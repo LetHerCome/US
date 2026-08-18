@@ -1,4 +1,3 @@
-!-- test deploy -->
 <!doctype html>
 <html lang="it">
 <head>
@@ -83,6 +82,7 @@ button{border:0;border-radius:15px;padding:13px 16px;font:inherit;font-weight:70
 .quiz-cat{padding:16px;border-radius:20px;background:var(--card);border:1px solid var(--border);min-height:122px;cursor:pointer}
 .quiz-cat .emoji{font-size:24px}.quiz-cat b{display:block;margin-top:11px}.quiz-cat small{display:block;color:var(--muted);margin-top:5px;line-height:1.3}
 .quiz-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.today-reveal{margin-top:12px;display:grid;gap:10px}.today-answer{padding:14px 15px;border-radius:18px;background:rgba(255,255,255,.035);border:1px solid var(--border)}.today-answer b{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em}.today-answer p{margin:0;white-space:pre-wrap;line-height:1.45}
 .progress{height:8px;background:#262c37;border-radius:999px;overflow:hidden}.progress>div{height:100%;background:linear-gradient(90deg,#ff5f89,#a985ff);width:10%}
 .answers{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}
 .answer-btn{background:#202632;color:#eef0f6;border:1px solid var(--border);min-height:54px}
@@ -223,10 +223,11 @@ button{border:0;border-radius:15px;padding:13px 16px;font:inherit;font-weight:70
         <div class="qtag">LA DOMANDA DEL GIORNO</div>
         <div class="qtext">Qual è una cosa che vorresti rifare insieme per la prima volta?</div>
         <textarea id="answer" rows="4" placeholder="Scrivi la tua risposta..."></textarea>
-        <div class="row"><button class="primary" onclick="saveAnswer()">Rispondi</button><button class="ghost" onclick="newQuestion()">Cambia domanda</button></div>
-        <div class="locked" id="locked">🔒 La risposta di Bea si sbloccherà quando avrete risposto entrambi.</div>
+        <div class="row"><button class="primary" id="todaySaveBtn" onclick="saveAnswer()">Rispondi</button></div>
+        <div class="locked" id="locked">🔒 La risposta dell’altra persona si sblocca quando avete risposto entrambi.</div>
+        <div id="todayReveal" class="hidden"></div>
       </div>
-      <div class="smallnote">Nella versione condivisa questa parte sarà sincronizzata tra i vostri due telefoni.</div>
+      <div class="smallnote">Una domanda al giorno, uguale per entrambi. Le risposte restano private fino al reveal.</div>
     </section>
   </main>
 
@@ -275,7 +276,7 @@ button{border:0;border-radius:15px;padding:13px 16px;font:inherit;font-weight:70
   <main id="quiz" class="page">
     <section class="section" style="margin-top:6px">
       <div class="quiz-head">
-        <div><div class="tiny">US. QUIZ</div><h2 style="margin:2px 0 0">Quanto ci conosciamo?</h2></div>
+        <div><div class="tiny">US. QUIZ</div><h2 style="margin:2px 0 0">Quanto siamo allineati?</h2></div>
         <button class="ghost" onclick="go('home')">←</button>
       </div>
 
@@ -297,7 +298,7 @@ button{border:0;border-radius:15px;padding:13px 16px;font:inherit;font-weight:70
           </div>
           <div class="progress"><div id="quizProgress"></div></div>
           <div class="qtext" id="quizQuestion" style="font-size:21px"></div>
-          <div class="tiny" id="quizWho">Rispondi pensando a Beatrice.</div>
+          <div class="tiny" id="quizWho">Rispondi per te. Il confronto resta nascosto fino alla fine.</div>
           <div class="answers" id="quizAnswers"></div>
           <button class="primary" id="quizNext" style="width:100%;margin-top:14px" onclick="nextQuiz()" disabled>Conferma</button>
         </div>
@@ -310,7 +311,7 @@ button{border:0;border-radius:15px;padding:13px 16px;font:inherit;font-weight:70
             <div class="score-inner"><div><b id="scoreValue">0/10</b><br><span>risposte uguali</span></div></div>
           </div>
           <div class="qtext" id="scoreText" style="font-size:19px">Ci stiamo ancora studiando 👀</div>
-          <div class="csub">Nella versione sincronizzata il risultato si sblocca solo quando entrambi hanno completato il set.</div>
+          <div class="csub" id="scoreSub">Il risultato si sblocca solo quando entrambi hanno completato il set.</div>
           <button class="primary" style="width:100%;margin-top:16px" onclick="resetQuiz()">Scegli un'altra categoria</button>
         </div>
       </div>
@@ -346,24 +347,8 @@ function go(id){
   scrollTo({top:0,behavior:'smooth'});
 }
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700)}
-function saveAnswer(){
-  const v=document.getElementById('answer').value.trim();
-  if(!v)return toast('Scrivi qualcosa prima :)');
-  localStorage.setItem('us_answer',v);
-  document.getElementById('locked').innerHTML='✓ Hai risposto. <b>In attesa di Bea…</b>';
-  toast('+10 Bond XP');
-}
-function newQuestion(){
-  const qs=[
-    'Qual è una cosa che vorresti rifare insieme per la prima volta?',
-    'Quale nostra giornata conserveresti esattamente com’era?',
-    'Cosa vorresti che facessimo più spesso insieme?',
-    'Qual è una cosa piccola che faccio e che ti fa stare bene?',
-    'Se partissimo domani senza programma, dove andremmo?'
-  ];
-  const q=qs[Math.floor(Math.random()*qs.length)];
-  document.querySelector('.qtext').textContent=q; toast('Nuova domanda');
-}
+function saveAnswer(){ toast('Sync in preparazione…'); }
+function newQuestion(){ toast('La domanda del giorno è uguale per entrambi ♡'); }
 function toggleDone(el){
   el.classList.toggle('done');el.querySelector('.check').textContent=el.classList.contains('done')?'✓':'';
   toast(el.classList.contains('done')?'+15 Bond XP':'Riaperta');
@@ -380,8 +365,6 @@ function openMsg(title,text){
   document.getElementById('modal').classList.add('show');
 }
 function closeModal(e){if(e.target.id==='modal')e.currentTarget.classList.remove('show')}
-const saved=localStorage.getItem('us_answer');if(saved){document.getElementById('answer').value=saved;document.getElementById('locked').innerHTML='✓ Hai risposto. <b>In attesa di Bea…</b>'}
-
 const quizData={
 preferenze:[
  {q:"Qual è la sua serata perfetta?",a:["Film sul divano","Uscire a cena","Serata con amici","Gaming insieme"]},
@@ -431,52 +414,104 @@ futuro:[
  {q:"Weekend improvviso: dove?",a:["Città d'arte","Spa","Mare","Montagna"]},
  {q:"Tra 10 anni ci vede...",a:["Sempre in giro","Con mille progetti","Più tranquilli","Tutte le precedenti"]}
 ]};
-let quizCat='',quizPos=0,quizSelected=null,quizMine=[],quizMockPartner=[];
+let quizCat='',quizPos=0,quizSelected=null,quizQuestions=[],quizSet=null,quizState=null;
 function openQuizHub(){go('quiz');resetQuiz()}
-function startQuiz(cat){
- quizCat=cat;quizPos=0;quizMine=[];quizMockPartner=[];
- document.getElementById('quizHub').classList.add('hidden');
- document.getElementById('quizResult').classList.add('hidden');
- document.getElementById('quizPlay').classList.remove('hidden');
- renderQuiz();
+async function startQuiz(cat){
+  if(!window.usProfile){toast('Sync non pronta');return;}
+  quizCat=cat;quizPos=0;quizSelected=null;quizQuestions=[];quizSet=null;quizState=null;
+  document.getElementById('quizHub').classList.add('hidden');
+  document.getElementById('quizResult').classList.add('hidden');
+  document.getElementById('quizPlay').classList.remove('hidden');
+  document.getElementById('quizQuestion').textContent='Carico il set…';
+  document.getElementById('quizAnswers').innerHTML='';
+  try{
+    const {data:set,error:setError}=await sb.from('quiz_sets').select('id,slug,title,category').eq('slug',cat).single();
+    if(setError) throw setError;
+    const {data:questions,error:qError}=await sb.from('quiz_questions').select('id,position,question,options').eq('set_id',set.id).order('position',{ascending:true});
+    if(qError) throw qError;
+    if(!questions || !questions.length) throw new Error('Set vuoto');
+    quizSet=set;quizQuestions=questions;
+    const {data:state,error:stateError}=await sb.rpc('get_quiz_state',{target_set_id:set.id});
+    if(stateError) throw stateError;
+    quizState=state;
+    if(state?.my_complete){
+      showQuizState(state);
+      return;
+    }
+    const mine=state?.my_answers||{};
+    const first=quizQuestions.findIndex(q=>mine[String(q.id)]===undefined);
+    quizPos=first>=0?first:0;
+    renderQuiz();
+  }catch(e){
+    console.warn(e);
+    resetQuiz();
+    toast('Errore caricamento quiz');
+  }
 }
 function renderQuiz(){
- const item=quizData[quizCat][quizPos];quizSelected=null;
- document.getElementById('quizCategory').textContent=quizCat.toUpperCase();
- document.getElementById('quizIndex').textContent=quizPos+1;
- document.getElementById('quizProgress').style.width=((quizPos+1)*10)+'%';
- document.getElementById('quizQuestion').textContent=item.q;
- const box=document.getElementById('quizAnswers');box.innerHTML='';
- item.a.forEach((ans,i)=>{
-  const b=document.createElement('button');b.className='answer-btn';b.textContent=ans;
-  b.onclick=()=>{document.querySelectorAll('.answer-btn').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');quizSelected=i;document.getElementById('quizNext').disabled=false};
-  box.appendChild(b);
- });
- document.getElementById('quizNext').disabled=true;
+  const item=quizQuestions[quizPos];if(!item)return;
+  quizSelected=null;
+  document.getElementById('quizCategory').textContent=(quizSet?.title||quizCat).toUpperCase();
+  document.getElementById('quizIndex').textContent=quizPos+1;
+  document.getElementById('quizProgress').style.width=(((quizPos+1)/quizQuestions.length)*100)+'%';
+  document.getElementById('quizQuestion').textContent=item.question;
+  document.getElementById('quizWho').textContent='Rispondi per te. Il confronto resta nascosto fino alla fine.';
+  const box=document.getElementById('quizAnswers');box.innerHTML='';
+  (item.options||[]).forEach((ans,i)=>{
+    const b=document.createElement('button');b.className='answer-btn';b.textContent=ans;
+    b.onclick=()=>{document.querySelectorAll('#quizAnswers .answer-btn').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');quizSelected=i;document.getElementById('quizNext').disabled=false};
+    box.appendChild(b);
+  });
+  document.getElementById('quizNext').disabled=true;
+  document.getElementById('quizNext').textContent=quizPos===quizQuestions.length-1?'Completa':'Conferma';
 }
-function nextQuiz(){
- if(quizSelected===null)return;
- quizMine.push(quizSelected);
- // Demo-only partner simulation, intentionally deterministic-ish for visible scoring.
- const partner = (quizPos%3===0) ? quizSelected : (quizPos%4===0 ? (quizSelected+1)%4 : quizSelected);
- quizMockPartner.push(partner);
- if(quizPos<9){quizPos++;renderQuiz()} else {showQuizResult()}
+async function nextQuiz(){
+  if(quizSelected===null || !quizSet)return;
+  const btn=document.getElementById('quizNext');btn.disabled=true;btn.textContent='Salvo…';
+  const item=quizQuestions[quizPos];
+  const {error}=await sb.rpc('save_quiz_answer',{target_question_id:item.id,target_answer_index:quizSelected});
+  if(error){console.warn(error);toast('Errore sync quiz');renderQuiz();return;}
+  const {data:state,error:stateError}=await sb.rpc('get_quiz_state',{target_set_id:quizSet.id});
+  if(stateError){console.warn(stateError);toast('Errore stato quiz');renderQuiz();return;}
+  quizState=state;
+  if(state.my_complete){showQuizState(state);return;}
+  const mine=state.my_answers||{};
+  const next=quizQuestions.findIndex((q,i)=>i>quizPos && mine[String(q.id)]===undefined);
+  const any=quizQuestions.findIndex(q=>mine[String(q.id)]===undefined);
+  quizPos=next>=0?next:any;
+  renderQuiz();
 }
-function showQuizResult(){
- const score=quizMine.reduce((n,v,i)=>n+(v===quizMockPartner[i]?1:0),0);
- document.getElementById('quizPlay').classList.add('hidden');
- document.getElementById('quizResult').classList.remove('hidden');
- document.getElementById('scoreValue').textContent=score+'/10';
- document.getElementById('scoreRing').style.setProperty('--score',score*10);
- document.getElementById('scoreText').textContent=score>=9?'Vi conoscete fin troppo bene 😏':score>=7?'Direi che vi studiate parecchio ❤️':score>=5?'Niente male, ma c’è margine 👀':'Abbiamo del materiale per le prossime serate 😂';
- toast('Set completato · +50 Bond XP');
+function showQuizState(state){
+  document.getElementById('quizPlay').classList.add('hidden');
+  document.getElementById('quizResult').classList.remove('hidden');
+  if(state.both_complete){
+    const score=Number(state.score||0),total=Number(state.total||10);
+    document.getElementById('scoreValue').textContent=score+'/'+total;
+    document.getElementById('scoreRing').style.setProperty('--score',Math.round(score/total*100));
+    document.getElementById('scoreText').textContent=score>=9?'Siete praticamente sincronizzati 😏':score>=7?'Molto allineati ❤️':score>=5?'Niente male, ma avete ancora cose da scoprire 👀':'Due teste, parecchie sorprese 😂';
+    document.getElementById('scoreSub').textContent='Avete completato entrambi il set. Questo è il vostro confronto reale.';
+    toast('Confronto sbloccato ♡');
+  }else{
+    document.getElementById('scoreValue').textContent='✓';
+    document.getElementById('scoreRing').style.setProperty('--score',100);
+    document.getElementById('scoreText').textContent='Hai completato il set ♡';
+    const partner=window.usProfile?.role==='francesco'?'Bea':'Francesco';
+    document.getElementById('scoreSub').textContent='Ora aspettiamo '+partner+'. Il risultato resta nascosto finché non completa anche '+partner+'.';
+  }
+}
+async function refreshQuizState(){
+  if(!quizSet || !window.usProfile)return;
+  const resultVisible=!document.getElementById('quizResult').classList.contains('hidden');
+  if(!resultVisible)return;
+  const {data:state}=await sb.rpc('get_quiz_state',{target_set_id:quizSet.id});
+  if(state){quizState=state;showQuizState(state);}
 }
 function resetQuiz(){
- document.getElementById('quizHub').classList.remove('hidden');
- document.getElementById('quizPlay').classList.add('hidden');
- document.getElementById('quizResult').classList.add('hidden');
+  quizSet=null;quizQuestions=[];quizState=null;quizPos=0;quizSelected=null;
+  document.getElementById('quizHub').classList.remove('hidden');
+  document.getElementById('quizPlay').classList.add('hidden');
+  document.getElementById('quizResult').classList.add('hidden');
 }
-
 
 function updateTogetherDays(){
   const start = new Date('2026-04-21T00:00:00');
@@ -573,6 +608,51 @@ async function pairAccount(){
 }
 window.pairAccount=pairAccount;
 
+function localDateISO(){
+  const d=new Date(), y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+async function hydrateToday(){
+  if(!window.usProfile)return;
+  const {data:q,error:qError}=await sb.from('daily_questions').select('id,question').eq('question_date',localDateISO()).maybeSingle();
+  if(qError){console.warn(qError);return;}
+  const qel=document.querySelector('#today .qtext');
+  const locked=document.getElementById('locked'), reveal=document.getElementById('todayReveal'), btn=document.getElementById('todaySaveBtn');
+  if(!q){
+    window.todayQuestion=null;
+    if(qel)qel.textContent='La prossima domanda sta arrivando…';
+    locked.textContent='Nessuna domanda disponibile per oggi.';
+    reveal.classList.add('hidden');
+    return;
+  }
+  window.todayQuestion=q;if(qel)qel.textContent=q.question;
+  const {data:state,error}=await sb.rpc('get_daily_state',{target_question_id:q.id});
+  if(error){console.warn(error);return;}
+  window.todayState=state;
+  if(state?.my_answer){
+    document.getElementById('answer').value=state.my_answer;
+    btn.textContent='Aggiorna risposta';
+  }else{
+    btn.textContent='Rispondi';
+  }
+  if(state?.both_answered){
+    const partner=window.usProfile.role==='francesco'?'Bea':'Francesco';
+    locked.innerHTML='♡ <b>Reveal sbloccato.</b> Avete risposto entrambi.';
+    reveal.className='today-reveal';
+    reveal.innerHTML='<div class="today-answer"><b>La tua risposta</b><p>'+escapeHtml(state.my_answer||'')+'</p></div><div class="today-answer"><b>'+partner+'</b><p>'+escapeHtml(state.partner_answer||'')+'</p></div>';
+  }else{
+    reveal.classList.add('hidden');reveal.innerHTML='';
+    if(state?.my_answer){
+      const partner=window.usProfile.role==='francesco'?'Bea':'Francesco';
+      locked.innerHTML='✓ Hai risposto. <b>In attesa di '+partner+'…</b>';
+    }else if(state?.partner_has_answer){
+      locked.innerHTML='🔒 L’altra risposta è già arrivata. <b>Rispondi per sbloccarla.</b>';
+    }else{
+      locked.innerHTML='🔒 Le risposte si sbloccano quando avete risposto entrambi.';
+    }
+  }
+}
+
 async function hydrateCloud(){
   try{
     // Shared bucket list
@@ -590,21 +670,7 @@ async function hydrateCloud(){
       });
     }
 
-    // Today status
-    const today=new Date().toISOString().slice(0,10);
-    const {data:q}=await sb.from('daily_questions').select('id,question').eq('question_date',today).maybeSingle();
-    if(q){
-      const qel=document.querySelector('#today .qtext');
-      if(qel) qel.textContent=q.question;
-      window.todayQuestion=q;
-      const {data:state}=await sb.rpc('get_daily_state',{target_question_id:q.id});
-      if(state?.my_answer){
-        document.getElementById('answer').value=state.my_answer;
-        document.getElementById('locked').innerHTML=state.both_answered
-          ? '♡ Avete risposto entrambi. Le risposte sono sincronizzate.'
-          : '✓ Hai risposto. <b>In attesa dell’altra risposta…</b>';
-      }
-    }
+    await hydrateToday();
   }catch(e){console.warn(e)}
 }
 
@@ -612,11 +678,11 @@ function escapeHtml(s){
   return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
-const localSaveAnswer = saveAnswer;
 saveAnswer = async function(){
-  if(!window.usProfile || !window.todayQuestion) return localSaveAnswer();
+  if(!window.usProfile || !window.todayQuestion){toast('Sync non pronta, riprova tra un attimo');return;}
   const v=document.getElementById('answer').value.trim();
   if(!v)return toast('Scrivi qualcosa prima :)');
+  const btn=document.getElementById('todaySaveBtn');btn.disabled=true;btn.textContent='Salvo…';
   const {error}=await sb.from('daily_answers').upsert({
     question_id:window.todayQuestion.id,
     user_id:window.usProfile.id,
@@ -624,11 +690,12 @@ saveAnswer = async function(){
     answer:v,
     updated_at:new Date().toISOString()
   },{onConflict:'question_id,user_id'});
-  if(error) return toast('Errore sync');
-  document.getElementById('locked').innerHTML='✓ Risposta sincronizzata. <b>In attesa dell’altra risposta…</b>';
+  btn.disabled=false;
+  if(error){console.warn(error);btn.textContent='Riprova';return toast('Errore sync Today');}
   toast('Salvato online ♡');
-  hydrateCloud();
+  await hydrateToday();
 }
+window.saveAnswer=saveAnswer;
 
 const localAddWish = addWish;
 addWish = async function(){
@@ -656,6 +723,8 @@ async function toggleCloudBucket(el){
   hydrateCloud();
 }
 
+setInterval(()=>{ if(window.usProfile){ hydrateToday(); refreshQuizState(); } },15000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden && window.usProfile){hydrateCloud();refreshQuizState();}});
 sb.auth.onAuthStateChange((_event,_session)=>{ setTimeout(initCloud,0); });
 const pairBtn=document.getElementById('pairBtn');
 if(pairBtn) pairBtn.addEventListener('click', pairAccount);
