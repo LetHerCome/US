@@ -46,8 +46,8 @@ min-height:390px;display:flex;flex-direction:column;justify-content:flex-end}
 .kicker{font-size:13px;color:#d2d6e1}
 .names{font-size:20px;margin-top:8px}.days{font-family:Georgia,serif;font-size:58px;line-height:1;margin-top:18px}
 .days-label{font-size:14px;color:#d8dbe5;margin-top:4px}
-.bond{margin-top:22px}.bondline{display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px}
-.bar{height:10px;background:#2a2f3b;border-radius:999px;overflow:hidden}.fill{height:100%;width:82%;background:linear-gradient(90deg,#ff5c88,#ff93ad);border-radius:999px}
+.bond{margin-top:22px}.bondline{display:flex;justify-content:space-between;gap:12px;font-size:13px;margin-bottom:8px}
+.bar{height:10px;background:#2a2f3b;border-radius:999px;overflow:hidden}.fill{height:100%;width:0;background:linear-gradient(90deg,#ff5c88,#ff93ad);border-radius:999px;transition:width .35s ease}
 .quick{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
 .card{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--border);border-radius:22px;padding:16px;box-shadow:0 12px 30px rgba(0,0,0,.15)}
 .quick .card{min-height:112px}.ico{font-size:24px}.ctitle{font-weight:700;margin-top:11px}.csub{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.35}
@@ -83,7 +83,10 @@ button{border:0;border-radius:15px;padding:13px 16px;font:inherit;font-weight:70
 .sheet{width:min(480px,100%);margin:0 auto;background:#151922;border:1px solid var(--border);border-radius:28px 28px 0 0;padding:22px 18px calc(28px + env(safe-area-inset-bottom));box-shadow:0 -18px 60px rgba(0,0,0,.5)}
 .sheet h3{margin:0 0 10px}.sheet p{color:#cbd0dc;line-height:1.5}
 .badge{display:inline-block;padding:7px 10px;border-radius:999px;background:#241a20;color:var(--pink2);font-size:12px;font-weight:700}
-.smallnote{font-size:12px;color:var(--muted);margin-top:12px}
+.smallnote{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.45}
+.empty-state{padding:22px 16px;border:1px dashed rgba(255,255,255,.12);border-radius:20px;text-align:center;background:rgba(255,255,255,.025)}
+.empty-state .emoji{font-size:30px;margin-bottom:8px}.empty-state b{display:block;margin-bottom:5px}.empty-state p{font-size:13px;margin:0;color:var(--muted);line-height:1.45}
+.coming-item{opacity:.6;pointer-events:none}.coming-tag{margin-left:auto;font-size:10px;color:var(--pink2);font-weight:800;letter-spacing:.05em}
 
 .quiz-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .quiz-cat{padding:16px;border-radius:20px;background:var(--card);border:1px solid var(--border);min-height:122px;cursor:pointer}
@@ -103,7 +106,7 @@ button{border:0;border-radius:15px;padding:13px 16px;font:inherit;font-weight:70
 .sync-card{background:linear-gradient(135deg,rgba(255,102,142,.12),rgba(169,133,255,.08)),var(--card);border:1px solid rgba(255,255,255,.10);border-radius:22px;padding:16px}
 .sync-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .sync-pair{display:flex;align-items:center;gap:8px}.sync-dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 12px rgba(100,217,139,.8)}
-.pills{display:flex;gap:8px;overflow:auto;padding-bottom:2px;margin-top:12px}.pill{flex:0 0 auto;padding:9px 12px;border-radius:999px;background:#1c2230;border:1px solid var(--border);font-size:12px;color:#dfe3ec}
+.pills{display:flex;gap:8px;overflow:auto;padding-bottom:2px;margin-top:12px;scrollbar-width:none}.pills::-webkit-scrollbar{display:none}.pill{flex:0 0 auto;padding:9px 12px;border-radius:999px;background:#1c2230;border:1px solid var(--border);font-size:12px;color:#dfe3ec}
 .activity{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--border)}.activity:first-child{border-top:0}
 .activity .bubble{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:#222836;flex:0 0 auto}
 .activity b{font-size:13px}.activity div div{font-size:12px;color:var(--muted);margin-top:3px}
@@ -121,7 +124,7 @@ button{border:0;border-radius:15px;padding:13px 16px;font:inherit;font-weight:70
 .role-btn{min-height:78px;border:1px solid var(--border);background:#10141c;color:var(--text);border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
 .role-btn span{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#ff668e,#a985ff);font-weight:800}
 .role-btn b{font-size:13px}.role-btn.selected{border-color:rgba(255,102,142,.75);box-shadow:0 0 0 2px rgba(255,102,142,.12) inset;background:linear-gradient(135deg,rgba(255,102,142,.12),rgba(169,133,255,.08)),#10141c}
-.online-badge{position:fixed;right:14px;top:calc(14px + env(safe-area-inset-top));z-index:60;padding:7px 10px;border-radius:999px;background:rgba(13,16,22,.78);border:1px solid var(--border);backdrop-filter:blur(12px);font-size:11px;color:#dce1eb}
+.online-badge{padding:7px 10px;border-radius:999px;background:rgba(13,16,22,.78);border:1px solid var(--border);backdrop-filter:blur(12px);font-size:11px;color:#dce1eb;white-space:nowrap}
 .online-badge.ok{color:#91e8ad}.online-badge.warn{color:#ffc27d}
 
 </style>
@@ -129,7 +132,6 @@ button{border:0;border-radius:15px;padding:13px 16px;font:inherit;font-weight:70
 </head>
 <body>
 
-<div class="online-badge warn" id="onlineBadge">● locale</div>
 
 <div class="auth-overlay" id="authOverlay">
   <div class="auth-card">
@@ -151,7 +153,7 @@ button{border:0;border-radius:15px;padding:13px 16px;font:inherit;font-weight:70
 </div>
 
 <div class="app">
-  <div class="top"><div class="brand">Us<span class="heart">.</span></div><div class="avatar">F+B</div></div>
+  <div class="top"><div class="brand">Us<span class="heart">.</span></div><div class="online-badge warn" id="onlineBadge">● connessione…</div></div>
 
   <main id="home" class="page active">
     <section class="hero photo-ready"><div class="photo-chip">♡ dal 21.04.2026</div>
@@ -160,7 +162,7 @@ button{border:0;border-radius:15px;padding:13px 16px;font:inherit;font-weight:70
       <div class="days" id="daysTogether">119</div>
       <div class="days-label">giorni insieme · dal 21 aprile 2026</div>
       <div class="bond">
-        <div class="bondline"><span>OUR BOND</span><span>LV. 27 · <b id="bondPct">82%</b></span></div>
+        <div class="bondline"><span>PROSSIMO TRAGUARDO</span><span id="milestoneLabel">200 giorni</span></div>
         <div class="bar"><div class="fill" id="bondFill"></div></div>
       </div>
     </section>
@@ -172,14 +174,14 @@ button{border:0;border-radius:15px;padding:13px 16px;font:inherit;font-weight:70
             <div class="tiny">SPAZIO CONDIVISO</div>
             <div class="sync-pair" style="margin-top:5px"><span class="sync-dot"></span><b>Francesco + Beatrice</b></div>
           </div>
-          <span class="badge">SYNC READY</span>
+          <span class="badge" id="syncReadyBadge">SYNC ATTIVO</span>
         </div>
         <div class="pills">
-          <span class="pill">💬 1 risposta in attesa</span>
-          <span class="pill">📸 4 Moments</span>
-          <span class="pill">🎯 Quiz 7/10</span>
+          <span class="pill" id="todayStatusPill">💬 Today · controllo…</span>
+          <span class="pill" id="quizStatusPill">🎯 Quiz · 0/40</span>
+          <span class="pill">📸 Moments · in arrivo</span>
         </div>
-        <div class="smallnote">Demo locale: gli stati sono simulati. Quando colleghiamo il backend, questi dati saranno condivisi davvero tra i vostri telefoni.</div>
+        <div class="smallnote" id="syncNote">I vostri telefoni condividono lo stesso spazio privato.</div>
       </div>
     </section>
 
@@ -197,30 +199,13 @@ button{border:0;border-radius:15px;padding:13px 16px;font:inherit;font-weight:70
           <div style="font-size:32px">🎯</div>
           <div style="flex:1">
             <div class="ctitle" style="margin-top:0">Couple Quiz</div>
-            <div class="csub">10 domande. Prima rispondi tu, poi Bea. Scopri quante ne avete azzeccate.</div>
+            <div class="csub">10 domande per set. Rispondete separatamente e scoprite quanto siete allineati.</div>
           </div>
           <div style="color:var(--pink2);font-size:22px">›</div>
         </div>
       </div>
     </section>
 
-    <section class="section">
-      <h2>Ultime cose tra noi</h2>
-      <div class="card">
-        <div class="activity"><div class="bubble">💬</div><div><b>Bea ha risposto a Today</b><div>La risposta si sblocca quando rispondi anche tu.</div></div></div>
-        <div class="activity"><div class="bubble">📸</div><div><b>Nuovo Moment</b><div>“Quel posto con lo specchio gigante.”</div></div></div>
-        <div class="activity"><div class="bubble">✨</div><div><b>Bucket list aggiornata</b><div>Una nuova cosa da fare insieme.</div></div></div>
-      </div>
-    </section>
-
-    <section class="section">
-      <h2>Un piccolo pezzo di noi</h2>
-      <div class="card">
-        <span class="badge">RANDOM MEMORY</span>
-        <div class="qtext" style="font-size:18px;margin-bottom:8px">“Quel viaggio in cui abbiamo camminato troppo e mangiato ancora di più.”</div>
-        <div class="tiny">Tocca Moments per costruire davvero questa parte.</div>
-      </div>
-    </section>
   </main>
 
   <main id="today" class="page">
@@ -239,25 +224,19 @@ button{border:0;border-radius:15px;padding:13px 16px;font:inherit;font-weight:70
   </main>
 
   <main id="moments" class="page">
-    <section class="section" style="margin-top:6px"><h2>Moments</h2>
-      <div class="memory-grid">
-        <div class="mem"><b>Primo viaggio</b><span>28 luglio</span></div>
-        <div class="mem"><b>Una sera perfetta</b><span>solo noi</span></div>
-        <div class="mem"><b>Foto preferita</b><span>♡</span></div>
-        <div class="mem"><b>Quel giorno lì</b><span>da non dimenticare</span></div>
+    <section class="section" style="margin-top:6px">
+      <h2>Moments</h2>
+      <div class="empty-state">
+        <div class="emoji">📸</div>
+        <b>Qui vivranno i vostri ricordi.</b>
+        <p>Foto, data e una nota condivisa. Non mostriamo più ricordi finti finché il caricamento foto non è attivo.</p>
       </div>
-      <div class="card" style="margin-top:12px"><div class="ctitle">+ Aggiungi un momento</div><div class="csub">Nella V1: foto, testo, data e una piccola nota.</div></div>
     </section>
   </main>
 
   <main id="together" class="page">
     <section class="section" style="margin-top:6px"><h2>Together</h2>
-      <div class="list" id="bucket">
-        <div class="item" onclick="toggleDone(this)"><div class="check"></div><div class="txt">Vedere l’aurora boreale<div class="tiny">bucket list</div></div></div>
-        <div class="item" onclick="toggleDone(this)"><div class="check"></div><div class="txt">Viaggio in Giappone<div class="tiny">bucket list</div></div></div>
-        <div class="item done" onclick="toggleDone(this)"><div class="check">✓</div><div class="txt">Imparare a cucinare insieme<div class="tiny">completata</div></div></div>
-        <div class="item" onclick="toggleDone(this)"><div class="check"></div><div class="txt">Guardare 100 film insieme<div class="tiny">37 / 100</div></div></div>
-      </div>
+      <div class="list" id="bucket"><div class="empty-state"><div class="emoji">↻</div><b>Carico la vostra lista…</b></div></div>
       <button class="primary" style="width:100%;margin-top:12px" onclick="addWish()">+ Nuova cosa da fare</button>
     </section>
   </main>
@@ -270,11 +249,11 @@ button{border:0;border-radius:15px;padding:13px 16px;font:inherit;font-weight:70
       <div class="open-card" onclick="openMsg('Quando non riesci a dormire','Metti giù il telefono tra due minuti. Prima però: ti amo. Ora davvero, dormi.')"><span>…non riesci a dormire</span><span>💌</span></div>
 
       <div class="section">
-        <h2 style="margin-left:0">Piccole cose sincronizzate</h2>
+        <h2 style="margin-left:0">Prossimamente</h2>
         <div class="list">
-          <div class="item" onclick="toast('Demo: poke inviato ♡')"><div class="check">♡</div><div class="txt">Mandale un “ti penso”<div class="tiny">Un piccolo poke che comparirà sul suo telefono.</div></div></div>
-          <div class="item" onclick="toast('Demo: sorpresa programmata')"><div class="check">⏰</div><div class="txt">Programma una sorpresa<div class="tiny">Messaggio che si sblocca in una data precisa.</div></div></div>
-          <div class="item" onclick="toast('Demo: mood condiviso')"><div class="check">☾</div><div class="txt">Mood di oggi<div class="tiny">Lascia un piccolo stato che Bea vedrà aprendo Us.</div></div></div>
+          <div class="item coming-item"><div class="check">♡</div><div class="txt">“Ti penso”<div class="tiny">Un piccolo segnale privato tra i vostri telefoni.</div></div><span class="coming-tag">PRESTO</span></div>
+          <div class="item coming-item"><div class="check">⏰</div><div class="txt">Sorpresa programmata<div class="tiny">Un messaggio che si sblocca quando decidi tu.</div></div><span class="coming-tag">PRESTO</span></div>
+          <div class="item coming-item"><div class="check">☾</div><div class="txt">Mood di oggi<div class="tiny">Un piccolo stato condiviso tra voi due.</div></div><span class="coming-tag">PRESTO</span></div>
         </div>
       </div>
     </section>
@@ -315,7 +294,7 @@ button{border:0;border-radius:15px;padding:13px 16px;font:inherit;font-weight:70
         <div class="card" style="text-align:center">
           <div class="tiny">RISULTATO DEL SET</div>
           <div class="score-ring" id="scoreRing" style="--score:0">
-            <div class="score-inner"><div><b id="scoreValue">0/10</b><br><span>risposte uguali</span></div></div>
+            <div class="score-inner"><div><b id="scoreValue">0/10</b><br><span>risposte allineate</span></div></div>
           </div>
           <div class="qtext" id="scoreText" style="font-size:19px">Ci stiamo ancora studiando 👀</div>
           <div class="csub" id="scoreSub">Il risultato si sblocca solo quando entrambi hanno completato il set.</div>
@@ -354,8 +333,6 @@ function go(id){
   scrollTo({top:0,behavior:'smooth'});
 }
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700)}
-function saveAnswer(){ toast('Sync in preparazione…'); }
-function newQuestion(){ toast('La domanda del giorno è uguale per entrambi ♡'); }
 function toggleDone(el){
   el.classList.toggle('done');el.querySelector('.check').textContent=el.classList.contains('done')?'✓':'';
   toast(el.classList.contains('done')?'+15 Bond XP':'Riaperta');
@@ -372,55 +349,6 @@ function openMsg(title,text){
   document.getElementById('modal').classList.add('show');
 }
 function closeModal(e){if(e.target.id==='modal')e.currentTarget.classList.remove('show')}
-const quizData={
-preferenze:[
- {q:"Qual è la sua serata perfetta?",a:["Film sul divano","Uscire a cena","Serata con amici","Gaming insieme"]},
- {q:"Che tipo di regalo apprezza di più?",a:["Esperienza insieme","Qualcosa di utile","Qualcosa di romantico","Una sorpresa assurda"]},
- {q:"Quando è stressata, cosa preferisce?",a:["Stare da sola","Parlarne subito","Distrarsi","Dormire"]},
- {q:"Quale vacanza sceglierebbe?",a:["Mare","Montagna","Grande città","Road trip"]},
- {q:"Che cosa sceglierebbe più facilmente?",a:["Dolce","Salato","Entrambi","Dipende dal giorno"]},
- {q:"Qual è il suo modo preferito di ricevere affetto?",a:["Parole","Tempo insieme","Contatto","Piccoli gesti"]},
- {q:"Una domenica libera ideale?",a:["Casa e relax","Gita","Shopping","Pranzo fuori"]},
- {q:"Cosa la fa ridere di più?",a:["Meme","Battute stupide","Inside joke","Figuracce"]},
- {q:"Se potesse scegliere ora?",a:["Viaggio","Concerto","Spa","Weekend in casa"]},
- {q:"Quale sorpresa gradirebbe di più?",a:["Cena preparata","Lettera","Biglietti viaggio","Foto/ricordo"]}
-],
-noi:[
- {q:"Quale momento nostro ricorda con più affetto?",a:["Primo appuntamento","Primo viaggio","Una serata normale","Un momento difficile superato"]},
- {q:"Chi dei due fa pace per primo?",a:["Io","Lei","Entrambi","Dipende"]},
- {q:"Cosa ci rappresenta meglio?",a:["Ridiamo sempre","Ci supportiamo","Siamo due testardi","Un po' tutto"]},
- {q:"Quale nostro rito le piace di più?",a:["Film/serie","Mangiare insieme","Viaggiare","Messaggi durante il giorno"]},
- {q:"Cosa nota subito quando sono giù?",a:["Voce","Messaggi","Espressione","Silenzio"]},
- {q:"Quale foto nostra sceglierebbe come preferita?",a:["Viaggio","Casa","Evento","Foto spontanea"]},
- {q:"Quale cosa facciamo troppo poco?",a:["Uscire","Parlare senza telefoni","Viaggiare","Fare foto"]},
- {q:"Quale lato di noi è più forte?",a:["Complicità","Affetto","Umorismo","Supporto"]},
- {q:"La nostra vacanza ideale è...",a:["Organizzata","Improvvisata","Metà e metà","Basta partire"]},
- {q:"Cosa ci fa tornare sempre a posto?",a:["Parlarne","Tempo","Abbraccio","Una battuta"]}
-],
-quotidiano:[
- {q:"Qual è la prima cosa che fa appena sveglia?",a:["Telefono","Bagno","Colazione","Resta a letto"]},
- {q:"Quando ha fame diventa...",a:["Silenziosa","Nervosa","Drammatica","Normalissima"]},
- {q:"Come preferisce organizzare una giornata?",a:["Tutto deciso","Solo due cose","Improvvisare","Decidi tu"]},
- {q:"Messaggi: cosa preferisce?",a:["Tanti brevi","Pochi lunghi","Vocali","Chiamata"]},
- {q:"Quando guarda una serie...",a:["Non parla","Commenta tutto","Sta al telefono","Si addormenta"]},
- {q:"Che cosa dimentica più facilmente?",a:["Chiavi","Caricatore","Orari","Niente"]},
- {q:"La sua comfort food?",a:["Pizza","Pasta","Sushi","Dolci"]},
- {q:"Quando è in ritardo...",a:["Corre","Fa finta di niente","Avvisa subito","Dà la colpa al traffico"]},
- {q:"In casa preferisce...",a:["Silenzio","Musica","TV accesa","Podcast"]},
- {q:"Per decidere dove mangiare...",a:["Sceglie subito","Dice 'boh'","Fa 20 proposte","Lascia scegliere me"]}
-],
-futuro:[
- {q:"Quale viaggio vorrebbe fare prima?",a:["Giappone","Nord Europa","USA","Tropicale"]},
- {q:"Che casa immagina?",a:["Centro città","Fuori città","Vicino al mare","Non importa"]},
- {q:"Quale esperienza vorrebbe fare insieme?",a:["Road trip","Concerto","Corso insieme","Avventura estrema"]},
- {q:"Quanto pianificare il futuro?",a:["Molto","Il giusto","Poco","Zero"]},
- {q:"Cosa conta di più nei prossimi anni?",a:["Stabilità","Viaggiare","Carriera","Tempo insieme"]},
- {q:"Un sogno condiviso sarebbe...",a:["Casa nostra","Grande viaggio","Progetto insieme","Vita tranquilla"]},
- {q:"Dove passare un mese?",a:["Tokyo","New York","Isola","Borgo tranquillo"]},
- {q:"Cosa vorrebbe imparare insieme?",a:["Lingua","Cucina","Sport","Qualcosa di creativo"]},
- {q:"Weekend improvviso: dove?",a:["Città d'arte","Spa","Mare","Montagna"]},
- {q:"Tra 10 anni ci vede...",a:["Sempre in giro","Con mille progetti","Più tranquilli","Tutte le precedenti"]}
-]};
 let quizCat='',quizPos=0,quizSelected=null,quizQuestions=[],quizSet=null,quizState=null;
 function openQuizHub(){go('quiz');resetQuiz()}
 async function startQuiz(cat){
@@ -442,7 +370,7 @@ async function startQuiz(cat){
     if(stateError) throw stateError;
     quizState=state;
     if(state?.my_complete){
-      showQuizState(state);
+      showQuizState(state,false);
       return;
     }
     const mine=state?.my_answers||{};
@@ -481,14 +409,15 @@ async function nextQuiz(){
   const {data:state,error:stateError}=await sb.rpc('get_quiz_state',{target_set_id:quizSet.id});
   if(stateError){console.warn(stateError);toast('Errore stato quiz');renderQuiz();return;}
   quizState=state;
-  if(state.my_complete){showQuizState(state);return;}
+  updateHomeStatus();
+  if(state.my_complete){showQuizState(state,true);return;}
   const mine=state.my_answers||{};
   const next=quizQuestions.findIndex((q,i)=>i>quizPos && mine[String(q.id)]===undefined);
   const any=quizQuestions.findIndex(q=>mine[String(q.id)]===undefined);
   quizPos=next>=0?next:any;
   renderQuiz();
 }
-function showQuizState(state){
+function showQuizState(state,notify=false){
   document.getElementById('quizPlay').classList.add('hidden');
   document.getElementById('quizResult').classList.remove('hidden');
   if(state.both_complete){
@@ -496,8 +425,8 @@ function showQuizState(state){
     document.getElementById('scoreValue').textContent=score+'/'+total;
     document.getElementById('scoreRing').style.setProperty('--score',Math.round(score/total*100));
     document.getElementById('scoreText').textContent=score>=9?'Siete praticamente sincronizzati 😏':score>=7?'Molto allineati ❤️':score>=5?'Niente male, ma avete ancora cose da scoprire 👀':'Due teste, parecchie sorprese 😂';
-    document.getElementById('scoreSub').textContent='Avete completato entrambi il set. Questo è il vostro confronto reale.';
-    toast('Confronto sbloccato ♡');
+    document.getElementById('scoreSub').textContent='Avete completato entrambi il set. Questo confronto usa solo le risposte completate da entrambi.';
+    if(notify) toast('Confronto sbloccato ♡');
   }else{
     document.getElementById('scoreValue').textContent='✓';
     document.getElementById('scoreRing').style.setProperty('--score',100);
@@ -510,8 +439,9 @@ async function refreshQuizState(){
   if(!quizSet || !window.usProfile)return;
   const resultVisible=!document.getElementById('quizResult').classList.contains('hidden');
   if(!resultVisible)return;
+  const wasBoth=Boolean(quizState?.both_complete);
   const {data:state}=await sb.rpc('get_quiz_state',{target_set_id:quizSet.id});
-  if(state){quizState=state;showQuizState(state);}
+  if(state){quizState=state;showQuizState(state,!wasBoth && Boolean(state.both_complete));updateHomeStatus();}
 }
 function resetQuiz(){
   quizSet=null;quizQuestions=[];quizState=null;quizPos=0;quizSelected=null;
@@ -524,8 +454,14 @@ function updateTogetherDays(){
   const start = new Date('2026-04-21T00:00:00');
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const diff = Math.floor((today - start)/86400000);
+  const diff = Math.max(0,Math.floor((today - start)/86400000));
   document.getElementById('daysTogether').textContent = diff.toLocaleString('it-IT');
+  const milestones=[100,200,365,500,730,1000,1500,2000,3000,5000];
+  const next=milestones.find(x=>x>diff) || (Math.ceil((diff+1)/1000)*1000);
+  const prev=[0,...milestones].filter(x=>x<=diff).pop() || 0;
+  const progress=Math.max(0,Math.min(100,((diff-prev)/(next-prev))*100));
+  document.getElementById('milestoneLabel').textContent=next.toLocaleString('it-IT')+' giorni';
+  document.getElementById('bondFill').style.width=progress+'%';
 }
 updateTogetherDays();
 
@@ -540,7 +476,7 @@ async function initCloud(){
   const { data: { session } } = await sb.auth.getSession();
   if(!session){
     window.usProfile = null;
-    setCloudBadge(false,'privato');
+    setCloudBadge(false,'offline');
     document.getElementById('authOverlay').classList.remove('hidden');
     showAuthStep('authPair');
     return;
@@ -558,6 +494,7 @@ async function initCloud(){
   selectedRole = profile.role;
   document.getElementById('authOverlay').classList.add('hidden');
   setCloudBadge(true, profile.display_name);
+  const syncBadge=document.getElementById('syncReadyBadge'); if(syncBadge) syncBadge.textContent='SYNC ATTIVO';
   await hydrateCloud();
 }
 
@@ -625,13 +562,17 @@ async function hydrateToday(){
   if(qError){console.warn(qError);return;}
   const qel=document.querySelector('#today .qtext');
   const locked=document.getElementById('locked'), reveal=document.getElementById('todayReveal'), btn=document.getElementById('todaySaveBtn');
+  const answerEl=document.getElementById('answer');
   if(!q){
-    window.todayQuestion=null;
+    window.todayQuestion=null; window.todayState=null;
     if(qel)qel.textContent='La prossima domanda sta arrivando…';
     locked.textContent='Nessuna domanda disponibile per oggi.';
     reveal.classList.add('hidden');
+    answerEl.disabled=true; btn.disabled=true; btn.textContent='Nessuna domanda';
+    updateHomeStatus();
     return;
   }
+  answerEl.disabled=false; btn.disabled=false;
   window.todayQuestion=q;if(qel)qel.textContent=q.question;
   const {data:state,error}=await sb.rpc('get_daily_state',{target_question_id:q.id});
   if(error){console.warn(error);return;}
@@ -647,6 +588,7 @@ async function hydrateToday(){
     locked.innerHTML='♡ <b>Reveal sbloccato.</b> Avete risposto entrambi.';
     reveal.className='today-reveal';
     reveal.innerHTML='<div class="today-answer"><b>La tua risposta</b><p>'+escapeHtml(state.my_answer||'')+'</p></div><div class="today-answer"><b>'+partner+'</b><p>'+escapeHtml(state.partner_answer||'')+'</p></div>';
+    answerEl.disabled=true; btn.disabled=true; btn.textContent='Risposte sbloccate';
   }else{
     reveal.classList.add('hidden');reveal.innerHTML='';
     if(state?.my_answer){
@@ -658,14 +600,38 @@ async function hydrateToday(){
       locked.innerHTML='🔒 Le risposte si sbloccano quando avete risposto entrambi.';
     }
   }
+  updateHomeStatus();
+}
+
+async function updateHomeStatus(){
+  if(!window.usProfile)return;
+  const todayPill=document.getElementById('todayStatusPill');
+  const quizPill=document.getElementById('quizStatusPill');
+  const st=window.todayState;
+  const partner=window.usProfile.role==='francesco'?'Bea':'Francesco';
+  if(todayPill){
+    if(st?.both_answered) todayPill.textContent='💬 Today · reveal sbloccato';
+    else if(st?.my_answer) todayPill.textContent='💬 Today · in attesa di '+partner;
+    else if(st?.partner_has_answer) todayPill.textContent='💬 Today · risposta in attesa';
+    else todayPill.textContent='💬 Today · da fare';
+  }
+  try{
+    const {count,error}=await sb.from('quiz_responses').select('id',{count:'exact',head:true});
+    if(!error && quizPill) quizPill.textContent='🎯 Quiz · '+Number(count||0)+'/40';
+  }catch(_e){}
 }
 
 async function hydrateCloud(){
   try{
     // Shared bucket list
-    const {data:items}=await sb.from('bucket_items').select('*').order('created_at',{ascending:true});
-    if(items && items.length){
-      const bucket=document.getElementById('bucket');
+    const {data:items,error:bucketError}=await sb.from('bucket_items').select('*').order('created_at',{ascending:true});
+    const bucket=document.getElementById('bucket');
+    if(bucketError){
+      console.warn(bucketError);
+      bucket.innerHTML='<div class="empty-state"><div class="emoji">!</div><b>Lista non disponibile</b><p>Riprova tra un momento.</p></div>';
+    }else if(!items || items.length===0){
+      bucket.innerHTML='<div class="empty-state"><div class="emoji">🗺️</div><b>La lista è ancora vuota.</b><p>Aggiungete la prima cosa che volete vivere insieme.</p></div>';
+    }else{
       bucket.innerHTML='';
       items.forEach(item=>{
         const d=document.createElement('div');
@@ -678,6 +644,7 @@ async function hydrateCloud(){
     }
 
     await hydrateToday();
+    await updateHomeStatus();
   }catch(e){console.warn(e)}
 }
 
@@ -704,9 +671,8 @@ saveAnswer = async function(){
 }
 window.saveAnswer=saveAnswer;
 
-const localAddWish = addWish;
 addWish = async function(){
-  if(!window.usProfile) return localAddWish();
+  if(!window.usProfile) return toast('Connessione non pronta');
   const t=prompt('Cosa volete fare insieme?'); if(!t)return;
   const {error}=await sb.from('bucket_items').insert({
     couple_id:window.usProfile.couple_id,
@@ -719,7 +685,7 @@ addWish = async function(){
 }
 
 async function toggleCloudBucket(el){
-  const id=el.dataset.id;if(!id)return toggleDone(el);
+  const id=el.dataset.id;if(!id)return;
   const completed=!el.classList.contains('done');
   const {error}=await sb.from('bucket_items').update({
     completed,
@@ -743,7 +709,7 @@ initCloud();
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/service-worker.js").catch((err) => {
+    navigator.serviceWorker.register("/service-worker.js",{updateViaCache:"none"}).catch((err) => {
       console.warn("US. service worker non registrato:", err);
     });
   });
