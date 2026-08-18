@@ -127,6 +127,19 @@ button{border:0;border-radius:15px;padding:13px 16px;font:inherit;font-weight:70
 .online-badge{padding:7px 10px;border-radius:999px;background:rgba(13,16,22,.78);border:1px solid var(--border);backdrop-filter:blur(12px);font-size:11px;color:#dce1eb;white-space:nowrap}
 .online-badge.ok{color:#91e8ad}.online-badge.warn{color:#ffc27d}
 
+
+.moment-compose{background:linear-gradient(135deg,rgba(255,102,142,.10),rgba(169,133,255,.06)),var(--card);border:1px solid var(--border);border-radius:22px;padding:16px;margin-bottom:14px}
+.moment-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.moment-preview{display:none;position:relative;margin:12px 0 4px;border-radius:18px;overflow:hidden;background:#0e1118;border:1px solid var(--border);aspect-ratio:4/3}
+.moment-preview.show{display:block}.moment-preview img{width:100%;height:100%;object-fit:cover;display:block}
+.moment-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.moment-card{position:relative;overflow:hidden;border-radius:18px;background:var(--card);border:1px solid var(--border);min-height:190px}
+.moment-card img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;background:#0d1016}
+.moment-meta{padding:10px}.moment-meta b{font-size:12px;display:block}.moment-meta p{font-size:12px!important;margin:4px 0 0!important;line-height:1.35;color:var(--muted)}
+.moment-delete{position:absolute;top:8px;right:8px;width:30px;height:30px;padding:0;border-radius:50%;background:rgba(10,12,17,.78);color:white;border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(10px);display:grid;place-items:center}
+.moment-loading{grid-column:1/-1}
+@media(max-width:360px){.moment-grid{grid-template-columns:1fr}.moment-actions{grid-template-columns:1fr}}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -179,7 +192,7 @@ button{border:0;border-radius:15px;padding:13px 16px;font:inherit;font-weight:70
         <div class="pills">
           <span class="pill" id="todayStatusPill">💬 Today · controllo…</span>
           <span class="pill" id="quizStatusPill">🎯 Quiz · 0/40</span>
-          <span class="pill">📸 Moments · in arrivo</span>
+          <span class="pill" id="momentsStatusPill">📸 Moments · 0</span>
         </div>
         <div class="smallnote" id="syncNote">I vostri telefoni condividono lo stesso spazio privato.</div>
       </div>
@@ -226,11 +239,19 @@ button{border:0;border-radius:15px;padding:13px 16px;font:inherit;font-weight:70
   <main id="moments" class="page">
     <section class="section" style="margin-top:6px">
       <h2>Moments</h2>
-      <div class="empty-state">
-        <div class="emoji">📸</div>
-        <b>Qui vivranno i vostri ricordi.</b>
-        <p>Foto, data e una nota condivisa. Non mostriamo più ricordi finti finché il caricamento foto non è attivo.</p>
+      <div class="moment-compose">
+        <div class="tiny">AGGIUNGI UN RICORDO</div>
+        <div id="momentPreview" class="moment-preview"><img id="momentPreviewImg" alt="Anteprima ricordo"></div>
+        <input id="momentFile" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+        <div class="moment-actions">
+          <button type="button" class="ghost" onclick="pickMomentPhoto()">📷 Scegli foto</button>
+          <input id="momentDate" type="date" aria-label="Data del ricordo">
+        </div>
+        <input id="momentCaption" type="text" maxlength="180" placeholder="Una nota per questo momento…" style="margin-top:10px">
+        <button id="momentUploadBtn" type="button" class="primary" style="width:100%;margin-top:10px" onclick="uploadMoment()">Aggiungi a Moments</button>
+        <div class="smallnote" style="margin-top:9px">Solo voi due potete vedere queste foto.</div>
       </div>
+      <div id="momentsGrid" class="moment-grid"><div class="empty-state moment-loading"><div class="emoji">↻</div><b>Carico i vostri ricordi…</b></div></div>
     </section>
   </main>
 
@@ -331,6 +352,7 @@ function go(id){
   pages.forEach(p=>document.getElementById(p).classList.toggle('active',p===id));
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
   scrollTo({top:0,behavior:'smooth'});
+  if(id==='moments' && window.usProfile) hydrateMoments();
 }
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700)}
 function toggleDone(el){
@@ -621,6 +643,109 @@ async function updateHomeStatus(){
   }catch(_e){}
 }
 
+let pendingMomentFile=null;
+
+function initMomentDate(){
+  const el=document.getElementById('momentDate');
+  if(el && !el.value) el.value=localDateISO();
+}
+initMomentDate();
+
+function pickMomentPhoto(){
+  document.getElementById('momentFile').click();
+}
+window.pickMomentPhoto=pickMomentPhoto;
+
+document.getElementById('momentFile').addEventListener('change',(event)=>{
+  const file=event.target.files?.[0]||null;
+  pendingMomentFile=file;
+  const wrap=document.getElementById('momentPreview');
+  const img=document.getElementById('momentPreviewImg');
+  if(!file){wrap.classList.remove('show');img.removeAttribute('src');return;}
+  if(!['image/jpeg','image/png','image/webp'].includes(file.type)){
+    pendingMomentFile=null;event.target.value='';wrap.classList.remove('show');
+    return toast('Per ora usa JPG, PNG o WebP');
+  }
+  if(file.size>8*1024*1024){
+    pendingMomentFile=null;event.target.value='';wrap.classList.remove('show');
+    return toast('Foto troppo grande: massimo 8 MB');
+  }
+  img.src=URL.createObjectURL(file);wrap.classList.add('show');
+});
+
+function momentExt(file){
+  if(file.type==='image/png')return 'png';
+  if(file.type==='image/webp')return 'webp';
+  return 'jpg';
+}
+
+async function uploadMoment(){
+  if(!window.usProfile)return toast('Connessione non pronta');
+  if(!pendingMomentFile)return toast('Scegli prima una foto');
+  const btn=document.getElementById('momentUploadBtn');
+  const caption=document.getElementById('momentCaption').value.trim();
+  const momentDate=document.getElementById('momentDate').value||localDateISO();
+  const file=pendingMomentFile;
+  const safeName=`${Date.now()}-${crypto.randomUUID()}.${momentExt(file)}`;
+  const path=`${window.usProfile.couple_id}/${window.usProfile.id}/${safeName}`;
+  btn.disabled=true;btn.textContent='Carico…';
+  try{
+    const {error:uploadError}=await sb.storage.from('us-media').upload(path,file,{contentType:file.type,upsert:false,cacheControl:'3600'});
+    if(uploadError)throw uploadError;
+    const {error:rowError}=await sb.from('moments').insert({
+      couple_id:window.usProfile.couple_id,
+      created_by:window.usProfile.id,
+      storage_path:path,
+      caption:caption||null,
+      moment_date:momentDate
+    });
+    if(rowError){await sb.storage.from('us-media').remove([path]);throw rowError;}
+    pendingMomentFile=null;
+    document.getElementById('momentFile').value='';
+    document.getElementById('momentCaption').value='';
+    document.getElementById('momentPreview').classList.remove('show');
+    document.getElementById('momentPreviewImg').removeAttribute('src');
+    initMomentDate();
+    toast('Ricordo aggiunto ♡');
+    await hydrateMoments();
+  }catch(err){console.warn(err);toast('Upload non riuscito');}
+  finally{btn.disabled=false;btn.textContent='Aggiungi a Moments';}
+}
+window.uploadMoment=uploadMoment;
+
+async function hydrateMoments(){
+  if(!window.usProfile)return;
+  const grid=document.getElementById('momentsGrid');
+  const pill=document.getElementById('momentsStatusPill');
+  grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">↻</div><b>Carico i vostri ricordi…</b></div>';
+  const {data:rows,error}=await sb.from('moments').select('id,created_by,storage_path,caption,moment_date,created_at').order('moment_date',{ascending:false}).order('created_at',{ascending:false});
+  if(error){console.warn(error);grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">!</div><b>Moments non disponibile</b><p>Riprova tra un momento.</p></div>';return;}
+  if(pill)pill.textContent='📸 Moments · '+(rows?.length||0);
+  if(!rows?.length){grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">📸</div><b>Il primo ricordo parte da qui.</b><p>Scegli una foto e aggiungi una piccola nota.</p></div>';return;}
+  const cards=[];
+  for(const row of rows){
+    const {data:signed,error:signedError}=await sb.storage.from('us-media').createSignedUrl(row.storage_path,3600);
+    if(signedError||!signed?.signedUrl){console.warn(signedError);continue;}
+    const dateLabel=new Date(row.moment_date+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
+    const own=row.created_by===window.usProfile.id;
+    cards.push(`<article class="moment-card"><img src="${escapeHtml(signed.signedUrl)}" alt="Ricordo condiviso" loading="lazy">${own?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="deleteMoment('${row.id}','${escapeHtml(row.storage_path)}')">×</button>`:''}<div class="moment-meta"><b>${dateLabel}</b>${row.caption?`<p>${escapeHtml(row.caption)}</p>`:''}</div></article>`);
+  }
+  grid.innerHTML=cards.join('')||'<div class="empty-state moment-loading"><div class="emoji">!</div><b>Foto non disponibili</b><p>Riprova tra un momento.</p></div>';
+}
+window.hydrateMoments=hydrateMoments;
+
+async function deleteMoment(id,path){
+  if(!window.usProfile)return;
+  if(!confirm('Eliminare questo ricordo?'))return;
+  const {error:storageError}=await sb.storage.from('us-media').remove([path]);
+  if(storageError){console.warn(storageError);return toast('Non riesco a eliminare la foto');}
+  const {error:rowError}=await sb.from('moments').delete().eq('id',id).eq('created_by',window.usProfile.id);
+  if(rowError){console.warn(rowError);return toast('Foto eliminata, aggiorno Moments');}
+  toast('Ricordo eliminato');
+  await hydrateMoments();
+}
+window.deleteMoment=deleteMoment;
+
 async function hydrateCloud(){
   try{
     // Shared bucket list
@@ -644,6 +769,7 @@ async function hydrateCloud(){
     }
 
     await hydrateToday();
+    await hydrateMoments();
     await updateHomeStatus();
   }catch(e){console.warn(e)}
 }
