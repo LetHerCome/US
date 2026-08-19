@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-v13";
+const CACHE_NAME = "us-shell-v14";
 
 const APP_SHELL = [
   "/",
@@ -149,6 +149,89 @@ const AUTH_BOOTSTRAP = `
 })();
 `;
 
+
+const FAST_REFRESH_BOOTSTRAP = `
+(() => {
+  if (window.__usFastRefreshInstalled) return;
+  window.__usFastRefreshInstalled = true;
+
+  let fastTimer = null;
+  let profileTick = 0;
+
+  async function runFastRefresh() {
+    if (!window.usProfile || document.hidden) return;
+
+    try {
+      if (typeof hydrateToday === 'function') await hydrateToday();
+    } catch (_) {}
+
+    try {
+      if (typeof updateHomeStatus === 'function') await updateHomeStatus();
+    } catch (_) {}
+
+    try {
+      if (typeof refreshQuizState === 'function') await refreshQuizState();
+    } catch (_) {}
+
+    try {
+      if (typeof hydrateDistance === 'function') await hydrateDistance();
+    } catch (_) {}
+
+    try {
+      if (typeof hydrateBondSummary === 'function') await hydrateBondSummary();
+    } catch (_) {}
+
+    const activePage = document.querySelector('.page.active')?.id;
+
+    if (activePage === 'moments') {
+      try {
+        if (typeof hydrateMoments === 'function') await hydrateMoments();
+      } catch (_) {}
+    }
+
+    if (activePage === 'bond') {
+      try {
+        if (typeof hydrateBond === 'function') await hydrateBond();
+      } catch (_) {}
+    }
+
+    if (activePage === 'think') {
+      try {
+        if (typeof hydrateThink === 'function') await hydrateThink();
+      } catch (_) {}
+    }
+
+    profileTick++;
+    if (profileTick >= 4) {
+      profileTick = 0;
+      try {
+        if (typeof hydrateProfileAvatars === 'function') await hydrateProfileAvatars();
+      } catch (_) {}
+      try {
+        if (typeof hydrateHomePhoto === 'function') await hydrateHomePhoto();
+      } catch (_) {}
+    }
+  }
+
+  function startFastRefresh() {
+    if (fastTimer) clearInterval(fastTimer);
+    fastTimer = setInterval(runFastRefresh, 3000);
+    setTimeout(runFastRefresh, 500);
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) runFastRefresh();
+  });
+
+  window.addEventListener('focus', runFastRefresh);
+  window.addEventListener('online', runFastRefresh);
+
+  startFastRefresh();
+
+  console.info('[US Sync] Refresh rapido attivo: 3s');
+})();
+`;
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -178,7 +261,7 @@ async function transformedAppJs(request) {
     if (!networkResponse.ok) throw new Error("app.js network error");
 
     const originalJs = await networkResponse.text();
-    const combinedJs = AUTH_BOOTSTRAP + "\n\n" + originalJs;
+    const combinedJs = AUTH_BOOTSTRAP + "\n\n" + originalJs + "\n\n" + FAST_REFRESH_BOOTSTRAP;
 
     const response = new Response(combinedJs, {
       status: 200,
