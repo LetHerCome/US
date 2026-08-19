@@ -1,15 +1,20 @@
 const pages=['home','today','moments','together','foryou','quiz'];
 const swipePages=['home','today','moments','together','foryou'];
 function go(id,options={}){
-  pages.forEach(p=>document.getElementById(p).classList.toggle('active',p===id));
-  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
-  const active=document.getElementById(id);
-  if(active && options.swipe){
-    active.classList.remove('swipe-next','swipe-prev');
-    void active.offsetWidth;
-    active.classList.add(options.swipe==='next'?'swipe-next':'swipe-prev');
-    setTimeout(()=>active.classList.remove('swipe-next','swipe-prev'),260);
+  const current=document.querySelector('.page.active')?.id;
+  if(current===id){
+    scrollTo({top:0,behavior:'smooth'});
+    if(id==='moments' && window.usProfile)hydrateMoments();
+    return;
   }
+  pages.forEach(pageId=>{
+    const el=document.getElementById(pageId);
+    el.classList.remove('swipe-next','swipe-prev');
+    if(pageId===id && options.swipe)el.classList.add(options.swipe==='next'?'swipe-next':'swipe-prev');
+    el.classList.toggle('active',pageId===id);
+  });
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
+  if(options.swipe)setTimeout(()=>document.getElementById(id)?.classList.remove('swipe-next','swipe-prev'),190);
   scrollTo({top:0,behavior:options.swipe?'auto':'smooth'});
   if(id==='moments' && window.usProfile) hydrateMoments();
 }
@@ -640,10 +645,11 @@ async function updateHomeStatus(){
 }
 
 let pendingMomentFile=null;
+let pendingMomentPreviewUrl=null;
 
-function initMomentDate(){
+function initMomentDate(force=false){
   const el=document.getElementById('momentDate');
-  if(el && !el.value) el.value=localDateISO();
+  if(el && (force||!el.value))el.value=localDateISO();
 }
 initMomentDate();
 
@@ -652,21 +658,34 @@ function pickMomentPhoto(){
 }
 window.pickMomentPhoto=pickMomentPhoto;
 
+function resetMomentComposer(){
+  pendingMomentFile=null;
+  if(pendingMomentPreviewUrl){URL.revokeObjectURL(pendingMomentPreviewUrl);pendingMomentPreviewUrl=null;}
+  const fileInput=document.getElementById('momentFile');if(fileInput)fileInput.value='';
+  const caption=document.getElementById('momentCaption');if(caption)caption.value='';
+  const img=document.getElementById('momentPreviewImg');if(img)img.removeAttribute('src');
+  document.getElementById('momentCompose')?.classList.remove('has-photo');
+  initMomentDate(true);
+}
+
 document.getElementById('momentFile').addEventListener('change',(event)=>{
   const file=event.target.files?.[0]||null;
-  pendingMomentFile=file;
-  const wrap=document.getElementById('momentPreview');
+  const compose=document.getElementById('momentCompose');
   const img=document.getElementById('momentPreviewImg');
-  if(!file){wrap.classList.remove('show');img.removeAttribute('src');return;}
+  if(!file)return;
   if(!['image/jpeg','image/png','image/webp'].includes(file.type)){
-    pendingMomentFile=null;event.target.value='';wrap.classList.remove('show');
+    event.target.value='';
     return toast('Per ora usa JPG, PNG o WebP');
   }
   if(file.size>20*1024*1024){
-    pendingMomentFile=null;event.target.value='';wrap.classList.remove('show');
+    event.target.value='';
     return toast('Foto troppo grande: massimo 20 MB');
   }
-  img.src=URL.createObjectURL(file);wrap.classList.add('show');
+  pendingMomentFile=file;
+  if(pendingMomentPreviewUrl)URL.revokeObjectURL(pendingMomentPreviewUrl);
+  pendingMomentPreviewUrl=URL.createObjectURL(file);
+  img.src=pendingMomentPreviewUrl;
+  compose?.classList.add('has-photo');
 });
 
 function momentExt(_file){return 'webp';}
@@ -694,17 +713,12 @@ async function uploadMoment(){
       moment_date:momentDate
     });
     if(rowError){await sb.storage.from('us-media').remove([path]);throw rowError;}
-    pendingMomentFile=null;
-    document.getElementById('momentFile').value='';
-    document.getElementById('momentCaption').value='';
-    document.getElementById('momentPreview').classList.remove('show');
-    document.getElementById('momentPreviewImg').removeAttribute('src');
-    initMomentDate();
+    resetMomentComposer();
     toast('Ricordo aggiunto ♡');
     await hydrateMoments();
     await hydrateHomeMemory();
   }catch(err){console.warn(err);toast(err?.message==='SOURCE_TOO_LARGE'?'Foto troppo grande: massimo 20 MB':'Upload non riuscito');}
-  finally{btn.disabled=false;btn.textContent='Aggiungi a Moments';}
+  finally{btn.disabled=false;btn.textContent='Salva ricordo';}
 }
 window.uploadMoment=uploadMoment;
 
@@ -899,31 +913,63 @@ async function toggleCloudBucket(el){
 }
 
 
-let swipeStartX=null,swipeStartY=null,swipeStartTarget=null;
+let swipeGesture=null;
 function swipeBlockedTarget(target){
   return Boolean(target?.closest?.('input,textarea,select,button,[contenteditable="true"],.modal,.moment-viewer,.auth-overlay'));
 }
+function resetSwipeVisual(page){
+  if(!page)return;
+  page.style.transition='transform .11s ease-out, opacity .11s ease-out';
+  page.style.transform='';
+  page.style.opacity='';
+  setTimeout(()=>{page.style.transition='';},120);
+}
 document.addEventListener('touchstart',event=>{
-  if(event.touches.length!==1)return;
-  const active=document.querySelector('.page.active')?.id;
-  if(!swipePages.includes(active))return;
-  if(swipeBlockedTarget(event.target))return;
-  swipeStartX=event.touches[0].clientX;
-  swipeStartY=event.touches[0].clientY;
-  swipeStartTarget=event.target;
+  if(event.touches.length!==1||swipeBlockedTarget(event.target))return;
+  const activePage=document.querySelector('.page.active');
+  if(!activePage||!swipePages.includes(activePage.id))return;
+  const touch=event.touches[0];
+  if(touch.clientX<12||touch.clientX>window.innerWidth-12)return;
+  swipeGesture={page:activePage,startX:touch.clientX,startY:touch.clientY,lastX:touch.clientX,startTime:performance.now(),axis:null};
 },{passive:true});
+document.addEventListener('touchmove',event=>{
+  if(!swipeGesture||event.touches.length!==1)return;
+  const touch=event.touches[0];
+  const dx=touch.clientX-swipeGesture.startX;
+  const dy=touch.clientY-swipeGesture.startY;
+  if(!swipeGesture.axis && (Math.abs(dx)>7||Math.abs(dy)>7)){
+    swipeGesture.axis=Math.abs(dx)>Math.abs(dy)*1.08?'x':'y';
+  }
+  if(swipeGesture.axis!=='x')return;
+  event.preventDefault();
+  swipeGesture.lastX=touch.clientX;
+  const index=swipePages.indexOf(swipeGesture.page.id);
+  const atEdge=(dx>0&&index===0)||(dx<0&&index===swipePages.length-1);
+  const resistance=atEdge ? 0.13 : 0.34;
+  const visualDx=Math.max(-58,Math.min(58,dx*resistance));
+  swipeGesture.page.style.transition='none';
+  swipeGesture.page.style.transform=`translate3d(${visualDx}px,0,0)`;
+  swipeGesture.page.style.opacity=String(Math.max(.91,1-Math.abs(visualDx)/620));
+},{passive:false});
 document.addEventListener('touchend',event=>{
-  if(swipeStartX===null||!event.changedTouches?.length)return;
-  const touch=event.changedTouches[0];
-  const dx=touch.clientX-swipeStartX;
-  const dy=touch.clientY-swipeStartY;
-  swipeStartX=null;swipeStartY=null;swipeStartTarget=null;
-  if(Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.25)return;
-  const active=document.querySelector('.page.active')?.id;
-  const index=swipePages.indexOf(active);
-  if(index<0)return;
-  if(dx<0 && index<swipePages.length-1)go(swipePages[index+1],{swipe:'next'});
-  if(dx>0 && index>0)go(swipePages[index-1],{swipe:'prev'});
+  if(!swipeGesture)return;
+  const gesture=swipeGesture;swipeGesture=null;
+  const touch=event.changedTouches?.[0];
+  const dx=(touch?.clientX??gesture.lastX)-gesture.startX;
+  const dy=(touch?.clientY??gesture.startY)-gesture.startY;
+  const elapsed=Math.max(1,performance.now()-gesture.startTime);
+  const velocity=Math.abs(dx)/elapsed;
+  resetSwipeVisual(gesture.page);
+  if(gesture.axis!=='x'||Math.abs(dx)<34||Math.abs(dx)<Math.abs(dy)*1.05)return;
+  if(Math.abs(dx)<48&&velocity<.32)return;
+  const index=swipePages.indexOf(gesture.page.id);
+  if(dx<0&&index<swipePages.length-1)go(swipePages[index+1],{swipe:'next'});
+  else if(dx>0&&index>0)go(swipePages[index-1],{swipe:'prev'});
+},{passive:true});
+document.addEventListener('touchcancel',()=>{
+  if(!swipeGesture)return;
+  resetSwipeVisual(swipeGesture.page);
+  swipeGesture=null;
 },{passive:true});
 
 setInterval(()=>{ if(window.usProfile){ hydrateToday(); refreshQuizState(); hydrateDistance(); } },15000);

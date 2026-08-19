@@ -146,17 +146,26 @@
   <main id="moments" class="page">
     <section class="section" style="margin-top:6px">
       <h2>Moments</h2>
-      <div class="moment-compose">
-        <div class="tiny">AGGIUNGI UN RICORDO</div>
-        <div id="momentPreview" class="moment-preview"><img id="momentPreviewImg" alt="Anteprima ricordo"></div>
+      <div class="moment-compose" id="momentCompose">
         <input id="momentFile" type="file" accept="image/jpeg,image/png,image/webp" hidden>
-        <div class="moment-actions">
-          <button type="button" class="ghost" onclick="pickMomentPhoto()">📷 Scegli foto</button>
-          <input id="momentDate" type="date" aria-label="Data del ricordo">
+        <button type="button" class="moment-picker" onclick="pickMomentPhoto()" aria-label="Scegli una foto per il ricordo">
+          <span class="moment-picker-empty">
+            <span class="moment-add-icon">＋</span>
+            <span class="moment-picker-copy"><b>Aggiungi un ricordo</b><small>Tocca per scegliere una foto</small></span>
+          </span>
+          <span id="momentPreview" class="moment-preview">
+            <img id="momentPreviewImg" alt="Anteprima ricordo">
+            <span class="moment-change-chip">Cambia foto</span>
+          </span>
+        </button>
+        <div class="moment-details">
+          <input id="momentCaption" type="text" maxlength="180" placeholder="Scrivi una nota… (opzionale)">
+          <div class="moment-compose-footer">
+            <label class="moment-date-control"><span>Data</span><input id="momentDate" type="date" aria-label="Data del ricordo"></label>
+            <button id="momentUploadBtn" type="button" class="primary moment-save" onclick="uploadMoment()">Salva ricordo</button>
+          </div>
+          <div class="moment-private">⌁ Solo voi due potete vederlo</div>
         </div>
-        <input id="momentCaption" type="text" maxlength="180" placeholder="Una nota per questo momento…" style="margin-top:10px">
-        <button id="momentUploadBtn" type="button" class="primary" style="width:100%;margin-top:10px" onclick="uploadMoment()">Aggiungi a Moments</button>
-        <div class="smallnote" style="margin-top:9px">Solo voi due potete vedere queste foto.</div>
       </div>
       <div id="momentsGrid" class="moment-grid"><div class="empty-state moment-loading"><div class="emoji">↻</div><b>Carico i vostri ricordi…</b></div></div>
     </section>
