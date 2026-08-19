@@ -1,7 +1,9 @@
-const CACHE_NAME = "us-shell-v3";
+const CACHE_NAME = "us-shell-v4";
 const APP_SHELL = [
   "/",
   "/index.html",
+  "/styles.css",
+  "/app.js",
   "/manifest.webmanifest",
   "/icon-192.png",
   "/icon-512.png",
