@@ -42,41 +42,69 @@
   <div class="top"><div class="brand">Us<span class="heart">.</span></div><div class="top-actions"><div class="online-badge warn" id="onlineBadge">● connessione…</div><button type="button" class="profile-avatar" id="profileAvatarBtn" aria-label="Cambia foto profilo" onclick="pickProfilePhoto()"><img id="profileAvatarImg" alt="Foto profilo" hidden><span class="fallback" id="profileAvatarFallback">♡</span><span class="camera-dot">+</span></button><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
 
   <main id="home" class="page active">
-    <section class="hero photo-ready"><div class="photo-chip">♡ dal 21.04.2026</div>
-      <div class="kicker">Il nostro posto.</div>
-      <div class="names">Francesco <span class="heart">♡</span> Beatrice</div>
-      <div class="days" id="daysTogether">119</div>
-      <div class="days-label">giorni insieme · dal 21 aprile 2026</div>
-      <div class="bond">
-        <div class="bondline"><span>PROSSIMO TRAGUARDO</span><span id="milestoneLabel">200 giorni</span></div>
-        <div class="bar"><div class="fill" id="bondFill"></div></div>
+    <section class="hero" id="homeHero">
+      <div class="hero-topline">
+        <div class="photo-chip">♡ dal 21.04.2026</div>
+        <button type="button" class="hero-photo-btn" onclick="pickHomePhoto()" aria-label="Cambia foto Home">Foto</button>
+        <input id="homePhotoFile" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+      </div>
+      <div class="hero-content">
+        <div class="kicker">Francesco & Beatrice</div>
+        <div class="days" id="daysTogether">119</div>
+        <div class="days-label">giorni insieme</div>
+        <div class="bond">
+          <div class="bondline"><span>Prossimo traguardo</span><span id="milestoneLabel">200 giorni</span></div>
+          <div class="bar"><div class="fill" id="bondFill"></div></div>
+        </div>
       </div>
     </section>
 
-    <section class="section">
-      <div class="sync-card">
-        <div class="sync-top">
-          <div>
-            <div class="tiny">SPAZIO CONDIVISO</div>
-            <div class="sync-pair" style="margin-top:5px"><span class="sync-dot"></span><span class="pair-avatars"><span class="pair-avatar" id="pairAvatarFrancesco"><img alt="Francesco" hidden><span class="fallback">F</span></span><span class="pair-avatar beatrice" id="pairAvatarBeatrice"><img alt="Beatrice" hidden><span class="fallback">B</span></span></span><b>Francesco + Beatrice</b></div>
-          </div>
-          <span class="badge" id="syncReadyBadge">SYNC ATTIVO</span>
-        </div>
-        <div class="pills">
-          <span class="pill" id="todayStatusPill">💬 Today · controllo…</span>
-          <span class="pill" id="quizStatusPill">🎯 Quiz · 0/40</span>
-          <span class="pill" id="momentsStatusPill">📸 Moments · 0</span>
-        </div>
-        <div class="smallnote" id="syncNote">I vostri telefoni condividono lo stesso spazio privato.</div>
-      </div>
-    </section>
-
-    <section class="section home-memory-section" id="homeMemorySection" hidden>
-      <div class="section-headline">
+    <section class="home-couple-status">
+      <div class="home-couple-left">
+        <span class="pair-avatars">
+          <span class="pair-avatar" id="pairAvatarFrancesco"><img alt="Francesco" hidden><span class="fallback">F</span></span>
+          <span class="pair-avatar beatrice" id="pairAvatarBeatrice"><img alt="Beatrice" hidden><span class="fallback">B</span></span>
+        </span>
         <div>
-          <div class="tiny">UN RICORDO DI VOI</div>
-          <h2 style="margin:4px 0 0">Oggi mi è tornato in mente…</h2>
+          <b>Il vostro spazio</b>
+          <span id="syncNote">Sincronizzato tra i vostri telefoni</span>
         </div>
+      </div>
+      <span class="home-live-dot" title="Sync attivo"></span>
+      <span id="syncReadyBadge" hidden>SYNC ATTIVO</span>
+      <span id="todayStatusPill" hidden></span>
+      <span id="quizStatusPill" hidden></span>
+      <span id="momentsStatusPill" hidden></span>
+    </section>
+
+    <section class="home-actions-section">
+      <div class="home-section-title">
+        <span>Per voi</span>
+      </div>
+      <div class="home-actions">
+        <button type="button" class="home-action" onclick="go('today')">
+          <span class="home-action-icon">💬</span><span><b>Today</b><small>La domanda di oggi</small></span><i>›</i>
+        </button>
+        <button type="button" class="home-action" onclick="go('moments')">
+          <span class="home-action-icon">📸</span><span><b>Moments</b><small>I vostri ricordi</small></span><i>›</i>
+        </button>
+        <button type="button" class="home-action" onclick="go('together')">
+          <span class="home-action-icon">🗺️</span><span><b>Together</b><small>Cose da vivere</small></span><i>›</i>
+        </button>
+        <button type="button" class="home-action" onclick="go('foryou')">
+          <span class="home-action-icon">💌</span><span><b>For You</b><small>Messaggi per voi</small></span><i>›</i>
+        </button>
+      </div>
+      <button type="button" class="home-quiz-row" onclick="openQuizHub()">
+        <span class="home-action-icon">🎯</span>
+        <span><b>Couple Quiz</b><small>Scoprite quanto siete allineati</small></span>
+        <i>›</i>
+      </button>
+    </section>
+
+    <section class="home-memory-section" id="homeMemorySection" hidden>
+      <div class="home-section-title home-memory-title">
+        <span>Un ricordo di voi</span>
         <button type="button" class="memory-refresh" aria-label="Mostra un altro ricordo" onclick="hydrateHomeMemory(true)">↻</button>
       </div>
       <article class="home-memory-card" id="homeMemoryCard" role="button" tabindex="0" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}">
@@ -88,28 +116,6 @@
         </div>
       </article>
     </section>
-
-    <div class="quick">
-      <div class="card" onclick="go('today')"><div class="ico">💬</div><div class="ctitle">Today</div><div class="csub">Una domanda per conoscerci ancora meglio.</div></div>
-      <div class="card" onclick="go('moments')"><div class="ico">📸</div><div class="ctitle">Moments</div><div class="csub">I ricordi che non vogliamo perdere.</div></div>
-      <div class="card" onclick="go('together')"><div class="ico">🗺️</div><div class="ctitle">Together</div><div class="csub">Le cose che vogliamo vivere insieme.</div></div>
-      <div class="card" onclick="go('foryou')"><div class="ico">💌</div><div class="ctitle">For You</div><div class="csub">Messaggi, sorprese e “Open when…”.</div></div>
-    </div>
-
-    <section class="section">
-      <h2>Quanto ci conosciamo?</h2>
-      <div class="card" onclick="openQuizHub()" style="cursor:pointer">
-        <div style="display:flex;align-items:center;gap:14px">
-          <div style="font-size:32px">🎯</div>
-          <div style="flex:1">
-            <div class="ctitle" style="margin-top:0">Couple Quiz</div>
-            <div class="csub">10 domande per set. Rispondete separatamente e scoprite quanto siete allineati.</div>
-          </div>
-          <div style="color:var(--pink2);font-size:22px">›</div>
-        </div>
-      </div>
-    </section>
-
   </main>
 
   <main id="today" class="page">

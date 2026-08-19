@@ -169,6 +169,7 @@ async function initCloud(){
   setCloudBadge(true, profile.display_name);
   const syncBadge=document.getElementById('syncReadyBadge'); if(syncBadge) syncBadge.textContent='SYNC ATTIVO';
   await hydrateProfileAvatars();
+  await hydrateHomePhoto();
   await hydrateCloud();
 }
 
@@ -279,6 +280,66 @@ async function uploadProfilePhoto(file){
 
 const profileAvatarFile=document.getElementById('profileAvatarFile');
 if(profileAvatarFile)profileAvatarFile.addEventListener('change',(event)=>uploadProfilePhoto(event.target.files?.[0]||null));
+
+
+function pickHomePhoto(){
+  if(!window.usProfile)return toast('Connessione non pronta');
+  document.getElementById('homePhotoFile').click();
+}
+window.pickHomePhoto=pickHomePhoto;
+
+async function hydrateHomePhoto(){
+  if(!window.usProfile)return;
+  const hero=document.getElementById('homeHero');
+  if(!hero)return;
+  const {data:couple,error}=await sb.from('couples').select('home_photo_path').eq('id',window.usProfile.couple_id).maybeSingle();
+  if(error){console.warn(error);return;}
+  const path=couple?.home_photo_path||null;
+  window.usHomePhotoPath=path;
+  if(!path){
+    hero.style.backgroundImage='';
+    hero.classList.remove('has-photo');
+    return;
+  }
+  const {data:signed,error:signedError}=await sb.storage.from('us-media').createSignedUrl(path,21600);
+  if(signedError||!signed?.signedUrl){console.warn(signedError);return;}
+  hero.style.backgroundImage=`url("${signed.signedUrl}")`;
+  hero.classList.add('has-photo');
+}
+window.hydrateHomePhoto=hydrateHomePhoto;
+
+async function uploadHomePhoto(file){
+  if(!window.usProfile||!file)return;
+  if(!['image/jpeg','image/png','image/webp'].includes(file.type))return toast('Per ora usa JPG, PNG o WebP');
+  if(file.size>20*1024*1024)return toast('Foto troppo grande: massimo 20 MB');
+  const input=document.getElementById('homePhotoFile');
+  const oldPath=window.usHomePhotoPath||null;
+  try{
+    toast('Ottimizzo la foto…');
+    const compressed=await compressImageFile(file,{maxDimension:1920,quality:.82});
+    const path=`${window.usProfile.couple_id}/${window.usProfile.id}/home-${Date.now()}-${crypto.randomUUID()}.webp`;
+    const {error:uploadError}=await sb.storage.from('us-media').upload(path,compressed,{contentType:'image/webp',upsert:false,cacheControl:'3600'});
+    if(uploadError)throw uploadError;
+    const {error:updateError}=await sb.from('couples').update({home_photo_path:path}).eq('id',window.usProfile.couple_id);
+    if(updateError){await sb.storage.from('us-media').remove([path]);throw updateError;}
+    window.usHomePhotoPath=path;
+    await hydrateHomePhoto();
+    if(oldPath && oldPath!==path){
+      const oldOwner=oldPath.split('/')[1];
+      if(oldOwner===window.usProfile.id)await sb.storage.from('us-media').remove([oldPath]);
+    }
+    toast('Foto Home aggiornata ♡');
+  }catch(err){
+    console.warn(err);
+    toast('Non riesco ad aggiornare la Home');
+  }finally{
+    if(input)input.value='';
+  }
+}
+window.uploadHomePhoto=uploadHomePhoto;
+
+const homePhotoFile=document.getElementById('homePhotoFile');
+if(homePhotoFile)homePhotoFile.addEventListener('change',(event)=>uploadHomePhoto(event.target.files?.[0]||null));
 
 function selectRole(role){
   selectedRole=role;
