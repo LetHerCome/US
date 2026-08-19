@@ -223,21 +223,49 @@ function pickProfilePhoto(){
 }
 window.pickProfilePhoto=pickProfilePhoto;
 
-function avatarExt(file){
-  if(file.type==='image/png')return 'png';
-  if(file.type==='image/webp')return 'webp';
-  return 'jpg';
+
+
+async function compressImageFile(file,{maxDimension=1920,quality=.82}={}){
+  if(!file)return null;
+  if(file.size>20*1024*1024)throw new Error('SOURCE_TOO_LARGE');
+  let bitmap=null;
+  try{
+    if('createImageBitmap' in window) bitmap=await createImageBitmap(file,{imageOrientation:'from-image'});
+  }catch(_e){}
+  let width,height,drawSource,revokeUrl=null;
+  if(bitmap){width=bitmap.width;height=bitmap.height;drawSource=bitmap;}
+  else{
+    const url=URL.createObjectURL(file);revokeUrl=url;
+    const img=await new Promise((resolve,reject)=>{const el=new Image();el.onload=()=>resolve(el);el.onerror=reject;el.src=url;});
+    width=img.naturalWidth||img.width;height=img.naturalHeight||img.height;drawSource=img;
+  }
+  if(!width||!height)throw new Error('INVALID_IMAGE');
+  const scale=Math.min(1,maxDimension/Math.max(width,height));
+  const outW=Math.max(1,Math.round(width*scale));
+  const outH=Math.max(1,Math.round(height*scale));
+  const canvas=document.createElement('canvas');canvas.width=outW;canvas.height=outH;
+  const ctx=canvas.getContext('2d',{alpha:false});
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+  ctx.drawImage(drawSource,0,0,outW,outH);
+  const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',quality));
+  if(bitmap?.close)bitmap.close();
+  if(revokeUrl)URL.revokeObjectURL(revokeUrl);
+  if(!blob)throw new Error('COMPRESSION_FAILED');
+  return new File([blob],(file.name||'image').replace(/\.[^.]+$/,'')+'.webp',{type:'image/webp',lastModified:Date.now()});
 }
+
+function avatarExt(_file){return 'webp';}
 
 async function uploadProfilePhoto(file){
   if(!window.usProfile||!file)return;
   if(!['image/jpeg','image/png','image/webp'].includes(file.type))return toast('Per ora usa JPG, PNG o WebP');
-  if(file.size>8*1024*1024)return toast('Foto troppo grande: massimo 8 MB');
+  if(file.size>20*1024*1024)return toast('Foto troppo grande: massimo 20 MB');
   const oldPath=window.usProfile.avatar_path||null;
-  const path=`${window.usProfile.couple_id}/${window.usProfile.id}/avatar-${Date.now()}-${crypto.randomUUID()}.${avatarExt(file)}`;
   const btn=document.getElementById('profileAvatarBtn');btn.disabled=true;
   try{
-    const {error:uploadError}=await sb.storage.from('us-media').upload(path,file,{contentType:file.type,upsert:false,cacheControl:'3600'});
+    const compressed=await compressImageFile(file,{maxDimension:512,quality:.82});
+    const path=`${window.usProfile.couple_id}/${window.usProfile.id}/avatar-${Date.now()}-${crypto.randomUUID()}.webp`;
+    const {error:uploadError}=await sb.storage.from('us-media').upload(path,compressed,{contentType:'image/webp',upsert:false,cacheControl:'3600'});
     if(uploadError)throw uploadError;
     const {error:updateError}=await sb.from('profiles').update({avatar_path:path}).eq('id',window.usProfile.id);
     if(updateError){await sb.storage.from('us-media').remove([path]);throw updateError;}
@@ -245,7 +273,7 @@ async function uploadProfilePhoto(file){
     if(oldPath && oldPath!==path)await sb.storage.from('us-media').remove([oldPath]);
     toast('Foto profilo aggiornata ♡');
     await hydrateProfileAvatars();
-  }catch(err){console.warn(err);toast('Non riesco ad aggiornare la foto');}
+  }catch(err){console.warn(err);toast(err?.message==='SOURCE_TOO_LARGE'?'Foto troppo grande: massimo 20 MB':'Non riesco ad aggiornare la foto');}
   finally{btn.disabled=false;document.getElementById('profileAvatarFile').value='';}
 }
 
@@ -387,18 +415,14 @@ document.getElementById('momentFile').addEventListener('change',(event)=>{
     pendingMomentFile=null;event.target.value='';wrap.classList.remove('show');
     return toast('Per ora usa JPG, PNG o WebP');
   }
-  if(file.size>8*1024*1024){
+  if(file.size>20*1024*1024){
     pendingMomentFile=null;event.target.value='';wrap.classList.remove('show');
-    return toast('Foto troppo grande: massimo 8 MB');
+    return toast('Foto troppo grande: massimo 20 MB');
   }
   img.src=URL.createObjectURL(file);wrap.classList.add('show');
 });
 
-function momentExt(file){
-  if(file.type==='image/png')return 'png';
-  if(file.type==='image/webp')return 'webp';
-  return 'jpg';
-}
+function momentExt(_file){return 'webp';}
 
 async function uploadMoment(){
   if(!window.usProfile)return toast('Connessione non pronta');
@@ -407,11 +431,13 @@ async function uploadMoment(){
   const caption=document.getElementById('momentCaption').value.trim();
   const momentDate=document.getElementById('momentDate').value||localDateISO();
   const file=pendingMomentFile;
-  const safeName=`${Date.now()}-${crypto.randomUUID()}.${momentExt(file)}`;
-  const path=`${window.usProfile.couple_id}/${window.usProfile.id}/${safeName}`;
-  btn.disabled=true;btn.textContent='Carico…';
+  btn.disabled=true;btn.textContent='Ottimizzo…';
   try{
-    const {error:uploadError}=await sb.storage.from('us-media').upload(path,file,{contentType:file.type,upsert:false,cacheControl:'3600'});
+    const compressed=await compressImageFile(file,{maxDimension:1920,quality:.82});
+    const safeName=`${Date.now()}-${crypto.randomUUID()}.webp`;
+    const path=`${window.usProfile.couple_id}/${window.usProfile.id}/${safeName}`;
+    btn.textContent='Carico…';
+    const {error:uploadError}=await sb.storage.from('us-media').upload(path,compressed,{contentType:'image/webp',upsert:false,cacheControl:'3600'});
     if(uploadError)throw uploadError;
     const {error:rowError}=await sb.from('moments').insert({
       couple_id:window.usProfile.couple_id,
@@ -430,7 +456,7 @@ async function uploadMoment(){
     toast('Ricordo aggiunto ♡');
     await hydrateMoments();
     await hydrateHomeMemory();
-  }catch(err){console.warn(err);toast('Upload non riuscito');}
+  }catch(err){console.warn(err);toast(err?.message==='SOURCE_TOO_LARGE'?'Foto troppo grande: massimo 20 MB':'Upload non riuscito');}
   finally{btn.disabled=false;btn.textContent='Aggiungi a Moments';}
 }
 window.uploadMoment=uploadMoment;
