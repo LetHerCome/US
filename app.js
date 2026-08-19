@@ -1,8 +1,16 @@
 const pages=['home','today','moments','together','foryou','quiz'];
-function go(id){
+const swipePages=['home','today','moments','together','foryou'];
+function go(id,options={}){
   pages.forEach(p=>document.getElementById(p).classList.toggle('active',p===id));
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
-  scrollTo({top:0,behavior:'smooth'});
+  const active=document.getElementById(id);
+  if(active && options.swipe){
+    active.classList.remove('swipe-next','swipe-prev');
+    void active.offsetWidth;
+    active.classList.add(options.swipe==='next'?'swipe-next':'swipe-prev');
+    setTimeout(()=>active.classList.remove('swipe-next','swipe-prev'),260);
+  }
+  scrollTo({top:0,behavior:options.swipe?'auto':'smooth'});
   if(id==='moments' && window.usProfile) hydrateMoments();
 }
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700)}
@@ -171,6 +179,8 @@ async function initCloud(){
   await hydrateProfileAvatars();
   await hydrateHomePhoto();
   await hydrateCloud();
+  await maybeAutoRefreshLocation();
+  startLocationRefreshTimer();
 }
 
 function showAuthStep(id){
@@ -182,6 +192,182 @@ function setCloudBadge(ok,text){
   const b=document.getElementById('onlineBadge');
   b.className='online-badge '+(ok?'ok':'warn');
   b.textContent=(ok?'● sync · ':'● ')+text;
+}
+
+
+let locationRefreshInFlight=false;
+let locationTimer=null;
+
+function distanceKm(aLat,aLon,bLat,bLon){
+  const rad=value=>value*Math.PI/180;
+  const earthKm=6371;
+  const dLat=rad(bLat-aLat),dLon=rad(bLon-aLon);
+  const x=Math.sin(dLat/2)**2+Math.cos(rad(aLat))*Math.cos(rad(bLat))*Math.sin(dLon/2)**2;
+  return earthKm*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+}
+
+function relativeLocationAge(dateString){
+  const ms=Math.max(0,Date.now()-new Date(dateString).getTime());
+  const minutes=Math.floor(ms/60000);
+  if(minutes<1)return 'ora';
+  if(minutes<60)return `${minutes} min fa`;
+  const hours=Math.floor(minutes/60);
+  if(hours<24)return `${hours} ${hours===1?'ora':'ore'} fa`;
+  const days=Math.floor(hours/24);
+  return `${days} ${days===1?'giorno':'giorni'} fa`;
+}
+
+function renderDistanceState(state,detail='',action='Aggiorna'){
+  const root=document.getElementById('distanceWidget');
+  const value=document.getElementById('distanceValue');
+  const meta=document.getElementById('distanceMeta');
+  const btn=document.getElementById('distanceAction');
+  if(!root||!value||!meta||!btn)return;
+  root.classList.remove('ready','denied');
+  if(state==='ready')root.classList.add('ready');
+  if(state==='denied')root.classList.add('denied');
+  value.textContent=state==='unsupported'?'Posizione non supportata':state==='denied'?'Posizione disattivata':state==='loading'?'Aggiorno la distanza…':detail||'Attiva la distanza';
+  if(state==='unsupported')meta.textContent='Questo dispositivo non espone la geolocalizzazione.';
+  else if(state==='denied')meta.textContent='Riattiva la posizione dalle impostazioni del sito/app.';
+  else if(state==='loading')meta.textContent='Uso la posizione solo per calcolare quanto siete lontani.';
+  btn.textContent=state==='denied'?'Permessi':action;
+  btn.disabled=state==='loading';
+}
+
+function formatDistance(km){
+  if(km<1)return `${Math.max(1,Math.round(km*1000))} m`;
+  if(km<10)return `${km.toFixed(1).replace('.',',')} km`;
+  return `${Math.round(km).toLocaleString('it-IT')} km`;
+}
+
+async function hydrateDistance(){
+  if(!window.usProfile)return;
+  const {data:rows,error}=await sb.from('couple_locations')
+    .select('user_id,latitude,longitude,accuracy_m,updated_at')
+    .eq('couple_id',window.usProfile.couple_id);
+  if(error){console.warn(error);return;}
+  const mine=(rows||[]).find(row=>row.user_id===window.usProfile.id);
+  const partner=(rows||[]).find(row=>row.user_id!==window.usProfile.id);
+  const partnerName=window.usProfile.role==='francesco'?'Beatrice':'Francesco';
+  const root=document.getElementById('distanceWidget');
+  const value=document.getElementById('distanceValue');
+  const meta=document.getElementById('distanceMeta');
+  const btn=document.getElementById('distanceAction');
+  if(!root||!value||!meta||!btn)return;
+  root.classList.remove('denied');
+  if(!mine){
+    root.classList.remove('ready');
+    value.textContent='Attiva la distanza';
+    meta.textContent=`Condividi la tua posizione per vedere quanto sei lontano da ${partnerName}.`;
+    btn.textContent='Attiva';btn.disabled=false;
+    return;
+  }
+  if(!partner){
+    root.classList.add('ready');
+    value.textContent=`In attesa di ${partnerName}`;
+    meta.textContent=`La tua posizione è aggiornata · ${relativeLocationAge(mine.updated_at)}.`;
+    btn.textContent='Aggiorna';btn.disabled=false;
+    return;
+  }
+  const km=distanceKm(mine.latitude,mine.longitude,partner.latitude,partner.longitude);
+  root.classList.add('ready');
+  value.textContent=`♡ ${formatDistance(km)} da ${partnerName}`;
+  meta.textContent=`Posizione di ${partnerName} aggiornata ${relativeLocationAge(partner.updated_at)}.`;
+  btn.textContent='↻';btn.disabled=false;
+}
+
+async function saveMyLocation(position){
+  if(!window.usProfile)return;
+  const payload={
+    user_id:window.usProfile.id,
+    couple_id:window.usProfile.couple_id,
+    latitude:Number(position.coords.latitude.toFixed(4)),
+    longitude:Number(position.coords.longitude.toFixed(4)),
+    accuracy_m:Number.isFinite(position.coords.accuracy)?position.coords.accuracy:null,
+    updated_at:new Date(position.timestamp||Date.now()).toISOString()
+  };
+  const {error}=await sb.from('couple_locations').upsert(payload,{onConflict:'user_id'});
+  if(error)throw error;
+  localStorage.setItem('usLocationEnabled','1');
+}
+
+function geolocationError(error,silent=false){
+  if(error?.code===1){
+    localStorage.removeItem('usLocationEnabled');
+    renderDistanceState('denied');
+    if(!silent)toast('Permesso posizione non attivo');
+  }else{
+    if(!silent)toast('Non riesco ad aggiornare la posizione');
+    hydrateDistance();
+  }
+}
+
+function refreshMyLocation(options={}){
+  const silent=Boolean(options?.silent);
+  if(!window.usProfile)return toast('Connessione non pronta');
+  if(!navigator.geolocation){
+    renderDistanceState('unsupported');
+    return;
+  }
+  if(locationRefreshInFlight)return;
+  locationRefreshInFlight=true;
+  if(!silent)renderDistanceState('loading');
+  navigator.geolocation.getCurrentPosition(async position=>{
+    try{
+      await saveMyLocation(position);
+      await hydrateDistance();
+      if(!silent)toast('Distanza aggiornata ♡');
+    }catch(error){
+      console.warn(error);
+      if(!silent)toast('Errore sync posizione');
+    }finally{
+      locationRefreshInFlight=false;
+    }
+  },error=>{
+    locationRefreshInFlight=false;
+    geolocationError(error,silent);
+  },{
+    enableHighAccuracy:false,
+    timeout:12000,
+    maximumAge:silent?120000:0
+  });
+}
+window.refreshMyLocation=refreshMyLocation;
+
+async function maybeAutoRefreshLocation(){
+  if(!window.usProfile||!navigator.geolocation)return hydrateDistance();
+  await hydrateDistance();
+  if(localStorage.getItem('usLocationEnabled')==='1'){
+    refreshMyLocation({silent:true});
+    return;
+  }
+  if(!navigator.permissions?.query)return;
+  try{
+    const permission=await navigator.permissions.query({name:'geolocation'});
+    if(permission.state==='granted')refreshMyLocation({silent:true});
+    if(permission.state==='denied')renderDistanceState('denied');
+    permission.onchange=()=>{
+      if(permission.state==='granted')refreshMyLocation({silent:true});
+      else if(permission.state==='denied')renderDistanceState('denied');
+      else hydrateDistance();
+    };
+  }catch(_e){}
+}
+
+function startLocationRefreshTimer(){
+  if(locationTimer)clearInterval(locationTimer);
+  locationTimer=setInterval(()=>{
+    if(document.hidden||!window.usProfile)return;
+    if(localStorage.getItem('usLocationEnabled')==='1'){
+      refreshMyLocation({silent:true});
+      return;
+    }
+    if(navigator.permissions?.query){
+      navigator.permissions.query({name:'geolocation'}).then(permission=>{
+        if(permission.state==='granted')refreshMyLocation({silent:true});
+      }).catch(()=>{});
+    }
+  },5*60*1000);
 }
 
 function setAvatarSlot(containerId,signedUrl){
@@ -712,8 +898,36 @@ async function toggleCloudBucket(el){
   hydrateCloud();
 }
 
-setInterval(()=>{ if(window.usProfile){ hydrateToday(); refreshQuizState(); } },15000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden && window.usProfile){hydrateCloud();refreshQuizState();}});
+
+let swipeStartX=null,swipeStartY=null,swipeStartTarget=null;
+function swipeBlockedTarget(target){
+  return Boolean(target?.closest?.('input,textarea,select,button,[contenteditable="true"],.modal,.moment-viewer,.auth-overlay'));
+}
+document.addEventListener('touchstart',event=>{
+  if(event.touches.length!==1)return;
+  const active=document.querySelector('.page.active')?.id;
+  if(!swipePages.includes(active))return;
+  if(swipeBlockedTarget(event.target))return;
+  swipeStartX=event.touches[0].clientX;
+  swipeStartY=event.touches[0].clientY;
+  swipeStartTarget=event.target;
+},{passive:true});
+document.addEventListener('touchend',event=>{
+  if(swipeStartX===null||!event.changedTouches?.length)return;
+  const touch=event.changedTouches[0];
+  const dx=touch.clientX-swipeStartX;
+  const dy=touch.clientY-swipeStartY;
+  swipeStartX=null;swipeStartY=null;swipeStartTarget=null;
+  if(Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.25)return;
+  const active=document.querySelector('.page.active')?.id;
+  const index=swipePages.indexOf(active);
+  if(index<0)return;
+  if(dx<0 && index<swipePages.length-1)go(swipePages[index+1],{swipe:'next'});
+  if(dx>0 && index>0)go(swipePages[index-1],{swipe:'prev'});
+},{passive:true});
+
+setInterval(()=>{ if(window.usProfile){ hydrateToday(); refreshQuizState(); hydrateDistance(); } },15000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden && window.usProfile){hydrateCloud();refreshQuizState();maybeAutoRefreshLocation();}});
 sb.auth.onAuthStateChange((_event,_session)=>{ setTimeout(initCloud,0); });
 const pairBtn=document.getElementById('pairBtn');
 if(pairBtn) pairBtn.addEventListener('click', pairAccount);
