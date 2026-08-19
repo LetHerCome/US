@@ -52,10 +52,10 @@
         <div class="kicker">Francesco & Beatrice</div>
         <div class="days" id="daysTogether">119</div>
         <div class="days-label">giorni insieme</div>
-        <div class="bond">
-          <div class="bondline"><span>Prossimo traguardo</span><span id="milestoneLabel">200 giorni</span></div>
+        <button type="button" class="bond hero-bond" onclick="go('bond')" aria-label="Apri il vostro Bond">
+          <div class="bondline"><span id="heroBondLevel">BOND LV. 1</span><span id="heroBondXp">0 / 200 XP</span></div>
           <div class="bar"><div class="fill" id="bondFill"></div></div>
-        </div>
+        </button>
       </div>
     </section>
 
@@ -98,11 +98,11 @@
         <button type="button" class="home-action" onclick="go('moments')">
           <span class="home-action-icon">📸</span><span><b>Moments</b><small>I vostri ricordi</small></span><i>›</i>
         </button>
-        <button type="button" class="home-action" onclick="go('together')">
-          <span class="home-action-icon">🗺️</span><span><b>Together</b><small>Cose da vivere</small></span><i>›</i>
+        <button type="button" class="home-action" onclick="go('bond')">
+          <span class="home-action-icon">✦</span><span><b>Bond</b><small>Quest e livello condiviso</small></span><i>›</i>
         </button>
-        <button type="button" class="home-action" onclick="go('foryou')">
-          <span class="home-action-icon">💌</span><span><b>For You</b><small>Messaggi per voi</small></span><i>›</i>
+        <button type="button" class="home-action" onclick="go('think')">
+          <span class="home-action-icon">♡</span><span><b>Ti penso</b><small>Un segnale solo per voi</small></span><i>›</i>
         </button>
       </div>
       <button type="button" class="home-quiz-row" onclick="openQuizHub()">
@@ -171,28 +171,53 @@
     </section>
   </main>
 
-  <main id="together" class="page">
-    <section class="section" style="margin-top:6px"><h2>Together</h2>
-      <div class="list" id="bucket"><div class="empty-state"><div class="emoji">↻</div><b>Carico la vostra lista…</b></div></div>
-      <button class="primary" style="width:100%;margin-top:12px" onclick="addWish()">+ Nuova cosa da fare</button>
+  <main id="bond" class="page">
+    <section class="section bond-page" style="margin-top:6px">
+      <div class="bond-page-head">
+        <div><div class="tiny">OUR BOND</div><h2>Il vostro livello</h2></div>
+        <div class="bond-level-medallion"><span>LV.</span><b id="bondLevelValue">1</b></div>
+      </div>
+
+      <article class="bond-progress-card">
+        <div class="bond-progress-top">
+          <div><div class="bond-rank" id="bondRankTitle">First Link</div><b id="bondTotalXp">0 XP totali</b></div>
+          <div class="bond-next" id="bondNextXp">200 XP al prossimo livello</div>
+        </div>
+        <div class="bond-xp-track"><div id="bondPageFill"></div></div>
+        <div class="bond-xp-line"><span id="bondLevelXp">0 / 200 XP</span><span id="bondCompletedCount">0 quest completate</span></div>
+      </article>
+
+      <div class="bond-weekly-head">
+        <div><div class="tiny">WEEKLY QUESTS</div><h3>Questa settimana</h3></div>
+        <div class="reroll-counter"><span>↻</span><b id="bondRerollsLeft">3</b><small>rimasti</small></div>
+      </div>
+      <div id="bondQuestList" class="bond-quest-list">
+        <div class="empty-state"><div class="emoji">✦</div><b>Preparo le vostre quest…</b></div>
+      </div>
+      <div class="bond-week-note"><span id="bondWeekReset">Nuove quest ogni lunedì</span><span>Entrambi devono confermare.</span></div>
     </section>
   </main>
 
-  <main id="foryou" class="page">
-    <section class="section" style="margin-top:6px"><h2>For You <span class="heart">♥</span></h2>
-      <div class="open-card" onclick="openMsg('Quando ti senti giù','Non posso essere sempre lì accanto a te, ma posso lasciarti qui un pezzo di me. Ricordati che abbiamo superato giornate molto peggiori di questa.')"><span>…ti senti giù</span><span>💌</span></div>
-      <div class="open-card" onclick="openMsg('Quando ti manco','Apri una nostra foto. Poi pensa che il prossimo ricordo non esiste ancora. Ed è proprio quello il bello.')"><span>…ti manco</span><span>💌</span></div>
-      <div class="open-card" onclick="openMsg('Quando sei arrabbiata con me','Probabilmente ho fatto una cazzata. Di nuovo. Ma se hai aperto questo, almeno non mi hai ancora eliminato dall’app.')"><span>…sei arrabbiata con me</span><span>💌</span></div>
-      <div class="open-card" onclick="openMsg('Quando non riesci a dormire','Metti giù il telefono tra due minuti. Prima però: ti amo. Ora davvero, dormi.')"><span>…non riesci a dormire</span><span>💌</span></div>
-
-      <div class="section">
-        <h2 style="margin-left:0">Prossimamente</h2>
-        <div class="list">
-          <div class="item coming-item"><div class="check">♡</div><div class="txt">“Ti penso”<div class="tiny">Un piccolo segnale privato tra i vostri telefoni.</div></div><span class="coming-tag">PRESTO</span></div>
-          <div class="item coming-item"><div class="check">⏰</div><div class="txt">Sorpresa programmata<div class="tiny">Un messaggio che si sblocca quando decidi tu.</div></div><span class="coming-tag">PRESTO</span></div>
-          <div class="item coming-item"><div class="check">☾</div><div class="txt">Mood di oggi<div class="tiny">Un piccolo stato condiviso tra voi due.</div></div><span class="coming-tag">PRESTO</span></div>
-        </div>
+  <main id="think" class="page">
+    <section class="section think-page" style="margin-top:6px">
+      <div class="think-copy">
+        <div class="tiny">PRIVATE SIGNAL</div>
+        <h2>Ti penso</h2>
+        <p>Niente messaggi da scrivere. Solo un piccolo segnale per dire: sono qui, ti sto pensando.</p>
       </div>
+      <button type="button" class="think-heart" id="thinkButton" onclick="sendThinkSignal()" aria-label="Invia Ti penso">
+        <span class="think-heart-ring"></span>
+        <span class="think-heart-glyph">♡</span>
+        <span class="think-heart-label">TI PENSO</span>
+      </button>
+      <div class="think-live" id="thinkLiveText">Tocca il cuore quando vuoi.</div>
+
+      <div class="think-history">
+        <article><div class="tiny">L’ULTIMO DA LUI/LEI</div><b id="thinkLastReceived">Ancora nessun segnale</b></article>
+        <article><div class="tiny">IL TUO ULTIMO</div><b id="thinkLastSent">Non ne hai ancora inviati</b></article>
+      </div>
+      <div class="think-month"><b id="thinkMonthCount">0</b><span>pensieri condivisi questo mese</span></div>
+      <div class="smallnote think-note">Quando US è aperta sull’altro telefono il segnale arriva in tempo reale. Se è chiusa, resta salvato e compare al prossimo accesso.</div>
     </section>
   </main>
 
@@ -247,20 +272,11 @@
 <button class="active" data-page="home" onclick="go('home')"><span class="nicon">⌂</span>Home</button>
 <button data-page="today" onclick="go('today')"><span class="nicon">◌</span>Today</button>
 <button data-page="moments" onclick="go('moments')"><span class="nicon">▧</span>Moments</button>
-<button data-page="together" onclick="go('together')"><span class="nicon">♧</span>Together</button>
-<button data-page="foryou" onclick="go('foryou')"><span class="nicon">♡</span>For You</button>
+<button data-page="bond" onclick="go('bond')"><span class="nicon">✦</span>Bond</button>
+<button data-page="think" onclick="go('think')"><span class="nicon">♡</span>Ti penso</button>
 </nav>
 
 <div class="toast" id="toast">Salvato ♡</div>
-
-<div class="modal" id="modal" onclick="closeModal(event)">
-  <div class="sheet">
-    <span class="badge">OPEN WHEN...</span>
-    <h3 id="modalTitle"></h3>
-    <p id="modalText"></p>
-    <button class="primary" style="width:100%" onclick="document.getElementById('modal').classList.remove('show')">Chiudi</button>
-  </div>
-</div>
 
 <div class="moment-viewer" id="momentViewer" aria-hidden="true" onclick="if(event.target===this)closeMomentViewer()">
   <button class="moment-viewer-close" type="button" aria-label="Chiudi foto" onclick="closeMomentViewer()">×</button>

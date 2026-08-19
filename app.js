@@ -1,10 +1,12 @@
-const pages=['home','today','moments','together','foryou','quiz'];
-const swipePages=['home','today','moments','together','foryou'];
+const pages=['home','today','moments','bond','think','quiz'];
+const swipePages=['home','today','moments','bond','think'];
 function go(id,options={}){
   const current=document.querySelector('.page.active')?.id;
   if(current===id){
     scrollTo({top:0,behavior:'smooth'});
     if(id==='moments' && window.usProfile)hydrateMoments();
+    if(id==='bond' && window.usProfile)hydrateBond();
+    if(id==='think' && window.usProfile)hydrateThink();
     return;
   }
   pages.forEach(pageId=>{
@@ -17,24 +19,10 @@ function go(id,options={}){
   if(options.swipe)setTimeout(()=>document.getElementById(id)?.classList.remove('swipe-next','swipe-prev'),190);
   scrollTo({top:0,behavior:options.swipe?'auto':'smooth'});
   if(id==='moments' && window.usProfile) hydrateMoments();
+  if(id==='bond' && window.usProfile) hydrateBond();
+  if(id==='think' && window.usProfile) hydrateThink();
 }
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700)}
-function toggleDone(el){
-  el.classList.toggle('done');el.querySelector('.check').textContent=el.classList.contains('done')?'✓':'';
-  toast(el.classList.contains('done')?'+15 Bond XP':'Riaperta');
-}
-function addWish(){
-  const t=prompt('Cosa volete fare insieme?'); if(!t)return;
-  const d=document.createElement('div');d.className='item';d.onclick=function(){toggleDone(this)};
-  d.innerHTML='<div class="check"></div><div class="txt">'+t+'<div class="tiny">bucket list</div></div>';
-  document.getElementById('bucket').appendChild(d);toast('Aggiunta ♡');
-}
-function openMsg(title,text){
-  document.getElementById('modalTitle').textContent=title;
-  document.getElementById('modalText').textContent=text;
-  document.getElementById('modal').classList.add('show');
-}
-function closeModal(e){if(e.target.id==='modal')e.currentTarget.classList.remove('show')}
 let quizCat='',quizPos=0,quizSelected=null,quizQuestions=[],quizSet=null,quizState=null;
 function openQuizHub(){go('quiz');resetQuiz()}
 async function startQuiz(cat){
@@ -142,12 +130,6 @@ function updateTogetherDays(){
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const diff = Math.max(0,Math.floor((today - start)/86400000));
   document.getElementById('daysTogether').textContent = diff.toLocaleString('it-IT');
-  const milestones=[100,200,365,500,730,1000,1500,2000,3000,5000];
-  const next=milestones.find(x=>x>diff) || (Math.ceil((diff+1)/1000)*1000);
-  const prev=[0,...milestones].filter(x=>x<=diff).pop() || 0;
-  const progress=Math.max(0,Math.min(100,((diff-prev)/(next-prev))*100));
-  document.getElementById('milestoneLabel').textContent=next.toLocaleString('it-IT')+' giorni';
-  document.getElementById('bondFill').style.width=progress+'%';
 }
 updateTogetherDays();
 
@@ -184,6 +166,7 @@ async function initCloud(){
   await hydrateProfileAvatars();
   await hydrateHomePhoto();
   await hydrateCloud();
+  startUsRealtime();
   await maybeAutoRefreshLocation();
   startLocationRefreshTimer();
 }
@@ -275,6 +258,7 @@ async function hydrateDistance(){
     return;
   }
   const km=distanceKm(mine.latitude,mine.longitude,partner.latitude,partner.longitude);
+  window.usDistanceKm=km;
   root.classList.add('ready');
   value.textContent=`♡ ${formatDistance(km)} da ${partnerName}`;
   meta.textContent=`Posizione di ${partnerName} aggiornata ${relativeLocationAge(partner.updated_at)}.`;
@@ -835,32 +819,283 @@ async function deleteMoment(id,path){
 }
 window.deleteMoment=deleteMoment;
 
+
+
+// ===== Bond progression + Weekly Quests =====
+function weekStartISO(){
+  const now=new Date();
+  const d=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const mondayOffset=(d.getDay()+6)%7;
+  d.setDate(d.getDate()-mondayOffset);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function nextWeekLabel(){
+  const [y,m,d]=weekStartISO().split('-').map(Number);
+  const next=new Date(y,m-1,d+7);
+  return next.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'short'});
+}
+function bondLevelInfo(totalXp=0){
+  const total=Math.max(0,Number(totalXp)||0);
+  let level=1,floor=0,needed=200;
+  while(total>=floor+needed){
+    floor+=needed;
+    level+=1;
+    needed=200+(level-1)*150;
+    if(level>999)break;
+  }
+  const current=total-floor;
+  return {total,level,current,needed,progress:Math.max(0,Math.min(100,current/needed*100))};
+}
+function bondRankTitle(level){
+  if(level<=1)return 'First Link';
+  if(level===2)return 'Party Formed';
+  if(level===3)return 'Resonance';
+  if(level===4)return 'Synced Souls';
+  if(level<=7)return 'Soulbound';
+  if(level<=12)return 'Legendary Duo';
+  if(level<=20)return 'Mythic Bond';
+  return 'Eternal Party';
+}
+function renderBondProgress(totalXp){
+  const info=bondLevelInfo(totalXp);
+  const heroLevel=document.getElementById('heroBondLevel');
+  const heroXp=document.getElementById('heroBondXp');
+  const heroFill=document.getElementById('bondFill');
+  if(heroLevel)heroLevel.textContent=`BOND LV. ${info.level}`;
+  if(heroXp)heroXp.textContent=`${info.current.toLocaleString('it-IT')} / ${info.needed.toLocaleString('it-IT')} XP`;
+  if(heroFill)heroFill.style.width=`${info.progress}%`;
+  const levelEl=document.getElementById('bondLevelValue');if(levelEl)levelEl.textContent=info.level;
+  const totalEl=document.getElementById('bondTotalXp');if(totalEl)totalEl.textContent=`${info.total.toLocaleString('it-IT')} XP totali`;
+  const rankEl=document.getElementById('bondRankTitle');if(rankEl)rankEl.textContent=bondRankTitle(info.level);
+  const nextEl=document.getElementById('bondNextXp');if(nextEl)nextEl.textContent=`${(info.needed-info.current).toLocaleString('it-IT')} XP al prossimo livello`;
+  const pageFill=document.getElementById('bondPageFill');if(pageFill)pageFill.style.width=`${info.progress}%`;
+  const line=document.getElementById('bondLevelXp');if(line)line.textContent=`${info.current.toLocaleString('it-IT')} / ${info.needed.toLocaleString('it-IT')} XP`;
+  window.usBondXp=info.total;
+}
+async function hydrateBondSummary(){
+  if(!window.usProfile)return;
+  const {data,error}=await sb.from('couples').select('bond_xp').eq('id',window.usProfile.couple_id).maybeSingle();
+  if(error){console.warn(error);return;}
+  renderBondProgress(data?.bond_xp||0);
+}
+window.hydrateBondSummary=hydrateBondSummary;
+
+function hashSeed(text){
+  let h=2166136261;
+  for(let i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619);}
+  return h>>>0;
+}
+async function currentQuestMode(){
+  if(Number.isFinite(window.usDistanceKm))return window.usDistanceKm>50?'far':'near';
+  const {data:rows}=await sb.from('couple_locations').select('user_id,latitude,longitude').eq('couple_id',window.usProfile.couple_id);
+  if(!rows||rows.length<2)return 'any';
+  const km=distanceKm(rows[0].latitude,rows[0].longitude,rows[1].latitude,rows[1].longitude);
+  window.usDistanceKm=km;
+  return km>50?'far':'near';
+}
+function selectInitialQuestTemplates(templates,mode,week,coupleId){
+  const eligible=templates.filter(t=>t.mode==='any'||t.mode===mode).sort((a,b)=>a.key.localeCompare(b.key));
+  const used=new Set();
+  const slots=[
+    eligible.filter(t=>['common','uncommon'].includes(t.rarity)),
+    eligible.filter(t=>['uncommon','rare'].includes(t.rarity)),
+    eligible.filter(t=>['rare','epic'].includes(t.rarity))
+  ];
+  return slots.map((pool,index)=>{
+    const candidates=(pool.length?pool:eligible).filter(t=>!used.has(t.key));
+    const seed=hashSeed(`${coupleId}|${week}|${index+1}|bond`);
+    const picked=candidates[seed%candidates.length];
+    if(picked)used.add(picked.key);
+    return picked;
+  }).filter(Boolean);
+}
+async function ensureBondWeek(){
+  if(!window.usProfile)return;
+  const coupleId=window.usProfile.couple_id,week=weekStartISO();
+  const {data:state}=await sb.from('bond_weekly_state').select('couple_id,week_start,rerolls_used').eq('couple_id',coupleId).eq('week_start',week).maybeSingle();
+  if(!state){
+    const {error}=await sb.from('bond_weekly_state').insert({couple_id:coupleId,week_start:week});
+    if(error&&error.code!=='23505')console.warn(error);
+  }
+  const {data:existing,error:questError}=await sb.from('bond_weekly_quests').select('id,slot').eq('couple_id',coupleId).eq('week_start',week).order('slot');
+  if(questError){console.warn(questError);return;}
+  if((existing||[]).length>=3)return;
+  const [{data:templates,error:templatesError},mode]=await Promise.all([
+    sb.from('bond_quest_templates').select('key,title,category,rarity,xp,mode').eq('active',true),
+    currentQuestMode()
+  ]);
+  if(templatesError||!templates?.length){console.warn(templatesError);return;}
+  const picks=selectInitialQuestTemplates(templates,mode,week,coupleId);
+  const existingSlots=new Set((existing||[]).map(q=>q.slot));
+  for(let i=0;i<3;i++){
+    const slot=i+1,t=picks[i];
+    if(existingSlots.has(slot)||!t)continue;
+    const {error}=await sb.from('bond_weekly_quests').insert({couple_id:coupleId,week_start:week,slot,template_key:t.key,title:t.title,category:t.category,rarity:t.rarity,xp:t.xp});
+    if(error&&error.code!=='23505')console.warn(error);
+  }
+}
+function questCategoryIcon(category){
+  return ({connection:'♡',fun:'✦',adventure:'⌁',discover:'?',memory:'▧',surprise:'✧',chill:'☕'})[category]||'✦';
+}
+function questCategoryLabel(category){
+  return ({connection:'Connection',fun:'Fun',adventure:'Adventure',discover:'Discover',memory:'Memory',surprise:'Surprise',chill:'Chill'})[category]||category;
+}
+function renderBondQuest(q,state,profiles){
+  const confirmed=Array.isArray(q.confirmed_by)?q.confirmed_by:[];
+  const mine=confirmed.includes(window.usProfile.id);
+  const partner=(profiles||[]).find(p=>p.id!==window.usProfile.id);
+  const partnerConfirmed=partner?confirmed.includes(partner.id):false;
+  const complete=Boolean(q.completed_at);
+  const rerollsLeft=Math.max(0,3-Number(state?.rerolls_used||0));
+  const canReroll=!complete&&confirmed.length===0&&rerollsLeft>0;
+  const myInitial=(window.usProfile.display_name||'Tu').slice(0,1).toUpperCase();
+  const partnerInitial=(partner?.display_name||'B').slice(0,1).toUpperCase();
+  const confirmText=complete?`Completata · +${q.xp} XP`:mine?'✓ Confermata da te':'Ho completato questa quest';
+  return `<article class="bond-quest rarity-${escapeHtml(q.rarity)} ${complete?'completed':''}">
+    <div class="quest-top"><span class="quest-category"><i>${questCategoryIcon(q.category)}</i>${escapeHtml(questCategoryLabel(q.category))}</span><span class="quest-rarity">${escapeHtml(q.rarity.toUpperCase())} · +${q.xp} XP</span></div>
+    <h4>${escapeHtml(q.title)}</h4>
+    <div class="quest-confirmers"><span class="${mine?'checked':''}">${myInitial}${mine?' ✓':''}</span><span class="quest-link"></span><span class="${partnerConfirmed?'checked':''}">${partnerInitial}${partnerConfirmed?' ✓':''}</span><small>${complete?'XP assegnati':'Conferma di entrambi'}</small></div>
+    <div class="quest-actions">
+      <button type="button" class="quest-confirm ${mine||complete?'confirmed':''}" ${mine||complete?'disabled':''} onclick="confirmBondQuest('${q.id}')">${confirmText}</button>
+      ${canReroll?`<button type="button" class="quest-reroll" onclick="rerollBondQuest('${q.id}')" aria-label="Cambia questa quest">↻</button>`:''}
+    </div>
+  </article>`;
+}
+async function hydrateBond(){
+  if(!window.usProfile)return;
+  const list=document.getElementById('bondQuestList');
+  if(!list)return;
+  list.innerHTML='<div class="empty-state"><div class="emoji">✦</div><b>Preparo le vostre quest…</b></div>';
+  await ensureBondWeek();
+  const week=weekStartISO(),coupleId=window.usProfile.couple_id;
+  const [{data:state,error:stateError},{data:quests,error:questError},{data:profiles,error:profilesError},{data:couple,error:coupleError},{count:completedCount,error:countError}]=await Promise.all([
+    sb.from('bond_weekly_state').select('rerolls_used').eq('couple_id',coupleId).eq('week_start',week).maybeSingle(),
+    sb.from('bond_weekly_quests').select('id,slot,template_key,title,category,rarity,xp,confirmed_by,completed_at').eq('couple_id',coupleId).eq('week_start',week).order('slot'),
+    sb.from('profiles').select('id,display_name,role').eq('couple_id',coupleId),
+    sb.from('couples').select('bond_xp').eq('id',coupleId).maybeSingle(),
+    sb.from('bond_weekly_quests').select('id',{count:'exact',head:true}).eq('couple_id',coupleId).not('completed_at','is',null)
+  ]);
+  if(stateError||questError||profilesError||coupleError){console.warn(stateError||questError||profilesError||coupleError);list.innerHTML='<div class="empty-state"><div class="emoji">!</div><b>Bond non disponibile</b><p>Riprova tra un momento.</p></div>';return;}
+  if(countError)console.warn(countError);
+  window.usBondProfiles=profiles||[];
+  window.usBondState=state||{rerolls_used:0};
+  window.usBondQuests=quests||[];
+  renderBondProgress(couple?.bond_xp||0);
+  const countEl=document.getElementById('bondCompletedCount');if(countEl)countEl.textContent=`${Number(completedCount||0)} quest completate`;
+  const rerollsLeft=Math.max(0,3-Number(state?.rerolls_used||0));
+  const rerollEl=document.getElementById('bondRerollsLeft');if(rerollEl)rerollEl.textContent=rerollsLeft;
+  const resetEl=document.getElementById('bondWeekReset');if(resetEl)resetEl.textContent=`Nuove quest ${nextWeekLabel()}`;
+  list.innerHTML=(quests||[]).map(q=>renderBondQuest(q,state,profiles)).join('')||'<div class="empty-state"><b>Nessuna quest disponibile.</b></div>';
+}
+window.hydrateBond=hydrateBond;
+async function confirmBondQuest(id){
+  if(!window.usProfile)return;
+  const {data,error}=await sb.rpc('confirm_bond_quest',{target_quest_id:id});
+  if(error){console.warn(error);toast('Non riesco a confermare la quest');return;}
+  if(data?.xp_awarded){toast(`+${data.xp_awarded} Bond XP ♡`);navigator.vibrate?.([35,25,55]);}
+  else toast('Confermata. Aspettiamo l’altro ♡');
+  await hydrateBond();
+  await hydrateBondSummary();
+}
+window.confirmBondQuest=confirmBondQuest;
+async function rerollBondQuest(id){
+  const state=window.usBondState||{rerolls_used:3};
+  if(Number(state.rerolls_used)>=3)return toast('Avete finito i 3 refresh');
+  const current=(window.usBondQuests||[]).find(q=>q.id===id);
+  if(!current||current.completed_at||(current.confirmed_by||[]).length)return toast('Questa quest è già stata confermata');
+  const mode=await currentQuestMode();
+  const {data:templates,error}=await sb.from('bond_quest_templates').select('key,title,category,rarity,xp,mode').eq('active',true);
+  if(error||!templates?.length){console.warn(error);return toast('Nessuna quest disponibile');}
+  const used=new Set((window.usBondQuests||[]).map(q=>q.template_key));
+  const candidates=templates.filter(t=>(t.mode==='any'||t.mode===mode)&&!used.has(t.key));
+  if(!candidates.length)return toast('Nessuna alternativa disponibile');
+  const pick=candidates[Math.floor(Math.random()*candidates.length)];
+  const result=await sb.rpc('reroll_bond_quest',{target_quest_id:id,target_template_key:pick.key});
+  if(result.error){console.warn(result.error);toast(result.error.message?.includes('No rerolls')?'Avete finito i 3 refresh':'Non riesco a cambiare la quest');return;}
+  toast(`Nuova quest · ${3-Number(result.data?.rerolls_used||3)} refresh rimasti`);
+  await hydrateBond();
+}
+window.rerollBondQuest=rerollBondQuest;
+
+// ===== Ti penso =====
+let usRealtimeChannel=null;
+function partnerFromProfiles(profiles){return (profiles||[]).find(p=>p.id!==window.usProfile?.id)||null;}
+async function getCoupleProfiles(){
+  if(window.usBondProfiles?.length)return window.usBondProfiles;
+  const {data,error}=await sb.from('profiles').select('id,display_name,role').eq('couple_id',window.usProfile.couple_id);
+  if(error){console.warn(error);return [];}
+  window.usBondProfiles=data||[];return window.usBondProfiles;
+}
+function relativeSignalAge(dateString){
+  if(!dateString)return '';
+  const ms=Math.max(0,Date.now()-new Date(dateString).getTime());
+  const min=Math.floor(ms/60000);
+  if(min<1)return 'proprio ora';
+  if(min<60)return `${min} min fa`;
+  const h=Math.floor(min/60);if(h<24)return `${h} ${h===1?'ora':'ore'} fa`;
+  const d=Math.floor(h/24);return `${d} ${d===1?'giorno':'giorni'} fa`;
+}
+async function hydrateThink(){
+  if(!window.usProfile)return;
+  const [profiles,{data:rows,error},{count,error:countError}]=await Promise.all([
+    getCoupleProfiles(),
+    sb.from('shared_messages').select('id,sender_id,recipient_id,kind,created_at').eq('kind','think').order('created_at',{ascending:false}).limit(60),
+    sb.from('shared_messages').select('id',{count:'exact',head:true}).eq('kind','think').gte('created_at',new Date(new Date().getFullYear(),new Date().getMonth(),1).toISOString())
+  ]);
+  if(error){console.warn(error);return;}if(countError)console.warn(countError);
+  const partner=partnerFromProfiles(profiles),partnerName=partner?.display_name||'L’altra persona';
+  const received=(rows||[]).find(r=>r.sender_id!==window.usProfile.id);
+  const sent=(rows||[]).find(r=>r.sender_id===window.usProfile.id);
+  const receivedEl=document.getElementById('thinkLastReceived');if(receivedEl)receivedEl.textContent=received?`${partnerName} ti ha pensato ${relativeSignalAge(received.created_at)}`:'Ancora nessun segnale';
+  const sentEl=document.getElementById('thinkLastSent');if(sentEl)sentEl.textContent=sent?`Hai pensato a ${partnerName} ${relativeSignalAge(sent.created_at)}`:'Non ne hai ancora inviati';
+  const monthEl=document.getElementById('thinkMonthCount');if(monthEl)monthEl.textContent=Number(count||0).toLocaleString('it-IT');
+  const live=document.getElementById('thinkLiveText');if(live&&received)live.textContent=`Ultimo segnale da ${partnerName} · ${relativeSignalAge(received.created_at)}`;
+}
+window.hydrateThink=hydrateThink;
+async function sendThinkSignal(){
+  if(!window.usProfile)return toast('Connessione non pronta');
+  const btn=document.getElementById('thinkButton');if(btn?.disabled)return;
+  const profiles=await getCoupleProfiles(),partner=partnerFromProfiles(profiles);
+  if(!partner)return toast('L’altro profilo non è ancora collegato');
+  if(btn)btn.disabled=true;
+  const {error}=await sb.from('shared_messages').insert({couple_id:window.usProfile.couple_id,sender_id:window.usProfile.id,recipient_id:partner.id,kind:'think',body:'♡'});
+  if(error){console.warn(error);toast('Non riesco a inviare il segnale');if(btn)btn.disabled=false;return;}
+  btn?.classList.add('sent');setTimeout(()=>btn?.classList.remove('sent'),700);
+  navigator.vibrate?.([30,25,45]);
+  toast(`${partner.display_name} lo saprà ♡`);
+  await hydrateThink();
+  setTimeout(()=>{if(btn)btn.disabled=false;},1800);
+}
+window.sendThinkSignal=sendThinkSignal;
+function handleIncomingThink(row){
+  if(!row||row.kind!=='think'||row.recipient_id!==window.usProfile?.id)return;
+  const partner=partnerFromProfiles(window.usBondProfiles||[]);
+  toast(`${partner?.display_name||'L’altra persona'} ti pensa ♡`);
+  navigator.vibrate?.([45,35,80]);
+  const heart=document.getElementById('thinkButton');heart?.classList.add('received');setTimeout(()=>heart?.classList.remove('received'),900);
+  hydrateThink();
+}
+function startUsRealtime(){
+  if(!window.usProfile)return;
+  if(usRealtimeChannel){sb.removeChannel(usRealtimeChannel);usRealtimeChannel=null;}
+  const userId=window.usProfile.id,coupleId=window.usProfile.couple_id;
+  usRealtimeChannel=sb.channel(`us-live-${userId}`)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'shared_messages',filter:`recipient_id=eq.${userId}`},payload=>handleIncomingThink(payload.new))
+    .on('postgres_changes',{event:'*',schema:'public',table:'bond_weekly_quests',filter:`couple_id=eq.${coupleId}`},()=>{hydrateBondSummary();if(document.getElementById('bond')?.classList.contains('active'))hydrateBond();})
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'couples',filter:`id=eq.${coupleId}`},payload=>renderBondProgress(payload.new?.bond_xp||0))
+    .subscribe();
+}
+window.startUsRealtime=startUsRealtime;
+
 async function hydrateCloud(){
   try{
-    // Shared bucket list
-    const {data:items,error:bucketError}=await sb.from('bucket_items').select('*').order('created_at',{ascending:true});
-    const bucket=document.getElementById('bucket');
-    if(bucketError){
-      console.warn(bucketError);
-      bucket.innerHTML='<div class="empty-state"><div class="emoji">!</div><b>Lista non disponibile</b><p>Riprova tra un momento.</p></div>';
-    }else if(!items || items.length===0){
-      bucket.innerHTML='<div class="empty-state"><div class="emoji">🗺️</div><b>La lista è ancora vuota.</b><p>Aggiungete la prima cosa che volete vivere insieme.</p></div>';
-    }else{
-      bucket.innerHTML='';
-      items.forEach(item=>{
-        const d=document.createElement('div');
-        d.className='item '+(item.completed?'done':'');
-        d.dataset.id=item.id;
-        d.onclick=()=>toggleCloudBucket(d);
-        d.innerHTML='<div class="check">'+(item.completed?'✓':'')+'</div><div class="txt">'+escapeHtml(item.title)+'<div class="tiny">'+(item.completed?'completata':'bucket list')+'</div></div>';
-        bucket.appendChild(d);
-      });
-    }
-
     await hydrateToday();
     await hydrateMoments();
     await hydrateHomeMemory();
     await updateHomeStatus();
+    await hydrateBondSummary();
+    await hydrateThink();
+    if(document.getElementById('bond')?.classList.contains('active'))await hydrateBond();
   }catch(e){console.warn(e)}
 }
 
@@ -887,30 +1122,6 @@ saveAnswer = async function(){
 }
 window.saveAnswer=saveAnswer;
 
-addWish = async function(){
-  if(!window.usProfile) return toast('Connessione non pronta');
-  const t=prompt('Cosa volete fare insieme?'); if(!t)return;
-  const {error}=await sb.from('bucket_items').insert({
-    couple_id:window.usProfile.couple_id,
-    created_by:window.usProfile.id,
-    title:t
-  });
-  if(error)return toast('Errore sync');
-  toast('Aggiunta online ♡');
-  hydrateCloud();
-}
-
-async function toggleCloudBucket(el){
-  const id=el.dataset.id;if(!id)return;
-  const completed=!el.classList.contains('done');
-  const {error}=await sb.from('bucket_items').update({
-    completed,
-    completed_at: completed ? new Date().toISOString() : null
-  }).eq('id',id);
-  if(error)return toast('Errore sync');
-  toast(completed?'+15 Bond XP':'Riaperta');
-  hydrateCloud();
-}
 
 
 let swipeGesture=null;
@@ -972,7 +1183,7 @@ document.addEventListener('touchcancel',()=>{
   swipeGesture=null;
 },{passive:true});
 
-setInterval(()=>{ if(window.usProfile){ hydrateToday(); refreshQuizState(); hydrateDistance(); } },15000);
+setInterval(()=>{ if(window.usProfile){ hydrateToday(); refreshQuizState(); hydrateDistance(); hydrateBondSummary(); if(document.getElementById('think')?.classList.contains('active'))hydrateThink(); } },15000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden && window.usProfile){hydrateCloud();refreshQuizState();maybeAutoRefreshLocation();}});
 sb.auth.onAuthStateChange((_event,_session)=>{ setTimeout(initCloud,0); });
 const pairBtn=document.getElementById('pairBtn');
