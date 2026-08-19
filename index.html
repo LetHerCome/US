@@ -39,98 +39,28 @@
 </div>
 
 <div class="app">
-  <div class="top"><div class="brand">Us<span class="heart">.</span></div><div class="top-actions"><div class="online-badge warn" id="onlineBadge">● connessione…</div><button type="button" class="profile-avatar" id="profileAvatarBtn" aria-label="Cambia foto profilo" onclick="pickProfilePhoto()"><img id="profileAvatarImg" alt="Foto profilo" hidden><span class="fallback" id="profileAvatarFallback">♡</span><span class="camera-dot">+</span></button><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
+  <div class="top"><div class="brand-row"><div class="brand">Us<span class="heart">.</span></div><button type="button" class="today-orb" id="todayOrb" onclick="openToday()" aria-label="Apri Today"><span>◌</span><i id="todayOrbDot"></i></button></div><div class="top-actions"><div class="online-badge warn" id="onlineBadge">● connessione…</div><button type="button" class="profile-avatar" id="profileAvatarBtn" aria-label="Cambia foto profilo" onclick="pickProfilePhoto()"><img id="profileAvatarImg" alt="Foto profilo" hidden><span class="fallback" id="profileAvatarFallback">♡</span><span class="camera-dot">+</span></button><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
 
   <main id="home" class="page active">
-    <section class="hero" id="homeHero">
-      <div class="hero-topline">
-        <div class="photo-chip">♡ dal 21.04.2026</div>
-        <button type="button" class="hero-photo-btn" onclick="pickHomePhoto()" aria-label="Cambia foto Home">Foto</button>
-        <input id="homePhotoFile" type="file" accept="image/jpeg,image/png,image/webp" hidden>
-      </div>
-      <div class="hero-content">
-        <div class="kicker">Francesco & Beatrice</div>
-        <div class="days" id="daysTogether">119</div>
-        <div class="days-label">giorni insieme</div>
-        <button type="button" class="bond hero-bond" onclick="go('bond')" aria-label="Apri il vostro Bond">
-          <div class="bondline"><span id="heroBondLevel">BOND LV. 1</span><span id="heroBondXp">0 / 200 XP</span></div>
-          <div class="bar"><div class="fill" id="bondFill"></div></div>
-        </button>
-      </div>
-    </section>
-
-    <section class="home-couple-status">
-      <div class="home-couple-left">
-        <span class="pair-avatars">
-          <span class="pair-avatar" id="pairAvatarFrancesco"><img alt="Francesco" hidden><span class="fallback">F</span></span>
-          <span class="pair-avatar beatrice" id="pairAvatarBeatrice"><img alt="Beatrice" hidden><span class="fallback">B</span></span>
+    <section class="hero home-hero-only" id="homeHero" aria-label="Un vostro ricordo">
+      <div class="home-photo-layer active" id="homePhotoLayerA"></div>
+      <div class="home-photo-layer" id="homePhotoLayerB"></div>
+      <div class="home-photo-shade"></div>
+      <button type="button" class="home-distance-pill" id="distanceWidget" onclick="refreshMyLocation()" aria-label="Aggiorna distanza">
+        <span class="distance-orbit" aria-hidden="true">♡</span>
+        <span class="distance-copy">
+          <b id="distanceValue">Attiva la distanza</b>
+          <small id="distanceMeta">Tocca per aggiornare</small>
         </span>
-        <div>
-          <b>Il vostro spazio</b>
-          <span id="syncNote">Sincronizzato tra i vostri telefoni</span>
-        </div>
-      </div>
-      <span class="home-live-dot" title="Sync attivo"></span>
-      <span id="syncReadyBadge" hidden>SYNC ATTIVO</span>
-      <span id="todayStatusPill" hidden></span>
-      <span id="quizStatusPill" hidden></span>
-      <span id="momentsStatusPill" hidden></span>
-    </section>
-
-    <section class="distance-widget" id="distanceWidget">
-      <div class="distance-orbit" aria-hidden="true"><span>♡</span></div>
-      <div class="distance-copy">
-        <div class="tiny">DISTANZA TRA VOI</div>
-        <b id="distanceValue">Attiva la distanza</b>
-        <span id="distanceMeta">La posizione viene condivisa solo tra voi due.</span>
-      </div>
-      <button type="button" class="distance-action" id="distanceAction" onclick="refreshMyLocation()">Attiva</button>
-    </section>
-
-    <section class="home-actions-section">
-      <div class="home-section-title">
-        <span>Per voi</span>
-      </div>
-      <div class="home-actions">
-        <button type="button" class="home-action" onclick="go('today')">
-          <span class="home-action-icon">💬</span><span><b>Today</b><small>La domanda di oggi</small></span><i>›</i>
-        </button>
-        <button type="button" class="home-action" onclick="go('moments')">
-          <span class="home-action-icon">📸</span><span><b>Moments</b><small>I vostri ricordi</small></span><i>›</i>
-        </button>
-        <button type="button" class="home-action" onclick="go('bond')">
-          <span class="home-action-icon">✦</span><span><b>Bond</b><small>Quest e livello condiviso</small></span><i>›</i>
-        </button>
-        <button type="button" class="home-action" onclick="go('think')">
-          <span class="home-action-icon">♡</span><span><b>Ti penso</b><small>Un segnale solo per voi</small></span><i>›</i>
-        </button>
-      </div>
-      <button type="button" class="home-quiz-row" onclick="openQuizHub()">
-        <span class="home-action-icon">🎯</span>
-        <span><b>Couple Quiz</b><small>Scoprite quanto siete allineati</small></span>
-        <i>›</i>
+        <span class="distance-action" id="distanceAction">↻</span>
       </button>
-    </section>
-
-    <section class="home-memory-section" id="homeMemorySection" hidden>
-      <div class="home-section-title home-memory-title">
-        <span>Un ricordo di voi</span>
-        <button type="button" class="memory-refresh" aria-label="Mostra un altro ricordo" onclick="hydrateHomeMemory(true)">↻</button>
-      </div>
-      <article class="home-memory-card" id="homeMemoryCard" role="button" tabindex="0" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}">
-        <img id="homeMemoryImg" alt="Un vostro ricordo" loading="lazy">
-        <div class="home-memory-overlay">
-          <div class="moment-by" id="homeMemoryAuthor">Noi</div>
-          <b id="homeMemoryDate"></b>
-          <p id="homeMemoryCaption" hidden></p>
-        </div>
-      </article>
     </section>
   </main>
 
-  <main id="today" class="page">
-    <section class="section" style="margin-top:6px">
-      <h2>Today</h2>
+  <main id="today" class="today-overlay" aria-hidden="true">
+    <div class="today-backdrop" onclick="closeToday()"></div>
+    <section class="today-sheet">
+      <div class="today-sheet-head"><div><div class="tiny">TODAY</div><h2>La domanda di oggi</h2></div><button type="button" class="today-close" onclick="closeToday()" aria-label="Chiudi Today">×</button></div>
       <div class="card question">
         <div class="qtag">LA DOMANDA DEL GIORNO</div>
         <div class="qtext">Qual è una cosa che vorresti rifare insieme per la prima volta?</div>
@@ -160,8 +90,8 @@
         </button>
         <div class="moment-details">
           <input id="momentCaption" type="text" maxlength="180" placeholder="Scrivi una nota… (opzionale)">
+          <div class="moment-auto-date" id="momentDetectedDate">La data verrà letta automaticamente dalla foto.</div>
           <div class="moment-compose-footer">
-            <label class="moment-date-control"><span>Data</span><input id="momentDate" type="date" aria-label="Data del ricordo"></label>
             <button id="momentUploadBtn" type="button" class="primary moment-save" onclick="uploadMoment()">Salva ricordo</button>
           </div>
           <div class="moment-private">⌁ Solo voi due potete vederlo</div>
@@ -186,6 +116,11 @@
         <div class="bond-xp-track"><div id="bondPageFill"></div></div>
         <div class="bond-xp-line"><span id="bondLevelXp">0 / 200 XP</span><span id="bondCompletedCount">0 quest completate</span></div>
       </article>
+
+      <section class="bond-badges-section">
+        <div class="bond-weekly-head bond-badge-head"><div><div class="tiny">BADGES</div><h3>Livelli sbloccati</h3></div></div>
+        <div class="bond-badges" id="bondBadges"></div>
+      </section>
 
       <div class="bond-weekly-head">
         <div><div class="tiny">WEEKLY QUESTS</div><h3>Questa settimana</h3></div>
@@ -231,10 +166,15 @@
       <div id="quizHub">
         <p style="margin-top:0">Scegli una categoria. Ogni set ha 10 domande.</p>
         <div class="quiz-grid">
-          <div class="quiz-cat" onclick="startQuiz('preferenze')"><div class="emoji">💜</div><b>Preferenze</b><small>Cose che piacciono, gusti e abitudini.</small></div>
-          <div class="quiz-cat" onclick="startQuiz('noi')"><div class="emoji">❤️</div><b>Noi due</b><small>Ricordi, momenti e dettagli della relazione.</small></div>
-          <div class="quiz-cat" onclick="startQuiz('quotidiano')"><div class="emoji">☕</div><b>Quotidiano</b><small>Le piccole cose che dovresti sapere.</small></div>
+          <div class="quiz-cat" onclick="startQuiz('preferenze')"><div class="emoji">💜</div><b>Preferenze</b><small>Gusti, abitudini e piccole scelte.</small></div>
+          <div class="quiz-cat" onclick="startQuiz('noi')"><div class="emoji">❤️</div><b>Noi due</b><small>Ricordi e dettagli della relazione.</small></div>
+          <div class="quiz-cat" onclick="startQuiz('quotidiano')"><div class="emoji">☕</div><b>Quotidiano</b><small>Come vivete le piccole cose.</small></div>
           <div class="quiz-cat" onclick="startQuiz('futuro')"><div class="emoji">✨</div><b>Futuro</b><small>Sogni, progetti e desideri.</small></div>
+          <div class="quiz-cat" onclick="startQuiz('comunicazione')"><div class="emoji">💬</div><b>Comunicazione</b><small>Come vi capite quando conta.</small></div>
+          <div class="quiz-cat" onclick="startQuiz('viaggi')"><div class="emoji">✈️</div><b>Viaggi</b><small>Il vostro modo ideale di partire.</small></div>
+          <div class="quiz-cat" onclick="startQuiz('intimita')"><div class="emoji">🫶</div><b>Intimità</b><small>Affetto, vicinanza e attenzioni.</small></div>
+          <div class="quiz-cat" onclick="startQuiz('nerd')"><div class="emoji">🎮</div><b>Nerd mode</b><small>Gaming, film, fantasy e serate.</small></div>
+          <div class="quiz-cat quiz-cat-wide" onclick="startQuiz('random')"><div class="emoji">🎲</div><b>Random</b><small>Domande assurde per scoprire cose nuove.</small></div>
         </div>
       </div>
 
@@ -260,7 +200,8 @@
           </div>
           <div class="qtext" id="scoreText" style="font-size:19px">Ci stiamo ancora studiando 👀</div>
           <div class="csub" id="scoreSub">Il risultato si sblocca solo quando entrambi hanno completato il set.</div>
-          <button class="primary" style="width:100%;margin-top:16px" onclick="resetQuiz()">Scegli un'altra categoria</button>
+          <div class="quiz-matches hidden" id="quizMatches"></div>
+          <button class="primary" style="width:100%;margin-top:16px" onclick="resetQuiz()">Scegli un altro quiz</button>
         </div>
       </div>
     </section>
@@ -270,8 +211,8 @@
 
 <nav class="nav">
 <button class="active" data-page="home" onclick="go('home')"><span class="nicon">⌂</span>Home</button>
-<button data-page="today" onclick="go('today')"><span class="nicon">◌</span>Today</button>
 <button data-page="moments" onclick="go('moments')"><span class="nicon">▧</span>Moments</button>
+<button data-page="quiz" onclick="openQuizHub()"><span class="nicon">◎</span>Quiz</button>
 <button data-page="bond" onclick="go('bond')"><span class="nicon">✦</span>Bond</button>
 <button data-page="think" onclick="go('think')"><span class="nicon">♡</span>Ti penso</button>
 </nav>

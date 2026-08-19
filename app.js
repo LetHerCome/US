@@ -1,5 +1,5 @@
-const pages=['home','today','moments','bond','think','quiz'];
-const swipePages=['home','today','moments','bond','think'];
+const pages=['home','moments','quiz','bond','think'];
+const swipePages=['home','moments','quiz','bond','think'];
 function go(id,options={}){
   const current=document.querySelector('.page.active')?.id;
   if(current===id){
@@ -91,6 +91,17 @@ async function nextQuiz(){
   quizPos=next>=0?next:any;
   renderQuiz();
 }
+function renderQuizMatches(state){
+  const root=document.getElementById('quizMatches');
+  if(!root)return;
+  const mine=state?.my_answers||{};
+  const partner=state?.partner_answers||{};
+  const matches=(quizQuestions||[]).filter(q=>mine[String(q.id)]!==undefined&&mine[String(q.id)]===partner[String(q.id)]);
+  if(!matches.length){root.classList.remove('hidden');root.innerHTML='<div class="quiz-match-empty">Nessuna risposta identica in questo set. Almeno ora sapete dove siete diversi 👀</div>';return;}
+  root.classList.remove('hidden');
+  root.innerHTML='<div class="quiz-match-title">Le vostre risposte uguali</div>'+matches.map(q=>{const idx=Number(mine[String(q.id)]);const answer=(q.options||[])[idx]??'—';return `<article class="quiz-match"><small>${escapeHtml(q.question)}</small><b>♡ ${escapeHtml(String(answer))}</b></article>`;}).join('');
+}
+
 function showQuizState(state,notify=false){
   document.getElementById('quizPlay').classList.add('hidden');
   document.getElementById('quizResult').classList.remove('hidden');
@@ -99,12 +110,14 @@ function showQuizState(state,notify=false){
     document.getElementById('scoreValue').textContent=score+'/'+total;
     document.getElementById('scoreRing').style.setProperty('--score',Math.round(score/total*100));
     document.getElementById('scoreText').textContent=score>=9?'Siete praticamente sincronizzati 😏':score>=7?'Molto allineati ❤️':score>=5?'Niente male, ma avete ancora cose da scoprire 👀':'Due teste, parecchie sorprese 😂';
-    document.getElementById('scoreSub').textContent='Avete completato entrambi il set. Questo confronto usa solo le risposte completate da entrambi.';
+    document.getElementById('scoreSub').textContent='Avete completato entrambi il set. Qui sotto trovi le risposte che avete scelto uguali.';
+    renderQuizMatches(state);
     if(notify) toast('Confronto sbloccato ♡');
   }else{
     document.getElementById('scoreValue').textContent='✓';
     document.getElementById('scoreRing').style.setProperty('--score',100);
     document.getElementById('scoreText').textContent='Hai completato il set ♡';
+    const matches=document.getElementById('quizMatches');if(matches){matches.classList.add('hidden');matches.innerHTML='';}
     const partner=window.usProfile?.role==='francesco'?'Bea':'Francesco';
     document.getElementById('scoreSub').textContent='Ora aspettiamo '+partner+'. Il risultato resta nascosto finché non completa anche '+partner+'.';
   }
@@ -119,6 +132,7 @@ async function refreshQuizState(){
 }
 function resetQuiz(){
   quizSet=null;quizQuestions=[];quizState=null;quizPos=0;quizSelected=null;
+  const matches=document.getElementById('quizMatches');if(matches){matches.classList.add('hidden');matches.innerHTML='';}
   document.getElementById('quizHub').classList.remove('hidden');
   document.getElementById('quizPlay').classList.add('hidden');
   document.getElementById('quizResult').classList.add('hidden');
@@ -129,7 +143,8 @@ function updateTogetherDays(){
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const diff = Math.max(0,Math.floor((today - start)/86400000));
-  document.getElementById('daysTogether').textContent = diff.toLocaleString('it-IT');
+  const el=document.getElementById('daysTogether');
+  if(el)el.textContent = diff.toLocaleString('it-IT');
 }
 updateTogetherDays();
 
@@ -310,7 +325,8 @@ async function hydrateDistance(){
   window.usDistanceKm=km;
   root.classList.add('ready');
   value.textContent=`♡ ${formatDistance(km)} da ${partnerName}`;
-  meta.textContent=`Posizione di ${partnerName} aggiornata ${relativeLocationAge(partner.updated_at)}.`;
+  const accuracy=Number.isFinite(Number(partner.accuracy_m))?` · precisione ±${Math.round(Number(partner.accuracy_m))} m`:'';
+  meta.textContent=`Posizione di ${partnerName} aggiornata ${relativeLocationAge(partner.updated_at)}${accuracy}.`;
   btn.textContent='↻';btn.disabled=false;
 }
 
@@ -319,8 +335,8 @@ async function saveMyLocation(position){
   const payload={
     user_id:window.usProfile.id,
     couple_id:window.usProfile.couple_id,
-    latitude:Number(position.coords.latitude.toFixed(4)),
-    longitude:Number(position.coords.longitude.toFixed(4)),
+    latitude:Number(position.coords.latitude.toFixed(6)),
+    longitude:Number(position.coords.longitude.toFixed(6)),
     accuracy_m:Number.isFinite(position.coords.accuracy)?position.coords.accuracy:null,
     updated_at:new Date(position.timestamp||Date.now()).toISOString()
   };
@@ -365,9 +381,9 @@ function refreshMyLocation(options={}){
     locationRefreshInFlight=false;
     geolocationError(error,silent);
   },{
-    enableHighAccuracy:false,
-    timeout:12000,
-    maximumAge:silent?120000:0
+    enableHighAccuracy:true,
+    timeout:20000,
+    maximumAge:silent?30000:0
   });
 }
 window.refreshMyLocation=refreshMyLocation;
@@ -506,64 +522,90 @@ const profileAvatarFile=document.getElementById('profileAvatarFile');
 if(profileAvatarFile)profileAvatarFile.addEventListener('change',(event)=>uploadProfilePhoto(event.target.files?.[0]||null));
 
 
-function pickHomePhoto(){
-  if(!window.usProfile)return toast('Connessione non pronta');
-  document.getElementById('homePhotoFile').click();
-}
-window.pickHomePhoto=pickHomePhoto;
+let homePhotoRotationTimer=null;
+let homePhotoActiveLayer='A';
+let homePhotoHourKey='';
+let homePhotoPath='';
 
-async function hydrateHomePhoto(){
-  if(!window.usProfile)return;
+function homeRotationKey(){
+  const d=new Date();
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}T${String(d.getUTCHours()).padStart(2,'0')}`;
+}
+
+function homeStableIndex(seed,count){
+  let h=2166136261;
+  for(let i=0;i<seed.length;i++){h^=seed.charCodeAt(i);h=Math.imul(h,16777619);}
+  return count?((h>>>0)%count):0;
+}
+
+async function getHomeRotationPath(){
+  if(!window.usProfile)return null;
+  const {data:rows,error}=await sb.from('moments')
+    .select('id,storage_path,moment_date,created_at')
+    .eq('couple_id',window.usProfile.couple_id)
+    .order('moment_date',{ascending:false})
+    .order('created_at',{ascending:false})
+    .limit(120);
+  if(error){console.warn(error);return null;}
+  if(rows?.length){
+    const key=homeRotationKey();
+    let idx=homeStableIndex(`${window.usProfile.couple_id}|${key}|home`,rows.length);
+    if(rows.length>1&&rows[idx]?.storage_path===homePhotoPath)idx=(idx+1)%rows.length;
+    return rows[idx]?.storage_path||null;
+  }
+  const {data:couple}=await sb.from('couples').select('home_photo_path').eq('id',window.usProfile.couple_id).maybeSingle();
+  return couple?.home_photo_path||null;
+}
+
+function crossfadeHomePhoto(url){
   const hero=document.getElementById('homeHero');
-  if(!hero)return;
-  const {data:couple,error}=await sb.from('couples').select('home_photo_path').eq('id',window.usProfile.couple_id).maybeSingle();
-  if(error){console.warn(error);return;}
-  const path=couple?.home_photo_path||null;
-  window.usHomePhotoPath=path;
+  const nextKey=homePhotoActiveLayer==='A'?'B':'A';
+  const current=document.getElementById(`homePhotoLayer${homePhotoActiveLayer}`);
+  const next=document.getElementById(`homePhotoLayer${nextKey}`);
+  if(!hero||!current||!next)return;
+  const apply=()=>{
+    next.style.backgroundImage=url?`url("${url}")`:'';
+    requestAnimationFrame(()=>{
+      next.classList.add('active');
+      current.classList.remove('active');
+      homePhotoActiveLayer=nextKey;
+    });
+  };
+  if(!url){apply();return;}
+  const preload=new Image();
+  preload.onload=apply;
+  preload.onerror=()=>console.warn('[US Home] preload foto fallito');
+  preload.src=url;
+}
+
+async function hydrateHomePhoto(force=false){
+  if(!window.usProfile)return;
+  const hourKey=homeRotationKey();
+  if(!force && homePhotoHourKey===hourKey && homePhotoPath)return;
+  const path=await getHomeRotationPath();
+  homePhotoHourKey=hourKey;
   if(!path){
-    hero.style.backgroundImage='';
-    hero.classList.remove('has-photo');
+    homePhotoPath='';
+    crossfadeHomePhoto('');
     return;
   }
-  const {data:signed,error:signedError}=await sb.storage.from('us-media').createSignedUrl(path,21600);
-  if(signedError||!signed?.signedUrl){console.warn(signedError);return;}
-  hero.style.backgroundImage=`url("${signed.signedUrl}")`;
-  hero.classList.add('has-photo');
+  if(!force && path===homePhotoPath)return;
+  const {data:signed,error}=await sb.storage.from('us-media').createSignedUrl(path,3900);
+  if(error||!signed?.signedUrl){console.warn(error);return;}
+  homePhotoPath=path;
+  crossfadeHomePhoto(signed.signedUrl);
 }
 window.hydrateHomePhoto=hydrateHomePhoto;
 
-async function uploadHomePhoto(file){
-  if(!window.usProfile||!file)return;
-  if(!['image/jpeg','image/png','image/webp'].includes(file.type))return toast('Per ora usa JPG, PNG o WebP');
-  if(file.size>20*1024*1024)return toast('Foto troppo grande: massimo 20 MB');
-  const input=document.getElementById('homePhotoFile');
-  const oldPath=window.usHomePhotoPath||null;
-  try{
-    toast('Ottimizzo la foto…');
-    const compressed=await compressImageFile(file,{maxDimension:1920,quality:.82});
-    const path=`${window.usProfile.couple_id}/${window.usProfile.id}/home-${Date.now()}-${crypto.randomUUID()}.webp`;
-    const {error:uploadError}=await sb.storage.from('us-media').upload(path,compressed,{contentType:'image/webp',upsert:false,cacheControl:'3600'});
-    if(uploadError)throw uploadError;
-    const {error:updateError}=await sb.from('couples').update({home_photo_path:path}).eq('id',window.usProfile.couple_id);
-    if(updateError){await sb.storage.from('us-media').remove([path]);throw updateError;}
-    window.usHomePhotoPath=path;
-    await hydrateHomePhoto();
-    if(oldPath && oldPath!==path){
-      const oldOwner=oldPath.split('/')[1];
-      if(oldOwner===window.usProfile.id)await sb.storage.from('us-media').remove([oldPath]);
-    }
-    toast('Foto Home aggiornata ♡');
-  }catch(err){
-    console.warn(err);
-    toast('Non riesco ad aggiornare la Home');
-  }finally{
-    if(input)input.value='';
-  }
+function startHomePhotoRotation(){
+  if(homePhotoRotationTimer)clearInterval(homePhotoRotationTimer);
+  const tick=()=>{
+    if(document.hidden||!window.usProfile)return;
+    if(homePhotoHourKey!==homeRotationKey())hydrateHomePhoto(true);
+  };
+  homePhotoRotationTimer=setInterval(tick,60000);
 }
-window.uploadHomePhoto=uploadHomePhoto;
-
-const homePhotoFile=document.getElementById('homePhotoFile');
-if(homePhotoFile)homePhotoFile.addEventListener('change',(event)=>uploadHomePhoto(event.target.files?.[0]||null));
+startHomePhotoRotation();
 
 function selectRole(role){
   selectedRole=role;
@@ -612,6 +654,23 @@ function localDateISO(){
   const d=new Date(), y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
   return `${y}-${m}-${day}`;
 }
+function openToday(){
+  const root=document.getElementById('today');
+  if(!root)return;
+  root.classList.add('open');
+  root.setAttribute('aria-hidden','false');
+  document.body.style.overflow='hidden';
+  hydrateToday();
+}
+window.openToday=openToday;
+function closeToday(){
+  const root=document.getElementById('today');
+  root?.classList.remove('open');
+  root?.setAttribute('aria-hidden','true');
+  document.body.style.overflow='';
+}
+window.closeToday=closeToday;
+
 async function hydrateToday(){
   if(!window.usProfile)return;
   const {data:q,error:qError}=await sb.from('daily_questions').select('id,question').eq('question_date',localDateISO()).maybeSingle();
@@ -663,7 +722,14 @@ async function updateHomeStatus(){
   if(!window.usProfile)return;
   const todayPill=document.getElementById('todayStatusPill');
   const quizPill=document.getElementById('quizStatusPill');
+  const todayOrb=document.getElementById('todayOrb');
+  const todayOrbDot=document.getElementById('todayOrbDot');
   const st=window.todayState;
+  if(todayOrb){
+    todayOrb.classList.toggle('done',Boolean(st?.my_answer));
+    todayOrb.classList.toggle('reveal',Boolean(st?.both_answered));
+  }
+  if(todayOrbDot)todayOrbDot.hidden=Boolean(st?.my_answer);
   const partner=window.usProfile.role==='francesco'?'Bea':'Francesco';
   if(todayPill){
     if(st?.both_answered) todayPill.textContent='💬 Today · reveal sbloccato';
@@ -673,18 +739,83 @@ async function updateHomeStatus(){
   }
   try{
     const {count,error}=await sb.from('quiz_responses').select('id',{count:'exact',head:true});
-    if(!error && quizPill) quizPill.textContent='🎯 Quiz · '+Number(count||0)+'/40';
+    if(!error && quizPill) quizPill.textContent='🎯 Quiz · '+Number(count||0)+' risposte';
   }catch(_e){}
 }
 
 let pendingMomentFile=null;
 let pendingMomentPreviewUrl=null;
+let pendingMomentDate=localDateISO();
 
-function initMomentDate(force=false){
-  const el=document.getElementById('momentDate');
-  if(el && (force||!el.value))el.value=localDateISO();
+function formatMomentDetectedDate(value){
+  try{return new Date(value+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'});}catch(_){return value;}
 }
-initMomentDate();
+
+function parseExifDateString(value){
+  const m=String(value||'').match(/^(\d{4}):(\d{2}):(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/);
+  if(!m)return null;
+  return `${m[1]}-${m[2]}-${m[3]}`;
+}
+
+async function readJpegExifDate(file){
+  if(file?.type!=='image/jpeg')return null;
+  try{
+    const buffer=await file.slice(0,Math.min(file.size,512*1024)).arrayBuffer();
+    const view=new DataView(buffer);
+    if(view.byteLength<4||view.getUint16(0,false)!==0xFFD8)return null;
+    let offset=2;
+    const readAscii=(pos,len)=>{let out='';for(let i=0;i<len&&pos+i<view.byteLength;i++){const c=view.getUint8(pos+i);if(!c)break;out+=String.fromCharCode(c);}return out;};
+    while(offset+4<view.byteLength){
+      if(view.getUint8(offset)!==0xFF){offset++;continue;}
+      const marker=view.getUint8(offset+1);offset+=2;
+      if(marker===0xDA||marker===0xD9)break;
+      if(offset+2>view.byteLength)break;
+      const size=view.getUint16(offset,false);
+      if(size<2||offset+size>view.byteLength)break;
+      if(marker===0xE1&&size>=8&&readAscii(offset+2,6).startsWith('Exif')){
+        const tiff=offset+8;
+        const little=view.getUint16(tiff,false)===0x4949;
+        const u16=(p)=>view.getUint16(p,little),u32=(p)=>view.getUint32(p,little);
+        const readIfd=(ifdPos)=>{
+          if(ifdPos+2>view.byteLength)return {date:null,exif:null};
+          const count=u16(ifdPos);let date=null,exif=null;
+          for(let i=0;i<count;i++){
+            const e=ifdPos+2+i*12;if(e+12>view.byteLength)break;
+            const tag=u16(e),type=u16(e+2),num=u32(e+4),value=u32(e+8);
+            if(tag===0x8769)exif=tiff+value;
+            if((tag===0x0132||tag===0x9003||tag===0x9004)&&type===2&&num>0){
+              const pos=num<=4?e+8:tiff+value;
+              const raw=readAscii(pos,Math.min(num,32));
+              date=parseExifDateString(raw)||date;
+            }
+          }
+          return {date,exif};
+        };
+        const ifd0=tiff+u32(tiff+4);
+        const first=readIfd(ifd0);
+        if(first.exif){const ex=readIfd(first.exif);if(ex.date)return ex.date;}
+        if(first.date)return first.date;
+      }
+      offset+=size;
+    }
+  }catch(error){console.warn('[US Moments] EXIF date',error);}
+  return null;
+}
+
+async function detectMomentDate(file){
+  const exif=await readJpegExifDate(file);
+  if(exif)return exif;
+  if(Number.isFinite(file?.lastModified)&&file.lastModified>0){
+    const d=new Date(file.lastModified);
+    if(!Number.isNaN(d.getTime()))return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  return localDateISO();
+}
+
+function updateDetectedMomentDate(){
+  const el=document.getElementById('momentDetectedDate');
+  if(el)el.textContent=`Data foto · ${formatMomentDetectedDate(pendingMomentDate)}`;
+}
 
 function pickMomentPhoto(){
   document.getElementById('momentFile').click();
@@ -693,15 +824,16 @@ window.pickMomentPhoto=pickMomentPhoto;
 
 function resetMomentComposer(){
   pendingMomentFile=null;
+  pendingMomentDate=localDateISO();
   if(pendingMomentPreviewUrl){URL.revokeObjectURL(pendingMomentPreviewUrl);pendingMomentPreviewUrl=null;}
   const fileInput=document.getElementById('momentFile');if(fileInput)fileInput.value='';
   const caption=document.getElementById('momentCaption');if(caption)caption.value='';
   const img=document.getElementById('momentPreviewImg');if(img)img.removeAttribute('src');
   document.getElementById('momentCompose')?.classList.remove('has-photo');
-  initMomentDate(true);
+  const detected=document.getElementById('momentDetectedDate');if(detected)detected.textContent='La data verrà letta automaticamente dalla foto.';
 }
 
-document.getElementById('momentFile').addEventListener('change',(event)=>{
+document.getElementById('momentFile')?.addEventListener('change',async(event)=>{
   const file=event.target.files?.[0]||null;
   const compose=document.getElementById('momentCompose');
   const img=document.getElementById('momentPreviewImg');
@@ -715,6 +847,8 @@ document.getElementById('momentFile').addEventListener('change',(event)=>{
     return toast('Foto troppo grande: massimo 20 MB');
   }
   pendingMomentFile=file;
+  pendingMomentDate=await detectMomentDate(file);
+  updateDetectedMomentDate();
   if(pendingMomentPreviewUrl)URL.revokeObjectURL(pendingMomentPreviewUrl);
   pendingMomentPreviewUrl=URL.createObjectURL(file);
   img.src=pendingMomentPreviewUrl;
@@ -728,7 +862,7 @@ async function uploadMoment(){
   if(!pendingMomentFile)return toast('Scegli prima una foto');
   const btn=document.getElementById('momentUploadBtn');
   const caption=document.getElementById('momentCaption').value.trim();
-  const momentDate=document.getElementById('momentDate').value||localDateISO();
+  const momentDate=pendingMomentDate||localDateISO();
   const file=pendingMomentFile;
   btn.disabled=true;btn.textContent='Ottimizzo…';
   try{
@@ -750,6 +884,7 @@ async function uploadMoment(){
     toast('Ricordo aggiunto ♡');
     await hydrateMoments();
     await hydrateHomeMemory();
+    if(!homePhotoPath)await hydrateHomePhoto(true);
   }catch(err){console.warn(err);toast(err?.message==='SOURCE_TOO_LARGE'?'Foto troppo grande: massimo 20 MB':'Upload non riuscito');}
   finally{btn.disabled=false;btn.textContent='Salva ricordo';}
 }
@@ -759,26 +894,30 @@ async function hydrateMoments(){
   if(!window.usProfile)return;
   const grid=document.getElementById('momentsGrid');
   const pill=document.getElementById('momentsStatusPill');
-  grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">↻</div><b>Carico i vostri ricordi…</b></div>';
-  const [{data:rows,error},{data:profiles, error:profilesError}]=await Promise.all([
+  if(!grid)return;
+  if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">↻</div><b>Carico i vostri ricordi…</b></div>';
+  const [{data:rows,error},{data:profiles,error:profilesError}]=await Promise.all([
     sb.from('moments').select('id,created_by,storage_path,caption,moment_date,created_at').order('moment_date',{ascending:false}).order('created_at',{ascending:false}),
     sb.from('profiles').select('id,display_name').eq('couple_id',window.usProfile.couple_id)
   ]);
-  if(error){console.warn(error);grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">!</div><b>Moments non disponibile</b><p>Riprova tra un momento.</p></div>';return;}
+  if(error){console.warn(error);if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">!</div><b>Moments non disponibile</b><p>Riprova tra un momento.</p></div>';return;}
   if(profilesError)console.warn(profilesError);
-  const names=new Map((profiles||[]).map(profile=>[profile.id,profile.display_name||'Noi']));
   if(pill)pill.textContent='📸 Moments · '+(rows?.length||0);
-  if(!rows?.length){grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">📸</div><b>Il primo ricordo parte da qui.</b><p>Scegli una foto e aggiungi una piccola nota.</p></div>';return;}
+  const signature=JSON.stringify((rows||[]).map(r=>[r.id,r.created_by,r.storage_path,r.caption||'',r.moment_date,r.created_at]));
+  if(grid.dataset.loaded==='1'&&grid.dataset.signature===signature)return;
+  if(!rows?.length){grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">📸</div><b>Il primo ricordo parte da qui.</b><p>Scegli una foto: la data verrà letta automaticamente.</p></div>';grid.dataset.loaded='1';grid.dataset.signature=signature;return;}
+  const names=new Map((profiles||[]).map(profile=>[profile.id,profile.display_name||'Noi']));
   const cards=[];
   for(const row of rows){
-    const {data:signed,error:signedError}=await sb.storage.from('us-media').createSignedUrl(row.storage_path,3600);
+    const {data:signed,error:signedError}=await sb.storage.from('us-media').createSignedUrl(row.storage_path,21600);
     if(signedError||!signed?.signedUrl){console.warn(signedError);continue;}
     const dateLabel=new Date(row.moment_date+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
     const own=row.created_by===window.usProfile.id;
     const author=names.get(row.created_by)||(own?window.usProfile.display_name:'Noi');
-    cards.push(`<article class="moment-card" role="button" tabindex="0" data-url="${escapeHtml(signed.signedUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(row.caption||'')}" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(signed.signedUrl)}" alt="Ricordo condiviso" loading="lazy">${own?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}','${escapeHtml(row.storage_path)}')">×</button>`:''}<div class="moment-meta"><div class="moment-by">${escapeHtml(author||'Noi')}</div><b>${dateLabel}</b>${row.caption?`<p>${escapeHtml(row.caption)}</p>`:''}</div></article>`);
+    cards.push(`<article class="moment-card moment-postit" role="button" tabindex="0" data-url="${escapeHtml(signed.signedUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(row.caption||'')}" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(signed.signedUrl)}" alt="Ricordo condiviso" loading="lazy">${own?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}','${escapeHtml(row.storage_path)}')">×</button>`:''}<div class="moment-meta"><div class="moment-by">${escapeHtml(author||'Noi')}</div><b>${dateLabel}</b>${row.caption?`<p>${escapeHtml(row.caption)}</p>`:''}</div></article>`);
   }
-  grid.innerHTML=cards.join('')||'<div class="empty-state moment-loading"><div class="emoji">!</div><b>Foto non disponibili</b><p>Riprova tra un momento.</p></div>';
+  if(cards.length){grid.innerHTML=cards.join('');grid.dataset.loaded='1';grid.dataset.signature=signature;}
+  else if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">!</div><b>Foto non disponibili</b><p>Riprova tra un momento.</p></div>';
 }
 window.hydrateMoments=hydrateMoments;
 
@@ -799,7 +938,7 @@ async function hydrateHomeMemory(forceNext=false){
   const daySeed=Number(localDateISO().replaceAll('-',''))||0;
   const row=rows[(daySeed+homeMemoryOffset)%rows.length];
   const names=new Map((profiles||[]).map(profile=>[profile.id,profile.display_name||'Noi']));
-  const {data:signed,error:signedError}=await sb.storage.from('us-media').createSignedUrl(row.storage_path,3600);
+  const {data:signed,error:signedError}=await sb.storage.from('us-media').createSignedUrl(row.storage_path,21600);
   if(signedError||!signed?.signedUrl){console.warn(signedError);section.hidden=true;return;}
   const dateLabel=new Date(row.moment_date+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'long',year:'numeric'});
   const author=names.get(row.created_by)||'Noi';
@@ -865,6 +1004,7 @@ async function deleteMoment(id,path){
   toast('Ricordo eliminato');
   await hydrateMoments();
   await hydrateHomeMemory();
+  if(path===homePhotoPath){homePhotoPath='';await hydrateHomePhoto(true);}
 }
 window.deleteMoment=deleteMoment;
 
@@ -905,6 +1045,30 @@ function bondRankTitle(level){
   if(level<=20)return 'Mythic Bond';
   return 'Eternal Party';
 }
+function bondBadgeIcon(level){
+  const icons=['♡','✦','∞','⌁','✧','☾','◇','♜','⚡','♛'];
+  return icons[(Math.max(1,level)-1)%icons.length];
+}
+function renderBondBadges(level){
+  const root=document.getElementById('bondBadges');
+  if(!root)return;
+  if(root.dataset.level===String(level))return;
+  root.dataset.level=String(level);
+  const maxShown=Math.max(3,Math.min(level+2,12));
+  const cards=[];
+  for(let l=1;l<=maxShown;l++){
+    const unlocked=l<=level;
+    cards.push(`<div class="bond-badge-card ${unlocked?'unlocked':'locked'}"><span>${bondBadgeIcon(l)}</span><b>LV. ${l}</b><small>${escapeHtml(bondRankTitle(l))}</small></div>`);
+  }
+  root.innerHTML=cards.join('');
+  try{
+    const key=`usBondLastLevel:${window.usProfile?.couple_id||'local'}`;
+    const prev=Number(localStorage.getItem(key)||0);
+    if(prev>0&&level>prev){toast(`Badge LV. ${level} sbloccato ✦`);navigator.vibrate?.([35,20,55]);}
+    if(level>prev)localStorage.setItem(key,String(level));
+  }catch(_e){}
+}
+
 function renderBondProgress(totalXp){
   const info=bondLevelInfo(totalXp);
   const heroLevel=document.getElementById('heroBondLevel');
@@ -920,6 +1084,7 @@ function renderBondProgress(totalXp){
   const pageFill=document.getElementById('bondPageFill');if(pageFill)pageFill.style.width=`${info.progress}%`;
   const line=document.getElementById('bondLevelXp');if(line)line.textContent=`${info.current.toLocaleString('it-IT')} / ${info.needed.toLocaleString('it-IT')} XP`;
   window.usBondXp=info.total;
+  renderBondBadges(info.level);
 }
 async function hydrateBondSummary(){
   if(!window.usProfile)return;
@@ -1014,7 +1179,7 @@ async function hydrateBond(){
   if(!window.usProfile)return;
   const list=document.getElementById('bondQuestList');
   if(!list)return;
-  list.innerHTML='<div class="empty-state"><div class="emoji">✦</div><b>Preparo le vostre quest…</b></div>';
+  if(list.dataset.loaded!=='1')list.innerHTML='<div class="empty-state"><div class="emoji">✦</div><b>Preparo le vostre quest…</b></div>';
   await ensureBondWeek();
   const week=weekStartISO(),coupleId=window.usProfile.couple_id;
   const [{data:state,error:stateError},{data:quests,error:questError},{data:profiles,error:profilesError},{data:couple,error:coupleError},{count:completedCount,error:countError}]=await Promise.all([
@@ -1024,7 +1189,7 @@ async function hydrateBond(){
     sb.from('couples').select('bond_xp').eq('id',coupleId).maybeSingle(),
     sb.from('bond_weekly_quests').select('id',{count:'exact',head:true}).eq('couple_id',coupleId).not('completed_at','is',null)
   ]);
-  if(stateError||questError||profilesError||coupleError){console.warn(stateError||questError||profilesError||coupleError);list.innerHTML='<div class="empty-state"><div class="emoji">!</div><b>Bond non disponibile</b><p>Riprova tra un momento.</p></div>';return;}
+  if(stateError||questError||profilesError||coupleError){console.warn(stateError||questError||profilesError||coupleError);if(list.dataset.loaded!=='1')list.innerHTML='<div class="empty-state"><div class="emoji">!</div><b>Bond non disponibile</b><p>Riprova tra un momento.</p></div>';return;}
   if(countError)console.warn(countError);
   window.usBondProfiles=profiles||[];
   window.usBondState=state||{rerolls_used:0};
@@ -1034,7 +1199,10 @@ async function hydrateBond(){
   const rerollsLeft=Math.max(0,3-Number(state?.rerolls_used||0));
   const rerollEl=document.getElementById('bondRerollsLeft');if(rerollEl)rerollEl.textContent=rerollsLeft;
   const resetEl=document.getElementById('bondWeekReset');if(resetEl)resetEl.textContent=`Nuove quest ${nextWeekLabel()}`;
+  const signature=JSON.stringify([state?.rerolls_used||0,couple?.bond_xp||0,completedCount||0,(quests||[]).map(q=>[q.id,q.template_key,q.title,q.rarity,q.xp,q.confirmed_by,q.completed_at])]);
+  if(list.dataset.loaded==='1'&&list.dataset.signature===signature)return;
   list.innerHTML=(quests||[]).map(q=>renderBondQuest(q,state,profiles)).join('')||'<div class="empty-state"><b>Nessuna quest disponibile.</b></div>';
+  list.dataset.loaded='1';list.dataset.signature=signature;
 }
 window.hydrateBond=hydrateBond;
 async function confirmBondQuest(id){
@@ -1143,6 +1311,7 @@ async function hydrateCloud(){
     await hydrateToday();
     await hydrateMoments();
     await hydrateHomeMemory();
+    if(!homePhotoPath)await hydrateHomePhoto(true);
     await updateHomeStatus();
     await hydrateBondSummary();
     await hydrateThink();
@@ -1177,7 +1346,7 @@ window.saveAnswer=saveAnswer;
 
 let swipeGesture=null;
 function swipeBlockedTarget(target){
-  return Boolean(target?.closest?.('input,textarea,select,button,[contenteditable="true"],.modal,.moment-viewer,.auth-overlay'));
+  return Boolean(target?.closest?.('input,textarea,select,button,[contenteditable="true"],.modal,.moment-viewer,.auth-overlay,.today-overlay,.us-story-viewer,.us-camera-viewer'));
 }
 function resetSwipeVisual(page){
   if(!page)return;
@@ -1249,3 +1418,6 @@ if ("serviceWorker" in navigator) {
     });
   });
 }
+
+
+document.addEventListener('keydown',(event)=>{if(event.key==='Escape')closeToday();});

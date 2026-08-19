@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-v17";
+const CACHE_NAME = "us-shell-v18";
 
 const APP_SHELL = [
   "/",
@@ -152,64 +152,34 @@ const AUTH_BOOTSTRAP = `
 
 const FAST_REFRESH_BOOTSTRAP = `
 (() => {
-  if (window.__usFastRefreshInstalled) return;
-  window.__usFastRefreshInstalled = true;
+  if (window.__usFastRefreshV18Installed) return;
+  window.__usFastRefreshV18Installed = true;
 
   let fastTimer = null;
-  let profileTick = 0;
+  let running = false;
 
   async function runFastRefresh() {
-    if (!window.usProfile || document.hidden) return;
-
+    if (running || !window.usProfile || document.hidden) return;
+    running = true;
     try {
-      if (typeof hydrateToday === 'function') await hydrateToday();
-    } catch (_) {}
+      try { if (typeof hydrateToday === 'function') await hydrateToday(); } catch (_) {}
+      try { if (typeof updateHomeStatus === 'function') await updateHomeStatus(); } catch (_) {}
+      try { if (typeof refreshQuizState === 'function') await refreshQuizState(); } catch (_) {}
+      try { if (typeof hydrateDistance === 'function') await hydrateDistance(); } catch (_) {}
+      try { if (typeof hydrateBondSummary === 'function') await hydrateBondSummary(); } catch (_) {}
 
-    try {
-      if (typeof updateHomeStatus === 'function') await updateHomeStatus();
-    } catch (_) {}
-
-    try {
-      if (typeof refreshQuizState === 'function') await refreshQuizState();
-    } catch (_) {}
-
-    try {
-      if (typeof hydrateDistance === 'function') await hydrateDistance();
-    } catch (_) {}
-
-    try {
-      if (typeof hydrateBondSummary === 'function') await hydrateBondSummary();
-    } catch (_) {}
-
-    const activePage = document.querySelector('.page.active')?.id;
-
-    if (activePage === 'moments') {
-      try {
-        if (typeof hydrateMoments === 'function') await hydrateMoments();
-      } catch (_) {}
-    }
-
-    if (activePage === 'bond') {
-      try {
-        if (typeof hydrateBond === 'function') await hydrateBond();
-      } catch (_) {}
-    }
-
-    if (activePage === 'think') {
-      try {
-        if (typeof hydrateThink === 'function') await hydrateThink();
-      } catch (_) {}
-    }
-
-    profileTick++;
-    if (profileTick >= 4) {
-      profileTick = 0;
-      try {
-        if (typeof hydrateProfileAvatars === 'function') await hydrateProfileAvatars();
-      } catch (_) {}
-      try {
-        if (typeof hydrateHomePhoto === 'function') await hydrateHomePhoto();
-      } catch (_) {}
+      const activePage = document.querySelector('.page.active')?.id;
+      if (activePage === 'moments') {
+        try { if (typeof hydrateMoments === 'function') await hydrateMoments(); } catch (_) {}
+      }
+      if (activePage === 'bond') {
+        try { if (typeof hydrateBond === 'function') await hydrateBond(); } catch (_) {}
+      }
+      if (activePage === 'think') {
+        try { if (typeof hydrateThink === 'function') await hydrateThink(); } catch (_) {}
+      }
+    } finally {
+      running = false;
     }
   }
 
@@ -219,16 +189,12 @@ const FAST_REFRESH_BOOTSTRAP = `
     setTimeout(runFastRefresh, 500);
   }
 
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) runFastRefresh();
-  });
-
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) runFastRefresh(); });
   window.addEventListener('focus', runFastRefresh);
   window.addEventListener('online', runFastRefresh);
 
   startFastRefresh();
-
-  console.info('[US Sync] Refresh rapido attivo: 3s');
+  console.info('[US Sync] v18 refresh dati 3s senza rerender immagini');
 })();
 `;
 
