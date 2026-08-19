@@ -139,6 +139,54 @@ const SB_KEY = 'sb_publishable_JAB6USqhccAUg8_0ujgQ1A_NkRJRv_A';
 const sb = window.supabase.createClient(SB_URL, SB_KEY);
 
 let selectedRole = null;
+let usNativeWidgetBridge = null;
+
+function getNativeWidgetBridge(){
+  const cap=window.Capacitor;
+  if(!cap || typeof cap.isNativePlatform!=='function' || !cap.isNativePlatform() || typeof cap.registerPlugin!=='function')return null;
+  if(!usNativeWidgetBridge)usNativeWidgetBridge=cap.registerPlugin('UsWidgetBridge');
+  return usNativeWidgetBridge;
+}
+
+async function syncNativeWidgetBridge(sessionOverride=null){
+  const bridge=getNativeWidgetBridge();
+  if(!bridge || !window.usProfile)return;
+  try{
+    let session=sessionOverride;
+    if(!session){
+      const {data}=await sb.auth.getSession();
+      session=data?.session||null;
+    }
+    if(!session?.access_token || !session?.refresh_token)return;
+    const profiles=await getCoupleProfiles();
+    const partner=partnerFromProfiles(profiles);
+    if(!partner)return;
+    const {data:lastReceived,error:lastReceivedError}=await sb.from('shared_messages')
+      .select('created_at')
+      .eq('kind','think')
+      .eq('sender_id',partner.id)
+      .eq('recipient_id',window.usProfile.id)
+      .order('created_at',{ascending:false})
+      .limit(1)
+      .maybeSingle();
+    if(lastReceivedError)console.warn(lastReceivedError);
+    await bridge.configure({
+      supabaseUrl:SB_URL,
+      supabaseKey:SB_KEY,
+      accessToken:session.access_token,
+      refreshToken:session.refresh_token,
+      userId:window.usProfile.id,
+      coupleId:window.usProfile.couple_id,
+      displayName:window.usProfile.display_name||'',
+      partnerId:partner.id,
+      partnerName:partner.display_name||'',
+      lastReceivedAt:lastReceived?.created_at||''
+    });
+  }catch(error){
+    console.warn('Widget bridge non disponibile',error);
+  }
+}
+window.syncNativeWidgetBridge=syncNativeWidgetBridge;
 
 async function initCloud(){
   const { data: { session } } = await sb.auth.getSession();
@@ -166,6 +214,7 @@ async function initCloud(){
   await hydrateProfileAvatars();
   await hydrateHomePhoto();
   await hydrateCloud();
+  await syncNativeWidgetBridge(session);
   startUsRealtime();
   await maybeAutoRefreshLocation();
   startLocationRefreshTimer();
@@ -1064,6 +1113,7 @@ async function sendThinkSignal(){
   navigator.vibrate?.([30,25,45]);
   toast(`${partner.display_name} lo saprà ♡`);
   await hydrateThink();
+  syncNativeWidgetBridge().catch(()=>{});
   setTimeout(()=>{if(btn)btn.disabled=false;},1800);
 }
 window.sendThinkSignal=sendThinkSignal;
@@ -1074,6 +1124,7 @@ function handleIncomingThink(row){
   navigator.vibrate?.([45,35,80]);
   const heart=document.getElementById('thinkButton');heart?.classList.add('received');setTimeout(()=>heart?.classList.remove('received'),900);
   hydrateThink();
+  syncNativeWidgetBridge().catch(()=>{});
 }
 function startUsRealtime(){
   if(!window.usProfile)return;
