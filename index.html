@@ -71,6 +71,24 @@
       </div>
     </section>
 
+    <section class="section home-memory-section" id="homeMemorySection" hidden>
+      <div class="section-headline">
+        <div>
+          <div class="tiny">UN RICORDO DI VOI</div>
+          <h2 style="margin:4px 0 0">Oggi mi è tornato in mente…</h2>
+        </div>
+        <button type="button" class="memory-refresh" aria-label="Mostra un altro ricordo" onclick="hydrateHomeMemory(true)">↻</button>
+      </div>
+      <article class="home-memory-card" id="homeMemoryCard" role="button" tabindex="0" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}">
+        <img id="homeMemoryImg" alt="Un vostro ricordo" loading="lazy">
+        <div class="home-memory-overlay">
+          <div class="moment-by" id="homeMemoryAuthor">Noi</div>
+          <b id="homeMemoryDate"></b>
+          <p id="homeMemoryCaption" hidden></p>
+        </div>
+      </article>
+    </section>
+
     <div class="quick">
       <div class="card" onclick="go('today')"><div class="ico">💬</div><div class="ctitle">Today</div><div class="csub">Una domanda per conoscerci ancora meglio.</div></div>
       <div class="card" onclick="go('moments')"><div class="ico">📸</div><div class="ctitle">Moments</div><div class="csub">I ricordi che non vogliamo perdere.</div></div>

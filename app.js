@@ -429,6 +429,7 @@ async function uploadMoment(){
     initMomentDate();
     toast('Ricordo aggiunto ♡');
     await hydrateMoments();
+    await hydrateHomeMemory();
   }catch(err){console.warn(err);toast('Upload non riuscito');}
   finally{btn.disabled=false;btn.textContent='Aggiungi a Moments';}
 }
@@ -460,6 +461,41 @@ async function hydrateMoments(){
   grid.innerHTML=cards.join('')||'<div class="empty-state moment-loading"><div class="emoji">!</div><b>Foto non disponibili</b><p>Riprova tra un momento.</p></div>';
 }
 window.hydrateMoments=hydrateMoments;
+
+let homeMemoryOffset=0;
+async function hydrateHomeMemory(forceNext=false){
+  if(!window.usProfile)return;
+  const section=document.getElementById('homeMemorySection');
+  const card=document.getElementById('homeMemoryCard');
+  if(!section||!card)return;
+  const [{data:rows,error},{data:profiles,error:profilesError}]=await Promise.all([
+    sb.from('moments').select('id,created_by,storage_path,caption,moment_date,created_at').order('created_at',{ascending:false}).limit(24),
+    sb.from('profiles').select('id,display_name').eq('couple_id',window.usProfile.couple_id)
+  ]);
+  if(error){console.warn(error);section.hidden=true;return;}
+  if(profilesError)console.warn(profilesError);
+  if(!rows?.length){section.hidden=true;return;}
+  if(forceNext)homeMemoryOffset=(homeMemoryOffset+1)%rows.length;
+  const daySeed=Number(localDateISO().replaceAll('-',''))||0;
+  const row=rows[(daySeed+homeMemoryOffset)%rows.length];
+  const names=new Map((profiles||[]).map(profile=>[profile.id,profile.display_name||'Noi']));
+  const {data:signed,error:signedError}=await sb.storage.from('us-media').createSignedUrl(row.storage_path,3600);
+  if(signedError||!signed?.signedUrl){console.warn(signedError);section.hidden=true;return;}
+  const dateLabel=new Date(row.moment_date+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'long',year:'numeric'});
+  const author=names.get(row.created_by)||'Noi';
+  document.getElementById('homeMemoryImg').src=signed.signedUrl;
+  document.getElementById('homeMemoryAuthor').textContent=author;
+  document.getElementById('homeMemoryDate').textContent=dateLabel;
+  const caption=document.getElementById('homeMemoryCaption');
+  caption.textContent=row.caption||'';
+  caption.hidden=!row.caption;
+  card.dataset.url=signed.signedUrl;
+  card.dataset.author=author;
+  card.dataset.date=dateLabel;
+  card.dataset.caption=row.caption||'';
+  section.hidden=false;
+}
+window.hydrateHomeMemory=hydrateHomeMemory;
 
 function openMomentViewer(card){
   const viewer=document.getElementById('momentViewer');
@@ -508,6 +544,7 @@ async function deleteMoment(id,path){
   if(rowError){console.warn(rowError);return toast('Foto eliminata, aggiorno Moments');}
   toast('Ricordo eliminato');
   await hydrateMoments();
+  await hydrateHomeMemory();
 }
 window.deleteMoment=deleteMoment;
 
@@ -535,6 +572,7 @@ async function hydrateCloud(){
 
     await hydrateToday();
     await hydrateMoments();
+    await hydrateHomeMemory();
     await updateHomeStatus();
   }catch(e){console.warn(e)}
 }
