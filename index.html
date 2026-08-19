@@ -219,9 +219,18 @@
   </div>
 </div>
 
-
-
-
+<div class="moment-viewer" id="momentViewer" aria-hidden="true" onclick="if(event.target===this)closeMomentViewer()">
+  <button class="moment-viewer-close" type="button" aria-label="Chiudi foto" onclick="closeMomentViewer()">×</button>
+  <div class="moment-viewer-card">
+    <img id="momentViewerImg" alt="Ricordo a schermo intero">
+    <div class="moment-viewer-info">
+      <div class="moment-viewer-kicker" id="momentViewerAuthor">Noi</div>
+      <div class="moment-viewer-date" id="momentViewerDate"></div>
+      <p id="momentViewerCaption" hidden></p>
+      <div class="moment-viewer-hint">Scorri verso il basso per chiudere</div>
+    </div>
+  </div>
+</div>
 
 <script defer src="/app.js"></script>
 </body></html>

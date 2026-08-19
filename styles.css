@@ -131,3 +131,23 @@ button{border:0;border-radius:15px;padding:13px 16px;font:inherit;font-weight:70
 .moment-delete{position:absolute;top:8px;right:8px;width:30px;height:30px;padding:0;border-radius:50%;background:rgba(10,12,17,.78);color:white;border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(10px);display:grid;place-items:center}
 .moment-loading{grid-column:1/-1}
 @media(max-width:360px){.moment-grid{grid-template-columns:1fr}.moment-actions{grid-template-columns:1fr}}
+
+
+/* Moments v2 */
+.moment-card{cursor:pointer;transition:transform .18s ease,border-color .18s ease}
+.moment-card:active{transform:scale(.985)}
+.moment-card:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
+.moment-by{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--pink2);margin-bottom:4px}
+body.viewer-open{overflow:hidden}
+.moment-viewer{position:fixed;inset:0;z-index:80;background:rgba(3,5,9,.94);backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;padding:max(18px,env(safe-area-inset-top)) 14px max(18px,env(safe-area-inset-bottom));opacity:0;pointer-events:none;transition:opacity .2s ease}
+.moment-viewer.show{opacity:1;pointer-events:auto}
+.moment-viewer-card{width:min(100%,520px);max-height:100%;display:flex;flex-direction:column;border-radius:24px;overflow:hidden;background:#10131a;border:1px solid rgba(255,255,255,.10);box-shadow:0 28px 80px rgba(0,0,0,.55);transform:translateY(12px) scale(.985);transition:transform .22s ease}
+.moment-viewer.show .moment-viewer-card{transform:translateY(0) scale(1)}
+.moment-viewer-card>img{width:100%;max-height:68vh;object-fit:contain;background:#05070a;display:block}
+.moment-viewer-info{padding:16px 17px 14px}
+.moment-viewer-kicker{font-size:11px;font-weight:850;letter-spacing:.1em;text-transform:uppercase;color:var(--pink2)}
+.moment-viewer-date{font-size:17px;font-weight:800;margin-top:4px}
+.moment-viewer-info p{font-size:14px;line-height:1.5;color:#d9deea;margin:9px 0 0}
+.moment-viewer-hint{font-size:10px;color:var(--muted);margin-top:12px;text-align:center;opacity:.72}
+.moment-viewer-close{position:fixed;z-index:82;top:max(14px,env(safe-area-inset-top));right:14px;width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.15);background:rgba(16,19,26,.82);color:white;font-size:25px;line-height:1;display:grid;place-items:center;backdrop-filter:blur(12px)}
+@media(max-width:420px){.moment-viewer{padding-left:0;padding-right:0}.moment-viewer-card{width:100%;border-radius:20px 20px 0 0;margin-top:auto}.moment-viewer-card>img{max-height:66vh}}

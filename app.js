@@ -439,8 +439,13 @@ async function hydrateMoments(){
   const grid=document.getElementById('momentsGrid');
   const pill=document.getElementById('momentsStatusPill');
   grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">↻</div><b>Carico i vostri ricordi…</b></div>';
-  const {data:rows,error}=await sb.from('moments').select('id,created_by,storage_path,caption,moment_date,created_at').order('moment_date',{ascending:false}).order('created_at',{ascending:false});
+  const [{data:rows,error},{data:profiles, error:profilesError}]=await Promise.all([
+    sb.from('moments').select('id,created_by,storage_path,caption,moment_date,created_at').order('moment_date',{ascending:false}).order('created_at',{ascending:false}),
+    sb.from('profiles').select('id,display_name').eq('couple_id',window.usProfile.couple_id)
+  ]);
   if(error){console.warn(error);grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">!</div><b>Moments non disponibile</b><p>Riprova tra un momento.</p></div>';return;}
+  if(profilesError)console.warn(profilesError);
+  const names=new Map((profiles||[]).map(profile=>[profile.id,profile.display_name||'Noi']));
   if(pill)pill.textContent='📸 Moments · '+(rows?.length||0);
   if(!rows?.length){grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">📸</div><b>Il primo ricordo parte da qui.</b><p>Scegli una foto e aggiungi una piccola nota.</p></div>';return;}
   const cards=[];
@@ -449,11 +454,50 @@ async function hydrateMoments(){
     if(signedError||!signed?.signedUrl){console.warn(signedError);continue;}
     const dateLabel=new Date(row.moment_date+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
     const own=row.created_by===window.usProfile.id;
-    cards.push(`<article class="moment-card"><img src="${escapeHtml(signed.signedUrl)}" alt="Ricordo condiviso" loading="lazy">${own?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="deleteMoment('${row.id}','${escapeHtml(row.storage_path)}')">×</button>`:''}<div class="moment-meta"><b>${dateLabel}</b>${row.caption?`<p>${escapeHtml(row.caption)}</p>`:''}</div></article>`);
+    const author=names.get(row.created_by)||(own?window.usProfile.display_name:'Noi');
+    cards.push(`<article class="moment-card" role="button" tabindex="0" data-url="${escapeHtml(signed.signedUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(row.caption||'')}" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(signed.signedUrl)}" alt="Ricordo condiviso" loading="lazy">${own?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}','${escapeHtml(row.storage_path)}')">×</button>`:''}<div class="moment-meta"><div class="moment-by">${escapeHtml(author||'Noi')}</div><b>${dateLabel}</b>${row.caption?`<p>${escapeHtml(row.caption)}</p>`:''}</div></article>`);
   }
   grid.innerHTML=cards.join('')||'<div class="empty-state moment-loading"><div class="emoji">!</div><b>Foto non disponibili</b><p>Riprova tra un momento.</p></div>';
 }
 window.hydrateMoments=hydrateMoments;
+
+function openMomentViewer(card){
+  const viewer=document.getElementById('momentViewer');
+  document.getElementById('momentViewerImg').src=card.dataset.url||'';
+  document.getElementById('momentViewerAuthor').textContent=card.dataset.author||'Noi';
+  document.getElementById('momentViewerDate').textContent=card.dataset.date||'';
+  const caption=document.getElementById('momentViewerCaption');
+  caption.textContent=card.dataset.caption||'';
+  caption.hidden=!card.dataset.caption;
+  viewer.classList.add('show');
+  viewer.setAttribute('aria-hidden','false');
+  document.body.classList.add('viewer-open');
+}
+window.openMomentViewer=openMomentViewer;
+
+function closeMomentViewer(){
+  const viewer=document.getElementById('momentViewer');
+  if(!viewer?.classList.contains('show'))return;
+  viewer.classList.remove('show');
+  viewer.setAttribute('aria-hidden','true');
+  document.body.classList.remove('viewer-open');
+  setTimeout(()=>document.getElementById('momentViewerImg').removeAttribute('src'),180);
+}
+window.closeMomentViewer=closeMomentViewer;
+
+document.addEventListener('keydown',(event)=>{if(event.key==='Escape')closeMomentViewer();});
+
+let momentViewerTouchY=null;
+const momentViewer=document.getElementById('momentViewer');
+if(momentViewer){
+  momentViewer.addEventListener('touchstart',(event)=>{momentViewerTouchY=event.touches?.[0]?.clientY??null;},{passive:true});
+  momentViewer.addEventListener('touchend',(event)=>{
+    if(momentViewerTouchY===null)return;
+    const endY=event.changedTouches?.[0]?.clientY??momentViewerTouchY;
+    if(endY-momentViewerTouchY>70)closeMomentViewer();
+    momentViewerTouchY=null;
+  },{passive:true});
+}
 
 async function deleteMoment(id,path){
   if(!window.usProfile)return;
