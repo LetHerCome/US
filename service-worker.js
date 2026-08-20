@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-v19";
+const CACHE_NAME = "us-shell-v20";
 
 const APP_SHELL = [
   "/",
@@ -220,6 +220,44 @@ self.addEventListener("activate", (event) => {
       )
       .then(() => self.clients.claim())
   );
+});
+
+self.addEventListener("push", (event) => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch (_) {
+    try { data = { body: event.data?.text?.() || "Hai qualcosa di nuovo su US. ♡" }; } catch (_e) {}
+  }
+  const title = data.title || "US.";
+  const options = {
+    body: data.body || "Hai qualcosa di nuovo su US. ♡",
+    icon: data.icon || "/icon-192.png",
+    badge: data.badge || "/icon-192.png",
+    tag: data.tag || "us-notification",
+    renotify: false,
+    data: {
+      target: data.target || "home",
+      url: data.url || "/?open=home&from=push"
+    }
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const data = event.notification.data || {};
+  const target = data.target || "home";
+  const targetUrl = new URL(data.url || `/?open=${encodeURIComponent(target)}&from=push`, self.location.origin).href;
+  event.waitUntil((async () => {
+    const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const client of windows) {
+      if ("focus" in client) {
+        await client.focus();
+        client.postMessage({ type: "US_PUSH_NAVIGATE", target });
+        return;
+      }
+    }
+    if (self.clients.openWindow) await self.clients.openWindow(targetUrl);
+  })());
 });
 
 async function transformedAppJs(request) {

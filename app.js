@@ -206,6 +206,164 @@ const SB_URL = 'https://iiakdfsxpywdkxravqjh.supabase.co';
 const SB_KEY = 'sb_publishable_JAB6USqhccAUg8_0ujgQ1A_NkRJRv_A';
 const sb = window.supabase.createClient(SB_URL, SB_KEY);
 
+// ===== US v20 · Web Push Foundation =====
+const US_VAPID_PUBLIC_KEY='BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss';
+let usPushUiBusy=false;
+let usPendingPushTarget=null;
+
+function isIosDevice(){return /iphone|ipad|ipod/i.test(navigator.userAgent||'');}
+function isStandaloneUs(){return Boolean(window.matchMedia?.('(display-mode: standalone)')?.matches||window.navigator.standalone===true);}
+function isWebPushSupported(){return 'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;}
+function urlBase64ToUint8Array(base64String){
+  const padding='='.repeat((4-base64String.length%4)%4);
+  const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(base64);const out=new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);
+  return out;
+}
+async function getUsServiceWorkerRegistration(){
+  if(!('serviceWorker' in navigator))return null;
+  await navigator.serviceWorker.register('/service-worker.js',{updateViaCache:'none'});
+  return navigator.serviceWorker.ready;
+}
+async function getCurrentPushSubscription(){
+  try{const reg=await getUsServiceWorkerRegistration();return reg?await reg.pushManager.getSubscription():null;}catch(error){console.warn('[US Push] subscription check',error);return null;}
+}
+async function syncPushSubscriptionToSupabase(subscription){
+  if(!subscription||!window.usProfile)return false;
+  const json=subscription.toJSON();
+  const {error}=await sb.rpc('register_web_push_subscription',{
+    target_endpoint:json.endpoint,
+    target_p256dh:json.keys?.p256dh||'',
+    target_auth:json.keys?.auth||'',
+    target_expiration_time:json.expirationTime??null,
+    target_user_agent:(navigator.userAgent||'').slice(0,500)
+  });
+  if(error){console.warn('[US Push] subscription sync failed',error);return false;}
+  return true;
+}
+async function sendWebPushEvent(type,referenceId=null){
+  try{
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session?.access_token)return null;
+    const response=await fetch(`${SB_URL}/functions/v1/send-web-push`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':`Bearer ${session.access_token}`},
+      body:JSON.stringify({type,reference_id:referenceId||undefined})
+    });
+    const payload=await response.json().catch(()=>({}));
+    if(!response.ok)console.warn('[US Push] send failed',response.status,payload);
+    return payload;
+  }catch(error){console.warn('[US Push] send unavailable',error);return null;}
+}
+window.sendWebPushEvent=sendWebPushEvent;
+
+function setPushSettingsState(kind,title,detail,actionLabel=''){
+  const row=document.getElementById('pushSettingsRow'),status=document.getElementById('pushSettingsStatus'),info=document.getElementById('pushSettingsDetail'),button=document.getElementById('pushDisableBtn');
+  if(!row)return;
+  row.hidden=false;row.classList.toggle('active',kind==='active');row.classList.toggle('denied',kind==='denied');
+  if(status)status.textContent=title;if(info)info.textContent=detail;
+  if(button){
+    if(!actionLabel){button.hidden=true;}
+    else{button.hidden=false;button.textContent=actionLabel;button.setAttribute('onclick',kind==='active'?'disableWebPush()':'enableWebPush()');}
+  }
+}
+async function refreshWebPushUi(){
+  const card=document.getElementById('pushOptInCard'),title=document.getElementById('pushOptInTitle'),text=document.getElementById('pushOptInText'),button=document.getElementById('pushEnableBtn'),settings=document.getElementById('pushSettingsRow');
+  if(!card||!window.usProfile){if(card)card.hidden=true;if(settings)settings.hidden=true;return;}
+  card.classList.remove('install-only','denied');
+  if(!isWebPushSupported()){
+    card.hidden=true;if(settings)settings.hidden=true;return;
+  }
+  if(isIosDevice()&&!isStandaloneUs()){
+    card.hidden=false;card.classList.add('install-only');
+    if(title)title.textContent='Aggiungi US alla schermata Home';
+    if(text)text.textContent='Su iPhone le notifiche funzionano dalla web app installata nella Home.';
+    if(button)button.hidden=true;
+    if(settings)settings.hidden=true;
+    return;
+  }
+  if(Notification.permission==='denied'){
+    card.hidden=false;card.classList.add('denied');
+    if(title)title.textContent='Notifiche disattivate';
+    if(text)text.textContent='Riattivale dalle impostazioni notifiche del telefono per US.';
+    if(button)button.hidden=true;
+    setPushSettingsState('denied','Notifiche bloccate','Riattivale dalle impostazioni del telefono.','');
+    return;
+  }
+  const subscription=await getCurrentPushSubscription();
+  if(Notification.permission==='granted'&&subscription){
+    await syncPushSubscriptionToSupabase(subscription);
+    card.hidden=true;
+    setPushSettingsState('active','Notifiche attive','Ti penso, Today e Bond possono raggiungerti a US chiusa.','Disattiva');
+    return;
+  }
+  card.hidden=false;
+  if(title)title.textContent='Rimani vicino anche quando US è chiusa';
+  if(text)text.textContent='Ricevi “Ti penso”, risposte e quest condivise.';
+  if(button){button.hidden=false;button.disabled=false;button.textContent=Notification.permission==='granted'?'Completa attivazione':'Attiva notifiche';}
+  setPushSettingsState('inactive','Notifiche non attive','Attivale quando vuoi.','Attiva');
+}
+window.refreshWebPushUi=refreshWebPushUi;
+
+async function enableWebPush(){
+  if(usPushUiBusy||!window.usProfile)return;
+  if(!isWebPushSupported())return toast('Notifiche non supportate su questo browser');
+  if(isIosDevice()&&!isStandaloneUs())return refreshWebPushUi();
+  const button=document.getElementById('pushEnableBtn');usPushUiBusy=true;if(button){button.disabled=true;button.textContent='Attivo…';}
+  try{
+    let permission=Notification.permission;
+    if(permission==='default')permission=await Notification.requestPermission();
+    if(permission!=='granted'){await refreshWebPushUi();return;}
+    const reg=await getUsServiceWorkerRegistration();
+    if(!reg)throw new Error('Service worker unavailable');
+    let subscription=await reg.pushManager.getSubscription();
+    if(!subscription){
+      subscription=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(US_VAPID_PUBLIC_KEY)});
+    }
+    const synced=await syncPushSubscriptionToSupabase(subscription);
+    if(!synced)throw new Error('Subscription sync failed');
+    toast('Notifiche attive ♡');
+    await refreshWebPushUi();
+    setTimeout(()=>sendWebPushEvent('test'),350);
+  }catch(error){console.warn('[US Push] enable failed',error);toast('Non riesco ad attivare le notifiche');await refreshWebPushUi();}
+  finally{usPushUiBusy=false;if(button)button.disabled=false;}
+}
+window.enableWebPush=enableWebPush;
+
+async function disableWebPush(){
+  if(usPushUiBusy)return;usPushUiBusy=true;
+  try{
+    const subscription=await getCurrentPushSubscription();
+    if(subscription){
+      const endpoint=subscription.endpoint;
+      const {error}=await sb.rpc('remove_web_push_subscription',{target_endpoint:endpoint});
+      if(error)console.warn('[US Push] remove subscription',error);
+      await subscription.unsubscribe().catch(()=>false);
+    }
+    toast('Notifiche disattivate');
+  }catch(error){console.warn('[US Push] disable failed',error);toast('Non riesco a disattivare le notifiche');}
+  finally{usPushUiBusy=false;await refreshWebPushUi();}
+}
+window.disableWebPush=disableWebPush;
+
+function performPushNavigation(target){
+  if(!target)return;
+  if(!window.usProfile){usPendingPushTarget=target;return;}
+  if(target==='today'){openToday();return;}
+  if(pages.includes(target))go(target);
+}
+function captureInitialPushTarget(){
+  try{
+    const url=new URL(location.href),target=url.searchParams.get('open');
+    if(target){usPendingPushTarget=target;url.searchParams.delete('open');url.searchParams.delete('from');history.replaceState({},'',url.pathname+url.search+url.hash);}
+  }catch(_e){}
+}
+function flushPendingPushTarget(){if(usPendingPushTarget){const target=usPendingPushTarget;usPendingPushTarget=null;setTimeout(()=>performPushNavigation(target),120);}}
+captureInitialPushTarget();
+if('serviceWorker' in navigator){navigator.serviceWorker.addEventListener('message',event=>{if(event.data?.type==='US_PUSH_NAVIGATE')performPushNavigation(event.data.target);});}
+
+
 let selectedRole = null;
 let usNativeWidgetBridge = null;
 
@@ -286,6 +444,8 @@ async function initCloud(){
   startUsRealtime();
   await maybeAutoRefreshLocation();
   startLocationRefreshTimer();
+  refreshWebPushUi().catch(()=>{});
+  flushPendingPushTarget();
 }
 
 function showAuthStep(id){
@@ -1262,6 +1422,7 @@ async function confirmBondQuest(id){
   if(!window.usProfile)return;
   const {data,error}=await sb.rpc('confirm_bond_quest',{target_quest_id:id});
   if(error){console.warn(error);toast('Non riesco a confermare la quest');return;}
+  sendWebPushEvent('quest_confirmed',id).catch(()=>{});
   if(data?.xp_awarded){toast(`+${data.xp_awarded} Bond XP ♡`);navigator.vibrate?.([35,25,55]);}
   else toast('Confermata. Aspettiamo l’altro ♡');
   await hydrateBond();
@@ -1328,8 +1489,9 @@ async function sendThinkSignal(){
   const profiles=await getCoupleProfiles(),partner=partnerFromProfiles(profiles);
   if(!partner)return toast('L’altro profilo non è ancora collegato');
   if(btn)btn.disabled=true;
-  const {error}=await sb.from('shared_messages').insert({couple_id:window.usProfile.couple_id,sender_id:window.usProfile.id,recipient_id:partner.id,kind:'think',body:'♡'});
+  const {data:message,error}=await sb.from('shared_messages').insert({couple_id:window.usProfile.couple_id,sender_id:window.usProfile.id,recipient_id:partner.id,kind:'think',body:'♡'}).select('id').single();
   if(error){console.warn(error);toast('Non riesco a inviare il segnale');if(btn)btn.disabled=false;return;}
+  if(message?.id)sendWebPushEvent('think',message.id).catch(()=>{});
   btn?.classList.add('sent');setTimeout(()=>btn?.classList.remove('sent'),700);
   navigator.vibrate?.([30,25,45]);
   toast(`${partner.display_name} lo saprà ♡`);
@@ -1391,6 +1553,7 @@ saveAnswer = async function(){
   btn.disabled=false;
   if(error){console.warn(error);btn.textContent='Riprova';return toast('Errore sync Today');}
   toast('Salvato online ♡');
+  sendWebPushEvent('daily_answer',window.todayQuestion.id).catch(()=>{});
   await hydrateToday();
 }
 window.saveAnswer=saveAnswer;

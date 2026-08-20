@@ -54,6 +54,14 @@
         </span>
         <span class="distance-action" id="distanceAction">↻</span>
       </button>
+      <aside class="push-optin-card" id="pushOptInCard" hidden aria-live="polite">
+        <span class="push-optin-icon" aria-hidden="true">♡</span>
+        <span class="push-optin-copy">
+          <b id="pushOptInTitle">Rimani vicino anche quando US è chiusa</b>
+          <small id="pushOptInText">Ricevi “Ti penso”, risposte e quest condivise.</small>
+        </span>
+        <button type="button" class="push-optin-action" id="pushEnableBtn" onclick="enableWebPush()">Attiva notifiche</button>
+      </aside>
     </section>
   </main>
 
@@ -70,6 +78,10 @@
         <div id="todayReveal" class="hidden"></div>
       </div>
       <div class="smallnote">Una domanda al giorno, uguale per entrambi. Le risposte restano private fino al reveal.</div>
+      <div class="push-settings-row" id="pushSettingsRow" hidden>
+        <span><b id="pushSettingsStatus">Notifiche</b><small id="pushSettingsDetail">Stato notifiche US</small></span>
+        <button type="button" id="pushDisableBtn" onclick="disableWebPush()">Disattiva</button>
+      </div>
     </section>
   </main>
 
