@@ -31,7 +31,177 @@ function privacyModal(){openModal('Consensi e privacy','<div class="us-settings-
 function helpModal(){openModal('Aiuto','<div class="us-settings-copy"><p><b>Today</b> · una domanda al giorno, reveal dopo entrambe le risposte.</p><p><b>Moments</b> · album condivisi a cui potete aggiungere foto entrambi.</p><p><b>Quiz</b> · quiz e giochi settimanali che danno XP Bond.</p><p><b>♡</b> · il cuore flottante manda “Ti penso” da qualsiasi pagina.</p><p><b>Calendario</b> · eventi importanti, countdown e XP quando li segnate come fatti.</p></div>','AIUTO');}
 async function logout(){if(!confirm('Scollegare questo telefono da US? Dovrai inserire di nuovo il codice privato per rientrare.'))return;try{localStorage.removeItem('us:fix4:last-profile');await sb.auth.signOut();location.reload();}catch(error){console.warn(error);toast('Non riesco a uscire');}}
 async function action(name){if(name==='widgets')return widgetsModal();if(name==='story-archive')return showStoryArchive();if(name==='distance')return distanceModal();if(name==='location')return locationAction();if(name==='notifications')return notificationsModal();if(name==='language')return languageModal();if(name==='about')return aboutModal();if(name==='share')return shareApp();if(name==='privacy')return privacyModal();if(name==='help')return helpModal();if(name==='logout')return logout();}
-function boot(){document.querySelectorAll('[data-us-setting]').forEach(row=>row.addEventListener('click',()=>action(row.dataset.usSetting)));document.querySelectorAll('[data-us-settings-close]').forEach(el=>el.addEventListener('click',closeModal));document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('usSettingsOverlay')?.classList.contains('open'))closeModal();});const wait=setInterval(()=>{const heart=$('thinkButton');if(heart)heart.hidden=!window.usProfile;if(window.usProfile){clearInterval(wait);hydrateUsSettings();}},250);setTimeout(()=>clearInterval(wait),30000);}
+
+
+/* US · Draggable Ti penso */
+const US_THINK_POSITION_KEY='us:think-position:v1';
+let usThinkDragCleanup=null;
+
+function setupDraggableThink(){
+  const heart=$('thinkButton');
+  if(!heart||heart.dataset.draggableThink==='1')return;
+  heart.dataset.draggableThink='1';
+
+  let pointerId=null;
+  let startX=0,startY=0,startLeft=0,startTop=0;
+  let dragging=false;
+  let suppressClickUntil=0;
+  const threshold=7;
+
+  function viewport(){
+    const vv=window.visualViewport;
+    return {
+      width:vv?.width||window.innerWidth,
+      height:vv?.height||window.innerHeight,
+      offsetLeft:vv?.offsetLeft||0,
+      offsetTop:vv?.offsetTop||0
+    };
+  }
+
+  function bounds(){
+    const vp=viewport();
+    const rect=heart.getBoundingClientRect();
+    const nav=document.querySelector('.nav');
+    const navRect=nav?.getBoundingClientRect();
+    const margin=12;
+    const minX=vp.offsetLeft+margin;
+    const maxX=Math.max(minX,vp.offsetLeft+vp.width-rect.width-margin);
+    const minY=vp.offsetTop+Math.max(12,Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--us-safe-top'))||0)+8;
+    const navTop=navRect?.top && navRect.top < vp.offsetTop+vp.height ? navRect.top : vp.offsetTop+vp.height;
+    const maxY=Math.max(minY,navTop-rect.height-14);
+    return {minX,maxX,minY,maxY,width:vp.width,height:vp.height};
+  }
+
+  function clamp(value,min,max){return Math.min(max,Math.max(min,value));}
+
+  function apply(left,top,animate=false){
+    const b=bounds();
+    const x=clamp(left,b.minX,b.maxX);
+    const y=clamp(top,b.minY,b.maxY);
+    heart.classList.toggle('snap-moving',animate);
+    heart.style.left=`${x}px`;
+    heart.style.top=`${y}px`;
+    heart.style.right='auto';
+    heart.style.bottom='auto';
+    if(animate)setTimeout(()=>heart.classList.remove('snap-moving'),220);
+    return {x,y,b};
+  }
+
+  function savePosition(x,y,b){
+    try{
+      const center=x+heart.offsetWidth/2;
+      const edge=center < b.width/2 ? 'left' : 'right';
+      const yRange=Math.max(1,b.maxY-b.minY);
+      localStorage.setItem(US_THINK_POSITION_KEY,JSON.stringify({
+        edge,
+        yRatio:clamp((y-b.minY)/yRange,0,1)
+      }));
+    }catch(_){}
+  }
+
+  function restorePosition(){
+    let stored=null;
+    try{stored=JSON.parse(localStorage.getItem(US_THINK_POSITION_KEY)||'null');}catch(_){}
+    if(!stored)return;
+    const b=bounds();
+    const x=stored.edge==='right'?b.maxX:b.minX;
+    const y=b.minY+clamp(Number(stored.yRatio)||0,0,1)*(b.maxY-b.minY);
+    apply(x,y,false);
+  }
+
+  function snapAndSave(){
+    const rect=heart.getBoundingClientRect();
+    const b=bounds();
+    const center=rect.left+rect.width/2;
+    const x=center < b.width/2 ? b.minX : b.maxX;
+    const pos=apply(x,rect.top,true);
+    savePosition(pos.x,pos.y,pos.b);
+  }
+
+  function onPointerDown(event){
+    if(event.button!==undefined&&event.button!==0)return;
+    const rect=heart.getBoundingClientRect();
+    pointerId=event.pointerId;
+    startX=event.clientX;
+    startY=event.clientY;
+    startLeft=rect.left;
+    startTop=rect.top;
+    dragging=false;
+    heart.setPointerCapture?.(pointerId);
+  }
+
+  function onPointerMove(event){
+    if(pointerId===null||event.pointerId!==pointerId)return;
+    const dx=event.clientX-startX;
+    const dy=event.clientY-startY;
+
+    if(!dragging&&Math.hypot(dx,dy)>=threshold){
+      dragging=true;
+      heart.classList.add('dragging');
+    }
+    if(!dragging)return;
+
+    event.preventDefault();
+    apply(startLeft+dx,startTop+dy,false);
+  }
+
+  function finishDrag(event){
+    if(pointerId===null||event.pointerId!==pointerId)return;
+    try{heart.releasePointerCapture?.(pointerId);}catch(_){}
+    pointerId=null;
+
+    if(dragging){
+      suppressClickUntil=Date.now()+450;
+      dragging=false;
+      heart.classList.remove('dragging');
+      snapAndSave();
+    }
+  }
+
+  function blockAccidentalClick(event){
+    if(Date.now()<suppressClickUntil){
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }
+  }
+
+  heart.addEventListener('pointerdown',onPointerDown);
+  heart.addEventListener('pointermove',onPointerMove,{passive:false});
+  heart.addEventListener('pointerup',finishDrag);
+  heart.addEventListener('pointercancel',finishDrag);
+  heart.addEventListener('click',blockAccidentalClick,true);
+
+  let resizeTimer=null;
+  const onResize=()=>{
+    clearTimeout(resizeTimer);
+    resizeTimer=setTimeout(()=>{
+      const rect=heart.getBoundingClientRect();
+      if(heart.style.top) {
+        const b=bounds();
+        const pos=apply(rect.left,rect.top,false);
+        savePosition(pos.x,pos.y,b);
+      } else {
+        restorePosition();
+      }
+    },100);
+  };
+  window.addEventListener('resize',onResize);
+  window.visualViewport?.addEventListener('resize',onResize);
+
+  requestAnimationFrame(()=>requestAnimationFrame(restorePosition));
+
+  usThinkDragCleanup=()=>{
+    heart.removeEventListener('pointerdown',onPointerDown);
+    heart.removeEventListener('pointermove',onPointerMove);
+    heart.removeEventListener('pointerup',finishDrag);
+    heart.removeEventListener('pointercancel',finishDrag);
+    heart.removeEventListener('click',blockAccidentalClick,true);
+    window.removeEventListener('resize',onResize);
+    window.visualViewport?.removeEventListener('resize',onResize);
+  };
+}
+
+function boot(){setupDraggableThink();document.querySelectorAll('[data-us-setting]').forEach(row=>row.addEventListener('click',()=>action(row.dataset.usSetting)));document.querySelectorAll('[data-us-settings-close]').forEach(el=>el.addEventListener('click',closeModal));document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('usSettingsOverlay')?.classList.contains('open'))closeModal();});const wait=setInterval(()=>{const heart=$('thinkButton');if(heart)heart.hidden=!window.usProfile;if(window.usProfile){clearInterval(wait);hydrateUsSettings();}},250);setTimeout(()=>clearInterval(wait),30000);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();document.addEventListener('visibilitychange',()=>{if(!document.hidden&&document.getElementById('settings')?.classList.contains('active'))hydrateUsSettings();});
 console.info('[US Settings] pagina impostazioni attiva');
 })();
