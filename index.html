@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <meta name="theme-color" content="#0d0f14"/>
 <meta name="color-scheme" content="dark"/>
-<meta name="us-build" content="fix4-fastboot-back-20260820-1"/>
+<meta name="us-build" content="fix4-couple-loop-20260820-1"/>
 <link rel="manifest" href="/manifest.webmanifest?v=fix4-20260820-1"/>
 <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=fix4-20260820-1"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=fix4-20260820-1"/>
@@ -20,6 +20,8 @@
 <link rel="stylesheet" href="/fix4.css?v=fix4-20260820-1"/>
 <link rel="stylesheet" href="/events.css?v=us-events-1"/>
 <link rel="stylesheet" href="/moments-albums.css?v=us-moments-visual-1"/>
+<link rel="stylesheet" href="/games.css?v=us-couple-loop-1"/>
+<link rel="stylesheet" href="/settings.css?v=us-couple-loop-1"/>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://iiakdfsxpywdkxravqjh.supabase.co" crossorigin>
 <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
@@ -126,37 +128,56 @@
     </section>
   </main>
 
-  <main id="think" class="page">
-    <section class="section think-page" style="margin-top:6px">
-      <div class="think-copy"><div class="tiny">SEGNALE PRIVATO</div><h2>Ti penso</h2><p>Niente messaggi da scrivere. Solo un piccolo segnale per dire: sono qui, ti sto pensando.</p></div>
-      <button type="button" class="think-heart" id="thinkButton" onclick="sendThinkSignal()" aria-label="Invia Ti penso"><span class="think-heart-ring"></span><span class="think-heart-glyph">♡</span><span class="think-heart-label">TI PENSO</span></button>
-      <div class="think-live" id="thinkLiveText" role="status" aria-live="polite">Tocca il cuore quando vuoi.</div>
-      <div class="think-history"><article><div class="tiny">L’ULTIMO DA LUI/LEI</div><b id="thinkLastReceived">Ancora nessun segnale</b></article><article><div class="tiny">IL TUO ULTIMO</div><b id="thinkLastSent">Non ne hai ancora inviati</b></article></div>
-      <div class="think-month"><b id="thinkMonthCount">0</b><span>pensieri condivisi questo mese</span></div>
-      <div class="smallnote think-note">Quando US è aperta sull’altro telefono il segnale arriva in tempo reale. Se è chiusa, resta salvato e compare al prossimo accesso.</div>
+  <main id="settings" class="page">
+    <section class="section us-settings-page">
+      <div class="us-settings-head">
+        <div><div class="tiny">US.</div><h2>Impostazioni</h2><p>Le cose che riguardano questo telefono e il vostro spazio.</p></div>
+        <div class="us-settings-profile" id="usSettingsProfile">♡</div>
+      </div>
+
+      <div class="us-settings-group">
+        <button type="button" class="us-setting-row" data-us-setting="widgets"><span class="us-setting-main"><b>Widget</b><small>Scriptable · KWGT</small></span><span class="us-setting-value">Configura</span><i>›</i></button>
+        <button type="button" class="us-setting-row" data-us-setting="story-archive"><span class="us-setting-main"><b>Archivio storie</b><small>Le storie scadute restano vostre</small></span><span class="us-setting-value" id="usStoryArchiveValue"></span><i>›</i></button>
+        <button type="button" class="us-setting-row" data-us-setting="distance"><span class="us-setting-main"><b>Unità di distanza</b><small>Distanza tra voi due</small></span><span class="us-setting-value" id="usDistanceUnitValue">chilometri</span><i>›</i></button>
+        <button type="button" class="us-setting-row" data-us-setting="location"><span class="us-setting-main"><b>Permesso di localizzazione</b><small>Serve solo per la distanza</small></span><span class="us-setting-state" id="usLocationState">…</span><i>›</i></button>
+        <button type="button" class="us-setting-row" data-us-setting="notifications"><span class="us-setting-main"><b>Notifiche</b><small>Today, Ti penso, Bond e ricorrenze</small></span><span class="us-setting-value" id="usNotificationsValue">…</span><i>›</i></button>
+        <button type="button" class="us-setting-row" data-us-setting="language"><span class="us-setting-main"><b>Lingua</b><small>Interfaccia di US</small></span><span class="us-setting-value">Italiano</span><i>›</i></button>
+      </div>
+
+      <div class="us-settings-group us-settings-secondary">
+        <button type="button" class="us-setting-row" data-us-setting="about"><span class="us-setting-main"><b>Chi siamo</b><small>Cos’è US.</small></span><i>›</i></button>
+        <button type="button" class="us-setting-row" data-us-setting="share"><span class="us-setting-main"><b>Condividi l’applicazione</b><small>Condividi il link di US</small></span><i>›</i></button>
+        <button type="button" class="us-setting-row" data-us-setting="privacy"><span class="us-setting-main"><b>Consensi e privacy</b><small>Posizione, foto e notifiche</small></span><i>›</i></button>
+        <button type="button" class="us-setting-row" data-us-setting="help"><span class="us-setting-main"><b>Aiuto</b><small>Le funzioni principali</small></span><i>›</i></button>
+        <button type="button" class="us-setting-row us-setting-danger" data-us-setting="logout"><span class="us-setting-main"><b>Esci</b><small>Scollega questo telefono</small></span><i>›</i></button>
+      </div>
+      <div class="us-settings-build" id="usSettingsBuild"></div>
     </section>
   </main>
 
   <main id="quiz" class="page">
     <section class="section" style="margin-top:6px">
-      <div class="quiz-head"><div><div class="tiny">US QUIZ</div><h2 style="margin:2px 0 0">Quanto siamo allineati?</h2></div><button class="ghost" onclick="go('home')" aria-label="Torna alla Home">←</button></div>
+      <div class="quiz-head"><div><div class="tiny">US QUIZ</div><h2 style="margin:2px 0 0">Giochiamo insieme</h2></div><button class="ghost" onclick="go('home')" aria-label="Torna alla Home">←</button></div>
       <div id="quizHub">
         <div class="quiz-week-card"><div><span class="quiz-week-kicker">SETTIMANALE</span><b id="quizWeekLabel">I quiz di questa settimana</b></div><small id="quizWeekReset">Cambiano automaticamente ogni 7 giorni</small></div>
         <div class="quiz-xp-rule">Ogni risposta uguale vale <b>+5 XP Bond</b> · massimo 50 XP per quiz.</div>
         <div class="quiz-grid" id="weeklyQuizGrid" aria-live="polite"><div class="quiz-week-loading" aria-busy="true">Preparo i quiz della settimana…</div></div>
+        <div id="usExtraGames" class="us-extra-games" aria-live="polite"></div>
       </div>
-      <div id="quizPlay" class="hidden"><div class="card"><div class="quiz-head"><div><span class="badge" id="quizCategory">PREFERENZE</span></div><div class="tiny"><span id="quizIndex">1</span>/10</div></div><div class="progress"><div id="quizProgress"></div></div><div class="qtext" id="quizQuestion" style="font-size:21px"></div><div class="tiny" id="quizWho">Rispondi per te. Il confronto resta nascosto fino alla fine.</div><div class="answers" id="quizAnswers"></div><button class="primary" id="quizNext" style="width:100%;margin-top:14px" onclick="nextQuiz()" disabled>Conferma</button></div></div>
+      <div id="quizPlay" class="hidden"><div class="card"><div class="quiz-head"><div><span class="badge" id="quizCategory">PREFERENZE</span></div><div class="tiny"><span id="quizIndex">1</span>/<span id="quizTotal">10</span></div></div><div class="progress"><div id="quizProgress"></div></div><div class="qtext" id="quizQuestion" style="font-size:21px"></div><div class="tiny" id="quizWho">Rispondi per te. Il confronto resta nascosto fino alla fine.</div><div class="answers" id="quizAnswers"></div><button class="primary" id="quizNext" style="width:100%;margin-top:14px" onclick="nextQuiz()" disabled>Conferma</button></div></div>
       <div id="quizResult" class="hidden"><div class="card" style="text-align:center"><div class="tiny">RISULTATO DEL SET</div><div class="score-ring" id="scoreRing" style="--score:0"><div class="score-inner"><div><b id="scoreValue">0/10</b><br><span>risposte uguali</span></div></div></div><div class="qtext" id="scoreText" style="font-size:19px">Ci stiamo ancora studiando 👀</div><div class="csub" id="scoreSub">Il risultato si sblocca solo quando entrambi hanno completato il set.</div><div class="quiz-xp-earned hidden" id="quizXpEarned"></div><div class="quiz-matches hidden" id="quizMatches"></div><button class="primary" style="width:100%;margin-top:16px" onclick="resetQuiz()">Scegli un altro quiz</button></div></div>
     </section>
   </main>
 </div>
+
+<button type="button" id="thinkButton" class="us-floating-think" onclick="sendThinkSignal()" aria-label="Invia Ti penso" title="Ti penso"><span class="us-floating-think-ring"></span><span>♡</span></button>
 
 <nav class="nav" aria-label="Navigazione principale">
 <button class="active" data-page="home" onclick="go('home')"><span class="nicon">⌂</span>Home</button>
 <button data-page="moments" onclick="go('moments')"><span class="nicon">▧</span>Moments</button>
 <button data-page="quiz" onclick="openQuizHub()"><span class="nicon">◎</span>Quiz</button>
 <button data-page="bond" onclick="go('bond')"><span class="nicon">✦</span>Bond</button>
-<button data-page="think" onclick="go('think')"><span class="nicon">♡</span>Ti penso</button>
+<button data-page="settings" onclick="go('settings')"><span class="nicon">⚙</span>Impostazioni</button>
 </nav>
 
 
@@ -181,6 +202,16 @@
         <div class="us-events-empty">Carico i vostri eventi…</div>
       </div>
 
+      <section class="us-events-subsection" id="usEventsDueSection" hidden>
+        <div class="us-events-list-head"><b>Da segnare</b><small>Eventi passati</small></div>
+        <div class="us-events-list" id="usEventsDueList"></div>
+      </section>
+
+      <section class="us-events-subsection" id="usEventsDoneSection" hidden>
+        <div class="us-events-list-head"><b>Completati</b><small>XP già ottenuti</small></div>
+        <div class="us-events-list us-events-done-list" id="usEventsDoneList"></div>
+      </section>
+
       <button type="button" class="us-event-add" onclick="beginAddEvent()"><span>＋</span>Aggiungi evento</button>
     </div>
 
@@ -200,11 +231,21 @@
       <label class="us-event-repeat"><input id="usEventRecurringInput" type="checkbox"><span><b>Ogni anno</b><small>Per anniversari, compleanni e date ricorrenti.</small></span></label>
 
       <div class="us-event-status" id="usEventStatus" role="status" aria-live="polite"></div>
+      <button type="button" class="us-event-complete" id="usEventCompleteBtn" hidden></button>
       <div class="us-event-actions">
         <button type="button" class="us-event-delete" id="usEventDeleteBtn" hidden>Elimina</button>
         <button type="submit" class="primary us-event-save" id="usEventSaveBtn">Salva evento</button>
       </div>
     </form>
+  </section>
+</div>
+
+<div class="us-settings-overlay" id="usSettingsOverlay" aria-hidden="true">
+  <div class="us-settings-backdrop" data-us-settings-close></div>
+  <section class="us-settings-sheet" role="dialog" aria-modal="true" aria-labelledby="usSettingsModalTitle">
+    <div class="us-settings-sheet-grabber"></div>
+    <header><div><div class="tiny" id="usSettingsModalKicker">US.</div><h3 id="usSettingsModalTitle">Impostazione</h3></div><button type="button" class="us-settings-close" data-us-settings-close aria-label="Chiudi">×</button></header>
+    <div class="us-settings-modal-body" id="usSettingsModalBody"></div>
   </section>
 </div>
 
@@ -219,7 +260,9 @@
 
 <script defer src="/app.js"></script>
 <script defer src="/fix4.js?v=fix4-20260820-1"></script>
-<script defer src="/events.js?v=us-events-1"></script>
+<script defer src="/events.js?v=us-couple-loop-1"></script>
+<script defer src="/games.js?v=us-couple-loop-1"></script>
+<script defer src="/settings.js?v=us-couple-loop-1"></script>
 <script defer src="/moments-albums.js?v=us-moments-visual-1"></script>
 <script defer src="/navigation.js?v=us-fastboot-back-1"></script>
 </body></html>

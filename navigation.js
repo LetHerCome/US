@@ -51,6 +51,27 @@ const layers=[
     close:()=>window.closeEvents?.()
   },
   {
+    name:'event-form',
+    find:()=>document.getElementById('usEventForm'),
+    open:el=>Boolean(el&&!el.hidden),
+    close:()=>window.cancelEventEdit?.()
+  },
+  {
+    name:'quiz-subview',
+    find:()=>document.getElementById('quiz'),
+    open:()=>Boolean(document.getElementById('quizHub')?.classList.contains('hidden')),
+    close:()=>{
+      const knowledgeOpen=!document.getElementById('usKnowledgePlay')?.classList.contains('hidden')||!document.getElementById('usKnowledgeResult')?.classList.contains('hidden');
+      if(knowledgeOpen)window.resetPartnerKnowledge?.();else window.resetQuiz?.();
+    }
+  },
+  {
+    name:'settings-modal',
+    find:()=>document.getElementById('usSettingsOverlay'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.closeUsSettingsModal?.()
+  },
+  {
     name:'moment-compose',
     find:()=>document.getElementById('usMomentComposeOverlay'),
     open:el=>el?.classList.contains('show'),

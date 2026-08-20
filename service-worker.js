@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-fastboot-back-1";
+const CACHE_NAME = "us-shell-couple-loop-1";
 
 const APP_SHELL = [
   "/",
@@ -11,6 +11,10 @@ const APP_SHELL = [
   "/moments-albums.css",
   "/moments-albums.js",
   "/navigation.js",
+  "/games.css",
+  "/games.js",
+  "/settings.css",
+  "/settings.js",
   "/version.json",
   "/manifest.webmanifest",
   "/icon-192.png",

@@ -45,3 +45,18 @@ body.us-keyboard-open .us-events-sheet{max-height:var(--us-viewport-height)}
 @media(max-width:360px){.us-events-sheet{padding-left:12px;padding-right:12px}.us-event-row{grid-template-columns:1fr}.us-next-event{min-height:136px;padding-right:70px}}
 @media(orientation:landscape) and (max-height:560px){.us-events-sheet{max-height:96dvh;border-radius:24px 24px 0 0}.us-next-event{min-height:112px}.us-event-row{grid-template-columns:1fr 1fr}}
 @media(prefers-reduced-motion:reduce){.us-events-sheet{animation:none!important}}
+
+/* US Couple Loop · Calendar polish */
+.us-next-event{padding-right:18px!important}
+.us-next-event::after{display:none!important;content:none!important}
+.us-next-event.us-next-relationship{background:radial-gradient(circle at 88% 18%,rgba(255,102,142,.23),transparent 37%),radial-gradient(circle at 15% 90%,rgba(169,133,255,.14),transparent 40%),#191c26}
+.us-events-subsection{margin-top:5px}
+.us-event-item.is-due{border-color:rgba(255,180,92,.14);background:linear-gradient(90deg,rgba(255,180,92,.045),transparent),#171a23}
+.us-event-item.is-due .us-event-datebox small{color:#ffc07a}
+.us-event-item.is-done{opacity:.72;background:#13161e}
+.us-event-item.is-done .us-event-chevron{color:#64d98b;font-size:13px;font-weight:900}
+.us-event-system{cursor:default;background:linear-gradient(100deg,rgba(255,102,142,.075),rgba(169,133,255,.055)),#171a23}
+.us-event-heart-date b{color:#ff92ad;font-size:20px;font-weight:500}
+.us-event-complete{width:100%;min-height:50px;margin-top:15px;border-radius:17px;background:linear-gradient(135deg,rgba(100,217,139,.16),rgba(169,133,255,.12));border:1px solid rgba(100,217,139,.20);color:#dff9e8;font-size:11px;font-weight:800;letter-spacing:.01em}
+.us-event-complete:disabled{opacity:.72!important;background:rgba(100,217,139,.08);color:#9dd9b1}
+.us-events-done-list{padding-bottom:4px}

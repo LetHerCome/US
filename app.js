@@ -1,12 +1,12 @@
-const pages=['home','moments','quiz','bond','think'];
-const swipePages=['home','moments','quiz','bond','think'];
+const pages=['home','moments','quiz','bond','settings'];
+const swipePages=['home','moments','quiz','bond','settings'];
 function go(id,options={}){
   const current=document.querySelector('.page.active')?.id;
   if(current===id){
     scrollTo({top:0,behavior:'smooth'});
     if(id==='moments' && window.usProfile)hydrateMoments();
     if(id==='bond' && window.usProfile)hydrateBond();
-    if(id==='think' && window.usProfile)hydrateThink();
+    if(id==='settings' && window.usProfile)window.hydrateUsSettings?.();
     return;
   }
   pages.forEach(pageId=>{
@@ -20,7 +20,7 @@ function go(id,options={}){
   scrollTo({top:0,behavior:options.swipe?'auto':'smooth'});
   if(id==='moments' && window.usProfile) hydrateMoments();
   if(id==='bond' && window.usProfile) hydrateBond();
-  if(id==='think' && window.usProfile) hydrateThink();
+  if(id==='settings' && window.usProfile) window.hydrateUsSettings?.();
 }
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700)}
 let quizCat='',quizPos=0,quizSelected=null,quizQuestions=[],quizSet=null,quizState=null;
@@ -76,7 +76,7 @@ async function startQuiz(cat){
   document.getElementById('quizQuestion').textContent='Carico il set…';
   document.getElementById('quizAnswers').innerHTML='';
   try{
-    const {data:set,error:setError}=await sb.from('quiz_sets').select('id,slug,title,category').eq('slug',cat).single();
+    const {data:set,error:setError}=await sb.from('quiz_sets').select('id,slug,title,category,mode').eq('slug',cat).single();
     if(setError) throw setError;
     const {data:questions,error:qError}=await sb.from('quiz_questions').select('id,position,question,options').eq('set_id',set.id).order('position',{ascending:true});
     if(qError) throw qError;
@@ -99,9 +99,13 @@ function renderQuiz(){
   quizSelected=null;
   document.getElementById('quizCategory').textContent=(quizSet?.title||quizCat).toUpperCase();
   document.getElementById('quizIndex').textContent=quizPos+1;
+  const totalEl=document.getElementById('quizTotal');if(totalEl)totalEl.textContent=quizQuestions.length;
   document.getElementById('quizProgress').style.width=(((quizPos+1)/quizQuestions.length)*100)+'%';
   document.getElementById('quizQuestion').textContent=item.question;
-  document.getElementById('quizWho').textContent='Rispondi per te. Il confronto resta nascosto fino alla fine.';
+  const mode=quizSet?.mode||'match';
+  document.getElementById('quizWho').textContent=mode==='match'
+    ?'Rispondi per te. Il confronto resta nascosto fino alla fine.'
+    :'Rispondete entrambi. Alla fine vedrete tutte le vostre risposte.';
   const box=document.getElementById('quizAnswers');box.innerHTML='';
   (item.options||[]).forEach((ans,i)=>{
     const b=document.createElement('button');b.className='answer-btn';b.textContent=ans;
@@ -139,24 +143,57 @@ function renderQuizDifferences(state){
     return `<article class="quiz-match quiz-difference"><small>${escapeHtml(q.question)}</small><div><span>Tu</span><b>${escapeHtml(String(myAnswer))}</b></div><div><span>${escapeHtml(partnerName)}</span><b>${escapeHtml(String(partnerAnswer))}</b></div></article>`;
   }).join('');
 }
+function renderQuizAllAnswers(state,mode='match'){
+  const root=document.getElementById('quizMatches');if(!root)return;
+  const mine=state?.my_answers||{},partner=state?.partner_answers||{};
+  const partnerName=window.usProfile?.role==='francesco'?'Bea':'Francesco';
+  const title=mode==='never_have_i'?'Quello che avete fatto davvero':mode==='agree_disagree'?'Come la pensate':mode==='would_you_rather'?'Le vostre scelte':'Le vostre risposte';
+  root.classList.remove('hidden');
+  root.innerHTML='<div class="quiz-match-title">'+escapeHtml(title)+'</div>'+(quizQuestions||[]).map(q=>{
+    const myIdx=Number(mine[String(q.id)]),partnerIdx=Number(partner[String(q.id)]);
+    const myAnswer=(q.options||[])[myIdx]??'—',partnerAnswer=(q.options||[])[partnerIdx]??'—';
+    const same=myIdx===partnerIdx;
+    const prompt=mode==='would_you_rather'?(q.options||[]).join('  ·  '):q.question;
+    return `<article class="quiz-match us-game-answer ${same?'same':'different'}"><small>${escapeHtml(prompt)}</small><div><span>Tu</span><b>${escapeHtml(String(myAnswer))}</b></div><div><span>${escapeHtml(partnerName)}</span><b>${escapeHtml(String(partnerAnswer))}</b></div></article>`;
+  }).join('');
+}
+
 function showQuizState(state,notify=false){
   document.getElementById('quizPlay').classList.add('hidden');
   document.getElementById('quizResult').classList.remove('hidden');
   const xpRoot=document.getElementById('quizXpEarned');
+  const ringLabel=document.querySelector('#scoreRing .score-inner span');
+  const mode=state?.mode||quizSet?.mode||'match';
   if(state.both_complete){
-    const score=Number(state.score||0),total=Number(state.total||10),xp=Number(state.xp_awarded||0);
+    const score=Number(state.score||0),total=Number(state.total||quizQuestions.length||10),xp=Number(state.xp_awarded||0);
     document.getElementById('scoreValue').textContent=score+'/'+total;
-    document.getElementById('scoreRing').style.setProperty('--score',Math.round(score/total*100));
-    document.getElementById('scoreText').textContent=score>=9?'Siete praticamente sincronizzati 😏':score>=7?'Molto allineati ❤️':score>=5?'Niente male, ma avete ancora cose da scoprire 👀':'Due teste, parecchie sorprese 😂';
-    document.getElementById('scoreSub').textContent='Ogni risposta uguale vale 5 XP. Qui sotto mostro solo dove avete risposto diversamente.';
-    if(xpRoot){xpRoot.classList.remove('hidden');xpRoot.innerHTML=`<span>✦</span><b>+${xp} XP Bond</b><small>${score} risposte uguali</small>`;}
-    renderQuizDifferences(state);
+    document.getElementById('scoreRing').style.setProperty('--score',Math.round(score/Math.max(1,total)*100));
+    if(mode==='match'){
+      if(ringLabel)ringLabel.textContent='risposte uguali';
+      document.getElementById('scoreText').textContent=score>=9?'Siete praticamente sincronizzati 😏':score>=7?'Molto allineati ❤️':score>=5?'Niente male, ma avete ancora cose da scoprire 👀':'Due teste, parecchie sorprese 😂';
+      document.getElementById('scoreSub').textContent='Ogni risposta uguale vale 5 XP. Qui sotto mostro solo dove avete risposto diversamente.';
+      if(xpRoot){xpRoot.classList.remove('hidden');xpRoot.innerHTML=`<span>✦</span><b>+${xp} XP Bond</b><small>${score} risposte uguali</small>`;}
+      renderQuizDifferences(state);
+    }else{
+      if(ringLabel)ringLabel.textContent='scelte uguali';
+      const titles={
+        never_have_i:'Adesso sapete qualcosa in più 👀',
+        agree_disagree:'Ecco dove siete sulla stessa linea',
+        would_you_rather:'Le vostre scelte, senza filtri'
+      };
+      document.getElementById('scoreText').textContent=titles[mode]||'Le vostre risposte';
+      document.getElementById('scoreSub').textContent=`Avete fatto ${score} scelte uguali su ${total}. Gli XP premiano il completamento e aggiungono un piccolo bonus quando vi allineate.`;
+      if(xpRoot){xpRoot.classList.remove('hidden');xpRoot.innerHTML=`<span>✦</span><b>+${xp} XP Bond</b><small>partecipazione + affinità</small>`;}
+      renderQuizAllAnswers(state,mode);
+    }
     if(typeof hydrateBondSummary==='function')hydrateBondSummary();
+    window.loadUsExtraGames?.(true);
     if(notify&&state.reward_granted_now)toast(`+${xp} XP Bond ✦`);
     else if(notify)toast('Confronto sbloccato ♡');
   }else{
     document.getElementById('scoreValue').textContent='✓';
     document.getElementById('scoreRing').style.setProperty('--score',100);
+    if(ringLabel)ringLabel.textContent='completato';
     document.getElementById('scoreText').textContent='Hai completato il set ♡';
     const matches=document.getElementById('quizMatches');if(matches){matches.classList.add('hidden');matches.innerHTML='';}
     if(xpRoot){xpRoot.classList.add('hidden');xpRoot.innerHTML='';}
@@ -179,8 +216,10 @@ function resetQuiz(options={}){
   document.getElementById('quizHub').classList.remove('hidden');
   document.getElementById('quizPlay').classList.add('hidden');
   document.getElementById('quizResult').classList.add('hidden');
-  if(options.reload!==false)loadWeeklyQuizHub();
+  window.resetPartnerKnowledge?.({silent:true});
+  if(options.reload!==false){loadWeeklyQuizHub();window.loadUsExtraGames?.();}
 }
+window.resetQuiz=resetQuiz;
 function startWeeklyQuizRefresh(){
   if(weeklyQuizTimer)clearInterval(weeklyQuizTimer);
   weeklyQuizTimer=setInterval(()=>{
@@ -604,6 +643,13 @@ function renderDistanceState(state,detail='',action='Aggiorna'){
 }
 
 function formatDistance(km){
+  const unit=localStorage.getItem('us:settings:distance-unit')||'km';
+  if(unit==='mi'){
+    const miles=km*0.621371;
+    if(miles<0.1)return `${Math.max(1,Math.round(km*3280.84))} ft`;
+    if(miles<10)return `${miles.toFixed(1).replace('.',',')} mi`;
+    return `${Math.round(miles).toLocaleString('it-IT')} mi`;
+  }
   if(km<1)return `${Math.max(1,Math.round(km*1000))} m`;
   if(km<10)return `${km.toFixed(1).replace('.',',')} km`;
   return `${Math.round(km).toLocaleString('it-IT')} km`;
@@ -1691,6 +1737,8 @@ function startUsRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:'moments',filter:`couple_id=eq.${coupleId}`},()=>scheduleUsRealtimeRefresh('moments'))
     .on('postgres_changes',{event:'*',schema:'public',table:'moment_photos',filter:`couple_id=eq.${coupleId}`},()=>scheduleUsRealtimeRefresh('moments'))
     .on('postgres_changes',{event:'*',schema:'public',table:'shared_events',filter:`couple_id=eq.${coupleId}`},()=>scheduleUsRealtimeRefresh('events'))
+    .on('postgres_changes',{event:'*',schema:'public',table:'shared_event_completions',filter:`couple_id=eq.${coupleId}`},()=>{scheduleUsRealtimeRefresh('events');hydrateBondSummary();})
+    .on('postgres_changes',{event:'*',schema:'public',table:'relationship_milestones',filter:`couple_id=eq.${coupleId}`},()=>{scheduleUsRealtimeRefresh('events');hydrateBondSummary();})
     .on('postgres_changes',{event:'*',schema:'public',table:'bond_weekly_quests',filter:`couple_id=eq.${coupleId}`},()=>{hydrateBondSummary();if(document.getElementById('bond')?.classList.contains('active'))hydrateBond();})
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'couples',filter:`id=eq.${coupleId}`},payload=>renderBondProgress(payload.new?.bond_xp||0))
     .subscribe();
@@ -1708,7 +1756,7 @@ async function hydrateCloud(){
     // Only hydrate the visible heavy page.
     if(active==='moments')tasks.push(hydrateMoments());
     if(active==='bond')tasks.push(hydrateBond());
-    if(active==='think')tasks.push(hydrateThink());
+    if(active==='settings')tasks.push(Promise.resolve(window.hydrateUsSettings?.()));
 
     const results=await Promise.allSettled(tasks);
     results.forEach(result=>{
@@ -1813,7 +1861,7 @@ async function refreshVisibleState(options={}){
   if(active==='moments'){await hydrateMoments();return;}
   if(active==='quiz'){await refreshQuizState();return;}
   if(active==='bond'){await hydrateBondSummary();return;}
-  if(active==='think'){await hydrateThink();}
+  if(active==='settings'){await window.hydrateUsSettings?.();}
 }
 setInterval(()=>refreshVisibleState(),60000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&window.usProfile)refreshVisibleState({foreground:true});});
