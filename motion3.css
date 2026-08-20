@@ -1,0 +1,95 @@
+/* =========================================================
+   US · Motion 3
+   Weighted adjacent-page navigation.
+   ========================================================= */
+
+/* Disable the old single-page Motion Pass transform while Motion 3 owns it. */
+.page.us-motion3-current{
+  display:block!important;
+  position:relative;
+  z-index:7;
+  transform:translate3d(var(--us-motion3-x,0px),0,0)!important;
+  opacity:var(--us-motion3-opacity,1)!important;
+  transition:none!important;
+  will-change:transform,opacity;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+}
+
+.page.us-motion3-preview{
+  display:block!important;
+  position:fixed!important;
+  left:var(--us-motion3-left,0px)!important;
+  width:var(--us-motion3-width,100vw)!important;
+  top:var(--us-motion3-top,0px)!important;
+  bottom:var(--us-motion3-bottom,0px)!important;
+  margin:0!important;
+  padding-left:16px!important;
+  padding-right:16px!important;
+  overflow:hidden!important;
+  z-index:6!important;
+  background:
+    radial-gradient(circle at 18% -6%,rgba(232,138,162,.075),transparent 31%),
+    radial-gradient(circle at 92% 5%,rgba(143,134,200,.06),transparent 26%),
+    var(--us-bg,#090a0e)!important;
+  transform:translate3d(var(--us-motion3-x,100%),0,0)!important;
+  opacity:var(--us-motion3-opacity,.82)!important;
+  transition:none!important;
+  will-change:transform,opacity;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  contain:paint;
+}
+
+.page.us-motion3-preview::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  box-shadow:inset 10px 0 24px rgba(0,0,0,.10);
+}
+
+.page.us-motion3-animating,
+.page.us-motion3-returning{
+  transition:
+    transform .265s cubic-bezier(.22,.72,.20,1),
+    opacity .22s ease!important;
+}
+
+.page.us-motion3-returning{
+  transition-duration:.29s!important;
+  transition-timing-function:cubic-bezier(.22,.78,.24,1)!important;
+}
+
+/* The old page-entry animation otherwise adds an extra "kick" after swipe. */
+.page.active.swipe-next,
+.page.active.swipe-prev{
+  animation-duration:.14s!important;
+  animation-timing-function:cubic-bezier(.25,.75,.25,1)!important;
+}
+
+/* During a page gesture, keep interactive cards visually inert. */
+.page.us-motion3-current button,
+.page.us-motion3-preview button{
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* Settings rows remain eligible swipe surfaces. */
+.us-settings2-row{
+  touch-action:pan-y;
+}
+
+/* Prefer stable GPU compositing on mobile. */
+@media(max-width:520px){
+  .page.us-motion3-current,
+  .page.us-motion3-preview{
+    transform-style:preserve-3d;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .page.us-motion3-animating,
+  .page.us-motion3-returning{
+    transition-duration:.12s!important;
+  }
+}

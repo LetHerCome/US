@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-settings2-1";
+const CACHE_NAME = "us-shell-motion3-1";
 
 const APP_SHELL = [
   "/",
@@ -18,6 +18,7 @@ const APP_SHELL = [
   "/identity.css",
   "/identity.js",
   "/settings2.css",
+  "/motion3.css",
   "/version.json",
   "/manifest.webmanifest",
   "/icon-192.png",
