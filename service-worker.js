@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-draggable-heart-1";
+const CACHE_NAME = "us-shell-motion-pass-1";
 
 const APP_SHELL = [
   "/",

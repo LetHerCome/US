@@ -34,18 +34,22 @@ async function action(name){if(name==='widgets')return widgetsModal();if(name===
 
 
 /* US · Draggable Ti penso */
-const US_THINK_POSITION_KEY='us:think-position:v1';
+const US_THINK_POSITION_KEY='us:think-position:v2';
 let usThinkDragCleanup=null;
 
 function setupDraggableThink(){
   const heart=$('thinkButton');
-  if(!heart||heart.dataset.draggableThink==='1')return;
-  heart.dataset.draggableThink='1';
+  if(!heart||heart.dataset.draggableThink==='2')return;
+  heart.dataset.draggableThink='2';
 
   let pointerId=null;
   let startX=0,startY=0,startLeft=0,startTop=0;
   let dragging=false;
   let suppressClickUntil=0;
+  let samples=[];
+  let physicsFrame=0;
+  let posX=0,posY=0;
+  let velocityX=0,velocityY=0;
   const threshold=7;
 
   function viewport(){
@@ -66,35 +70,34 @@ function setupDraggableThink(){
     const margin=12;
     const minX=vp.offsetLeft+margin;
     const maxX=Math.max(minX,vp.offsetLeft+vp.width-rect.width-margin);
-    const minY=vp.offsetTop+Math.max(12,Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--us-safe-top'))||0)+8;
-    const navTop=navRect?.top && navRect.top < vp.offsetTop+vp.height ? navRect.top : vp.offsetTop+vp.height;
+    const minY=vp.offsetTop+12;
+    const navTop=navRect?.top&&navRect.top<vp.offsetTop+vp.height?navRect.top:vp.offsetTop+vp.height;
     const maxY=Math.max(minY,navTop-rect.height-14);
     return {minX,maxX,minY,maxY,width:vp.width,height:vp.height};
   }
 
   function clamp(value,min,max){return Math.min(max,Math.max(min,value));}
 
-  function apply(left,top,animate=false){
+  function setPosition(x,y){
     const b=bounds();
-    const x=clamp(left,b.minX,b.maxX);
-    const y=clamp(top,b.minY,b.maxY);
-    heart.classList.toggle('snap-moving',animate);
-    heart.style.left=`${x}px`;
-    heart.style.top=`${y}px`;
+    posX=clamp(x,b.minX,b.maxX);
+    posY=clamp(y,b.minY,b.maxY);
+    heart.style.left=`${posX}px`;
+    heart.style.top=`${posY}px`;
     heart.style.right='auto';
     heart.style.bottom='auto';
-    if(animate)setTimeout(()=>heart.classList.remove('snap-moving'),220);
-    return {x,y,b};
+    return b;
   }
 
-  function savePosition(x,y,b){
+  function savePosition(){
+    const b=bounds();
+    const center=posX+heart.offsetWidth/2;
+    const edge=center<b.width/2?'left':'right';
+    const yRange=Math.max(1,b.maxY-b.minY);
     try{
-      const center=x+heart.offsetWidth/2;
-      const edge=center < b.width/2 ? 'left' : 'right';
-      const yRange=Math.max(1,b.maxY-b.minY);
       localStorage.setItem(US_THINK_POSITION_KEY,JSON.stringify({
         edge,
-        yRatio:clamp((y-b.minY)/yRange,0,1)
+        yRatio:clamp((posY-b.minY)/yRange,0,1)
       }));
     }catch(_){}
   }
@@ -102,31 +105,132 @@ function setupDraggableThink(){
   function restorePosition(){
     let stored=null;
     try{stored=JSON.parse(localStorage.getItem(US_THINK_POSITION_KEY)||'null');}catch(_){}
-    if(!stored)return;
+    if(!stored){
+      const rect=heart.getBoundingClientRect();
+      posX=rect.left;posY=rect.top;
+      return;
+    }
     const b=bounds();
     const x=stored.edge==='right'?b.maxX:b.minX;
     const y=b.minY+clamp(Number(stored.yRatio)||0,0,1)*(b.maxY-b.minY);
-    apply(x,y,false);
+    setPosition(x,y);
   }
 
-  function snapAndSave(){
-    const rect=heart.getBoundingClientRect();
+  function stopPhysics(){
+    if(physicsFrame)cancelAnimationFrame(physicsFrame);
+    physicsFrame=0;
+    heart.classList.remove('inertia');
+  }
+
+  function snapToNearestEdge(){
     const b=bounds();
-    const center=rect.left+rect.width/2;
-    const x=center < b.width/2 ? b.minX : b.maxX;
-    const pos=apply(x,rect.top,true);
-    savePosition(pos.x,pos.y,pos.b);
+    const targetX=(posX+heart.offsetWidth/2)<b.width/2?b.minX:b.maxX;
+    const start=posX;
+    const delta=targetX-start;
+    const began=performance.now();
+    const duration=210;
+
+    heart.classList.add('snap-moving');
+    function frame(now){
+      const t=Math.min(1,(now-began)/duration);
+      const eased=1-Math.pow(1-t,3);
+      setPosition(start+delta*eased,posY);
+      if(t<1){
+        physicsFrame=requestAnimationFrame(frame);
+      }else{
+        physicsFrame=0;
+        heart.classList.remove('snap-moving');
+        savePosition();
+      }
+    }
+    physicsFrame=requestAnimationFrame(frame);
+  }
+
+  function launch(vx,vy){
+    stopPhysics();
+    velocityX=vx;
+    velocityY=vy;
+
+    // px/ms -> px/frame-ish scale. Cap violent throws.
+    velocityX=clamp(velocityX,-1.8,1.8);
+    velocityY=clamp(velocityY,-1.8,1.8);
+
+    let last=performance.now();
+    heart.classList.add('inertia');
+
+    function tick(now){
+      const dt=Math.min(32,Math.max(8,now-last));
+      last=now;
+      const b=bounds();
+
+      posX+=velocityX*dt;
+      posY+=velocityY*dt;
+
+      // Soft bounce against safe bounds; loses energy like a weighted object.
+      if(posX<b.minX){
+        posX=b.minX;
+        velocityX=Math.abs(velocityX)*0.46;
+      }else if(posX>b.maxX){
+        posX=b.maxX;
+        velocityX=-Math.abs(velocityX)*0.46;
+      }
+
+      if(posY<b.minY){
+        posY=b.minY;
+        velocityY=Math.abs(velocityY)*0.42;
+      }else if(posY>b.maxY){
+        posY=b.maxY;
+        velocityY=-Math.abs(velocityY)*0.42;
+      }
+
+      setPosition(posX,posY);
+
+      // Time-based friction: approximately stable across 60/90/120 Hz.
+      const friction=Math.pow(0.918,dt/16.67);
+      velocityX*=friction;
+      velocityY*=friction;
+
+      const speed=Math.hypot(velocityX,velocityY);
+      if(speed>0.055){
+        physicsFrame=requestAnimationFrame(tick);
+      }else{
+        physicsFrame=0;
+        heart.classList.remove('inertia');
+        snapToNearestEdge();
+      }
+    }
+
+    physicsFrame=requestAnimationFrame(tick);
+  }
+
+  function addSample(x,y,time){
+    samples.push({x,y,time});
+    while(samples.length>6||samples[0]?.time<time-110)samples.shift();
+  }
+
+  function releaseVelocity(){
+    if(samples.length<2)return {vx:0,vy:0};
+    const first=samples[0],last=samples[samples.length-1];
+    const dt=Math.max(1,last.time-first.time);
+    return {
+      vx:(last.x-first.x)/dt,
+      vy:(last.y-first.y)/dt
+    };
   }
 
   function onPointerDown(event){
     if(event.button!==undefined&&event.button!==0)return;
+    stopPhysics();
     const rect=heart.getBoundingClientRect();
     pointerId=event.pointerId;
     startX=event.clientX;
     startY=event.clientY;
     startLeft=rect.left;
     startTop=rect.top;
+    posX=rect.left;
+    posY=rect.top;
     dragging=false;
+    samples=[{x:event.clientX,y:event.clientY,time:performance.now()}];
     heart.setPointerCapture?.(pointerId);
   }
 
@@ -142,7 +246,8 @@ function setupDraggableThink(){
     if(!dragging)return;
 
     event.preventDefault();
-    apply(startLeft+dx,startTop+dy,false);
+    setPosition(startLeft+dx,startTop+dy);
+    addSample(event.clientX,event.clientY,performance.now());
   }
 
   function finishDrag(event){
@@ -151,10 +256,16 @@ function setupDraggableThink(){
     pointerId=null;
 
     if(dragging){
-      suppressClickUntil=Date.now()+450;
+      addSample(event.clientX,event.clientY,performance.now());
+      suppressClickUntil=Date.now()+500;
       dragging=false;
       heart.classList.remove('dragging');
-      snapAndSave();
+
+      const {vx,vy}=releaseVelocity();
+      const speed=Math.hypot(vx,vy);
+
+      if(speed>0.22)launch(vx,vy);
+      else snapToNearestEdge();
     }
   }
 
@@ -175,22 +286,20 @@ function setupDraggableThink(){
   const onResize=()=>{
     clearTimeout(resizeTimer);
     resizeTimer=setTimeout(()=>{
+      stopPhysics();
       const rect=heart.getBoundingClientRect();
-      if(heart.style.top) {
-        const b=bounds();
-        const pos=apply(rect.left,rect.top,false);
-        savePosition(pos.x,pos.y,b);
-      } else {
-        restorePosition();
-      }
+      setPosition(rect.left,rect.top);
+      snapToNearestEdge();
     },100);
   };
+
   window.addEventListener('resize',onResize);
   window.visualViewport?.addEventListener('resize',onResize);
 
   requestAnimationFrame(()=>requestAnimationFrame(restorePosition));
 
   usThinkDragCleanup=()=>{
+    stopPhysics();
     heart.removeEventListener('pointerdown',onPointerDown);
     heart.removeEventListener('pointermove',onPointerMove);
     heart.removeEventListener('pointerup',finishDrag);

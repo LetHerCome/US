@@ -32,3 +32,29 @@ body.us-keyboard-open .us-floating-think,body.us-events-open .us-floating-think,
     box-shadow .2s ease!important;
 }
 .us-floating-think.dragging:active{transform:scale(1.06)!important}
+/* US · Motion Pass */
+.page.us-swipe-tracking{
+  transform:translate3d(var(--us-swipe-x,0px),0,0)!important;
+  opacity:calc(1 - (var(--us-swipe-progress,0) * .055))!important;
+  transition:none!important;
+  will-change:transform,opacity;
+}
+.page.us-swipe-return{
+  transform:translate3d(var(--us-swipe-x,0px),0,0)!important;
+  opacity:calc(1 - (var(--us-swipe-progress,0) * .035))!important;
+  transition:
+    transform .22s cubic-bezier(.22,.78,.24,1),
+    opacity .20s ease!important;
+  will-change:transform,opacity;
+}
+.us-floating-think.inertia{
+  transition:none!important;
+  cursor:grabbing;
+  transform:scale(1.035);
+  box-shadow:
+    0 18px 42px rgba(0,0,0,.31),
+    0 0 18px rgba(255,102,142,.11)!important;
+}
+.us-floating-think.inertia .us-floating-think-ring{
+  opacity:.78;
+}
