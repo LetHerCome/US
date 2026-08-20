@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-performance-1";
+const CACHE_NAME = "us-shell-moments-visual-1";
 
 const APP_SHELL = [
   "/",

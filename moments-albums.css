@@ -195,3 +195,353 @@ body.us-album-open{overflow:hidden;touch-action:none}
 @media(prefers-reduced-motion:reduce){
   .us-album-photo-card,.us-album-caption-postit{transform:none!important}
 }
+/* ============================================================
+   US · Moments Visual Fix
+   Pure visual/interaction polish over the existing Moments logic.
+   ============================================================ */
+
+/* Page header */
+#moments>.section{position:relative}
+#moments>.section>h2{display:none!important}
+.us-moments-head{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:16px;
+  margin:2px 3px 19px;
+}
+.us-moments-head-copy{min-width:0}
+.us-moments-eyebrow{
+  color:#8f97a6;font-size:9px;font-weight:780;letter-spacing:.14em;text-transform:uppercase
+}
+.us-moments-head h2{
+  display:block!important;margin:4px 0 3px!important;
+  font-family:Georgia,serif;font-size:28px!important;font-style:italic;
+  font-weight:500;letter-spacing:-.6px;line-height:1.02
+}
+.us-moments-head p{
+  margin:0!important;color:#8f97a6!important;font-size:11px!important;line-height:1.35
+}
+.us-moments-head-actions{display:flex;align-items:center;gap:9px;flex:0 0 auto}
+.us-moments-total{
+  color:#929aa9;font-size:9px;font-weight:720;white-space:nowrap
+}
+.us-moments-add{
+  width:42px;height:42px;padding:0;border-radius:50%;
+  display:grid;place-items:center;
+  background:rgba(255,255,255,.08);color:#f7f8fb;
+  border:1px solid rgba(255,255,255,.11);
+  box-shadow:0 10px 26px rgba(0,0,0,.19);
+  font-size:23px;font-weight:300;line-height:1;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)
+}
+.us-moments-add:active{transform:scale(.94)}
+
+/* Composer becomes a focused bottom sheet instead of occupying the feed */
+.us-moment-compose-overlay{
+  position:fixed;inset:0;z-index:10040;display:none;
+  align-items:flex-end;justify-content:center;
+  background:rgba(3,5,9,.66);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  padding-top:calc(env(safe-area-inset-top,0px) + 10px);
+}
+.us-moment-compose-overlay.show{display:flex}
+.us-moment-compose-backdrop{position:absolute;inset:0}
+.us-moment-compose-sheet{
+  width:min(500px,100%);max-height:calc(var(--us-viewport-height,100dvh) - max(24px,env(safe-area-inset-top,0px)));
+  overflow:auto;overscroll-behavior:contain;position:relative;z-index:1;
+  padding:10px 14px calc(16px + env(safe-area-inset-bottom,0px));
+  border-radius:29px 29px 0 0;
+  background:
+    radial-gradient(circle at 90% -20%,rgba(169,133,255,.10),transparent 34%),
+    #10131a;
+  border:1px solid rgba(255,255,255,.09);border-bottom:0;
+  box-shadow:0 -28px 70px rgba(0,0,0,.50);
+  animation:usMomentSheetIn .24s cubic-bezier(.22,.78,.24,1)
+}
+@keyframes usMomentSheetIn{from{transform:translateY(30px);opacity:.55}to{transform:none;opacity:1}}
+.us-moment-compose-grabber{
+  width:36px;height:4px;border-radius:99px;background:rgba(255,255,255,.20);
+  margin:1px auto 12px
+}
+.us-moment-compose-title{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 3px 12px
+}
+.us-moment-compose-title div{min-width:0}
+.us-moment-compose-title small{
+  display:block;color:#8f97a6;font-size:9px;letter-spacing:.11em;text-transform:uppercase
+}
+.us-moment-compose-title b{display:block;margin-top:3px;font-size:17px}
+.us-moment-compose-close{
+  width:39px;height:39px;padding:0;border-radius:50%;
+  background:#1d222d;color:#f2f4f8;font-size:21px;font-weight:400
+}
+.us-moment-compose-sheet .moment-compose{margin:0!important}
+.us-moment-compose-sheet .moment-picker{
+  border-radius:20px!important;background:#171b24!important;
+  border-color:rgba(255,255,255,.09)!important;
+  box-shadow:none!important
+}
+.us-moment-compose-sheet .moment-picker-empty{min-height:132px!important}
+.us-moment-compose-sheet .moment-preview{aspect-ratio:4/3!important}
+.us-moment-compose-sheet .moment-details{padding:12px 0 0!important}
+.us-moment-compose-sheet .moment-private{text-align:center;margin-top:11px!important}
+body.us-moment-compose-open{overflow:hidden}
+
+/* Feed: cleaner photographic journal instead of generic cards */
+#moments .moment-grid{
+  gap:16px 12px!important;align-items:start!important;
+  padding:0 1px 8px
+}
+#moments .moment-card.moment-postit{
+  background:#f1ede4!important;
+  border-radius:5px 12px 7px 10px!important;
+  padding:6px 6px 10px!important;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.45) inset,
+    0 12px 30px rgba(0,0,0,.22)!important;
+  transform:rotate(-.18deg)!important;
+  transition:transform .18s ease,box-shadow .18s ease!important
+}
+#moments .moment-card.moment-postit:nth-child(2n){transform:rotate(.20deg)!important}
+#moments .moment-card.moment-postit:nth-child(3n){transform:rotate(-.08deg)!important}
+#moments .moment-card.moment-postit:active{
+  transform:rotate(0) scale(.985)!important;
+  box-shadow:0 7px 18px rgba(0,0,0,.18)!important
+}
+#moments .moment-card.moment-postit img{
+  aspect-ratio:4/5!important;border-radius:3px 8px 4px 8px!important;
+  background:#d6d0c5!important
+}
+#moments .moment-card.moment-postit:nth-child(4n+2) img{aspect-ratio:1/1!important}
+#moments .moment-card.moment-postit:nth-child(4n+4) img{aspect-ratio:5/4!important}
+#moments .moment-card.moment-postit .moment-meta{
+  padding:10px 5px 1px!important;min-height:62px!important
+}
+#moments .moment-card.moment-postit .moment-meta b{
+  color:#292722!important;font-family:Georgia,serif!important;
+  font-size:12px!important;font-weight:600!important;letter-spacing:-.1px
+}
+#moments .moment-card.moment-postit .moment-meta p{
+  color:#625d54!important;font-size:10px!important;
+  line-height:1.42!important;margin-top:5px!important
+}
+#moments .moment-card.moment-postit .moment-by{
+  color:#8a8275!important;font-size:8px!important;letter-spacing:.09em!important
+}
+
+/* Replace prototype-looking delete X with discreet overflow control */
+#moments .moment-card.moment-postit .moment-delete{
+  top:9px!important;right:9px!important;
+  width:34px!important;height:28px!important;min-width:34px!important;min-height:28px!important;
+  border-radius:999px!important;border:1px solid rgba(255,255,255,.16)!important;
+  background:rgba(7,9,13,.58)!important;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  font-size:0!important;box-shadow:0 5px 15px rgba(0,0,0,.16)!important
+}
+#moments .moment-card.moment-postit .moment-delete::before{
+  content:"•••";font-size:12px;letter-spacing:1px;color:#fff;line-height:1
+}
+#moments .moment-album-count{
+  top:10px!important;right:10px!important;bottom:auto!important;
+  min-height:26px!important;padding:5px 9px!important;
+  background:rgba(7,9,13,.62)!important;border-color:rgba(255,255,255,.14)!important;
+  font-size:8px!important;letter-spacing:.05em!important
+}
+#moments .moment-card.has-album .moment-album-count{right:10px!important}
+
+/* Album shell */
+.us-album-overlay{
+  background:#07090d!important;
+  opacity:0;transition:opacity .18s ease
+}
+.us-album-overlay.show{opacity:1}
+.us-album-shell{
+  background:
+    radial-gradient(circle at 86% 0%,rgba(169,133,255,.08),transparent 27%),
+    radial-gradient(circle at 8% 18%,rgba(255,102,142,.055),transparent 31%),
+    #0a0c11!important
+}
+.us-album-overlay.show .us-album-shell{animation:usAlbumVisualIn .24s cubic-bezier(.22,.78,.24,1)}
+@keyframes usAlbumVisualIn{from{transform:translateY(14px);opacity:.68}to{transform:none;opacity:1}}
+
+.us-album-close{
+  width:40px!important;height:40px!important;
+  background:rgba(7,9,13,.47)!important;
+  border-color:rgba(255,255,255,.13)!important;
+  box-shadow:0 8px 22px rgba(0,0,0,.20)!important
+}
+
+/* Hero uses the same photo blurred behind the intact image */
+.us-album-cover-stage{
+  position:relative!important;isolation:isolate;overflow:hidden!important;
+  height:min(58vh,600px)!important;min-height:390px!important;
+  padding:0!important;background:#090b10!important;
+  align-items:center!important;
+  border-bottom:0!important
+}
+.us-album-cover-blur{
+  position:absolute;z-index:-2;inset:-35px;
+  background-size:cover;background-position:center;
+  filter:blur(28px) saturate(.82);opacity:.52;transform:scale(1.08)
+}
+.us-album-cover-stage::after{
+  content:"";position:absolute;z-index:-1;inset:0;
+  background:
+    linear-gradient(180deg,rgba(5,7,10,.20),rgba(5,7,10,.02) 48%,rgba(5,7,10,.58) 100%),
+    rgba(8,10,14,.12)
+}
+.us-album-cover-stage img{
+  position:relative;z-index:1;
+  width:100%!important;height:100%!important;min-height:0!important;
+  object-fit:contain!important;object-position:center center!important;
+  background:transparent!important;padding:0 8px
+}
+
+/* Metadata floats into the hero instead of forming another block */
+.us-album-info{
+  position:relative;z-index:3;margin-top:-34px!important;
+  padding:0 17px 4px!important
+}
+.us-album-meta-line{
+  width:max-content;max-width:100%;
+  min-height:32px;margin:0 4px 14px!important;padding:7px 11px!important;
+  display:flex!important;gap:10px!important;
+  background:rgba(12,14,19,.65);
+  border:1px solid rgba(255,255,255,.10);border-radius:999px;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  color:#aeb5c2!important;font-size:8px!important;
+  box-shadow:0 8px 20px rgba(0,0,0,.18)
+}
+.us-album-meta-line b{font-size:8px!important;color:#eef0f5!important}
+
+/* Main note becomes an actual warm post-it */
+.us-album-caption-postit{
+  max-width:92%;margin:0 auto 30px!important;padding:18px 18px 16px!important;
+  border-radius:3px 13px 5px 11px!important;
+  background:
+    linear-gradient(155deg,rgba(255,255,255,.22),transparent 35%),
+    #eee9de!important;
+  border:0!important;
+  box-shadow:0 14px 34px rgba(0,0,0,.23)!important;
+  transform:rotate(-.28deg)!important
+}
+.us-album-caption-postit p{
+  color:#292722!important;font-family:Georgia,serif;
+  font-size:14px!important;line-height:1.5!important
+}
+.us-album-caption-postit small{
+  color:#766f65!important;font-size:8px!important;text-transform:uppercase;
+  letter-spacing:.07em
+}
+
+/* Album content */
+.us-album-section{padding:2px 17px 18px!important}
+.us-album-section-head{
+  align-items:center!important;margin:0 2px 15px!important
+}
+.us-album-section-head .tiny{font-size:8px!important;color:#818998!important}
+.us-album-section-head h3{
+  font-family:Georgia,serif;font-size:21px!important;font-weight:500;
+  letter-spacing:-.35px;margin-top:4px!important
+}
+.us-album-section-head .us-album-add{display:none!important}
+
+/* Editorial sequence: one wide photo, then a pair, repeated */
+.us-album-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:15px 11px!important;padding:2px 0 10px!important
+}
+.us-album-photo-card{
+  padding:6px 6px 10px!important;
+  border-radius:4px 11px 6px 10px!important;
+  background:#eee9de!important;
+  border:0!important;
+  box-shadow:0 13px 31px rgba(0,0,0,.22)!important;
+  transform:rotate(-.14deg)!important
+}
+.us-album-photo-card:nth-of-type(2n){transform:rotate(.16deg)!important}
+.us-album-photo-card:nth-of-type(3n+1){grid-column:1/-1}
+.us-album-photo-card img{
+  aspect-ratio:1/1.05!important;border-radius:3px 8px 4px 8px!important;
+  background:#cbc6bc!important
+}
+.us-album-photo-card:nth-of-type(3n+1) img{aspect-ratio:16/10!important}
+.us-album-photo-copy{padding:9px 5px 1px!important}
+.us-album-photo-copy p{
+  color:#3a3731!important;font-family:Georgia,serif;
+  font-size:10px!important;line-height:1.45!important
+}
+.us-album-photo-copy small{
+  color:#80786c!important;font-size:8px!important;letter-spacing:.07em!important;
+  display:flex!important;align-items:center;gap:6px
+}
+.us-author-initial{
+  width:18px;height:18px;border-radius:50%;display:inline-grid;place-items:center;
+  background:#272a33;color:#f7f8fb;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",sans-serif;
+  font-size:8px;font-weight:800;letter-spacing:0;flex:0 0 auto
+}
+.us-album-photo-delete{
+  width:31px!important;height:31px!important;min-width:31px!important;min-height:31px!important;
+  right:8px!important;top:8px!important;
+  background:rgba(8,10,14,.58)!important;border-color:rgba(255,255,255,.14)!important;
+  font-size:16px!important
+}
+
+/* Integrated "add another piece" card */
+.us-album-add-tile{
+  width:100%;min-height:92px;margin:7px 0 4px;padding:16px;
+  display:flex;align-items:center;justify-content:center;gap:11px;
+  border-radius:20px;
+  border:1px dashed rgba(255,255,255,.14);
+  background:rgba(255,255,255,.025);color:#cbd0da;
+  font-size:11px;font-weight:720
+}
+.us-album-add-tile span{
+  width:33px;height:33px;border-radius:12px;display:grid;place-items:center;
+  background:rgba(255,255,255,.065);color:#f5f6f9;font-size:19px;font-weight:400
+}
+.us-album-add-tile:active{background:rgba(255,255,255,.055)}
+
+/* Album composer feels like a note being added, not a generic form */
+.us-album-composer{
+  padding:9px!important;border-radius:19px!important;
+  background:#141820!important;border-color:rgba(255,255,255,.08)!important
+}
+.us-album-composer-preview{height:260px!important;border-radius:13px!important}
+.us-album-composer input{background:#0d1016!important}
+.us-album-save{background:linear-gradient(135deg,#ff668e,#a985ff)!important}
+
+/* Fullscreen gallery polish */
+.us-album-lightbox{background:#030407!important}
+.us-album-lightbox-count{
+  left:50%!important;transform:translateX(-50%);
+  top:calc(env(safe-area-inset-top,0px) + 24px)!important;
+  color:rgba(255,255,255,.72)!important
+}
+.us-album-lightbox-close{
+  width:40px!important;height:40px!important;
+  background:rgba(8,10,14,.48)!important
+}
+.us-album-lightbox-info{
+  padding-top:62px!important;
+  background:linear-gradient(transparent,rgba(0,0,0,.84))!important
+}
+.us-album-lightbox-info b{font-size:9px!important}
+.us-album-lightbox-info p{
+  font-family:Georgia,serif;font-size:13px!important;line-height:1.5!important
+}
+
+@media(max-width:360px){
+  .us-moments-head{margin-bottom:16px}
+  .us-moments-head h2{font-size:25px!important}
+  #moments .moment-grid{gap:13px 9px!important}
+  .us-album-cover-stage{min-height:350px!important;height:55vh!important}
+  .us-album-caption-postit{max-width:95%}
+}
+@media(orientation:landscape) and (max-height:560px){
+  .us-album-cover-stage{height:75vh!important;min-height:310px!important}
+  .us-album-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .us-album-photo-card:nth-of-type(3n+1){grid-column:auto}
+  .us-album-photo-card:nth-of-type(4n+1){grid-column:span 2}
+}
+@media(prefers-reduced-motion:reduce){
+  .us-moment-compose-sheet,.us-album-overlay.show .us-album-shell{animation:none!important}
+}

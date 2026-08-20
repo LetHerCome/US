@@ -344,3 +344,214 @@ document.addEventListener('visibilitychange',()=>{
 });
 console.info('[US] Moments Albums attivo');
 })();
+
+/* ============================================================
+   US · Moments Visual Fix
+   UI-only enhancement. No DB/runtime ownership.
+   ============================================================ */
+(() => {
+  'use strict';
+  if (window.__usMomentsVisualFixInstalled) return;
+  window.__usMomentsVisualFixInstalled = true;
+
+  let pageReady = false;
+  let albumReady = false;
+  let composeWasPhoto = false;
+  let albumSwipeStart = null;
+
+  function initials(name) {
+    const value = String(name || 'Noi').trim();
+    if (!value) return '♡';
+    return value.split(/\s+/).slice(0, 2).map(part => part[0]?.toUpperCase() || '').join('') || '♡';
+  }
+
+  function updateMomentCount() {
+    const total = document.querySelectorAll('#momentsGrid .moment-card').length;
+    const el = document.getElementById('usMomentsTotal');
+    if (el) el.textContent = total ? `${total} ${total === 1 ? 'ricordo' : 'ricordi'}` : 'Nessun ricordo';
+  }
+
+  function openComposer() {
+    const overlay = document.getElementById('usMomentComposeOverlay');
+    if (!overlay) return;
+    overlay.classList.add('show');
+    overlay.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('us-moment-compose-open');
+  }
+
+  function closeComposer() {
+    const overlay = document.getElementById('usMomentComposeOverlay');
+    if (!overlay) return;
+    overlay.classList.remove('show');
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('us-moment-compose-open');
+  }
+
+  function setupMomentsPage() {
+    if (pageReady) return;
+    const page = document.getElementById('moments');
+    const section = page?.querySelector('.section');
+    const compose = document.getElementById('momentCompose');
+    const grid = document.getElementById('momentsGrid');
+    const originalTitle = section?.querySelector(':scope > h2');
+    if (!page || !section || !compose || !grid || !originalTitle) return;
+
+    const head = document.createElement('div');
+    head.className = 'us-moments-head';
+    head.innerHTML = `
+      <div class="us-moments-head-copy">
+        <div class="us-moments-eyebrow">IL VOSTRO DIARIO</div>
+        <h2>Moments</h2>
+        <p>I vostri ricordi, un pezzo alla volta.</p>
+      </div>
+      <div class="us-moments-head-actions">
+        <span class="us-moments-total" id="usMomentsTotal"></span>
+        <button type="button" class="us-moments-add" id="usMomentsAdd" aria-label="Aggiungi un ricordo">＋</button>
+      </div>
+    `;
+    section.insertBefore(head, originalTitle.nextSibling);
+
+    const overlay = document.createElement('div');
+    overlay.className = 'us-moment-compose-overlay';
+    overlay.id = 'usMomentComposeOverlay';
+    overlay.setAttribute('aria-hidden', 'true');
+    overlay.innerHTML = `
+      <div class="us-moment-compose-backdrop" id="usMomentComposeBackdrop"></div>
+      <section class="us-moment-compose-sheet" role="dialog" aria-modal="true" aria-label="Aggiungi un ricordo">
+        <div class="us-moment-compose-grabber"></div>
+        <div class="us-moment-compose-title">
+          <div><small>NUOVO MOMENT</small><b>Aggiungi un ricordo</b></div>
+          <button type="button" class="us-moment-compose-close" id="usMomentComposeClose" aria-label="Chiudi">×</button>
+        </div>
+        <div id="usMomentComposeMount"></div>
+      </section>
+    `;
+    document.body.appendChild(overlay);
+    overlay.querySelector('#usMomentComposeMount')?.appendChild(compose);
+
+    document.getElementById('usMomentsAdd')?.addEventListener('click', openComposer);
+    document.getElementById('usMomentComposeClose')?.addEventListener('click', closeComposer);
+    document.getElementById('usMomentComposeBackdrop')?.addEventListener('click', closeComposer);
+
+    composeWasPhoto = compose.classList.contains('has-photo');
+    const composeObserver = new MutationObserver(() => {
+      const hasPhoto = compose.classList.contains('has-photo');
+      if (composeWasPhoto && !hasPhoto && overlay.classList.contains('show')) {
+        setTimeout(closeComposer, 160);
+      }
+      composeWasPhoto = hasPhoto;
+    });
+    composeObserver.observe(compose, { attributes: true, attributeFilter: ['class'] });
+
+    const gridObserver = new MutationObserver(updateMomentCount);
+    gridObserver.observe(grid, { childList: true, subtree: false });
+    updateMomentCount();
+    pageReady = true;
+  }
+
+  function syncCoverBlur() {
+    const cover = document.getElementById('usAlbumCover');
+    const blur = document.querySelector('.us-album-cover-blur');
+    if (!cover || !blur) return;
+    const url = cover.currentSrc || cover.src || '';
+    blur.style.backgroundImage = url ? `url("${url.replace(/"/g, '\\"')}")` : '';
+  }
+
+  function decorateAuthors(root = document) {
+    root.querySelectorAll?.('.us-album-photo-copy small').forEach(small => {
+      if (small.querySelector('.us-author-initial')) return;
+      const name = small.textContent.trim() || 'Noi';
+      const chip = document.createElement('span');
+      chip.className = 'us-author-initial';
+      chip.textContent = initials(name);
+      small.prepend(chip);
+    });
+
+    const coverAuthor = document.getElementById('usAlbumCoverAuthor');
+    if (coverAuthor && !coverAuthor.dataset.visualPolished) {
+      coverAuthor.dataset.visualPolished = '1';
+    }
+  }
+
+  function addAlbumTile() {
+    const grid = document.getElementById('usAlbumGrid');
+    if (!grid || document.getElementById('usAlbumAddTile')) return;
+    const tile = document.createElement('button');
+    tile.type = 'button';
+    tile.id = 'usAlbumAddTile';
+    tile.className = 'us-album-add-tile';
+    tile.innerHTML = '<span>＋</span> Aggiungi un altro pezzo di questo giorno';
+    tile.addEventListener('click', () => document.getElementById('usAlbumFile')?.click());
+    grid.insertAdjacentElement('afterend', tile);
+  }
+
+  function setupAlbum() {
+    if (albumReady) return;
+    const overlay = document.getElementById('usAlbumOverlay');
+    const stage = overlay?.querySelector('.us-album-cover-stage');
+    const cover = document.getElementById('usAlbumCover');
+    const grid = document.getElementById('usAlbumGrid');
+    const scroll = document.getElementById('usAlbumScroll');
+    if (!overlay || !stage || !cover || !grid || !scroll) return;
+
+    if (!stage.querySelector('.us-album-cover-blur')) {
+      const blur = document.createElement('div');
+      blur.className = 'us-album-cover-blur';
+      stage.prepend(blur);
+    }
+
+    const title = overlay.querySelector('.us-album-section-head h3');
+    const kicker = overlay.querySelector('.us-album-section-head .tiny');
+    if (title) title.textContent = 'Altri pezzi di quel giorno';
+    if (kicker) kicker.textContent = 'DENTRO QUESTO MOMENT';
+
+    addAlbumTile();
+    syncCoverBlur();
+    decorateAuthors(overlay);
+
+    const coverObserver = new MutationObserver(syncCoverBlur);
+    coverObserver.observe(cover, { attributes: true, attributeFilter: ['src'] });
+    cover.addEventListener('load', syncCoverBlur);
+
+    const gridObserver = new MutationObserver(() => {
+      decorateAuthors(grid);
+      addAlbumTile();
+    });
+    gridObserver.observe(grid, { childList: true, subtree: true });
+
+    // Natural "pull down to go back" when the album is already at the top.
+    scroll.addEventListener('touchstart', event => {
+      const t = event.touches?.[0];
+      if (!t || scroll.scrollTop > 2) { albumSwipeStart = null; return; }
+      albumSwipeStart = { x: t.clientX, y: t.clientY };
+    }, { passive: true });
+
+    scroll.addEventListener('touchend', event => {
+      if (!albumSwipeStart || scroll.scrollTop > 2) { albumSwipeStart = null; return; }
+      const t = event.changedTouches?.[0];
+      if (!t) { albumSwipeStart = null; return; }
+      const dx = t.clientX - albumSwipeStart.x;
+      const dy = t.clientY - albumSwipeStart.y;
+      albumSwipeStart = null;
+      if (dy > 88 && Math.abs(dy) > Math.abs(dx) * 1.25) {
+        document.getElementById('usAlbumClose')?.click();
+      }
+    }, { passive: true });
+
+    albumReady = true;
+  }
+
+  function boot() {
+    setupMomentsPage();
+    setupAlbum();
+    if (!pageReady || !albumReady) setTimeout(boot, 150);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot, { once: true });
+  } else {
+    boot();
+  }
+
+  console.info('[US] Moments Visual Fix attivo');
+})();
