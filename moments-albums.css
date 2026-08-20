@@ -1,0 +1,197 @@
+/* US · Moments Albums
+   Additive visual layer. Does not restyle Home / navigation / calendar. */
+
+body.us-album-open{overflow:hidden;touch-action:none}
+
+.moment-card.has-album .moment-delete{display:none!important}
+.moment-album-count{
+  position:absolute;right:10px;bottom:10px;z-index:4;
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:27px;padding:5px 9px;border-radius:999px;
+  background:rgba(8,10,15,.70);border:1px solid rgba(255,255,255,.16);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  color:#f5f6fa;font-size:9px;font-weight:800;letter-spacing:.035em;
+  box-shadow:0 7px 20px rgba(0,0,0,.26)
+}
+
+.us-album-overlay{
+  position:fixed;inset:0;z-index:10080;
+  display:none;background:#090b10;color:#f6f7fb;
+}
+.us-album-overlay.show{display:block}
+.us-album-shell{
+  width:min(520px,100%);height:100dvh;height:var(--us-viewport-height,100dvh);
+  margin:0 auto;background:
+    radial-gradient(circle at 85% -10%,rgba(169,133,255,.09),transparent 26%),
+    radial-gradient(circle at 10% 10%,rgba(255,102,142,.07),transparent 30%),#0b0d12;
+  overflow:hidden;position:relative;
+}
+.us-album-scroll{
+  height:100%;overflow-y:auto;overscroll-behavior:contain;
+  padding-bottom:calc(38px + env(safe-area-inset-bottom,0px));
+  scrollbar-width:none;
+}
+.us-album-scroll::-webkit-scrollbar{display:none}
+
+.us-album-close{
+  position:fixed;z-index:8;
+  top:calc(env(safe-area-inset-top,0px) + 12px);
+  left:max(14px,calc((100vw - min(520px,100vw))/2 + 14px));
+  width:42px;height:42px;padding:0;border-radius:50%;
+  display:grid;place-items:center;
+  background:rgba(8,10,15,.58);color:white;
+  border:1px solid rgba(255,255,255,.14);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  box-shadow:0 8px 24px rgba(0,0,0,.25);
+  font-size:24px;font-weight:500;line-height:1;
+}
+.us-album-cover-stage{
+  min-height:42vh;background:#05060a;
+  display:flex;align-items:flex-start;justify-content:center;
+  padding-top:max(0px,env(safe-area-inset-top,0px));
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.us-album-cover-stage img{
+  width:100%;height:min(58vh,590px);min-height:42vh;
+  object-fit:contain;object-position:center top;
+  display:block;background:#05060a;
+}
+.us-album-loading{
+  min-height:55vh;display:grid;place-items:center;
+  color:#949cab;font-size:12px
+}
+
+.us-album-info{padding:17px 17px 2px}
+.us-album-meta-line{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  color:#9aa2b2;font-size:10px;text-transform:uppercase;letter-spacing:.07em;
+  margin:0 3px 12px
+}
+.us-album-meta-line b{color:#e7e9ee;font-size:10px}
+.us-album-caption-postit{
+  margin:0 5px 25px;padding:15px 16px 14px;
+  border-radius:4px 13px 7px 12px;
+  background:linear-gradient(150deg,rgba(62,55,68,.88),rgba(34,31,39,.95));
+  border:1px solid rgba(255,255,255,.11);
+  box-shadow:0 12px 25px rgba(0,0,0,.18);
+  transform:rotate(-.45deg);
+}
+.us-album-caption-postit[hidden]{display:none!important}
+.us-album-caption-postit p{margin:0;color:#edf0f5;line-height:1.48;font-size:13px;white-space:pre-wrap}
+.us-album-caption-postit small{display:block;margin-top:8px;color:#9fa6b4;font-size:9px}
+
+.us-album-section{padding:0 17px 10px}
+.us-album-section-head{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:14px;
+  margin:4px 3px 12px;
+}
+.us-album-section-head .tiny{font-size:9px;letter-spacing:.13em}
+.us-album-section-head h3{margin:4px 0 0;font-size:19px}
+.us-album-add{
+  min-height:42px;padding:9px 13px;border-radius:14px;
+  background:rgba(255,255,255,.075);color:#f5f6fa;
+  border:1px solid rgba(255,255,255,.10);font-size:10px
+}
+
+.us-album-composer{
+  margin:0 0 15px;padding:10px;border-radius:20px;
+  background:#141821;border:1px solid rgba(255,255,255,.10);
+  box-shadow:0 12px 30px rgba(0,0,0,.18)
+}
+.us-album-composer[hidden]{display:none!important}
+.us-album-composer-preview{
+  width:100%;height:240px;display:block;object-fit:contain;
+  border-radius:15px;background:#080a0f;
+}
+.us-album-composer input{
+  margin-top:9px;background:#0d1016!important;border-radius:14px!important;
+  font-size:16px!important
+}
+.us-album-composer-actions{display:flex;gap:8px;margin-top:9px}
+.us-album-composer-actions button{flex:1;min-height:43px;border-radius:14px;font-size:10px}
+.us-album-cancel{background:#202530;color:#e6e9ef}
+.us-album-save{background:linear-gradient(135deg,#ff668e,#a985ff);color:white}
+
+.us-album-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:14px 11px;
+  padding:4px 1px 12px;
+}
+.us-album-empty{
+  grid-column:1/-1;padding:25px 18px;border-radius:20px;
+  border:1px dashed rgba(255,255,255,.11);
+  color:#8f97a6;text-align:center;font-size:11px;line-height:1.5
+}
+.us-album-photo-card{
+  position:relative;min-width:0;padding:7px 7px 11px;
+  border-radius:4px 12px 6px 13px;
+  background:linear-gradient(155deg,#242630,#171a22);
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:0 12px 28px rgba(0,0,0,.20);
+  transform:rotate(-.7deg);cursor:pointer;
+}
+.us-album-photo-card:nth-child(2n){transform:rotate(.65deg)}
+.us-album-photo-card:nth-child(3n){transform:rotate(-.25deg)}
+.us-album-photo-card img{
+  width:100%;aspect-ratio:1/1.08;display:block;object-fit:cover;
+  border-radius:3px 9px 4px 9px;background:#080a0e
+}
+.us-album-photo-copy{padding:8px 4px 0}
+.us-album-photo-copy p{
+  margin:0;color:#ebedf2;font-size:10px;line-height:1.42;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden
+}
+.us-album-photo-copy small{
+  display:block;margin-top:5px;color:#8e96a5;font-size:8px;text-transform:uppercase;letter-spacing:.06em
+}
+.us-album-photo-delete{
+  position:absolute;right:2px;top:2px;z-index:3;
+  width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important;
+  padding:0;border-radius:50%;display:grid;place-items:center;
+  background:rgba(7,9,13,.68);color:#fff;border:1px solid rgba(255,255,255,.16);
+  backdrop-filter:blur(8px);font-size:17px;font-weight:500
+}
+
+/* Dedicated fullscreen gallery. */
+.us-album-lightbox{
+  position:fixed;inset:0;z-index:10120;background:#020306;
+  display:none;align-items:center;justify-content:center;touch-action:none
+}
+.us-album-lightbox.show{display:flex}
+.us-album-lightbox img{
+  width:100%;height:100%;object-fit:contain;display:block;
+  padding:max(54px,calc(env(safe-area-inset-top,0px) + 46px)) 0
+          max(92px,calc(env(safe-area-inset-bottom,0px) + 78px));
+}
+.us-album-lightbox-close{
+  position:absolute;z-index:5;right:14px;top:calc(env(safe-area-inset-top,0px) + 12px);
+  width:42px;height:42px;padding:0;border-radius:50%;
+  display:grid;place-items:center;background:rgba(15,17,23,.62);
+  color:white;border:1px solid rgba(255,255,255,.14);font-size:25px
+}
+.us-album-lightbox-count{
+  position:absolute;z-index:4;left:14px;top:calc(env(safe-area-inset-top,0px) + 22px);
+  color:#d8dce5;font-size:10px;letter-spacing:.09em
+}
+.us-album-lightbox-info{
+  position:absolute;z-index:4;left:0;right:0;bottom:0;
+  padding:36px 22px calc(env(safe-area-inset-bottom,0px) + 19px);
+  background:linear-gradient(transparent,rgba(0,0,0,.78));
+  text-align:center;pointer-events:none
+}
+.us-album-lightbox-info b{display:block;font-size:10px;letter-spacing:.07em;text-transform:uppercase}
+.us-album-lightbox-info p{margin:7px auto 0;max-width:380px;color:#e7e9ee;font-size:12px;line-height:1.45;white-space:pre-wrap}
+.us-album-lightbox-info p:empty{display:none}
+
+@media(max-width:360px){
+  .us-album-grid{gap:12px 9px}
+  .us-album-cover-stage img{height:min(54vh,510px)}
+  .us-album-composer-preview{height:210px}
+}
+@media(orientation:landscape) and (max-height:560px){
+  .us-album-cover-stage{min-height:64vh}
+  .us-album-cover-stage img{height:76vh;min-height:64vh}
+  .us-album-grid{grid-template-columns:repeat(3,1fr)}
+}
+@media(prefers-reduced-motion:reduce){
+  .us-album-photo-card,.us-album-caption-postit{transform:none!important}
+}
