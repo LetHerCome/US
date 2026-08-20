@@ -545,3 +545,138 @@ body.us-moment-compose-open{overflow:hidden}
 @media(prefers-reduced-motion:reduce){
   .us-moment-compose-sheet,.us-album-overlay.show .us-album-shell{animation:none!important}
 }
+/* ============================================================
+   US · Moments Consistency Fix
+   ============================================================ */
+
+/* Feed cards: every cover uses the same photographic frame. */
+#moments .moment-grid{
+  align-items:stretch!important;
+}
+#moments .moment-card.moment-postit{
+  display:flex!important;
+  flex-direction:column!important;
+  height:100%!important;
+}
+#moments .moment-card.moment-postit img,
+#moments .moment-card.moment-postit:nth-child(4n+2) img,
+#moments .moment-card.moment-postit:nth-child(4n+4) img{
+  width:100%!important;
+  aspect-ratio:4/5!important;
+  object-fit:cover!important;
+  object-position:center!important;
+}
+#moments .moment-card.moment-postit .moment-meta{
+  min-height:82px!important;
+  display:flex!important;
+  flex-direction:column!important;
+}
+#moments .moment-card.moment-postit .moment-meta p{
+  display:-webkit-box!important;
+  -webkit-line-clamp:2!important;
+  -webkit-box-orient:vertical!important;
+  overflow:hidden!important;
+}
+#moments .moment-card.moment-postit .moment-album-count{
+  margin-top:auto;
+}
+
+/* Open album: same stage geometry for portrait, square and landscape covers. */
+.us-album-cover-stage{
+  position:relative!important;
+  height:min(55dvh,560px)!important;
+  min-height:360px!important;
+  max-height:560px!important;
+  display:grid!important;
+  place-items:center!important;
+  overflow:hidden!important;
+  padding-top:0!important;
+  background:#05060a!important;
+}
+.us-album-cover-stage img#usAlbumCover{
+  position:relative!important;
+  z-index:2!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  cursor:pointer;
+}
+.us-album-cover-stage .us-album-cover-blur{
+  position:absolute!important;
+  inset:-22px!important;
+  width:calc(100% + 44px)!important;
+  height:calc(100% + 44px)!important;
+  object-fit:cover!important;
+  filter:blur(24px) brightness(.48) saturate(.8)!important;
+  opacity:.56!important;
+  transform:scale(1.04)!important;
+  z-index:0!important;
+}
+
+/* Every secondary card has the same visual rhythm. */
+.us-album-photo-card{
+  display:flex!important;
+  flex-direction:column!important;
+  height:100%!important;
+}
+.us-album-photo-card img{
+  aspect-ratio:4/5!important;
+  object-fit:cover!important;
+}
+.us-album-photo-copy{
+  min-height:58px!important;
+  display:flex!important;
+  flex-direction:column!important;
+}
+.us-album-photo-copy small{
+  margin-top:auto!important;
+}
+
+/* Always-accessible add action, even when the album only has its cover. */
+.us-album-floating-add{
+  position:fixed;
+  z-index:12;
+  right:max(14px,calc((100vw - min(520px,100vw))/2 + 14px));
+  bottom:calc(env(safe-area-inset-bottom,0px) + 18px);
+  min-height:46px;
+  padding:9px 13px 9px 10px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:#f5f3ef;
+  background:rgba(17,19,26,.88);
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 13px 34px rgba(0,0,0,.34);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+}
+.us-album-floating-add span{
+  width:29px;height:29px;border-radius:50%;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,rgba(232,138,162,.18),rgba(143,134,200,.18));
+  color:#f5f3ef;font-size:18px;font-weight:400;
+}
+.us-album-floating-add b{font-size:9px;font-weight:720}
+.us-album-overlay:not(.show) .us-album-floating-add{display:none!important}
+body.us-keyboard-open .us-album-floating-add,
+.us-album-overlay:has(.us-album-composer:not([hidden])) .us-album-floating-add{
+  opacity:0!important;
+  pointer-events:none!important;
+}
+
+/* Empty album still visually invites an addition. */
+.us-album-empty{
+  min-height:118px!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:24px 18px!important;
+}
+
+@media(max-width:360px){
+  .us-album-cover-stage{height:min(52dvh,500px)!important;min-height:320px!important}
+  .us-album-floating-add b{display:none}
+  .us-album-floating-add{padding:8px}
+}

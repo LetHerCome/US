@@ -60,6 +60,17 @@ function ensureUi(){
 
   document.getElementById('usAlbumClose')?.addEventListener('click',closeAlbum);
   document.getElementById('usAlbumAddBtn')?.addEventListener('click',()=>document.getElementById('usAlbumFile')?.click());
+
+  if(!document.getElementById('usAlbumFloatingAdd')){
+    const floating=document.createElement('button');
+    floating.type='button';
+    floating.id='usAlbumFloatingAdd';
+    floating.className='us-album-floating-add';
+    floating.setAttribute('aria-label','Aggiungi una foto a questo Moment');
+    floating.innerHTML='<span>＋</span><b>Aggiungi foto</b>';
+    floating.addEventListener('click',()=>document.getElementById('usAlbumFile')?.click());
+    document.getElementById('usAlbumOverlay')?.appendChild(floating);
+  }
   document.getElementById('usAlbumCancel')?.addEventListener('click',resetComposer);
   document.getElementById('usAlbumSave')?.addEventListener('click',saveAlbumPhoto);
   document.getElementById('usAlbumFile')?.addEventListener('change',handleFileSelected);
@@ -271,7 +282,14 @@ async function openAlbum(card){
   albumRows=[];resetComposer();
   const overlay=document.getElementById('usAlbumOverlay');
   const cover=document.getElementById('usAlbumCover');
-  if(cover)cover.src=currentAlbum.url;
+  const addBtn=document.getElementById('usAlbumAddBtn');
+  if(addBtn){addBtn.hidden=false;addBtn.disabled=false;}
+  if(cover){
+    cover.src=currentAlbum.url;
+    cover.onclick=()=>openLightbox(0);
+    cover.setAttribute('role','button');
+    cover.setAttribute('tabindex','0');
+  }
   document.getElementById('usAlbumDate').textContent=currentAlbum.date;
   document.getElementById('usAlbumCount').textContent='1 foto';
   const note=document.getElementById('usAlbumCoverNote');
@@ -322,10 +340,39 @@ function closeLightbox(){
 
 function installHooks(){
   ensureUi();
+
+  // One deterministic entry point for every Moment card.
   window.openMomentViewer=function(card){
+    if(card?.matches?.('#momentsGrid .moment-card[data-moment-id]'))return openAlbum(card);
     if(card?.dataset?.momentId)return openAlbum(card);
     return legacyOpenMomentViewer?.(card);
   };
+  window.openUsMomentAlbum=openAlbum;
+
+  // Capture before legacy inline/click handlers. This removes the historical
+  // split where some covers could still fall through to the old viewer.
+  const grid=document.getElementById('momentsGrid');
+  if(grid&&!grid.dataset.usAlbumCapture){
+    grid.dataset.usAlbumCapture='1';
+    grid.addEventListener('click',event=>{
+      if(event.target.closest('.moment-delete'))return;
+      const card=event.target.closest('.moment-card[data-moment-id]');
+      if(!card)return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      openAlbum(card);
+    },true);
+    grid.addEventListener('keydown',event=>{
+      if(event.key!=='Enter'&&event.key!==' ')return;
+      if(event.target.closest('.moment-delete'))return;
+      const card=event.target.closest('.moment-card[data-moment-id]');
+      if(!card)return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      openAlbum(card);
+    },true);
+  }
+
   if(typeof legacyHydrateMoments==='function'){
     window.hydrateMoments=async function(...args){
       const result=await legacyHydrateMoments.apply(this,args);

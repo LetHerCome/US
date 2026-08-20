@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-update-loop-fix-1";
+const CACHE_NAME = "us-shell-moments-consistency-1";
 
 const APP_SHELL = [
   "/",
