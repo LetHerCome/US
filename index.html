@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <meta name="theme-color" content="#0d0f14"/>
 <meta name="color-scheme" content="dark"/>
-<meta name="us-build" content="fix4-20260820-1"/>
+<meta name="us-build" content="fix4-events-20260820-1"/>
 <link rel="manifest" href="/manifest.webmanifest?v=fix4-20260820-1"/>
 <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=fix4-20260820-1"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=fix4-20260820-1"/>
@@ -18,6 +18,7 @@
 <title>US — Francesco & Beatrice</title>
 <link rel="stylesheet" href="/styles.css"/>
 <link rel="stylesheet" href="/fix4.css?v=fix4-20260820-1"/>
+<link rel="stylesheet" href="/events.css?v=us-events-1"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -41,7 +42,10 @@
 </div>
 
 <div class="app">
-  <div class="top"><div class="brand-row"><div class="brand">US<span class="heart">.</span></div><button type="button" class="today-orb" id="todayOrb" onclick="openToday()" aria-label="Apri la domanda giornaliera"><span class="today-orb-mark">?</span><span class="today-orb-copy"><b>Oggi</b><small>Domanda</small></span><i id="todayOrbDot"></i></button></div><div class="top-actions"><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><button type="button" class="profile-avatar" id="profileAvatarBtn" aria-label="Cambia foto profilo" onclick="pickProfilePhoto()"><img id="profileAvatarImg" alt="Foto profilo" hidden><span class="fallback" id="profileAvatarFallback">♡</span><span class="camera-dot">+</span></button><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
+  <div class="top"><div class="brand-row"><div class="brand">US<span class="heart">.</span></div><button type="button" class="today-orb" id="todayOrb" onclick="openToday()" aria-label="Apri la domanda giornaliera"><span class="today-orb-mark">?</span><span class="today-orb-copy"><b>Oggi</b><small>Domanda</small></span><i id="todayOrbDot"></i></button></div><div class="top-actions"><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><button type="button" class="us-calendar-btn" id="usCalendarBtn" onclick="openEvents()" aria-label="Apri eventi condivisi">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="15" rx="4"></rect><path d="M7.5 3.5v4M16.5 3.5v4M3.5 10h17"></path></svg>
+  <i id="usCalendarDot" hidden></i>
+</button><button type="button" class="profile-avatar" id="profileAvatarBtn" aria-label="Cambia foto profilo" onclick="pickProfilePhoto()"><img id="profileAvatarImg" alt="Foto profilo" hidden><span class="fallback" id="profileAvatarFallback">♡</span><span class="camera-dot">+</span></button><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
 
   <main id="home" class="page active">
     <section class="hero home-hero-only" id="homeHero" aria-label="Un vostro ricordo">
@@ -149,6 +153,55 @@
 <button data-page="think" onclick="go('think')"><span class="nicon">♡</span>Ti penso</button>
 </nav>
 
+
+<div class="us-events-overlay" id="usEventsOverlay" aria-hidden="true">
+  <div class="us-events-backdrop" onclick="closeEvents()"></div>
+  <section class="us-events-sheet" role="dialog" aria-modal="true" aria-labelledby="usEventsTitle">
+    <header class="us-events-head">
+      <div><div class="tiny">NOI DUE</div><h2 id="usEventsTitle">I nostri eventi</h2></div>
+      <button type="button" class="us-events-close" onclick="closeEvents()" aria-label="Chiudi eventi">×</button>
+    </header>
+
+    <div id="usEventsBrowse">
+      <button type="button" class="us-next-event" id="usNextEventCard" hidden>
+        <span class="us-next-event-kicker">PROSSIMO</span>
+        <strong id="usNextEventTitle">Il prossimo evento</strong>
+        <span class="us-next-event-date" id="usNextEventDate"></span>
+        <b id="usNextEventCountdown"></b>
+      </button>
+
+      <div class="us-events-list-head"><b>In arrivo</b><small id="usEventsCount"></small></div>
+      <div class="us-events-list" id="usEventsList" aria-live="polite">
+        <div class="us-events-empty">Carico i vostri eventi…</div>
+      </div>
+
+      <button type="button" class="us-event-add" onclick="beginAddEvent()"><span>＋</span>Aggiungi evento</button>
+    </div>
+
+    <form class="us-event-form" id="usEventForm" hidden>
+      <div class="us-event-form-title"><button type="button" class="us-event-back" onclick="cancelEventEdit()" aria-label="Torna agli eventi">←</button><div><div class="tiny" id="usEventFormKicker">NUOVO EVENTO</div><h3 id="usEventFormTitle">Aggiungi qualcosa da aspettare insieme</h3></div></div>
+
+      <label class="us-event-field"><span>Che cosa?</span><input id="usEventTitleInput" type="text" maxlength="120" placeholder="Es. Atene, concerto, anniversario…" required></label>
+
+      <div class="us-event-row">
+        <label class="us-event-field"><span>Quando?</span><input id="usEventDateInput" type="date" required></label>
+        <label class="us-event-field"><span>Ora <i>opzionale</i></span><input id="usEventTimeInput" type="time"></label>
+      </div>
+
+      <label class="us-event-field"><span>Dove? <i>opzionale</i></span><input id="usEventLocationInput" type="text" maxlength="160" placeholder="Es. Roma, casa, aeroporto…"></label>
+      <label class="us-event-field"><span>Una nota <i>opzionale</i></span><textarea id="usEventNoteInput" rows="3" maxlength="500" placeholder="Solo se serve ricordare qualcosa."></textarea></label>
+
+      <label class="us-event-repeat"><input id="usEventRecurringInput" type="checkbox"><span><b>Ogni anno</b><small>Per anniversari, compleanni e date ricorrenti.</small></span></label>
+
+      <div class="us-event-status" id="usEventStatus" role="status" aria-live="polite"></div>
+      <div class="us-event-actions">
+        <button type="button" class="us-event-delete" id="usEventDeleteBtn" hidden>Elimina</button>
+        <button type="submit" class="primary us-event-save" id="usEventSaveBtn">Salva evento</button>
+      </div>
+    </form>
+  </section>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite">Salvato ♡</div>
 <div class="app-status-bar" id="appStatusBar" data-kind="offline" role="alert" aria-live="assertive" hidden>Sei offline. Mostro ciò che è già disponibile; le azioni online riprenderanno alla riconnessione.</div>
 <div class="app-update-bar" id="appUpdateBar" role="status" aria-live="polite" hidden><span><b>Aggiornamento disponibile</b><small>Puoi aggiornare quando hai finito quello che stai facendo.</small></span><button type="button" id="appUpdateBtn">Aggiorna</button></div>
@@ -160,4 +213,5 @@
 
 <script defer src="/app.js"></script>
 <script defer src="/fix4.js?v=fix4-20260820-1"></script>
+<script defer src="/events.js?v=us-events-1"></script>
 </body></html>

@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-fix4-1";
+const CACHE_NAME = "us-shell-events-1";
 
 const APP_SHELL = [
   "/",
@@ -6,6 +6,8 @@ const APP_SHELL = [
   "/styles.css",
   "/fix4.css",
   "/fix4.js",
+  "/events.css",
+  "/events.js",
   "/version.json",
   "/manifest.webmanifest",
   "/icon-192.png",
