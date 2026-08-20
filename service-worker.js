@@ -1,13 +1,18 @@
-const CACHE_NAME = "us-shell-v20";
+const CACHE_NAME = "us-shell-fix4-1";
 
 const APP_SHELL = [
   "/",
   "/index.html",
   "/styles.css",
+  "/fix4.css",
+  "/fix4.js",
+  "/version.json",
   "/manifest.webmanifest",
   "/icon-192.png",
   "/icon-512.png",
-  "/apple-touch-icon.png"
+  "/apple-touch-icon.png",
+  "/favicon-32.png",
+  "/favicon.svg"
 ];
 
 const AUTH_BOOTSTRAP = `
