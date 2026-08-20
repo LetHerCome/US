@@ -206,6 +206,53 @@ const SB_URL = 'https://iiakdfsxpywdkxravqjh.supabase.co';
 const SB_KEY = 'sb_publishable_JAB6USqhccAUg8_0ujgQ1A_NkRJRv_A';
 const sb = window.supabase.createClient(SB_URL, SB_KEY);
 
+const US_SIGNED_URL_CACHE=new Map();
+const US_SIGNED_URL_SKEW_MS=5*60*1000;
+function usReadSignedUrlCache(path){
+  const hit=US_SIGNED_URL_CACHE.get(path);
+  if(!hit||!hit.url||hit.expiresAt-Date.now()<=US_SIGNED_URL_SKEW_MS){US_SIGNED_URL_CACHE.delete(path);return null;}
+  return hit.url;
+}
+function usWriteSignedUrlCache(path,url,expiresIn){
+  if(path&&url)US_SIGNED_URL_CACHE.set(path,{url,expiresAt:Date.now()+Math.max(60,Number(expiresIn)||60)*1000});
+  return url||null;
+}
+async function usGetSignedUrl(path,expiresIn=21600){
+  if(!path)return null;
+  const cached=usReadSignedUrlCache(path);if(cached)return cached;
+  const {data,error}=await sb.storage.from('us-media').createSignedUrl(path,expiresIn);
+  if(error||!data?.signedUrl){if(error)console.warn('[US Media] signed url',error);return null;}
+  return usWriteSignedUrlCache(path,data.signedUrl,expiresIn);
+}
+async function usGetSignedUrls(paths,expiresIn=21600){
+  const unique=[...new Set((paths||[]).filter(Boolean))];
+  const result=new Map(),missing=[];
+  for(const path of unique){
+    const cached=usReadSignedUrlCache(path);
+    if(cached)result.set(path,cached);else missing.push(path);
+  }
+  if(!missing.length)return result;
+  const bucket=sb.storage.from('us-media');
+  if(typeof bucket.createSignedUrls==='function'){
+    const {data,error}=await bucket.createSignedUrls(missing,expiresIn);
+    if(!error&&Array.isArray(data)){
+      for(const item of data){
+        if(item?.signedUrl&&item?.path){
+          result.set(item.path,usWriteSignedUrlCache(item.path,item.signedUrl,expiresIn));
+        }
+      }
+    }else if(error)console.warn('[US Media] batch signed urls',error);
+  }
+  const unresolved=missing.filter(path=>!result.has(path));
+  if(unresolved.length){
+    const fallback=await Promise.all(unresolved.map(async path=>[path,await usGetSignedUrl(path,expiresIn)]));
+    for(const [path,url] of fallback)if(url)result.set(path,url);
+  }
+  return result;
+}
+window.usGetSignedUrl=usGetSignedUrl;
+window.usGetSignedUrls=usGetSignedUrls;
+
 // ===== US v20 · Web Push Foundation =====
 const US_VAPID_PUBLIC_KEY='BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss';
 let usPushUiBusy=false;
@@ -232,6 +279,9 @@ async function getCurrentPushSubscription(){
 async function syncPushSubscriptionToSupabase(subscription){
   if(!subscription||!window.usProfile)return false;
   const json=subscription.toJSON();
+  const signature=JSON.stringify([json.endpoint,json.keys?.p256dh||'',json.keys?.auth||'',json.expirationTime??null]);
+  const cacheKey=`us:push:subscription:${window.usProfile.id}`;
+  try{if(localStorage.getItem(cacheKey)===signature)return true;}catch(_e){}
   const {error}=await sb.rpc('register_web_push_subscription',{
     target_endpoint:json.endpoint,
     target_p256dh:json.keys?.p256dh||'',
@@ -240,6 +290,7 @@ async function syncPushSubscriptionToSupabase(subscription){
     target_user_agent:(navigator.userAgent||'').slice(0,500)
   });
   if(error){console.warn('[US Push] subscription sync failed',error);return false;}
+  try{localStorage.setItem(cacheKey,signature);}catch(_e){}
   return true;
 }
 async function sendWebPushEvent(type,referenceId=null){
@@ -341,6 +392,7 @@ async function disableWebPush(){
       if(error)console.warn('[US Push] remove subscription',error);
       await subscription.unsubscribe().catch(()=>false);
     }
+    try{if(window.usProfile?.id)localStorage.removeItem(`us:push:subscription:${window.usProfile.id}`);}catch(_e){}
     toast('Notifiche disattivate');
   }catch(error){console.warn('[US Push] disable failed',error);toast('Non riesco a disattivare le notifiche');}
   finally{usPushUiBusy=false;await refreshWebPushUi();}
@@ -645,10 +697,7 @@ function setAvatarSlot(containerId,signedUrl){
 }
 
 async function signedAvatarUrl(path){
-  if(!path)return null;
-  const {data,error}=await sb.storage.from('us-media').createSignedUrl(path,21600);
-  if(error){console.warn(error);return null;}
-  return data?.signedUrl||null;
+  return usGetSignedUrl(path,21600);
 }
 
 async function hydrateProfileAvatars(){
@@ -803,10 +852,10 @@ async function hydrateHomePhoto(force=false){
     return;
   }
   if(!force && path===homePhotoPath)return;
-  const {data:signed,error}=await sb.storage.from('us-media').createSignedUrl(path,3900);
-  if(error||!signed?.signedUrl){console.warn(error);return;}
+  const signedUrl=await usGetSignedUrl(path,3900);
+  if(!signedUrl)return;
   homePhotoPath=path;
-  crossfadeHomePhoto(signed.signedUrl);
+  crossfadeHomePhoto(signedUrl);
 }
 window.hydrateHomePhoto=hydrateHomePhoto;
 
@@ -950,10 +999,12 @@ async function updateHomeStatus(){
     else if(st?.partner_has_answer) todayPill.textContent='💬 Today · risposta in attesa';
     else todayPill.textContent='💬 Today · da fare';
   }
-  try{
-    const {count,error}=await sb.from('quiz_responses').select('id',{count:'exact',head:true});
-    if(!error && quizPill) quizPill.textContent='🎯 Quiz · '+Number(count||0)+' risposte';
-  }catch(_e){}
+  if(quizPill){
+    try{
+      const {count,error}=await sb.from('quiz_responses').select('id',{count:'exact',head:true});
+      if(!error)quizPill.textContent='🎯 Quiz · '+Number(count||0)+' risposte';
+    }catch(_e){}
+  }
 }
 
 let pendingMomentFile=null;
@@ -1103,7 +1154,7 @@ async function uploadMoment(){
 }
 window.uploadMoment=uploadMoment;
 
-async function hydrateMoments(){
+async function hydrateMomentsCore(){
   if(!window.usProfile)return;
   const grid=document.getElementById('momentsGrid');
   const pill=document.getElementById('momentsStatusPill');
@@ -1120,17 +1171,24 @@ async function hydrateMoments(){
   if(grid.dataset.loaded==='1'&&grid.dataset.signature===signature)return;
   if(!rows?.length){grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">📸</div><b>Il primo ricordo parte da qui.</b><p>Scegli una foto: la data verrà letta automaticamente.</p></div>';grid.dataset.loaded='1';grid.dataset.signature=signature;return;}
   const names=new Map((profiles||[]).map(profile=>[profile.id,profile.display_name||'Noi']));
+  const signedUrls=await usGetSignedUrls((rows||[]).map(row=>row.storage_path),21600);
   const cards=[];
   for(const row of rows){
-    const {data:signed,error:signedError}=await sb.storage.from('us-media').createSignedUrl(row.storage_path,21600);
-    if(signedError||!signed?.signedUrl){console.warn(signedError);continue;}
+    const signedUrl=signedUrls.get(row.storage_path);
+    if(!signedUrl)continue;
     const dateLabel=new Date(row.moment_date+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
     const own=row.created_by===window.usProfile.id;
     const author=names.get(row.created_by)||(own?window.usProfile.display_name:'Noi');
-    cards.push(`<article class="moment-card moment-postit" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-url="${escapeHtml(signed.signedUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(row.caption||'')}" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(signed.signedUrl)}" alt="Ricordo condiviso" loading="lazy">${own?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}','${escapeHtml(row.storage_path)}')">×</button>`:''}<div class="moment-meta"><div class="moment-by">${escapeHtml(author||'Noi')}</div><b>${dateLabel}</b>${row.caption?`<p>${escapeHtml(row.caption)}</p>`:''}</div></article>`);
+    cards.push(`<article class="moment-card moment-postit" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-url="${escapeHtml(signedUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(row.caption||'')}" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(signedUrl)}" alt="Ricordo condiviso" loading="lazy">${own?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}','${escapeHtml(row.storage_path)}')">×</button>`:''}<div class="moment-meta"><div class="moment-by">${escapeHtml(author||'Noi')}</div><b>${dateLabel}</b>${row.caption?`<p>${escapeHtml(row.caption)}</p>`:''}</div></article>`);
   }
   if(cards.length){grid.innerHTML=cards.join('');grid.dataset.loaded='1';grid.dataset.signature=signature;}
   else if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">!</div><b>Foto non disponibili</b><p>Riprova tra un momento.</p></div>';
+}
+let momentsHydrateInFlight=null;
+async function hydrateMoments(){
+  if(momentsHydrateInFlight)return momentsHydrateInFlight;
+  momentsHydrateInFlight=hydrateMomentsCore().finally(()=>{momentsHydrateInFlight=null;});
+  return momentsHydrateInFlight;
 }
 window.hydrateMoments=hydrateMoments;
 
@@ -1151,11 +1209,11 @@ async function hydrateHomeMemory(forceNext=false){
   const daySeed=Number(localDateISO().replaceAll('-',''))||0;
   const row=rows[(daySeed+homeMemoryOffset)%rows.length];
   const names=new Map((profiles||[]).map(profile=>[profile.id,profile.display_name||'Noi']));
-  const {data:signed,error:signedError}=await sb.storage.from('us-media').createSignedUrl(row.storage_path,21600);
-  if(signedError||!signed?.signedUrl){console.warn(signedError);section.hidden=true;return;}
+  const signedUrl=await usGetSignedUrl(row.storage_path,21600);
+  if(!signedUrl){section.hidden=true;return;}
   const dateLabel=new Date(row.moment_date+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'long',year:'numeric'});
   const author=names.get(row.created_by)||'Noi';
-  document.getElementById('homeMemoryImg').src=signed.signedUrl;
+  document.getElementById('homeMemoryImg').src=signedUrl;
   document.getElementById('homeMemoryAuthor').textContent=author;
   document.getElementById('homeMemoryDate').textContent=dateLabel;
   const caption=document.getElementById('homeMemoryCaption');
@@ -1509,12 +1567,40 @@ function handleIncomingThink(row){
   hydrateThink();
   syncNativeWidgetBridge().catch(()=>{});
 }
+const usRealtimeRefreshTimers=new Map();
+function scheduleUsRealtimeRefresh(kind){
+  const previous=usRealtimeRefreshTimers.get(kind);
+  if(previous)clearTimeout(previous);
+  const timer=setTimeout(()=>{
+    usRealtimeRefreshTimers.delete(kind);
+    if(!window.usProfile||document.hidden)return;
+    const active=document.querySelector('.page.active')?.id;
+    if(kind==='daily'){hydrateToday();return;}
+    if(kind==='quiz'){if(active==='quiz')refreshQuizState();return;}
+    if(kind==='location'){if(active==='home')hydrateDistance();return;}
+    if(kind==='moments'){
+      if(active==='moments')hydrateMoments();
+      window.refreshOpenMomentAlbum?.();
+      return;
+    }
+    if(kind==='events'){
+      if(document.getElementById('usEventsOverlay')?.classList.contains('open'))window.hydrateEvents?.();
+    }
+  },180);
+  usRealtimeRefreshTimers.set(kind,timer);
+}
 function startUsRealtime(){
   if(!window.usProfile)return;
   if(usRealtimeChannel){sb.removeChannel(usRealtimeChannel);usRealtimeChannel=null;}
   const userId=window.usProfile.id,coupleId=window.usProfile.couple_id;
   usRealtimeChannel=sb.channel(`us-live-${userId}`)
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'shared_messages',filter:`recipient_id=eq.${userId}`},payload=>handleIncomingThink(payload.new))
+    .on('postgres_changes',{event:'*',schema:'public',table:'daily_answers',filter:`couple_id=eq.${coupleId}`},()=>scheduleUsRealtimeRefresh('daily'))
+    .on('postgres_changes',{event:'*',schema:'public',table:'quiz_responses',filter:`couple_id=eq.${coupleId}`},()=>scheduleUsRealtimeRefresh('quiz'))
+    .on('postgres_changes',{event:'*',schema:'public',table:'couple_locations',filter:`couple_id=eq.${coupleId}`},()=>scheduleUsRealtimeRefresh('location'))
+    .on('postgres_changes',{event:'*',schema:'public',table:'moments',filter:`couple_id=eq.${coupleId}`},()=>scheduleUsRealtimeRefresh('moments'))
+    .on('postgres_changes',{event:'*',schema:'public',table:'moment_photos',filter:`couple_id=eq.${coupleId}`},()=>scheduleUsRealtimeRefresh('moments'))
+    .on('postgres_changes',{event:'*',schema:'public',table:'shared_events',filter:`couple_id=eq.${coupleId}`},()=>scheduleUsRealtimeRefresh('events'))
     .on('postgres_changes',{event:'*',schema:'public',table:'bond_weekly_quests',filter:`couple_id=eq.${coupleId}`},()=>{hydrateBondSummary();if(document.getElementById('bond')?.classList.contains('active'))hydrateBond();})
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'couples',filter:`id=eq.${coupleId}`},payload=>renderBondProgress(payload.new?.bond_xp||0))
     .subscribe();
@@ -1524,13 +1610,11 @@ window.startUsRealtime=startUsRealtime;
 async function hydrateCloud(){
   try{
     await hydrateToday();
-    await hydrateMoments();
-    await hydrateHomeMemory();
     if(!homePhotoPath)await hydrateHomePhoto(true);
-    await updateHomeStatus();
-    await hydrateBondSummary();
-    await hydrateThink();
-    if(document.getElementById('bond')?.classList.contains('active'))await hydrateBond();
+    const active=document.querySelector('.page.active')?.id;
+    if(active==='moments')await hydrateMoments();
+    if(active==='bond')await hydrateBond();
+    if(active==='think')await hydrateThink();
   }catch(e){console.warn(e)}
 }
 
@@ -1619,8 +1703,21 @@ document.addEventListener('touchcancel',()=>{
   swipeGesture=null;
 },{passive:true});
 
-setInterval(()=>{ if(window.usProfile){ hydrateToday(); refreshQuizState(); hydrateDistance(); hydrateBondSummary(); if(document.getElementById('think')?.classList.contains('active'))hydrateThink(); } },15000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden && window.usProfile){hydrateCloud();refreshQuizState();maybeAutoRefreshLocation();}});
+async function refreshVisibleState(options={}){
+  if(!window.usProfile||document.hidden)return;
+  const active=document.querySelector('.page.active')?.id;
+  if(active==='home'){
+    await hydrateToday();
+    if(options.foreground)maybeAutoRefreshLocation();else hydrateDistance();
+    return;
+  }
+  if(active==='moments'){await hydrateMoments();return;}
+  if(active==='quiz'){await refreshQuizState();return;}
+  if(active==='bond'){await hydrateBondSummary();return;}
+  if(active==='think'){await hydrateThink();}
+}
+setInterval(()=>refreshVisibleState(),60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&window.usProfile)refreshVisibleState({foreground:true});});
 sb.auth.onAuthStateChange((_event,_session)=>{ setTimeout(initCloud,0); });
 const pairBtn=document.getElementById('pairBtn');
 if(pairBtn) pairBtn.addEventListener('click', pairAccount);

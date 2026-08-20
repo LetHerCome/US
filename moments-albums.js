@@ -188,12 +188,22 @@ async function loadAlbum(momentId){
   if(error){console.warn('[US Albums] load',error);if(grid)grid.innerHTML='<div class="us-album-empty">Non riesco a caricare le altre foto. Riprova tra poco.</div>';return;}
   if(profilesError)console.warn(profilesError);
   const names=new Map((profiles||[]).map(p=>[p.id,p.display_name||'Noi']));
+  const paths=(rows||[]).map(row=>row.storage_path);
+  let signedUrls=new Map();
+  if(typeof window.usGetSignedUrls==='function')signedUrls=await window.usGetSignedUrls(paths,21600);
+  else{
+    const fallback=await Promise.all(paths.map(async path=>{
+      const {data,error}=await sb.storage.from('us-media').createSignedUrl(path,21600);
+      return [path,error?null:data?.signedUrl||null];
+    }));
+    signedUrls=new Map(fallback.filter(([,url])=>url));
+  }
+  if(seq!==albumLoadSeq)return;
   const hydrated=[];
   for(const row of rows||[]){
-    const {data:signed,error:signedError}=await sb.storage.from('us-media').createSignedUrl(row.storage_path,21600);
-    if(seq!==albumLoadSeq)return;
-    if(signedError||!signed?.signedUrl){console.warn('[US Albums] signed url',signedError);continue;}
-    hydrated.push({...row,url:signed.signedUrl,author:names.get(row.created_by)||'Noi',own:row.created_by===window.usProfile.id});
+    const signedUrl=signedUrls.get(row.storage_path);
+    if(!signedUrl)continue;
+    hydrated.push({...row,url:signedUrl,author:names.get(row.created_by)||'Noi',own:row.created_by===window.usProfile.id});
   }
   albumRows=hydrated;
   renderAlbum();
@@ -276,6 +286,10 @@ async function openAlbum(card){
   lightboxItems=[{url:currentAlbum.url,author:currentAlbum.author,caption:currentAlbum.caption,cover:true}];
   await loadAlbum(id);
 }
+window.refreshOpenMomentAlbum=function(){
+  if(currentAlbum?.id&&document.getElementById('usAlbumOverlay')?.classList.contains('show'))return loadAlbum(currentAlbum.id);
+  return Promise.resolve();
+};
 function closeAlbum(){
   ++albumLoadSeq;resetComposer();
   document.getElementById('usAlbumOverlay')?.classList.remove('show');

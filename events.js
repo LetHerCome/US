@@ -312,7 +312,7 @@
 
   setInterval(() => {
     if (!document.hidden && $('usEventsOverlay')?.classList.contains('open') && window.usProfile) hydrateEvents();
-  }, 15000);
+  }, 60000);
 
-  console.info('[US Events] calendario condiviso attivo');
+  console.info('[US Events] calendario condiviso attivo · fallback 60s');
 })();
