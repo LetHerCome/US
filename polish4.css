@@ -1,0 +1,197 @@
+/* =========================================================
+   US · Final Polish + Motion 3.1
+   ========================================================= */
+
+/* Motion 3.1: no fade, no active-page animation during promotion. */
+.page.us-motion31-current{
+  display:block!important;
+  position:relative;
+  z-index:7;
+  transform:translate3d(var(--us-motion31-x,0px),0,0)!important;
+  transition:none!important;
+  will-change:transform;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+}
+
+.page.us-motion31-preview{
+  display:block!important;
+  position:fixed!important;
+  left:var(--us-motion31-left,0px)!important;
+  width:var(--us-motion31-width,100vw)!important;
+  top:var(--us-motion31-top,0px)!important;
+  bottom:var(--us-motion31-bottom,0px)!important;
+  margin:0!important;
+  padding-left:16px!important;
+  padding-right:16px!important;
+  overflow:hidden!important;
+  z-index:6!important;
+  background:
+    radial-gradient(circle at 18% -6%,rgba(232,138,162,.075),transparent 31%),
+    radial-gradient(circle at 92% 5%,rgba(143,134,200,.06),transparent 26%),
+    var(--us-bg,#090a0e)!important;
+  transform:translate3d(var(--us-motion31-x,100%),0,0)!important;
+  transition:none!important;
+  will-change:transform;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  contain:paint;
+  animation:none!important;
+}
+
+/* Small seam shadow only; no opacity crossfade. */
+.page.us-motion31-preview::before{
+  content:"";
+  position:absolute;
+  top:0;bottom:0;left:-16px;
+  width:16px;
+  pointer-events:none;
+  box-shadow:8px 0 20px rgba(0,0,0,.11);
+}
+
+.page.us-motion31-animating,
+.page.us-motion31-returning{
+  transition:transform .255s cubic-bezier(.22,.72,.18,1)!important;
+}
+
+.page.us-motion31-returning{
+  transition-duration:.275s!important;
+  transition-timing-function:cubic-bezier(.22,.78,.24,1)!important;
+}
+
+html.us-motion31-promoting .page.active,
+.page.us-motion31-promote{
+  animation:none!important;
+  transition:none!important;
+}
+
+/* Old swipe animation must never stack on top of Motion 3.1. */
+html.us-motion31-promoting .page.active.swipe-next,
+html.us-motion31-promoting .page.active.swipe-prev{
+  animation:none!important;
+}
+
+/* --- Unified XP feedback --------------------------------------- */
+.us-xp-celebration{
+  position:fixed;
+  z-index:10120;
+  left:50%;
+  bottom:calc(var(--us-nav-height,68px) + env(safe-area-inset-bottom,0px) + 34px);
+  transform:translate3d(-50%,14px,0) scale(.96);
+  opacity:0;
+  pointer-events:none;
+  min-width:150px;
+  max-width:min(310px,calc(100vw - 40px));
+  padding:11px 16px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  background:rgba(240,237,231,.96);
+  color:#16171c;
+  box-shadow:0 15px 38px rgba(0,0,0,.28);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  transition:
+    transform .28s cubic-bezier(.22,.78,.24,1),
+    opacity .2s ease;
+}
+.us-xp-celebration.show{opacity:1;transform:translate3d(-50%,0,0) scale(1)}
+.us-xp-celebration.leave{opacity:0;transform:translate3d(-50%,-13px,0) scale(.98)}
+.us-xp-celebration>i{
+  width:27px;height:27px;border-radius:50%;
+  display:grid;place-items:center;
+  font-style:normal;
+  background:linear-gradient(135deg,rgba(232,138,162,.22),rgba(143,134,200,.23));
+  color:#8b627a;
+  font-size:13px;
+}
+.us-xp-celebration span{min-width:0}
+.us-xp-celebration b{display:block;font-size:11px}
+.us-xp-celebration small{display:block;margin-top:1px;color:#77737c;font-size:7.5px}
+
+/* --- Level-up feedback ----------------------------------------- */
+.us-level-celebration{
+  position:fixed;inset:0;z-index:10130;
+  display:grid;place-items:center;
+  padding:24px;
+  pointer-events:none;
+  background:rgba(7,8,12,0);
+  transition:background .25s ease;
+}
+.us-level-celebration.show{background:rgba(7,8,12,.34)}
+.us-level-celebration>div{
+  width:min(280px,82vw);
+  padding:24px 18px;
+  text-align:center;
+  border-radius:27px;
+  background:
+    radial-gradient(circle at 50% -15%,rgba(232,138,162,.16),transparent 45%),
+    #13151c;
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 24px 70px rgba(0,0,0,.43);
+  transform:scale(.9);
+  opacity:0;
+  transition:transform .3s cubic-bezier(.18,.8,.2,1),opacity .2s ease;
+}
+.us-level-celebration.show>div{transform:scale(1);opacity:1}
+.us-level-celebration i{
+  width:52px;height:52px;margin:0 auto 11px;
+  display:grid;place-items:center;
+  border-radius:50%;
+  font-style:normal;
+  font-family:var(--us-serif,Georgia,serif);
+  background:linear-gradient(135deg,rgba(232,138,162,.15),rgba(143,134,200,.15));
+  border:1px solid rgba(255,255,255,.08);
+  font-size:15px;
+}
+.us-level-celebration small{display:block;color:#777580;font-size:8px;letter-spacing:.12em}
+.us-level-celebration b{display:block;margin-top:6px;font-size:20px}
+.us-level-celebration span{display:block;margin-top:4px;color:#aaa6b1;font-family:var(--us-serif,Georgia,serif);font-size:13px}
+
+/* --- Empty states: one identity language ----------------------- */
+.us-empty-mark{
+  position:relative;
+  width:39px;height:28px;
+  margin:0 auto 10px;
+}
+.us-empty-mark i{
+  position:absolute;top:4px;
+  width:20px;height:20px;border-radius:50%;
+  border:1.5px solid;
+}
+.us-empty-mark i:first-child{left:3px;border-color:rgba(232,138,162,.62)}
+.us-empty-mark i:nth-child(2){right:3px;border-color:rgba(143,134,200,.62)}
+.us-empty-mark b{
+  position:absolute;right:1px;bottom:1px;
+  width:3px;height:3px;border-radius:50%;
+  background:#aaa7af;
+}
+.empty-state:not([aria-busy="true"])>.emoji.us-polish-hidden{
+  display:none!important;
+}
+
+/* Calendar completed items: softer "lived" state. */
+.us-event-item.is-done{
+  border-color:rgba(114,201,152,.09)!important;
+  background:linear-gradient(90deg,rgba(114,201,152,.035),transparent),rgba(255,255,255,.018)!important;
+}
+.us-event-item.is-done .us-event-chevron{color:#72c998!important}
+
+/* Bond rank gets editorial emphasis. */
+.bond-rank{
+  font-family:var(--us-serif,Georgia,serif)!important;
+  font-size:14px!important;
+  letter-spacing:-.15px!important;
+}
+
+@media(prefers-reduced-motion:reduce){
+  .page.us-motion31-animating,
+  .page.us-motion31-returning,
+  .us-xp-celebration,
+  .us-level-celebration,
+  .us-level-celebration>div{
+    transition-duration:.08s!important;
+  }
+}

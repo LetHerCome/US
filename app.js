@@ -3,7 +3,7 @@ const swipePages=['home','moments','quiz','bond','settings'];
 function go(id,options={}){
   const current=document.querySelector('.page.active')?.id;
   if(current===id){
-    scrollTo({top:0,behavior:'smooth'});
+    scrollTo({top:0,behavior:options.motionCommit?'auto':'smooth'});
     if(id==='moments' && window.usProfile)hydrateMoments();
     if(id==='bond' && window.usProfile)hydrateBond();
     if(id==='settings' && window.usProfile)window.hydrateUsSettings?.();
@@ -12,12 +12,12 @@ function go(id,options={}){
   pages.forEach(pageId=>{
     const el=document.getElementById(pageId);
     el.classList.remove('swipe-next','swipe-prev');
-    if(pageId===id && options.swipe)el.classList.add(options.swipe==='next'?'swipe-next':'swipe-prev');
+    if(pageId===id && options.swipe && !options.motionCommit)el.classList.add(options.swipe==='next'?'swipe-next':'swipe-prev');
     el.classList.toggle('active',pageId===id);
   });
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
-  if(options.swipe)setTimeout(()=>document.getElementById(id)?.classList.remove('swipe-next','swipe-prev'),190);
-  scrollTo({top:0,behavior:options.swipe?'auto':'smooth'});
+  if(options.swipe&&!options.motionCommit)setTimeout(()=>document.getElementById(id)?.classList.remove('swipe-next','swipe-prev'),190);
+  scrollTo({top:0,behavior:(options.swipe||options.motionCommit)?'auto':'smooth'});
   if(id==='moments' && window.usProfile) hydrateMoments();
   if(id==='bond' && window.usProfile) hydrateBond();
   if(id==='settings' && window.usProfile) window.hydrateUsSettings?.();
@@ -188,7 +188,7 @@ function showQuizState(state,notify=false){
     }
     if(typeof hydrateBondSummary==='function')hydrateBondSummary();
     window.loadUsExtraGames?.(true);
-    if(notify&&state.reward_granted_now)toast(`+${xp} XP Bond ✦`);
+    if(notify&&state.reward_granted_now){if(window.usCelebrateXp)window.usCelebrateXp(xp,'Quiz completato');else toast(`+${xp} XP Bond ✦`);}
     else if(notify)toast('Confronto sbloccato ♡');
   }else{
     document.getElementById('scoreValue').textContent='✓';
@@ -1443,14 +1443,14 @@ function bondLevelInfo(totalXp=0){
   return {total,level,current,needed,progress:Math.max(0,Math.min(100,current/needed*100))};
 }
 function bondRankTitle(level){
-  if(level<=1)return 'First Link';
-  if(level===2)return 'Party Formed';
-  if(level===3)return 'Resonance';
-  if(level===4)return 'Synced Souls';
-  if(level<=7)return 'Soulbound';
-  if(level<=12)return 'Legendary Duo';
-  if(level<=20)return 'Mythic Bond';
-  return 'Eternal Party';
+  if(level<=1)return 'Primo legame';
+  if(level===2)return 'Complici';
+  if(level===3)return 'In sintonia';
+  if(level===4)return 'Stessa frequenza';
+  if(level<=7)return 'Intesa rara';
+  if(level<=12)return 'Indivisibili';
+  if(level<=20)return 'Legame leggendario';
+  return 'Noi, senza limite';
 }
 function bondBadgeIcon(level){
   const icons=['♡','✦','∞','⌁','✧','☾','◇','♜','⚡','♛'];
@@ -1471,7 +1471,7 @@ function renderBondBadges(level){
   try{
     const key=`usBondLastLevel:${window.usProfile?.couple_id||'local'}`;
     const prev=Number(localStorage.getItem(key)||0);
-    if(prev>0&&level>prev){toast(`Badge LV. ${level} sbloccato ✦`);navigator.vibrate?.([35,20,55]);}
+    if(prev>0&&level>prev){window.usCelebrateLevel?.(level,bondRankTitle(level))||toast(`LV. ${level} · ${bondRankTitle(level)}`);navigator.vibrate?.([35,20,55]);}
     if(level>prev)localStorage.setItem(key,String(level));
   }catch(_e){}
 }
@@ -1795,27 +1795,22 @@ let swipeGesture=null;
 let swipeRaf=0;
 let swipePreviewPage=null;
 
-const US_SWIPE_COMMIT_RATIO=.32;
-const US_SWIPE_FLICK_VELOCITY=.72;
-const US_SWIPE_MIN_FLICK_DISTANCE=46;
-const US_SWIPE_TRACKING=.68;
+const US_SWIPE_COMMIT_RATIO=.34;
+const US_SWIPE_FLICK_VELOCITY=.86;
+const US_SWIPE_MIN_FLICK_DISTANCE=58;
+const US_SWIPE_TRACKING=.94;
 
 function swipeBlockedTarget(target){
   if(!target?.closest)return false;
-
   if(target.closest(
     'input,textarea,select,[contenteditable="true"],' +
     '.modal,.moment-viewer,.auth-overlay,.today-overlay,' +
     '.us-story-viewer,.us-camera-viewer,.us-events-overlay.open,' +
     '.us-settings-overlay.open,.us-album-overlay.show,' +
     '.us-album-lightbox.show,.us-moment-compose-overlay.show'
-  )) return true;
-
-  // Settings is almost entirely made of buttons: let horizontal intent start
-  // on setting rows while a normal tap continues to work normally.
+  ))return true;
   const button=target.closest('button');
-  if(button && !button.classList.contains('us-setting-row'))return true;
-
+  if(button&&!button.classList.contains('us-setting-row'))return true;
   return false;
 }
 
@@ -1824,15 +1819,15 @@ function appViewportBounds(){
   const rect=app?.getBoundingClientRect();
   const width=Math.min(window.innerWidth,rect?.width||window.innerWidth);
   const left=rect?Math.max(0,rect.left):Math.max(0,(window.innerWidth-width)/2);
-  const nav=document.querySelector('.nav');
-  const navTop=nav?.getBoundingClientRect()?.top||window.innerHeight;
-  const top=document.querySelector('.top')?.getBoundingClientRect()?.bottom||0;
-  return {left,width,top:Math.max(0,top),bottom:Math.min(window.innerHeight,navTop)};
+  const navTop=document.querySelector('.nav')?.getBoundingClientRect()?.top||window.innerHeight;
+  const topRect=document.querySelector('.top')?.getBoundingClientRect();
+  const top=Math.max(0,topRect?.bottom||0);
+  return {left,width,top,bottom:Math.min(window.innerHeight,navTop)};
 }
 
 function recordSwipeSample(g,x,time){
   g.samples.push({x,time});
-  while(g.samples.length>6 || g.samples[0]?.time<time-100)g.samples.shift();
+  while(g.samples.length>6||g.samples[0]?.time<time-95)g.samples.shift();
 }
 function swipeVelocity(g){
   if(g.samples.length<2)return 0;
@@ -1843,31 +1838,28 @@ function swipeVelocity(g){
 function clearMotionPage(page){
   if(!page)return;
   page.classList.remove(
-    'us-motion3-current',
-    'us-motion3-preview',
-    'us-motion3-animating',
-    'us-motion3-returning'
+    'us-motion31-current',
+    'us-motion31-preview',
+    'us-motion31-animating',
+    'us-motion31-returning',
+    'us-motion31-promote'
   );
-  page.style.removeProperty('--us-motion3-x');
-  page.style.removeProperty('--us-motion3-opacity');
-  page.style.removeProperty('--us-motion3-left');
-  page.style.removeProperty('--us-motion3-width');
-  page.style.removeProperty('--us-motion3-top');
-  page.style.removeProperty('--us-motion3-bottom');
+  page.style.removeProperty('--us-motion31-x');
+  page.style.removeProperty('--us-motion31-left');
+  page.style.removeProperty('--us-motion31-width');
+  page.style.removeProperty('--us-motion31-top');
+  page.style.removeProperty('--us-motion31-bottom');
   page.style.removeProperty('pointer-events');
   page.removeAttribute('aria-hidden');
 }
 
 function destroySwipePreview(){
-  if(swipePreviewPage){
-    swipePreviewPage.classList.remove('active');
-    clearMotionPage(swipePreviewPage);
-  }
+  if(swipePreviewPage)clearMotionPage(swipePreviewPage);
   swipePreviewPage=null;
 }
 
 function prepareSwipePreview(g,direction){
-  if(g.previewDirection===direction && swipePreviewPage)return swipePreviewPage;
+  if(g.previewDirection===direction&&swipePreviewPage)return swipePreviewPage;
 
   destroySwipePreview();
 
@@ -1887,13 +1879,16 @@ function prepareSwipePreview(g,direction){
   g.targetIndex=targetIndex;
   swipePreviewPage=target;
 
-  target.classList.add('active','us-motion3-preview');
+  // Important: preview is NOT .active.
+  // .us-motion31-preview alone overrides display:none, so the normal
+  // .page.active fade never starts during the gesture.
+  target.classList.add('us-motion31-preview');
   target.setAttribute('aria-hidden','true');
   target.style.pointerEvents='none';
-  target.style.setProperty('--us-motion3-left',`${bounds.left}px`);
-  target.style.setProperty('--us-motion3-width',`${bounds.width}px`);
-  target.style.setProperty('--us-motion3-top',`${bounds.top}px`);
-  target.style.setProperty('--us-motion3-bottom',`${Math.max(0,window.innerHeight-bounds.bottom)}px`);
+  target.style.setProperty('--us-motion31-left',`${bounds.left}px`);
+  target.style.setProperty('--us-motion31-width',`${bounds.width}px`);
+  target.style.setProperty('--us-motion31-top',`${bounds.top}px`);
+  target.style.setProperty('--us-motion31-bottom',`${Math.max(0,window.innerHeight-bounds.bottom)}px`);
 
   return target;
 }
@@ -1903,21 +1898,20 @@ function applySwipeVisual(){
   const g=swipeGesture;
   if(!g||g.axis!=='x')return;
 
-  const dx=g.currentX-g.startX;
-  const direction=dx<0?1:-1;
+  const rawDx=g.currentX-g.startX;
+  const direction=rawDx<0?1:-1;
   const index=swipePages.indexOf(g.page.id);
   const targetIndex=index+direction;
   const atEdge=targetIndex<0||targetIndex>=swipePages.length;
   const width=Math.max(1,appViewportBounds().width);
 
-  const tracked=dx*(atEdge?.16:US_SWIPE_TRACKING);
-  const maxCurrent=width*.78;
-  const currentX=Math.max(-maxCurrent,Math.min(maxCurrent,tracked));
-  const progress=Math.min(1,Math.abs(currentX)/(width*.68));
+  // Nearly 1:1 tracking is perceived as smoother. Accidental navigation is
+  // prevented by the much stronger commit thresholds, not by artificial lag.
+  const resistance=atEdge?.20:US_SWIPE_TRACKING;
+  const currentX=Math.max(-width*.92,Math.min(width*.92,rawDx*resistance));
 
-  g.page.classList.add('us-motion3-current');
-  g.page.style.setProperty('--us-motion3-x',`${currentX}px`);
-  g.page.style.setProperty('--us-motion3-opacity',String(1-progress*.045));
+  g.page.classList.add('us-motion31-current');
+  g.page.style.setProperty('--us-motion31-x',`${currentX}px`);
 
   if(atEdge){
     destroySwipePreview();
@@ -1927,80 +1921,79 @@ function applySwipeVisual(){
   const preview=prepareSwipePreview(g,direction);
   if(!preview)return;
 
-  // Preview starts just outside the viewport and follows the same finger with
-  // a small parallax gap, giving both pages physical continuity.
-  const previewBase=direction>0?width:-width;
-  const previewX=previewBase+currentX;
-  preview.style.setProperty('--us-motion3-x',`${previewX}px`);
-  preview.style.setProperty('--us-motion3-opacity',String(.82+progress*.18));
+  // Exact edge-to-edge continuity. No opacity crossfade: it was one of the
+  // things making Motion 3 look like a web transition instead of native motion.
+  const previewX=(direction>0?width:-width)+currentX;
+  preview.style.setProperty('--us-motion31-x',`${previewX}px`);
 }
 
 function resetSwipeVisual(g){
   if(!g?.page)return;
-
   const current=g.page;
   const preview=swipePreviewPage;
   const width=Math.max(1,appViewportBounds().width);
   const direction=g.previewDirection||1;
 
-  current.classList.remove('us-motion3-current');
-  current.classList.add('us-motion3-returning');
-  current.style.setProperty('--us-motion3-x','0px');
-  current.style.setProperty('--us-motion3-opacity','1');
+  current.classList.remove('us-motion31-current');
+  current.classList.add('us-motion31-returning');
+  current.style.setProperty('--us-motion31-x','0px');
 
   if(preview){
-    preview.classList.add('us-motion3-returning');
-    preview.style.setProperty('--us-motion3-x',`${direction>0?width:-width}px`);
-    preview.style.setProperty('--us-motion3-opacity','.82');
+    preview.classList.add('us-motion31-returning');
+    preview.style.setProperty('--us-motion31-x',`${direction>0?width:-width}px`);
   }
 
   setTimeout(()=>{
     clearMotionPage(current);
     destroySwipePreview();
-  },300);
+  },285);
 }
 
 function completeSwipe(g,direction){
   const target=swipePreviewPage;
-  if(!target || g.targetIndex<0){
+  if(!target||g.targetIndex<0){
     resetSwipeVisual(g);
     return;
   }
 
   const width=Math.max(1,appViewportBounds().width);
   const current=g.page;
-
-  current.classList.remove('us-motion3-current');
-  current.classList.add('us-motion3-animating');
-  target.classList.add('us-motion3-animating');
-
-  current.style.setProperty('--us-motion3-x',`${direction>0?-width:width}px`);
-  current.style.setProperty('--us-motion3-opacity','.94');
-  target.style.setProperty('--us-motion3-x','0px');
-  target.style.setProperty('--us-motion3-opacity','1');
-
   const targetId=swipePages[g.targetIndex];
 
-  setTimeout(()=>{
-    // Avoid two active pages when go() executes.
-    target.classList.remove('active');
-    clearMotionPage(target);
-    swipePreviewPage=null;
-    clearMotionPage(current);
+  current.classList.remove('us-motion31-current');
+  current.classList.add('us-motion31-animating');
+  target.classList.add('us-motion31-animating');
 
-    go(targetId,{swipe:direction>0?'next':'prev'});
-  },265);
+  current.style.setProperty('--us-motion31-x',`${direction>0?-width:width}px`);
+  target.style.setProperty('--us-motion31-x','0px');
+
+  setTimeout(()=>{
+    // Seamless promotion:
+    // 1. target is already visually at x=0 as preview
+    // 2. go() marks the SAME DOM node active, with page-entry animation disabled
+    // 3. only on the following frames do we remove fixed-preview positioning
+    document.documentElement.classList.add('us-motion31-promoting');
+    target.classList.add('us-motion31-promote');
+
+    go(targetId,{motionCommit:true});
+
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+        clearMotionPage(current);
+        clearMotionPage(target);
+        swipePreviewPage=null;
+        document.documentElement.classList.remove('us-motion31-promoting');
+      });
+    });
+  },248);
 }
 
 document.addEventListener('touchstart',event=>{
   if(event.touches.length!==1||swipeBlockedTarget(event.target))return;
-
   const activePage=document.querySelector('.page.active');
   if(!activePage||!swipePages.includes(activePage.id))return;
 
   const touch=event.touches[0];
-
-  // Preserve the Android system Back gesture.
   if(touch.clientX<20||touch.clientX>window.innerWidth-20)return;
 
   const now=performance.now();
@@ -2026,9 +2019,7 @@ document.addEventListener('touchmove',event=>{
   const dy=touch.clientY-g.startY;
 
   if(!g.axis&&(Math.abs(dx)>7||Math.abs(dy)>7)){
-    // Stronger horizontal intent than Motion Pass: scrolling vertically should
-    // feel completely safe.
-    g.axis=Math.abs(dx)>Math.abs(dy)*1.28?'x':'y';
+    g.axis=Math.abs(dx)>Math.abs(dy)*1.32?'x':'y';
     if(g.axis==='y'){
       swipeGesture=null;
       destroySwipePreview();
@@ -2066,7 +2057,7 @@ document.addEventListener('touchend',event=>{
   const dx=g.currentX-g.startX;
   const dy=g.currentY-g.startY;
 
-  if(g.axis!=='x'||Math.abs(dx)<Math.abs(dy)*1.12){
+  if(g.axis!=='x'||Math.abs(dx)<Math.abs(dy)*1.16){
     resetSwipeVisual(g);
     return;
   }
@@ -2080,7 +2071,6 @@ document.addEventListener('touchend',event=>{
     return;
   }
 
-  // Motion 3 is intentionally less eager than Motion Pass.
   const width=Math.max(1,appViewportBounds().width);
   const distanceEnough=Math.abs(dx)>=width*US_SWIPE_COMMIT_RATIO;
   const velocity=Math.abs(swipeVelocity(g));
@@ -2091,7 +2081,6 @@ document.addEventListener('touchend',event=>{
     return;
   }
 
-  // Guarantee correct adjacent preview if the last frame was not painted yet.
   prepareSwipePreview(g,direction);
   completeSwipe(g,direction);
 },{passive:true});
