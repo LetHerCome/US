@@ -466,38 +466,90 @@ async function syncNativeWidgetBridge(sessionOverride=null){
 }
 window.syncNativeWidgetBridge=syncNativeWidgetBridge;
 
+let usInitCloudInFlight=null;
+
+function usRunWhenIdle(task,timeout=1000){
+  const run=()=>Promise.resolve().then(task).catch(error=>console.warn('[US Boot] deferred task',error));
+  if('requestIdleCallback' in window){
+    requestIdleCallback(run,{timeout});
+    return;
+  }
+  setTimeout(run,Math.min(120,timeout));
+}
+
 async function initCloud(){
-  const { data: { session } } = await sb.auth.getSession();
-  if(!session){
-    window.usProfile = null;
-    setCloudBadge(false,'offline');
-    document.getElementById('authOverlay').classList.remove('hidden');
-    showAuthStep('authPair');
-    return;
+  if(usInitCloudInFlight)return usInitCloudInFlight;
+
+  usInitCloudInFlight=(async()=>{
+    const { data: { session } } = await sb.auth.getSession();
+    if(!session){
+      window.usProfile = null;
+      setCloudBadge(false,'offline');
+      document.getElementById('authOverlay').classList.remove('hidden');
+      showAuthStep('authPair');
+      return;
+    }
+
+    // The device is already paired: show the shell immediately from the
+    // profile snapshot while Supabase validates/freshens it in background.
+    let cachedProfile=null;
+    try{
+      const cached=JSON.parse(localStorage.getItem('us:fix4:last-profile')||'null');
+      if(cached?.id===session.user.id&&cached?.couple_id)cachedProfile=cached;
+    }catch(_e){}
+
+    if(cachedProfile){
+      window.usProfile=cachedProfile;
+      selectedRole=cachedProfile.role;
+      document.getElementById('authOverlay').classList.add('hidden');
+      setCloudBadge(true,cachedProfile.display_name||'sync');
+    }
+
+    const {data:freshProfile,error}=await sb.from('profiles')
+      .select('id,display_name,role,couple_id,avatar_path')
+      .eq('id',session.user.id)
+      .maybeSingle();
+
+    if(error)console.warn(error);
+    const profile=freshProfile||cachedProfile;
+
+    if(!profile){
+      window.usProfile = null;
+      setCloudBadge(false,'da collegare');
+      document.getElementById('authOverlay').classList.remove('hidden');
+      showAuthStep('authPair');
+      return;
+    }
+
+    window.usProfile = profile;
+    selectedRole = profile.role;
+    try{localStorage.setItem('us:fix4:last-profile',JSON.stringify(profile));}catch(_e){}
+    document.getElementById('authOverlay').classList.add('hidden');
+    setCloudBadge(true, profile.display_name);
+    const syncBadge=document.getElementById('syncReadyBadge');
+    if(syncBadge)syncBadge.textContent='SYNC ATTIVO';
+
+    // Start live updates first. Everything below can hydrate independently.
+    startUsRealtime();
+    startLocationRefreshTimer();
+
+    // Critical Home data begins together instead of one request after another.
+    hydrateCloud().catch(error=>console.warn('[US Boot] hydrate',error));
+
+    // These do not need to block the first usable paint.
+    usRunWhenIdle(()=>hydrateProfileAvatars(),250);
+    usRunWhenIdle(()=>maybeAutoRefreshLocation(),650);
+    usRunWhenIdle(()=>syncNativeWidgetBridge(session),1400);
+
+    refreshWebPushUi().catch(()=>{});
+    flushPendingPushTarget();
+  })();
+
+  try{
+    return await usInitCloudInFlight;
+  }finally{
+    usInitCloudInFlight=null;
   }
-  const {data:profile,error} = await sb.from('profiles').select('id,display_name,role,couple_id,avatar_path').eq('id',session.user.id).maybeSingle();
-  if(error) console.warn(error);
-  if(!profile){
-    window.usProfile = null;
-    setCloudBadge(false,'da collegare');
-    document.getElementById('authOverlay').classList.remove('hidden');
-    showAuthStep('authPair');
-    return;
-  }
-  window.usProfile = profile;
-  selectedRole = profile.role;
-  document.getElementById('authOverlay').classList.add('hidden');
-  setCloudBadge(true, profile.display_name);
-  const syncBadge=document.getElementById('syncReadyBadge'); if(syncBadge) syncBadge.textContent='SYNC ATTIVO';
-  await hydrateProfileAvatars();
-  await hydrateHomePhoto();
-  await hydrateCloud();
-  await syncNativeWidgetBridge(session);
-  startUsRealtime();
-  await maybeAutoRefreshLocation();
-  startLocationRefreshTimer();
-  refreshWebPushUi().catch(()=>{});
-  flushPendingPushTarget();
 }
 
 function showAuthStep(id){
@@ -788,6 +840,30 @@ let homePhotoRotationTimer=null;
 let homePhotoActiveLayer='A';
 let homePhotoHourKey='';
 let homePhotoPath='';
+const US_HOME_BOOT_CACHE_KEY='us:boot:home-photo:v1';
+
+function readHomeBootCache(hourKey){
+  try{
+    const cached=JSON.parse(localStorage.getItem(US_HOME_BOOT_CACHE_KEY)||'null');
+    if(!cached?.url||!cached?.path||!cached?.coupleId)return null;
+    if(cached.coupleId!==window.usProfile?.couple_id)return null;
+    if(cached.hourKey!==hourKey)return null;
+    if(Number(cached.expiresAt||0)-Date.now()<60*1000)return null;
+    return cached;
+  }catch(_e){return null;}
+}
+function writeHomeBootCache(hourKey,path,url){
+  try{
+    localStorage.setItem(US_HOME_BOOT_CACHE_KEY,JSON.stringify({
+      coupleId:window.usProfile?.couple_id||'',
+      hourKey,
+      path,
+      url,
+      // Home signed URLs are created for 3900s. Keep a safety margin.
+      expiresAt:Date.now()+55*60*1000
+    }));
+  }catch(_e){}
+}
 
 function homeRotationKey(){
   const d=new Date();
@@ -844,10 +920,23 @@ async function hydrateHomePhoto(force=false){
   if(!window.usProfile)return;
   const hourKey=homeRotationKey();
   if(!force && homePhotoHourKey===hourKey && homePhotoPath)return;
+
+  // Cold start fast path: reuse the last still-valid image immediately.
+  if(!force && !homePhotoPath){
+    const cached=readHomeBootCache(hourKey);
+    if(cached){
+      homePhotoHourKey=hourKey;
+      homePhotoPath=cached.path;
+      crossfadeHomePhoto(cached.url);
+      return;
+    }
+  }
+
   const path=await getHomeRotationPath();
   homePhotoHourKey=hourKey;
   if(!path){
     homePhotoPath='';
+    try{localStorage.removeItem(US_HOME_BOOT_CACHE_KEY);}catch(_e){}
     crossfadeHomePhoto('');
     return;
   }
@@ -855,6 +944,7 @@ async function hydrateHomePhoto(force=false){
   const signedUrl=await usGetSignedUrl(path,3900);
   if(!signedUrl)return;
   homePhotoPath=path;
+  writeHomeBootCache(hourKey,path,signedUrl);
   crossfadeHomePhoto(signedUrl);
 }
 window.hydrateHomePhoto=hydrateHomePhoto;
@@ -1609,12 +1699,21 @@ window.startUsRealtime=startUsRealtime;
 
 async function hydrateCloud(){
   try{
-    await hydrateToday();
-    if(!homePhotoPath)await hydrateHomePhoto(true);
     const active=document.querySelector('.page.active')?.id;
-    if(active==='moments')await hydrateMoments();
-    if(active==='bond')await hydrateBond();
-    if(active==='think')await hydrateThink();
+    const tasks=[hydrateToday()];
+
+    // Home photo and Today are independent: fetch them in parallel.
+    if(!homePhotoPath)tasks.push(hydrateHomePhoto(false));
+
+    // Only hydrate the visible heavy page.
+    if(active==='moments')tasks.push(hydrateMoments());
+    if(active==='bond')tasks.push(hydrateBond());
+    if(active==='think')tasks.push(hydrateThink());
+
+    const results=await Promise.allSettled(tasks);
+    results.forEach(result=>{
+      if(result.status==='rejected')console.warn('[US Boot] hydrate task',result.reason);
+    });
   }catch(e){console.warn(e)}
 }
 
@@ -1718,7 +1817,10 @@ async function refreshVisibleState(options={}){
 }
 setInterval(()=>refreshVisibleState(),60000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&window.usProfile)refreshVisibleState({foreground:true});});
-sb.auth.onAuthStateChange((_event,_session)=>{ setTimeout(initCloud,0); });
+sb.auth.onAuthStateChange((event,_session)=>{
+  if(event==='INITIAL_SESSION'||event==='TOKEN_REFRESHED')return;
+  setTimeout(initCloud,0);
+});
 const pairBtn=document.getElementById('pairBtn');
 if(pairBtn) pairBtn.addEventListener('click', pairAccount);
 

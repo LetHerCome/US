@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-moments-visual-1";
+const CACHE_NAME = "us-shell-fastboot-back-1";
 
 const APP_SHELL = [
   "/",
@@ -10,6 +10,7 @@ const APP_SHELL = [
   "/events.js",
   "/moments-albums.css",
   "/moments-albums.js",
+  "/navigation.js",
   "/version.json",
   "/manifest.webmanifest",
   "/icon-192.png",
@@ -264,37 +265,80 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
 
+  // Let the browser keep its normal HTTP cache for third-party resources.
   if (url.origin !== self.location.origin) return;
 
-  if (url.pathname === "/app.js") {
-    event.respondWith(transformedAppJs(request));
-    return;
-  }
-
-  if (request.mode === "navigate") {
+  // Update detection must always see the freshest build marker.
+  if (url.pathname === "/version.json") {
     event.respondWith(
       fetch(request, { cache: "no-store" })
         .then((response) => {
           const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) =>
-            cache.put("/index.html", copy)
+          event.waitUntil(
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy))
           );
           return response;
         })
-        .catch(() => caches.match("/index.html"))
+        .catch(() => caches.match(request))
     );
     return;
   }
 
-  event.respondWith(
-    fetch(request)
-      .then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) =>
-          cache.put(request, copy)
+  // app.js is transformed by this SW. On cold launches, serve the already
+  // transformed copy immediately and rebuild it silently from the network.
+  if (url.pathname === "/app.js") {
+    event.respondWith((async () => {
+      const cached = await caches.match(request);
+      if (cached) {
+        event.waitUntil(
+          transformedAppJs(request).then(() => undefined).catch(() => undefined)
         );
+        return cached;
+      }
+      return transformedAppJs(request);
+    })());
+    return;
+  }
+
+  // A PWA cold launch should not wait for a network round-trip just to paint.
+  // Serve the cached document first; update it in the background.
+  if (request.mode === "navigate") {
+    event.respondWith((async () => {
+      const cached = await caches.match("/index.html");
+      const refresh = fetch(request, { cache: "no-store" })
+        .then(async (response) => {
+          const copy = response.clone();
+          const cache = await caches.open(CACHE_NAME);
+          await cache.put("/index.html", copy);
+          return response;
+        });
+
+      if (cached) {
+        event.waitUntil(refresh.then(() => undefined).catch(() => undefined));
+        return cached;
+      }
+
+      return refresh.catch(() => caches.match("/index.html"));
+    })());
+    return;
+  }
+
+  // Static same-origin shell: stale-while-revalidate.
+  event.respondWith((async () => {
+    const cached = await caches.match(request);
+    const refresh = fetch(request)
+      .then(async (response) => {
+        const copy = response.clone();
+        const cache = await caches.open(CACHE_NAME);
+        await cache.put(request, copy);
         return response;
-      })
-      .catch(() => caches.match(request))
-  );
+      });
+
+    if (cached) {
+      event.waitUntil(refresh.then(() => undefined).catch(() => undefined));
+      return cached;
+    }
+
+    return refresh.catch(() => caches.match(request));
+  })());
 });
