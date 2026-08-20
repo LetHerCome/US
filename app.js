@@ -247,15 +247,48 @@ const sb = window.supabase.createClient(SB_URL, SB_KEY);
 
 const US_SIGNED_URL_CACHE=new Map();
 const US_SIGNED_URL_SKEW_MS=5*60*1000;
+const US_SIGNED_URL_STORAGE_KEY='us:signed-url-cache:v2';
+
+function usLoadSignedUrlCache(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(US_SIGNED_URL_STORAGE_KEY)||'{}');
+    const now=Date.now();
+    for(const [path,hit] of Object.entries(raw||{})){
+      if(hit?.url&&Number(hit.expiresAt||0)-now>US_SIGNED_URL_SKEW_MS){
+        US_SIGNED_URL_CACHE.set(path,{url:hit.url,expiresAt:Number(hit.expiresAt)});
+      }
+    }
+  }catch(_e){}
+}
+function usPersistSignedUrlCache(){
+  try{
+    const now=Date.now();
+    const out={};
+    let count=0;
+    for(const [path,hit] of US_SIGNED_URL_CACHE){
+      if(hit?.url&&hit.expiresAt-now>US_SIGNED_URL_SKEW_MS&&count<80){
+        out[path]=hit;count++;
+      }
+    }
+    localStorage.setItem(US_SIGNED_URL_STORAGE_KEY,JSON.stringify(out));
+  }catch(_e){}
+}
 function usReadSignedUrlCache(path){
   const hit=US_SIGNED_URL_CACHE.get(path);
-  if(!hit||!hit.url||hit.expiresAt-Date.now()<=US_SIGNED_URL_SKEW_MS){US_SIGNED_URL_CACHE.delete(path);return null;}
+  if(!hit||!hit.url||hit.expiresAt-Date.now()<=US_SIGNED_URL_SKEW_MS){
+    US_SIGNED_URL_CACHE.delete(path);
+    return null;
+  }
   return hit.url;
 }
 function usWriteSignedUrlCache(path,url,expiresIn){
-  if(path&&url)US_SIGNED_URL_CACHE.set(path,{url,expiresAt:Date.now()+Math.max(60,Number(expiresIn)||60)*1000});
+  if(path&&url){
+    US_SIGNED_URL_CACHE.set(path,{url,expiresAt:Date.now()+Math.max(60,Number(expiresIn)||60)*1000});
+    usPersistSignedUrlCache();
+  }
   return url||null;
 }
+usLoadSignedUrlCache();
 async function usGetSignedUrl(path,expiresIn=21600){
   if(!path)return null;
   const cached=usReadSignedUrlCache(path);if(cached)return cached;
@@ -520,12 +553,37 @@ async function initCloud(){
   if(usInitCloudInFlight)return usInitCloudInFlight;
 
   usInitCloudInFlight=(async()=>{
-    const { data: { session } } = await sb.auth.getSession();
+    let cachedDeviceProfile=null;
+    try{
+      const cached=JSON.parse(localStorage.getItem('us:fix4:last-profile')||'null');
+      if(cached?.id&&cached?.couple_id)cachedDeviceProfile=cached;
+    }catch(_e){}
+
+    let { data: { session } } = await sb.auth.getSession();
+
+    // A returning PWA can briefly report no session while its durable
+    // IndexedDB storage is warming. Never flash the pairing UI for that race.
+    if(!session&&cachedDeviceProfile){
+      await new Promise(resolve=>setTimeout(resolve,220));
+      try{
+        const retry=await sb.auth.getSession();
+        session=retry?.data?.session||null;
+      }catch(_e){}
+      if(!session){
+        try{
+          const refreshed=await sb.auth.refreshSession();
+          session=refreshed?.data?.session||null;
+        }catch(_e){}
+      }
+    }
+
     if(!session){
       window.usProfile = null;
+      document.documentElement.classList.remove('us-returning-device','us-auth-pending');
       setCloudBadge(false,'offline');
       document.getElementById('authOverlay').classList.remove('hidden');
       showAuthStep('authPair');
+      window.dispatchEvent(new CustomEvent('us-auth-resolved',{detail:{paired:false}}));
       return;
     }
 
@@ -533,8 +591,7 @@ async function initCloud(){
     // profile snapshot while Supabase validates/freshens it in background.
     let cachedProfile=null;
     try{
-      const cached=JSON.parse(localStorage.getItem('us:fix4:last-profile')||'null');
-      if(cached?.id===session.user.id&&cached?.couple_id)cachedProfile=cached;
+      if(cachedDeviceProfile?.id===session.user.id)cachedProfile=cachedDeviceProfile;
     }catch(_e){}
 
     if(cachedProfile){
@@ -554,9 +611,11 @@ async function initCloud(){
 
     if(!profile){
       window.usProfile = null;
+      document.documentElement.classList.remove('us-returning-device','us-auth-pending');
       setCloudBadge(false,'da collegare');
       document.getElementById('authOverlay').classList.remove('hidden');
       showAuthStep('authPair');
+      window.dispatchEvent(new CustomEvent('us-auth-resolved',{detail:{paired:false}}));
       return;
     }
 
@@ -564,23 +623,25 @@ async function initCloud(){
     selectedRole = profile.role;
     try{localStorage.setItem('us:fix4:last-profile',JSON.stringify(profile));}catch(_e){}
     document.getElementById('authOverlay').classList.add('hidden');
+    document.documentElement.classList.remove('us-auth-pending');
+    document.documentElement.classList.add('us-auth-ready','us-returning-device');
+    window.dispatchEvent(new CustomEvent('us-auth-resolved',{detail:{paired:true}}));
     setCloudBadge(true, profile.display_name);
     const syncBadge=document.getElementById('syncReadyBadge');
     if(syncBadge)syncBadge.textContent='SYNC ATTIVO';
 
-    // Start live updates first. Everything below can hydrate independently.
-    startUsRealtime();
-    startLocationRefreshTimer();
-
-    // Critical Home data begins together instead of one request after another.
+    // First usable Home paint wins. Live subscriptions and device maintenance
+    // start immediately after, but no longer compete with the first image/data.
     hydrateCloud().catch(error=>console.warn('[US Boot] hydrate',error));
 
-    // These do not need to block the first usable paint.
-    usRunWhenIdle(()=>hydrateProfileAvatars(),250);
-    usRunWhenIdle(()=>maybeAutoRefreshLocation(),650);
-    usRunWhenIdle(()=>syncNativeWidgetBridge(session),1400);
+    usRunWhenIdle(()=>startUsRealtime(),420);
+    usRunWhenIdle(()=>startLocationRefreshTimer(),650);
+    usRunWhenIdle(()=>hydrateProfileAvatars(),520);
+    usRunWhenIdle(()=>maybeAutoRefreshLocation(),1400);
+    usRunWhenIdle(()=>refreshWebPushUi(),1100);
+    usRunWhenIdle(()=>syncNativeWidgetBridge(session),2200);
 
-    refreshWebPushUi().catch(()=>{});
+    // Push navigation itself is user intent, so keep it immediate.
     flushPendingPushTarget();
   })();
 
@@ -893,9 +954,8 @@ function readHomeBootCache(hourKey){
     const cached=JSON.parse(localStorage.getItem(US_HOME_BOOT_CACHE_KEY)||'null');
     if(!cached?.url||!cached?.path||!cached?.coupleId)return null;
     if(cached.coupleId!==window.usProfile?.couple_id)return null;
-    if(cached.hourKey!==hourKey)return null;
     if(Number(cached.expiresAt||0)-Date.now()<60*1000)return null;
-    return cached;
+    return {...cached,currentHour:cached.hourKey===hourKey};
   }catch(_e){return null;}
 }
 function writeHomeBootCache(hourKey,path,url){
@@ -905,8 +965,8 @@ function writeHomeBootCache(hourKey,path,url){
       hourKey,
       path,
       url,
-      // Home signed URLs are created for 3900s. Keep a safety margin.
-      expiresAt:Date.now()+55*60*1000
+      // Home URLs now last 6h. Keep a safety margin.
+      expiresAt:Date.now()+5.5*60*60*1000
     }));
   }catch(_e){}
 }
@@ -967,14 +1027,15 @@ async function hydrateHomePhoto(force=false){
   const hourKey=homeRotationKey();
   if(!force && homePhotoHourKey===hourKey && homePhotoPath)return;
 
-  // Cold start fast path: reuse the last still-valid image immediately.
+  // Paint the previous valid image first, even if the rotation hour changed.
+  // Then refresh the correct hourly image silently in the background.
   if(!force && !homePhotoPath){
     const cached=readHomeBootCache(hourKey);
     if(cached){
-      homePhotoHourKey=hourKey;
+      homePhotoHourKey=cached.hourKey||'';
       homePhotoPath=cached.path;
       crossfadeHomePhoto(cached.url);
-      return;
+      if(cached.currentHour)return;
     }
   }
 
@@ -986,8 +1047,12 @@ async function hydrateHomePhoto(force=false){
     crossfadeHomePhoto('');
     return;
   }
-  if(!force && path===homePhotoPath)return;
-  const signedUrl=await usGetSignedUrl(path,3900);
+  if(!force && path===homePhotoPath){
+    // It is already visible; only normalize the current rotation key.
+    homePhotoHourKey=hourKey;
+    return;
+  }
+  const signedUrl=await usGetSignedUrl(path,21600);
   if(!signedUrl)return;
   homePhotoPath=path;
   writeHomeBootCache(hourKey,path,signedUrl);
@@ -1748,20 +1813,23 @@ window.startUsRealtime=startUsRealtime;
 async function hydrateCloud(){
   try{
     const active=document.querySelector('.page.active')?.id;
-    const tasks=[hydrateToday()];
+    const critical=[];
 
-    // Home photo and Today are independent: fetch them in parallel.
-    if(!homePhotoPath)tasks.push(hydrateHomePhoto(false));
+    // Home image is the visual first paint priority.
+    if(!homePhotoPath)critical.push(hydrateHomePhoto(false));
 
-    // Only hydrate the visible heavy page.
-    if(active==='moments')tasks.push(hydrateMoments());
-    if(active==='bond')tasks.push(hydrateBond());
-    if(active==='settings')tasks.push(Promise.resolve(window.hydrateUsSettings?.()));
+    // Only a directly-opened heavy page joins the critical lane.
+    if(active==='moments')critical.push(hydrateMoments());
+    if(active==='bond')critical.push(hydrateBond());
+    if(active==='settings')critical.push(Promise.resolve(window.hydrateUsSettings?.()));
 
-    const results=await Promise.allSettled(tasks);
+    const results=await Promise.allSettled(critical);
     results.forEach(result=>{
       if(result.status==='rejected')console.warn('[US Boot] hydrate task',result.reason);
     });
+
+    // Today is important but does not need to compete with the Home image.
+    usRunWhenIdle(()=>hydrateToday(),320);
   }catch(e){console.warn(e)}
 }
 
