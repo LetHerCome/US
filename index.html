@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <meta name="theme-color" content="#0d0f14"/>
 <meta name="color-scheme" content="dark"/>
-<meta name="us-build" content="fix4-20260820-1"/>
-<link rel="manifest" href="/manifest.webmanifest?v=fix4-20260820-1"/>
-<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=fix4-20260820-1"/>
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=fix4-20260820-1"/>
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=fix4-20260820-1"/>
+<meta name="us-build" content="fix5-20260820-1"/>
+<link rel="manifest" href="/manifest.webmanifest?v=fix5-20260820-1"/>
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=fix5-20260820-1"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=fix5-20260820-1"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=fix5-20260820-1"/>
 <meta name="application-name" content="US"/>
 <meta name="apple-mobile-web-app-title" content="US"/>
 <meta name="mobile-web-app-capable" content="yes"/>
@@ -18,13 +18,14 @@
 <title>US — Francesco & Beatrice</title>
 <link rel="stylesheet" href="/styles.css"/>
 <link rel="stylesheet" href="/fix4.css?v=fix4-20260820-1"/>
+<link rel="stylesheet" href="/fix5.css?v=fix5-20260820-1"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
 <div class="auth-overlay" id="authOverlay">
   <div class="auth-card">
-    <div class="auth-logo">US<span class="heart">.</span></div>
+    <div class="auth-logo">Us<span class="heart">.</span></div>
     <div class="auth-step active" id="authPair">
       <div class="tiny">SPAZIO PRIVATO</div>
       <h2>Chi sei?</h2>
@@ -41,112 +42,140 @@
 </div>
 
 <div class="app">
-  <div class="top"><div class="brand-row"><div class="brand">US<span class="heart">.</span></div><button type="button" class="today-orb" id="todayOrb" onclick="openToday()" aria-label="Apri la domanda giornaliera"><span class="today-orb-mark">?</span><span class="today-orb-copy"><b>Oggi</b><small>Domanda</small></span><i id="todayOrbDot"></i></button></div><div class="top-actions"><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><button type="button" class="profile-avatar" id="profileAvatarBtn" aria-label="Cambia foto profilo" onclick="pickProfilePhoto()"><img id="profileAvatarImg" alt="Foto profilo" hidden><span class="fallback" id="profileAvatarFallback">♡</span><span class="camera-dot">+</span></button><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
+  <div class="top fix5-top">
+    <div class="brand-row"><div class="brand">Us<span class="heart">.</span></div></div>
+    <div class="top-actions"><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><button type="button" class="profile-avatar" id="profileAvatarBtn" aria-label="Cambia foto profilo" onclick="pickProfilePhoto()"><img id="profileAvatarImg" alt="Foto profilo" hidden><span class="fallback" id="profileAvatarFallback">♡</span><span class="camera-dot">+</span></button><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div>
+  </div>
 
-  <main id="home" class="page active">
-    <section class="hero home-hero-only" id="homeHero" aria-label="Un vostro ricordo">
+  <main id="home" class="page active fix5-today-page">
+    <section class="hero home-hero-only fix5-home-hero" id="homeHero" aria-label="Oggi su US">
       <div class="home-photo-layer active" id="homePhotoLayerA"></div>
       <div class="home-photo-layer" id="homePhotoLayerB"></div>
       <div class="home-photo-shade"></div>
-      <button type="button" class="home-distance-pill" id="distanceWidget" onclick="refreshMyLocation()" aria-label="Aggiorna distanza">
-        <span class="distance-orbit" aria-hidden="true">♡</span>
-        <span class="distance-copy"><b id="distanceValue">Attiva la distanza</b><small id="distanceMeta">Tocca per aggiornare</small></span>
-        <span class="distance-action" id="distanceAction">↻</span>
-      </button>
-      <aside class="push-optin-card" id="pushOptInCard" hidden aria-live="polite">
-        <span class="push-optin-icon" aria-hidden="true">♡</span>
-        <span class="push-optin-copy"><b id="pushOptInTitle">Rimani vicino anche quando US è chiusa</b><small id="pushOptInText">Ricevi “Ti penso”, risposte e quest condivise.</small></span>
-        <button type="button" class="push-optin-action" id="pushEnableBtn" onclick="enableWebPush()">Attiva notifiche</button>
-      </aside>
+      <div class="fix5-home-content">
+        <div class="fix5-home-kicker"><span>OGGI</span><small id="todayDateLabel"></small></div>
+        <button type="button" class="fix5-today-focus" id="todayFocusCard" onclick="openToday()" aria-label="Apri la domanda di oggi">
+          <span class="fix5-focus-state" id="todayFocusState">CARICO</span>
+          <strong id="todayFocusTitle">Vediamo cosa c’è oggi</strong>
+          <small id="todayFocusText">Sto sincronizzando il vostro spazio.</small>
+          <span class="fix5-focus-arrow" aria-hidden="true">↗</span>
+        </button>
+        <button type="button" class="fix5-think-quick" id="thinkButton" onclick="sendThinkSignal()" aria-label="Invia Ti penso">
+          <span class="fix5-think-mark" aria-hidden="true">⌁</span>
+          <span class="fix5-think-copy"><b>Ti penso</b><small id="thinkQuickText">Invia un segnale discreto al partner</small></span>
+          <span class="fix5-think-send" aria-hidden="true">→</span>
+        </button>
+      </div>
     </section>
   </main>
 
   <main id="today" class="today-overlay" aria-hidden="true">
     <div class="today-backdrop" onclick="closeToday()"></div>
-    <section class="today-sheet" role="dialog" aria-modal="true" aria-label="Domanda del giorno">
+    <section class="today-sheet fix5-today-sheet" role="dialog" aria-modal="true" aria-label="Domanda del giorno">
       <div class="today-sheet-head"><div><div class="tiny">OGGI</div><h2>La domanda di oggi</h2></div><button type="button" class="today-close" onclick="closeToday()" aria-label="Chiudi domanda del giorno">×</button></div>
       <div class="card question">
-        <div class="qtag">LA DOMANDA DEL GIORNO</div>
+        <div class="qtag">UNA COSA PER VOI DUE</div>
         <div class="qtext">Qual è una cosa che vorresti rifare insieme per la prima volta?</div>
         <textarea id="answer" rows="4" placeholder="Scrivi la tua risposta..."></textarea>
         <div class="row"><button class="primary" id="todaySaveBtn" onclick="saveAnswer()">Rispondi</button></div>
-        <div class="locked" id="locked" role="status" aria-live="polite">🔒 La risposta dell’altra persona si sblocca quando avete risposto entrambi.</div>
+        <div class="locked" id="locked" role="status" aria-live="polite">La risposta dell’altra persona si sblocca quando avete risposto entrambi.</div>
         <div id="todayReveal" class="hidden"></div>
       </div>
-      <div class="smallnote">Una domanda al giorno, uguale per entrambi. Le risposte restano private fino al reveal.</div>
-      <div class="push-settings-row" id="pushSettingsRow" hidden>
-        <span><b id="pushSettingsStatus">Notifiche</b><small id="pushSettingsDetail">Stato notifiche US</small></span>
-        <button type="button" id="pushDisableBtn" onclick="disableWebPush()">Disattiva</button>
-      </div>
-    </section>
-  </main>
-
-  <main id="moments" class="page">
-    <section class="section" style="margin-top:6px">
-      <h2>Moments</h2>
-      <div class="moment-compose" id="momentCompose">
-        <input id="momentFile" type="file" accept="image/jpeg,image/png,image/webp" hidden>
-        <button type="button" class="moment-picker" onclick="pickMomentPhoto()" aria-label="Scegli una foto per il ricordo">
-          <span class="moment-picker-empty"><span class="moment-add-icon">＋</span><span class="moment-picker-copy"><b>Aggiungi un ricordo</b><small>Tocca per scegliere una foto</small></span></span>
-          <span id="momentPreview" class="moment-preview"><img id="momentPreviewImg" alt="Anteprima ricordo"><span class="moment-change-chip">Cambia foto</span></span>
-        </button>
-        <div class="moment-details">
-          <input id="momentCaption" type="text" maxlength="180" placeholder="Scrivi una nota… (opzionale)">
-          <div class="moment-auto-date" id="momentDetectedDate">La data verrà letta automaticamente dalla foto.</div>
-          <div class="moment-compose-footer"><button id="momentUploadBtn" type="button" class="primary moment-save" onclick="uploadMoment()">Salva ricordo</button></div>
-          <div class="moment-private">⌁ Solo voi due potete vederlo</div>
-        </div>
-      </div>
-      <div id="momentsGrid" class="moment-grid" aria-live="polite"><div class="empty-state moment-loading" aria-busy="true"><div class="emoji">↻</div><b>Carico i vostri ricordi…</b></div></div>
+      <div class="smallnote">Un piccolo momento alla volta. Il confronto resta privato finché non avete contribuito entrambi.</div>
     </section>
   </main>
 
   <main id="bond" class="page">
-    <section class="section bond-page" style="margin-top:6px">
-      <div class="bond-page-head"><div><div class="tiny">IL VOSTRO BOND</div><h2>Il vostro livello</h2></div><div class="bond-level-medallion"><span>LV.</span><b id="bondLevelValue">1</b></div></div>
-      <article class="bond-progress-card">
-        <div class="bond-progress-top"><div><div class="bond-rank" id="bondRankTitle">Primo legame</div><b id="bondTotalXp">0 XP totali</b></div><div class="bond-next" id="bondNextXp">200 XP al prossimo livello</div></div>
+    <section class="section bond-page fix5-noi-page">
+      <header class="fix5-section-head"><div class="tiny">NOI</div><h2>Il nostro percorso</h2><p>Giorni, segnali e piccole cose fatte insieme. Non è un voto: è solo la traccia di quello che costruite.</p></header>
+
+      <div class="fix5-noi-stats">
+        <article class="fix5-days-card"><small>INSIEME DA</small><div><b id="daysTogether">0</b><span>giorni</span></div></article>
+        <button type="button" class="home-distance-pill fix5-distance-card" id="distanceWidget" onclick="refreshMyLocation()" aria-label="Aggiorna distanza">
+          <span class="distance-orbit" aria-hidden="true">⌖</span>
+          <span class="distance-copy"><b id="distanceValue">Attiva la distanza</b><small id="distanceMeta">Tocca per aggiornare</small></span>
+          <span class="distance-action" id="distanceAction">↻</span>
+        </button>
+      </div>
+
+      <article class="bond-progress-card fix5-bond-progress">
+        <div class="bond-progress-top"><div><div class="bond-rank" id="bondRankTitle">Primo legame</div><b id="bondTotalXp">0 XP condivisi</b></div><div class="bond-level-medallion"><span>LV.</span><b id="bondLevelValue">1</b></div></div>
         <div class="bond-xp-track"><div id="bondPageFill"></div></div>
         <div class="bond-xp-line"><span id="bondLevelXp">0 / 200 XP</span><span id="bondCompletedCount">0 quest completate</span></div>
+        <div class="bond-next" id="bondNextXp">200 XP al prossimo livello</div>
       </article>
-      <section class="bond-badges-section"><div class="bond-weekly-head bond-badge-head"><div><div class="tiny">DISTINTIVI</div><h3>Livelli sbloccati</h3></div></div><div class="bond-badges" id="bondBadges"></div></section>
-      <div class="bond-weekly-head"><div><div class="tiny">QUEST SETTIMANALI</div><h3>Questa settimana</h3></div><div class="reroll-counter"><span>↻</span><b id="bondRerollsLeft">3</b><small>rimasti</small></div></div>
+
+      <div class="bond-weekly-head fix5-subhead"><div><div class="tiny">QUEST DELLA SETTIMANA</div><h3>Una cosa da fare insieme</h3></div><div class="reroll-counter"><span>↻</span><b id="bondRerollsLeft">3</b><small>rimasti</small></div></div>
       <div id="bondQuestList" class="bond-quest-list" aria-live="polite"><div class="empty-state" aria-busy="true"><div class="emoji">✦</div><b>Preparo le vostre quest…</b></div></div>
-      <div class="bond-week-note"><span id="bondWeekReset">Nuove quest ogni lunedì</span><span>Entrambi devono confermare.</span></div>
+      <div class="bond-week-note"><span id="bondWeekReset">Nuove quest ogni lunedì</span><span>Si chiude solo quando confermate entrambi.</span></div>
+
+      <section class="bond-badges-section fix5-badges-section"><div class="bond-weekly-head bond-badge-head"><div><div class="tiny">TRAGUARDI</div><h3>Livelli sbloccati</h3></div></div><div class="bond-badges" id="bondBadges"></div></section>
+
+      <section class="fix5-think-history-section">
+        <div class="fix5-subhead"><div><div class="tiny">SEGNALI TRA VOI</div><h3>Ti penso</h3></div><span class="fix5-signal-dot" aria-hidden="true"></span></div>
+        <div class="think-live" id="thinkLiveText" role="status" aria-live="polite">Nessun segnale recente.</div>
+        <div class="think-history"><article><div class="tiny">RICEVUTO</div><b id="thinkLastReceived">Ancora nessun segnale</b></article><article><div class="tiny">INVIATO</div><b id="thinkLastSent">Non ne hai ancora inviati</b></article></div>
+        <div class="think-month"><b id="thinkMonthCount">0</b><span>segnali condivisi questo mese</span></div>
+      </section>
+
+      <section class="fix5-notification-section" aria-label="Notifiche US">
+        <div class="fix5-subhead"><div><div class="tiny">NOTIFICHE</div><h3>Resta raggiungibile</h3></div></div>
+        <aside class="push-optin-card fix5-push-card" id="pushOptInCard" hidden aria-live="polite">
+          <img class="push-app-logo" src="/icon-192.png" alt="Logo ufficiale US">
+          <span class="push-optin-copy"><b id="pushOptInTitle">Rimani vicino anche quando US è chiusa</b><small id="pushOptInText">Ricevi Ti penso, risposte e quest condivise.</small></span>
+          <button type="button" class="push-optin-action" id="pushEnableBtn" onclick="enableWebPush()">Attiva notifiche</button>
+        </aside>
+        <div class="push-settings-row fix5-push-settings" id="pushSettingsRow" hidden>
+          <img class="push-app-logo" src="/icon-192.png" alt="Logo ufficiale US">
+          <span><b id="pushSettingsStatus">Notifiche</b><small id="pushSettingsDetail">Stato notifiche US</small></span>
+          <button type="button" id="pushDisableBtn" onclick="disableWebPush()">Disattiva</button>
+        </div>
+      </section>
     </section>
   </main>
 
-  <main id="think" class="page">
-    <section class="section think-page" style="margin-top:6px">
-      <div class="think-copy"><div class="tiny">SEGNALE PRIVATO</div><h2>Ti penso</h2><p>Niente messaggi da scrivere. Solo un piccolo segnale per dire: sono qui, ti sto pensando.</p></div>
-      <button type="button" class="think-heart" id="thinkButton" onclick="sendThinkSignal()" aria-label="Invia Ti penso"><span class="think-heart-ring"></span><span class="think-heart-glyph">♡</span><span class="think-heart-label">TI PENSO</span></button>
-      <div class="think-live" id="thinkLiveText" role="status" aria-live="polite">Tocca il cuore quando vuoi.</div>
-      <div class="think-history"><article><div class="tiny">L’ULTIMO DA LUI/LEI</div><b id="thinkLastReceived">Ancora nessun segnale</b></article><article><div class="tiny">IL TUO ULTIMO</div><b id="thinkLastSent">Non ne hai ancora inviati</b></article></div>
-      <div class="think-month"><b id="thinkMonthCount">0</b><span>pensieri condivisi questo mese</span></div>
-      <div class="smallnote think-note">Quando US è aperta sull’altro telefono il segnale arriva in tempo reale. Se è chiusa, resta salvato e compare al prossimo accesso.</div>
+  <main id="moments" class="page">
+    <section class="section fix5-memories-page">
+      <header class="fix5-section-head"><div class="tiny">RICORDI</div><h2>La vostra storia</h2><p>Foto, date e note in ordine. Uno spazio pensato per crescere con voi.</p></header>
+      <div class="moment-compose" id="momentCompose">
+        <input id="momentFile" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+        <button type="button" class="moment-picker" onclick="pickMomentPhoto()" aria-label="Scegli una foto per il ricordo">
+          <span class="moment-picker-empty"><span class="moment-add-icon">＋</span><span class="moment-picker-copy"><b>Aggiungi un ricordo</b><small>Scegli una foto dalla galleria</small></span></span>
+          <span id="momentPreview" class="moment-preview"><img id="momentPreviewImg" alt="Anteprima ricordo"><span class="moment-change-chip">Cambia foto</span></span>
+        </button>
+        <div class="moment-details">
+          <input id="momentCaption" type="text" maxlength="180" placeholder="Una nota, se ti va…">
+          <div class="moment-auto-date" id="momentDetectedDate">Leggo automaticamente la data della foto.</div>
+          <div class="moment-compose-footer"><button id="momentUploadBtn" type="button" class="primary moment-save" onclick="uploadMoment()">Salva ricordo</button></div>
+          <div class="moment-private">Solo voi due</div>
+        </div>
+      </div>
+      <div class="fix5-timeline-label"><span>LA TIMELINE</span><small>Più recenti in alto</small></div>
+      <div id="momentsGrid" class="moment-grid" aria-live="polite"><div class="empty-state moment-loading" aria-busy="true"><div class="emoji">↻</div><b>Carico i vostri ricordi…</b></div></div>
     </section>
   </main>
 
   <main id="quiz" class="page">
-    <section class="section" style="margin-top:6px">
-      <div class="quiz-head"><div><div class="tiny">US QUIZ</div><h2 style="margin:2px 0 0">Quanto siamo allineati?</h2></div><button class="ghost" onclick="go('home')" aria-label="Torna alla Home">←</button></div>
+    <section class="section fix5-discover-page">
+      <header class="fix5-section-head"><div class="tiny">SCOPRI</div><h2>Cosa scopriamo questa settimana?</h2><p>Non cercate un punteggio perfetto. I punti in comune fanno avanzare il percorso; le differenze sono spesso la parte più interessante.</p></header>
       <div id="quizHub">
         <div class="quiz-week-card"><div><span class="quiz-week-kicker">SETTIMANALE</span><b id="quizWeekLabel">I quiz di questa settimana</b></div><small id="quizWeekReset">Cambiano automaticamente ogni 7 giorni</small></div>
-        <div class="quiz-xp-rule">Ogni risposta uguale vale <b>+5 XP Bond</b> · massimo 50 XP per quiz.</div>
+        <div class="quiz-xp-rule">Ogni risposta uguale aggiunge <b>+5 XP</b> al percorso condiviso. Le risposte diverse non sono errori: diventano spunti da confrontare.</div>
         <div class="quiz-grid" id="weeklyQuizGrid" aria-live="polite"><div class="quiz-week-loading" aria-busy="true">Preparo i quiz della settimana…</div></div>
       </div>
       <div id="quizPlay" class="hidden"><div class="card"><div class="quiz-head"><div><span class="badge" id="quizCategory">PREFERENZE</span></div><div class="tiny"><span id="quizIndex">1</span>/10</div></div><div class="progress"><div id="quizProgress"></div></div><div class="qtext" id="quizQuestion" style="font-size:21px"></div><div class="tiny" id="quizWho">Rispondi per te. Il confronto resta nascosto fino alla fine.</div><div class="answers" id="quizAnswers"></div><button class="primary" id="quizNext" style="width:100%;margin-top:14px" onclick="nextQuiz()" disabled>Conferma</button></div></div>
-      <div id="quizResult" class="hidden"><div class="card" style="text-align:center"><div class="tiny">RISULTATO DEL SET</div><div class="score-ring" id="scoreRing" style="--score:0"><div class="score-inner"><div><b id="scoreValue">0/10</b><br><span>risposte uguali</span></div></div></div><div class="qtext" id="scoreText" style="font-size:19px">Ci stiamo ancora studiando 👀</div><div class="csub" id="scoreSub">Il risultato si sblocca solo quando entrambi hanno completato il set.</div><div class="quiz-xp-earned hidden" id="quizXpEarned"></div><div class="quiz-matches hidden" id="quizMatches"></div><button class="primary" style="width:100%;margin-top:16px" onclick="resetQuiz()">Scegli un altro quiz</button></div></div>
+      <div id="quizResult" class="hidden"><div class="card" style="text-align:center"><div class="tiny">COSA AVETE SCOPERTO</div><div class="score-ring" id="scoreRing" style="--score:0"><div class="score-inner"><div><b id="scoreValue">0/10</b><br><span>punti in comune</span></div></div></div><div class="qtext" id="scoreText" style="font-size:19px">Vediamo dove vi siete incontrati.</div><div class="csub" id="scoreSub">Il confronto si sblocca quando avete completato entrambi.</div><div class="quiz-xp-earned hidden" id="quizXpEarned"></div><div class="quiz-matches hidden" id="quizMatches"></div><button class="primary" style="width:100%;margin-top:16px" onclick="resetQuiz()">Scopri un altro quiz</button></div></div>
     </section>
   </main>
+
+  <main id="think" class="page fix5-legacy-page" aria-hidden="true"></main>
 </div>
 
-<nav class="nav" aria-label="Navigazione principale">
-<button class="active" data-page="home" onclick="go('home')"><span class="nicon">⌂</span>Home</button>
-<button data-page="moments" onclick="go('moments')"><span class="nicon">▧</span>Moments</button>
-<button data-page="quiz" onclick="openQuizHub()"><span class="nicon">◎</span>Quiz</button>
-<button data-page="bond" onclick="go('bond')"><span class="nicon">✦</span>Bond</button>
-<button data-page="think" onclick="go('think')"><span class="nicon">♡</span>Ti penso</button>
+<nav class="nav fix5-nav" aria-label="Navigazione principale">
+<button class="active" data-page="home" onclick="go('home')"><span class="nicon">◉</span>Oggi</button>
+<button data-page="bond" onclick="go('bond')"><span class="nicon">⌁</span>Noi</button>
+<button data-page="moments" onclick="go('moments')"><span class="nicon">▧</span>Ricordi</button>
+<button data-page="quiz" onclick="openQuizHub()"><span class="nicon">◇</span>Scopri</button>
 </nav>
 
 <div class="toast" id="toast" role="status" aria-live="polite">Salvato ♡</div>
@@ -160,4 +189,5 @@
 
 <script defer src="/app.js"></script>
 <script defer src="/fix4.js?v=fix4-20260820-1"></script>
+<script defer src="/fix5.js?v=fix5-20260820-1"></script>
 </body></html>

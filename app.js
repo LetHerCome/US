@@ -1,5 +1,5 @@
 const pages=['home','moments','quiz','bond','think'];
-const swipePages=['home','moments','quiz','bond','think'];
+const swipePages=['home','bond','moments','quiz'];
 function go(id,options={}){
   const current=document.querySelector('.page.active')?.id;
   if(current===id){
