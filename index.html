@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <meta name="theme-color" content="#0a0a0e"/>
 <meta name="color-scheme" content="dark"/>
-<meta name="us-build" content="fix4-identity1-20260820-1"/>
+<meta name="us-build" content="fix4-settings2-20260820-1"/>
 <link rel="manifest" href="/manifest.webmanifest?v=us-identity1"/>
 <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=us-identity1"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=us-identity1"/>
@@ -23,6 +23,7 @@
 <link rel="stylesheet" href="/games.css?v=us-couple-loop-1"/>
 <link rel="stylesheet" href="/settings.css?v=us-motion-pass-1"/>
 <link rel="stylesheet" href="/identity.css?v=us-identity1"/>
+<link rel="stylesheet" href="/settings2.css?v=us-settings2-1"/>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://iiakdfsxpywdkxravqjh.supabase.co" crossorigin>
 <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
@@ -130,29 +131,94 @@
   </main>
 
   <main id="settings" class="page">
-    <section class="section us-settings-page">
-      <div class="us-settings-head">
-        <div><div class="tiny">US.</div><h2>Impostazioni</h2><p>Le cose che riguardano questo telefono e il vostro spazio.</p></div>
-        <div class="us-settings-profile" id="usSettingsProfile">♡</div>
+    <section class="section us-settings-page us-settings2-page">
+      <div class="us-settings2-head">
+        <div>
+          <div class="tiny">IL VOSTRO SPAZIO</div>
+          <h2>Impostazioni</h2>
+          <p>Solo ciò che serve davvero a voi e a questo telefono.</p>
+        </div>
+        <div class="us-settings2-device-dot" id="usSettingsDeviceDot" aria-label="Stato sincronizzazione">•</div>
       </div>
 
-      <div class="us-settings-group">
-        <button type="button" class="us-setting-row" data-us-setting="widgets"><span class="us-setting-main"><b>Widget</b><small>Scriptable · KWGT</small></span><span class="us-setting-value">Configura</span><i>›</i></button>
-        <button type="button" class="us-setting-row" data-us-setting="story-archive"><span class="us-setting-main"><b>Archivio storie</b><small>Le storie scadute restano vostre</small></span><span class="us-setting-value" id="usStoryArchiveValue"></span><i>›</i></button>
-        <button type="button" class="us-setting-row" data-us-setting="distance"><span class="us-setting-main"><b>Unità di distanza</b><small>Distanza tra voi due</small></span><span class="us-setting-value" id="usDistanceUnitValue">chilometri</span><i>›</i></button>
-        <button type="button" class="us-setting-row" data-us-setting="location"><span class="us-setting-main"><b>Permesso di localizzazione</b><small>Serve solo per la distanza</small></span><span class="us-setting-state" id="usLocationState">…</span><i>›</i></button>
-        <button type="button" class="us-setting-row" data-us-setting="notifications"><span class="us-setting-main"><b>Notifiche</b><small>Today, Ti penso, Bond e ricorrenze</small></span><span class="us-setting-value" id="usNotificationsValue">…</span><i>›</i></button>
-        <button type="button" class="us-setting-row" data-us-setting="language"><span class="us-setting-main"><b>Lingua</b><small>Interfaccia di US</small></span><span class="us-setting-value">Italiano</span><i>›</i></button>
+      <article class="us-couple-id-card" id="usCoupleIdCard" aria-live="polite">
+        <div class="us-couple-id-top">
+          <div class="us-couple-avatars" id="usCoupleAvatars">
+            <span>F</span><span>B</span>
+          </div>
+          <div class="us-couple-id-copy">
+            <small>IL NOSTRO US</small>
+            <b id="usCoupleNames">Francesco + Beatrice</b>
+            <span id="usTogetherLine">Carico il vostro tempo insieme…</span>
+          </div>
+        </div>
+        <div class="us-couple-stats">
+          <span><b id="usSettingsBondLevel">—</b><small>Bond</small></span>
+          <span><b id="usSettingsMomentsCount">—</b><small>Moments</small></span>
+          <span><b id="usSettingsEventsCount">—</b><small>vissuti</small></span>
+        </div>
+      </article>
+
+      <div class="us-settings2-label">NOI</div>
+      <div class="us-settings2-group">
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="relationship-date">
+          <span class="us-settings2-icon" aria-hidden="true">21</span>
+          <span class="us-setting-main"><b>Data della relazione</b><small>Regola mesiversari, anniversari e giorni insieme</small></span>
+          <span class="us-setting-value" id="usRelationshipDateValue">…</span><i>›</i>
+        </button>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="home-photo">
+          <span class="us-settings2-icon us-settings2-photo-icon" aria-hidden="true">▧</span>
+          <span class="us-setting-main"><b>Foto Home</b><small>La Home pesca automaticamente dai vostri Moments</small></span>
+          <span class="us-setting-value">Gestisci</span><i>›</i>
+        </button>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="story-archive">
+          <span class="us-settings2-icon" aria-hidden="true">◷</span>
+          <span class="us-setting-main"><b>Archivio Stories</b><small>Rivedi le storie dopo le 24 ore</small></span>
+          <span class="us-setting-value" id="usStoryArchiveValue"></span><i>›</i>
+        </button>
       </div>
 
-      <div class="us-settings-group us-settings-secondary">
-        <button type="button" class="us-setting-row" data-us-setting="about"><span class="us-setting-main"><b>Chi siamo</b><small>Cos’è US.</small></span><i>›</i></button>
-        <button type="button" class="us-setting-row" data-us-setting="share"><span class="us-setting-main"><b>Condividi l’applicazione</b><small>Condividi il link di US</small></span><i>›</i></button>
-        <button type="button" class="us-setting-row" data-us-setting="privacy"><span class="us-setting-main"><b>Consensi e privacy</b><small>Posizione, foto e notifiche</small></span><i>›</i></button>
-        <button type="button" class="us-setting-row" data-us-setting="help"><span class="us-setting-main"><b>Aiuto</b><small>Le funzioni principali</small></span><i>›</i></button>
-        <button type="button" class="us-setting-row us-setting-danger" data-us-setting="logout"><span class="us-setting-main"><b>Esci</b><small>Scollega questo telefono</small></span><i>›</i></button>
+      <div class="us-settings2-label">QUESTO TELEFONO</div>
+      <div class="us-settings2-group">
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="notifications">
+          <span class="us-settings2-icon" aria-hidden="true">⌁</span>
+          <span class="us-setting-main"><b>Notifiche</b><small>Scegli cosa vuoi ricevere davvero</small></span>
+          <span class="us-setting-value" id="usNotificationsValue">…</span><i>›</i>
+        </button>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="distance">
+          <span class="us-settings2-icon" aria-hidden="true">↔</span>
+          <span class="us-setting-main"><b>Distanza</b><small>Unità usata nella Home</small></span>
+          <span class="us-setting-value" id="usDistanceUnitValue">km</span><i>›</i>
+        </button>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="location">
+          <span class="us-settings2-icon" aria-hidden="true">⌖</span>
+          <span class="us-setting-main"><b>Posizione</b><small>Serve solo per calcolare la distanza tra voi</small></span>
+          <span class="us-setting-state" id="usLocationState">…</span><i>›</i>
+        </button>
       </div>
-      <div class="us-settings-build" id="usSettingsBuild"></div>
+
+      <div class="us-settings2-label">STATO US</div>
+      <div class="us-settings2-group">
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="sync-status">
+          <span class="us-settings2-icon" aria-hidden="true">∞</span>
+          <span class="us-setting-main"><b>Sincronizzazione</b><small>Profili, rete, push e stato di questo dispositivo</small></span>
+          <span class="us-setting-value" id="usSyncValue">Controlla</span><i>›</i>
+        </button>
+        <div class="us-settings2-version-row">
+          <span class="us-settings2-icon us-settings2-brand-mini" aria-hidden="true">US</span>
+          <span><b>US 1.0</b><small id="usSettingsBuild">Build corrente</small></span>
+        </div>
+      </div>
+
+      <button type="button" class="us-settings2-disconnect" data-us-setting="logout">
+        Scollega questo telefono
+      </button>
+
+      <div class="us-settings2-footer">
+        <button type="button" data-us-setting="privacy">Privacy e dati</button>
+        <span>•</span>
+        <span>spazio privato condiviso</span>
+      </div>
     </section>
   </main>
 
@@ -273,7 +339,7 @@
 <script defer src="/fix4.js?v=fix4-20260820-1"></script>
 <script defer src="/events.js?v=us-couple-loop-1"></script>
 <script defer src="/games.js?v=us-couple-loop-1"></script>
-<script defer src="/settings.js?v=us-motion-pass-1"></script>
+<script defer src="/settings.js?v=us-settings2-1"></script>
 <script defer src="/identity.js?v=us-identity1"></script>
 <script defer src="/moments-albums.js?v=us-moments-visual-1"></script>
 <script defer src="/navigation.js?v=us-fastboot-back-1"></script>

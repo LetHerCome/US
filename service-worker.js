@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-identity1-1";
+const CACHE_NAME = "us-shell-settings2-1";
 
 const APP_SHELL = [
   "/",
@@ -17,6 +17,7 @@ const APP_SHELL = [
   "/settings.js",
   "/identity.css",
   "/identity.js",
+  "/settings2.css",
   "/version.json",
   "/manifest.webmanifest",
   "/icon-192.png",
