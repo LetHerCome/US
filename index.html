@@ -39,7 +39,7 @@
 </div>
 
 <div class="app">
-  <div class="top"><div class="brand-row"><div class="brand">Us<span class="heart">.</span></div><button type="button" class="today-orb" id="todayOrb" onclick="openToday()" aria-label="Apri Today"><span>◌</span><i id="todayOrbDot"></i></button></div><div class="top-actions"><div class="online-badge warn" id="onlineBadge">● connessione…</div><button type="button" class="profile-avatar" id="profileAvatarBtn" aria-label="Cambia foto profilo" onclick="pickProfilePhoto()"><img id="profileAvatarImg" alt="Foto profilo" hidden><span class="fallback" id="profileAvatarFallback">♡</span><span class="camera-dot">+</span></button><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
+  <div class="top"><div class="brand-row"><div class="brand">Us<span class="heart">.</span></div><button type="button" class="today-orb" id="todayOrb" onclick="openToday()" aria-label="Apri la domanda giornaliera"><span class="today-orb-mark">?</span><span class="today-orb-copy"><b>Oggi</b><small>Domanda</small></span><i id="todayOrbDot"></i></button></div><div class="top-actions"><div class="online-badge warn" id="onlineBadge">● connessione…</div><button type="button" class="profile-avatar" id="profileAvatarBtn" aria-label="Cambia foto profilo" onclick="pickProfilePhoto()"><img id="profileAvatarImg" alt="Foto profilo" hidden><span class="fallback" id="profileAvatarFallback">♡</span><span class="camera-dot">+</span></button><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
 
   <main id="home" class="page active">
     <section class="hero home-hero-only" id="homeHero" aria-label="Un vostro ricordo">
@@ -164,17 +164,13 @@
       </div>
 
       <div id="quizHub">
-        <p style="margin-top:0">Scegli una categoria. Ogni set ha 10 domande.</p>
-        <div class="quiz-grid">
-          <div class="quiz-cat" onclick="startQuiz('preferenze')"><div class="emoji">💜</div><b>Preferenze</b><small>Gusti, abitudini e piccole scelte.</small></div>
-          <div class="quiz-cat" onclick="startQuiz('noi')"><div class="emoji">❤️</div><b>Noi due</b><small>Ricordi e dettagli della relazione.</small></div>
-          <div class="quiz-cat" onclick="startQuiz('quotidiano')"><div class="emoji">☕</div><b>Quotidiano</b><small>Come vivete le piccole cose.</small></div>
-          <div class="quiz-cat" onclick="startQuiz('futuro')"><div class="emoji">✨</div><b>Futuro</b><small>Sogni, progetti e desideri.</small></div>
-          <div class="quiz-cat" onclick="startQuiz('comunicazione')"><div class="emoji">💬</div><b>Comunicazione</b><small>Come vi capite quando conta.</small></div>
-          <div class="quiz-cat" onclick="startQuiz('viaggi')"><div class="emoji">✈️</div><b>Viaggi</b><small>Il vostro modo ideale di partire.</small></div>
-          <div class="quiz-cat" onclick="startQuiz('intimita')"><div class="emoji">🫶</div><b>Intimità</b><small>Affetto, vicinanza e attenzioni.</small></div>
-          <div class="quiz-cat" onclick="startQuiz('nerd')"><div class="emoji">🎮</div><b>Nerd mode</b><small>Gaming, film, fantasy e serate.</small></div>
-          <div class="quiz-cat quiz-cat-wide" onclick="startQuiz('random')"><div class="emoji">🎲</div><b>Random</b><small>Domande assurde per scoprire cose nuove.</small></div>
+        <div class="quiz-week-card">
+          <div><span class="quiz-week-kicker">SETTIMANALE</span><b id="quizWeekLabel">I quiz di questa settimana</b></div>
+          <small id="quizWeekReset">Cambiano automaticamente ogni 7 giorni</small>
+        </div>
+        <div class="quiz-xp-rule">Ogni risposta uguale vale <b>+5 XP Bond</b> · massimo 50 XP per quiz.</div>
+        <div class="quiz-grid" id="weeklyQuizGrid">
+          <div class="quiz-week-loading">Preparo i quiz della settimana…</div>
         </div>
       </div>
 
@@ -196,10 +192,11 @@
         <div class="card" style="text-align:center">
           <div class="tiny">RISULTATO DEL SET</div>
           <div class="score-ring" id="scoreRing" style="--score:0">
-            <div class="score-inner"><div><b id="scoreValue">0/10</b><br><span>risposte allineate</span></div></div>
+            <div class="score-inner"><div><b id="scoreValue">0/10</b><br><span>risposte uguali</span></div></div>
           </div>
           <div class="qtext" id="scoreText" style="font-size:19px">Ci stiamo ancora studiando 👀</div>
           <div class="csub" id="scoreSub">Il risultato si sblocca solo quando entrambi hanno completato il set.</div>
+          <div class="quiz-xp-earned hidden" id="quizXpEarned"></div>
           <div class="quiz-matches hidden" id="quizMatches"></div>
           <button class="primary" style="width:100%;margin-top:16px" onclick="resetQuiz()">Scegli un altro quiz</button>
         </div>

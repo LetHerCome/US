@@ -24,7 +24,49 @@ function go(id,options={}){
 }
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700)}
 let quizCat='',quizPos=0,quizSelected=null,quizQuestions=[],quizSet=null,quizState=null;
-function openQuizHub(){go('quiz');resetQuiz()}
+let weeklyQuizSignature='',weeklyQuizWeekStart='',weeklyQuizTimer=null;
+const QUIZ_META={
+  preferenze:{emoji:'💜',desc:'Gusti, abitudini e piccole scelte.'},
+  noi:{emoji:'❤️',desc:'Ricordi e dettagli della relazione.'},
+  quotidiano:{emoji:'☕',desc:'Come vivete le piccole cose.'},
+  futuro:{emoji:'✨',desc:'Sogni, progetti e desideri.'},
+  comunicazione:{emoji:'💬',desc:'Come vi capite quando conta.'},
+  viaggi:{emoji:'✈️',desc:'Il vostro modo ideale di partire.'},
+  intimita:{emoji:'🫶',desc:'Affetto, vicinanza e attenzioni.'},
+  nerd:{emoji:'🎮',desc:'Gaming, film, fantasy e serate.'},
+  random:{emoji:'🎲',desc:'Domande imprevedibili per scoprirvi ancora.'}
+};
+function formatQuizWeekDate(value){
+  if(!value)return '';
+  return new Date(value+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'short'});
+}
+async function loadWeeklyQuizHub(force=false){
+  if(!window.usProfile)return;
+  const grid=document.getElementById('weeklyQuizGrid');
+  if(!grid)return;
+  try{
+    const {data,error}=await sb.rpc('get_weekly_quiz_sets');
+    if(error)throw error;
+    const sets=Array.isArray(data?.sets)?data.sets:[];
+    const signature=JSON.stringify([data?.week_start||'',sets.map(x=>x.slug)]);
+    if(!force&&signature===weeklyQuizSignature)return;
+    weeklyQuizSignature=signature;weeklyQuizWeekStart=data?.week_start||'';
+    const label=document.getElementById('quizWeekLabel');
+    const reset=document.getElementById('quizWeekReset');
+    if(label)label.textContent='Settimana del '+formatQuizWeekDate(data?.week_start);
+    if(reset)reset.textContent='Nuovi quiz il '+formatQuizWeekDate(data?.next_refresh)+' · stessi per entrambi';
+    if(!sets.length){grid.innerHTML='<div class="quiz-week-loading">Nessun quiz disponibile.</div>';return;}
+    grid.innerHTML=sets.map((set,index)=>{
+      const meta=QUIZ_META[set.slug]||{emoji:'◎',desc:'10 domande per conoscervi meglio.'};
+      return `<button type="button" class="quiz-cat weekly-quiz-card" style="--quiz-delay:${index*55}ms" onclick="startQuiz('${escapeHtml(set.slug)}')"><span class="quiz-week-number">0${index+1}</span><span class="emoji">${meta.emoji}</span><b>${escapeHtml(set.title)}</b><small>${escapeHtml(meta.desc)}</small><i>10 domande</i></button>`;
+    }).join('');
+  }catch(error){
+    console.warn(error);
+    grid.innerHTML='<div class="quiz-week-loading">Non riesco a caricare i quiz. Riprova tra poco.</div>';
+  }
+}
+window.loadWeeklyQuizHub=loadWeeklyQuizHub;
+function openQuizHub(){go('quiz');resetQuiz({reload:false});loadWeeklyQuizHub()}
 async function startQuiz(cat){
   if(!window.usProfile){toast('Sync non pronta');return;}
   quizCat=cat;quizPos=0;quizSelected=null;quizQuestions=[];quizSet=null;quizState=null;
@@ -43,18 +85,13 @@ async function startQuiz(cat){
     const {data:state,error:stateError}=await sb.rpc('get_quiz_state',{target_set_id:set.id});
     if(stateError) throw stateError;
     quizState=state;
-    if(state?.my_complete){
-      showQuizState(state,false);
-      return;
-    }
+    if(state?.my_complete){showQuizState(state,false);return;}
     const mine=state?.my_answers||{};
     const first=quizQuestions.findIndex(q=>mine[String(q.id)]===undefined);
     quizPos=first>=0?first:0;
     renderQuiz();
   }catch(e){
-    console.warn(e);
-    resetQuiz();
-    toast('Errore caricamento quiz');
+    console.warn(e);resetQuiz();toast('Errore caricamento quiz');
   }
 }
 function renderQuiz(){
@@ -82,44 +119,49 @@ async function nextQuiz(){
   if(error){console.warn(error);toast('Errore sync quiz');renderQuiz();return;}
   const {data:state,error:stateError}=await sb.rpc('get_quiz_state',{target_set_id:quizSet.id});
   if(stateError){console.warn(stateError);toast('Errore stato quiz');renderQuiz();return;}
-  quizState=state;
-  updateHomeStatus();
+  quizState=state;updateHomeStatus();
   if(state.my_complete){showQuizState(state,true);return;}
   const mine=state.my_answers||{};
   const next=quizQuestions.findIndex((q,i)=>i>quizPos && mine[String(q.id)]===undefined);
   const any=quizQuestions.findIndex(q=>mine[String(q.id)]===undefined);
-  quizPos=next>=0?next:any;
-  renderQuiz();
+  quizPos=next>=0?next:any;renderQuiz();
 }
-function renderQuizMatches(state){
-  const root=document.getElementById('quizMatches');
-  if(!root)return;
-  const mine=state?.my_answers||{};
-  const partner=state?.partner_answers||{};
-  const matches=(quizQuestions||[]).filter(q=>mine[String(q.id)]!==undefined&&mine[String(q.id)]===partner[String(q.id)]);
-  if(!matches.length){root.classList.remove('hidden');root.innerHTML='<div class="quiz-match-empty">Nessuna risposta identica in questo set. Almeno ora sapete dove siete diversi 👀</div>';return;}
+function renderQuizDifferences(state){
+  const root=document.getElementById('quizMatches');if(!root)return;
+  const mine=state?.my_answers||{},partner=state?.partner_answers||{};
+  const different=(quizQuestions||[]).filter(q=>mine[String(q.id)]!==undefined&&partner[String(q.id)]!==undefined&&mine[String(q.id)]!==partner[String(q.id)]);
   root.classList.remove('hidden');
-  root.innerHTML='<div class="quiz-match-title">Le vostre risposte uguali</div>'+matches.map(q=>{const idx=Number(mine[String(q.id)]);const answer=(q.options||[])[idx]??'—';return `<article class="quiz-match"><small>${escapeHtml(q.question)}</small><b>♡ ${escapeHtml(String(answer))}</b></article>`;}).join('');
+  if(!different.length){root.innerHTML='<div class="quiz-match-empty">Avete risposto uguale a tutto. Nessuna risposta diversa da mostrare ♡</div>';return;}
+  const partnerName=window.usProfile?.role==='francesco'?'Bea':'Francesco';
+  root.innerHTML='<div class="quiz-match-title">Dove avete risposto diversamente</div>'+different.map(q=>{
+    const myIdx=Number(mine[String(q.id)]),partnerIdx=Number(partner[String(q.id)]);
+    const myAnswer=(q.options||[])[myIdx]??'—',partnerAnswer=(q.options||[])[partnerIdx]??'—';
+    return `<article class="quiz-match quiz-difference"><small>${escapeHtml(q.question)}</small><div><span>Tu</span><b>${escapeHtml(String(myAnswer))}</b></div><div><span>${escapeHtml(partnerName)}</span><b>${escapeHtml(String(partnerAnswer))}</b></div></article>`;
+  }).join('');
 }
-
 function showQuizState(state,notify=false){
   document.getElementById('quizPlay').classList.add('hidden');
   document.getElementById('quizResult').classList.remove('hidden');
+  const xpRoot=document.getElementById('quizXpEarned');
   if(state.both_complete){
-    const score=Number(state.score||0),total=Number(state.total||10);
+    const score=Number(state.score||0),total=Number(state.total||10),xp=Number(state.xp_awarded||0);
     document.getElementById('scoreValue').textContent=score+'/'+total;
     document.getElementById('scoreRing').style.setProperty('--score',Math.round(score/total*100));
     document.getElementById('scoreText').textContent=score>=9?'Siete praticamente sincronizzati 😏':score>=7?'Molto allineati ❤️':score>=5?'Niente male, ma avete ancora cose da scoprire 👀':'Due teste, parecchie sorprese 😂';
-    document.getElementById('scoreSub').textContent='Avete completato entrambi il set. Qui sotto trovi le risposte che avete scelto uguali.';
-    renderQuizMatches(state);
-    if(notify) toast('Confronto sbloccato ♡');
+    document.getElementById('scoreSub').textContent='Ogni risposta uguale vale 5 XP. Qui sotto mostro solo dove avete risposto diversamente.';
+    if(xpRoot){xpRoot.classList.remove('hidden');xpRoot.innerHTML=`<span>✦</span><b>+${xp} XP Bond</b><small>${score} risposte uguali</small>`;}
+    renderQuizDifferences(state);
+    if(typeof hydrateBondSummary==='function')hydrateBondSummary();
+    if(notify&&state.reward_granted_now)toast(`+${xp} XP Bond ✦`);
+    else if(notify)toast('Confronto sbloccato ♡');
   }else{
     document.getElementById('scoreValue').textContent='✓';
     document.getElementById('scoreRing').style.setProperty('--score',100);
     document.getElementById('scoreText').textContent='Hai completato il set ♡';
     const matches=document.getElementById('quizMatches');if(matches){matches.classList.add('hidden');matches.innerHTML='';}
+    if(xpRoot){xpRoot.classList.add('hidden');xpRoot.innerHTML='';}
     const partner=window.usProfile?.role==='francesco'?'Bea':'Francesco';
-    document.getElementById('scoreSub').textContent='Ora aspettiamo '+partner+'. Il risultato resta nascosto finché non completa anche '+partner+'.';
+    document.getElementById('scoreSub').textContent='Ora aspettiamo '+partner+'. Il risultato e gli XP si sbloccano quando completa anche '+partner+'.';
   }
 }
 async function refreshQuizState(){
@@ -128,15 +170,26 @@ async function refreshQuizState(){
   if(!resultVisible)return;
   const wasBoth=Boolean(quizState?.both_complete);
   const {data:state}=await sb.rpc('get_quiz_state',{target_set_id:quizSet.id});
-  if(state){quizState=state;showQuizState(state,!wasBoth && Boolean(state.both_complete));updateHomeStatus();}
+  if(state){quizState=state;showQuizState(state,!wasBoth&&Boolean(state.both_complete));updateHomeStatus();}
 }
-function resetQuiz(){
+function resetQuiz(options={}){
   quizSet=null;quizQuestions=[];quizState=null;quizPos=0;quizSelected=null;
   const matches=document.getElementById('quizMatches');if(matches){matches.classList.add('hidden');matches.innerHTML='';}
+  const xpRoot=document.getElementById('quizXpEarned');if(xpRoot){xpRoot.classList.add('hidden');xpRoot.innerHTML='';}
   document.getElementById('quizHub').classList.remove('hidden');
   document.getElementById('quizPlay').classList.add('hidden');
   document.getElementById('quizResult').classList.add('hidden');
+  if(options.reload!==false)loadWeeklyQuizHub();
 }
+function startWeeklyQuizRefresh(){
+  if(weeklyQuizTimer)clearInterval(weeklyQuizTimer);
+  weeklyQuizTimer=setInterval(()=>{
+    if(document.hidden||!window.usProfile)return;
+    if(document.getElementById('quiz')?.classList.contains('active')&&!document.getElementById('quizHub')?.classList.contains('hidden'))loadWeeklyQuizHub();
+  },15*60*1000);
+}
+startWeeklyQuizRefresh();
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&document.getElementById('quiz')?.classList.contains('active'))loadWeeklyQuizHub();});
 
 function updateTogetherDays(){
   const start = new Date('2026-04-21T00:00:00');
