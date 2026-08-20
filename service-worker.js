@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-final-polish-motion31-1";
+const CACHE_NAME = "us-shell-update-loop-fix-1";
 
 const APP_SHELL = [
   "/",
@@ -310,8 +310,30 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // A PWA cold launch should not wait for a network round-trip just to paint.
-  // Serve the cached document first; update it in the background.
+  // Explicit update requests MUST bypass the cached document.
+  // fix4.js calls /?us-refresh=<timestamp> after registration.update().
+  // Previously this branch still returned cached index.html, causing:
+  // old BUILD -> new version.json -> update banner -> reload -> old BUILD -> loop.
+  if (request.mode === "navigate" && url.searchParams.has("us-refresh")) {
+    event.respondWith((async () => {
+      try {
+        const response = await fetch(request, {
+          cache: "no-store",
+          headers: { "Cache-Control": "no-cache" }
+        });
+        if (!response.ok) throw new Error("refresh navigation failed");
+
+        const cache = await caches.open(CACHE_NAME);
+        await cache.put("/index.html", response.clone());
+        return response;
+      } catch (_) {
+        return (await caches.match("/index.html")) || Response.error();
+      }
+    })());
+    return;
+  }
+
+  // Normal cold launch remains cache-first for speed.
   if (request.mode === "navigate") {
     event.respondWith((async () => {
       const cached = await caches.match("/index.html");
