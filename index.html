@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<meta name="theme-color" content="#0d0f14"/>
+<meta name="theme-color" content="#0a0a0e"/>
 <meta name="color-scheme" content="dark"/>
-<meta name="us-build" content="fix4-motion-pass-20260820-1"/>
-<link rel="manifest" href="/manifest.webmanifest?v=fix4-20260820-1"/>
-<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=fix4-20260820-1"/>
-<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=fix4-20260820-1"/>
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=fix4-20260820-1"/>
+<meta name="us-build" content="fix4-identity1-20260820-1"/>
+<link rel="manifest" href="/manifest.webmanifest?v=us-identity1"/>
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=us-identity1"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=us-identity1"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=us-identity1"/>
 <meta name="application-name" content="US"/>
 <meta name="apple-mobile-web-app-title" content="US"/>
 <meta name="mobile-web-app-capable" content="yes"/>
@@ -22,6 +22,7 @@
 <link rel="stylesheet" href="/moments-albums.css?v=us-moments-visual-1"/>
 <link rel="stylesheet" href="/games.css?v=us-couple-loop-1"/>
 <link rel="stylesheet" href="/settings.css?v=us-motion-pass-1"/>
+<link rel="stylesheet" href="/identity.css?v=us-identity1"/>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://iiakdfsxpywdkxravqjh.supabase.co" crossorigin>
 <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
@@ -33,7 +34,7 @@
 
 <div class="auth-overlay" id="authOverlay">
   <div class="auth-card">
-    <div class="auth-logo">US<span class="heart">.</span></div>
+    <div class="auth-logo us-wordmark" aria-label="US"><span class="us-wordmark-letters">US</span><span class="us-wordmark-dot" aria-hidden="true"><i></i><i></i></span></div>
     <div class="auth-step active" id="authPair">
       <div class="tiny">SPAZIO PRIVATO</div>
       <h2>Chi sei?</h2>
@@ -50,7 +51,7 @@
 </div>
 
 <div class="app">
-  <div class="top"><div class="brand-row"><div class="brand">US<span class="heart">.</span></div><button type="button" class="today-orb" id="todayOrb" onclick="openToday()" aria-label="Apri la domanda giornaliera"><span class="today-orb-mark">?</span><span class="today-orb-copy"><b>Oggi</b><small>Domanda</small></span><i id="todayOrbDot"></i></button></div><div class="top-actions"><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><button type="button" class="us-calendar-btn" id="usCalendarBtn" onclick="openEvents()" aria-label="Apri eventi condivisi">
+  <div class="top"><div class="brand-row"><div class="brand us-wordmark" aria-label="US"><span class="us-wordmark-letters">US</span><span class="us-wordmark-dot" aria-hidden="true"><i></i><i></i></span></div><button type="button" class="today-orb" id="todayOrb" onclick="openToday()" aria-label="Apri la domanda giornaliera"><span class="today-orb-mark">?</span><span class="today-orb-copy"><b>Oggi</b><small>Domanda</small></span><i id="todayOrbDot"></i></button></div><div class="top-actions"><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><button type="button" class="us-calendar-btn" id="usCalendarBtn" onclick="openEvents()" aria-label="Apri eventi condivisi">
   <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="15" rx="4"></rect><path d="M7.5 3.5v4M16.5 3.5v4M3.5 10h17"></path></svg>
   <i id="usCalendarDot" hidden></i>
 </button><button type="button" class="profile-avatar" id="profileAvatarBtn" aria-label="Cambia foto profilo" onclick="pickProfilePhoto()"><img id="profileAvatarImg" alt="Foto profilo" hidden><span class="fallback" id="profileAvatarFallback">♡</span><span class="camera-dot">+</span></button><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
@@ -172,12 +173,22 @@
 
 <button type="button" id="thinkButton" class="us-floating-think" onclick="sendThinkSignal()" aria-label="Invia Ti penso" title="Ti penso"><span class="us-floating-think-ring"></span><span>♡</span></button>
 
-<nav class="nav" aria-label="Navigazione principale">
-<button class="active" data-page="home" onclick="go('home')"><span class="nicon">⌂</span>Home</button>
-<button data-page="moments" onclick="go('moments')"><span class="nicon">▧</span>Moments</button>
-<button data-page="quiz" onclick="openQuizHub()"><span class="nicon">◎</span>Quiz</button>
-<button data-page="bond" onclick="go('bond')"><span class="nicon">✦</span>Bond</button>
-<button data-page="settings" onclick="go('settings')"><span class="nicon">⚙</span>Impostazioni</button>
+<nav class="nav us-nav" aria-label="Navigazione principale">
+<button class="active" data-page="home" onclick="go('home')" aria-label="Home">
+  <span class="nicon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 10.4 12 4.2l7.5 6.2v8.1a1.3 1.3 0 0 1-1.3 1.3H5.8a1.3 1.3 0 0 1-1.3-1.3z"/><path d="M9.2 19.8v-5.5h5.6v5.5"/><circle cx="18.4" cy="6.4" r="1.15" class="us-icon-dot"/></svg></span><span class="nlabel">Home</span>
+</button>
+<button data-page="moments" onclick="go('moments')" aria-label="Moments">
+  <span class="nicon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.2" y="6.4" width="12.6" height="13" rx="2.8"/><path d="M8 6.4V5.8A2.2 2.2 0 0 1 10.2 3.6h7.6A2.2 2.2 0 0 1 20 5.8v8.1a2.2 2.2 0 0 1-2.2 2.2h-1"/><circle cx="8.4" cy="10.4" r="1.25"/><path d="m6.2 17 3.6-3.6 2.3 2.2 1.7-1.7 3 3.1"/></svg></span><span class="nlabel">Moments</span>
+</button>
+<button data-page="quiz" onclick="openQuizHub()" aria-label="Quiz">
+  <span class="nicon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.2 5.4h10.2a3 3 0 0 1 3 3v3.5a3 3 0 0 1-3 3H9l-3.5 3v-3.2a2.5 2.5 0 0 1-1.3-2.2z"/><path d="M10.2 17.1h4.7l3.5 2.8v-3.3a2.7 2.7 0 0 0 1.4-2.3V11"/><circle cx="8.3" cy="10.1" r=".75"/><circle cx="11" cy="10.1" r=".75"/><circle cx="13.7" cy="10.1" r=".75"/></svg></span><span class="nlabel">Quiz</span>
+</button>
+<button data-page="bond" onclick="go('bond')" aria-label="Bond">
+  <span class="nicon us-bond-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9.1" cy="12" r="5.2"/><circle cx="14.9" cy="12" r="5.2"/><circle cx="19.4" cy="18.6" r="1.05" class="us-icon-dot"/></svg></span><span class="nlabel">Bond</span>
+</button>
+<button data-page="settings" onclick="go('settings')" aria-label="Impostazioni">
+  <span class="nicon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14M5 12h14M5 17.5h14"/><circle cx="9" cy="6.5" r="1.9"/><circle cx="15.4" cy="12" r="1.9"/><circle cx="10.8" cy="17.5" r="1.9"/></svg></span><span class="nlabel">Impostazioni</span>
+</button>
 </nav>
 
 
@@ -263,6 +274,7 @@
 <script defer src="/events.js?v=us-couple-loop-1"></script>
 <script defer src="/games.js?v=us-couple-loop-1"></script>
 <script defer src="/settings.js?v=us-motion-pass-1"></script>
+<script defer src="/identity.js?v=us-identity1"></script>
 <script defer src="/moments-albums.js?v=us-moments-visual-1"></script>
 <script defer src="/navigation.js?v=us-fastboot-back-1"></script>
 </body></html>

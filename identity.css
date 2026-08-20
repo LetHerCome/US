@@ -1,0 +1,299 @@
+/* =========================================================
+   US · Identity 1
+   A shared private space, not a generic "couple app".
+   ========================================================= */
+
+:root{
+  --bg:#090a0e;
+  --card:#11131a;
+  --card2:#161921;
+  --text:#f3f1ed;
+  --muted:#918d99;
+  --pink:#e88aa2;
+  --pink2:#f0a0b4;
+  --violet:#8f86c8;
+  --accent:#d5a7a3;
+  --green:#72c998;
+  --border:rgba(255,255,255,.075);
+  --shadow:0 18px 50px rgba(0,0,0,.34);
+
+  --us-bg:#090a0e;
+  --us-surface:#11131a;
+  --us-surface-2:#161921;
+  --us-ink:#f3f1ed;
+  --us-muted:#918d99;
+  --us-pink:#e88aa2;
+  --us-violet:#8f86c8;
+  --us-paper:#e9e2d5;
+  --us-line:rgba(255,255,255,.075);
+  --us-serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --us-sans:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+  --us-accent-gradient:linear-gradient(135deg,#e88aa2 0%,#b98dbb 50%,#8f86c8 100%);
+}
+
+html,body{
+  background:
+    radial-gradient(circle at 18% -6%,rgba(232,138,162,.075),transparent 31%),
+    radial-gradient(circle at 92% 5%,rgba(143,134,200,.06),transparent 26%),
+    var(--us-bg)!important;
+  color:var(--us-ink)!important;
+  font-family:var(--us-sans)!important;
+  letter-spacing:-.006em;
+}
+
+/* --- Wordmark --------------------------------------------------- */
+.us-wordmark{
+  display:inline-flex!important;
+  align-items:baseline;
+  gap:4px;
+  width:auto!important;
+  color:var(--us-ink);
+  font-family:var(--us-serif)!important;
+  font-style:italic;
+  font-weight:600!important;
+  line-height:1;
+  letter-spacing:-1.6px!important;
+}
+.brand.us-wordmark{font-size:31px!important}
+.auth-logo.us-wordmark{font-size:42px!important;margin-bottom:11px}
+.us-wordmark-letters{display:inline-block}
+.us-wordmark-dot{
+  position:relative;
+  display:inline-block;
+  width:10px;
+  height:10px;
+  transform:translateY(1px);
+}
+.us-wordmark-dot i{
+  position:absolute;
+  bottom:0;
+  width:6.5px;
+  height:6.5px;
+  border-radius:50%;
+}
+.us-wordmark-dot i:first-child{left:0;background:var(--us-pink)}
+.us-wordmark-dot i:last-child{right:0;background:var(--us-violet);mix-blend-mode:screen}
+.us-wordmark-dot::after{
+  content:"";
+  position:absolute;
+  width:2.4px;height:2.4px;border-radius:50%;
+  left:3.8px;bottom:2.1px;background:#f5f1ea;
+  box-shadow:0 0 7px rgba(255,255,255,.2);
+}
+
+/* --- Core palette cleanup -------------------------------------- */
+.card,
+.sync-card,
+.auth-card{
+  background:linear-gradient(180deg,var(--us-surface-2),var(--us-surface))!important;
+  border-color:var(--us-line)!important;
+}
+.primary,
+.answer-btn.selected{
+  background:var(--us-accent-gradient)!important;
+  color:#fff!important;
+}
+.fill,
+.progress>div,
+.bond-xp-track>div{
+  background:var(--us-accent-gradient)!important;
+}
+.qtag,.heart,.coming-tag{color:var(--us-pink)!important}
+textarea,input{
+  background:#0d0f14!important;
+  border-color:var(--us-line)!important;
+}
+.tiny{
+  color:var(--us-muted)!important;
+  letter-spacing:.105em;
+  font-weight:650;
+}
+
+/* Main titles share one hierarchy. Moments keeps its journal voice. */
+.section>h2,
+.quiz-head h2,
+.bond-page-head h2,
+.us-settings-head h2{
+  letter-spacing:-.42px!important;
+  font-weight:690!important;
+}
+.us-moments-head h2,
+.us-album-section-head h3,
+.us-album-caption-postit p{
+  font-family:var(--us-serif)!important;
+}
+
+/* --- Top chrome ------------------------------------------------- */
+.top{
+  border-bottom:1px solid rgba(255,255,255,.035);
+}
+.online-badge{
+  letter-spacing:.015em;
+}
+.today-orb,
+.us-calendar-btn{
+  background:rgba(255,255,255,.045)!important;
+  border-color:rgba(255,255,255,.085)!important;
+}
+.today-orb-mark{
+  color:var(--us-pink)!important;
+}
+.us-calendar-btn i{
+  background:var(--us-pink)!important;
+}
+
+/* --- Signature nav icon family --------------------------------- */
+.us-nav{
+  background:rgba(9,10,14,.88)!important;
+  border-top:1px solid rgba(255,255,255,.065)!important;
+  box-shadow:0 -14px 40px rgba(0,0,0,.17);
+}
+.us-nav button{
+  position:relative;
+  color:#74727d!important;
+  padding:6px 2px 5px!important;
+  border-radius:15px!important;
+  transition:color .18s ease,transform .16s ease,background .18s ease!important;
+}
+.us-nav button:active{transform:scale(.95)}
+.us-nav button .nicon{
+  width:30px;
+  height:27px;
+  margin:0 auto 3px!important;
+  border-radius:11px;
+  display:grid!important;
+  place-items:center;
+  font-size:0!important;
+  transition:background .18s ease,transform .18s ease,box-shadow .18s ease;
+}
+.us-nav .nicon svg{
+  width:21px;height:21px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.65;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  overflow:visible;
+}
+.us-nav .nicon svg .us-icon-dot{
+  fill:currentColor;
+  stroke:none;
+}
+.us-nav .nlabel{
+  display:block;
+  font-size:9px;
+  font-weight:660;
+  letter-spacing:-.01em;
+  white-space:nowrap;
+}
+.us-nav button.active{
+  color:var(--us-ink)!important;
+  background:transparent!important;
+}
+.us-nav button.active .nicon{
+  background:
+    linear-gradient(135deg,rgba(232,138,162,.13),rgba(143,134,200,.12)),
+    rgba(255,255,255,.025);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.07);
+  transform:translateY(-1px);
+}
+.us-nav button.active .nicon svg{
+  stroke:var(--us-ink);
+}
+.us-nav button.active .us-icon-dot{
+  fill:var(--us-pink)!important;
+}
+.us-nav button.active::after{
+  content:"";
+  position:absolute;
+  left:50%;bottom:0;
+  width:3px;height:3px;border-radius:50%;
+  transform:translateX(-50%);
+  background:var(--us-pink);
+  opacity:.82;
+}
+
+/* Bond deliberately uses the app's "two loops" mark. */
+.us-nav .us-bond-icon svg circle:first-child{stroke:var(--us-pink)}
+.us-nav .us-bond-icon svg circle:nth-child(2){stroke:var(--us-violet)}
+.us-nav button:not(.active) .us-bond-icon svg circle:first-child,
+.us-nav button:not(.active) .us-bond-icon svg circle:nth-child(2){
+  stroke:currentColor;
+}
+
+/* --- Signature loading mark ------------------------------------ */
+.us-id-loader{
+  position:relative;
+  width:34px;height:20px;
+  display:inline-block;
+  margin:0 auto 9px;
+}
+.us-id-loader i{
+  position:absolute;
+  top:3px;
+  width:14px;height:14px;
+  border:1.7px solid;
+  border-radius:50%;
+  animation:usLoopMeet 1.18s cubic-bezier(.55,.05,.35,1) infinite;
+}
+.us-id-loader i:first-child{
+  left:3px;border-color:var(--us-pink);
+}
+.us-id-loader i:nth-child(2){
+  right:3px;border-color:var(--us-violet);
+  animation-delay:-.59s;
+}
+.us-id-loader b{
+  position:absolute;
+  right:0;bottom:0;
+  width:3px;height:3px;border-radius:50%;
+  background:#f3f1ed;
+  opacity:.72;
+}
+@keyframes usLoopMeet{
+  0%,100%{transform:translateX(0) scale(.92);opacity:.48}
+  50%{transform:translateX(3px) scale(1.03);opacity:1}
+}
+.empty-state[aria-busy="true"]>.emoji{display:none!important}
+.empty-state[aria-busy="true"]>.us-id-loader,
+.quiz-week-loading[aria-busy="true"]>.us-id-loader{
+  display:block;
+}
+
+/* --- Common emotional feedback --------------------------------- */
+.toast{
+  background:#f1eee8!important;
+  color:#16171c!important;
+  box-shadow:0 12px 32px rgba(0,0,0,.24)!important;
+}
+.us-floating-think{
+  color:var(--us-pink)!important;
+  background:rgba(15,16,22,.82)!important;
+  border-color:rgba(232,138,162,.16)!important;
+}
+.us-floating-think-ring{
+  border-color:rgba(232,138,162,.22)!important;
+}
+
+/* Photo journal retains the warm-paper signature. */
+#moments .moment-card.moment-postit,
+.us-album-photo-card,
+.us-album-caption-postit{
+  background-color:var(--us-paper)!important;
+}
+
+/* --- Selection / focus ----------------------------------------- */
+button:focus-visible,
+[role="button"]:focus-visible{
+  outline:2px solid rgba(232,138,162,.62)!important;
+  outline-offset:2px;
+}
+
+@media(max-width:360px){
+  .brand.us-wordmark{font-size:29px!important}
+  .us-nav .nlabel{font-size:8.5px}
+  .us-nav button .nicon{width:28px}
+}
+@media(prefers-reduced-motion:reduce){
+  .us-id-loader i{animation:none!important}
+}
