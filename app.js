@@ -564,17 +564,13 @@ async function initCloud(){
     // A returning PWA can briefly report no session while its durable
     // IndexedDB storage is warming. Never flash the pairing UI for that race.
     if(!session&&cachedDeviceProfile){
-      await new Promise(resolve=>setTimeout(resolve,220));
+      // Cold PWA launch: give durable storage time to resolve, but never force
+      // refreshSession here. Supabase auto-refresh + its lock own token rotation.
+      await new Promise(resolve=>setTimeout(resolve,420));
       try{
         const retry=await sb.auth.getSession();
         session=retry?.data?.session||null;
       }catch(_e){}
-      if(!session){
-        try{
-          const refreshed=await sb.auth.refreshSession();
-          session=refreshed?.data?.session||null;
-        }catch(_e){}
-      }
     }
 
     if(!session){

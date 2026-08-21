@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-fastboot2-1";
+const CACHE_NAME = "us-shell-auth-session-fix-1";
 const MEDIA_CACHE_NAME = "us-private-media-v1";
 
 const APP_SHELL = [
@@ -105,45 +105,77 @@ const AUTH_BOOTSTRAP = `
     });
   }
 
+  function sessionExpiry(value) {
+    if (!value) return 0;
+    try {
+      const parsed = JSON.parse(value);
+      const expires = Number(
+        parsed?.expires_at ||
+        parsed?.currentSession?.expires_at ||
+        parsed?.session?.expires_at ||
+        0
+      );
+      return Number.isFinite(expires) ? expires : 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  function readLegacyLocal(key) {
+    try { return window.localStorage.getItem(key); }
+    catch (_) { return null; }
+  }
+
+  function clearLegacyLocal(key) {
+    try { window.localStorage.removeItem(key); } catch (_) {}
+  }
+
   const durableAuthStorage = {
     async getItem(key) {
-      try {
-        const value = await idbGet(key);
-        if (value !== null) return value;
-      } catch (_) {}
+      let idbValue = null;
+      let localValue = null;
+      try { idbValue = await idbGet(key); } catch (_) {}
+      localValue = readLegacyLocal(key);
 
-      try {
-        const legacyValue = window.localStorage.getItem(key);
-        if (legacyValue !== null) {
-          idbSet(key, legacyValue).catch(() => {});
-          return legacyValue;
+      let chosen = idbValue;
+      if (
+        localValue !== null &&
+        (idbValue === null || sessionExpiry(localValue) > sessionExpiry(idbValue))
+      ) {
+        chosen = localValue;
+      }
+
+      if (chosen !== null) {
+        try {
+          await idbSet(key, chosen);
+          clearLegacyLocal(key);
+        } catch (_) {
+          try { window.localStorage.setItem(key, chosen); } catch (_) {}
         }
-      } catch (_) {}
-
+        return chosen;
+      }
       return null;
     },
 
     async setItem(key, value) {
-      let persisted = false;
-
       try {
         await idbSet(key, value);
-        persisted = true;
+        // One canonical rotating-token copy: avoid stale refresh-token replay.
+        clearLegacyLocal(key);
+        return;
       } catch (_) {}
 
       try {
         window.localStorage.setItem(key, value);
-        persisted = true;
+        return;
       } catch (_) {}
 
-      if (!persisted) {
-        throw new Error('Unable to persist US auth session');
-      }
+      throw new Error('Unable to persist US auth session');
     },
 
     async removeItem(key) {
       try { await idbRemove(key); } catch (_) {}
-      try { window.localStorage.removeItem(key); } catch (_) {}
+      clearLegacyLocal(key);
     }
   };
 
