@@ -243,7 +243,14 @@ updateTogetherDays();
 
 const SB_URL = 'https://iiakdfsxpywdkxravqjh.supabase.co';
 const SB_KEY = 'sb_publishable_JAB6USqhccAUg8_0ujgQ1A_NkRJRv_A';
-const sb = window.supabase.createClient(SB_URL, SB_KEY);
+const sb = window.supabase.createClient(SB_URL, SB_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storage: window.usDurableAuthStorage
+  }
+});
 
 const US_SIGNED_URL_CACHE=new Map();
 const US_SIGNED_URL_SKEW_MS=5*60*1000;
@@ -2245,3 +2252,9 @@ if ("serviceWorker" in navigator) {
 
 
 document.addEventListener('keydown',(event)=>{if(event.key==='Escape')closeToday();});
+
+(() => {
+  if (window.__usFastRefreshV19Installed) return;
+  window.__usFastRefreshV19Installed = true;
+  console.info('[US Sync] legacy polling 3s disattivato · Performance 1');
+})();
