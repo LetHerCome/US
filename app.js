@@ -328,6 +328,7 @@ window.usGetSignedUrls=usGetSignedUrls;
 // ===== US v20 · Web Push Foundation =====
 const US_VAPID_PUBLIC_KEY='BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss';
 let usPushUiBusy=false;
+let usPushOperationInFlight=null;
 let usPendingPushTarget=null;
 
 function isIosDevice(){return /iphone|ipad|ipod/i.test(navigator.userAgent||'');}
@@ -433,7 +434,11 @@ async function enableWebPush(){
   if(usPushUiBusy||!window.usProfile)return;
   if(!isWebPushSupported())return toast('Notifiche non supportate su questo browser');
   if(isIosDevice()&&!isStandaloneUs())return refreshWebPushUi();
-  const button=document.getElementById('pushEnableBtn');usPushUiBusy=true;if(button){button.disabled=true;button.textContent='Attivo…';}
+  const button=document.getElementById('pushEnableBtn');
+  let finishOperation;
+  const operationDone=new Promise(resolve=>{finishOperation=resolve;});
+  usPushOperationInFlight=operationDone;
+  usPushUiBusy=true;if(button){button.disabled=true;button.textContent='Attivo…';}
   try{
     let permission=Notification.permission;
     if(permission==='default')permission=await Notification.requestPermission();
@@ -450,24 +455,48 @@ async function enableWebPush(){
     await refreshWebPushUi();
     setTimeout(()=>sendWebPushEvent('test'),350);
   }catch(error){console.warn('[US Push] enable failed',error);toast('Non riesco ad attivare le notifiche');await refreshWebPushUi();}
-  finally{usPushUiBusy=false;if(button)button.disabled=false;}
+  finally{
+    usPushUiBusy=false;if(button)button.disabled=false;
+    if(usPushOperationInFlight===operationDone)usPushOperationInFlight=null;
+    finishOperation();
+  }
 }
 window.enableWebPush=enableWebPush;
 
-async function disableWebPush(){
-  if(usPushUiBusy)return;usPushUiBusy=true;
+async function disableWebPush(options={}){
+  const silent=options?.silent===true;
+  if(silent&&usPushOperationInFlight)try{await usPushOperationInFlight;}catch(_e){}
+  if(usPushUiBusy)return false;
+  let finishOperation;
+  const operationDone=new Promise(resolve=>{finishOperation=resolve;});
+  usPushOperationInFlight=operationDone;
+  usPushUiBusy=true;
+  const refreshUi=options?.refreshUi!==false;
+  const profileId=options?.profileId||window.usProfile?.id||'';
+  let subscription=null;
+  let disableFailed=false;
   try{
-    const subscription=await getCurrentPushSubscription();
+    subscription=await getCurrentPushSubscription();
     if(subscription){
-      const endpoint=subscription.endpoint;
-      const {error}=await sb.rpc('remove_web_push_subscription',{target_endpoint:endpoint});
-      if(error)console.warn('[US Push] remove subscription',error);
-      await subscription.unsubscribe().catch(()=>false);
+      try{
+        const {error}=await sb.rpc('remove_web_push_subscription',{target_endpoint:subscription.endpoint});
+        if(error)console.warn('[US Push] remove subscription',error);
+      }catch(error){disableFailed=true;console.warn('[US Push] remove subscription',error);}
+      try{await subscription.unsubscribe();}catch(error){console.warn('[US Push] unsubscribe',error);}
     }
-    try{if(window.usProfile?.id)localStorage.removeItem(`us:push:subscription:${window.usProfile.id}`);}catch(_e){}
-    toast('Notifiche disattivate');
-  }catch(error){console.warn('[US Push] disable failed',error);toast('Non riesco a disattivare le notifiche');}
-  finally{usPushUiBusy=false;await refreshWebPushUi();}
+    try{if(profileId)localStorage.removeItem(`us:push:subscription:${profileId}`);}catch(_e){}
+    if(!silent)toast(disableFailed?'Non riesco a disattivare le notifiche':'Notifiche disattivate');
+    return !disableFailed;
+  }catch(error){
+    console.warn('[US Push] disable failed',error);
+    if(!silent)toast('Non riesco a disattivare le notifiche');
+    return false;
+  }finally{
+    usPushUiBusy=false;
+    if(refreshUi)try{await refreshWebPushUi();}catch(error){console.warn('[US Push] refresh after disable',error);}
+    if(usPushOperationInFlight===operationDone)usPushOperationInFlight=null;
+    finishOperation();
+  }
 }
 window.disableWebPush=disableWebPush;
 
@@ -537,6 +566,28 @@ async function syncNativeWidgetBridge(sessionOverride=null){
   }
 }
 window.syncNativeWidgetBridge=syncNativeWidgetBridge;
+
+async function clearPrivateDeviceState(profileId=window.usProfile?.id||''){
+  try{US_SIGNED_URL_CACHE.clear();}catch(_e){}
+  const storageKeys=[
+    'us:fix4:last-profile',
+    US_SIGNED_URL_STORAGE_KEY,
+    US_HOME_BOOT_CACHE_KEY,
+    'us:home-photo:boot:v1'
+  ];
+  if(profileId)storageKeys.push(`us:push:subscription:${profileId}`);
+  for(const key of storageKeys){
+    try{localStorage.removeItem(key);}catch(_e){}
+  }
+  try{await caches.delete('us-private-media-v1');}catch(error){console.warn('[US Logout] private media cache',error);}
+}
+
+async function revokeCurrentDevice(){
+  const profileId=window.usProfile?.id||'';
+  try{await disableWebPush({silent:true,refreshUi:false,profileId});}catch(error){console.warn('[US Logout] push revoke',error);}
+  try{await clearPrivateDeviceState(profileId);}catch(error){console.warn('[US Logout] private cleanup',error);}
+}
+window.revokeCurrentDevice=revokeCurrentDevice;
 
 let usInitCloudInFlight=null;
 

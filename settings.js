@@ -6,6 +6,7 @@ window.__usSettingsInstalled=true;
 const $=id=>document.getElementById(id);
 const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 let settingsSnapshot=null;
+let logoutInFlight=false;
 
 function currentBuild(){return document.querySelector('meta[name="us-build"]')?.content||'';}
 
@@ -296,12 +297,15 @@ function privacyModal(){
 }
 
 async function logout(){
+  if(logoutInFlight)return;
   if(!confirm('Scollegare questo telefono da US? Dovrai inserire di nuovo il codice privato per rientrare.'))return;
+  logoutInFlight=true;
+  try{await window.revokeCurrentDevice?.();}catch(error){console.warn('[US Logout] device cleanup',error);}
   try{
-    localStorage.removeItem('us:fix4:last-profile');
-    await sb.auth.signOut();
+    const {error}=await sb.auth.signOut();
+    if(error)throw error;
     location.reload();
-  }catch(error){console.warn(error);toast('Non riesco a scollegarlo');}
+  }catch(error){logoutInFlight=false;console.warn(error);toast('Non riesco a scollegarlo');}
 }
 
 async function action(name){
