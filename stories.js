@@ -94,12 +94,12 @@
       root.className = 'us-top-profiles';
       root.innerHTML = `
         <div class="us-top-story" id="usStoryPartner">
-          <button type="button" class="us-top-story-btn" id="usStoryPartnerOpen" aria-label="Stories del partner">
+          <button type="button" class="us-top-story-btn us-important-control" id="usStoryPartnerOpen" aria-label="Stories del partner">
             <span class="us-top-story-ring"><span class="us-top-story-avatar"><img id="usStoryPartnerImg" alt="Foto profilo partner" hidden><span class="fallback" id="usStoryPartnerFallback">♡</span></span></span>
             <span class="us-top-story-dot" aria-hidden="true"></span>
           </button>
         </div>
-        <button type="button" class="us-story-add-only" id="usStoryAdd" aria-label="Aggiungi una story">+</button>
+        <button type="button" class="us-story-add-only us-important-control" id="usStoryAdd" aria-label="Aggiungi una story">+</button>
       `;
       const actions = document.querySelector('.top .top-actions');
       if (actions) actions.appendChild(root);
@@ -120,11 +120,16 @@
       viewer.id = 'usStoryViewer';
       viewer.className = 'us-story-viewer';
       viewer.setAttribute('aria-hidden','true');
+      viewer.setAttribute('role','dialog');
+      viewer.setAttribute('aria-modal','true');
+      viewer.setAttribute('aria-label','Stories private');
+      viewer.setAttribute('data-us-modal','');
+      viewer.setAttribute('data-us-modal-panel','');
       viewer.innerHTML = `
         <div class="us-story-loading" id="usStoryLoading">Carico…</div>
         <img class="us-story-media" id="usStoryMedia" alt="Story privata" hidden>
         <div class="us-story-top"><div class="us-story-progress" id="usStoryProgress"></div><div class="us-story-author-row"><span class="us-story-author-text"><b id="usStoryAuthorName">US.</b><small id="usStoryTime"></small></span></div></div>
-        <button type="button" class="us-story-close" id="usStoryClose" aria-label="Chiudi">×</button>
+        <button type="button" class="us-story-close us-modal-close" id="usStoryClose" aria-label="Chiudi" data-us-modal-close>×</button>
         <button type="button" class="us-story-zone prev" id="usStoryPrev" aria-label="Story precedente"></button>
         <button type="button" class="us-story-zone next" id="usStoryNext" aria-label="Story successiva"></button>
         <div class="us-story-caption" id="usStoryCaption" hidden></div>
@@ -141,10 +146,15 @@
       camera.id = 'usStoryCamera';
       camera.className = 'us-camera-viewer';
       camera.setAttribute('aria-hidden','true');
+      camera.setAttribute('role','dialog');
+      camera.setAttribute('aria-modal','true');
+      camera.setAttribute('aria-label','Fotocamera Story');
+      camera.setAttribute('data-us-modal','');
+      camera.setAttribute('data-us-modal-panel','');
       camera.innerHTML = `
         <video class="us-camera-video" id="usCameraVideo" playsinline autoplay muted></video>
         <div class="us-camera-shade"></div>
-        <div class="us-camera-top"><button type="button" class="us-camera-icon-btn" id="usCameraClose" aria-label="Chiudi fotocamera">×</button><div class="us-camera-title">Story privata · foto</div><span style="width:40px"></span></div>
+        <div class="us-camera-top"><button type="button" class="us-camera-icon-btn us-modal-close" id="usCameraClose" aria-label="Chiudi fotocamera" data-us-modal-close>×</button><div class="us-camera-title">Story privata · foto</div><span style="width:40px"></span></div>
         <div class="us-camera-status" id="usCameraStatus">Inquadra e scatta</div>
         <div class="us-camera-bottom"><span></span><button type="button" class="us-camera-capture" id="usCameraCapture" aria-label="Scatta foto"></button><button type="button" class="us-camera-flip" id="usCameraFlip" aria-label="Cambia fotocamera">↻</button></div>
       `;
@@ -159,7 +169,12 @@
       preview.id = 'usProfilePreview';
       preview.className = 'us-profile-preview';
       preview.setAttribute('aria-hidden','true');
-      preview.innerHTML = `<button type="button" class="us-profile-preview-close" id="usProfilePreviewClose" aria-label="Chiudi">×</button><img class="us-profile-preview-photo" id="usProfilePreviewImg" alt="Foto profilo" hidden><div class="us-profile-preview-fallback" id="usProfilePreviewFallback" hidden>♡</div><div class="us-profile-preview-name" id="usProfilePreviewName"></div><div class="us-profile-preview-sub">solo voi due ♡</div>`;
+      preview.setAttribute('role','dialog');
+      preview.setAttribute('aria-modal','true');
+      preview.setAttribute('aria-label','Anteprima profilo');
+      preview.setAttribute('data-us-modal','');
+      preview.setAttribute('data-us-modal-panel','');
+      preview.innerHTML = `<button type="button" class="us-profile-preview-close us-modal-close" id="usProfilePreviewClose" aria-label="Chiudi" data-us-modal-close>×</button><img class="us-profile-preview-photo" id="usProfilePreviewImg" alt="Foto profilo" hidden><div class="us-profile-preview-fallback" id="usProfilePreviewFallback" hidden>♡</div><div class="us-profile-preview-name" id="usProfilePreviewName"></div><div class="us-profile-preview-sub">solo voi due ♡</div>`;
       document.body.appendChild(preview);
       preview.addEventListener('click', (event) => { if (event.target === preview) closeProfilePreview(); });
       document.getElementById('usProfilePreviewClose')?.addEventListener('click', closeProfilePreview);

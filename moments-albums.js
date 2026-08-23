@@ -22,9 +22,9 @@ function esc(value){
 function ensureUi(){
   if(document.getElementById('usAlbumOverlay'))return;
   document.body.insertAdjacentHTML('beforeend',`
-    <div class="us-album-overlay" id="usAlbumOverlay" aria-hidden="true">
-      <div class="us-album-shell">
-        <button type="button" class="us-album-close" id="usAlbumClose" aria-label="Chiudi album">‹</button>
+    <div class="us-album-overlay" id="usAlbumOverlay" aria-hidden="true" data-us-modal>
+      <div class="us-album-shell" role="dialog" aria-modal="true" aria-label="Album del Moment" data-us-modal-panel>
+        <button type="button" class="us-album-close us-modal-close" id="usAlbumClose" aria-label="Chiudi album" data-us-modal-close>‹</button>
         <div class="us-album-scroll" id="usAlbumScroll">
           <div class="us-album-cover-stage"><img id="usAlbumCover" alt="Foto principale del Moment"></div>
           <div class="us-album-info">
@@ -50,8 +50,8 @@ function ensureUi(){
         </div>
       </div>
     </div>
-    <div class="us-album-lightbox" id="usAlbumLightbox" aria-hidden="true">
-      <button type="button" class="us-album-lightbox-close" id="usAlbumLightboxClose" aria-label="Chiudi foto">×</button>
+    <div class="us-album-lightbox" id="usAlbumLightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Foto del Moment" data-us-modal data-us-modal-panel>
+      <button type="button" class="us-album-lightbox-close us-modal-close" id="usAlbumLightboxClose" aria-label="Chiudi foto" data-us-modal-close>×</button>
       <div class="us-album-lightbox-count" id="usAlbumLightboxCount"></div>
       <img id="usAlbumLightboxImg" alt="Foto del Moment">
       <div class="us-album-lightbox-info"><b id="usAlbumLightboxAuthor"></b><p id="usAlbumLightboxCaption"></p></div>
@@ -462,13 +462,14 @@ console.info('[US] Moments Albums attivo');
     overlay.className = 'us-moment-compose-overlay';
     overlay.id = 'usMomentComposeOverlay';
     overlay.setAttribute('aria-hidden', 'true');
+    overlay.setAttribute('data-us-modal', '');
     overlay.innerHTML = `
-      <div class="us-moment-compose-backdrop" id="usMomentComposeBackdrop"></div>
-      <section class="us-moment-compose-sheet" role="dialog" aria-modal="true" aria-label="Aggiungi un ricordo">
+      <div class="us-moment-compose-backdrop us-modal-backdrop" id="usMomentComposeBackdrop"></div>
+      <section class="us-moment-compose-sheet" role="dialog" aria-modal="true" aria-label="Aggiungi un ricordo" data-us-modal-panel>
         <div class="us-moment-compose-grabber"></div>
         <div class="us-moment-compose-title">
           <div><small>NUOVO MOMENT</small><b>Aggiungi un ricordo</b></div>
-          <button type="button" class="us-moment-compose-close" id="usMomentComposeClose" aria-label="Chiudi">×</button>
+          <button type="button" class="us-moment-compose-close us-modal-close" id="usMomentComposeClose" aria-label="Chiudi" data-us-modal-close>×</button>
         </div>
         <div id="usMomentComposeMount"></div>
       </section>

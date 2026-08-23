@@ -6,6 +6,7 @@ const vm = require('node:vm');
 
 const ROOT = path.resolve(__dirname, '..');
 const ORIGIN = 'https://us.example.test';
+const CURRENT_SHELL = 'us-shell-static-runtime-2';
 
 function readRequiredRuntimeFile(name) {
   const file = path.join(ROOT, name);
@@ -455,17 +456,19 @@ test('installazione pulita precachea l’intero runtime statico prima di skipWai
 
   await harness.dispatchExtendable('install');
 
-  const shell = harness.cacheBuckets.get('us-shell-static-runtime-1');
+  const shell = harness.cacheBuckets.get(CURRENT_SHELL);
   assert.ok(shell.has(`${ORIGIN}/auth-storage.js`));
   assert.ok(shell.has(`${ORIGIN}/app.js`));
   assert.ok(shell.has(`${ORIGIN}/stories.js`));
+  assert.ok(shell.has(`${ORIGIN}/ui-foundation.css`));
+  assert.ok(shell.has(`${ORIGIN}/ui-foundation.js`));
   assert.equal(harness.skipWaitingCalls, 1);
 });
 
 test('upgrade sullo stesso origin elimina la shell legacy ma preserva la cache privata', async () => {
   const harness = createServiceWorkerHarness();
   const privateKey = `${ORIGIN}/__us_media_cache__?path=private%2Fphoto.jpg`;
-  harness.cacheBuckets.set('us-shell-auth-session-fix-1', new Map([
+  harness.cacheBuckets.set('us-shell-static-runtime-1', new Map([
     [`${ORIGIN}/app.js`, new Response('legacy transformed app')]
   ]));
   harness.cacheBuckets.set('us-private-media-v1', new Map([
@@ -475,7 +478,8 @@ test('upgrade sullo stesso origin elimina la shell legacy ma preserva la cache p
   await harness.dispatchExtendable('install');
   await harness.dispatchExtendable('activate');
 
-  assert.equal(harness.cacheBuckets.has('us-shell-auth-session-fix-1'), false);
+  assert.equal(harness.cacheBuckets.has('us-shell-static-runtime-1'), false);
+  assert.equal(harness.cacheBuckets.has(CURRENT_SHELL), true);
   assert.equal(harness.cacheBuckets.get('us-private-media-v1').has(privateKey), true);
   assert.equal(harness.claimCalls, 1);
 });
@@ -541,13 +545,13 @@ test('push e notification click mantengono payload e navigazione esistenti', asy
 });
 
 test('fallimento del precache non chiama skipWaiting e lascia intatta la shell precedente', async () => {
-  const harness = createServiceWorkerHarness({ failPrecachePath: '/stories.js' });
+  const harness = createServiceWorkerHarness({ failPrecachePath: '/ui-foundation.js' });
   const legacyEntries = new Map([[`${ORIGIN}/app.js`, new Response('legacy app')]]);
-  harness.cacheBuckets.set('us-shell-auth-session-fix-1', legacyEntries);
+  harness.cacheBuckets.set('us-shell-static-runtime-1', legacyEntries);
 
   await assert.rejects(harness.dispatchExtendable('install'), /precache failed/);
 
   assert.equal(harness.skipWaitingCalls, 0);
-  assert.equal(harness.cacheBuckets.get('us-shell-auth-session-fix-1'), legacyEntries);
+  assert.equal(harness.cacheBuckets.get('us-shell-static-runtime-1'), legacyEntries);
   assert.equal(harness.deletedCaches.length, 0);
 });

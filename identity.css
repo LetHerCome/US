@@ -45,7 +45,7 @@ html,body{
 .us-wordmark{
   display:inline-flex!important;
   align-items:baseline;
-  gap:4px;
+  gap:var(--us-space-1);
   width:auto!important;
   color:var(--us-ink);
   font-family:var(--us-serif)!important;
@@ -181,7 +181,7 @@ textarea,input{
 }
 .us-nav .nlabel{
   display:block;
-  font-size:9px;
+  font-size:var(--us-text-meta);
   font-weight:660;
   letter-spacing:-.01em;
   white-space:nowrap;
@@ -291,7 +291,8 @@ button:focus-visible,
 
 @media(max-width:360px){
   .brand.us-wordmark{font-size:29px!important}
-  .us-nav .nlabel{font-size:8.5px}
+  .top .online-badge.warn{display:none}
+  .us-nav .nlabel{font-size:var(--us-text-meta)}
   .us-nav button .nicon{width:28px}
 }
 @media(prefers-reduced-motion:reduce){

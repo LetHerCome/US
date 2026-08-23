@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <meta name="theme-color" content="#0a0a0e"/>
 <meta name="color-scheme" content="dark"/>
-<meta name="us-build" content="static-runtime-20260823-1"/>
+<meta name="us-build" content="static-runtime-20260823-2"/>
 <link rel="manifest" href="/manifest.webmanifest?v=us-identity1"/>
 <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=us-identity1"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=us-identity1"/>
@@ -17,6 +17,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <title>US — Francesco & Beatrice</title>
 <link rel="stylesheet" href="/styles.css"/>
+<link rel="stylesheet" href="/ui-foundation.css"/>
 <link rel="stylesheet" href="/fix4.css?v=fix4-20260820-1"/>
 <link rel="stylesheet" href="/events.css?v=us-events-1" media="print" onload="this.media='all'"/>
 <link rel="stylesheet" href="/moments-albums.css?v=us-moments-consistency-1" media="print" onload="this.media='all'"/>
@@ -74,10 +75,10 @@ html.us-returning-device .auth-overlay{
 </div>
 
 <div class="app">
-  <div class="top"><div class="brand-row"><div class="brand us-wordmark" aria-label="US"><span class="us-wordmark-letters">US</span><span class="us-wordmark-dot" aria-hidden="true"><i></i><i></i></span></div><button type="button" class="today-orb" id="todayOrb" onclick="openToday()" aria-label="Apri la domanda giornaliera"><span class="today-orb-mark">?</span><span class="today-orb-copy"><b>Oggi</b><small>Domanda</small></span><i id="todayOrbDot"></i></button></div><div class="top-actions"><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><button type="button" class="us-calendar-btn" id="usCalendarBtn" onclick="openEvents()" aria-label="Apri eventi condivisi">
+  <div class="top"><div class="brand-row"><div class="brand us-wordmark" aria-label="US"><span class="us-wordmark-letters">US</span><span class="us-wordmark-dot" aria-hidden="true"><i></i><i></i></span></div><button type="button" class="today-orb us-important-control" id="todayOrb" onclick="openToday()" aria-label="Apri la domanda giornaliera"><span class="today-orb-mark">?</span><span class="today-orb-copy"><b>Oggi</b><small>Domanda</small></span><i id="todayOrbDot"></i></button></div><div class="top-actions"><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><button type="button" class="us-calendar-btn us-important-control" id="usCalendarBtn" onclick="openEvents()" aria-label="Apri eventi condivisi">
   <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="15" rx="4"></rect><path d="M7.5 3.5v4M16.5 3.5v4M3.5 10h17"></path></svg>
   <i id="usCalendarDot" hidden></i>
-</button><button type="button" class="profile-avatar" id="profileAvatarBtn" aria-label="Cambia foto profilo" onclick="pickProfilePhoto()"><img id="profileAvatarImg" alt="Foto profilo" hidden><span class="fallback" id="profileAvatarFallback">♡</span><span class="camera-dot">+</span></button><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
+</button><button type="button" class="profile-avatar us-important-control" id="profileAvatarBtn" aria-label="Cambia foto profilo" onclick="pickProfilePhoto()"><img id="profileAvatarImg" alt="Foto profilo" hidden><span class="fallback" id="profileAvatarFallback">♡</span><span class="camera-dot">+</span></button><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
 
   <main id="home" class="page active">
     <section class="hero home-hero-only" id="homeHero" aria-label="Un vostro ricordo">
@@ -97,10 +98,10 @@ html.us-returning-device .auth-overlay{
     </section>
   </main>
 
-  <main id="today" class="today-overlay" aria-hidden="true">
-    <div class="today-backdrop" onclick="closeToday()"></div>
-    <section class="today-sheet" role="dialog" aria-modal="true" aria-label="Domanda del giorno">
-      <div class="today-sheet-head"><div><div class="tiny">OGGI</div><h2>La domanda di oggi</h2></div><button type="button" class="today-close" onclick="closeToday()" aria-label="Chiudi domanda del giorno">×</button></div>
+  <main id="today" class="today-overlay" aria-hidden="true" data-us-modal>
+    <div class="today-backdrop us-modal-backdrop" onclick="closeToday()"></div>
+    <section class="today-sheet" role="dialog" aria-modal="true" aria-label="Domanda del giorno" data-us-modal-panel>
+      <div class="today-sheet-head"><div><div class="tiny">OGGI</div><h2>La domanda di oggi</h2></div><button type="button" class="today-close us-modal-close" onclick="closeToday()" aria-label="Chiudi domanda del giorno" data-us-modal-close>×</button></div>
       <div class="card question">
         <div class="qtag">LA DOMANDA DEL GIORNO</div>
         <div class="qtext">Qual è una cosa che vorresti rifare insieme per la prima volta?</div>
@@ -262,7 +263,7 @@ html.us-returning-device .auth-overlay{
 <button type="button" id="thinkButton" class="us-floating-think" onclick="sendThinkSignal()" aria-label="Invia Ti penso" title="Ti penso"><span class="us-floating-think-ring"></span><span>♡</span></button>
 
 <nav class="nav us-nav" aria-label="Navigazione principale">
-<button class="active" data-page="home" onclick="go('home')" aria-label="Home">
+<button class="active" data-page="home" onclick="go('home')" aria-label="Home" aria-current="page">
   <span class="nicon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 10.4 12 4.2l7.5 6.2v8.1a1.3 1.3 0 0 1-1.3 1.3H5.8a1.3 1.3 0 0 1-1.3-1.3z"/><path d="M9.2 19.8v-5.5h5.6v5.5"/><circle cx="18.4" cy="6.4" r="1.15" class="us-icon-dot"/></svg></span><span class="nlabel">Home</span>
 </button>
 <button data-page="moments" onclick="go('moments')" aria-label="Moments">
@@ -280,12 +281,12 @@ html.us-returning-device .auth-overlay{
 </nav>
 
 
-<div class="us-events-overlay" id="usEventsOverlay" aria-hidden="true">
-  <div class="us-events-backdrop" onclick="closeEvents()"></div>
-  <section class="us-events-sheet" role="dialog" aria-modal="true" aria-labelledby="usEventsTitle">
+<div class="us-events-overlay" id="usEventsOverlay" aria-hidden="true" data-us-modal>
+  <div class="us-events-backdrop us-modal-backdrop" onclick="closeEvents()"></div>
+  <section class="us-events-sheet" role="dialog" aria-modal="true" aria-labelledby="usEventsTitle" data-us-modal-panel>
     <header class="us-events-head">
       <div><div class="tiny">NOI DUE</div><h2 id="usEventsTitle">I nostri eventi</h2></div>
-      <button type="button" class="us-events-close" onclick="closeEvents()" aria-label="Chiudi eventi">×</button>
+      <button type="button" class="us-events-close us-modal-close" onclick="closeEvents()" aria-label="Chiudi eventi" data-us-modal-close>×</button>
     </header>
 
     <div id="usEventsBrowse">
@@ -339,11 +340,11 @@ html.us-returning-device .auth-overlay{
   </section>
 </div>
 
-<div class="us-settings-overlay" id="usSettingsOverlay" aria-hidden="true">
-  <div class="us-settings-backdrop" data-us-settings-close></div>
-  <section class="us-settings-sheet" role="dialog" aria-modal="true" aria-labelledby="usSettingsModalTitle">
+<div class="us-settings-overlay" id="usSettingsOverlay" aria-hidden="true" data-us-modal>
+  <div class="us-settings-backdrop us-modal-backdrop" data-us-settings-close></div>
+  <section class="us-settings-sheet" role="dialog" aria-modal="true" aria-labelledby="usSettingsModalTitle" data-us-modal-panel>
     <div class="us-settings-sheet-grabber"></div>
-    <header><div><div class="tiny" id="usSettingsModalKicker">US.</div><h3 id="usSettingsModalTitle">Impostazione</h3></div><button type="button" class="us-settings-close" data-us-settings-close aria-label="Chiudi">×</button></header>
+    <header><div><div class="tiny" id="usSettingsModalKicker">US.</div><h3 id="usSettingsModalTitle">Impostazione</h3></div><button type="button" class="us-settings-close us-modal-close" data-us-settings-close data-us-modal-close aria-label="Chiudi">×</button></header>
     <div class="us-settings-modal-body" id="usSettingsModalBody"></div>
   </section>
 </div>
@@ -352,8 +353,8 @@ html.us-returning-device .auth-overlay{
 <div class="app-status-bar" id="appStatusBar" data-kind="offline" role="alert" aria-live="assertive" hidden>Sei offline. Mostro ciò che è già disponibile; le azioni online riprenderanno alla riconnessione.</div>
 <div class="app-update-bar" id="appUpdateBar" role="status" aria-live="polite" hidden><span><b>Aggiornamento disponibile</b><small>Puoi aggiornare quando hai finito quello che stai facendo.</small></span><button type="button" id="appUpdateBtn">Aggiorna</button></div>
 
-<div class="moment-viewer" id="momentViewer" aria-hidden="true" onclick="if(event.target===this)closeMomentViewer()">
-  <button class="moment-viewer-close" type="button" aria-label="Chiudi foto" onclick="closeMomentViewer()">×</button>
+<div class="moment-viewer" id="momentViewer" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Foto del ricordo" data-us-modal data-us-modal-panel onclick="if(event.target===this)closeMomentViewer()">
+  <button class="moment-viewer-close us-modal-close" type="button" aria-label="Chiudi foto" data-us-modal-close onclick="closeMomentViewer()">×</button>
   <div class="moment-viewer-card"><img id="momentViewerImg" alt="Ricordo a schermo intero"><div class="moment-viewer-info"><div class="moment-viewer-kicker" id="momentViewerAuthor">Noi</div><div class="moment-viewer-date" id="momentViewerDate"></div><p id="momentViewerCaption" hidden></p><div class="moment-viewer-hint">Scorri verso il basso per chiudere</div></div></div>
 </div>
 
@@ -368,4 +369,5 @@ html.us-returning-device .auth-overlay{
 <script defer src="/polish4.js?v=us-final-polish-motion31-1"></script>
 <script defer src="/moments-albums.js?v=us-moments-consistency-1"></script>
 <script defer src="/navigation.js?v=us-fastboot-back-1"></script>
+<script defer src="/ui-foundation.js"></script>
 </body></html>

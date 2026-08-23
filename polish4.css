@@ -76,7 +76,7 @@ html.us-motion31-promoting .page.active.swipe-prev{
   position:fixed;
   z-index:10120;
   left:50%;
-  bottom:calc(var(--us-nav-height,68px) + env(safe-area-inset-bottom,0px) + 34px);
+  bottom:calc(var(--us-nav-height,68px) + var(--us-safe-bottom) + 34px);
   transform:translate3d(-50%,14px,0) scale(.96);
   opacity:0;
   pointer-events:none;
@@ -115,7 +115,7 @@ html.us-motion31-promoting .page.active.swipe-prev{
 .us-level-celebration{
   position:fixed;inset:0;z-index:10130;
   display:grid;place-items:center;
-  padding:24px;
+  padding:var(--us-space-8);
   pointer-events:none;
   background:rgba(7,8,12,0);
   transition:background .25s ease;
