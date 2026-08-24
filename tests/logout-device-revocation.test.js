@@ -40,6 +40,7 @@ function createHarness(overrides = {}) {
     confirm: () => true,
     location: { reload: () => events.push('reload') },
     document: { getElementById: () => pushButton },
+    $: () => pushButton,
     setTimeout() {},
     toast(message) { events.push(`toast:${message}`); },
     refreshWebPushUi: async () => { events.push('push:refresh'); },

@@ -232,7 +232,7 @@ function renderAlbum(){
     grid.innerHTML=albumRows.map((row,index)=>`
       <article class="us-album-photo-card" role="button" tabindex="0" data-album-index="${index+1}" aria-label="Apri foto aggiunta da ${esc(row.author)}">
         <img src="${esc(row.url)}" alt="Foto aggiunta al Moment" loading="lazy">
-        ${row.own?`<button type="button" class="us-album-photo-delete" data-album-delete="${esc(row.id)}" data-storage-path="${esc(row.storage_path)}" aria-label="Elimina questa foto">×</button>`:''}
+        ${row.own?`<button type="button" class="us-album-photo-delete" data-album-delete="${esc(row.id)}" data-storage-path="${esc(row.storage_path)}" aria-label="Elimina questa foto"><span class="us-delete-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 9v8m4-8v8m4-8v8M5 6h14m-2 0-1 14H8L7 6m3-3h4l1 3H9z"/></svg></span></button>`:''}
         <div class="us-album-photo-copy">
           ${row.caption?`<p>${esc(row.caption)}</p>`:'<p> </p>'}
           <small>${esc(row.author)}</small>

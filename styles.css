@@ -293,8 +293,6 @@ body.viewer-open{overflow:hidden}
 .moment-card.moment-postit .moment-meta b{color:#25231f!important;font-family:Georgia,serif;font-size:12px}
 .moment-card.moment-postit .moment-meta p{color:#5b564d!important;margin-top:5px!important;font-size:11px!important;line-height:1.3!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .moment-card.moment-postit .moment-by{color:#81796c!important;font-size:9px!important;letter-spacing:.08em;text-transform:uppercase}
-.moment-card.moment-postit .moment-delete{top:-8px!important;right:-7px!important;background:#1c2029!important;color:#fff!important;border:2px solid #eee9dc!important}
-
 .bond-badges-section{margin:18px 0 22px}
 .bond-badge-head{margin-bottom:10px!important}
 .bond-badges{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:none}

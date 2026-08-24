@@ -32,21 +32,6 @@ body.us-keyboard-open .us-floating-think,body.us-events-open .us-floating-think,
     box-shadow .2s ease!important;
 }
 .us-floating-think.dragging:active{transform:scale(1.06)!important}
-/* US · Motion Pass */
-.page.us-swipe-tracking{
-  transform:translate3d(var(--us-swipe-x,0px),0,0)!important;
-  opacity:calc(1 - (var(--us-swipe-progress,0) * .055))!important;
-  transition:none!important;
-  will-change:transform,opacity;
-}
-.page.us-swipe-return{
-  transform:translate3d(var(--us-swipe-x,0px),0,0)!important;
-  opacity:calc(1 - (var(--us-swipe-progress,0) * .035))!important;
-  transition:
-    transform .22s cubic-bezier(.22,.78,.24,1),
-    opacity .20s ease!important;
-  will-change:transform,opacity;
-}
 .us-floating-think.inertia{
   transition:none!important;
   cursor:grabbing;

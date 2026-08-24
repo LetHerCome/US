@@ -145,10 +145,16 @@ body.us-album-open{overflow:hidden;touch-action:none}
 }
 .us-album-photo-delete{
   position:absolute;right:2px;top:2px;z-index:3;
-  width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important;
-  padding:0;border-radius:50%;display:grid;place-items:center;
-  background:rgba(7,9,13,.68);color:#fff;border:1px solid rgba(255,255,255,.16);
-  backdrop-filter:blur(8px);font-size:17px;font-weight:500
+  width:44px;height:44px;min-width:44px;min-height:44px;
+  padding:0;border:0;background:transparent;display:grid;place-items:center
+}
+.us-delete-icon{
+  width:31px;height:31px;border-radius:50%;display:grid;place-items:center;
+  background:rgba(8,10,14,.58);border:1px solid rgba(255,255,255,.14);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);pointer-events:none
+}
+.us-delete-icon svg{
+  width:15px;height:15px;fill:none;stroke:#fff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round
 }
 
 /* Dedicated fullscreen gallery. */
@@ -329,15 +335,19 @@ body.us-moment-compose-open{overflow:hidden}
 
 /* Replace prototype-looking delete X with discreet overflow control */
 #moments .moment-card.moment-postit .moment-delete{
-  top:9px!important;right:9px!important;
-  width:34px!important;height:28px!important;min-width:34px!important;min-height:28px!important;
-  border-radius:999px!important;border:1px solid rgba(255,255,255,.16)!important;
-  background:rgba(7,9,13,.58)!important;
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  font-size:0!important;box-shadow:0 5px 15px rgba(0,0,0,.16)!important
+  top:1px;right:4px;
+  width:44px;height:44px;min-width:44px;min-height:44px;
+  border:0;border-radius:0;background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;
+  font-size:0;box-shadow:none
 }
-#moments .moment-card.moment-postit .moment-delete::before{
-  content:"•••";font-size:12px;letter-spacing:1px;color:#fff;line-height:1
+.us-overflow-icon{
+  width:34px;height:28px;border-radius:999px;display:grid;place-items:center;
+  border:1px solid rgba(255,255,255,.16);background:rgba(7,9,13,.58);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  box-shadow:0 5px 15px rgba(0,0,0,.16);pointer-events:none
+}
+.us-overflow-icon svg{
+  width:18px;height:6px;fill:#fff
 }
 #moments .moment-album-count{
   top:10px!important;right:10px!important;bottom:auto!important;
@@ -478,13 +488,6 @@ body.us-moment-compose-open{overflow:hidden}
   background:#272a33;color:#f7f8fb;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",sans-serif;
   font-size:8px;font-weight:800;letter-spacing:0;flex:0 0 auto
 }
-.us-album-photo-delete{
-  width:31px!important;height:31px!important;min-width:31px!important;min-height:31px!important;
-  right:8px!important;top:8px!important;
-  background:rgba(8,10,14,.58)!important;border-color:rgba(255,255,255,.14)!important;
-  font-size:16px!important
-}
-
 /* Integrated "add another piece" card */
 .us-album-add-tile{
   width:100%;min-height:92px;margin:7px 0 4px;padding:16px;

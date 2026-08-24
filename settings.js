@@ -132,8 +132,8 @@ async function hydrateUsSettings(){
 }
 window.hydrateUsSettings=hydrateUsSettings;
 
-function relationshipDateModal(){
-  const current=settingsSnapshot?.couple?.started_on||'';
+function relationshipDateModal(valueOverride){
+  const current=valueOverride||settingsSnapshot?.couple?.started_on||'';
   const today=new Date();
   const max=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
   openModal('Data della relazione',`
@@ -141,18 +141,33 @@ function relationshipDateModal(){
     <label class="us-settings2-field"><span>Insieme dal</span><input id="usRelationshipDateInput" type="date" max="${max}" value="${esc(current)}"></label>
     <button type="button" class="primary us-settings-main-action" id="usSaveRelationshipDate">Salva data</button>
   `,'NOI');
-  $('usSaveRelationshipDate')?.addEventListener('click',async()=>{
+  $('usSaveRelationshipDate')?.addEventListener('click',()=>{
     const value=$('usRelationshipDateInput')?.value;
     if(!value)return;
-    if(!confirm(`Impostare ${formatDate(value)} come data della relazione?`))return;
-    const btn=$('usSaveRelationshipDate');btn.disabled=true;btn.textContent='Salvo…';
+    relationshipDateConfirmation(value);
+  });
+  if(valueOverride)$('usRelationshipDateInput')?.focus({preventScroll:true});
+}
+
+function relationshipDateConfirmation(value){
+  openModal('Conferma data',`
+    <div class="us-settings2-modal-copy">Impostare <b>${esc(formatDate(value))}</b> come data della relazione?</div>
+    <div class="us-settings2-action-stack">
+      <button type="button" class="ghost" id="usCancelRelationshipDate">Indietro</button>
+      <button type="button" class="primary" id="usConfirmRelationshipDate">Conferma data</button>
+    </div>
+  `,'NOI');
+  $('usCancelRelationshipDate')?.addEventListener('click',()=>relationshipDateModal(value));
+  $('usConfirmRelationshipDate')?.addEventListener('click',async()=>{
+    const btn=$('usConfirmRelationshipDate');btn.disabled=true;btn.textContent='Salvo…';
     const {error}=await sb.from('couples').update({started_on:value}).eq('id',window.usProfile.couple_id);
-    if(error){console.warn(error);btn.disabled=false;btn.textContent='Salva data';return toast('Non riesco a salvare la data');}
+    if(error){console.warn(error);btn.disabled=false;btn.textContent='Conferma data';return toast('Non riesco a salvare la data');}
     await hydrateUsSettings();
     window.hydrateEvents?.();
     closeModal();
     toast('Data aggiornata ♡');
   });
+  $('usCancelRelationshipDate')?.focus({preventScroll:true});
 }
 
 function homePhotoModal(){
@@ -296,16 +311,29 @@ function privacyModal(){
   `,'DATI');
 }
 
+function logoutConfirmationModal(){
+  openModal('Scollega questo telefono',`
+    <div class="us-settings2-modal-copy">Dovrai inserire di nuovo il codice privato per rientrare in US.</div>
+    <div class="us-settings2-action-stack">
+      <button type="button" class="ghost" id="usCancelLogout">Annulla</button>
+      <button type="button" class="us-settings2-disconnect" id="usConfirmLogout">Scollega questo telefono</button>
+    </div>
+  `,'QUESTO TELEFONO');
+  $('usCancelLogout')?.addEventListener('click',closeModal);
+  $('usConfirmLogout')?.addEventListener('click',logout);
+}
+
 async function logout(){
   if(logoutInFlight)return;
-  if(!confirm('Scollegare questo telefono da US? Dovrai inserire di nuovo il codice privato per rientrare.'))return;
   logoutInFlight=true;
+  const btn=$('usConfirmLogout');
+  if(btn){btn.disabled=true;btn.textContent='Scollego…';}
   try{await window.revokeCurrentDevice?.();}catch(error){console.warn('[US Logout] device cleanup',error);}
   try{
     const {error}=await sb.auth.signOut();
     if(error)throw error;
     location.reload();
-  }catch(error){logoutInFlight=false;console.warn(error);toast('Non riesco a scollegarlo');}
+  }catch(error){logoutInFlight=false;if(btn){btn.disabled=false;btn.textContent='Scollega questo telefono';}console.warn(error);toast('Non riesco a scollegarlo');}
 }
 
 async function action(name){
@@ -317,7 +345,7 @@ async function action(name){
   if(name==='location')return locationAction();
   if(name==='sync-status')return syncStatusModal();
   if(name==='privacy')return privacyModal();
-  if(name==='logout')return logout();
+  if(name==='logout')return logoutConfirmationModal();
 }
 
 

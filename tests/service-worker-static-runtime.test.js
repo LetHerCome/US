@@ -6,7 +6,7 @@ const vm = require('node:vm');
 
 const ROOT = path.resolve(__dirname, '..');
 const ORIGIN = 'https://us.example.test';
-const CURRENT_SHELL = 'us-shell-static-runtime-2';
+const CURRENT_SHELL = 'us-shell-static-runtime-3';
 
 function readRequiredRuntimeFile(name) {
   const file = path.join(ROOT, name);
@@ -327,7 +327,7 @@ test('Stories si inizializza una sola volta anche se lo script viene eseguito du
   vm.runInContext(source, context, { filename: 'stories.js' });
 
   assert.equal(context.window.__usStoriesV19Installed, true);
-  assert.equal(effects.styles, 1);
+  assert.equal(effects.styles, 0);
   assert.equal(effects.authListeners, 1);
 });
 
@@ -460,6 +460,7 @@ test('installazione pulita precachea l’intero runtime statico prima di skipWai
   assert.ok(shell.has(`${ORIGIN}/auth-storage.js`));
   assert.ok(shell.has(`${ORIGIN}/app.js`));
   assert.ok(shell.has(`${ORIGIN}/stories.js`));
+  assert.ok(shell.has(`${ORIGIN}/stories.css`));
   assert.ok(shell.has(`${ORIGIN}/ui-foundation.css`));
   assert.ok(shell.has(`${ORIGIN}/ui-foundation.js`));
   assert.equal(harness.skipWaitingCalls, 1);
@@ -468,7 +469,7 @@ test('installazione pulita precachea l’intero runtime statico prima di skipWai
 test('upgrade sullo stesso origin elimina la shell legacy ma preserva la cache privata', async () => {
   const harness = createServiceWorkerHarness();
   const privateKey = `${ORIGIN}/__us_media_cache__?path=private%2Fphoto.jpg`;
-  harness.cacheBuckets.set('us-shell-static-runtime-1', new Map([
+  harness.cacheBuckets.set('us-shell-static-runtime-2', new Map([
     [`${ORIGIN}/app.js`, new Response('legacy transformed app')]
   ]));
   harness.cacheBuckets.set('us-private-media-v1', new Map([
@@ -478,7 +479,7 @@ test('upgrade sullo stesso origin elimina la shell legacy ma preserva la cache p
   await harness.dispatchExtendable('install');
   await harness.dispatchExtendable('activate');
 
-  assert.equal(harness.cacheBuckets.has('us-shell-static-runtime-1'), false);
+  assert.equal(harness.cacheBuckets.has('us-shell-static-runtime-2'), false);
   assert.equal(harness.cacheBuckets.has(CURRENT_SHELL), true);
   assert.equal(harness.cacheBuckets.get('us-private-media-v1').has(privateKey), true);
   assert.equal(harness.claimCalls, 1);
@@ -506,10 +507,12 @@ test('reload offline usa index e runtime della nuova shell cache', async () => {
   const documentResponse = await harness.dispatchFetch('/home', { mode: 'navigate' });
   const appResponse = await harness.dispatchFetch('/app.js');
   const storiesResponse = await harness.dispatchFetch('/stories.js');
+  const storiesCssResponse = await harness.dispatchFetch('/stories.css');
 
   assert.equal(await documentResponse.text(), 'asset:/index.html');
   assert.equal(await appResponse.text(), harness.rawApp);
   assert.equal(await storiesResponse.text(), 'asset:/stories.js');
+  assert.equal(await storiesCssResponse.text(), 'asset:/stories.css');
 });
 
 test('push e notification click mantengono payload e navigazione esistenti', async () => {
@@ -547,11 +550,11 @@ test('push e notification click mantengono payload e navigazione esistenti', asy
 test('fallimento del precache non chiama skipWaiting e lascia intatta la shell precedente', async () => {
   const harness = createServiceWorkerHarness({ failPrecachePath: '/ui-foundation.js' });
   const legacyEntries = new Map([[`${ORIGIN}/app.js`, new Response('legacy app')]]);
-  harness.cacheBuckets.set('us-shell-static-runtime-1', legacyEntries);
+  harness.cacheBuckets.set('us-shell-static-runtime-2', legacyEntries);
 
   await assert.rejects(harness.dispatchExtendable('install'), /precache failed/);
 
   assert.equal(harness.skipWaitingCalls, 0);
-  assert.equal(harness.cacheBuckets.get('us-shell-static-runtime-1'), legacyEntries);
+  assert.equal(harness.cacheBuckets.get('us-shell-static-runtime-2'), legacyEntries);
   assert.equal(harness.deletedCaches.length, 0);
 });

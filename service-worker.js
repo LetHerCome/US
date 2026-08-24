@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-static-runtime-2";
+const CACHE_NAME = "us-shell-static-runtime-3";
 const MEDIA_CACHE_NAME = "us-private-media-v1";
 
 const APP_SHELL = [
@@ -7,6 +7,7 @@ const APP_SHELL = [
   "/auth-storage.js",
   "/app.js",
   "/stories.js",
+  "/stories.css",
   "/styles.css",
   "/ui-foundation.css",
   "/ui-foundation.js",
@@ -25,7 +26,6 @@ const APP_SHELL = [
   "/identity.css",
   "/identity.js",
   "/settings2.css",
-  "/motion3.css",
   "/polish4.css",
   "/polish4.js",
   "/version.json",
