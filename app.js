@@ -1044,24 +1044,28 @@ async function getHomeRotationPath(){
     .order('moment_date',{ascending:false})
     .order('created_at',{ascending:false})
     .limit(120);
-  if(error){console.warn(error);return null;}
+  if(error){console.warn(error);return undefined;}
   if(rows?.length){
     const key=homeRotationKey();
     let idx=homeStableIndex(`${window.usProfile.couple_id}|${key}|home`,rows.length);
     if(rows.length>1&&rows[idx]?.storage_path===homePhotoPath)idx=(idx+1)%rows.length;
     return rows[idx]?.storage_path||null;
   }
-  const {data:couple}=await sb.from('couples').select('home_photo_path').eq('id',window.usProfile.couple_id).maybeSingle();
+  const {data:couple,error:coupleError}=await sb.from('couples').select('home_photo_path').eq('id',window.usProfile.couple_id).maybeSingle();
+  if(coupleError){console.warn(coupleError);return undefined;}
   return couple?.home_photo_path||null;
 }
 
 function crossfadeHomePhoto(url){
   const hero=document.getElementById('homeHero');
+  const empty=document.getElementById('homeEmptyState');
   const nextKey=homePhotoActiveLayer==='A'?'B':'A';
   const current=document.getElementById(`homePhotoLayer${homePhotoActiveLayer}`);
   const next=document.getElementById(`homePhotoLayer${nextKey}`);
   if(!hero||!current||!next)return;
   const apply=()=>{
+    hero.classList.toggle('is-empty',!url);
+    if(empty)empty.hidden=Boolean(url);
     next.style.backgroundImage=url?`url("${url}")`:'';
     requestAnimationFrame(()=>{
       next.classList.add('active');
@@ -1094,6 +1098,7 @@ async function hydrateHomePhoto(force=false){
   }
 
   const path=await getHomeRotationPath();
+  if(path===undefined)return;
   homePhotoHourKey=hourKey;
   if(!path){
     homePhotoPath='';

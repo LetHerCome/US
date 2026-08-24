@@ -12,6 +12,11 @@
   let updateCheckTimer = null;
   let keyboardOpen = false;
 
+  function syncRuntimeLayout() {
+    document.body.classList.toggle('us-status-visible', Boolean(statusBar && !statusBar.hidden));
+    document.body.classList.toggle('us-update-visible', Boolean(updateBar && !updateBar.hidden));
+  }
+
   function setViewportHeight() {
     const viewport = window.visualViewport;
     const height = Math.max(320, Math.round(viewport?.height || window.innerHeight || document.documentElement.clientHeight));
@@ -41,6 +46,7 @@
     statusBar.dataset.kind = kind;
     statusBar.textContent = message;
     statusBar.hidden = false;
+    syncRuntimeLayout();
     if (timeout > 0) statusTimer = setTimeout(() => hideStatus(), timeout);
   }
 
@@ -49,6 +55,7 @@
     if (statusTimer) clearTimeout(statusTimer);
     statusTimer = null;
     statusBar.hidden = true;
+    syncRuntimeLayout();
   }
 
   function syncNetworkUi() {
@@ -173,7 +180,10 @@
       const response = await fetch(`/version.json?ts=${Date.now()}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } });
       if (!response.ok) return;
       const payload = await response.json();
-      if (payload?.version && payload.version !== BUILD) updateBar.hidden = false;
+      if (payload?.version && payload.version !== BUILD) {
+        updateBar.hidden = false;
+        syncRuntimeLayout();
+      }
     } catch (_) {}
   }
 
@@ -244,6 +254,7 @@
   setupMutationObserver();
   setupUpdateChecks();
   syncNetworkUi();
+  syncRuntimeLayout();
 
   let profileAttempts = 0;
   const profileTimer = setInterval(() => {

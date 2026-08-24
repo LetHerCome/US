@@ -47,7 +47,11 @@
   -webkit-tap-highlight-color:transparent;
 }
 
-.nav button:focus-visible,
+.nav button:focus-visible {
+  outline:2px solid rgba(232,138,162,.62);
+  outline-offset:-2px;
+}
+
 .us-modal-close:focus-visible {
   outline:2px solid rgba(232,138,162,.62);
   outline-offset:2px;

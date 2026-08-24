@@ -73,7 +73,7 @@ function settingsModalHarness() {
     ${functionSource(source, 'function relationshipDateConfirmation(', 'function homePhotoModal(')}
     ${functionSource(source, 'function logoutConfirmationModal(', 'async function logout(')}
     ${functionSource(source, 'async function logout(', 'async function action(')}
-    ${functionSource(source, 'async function action(', 'const US_THINK_POSITION_KEY=')}
+    ${functionSource(source, 'async function action(', 'function boot(){')}
   `, context);
 
   return { context, document, elements, events };
@@ -150,9 +150,9 @@ test('shell, build e asset Stories restano coerenti per upgrade e offline', () =
   const version = JSON.parse(read('version.json')).version;
   const build = html.match(/meta name="us-build" content="([^"]+)"/)?.[1];
 
-  assert.equal(version, 'static-runtime-20260824-1');
+  assert.equal(version, 'static-runtime-20260824-2');
   assert.equal(build, version);
-  assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-3"/);
+  assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-4"/);
   assert.match(worker, /"\/stories\.css"/);
   assert.doesNotMatch(worker, /"\/motion3\.css"/);
   assert.match(worker, /const MEDIA_CACHE_NAME = "us-private-media-v1"/);

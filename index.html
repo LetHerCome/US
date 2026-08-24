@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <meta name="theme-color" content="#0a0a0e"/>
 <meta name="color-scheme" content="dark"/>
-<meta name="us-build" content="static-runtime-20260824-1"/>
+<meta name="us-build" content="static-runtime-20260824-2"/>
 <link rel="manifest" href="/manifest.webmanifest?v=us-identity1"/>
 <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=us-identity1"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=us-identity1"/>
@@ -85,6 +85,11 @@ html.us-returning-device .auth-overlay{
       <div class="home-photo-layer active" id="homePhotoLayerA"></div>
       <div class="home-photo-layer" id="homePhotoLayerB"></div>
       <div class="home-photo-shade"></div>
+      <div class="home-empty-state" id="homeEmptyState" hidden>
+        <span class="home-empty-mark" aria-hidden="true">♡</span>
+        <span class="home-empty-copy"><b>Il primo ricordo può iniziare da qui.</b><small>Aggiungi un Moment e la Home lo custodirà per voi.</small></span>
+        <button type="button" class="home-empty-action" onclick="go('moments')">Aggiungi un ricordo</button>
+      </div>
       <button type="button" class="home-distance-pill" id="distanceWidget" onclick="refreshMyLocation()" aria-label="Aggiorna distanza">
         <span class="distance-orbit" aria-hidden="true">♡</span>
         <span class="distance-copy"><b id="distanceValue">Attiva la distanza</b><small id="distanceMeta">Tocca per aggiornare</small></span>
@@ -247,7 +252,7 @@ html.us-returning-device .auth-overlay{
 
   <main id="quiz" class="page">
     <section class="section" style="margin-top:6px">
-      <div class="quiz-head"><div><div class="tiny">US QUIZ</div><h2 style="margin:2px 0 0">Giochiamo insieme</h2></div><button class="ghost" onclick="go('home')" aria-label="Torna alla Home">←</button></div>
+      <div class="quiz-head"><div><div class="tiny">US QUIZ</div><h2 style="margin:2px 0 0">Giochiamo insieme</h2></div></div>
       <div id="quizHub">
         <div class="quiz-week-card"><div><span class="quiz-week-kicker">SETTIMANALE</span><b id="quizWeekLabel">I quiz di questa settimana</b></div><small id="quizWeekReset">Cambiano automaticamente ogni 7 giorni</small></div>
         <div class="quiz-xp-rule">Ogni risposta uguale vale <b>+5 XP Bond</b> · massimo 50 XP per quiz.</div>

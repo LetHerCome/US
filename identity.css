@@ -212,6 +212,7 @@ textarea,input{
   background:var(--us-pink);
   opacity:.82;
 }
+.us-nav button.active .nlabel{font-weight:760;color:var(--us-ink)}
 
 /* Bond deliberately uses the app's "two loops" mark. */
 .us-nav .us-bond-icon svg circle:first-child{stroke:var(--us-pink)}
@@ -291,10 +292,15 @@ button:focus-visible,
 
 @media(max-width:360px){
   .brand.us-wordmark{font-size:29px!important}
-  .top .online-badge.warn{display:none}
+  .top{gap:8px}
+  .brand-row{gap:6px!important;min-width:0}
+  .today-orb{width:44px!important;min-width:44px!important;padding:0!important;justify-content:center!important}
+  .today-orb-copy{display:none!important}
+  .top-actions{gap:4px}
   .us-nav .nlabel{font-size:var(--us-text-meta)}
   .us-nav button .nicon{width:28px}
 }
+@media(max-width:420px){.top .online-badge{display:none!important}}
 @media(prefers-reduced-motion:reduce){
   .us-id-loader i{animation:none!important}
 }
