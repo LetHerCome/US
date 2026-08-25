@@ -248,6 +248,7 @@ test('le superfici semplici adottano la primitive e Auth resta fuori', () => {
   assert.match(albums, /id="usAlbumLightbox"[^>]*data-us-modal/);
   assert.match(stories, /viewer\.setAttribute\('data-us-modal',''\)/);
   assert.match(stories, /camera\.setAttribute\('data-us-modal',''\)/);
+  assert.match(stories, /confirmation\.setAttribute\('data-us-modal',''\)/);
 });
 
 test('il foglio fondazionale espone token conservativi e target comuni da 44px', () => {
