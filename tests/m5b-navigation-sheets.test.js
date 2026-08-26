@@ -23,7 +23,7 @@ test('la navigazione usa un ingresso direzionale M5B senza riattivare il fade le
   assert.match(css, /html\.us-motion31-promoting \.page\.active\.us-motion5-enter-next/);
 });
 
-test('le sole superfici non fotografiche concordate adottano l opt-in motion', () => {
+test('le superfici concordate adottano l opt-in motion', () => {
   const index = read('index.html');
   const albums = read('moments-albums.js');
   const foundation = read('ui-foundation.css');
@@ -32,7 +32,7 @@ test('le sole superfici non fotografiche concordate adottano l opt-in motion', (
     assert.match(index, new RegExp(`id=["']${id}["'][^>]*data-us-motion-surface`));
   });
   assert.match(albums, /overlay\.setAttribute\('data-us-motion-surface',\s*''\)/);
-  assert.doesNotMatch(index, /id=["']momentViewer["'][^>]*data-us-motion-surface/);
+  assert.match(index, /id=["']momentViewer["'][^>]*data-us-motion-surface/);
   assert.match(foundation, /\[data-us-motion-surface\]\[data-us-motion-exiting\]/);
   assert.match(foundation, /\[data-us-motion-surface\] \.us-modal-backdrop/);
   assert.match(foundation, /\[data-us-motion-surface\] \[data-us-modal-panel\]/);

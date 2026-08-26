@@ -27,9 +27,9 @@ class FakeClassList {
   }
 }
 
-test('Home rende intenzionale il vuoto e lo rimuove quando arriva una foto', () => {
+test('Home rende intenzionale il vuoto e lo rimuove quando arriva una foto', async () => {
   const source = read('app.js');
-  const hero = { classList: new FakeClassList() };
+  const hero = { classList: new FakeClassList(), setAttribute() {}, removeAttribute() {} };
   const empty = { hidden: true };
   const layers = {
     homePhotoLayerA: { style: {}, classList: new FakeClassList(['active']) },
@@ -42,8 +42,11 @@ test('Home rende intenzionale il vuoto e lo rimuove quando arriva una foto', () 
   });
   vm.runInContext(`
     let homePhotoActiveLayer = 'A';
+    let homePhotoRequestId = 0;
+    let homePhotoHasPainted = false;
     class Image {
       set src(_value) { this.onload?.(); }
+      decode() { return Promise.resolve(); }
     }
     ${functionSource(source, 'function crossfadeHomePhoto(', 'async function hydrateHomePhoto(')}
   `, context);
@@ -53,6 +56,7 @@ test('Home rende intenzionale il vuoto e lo rimuove quando arriva una foto', () 
   assert.equal(hero.classList.contains('is-empty'), true);
 
   context.crossfadeHomePhoto('https://example.test/private-photo');
+  await new Promise((resolve) => setImmediate(resolve));
   assert.equal(empty.hidden, true);
   assert.equal(hero.classList.contains('is-empty'), false);
 });

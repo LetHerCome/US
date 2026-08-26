@@ -149,17 +149,20 @@ button{border:0;border-radius:var(--us-radius-control);padding:13px 16px;font:in
 .moment-card:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
 .moment-by{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--pink2);margin-bottom:4px}
 body.viewer-open{overflow:hidden}
-.moment-viewer{position:fixed;inset:0;z-index:80;background:rgba(3,5,9,.94);backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;padding:max(18px,var(--us-safe-top)) 14px max(18px,var(--us-safe-bottom));opacity:0;pointer-events:none;transition:opacity .2s ease}
+.moment-viewer{position:fixed;inset:0;z-index:80;background:rgba(3,5,9,.94);backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;padding:max(18px,var(--us-safe-top)) 14px max(18px,var(--us-safe-bottom));opacity:0;pointer-events:none;transition:opacity var(--us-motion-surface) var(--us-ease-standard)}
 .moment-viewer.show{opacity:1;pointer-events:auto}
-.moment-viewer-card{width:min(100%,520px);max-height:100%;display:flex;flex-direction:column;border-radius:24px;overflow:hidden;background:#10131a;border:1px solid rgba(255,255,255,.10);box-shadow:0 28px 80px rgba(0,0,0,.55);transform:translateY(12px) scale(.985);transition:transform .22s ease}
-.moment-viewer.show .moment-viewer-card{transform:translateY(0) scale(1)}
-.moment-viewer-card>img{width:100%;max-height:68vh;object-fit:contain;background:#05070a;display:block}
-.moment-viewer-info{padding:16px 17px 14px}
+.moment-viewer-card{width:min(100%,520px);max-height:100%;display:flex;flex-direction:column;border-radius:24px;overflow:hidden;background:#10131a;border:1px solid rgba(255,255,255,.10);box-shadow:0 28px 80px rgba(0,0,0,.55)}
+.moment-viewer-card>img{width:100%;min-height:280px;max-height:68vh;aspect-ratio:4/5;object-fit:contain;background:#05070a;display:block;opacity:.38;transition:opacity var(--us-motion-micro) var(--us-ease-standard)}
+.moment-viewer.is-media-preview .moment-viewer-card>img,.moment-viewer.is-media-ready .moment-viewer-card>img{opacity:1}
+.moment-viewer-info{padding:16px 17px 14px;opacity:0;transform:translateY(6px);transition:opacity var(--us-motion-micro) var(--us-ease-standard),transform var(--us-motion-micro) var(--us-ease-standard)}
+.moment-viewer.show .moment-viewer-info{opacity:1;transform:none;transition-delay:var(--us-motion-micro)}
+.moment-viewer[data-us-motion-exiting]{opacity:0}
 .moment-viewer-kicker{font-size:11px;font-weight:850;letter-spacing:.1em;text-transform:uppercase;color:var(--pink2)}
 .moment-viewer-date{font-size:17px;font-weight:800;margin-top:4px}
 .moment-viewer-info p{font-size:14px;line-height:1.5;color:#d9deea;margin:9px 0 0}
 .moment-viewer-hint{font-size:var(--us-text-meta);color:var(--muted);margin-top:12px;text-align:center;opacity:.72}
 .moment-viewer-close{position:fixed;z-index:82;top:max(14px,var(--us-safe-top));right:14px;width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.15);background:rgba(16,19,26,.82);color:white;font-size:25px;line-height:1;display:grid;place-items:center;backdrop-filter:blur(12px)}
+@media(prefers-reduced-motion:reduce){.moment-viewer,.moment-viewer-card,.moment-viewer-info{transform:none!important;transition:opacity 100ms linear!important}}
 @media(max-width:420px){.moment-viewer{padding-left:0;padding-right:0}.moment-viewer-card{width:100%;border-radius:20px 20px 0 0;margin-top:auto}.moment-viewer-card>img{max-height:66vh}}
 
 
@@ -261,7 +264,7 @@ body.viewer-open{overflow:hidden}
 
 .home-hero-only{min-height:min(68vh,650px);height:clamp(440px,68vh,650px);padding:0;background:#11141b;isolation:isolate}
 .home-hero-only:before{display:none!important}
-.home-photo-layer{position:absolute!important;inset:0;z-index:0!important;background-size:cover;background-position:center;opacity:0;transform:scale(1.015);transition:opacity 1.25s ease,transform 6s ease;will-change:opacity,transform}
+.home-photo-layer{position:absolute!important;inset:0;z-index:0!important;background-size:cover;background-position:center;opacity:0;transform:scale(1.006);transition:opacity var(--us-motion-photo) var(--us-ease-standard),transform var(--us-motion-photo) var(--us-ease-standard);will-change:opacity,transform}
 .home-photo-layer.active{opacity:1;transform:scale(1)}
 .home-photo-shade{position:absolute!important;inset:0;z-index:1!important;background:linear-gradient(180deg,rgba(5,7,10,.04),rgba(5,7,10,.02) 55%,rgba(5,7,10,.42) 100%);pointer-events:none}
 .home-distance-pill{position:absolute!important;z-index:3!important;left:14px;right:14px;bottom:14px;width:calc(100% - 28px);padding:10px 12px;border-radius:17px;border:1px solid rgba(255,255,255,.14);background:rgba(10,12,17,.44);backdrop-filter:blur(18px);color:#fff;display:flex;align-items:center;gap:10px;text-align:left;box-shadow:0 10px 30px rgba(0,0,0,.18)}
@@ -328,8 +331,9 @@ body.viewer-open{overflow:hidden}
 /* Home: la foto occupa tutto lo spazio utile della pagina. */
 #home{margin-left:-16px;margin-right:-16px;margin-top:-2px}
 .home-hero-only{height:calc(100svh - 86px - var(--us-safe-top) - var(--us-safe-bottom))!important;min-height:520px!important;max-height:none!important;border-radius:0!important;border-left:0!important;border-right:0!important;box-shadow:none!important}
-.home-photo-layer{transition:opacity 1.45s var(--apple-ease),transform 8s ease!important;transform:scale(1.025)!important}
+.home-photo-layer{transition:opacity var(--us-motion-photo-slow) var(--us-ease-standard),transform var(--us-motion-photo-slow) var(--us-ease-standard)!important;transform:scale(1.006)!important}
 .home-photo-layer.active{transform:scale(1)!important}
+.home-hero-only[data-us-home-photo-instant] .home-photo-layer{transition:none!important}
 .home-photo-shade{background:linear-gradient(180deg,rgba(4,6,9,.03),rgba(4,6,9,.01) 58%,rgba(4,6,9,.46) 100%)!important}
 .home-distance-pill{bottom:26px!important;left:78px!important;right:18px!important;width:auto!important;border-radius:22px!important;background:rgba(12,14,20,.39)!important;backdrop-filter:blur(24px) saturate(150%)!important;-webkit-backdrop-filter:blur(24px) saturate(150%)!important;box-shadow:0 14px 42px rgba(0,0,0,.22)!important;transition:bottom .22s var(--apple-ease),transform .2s var(--apple-ease),background .2s ease!important}
 .home-distance-pill:active{transform:scale(.985);background:rgba(12,14,20,.52)!important}
