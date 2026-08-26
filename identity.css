@@ -29,6 +29,12 @@
   --us-serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
   --us-sans:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
   --us-accent-gradient:linear-gradient(135deg,#e88aa2 0%,#b98dbb 50%,#8f86c8 100%);
+  --us-brand-icon-home:url("/assets/brand/us-icon-home.svg");
+  --us-brand-icon-moments:url("/assets/brand/us-icon-moments.svg");
+  --us-brand-icon-quiz:url("/assets/brand/us-icon-quiz.svg");
+  --us-brand-icon-bond:url("/assets/brand/us-icon-bond.svg");
+  --us-brand-icon-settings:url("/assets/brand/us-icon-settings.svg");
+  --us-brand-icon-stories:url("/assets/brand/us-icon-stories.svg");
 }
 
 html,body{
@@ -44,42 +50,14 @@ html,body{
 /* --- Wordmark --------------------------------------------------- */
 .us-wordmark{
   display:inline-flex!important;
-  align-items:baseline;
-  gap:var(--us-space-1);
+  align-items:center;
   width:auto!important;
-  color:var(--us-ink);
-  font-family:var(--us-serif)!important;
-  font-style:italic;
-  font-weight:600!important;
   line-height:1;
-  letter-spacing:-1.6px!important;
 }
-.brand.us-wordmark{font-size:31px!important}
-.auth-logo.us-wordmark{font-size:42px!important;margin-bottom:11px}
-.us-wordmark-letters{display:inline-block}
-.us-wordmark-dot{
-  position:relative;
-  display:inline-block;
-  width:10px;
-  height:10px;
-  transform:translateY(1px);
-}
-.us-wordmark-dot i{
-  position:absolute;
-  bottom:0;
-  width:6.5px;
-  height:6.5px;
-  border-radius:50%;
-}
-.us-wordmark-dot i:first-child{left:0;background:var(--us-pink)}
-.us-wordmark-dot i:last-child{right:0;background:var(--us-violet);mix-blend-mode:screen}
-.us-wordmark-dot::after{
-  content:"";
-  position:absolute;
-  width:2.4px;height:2.4px;border-radius:50%;
-  left:3.8px;bottom:2.1px;background:#f5f1ea;
-  box-shadow:0 0 7px rgba(255,255,255,.2);
-}
+.us-wordmark-art{display:block;width:62px;height:auto}
+.auth-logo.us-wordmark{margin-bottom:11px}
+.auth-logo .us-wordmark-art{width:94px}
+.us-settings2-brand-mini .us-wordmark-art{width:25px}
 
 /* --- Core palette cleanup -------------------------------------- */
 .card,
@@ -166,19 +144,21 @@ textarea,input{
   font-size:0!important;
   transition:background .18s ease,transform .18s ease,box-shadow .18s ease;
 }
-.us-nav .nicon svg{
-  width:21px;height:21px;
-  fill:none;
-  stroke:currentColor;
-  stroke-width:1.65;
-  stroke-linecap:round;
-  stroke-linejoin:round;
-  overflow:visible;
+.us-nav-icon,
+.us-brand-icon{
+  display:block;
+  width:22px;
+  height:22px;
+  background:#9893a1;
+  -webkit-mask:var(--us-brand-icon-source) center/contain no-repeat;
+  mask:var(--us-brand-icon-source) center/contain no-repeat;
 }
-.us-nav .nicon svg .us-icon-dot{
-  fill:currentColor;
-  stroke:none;
-}
+.us-nav-icon--home{--us-brand-icon-source:var(--us-brand-icon-home)}
+.us-nav-icon--moments{--us-brand-icon-source:var(--us-brand-icon-moments)}
+.us-nav-icon--quiz{--us-brand-icon-source:var(--us-brand-icon-quiz)}
+.us-nav-icon--bond{--us-brand-icon-source:var(--us-brand-icon-bond)}
+.us-nav-icon--settings{--us-brand-icon-source:var(--us-brand-icon-settings)}
+.us-brand-icon--stories{--us-brand-icon-source:var(--us-brand-icon-stories)}
 .us-nav .nlabel{
   display:block;
   font-size:var(--us-text-meta);
@@ -197,11 +177,9 @@ textarea,input{
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.07);
   transform:translateY(-1px);
 }
-.us-nav button.active .nicon svg{
-  stroke:var(--us-ink);
-}
-.us-nav button.active .us-icon-dot{
-  fill:var(--us-pink)!important;
+.us-nav button.active .us-nav-icon{
+  background:linear-gradient(135deg,#ff9abe 0%,#d79aff 52%,#9b82f5 100%);
+  filter:drop-shadow(0 2px 6px rgba(190,113,255,.28));
 }
 .us-nav button.active::after{
   content:"";
@@ -214,12 +192,11 @@ textarea,input{
 }
 .us-nav button.active .nlabel{font-weight:760;color:var(--us-ink)}
 
-/* Bond deliberately uses the app's "two loops" mark. */
-.us-nav .us-bond-icon svg circle:first-child{stroke:var(--us-pink)}
-.us-nav .us-bond-icon svg circle:nth-child(2){stroke:var(--us-violet)}
-.us-nav button:not(.active) .us-bond-icon svg circle:first-child,
-.us-nav button:not(.active) .us-bond-icon svg circle:nth-child(2){
-  stroke:currentColor;
+.us-story-add-only .us-brand-icon{
+  width:18px;
+  height:18px;
+  background:linear-gradient(135deg,#ff9abe 0%,#d79aff 52%,#9b82f5 100%);
+  filter:drop-shadow(0 1px 4px rgba(190,113,255,.22));
 }
 
 /* --- Signature loading mark ------------------------------------ */
@@ -291,7 +268,7 @@ button:focus-visible,
 }
 
 @media(max-width:360px){
-  .brand.us-wordmark{font-size:29px!important}
+  .us-wordmark-art{width:56px}
   .top{gap:8px}
   .brand-row{gap:6px!important;min-width:0}
   .today-orb{width:44px!important;min-width:44px!important;padding:0!important;justify-content:center!important}

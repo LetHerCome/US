@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-static-runtime-9";
+const CACHE_NAME = "us-shell-static-runtime-10";
 const MEDIA_CACHE_NAME = "us-private-media-v1";
 
 const APP_SHELL = [
@@ -28,6 +28,13 @@ const APP_SHELL = [
   "/settings2.css",
   "/polish4.css",
   "/polish4.js",
+  "/assets/brand/us-wordmark.svg",
+  "/assets/brand/us-icon-home.svg",
+  "/assets/brand/us-icon-moments.svg",
+  "/assets/brand/us-icon-quiz.svg",
+  "/assets/brand/us-icon-bond.svg",
+  "/assets/brand/us-icon-settings.svg",
+  "/assets/brand/us-icon-stories.svg",
   "/version.json",
   "/manifest.webmanifest",
   "/icon-192.png",

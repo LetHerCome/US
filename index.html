@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <meta name="theme-color" content="#0a0a0e"/>
 <meta name="color-scheme" content="dark"/>
-<meta name="us-build" content="static-runtime-20260826-5"/>
+<meta name="us-build" content="static-runtime-20260826-6"/>
 <link rel="manifest" href="/manifest.webmanifest?v=us-identity1"/>
 <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=us-identity1"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=us-identity1"/>
@@ -23,7 +23,7 @@
 <link rel="stylesheet" href="/moments-albums.css?v=us-moments-consistency-1" media="print" onload="this.media='all'"/>
 <link rel="stylesheet" href="/games.css?v=us-couple-loop-1" media="print" onload="this.media='all'"/>
 <link rel="stylesheet" href="/settings.css?v=us-motion-pass-1"/>
-<link rel="stylesheet" href="/identity.css?v=us-identity1"/>
+<link rel="stylesheet" href="/identity.css?v=us-identity2"/>
 <link rel="stylesheet" href="/settings2.css?v=us-settings2-1" media="print" onload="this.media='all'"/>
 <link rel="stylesheet" href="/polish4.css?v=us-final-polish-motion31-1"/>
 <link rel="stylesheet" href="/stories.css"/>
@@ -58,7 +58,7 @@ html.us-returning-device .auth-overlay{
 
 <div class="auth-overlay" id="authOverlay">
   <div class="auth-card">
-    <div class="auth-logo us-wordmark" aria-label="US"><span class="us-wordmark-letters">US</span><span class="us-wordmark-dot" aria-hidden="true"><i></i><i></i></span></div>
+    <div class="auth-logo us-wordmark" aria-label="US"><img class="us-wordmark-art" src="/assets/brand/us-wordmark.svg" alt="" aria-hidden="true"></div>
     <div class="auth-step active" id="authPair">
       <div class="tiny">SPAZIO PRIVATO</div>
       <h2>Chi sei?</h2>
@@ -75,7 +75,7 @@ html.us-returning-device .auth-overlay{
 </div>
 
 <div class="app">
-  <div class="top"><div class="brand-row"><div class="brand us-wordmark" aria-label="US"><span class="us-wordmark-letters">US</span><span class="us-wordmark-dot" aria-hidden="true"><i></i><i></i></span></div><button type="button" class="today-orb us-important-control" id="todayOrb" onclick="openToday()" aria-label="Apri la domanda giornaliera"><span class="today-orb-mark">?</span><span class="today-orb-copy"><b>Oggi</b><small>Domanda</small></span><i id="todayOrbDot"></i></button></div><div class="top-actions"><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><button type="button" class="us-calendar-btn us-important-control" id="usCalendarBtn" onclick="openEvents()" aria-label="Apri eventi condivisi">
+  <div class="top"><div class="brand-row"><div class="brand us-wordmark" aria-label="US"><img class="us-wordmark-art" src="/assets/brand/us-wordmark.svg" alt="" aria-hidden="true"></div><button type="button" class="today-orb us-important-control" id="todayOrb" onclick="openToday()" aria-label="Apri la domanda giornaliera"><span class="today-orb-mark">?</span><span class="today-orb-copy"><b>Oggi</b><small>Domanda</small></span><i id="todayOrbDot"></i></button></div><div class="top-actions"><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><button type="button" class="us-calendar-btn us-important-control" id="usCalendarBtn" onclick="openEvents()" aria-label="Apri eventi condivisi">
   <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="15" rx="4"></rect><path d="M7.5 3.5v4M16.5 3.5v4M3.5 10h17"></path></svg>
   <i id="usCalendarDot" hidden></i>
 </button><button type="button" class="profile-avatar us-important-control" id="profileAvatarBtn" aria-label="Cambia foto profilo" onclick="pickProfilePhoto()"><img id="profileAvatarImg" alt="Foto profilo" hidden><span class="fallback" id="profileAvatarFallback">♡</span><span class="camera-dot">+</span></button><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
@@ -233,7 +233,7 @@ html.us-returning-device .auth-overlay{
           <span class="us-setting-value" id="usSyncValue">Controlla</span><i>›</i>
         </button>
         <div class="us-settings2-version-row">
-          <span class="us-settings2-icon us-settings2-brand-mini" aria-hidden="true">US</span>
+          <span class="us-settings2-icon us-settings2-brand-mini" aria-hidden="true"><img class="us-wordmark-art" src="/assets/brand/us-wordmark.svg" alt=""></span>
           <span><b>US 1.0</b><small id="usSettingsBuild">Build corrente</small></span>
         </div>
       </div>
@@ -269,19 +269,19 @@ html.us-returning-device .auth-overlay{
 
 <nav class="nav us-nav" aria-label="Navigazione principale">
 <button class="active" data-page="home" onclick="go('home',{nav:true})" aria-label="Home" aria-current="page">
-  <span class="nicon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 10.4 12 4.2l7.5 6.2v8.1a1.3 1.3 0 0 1-1.3 1.3H5.8a1.3 1.3 0 0 1-1.3-1.3z"/><path d="M9.2 19.8v-5.5h5.6v5.5"/><circle cx="18.4" cy="6.4" r="1.15" class="us-icon-dot"/></svg></span><span class="nlabel">Home</span>
+  <span class="nicon"><span class="us-nav-icon us-nav-icon--home" aria-hidden="true"></span></span><span class="nlabel">Home</span>
 </button>
 <button data-page="moments" onclick="go('moments',{nav:true})" aria-label="Moments">
-  <span class="nicon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.2" y="6.4" width="12.6" height="13" rx="2.8"/><path d="M8 6.4V5.8A2.2 2.2 0 0 1 10.2 3.6h7.6A2.2 2.2 0 0 1 20 5.8v8.1a2.2 2.2 0 0 1-2.2 2.2h-1"/><circle cx="8.4" cy="10.4" r="1.25"/><path d="m6.2 17 3.6-3.6 2.3 2.2 1.7-1.7 3 3.1"/></svg></span><span class="nlabel">Moments</span>
+  <span class="nicon"><span class="us-nav-icon us-nav-icon--moments" aria-hidden="true"></span></span><span class="nlabel">Moments</span>
 </button>
 <button data-page="quiz" onclick="openQuizHub({nav:true})" aria-label="Quiz">
-  <span class="nicon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.2 5.4h10.2a3 3 0 0 1 3 3v3.5a3 3 0 0 1-3 3H9l-3.5 3v-3.2a2.5 2.5 0 0 1-1.3-2.2z"/><path d="M10.2 17.1h4.7l3.5 2.8v-3.3a2.7 2.7 0 0 0 1.4-2.3V11"/><circle cx="8.3" cy="10.1" r=".75"/><circle cx="11" cy="10.1" r=".75"/><circle cx="13.7" cy="10.1" r=".75"/></svg></span><span class="nlabel">Quiz</span>
+  <span class="nicon"><span class="us-nav-icon us-nav-icon--quiz" aria-hidden="true"></span></span><span class="nlabel">Quiz</span>
 </button>
 <button data-page="bond" onclick="go('bond',{nav:true})" aria-label="Bond">
-  <span class="nicon us-bond-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9.1" cy="12" r="5.2"/><circle cx="14.9" cy="12" r="5.2"/><circle cx="19.4" cy="18.6" r="1.05" class="us-icon-dot"/></svg></span><span class="nlabel">Bond</span>
+  <span class="nicon"><span class="us-nav-icon us-nav-icon--bond" aria-hidden="true"></span></span><span class="nlabel">Bond</span>
 </button>
 <button data-page="settings" onclick="go('settings',{nav:true})" aria-label="Impostazioni">
-  <span class="nicon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14M5 12h14M5 17.5h14"/><circle cx="9" cy="6.5" r="1.9"/><circle cx="15.4" cy="12" r="1.9"/><circle cx="10.8" cy="17.5" r="1.9"/></svg></span><span class="nlabel">Impostazioni</span>
+  <span class="nicon"><span class="us-nav-icon us-nav-icon--settings" aria-hidden="true"></span></span><span class="nlabel">Impostazioni</span>
 </button>
 </nav>
 
