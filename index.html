@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <meta name="theme-color" content="#0a0a0e"/>
 <meta name="color-scheme" content="dark"/>
-<meta name="us-build" content="static-runtime-20260825-2"/>
+<meta name="us-build" content="static-runtime-20260825-3"/>
 <link rel="manifest" href="/manifest.webmanifest?v=us-identity1"/>
 <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=us-identity1"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=us-identity1"/>
@@ -88,7 +88,7 @@ html.us-returning-device .auth-overlay{
       <div class="home-empty-state" id="homeEmptyState" hidden>
         <span class="home-empty-mark" aria-hidden="true">♡</span>
         <span class="home-empty-copy"><b>Il primo ricordo può iniziare da qui.</b><small>Aggiungi un Moment e la Home lo custodirà per voi.</small></span>
-        <button type="button" class="home-empty-action" onclick="go('moments')">Aggiungi un ricordo</button>
+        <button type="button" class="home-empty-action" onclick="go('moments',{nav:true})">Aggiungi un ricordo</button>
       </div>
       <button type="button" class="home-distance-pill" id="distanceWidget" onclick="refreshMyLocation()" aria-label="Aggiorna distanza">
         <span class="distance-orbit" aria-hidden="true">♡</span>
@@ -103,7 +103,7 @@ html.us-returning-device .auth-overlay{
     </section>
   </main>
 
-  <main id="today" class="today-overlay" aria-hidden="true" data-us-modal>
+  <main id="today" class="today-overlay" aria-hidden="true" data-us-modal data-us-motion-surface>
     <div class="today-backdrop us-modal-backdrop" onclick="closeToday()"></div>
     <section class="today-sheet" role="dialog" aria-modal="true" aria-label="Domanda del giorno" data-us-modal-panel>
       <div class="today-sheet-head"><div><div class="tiny">OGGI</div><h2>La domanda di oggi</h2></div><button type="button" class="today-close us-modal-close" onclick="closeToday()" aria-label="Chiudi domanda del giorno" data-us-modal-close>×</button></div>
@@ -268,25 +268,25 @@ html.us-returning-device .auth-overlay{
 <button type="button" id="thinkButton" class="us-floating-think" onclick="sendThinkSignal()" aria-label="Invia Ti penso" title="Ti penso"><span class="us-floating-think-ring"></span><span>♡</span></button>
 
 <nav class="nav us-nav" aria-label="Navigazione principale">
-<button class="active" data-page="home" onclick="go('home')" aria-label="Home" aria-current="page">
+<button class="active" data-page="home" onclick="go('home',{nav:true})" aria-label="Home" aria-current="page">
   <span class="nicon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 10.4 12 4.2l7.5 6.2v8.1a1.3 1.3 0 0 1-1.3 1.3H5.8a1.3 1.3 0 0 1-1.3-1.3z"/><path d="M9.2 19.8v-5.5h5.6v5.5"/><circle cx="18.4" cy="6.4" r="1.15" class="us-icon-dot"/></svg></span><span class="nlabel">Home</span>
 </button>
-<button data-page="moments" onclick="go('moments')" aria-label="Moments">
+<button data-page="moments" onclick="go('moments',{nav:true})" aria-label="Moments">
   <span class="nicon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.2" y="6.4" width="12.6" height="13" rx="2.8"/><path d="M8 6.4V5.8A2.2 2.2 0 0 1 10.2 3.6h7.6A2.2 2.2 0 0 1 20 5.8v8.1a2.2 2.2 0 0 1-2.2 2.2h-1"/><circle cx="8.4" cy="10.4" r="1.25"/><path d="m6.2 17 3.6-3.6 2.3 2.2 1.7-1.7 3 3.1"/></svg></span><span class="nlabel">Moments</span>
 </button>
-<button data-page="quiz" onclick="openQuizHub()" aria-label="Quiz">
+<button data-page="quiz" onclick="openQuizHub({nav:true})" aria-label="Quiz">
   <span class="nicon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.2 5.4h10.2a3 3 0 0 1 3 3v3.5a3 3 0 0 1-3 3H9l-3.5 3v-3.2a2.5 2.5 0 0 1-1.3-2.2z"/><path d="M10.2 17.1h4.7l3.5 2.8v-3.3a2.7 2.7 0 0 0 1.4-2.3V11"/><circle cx="8.3" cy="10.1" r=".75"/><circle cx="11" cy="10.1" r=".75"/><circle cx="13.7" cy="10.1" r=".75"/></svg></span><span class="nlabel">Quiz</span>
 </button>
-<button data-page="bond" onclick="go('bond')" aria-label="Bond">
+<button data-page="bond" onclick="go('bond',{nav:true})" aria-label="Bond">
   <span class="nicon us-bond-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9.1" cy="12" r="5.2"/><circle cx="14.9" cy="12" r="5.2"/><circle cx="19.4" cy="18.6" r="1.05" class="us-icon-dot"/></svg></span><span class="nlabel">Bond</span>
 </button>
-<button data-page="settings" onclick="go('settings')" aria-label="Impostazioni">
+<button data-page="settings" onclick="go('settings',{nav:true})" aria-label="Impostazioni">
   <span class="nicon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14M5 12h14M5 17.5h14"/><circle cx="9" cy="6.5" r="1.9"/><circle cx="15.4" cy="12" r="1.9"/><circle cx="10.8" cy="17.5" r="1.9"/></svg></span><span class="nlabel">Impostazioni</span>
 </button>
 </nav>
 
 
-<div class="us-events-overlay" id="usEventsOverlay" aria-hidden="true" data-us-modal>
+<div class="us-events-overlay" id="usEventsOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
   <div class="us-events-backdrop us-modal-backdrop" onclick="closeEvents()"></div>
   <section class="us-events-sheet" role="dialog" aria-modal="true" aria-labelledby="usEventsTitle" data-us-modal-panel>
     <header class="us-events-head">
@@ -345,7 +345,7 @@ html.us-returning-device .auth-overlay{
   </section>
 </div>
 
-<div class="us-settings-overlay" id="usSettingsOverlay" aria-hidden="true" data-us-modal>
+<div class="us-settings-overlay" id="usSettingsOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
   <div class="us-settings-backdrop us-modal-backdrop" data-us-settings-close></div>
   <section class="us-settings-sheet" role="dialog" aria-modal="true" aria-labelledby="usSettingsModalTitle" data-us-modal-panel>
     <div class="us-settings-sheet-grabber"></div>

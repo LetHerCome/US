@@ -51,12 +51,11 @@
 
 .page.us-motion31-animating,
 .page.us-motion31-returning{
-  transition:transform .255s cubic-bezier(.22,.72,.18,1)!important;
+  transition:transform var(--us-motion-surface) var(--us-ease-standard)!important;
 }
 
 .page.us-motion31-returning{
-  transition-duration:.275s!important;
-  transition-timing-function:cubic-bezier(.22,.78,.24,1)!important;
+  transition:transform var(--us-motion-base) var(--us-ease-standard)!important;
 }
 
 html.us-motion31-promoting .page.active,
@@ -68,6 +67,24 @@ html.us-motion31-promoting .page.active,
 /* Old swipe animation must never stack on top of Motion 3.1. */
 html.us-motion31-promoting .page.active.swipe-next,
 html.us-motion31-promoting .page.active.swipe-prev{
+  animation:none!important;
+}
+
+.page.active.us-motion5-enter-next,
+.page.active.us-motion5-enter-prev{
+  animation:usMotion5PageEnter var(--us-motion-fast) var(--us-ease-enter) both!important;
+}
+
+.page.active.us-motion5-enter-next{--us-motion5-enter-x:10px}
+.page.active.us-motion5-enter-prev{--us-motion5-enter-x:-10px}
+
+@keyframes usMotion5PageEnter{
+  from{opacity:.94;transform:translate3d(var(--us-motion5-enter-x),0,0)}
+  to{opacity:1;transform:none}
+}
+
+html.us-motion31-promoting .page.active.us-motion5-enter-next,
+html.us-motion31-promoting .page.active.us-motion5-enter-prev{
   animation:none!important;
 }
 
@@ -189,6 +206,8 @@ html.us-motion31-promoting .page.active.swipe-prev{
 @media(prefers-reduced-motion:reduce){
   .page.us-motion31-animating,
   .page.us-motion31-returning,
+  .page.active.us-motion5-enter-next,
+  .page.active.us-motion5-enter-prev,
   .us-xp-celebration,
   .us-level-celebration,
   .us-level-celebration>div{

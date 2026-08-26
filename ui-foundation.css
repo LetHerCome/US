@@ -56,6 +56,43 @@
   transform:scale(.985);
 }
 
+[data-us-motion-surface] .us-modal-backdrop {
+  opacity:0;
+  transition:opacity var(--us-motion-surface) var(--us-ease-standard);
+}
+
+[data-us-motion-surface] [data-us-modal-panel] {
+  opacity:0;
+  transform:translateY(16px);
+  transition:transform var(--us-motion-surface) var(--us-ease-enter),opacity var(--us-motion-micro) var(--us-ease-standard);
+  will-change:transform,opacity;
+  animation:none;
+}
+
+[data-us-motion-surface].open .us-modal-backdrop,
+[data-us-motion-surface].show .us-modal-backdrop {
+  opacity:1;
+}
+
+[data-us-motion-surface].open [data-us-modal-panel],
+[data-us-motion-surface].show [data-us-modal-panel] {
+  opacity:1;
+  transform:none;
+}
+
+[data-us-motion-surface][data-us-motion-exiting] {
+  pointer-events:none;
+}
+
+[data-us-motion-surface][data-us-motion-exiting] .us-modal-backdrop {
+  opacity:0;
+}
+
+[data-us-motion-surface][data-us-motion-exiting] [data-us-modal-panel] {
+  opacity:0;
+  transform:translateY(16px);
+}
+
 :root[data-us-motion="reduced"] {
   --us-motion-press:1ms;
   --us-motion-micro:1ms;
@@ -68,6 +105,10 @@
 }
 
 :root[data-us-motion="reduced"] :where(button:not(:disabled):not([data-us-motion-tap="off"])):active {
+  transform:none;
+}
+
+:root[data-us-motion="reduced"] [data-us-motion-surface] [data-us-modal-panel] {
   transform:none;
 }
 

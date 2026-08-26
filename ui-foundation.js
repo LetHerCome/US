@@ -13,6 +13,10 @@
     isReducedMotion: () => false,
     onChange: () => () => {}
   };
+  let activeSurfaceMotion = {
+    cancelExit: () => {},
+    exit: (_root, finalize) => finalize?.()
+  };
 
   const FOCUSABLE = [
     'button:not([disabled])',
@@ -22,6 +26,8 @@
     'textarea:not([disabled])',
     '[tabindex]:not([tabindex="-1"])'
   ].join(',');
+  // Safety only: normal completion comes from the panel's real transform transition.
+  const SURFACE_EXIT_FALLBACK_MS = 1000;
 
   function isOpen(modal) {
     return !modal.hidden && modal.getAttribute('aria-hidden') !== 'true';
@@ -82,6 +88,47 @@
       }
     };
     activeMotion = motion;
+    const surfaceExits = new Map();
+    const schedule = environment.setTimeout || setTimeout;
+    const cancelSchedule = environment.clearTimeout || clearTimeout;
+    const cancelSurfaceExit = (root) => {
+      const exit = surfaceExits.get(root);
+      if (exit) {
+        exit.cancelled = true;
+        if (exit.fallback !== undefined) cancelSchedule(exit.fallback);
+        exit.surface.removeEventListener('transitionend', exit.onTransitionEnd);
+      }
+      surfaceExits.delete(root);
+      root?.removeAttribute('data-us-motion-exiting');
+    };
+    const exitSurface = (root, finalize) => {
+      if (!root || typeof finalize !== 'function') return false;
+      if (surfaceExits.has(root)) return true;
+      if (reducedMotion) {
+        finalize();
+        return true;
+      }
+      const surface = root.querySelector('[data-us-modal-panel]') || root;
+      const exit = { surface, fallback: undefined, cancelled: false, onTransitionEnd: null };
+      const complete = () => {
+        if (exit.cancelled || surfaceExits.get(root) !== exit) return;
+        exit.cancelled = true;
+        if (exit.fallback !== undefined) cancelSchedule(exit.fallback);
+        surface.removeEventListener('transitionend', exit.onTransitionEnd);
+        surfaceExits.delete(root);
+        root.removeAttribute('data-us-motion-exiting');
+        finalize();
+      };
+      exit.onTransitionEnd = (event) => {
+        if (event.target === surface && event.propertyName === 'transform') complete();
+      };
+      surfaceExits.set(root, exit);
+      surface.addEventListener('transitionend', exit.onTransitionEnd);
+      root.setAttribute('data-us-motion-exiting', '');
+      exit.fallback = schedule(complete, SURFACE_EXIT_FALLBACK_MS);
+      return true;
+    };
+    activeSurfaceMotion = { cancelExit: cancelSurfaceExit, exit: exitSurface };
 
     const modalState = new Map();
     const inertState = new Map();
@@ -198,22 +245,38 @@
         if (motionQuery?.removeEventListener) motionQuery.removeEventListener('change', onMotionChange);
         else motionQuery?.removeListener?.(onMotionChange);
         motionSubscribers.clear();
+        surfaceExits.forEach((exit) => {
+          exit.cancelled = true;
+          if (exit.fallback !== undefined) cancelSchedule(exit.fallback);
+          exit.surface.removeEventListener('transitionend', exit.onTransitionEnd);
+        });
+        surfaceExits.clear();
         if (activeMotion === motion) {
           activeMotion = {
             isReducedMotion: () => false,
             onChange: () => () => {}
           };
         }
+        if (activeSurfaceMotion.exit === exitSurface) {
+          activeSurfaceMotion = {
+            cancelExit: () => {},
+            exit: (_root, finalize) => finalize?.()
+          };
+        }
         setInert(new Set());
       },
       isReducedMotion: motion.isReducedMotion,
-      onMotionPreferenceChange: motion.onChange
+      onMotionPreferenceChange: motion.onChange,
+      cancelSurfaceExit,
+      exitSurface
     };
   }
 
   return {
     install,
     isReducedMotion: () => activeMotion.isReducedMotion(),
-    onMotionPreferenceChange: (listener) => activeMotion.onChange(listener)
+    onMotionPreferenceChange: (listener) => activeMotion.onChange(listener),
+    cancelSurfaceExit: (root) => activeSurfaceMotion.cancelExit(root),
+    exitSurface: (root, finalize) => activeSurfaceMotion.exit(root, finalize)
   };
 });

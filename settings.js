@@ -15,15 +15,20 @@ function openModal(title,body,kicker='US.'){
   $('usSettingsModalKicker').textContent=kicker;
   $('usSettingsModalBody').innerHTML=body;
   const root=$('usSettingsOverlay');
+  window.UsUiFoundation?.cancelSurfaceExit?.(root);
   root.classList.add('open');
   root.setAttribute('aria-hidden','false');
   document.body.classList.add('us-settings-modal-open');
 }
 function closeModal(){
   const root=$('usSettingsOverlay');
-  root?.classList.remove('open');
-  root?.setAttribute('aria-hidden','true');
-  document.body.classList.remove('us-settings-modal-open');
+  if(!root)return;
+  const finalize=()=>{
+    root.classList.remove('open');
+    root.setAttribute('aria-hidden','true');
+    document.body.classList.remove('us-settings-modal-open');
+  };
+  if(window.UsUiFoundation?.exitSurface)window.UsUiFoundation.exitSurface(root,finalize);else finalize();
 }
 window.closeUsSettingsModal=closeModal;
 

@@ -421,6 +421,7 @@ console.info('[US] Moments Albums attivo');
   function openComposer() {
     const overlay = document.getElementById('usMomentComposeOverlay');
     if (!overlay) return;
+    window.UsUiFoundation?.cancelSurfaceExit?.(overlay);
     overlay.classList.add('show');
     overlay.setAttribute('aria-hidden', 'false');
     document.body.classList.add('us-moment-compose-open');
@@ -429,9 +430,12 @@ console.info('[US] Moments Albums attivo');
   function closeComposer() {
     const overlay = document.getElementById('usMomentComposeOverlay');
     if (!overlay) return;
-    overlay.classList.remove('show');
-    overlay.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('us-moment-compose-open');
+    const finalize = () => {
+      overlay.classList.remove('show');
+      overlay.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('us-moment-compose-open');
+    };
+    if (window.UsUiFoundation?.exitSurface) window.UsUiFoundation.exitSurface(overlay, finalize); else finalize();
   }
 
   function setupMomentsPage() {
@@ -463,6 +467,7 @@ console.info('[US] Moments Albums attivo');
     overlay.id = 'usMomentComposeOverlay';
     overlay.setAttribute('aria-hidden', 'true');
     overlay.setAttribute('data-us-modal', '');
+    overlay.setAttribute('data-us-motion-surface', '');
     overlay.innerHTML = `
       <div class="us-moment-compose-backdrop us-modal-backdrop" id="usMomentComposeBackdrop"></div>
       <section class="us-moment-compose-sheet" role="dialog" aria-modal="true" aria-label="Aggiungi un ricordo" data-us-modal-panel>

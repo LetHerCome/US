@@ -19,6 +19,7 @@ class FakeElement {
     this.parentElement = null;
     this.children = [];
     this.attributes = new Map();
+    this.listeners = new Map();
     this.classList = new FakeClassList(options.classes || []);
     this.hidden = Boolean(options.hidden);
     this.disabled = Boolean(options.disabled);
@@ -63,6 +64,15 @@ class FakeElement {
   }
   querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
   focus() { this.ownerDocument.activeElement = this; }
+  addEventListener(type, listener) {
+    const listeners = this.listeners.get(type) || new Set();
+    listeners.add(listener);
+    this.listeners.set(type, listeners);
+  }
+  removeEventListener(type, listener) { this.listeners.get(type)?.delete(listener); }
+  dispatch(type, detail = {}) {
+    this.listeners.get(type)?.forEach((listener) => listener({ target: this, ...detail }));
+  }
 }
 
 class FakeDocument {
@@ -334,4 +344,106 @@ test('i token motion legacy preservano le superfici rinviate alle milestone succ
   assert.match(settings, /var\(--us-motion-legacy-base\)/);
   assert.match(events, /var\(--us-motion-legacy-base\)/);
   assert.match(games, /var\(--us-motion-legacy-base\)/);
+});
+
+test('l exit surface completa sul transform della superficie e mantiene focus e inert fino alla chiusura semantica', () => {
+  const { install } = require('../ui-foundation.js');
+  const { document, app, opener, modal, close } = modalFixture();
+  const scheduled = new Map();
+  const controller = install(document, {
+    MutationObserver: null,
+    setTimeout(callback) { scheduled.set(0, callback); return 0; },
+    clearTimeout(id) { scheduled.delete(id); }
+  });
+
+  opener.focus();
+  modal.setAttribute('aria-hidden', 'false');
+  controller.sync();
+  assert.equal(document.activeElement, close);
+  assert.equal(app.hasAttribute('inert'), true);
+
+  let finalized = 0;
+  controller.exitSurface(modal, () => {
+    finalized += 1;
+    modal.setAttribute('aria-hidden', 'true');
+  });
+
+  assert.equal(modal.hasAttribute('data-us-motion-exiting'), true);
+  assert.equal(finalized, 0);
+  assert.equal(document.activeElement, close, 'il focus non deve finire dietro la superficie visibile');
+  assert.equal(app.hasAttribute('inert'), true, 'inert resta authority della foundation durante l exit');
+
+  const panel = modal.querySelector('[data-us-modal-panel]');
+  panel.dispatch('transitionend', { propertyName: 'opacity' });
+  assert.equal(finalized, 0, 'la transizione breve di opacit\u00e0 non deve chiudere prima del movimento della superficie');
+  panel.dispatch('transitionend', { propertyName: 'transform' });
+  controller.sync();
+  assert.equal(finalized, 1);
+  assert.equal(scheduled.has(0), false, 'il fallback deve essere cancellato dopo il transitionend reale');
+  assert.equal(modal.hasAttribute('data-us-motion-exiting'), false);
+  assert.equal(document.activeElement, opener);
+  assert.equal(app.hasAttribute('inert'), false);
+  controller.destroy();
+});
+
+test('reduced motion finalizza l exit surface senza timer', () => {
+  const { install } = require('../ui-foundation.js');
+  const { document, modal } = modalFixture();
+  const controller = install(document, {
+    MutationObserver: null,
+    matchMedia: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
+    setTimeout() { throw new Error('reduced motion non deve pianificare un timer'); }
+  });
+  let finalized = 0;
+
+  controller.exitSurface(modal, () => { finalized += 1; });
+
+  assert.equal(finalized, 1);
+  assert.equal(modal.hasAttribute('data-us-motion-exiting'), false);
+  controller.destroy();
+});
+
+test('close e riapertura rapida annullano il callback stale dell exit surface', () => {
+  const { install } = require('../ui-foundation.js');
+  const { document, modal } = modalFixture();
+  const scheduled = new Map();
+  const controller = install(document, {
+    MutationObserver: null,
+    setTimeout(callback) { scheduled.set(0, callback); return 0; },
+    clearTimeout(id) { scheduled.delete(id); }
+  });
+
+  let finalized = 0;
+  controller.exitSurface(modal, () => { finalized += 1; });
+  const staleFallback = scheduled.get(0);
+  controller.cancelSurfaceExit(modal);
+  staleFallback();
+
+  assert.equal(scheduled.has(0), false);
+  assert.equal(modal.hasAttribute('data-us-motion-exiting'), false);
+  assert.equal(finalized, 0, 'un fallback annullato non deve chiudere una superficie riaperta');
+  controller.destroy();
+});
+
+test('un exit surface completa una sola volta tra transitionend e fallback', () => {
+  const { install } = require('../ui-foundation.js');
+  const { document, modal } = modalFixture();
+  const scheduled = new Map();
+  const controller = install(document, {
+    MutationObserver: null,
+    setTimeout(callback) { scheduled.set(0, callback); return 0; },
+    clearTimeout(id) { scheduled.delete(id); }
+  });
+  let finalized = 0;
+
+  controller.exitSurface(modal, () => { finalized += 1; });
+  const staleFallback = scheduled.get(0);
+  const panel = modal.querySelector('[data-us-modal-panel]');
+  panel.dispatch('transitionend', { propertyName: 'transform' });
+  assert.equal(finalized, 1, 'il transitionend reale deve finalizzare senza attendere il fallback');
+  panel.dispatch('transitionend', { propertyName: 'transform' });
+  staleFallback();
+
+  assert.equal(finalized, 1);
+  controller.destroy();
 });

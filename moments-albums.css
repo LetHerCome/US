@@ -244,12 +244,11 @@ body.us-album-open{overflow:hidden;touch-action:none}
 .us-moment-compose-overlay{
   position:fixed;inset:0;z-index:10040;display:none;
   align-items:flex-end;justify-content:center;
-  background:rgba(3,5,9,.66);
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  background:transparent;
   padding-top:calc(var(--us-safe-top) + 10px);
 }
 .us-moment-compose-overlay.show{display:flex}
-.us-moment-compose-backdrop{position:absolute;inset:0}
+.us-moment-compose-backdrop{position:absolute;inset:0;background:rgba(3,5,9,.66);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .us-moment-compose-sheet{
   width:min(500px,100%);max-height:calc(var(--us-viewport-height,100dvh) - max(24px,var(--us-safe-top)));
   overflow:auto;overscroll-behavior:contain;position:relative;z-index:1;

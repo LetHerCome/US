@@ -1,5 +1,17 @@
 const pages=['home','moments','quiz','bond','settings'];
 const swipePages=['home','moments','quiz','bond','settings'];
+const US_MOTION_FAST_MS=180;
+const US_MOTION_BASE_MS=220;
+const US_MOTION_SURFACE_MS=260;
+function isReducedMotion(){return Boolean(window.UsUiFoundation?.isReducedMotion?.());}
+function clearPageEntry(page){page?.classList.remove('us-motion5-enter-next','us-motion5-enter-prev');}
+function animatePageEntry(page,direction){
+  if(!page||isReducedMotion())return;
+  const entry=direction>0?'us-motion5-enter-next':'us-motion5-enter-prev';
+  clearPageEntry(page);
+  page.classList.add(entry);
+  setTimeout(()=>page.classList.remove(entry),US_MOTION_FAST_MS);
+}
 function go(id,options={}){
   const current=document.querySelector('.page.active')?.id;
   if(current===id){
@@ -9,12 +21,15 @@ function go(id,options={}){
     if(id==='settings' && window.usProfile)window.hydrateUsSettings?.();
     return;
   }
+  const direction=Math.sign(pages.indexOf(id)-pages.indexOf(current));
   pages.forEach(pageId=>{
     const el=document.getElementById(pageId);
     el.classList.remove('swipe-next','swipe-prev');
+    clearPageEntry(el);
     if(pageId===id && options.swipe && !options.motionCommit)el.classList.add(options.swipe==='next'?'swipe-next':'swipe-prev');
     el.classList.toggle('active',pageId===id);
   });
+  if(options.nav&&!options.motionCommit&&direction)animatePageEntry(document.getElementById(id),direction);
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
   if(options.swipe&&!options.motionCommit)setTimeout(()=>document.getElementById(id)?.classList.remove('swipe-next','swipe-prev'),190);
   scrollTo({top:0,behavior:(options.swipe||options.motionCommit)?'auto':'smooth'});
@@ -66,7 +81,7 @@ async function loadWeeklyQuizHub(force=false){
   }
 }
 window.loadWeeklyQuizHub=loadWeeklyQuizHub;
-function openQuizHub(){go('quiz');resetQuiz({reload:false});loadWeeklyQuizHub()}
+function openQuizHub(options={}){go('quiz',options);resetQuiz({reload:false});loadWeeklyQuizHub()}
 async function startQuiz(cat){
   if(!window.usProfile){toast('Sync non pronta');return;}
   quizCat=cat;quizPos=0;quizSelected=null;quizQuestions=[];quizSet=null;quizState=null;
@@ -1179,6 +1194,7 @@ function localDateISO(){
 function openToday(){
   const root=document.getElementById('today');
   if(!root)return;
+  window.UsUiFoundation?.cancelSurfaceExit?.(root);
   root.classList.add('open');
   root.setAttribute('aria-hidden','false');
   document.body.style.overflow='hidden';
@@ -1187,9 +1203,13 @@ function openToday(){
 window.openToday=openToday;
 function closeToday(){
   const root=document.getElementById('today');
-  root?.classList.remove('open');
-  root?.setAttribute('aria-hidden','true');
-  document.body.style.overflow='';
+  if(!root)return;
+  const finalize=()=>{
+    root.classList.remove('open');
+    root.setAttribute('aria-hidden','true');
+    document.body.style.overflow='';
+  };
+  if(window.UsUiFoundation?.exitSurface)window.UsUiFoundation.exitSurface(root,finalize);else finalize();
 }
 window.closeToday=closeToday;
 
@@ -1964,6 +1984,7 @@ function swipeVelocity(g){
 
 function clearMotionPage(page){
   if(!page)return;
+  clearPageEntry(page);
   page.classList.remove(
     'us-motion31-current',
     'us-motion31-preview',
@@ -2073,7 +2094,7 @@ function resetSwipeVisual(g){
   setTimeout(()=>{
     clearMotionPage(current);
     destroySwipePreview();
-  },285);
+  },isReducedMotion()?0:US_MOTION_BASE_MS);
 }
 
 function completeSwipe(g,direction){
@@ -2112,13 +2133,14 @@ function completeSwipe(g,direction){
         document.documentElement.classList.remove('us-motion31-promoting');
       });
     });
-  },248);
+  },isReducedMotion()?0:US_MOTION_SURFACE_MS);
 }
 
 document.addEventListener('touchstart',event=>{
   if(event.touches.length!==1||swipeBlockedTarget(event.target))return;
   const activePage=document.querySelector('.page.active');
   if(!activePage||!swipePages.includes(activePage.id))return;
+  clearPageEntry(activePage);
 
   const touch=event.touches[0];
   if(touch.clientX<20||touch.clientX>window.innerWidth-20)return;
