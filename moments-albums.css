@@ -158,16 +158,20 @@ body.us-album-open{overflow:hidden;touch-action:none}
 }
 
 /* Dedicated fullscreen gallery. */
-.us-album-lightbox{
-  position:fixed;inset:0;z-index:10120;background:#020306;
-  display:none;align-items:center;justify-content:center;touch-action:none
-}
+.us-album-lightbox{position:fixed;inset:0;z-index:10120;background:#020306;display:none;align-items:center;justify-content:center;touch-action:none;opacity:0;transition:opacity var(--us-motion-surface) var(--us-ease-standard)}
 .us-album-lightbox.show{display:flex}
-.us-album-lightbox img{
-  width:100%;height:100%;object-fit:contain;display:block;
+.us-album-lightbox.show{opacity:1}
+.us-album-lightbox[data-us-motion-exiting]{opacity:0}
+.us-album-lightbox-stage{position:relative;width:100%;height:100%;overflow:hidden}
+.us-album-lightbox-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;opacity:0;transform:translateX(0);transition:transform var(--us-motion-base) var(--us-ease-standard),opacity var(--us-motion-micro) var(--us-ease-standard);pointer-events:none;
   padding:max(54px,calc(var(--us-safe-top) + 46px)) 0
           max(92px,calc(var(--us-safe-bottom) + 78px));
 }
+.us-album-lightbox-photo.active{opacity:1}
+.us-album-lightbox-photo.is-preparing.us-lightbox-enter-next{opacity:1;transform:translateX(14%);transition:none}
+.us-album-lightbox-photo.is-preparing.us-lightbox-enter-prev{opacity:1;transform:translateX(-14%);transition:none}
+.us-album-lightbox-photo.active.us-lightbox-exit-next{opacity:1;transform:translateX(-14%)}
+.us-album-lightbox-photo.active.us-lightbox-exit-prev{opacity:1;transform:translateX(14%)}
 .us-album-lightbox-close{
   position:absolute;z-index:5;right:14px;top:calc(var(--us-safe-top) + 12px);
   width:42px;height:42px;padding:0;border-radius:50%;
@@ -369,6 +373,7 @@ body.us-moment-compose-open{overflow:hidden}
     #0a0c11!important
 }
 .us-album-overlay.show .us-album-shell{animation:usAlbumVisualIn .24s cubic-bezier(.22,.78,.24,1)}
+.us-album-overlay[data-us-motion-surface] .us-album-shell{animation:none!important}
 @keyframes usAlbumVisualIn{from{transform:translateY(14px);opacity:.68}to{transform:none;opacity:1}}
 
 .us-album-close{
@@ -544,9 +549,7 @@ body.us-moment-compose-open{overflow:hidden}
   .us-album-photo-card:nth-of-type(3n+1){grid-column:auto}
   .us-album-photo-card:nth-of-type(4n+1){grid-column:span 2}
 }
-@media(prefers-reduced-motion:reduce){
-  .us-moment-compose-sheet,.us-album-overlay.show .us-album-shell{animation:none!important}
-}
+@media(prefers-reduced-motion:reduce){.us-moment-compose-sheet,.us-album-overlay.show .us-album-shell{animation:none!important}.us-album-lightbox,.us-album-lightbox-stage,.us-album-lightbox-photo{transform:none!important;transition:opacity 100ms linear!important}}
 /* ============================================================
    US · Moments Consistency Fix
    ============================================================ */

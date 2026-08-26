@@ -14,6 +14,9 @@ let albumLoadSeq=0;
 let lightboxItems=[];
 let lightboxIndex=0;
 let lightboxTouch=null;
+let lightboxActiveLayer='A';
+let lightboxRenderToken=0;
+let lightboxSettleCancel=null;
 let albumUploadBusy=false;
 
 function esc(value){
@@ -22,7 +25,7 @@ function esc(value){
 function ensureUi(){
   if(document.getElementById('usAlbumOverlay'))return;
   document.body.insertAdjacentHTML('beforeend',`
-    <div class="us-album-overlay" id="usAlbumOverlay" aria-hidden="true" data-us-modal>
+    <div class="us-album-overlay" id="usAlbumOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
       <div class="us-album-shell" role="dialog" aria-modal="true" aria-label="Album del Moment" data-us-modal-panel>
         <button type="button" class="us-album-close us-modal-close" id="usAlbumClose" aria-label="Chiudi album" data-us-modal-close>‹</button>
         <div class="us-album-scroll" id="usAlbumScroll">
@@ -50,11 +53,14 @@ function ensureUi(){
         </div>
       </div>
     </div>
-    <div class="us-album-lightbox" id="usAlbumLightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Foto del Moment" data-us-modal data-us-modal-panel>
-      <button type="button" class="us-album-lightbox-close us-modal-close" id="usAlbumLightboxClose" aria-label="Chiudi foto" data-us-modal-close>×</button>
-      <div class="us-album-lightbox-count" id="usAlbumLightboxCount"></div>
-      <img id="usAlbumLightboxImg" alt="Foto del Moment">
-      <div class="us-album-lightbox-info"><b id="usAlbumLightboxAuthor"></b><p id="usAlbumLightboxCaption"></p></div>
+    <div class="us-album-lightbox" id="usAlbumLightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Foto del Moment" data-us-modal data-us-motion-surface>
+      <div class="us-album-lightbox-stage" data-us-modal-panel>
+        <button type="button" class="us-album-lightbox-close us-modal-close" id="usAlbumLightboxClose" aria-label="Chiudi foto" data-us-modal-close>×</button>
+        <div class="us-album-lightbox-count" id="usAlbumLightboxCount"></div>
+        <img class="us-album-lightbox-photo active" id="usAlbumLightboxImgA" alt="Foto del Moment">
+        <img class="us-album-lightbox-photo" id="usAlbumLightboxImgB" alt="">
+        <div class="us-album-lightbox-info"><b id="usAlbumLightboxAuthor"></b><p id="usAlbumLightboxCaption"></p></div>
+      </div>
     </div>
   `);
 
@@ -90,8 +96,8 @@ function ensureUi(){
     lightboxTouch=null;
     if(dy>70&&Math.abs(dy)>Math.abs(dx)){closeLightbox();return;}
     if(Math.abs(dx)>48&&Math.abs(dx)>Math.abs(dy)){
-      if(dx<0)showLightbox(lightboxIndex+1);
-      else showLightbox(lightboxIndex-1);
+      if(dx<0)showLightbox(lightboxIndex+1,1);
+      else showLightbox(lightboxIndex-1,-1);
     }
   },{passive:true});
 
@@ -100,8 +106,8 @@ function ensureUi(){
       if(document.getElementById('usAlbumLightbox')?.classList.contains('show'))closeLightbox();
       else if(document.getElementById('usAlbumOverlay')?.classList.contains('show'))closeAlbum();
     }else if(document.getElementById('usAlbumLightbox')?.classList.contains('show')){
-      if(e.key==='ArrowRight')showLightbox(lightboxIndex+1);
-      if(e.key==='ArrowLeft')showLightbox(lightboxIndex-1);
+      if(e.key==='ArrowRight')showLightbox(lightboxIndex+1,1);
+      if(e.key==='ArrowLeft')showLightbox(lightboxIndex-1,-1);
     }
   });
 }
@@ -309,33 +315,120 @@ window.refreshOpenMomentAlbum=function(){
   return Promise.resolve();
 };
 function closeAlbum(){
-  ++albumLoadSeq;resetComposer();
-  document.getElementById('usAlbumOverlay')?.classList.remove('show');
-  document.getElementById('usAlbumOverlay')?.setAttribute('aria-hidden','true');
-  document.body.classList.remove('us-album-open');
+  const overlay=document.getElementById('usAlbumOverlay');
+  if(!overlay)return;
+  const finalize=()=>{
+    ++albumLoadSeq;resetComposer();
+    overlay.classList.remove('show');overlay.setAttribute('aria-hidden','true');
+    document.body.classList.remove('us-album-open');
+    currentAlbum=null;albumRows=[];
+  };
   closeLightbox();
-  currentAlbum=null;albumRows=[];
+  if(window.UsUiFoundation?.exitSurface)window.UsUiFoundation.exitSurface(overlay,finalize);else finalize();
 }
 function openLightbox(index=0){
   if(!lightboxItems.length)return;
   ensureUi();
   const lb=document.getElementById('usAlbumLightbox');
+  window.UsUiFoundation?.cancelSurfaceExit?.(lb);
   lb?.classList.add('show');lb?.setAttribute('aria-hidden','false');
   showLightbox(index);
 }
-function showLightbox(index){
+function loadDecodedPhoto(url){
+  return new Promise(resolve=>{
+    if(!url){resolve(null);return;}
+    const image=new Image();
+    image.onload=async()=>{
+      try{if(typeof image.decode==='function')await image.decode();}catch(_e){}
+      resolve(url);
+    };
+    image.onerror=()=>resolve(null);
+    image.src=url;
+  });
+}
+function settleLightboxFrame(current,next){
+  current?.removeAttribute('src');
+  current?.classList.remove('active','us-lightbox-exit-next','us-lightbox-exit-prev');
+  next?.classList.remove('us-lightbox-enter-next','us-lightbox-enter-prev');
+}
+function cancelLightboxSettle(){
+  lightboxSettleCancel?.();lightboxSettleCancel=null;
+}
+function normalizeLightboxFrames(){
+  const active=document.getElementById(`usAlbumLightboxImg${lightboxActiveLayer}`);
+  const inactive=document.getElementById(`usAlbumLightboxImg${lightboxActiveLayer==='A'?'B':'A'}`);
+  active?.classList.remove('is-preparing','us-lightbox-enter-next','us-lightbox-enter-prev','us-lightbox-exit-next','us-lightbox-exit-prev');
+  active?.classList.add('active');
+  inactive?.classList.remove('active','is-preparing','us-lightbox-enter-next','us-lightbox-enter-prev','us-lightbox-exit-next','us-lightbox-exit-prev');
+  inactive?.removeAttribute('src');
+}
+async function showLightbox(index,direction=0){
   if(!lightboxItems.length)return;
-  lightboxIndex=(index+lightboxItems.length)%lightboxItems.length;
-  const item=lightboxItems[lightboxIndex];
-  const img=document.getElementById('usAlbumLightboxImg');if(img)img.src=item.url||'';
+  const nextIndex=(index+lightboxItems.length)%lightboxItems.length;
+  const item=lightboxItems[nextIndex];
+  const token=++lightboxRenderToken;
+  cancelLightboxSettle();normalizeLightboxFrames();
+  const url=await loadDecodedPhoto(item.url||'');
+  const lb=document.getElementById('usAlbumLightbox');
+  if(token!==lightboxRenderToken||!url||!lb?.classList.contains('show'))return;
+  const current=document.getElementById(`usAlbumLightboxImg${lightboxActiveLayer}`);
+  const nextKey=lightboxActiveLayer==='A'?'B':'A';
+  const next=document.getElementById(`usAlbumLightboxImg${nextKey}`);
+  if(!current||!next)return;
+  lightboxIndex=nextIndex;
+  next.src=url;
   document.getElementById('usAlbumLightboxCount').textContent=`${lightboxIndex+1} / ${lightboxItems.length}`;
   document.getElementById('usAlbumLightboxAuthor').textContent=item.author||'Noi';
   document.getElementById('usAlbumLightboxCaption').textContent=item.caption||'';
+  const reduced=window.UsUiFoundation?.isReducedMotion?.();
+  if(!current.getAttribute('src')||!direction||reduced){
+    current.classList.remove('active','us-lightbox-exit-next','us-lightbox-exit-prev');
+    next.classList.add('active');
+    lightboxActiveLayer=nextKey;
+    if(current!==next)current.removeAttribute('src');
+    return;
+  }
+  const side=direction>0?'next':'prev';
+  next.classList.add(`us-lightbox-enter-${side}`,'is-preparing');
+  requestAnimationFrame(()=>{
+    if(token!==lightboxRenderToken)return;
+    next.classList.remove('is-preparing');next.classList.add('active');
+    current.classList.add(`us-lightbox-exit-${side}`);
+  });
+  let settled=false;
+  let fallback=null;
+  const cancel=()=>{
+    if(fallback)clearTimeout(fallback);
+    current.removeEventListener('transitionend',onEnd);
+  };
+  const finish=()=>{
+    if(settled||token!==lightboxRenderToken)return;
+    settled=true;
+    cancel();
+    if(lightboxSettleCancel===cancel)lightboxSettleCancel=null;
+    settleLightboxFrame(current,next);
+  };
+  const onEnd=event=>{if(event.target===current&&event.propertyName==='transform')finish();};
+  current.addEventListener('transitionend',onEnd);
+  fallback=setTimeout(finish,600);
+  lightboxSettleCancel=cancel;
+  lightboxActiveLayer=nextKey;
 }
 function closeLightbox(){
   const lb=document.getElementById('usAlbumLightbox');
-  lb?.classList.remove('show');lb?.setAttribute('aria-hidden','true');
-  const img=document.getElementById('usAlbumLightboxImg');if(img)img.removeAttribute('src');
+  if(!lb?.classList.contains('show'))return;
+  ++lightboxRenderToken;
+  cancelLightboxSettle();
+  const finalize=()=>{
+    lb.classList.remove('show');lb.setAttribute('aria-hidden','true');
+    ['A','B'].forEach(key=>{
+      const img=document.getElementById(`usAlbumLightboxImg${key}`);
+      img?.removeAttribute('src');img?.classList.remove('active','is-preparing','us-lightbox-enter-next','us-lightbox-enter-prev','us-lightbox-exit-next','us-lightbox-exit-prev');
+    });
+    document.getElementById('usAlbumLightboxImgA')?.classList.add('active');
+    lightboxActiveLayer='A';
+  };
+  if(window.UsUiFoundation?.exitSurface)window.UsUiFoundation.exitSurface(lb,finalize);else finalize();
 }
 
 function installHooks(){

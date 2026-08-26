@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <meta name="theme-color" content="#0a0a0e"/>
 <meta name="color-scheme" content="dark"/>
-<meta name="us-build" content="static-runtime-20260825-3"/>
+<meta name="us-build" content="static-runtime-20260826-4"/>
 <link rel="manifest" href="/manifest.webmanifest?v=us-identity1"/>
 <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=us-identity1"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=us-identity1"/>
@@ -358,9 +358,8 @@ html.us-returning-device .auth-overlay{
 <div class="app-status-bar" id="appStatusBar" data-kind="offline" role="alert" aria-live="assertive" hidden>Sei offline. Mostro ciò che è già disponibile; le azioni online riprenderanno alla riconnessione.</div>
 <div class="app-update-bar" id="appUpdateBar" role="status" aria-live="polite" hidden><span><b>Aggiornamento disponibile</b><small>Puoi aggiornare quando hai finito quello che stai facendo.</small></span><button type="button" id="appUpdateBtn">Aggiorna</button></div>
 
-<div class="moment-viewer" id="momentViewer" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Foto del ricordo" data-us-modal data-us-modal-panel onclick="if(event.target===this)closeMomentViewer()">
-  <button class="moment-viewer-close us-modal-close" type="button" aria-label="Chiudi foto" data-us-modal-close onclick="closeMomentViewer()">×</button>
-  <div class="moment-viewer-card"><img id="momentViewerImg" alt="Ricordo a schermo intero"><div class="moment-viewer-info"><div class="moment-viewer-kicker" id="momentViewerAuthor">Noi</div><div class="moment-viewer-date" id="momentViewerDate"></div><p id="momentViewerCaption" hidden></p><div class="moment-viewer-hint">Scorri verso il basso per chiudere</div></div></div>
+<div class="moment-viewer" id="momentViewer" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Foto del ricordo" data-us-modal data-us-motion-surface onclick="if(event.target===this)closeMomentViewer()">
+  <div class="moment-viewer-card" data-us-modal-panel><button class="moment-viewer-close us-modal-close" type="button" aria-label="Chiudi foto" data-us-modal-close onclick="closeMomentViewer()">×</button><img id="momentViewerImg" alt="Ricordo a schermo intero"><div class="moment-viewer-info"><div class="moment-viewer-kicker" id="momentViewerAuthor">Noi</div><div class="moment-viewer-date" id="momentViewerDate"></div><p id="momentViewerCaption" hidden></p><div class="moment-viewer-hint">Scorri verso il basso per chiudere</div></div></div>
 </div>
 
 <script defer src="/auth-storage.js"></script>
