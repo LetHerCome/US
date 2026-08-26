@@ -69,6 +69,8 @@ class FakeDocument {
   constructor() {
     this.listeners = new Map();
     this.body = new FakeElement(this, 'body');
+    this.documentElement = new FakeElement(this, 'html');
+    this.documentElement.append(this.body);
     this.activeElement = this.body;
   }
   querySelectorAll(selector) {
@@ -82,6 +84,19 @@ class FakeDocument {
     this.listeners.get('keydown')?.(event);
     return event;
   }
+}
+
+function createMotionMedia(initialMatches = false) {
+  const listeners = new Set();
+  return {
+    matches: initialMatches,
+    addEventListener(type, listener) { if (type === 'change') listeners.add(listener); },
+    removeEventListener(type, listener) { if (type === 'change') listeners.delete(listener); },
+    setMatches(matches) {
+      this.matches = matches;
+      listeners.forEach((listener) => listener({ matches }));
+    }
+  };
 }
 
 function modalFixture() {
@@ -235,6 +250,39 @@ test('la bottom navigation espone una sola pagina corrente', () => {
   controller.destroy();
 });
 
+test('la foundation centralizza reduced motion e segue i cambiamenti di preferenza live', () => {
+  const foundation = require('../ui-foundation.js');
+  const document = new FakeDocument();
+  const media = createMotionMedia(false);
+  const controller = foundation.install(document, {
+    MutationObserver: null,
+    matchMedia: (query) => {
+      assert.equal(query, '(prefers-reduced-motion: reduce)');
+      return media;
+    }
+  });
+  const changes = [];
+  const unsubscribe = controller.onMotionPreferenceChange((reduced) => changes.push(reduced));
+
+  assert.equal(controller.isReducedMotion(), false);
+  assert.equal(document.documentElement.getAttribute('data-us-motion'), 'full');
+
+  media.setMatches(true);
+  assert.equal(controller.isReducedMotion(), true);
+  assert.equal(document.documentElement.getAttribute('data-us-motion'), 'reduced');
+  assert.deepEqual(changes, [true]);
+
+  media.setMatches(false);
+  assert.equal(controller.isReducedMotion(), false);
+  assert.equal(document.documentElement.getAttribute('data-us-motion'), 'full');
+  assert.deepEqual(changes, [true, false]);
+
+  unsubscribe();
+  controller.destroy();
+  media.setMatches(true);
+  assert.deepEqual(changes, [true, false]);
+});
+
 test('le superfici semplici adottano la primitive e Auth resta fuori', () => {
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   const albums = fs.readFileSync(path.join(ROOT, 'moments-albums.js'), 'utf8');
@@ -257,8 +305,33 @@ test('il foglio fondazionale espone token conservativi e target comuni da 44px',
   assert.match(css, /--us-radius-card:20px/);
   assert.match(css, /--us-radius-sheet:29px/);
   assert.match(css, /--us-shadow-card:0 10px 28px/);
-  assert.match(css, /--us-motion-base:\.2s/);
+  assert.match(css, /--us-motion-press:90ms/);
+  assert.match(css, /--us-motion-micro:140ms/);
+  assert.match(css, /--us-motion-fast:180ms/);
+  assert.match(css, /--us-motion-base:220ms/);
+  assert.match(css, /--us-motion-surface:260ms/);
+  assert.match(css, /--us-motion-immersive:300ms/);
+  assert.match(css, /--us-motion-photo:360ms/);
+  assert.match(css, /--us-motion-photo-slow:420ms/);
+  assert.match(css, /--us-ease-enter:cubic-bezier\(\.16,1,\.3,1\)/);
+  assert.match(css, /--us-ease-exit:cubic-bezier\(\.4,0,1,1\)/);
+  assert.match(css, /:where\(button:not\(:disabled\):not\(\[data-us-motion-tap="off"\]\)\):active\s*\{\s*transform:scale\(\.985\)/);
+  assert.match(css, /:root\[data-us-motion="reduced"\]/);
   assert.match(css, /--us-text-meta:11px/);
   assert.match(css, /--us-text-secondary:12px/);
   assert.match(css, /\.us-modal-close[\s\S]*min-width:44px;[\s\S]*min-height:44px/);
+});
+
+test('i token motion legacy preservano le superfici rinviate alle milestone successive', () => {
+  const foundation = fs.readFileSync(path.join(ROOT, 'ui-foundation.css'), 'utf8');
+  const settings = fs.readFileSync(path.join(ROOT, 'settings.css'), 'utf8');
+  const events = fs.readFileSync(path.join(ROOT, 'events.css'), 'utf8');
+  const games = fs.readFileSync(path.join(ROOT, 'games.css'), 'utf8');
+
+  assert.match(foundation, /--us-motion-legacy-fast:160ms/);
+  assert.match(foundation, /--us-motion-legacy-base:200ms/);
+  assert.match(settings, /var\(--us-motion-legacy-fast\)/);
+  assert.match(settings, /var\(--us-motion-legacy-base\)/);
+  assert.match(events, /var\(--us-motion-legacy-base\)/);
+  assert.match(games, /var\(--us-motion-legacy-base\)/);
 });

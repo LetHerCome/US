@@ -9,6 +9,11 @@
 })(typeof window !== 'undefined' ? window : globalThis, function createUsUiFoundation() {
   'use strict';
 
+  let activeMotion = {
+    isReducedMotion: () => false,
+    onChange: () => () => {}
+  };
+
   const FOCUSABLE = [
     'button:not([disabled])',
     '[href]',
@@ -53,6 +58,30 @@
 
   function install(documentRef, environment = {}) {
     if (!documentRef?.body) return { sync() {}, destroy() {} };
+
+    const motionSubscribers = new Set();
+    const motionQuery = typeof environment.matchMedia === 'function'
+      ? environment.matchMedia('(prefers-reduced-motion: reduce)')
+      : null;
+    let reducedMotion = Boolean(motionQuery?.matches);
+    const applyMotionPreference = (next, notify = true) => {
+      reducedMotion = Boolean(next);
+      documentRef.documentElement?.setAttribute('data-us-motion', reducedMotion ? 'reduced' : 'full');
+      if (notify) motionSubscribers.forEach((listener) => listener(reducedMotion));
+    };
+    const onMotionChange = (event) => applyMotionPreference(event.matches);
+    if (motionQuery?.addEventListener) motionQuery.addEventListener('change', onMotionChange);
+    else motionQuery?.addListener?.(onMotionChange);
+    applyMotionPreference(reducedMotion, false);
+    const motion = {
+      isReducedMotion: () => reducedMotion,
+      onChange(listener) {
+        if (typeof listener !== 'function') return () => {};
+        motionSubscribers.add(listener);
+        return () => motionSubscribers.delete(listener);
+      }
+    };
+    activeMotion = motion;
 
     const modalState = new Map();
     const inertState = new Map();
@@ -166,10 +195,25 @@
       destroy() {
         observer?.disconnect();
         documentRef.removeEventListener('keydown', onKeydown);
+        if (motionQuery?.removeEventListener) motionQuery.removeEventListener('change', onMotionChange);
+        else motionQuery?.removeListener?.(onMotionChange);
+        motionSubscribers.clear();
+        if (activeMotion === motion) {
+          activeMotion = {
+            isReducedMotion: () => false,
+            onChange: () => () => {}
+          };
+        }
         setInert(new Set());
-      }
+      },
+      isReducedMotion: motion.isReducedMotion,
+      onMotionPreferenceChange: motion.onChange
     };
   }
 
-  return { install };
+  return {
+    install,
+    isReducedMotion: () => activeMotion.isReducedMotion(),
+    onMotionPreferenceChange: (listener) => activeMotion.onChange(listener)
+  };
 });

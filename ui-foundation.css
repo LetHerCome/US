@@ -18,10 +18,22 @@
   --us-surface-sheet:#141821;
   --us-shadow-card:0 10px 28px rgba(0,0,0,.18);
   --us-shadow-sheet:0 -24px 70px rgba(0,0,0,.5);
-  --us-motion-fast:.16s;
-  --us-motion-base:.2s;
+  --us-motion-press:90ms;
+  --us-motion-micro:140ms;
+  --us-motion-fast:180ms;
+  --us-motion-base:220ms;
+  --us-motion-surface:260ms;
+  --us-motion-immersive:300ms;
+  --us-motion-photo:360ms;
+  --us-motion-photo-slow:420ms;
+  /* Compatibility aliases keep deferred feature motion visually unchanged. */
+  --us-motion-legacy-fast:160ms;
+  --us-motion-legacy-base:200ms;
+  /* Kept until sheet-specific motion is migrated in a later milestone. */
   --us-motion-sheet:.24s;
   --us-ease-standard:cubic-bezier(.22,.78,.24,1);
+  --us-ease-enter:cubic-bezier(.16,1,.3,1);
+  --us-ease-exit:cubic-bezier(.4,0,1,1);
   --us-text-secondary:12px;
   --us-text-meta:11px;
   --us-text-decorative:9px;
@@ -32,6 +44,48 @@
   --us-nav-height:68px;
   --us-viewport-height:100dvh;
   --us-focus:0 0 0 3px rgba(169,133,255,.28);
+}
+
+:where(button:not(:disabled):not([data-us-motion-tap="off"])) {
+  transition-property:transform;
+  transition-duration:var(--us-motion-press);
+  transition-timing-function:var(--us-ease-standard);
+}
+
+:where(button:not(:disabled):not([data-us-motion-tap="off"])):active {
+  transform:scale(.985);
+}
+
+:root[data-us-motion="reduced"] {
+  --us-motion-press:1ms;
+  --us-motion-micro:1ms;
+  --us-motion-fast:1ms;
+  --us-motion-base:1ms;
+  --us-motion-surface:1ms;
+  --us-motion-immersive:1ms;
+  --us-motion-photo:1ms;
+  --us-motion-photo-slow:1ms;
+}
+
+:root[data-us-motion="reduced"] :where(button:not(:disabled):not([data-us-motion-tap="off"])):active {
+  transform:none;
+}
+
+@media (prefers-reduced-motion:reduce) {
+  :root {
+    --us-motion-press:1ms;
+    --us-motion-micro:1ms;
+    --us-motion-fast:1ms;
+    --us-motion-base:1ms;
+    --us-motion-surface:1ms;
+    --us-motion-immersive:1ms;
+    --us-motion-photo:1ms;
+    --us-motion-photo-slow:1ms;
+  }
+
+  :where(button:not(:disabled):not([data-us-motion-tap="off"])):active {
+    transform:none;
+  }
 }
 
 .us-modal-backdrop {
