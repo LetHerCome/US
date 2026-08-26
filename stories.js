@@ -17,8 +17,12 @@
   let currentViewerStories = [];
   let currentViewerIndex = 0;
   let currentViewerAuthor = null;
-  let storyAdvanceTimer = null;
   let currentProgressFrame = null;
+  let storyPlaybackElapsedMs = 0;
+  let storyPlaybackStartedAt = 0;
+  let storyPlaybackDurationMs = 0;
+  let storyPlaybackPaused = false;
+  let storyPlaybackBackgroundPaused = false;
   let uploadBusy = false;
   let captureBusy = false;
   let pendingStoryBlob = null;
@@ -431,8 +435,11 @@
     const firstUnseen = own ? -1 : rows.findIndex((s) => !storyViews.has(s.id));
     currentViewerIndex = firstUnseen >= 0 ? firstUnseen : 0;
     const viewer = document.getElementById('usStoryViewer');
+    window.UsUiFoundation?.cancelSurfaceExit?.(viewer);
+    viewer?.classList.add('is-opening');
     viewer?.classList.add('open');
     viewer?.setAttribute('aria-hidden','false');
+    requestAnimationFrame(() => viewer?.classList.remove('is-opening'));
     document.body.style.overflow = 'hidden';
     renderViewerHeader(author);
     await showStoryAt(currentViewerIndex);
@@ -444,10 +451,13 @@
   }
 
   function clearStoryAdvance() {
-    if (storyAdvanceTimer) clearTimeout(storyAdvanceTimer);
-    storyAdvanceTimer = null;
     if (currentProgressFrame) cancelAnimationFrame(currentProgressFrame);
     currentProgressFrame = null;
+    storyPlaybackElapsedMs = 0;
+    storyPlaybackStartedAt = 0;
+    storyPlaybackDurationMs = 0;
+    storyPlaybackPaused = false;
+    storyPlaybackBackgroundPaused = false;
   }
 
   function renderProgress(index, durationSeconds, running = false) {
@@ -459,14 +469,49 @@
       bar.style.width = i < index ? '100%' : '0%';
     });
     const active = root.querySelector('i[data-i="' + index + '"]');
-    if (active && running) {
-      currentProgressFrame = requestAnimationFrame(() => {
-        currentProgressFrame = requestAnimationFrame(() => {
-          active.style.transition = 'width ' + durationSeconds + 's linear';
-          active.style.width = '100%';
-        });
-      });
-    }
+    if (active && running) active.style.width = '0%';
+  }
+
+  function isStoryReducedMotion() { return Boolean(window.UsUiFoundation?.isReducedMotion?.() || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches); }
+  function updateStoryProgress() {
+    const active = document.querySelector('#usStoryProgress i[data-i="' + currentViewerIndex + '"]');
+    if (active && storyPlaybackDurationMs) active.style.width = Math.min(100, (storyPlaybackElapsedMs / storyPlaybackDurationMs) * 100) + '%';
+  }
+  function runStoryPlayback() {
+    if (storyPlaybackPaused || isStoryReducedMotion()) return;
+    const tick = (now) => {
+      if (storyPlaybackPaused || !storyPlaybackDurationMs) return;
+      storyPlaybackElapsedMs = Math.min(storyPlaybackDurationMs, storyPlaybackElapsedMs + (now - storyPlaybackStartedAt));
+      storyPlaybackStartedAt = now;
+      updateStoryProgress();
+      if (storyPlaybackElapsedMs >= storyPlaybackDurationMs) { currentProgressFrame = null; nextStory(); return; }
+      currentProgressFrame = requestAnimationFrame(tick);
+    };
+    currentProgressFrame = requestAnimationFrame((now) => { storyPlaybackStartedAt = now; tick(now); });
+  }
+  function startStoryPlayback(durationSeconds) {
+    storyPlaybackElapsedMs = 0;storyPlaybackDurationMs = durationSeconds * 1000;storyPlaybackStartedAt = performance.now();storyPlaybackPaused = false;
+    if (isStoryReducedMotion()) return;
+    runStoryPlayback();
+  }
+  function pauseStoryPlayback() {
+    if (storyPlaybackPaused || !storyPlaybackDurationMs) return;
+    storyPlaybackElapsedMs = Math.min(storyPlaybackDurationMs, storyPlaybackElapsedMs + (performance.now() - storyPlaybackStartedAt));
+    storyPlaybackPaused = true;
+    if (currentProgressFrame) cancelAnimationFrame(currentProgressFrame);
+    currentProgressFrame = null;updateStoryProgress();
+    document.getElementById('usStoryViewer')?.classList.add('is-paused');
+  }
+  function resumeStoryPlayback() {
+    if (!storyPlaybackPaused || isStoryReducedMotion()) return;
+    storyPlaybackPaused = false;document.getElementById('usStoryViewer')?.classList.remove('is-paused');runStoryPlayback();
+  }
+  function applyStoryMediaEntry(direction) {
+    const media = document.getElementById('usStoryMedia');
+    if (!media || !direction || isStoryReducedMotion()) return;
+    media.classList.remove('us-story-enter-next','us-story-enter-prev');
+    media.classList.add(direction > 0 ? 'us-story-enter-next' : 'us-story-enter-prev');
+    requestAnimationFrame(() => media.classList.remove('us-story-enter-next','us-story-enter-prev'));
   }
 
   function setStoryViewerState(kind, message = '') {
@@ -481,7 +526,7 @@
     if (retry) retry.hidden = kind !== 'error' && kind !== 'offline';
   }
 
-  async function showStoryAt(index) {
+  async function showStoryAt(index,direction=0) {
     clearStoryAdvance();
     if (index < 0) index = 0;
     if (index >= currentViewerStories.length) { closeStoryViewer(); return; }
@@ -531,7 +576,8 @@
       setStoryViewerState('ready');
       if (story.author_id !== window.usProfile?.id) markStorySeen(story.id);
       renderProgress(index, duration, true);
-      storyAdvanceTimer = setTimeout(nextStory, duration * 1000);
+      applyStoryMediaEntry(direction);
+      startStoryPlayback(duration);
     };
     media.onerror = () => {
       if (loadToken !== storyLoadToken) return;
@@ -555,7 +601,7 @@
       refreshStories().catch(() => {});
       return;
     }
-    showStoryAt(currentViewerIndex + 1);
+    showStoryAt(currentViewerIndex + 1,1);
   }
 
   function previousStory() {
@@ -563,7 +609,7 @@
       showStoryAt(0);
       return;
     }
-    showStoryAt(currentViewerIndex - 1);
+    showStoryAt(currentViewerIndex - 1,-1);
   }
 
   async function deleteOwnStory(story) {
@@ -684,6 +730,10 @@
     viewer.addEventListener('touchcancel', () => {
       storySwipeStartY = null; storySwipeStartX = null; storySwipeEndY = null; storySwipeEndX = null;
     }, { passive: true });
+    viewer.addEventListener('pointerdown', (event) => {
+      if (event.isPrimary && !shouldIgnoreStoryGestureTarget(event.target)) pauseStoryPlayback();
+    });
+    ['pointerup','pointercancel'].forEach(type => viewer.addEventListener(type, () => resumeStoryPlayback()));
   }
 
   function closeStoryViewer() {
@@ -692,6 +742,7 @@
     closeStoryDeleteConfirmation({ resume: false });
     const viewer = document.getElementById('usStoryViewer');
     viewer?.classList.remove('open','story-swipe-closing');
+    viewer?.classList.remove('is-opening','is-paused');
     if (viewer) { viewer.style.transform=''; viewer.style.opacity=''; viewer.style.transition=''; }
     viewer?.setAttribute('aria-hidden','true');
     const media = document.getElementById('usStoryMedia');
@@ -854,8 +905,14 @@
     }, 450);
     setTimeout(() => startForCurrentProfile(), 100);
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden) closeStoryCamera();
+      if (document.hidden) {
+        closeStoryCamera();
+        if (document.getElementById('usStoryViewer')?.classList.contains('open') && !storyPlaybackPaused) {
+          pauseStoryPlayback();storyPlaybackBackgroundPaused = true;
+        }
+      }
       if (!document.hidden) {
+        if (storyPlaybackBackgroundPaused) { storyPlaybackBackgroundPaused = false;resumeStoryPlayback(); }
         startForCurrentProfile();
         refreshStories({ refreshProfiles: true });
         scheduleTodayCloseIfNeeded();

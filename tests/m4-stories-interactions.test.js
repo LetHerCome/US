@@ -40,6 +40,7 @@ function viewerHarness({ online = true } = {}) {
     }],
     document: { getElementById: (id) => elements[id] || null },
     markStorySeen: (id) => seen.push(id),
+    applyStoryMediaEntry() {},
     navigator: { onLine: online },
     nextStory: () => { advances += 1; },
     relativeStoryTime: () => 'ora',
@@ -47,6 +48,7 @@ function viewerHarness({ online = true } = {}) {
     requestAnimationFrame: (callback) => callback(),
     sb: {},
     setStoryViewerState: (kind, message) => states.push({ kind, message }),
+    startStoryPlayback() {},
     setTimeout: () => 1,
     storyLoadToken: 0,
     window: {
