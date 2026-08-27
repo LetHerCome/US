@@ -12,14 +12,16 @@ test('M5E fornisce una famiglia SVG vettoriale coerente per brand e icone', () =
   const wordmark = read(`${BRAND}/us-wordmark.svg`);
   assert.match(wordmark, /viewBox="0 0 112 32"/);
   assert.match(wordmark, /<path\b/);
+  assert.match(wordmark, /linearGradient\b/);
   assert.doesNotMatch(wordmark, /<text\b/i, 'il wordmark deve restare un vero asset grafico, non testo font-dependent');
 
   NAV_ICONS.forEach((name) => {
     const icon = read(`${BRAND}/us-icon-${name}.svg`);
     assert.match(icon, /viewBox="0 0 24 24"/);
     assert.match(icon, /stroke-width="1\.75"/);
-    assert.match(icon, /stroke-linecap="round"/);
-    assert.match(icon, /stroke-linejoin="round"/);
+    assert.match(icon, /linearGradient\b/);
+    assert.match(icon, /#FF86C8/i);
+    assert.match(icon, /#B16DFF/i);
     assert.doesNotMatch(icon, /<image\b|\.png|\.jpg/i, `${name} deve restare vettoriale`);
   });
 });
@@ -36,18 +38,20 @@ test('M5E integra il wordmark e la famiglia corretta senza cambiare le cinque ta
   assert.doesNotMatch(html, /data-page="stories"/, 'Stories resta fuori dalla bottom navigation');
 });
 
-test('M5E distingue default e selected con gradiente controllato e precachea gli asset', () => {
+test('M5E renderizza gli SVG approvati direttamente, senza appiattirli in CSS mask', () => {
   const css = read('identity.css');
   const worker = read('service-worker.js');
   const html = read('index.html');
   const version = JSON.parse(read('version.json')).version;
   const build = html.match(/meta name="us-build" content="([^"]+)"/)?.[1];
 
-  assert.match(css, /\.us-nav-icon,\s*\.us-brand-icon\{[\s\S]*background:#9[\w#]+/);
-  assert.match(css, /\.us-nav button\.active \.us-nav-icon\{[\s\S]*linear-gradient\(135deg,#ff[\w#]+[\s\S]*#9[\w#]+/);
+  assert.match(css, /\.us-nav-icon,\s*\.us-brand-icon\{[\s\S]*background:var\(--us-brand-icon-source\) center\/contain no-repeat/);
+  assert.doesNotMatch(css, /(?:-webkit-)?mask:var\(--us-brand-icon-source\)/);
+  assert.match(css, /\.us-nav button\.active \.us-nav-icon\{[\s\S]*opacity:1/);
   assert.match(css, /drop-shadow\(0 2px 6px rgba\(190,113,255,\.28\)\)/);
   assert.match(css, /--us-brand-icon-home:url\("\/assets\/brand\/us-icon-home\.svg"\)/);
   assert.match(css, /--us-brand-icon-stories:url\("\/assets\/brand\/us-icon-stories\.svg"\)/);
+
   ['us-wordmark.svg', ...NAV_ICONS.map((name) => `us-icon-${name}.svg`)].forEach((file) => {
     assert.match(worker, new RegExp(`"/assets/brand/${file.replace('.', '\\.')}"`));
   });

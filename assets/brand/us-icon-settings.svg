@@ -1,5 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M12 3.5v2.1M12 18.4v2.1M20.5 12h-2.1M5.6 12H3.5M18 6l-1.5 1.5M7.5 16.5 6 18M18 18l-1.5-1.5M7.5 7.5 6 6"/>
-  <path d="M12 6.6a5.4 5.4 0 1 1 0 10.8 5.4 5.4 0 0 1 0-10.8Z"/>
-  <circle cx="12" cy="12" r="2.2"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><defs>
+  <linearGradient id="usGradient" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#FF86C8"/><stop offset="0.52" stop-color="#E579E8"/><stop offset="1" stop-color="#B16DFF"/>
+  </linearGradient>
+  <filter id="usGlow" x="-35%" y="-35%" width="170%" height="170%"><feGaussianBlur stdDeviation="0.75"/></filter>
+</defs>
+<g opacity=".26" filter="url(#usGlow)" stroke="url(#usGradient)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M 10.555 4.488 L 11.132 2.891 L 12.868 2.891 L 13.445 4.488 L 16.290 5.666 L 17.827 4.945 L 19.055 6.173 L 18.334 7.710 L 19.512 10.555 L 21.109 11.132 L 21.109 12.868 L 19.512 13.445 L 18.334 16.290 L 19.055 17.827 L 17.827 19.055 L 16.290 18.334 L 13.445 19.512 L 12.868 21.109 L 11.132 21.109 L 10.555 19.512 L 7.710 18.334 L 6.173 19.055 L 4.945 17.827 L 5.666 16.290 L 4.488 13.445 L 2.891 12.868 L 2.891 11.132 L 4.488 10.555 L 5.666 7.710 L 4.945 6.173 L 6.173 4.945 L 7.710 5.666 Z"/><circle cx="12" cy="12" r="3.45"/></g>
+<g stroke="url(#usGradient)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M 10.555 4.488 L 11.132 2.891 L 12.868 2.891 L 13.445 4.488 L 16.290 5.666 L 17.827 4.945 L 19.055 6.173 L 18.334 7.710 L 19.512 10.555 L 21.109 11.132 L 21.109 12.868 L 19.512 13.445 L 18.334 16.290 L 19.055 17.827 L 17.827 19.055 L 16.290 18.334 L 13.445 19.512 L 12.868 21.109 L 11.132 21.109 L 10.555 19.512 L 7.710 18.334 L 6.173 19.055 L 4.945 17.827 L 5.666 16.290 L 4.488 13.445 L 2.891 12.868 L 2.891 11.132 L 4.488 10.555 L 5.666 7.710 L 4.945 6.173 L 6.173 4.945 L 7.710 5.666 Z"/><circle cx="12" cy="12" r="3.45"/></g>
+
 </svg>

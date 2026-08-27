@@ -1,5 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-  <circle cx="11.7" cy="12.2" r="7.6"/>
-  <path d="M11.7 7.1v10.2M6.6 12.2h10.2M8.1 8.6l7.2 7.2M15.3 8.6l-7.2 7.2"/>
-  <path d="M18.8 3.5v3.2M17.2 5.1h3.2"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+<defs>
+  <linearGradient id="usGradient" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#FF86C8"/>
+    <stop offset="0.52" stop-color="#E579E8"/>
+    <stop offset="1" stop-color="#B16DFF"/>
+  </linearGradient>
+  <filter id="usGlow" x="-35%" y="-35%" width="170%" height="170%">
+    <feGaussianBlur stdDeviation="0.8"/>
+  </filter>
+</defs>
+<g opacity=".30" filter="url(#usGlow)" stroke="url(#usGradient)" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round">
+<path d="M12 3.4a8.55 8.55 0 1 0 8.45 9.88"/>
+<path d="M19.95 6.28h.01M20.95 7.5h.01M21.35 9.02h.01"/>
+</g>
+<g stroke="url(#usGradient)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+<path d="M12 3.4a8.55 8.55 0 1 0 8.45 9.88"/>
+<path d="M19.95 6.28h.01M20.95 7.5h.01M21.35 9.02h.01"/>
+<path d="M12 8.5c.42 2.05 1.45 3.08 3.5 3.5-2.05.42-3.08 1.45-3.5 3.5-.42-2.05-1.45-3.08-3.5-3.5 2.05-.42 3.08-1.45 3.5-3.5Z" fill="url(#usGradient)" stroke="none"/></g>
 </svg>

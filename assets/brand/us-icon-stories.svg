@@ -1,5 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M4.2 5.8c2.9-1.2 5.6-.7 7.8 1.5v11.3c-2.2-2.2-4.9-2.7-7.8-1.5V5.8Z"/>
-  <path d="M19.8 5.8c-2.9-1.2-5.6-.7-7.8 1.5v11.3c2.2-2.2 4.9-2.7 7.8-1.5V5.8Z"/>
-  <path d="M17.8 3.2v3.1M16.25 4.75h3.1"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+<defs>
+  <linearGradient id="usGradient" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#FF86C8"/>
+    <stop offset="0.52" stop-color="#E579E8"/>
+    <stop offset="1" stop-color="#B16DFF"/>
+  </linearGradient>
+  <filter id="usGlow" x="-35%" y="-35%" width="170%" height="170%">
+    <feGaussianBlur stdDeviation="0.8"/>
+  </filter>
+</defs>
+<g opacity=".30" filter="url(#usGlow)" stroke="url(#usGradient)" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round">
+<path d="M3.85 5.25c2.7-.62 5.45-.2 8.15 1.76v13.1c-2.58-1.66-5.3-2.09-8.15-1.42Z"/>
+<path d="M20.15 5.25c-2.7-.62-5.45-.2-8.15 1.76v13.1c2.58-1.66 5.3-2.09 8.15-1.42Z"/>
+<path d="M4.15 20.1c2.6-.58 5.16-.25 7.85 1.25 2.69-1.5 5.25-1.83 7.85-1.25"/>
+</g>
+<g stroke="url(#usGradient)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+<path d="M3.85 5.25c2.7-.62 5.45-.2 8.15 1.76v13.1c-2.58-1.66-5.3-2.09-8.15-1.42Z"/>
+<path d="M20.15 5.25c-2.7-.62-5.45-.2-8.15 1.76v13.1c2.58-1.66 5.3-2.09 8.15-1.42Z"/>
+<path d="M4.15 20.1c2.6-.58 5.16-.25 7.85 1.25 2.69-1.5 5.25-1.83 7.85-1.25"/>
+<path d="M12 8.5c.42 2.05 1.45 3.08 3.5 3.5-2.05.42-3.08 1.45-3.5 3.5-.42-2.05-1.45-3.08-3.5-3.5 2.05-.42 3.08-1.45 3.5-3.5Z" fill="url(#usGradient)" stroke="none"/></g>
 </svg>

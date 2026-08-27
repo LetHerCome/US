@@ -1,6 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M5.2 15.8c-2.4-2.4-2.4-6.3 0-8.6 2.3-2.3 6.1-2.3 8.4 0l1.2 1.2"/>
-  <path d="m10.1 16.7 3.8-3.8c1.2-1.2 1.2-3.1 0-4.3-1.2-1.2-3.1-1.2-4.3 0l-1 1"/>
-  <path d="m18.8 8.2-4.9 4.9-3.8 3.8c-1.2 1.2-3.1 1.2-4.3 0-1.2-1.2-1.2-3.1 0-4.3l1-1"/>
-  <path d="M18.8 8.2c2.4 2.4 2.4 6.3 0 8.6-2.3 2.3-6.1 2.3-8.4 0l-1.2-1.2"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><defs>
+  <linearGradient id="usGradient" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#FF86C8"/><stop offset="0.52" stop-color="#E579E8"/><stop offset="1" stop-color="#B16DFF"/>
+  </linearGradient>
+  <filter id="usGlow" x="-35%" y="-35%" width="170%" height="170%"><feGaussianBlur stdDeviation="0.75"/></filter>
+</defs>
+<g opacity=".26" filter="url(#usGlow)" stroke="url(#usGradient)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+<rect x="7.05" y="2.85" width="6.15" height="18.3" rx="3.075" transform="rotate(-45 10.125 12)"/>
+<rect x="10.8" y="2.85" width="6.15" height="18.3" rx="3.075" transform="rotate(45 13.875 12)"/>
+</g>
+<g stroke="url(#usGradient)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+<rect x="7.05" y="2.85" width="6.15" height="18.3" rx="3.075" transform="rotate(-45 10.125 12)"/>
+<rect x="10.8" y="2.85" width="6.15" height="18.3" rx="3.075" transform="rotate(45 13.875 12)"/>
+</g>
+
 </svg>

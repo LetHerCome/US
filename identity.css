@@ -149,9 +149,10 @@ textarea,input{
   display:block;
   width:22px;
   height:22px;
-  background:#9893a1;
-  -webkit-mask:var(--us-brand-icon-source) center/contain no-repeat;
-  mask:var(--us-brand-icon-source) center/contain no-repeat;
+  background:var(--us-brand-icon-source) center/contain no-repeat;
+  opacity:.56;
+  filter:saturate(.34) brightness(.88);
+  transition:opacity .18s ease,filter .18s ease,transform .18s ease;
 }
 .us-nav-icon--home{--us-brand-icon-source:var(--us-brand-icon-home)}
 .us-nav-icon--moments{--us-brand-icon-source:var(--us-brand-icon-moments)}
@@ -178,8 +179,8 @@ textarea,input{
   transform:translateY(-1px);
 }
 .us-nav button.active .us-nav-icon{
-  background:linear-gradient(135deg,#ff9abe 0%,#d79aff 52%,#9b82f5 100%);
-  filter:drop-shadow(0 2px 6px rgba(190,113,255,.28));
+  opacity:1;
+  filter:saturate(1) brightness(1) drop-shadow(0 2px 6px rgba(190,113,255,.28));
 }
 .us-nav button.active::after{
   content:"";
@@ -195,8 +196,8 @@ textarea,input{
 .us-story-add-only .us-brand-icon{
   width:18px;
   height:18px;
-  background:linear-gradient(135deg,#ff9abe 0%,#d79aff 52%,#9b82f5 100%);
-  filter:drop-shadow(0 1px 4px rgba(190,113,255,.22));
+  opacity:1;
+  filter:saturate(1) brightness(1) drop-shadow(0 1px 4px rgba(190,113,255,.22));
 }
 
 /* --- Signature loading mark ------------------------------------ */
