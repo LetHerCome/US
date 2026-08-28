@@ -6,7 +6,7 @@ const vm = require('node:vm');
 
 const ROOT = path.resolve(__dirname, '..');
 const ORIGIN = 'https://us.example.test';
-const CURRENT_SHELL = 'us-shell-static-runtime-12';
+const CURRENT_SHELL = 'us-shell-static-runtime-13';
 
 function readRequiredRuntimeFile(name) {
   const file = path.join(ROOT, name);
@@ -464,6 +464,7 @@ test('installazione pulita precachea l’intero runtime statico prima di skipWai
   assert.ok(shell.has(`${ORIGIN}/stories.css`));
   assert.ok(shell.has(`${ORIGIN}/ui-foundation.css`));
   assert.ok(shell.has(`${ORIGIN}/ui-foundation.js`));
+  assert.ok(shell.has(`${ORIGIN}/platform.js`));
   assert.equal(harness.skipWaitingCalls, 1);
 });
 

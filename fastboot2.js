@@ -44,12 +44,14 @@ async function restoreHome(){
 
   // Stable local media endpoint handled by the Service Worker.
   // It works even when yesterday's signed URL has expired.
-  const localUrl=`/__us_media_cache__?path=${encodeURIComponent(cached.path)}`;
-  try{
-    const ok=await tryImage(localUrl);
-    applyHome(ok);
-    return;
-  }catch(_){}
+  if(window.UsPlatform?.canUsePrivateWebMediaCache!==false){
+    const localUrl=`/__us_media_cache__?path=${encodeURIComponent(cached.path)}`;
+    try{
+      const ok=await tryImage(localUrl);
+      applyHome(ok);
+      return;
+    }catch(_){}
+  }
 
   // First run after installing Fast Boot 2 may not have the media cache yet.
   // Reuse the previous signed URL if it is still valid.

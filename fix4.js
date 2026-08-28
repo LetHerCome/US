@@ -12,6 +12,10 @@
   let updateCheckTimer = null;
   let keyboardOpen = false;
 
+  function canUsePwaUpdates() {
+    return window.UsPlatform?.canUsePwaUpdates !== false;
+  }
+
   function syncRuntimeLayout() {
     document.body.classList.toggle('us-status-visible', Boolean(statusBar && !statusBar.hidden));
     document.body.classList.toggle('us-update-visible', Boolean(updateBar && !updateBar.hidden));
@@ -175,7 +179,7 @@
   }
 
   async function checkForUpdate() {
-    if (!navigator.onLine || !updateBar) return;
+    if (!canUsePwaUpdates() || !navigator.onLine || !updateBar) return;
     try {
       const response = await fetch(`/version.json?ts=${Date.now()}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } });
       if (!response.ok) return;
@@ -188,7 +192,7 @@
   }
 
   async function applyUpdate() {
-    if (!updateBtn) return;
+    if (!canUsePwaUpdates() || !updateBtn) return;
     updateBtn.disabled = true;
     updateBtn.textContent = 'Aggiorno…';
     try {
@@ -201,6 +205,11 @@
   }
 
   function setupUpdateChecks() {
+    if (!canUsePwaUpdates()) {
+      if (updateBar) updateBar.hidden = true;
+      syncRuntimeLayout();
+      return;
+    }
     if (updateBtn) updateBtn.addEventListener('click', applyUpdate, { passive: true });
     checkForUpdate();
     if (updateCheckTimer) clearInterval(updateCheckTimer);

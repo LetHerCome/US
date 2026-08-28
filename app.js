@@ -355,7 +355,7 @@ let usPendingPushTarget=null;
 
 function isIosDevice(){return /iphone|ipad|ipod/i.test(navigator.userAgent||'');}
 function isStandaloneUs(){return Boolean(window.matchMedia?.('(display-mode: standalone)')?.matches||window.navigator.standalone===true);}
-function isWebPushSupported(){return 'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;}
+function isWebPushSupported(){return window.UsPlatform?.canUseWebPush!==false&&'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;}
 function urlBase64ToUint8Array(base64String){
   const padding='='.repeat((4-base64String.length%4)%4);
   const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
@@ -363,8 +363,9 @@ function urlBase64ToUint8Array(base64String){
   for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);
   return out;
 }
+function canUseUsServiceWorker(){return window.UsPlatform?.canUseServiceWorker!==false&&'serviceWorker' in navigator;}
 async function getUsServiceWorkerRegistration(){
-  if(!('serviceWorker' in navigator))return null;
+  if(!canUseUsServiceWorker())return null;
   await navigator.serviceWorker.register('/service-worker.js',{updateViaCache:'none'});
   return navigator.serviceWorker.ready;
 }
@@ -536,16 +537,14 @@ function captureInitialPushTarget(){
 }
 function flushPendingPushTarget(){if(usPendingPushTarget){const target=usPendingPushTarget;usPendingPushTarget=null;setTimeout(()=>performPushNavigation(target),120);}}
 captureInitialPushTarget();
-if('serviceWorker' in navigator){navigator.serviceWorker.addEventListener('message',event=>{if(event.data?.type==='US_PUSH_NAVIGATE')performPushNavigation(event.data.target);});}
+if(canUseUsServiceWorker()){navigator.serviceWorker.addEventListener('message',event=>{if(event.data?.type==='US_PUSH_NAVIGATE')performPushNavigation(event.data.target);});}
 
 
 let selectedRole = null;
 let usNativeWidgetBridge = null;
 
 function getNativeWidgetBridge(){
-  const cap=window.Capacitor;
-  if(!cap || typeof cap.isNativePlatform!=='function' || !cap.isNativePlatform() || typeof cap.registerPlugin!=='function')return null;
-  if(!usNativeWidgetBridge)usNativeWidgetBridge=cap.registerPlugin('UsWidgetBridge');
+  if(!usNativeWidgetBridge)usNativeWidgetBridge=window.UsPlatform?.getNativePlugin?.('UsWidgetBridge')||null;
   return usNativeWidgetBridge;
 }
 
@@ -2320,7 +2319,7 @@ if(pairBtn) pairBtn.addEventListener('click', pairAccount);
 
 initCloud();
 
-if ("serviceWorker" in navigator) {
+if (canUseUsServiceWorker()) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/service-worker.js",{updateViaCache:"none"}).catch((err) => {
       console.warn("US. service worker non registrato:", err);

@@ -1,0 +1,5 @@
+{
+  "appId": "com.usapp.us",
+  "appName": "US",
+  "webDir": "dist/capacitor"
+}

@@ -1,10 +1,11 @@
-const CACHE_NAME = "us-shell-static-runtime-12";
+const CACHE_NAME = "us-shell-static-runtime-13";
 const MEDIA_CACHE_NAME = "us-private-media-v1";
 
 const APP_SHELL = [
   "/",
   "/index.html",
   "/auth-storage.js",
+  "/platform.js",
   "/app.js",
   "/stories.js",
   "/stories.css",

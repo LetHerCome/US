@@ -1,0 +1,21 @@
+{
+  "name": "us-private-couple-app",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test",
+    "build:capacitor-web": "node scripts/build-capacitor-web.mjs"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.0",
+    "@capacitor/core": "8.5.0",
+    "@supabase/supabase-js": "2.112.4"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.0",
+    "esbuild": "0.28.2"
+  }
+}
