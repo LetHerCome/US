@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <meta name="theme-color" content="#0a0a0e"/>
 <meta name="color-scheme" content="dark"/>
-<meta name="us-build" content="static-runtime-20260827-7"/>
+<meta name="us-build" content="premium-shell-20260827-1"/>
 <link rel="manifest" href="/manifest.webmanifest?v=us-identity1"/>
 <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=us-identity1"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=us-identity1"/>
@@ -58,7 +58,7 @@ html.us-returning-device .auth-overlay{
 
 <div class="auth-overlay" id="authOverlay">
   <div class="auth-card">
-    <div class="auth-logo us-wordmark" aria-label="US"><img class="us-wordmark-art" src="/assets/brand/us-wordmark.svg" alt="" aria-hidden="true"></div>
+    <div class="auth-logo us-wordmark" aria-label="US"><img class="us-wordmark-art" src="/assets/brand/us-wordmark-premium.svg" alt="" aria-hidden="true"></div>
     <div class="auth-step active" id="authPair">
       <div class="tiny">SPAZIO PRIVATO</div>
       <h2>Chi sei?</h2>
@@ -75,10 +75,10 @@ html.us-returning-device .auth-overlay{
 </div>
 
 <div class="app">
-  <div class="top"><div class="brand-row"><div class="brand us-wordmark" aria-label="US"><img class="us-wordmark-art" src="/assets/brand/us-wordmark.svg" alt="" aria-hidden="true"></div><button type="button" class="today-orb us-important-control" id="todayOrb" onclick="openToday()" aria-label="Apri la domanda giornaliera"><span class="today-orb-mark">?</span><span class="today-orb-copy"><b>Oggi</b><small>Domanda</small></span><i id="todayOrbDot"></i></button></div><div class="top-actions"><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><button type="button" class="us-calendar-btn us-important-control" id="usCalendarBtn" onclick="openEvents()" aria-label="Apri eventi condivisi">
-  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="15" rx="4"></rect><path d="M7.5 3.5v4M16.5 3.5v4M3.5 10h17"></path></svg>
+  <div class="top us-premium-top"><div class="brand-row"><div class="brand us-wordmark" aria-label="US"><img class="us-wordmark-art" src="/assets/brand/us-wordmark-premium.svg" alt="" aria-hidden="true"></div><button type="button" class="today-orb us-important-control us-premium-control" id="todayOrb" onclick="openToday()" aria-label="Apri la domanda giornaliera"><span class="today-orb-mark">?</span><span class="today-orb-copy"><b>Oggi</b><small>Domanda</small></span><i id="todayOrbDot"></i></button></div><div class="top-actions"><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><button type="button" class="us-calendar-btn us-important-control us-premium-control" id="usCalendarBtn" onclick="openEvents()" aria-label="Apri eventi condivisi">
+  <span class="us-shell-icon us-shell-icon--calendar" aria-hidden="true"><img class="us-shell-icon-off" src="/assets/icons/calendar-off.svg" alt=""><img class="us-shell-icon-on" src="/assets/icons/calendar-on.svg" alt=""></span>
   <i id="usCalendarDot" hidden></i>
-</button><button type="button" class="profile-avatar us-important-control" id="profileAvatarBtn" aria-label="Cambia foto profilo" onclick="pickProfilePhoto()"><img id="profileAvatarImg" alt="Foto profilo" hidden><span class="fallback" id="profileAvatarFallback">♡</span><span class="camera-dot">+</span></button><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
+</button><button type="button" class="profile-avatar us-important-control us-premium-control" id="profileAvatarBtn" aria-label="Cambia foto profilo" onclick="pickProfilePhoto()"><img id="profileAvatarImg" alt="Foto profilo" hidden><span class="fallback" id="profileAvatarFallback">♡</span><span class="camera-dot" aria-hidden="true"><img class="us-shell-icon-off" src="/assets/icons/add-off.svg" alt=""><img class="us-shell-icon-on" src="/assets/icons/add-on.svg" alt=""></span></button><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
 
   <main id="home" class="page active">
     <section class="hero home-hero-only" id="homeHero" aria-label="Un vostro ricordo">
@@ -233,7 +233,7 @@ html.us-returning-device .auth-overlay{
           <span class="us-setting-value" id="usSyncValue">Controlla</span><i>›</i>
         </button>
         <div class="us-settings2-version-row">
-          <span class="us-settings2-icon us-settings2-brand-mini" aria-hidden="true"><img class="us-wordmark-art" src="/assets/brand/us-wordmark.svg" alt=""></span>
+          <span class="us-settings2-icon us-settings2-brand-mini" aria-hidden="true"><img class="us-wordmark-art" src="/assets/brand/us-wordmark-premium.svg" alt=""></span>
           <span><b>US 1.0</b><small id="usSettingsBuild">Build corrente</small></span>
         </div>
       </div>
@@ -265,23 +265,23 @@ html.us-returning-device .auth-overlay{
   </main>
 </div>
 
-<button type="button" id="thinkButton" class="us-floating-think" onclick="sendThinkSignal()" aria-label="Invia Ti penso" title="Ti penso"><span class="us-floating-think-ring"></span><span>♡</span></button>
+<button type="button" id="thinkButton" class="us-floating-think us-premium-control" onclick="sendThinkSignal()" aria-label="Invia Ti penso" title="Ti penso"><span class="us-floating-think-ring"></span><span class="us-shell-icon us-shell-icon--think" aria-hidden="true"><img class="us-shell-icon-off" src="/assets/icons/think-off.svg" alt=""><img class="us-shell-icon-on" src="/assets/icons/think-on.svg" alt=""></span></button>
 
-<nav class="nav us-nav" aria-label="Navigazione principale">
+<nav class="nav us-nav us-nav-premium" aria-label="Navigazione principale">
 <button class="active" data-page="home" onclick="go('home',{nav:true})" aria-label="Home" aria-current="page">
-  <span class="nicon"><span class="us-nav-icon us-nav-icon--home" aria-hidden="true"></span></span><span class="nlabel">Home</span>
+  <span class="nicon"><span class="us-nav-icon us-nav-icon--home" aria-hidden="true"><img class="us-nav-icon-off" src="/assets/icons/home-off.svg" alt=""><img class="us-nav-icon-on" src="/assets/icons/home-on.svg" alt=""></span></span><span class="nlabel">Home</span>
 </button>
 <button data-page="moments" onclick="go('moments',{nav:true})" aria-label="Moments">
-  <span class="nicon"><span class="us-nav-icon us-nav-icon--moments" aria-hidden="true"></span></span><span class="nlabel">Moments</span>
+  <span class="nicon"><span class="us-nav-icon us-nav-icon--moments" aria-hidden="true"><img class="us-nav-icon-off" src="/assets/icons/moments-off.svg" alt=""><img class="us-nav-icon-on" src="/assets/icons/moments-on.svg" alt=""></span></span><span class="nlabel">Moments</span>
 </button>
 <button data-page="quiz" onclick="openQuizHub({nav:true})" aria-label="Quiz">
-  <span class="nicon"><span class="us-nav-icon us-nav-icon--quiz" aria-hidden="true"></span></span><span class="nlabel">Quiz</span>
+  <span class="nicon"><span class="us-nav-icon us-nav-icon--quiz" aria-hidden="true"><img class="us-nav-icon-off" src="/assets/icons/quiz-off.svg" alt=""><img class="us-nav-icon-on" src="/assets/icons/quiz-on.svg" alt=""></span></span><span class="nlabel">Quiz</span>
 </button>
 <button data-page="bond" onclick="go('bond',{nav:true})" aria-label="Bond">
-  <span class="nicon"><span class="us-nav-icon us-nav-icon--bond" aria-hidden="true"></span></span><span class="nlabel">Bond</span>
+  <span class="nicon"><span class="us-nav-icon us-nav-icon--bond" aria-hidden="true"><img class="us-nav-icon-off" src="/assets/icons/bond-off.svg" alt=""><img class="us-nav-icon-on" src="/assets/icons/bond-on.svg" alt=""></span></span><span class="nlabel">Bond</span>
 </button>
 <button data-page="settings" onclick="go('settings',{nav:true})" aria-label="Impostazioni">
-  <span class="nicon"><span class="us-nav-icon us-nav-icon--settings" aria-hidden="true"></span></span><span class="nlabel">Impostazioni</span>
+  <span class="nicon"><span class="us-nav-icon us-nav-icon--settings" aria-hidden="true"><img class="us-nav-icon-off" src="/assets/icons/settings-off.svg" alt=""><img class="us-nav-icon-on" src="/assets/icons/settings-on.svg" alt=""></span></span><span class="nlabel">Impostazioni</span>
 </button>
 </nav>
 

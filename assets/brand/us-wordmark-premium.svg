@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 118 36" fill="none">
+<defs>
+  <linearGradient id="wm" x1="8" y1="5" x2="105" y2="32" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#FFF0F8"/>
+    <stop offset=".28" stop-color="#FFD1E8"/>
+    <stop offset=".56" stop-color="#FF91C7"/>
+    <stop offset=".82" stop-color="#C685F7"/>
+    <stop offset="1" stop-color="#A77CFF"/>
+  </linearGradient>
+  <filter id="soft" x="-50%" y="-80%" width="200%" height="260%">
+    <feGaussianBlur stdDeviation=".9" result="b"/>
+    <feColorMatrix in="b" values="1 0 0 0 .95 0 1 0 0 .35 0 0 1 0 .7 0 0 0 .5 0"/>
+    <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+</defs>
+<g fill="url(#wm)" filter="url(#soft)">
+  <g transform="translate(4,31.2) scale(0.0295,-0.0295)"><path d="M723 692H503V661C541 661 563 658 570 652C587 636 596 610 596 573V247C596 92 531 15 402 15C276 15 213 84 213 223V661H307V692H32V661H124V219C124 158 145 105 186 60C232 10 294 -15 373 -15C470 -15 538 8 576 54C611 97 629 172 629 279V573C629 608 637 634 654 651C661 658 684 661 723 661Z"/></g>
+  <g transform="translate(24.4365,31.2) scale(0.0295,-0.0295)"><path d="M491 220C491 326 416 387 268 403C162 414 109 458 108 534C107 619 154 663 251 665C350 666 399 626 408 526H438V705H410C407 695 400 690 390 690C369 690 325 707 274 707C208 707 152 691 106 659C52 622 25 567 25 498C25 396 96 337 238 320C290 314 331 300 361 275C393 247 409 212 409 168C408 127 391 94 356 69C322 46 281 33 235 32C195 31 138 48 112 69C85 92 69 129 65 183H35L34 24C95 1 150 -10 197 -10C278 -10 345 8 398 43C460 84 491 143 491 220Z"/></g>
+</g>
+<!-- small heart-comma mark -->
+<path d="M101.5 24.4c-2.2-2.8-6.9-1.05-6.05 2.6.62 2.65 3.5 4.82 6.05 6.42 2.55-1.6 5.43-3.77 6.05-6.42.85-3.65-3.85-5.4-6.05-2.6Z" fill="url(#wm)" filter="url(#soft)"/>
+<path d="M108.1 20.2l.7 1.65 1.65.7-1.65.7-.7 1.65-.7-1.65-1.65-.7 1.65-.7z" fill="#FFDDF0" filter="url(#soft)"/>
+</svg>

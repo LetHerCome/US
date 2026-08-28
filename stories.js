@@ -49,7 +49,7 @@
             <span class="us-top-story-dot" aria-hidden="true"></span>
           </button>
         </div>
-        <button type="button" class="us-story-add-only us-important-control" id="usStoryAdd" aria-label="Aggiungi una story"><span class="us-brand-icon us-brand-icon--stories" aria-hidden="true"></span></button>
+        <button type="button" class="us-story-add-only us-important-control us-premium-control" id="usStoryAdd" aria-label="Aggiungi una story"><span class="us-brand-icon us-brand-icon--stories" aria-hidden="true"><img class="us-brand-icon-off" src="/assets/icons/stories-off.svg" alt=""><img class="us-brand-icon-on" src="/assets/icons/stories-on.svg" alt=""></span></button>
       `;
       const actions = document.querySelector('.top .top-actions');
       if (actions) actions.appendChild(root);

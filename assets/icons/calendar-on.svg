@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+<defs>
+  <linearGradient id="usg" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#FFD7EA"/>
+    <stop offset=".36" stop-color="#FF8FC5"/>
+    <stop offset=".68" stop-color="#E27BE2"/>
+    <stop offset="1" stop-color="#A978FF"/>
+  </linearGradient>
+  <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+    <feGaussianBlur stdDeviation="1.45" result="b"/>
+    <feColorMatrix in="b" values="1 0 0 0 0.99  0 1 0 0 0.40  0 0 1 0 0.74  0 0 0 0.62 0" result="c"/>
+    <feMerge><feMergeNode in="c"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+
+</defs>
+
+<rect x="4" y="5.5" width="16" height="14.2" rx="3" stroke="url(#usg)" stroke-width="1.75" filter="url(#glow)"/>
+<path d="M7.5 3.7v3.6M16.5 3.7v3.6M4 9.5h16" stroke="url(#usg)" stroke-width="1.75" stroke-linecap="round" filter="url(#glow)"/>
+<g fill="url(#usg)" filter="url(#glow)"><circle cx="8" cy="13" r=".9"/><circle cx="12" cy="13" r=".9"/><circle cx="16" cy="13" r=".9"/><circle cx="8" cy="16" r=".9"/><circle cx="12" cy="16" r=".9"/></g>
+
+</svg>

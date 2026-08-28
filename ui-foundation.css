@@ -44,6 +44,14 @@
   --us-nav-height:68px;
   --us-viewport-height:100dvh;
   --us-focus:0 0 0 3px rgba(169,133,255,.28);
+  --us-premium-glass:rgba(24,20,31,.68);
+  --us-premium-glass-strong:rgba(31,25,39,.82);
+  --us-premium-border:rgba(255,234,247,.11);
+  --us-premium-border-active:rgba(255,157,205,.38);
+  --us-premium-blur:22px;
+  --us-premium-shadow:0 18px 50px rgba(0,0,0,.34);
+  --us-premium-inner-highlight:inset 0 1px 0 rgba(255,255,255,.055);
+  --us-premium-active-glow:0 0 16px rgba(255,116,184,.30),0 0 32px rgba(176,116,255,.13);
 }
 
 :where(button:not(:disabled):not([data-us-motion-tap="off"])) {
@@ -150,4 +158,24 @@
 .us-modal-close:focus-visible {
   outline:2px solid rgba(232,138,162,.62);
   outline-offset:2px;
+}
+
+.us-premium-glass {
+  background:
+    radial-gradient(120% 150% at 0% 0%,rgba(255,140,195,.07),transparent 47%),
+    radial-gradient(110% 140% at 100% 100%,rgba(156,113,255,.08),transparent 52%),
+    var(--us-premium-glass);
+  border:1px solid var(--us-premium-border);
+  box-shadow:var(--us-premium-shadow),var(--us-premium-inner-highlight);
+  backdrop-filter:blur(var(--us-premium-blur)) saturate(1.14);
+  -webkit-backdrop-filter:blur(var(--us-premium-blur)) saturate(1.14);
+}
+
+.us-premium-control {
+  border-radius:999px;
+  background:rgba(31,27,37,.72);
+  border:1px solid rgba(255,235,247,.10);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 10px 28px rgba(0,0,0,.20);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
 }
