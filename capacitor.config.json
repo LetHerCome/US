@@ -1,5 +1,12 @@
 {
   "appId": "com.usapp.us",
   "appName": "US",
-  "webDir": "dist/capacitor"
+  "webDir": "dist/capacitor",
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "css",
+      "style": "DARK",
+      "hidden": false
+    }
+  }
 }

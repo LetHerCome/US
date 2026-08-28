@@ -37,10 +37,10 @@
   --us-text-secondary:12px;
   --us-text-meta:11px;
   --us-text-decorative:9px;
-  --us-safe-top:env(safe-area-inset-top,0px);
-  --us-safe-right:env(safe-area-inset-right,0px);
-  --us-safe-bottom:env(safe-area-inset-bottom,0px);
-  --us-safe-left:env(safe-area-inset-left,0px);
+  --us-safe-top:var(--safe-area-inset-top,env(safe-area-inset-top,0px));
+  --us-safe-right:var(--safe-area-inset-right,env(safe-area-inset-right,0px));
+  --us-safe-bottom:var(--safe-area-inset-bottom,env(safe-area-inset-bottom,0px));
+  --us-safe-left:var(--safe-area-inset-left,env(safe-area-inset-left,0px));
   --us-nav-height:68px;
   --us-viewport-height:100dvh;
   --us-focus:0 0 0 3px rgba(169,133,255,.28);

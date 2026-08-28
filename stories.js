@@ -134,6 +134,7 @@
       camera.setAttribute('data-us-modal-panel','');
       camera.innerHTML = `
         <video class="us-camera-video" id="usCameraVideo" playsinline autoplay muted></video>
+        <img class="us-camera-switch-frame" id="usCameraSwitchFrame" alt="" aria-hidden="true" hidden>
         <div class="us-camera-shade"></div>
         <div class="us-camera-top"><button type="button" class="us-camera-icon-btn us-modal-close" id="usCameraClose" aria-label="Chiudi fotocamera" data-us-modal-close>×</button><div class="us-camera-title">Story privata · foto</div><button type="button" class="us-camera-manage" id="usCameraManage" aria-label="Gestisci le tue Stories" hidden><svg viewBox="0 0 18 6" aria-hidden="true"><circle cx="3" cy="3" r="2"/><circle cx="9" cy="3" r="2"/><circle cx="15" cy="3" r="2"/></svg></button></div>
         <div class="us-camera-feedback" role="status" aria-live="polite"><span id="usCameraStatus">Inquadra e scatta</span><button type="button" class="us-camera-retry" id="usCameraRetry" hidden>Riprova</button></div>
@@ -253,6 +254,8 @@
 
   let cameraStream = null;
   let cameraFacing = 'environment';
+  let cameraStreamToken = 0;
+  let cameraSwitchBusy = false;
 
   function setCameraFeedback(message, options = {}) {
     const status = document.getElementById('usCameraStatus');
@@ -292,7 +295,7 @@
       const expires = new Date(Date.now() + STORY_LIFETIME_HOURS * 3600000).toISOString();
       const { error: rowError } = await sb.from('stories').insert({ couple_id: window.usProfile.couple_id, author_id: window.usProfile.id, media_path: path, duration_seconds: STORY_SECONDS, expires_at: expires });
       if (rowError) { await sb.storage.from('us-media').remove([path]); throw rowError; }
-      navigator.vibrate?.([28,18,38]);
+      window.UsPlatform?.haptic?.('success',[28,18,38])||navigator.vibrate?.([28,18,38]);
       toast('Story pubblicata ♡');
       await refreshStories();
       return true;
@@ -348,28 +351,89 @@
     openStoriesFor(window.usProfile.id, true);
   }
 
-  async function startCameraStream() {
-    stopCameraStream();
+  function stopCameraTracks(stream) {
+    stream?.getTracks?.().forEach((track) => track.stop());
+  }
+
+  function hideCameraSwitchFrame() {
+    const frame = document.getElementById('usCameraSwitchFrame');
+    if (!frame) return;
+    frame.hidden = true;
+    frame.removeAttribute('src');
+  }
+
+  function showCameraSwitchFrame(video) {
+    const frame = document.getElementById('usCameraSwitchFrame');
+    if (!frame || !video?.videoWidth || !video?.videoHeight) return;
     try {
-      cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: cameraFacing }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false });
-      const video = document.getElementById('usCameraVideo');
-      if (video) {
-        video.srcObject = cameraStream;
-        await video.play();
-      }
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const context = canvas.getContext('2d');
+      if (!context) return;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      frame.src = canvas.toDataURL('image/webp');
+      frame.hidden = false;
+    } catch (_) {
+      hideCameraSwitchFrame();
+    }
+  }
+
+  function waitForCameraFrame(video, token) {
+    if (!video || video.readyState >= 2) return Promise.resolve(token === cameraStreamToken);
+    return new Promise((resolve) => {
+      let settled = false;
+      const finish = (ready) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        video.removeEventListener('loadeddata', onReady);
+        video.removeEventListener('canplay', onReady);
+        resolve(Boolean(ready && token === cameraStreamToken));
+      };
+      const onReady = () => finish(true);
+      const timeout = setTimeout(() => finish(false), 1200);
+      video.addEventListener('loadeddata', onReady, { once: true });
+      video.addEventListener('canplay', onReady, { once: true });
+      if (typeof video.requestVideoFrameCallback === 'function') video.requestVideoFrameCallback(() => finish(true));
+    });
+  }
+
+  async function startCameraStream(options = {}) {
+    const preserveFrame = Boolean(options.preserveFrame);
+    const facing = options.facing || cameraFacing;
+    const token = ++cameraStreamToken;
+    const video = document.getElementById('usCameraVideo');
+    if (preserveFrame) showCameraSwitchFrame(video);
+    stopCameraStream({ invalidate: false, clearFrame: !preserveFrame });
+    let stream = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: facing }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false });
+      if (token !== cameraStreamToken) { stopCameraTracks(stream); return false; }
+      cameraStream = stream;
+      if (!video) { stopCameraStream({ invalidate: false }); return false; }
+      video.srcObject = stream;
+      const ready = waitForCameraFrame(video, token);
+      await video.play();
+      await ready;
+      if (token !== cameraStreamToken || cameraStream !== stream) { stopCameraTracks(stream); return false; }
+      hideCameraSwitchFrame();
+      return true;
     } catch (error) {
-      stopCameraStream();
+      if (cameraStream === stream) stopCameraStream({ invalidate: false });
+      if (token === cameraStreamToken) hideCameraSwitchFrame();
       throw error;
     }
   }
 
-  function stopCameraStream() {
-    if (cameraStream) {
-      cameraStream.getTracks().forEach((track) => track.stop());
-      cameraStream = null;
-    }
+  function stopCameraStream(options = {}) {
+    const { invalidate = true, clearFrame = true } = options;
+    if (invalidate) cameraStreamToken += 1;
+    stopCameraTracks(cameraStream);
+    cameraStream = null;
     const video = document.getElementById('usCameraVideo');
     if (video) video.srcObject = null;
+    if (clearFrame) hideCameraSwitchFrame();
   }
 
   function closeStoryCamera() {
@@ -384,10 +448,22 @@
   }
 
   async function flipStoryCamera() {
-    cameraFacing = cameraFacing === 'environment' ? 'user' : 'environment';
+    if (cameraSwitchBusy || uploadBusy || captureBusy) return;
+    cameraSwitchBusy = true;
+    setCameraBusy(true);
+    const nextFacing = cameraFacing === 'environment' ? 'user' : 'environment';
     setCameraFeedback('Cambio fotocamera…');
-    try { await startCameraStream(); setCameraFeedback('Inquadra e scatta'); }
-    catch (error) { console.warn(error); setCameraFeedback('Cambio fotocamera non riuscito.'); toast('Non riesco a cambiare fotocamera'); }
+    try {
+      if (await startCameraStream({ facing: nextFacing, preserveFrame: true })) cameraFacing = nextFacing;
+      setCameraFeedback('Inquadra e scatta');
+    } catch (error) {
+      console.warn(error);
+      setCameraFeedback('Cambio fotocamera non riuscito.');
+      toast('Non riesco a cambiare fotocamera');
+    } finally {
+      cameraSwitchBusy = false;
+      if (!uploadBusy && !captureBusy) setCameraBusy(false);
+    }
   }
 
   async function captureStoryPhoto() {

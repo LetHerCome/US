@@ -6,6 +6,7 @@ window.__usInternalHistoryInstalled=true;
 let applyingHistory=false;
 let historyReady=false;
 let layerScanQueued=false;
+let currentEntryIndex=0;
 const layerStates=new Map();
 
 const originalGo=typeof window.go==='function'?window.go:null;
@@ -16,15 +17,20 @@ function activePage(){
 function currentState(){
   return history.state&&history.state.__usNav?history.state:null;
 }
+function entryIndex(state=currentState()){
+  return Number.isInteger(state?.entryIndex)&&state.entryIndex>=0?state.entryIndex:0;
+}
 function sameLayerState(name){
   const state=currentState();
   return Boolean(state&&state.kind==='layer'&&state.layer===name);
 }
 function pushPage(page){
-  history.pushState({__usNav:1,kind:'page',page},'',location.href);
+  currentEntryIndex=entryIndex()+1;
+  history.pushState({__usNav:1,kind:'page',page,entryIndex:currentEntryIndex},'',location.href);
 }
 function pushLayer(name){
-  history.pushState({__usNav:1,kind:'layer',layer:name,page:activePage()},'',location.href);
+  currentEntryIndex=entryIndex()+1;
+  history.pushState({__usNav:1,kind:'layer',layer:name,page:activePage(),entryIndex:currentEntryIndex},'',location.href);
 }
 
 if(originalGo){
@@ -169,6 +175,45 @@ function closeLayersExcept(targetName=null){
   });
 }
 
+function topOpenLayer(){
+  return [...layers].reverse().find(layer=>{
+    const el=layer.find();
+    return Boolean(el&&layer.open(el));
+  })||null;
+}
+
+function closeTopLayer(){
+  const layer=topOpenLayer();
+  if(!layer)return false;
+  try{layer.close();return true;}catch(_e){return false;}
+}
+
+function handleNativeBack(){
+  const state=currentState();
+  const layer=topOpenLayer();
+
+  if(layer){
+    if(state?.kind==='layer'&&state.layer===layer.name&&entryIndex(state)>0){
+      history.back();
+      return true;
+    }
+    return closeTopLayer();
+  }
+
+  if(state?.kind==='page'&&state.page&&state.page!=='home'){
+    if(entryIndex(state)>0){
+      history.back();
+      return true;
+    }
+    if(originalGo){
+      originalGo('home',{history:false});
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function applyHistoryState(state){
   applyingHistory=true;
 
@@ -195,6 +240,7 @@ function applyHistoryState(state){
 window.addEventListener('popstate',event=>{
   const state=event.state;
   if(!state?.__usNav)return;
+  currentEntryIndex=entryIndex(state);
   applyHistoryState(state);
 });
 
@@ -202,10 +248,12 @@ function installHistory(){
   const page=activePage();
   const existing=currentState();
   if(!existing){
-    history.replaceState({...(history.state||{}),__usNav:1,kind:'page',page},'',location.href);
+    history.replaceState({...(history.state||{}),__usNav:1,kind:'page',page,entryIndex:0},'',location.href);
   }else if(!existing.page){
-    history.replaceState({...existing,page},'',location.href);
+    history.replaceState({...existing,page,entryIndex:entryIndex(existing)},'',location.href);
   }
+
+  currentEntryIndex=entryIndex();
 
   historyReady=true;
   scanLayers({initialize:true});
@@ -221,9 +269,19 @@ function installHistory(){
   console.info('[US Navigation] Android/browser Back collegato alla history interna');
 }
 
+function installNativeBackButton(){
+  window.UsPlatform?.listenForNativeBackButton?.(()=>{
+    if(handleNativeBack())return;
+    void window.UsPlatform?.exitNativeApp?.();
+  });
+}
+
+window.UsNavigation=Object.freeze({handleNativeBack});
+
 if(document.readyState==='loading'){
   document.addEventListener('DOMContentLoaded',installHistory,{once:true});
 }else{
   installHistory();
 }
+installNativeBackButton();
 })();

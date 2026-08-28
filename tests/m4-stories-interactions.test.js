@@ -181,16 +181,19 @@ test('la camera rilascia lo stream acquisito se il video non riesce ad avviarsi'
   const stream = { getTracks: () => [{ stop: () => { stopped += 1; } }] };
   const video = {
     srcObject: null,
+    readyState: 2,
     async play() { throw new Error('play failed'); }
   };
   const context = vm.createContext({
-    cameraFacing: 'environment',
     document: { getElementById: (id) => id === 'usCameraVideo' ? video : null },
-    navigator: { mediaDevices: { getUserMedia: async () => stream } }
+    navigator: { mediaDevices: { getUserMedia: async () => stream } },
+    clearTimeout() {}
   });
   vm.runInContext(`
     let cameraStream = null;
-    ${functionSource('async function startCameraStream(', 'function closeStoryCamera(')}
+    let cameraFacing = 'environment';
+    let cameraStreamToken = 0;
+    ${functionSource('function stopCameraTracks(', 'function closeStoryCamera(')}
     this.start = startCameraStream;
   `, context);
 

@@ -1665,7 +1665,7 @@ function renderBondBadges(level){
   try{
     const key=`usBondLastLevel:${window.usProfile?.couple_id||'local'}`;
     const prev=Number(localStorage.getItem(key)||0);
-    if(prev>0&&level>prev){window.usCelebrateLevel?.(level,bondRankTitle(level))||toast(`LV. ${level} · ${bondRankTitle(level)}`);navigator.vibrate?.([35,20,55]);}
+    if(prev>0&&level>prev){window.usCelebrateLevel?.(level,bondRankTitle(level))||toast(`LV. ${level} · ${bondRankTitle(level)}`);window.UsPlatform?.haptic?.('success',[35,20,55])||navigator.vibrate?.([35,20,55]);}
     if(level>prev)localStorage.setItem(key,String(level));
   }catch(_e){}
 }
@@ -1811,7 +1811,7 @@ async function confirmBondQuest(id){
   const {data,error}=await sb.rpc('confirm_bond_quest',{target_quest_id:id});
   if(error){console.warn(error);toast('Non riesco a confermare la quest');return;}
   sendWebPushEvent('quest_confirmed',id).catch(()=>{});
-  if(data?.xp_awarded){toast(`+${data.xp_awarded} Bond XP ♡`);navigator.vibrate?.([35,25,55]);}
+  if(data?.xp_awarded){toast(`+${data.xp_awarded} Bond XP ♡`);window.UsPlatform?.haptic?.('success',[35,25,55])||navigator.vibrate?.([35,25,55]);}
   else toast('Confermata. Aspettiamo l’altro ♡');
   await hydrateBond();
   await hydrateBondSummary();
@@ -1881,7 +1881,7 @@ async function sendThinkSignal(){
   if(error){console.warn(error);toast('Non riesco a inviare il segnale');if(btn)btn.disabled=false;return;}
   if(message?.id)sendWebPushEvent('think',message.id).catch(()=>{});
   btn?.classList.add('sent');setTimeout(()=>btn?.classList.remove('sent'),700);
-  navigator.vibrate?.([30,25,45]);
+  window.UsPlatform?.haptic?.('light',[30,25,45])||navigator.vibrate?.([30,25,45]);
   toast(`${partner.display_name} lo saprà ♡`);
   await hydrateThink();
   syncNativeWidgetBridge().catch(()=>{});
@@ -1892,7 +1892,7 @@ function handleIncomingThink(row){
   if(!row||row.kind!=='think'||row.recipient_id!==window.usProfile?.id)return;
   const partner=partnerFromProfiles(window.usBondProfiles||[]);
   toast(`${partner?.display_name||'L’altra persona'} ti pensa ♡`);
-  navigator.vibrate?.([45,35,80]);
+  window.UsPlatform?.haptic?.('medium',[45,35,80])||navigator.vibrate?.([45,35,80]);
   const heart=document.getElementById('thinkButton');heart?.classList.add('received');setTimeout(()=>heart?.classList.remove('received'),900);
   hydrateThink();
   syncNativeWidgetBridge().catch(()=>{});
