@@ -20,3 +20,10 @@
 - If an approved asset is not suitable for a technical target, stop and report the constraint.
 - Any derivative must originate from the master without altering its source.
 - Do not invent a visual asset when an approved one is missing.
+
+## UI Icon Authority
+
+- Phosphor is the only approved standard icon library.
+- Do not replace Phosphor icons with another icon library.
+- Do not invent custom icons; if the required custom icon does not exist, stop and report it.
+- Do not generate custom SVG icons autonomously.
