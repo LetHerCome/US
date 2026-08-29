@@ -24,6 +24,14 @@
       "immutable": true,
       "purpose": "Official US Android adaptive icon background",
       "usedBy": []
+    },
+    {
+      "path": "assets/source/brand/splash/us-splash-master-v1.png",
+      "status": "APPROVED",
+      "sha256": "cc142ef2f60734aee10f918511ddac5a54c80d792225b0415fa1f81247c0c405",
+      "immutable": true,
+      "purpose": "Official US splash master",
+      "usedBy": []
     }
   ]
 }
