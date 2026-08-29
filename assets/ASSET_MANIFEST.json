@@ -1,4 +1,13 @@
 {
   "schemaVersion": 1,
-  "assets": []
+  "assets": [
+    {
+      "path": "assets/source/brand/us-symbol-master-v1.png",
+      "status": "APPROVED",
+      "sha256": "bcbb3f3060edd5cf7218f245e1b56053de2c011ea5244e49f9e5f325269d28fd",
+      "immutable": true,
+      "purpose": "Official US master brand symbol",
+      "usedBy": []
+    }
+  ]
 }
