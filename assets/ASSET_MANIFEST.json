@@ -32,6 +32,14 @@
       "immutable": true,
       "purpose": "Official US splash master",
       "usedBy": []
+    },
+    {
+      "path": "assets/source/brand/us-wordmark-v1.png",
+      "status": "APPROVED",
+      "sha256": "e8e3007c9ada499e4fc68aa68179d6e4046d21df14351e6c7144bca5d8b28f97",
+      "immutable": true,
+      "purpose": "Official US supporting wordmark",
+      "usedBy": []
     }
   ]
 }
