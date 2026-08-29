@@ -8,6 +8,22 @@
       "immutable": true,
       "purpose": "Official US master brand symbol",
       "usedBy": []
+    },
+    {
+      "path": "assets/source/brand/app-icon/us-adaptive-foreground-v1.png",
+      "status": "APPROVED",
+      "sha256": "fb91f1008154887f8ec114b85f5c84e88360e18ccc6d0ee838ecd7b003ad8621",
+      "immutable": true,
+      "purpose": "Official US Android adaptive icon foreground",
+      "usedBy": []
+    },
+    {
+      "path": "assets/source/brand/app-icon/us-adaptive-background-v1.png",
+      "status": "APPROVED",
+      "sha256": "9dbe74d482bbbf6a43d9ccabae3e5599c7d43b5a79b350765175443ac686515a",
+      "immutable": true,
+      "purpose": "Official US Android adaptive icon background",
+      "usedBy": []
     }
   ]
 }
