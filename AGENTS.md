@@ -12,3 +12,11 @@
 - Design and verify mobile-first, including safe areas and constrained viewports when affected.
 - A native shell follows the US 1.0 Freeze. Do not introduce duplicate native/web systems now.
 - Keep micro-fixes as small prompts/tasks. Give architectural milestones deeper analysis before implementation.
+
+## Visual Asset Authority
+
+- Assets marked `APPROVED` in `assets/ASSET_MANIFEST.json` are the visual authority.
+- Codex must not redraw, modify, recolor, crop, simplify, optimize, overwrite, or replace an approved asset.
+- If an approved asset is not suitable for a technical target, stop and report the constraint.
+- Any derivative must originate from the master without altering its source.
+- Do not invent a visual asset when an approved one is missing.
