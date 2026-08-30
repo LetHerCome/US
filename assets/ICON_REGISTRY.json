@@ -6,7 +6,7 @@
   },
   "icons": [
     { "id": "home", "label": "Home", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "House", "customAssetPath": null, "status": "APPROVED", "usedBy": ["bottom-navigation"] },
-    { "id": "settings", "label": "Settings", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "GearSix", "customAssetPath": null, "status": "APPROVED", "usedBy": ["bottom-navigation", "settings"] },
+    { "id": "settings", "label": "Settings", "source": "CUSTOM", "authority": "CUSTOM_ASSET", "phosphorName": null, "customAssetPath": "assets/source/ui/us-icon-settings-v1.png", "status": "APPROVED", "usedBy": ["bottom-navigation", "settings"] },
     { "id": "camera", "label": "Camera", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "Camera", "customAssetPath": null, "status": "APPROVED", "usedBy": ["stories-camera"] },
     { "id": "gallery", "label": "Gallery", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "ImageSquare", "customAssetPath": null, "status": "APPROVED", "usedBy": ["moments", "stories-upload"] },
     { "id": "add", "label": "Add", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "Plus", "customAssetPath": null, "status": "APPROVED", "usedBy": ["moments", "stories", "events"] },
@@ -16,10 +16,10 @@
     { "id": "location", "label": "Location", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "MapPin", "customAssetPath": null, "status": "APPROVED", "usedBy": ["home-distance", "events"] },
     { "id": "notifications", "label": "Notifications", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "Bell", "customAssetPath": null, "status": "APPROVED", "usedBy": ["settings-web-push"] },
     { "id": "calendar-date", "label": "Calendar / date", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "CalendarDots", "customAssetPath": null, "status": "APPROVED", "usedBy": ["events", "home"] },
-    { "id": "bond", "label": "Bond", "source": "CUSTOM", "authority": "CUSTOM_ASSET", "phosphorName": null, "customAssetPath": "assets/source/ui/us-icon-bond-v1.svg", "status": "PLANNED", "usedBy": ["bottom-navigation", "bond"] },
-    { "id": "stories", "label": "Stories", "source": "CUSTOM", "authority": "CUSTOM_ASSET", "phosphorName": null, "customAssetPath": "assets/source/ui/us-icon-stories-v1.svg", "status": "PLANNED", "usedBy": ["header-stories-trigger", "stories-viewer"] },
-    { "id": "moments", "label": "Moments", "source": "CUSTOM", "authority": "CUSTOM_ASSET", "phosphorName": null, "customAssetPath": "assets/source/ui/us-icon-moments-v1.svg", "status": "PLANNED", "usedBy": ["bottom-navigation", "moments"] },
-    { "id": "daily-question", "label": "Daily question", "source": "CUSTOM", "authority": "CUSTOM_ASSET", "phosphorName": null, "customAssetPath": "assets/source/ui/us-icon-daily-question-v1.svg", "status": "PLANNED", "usedBy": ["quiz-daily-question"] },
-    { "id": "ti-penso", "label": "Ti penso", "source": "CUSTOM", "authority": "CUSTOM_ASSET", "phosphorName": null, "customAssetPath": "assets/source/ui/us-icon-ti-penso-v1.svg", "status": "PLANNED", "usedBy": ["home-ti-penso"] }
+    { "id": "bond", "label": "Bond", "source": "CUSTOM", "authority": "CUSTOM_ASSET", "phosphorName": null, "customAssetPath": "assets/source/ui/us-icon-bond-v1.png", "status": "APPROVED", "usedBy": ["bottom-navigation", "bond"] },
+    { "id": "stories", "label": "Stories", "source": "CUSTOM", "authority": "CUSTOM_ASSET", "phosphorName": null, "customAssetPath": "assets/source/ui/us-icon-stories-v1.png", "status": "APPROVED", "usedBy": ["header-stories-trigger", "stories-viewer"] },
+    { "id": "moments", "label": "Moments", "source": "CUSTOM", "authority": "CUSTOM_ASSET", "phosphorName": null, "customAssetPath": "assets/source/ui/us-icon-moments-v1.png", "status": "APPROVED", "usedBy": ["bottom-navigation", "moments"] },
+    { "id": "daily-question", "label": "Daily question", "source": "CUSTOM", "authority": "CUSTOM_ASSET", "phosphorName": null, "customAssetPath": "assets/source/ui/us-icon-daily-question-v1.png", "status": "APPROVED", "usedBy": ["quiz-daily-question"] },
+    { "id": "ti-penso", "label": "Ti penso", "source": "CUSTOM", "authority": "CUSTOM_ASSET", "phosphorName": null, "customAssetPath": "assets/source/ui/us-icon-ti-penso-v1.png", "status": "APPROVED", "usedBy": ["home-ti-penso"] }
   ]
 }

@@ -40,6 +40,54 @@
       "immutable": true,
       "purpose": "Official US supporting wordmark",
       "usedBy": []
+    },
+    {
+      "path": "assets/source/ui/us-icon-bond-v1.png",
+      "status": "APPROVED",
+      "sha256": "b61fcd1be9380d572fc23c1561e21910b3270c7f33d7ce8f140aa6998d47e80d",
+      "immutable": true,
+      "purpose": "Official US Bond custom icon",
+      "usedBy": ["bottom-navigation", "bond"]
+    },
+    {
+      "path": "assets/source/ui/us-icon-stories-v1.png",
+      "status": "APPROVED",
+      "sha256": "455422f08fe0334bfc6d780ace5f1881d84f878e4c41b676c7daa7ef6858bc06",
+      "immutable": true,
+      "purpose": "Official US Stories custom icon",
+      "usedBy": ["header-stories-trigger", "stories-viewer"]
+    },
+    {
+      "path": "assets/source/ui/us-icon-moments-v1.png",
+      "status": "APPROVED",
+      "sha256": "319a98637ec62445f6329f3d8ea2fb7cccd2602fc2b97c8737e089f80c812627",
+      "immutable": true,
+      "purpose": "Official US Moments custom icon",
+      "usedBy": ["bottom-navigation", "moments"]
+    },
+    {
+      "path": "assets/source/ui/us-icon-daily-question-v1.png",
+      "status": "APPROVED",
+      "sha256": "a74741e415df001e11b83493b65c9aa80acb3619af3652a26e82bb07a047ffa3",
+      "immutable": true,
+      "purpose": "Official US Daily Question custom icon",
+      "usedBy": ["quiz-daily-question"]
+    },
+    {
+      "path": "assets/source/ui/us-icon-ti-penso-v1.png",
+      "status": "APPROVED",
+      "sha256": "f1910a3aaf8267de807df476e35ac893a34092cbbeb3917c8f3ff15edc307e8e",
+      "immutable": true,
+      "purpose": "Official US Ti Penso custom icon",
+      "usedBy": ["home-ti-penso"]
+    },
+    {
+      "path": "assets/source/ui/us-icon-settings-v1.png",
+      "status": "APPROVED",
+      "sha256": "c939f83506dc0bf323f194d4c88c6ccd5530d7f78954b43e3f4ef297b7876e88",
+      "immutable": true,
+      "purpose": "Official US Settings custom icon",
+      "usedBy": ["bottom-navigation", "settings"]
     }
   ]
 }
