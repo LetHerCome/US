@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-static-runtime-14";
+const CACHE_NAME = "us-shell-static-runtime-15";
 const MEDIA_CACHE_NAME = "us-private-media-v1";
 
 const APP_SHELL = [
@@ -50,6 +50,12 @@ const APP_SHELL = [
   "/assets/icons/add-on.svg",
   "/assets/icons/think-off.svg",
   "/assets/icons/think-on.svg",
+  "/assets/source/ui/us-icon-bond-v1.png",
+  "/assets/source/ui/us-icon-stories-v1.png",
+  "/assets/source/ui/us-icon-moments-v1.png",
+  "/assets/source/ui/us-icon-daily-question-v1.png",
+  "/assets/source/ui/us-icon-ti-penso-v1.png",
+  "/assets/source/ui/us-icon-settings-v1.png",
   "/version.json",
   "/manifest.webmanifest",
   "/icon-192.png",

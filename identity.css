@@ -117,8 +117,17 @@ textarea,input{
 .today-orb-copy{display:none!important}
 .today-orb-mark{
   color:#fff!important;
-  background:var(--us-accent-gradient)!important;
-  box-shadow:0 0 14px rgba(255,116,184,.20);
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.us-approved-custom-icon{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  background:transparent;
+  border:0;
+  box-shadow:none;
 }
 .us-calendar-btn i{
   background:#ff8fc5!important;
