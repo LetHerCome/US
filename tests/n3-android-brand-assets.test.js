@@ -76,12 +76,31 @@ test('launcher e splash Android usano soltanto il nuovo set brand', () => {
 
   assert.match(manifest, /android:icon="@mipmap\/ic_launcher"/);
   assert.match(manifest, /android:roundIcon="@mipmap\/ic_launcher_round"/);
-  assert.match(adaptive, /@drawable\/us_adaptive_background_v1/);
+  assert.match(adaptive, /@color\/ic_launcher_background/);
   assert.match(adaptive, /@drawable\/us_adaptive_foreground_v1/);
   assert.match(baseStyles, /@drawable\/us_splash_background/);
   assert.match(v31Styles, /windowSplashScreenAnimatedIcon/);
   assert.match(v31Styles, /@drawable\/us_splash_symbol/);
   assert.match(v31Styles, /postSplashScreenTheme/);
+});
+
+test('foreground Android deriva dal master trasparente e il launcher non espone sfondo chiaro', () => {
+  runBrandBuild();
+  const brand = JSON.parse(fs.readFileSync(BRAND_MANIFEST, 'utf8'));
+  const foreground = brand.derivatives.find((entry) => entry.path.endsWith('/us_adaptive_foreground_v1.png'));
+  assert.ok(foreground, 'foreground adaptive derivato mancante');
+  assert.deepEqual(foreground.sources, ['assets/source/brand/us-symbol-master-v1.png']);
+  assert.match(foreground.operation, /FIT_CENTER.*TRANSPARENT/i);
+
+  const colors = fs.readFileSync(path.join(ROOT, 'android/app/src/main/res/values/colors.xml'), 'utf8');
+  assert.match(colors, /<color name="ic_launcher_background">#08040E<\/color>/);
+
+  const legacy = brand.derivatives.filter((entry) => /mipmap-[^/]+\/ic_launcher(?:_round)?\.png$/.test(entry.path));
+  assert.equal(legacy.length, 10);
+  legacy.forEach((entry) => {
+    assert.deepEqual(entry.sources, ['assets/source/brand/us-symbol-master-v1.png']);
+    assert.match(entry.operation, /DARK_08040E/);
+  });
 });
 
 test('le risorse base Android hanno una sola authority per type e name', () => {

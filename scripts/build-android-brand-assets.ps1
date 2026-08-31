@@ -61,19 +61,40 @@ function Add-Derivative([string]$RelativePath, [string]$Operation, [string[]]$In
 $drawableNoDpi = Join-Path $res 'drawable-nodpi'
 New-Item -ItemType Directory -Force -Path $drawableNoDpi | Out-Null
 
-$copies = @(
-  @('assets/source/brand/app-icon/us-adaptive-foreground-v1.png', 'android/app/src/main/res/drawable-nodpi/us_adaptive_foreground_v1.png'),
-  @('assets/source/brand/app-icon/us-adaptive-background-v1.png', 'android/app/src/main/res/drawable-nodpi/us_adaptive_background_v1.png'),
-  @('assets/source/brand/splash/us-splash-master-v1.png', 'android/app/src/main/res/drawable-nodpi/us_splash_master_v1.png')
-)
+$copies = ,@('assets/source/brand/splash/us-splash-master-v1.png', 'android/app/src/main/res/drawable-nodpi/us_splash_master_v1.png')
 foreach ($copy in $copies) {
   Copy-Item -LiteralPath $sourceFiles[$copy[0]] -Destination (Join-Path $root $copy[1]) -Force
   Add-Derivative $copy[1] 'BYTE_COPY' @($copy[0])
 }
 
-$background = [System.Drawing.Image]::FromFile($sourceFiles['assets/source/brand/app-icon/us-adaptive-background-v1.png'])
-$foreground = [System.Drawing.Image]::FromFile($sourceFiles['assets/source/brand/app-icon/us-adaptive-foreground-v1.png'])
+$deprecatedBackground = Join-Path $root 'android/app/src/main/res/drawable-nodpi/us_adaptive_background_v1.png'
+if (Test-Path -LiteralPath $deprecatedBackground) { Remove-Item -LiteralPath $deprecatedBackground -Force }
+
+$symbol = [System.Drawing.Image]::FromFile($sourceFiles['assets/source/brand/us-symbol-master-v1.png'])
 try {
+  $adaptiveSize = 1254
+  $adaptive = New-Object System.Drawing.Bitmap $adaptiveSize, $adaptiveSize
+  $adaptiveGraphics = [System.Drawing.Graphics]::FromImage($adaptive)
+  try {
+    $adaptiveGraphics.Clear([System.Drawing.Color]::Transparent)
+    $adaptiveGraphics.CompositingMode = [System.Drawing.Drawing2D.CompositingMode]::SourceOver
+    $adaptiveGraphics.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
+    $adaptiveGraphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+    $adaptiveGraphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+    $adaptiveScale = [Math]::Min($adaptiveSize / $symbol.Width, $adaptiveSize / $symbol.Height)
+    $adaptiveWidth = [int][Math]::Round($symbol.Width * $adaptiveScale)
+    $adaptiveHeight = [int][Math]::Round($symbol.Height * $adaptiveScale)
+    $adaptiveX = [int](($adaptiveSize - $adaptiveWidth) / 2)
+    $adaptiveY = [int](($adaptiveSize - $adaptiveHeight) / 2)
+    $adaptiveGraphics.DrawImage($symbol, (New-Object System.Drawing.Rectangle $adaptiveX, $adaptiveY, $adaptiveWidth, $adaptiveHeight))
+    $relative = 'android/app/src/main/res/drawable-nodpi/us_adaptive_foreground_v1.png'
+    Write-Png $adaptive (Join-Path $root $relative)
+    Add-Derivative $relative 'FIT_CENTER_TRANSPARENT' @('assets/source/brand/us-symbol-master-v1.png')
+  } finally {
+    $adaptiveGraphics.Dispose()
+    $adaptive.Dispose()
+  }
+
   $sizes = [ordered]@{ 'mipmap-mdpi' = 48; 'mipmap-hdpi' = 72; 'mipmap-xhdpi' = 96; 'mipmap-xxhdpi' = 144; 'mipmap-xxxhdpi' = 192 }
   foreach ($density in $sizes.Keys) {
     $size = $sizes[$density]
@@ -86,12 +107,17 @@ try {
       $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
       $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
       $rect = New-Object System.Drawing.Rectangle 0, 0, $size, $size
-      $graphics.DrawImage($background, $rect)
-      $graphics.DrawImage($foreground, $rect)
+      $graphics.Clear([System.Drawing.Color]::FromArgb(255, 8, 4, 14))
+      $scale = [Math]::Min($size / $symbol.Width, $size / $symbol.Height)
+      $width = [int][Math]::Round($symbol.Width * $scale)
+      $height = [int][Math]::Round($symbol.Height * $scale)
+      $x = [int](($size - $width) / 2)
+      $y = [int](($size - $height) / 2)
+      $graphics.DrawImage($symbol, (New-Object System.Drawing.Rectangle $x, $y, $width, $height))
       foreach ($name in @('ic_launcher.png', 'ic_launcher_round.png')) {
         $relative = "android/app/src/main/res/$density/$name"
         Write-Png $bitmap (Join-Path $root $relative)
-        Add-Derivative $relative 'COMPOSITE_RESIZE' @('assets/source/brand/app-icon/us-adaptive-background-v1.png', 'assets/source/brand/app-icon/us-adaptive-foreground-v1.png')
+        Add-Derivative $relative 'FIT_CENTER_DARK_08040E' @('assets/source/brand/us-symbol-master-v1.png')
       }
     } finally {
       $graphics.Dispose()
@@ -99,8 +125,7 @@ try {
     }
   }
 } finally {
-  $foreground.Dispose()
-  $background.Dispose()
+  $symbol.Dispose()
 }
 
 $symbol = [System.Drawing.Image]::FromFile($sourceFiles['assets/source/brand/us-symbol-master-v1.png'])

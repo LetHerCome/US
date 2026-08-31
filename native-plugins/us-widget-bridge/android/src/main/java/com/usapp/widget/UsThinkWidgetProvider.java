@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.view.View;
 import android.widget.RemoteViews;
 import java.time.Duration;
 import java.time.Instant;
@@ -26,24 +27,46 @@ public class UsThinkWidgetProvider extends AppWidgetProvider {
         for (int id : appWidgetIds) manager.updateAppWidget(id, render(context, snapshot));
     }
 
+    static void updateAll(Context context) {
+        AppWidgetManager manager = AppWidgetManager.getInstance(context);
+        android.content.ComponentName component = new android.content.ComponentName(context, UsThinkWidgetProvider.class);
+        updateAll(context, manager, manager.getAppWidgetIds(component));
+    }
+
     private static RemoteViews render(Context context, JSONObject snapshot) {
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.us_widget_think);
         String message = messageFor(snapshot);
         views.setTextViewText(R.id.us_widget_message, message);
         views.setTextViewText(R.id.us_widget_cta, ctaFor(message));
-        views.setOnClickPendingIntent(R.id.us_widget_root, launchIntent(context, "open", 4101));
-        views.setOnClickPendingIntent(R.id.us_widget_heart, launchIntent(context, "send", 4102));
+        boolean sending = "sending".equals(actionStatus(snapshot));
+        views.setViewVisibility(R.id.us_widget_heart, sending ? View.GONE : View.VISIBLE);
+        views.setViewVisibility(R.id.us_widget_heart_pulse, sending ? View.VISIBLE : View.GONE);
+        views.setOnClickPendingIntent(R.id.us_widget_root, launchIntent(context));
+        views.setOnClickPendingIntent(R.id.us_widget_heart, sendIntent(context));
+        views.setOnClickPendingIntent(R.id.us_widget_heart_pulse, sendIntent(context));
         return views;
     }
 
-    private static PendingIntent launchIntent(Context context, String action, int requestCode) {
+    private static PendingIntent launchIntent(Context context) {
         Intent intent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
         if (intent == null) intent = new Intent();
         intent.setPackage(context.getPackageName());
-        intent.setAction("com.usapp.us.WIDGET_" + action.toUpperCase());
-        intent.setData(Uri.parse("us://widget/think/" + action));
+        intent.setAction("com.usapp.us.WIDGET_OPEN");
+        intent.setData(Uri.parse("us://widget/think/open"));
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        return PendingIntent.getActivity(context, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        return PendingIntent.getActivity(context, 4101, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+    }
+
+    private static PendingIntent sendIntent(Context context) {
+        Intent intent = new Intent(context, UsThinkWidgetActionReceiver.class);
+        intent.setAction(UsThinkWidgetActionReceiver.ACTION_SEND_THINK);
+        return PendingIntent.getBroadcast(context, 4102, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+    }
+
+    private static String actionStatus(JSONObject snapshot) {
+        JSONObject modules = snapshot == null ? null : snapshot.optJSONObject("modules");
+        JSONObject think = modules == null ? null : modules.optJSONObject("think");
+        return think == null ? "idle" : think.optString("lastActionStatus", "idle");
     }
 
     private static String messageFor(JSONObject snapshot) {

@@ -126,6 +126,30 @@
     return true;
   }
 
+  async function getWidgetDeviceIdentity() {
+    const plugin = widgetBridge();
+    if (!plugin || typeof plugin.getDeviceIdentity !== 'function') return null;
+    const result = await plugin.getDeviceIdentity();
+    const deviceId = typeof result?.deviceId === 'string' ? result.deviceId : '';
+    return /^[0-9a-f-]{36}$/i.test(deviceId) ? { deviceId } : null;
+  }
+
+  async function storeWidgetActionCredential(ownerHash, token) {
+    const plugin = widgetBridge();
+    const safeHash = validOwnerHash(ownerHash);
+    const safeToken = typeof token === 'string' && /^[A-Za-z0-9_-]{43}$/.test(token) ? token : '';
+    if (!plugin || !safeHash || !safeToken || typeof plugin.setActionCredential !== 'function') return false;
+    await plugin.setActionCredential({ ownerHash: safeHash, token: safeToken });
+    return true;
+  }
+
+  async function clearWidgetActionCredential() {
+    const plugin = widgetBridge();
+    if (!plugin || typeof plugin.clearActionCredential !== 'function') return false;
+    await plugin.clearActionCredential();
+    return true;
+  }
+
   async function getNativeLaunchUrl() {
     const app = getNativeApp();
     if (!app || typeof app.getLaunchUrl !== 'function') return null;
@@ -159,6 +183,9 @@
     activateWidgetAccount,
     writeWidgetSnapshot,
     clearWidgetSnapshot,
+    getWidgetDeviceIdentity,
+    storeWidgetActionCredential,
+    clearWidgetActionCredential,
     getNativeLaunchUrl,
     listenForNativeAppUrl
   });

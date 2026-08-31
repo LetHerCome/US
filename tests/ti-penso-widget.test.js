@@ -18,16 +18,20 @@ function loadPlatform(runtime = null) {
   return sandbox.UsPlatform;
 }
 
-function loadWidgetRuntime({ launchUrl = null, sendResult = true } = {}) {
+function loadWidgetRuntime({ launchUrl = null, issueResult = { token: 'A'.repeat(43), expiresAt: '2027-01-01T00:00:00.000Z' }, storeCredentialResult = true } = {}) {
   const events = [];
   let appUrlOpen;
   let listenerRegistrations = 0;
-  let sendCalls = 0;
+  let issueCalls = 0;
+  let revokeCalls = 0;
   const platform = {
     isNative: true,
     activateWidgetAccount: async (ownerHash) => events.push(['activate', ownerHash]),
     writeWidgetSnapshot: async (snapshot) => events.push(['snapshot', snapshot]),
     clearWidgetSnapshot: async () => events.push(['clear']),
+    getWidgetDeviceIdentity: async () => ({ deviceId: '5a86d7aa-37d8-48ed-9122-a8f42d80ff9e' }),
+    storeWidgetActionCredential: async (ownerHash, token) => { events.push(['credential', ownerHash, token]); return storeCredentialResult; },
+    clearWidgetActionCredential: async () => events.push(['credential-clear']),
     getNativeLaunchUrl: async () => launchUrl,
     listenForNativeAppUrl(handler) {
       listenerRegistrations += 1;
@@ -42,7 +46,10 @@ function loadWidgetRuntime({ launchUrl = null, sendResult = true } = {}) {
     URL,
     UsPlatform: platform,
     go(page) { events.push(['go', page]); },
-    sendThinkSignal: async () => { sendCalls += 1; return sendResult; },
+    UsWidgetCredentialApi: {
+      issue: async (deviceIdHash) => { issueCalls += 1; events.push(['issue', deviceIdHash]); return issueResult; },
+      revoke: async (deviceIdHash) => { revokeCalls += 1; events.push(['revoke', deviceIdHash]); return true; }
+    },
     setTimeout,
     clearTimeout
   };
@@ -54,7 +61,8 @@ function loadWidgetRuntime({ launchUrl = null, sendResult = true } = {}) {
     emitUrl: (url) => appUrlOpen?.({ url }),
     events,
     get listenerRegistrations() { return listenerRegistrations; },
-    get sendCalls() { return sendCalls; }
+    get issueCalls() { return issueCalls; },
+    get revokeCalls() { return revokeCalls; }
   };
 }
 
@@ -66,6 +74,9 @@ test('browser/PWA mantiene il bridge widget come no-op fail-safe', async () => {
   assert.equal(await platform.clearWidgetSnapshot(), false);
   assert.equal(await platform.getNativeLaunchUrl(), null);
   assert.equal(await platform.listenForNativeAppUrl(() => {}), null);
+  assert.equal(await platform.getWidgetDeviceIdentity(), null);
+  assert.equal(await platform.storeWidgetActionCredential('a'.repeat(64), 'A'.repeat(43)), false);
+  assert.equal(await platform.clearWidgetActionCredential(), false);
 });
 
 test('boundary inoltra solo snapshot e owner hash, mai credenziali', async () => {
@@ -94,38 +105,55 @@ test('boundary inoltra solo snapshot e owner hash, mai credenziali', async () =>
   assert.equal(calls[1][1].snapshot.schemaVersion, 1);
 });
 
-test('listener URL native è singolo e cold send resta accodato fino ad auth ready', async () => {
+test('listener URL native è singolo e auth ready provisiona una credential device-scoped', async () => {
   const harness = loadWidgetRuntime({ launchUrl: { url: 'us://widget/think/send' } });
   await Promise.resolve();
   await Promise.resolve();
   assert.equal(harness.listenerRegistrations, 1);
-  assert.equal(harness.sendCalls, 0);
+  assert.equal(harness.issueCalls, 0);
   await harness.widget.authReady({ id: 'user-1' });
-  assert.equal(harness.sendCalls, 1);
-  assert.deepEqual(harness.events.find((event) => event[0] === 'go'), ['go', 'home']);
+  assert.equal(harness.issueCalls, 1);
+  assert.ok(harness.events.some((event) => event[0] === 'credential'));
 });
 
-test('open non invia e doppio tap send produce un solo invio', async () => {
+test('URL open naviga Home mentre URL send legacy non invia dalla WebView', async () => {
   const harness = loadWidgetRuntime();
   await harness.widget.authReady({ id: 'user-1' });
   await harness.emitUrl('us://widget/think/open');
-  assert.equal(harness.sendCalls, 0);
-  await Promise.all([
-    harness.emitUrl('us://widget/think/send'),
-    harness.emitUrl('us://widget/think/send')
-  ]);
-  assert.equal(harness.sendCalls, 1);
+  assert.deepEqual(harness.events.find((event) => event[0] === 'go'), ['go', 'home']);
+  assert.equal(await harness.emitUrl('us://widget/think/send'), false);
 });
 
-test('fallimento/offline non pubblica un falso stato sent', async () => {
-  const harness = loadWidgetRuntime({ sendResult: false });
+test('fallimento provisioning non conserva credential e non pubblica falso sent', async () => {
+  const harness = loadWidgetRuntime({ issueResult: null });
   await harness.widget.authReady({ id: 'user-1' });
-  await harness.emitUrl('us://widget/think/send');
-  const statuses = harness.events
-    .filter((event) => event[0] === 'snapshot')
-    .map((event) => event[1].modules.think.lastActionStatus);
-  assert.ok(statuses.includes('failed'));
-  assert.equal(statuses.includes('sent'), false);
+  assert.equal(harness.events.some((event) => event[0] === 'credential'), false);
+  assert.ok(harness.events.some((event) => event[0] === 'credential-clear'));
+});
+
+test('credential emessa ma non cifrata localmente viene revocata subito', async () => {
+  const harness = loadWidgetRuntime({ storeCredentialResult: false });
+  await harness.widget.authReady({ id: 'user-1' });
+  assert.equal(harness.issueCalls, 1);
+  assert.equal(harness.revokeCalls, 1);
+  assert.ok(harness.events.some((event) => event[0] === 'credential-clear'));
+});
+
+test('logout attende il provisioning prima di revocare e cancellare la credential', async () => {
+  let releaseIssue;
+  const pendingIssue = new Promise((resolve) => { releaseIssue = resolve; });
+  const harness = loadWidgetRuntime({ issueResult: pendingIssue });
+  const ready = harness.widget.authReady({ id: 'user-1' });
+  for (let index = 0; index < 10 && harness.issueCalls === 0; index += 1) await new Promise(setImmediate);
+  assert.equal(harness.issueCalls, 1);
+  const clearing = harness.widget.clear();
+  await Promise.resolve();
+  assert.equal(harness.revokeCalls, 0);
+  releaseIssue({ token: 'A'.repeat(43), expiresAt: '2027-01-01T00:00:00.000Z' });
+  await Promise.all([ready, clearing]);
+  const names = harness.events.map((event) => event[0]);
+  assert.ok(names.indexOf('credential') < names.indexOf('revoke'));
+  assert.ok(names.indexOf('revoke') < names.indexOf('credential-clear'));
 });
 
 test('snapshot è versionato, isolato con hash account e cancellabile', async () => {
@@ -138,6 +166,9 @@ test('snapshot è versionato, isolato con hash account e cancellabile', async ()
   assert.doesNotMatch(JSON.stringify(snapshot), /raw-user-id/);
   await harness.widget.clear();
   assert.ok(harness.events.some((event) => event[0] === 'clear'));
+  assert.equal(harness.revokeCalls, 1);
+  assert.ok(harness.events.some((event) => event[0] === 'credential-clear'));
+  assert.ok(harness.events.findIndex((event) => event[0] === 'revoke') < harness.events.findIndex((event) => event[0] === 'credential-clear'));
 });
 
 test('cambio account produce owner hash distinto e non riusa identità raw', async () => {
@@ -152,19 +183,21 @@ test('cambio account produce owner hash distinto e non riusa identità raw', asy
   assert.doesNotMatch(JSON.stringify(second), /account-one|account-two|Prima/);
 });
 
-test('app riusa sendThinkSignal e non conserva più configure token-based', () => {
+test('app provisiona/revoca via client Supabase esistente e non conserva session token nel bridge', () => {
   const app = read('app.js');
   const coordinator = read('ti-penso-widget.js');
   assert.doesNotMatch(app, /syncNativeWidgetBridge|bridge\.configure/);
-  assert.match(coordinator, /window\.sendThinkSignal\(\)/);
+  assert.doesNotMatch(coordinator, /window\.sendThinkSignal\(\)/);
   assert.doesNotMatch(coordinator, /Supabase|access[_T]?oken|refresh[_T]?oken|supabaseUrl|supabaseKey/i);
+  assert.match(app, /widget-device-token/);
+  assert.match(app, /UsWidgetCredentialApi/);
   assert.match(app, /UsThinkWidget\?\.authReady\?\.\(profile\)/);
   assert.match(app, /UsThinkWidget\?\.publishThink\?\.\(/);
   assert.match(app, /if\(options\.foreground\)hydrateThink\(\)\.catch/);
   assert.match(app, /UsThinkWidget\?\.clear\?\.\(\)/);
 });
 
-test('plugin Android dichiara provider 2x2, no networking e MainActivity invariata', () => {
+test('plugin Android dichiara provider 2x2, networking minimale senza Supabase client e MainActivity invariata', () => {
   const pluginManifest = read('native-plugins/us-widget-bridge/android/src/main/AndroidManifest.xml');
   const providerInfo = read('native-plugins/us-widget-bridge/android/src/main/res/xml/us_widget_think_info.xml');
   const mainActivity = read('android/app/src/main/java/com/usapp/us/MainActivity.java');
@@ -176,7 +209,7 @@ test('plugin Android dichiara provider 2x2, no networking e MainActivity invaria
   assert.match(pluginManifest, /android\.appwidget\.action\.APPWIDGET_UPDATE/);
   assert.match(providerInfo, /android:targetCellWidth="2"/);
   assert.match(providerInfo, /android:targetCellHeight="2"/);
-  assert.doesNotMatch(pluginSources, /OkHttp|HttpURLConnection|Supabase|accessToken|refreshToken/);
+  assert.doesNotMatch(pluginSources, /OkHttp|Supabase|accessToken|refreshToken/);
   assert.match(pluginSources, /getNoBackupFilesDir\(\)/);
   assert.match(pluginSources, /new AtomicFile/);
   assert.match(pluginSources, /!currentOwner\.equals\(ownerHash\)\) snapshotFile\.delete\(\)/);

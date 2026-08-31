@@ -267,6 +267,21 @@ const sb = window.supabase.createClient(SB_URL, SB_KEY, {
   }
 });
 
+window.UsWidgetCredentialApi=Object.freeze({
+  async issue(deviceIdHash){
+    if(!window.UsPlatform?.isNative||!/^[a-f0-9]{64}$/.test(String(deviceIdHash||'')))return null;
+    const {data,error}=await sb.functions.invoke('widget-device-token',{body:{operation:'issue',deviceIdHash}});
+    if(error||!data?.token)throw error||new Error('Widget credential unavailable');
+    return {token:data.token,expiresAt:data.expiresAt||''};
+  },
+  async revoke(deviceIdHash){
+    if(!window.UsPlatform?.isNative||!/^[a-f0-9]{64}$/.test(String(deviceIdHash||'')))return false;
+    const {error}=await sb.functions.invoke('widget-device-token',{body:{operation:'revoke',deviceIdHash}});
+    if(error)throw error;
+    return true;
+  }
+});
+
 const US_SIGNED_URL_CACHE=new Map();
 const US_SIGNED_URL_SKEW_MS=5*60*1000;
 const US_SIGNED_URL_STORAGE_KEY='us:signed-url-cache:v2';

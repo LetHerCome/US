@@ -55,6 +55,21 @@ final class UsWidgetSnapshotStore {
         ownerFile.delete();
     }
 
+    synchronized boolean updateActionStatus(String status) {
+        if (!status.equals("sending") && !status.equals("sent") && !status.equals("failed")) return false;
+        JSONObject current = read();
+        if (current == null) return false;
+        try {
+            JSONObject think = current.getJSONObject("modules").getJSONObject("think");
+            think.put("lastActionStatus", status);
+            think.put("lastActionAt", java.time.Instant.now().toString());
+            current.put("updatedAt", java.time.Instant.now().toString());
+            return write(current);
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
     private JSONObject normalize(JSONObject input) {
         if (input == null || input.optInt("schemaVersion", 0) != SCHEMA_VERSION) return null;
         String ownerHash = input.optString("ownerHash", "");
