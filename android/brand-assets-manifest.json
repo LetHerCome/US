@@ -1,0 +1,134 @@
+{
+    "schemaVersion":  1,
+    "generator":  "scripts/build-android-brand-assets.mjs + scripts/build-android-brand-assets.ps1",
+    "sources":  {
+                    "assets/source/brand/us-symbol-master-v1.png":  "bcbb3f3060edd5cf7218f245e1b56053de2c011ea5244e49f9e5f325269d28fd",
+                    "assets/source/brand/app-icon/us-adaptive-foreground-v1.png":  "fb91f1008154887f8ec114b85f5c84e88360e18ccc6d0ee838ecd7b003ad8621",
+                    "assets/source/brand/app-icon/us-adaptive-background-v1.png":  "9dbe74d482bbbf6a43d9ccabae3e5599c7d43b5a79b350765175443ac686515a",
+                    "assets/source/brand/splash/us-splash-master-v1.png":  "cc142ef2f60734aee10f918511ddac5a54c80d792225b0415fa1f81247c0c405"
+                },
+    "derivatives":  [
+                        {
+                            "path":  "android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png",
+                            "sha256":  "0f30a50c3e6d7c6a90f64ec907bd2fc4e2121b06bc004bb547c03de757c6ea58",
+                            "operation":  "COMPOSITE_RESIZE",
+                            "sources":  [
+                                            "assets/source/brand/app-icon/us-adaptive-background-v1.png",
+                                            "assets/source/brand/app-icon/us-adaptive-foreground-v1.png"
+                                        ]
+                        },
+                        {
+                            "path":  "android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png",
+                            "sha256":  "b11a52ec3367a1b117d4b2f4d27459356bbb2c558cf6f88bc7f200ae2477dfb3",
+                            "operation":  "COMPOSITE_RESIZE",
+                            "sources":  [
+                                            "assets/source/brand/app-icon/us-adaptive-background-v1.png",
+                                            "assets/source/brand/app-icon/us-adaptive-foreground-v1.png"
+                                        ]
+                        },
+                        {
+                            "path":  "android/app/src/main/res/mipmap-xhdpi/ic_launcher.png",
+                            "sha256":  "b11a52ec3367a1b117d4b2f4d27459356bbb2c558cf6f88bc7f200ae2477dfb3",
+                            "operation":  "COMPOSITE_RESIZE",
+                            "sources":  [
+                                            "assets/source/brand/app-icon/us-adaptive-background-v1.png",
+                                            "assets/source/brand/app-icon/us-adaptive-foreground-v1.png"
+                                        ]
+                        },
+                        {
+                            "path":  "android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png",
+                            "sha256":  "0f30a50c3e6d7c6a90f64ec907bd2fc4e2121b06bc004bb547c03de757c6ea58",
+                            "operation":  "COMPOSITE_RESIZE",
+                            "sources":  [
+                                            "assets/source/brand/app-icon/us-adaptive-background-v1.png",
+                                            "assets/source/brand/app-icon/us-adaptive-foreground-v1.png"
+                                        ]
+                        },
+                        {
+                            "path":  "android/app/src/main/res/drawable-nodpi/us_splash_symbol.png",
+                            "sha256":  "41e3ab5ad42f4d4317469fa5023395e22377a4881c3404df1f41d0345e0041e0",
+                            "operation":  "FIT_CENTER_PAD_DARK",
+                            "sources":  [
+                                            "assets/source/brand/us-symbol-master-v1.png"
+                                        ]
+                        },
+                        {
+                            "path":  "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png",
+                            "sha256":  "37bc2631b67bd92064d29968a2afd53c88bc1a599903b4717838e1e7cc334cb4",
+                            "operation":  "COMPOSITE_RESIZE",
+                            "sources":  [
+                                            "assets/source/brand/app-icon/us-adaptive-background-v1.png",
+                                            "assets/source/brand/app-icon/us-adaptive-foreground-v1.png"
+                                        ]
+                        },
+                        {
+                            "path":  "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+                            "sha256":  "37bc2631b67bd92064d29968a2afd53c88bc1a599903b4717838e1e7cc334cb4",
+                            "operation":  "COMPOSITE_RESIZE",
+                            "sources":  [
+                                            "assets/source/brand/app-icon/us-adaptive-background-v1.png",
+                                            "assets/source/brand/app-icon/us-adaptive-foreground-v1.png"
+                                        ]
+                        },
+                        {
+                            "path":  "android/app/src/main/res/drawable-nodpi/us_splash_master_v1.png",
+                            "sha256":  "cc142ef2f60734aee10f918511ddac5a54c80d792225b0415fa1f81247c0c405",
+                            "operation":  "BYTE_COPY",
+                            "sources":  [
+                                            "assets/source/brand/splash/us-splash-master-v1.png"
+                                        ]
+                        },
+                        {
+                            "path":  "android/app/src/main/res/drawable-nodpi/us_adaptive_background_v1.png",
+                            "sha256":  "9dbe74d482bbbf6a43d9ccabae3e5599c7d43b5a79b350765175443ac686515a",
+                            "operation":  "BYTE_COPY",
+                            "sources":  [
+                                            "assets/source/brand/app-icon/us-adaptive-background-v1.png"
+                                        ]
+                        },
+                        {
+                            "path":  "android/app/src/main/res/drawable-nodpi/us_adaptive_foreground_v1.png",
+                            "sha256":  "fb91f1008154887f8ec114b85f5c84e88360e18ccc6d0ee838ecd7b003ad8621",
+                            "operation":  "BYTE_COPY",
+                            "sources":  [
+                                            "assets/source/brand/app-icon/us-adaptive-foreground-v1.png"
+                                        ]
+                        },
+                        {
+                            "path":  "android/app/src/main/res/mipmap-mdpi/ic_launcher.png",
+                            "sha256":  "ff9f8bf4490b5f20db2fb2f681e73fe37424fac14c08bdc655bb9a25ad6fe830",
+                            "operation":  "COMPOSITE_RESIZE",
+                            "sources":  [
+                                            "assets/source/brand/app-icon/us-adaptive-background-v1.png",
+                                            "assets/source/brand/app-icon/us-adaptive-foreground-v1.png"
+                                        ]
+                        },
+                        {
+                            "path":  "android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png",
+                            "sha256":  "22557d70621e8691c528d76ba2a92421a2f3b3260b5648af1726ff419e769c45",
+                            "operation":  "COMPOSITE_RESIZE",
+                            "sources":  [
+                                            "assets/source/brand/app-icon/us-adaptive-background-v1.png",
+                                            "assets/source/brand/app-icon/us-adaptive-foreground-v1.png"
+                                        ]
+                        },
+                        {
+                            "path":  "android/app/src/main/res/mipmap-hdpi/ic_launcher.png",
+                            "sha256":  "22557d70621e8691c528d76ba2a92421a2f3b3260b5648af1726ff419e769c45",
+                            "operation":  "COMPOSITE_RESIZE",
+                            "sources":  [
+                                            "assets/source/brand/app-icon/us-adaptive-background-v1.png",
+                                            "assets/source/brand/app-icon/us-adaptive-foreground-v1.png"
+                                        ]
+                        },
+                        {
+                            "path":  "android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png",
+                            "sha256":  "ff9f8bf4490b5f20db2fb2f681e73fe37424fac14c08bdc655bb9a25ad6fe830",
+                            "operation":  "COMPOSITE_RESIZE",
+                            "sources":  [
+                                            "assets/source/brand/app-icon/us-adaptive-background-v1.png",
+                                            "assets/source/brand/app-icon/us-adaptive-foreground-v1.png"
+                                        ]
+                        }
+                    ]
+}

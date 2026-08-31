@@ -7,6 +7,7 @@
   },
   "scripts": {
     "test": "node --test",
+    "assets:android-brand": "node scripts/build-android-brand-assets.mjs",
     "assets:widget": "node scripts/sync-approved-widget-assets.mjs",
     "prebuild:capacitor-web": "npm run assets:widget",
     "build:capacitor-web": "node scripts/build-capacitor-web.mjs"
