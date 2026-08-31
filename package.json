@@ -7,6 +7,8 @@
   },
   "scripts": {
     "test": "node --test",
+    "assets:widget": "node scripts/sync-approved-widget-assets.mjs",
+    "prebuild:capacitor-web": "npm run assets:widget",
     "build:capacitor-web": "node scripts/build-capacitor-web.mjs"
   },
   "dependencies": {
@@ -14,6 +16,7 @@
     "@capacitor/app": "8.1.1",
     "@capacitor/core": "8.5.0",
     "@capacitor/haptics": "8.0.2",
+    "@us/widget-bridge": "file:native-plugins/us-widget-bridge",
     "@supabase/supabase-js": "2.112.4"
   },
   "devDependencies": {

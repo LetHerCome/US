@@ -88,13 +88,21 @@ function createHarness(overrides = {}) {
         stored.delete(key);
       }
     },
-    window: { usProfile: { id: 'user-1' } },
+    window: {
+      usProfile: { id: 'user-1' },
+      UsThinkWidget: {
+        async clear() {
+          events.push('widget:clear');
+          if (overrides.widgetClearError) throw new Error('widget clear failed');
+          return true;
+        }
+      }
+    },
     US_SIGNED_URL_CACHE: new Map([['private/path.jpg', { url: 'signed' }]]),
     US_SIGNED_URL_STORAGE_KEY: 'us:signed-url-cache:v2',
     US_HOME_BOOT_CACHE_KEY: 'us:boot:home-photo:v1',
     usPushUiBusy: false,
     usPushOperationInFlight: null,
-    usNativeWidgetBridge: { configured: true },
     logoutInFlight: false
   });
 
@@ -125,7 +133,7 @@ test('login simulato -> logout -> reload rispetta revoke -> cleanup -> signOut',
   assert.ok(signOutIndex < signOutDoneIndex);
   assert.ok(signOutDoneIndex < reloadIndex);
   assert.equal(context.US_SIGNED_URL_CACHE.size, 0);
-  assert.deepEqual(context.usNativeWidgetBridge, { configured: true });
+  assert.ok(events.indexOf('widget:clear') > -1 && events.indexOf('widget:clear') < signOutIndex);
   assert.deepEqual([...stored.keys()], ['us:push:subscription:user-2']);
   assert.ok(events.includes('cleanup:cache:us-private-media-v1'));
 });
@@ -135,7 +143,8 @@ test('cleanup best-effort: gli errori non bloccano signOut o reload', async () =
     rpcError: true,
     unsubscribeError: true,
     cacheError: true,
-    storageError: 'us:signed-url-cache:v2'
+    storageError: 'us:signed-url-cache:v2',
+    widgetClearError: true
   });
   context.usPushUiBusy = true;
   let finishPriorPush;
@@ -155,6 +164,7 @@ test('cleanup best-effort: gli errori non bloccano signOut o reload', async () =
   assert.ok(events.indexOf('push:prior:done') < events.indexOf('revoke:server'));
   assert.ok(events.indexOf('revoke:server') < events.indexOf('cleanup:unsubscribe'));
   assert.ok(events.indexOf('cleanup:unsubscribe') < events.indexOf('signOut'));
+  assert.ok(events.indexOf('widget:clear') > -1 && events.indexOf('widget:clear') < events.indexOf('signOut'));
 });
 
 test('doppio click avvia una sola sequenza di logout', async () => {

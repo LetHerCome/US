@@ -39,7 +39,7 @@
       "sha256": "e8e3007c9ada499e4fc68aa68179d6e4046d21df14351e6c7144bca5d8b28f97",
       "immutable": true,
       "purpose": "Official US supporting wordmark",
-      "usedBy": []
+      "usedBy": ["android-ti-penso-widget"]
     },
     {
       "path": "assets/source/ui/us-icon-bond-v1.png",
@@ -79,7 +79,7 @@
       "sha256": "f1910a3aaf8267de807df476e35ac893a34092cbbeb3917c8f3ff15edc307e8e",
       "immutable": true,
       "purpose": "Official US Ti Penso custom icon",
-      "usedBy": ["home-ti-penso"]
+      "usedBy": ["home-ti-penso", "android-ti-penso-widget"]
     },
     {
       "path": "assets/source/ui/us-icon-settings-v1.png",

@@ -5,6 +5,7 @@
   const isNative = Boolean(runtime?.isNativePlatform?.());
   const plugins = new Map();
   let nativeBackListener = null;
+  let nativeAppUrlListener = null;
 
   function isPluginAvailable(name) {
     if (!isNative || !name || typeof runtime?.isPluginAvailable !== 'function') return false;
@@ -70,6 +71,80 @@
     return true;
   }
 
+  function widgetBridge() {
+    return getNativePlugin('UsWidgetBridge');
+  }
+
+  function validOwnerHash(value) {
+    return typeof value === 'string' && /^[a-f0-9]{64}$/.test(value) ? value : '';
+  }
+
+  function safeTimestamp(value) {
+    return typeof value === 'string' && value.length <= 40 ? value : '';
+  }
+
+  function normalizeWidgetSnapshot(input = {}) {
+    const think = input?.modules?.think || {};
+    const allowedStatus = new Set(['idle', 'sending', 'sent', 'failed']);
+    return {
+      schemaVersion: 1,
+      ownerHash: validOwnerHash(input.ownerHash),
+      updatedAt: safeTimestamp(input.updatedAt),
+      modules: {
+        think: {
+          partnerName: typeof think.partnerName === 'string' ? think.partnerName.slice(0, 80) : '',
+          lastReceivedAt: safeTimestamp(think.lastReceivedAt),
+          lastSentAt: safeTimestamp(think.lastSentAt),
+          lastActionStatus: allowedStatus.has(think.lastActionStatus) ? think.lastActionStatus : 'idle',
+          lastActionAt: safeTimestamp(think.lastActionAt)
+        }
+      }
+    };
+  }
+
+  async function activateWidgetAccount(ownerHash) {
+    const plugin = widgetBridge();
+    const safeHash = validOwnerHash(ownerHash);
+    if (!plugin || !safeHash || typeof plugin.activateAccount !== 'function') return false;
+    await plugin.activateAccount({ ownerHash: safeHash });
+    return true;
+  }
+
+  async function writeWidgetSnapshot(snapshot) {
+    const plugin = widgetBridge();
+    if (!plugin || typeof plugin.writeSnapshot !== 'function') return false;
+    const safeSnapshot = normalizeWidgetSnapshot(snapshot);
+    if (!safeSnapshot.ownerHash) return false;
+    await plugin.writeSnapshot({ snapshot: safeSnapshot });
+    return true;
+  }
+
+  async function clearWidgetSnapshot() {
+    const plugin = widgetBridge();
+    if (!plugin || typeof plugin.clearSnapshot !== 'function') return false;
+    await plugin.clearSnapshot();
+    return true;
+  }
+
+  async function getNativeLaunchUrl() {
+    const app = getNativeApp();
+    if (!app || typeof app.getLaunchUrl !== 'function') return null;
+    try { return await app.getLaunchUrl(); }
+    catch (_) { return null; }
+  }
+
+  function listenForNativeAppUrl(handler) {
+    if (!isNative || typeof handler !== 'function') return Promise.resolve(null);
+    if (nativeAppUrlListener) return nativeAppUrlListener;
+    const app = getNativeApp();
+    if (!app || typeof app.addListener !== 'function') return Promise.resolve(null);
+    nativeAppUrlListener = Promise.resolve(app.addListener('appUrlOpen', handler)).catch(() => {
+      nativeAppUrlListener = null;
+      return null;
+    });
+    return nativeAppUrlListener;
+  }
+
   window.UsPlatform = Object.freeze({
     isNative,
     canUseServiceWorker: !isNative,
@@ -80,6 +155,11 @@
     getNativePlugin,
     haptic,
     listenForNativeBackButton,
-    exitNativeApp
+    exitNativeApp,
+    activateWidgetAccount,
+    writeWidgetSnapshot,
+    clearWidgetSnapshot,
+    getNativeLaunchUrl,
+    listenForNativeAppUrl
   });
 })();

@@ -20,6 +20,6 @@
     { "id": "stories", "label": "Stories", "source": "CUSTOM", "authority": "CUSTOM_ASSET", "phosphorName": null, "customAssetPath": "assets/source/ui/us-icon-stories-v1.png", "status": "APPROVED", "usedBy": ["header-stories-trigger", "stories-viewer"] },
     { "id": "moments", "label": "Moments", "source": "CUSTOM", "authority": "CUSTOM_ASSET", "phosphorName": null, "customAssetPath": "assets/source/ui/us-icon-moments-v1.png", "status": "APPROVED", "usedBy": ["bottom-navigation", "moments"] },
     { "id": "daily-question", "label": "Daily question", "source": "CUSTOM", "authority": "CUSTOM_ASSET", "phosphorName": null, "customAssetPath": "assets/source/ui/us-icon-daily-question-v1.png", "status": "APPROVED", "usedBy": ["quiz-daily-question"] },
-    { "id": "ti-penso", "label": "Ti penso", "source": "CUSTOM", "authority": "CUSTOM_ASSET", "phosphorName": null, "customAssetPath": "assets/source/ui/us-icon-ti-penso-v1.png", "status": "APPROVED", "usedBy": ["home-ti-penso"] }
+    { "id": "ti-penso", "label": "Ti penso", "source": "CUSTOM", "authority": "CUSTOM_ASSET", "phosphorName": null, "customAssetPath": "assets/source/ui/us-icon-ti-penso-v1.png", "status": "APPROVED", "usedBy": ["home-ti-penso", "android-ti-penso-widget"] }
   ]
 }

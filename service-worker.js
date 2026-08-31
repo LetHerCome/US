@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-static-runtime-15";
+const CACHE_NAME = "us-shell-static-runtime-16";
 const MEDIA_CACHE_NAME = "us-private-media-v1";
 
 const APP_SHELL = [
@@ -6,6 +6,7 @@ const APP_SHELL = [
   "/index.html",
   "/auth-storage.js",
   "/platform.js",
+  "/ti-penso-widget.js",
   "/app.js",
   "/stories.js",
   "/stories.css",

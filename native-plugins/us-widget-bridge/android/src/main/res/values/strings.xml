@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="us_widget_send">Invia Ti penso</string>
+    <string name="us_widget_cta">Ricambia</string>
+    <string name="us_widget_description">Ti penso · US</string>
+</resources>

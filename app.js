@@ -541,52 +541,6 @@ if(canUseUsServiceWorker()){navigator.serviceWorker.addEventListener('message',e
 
 
 let selectedRole = null;
-let usNativeWidgetBridge = null;
-
-function getNativeWidgetBridge(){
-  if(!usNativeWidgetBridge)usNativeWidgetBridge=window.UsPlatform?.getNativePlugin?.('UsWidgetBridge')||null;
-  return usNativeWidgetBridge;
-}
-
-async function syncNativeWidgetBridge(sessionOverride=null){
-  const bridge=getNativeWidgetBridge();
-  if(!bridge || !window.usProfile)return;
-  try{
-    let session=sessionOverride;
-    if(!session){
-      const {data}=await sb.auth.getSession();
-      session=data?.session||null;
-    }
-    if(!session?.access_token || !session?.refresh_token)return;
-    const profiles=await getCoupleProfiles();
-    const partner=partnerFromProfiles(profiles);
-    if(!partner)return;
-    const {data:lastReceived,error:lastReceivedError}=await sb.from('shared_messages')
-      .select('created_at')
-      .eq('kind','think')
-      .eq('sender_id',partner.id)
-      .eq('recipient_id',window.usProfile.id)
-      .order('created_at',{ascending:false})
-      .limit(1)
-      .maybeSingle();
-    if(lastReceivedError)console.warn(lastReceivedError);
-    await bridge.configure({
-      supabaseUrl:SB_URL,
-      supabaseKey:SB_KEY,
-      accessToken:session.access_token,
-      refreshToken:session.refresh_token,
-      userId:window.usProfile.id,
-      coupleId:window.usProfile.couple_id,
-      displayName:window.usProfile.display_name||'',
-      partnerId:partner.id,
-      partnerName:partner.display_name||'',
-      lastReceivedAt:lastReceived?.created_at||''
-    });
-  }catch(error){
-    console.warn('Widget bridge non disponibile',error);
-  }
-}
-window.syncNativeWidgetBridge=syncNativeWidgetBridge;
 
 async function clearPrivateDeviceState(profileId=window.usProfile?.id||''){
   try{US_SIGNED_URL_CACHE.clear();}catch(_e){}
@@ -607,6 +561,7 @@ async function revokeCurrentDevice(){
   const profileId=window.usProfile?.id||'';
   try{await disableWebPush({silent:true,refreshUi:false,profileId});}catch(error){console.warn('[US Logout] push revoke',error);}
   try{await clearPrivateDeviceState(profileId);}catch(error){console.warn('[US Logout] private cleanup',error);}
+  try{await window.UsThinkWidget?.clear?.();}catch(error){console.warn('[US Logout] widget cleanup',error);}
 }
 window.revokeCurrentDevice=revokeCurrentDevice;
 
@@ -647,6 +602,7 @@ async function initCloud(){
 
     if(!session){
       window.usProfile = null;
+      window.UsThinkWidget?.clear?.().catch(()=>{});
       document.documentElement.classList.remove('us-returning-device','us-auth-pending');
       setCloudBadge(false,'offline');
       document.getElementById('authOverlay').classList.remove('hidden');
@@ -679,6 +635,7 @@ async function initCloud(){
 
     if(!profile){
       window.usProfile = null;
+      window.UsThinkWidget?.clear?.().catch(()=>{});
       document.documentElement.classList.remove('us-returning-device','us-auth-pending');
       setCloudBadge(false,'da collegare');
       document.getElementById('authOverlay').classList.remove('hidden');
@@ -688,6 +645,7 @@ async function initCloud(){
     }
 
     window.usProfile = profile;
+    window.UsThinkWidget?.authReady?.(profile).catch(error=>console.warn('[US Widget] auth ready',error));
     selectedRole = profile.role;
     try{localStorage.setItem('us:fix4:last-profile',JSON.stringify(profile));}catch(_e){}
     document.getElementById('authOverlay').classList.add('hidden');
@@ -707,7 +665,7 @@ async function initCloud(){
     usRunWhenIdle(()=>hydrateProfileAvatars(),520);
     usRunWhenIdle(()=>maybeAutoRefreshLocation(),1400);
     usRunWhenIdle(()=>refreshWebPushUi(),1100);
-    usRunWhenIdle(()=>syncNativeWidgetBridge(session),2200);
+    usRunWhenIdle(()=>hydrateThink(),900);
 
     // Push navigation itself is user intent, so keep it immediate.
     flushPendingPushTarget();
@@ -1869,23 +1827,24 @@ async function hydrateThink(){
   const sentEl=document.getElementById('thinkLastSent');if(sentEl)sentEl.textContent=sent?`Hai pensato a ${partnerName} ${relativeSignalAge(sent.created_at)}`:'Non ne hai ancora inviati';
   const monthEl=document.getElementById('thinkMonthCount');if(monthEl)monthEl.textContent=Number(count||0).toLocaleString('it-IT');
   const live=document.getElementById('thinkLiveText');if(live&&received)live.textContent=`Ultimo segnale da ${partnerName} · ${relativeSignalAge(received.created_at)}`;
+  window.UsThinkWidget?.publishThink?.({partnerName,lastReceivedAt:received?.created_at||'',lastSentAt:sent?.created_at||''}).catch(()=>{});
 }
 window.hydrateThink=hydrateThink;
 async function sendThinkSignal(){
-  if(!window.usProfile)return toast('Connessione non pronta');
-  const btn=document.getElementById('thinkButton');if(btn?.disabled)return;
+  if(!window.usProfile){toast('Connessione non pronta');return false;}
+  const btn=document.getElementById('thinkButton');if(btn?.disabled)return false;
   const profiles=await getCoupleProfiles(),partner=partnerFromProfiles(profiles);
-  if(!partner)return toast('L’altro profilo non è ancora collegato');
+  if(!partner){toast('L’altro profilo non è ancora collegato');return false;}
   if(btn)btn.disabled=true;
   const {data:message,error}=await sb.from('shared_messages').insert({couple_id:window.usProfile.couple_id,sender_id:window.usProfile.id,recipient_id:partner.id,kind:'think',body:'♡'}).select('id').single();
-  if(error){console.warn(error);toast('Non riesco a inviare il segnale');if(btn)btn.disabled=false;return;}
+  if(error){console.warn(error);toast('Non riesco a inviare il segnale');if(btn)btn.disabled=false;return false;}
   if(message?.id)sendWebPushEvent('think',message.id).catch(()=>{});
   btn?.classList.add('sent');setTimeout(()=>btn?.classList.remove('sent'),700);
   window.UsPlatform?.haptic?.('light',[30,25,45])||navigator.vibrate?.([30,25,45]);
   toast(`${partner.display_name} lo saprà ♡`);
   await hydrateThink();
-  syncNativeWidgetBridge().catch(()=>{});
   setTimeout(()=>{if(btn)btn.disabled=false;},1800);
+  return true;
 }
 window.sendThinkSignal=sendThinkSignal;
 function handleIncomingThink(row){
@@ -1895,7 +1854,6 @@ function handleIncomingThink(row){
   window.UsPlatform?.haptic?.('medium',[45,35,80])||navigator.vibrate?.([45,35,80]);
   const heart=document.getElementById('thinkButton');heart?.classList.add('received');setTimeout(()=>heart?.classList.remove('received'),900);
   hydrateThink();
-  syncNativeWidgetBridge().catch(()=>{});
 }
 const usRealtimeRefreshTimers=new Map();
 function scheduleUsRealtimeRefresh(kind){
@@ -2297,6 +2255,7 @@ document.addEventListener('touchcancel',()=>{
 
 async function refreshVisibleState(options={}){
   if(!window.usProfile||document.hidden)return;
+  if(options.foreground)hydrateThink().catch(()=>{});
   const active=document.querySelector('.page.active')?.id;
   if(active==='home'){
     await hydrateToday();

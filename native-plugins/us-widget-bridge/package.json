@@ -1,0 +1,13 @@
+{
+  "name": "@us/widget-bridge",
+  "version": "1.0.0",
+  "private": true,
+  "capacitor": {
+    "android": {
+      "src": "android"
+    }
+  },
+  "peerDependencies": {
+    "@capacitor/core": "8.5.0"
+  }
+}
