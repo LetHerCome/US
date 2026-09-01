@@ -113,6 +113,7 @@ textarea,input{
   background:rgba(31,27,37,.72)!important;
   border-color:rgba(255,235,247,.10)!important;
 }
+.us-calendar-btn{width:44px;min-width:44px;height:44px;min-height:44px;padding:0;display:grid;place-items:center;border-radius:50%}
 .today-orb{width:44px!important;min-width:44px!important;padding:0!important;justify-content:center!important}
 .today-orb-copy{display:none!important}
 .today-orb-mark{

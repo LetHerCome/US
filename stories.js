@@ -959,6 +959,11 @@
     // Le Stories hanno un solo punto di ingresso: il pallino del partner in alto.
   }
 
+  window.openOwnStories = function openOwnStories() {
+    if (!window.usProfile?.id || uploadBusy) return;
+    openStoriesFor(window.usProfile.id, true);
+  };
+
   async function startForCurrentProfile() {
     if (!window.usProfile?.id) return false;
     if (initializedForUserId === window.usProfile.id) return true;
