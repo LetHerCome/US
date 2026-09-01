@@ -330,6 +330,13 @@ body.viewer-open{overflow:hidden}
 
 /* Home: la foto occupa tutto lo spazio utile della pagina. */
 #home{margin-left:-16px;margin-right:-16px;margin-top:-2px}
+#usTodayPriorityRegion[hidden]{display:none!important}
+#usTodayPriorityRegion{display:grid;gap:8px;padding:8px 16px 12px}
+.us-today-priority-card{width:100%;min-height:44px;padding:12px 13px;border:1px solid rgba(255,255,255,.11);border-radius:20px;background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.025)),var(--card);color:var(--text);display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"kind action" "copy action";align-items:center;gap:4px 12px;text-align:left;box-shadow:0 11px 28px rgba(0,0,0,.16)}
+.us-today-priority-kind{grid-area:kind;font-size:8px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--pink2)}
+.us-today-priority-copy{grid-area:copy;min-width:0;display:grid;gap:3px}.us-today-priority-copy b{font-size:13px;line-height:1.25}.us-today-priority-copy small{font-size:10px;line-height:1.35;color:var(--muted)}
+.us-today-priority-action{grid-area:action;font-size:10px;font-weight:800;color:#eadfff;white-space:nowrap}
+.us-today-priority-card:active{transform:scale(.985)}
 .home-hero-only{height:calc(100svh - 86px - var(--us-safe-top) - var(--us-safe-bottom))!important;min-height:520px!important;max-height:none!important;border-radius:0!important;border-left:0!important;border-right:0!important;box-shadow:none!important}
 .home-photo-layer{transition:opacity var(--us-motion-photo-slow) var(--us-ease-standard),transform var(--us-motion-photo-slow) var(--us-ease-standard)!important;transform:scale(1.006)!important}
 .home-photo-layer.active{transform:scale(1)!important}
@@ -392,6 +399,8 @@ body.viewer-open{overflow:hidden}
 @media(max-width:370px){
   .today-orb{min-width:70px!important;padding-right:7px!important}.today-orb-copy small{display:none}.today-orb-copy b{font-size:9px}
   .online-badge{font-size:8px!important}
+  #usTodayPriorityRegion{padding-left:10px;padding-right:10px}
+  .us-today-priority-card{padding:11px}.us-today-priority-action{font-size:9px}
   .home-hero-only{min-height:470px!important}
   .nav{width:calc(100% - 16px)!important}
 }

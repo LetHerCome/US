@@ -80,6 +80,7 @@ html.us-returning-device .auth-overlay{
   <div class="top us-premium-top"><div class="brand-row"><div class="brand us-brand-symbol" aria-label="US"><img class="us-brand-symbol-art" src="/assets/derived/brand/us-symbol-ui-crisp-v1.png" alt="" aria-hidden="true"></div><button type="button" class="today-orb us-important-control us-premium-control" id="todayOrb" onclick="openToday()" aria-label="Apri la domanda giornaliera"><span class="today-orb-mark"><img class="us-approved-custom-icon" src="/assets/source/ui/us-icon-daily-question-v1.png" alt="" aria-hidden="true"></span><span class="today-orb-copy"><b>Oggi</b><small>Domanda</small></span><i id="todayOrbDot"></i></button></div><div class="top-actions"><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><button type="button" class="profile-avatar us-important-control us-premium-control" id="profileAvatarBtn" aria-label="Apri le tue Stories" onclick="openOwnStories()"><img id="profileAvatarImg" alt="Foto profilo" hidden><span class="fallback" id="profileAvatarFallback">♡</span><span class="camera-dot" aria-hidden="true"><img class="us-shell-icon-off" src="/assets/icons/add-off.svg" alt=""><img class="us-shell-icon-on" src="/assets/icons/add-on.svg" alt=""></span></button><button type="button" class="us-calendar-btn us-important-control us-premium-control" id="usSettingsEntry" onclick="go('settings',{nav:true})" aria-label="Apri impostazioni"><span class="us-shell-icon" aria-hidden="true"><img class="us-shell-icon-off us-approved-custom-icon" src="/assets/source/ui/us-icon-settings-v1.png" alt=""><img class="us-shell-icon-on us-approved-custom-icon" src="/assets/source/ui/us-icon-settings-v1.png" alt=""></span></button><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
 
   <main id="home" class="page active">
+    <div id="usTodayPriorityRegion" hidden aria-live="polite"></div>
     <section class="hero home-hero-only" id="homeHero" aria-label="Un vostro ricordo">
       <div class="home-photo-layer active" id="homePhotoLayerA"></div>
       <div class="home-photo-layer" id="homePhotoLayerB"></div>
@@ -100,7 +101,6 @@ html.us-returning-device .auth-overlay{
         <button type="button" class="push-optin-action" id="pushEnableBtn" onclick="enableWebPush()">Attiva notifiche</button>
       </aside>
     </section>
-    <div id="usTodayPriorityRegion" hidden aria-live="polite"></div>
   </main>
 
   <main id="today" class="today-overlay" aria-hidden="true" data-us-modal data-us-motion-surface>

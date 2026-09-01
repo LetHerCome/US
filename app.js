@@ -1176,6 +1176,108 @@ async function pairAccount(){
 }
 window.pairAccount=pairAccount;
 
+const US_TODAY_PRIORITY_ORDER=Object.freeze({received_ready:1,waiting_for_me:2,couple_context:3});
+const US_TODAY_PRIORITY_LABELS=Object.freeze({
+  received_ready:'Pronto per voi',
+  waiting_for_me:'Aspetta te',
+  couple_context:'Tra voi oggi'
+});
+let usTodayPriorityRefreshId=0;
+
+function usTodayPriorityNumber(value,fallback){
+  if(value===null||value===undefined||value==='')return fallback;
+  const number=Number(value);
+  return Number.isFinite(number)?number:fallback;
+}
+function composeTodayPriorities(candidates=[]){
+  const ordered=(Array.isArray(candidates)?candidates:[])
+    .filter(item=>item?.id&&US_TODAY_PRIORITY_ORDER[item.category])
+    .slice()
+    .sort((a,b)=>US_TODAY_PRIORITY_ORDER[a.category]-US_TODAY_PRIORITY_ORDER[b.category]
+      ||usTodayPriorityNumber(a.urgency,Number.MAX_SAFE_INTEGER)-usTodayPriorityNumber(b.urgency,Number.MAX_SAFE_INTEGER)
+      ||usTodayPriorityNumber(b.recency,0)-usTodayPriorityNumber(a.recency,0)
+      ||String(a.id).localeCompare(String(b.id)));
+  const categories=new Set(),facts=new Set(),result=[];
+  for(const item of ordered){
+    const factKey=String(item.factKey||item.id);
+    if(categories.has(item.category)||facts.has(factKey))continue;
+    categories.add(item.category);facts.add(factKey);result.push(item);
+    if(result.length===3)break;
+  }
+  return result;
+}
+function dailyTodayPriorityViewModel(source){
+  const question=source?.question,state=source?.state;
+  if(!question?.id||!state)return null;
+  const urgency=Date.parse(`${question.question_date||localDateISO()}T23:59:59`);
+  const common={factKey:`daily:${question.id}`,urgency:Number.isFinite(urgency)?urgency:Number.MAX_SAFE_INTEGER,recency:0,action:'today'};
+  if(state.both_answered){
+    return {...common,id:`daily-ready:${question.id}`,category:'received_ready',title:'Risposte pronte',detail:'La Domanda del giorno Ã¨ pronta da leggere insieme.',actionLabel:'Scopri le risposte'};
+  }
+  if(state.partner_has_answer&&!state.my_answer){
+    const partnerName=source.partnerName||'La tua persona';
+    return {...common,id:`daily-waiting:${question.id}`,category:'waiting_for_me',title:`La risposta di ${partnerName} ti aspetta`,detail:'Rispondi alla Domanda del giorno per sbloccarla.',actionLabel:'Rispondi ora'};
+  }
+  return null;
+}
+function eventTodayPriorityViewModel(source){
+  if(source?.days_left===null||source?.days_left===undefined||!source?.effective_date)return null;
+  const days=Number(source?.days_left);
+  if(!source?.id||!source?.title||!Number.isFinite(days)||days<0||days>2)return null;
+  const time=source.event_time?String(source.event_time).slice(0,5):'';
+  const when=days===0?'Oggi':days===1?'Domani':'Entro 48 ore';
+  const detail=[when,time,source.location].filter(Boolean).join(' Â· ');
+  const urgency=Date.parse(`${source.effective_date}T${time||'23:59'}:00`);
+  const recency=Date.parse(source.updated_at||source.created_at||'');
+  return {
+    id:`event:${source.id}:${source.effective_date}`,
+    factKey:`event:${source.id}:${source.effective_date}`,
+    category:'couple_context',
+    title:String(source.title),detail,action:'events',actionLabel:'Apri eventi',
+    urgency:Number.isFinite(urgency)?urgency:Number.MAX_SAFE_INTEGER,
+    recency:Number.isFinite(recency)?recency:0
+  };
+}
+function renderTodayPriorities(priorities=[]){
+  const region=document.getElementById('usTodayPriorityRegion');
+  if(!region)return;
+  if(!priorities.length){region.innerHTML='';region.hidden=true;return;}
+  region.innerHTML=priorities.slice(0,3).map(item=>`<button type="button" class="us-today-priority-card" data-us-today-action="${escapeHtml(item.action)}" aria-label="${escapeHtml(item.actionLabel)}: ${escapeHtml(item.title)}"><span class="us-today-priority-kind">${escapeHtml(US_TODAY_PRIORITY_LABELS[item.category]||'Oggi')}</span><span class="us-today-priority-copy"><b>${escapeHtml(item.title)}</b><small>${escapeHtml(item.detail||'')}</small></span><span class="us-today-priority-action">${escapeHtml(item.actionLabel)}</span></button>`).join('');
+  region.hidden=false;
+}
+async function refreshTodayPriorities({daily}={}){
+  const refreshId=++usTodayPriorityRefreshId;
+  const dailySource=daily===undefined&&window.todayQuestion?{
+    question:window.todayQuestion,
+    state:window.todayState,
+    partnerName:window.usProfile?.role==='francesco'?'Bea':'Francesco'
+  }:daily;
+  const candidates=[];
+  const dailyPriority=dailyTodayPriorityViewModel(dailySource);
+  if(dailyPriority)candidates.push(dailyPriority);
+  try{
+    const eventSource=await window.getTodayEventPrioritySource?.();
+    const eventPriority=eventTodayPriorityViewModel(eventSource);
+    if(eventPriority)candidates.push(eventPriority);
+  }catch(error){console.warn('[US Oggi] Events priority',error);}
+  if(refreshId!==usTodayPriorityRefreshId)return [];
+  const priorities=composeTodayPriorities(candidates);
+  renderTodayPriorities(priorities);
+  return priorities;
+}
+document.getElementById('usTodayPriorityRegion')?.addEventListener('click',event=>{
+  const action=event.target.closest?.('[data-us-today-action]')?.dataset.usTodayAction;
+  if(action==='today')window.openToday?.();
+  if(action==='events')window.openEvents?.();
+});
+window.UsTodayPriority=Object.freeze({
+  compose:composeTodayPriorities,
+  dailyViewModel:dailyTodayPriorityViewModel,
+  eventViewModel:eventTodayPriorityViewModel,
+  render:renderTodayPriorities,
+  refresh:refreshTodayPriorities
+});
+
 function localDateISO(){
   const d=new Date(), y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
   return `${y}-${m}-${day}`;
@@ -1203,9 +1305,9 @@ function closeToday(){
 window.closeToday=closeToday;
 
 async function hydrateToday(){
-  if(!window.usProfile)return;
-  const {data:q,error:qError}=await sb.from('daily_questions').select('id,question').eq('question_date',localDateISO()).maybeSingle();
-  if(qError){console.warn(qError);return;}
+  if(!window.usProfile){window.UsTodayPriority?.render?.([]);return;}
+  const {data:q,error:qError}=await sb.from('daily_questions').select('id,question,question_date').eq('question_date',localDateISO()).maybeSingle();
+  if(qError){console.warn(qError);window.UsTodayPriority?.refresh?.({daily:null});return;}
   const qel=document.querySelector('#today .qtext');
   const locked=document.getElementById('locked'), reveal=document.getElementById('todayReveal'), btn=document.getElementById('todaySaveBtn');
   const answerEl=document.getElementById('answer');
@@ -1216,12 +1318,13 @@ async function hydrateToday(){
     reveal.classList.add('hidden');
     answerEl.disabled=true; btn.disabled=true; btn.textContent='Nessuna domanda';
     updateHomeStatus();
+    window.UsTodayPriority?.refresh?.({daily:null});
     return;
   }
   answerEl.disabled=false; btn.disabled=false;
   window.todayQuestion=q;if(qel)qel.textContent=q.question;
   const {data:state,error}=await sb.rpc('get_daily_state',{target_question_id:q.id});
-  if(error){console.warn(error);return;}
+  if(error){console.warn(error);window.UsTodayPriority?.refresh?.({daily:null});return;}
   window.todayState=state;
   if(state?.my_answer){
     document.getElementById('answer').value=state.my_answer;
@@ -1247,6 +1350,11 @@ async function hydrateToday(){
     }
   }
   updateHomeStatus();
+  window.UsTodayPriority?.refresh?.({daily:{
+    question:q,
+    state,
+    partnerName:window.usProfile.role==='francesco'?'Bea':'Francesco'
+  }});
 }
 
 async function updateHomeStatus(){
@@ -1888,6 +1996,7 @@ function scheduleUsRealtimeRefresh(kind){
     }
     if(kind==='events'){
       if(document.getElementById('usEventsOverlay')?.classList.contains('open'))window.hydrateEvents?.();
+      window.UsTodayPriority?.refresh?.();
     }
   },180);
   usRealtimeRefreshTimers.set(kind,timer);

@@ -53,7 +53,10 @@ function nextRelationshipMilestone(){
 }
 function upcomingRows(){
   const eventRows=rows.map(occurrence).filter(Boolean);const relationship=nextRelationshipMilestone();if(relationship)eventRows.push(relationship);
-  return eventRows.sort((a,b)=>a.effective_date.localeCompare(b.effective_date)||String(a.event_time||'23:59:59').localeCompare(String(b.event_time||'23:59:59')));
+  return eventRows.sort((a,b)=>a.effective_date.localeCompare(b.effective_date)
+    ||String(a.event_time||'23:59:59').localeCompare(String(b.event_time||'23:59:59'))
+    ||String(b.updated_at||b.created_at||'').localeCompare(String(a.updated_at||a.created_at||''))
+    ||String(a.id).localeCompare(String(b.id)));
 }
 function dueRows(){
   const today=localTodayISO();return rows.map(row=>{const date=previousOccurrence(row);if(!date||date>=today||completionFor(row.id,date))return null;return {...row,effective_date:date,days_left:daysBetween(today,date)};}).filter(Boolean).sort((a,b)=>b.effective_date.localeCompare(a.effective_date));
@@ -86,18 +89,27 @@ function render(){
   const dueSection=$('usEventsDueSection'),dueList=$('usEventsDueList');if(dueSection)dueSection.hidden=!due.length;if(dueList)dueList.innerHTML=due.map(row=>eventButton(row,{due:true})).join('');dueList?.querySelectorAll('[data-id]').forEach(btn=>btn.addEventListener('click',()=>editEvent(btn.dataset.id,btn.dataset.occurrence)));
   const doneSection=$('usEventsDoneSection'),doneList=$('usEventsDoneList');if(doneSection)doneSection.hidden=!done.length;if(doneList)doneList.innerHTML=done.map(row=>eventButton(row,{done:true})).join('');doneList?.querySelectorAll('[data-id]').forEach(btn=>btn.addEventListener('click',()=>editEvent(btn.dataset.id,btn.dataset.occurrence)));
 }
+async function loadEventsData(){
+  if(!window.usProfile)return false;
+  const [eventsRes,completionRes,coupleRes,milestoneRes]=await Promise.all([
+    sb.from('shared_events').select('id,couple_id,created_by,title,event_date,event_time,location,note,recurs_yearly,created_at,updated_at').eq('couple_id',window.usProfile.couple_id).order('event_date',{ascending:true}),
+    sb.from('shared_event_completions').select('id,event_id,occurrence_date,completed_by,xp_awarded,completed_at').eq('couple_id',window.usProfile.couple_id).order('completed_at',{ascending:false}),
+    sb.from('couples').select('started_on').eq('id',window.usProfile.couple_id).maybeSingle(),
+    sb.from('relationship_milestones').select('milestone_date,kind,months_together,xp_awarded,awarded_at').eq('couple_id',window.usProfile.couple_id).order('milestone_date',{ascending:false}).limit(24)
+  ]);
+  if(eventsRes.error)throw eventsRes.error;if(completionRes.error)throw completionRes.error;if(coupleRes.error)throw coupleRes.error;if(milestoneRes.error)throw milestoneRes.error;
+  rows=eventsRes.data||[];completions=completionRes.data||[];coupleStartedOn=coupleRes.data?.started_on||null;milestones=milestoneRes.data||[];
+  return true;
+}
 async function hydrateEvents(){
   if(!window.usProfile)return;const list=$('usEventsList');
-  try{
-    const [eventsRes,completionRes,coupleRes,milestoneRes]=await Promise.all([
-      sb.from('shared_events').select('id,couple_id,created_by,title,event_date,event_time,location,note,recurs_yearly,created_at,updated_at').eq('couple_id',window.usProfile.couple_id).order('event_date',{ascending:true}),
-      sb.from('shared_event_completions').select('id,event_id,occurrence_date,completed_by,xp_awarded,completed_at').eq('couple_id',window.usProfile.couple_id).order('completed_at',{ascending:false}),
-      sb.from('couples').select('started_on').eq('id',window.usProfile.couple_id).maybeSingle(),
-      sb.from('relationship_milestones').select('milestone_date,kind,months_together,xp_awarded,awarded_at').eq('couple_id',window.usProfile.couple_id).order('milestone_date',{ascending:false}).limit(24)
-    ]);
-    if(eventsRes.error)throw eventsRes.error;if(completionRes.error)throw completionRes.error;if(coupleRes.error)throw coupleRes.error;if(milestoneRes.error)throw milestoneRes.error;
-    rows=eventsRes.data||[];completions=completionRes.data||[];coupleStartedOn=coupleRes.data?.started_on||null;milestones=milestoneRes.data||[];render();
-  }catch(error){console.warn('[US Events] load',error);if(list)list.innerHTML='<div class="us-events-empty">Non riesco a caricare gli eventi. Controlla la connessione e riprova.</div>';}
+  try{await loadEventsData();render();}
+  catch(error){console.warn('[US Events] load',error);if(list)list.innerHTML='<div class="us-events-empty">Non riesco a caricare gli eventi. Controlla la connessione e riprova.</div>';}
+}
+async function getTodayEventPrioritySource(){
+  if(!window.usProfile)return null;
+  await loadEventsData();
+  return upcomingRows().find(row=>row.days_left>=0&&row.days_left<=2)||null;
 }
 function showBrowse(){$('usEventsBrowse').hidden=false;$('usEventForm').hidden=true;editingId=null;editingOccurrenceDate=null;}
 function showForm(){$('usEventsBrowse').hidden=true;$('usEventForm').hidden=false;setTimeout(()=>$('usEventTitleInput')?.focus({preventScroll:true}),80);}
@@ -131,7 +143,7 @@ async function openEvents(){const overlay=$('usEventsOverlay');if(!overlay)retur
 function closeEvents(){if(busy)return;const overlay=$('usEventsOverlay');if(!overlay)return;const finalize=()=>{overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');document.body.classList.remove('us-events-open');resetForm();showBrowse();};if(window.UsUiFoundation?.exitSurface)window.UsUiFoundation.exitSurface(overlay,finalize);else finalize();}
 function captureDeepLink(){try{const url=new URL(location.href);deepLinkPending=url.searchParams.get('open')==='events';if(!deepLinkPending)return;url.searchParams.delete('open');history.replaceState(history.state||{},'',url.pathname+url.search+url.hash);}catch(_){}}
 function flushDeepLink(){if(deepLinkPending&&window.usProfile){deepLinkPending=false;openEvents();}}
-window.openEvents=openEvents;window.closeEvents=closeEvents;window.beginAddEvent=beginAddEvent;window.editEvent=editEvent;window.cancelEventEdit=cancelEventEdit;window.hydrateEvents=hydrateEvents;window.completeEvent=completeEvent;
+window.openEvents=openEvents;window.closeEvents=closeEvents;window.beginAddEvent=beginAddEvent;window.editEvent=editEvent;window.cancelEventEdit=cancelEventEdit;window.hydrateEvents=hydrateEvents;window.getTodayEventPrioritySource=getTodayEventPrioritySource;window.completeEvent=completeEvent;
 $('usEventForm')?.addEventListener('submit',saveEvent);$('usEventDeleteBtn')?.addEventListener('click',deleteEvent);$('usEventCompleteBtn')?.addEventListener('click',completeEvent);document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('usEventsOverlay')?.classList.contains('open'))closeEvents();});document.addEventListener('visibilitychange',()=>{if(!document.hidden&&$('usEventsOverlay')?.classList.contains('open'))hydrateEvents();});window.addEventListener('online',()=>{if($('usEventsOverlay')?.classList.contains('open'))hydrateEvents();});
 captureDeepLink();const bootTimer=setInterval(()=>{flushDeepLink();if(window.usProfile)clearInterval(bootTimer);},300);setTimeout(()=>clearInterval(bootTimer),30000);setInterval(()=>{if(!document.hidden&&$('usEventsOverlay')?.classList.contains('open')&&window.usProfile)hydrateEvents();},60000);
 console.info('[US Events] calendario + XP + ricorrenze attivi');
