@@ -8,11 +8,10 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const PRIMARY_NAV = ['home', 'moments', 'quiz', 'bond', 'settings'];
 const SHELL_ICONS = [...PRIMARY_NAV, 'stories', 'calendar', 'profile', 'add', 'think'];
 
-test('M6A usa il wordmark premium e coppie SVG OFF/ON reali senza tint o mask', () => {
+test('M6A conserva coppie SVG OFF/ON reali senza tint o mask', () => {
   const html = read('index.html');
   const css = read('identity.css');
 
-  assert.equal((html.match(/assets\/brand\/us-wordmark-premium\.svg/g) || []).length, 3);
   PRIMARY_NAV.forEach((name) => {
     assert.match(html, new RegExp(`data-page="${name}"[\\s\\S]{0,420}us-nav-icon--${name}`));
     assert.match(html, new RegExp(`us-nav-icon--${name}[\\s\\S]{0,260}us-nav-icon-off[\\s\\S]{0,260}us-nav-icon-on`));
@@ -31,9 +30,9 @@ test('M6A precarica tutti gli asset shell premium e mantiene il contratto PWA', 
   const build = html.match(/meta name="us-build" content="([^"]+)"/)?.[1];
 
   assert.match(worker, /const MEDIA_CACHE_NAME = "us-private-media-v1"/);
-  assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-17"/);
+  assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-19"/);
   assert.equal(build, version);
-  assert.match(worker, /"\/assets\/brand\/us-wordmark-premium\.svg"/);
+  assert.match(worker, /"\/assets\/derived\/brand\/us-symbol-ui-crisp-v1\.png"/);
   SHELL_ICONS.forEach((name) => {
     ['off', 'on'].forEach((state) => {
       const file = `assets/icons/${name}-${state}.svg`;

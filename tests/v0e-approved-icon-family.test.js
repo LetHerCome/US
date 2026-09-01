@@ -10,7 +10,6 @@ const CUSTOM_ICONS = {
   bond: 'assets/source/ui/us-icon-bond-v1.png',
   settings: 'assets/source/ui/us-icon-settings-v1.png',
   'daily-question': 'assets/source/ui/us-icon-daily-question-v1.png',
-  'ti-penso': 'assets/source/ui/us-icon-ti-penso-v1.png',
   stories: 'assets/source/ui/us-icon-stories-v1.png'
 };
 
@@ -30,7 +29,7 @@ test('V0E usa direttamente i sei master custom approvati nelle rispettive superf
     assert.match(html, new RegExp(`us-nav-icon--${id}[\\s\\S]{0,320}${asset}`));
   });
   assert.match(html, /id="todayOrb"[\s\S]{0,340}assets\/source\/ui\/us-icon-daily-question-v1\.png/);
-  assert.match(html, /id="thinkButton"[\s\S]{0,340}assets\/source\/ui\/us-icon-ti-penso-v1\.png/);
+  assert.doesNotMatch(html.match(/<button[^>]+id="thinkButton"[\s\S]*?<\/button>/)?.[0] || '', /us-icon-ti-penso-v1\.png/);
   assert.match(stories, /id="usStoryAdd"[\s\S]{0,340}assets\/source\/ui\/us-icon-stories-v1\.png/);
 });
 

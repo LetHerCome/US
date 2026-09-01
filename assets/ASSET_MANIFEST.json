@@ -10,6 +10,17 @@
       "usedBy": []
     },
     {
+      "path": "assets/derived/brand/us-symbol-ui-crisp-v1.png",
+      "status": "APPROVED",
+      "sha256": "a4efb5ab73eec83dcdcd4c2cedb450e78f0282fe0a720896891260c25985ef24",
+      "immutable": true,
+      "purpose": "Deterministic crisp transparent web derivative of the approved isolated US symbol",
+      "usedBy": ["auth-branding", "home-header-branding", "settings-branding"],
+      "source": "assets/source/brand/us-wordmark-v1.png",
+      "sourceSha256": "e8e3007c9ada499e4fc68aa68179d6e4046d21df14351e6c7144bca5d8b28f97",
+      "operation": "REMOVE_LOW_ALPHA_GLOW_PRESERVE_US_GEOMETRY"
+    },
+    {
       "path": "assets/source/brand/app-icon/us-adaptive-foreground-v1.png",
       "status": "APPROVED",
       "sha256": "fb91f1008154887f8ec114b85f5c84e88360e18ccc6d0ee838ecd7b003ad8621",
@@ -39,7 +50,7 @@
       "sha256": "e8e3007c9ada499e4fc68aa68179d6e4046d21df14351e6c7144bca5d8b28f97",
       "immutable": true,
       "purpose": "Official US supporting wordmark",
-      "usedBy": ["android-ti-penso-widget"]
+      "usedBy": ["android-ti-penso-widget", "web-internal-brand-derivative"]
     },
     {
       "path": "assets/source/ui/us-icon-bond-v1.png",
@@ -79,7 +90,7 @@
       "sha256": "f1910a3aaf8267de807df476e35ac893a34092cbbeb3917c8f3ff15edc307e8e",
       "immutable": true,
       "purpose": "Official US Ti Penso custom icon",
-      "usedBy": ["home-ti-penso", "android-ti-penso-widget"]
+      "usedBy": ["android-ti-penso-widget"]
     },
     {
       "path": "assets/source/ui/us-icon-settings-v1.png",

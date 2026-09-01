@@ -340,7 +340,9 @@ test('i token motion legacy preservano le superfici rinviate alle milestone succ
 
   assert.match(foundation, /--us-motion-legacy-fast:160ms/);
   assert.match(foundation, /--us-motion-legacy-base:200ms/);
-  assert.match(settings, /var\(--us-motion-legacy-fast\)/);
+  // Ti Penso now uses the shared M5A feedback tokens; only the deferred
+  // Settings sheet still intentionally consumes the legacy motion contract.
+  assert.match(settings, /var\(--us-motion-base\)/);
   assert.match(settings, /var\(--us-motion-legacy-base\)/);
   assert.match(events, /var\(--us-motion-legacy-base\)/);
   assert.match(games, /var\(--us-motion-legacy-base\)/);

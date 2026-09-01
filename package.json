@@ -8,8 +8,9 @@
   "scripts": {
     "test": "node --test",
     "assets:android-brand": "node scripts/build-android-brand-assets.mjs",
+    "assets:web-brand": "node scripts/build-web-brand-assets.mjs",
     "assets:widget": "node scripts/sync-approved-widget-assets.mjs",
-    "prebuild:capacitor-web": "npm run assets:widget",
+    "prebuild:capacitor-web": "npm run assets:widget && npm run assets:web-brand",
     "build:capacitor-web": "node scripts/build-capacitor-web.mjs"
   },
   "dependencies": {

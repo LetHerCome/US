@@ -1856,7 +1856,7 @@ async function sendThinkSignal(){
   if(message?.id)sendWebPushEvent('think',message.id).catch(()=>{});
   btn?.classList.add('sent');setTimeout(()=>btn?.classList.remove('sent'),700);
   window.UsPlatform?.haptic?.('light',[30,25,45])||navigator.vibrate?.([30,25,45]);
-  toast(`${partner.display_name} lo saprà ♡`);
+  toast('Inviato');
   await hydrateThink();
   setTimeout(()=>{if(btn)btn.disabled=false;},1800);
   return true;

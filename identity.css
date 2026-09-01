@@ -47,18 +47,18 @@ html,body{
   letter-spacing:-.006em;
 }
 
-/* --- Wordmark --------------------------------------------------- */
-.us-wordmark{
+/* --- Internal brand symbol ------------------------------------- */
+.us-brand-symbol{
   display:inline-flex!important;
   align-items:center;
   width:auto!important;
   line-height:1;
 }
-.us-wordmark-art{display:block;width:62px;height:auto}
-.top .us-wordmark-art{width:82px}
-.auth-logo.us-wordmark{margin-bottom:11px}
-.auth-logo .us-wordmark-art{width:94px}
-.us-settings2-brand-mini .us-wordmark-art{width:25px}
+.us-brand-symbol-art{display:block;width:58px;height:39px;object-fit:contain}
+.top .us-brand-symbol-art{width:52px;height:34px}
+.auth-logo.us-brand-symbol{margin-bottom:11px}
+.auth-logo .us-brand-symbol-art{width:132px;height:88px}
+.us-settings2-brand-mini .us-brand-symbol-art{width:36px;height:24px}
 
 /* --- Core palette cleanup -------------------------------------- */
 .card,
@@ -264,14 +264,6 @@ textarea,input{
   color:#16171c!important;
   box-shadow:0 12px 32px rgba(0,0,0,.24)!important;
 }
-.us-floating-think{
-  color:var(--us-pink)!important;
-  background:rgba(15,16,22,.82)!important;
-  border-color:rgba(232,138,162,.16)!important;
-}
-.us-floating-think-ring{
-  border-color:rgba(232,138,162,.22)!important;
-}
 
 /* Photo journal retains the warm-paper signature. */
 #moments .moment-card.moment-postit,
@@ -288,7 +280,7 @@ button:focus-visible,
 }
 
 @media(max-width:360px){
-  .top .us-wordmark-art{width:72px}
+  .top .us-brand-symbol-art{width:48px;height:32px}
   .top{gap:8px}
   .brand-row{gap:6px!important;min-width:0}
   .today-orb{width:44px!important;min-width:44px!important;padding:0!important;justify-content:center!important}

@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-static-runtime-17";
+const CACHE_NAME = "us-shell-static-runtime-19";
 const MEDIA_CACHE_NAME = "us-private-media-v1";
 
 const APP_SHELL = [
@@ -30,7 +30,7 @@ const APP_SHELL = [
   "/settings2.css",
   "/polish4.css",
   "/polish4.js",
-  "/assets/brand/us-wordmark-premium.svg",
+  "/assets/derived/brand/us-symbol-ui-crisp-v1.png",
   "/assets/icons/home-off.svg",
   "/assets/icons/home-on.svg",
   "/assets/icons/moments-off.svg",
@@ -55,7 +55,6 @@ const APP_SHELL = [
   "/assets/source/ui/us-icon-stories-v1.png",
   "/assets/source/ui/us-icon-moments-v1.png",
   "/assets/source/ui/us-icon-daily-question-v1.png",
-  "/assets/source/ui/us-icon-ti-penso-v1.png",
   "/assets/source/ui/us-icon-settings-v1.png",
   "/version.json",
   "/manifest.webmanifest",

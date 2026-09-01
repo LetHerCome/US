@@ -1,20 +1,2 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
-<defs>
-  <linearGradient id="usg" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
-    <stop stop-color="#FFD7EA"/>
-    <stop offset=".36" stop-color="#FF8FC5"/>
-    <stop offset=".68" stop-color="#E27BE2"/>
-    <stop offset="1" stop-color="#A978FF"/>
-  </linearGradient>
-  <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
-    <feGaussianBlur stdDeviation="1.45" result="b"/>
-    <feColorMatrix in="b" values="1 0 0 0 0.99  0 1 0 0 0.40  0 0 1 0 0.74  0 0 0 0.62 0" result="c"/>
-    <feMerge><feMergeNode in="c"/><feMergeNode in="SourceGraphic"/></feMerge>
-  </filter>
-
-</defs>
-
-<path d="M12 19.2S4.8 15.15 4.8 9.75C4.8 6.7 8.35 5.6 10.1 8.05 11.85 5.6 15.4 6.7 15.4 9.75c0 5.4-3.4 7.7-3.4 9.45Z" stroke="#8E8A9A" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M17 8.7c.75.85 1.15 1.8 1.15 2.85M18.2 6.35c1.35 1.4 2.05 3.1 2.05 5" stroke="#6F6B79" stroke-width="1.2" stroke-linecap="round"/>
-
-</svg>
+<!-- Phosphor Icons Heart, faithfully derived from the official regular asset. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="#e66b86"><path d="M178,40c-20.65,0-38.73,8.88-50,23.89C116.73,48.88,98.65,40,78,40a62.07,62.07,0,0,0-62,62c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,228.66,240,172,240,102A62.07,62.07,0,0,0,178,40ZM128,214.8C109.74,204.16,32,155.69,32,102A46.06,46.06,0,0,1,78,56c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,155.61,146.24,204.15,128,214.8Z"/></svg>
