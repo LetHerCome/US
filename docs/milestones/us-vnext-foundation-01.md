@@ -86,8 +86,10 @@ The target primary navigation is exactly:
 | Gioca | `quiz` |
 | Settings | `settings` |
 
-Settings is secondary and is opened through the avatar/profile control. Preserve
-all current internal page IDs. Do not mass-rename DOM IDs, tables, RPCs,
+Settings is secondary and is opened through the dedicated Settings entry in the
+header. The avatar/profile control opens the user's personal Stories, which must
+remain accessible from the avatar. Preserve all current internal page IDs. Do
+not mass-rename DOM IDs, tables, RPCs,
 storage identifiers, or other legacy identifiers.
 
 `Ti penso` remains global. Events belongs under `Noi`. Existing systems are not
@@ -123,8 +125,9 @@ or make it unreachable.
 
 ### Avatar and Settings
 
-Change the avatar's primary action from directly starting profile-photo editing
-to opening Settings, and update its accessible label accordingly.
+Keep the avatar's primary action opening the user's personal Stories and update
+its accessible label accordingly. Settings is opened through the dedicated
+header entry point, not through the avatar.
 
 The existing profile-photo editing capability must remain reachable inside
 Settings/Profile through a visible accessible action such as `Cambia foto
@@ -275,7 +278,7 @@ Foundation 01 is acceptable only when all of these are true:
    `Oggi / Noi / Ricordi / Gioca`.
 3. The four entries map to `home / bond / moments / quiz`.
 4. Settings is absent from bottom navigation but remains routable.
-5. Avatar opens Settings and has the updated accessible label.
+5. Avatar opens personal Stories and has the updated accessible label.
 6. Profile-photo editing remains reachable from Settings through an accessible
    `Cambia foto profilo`-type action and still uses the existing single flow.
 7. Events is reachable from Noi through the existing Events implementation and
@@ -302,7 +305,8 @@ Foundation 01 is acceptable only when all of these are true:
 ### Product
 
 - Four primary destinations exist with the specified labels and mappings.
-- Settings is secondary and accessible from the avatar.
+- Settings is secondary and accessible from the dedicated header entry point.
+- Personal Stories remain accessible from the avatar.
 - Events belongs under Noi without a duplicate global destination.
 - Daily Question no longer competes with Oggi naming.
 - Existing feature systems remain accessible.
