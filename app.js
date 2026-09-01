@@ -1,5 +1,5 @@
-const pages=['home','moments','quiz','bond','settings'];
-const swipePages=['home','moments','quiz','bond','settings'];
+const pages=['home','bond','moments','quiz','settings'];
+const swipePages=['home','bond','moments','quiz'];
 const US_MOTION_FAST_MS=180;
 const US_MOTION_BASE_MS=220;
 const US_MOTION_SURFACE_MS=260;

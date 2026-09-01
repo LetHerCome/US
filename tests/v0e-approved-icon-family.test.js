@@ -24,7 +24,7 @@ test('V0E usa direttamente i sei master custom approvati nelle rispettive superf
     assert.equal(record?.immutable, true, `${id} deve restare immutabile`);
   });
 
-  ['moments', 'bond', 'settings'].forEach((id) => {
+  ['moments', 'bond'].forEach((id) => {
     const asset = CUSTOM_ICONS[id].replaceAll('/', '\\/');
     assert.match(html, new RegExp(`us-nav-icon--${id}[\\s\\S]{0,320}${asset}`));
   });

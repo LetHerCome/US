@@ -26,14 +26,15 @@ test('M5E conserva una famiglia SVG vettoriale coerente per il brand precedente'
   });
 });
 
-test('M5E conserva struttura a cinque tab e Stories fuori dalla bottom navigation', () => {
+test('Foundation 01 conserva quattro tab primarie e Stories fuori dalla bottom navigation', () => {
   const html = read('index.html');
   const stories = read('stories.js');
 
-  ['home', 'moments', 'quiz', 'bond', 'settings'].forEach((name) => {
+  ['home', 'bond', 'moments', 'quiz'].forEach((name) => {
     assert.match(html, new RegExp(`data-page="${name}"[\\s\\S]{0,420}us-nav-icon--${name}`));
   });
   assert.match(stories, /us-brand-icon--stories/);
+  assert.doesNotMatch(html, /data-page="settings"/, 'Settings resta fuori dalla bottom navigation');
   assert.doesNotMatch(html, /data-page="stories"/, 'Stories resta fuori dalla bottom navigation');
 });
 

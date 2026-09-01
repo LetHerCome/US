@@ -343,6 +343,7 @@ async function logout(){
 
 async function action(name){
   if(name==='relationship-date')return relationshipDateModal();
+  if(name==='profile-photo'){closeModal();window.pickProfilePhoto?.();return;}
   if(name==='home-photo')return homePhotoModal();
   if(name==='story-archive')return showStoryArchive();
   if(name==='notifications')return notificationsModal();

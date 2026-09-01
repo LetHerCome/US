@@ -77,10 +77,7 @@ html.us-returning-device .auth-overlay{
 </div>
 
 <div class="app">
-  <div class="top us-premium-top"><div class="brand-row"><div class="brand us-brand-symbol" aria-label="US"><img class="us-brand-symbol-art" src="/assets/derived/brand/us-symbol-ui-crisp-v1.png" alt="" aria-hidden="true"></div><button type="button" class="today-orb us-important-control us-premium-control" id="todayOrb" onclick="openToday()" aria-label="Apri la domanda giornaliera"><span class="today-orb-mark"><img class="us-approved-custom-icon" src="/assets/source/ui/us-icon-daily-question-v1.png" alt="" aria-hidden="true"></span><span class="today-orb-copy"><b>Oggi</b><small>Domanda</small></span><i id="todayOrbDot"></i></button></div><div class="top-actions"><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><button type="button" class="us-calendar-btn us-important-control us-premium-control" id="usCalendarBtn" onclick="openEvents()" aria-label="Apri eventi condivisi">
-  <span class="us-shell-icon us-shell-icon--calendar" aria-hidden="true"><img class="us-shell-icon-off" src="/assets/icons/calendar-off.svg" alt=""><img class="us-shell-icon-on" src="/assets/icons/calendar-on.svg" alt=""></span>
-  <i id="usCalendarDot" hidden></i>
-</button><button type="button" class="profile-avatar us-important-control us-premium-control" id="profileAvatarBtn" aria-label="Cambia foto profilo" onclick="pickProfilePhoto()"><img id="profileAvatarImg" alt="Foto profilo" hidden><span class="fallback" id="profileAvatarFallback">♡</span><span class="camera-dot" aria-hidden="true"><img class="us-shell-icon-off" src="/assets/icons/add-off.svg" alt=""><img class="us-shell-icon-on" src="/assets/icons/add-on.svg" alt=""></span></button><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
+  <div class="top us-premium-top"><div class="brand-row"><div class="brand us-brand-symbol" aria-label="US"><img class="us-brand-symbol-art" src="/assets/derived/brand/us-symbol-ui-crisp-v1.png" alt="" aria-hidden="true"></div><button type="button" class="today-orb us-important-control us-premium-control" id="todayOrb" onclick="openToday()" aria-label="Apri la domanda giornaliera"><span class="today-orb-mark"><img class="us-approved-custom-icon" src="/assets/source/ui/us-icon-daily-question-v1.png" alt="" aria-hidden="true"></span><span class="today-orb-copy"><b>Oggi</b><small>Domanda</small></span><i id="todayOrbDot"></i></button></div><div class="top-actions"><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><button type="button" class="profile-avatar us-important-control us-premium-control" id="profileAvatarBtn" aria-label="Apri impostazioni" onclick="go('settings',{nav:true})"><img id="profileAvatarImg" alt="Foto profilo" hidden><span class="fallback" id="profileAvatarFallback">♡</span><span class="camera-dot" aria-hidden="true"><img class="us-shell-icon-off" src="/assets/icons/add-off.svg" alt=""><img class="us-shell-icon-on" src="/assets/icons/add-on.svg" alt=""></span></button><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
 
   <main id="home" class="page active">
     <section class="hero home-hero-only" id="homeHero" aria-label="Un vostro ricordo">
@@ -103,6 +100,7 @@ html.us-returning-device .auth-overlay{
         <button type="button" class="push-optin-action" id="pushEnableBtn" onclick="enableWebPush()">Attiva notifiche</button>
       </aside>
     </section>
+    <div id="usTodayPriorityRegion" hidden aria-live="polite"></div>
   </main>
 
   <main id="today" class="today-overlay" aria-hidden="true" data-us-modal data-us-motion-surface>
@@ -147,6 +145,7 @@ html.us-returning-device .auth-overlay{
 
   <main id="bond" class="page">
     <section class="section bond-page" style="margin-top:6px">
+      <button type="button" class="us-event-add" onclick="openEvents()"><span>＋</span>I nostri eventi</button>
       <div class="bond-page-head"><div><div class="tiny">IL VOSTRO BOND</div><h2>Il vostro livello</h2></div><div class="bond-level-medallion"><span>LV.</span><b id="bondLevelValue">1</b></div></div>
       <article class="bond-progress-card">
         <div class="bond-progress-top"><div><div class="bond-rank" id="bondRankTitle">Primo legame</div><b id="bondTotalXp">0 XP totali</b></div><div class="bond-next" id="bondNextXp">200 XP al prossimo livello</div></div>
@@ -195,6 +194,10 @@ html.us-returning-device .auth-overlay{
           <span class="us-settings2-icon" aria-hidden="true">21</span>
           <span class="us-setting-main"><b>Data della relazione</b><small>Regola mesiversari, anniversari e giorni insieme</small></span>
           <span class="us-setting-value" id="usRelationshipDateValue">…</span><i>›</i>
+        </button>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="profile-photo">
+          <span class="us-settings2-icon us-settings2-photo-icon" aria-hidden="true">◎</span>
+          <span class="us-setting-main"><b>Cambia foto profilo</b><small>Aggiorna la foto che vede il tuo partner</small></span><span class="us-setting-value">Modifica</span><i>›</i>
         </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="home-photo">
           <span class="us-settings2-icon us-settings2-photo-icon" aria-hidden="true">▧</span>
@@ -270,21 +273,10 @@ html.us-returning-device .auth-overlay{
 <button type="button" id="thinkButton" class="us-floating-think us-premium-control" onclick="sendThinkSignal()" aria-label="Invia Ti penso" title="Ti penso"><span class="us-shell-icon us-shell-icon--think" aria-hidden="true"><img class="us-shell-icon-off" src="/assets/icons/think-off.svg" alt=""><img class="us-shell-icon-on" src="/assets/icons/think-on.svg" alt=""></span></button>
 
 <nav class="nav us-nav us-nav-premium" aria-label="Navigazione principale">
-<button class="active" data-page="home" onclick="go('home',{nav:true})" aria-label="Home" aria-current="page">
-  <span class="nicon"><span class="us-nav-icon us-nav-icon--home" aria-hidden="true"><img class="us-nav-icon-off" src="/assets/icons/home-off.svg" alt=""><img class="us-nav-icon-on" src="/assets/icons/home-on.svg" alt=""></span></span><span class="nlabel">Home</span>
-</button>
-<button data-page="moments" onclick="go('moments',{nav:true})" aria-label="Moments">
-  <span class="nicon"><span class="us-nav-icon us-nav-icon--moments" aria-hidden="true"><img class="us-nav-icon-off us-approved-custom-icon" src="/assets/source/ui/us-icon-moments-v1.png" alt=""><img class="us-nav-icon-on us-approved-custom-icon" src="/assets/source/ui/us-icon-moments-v1.png" alt=""></span></span><span class="nlabel">Moments</span>
-</button>
-<button data-page="quiz" onclick="openQuizHub({nav:true})" aria-label="Quiz">
-  <span class="nicon"><span class="us-nav-icon us-nav-icon--quiz" aria-hidden="true"><img class="us-nav-icon-off" src="/assets/icons/quiz-off.svg" alt=""><img class="us-nav-icon-on" src="/assets/icons/quiz-on.svg" alt=""></span></span><span class="nlabel">Quiz</span>
-</button>
-<button data-page="bond" onclick="go('bond',{nav:true})" aria-label="Bond">
-  <span class="nicon"><span class="us-nav-icon us-nav-icon--bond" aria-hidden="true"><img class="us-nav-icon-off us-approved-custom-icon" src="/assets/source/ui/us-icon-bond-v1.png" alt=""><img class="us-nav-icon-on us-approved-custom-icon" src="/assets/source/ui/us-icon-bond-v1.png" alt=""></span></span><span class="nlabel">Bond</span>
-</button>
-<button data-page="settings" onclick="go('settings',{nav:true})" aria-label="Impostazioni">
-  <span class="nicon"><span class="us-nav-icon us-nav-icon--settings" aria-hidden="true"><img class="us-nav-icon-off us-approved-custom-icon" src="/assets/source/ui/us-icon-settings-v1.png" alt=""><img class="us-nav-icon-on us-approved-custom-icon" src="/assets/source/ui/us-icon-settings-v1.png" alt=""></span></span><span class="nlabel">Impostazioni</span>
-</button>
+<button class="active" data-page="home" onclick="go('home',{nav:true})" aria-label="Oggi" aria-current="page"><span class="nicon"><span class="us-nav-icon us-nav-icon--home" aria-hidden="true"><img class="us-nav-icon-off" src="/assets/icons/home-off.svg" alt=""><img class="us-nav-icon-on" src="/assets/icons/home-on.svg" alt=""></span></span><span class="nlabel">Oggi</span></button>
+<button data-page="bond" onclick="go('bond',{nav:true})" aria-label="Noi"><span class="nicon"><span class="us-nav-icon us-nav-icon--bond" aria-hidden="true"><img class="us-nav-icon-off us-approved-custom-icon" src="/assets/source/ui/us-icon-bond-v1.png" alt=""><img class="us-nav-icon-on us-approved-custom-icon" src="/assets/source/ui/us-icon-bond-v1.png" alt=""></span></span><span class="nlabel">Noi</span></button>
+<button data-page="moments" onclick="go('moments',{nav:true})" aria-label="Ricordi"><span class="nicon"><span class="us-nav-icon us-nav-icon--moments" aria-hidden="true"><img class="us-nav-icon-off us-approved-custom-icon" src="/assets/source/ui/us-icon-moments-v1.png" alt=""><img class="us-nav-icon-on us-approved-custom-icon" src="/assets/source/ui/us-icon-moments-v1.png" alt=""></span></span><span class="nlabel">Ricordi</span></button>
+<button data-page="quiz" onclick="openQuizHub({nav:true})" aria-label="Gioca"><span class="nicon"><span class="us-nav-icon us-nav-icon--quiz" aria-hidden="true"><img class="us-nav-icon-off" src="/assets/icons/quiz-off.svg" alt=""><img class="us-nav-icon-on" src="/assets/icons/quiz-on.svg" alt=""></span></span><span class="nlabel">Gioca</span></button>
 </nav>
 
 

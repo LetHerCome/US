@@ -5,8 +5,8 @@ const test = require('node:test');
 
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
-const PRIMARY_NAV = ['home', 'moments', 'quiz', 'bond', 'settings'];
-const SHELL_ICONS = [...PRIMARY_NAV, 'stories', 'calendar', 'profile', 'add', 'think'];
+const PRIMARY_NAV = ['home', 'bond', 'moments', 'quiz'];
+const SHELL_ICONS = [...PRIMARY_NAV, 'settings', 'stories', 'calendar', 'profile', 'add', 'think'];
 
 test('M6A conserva coppie SVG OFF/ON reali senza tint o mask', () => {
   const html = read('index.html');
