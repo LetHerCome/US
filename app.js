@@ -1304,6 +1304,84 @@ function closeToday(){
 }
 window.closeToday=closeToday;
 
+function dailyQuestionOutcomeRuntime(){
+  const ownRole=()=>window.usProfile?.role||'';
+  const partnerLabel=()=>ownRole()==='francesco'?'Bea':'Francesco';
+  const emptyState=(questionId='')=>({questionId,rows:[],draft:'',status:'idle'});
+  const current=()=>window.todayOutcomeState||emptyState(window.todayQuestion?.id);
+  const operationId=()=>globalThis.crypto?.randomUUID?.()||'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,char=>{
+    const value=Math.floor(Math.random()*16);return (char==='x'?value:(value&3|8)).toString(16);
+  });
+  const ownOutcome=(state=current())=>state.rows.find(row=>row.author_role===ownRole())||null;
+  const outcomeLabel=(row)=>row.author_role===ownRole()?'La tua riflessione':partnerLabel();
+  const statusCopy=(status)=>({
+    loading:'Carico le riflessioni…', saved:'Riflessione salvata.', duplicate:'Riflessione già salvata.',
+    stale:'È arrivata una versione più recente: ho ricaricato il confronto.', already_absent:'La riflessione era già stata eliminata.',
+    deleted:'Riflessione eliminata.', error:'Non riesco a sincronizzare ora. Il reveal resta disponibile.'
+  })[status]||'';
+  const view=()=>{
+    const state=current(),mine=ownOutcome(state),partner=state.rows.filter(row=>row.author_role!==ownRole());
+    const rows=[...partner,...(mine?[mine]:[])].map(row=>`<article class="today-outcome-entry" data-us-today-outcome-${row.author_role===ownRole()?'owner':'partner'}><b>${escapeHtml(outcomeLabel(row))}</b><p>${escapeHtml(row.body||'')}</p></article>`).join('');
+    const status=statusCopy(state.status);
+    return `<div class="today-outcome-head"><div><div class="qtag">DOPO IL REVEAL</div><h3>Parlatene insieme</h3></div></div><p class="today-outcome-copy">Una riflessione è facoltativa e resta privata tra voi.</p>${rows?`<div class="today-outcome-list">${rows}</div>`:''}<div class="today-outcome-compose" data-us-today-outcome-owner><label class="tiny" for="todayOutcomeBody">La tua riflessione</label><textarea id="todayOutcomeBody" rows="3" maxlength="1000" placeholder="Lascia un pensiero, se ti va…">${escapeHtml(state.draft||mine?.body||'')}</textarea><div class="today-outcome-actions"><button type="button" class="primary" onclick="saveDailyQuestionOutcome()">Salva riflessione</button>${mine?'<button type="button" class="today-outcome-delete" onclick="deleteDailyQuestionOutcome()">Elimina</button>':''}</div></div>${status?`<p class="today-outcome-status ${state.status==='error'?'error':''}" role="status">${status}</p>`:''}`;
+  };
+  const render=()=>{
+    const root=document.getElementById('todayOutcome');
+    if(!root)return;
+    const active=Boolean(current().questionId&&window.todayState?.both_answered);
+    root.hidden=!active;root.classList.toggle('hidden',!active);
+    if(active)root.innerHTML=view();
+  };
+  const hide=()=>{window.todayOutcomeState=emptyState();render();};
+  const load=async(question,state)=>{
+    if(!question?.id||!state?.both_answered){hide();return {status:'not_ready'};}
+    const previous=current();
+    window.todayOutcomeState={...emptyState(question.id),draft:previous.questionId===question.id?previous.draft:'',status:'loading'};
+    render();
+    const {data,error}=await sb.from('daily_question_outcomes').select('id,author_role,body,revision').eq('question_id',question.id).order('created_at');
+    if(window.todayQuestion?.id!==question.id)return {status:'stale_question'};
+    if(error){console.warn(error);window.todayOutcomeState.status='error';render();return {status:'error',error};}
+    window.todayOutcomeState.rows=Array.isArray(data)?data:[];
+    window.todayOutcomeState.status='idle';render();return {status:'loaded'};
+  };
+  const save=async(value)=>{
+    const state=current(),questionId=state.questionId||window.todayQuestion?.id,body=String(value??'').trim();
+    if(!questionId||!window.todayState?.both_answered)return {status:'not_ready'};
+    state.draft=body;
+    if(!body||body.length>1000){state.status='error';render();return {status:'error'};}
+    const mine=ownOutcome(state);
+    const {data,error}=await sb.rpc('save_daily_question_outcome',{target_question_id:questionId,target_body:body,operation_id:operationId(),expected_revision:mine?.revision??null});
+    if(error){console.warn(error);state.status='error';render();return {status:'error',error};}
+    if(data?.status==='saved'||data?.status==='duplicate'){
+      const row={id:data.id,author_role:ownRole(),body:data.body||body,revision:data.revision};
+      state.rows=[...state.rows.filter(item=>item.author_role!==ownRole()),row];state.draft=row.body;state.status=data.status;render();return data;
+    }
+    if(data?.status==='stale'){state.status='stale';render();await load({id:questionId},{both_answered:true});return data;}
+    state.status='error';render();return {status:'error'};
+  };
+  const remove=async()=>{
+    const state=current(),questionId=state.questionId||window.todayQuestion?.id,mine=ownOutcome(state);
+    if(!questionId||!mine)return {status:'already_absent'};
+    const {data,error}=await sb.rpc('delete_daily_question_outcome',{target_question_id:questionId,expected_revision:mine.revision});
+    if(error){console.warn(error);state.status='error';render();return {status:'error',error};}
+    if(data?.status==='deleted'||data?.status==='already_absent'){
+      state.rows=state.rows.filter(row=>row.author_role!==ownRole());state.draft='';state.status=data.status;render();return data;
+    }
+    if(data?.status==='stale'){state.status='stale';render();await load({id:questionId},{both_answered:true});return data;}
+    state.status='error';render();return {status:'error'};
+  };
+  return {hide,load,remove,render,save,view};
+}
+const dailyQuestionOutcomes=dailyQuestionOutcomeRuntime();
+window.saveDailyQuestionOutcome=async()=>{
+  const result=await dailyQuestionOutcomes.save(document.getElementById('todayOutcomeBody')?.value||'');
+  if(result.status==='error')toast('Riflessione non salvata: riprova quando torni online');
+};
+window.deleteDailyQuestionOutcome=async()=>{
+  const result=await dailyQuestionOutcomes.remove();
+  if(result.status==='error')toast('Riflessione non eliminata: riprova quando torni online');
+};
+
 async function hydrateToday(){
   if(!window.usProfile){window.UsTodayPriority?.render?.([]);return;}
   const {data:q,error:qError}=await sb.from('daily_questions').select('id,question,question_date').eq('question_date',localDateISO()).maybeSingle();
@@ -1313,6 +1391,7 @@ async function hydrateToday(){
   const answerEl=document.getElementById('answer');
   if(!q){
     window.todayQuestion=null; window.todayState=null;
+    dailyQuestionOutcomes.hide();
     if(qel)qel.textContent='La prossima domanda sta arrivando…';
     locked.textContent='Nessuna domanda disponibile per oggi.';
     reveal.classList.add('hidden');
@@ -1338,8 +1417,10 @@ async function hydrateToday(){
     reveal.className='today-reveal';
     reveal.innerHTML='<div class="today-answer"><b>La tua risposta</b><p>'+escapeHtml(state.my_answer||'')+'</p></div><div class="today-answer"><b>'+partner+'</b><p>'+escapeHtml(state.partner_answer||'')+'</p></div>';
     answerEl.disabled=true; btn.disabled=true; btn.textContent='Risposte sbloccate';
+    await dailyQuestionOutcomes.load(q,state);
   }else{
     reveal.classList.add('hidden');reveal.innerHTML='';
+    dailyQuestionOutcomes.hide();
     if(state?.my_answer){
       const partner=window.usProfile.role==='francesco'?'Bea':'Francesco';
       locked.innerHTML='✓ Hai risposto. <b>In attesa di '+partner+'…</b>';
@@ -2381,7 +2462,8 @@ async function refreshVisibleState(options={}){
   if(!window.usProfile||document.hidden)return;
   if(options.foreground)hydrateThink().catch(()=>{});
   const active=document.querySelector('.page.active')?.id;
-  if(active==='home'){
+  const todayOpen=document.getElementById('today')?.classList.contains('open');
+  if(active==='home'||todayOpen){
     await hydrateToday();
     if(options.foreground)maybeAutoRefreshLocation();else hydrateDistance();
     return;

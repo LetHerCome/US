@@ -1,0 +1,8 @@
+# Frontend-only Vercel deployment. Keep root web runtime and assets.
+android/
+dist/
+docs/
+tests/
+supabase/
+native-plugins/
+_handoff/
