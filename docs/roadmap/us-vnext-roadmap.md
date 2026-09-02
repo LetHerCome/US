@@ -12,8 +12,8 @@ Questa roadmap deriva dalla product vision e dallo stato reale del repository, n
 |---|---|---|
 | Foundation 01 — contratti e information architecture | **DONE** | Contratti vNext, navigation e confini preservati |
 | M2 — Oggi | **DONE** | Priorità reali nella Home senza dashboard permanente |
-| M3 — Daily Question: loop reciproco | **CURRENT** | Trasformare domanda/reveal in conseguenza e confronto |
-| M4 — Ti penso reciproco | PLANNED | Da gesto singolo a scambio significativo |
+| M3 — Daily Question: loop reciproco | **DONE** | Trasformare domanda/reveal in conseguenza e confronto |
+| M4 — Ti penso reciproco | **CURRENT** | Da gesto singolo a scambio significativo |
 | M5 — Lasciato per te | PLANNED | Contenuto personale lasciato al partner |
 | M6 — Eventi prima/durante/dopo | PLANNED | Collegare anticipazione, esperienza e traccia |
 | M7 — Gioca: esiti interpretativi | PLANNED | Da score generico a conversazione |
@@ -21,7 +21,7 @@ Questa roadmap deriva dalla product vision e dallo stato reale del repository, n
 | M9 — Ricordi: timeline narrativa | PLANNED | Una storia composta senza duplicare i domini |
 | M10 — Noi: progressione narrativa | PLANNED | Ridurre la dipendenza da XP/livelli artificiali |
 
-`M3` è l’unica `CURRENT`. Nessuna milestone successiva deve essere avviata prima della chiusura di M3 e dell’aggiornamento di questo documento.
+`M4` è l’unica `CURRENT`; è uno stato di roadmap e non autorizza l’implementazione in questa sessione. M3 è chiusa e non si avvia altro lavoro senza il relativo protocollo.
 
 ## 2. Baseline completata
 
@@ -57,7 +57,7 @@ Questa roadmap deriva dalla product vision e dallo stato reale del repository, n
 
 ### M3 — Daily Question: loop reciproco
 
-**Stato:** CURRENT
+**Stato:** DONE
 
 - **Goal:** trasformare il flusso esistente domanda → risposta separata → waiting → reveal in un primo loop completo che renda il confronto e l’eventuale outcome espliciti.
 - **Perché serve:** Daily Question è la fonte più affidabile già esistente per testare il principio “azione di A → cambia US di B → risposta → outcome” senza introdurre subito una nuova feature o un motore universale.
@@ -67,6 +67,8 @@ Questa roadmap deriva dalla product vision e dallo stato reale del repository, n
 - **Classification:** DEEP.
 - **Definition of Done:** il partner può vedere chiaramente waiting/reveal con dati reali; il reveal conduce a un confronto o risposta successiva concreta; eventuale preservazione usa un’autorità esistente o una persistence minima motivata; stale/realtime/offline/back sono coperti; Oggi e navigation restano integri; rollout reversibile e testati i due partner.
 - **Fuori:** universal interaction engine; nuova inbox; Reveal Engine; capitoli; nuove notifiche; decisioni generiche; rifacimento del modello Daily Question completo.
+
+**Chiusura:** manual QA reciproco PASS; migration base `20260901192817` e correttiva `20260902101619` applicate e verificate in read-only; full suite, build web, review DEEP/security e review runtime PASS.
 
 ### M4 — Ti penso reciproco
 
