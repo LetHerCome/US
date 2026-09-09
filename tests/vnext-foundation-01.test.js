@@ -25,11 +25,36 @@ test('Foundation 01 mantiene il contratto completo di navigation e Oggi', () => 
   assert.deepEqual([...html.matchAll(/<button[^>]+data-page="([^"]+)"[^>]*aria-label="([^"]+)"/g)].map((match) => [match[1], match[2]]), [
     ['home', 'Oggi'], ['bond', 'Noi'], ['moments', 'Ricordi'], ['quiz', 'Gioca'],
   ]);
-  assert.match(app, /const pages=\['home','bond','moments','quiz','settings'\]/);
+  assert.match(app, /const rootPages=\['home','bond','moments','quiz'\]/);
   assert.match(app, /const swipePages=\['home','bond','moments','quiz'\]/);
   assert.doesNotMatch(html, /data-page="settings"/);
   assert.match(html, /id="usTodayPriorityRegion" hidden aria-live="polite"><\/div>/);
-  assert.doesNotMatch(html, /usTodayPriorityRegion[^>]*>[\s\S]*?(received|reveal ready|waiting for me|priority card)/i);
+  assert.match(html, /id="homeHero"[^>]*>[\s\S]*id="usHeroOverlayLayer"[^>]*data-us-hero-overlay-layer/);
+  assert.match(html, /id="usHeroOverlayLayer"[\s\S]*id="usTodayPriorityRegion"/);
+  assert.match(html, /id="settings"[^>]*data-us-fullscreen-page/);
+});
+
+test('Foundation 01 keeps Oggi hero geometry independent from structural overlay content', () => {
+  const html = read('index.html');
+  const css = read('ui-foundation.css');
+
+  assert.match(html, /<section class="hero home-hero-only" id="homeHero"/);
+  assert.match(html, /id="usHeroOverlayLayer"[^>]*data-us-hero-overlay-layer/);
+  assert.match(css, /\[data-us-hero-overlay-layer\][\s\S]*position:absolute/);
+  assert.match(css, /\.home-hero-only[\s\S]*position:relative/);
+  assert.match(css, /\[data-us-hero-overlay-layer\][\s\S]*inset:0/);
+});
+
+test('Foundation 01 defines fullscreen Settings and reduced-motion shell contracts', () => {
+  const html = read('index.html');
+  const foundation = read('ui-foundation.css');
+  const app = read('app.js');
+
+  assert.match(html, /id="settings"[^>]*data-us-fullscreen-page/);
+  assert.match(foundation, /\.us-nav[\s\S]*padding-bottom:var\(--us-safe-bottom\)/);
+  assert.match(foundation, /@media \(prefers-reduced-motion:reduce\)/);
+  assert.match(foundation, /data-us-motion="reduced"/);
+  assert.match(app, /rootPages/);
 });
 
 test('avatar apre Stories personali, Settings ha un entry dedicato ed Events vive sotto Noi', () => {

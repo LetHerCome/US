@@ -45,7 +45,8 @@ test('M2 colloca la priority region sopra l hero e la lascia strutturalmente vuo
   const region = '<div id="usTodayPriorityRegion" hidden aria-live="polite"></div>';
 
   assert.ok(home.indexOf(region) >= 0);
-  assert.ok(home.indexOf(region) < home.indexOf('id="homeHero"'));
+  assert.ok(home.indexOf('id="homeHero"') < home.indexOf(region));
+  assert.match(home, /id="usHeroOverlayLayer"[\s\S]*id="usTodayPriorityRegion"/);
   assert.match(read('styles.css'), /\.us-today-priority-card[\s\S]{0,500}min-height:44px/);
 });
 
