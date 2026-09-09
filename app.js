@@ -1,4 +1,5 @@
-const pages=['home','bond','moments','quiz','settings'];
+const rootPages=['home','bond','moments','quiz'];
+const pages=[...rootPages,'settings'];
 const swipePages=['home','bond','moments','quiz'];
 const US_MOTION_FAST_MS=180;
 const US_MOTION_BASE_MS=220;
@@ -29,6 +30,7 @@ function go(id,options={}){
     if(pageId===id && options.swipe && !options.motionCommit)el.classList.add(options.swipe==='next'?'swipe-next':'swipe-prev');
     el.classList.toggle('active',pageId===id);
   });
+  document.body.classList.toggle('us-settings-fullscreen-open',id==='settings');
   if(options.nav&&!options.motionCommit&&direction)animatePageEntry(document.getElementById(id),direction);
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
   if(options.swipe&&!options.motionCommit)setTimeout(()=>document.getElementById(id)?.classList.remove('swipe-next','swipe-prev'),190);
