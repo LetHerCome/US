@@ -9,6 +9,7 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const harness = read('qa/local-visual-harness.js');
 const index = read('index.html');
 const app = read('app.js');
+const staging = read('scripts/build-capacitor-web.mjs');
 
 test('local QA harness requires an explicit flag and exact local hostname', () => {
   assert.match(harness, /hostname === 'localhost'/);
@@ -19,8 +20,13 @@ test('local QA harness requires an explicit flag and exact local hostname', () =
   assert.doesNotMatch(harness, /hostname === '::1'/);
 });
 
+test('native runtime plus QA flag cannot activate the local fixture', () => {
+  assert.match(harness, /nativeRuntime = Boolean\(window\.UsPlatform\?\.isNative\)/);
+  assert.match(harness, /localOrigin && requested && !nativeRuntime/);
+});
+
 test('QA harness is loaded before production auth/app and production auth remains present', () => {
-  const harnessIndex = index.indexOf('/qa/local-visual-harness.js');
+  const harnessIndex = index.indexOf("['/qa/', 'local-visual-harness.js']");
   const authIndex = index.indexOf('/auth-storage.js');
   const appIndex = index.indexOf('<script defer src="/app.js"');
   assert.ok(harnessIndex >= 0 && harnessIndex < authIndex && harnessIndex < appIndex);
@@ -46,4 +52,9 @@ test('QA fixture does not replace pairing or create a production session', () =>
   assert.match(harness, /signInAnonymously|claim_us_role/);
   assert.match(harness, /QA mode never calls pairing/i);
   assert.match(harness, /window\.usProfile/);
+});
+
+test('Capacitor release staging excludes the development-only QA asset', () => {
+  assert.doesNotMatch(staging, /'qa\/local-visual-harness\.js'/);
+  assert.match(index, /\['\/qa\/', 'local-visual-harness\.js'\]\.join\(''\)/);
 });

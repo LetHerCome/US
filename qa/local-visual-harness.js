@@ -4,7 +4,8 @@
   const hostname = window.location.hostname;
   const localOrigin = hostname === 'localhost' || hostname === '127.0.0.1';
   const requested = new URLSearchParams(window.location.search).get('us-qa') === 'gate1';
-  const active = localOrigin && requested;
+  const nativeRuntime = Boolean(window.UsPlatform?.isNative);
+  const active = localOrigin && requested && !nativeRuntime;
   const MUTATING_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
 
   const originalFetch = window.fetch?.bind(window);
