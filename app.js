@@ -2016,6 +2016,42 @@ function relativeSignalAge(dateString){
   const h=Math.floor(min/60);if(h<24)return `${h} ${h===1?'ora':'ore'} fa`;
   const d=Math.floor(h/24);return `${d} ${d===1?'giorno':'giorni'} fa`;
 }
+const US_THINK_REACTIONS=Object.freeze({heart:'♡',hug:'Abbraccio',miss_you:'Mi manchi'});
+let receivedThinkMessage=null;
+let receivedThinkReaction=null;
+function renderReceivedThinkContext(status=''){
+  const root=document.getElementById('thinkReceivedContext');
+  if(!root)return;
+  if(!receivedThinkMessage){root.hidden=true;root.innerHTML='';return;}
+  const selected=receivedThinkReaction?.reaction||'';
+  root.hidden=false;
+  root.innerHTML=`<div class="think-received-head"><b>${escapeHtml(receivedThinkMessage.partnerName)} ti pensa</b><small>${escapeHtml(relativeSignalAge(receivedThinkMessage.created_at))}</small></div><p class="think-received-copy">Lascia una reazione, solo se ti va.</p><div class="think-received-actions">${Object.entries(US_THINK_REACTIONS).map(([key,label])=>`<button type="button" class="think-reaction-btn ${selected===key?'selected':''}" data-think-reaction="${key}">${escapeHtml(label)}</button>`).join('')} ${selected?'<button type="button" class="think-reaction-remove" data-think-reaction-remove>Rimuovi</button>':''}</div>${status?`<div class="think-received-status" role="status">${escapeHtml(status)}</div>`:''}`;
+  root.querySelectorAll('[data-think-reaction]').forEach(btn=>btn.addEventListener('click',()=>setThinkReaction(btn.dataset.thinkReaction)));
+  root.querySelector('[data-think-reaction-remove]')?.addEventListener('click',deleteThinkReaction);
+}
+async function loadThinkReaction(message){
+  if(!message){receivedThinkMessage=null;receivedThinkReaction=null;renderReceivedThinkContext();return;}
+  receivedThinkMessage=message;
+  try{
+    const {data,error}=await sb.from('think_reactions').select('id,message_id,reaction,updated_at').eq('message_id',message.id).maybeSingle();
+    if(error)throw error;
+    receivedThinkReaction=data||null;renderReceivedThinkContext();
+  }catch(error){console.warn('[US Ti penso] reaction load',error);receivedThinkReaction=null;renderReceivedThinkContext();}
+}
+async function setThinkReaction(reaction){
+  if(!receivedThinkMessage||!US_THINK_REACTIONS[reaction])return;
+  renderReceivedThinkContext('Salvo la tua reazione…');
+  const {data,error}=await sb.rpc('set_think_reaction',{target_message_id:receivedThinkMessage.id,target_reaction:reaction});
+  if(error){console.warn('[US Ti penso] reaction save',error);renderReceivedThinkContext('Non riesco a salvare ora. Riprova.');return;}
+  receivedThinkReaction={id:data?.id,message_id:receivedThinkMessage.id,reaction:data?.reaction||reaction,updated_at:data?.updated_at};renderReceivedThinkContext('Reazione aggiornata.');
+}
+async function deleteThinkReaction(){
+  if(!receivedThinkMessage||!receivedThinkReaction)return;
+  renderReceivedThinkContext('Rimuovo la reazione…');
+  const {data,error}=await sb.rpc('delete_think_reaction',{target_message_id:receivedThinkMessage.id});
+  if(error){console.warn('[US Ti penso] reaction delete',error);renderReceivedThinkContext('Non riesco a rimuoverla ora. Riprova.');return;}
+  receivedThinkReaction=null;renderReceivedThinkContext(data?.status==='already_absent'?'Reazione già rimossa.':'Reazione rimossa.');
+}
 async function hydrateThink(){
   if(!window.usProfile)return;
   const [profiles,{data:rows,error},{count,error:countError}]=await Promise.all([
@@ -2031,6 +2067,7 @@ async function hydrateThink(){
   const sentEl=document.getElementById('thinkLastSent');if(sentEl)sentEl.textContent=sent?`Hai pensato a ${partnerName} ${relativeSignalAge(sent.created_at)}`:'Non ne hai ancora inviati';
   const monthEl=document.getElementById('thinkMonthCount');if(monthEl)monthEl.textContent=Number(count||0).toLocaleString('it-IT');
   const live=document.getElementById('thinkLiveText');if(live&&received)live.textContent=`Ultimo segnale da ${partnerName} · ${relativeSignalAge(received.created_at)}`;
+  await loadThinkReaction(received?{...received,partnerName}:null);
   window.UsThinkWidget?.publishThink?.({partnerName,lastReceivedAt:received?.created_at||'',lastSentAt:sent?.created_at||''}).catch(()=>{});
 }
 window.hydrateThink=hydrateThink;
