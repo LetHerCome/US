@@ -23,6 +23,7 @@ const RUNTIME_FILES = [
   'ui-foundation.css',
   'ui-foundation.js',
   'platform.js',
+  'qa/local-visual-harness.js',
   'ti-penso-widget.js',
   'fix4.css',
   'fix4.js',

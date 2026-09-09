@@ -594,6 +594,7 @@ function usRunWhenIdle(task,timeout=1000){
 }
 
 async function initCloud(){
+  if(window.__US_LOCAL_QA__?.active)return window.__US_LOCAL_QA__.boot();
   if(usInitCloudInFlight)return usInitCloudInFlight;
 
   usInitCloudInFlight=(async()=>{
