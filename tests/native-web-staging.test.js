@@ -18,6 +18,7 @@ function runStaging() {
   return JSON.parse(fs.readFileSync(MANIFEST, 'utf8'));
 }
 
+
 test('Supabase JS usa lo stesso pin esatto nel browser e nel bundle native', () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
   const version = pkg.dependencies['@supabase/supabase-js'];
@@ -66,6 +67,25 @@ test('staging ripetuto produce manifest e bundle hash identici', () => {
     crypto.createHash('sha256').update(firstBytes).digest('hex'),
     crypto.createHash('sha256').update(secondBytes).digest('hex')
   );
+});
+
+test('staged Android Gate 1.5A runtime remains in parity with web source', () => {
+  runStaging();
+  const nativeRoot = path.join(ROOT, 'android', 'app', 'src', 'main', 'assets', 'public');
+  const nativeFix4 = fs.readFileSync(path.join(nativeRoot, 'fix4.js'), 'utf8');
+  const nativeIndex = fs.readFileSync(path.join(nativeRoot, 'index.html'), 'utf8');
+  const nativeApp = fs.readFileSync(path.join(nativeRoot, 'app.js'), 'utf8');
+  const nativeReliability = fs.readFileSync(path.join(nativeRoot, 'reliability.js'), 'utf8');
+  const sourceFix4 = fs.readFileSync(path.join(ROOT, 'fix4.js'), 'utf8');
+  const sourceApp = fs.readFileSync(path.join(ROOT, 'app.js'), 'utf8');
+
+  assert.equal(nativeFix4, sourceFix4);
+  assert.equal(nativeApp, sourceApp);
+  assert.equal(nativeReliability, fs.readFileSync(path.join(ROOT, 'reliability.js'), 'utf8'));
+  assert.doesNotMatch(nativeFix4, /rescueOfflineProfile|window\.usProfile\s*=\s*cached/);
+  assert.ok(fs.existsSync(path.join(nativeRoot, 'reliability.js')));
+  assert.ok(nativeIndex.indexOf('<script defer src="/auth-storage.js"') < nativeIndex.indexOf('<script defer src="/reliability.js"'));
+  assert.ok(nativeIndex.indexOf('<script defer src="/reliability.js"') < nativeIndex.indexOf('<script defer src="/app.js"'));
 });
 
 test('ogni riferimento locale HTML e CSS dello staging punta a un asset presente', () => {

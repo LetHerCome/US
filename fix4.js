@@ -85,18 +85,6 @@
     return false;
   }
 
-  function rescueOfflineProfile() {
-    if (navigator.onLine || window.usProfile) return;
-    try {
-      const cached = JSON.parse(localStorage.getItem(PROFILE_CACHE_KEY) || 'null');
-      if (!cached?.id || !cached?.couple_id) return;
-      window.usProfile = cached;
-      document.getElementById('authOverlay')?.classList.add('hidden');
-      if (typeof window.setCloudBadge === 'function') window.setCloudBadge(false, 'offline');
-      showStatus('US è offline. Puoi consultare ciò che è già presente; le azioni che richiedono internet riprenderanno alla riconnessione.', 'offline');
-    } catch (_) {}
-  }
-
   function updateBusyElement(el) {
     if (!(el instanceof Element)) return;
     if (el.matches('button')) {
@@ -239,7 +227,7 @@
       checkForUpdate();
     }, 250);
   });
-  window.addEventListener('offline', () => { rescueOfflineProfile(); syncNetworkUi(); });
+  window.addEventListener('offline', () => { syncNetworkUi(); });
   window.addEventListener('resize', setViewportHeight, { passive: true });
   window.visualViewport?.addEventListener('resize', () => { setViewportHeight(); setTimeout(keepFocusedControlVisible, 60); }, { passive: true });
   window.visualViewport?.addEventListener('scroll', setViewportHeight, { passive: true });
@@ -250,7 +238,7 @@
     if (!document.hidden) {
       setViewportHeight();
       saveProfileSnapshot();
-      rescueOfflineProfile();
+
       checkForUpdate();
     }
   });
@@ -269,7 +257,7 @@
   const profileTimer = setInterval(() => {
     profileAttempts += 1;
     if (saveProfileSnapshot() || profileAttempts > 40) clearInterval(profileTimer);
-    if (!navigator.onLine) rescueOfflineProfile();
+
     wrapToast();
   }, 250);
 })();

@@ -4,6 +4,73 @@ const swipePages=['home','bond','moments','quiz'];
 const US_MOTION_FAST_MS=180;
 const US_MOTION_BASE_MS=220;
 const US_MOTION_SURFACE_MS=260;
+let usReliabilityQueue=null;
+let usForegroundReconciler=null;
+let usRetryScheduler=null;
+let usReliabilityIdentity=null;
+async function replayUsOperation(operation){
+  if(operation.domain==='think.send'){
+    const {data,error}=await sb.rpc('send_think_signal',{operation_id:operation.operationId});
+    if(error)throw error;
+    return {confirmed:data?.status==='confirmed',result:data||null};
+  }
+  throw new Error(`Unsupported reliability domain: ${operation.domain}`);
+}
+async function invalidateUsReliability(profile=usReliabilityIdentity){
+  usRetryScheduler?.stop?.();
+  usRetryScheduler=null;
+  usForegroundReconciler=null;
+  const queue=usReliabilityQueue;
+  usReliabilityQueue=null;
+  usReliabilityIdentity=null;
+  if(queue){await queue.clear();return;}
+  if(profile?.id&&window.UsReliability?.invalidateMutationNamespace){
+    await window.UsReliability.invalidateMutationNamespace({storage:window.localStorage,accountId:profile.id});
+  }
+}
+async function initializeUsReliability(profile){
+  if(!profile?.id||!profile?.couple_id||!window.UsReliability)return null;
+  if(usReliabilityIdentity&&(usReliabilityIdentity.id!==profile.id||usReliabilityIdentity.couple_id!==profile.couple_id)){
+    await invalidateUsReliability(usReliabilityIdentity);
+  }
+  if(usReliabilityQueue)return usReliabilityQueue;
+  try{
+    usReliabilityQueue=window.UsReliability.createMutationQueue({
+      storage:window.localStorage,
+      accountId:profile.id,
+      coupleId:profile.couple_id,
+      onExternalChange:()=>triggerUsReliability(),
+      onObservationError:error=>console.warn('[US Reliability] storage observation',error)
+    });
+  }catch(error){
+    console.warn('[US Reliability] durable queue unavailable',error);
+    usReliabilityQueue=null;
+    return null;
+  }
+  usReliabilityIdentity={id:profile.id,couple_id:profile.couple_id};
+  usForegroundReconciler=window.UsReliability.createForegroundReconciler({
+    queue:{replay:()=>usReliabilityQueue.replay(replayUsOperation)},
+    refresh:()=>refreshVisibleState({foreground:true,reliability:true})
+  });
+  usRetryScheduler=window.UsReliability.createRetryScheduler({
+    reconcile:()=>reconcileForeground(),
+    nextDelay:()=>usReliabilityQueue?.nextReplayDelay?.()??null,
+    isActive:()=>!document.hidden,
+    isOnline:()=>navigator.onLine!==false,
+    onError:error=>console.warn('[US Reliability] scheduler',error),
+    minDelayMs:500,
+    maxDelayMs:30000
+  });
+  window.dispatchEvent(new CustomEvent('us-reliability-ready',{detail:{pending:usReliabilityQueue.list().filter(item=>['pending','sending','retryable'].includes(item.state)).length}}));
+  return usReliabilityQueue;
+}
+function reconcileForeground(){
+  return usForegroundReconciler?.run?.()||Promise.resolve();
+}
+function triggerUsReliability(){
+  if(!window.usProfile)return Promise.resolve();
+  return usRetryScheduler?.trigger?.()||reconcileForeground();
+}
 function isReducedMotion(){return Boolean(window.UsUiFoundation?.isReducedMotion?.());}
 function clearPageEntry(page){page?.classList.remove('us-motion5-enter-next','us-motion5-enter-prev');}
 function animatePageEntry(page,direction){
@@ -560,6 +627,8 @@ if(canUseUsServiceWorker()){navigator.serviceWorker.addEventListener('message',e
 let selectedRole = null;
 
 async function clearPrivateDeviceState(profileId=window.usProfile?.id||''){
+  try{await invalidateUsReliability({id:profileId,couple_id:window.usProfile?.couple_id||''});}
+  catch(error){console.warn('[US Logout] reliability cleanup',error);}
   try{US_SIGNED_URL_CACHE.clear();}catch(_e){}
   const storageKeys=[
     'us:fix4:last-profile',
@@ -598,6 +667,11 @@ async function initCloud(){
   if(usInitCloudInFlight)return usInitCloudInFlight;
 
   usInitCloudInFlight=(async()=>{
+    // A cached profile may paint returning-device presentation, but it is never
+    // membership authority. Suspend replay and remove the shared-mutation gate
+    // before awaiting session/profile validation.
+    window.usProfile=null;
+    usRetryScheduler?.stop?.();
     let cachedDeviceProfile=null;
     try{
       const cached=JSON.parse(localStorage.getItem('us:fix4:last-profile')||'null');
@@ -619,6 +693,7 @@ async function initCloud(){
     }
 
     if(!session){
+      try{await invalidateUsReliability(cachedDeviceProfile||window.usProfile);}catch(error){console.warn('[US Reliability] no-session cleanup',error);}
       window.usProfile = null;
       window.UsThinkWidget?.clear?.().catch(()=>{});
       document.documentElement.classList.remove('us-returning-device','us-auth-pending');
@@ -629,6 +704,11 @@ async function initCloud(){
       return;
     }
 
+    if(cachedDeviceProfile?.id&&cachedDeviceProfile.id!==session.user.id){
+      try{await invalidateUsReliability(cachedDeviceProfile);}catch(error){console.warn('[US Reliability] account-switch cleanup',error);}
+      cachedDeviceProfile=null;
+    }
+
     // The device is already paired: show the shell immediately from the
     // profile snapshot while Supabase validates/freshens it in background.
     let cachedProfile=null;
@@ -637,10 +717,8 @@ async function initCloud(){
     }catch(_e){}
 
     if(cachedProfile){
-      window.usProfile=cachedProfile;
       selectedRole=cachedProfile.role;
-      document.getElementById('authOverlay').classList.add('hidden');
-      setCloudBadge(true,cachedProfile.display_name||'sync');
+      setCloudBadge(false,'verifica in corso');
     }
 
     const {data:freshProfile,error}=await sb.from('profiles')
@@ -649,9 +727,25 @@ async function initCloud(){
       .maybeSingle();
 
     if(error)console.warn(error);
-    const profile=freshProfile||cachedProfile;
+    if(error&&cachedProfile){
+      // Network uncertainty may retain the cached shell as presentation only.
+      // The mutation gate and replay rail stay suspended until a fresh profile
+      // is authoritatively validated by a later auth/bootstrap pass.
+      document.documentElement.classList.remove('us-auth-pending','us-auth-ready');
+      document.documentElement.classList.add('us-returning-device');
+      setCloudBadge(false,'offline');
+      return;
+    }
+    if(!error&&freshProfile&&cachedDeviceProfile&&(cachedDeviceProfile.id!==freshProfile.id||cachedDeviceProfile.couple_id!==freshProfile.couple_id)){
+      try{await invalidateUsReliability(cachedDeviceProfile);}catch(cleanupError){console.warn('[US Reliability] profile-namespace cleanup',cleanupError);}
+      cachedDeviceProfile=null;
+      cachedProfile=null;
+    }
+    const profile=error?cachedProfile:freshProfile;
 
     if(!profile){
+      try{await invalidateUsReliability(cachedDeviceProfile||{id:session.user.id});}catch(cleanupError){console.warn('[US Reliability] missing-profile cleanup',cleanupError);}
+      if(!error)try{localStorage.removeItem('us:fix4:last-profile');}catch(_e){}
       window.usProfile = null;
       window.UsThinkWidget?.clear?.().catch(()=>{});
       document.documentElement.classList.remove('us-returning-device','us-auth-pending');
@@ -663,6 +757,7 @@ async function initCloud(){
     }
 
     window.usProfile = profile;
+    await initializeUsReliability(profile);
     window.UsThinkWidget?.authReady?.(profile).catch(error=>console.warn('[US Widget] auth ready',error));
     selectedRole = profile.role;
     try{localStorage.setItem('us:fix4:last-profile',JSON.stringify(profile));}catch(_e){}
@@ -676,6 +771,8 @@ async function initCloud(){
 
     // First usable Home paint wins. Live subscriptions and device maintenance
     // start immediately after, but no longer compete with the first image/data.
+    try{await reconcileForeground();}catch(error){console.warn('[US Reliability] boot reconciliation',error);}
+    usRetryScheduler?.start?.({immediate:false});
     hydrateCloud().catch(error=>console.warn('[US Boot] hydrate',error));
 
     usRunWhenIdle(()=>startUsRealtime(),420);
@@ -2076,13 +2173,27 @@ async function hydrateThink(){
 window.hydrateThink=hydrateThink;
 async function sendThinkSignal(){
   if(!window.usProfile){toast('Connessione non pronta');return false;}
+  if(!usReliabilityQueue)await initializeUsReliability(window.usProfile);
+  if(!usReliabilityQueue){toast('Affidabilità non disponibile');return false;}
   const btn=document.getElementById('thinkButton');if(btn?.disabled)return false;
-  const profiles=await getCoupleProfiles(),partner=partnerFromProfiles(profiles);
-  if(!partner){toast('L’altro profilo non è ancora collegato');return false;}
   if(btn)btn.disabled=true;
-  const {data:message,error}=await sb.from('shared_messages').insert({couple_id:window.usProfile.couple_id,sender_id:window.usProfile.id,recipient_id:partner.id,kind:'think',body:'♡'}).select('id').single();
-  if(error){console.warn(error);toast('Non riesco a inviare il segnale');if(btn)btn.disabled=false;return false;}
-  if(message?.id)sendWebPushEvent('think',message.id).catch(()=>{});
+  let operation;
+  try{
+    operation=await usReliabilityQueue.enqueue({domain:'think.send',payload:{}},{reuseNonTerminal:true});
+    await reconcileForeground();
+    usRetryScheduler?.start?.({immediate:false});
+  }catch(error){
+    console.warn('[US Reliability] Ti penso queue',error);
+    toast('Invio non salvato: riprova');
+    if(btn)btn.disabled=false;
+    return false;
+  }
+  const state=usReliabilityQueue.get(operation.operationId);
+  if(state?.state!=='confirmed'){
+    toast(state?.state==='failed'?'Invio non riuscito':'Invio in attesa di rete');
+    if(btn)btn.disabled=false;
+    return false;
+  }
   btn?.classList.add('sent');setTimeout(()=>btn?.classList.remove('sent'),700);
   window.UsPlatform?.haptic?.('light',[30,25,45])||navigator.vibrate?.([30,25,45]);
   toast('Inviato');
@@ -2514,7 +2625,8 @@ async function refreshVisibleState(options={}){
   if(active==='settings'){await window.hydrateUsSettings?.();}
 }
 setInterval(()=>refreshVisibleState(),60000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&window.usProfile)refreshVisibleState({foreground:true});});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&window.usProfile)triggerUsReliability().catch(error=>console.warn('[US Reliability] foreground',error));});
+window.addEventListener('online',()=>{if(window.usProfile)triggerUsReliability().catch(error=>console.warn('[US Reliability] online',error));});
 sb.auth.onAuthStateChange((event,_session)=>{
   if(event==='INITIAL_SESSION'||event==='TOKEN_REFRESHED')return;
   setTimeout(initCloud,0);

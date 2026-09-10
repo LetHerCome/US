@@ -6,7 +6,7 @@ const vm = require('node:vm');
 
 const ROOT = path.resolve(__dirname, '..');
 const ORIGIN = 'https://us.example.test';
-const CURRENT_SHELL = 'us-shell-static-runtime-19';
+const CURRENT_SHELL = 'us-shell-static-runtime-20';
 
 function readRequiredRuntimeFile(name) {
   const file = path.join(ROOT, name);
@@ -293,20 +293,21 @@ test('/app.js viene servito dal service worker senza trasformazioni', async () =
   assert.equal(await response.text(), harness.rawApp);
 });
 
-test('index carica Supabase, auth storage, app e Stories in questo ordine', () => {
+test('index carica Supabase, auth storage, reliability, app e Stories in questo ordine', () => {
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   const sources = [...html.matchAll(/<script\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi)]
     .map((match) => match[1]);
   const supabaseIndex = sources.findIndex((src) => src.includes('@supabase/supabase-js'));
   const authIndex = sources.findIndex((src) => src.startsWith('/auth-storage.js'));
+  const reliabilityIndex = sources.findIndex((src) => src.startsWith('/reliability.js'));
   const appIndex = sources.findIndex((src) => src.startsWith('/app.js'));
   const storiesIndex = sources.findIndex((src) => src.startsWith('/stories.js'));
   const firstExistingScriptIndex = sources.findIndex((src) => src.startsWith('/fix4.js'));
 
   assert.ok(supabaseIndex >= 0, 'script Supabase non trovato');
   assert.deepEqual(
-    [authIndex, appIndex, storiesIndex, firstExistingScriptIndex],
-    [supabaseIndex + 1, supabaseIndex + 2, supabaseIndex + 3, supabaseIndex + 4]
+    [authIndex, reliabilityIndex, appIndex, storiesIndex, firstExistingScriptIndex],
+    [supabaseIndex + 1, supabaseIndex + 2, supabaseIndex + 3, supabaseIndex + 4, supabaseIndex + 5]
   );
 });
 
@@ -459,6 +460,7 @@ test('installazione pulita precachea l’intero runtime statico prima di skipWai
 
   const shell = harness.cacheBuckets.get(CURRENT_SHELL);
   assert.ok(shell.has(`${ORIGIN}/auth-storage.js`));
+  assert.ok(shell.has(`${ORIGIN}/reliability.js`));
   assert.ok(shell.has(`${ORIGIN}/app.js`));
   assert.ok(shell.has(`${ORIGIN}/stories.js`));
   assert.ok(shell.has(`${ORIGIN}/stories.css`));
