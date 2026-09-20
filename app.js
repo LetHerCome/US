@@ -258,7 +258,9 @@ updateTogetherDays();
 
 const SB_URL = 'https://iiakdfsxpywdkxravqjh.supabase.co';
 const SB_KEY = 'sb_publishable_JAB6USqhccAUg8_0ujgQ1A_NkRJRv_A';
-const sb = window.supabase.createClient(SB_URL, SB_KEY, {
+const sb = window.__US_REMOTE_PREVIEW__?.active
+  ? window.__US_REMOTE_PREVIEW__.client
+  : window.supabase.createClient(SB_URL, SB_KEY, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
@@ -2512,14 +2514,20 @@ async function refreshVisibleState(options={}){
 }
 setInterval(()=>refreshVisibleState(),60000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&window.usProfile)refreshVisibleState({foreground:true});});
-sb.auth.onAuthStateChange((event,_session)=>{
-  if(event==='INITIAL_SESSION'||event==='TOKEN_REFRESHED')return;
-  setTimeout(initCloud,0);
-});
+if(!window.__US_REMOTE_PREVIEW__?.active){
+  sb.auth.onAuthStateChange((event,_session)=>{
+    if(event==='INITIAL_SESSION'||event==='TOKEN_REFRESHED')return;
+    setTimeout(initCloud,0);
+  });
+}
 const pairBtn=document.getElementById('pairBtn');
 if(pairBtn) pairBtn.addEventListener('click', pairAccount);
 
-initCloud();
+if(window.__US_REMOTE_PREVIEW__?.active){
+  window.__US_REMOTE_PREVIEW__.boot().catch(error=>console.warn('[US Preview] boot',error));
+}else{
+  initCloud();
+}
 
 if (canUseUsServiceWorker()) {
   window.addEventListener("load", () => {

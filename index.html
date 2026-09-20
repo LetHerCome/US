@@ -50,8 +50,10 @@ html.us-auth-pending .auth-overlay,
 html.us-returning-device .auth-overlay{
   display:none!important;
 }
+  .us-preview-marker{position:fixed;z-index:9999;top:8px;left:50%;transform:translateX(-50%);padding:6px 10px;border:1px solid rgba(246,111,158,.55);border-radius:999px;background:rgba(24,10,30,.92);color:#ffd8ea;font:700 10px/1.2 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;pointer-events:none}
 </style>
 <script defer src="/platform.js"></script>
+<script defer src="/qa/remote-visual-preview.js"></script>
 <script defer src="/ti-penso-widget.js"></script>
 <script defer src="/fastboot2.js?v=us-fastboot2-1"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
@@ -75,6 +77,8 @@ html.us-returning-device .auth-overlay{
     </div>
   </div>
 </div>
+
+<div id="previewMarker" class="us-preview-marker" hidden aria-label="Development preview">DEV PREVIEW · local fixtures · no production data</div>
 
 <div class="app">
   <div class="top us-premium-top"><div class="brand-row"><div class="brand us-brand-symbol" aria-label="US"><img class="us-brand-symbol-art" src="/assets/derived/brand/us-symbol-ui-crisp-v1.png" alt="" aria-hidden="true"></div><button type="button" class="today-orb us-important-control us-premium-control" id="todayOrb" onclick="openToday()" aria-label="Apri la domanda giornaliera"><span class="today-orb-mark"><img class="us-approved-custom-icon" src="/assets/source/ui/us-icon-daily-question-v1.png" alt="" aria-hidden="true"></span><span class="today-orb-copy"><b>Oggi</b><small>Domanda</small></span><i id="todayOrbDot"></i></button></div><div class="top-actions"><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><button type="button" class="profile-avatar us-important-control us-premium-control" id="profileAvatarBtn" aria-label="Apri le tue Stories" onclick="openOwnStories()"><img id="profileAvatarImg" alt="Foto profilo" hidden><span class="fallback" id="profileAvatarFallback">♡</span><span class="camera-dot" aria-hidden="true"><img class="us-shell-icon-off" src="/assets/icons/add-off.svg" alt=""><img class="us-shell-icon-on" src="/assets/icons/add-on.svg" alt=""></span></button><button type="button" class="us-calendar-btn us-important-control us-premium-control" id="usSettingsEntry" onclick="go('settings',{nav:true})" aria-label="Apri impostazioni"><span class="us-shell-icon" aria-hidden="true"><img class="us-shell-icon-off us-approved-custom-icon" src="/assets/source/ui/us-icon-settings-v1.png" alt=""><img class="us-shell-icon-on us-approved-custom-icon" src="/assets/source/ui/us-icon-settings-v1.png" alt=""></span></button><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>

@@ -100,6 +100,7 @@ await build({
 const sourceCdn = `https://cdn.jsdelivr.net/npm/@supabase/supabase-js@${supabaseVersion}`;
 const stagedIndexPath = path.join(OUTPUT, 'index.html');
 let html = await readFile(stagedIndexPath, 'utf8');
+html = html.replace(/\s*<script defer src="\/qa\/remote-visual-preview\.js"><\/script>/i, '');
 if (!html.includes(sourceCdn)) throw new Error(`index.html does not use Supabase JS ${supabaseVersion}`);
 html = html
   .replace(/<link\s+rel=["']manifest["'][^>]*>\s*/i, '')
