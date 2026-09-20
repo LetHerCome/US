@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const PREVIEW_HOST = 'us-preview.vercel.app';
+  const PREVIEW_HOST = 'usfinal-git-feat-us-vnext-m4-think-reactions-moonlight-6b91.vercel.app';
   const PRODUCTION_HOST = 'usfinal.vercel.app';
   const hostname = window.location.hostname;
   const localOrigin = hostname === PREVIEW_HOST && hostname !== PRODUCTION_HOST;
