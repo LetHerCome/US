@@ -81,6 +81,15 @@ test('M1.2 usa una clearance authority e riserva spazio sulle tre secondary root
   assert.doesNotMatch(css, /#settings\{padding-top:/);
 });
 
+test('M1.3 porta un solo opener I nostri eventi al centro della top chrome', () => {
+  const html = read('index.html');
+  const css = read('identity.css');
+  assert.match(html, /id="usEventsTopEntry"[^>]+onclick="openEvents\(\)"[\s\S]*I nostri eventi/);
+  assert.doesNotMatch(html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '', /class="us-event-add"/);
+  assert.match(css, /\.us-events-top-control\{[^}]*min-width:92px[^}]*min-height:44px/);
+  assert.match(css, /\.us-events-top-control span:first-child\{[^}]*max-width:/);
+});
+
 test('M1 shell assets sono presenti nel Web source e non dipendono dal bundle APK', () => {
   const required = [
     'assets/fonts/Inter-Variable.woff2',
