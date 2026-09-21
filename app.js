@@ -656,7 +656,15 @@ async function initCloud(){
       document.documentElement.classList.remove('us-returning-device','us-auth-pending');
       setCloudBadge(false,'da collegare');
       document.getElementById('authOverlay').classList.remove('hidden');
-      showAuthStep('authPair');
+      if(session.user && !session.user.is_anonymous){
+        // Permanent authenticated user without a valid US profile:
+        // show an error, never create or migrate anything.
+        showAuthStep('authLogin');
+        const st=document.getElementById('loginStatus');
+        if(st)st.textContent='Nessun profilo US valido associato a questo account. Accesso negato.';
+      }else{
+        showAuthStep('authPair');
+      }
       window.dispatchEvent(new CustomEvent('us-auth-resolved',{detail:{paired:false}}));
       return;
     }
@@ -1177,6 +1185,29 @@ async function pairAccount(){
   }
 }
 window.pairAccount=pairAccount;
+
+async function loginAccount(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const s=document.getElementById('loginStatus');
+  const btn=document.getElementById('loginBtn');
+  if(!email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){s.textContent='Inserisci un indirizzo email valido.';return;}
+  btn.disabled=true;
+  s.textContent='Invio del link…';
+  try{
+    const {error}=await sb.auth.signInWithOtp({
+      email,
+      options:{shouldCreateUser:false, emailRedirectTo:location.origin+'/'}
+    });
+    if(error) throw error;
+    s.textContent='Link inviato a '+email+'. Aprilo da questo dispositivo per entrare.';
+  }catch(err){
+    const msg=String(err?.message||'invio non riuscito');
+    s.textContent=/redirect|not allowed|provider/i.test(msg)?'Errore: URL di ritorno non autorizzato in Supabase.':('Errore: '+msg);
+  }finally{
+    btn.disabled=false;
+  }
+}
+window.loginAccount=loginAccount;
 
 const US_TODAY_PRIORITY_ORDER=Object.freeze({received_ready:1,waiting_for_me:2,couple_context:3});
 const US_TODAY_PRIORITY_LABELS=Object.freeze({
@@ -2522,6 +2553,10 @@ if(!window.__US_REMOTE_PREVIEW__?.active){
 }
 const pairBtn=document.getElementById('pairBtn');
 if(pairBtn) pairBtn.addEventListener('click', pairAccount);
+const loginBtn=document.getElementById('loginBtn');
+if(loginBtn) loginBtn.addEventListener('click', loginAccount);
+const loginEnter=document.getElementById('loginEmail');
+if(loginEnter) loginEnter.addEventListener('keydown',(e)=>{if(e.key==='Enter')loginAccount();});
 
 if(window.__US_REMOTE_PREVIEW__?.active){
   window.__US_REMOTE_PREVIEW__.boot().catch(error=>console.warn('[US Preview] boot',error));

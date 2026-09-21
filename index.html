@@ -50,6 +50,8 @@ html.us-auth-pending .auth-overlay,
 html.us-returning-device .auth-overlay{
   display:none!important;
 }
+  .us-auth-link{background:none;border:none;color:rgba(255,255,255,.62);font:600 13px/1.2 inherit;font-family:inherit;padding:10px 0 2px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+  .us-auth-link:hover{color:#fff}
   .us-preview-marker{position:fixed;z-index:9999;top:8px;left:50%;transform:translateX(-50%);padding:6px 10px;border:1px solid rgba(246,111,158,.55);border-radius:999px;background:rgba(24,10,30,.92);color:#ffd8ea;font:700 10px/1.2 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;pointer-events:none}
 </style>
 <script defer src="/platform.js"></script>
@@ -74,6 +76,16 @@ html.us-returning-device .auth-overlay{
       <input id="pairCode" type="password" autocomplete="off" placeholder="Codice privato">
       <button id="pairBtn" type="button" class="primary" style="width:100%;margin-top:10px">Entra in US</button>
       <div class="auth-status" id="pairStatus" role="status" aria-live="polite"></div>
+      <button type="button" class="us-auth-link" onclick="showAuthStep('authLogin')">Hai già US? Accedi con email</button>
+    </div>
+    <div class="auth-step" id="authLogin">
+      <div class="tiny">SPAZIO PRIVATO</div>
+      <h2>Hai già US? Accedi</h2>
+      <p>Inserisci la tua email: ti inviamo un link magico. Nessun codice, nessuna nuova registrazione.</p>
+      <input id="loginEmail" type="email" inputmode="email" autocomplete="email" placeholder="tua@email.com">
+      <button id="loginBtn" type="button" class="primary" style="width:100%;margin-top:10px">Invia Magic Link</button>
+      <div class="auth-status" id="loginStatus" role="status" aria-live="polite"></div>
+      <button type="button" class="us-auth-link" onclick="showAuthStep('authPair')">← Torna al collegamento</button>
     </div>
   </div>
 </div>
