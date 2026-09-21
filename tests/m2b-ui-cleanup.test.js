@@ -152,7 +152,7 @@ test('shell, build e asset Stories restano coerenti per upgrade e offline', () =
 
   assert.equal(version, 'p1-logo-hotfix-20260901-1');
   assert.equal(build, version);
-  assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-19"/);
+  assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-20"/);
   assert.match(worker, /"\/stories\.css"/);
   assert.doesNotMatch(worker, /"\/motion3\.css"/);
   assert.match(worker, /const MEDIA_CACHE_NAME = "us-private-media-v1"/);
