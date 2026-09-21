@@ -69,11 +69,16 @@ test('M1 ancora il top chrome al contenitore mobile .app, non al viewport deskto
   assert.match(css, /\.top\.us-premium-top\{position:absolute/);
 });
 
-test('M1.1 compensa il top chrome soltanto sulle tre pagine sotto la shell', () => {
-  const css = read('identity.css') + read('fix4.css');
-  assert.match(css, /#bond>\.section,#moments>\.section,#quiz>\.section\{margin-top:calc\(80px \+ var\(--us-space-2\)\)!important\}/);
-  assert.doesNotMatch(css, /#home>\.section/);
-  assert.doesNotMatch(css, /#settings>\.section/);
+test('M1.2 usa una clearance authority e riserva spazio sulle tre secondary root pages', () => {
+  const css = read('identity.css') + read('fix4.css') + read('ui-foundation.css');
+  assert.match(css, /--us-top-chrome-height:56px/);
+  assert.match(css, /--us-top-chrome-clearance:68px/);
+  assert.match(css, /\.top\.us-premium-top\{[^}]*height:var\(--us-top-chrome-height\)/);
+  assert.match(css, /\.top\.us-premium-top::before\{[^}]*height:var\(--us-top-chrome-clearance\)/);
+  assert.match(css, /#bond,#moments,#quiz\{padding-top:calc\(var\(--us-top-chrome-clearance\) \+ var\(--us-space-2\)\);box-sizing:border-box\}/);
+  assert.match(css, /#bond>\.section,#moments>\.section,#quiz>\.section\{margin-top:0!important\}/);
+  assert.doesNotMatch(css, /#home\{padding-top:/);
+  assert.doesNotMatch(css, /#settings\{padding-top:/);
 });
 
 test('M1 shell assets sono presenti nel Web source e non dipendono dal bundle APK', () => {

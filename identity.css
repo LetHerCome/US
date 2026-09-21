@@ -218,8 +218,8 @@ textarea,input{
 @keyframes us-nav-orbit{to{transform:rotate(1turn)}}
 
 /* M1 top chrome: APK shell treatment only; Home layout remains Web-owned. */
-.top.us-premium-top{position:absolute;z-index:10;top:max(0px,calc(var(--us-safe-top) - 3px));left:0;right:0;height:64px;padding:4px 16px!important;display:flex;align-items:center;justify-content:space-between;background:transparent!important;isolation:isolate}
-.top.us-premium-top::before{content:"";position:absolute;z-index:0;top:0;left:0;right:0;height:80px;background:linear-gradient(180deg,rgba(12,9,15,.48),rgba(12,9,15,.14) 72%,transparent);border-bottom:1px solid rgba(255,247,251,.07);backdrop-filter:blur(18px) saturate(120%);-webkit-backdrop-filter:blur(18px) saturate(120%);pointer-events:none}
+.top.us-premium-top{position:absolute;z-index:10;top:max(0px,calc(var(--us-safe-top) - 3px));left:0;right:0;height:var(--us-top-chrome-height);padding:4px 16px!important;display:flex;align-items:center;justify-content:space-between;background:transparent!important;isolation:isolate}
+.top.us-premium-top::before{content:"";position:absolute;z-index:0;top:0;left:0;right:0;height:var(--us-top-chrome-clearance);background:linear-gradient(180deg,rgba(12,9,15,.48),rgba(12,9,15,.14) 72%,transparent);border-bottom:1px solid rgba(255,247,251,.07);backdrop-filter:blur(18px) saturate(120%);-webkit-backdrop-filter:blur(18px) saturate(120%);pointer-events:none}
 .top.us-premium-top>*{position:relative;z-index:1}
 .top.us-premium-top .brand-row{gap:10px}
 .top.us-premium-top .top-actions{gap:10px}
@@ -228,7 +228,8 @@ textarea,input{
 .top.us-premium-top .today-orb{background:rgba(12,9,15,.48)!important;border:1px solid rgba(255,247,251,.14)!important;backdrop-filter:blur(18px) saturate(120%);-webkit-backdrop-filter:blur(18px) saturate(120%)}
 .top.us-premium-top .us-calendar-btn{background:rgba(12,9,15,.48)!important;border:1px solid rgba(255,247,251,.14)!important;backdrop-filter:blur(18px) saturate(120%);-webkit-backdrop-filter:blur(18px) saturate(120%)}
 .top.us-premium-top .profile-avatar{background:linear-gradient(145deg,rgba(242,85,101,.42),rgba(82,149,255,.3))!important;border:1px solid rgba(255,247,251,.14)!important;box-shadow:none!important}
-#bond>.section,#moments>.section,#quiz>.section{margin-top:calc(80px + var(--us-space-2))!important}
+#bond,#moments,#quiz{padding-top:calc(var(--us-top-chrome-clearance) + var(--us-space-2));box-sizing:border-box}
+#bond>.section,#moments>.section,#quiz>.section{margin-top:0!important}
 
 @media(prefers-reduced-motion:reduce){
   .us-nav-premium button.active .nicon::before{animation:none!important}
