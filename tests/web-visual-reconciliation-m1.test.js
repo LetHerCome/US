@@ -69,6 +69,13 @@ test('M1 ancora il top chrome al contenitore mobile .app, non al viewport deskto
   assert.match(css, /\.top\.us-premium-top\{position:absolute/);
 });
 
+test('M1.1 compensa il top chrome soltanto sulle tre pagine sotto la shell', () => {
+  const css = read('identity.css') + read('fix4.css');
+  assert.match(css, /#bond>\.section,#moments>\.section,#quiz>\.section\{margin-top:calc\(80px \+ var\(--us-space-2\)\)!important\}/);
+  assert.doesNotMatch(css, /#home>\.section/);
+  assert.doesNotMatch(css, /#settings>\.section/);
+});
+
 test('M1 shell assets sono presenti nel Web source e non dipendono dal bundle APK', () => {
   const required = [
     'assets/fonts/Inter-Variable.woff2',
