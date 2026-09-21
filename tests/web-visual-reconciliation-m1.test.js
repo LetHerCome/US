@@ -63,6 +63,12 @@ test('M1 applica il top chrome APK senza introdurre fullscreen/settings o reloca
   assert.doesNotMatch(html, /native-entry\.js|reliability\.js|vendor\/supabase\.js/);
 });
 
+test('M1 ancora il top chrome al contenitore mobile .app, non al viewport desktop', () => {
+  const css = read('fix4.css') + read('identity.css');
+  assert.match(css, /\.app\{[^}]*position:relative/);
+  assert.match(css, /\.top\.us-premium-top\{position:absolute/);
+});
+
 test('M1 shell assets sono presenti nel Web source e non dipendono dal bundle APK', () => {
   const required = [
     'assets/fonts/Inter-Variable.woff2',
