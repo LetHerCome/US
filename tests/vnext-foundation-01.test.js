@@ -41,7 +41,7 @@ test('avatar apre Stories personali, Settings ha un entry dedicato ed Events viv
   assert.match(html, /id="usSettingsEntry"[\s\S]{0,160}onclick="go\('settings',\{nav:true\}\)"/);
   assert.match(read('identity.css'), /\.us-calendar-btn\{width:44px;min-width:44px;height:44px;min-height:44px/);
   assert.doesNotMatch(html, /id="usCalendarBtn"/);
-  assert.match(html, /id="bond"[\s\S]{0,500}onclick="openEvents\(\)"/);
+  assert.match(html, /id="usEventsTopEntry"[\s\S]{0,180}onclick="openEvents\(\)"/);
   assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,220}Cambia foto profilo/);
   assert.match(read('settings.js'), /window\.pickProfilePhoto\?\.\(\)/);
 });

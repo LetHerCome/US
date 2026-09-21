@@ -30,7 +30,7 @@ test('M6A precarica tutti gli asset shell premium e mantiene il contratto PWA', 
   const build = html.match(/meta name="us-build" content="([^"]+)"/)?.[1];
 
   assert.match(worker, /const MEDIA_CACHE_NAME = "us-private-media-v1"/);
-  assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-21"/);
+  assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-22"/);
   assert.equal(build, version);
   assert.match(worker, /"\/assets\/derived\/brand\/us-symbol-ui-crisp-v1\.png"/);
   SHELL_ICONS.forEach((name) => {

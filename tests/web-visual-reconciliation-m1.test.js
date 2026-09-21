@@ -69,6 +69,60 @@ test('M1 ancora il top chrome al contenitore mobile .app, non al viewport deskto
   assert.match(css, /\.top\.us-premium-top\{position:absolute/);
 });
 
+test('M1.2 usa una clearance authority e riserva spazio sulle tre secondary root pages', () => {
+  const css = read('identity.css') + read('fix4.css') + read('ui-foundation.css');
+  assert.match(css, /--us-top-chrome-height:56px/);
+  assert.match(css, /--us-top-chrome-clearance:68px/);
+  assert.match(css, /\.top\.us-premium-top\{[^}]*height:var\(--us-top-chrome-height\)/);
+  assert.match(css, /\.top\.us-premium-top::before\{[^}]*height:var\(--us-top-chrome-clearance\)/);
+  assert.match(css, /#bond,#moments,#quiz\{padding-top:calc\(var\(--us-top-chrome-clearance\) \+ var\(--us-space-2\)\);box-sizing:border-box\}/);
+  assert.match(css, /#bond>\.section,#moments>\.section,#quiz>\.section\{margin-top:0!important\}/);
+  assert.doesNotMatch(css, /#home\{padding-top:/);
+  assert.doesNotMatch(css, /#settings\{padding-top:/);
+});
+
+test('M1.3 porta un solo opener I nostri eventi al centro della top chrome', () => {
+  const html = read('index.html');
+  const css = read('identity.css');
+  assert.match(html, /id="usEventsTopEntry"[^>]+onclick="openEvents\(\)"[\s\S]*I nostri eventi/);
+  assert.doesNotMatch(html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '', /class="us-event-add"/);
+  assert.match(css, /\.us-events-top-control\{[^}]*min-width:92px[^}]*min-height:44px/);
+  assert.match(css, /\.us-events-top-control span:first-child\{[^}]*max-width:/);
+});
+
+test('M1.4 rende la top chrome una floating pill contenuta nella shell', () => {
+  const css = read('identity.css');
+  assert.match(css, /\.top\.us-premium-top\{[^}]*left:10px;right:10px/);
+  assert.match(css, /\.top\.us-premium-top\{[^}]*border-radius:28px/);
+  assert.match(css, /\.top\.us-premium-top\{[^}]*overflow:hidden/);
+  assert.match(css, /\.top\.us-premium-top::before\{[^}]*border-radius:inherit/);
+  assert.match(css, /\.us-events-top-control\{[^}]*background:transparent!important/);
+  assert.match(css, /\.us-events-top-control\{[^}]*border:0/);
+});
+
+test('M1.5 nasconde la priority region solo in Home e preserva il runtime Daily/Events', () => {
+  const html = read('index.html');
+  const css = read('identity.css') + read('fix4.css') + read('styles.css');
+  const app = read('app.js');
+  assert.match(html, /<main id="home"[\s\S]*id="usTodayPriorityRegion" hidden aria-live="polite"><\/div>/);
+  assert.match(css, /#home #usTodayPriorityRegion\{display:none!important\}/);
+  assert.match(app, /function dailyTodayPriorityViewModel/);
+  assert.match(app, /function eventTodayPriorityViewModel/);
+  assert.match(app, /data-us-today-action/);
+  assert.match(app, /if\(action==='today'\)window\.openToday\?\./);
+  assert.match(app, /if\(action==='events'\)window\.openEvents\?\./);
+});
+
+test('M1.6 rende Home full-bleed senza cambiare il padding globale delle secondary pages', () => {
+  const css = read('identity.css') + read('fix4.css') + read('styles.css');
+  assert.match(css, /#home\.page\.active\{[^}]*padding-bottom:0!important[^}]*overflow:hidden/);
+  assert.match(css, /#home \.home-hero-only\{[^}]*height:calc\(var\(--us-viewport-height\) - var\(--us-safe-top\)\)!important[^}]*min-height:0!important/);
+  assert.match(css, /#home \.home-distance-pill\{[^}]*bottom:calc\(var\(--us-nav-height\) \+ var\(--us-safe-bottom\) \+ 18px\)!important/);
+  assert.match(css, /#home \.push-optin-card\{[^}]*bottom:calc\(var\(--us-nav-height\) \+ var\(--us-safe-bottom\) \+ 24px\)!important/);
+  assert.match(css, /\.app\{[^}]*padding-bottom:calc\(var\(--us-nav-height\) \+ var\(--us-safe-bottom\) \+ 34px\)!important/);
+  assert.match(css, /\.home-photo-layer\{[\s\S]*background-size:cover/);
+});
+
 test('M1 shell assets sono presenti nel Web source e non dipendono dal bundle APK', () => {
   const required = [
     'assets/fonts/Inter-Variable.woff2',
