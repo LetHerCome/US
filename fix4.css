@@ -1,6 +1,6 @@
 html{width:100%;min-height:100%;overflow-x:hidden;background:var(--us-surface-canvas);scroll-padding-bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 28px)}
 body{width:100%;min-height:100dvh;min-height:var(--us-viewport-height);overflow-x:hidden;overscroll-behavior-x:none;-webkit-text-size-adjust:100%}
-.app{min-height:100dvh!important;min-height:var(--us-viewport-height)!important;padding-top:max(var(--us-safe-top),0px)!important;padding-right:max(16px,var(--us-safe-right))!important;padding-left:max(16px,var(--us-safe-left))!important;padding-bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 34px)!important}
+.app{position:relative;min-height:100dvh!important;min-height:var(--us-viewport-height)!important;padding-top:max(var(--us-safe-top),0px)!important;padding-right:max(16px,var(--us-safe-right))!important;padding-left:max(16px,var(--us-safe-left))!important;padding-bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 34px)!important}
 .page,.section{max-width:100%}.page{padding-bottom:16px}img,video,canvas{max-width:100%}
 textarea,input,select{font-size:16px;scroll-margin-top:90px;scroll-margin-bottom:calc(var(--us-nav-height) + 36px)}
 .nav{bottom:max(8px,var(--us-safe-bottom))!important;min-height:var(--us-nav-height);padding:7px!important;width:min(456px,calc(100% - max(18px,calc(var(--us-safe-left) + var(--us-safe-right) + 18px))))!important;grid-template-columns:repeat(4,minmax(0,1fr))!important}

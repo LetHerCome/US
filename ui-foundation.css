@@ -1,4 +1,21 @@
+@font-face{font-family:"Newsreader";src:url("/assets/fonts/Newsreader-Variable.woff2") format("woff2");font-style:normal;font-weight:200 800;font-display:swap}
+@font-face{font-family:"Inter";src:url("/assets/fonts/Inter-Variable.woff2") format("woff2");font-style:normal;font-weight:100 900;font-display:swap}
+
 :root {
+  /* M1 shell authority: Midnight Correspondence typography and palette. */
+  --us-ink:#f7f2f8;
+  --us-graphite:#121016;
+  --us-plum:#28142f;
+  --us-porpora:#6e356f;
+  --us-pink:#f66f9e;
+  --us-magenta:#d64bda;
+  --us-violet:#8b72f8;
+  --us-red:#e45a68;
+  --us-blue:#5b8def;
+  --us-text:#f7f2f8;
+  --us-muted:rgba(247,242,248,.68);
+  --us-font-editorial:"Newsreader",Georgia,serif;
+  --us-font-ui:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   /* Existing dominant values, named for gradual component adoption. */
   --us-space-1:4px;
   --us-space-2:8px;
@@ -170,6 +187,10 @@
   backdrop-filter:blur(var(--us-premium-blur)) saturate(1.14);
   -webkit-backdrop-filter:blur(var(--us-premium-blur)) saturate(1.14);
 }
+
+/* M1 typography applies only to the shared shell hierarchy. */
+body{font-family:var(--us-font-ui)}
+h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
 
 .us-premium-control {
   border-radius:999px;

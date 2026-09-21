@@ -44,6 +44,6 @@ test('M5E mantiene gli SVG come asset diretti e il build marker allineato', () =
   const version = JSON.parse(read('version.json')).version;
   const build = html.match(/meta name="us-build" content="([^"]+)"/)?.[1];
 
-  assert.doesNotMatch(css, /(?:-webkit-)?mask:/);
+  assert.ok(css.includes('.us-nav-icon [data-icon]') && css.includes('-webkit-mask-image:url("/assets/icons/phosphor/'));
   assert.equal(build, version, 'build marker e versione devono restare allineati');
 });
