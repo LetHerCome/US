@@ -90,6 +90,16 @@ test('M1.3 porta un solo opener I nostri eventi al centro della top chrome', () 
   assert.match(css, /\.us-events-top-control span:first-child\{[^}]*max-width:/);
 });
 
+test('M1.4 rende la top chrome una floating pill contenuta nella shell', () => {
+  const css = read('identity.css');
+  assert.match(css, /\.top\.us-premium-top\{[^}]*left:10px;right:10px/);
+  assert.match(css, /\.top\.us-premium-top\{[^}]*border-radius:28px/);
+  assert.match(css, /\.top\.us-premium-top\{[^}]*overflow:hidden/);
+  assert.match(css, /\.top\.us-premium-top::before\{[^}]*border-radius:inherit/);
+  assert.match(css, /\.us-events-top-control\{[^}]*background:transparent!important/);
+  assert.match(css, /\.us-events-top-control\{[^}]*border:0/);
+});
+
 test('M1 shell assets sono presenti nel Web source e non dipendono dal bundle APK', () => {
   const required = [
     'assets/fonts/Inter-Variable.woff2',
