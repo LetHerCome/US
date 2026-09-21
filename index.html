@@ -79,10 +79,12 @@ html.us-returning-device .auth-overlay{
     <div class="auth-step" id="authLogin">
       <div class="tiny">SPAZIO PRIVATO</div>
       <h2>Hai già US? Accedi</h2>
-      <p>Inserisci la tua email: ti inviamo un link magico. Nessun codice, nessuna nuova registrazione.</p>
+      <p>Accedi con l’email e la password del tuo account US. Nessuna nuova registrazione.</p>
       <input id="loginEmail" type="email" inputmode="email" autocomplete="email" placeholder="tua@email.com">
-      <button id="loginBtn" type="button" class="primary" style="width:100%;margin-top:10px">Invia Magic Link</button>
+      <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Password">
+      <button id="loginBtn" type="button" class="primary" style="width:100%;margin-top:10px">Accedi</button>
       <div class="auth-status" id="loginStatus" role="status" aria-live="polite"></div>
+      <button id="magicLinkBtn" type="button" class="us-auth-link">Usa Magic Link come recupero</button>
       <button type="button" class="us-auth-link" onclick="showAuthStep('authPair')">← Torna al collegamento</button>
     </div>
   </div>
