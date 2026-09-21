@@ -113,6 +113,16 @@ test('M1.5 nasconde la priority region solo in Home e preserva il runtime Daily/
   assert.match(app, /if\(action==='events'\)window\.openEvents\?\./);
 });
 
+test('M1.6 rende Home full-bleed senza cambiare il padding globale delle secondary pages', () => {
+  const css = read('identity.css') + read('fix4.css') + read('styles.css');
+  assert.match(css, /#home\.page\.active\{[^}]*padding-bottom:0!important[^}]*overflow:hidden/);
+  assert.match(css, /#home \.home-hero-only\{[^}]*height:calc\(var\(--us-viewport-height\) - var\(--us-safe-top\)\)!important[^}]*min-height:0!important/);
+  assert.match(css, /#home \.home-distance-pill\{[^}]*bottom:calc\(var\(--us-nav-height\) \+ var\(--us-safe-bottom\) \+ 18px\)!important/);
+  assert.match(css, /#home \.push-optin-card\{[^}]*bottom:calc\(var\(--us-nav-height\) \+ var\(--us-safe-bottom\) \+ 24px\)!important/);
+  assert.match(css, /\.app\{[^}]*padding-bottom:calc\(var\(--us-nav-height\) \+ var\(--us-safe-bottom\) \+ 34px\)!important/);
+  assert.match(css, /\.home-photo-layer\{[\s\S]*background-size:cover/);
+});
+
 test('M1 shell assets sono presenti nel Web source e non dipendono dal bundle APK', () => {
   const required = [
     'assets/fonts/Inter-Variable.woff2',

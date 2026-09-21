@@ -306,6 +306,13 @@ button:focus-visible,
   outline-offset:2px;
 }
 
+/* M1.6 Home-only full-bleed fill: the shared app padding stays intact. */
+body:has(#home.page.active){overflow-y:hidden}
+#home.page.active{padding-bottom:0!important;overflow:hidden}
+#home .home-hero-only{height:calc(var(--us-viewport-height) - var(--us-safe-top))!important;min-height:0!important}
+#home .home-distance-pill{bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 18px)!important}
+#home .push-optin-card{bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 24px)!important}
+
 @media(max-width:360px){
   .top .us-brand-symbol-art{width:48px;height:32px}
   .top{gap:8px}
