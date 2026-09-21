@@ -19,7 +19,7 @@ test('M6A conserva coppie SVG OFF/ON reali senza tint o mask', () => {
   assert.match(css, /\.us-nav-icon-off\{[\s\S]*display:block/);
   assert.match(css, /\.us-nav-premium button\.active \.us-nav-icon-off\{[\s\S]*display:none/);
   assert.match(css, /\.us-nav-premium button\.active \.us-nav-icon-on\{[\s\S]*display:block/);
-  assert.doesNotMatch(css, /(?:-webkit-)?mask:/, 'le icone premium non possono essere ridotte a una CSS mask');
+  assert.ok(css.includes('.us-nav-icon [data-icon]') && css.includes('-webkit-mask-image:url("/assets/icons/phosphor/'), 'la nav M1 usa gli asset Phosphor locali come mask colorabile');
   assert.doesNotMatch(css, /filter:\s*(?:saturate|brightness)/, 'gli SVG ON/OFF devono conservare il proprio colore');
 });
 
@@ -30,7 +30,7 @@ test('M6A precarica tutti gli asset shell premium e mantiene il contratto PWA', 
   const build = html.match(/meta name="us-build" content="([^"]+)"/)?.[1];
 
   assert.match(worker, /const MEDIA_CACHE_NAME = "us-private-media-v1"/);
-  assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-20"/);
+  assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-21"/);
   assert.equal(build, version);
   assert.match(worker, /"\/assets\/derived\/brand\/us-symbol-ui-crisp-v1\.png"/);
   SHELL_ICONS.forEach((name) => {
@@ -39,5 +39,13 @@ test('M6A precarica tutti gli asset shell premium e mantiene il contratto PWA', 
       assert.ok(fs.existsSync(path.join(ROOT, file)), `${file} deve essere disponibile al runtime`);
       assert.match(worker, new RegExp(`"/${file.replace('.', '\\.') }"`));
     });
+  });
+  ['Inter-Variable.woff2', 'Newsreader-Variable.woff2',
+    'house-regular.svg', 'house-fill.svg',
+    'heart-straight-regular.svg', 'heart-straight-fill.svg',
+    'images-regular.svg', 'images-fill.svg',
+    'cards-three-regular.svg', 'cards-three-fill.svg'].forEach((name) => {
+    const file = name.endsWith('.woff2') ? `assets/fonts/${name}` : `assets/icons/phosphor/${name}`;
+    assert.match(worker, new RegExp(`"/${file.replaceAll('.', '\\.') }"`));
   });
 });

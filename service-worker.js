@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-static-runtime-20";
+const CACHE_NAME = "us-shell-static-runtime-21";
 const MEDIA_CACHE_NAME = "us-private-media-v1";
 
 const APP_SHELL = [
@@ -31,6 +31,16 @@ const APP_SHELL = [
   "/polish4.css",
   "/polish4.js",
   "/assets/derived/brand/us-symbol-ui-crisp-v1.png",
+  "/assets/fonts/Inter-Variable.woff2",
+  "/assets/fonts/Newsreader-Variable.woff2",
+  "/assets/icons/phosphor/house-regular.svg",
+  "/assets/icons/phosphor/house-fill.svg",
+  "/assets/icons/phosphor/heart-straight-regular.svg",
+  "/assets/icons/phosphor/heart-straight-fill.svg",
+  "/assets/icons/phosphor/images-regular.svg",
+  "/assets/icons/phosphor/images-fill.svg",
+  "/assets/icons/phosphor/cards-three-regular.svg",
+  "/assets/icons/phosphor/cards-three-fill.svg",
   "/assets/icons/home-off.svg",
   "/assets/icons/home-on.svg",
   "/assets/icons/moments-off.svg",
