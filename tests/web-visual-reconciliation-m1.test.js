@@ -123,6 +123,17 @@ test('M1.6 rende Home full-bleed senza cambiare il padding globale delle seconda
   assert.match(css, /\.home-photo-layer\{[\s\S]*background-size:cover/);
 });
 
+test('M1 topbar refinement bilancia tre zone senza ridurre i touch target', () => {
+  const css = read('identity.css');
+  assert.match(css, /\.top\.us-premium-top\{[^}]*display:grid[^}]*grid-template-columns:minmax\(0,1fr\) auto minmax\(0,1fr\)/);
+  assert.match(css, /\.top\.us-premium-top \.brand-row\{[^}]*justify-self:start/);
+  assert.match(css, /\.top\.us-premium-top \.top-actions\{[^}]*justify-self:end/);
+  assert.match(css, /\.top\.us-premium-top \.us-events-top-control\{[^}]*flex:0 1 auto[^}]*justify-self:center/);
+  assert.match(css, /\.top\.us-premium-top \.us-brand-symbol-art\{[^}]*width:58px[^}]*height:39px/);
+  assert.match(css, /\.top\.us-premium-top \.profile-avatar[^}]*min-width:44px/);
+  assert.match(css, /\.top\.us-premium-top \.us-calendar-btn[^}]*min-width:44px/);
+});
+
 test('M1 shell assets sono presenti nel Web source e non dipendono dal bundle APK', () => {
   const required = [
     'assets/fonts/Inter-Variable.woff2',
