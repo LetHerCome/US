@@ -100,6 +100,19 @@ test('M1.4 rende la top chrome una floating pill contenuta nella shell', () => {
   assert.match(css, /\.us-events-top-control\{[^}]*border:0/);
 });
 
+test('M1.5 nasconde la priority region solo in Home e preserva il runtime Daily/Events', () => {
+  const html = read('index.html');
+  const css = read('identity.css') + read('fix4.css') + read('styles.css');
+  const app = read('app.js');
+  assert.match(html, /<main id="home"[\s\S]*id="usTodayPriorityRegion" hidden aria-live="polite"><\/div>/);
+  assert.match(css, /#home #usTodayPriorityRegion\{display:none!important\}/);
+  assert.match(app, /function dailyTodayPriorityViewModel/);
+  assert.match(app, /function eventTodayPriorityViewModel/);
+  assert.match(app, /data-us-today-action/);
+  assert.match(app, /if\(action==='today'\)window\.openToday\?\./);
+  assert.match(app, /if\(action==='events'\)window\.openEvents\?\./);
+});
+
 test('M1 shell assets sono presenti nel Web source e non dipendono dal bundle APK', () => {
   const required = [
     'assets/fonts/Inter-Variable.woff2',
