@@ -1186,26 +1186,54 @@ window.pairAccount=pairAccount;
 
 async function loginAccount(){
   const email=document.getElementById('loginEmail').value.trim();
+  const password=document.getElementById('loginPassword').value;
   const s=document.getElementById('loginStatus');
   const btn=document.getElementById('loginBtn');
   if(!email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){s.textContent='Inserisci un indirizzo email valido.';return;}
+  if(!password){s.textContent='Inserisci la password.';return;}
   btn.disabled=true;
-  s.textContent='Invio del link…';
+  s.textContent='Accesso…';
   try{
-    const {error}=await sb.auth.signInWithOtp({
-      email,
-      options:{shouldCreateUser:false, emailRedirectTo:location.origin+'/'}
-    });
+    const {error}=await sb.auth.signInWithPassword({email,password});
     if(error) throw error;
-    s.textContent='Link inviato a '+email+'. Aprilo da questo dispositivo per entrare.';
+    document.getElementById('loginPassword').value='';
+    await initCloud();
   }catch(err){
     const msg=String(err?.message||'invio non riuscito');
-    s.textContent=/redirect|not allowed|provider/i.test(msg)?'Errore: URL di ritorno non autorizzato in Supabase.':('Errore: '+msg);
+    s.textContent='Errore: '+msg;
   }finally{
     btn.disabled=false;
   }
 }
 window.loginAccount=loginAccount;
+
+// Called only from a trusted, already authenticated session. The caller owns
+// password entry; this function never logs, persists, or transmits it elsewhere.
+async function setPasswordFromActiveSession(password){
+  if(typeof password!=='string'||password.length<6)throw new Error('La password deve contenere almeno 6 caratteri.');
+  const {data:{user},error:userError}=await sb.auth.getUser();
+  if(userError)throw userError;
+  if(user?.id!=='c42c0170-10c8-43f8-b08f-c46e97770e6d')throw new Error('Sessione Francesco non valida.');
+  const {error}=await sb.auth.updateUser({password});
+  if(error)throw error;
+  return true;
+}
+window.setPasswordFromActiveSession=setPasswordFromActiveSession;
+
+async function sendMagicLinkRecovery(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const s=document.getElementById('loginStatus');
+  const btn=document.getElementById('magicLinkBtn');
+  if(!email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){s.textContent='Inserisci un indirizzo email valido.';return;}
+  btn.disabled=true;
+  try{
+    const {error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:location.origin+'/'}});
+    if(error)throw error;
+    s.textContent='Link di recupero inviato a '+email+'.';
+  }catch(err){s.textContent='Errore: '+String(err?.message||'invio non riuscito');}
+  finally{btn.disabled=false;}
+}
+window.sendMagicLinkRecovery=sendMagicLinkRecovery;
 
 const US_TODAY_PRIORITY_ORDER=Object.freeze({received_ready:1,waiting_for_me:2,couple_context:3});
 const US_TODAY_PRIORITY_LABELS=Object.freeze({
@@ -2514,6 +2542,8 @@ const pairBtn=document.getElementById('pairBtn');
 if(pairBtn) pairBtn.addEventListener('click', pairAccount);
 const loginBtn=document.getElementById('loginBtn');
 if(loginBtn) loginBtn.addEventListener('click', loginAccount);
+const magicLinkBtn=document.getElementById('magicLinkBtn');
+if(magicLinkBtn) magicLinkBtn.addEventListener('click', sendMagicLinkRecovery);
 const loginEnter=document.getElementById('loginEmail');
 if(loginEnter) loginEnter.addEventListener('keydown',(e)=>{if(e.key==='Enter')loginAccount();});
 
