@@ -313,7 +313,23 @@ body:has(#home.page.active){overflow-y:hidden}
 #home .home-distance-pill{bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 18px)!important}
 #home .push-optin-card{bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 24px)!important}
 
+/* M1 topbar refinement: three balanced zones inside the approved pill. */
+.top.us-premium-top{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);column-gap:6px;justify-content:initial}
+.top.us-premium-top .brand-row{justify-self:start;min-width:0;gap:6px}
+.top.us-premium-top .top-actions{justify-self:end;min-width:0;gap:6px}
+.top.us-premium-top .us-events-top-control{flex:0 1 auto;justify-self:center;margin:0;max-width:150px}
+.top.us-premium-top .us-brand-symbol-art{width:58px;height:39px}
+.top.us-premium-top .today-orb,.top.us-premium-top .profile-avatar,.top.us-premium-top .us-calendar-btn{min-width:44px;min-height:44px}
+.top.us-premium-top .us-shell-icon{width:20px;height:20px}
+.top.us-premium-top .profile-avatar .fallback::before{width:20px;height:20px}
+.top.us-premium-top .profile-avatar .camera-dot{width:17px;height:17px}
+
 @media(max-width:360px){
+  .top.us-premium-top .us-brand-symbol-art{width:52px;height:34px}
+  .top.us-premium-top{column-gap:2px}
+  .top.us-premium-top .brand-row{gap:4px}
+  .top.us-premium-top .top-actions{gap:4px}
+  .top.us-premium-top .us-events-top-control{min-width:80px;max-width:112px}
   .top .us-brand-symbol-art{width:48px;height:32px}
   .top{gap:8px}
   .brand-row{gap:6px!important;min-width:0}
