@@ -1265,12 +1265,13 @@ window.setPasswordFromActiveSession=setPasswordFromActiveSession;
 // as non-sensitive metadata only (never the email itself): it is the authority
 // for the whole flow, so the password step cannot be self-referential.
 const ACCOUNT_UPGRADE_KEY='us:account-upgrade';
+const ACCOUNT_UPGRADE_PHASES=['awaiting_email_confirmation','admin_fallback_required'];
 function readPendingAccountUpgrade(){
   try{
     const raw=localStorage.getItem(ACCOUNT_UPGRADE_KEY);
     if(!raw)return null;
     const pending=JSON.parse(raw);
-    if(!pending||pending.expectedUserId==null||pending.phase!=='awaiting_email_confirmation')return null;
+    if(!pending||pending.expectedUserId==null||!ACCOUNT_UPGRADE_PHASES.includes(pending.phase))return null;
     return pending;
   }catch(_){return null;}
 }
@@ -1287,9 +1288,19 @@ async function requestAccountEmailUpgrade(email){
   if(!user)throw new Error('Sessione non valida.');
   if(!user.is_anonymous)throw new Error('Questo account non è anonimo.');
   // Authority: the ORIGINAL anonymous UID, captured before any mutation.
-  try{localStorage.setItem(ACCOUNT_UPGRADE_KEY,JSON.stringify({expectedUserId:user.id,phase:'awaiting_email_confirmation'}));}catch(_){}
+  const expectedUserId=user.id;
   const {error}=await sb.auth.updateUser({email:normalized});
-  if(error)throw error;
+  if(error){
+    if(/rate|too many/i.test(error.message||'')){
+      // Rate limit: persist the original UID so the admin fallback can run on
+      // the same account. No second email attempt is possible from here.
+      try{localStorage.setItem(ACCOUNT_UPGRADE_KEY,JSON.stringify({expectedUserId,phase:'admin_fallback_required'}));}catch(_){}
+      throw error;
+    }
+    // Any other error: no pending state must survive (no false "email sent").
+    throw error;
+  }
+  try{localStorage.setItem(ACCOUNT_UPGRADE_KEY,JSON.stringify({expectedUserId,phase:'awaiting_email_confirmation'}));}catch(_){}
   return true;
 }
 window.requestAccountEmailUpgrade=requestAccountEmailUpgrade;

@@ -366,23 +366,29 @@ function accountUpgradeModal(){
     btn.disabled=true;
     st.textContent='';
     try{
-      await window.requestAccountEmailUpgrade(document.getElementById('usUpgradeEmail').value);
-      // Phase boundary: after the email request only "check your email" is shown.
-      // The password field appears ONLY after the email is confirmed and the
-      // pending original-UID state matches the current session.
-      btn.disabled=true;
-      btn.textContent='Email inviata';
-      st.textContent='Controlla la tua email: apri il link di conferma su questo telefono. Torna qui dopo la conferma per impostare la password.';
-    }catch(err){
-      const msg=String(err?.message||'invio non riuscito');
-      if(/rate|too many/i.test(msg)){
-        st.textContent='Supabase ha bloccato l\'invio (rate limit). Fermati qui: useremo il fallback admin sullo stesso UID. Nessun secondo invio.';
-      }else{
-        st.textContent='Errore: '+msg;
-      }
-      btn.disabled=true; // single attempt: no retry path
-    }
-  });
+          await window.requestAccountEmailUpgrade(document.getElementById('usUpgradeEmail').value);
+          // Phase boundary: after the email request only "check your email" is shown.
+          // The password field appears ONLY after the email is confirmed and the
+          // pending original-UID state matches the current session.
+          btn.disabled=true;
+          btn.textContent='Email inviata';
+          st.textContent='Controlla la tua email: apri il link di conferma su questo telefono. Torna qui dopo la conferma per impostare la password.';
+        }catch(err){
+          const msg=String(err?.message||'invio non riuscito');
+          btn.disabled=true; // single attempt: no retry path
+          if(/rate|too many/i.test(msg)){
+            // Pending state survives as admin_fallback_required (original UID kept);
+            // no second email attempt, the email button stays disabled/hidden.
+            btn.hidden=true;
+            const emailInput=$('usUpgradeEmail');if(emailInput)emailInput.hidden=true;
+            st.textContent='Supabase ha bloccato l\'invio (rate limit): fallback admin richiesto sullo stesso UID. Il bottone email resta disabilitato: nessun secondo invio.';
+          }else{
+            // Generic error: clear any pending state (never show a false "sent").
+            window.clearPendingAccountUpgrade?.();
+            st.textContent='Errore: '+msg;
+          }
+        }
+      });
   // If the pending upgrade already belongs to this (now confirmed) account,
   // resume directly at the password phase.
   resumeAccountPasswordPhaseIfConfirmed();

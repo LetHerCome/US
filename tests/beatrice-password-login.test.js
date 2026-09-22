@@ -15,11 +15,13 @@ const appAuthBlock = () => {
 
 test('auth: original UID catturato PRIMA dell email upgrade e usato come authority', () => {
   const fn = appAuthBlock().slice(appAuthBlock().indexOf('async function requestAccountEmailUpgrade'));
-  const capture = fn.indexOf("ACCOUNT_UPGRADE_KEY,JSON.stringify({expectedUserId:user.id,phase:'awaiting_email_confirmation'})");
+  const capture = fn.indexOf('const expectedUserId=user.id;');
   const mutation = fn.indexOf('sb.auth.updateUser({email:normalized})');
-  assert.ok(capture > -1, 'il pending state con expectedUserId viene salvato');
+  const awaitingPersist = fn.indexOf("JSON.stringify({expectedUserId,phase:'awaiting_email_confirmation'})");
+  assert.ok(capture > -1, 'expectedUserId catturato prima della mutation');
+  assert.ok(awaitingPersist > -1, 'il pending awaiting_email_confirmation è salvato solo dopo il successo');
   assert.ok(mutation > -1);
-  assert.ok(capture < mutation, 'l UID originale è persistato PRIMA della mutazione email');
+  assert.ok(capture < mutation && mutation < awaitingPersist, 'cattura UID -> mutation email -> persist awaiting');
   // Metadata non sensibili soltanto: niente email, niente password nel pending.
   // Solo expectedUserId e phase: nessun valore di email/password nel pending.
   assert.doesNotMatch(fn, /JSON\.stringify\(\{[^}]*normalized/i);
@@ -43,8 +45,37 @@ test('auth: due fasi reali — dopo email sent nessun campo password né updateU
   assert.doesNotMatch(handler, /updateUser\(\{password/);
   assert.match(handler, /btn\.disabled=true;\s*\/\/ single attempt: no retry path/);
   assert.match(handler, /\/rate\|too many\/i/);
-  assert.match(handler, /fallback admin sullo stesso UID/);
+  assert.match(handler, /fallback admin richiesto sullo stesso UID/);
+  // Rate limit: bottone email nascosto/disabilitato, nessun secondo invio.
+  assert.match(handler, /btn\.hidden=true/);
   assert.doesNotMatch(handler, /riprova|setTimeout[\s\S]*requestAccountEmailUpgrade|retr(y|ies)\s*\(/i);
+});
+
+test('auth: rate limit -> admin_fallback_required; generic error -> pending cleared', () => {
+  const fn = appAuthBlock().slice(appAuthBlock().indexOf('async function requestAccountEmailUpgrade'));
+  // Rate limit: il pending diventa admin_fallback_required con l UID originale.
+  assert.match(fn, /if\(\/rate\|too many\/i\.test\(error\.message\|\|''\)\)/);
+  assert.match(fn, /JSON\.stringify\(\{expectedUserId,phase:'admin_fallback_required'\}\)/);
+  assert.match(fn, /No second email attempt is possible from here/);
+  // Generic error: nessun pending sopravvive (niente falso "email inviata").
+  const genericBranch = fn.slice(fn.indexOf('// Any other error'), fn.indexOf('try{localStorage', fn.indexOf('// Any other error')));
+  assert.doesNotMatch(genericBranch, /localStorage\.setItem/);
+  // readPendingAccountUpgrade accetta solo le due phase note.
+  const appAuth = appAuthBlock();
+  assert.match(appAuth, /ACCOUNT_UPGRADE_PHASES=\['awaiting_email_confirmation','admin_fallback_required'\]/);
+  assert.match(appAuth, /!ACCOUNT_UPGRADE_PHASES\.includes\(pending\.phase\)/);
+});
+
+test('auth: reopen durante admin_fallback_required non permette nuovo invio', () => {
+  const src = settings();
+  const resume = src.slice(src.indexOf('async function resumeAccountPasswordPhaseIfConfirmed'), src.indexOf('async function logout()'));
+  // Il resume accetta entrambe le phase (readPending filtra solo quelle note)
+  // ma la fase password richiede UID match + non anonymous + email confirmed,
+  // indipendentemente da come l email è stata confermata.
+  assert.match(resume, /user\.id!==pending\.expectedUserId[\s\S]*?clearPendingAccountUpgrade\(\)/);
+  assert.match(resume, /user\.is_anonymous\|\|!user\.email\|\|!user\.email_confirmed_at/);
+  // Il modal non re-invia: il bottone email non è mai riattivato nel resume.
+  assert.doesNotMatch(resume, /requestAccountEmailUpgrade/);
 });
 
 test('auth: anonymous non può impostare la password (guard dedicato)', () => {
@@ -91,7 +122,7 @@ test('auth: nessuna email/password salvata in storage; niente signUp/claim_us_ro
   assert.doesNotMatch(src, /signUp|signInAnonymously|claim_us_role|signInWithPassword/);
   // Il pending state persista solo expectedUserId e phase.
   const fn = appAuthBlock();
-  assert.match(fn, /JSON\.stringify\(\{expectedUserId:user\.id,phase:'awaiting_email_confirmation'\}\)/);
+  assert.match(fn, /JSON\.stringify\(\{expectedUserId,phase:'awaiting_email_confirmation'\}\)/);
 });
 
 test('auth: Francesco continua a funzionare col percorso generalizzato; pairing intatto', () => {
