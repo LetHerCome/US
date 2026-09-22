@@ -73,3 +73,68 @@ export async function dispatchThinkWebPush(admin: any, args: ThinkPushArgs) {
   if (!delivered) await admin.from("push_event_log").delete().eq("dedupe_key", dedupeKey);
   return { delivered, failed };
 }
+
+type ThinkReactionPushArgs = ThinkPushArgs & { reaction: "heart" | "hug" | "miss_you" };
+
+export async function dispatchThinkReactionWebPush(admin: any, args: ThinkReactionPushArgs) {
+  const dedupeKey = `think-reaction:${args.messageId}`;
+  const { data: preferences, error: preferenceError } = await admin
+    .from("notification_preferences")
+    .select("think")
+    .eq("user_id", args.recipientId)
+    .maybeSingle();
+  if (preferenceError) throw preferenceError;
+  if (preferences && !preferences.think) return { delivered: 0, failed: 0, reason: "disabled-by-preference" };
+
+  const { data: vapidPrivate, error: vapidError } = await admin.rpc("get_internal_vapid_private_key");
+  if (vapidError || !vapidPrivate) throw new Error("push_configuration_unavailable");
+  webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, vapidPrivate as string);
+
+  const { error: dedupeError } = await admin.from("push_event_log").insert({
+    dedupe_key: dedupeKey,
+    couple_id: args.coupleId,
+    sender_id: args.senderId,
+    event_type: "think_reaction"
+  });
+  if (dedupeError?.code === "23505") return { delivered: 0, failed: 0, deduplicated: true };
+  if (dedupeError) throw dedupeError;
+
+  const { data: subscriptions, error: subscriptionsError } = await admin
+    .from("push_subscriptions")
+    .select("id,endpoint,p256dh,auth_key")
+    .eq("user_id", args.recipientId);
+  if (subscriptionsError) throw subscriptionsError;
+  if (!subscriptions?.length) {
+    await admin.from("push_event_log").delete().eq("dedupe_key", dedupeKey);
+    return { delivered: 0, failed: 0, reason: "recipient-not-subscribed" };
+  }
+
+  const payload = JSON.stringify({
+    title: "US. · Ti penso",
+    body: "Ha reagito al tuo Ti penso.",
+    icon: "/icon-192.png",
+    badge: "/icon-192.png",
+    tag: `think-reaction-${args.messageId}`,
+    target: "home",
+    url: "/?open=home&from=think-reaction"
+  });
+  let delivered = 0;
+  let failed = 0;
+  for (const subscription of subscriptions) {
+    try {
+      await webpush.sendNotification({
+        endpoint: subscription.endpoint,
+        keys: { p256dh: subscription.p256dh, auth: subscription.auth_key }
+      }, payload, { TTL: 60 * 60 * 12, urgency: "normal" });
+      delivered += 1;
+    } catch (error) {
+      failed += 1;
+      const status = Number((error as { statusCode?: number })?.statusCode || 0);
+      if (status === 404 || status === 410) {
+        await admin.from("push_subscriptions").delete().eq("id", subscription.id);
+      }
+    }
+  }
+  if (!delivered) await admin.from("push_event_log").delete().eq("dedupe_key", dedupeKey);
+  return { delivered, failed };
+}
