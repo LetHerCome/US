@@ -239,6 +239,8 @@ body.viewer-open{overflow:hidden}
 .hero-bond .fill{background:linear-gradient(90deg,#ff668e,#a985ff,#ffd08a)}
 
 .bond-page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:14px}
+.bond-page-head-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.bond-page-head-actions .us-calendar-btn{flex:0 0 44px}
 .bond-page-head h2{margin:3px 0 0!important;font-size:23px!important}
 .bond-level-medallion{width:58px;height:58px;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(145deg,rgba(255,102,142,.18),rgba(169,133,255,.20)),#181c26;border:1px solid rgba(255,255,255,.12);box-shadow:0 14px 34px rgba(0,0,0,.24)}
 .bond-level-medallion span{font-size:8px;letter-spacing:.14em;color:var(--muted);font-weight:900}.bond-level-medallion b{font-family:Georgia,serif;font-size:27px;line-height:1;color:#fff}

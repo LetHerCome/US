@@ -21,6 +21,17 @@
       "operation": "REMOVE_LOW_ALPHA_GLOW_PRESERVE_US_GEOMETRY"
     },
     {
+      "path": "assets/derived/brand/us-symbol-apk-foreground-v1.png",
+      "status": "APPROVED",
+      "sha256": "f71c0cf6cbca172b7833754f6eaa2b4addfab6381a696bdccf070d83ea690868",
+      "immutable": true,
+      "purpose": "Byte-identical Web/PWA derivative of the official Android adaptive foreground",
+      "usedBy": ["auth-branding", "home-header-branding", "settings-branding", "pwa-install-branding"],
+      "source": "android/app/src/main/res/drawable-nodpi/us_adaptive_foreground_v1.png",
+      "sourceSha256": "f71c0cf6cbca172b7833754f6eaa2b4addfab6381a696bdccf070d83ea690868",
+      "operation": "BYTE_COPY_OFFICIAL_ANDROID_FOREGROUND"
+    },
+    {
       "path": "assets/source/brand/app-icon/us-adaptive-foreground-v1.png",
       "status": "APPROVED",
       "sha256": "fb91f1008154887f8ec114b85f5c84e88360e18ccc6d0ee838ecd7b003ad8621",
