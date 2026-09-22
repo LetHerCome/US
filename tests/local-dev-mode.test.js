@@ -35,3 +35,9 @@ test('il service worker production resta invariato e la modalità dev non altera
   assert.match(packageJson, /"build:capacitor-web"/);
   assert.doesNotMatch(read('capacitor.config.json'), /server\s*:/);
 });
+
+test('il reset local dev preserva lo state interno della navigation history', () => {
+  const html = read('index.html');
+  assert.doesNotMatch(html, /history\.replaceState\(null/);
+  assert.match(html, /window\.history\.replaceState\(window\.history\.state/);
+});

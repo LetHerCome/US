@@ -47,9 +47,11 @@ test('M2 colloca la priority region sopra l hero e la lascia strutturalmente vuo
   assert.ok(home.indexOf(region) >= 0);
   assert.ok(home.indexOf(region) < home.indexOf('id="homeHero"'));
   assert.match(read('styles.css'), /\.us-today-priority-card[\s\S]{0,500}min-height:44px/);
+  assert.match(read('styles.css'), /#usTodayPriorityRegion\{position:absolute/);
+  assert.match(read('styles.css'), /#usTodayPriorityRegion\{[\s\S]*pointer-events:none/);
 });
 
-test('M2 compone al massimo una priorita per categoria in ordine P1 P2 P3', () => {
+test('M2 compone le priorita in ordine P1 P2 P3 ma il renderer ne mostra una sola', () => {
   const { api } = installPriorityRuntime();
   const candidates = [
     { id: 'context-late', factKey: 'event:late', category: 'couple_context', urgency: 30, recency: 90 },
@@ -122,12 +124,20 @@ test('M2 mantiene la region hidden senza placeholder e usa solo gli opener esist
   ]);
   assert.equal(region.hidden, false);
   assert.match(region.innerHTML, /data-us-today-action="today"/);
-  assert.match(region.innerHTML, /data-us-today-action="events"/);
+  assert.doesNotMatch(region.innerHTML, /data-us-today-action="events"/);
 
   const click = listeners.get('click');
   click({ target: { closest: () => ({ dataset: { usTodayAction: 'today' } }) } });
+  assert.match(region.innerHTML, /data-us-today-action="events"/);
   click({ target: { closest: () => ({ dataset: { usTodayAction: 'events' } }) } });
   assert.deepEqual(calls, ['today', 'events']);
+});
+
+test('M2 mantiene il renderer estendibile a future arrival type senza impilarle', () => {
+  const { api, region } = installPriorityRuntime();
+  api.render([{ id: 'future-1', category: 'received_ready', arrivalType: 'partner-reaction', title: 'Una reaction', detail: 'Dal partner', action: 'future', actionLabel: 'Apri' }]);
+  assert.match(region.innerHTML, /data-us-arrival-type="partner-reaction"/);
+  assert.equal((region.innerHTML.match(/class="us-today-priority-card"/g) || []).length, 1);
 });
 
 test('M2 isola una failure Events e non trasforma errori o assenza dati in priorita false', async () => {

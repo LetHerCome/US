@@ -64,7 +64,7 @@
     if (alreadyReset) {
       if (params.has('us-refresh')) {
         const cleanUrl = `${window.location.pathname}?us-dev=1${window.location.hash || ''}`;
-        window.history.replaceState(null, '', cleanUrl);
+        window.history.replaceState(window.history.state, '', cleanUrl);
       }
       return;
     }
@@ -82,14 +82,14 @@
     if (hadController || registrations.length || cacheNames.length) {
       window.location.replace(cleanUrl);
     } else {
-      window.history.replaceState(null, '', `${window.location.pathname}?us-dev=1${window.location.hash || ''}`);
+      window.history.replaceState(window.history.state, '', `${window.location.pathname}?us-dev=1${window.location.hash || ''}`);
     }
   }
 
   window.addEventListener('load', () => {
     resetLocalRuntime().catch((error) => {
       console.warn('[US Local Dev] runtime reset unavailable:', error);
-      window.history.replaceState(null, '', `${window.location.pathname}?us-dev=1${window.location.hash || ''}`);
+      window.history.replaceState(window.history.state, '', `${window.location.pathname}?us-dev=1${window.location.hash || ''}`);
     });
   }, { once: true });
 })();

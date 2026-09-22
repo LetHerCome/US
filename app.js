@@ -1242,6 +1242,8 @@ const US_TODAY_PRIORITY_LABELS=Object.freeze({
   couple_context:'Tra voi oggi'
 });
 let usTodayPriorityRefreshId=0;
+let usTodayPriorityQueue=[];
+const usTodayConsumedFacts=new Set();
 
 function usTodayPriorityNumber(value,fallback){
   if(value===null||value===undefined||value==='')return fallback;
@@ -1250,7 +1252,7 @@ function usTodayPriorityNumber(value,fallback){
 }
 function composeTodayPriorities(candidates=[]){
   const ordered=(Array.isArray(candidates)?candidates:[])
-    .filter(item=>item?.id&&US_TODAY_PRIORITY_ORDER[item.category])
+    .filter(item=>item?.id&&US_TODAY_PRIORITY_ORDER[item.category]&&!usTodayConsumedFacts.has(String(item.factKey||item.id)))
     .slice()
     .sort((a,b)=>US_TODAY_PRIORITY_ORDER[a.category]-US_TODAY_PRIORITY_ORDER[b.category]
       ||usTodayPriorityNumber(a.urgency,Number.MAX_SAFE_INTEGER)-usTodayPriorityNumber(b.urgency,Number.MAX_SAFE_INTEGER)
@@ -1297,12 +1299,17 @@ function eventTodayPriorityViewModel(source){
     recency:Number.isFinite(recency)?recency:0
   };
 }
-function renderTodayPriorities(priorities=[]){
+function renderTodayPriorityItem(item,total=0){
   const region=document.getElementById('usTodayPriorityRegion');
   if(!region)return;
-  if(!priorities.length){region.innerHTML='';region.hidden=true;return;}
-  region.innerHTML=priorities.slice(0,3).map(item=>`<button type="button" class="us-today-priority-card" data-us-today-action="${escapeHtml(item.action)}" aria-label="${escapeHtml(item.actionLabel)}: ${escapeHtml(item.title)}"><span class="us-today-priority-kind">${escapeHtml(US_TODAY_PRIORITY_LABELS[item.category]||'Oggi')}</span><span class="us-today-priority-copy"><b>${escapeHtml(item.title)}</b><small>${escapeHtml(item.detail||'')}</small></span><span class="us-today-priority-action">${escapeHtml(item.actionLabel)}</span></button>`).join('');
+  if(!item){region.innerHTML='';region.hidden=true;return;}
+  const queueLabel=total>1?` · 1/${total}`:'';
+  region.innerHTML=`<button type="button" class="us-today-priority-card" data-us-today-action="${escapeHtml(item.action)}" data-us-arrival-type="${escapeHtml(item.arrivalType||item.category||'arrival')}" aria-label="${escapeHtml(item.actionLabel)}: ${escapeHtml(item.title)}"><span class="us-today-priority-kind">${escapeHtml(US_TODAY_PRIORITY_LABELS[item.category]||'Oggi')}${queueLabel}</span><span class="us-today-priority-copy"><b>${escapeHtml(item.title)}</b><small>${escapeHtml(item.detail||'')}</small></span><span class="us-today-priority-action">${escapeHtml(item.actionLabel)}</span></button>`;
   region.hidden=false;
+}
+function renderTodayPriorities(priorities=[]){
+  usTodayPriorityQueue=Array.isArray(priorities)?priorities.slice():[];
+  renderTodayPriorityItem(usTodayPriorityQueue[0],usTodayPriorityQueue.length);
 }
 async function refreshTodayPriorities({daily}={}){
   const refreshId=++usTodayPriorityRefreshId;
@@ -1325,7 +1332,12 @@ async function refreshTodayPriorities({daily}={}){
   return priorities;
 }
 document.getElementById('usTodayPriorityRegion')?.addEventListener('click',event=>{
-  const action=event.target.closest?.('[data-us-today-action]')?.dataset.usTodayAction;
+  const control=event.target.closest?.('[data-us-today-action]');
+  const action=control?.dataset.usTodayAction;
+  if(!action)return;
+  const current=usTodayPriorityQueue.shift();
+  if(current)usTodayConsumedFacts.add(String(current.factKey||current.id));
+  renderTodayPriorityItem(usTodayPriorityQueue[0],usTodayPriorityQueue.length);
   if(action==='today')window.openToday?.();
   if(action==='events')window.openEvents?.();
 });
