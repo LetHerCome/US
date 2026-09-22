@@ -13,7 +13,7 @@
   let keyboardOpen = false;
 
   function canUsePwaUpdates() {
-    return window.UsPlatform?.canUsePwaUpdates !== false;
+    return !window.__US_LOCAL_DEV__ && window.UsPlatform?.canUsePwaUpdates !== false;
   }
 
   function syncRuntimeLayout() {

@@ -370,7 +370,7 @@ let usPendingPushTarget=null;
 
 function isIosDevice(){return /iphone|ipad|ipod/i.test(navigator.userAgent||'');}
 function isStandaloneUs(){return Boolean(window.matchMedia?.('(display-mode: standalone)')?.matches||window.navigator.standalone===true);}
-function isWebPushSupported(){return window.UsPlatform?.canUseWebPush!==false&&'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;}
+function isWebPushSupported(){return !window.__US_LOCAL_DEV__&&window.UsPlatform?.canUseWebPush!==false&&'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;}
 function urlBase64ToUint8Array(base64String){
   const padding='='.repeat((4-base64String.length%4)%4);
   const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
@@ -378,7 +378,7 @@ function urlBase64ToUint8Array(base64String){
   for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);
   return out;
 }
-function canUseUsServiceWorker(){return window.UsPlatform?.canUseServiceWorker!==false&&'serviceWorker' in navigator;}
+function canUseUsServiceWorker(){return !window.__US_LOCAL_DEV__&&window.UsPlatform?.canUseServiceWorker!==false&&'serviceWorker' in navigator;}
 async function getUsServiceWorkerRegistration(){
   if(!canUseUsServiceWorker())return null;
   await navigator.serviceWorker.register('/service-worker.js',{updateViaCache:'none'});
