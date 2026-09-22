@@ -108,8 +108,11 @@ test('auth: pending di altro UID -> clear e nessuna password da quel pending', (
 
 test('auth: il bottone send non può partire con pending attivo (guard handler)', () => {
   const handler = sendHandler();
-  assert.match(handler, /if\(window\.readPendingAccountUpgrade\?\(\)\)\{/);
-  assert.match(handler, /Una richiesta di upgrade è già in corso per questo account\./);
+  assert.ok(handler.includes('if(window.readPendingAccountUpgrade?.()){'),
+    'il guard pending esiste nel handler send');
+  assert.ok(handler.includes('Una richiesta di upgrade è già in corso per questo account.'));
+  assert.ok(handler.indexOf('if(window.readPendingAccountUpgrade?.())') < handler.indexOf('await window.requestAccountEmailUpgrade'),
+    'il guard previene il send prima di qualsiasi chiamata');
   // Nessuna nuova richiesta mentre un pending esiste: nessuna chiamata di invio.
   assert.doesNotMatch(handler, /riprova|setTimeout[\s\S]*requestAccountEmailUpgrade|retr(y|ies)\s*\(/i);
 });
