@@ -363,6 +363,13 @@ function accountUpgradeModal(){
   $('usSendUpgrade')?.addEventListener('click',async()=>{
     const btn=$('usSendUpgrade');
     const st=$('usUpgradeStatus');
+    // A pending upgrade for this account is the UI authority: no second send,
+    // even after a reload that recreated this modal.
+    if(window.readPendingAccountUpgrade?.()){
+      btn.disabled=true;
+      st.textContent='Una richiesta di upgrade è già in corso per questo account.';
+      return;
+    }
     btn.disabled=true;
     st.textContent='';
     try{
@@ -389,12 +396,11 @@ function accountUpgradeModal(){
           }
         }
       });
-  // If the pending upgrade already belongs to this (now confirmed) account,
-  // resume directly at the password phase.
-  resumeAccountPasswordPhaseIfConfirmed();
+  // The pending upgrade is the UI authority on reopen: decide the phase.
+  resumeAccountUpgradePhase();
 }
 
-async function resumeAccountPasswordPhaseIfConfirmed(){
+async function resumeAccountUpgradePhase(){
   const body=document.getElementById('usAccountUpgradeBody');
   if(!body)return;
   const pending=window.readPendingAccountUpgrade?.();
@@ -406,14 +412,27 @@ async function resumeAccountPasswordPhaseIfConfirmed(){
     window.clearPendingAccountUpgrade();
     return;
   }
+  // Same UID with a pending upgrade: the email request phase can never come
+  // back — hide/disable it regardless of the pending phase.
+  const emailInput=$('usUpgradeEmail');
+  if(emailInput){emailInput.disabled=true;emailInput.hidden=true;}
+  const sendBtn=$('usSendUpgrade');
+  if(sendBtn){sendBtn.disabled=true;sendBtn.hidden=true;}
+  const cancelBtn=$('usCancelUpgrade');
+  if(cancelBtn){cancelBtn.disabled=true;cancelBtn.hidden=true;}
   if(user.is_anonymous||!user.email||!user.email_confirmed_at){
+    if(pending.phase==='admin_fallback_required'){
+      $('usUpgradeStatus').textContent='Serve il fallback admin sullo stesso account: l\'invio email è stato bloccato. Nessun secondo invio è possibile da qui.';
+    }else{
       $('usUpgradeStatus').textContent='Controlla la tua email: apri il link di conferma su questo telefono, poi torna qui.';
-      return;
     }
+    return;
+  }
+  // Same UID, confirmed: straight to the password phase (normal confirmation
+  // or admin fallback are both acceptable).
     // Resume confirmed: hide the email request phase entirely.
     $('usUpgradeEmail')?.setAttribute('hidden','');
-    const sendBtn=$('usSendUpgrade');if(sendBtn)sendBtn.hidden=true;
-    const cancelBtn=$('usCancelUpgrade');if(cancelBtn)cancelBtn.hidden=true;
+
     body.insertAdjacentHTML('beforeend',`
     <p>Sei entrata dall'email. Ora scegli una password per questo account.</p>
     <input id="usUpgradePassword" type="password" autocomplete="new-password" placeholder="Nuova password (min 6)" style="width:100%;margin-top:10px">
