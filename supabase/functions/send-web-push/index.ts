@@ -1,14 +1,14 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.112.4";
 import webpush from "npm:web-push@3.6.7";
-import { dispatchThinkWebPush } from "../_shared/think-web-push.ts";
+import { dispatchThinkReactionWebPush, dispatchThinkWebPush } from "../_shared/think-web-push.ts";
 import { supabaseSecretKey } from "../_shared/supabase-secret.ts";
 
 const VAPID_PUBLIC_KEY = "BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss";
 const VAPID_SUBJECT = "https://usfinal.vercel.app";
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization,x-client-info,apikey,content-type", "Access-Control-Allow-Methods": "POST,OPTIONS", "Content-Type": "application/json" };
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: cors });
-type EventType = "test" | "think" | "daily_answer" | "quest_confirmed";
+type EventType = "test" | "think" | "think_reaction" | "daily_answer" | "quest_confirmed";
 
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -43,6 +43,29 @@ Deno.serve(async (request) => {
         recipientId: partner.id,
         coupleId: sender.couple_id,
         messageId: message.id
+      }));
+    }
+
+    if (type === "think_reaction") {
+      if (!partner || !body.reference_id || !["heart", "hug", "miss_you"].includes(body.reaction)) {
+        return json({ error: "Missing or invalid think reaction" }, 400);
+      }
+      const { data: message } = await admin.from("shared_messages")
+        .select("id,couple_id,sender_id,recipient_id,kind")
+        .eq("id", body.reference_id).maybeSingle();
+      const { data: reaction } = await admin.from("think_reactions")
+        .select("message_id,reaction")
+        .eq("message_id", body.reference_id).maybeSingle();
+      if (!message || message.kind !== "think" || message.recipient_id !== sender.id || message.sender_id !== partner.id || message.couple_id !== sender.couple_id || reaction?.reaction !== body.reaction) {
+        return json({ error: "Invalid think reaction event" }, 403);
+      }
+      return json(await dispatchThinkReactionWebPush(admin, {
+        senderId: sender.id,
+        senderName: sender.display_name || "La tua persona",
+        recipientId: message.sender_id,
+        coupleId: sender.couple_id,
+        messageId: message.id,
+        reaction: body.reaction
       }));
     }
 
