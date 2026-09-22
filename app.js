@@ -1247,7 +1247,11 @@ async function setPasswordFromActiveSession(password, expectedUserId){
   if(typeof expectedUserId!=='string'||!expectedUserId)throw new Error('Sessione non valida.');
   const {data:{user},error:userError}=await sb.auth.getUser();
   if(userError)throw userError;
-  if(user?.id!==expectedUserId)throw new Error('Sessione non valida per questo account.');
+  if(!user)throw new Error('Sessione non valida.');
+  // Hard guards: original UID match, account no longer anonymous, email confirmed.
+  if(user.id!==expectedUserId)throw new Error('Sessione non valida per questo account.');
+  if(user.is_anonymous)throw new Error('L\'account deve prima confermare l\'email.');
+  if(!user.email||!user.email_confirmed_at)throw new Error('L\'email non è ancora verificata.');
   const {error}=await sb.auth.updateUser({password});
   if(error)throw error;
   return true;
@@ -1257,6 +1261,24 @@ window.setPasswordFromActiveSession=setPasswordFromActiveSession;
 // Anonymous -> email upgrade for the CURRENT active session only.
 // Single email attempt: on rate limit the error propagates and the caller stops.
 // Never creates a new auth user (updateUser mutates the existing one in place).
+// The ORIGINAL anonymous UID is captured BEFORE the email update and persisted
+// as non-sensitive metadata only (never the email itself): it is the authority
+// for the whole flow, so the password step cannot be self-referential.
+const ACCOUNT_UPGRADE_KEY='us:account-upgrade';
+function readPendingAccountUpgrade(){
+  try{
+    const raw=localStorage.getItem(ACCOUNT_UPGRADE_KEY);
+    if(!raw)return null;
+    const pending=JSON.parse(raw);
+    if(!pending||pending.expectedUserId==null||pending.phase!=='awaiting_email_confirmation')return null;
+    return pending;
+  }catch(_){return null;}
+}
+window.readPendingAccountUpgrade=readPendingAccountUpgrade;
+function clearPendingAccountUpgrade(){
+  try{localStorage.removeItem(ACCOUNT_UPGRADE_KEY);}catch(_){}
+}
+window.clearPendingAccountUpgrade=clearPendingAccountUpgrade;
 async function requestAccountEmailUpgrade(email){
   const normalized=typeof email==='string'?email.trim().toLowerCase():'';
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(normalized))throw new Error('Inserisci un indirizzo email valido.');
@@ -1264,6 +1286,8 @@ async function requestAccountEmailUpgrade(email){
   if(userError)throw userError;
   if(!user)throw new Error('Sessione non valida.');
   if(!user.is_anonymous)throw new Error('Questo account non è anonimo.');
+  // Authority: the ORIGINAL anonymous UID, captured before any mutation.
+  try{localStorage.setItem(ACCOUNT_UPGRADE_KEY,JSON.stringify({expectedUserId:user.id,phase:'awaiting_email_confirmation'}));}catch(_){}
   const {error}=await sb.auth.updateUser({email:normalized});
   if(error)throw error;
   return true;

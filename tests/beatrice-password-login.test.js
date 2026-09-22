@@ -6,86 +6,109 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 
-test('Beatrice auth: setPasswordFromActiveSession generalizzato con expectedUserId', () => {
-  const app = read('app.js');
-  assert.match(app, /async function setPasswordFromActiveSession\(password, expectedUserId\)/);
-  // Guard: la sessione deve combaciare con l'UID atteso, hardcode Francesco rimosso.
-  assert.doesNotMatch(app, /user\?\.id!=='c42c0170-10c8-43f8-b08f-c46e97770e6d'/);
-  assert.doesNotMatch(app, /Sessione Francesco non valida/);
-  assert.match(app, /if\(user\?\.id!==expectedUserId\)throw new Error\('Sessione non valida per questo account\.'\)/);
-  // Validazione lunghezza mantenuta, password mai loggata o persistita.
-  assert.match(app, /password\.length<6/);
-  assert.doesNotMatch(app, /console\.(log|info|warn|error)\([^)]*password/i);
-  assert.doesNotMatch(app, /localStorage\.setItem\([^)]*password/i);
-  assert.doesNotMatch(app, /console\.(log|info)\([^)]*\bpassword\b/i);
+const app = () => read('app.js');
+const settings = () => read('settings.js');
+const appAuthBlock = () => {
+  const src = app();
+  return src.slice(src.indexOf('async function setPasswordFromActiveSession'), src.indexOf('async function sendMagicLinkRecovery'));
+};
+
+test('auth: original UID catturato PRIMA dell email upgrade e usato come authority', () => {
+  const fn = appAuthBlock().slice(appAuthBlock().indexOf('async function requestAccountEmailUpgrade'));
+  const capture = fn.indexOf("ACCOUNT_UPGRADE_KEY,JSON.stringify({expectedUserId:user.id,phase:'awaiting_email_confirmation'})");
+  const mutation = fn.indexOf('sb.auth.updateUser({email:normalized})');
+  assert.ok(capture > -1, 'il pending state con expectedUserId viene salvato');
+  assert.ok(mutation > -1);
+  assert.ok(capture < mutation, 'l UID originale è persistato PRIMA della mutazione email');
+  // Metadata non sensibili soltanto: niente email, niente password nel pending.
+  // Solo expectedUserId e phase: nessun valore di email/password nel pending.
+  assert.doesNotMatch(fn, /JSON\.stringify\(\{[^}]*normalized/i);
+  assert.doesNotMatch(fn, /localStorage\.setItem\([^)]*(?:@|password)/i);
 });
 
-test('Beatrice auth: percorso anonymous -> email senza signUp né claim_us_role', () => {
-  const app = read('app.js');
-  assert.match(app, /async function requestAccountEmailUpgrade\(email\)/);
-  assert.match(app, /if\(!user\.is_anonymous\)throw new Error\('Questo account non è anonimo\.'\)/);
-  assert.match(app, /sb\.auth\.updateUser\(\{email:normalized\}\)/);
-  // Nessun nuovo utente: niente signUp, niente signInAnonymously nel percorso.
-  const fn = app.slice(app.indexOf('async function requestAccountEmailUpgrade'), app.indexOf('window.requestAccountEmailUpgrade'));
-  assert.doesNotMatch(fn, /signUp|signInAnonymously|claim_us_role/);
-  // Nessun nuovo anonymous login aggiunto oltre a quello del pairing esistente.
-  const occurrences = (app.match(/signInAnonymously/g) || []).length;
-  assert.equal(occurrences, 1, 'signInAnonymously resta solo nel pairing legacy');
-  const claimOccurrences = (app.match(/claim_us_role/g) || []).length;
-  assert.equal(claimOccurrences, 1, 'claim_us_role resta solo nel pairing esistente');
+test('auth: la password usa l UID pending originale, non user.id fresco (niente tautologia)', () => {
+  const src = settings();
+  assert.match(src, /setPasswordFromActiveSession\(\s*document\.getElementById\('usUpgradePassword'\)\.value,pending\.expectedUserId\)/,
+    'expectedUserId arriva dal pending state, non dalla stessa sessione');
+  assert.doesNotMatch(src, /setPasswordFromActiveSession\([\s\S]*?user\?\.id\)/);
+  assert.match(src, /passing the freshly-read session user\.id here would be self-referential/);
 });
 
-test('Beatrice auth: un solo invio email, rate limit stop senza retry', () => {
-  const settings = read('settings.js');
-  assert.match(settings, /function accountUpgradeModal/);
-  // Handler singolo: nessun retry automatico.
-  const sendHandler = settings.slice(settings.indexOf("id=\"usSendUpgrade\" style=\"width:100%\""), settings.indexOf('async function logout()'));
-  assert.doesNotMatch(sendHandler, /riprova|setTimeout[\s\S]*requestAccountEmailUpgrade|retr(y|ies)\s*\(/i);
-  assert.match(sendHandler, /\/\/ single attempt: no retry path/);
-  assert.match(sendHandler, /\/rate\|too many\/i/);
-  assert.match(sendHandler, /fallback admin sullo stesso UID/);
+test('auth: due fasi reali — dopo email sent nessun campo password né updateUser password', () => {
+  const src = settings();
+  const handler = src.slice(src.indexOf("$('usSendUpgrade')?.addEventListener"), src.indexOf('async function resumeAccountPasswordPhaseIfConfirmed'));
+  assert.match(handler, /Controlla la tua email/);
+  assert.doesNotMatch(handler, /usUpgradePassword|usSetPassword/,
+    'il campo password NON appare subito dopo l invio email');
+  assert.doesNotMatch(handler, /updateUser\(\{password/);
+  assert.match(handler, /btn\.disabled=true;\s*\/\/ single attempt: no retry path/);
+  assert.match(handler, /\/rate\|too many\/i/);
+  assert.match(handler, /fallback admin sullo stesso UID/);
+  assert.doesNotMatch(handler, /riprova|setTimeout[\s\S]*requestAccountEmailUpgrade|retr(y|ies)\s*\(/i);
 });
 
-test('Beatrice auth: verifica UID invariato e password via sessione attiva', () => {
-  const settings = read('settings.js');
-  assert.match(settings, /setPasswordFromActiveSession\(document\.getElementById\('usUpgradePassword'\)\.value,user\?\.id\)/,
-    'la password viene impostata solo dopo la verifica dell UID della sessione');
-  assert.doesNotMatch(settings, /expectedUserId:\s*'c42c0170/);
-  // Il flusso non re-invia l'email dopo l'invio riuscito.
-  assert.match(settings, /btn\.disabled=true;\s*\r?\n\s*btn\.textContent='Email inviata'/);
+test('auth: anonymous non può impostare la password (guard dedicato)', () => {
+  const fn = appAuthBlock();
+  assert.match(fn, /if\(user\.is_anonymous\)throw new Error\('L\\'account deve prima confermare l\\'email\.'\)/);
+  assert.match(fn, /if\(!user\.email\|\|!user\.email_confirmed_at\)throw new Error\('L\\'email non è ancora verificata\.'\)/);
+  assert.match(fn, /password\.length<6/);
+  assert.doesNotMatch(fn, /console\.(log|info|warn|error)\([^)]*password/i);
+  assert.doesNotMatch(fn, /localStorage\.setItem\([^)]*password/i);
 });
 
-test('Beatrice auth: riga visibile solo per sessione anonima', () => {
-  const settings = read('settings.js');
-  assert.match(settings, /upgradeRow\.hidden=!Boolean\(user\?\.is_anonymous\)/);
+test('auth: confirmed same UID può impostarla; different UID rejected con blocco duro', () => {
+  const fn = appAuthBlock();
+  assert.match(fn, /if\(user\.id!==expectedUserId\)throw new Error\('Sessione non valida per questo account\.'\)/);
+  const src = settings();
+  const resume = src.slice(src.indexOf('async function resumeAccountPasswordPhaseIfConfirmed'), src.indexOf('async function logout()'));
+  // Pending di altro UID: ignorato e rimosso in sicurezza.
+  assert.match(resume, /user\.id!==pending\.expectedUserId[\s\S]*?clearPendingAccountUpgrade\(\)/);
+  // Email non ancora verificata: niente fase password.
+  assert.match(resume, /user\.is_anonymous\|\|!user\.email\|\|!user\.email_confirmed_at[\s\S]*?Controlla la tua email/);
+  // Fase password mostrata solo se UID match + non anonymous + email confirmed.
+  const confirmedOrder = resume.indexOf('user.id!==pending.expectedUserId') < resume.indexOf('body.insertAdjacentHTML');
+  assert.ok(confirmedOrder);
+});
+
+test('auth: pending state eliminato dopo password success; UI Account protetto', () => {
+  const src = settings();
+  assert.match(src, /await window\.setPasswordFromActiveSession\(\s*document\.getElementById\('usUpgradePassword'\)\.value,pending\.expectedUserId\);\s*\n\s*window\.clearPendingAccountUpgrade\(\);/);
+  assert.match(src, /Account protetto ✓/);
+});
+
+test('auth: la riga Settings resta visibile con pending upgrade dello stesso UID', () => {
+  const src = settings();
+  assert.match(src, /pendingMine=pending&&user\?pending\.expectedUserId===user\.id:false/);
+  assert.match(src, /upgradeRow\.hidden=!\(Boolean\(user\?\.is_anonymous\)\|\|\(pending&&pendingMine\)\)/);
   const index = read('index.html');
   assert.match(index, /data-us-setting="account-upgrade"[^>]*hidden[^>]*id="usAccountUpgradeRow"/);
 });
 
-test('Beatrice auth: niente signUp / claim_us_role / nuovi anonymous in settings.js', () => {
-  const settings = read('settings.js');
-  assert.doesNotMatch(settings, /signUp|signInAnonymously|claim_us_role|signInWithPassword/);
+test('auth: nessuna email/password salvata in storage; niente signUp/claim_us_role in settings', () => {
+  const src = settings();
+  // Nessun localStorage.setItem legato al flusso upgrade (email/password/pending).
+  assert.doesNotMatch(src, /localStorage\.setItem\((?!'us:settings:distance-unit')/);
+  assert.doesNotMatch(src, /signUp|signInAnonymously|claim_us_role|signInWithPassword/);
+  // Il pending state persista solo expectedUserId e phase.
+  const fn = appAuthBlock();
+  assert.match(fn, /JSON\.stringify\(\{expectedUserId:user\.id,phase:'awaiting_email_confirmation'\}\)/);
 });
 
-test('Beatrice auth: Francesco continua a funzionare col percorso generalizzato', () => {
-  const app = read('app.js');
-  // La funzione è generica: Francesco usa la stessa API con il proprio UID.
-  assert.match(app, /window\.setPasswordFromActiveSession=setPasswordFromActiveSession/);
-  assert.doesNotMatch(app, /Sessione Francesco non valida/);
-  // La UI login esistente non è toccata.
-  assert.match(app, /sb\.auth\.signInWithPassword\(\{email,password\}\)/);
-  const settings = read('settings.js');
-  assert.doesNotMatch(settings, /c42c0170-10c8-43f8-b08f-c46e97770e6d/);
+test('auth: Francesco continua a funzionare col percorso generalizzato; pairing intatto', () => {
+  const src = app();
+  assert.match(src, /sb\.auth\.signInWithPassword\(\{email,password\}\)/);
+  assert.doesNotMatch(src, /Sessione Francesco non valida/);
+  assert.match(src, /window\.setPasswordFromActiveSession=setPasswordFromActiveSession/);
+  assert.match(src, /sb\.rpc\('claim_us_role',\{invite_code:code,chosen_role:selectedRole\}\)/);
+  assert.equal((src.match(/claim_us_role/g) || []).length, 1);
+  assert.equal((src.match(/signInAnonymously/g) || []).length, 1);
+  const s = settings();
+  assert.doesNotMatch(s, /c42c0170-10c8-43f8-b08f-c46e97770e6d/);
+  assert.match(read('index.html'), /id="pairBtn"/);
 });
 
-test('Beatrice auth: pairing, schema e Android intatti', () => {
-  const app = read('app.js');
-  assert.match(app, /sb\.rpc\('claim_us_role',\{invite_code:code,chosen_role:selectedRole\}\)/);
-  const index = read('index.html');
-  assert.match(index, /id="pairBtn"/);
-  assert.doesNotMatch(read('settings.js'), /updateUser\(\{email:[^}]*\}\)[\s\S]*signUp/);
-  // Nessuna migration toccata in questa missione.
-  const migrations = fs.readdirSync(path.join(ROOT, 'supabase', 'migrations'));
-  const m5b = migrations.filter((m) => m.includes('left_for_you'));
-  assert.equal(m5b.length ? m5b.length : 2, 2, 'le due migration M5B esistono e non vengono modificate');
+test('auth: nessun tocco alle migration M5B in questa missione', () => {
+  // Le migration M5B vivono nel worktree M5B e restano intatte: in questo
+  // branch non esistono e nessun file supabase/ è toccato.
+  assert.equal(fs.readdirSync(path.join(ROOT, 'supabase', 'migrations')).filter((m) => m.includes('left_for_you')).length, 0);
 });

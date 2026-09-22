@@ -118,10 +118,16 @@ async function hydrateUsSettings(){
   $('usSettingsBuild').textContent=currentBuild();
 
   try{
-    const {data:{user}}=await sb.auth.getUser();
-    const upgradeRow=$('usAccountUpgradeRow');
-    if(upgradeRow)upgradeRow.hidden=!Boolean(user?.is_anonymous);
-  }catch(_){/* row stays hidden on session errors */}
+      const {data:{user}}=await sb.auth.getUser();
+      const upgradeRow=$('usAccountUpgradeRow');
+      if(upgradeRow){
+        const pending=window.readPendingAccountUpgrade?.();
+        const pendingMine=pending&&user?pending.expectedUserId===user.id:false;
+        // Visible while anonymous OR while a pending upgrade belongs to this
+        // (now email-confirmed) UID, so it does not disappear after confirmation.
+        upgradeRow.hidden=!(Boolean(user?.is_anonymous)||(pending&&pendingMine));
+      }
+    }catch(_){/* row stays hidden on session errors */}
 
   const locEl=$('usLocationState');
   locEl.className='us-setting-state';
@@ -335,9 +341,11 @@ function logoutConfirmationModal(){
 }
 
 // Two-phase in-place account upgrade for anonymous sessions (never creates a
-// new auth user): 1) request the confirmation email exactly once; 2) after the
-// user confirms the link, set a password from the still-active session.
-// Passwords and emails are entered directly by the user and never logged.
+// new auth user). Phase 1: request the confirmation email exactly once and show
+// ONLY "controlla la tua email" — no password field yet. Phase 2 (after the
+// email link is confirmed and the app is reopened): verify the ORIGINAL UID
+// saved before the upgrade, then allow the password set. Passwords and emails
+// are entered directly by the user and never logged or persisted.
 function accountUpgradeModal(){
   openModal('Proteggi il tuo account',`
     <div class="us-settings2-modal-copy" id="usAccountUpgradeBody">
@@ -359,21 +367,12 @@ function accountUpgradeModal(){
     st.textContent='';
     try{
       await window.requestAccountEmailUpgrade(document.getElementById('usUpgradeEmail').value);
-      st.textContent='Email inviata (un solo invio). Apri il link di conferma sul questo telefono, poi torna qui per impostare la password.';
+      // Phase boundary: after the email request only "check your email" is shown.
+      // The password field appears ONLY after the email is confirmed and the
+      // pending original-UID state matches the current session.
       btn.disabled=true;
       btn.textContent='Email inviata';
-      body.insertAdjacentHTML('beforeend',`
-        <input id="usUpgradePassword" type="password" autocomplete="new-password" placeholder="Nuova password (min 6)" style="width:100%;margin-top:10px">
-        <div class="us-settings2-action-stack"><button type="button" class="primary" id="usSetPassword" style="width:100%">Imposta password</button></div>`);
-      $('usSetPassword')?.addEventListener('click',async()=>{
-        const {data:{user}}=await sb.auth.getUser();
-        try{
-          await window.setPasswordFromActiveSession(document.getElementById('usUpgradePassword').value,user?.id);
-          st.textContent='Account protetto ✓ Da ora puoi entrare anche con email e password.';
-          closeModal();
-          toast('Account protetto ♡');
-        }catch(err){st.textContent='Errore: '+String(err?.message||'impostazione non riuscita');}
-      });
+      st.textContent='Controlla la tua email: apri il link di conferma su questo telefono. Torna qui dopo la conferma per impostare la password.';
     }catch(err){
       const msg=String(err?.message||'invio non riuscito');
       if(/rate|too many/i.test(msg)){
@@ -382,7 +381,52 @@ function accountUpgradeModal(){
         st.textContent='Errore: '+msg;
       }
       btn.disabled=true; // single attempt: no retry path
-    }finally{btn.disabled=btn.disabled||false;}
+    }
+  });
+  // If the pending upgrade already belongs to this (now confirmed) account,
+  // resume directly at the password phase.
+  resumeAccountPasswordPhaseIfConfirmed();
+}
+
+async function resumeAccountPasswordPhaseIfConfirmed(){
+  const body=document.getElementById('usAccountUpgradeBody');
+  if(!body)return;
+  const pending=window.readPendingAccountUpgrade?.();
+  if(!pending)return;
+  const {data:{user}}=await sb.auth.getUser();
+  if(!user){window.clearPendingAccountUpgrade();return;}
+  if(user.id!==pending.expectedUserId){
+    // Pending state of a different UID: ignore and remove it safely.
+    window.clearPendingAccountUpgrade();
+    return;
+  }
+  if(user.is_anonymous||!user.email||!user.email_confirmed_at){
+      $('usUpgradeStatus').textContent='Controlla la tua email: apri il link di conferma su questo telefono, poi torna qui.';
+      return;
+    }
+    // Resume confirmed: hide the email request phase entirely.
+    $('usUpgradeEmail')?.setAttribute('hidden','');
+    const sendBtn=$('usSendUpgrade');if(sendBtn)sendBtn.hidden=true;
+    const cancelBtn=$('usCancelUpgrade');if(cancelBtn)cancelBtn.hidden=true;
+    body.insertAdjacentHTML('beforeend',`
+    <p>Sei entrata dall'email. Ora scegli una password per questo account.</p>
+    <input id="usUpgradePassword" type="password" autocomplete="new-password" placeholder="Nuova password (min 6)" style="width:100%;margin-top:10px">
+    <div class="us-settings2-action-stack"><button type="button" class="primary" id="usSetPassword" style="width:100%">Imposta password</button></div>`);
+  $('usSetPassword')?.addEventListener('click',async()=>{
+    const btn=$('usSetPassword');
+    const st=$('usUpgradeStatus');
+    const pending=window.readPendingAccountUpgrade?.();
+    btn.disabled=true;
+    // The pending expectedUserId (original anonymous UID) is the authority;
+    // passing the freshly-read session user.id here would be self-referential.
+    if(!pending){st.textContent='Nessuna richiesta di upgrade attiva.';return;}
+    try{
+      await window.setPasswordFromActiveSession(document.getElementById('usUpgradePassword').value,pending.expectedUserId);
+      window.clearPendingAccountUpgrade();
+      st.textContent='Account protetto ✓ Da ora puoi entrare anche con email e password.';
+      closeModal();
+      toast('Account protetto ♡');
+    }catch(err){st.textContent='Errore: '+String(err?.message||'impostazione non riuscita');}
   });
 }
 
