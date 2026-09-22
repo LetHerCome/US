@@ -173,6 +173,14 @@ test('auth: Francesco continua a funzionare col percorso generalizzato; pairing 
   assert.match(read('index.html'), /id="pairBtn"/);
 });
 
-test('auth: nessun tocco alle migration M5B in questa missione', () => {
-  assert.equal(fs.readdirSync(path.join(ROOT, 'supabase', 'migrations')).filter((m) => m.includes('left_for_you')).length, 0);
+test('auth: l auth non tocca il dominio M5B left_for_you', () => {
+  // La history M5B esiste ed è canonical (missioni M5B successive alla auth);
+  // il confine valido qui è che il codice auth/produzione non la referenzia.
+  const m5b = fs
+    .readdirSync(path.join(ROOT, 'supabase', 'migrations'))
+    .filter((m) => m.includes('left_for_you'));
+  assert.ok(m5b.length >= 2, 'la migration history M5B deve restare intatta');
+  assert.doesNotMatch(app(), /left_for_you/);
+  assert.doesNotMatch(settings(), /left_for_you/);
+  assert.doesNotMatch(read('index.html'), /left_for_you/);
 });
