@@ -188,6 +188,20 @@ html.us-returning-device .auth-overlay{
     </section>
   </main>
 
+  <main id="thinkArrival" class="think-arrival-overlay" aria-hidden="true" data-us-modal data-us-motion-surface>
+    <div class="think-arrival-backdrop us-modal-backdrop" onclick="closeThinkArrival()"></div>
+    <section class="think-arrival-sheet" role="dialog" aria-modal="true" aria-label="Ti penso ricevuto" data-us-modal-panel>
+      <header class="think-arrival-head"><div><div class="tiny">TI PENSO</div><h2 id="thinkArrivalTitle">La tua persona ti pensa</h2></div><button type="button" class="think-arrival-close us-modal-close" onclick="closeThinkArrival()" aria-label="Chiudi Ti penso">×</button></header>
+      <p id="thinkArrivalCopy" class="think-arrival-copy">Un piccolo segnale, solo per voi due.</p>
+      <div class="think-reaction-grid" role="group" aria-label="Scegli una reazione">
+        <button type="button" class="think-reaction-button" data-think-reaction="heart" aria-label="Reagisci con cuore" aria-pressed="false"><span class="think-reaction-glyph think-reaction-heart" aria-hidden="true">♥</span><span class="sr-only">heart</span></button>
+        <button type="button" class="think-reaction-button" data-think-reaction="hug" aria-label="Reagisci con abbraccio" aria-pressed="false"><span class="think-reaction-glyph think-reaction-hug" aria-hidden="true">🫂</span><span class="sr-only">hug</span></button>
+        <button type="button" class="think-reaction-button" data-think-reaction="miss_you" aria-label="Reagisci con miss you" aria-pressed="false"><span class="think-reaction-glyph think-reaction-miss" aria-hidden="true">💭</span><span class="sr-only">miss_you</span></button>
+      </div>
+      <p id="thinkArrivalStatus" class="think-arrival-status" role="status" aria-live="polite"></p>
+    </section>
+  </main>
+
   <main id="moments" class="page">
     <section class="section" style="margin-top:6px">
       <h2>Moments</h2>

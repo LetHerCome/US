@@ -404,14 +404,14 @@ async function syncPushSubscriptionToSupabase(subscription){
   try{localStorage.setItem(cacheKey,signature);}catch(_e){}
   return true;
 }
-async function sendWebPushEvent(type,referenceId=null){
+async function sendWebPushEvent(type,referenceId=null,extra={}){
   try{
     const {data:{session}}=await sb.auth.getSession();
     if(!session?.access_token)return null;
     const response=await fetch(`${SB_URL}/functions/v1/send-web-push`,{
       method:'POST',
       headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':`Bearer ${session.access_token}`},
-      body:JSON.stringify({type,reference_id:referenceId||undefined})
+      body:JSON.stringify({type,reference_id:referenceId||undefined,...extra})
     });
     const payload=await response.json().catch(()=>({}));
     if(!response.ok)console.warn('[US Push] send failed',response.status,payload);
@@ -1235,6 +1235,12 @@ async function sendMagicLinkRecovery(){
 }
 window.sendMagicLinkRecovery=sendMagicLinkRecovery;
 
+let usIncomingThink=null;
+let usThinkOperationId=null;
+let usThinkReactionFinal=null;
+let usThinkReactionInFlight=false;
+let usThinkKnownReactionSignature='';
+
 const US_TODAY_PRIORITY_ORDER=Object.freeze({received_ready:1,waiting_for_me:2,couple_context:3});
 const US_TODAY_PRIORITY_LABELS=Object.freeze({
   received_ready:'Pronto per voi',
@@ -1311,6 +1317,22 @@ function renderTodayPriorities(priorities=[]){
   usTodayPriorityQueue=Array.isArray(priorities)?priorities.slice():[];
   renderTodayPriorityItem(usTodayPriorityQueue[0],usTodayPriorityQueue.length);
 }
+function thinkTodayPriorityViewModel(){
+  const signal=typeof usIncomingThink!=='undefined'?usIncomingThink:null;
+  const finalReaction=typeof usThinkReactionFinal!=='undefined'?usThinkReactionFinal:null;
+  if(!signal?.id||finalReaction)return null;
+  const partner=partnerFromProfiles(window.usBondProfiles||[]);
+  return {
+    id:`think-received:${signal.id}`,
+    factKey:`think:${signal.id}`,
+    arrivalType:'think-received',
+    category:'received_ready',
+    title:`${partner?.display_name||'La tua persona'} ti pensa`,
+    detail:'Ha lasciato un segnale per te.',
+    action:'think',
+    actionLabel:'Apri'
+  };
+}
 async function refreshTodayPriorities({daily}={}){
   const refreshId=++usTodayPriorityRefreshId;
   const dailySource=daily===undefined&&window.todayQuestion?{
@@ -1319,6 +1341,8 @@ async function refreshTodayPriorities({daily}={}){
     partnerName:window.usProfile?.role==='francesco'?'Bea':'Francesco'
   }:daily;
   const candidates=[];
+  const thinkPriority=thinkTodayPriorityViewModel();
+  if(thinkPriority)candidates.push(thinkPriority);
   const dailyPriority=dailyTodayPriorityViewModel(dailySource);
   if(dailyPriority)candidates.push(dailyPriority);
   try{
@@ -1340,6 +1364,7 @@ document.getElementById('usTodayPriorityRegion')?.addEventListener('click',event
   renderTodayPriorityItem(usTodayPriorityQueue[0],usTodayPriorityQueue.length);
   if(action==='today')window.openToday?.();
   if(action==='events')window.openEvents?.();
+  if(action==='think')window.openThinkArrival?.();
 });
 window.UsTodayPriority=Object.freeze({
   compose:composeTodayPriorities,
@@ -1374,6 +1399,84 @@ function closeToday(){
   if(window.UsUiFoundation?.exitSurface)window.UsUiFoundation.exitSurface(root,finalize);else finalize();
 }
 window.closeToday=closeToday;
+
+function thinkReactionLabel(reaction){return ({heart:'❤️',hug:'🫂',miss_you:'miss_you'})[reaction]||reaction||'';}
+function renderThinkReactionUi(){
+  const root=document.getElementById('thinkArrival');
+  if(!root)return;
+  const title=document.getElementById('thinkArrivalTitle');
+  const copy=document.getElementById('thinkArrivalCopy');
+  const status=document.getElementById('thinkArrivalStatus');
+  const buttons=root.querySelectorAll('[data-think-reaction]');
+  const partner=partnerFromProfiles(window.usBondProfiles||[]);
+  if(title)title.textContent=`${partner?.display_name||'La tua persona'} ti pensa`;
+  if(copy)copy.textContent='Un piccolo segnale, solo per voi due.';
+  buttons.forEach(button=>{
+    const reaction=button.dataset.thinkReaction;
+    button.classList.toggle('selected',reaction===usThinkReactionFinal);
+    button.disabled=Boolean(usThinkReactionFinal||usThinkReactionInFlight);
+    button.setAttribute('aria-pressed',String(reaction===usThinkReactionFinal));
+  });
+  if(status)status.textContent=usThinkReactionFinal?`Hai risposto ${thinkReactionLabel(usThinkReactionFinal)}.`:usThinkReactionInFlight?'Invio…':'';
+}
+function openThinkArrival(){
+  const root=document.getElementById('thinkArrival');
+  if(!root||!usIncomingThink)return;
+  window.UsUiFoundation?.cancelSurfaceExit?.(root);
+  root.classList.add('open');
+  root.setAttribute('aria-hidden','false');
+  renderThinkReactionUi();
+}
+window.openThinkArrival=openThinkArrival;
+function closeThinkArrival(){
+  const root=document.getElementById('thinkArrival');
+  if(!root)return;
+  const finalize=()=>{root.classList.remove('open');root.setAttribute('aria-hidden','true');};
+  if(window.UsUiFoundation?.exitSurface)window.UsUiFoundation.exitSurface(root,finalize);else finalize();
+}
+window.closeThinkArrival=closeThinkArrival;
+async function sendThinkReaction(reaction){
+  if(!usIncomingThink?.id||usThinkReactionFinal||usThinkReactionInFlight)return false;
+  if(!['heart','hug','miss_you'].includes(reaction))return false;
+  usThinkReactionInFlight=true;renderThinkReactionUi();
+  const {data,error}=await sb.rpc('set_think_reaction',{target_message_id:usIncomingThink.id,target_reaction:reaction});
+  if(error){
+    const terminal=error.code==='23505'&&String(error.message||'').includes('already_reacted');
+    if(terminal){
+      const {data:existing,error:readError}=await sb.from('think_reactions').select('message_id,reaction').eq('message_id',usIncomingThink.id).maybeSingle();
+      if(!readError&&existing?.reaction){
+        usThinkReactionFinal=existing.reaction;
+        usIncomingThink={...usIncomingThink,reaction:usThinkReactionFinal};
+        usThinkReactionInFlight=false;
+        renderThinkReactionUi();
+        sendWebPushEvent('think_reaction',usIncomingThink.id,{reaction:usThinkReactionFinal}).catch(()=>{});
+        window.UsTodayPriority?.refresh?.();
+        toast('Reazione già inviata');
+        setTimeout(()=>closeThinkArrival(),620);
+        return true;
+      }
+    }
+    console.warn('[US Think] reaction',error);usThinkReactionInFlight=false;renderThinkReactionUi();toast('Non riesco a inviare la reazione');return false;
+  }
+  const result=Array.isArray(data)?data[0]:data;
+  if(result?.status==='saved'||result?.status==='duplicate'){
+    usThinkReactionFinal=result.reaction||reaction;
+    usIncomingThink={...usIncomingThink,reaction:usThinkReactionFinal};
+    usThinkReactionInFlight=false;
+    renderThinkReactionUi();
+    sendWebPushEvent('think_reaction',usIncomingThink.id,{reaction:usThinkReactionFinal}).catch(()=>{});
+    window.UsTodayPriority?.refresh?.();
+    toast('Reazione inviata');
+    setTimeout(()=>closeThinkArrival(),620);
+    return true;
+  }
+  usThinkReactionInFlight=false;renderThinkReactionUi();return false;
+}
+window.sendThinkReaction=sendThinkReaction;
+document.getElementById('thinkArrival')?.addEventListener('click',event=>{
+  const reaction=event.target.closest?.('[data-think-reaction]')?.dataset.thinkReaction;
+  if(reaction)sendThinkReaction(reaction);
+});
 
 function dailyQuestionOutcomeRuntime(){
   const ownRole=()=>window.usProfile?.role||'';
@@ -2095,13 +2198,30 @@ async function hydrateThink(){
     sb.from('shared_messages').select('id',{count:'exact',head:true}).eq('kind','think').gte('created_at',new Date(new Date().getFullYear(),new Date().getMonth(),1).toISOString())
   ]);
   if(error){console.warn(error);return;}if(countError)console.warn(countError);
+  const messageIds=(rows||[]).map(row=>row.id).filter(Boolean);
+  let reactionRows=[];
+  if(messageIds.length){
+    const reactionResult=await sb.from('think_reactions').select('message_id,reaction,updated_at').in('message_id',messageIds);
+    if(reactionResult.error)console.warn('[US Think] reactions',reactionResult.error);else reactionRows=reactionResult.data||[];
+  }
+  const reactions=new Map(reactionRows.map(row=>[row.message_id,row]));
   const partner=partnerFromProfiles(profiles),partnerName=partner?.display_name||'L’altra persona';
   const received=(rows||[]).find(r=>r.sender_id!==window.usProfile.id);
   const sent=(rows||[]).find(r=>r.sender_id===window.usProfile.id);
-  const receivedEl=document.getElementById('thinkLastReceived');if(receivedEl)receivedEl.textContent=received?`${partnerName} ti ha pensato ${relativeSignalAge(received.created_at)}`:'Ancora nessun segnale';
-  const sentEl=document.getElementById('thinkLastSent');if(sentEl)sentEl.textContent=sent?`Hai pensato a ${partnerName} ${relativeSignalAge(sent.created_at)}`:'Non ne hai ancora inviati';
+  const receivedReaction=received?reactions.get(received.id):null;
+  const sentReaction=sent?reactions.get(sent.id):null;
+  if(received&&!receivedReaction){usIncomingThink=received;usThinkReactionFinal=null;}
+  else if(!received||receivedReaction){usIncomingThink=null;usThinkReactionFinal=receivedReaction?.reaction||null;}
+  const receivedEl=document.getElementById('thinkLastReceived');if(receivedEl)receivedEl.textContent=received?(receivedReaction?`${partnerName} ha reagito al tuo Ti penso`:`${partnerName} ti ha pensato ${relativeSignalAge(received.created_at)}`):'Ancora nessun segnale';
+  const sentEl=document.getElementById('thinkLastSent');if(sentEl)sentEl.textContent=sent?(sentReaction?`${partnerName} ha reagito ${thinkReactionLabel(sentReaction.reaction)}`:`Hai pensato a ${partnerName} ${relativeSignalAge(sent.created_at)}`):'Non ne hai ancora inviati';
   const monthEl=document.getElementById('thinkMonthCount');if(monthEl)monthEl.textContent=Number(count||0).toLocaleString('it-IT');
   const live=document.getElementById('thinkLiveText');if(live&&received)live.textContent=`Ultimo segnale da ${partnerName} · ${relativeSignalAge(received.created_at)}`;
+  if(sentReaction){
+    const signature=`${sent.id}:${sentReaction.reaction}:${sentReaction.updated_at||''}`;
+    if(usThinkKnownReactionSignature&&usThinkKnownReactionSignature!==signature)toast(`Ha reagito ${thinkReactionLabel(sentReaction.reaction)}`);
+    usThinkKnownReactionSignature=signature;
+  }
+  window.UsTodayPriority?.refresh?.();
   window.UsThinkWidget?.publishThink?.({partnerName,lastReceivedAt:received?.created_at||'',lastSentAt:sent?.created_at||''}).catch(()=>{});
 }
 window.hydrateThink=hydrateThink;
@@ -2110,13 +2230,17 @@ async function sendThinkSignal(){
   const btn=document.getElementById('thinkButton');if(btn?.disabled)return false;
   const profiles=await getCoupleProfiles(),partner=partnerFromProfiles(profiles);
   if(!partner){toast('L’altro profilo non è ancora collegato');return false;}
+  if(!usThinkOperationId)usThinkOperationId=globalThis.crypto?.randomUUID?.()||String(Date.now())+'-'+Math.random().toString(16).slice(2);
   if(btn)btn.disabled=true;
-  const {data:message,error}=await sb.from('shared_messages').insert({couple_id:window.usProfile.couple_id,sender_id:window.usProfile.id,recipient_id:partner.id,kind:'think',body:'♡'}).select('id').single();
+  const {data,error}=await sb.rpc('send_think',{operation_id:usThinkOperationId});
   if(error){console.warn(error);toast('Non riesco a inviare il segnale');if(btn)btn.disabled=false;return false;}
-  if(message?.id)sendWebPushEvent('think',message.id).catch(()=>{});
+  const result=Array.isArray(data)?data[0]:data;
+  const messageId=result?.message_id;
+  usThinkOperationId=null;
+  if(messageId)sendWebPushEvent('think',messageId).catch(()=>{});
   btn?.classList.add('sent');setTimeout(()=>btn?.classList.remove('sent'),700);
   window.UsPlatform?.haptic?.('light',[30,25,45])||navigator.vibrate?.([30,25,45]);
-  toast('Inviato');
+  toast(result?.duplicate?'Già inviato':'Inviato');
   await hydrateThink();
   setTimeout(()=>{if(btn)btn.disabled=false;},1800);
   return true;
@@ -2124,11 +2248,13 @@ async function sendThinkSignal(){
 window.sendThinkSignal=sendThinkSignal;
 function handleIncomingThink(row){
   if(!row||row.kind!=='think'||row.recipient_id!==window.usProfile?.id)return;
+  usIncomingThink={...row};usThinkReactionFinal=null;usThinkReactionInFlight=false;
   const partner=partnerFromProfiles(window.usBondProfiles||[]);
   toast(`${partner?.display_name||'L’altra persona'} ti pensa ♡`);
   window.UsPlatform?.haptic?.('medium',[45,35,80])||navigator.vibrate?.([45,35,80]);
   const heart=document.getElementById('thinkButton');heart?.classList.add('received');setTimeout(()=>heart?.classList.remove('received'),900);
-  hydrateThink();
+  hydrateThink().catch(()=>{});
+  window.UsTodayPriority?.refresh?.();
 }
 const usRealtimeRefreshTimers=new Map();
 function scheduleUsRealtimeRefresh(kind){
@@ -2150,6 +2276,7 @@ function scheduleUsRealtimeRefresh(kind){
       if(document.getElementById('usEventsOverlay')?.classList.contains('open'))window.hydrateEvents?.();
       window.UsTodayPriority?.refresh?.();
     }
+    if(kind==='think-reaction'){hydrateThink().catch(()=>{});return;}
   },180);
   usRealtimeRefreshTimers.set(kind,timer);
 }
@@ -2159,6 +2286,7 @@ function startUsRealtime(){
   const userId=window.usProfile.id,coupleId=window.usProfile.couple_id;
   usRealtimeChannel=sb.channel(`us-live-${userId}`)
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'shared_messages',filter:`recipient_id=eq.${userId}`},payload=>handleIncomingThink(payload.new))
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'think_reactions'},()=>scheduleUsRealtimeRefresh('think-reaction'))
     .on('postgres_changes',{event:'*',schema:'public',table:'daily_answers',filter:`couple_id=eq.${coupleId}`},()=>scheduleUsRealtimeRefresh('daily'))
     .on('postgres_changes',{event:'*',schema:'public',table:'quiz_responses',filter:`couple_id=eq.${coupleId}`},()=>scheduleUsRealtimeRefresh('quiz'))
     .on('postgres_changes',{event:'*',schema:'public',table:'couple_locations',filter:`couple_id=eq.${coupleId}`},()=>scheduleUsRealtimeRefresh('location'))
