@@ -70,7 +70,7 @@ test('P1 recupera gli artefatti di verifica interrotti senza copiarli negli asse
 
 test('P1 integra il monogramma US netto in auth, header e mini-branding', () => {
   const html = read('index.html');
-  assert.equal((html.match(/assets\/derived\/brand\/us-symbol-apk-foreground-v1\.png/g) || []).length, 5);
+  assert.equal((html.match(/assets\/derived\/brand\/us-symbol-apk-foreground-v1\.png/g) || []).length, 3);
   assert.doesNotMatch(html, /assets\/derived\/brand\/us-symbol-ui-transparent-v1\.png/);
   assert.doesNotMatch(html, /assets\/brand\/us-wordmark-premium\.svg/);
 });

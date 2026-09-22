@@ -30,7 +30,7 @@ test('M6A precarica tutti gli asset shell premium e mantiene il contratto PWA', 
   const build = html.match(/meta name="us-build" content="([^"]+)"/)?.[1];
 
   assert.match(worker, /const MEDIA_CACHE_NAME = "us-private-media-v1"/);
-  assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-25"/);
+  assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-26"/);
   assert.equal(build, version);
   assert.match(worker, /"\/assets\/derived\/brand\/us-symbol-apk-foreground-v1\.png"/);
   SHELL_ICONS.forEach((name) => {
@@ -44,7 +44,7 @@ test('M6A precarica tutti gli asset shell premium e mantiene il contratto PWA', 
     'house-regular.svg', 'house-fill.svg',
     'heart-straight-regular.svg', 'heart-straight-fill.svg',
     'images-regular.svg', 'images-fill.svg',
-    'cards-three-regular.svg', 'cards-three-fill.svg'].forEach((name) => {
+    'cards-three-regular.svg', 'cards-three-fill.svg', 'calendar-dots-regular.svg'].forEach((name) => {
     const file = name.endsWith('.woff2') ? `assets/fonts/${name}` : `assets/icons/phosphor/${name}`;
     assert.match(worker, new RegExp(`"/${file.replaceAll('.', '\\.') }"`));
   });

@@ -351,3 +351,21 @@ body:has(#home.page.active){overflow-y:hidden}
 @media(prefers-reduced-motion:reduce){
   .us-id-loader i{animation:none!important}
 }
+
+/* ===== MOBILE POLISH 20260922 ===== */
+.top.us-premium-top{top:calc(var(--us-safe-top) + 8px);padding:5px 10px!important;border-radius:999px;background:linear-gradient(145deg,rgba(255,255,255,.085),rgba(255,255,255,.025)),rgba(17,20,27,.68)!important;border-color:rgba(255,255,255,.14);box-shadow:0 18px 44px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08);backdrop-filter:blur(25px) saturate(155%);-webkit-backdrop-filter:blur(25px) saturate(155%);overflow:visible}
+.top.us-premium-top::before{background:linear-gradient(180deg,rgba(255,255,255,.10),transparent 70%);backdrop-filter:none;-webkit-backdrop-filter:none}
+.top.us-premium-top .brand-row{width:44px;gap:0}
+.top.us-premium-top .top-actions{width:44px;justify-content:flex-end;gap:0}
+.top.us-premium-top .us-top-profiles{width:44px;justify-content:flex-end;margin-left:0}
+.top.us-premium-top .us-events-top-control{max-width:180px;width:100%;margin:0;justify-self:center}
+.today-orb-mark.us-phosphor-calendar{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#ff6d93,#9b7cff);color:#fff;box-shadow:0 6px 15px rgba(255,102,142,.20)}
+.today-orb-mark.us-phosphor-calendar::before{content:"";width:16px;height:16px;background:currentColor;-webkit-mask:url("/assets/icons/phosphor/calendar-dots-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/calendar-dots-regular.svg") center/contain no-repeat}
+#settings{height:calc(var(--us-viewport-height) - var(--us-safe-top));overflow-y:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;padding-top:calc(var(--us-top-chrome-clearance) + 10px);box-sizing:border-box}
+#settings .us-settings2-page{padding-top:4px!important;padding-bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 28px)!important}
+.noi-canonical-page{height:auto!important;min-height:calc(var(--us-viewport-height) - var(--us-top-chrome-clearance) - var(--us-safe-top) - var(--us-safe-bottom) - 12px);overflow:visible!important}
+.noi-living-section{overflow:visible!important}
+.noi-living-list{height:clamp(230px,35vh,300px)!important;overflow:visible!important}
+.noi-living-list .bond-quest{overflow:visible!important;justify-content:flex-start!important}
+.noi-living-list .bond-quest h4{display:block!important;-webkit-line-clamp:unset!important;overflow:visible!important;line-height:1.18!important}
+@media(max-width:360px){.home-distance-pill{left:76px!important;right:10px!important}}

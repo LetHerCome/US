@@ -78,7 +78,7 @@ test('M1.2 usa una clearance authority e riserva spazio sulle tre secondary root
   assert.match(css, /#bond,#moments,#quiz\{padding-top:calc\(var\(--us-top-chrome-clearance\) \+ var\(--us-space-2\)\);box-sizing:border-box\}/);
   assert.match(css, /#bond>\.section,#moments>\.section,#quiz>\.section\{margin-top:0!important\}/);
   assert.doesNotMatch(css, /#home\{padding-top:/);
-  assert.doesNotMatch(css, /#settings\{padding-top:/);
+  assert.match(css, /#settings\{height:calc\(var\(--us-viewport-height\) - var\(--us-safe-top\)\)/);
 });
 
 test('M1.3 porta un solo opener I nostri eventi al centro della top chrome', () => {

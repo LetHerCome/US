@@ -37,9 +37,10 @@ test('il branding PWA usa il foreground ufficiale già derivato per Android', ()
   });
   assert.equal(webManifest.background_color, '#08040E');
   assert.equal(webManifest.theme_color, '#08040E');
-  assert.ok(webManifest.icons.every((icon) => icon.src.startsWith(`/${BRAND}`)));
+  assert.deepEqual(webManifest.icons.map((icon) => icon.sizes), ['192x192', '512x512', '1254x1254']);
+  assert.ok(webManifest.icons.some((icon) => icon.src.startsWith(`/${BRAND}`)));
   assert.match(html, new RegExp(`rel="icon"[^>]+href="/${BRAND}`));
-  assert.match(html, new RegExp(`rel="apple-touch-icon"[^>]+href="/${BRAND}`));
+  assert.match(html, /rel="apple-touch-icon"[^>]+href="\/apple-touch-icon\.png\?v=us-pwa-logo-v2/);
 });
 
 test('il foreground branding web è una copia byte-identica del derivato Android ufficiale', () => {

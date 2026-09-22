@@ -715,6 +715,7 @@ function setCloudBadge(ok,text){
 
 let locationRefreshInFlight=false;
 let locationTimer=null;
+const LOCATION_STALE_MS=24*60*60*1000;
 
 function distanceKm(aLat,aLon,bLat,bLon){
   const rad=value=>value*Math.PI/180;
@@ -733,6 +734,14 @@ function relativeLocationAge(dateString){
   if(hours<24)return `${hours} ${hours===1?'ora':'ore'} fa`;
   const days=Math.floor(hours/24);
   return `${days} ${days===1?'giorno':'giorni'} fa`;
+}
+function locationAgeMs(dateString){
+  const timestamp=Date.parse(dateString||'');
+  return Number.isFinite(timestamp)?Math.max(0,Date.now()-timestamp):Infinity;
+}
+function validCoordinate(value,min,max){
+  const number=Number(value);
+  return Number.isFinite(number)&&number>=min&&number<=max;
 }
 
 function renderDistanceState(state,detail='',action='Aggiorna'){
@@ -779,7 +788,7 @@ async function hydrateDistance(){
   const meta=document.getElementById('distanceMeta');
   const btn=document.getElementById('distanceAction');
   if(!root||!value||!meta||!btn)return;
-  root.classList.remove('denied');
+  root.classList.remove('denied','stale');
   if(!mine){
     root.classList.remove('ready');
     value.textContent='Attiva la distanza';
@@ -794,7 +803,29 @@ async function hydrateDistance(){
     btn.textContent='Aggiorna';btn.disabled=false;
     return;
   }
-  const km=distanceKm(mine.latitude,mine.longitude,partner.latitude,partner.longitude);
+  const validCoordinates=validCoordinate(mine.latitude,-90,90)&&validCoordinate(mine.longitude,-180,180)&&validCoordinate(partner.latitude,-90,90)&&validCoordinate(partner.longitude,-180,180);
+  if(!validCoordinates){
+    root.classList.add('stale');
+    value.textContent='Distanza non disponibile';
+    meta.textContent='Una delle due posizioni non contiene coordinate valide.';
+    btn.textContent='Aggiorna';btn.disabled=false;
+    return;
+  }
+  const stalePartner=locationAgeMs(partner.updated_at)>LOCATION_STALE_MS;
+  const staleMine=locationAgeMs(mine.updated_at)>LOCATION_STALE_MS;
+  if(stalePartner||staleMine){
+    root.classList.add('stale');
+    value.textContent='Posizione non aggiornata';
+    const staleOwner=stalePartner?partnerName:'la tua';
+    const staleAge=stalePartner?partner.updated_at:mine.updated_at;
+    const staleAgeLabel=relativeLocationAge(staleAge).replace(' giorni fa','g').replace(' giorno fa','g').replace(' ore fa','h').replace(' ora fa','h');
+    meta.textContent=stalePartner
+      ?`${partnerName}: ${staleAgeLabel} · deve aprire US.`
+      :`La tua posizione: ${staleAgeLabel} · riprova.`;
+    btn.textContent='Riprova';btn.disabled=false;
+    return;
+  }
+  const km=distanceKm(Number(mine.latitude),Number(mine.longitude),Number(partner.latitude),Number(partner.longitude));
   window.usDistanceKm=km;
   root.classList.add('ready');
   value.textContent=`♡ ${formatDistance(km)} da ${partnerName}`;

@@ -277,6 +277,9 @@ body.viewer-open{overflow:hidden}
 .home-distance-pill .distance-copy small{font-size:var(--us-text-meta);color:rgba(255,255,255,.62);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .home-distance-pill .distance-action{font-size:17px;color:rgba(255,255,255,.72);flex:0 0 auto}
 .home-distance-pill.denied{border-color:rgba(255,102,142,.35)}
+.home-distance-pill.stale{border-color:rgba(255,180,92,.30);background:rgba(28,22,16,.48)!important}
+.home-distance-pill.stale .distance-orbit{background:rgba(255,180,92,.12);color:#ffd08a}
+.home-distance-pill.stale .distance-copy b{color:#ffe0a8}
 
 .today-overlay{position:fixed;inset:0;z-index:10020;display:none;align-items:flex-end;justify-content:center}
 .today-overlay.open{display:flex}
@@ -346,7 +349,7 @@ body.viewer-open{overflow:hidden}
 .home-photo-layer.active{transform:scale(1)!important}
 .home-hero-only[data-us-home-photo-instant] .home-photo-layer{transition:none!important}
 .home-photo-shade{background:linear-gradient(180deg,rgba(4,6,9,.03),rgba(4,6,9,.01) 58%,rgba(4,6,9,.46) 100%)!important}
-.home-distance-pill{bottom:26px!important;left:78px!important;right:18px!important;width:auto!important;border-radius:22px!important;background:rgba(12,14,20,.44)!important;backdrop-filter:blur(18px) saturate(135%)!important;-webkit-backdrop-filter:blur(18px) saturate(135%)!important;box-shadow:0 9px 26px rgba(0,0,0,.20)!important;transition:bottom .22s var(--apple-ease),transform .2s var(--apple-ease),background .2s ease!important}
+.home-distance-pill{bottom:26px!important;left:84px!important;right:14px!important;width:auto!important;padding:7px 9px!important;gap:8px!important;border-radius:16px!important;background:rgba(12,14,20,.44)!important;backdrop-filter:blur(18px) saturate(135%)!important;-webkit-backdrop-filter:blur(18px) saturate(135%)!important;box-shadow:0 9px 26px rgba(0,0,0,.20)!important;transition:bottom .22s var(--apple-ease),transform .2s var(--apple-ease),background .2s ease!important}
 .home-distance-pill:active{transform:scale(.985);background:rgba(12,14,20,.56)!important}
 .home-empty-state[hidden]{display:none}
 .home-empty-state{position:absolute!important;z-index:2!important;left:28px;right:28px;top:48%;transform:translateY(-50%);display:grid;justify-items:center;gap:10px;text-align:center;color:#f2f1f4;transition:top .22s var(--apple-ease)}
