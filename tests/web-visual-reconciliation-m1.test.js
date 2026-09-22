@@ -105,7 +105,7 @@ test('M1.5 nasconde la priority region solo in Home e preserva il runtime Daily/
   const css = read('identity.css') + read('fix4.css') + read('styles.css');
   const app = read('app.js');
   assert.match(html, /<main id="home"[\s\S]*id="usTodayPriorityRegion" hidden aria-live="polite"><\/div>/);
-  assert.match(css, /#home #usTodayPriorityRegion\{display:none!important\}/);
+  assert.match(css, /#home #usTodayPriorityRegion\[hidden\]\{display:none!important\}/);
   assert.match(app, /function dailyTodayPriorityViewModel/);
   assert.match(app, /function eventTodayPriorityViewModel/);
   assert.match(app, /data-us-today-action/);

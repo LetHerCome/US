@@ -332,10 +332,11 @@ body.viewer-open{overflow:hidden}
 :root{--glass:rgba(18,21,28,.66);--glass-border:rgba(255,255,255,.13);--apple-ease:cubic-bezier(.22,.78,.24,1)}
 
 /* Home: la foto occupa tutto lo spazio utile della pagina. */
-#home{margin-left:-16px;margin-right:-16px;margin-top:-2px}
+#home{margin-left:-16px;margin-right:-16px;margin-top:-2px;position:relative}
 #usTodayPriorityRegion[hidden]{display:none!important}
-#usTodayPriorityRegion{display:grid;gap:8px;padding:8px 16px 12px}
+#usTodayPriorityRegion{position:absolute;z-index:6;top:calc(var(--us-top-chrome-clearance) + 8px);left:14px;right:14px;display:block;padding:0;pointer-events:none}
 .us-today-priority-card{width:100%;min-height:44px;padding:12px 13px;border:1px solid rgba(255,255,255,.11);border-radius:20px;background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.025)),var(--card);color:var(--text);display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"kind action" "copy action";align-items:center;gap:4px 12px;text-align:left;box-shadow:0 11px 28px rgba(0,0,0,.16)}
+.us-today-priority-card{pointer-events:auto}
 .us-today-priority-kind{grid-area:kind;font-size:8px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--pink2)}
 .us-today-priority-copy{grid-area:copy;min-width:0;display:grid;gap:3px}.us-today-priority-copy b{font-size:13px;line-height:1.25}.us-today-priority-copy small{font-size:10px;line-height:1.35;color:var(--muted)}
 .us-today-priority-action{grid-area:action;font-size:10px;font-weight:800;color:#eadfff;white-space:nowrap}
