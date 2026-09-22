@@ -1240,16 +1240,35 @@ window.loginAccount=loginAccount;
 
 // Called only from a trusted, already authenticated session. The caller owns
 // password entry; this function never logs, persists, or transmits it elsewhere.
-async function setPasswordFromActiveSession(password){
+// expectedUserId must match the current session user id (works for any account,
+// e.g. after the anonymous -> email upgrade).
+async function setPasswordFromActiveSession(password, expectedUserId){
   if(typeof password!=='string'||password.length<6)throw new Error('La password deve contenere almeno 6 caratteri.');
+  if(typeof expectedUserId!=='string'||!expectedUserId)throw new Error('Sessione non valida.');
   const {data:{user},error:userError}=await sb.auth.getUser();
   if(userError)throw userError;
-  if(user?.id!=='c42c0170-10c8-43f8-b08f-c46e97770e6d')throw new Error('Sessione Francesco non valida.');
+  if(user?.id!==expectedUserId)throw new Error('Sessione non valida per questo account.');
   const {error}=await sb.auth.updateUser({password});
   if(error)throw error;
   return true;
 }
 window.setPasswordFromActiveSession=setPasswordFromActiveSession;
+
+// Anonymous -> email upgrade for the CURRENT active session only.
+// Single email attempt: on rate limit the error propagates and the caller stops.
+// Never creates a new auth user (updateUser mutates the existing one in place).
+async function requestAccountEmailUpgrade(email){
+  const normalized=typeof email==='string'?email.trim().toLowerCase():'';
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(normalized))throw new Error('Inserisci un indirizzo email valido.');
+  const {data:{user},error:userError}=await sb.auth.getUser();
+  if(userError)throw userError;
+  if(!user)throw new Error('Sessione non valida.');
+  if(!user.is_anonymous)throw new Error('Questo account non è anonimo.');
+  const {error}=await sb.auth.updateUser({email:normalized});
+  if(error)throw error;
+  return true;
+}
+window.requestAccountEmailUpgrade=requestAccountEmailUpgrade;
 
 async function sendMagicLinkRecovery(){
   const email=document.getElementById('loginEmail').value.trim();

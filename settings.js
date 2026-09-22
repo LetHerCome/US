@@ -117,6 +117,12 @@ async function hydrateUsSettings(){
   $('usDistanceUnitValue').textContent=unit==='mi'?'miglia':'km';
   $('usSettingsBuild').textContent=currentBuild();
 
+  try{
+    const {data:{user}}=await sb.auth.getUser();
+    const upgradeRow=$('usAccountUpgradeRow');
+    if(upgradeRow)upgradeRow.hidden=!Boolean(user?.is_anonymous);
+  }catch(_){/* row stays hidden on session errors */}
+
   const locEl=$('usLocationState');
   locEl.className='us-setting-state';
   if(loc==='granted'){locEl.textContent='✓';locEl.classList.add('ok');}
@@ -328,6 +334,58 @@ function logoutConfirmationModal(){
   $('usConfirmLogout')?.addEventListener('click',logout);
 }
 
+// Two-phase in-place account upgrade for anonymous sessions (never creates a
+// new auth user): 1) request the confirmation email exactly once; 2) after the
+// user confirms the link, set a password from the still-active session.
+// Passwords and emails are entered directly by the user and never logged.
+function accountUpgradeModal(){
+  openModal('Proteggi il tuo account',`
+    <div class="us-settings2-modal-copy" id="usAccountUpgradeBody">
+      <p>Aggiungo un'email a questo account, senza cambiare identità o dati. Ti mando un solo link di conferma.</p>
+      <input id="usUpgradeEmail" type="email" inputmode="email" autocomplete="email" placeholder="tua@email.com" style="width:100%">
+      <div class="us-settings2-action-stack">
+        <button type="button" class="ghost" id="usCancelUpgrade">Annulla</button>
+        <button type="button" class="primary" id="usSendUpgrade" style="width:100%">Invia email di conferma</button>
+      </div>
+      <div class="auth-status" id="usUpgradeStatus" role="status" aria-live="polite"></div>
+    </div>
+  `,'ACCOUNT');
+  const body=document.getElementById('usAccountUpgradeBody');
+  $('usCancelUpgrade')?.addEventListener('click',closeModal);
+  $('usSendUpgrade')?.addEventListener('click',async()=>{
+    const btn=$('usSendUpgrade');
+    const st=$('usUpgradeStatus');
+    btn.disabled=true;
+    st.textContent='';
+    try{
+      await window.requestAccountEmailUpgrade(document.getElementById('usUpgradeEmail').value);
+      st.textContent='Email inviata (un solo invio). Apri il link di conferma sul questo telefono, poi torna qui per impostare la password.';
+      btn.disabled=true;
+      btn.textContent='Email inviata';
+      body.insertAdjacentHTML('beforeend',`
+        <input id="usUpgradePassword" type="password" autocomplete="new-password" placeholder="Nuova password (min 6)" style="width:100%;margin-top:10px">
+        <div class="us-settings2-action-stack"><button type="button" class="primary" id="usSetPassword" style="width:100%">Imposta password</button></div>`);
+      $('usSetPassword')?.addEventListener('click',async()=>{
+        const {data:{user}}=await sb.auth.getUser();
+        try{
+          await window.setPasswordFromActiveSession(document.getElementById('usUpgradePassword').value,user?.id);
+          st.textContent='Account protetto ✓ Da ora puoi entrare anche con email e password.';
+          closeModal();
+          toast('Account protetto ♡');
+        }catch(err){st.textContent='Errore: '+String(err?.message||'impostazione non riuscita');}
+      });
+    }catch(err){
+      const msg=String(err?.message||'invio non riuscito');
+      if(/rate|too many/i.test(msg)){
+        st.textContent='Supabase ha bloccato l\'invio (rate limit). Fermati qui: useremo il fallback admin sullo stesso UID. Nessun secondo invio.';
+      }else{
+        st.textContent='Errore: '+msg;
+      }
+      btn.disabled=true; // single attempt: no retry path
+    }finally{btn.disabled=btn.disabled||false;}
+  });
+}
+
 async function logout(){
   if(logoutInFlight)return;
   logoutInFlight=true;
@@ -350,6 +408,7 @@ async function action(name){
   if(name==='distance')return distanceModal();
   if(name==='location')return locationAction();
   if(name==='sync-status')return syncStatusModal();
+  if(name==='account-upgrade')return accountUpgradeModal();
   if(name==='privacy')return privacyModal();
   if(name==='logout')return logoutConfirmationModal();
 }
