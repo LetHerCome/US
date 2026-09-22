@@ -209,17 +209,34 @@ html.us-returning-device .auth-overlay{
   </main>
 
   <main id="bond" class="page">
-    <section class="section bond-page" style="margin-top:6px">
-      <div class="bond-page-head"><div><div class="tiny">IL VOSTRO BOND</div><h2>Il vostro livello</h2></div><div class="bond-page-head-actions"><div class="bond-level-medallion"><span>LV.</span><b id="bondLevelValue">1</b></div><button type="button" class="us-calendar-btn us-important-control us-premium-control" id="usSettingsEntry" onclick="go('settings',{nav:true})" aria-label="Apri impostazioni"><span class="us-shell-icon" aria-hidden="true"><img class="us-shell-icon-off us-approved-custom-icon" src="/assets/source/ui/us-icon-settings-v1.png" alt=""><img class="us-shell-icon-on us-approved-custom-icon" src="/assets/source/ui/us-icon-settings-v1.png" alt=""></span></button></div></div>
-      <article class="bond-progress-card">
-        <div class="bond-progress-top"><div><div class="bond-rank" id="bondRankTitle">Primo legame</div><b id="bondTotalXp">0 XP totali</b></div><div class="bond-next" id="bondNextXp">200 XP al prossimo livello</div></div>
+    <section class="section bond-page noi-canonical-page" style="margin-top:6px" aria-label="Noi">
+      <header class="noi-canonical-head">
+        <div>
+          <div class="tiny">NOI</div>
+          <h2>Risonanza</h2>
+          <p>Quello che state costruendo insieme.</p>
+        </div>
+        <button type="button" class="us-calendar-btn us-important-control us-premium-control" id="usSettingsEntry" onclick="go('settings',{nav:true})" aria-label="Apri impostazioni">
+          <span class="us-shell-icon" aria-hidden="true"><img class="us-shell-icon-off us-approved-custom-icon" src="/assets/source/ui/us-icon-settings-v1.png" alt=""><img class="us-shell-icon-on us-approved-custom-icon" src="/assets/source/ui/us-icon-settings-v1.png" alt=""></span>
+        </button>
+      </header>
+
+      <article class="noi-resonance" aria-label="Risonanza attuale">
+        <div class="noi-resonance-top"><div><div class="tiny">RISONANZA</div><b id="bondRankTitle">Primo legame</b></div><span class="noi-resonance-mark" aria-hidden="true">∞</span></div>
         <div class="bond-xp-track"><div id="bondPageFill"></div></div>
-        <div class="bond-xp-line"><span id="bondLevelXp">0 / 200 XP</span><span id="bondCompletedCount">0 quest completate</span></div>
+        <div class="noi-resonance-foot"><span>La vostra sintonia cresce con ciò che vivete.</span><span id="bondCompletedCount" aria-hidden="true">0 esperienze</span></div>
+        <div class="noi-resonance-legacy" aria-hidden="true"><span id="bondLevelValue">1</span><span id="bondTotalXp">0 XP totali</span><span id="bondNextXp">200 XP al prossimo livello</span><span id="bondLevelXp">0 / 200 XP</span><span id="bondRerollsLeft">3</span><span id="bondWeekReset">Nuove esperienze ogni lunedì</span><span id="bondBadges"></span></div>
       </article>
-      <section class="bond-badges-section"><div class="bond-weekly-head bond-badge-head"><div><div class="tiny">DISTINTIVI</div><h3>Livelli sbloccati</h3></div></div><div class="bond-badges" id="bondBadges"></div></section>
-      <div class="bond-weekly-head"><div><div class="tiny">QUEST SETTIMANALI</div><h3>Questa settimana</h3></div><div class="reroll-counter"><span>↻</span><b id="bondRerollsLeft">3</b><small>rimasti</small></div></div>
-      <div id="bondQuestList" class="bond-quest-list" aria-live="polite"><div class="empty-state" aria-busy="true"><div class="emoji">✦</div><b>Preparo le vostre quest…</b></div></div>
-      <div class="bond-week-note"><span id="bondWeekReset">Nuove quest ogni lunedì</span><span>Entrambi devono confermare.</span></div>
+
+      <section class="noi-living-section" aria-labelledby="noiLivingTitle">
+        <div class="noi-section-kicker">DA VIVERE</div>
+        <div class="noi-section-title-row"><div><h3 id="noiLivingTitle">Quello che vi aspetta</h3><p>Una sola esperienza alla volta, senza riempire lo spazio.</p></div><span class="noi-section-symbol" aria-hidden="true">↗</span></div>
+        <div id="bondQuestList" class="bond-quest-list noi-living-list" aria-live="polite"><div class="noi-quiet-state"><b>Da vivere</b><span>Le vostre prossime esperienze appariranno qui.</span></div></div>
+        <div class="bond-week-note" aria-hidden="true"><span id="bondWeekReset"></span><span></span></div>
+      </section>
+
+      <section class="noi-idea-section" aria-labelledby="noiIdeaTitle" hidden>
+      </section>
     </section>
   </main>
 
