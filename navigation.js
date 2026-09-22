@@ -51,6 +51,12 @@ const layers=[
     close:()=>window.closeToday?.()
   },
   {
+    name:'think-arrival',
+    find:()=>document.getElementById('thinkArrival'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.closeThinkArrival?.()
+  },
+  {
     name:'events',
     find:()=>document.getElementById('usEventsOverlay'),
     open:el=>el?.classList.contains('open'),
