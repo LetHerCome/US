@@ -45,6 +45,57 @@
   setTimeout(() => document.documentElement.classList.remove('us-auth-pending'), 6000);
 })();
 </script>
+<!-- us-local-dev-bootstrap: start -->
+<script>
+(() => {
+  const params = new URLSearchParams(window.location.search);
+  const localOrigin = window.location.protocol === 'http:' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  const nativeRuntime = Boolean(
+    window.UsCapacitorRuntime?.isNativePlatform?.() ||
+    window.Capacitor?.isNativePlatform?.()
+  );
+  if (!localOrigin || params.get('us-dev') !== '1' || nativeRuntime) return;
+
+  window.__US_LOCAL_DEV__ = true;
+  const resetKey = 'us:local-dev:service-worker-reset:v1';
+  const alreadyReset = params.get('us-dev-ready') === '1' || sessionStorage.getItem(resetKey) === '1';
+
+  async function resetLocalRuntime() {
+    if (alreadyReset) {
+      if (params.has('us-refresh')) {
+        const cleanUrl = `${window.location.pathname}?us-dev=1${window.location.hash || ''}`;
+        window.history.replaceState(null, '', cleanUrl);
+      }
+      return;
+    }
+
+    sessionStorage.setItem(resetKey, '1');
+    const registrations = await navigator.serviceWorker?.getRegistrations?.() || [];
+    await Promise.all(registrations.map((registration) => registration.unregister()));
+    const cacheNames = await window.caches?.keys?.() || [];
+    await Promise.all(cacheNames
+      .filter((name) => name !== 'us-private-media-v1')
+      .map((name) => window.caches.delete(name)));
+
+    const hadController = Boolean(navigator.serviceWorker?.controller);
+    const cleanUrl = `${window.location.pathname}?us-dev=1&us-dev-ready=1&us-refresh=${Date.now()}${window.location.hash || ''}`;
+    if (hadController || registrations.length || cacheNames.length) {
+      window.location.replace(cleanUrl);
+    } else {
+      window.history.replaceState(null, '', `${window.location.pathname}?us-dev=1${window.location.hash || ''}`);
+    }
+  }
+
+  window.addEventListener('load', () => {
+    resetLocalRuntime().catch((error) => {
+      console.warn('[US Local Dev] runtime reset unavailable:', error);
+      window.history.replaceState(null, '', `${window.location.pathname}?us-dev=1${window.location.hash || ''}`);
+    });
+  }, { once: true });
+})();
+</script>
+<!-- us-local-dev-bootstrap: end -->
 <style>
 html.us-auth-pending .auth-overlay,
 html.us-returning-device .auth-overlay{
