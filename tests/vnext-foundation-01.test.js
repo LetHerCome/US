@@ -37,7 +37,9 @@ test('partner apre solo Lasciato per te e il profilo resta un controllo foto', (
   const stories = read('stories.js');
 
   assert.match(html, /id="leftForYouPartnerEntry"[\s\S]{0,180}onclick="usEnvelopeTap\(\)"/);
-  assert.match(html, /id="profileAvatarBtn"[\s\S]{0,180}aria-label="Aggiorna foto profilo"[\s\S]{0,100}onclick="pickProfilePhoto\(\)"/);
+  assert.doesNotMatch(html, /id="profileAvatarBtn"/, 'nessun avatar/foto legacy nel top chrome');
+  assert.match(html, /id="profileAvatarFile"/, 'il flusso foto profilo resta vivo tramite Impostazioni');
+  assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,220}Cambia foto profilo/);
   assert.doesNotMatch(html, /onclick="openOwnStories\(\)"/);
   assert.match(stories, /__US_LEFT_FOR_YOU_ACTIVE__/);
   assert.match(html, /id="usSettingsEntry"[\s\S]{0,160}onclick="go\('settings',\{nav:true\}\)"/);

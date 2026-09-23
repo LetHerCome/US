@@ -38,9 +38,10 @@ test('M5F unseen state derives from seen_at and the envelope exposes the canonic
   assert.equal(api.isUnseen({ seen_at: null }), true);
   assert.equal(api.isUnseen({ seen_at: '2026-09-23T10:00:00Z' }), false);
   const html = read('index.html');
-  assert.match(html, /aria-label="Beatrice ti ha lasciato qualcosa"/);
+  assert.match(html, /aria-label="Lasciato per te"/, 'stato neutro finché il dato non risolve');
   const source = read('left-for-you.js');
-  assert.match(source, /Lascia qualcosa a Beatrice/);
+  assert.match(source, /'Beatrice ti ha lasciato qualcosa'/);
+  assert.match(source, /'Lascia qualcosa a Beatrice'/);
 });
 
 test('M5E integrates server-authoritative seen and Conserva RPCs', () => {
@@ -80,14 +81,15 @@ test('M5E partner entry is one unified envelope control, not an avatar or Storie
   assert.doesNotMatch(css, /#leftForYouPartnerBadge/);
 });
 
-test('M5E visual shell keeps the avatar row compact and the empty state intimate', () => {
+test('M5F visual shell keeps the top-right slot clean and the empty state intimate', () => {
   const html = read('index.html');
   const css = read('left-for-you.css');
   assert.match(html, /Qui apparirà qualcosa che Beatrice ha lasciato per te/);
   assert.doesNotMatch(html, /leftForYouEmpty[\s\S]*left-for-you-mark/);
   assert.match(css, /\.left-for-you-sheet\{[^}]*width:min\(100%,430px\)/);
-  assert.match(css, /#profileAvatarBtn \.fallback\[hidden\][^}]*display:none!important/);
-  assert.match(css, /\.top\.us-premium-top \.profile-avatar\{[^}]*width:36px!important/);
+  assert.doesNotMatch(html, /id="profileAvatarBtn"/);
+  assert.match(css, /#leftForYouPartnerEntry\.is-loading\{[^}]*pointer-events:none/);
+  assert.match(css, /#leftForYouPartnerEntry:active\{[^}]*transform:scale\(\.94\)/);
 });
 
 test('M5E media uses the existing private signed-url helper', () => {

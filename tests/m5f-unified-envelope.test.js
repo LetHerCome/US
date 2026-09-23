@@ -10,6 +10,7 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 
 function makeEl(id) {
   const classes = new Set();
+  const attrs = {};
   return {
     id,
     hidden: true,
@@ -28,14 +29,15 @@ function makeEl(id) {
         return next;
       },
     },
-    setAttribute: () => {},
-    getAttribute: () => null,
+    setAttribute: (name, value) => { attrs[name] = String(value); },
+    getAttribute: (name) => (name in attrs ? attrs[name] : null),
+    removeAttribute: (name) => { delete attrs[name]; },
     addEventListener: () => {},
     click: () => {},
   };
 }
 
-function createHarness({ leftForYouRows = [], profilesRows = [{ id: 'beatrice-id', display_name: 'Beatrice', couple_id: 'couple-id' }], insertResult = null } = {}) {
+function createHarness({ leftForYouRows = [], profilesRows = [{ id: 'beatrice-id', display_name: 'Beatrice', couple_id: 'couple-id' }], insertResult = null, authed = true } = {}) {
   const elements = new Map();
   const log = { inserts: [], uploads: [], realtime: [] };
   let pendingInsert = null;
@@ -55,7 +57,7 @@ function createHarness({ leftForYouRows = [], profilesRows = [{ id: 'beatrice-id
     document: documentShim,
     addEventListener: () => {},
     dispatchEvent: () => {},
-    usProfile: { id: 'francesco-id', couple_id: 'couple-id' },
+    usProfile: authed ? { id: 'francesco-id', couple_id: 'couple-id' } : undefined,
   };
 
   function selectBuilder(rows) {
@@ -66,7 +68,7 @@ function createHarness({ leftForYouRows = [], profilesRows = [{ id: 'beatrice-id
       insert: (payload) => {
         log.inserts.push(payload);
         if (pendingInsert) return pendingInsert.promise;
-        return Promise.resolve(insertResult);
+        return Promise.resolve(insertResult ?? { data: null, error: null });
       },
       then: (resolve, reject) => Promise.resolve({ data: rows, error: null }).then(resolve, reject),
       catch: (reject) => Promise.resolve({ data: rows, error: null }).catch(reject),
@@ -140,6 +142,7 @@ test('M5F envelope state machine: zero unseen → open, unseen >= 1 → closed',
 test('M5F closed tap opens the unseen item receiver; open tap launches the sender composer', async () => {
   const harness = createHarness();
   const { api, el } = harness;
+  await api.load();
 
   api.updateEntry(2);
   assert.equal(el('leftForYouPartnerEntry').classList.contains('is-closed'), true);
@@ -155,6 +158,7 @@ test('M5F closed tap opens the unseen item receiver; open tap launches the sende
 
 test('M5F transition: one unseen marked seen → envelope opens; multiple unseen → stays closed until the last one', async () => {
   const { api, el } = createHarness();
+  await api.load();
   api.updateEntry(3);
   assert.equal(el('leftForYouPartnerEntry').classList.contains('is-closed'), true);
   api.updateEntry(2);
@@ -172,6 +176,7 @@ test('M5F transition: one unseen marked seen → envelope opens; multiple unseen
 test('M5F new realtime incoming item → envelope closes again', async () => {
   const harness = createHarness({ leftForYouRows: [] });
   const { api, el } = harness;
+  await api.handleIncoming();
   api.updateEntry(0);
   assert.equal(el('leftForYouPartnerEntry').classList.contains('is-open'), true);
 
@@ -304,6 +309,40 @@ test('M5F envelope uses the canonical Phosphor pair and a restrained trace, not 
   }
   assert.match(css, /us-envelope-trace/);
   assert.match(css, /@media\(prefers-reduced-motion:reduce\)\{#leftForYouPartnerEntry\.is-closed::before\{animation:none\}/);
+});
+
+test('M5F top chrome: question icon for the daily question, no legacy avatar control', () => {
+  const html = read('index.html');
+  const css = read('identity.css');
+  assert.match(html, /us-phosphor-question/);
+  assert.match(css, /us-phosphor-question::before\{[^}]*mask:url\("\/assets\/icons\/phosphor\/question-regular\.svg"\)/);
+  assert.doesNotMatch(html, /id="profileAvatarBtn"/);
+  assert.doesNotMatch(html, /onclick="pickProfilePhoto\(\)"/);
+  assert.match(html, /id="profileAvatarFile"/, 'il flusso foto profilo resta vivo tramite Impostazioni');
+});
+
+test('M5F loading: neutral envelope, inert tap until the first server answer resolves', async () => {
+  const harness = createHarness({ authed: false });
+  const { api, el, window } = harness;
+  await sleep(5);
+  assert.equal(api.envelopeIsResolved(), false);
+  const entry = el('leftForYouPartnerEntry');
+  assert.equal(entry.classList.contains('is-loading'), true);
+  assert.equal(entry.getAttribute('aria-busy'), 'true');
+  assert.equal(entry.classList.contains('is-open'), false);
+  assert.equal(entry.classList.contains('is-closed'), false);
+
+  api.tap();
+  assert.equal(el('leftForYouOverlay').classList.contains('open'), false);
+  assert.equal(el('leftForYouComposerOverlay').classList.contains('open'), false);
+
+  window.usProfile = { id: 'francesco-id', couple_id: 'couple-id' };
+  await api.handleIncoming();
+  await sleep(5);
+  assert.equal(api.envelopeIsResolved(), true);
+  assert.equal(entry.classList.contains('is-loading'), false);
+  assert.equal(entry.classList.contains('is-open'), true);
+  assert.equal(entry.getAttribute('aria-busy'), null);
 });
 
 test('M5F composer surface: title, send language, five kinds, reduced-motion composer transitions', () => {

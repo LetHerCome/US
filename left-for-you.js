@@ -13,7 +13,10 @@
 
   // M5F — unified envelope state machine (ONE control, no parallel system).
   // State A closed: at least one unseen item. State B open: everything seen.
+  // Until the first server answer resolves, the control stays neutral/loading
+  // and is safely non-interactive (never exposes closed/open prematurely).
   let unseenCount = 0;
+  let envelopeResolved = false;
   let lastRenderedItemId = null;
   let envelopeOpeningTimer = null;
   let realtimeChannel = null;
@@ -58,6 +61,16 @@
   function applyEnvelopeState({ transition = false } = {}) {
     const el = envelopeEl();
     if (!el) return;
+    if (!envelopeResolved) {
+      el.classList.add('is-loading');
+      el.classList.remove('is-closed');
+      el.classList.remove('is-open');
+      el.setAttribute('aria-label', 'Lasciato per te');
+      el.setAttribute('aria-busy', 'true');
+      return;
+    }
+    el.classList.remove('is-loading');
+    el.removeAttribute('aria-busy');
     const closed = unseenCount > 0;
     const wasClosed = el.classList.contains('is-closed');
     el.classList.toggle('is-closed', closed);
@@ -78,6 +91,10 @@
   // Pure state derivation: unseen >= 1 → closed (State A); zero → open (State B).
   function envelopeStateFor(count = 0) {
     return count > 0 ? 'closed' : 'open';
+  }
+
+  function envelopeIsResolved() {
+    return envelopeResolved;
   }
 
   async function loadProfiles() {
@@ -102,6 +119,7 @@
       .order('created_at', { ascending: false });
     if (error) throw error;
     items = (data || []).filter((item) => kinds.has(item.kind));
+    envelopeResolved = true;
     updateEntry(items.filter(isUnseen).length);
     return items;
   }
@@ -197,8 +215,9 @@
 
   async function retry() { await load(); }
 
-  // M5F — ONE tap dispatcher: closed → next unseen item; open → sender composer.
+  // M5F — ONE tap dispatcher: loading → inert; closed → next unseen item; open → sender composer.
   function tap() {
+    if (!envelopeResolved) return;
     if (unseenCount > 0) { open(); return; }
     openComposer();
   }
@@ -211,7 +230,7 @@
 
   function handleIncoming() {
     const overlayOpen = Boolean(root()?.classList.contains('open'));
-    fetchItems().then(() => { if (overlayOpen) alignCurrentToRenderedItem(); }).catch(() => {});
+    return fetchItems().then(() => { if (overlayOpen) alignCurrentToRenderedItem(); }).catch(() => {});
   }
 
   function subscribeRealtime() {
@@ -258,6 +277,8 @@
     if (!overlay) return;
     overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false');
     setComposerStatus('');
+    // The composer must be ready to send: make sure the recipient profile is known.
+    if (!partner()) loadProfiles().catch(() => {});
   }
 
   function closeComposer() {
@@ -420,18 +441,19 @@
     window.addEventListener('us-auth-resolved', (event) => {
       if (event.detail?.paired) {
         fetchItems().catch(() => {});
+        loadProfiles().catch(() => {});
         subscribeRealtime();
       }
     });
     window.addEventListener('left-for-you-refresh', () => { if (root()?.classList.contains('open')) load(); else fetchItems().catch(() => {}); });
-    if (window.usProfile) { fetchItems().catch(() => {}); subscribeRealtime(); }
+    if (window.usProfile) { fetchItems().catch(() => {}); loadProfiles().catch(() => {}); subscribeRealtime(); }
     applyEnvelopeState();
     window.usEnvelopeTap = tap;
   }
 
   const api = {
     isUnseen, renderItemMarkup, labelForKind, open, close, load, conserve, retry, boot,
-    tap, applyEnvelopeState, updateEntry, envelopeStateFor, subscribeRealtime, handleIncoming, alignCurrentToRenderedItem,
+    tap, applyEnvelopeState, updateEntry, envelopeStateFor, envelopeIsResolved, subscribeRealtime, handleIncoming, alignCurrentToRenderedItem,
     setComposerKind, openComposer, closeComposer, send, composer,
   };
   if (typeof window !== 'undefined') window.openLeftForYou = open;

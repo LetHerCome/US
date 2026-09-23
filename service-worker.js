@@ -42,6 +42,7 @@ const APP_SHELL = [
   "/assets/icons/phosphor/cards-three-regular.svg",
   "/assets/icons/phosphor/cards-three-fill.svg",
   "/assets/icons/phosphor/calendar-dots-regular.svg",
+  "/assets/icons/phosphor/question-regular.svg",
   "/assets/icons/phosphor/envelope-simple-regular.svg",
   "/assets/icons/phosphor/envelope-open-regular.svg",
   "/assets/icons/home-off.svg",
