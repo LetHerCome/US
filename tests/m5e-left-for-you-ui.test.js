@@ -77,6 +77,16 @@ test('M5E partner entry uses an integrated avatar control, not a Stories ring', 
   assert.match(css, /#leftForYouPartnerBadge\{[^}]*width:6px[^}]*height:6px/);
 });
 
+test('M5E visual shell keeps the avatar row compact and the empty state intimate', () => {
+  const html = read('index.html');
+  const css = read('left-for-you.css');
+  assert.match(html, /Qui apparirà qualcosa che Beatrice ha lasciato per te/);
+  assert.doesNotMatch(html, /leftForYouEmpty[\s\S]*left-for-you-mark/);
+  assert.match(css, /\.left-for-you-sheet\{[^}]*width:min\(100%,430px\)/);
+  assert.match(css, /#leftForYouPartnerFallback\[hidden\][^}]*display:none!important/);
+  assert.match(css, /\.top\.us-premium-top \.profile-avatar\{[^}]*width:36px!important/);
+});
+
 test('M5E media uses the existing private signed-url helper', () => {
   const source = read('left-for-you.js');
   assert.match(source, /usGetSignedUrl/);
