@@ -14,10 +14,10 @@ function loadApi() {
   return context.module.exports;
 }
 
-test('M5E entry is partner presence, not a Stories or bottom-nav destination', () => {
+test('M5E entry is a single envelope control, not a Stories or bottom-nav destination', () => {
   const html = read('index.html');
   assert.match(html, /id="leftForYouPartnerEntry"/);
-  assert.match(html, /onclick="openLeftForYou\(\)"/);
+  assert.match(html, /onclick="usEnvelopeTap\(\)"/);
   assert.doesNotMatch(html, /data-page="left-for-you"/);
   assert.doesNotMatch(html, /data-page="stories"/);
   assert.match(html, /left-for-you\.js/);
@@ -33,13 +33,14 @@ test('M5E content model renders exactly the five supported kinds', () => {
   }
 });
 
-test('M5E unseen state is derived from seen_at and partner access exposes a badge', () => {
+test('M5F unseen state derives from seen_at and the envelope exposes the canonical labels', () => {
   const api = loadApi();
   assert.equal(api.isUnseen({ seen_at: null }), true);
   assert.equal(api.isUnseen({ seen_at: '2026-09-23T10:00:00Z' }), false);
   const html = read('index.html');
-  assert.match(html, /id="leftForYouPartnerBadge"/);
-  assert.match(html, /aria-label="Apri Lasciato per te"/);
+  assert.match(html, /aria-label="Beatrice ti ha lasciato qualcosa"/);
+  const source = read('left-for-you.js');
+  assert.match(source, /Lascia qualcosa a Beatrice/);
 });
 
 test('M5E integrates server-authoritative seen and Conserva RPCs', () => {
@@ -66,15 +67,17 @@ test('M5E disables the legacy media surface in the active Web/PWA shell', () => 
   assert.match(html, /__US_LEFT_FOR_YOU_ACTIVE__/);
   assert.doesNotMatch(html, /usTopProfiles|usStoryPartner|usStoryPartnerOpen|openOwnStories\(\)/);
   assert.match(stories, /if \(window\.__US_LEFT_FOR_YOU_ACTIVE__\) return/);
-  assert.match(html, /id="leftForYouPartnerEntry"[\s\S]{0,220}openLeftForYou/);
+  assert.match(html, /id="leftForYouPartnerEntry"[\s\S]{0,220}usEnvelopeTap/);
 });
 
-test('M5E partner entry uses an integrated avatar control, not a Stories ring', () => {
+test('M5E partner entry is one unified envelope control, not an avatar or Stories ring', () => {
   const css = read('left-for-you.css');
-  assert.match(css, /#leftForYouPartnerEntry\{[^}]*border:0[^}]*background:transparent/);
-  assert.match(css, /#leftForYouPartnerEntry\.has-unseen\{[^}]*box-shadow:none/);
-  assert.match(css, /#leftForYouPartnerEntry\.has-unseen:after\{content:none/);
-  assert.match(css, /#leftForYouPartnerBadge\{[^}]*width:6px[^}]*height:6px/);
+  const html = read('index.html');
+  assert.match(css, /#leftForYouPartnerEntry\.us-envelope-control\{[^}]*border:1px solid/);
+  assert.match(css, /\.us-envelope-face--closed\{[^}]*mask-image:url\("\/assets\/icons\/phosphor\/envelope-simple-regular\.svg"\)/);
+  assert.match(css, /\.us-envelope-face--open\{[^}]*mask-image:url\("\/assets\/icons\/phosphor\/envelope-open-regular\.svg"\)/);
+  assert.doesNotMatch(html, /id="leftForYouPartnerBadge"/);
+  assert.doesNotMatch(css, /#leftForYouPartnerBadge/);
 });
 
 test('M5E visual shell keeps the avatar row compact and the empty state intimate', () => {
@@ -83,7 +86,7 @@ test('M5E visual shell keeps the avatar row compact and the empty state intimate
   assert.match(html, /Qui apparirà qualcosa che Beatrice ha lasciato per te/);
   assert.doesNotMatch(html, /leftForYouEmpty[\s\S]*left-for-you-mark/);
   assert.match(css, /\.left-for-you-sheet\{[^}]*width:min\(100%,430px\)/);
-  assert.match(css, /#leftForYouPartnerFallback\[hidden\][^}]*display:none!important/);
+  assert.match(css, /#profileAvatarBtn \.fallback\[hidden\][^}]*display:none!important/);
   assert.match(css, /\.top\.us-premium-top \.profile-avatar\{[^}]*width:36px!important/);
 });
 

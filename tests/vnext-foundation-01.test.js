@@ -36,7 +36,7 @@ test('partner apre solo Lasciato per te e il profilo resta un controllo foto', (
   const html = read('index.html');
   const stories = read('stories.js');
 
-  assert.match(html, /id="leftForYouPartnerEntry"[\s\S]{0,180}onclick="openLeftForYou\(\)"/);
+  assert.match(html, /id="leftForYouPartnerEntry"[\s\S]{0,180}onclick="usEnvelopeTap\(\)"/);
   assert.match(html, /id="profileAvatarBtn"[\s\S]{0,180}aria-label="Aggiorna foto profilo"[\s\S]{0,100}onclick="pickProfilePhoto\(\)"/);
   assert.doesNotMatch(html, /onclick="openOwnStories\(\)"/);
   assert.match(stories, /__US_LEFT_FOR_YOU_ACTIVE__/);
