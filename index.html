@@ -26,6 +26,7 @@
 <link rel="stylesheet" href="/settings2.css?v=us-settings2-1" media="print" onload="this.media='all'"/>
 <link rel="stylesheet" href="/polish4.css?v=us-final-polish-motion31-1"/>
 <link rel="stylesheet" href="/stories.css"/>
+<link rel="stylesheet" href="/left-for-you.css"/>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://iiakdfsxpywdkxravqjh.supabase.co" crossorigin>
 <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
@@ -141,7 +142,7 @@ html.us-returning-device .auth-overlay{
 </div>
 
 <div class="app">
-  <div class="top us-premium-top"><div class="brand-row"><button type="button" class="today-orb us-important-control us-premium-control" id="todayOrb" onclick="openToday()" aria-label="Apri la domanda giornaliera"><span class="today-orb-mark us-phosphor-calendar" aria-hidden="true"></span><span class="today-orb-copy"><b>Oggi</b><small>Domanda</small></span><i id="todayOrbDot"></i></button></div><button type="button" class="us-events-top-control us-important-control" id="usEventsTopEntry" onclick="openEvents()" aria-label="Apri i nostri eventi"><span>I nostri eventi</span><span class="us-events-top-chevron" aria-hidden="true">⌄</span></button><div class="top-actions"><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><button type="button" class="profile-avatar us-important-control us-premium-control" id="profileAvatarBtn" aria-label="Apri le tue Stories" onclick="openOwnStories()"><img id="profileAvatarImg" alt="Foto profilo" hidden><span class="fallback" id="profileAvatarFallback">♡</span><span class="camera-dot" aria-hidden="true"><img class="us-shell-icon-off" src="/assets/icons/add-off.svg" alt=""><img class="us-shell-icon-on" src="/assets/icons/add-on.svg" alt=""></span></button><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
+  <div class="top us-premium-top"><div class="brand-row"><button type="button" class="today-orb us-important-control us-premium-control" id="todayOrb" onclick="openToday()" aria-label="Apri la domanda giornaliera"><span class="today-orb-mark us-phosphor-calendar" aria-hidden="true"></span><span class="today-orb-copy"><b>Oggi</b><small>Domanda</small></span><i id="todayOrbDot"></i></button></div><button type="button" class="us-events-top-control us-important-control" id="usEventsTopEntry" onclick="openEvents()" aria-label="Apri i nostri eventi"><span>I nostri eventi</span><span class="us-events-top-chevron" aria-hidden="true">⌄</span></button><div class="top-actions"><button type="button" id="leftForYouPartnerEntry" onclick="openLeftForYou()" aria-label="Apri Lasciato per te"><img id="leftForYouPartnerImg" alt="Foto della tua persona" hidden><span id="leftForYouPartnerFallback">♡</span><span id="leftForYouPartnerBadge" hidden aria-label="Nuovi messaggi"></span></button><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><button type="button" class="profile-avatar us-important-control us-premium-control" id="profileAvatarBtn" aria-label="Apri le tue Stories" onclick="openOwnStories()"><img id="profileAvatarImg" alt="Foto profilo" hidden><span class="fallback" id="profileAvatarFallback">♡</span><span class="camera-dot" aria-hidden="true"><img class="us-shell-icon-off" src="/assets/icons/add-off.svg" alt=""><img class="us-shell-icon-on" src="/assets/icons/add-on.svg" alt=""></span></button><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
 
   <main id="home" class="page active">
     <div id="usTodayPriorityRegion" hidden aria-live="polite"></div>
@@ -448,6 +449,27 @@ html.us-returning-device .auth-overlay{
   </section>
 </div>
 
+<div class="left-for-you-overlay" id="leftForYouOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
+  <div class="left-for-you-backdrop us-modal-backdrop" id="leftForYouBackdrop"></div>
+  <section class="left-for-you-sheet" role="dialog" aria-modal="true" aria-labelledby="leftForYouTitle" data-us-modal-panel>
+    <header class="left-for-you-head">
+      <div><div class="tiny">PER VOI DUE</div><h2 id="leftForYouTitle">Lasciato per te</h2><small id="leftForYouPartnerName">La tua persona</small></div>
+      <button type="button" class="left-for-you-close us-modal-close" id="leftForYouClose" aria-label="Chiudi Lasciato per te" data-us-modal-close>×</button>
+    </header>
+    <div class="left-for-you-body">
+      <div class="left-for-you-loading" id="leftForYouLoading" aria-busy="true"><div class="left-for-you-mark" aria-hidden="true">♡</div><p>Apro il tuo messaggio…</p></div>
+      <div class="left-for-you-empty" id="leftForYouEmpty" hidden><div class="left-for-you-mark" aria-hidden="true">⌁</div><h3>Niente da aprire</h3><p>Quando la tua persona lascerà qualcosa per te, lo troverai qui.</p></div>
+      <div class="left-for-you-error" id="leftForYouError" hidden><div class="left-for-you-mark" aria-hidden="true">!</div><h3>Non riesco ad aprirlo</h3><p>Il tuo spazio privato non ha risposto. Riprova senza perdere il messaggio.</p><button type="button" data-action id="leftForYouRetry">Riprova</button></div>
+      <div class="left-for-you-card" id="leftForYouCard" hidden>
+        <div class="left-for-you-meta"><span class="left-for-you-from"><span class="left-for-you-from-avatar" id="leftForYouFromFallback">♡</span><span>Da <b id="leftForYouFromName">la tua persona</b></span></span><span id="leftForYouCounter"></span></div>
+        <div id="leftForYouContent"></div>
+        <div class="left-for-you-actions"><button type="button" id="leftForYouConserve">Conserva</button><button type="button" id="leftForYouNext">Apri il prossimo</button></div>
+        <div class="left-for-you-status" id="leftForYouStatus" role="status" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite">Salvato ♡</div>
 <div class="app-status-bar" id="appStatusBar" data-kind="offline" role="alert" aria-live="assertive" hidden>Sei offline. Mostro ciò che è già disponibile; le azioni online riprenderanno alla riconnessione.</div>
 <div class="app-update-bar" id="appUpdateBar" role="status" aria-live="polite" hidden><span><b>Aggiornamento disponibile</b><small>Puoi aggiornare quando hai finito quello che stai facendo.</small></span><button type="button" id="appUpdateBtn">Aggiorna</button></div>
@@ -460,6 +482,7 @@ html.us-returning-device .auth-overlay{
 <script defer src="/app.js"></script>
 <script defer src="/stories.js"></script>
 <script defer src="/fix4.js?v=fix4-20260820-1"></script>
+<script defer src="/left-for-you.js?v=us-m5e-1"></script>
 <script defer src="/events.js?v=us-couple-loop-1"></script>
 <script defer src="/games.js?v=us-final-polish-motion31-1"></script>
 <script defer src="/settings.js?v=us-settings2-1"></script>

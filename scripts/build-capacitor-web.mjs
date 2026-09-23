@@ -103,6 +103,8 @@ let html = await readFile(stagedIndexPath, 'utf8');
 if (!html.includes(sourceCdn)) throw new Error(`index.html does not use Supabase JS ${supabaseVersion}`);
 html = html
   .replace(/<link\s+rel=["']manifest["'][^>]*>\s*/i, '')
+  .replace(/<link\s+rel=["']stylesheet["'][^>]*href=["']\/left-for-you\.css[^>]*>\s*/i, '')
+  .replace(/<script\s+defer\s+src=["']\/left-for-you\.js[^>]*><\/script>\s*/i, '')
   .replace(/<link\s+rel=["']preconnect["']\s+href=["']https:\/\/cdn\.jsdelivr\.net["'][^>]*>\s*/i, '')
   .replace(/<link\s+rel=["']dns-prefetch["']\s+href=["']\/\/cdn\.jsdelivr\.net["'][^>]*>\s*/i, '')
   .replace(`${sourceCdn}"></script>`, '/vendor/supabase.js"></script>')
