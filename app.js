@@ -1003,7 +1003,8 @@ async function uploadProfilePhoto(file){
   if(!['image/jpeg','image/png','image/webp'].includes(file.type))return toast('Per ora usa JPG, PNG o WebP');
   if(file.size>20*1024*1024)return toast('Foto troppo grande: massimo 20 MB');
   const oldPath=window.usProfile.avatar_path||null;
-  const btn=document.getElementById('profileAvatarBtn');btn.disabled=true;
+  const btn=document.getElementById('profileAvatarBtn');
+  if(btn)btn.disabled=true;
   try{
     const compressed=await compressImageFile(file,{maxDimension:512,quality:.82});
     const path=`${window.usProfile.couple_id}/${window.usProfile.id}/avatar-${Date.now()}-${crypto.randomUUID()}.webp`;
@@ -1016,7 +1017,7 @@ async function uploadProfilePhoto(file){
     toast('Foto profilo aggiornata ♡');
     await hydrateProfileAvatars();
   }catch(err){console.warn(err);toast(err?.message==='SOURCE_TOO_LARGE'?'Foto troppo grande: massimo 20 MB':'Non riesco ad aggiornare la foto');}
-  finally{btn.disabled=false;document.getElementById('profileAvatarFile').value='';}
+  finally{if(btn)btn.disabled=false;document.getElementById('profileAvatarFile').value='';}
 }
 
 const profileAvatarFile=document.getElementById('profileAvatarFile');

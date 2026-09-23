@@ -26,7 +26,7 @@ test('V0E usa direttamente i sei master custom approvati nelle rispettive superf
 
   assert.match(html, /us-nav-icon--moments[\s\S]{0,320}phosphor\/images-(?:regular|fill)\.svg/);
   assert.match(html, /us-nav-icon--bond[\s\S]{0,320}phosphor\/heart-straight-(?:regular|fill)\.svg/);
-  assert.match(html, /id="todayOrb"[\s\S]{0,340}us-phosphor-calendar/);
+  assert.match(html, /id="todayOrb"[\s\S]{0,340}us-phosphor-question/);
   assert.doesNotMatch(html.match(/<button[^>]+id="thinkButton"[\s\S]*?<\/button>/)?.[0] || '', /us-icon-ti-penso-v1\.png/);
   assert.match(stories, /id="usStoryAdd"[\s\S]{0,340}assets\/source\/ui\/us-icon-stories-v1\.png/);
 });

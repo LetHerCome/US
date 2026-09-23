@@ -1,4 +1,5 @@
 (() => {
+  if (window.__US_LEFT_FOR_YOU_ACTIVE__) return;
   if (window.__usStoriesV19Installed) return;
   window.__usStoriesV19Installed = true;
 

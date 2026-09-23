@@ -32,12 +32,16 @@ test('Foundation 01 mantiene il contratto completo di navigation e Oggi', () => 
   assert.doesNotMatch(html, /usTodayPriorityRegion[^>]*>[\s\S]*?(received|reveal ready|waiting for me|priority card)/i);
 });
 
-test('avatar apre Stories personali, Settings ha un entry dedicato ed Events vive sotto Noi', () => {
+test('partner apre solo Lasciato per te e il profilo resta un controllo foto', () => {
   const html = read('index.html');
   const stories = read('stories.js');
 
-  assert.match(html, /id="profileAvatarBtn"[\s\S]{0,180}aria-label="Apri le tue Stories"[\s\S]{0,100}onclick="openOwnStories\(\)"/);
-  assert.match(stories, /window\.openOwnStories = function openOwnStories\(\) \{[\s\S]{0,180}openStoriesFor\(window\.usProfile\.id, true\)/);
+  assert.match(html, /id="leftForYouPartnerEntry"[\s\S]{0,180}onclick="usEnvelopeTap\(\)"/);
+  assert.doesNotMatch(html, /id="profileAvatarBtn"/, 'nessun avatar/foto legacy nel top chrome');
+  assert.match(html, /id="profileAvatarFile"/, 'il flusso foto profilo resta vivo tramite Impostazioni');
+  assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,220}Cambia foto profilo/);
+  assert.doesNotMatch(html, /onclick="openOwnStories\(\)"/);
+  assert.match(stories, /__US_LEFT_FOR_YOU_ACTIVE__/);
   assert.match(html, /id="usSettingsEntry"[\s\S]{0,160}onclick="go\('settings',\{nav:true\}\)"/);
   assert.match(read('identity.css'), /\.us-calendar-btn\{width:44px;min-width:44px;height:44px;min-height:44px/);
   assert.doesNotMatch(html, /id="usCalendarBtn"/);

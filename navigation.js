@@ -63,6 +63,12 @@ const layers=[
     close:()=>window.closeEvents?.()
   },
   {
+    name:'left-for-you',
+    find:()=>document.getElementById('leftForYouOverlay'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsLeftForYou?.close?.()
+  },
+  {
     name:'event-form',
     find:()=>document.getElementById('usEventForm'),
     open:el=>Boolean(el&&!el.hidden),

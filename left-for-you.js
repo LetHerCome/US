@@ -1,0 +1,464 @@
+((root, factory) => {
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  if (root) root.UsLeftForYou = api;
+})(typeof window !== 'undefined' ? window : globalThis, () => {
+  'use strict';
+
+  const kinds = new Set(['text', 'photo', 'audio', 'video', 'music']);
+  let items = [];
+  let currentIndex = 0;
+  let busy = false;
+  let profiles = new Map();
+
+  // M5F — unified envelope state machine (ONE control, no parallel system).
+  // State A closed: at least one unseen item. State B open: everything seen.
+  // Until the first server answer resolves, the control stays neutral/loading
+  // and is safely non-interactive (never exposes closed/open prematurely).
+  let unseenCount = 0;
+  let envelopeResolved = false;
+  let lastRenderedItemId = null;
+  let envelopeOpeningTimer = null;
+  let realtimeChannel = null;
+
+  // M5F sender composer state.
+  const composer = { kind: 'text', sending: false };
+
+  function getClient() {
+    try { return sb; } catch (_) { return window.sb || null; }
+  }
+
+  const escapeHtml = (value) => String(value ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+  const isUnseen = (item) => !item?.seen_at;
+  const partner = () => profiles.get(items[0]?.sender_id) || [...profiles.values()].find((p) => p.id !== window.usProfile?.id) || null;
+  const labelForKind = (kind) => ({ text: 'Un pensiero', photo: 'Una foto', audio: 'Una voce', video: 'Un momento', music: 'Musica' }[kind] || 'Lasciato per te');
+
+  function renderItemMarkup(item, mediaUrl = '') {
+    const kind = kinds.has(item?.kind) ? item.kind : 'text';
+    const body = item?.body ? `<p class="left-for-you-note">${escapeHtml(item.body)}</p>` : '';
+    let content = '';
+    if (kind === 'text') content = `<div class="left-for-you-text">${escapeHtml(item?.body || 'Un pensiero per te.')}</div>`;
+    if (kind === 'photo') content = `<img class="left-for-you-photo" src="${escapeHtml(mediaUrl)}" alt="Foto lasciata per te" loading="eager">${body}`;
+    if (kind === 'audio') content = `<div class="left-for-you-media-shell"><span class="left-for-you-media-mark" aria-hidden="true">◖</span><audio controls preload="metadata" src="${escapeHtml(mediaUrl)}"></audio></div>${body}`;
+    if (kind === 'video') content = `<video class="left-for-you-video" controls preload="metadata" playsinline src="${escapeHtml(mediaUrl)}"></video>${body}`;
+    if (kind === 'music') content = `<a class="left-for-you-music" href="${escapeHtml(item?.media_path || '')}" target="_blank" rel="noreferrer noopener"><span class="left-for-you-music-mark" aria-hidden="true">♪</span><span><b>Apri il brano</b><small>${escapeHtml(item?.media_path || '')}</small></span><span aria-hidden="true">↗</span></a>${body}`;
+    return `<article class="left-for-you-item" data-left-kind="${kind}"><div class="left-for-you-kind">${labelForKind(kind)}</div>${content}</article>`;
+  }
+
+  function root() { return document.getElementById('leftForYouOverlay'); }
+  function setStatus(message, kind = '') {
+    const status = document.getElementById('leftForYouStatus');
+    if (status) { status.textContent = message || ''; status.dataset.kind = kind; }
+  }
+  function setVisible(id, visible) { const el = document.getElementById(id); if (el) el.hidden = !visible; }
+  function partnerName() { return partner()?.display_name || 'La tua persona'; }
+
+  function envelopeEl() { return document.getElementById('leftForYouPartnerEntry'); }
+
+  function applyEnvelopeState({ transition = false } = {}) {
+    const el = envelopeEl();
+    if (!el) return;
+    if (!envelopeResolved) {
+      el.classList.add('is-loading');
+      el.classList.remove('is-closed');
+      el.classList.remove('is-open');
+      el.setAttribute('aria-label', 'Lasciato per te');
+      el.setAttribute('aria-busy', 'true');
+      return;
+    }
+    el.classList.remove('is-loading');
+    el.removeAttribute('aria-busy');
+    const closed = unseenCount > 0;
+    const wasClosed = el.classList.contains('is-closed');
+    el.classList.toggle('is-closed', closed);
+    el.classList.toggle('is-open', !closed);
+    el.setAttribute('aria-label', closed ? 'Beatrice ti ha lasciato qualcosa' : 'Lascia qualcosa a Beatrice');
+    if (transition && !closed && wasClosed) {
+      el.classList.add('is-opening');
+      clearTimeout(envelopeOpeningTimer);
+      envelopeOpeningTimer = setTimeout(() => el.classList.remove('is-opening'), 400);
+    }
+  }
+
+  function updateEntry(count = 0) {
+    unseenCount = count;
+    applyEnvelopeState({ transition: true });
+  }
+
+  // Pure state derivation: unseen >= 1 → closed (State A); zero → open (State B).
+  function envelopeStateFor(count = 0) {
+    return count > 0 ? 'closed' : 'open';
+  }
+
+  function envelopeIsResolved() {
+    return envelopeResolved;
+  }
+
+  async function loadProfiles() {
+    const client = getClient();
+    if (!window.usProfile || !client) return;
+    const { data, error } = await client.from('profiles').select('id,display_name,role,avatar_path').eq('couple_id', window.usProfile.couple_id);
+    if (error) throw error;
+    profiles = new Map((data || []).map((profile) => [profile.id, profile]));
+    const other = [...profiles.values()].find((profile) => profile.id !== window.usProfile.id);
+    const name = document.getElementById('leftForYouPartnerName');
+    const fromName = document.getElementById('leftForYouFromName');
+    if (name) name.textContent = other?.display_name || 'La tua persona';
+    if (fromName) fromName.textContent = other?.display_name || 'la tua persona';
+  }
+
+  async function fetchItems() {
+    const client = getClient();
+    if (!window.usProfile || !client) throw new Error('sync_unavailable');
+    const { data, error } = await client.from('left_for_you')
+      .select('id,sender_id,recipient_id,kind,body,media_path,created_at,seen_at')
+      .eq('recipient_id', window.usProfile.id)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    items = (data || []).filter((item) => kinds.has(item.kind));
+    envelopeResolved = true;
+    updateEntry(items.filter(isUnseen).length);
+    return items;
+  }
+
+  async function markSeen(item) {
+    const client = getClient();
+    if (!item || item.seen_at || !client) return;
+    const { data, error } = await client.rpc('mark_left_item_seen', { target_item_id: item.id });
+    if (error) throw error;
+    item.seen_at = data?.seen_at || new Date().toISOString();
+    updateEntry(items.filter(isUnseen).length);
+  }
+
+  async function mediaUrl(item) {
+    if (!item?.media_path || item.kind === 'music') return '';
+    if (typeof window.usGetSignedUrl !== 'function') return '';
+    return window.usGetSignedUrl(item.media_path);
+  }
+
+  async function renderCurrent() {
+    const item = items[currentIndex];
+    const content = document.getElementById('leftForYouContent');
+    const counter = document.getElementById('leftForYouCounter');
+    const conserve = document.getElementById('leftForYouConserve');
+    if (!item || !content) return;
+    content.innerHTML = '<div class="left-for-you-loading-inline" aria-busy="true">Apro il tuo messaggio…</div>';
+    const url = await mediaUrl(item);
+    content.innerHTML = renderItemMarkup(item, url);
+    lastRenderedItemId = item.id;
+    if (counter) counter.textContent = items.length > 1 ? `${currentIndex + 1} di ${items.length}` : '';
+    if (conserve) {
+      conserve.disabled = false;
+      conserve.classList.toggle('is-conserved', Boolean(item.conserved));
+      conserve.innerHTML = item.conserved ? '✓ Conservato' : 'Conserva';
+    }
+    await markSeen(item);
+  }
+
+  function showState(state) {
+    setVisible('leftForYouLoading', state === 'loading');
+    setVisible('leftForYouEmpty', state === 'empty');
+    setVisible('leftForYouError', state === 'error');
+    setVisible('leftForYouCard', state === 'ready');
+  }
+
+  async function load() {
+    showState('loading'); setStatus('');
+    try {
+      await loadProfiles();
+      await fetchItems();
+      if (!items.length) { showState('empty'); return; }
+      const firstUnseen = items.findIndex(isUnseen);
+      if (firstUnseen >= 0) currentIndex = firstUnseen;
+      showState('ready');
+      await renderCurrent();
+    } catch (error) {
+      console.warn('[US Left for You]', error);
+      showState('error'); setStatus('Non riesco ad aprire questo messaggio.', 'error');
+    }
+  }
+
+  async function open() {
+    const modal = root();
+    if (!modal) return;
+    modal.classList.add('open'); modal.setAttribute('aria-hidden', 'false');
+    await load();
+  }
+
+  function close() {
+    const modal = root();
+    if (!modal) return;
+    modal.classList.remove('open'); modal.setAttribute('aria-hidden', 'true');
+  }
+
+  async function conserve() {
+    const item = items[currentIndex];
+    const client = getClient();
+    if (!item || busy || item.conserved || !client) return;
+    busy = true; const button = document.getElementById('leftForYouConserve');
+    if (button) { button.disabled = true; button.textContent = 'Conservo…'; }
+    try {
+      const { data, error } = await client.rpc('conserve_left_for_you', { target_item_id: item.id });
+      if (error) throw error;
+      item.conserved = true;
+      if (button) { button.classList.add('is-conserved'); button.textContent = data?.status === 'existing' ? '✓ Già conservato' : '✓ Conservato'; }
+      setStatus(data?.status === 'existing' ? 'Era già tra le cose da custodire.' : 'Conservato per voi.', 'success');
+    } catch (error) {
+      console.warn('[US Left for You] conserve', error);
+      if (button) { button.disabled = false; button.textContent = 'Conserva'; }
+      setStatus('Non riesco a conservarlo. Riprova.', 'error');
+    } finally { busy = false; }
+  }
+
+  async function retry() { await load(); }
+
+  // M5F — ONE tap dispatcher: loading → inert; closed → next unseen item; open → sender composer.
+  function tap() {
+    if (!envelopeResolved) return;
+    if (unseenCount > 0) { open(); return; }
+    openComposer();
+  }
+
+  function alignCurrentToRenderedItem() {
+    if (!lastRenderedItemId) return;
+    const index = items.findIndex((item) => item.id === lastRenderedItemId);
+    if (index >= 0) currentIndex = index;
+  }
+
+  function handleIncoming() {
+    const overlayOpen = Boolean(root()?.classList.contains('open'));
+    return fetchItems().then(() => { if (overlayOpen) alignCurrentToRenderedItem(); }).catch(() => {});
+  }
+
+  function subscribeRealtime() {
+    const client = getClient();
+    const me = window.usProfile;
+    if (!client || !me || typeof client.channel !== 'function') return;
+    if (realtimeChannel) {
+      try { client.removeChannel(realtimeChannel); } catch (_) { /* channel already gone */ }
+      realtimeChannel = null;
+    }
+    realtimeChannel = client.channel(`us-left-for-you-${me.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'left_for_you',
+        filter: `recipient_id=eq.${me.id}`,
+      }, () => handleIncoming());
+    realtimeChannel.subscribe();
+  }
+
+  // ---- M5F sender composer ----
+
+  function composerRoot() { return document.getElementById('leftForYouComposerOverlay'); }
+  function setComposerStatus(message, kind = '') {
+    const status = document.getElementById('leftForYouComposerStatus');
+    if (status) { status.textContent = message || ''; status.dataset.kind = kind; }
+  }
+
+  function setComposerKind(kind) {
+    if (!kinds.has(kind)) return;
+    composer.kind = kind;
+    document.querySelectorAll('[data-us-composer-kind]').forEach((tab) => {
+      const active = tab.dataset.usComposerKind === kind;
+      tab.classList.toggle('is-active', kind === tab.dataset.usComposerKind);
+      tab.setAttribute('aria-selected', kind === tab.dataset.usComposerKind ? 'true' : 'false');
+    });
+    document.querySelectorAll('[data-us-composer-panel]').forEach((panel) => {
+      panel.hidden = panel.dataset.usComposerPanel !== kind;
+    });
+  }
+
+  function openComposer() {
+    const overlay = document.getElementById('leftForYouComposerOverlay');
+    if (!overlay) return;
+    overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false');
+    setComposerStatus('');
+    // The composer must be ready to send: make sure the recipient profile is known.
+    if (!partner()) loadProfiles().catch(() => {});
+  }
+
+  function closeComposer() {
+    const overlay = document.getElementById('leftForYouComposerOverlay');
+    if (!overlay) return;
+    overlay.classList.remove('open'); overlay.setAttribute('aria-hidden', 'true');
+  }
+
+  function composerNoteValue() {
+    const panel = document.querySelector(`[data-us-composer-panel="${composer.kind}"]`);
+    const note = panel?.querySelector('.left-for-you-composer-note');
+    const value = (note?.value || '').trim();
+    return value ? value.slice(0, 280) : null;
+  }
+
+  function composerFileInput() {
+    const id = { photo: 'leftForYouComposerPhotoFile', audio: 'leftForYouComposerAudioFile', video: 'leftForYouComposerVideoFile' }[composer.kind];
+    return id ? document.getElementById(id) : null;
+  }
+
+  function fileExtension(file) {
+    const fromName = String(file?.name || '').match(/\.([a-z0-9]{1,8})$/i);
+    if (fromName) return fromName[1].toLowerCase();
+    const fromType = String(file?.type || '').split('/')[1];
+    return (fromType || 'bin').replace(/[^a-z0-9]/gi, '') || 'bin';
+  }
+
+  async function uploadComposerMedia(file, kind) {
+    const client = getClient();
+    const me = window.usProfile;
+    if (!client || !me) throw new Error('sync_unavailable');
+    let payload = file;
+    let ext = fileExtension(file);
+    if (kind === 'photo' && typeof compressImageFile === 'function') {
+      try {
+        payload = await compressImageFile(file, { maxDimension: 1920, quality: 0.82 });
+        ext = 'webp';
+      } catch (_) { /* fall back to the original file */ }
+    }
+    const path = `${me.couple_id}/${me.id}/left/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+    const { error } = await client.storage.from('us-media').upload(path, payload, {
+      contentType: ext === 'webp' ? 'image/webp' : (payload.type || 'application/octet-stream'),
+      upsert: false,
+      cacheControl: '3600',
+    });
+    if (error) throw error;
+    return path;
+  }
+
+  function setComposerBusy(isBusy) {
+    composer.sending = isBusy;
+    const button = document.getElementById('leftForYouComposerSend');
+    if (button) {
+      button.disabled = isBusy;
+      button.textContent = isBusy ? 'Lascio…' : 'Lascia per Beatrice';
+    }
+  }
+
+  function resetComposerInputs() {
+    const text = document.getElementById('leftForYouComposerText');
+    if (text) text.value = '';
+    document.querySelectorAll('[data-us-composer-panel] textarea').forEach((note) => { note.value = ''; });
+    document.querySelectorAll('[data-us-composer-panel] input[type="file"]').forEach((input) => { input.value = ''; });
+    const music = document.getElementById('leftForYouComposerMusic');
+    if (music) music.value = '';
+    ['Photo', 'Audio', 'Video'].forEach((kind) => {
+      const slot = document.getElementById(`leftForYouComposer${kind}Name`);
+      if (slot) slot.textContent = '';
+    });
+  }
+
+  async function send() {
+    if (composer.sending) return;
+    const client = getClient();
+    const me = window.usProfile;
+    const other = partner();
+    if (!client || !me || !other || other.id === me.id) {
+      setComposerStatus('Non so ancora a chi lasciarlo. Riprova.', 'error');
+      return;
+    }
+    const kind = composer.kind;
+    let body = null;
+    let mediaPath = null;
+    if (kind === 'text') {
+      body = (document.getElementById('leftForYouComposerText')?.value || '').trim();
+      if (!body) { setComposerStatus('Scrivi qualcosa per lei.', 'error'); return; }
+      if (body.length > 1000) { setComposerStatus('Il pensiero è troppo lungo (massimo 1000 caratteri).', 'error'); return; }
+    } else if (kind === 'music') {
+      mediaPath = (document.getElementById('leftForYouComposerMusic')?.value || '').trim();
+      if (!/^https:\/\/\S+$/.test(mediaPath) || mediaPath.length > 512) {
+        setComposerStatus('Inserisci un link https valido alla musica.', 'error');
+        return;
+      }
+      body = composerNoteValue();
+    } else {
+      const file = composerFileInput()?.files?.[0];
+      if (!file) { setComposerStatus('Scegli qualcosa da lasciare.', 'error'); return; }
+      if (file.size > 25 * 1024 * 1024) { setComposerStatus('Il file è troppo grande (massimo 25 MB).', 'error'); return; }
+      body = composerNoteValue();
+    }
+    setComposerBusy(true);
+    setComposerStatus('');
+    try {
+      if (kind === 'photo' || kind === 'audio' || kind === 'video') {
+        mediaPath = await uploadComposerMedia(composerFileInput().files[0], kind);
+      }
+      const { error } = await client.from('left_for_you').insert({
+        couple_id: me.couple_id,
+        sender_id: me.id,
+        recipient_id: other.id,
+        kind,
+        body,
+        media_path: mediaPath,
+      });
+      if (error) throw error;
+      setComposerStatus('Lasciato per lei ♡', 'success');
+      resetComposerInputs();
+      setTimeout(() => { if (!composer.sending) closeComposer(); }, 900);
+    } catch (error) {
+      console.warn('[US Left for You] send', error);
+      setComposerStatus('Non riesco a lasciarlo ora. Riprova, è ancora qui.', 'error');
+    } finally {
+      setComposerBusy(false);
+    }
+  }
+
+  function bindComposer() {
+    document.getElementById('leftForYouComposerClose')?.addEventListener('click', closeComposer);
+    document.getElementById('leftForYouComposerBackdrop')?.addEventListener('click', closeComposer);
+    document.getElementById('leftForYouComposerSend')?.addEventListener('click', send);
+    document.querySelectorAll('[data-us-composer-kind]').forEach((tab) => {
+      tab.addEventListener('click', () => setComposerKind(tab.dataset.usComposerKind));
+    });
+    const pickBindings = [
+      ['leftForYouComposerPhotoPick', 'leftForYouComposerPhotoFile', 'leftForYouComposerPhotoName'],
+      ['leftForYouComposerAudioPick', 'leftForYouComposerAudioFile', 'leftForYouComposerAudioName'],
+      ['leftForYouComposerVideoPick', 'leftForYouComposerVideoFile', 'leftForYouComposerVideoName'],
+    ];
+    for (const [pickId, fileId, nameId] of pickBindings) {
+      const pick = document.getElementById(pickId);
+      const file = document.getElementById(fileId);
+      pick?.addEventListener('click', () => file?.click());
+      file?.addEventListener('change', () => {
+        const slot = document.getElementById(nameId);
+        if (slot) slot.textContent = file.files?.[0]?.name || '';
+      });
+    }
+  }
+
+  function boot() {
+    document.getElementById('leftForYouClose')?.addEventListener('click', close);
+    document.getElementById('leftForYouBackdrop')?.addEventListener('click', close);
+    document.getElementById('leftForYouRetry')?.addEventListener('click', retry);
+    document.getElementById('leftForYouConserve')?.addEventListener('click', conserve);
+    document.getElementById('leftForYouNext')?.addEventListener('click', async () => {
+      if (currentIndex >= items.length - 1) return;
+      currentIndex += 1; await renderCurrent();
+    });
+    bindComposer();
+    window.addEventListener('us-auth-resolved', (event) => {
+      if (event.detail?.paired) {
+        fetchItems().catch(() => {});
+        loadProfiles().catch(() => {});
+        subscribeRealtime();
+      }
+    });
+    window.addEventListener('left-for-you-refresh', () => { if (root()?.classList.contains('open')) load(); else fetchItems().catch(() => {}); });
+    if (window.usProfile) { fetchItems().catch(() => {}); loadProfiles().catch(() => {}); subscribeRealtime(); }
+    applyEnvelopeState();
+    window.usEnvelopeTap = tap;
+  }
+
+  const api = {
+    isUnseen, renderItemMarkup, labelForKind, open, close, load, conserve, retry, boot,
+    tap, applyEnvelopeState, updateEntry, envelopeStateFor, envelopeIsResolved, subscribeRealtime, handleIncoming, alignCurrentToRenderedItem,
+    setComposerKind, openComposer, closeComposer, send, composer,
+  };
+  if (typeof window !== 'undefined') window.openLeftForYou = open;
+  if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true }); else boot();
+  }
+  return api;
+});
