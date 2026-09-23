@@ -65,6 +65,12 @@
    only: nessun cambio di layout, copy, gerarchia, interazioni. */
 #leftForYouComposerOverlay{background:var(--us-glass-dim);-webkit-backdrop-filter:var(--us-glass-dim-blur);backdrop-filter:var(--us-glass-dim-blur)}
 .left-for-you-composer-sheet{position:relative;border:var(--us-glass-border);background:var(--us-glass-surface);box-shadow:var(--us-glass-shadow-sheet);-webkit-backdrop-filter:var(--us-glass-blur);backdrop-filter:var(--us-glass-blur)}
+/* Allineamento visivo: il compositore è un pannello traslucido morbido,
+   leggermente più denso/opaco degli altri popup (che sono bottom sheet a
+   tutta larghezza): meno show-through della foto, meno refrazione. */
+#leftForYouComposerOverlay{background:rgba(5,3,8,.24)}
+.left-for-you-composer-sheet{background:linear-gradient(165deg,rgba(255,255,255,.04),rgba(255,255,255,0) 30%),radial-gradient(120% 80% at 88% -6%,rgba(155,124,255,.08),transparent 50%),radial-gradient(130% 90% at 0% 106%,rgba(246,111,158,.07),transparent 50%),linear-gradient(150deg,rgba(34,27,41,.80),rgba(15,12,20,.85));-webkit-backdrop-filter:blur(26px) saturate(1.2);backdrop-filter:blur(26px) saturate(1.2)}
+.left-for-you-composer-sheet::before{opacity:.7}
 .left-for-you-composer-sheet::before{content:"";position:absolute;top:0;left:14px;right:14px;height:1px;background:var(--us-glass-top-edge);pointer-events:none}
 .left-for-you-composer-sheet .left-for-you-composer-text,.left-for-you-composer-sheet .left-for-you-composer-note,.left-for-you-composer-sheet .left-for-you-composer-url{background:var(--us-glass-inner-surface);border:var(--us-glass-inner-border);box-shadow:var(--us-glass-inner-highlight)}
 .left-for-you-composer-sheet .left-for-you-composer-pick{border:1px solid rgba(246,111,158,.22);background:linear-gradient(150deg,rgba(246,111,158,.10),rgba(155,124,255,.07));box-shadow:var(--us-glass-inner-highlight)}
