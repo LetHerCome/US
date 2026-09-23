@@ -6,7 +6,8 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 
-const M5D = 'supabase/migrations/20260923120000_m5d_conserva_contribution.sql';
+const M5D = 'supabase/migrations/20260923112331_m5d_conserva_contribution.sql';
+const M5D_HARDEN = 'supabase/migrations/20260923112428_harden_conserva_contribution_grants.sql';
 const M5B_V1 = 'supabase/migrations/20260922180436_left_for_you_v1.sql';
 const M5B_FIX = 'supabase/migrations/20260922182210_fix_left_for_you_partner_scope_and_grants.sql';
 const M5B_HARDEN = 'supabase/migrations/20260923100236_enforce_left_for_you_insert_unseen.sql';
@@ -14,10 +15,13 @@ const M5C = 'supabase/migrations/20260923110119_m5c_left_for_you_rich_media.sql'
 const stripComments = (sql) => sql.replace(/--[^\n]*/g, '');
 
 const m5d = () => read(M5D);
+const m5dHardening = () => read(M5D_HARDEN);
 const m5dStatements = () => stripComments(m5d());
+const m5dHardeningStatements = () => stripComments(m5dHardening());
 
 test('M5D history: migration forward-only separata, M5B/M5C non riscritte', () => {
   assert.ok(fs.existsSync(path.join(ROOT, M5D)), 'la migration M5D deve esistere');
+  assert.ok(fs.existsSync(path.join(ROOT, M5D_HARDEN)), 'la migration di hardening grant deve esistere');
   // Le migration precedenti restano identiche: M5D è additiva.
   assert.match(read(M5B_V1), /create table public\.left_for_you/i);
   assert.match(read(M5C), /left_for_you_kind_m5c_check/i);
@@ -72,12 +76,13 @@ test('M5D RLS: solo stessa coppia in SELECT, nessuna mutazione client', () => {
   assert.doesNotMatch(statements, /for insert to authenticated/i);
   assert.doesNotMatch(statements, /for update to/i);
   assert.doesNotMatch(statements, /for delete to/i);
-  // Grants: authenticated solo SELECT, anon nessuno.
-  assert.match(statements, /revoke all on table public\.conserva_contributions from anon/i);
-  assert.match(statements, /grant select on table public\.conserva_contributions to authenticated/i);
-  assert.doesNotMatch(statements, /grant insert/i);
-  assert.doesNotMatch(statements, /grant update/i);
-  assert.doesNotMatch(statements, /grant delete/i);
+  // Grants authenticated = SELECT only are established by the forward-only hardening migration.
+  const hardening = m5dHardeningStatements();
+  assert.match(hardening, /revoke all on table public\.conserva_contributions\s+from public, anon, authenticated/i);
+  assert.match(hardening, /grant select on table public\.conserva_contributions\s+to authenticated/i);
+  assert.doesNotMatch(hardening, /grant insert/i);
+  assert.doesNotMatch(hardening, /grant update/i);
+  assert.doesNotMatch(hardening, /grant delete/i);
 });
 
 test('M5D RPC: conserve_left_for_you recipient-only, stessa coppia, hardening', () => {
