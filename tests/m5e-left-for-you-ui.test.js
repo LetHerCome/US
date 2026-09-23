@@ -69,6 +69,14 @@ test('M5E disables the legacy media surface in the active Web/PWA shell', () => 
   assert.match(html, /id="leftForYouPartnerEntry"[\s\S]{0,220}openLeftForYou/);
 });
 
+test('M5E partner entry uses an integrated avatar control, not a Stories ring', () => {
+  const css = read('left-for-you.css');
+  assert.match(css, /#leftForYouPartnerEntry\{[^}]*border:0[^}]*background:transparent/);
+  assert.match(css, /#leftForYouPartnerEntry\.has-unseen\{[^}]*box-shadow:none/);
+  assert.match(css, /#leftForYouPartnerEntry\.has-unseen:after\{content:none/);
+  assert.match(css, /#leftForYouPartnerBadge\{[^}]*width:6px[^}]*height:6px/);
+});
+
 test('M5E media uses the existing private signed-url helper', () => {
   const source = read('left-for-you.js');
   assert.match(source, /usGetSignedUrl/);
