@@ -214,3 +214,38 @@ html.us-motion31-promoting .page.active.us-motion5-enter-prev{
     transition-duration:.08s!important;
   }
 }
+
+/* ===== US shared liquid-glass popup material (Home popups) =====
+   Baseline approvata: Left For You composer.
+   STESSO materiale (traslucenza/blur/bordo/highlight/ombra), accenti per feature.
+   Solo superfici: nessun cambio di layout, copy, comportamento. */
+:root{
+  --us-glass-dim:rgba(5,3,8,.16);
+  --us-glass-dim-blur:blur(3px);
+  --us-glass-blur:blur(28px) saturate(1.35);
+  --us-glass-surface:linear-gradient(165deg,rgba(255,255,255,.055),rgba(255,255,255,0) 34%),radial-gradient(120% 80% at 88% -6%,rgba(155,124,255,.12),transparent 52%),radial-gradient(130% 90% at 0% 106%,rgba(246,111,158,.11),transparent 52%),linear-gradient(150deg,rgba(40,31,46,.58),rgba(17,14,24,.66));
+  --us-glass-border:1px solid rgba(255,255,255,.14);
+  --us-glass-shadow-sheet:0 34px 90px rgba(0,0,0,.55),0 8px 26px rgba(18,9,28,.38),inset 0 1px 0 rgba(255,255,255,.11),inset 0 -1px 0 rgba(155,124,255,.07);
+  --us-glass-shadow-bottom:0 -26px 80px rgba(0,0,0,.55),0 -6px 22px rgba(18,9,28,.38),inset 0 1px 0 rgba(255,255,255,.11),inset 0 -1px 0 rgba(155,124,255,.07);
+  --us-glass-top-edge:linear-gradient(90deg,transparent,rgba(255,255,255,.34) 30%,rgba(228,200,255,.30) 70%,transparent);
+  --us-glass-inner-surface:linear-gradient(150deg,rgba(255,255,255,.055),rgba(255,255,255,.026));
+  --us-glass-inner-border:1px solid rgba(255,255,255,.10);
+  --us-glass-inner-highlight:inset 0 1px 0 rgba(255,255,255,.055);
+}
+
+/* Dim leggero: la foto della Home resta percepibile sotto ogni popup. */
+.today-backdrop,.us-events-backdrop,.think-arrival-backdrop{background:var(--us-glass-dim);backdrop-filter:var(--us-glass-dim-blur);-webkit-backdrop-filter:var(--us-glass-dim-blur)}
+
+/* Materiale sheet condiviso. */
+.today-sheet,.us-events-sheet,.think-arrival-sheet,.left-for-you-composer-sheet{border:var(--us-glass-border);background:var(--us-glass-surface);box-shadow:var(--us-glass-shadow-sheet);-webkit-backdrop-filter:var(--us-glass-blur);backdrop-filter:var(--us-glass-blur);position:relative}
+.today-sheet::before,.us-events-sheet::before,.think-arrival-sheet::before,.left-for-you-composer-sheet::before{content:"";position:absolute;top:0;left:14px;right:14px;height:1px;background:var(--us-glass-top-edge);pointer-events:none}
+/* I bottom sheet (oggi/eventi) proiettano l'ombra verso l'alto: stesso materiale, direzione adattata. */
+.today-sheet,.us-events-sheet{box-shadow:var(--us-glass-shadow-bottom)}
+.us-events-sheet{border-bottom:0}
+
+/* Controlli interni: glass più contenuto, mai opachi. */
+.today-close,.us-events-close,.think-arrival-close{background:var(--us-glass-inner-surface);border:var(--us-glass-inner-border);box-shadow:var(--us-glass-inner-highlight);-webkit-backdrop-filter:blur(10px) saturate(1.2);backdrop-filter:blur(10px) saturate(1.2)}
+.today-sheet textarea,.today-sheet input{background:var(--us-glass-inner-surface);border:var(--us-glass-inner-border);box-shadow:var(--us-glass-inner-highlight);color:#fff7fb}
+.today-sheet .card{background:linear-gradient(150deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:var(--us-glass-inner-border);box-shadow:var(--us-glass-inner-highlight)}
+.us-event-field input,.us-event-field textarea{background:var(--us-glass-inner-surface)!important;border:var(--us-glass-inner-border)!important;box-shadow:var(--us-glass-inner-highlight);color:#f5f6fa!important}
+.us-next-event{background:radial-gradient(circle at 90% 12%,rgba(169,133,255,.32),transparent 34%),radial-gradient(circle at 90% 90%,rgba(255,102,142,.22),transparent 38%),linear-gradient(150deg,rgba(255,255,255,.05),rgba(20,23,32,.42));border:var(--us-glass-inner-border);box-shadow:var(--us-glass-inner-highlight);-webkit-backdrop-filter:blur(12px) saturate(1.2);backdrop-filter:blur(12px) saturate(1.2)}
