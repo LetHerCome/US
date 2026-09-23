@@ -60,6 +60,15 @@ test('M5E has loading, empty, retry and no Stories semantics in the UI owner', (
   assert.doesNotMatch(source, /story|stories|carousel|swipe|24h|commenti|reazioni/i);
 });
 
+test('M5E disables the legacy media surface in the active Web/PWA shell', () => {
+  const html = read('index.html');
+  const stories = read('stories.js');
+  assert.match(html, /__US_LEFT_FOR_YOU_ACTIVE__/);
+  assert.doesNotMatch(html, /usTopProfiles|usStoryPartner|usStoryPartnerOpen|openOwnStories\(\)/);
+  assert.match(stories, /if \(window\.__US_LEFT_FOR_YOU_ACTIVE__\) return/);
+  assert.match(html, /id="leftForYouPartnerEntry"[\s\S]{0,220}openLeftForYou/);
+});
+
 test('M5E media uses the existing private signed-url helper', () => {
   const source = read('left-for-you.js');
   assert.match(source, /usGetSignedUrl/);
