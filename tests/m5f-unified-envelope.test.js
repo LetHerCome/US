@@ -492,3 +492,76 @@ test('M5G internal recorder transitions idle → recording → ready and release
   assert.equal(api.composer.recordingState, 'idle');
   assert.equal(stream.tracks[0].stopped, true);
 });
+
+test('M5G1 composer surface removes note inputs and uses a circular centered recorder control', () => {
+  const html = read('index.html');
+  const css = read('left-for-you.css');
+  assert.doesNotMatch(html, /left-for-you-composer-note/);
+  assert.match(html, /class="left-for-you-record-control" id="leftForYouComposerAudioRecord"/);
+  assert.match(html, /aria-label="Registra la voce"/);
+  assert.match(css, /\.left-for-you-record-control\{[^}]*border-radius:50%/);
+  assert.match(css, /\.left-for-you-record-control\.is-recording/);
+});
+
+test('M5G1 live DOM events immediately enable and disable the send CTA for every kind', async () => {
+  const harness = createHarness();
+  const { api, el } = harness;
+  await api.load();
+  const send = el('leftForYouComposerSend');
+
+  api.setComposerKind('text');
+  el('leftForYouComposerText').value = '  testo valido  ';
+  el('leftForYouComposerText').dispatchEvent({ type: 'input' });
+  assert.equal(send.disabled, false);
+  el('leftForYouComposerText').value = '   ';
+  el('leftForYouComposerText').dispatchEvent({ type: 'input' });
+  assert.equal(send.disabled, true);
+
+  api.setComposerKind('photo');
+  const photo = el('leftForYouComposerPhotoFile');
+  photo.files = [{ name: 'foto.jpg', type: 'image/jpeg', size: 10 }];
+  photo.dispatchEvent({ type: 'change' });
+  assert.equal(send.disabled, false);
+  photo.files = [];
+  photo.dispatchEvent({ type: 'change' });
+  assert.equal(send.disabled, true);
+
+  api.setComposerKind('audio');
+  await api.startRecording();
+  assert.equal(send.disabled, true);
+  api.stopRecording();
+  assert.equal(send.disabled, false);
+  api.discardRecording();
+  assert.equal(send.disabled, true);
+
+  api.setComposerKind('video');
+  const video = el('leftForYouComposerVideoFile');
+  video.files = [{ name: 'video.mp4', type: 'video/mp4', size: 10 }];
+  video.dispatchEvent({ type: 'change' });
+  assert.equal(send.disabled, false);
+  video.files = [];
+  video.dispatchEvent({ type: 'change' });
+  assert.equal(send.disabled, true);
+
+  api.setComposerKind('music');
+  el('leftForYouComposerMusic').value = 'https://open.example/track/1';
+  el('leftForYouComposerMusic').dispatchEvent({ type: 'input' });
+  assert.equal(send.disabled, false);
+  el('leftForYouComposerMusic').value = '';
+  el('leftForYouComposerMusic').dispatchEvent({ type: 'input' });
+  assert.equal(send.disabled, true);
+});
+
+test('M5G1 profile hydration does not overwrite a valid CTA and send reset disables it again', async () => {
+  const harness = createHarness();
+  const { api, el, log } = harness;
+  api.openComposer();
+  el('leftForYouComposerText').value = 'Prima del profilo';
+  el('leftForYouComposerText').dispatchEvent({ type: 'input' });
+  assert.equal(el('leftForYouComposerSend').disabled, false);
+  await api.load();
+  assert.equal(el('leftForYouComposerSend').disabled, false);
+  await api.send();
+  assert.equal(log.inserts.length, 1);
+  assert.equal(el('leftForYouComposerSend').disabled, true);
+});

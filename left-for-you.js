@@ -283,7 +283,8 @@
     const audioRecord = document.getElementById('leftForYouComposerAudioRecord');
     if (title) title.textContent = `Lascia qualcosa a ${name}`;
     if (send && !composer.sending) send.textContent = `Lascia per ${name}`;
-    if (audioRecord && composer.recordingState === 'idle') audioRecord.textContent = 'Registra';
+    if (audioRecord) audioRecord.setAttribute('aria-label', composer.recordingState === 'recording' ? 'Ferma la registrazione' : 'Registra la voce');
+    updateComposerValidity();
   }
 
   function setComposerKind(kind) {
@@ -316,13 +317,6 @@
     if (!overlay) return;
     discardRecording();
     overlay.classList.remove('open'); overlay.setAttribute('aria-hidden', 'true');
-  }
-
-  function composerNoteValue() {
-    const panel = document.querySelector(`[data-us-composer-panel="${composer.kind}"]`);
-    const note = panel?.querySelector('.left-for-you-composer-note');
-    const value = (note?.value || '').trim();
-    return value ? value.slice(0, 280) : null;
   }
 
   function selectedComposerFile(kind = composer.kind) {
@@ -389,7 +383,10 @@
     const remove = document.getElementById('leftForYouComposerAudioDelete');
     if (!record) return;
     const state = composer.recordingState;
-    record.textContent = state === 'recording' ? 'Stop' : state === 'ready' ? 'Rifai' : 'Registra';
+    const label = record.querySelector('.left-for-you-record-label');
+    if (label) label.textContent = state === 'recording' ? 'Stop' : 'Registra';
+    record.setAttribute('aria-label', state === 'recording' ? 'Ferma la registrazione' : 'Registra la voce');
+    record.classList.toggle('is-recording', state === 'recording');
     record.hidden = state === 'ready';
     record.disabled = composer.sending || state === 'starting';
     if (timer) {
@@ -550,7 +547,6 @@
     discardRecording();
     const text = document.getElementById('leftForYouComposerText');
     if (text) text.value = '';
-    document.querySelectorAll('[data-us-composer-panel] textarea').forEach((note) => { note.value = ''; });
     document.querySelectorAll('[data-us-composer-panel] input[type="file"]').forEach((input) => { input.value = ''; });
     const music = document.getElementById('leftForYouComposerMusic');
     if (music) music.value = '';
@@ -585,17 +581,14 @@
         setComposerStatus('Inserisci un link https valido alla musica.', 'error');
         return;
       }
-      body = composerNoteValue();
     } else if (kind === 'audio') {
       file = composer.recording?.file;
       if (!file) { setComposerStatus('Registra una voce prima di lasciarla.', 'error'); return; }
       if (file.size > 25 * 1024 * 1024) { setComposerStatus('Il file è troppo grande (massimo 25 MB).', 'error'); return; }
-      body = composerNoteValue();
     } else {
       file = selectedComposerFile(kind);
       if (!file) { setComposerStatus('Scegli qualcosa da lasciare.', 'error'); return; }
       if (file.size > 25 * 1024 * 1024) { setComposerStatus('Il file è troppo grande (massimo 25 MB).', 'error'); return; }
-      body = composerNoteValue();
     }
     if (!composerCanSend()) {
       setComposerStatus('Completa il contenuto prima di lasciarlo.', 'error');
@@ -649,9 +642,9 @@
       });
     }
     document.getElementById('leftForYouComposerText')?.addEventListener('input', updateComposerValidity);
+    document.getElementById('leftForYouComposerText')?.addEventListener('change', updateComposerValidity);
     document.getElementById('leftForYouComposerMusic')?.addEventListener('input', updateComposerValidity);
-    document.querySelectorAll('.left-for-you-composer-note').forEach((note) => note.addEventListener('input', updateComposerValidity));
-
+    document.getElementById('leftForYouComposerMusic')?.addEventListener('change', updateComposerValidity);
     document.getElementById('leftForYouComposerAudioRecord')?.addEventListener('click', () => {
       if (composer.recordingState === 'recording') stopRecording();
       else startRecording();
