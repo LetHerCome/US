@@ -180,6 +180,5 @@ test('auth: l auth non tocca il dominio M5B left_for_you', () => {
     .readdirSync(path.join(ROOT, 'supabase', 'migrations'))
     .filter((m) => m.includes('left_for_you'));
   assert.ok(m5b.length >= 2, 'la migration history M5B deve restare intatta');
-  assert.doesNotMatch(settings(), /left_for_you/);
   assert.doesNotMatch(read('index.html'), /left_for_you/);
 });

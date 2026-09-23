@@ -55,9 +55,22 @@ test('M5G3 push navigation routes left_for_you to Home and the existing recipien
   assert.match(app, /openLeftForYou/);
 });
 
-test('M5G3 prepares, but does not apply, the dedicated notification preference migration', () => {
+test('M5G3 keeps the dedicated notification preference migration prepared but unapplied', () => {
   const migration = read('supabase/migrations/20260923210000_m5g3_left_for_you_notification_preference.sql');
   assert.match(migration, /add column if not exists left_for_you boolean not null default true/);
   assert.match(migration, /set_notification_preference/);
   assert.match(migration, /get_notification_preferences/);
+});
+
+test('M5G3 left_for_you Edge Function preserves think_reaction and suppresses disabled preference', () => {
+  const edge = read('supabase/functions/send-web-push/index.ts');
+  const settings = read('settings.js');
+  assert.match(edge, /\[\"test\", \"think\", \"think_reaction\", \"daily_answer\", \"quest_confirmed\", \"left_for_you\"\]/);
+  assert.match(edge, /let prefKey: \"today\" \| \"bond\" \| \"left_for_you\" \| null/);
+  assert.match(edge, /prefKey = \"left_for_you\"/);
+  assert.match(edge, /select\(\"user_id,think,today,bond,relationship,left_for_you\"\)/);
+  assert.match(edge, /disabled-by-preference/);
+  assert.match(settings, /left_for_you:true/);
+  assert.match(settings, /preferenceToggle\('left_for_you','Lasciato per te'/);
+  assert.match(settings, /Quando la tua persona ti lascia qualcosa/);
 });

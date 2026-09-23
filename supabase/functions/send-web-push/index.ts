@@ -24,7 +24,7 @@ Deno.serve(async (request) => {
     if (authError || !authData.user) return json({ error: "Invalid session" }, 401);
     const body = await request.json().catch(() => ({}));
     const type = body?.type as EventType;
-    if (!type || !["test", "think", "daily_answer", "quest_confirmed", "left_for_you"].includes(type)) return json({ error: "Invalid notification type" }, 400);
+    if (!type || !["test", "think", "think_reaction", "daily_answer", "quest_confirmed", "left_for_you"].includes(type)) return json({ error: "Invalid notification type" }, 400);
     const { data: sender, error: senderError } = await admin.from("profiles").select("id,couple_id,display_name,role").eq("id", authData.user.id).maybeSingle();
     if (senderError || !sender?.couple_id) return json({ error: "Profile not linked" }, 403);
     const { data: partner } = await admin.from("profiles").select("id,display_name,role").eq("couple_id", sender.couple_id).neq("id", sender.id).maybeSingle();
@@ -78,7 +78,7 @@ Deno.serve(async (request) => {
     let target = "home";
     let tag = "us";
     let dedupeKey: string | null = null;
-    let prefKey: "today" | "bond" | null = null;
+    let prefKey: "today" | "bond" | "left_for_you" | null = null;
     if (type === "left_for_you") {
       if (!partner || !body.reference_id) return json({ error: "Missing left_for_you reference" }, 400);
       const { data: row, error: rowError } = await admin.from("left_for_you")
@@ -93,6 +93,7 @@ Deno.serve(async (request) => {
       target = "left_for_you";
       tag = `left-for-you:${row.id}`;
       dedupeKey = `left-for-you:${row.id}`;
+      prefKey = "left_for_you";
     }
     if (type === "test") {
       recipientIds = [sender.id];
@@ -138,7 +139,7 @@ Deno.serve(async (request) => {
     }
     if (!recipientIds.length) return json({ delivered: 0, reason: "no-recipient" });
     if (prefKey) {
-      const { data: preferences } = await admin.from("notification_preferences").select("user_id,think,today,bond").in("user_id", recipientIds);
+      const { data: preferences } = await admin.from("notification_preferences").select("user_id,think,today,bond,relationship,left_for_you").in("user_id", recipientIds);
       const byUser = new Map((preferences || []).map((preference: any) => [preference.user_id, preference]));
       recipientIds = recipientIds.filter((id) => byUser.has(id) ? Boolean(byUser.get(id)[prefKey!]) : true);
       if (!recipientIds.length) return json({ delivered: 0, reason: "disabled-by-preference" });

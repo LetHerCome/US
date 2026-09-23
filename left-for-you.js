@@ -748,7 +748,7 @@
         kind,
         body,
         media_path: mediaPath,
-      });
+      }).select('id').single();
       if (error) throw error;
       if (inserted?.id) window.sendWebPushEvent?.('left_for_you', inserted.id).catch?.(() => {});
       setComposerStatus(`Lasciato per ${personName} ♡`, 'success');
