@@ -6,7 +6,7 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 
-const FIX = 'supabase/migrations/20260922215330_enforce_left_for_you_insert_unseen.sql';
+const FIX = 'supabase/migrations/20260923100236_enforce_left_for_you_insert_unseen.sql';
 const stripComments = (sql) => sql.replace(/--[^\n]*/g, '');
 
 test('M5B seen_at invariant: forward-only fix migration exists, non-rewriting', () => {
