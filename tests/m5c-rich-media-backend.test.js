@@ -6,7 +6,7 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 
-const M5C = 'supabase/migrations/20260923130000_m5c_left_for_you_rich_media.sql';
+const M5C = 'supabase/migrations/20260923110119_m5c_left_for_you_rich_media.sql';
 const V1 = 'supabase/migrations/20260922180436_left_for_you_v1.sql';
 const FIX = 'supabase/migrations/20260922182210_fix_left_for_you_partner_scope_and_grants.sql';
 const HARDEN = 'supabase/migrations/20260923100236_enforce_left_for_you_insert_unseen.sql';
