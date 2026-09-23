@@ -475,7 +475,7 @@ html.us-returning-device .auth-overlay{
   <div class="left-for-you-backdrop us-modal-backdrop" id="leftForYouComposerBackdrop"></div>
   <section class="left-for-you-sheet left-for-you-composer-sheet" role="dialog" aria-modal="true" aria-labelledby="leftForYouComposerTitle" data-us-modal-panel>
     <header class="left-for-you-head">
-      <div><div class="tiny">PER VOI DUE</div><h2 id="leftForYouComposerTitle">Lascia qualcosa a Beatrice</h2><small>Solo per lei. Nessun feed, nessun pubblico.</small></div>
+      <div><div class="tiny">PER VOI DUE</div><h2 id="leftForYouComposerTitle">Lascia qualcosa alla tua persona</h2></div>
       <button type="button" class="left-for-you-close us-modal-close" id="leftForYouComposerClose" aria-label="Chiudi il compositore" data-us-modal-close>×</button>
     </header>
     <div class="left-for-you-body left-for-you-composer-body">
@@ -492,23 +492,24 @@ html.us-returning-device .auth-overlay{
       <div class="left-for-you-composer-panel" data-us-composer-panel="photo" hidden>
         <button type="button" class="left-for-you-composer-pick" id="leftForYouComposerPhotoPick">Scegli una foto</button><input type="file" id="leftForYouComposerPhotoFile" accept="image/jpeg,image/png,image/webp" hidden>
         <span class="left-for-you-composer-file" id="leftForYouComposerPhotoName"></span>
-        <textarea class="left-for-you-composer-note" maxlength="280" rows="2" placeholder="Una nota per lei (opzionale)"></textarea>
+        <textarea class="left-for-you-composer-note" maxlength="280" rows="2" placeholder="Una nota (opzionale)"></textarea>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="audio" hidden>
-        <button type="button" class="left-for-you-composer-pick" id="leftForYouComposerAudioPick">Scegli un audio</button><input type="file" id="leftForYouComposerAudioFile" accept="audio/*" hidden>
-        <span class="left-for-you-composer-file" id="leftForYouComposerAudioName"></span>
-        <textarea class="left-for-you-composer-note" maxlength="280" rows="2" placeholder="Una nota per lei (opzionale)"></textarea>
+        <div class="left-for-you-recorder-controls"><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerAudioRecord">Registra</button><span class="left-for-you-recorder-timer" id="leftForYouComposerAudioTimer" hidden>00:00</span></div>
+        <audio class="left-for-you-recorder-preview" id="leftForYouComposerAudioPreview" controls preload="metadata" hidden></audio>
+        <div class="left-for-you-recorder-actions"><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerAudioRetry" hidden>Rifai</button><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerAudioDelete" hidden>Elimina</button></div>
+        <textarea class="left-for-you-composer-note" maxlength="280" rows="2" placeholder="Una nota (opzionale)"></textarea>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="video" hidden>
         <button type="button" class="left-for-you-composer-pick" id="leftForYouComposerVideoPick">Scegli un video</button><input type="file" id="leftForYouComposerVideoFile" accept="video/*" hidden>
         <span class="left-for-you-composer-file" id="leftForYouComposerVideoName"></span>
-        <textarea class="left-for-you-composer-note" maxlength="280" rows="2" placeholder="Una nota per lei (opzionale)"></textarea>
+        <textarea class="left-for-you-composer-note" maxlength="280" rows="2" placeholder="Una nota (opzionale)"></textarea>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="music" hidden>
         <input type="url" id="leftForYouComposerMusic" class="left-for-you-composer-url" maxlength="512" placeholder="https://link alla musica" spellcheck="false">
-        <textarea class="left-for-you-composer-note" maxlength="280" rows="2" placeholder="Una nota per lei (opzionale)"></textarea>
+        <textarea class="left-for-you-composer-note" maxlength="280" rows="2" placeholder="Una nota (opzionale)"></textarea>
       </div>
-      <div class="left-for-you-actions left-for-you-composer-actions"><button type="button" id="leftForYouComposerSend">Lascia per Beatrice</button></div>
+      <div class="left-for-you-actions left-for-you-composer-actions"><button type="button" id="leftForYouComposerSend" disabled>Lascia per la tua persona</button></div>
       <div class="left-for-you-status" id="leftForYouComposerStatus" role="status" aria-live="polite"></div>
     </div>
   </section>

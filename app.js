@@ -835,6 +835,7 @@ async function hydrateDistance(){
 }
 
 async function saveMyLocation(position){
+  if(window.__US_LOCAL_DEV__)return false;
   if(!window.usProfile)return;
   const payload={
     user_id:window.usProfile.id,
@@ -861,6 +862,7 @@ function geolocationError(error,silent=false){
 }
 
 function refreshMyLocation(options={}){
+  if(window.__US_LOCAL_DEV__)return;
   const silent=Boolean(options?.silent);
   if(!window.usProfile)return toast('Connessione non pronta');
   if(!navigator.geolocation){
@@ -893,6 +895,7 @@ function refreshMyLocation(options={}){
 window.refreshMyLocation=refreshMyLocation;
 
 async function maybeAutoRefreshLocation(){
+  if(window.__US_LOCAL_DEV__)return;
   if(!window.usProfile||!navigator.geolocation)return hydrateDistance();
   await hydrateDistance();
   if(localStorage.getItem('usLocationEnabled')==='1'){
@@ -913,8 +916,10 @@ async function maybeAutoRefreshLocation(){
 }
 
 function startLocationRefreshTimer(){
+  if(window.__US_LOCAL_DEV__)return;
   if(locationTimer)clearInterval(locationTimer);
   locationTimer=setInterval(()=>{
+    if(window.__US_LOCAL_DEV__)return;
     if(document.hidden||!window.usProfile)return;
     if(localStorage.getItem('usLocationEnabled')==='1'){
       refreshMyLocation({silent:true});
