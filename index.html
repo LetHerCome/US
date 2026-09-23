@@ -143,6 +143,7 @@ html.us-returning-device .auth-overlay{
 </div>
 
 <div class="app">
+
   <div class="top us-premium-top"><div class="brand-row"><button type="button" class="today-orb us-important-control us-premium-control" id="todayOrb" onclick="openToday()" aria-label="Apri la domanda giornaliera"><span class="today-orb-mark us-phosphor-question" aria-hidden="true"></span><span class="today-orb-copy"><b>Oggi</b><small>Domanda</small></span><i id="todayOrbDot"></i></button></div><button type="button" class="us-events-top-control us-important-control" id="usEventsTopEntry" onclick="openEvents()" aria-label="Apri i nostri eventi"><span>I nostri eventi</span><span class="us-events-top-chevron" aria-hidden="true">⌄</span></button><div class="top-actions"><button type="button" class="us-envelope-control us-important-control is-loading" id="leftForYouPartnerEntry" onclick="usEnvelopeTap()" aria-label="Lasciato per te" aria-busy="true" data-us-envelope><span class="us-envelope-mark" aria-hidden="true"><span class="us-envelope-icon"><span class="us-envelope-face us-envelope-face--closed" data-icon="/assets/icons/phosphor/envelope-simple-regular.svg"></span><span class="us-envelope-face us-envelope-face--open" data-icon="/assets/icons/phosphor/envelope-open-regular.svg"></span></span></span></button><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
 
   <main id="home" class="page active">
@@ -490,11 +491,12 @@ html.us-returning-device .auth-overlay{
         <textarea id="leftForYouComposerText" class="left-for-you-composer-text" maxlength="1000" rows="4" placeholder="Un pensiero lasciatelo qui…"></textarea>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="photo" hidden>
-        <button type="button" class="left-for-you-composer-pick" id="leftForYouComposerPhotoPick">Scegli una foto</button><input type="file" id="leftForYouComposerPhotoFile" accept="image/jpeg,image/png,image/webp" hidden>
+        <div class="left-for-you-photo-actions"><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerPhotoPick">Scegli una foto</button><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerPhotoCamera">Scatta una foto</button></div>
+        <input type="file" id="leftForYouComposerPhotoFile" accept="image/jpeg,image/png,image/webp" hidden>
         <span class="left-for-you-composer-file" id="leftForYouComposerPhotoName"></span>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="audio" hidden>
-        <div class="left-for-you-recorder-controls"><button type="button" class="left-for-you-record-control" id="leftForYouComposerAudioRecord" aria-label="Registra la voce"><span class="left-for-you-record-icon" aria-hidden="true"></span><span class="left-for-you-record-label">Registra</span></button><span class="left-for-you-recorder-timer" id="leftForYouComposerAudioTimer" hidden>00:00</span></div>
+        <div class="left-for-you-recorder-controls"><button type="button" class="left-for-you-record-control" id="leftForYouComposerAudioRecord" aria-label="Registra la voce"><span class="left-for-you-record-icon" aria-hidden="true"></span></button><span class="left-for-you-recorder-timer" id="leftForYouComposerAudioTimer" hidden>00:00</span></div>
         <audio class="left-for-you-recorder-preview" id="leftForYouComposerAudioPreview" controls preload="metadata" hidden></audio>
         <div class="left-for-you-recorder-actions"><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerAudioRetry" hidden>Rifai</button><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerAudioDelete" hidden>Elimina</button></div>
       </div>
@@ -507,6 +509,18 @@ html.us-returning-device .auth-overlay{
       </div>
       <div class="left-for-you-actions left-for-you-composer-actions"><button type="button" id="leftForYouComposerSend" disabled>Lascia per la tua persona</button></div>
       <div class="left-for-you-status" id="leftForYouComposerStatus" role="status" aria-live="polite"></div>
+    </div>
+  </section>
+</div>
+
+<div class="left-for-you-overlay left-for-you-camera-overlay" id="leftForYouCameraOverlay" aria-hidden="true">
+  <div class="left-for-you-backdrop us-modal-backdrop" id="leftForYouCameraBackdrop"></div>
+  <section class="left-for-you-sheet left-for-you-camera-sheet" role="dialog" aria-modal="true" aria-labelledby="leftForYouCameraTitle">
+    <header class="left-for-you-head"><div><div class="tiny">FOTO PRIVATA</div><h2 id="leftForYouCameraTitle">Scatta una foto</h2></div><button type="button" class="left-for-you-close" id="leftForYouCameraClose" aria-label="Chiudi fotocamera">×</button></header>
+    <div class="left-for-you-body left-for-you-camera-body">
+      <div class="left-for-you-camera-preview-wrap"><video id="leftForYouCameraPreview" autoplay playsinline muted></video><img id="leftForYouCameraCaptured" alt="Anteprima della foto" hidden></div>
+      <div class="left-for-you-camera-status" id="leftForYouCameraStatus" role="status" aria-live="polite"></div>
+      <div class="left-for-you-camera-actions"><button type="button" class="left-for-you-composer-pick" id="leftForYouCameraSwitch">Cambia fotocamera</button><button type="button" class="left-for-you-camera-shutter" id="leftForYouCameraCapture" aria-label="Scatta foto"><span aria-hidden="true"></span></button><button type="button" class="left-for-you-composer-pick" id="leftForYouCameraUse" hidden>Usa foto</button><button type="button" class="left-for-you-composer-pick" id="leftForYouCameraRetake" hidden>Rifai</button></div>
     </div>
   </section>
 </div>

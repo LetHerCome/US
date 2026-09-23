@@ -32,6 +32,11 @@
     recordingChunks: [],
     recordingDiscarded: false,
     recordingStartedAt: 0,
+    cameraStream: null,
+    cameraFacing: 'environment',
+    cameraCapture: null,
+    cameraOpen: false,
+    cameraRequestId: 0,
   };
 
   function getClient() {
@@ -315,11 +320,13 @@
   function closeComposer() {
     const overlay = document.getElementById('leftForYouComposerOverlay');
     if (!overlay) return;
+    closeCamera();
     discardRecording();
     overlay.classList.remove('open'); overlay.setAttribute('aria-hidden', 'true');
   }
 
   function selectedComposerFile(kind = composer.kind) {
+    if (kind === 'photo' && composer.cameraCapture?.selected && composer.cameraCapture.file) return composer.cameraCapture.file;
     const id = { photo: 'leftForYouComposerPhotoFile', video: 'leftForYouComposerVideoFile' }[kind];
     return id ? document.getElementById(id)?.files?.[0] || null : null;
   }
@@ -343,6 +350,138 @@
     if (button) button.disabled = !composerCanSend();
     updateRecorderUi();
     return composerCanSend();
+  }
+
+  function releaseCameraStream(stream = composer.cameraStream) {
+    for (const track of stream?.getTracks?.() || stream?.tracks || []) {
+      try { track.stop?.(); } catch (_) { /* already stopped */ }
+    }
+    if (!stream || stream === composer.cameraStream) composer.cameraStream = null;
+    const preview = document.getElementById('leftForYouCameraPreview');
+    if (preview && (!stream || preview.srcObject === stream)) preview.srcObject = null;
+  }
+
+  function setCameraStatus(message, kind = '') {
+    const status = document.getElementById('leftForYouCameraStatus');
+    if (status) { status.textContent = message || ''; status.dataset.kind = kind; }
+  }
+
+  function updateCameraUi() {
+    const overlay = document.getElementById('leftForYouCameraOverlay');
+    const preview = document.getElementById('leftForYouCameraPreview');
+    const captured = document.getElementById('leftForYouCameraCaptured');
+    const capture = document.getElementById('leftForYouCameraCapture');
+    const use = document.getElementById('leftForYouCameraUse');
+    const retake = document.getElementById('leftForYouCameraRetake');
+    const switcher = document.getElementById('leftForYouCameraSwitch');
+    const hasCapture = Boolean(composer.cameraCapture);
+    if (overlay) { overlay.classList.toggle('open', composer.cameraOpen); overlay.setAttribute('aria-hidden', composer.cameraOpen ? 'false' : 'true'); }
+    if (preview) preview.hidden = hasCapture;
+    if (captured) { captured.hidden = !hasCapture; if (hasCapture && composer.cameraCapture.url) captured.src = composer.cameraCapture.url; }
+    if (capture) capture.hidden = hasCapture;
+    if (use) use.hidden = !hasCapture;
+    if (retake) retake.hidden = !hasCapture;
+    if (switcher) switcher.hidden = hasCapture || switcher.disabled;
+  }
+
+  async function requestCameraStream(facing = composer.cameraFacing) {
+    const mediaDevices = window.navigator?.mediaDevices;
+    if (!mediaDevices?.getUserMedia) throw new Error('camera_unavailable');
+    const requestId = ++composer.cameraRequestId;
+    releaseCameraStream();
+    try {
+      const stream = await mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: false });
+      if (!composer.cameraOpen || requestId !== composer.cameraRequestId) { releaseCameraStream(stream); return null; }
+      composer.cameraStream = stream;
+      composer.cameraFacing = facing;
+      const preview = document.getElementById('leftForYouCameraPreview');
+      if (preview) { preview.srcObject = stream; try { await preview.play?.(); } catch (_) { /* autoplay policy */ } }
+      updateCameraUi();
+      return stream;
+    } catch (error) {
+      if (facing === 'environment' && !['NotAllowedError', 'SecurityError'].includes(error?.name)) {
+        try { return await requestCameraStream('user'); } catch (_) { /* report below */ }
+      }
+      throw error;
+    }
+  }
+
+  async function openCamera() {
+    if (composer.cameraOpen) return;
+    composer.cameraOpen = true;
+    discardCameraCapture();
+    composer.cameraFacing = 'environment';
+    updateCameraUi();
+    try {
+      const devices = await window.navigator?.mediaDevices?.enumerateDevices?.();
+      const switcher = document.getElementById('leftForYouCameraSwitch');
+      if (switcher) switcher.hidden = (devices || []).filter((device) => device.kind === 'videoinput').length < 2;
+      await requestCameraStream('environment');
+    } catch (error) {
+      composer.cameraOpen = false;
+      releaseCameraStream();
+      updateCameraUi();
+      setComposerStatus(error?.name === 'NotAllowedError' ? 'La fotocamera non è disponibile. Controlla i permessi e riprova.' : 'Non riesco ad aprire la fotocamera su questo dispositivo.', 'error');
+    }
+  }
+
+  function closeCamera() {
+    composer.cameraOpen = false;
+    ++composer.cameraRequestId;
+    releaseCameraStream();
+    if (composer.cameraCapture?.url && typeof window.URL?.revokeObjectURL === 'function') window.URL.revokeObjectURL(composer.cameraCapture.url);
+    composer.cameraCapture = null;
+    updateCameraUi();
+    updateComposerValidity();
+  }
+
+  async function switchCamera() {
+    if (!composer.cameraOpen || composer.cameraCapture) return;
+    const next = composer.cameraFacing === 'environment' ? 'user' : 'environment';
+    try { await requestCameraStream(next); } catch (_) { setCameraStatus('Questa fotocamera non è disponibile.', 'error'); }
+  }
+
+  function retakeCameraPhoto() {
+    if (!composer.cameraOpen) return;
+    if (composer.cameraCapture?.url && typeof window.URL?.revokeObjectURL === 'function') window.URL.revokeObjectURL(composer.cameraCapture.url);
+    composer.cameraCapture = null;
+    setCameraStatus('');
+    updateCameraUi();
+    requestCameraStream(composer.cameraFacing).catch(() => setCameraStatus('Non riesco a riaprire la fotocamera.', 'error'));
+  }
+
+  function useCameraPhoto() {
+    if (!composer.cameraCapture) return;
+    composer.cameraCapture.selected = true;
+    composer.cameraOpen = false;
+    ++composer.cameraRequestId;
+    releaseCameraStream();
+    updateCameraUi();
+    updateComposerValidity();
+  }
+
+  async function captureCameraPhoto() {
+    if (!composer.cameraOpen || !composer.cameraStream) return;
+    const preview = document.getElementById('leftForYouCameraPreview');
+    const width = preview.videoWidth || preview.clientWidth || 1280;
+    const height = preview.videoHeight || preview.clientHeight || 720;
+    const canvas = document.createElement('canvas');
+    canvas.width = width; canvas.height = height;
+    canvas.getContext('2d')?.drawImage(preview, 0, 0, width, height);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+    if (!blob) { setCameraStatus('Non riesco a catturare la foto. Riprova.', 'error'); return; }
+    const file = typeof File === 'function' ? new File([blob], `foto-${Date.now()}.jpg`, { type: 'image/jpeg' }) : blob;
+    const url = typeof window.URL?.createObjectURL === 'function' ? window.URL.createObjectURL(blob) : '';
+    composer.cameraCapture = { file, url, selected: false };
+    releaseCameraStream();
+    updateCameraUi();
+    updateComposerValidity();
+  }
+
+  function discardCameraCapture() {
+    if (composer.cameraCapture?.url && typeof window.URL?.revokeObjectURL === 'function') window.URL.revokeObjectURL(composer.cameraCapture.url);
+    composer.cameraCapture = null;
+    updateComposerValidity();
   }
 
   function recordingMimeType() {
@@ -383,8 +522,6 @@
     const remove = document.getElementById('leftForYouComposerAudioDelete');
     if (!record) return;
     const state = composer.recordingState;
-    const label = record.querySelector('.left-for-you-record-label');
-    if (label) label.textContent = state === 'recording' ? 'Stop' : 'Registra';
     record.setAttribute('aria-label', state === 'recording' ? 'Ferma la registrazione' : 'Registra la voce');
     record.classList.toggle('is-recording', state === 'recording');
     record.hidden = state === 'ready';
@@ -544,7 +681,9 @@
   }
 
   function resetComposerInputs() {
+    closeCamera();
     discardRecording();
+    discardCameraCapture();
     const text = document.getElementById('leftForYouComposerText');
     if (text) text.value = '';
     document.querySelectorAll('[data-us-composer-panel] input[type="file"]').forEach((input) => { input.value = ''; });
@@ -588,7 +727,9 @@
     } else {
       file = selectedComposerFile(kind);
       if (!file) { setComposerStatus('Scegli qualcosa da lasciare.', 'error'); return; }
-      if (file.size > 25 * 1024 * 1024) { setComposerStatus('Il file è troppo grande (massimo 25 MB).', 'error'); return; }
+      const maxBytes = kind === 'video' ? 40 * 1024 * 1024 : 25 * 1024 * 1024;
+      const maxLabel = kind === 'video' ? '40 MB' : '25 MB';
+      if (file.size > maxBytes) { setComposerStatus(`Il file è troppo grande (massimo ${maxLabel}).`, 'error'); return; }
     }
     if (!composerCanSend()) {
       setComposerStatus('Completa il contenuto prima di lasciarlo.', 'error');
@@ -636,6 +777,7 @@
       const file = document.getElementById(fileId);
       pick?.addEventListener('click', () => file?.click());
       file?.addEventListener('change', () => {
+        if (fileId === 'leftForYouComposerPhotoFile' && file.files?.[0]) discardCameraCapture();
         const slot = document.getElementById(nameId);
         if (slot) slot.textContent = file.files?.[0]?.name || '';
         updateComposerValidity();
@@ -645,6 +787,13 @@
     document.getElementById('leftForYouComposerText')?.addEventListener('change', updateComposerValidity);
     document.getElementById('leftForYouComposerMusic')?.addEventListener('input', updateComposerValidity);
     document.getElementById('leftForYouComposerMusic')?.addEventListener('change', updateComposerValidity);
+    document.getElementById('leftForYouComposerPhotoCamera')?.addEventListener('click', openCamera);
+    document.getElementById('leftForYouCameraClose')?.addEventListener('click', closeCamera);
+    document.getElementById('leftForYouCameraBackdrop')?.addEventListener('click', closeCamera);
+    document.getElementById('leftForYouCameraSwitch')?.addEventListener('click', switchCamera);
+    document.getElementById('leftForYouCameraCapture')?.addEventListener('click', captureCameraPhoto);
+    document.getElementById('leftForYouCameraUse')?.addEventListener('click', useCameraPhoto);
+    document.getElementById('leftForYouCameraRetake')?.addEventListener('click', retakeCameraPhoto);
     document.getElementById('leftForYouComposerAudioRecord')?.addEventListener('click', () => {
       if (composer.recordingState === 'recording') stopRecording();
       else startRecording();
@@ -681,7 +830,7 @@
     isUnseen, renderItemMarkup, labelForKind, open, close, load, conserve, retry, boot,
     tap, applyEnvelopeState, updateEntry, envelopeStateFor, envelopeIsResolved, subscribeRealtime, handleIncoming, alignCurrentToRenderedItem,
     setComposerKind, openComposer, closeComposer, send, updateComposerValidity, composerCanSend,
-    startRecording, stopRecording, discardRecording, composer,
+    startRecording, stopRecording, discardRecording, openCamera, closeCamera, switchCamera, captureCameraPhoto, useCameraPhoto, retakeCameraPhoto, discardCameraCapture, composer,
   };
   if (typeof window !== 'undefined') window.openLeftForYou = open;
   if (typeof document !== 'undefined') {

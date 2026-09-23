@@ -43,10 +43,11 @@ function makeEl(id) {
 
 function createHarness({ leftForYouRows = [], profilesRows = [{ id: 'beatrice-id', display_name: 'Beatrice', couple_id: 'couple-id' }], insertResult = null, authed = true, currentProfile = { id: 'francesco-id', display_name: 'Francesco', role: 'francesco', couple_id: 'couple-id' } } = {}) {
   const elements = new Map();
-  const log = { inserts: [], uploads: [], realtime: [] };
+  const log = { inserts: [], uploads: [], realtime: [], cameraRequests: [], cameraStreams: [] };
   let pendingInsert = null;
   let lastRecorder = null;
   const stream = { tracks: [{ stopped: false, stop() { this.stopped = true; } }] };
+  const makeCameraStream = () => ({ tracks: [{ stopped: false, stop() { this.stopped = true; } }] });
 
   class FakeMediaRecorder {
     static isTypeSupported(type) { return type === 'audio/webm' || type === 'audio/mp4'; }
@@ -74,6 +75,17 @@ function createHarness({ leftForYouRows = [], profilesRows = [{ id: 'beatrice-id
     },
     querySelectorAll: () => [],
     querySelector: () => ({ querySelector: () => makeEl('note') }),
+    createElement: (tag) => {
+      if (tag === 'canvas') {
+        return {
+          width: 0,
+          height: 0,
+          getContext: () => ({ drawImage() {} }),
+          toBlob: (callback, type) => callback(new Blob(['captured photo'], { type: type || 'image/jpeg' })),
+        };
+      }
+      return makeEl(`created-${tag}`);
+    },
     addEventListener: () => {},
     readyState: 'complete',
   };
@@ -83,7 +95,18 @@ function createHarness({ leftForYouRows = [], profilesRows = [{ id: 'beatrice-id
     addEventListener: () => {},
     dispatchEvent: () => {},
     usProfile: authed ? currentProfile : undefined,
-    mediaDevices: { getUserMedia: async () => stream },
+    mediaDevices: {
+      getUserMedia: async (constraints) => {
+        if (constraints?.video) {
+          const cameraStream = makeCameraStream();
+          log.cameraRequests.push(constraints);
+          log.cameraStreams.push(cameraStream);
+          return cameraStream;
+        }
+        return stream;
+      },
+      enumerateDevices: async () => [{ kind: 'videoinput', deviceId: 'camera-1' }, { kind: 'videoinput', deviceId: 'camera-2' }],
+    },
     MediaRecorder: FakeMediaRecorder,
   };
   windowShim.navigator = windowShim;
@@ -564,4 +587,59 @@ test('M5G1 profile hydration does not overwrite a valid CTA and send reset disab
   await api.send();
   assert.equal(log.inserts.length, 1);
   assert.equal(el('leftForYouComposerSend').disabled, true);
+});
+
+test('M5G2 voice control uses a red dot idle and a stop square while recording', () => {
+  const html = read('index.html');
+  const css = read('left-for-you.css');
+  assert.doesNotMatch(html, /leftForYouComposerAudioRecord[^>]*>[^<]*Registra/);
+  assert.match(css, /left-for-you-record-icon[^}]*background:#e/);
+  assert.match(css, /\.left-for-you-record-control\.is-recording[^}]*\.left-for-you-record-icon/);
+});
+
+test('M5G2 client media limits keep photo/audio at 25 MB and allow video up to 40 MB', async () => {
+  const harness = createHarness();
+  const { api, el, log } = harness;
+  await api.load();
+  const mb = 1024 * 1024;
+
+  api.setComposerKind('video');
+  el('leftForYouComposerVideoFile').files = [{ name: 'ok.mp4', type: 'video/mp4', size: 40 * mb }];
+  await api.send();
+  assert.equal(log.uploads.length, 1);
+  el('leftForYouComposerVideoFile').files = [{ name: 'too-large.mp4', type: 'video/mp4', size: 40 * mb + 1 }];
+  await api.send();
+  assert.equal(log.uploads.length, 1);
+
+  api.setComposerKind('photo');
+  el('leftForYouComposerPhotoFile').files = [{ name: 'too-large.jpg', type: 'image/jpeg', size: 25 * mb + 1 }];
+  await api.send();
+  assert.equal(log.uploads.length, 1);
+});
+
+test('M5G2 camera requests rear only after explicit tap, switches with cleanup, and captured photo enables send', async () => {
+  const harness = createHarness();
+  const { api, el, log } = harness;
+  await api.load();
+  api.setComposerKind('photo');
+  assert.equal(log.cameraRequests.length, 0);
+  const preview = el('leftForYouCameraPreview');
+  preview.play = async () => {};
+  preview.videoWidth = 640;
+  preview.videoHeight = 480;
+  await api.openCamera();
+  assert.equal(log.cameraRequests[0].video.facingMode, 'environment');
+  const firstStream = log.cameraStreams[0];
+  await api.switchCamera();
+  assert.equal(firstStream.tracks[0].stopped, true);
+  assert.equal(log.cameraRequests[1].video.facingMode, 'user');
+  await api.captureCameraPhoto();
+  assert.equal(api.composer.cameraCapture.file.type, 'image/jpeg');
+  assert.equal(el('leftForYouComposerSend').disabled, true);
+  api.useCameraPhoto();
+  assert.equal(el('leftForYouComposerSend').disabled, false);
+  await api.send();
+  assert.equal(log.uploads.length, 1);
+  assert.equal(log.inserts.at(-1).kind, 'photo');
+  assert.equal(log.cameraStreams[1].tracks[0].stopped, true);
 });
