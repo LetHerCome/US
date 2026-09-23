@@ -40,8 +40,8 @@ test('M5F unseen state derives from seen_at and the envelope exposes the canonic
   const html = read('index.html');
   assert.match(html, /aria-label="Lasciato per te"/, 'stato neutro finché il dato non risolve');
   const source = read('left-for-you.js');
-  assert.match(source, /'Beatrice ti ha lasciato qualcosa'/);
-  assert.match(source, /'Lascia qualcosa a Beatrice'/);
+  assert.match(source, /\$\{personName\} ti ha lasciato qualcosa/);
+  assert.match(source, /Lascia qualcosa a \$\{personName\}/);
 });
 
 test('M5E integrates server-authoritative seen and Conserva RPCs', () => {

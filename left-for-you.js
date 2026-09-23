@@ -22,7 +22,17 @@
   let realtimeChannel = null;
 
   // M5F sender composer state.
-  const composer = { kind: 'text', sending: false };
+  const composer = {
+    kind: 'text',
+    sending: false,
+    recordingState: 'idle',
+    recording: null,
+    mediaRecorder: null,
+    mediaStream: null,
+    recordingChunks: [],
+    recordingDiscarded: false,
+    recordingStartedAt: 0,
+  };
 
   function getClient() {
     try { return sb; } catch (_) { return window.sb || null; }
@@ -75,7 +85,8 @@
     const wasClosed = el.classList.contains('is-closed');
     el.classList.toggle('is-closed', closed);
     el.classList.toggle('is-open', !closed);
-    el.setAttribute('aria-label', closed ? 'Beatrice ti ha lasciato qualcosa' : 'Lascia qualcosa a Beatrice');
+    const personName = partnerName();
+    el.setAttribute('aria-label', closed ? `${personName} ti ha lasciato qualcosa` : `Lascia qualcosa a ${personName}`);
     if (transition && !closed && wasClosed) {
       el.classList.add('is-opening');
       clearTimeout(envelopeOpeningTimer);
@@ -108,6 +119,8 @@
     const fromName = document.getElementById('leftForYouFromName');
     if (name) name.textContent = other?.display_name || 'La tua persona';
     if (fromName) fromName.textContent = other?.display_name || 'la tua persona';
+    setPartnerAwareComposerLabels();
+    applyEnvelopeState();
   }
 
   async function fetchItems() {
@@ -259,6 +272,20 @@
     if (status) { status.textContent = message || ''; status.dataset.kind = kind; }
   }
 
+  function composerPartnerName() {
+    return partner()?.display_name || 'la tua persona';
+  }
+
+  function setPartnerAwareComposerLabels() {
+    const name = composerPartnerName();
+    const title = document.getElementById('leftForYouComposerTitle');
+    const send = document.getElementById('leftForYouComposerSend');
+    const audioRecord = document.getElementById('leftForYouComposerAudioRecord');
+    if (title) title.textContent = `Lascia qualcosa a ${name}`;
+    if (send && !composer.sending) send.textContent = `Lascia per ${name}`;
+    if (audioRecord && composer.recordingState === 'idle') audioRecord.textContent = 'Registra';
+  }
+
   function setComposerKind(kind) {
     if (!kinds.has(kind)) return;
     composer.kind = kind;
@@ -270,6 +297,7 @@
     document.querySelectorAll('[data-us-composer-panel]').forEach((panel) => {
       panel.hidden = panel.dataset.usComposerPanel !== kind;
     });
+    updateComposerValidity();
   }
 
   function openComposer() {
@@ -277,6 +305,8 @@
     if (!overlay) return;
     overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false');
     setComposerStatus('');
+    setPartnerAwareComposerLabels();
+    updateComposerValidity();
     // The composer must be ready to send: make sure the recipient profile is known.
     if (!partner()) loadProfiles().catch(() => {});
   }
@@ -284,6 +314,7 @@
   function closeComposer() {
     const overlay = document.getElementById('leftForYouComposerOverlay');
     if (!overlay) return;
+    discardRecording();
     overlay.classList.remove('open'); overlay.setAttribute('aria-hidden', 'true');
   }
 
@@ -294,9 +325,185 @@
     return value ? value.slice(0, 280) : null;
   }
 
-  function composerFileInput() {
-    const id = { photo: 'leftForYouComposerPhotoFile', audio: 'leftForYouComposerAudioFile', video: 'leftForYouComposerVideoFile' }[composer.kind];
-    return id ? document.getElementById(id) : null;
+  function selectedComposerFile(kind = composer.kind) {
+    const id = { photo: 'leftForYouComposerPhotoFile', video: 'leftForYouComposerVideoFile' }[kind];
+    return id ? document.getElementById(id)?.files?.[0] || null : null;
+  }
+
+  function validMusicLink() {
+    const value = (document.getElementById('leftForYouComposerMusic')?.value || '').trim();
+    return /^https:\/\/\S+$/.test(value) && value.length <= 512;
+  }
+
+  function composerCanSend() {
+    if (composer.sending) return false;
+    if (composer.kind === 'text') return Boolean((document.getElementById('leftForYouComposerText')?.value || '').trim());
+    if (composer.kind === 'photo' || composer.kind === 'video') return Boolean(selectedComposerFile());
+    if (composer.kind === 'audio') return Boolean(composer.recording?.ready && composer.recording.file);
+    if (composer.kind === 'music') return validMusicLink();
+    return false;
+  }
+
+  function updateComposerValidity() {
+    const button = document.getElementById('leftForYouComposerSend');
+    if (button) button.disabled = !composerCanSend();
+    updateRecorderUi();
+    return composerCanSend();
+  }
+
+  function recordingMimeType() {
+    const MediaRecorderCtor = window.MediaRecorder;
+    if (!MediaRecorderCtor) return '';
+    const candidates = ['audio/webm', 'audio/mp4'];
+    return candidates.find((type) => typeof MediaRecorderCtor.isTypeSupported !== 'function' || MediaRecorderCtor.isTypeSupported(type)) || '';
+  }
+
+  function releaseMediaStream() {
+    for (const track of composer.mediaStream?.getTracks?.() || composer.mediaStream?.tracks || []) {
+      try { track.stop(); } catch (_) { /* stream already released */ }
+    }
+    composer.mediaStream = null;
+  }
+
+  function clearRecordingTimer() {
+    if (composer.recordingTimer) clearInterval(composer.recordingTimer);
+    composer.recordingTimer = null;
+  }
+
+  function formatRecordingDuration(seconds) {
+    const safe = Math.max(0, Math.floor(Number(seconds) || 0));
+    return `${String(Math.floor(safe / 60)).padStart(2, '0')}:${String(safe % 60).padStart(2, '0')}`;
+  }
+
+  function updateRecordingTimer() {
+    const timer = document.getElementById('leftForYouComposerAudioTimer');
+    if (!timer || composer.recordingState !== 'recording') return;
+    timer.textContent = formatRecordingDuration((Date.now() - composer.recordingStartedAt) / 1000);
+  }
+
+  function updateRecorderUi() {
+    const record = document.getElementById('leftForYouComposerAudioRecord');
+    const timer = document.getElementById('leftForYouComposerAudioTimer');
+    const preview = document.getElementById('leftForYouComposerAudioPreview');
+    const retry = document.getElementById('leftForYouComposerAudioRetry');
+    const remove = document.getElementById('leftForYouComposerAudioDelete');
+    if (!record) return;
+    const state = composer.recordingState;
+    record.textContent = state === 'recording' ? 'Stop' : state === 'ready' ? 'Rifai' : 'Registra';
+    record.hidden = state === 'ready';
+    record.disabled = composer.sending || state === 'starting';
+    if (timer) {
+      timer.hidden = state !== 'recording';
+      if (state === 'idle') timer.textContent = '00:00';
+    }
+    if (preview) {
+      preview.hidden = state !== 'ready';
+      if (state === 'ready' && composer.recording?.url) preview.src = composer.recording.url;
+      if (state !== 'ready') preview.removeAttribute('src');
+    }
+    if (retry) retry.hidden = state !== 'ready';
+    if (remove) remove.hidden = state !== 'ready';
+  }
+
+  function makeRecordedFile(blob) {
+    const extension = String(blob?.type || '').includes('mp4') ? 'm4a' : 'webm';
+    try { Object.defineProperty(blob, 'name', { value: `voce-${Date.now()}.${extension}` }); } catch (_) { /* Blob remains uploadable */ }
+    return blob;
+  }
+
+  function discardRecording() {
+    composer.recordingDiscarded = true;
+    clearRecordingTimer();
+    const recorder = composer.mediaRecorder;
+    if (recorder && recorder.state === 'recording') {
+      try { recorder.stop(); } catch (_) { /* recorder already stopped */ }
+    }
+    releaseMediaStream();
+    composer.mediaRecorder = null;
+    composer.recordingChunks = [];
+    if (composer.recording?.url && typeof window.URL?.revokeObjectURL === 'function') window.URL.revokeObjectURL(composer.recording.url);
+    composer.recording = null;
+    composer.recordingState = 'idle';
+    updateRecorderUi();
+    updateComposerValidity();
+  }
+
+  async function startRecording() {
+    if (composer.sending || composer.recordingState === 'recording' || composer.recordingState === 'starting') return;
+    const mediaDevices = window.navigator?.mediaDevices;
+    const MediaRecorderCtor = window.MediaRecorder;
+    if (!mediaDevices?.getUserMedia || !MediaRecorderCtor) {
+      setComposerStatus('La registrazione vocale non è disponibile in questo browser.', 'error');
+      return;
+    }
+    discardRecording();
+    composer.recordingDiscarded = false;
+    composer.recordingState = 'starting';
+    updateRecorderUi();
+    try {
+      const stream = await mediaDevices.getUserMedia({ audio: true });
+      if (composer.recordingState !== 'starting') {
+        for (const track of stream.getTracks?.() || stream.tracks || []) track.stop?.();
+        return;
+      }
+      composer.mediaStream = stream;
+      composer.recordingChunks = [];
+      const mimeType = recordingMimeType();
+      const recorder = mimeType ? new MediaRecorderCtor(stream, { mimeType }) : new MediaRecorderCtor(stream);
+      composer.mediaRecorder = recorder;
+      composer.recordingState = 'recording';
+      composer.recordingStartedAt = Date.now();
+      recorder.ondataavailable = (event) => { if (event.data?.size) composer.recordingChunks.push(event.data); };
+      recorder.onerror = () => {
+        setComposerStatus('Non riesco a registrare la voce. Riprova.', 'error');
+        discardRecording();
+      };
+      recorder.onstop = () => {
+        const ignored = composer.recordingDiscarded;
+        const chunks = composer.recordingChunks;
+        clearRecordingTimer();
+        releaseMediaStream();
+        composer.mediaRecorder = null;
+        composer.recordingChunks = [];
+        if (ignored || !chunks.length) {
+          composer.recordingState = 'idle';
+          composer.recording = null;
+          updateRecorderUi();
+          updateComposerValidity();
+          return;
+        }
+        const BlobCtor = window.Blob || globalThis.Blob;
+        const blob = new BlobCtor(chunks, { type: recorder.mimeType || chunks[0]?.type || 'audio/webm' });
+        const file = makeRecordedFile(blob);
+        const url = typeof window.URL?.createObjectURL === 'function' ? window.URL.createObjectURL(blob) : '';
+        composer.recording = { ready: true, file, url, duration: (Date.now() - composer.recordingStartedAt) / 1000 };
+        composer.recordingState = 'ready';
+        updateRecorderUi();
+        updateComposerValidity();
+      };
+      recorder.start();
+      composer.recordingTimer = typeof setInterval === 'function' ? setInterval(updateRecordingTimer, 250) : null;
+      updateRecorderUi();
+    } catch (error) {
+      console.warn('[US Left for You] recorder', error);
+      releaseMediaStream();
+      composer.mediaRecorder = null;
+      composer.recordingState = 'idle';
+      updateRecorderUi();
+      setComposerStatus(error?.name === 'NotAllowedError' ? 'Il microfono non è disponibile. Controlla i permessi e riprova.' : 'Non riesco ad avviare la registrazione. Riprova.', 'error');
+      updateComposerValidity();
+    }
+  }
+
+  function stopRecording() {
+    if (composer.recordingState !== 'recording') return;
+    const recorder = composer.mediaRecorder;
+    if (!recorder) return;
+    try { recorder.stop(); } catch (error) {
+      console.warn('[US Left for You] recorder stop', error);
+      discardRecording();
+    }
+    releaseMediaStream();
   }
 
   function fileExtension(file) {
@@ -333,11 +540,14 @@
     const button = document.getElementById('leftForYouComposerSend');
     if (button) {
       button.disabled = isBusy;
-      button.textContent = isBusy ? 'Lascio…' : 'Lascia per Beatrice';
+      button.textContent = isBusy ? `Lascio per ${composerPartnerName()}…` : `Lascia per ${composerPartnerName()}`;
     }
+    updateRecorderUi();
+    if (!isBusy) updateComposerValidity();
   }
 
   function resetComposerInputs() {
+    discardRecording();
     const text = document.getElementById('leftForYouComposerText');
     if (text) text.value = '';
     document.querySelectorAll('[data-us-composer-panel] textarea').forEach((note) => { note.value = ''; });
@@ -348,6 +558,7 @@
       const slot = document.getElementById(`leftForYouComposer${kind}Name`);
       if (slot) slot.textContent = '';
     });
+    updateComposerValidity();
   }
 
   async function send() {
@@ -355,6 +566,7 @@
     const client = getClient();
     const me = window.usProfile;
     const other = partner();
+    const personName = composerPartnerName();
     if (!client || !me || !other || other.id === me.id) {
       setComposerStatus('Non so ancora a chi lasciarlo. Riprova.', 'error');
       return;
@@ -362,28 +574,38 @@
     const kind = composer.kind;
     let body = null;
     let mediaPath = null;
+    let file = null;
     if (kind === 'text') {
       body = (document.getElementById('leftForYouComposerText')?.value || '').trim();
-      if (!body) { setComposerStatus('Scrivi qualcosa per lei.', 'error'); return; }
+      if (!body) { setComposerStatus(`Scrivi qualcosa per ${personName}.`, 'error'); return; }
       if (body.length > 1000) { setComposerStatus('Il pensiero è troppo lungo (massimo 1000 caratteri).', 'error'); return; }
     } else if (kind === 'music') {
       mediaPath = (document.getElementById('leftForYouComposerMusic')?.value || '').trim();
-      if (!/^https:\/\/\S+$/.test(mediaPath) || mediaPath.length > 512) {
+      if (!validMusicLink()) {
         setComposerStatus('Inserisci un link https valido alla musica.', 'error');
         return;
       }
       body = composerNoteValue();
+    } else if (kind === 'audio') {
+      file = composer.recording?.file;
+      if (!file) { setComposerStatus('Registra una voce prima di lasciarla.', 'error'); return; }
+      if (file.size > 25 * 1024 * 1024) { setComposerStatus('Il file è troppo grande (massimo 25 MB).', 'error'); return; }
+      body = composerNoteValue();
     } else {
-      const file = composerFileInput()?.files?.[0];
+      file = selectedComposerFile(kind);
       if (!file) { setComposerStatus('Scegli qualcosa da lasciare.', 'error'); return; }
       if (file.size > 25 * 1024 * 1024) { setComposerStatus('Il file è troppo grande (massimo 25 MB).', 'error'); return; }
       body = composerNoteValue();
+    }
+    if (!composerCanSend()) {
+      setComposerStatus('Completa il contenuto prima di lasciarlo.', 'error');
+      return;
     }
     setComposerBusy(true);
     setComposerStatus('');
     try {
       if (kind === 'photo' || kind === 'audio' || kind === 'video') {
-        mediaPath = await uploadComposerMedia(composerFileInput().files[0], kind);
+        mediaPath = await uploadComposerMedia(file, kind);
       }
       const { error } = await client.from('left_for_you').insert({
         couple_id: me.couple_id,
@@ -394,12 +616,12 @@
         media_path: mediaPath,
       });
       if (error) throw error;
-      setComposerStatus('Lasciato per lei ♡', 'success');
+      setComposerStatus(`Lasciato per ${personName} ♡`, 'success');
       resetComposerInputs();
       setTimeout(() => { if (!composer.sending) closeComposer(); }, 900);
     } catch (error) {
       console.warn('[US Left for You] send', error);
-      setComposerStatus('Non riesco a lasciarlo ora. Riprova, è ancora qui.', 'error');
+      setComposerStatus(`Non riesco a lasciarlo a ${personName} ora. Riprova, è ancora qui.`, 'error');
     } finally {
       setComposerBusy(false);
     }
@@ -414,7 +636,6 @@
     });
     const pickBindings = [
       ['leftForYouComposerPhotoPick', 'leftForYouComposerPhotoFile', 'leftForYouComposerPhotoName'],
-      ['leftForYouComposerAudioPick', 'leftForYouComposerAudioFile', 'leftForYouComposerAudioName'],
       ['leftForYouComposerVideoPick', 'leftForYouComposerVideoFile', 'leftForYouComposerVideoName'],
     ];
     for (const [pickId, fileId, nameId] of pickBindings) {
@@ -424,8 +645,20 @@
       file?.addEventListener('change', () => {
         const slot = document.getElementById(nameId);
         if (slot) slot.textContent = file.files?.[0]?.name || '';
+        updateComposerValidity();
       });
     }
+    document.getElementById('leftForYouComposerText')?.addEventListener('input', updateComposerValidity);
+    document.getElementById('leftForYouComposerMusic')?.addEventListener('input', updateComposerValidity);
+    document.querySelectorAll('.left-for-you-composer-note').forEach((note) => note.addEventListener('input', updateComposerValidity));
+
+    document.getElementById('leftForYouComposerAudioRecord')?.addEventListener('click', () => {
+      if (composer.recordingState === 'recording') stopRecording();
+      else startRecording();
+    });
+    document.getElementById('leftForYouComposerAudioRetry')?.addEventListener('click', startRecording);
+    document.getElementById('leftForYouComposerAudioDelete')?.addEventListener('click', discardRecording);
+    updateComposerValidity();
   }
 
   function boot() {
@@ -454,7 +687,8 @@
   const api = {
     isUnseen, renderItemMarkup, labelForKind, open, close, load, conserve, retry, boot,
     tap, applyEnvelopeState, updateEntry, envelopeStateFor, envelopeIsResolved, subscribeRealtime, handleIncoming, alignCurrentToRenderedItem,
-    setComposerKind, openComposer, closeComposer, send, composer,
+    setComposerKind, openComposer, closeComposer, send, updateComposerValidity, composerCanSend,
+    startRecording, stopRecording, discardRecording, composer,
   };
   if (typeof window !== 'undefined') window.openLeftForYou = open;
   if (typeof document !== 'undefined') {
