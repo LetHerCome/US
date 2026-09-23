@@ -8,7 +8,7 @@ const VAPID_PUBLIC_KEY = "BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLw
 const VAPID_SUBJECT = "https://usfinal.vercel.app";
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization,x-client-info,apikey,content-type", "Access-Control-Allow-Methods": "POST,OPTIONS", "Content-Type": "application/json" };
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: cors });
-type EventType = "test" | "think" | "think_reaction" | "daily_answer" | "quest_confirmed";
+type EventType = "test" | "think" | "think_reaction" | "daily_answer" | "quest_confirmed" | "left_for_you";
 
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -24,7 +24,7 @@ Deno.serve(async (request) => {
     if (authError || !authData.user) return json({ error: "Invalid session" }, 401);
     const body = await request.json().catch(() => ({}));
     const type = body?.type as EventType;
-    if (!type || !["test", "think", "daily_answer", "quest_confirmed"].includes(type)) return json({ error: "Invalid notification type" }, 400);
+    if (!type || !["test", "think", "daily_answer", "quest_confirmed", "left_for_you"].includes(type)) return json({ error: "Invalid notification type" }, 400);
     const { data: sender, error: senderError } = await admin.from("profiles").select("id,couple_id,display_name,role").eq("id", authData.user.id).maybeSingle();
     if (senderError || !sender?.couple_id) return json({ error: "Profile not linked" }, 403);
     const { data: partner } = await admin.from("profiles").select("id,display_name,role").eq("couple_id", sender.couple_id).neq("id", sender.id).maybeSingle();
@@ -79,6 +79,21 @@ Deno.serve(async (request) => {
     let tag = "us";
     let dedupeKey: string | null = null;
     let prefKey: "today" | "bond" | null = null;
+    if (type === "left_for_you") {
+      if (!partner || !body.reference_id) return json({ error: "Missing left_for_you reference" }, 400);
+      const { data: row, error: rowError } = await admin.from("left_for_you")
+        .select("id,couple_id,sender_id,recipient_id")
+        .eq("id", body.reference_id)
+        .maybeSingle();
+      if (rowError || !row || row.sender_id !== sender.id || row.couple_id !== sender.couple_id || row.recipient_id !== partner.id) {
+        return json({ error: "Invalid left_for_you event" }, 403);
+      }
+      recipientIds = [row.recipient_id];
+      notificationBody = `${sender.display_name || "La tua persona"} ti ha lasciato qualcosa ♡`;
+      target = "left_for_you";
+      tag = `left-for-you:${row.id}`;
+      dedupeKey = `left-for-you:${row.id}`;
+    }
     if (type === "test") {
       recipientIds = [sender.id];
       notificationBody = "Notifiche attive. US può raggiungerti anche quando è chiusa ♡";

@@ -542,6 +542,11 @@ function performPushNavigation(target){
   if(!target)return;
   if(!window.usProfile){usPendingPushTarget=target;return;}
   if(target==='today'){openToday();return;}
+  if(target==='left_for_you'){
+    if(document.querySelector('.page.active')?.id!=='home')go('home',{motionCommit:true});
+    setTimeout(()=>window.openLeftForYou?.(),120);
+    return;
+  }
   if(pages.includes(target))go(target);
 }
 function captureInitialPushTarget(){

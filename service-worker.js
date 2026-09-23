@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-static-runtime-26";
+const CACHE_NAME = "us-shell-static-runtime-27";
 const MEDIA_CACHE_NAME = "us-private-media-v1";
 
 const APP_SHELL = [
@@ -10,6 +10,8 @@ const APP_SHELL = [
   "/app.js",
   "/stories.js",
   "/stories.css",
+  "/left-for-you.js",
+  "/left-for-you.css",
   "/styles.css",
   "/ui-foundation.css",
   "/ui-foundation.js",

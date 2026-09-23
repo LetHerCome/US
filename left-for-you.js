@@ -741,7 +741,7 @@
       if (kind === 'photo' || kind === 'audio' || kind === 'video') {
         mediaPath = await uploadComposerMedia(file, kind);
       }
-      const { error } = await client.from('left_for_you').insert({
+      const { data: inserted, error } = await client.from('left_for_you').insert({
         couple_id: me.couple_id,
         sender_id: me.id,
         recipient_id: other.id,
@@ -750,6 +750,7 @@
         media_path: mediaPath,
       });
       if (error) throw error;
+      if (inserted?.id) window.sendWebPushEvent?.('left_for_you', inserted.id).catch?.(() => {});
       setComposerStatus(`Lasciato per ${personName} ♡`, 'success');
       resetComposerInputs();
       setTimeout(() => { if (!composer.sending) closeComposer(); }, 900);
