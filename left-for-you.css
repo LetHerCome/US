@@ -92,6 +92,8 @@
 .left-for-you-camera-actions{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
 .left-for-you-camera-shutter{width:64px;height:64px;padding:0;border:4px solid rgba(255,255,255,.9);border-radius:50%;background:transparent;display:grid;place-items:center}
 .left-for-you-camera-shutter span{width:46px;height:46px;border-radius:50%;background:#f2f0f2}
+/* M5G9: author display rules outrank the user-agent [hidden] rule, so the camera sheet must restate it. */
+.left-for-you-camera-body [hidden]{display:none!important}
 @media(prefers-reduced-motion:reduce){.left-for-you-record-control.is-recording{animation:none}}
 
 /* M5G5: enabled CTA must not resemble a disabled control. */
