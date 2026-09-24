@@ -43,7 +43,7 @@ function makeEl(id) {
 
 function createHarness({ leftForYouRows = [], profilesRows = [{ id: 'beatrice-id', display_name: 'Beatrice', couple_id: 'couple-id' }], insertResult = null, pushError = false, authed = true, currentProfile = { id: 'francesco-id', display_name: 'Francesco', role: 'francesco', couple_id: 'couple-id' } } = {}) {
   const elements = new Map();
-  const log = { inserts: [], uploads: [], realtime: [], cameraRequests: [], cameraStreams: [], pushEvents: [] };
+  const log = { inserts: [], uploads: [], realtime: [], realtimeHandlers: [], rpcs: [], cameraRequests: [], cameraStreams: [], pushEvents: [] };
   let pendingInsert = null;
   let lastRecorder = null;
   const stream = { tracks: [{ stopped: false, stop() { this.stopped = true; } }] };
@@ -145,11 +145,17 @@ function createHarness({ leftForYouRows = [], profilesRows = [{ id: 'beatrice-id
       if (table === 'profiles') return selectBuilder(profilesRows);
       return selectBuilder(leftForYouRows);
     },
-    rpc: () => Promise.resolve({ data: { seen_at: '2026-09-23T10:00:00Z', status: 'seen' }, error: null }),
+    rpc: (name, args) => {
+      log.rpcs.push({ name, args });
+      return Promise.resolve({ data: { seen_at: '2026-09-23T10:00:00Z', status: 'seen' }, error: null });
+    },
     channel: (name) => {
       const channel = {
         name,
-        on: () => channel,
+        on: (event, config, handler) => {
+          log.realtimeHandlers.push({ event, config, handler });
+          return channel;
+        },
         subscribe: () => {
           log.realtime.push(name);
           return channel;
@@ -278,6 +284,57 @@ test('M5F receiver opens the first unseen item and marks seen through the server
   assert.match(el('leftForYouContent').innerHTML, /data-left-kind="text"/);
   assert.match(el('leftForYouContent').innerHTML, /Nuovo/);
 });
+
+test('M5I active receiver item survives its own Realtime UPDATE and Conserva remains available', async () => {
+  const harness = createHarness({
+    leftForYouRows: [{ id: 'active-item', sender_id: 'beatrice-id', recipient_id: 'francesco-id', kind: 'text', body: 'Resta qui', seen_at: null }],
+  });
+  const { api, el, log } = harness;
+  await api.open();
+  api.subscribeRealtime();
+  const updateHandler = log.realtimeHandlers.find(({ event, config }) => event === 'postgres_changes' && config.event === 'UPDATE');
+  await updateHandler.handler({ new: { id: 'active-item', seen_at: '2026-09-24T10:00:00Z' } });
+  assert.equal(el('leftForYouOverlay').classList.contains('open'), true);
+  assert.match(el('leftForYouContent').innerHTML, /Resta qui/);
+  await api.conserve();
+  assert.equal(log.rpcs.at(-1).name, 'conserve_left_for_you');
+});
+
+test('M5I Realtime UPDATE does not auto-render the next unseen item', async () => {
+  const harness = createHarness({
+    leftForYouRows: [
+      { id: 'first-item', sender_id: 'beatrice-id', recipient_id: 'francesco-id', kind: 'text', body: 'Primo', seen_at: null },
+      { id: 'second-item', sender_id: 'beatrice-id', recipient_id: 'francesco-id', kind: 'text', body: 'Secondo', seen_at: null },
+    ],
+  });
+  const { api, el, log } = harness;
+  await api.open();
+  api.subscribeRealtime();
+  const updateHandler = log.realtimeHandlers.find(({ config }) => config.event === 'UPDATE');
+  await updateHandler.handler({ new: { id: 'first-item', seen_at: '2026-09-24T10:00:00Z' } });
+  assert.match(el('leftForYouContent').innerHTML, /Primo/);
+  assert.doesNotMatch(el('leftForYouContent').innerHTML, /Secondo/);
+  assert.equal(log.rpcs.filter(({ name }) => name === 'mark_left_item_seen').length, 1);
+  el('leftForYouNext').click();
+  await sleep(5);
+  assert.match(el('leftForYouContent').innerHTML, /Secondo/);
+  assert.equal(log.rpcs.filter(({ name }) => name === 'mark_left_item_seen').length, 2);
+});
+
+test('M5I new Realtime INSERT joins pending state without replacing the active item', async () => {
+  const rows = [{ id: 'active-item', sender_id: 'beatrice-id', recipient_id: 'francesco-id', kind: 'text', body: 'Attivo', seen_at: null }];
+  const harness = createHarness({ leftForYouRows: rows });
+  const { api, el, log } = harness;
+  await api.open();
+  api.subscribeRealtime();
+  rows.push({ id: 'incoming-item', sender_id: 'beatrice-id', recipient_id: 'francesco-id', kind: 'text', body: 'Nuovo arrivo', seen_at: null });
+  const insertHandler = log.realtimeHandlers.find(({ config }) => config.event === 'INSERT');
+  await insertHandler.handler({ new: { id: 'incoming-item' } });
+  assert.match(el('leftForYouContent').innerHTML, /Attivo/);
+  assert.doesNotMatch(el('leftForYouContent').innerHTML, /Nuovo arrivo/);
+  assert.equal(log.rpcs.filter(({ name }) => name === 'mark_left_item_seen').length, 1);
+});
+
 
 test('M5F composer sends text', async () => {
   const harness = createHarness();

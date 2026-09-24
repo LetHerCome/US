@@ -11,11 +11,11 @@ test('M5G3 release coherency versions the composer assets and shell without touc
   const version = JSON.parse(read('version.json')).version;
   const worker = read('service-worker.js');
   const build = html.match(/meta name="us-build" content="([^"]+)"/)?.[1];
-  assert.equal(build, 'm5h-spotify-attribution-20260924-1');
+  assert.equal(build, 'm5i-ephemeral-inbox-20260924-1');
   assert.equal(version, build);
-  assert.match(html, /left-for-you\.css\?v=us-m5h-spotify-20260924-1/);
-  assert.match(html, /left-for-you\.js\?v=us-m5h-spotify-20260924-1/);
-  assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-28"/);
+  assert.match(html, /left-for-you\.css\?v=us-m5i-ephemeral-20260924-1/);
+  assert.match(html, /left-for-you\.js\?v=us-m5i-ephemeral-20260924-1/);
+  assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-29"/);
   assert.match(worker, /const MEDIA_CACHE_NAME = "us-private-media-v1"/);
   assert.match(worker, /"\/left-for-you\.css"/);
   assert.match(worker, /"\/left-for-you\.js"/);

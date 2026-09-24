@@ -8,6 +8,7 @@
   const kinds = new Set(['text', 'photo', 'audio', 'video', 'music']);
   let items = [];
   let currentIndex = 0;
+  let activeItem = null;
   let busy = false;
   let profiles = new Map();
 
@@ -157,7 +158,7 @@
     applyEnvelopeState();
   }
 
-  async function fetchItems() {
+  async function fetchItems({ preserveActive = false } = {}) {
     const client = getClient();
     if (!window.usProfile || !client) throw new Error('sync_unavailable');
     const { data, error } = await client.from('left_for_you')
@@ -166,9 +167,17 @@
       .is('seen_at', null)
       .order('created_at', { ascending: false });
     if (error) throw error;
-    items = (data || []).filter((item) => kinds.has(item.kind));
+    const pending = (data || []).filter((item) => kinds.has(item.kind));
+    if (preserveActive && activeItem) {
+      items = [activeItem, ...pending.filter((item) => item.id !== activeItem.id)];
+      currentIndex = 0;
+    } else {
+      items = pending;
+      currentIndex = 0;
+      activeItem = null;
+    }
     envelopeResolved = true;
-    updateEntry(items.length);
+    updateEntry(pending.length);
     return items;
   }
 
@@ -193,6 +202,7 @@
     const counter = document.getElementById('leftForYouCounter');
     const conserve = document.getElementById('leftForYouConserve');
     if (!item || !content) return;
+    activeItem = item;
     content.innerHTML = '<div class="left-for-you-loading-inline" aria-busy="true">Apro il tuo messaggio…</div>';
     const url = await mediaUrl(item);
     content.innerHTML = renderItemMarkup(item, url);
@@ -244,6 +254,9 @@
     const modal = root();
     if (!modal) return;
     modal.classList.remove('open'); modal.setAttribute('aria-hidden', 'true');
+    activeItem = null;
+    items = [];
+    currentIndex = 0;
   }
 
   async function conserve() {
@@ -282,16 +295,7 @@
 
   function handleIncoming() {
     const overlayOpen = Boolean(root()?.classList.contains('open'));
-    return fetchItems().then(async () => {
-      if (!overlayOpen) return;
-      if (!items.length) {
-        close();
-        return;
-      }
-      const renderedIndex = items.findIndex((item) => item.id === lastRenderedItemId);
-      currentIndex = renderedIndex >= 0 ? renderedIndex : Math.min(currentIndex, items.length - 1);
-      await renderCurrent();
-    }).catch(() => {});
+    return fetchItems({ preserveActive: overlayOpen }).catch(() => {});
   }
 
   function subscribeRealtime() {
