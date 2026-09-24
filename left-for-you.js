@@ -789,8 +789,15 @@
     document.getElementById('leftForYouComposerMusic')?.addEventListener('input', updateComposerValidity);
     document.getElementById('leftForYouComposerMusic')?.addEventListener('change', updateComposerValidity);
     document.getElementById('leftForYouComposerPhotoCamera')?.addEventListener('click', openCamera);
+    const cameraOverlay = document.getElementById('leftForYouCameraOverlay');
+    const cameraBackdrop = document.getElementById('leftForYouCameraBackdrop');
+    cameraOverlay?.addEventListener('click', (event) => {
+      if (event.target === cameraOverlay) closeCamera();
+    });
+    cameraBackdrop?.addEventListener('click', (event) => {
+      if (event.target === cameraBackdrop) closeCamera();
+    });
     document.getElementById('leftForYouCameraClose')?.addEventListener('click', closeCamera);
-    document.getElementById('leftForYouCameraBackdrop')?.addEventListener('click', closeCamera);
     document.getElementById('leftForYouCameraSwitch')?.addEventListener('click', switchCamera);
     document.getElementById('leftForYouCameraCapture')?.addEventListener('click', captureCameraPhoto);
     document.getElementById('leftForYouCameraUse')?.addEventListener('click', useCameraPhoto);
