@@ -163,11 +163,12 @@
     const { data, error } = await client.from('left_for_you')
       .select('id,sender_id,recipient_id,kind,body,media_path,created_at,seen_at')
       .eq('recipient_id', window.usProfile.id)
+      .is('seen_at', null)
       .order('created_at', { ascending: false });
     if (error) throw error;
     items = (data || []).filter((item) => kinds.has(item.kind));
     envelopeResolved = true;
-    updateEntry(items.filter(isUnseen).length);
+    updateEntry(items.length);
     return items;
   }
 
@@ -233,6 +234,10 @@
     if (!modal) return;
     modal.classList.add('open'); modal.setAttribute('aria-hidden', 'false');
     await load();
+    if (!items.length) {
+      close();
+      openComposer();
+    }
   }
 
   function close() {
@@ -277,7 +282,16 @@
 
   function handleIncoming() {
     const overlayOpen = Boolean(root()?.classList.contains('open'));
-    return fetchItems().then(() => { if (overlayOpen) alignCurrentToRenderedItem(); }).catch(() => {});
+    return fetchItems().then(async () => {
+      if (!overlayOpen) return;
+      if (!items.length) {
+        close();
+        return;
+      }
+      const renderedIndex = items.findIndex((item) => item.id === lastRenderedItemId);
+      currentIndex = renderedIndex >= 0 ? renderedIndex : Math.min(currentIndex, items.length - 1);
+      await renderCurrent();
+    }).catch(() => {});
   }
 
   function subscribeRealtime() {
@@ -288,13 +302,26 @@
       try { client.removeChannel(realtimeChannel); } catch (_) { /* channel already gone */ }
       realtimeChannel = null;
     }
+    const receiveChange = () => handleIncoming();
     realtimeChannel = client.channel(`us-left-for-you-${me.id}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'left_for_you',
         filter: `recipient_id=eq.${me.id}`,
-      }, () => handleIncoming());
+      }, receiveChange)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'left_for_you',
+        filter: `recipient_id=eq.${me.id}`,
+      }, receiveChange)
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'left_for_you',
+        filter: `recipient_id=eq.${me.id}`,
+      }, receiveChange);
     realtimeChannel.subscribe();
   }
 

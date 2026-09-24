@@ -53,6 +53,7 @@ function selectBuilder(rows, log) {
   const builder = {
     select: () => builder,
     eq: () => builder,
+    is: () => builder,
     order: () => builder,
     insert: (payload) => {
       log.inserts.push(payload);

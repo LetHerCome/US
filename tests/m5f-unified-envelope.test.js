@@ -120,6 +120,7 @@ function createHarness({ leftForYouRows = [], profilesRows = [{ id: 'beatrice-id
     const builder = {
       select: () => builder,
       eq: () => builder,
+      is: () => builder,
       order: () => builder,
       insert: (payload) => {
         log.inserts.push(payload);
@@ -209,7 +210,9 @@ test('M5F envelope state machine: zero unseen → open, unseen >= 1 → closed',
 });
 
 test('M5F closed tap opens the unseen item receiver; open tap launches the sender composer', async () => {
-  const harness = createHarness();
+  const harness = createHarness({
+    leftForYouRows: [{ id: 'unseen-item', sender_id: 'beatrice-id', recipient_id: 'francesco-id', kind: 'text', body: 'Ciao', seen_at: null }],
+  });
   const { api, el } = harness;
   await api.load();
 
