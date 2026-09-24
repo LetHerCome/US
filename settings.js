@@ -103,7 +103,7 @@ async function hydrateUsSettings(){
 
   const couple=coupleRes.data||{};
   const profiles=profilesRes.data||[];
-  settingsSnapshot={couple,profiles,loc,push,prefs:prefsRes.data||{think:true,today:true,bond:true,relationship:true}};
+  settingsSnapshot={couple,profiles,loc,push,prefs:prefsRes.data||{think:true,today:true,bond:true,relationship:true,left_for_you:true}};
 
   const names=profiles.map(p=>p.display_name).filter(Boolean);
   $('usCoupleNames').textContent=names.length?names.join(' + '):'Il vostro US';
@@ -256,7 +256,7 @@ async function locationAction(){
 
 function preferenceToggle(key,label,checked){
   return `<button type="button" class="us-settings2-toggle-row" data-pref="${key}" aria-pressed="${checked?'true':'false'}">
-    <span><b>${label}</b><small>${key==='think'?'Segnali Ti penso':key==='today'?'Risposte e reveal di Today':key==='bond'?'Conferme delle quest Bond':'Mesiversari e anniversari'}</small></span>
+    <span><b>${label}</b><small>${key==='think'?'Segnali Ti penso':key==='today'?'Risposte e reveal di Today':key==='bond'?'Conferme delle quest Bond':key==='left_for_you'?'Quando la tua persona ti lascia qualcosa':'Mesiversari e anniversari'}</small></span>
     <i class="${checked?'on':''}"><u></u></i>
   </button>`;
 }
@@ -264,7 +264,7 @@ function preferenceToggle(key,label,checked){
 async function notificationsModal(){
   const state=await pushState();
   const {data:prefs}=await sb.rpc('get_notification_preferences');
-  const p=prefs||{think:true,today:true,bond:true,relationship:true};
+  const p=prefs||{think:true,today:true,bond:true,relationship:true,left_for_you:true};
   openModal('Notifiche',`
     <div class="us-settings2-push-master">
       <span><b>${state.active?'Notifiche attive':'Notifiche non attive'}</b><small>${state.permission==='denied'?'Bloccate dal telefono/browser':'Le preferenze sotto sono personali'}</small></span>
@@ -275,6 +275,7 @@ async function notificationsModal(){
       ${preferenceToggle('today','Today',p.today!==false)}
       ${preferenceToggle('bond','Bond',p.bond!==false)}
       ${preferenceToggle('relationship','Ricorrenze',p.relationship!==false)}
+      ${preferenceToggle('left_for_you','Lasciato per te',p.left_for_you!==false)}
     </div>
     <div class="us-settings2-footnote">Questi interruttori regolano realmente cosa il server invia al tuo profilo.</div>
   `,'QUESTO TELEFONO');

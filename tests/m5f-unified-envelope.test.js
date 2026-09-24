@@ -41,9 +41,9 @@ function makeEl(id) {
   };
 }
 
-function createHarness({ leftForYouRows = [], profilesRows = [{ id: 'beatrice-id', display_name: 'Beatrice', couple_id: 'couple-id' }], insertResult = null, authed = true, currentProfile = { id: 'francesco-id', display_name: 'Francesco', role: 'francesco', couple_id: 'couple-id' } } = {}) {
+function createHarness({ leftForYouRows = [], profilesRows = [{ id: 'beatrice-id', display_name: 'Beatrice', couple_id: 'couple-id' }], insertResult = null, pushError = false, authed = true, currentProfile = { id: 'francesco-id', display_name: 'Francesco', role: 'francesco', couple_id: 'couple-id' } } = {}) {
   const elements = new Map();
-  const log = { inserts: [], uploads: [], realtime: [], cameraRequests: [], cameraStreams: [] };
+  const log = { inserts: [], uploads: [], realtime: [], cameraRequests: [], cameraStreams: [], pushEvents: [] };
   let pendingInsert = null;
   let lastRecorder = null;
   const stream = { tracks: [{ stopped: false, stop() { this.stopped = true; } }] };
@@ -108,6 +108,11 @@ function createHarness({ leftForYouRows = [], profilesRows = [{ id: 'beatrice-id
       enumerateDevices: async () => [{ kind: 'videoinput', deviceId: 'camera-1' }, { kind: 'videoinput', deviceId: 'camera-2' }],
     },
     MediaRecorder: FakeMediaRecorder,
+    sendWebPushEvent: async (type, referenceId) => {
+      log.pushEvents.push({ type, referenceId });
+      if (pushError) throw new Error('push failed');
+      return { delivered: 1 };
+    },
   };
   windowShim.navigator = windowShim;
 
@@ -118,8 +123,15 @@ function createHarness({ leftForYouRows = [], profilesRows = [{ id: 'beatrice-id
       order: () => builder,
       insert: (payload) => {
         log.inserts.push(payload);
-        if (pendingInsert) return pendingInsert.promise;
-        return Promise.resolve(insertResult ?? { data: null, error: null });
+        const resultPromise = pendingInsert
+          ? pendingInsert.promise
+          : Promise.resolve(insertResult ?? { data: { id: 'inserted-left-for-you-id' }, error: null });
+        const inserted = {
+          select: () => ({ single: () => resultPromise }),
+          then: (resolve, reject) => resultPromise.then(resolve, reject),
+          catch: (reject) => resultPromise.catch(reject),
+        };
+        return inserted;
       },
       then: (resolve, reject) => Promise.resolve({ data: rows, error: null }).then(resolve, reject),
       catch: (reject) => Promise.resolve({ data: rows, error: null }).catch(reject),
@@ -615,6 +627,22 @@ test('M5G2 client media limits keep photo/audio at 25 MB and allow video up to 4
   el('leftForYouComposerPhotoFile').files = [{ name: 'too-large.jpg', type: 'image/jpeg', size: 25 * mb + 1 }];
   await api.send();
   assert.equal(log.uploads.length, 1);
+});
+
+test('M5G3 left_for_you insert returns its id to Push and Push failure remains non-fatal', async () => {
+  const success = createHarness({ insertResult: { data: { id: 'exact-inserted-id' }, error: null } });
+  await success.api.load();
+  success.el('leftForYouComposerText').value = 'Ciao';
+  await success.api.send();
+  assert.deepEqual(success.log.pushEvents, [{ type: 'left_for_you', referenceId: 'exact-inserted-id' }]);
+  assert.equal(success.log.inserts.length, 1);
+
+  const pushFailure = createHarness({ pushError: true, insertResult: { data: { id: 'saved-despite-push-failure' }, error: null } });
+  await pushFailure.api.load();
+  pushFailure.el('leftForYouComposerText').value = 'Salvato comunque';
+  await pushFailure.api.send();
+  assert.equal(pushFailure.log.inserts.length, 1);
+  assert.deepEqual(pushFailure.log.pushEvents, [{ type: 'left_for_you', referenceId: 'saved-despite-push-failure' }]);
 });
 
 test('M5G2 camera requests rear only after explicit tap, switches with cleanup, and captured photo enables send', async () => {
