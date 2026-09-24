@@ -513,10 +513,10 @@ html.us-returning-device .auth-overlay{
   </section>
 </div>
 
-<div class="left-for-you-overlay left-for-you-camera-overlay" id="leftForYouCameraOverlay" aria-hidden="true">
+<div class="left-for-you-overlay left-for-you-camera-overlay" id="leftForYouCameraOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
   <div class="left-for-you-backdrop us-modal-backdrop" id="leftForYouCameraBackdrop"></div>
-  <section class="left-for-you-sheet left-for-you-camera-sheet" role="dialog" aria-modal="true" aria-labelledby="leftForYouCameraTitle">
-    <header class="left-for-you-head"><div><div class="tiny">FOTO PRIVATA</div><h2 id="leftForYouCameraTitle">Scatta una foto</h2></div><button type="button" class="left-for-you-close" id="leftForYouCameraClose" aria-label="Chiudi fotocamera">×</button></header>
+  <section class="left-for-you-sheet left-for-you-camera-sheet" role="dialog" aria-modal="true" aria-labelledby="leftForYouCameraTitle" data-us-modal-panel>
+    <header class="left-for-you-head"><div><div class="tiny">FOTO PRIVATA</div><h2 id="leftForYouCameraTitle">Scatta una foto</h2></div><button type="button" class="left-for-you-close" id="leftForYouCameraClose" aria-label="Chiudi fotocamera" data-us-modal-close>×</button></header>
     <div class="left-for-you-body left-for-you-camera-body">
       <div class="left-for-you-camera-preview-wrap"><video id="leftForYouCameraPreview" autoplay playsinline muted></video><img id="leftForYouCameraCaptured" alt="Anteprima della foto" hidden></div>
       <div class="left-for-you-camera-status" id="leftForYouCameraStatus" role="status" aria-live="polite"></div>
