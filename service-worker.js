@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-static-runtime-27";
+const CACHE_NAME = "us-shell-static-runtime-28";
 const MEDIA_CACHE_NAME = "us-private-media-v1";
 
 const APP_SHELL = [
@@ -12,6 +12,7 @@ const APP_SHELL = [
   "/stories.css",
   "/left-for-you.js",
   "/left-for-you.css",
+  "/assets/third-party/spotify/spotify-full-logo-white.svg",
   "/styles.css",
   "/ui-foundation.css",
   "/ui-foundation.js",

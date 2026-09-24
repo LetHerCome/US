@@ -174,6 +174,7 @@ function createHarness({ leftForYouRows = [], profilesRows = [{ id: 'beatrice-id
     document: documentShim,
     console,
     crypto: require('node:crypto'),
+    URL,
     setTimeout,
     clearTimeout,
     compressImageFile: undefined,
@@ -314,15 +315,15 @@ test('M5F composer sends photo, audio and video through the private us-media nam
   }
 });
 
-test('M5F composer sends a provider-neutral https music link', async () => {
+test('M5F composer sends a canonical Spotify track link and rejects a non-Spotify link', async () => {
   const { api, el, log } = createHarness();
   await api.load();
   api.setComposerKind('music');
-  el('leftForYouComposerMusic').value = 'https://open.example/track/1';
+  el('leftForYouComposerMusic').value = 'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC';
   await api.send();
   const insert = log.inserts.at(-1);
   assert.equal(insert.kind, 'music');
-  assert.equal(insert.media_path, 'https://open.example/track/1');
+  assert.equal(insert.media_path, 'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC');
   assert.equal(log.uploads.length, 0);
 
   el('leftForYouComposerMusic').value = 'http://non-sicuro.example/track';
@@ -495,7 +496,7 @@ test('M5G composer validity is centralized across all five kinds and ignores opt
   el('leftForYouComposerMusic').value = '';
   api.updateComposerValidity();
   assert.equal(el('leftForYouComposerSend').disabled, true);
-  el('leftForYouComposerMusic').value = 'https://open.example/track/1';
+  el('leftForYouComposerMusic').value = 'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC';
   api.updateComposerValidity();
   assert.equal(el('leftForYouComposerSend').disabled, false);
 
@@ -579,7 +580,7 @@ test('M5G1 live DOM events immediately enable and disable the send CTA for every
   assert.equal(send.disabled, true);
 
   api.setComposerKind('music');
-  el('leftForYouComposerMusic').value = 'https://open.example/track/1';
+  el('leftForYouComposerMusic').value = 'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC';
   el('leftForYouComposerMusic').dispatchEvent({ type: 'input' });
   assert.equal(send.disabled, false);
   el('leftForYouComposerMusic').value = '';

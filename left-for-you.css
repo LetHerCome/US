@@ -96,6 +96,35 @@
 .left-for-you-camera-body [hidden]{display:none!important}
 @media(prefers-reduced-motion:reduce){.left-for-you-record-control.is-recording{animation:none}}
 
+/* M5H Spotify search: same glass language as the rest of the composer, no neon/brand-green redesign. */
+.left-for-you-music-search-status{min-height:15px;margin:2px 2px 0;color:var(--us-muted);font-size:11px}
+.left-for-you-music-search-status[data-kind=error]{color:#ff9ca8}
+.left-for-you-music-attribution{display:flex;padding:11px}
+.left-for-you-spotify-attribution{width:80px;height:auto;display:block}
+.left-for-you-music-results{list-style:none;margin:0;padding:4px;display:grid;gap:4px;max-height:240px;overflow-y:auto;border:1px solid rgba(255,234,247,.12);border-radius:14px;background:rgba(255,255,255,.03)}
+.left-for-you-music-results[hidden]{display:none!important}
+.left-for-you-music-result{display:flex;align-items:center;gap:4px}
+.left-for-you-music-result-select{flex:1;min-width:0;display:grid;grid-template-columns:40px 1fr;align-items:center;gap:10px;padding:7px 8px;border:0;border-radius:10px;background:transparent;cursor:pointer;color:var(--us-text);font:inherit;text-align:left}
+.left-for-you-music-result-select:hover,.left-for-you-music-result-select:focus-visible{background:rgba(246,111,158,.12);outline:none}
+.left-for-you-music-result img{width:40px;height:40px;border-radius:4px;object-fit:cover;background:#0b080e}
+.left-for-you-music-result-fallback{width:40px;height:40px;display:grid;place-items:center;border-radius:4px;background:linear-gradient(145deg,#e35291,#5940a0);font:20px var(--us-font-editorial)}
+.left-for-you-music-result-info{min-width:0;display:grid;gap:2px}
+.left-for-you-music-result-link{flex:0 0 auto;display:grid;place-items:center;width:32px;height:32px;border-radius:8px;color:rgba(247,242,248,.68);text-decoration:none;font-size:13px}
+.left-for-you-music-result-link:hover,.left-for-you-music-result-link:focus-visible{background:rgba(255,255,255,.08);color:#fff7fb;outline:none}
+.left-for-you-music-result-info b{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.left-for-you-music-result-info small{color:var(--us-muted);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.left-for-you-music-selected{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid rgba(246,111,158,.26);border-radius:14px;background:rgba(246,111,158,.09)}
+.left-for-you-music-selected[hidden]{display:none!important}
+.left-for-you-music-selected-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:600;color:#fff7fb}
+.left-for-you-music-clear{width:26px;height:26px;flex:0 0 auto;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.08);color:rgba(247,242,248,.78);font-size:15px;line-height:1}
+.left-for-you-music-manual{margin-top:2px}
+.left-for-you-music-manual summary{cursor:pointer;color:var(--us-muted);font-size:11px;font-weight:600;list-style:none}
+.left-for-you-music-manual summary::-webkit-details-marker{display:none}
+.left-for-you-music-manual[open] summary{margin-bottom:8px;color:rgba(247,242,248,.72)}
+.left-for-you-music-embed{display:grid;gap:8px}
+.left-for-you-music-embed iframe{width:100%;border-radius:16px;border:1px solid rgba(255,255,255,.08)}
+.left-for-you-music-fallback{justify-self:start;color:#f2a6c7;font-size:12px;font-weight:600;text-decoration:none}
+
 /* M5G5: enabled CTA must not resemble a disabled control. */
 .left-for-you-composer-actions button:not(:disabled){opacity:1;color:#fffafc;border-color:rgba(198,164,255,.42);background:linear-gradient(115deg,rgba(235,73,141,.72),rgba(113,79,207,.72));box-shadow:0 8px 22px rgba(92,52,151,.22),inset 0 1px rgba(255,255,255,.16);text-shadow:0 1px 8px rgba(255,255,255,.12)}
 .left-for-you-composer-actions button:disabled{opacity:.42;color:rgba(247,242,248,.48);border-color:rgba(255,255,255,.08);background:rgba(255,255,255,.045);box-shadow:none;text-shadow:none}
