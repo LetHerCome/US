@@ -99,7 +99,7 @@
 /* M5H Spotify search: same glass language as the rest of the composer, no neon/brand-green redesign. */
 .left-for-you-music-search-status{min-height:15px;margin:2px 2px 0;color:var(--us-muted);font-size:11px}
 .left-for-you-music-search-status[data-kind=error]{color:#ff9ca8}
-.left-for-you-music-attribution{display:flex;margin:0 2px 8px}
+.left-for-you-music-attribution{display:flex;padding:11px}
 .left-for-you-spotify-attribution{width:80px;height:auto;display:block}
 .left-for-you-music-results{list-style:none;margin:0;padding:4px;display:grid;gap:4px;max-height:240px;overflow-y:auto;border:1px solid rgba(255,234,247,.12);border-radius:14px;background:rgba(255,255,255,.03)}
 .left-for-you-music-results[hidden]{display:none!important}

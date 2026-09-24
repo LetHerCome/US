@@ -309,6 +309,16 @@ test('M5H the composer shows the official, unmodified Spotify attribution mark a
   assert.doesNotMatch(html, /left-for-you-spotify-attribution[\s\S]{0,300}us-logo|us-logo[\s\S]{0,300}left-for-you-spotify-attribution/i);
 });
 
+test('M5H the Spotify attribution mark keeps at least 11px of clear space on every side (half its ~22px rendered height), per Spotify guidelines', () => {
+  const css = read('left-for-you.css');
+  const rule = css.match(/\.left-for-you-music-attribution\{([^}]*)\}/)?.[1];
+  assert.ok(rule, 'attribution container rule not found');
+  const shorthand = rule.match(/(?:^|;)padding:([\d.]+)px(?:\s+([\d.]+)px)?(?:\s+([\d.]+)px)?(?:\s+([\d.]+)px)?/);
+  assert.ok(shorthand, 'no padding declared on the attribution container');
+  const sides = [shorthand[1], shorthand[2] ?? shorthand[1], shorthand[3] ?? shorthand[1], shorthand[4] ?? shorthand[2] ?? shorthand[1]];
+  sides.forEach((value) => assert.ok(Number(value) >= 11, `clear space ${value}px is below the required 11px exclusion zone`));
+});
+
 test('M5H the official Spotify logo asset is byte-identical to the Spotify Developer Design Guidelines source, with provenance recorded', () => {
   const svgBytes = fs.readFileSync(path.join(ROOT, 'assets/third-party/spotify/spotify-full-logo-white.svg'));
   const hash = crypto.createHash('sha256').update(svgBytes).digest('hex');
