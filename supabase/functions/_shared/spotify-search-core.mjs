@@ -29,7 +29,7 @@ export function normalizeQuery(raw) {
 
 export function parseRetryAfterSeconds(headerValue) {
   const seconds = Number(headerValue);
-  if (Number.isFinite(seconds) && seconds >= 0) return Math.min(seconds, 120);
+  if (Number.isFinite(seconds) && seconds >= 0) return seconds;
   return null;
 }
 

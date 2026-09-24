@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+const crypto = require('node:crypto');
 const { pathToFileURL } = require('node:url');
 const { setTimeout: sleep } = require('node:timers/promises');
 
@@ -271,6 +272,72 @@ test('M5H selecting a result replaces any prior selection and enables the CTA', 
   assert.equal(list.hidden, true, 'the results list closes once a track is chosen');
 });
 
+test('M5H each search result renders a native selection button and a separate Spotify link-back anchor, not nested inside each other', () => {
+  const harness = createHarness();
+  const { api, el } = harness;
+  api.renderMusicResults([
+    { id: 'aaaaaaaaaaaaaaaaaaaaaa', title: 'Song A', artist: 'Artist A', album: '', imageUrl: '', spotifyUrl: 'https://open.spotify.com/track/aaaaaaaaaaaaaaaaaaaaaa' },
+  ]);
+  const html = el('leftForYouMusicResults').innerHTML;
+
+  assert.match(html, /<button type="button" class="left-for-you-music-result-select" data-spotify-id="aaaaaaaaaaaaaaaaaaaaaa"[^>]*>/);
+  assert.match(html, /<a class="left-for-you-music-result-link" href="https:\/\/open\.spotify\.com\/track\/aaaaaaaaaaaaaaaaaaaaaa" target="_blank" rel="noreferrer noopener"[^>]*>/);
+
+  // The link-back anchor must never carry the selection hook, so a delegated
+  // click handler keyed on [data-spotify-id] can never pick it up.
+  const anchorTag = html.match(/<a class="left-for-you-music-result-link"[^>]*>/)[0];
+  assert.doesNotMatch(anchorTag, /data-spotify-id/);
+
+  // The anchor must be a sibling after the button closes, never nested inside it.
+  const buttonCloseIndex = html.indexOf('</button>');
+  const anchorOpenIndex = html.indexOf('<a class="left-for-you-music-result-link"');
+  assert.ok(buttonCloseIndex > -1 && anchorOpenIndex > buttonCloseIndex, 'the link-back anchor must sit outside the selection button, not nested inside it');
+
+  assert.doesNotMatch(html, /role="option"/);
+});
+
+test('M5H the results container is a plain semantic list, not an ARIA listbox that would force an anchor inside an option', () => {
+  const html = read('index.html');
+  assert.doesNotMatch(html, /id="leftForYouMusicResults"[^>]*role="listbox"/);
+  const source = read('left-for-you.js');
+  assert.doesNotMatch(source, /role="option"/);
+});
+
+test('M5H the composer shows the official, unmodified Spotify attribution mark at least 70px wide, kept visually separate from the US logo', () => {
+  const html = read('index.html');
+  assert.match(html, /<img class="left-for-you-spotify-attribution" src="\/assets\/third-party\/spotify\/spotify-full-logo-white\.svg" alt="Spotify" width="80"/);
+  assert.doesNotMatch(html, /left-for-you-spotify-attribution[\s\S]{0,300}us-logo|us-logo[\s\S]{0,300}left-for-you-spotify-attribution/i);
+});
+
+test('M5H the official Spotify logo asset is byte-identical to the Spotify Developer Design Guidelines source, with provenance recorded', () => {
+  const svgBytes = fs.readFileSync(path.join(ROOT, 'assets/third-party/spotify/spotify-full-logo-white.svg'));
+  const hash = crypto.createHash('sha256').update(svgBytes).digest('hex');
+  assert.equal(hash, '31cdfcdd58d3533a32d287267a1c404f376749b1fc4da99e4baa2233684f053c');
+  const provenance = read('assets/third-party/spotify/PROVENANCE.md');
+  assert.match(provenance, /31cdfcdd58d3533a32d287267a1c404f376749b1fc4da99e4baa2233684f053c/);
+  assert.match(provenance, /Spotify Developer Design Guidelines/);
+  assert.match(provenance, /2026-09-24/);
+});
+
+test('M5H Spotify-derived artwork uses a 4px corner radius, not the previous 8px', () => {
+  const css = read('left-for-you.css');
+  assert.match(css, /\.left-for-you-music-result img\{[^}]*border-radius:4px/);
+  assert.match(css, /\.left-for-you-music-result-fallback\{[^}]*border-radius:4px/);
+  assert.doesNotMatch(css, /\.left-for-you-music-result img\{[^}]*border-radius:8px/);
+  assert.doesNotMatch(css, /\.left-for-you-music-result-fallback\{[^}]*border-radius:8px/);
+});
+
+test('M5H release identity: build marker, version.json, and versioned Left for You assets stay coherent', () => {
+  const html = read('index.html');
+  const version = JSON.parse(read('version.json')).version;
+  const build = html.match(/<meta\s+name="us-build"\s+content="([^"]+)"/)?.[1];
+  assert.ok(build, 'build marker HTML non trovato');
+  assert.equal(build, version);
+  assert.match(build, /^m5h-spotify-attribution-\d{8}-\d+$/);
+  assert.match(html, /left-for-you\.css\?v=us-m5h-spotify-\d{8}-\d+/);
+  assert.match(html, /left-for-you\.js\?v=us-m5h-spotify-\d{8}-\d+/);
+});
+
 test('M5H clearing the selection empties the composer field and disables the CTA again', () => {
   const harness = createHarness();
   const { api, el } = harness;
@@ -415,6 +482,23 @@ test('M5H normalizeQuery trims and enforces the 2-100 char bound', async () => {
   assert.throws(() => core.normalizeQuery('x'.repeat(101)), /invalid_query/);
 });
 
+test('M5H parseRetryAfterSeconds preserves the real finite non-negative Retry-After value, never capping it at 120', async () => {
+  const core = await loadCore();
+  assert.equal(core.parseRetryAfterSeconds('9999'), 9999);
+  assert.equal(core.parseRetryAfterSeconds('121'), 121);
+  assert.equal(core.parseRetryAfterSeconds('30'), 30);
+  assert.equal(core.parseRetryAfterSeconds('0'), 0);
+});
+
+test('M5H parseRetryAfterSeconds still safely rejects invalid/negative/non-finite values', async () => {
+  const core = await loadCore();
+  assert.equal(core.parseRetryAfterSeconds(undefined), null);
+  assert.equal(core.parseRetryAfterSeconds('not-a-number'), null);
+  assert.equal(core.parseRetryAfterSeconds('-5'), null);
+  assert.equal(core.parseRetryAfterSeconds('Infinity'), null);
+  assert.equal(core.parseRetryAfterSeconds('NaN'), null);
+});
+
 test('M5H getAccessToken caches the token and skews the expiry, refetching only once stale', async () => {
   const core = await loadCore();
   let calls = 0;
@@ -467,16 +551,17 @@ test('M5H searchSpotifyTracks requests type=track, the given market and a bounde
   assert.equal(parsed.searchParams.get('q'), 'nirvana');
 });
 
-test('M5H searchSpotifyTracks classifies a 429 with error.reason=QUOTA_EXCEEDED as quota_exceeded, with a bounded Retry-After', async () => {
+test('M5H searchSpotifyTracks classifies a 429 with error.reason=QUOTA_EXCEEDED as quota_exceeded, preserving the exact Retry-After value', async () => {
   const core = await loadCore();
   const fetchImpl = async () => fakeResponse({ status: 429, ok: false, headers: { 'Retry-After': '9999' }, json: { error: { status: 429, message: 'quota exceeded', reason: 'QUOTA_EXCEEDED' } } });
   await assert.rejects(
     () => core.searchSpotifyTracks({ token: 't', query: 'nirvana', fetchImpl }),
-    (error) => error.code === 'quota_exceeded' && error.status === 429 && error.retryAfterSeconds <= 120,
+    (error) => error.code === 'quota_exceeded' && error.status === 429 && error.retryAfterSeconds === 9999,
+    'a valid Retry-After above 120s must be preserved, never shortened',
   );
 });
 
-test('M5H searchSpotifyTracks classifies an ordinary 429 (no reason, or a different reason) as rate_limited, with a bounded Retry-After', async () => {
+test('M5H searchSpotifyTracks classifies an ordinary 429 (no reason, or a different reason) as rate_limited, preserving the exact Retry-After value', async () => {
   const core = await loadCore();
   const noReason = async () => fakeResponse({ status: 429, ok: false, headers: { 'Retry-After': '30' }, json: { error: { status: 429, message: 'too many requests' } } });
   await assert.rejects(

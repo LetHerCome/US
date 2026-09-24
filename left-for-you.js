@@ -385,7 +385,9 @@
       const cover = track.imageUrl
         ? `<img src="${escapeHtml(track.imageUrl)}" alt="" loading="lazy">`
         : '<span class="left-for-you-music-result-fallback" aria-hidden="true">♪</span>';
-      return `<li role="option" tabindex="0" class="left-for-you-music-result" data-spotify-id="${escapeHtml(track.id || '')}" data-spotify-title="${escapeHtml(track.title || '')}" data-spotify-artist="${escapeHtml(track.artist || '')}" data-spotify-url="${escapeHtml(track.spotifyUrl || '')}">${cover}<span class="left-for-you-music-result-info"><b>${escapeHtml(track.title || '')}</b><small>${escapeHtml(secondary)}</small></span></li>`;
+      const title = escapeHtml(track.title || '');
+      const url = escapeHtml(track.spotifyUrl || '');
+      return `<li class="left-for-you-music-result"><button type="button" class="left-for-you-music-result-select" data-spotify-id="${escapeHtml(track.id || '')}" data-spotify-title="${title}" data-spotify-artist="${escapeHtml(track.artist || '')}" data-spotify-url="${url}">${cover}<span class="left-for-you-music-result-info"><b>${title}</b><small>${escapeHtml(secondary)}</small></span></button><a class="left-for-you-music-result-link" href="${url}" target="_blank" rel="noreferrer noopener" aria-label="Apri ${title} su Spotify">↗</a></li>`;
     }).join('');
     list.hidden = false;
   }
