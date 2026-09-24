@@ -720,7 +720,7 @@ function setCloudBadge(ok,text){
 
 let locationRefreshInFlight=false;
 let locationTimer=null;
-const LOCATION_STALE_MS=24*60*60*1000;
+const LOCATION_STALE_MS=60*60*1000;
 
 function distanceKm(aLat,aLon,bLat,bLon){
   const rad=value=>value*Math.PI/180;
@@ -961,8 +961,10 @@ async function hydrateProfileAvatars(){
     if(profile.role==='beatrice')setAvatarSlot('pairAvatarBeatrice',url);
     if(profile.id===window.usProfile.id){
       const img=document.getElementById('profileAvatarImg');
-      if(url){img.src=url;img.hidden=false;if(fallback)fallback.style.display='none';}
-      else{img.removeAttribute('src');img.hidden=true;if(fallback)fallback.style.display='grid';}
+      if(img){
+        if(url){img.src=url;img.hidden=false;if(fallback)fallback.style.display='none';}
+        else{img.removeAttribute('src');img.hidden=true;if(fallback)fallback.style.display='grid';}
+      }
       window.usProfile.avatar_path=profile.avatar_path||null;
     }
   }

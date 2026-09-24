@@ -433,10 +433,10 @@ test('M5F composer surface: title, send language, five kinds, reduced-motion com
   assert.match(html, /id="leftForYouComposerPhotoFile" accept="image\/jpeg,image\/png,image\/webp"/);
   assert.match(html, /id="leftForYouComposerVideoFile" accept="video\/\*"/);
   assert.match(html, /id="leftForYouComposerAudioRecord"/);
-  assert.match(css, /#leftForYouOverlay,#leftForYouComposerOverlay\{position:fixed/);
-  assert.match(css, /#leftForYouOverlay\.open,#leftForYouComposerOverlay\.open\{opacity:1/);
-  assert.match(css, /#leftForYouOverlay\.open \.left-for-you-sheet,#leftForYouComposerOverlay\.open \.left-for-you-sheet\{transform:none\}/);
-  assert.match(css, /#leftForYouComposerOverlay,#leftForYouComposerOverlay \.left-for-you-sheet\{transition-duration:1ms\}/);
+  assert.match(css, /#leftForYouOverlay,#leftForYouComposerOverlay(?:,#leftForYouCameraOverlay)?\{position:fixed/);
+  assert.match(css, /#leftForYouOverlay\.open,#leftForYouComposerOverlay\.open(?:,#leftForYouCameraOverlay\.open)?\{opacity:1/);
+  assert.match(css, /#leftForYouOverlay\.open \.left-for-you-sheet,#leftForYouComposerOverlay\.open \.left-for-you-sheet(?:,#leftForYouCameraOverlay\.open \.left-for-you-sheet)?\{transform:none\}/);
+  assert.match(css, /#leftForYouOverlay,#leftForYouOverlay \.left-for-you-sheet,#leftForYouComposerOverlay,#leftForYouComposerOverlay \.left-for-you-sheet(?:,#leftForYouCameraOverlay,#leftForYouCameraOverlay \.left-for-you-sheet)?\{transition-duration:1ms\}/);
   assert.match(css, /\.left-for-you-composer-panel\[hidden\]\{display:none!important\}/, 'solo il pannello del kind attivo è visibile');
 });
 
