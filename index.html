@@ -505,7 +505,17 @@ html.us-returning-device .auth-overlay{
         <span class="left-for-you-composer-file" id="leftForYouComposerVideoName"></span>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="music" hidden>
-        <input type="url" id="leftForYouComposerMusic" class="left-for-you-composer-url" maxlength="512" placeholder="https://link alla musica" spellcheck="false">
+        <input type="search" id="leftForYouMusicSearch" class="left-for-you-composer-url" placeholder="Cerca su Spotify…" autocomplete="off" spellcheck="false">
+        <p class="left-for-you-music-search-status" id="leftForYouMusicSearchStatus" role="status" aria-live="polite"></p>
+        <ul class="left-for-you-music-results" id="leftForYouMusicResults" role="listbox" aria-label="Risultati Spotify" hidden></ul>
+        <div class="left-for-you-music-selected" id="leftForYouMusicSelected" hidden>
+          <span class="left-for-you-music-selected-label" id="leftForYouMusicSelectedLabel"></span>
+          <button type="button" class="left-for-you-music-clear" id="leftForYouMusicClear" aria-label="Rimuovi il brano scelto">×</button>
+        </div>
+        <details class="left-for-you-music-manual">
+          <summary>Incolla link Spotify</summary>
+          <input type="url" id="leftForYouComposerMusic" class="left-for-you-composer-url" maxlength="512" placeholder="https://open.spotify.com/track/…" spellcheck="false">
+        </details>
       </div>
       <div class="left-for-you-actions left-for-you-composer-actions"><button type="button" id="leftForYouComposerSend" disabled>Lascia per la tua persona</button></div>
       <div class="left-for-you-status" id="leftForYouComposerStatus" role="status" aria-live="polite"></div>

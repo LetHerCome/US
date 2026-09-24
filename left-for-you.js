@@ -47,6 +47,30 @@
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
+  // M5H — Spotify track link canonicalization, shared by the composer's manual
+  // fallback and the receiver's embed. Track links only: playlists/albums/
+  // artists/arbitrary hosts are rejected so the receiver never embeds them.
+  const SPOTIFY_TRACK_ID_RE = /^[0-9A-Za-z]{22}$/;
+  function extractSpotifyTrackId(raw) {
+    const value = String(raw || '').trim();
+    if (!value) return null;
+    const uriMatch = value.match(/^spotify:track:([0-9A-Za-z]{22})$/);
+    if (uriMatch) return uriMatch[1];
+    let url;
+    try { url = new URL(value); } catch (_) { return null; }
+    if (url.protocol !== 'https:' || url.hostname !== 'open.spotify.com') return null;
+    const segments = url.pathname.split('/').filter(Boolean);
+    if (segments.length === 2 && segments[0] === 'track') {
+      return SPOTIFY_TRACK_ID_RE.test(segments[1]) ? segments[1] : null;
+    }
+    if (segments.length === 3 && /^intl-[a-z]{2,5}$/i.test(segments[0]) && segments[1] === 'track') {
+      return SPOTIFY_TRACK_ID_RE.test(segments[2]) ? segments[2] : null;
+    }
+    return null;
+  }
+  function canonicalSpotifyTrackUrl(id) { return `https://open.spotify.com/track/${id}`; }
+  function spotifyEmbedUrl(id) { return `https://open.spotify.com/embed/track/${id}`; }
+
   const isUnseen = (item) => !item?.seen_at;
   const partner = () => profiles.get(items[0]?.sender_id) || [...profiles.values()].find((p) => p.id !== window.usProfile?.id) || null;
   const labelForKind = (kind) => ({ text: 'Un pensiero', photo: 'Una foto', audio: 'Una voce', video: 'Un momento', music: 'Musica' }[kind] || 'Lasciato per te');
@@ -59,7 +83,12 @@
     if (kind === 'photo') content = `<img class="left-for-you-photo" src="${escapeHtml(mediaUrl)}" alt="Foto lasciata per te" loading="eager">${body}`;
     if (kind === 'audio') content = `<div class="left-for-you-media-shell"><span class="left-for-you-media-mark" aria-hidden="true">◖</span><audio controls preload="metadata" src="${escapeHtml(mediaUrl)}"></audio></div>${body}`;
     if (kind === 'video') content = `<video class="left-for-you-video" controls preload="metadata" playsinline src="${escapeHtml(mediaUrl)}"></video>${body}`;
-    if (kind === 'music') content = `<a class="left-for-you-music" href="${escapeHtml(item?.media_path || '')}" target="_blank" rel="noreferrer noopener"><span class="left-for-you-music-mark" aria-hidden="true">♪</span><span><b>Apri il brano</b><small>${escapeHtml(item?.media_path || '')}</small></span><span aria-hidden="true">↗</span></a>${body}`;
+    if (kind === 'music') {
+      const trackId = extractSpotifyTrackId(item?.media_path || '');
+      content = trackId
+        ? `<div class="left-for-you-music-embed"><iframe src="${escapeHtml(spotifyEmbedUrl(trackId))}" width="100%" height="152" frameborder="0" allow="encrypted-media" loading="lazy" title="Brano Spotify"></iframe><a class="left-for-you-music-fallback" href="${escapeHtml(canonicalSpotifyTrackUrl(trackId))}" target="_blank" rel="noreferrer noopener">Apri su Spotify ↗</a></div>${body}`
+        : `<a class="left-for-you-music" href="${escapeHtml(item?.media_path || '')}" target="_blank" rel="noreferrer noopener"><span class="left-for-you-music-mark" aria-hidden="true">♪</span><span><b>Apri il brano</b><small>${escapeHtml(item?.media_path || '')}</small></span><span aria-hidden="true">↗</span></a>${body}`;
+    }
     return `<article class="left-for-you-item" data-left-kind="${kind}"><div class="left-for-you-kind">${labelForKind(kind)}</div>${content}</article>`;
   }
 
@@ -322,6 +351,7 @@
     if (!overlay) return;
     closeCamera();
     discardRecording();
+    resetMusicSearchUi();
     overlay.classList.remove('open'); overlay.setAttribute('aria-hidden', 'true');
   }
 
@@ -333,7 +363,105 @@
 
   function validMusicLink() {
     const value = (document.getElementById('leftForYouComposerMusic')?.value || '').trim();
-    return /^https:\/\/\S+$/.test(value) && value.length <= 512;
+    return Boolean(extractSpotifyTrackId(value)) && value.length <= 512;
+  }
+
+  // ---- M5H Spotify search (composer "music" panel) ----
+
+  const musicSearch = { requestId: 0, timer: null };
+
+  function musicSearchStatusEl() { return document.getElementById('leftForYouMusicSearchStatus'); }
+  function setMusicSearchStatus(message, kind = '') {
+    const status = musicSearchStatusEl();
+    if (status) { status.textContent = message || ''; status.dataset.kind = kind; }
+  }
+
+  function renderMusicResults(tracks) {
+    const list = document.getElementById('leftForYouMusicResults');
+    if (!list) return;
+    if (!tracks || !tracks.length) { list.hidden = true; list.innerHTML = ''; return; }
+    list.innerHTML = tracks.slice(0, 5).map((track) => {
+      const secondary = [track.artist, track.album].filter(Boolean).join(' · ');
+      const cover = track.imageUrl
+        ? `<img src="${escapeHtml(track.imageUrl)}" alt="" loading="lazy">`
+        : '<span class="left-for-you-music-result-fallback" aria-hidden="true">♪</span>';
+      return `<li role="option" tabindex="0" class="left-for-you-music-result" data-spotify-id="${escapeHtml(track.id || '')}" data-spotify-title="${escapeHtml(track.title || '')}" data-spotify-artist="${escapeHtml(track.artist || '')}" data-spotify-url="${escapeHtml(track.spotifyUrl || '')}">${cover}<span class="left-for-you-music-result-info"><b>${escapeHtml(track.title || '')}</b><small>${escapeHtml(secondary)}</small></span></li>`;
+    }).join('');
+    list.hidden = false;
+  }
+
+  function setMusicSelection(url, label) {
+    const musicInput = document.getElementById('leftForYouComposerMusic');
+    if (musicInput) musicInput.value = url || '';
+    const selected = document.getElementById('leftForYouMusicSelected');
+    const selectedLabel = document.getElementById('leftForYouMusicSelectedLabel');
+    if (selectedLabel) selectedLabel.textContent = label || '';
+    if (selected) selected.hidden = !url;
+    updateComposerValidity();
+  }
+
+  function selectMusicResult(el) {
+    const url = el?.dataset?.spotifyUrl;
+    if (!url) return;
+    const title = el.dataset.spotifyTitle || '';
+    const artist = el.dataset.spotifyArtist || '';
+    setMusicSelection(url, artist ? `${title} — ${artist}` : title);
+    const list = document.getElementById('leftForYouMusicResults');
+    if (list) { list.hidden = true; list.innerHTML = ''; }
+    const search = document.getElementById('leftForYouMusicSearch');
+    if (search) search.value = '';
+    setMusicSearchStatus('');
+    setComposerStatus('');
+  }
+
+  function clearMusicSelection() {
+    setMusicSelection('', '');
+  }
+
+  function resetMusicSearchUi() {
+    musicSearch.requestId += 1;
+    clearTimeout(musicSearch.timer);
+    musicSearch.timer = null;
+    renderMusicResults([]);
+    setMusicSearchStatus('');
+  }
+
+  async function runMusicSearch(query) {
+    const client = getClient();
+    const requestId = ++musicSearch.requestId;
+    setMusicSearchStatus('Cerco…', 'loading');
+    if (!client?.functions?.invoke) { setMusicSearchStatus('Ricerca non disponibile ora. Puoi incollare il link.', 'error'); return; }
+    try {
+      const { data, error } = await client.functions.invoke('spotify-search', { body: { query } });
+      if (requestId !== musicSearch.requestId) return; // a newer search superseded this one
+      if (error) {
+        const status = error?.context?.status;
+        setMusicSearchStatus(status === 429 ? 'Troppe ricerche su Spotify, riprova tra poco.' : 'Ricerca non disponibile ora. Puoi incollare il link.', 'error');
+        renderMusicResults([]);
+        return;
+      }
+      const tracks = Array.isArray(data?.tracks) ? data.tracks.slice(0, 5) : [];
+      setMusicSearchStatus(tracks.length ? '' : 'Nessun brano trovato.');
+      renderMusicResults(tracks);
+    } catch (error) {
+      if (requestId !== musicSearch.requestId) return;
+      console.warn('[US Left for You] spotify search', error);
+      setMusicSearchStatus('Ricerca non disponibile ora. Puoi incollare il link.', 'error');
+      renderMusicResults([]);
+    }
+  }
+
+  function scheduleMusicSearch(rawValue) {
+    const trimmed = String(rawValue || '').trim();
+    clearTimeout(musicSearch.timer);
+    if (trimmed.length < 2) {
+      musicSearch.requestId += 1;
+      musicSearch.timer = null;
+      renderMusicResults([]);
+      setMusicSearchStatus('');
+      return;
+    }
+    musicSearch.timer = setTimeout(() => runMusicSearch(trimmed), 350);
   }
 
   function composerCanSend() {
@@ -689,6 +817,10 @@
     document.querySelectorAll('[data-us-composer-panel] input[type="file"]').forEach((input) => { input.value = ''; });
     const music = document.getElementById('leftForYouComposerMusic');
     if (music) music.value = '';
+    const musicSearchInput = document.getElementById('leftForYouMusicSearch');
+    if (musicSearchInput) musicSearchInput.value = '';
+    resetMusicSearchUi();
+    clearMusicSelection();
     ['Photo', 'Audio', 'Video'].forEach((kind) => {
       const slot = document.getElementById(`leftForYouComposer${kind}Name`);
       if (slot) slot.textContent = '';
@@ -715,11 +847,13 @@
       if (!body) { setComposerStatus(`Scrivi qualcosa per ${personName}.`, 'error'); return; }
       if (body.length > 1000) { setComposerStatus('Il pensiero è troppo lungo (massimo 1000 caratteri).', 'error'); return; }
     } else if (kind === 'music') {
-      mediaPath = (document.getElementById('leftForYouComposerMusic')?.value || '').trim();
-      if (!validMusicLink()) {
-        setComposerStatus('Inserisci un link https valido alla musica.', 'error');
+      const rawMusic = (document.getElementById('leftForYouComposerMusic')?.value || '').trim();
+      const trackId = extractSpotifyTrackId(rawMusic);
+      if (!trackId) {
+        setComposerStatus('Cerca un brano o incolla un link Spotify valido.', 'error');
         return;
       }
+      mediaPath = canonicalSpotifyTrackUrl(trackId);
     } else if (kind === 'audio') {
       file = composer.recording?.file;
       if (!file) { setComposerStatus('Registra una voce prima di lasciarla.', 'error'); return; }
@@ -792,7 +926,24 @@
     document.getElementById('leftForYouComposerText')?.addEventListener('input', updateComposerValidity);
     document.getElementById('leftForYouComposerText')?.addEventListener('change', updateComposerValidity);
     document.getElementById('leftForYouComposerMusic')?.addEventListener('input', updateComposerValidity);
-    document.getElementById('leftForYouComposerMusic')?.addEventListener('change', updateComposerValidity);
+    document.getElementById('leftForYouComposerMusic')?.addEventListener('change', (event) => {
+      const trackId = extractSpotifyTrackId(event.target.value);
+      if (trackId) setMusicSelection(canonicalSpotifyTrackUrl(trackId), 'Link Spotify pronto');
+      updateComposerValidity();
+    });
+    document.getElementById('leftForYouMusicSearch')?.addEventListener('input', (event) => scheduleMusicSearch(event.target.value));
+    document.getElementById('leftForYouMusicResults')?.addEventListener('click', (event) => {
+      const item = event.target.closest('[data-spotify-id]');
+      if (item) selectMusicResult(item);
+    });
+    document.getElementById('leftForYouMusicResults')?.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      const item = event.target.closest('[data-spotify-id]');
+      if (!item) return;
+      event.preventDefault();
+      selectMusicResult(item);
+    });
+    document.getElementById('leftForYouMusicClear')?.addEventListener('click', clearMusicSelection);
     document.getElementById('leftForYouComposerPhotoCamera')?.addEventListener('click', openCamera);
     const cameraOverlay = document.getElementById('leftForYouCameraOverlay');
     const cameraBackdrop = document.getElementById('leftForYouCameraBackdrop');
@@ -844,6 +995,8 @@
     tap, applyEnvelopeState, updateEntry, envelopeStateFor, envelopeIsResolved, subscribeRealtime, handleIncoming, alignCurrentToRenderedItem,
     setComposerKind, openComposer, closeComposer, send, updateComposerValidity, composerCanSend,
     startRecording, stopRecording, discardRecording, openCamera, closeCamera, switchCamera, captureCameraPhoto, useCameraPhoto, retakeCameraPhoto, discardCameraCapture, composer,
+    extractSpotifyTrackId, canonicalSpotifyTrackUrl, spotifyEmbedUrl,
+    renderMusicResults, selectMusicResult, clearMusicSelection, resetMusicSearchUi, runMusicSearch, scheduleMusicSearch, musicSearch,
   };
   if (typeof window !== 'undefined') window.openLeftForYou = open;
   if (typeof document !== 'undefined') {
