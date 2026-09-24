@@ -8,6 +8,7 @@
   const kinds = new Set(['text', 'photo', 'audio', 'video', 'music']);
   let items = [];
   let currentIndex = 0;
+  let activeItem = null;
   let busy = false;
   let profiles = new Map();
 
@@ -157,17 +158,26 @@
     applyEnvelopeState();
   }
 
-  async function fetchItems() {
+  async function fetchItems({ preserveActive = false } = {}) {
     const client = getClient();
     if (!window.usProfile || !client) throw new Error('sync_unavailable');
     const { data, error } = await client.from('left_for_you')
       .select('id,sender_id,recipient_id,kind,body,media_path,created_at,seen_at')
       .eq('recipient_id', window.usProfile.id)
+      .is('seen_at', null)
       .order('created_at', { ascending: false });
     if (error) throw error;
-    items = (data || []).filter((item) => kinds.has(item.kind));
+    const pending = (data || []).filter((item) => kinds.has(item.kind));
+    if (preserveActive && activeItem) {
+      items = [activeItem, ...pending.filter((item) => item.id !== activeItem.id)];
+      currentIndex = 0;
+    } else {
+      items = pending;
+      currentIndex = 0;
+      activeItem = null;
+    }
     envelopeResolved = true;
-    updateEntry(items.filter(isUnseen).length);
+    updateEntry(pending.length);
     return items;
   }
 
@@ -192,6 +202,7 @@
     const counter = document.getElementById('leftForYouCounter');
     const conserve = document.getElementById('leftForYouConserve');
     if (!item || !content) return;
+    activeItem = item;
     content.innerHTML = '<div class="left-for-you-loading-inline" aria-busy="true">Apro il tuo messaggio…</div>';
     const url = await mediaUrl(item);
     content.innerHTML = renderItemMarkup(item, url);
@@ -233,12 +244,19 @@
     if (!modal) return;
     modal.classList.add('open'); modal.setAttribute('aria-hidden', 'false');
     await load();
+    if (!items.length) {
+      close();
+      openComposer();
+    }
   }
 
   function close() {
     const modal = root();
     if (!modal) return;
     modal.classList.remove('open'); modal.setAttribute('aria-hidden', 'true');
+    activeItem = null;
+    items = [];
+    currentIndex = 0;
   }
 
   async function conserve() {
@@ -277,7 +295,7 @@
 
   function handleIncoming() {
     const overlayOpen = Boolean(root()?.classList.contains('open'));
-    return fetchItems().then(() => { if (overlayOpen) alignCurrentToRenderedItem(); }).catch(() => {});
+    return fetchItems({ preserveActive: overlayOpen }).catch(() => {});
   }
 
   function subscribeRealtime() {
@@ -288,13 +306,26 @@
       try { client.removeChannel(realtimeChannel); } catch (_) { /* channel already gone */ }
       realtimeChannel = null;
     }
+    const receiveChange = () => handleIncoming();
     realtimeChannel = client.channel(`us-left-for-you-${me.id}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'left_for_you',
         filter: `recipient_id=eq.${me.id}`,
-      }, () => handleIncoming());
+      }, receiveChange)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'left_for_you',
+        filter: `recipient_id=eq.${me.id}`,
+      }, receiveChange)
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'left_for_you',
+        filter: `recipient_id=eq.${me.id}`,
+      }, receiveChange);
     realtimeChannel.subscribe();
   }
 
