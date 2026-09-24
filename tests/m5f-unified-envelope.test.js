@@ -645,6 +645,52 @@ test('M5G3 left_for_you insert returns its id to Push and Push failure remains n
   assert.deepEqual(pushFailure.log.pushEvents, [{ type: 'left_for_you', referenceId: 'saved-despite-push-failure' }]);
 });
 
+test('M5G7 nested camera keeps composer open while guarding the composer backdrop', async () => {
+  const harness = createHarness();
+  const { api, el } = harness;
+  await api.load();
+  api.openComposer();
+  assert.equal(el('leftForYouComposerOverlay').classList.contains('open'), true);
+
+  await api.openCamera();
+  el('leftForYouComposerBackdrop').dispatchEvent({ type: 'click', target: el('leftForYouComposerBackdrop') });
+  assert.equal(api.composer.cameraOpen, true);
+  assert.equal(el('leftForYouComposerOverlay').classList.contains('open'), true);
+
+  el('leftForYouCameraBackdrop').dispatchEvent({ type: 'click', target: el('leftForYouCameraBackdrop') });
+  assert.equal(api.composer.cameraOpen, false);
+  assert.equal(el('leftForYouComposerOverlay').classList.contains('open'), true);
+
+  api.closeComposer();
+  assert.equal(el('leftForYouComposerOverlay').classList.contains('open'), false);
+});
+
+test('M5G7 camera controls preserve composer and Use photo selects the capture', async () => {
+  const harness = createHarness();
+  const { api, el, log } = harness;
+  await api.load();
+  api.openComposer();
+  api.setComposerKind('photo');
+  const preview = el('leftForYouCameraPreview');
+  preview.play = async () => {};
+  preview.videoWidth = 640;
+  preview.videoHeight = 480;
+  await api.openCamera();
+  await api.switchCamera();
+  assert.equal(api.composer.cameraOpen, true);
+  assert.equal(el('leftForYouComposerOverlay').classList.contains('open'), true);
+  await api.captureCameraPhoto();
+  assert.equal(api.composer.cameraOpen, true);
+  assert.equal(el('leftForYouComposerOverlay').classList.contains('open'), true);
+  api.useCameraPhoto();
+  assert.equal(api.composer.cameraOpen, false);
+  assert.equal(el('leftForYouComposerOverlay').classList.contains('open'), true);
+  assert.equal(api.composer.cameraCapture.selected, true);
+  assert.equal(api.composerCanSend(), true);
+  assert.equal(log.cameraStreams[0].tracks[0].stopped, true);
+  assert.equal(log.cameraStreams[1].tracks[0].stopped, true);
+});
+
 test('M5G2 camera requests rear only after explicit tap, switches with cleanup, and captured photo enables send', async () => {
   const harness = createHarness();
   const { api, el, log } = harness;

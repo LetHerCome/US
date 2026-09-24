@@ -764,7 +764,12 @@
 
   function bindComposer() {
     document.getElementById('leftForYouComposerClose')?.addEventListener('click', closeComposer);
-    document.getElementById('leftForYouComposerBackdrop')?.addEventListener('click', closeComposer);
+    const composerBackdrop = document.getElementById('leftForYouComposerBackdrop');
+    composerBackdrop?.addEventListener('click', (event) => {
+      if (event.target !== composerBackdrop) return;
+      if (composer.cameraOpen) return;
+      closeComposer();
+    });
     document.getElementById('leftForYouComposerSend')?.addEventListener('click', send);
     document.querySelectorAll('[data-us-composer-kind]').forEach((tab) => {
       tab.addEventListener('click', () => setComposerKind(tab.dataset.usComposerKind));
