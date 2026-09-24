@@ -426,6 +426,20 @@
     setMusicSearchStatus('');
   }
 
+  // M5H — bounded, privacy-safe status text. Reads only the small {error:"code"}
+  // body the Edge Function returns (never raw diagnostics); any parsing failure
+  // safely falls back to the ordinary rate-limit copy.
+  async function musicSearchErrorMessage(error) {
+    const status = error?.context?.status;
+    if (status !== 429) return 'Ricerca non disponibile ora. Puoi incollare il link.';
+    let code = null;
+    if (typeof error?.context?.json === 'function') {
+      try { code = (await error.context.json())?.error || null; } catch (_) { code = null; }
+    }
+    if (code === 'quota_exceeded') return 'Hai esaurito le ricerche Spotify per ora. Riprova più tardi.';
+    return 'Troppe ricerche su Spotify, riprova tra poco.';
+  }
+
   async function runMusicSearch(query) {
     const client = getClient();
     const requestId = ++musicSearch.requestId;
@@ -435,8 +449,7 @@
       const { data, error } = await client.functions.invoke('spotify-search', { body: { query } });
       if (requestId !== musicSearch.requestId) return; // a newer search superseded this one
       if (error) {
-        const status = error?.context?.status;
-        setMusicSearchStatus(status === 429 ? 'Troppe ricerche su Spotify, riprova tra poco.' : 'Ricerca non disponibile ora. Puoi incollare il link.', 'error');
+        setMusicSearchStatus(await musicSearchErrorMessage(error), 'error');
         renderMusicResults([]);
         return;
       }
@@ -996,7 +1009,7 @@
     setComposerKind, openComposer, closeComposer, send, updateComposerValidity, composerCanSend,
     startRecording, stopRecording, discardRecording, openCamera, closeCamera, switchCamera, captureCameraPhoto, useCameraPhoto, retakeCameraPhoto, discardCameraCapture, composer,
     extractSpotifyTrackId, canonicalSpotifyTrackUrl, spotifyEmbedUrl,
-    renderMusicResults, selectMusicResult, clearMusicSelection, resetMusicSearchUi, runMusicSearch, scheduleMusicSearch, musicSearch,
+    renderMusicResults, selectMusicResult, clearMusicSelection, resetMusicSearchUi, runMusicSearch, scheduleMusicSearch, musicSearch, musicSearchErrorMessage,
   };
   if (typeof window !== 'undefined') window.openLeftForYou = open;
   if (typeof document !== 'undefined') {

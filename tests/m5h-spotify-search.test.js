@@ -295,12 +295,53 @@ test('M5H a Spotify search failure shows a recoverable error and never blocks th
   assert.equal(api.composerCanSend(), true);
 });
 
-test('M5H a 429 from search is reported as a rate limit, bounded and non-crashing', async () => {
+test('M5H a 429 with no readable body is reported as an ordinary rate limit, bounded and non-crashing', async () => {
   const invoke = async () => ({ data: null, error: { context: { status: 429 } } });
   const harness = createHarness({ invoke });
   const { api, el } = harness;
   await api.runMusicSearch('nirvana');
   assert.match(el('leftForYouMusicSearchStatus').textContent, /Troppe ricerche/);
+});
+
+test('M5H the PWA shows a distinct quota-exhausted status when the Edge Function reports quota_exceeded', async () => {
+  const invoke = async () => ({ data: null, error: { context: { status: 429, json: async () => ({ error: 'quota_exceeded' }) } } });
+  const harness = createHarness({ invoke });
+  const { api, el } = harness;
+  api.setComposerKind('music');
+  await api.runMusicSearch('nirvana');
+  assert.match(el('leftForYouMusicSearchStatus').textContent, /esaurito/);
+  // Manual paste must remain fully usable after a quota error.
+  el('leftForYouComposerMusic').value = 'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC';
+  assert.equal(api.composerCanSend(), true);
+});
+
+test('M5H the PWA shows the ordinary rate-limit status when the Edge Function reports rate_limited', async () => {
+  const invoke = async () => ({ data: null, error: { context: { status: 429, json: async () => ({ error: 'rate_limited' }) } } });
+  const harness = createHarness({ invoke });
+  const { api, el } = harness;
+  await api.runMusicSearch('nirvana');
+  assert.match(el('leftForYouMusicSearchStatus').textContent, /Troppe ricerche/);
+  assert.doesNotMatch(el('leftForYouMusicSearchStatus').textContent, /esaurito/);
+});
+
+test('M5H a malformed/unreadable 429 body safely defaults to the ordinary rate-limit status, never throwing', async () => {
+  const invoke = async () => ({ data: null, error: { context: { status: 429, json: async () => { throw new Error('boom'); } } } });
+  const harness = createHarness({ invoke });
+  const { api, el } = harness;
+  await assert.doesNotReject(() => api.runMusicSearch('nirvana'));
+  assert.match(el('leftForYouMusicSearchStatus').textContent, /Troppe ricerche/);
+  // Manual paste must remain fully usable after a malformed error body.
+  api.setComposerKind('music');
+  el('leftForYouComposerMusic').value = 'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC';
+  assert.equal(api.composerCanSend(), true);
+});
+
+test('M5H musicSearchErrorMessage never surfaces raw upstream diagnostics, only the bounded code', async () => {
+  const harness = createHarness();
+  const { api } = harness;
+  const quota = await api.musicSearchErrorMessage({ context: { status: 429, json: async () => ({ error: 'quota_exceeded', message: 'quota for the day depleted', internal_trace_id: 'abc-123' }) } });
+  assert.doesNotMatch(quota, /trace_id|abc-123|depleted/);
+  assert.match(quota, /esaurito/);
 });
 
 test('M5H no Spotify client secret or id is hardcoded in the browser-shipped source', () => {
@@ -344,6 +385,16 @@ test('M5H the Edge Function returns Retry-After and a quota_exceeded code on 429
   assert.match(source, /Retry-After/);
   assert.match(source, /quota_exceeded/);
   assert.match(source, /normalizeQuery\(body\?\.query\)/);
+});
+
+test('M5H the Edge Function attaches Retry-After for both the quota_exceeded and rate_limited 429 classes', () => {
+  const source = read('supabase/functions/spotify-search/index.ts');
+  assert.match(
+    source,
+    /if \s*\(\s*\(\s*error\.code === "quota_exceeded" \|\| error\.code === "rate_limited"\s*\)\s*&&\s*error\.retryAfterSeconds != null\s*\)\s*\{\s*\n\s*headers\["Retry-After"\] = String\(error\.retryAfterSeconds\);/,
+    'both 429 classes must share the same Retry-After header assignment, not just quota_exceeded',
+  );
+  assert.match(source, /rate_limited/, 'the ordinary rate-limit code must exist as a distinct branch, not be folded into quota_exceeded');
 });
 
 test('M5H the Edge Function normalizes the raw Spotify payload and never proxies it verbatim', () => {
@@ -416,13 +467,58 @@ test('M5H searchSpotifyTracks requests type=track, the given market and a bounde
   assert.equal(parsed.searchParams.get('q'), 'nirvana');
 });
 
-test('M5H searchSpotifyTracks surfaces 429 as quota_exceeded with a bounded Retry-After', async () => {
+test('M5H searchSpotifyTracks classifies a 429 with error.reason=QUOTA_EXCEEDED as quota_exceeded, with a bounded Retry-After', async () => {
   const core = await loadCore();
-  const fetchImpl = async () => fakeResponse({ status: 429, ok: false, headers: { 'Retry-After': '9999' } });
+  const fetchImpl = async () => fakeResponse({ status: 429, ok: false, headers: { 'Retry-After': '9999' }, json: { error: { status: 429, message: 'quota exceeded', reason: 'QUOTA_EXCEEDED' } } });
   await assert.rejects(
     () => core.searchSpotifyTracks({ token: 't', query: 'nirvana', fetchImpl }),
     (error) => error.code === 'quota_exceeded' && error.status === 429 && error.retryAfterSeconds <= 120,
   );
+});
+
+test('M5H searchSpotifyTracks classifies an ordinary 429 (no reason, or a different reason) as rate_limited, with a bounded Retry-After', async () => {
+  const core = await loadCore();
+  const noReason = async () => fakeResponse({ status: 429, ok: false, headers: { 'Retry-After': '30' }, json: { error: { status: 429, message: 'too many requests' } } });
+  await assert.rejects(
+    () => core.searchSpotifyTracks({ token: 't', query: 'nirvana', fetchImpl: noReason }),
+    (error) => error.code === 'rate_limited' && error.status === 429 && error.retryAfterSeconds === 30,
+  );
+  const otherReason = async () => fakeResponse({ status: 429, ok: false, json: { error: { reason: 'SOME_OTHER_REASON' } } });
+  await assert.rejects(
+    () => core.searchSpotifyTracks({ token: 't', query: 'nirvana', fetchImpl: otherReason }),
+    (error) => error.code === 'rate_limited',
+  );
+});
+
+test('M5H searchSpotifyTracks classifies a 429 with a malformed/empty error body as rate_limited, never throwing an unrelated error', async () => {
+  const core = await loadCore();
+  const emptyBody = async () => fakeResponse({ status: 429, ok: false, json: null });
+  await assert.rejects(
+    () => core.searchSpotifyTracks({ token: 't', query: 'nirvana', fetchImpl: emptyBody }),
+    (error) => error.code === 'rate_limited' && error.status === 429,
+  );
+  const brokenJson = async () => ({
+    status: 429,
+    ok: false,
+    headers: { get: () => null },
+    json: async () => { throw new Error('not json'); },
+  });
+  await assert.rejects(
+    () => core.searchSpotifyTracks({ token: 't', query: 'nirvana', fetchImpl: brokenJson }),
+    (error) => error.code === 'rate_limited' && error.status === 429,
+  );
+});
+
+test('M5H searchSpotifyTracks never leaks the raw upstream error body on the thrown error object', async () => {
+  const core = await loadCore();
+  const fetchImpl = async () => fakeResponse({ status: 429, ok: false, json: { error: { reason: 'QUOTA_EXCEEDED', message: 'internal quota detail', internal_trace_id: 'abc-123' } } });
+  try {
+    await core.searchSpotifyTracks({ token: 't', query: 'nirvana', fetchImpl });
+    assert.fail('expected rejection');
+  } catch (error) {
+    assert.equal(error.code, 'quota_exceeded');
+    assert.doesNotMatch(JSON.stringify(error), /internal quota detail|abc-123/);
+  }
 });
 
 test('M5H searchSpotifyTracks maps 401/403 to a bounded upstream_auth_failed, not a raw pass-through', async () => {

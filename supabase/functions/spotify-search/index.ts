@@ -48,7 +48,7 @@ Deno.serve(async (request) => {
   } catch (error) {
     if (error instanceof SpotifySearchError) {
       const headers: Record<string, string> = {};
-      if (error.code === "quota_exceeded" && error.retryAfterSeconds != null) {
+      if ((error.code === "quota_exceeded" || error.code === "rate_limited") && error.retryAfterSeconds != null) {
         headers["Retry-After"] = String(error.retryAfterSeconds);
       }
       console.error("spotify search failed", error.code);

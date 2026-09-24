@@ -33,6 +33,18 @@ export function parseRetryAfterSeconds(headerValue) {
   return null;
 }
 
+// Spotify's 429 body may carry { error: { status, message, reason: "QUOTA_EXCEEDED" } }.
+// Any other shape (or no body at all) is ordinary rate limiting, not quota exhaustion.
+async function readSpotifyErrorReason(response) {
+  try {
+    const body = await response.json();
+    const reason = body?.error?.reason;
+    return typeof reason === 'string' ? reason : null;
+  } catch (_) {
+    return null;
+  }
+}
+
 function base64Encode(value) {
   if (typeof btoa === 'function') return btoa(value);
   return Buffer.from(value, 'utf-8').toString('base64');
@@ -88,7 +100,9 @@ export async function searchSpotifyTracks({ token, query, fetchImpl = fetch, mar
   }
   if (response.status === 429) {
     const retryAfterSeconds = parseRetryAfterSeconds(response.headers?.get?.('Retry-After'));
-    throw new SpotifySearchError('quota_exceeded', { status: 429, retryAfterSeconds });
+    const reason = await readSpotifyErrorReason(response);
+    const code = reason === 'QUOTA_EXCEEDED' ? 'quota_exceeded' : 'rate_limited';
+    throw new SpotifySearchError(code, { status: 429, retryAfterSeconds });
   }
   if (response.status === 401 || response.status === 403) {
     throw new SpotifySearchError('upstream_auth_failed', { status: 502 });
