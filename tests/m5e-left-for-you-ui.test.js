@@ -50,6 +50,8 @@ test('M5E integrates server-authoritative seen and Conserva RPCs', () => {
   assert.match(source, /rpc\('conserve_left_for_you'/);
   assert.match(source, /status.*existing|existing.*status/);
   assert.match(source, /Conservato/);
+  assert.ok(/setStatus\(['"]Conservato nei Ricordi\./.test(source),
+    'successful conservation must identify Ricordi as the destination');
 });
 
 test('M5E has loading, empty, retry and no Stories semantics in the UI owner', () => {

@@ -701,3 +701,208 @@ console.info('[US] Moments Albums attivo');
 
   console.info('[US] Moments Visual Fix attivo');
 })();
+
+/* ============================================================
+   US · Conservati Surface (M5J)
+   Read-only view over Conserva contributions and their original sources.
+   ============================================================ */
+(() => {
+  'use strict';
+  if (window.__usConservatiSurfaceInstalled) return;
+  window.__usConservatiSurfaceInstalled = true;
+
+  const PRIVATE_MEDIA_KINDS = new Set(['photo', 'audio', 'video']);
+  const SUPPORTED_KINDS = new Set(['text', 'photo', 'audio', 'video', 'music']);
+  let conservatiEntries = [];
+  let conservatiRequestId = 0;
+
+  function root() { return document.getElementById('conservatiOverlay'); }
+  function setVisible(id, visible) { const el = document.getElementById(id); if (el) el.hidden = !visible; }
+  function escapeConservati(value) {
+    return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  }
+
+  function showConservatiState(state) {
+    setVisible('conservatiLoading', state === 'loading');
+    setVisible('conservatiEmpty', state === 'empty');
+    setVisible('conservatiError', state === 'error');
+    setVisible('conservatiList', state === 'list');
+    setVisible('conservatiDetail', state === 'detail');
+  }
+
+  function releaseConservatiDetailMedia() {
+    const detail = document.getElementById('conservatiDetail');
+    for (const media of detail?.querySelectorAll?.('audio, video') || []) {
+      try { media.pause?.(); } catch (_) {}
+      try { media.removeAttribute?.('src'); } catch (_) {}
+      for (const source of media.querySelectorAll?.('source') || []) {
+        try { source.removeAttribute?.('src'); } catch (_) {}
+      }
+      try { media.load?.(); } catch (_) {}
+    }
+  }
+
+  function formatConservatiDate(value) {
+    const date = new Date(value);
+    if (!Number.isFinite(date.getTime())) return 'Data non disponibile';
+    return date.toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  function kindLabel(kind) {
+    return window.UsLeftForYou?.labelForKind?.(kind) || 'Lasciato per voi';
+  }
+
+  function renderConservatiList(entries) {
+    const list = document.getElementById('conservatiList');
+    if (!list) return;
+    list.innerHTML = entries.map(entry => {
+      const preview = entry.source.kind === 'text'
+        ? (entry.source.body || 'Un pensiero per voi.')
+        : kindLabel(entry.source.kind);
+      return `<button type="button" class="conservati-card" data-conservati-open="${escapeConservati(entry.contribution.id)}" aria-label="Apri ${escapeConservati(kindLabel(entry.source.kind))} lasciato da ${escapeConservati(entry.senderName)}">
+        <span class="conservati-card-mark" aria-hidden="true">${entry.source.kind === 'text' ? '✎' : entry.source.kind === 'music' ? '♫' : '♡'}</span>
+        <span class="conservati-card-copy"><b>${escapeConservati(entry.senderName)}</b><small>${escapeConservati(formatConservatiDate(entry.source.created_at))}</small><span>${escapeConservati(preview)}</span></span>
+        <span class="conservati-card-kind">${escapeConservati(kindLabel(entry.source.kind))}</span>
+      </button>`;
+    }).join('');
+    showConservatiState('list');
+  }
+
+  function renderConservatiDetail(entry) {
+    const detail = document.getElementById('conservatiDetail');
+    const renderer = window.UsLeftForYou?.renderItemMarkup;
+    if (!detail || typeof renderer !== 'function') throw new Error('conservati_renderer_unavailable');
+    const source = entry.source;
+    const mediaUnavailable = PRIVATE_MEDIA_KINDS.has(source.kind) && !entry.mediaUrl;
+    const content = mediaUnavailable
+      ? '<p class="conservati-media-unavailable" role="status">Questo contenuto privato non è disponibile in questo momento.</p>'
+      : renderer(source, entry.mediaUrl || '');
+    detail.innerHTML = `<button type="button" class="conservati-back" data-conservati-back aria-label="Torna ai Conservati">‹ <span>Conservati</span></button>
+      <div class="conservati-provenance"><b>${escapeConservati(entry.senderName)}</b><time datetime="${escapeConservati(source.created_at)}">${escapeConservati(formatConservatiDate(source.created_at))}</time></div>
+      <div class="conservati-item-content">${content}</div>`;
+    showConservatiState('detail');
+  }
+
+  async function loadConservati(requestId) {
+    const coupleId = window.usProfile?.couple_id;
+    let client;
+    try { client = sb; } catch (_) { client = window.sb || null; }
+    if (!coupleId || !client) throw new Error('conservati_sync_unavailable');
+
+    const { data: contributions, error: contributionsError } = await client.from('conserva_contributions')
+      .select('id,couple_id,source_item_id,source_sender_id,conserved_by,created_at')
+      .eq('couple_id', coupleId)
+      .order('created_at', { ascending: false });
+    if (contributionsError) throw contributionsError;
+    if (requestId !== conservatiRequestId || !root()?.classList.contains('show')) return;
+    if (!contributions?.length) {
+      conservatiEntries = [];
+      showConservatiState('empty');
+      return;
+    }
+
+    const sourceIds = [...new Set(contributions.map(row => row.source_item_id).filter(Boolean))];
+    const [{ data: sources, error: sourcesError }, { data: profiles, error: profilesError }] = await Promise.all([
+      client.from('left_for_you')
+        .select('id,couple_id,sender_id,recipient_id,kind,body,media_path,created_at')
+        .in('id', sourceIds)
+        .eq('couple_id', coupleId),
+      client.from('profiles')
+        .select('id,display_name')
+        .eq('couple_id', coupleId)
+    ]);
+    if (sourcesError) throw sourcesError;
+    if (profilesError) throw profilesError;
+    if (requestId !== conservatiRequestId || !root()?.classList.contains('show')) return;
+
+    const sourceById = new Map((sources || []).map(source => [source.id, source]));
+    const profileById = new Map((profiles || []).map(profile => [profile.id, profile]));
+    const sourceRows = contributions.map(contribution => {
+      const source = sourceById.get(contribution.source_item_id);
+      if (!source || source.couple_id !== coupleId || !SUPPORTED_KINDS.has(source.kind)) {
+        throw new Error('conservati_source_unavailable');
+      }
+      return { contribution, source };
+    });
+    const mediaPaths = sourceRows
+      .filter(({ source }) => PRIVATE_MEDIA_KINDS.has(source.kind))
+      .map(({ source }) => source.media_path)
+      .filter(Boolean);
+    let signedUrls = new Map();
+    if (mediaPaths.length) {
+      if (typeof window.usGetSignedUrls !== 'function') throw new Error('conservati_signed_media_unavailable');
+      signedUrls = await window.usGetSignedUrls(mediaPaths, 21600);
+      if (!(signedUrls instanceof Map)) throw new Error('conservati_signed_media_unavailable');
+    }
+    if (requestId !== conservatiRequestId || !root()?.classList.contains('show')) return;
+
+    conservatiEntries = sourceRows.map(({ contribution, source }) => ({
+      contribution,
+      source,
+      senderName: profileById.get(source.sender_id || contribution.source_sender_id)?.display_name || 'La tua persona',
+      mediaUrl: PRIVATE_MEDIA_KINDS.has(source.kind) ? (signedUrls.get(source.media_path) || '') : ''
+    }));
+    renderConservatiList(conservatiEntries);
+  }
+
+  function retryConservati() {
+    const requestId = ++conservatiRequestId;
+    showConservatiState('loading');
+    loadConservati(requestId).catch(error => {
+      if (requestId !== conservatiRequestId || !root()?.classList.contains('show')) return;
+      console.warn('[US Conservati] load', error);
+      showConservatiState('error');
+    });
+  }
+
+  function openConservati() {
+    const modal = root();
+    if (!modal) return;
+    window.UsUiFoundation?.cancelSurfaceExit?.(modal);
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+    retryConservati();
+  }
+
+  function closeConservati() {
+    const modal = root();
+    if (!modal) return;
+    ++conservatiRequestId;
+    releaseConservatiDetailMedia();
+    const finalize = () => {
+      modal.classList.remove('show');
+      modal.setAttribute('aria-hidden', 'true');
+      conservatiEntries = [];
+      const list = document.getElementById('conservatiList');
+      const detail = document.getElementById('conservatiDetail');
+      if (list) list.replaceChildren();
+      if (detail) detail.replaceChildren();
+      showConservatiState('loading');
+    };
+    if (window.UsUiFoundation?.exitSurface) window.UsUiFoundation.exitSurface(modal, finalize); else finalize();
+  }
+
+  document.getElementById('conservatiClose')?.addEventListener('click', closeConservati);
+  document.getElementById('conservatiBackdrop')?.addEventListener('click', closeConservati);
+  document.getElementById('conservatiRetry')?.addEventListener('click', retryConservati);
+  document.getElementById('conservatiList')?.addEventListener('click', event => {
+    const button = event.target.closest('[data-conservati-open]');
+    if (!button) return;
+    const entry = conservatiEntries.find(item => item.contribution.id === button.dataset.conservatiOpen);
+    if (!entry) return;
+    try { renderConservatiDetail(entry); }
+    catch (error) { console.warn('[US Conservati] detail', error); showConservatiState('error'); }
+  });
+  document.getElementById('conservatiDetail')?.addEventListener('click', event => {
+    if (event.target.closest('[data-conservati-back]')) {
+      releaseConservatiDetailMedia();
+      showConservatiState('list');
+    }
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && root()?.classList.contains('show')) closeConservati();
+  });
+
+  window.openConservati = openConservati;
+  window.closeConservati = closeConservati;
+})();

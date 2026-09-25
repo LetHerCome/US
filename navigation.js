@@ -134,6 +134,12 @@ const layers=[
       const close=root?.querySelector('[aria-label*="Chiudi"],[aria-label*="Annulla"],.us-camera-top .us-camera-icon-btn');
       close?.click();
     }
+  },
+  {
+    name:'conservati',
+    find:()=>document.getElementById('conservatiOverlay'),
+    open:el=>el?.classList.contains('show'),
+    close:()=>window.closeConservati?.()
   }
 ];
 

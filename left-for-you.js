@@ -270,7 +270,7 @@
       if (error) throw error;
       item.conserved = true;
       if (button) { button.classList.add('is-conserved'); button.textContent = data?.status === 'existing' ? '✓ Già conservato' : '✓ Conservato'; }
-      setStatus(data?.status === 'existing' ? 'Era già tra le cose da custodire.' : 'Conservato per voi.', 'success');
+      setStatus('Conservato nei Ricordi.', 'success');
     } catch (error) {
       console.warn('[US Left for You] conserve', error);
       if (button) { button.disabled = false; button.textContent = 'Conserva'; }
@@ -1044,8 +1044,9 @@
     extractSpotifyTrackId, canonicalSpotifyTrackUrl, spotifyEmbedUrl,
     renderMusicResults, selectMusicResult, clearMusicSelection, resetMusicSearchUi, runMusicSearch, scheduleMusicSearch, musicSearch, musicSearchErrorMessage,
   };
-  if (typeof window !== 'undefined') window.openLeftForYou = open;
-  if (typeof document !== 'undefined') {
+  const rendererOnly = typeof window !== 'undefined' && window.__US_LEFT_FOR_YOU_RENDERER_ONLY__ === true;
+  if (typeof window !== 'undefined' && !rendererOnly) window.openLeftForYou = open;
+  if (typeof document !== 'undefined' && !rendererOnly) {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true }); else boot();
   }
   return api;

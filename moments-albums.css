@@ -685,3 +685,53 @@ body.us-keyboard-open .us-album-floating-add,
   .us-album-floating-add b{display:none}
   .us-album-floating-add{padding:8px}
 }
+
+/* M5J · Conservati, inside the existing Ricordi experience. */
+.us-conservati-entry{
+  width:100%;min-height:72px;margin:0 0 14px;padding:12px 14px;
+  display:flex;align-items:center;gap:12px;text-align:left;
+  border:1px solid rgba(255,255,255,.10);border-radius:19px;
+  background:linear-gradient(120deg,rgba(246,111,158,.10),rgba(139,114,248,.09));
+  color:var(--us-text);box-shadow:0 9px 24px rgba(0,0,0,.16)
+}
+.us-conservati-entry:active{transform:scale(.99)}
+.us-conservati-entry-mark{width:38px;height:38px;flex:0 0 auto;display:grid;place-items:center;border-radius:14px;background:rgba(255,255,255,.08);font-size:20px;color:#f2a6c7}
+.us-conservati-entry-copy{min-width:0;display:grid;gap:4px;flex:1}
+.us-conservati-entry-copy b{font:500 17px/1.1 var(--us-font-editorial);color:#fff7fb}
+.us-conservati-entry-copy small{color:rgba(247,242,248,.62);font-size:11px;line-height:1.35}
+.us-conservati-entry-chevron{font-size:23px;color:rgba(247,242,248,.52)}
+
+.conservati-overlay{position:fixed;inset:0;z-index:10130;display:none;align-items:flex-end;justify-content:center;padding-top:var(--us-safe-top);background:rgba(3,4,8,.62);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.conservati-overlay.show{display:flex}
+.conservati-backdrop{position:absolute;inset:0}
+.conservati-sheet{position:relative;z-index:1;width:min(520px,100%);max-height:calc(var(--us-viewport-height,100dvh) - var(--us-safe-top));overflow:auto;overscroll-behavior:contain;padding:0 0 calc(18px + var(--us-safe-bottom));border:1px solid rgba(255,255,255,.10);border-bottom:0;border-radius:27px 27px 0 0;background:radial-gradient(circle at 90% -10%,rgba(139,114,248,.11),transparent 35%),linear-gradient(160deg,#19141f,#0c0b11 72%);box-shadow:0 -20px 65px rgba(0,0,0,.44);color:var(--us-text)}
+.conservati-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 19px 13px;background:rgba(15,12,19,.94);border-bottom:1px solid rgba(255,255,255,.07);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.conservati-head h2{margin:3px 0 4px;font:400 27px/1 var(--us-font-editorial);letter-spacing:-.02em}
+.conservati-head small{display:block;max-width:310px;color:rgba(247,242,248,.63);font-size:11px;line-height:1.4}
+.conservati-close{width:40px;height:40px;flex:0 0 auto;padding:0;border:1px solid rgba(255,255,255,.10);border-radius:50%;background:rgba(255,255,255,.05);color:var(--us-text);font-size:23px}
+.conservati-body{padding:12px 18px 0}
+.conservati-loading,.conservati-empty,.conservati-error{padding:34px 12px 40px;text-align:center;color:var(--us-muted)}
+.conservati-loading p{margin:0;font-size:12px}
+.conservati-empty h3,.conservati-error h3{margin:0 0 8px;font:400 23px/1.15 var(--us-font-editorial);color:#fff7fb}
+.conservati-empty p,.conservati-error p{max-width:280px;margin:0 auto;color:rgba(247,242,248,.62);font-size:12px;line-height:1.5}
+.conservati-error button{min-height:44px;margin-top:16px;padding:0 17px;border:1px solid rgba(246,111,158,.24);border-radius:14px;background:rgba(246,111,158,.10);color:#fff7fb;font-weight:650}
+.conservati-list{display:grid;gap:9px;padding-bottom:6px}
+.conservati-card{width:100%;min-height:74px;padding:11px 12px;display:flex;align-items:center;gap:11px;text-align:left;border:1px solid rgba(255,255,255,.085);border-radius:17px;background:rgba(255,255,255,.035);color:var(--us-text)}
+.conservati-card:active{background:rgba(255,255,255,.075)}
+.conservati-card-mark{width:36px;height:36px;flex:0 0 auto;display:grid;place-items:center;border-radius:13px;background:rgba(255,255,255,.065);color:#efabc8;font-size:17px}
+.conservati-card-copy{min-width:0;flex:1;display:grid;gap:3px}
+.conservati-card-copy b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:700}
+.conservati-card-copy small{color:rgba(247,242,248,.52);font-size:10px}
+.conservati-card-copy>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(247,242,248,.72);font-size:11px}
+.conservati-card-kind{flex:0 0 auto;color:#c5a8c3;font-size:9px;letter-spacing:.03em}
+.conservati-detail{padding:2px 1px 12px}
+.conservati-back{min-height:44px;padding:0 8px 0 2px;display:flex;align-items:center;gap:6px;border:0;background:transparent;color:#efb1d0;font:600 12px var(--us-font-ui)}
+.conservati-provenance{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:5px 3px 12px;color:rgba(247,242,248,.76);font-size:11px}
+.conservati-provenance time{color:rgba(247,242,248,.5);font-size:10px}
+.conservati-item-content .left-for-you-item{min-height:0;padding:14px 4px;border:0;border-radius:0;background:transparent;box-shadow:none}
+.conservati-item-content .left-for-you-photo,.conservati-item-content .left-for-you-video{max-width:100%;max-height:54dvh}
+.conservati-item-content audio{width:100%}
+.conservati-media-unavailable{margin:18px 0;padding:16px;border:1px solid rgba(255,255,255,.08);border-radius:14px;color:var(--us-muted);font-size:12px;text-align:center}
+.conservati-loading[hidden],.conservati-empty[hidden],.conservati-error[hidden],.conservati-list[hidden],.conservati-detail[hidden]{display:none!important}
+@media(max-width:360px){.conservati-head{padding-inline:15px}.conservati-body{padding-inline:14px}.conservati-card-kind{max-width:64px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+@media(prefers-reduced-motion:reduce){.us-conservati-entry:active{transform:none}}

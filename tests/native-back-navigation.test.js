@@ -7,22 +7,24 @@ const vm = require('node:vm');
 const ROOT = path.resolve(__dirname, '..');
 const source = fs.readFileSync(path.join(ROOT, 'navigation.js'), 'utf8');
 
-function classList(open = false) {
+function classList(open = false, openClass = 'open') {
   return {
-    contains(name) { return name === 'open' && open; },
+    contains(name) { return name === openClass && open; },
     toggle() {},
     remove() {},
     set open(value) { open = value; }
   };
 }
 
-function navigationHarness({ page = 'home', layerOpen = false, state = null } = {}) {
+function navigationHarness({ page = 'home', layerOpen = false, conservatiOpen = false, state = null } = {}) {
   const listeners = new Map();
-  const calls = { go: [], closeToday: 0, back: 0 };
+  const calls = { go: [], closeToday: 0, closeConservati: 0, back: 0 };
   const today = { classList: classList(layerOpen) };
+  const conservati = { classList: classList(conservatiOpen, 'show') };
   const states = [{ __usNav: 1, kind: 'page', page: 'home', entryIndex: 0 }];
   if (state) states.push(state);
   else if (page !== 'home') states.push({ __usNav: 1, kind: 'page', page, entryIndex: 1 });
+  else if (conservatiOpen) states.push({ __usNav: 1, kind: 'layer', layer: 'conservati', page: 'home', entryIndex: 1 });
   else if (layerOpen) states.push({ __usNav: 1, kind: 'layer', layer: 'today', page: 'home', entryIndex: 1 });
   let position = states.length - 1;
 
@@ -35,6 +37,7 @@ function navigationHarness({ page = 'home', layerOpen = false, state = null } = 
     },
     getElementById(id) {
       if (id === 'today') return today;
+      if (id === 'conservatiOverlay') return conservati;
       return null;
     },
     addEventListener() {}
@@ -56,6 +59,7 @@ function navigationHarness({ page = 'home', layerOpen = false, state = null } = 
     location: { href: 'https://app.test/' },
     go(id) { calls.go.push(id); page = id; },
     closeToday() { calls.closeToday += 1; today.classList.open = false; },
+    closeConservati() { calls.closeConservati += 1; conservati.classList.open = false; },
     addEventListener(name, listener) { listeners.set(name, listener); },
     setTimeout(callback) { callback(); return 1; },
     queueMicrotask(callback) { callback(); },
@@ -63,7 +67,7 @@ function navigationHarness({ page = 'home', layerOpen = false, state = null } = 
   };
   window.window = window;
   vm.runInContext(source, vm.createContext({ window, document, history, location: window.location, MutationObserver: window.MutationObserver, queueMicrotask: window.queueMicrotask, setTimeout: window.setTimeout, console: { info() {} } }), { filename: 'navigation.js' });
-  return { window, calls, today };
+  return { window, calls, today, conservati, history };
 }
 
 test('Back nativo con layer aperto usa lo state layer US e chiude soltanto il layer', () => {
@@ -96,4 +100,22 @@ test('Back nativo non usa history.length estranea alla navigation US', () => {
 
   assert.equal(window.UsNavigation.handleNativeBack(), false);
   assert.equal(calls.back, 0);
+});
+
+test('Back browser chiude Conservati come layer top-level senza lasciare la pagina Ricordi aperta sotto', () => {
+  const { history, calls, conservati } = navigationHarness({ page: 'moments', conservatiOpen: true });
+
+  history.back();
+
+  assert.equal(calls.closeConservati, 1);
+  assert.equal(conservati.classList.contains('show'), false);
+});
+
+test('Back nativo chiude Conservati prima di navigare fuori da Ricordi', () => {
+  const { window, calls, conservati } = navigationHarness({ page: 'moments', conservatiOpen: true });
+
+  assert.equal(window.UsNavigation.handleNativeBack(), true);
+  assert.equal(calls.back, 1);
+  assert.equal(calls.closeConservati, 1);
+  assert.equal(conservati.classList.contains('show'), false);
 });

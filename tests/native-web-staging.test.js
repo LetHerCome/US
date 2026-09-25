@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
+const vm = require('node:vm');
 
 const ROOT = path.resolve(__dirname, '..');
 const OUTPUT = path.join(ROOT, 'dist', 'capacitor');
@@ -52,6 +53,71 @@ test('staging pulisce stale files e copia soltanto la allowlist native', () => {
   assert.equal(files.some((file) => file.startsWith('tests/')), false);
   assert.equal(files.some((file) => file.startsWith('_handoff/')), false);
   assert.equal(files.some((file) => file.startsWith('.git/')), false);
+});
+
+test('staging native conserva soltanto il renderer Left for You per Conservati', () => {
+  const manifest = runStaging();
+  const files = manifest.files.map((entry) => entry.path);
+  const nativeHtml = fs.readFileSync(path.join(OUTPUT, 'index.html'), 'utf8');
+
+  assert.ok(files.includes('left-for-you.js'));
+  assert.ok(files.includes('left-for-you.css'));
+
+  const rendererOnlyFlag = nativeHtml.indexOf('window.__US_LEFT_FOR_YOU_RENDERER_ONLY__ = true');
+  const leftForYouScript = nativeHtml.indexOf('src="/left-for-you.js');
+  assert.ok(rendererOnlyFlag >= 0, 'native deve attivare il renderer-only mode');
+  assert.ok(leftForYouScript > rendererOnlyFlag, 'il flag renderer-only deve precedere left-for-you.js');
+
+  assert.match(nativeHtml, /window\.__US_LEFT_FOR_YOU_ACTIVE__\s*=\s*false/);
+  assert.doesNotMatch(nativeHtml, /id="leftForYouPartnerEntry"/);
+  assert.doesNotMatch(nativeHtml, /id="leftForYouOverlay"/);
+});
+
+test('Left for You renderer-only espone il renderer senza avviare inbox o Realtime', () => {
+  const source = fs.readFileSync(path.join(ROOT, 'left-for-you.js'), 'utf8');
+  const fromCalls = [];
+  const channelCalls = [];
+  const listeners = [];
+  const query = {
+    select() { return this; },
+    eq() { return this; },
+    is() { return this; },
+    order() { return Promise.resolve({ data: [], error: null }); },
+    then(resolve, reject) { return Promise.resolve({ data: [], error: null }).then(resolve, reject); }
+  };
+  const sb = {
+    from(table) { fromCalls.push(table); return Object.create(query); },
+    channel(name) {
+      channelCalls.push(name);
+      return {
+        on() { return this; },
+        subscribe() { return this; }
+      };
+    }
+  };
+  const window = {
+    __US_LEFT_FOR_YOU_RENDERER_ONLY__: true,
+    usProfile: { id: 'me', couple_id: 'couple' },
+    sb,
+    addEventListener(name) { listeners.push(name); }
+  };
+  const document = {
+    readyState: 'complete',
+    getElementById() { return null; },
+    querySelectorAll() { return []; }
+  };
+
+  vm.runInNewContext(source, { window, document, console });
+
+  assert.equal(typeof window.UsLeftForYou?.renderItemMarkup, 'function');
+  assert.match(
+    window.UsLeftForYou.renderItemMarkup({ kind: 'text', body: 'Per te' }),
+    /left-for-you-text[^>]*>Per te/
+  );
+  assert.deepEqual(fromCalls, []);
+  assert.deepEqual(channelCalls, []);
+  assert.equal(listeners.includes('us-auth-resolved'), false);
+  assert.equal(listeners.includes('left-for-you-refresh'), false);
 });
 
 test('staging ripetuto produce manifest e bundle hash identici', () => {

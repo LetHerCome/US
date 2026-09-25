@@ -41,6 +41,8 @@ const RUNTIME_FILES = [
   'settings2.css',
   'polish4.css',
   'polish4.js',
+  'left-for-you.css',
+  'left-for-you.js',
   'icon-192.png',
   'icon-512.png',
   'apple-touch-icon.png',
@@ -103,10 +105,8 @@ let html = await readFile(stagedIndexPath, 'utf8');
 if (!html.includes(sourceCdn)) throw new Error(`index.html does not use Supabase JS ${supabaseVersion}`);
 html = html
   .replace(/<link\s+rel=["']manifest["'][^>]*>\s*/i, '')
-  .replace(/<link\s+rel=["']stylesheet["'][^>]*href=["']\/left-for-you\.css[^>]*>\s*/i, '')
-  .replace(/<script\s+defer\s+src=["']\/left-for-you\.js[^>]*><\/script>\s*/i, '')
   .replace(/<script>window\.__US_LEFT_FOR_YOU_ACTIVE__\s*=\s*true;<\/script>/i, '<script>window.__US_LEFT_FOR_YOU_ACTIVE__ = false;</script>')
-  .replace(/<button\s+type=["']button["']\s+id=["']leftForYouPartnerEntry["'][\s\S]*?<\/button>\s*/i, '')
+  .replace(/<button\b(?=[^>]*\bid=["']leftForYouPartnerEntry["'])[^>]*>[\s\S]*?<\/button>\s*/i, '')
   .replace(/<div\s+class=["']left-for-you-overlay["'][\s\S]*?<\/div>\s*\n\s*<div\s+class=["']toast["']/i, '<div class="toast"')
   .replace('aria-label="Aggiorna foto profilo" onclick="pickProfilePhoto()"', 'aria-label="Apri le tue Stories" onclick="openOwnStories()"')
   .replace(/<link\s+rel=["']preconnect["']\s+href=["']https:\/\/cdn\.jsdelivr\.net["'][^>]*>\s*/i, '')
@@ -115,6 +115,10 @@ html = html
   .replace(
     '<script defer src="/platform.js"></script>',
     '<script defer src="/native-entry.js"></script>\n<script defer src="/platform.js"></script>'
+  )
+  .replace(
+    /(<script\s+defer\s+src=["']\/left-for-you\.js[^>]*><\/script>)/i,
+    '<script>window.__US_LEFT_FOR_YOU_RENDERER_ONLY__ = true;</script>\n$1'
   );
 if (!html.includes('src="/native-entry.js"') || html.includes('rel="manifest"')) {
   throw new Error('Native index transformation incomplete');

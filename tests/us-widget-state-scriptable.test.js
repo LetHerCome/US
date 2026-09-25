@@ -6,7 +6,7 @@ const vm = require('node:vm');
 
 const root = path.resolve(__dirname, '..');
 const read = (relative) => fs.readFileSync(path.join(root, relative), 'utf8');
-const source = () => read('supabase/functions/us-widget-state/index.ts');
+const source = () => read('supabase/functions/us-widget-state/index.ts').replace(/\r\n/g, '\n');
 
 function loadHelpers(sourceText) {
   function extract(name) {

@@ -344,9 +344,9 @@ test('M5H release identity: build marker, version.json, and versioned Left for Y
   const build = html.match(/<meta\s+name="us-build"\s+content="([^"]+)"/)?.[1];
   assert.ok(build, 'build marker HTML non trovato');
   assert.equal(build, version);
-  assert.match(build, /^us-scriptable-widgets-v1b-20260924-1$/);
+  assert.match(build, /^us-m5j-conservati-20260925-1$/);
   assert.match(html, /left-for-you\.css\?v=us-m5i-ephemeral-\d{8}-\d+/);
-  assert.match(html, /left-for-you\.js\?v=us-m5i-ephemeral-\d{8}-\d+/);
+  assert.match(html, /left-for-you\.js\?v=us-m5j-conservati-20260925-1/);
 });
 
 test('M5H clearing the selection empties the composer field and disables the CTA again', () => {
