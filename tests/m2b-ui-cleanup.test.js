@@ -58,6 +58,9 @@ function settingsModalHarness() {
     location: { reload: () => events.push('reload') },
     sb: { auth: { signOut: async () => { events.push('signOut'); return { error: null }; } } },
     settingsSnapshot: { couple: { started_on: '2020-01-01' } },
+    settingsModalGeneration: 0,
+    scriptableSetupCodeOpen: false,
+    scriptableSetupCode: '',
     logoutInFlight: false,
     toast: () => {},
     window: { revokeCurrentDevice: async () => events.push('revoke') }
@@ -150,9 +153,10 @@ test('shell, build e asset Stories restano coerenti per upgrade e offline', () =
   const version = JSON.parse(read('version.json')).version;
   const build = html.match(/meta name="us-build" content="([^"]+)"/)?.[1];
 
-  assert.equal(version, 'm5i-ephemeral-inbox-20260924-1');
+  assert.equal(version, 'us-scriptable-widgets-v1b-20260924-1');
   assert.equal(build, version);
-  assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-29"/);
+  assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-30"/);
+  assert.match(html, /settings\.js\?v=us-scriptable-widgets-v1b-20260924-1/);
   assert.match(worker, /"\/stories\.css"/);
   assert.doesNotMatch(worker, /"\/motion3\.css"/);
   assert.match(worker, /const MEDIA_CACHE_NAME = "us-private-media-v1"/);

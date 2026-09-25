@@ -6,6 +6,12 @@ verify_jwt = true
 [functions.widget-think-send]
 verify_jwt = false
 
+[functions.us-widget-state]
+verify_jwt = false
+
+[functions.widget-scriptable-setup]
+verify_jwt = false
+
 [functions.send-web-push]
 verify_jwt = true
 
