@@ -212,6 +212,62 @@ function durationMinutesFromTimes(startHHMM, endHHMM) {
   return diff > 0 ? diff : null;
 }
 
+// M6D — Reminder options. Fixed enum: null = Nessuno, else minutes before.
+const REMINDER_OPTIONS = [
+  { value: null, label: 'Nessuno' },
+  { value: 10, label: '10 min prima' },
+  { value: 30, label: '30 min prima' },
+  { value: 60, label: '1 ora prima' },
+  { value: 1440, label: '1 giorno prima' }
+];
+// "Ricorda a" — Me sempre; Partner sempre; Entrambi solo per gli shared.
+const REMINDER_TARGETS = [
+  { value: 'me', label: 'Me' },
+  { value: 'partner', label: 'Partner' },
+  { value: 'both', label: 'Entrambi' }
+];
+// "Entrambi" esiste solo per gli eventi Insieme.
+function reminderTargetAllowed(target, entryType) {
+  return target !== 'both' || entryType === 'shared';
+}
+// All-day: solo "1 giorno prima" (1440) — 10m/30m/1h non hanno senso per
+// una giornata senza ora. Timed: tutti gli offset.
+function reminderOffsetAllowed(offsetMinutes, isAllDay) {
+  return !isAllDay || offsetMinutes === 1440;
+}
+// Filtra le opzioni visibili per il tipo di evento.
+function reminderOptionsFor(isAllDay) {
+  return REMINDER_OPTIONS.filter((o) => o.value == null || reminderOffsetAllowed(o.value, isAllDay));
+}
+// Righe da scrivere per (entry, target): una riga per destinatario — mai una
+// colonna "entrambi". Una riga = un invio. Il partner è risolto dal chiamante
+// dai profili reali (mai hardcoding).
+function reminderRowsFor({ entryType, target, requesterId, partnerId, offsetMinutes }) {
+  if (offsetMinutes == null || !reminderTargetAllowed(target, entryType)) return [];
+  const rows = [];
+  const push = (recipientId) => { if (recipientId) rows.push(recipientId); };
+  if (entryType === 'shared') {
+    if (target === 'me') push(requesterId);
+    else if (target === 'partner') push(partnerId);
+    else { push(requesterId); push(partnerId); }
+  } else {
+    if (target === 'me') push(requesterId);
+    else if (target === 'partner') push(partnerId);
+  }
+  return rows.map((recipientId) => ({
+    recipient_id: recipientId,
+    offset_minutes: offsetMinutes
+  }));
+}
+// Copia della notifica: self → "Tra un'ora — Titolo"; partner →
+// "Francesco ti ricorda — Cena alle 20:30 ♡" (display name reale dal profilo).
+function reminderCopy({ selfRecipient, requesterName, title, startsAt, allDay }) {
+  if (selfRecipient) return '— ' + title;
+  const hhmm = startsAt ? new Date(startsAt) : null;
+  const when = allDay || !hhmm ? '' : ' alle ' + pad2(hhmm.getHours()) + ':' + pad2(hhmm.getMinutes());
+  return requesterName + ' ti ricorda — ' + title + when + ' ♡';
+}
+
 function buildEntryPayload({ title, description, location, allDay, date, time, durationMinutes, spanDays }) {
   if (allDay) {
     const days = spanDays > 0 ? spanDays : 0;
@@ -263,7 +319,7 @@ const pureApi = {
   formatDateRangeLabel, localDateFromInstant, localDateTimeToISO, addMinutesToISO, originalDurationMinutes,
   shiftISODate, originalAllDaySpanDays,
   monthGridRange, windowForGrid, weekRangeFor, weekWindowFor, mondayOfISO, partitionDayBusy, tempoWindowLabel,
-  durationMinutesFromTimes,
+  durationMinutesFromTimes, REMINDER_OPTIONS, REMINDER_TARGETS, reminderTargetAllowed, reminderOffsetAllowed, reminderOptionsFor, reminderRowsFor, reminderCopy,
   buildEntryPayload, withCreateAuthority, canEditEntry,
   quickEntryError, classifyMutationResult
 };
@@ -290,6 +346,9 @@ let calendarMode = 'month'; // 'month' | 'week'
 let weekStartISO = null;    // Monday of the visible week
 let editingFormEntry = null;
 let editingOriginalEndHHMM = ''; // M6C.1 — the end time the form was prefilled with
+let editingEntryReminders = []; // M6D — righe calendar_reminders dell entry in editing
+let formReminderOffset = null;   // null = Nessuno
+let formReminderTarget = 'me';
 let detailEntry = null;
 let busy = false;
 
@@ -591,6 +650,7 @@ function openDetail(entryId) {
   if (entry.description) rows.push(`<p class="us-cal-detail-note">${esc(entry.description)}</p>`);
   const body = $('usCalendarDetailBody');
   if (body) body.innerHTML = rows.join('');
+  renderDetailReminders(entry);
   const canEdit = window.usProfile ? canEditEntry(entry, window.usProfile.id) : false;
   const actions = $('usCalendarDetailActions');
   if (actions) actions.hidden = !canEdit;
@@ -619,6 +679,7 @@ async function deleteEntry() {
     if (outcome === 'error') throw error;
     if (outcome === 'not_authorized') throw new Error('delete matched 0 rows');
     entries = entries.filter((e) => e.id !== detailEntry.id);
+    editingEntryReminders = editingEntryReminders.filter((r) => r.entry_id !== detailEntry.id);
     closeCalendarDetailSheet();
     renderCalendar();
     if ($('usCalendarDaySheet')?.classList.contains('open') && selectedDate) renderDaySections(selectedDate);
@@ -663,6 +724,56 @@ function getActiveDurationChoice() {
   const active = $('usCalendarDurationPicker')?.querySelector('button.is-active[data-us-cal-duration]');
   if (!active) return null;
   return active.dataset.usCalDuration === 'custom' ? 'custom' : Number(active.dataset.usCalDuration);
+}
+// M6D — Ricordamelo: opzioni filtrate per tipo (all-day → solo Nessuno/1 giorno),
+// Ricorda a visibile solo con un reminder attivo; Entrambi solo per gli shared.
+function setReminderPicker(offsetMinutes) {
+  formReminderOffset = offsetMinutes;
+  const picker = $('usCalendarReminderPicker');
+  if (!picker) return;
+  const isAllDay = Boolean($('usCalendarAllDayInput')?.checked);
+  picker.querySelectorAll('button[data-us-cal-reminder]').forEach((btn) => {
+    const value = btn.dataset.usCalReminder === 'none' ? null : Number(btn.dataset.usCalReminder);
+    const visible = reminderOffsetAllowed(value, isAllDay);
+    btn.hidden = !visible;
+    const active = (value == null ? formReminderOffset == null : formReminderOffset === value);
+    btn.classList.toggle('is-active', active);
+    btn.setAttribute('aria-pressed', String(active));
+  });
+  // All-day può avere solo Nessuno o 1440: se l'utente passa a all-day con
+  // un offset timed selezionato, il reminder cade su Nessuno.
+  if (isAllDay && formReminderOffset != null && formReminderOffset !== 1440) {
+    formReminderOffset = null;
+    picker.querySelectorAll('button[data-us-cal-reminder]').forEach((btn) => {
+      const active = btn.dataset.usCalReminder === 'none';
+      btn.classList.toggle('is-active', active);
+      btn.setAttribute('aria-pressed', String(active));
+    });
+  }
+  updateReminderTargetVisibility();
+}
+function setReminderTarget(target) {
+  formReminderTarget = reminderTargetAllowed(target, calendarKind) ? target : 'me';
+  const picker = $('usCalendarReminderTargetPicker');
+  if (!picker) return;
+  picker.querySelectorAll('button[data-us-cal-reminder-target]').forEach((btn) => {
+    const active = btn.dataset.usCalReminderTarget === formReminderTarget;
+    btn.classList.toggle('is-active', active);
+    btn.setAttribute('aria-pressed', String(active));
+  });
+}
+function updateReminderTargetVisibility() {
+  const wrap = $('usCalendarReminderTargetWrap');
+  if (wrap) wrap.hidden = formReminderOffset == null;
+  const both = $('usCalendarReminderTargetPicker')?.querySelector('[data-us-cal-reminder-target=both]');
+  if (both) both.hidden = calendarKind !== 'shared';
+  if (calendarKind !== 'shared' && formReminderTarget === 'both') { formReminderTarget = 'me'; setReminderTarget('me'); }
+}
+function getActiveReminderOffset() {
+  return formReminderOffset;
+}
+function getActiveReminderTarget() {
+  return formReminderOffset == null ? null : formReminderTarget;
 }
 function setFormStatus(msg) { const el = $('usCalendarFormStatus'); if (el) el.textContent = msg; }
 
@@ -711,6 +822,21 @@ function openForm(mode, entry) {
   setDurationPicker(durationChoice);
   $('usCalendarEndInput').value = durationEnd;
   toggleAllDayFields();
+  // M6D — prefill del reminder dalle righe esistenti dell'entry (edit):
+  // una riga per destinatario; 'both' = due righe stesso offset.
+  const entryRows = entry ? editingEntryReminders.filter((r) => r.entry_id === entry.id) : [];
+  if (entryRows.length) {
+    const meId = window.usProfile ? window.usProfile.id : null;
+    const meRows = entryRows.some((r) => r.recipient_id === meId);
+    const partnerRows = entryRows.some((r) => r.recipient_id !== meId);
+    formReminderOffset = entryRows[0].offset_minutes;
+    formReminderTarget = meRows && partnerRows ? 'both' : (meRows ? 'me' : 'partner');
+  } else {
+    formReminderOffset = null;
+    formReminderTarget = 'me';
+  }
+  setReminderPicker(formReminderOffset);
+  setReminderTarget(formReminderTarget);
 
   const sheet = $('usCalendarFormSheet');
   if (!sheet) return;
@@ -773,16 +899,24 @@ async function saveEntry(event) {
   if (saveBtn) saveBtn.disabled = true;
   setFormStatus('Salvo…');
   try {
+    let savedId = null; // M6D — id della riga creata (create-only)
     if (editingFormEntry) {
       const { data, error } = await sb.from('calendar_entries').update(payload).eq('id', editingFormEntry.id).select('id');
       const outcome = classifyMutationResult({ data, error });
       if (outcome === 'error') throw error;
       if (outcome === 'not_authorized') throw new Error('update matched 0 rows');
     } else {
-      const result = await sb.from('calendar_entries').insert(withCreateAuthority(payload, calendarKind, window.usProfile));
+      const result = await sb.from('calendar_entries').insert(withCreateAuthority(payload, calendarKind, window.usProfile)).select('id');
       if (result.error) throw result.error;
+      savedId = Array.isArray(result.data) && result.data[0]?.id ? result.data[0].id : null;
     }
     const wasEditing = Boolean(editingFormEntry);
+    // M6D — sync dei reminder dopo il salvataggio dell'entry:
+    // replace-all delle righe non ancora inviate (sent_at is null) con la
+    // scelta corrente del form; una riga già inviata non si tocca (storia).
+    const savedEntryId = wasEditing ? editingFormEntry.id : savedId;
+    if (savedEntryId) await syncEntryReminders(savedEntryId);
+    await loadEntryReminders();
     closeCalendarFormSheet();
     await loadEntries();
     if ($('usCalendarDaySheet')?.classList.contains('open') && selectedDate) renderDaySections(selectedDate);
@@ -794,6 +928,66 @@ async function saveEntry(event) {
     busy = false;
     if (saveBtn) saveBtn.disabled = false;
   }
+}
+
+// M6D — reminder dell'entry in editing: caricate una volta per superficie
+// aperta, senza limiti di finestra (righe couple-scoped, quantità minuscola).
+async function loadEntryReminders() {
+  if (!window.usProfile) { editingEntryReminders = []; return; }
+  try {
+    const { data, error } = await sb.from('calendar_reminders').select('id,entry_id,recipient_id,offset_minutes,requested_by,sent_at');
+    if (error) throw error;
+    editingEntryReminders = data || [];
+  } catch (error) {
+    console.warn('[US Calendar] reminders load', error);
+    editingEntryReminders = [];
+  }
+}
+
+// Replace-all delle righe PENDENTI (sent_at is null) dell'entry con la
+// scelta corrente; le righe già inviate restano (storia, no spam).
+// Chiave unica (entry_id, recipient_id, offset_minutes) copre le race.
+async function syncEntryReminders(entryId) {
+  if (!window.usProfile) return;
+  const offset = getActiveReminderOffset();
+  const existing = editingEntryReminders.filter((r) => r.entry_id === entryId);
+  // Rimuovi le pendenti che non corrispondono alla scelta corrente.
+  const stale = existing.filter((r) => !r.sent_at && (r.offset_minutes !== offset || !reminderRowsFor({ entryType: calendarKind, target: formReminderTarget, requesterId: window.usProfile.id, partnerId: partnerIdFor(), offsetMinutes: offset }).some((row) => row.recipient_id === r.recipient_id && row.offset_minutes === offset)));
+  for (const row of stale) {
+    await sb.from('calendar_reminders').delete().eq('id', row.id).select('id');
+  }
+  // Aggiungi le righe mancanti (mesma scelta nuova, o switch target).
+  const wanted = reminderRowsFor({ entryType: calendarKind, target: formReminderTarget, requesterId: window.usProfile.id, partnerId: partnerIdFor(), offsetMinutes: offset });
+  const toAdd = wanted.filter((row) => !existing.some((r) => r.recipient_id === row.recipient_id && r.offset_minutes === row.offset_minutes && !r.sent_at));
+  if (toAdd.length) {
+    await sb.from('calendar_reminders').insert(toAdd.map((row) => ({ ...row, couple_id: window.usProfile.couple_id, entry_id: entryId, requested_by: window.usProfile.id })));
+  }
+}
+
+// Il partner reale dai profili caricati (mai hardcoding): l'altro profilo
+// della coppia rispetto al viewer.
+function partnerIdFor() {
+  const me = window.usProfile ? window.usProfile.id : null;
+  const other = profiles.find((p) => p.id !== me);
+  return other ? other.id : null;
+}
+
+// Dettaglio: i reminder dell'entry sono SEMPRE visibili, con il richiedente
+// ("il destinatario deve sapere chi lo ha creato") e lo stato.
+function renderDetailReminders(entry) {
+  const container = $('usCalendarDetailReminders');
+  if (!container) return;
+  const rows = editingEntryReminders.filter((r) => r.entry_id === entry.id);
+  if (!rows.length) { container.innerHTML = ''; return; }
+  const offsetLabel = (m) => (m === 1440 ? '1 giorno prima' : m === 60 ? '1 ora prima' : m + ' min prima');
+  const items = rows.map((r) => {
+    const selfRecipient = r.recipient_id === r.requested_by;
+    const who = selfRecipient ? 'Te' : profileName(r.recipient_id);
+    const by = selfRecipient ? '' : ' · da ' + profileName(r.requested_by);
+    const state = r.sent_at ? 'inviato' : 'programmato';
+    return '<p class="us-cal-detail-reminder">' + esc(offsetLabel(r.offset_minutes)) + ' → ' + esc(who) + esc(by) + ' <small>' + state + '</small></p>';
+  });
+  container.innerHTML = '<h4>Ricordamelo</h4>' + items.join('');
 }
 
 function shiftMonth(delta) {
@@ -850,6 +1044,7 @@ async function openCalendarSurface() {
   renderCalendar();
   if (!window.usProfile) return;
   await loadProfiles();
+  await loadEntryReminders();
   await loadEntries();
 }
 function closeCalendarSurface() {
@@ -888,6 +1083,8 @@ $('usCalendarEmptyCta')?.addEventListener('click', () => openForm('create', null
 $('usCalendarAllDayInput')?.addEventListener('change', toggleAllDayFields);
 $('usCalendarKindPersonal')?.addEventListener('click', () => { calendarKind = 'personal'; setKindPicker('personal'); });
 $('usCalendarKindShared')?.addEventListener('click', () => { calendarKind = 'shared'; setKindPicker('shared'); });
+$('usCalendarReminderPicker')?.querySelectorAll('button[data-us-cal-reminder]').forEach((btn) => btn.addEventListener('click', () => setReminderPicker(btn.dataset.usCalReminder === 'none' ? null : Number(btn.dataset.usCalReminder))));
+$('usCalendarReminderTargetPicker')?.querySelectorAll('button[data-us-cal-reminder-target]').forEach((btn) => btn.addEventListener('click', () => setReminderTarget(btn.dataset.usCalReminderTarget)));
 $('usCalendarDurationPicker')?.querySelectorAll('button[data-us-cal-duration]').forEach((btn) => btn.addEventListener('click', () => setDurationPicker(btn.dataset.usCalDuration)));
 $('usCalendarForm')?.addEventListener('submit', saveEntry);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('usCalendarOverlay')?.classList.contains('open')) closeCalendarSurface(); });

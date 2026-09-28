@@ -645,6 +645,7 @@ html.us-returning-device .auth-overlay{
         <button type="button" class="us-cal-sheet-close us-icon-center" id="usCalendarDetailClose" aria-label="Chiudi impegno">×</button>
       </header>
       <div class="us-cal-detail-body" id="usCalendarDetailBody"></div>
+      <div class="us-cal-detail-reminders" id="usCalendarDetailReminders"></div>
       <div class="us-cal-detail-actions" id="usCalendarDetailActions" hidden>
         <button type="button" class="us-cal-detail-edit" id="usCalendarDetailEdit">Modifica</button>
         <button type="button" class="us-cal-detail-delete" id="usCalendarDetailDelete">Elimina</button>
@@ -673,6 +674,24 @@ html.us-returning-device .auth-overlay{
             <button type="button" data-us-cal-duration="custom" aria-pressed="false">Altro</button>
           </div>
           <label class="us-cal-field us-cal-end-field" id="usCalendarEndField" hidden><span>Fine alle</span><input id="usCalendarEndInput" type="time"></label>
+        </div>
+        <div class="us-cal-field" id="usCalendarReminderField">
+          <span>Ricordamelo</span>
+          <div class="us-cal-reminder-picker" id="usCalendarReminderPicker" role="group" aria-label="Reminder">
+            <button type="button" data-us-cal-reminder="none" class="is-active" aria-pressed="true">Nessuno</button>
+            <button type="button" data-us-cal-reminder="10" aria-pressed="false">10 min prima</button>
+            <button type="button" data-us-cal-reminder="30" aria-pressed="false">30 min prima</button>
+            <button type="button" data-us-cal-reminder="60" aria-pressed="false">1 ora prima</button>
+            <button type="button" data-us-cal-reminder="1440" aria-pressed="false">1 giorno prima</button>
+          </div>
+          <div class="us-cal-reminder-target" id="usCalendarReminderTargetWrap" hidden>
+            <span>Ricorda a</span>
+            <div class="us-cal-reminder-target-picker" id="usCalendarReminderTargetPicker" role="group" aria-label="Destinatario del reminder">
+              <button type="button" data-us-cal-reminder-target="me" class="is-active" aria-pressed="true">Me</button>
+              <button type="button" data-us-cal-reminder-target="partner" aria-pressed="false">Partner</button>
+              <button type="button" data-us-cal-reminder-target="both" aria-pressed="false" hidden>Entrambi</button>
+            </div>
+          </div>
         </div>
         <div class="us-cal-kind-picker" id="usCalendarKindPicker" role="group" aria-label="Per chi è questo impegno">
           <button type="button" class="is-active" data-us-cal-kind="personal" id="usCalendarKindPersonal" aria-pressed="true">Per me</button>

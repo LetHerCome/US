@@ -18,5 +18,8 @@ verify_jwt = true
 [functions.cleanup-left-for-you]
 verify_jwt = false
 
+[functions.calendar-reminders-worker]
+verify_jwt = false
+
 [functions.spotify-search]
 verify_jwt = true
