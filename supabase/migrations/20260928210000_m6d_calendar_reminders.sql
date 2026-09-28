@@ -139,18 +139,70 @@ create policy calendar_reminders_update_requester
 create policy calendar_reminders_delete_requester
   on public.calendar_reminders
   for delete to authenticated
-  using (couple_id = private.current_couple_id() and requested_by = auth.uid());
+  using (
+    couple_id = private.current_couple_id()
+    and (
+      requested_by = auth.uid()
+      -- Il destinatario può disattivare un reminder rivolto a sé (no-spam
+      -- per chi lo riceve) SENZA acquisire il diritto di modificarlo:
+      -- update resta appannaggio del solo richiedente.
+      or recipient_id = auth.uid()
+    )
+  );
 
 
 
--- Il worker di sistema (Edge Function con service role) aggiorna sent_at e
--- legge le righe in attesa: bypassa RLS via service role, ma gli diamo anche
--- i grant espliciti (come da pattern send-web-push sulle tabelle push).
--- Nessun grant extra all'utente: sent_at non è modificabile dal client.
+-- Chiave cron DEDICATA del worker dei reminder: vive SOLO nel vault.
+-- Il cron la legge con vault.decrypted_secrets; il worker la legge con la
+-- funzione SECURITY DEFINER qui sotto. Nessun plaintext nel repo, nella CLI
+-- o in altri job (chiave non condivisa con monthiversary).
+create or replace function public.get_internal_calendar_reminders_cron_key()
+returns text
+language sql
+security definer
+set search_path = public, vault
+as $$
+  select decrypted_secret from vault.decrypted_secrets where name = 'us_calendar_reminders_cron_key' limit 1
+$$;
 
--- ⚠️ NOTA DEPLOY: questa migration NON include il cron job pg_cron per il
--- worker dei reminder: viene registrata separatamente al deploy della Edge
--- Function (stesso pattern monthiversary-job), con la cron key in vault.
--- Il cron schedule vive nella repo solo come documentazione del worker
--- (supabase/functions/calendar-reminders-worker/README.md), perché la chiave
--- non è committabile.
+revoke all on function public.get_internal_calendar_reminders_cron_key() from public, anon, authenticated;
+grant execute on function public.get_internal_calendar_reminders_cron_key() to service_role;
+
+-- Il worker usa service_role: grant anche su update sent_at e select della
+-- tabella (l'ACL utente resta quello delle policy sopra).
+grant select, update on table public.calendar_reminders to service_role;
+
+-- Segreto generato dal database (mai noto fuori dal vault), idempotente.
+do $$
+begin
+  if not exists (select 1 from vault.secrets where name = 'us_calendar_reminders_cron_key') then
+    perform vault.create_secret(
+      encode(gen_random_bytes(32), 'base64'),
+      'us_calendar_reminders_cron_key'
+    );
+  end if;
+end
+$$;
+
+-- Schedulazione idempotente del worker (ogni minuto: l'offset più fine è
+-- 10 minuti; il worker invia solo righe scadute e non ancora inviate).
+do $$
+begin
+  if not exists (select 1 from cron.job where jobname = 'us-calendar-reminders-dispatch') then
+    perform cron.schedule(
+      'us-calendar-reminders-dispatch',
+      '* * * * *',
+      $cron$
+        select net.http_post(
+          url := 'https://iiakdfsxpywdkxravqjh.supabase.co/functions/v1/calendar-reminders-worker',
+          headers := jsonb_build_object(
+            'Content-Type','application/json',
+            'x-us-cron-key',(select decrypted_secret from vault.decrypted_secrets where name = 'us_calendar_reminders_cron_key' limit 1)
+          ),
+          body := '{}'::jsonb
+        );
+      $cron$
+    );
+  end if;
+end
+$$;

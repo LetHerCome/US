@@ -94,13 +94,15 @@ Deno.serve(async (request) => {
     const secret = supabaseSecretKey();
     if (!url || !secret) return json({ error: "Server configuration missing" }, 500);
 
-    // Solo il cron: chiave dedicata via Edge secret (pattern M5I_CLEANUP_SECRET),
-    // nessuna sessione utente e nessun riferimento a segreti di altri job.
-    const cronKey = (request.headers.get("x-us-cron-key") || "").trim();
-    const expectedKey = (Deno.env.get("CALENDAR_REMINDERS_CRON_SECRET") || "").trim();
-    if (!expectedKey || cronKey !== expectedKey) return json({ error: "Unauthorized" }, 401);
 
     const admin = createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
+    // Solo il cron: la chiave DEDICATA vive nel vault (mai in env, mai nel
+    // repo); il worker la legge con la funzione SECURITY DEFINER della
+    // migration, eseguibile solo da service_role.
+    const cronKey = (request.headers.get("x-us-cron-key") || "").trim();
+    if (!cronKey) return json({ error: "Unauthorized" }, 401);
+    const { data: expectedKey, error: keyError } = await admin.rpc("get_internal_calendar_reminders_cron_key");
+    if (keyError || !expectedKey || cronKey !== expectedKey) return json({ error: "Unauthorized" }, 401);
     const nowMs = Date.now();
 
     // Reminder in attesa: le righe non inviate. La finestra è piccola
