@@ -406,7 +406,13 @@ test('M6B (46): editing a timed entry preserves its original duration, not the d
   const payload = cal.buildEntryPayload({ title: 'Trasloco', allDay: false, date: '2026-11-04', time: '10:00', durationMinutes: preserved });
   const diffMinutes = (new Date(payload.ends_at) - new Date(payload.starts_at)) / 60000;
   assert.equal(diffMinutes, 240, 'moving only the start must not collapse the interval to the default duration');
-  assert.match(js(), /originalDurationMinutes\(editingFormEntry\) \|\| US_CALENDAR_DEFAULT_DURATION_MINUTES/, 'the default is only a fallback for a missing/invalid original duration');
+  // M6C.1: the duration is now EXPLICIT in the form. Preservation works by
+  // preselecting the entry's real duration (chip or Altro prefilled with its
+  // own end time) instead of an invisible save-time fallback — the real
+  // duration can never be silently rewritten to 60.
+  assert.match(js(), /if \(real === 30 \|\| real === 60 \|\| real === 120\) durationChoice = real;/, 'the picker opens on the entry\'s real duration');
+  assert.match(js(), /durationMinutes = \(real && endTime === editingOriginalEndHHMM\)[\s\S]{0,20}\? real/, 'an untouched Fine alle keeps the real duration even if the start moved');
+  assert.doesNotMatch(js(), /originalDurationMinutes\(editingFormEntry\) \|\| US_CALENDAR_DEFAULT_DURATION_MINUTES/, 'no silent save-time 60-minute rewrite');
 });
 
 // (46b) editing a multi-day all-day entry preserves its original span — the

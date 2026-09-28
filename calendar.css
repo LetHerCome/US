@@ -100,6 +100,19 @@
 .us-cal-kind-picker[hidden]{display:none!important}
 .us-cal-kind-picker button{flex:1;min-height:38px;border-radius:11px;border:0;background:transparent;color:rgba(247,242,248,.6);font-size:12px;font-weight:700}
 .us-cal-kind-picker button.is-active{background:rgba(169,133,255,.22);color:#fff7fb}
+/* M6C.1 · Quanto dura? — same segmented-control idiom, chips + Altro end time. */
+.us-cal-duration-picker{display:flex;gap:6px;margin-top:2px}
+.us-cal-duration-picker button{flex:1;min-height:38px;border-radius:11px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:rgba(247,242,248,.6);font-size:12px;font-weight:700}
+.us-cal-duration-picker button.is-active{background:rgba(169,133,255,.22);border-color:rgba(169,133,255,.3);color:#fff7fb}
+.us-cal-duration-picker button[hidden]{display:none!important}
+.us-cal-end-field{margin-top:10px}
+/* hidden must always win: the global stylesheet styles these as block/flex. */
+.us-cal-field[hidden]{display:none!important}
+.us-cal-end-field[hidden]{display:none!important}
+/* Four chips must fit 390px: two per row on narrow screens. */
+@media(max-width:420px){
+  .us-cal-duration-picker{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+}
 .us-cal-field{display:block;margin-top:12px}
 .us-cal-field>span{display:block;margin:0 0 7px 3px;font-size:11px;font-weight:750;color:#b7bdc9}
 .us-cal-field>span i{font-style:normal;color:#707888;font-weight:500}

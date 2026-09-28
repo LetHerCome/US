@@ -27,7 +27,7 @@
 <link rel="stylesheet" href="/polish4.css?v=us-final-polish-motion31-1"/>
 <link rel="stylesheet" href="/stories.css"/>
 <link rel="stylesheet" href="/left-for-you.css?v=us-m5i-ephemeral-20260924-1"/>
-<link rel="stylesheet" href="/calendar.css?v=us-m6c-week-view-1"/>
+<link rel="stylesheet" href="/calendar.css?v=us-m6c1-duration-1"/>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://iiakdfsxpywdkxravqjh.supabase.co" crossorigin>
 <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
@@ -664,6 +664,16 @@ html.us-returning-device .auth-overlay{
         <label class="us-cal-field"><span>Giorno</span><input id="usCalendarDateInput" type="date" required></label>
         <label class="us-cal-field us-cal-allday-field"><input id="usCalendarAllDayInput" type="checkbox"><span>Tutto il giorno</span></label>
         <label class="us-cal-field" id="usCalendarTimeField"><span>Ora</span><input id="usCalendarTimeInput" type="time"></label>
+        <div class="us-cal-field" id="usCalendarDurationField">
+          <span>Quanto dura?</span>
+          <div class="us-cal-duration-picker" id="usCalendarDurationPicker" role="group" aria-label="Durata dell'impegno">
+            <button type="button" data-us-cal-duration="30" aria-pressed="false">30 min</button>
+            <button type="button" data-us-cal-duration="60" class="is-active" aria-pressed="true">1 ora</button>
+            <button type="button" data-us-cal-duration="120" aria-pressed="false">2 ore</button>
+            <button type="button" data-us-cal-duration="custom" aria-pressed="false">Altro</button>
+          </div>
+          <label class="us-cal-field us-cal-end-field" id="usCalendarEndField" hidden><span>Fine alle</span><input id="usCalendarEndInput" type="time"></label>
+        </div>
         <div class="us-cal-kind-picker" id="usCalendarKindPicker" role="group" aria-label="Per chi è questo impegno">
           <button type="button" class="is-active" data-us-cal-kind="personal" id="usCalendarKindPersonal" aria-pressed="true">Per me</button>
           <button type="button" data-us-cal-kind="shared" id="usCalendarKindShared" aria-pressed="false">Insieme</button>
@@ -687,8 +697,8 @@ html.us-returning-device .auth-overlay{
 <script defer src="/identity.js?v=us-identity1"></script>
 <script defer src="/polish4.js?v=us-final-polish-motion31-1"></script>
 <script defer src="/moments-albums.js?v=us-m5j-conservati-20260925-1"></script>
-<script defer src="/calendar-domain.js?v=us-m6c-week-view-1"></script>
-<script defer src="/calendar.js?v=us-m6c-week-view-1"></script>
+<script defer src="/calendar-domain.js?v=us-m6c1-duration-1"></script>
+<script defer src="/calendar.js?v=us-m6c1-duration-1"></script>
 <script defer src="/navigation.js?v=us-fastboot-back-1"></script>
 <script defer src="/ui-foundation.js"></script>
 </body></html>

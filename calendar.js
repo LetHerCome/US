@@ -197,6 +197,21 @@ function windowForGrid(gridStart, gridEnd) {
 // from the entry being edited (0 for create, or when there is no prior
 // all-day span to preserve), never a constant — otherwise editing a
 // multi-day all-day entry would silently truncate it to a single day.
+// M6C.1 — Duration from two local "HH:MM" times, in minutes. null when either
+// value is malformed or end <= start (a timed entry must always end after it
+// starts — ends_at > starts_at is an invariant, never silently repaired).
+function durationMinutesFromTimes(startHHMM, endHHMM) {
+  const toMin = (v) => {
+    if (!/^\d{1,2}:\d{2}$/.test(String(v || ''))) return NaN;
+    const [h, m] = String(v).split(':').map(Number);
+    return h * 60 + m;
+  };
+  const start = toMin(startHHMM);
+  const end = toMin(endHHMM);
+  const diff = end - start;
+  return diff > 0 ? diff : null;
+}
+
 function buildEntryPayload({ title, description, location, allDay, date, time, durationMinutes, spanDays }) {
   if (allDay) {
     const days = spanDays > 0 ? spanDays : 0;
@@ -248,6 +263,7 @@ const pureApi = {
   formatDateRangeLabel, localDateFromInstant, localDateTimeToISO, addMinutesToISO, originalDurationMinutes,
   shiftISODate, originalAllDaySpanDays,
   monthGridRange, windowForGrid, weekRangeFor, weekWindowFor, mondayOfISO, partitionDayBusy, tempoWindowLabel,
+  durationMinutesFromTimes,
   buildEntryPayload, withCreateAuthority, canEditEntry,
   quickEntryError, classifyMutationResult
 };
@@ -273,6 +289,7 @@ let calendarKind = 'personal';
 let calendarMode = 'month'; // 'month' | 'week'
 let weekStartISO = null;    // Monday of the visible week
 let editingFormEntry = null;
+let editingOriginalEndHHMM = ''; // M6C.1 — the end time the form was prefilled with
 let detailEntry = null;
 let busy = false;
 
@@ -624,6 +641,28 @@ function toggleAllDayFields() {
   const allDay = Boolean($('usCalendarAllDayInput')?.checked);
   const timeField = $('usCalendarTimeField');
   if (timeField) timeField.hidden = allDay;
+  // M6C.1 — a timed duration makes no sense for an all-day entry: the whole
+  // duration UI (chips + custom end time) disappears with it.
+  const durationField = $('usCalendarDurationField');
+  if (durationField) durationField.hidden = allDay;
+}
+// M6C.1 — Quanto dura? One active chip at a time; Altro reveals the minimal
+// end-time control. values: 30 | 60 | 120 | 'custom'.
+function setDurationPicker(value) {
+  const picker = $('usCalendarDurationPicker');
+  if (!picker) return;
+  picker.querySelectorAll('button[data-us-cal-duration]').forEach((btn) => {
+    const active = String(btn.dataset.usCalDuration) === String(value);
+    btn.classList.toggle('is-active', active);
+    btn.setAttribute('aria-pressed', String(active));
+  });
+  const endField = $('usCalendarEndField');
+  if (endField) endField.hidden = String(value) !== 'custom';
+}
+function getActiveDurationChoice() {
+  const active = $('usCalendarDurationPicker')?.querySelector('button.is-active[data-us-cal-duration]');
+  if (!active) return null;
+  return active.dataset.usCalDuration === 'custom' ? 'custom' : Number(active.dataset.usCalDuration);
 }
 function setFormStatus(msg) { const el = $('usCalendarFormStatus'); if (el) el.textContent = msg; }
 
@@ -653,6 +692,24 @@ function openForm(mode, entry) {
     $('usCalendarTimeInput').value = '';
   }
   $('usCalendarNoteInput').value = entry?.description || '';
+  // M6C.1 — the duration picker opens on the entry's REAL duration when
+  // editing a timed entry (chip when it's 30/60/120, Altro with the entry's
+  // own end time otherwise); 1 hour is only the default for a NEW entry.
+  let durationChoice = US_CALENDAR_DEFAULT_DURATION_MINUTES;
+  let durationEnd = '';
+  editingOriginalEndHHMM = '';
+  if (entry && !entry.is_all_day) {
+    const real = originalDurationMinutes(entry);
+    if (real === 30 || real === 60 || real === 120) durationChoice = real;
+    else {
+      durationChoice = 'custom';
+      const e = new Date(entry.ends_at);
+      durationEnd = `${pad2(e.getHours())}:${pad2(e.getMinutes())}`;
+      editingOriginalEndHHMM = durationEnd;
+    }
+  }
+  setDurationPicker(durationChoice);
+  $('usCalendarEndInput').value = durationEnd;
   toggleAllDayFields();
 
   const sheet = $('usCalendarFormSheet');
@@ -680,14 +737,28 @@ async function saveEntry(event) {
   const time = $('usCalendarTimeInput').value;
   if (quickEntryError({ allDay, time }) === 'time') { setFormStatus('Scegli un\'ora.'); return; }
   const description = $('usCalendarNoteInput').value.trim();
+  // M6C.1 — the duration is now EXPLICIT for every new timed entry: a chip
+  // (30/60/120) or Altro's own end time. The old invisible 60-minute
+  // assumption is gone; editing a timed entry that stays timed opens on its
+  // REAL duration (see openForm) and keeps it unless the user changes it.
+  let durationMinutes;
+  if (getActiveDurationChoice() === 'custom') {
+    const endTime = $('usCalendarEndInput')?.value;
+    if (!endTime) { setFormStatus("Scegli l'orario di fine."); return; }
+    // Editing a timed entry whose Fine alle is untouched preserves the entry's
+    // REAL duration even if only the start moved (mission rule: an edit never
+    // mutates an existing duration silently). A new/edited end recomputes.
+    const real = editingFormEntry && !editingFormEntry.is_all_day ? originalDurationMinutes(editingFormEntry) : null;
+    durationMinutes = (real && endTime === editingOriginalEndHHMM)
+      ? real
+      : durationMinutesFromTimes(time, endTime);
+    if (!durationMinutes) { setFormStatus("La fine deve essere dopo l'inizio."); return; }
+  } else {
+    durationMinutes = getActiveDurationChoice() || US_CALENDAR_DEFAULT_DURATION_MINUTES;
+  }
   // The form no longer collects a location: an edit must carry the entry's
   // existing value through unchanged, and only a create ever writes null.
   const location = editingFormEntry ? (editingFormEntry.location ?? null) : null;
-  // A timed entry staying timed keeps its OWN original duration; every other
-  // case (create, or all-day <-> timed) falls back to the shared default.
-  const durationMinutes = !allDay && editingFormEntry && !editingFormEntry.is_all_day
-    ? (originalDurationMinutes(editingFormEntry) || US_CALENDAR_DEFAULT_DURATION_MINUTES)
-    : US_CALENDAR_DEFAULT_DURATION_MINUTES;
   // An all-day entry staying all-day keeps its OWN original span, shifted to
   // the chosen Giorno; every other case (create, or timed -> all-day) has no
   // prior all-day span to preserve, so it collapses to a single day.
@@ -817,6 +888,7 @@ $('usCalendarEmptyCta')?.addEventListener('click', () => openForm('create', null
 $('usCalendarAllDayInput')?.addEventListener('change', toggleAllDayFields);
 $('usCalendarKindPersonal')?.addEventListener('click', () => { calendarKind = 'personal'; setKindPicker('personal'); });
 $('usCalendarKindShared')?.addEventListener('click', () => { calendarKind = 'shared'; setKindPicker('shared'); });
+$('usCalendarDurationPicker')?.querySelectorAll('button[data-us-cal-duration]').forEach((btn) => btn.addEventListener('click', () => setDurationPicker(btn.dataset.usCalDuration)));
 $('usCalendarForm')?.addEventListener('submit', saveEntry);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('usCalendarOverlay')?.classList.contains('open')) closeCalendarSurface(); });
 
