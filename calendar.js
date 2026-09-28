@@ -99,6 +99,69 @@ function entryDatesTouched(entry) {
   return eachDateBetween(start, end);
 }
 
+// M6C — Week window: Monday-start, 7 days, end exclusive. Reuses windowForGrid
+// so the week read satisfies the exact same calendar-domain window contract
+// (instant bounds + date bounds) as the month grid read.
+function weekRangeFor(weekStartISO) {
+  return { startISO: weekStartISO, endISO: shiftISODate(weekStartISO, 7) };
+}
+function weekWindowFor(weekStartISO) {
+  const { startISO, endISO } = weekRangeFor(weekStartISO);
+  return windowForGrid(parseISODate(startISO), parseISODate(endISO));
+}
+function mondayOfISO(dateISO) {
+  const d = parseISODate(dateISO);
+  const monday = new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((d.getDay() + 6) % 7));
+  return isoDate(monday.getFullYear(), monday.getMonth(), monday.getDate());
+}
+
+// Splits one day's entries into per-partner busy intervals (ms, clipped to the
+// local day) for computeFreeTogether. ALL-DAY entries occupy whole local days
+// by DATE (never by instant — the M6A rule). A shared entry marks BOTH partners
+// busy (the domain layer adds it to both lists). An entry whose owner role is
+// unknown owner role plays it safe and marks both busy (never silently hides busy time).
+// The caller feeds this straight into UsCalendarDomain.computeFreeTogether —
+// the merge/complement/min-duration algorithm itself is NOT duplicated here.
+function partitionDayBusy(entries, dateISO, roleOf) {
+  const win = windowForGrid(parseISODate(dateISO), parseISODate(shiftISODate(dateISO, 1)));
+  const ws = new Date(win.windowStartAt).getTime();
+  const we = new Date(win.windowEndAt).getTime();
+  const personABusy = [];
+  const personBBusy = [];
+  const sharedEvents = [];
+  const push = (e, iv) => {
+    if (e.entry_type === 'shared') sharedEvents.push(iv);
+    else if (roleOf(e) === ROLE_ORDER[0]) personABusy.push(iv);
+    else if (roleOf(e) === ROLE_ORDER[1]) personBBusy.push(iv);
+    else { personABusy.push(iv); personBBusy.push(iv); }
+  };
+  for (const e of entries || []) {
+    if (e.is_all_day) {
+      if (e.start_date < win.windowEndDate && e.end_date >= win.windowStartDate) push(e, { start: ws, end: we });
+      continue;
+    }
+    const s = new Date(e.starts_at).getTime();
+    const en = new Date(e.ends_at).getTime();
+    if (s < we && en > ws) push(e, { start: Math.max(s, ws), end: Math.min(en, we) });
+  }
+  return { personABusy, personBBusy, sharedEvents, dayStartISO: win.windowStartDate, dayEndISO: win.windowEndDate };
+}
+
+// Human phrasing for one free-together window, in Italian, hour-based:
+//   entire day -> "Tutta la giornata"; ends at midnight -> "dopo le H:MM";
+//   starts at midnight -> "fino alle H:MM"; otherwise "13:00 – 16:00".
+function tempoWindowLabel(startISO, endISO, dayStartISO, dayEndISO) {
+  const s = new Date(startISO);
+  const e = new Date(endISO);
+  const fmt = (d) => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  const dayStartMs = parseISODate(dayStartISO).getTime();
+  const dayEndMs = parseISODate(dayEndISO).getTime();
+  if (s.getTime() === dayStartMs && e.getTime() === dayEndMs) return 'Tutta la giornata';
+  if (e.getTime() === dayEndMs) return `dopo le ${fmt(s)}`;
+  if (s.getTime() === dayStartMs) return `fino alle ${fmt(e)}`;
+  return `${fmt(s)} – ${fmt(e)}`;
+}
+
 function formatDateRangeLabel(startISO, endISO) {
   const fmtOne = (iso) => { const d = parseISODate(iso); return `${d.getDate()} ${MONTHS_IT[d.getMonth()].toLowerCase()}`; };
   return startISO === endISO ? fmtOne(startISO) : `${fmtOne(startISO)} → ${fmtOne(endISO)}`;
@@ -184,7 +247,8 @@ const pureApi = {
   ROLE_ORDER, US_CALENDAR_DEFAULT_DURATION_MINUTES, roleRank, entryLaneRoleFor, entryDateSpan, entryDatesTouched,
   formatDateRangeLabel, localDateFromInstant, localDateTimeToISO, addMinutesToISO, originalDurationMinutes,
   shiftISODate, originalAllDaySpanDays,
-  monthGridRange, windowForGrid, buildEntryPayload, withCreateAuthority, canEditEntry,
+  monthGridRange, windowForGrid, weekRangeFor, weekWindowFor, mondayOfISO, partitionDayBusy, tempoWindowLabel,
+  buildEntryPayload, withCreateAuthority, canEditEntry,
   quickEntryError, classifyMutationResult
 };
 if (typeof module === 'object' && module.exports) Object.assign(module.exports, pureApi);
@@ -206,6 +270,8 @@ let loadToken = 0;
 let loading = false;
 let lastError = false;
 let calendarKind = 'personal';
+let calendarMode = 'month'; // 'month' | 'week'
+let weekStartISO = null;    // Monday of the visible week
 let editingFormEntry = null;
 let detailEntry = null;
 let busy = false;
@@ -215,6 +281,14 @@ function ensureInitialMonth() {
   const n = new Date();
   viewYear = n.getFullYear();
   viewMonth = n.getMonth();
+  weekStartISO = mondayOfISO(todayISO());
+}
+// The window the current view needs — one shared contract for month and week.
+function visibleWindow() {
+  ensureInitialMonth();
+  if (calendarMode === 'week') return weekWindowFor(weekStartISO);
+  const { gridStart, gridEnd } = monthGridRange(viewYear, viewMonth);
+  return windowForGrid(gridStart, gridEnd);
 }
 function sortedProfiles() { return [...profiles].sort((a, b) => roleRank(a.role) - roleRank(b.role)); }
 function profileById(id) { return profilesById.get(id) || null; }
@@ -244,8 +318,7 @@ async function loadProfiles() {
 
 async function loadEntries() {
   if (!window.usProfile) return;
-  const { gridStart, gridEnd } = monthGridRange(viewYear, viewMonth);
-  const win = windowForGrid(gridStart, gridEnd);
+  const win = visibleWindow();
   const token = ++loadToken;
   loading = true;
   renderLoadingState();
@@ -335,7 +408,9 @@ function renderLoadingState() { $('usCalendarBody')?.classList.toggle('is-loadin
 function renderEmptyState() {
   const empty = $('usCalendarEmpty');
   if (!empty) return;
-  empty.hidden = !(entries.length === 0 && !loading && !lastError);
+  // In week mode every day card carries its own state, so the global empty
+  // panel belongs to the month view only.
+  empty.hidden = !(calendarMode === 'month' && entries.length === 0 && !loading && !lastError);
 }
 function renderErrorState() {
   const status = $('usCalendarStatus');
@@ -350,14 +425,88 @@ function renderErrorState() {
   }
 }
 
+// Free-together windows for one day, straight through the existing M6A
+// algorithm (computeFreeTogether) — merge, complement and the 30-minute
+// threshold all live in calendar-domain.js and are never duplicated here.
+function tempoWindowsForDay(dateISO) {
+  const win = windowForGrid(parseISODate(dateISO), parseISODate(shiftISODate(dateISO, 1)));
+  const partition = partitionDayBusy(entries, dateISO, entryLaneRole);
+  const windows = UsCalendarDomain.computeFreeTogether({
+    windowStart: win.windowStartAt,
+    windowEnd: win.windowEndAt,
+    personABusy: partition.personABusy,
+    personBBusy: partition.personBBusy,
+    sharedEvents: partition.sharedEvents,
+    minDurationMinutes: 30
+  });
+  return { windows, dayStartISO: win.windowStartDate, dayEndISO: win.windowEndDate };
+}
+
+function renderWeekDay(dateISO, dayEntries, ordered) {
+  const d = parseISODate(dateISO);
+  const weekday = capitalize(WEEKDAY_LONG_IT[(d.getDay() + 6) % 7]);
+  const isToday = dateISO === todayISO();
+  const { windows, dayStartISO, dayEndISO } = tempoWindowsForDay(dateISO);
+  const tempoBody = windows.length
+    ? `<ul>${windows.map((w) => `<li>${esc(tempoWindowLabel(w.start, w.end, dayStartISO, dayEndISO))}</li>`).join('')}</ul>`
+    : '<p>Nessun momento libero insieme, oggi.</p>';
+  const tempo = `<div class="us-cal-tempo${windows.length ? '' : ' is-empty'}">
+      <span class="us-cal-tempo-heart" aria-hidden="true">♡</span>
+      <div class="us-cal-tempo-copy"><b>Tempo insieme</b>${tempoBody}</div>
+    </div>`;
+  const body = dayEntries.length
+    ? [
+        ...ordered.map((p) => renderDaySection(p.display_name, dayEntries.filter((e) => entryLaneRole(e) === p.role), laneClass(p.role))),
+        renderDaySection('Insieme', dayEntries.filter((e) => entryLaneRole(e) === 'shared'), 'shared')
+      ].join('')
+    : '<p class="us-cal-day-empty">Niente in programma.</p>';
+  return `<article class="us-cal-week-day${isToday ? ' is-today' : ''}">
+    <button type="button" class="us-cal-week-day-head" data-date="${dateISO}" aria-label="${esc(`${weekday} ${d.getDate()} ${MONTHS_IT[d.getMonth()].toLowerCase()}`)}">
+      <span class="us-cal-week-day-name">${esc(weekday)}</span><span class="us-cal-week-day-num">${d.getDate()}</span>
+    </button>
+    <div class="us-cal-week-day-body">${body}</div>
+    ${tempo}
+  </article>`;
+}
+
+// One vertical day-list for every width — no tiny side-by-side timelines.
+// Partner lanes reuse the exact day-sheet sections, so the week view reads
+// like seven day-sheets stacked.
+function renderWeekList() {
+  const container = $('usCalendarWeekList');
+  if (!container) return;
+  const dateIndex = buildDateIndex();
+  const ordered = sortedProfiles();
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const dateISO = shiftISODate(weekStartISO, i);
+    days.push(renderWeekDay(dateISO, dateIndex.get(dateISO) || [], ordered));
+  }
+  container.innerHTML = days.join('');
+  container.querySelectorAll('[data-entry-id]').forEach((btn) => btn.addEventListener('click', () => openDetail(btn.dataset.entryId)));
+  container.querySelectorAll('.us-cal-week-day-head[data-date]').forEach((btn) => btn.addEventListener('click', () => openDaySheet(btn.dataset.date)));
+}
+
 function renderCalendar() {
   if (!$('usCalendarOverlay')?.classList.contains('open')) return;
   ensureInitialMonth();
+  const isWeek = calendarMode === 'week';
+  $('usCalendarBody')?.classList.toggle('is-week-mode', isWeek);
   const label = $('usCalendarMonthLabel');
-  if (label) label.textContent = `${MONTHS_IT[viewMonth]} ${viewYear}`;
-  const dateIndex = buildDateIndex();
-  renderMobileGrid(dateIndex);
-  renderWideGrids(dateIndex);
+  if (label) {
+    label.textContent = isWeek
+      ? formatDateRangeLabel(weekStartISO, shiftISODate(weekStartISO, 6))
+      : `${MONTHS_IT[viewMonth]} ${viewYear}`;
+  }
+  $('usCalendarPrev')?.setAttribute('aria-label', isWeek ? 'Settimana precedente' : 'Mese precedente');
+  $('usCalendarNext')?.setAttribute('aria-label', isWeek ? 'Settimana successiva' : 'Mese successivo');
+  if (isWeek) {
+    renderWeekList();
+  } else {
+    const dateIndex = buildDateIndex();
+    renderMobileGrid(dateIndex);
+    renderWideGrids(dateIndex);
+  }
   renderLegend();
   renderEmptyState();
   renderErrorState();
@@ -584,11 +733,37 @@ function shiftMonth(delta) {
   renderCalendar();
   loadEntries();
 }
+function setViewSwitch(mode) {
+  const month = $('usCalendarViewMonth');
+  const week = $('usCalendarViewWeek');
+  month?.classList.toggle('is-active', mode === 'month');
+  week?.classList.toggle('is-active', mode === 'week');
+  month?.setAttribute('aria-pressed', String(mode === 'month'));
+  week?.setAttribute('aria-pressed', String(mode === 'week'));
+}
+function setMode(mode) {
+  if (calendarMode === mode) { setViewSwitch(mode); return; }
+  calendarMode = mode;
+  if (mode === 'week') weekStartISO = mondayOfISO(selectedDate || todayISO());
+  setViewSwitch(mode);
+  renderCalendar();
+  loadEntries();
+}
+function shiftWeek(delta) {
+  weekStartISO = shiftISODate(weekStartISO, delta * 7);
+  renderCalendar();
+  loadEntries();
+}
+function stepView(delta) {
+  if (calendarMode === 'week') shiftWeek(delta);
+  else shiftMonth(delta);
+}
 function goToToday() {
   const n = new Date();
   viewYear = n.getFullYear();
   viewMonth = n.getMonth();
   selectedDate = todayISO();
+  weekStartISO = mondayOfISO(selectedDate);
   renderCalendar();
   loadEntries();
 }
@@ -622,9 +797,11 @@ function closeCalendarSurface() {
   else finalize();
 }
 
-$('usCalendarPrev')?.addEventListener('click', () => shiftMonth(-1));
-$('usCalendarNext')?.addEventListener('click', () => shiftMonth(1));
+$('usCalendarPrev')?.addEventListener('click', () => stepView(-1));
+$('usCalendarNext')?.addEventListener('click', () => stepView(1));
 $('usCalendarTodayBtn')?.addEventListener('click', goToToday);
+$('usCalendarViewMonth')?.addEventListener('click', () => setMode('month'));
+$('usCalendarViewWeek')?.addEventListener('click', () => setMode('week'));
 $('usCalendarClose')?.addEventListener('click', closeCalendarSurface);
 $('usCalendarBackdrop')?.addEventListener('click', closeCalendarSurface);
 $('usCalendarDayClose')?.addEventListener('click', closeCalendarDaySheet);

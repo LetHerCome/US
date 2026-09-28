@@ -43,10 +43,14 @@ test('M6B (3): the visible month/year label renders in Italian and the grid is a
   assert.ok(gridStart <= new Date(2026, 8, 1) && gridEnd > new Date(2026, 8, 30));
 });
 
-// (4) prev/next navigation, including year rollover.
+// (4) prev/next navigation, including year rollover. Since M6C the buttons route
+// through stepView(delta): month mode still lands on shiftMonth(±1), week mode
+// steps the week instead — same month behavior, one control.
 test('M6B (4): prev/next controls shift the visible month, wrapping across year boundaries', () => {
-  assert.match(js(), /usCalendarPrev'\)\?\.addEventListener\('click', ?\(\) => shiftMonth\(-1\)\)/);
-  assert.match(js(), /usCalendarNext'\)\?\.addEventListener\('click', ?\(\) => shiftMonth\(1\)\)/);
+  assert.match(js(), /function stepView\(delta\)/);
+  assert.match(js(), /else shiftMonth\(delta\)/, 'in month mode prev/next still call shiftMonth');
+  assert.match(js(), /\(\) => stepView\(-1\)\)/);
+  assert.match(js(), /\(\) => stepView\(1\)\)/);
   const decGrid = cal.monthGridRange(2026, 11);
   const janGrid = cal.monthGridRange(2027, 0);
   assert.ok(decGrid.gridEnd.getFullYear() >= 2026, 'December grid spills into January');

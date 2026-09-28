@@ -27,7 +27,7 @@
 <link rel="stylesheet" href="/polish4.css?v=us-final-polish-motion31-1"/>
 <link rel="stylesheet" href="/stories.css"/>
 <link rel="stylesheet" href="/left-for-you.css?v=us-m5i-ephemeral-20260924-1"/>
-<link rel="stylesheet" href="/calendar.css?v=us-m6b-calendar-1"/>
+<link rel="stylesheet" href="/calendar.css?v=us-m6c-week-view-1"/>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://iiakdfsxpywdkxravqjh.supabase.co" crossorigin>
 <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
@@ -594,6 +594,10 @@ html.us-returning-device .auth-overlay{
       <button type="button" class="us-cal-today-btn" id="usCalendarTodayBtn">Oggi</button>
       <button type="button" class="us-cal-nav us-icon-center" id="usCalendarNext" aria-label="Mese successivo">›</button>
     </div>
+    <div class="us-cal-view-switch" role="group" aria-label="Vista calendario">
+      <button type="button" id="usCalendarViewMonth" class="is-active" aria-pressed="true">Mese</button>
+      <button type="button" id="usCalendarViewWeek" class="" aria-pressed="false">Settimana</button>
+    </div>
     <div class="us-cal-legend" id="usCalendarLegend" aria-hidden="true"></div>
     <div class="us-cal-status" id="usCalendarStatus" role="status" aria-live="polite" hidden></div>
     <div class="us-cal-body" id="usCalendarBody">
@@ -609,6 +613,9 @@ html.us-returning-device .auth-overlay{
           <div class="us-cal-pane-head" id="usCalendarWideHeadB"></div>
           <div class="us-cal-grid" id="usCalendarGridB"></div>
         </div>
+      </div>
+      <div class="us-cal-week-pane" id="usCalendarWeekPane" hidden>
+        <div class="us-cal-week-list" id="usCalendarWeekList"></div>
       </div>
       <div class="us-cal-empty" id="usCalendarEmpty" hidden>
         <b>I vostri giorni, insieme.</b>
@@ -680,8 +687,8 @@ html.us-returning-device .auth-overlay{
 <script defer src="/identity.js?v=us-identity1"></script>
 <script defer src="/polish4.js?v=us-final-polish-motion31-1"></script>
 <script defer src="/moments-albums.js?v=us-m5j-conservati-20260925-1"></script>
-<script defer src="/calendar-domain.js?v=us-m6b-calendar-1"></script>
-<script defer src="/calendar.js?v=us-m6b-calendar-1"></script>
+<script defer src="/calendar-domain.js?v=us-m6c-week-view-1"></script>
+<script defer src="/calendar.js?v=us-m6c-week-view-1"></script>
 <script defer src="/navigation.js?v=us-fastboot-back-1"></script>
 <script defer src="/ui-foundation.js"></script>
 </body></html>
