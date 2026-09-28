@@ -11,6 +11,11 @@ const WEEKDAY_LONG_IT = ['lunedì', 'martedì', 'mercoledì', 'giovedì', 'vener
 // Fixed, never re-derived from the viewer's own identity — both partners'
 // devices must resolve the same lane/palette for the same person.
 const ROLE_ORDER = ['beatrice', 'francesco'];
+// The single source of truth for how long a newly-created (or all-day -> timed)
+// entry lasts. Editing a timed entry that stays timed preserves its OWN
+// original duration instead (see originalDurationMinutes) — this constant is
+// only ever a fallback/default, never a forced rewrite of an existing entry.
+const US_CALENDAR_DEFAULT_DURATION_MINUTES = 60;
 
 function pad2(n) { return String(n).padStart(2, '0'); }
 function isoDate(y, m, d) { return `${y}-${pad2(m + 1)}-${pad2(d)}`; }
@@ -32,6 +37,34 @@ function localDateTimeToISO(dateISO, timeHHMM) {
   const [y, m, d] = String(dateISO).split('-').map(Number);
   const [hh, mm] = String(timeHHMM || '00:00').split(':').map(Number);
   return new Date(y, m - 1, d, hh || 0, mm || 0, 0, 0).toISOString();
+}
+
+function addMinutesToISO(iso, minutes) {
+  return new Date(new Date(iso).getTime() + minutes * 60000).toISOString();
+}
+
+// The duration a TIMED entry already has, in minutes — null if the entry is
+// missing timestamps, all-day, or its stored interval is zero/negative (a
+// malformed row must never silently propagate a bad duration forward).
+function originalDurationMinutes(entry) {
+  if (!entry || entry.is_all_day || !entry.starts_at || !entry.ends_at) return null;
+  const minutes = (new Date(entry.ends_at) - new Date(entry.starts_at)) / 60000;
+  return minutes > 0 ? minutes : null;
+}
+
+function shiftISODate(dateISO, days) {
+  const d = parseISODate(dateISO);
+  const shifted = new Date(d.getFullYear(), d.getMonth(), d.getDate() + days);
+  return isoDate(shifted.getFullYear(), shifted.getMonth(), shifted.getDate());
+}
+
+// The span an ALL-DAY entry already covers, in whole days (0 = single day) —
+// null if the entry is missing date columns, timed, or its stored span is
+// negative (a malformed row must never silently propagate a bad span forward).
+function originalAllDaySpanDays(entry) {
+  if (!entry || !entry.is_all_day || !entry.start_date || !entry.end_date) return null;
+  const days = Math.round((parseISODate(entry.end_date) - parseISODate(entry.start_date)) / 86400000);
+  return days >= 0 ? days : null;
 }
 
 function eachDateBetween(startISO, endISO) {
@@ -94,15 +127,23 @@ function windowForGrid(gridStart, gridEnd) {
 // Pure payload builder shared by create and edit: never includes
 // couple_id/created_by/entry_type/owner_id (those are immutable/authority
 // fields — see M6A's BEFORE UPDATE guard trigger).
-function buildEntryPayload({ title, description, location, allDay, startDate, endDate, startTime, endTime }) {
-  const safeEndDate = endDate || startDate;
+// `location` must be passed through by the caller unchanged on edit (the form
+// no longer collects it) and as null on create — this function never invents
+// a default for it, so it can't be the one that erases an existing value.
+// `spanDays` mirrors `durationMinutes` for the all-day case: it must come
+// from the entry being edited (0 for create, or when there is no prior
+// all-day span to preserve), never a constant — otherwise editing a
+// multi-day all-day entry would silently truncate it to a single day.
+function buildEntryPayload({ title, description, location, allDay, date, time, durationMinutes, spanDays }) {
   if (allDay) {
-    return { title, description: description || null, location: location || null, is_all_day: true, start_date: startDate, end_date: safeEndDate, starts_at: null, ends_at: null };
+    const days = spanDays > 0 ? spanDays : 0;
+    return { title, description: description || null, location: location ?? null, is_all_day: true, start_date: date, end_date: shiftISODate(date, days), starts_at: null, ends_at: null };
   }
+  const starts_at = localDateTimeToISO(date, time || '00:00');
+  const minutes = durationMinutes > 0 ? durationMinutes : US_CALENDAR_DEFAULT_DURATION_MINUTES;
   return {
-    title, description: description || null, location: location || null, is_all_day: false,
-    starts_at: localDateTimeToISO(startDate, startTime || '00:00'),
-    ends_at: localDateTimeToISO(safeEndDate, endTime || '00:00'),
+    title, description: description || null, location: location ?? null, is_all_day: false,
+    starts_at, ends_at: addMinutesToISO(starts_at, minutes),
     start_date: null, end_date: null
   };
 }
@@ -114,6 +155,14 @@ function withCreateAuthority(payload, kind, profile) {
 
 function canEditEntry(entry, viewerId) {
   return entry.entry_type === 'shared' ? entry.created_by === viewerId : entry.owner_id === viewerId;
+}
+
+// Ora is mandatory for a TIMED entry, but the field is hidden (and therefore
+// empty) whenever Tutto il giorno is on — an all-day entry must never be
+// blocked by this check.
+function quickEntryError({ allDay, time }) {
+  if (!allDay && !time) return 'time';
+  return null;
 }
 
 // PostgREST reports an RLS-filtered UPDATE/DELETE as a *success* with zero
@@ -132,10 +181,11 @@ function classifyMutationResult({ data, error }) {
 }
 
 const pureApi = {
-  ROLE_ORDER, roleRank, entryLaneRoleFor, entryDateSpan, entryDatesTouched,
-  formatDateRangeLabel, localDateFromInstant, localDateTimeToISO,
+  ROLE_ORDER, US_CALENDAR_DEFAULT_DURATION_MINUTES, roleRank, entryLaneRoleFor, entryDateSpan, entryDatesTouched,
+  formatDateRangeLabel, localDateFromInstant, localDateTimeToISO, addMinutesToISO, originalDurationMinutes,
+  shiftISODate, originalAllDaySpanDays,
   monthGridRange, windowForGrid, buildEntryPayload, withCreateAuthority, canEditEntry,
-  classifyMutationResult
+  quickEntryError, classifyMutationResult
 };
 if (typeof module === 'object' && module.exports) Object.assign(module.exports, pureApi);
 if (typeof window === 'undefined') return;
@@ -423,10 +473,8 @@ function setKindPicker(kind) {
 }
 function toggleAllDayFields() {
   const allDay = Boolean($('usCalendarAllDayInput')?.checked);
-  const startTimeField = $('usCalendarStartTimeField');
-  const endTimeField = $('usCalendarEndTimeField');
-  if (startTimeField) startTimeField.hidden = allDay;
-  if (endTimeField) endTimeField.hidden = allDay;
+  const timeField = $('usCalendarTimeField');
+  if (timeField) timeField.hidden = allDay;
 }
 function setFormStatus(msg) { const el = $('usCalendarFormStatus'); if (el) el.textContent = msg; }
 
@@ -445,24 +493,16 @@ function openForm(mode, entry) {
   $('usCalendarTitleInput').value = entry?.title || '';
   $('usCalendarAllDayInput').checked = Boolean(entry?.is_all_day);
   if (entry?.is_all_day) {
-    $('usCalendarStartDateInput').value = entry.start_date;
-    $('usCalendarEndDateInput').value = entry.end_date;
-    $('usCalendarStartTimeInput').value = '';
-    $('usCalendarEndTimeInput').value = '';
+    $('usCalendarDateInput').value = entry.start_date;
+    $('usCalendarTimeInput').value = '';
   } else if (entry) {
     const s = new Date(entry.starts_at);
-    const e = new Date(entry.ends_at);
-    $('usCalendarStartDateInput').value = localDateFromInstant(entry.starts_at);
-    $('usCalendarEndDateInput').value = localDateFromInstant(entry.ends_at);
-    $('usCalendarStartTimeInput').value = `${pad2(s.getHours())}:${pad2(s.getMinutes())}`;
-    $('usCalendarEndTimeInput').value = `${pad2(e.getHours())}:${pad2(e.getMinutes())}`;
+    $('usCalendarDateInput').value = localDateFromInstant(entry.starts_at);
+    $('usCalendarTimeInput').value = `${pad2(s.getHours())}:${pad2(s.getMinutes())}`;
   } else {
-    $('usCalendarStartDateInput').value = selectedDate || todayISO();
-    $('usCalendarEndDateInput').value = '';
-    $('usCalendarStartTimeInput').value = '';
-    $('usCalendarEndTimeInput').value = '';
+    $('usCalendarDateInput').value = selectedDate || todayISO();
+    $('usCalendarTimeInput').value = '';
   }
-  $('usCalendarLocationInput').value = entry?.location || '';
   $('usCalendarNoteInput').value = entry?.description || '';
   toggleAllDayFields();
 
@@ -485,18 +525,28 @@ async function saveEntry(event) {
   if (busy || !window.usProfile) return;
   if (!navigator.onLine) { toast('Sei offline. Riprova quando torni online.'); return; }
   const title = $('usCalendarTitleInput').value.trim();
-  const startDate = $('usCalendarStartDateInput').value;
-  if (!title || !startDate) return;
+  const date = $('usCalendarDateInput').value;
+  if (!title || !date) return;
   const allDay = $('usCalendarAllDayInput').checked;
-  const endDate = $('usCalendarEndDateInput').value || startDate;
-  if (endDate < startDate) { setFormStatus('La data di fine non può precedere l’inizio.'); return; }
-  const startTime = $('usCalendarStartTimeInput').value || '00:00';
-  const endTime = $('usCalendarEndTimeInput').value || '00:00';
-  const location = $('usCalendarLocationInput').value.trim();
+  const time = $('usCalendarTimeInput').value;
+  if (quickEntryError({ allDay, time }) === 'time') { setFormStatus('Scegli un\'ora.'); return; }
   const description = $('usCalendarNoteInput').value.trim();
+  // The form no longer collects a location: an edit must carry the entry's
+  // existing value through unchanged, and only a create ever writes null.
+  const location = editingFormEntry ? (editingFormEntry.location ?? null) : null;
+  // A timed entry staying timed keeps its OWN original duration; every other
+  // case (create, or all-day <-> timed) falls back to the shared default.
+  const durationMinutes = !allDay && editingFormEntry && !editingFormEntry.is_all_day
+    ? (originalDurationMinutes(editingFormEntry) || US_CALENDAR_DEFAULT_DURATION_MINUTES)
+    : US_CALENDAR_DEFAULT_DURATION_MINUTES;
+  // An all-day entry staying all-day keeps its OWN original span, shifted to
+  // the chosen Giorno; every other case (create, or timed -> all-day) has no
+  // prior all-day span to preserve, so it collapses to a single day.
+  const spanDays = allDay && editingFormEntry && editingFormEntry.is_all_day
+    ? (originalAllDaySpanDays(editingFormEntry) || 0)
+    : 0;
 
-  const payload = buildEntryPayload({ title, description, location, allDay, startDate, endDate, startTime, endTime });
-  if (!allDay && new Date(payload.ends_at) <= new Date(payload.starts_at)) { setFormStatus('L’orario di fine deve essere dopo l’inizio.'); return; }
+  const payload = buildEntryPayload({ title, description, location, allDay, date, time, durationMinutes, spanDays });
 
   busy = true;
   const saveBtn = $('usCalendarFormSave');

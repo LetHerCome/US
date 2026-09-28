@@ -62,7 +62,7 @@
 .us-cal-empty p{max-width:320px;margin:0 auto 14px;font-size:12px;line-height:1.5}
 .us-cal-empty-cta{min-height:44px;padding:0 18px;border-radius:14px;border:1px solid rgba(169,133,255,.28);background:rgba(169,133,255,.14);color:#fff7fb;font-size:12px;font-weight:700}
 
-.us-cal-fab{position:fixed;right:calc(20px + var(--us-safe-right));bottom:calc(24px + var(--us-safe-bottom));z-index:20;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-size:26px;color:#fff;background:linear-gradient(135deg,#5b8def,#8b72f8);box-shadow:0 12px 30px rgba(91,141,239,.35)}
+.us-cal-fab{position:fixed;right:calc(20px + var(--us-safe-right));bottom:calc(24px + var(--us-safe-bottom));z-index:20;width:56px;height:56px;border-radius:50%;font-size:26px;color:#fff;background:linear-gradient(135deg,#5b8def,#8b72f8);box-shadow:0 12px 30px rgba(91,141,239,.35)}
 
 /* Nested sheets (day / detail / form) — same overlay, additional slide-up layers. */
 .us-cal-sheet-overlay{position:fixed;inset:0;z-index:10145;display:none;align-items:flex-end;justify-content:center;background:rgba(3,4,8,.58);backdrop-filter:blur(8px)}
@@ -107,7 +107,6 @@
 .us-cal-allday-field{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:15px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07)}
 .us-cal-allday-field input{width:20px;height:20px;flex:0 0 auto;accent-color:#8b72f8}
 .us-cal-allday-field span{font-size:12px;font-weight:650;color:var(--us-text)}
-.us-cal-row{display:grid;grid-template-columns:1.1fr .9fr;gap:9px}
 .us-cal-form-status{min-height:18px;margin-top:9px;color:#8e96a6;font-size:11px}
 .us-cal-form-save{width:100%;min-height:48px;margin-top:14px;border-radius:16px}
 
@@ -115,7 +114,6 @@ body.us-cal-open{overflow:hidden}
 
 @media(max-width:360px){
   .us-cal-surface{border-radius:22px 22px 0 0}
-  .us-cal-row{grid-template-columns:1fr}
   .us-cal-day{min-height:46px}
 }
 

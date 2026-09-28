@@ -101,7 +101,7 @@ test('M6B (10): shared entries render a distinct heart marker', () => {
 
 // (11) a shared event is exactly one domain record, never duplicated per partner.
 test('M6B (11): shared create/read never duplicates a domain row per partner', () => {
-  const payload = cal.buildEntryPayload({ title: 'Cena', allDay: true, startDate: '2026-10-01' });
+  const payload = cal.buildEntryPayload({ title: 'Cena', allDay: true, date: '2026-10-01' });
   const withAuthority = cal.withCreateAuthority(payload, 'shared', { id: 'me', couple_id: 'c1' });
   assert.equal(withAuthority.owner_id, null, 'a shared row carries no per-partner owner column');
   assert.equal(withAuthority.created_by, 'me');
@@ -145,7 +145,7 @@ test('M6B (17): a shared entry is read-only for a non-creator (no mutual consent
 
 // (18) create personal payload correct.
 test('M6B (18): a personal create payload sets owner_id = created_by = the caller, inside their own couple', () => {
-  const payload = cal.buildEntryPayload({ title: 'Palestra', allDay: false, startDate: '2026-10-05', endDate: '2026-10-05', startTime: '07:00', endTime: '08:00' });
+  const payload = cal.buildEntryPayload({ title: 'Palestra', allDay: false, date: '2026-10-05', time: '07:00', durationMinutes: 60 });
   const full = cal.withCreateAuthority(payload, 'personal', { id: 'me', couple_id: 'couple-1' });
   assert.equal(full.entry_type, 'personal');
   assert.equal(full.owner_id, 'me');
@@ -157,7 +157,7 @@ test('M6B (18): a personal create payload sets owner_id = created_by = the calle
 
 // (19) create shared payload correct.
 test('M6B (19): a shared create payload has no owner_id, created_by = the caller', () => {
-  const payload = cal.buildEntryPayload({ title: 'Cena fuori', allDay: true, startDate: '2026-10-05' });
+  const payload = cal.buildEntryPayload({ title: 'Cena fuori', allDay: true, date: '2026-10-05' });
   const full = cal.withCreateAuthority(payload, 'shared', { id: 'me', couple_id: 'couple-1' });
   assert.equal(full.entry_type, 'shared');
   assert.equal(full.owner_id, null);
@@ -166,7 +166,7 @@ test('M6B (19): a shared create payload has no owner_id, created_by = the caller
 
 // (20) edit never sends immutable/authority fields.
 test('M6B (20): an edit/update payload never includes couple_id, created_by, entry_type or owner_id', () => {
-  const payload = cal.buildEntryPayload({ title: 'Cena fuori', allDay: true, startDate: '2026-10-05', endDate: '2026-10-06' });
+  const payload = cal.buildEntryPayload({ title: 'Cena fuori', allDay: true, date: '2026-10-05' });
   for (const forbidden of ['couple_id', 'created_by', 'entry_type', 'owner_id']) {
     assert.equal(Object.prototype.hasOwnProperty.call(payload, forbidden), false, `update payload must never carry ${forbidden}`);
   }
@@ -331,4 +331,162 @@ test('M6B (37): the Capacitor web build stages calendar-domain.js, calendar.css 
 // (38) the private media cache name is untouched.
 test('M6B (38): the private media cache name is preserved exactly', () => {
   assert.match(worker(), /const MEDIA_CACHE_NAME = "us-private-media-v1"/);
+});
+
+// --- Quick-entry form refinement -----------------------------------------
+
+// (39) the refined form exposes exactly the six target fields, in order.
+test('M6B (39): the form exposes exactly Titolo, Giorno, Tutto il giorno, Ora, Per me/Insieme, Nota — in that order', () => {
+  const formBlock = html().match(/<form class="us-cal-form" id="usCalendarForm">[\s\S]*?<\/form>/)?.[0] || '';
+  const order = [
+    formBlock.indexOf('id="usCalendarTitleInput"'),
+    formBlock.indexOf('id="usCalendarDateInput"'),
+    formBlock.indexOf('id="usCalendarAllDayInput"'),
+    formBlock.indexOf('id="usCalendarTimeInput"'),
+    formBlock.indexOf('id="usCalendarKindPicker"'),
+    formBlock.indexOf('id="usCalendarNoteInput"')
+  ];
+  assert.ok(order.every((i) => i >= 0), 'all six fields must be present');
+  for (let i = 1; i < order.length; i++) assert.ok(order[i] > order[i - 1], `field at index ${i} must come after the previous one`);
+});
+
+// (40) the end-date, end-time and location inputs are gone from the markup.
+test('M6B (40): the end-date, end-time and location inputs no longer exist', () => {
+  assert.doesNotMatch(html(), /usCalendarEndDateInput/);
+  assert.doesNotMatch(html(), /usCalendarEndTimeInput/);
+  assert.doesNotMatch(html(), /usCalendarEndTimeField/);
+  assert.doesNotMatch(html(), /usCalendarLocationInput/);
+});
+
+// (41) no "Data inizio"/"Ora inizio" wording remains anywhere in the form.
+test('M6B (41): no "Data inizio"/"Ora inizio" wording remains in the calendar form', () => {
+  assert.doesNotMatch(html(), /Data inizio/);
+  assert.doesNotMatch(html(), /Ora inizio/);
+});
+
+// (42) the Ora field is hidden when Tutto il giorno is checked, shown when unchecked.
+test('M6B (42): the Ora field visibility is driven by the Tutto il giorno checkbox', () => {
+  assert.match(js(), /function toggleAllDayFields\(\)/);
+  assert.match(js(), /timeField\.hidden = allDay/);
+  assert.match(js(), /usCalendarAllDayInput'\)\?\.addEventListener\('change', ?toggleAllDayFields\)/);
+});
+
+// (43) the kind picker sits after the time field.
+test('M6B (43): the Per me/Insieme kind picker is ordered after the time field', () => {
+  const formBlock = html().match(/<form class="us-cal-form" id="usCalendarForm">[\s\S]*?<\/form>/)?.[0] || '';
+  assert.ok(formBlock.indexOf('id="usCalendarTimeField"') < formBlock.indexOf('id="usCalendarKindPicker"'));
+});
+
+// (44) all-day create sets start_date == end_date == Giorno, timestamps null.
+test('M6B (44): an all-day create payload sets start_date == end_date == the chosen day, with null timestamps', () => {
+  const payload = cal.buildEntryPayload({ title: 'Gita', allDay: true, date: '2026-11-03' });
+  assert.equal(payload.start_date, '2026-11-03');
+  assert.equal(payload.end_date, '2026-11-03');
+  assert.equal(payload.starts_at, null);
+  assert.equal(payload.ends_at, null);
+});
+
+// (45) a timed create derives ends_at from starts_at + the centralized default duration constant.
+test('M6B (45): a timed create derives ends_at = starts_at + US_CALENDAR_DEFAULT_DURATION_MINUTES', () => {
+  assert.equal(cal.US_CALENDAR_DEFAULT_DURATION_MINUTES, 60);
+  const payload = cal.buildEntryPayload({ title: 'Corsa', allDay: false, date: '2026-11-03', time: '18:00', durationMinutes: cal.US_CALENDAR_DEFAULT_DURATION_MINUTES });
+  const diffMinutes = (new Date(payload.ends_at) - new Date(payload.starts_at)) / 60000;
+  assert.equal(diffMinutes, cal.US_CALENDAR_DEFAULT_DURATION_MINUTES);
+});
+
+// (46) editing a timed entry preserves its original (non-default) duration.
+test('M6B (46): editing a timed entry preserves its original duration, not the default 60 minutes', () => {
+  const existing = { is_all_day: false, starts_at: cal.localDateTimeToISO('2026-11-03', '09:00'), ends_at: cal.localDateTimeToISO('2026-11-03', '13:00') };
+  const preserved = cal.originalDurationMinutes(existing);
+  assert.equal(preserved, 240, 'the existing entry is 4 hours, not the 60-minute default');
+  const payload = cal.buildEntryPayload({ title: 'Trasloco', allDay: false, date: '2026-11-04', time: '10:00', durationMinutes: preserved });
+  const diffMinutes = (new Date(payload.ends_at) - new Date(payload.starts_at)) / 60000;
+  assert.equal(diffMinutes, 240, 'moving only the start must not collapse the interval to the default duration');
+  assert.match(js(), /originalDurationMinutes\(editingFormEntry\) \|\| US_CALENDAR_DEFAULT_DURATION_MINUTES/, 'the default is only a fallback for a missing/invalid original duration');
+});
+
+// (46b) editing a multi-day all-day entry preserves its original span — the
+// all-day mirror of (46). Reproduces the regression a prior review flagged:
+// an existing 2026-12-20 -> 2026-12-31 span must NOT collapse to one day.
+test('M6B (46b): editing a multi-day all-day entry preserves its original span, shifted to the new Giorno', () => {
+  const existing = { is_all_day: true, start_date: '2026-12-20', end_date: '2026-12-31' };
+  const spanDays = cal.originalAllDaySpanDays(existing);
+  assert.equal(spanDays, 11, 'the existing entry spans 12 days (20-31 Dec inclusive) — an 11-day start-to-end offset');
+  const payload = cal.buildEntryPayload({ title: 'Vacanza', allDay: true, date: '2026-12-22', spanDays });
+  assert.equal(payload.start_date, '2026-12-22');
+  assert.equal(payload.end_date, '2027-01-02', 'the span must move with the start, not collapse to a single day');
+  assert.equal(cal.entryDatesTouched(payload).length, 12, 'the day sheet must still bucket the entry across all 12 days');
+  assert.match(js(), /originalAllDaySpanDays\(editingFormEntry\) \|\| 0/, 'the fallback span (0 = single day) is only used for a missing/invalid original span, never a constant');
+});
+
+// (46c) a single-day all-day entry stays a single day when edited.
+test('M6B (46c): editing a single-day all-day entry keeps it a single day', () => {
+  const existing = { is_all_day: true, start_date: '2026-11-05', end_date: '2026-11-05' };
+  const spanDays = cal.originalAllDaySpanDays(existing);
+  assert.equal(spanDays, 0);
+  const payload = cal.buildEntryPayload({ title: 'Compleanno', allDay: true, date: '2026-11-06', spanDays });
+  assert.equal(payload.start_date, '2026-11-06');
+  assert.equal(payload.end_date, '2026-11-06');
+});
+
+// (46d) converting a timed entry to all-day has no prior all-day span to preserve — single day.
+test('M6B (46d): converting a timed entry to all-day produces a single day, not a stale span', () => {
+  const timedEntry = { is_all_day: false, starts_at: cal.localDateTimeToISO('2026-11-05', '09:00'), ends_at: cal.localDateTimeToISO('2026-11-05', '13:00') };
+  assert.equal(cal.originalAllDaySpanDays(timedEntry), null, 'a timed entry has no all-day span to derive');
+  const payload = cal.buildEntryPayload({ title: 'Riunione', allDay: true, date: '2026-11-05', spanDays: cal.originalAllDaySpanDays(timedEntry) || 0 });
+  assert.equal(payload.start_date, '2026-11-05');
+  assert.equal(payload.end_date, '2026-11-05');
+});
+
+// (47) editing an entry that has a location preserves it, even though the form no longer collects one.
+test('M6B (47): editing an entry with a location preserves that location', () => {
+  const payload = cal.buildEntryPayload({ title: 'Cena', allDay: true, date: '2026-11-05', location: 'Roma, casa' });
+  assert.equal(payload.location, 'Roma, casa');
+  assert.match(js(), /const location = editingFormEntry \? \(editingFormEntry\.location \?\? null\) : null;/, 'edit must carry the existing location through unchanged; only create writes null');
+});
+
+// (48) the default duration is a single centralized constant, not scattered literals.
+test('M6B (48): the default duration lives in exactly one constant, not repeated 60-minute literals', () => {
+  assert.match(js(), /const US_CALENDAR_DEFAULT_DURATION_MINUTES = 60;/);
+  const literalDefs = js().match(/US_CALENDAR_DEFAULT_DURATION_MINUTES = 60/g) || [];
+  assert.equal(literalDefs.length, 1, 'the literal 60 must be assigned exactly once — every other use must reference the constant');
+});
+
+// --- Icon-button centering -------------------------------------------------
+
+// (49) a single shared centering-only primitive exists and is applied to every calendar icon button.
+test('M6B (49): a single shared icon-centering rule is defined once and applied to every calendar icon button', () => {
+  const foundation = read('ui-foundation.css');
+  assert.match(foundation, /\.us-icon-center\s*\{\s*display:inline-flex;\s*align-items:center;\s*justify-content:center;\s*\}/, 'the shared primitive must live in ui-foundation.css, the stated authority for cross-cutting UI primitives');
+
+  const fabBlock = css().match(/\.us-cal-fab\{[^}]*\}/)?.[0] || '';
+  assert.doesNotMatch(fabBlock, /place-items|display:grid/, 'the fab must rely on the shared centering class instead of its own duplicate rule');
+
+  for (const id of ['usCalendarClose', 'usCalendarPrev', 'usCalendarNext', 'usCalendarDayClose', 'usCalendarDetailClose', 'usCalendarFormClose', 'usCalendarAddBtn']) {
+    const tag = html().match(new RegExp(`<[^>]*id="${id}"[^>]*>`))?.[0] || '';
+    assert.ok(tag, `${id} must exist in the markup`);
+    assert.match(tag, /class="[^"]*\bus-icon-center\b[^"]*"/, `${id} must use the shared centering class`);
+  }
+  const chevron = html().match(/<span class="[^"]*us-cal-entry-chevron[^"]*"[^>]*>/)?.[0] || '';
+  assert.match(chevron, /\bus-icon-center\b/, 'the Noi entry chevron must use the shared centering class too');
+});
+
+// --- Ora validation ----------------------------------------------------------
+
+// (50) quickEntryError is a pure function: Ora is mandatory for a timed entry only.
+test('M6B (50): quickEntryError flags a missing Ora only for a timed entry, never for all-day', () => {
+  assert.equal(cal.quickEntryError({ allDay: false, time: '' }), 'time', 'a timed entry with no Ora must be rejected');
+  assert.equal(cal.quickEntryError({ allDay: false, time: '09:00' }), null, 'a timed entry with an Ora is valid');
+  assert.equal(cal.quickEntryError({ allDay: true, time: '' }), null, 'an all-day entry must never be blocked by its hidden, empty Ora field');
+});
+
+// (51) saveEntry gates on the pure helper, before building the payload, via the existing error surface — and the old silent 00:00 default is gone.
+test('M6B (51): saveEntry rejects a missing Ora through the existing form-status error surface, before building the payload', () => {
+  const saveBlock = js().match(/async function saveEntry\(event\)[\s\S]*?\n\}/)?.[0] || '';
+  assert.match(saveBlock, /quickEntryError\(\{ allDay, time \}\) === 'time'/, 'saveEntry must gate on the pure helper, not reimplement the rule inline');
+  assert.match(saveBlock, /setFormStatus\('Scegli un\\'ora\.'\)/, 'the existing form-status error surface must show the Ora message');
+  const guardIdx = saveBlock.indexOf('quickEntryError');
+  const payloadIdx = saveBlock.indexOf('buildEntryPayload(');
+  assert.ok(guardIdx > 0 && payloadIdx > guardIdx, 'the Ora check must run before the payload is built');
+  assert.match(js(), /const time = \$\('usCalendarTimeInput'\)\.value;/, 'the silent 00:00 default for a missing Ora must be removed');
 });

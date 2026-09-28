@@ -254,7 +254,7 @@ html.us-returning-device .auth-overlay{
       <button type="button" class="us-cal-entry" id="usCalendarEntry" onclick="openCalendarSurface()" aria-label="Apri il Calendario">
         <span class="us-cal-entry-mark" aria-hidden="true">▦</span>
         <span class="us-cal-entry-copy"><b>Calendario</b><small>I vostri giorni, insieme.</small></span>
-        <span class="us-cal-entry-chevron" aria-hidden="true">›</span>
+        <span class="us-cal-entry-chevron us-icon-center" aria-hidden="true">›</span>
       </button>
 
       <section class="noi-living-section" aria-labelledby="noiLivingTitle">
@@ -587,12 +587,12 @@ html.us-returning-device .auth-overlay{
         <h2 id="usCalendarTitle"><span id="usCalendarMonthLabel">—</span></h2>
         <p class="us-cal-subtitle">I vostri giorni, insieme.</p>
       </div>
-      <button type="button" class="us-cal-close us-modal-close" id="usCalendarClose" aria-label="Chiudi calendario" data-us-modal-close>×</button>
+      <button type="button" class="us-cal-close us-modal-close us-icon-center" id="usCalendarClose" aria-label="Chiudi calendario" data-us-modal-close>×</button>
     </header>
     <div class="us-cal-toolbar">
-      <button type="button" class="us-cal-nav" id="usCalendarPrev" aria-label="Mese precedente">‹</button>
+      <button type="button" class="us-cal-nav us-icon-center" id="usCalendarPrev" aria-label="Mese precedente">‹</button>
       <button type="button" class="us-cal-today-btn" id="usCalendarTodayBtn">Oggi</button>
-      <button type="button" class="us-cal-nav" id="usCalendarNext" aria-label="Mese successivo">›</button>
+      <button type="button" class="us-cal-nav us-icon-center" id="usCalendarNext" aria-label="Mese successivo">›</button>
     </div>
     <div class="us-cal-legend" id="usCalendarLegend" aria-hidden="true"></div>
     <div class="us-cal-status" id="usCalendarStatus" role="status" aria-live="polite" hidden></div>
@@ -616,7 +616,7 @@ html.us-returning-device .auth-overlay{
         <button type="button" class="us-cal-empty-cta" id="usCalendarEmptyCta">Aggiungi impegno</button>
       </div>
     </div>
-    <button type="button" class="us-cal-fab" id="usCalendarAddBtn" aria-label="Nuovo impegno">＋</button>
+    <button type="button" class="us-cal-fab us-icon-center" id="usCalendarAddBtn" aria-label="Nuovo impegno">＋</button>
   </section>
 
   <div class="us-cal-sheet-overlay" id="usCalendarDaySheet" aria-hidden="true">
@@ -624,7 +624,7 @@ html.us-returning-device .auth-overlay{
     <section class="us-cal-sheet" role="dialog" aria-modal="true" aria-labelledby="usCalendarDayTitle" data-us-modal-panel>
       <header class="us-cal-sheet-head">
         <h3 id="usCalendarDayTitle">—</h3>
-        <button type="button" class="us-cal-sheet-close" id="usCalendarDayClose" aria-label="Chiudi giornata">×</button>
+        <button type="button" class="us-cal-sheet-close us-icon-center" id="usCalendarDayClose" aria-label="Chiudi giornata">×</button>
       </header>
       <div class="us-cal-day-sections" id="usCalendarDaySections"></div>
     </section>
@@ -635,7 +635,7 @@ html.us-returning-device .auth-overlay{
     <section class="us-cal-sheet" role="dialog" aria-modal="true" aria-labelledby="usCalendarDetailTitle" data-us-modal-panel>
       <header class="us-cal-sheet-head">
         <h3 id="usCalendarDetailTitle">—</h3>
-        <button type="button" class="us-cal-sheet-close" id="usCalendarDetailClose" aria-label="Chiudi impegno">×</button>
+        <button type="button" class="us-cal-sheet-close us-icon-center" id="usCalendarDetailClose" aria-label="Chiudi impegno">×</button>
       </header>
       <div class="us-cal-detail-body" id="usCalendarDetailBody"></div>
       <div class="us-cal-detail-actions" id="usCalendarDetailActions" hidden>
@@ -650,24 +650,17 @@ html.us-returning-device .auth-overlay{
     <section class="us-cal-sheet" role="dialog" aria-modal="true" aria-labelledby="usCalendarFormTitle" data-us-modal-panel>
       <header class="us-cal-sheet-head">
         <h3 id="usCalendarFormTitle">Nuovo impegno</h3>
-        <button type="button" class="us-cal-sheet-close" id="usCalendarFormClose" aria-label="Chiudi modulo">×</button>
+        <button type="button" class="us-cal-sheet-close us-icon-center" id="usCalendarFormClose" aria-label="Chiudi modulo">×</button>
       </header>
       <form class="us-cal-form" id="usCalendarForm">
+        <label class="us-cal-field"><span>Titolo</span><input id="usCalendarTitleInput" type="text" maxlength="200" required></label>
+        <label class="us-cal-field"><span>Giorno</span><input id="usCalendarDateInput" type="date" required></label>
+        <label class="us-cal-field us-cal-allday-field"><input id="usCalendarAllDayInput" type="checkbox"><span>Tutto il giorno</span></label>
+        <label class="us-cal-field" id="usCalendarTimeField"><span>Ora</span><input id="usCalendarTimeInput" type="time"></label>
         <div class="us-cal-kind-picker" id="usCalendarKindPicker" role="group" aria-label="Per chi è questo impegno">
           <button type="button" class="is-active" data-us-cal-kind="personal" id="usCalendarKindPersonal" aria-pressed="true">Per me</button>
           <button type="button" data-us-cal-kind="shared" id="usCalendarKindShared" aria-pressed="false">Insieme</button>
         </div>
-        <label class="us-cal-field"><span>Titolo</span><input id="usCalendarTitleInput" type="text" maxlength="200" required></label>
-        <label class="us-cal-field us-cal-allday-field"><input id="usCalendarAllDayInput" type="checkbox"><span>Tutto il giorno</span></label>
-        <div class="us-cal-row">
-          <label class="us-cal-field"><span>Data inizio</span><input id="usCalendarStartDateInput" type="date" required></label>
-          <label class="us-cal-field" id="usCalendarStartTimeField"><span>Ora inizio</span><input id="usCalendarStartTimeInput" type="time"></label>
-        </div>
-        <div class="us-cal-row">
-          <label class="us-cal-field"><span>Data fine <i>opzionale</i></span><input id="usCalendarEndDateInput" type="date"></label>
-          <label class="us-cal-field" id="usCalendarEndTimeField"><span>Ora fine</span><input id="usCalendarEndTimeInput" type="time"></label>
-        </div>
-        <label class="us-cal-field"><span>Dove? <i>opzionale</i></span><input id="usCalendarLocationInput" type="text" maxlength="160"></label>
         <label class="us-cal-field"><span>Una nota <i>opzionale</i></span><textarea id="usCalendarNoteInput" rows="3" maxlength="500"></textarea></label>
         <div class="us-cal-form-status" id="usCalendarFormStatus" role="status" aria-live="polite"></div>
         <button type="submit" class="primary us-cal-form-save" id="usCalendarFormSave">Salva impegno</button>
