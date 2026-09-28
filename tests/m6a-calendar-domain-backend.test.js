@@ -6,8 +6,8 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 
-const MIGRATION = 'supabase/migrations/20260928090000_m6a_shared_calendar_domain.sql';
-const CLAIM_ROLE_FIX = 'supabase/migrations/20260928091500_m6a_claim_us_role_calendar_entries_transfer.sql';
+const MIGRATION = 'supabase/migrations/20260928071627_m6a_shared_calendar_domain.sql';
+const CLAIM_ROLE_FIX = 'supabase/migrations/20260928071749_m6a_claim_us_role_calendar_entries_transfer.sql';
 const stripComments = (sql) => sql.replace(/--[^\n]*/g, '');
 
 test('M6A migrations exist as fresh forward-only files after the M5 history', () => {
