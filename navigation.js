@@ -140,6 +140,30 @@ const layers=[
     find:()=>document.getElementById('conservatiOverlay'),
     open:el=>el?.classList.contains('show'),
     close:()=>window.closeConservati?.()
+  },
+  {
+    name:'calendar',
+    find:()=>document.getElementById('usCalendarOverlay'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.closeCalendarSurface?.()
+  },
+  {
+    name:'calendar-day',
+    find:()=>document.getElementById('usCalendarDaySheet'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.closeCalendarDaySheet?.()
+  },
+  {
+    name:'calendar-detail',
+    find:()=>document.getElementById('usCalendarDetailSheet'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.closeCalendarDetailSheet?.()
+  },
+  {
+    name:'calendar-form',
+    find:()=>document.getElementById('usCalendarFormSheet'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.closeCalendarFormSheet?.()
   }
 ];
 
