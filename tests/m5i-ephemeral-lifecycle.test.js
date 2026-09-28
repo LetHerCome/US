@@ -38,6 +38,8 @@ test('M5I migration establishes a server-side legacy boundary and durable storag
 test('M5I cleanup is service-authoritative, idempotent, and preserves Conserva sources', () => {
   const sql = read(MIGRATION);
   assert.match(sql, /create or replace function public\.claim_left_for_you_cleanup/i);
+  assert.match(sql, /create table(?: if not exists)? private\.left_for_you_cleanup_queue\s*\(\s*item_id uuid primary key/i);
+  assert.match(sql, /on conflict on constraint left_for_you_cleanup_queue_pkey do nothing/i);
   assert.match(sql, /create or replace function public\.finalize_left_for_you_cleanup/i);
   assert.match(sql, /create or replace function public\.complete_left_for_you_cleanup/i);
   assert.match(sql, /security definer/i);

@@ -120,7 +120,7 @@ begin
       where queued.item_id = item.id
         and queued.completed_at is null
     )
-  on conflict (item_id) do nothing;
+  on conflict on constraint left_for_you_cleanup_queue_pkey do nothing;
 
   return query
   with claimable as (
