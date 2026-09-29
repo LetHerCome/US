@@ -2041,7 +2041,7 @@ function ricordiMomentCard(row,signedUrl,author,own,feature){
 function ricordiExperienceCard(row){
   const d=new Date(row.completed_at);
   const day=d.toLocaleDateString('it-IT',{day:'numeric',month:'long'});
-  return `<button type="button" class="ricordi-experience" data-ricordi-experience="${escapeHtml(row.id)}"><span class="ricordi-experience-mark" aria-hidden="true">✓</span><span class="ricordi-experience-copy"><small>Vissuta insieme · ${escapeHtml(day)}</small><b>${escapeHtml(row.title)}</b></span><span class="ricordi-experience-source">Da vivere</span></button>`;
+  return `<button type="button" class="ricordi-experience" data-ricordi-experience="${escapeHtml(row.id)}"><span class="ricordi-experience-mark" aria-hidden="true"></span><span class="ricordi-experience-copy"><small>Vissuta insieme · ${escapeHtml(day)}</small><b>${escapeHtml(row.title)}</b></span><span class="ricordi-experience-source">Da vivere</span></button>`;
 }
 function renderRicordiRivivi(pick,signedUrls,names){
   const root=document.getElementById('ricordiRivivi');

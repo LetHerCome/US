@@ -779,6 +779,7 @@ body.us-keyboard-open .us-album-floating-add,
 #moments .ricordi-story .moment-card .moment-album-count{background:rgba(12,8,18,.6)!important;color:#fff!important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 #moments .ricordi-story .ricordi-experience{grid-column:1/-1;display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;border-radius:20px;border:1px solid rgba(255,142,170,.16);background:radial-gradient(circle at 0% 0%,rgba(255,102,142,.16),transparent 55%),linear-gradient(145deg,rgba(169,133,255,.10),rgba(255,255,255,.02)),rgba(22,16,30,.9);color:var(--text,#f6f7fb);text-align:left}
 #moments .ricordi-experience-mark{flex:0 0 32px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#ffc3d3;font-size:13px}
+#moments .ricordi-experience-mark::before{content:"";width:15px;height:15px;background:currentColor;-webkit-mask:url("/assets/icons/phosphor/heart-straight-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/heart-straight-regular.svg") center/contain no-repeat}
 #moments .ricordi-experience-copy{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:3px}
 #moments .ricordi-experience-copy small{font-size:10.5px;color:var(--muted,#9ba3b4)}
 #moments .ricordi-experience-copy b{font-family:Georgia,serif;font-weight:500;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

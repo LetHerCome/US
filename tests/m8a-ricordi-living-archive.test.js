@@ -86,3 +86,11 @@ test('M8A Moment detail: long date, title, real authors and provenance; existing
   assert.match(albums, /provenance\.textContent=`Moment · \$\{longDate\}`/);
   assert.match(albums, /Aggiunto da \$\{currentAlbum\.author\}\$\{others\.length\?` · con foto di/);
 });
+
+test('M8A icon authority: the lived experience mark is the approved Phosphor heart, never a text glyph', () => {
+  const card = archiveBlock().match(/function ricordiExperienceCard\([\s\S]*?\n\}/)?.[0] || '';
+  assert.match(card, /<span class="ricordi-experience-mark" aria-hidden="true"><\/span>/);
+  assert.doesNotMatch(card, /[✓✔☑]/);
+  assert.match(read('moments-albums.css'), /#moments \.ricordi-experience-mark::before\{[^}]*mask:url\("\/assets\/icons\/phosphor\/heart-straight-regular\.svg"\)/);
+  assert.ok(fs.existsSync(path.join(ROOT, 'assets/icons/phosphor/heart-straight-regular.svg')));
+});
