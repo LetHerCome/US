@@ -512,7 +512,8 @@ body.viewer-open{overflow:hidden}
 /* M7D · vissuta insieme: un gesto caldo ma piccolo, poi il ponte al ricordo */
 .noi-idea-lived-action{align-self:stretch;padding:11px 14px;border-radius:15px;border:1px solid rgba(255,142,170,.22);background:linear-gradient(135deg,rgba(255,102,142,.12),rgba(169,133,255,.10));color:#ffd6e1;font-size:13px;font-weight:600}
 .noi-idea-lived-action[data-confirm="1"]{background:linear-gradient(135deg,#ff638c,#a985ff);color:#fff}
-.noi-idea-lived-action[hidden],.noi-idea-memory[hidden]{display:none}
+.noi-idea-lived-action[hidden],.noi-idea-memory[hidden],.noi-idea-lived-wait[hidden]{display:none}
+.noi-idea-lived-wait{margin:0;align-self:stretch;padding:10px 14px;border-radius:15px;border:1px dashed rgba(255,142,170,.24);color:#f3c9d6;font-size:12.5px;line-height:1.35;text-align:center}
 .noi-idea-memory{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;border-radius:16px;border:1px solid rgba(255,142,170,.16);background:radial-gradient(circle at 12% 0%,rgba(255,102,142,.14),transparent 60%),rgba(255,255,255,.03)}
 .noi-idea-memory span{display:flex;flex-direction:column;gap:2px;min-width:0}
 .noi-idea-memory b{font-family:Georgia,serif;font-size:15px;font-weight:500}

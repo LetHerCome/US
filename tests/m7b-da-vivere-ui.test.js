@@ -78,7 +78,9 @@ test('M7B runtime: legge e scrive esclusivamente public.bucket_items, nessuna nu
   const tableRefs = [...block.matchAll(/sb\.from\('([a-z_]+)'\)/g)].map((m) => m[1]);
   assert.ok(tableRefs.length > 0);
   assert.ok(tableRefs.every((t) => t === 'bucket_items'), `unexpected table reference(s): ${tableRefs.join(',')}`);
-  assert.doesNotMatch(block, /living_items|shared_experiences|proposals|localStorage|indexedDB|sb\.rpc\(/);
+  assert.doesNotMatch(block, /living_items|shared_experiences|proposals|localStorage|indexedDB/);
+  // M7D: the only RPC is the reciprocal lived confirmation.
+  assert.deepEqual([...block.matchAll(/sb\.rpc\('([a-z_]+)'/g)].map((m) => m[1]), ['confirm_bucket_item_lived']);
 });
 
 test('M7B runtime: insert rispetta created_by/couple_id/status idea/completed false e non scrive mai completed_at o calendar_entry_id', () => {

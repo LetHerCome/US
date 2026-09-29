@@ -2578,7 +2578,7 @@ async function hydrateNoiIdeas(){
     list.innerHTML='<div class="empty-state" aria-busy="true"><div class="emoji">↻</div><b>Carico le vostre idee…</b></div>';
   }
   const {data,error}=await sb.from('bucket_items')
-    .select('id,title,note,link_url,status,calendar_entry_id,completed_at,created_at')
+    .select('id,title,note,link_url,status,calendar_entry_id,completed_at,created_at,lived_proposed_by')
     .eq('couple_id',coupleId)
     .neq('status','archived')
     .order('created_at',{ascending:false});
@@ -2668,6 +2668,17 @@ function noiIdeaLivedOnLabel(item){
   if(!d||Number.isNaN(d.getTime()))return '';
   return d.toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'});
 }
+function noiIdeaPartnerName(){
+  return window.usProfile?.role==='francesco'?'Beatrice':'Francesco';
+}
+// none: nessuno ha proposto · mine: ho proposto io, attendo · partner: ha
+// proposto l'altra persona, tocca a me · lived: confermata da entrambi.
+function noiIdeaLivedPhase(item){
+  if(item.status==='lived')return 'lived';
+  if(item.status!=='idea'&&item.status!=='scheduled')return 'lived';
+  if(!item.lived_proposed_by)return 'none';
+  return item.lived_proposed_by===window.usProfile?.id?'mine':'partner';
+}
 // Stato "quando" del dettaglio: un'idea senza data offre "Metti in
 // calendario"; una collegata mostra il quando (dal Calendario) e apre
 // l'evento vero, mai un secondo editor di data.
@@ -2682,9 +2693,21 @@ function renderNoiIdeaDetailState(item){
   if(cal)cal.hidden=!linked;
   if(when)when.textContent=linked?noiIdeaWhen(item):'';
   if(schedule)schedule.hidden=item.status!=='idea';
-  // M7D — idea/scheduled -> lived, e dopo solo un invito discreto al ricordo.
+  // M7D — vissuta solo in due: chi propone aspetta, l'altra persona conferma.
+  // Dopo la conferma reciproca (lived) resta solo un invito discreto al ricordo.
   const livedBtn=document.getElementById('noiIdeaDetailLived');
-  if(livedBtn){livedBtn.hidden=!(item.status==='idea'||item.status==='scheduled');livedBtn.dataset.confirm='';livedBtn.textContent="L'abbiamo vissuta";livedBtn.disabled=false;}
+  const pending=noiIdeaLivedPhase(item);
+  if(livedBtn){
+    livedBtn.hidden=!(pending==='none'||pending==='partner');
+    livedBtn.dataset.confirm='';
+    livedBtn.textContent=pending==='partner'?"Sì, l'abbiamo vissuta":"L'abbiamo vissuta";
+    livedBtn.disabled=false;
+  }
+  const livedWait=document.getElementById('noiIdeaDetailLivedWait');
+  if(livedWait){
+    livedWait.hidden=pending==='none'||pending==='lived';
+    livedWait.textContent=pending==='mine'?`In attesa della conferma di ${noiIdeaPartnerName()}`:pending==='partner'?`${noiIdeaPartnerName()} dice che l'avete vissuta`:'';
+  }
   const memory=document.getElementById('noiIdeaDetailMemory');
   if(memory)memory.hidden=item.status!=='lived';
   const livedOn=document.getElementById('noiIdeaDetailLivedOn');
@@ -2873,20 +2896,23 @@ function openNoiIdeaCalendarEntry(){
   if(!item?.calendar_entry_id)return;
   window.UsCalendarLinks?.openEntry?.(item.calendar_entry_id);
 }
-// M7D — "L'abbiamo vissuta": idea o scheduled -> lived. Due tocchi, perché
-// lived non torna indietro. Non scrive mai calendar_entry_id (il link al
-// giorno vero resta com'era) né crea un Moment: il ricordo, se c'è, lo
-// aggiunge la coppia con una foto vera dall'azione discreta successiva.
+// M7D — "L'abbiamo vissuta", in due: la prima persona propone, l'altra conferma
+// e solo allora il server porta l'idea a lived (RPC confirm_bucket_item_lived;
+// nessuna scrittura diretta di status/completed). Non tocca calendar_entry_id
+// (il link al giorno vero resta com'era) né crea un Moment: il ricordo, se c'è,
+// lo aggiunge la coppia con una foto vera dall'azione discreta successiva.
 async function markNoiIdeaLived(){
   if(noiIdeaState.busy||!window.usProfile)return;
   const id=noiIdeaState.selectedId;
   const item=id?noiIdeaFindItem(id):null;
-  if(!item||!(item.status==='idea'||item.status==='scheduled'))return;
+  const phase=item?noiIdeaLivedPhase(item):'lived';
+  if(!item||!(phase==='none'||phase==='partner'))return;
   const btn=document.getElementById('noiIdeaDetailLived');
-  if(btn&&btn.dataset.confirm!=='1'){
+  // Chiudere è irreversibile: la conferma finale vale due tocchi.
+  if(phase==='partner'&&btn&&btn.dataset.confirm!=='1'){
     btn.dataset.confirm='1';
-    btn.textContent='Sì, l\'abbiamo vissuta';
-    setTimeout(()=>{if(btn.dataset.confirm==='1'){btn.dataset.confirm='';btn.textContent="L'abbiamo vissuta";}},3000);
+    btn.textContent='Confermo, l\'abbiamo vissuta';
+    setTimeout(()=>{if(btn.dataset.confirm==='1'){btn.dataset.confirm='';btn.textContent="Sì, l'abbiamo vissuta";}},3000);
     return;
   }
   const userId=window.usProfile.id,coupleId=window.usProfile.couple_id,identityGen=noiIdeaIdentityGen;
@@ -2895,22 +2921,28 @@ async function markNoiIdeaLived(){
   if(btn)btn.disabled=true;
   if(statusEl)statusEl.textContent='Salvo…';
   try{
-    const {data:lived,error}=await sb.from('bucket_items').update({status:'lived'}).eq('id',id).eq('couple_id',coupleId).in('status',['idea','scheduled']).select('id,status,calendar_entry_id,completed_at').maybeSingle();
+    const {data:res,error}=await sb.rpc('confirm_bucket_item_lived',{p_item_id:id});
     if(!noiIdeaOperationIsCurrent(userId,coupleId,identityGen))return;
     if(error)throw error;
-    if(!lived){
+    if(!res){
       if(statusEl)statusEl.textContent='È già cambiata: aggiorno la lista.';
       hydrateNoiIdeas();
       return;
     }
-    const current=noiIdeaPatchItem(id,{status:'lived',completed_at:lived.completed_at||new Date().toISOString(),calendar_entry_id:lived.calendar_entry_id??item.calendar_entry_id});
-    noiIdeaState.activeItems=noiIdeaState.activeItems.filter(i=>i.id!==id);
-    if(current&&!noiIdeaState.livedItems.some(i=>i.id===id))noiIdeaState.livedItems.unshift(current);
-    renderNoiIdeaActiveList();
-    renderNoiIdeaLivedList();
     if(statusEl)statusEl.textContent='';
-    renderNoiIdeaDetailState(noiIdeaFindItem(id));
-    toast('Vissuta insieme ♡');
+    if(res.status==='lived'){
+      const current=noiIdeaPatchItem(id,{status:'lived',completed_at:res.completed_at||new Date().toISOString(),calendar_entry_id:res.calendar_entry_id??item.calendar_entry_id,lived_proposed_by:res.lived_proposed_by});
+      noiIdeaState.activeItems=noiIdeaState.activeItems.filter(i=>i.id!==id);
+      if(current&&!noiIdeaState.livedItems.some(i=>i.id===id))noiIdeaState.livedItems.unshift(current);
+      renderNoiIdeaActiveList();
+      renderNoiIdeaLivedList();
+      renderNoiIdeaDetailState(noiIdeaFindItem(id));
+      toast('Vissuta insieme ♡');
+    }else{
+      noiIdeaPatchItem(id,{lived_proposed_by:res.lived_proposed_by});
+      renderNoiIdeaDetailState(noiIdeaFindItem(id));
+      toast(`Ora manca ${noiIdeaPartnerName()} ♡`);
+    }
   }catch(e){
     if(!noiIdeaOperationIsCurrent(userId,coupleId,identityGen))return;
     console.warn(e);
