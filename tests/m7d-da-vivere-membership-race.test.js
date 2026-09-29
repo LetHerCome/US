@@ -19,7 +19,7 @@ function execFileSyncOk(cmd, args) { try { return execFileSync(cmd, args, { stdi
 const skip = CAN_RUN ? false : 'no local PostgreSQL server binaries / postgres OS user / root available';
 
 const uuid = () => crypto.randomUUID();
-const M = ['20260929121350_m7a_da_vivere_bucket_items_domain', '20260929180000_m7c_da_vivere_calendar_unschedule', '20260929200000_m7d_da_vivere_reciprocal_lived']
+const M = ['20260929121350_m7a_da_vivere_bucket_items_domain', '20260929190126_m7c_da_vivere_calendar_unschedule', '20260929190145_m7d_da_vivere_reciprocal_lived']
   .map((n) => `supabase/migrations/${n}.sql`);
 
 const FIXTURE_SQL = `
