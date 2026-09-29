@@ -40,7 +40,9 @@ test('M3 mantiene il runtime Bond esistente come fonte dati senza renderizzare u
 test('M3 non introduce persistence o authority Da vivere nuova', () => {
   const app = read('app.js');
   const html = read('index.html');
+  const noi = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
   assert.doesNotMatch(app, /living_items|shared_experiences|proposals/);
   assert.doesNotMatch(html, /Una cosa semplice da aspettare insieme|Le idee contestuali arriveranno qui|IN PREPARAZIONE/);
-  assert.match(html, /DA VIVERE/);
+  assert.match(html, /<h3 id="noiIdeaTitle">Da vivere<\/h3>/);
+  assert.doesNotMatch(noi.match(/<section class="noi-living-section"[\s\S]*?<\/section>/)?.[0]||'', /da vivere/i);
 });

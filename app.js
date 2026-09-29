@@ -623,6 +623,7 @@ async function initCloud(){
     }
 
     if(!session){
+      resetNoiIdeasForIdentityChange();
       window.usProfile = null;
       window.UsThinkWidget?.clear?.().catch(()=>{});
       document.documentElement.classList.remove('us-returning-device','us-auth-pending');
@@ -641,6 +642,7 @@ async function initCloud(){
     }catch(_e){}
 
     if(cachedProfile){
+      resetNoiIdeasForIdentityChange();
       window.usProfile=cachedProfile;
       selectedRole=cachedProfile.role;
       document.getElementById('authOverlay').classList.add('hidden');
@@ -656,6 +658,7 @@ async function initCloud(){
     const profile=freshProfile||cachedProfile;
 
     if(!profile){
+      resetNoiIdeasForIdentityChange();
       window.usProfile = null;
       window.UsThinkWidget?.clear?.().catch(()=>{});
       document.documentElement.classList.remove('us-returning-device','us-auth-pending');
@@ -674,6 +677,7 @@ async function initCloud(){
       return;
     }
 
+    resetNoiIdeasForIdentityChange();
     window.usProfile = profile;
     window.UsThinkWidget?.authReady?.(profile).catch(error=>console.warn('[US Widget] auth ready',error));
     selectedRole = profile.role;
@@ -2357,6 +2361,7 @@ window.rerollBondQuest=rerollBondQuest;
 // o status='archived' per l'archiviazione esplicita (mai schedulazione/lived qui).
 const NOI_IDEA_LINK_RE=/^https?:\/\//i;
 let noiIdeaRequestGen=0;
+let noiIdeaIdentityGen=0;
 let noiIdeaState={loaded:false,busy:false,error:false,activeItems:[],livedItems:[],showLived:false,selectedId:null,identityKey:null};
 
 function noiIdeaNormalizeLink(raw){
@@ -2409,15 +2414,7 @@ async function hydrateNoiIdeas(){
   // Account/couple switch: wipe the previous profile's in-memory ideas and
   // close any open detail/quick-add BEFORE issuing the new request, so a
   // slow response never leaves the old identity's private data on screen.
-  if(noiIdeaState.identityKey&&noiIdeaState.identityKey!==identityKey){
-    noiIdeaState.loaded=false;
-    noiIdeaState.error=false;
-    noiIdeaState.activeItems=[];
-    noiIdeaState.livedItems=[];
-    noiIdeaState.showLived=false;
-    closeNoiIdeaDetail();
-    toggleNoiIdeaQuickForm(false);
-  }
+  if(noiIdeaState.identityKey&&noiIdeaState.identityKey!==identityKey)resetNoiIdeasForIdentityChange();
   noiIdeaState.identityKey=identityKey;
   const gen=++noiIdeaRequestGen;
   const section=document.querySelector('.noi-idea-section');
@@ -2451,6 +2448,28 @@ async function hydrateNoiIdeas(){
   renderNoiIdeaLivedList();
 }
 window.hydrateNoiIdeas=hydrateNoiIdeas;
+function resetNoiIdeasForIdentityChange(){
+  noiIdeaIdentityGen++;
+  noiIdeaRequestGen++;
+  noiIdeaState={loaded:false,busy:false,error:false,activeItems:[],livedItems:[],showLived:false,selectedId:null,identityKey:null};
+  const active=document.getElementById('noiIdeaList');
+  if(active){active.innerHTML='';active.setAttribute('aria-busy','false');}
+  const lived=document.getElementById('noiIdeaLivedList');
+  if(lived){lived.innerHTML='';lived.hidden=true;}
+  const toggle=document.getElementById('noiIdeaLivedToggle');
+  if(toggle){toggle.hidden=true;toggle.textContent='Idee vissute';toggle.setAttribute('aria-expanded','false');}
+  const section=document.querySelector('.noi-idea-section');
+  if(section)section.hidden=true;
+  closeNoiIdeaDetail();
+  toggleNoiIdeaQuickForm(false);
+  const save=document.getElementById('noiIdeaQuickSave');if(save)save.disabled=false;
+  const detailSave=document.getElementById('noiIdeaDetailSave');if(detailSave)detailSave.disabled=false;
+  const archive=document.getElementById('noiIdeaDetailArchive');
+  if(archive){archive.disabled=false;archive.dataset.confirm='';archive.textContent='Archivia';}
+}
+function noiIdeaOperationIsCurrent(userId,coupleId,identityGen){
+  return noiIdeaIdentityGen===identityGen&&window.usProfile?.id===userId&&window.usProfile?.couple_id===coupleId;
+}
 function noiIdeaFindItem(id){
   return noiIdeaState.activeItems.find(i=>i.id===id)||noiIdeaState.livedItems.find(i=>i.id===id)||null;
 }
@@ -2508,6 +2527,7 @@ async function submitNoiIdeaQuickAdd(event){
   const status=document.getElementById('noiIdeaQuickStatus');
   const title=(document.getElementById('noiIdeaQuickTitle')?.value||'').trim();
   if(!title){if(status)status.textContent='Serve almeno un titolo.';return;}
+  const userId=window.usProfile.id,coupleId=window.usProfile.couple_id,identityGen=noiIdeaIdentityGen;
   const note=(document.getElementById('noiIdeaQuickNote')?.value||'').trim()||null;
   const linkRaw=document.getElementById('noiIdeaQuickLink')?.value||'';
   if(linkRaw.trim()&&!noiIdeaNormalizeLink(linkRaw)){
@@ -2522,10 +2542,11 @@ async function submitNoiIdeaQuickAdd(event){
   try{
     const {data,error}=await sb.from('bucket_items').insert({
       title,note,link_url:link,
-      created_by:window.usProfile.id,
-      couple_id:window.usProfile.couple_id,
+      created_by:userId,
+      couple_id:coupleId,
       status:'idea',completed:false
     }).select('id,title,note,link_url,status,calendar_entry_id,created_at');
+    if(!noiIdeaOperationIsCurrent(userId,coupleId,identityGen))return;
     if(error)throw error;
     const row=Array.isArray(data)&&data[0]?data[0]:null;
     if(row)noiIdeaState.activeItems.unshift(row);
@@ -2533,9 +2554,11 @@ async function submitNoiIdeaQuickAdd(event){
     toggleNoiIdeaQuickForm(false);
     toast('Idea aggiunta');
   }catch(e){
+    if(!noiIdeaOperationIsCurrent(userId,coupleId,identityGen))return;
     console.warn(e);
     if(status)status.textContent='Non riesco a salvarla. Riprova.';
   }finally{
+    if(!noiIdeaOperationIsCurrent(userId,coupleId,identityGen))return;
     noiIdeaState.busy=false;
     if(saveBtn)saveBtn.disabled=false;
   }
@@ -2546,6 +2569,7 @@ async function submitNoiIdeaDetail(event){
   const id=noiIdeaState.selectedId;
   const item=id?noiIdeaFindItem(id):null;
   if(!item)return;
+  const userId=window.usProfile.id,coupleId=window.usProfile.couple_id,identityGen=noiIdeaIdentityGen;
   const statusEl=document.getElementById('noiIdeaDetailStatus');
   const title=(document.getElementById('noiIdeaDetailTitle')?.value||'').trim();
   if(!title){if(statusEl)statusEl.textContent='Serve almeno un titolo.';return;}
@@ -2561,7 +2585,8 @@ async function submitNoiIdeaDetail(event){
   if(saveBtn)saveBtn.disabled=true;
   if(statusEl)statusEl.textContent='Salvo…';
   try{
-    const {data:updated,error}=await sb.from('bucket_items').update({title,note,link_url:link}).eq('id',id).eq('couple_id',window.usProfile.couple_id).select('id').maybeSingle();
+    const {data:updated,error}=await sb.from('bucket_items').update({title,note,link_url:link}).eq('id',id).eq('couple_id',coupleId).select('id').maybeSingle();
+    if(!noiIdeaOperationIsCurrent(userId,coupleId,identityGen))return;
     if(error)throw error;
     if(!updated)throw new Error('bucket_items_update_no_row');
     item.title=title;item.note=note;item.link_url=link;
@@ -2570,9 +2595,11 @@ async function submitNoiIdeaDetail(event){
     toast('Idea aggiornata');
     closeNoiIdeaDetail();
   }catch(e){
+    if(!noiIdeaOperationIsCurrent(userId,coupleId,identityGen))return;
     console.warn(e);
     if(statusEl)statusEl.textContent='Non riesco a salvarla. Riprova.';
   }finally{
+    if(!noiIdeaOperationIsCurrent(userId,coupleId,identityGen))return;
     noiIdeaState.busy=false;
     if(saveBtn)saveBtn.disabled=false;
   }
@@ -2589,12 +2616,14 @@ async function archiveNoiIdea(){
     setTimeout(()=>{if(btn.dataset.confirm==='1'){btn.dataset.confirm='';btn.textContent='Archivia';}},3000);
     return;
   }
+  const userId=window.usProfile.id,coupleId=window.usProfile.couple_id,identityGen=noiIdeaIdentityGen;
   const statusEl=document.getElementById('noiIdeaDetailStatus');
   noiIdeaState.busy=true;
   if(btn)btn.disabled=true;
   if(statusEl)statusEl.textContent='Archivio…';
   try{
-    const {data:archived,error}=await sb.from('bucket_items').update({status:'archived'}).eq('id',id).eq('couple_id',window.usProfile.couple_id).select('id').maybeSingle();
+    const {data:archived,error}=await sb.from('bucket_items').update({status:'archived'}).eq('id',id).eq('couple_id',coupleId).select('id').maybeSingle();
+    if(!noiIdeaOperationIsCurrent(userId,coupleId,identityGen))return;
     if(error)throw error;
     if(!archived)throw new Error('bucket_items_archive_no_row');
     noiIdeaState.activeItems=noiIdeaState.activeItems.filter(i=>i.id!==id);
@@ -2604,9 +2633,11 @@ async function archiveNoiIdea(){
     toast('Idea archiviata');
     closeNoiIdeaDetail();
   }catch(e){
+    if(!noiIdeaOperationIsCurrent(userId,coupleId,identityGen))return;
     console.warn(e);
     if(statusEl)statusEl.textContent='Non riesco ad archiviarla. Riprova.';
   }finally{
+    if(!noiIdeaOperationIsCurrent(userId,coupleId,identityGen))return;
     noiIdeaState.busy=false;
     if(btn){btn.disabled=false;btn.dataset.confirm='';btn.textContent='Archivia';}
   }
