@@ -263,7 +263,13 @@ test('M7B fix: bucket_items ("Da vivere") è la superficie dominante — precede
   // CSS flex ordering makes bucket_items the first and dominant living surface.
   const css = read('styles.css');
   assert.match(css, /\.noi-canonical-page\{[^}]*overflow:hidden/);
-  assert.doesNotMatch(css, /\.noi-idea-section\s*\{[^}]*overflow-y\s*:\s*auto/i, 'Da vivere must never become an internally scrolling vertical list');
+  assert.doesNotMatch(css, /\.noi-idea-section\s*\{[^}]*overflow-y\s*:\s*auto/i, 'the Da vivere section itself never scrolls as a whole');
+  // M7B gate: identity.css forces .noi-canonical-page{height:auto!important},
+  // so the no-scroll height must be re-imposed with a more specific !important
+  // rule whenever Da vivere is visible; only the idea list may scroll in place.
+  assert.match(css, /#bond \.noi-canonical-page:has\(\.noi-idea-section:not\(\[hidden\]\)\)\{height:calc\([^}]*var\(--us-nav-height\)[^}]*\)!important;min-height:0!important;overflow:hidden!important\}/);
+  assert.match(css, /\.noi-idea-browse \.noi-idea-list\{[^}]*overflow-y:auto;[^}]*overscroll-behavior:contain/);
+  assert.match(css, /\.noi-living-list \.bond-quest:not\(:first-child\)\{display:none!important\}/);
   assert.match(css, /\.noi-idea-section\{[^}]*order:4/);
   assert.match(css, /\.noi-living-section\{order:5/);
   assert.match(css, /\.noi-idea-card\{[^}]*color:var\(--text\)/, 'idea titles must retain readable foreground color on the dark card');
@@ -496,4 +502,25 @@ test('M7B fix (identity race b): B in errore non deve mai essere ripopolato dall
   assert.doesNotMatch(h.els.get('noiIdeaList').innerHTML, /lived-a/, 'A\'s stale lived item must never repopulate B\'s active list');
   assert.equal(h.els.get('noiIdeaLivedList').hidden, true, 'A\'s stale response must not reopen B\'s lived list');
   assert.doesNotMatch(h.els.get('noiIdeaLivedList').innerHTML, /lived-a/, 'A\'s stale lived item must never repopulate B\'s lived list');
+});
+
+test('M7B gate (stale edit): una modifica confermata si applica alla riga corrente anche se un hydrate ha sostituito le liste nel frattempo', async () => {
+  const h = buildNoiIdeaHarness();
+  h.window.usProfile = { id: 'u1', couple_id: 'c1' };
+  const first = h.enqueue();
+  const p1 = h.window.hydrateNoiIdeas();
+  first.resolve({ data: [item('a')], error: null });
+  await p1;
+  h.window.openNoiIdeaDetail('a');
+  h.els.get('noiIdeaDetailTitle').value = 'nuovo titolo';
+  const save = h.enqueue();
+  const submit = h.els.get('noiIdeaDetailForm')._listeners.submit({ preventDefault() {} });
+  // A hydrate lands while the update is still in flight: arrays are replaced.
+  const second = h.enqueue();
+  const p2 = h.window.hydrateNoiIdeas();
+  second.resolve({ data: [item('a')], error: null });
+  await p2;
+  save.resolve({ data: { id: 'a' }, error: null });
+  await submit;
+  assert.match(h.els.get('noiIdeaList').innerHTML, /nuovo titolo/);
 });

@@ -2473,6 +2473,14 @@ function noiIdeaOperationIsCurrent(userId,coupleId,identityGen){
 function noiIdeaFindItem(id){
   return noiIdeaState.activeItems.find(i=>i.id===id)||noiIdeaState.livedItems.find(i=>i.id===id)||null;
 }
+// Applies a confirmed write to whatever row object the CURRENT state holds for
+// this id: a hydrate that landed while the write was in flight replaces the
+// arrays, so patching the object captured before the await would be lost.
+function noiIdeaPatchItem(id,patch){
+  const current=noiIdeaFindItem(id);
+  if(current)Object.assign(current,patch);
+  return current;
+}
 function toggleNoiIdeaQuickForm(open){
   const form=document.getElementById('noiIdeaQuickForm');
   const btn=document.getElementById('noiIdeaAddToggle');
@@ -2549,7 +2557,7 @@ async function submitNoiIdeaQuickAdd(event){
     if(!noiIdeaOperationIsCurrent(userId,coupleId,identityGen))return;
     if(error)throw error;
     const row=Array.isArray(data)&&data[0]?data[0]:null;
-    if(row)noiIdeaState.activeItems.unshift(row);
+    if(row&&!noiIdeaFindItem(row.id))noiIdeaState.activeItems.unshift(row);
     renderNoiIdeaActiveList();
     toggleNoiIdeaQuickForm(false);
     toast('Idea aggiunta');
@@ -2589,7 +2597,7 @@ async function submitNoiIdeaDetail(event){
     if(!noiIdeaOperationIsCurrent(userId,coupleId,identityGen))return;
     if(error)throw error;
     if(!updated)throw new Error('bucket_items_update_no_row');
-    item.title=title;item.note=note;item.link_url=link;
+    noiIdeaPatchItem(id,{title,note,link_url:link});
     renderNoiIdeaActiveList();
     renderNoiIdeaLivedList();
     toast('Idea aggiornata');
