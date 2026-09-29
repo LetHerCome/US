@@ -14,9 +14,10 @@ test('M6A migrations exist as fresh forward-only files after the M5 history', ()
   assert.ok(fs.existsSync(path.join(ROOT, MIGRATION)));
   assert.ok(fs.existsSync(path.join(ROOT, CLAIM_ROLE_FIX)));
   const files = fs.readdirSync(path.join(ROOT, 'supabase/migrations')).sort();
-  const lastThree = files.slice(-3);
-  assert.deepEqual(lastThree, [path.basename(MIGRATION), path.basename(CLAIM_ROLE_FIX), '20260928210000_m6d_calendar_reminders.sql'],
-    'M6A migrations stay in order; the newest file is the M6D reminders migration (additive, later milestone)');
+  const idx = files.indexOf(path.basename(MIGRATION));
+  const nextThree = files.slice(idx, idx + 5).slice(0, 3);
+  assert.deepEqual(nextThree, [path.basename(MIGRATION), path.basename(CLAIM_ROLE_FIX), '20260928210000_m6d_calendar_reminders.sql'],
+    'M6A migrations stay in order, immediately followed by the M6D reminders migration (additive, later milestone)');
 });
 
 test('M6A does not touch shared_events or any other existing authority (28: existing data preserved)', () => {
