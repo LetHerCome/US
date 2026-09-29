@@ -576,6 +576,16 @@ console.info('[US] Moments Albums attivo');
     overlay.querySelector('#usMomentComposeMount')?.appendChild(compose);
 
     document.getElementById('usMomentsAdd')?.addEventListener('click', openComposer);
+    // M7D — entry point for the Da vivere "Aggiungi un ricordo" bridge: the
+    // same composer, a suggested note only if the field is still empty. The
+    // couple still picks the photo; nothing is created automatically.
+    window.UsMomentComposer = Object.freeze({
+      open({ caption } = {}) {
+        const input = document.getElementById('momentCaption');
+        if (input && caption && !input.value.trim()) input.value = String(caption).slice(0, 180);
+        openComposer();
+      },
+    });
     document.getElementById('usMomentComposeClose')?.addEventListener('click', closeComposer);
     document.getElementById('usMomentComposeBackdrop')?.addEventListener('click', closeComposer);
 
