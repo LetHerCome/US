@@ -149,8 +149,10 @@ test('M2 isola una failure Events e non trasforma errori o assenza dati in prior
       partnerName: 'Bea',
     },
   });
-  assert.equal(region.hidden, false);
-  assert.match(region.innerHTML, /Risposte pronte/);
+  // M9B: la Domanda del giorno vive nella sua card su Oggi, non nella priority
+  // queue; una failure Events non deve comunque inventare una priorita.
+  assert.equal(region.hidden, true);
+  assert.doesNotMatch(region.innerHTML, /Risposte pronte/);
 
   await api.refresh({ daily: null });
   assert.equal(region.hidden, true);

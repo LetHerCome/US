@@ -1464,7 +1464,7 @@ function dailyTodayPriorityViewModel(source){
   const urgency=Date.parse(`${question.question_date||localDateISO()}T23:59:59`);
   const common={factKey:`daily:${question.id}`,urgency:Number.isFinite(urgency)?urgency:Number.MAX_SAFE_INTEGER,recency:0,action:'today'};
   if(state.both_answered){
-    return {...common,id:`daily-ready:${question.id}`,category:'received_ready',title:'Risposte pronte',detail:'La Domanda del giorno Ã¨ pronta da leggere insieme.',actionLabel:'Scopri le risposte'};
+    return {...common,id:`daily-ready:${question.id}`,category:'received_ready',title:'Risposte pronte',detail:'La Domanda del giorno è pronta da leggere insieme.',actionLabel:'Scopri le risposte'};
   }
   if(state.partner_has_answer&&!state.my_answer){
     const partnerName=source.partnerName||'La tua persona';
@@ -1478,7 +1478,7 @@ function eventTodayPriorityViewModel(source){
   if(!source?.id||!source?.title||!Number.isFinite(days)||days<0||days>2)return null;
   const time=source.event_time?String(source.event_time).slice(0,5):'';
   const when=days===0?'Oggi':days===1?'Domani':'Entro 48 ore';
-  const detail=[when,time,source.location].filter(Boolean).join(' Â· ');
+  const detail=[when,time,source.location].filter(Boolean).join(' · ');
   const urgency=Date.parse(`${source.effective_date}T${time||'23:59'}:00`);
   const recency=Date.parse(source.updated_at||source.created_at||'');
   return {
@@ -1518,18 +1518,48 @@ function thinkTodayPriorityViewModel(){
     actionLabel:'Apri'
   };
 }
+// ===== M9B — Domanda del giorno: il rituale quotidiano su Oggi =====
+// Legge SOLO lo stato canonico di get_daily_state (window.todayState via
+// hydrateToday): nessuna copia locale delle risposte, nessun reveal anticipato.
+// La card apre il foglio esistente (openToday), che resta l'unico flusso.
+function dailyRitualPartnerName(){
+  const partner=partnerFromProfiles(window.usBondProfiles||[]);
+  if(partner?.display_name)return partner.display_name;
+  return window.usProfile?.role==='francesco'?'Beatrice':'Francesco';
+}
+function dailyRitualViewModel(source){
+  const question=source?.question,state=source?.state;
+  if(!question?.id||!question.question||!state)return null;
+  const name=source.partnerName||'La tua persona';
+  const base={questionId:question.id,question:String(question.question)};
+  if(state.both_answered)return {...base,state:'reveal',kicker:'Risposte pronte',status:'Avete risposto entrambi.',cta:'Scopri le risposte'};
+  if(state.my_answer)return {...base,state:'waiting',kicker:'Domanda del giorno',status:`Aspettiamo ${name}`,cta:'Rivedi'};
+  if(state.partner_has_answer)return {...base,state:'invited',kicker:'Domanda del giorno',status:`La risposta di ${name} ti aspetta`,cta:'Rispondi'};
+  return {...base,state:'answer',kicker:'Domanda del giorno',status:'Rispondete entrambi, poi scopritevi.',cta:'Rispondi'};
+}
+function renderDailyRitual(model){
+  const card=document.getElementById('usDailyRitual');
+  if(!card)return;
+  if(!model){card.hidden=true;card.innerHTML='';card.removeAttribute('data-state');return;}
+  card.dataset.state=model.state;
+  card.setAttribute('aria-label',`${model.kicker}: ${model.question}. ${model.status}. ${model.cta}`);
+  card.innerHTML=`<span class="us-daily-ritual-head"><span class="us-daily-ritual-mark us-phosphor-question" aria-hidden="true"></span><span class="us-daily-ritual-kicker">${escapeHtml(model.kicker)}</span></span><span class="us-daily-ritual-question">${escapeHtml(model.question)}</span><span class="us-daily-ritual-foot"><span class="us-daily-ritual-status">${escapeHtml(model.status)}</span><span class="us-daily-ritual-cta">${escapeHtml(model.cta)}</span></span>`;
+  card.hidden=false;
+}
+window.UsDailyRitual=Object.freeze({viewModel:dailyRitualViewModel,render:renderDailyRitual});
 async function refreshTodayPriorities({daily}={}){
   const refreshId=++usTodayPriorityRefreshId;
   const dailySource=daily===undefined&&window.todayQuestion?{
     question:window.todayQuestion,
     state:window.todayState,
-    partnerName:window.usProfile?.role==='francesco'?'Bea':'Francesco'
+    partnerName:dailyRitualPartnerName()
   }:daily;
   const candidates=[];
   const thinkPriority=thinkTodayPriorityViewModel();
   if(thinkPriority)candidates.push(thinkPriority);
-  const dailyPriority=dailyTodayPriorityViewModel(dailySource);
-  if(dailyPriority)candidates.push(dailyPriority);
+  // M9B: la Domanda del giorno ha la sua card su Oggi (renderDailyRitual):
+  // non entra più nella coda priority, così non compare due volte.
+  renderDailyRitual(dailyRitualViewModel(dailySource));
   try{
     const eventSource=await window.getTodayEventPrioritySource?.();
     const eventPriority=eventTodayPriorityViewModel(eventSource);
@@ -1793,7 +1823,7 @@ async function hydrateToday(){
   window.UsTodayPriority?.refresh?.({daily:{
     question:q,
     state,
-    partnerName:window.usProfile.role==='francesco'?'Bea':'Francesco'
+    partnerName:dailyRitualPartnerName()
   }});
 }
 
