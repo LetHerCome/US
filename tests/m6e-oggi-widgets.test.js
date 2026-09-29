@@ -253,6 +253,14 @@ test('M6E (13): styles fade the exact three hero widgets under Focus Photo, and 
   assert.match(css, /@media\(prefers-reduced-motion:reduce\)\{[^}]*us-oggi[^}]*transition:none/s);
 });
 
+test('M6E polish: mobile Oggi widget sits just below the safe-area-aware top bar without changing desktop positioning', () => {
+  const css = read('styles.css');
+  assert.match(css, /\.us-oggi-widgets\{[^}]*top:calc\(var\(--us-top-chrome-clearance\) \+ 64px\)/);
+  const mobile = css.match(/@media\(max-width:600px\)\{[^}]*\.us-oggi-widgets\{[^}]*\}\}/)?.[0] || '';
+  assert.match(mobile, /top:calc\(var\(--us-top-chrome-height\) \+ 20px\)/);
+  assert.match(read('ui-foundation.css'), /--us-safe-top:var\(--safe-area-inset-top,env\(safe-area-inset-top,0px\)\)/);
+});
+
 // ---------------------------------------------------------------------------
 // P2 accuracy fixes: never advertise a person's already-ended event, and never
 // advertise a shared free window (or part of one) that has already elapsed.

@@ -280,6 +280,8 @@ body.viewer-open{overflow:hidden}
 
 /* M6E — Oggi calendar widget + Focus Photo fade. */
 .us-oggi-widgets{position:absolute!important;z-index:3!important;top:calc(var(--us-top-chrome-clearance) + 64px);left:14px;right:14px;display:flex;flex-direction:column;gap:8px;transition:opacity .22s var(--apple-ease)}
+/* The app and top bar already share the safe-top inset; relative to the hero, it cancels. */
+@media(max-width:600px){.us-oggi-widgets{top:calc(var(--us-top-chrome-height) + 20px)}}
 .us-oggi-widgets[hidden]{display:none!important}
 .us-oggi-card{min-height:44px;width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:18px;border:1px solid rgba(255,255,255,.14);background:rgba(10,12,17,.46);backdrop-filter:blur(18px) saturate(150%);-webkit-backdrop-filter:blur(18px) saturate(150%);color:#fff;text-align:left;box-shadow:0 10px 30px rgba(0,0,0,.18)}
 .us-oggi-card.is-loading{opacity:.5}
