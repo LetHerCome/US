@@ -6,8 +6,8 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 
-const MIGRATION = 'supabase/migrations/20260929090000_m7a_da_vivere_bucket_items_domain.sql';
-const CLAIM_ROLE_FIX = 'supabase/migrations/20260929090100_m7a_claim_us_role_bucket_items_transfer.sql';
+const MIGRATION = 'supabase/migrations/20260929121350_m7a_da_vivere_bucket_items_domain.sql';
+const CLAIM_ROLE_FIX = 'supabase/migrations/20260929121430_m7a_claim_us_role_bucket_items_transfer.sql';
 const stripComments = (sql) => sql.replace(/--[^\n]*/g, '');
 
 test('M7A migrations exist as fresh forward-only files after the M6 history', () => {
