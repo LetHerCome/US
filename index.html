@@ -19,7 +19,7 @@
 <link rel="stylesheet" href="/ui-foundation.css"/>
 <link rel="stylesheet" href="/fix4.css?v=fix4-20260820-1"/>
 <link rel="stylesheet" href="/events.css?v=us-events-1" media="print" onload="this.media='all'"/>
-<link rel="stylesheet" href="/moments-albums.css?v=us-m5j-conservati-20260925-1" media="print" onload="this.media='all'"/>
+<link rel="stylesheet" href="/moments-albums.css?v=us-m8a-ricordi-1" media="print" onload="this.media='all'"/>
 <link rel="stylesheet" href="/games.css?v=us-couple-loop-1" media="print" onload="this.media='all'"/>
 <link rel="stylesheet" href="/settings.css?v=us-motion-pass-1"/>
 <link rel="stylesheet" href="/identity.css?v=us-identity2"/>
@@ -210,7 +210,8 @@ html.us-returning-device .auth-overlay{
 
   <main id="moments" class="page">
     <section class="section" style="margin-top:6px">
-      <h2>Moments</h2>
+      <h2>Ricordi</h2>
+      <section class="ricordi-rivivi" id="ricordiRivivi" aria-label="Rivivi" hidden></section>
       <button type="button" class="us-conservati-entry" id="conservatiEntry" onclick="openConservati()" aria-label="Apri Conservati">
         <span class="us-conservati-entry-mark" aria-hidden="true">✦</span>
         <span class="us-conservati-entry-copy"><b>Conservati</b><small>Piccole cose che avete deciso di non perdere.</small></span>
@@ -229,7 +230,9 @@ html.us-returning-device .auth-overlay{
           <div class="moment-private">⌁ Solo voi due potete vederlo</div>
         </div>
       </div>
-      <div id="momentsGrid" class="moment-grid" aria-live="polite"><div class="empty-state moment-loading" aria-busy="true"><div class="emoji">↻</div><b>Carico i vostri ricordi…</b></div></div>
+      <div class="ricordi-section-head ricordi-story-head"><div class="ricordi-kicker">LA VOSTRA STORIA</div><h3>Mese per mese</h3></div>
+      <div id="momentsGrid" class="moment-grid ricordi-story" aria-live="polite"><div class="empty-state moment-loading" aria-busy="true"><div class="emoji">↻</div><b>Carico i vostri ricordi…</b></div></div>
+      <section class="ricordi-chapters" id="ricordiChapters" aria-label="Capitoli" hidden></section>
     </section>
   </main>
 
@@ -769,7 +772,7 @@ html.us-returning-device .auth-overlay{
 <script defer src="/settings.js?v=us-scriptable-widgets-v1b-20260924-1"></script>
 <script defer src="/identity.js?v=us-identity1"></script>
 <script defer src="/polish4.js?v=us-final-polish-motion31-1"></script>
-<script defer src="/moments-albums.js?v=us-m7d-lived-bridge-1"></script>
+<script defer src="/moments-albums.js?v=us-m8a-ricordi-1"></script>
 <script defer src="/calendar-domain.js?v=us-m6c1-duration-1"></script>
 <script defer src="/calendar.js?v=us-m7c-da-vivere-1"></script>
 <script defer src="/navigation.js?v=us-fastboot-back-1"></script>

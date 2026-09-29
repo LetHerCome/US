@@ -1969,34 +1969,181 @@ async function uploadMoment(){
 }
 window.uploadMoment=uploadMoment;
 
+// ===== M8A — Ricordi living archive =====
+// Ricordi da album a storia viva, SOLO da dati reali e dalle loro fonti:
+// moments (+ moment_photos via albums) e le esperienze Da vivere vissute
+// (bucket_items status=lived, sola lettura, mai copiate). Nessuna tabella,
+// nessun ranking, nessun testo generato: Rivivi riemerge un ricordo vero,
+// La vostra storia è cronologica, Capitoli raggruppa per anno.
+const RICORDI_MONTHS=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+function ricordiDayDiff(aISO,bISO){
+  const a=Date.UTC(...aISO.split('-').map((v,i)=>i===1?Number(v)-1:Number(v)));
+  const b=Date.UTC(...bISO.split('-').map((v,i)=>i===1?Number(v)-1:Number(v)));
+  return Math.round((a-b)/86400000);
+}
+function ricordiLocalISO(instant){
+  const d=new Date(instant);
+  if(Number.isNaN(d.getTime()))return null;
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+// Timeline unificata, più recente prima; ogni voce porta tipo e provenienza.
+function ricordiTimeline(moments,lived){
+  const items=[];
+  for(const row of moments||[])if(row?.moment_date)items.push({kind:'moment',date:row.moment_date,at:row.created_at||'',row});
+  for(const row of lived||[]){const date=ricordiLocalISO(row?.completed_at);if(date)items.push({kind:'experience',date,at:row.completed_at,row});}
+  return items.sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(a.at<b.at?1:a.at>b.at?-1:0));
+}
+function ricordiPeriodKey(dateISO){return dateISO.slice(0,7);}
+function ricordiPeriodLabel(dateISO){const [y,m]=dateISO.split('-');return {month:RICORDI_MONTHS[Number(m)-1]||'',year:y};}
+// Rivivi: prima un anniversario vero (stesso periodo dell'anno, ±3 giorni,
+// in un anno passato), altrimenti un ricordo di almeno 30 giorni fa scelto in
+// modo stabile per la giornata. Niente di recente, niente riempitivi.
+function ricordiPickRivivi(moments,todayISO){
+  const rows=(moments||[]).filter(r=>r?.moment_date&&r.moment_date<todayISO);
+  if(!rows.length)return null;
+  const [ty]=todayISO.split('-').map(Number);
+  let best=null;
+  for(const r of rows){
+    const years=ty-Number(r.moment_date.slice(0,4));
+    if(years<1)continue;
+    const sameYearDay=`${ty}${r.moment_date.slice(4)}`;
+    const off=Math.abs(ricordiDayDiff(sameYearDay,todayISO));
+    if(off<=3&&(!best||off<best.off||(off===best.off&&years<best.years)))best={row:r,off,years};
+  }
+  if(best)return {row:best.row,reason:'anniversary',label:best.years===1?'Un anno fa, in questi giorni':`${best.years} anni fa, in questi giorni`};
+  const older=rows.filter(r=>ricordiDayDiff(todayISO,r.moment_date)>=30).sort((a,b)=>a.moment_date<b.moment_date?-1:1);
+  if(!older.length)return null;
+  const seed=Number(todayISO.replaceAll('-',''))||0;
+  const row=older[seed%older.length];
+  const days=ricordiDayDiff(todayISO,row.moment_date);
+  const months=Math.floor(days/30.44);
+  const label=days>=365?(Math.floor(days/365)===1?'Un anno fa':`${Math.floor(days/365)} anni fa`):(months<=1?'Un mese fa':`${months} mesi fa`);
+  return {row,reason:'resurface',label};
+}
+// Capitoli: raccolte secondarie per anno, con la copertina più recente.
+function ricordiChapters(timeline){
+  const byYear=new Map();
+  for(const item of timeline){
+    const year=item.date.slice(0,4);
+    if(!byYear.has(year))byYear.set(year,{year,count:0,moments:0,experiences:0,cover:null});
+    const ch=byYear.get(year);
+    ch.count++;
+    if(item.kind==='moment'){ch.moments++;if(!ch.cover)ch.cover=item.row;}else ch.experiences++;
+  }
+  return [...byYear.values()];
+}
+window.UsRicordiArchive=Object.freeze({timeline:ricordiTimeline,pickRivivi:ricordiPickRivivi,chapters:ricordiChapters,periodLabel:ricordiPeriodLabel});
+
+function ricordiMomentCard(row,signedUrl,author,own,feature){
+  const dateLabel=new Date(row.moment_date+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
+  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-moment-iso="${escapeHtml(row.moment_date)}" data-url="${escapeHtml(signedUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(row.caption||'')}" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(signedUrl)}" alt="Ricordo condiviso" loading="lazy">${own?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}','${escapeHtml(row.storage_path)}')"><span class="us-overflow-icon" aria-hidden="true"><svg viewBox="0 0 18 6"><circle cx="3" cy="3" r="2"/><circle cx="9" cy="3" r="2"/><circle cx="15" cy="3" r="2"/></svg></span></button>`:''}<div class="moment-meta"><div class="moment-by">${escapeHtml(author||'Noi')}</div><b>${dateLabel}</b>${row.caption?`<p>${escapeHtml(row.caption)}</p>`:''}</div></article>`;
+}
+function ricordiExperienceCard(row){
+  const d=new Date(row.completed_at);
+  const day=d.toLocaleDateString('it-IT',{day:'numeric',month:'long'});
+  return `<button type="button" class="ricordi-experience" data-ricordi-experience="${escapeHtml(row.id)}"><span class="ricordi-experience-mark" aria-hidden="true">✓</span><span class="ricordi-experience-copy"><small>Vissuta insieme · ${escapeHtml(day)}</small><b>${escapeHtml(row.title)}</b></span><span class="ricordi-experience-source">Da vivere</span></button>`;
+}
+function renderRicordiRivivi(pick,signedUrls,names){
+  const root=document.getElementById('ricordiRivivi');
+  if(!root)return;
+  const url=pick?signedUrls.get(pick.row.storage_path):null;
+  if(!pick||!url){root.hidden=true;root.innerHTML='';return;}
+  const date=new Date(pick.row.moment_date+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'});
+  root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><button type="button" class="ricordi-rivivi-card" data-ricordi-open="${escapeHtml(pick.row.id)}" aria-label="Rivivi: ${escapeHtml(pick.row.caption||date)}"><img src="${escapeHtml(url)}" alt="" loading="lazy"><span class="ricordi-rivivi-copy"><small>${escapeHtml(pick.label)}</small><b>${escapeHtml(pick.row.caption||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(names.get(pick.row.created_by)||'Noi')}</span></span></button>`;
+  root.hidden=false;
+}
+function renderRicordiChapters(chapters,signedUrls){
+  const root=document.getElementById('ricordiChapters');
+  if(!root)return;
+  if(!chapters.length){root.hidden=true;root.innerHTML='';return;}
+  root.innerHTML=`<div class="ricordi-section-head"><div class="ricordi-kicker">CAPITOLI</div><h3>Per anno</h3></div><div class="ricordi-chapter-row">${chapters.map(ch=>{
+    const url=ch.cover?signedUrls.get(ch.cover.storage_path):null;
+    const parts=[ch.moments?`${ch.moments} ${ch.moments===1?'ricordo':'ricordi'}`:'',ch.experiences?`${ch.experiences} ${ch.experiences===1?'esperienza':'esperienze'}`:''].filter(Boolean).join(' · ');
+    return `<button type="button" class="ricordi-chapter" data-ricordi-year="${escapeHtml(ch.year)}">${url?`<img src="${escapeHtml(url)}" alt="" loading="lazy">`:''}<span><b>${escapeHtml(ch.year)}</b><small>${escapeHtml(parts)}</small></span></button>`;
+  }).join('')}</div>`;
+  root.hidden=false;
+}
+function openRicordiExperience(id){
+  go('bond',{nav:true});
+  Promise.resolve(window.hydrateNoiIdeas?.()).then(()=>window.openNoiIdeaDetail?.(id)).catch(()=>{});
+}
+document.getElementById('moments')?.addEventListener('click',event=>{
+  const rivivi=event.target.closest('[data-ricordi-open]');
+  if(rivivi){
+    const card=[...document.querySelectorAll('#momentsGrid .moment-card[data-moment-id]')].find(c=>c.dataset.momentId===rivivi.dataset.ricordiOpen);
+    if(card)openMomentViewer(card);
+    return;
+  }
+  const experience=event.target.closest('[data-ricordi-experience]');
+  if(experience){openRicordiExperience(experience.dataset.ricordiExperience);return;}
+  const chapter=event.target.closest('[data-ricordi-year]');
+  if(chapter){
+    const target=document.querySelector(`#momentsGrid .ricordi-period[data-year="${chapter.dataset.ricordiYear}"]`);
+    target?.scrollIntoView({behavior:window.UsUiFoundation?.isReducedMotion?.()?'auto':'smooth',block:'start'});
+  }
+});
+
 async function hydrateMomentsCore(){
   if(!window.usProfile)return;
   const grid=document.getElementById('momentsGrid');
   const pill=document.getElementById('momentsStatusPill');
   if(!grid)return;
+  const profile=window.usProfile;
   if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">↻</div><b>Carico i vostri ricordi…</b></div>';
-  const [{data:rows,error},{data:profiles,error:profilesError}]=await Promise.all([
+  const [{data:rows,error},{data:profiles,error:profilesError},{data:lived,error:livedError}]=await Promise.all([
     sb.from('moments').select('id,created_by,storage_path,caption,moment_date,created_at').order('moment_date',{ascending:false}).order('created_at',{ascending:false}),
-    sb.from('profiles').select('id,display_name').eq('couple_id',window.usProfile.couple_id)
+    sb.from('profiles').select('id,display_name').eq('couple_id',profile.couple_id),
+    sb.from('bucket_items').select('id,title,completed_at').eq('couple_id',profile.couple_id).eq('status','lived')
   ]);
-  if(error){console.warn(error);if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">!</div><b>Moments non disponibile</b><p>Riprova tra un momento.</p></div>';return;}
+  if(window.usProfile!==profile)return;
+  if(error){console.warn(error);if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">!</div><b>Ricordi non disponibili</b><p>Riprova tra un momento.</p></div>';return;}
   if(profilesError)console.warn(profilesError);
+  // Le esperienze vissute sono un arricchimento: se non si leggono, la storia
+  // resta quella dei Moments, mai un errore dell'intera pagina.
+  if(livedError)console.warn(livedError);
+  const livedRows=livedError?[]:(lived||[]);
   if(pill)pill.textContent='📸 Moments · '+(rows?.length||0);
-  const signature=JSON.stringify((rows||[]).map(r=>[r.id,r.created_by,r.storage_path,r.caption||'',r.moment_date,r.created_at]));
+  const today=localDateISO();
+  const signature=JSON.stringify([today,(rows||[]).map(r=>[r.id,r.created_by,r.storage_path,r.caption||'',r.moment_date,r.created_at]),livedRows.map(r=>[r.id,r.title,r.completed_at])]);
   if(grid.dataset.loaded==='1'&&grid.dataset.signature===signature)return;
-  if(!rows?.length){grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">📸</div><b>Il primo ricordo parte da qui.</b><p>Scegli una foto: la data verrà letta automaticamente.</p></div>';grid.dataset.loaded='1';grid.dataset.signature=signature;return;}
-  const names=new Map((profiles||[]).map(profile=>[profile.id,profile.display_name||'Noi']));
-  const signedUrls=await usGetSignedUrls((rows||[]).map(row=>row.storage_path),21600);
-  const cards=[];
-  for(const row of rows){
-    const signedUrl=signedUrls.get(row.storage_path);
-    if(!signedUrl)continue;
-    const dateLabel=new Date(row.moment_date+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
-    const own=row.created_by===window.usProfile.id;
-    const author=names.get(row.created_by)||(own?window.usProfile.display_name:'Noi');
-    cards.push(`<article class="moment-card moment-postit" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-url="${escapeHtml(signedUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(row.caption||'')}" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(signedUrl)}" alt="Ricordo condiviso" loading="lazy">${own?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}','${escapeHtml(row.storage_path)}')"><span class="us-overflow-icon" aria-hidden="true"><svg viewBox="0 0 18 6"><circle cx="3" cy="3" r="2"/><circle cx="9" cy="3" r="2"/><circle cx="15" cy="3" r="2"/></svg></span></button>`:''}<div class="moment-meta"><div class="moment-by">${escapeHtml(author||'Noi')}</div><b>${dateLabel}</b>${row.caption?`<p>${escapeHtml(row.caption)}</p>`:''}</div></article>`);
+  if(!rows?.length&&!livedRows.length){
+    grid.innerHTML='<div class="empty-state moment-loading ricordi-empty"><b>La vostra storia parte dal primo ricordo.</b><p>Scegli una foto: la data verrà letta automaticamente.</p></div>';
+    renderRicordiRivivi(null,new Map(),new Map());
+    renderRicordiChapters([],new Map());
+    grid.dataset.loaded='1';grid.dataset.signature=signature;return;
   }
-  if(cards.length){grid.innerHTML=cards.join('');grid.dataset.loaded='1';grid.dataset.signature=signature;}
+  const names=new Map((profiles||[]).map(p=>[p.id,p.display_name||'Noi']));
+  const signedUrls=await usGetSignedUrls((rows||[]).map(row=>row.storage_path),21600);
+  if(window.usProfile!==profile)return;
+  const timeline=ricordiTimeline((rows||[]).filter(r=>signedUrls.get(r.storage_path)),livedRows);
+  const html=[];
+  let period='';
+  // Ritmo editoriale: la prima foto del mese è a tutta larghezza, le altre in
+  // coppia; una foto rimasta sola prima di una voce larga si allarga anch'essa.
+  let loneHalf=-1;
+  const closeRow=()=>{if(loneHalf>=0){html[loneHalf]=html[loneHalf].replace('class="moment-card moment-postit"','class="moment-card moment-postit ricordi-wide"');loneHalf=-1;}};
+  for(const item of timeline){
+    const key=ricordiPeriodKey(item.date);
+    const opensPeriod=key!==period;
+    if(opensPeriod){
+      closeRow();
+      period=key;
+      const {month,year}=ricordiPeriodLabel(item.date);
+      html.push(`<div class="ricordi-period" data-period="${key}" data-year="${year}"><b>${month}</b><span>${year}</span></div>`);
+    }
+    if(item.kind==='experience'){closeRow();html.push(ricordiExperienceCard(item.row));continue;}
+    const row=item.row;
+    const own=row.created_by===profile.id;
+    const author=names.get(row.created_by)||(own?profile.display_name:'Noi');
+    html.push(ricordiMomentCard(row,signedUrls.get(row.storage_path),author,own,opensPeriod));
+    if(!opensPeriod)loneHalf=loneHalf>=0?-1:html.length-1;
+  }
+  closeRow();
+  if(timeline.length){
+    grid.innerHTML=html.join('');grid.dataset.loaded='1';grid.dataset.signature=signature;
+    renderRicordiRivivi(ricordiPickRivivi(rows||[],today),signedUrls,names);
+    renderRicordiChapters(ricordiChapters(timeline),signedUrls);
+  }
   else if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">!</div><b>Foto non disponibili</b><p>Riprova tra un momento.</p></div>';
 }
 let momentsHydrateInFlight=null;

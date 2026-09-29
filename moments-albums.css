@@ -735,3 +735,77 @@ body.us-keyboard-open .us-album-floating-add,
 .conservati-loading[hidden],.conservati-empty[hidden],.conservati-error[hidden],.conservati-list[hidden],.conservati-detail[hidden]{display:none!important}
 @media(max-width:360px){.conservati-head{padding-inline:15px}.conservati-body{padding-inline:14px}.conservati-card-kind{max-width:64px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
 @media(prefers-reduced-motion:reduce){.us-conservati-entry:active{transform:none}}
+
+/* ============================================================
+   M8A · Ricordi living archive
+   Dark / plum / liquid glass, fotografia prima di tutto: niente carta
+   beige, niente griglia da file manager. Selettori con #moments
+   .ricordi-story / #usAlbumOverlay per prevalere sui layer legacy
+   (identity.css, M5 photo journal) senza toccarli.
+   ============================================================ */
+#moments .ricordi-kicker{font-size:9px;font-weight:900;letter-spacing:.16em;color:var(--pink2,#ff8eaa);text-transform:uppercase}
+#moments .ricordi-section-head{margin:26px 2px 12px}
+#moments .ricordi-section-head h3{margin:4px 0 0;font-family:Georgia,serif;font-weight:500;font-size:21px;letter-spacing:-.2px;color:var(--text,#f6f7fb)}
+#moments .ricordi-rivivi{margin:4px 0 14px}
+#moments .ricordi-rivivi[hidden],#moments .ricordi-chapters[hidden]{display:none}
+#moments .ricordi-rivivi .ricordi-kicker{margin:0 2px 8px}
+#moments .ricordi-rivivi-card{position:relative;display:block;width:100%;padding:0;border:1px solid rgba(255,255,255,.10);border-radius:26px;overflow:hidden;background:#120e18;text-align:left;box-shadow:0 24px 60px rgba(0,0,0,.42),0 0 0 1px rgba(169,133,255,.06) inset;transition:transform .2s var(--apple-ease,ease)}
+#moments .ricordi-rivivi-card:active{transform:scale(.99)}
+#moments .ricordi-rivivi-card img{display:block;width:100%;aspect-ratio:4/5;max-height:min(46vh,440px);object-fit:cover}
+#moments .ricordi-rivivi-card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,6,16,0) 38%,rgba(22,10,30,.55) 64%,rgba(12,7,18,.94) 100%);pointer-events:none}
+#moments .ricordi-rivivi-copy{position:absolute;left:18px;right:18px;bottom:18px;z-index:1;display:flex;flex-direction:column;gap:5px;color:#fff}
+#moments .ricordi-rivivi-copy small{font-size:11px;font-weight:700;letter-spacing:.02em;color:#ffc3d3}
+#moments .ricordi-rivivi-copy b{font-family:Georgia,serif;font-weight:500;font-size:27px;line-height:1.08;letter-spacing:-.4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#moments .ricordi-rivivi-copy span{font-size:11.5px;color:rgba(255,255,255,.66)}
+
+/* La vostra storia: timeline per mese, prima foto del mese a tutta larghezza. */
+#moments .ricordi-story-head{margin-top:24px}
+#moments .moment-grid.ricordi-story{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;align-items:start!important}
+#moments .ricordi-story .ricordi-period{grid-column:1/-1;display:flex;align-items:baseline;gap:8px;margin:14px 2px 0;padding-top:14px;border-top:1px solid rgba(255,255,255,.07)}
+#moments .ricordi-story .ricordi-period:first-child{margin-top:0;padding-top:0;border-top:0}
+#moments .ricordi-story .ricordi-period b{font-family:Georgia,serif;font-weight:500;font-size:19px;color:var(--text,#f6f7fb)}
+#moments .ricordi-story .ricordi-period span{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--muted,#9ba3b4)}
+#moments .ricordi-story .moment-card.moment-postit{height:auto!important;padding:0!important;border-radius:20px!important;background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.015)),rgba(24,18,32,.88)!important;background-color:rgba(24,18,32,.88)!important;border:1px solid rgba(255,255,255,.09)!important;box-shadow:0 16px 36px rgba(0,0,0,.30)!important;transform:none!important;overflow:hidden!important;color:var(--text,#f6f7fb)!important}
+#moments .ricordi-story .moment-card.moment-postit img{aspect-ratio:4/5!important;border-radius:0!important;margin:0!important;width:100%!important}
+#moments .ricordi-story .moment-card.moment-postit.ricordi-feature,#moments .ricordi-story .moment-card.moment-postit.ricordi-wide{grid-column:1/-1}
+#moments .ricordi-story .moment-card.moment-postit.ricordi-wide img{aspect-ratio:16/11!important}
+#moments .ricordi-story .moment-card.moment-postit.ricordi-feature img{aspect-ratio:16/11!important}
+#moments .ricordi-story .moment-card.moment-postit .moment-meta{min-height:0!important;padding:10px 12px 13px!important;background:transparent!important}
+#moments .ricordi-story .moment-card.moment-postit .moment-by{font-size:9px!important;font-weight:800!important;letter-spacing:.12em!important;color:#d8c6ff!important;text-transform:uppercase}
+#moments .ricordi-story .moment-card.moment-postit .moment-meta b{font-family:Georgia,serif!important;font-weight:500!important;font-size:15px!important;color:var(--text,#f6f7fb)!important;margin-top:3px}
+#moments .ricordi-story .moment-card.moment-postit .moment-meta p{color:rgba(246,247,251,.72)!important;font-size:12px!important;margin-top:4px!important}
+#moments .ricordi-story .moment-card.moment-postit.ricordi-feature .moment-meta b{font-size:18px!important}
+#moments .ricordi-story .moment-card.moment-postit .moment-delete{background:transparent!important;border:0!important;box-shadow:none!important}
+#moments .ricordi-story .moment-card .moment-album-count{background:rgba(12,8,18,.6)!important;color:#fff!important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+#moments .ricordi-story .ricordi-experience{grid-column:1/-1;display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;border-radius:20px;border:1px solid rgba(255,142,170,.16);background:radial-gradient(circle at 0% 0%,rgba(255,102,142,.16),transparent 55%),linear-gradient(145deg,rgba(169,133,255,.10),rgba(255,255,255,.02)),rgba(22,16,30,.9);color:var(--text,#f6f7fb);text-align:left}
+#moments .ricordi-experience-mark{flex:0 0 32px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#ffc3d3;font-size:13px}
+#moments .ricordi-experience-copy{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:3px}
+#moments .ricordi-experience-copy small{font-size:10.5px;color:var(--muted,#9ba3b4)}
+#moments .ricordi-experience-copy b{font-family:Georgia,serif;font-weight:500;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#moments .ricordi-experience-source{flex:0 0 auto;font-size:10px;font-style:italic;color:var(--muted,#9ba3b4)}
+#moments .ricordi-empty b{font-family:Georgia,serif;font-weight:500}
+
+/* Capitoli: raccolte secondarie, una riga orizzontale discreta. */
+#moments .ricordi-chapters .ricordi-section-head{margin-top:30px}
+#moments .ricordi-chapter-row{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 2px 6px;scrollbar-width:none;overscroll-behavior-x:contain}
+#moments .ricordi-chapter-row::-webkit-scrollbar{display:none}
+#moments .ricordi-chapter{position:relative;flex:0 0 156px;height:172px;padding:0;border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,.10);background:linear-gradient(160deg,rgba(169,133,255,.20),rgba(255,102,142,.10)),#15101d;scroll-snap-align:start;text-align:left;color:#fff}
+#moments .ricordi-chapter img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.78}
+#moments .ricordi-chapter::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,rgba(12,7,18,.9));pointer-events:none}
+#moments .ricordi-chapter span{position:absolute;z-index:1;left:12px;right:12px;bottom:11px;display:flex;flex-direction:column;gap:2px}
+#moments .ricordi-chapter b{font-family:Georgia,serif;font-weight:500;font-size:24px}
+#moments .ricordi-chapter small{font-size:10.5px;color:rgba(255,255,255,.72)}
+@media(min-width:720px){#moments .ricordi-rivivi-card img{aspect-ratio:16/10}}
+
+/* Moment detail immersivo. */
+#usAlbumOverlay .us-album-story{padding:18px 22px 22px}
+#usAlbumOverlay .us-album-provenance{display:block;font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#d8c6ff}
+#usAlbumOverlay .us-album-title{margin:6px 0 0;font-family:Georgia,serif;font-weight:500;font-size:29px;line-height:1.1;letter-spacing:-.5px;color:#fff}
+#usAlbumOverlay .us-album-byline{margin:8px 0 0;font-size:12.5px;color:rgba(246,247,251,.66)}
+#usAlbumOverlay .us-album-caption-postit{display:none!important}
+#usAlbumOverlay .us-album-meta-line{opacity:.9}
+#usAlbumOverlay .us-album-photo-card{background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.015)),rgba(24,18,32,.9)!important;background-color:rgba(24,18,32,.9)!important;border:1px solid rgba(255,255,255,.09)!important;border-radius:18px!important;padding:0!important;overflow:hidden!important;transform:none!important;color:var(--text,#f6f7fb)!important}
+#usAlbumOverlay .us-album-photo-card img{border-radius:0!important;margin:0!important}
+#usAlbumOverlay .us-album-photo-copy{padding:9px 11px 11px!important}
+#usAlbumOverlay .us-album-photo-copy p{color:rgba(246,247,251,.8)!important}
+#usAlbumOverlay .us-album-photo-copy small{color:var(--muted,#9ba3b4)!important}

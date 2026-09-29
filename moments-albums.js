@@ -34,6 +34,11 @@ function ensureUi(){
             <div class="us-album-meta-line"><b id="usAlbumDate"></b><span id="usAlbumCount">1 foto</span></div>
             <div class="us-album-caption-postit" id="usAlbumCoverNote" hidden><p id="usAlbumCoverCaption"></p><small id="usAlbumCoverAuthor"></small></div>
           </div>
+          <header class="us-album-story" id="usAlbumStory">
+            <small class="us-album-provenance" id="usAlbumProvenance"></small>
+            <h2 class="us-album-title" id="usAlbumTitle"></h2>
+            <p class="us-album-byline" id="usAlbumByline"></p>
+          </header>
           <section class="us-album-section">
             <div class="us-album-section-head">
               <div><div class="tiny">DENTRO QUESTO MOMENTO</div><h3>Le vostre foto</h3></div>
@@ -226,8 +231,27 @@ async function loadAlbum(momentId){
   renderAlbum();
 }
 
+// M8A — dettaglio immersivo: data lunga, titolo (la nota, o il giorno),
+// autori reali (chi l'ha creato + chi ha aggiunto foto) e provenienza.
+function albumLongDate(){
+  const iso=currentAlbum?.iso;
+  const d=iso?new Date(iso+'T12:00:00'):null;
+  return d&&!Number.isNaN(d.getTime())?d.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):(currentAlbum?.date||'');
+}
+function renderAlbumStory(){
+  if(!currentAlbum)return;
+  const longDate=albumLongDate();
+  const provenance=document.getElementById('usAlbumProvenance');
+  const title=document.getElementById('usAlbumTitle');
+  const byline=document.getElementById('usAlbumByline');
+  if(provenance)provenance.textContent=`Moment · ${longDate}`;
+  if(title)title.textContent=currentAlbum.caption||longDate;
+  const others=[...new Set(albumRows.map(row=>row.author).filter(name=>name&&name!==currentAlbum.author))];
+  if(byline)byline.textContent=`Aggiunto da ${currentAlbum.author}${others.length?` · con foto di ${others.join(' e ')}`:''}`;
+}
 function renderAlbum(){
   if(!currentAlbum)return;
+  renderAlbumStory();
   const count=albumRows.length+1;
   document.getElementById('usAlbumCount').textContent=`${count} ${count===1?'foto':'foto'}`;
   const grid=document.getElementById('usAlbumGrid');
@@ -283,6 +307,8 @@ async function openAlbum(card){
     url:card.dataset.url||'',
     author:card.dataset.author||'Noi',
     date:card.dataset.date||'',
+    iso:card.dataset.momentIso||'',
+    owner:card.dataset.momentOwner||'',
     caption:card.dataset.caption||''
   };
   albumRows=[];resetComposer();
@@ -304,6 +330,7 @@ async function openAlbum(card){
   if(caption)caption.textContent=currentAlbum.caption;
   if(author)author.textContent=currentAlbum.caption?`Aggiunto da ${currentAlbum.author}`:currentAlbum.author;
   if(note)note.hidden=!currentAlbum.caption;
+  renderAlbumStory();
   overlay?.classList.add('show');overlay?.setAttribute('aria-hidden','false');
   document.body.classList.add('us-album-open');
   const scroll=document.getElementById('usAlbumScroll');if(scroll)scroll.scrollTop=0;
@@ -544,9 +571,9 @@ console.info('[US] Moments Albums attivo');
     head.className = 'us-moments-head';
     head.innerHTML = `
       <div class="us-moments-head-copy">
-        <div class="us-moments-eyebrow">IL VOSTRO DIARIO</div>
-        <h2>Moments</h2>
-        <p>I vostri ricordi, un pezzo alla volta.</p>
+        <div class="us-moments-eyebrow">ARCHIVIO VIVO</div>
+        <h2>Ricordi</h2>
+        <p>Quello che avete vissuto davvero.</p>
       </div>
       <div class="us-moments-head-actions">
         <span class="us-moments-total" id="usMomentsTotal"></span>
