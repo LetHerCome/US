@@ -17,7 +17,7 @@ function go(id,options={}){
   if(current===id){
     scrollTo({top:0,behavior:options.motionCommit?'auto':'smooth'});
     if(id==='moments' && window.usProfile)hydrateMoments();
-    if(id==='bond' && window.usProfile)hydrateBond();
+    if(id==='bond' && window.usProfile){hydrateBond();hydrateNoiIdeas();}
     if(id==='settings' && window.usProfile)window.hydrateUsSettings?.();
     if(id==='home' && window.usProfile)window.refreshOggiCalendarWidget?.();
     return;
@@ -35,7 +35,7 @@ function go(id,options={}){
   if(options.swipe&&!options.motionCommit)setTimeout(()=>document.getElementById(id)?.classList.remove('swipe-next','swipe-prev'),190);
   scrollTo({top:0,behavior:(options.swipe||options.motionCommit)?'auto':'smooth'});
   if(id==='moments' && window.usProfile) hydrateMoments();
-  if(id==='bond' && window.usProfile) hydrateBond();
+  if(id==='bond' && window.usProfile){hydrateBond();hydrateNoiIdeas();}
   if(id==='settings' && window.usProfile) window.hydrateUsSettings?.();
   if(id==='home' && window.usProfile) window.refreshOggiCalendarWidget?.();
 }
@@ -2351,6 +2351,296 @@ async function rerollBondQuest(id){
 }
 window.rerollBondQuest=rerollBondQuest;
 
+// ===== M7B — Da vivere (bucket_items) =====
+// Solo bucket_items (M7A). Nessuna nuova tabella/RPC/persistenza locale.
+// Update: mai completed/completed_at/calendar_entry_id; solo title/note/link_url,
+// o status='archived' per l'archiviazione esplicita (mai schedulazione/lived qui).
+const NOI_IDEA_LINK_RE=/^https?:\/\//i;
+let noiIdeaRequestGen=0;
+let noiIdeaState={loaded:false,busy:false,error:false,activeItems:[],livedItems:[],showLived:false,selectedId:null,identityKey:null};
+
+function noiIdeaNormalizeLink(raw){
+  const value=(raw||'').trim();
+  if(!value)return null;
+  return NOI_IDEA_LINK_RE.test(value)?value:null;
+}
+function noiIdeaStateLabel(item){
+  if(item.status==='scheduled')return 'In calendario';
+  if(item.status==='lived')return 'Vissuta';
+  return '';
+}
+function noiIdeaSnippet(note){
+  if(!note)return '';
+  return note.length>90?`${note.slice(0,90)}…`:note;
+}
+function noiIdeaCardHtml(item){
+  const label=noiIdeaStateLabel(item);
+  const noteHtml=item.note?`<small>${escapeHtml(noiIdeaSnippet(item.note))}</small>`:'';
+  return `<button type="button" class="noi-idea-card" data-id="${escapeHtml(item.id)}"><span class="noi-idea-card-copy"><b>${escapeHtml(item.title)}</b>${noteHtml}</span>${label?`<span class="noi-idea-state">${escapeHtml(label)}</span>`:''}</button>`;
+}
+function renderNoiIdeaActiveList(){
+  const root=document.getElementById('noiIdeaList');
+  if(!root)return;
+  root.setAttribute('aria-busy','false');
+  if(noiIdeaState.error){
+    root.innerHTML='<div class="empty-state noi-idea-error"><div class="emoji">!</div><b>Non riesco a caricare le idee.</b><p>Riprova tra un momento.</p><button type="button" onclick="hydrateNoiIdeas()">Riprova</button></div>';
+    return;
+  }
+  if(!noiIdeaState.activeItems.length){
+    root.innerHTML='<div class="noi-quiet-state"><b>Niente in lista</b><span>Aggiungete la prima idea da vivere insieme.</span></div>';
+    return;
+  }
+  root.innerHTML=noiIdeaState.activeItems.map(noiIdeaCardHtml).join('');
+}
+function renderNoiIdeaLivedList(){
+  const toggle=document.getElementById('noiIdeaLivedToggle');
+  const root=document.getElementById('noiIdeaLivedList');
+  if(!toggle||!root)return;
+  toggle.hidden=!noiIdeaState.livedItems.length;
+  toggle.textContent=`Idee vissute (${noiIdeaState.livedItems.length})`;
+  toggle.setAttribute('aria-expanded',String(noiIdeaState.showLived));
+  root.hidden=!noiIdeaState.showLived;
+  root.innerHTML=noiIdeaState.showLived?noiIdeaState.livedItems.map(noiIdeaCardHtml).join(''):'';
+}
+async function hydrateNoiIdeas(){
+  if(!window.usProfile)return;
+  const userId=window.usProfile.id,coupleId=window.usProfile.couple_id;
+  const identityKey=`${userId}|${coupleId}`;
+  // Account/couple switch: wipe the previous profile's in-memory ideas and
+  // close any open detail/quick-add BEFORE issuing the new request, so a
+  // slow response never leaves the old identity's private data on screen.
+  if(noiIdeaState.identityKey&&noiIdeaState.identityKey!==identityKey){
+    noiIdeaState.loaded=false;
+    noiIdeaState.error=false;
+    noiIdeaState.activeItems=[];
+    noiIdeaState.livedItems=[];
+    noiIdeaState.showLived=false;
+    closeNoiIdeaDetail();
+    toggleNoiIdeaQuickForm(false);
+  }
+  noiIdeaState.identityKey=identityKey;
+  const gen=++noiIdeaRequestGen;
+  const section=document.querySelector('.noi-idea-section');
+  if(section)section.hidden=false;
+  const list=document.getElementById('noiIdeaList');
+  if(list&&!noiIdeaState.loaded){
+    list.setAttribute('aria-busy','true');
+    list.innerHTML='<div class="empty-state" aria-busy="true"><div class="emoji">↻</div><b>Carico le vostre idee…</b></div>';
+  }
+  const {data,error}=await sb.from('bucket_items')
+    .select('id,title,note,link_url,status,calendar_entry_id,created_at')
+    .eq('couple_id',coupleId)
+    .neq('status','archived')
+    .order('created_at',{ascending:false});
+  // Stale-response guard: ignore this result if a newer hydrateNoiIdeas call
+  // started, or the signed-in identity moved on, while this request was in
+  // flight. Never mutate state/DOM from an outdated response.
+  if(gen!==noiIdeaRequestGen||window.usProfile?.id!==userId||window.usProfile?.couple_id!==coupleId)return;
+  if(error){
+    console.warn(error);
+    noiIdeaState.error=true;
+    renderNoiIdeaActiveList();
+    return;
+  }
+  noiIdeaState.error=false;
+  noiIdeaState.loaded=true;
+  const rows=data||[];
+  noiIdeaState.activeItems=rows.filter(r=>r.status!=='lived');
+  noiIdeaState.livedItems=rows.filter(r=>r.status==='lived');
+  renderNoiIdeaActiveList();
+  renderNoiIdeaLivedList();
+}
+window.hydrateNoiIdeas=hydrateNoiIdeas;
+function noiIdeaFindItem(id){
+  return noiIdeaState.activeItems.find(i=>i.id===id)||noiIdeaState.livedItems.find(i=>i.id===id)||null;
+}
+function toggleNoiIdeaQuickForm(open){
+  const form=document.getElementById('noiIdeaQuickForm');
+  const btn=document.getElementById('noiIdeaAddToggle');
+  if(!form||!btn)return;
+  form.hidden=!open;
+  btn.setAttribute('aria-expanded',open?'true':'false');
+  if(open){document.getElementById('noiIdeaQuickTitle')?.focus();return;}
+  form.reset();
+  const extra=document.getElementById('noiIdeaQuickExtra');
+  if(extra)extra.hidden=true;
+  document.getElementById('noiIdeaQuickMoreToggle')?.setAttribute('aria-expanded','false');
+  const status=document.getElementById('noiIdeaQuickStatus');
+  if(status)status.textContent='';
+}
+function noiIdeaDetailHint(item){
+  if(item.status==='scheduled')return 'In calendario';
+  if(item.status==='lived')return 'Vissuta';
+  return '';
+}
+function openNoiIdeaDetail(id){
+  const item=noiIdeaFindItem(id);
+  if(!item)return;
+  noiIdeaState.selectedId=id;
+  const titleEl=document.getElementById('noiIdeaDetailTitle');
+  const noteEl=document.getElementById('noiIdeaDetailNote');
+  const linkEl=document.getElementById('noiIdeaDetailLink');
+  const hintEl=document.getElementById('noiIdeaDetailHint');
+  const statusEl=document.getElementById('noiIdeaDetailStatus');
+  const archiveBtn=document.getElementById('noiIdeaDetailArchive');
+  if(titleEl)titleEl.value=item.title||'';
+  if(noteEl)noteEl.value=item.note||'';
+  if(linkEl)linkEl.value=item.link_url||'';
+  if(hintEl)hintEl.textContent=noiIdeaDetailHint(item);
+  if(statusEl)statusEl.textContent='';
+  if(archiveBtn){archiveBtn.textContent='Archivia';archiveBtn.dataset.confirm='';}
+  const browse=document.getElementById('noiIdeaBrowse');
+  const detail=document.getElementById('noiIdeaDetail');
+  if(browse)browse.hidden=true;
+  if(detail)detail.hidden=false;
+  titleEl?.focus();
+}
+function closeNoiIdeaDetail(){
+  noiIdeaState.selectedId=null;
+  const browse=document.getElementById('noiIdeaBrowse');
+  const detail=document.getElementById('noiIdeaDetail');
+  if(detail)detail.hidden=true;
+  if(browse)browse.hidden=false;
+}
+async function submitNoiIdeaQuickAdd(event){
+  event.preventDefault();
+  if(noiIdeaState.busy||!window.usProfile)return;
+  const status=document.getElementById('noiIdeaQuickStatus');
+  const title=(document.getElementById('noiIdeaQuickTitle')?.value||'').trim();
+  if(!title){if(status)status.textContent='Serve almeno un titolo.';return;}
+  const note=(document.getElementById('noiIdeaQuickNote')?.value||'').trim()||null;
+  const linkRaw=document.getElementById('noiIdeaQuickLink')?.value||'';
+  if(linkRaw.trim()&&!noiIdeaNormalizeLink(linkRaw)){
+    if(status)status.textContent='Il link deve iniziare con http:// o https://';
+    return;
+  }
+  const link=noiIdeaNormalizeLink(linkRaw);
+  noiIdeaState.busy=true;
+  const saveBtn=document.getElementById('noiIdeaQuickSave');
+  if(saveBtn)saveBtn.disabled=true;
+  if(status)status.textContent='Salvo…';
+  try{
+    const {data,error}=await sb.from('bucket_items').insert({
+      title,note,link_url:link,
+      created_by:window.usProfile.id,
+      couple_id:window.usProfile.couple_id,
+      status:'idea',completed:false
+    }).select('id,title,note,link_url,status,calendar_entry_id,created_at');
+    if(error)throw error;
+    const row=Array.isArray(data)&&data[0]?data[0]:null;
+    if(row)noiIdeaState.activeItems.unshift(row);
+    renderNoiIdeaActiveList();
+    toggleNoiIdeaQuickForm(false);
+    toast('Idea aggiunta');
+  }catch(e){
+    console.warn(e);
+    if(status)status.textContent='Non riesco a salvarla. Riprova.';
+  }finally{
+    noiIdeaState.busy=false;
+    if(saveBtn)saveBtn.disabled=false;
+  }
+}
+async function submitNoiIdeaDetail(event){
+  event.preventDefault();
+  if(noiIdeaState.busy)return;
+  const id=noiIdeaState.selectedId;
+  const item=id?noiIdeaFindItem(id):null;
+  if(!item)return;
+  const statusEl=document.getElementById('noiIdeaDetailStatus');
+  const title=(document.getElementById('noiIdeaDetailTitle')?.value||'').trim();
+  if(!title){if(statusEl)statusEl.textContent='Serve almeno un titolo.';return;}
+  const note=(document.getElementById('noiIdeaDetailNote')?.value||'').trim()||null;
+  const linkRaw=document.getElementById('noiIdeaDetailLink')?.value||'';
+  if(linkRaw.trim()&&!noiIdeaNormalizeLink(linkRaw)){
+    if(statusEl)statusEl.textContent='Il link deve iniziare con http:// o https://';
+    return;
+  }
+  const link=noiIdeaNormalizeLink(linkRaw);
+  noiIdeaState.busy=true;
+  const saveBtn=document.getElementById('noiIdeaDetailSave');
+  if(saveBtn)saveBtn.disabled=true;
+  if(statusEl)statusEl.textContent='Salvo…';
+  try{
+    const {data:updated,error}=await sb.from('bucket_items').update({title,note,link_url:link}).eq('id',id).eq('couple_id',window.usProfile.couple_id).select('id').maybeSingle();
+    if(error)throw error;
+    if(!updated)throw new Error('bucket_items_update_no_row');
+    item.title=title;item.note=note;item.link_url=link;
+    renderNoiIdeaActiveList();
+    renderNoiIdeaLivedList();
+    toast('Idea aggiornata');
+    closeNoiIdeaDetail();
+  }catch(e){
+    console.warn(e);
+    if(statusEl)statusEl.textContent='Non riesco a salvarla. Riprova.';
+  }finally{
+    noiIdeaState.busy=false;
+    if(saveBtn)saveBtn.disabled=false;
+  }
+}
+async function archiveNoiIdea(){
+  if(noiIdeaState.busy)return;
+  const id=noiIdeaState.selectedId;
+  const item=id?noiIdeaFindItem(id):null;
+  if(!item)return;
+  const btn=document.getElementById('noiIdeaDetailArchive');
+  if(btn&&btn.dataset.confirm!=='1'){
+    btn.dataset.confirm='1';
+    btn.textContent='Confermi? Tocca di nuovo';
+    setTimeout(()=>{if(btn.dataset.confirm==='1'){btn.dataset.confirm='';btn.textContent='Archivia';}},3000);
+    return;
+  }
+  const statusEl=document.getElementById('noiIdeaDetailStatus');
+  noiIdeaState.busy=true;
+  if(btn)btn.disabled=true;
+  if(statusEl)statusEl.textContent='Archivio…';
+  try{
+    const {data:archived,error}=await sb.from('bucket_items').update({status:'archived'}).eq('id',id).eq('couple_id',window.usProfile.couple_id).select('id').maybeSingle();
+    if(error)throw error;
+    if(!archived)throw new Error('bucket_items_archive_no_row');
+    noiIdeaState.activeItems=noiIdeaState.activeItems.filter(i=>i.id!==id);
+    noiIdeaState.livedItems=noiIdeaState.livedItems.filter(i=>i.id!==id);
+    renderNoiIdeaActiveList();
+    renderNoiIdeaLivedList();
+    toast('Idea archiviata');
+    closeNoiIdeaDetail();
+  }catch(e){
+    console.warn(e);
+    if(statusEl)statusEl.textContent='Non riesco ad archiviarla. Riprova.';
+  }finally{
+    noiIdeaState.busy=false;
+    if(btn){btn.disabled=false;btn.dataset.confirm='';btn.textContent='Archivia';}
+  }
+}
+window.openNoiIdeaDetail=openNoiIdeaDetail;
+document.getElementById('noiIdeaAddToggle')?.addEventListener('click',()=>{
+  toggleNoiIdeaQuickForm(Boolean(document.getElementById('noiIdeaQuickForm')?.hidden));
+});
+document.getElementById('noiIdeaQuickCancel')?.addEventListener('click',()=>toggleNoiIdeaQuickForm(false));
+document.getElementById('noiIdeaQuickMoreToggle')?.addEventListener('click',()=>{
+  const extra=document.getElementById('noiIdeaQuickExtra');
+  const btn=document.getElementById('noiIdeaQuickMoreToggle');
+  const open=Boolean(extra?.hidden);
+  if(extra)extra.hidden=!open;
+  btn?.setAttribute('aria-expanded',open?'true':'false');
+  if(open)document.getElementById('noiIdeaQuickNote')?.focus();
+});
+document.getElementById('noiIdeaLivedToggle')?.addEventListener('click',()=>{
+  noiIdeaState.showLived=!noiIdeaState.showLived;
+  renderNoiIdeaLivedList();
+});
+document.getElementById('noiIdeaQuickForm')?.addEventListener('submit',submitNoiIdeaQuickAdd);
+document.getElementById('noiIdeaDetailForm')?.addEventListener('submit',submitNoiIdeaDetail);
+document.getElementById('noiIdeaDetailBack')?.addEventListener('click',closeNoiIdeaDetail);
+document.getElementById('noiIdeaDetailArchive')?.addEventListener('click',archiveNoiIdea);
+document.getElementById('noiIdeaList')?.addEventListener('click',(event)=>{
+  const card=event.target.closest('.noi-idea-card');
+  if(card?.dataset.id)openNoiIdeaDetail(card.dataset.id);
+});
+document.getElementById('noiIdeaLivedList')?.addEventListener('click',(event)=>{
+  const card=event.target.closest('.noi-idea-card');
+  if(card?.dataset.id)openNoiIdeaDetail(card.dataset.id);
+});
+
 // ===== Ti penso =====
 let usRealtimeChannel=null;
 function partnerFromProfiles(profiles){return (profiles||[]).find(p=>p.id!==window.usProfile?.id)||null;}
@@ -2490,7 +2780,7 @@ async function hydrateCloud(){
 
     // Only a directly-opened heavy page joins the critical lane.
     if(active==='moments')critical.push(hydrateMoments());
-    if(active==='bond')critical.push(hydrateBond());
+    if(active==='bond'){critical.push(hydrateBond());critical.push(hydrateNoiIdeas());}
     if(active==='settings')critical.push(Promise.resolve(window.hydrateUsSettings?.()));
 
     const results=await Promise.allSettled(critical);

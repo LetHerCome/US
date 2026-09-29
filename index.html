@@ -267,6 +267,48 @@ html.us-returning-device .auth-overlay{
       </section>
 
       <section class="noi-idea-section" aria-labelledby="noiIdeaTitle" hidden>
+        <div class="noi-idea-browse" id="noiIdeaBrowse">
+          <div class="noi-section-title-row">
+            <div><div class="noi-section-kicker">IDEE</div><h3 id="noiIdeaTitle">Da vivere</h3><p>Cose che volete provare, senza fretta.</p></div>
+            <button type="button" class="noi-idea-add-btn" id="noiIdeaAddToggle" aria-expanded="false" aria-controls="noiIdeaQuickForm" aria-label="Aggiungi un'idea da vivere">+</button>
+          </div>
+          <form id="noiIdeaQuickForm" class="noi-idea-quick-form" hidden>
+            <label class="noi-idea-sr" for="noiIdeaQuickTitle">Titolo dell'idea</label>
+            <input id="noiIdeaQuickTitle" type="text" maxlength="120" placeholder="Un'idea da vivere insieme…" required>
+            <button type="button" id="noiIdeaQuickMoreToggle" class="noi-idea-quick-more" aria-expanded="false" aria-controls="noiIdeaQuickExtra">+ nota o link</button>
+            <div id="noiIdeaQuickExtra" class="noi-idea-quick-extra" hidden>
+              <label class="noi-idea-sr" for="noiIdeaQuickNote">Nota</label>
+              <textarea id="noiIdeaQuickNote" rows="2" maxlength="500" placeholder="Una nota (opzionale)"></textarea>
+              <label class="noi-idea-sr" for="noiIdeaQuickLink">Link</label>
+              <input id="noiIdeaQuickLink" type="url" placeholder="Link (opzionale)">
+            </div>
+            <div class="noi-idea-quick-actions">
+              <button type="button" class="ghost" id="noiIdeaQuickCancel">Annulla</button>
+              <button type="submit" class="primary" id="noiIdeaQuickSave">Aggiungi</button>
+            </div>
+            <div id="noiIdeaQuickStatus" role="status" aria-live="polite" class="noi-idea-form-status"></div>
+          </form>
+          <div id="noiIdeaList" class="noi-idea-list" aria-live="polite" aria-busy="false"></div>
+          <button type="button" id="noiIdeaLivedToggle" class="noi-idea-lived-toggle" hidden aria-expanded="false" aria-controls="noiIdeaLivedList">Idee vissute</button>
+          <div id="noiIdeaLivedList" class="noi-idea-list noi-idea-lived-list" aria-live="polite" hidden></div>
+        </div>
+        <div class="noi-idea-detail" id="noiIdeaDetail" hidden>
+          <button type="button" class="noi-idea-detail-back" id="noiIdeaDetailBack">‹ Da vivere</button>
+          <form id="noiIdeaDetailForm">
+            <label class="noi-idea-sr" for="noiIdeaDetailTitle">Titolo</label>
+            <input id="noiIdeaDetailTitle" type="text" maxlength="120" required>
+            <label class="noi-idea-sr" for="noiIdeaDetailNote">Nota</label>
+            <textarea id="noiIdeaDetailNote" rows="3" maxlength="500" placeholder="Una nota (opzionale)"></textarea>
+            <label class="noi-idea-sr" for="noiIdeaDetailLink">Link</label>
+            <input id="noiIdeaDetailLink" type="url" placeholder="Link (opzionale)">
+            <p class="noi-idea-detail-hint" id="noiIdeaDetailHint" aria-hidden="true"></p>
+            <div class="noi-idea-detail-actions">
+              <button type="submit" class="primary" id="noiIdeaDetailSave">Salva</button>
+              <button type="button" id="noiIdeaDetailArchive">Archivia</button>
+            </div>
+            <div id="noiIdeaDetailStatus" role="status" aria-live="polite" class="noi-idea-form-status"></div>
+          </form>
+        </div>
       </section>
     </section>
   </main>
