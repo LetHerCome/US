@@ -19,11 +19,12 @@
     "@capacitor/app": "8.1.1",
     "@capacitor/core": "8.5.0",
     "@capacitor/haptics": "8.0.2",
-    "@us/widget-bridge": "file:native-plugins/us-widget-bridge",
-    "@supabase/supabase-js": "2.112.4"
+    "@supabase/supabase-js": "2.112.4",
+    "@us/widget-bridge": "file:native-plugins/us-widget-bridge"
   },
   "devDependencies": {
     "@capacitor/cli": "8.5.0",
+    "@electric-sql/pglite": "^0.5.8",
     "esbuild": "0.28.2"
   }
 }
