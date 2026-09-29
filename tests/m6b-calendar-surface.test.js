@@ -20,7 +20,9 @@ const capacitorBuild = () => read('scripts/build-capacitor-web.mjs');
 test('M6B (1): a single Calendario entry point lives inside Noi', () => {
   const bond = html().match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
   assert.match(bond, /id="usCalendarEntry"[^>]*onclick="openCalendarSurface\(\)"/);
-  assert.match(bond, /<b>Calendario<\/b><small>I vostri giorni, insieme\.<\/small>/);
+  // M9D: the entry point is the Calendario card of the Noi hub.
+  assert.match(bond, /class="noi-hub-card noi-hub-card--calendar" id="usCalendarEntry" onclick="openCalendarSurface\(\)"/);
+  assert.match(bond, /<span class="noi-hub-kicker">Calendario<\/span><b>I vostri giorni<\/b>/);
   assert.doesNotMatch(html(), /data-page="calendar"/, 'must not become a bottom-nav destination');
 });
 
@@ -487,8 +489,6 @@ test('M6B (49): a single shared icon-centering rule is defined once and applied 
     assert.ok(tag, `${id} must exist in the markup`);
     assert.match(tag, /class="[^"]*\bus-icon-center\b[^"]*"/, `${id} must use the shared centering class`);
   }
-  const chevron = html().match(/<span class="[^"]*us-cal-entry-chevron[^"]*"[^>]*>/)?.[0] || '';
-  assert.match(chevron, /\bus-icon-center\b/, 'the Noi entry chevron must use the shared centering class too');
 });
 
 // --- Ora validation ----------------------------------------------------------

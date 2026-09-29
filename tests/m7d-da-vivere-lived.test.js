@@ -54,7 +54,7 @@ test('M7D runtime: A proposes and waits, B confirms, only then lived with the Ca
   window.window = window;
   const toasts = [];
   const sb = { from: () => builder(), rpc: (name, args) => { calls.push([name, args]); return Promise.resolve(responses.shift()); } };
-  const context = { window, document: { getElementById: el, querySelector: () => ({ hidden: false }) }, sb, toast: (m) => toasts.push(m), escapeHtml: (s) => String(s), console, setTimeout: () => 0, go() {} };
+  const context = { window, document: { getElementById: el, querySelector: () => ({ hidden: false, dataset: {} }) }, sb, toast: (m) => toasts.push(m), escapeHtml: (s) => String(s), console, setTimeout: () => 0, scrollTo() {}, go() {} };
   vm.createContext(context);
   vm.runInContext(block(), context);
   const item = { id: 'i1', title: 'Cena al lago', status: 'scheduled', calendar_entry_id: 'e1', completed_at: null, created_at: 'x', lived_proposed_by: null };

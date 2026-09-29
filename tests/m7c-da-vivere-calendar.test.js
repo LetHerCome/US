@@ -208,7 +208,7 @@ test('M7C runtime: linkCalendarEntry updates local state on success and reports 
   };
   const window = { usProfile: { id: 'u1', couple_id: 'c1' } };
   window.window = window;
-  const context = { window, document: { getElementById: el, querySelector: () => ({ hidden: false }) }, sb: { from: () => builder() }, toast() {}, escapeHtml: (s) => String(s), console, setTimeout: () => 0 };
+  const context = { window, document: { getElementById: el, querySelector: () => ({ hidden: false, dataset: {} }) }, sb: { from: () => builder() }, toast() {}, escapeHtml: (s) => String(s), console, setTimeout: () => 0, scrollTo() {} };
   vm.createContext(context);
   vm.runInContext(daVivereBlock(), context);
   responses.push({ data: [{ id: 'i1', title: 'Lisbona', note: null, link_url: null, status: 'idea', calendar_entry_id: null, created_at: 'x' }], error: null });

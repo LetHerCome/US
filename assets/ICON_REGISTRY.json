@@ -11,16 +11,19 @@
     { "id": "gallery", "label": "Gallery", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "ImageSquare", "customAssetPath": null, "status": "APPROVED", "usedBy": ["moments", "stories-upload"] },
     { "id": "add", "label": "Add", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "Plus", "customAssetPath": null, "status": "APPROVED", "usedBy": ["moments", "stories", "events"] },
     { "id": "close", "label": "Close", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "X", "customAssetPath": null, "status": "APPROVED", "usedBy": ["modal", "sheet", "stories-viewer"] },
-    { "id": "back", "label": "Back", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "CaretLeft", "customAssetPath": null, "status": "APPROVED", "usedBy": ["navigation", "album-viewer", "events"] },
+    { "id": "back", "label": "Back", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "CaretLeft", "customAssetPath": null, "status": "APPROVED", "usedBy": ["navigation", "album-viewer", "events", "noi-hub"] },
     { "id": "send", "label": "Send", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "PaperPlaneTilt", "customAssetPath": null, "status": "APPROVED", "usedBy": ["daily-question", "ti-penso"] },
     { "id": "location", "label": "Location", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "MapPin", "customAssetPath": null, "status": "APPROVED", "usedBy": ["home-distance", "events"] },
     { "id": "notifications", "label": "Notifications", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "Bell", "customAssetPath": null, "status": "APPROVED", "usedBy": ["settings-web-push"] },
-    { "id": "calendar-date", "label": "Calendar / date", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "CalendarDots", "customAssetPath": null, "status": "APPROVED", "usedBy": ["events", "home"] },
+    { "id": "calendar-date", "label": "Calendar / date", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "CalendarDots", "customAssetPath": null, "status": "APPROVED", "usedBy": ["events", "home", "noi-hub"] },
     { "id": "bond", "label": "Bond", "source": "CUSTOM", "authority": "CUSTOM_ASSET", "phosphorName": null, "customAssetPath": "assets/source/ui/us-icon-bond-v1.png", "status": "APPROVED", "usedBy": ["bottom-navigation", "bond"] },
     { "id": "stories", "label": "Stories", "source": "CUSTOM", "authority": "CUSTOM_ASSET", "phosphorName": null, "customAssetPath": "assets/source/ui/us-icon-stories-v1.png", "status": "APPROVED", "usedBy": ["header-stories-trigger", "stories-viewer"] },
     { "id": "moments", "label": "Moments", "source": "CUSTOM", "authority": "CUSTOM_ASSET", "phosphorName": null, "customAssetPath": "assets/source/ui/us-icon-moments-v1.png", "status": "APPROVED", "usedBy": ["bottom-navigation", "moments"] },
     { "id": "daily-question", "label": "Daily question", "source": "CUSTOM", "authority": "CUSTOM_ASSET", "phosphorName": null, "customAssetPath": "assets/source/ui/us-icon-daily-question-v1.png", "status": "APPROVED", "usedBy": ["quiz-daily-question"] },
     { "id": "ti-penso", "label": "Ti penso legacy", "source": "CUSTOM", "authority": "CUSTOM_ASSET", "phosphorName": null, "customAssetPath": "assets/source/ui/us-icon-ti-penso-v1.png", "status": "APPROVED", "usedBy": ["android-ti-penso-widget"] },
-    { "id": "think-heart", "label": "Ti penso", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "Heart / HeartFill", "customAssetPath": null, "status": "APPROVED", "usedBy": ["home-ti-penso"] }
+    { "id": "think-heart", "label": "Ti penso", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "Heart / HeartFill", "customAssetPath": null, "status": "APPROVED", "usedBy": ["home-ti-penso"] },
+    { "id": "resonance", "label": "Risonanza", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "Infinity", "customAssetPath": null, "status": "APPROVED", "usedBy": ["noi-hub"] },
+    { "id": "da-vivere", "label": "Da vivere", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "Compass", "customAssetPath": null, "status": "APPROVED", "usedBy": ["noi-hub"] },
+    { "id": "couple-quest", "label": "Quest di coppia", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "FlagBanner", "customAssetPath": null, "status": "APPROVED", "usedBy": ["noi-hub"] }
   ]
 }

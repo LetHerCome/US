@@ -1,18 +1,5 @@
 
-/* M6B · Shared Calendar Surface — entry point inside Noi, additive only. */
-.us-cal-entry{
-  width:100%;min-height:72px;margin:0 0 14px;padding:12px 14px;
-  display:flex;align-items:center;gap:12px;text-align:left;
-  border:1px solid rgba(255,255,255,.10);border-radius:19px;
-  background:linear-gradient(120deg,rgba(91,141,239,.11),rgba(139,114,248,.10));
-  color:var(--us-text);box-shadow:0 9px 24px rgba(0,0,0,.16)
-}
-.us-cal-entry:active{transform:scale(.99)}
-.us-cal-entry-mark{width:38px;height:38px;flex:0 0 auto;display:grid;place-items:center;border-radius:14px;background:rgba(255,255,255,.08);font-size:18px;color:#a9c2ff}
-.us-cal-entry-copy{min-width:0;display:grid;gap:4px;flex:1}
-.us-cal-entry-copy b{font:500 17px/1.1 var(--us-font-editorial);color:#fff7fb}
-.us-cal-entry-copy small{color:rgba(247,242,248,.62);font-size:11px;line-height:1.35}
-.us-cal-entry-chevron{font-size:23px;color:rgba(247,242,248,.52)}
+/* M6B · Shared Calendar Surface — additive only. M9D: its entry point is the Calendario card of the Noi hub (styles.css). */
 
 /* Full-screen surface, same slide-up-sheet mechanics as the existing bottom sheets. */
 .us-cal-overlay{position:fixed;inset:0;z-index:10140;display:none;align-items:flex-end;justify-content:center;padding-top:var(--us-safe-top);background:rgba(3,4,8,.62);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}

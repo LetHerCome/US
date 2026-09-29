@@ -84,6 +84,19 @@ const layers=[
     }
   },
   {
+    // M9D — superficie interna del hub Noi (Risonanza, Da vivere, Quest).
+    name:'noi-section',
+    find:()=>document.getElementById('noiHub'),
+    open:el=>Boolean(el&&el.hidden),
+    close:()=>window.closeNoiSection?.()
+  },
+  {
+    name:'noi-idea-detail',
+    find:()=>document.getElementById('noiIdeaDetail'),
+    open:el=>Boolean(el&&!el.hidden),
+    close:()=>window.closeNoiIdeaDetail?.()
+  },
+  {
     name:'settings-modal',
     find:()=>document.getElementById('usSettingsOverlay'),
     open:el=>el?.classList.contains('open'),

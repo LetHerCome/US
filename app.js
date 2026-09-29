@@ -15,6 +15,7 @@ function animatePageEntry(page,direction){
 function go(id,options={}){
   const current=document.querySelector('.page.active')?.id;
   if(current===id){
+    if(id==='bond'&&options.nav)window.closeNoiSection?.();
     scrollTo({top:0,behavior:options.motionCommit?'auto':'smooth'});
     if(id==='moments' && window.usProfile)hydrateMoments();
     if(id==='bond' && window.usProfile){hydrateBond();hydrateNoiIdeas();}
@@ -22,6 +23,7 @@ function go(id,options={}){
     if(id==='home' && window.usProfile)window.refreshOggiCalendarWidget?.();
     return;
   }
+  if(current==='bond')window.closeNoiSection?.();
   const direction=Math.sign(pages.indexOf(id)-pages.indexOf(current));
   pages.forEach(pageId=>{
     const el=document.getElementById(pageId);
@@ -2382,6 +2384,13 @@ function renderBondProgress(totalXp){
   const nextEl=document.getElementById('bondNextXp');if(nextEl)nextEl.textContent=`${(info.needed-info.current).toLocaleString('it-IT')} XP al prossimo livello`;
   const pageFill=document.getElementById('bondPageFill');if(pageFill)pageFill.style.width=`${info.progress}%`;
   const line=document.getElementById('bondLevelXp');if(line)line.textContent=`${info.current.toLocaleString('it-IT')} / ${info.needed.toLocaleString('it-IT')} XP`;
+  // M9D — hub Noi e superficie Risonanza: stessi numeri di couples.bond_xp.
+  const hubTitle=document.getElementById('noiHubResonanceTitle');if(hubTitle)hubTitle.textContent=bondRankTitle(info.level);
+  const hubMeta=document.getElementById('noiHubResonanceMeta');if(hubMeta)hubMeta.textContent=`Livello ${info.level}`;
+  const hubFill=document.getElementById('noiHubResonanceFill');if(hubFill)hubFill.style.width=`${info.progress}%`;
+  const resLevel=document.getElementById('noiResonanceLevel');if(resLevel)resLevel.textContent=info.level;
+  const resTotal=document.getElementById('noiResonanceTotal');if(resTotal)resTotal.textContent=info.total.toLocaleString('it-IT');
+  const resNext=document.getElementById('noiResonanceNext');if(resNext)resNext.textContent=`${(info.needed-info.current).toLocaleString('it-IT')} XP`;
   window.usBondXp=info.total;
   renderBondBadges(info.level);
 }
@@ -2493,6 +2502,7 @@ async function hydrateBond(){
   window.usBondProfiles=profiles||[];
   window.usBondState=state||{rerolls_used:0};
   window.usBondQuests=quests||[];
+  renderNoiHubSummary();
   renderBondProgress(couple?.bond_xp||0);
   const countEl=document.getElementById('bondCompletedCount');if(countEl)countEl.textContent=`${Number(completedCount||0)} quest completate`;
   const rerollsLeft=Math.max(0,3-Number(state?.rerolls_used||0));
@@ -2576,11 +2586,41 @@ function renderNoiIdeaActiveList(){
     root.innerHTML='<div class="empty-state noi-idea-error"><div class="emoji">!</div><b>Non riesco a caricare le idee.</b><p>Riprova tra un momento.</p><button type="button" onclick="hydrateNoiIdeas()">Riprova</button></div>';
     return;
   }
+  renderNoiHubSummary();
   if(!noiIdeaState.activeItems.length){
     root.innerHTML='<div class="noi-quiet-state"><b>Niente in lista</b><span>Aggiungete la prima idea da vivere insieme.</span></div>';
     return;
   }
   root.innerHTML=noiIdeaState.activeItems.map(noiIdeaCardHtml).join('');
+}
+// M9D — riepilogo delle card del hub Noi, solo da dati già caricati.
+function renderNoiHubSummary(){
+  const ideasTitle=document.getElementById('noiHubIdeasTitle');
+  const ideasMeta=document.getElementById('noiHubIdeasMeta');
+  if(ideasTitle&&ideasMeta){
+    if(noiIdeaState.loaded&&!noiIdeaState.error){
+      const count=noiIdeaState.activeItems.length;
+      const scheduled=noiIdeaState.activeItems.filter(i=>i.status==='scheduled').length;
+      ideasTitle.textContent=count?`${count} ${count===1?'idea':'idee'} da vivere`:'Nessuna idea, per ora';
+      ideasMeta.textContent=scheduled?`${scheduled} in calendario`:(count?'Nessuna ancora in calendario':'Aggiungete la prima');
+    }else{
+      ideasTitle.textContent='Le vostre idee';
+      ideasMeta.textContent='Cose da provare insieme';
+    }
+  }
+  const questTitle=document.getElementById('noiHubQuestTitle');
+  const questMeta=document.getElementById('noiHubQuestMeta');
+  const quests=Array.isArray(window.usBondQuests)?window.usBondQuests:[];
+  if(questTitle&&questMeta){
+    if(quests.length){
+      const done=quests.filter(q=>q.completed_at).length;
+      questTitle.textContent=done===quests.length?'Tutte completate':`${done} di ${quests.length} completate`;
+      questMeta.textContent='Si rinnovano ogni lunedì';
+    }else{
+      questTitle.textContent='Le quest della settimana';
+      questMeta.textContent='Da fare insieme';
+    }
+  }
 }
 function renderNoiIdeaLivedList(){
   const toggle=document.getElementById('noiIdeaLivedToggle');
@@ -2657,6 +2697,8 @@ function resetNoiIdeasForIdentityChange(){
   if(toggle){toggle.hidden=true;toggle.textContent='Idee vissute';toggle.setAttribute('aria-expanded','false');}
   const section=document.querySelector('.noi-idea-section');
   if(section)section.hidden=true;
+  closeNoiSection();
+  renderNoiHubSummary();
   closeNoiIdeaDetail();
   toggleNoiIdeaQuickForm(false);
   const save=document.getElementById('noiIdeaQuickSave');if(save)save.disabled=false;
@@ -2748,6 +2790,7 @@ function renderNoiIdeaDetailState(item){
 function openNoiIdeaDetail(id){
   const item=noiIdeaFindItem(id);
   if(!item)return;
+  openNoiSection('da-vivere');
   noiIdeaState.selectedId=id;
   const titleEl=document.getElementById('noiIdeaDetailTitle');
   const noteEl=document.getElementById('noiIdeaDetailNote');
@@ -2999,6 +3042,46 @@ document.getElementById('noiIdeaDetailMemoryAdd')?.addEventListener('click',addN
 document.getElementById('noiIdeaDetailSchedule')?.addEventListener('click',scheduleNoiIdea);
 document.getElementById('noiIdeaDetailOpenCalendar')?.addEventListener('click',openNoiIdeaCalendarEntry);
 window.openNoiIdeaDetail=openNoiIdeaDetail;
+window.closeNoiIdeaDetail=closeNoiIdeaDetail;
+
+// ===== M9D · Noi hub =====
+// Noi è un hub: quattro card aprono superfici interne della stessa pagina
+// (nessun nuovo tab). Risonanza, Da vivere e Quest riusano i blocchi M3/M7
+// già presenti; Calendario apre l'overlay esistente. Il ritorno al hub passa
+// dal layer di navigation.js ('noi-section'), quindi anche il Back di sistema.
+const NOI_SECTIONS=['resonance','da-vivere','quest'];
+function noiCanonicalPage(){return document.querySelector('#bond .noi-canonical-page');}
+function openNoiSection(view){
+  const page=noiCanonicalPage();
+  if(!page||!NOI_SECTIONS.includes(view))return;
+  if(page.dataset.noiView===view)return;
+  page.dataset.noiView=view;
+  const bar=document.getElementById('noiSectionBar');if(bar)bar.hidden=false;
+  const hub=document.getElementById('noiHub');if(hub)hub.hidden=true;
+  scrollTo({top:0,behavior:'auto'});
+  if(view==='da-vivere'&&window.usProfile&&!noiIdeaState.loaded)hydrateNoiIdeas();
+  document.getElementById('noiSectionBack')?.focus({preventScroll:true});
+}
+function closeNoiSection(){
+  const page=noiCanonicalPage();
+  if(!page||!page.dataset.noiView||page.dataset.noiView==='hub')return;
+  const from=page.dataset.noiView;
+  page.dataset.noiView='hub';
+  if(from==='da-vivere'){closeNoiIdeaDetail();toggleNoiIdeaQuickForm(false);}
+  const bar=document.getElementById('noiSectionBar');if(bar)bar.hidden=true;
+  const hub=document.getElementById('noiHub');if(hub)hub.hidden=false;
+  if(document.getElementById('bond')?.classList.contains('active')){
+    scrollTo({top:0,behavior:'auto'});
+    hub?.querySelector(`[data-noi-open="${from}"]`)?.focus({preventScroll:true});
+  }
+}
+window.openNoiSection=openNoiSection;
+window.closeNoiSection=closeNoiSection;
+document.getElementById('noiHub')?.addEventListener('click',(event)=>{
+  const card=event.target.closest('[data-noi-open]');
+  if(card)openNoiSection(card.dataset.noiOpen);
+});
+document.getElementById('noiSectionBack')?.addEventListener('click',closeNoiSection);
 document.getElementById('noiIdeaAddToggle')?.addEventListener('click',()=>{
   toggleNoiIdeaQuickForm(Boolean(document.getElementById('noiIdeaQuickForm')?.hidden));
 });

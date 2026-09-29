@@ -265,23 +265,20 @@ test('M7B fix: la Quest settimanale non si presenta più come una seconda "Da vi
   assert.match(app(), /window\.rerollBondQuest=rerollBondQuest/);
 });
 
-test('M7B fix: bucket_items ("Da vivere") è la superficie dominante — precede visivamente la Quest e la pagina Noi resta senza scroll', () => {
+test('M7B fix (M9D): Da vivere è una superficie focalizzata del hub Noi, senza scroll di pagina — scorre solo la lista idee', () => {
   const main = bondMain();
-  const ideaIdx = main.indexOf('noi-idea-section');
-  const questIdx = main.indexOf('noi-living-section');
-  assert.ok(ideaIdx >= 0 && questIdx >= 0, 'both surfaces must still exist in the Noi markup');
-  // CSS flex ordering makes bucket_items the first and dominant living surface.
+  assert.ok(main.indexOf('noi-idea-section') >= 0 && main.indexOf('noi-living-section') >= 0, 'both surfaces must still exist in the Noi markup');
+  assert.match(main, /data-noi-open="da-vivere"/, 'the hub card opens Da vivere');
   const css = read('styles.css');
   assert.match(css, /\.noi-canonical-page\{[^}]*overflow:hidden/);
   assert.doesNotMatch(css, /\.noi-idea-section\s*\{[^}]*overflow-y\s*:\s*auto/i, 'the Da vivere section itself never scrolls as a whole');
-  // M7B gate: identity.css forces .noi-canonical-page{height:auto!important},
-  // so the no-scroll height must be re-imposed with a more specific !important
-  // rule whenever Da vivere is visible; only the idea list may scroll in place.
-  assert.match(css, /#bond \.noi-canonical-page:has\(\.noi-idea-section:not\(\[hidden\]\)\)\{height:calc\([^}]*var\(--us-nav-height\)[^}]*\)!important;min-height:0!important;overflow:hidden!important\}/);
+  // M7B gate, now scoped to the Da vivere surface: identity.css forces
+  // .noi-canonical-page{height:auto!important}, so the fixed height is
+  // re-imposed with a more specific !important rule; only the idea list scrolls.
+  assert.match(css, /#bond \.noi-canonical-page\[data-noi-view="da-vivere"\]\{height:calc\([^}]*var\(--us-nav-height\)[^}]*\)!important;min-height:0!important;overflow:hidden!important\}/);
   assert.match(css, /\.noi-idea-browse \.noi-idea-list\{[^}]*overflow-y:auto;[^}]*overscroll-behavior:contain/);
-  assert.match(css, /\.noi-living-list \.bond-quest:not\(:first-child\)\{display:none!important\}/);
-  assert.match(css, /\.noi-idea-section\{[^}]*order:4/);
-  assert.match(css, /\.noi-living-section\{order:5/);
+  assert.match(css, /#bond \.noi-canonical-page:not\(\[data-noi-view="da-vivere"\]\)>\.noi-idea-section\{display:none!important\}/, 'Da vivere and Quest never compete on one screen');
+  assert.match(css, /#bond \.noi-canonical-page:not\(\[data-noi-view="quest"\]\)>\.noi-living-section\{display:none!important\}/);
   assert.match(css, /\.noi-idea-card\{[^}]*color:var\(--text\)/, 'idea titles must retain readable foreground color on the dark card');
 });
 
