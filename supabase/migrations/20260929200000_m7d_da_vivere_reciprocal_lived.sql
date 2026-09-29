@@ -26,8 +26,9 @@
 --    identico: whitelist di transizione, scheduled -> idea senza link,
 --    completed/completed_at derivati da status, lived -> archived.
 -- 4. RPC public.confirm_bucket_item_lived(p_item_id): SECURITY DEFINER,
---    riga bloccata FOR UPDATE (conferme concorrenti serializzate), membro
---    della coppia verificato su profiles, idempotente:
+--    idempotente. Lock: profili coinvolti FOR SHARE (in ordine di id) poi
+--    riga FOR UPDATE con riverifica dopo l'attesa (dettagli nel corpo):
+--    membership e conferma sono serializzate contro rimozione/re-pair.
 --      - nessuna proposta           -> proposta di chi chiama
 --      - proposta dello stesso      -> nessun cambiamento (retry sicuro)
 --      - proposta dell'altro membro -> status 'lived' (completed/completed_at
@@ -160,24 +161,67 @@ set search_path = ''
 as $$
 declare
   v_uid uuid := auth.uid();
-  v_couple_id uuid;
   v_item public.bucket_items%rowtype;
+  v_seen_proposer uuid;
+  v_seen_couple uuid;
+  v_ids uuid[];
+  v_lock record;
+  v_caller_couple uuid;
+  v_proposer_couple uuid;
   v_proposer_is_member boolean := false;
 begin
   if v_uid is null then
     raise exception using errcode = '42501', message = 'bucket_items_lived_requires_authenticated_member';
   end if;
 
-  select p.couple_id into v_couple_id from public.profiles p where p.id = v_uid;
-  if v_couple_id is null then
+  -- Strategia di lock (stesso ordine del flusso claim_us_role, che blocca il
+  -- profilo PRIMA delle righe bucket_items: profili -> riga, mai il contrario,
+  -- quindi nessun deadlock con il re-pair):
+  --   1. lettura SENZA lock della riga, solo per sapere coppia e proponente;
+  --   2. lock FOR SHARE dei profili coinvolti (chi chiama + proponente), in
+  --      ordine deterministico per id: un re-pair/rimozione (che li blocca
+  --      FOR UPDATE o li cancella) aspetta la fine di questa transazione, e
+  --      chi è già stato rimosso non si vede più (la lettura sotto lock è
+  --      quella corrente, non quella di prima dell'attesa);
+  --   3. lock FOR UPDATE della riga e RIVERIFICA dopo l'attesa: coppia e
+  --      proponente devono essere ancora quelli su cui abbiamo bloccato i
+  --      profili, altrimenti 40001 (retry sicuro: la RPC è idempotente).
+  select b.couple_id, b.lived_proposed_by into v_seen_couple, v_seen_proposer
+  from public.bucket_items b where b.id = p_item_id;
+  -- Stesso errore per "non esiste" e "è di un'altra coppia": la RPC non
+  -- rivela l'esistenza di righe fuori dalla coppia di chi chiama.
+  if not found then
+    raise exception using errcode = 'P0002', message = 'bucket_items_not_found';
+  end if;
+
+  v_ids := array[v_uid];
+  if v_seen_proposer is not null and v_seen_proposer <> v_uid then
+    v_ids := v_ids || v_seen_proposer;
+  end if;
+
+  for v_lock in
+    select p.id, p.couple_id from public.profiles p
+    where p.id = any(v_ids)
+    order by p.id
+    for share
+  loop
+    if v_lock.id = v_uid then v_caller_couple := v_lock.couple_id; end if;
+    if v_lock.id = v_seen_proposer then v_proposer_couple := v_lock.couple_id; end if;
+  end loop;
+
+  if v_caller_couple is null then
     raise exception using errcode = '42501', message = 'bucket_items_lived_requires_authenticated_member';
+  end if;
+  if v_caller_couple <> v_seen_couple then
+    raise exception using errcode = 'P0002', message = 'bucket_items_not_found';
   end if;
 
   select b.* into v_item from public.bucket_items b where b.id = p_item_id for update;
-  -- Stesso errore per "non esiste" e "è di un'altra coppia": la RPC non
-  -- rivela l'esistenza di righe fuori dalla coppia di chi chiama.
-  if not found or v_item.couple_id <> v_couple_id then
+  if not found or v_item.couple_id <> v_caller_couple then
     raise exception using errcode = 'P0002', message = 'bucket_items_not_found';
+  end if;
+  if v_item.lived_proposed_by is distinct from v_seen_proposer then
+    raise exception using errcode = '40001', message = 'bucket_items_lived_proposal_changed_retry';
   end if;
 
   if v_item.status not in ('idea', 'scheduled', 'lived') then
@@ -185,12 +229,11 @@ begin
   end if;
 
   if v_item.status <> 'lived' then
-    if v_item.lived_proposed_by is not null and v_item.lived_proposed_by <> v_uid then
-      select exists (
-        select 1 from public.profiles p
-        where p.id = v_item.lived_proposed_by and p.couple_id = v_item.couple_id
-      ) into v_proposer_is_member;
-    end if;
+    -- Il proponente vale solo se è ANCORA membro della stessa coppia (letto
+    -- sotto lock: non può cambiare fino al commit).
+    v_proposer_is_member := v_item.lived_proposed_by is not null
+      and v_item.lived_proposed_by <> v_uid
+      and v_proposer_couple is not distinct from v_item.couple_id;
 
     perform set_config('us.bucket_items_lived_confirm', 'on', true);
     if v_item.lived_proposed_by is null
