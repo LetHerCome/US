@@ -40,7 +40,11 @@ test('M7B markup: quick-add accetta titolo e nota/link opzionali, senza scheduli
   assert.match(section, /id="noiIdeaQuickTitle"[^>]*required/);
   assert.match(section, /id="noiIdeaQuickNote"/);
   assert.match(section, /id="noiIdeaQuickLink"[^>]*type="url"/);
-  assert.doesNotMatch(section, /Metti in calendario|scegli un giorno|schedul/i);
+  // The quick-add itself never schedules: "Metti in calendario" (M7C) lives
+  // only in the detail of an existing idea and delegates to the Calendar form.
+  const quickForm = section.match(/<form id="noiIdeaQuickForm"[\s\S]*?<\/form>/)?.[0] || '';
+  assert.notEqual(quickForm, '');
+  assert.doesNotMatch(quickForm, /Metti in calendario|scegli un giorno|schedul|type="date"|type="time"/i);
 });
 
 test('M7B markup: il dettaglio espone titolo/nota/link, salvataggio, archiviazione e back verso Noi', () => {
@@ -110,8 +114,12 @@ test("M7B runtime: l'update di modifica tocca solo title/note/link_url, mai lo s
 test("M7B runtime: archiviare è l'unica update che scrive status, ed è sempre 'archived' esplicito e couple-scoped", () => {
   const block = daVivereBlock();
   const statusWrites = [...block.matchAll(/\.update\(\{[^}]*status\s*:\s*'([a-z]+)'[^}]*\}\)/g)].map((m) => m[1]);
-  assert.deepEqual(statusWrites, ['archived']);
-  assert.doesNotMatch(block, /status:\s*'(scheduled|lived)'/);
+  // M7C adds exactly one other lifecycle write (idea -> scheduled with the
+  // Calendar's entry id), asserted in tests/m7c-da-vivere-calendar.test.js;
+  // archiving stays the only status write of the M7B edit/detail flows.
+  assert.deepEqual(statusWrites.filter((s) => s !== 'scheduled' && s !== 'lived'), ['archived']);
+  const editFn = block.match(/async function submitNoiIdeaDetail\([\s\S]*?\n\}/)?.[0] || '';
+  assert.doesNotMatch(editFn, /status:/);
   assert.match(block, /sb\.from\('bucket_items'\)\.update\(\{status:'archived'\}\)\.eq\('id',id\)\.eq\('couple_id',coupleId\)\.select\('id'\)\.maybeSingle\(\)/);
   assert.match(block.match(/async function archiveNoiIdea\([\s\S]*?\n\}/)?.[0] || '', /identityGen=noiIdeaIdentityGen/);
 });
@@ -127,7 +135,7 @@ test('M7B runtime: un update/archive senza righe corrispondenti (0 righe RLS-vis
 
 test('M7B runtime: scheduled/lived vengono etichettati in modo naturale e discreto ("In calendario"/"Vissuta"), non in maiuscolo da badge', () => {
   const block = daVivereBlock();
-  assert.match(block, /noiIdeaStateLabel[\s\S]{0,200}status==='scheduled'\)return 'In calendario'/);
+  assert.match(block, /function noiIdeaStateLabel[\s\S]{0,260}status==='scheduled'\)[\s\S]{0,120}'In calendario'/);
   assert.match(block, /status==='lived'\)return 'Vissuta'/);
   assert.match(block, /class="noi-idea-state"/);
   assert.doesNotMatch(block, /return 'IN CALENDARIO'|return 'VISSUTA'/);
@@ -166,7 +174,7 @@ test('M7B runtime: un cambio di identità (account/coppia) svuota le idee e chiu
   const resetFn=block.match(/function resetNoiIdeasForIdentityChange\(\)\{[\s\S]*?\n\}/)?.[0]||'';
   const hydrateFn=block.match(/async function hydrateNoiIdeas\([\s\S]*?\nwindow\.hydrateNoiIdeas=hydrateNoiIdeas;/)?.[0]||'';
   assert.notEqual(resetFn,'');
-  assert.match(resetFn,/noiIdeaState=\{loaded:false,busy:false,error:false,activeItems:\[\],livedItems:\[\],showLived:false,selectedId:null,identityKey:null\}/);
+  assert.match(resetFn,/noiIdeaState=\{loaded:false,busy:false,error:false,activeItems:\[\],livedItems:\[\],showLived:false,selectedId:null,identityKey:null,calendarById:new Map\(\)\}/);
   assert.match(resetFn,/noiIdeaRequestGen\+\+/);
   assert.match(resetFn,/closeNoiIdeaDetail\(\)/);
   assert.match(resetFn,/toggleNoiIdeaQuickForm\(false\)/);

@@ -86,7 +86,9 @@ test('M6D (6): entry delete cascades to reminders; edit re-syncs pending rows', 
   assert.match(js(), /async function syncEntryReminders\(entryId\)/);
   assert.match(js(), /if \(savedEntryId\) await syncEntryReminders\(savedEntryId\);/);
   assert.match(js(), /\.from\('calendar_reminders'\)\.delete\(\)\.eq\('id', row\.id\)/, 'stale pending rows are deleted, not left behind');
-  assert.match(js(), /const result = await sb\.from\('calendar_entries'\)\.insert\(withCreateAuthority\(payload, calendarKind, window\.usProfile\)\)\.select\('id'\);/, 'create reads back the id so reminders can attach');
+  // M7C: a create from Da vivere is forced shared; every other create keeps calendarKind.
+  assert.match(js(), /const kind = ideaLink \? 'shared' : calendarKind;/);
+  assert.match(js(), /const result = await sb\.from\('calendar_entries'\)\.insert\(withCreateAuthority\(payload, kind, window\.usProfile\)\)\.select\('id'\);/, 'create reads back the id so reminders can attach');
 });
 
 // (7) authorization: personal owner-only, shared couple, recipient in couple, isolation.

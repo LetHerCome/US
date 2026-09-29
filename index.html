@@ -27,7 +27,7 @@
 <link rel="stylesheet" href="/polish4.css?v=us-final-polish-motion31-1"/>
 <link rel="stylesheet" href="/stories.css"/>
 <link rel="stylesheet" href="/left-for-you.css?v=us-m5i-ephemeral-20260924-1"/>
-<link rel="stylesheet" href="/calendar.css?v=us-m6d-reminders-1"/>
+<link rel="stylesheet" href="/calendar.css?v=us-m7c-da-vivere-1"/>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://iiakdfsxpywdkxravqjh.supabase.co" crossorigin>
 <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
@@ -302,6 +302,11 @@ html.us-returning-device .auth-overlay{
             <label class="noi-idea-sr" for="noiIdeaDetailLink">Link</label>
             <input id="noiIdeaDetailLink" type="url" placeholder="Link (opzionale)">
             <p class="noi-idea-detail-hint" id="noiIdeaDetailHint" aria-hidden="true"></p>
+            <div class="noi-idea-detail-calendar" id="noiIdeaDetailCalendar" hidden>
+              <span class="noi-idea-detail-when"><small>In calendario</small><b id="noiIdeaDetailWhen"></b></span>
+              <button type="button" class="noi-idea-quiet-action" id="noiIdeaDetailOpenCalendar">Apri nel calendario</button>
+            </div>
+            <button type="button" class="noi-idea-quiet-action noi-idea-schedule" id="noiIdeaDetailSchedule" hidden>Metti in calendario</button>
             <div class="noi-idea-detail-actions">
               <button type="submit" class="primary" id="noiIdeaDetailSave">Salva</button>
               <button type="button" id="noiIdeaDetailArchive">Archivia</button>
@@ -704,6 +709,7 @@ html.us-returning-device .auth-overlay{
         <button type="button" class="us-cal-sheet-close us-icon-center" id="usCalendarFormClose" aria-label="Chiudi modulo">×</button>
       </header>
       <form class="us-cal-form" id="usCalendarForm">
+        <p class="us-cal-form-context" id="usCalendarFormContext" hidden>Da vivere · un evento insieme, per entrambi</p>
         <label class="us-cal-field"><span>Titolo</span><input id="usCalendarTitleInput" type="text" maxlength="200" required></label>
         <label class="us-cal-field"><span>Giorno</span><input id="usCalendarDateInput" type="date" required></label>
         <label class="us-cal-field us-cal-allday-field"><input id="usCalendarAllDayInput" type="checkbox"><span>Tutto il giorno</span></label>
@@ -760,7 +766,7 @@ html.us-returning-device .auth-overlay{
 <script defer src="/polish4.js?v=us-final-polish-motion31-1"></script>
 <script defer src="/moments-albums.js?v=us-m5j-conservati-20260925-1"></script>
 <script defer src="/calendar-domain.js?v=us-m6c1-duration-1"></script>
-<script defer src="/calendar.js?v=us-m6d-reminders-1"></script>
+<script defer src="/calendar.js?v=us-m7c-da-vivere-1"></script>
 <script defer src="/navigation.js?v=us-fastboot-back-1"></script>
 <script defer src="/ui-foundation.js"></script>
 </body></html>

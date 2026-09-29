@@ -14,7 +14,10 @@ test('M7A migrations exist as fresh forward-only files after the M6 history', ()
   assert.ok(fs.existsSync(path.join(ROOT, MIGRATION)), 'domain migration missing');
   assert.ok(fs.existsSync(path.join(ROOT, CLAIM_ROLE_FIX)), 'claim_us_role fix migration missing');
   const files = fs.readdirSync(path.join(ROOT, 'supabase/migrations')).sort();
-  const lastThree = files.slice(-3);
+  // Later milestones (M7C+) may append migrations; M7A's pair must still sit
+  // right after the full M6 history, in order.
+  const m6d = files.indexOf('20260928210000_m6d_calendar_reminders.sql');
+  const lastThree = files.slice(m6d, m6d + 3);
   assert.deepEqual(lastThree, [
     '20260928210000_m6d_calendar_reminders.sql',
     path.basename(MIGRATION),

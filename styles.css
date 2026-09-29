@@ -501,6 +501,17 @@ body.viewer-open{overflow:hidden}
 .noi-idea-detail-actions #noiIdeaDetailArchive{background:#202632;color:#e9ebf2;flex:0 0 auto}
 .noi-idea-detail-actions #noiIdeaDetailArchive[data-confirm="1"]{background:rgba(255,102,142,.16);color:var(--pink2)}
 @media(max-width:370px){.noi-idea-card-copy b{font-size:13px}}
+/* M7C · Da vivere -> Calendar: quando + azioni discrete */
+.noi-idea-detail-calendar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:16px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03)}
+.noi-idea-detail-calendar[hidden],.noi-idea-schedule[hidden]{display:none}
+.noi-idea-detail-when{display:flex;flex-direction:column;gap:2px;min-width:0}
+.noi-idea-detail-when small{font-size:10px;font-style:italic;color:var(--muted)}
+.noi-idea-detail-when b{font-size:13px;font-weight:600;color:var(--text)}
+.noi-idea-quiet-action{flex:0 0 auto;background:none;border:1px solid rgba(255,255,255,.12);color:#e9ddff;font-size:12px;font-weight:600;padding:8px 12px;border-radius:13px}
+.noi-idea-schedule{align-self:flex-start}
+/* Il dettaglio di un'idea è una modalità focalizzata: Risonanza e Calendario
+   lasciano spazio, così azioni e quando restano visibili senza scroll. */
+#bond .noi-canonical-page:has(.noi-idea-detail:not([hidden])) .noi-resonance,#bond .noi-canonical-page:has(.noi-idea-detail:not([hidden])) .us-cal-entry{display:none}
 /* M7B gate · Noi resta no-scroll anche con Da vivere: la pagina ha un'altezza
    fissa (sopra nav e Ti penso) e batte gli override legacy di identity.css;
    solo la lista idee scorre al suo interno, la Quest diventa una riga compatta. */

@@ -415,6 +415,10 @@ let formReminderOffset = null;   // null = Nessuno
 let formReminderTarget = 'me';
 let detailEntry = null;
 let busy = false;
+// M7C — "Metti in calendario" da Da vivere: il form resta quello del
+// Calendario (autorità di data/ora/durata/reminder); questo contesto dice
+// solo che la creazione deve nascere shared e collegarsi a UN bucket_item.
+let pendingIdeaLink = null;
 
 function ensureInitialMonth() {
   if (viewYear != null) return;
@@ -842,6 +846,10 @@ async function deleteEntry() {
   try {
     const { data, error } = await sb.from('calendar_entries').delete().eq('id', detailEntry.id).select('id');
     const outcome = classifyMutationResult({ data, error });
+    // M7C — un evento che spiega ancora un'esperienza Da vivere è protetto
+    // dalla FK (ON DELETE RESTRICT -> 23001; 23503 se la FK fosse NO ACTION):
+    // lo diciamo, invece di un errore generico.
+    if (outcome === 'error' && (error?.code === '23001' || error?.code === '23503')) { toast('È collegato a Da vivere: resta nel calendario.'); return; }
     if (outcome === 'error') throw error;
     if (outcome === 'not_authorized') throw new Error('delete matched 0 rows');
     entries = entries.filter((e) => e.id !== detailEntry.id);
@@ -850,6 +858,7 @@ async function deleteEntry() {
     renderCalendar();
     if ($('usCalendarDaySheet')?.classList.contains('open') && selectedDate) renderDaySections(selectedDate);
     toast('Impegno eliminato');
+    window.hydrateNoiIdeas?.();
   } catch (error) {
     console.warn('[US Calendar] delete', error);
     toast('Non riesco a eliminarlo. Riprova.');
@@ -944,6 +953,9 @@ function getActiveReminderTarget() {
 function setFormStatus(msg) { const el = $('usCalendarFormStatus'); if (el) el.textContent = msg; }
 
 function openForm(mode, entry) {
+  pendingIdeaLink = null;
+  const context = $('usCalendarFormContext');
+  if (context) context.hidden = true;
   const title = $('usCalendarFormTitle');
   if (title) title.textContent = mode === 'edit' ? 'Modifica impegno' : 'Nuovo impegno';
   const picker = $('usCalendarKindPicker');
@@ -1016,6 +1028,7 @@ function closeCalendarFormSheet() {
   sheet.classList.remove('open');
   sheet.setAttribute('aria-hidden', 'true');
   editingFormEntry = null;
+  pendingIdeaLink = null;
 }
 
 async function saveEntry(event) {
@@ -1072,11 +1085,21 @@ async function saveEntry(event) {
       if (outcome === 'error') throw error;
       if (outcome === 'not_authorized') throw new Error('update matched 0 rows');
     } else {
-      const result = await sb.from('calendar_entries').insert(withCreateAuthority(payload, calendarKind, window.usProfile)).select('id');
+      const ideaLink = pendingIdeaLink;
+      const kind = ideaLink ? 'shared' : calendarKind;
+      const result = await sb.from('calendar_entries').insert(withCreateAuthority(payload, kind, window.usProfile)).select('id');
       if (result.error) throw result.error;
       savedId = Array.isArray(result.data) && result.data[0]?.id ? result.data[0].id : null;
+      if (ideaLink) {
+        const outcome = await linkCreatedEntryToIdea(ideaLink, savedId);
+        if (!outcome.ok) {
+          setFormStatus(outcome.reason === 'stale' ? 'Questa idea è già cambiata: niente di nuovo in calendario.' : 'Non riesco a metterla in calendario. Riprova.');
+          return;
+        }
+      }
     }
     const wasEditing = Boolean(editingFormEntry);
+    const linkedIdea = !wasEditing && Boolean(pendingIdeaLink);
     // M6D — sync dei reminder dopo il salvataggio dell'entry:
     // replace-all delle righe non ancora inviate (sent_at is null) con la
     // scelta corrente del form; una riga già inviata non si tocca (storia).
@@ -1086,7 +1109,7 @@ async function saveEntry(event) {
     closeCalendarFormSheet();
     await loadEntries();
     if ($('usCalendarDaySheet')?.classList.contains('open') && selectedDate) renderDaySections(selectedDate);
-    toast(wasEditing ? 'Impegno aggiornato' : 'Impegno aggiunto');
+    toast(wasEditing ? 'Impegno aggiornato' : (linkedIdea ? 'In calendario' : 'Impegno aggiunto'));
   } catch (error) {
     console.warn('[US Calendar] save', error);
     setFormStatus('Non riesco a salvarlo. Riprova.');
@@ -1271,6 +1294,88 @@ $('usCalendarDurationPicker')?.querySelectorAll('button[data-us-cal-duration]').
 $('usCalendarForm')?.addEventListener('submit', saveEntry);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('usCalendarOverlay')?.classList.contains('open')) closeCalendarSurface(); });
 
+// ===== M7C — Da vivere -> Calendar =====
+// Il Calendario resta l'unica autorità di data/ora/durata/reminder: Da vivere
+// non ha un suo date picker, apre QUESTO form (sempre shared) e riceve solo
+// l'id dell'evento creato. Il collegamento su bucket_items lo scrive Da vivere
+// (window.UsDaVivere.linkCalendarEntry): nessuno dei due domini scrive
+// le tabelle dell'altro.
+async function linkCreatedEntryToIdea(ideaLink, entryId) {
+  const sameIdentity = window.usProfile?.id === ideaLink.userId && window.usProfile?.couple_id === ideaLink.coupleId;
+  const linker = window.UsDaVivere?.linkCalendarEntry;
+  let outcome = { ok: false, reason: 'error' };
+  if (entryId && sameIdentity && typeof linker === 'function') {
+    try { outcome = await linker(ideaLink.bucketItemId, entryId); } catch (error) { console.warn('[US Calendar] link idea', error); }
+  }
+  if (outcome?.ok) return { ok: true };
+  // Compensazione: l'evento appena creato esiste solo per questa idea. Se il
+  // collegamento non è avvenuto (idea già programmata dall'altra persona,
+  // archiviata, rete) lo rimuoviamo, così il Calendario non tiene un
+  // duplicato scollegato.
+  if (entryId) {
+    const { error } = await sb.from('calendar_entries').delete().eq('id', entryId).select('id');
+    if (error) console.warn('[US Calendar] link rollback', error);
+  }
+  return { ok: false, reason: outcome?.reason || 'error' };
+}
+
+async function openCalendarForIdea(idea) {
+  if (!idea?.id || !window.usProfile) return;
+  const identity = { userId: window.usProfile.id, coupleId: window.usProfile.couple_id };
+  await openCalendarSurface();
+  if (window.usProfile?.id !== identity.userId || !$('usCalendarOverlay')?.classList.contains('open')) return;
+  openForm('create', null);
+  pendingIdeaLink = { bucketItemId: idea.id, ...identity };
+  calendarKind = 'shared';
+  setKindPicker('shared');
+  const picker = $('usCalendarKindPicker');
+  if (picker) picker.hidden = true;
+  updateReminderTargetVisibility();
+  const title = $('usCalendarFormTitle');
+  if (title) title.textContent = 'Metti in calendario';
+  const context = $('usCalendarFormContext');
+  if (context) context.hidden = false;
+  const saveBtn = $('usCalendarFormSave');
+  if (saveBtn) saveBtn.textContent = 'Metti in calendario';
+  $('usCalendarTitleInput').value = idea.title || '';
+  $('usCalendarNoteInput').value = idea.note || '';
+}
+
+// Letture minime per mostrare "In calendario · quando" in Da vivere, sempre
+// dalla fonte (calendar_entries), mai copiate su bucket_items.
+async function getCalendarEntriesByIds(ids) {
+  const unique = [...new Set((ids || []).filter(Boolean))];
+  if (!unique.length || !window.usProfile) return new Map();
+  const { data, error } = await sb.from('calendar_entries')
+    .select('id,title,entry_type,is_all_day,starts_at,ends_at,start_date,end_date')
+    .eq('couple_id', window.usProfile.couple_id)
+    .in('id', unique);
+  if (error) throw error;
+  return new Map((data || []).map((row) => [row.id, row]));
+}
+
+function calendarWhenLabel(entry) {
+  if (!entry) return '';
+  const dateISO = entry.is_all_day ? entry.start_date : localDateFromInstant(entry.starts_at);
+  if (!dateISO) return '';
+  const d = parseISODate(dateISO);
+  const day = `${WEEKDAYS_IT[(d.getDay() + 6) % 7].toLowerCase()} ${d.getDate()} ${MONTHS_IT[d.getMonth()].slice(0, 3).toLowerCase()}`;
+  if (entry.is_all_day) return day;
+  const s = new Date(entry.starts_at);
+  return `${day}, ${pad2(s.getHours())}:${pad2(s.getMinutes())}`;
+}
+
+async function openCalendarEntry(entryId) {
+  if (!entryId || !window.usProfile) return;
+  const map = await getCalendarEntriesByIds([entryId]).catch((error) => { console.warn('[US Calendar] open entry', error); return new Map(); });
+  const entry = map.get(entryId);
+  if (!entry) { toast('Non trovo più questo evento nel calendario.'); return; }
+  const dateISO = entry.is_all_day ? entry.start_date : localDateFromInstant(entry.starts_at);
+  await openCalendarSurface(dateISO);
+  if ($('usCalendarOverlay')?.classList.contains('open')) openDetail(entryId);
+}
+
+window.UsCalendarLinks = Object.freeze({ openForIdea: openCalendarForIdea, openEntry: openCalendarEntry, getEntriesByIds: getCalendarEntriesByIds, whenLabel: calendarWhenLabel });
 window.openCalendarSurface = openCalendarSurface;
 window.closeCalendarSurface = closeCalendarSurface;
 window.closeCalendarDaySheet = closeCalendarDaySheet;

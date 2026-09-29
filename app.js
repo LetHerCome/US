@@ -2362,15 +2362,21 @@ window.rerollBondQuest=rerollBondQuest;
 const NOI_IDEA_LINK_RE=/^https?:\/\//i;
 let noiIdeaRequestGen=0;
 let noiIdeaIdentityGen=0;
-let noiIdeaState={loaded:false,busy:false,error:false,activeItems:[],livedItems:[],showLived:false,selectedId:null,identityKey:null};
+let noiIdeaState={loaded:false,busy:false,error:false,activeItems:[],livedItems:[],showLived:false,selectedId:null,identityKey:null,calendarById:new Map()};
 
 function noiIdeaNormalizeLink(raw){
   const value=(raw||'').trim();
   if(!value)return null;
   return NOI_IDEA_LINK_RE.test(value)?value:null;
 }
+// M7C — "quando" arriva sempre dal Calendario (UsCalendarLinks), mai da una
+// copia su bucket_items: se l'evento non è leggibile resta "In calendario".
+function noiIdeaWhen(item){
+  const entry=item?.calendar_entry_id?noiIdeaState.calendarById.get(item.calendar_entry_id):null;
+  return entry?(window.UsCalendarLinks?.whenLabel?.(entry)||''):'';
+}
 function noiIdeaStateLabel(item){
-  if(item.status==='scheduled')return 'In calendario';
+  if(item.status==='scheduled'){const when=noiIdeaWhen(item);return when?`In calendario · ${when.split(',')[0]}`:'In calendario';}
   if(item.status==='lived')return 'Vissuta';
   return '';
 }
@@ -2446,12 +2452,24 @@ async function hydrateNoiIdeas(){
   noiIdeaState.livedItems=rows.filter(r=>r.status==='lived');
   renderNoiIdeaActiveList();
   renderNoiIdeaLivedList();
+  await refreshNoiIdeaCalendarLinks(rows.map(r=>r.calendar_entry_id),gen,userId,coupleId);
+}
+async function refreshNoiIdeaCalendarLinks(ids,gen,userId,coupleId){
+  const reader=window.UsCalendarLinks?.getEntriesByIds;
+  if(typeof reader!=='function'||!ids.some(Boolean))return;
+  let map;
+  try{map=await reader(ids);}catch(e){console.warn('[US Da vivere] calendar links',e);return;}
+  if((gen!=null&&gen!==noiIdeaRequestGen)||window.usProfile?.id!==userId||window.usProfile?.couple_id!==coupleId)return;
+  for(const [id,entry] of map)noiIdeaState.calendarById.set(id,entry);
+  renderNoiIdeaActiveList();
+  renderNoiIdeaLivedList();
+  if(noiIdeaState.selectedId)renderNoiIdeaDetailState(noiIdeaFindItem(noiIdeaState.selectedId));
 }
 window.hydrateNoiIdeas=hydrateNoiIdeas;
 function resetNoiIdeasForIdentityChange(){
   noiIdeaIdentityGen++;
   noiIdeaRequestGen++;
-  noiIdeaState={loaded:false,busy:false,error:false,activeItems:[],livedItems:[],showLived:false,selectedId:null,identityKey:null};
+  noiIdeaState={loaded:false,busy:false,error:false,activeItems:[],livedItems:[],showLived:false,selectedId:null,identityKey:null,calendarById:new Map()};
   const active=document.getElementById('noiIdeaList');
   if(active){active.innerHTML='';active.setAttribute('aria-busy','false');}
   const lived=document.getElementById('noiIdeaLivedList');
@@ -2496,9 +2514,23 @@ function toggleNoiIdeaQuickForm(open){
   if(status)status.textContent='';
 }
 function noiIdeaDetailHint(item){
-  if(item.status==='scheduled')return 'In calendario';
   if(item.status==='lived')return 'Vissuta';
   return '';
+}
+// Stato "quando" del dettaglio: un'idea senza data offre "Metti in
+// calendario"; una collegata mostra il quando (dal Calendario) e apre
+// l'evento vero, mai un secondo editor di data.
+function renderNoiIdeaDetailState(item){
+  if(!item)return;
+  const hintEl=document.getElementById('noiIdeaDetailHint');
+  if(hintEl)hintEl.textContent=noiIdeaDetailHint(item);
+  const cal=document.getElementById('noiIdeaDetailCalendar');
+  const when=document.getElementById('noiIdeaDetailWhen');
+  const schedule=document.getElementById('noiIdeaDetailSchedule');
+  const linked=Boolean(item.calendar_entry_id)&&item.status!=='archived';
+  if(cal)cal.hidden=!linked;
+  if(when)when.textContent=linked?noiIdeaWhen(item):'';
+  if(schedule)schedule.hidden=item.status!=='idea';
 }
 function openNoiIdeaDetail(id){
   const item=noiIdeaFindItem(id);
@@ -2513,7 +2545,7 @@ function openNoiIdeaDetail(id){
   if(titleEl)titleEl.value=item.title||'';
   if(noteEl)noteEl.value=item.note||'';
   if(linkEl)linkEl.value=item.link_url||'';
-  if(hintEl)hintEl.textContent=noiIdeaDetailHint(item);
+  renderNoiIdeaDetailState(item);
   if(statusEl)statusEl.textContent='';
   if(archiveBtn){archiveBtn.textContent='Archivia';archiveBtn.dataset.confirm='';}
   const browse=document.getElementById('noiIdeaBrowse');
@@ -2650,6 +2682,41 @@ async function archiveNoiIdea(){
     if(btn){btn.disabled=false;btn.dataset.confirm='';btn.textContent='Archivia';}
   }
 }
+// M7C — collegamento idea -> evento shared appena creato dal Calendario.
+// Scrive solo status/calendar_entry_id su bucket_items, e solo se la riga è
+// ancora un'idea senza link (guardia contro la race con l'altra persona o con
+// un'archiviazione): 0 righe = 'stale', mai un successo silenzioso.
+async function linkNoiIdeaToCalendar(id,entryId){
+  if(!window.usProfile||!id||!entryId)return {ok:false,reason:'error'};
+  const userId=window.usProfile.id,coupleId=window.usProfile.couple_id,identityGen=noiIdeaIdentityGen;
+  const {data,error}=await sb.from('bucket_items')
+    .update({status:'scheduled',calendar_entry_id:entryId})
+    .eq('id',id).eq('couple_id',coupleId).eq('status','idea').is('calendar_entry_id',null)
+    .select('id,status,calendar_entry_id').maybeSingle();
+  if(error){console.warn(error);return {ok:false,reason:'error'};}
+  if(!data)return {ok:false,reason:'stale'};
+  if(!noiIdeaOperationIsCurrent(userId,coupleId,identityGen))return {ok:true};
+  noiIdeaPatchItem(id,{status:'scheduled',calendar_entry_id:entryId});
+  renderNoiIdeaActiveList();
+  if(noiIdeaState.selectedId===id)renderNoiIdeaDetailState(noiIdeaFindItem(id));
+  refreshNoiIdeaCalendarLinks([entryId],null,userId,coupleId);
+  return {ok:true};
+}
+window.UsDaVivere=Object.freeze({linkCalendarEntry:linkNoiIdeaToCalendar});
+function scheduleNoiIdea(){
+  const item=noiIdeaState.selectedId?noiIdeaFindItem(noiIdeaState.selectedId):null;
+  if(!item||item.status!=='idea'||noiIdeaState.busy)return;
+  const opener=window.UsCalendarLinks?.openForIdea;
+  if(typeof opener!=='function'){toast('Il calendario non è pronto. Riprova.');return;}
+  opener({id:item.id,title:item.title,note:item.note});
+}
+function openNoiIdeaCalendarEntry(){
+  const item=noiIdeaState.selectedId?noiIdeaFindItem(noiIdeaState.selectedId):null;
+  if(!item?.calendar_entry_id)return;
+  window.UsCalendarLinks?.openEntry?.(item.calendar_entry_id);
+}
+document.getElementById('noiIdeaDetailSchedule')?.addEventListener('click',scheduleNoiIdea);
+document.getElementById('noiIdeaDetailOpenCalendar')?.addEventListener('click',openNoiIdeaCalendarEntry);
 window.openNoiIdeaDetail=openNoiIdeaDetail;
 document.getElementById('noiIdeaAddToggle')?.addEventListener('click',()=>{
   toggleNoiIdeaQuickForm(Boolean(document.getElementById('noiIdeaQuickForm')?.hidden));
