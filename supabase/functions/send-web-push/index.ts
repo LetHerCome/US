@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.112.4";
 import webpush from "npm:web-push@3.6.7";
 import { dispatchThinkReactionWebPush, dispatchThinkWebPush } from "../_shared/think-web-push.ts";
+import { dispatchLeftForYouPush } from "../_shared/left-for-you-push-core.mjs";
 import { supabaseSecretKey } from "../_shared/supabase-secret.ts";
 
 const VAPID_PUBLIC_KEY = "BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss";
@@ -69,16 +70,6 @@ Deno.serve(async (request) => {
       }));
     }
 
-    const { data: vapidPrivate, error: vapidError } = await admin.rpc("get_internal_vapid_private_key");
-    if (vapidError || !vapidPrivate) return json({ error: "Push configuration unavailable" }, 500);
-    webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, vapidPrivate as string);
-    let recipientIds: string[] = [];
-    let title = "US.";
-    let notificationBody = "";
-    let target = "home";
-    let tag = "us";
-    let dedupeKey: string | null = null;
-    let prefKey: "today" | "bond" | "left_for_you" | null = null;
     if (type === "left_for_you") {
       if (!partner || !body.reference_id) return json({ error: "Missing left_for_you reference" }, 400);
       const { data: row, error: rowError } = await admin.from("left_for_you")
@@ -88,13 +79,30 @@ Deno.serve(async (request) => {
       if (rowError || !row || row.sender_id !== sender.id || row.couple_id !== sender.couple_id || row.recipient_id !== partner.id) {
         return json({ error: "Invalid left_for_you event" }, 403);
       }
-      recipientIds = [row.recipient_id];
-      notificationBody = `${sender.display_name || "La tua persona"} ti ha lasciato qualcosa ♡`;
-      target = "left_for_you";
-      tag = `left-for-you:${row.id}`;
-      dedupeKey = `left-for-you:${row.id}`;
-      prefKey = "left_for_you";
+      // M9A: una notifica logica per riga (dedupe `left-for-you:<row id>`),
+      // stessa logica del worker di recupero left-for-you-push-worker.
+      return json(await dispatchLeftForYouPush(admin, {
+        itemId: row.id,
+        expectedSenderId: sender.id,
+        ensureVapid: async () => {
+          const { data: vapidPrivate, error: vapidError } = await admin.rpc("get_internal_vapid_private_key");
+          if (vapidError || !vapidPrivate) throw new Error("push_configuration_unavailable");
+          webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, vapidPrivate as string);
+        },
+        sendNotification: (subscription: unknown, payload: string, options: unknown) => webpush.sendNotification(subscription as any, payload, options as any),
+      }));
     }
+
+    const { data: vapidPrivate, error: vapidError } = await admin.rpc("get_internal_vapid_private_key");
+    if (vapidError || !vapidPrivate) return json({ error: "Push configuration unavailable" }, 500);
+    webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, vapidPrivate as string);
+    let recipientIds: string[] = [];
+    let title = "US.";
+    let notificationBody = "";
+    let target = "home";
+    let tag = "us";
+    let dedupeKey: string | null = null;
+    let prefKey: "today" | "bond" | null = null;
     if (type === "test") {
       recipientIds = [sender.id];
       notificationBody = "Notifiche attive. US può raggiungerti anche quando è chiusa ♡";
@@ -139,7 +147,7 @@ Deno.serve(async (request) => {
     }
     if (!recipientIds.length) return json({ delivered: 0, reason: "no-recipient" });
     if (prefKey) {
-      const { data: preferences } = await admin.from("notification_preferences").select("user_id,think,today,bond,relationship,left_for_you").in("user_id", recipientIds);
+      const { data: preferences } = await admin.from("notification_preferences").select("user_id,think,today,bond,relationship").in("user_id", recipientIds);
       const byUser = new Map((preferences || []).map((preference: any) => [preference.user_id, preference]));
       recipientIds = recipientIds.filter((id) => byUser.has(id) ? Boolean(byUser.get(id)[prefKey!]) : true);
       if (!recipientIds.length) return json({ delivered: 0, reason: "disabled-by-preference" });

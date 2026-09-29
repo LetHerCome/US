@@ -41,7 +41,7 @@ function makeEl(id) {
   };
 }
 
-function createHarness({ leftForYouRows = [], profilesRows = [{ id: 'beatrice-id', display_name: 'Beatrice', couple_id: 'couple-id' }], insertResult = null, pushError = false, authed = true, currentProfile = { id: 'francesco-id', display_name: 'Francesco', role: 'francesco', couple_id: 'couple-id' } } = {}) {
+function createHarness({ leftForYouRows = [], profilesRows = [{ id: 'beatrice-id', display_name: 'Beatrice', couple_id: 'couple-id' }], insertResult = null, nextInsertId = null, pushError = false, authed = true, currentProfile = { id: 'francesco-id', display_name: 'Francesco', role: 'francesco', couple_id: 'couple-id' } } = {}) {
   const elements = new Map();
   const log = { inserts: [], uploads: [], realtime: [], realtimeHandlers: [], rpcs: [], cameraRequests: [], cameraStreams: [], pushEvents: [] };
   let pendingInsert = null;
@@ -126,7 +126,7 @@ function createHarness({ leftForYouRows = [], profilesRows = [{ id: 'beatrice-id
         log.inserts.push(payload);
         const resultPromise = pendingInsert
           ? pendingInsert.promise
-          : Promise.resolve(insertResult ?? { data: { id: 'inserted-left-for-you-id' }, error: null });
+          : Promise.resolve(insertResult ?? { data: { id: nextInsertId ? nextInsertId() : 'inserted-left-for-you-id' }, error: null });
         const inserted = {
           select: () => ({ single: () => resultPromise }),
           then: (resolve, reject) => resultPromise.then(resolve, reject),
@@ -704,6 +704,23 @@ test('M5G3 left_for_you insert returns its id to Push and Push failure remains n
   await pushFailure.api.send();
   assert.equal(pushFailure.log.inserts.length, 1);
   assert.deepEqual(pushFailure.log.pushEvents, [{ type: 'left_for_you', referenceId: 'saved-despite-push-failure' }]);
+});
+
+test('M9A three sequential Left for You sends request three distinct pushes, each for its own row', async () => {
+  let counter = 0;
+  const harness = createHarness({ nextInsertId: () => `row-${++counter}` });
+  await harness.api.load();
+  for (const text of ['Uno', 'Due', 'Tre']) {
+    harness.el('leftForYouComposerText').value = text;
+    await harness.api.send();
+  }
+  assert.equal(harness.log.inserts.length, 3);
+  assert.deepEqual(harness.log.pushEvents, [
+    { type: 'left_for_you', referenceId: 'row-1' },
+    { type: 'left_for_you', referenceId: 'row-2' },
+    { type: 'left_for_you', referenceId: 'row-3' },
+  ]);
+  assert.ok(harness.log.inserts.every((row) => row.sender_id === 'francesco-id' && row.recipient_id === 'beatrice-id'));
 });
 
 test('M5G7 nested camera keeps composer open while guarding the composer backdrop', async () => {

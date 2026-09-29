@@ -21,5 +21,8 @@ verify_jwt = false
 [functions.calendar-reminders-worker]
 verify_jwt = false
 
+[functions.left-for-you-push-worker]
+verify_jwt = false
+
 [functions.spotify-search]
 verify_jwt = true

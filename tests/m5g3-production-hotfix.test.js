@@ -44,9 +44,13 @@ test('M5G3 Edge Function validates sender-owned left_for_you references and hide
   assert.match(edge, /row\.sender_id.*sender\.id|sender\.id.*row\.sender_id/);
   assert.match(edge, /row\.couple_id.*sender\.couple_id|sender\.couple_id.*row\.couple_id/);
   assert.match(edge, /row\.recipient_id.*partner\.id|partner\.id.*row\.recipient_id/);
-  assert.match(edge, /left-for-you:/);
-  assert.match(edge, /ti ha lasciato qualcosa/);
+  // M9A: payload e dedupe vivono nel core condiviso con il worker di recupero.
+  const core = read('supabase/functions/_shared/left-for-you-push-core.mjs');
+  assert.match(edge, /dispatchLeftForYouPush/);
+  assert.match(core, /left-for-you:/);
+  assert.match(core, /ti ha lasciato qualcosa/);
   assert.doesNotMatch(edge, /notificationBody\s*=\s*.*body\./);
+  assert.doesNotMatch(core, /body:\s*`[^`]*row\.body/);
 });
 
 test('M5G3 push navigation routes left_for_you to Home and the existing recipient surface', () => {
@@ -66,9 +70,11 @@ test('M5G3 left_for_you Edge Function preserves think_reaction and suppresses di
   const edge = read('supabase/functions/send-web-push/index.ts');
   const settings = read('settings.js');
   assert.match(edge, /\[\"test\", \"think\", \"think_reaction\", \"daily_answer\", \"quest_confirmed\", \"left_for_you\"\]/);
-  assert.match(edge, /let prefKey: \"today\" \| \"bond\" \| \"left_for_you\" \| null/);
-  assert.match(edge, /prefKey = \"left_for_you\"/);
-  assert.match(edge, /select\(\"user_id,think,today,bond,relationship,left_for_you\"\)/);
+  // M9A: la preferenza left_for_you è applicata dal core condiviso.
+  const core = read('supabase/functions/_shared/left-for-you-push-core.mjs');
+  assert.match(core, /\.select\('left_for_you'\)/);
+  assert.match(core, /preference\.left_for_you === false/);
+  assert.match(core, /disabled-by-preference/);
   assert.match(edge, /disabled-by-preference/);
   assert.match(settings, /left_for_you:true/);
   assert.match(settings, /preferenceToggle\('left_for_you','Lasciato per te'/);

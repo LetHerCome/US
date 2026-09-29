@@ -412,6 +412,8 @@ async function sendWebPushEvent(type,referenceId=null,extra={}){
     if(!session?.access_token)return null;
     const response=await fetch(`${SB_URL}/functions/v1/send-web-push`,{
       method:'POST',
+      // keepalive: la richiesta sopravvive se la PWA va in background o si chiude subito dopo l'invio.
+      keepalive:true,
       headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':`Bearer ${session.access_token}`},
       body:JSON.stringify({type,reference_id:referenceId||undefined,...extra})
     });
