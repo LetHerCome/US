@@ -173,6 +173,9 @@ test('M6C (11): window labels read like 13:00 – 16:00 / dopo le 19:00 — neve
 // (12) responsive: one week list everywhere, month panes untouched, no tiny dual timelines.
 test('M6C (12): the week view is a single vertical list at every width; the month view DOM is untouched', () => {
   assert.match(html(), /id="usCalendarWeekList"/);
+  assert.match(html(), /<div class="us-cal-body" id="usCalendarBody">[\s\S]*?<\/div>\s*<button type="button" class="us-cal-fab[^>]*id="usCalendarAddBtn"/, 'the shared FAB stays outside the scrolling day-list body');
+  assert.match(css(), /\.us-cal-fab\{[^}]*display:flex;position:sticky;[^}]*margin:0 calc\(20px \+ var\(--us-safe-right\)\) 0 auto;bottom:6px;/, 'the FAB stays at the right edge and sticks inside the Calendar scroll surface');
+  assert.match(css(), /\.us-cal-surface\{[^}]*padding:0 0 calc\(18px \+ var\(--us-safe-bottom\)\)/, 'the existing surface safe-area padding combines with the sticky inset to keep the FAB above the home indicator');
   assert.match(css(), /\.us-cal-week-pane\{display:none\}/);
   assert.match(css(), /\.us-cal-body\.is-week-mode \.us-cal-pane-mobile,\r?\n\.us-cal-body\.is-week-mode \.us-cal-pane-wide\{display:none!important\}/);
   assert.match(css(), /\.us-cal-body\.is-week-mode \.us-cal-week-pane\{display:block\}/);

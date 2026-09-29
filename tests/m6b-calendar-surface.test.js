@@ -269,11 +269,13 @@ test('M6B (28): a restrained loading state, not a blocking full-screen spinner',
   assert.match(css(), /\.us-cal-body\.is-loading\{opacity:/);
 });
 
-// (29) empty calendar state, with the exact copy and a CTA, not a fabricated "no records" message.
-test('M6B (29): the empty calendar state uses the specified copy and a single CTA', () => {
+// (29) empty calendar state keeps the copy, with the shared FAB as the sole create action.
+test('M6B (29): the empty calendar state has no duplicate CTA; the shared FAB is the create action', () => {
   assert.match(html(), /<b>I vostri giorni, insieme\.<\/b>/);
   assert.match(html(), /Aggiungete i vostri impegni e US vi aiuterà a vedere come si incastrano le vostre giornate\./);
-  assert.match(html(), /id="usCalendarEmptyCta">Aggiungi impegno</);
+  assert.doesNotMatch(html(), /usCalendarEmptyCta|class="us-cal-empty-cta"/);
+  assert.doesNotMatch(js(), /usCalendarEmptyCta/);
+  assert.match(html(), /id="usCalendarAddBtn" aria-label="Nuovo impegno"/);
 });
 
 // (30) error/retry state keeps last good data visible.

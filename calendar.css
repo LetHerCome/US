@@ -60,9 +60,8 @@
 .us-cal-empty[hidden]{display:none!important}
 .us-cal-empty b{display:block;font:500 19px/1.2 var(--us-font-editorial);color:#fff7fb;margin-bottom:6px}
 .us-cal-empty p{max-width:320px;margin:0 auto 14px;font-size:12px;line-height:1.5}
-.us-cal-empty-cta{min-height:44px;padding:0 18px;border-radius:14px;border:1px solid rgba(169,133,255,.28);background:rgba(169,133,255,.14);color:#fff7fb;font-size:12px;font-weight:700}
-
-.us-cal-fab{position:fixed;right:calc(20px + var(--us-safe-right));bottom:calc(24px + var(--us-safe-bottom));z-index:20;width:56px;height:56px;border-radius:50%;font-size:26px;color:#fff;background:linear-gradient(135deg,#5b8def,#8b72f8);box-shadow:0 12px 30px rgba(91,141,239,.35)}
+/* Surface padding already supplies 18px + safe-bottom; 6px gives a 24px + safe-area dock offset. */
+.us-cal-fab{display:flex;position:sticky;margin:0 calc(20px + var(--us-safe-right)) 0 auto;bottom:6px;z-index:20;width:56px;height:56px;border-radius:50%;font-size:26px;color:#fff;background:linear-gradient(135deg,#5b8def,#8b72f8);box-shadow:0 12px 30px rgba(91,141,239,.35)}
 
 /* Nested sheets (day / detail / form) — same overlay, additional slide-up layers. */
 .us-cal-sheet-overlay{position:fixed;inset:0;z-index:10145;display:none;align-items:flex-end;justify-content:center;background:rgba(3,4,8,.58);backdrop-filter:blur(8px)}

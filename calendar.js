@@ -1262,7 +1262,6 @@ $('usCalendarDetailDelete')?.addEventListener('click', deleteEntry);
 $('usCalendarFormClose')?.addEventListener('click', closeCalendarFormSheet);
 $('usCalendarFormBackdrop')?.addEventListener('click', closeCalendarFormSheet);
 $('usCalendarAddBtn')?.addEventListener('click', () => openForm('create', null));
-$('usCalendarEmptyCta')?.addEventListener('click', () => openForm('create', null));
 $('usCalendarAllDayInput')?.addEventListener('change', toggleAllDayFields);
 $('usCalendarKindPersonal')?.addEventListener('click', () => { calendarKind = 'personal'; setKindPicker('personal'); });
 $('usCalendarKindShared')?.addEventListener('click', () => { calendarKind = 'shared'; setKindPicker('shared'); });
