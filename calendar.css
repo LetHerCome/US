@@ -60,8 +60,6 @@
 .us-cal-empty[hidden]{display:none!important}
 .us-cal-empty b{display:block;font:500 19px/1.2 var(--us-font-editorial);color:#fff7fb;margin-bottom:6px}
 .us-cal-empty p{max-width:320px;margin:0 auto 14px;font-size:12px;line-height:1.5}
-/* Surface padding already supplies 18px + safe-bottom; 6px gives a 24px + safe-area dock offset. */
-.us-cal-fab{display:flex;position:sticky;margin:0 calc(20px + var(--us-safe-right)) 0 auto;bottom:6px;z-index:20;width:56px;height:56px;border-radius:50%;font-size:26px;color:#fff;background:linear-gradient(135deg,#5b8def,#8b72f8);box-shadow:0 12px 30px rgba(91,141,239,.35)}
 
 /* Nested sheets (day / detail / form) — same overlay, additional slide-up layers. */
 .us-cal-sheet-overlay{position:fixed;inset:0;z-index:10145;display:none;align-items:flex-end;justify-content:center;background:rgba(3,4,8,.58);backdrop-filter:blur(8px)}
@@ -95,28 +93,8 @@
 .us-cal-detail-delete{border:1px solid rgba(255,94,126,.18);background:rgba(255,94,126,.09);color:#ff91aa}
 
 .us-cal-form{padding:8px 18px 2px}
-.us-cal-kind-picker{display:flex;gap:8px;margin-bottom:14px;border-radius:14px;background:rgba(255,255,255,.04);padding:4px}
-.us-cal-kind-picker[hidden]{display:none!important}
-.us-cal-kind-picker button{flex:1;min-height:38px;border-radius:11px;border:0;background:transparent;color:rgba(247,242,248,.6);font-size:12px;font-weight:700}
-.us-cal-kind-picker button.is-active{background:rgba(169,133,255,.22);color:#fff7fb}
-/* M6C.1 · Quanto dura? — same segmented-control idiom, chips + Altro end time. */
-.us-cal-duration-picker{display:flex;gap:6px;margin-top:2px}
-.us-cal-duration-picker button{flex:1;min-height:38px;border-radius:11px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:rgba(247,242,248,.6);font-size:12px;font-weight:700}
-.us-cal-duration-picker button.is-active{background:rgba(169,133,255,.22);border-color:rgba(169,133,255,.3);color:#fff7fb}
-.us-cal-duration-picker button[hidden]{display:none!important}
-.us-cal-end-field{margin-top:10px}
 
-/* M6D · Ricordamelo / Ricorda a — stesso idioma chips, target sub-row. */
-.us-cal-reminder-picker{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.us-cal-reminder-picker button{min-height:38px;border-radius:11px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:rgba(247,242,248,.6);font-size:12px;font-weight:700}
-.us-cal-reminder-picker button.is-active{background:rgba(169,133,255,.22);border-color:rgba(169,133,255,.3);color:#fff7fb}
-.us-cal-reminder-target{margin-top:10px}
 .us-cal-field>span{display:block}
-.us-cal-reminder-target>span{margin:0 0 7px 3px;font-size:11px;font-weight:750;color:#b7bdc9}
-.us-cal-reminder-target-picker{display:flex;gap:6px}
-.us-cal-reminder-target-picker button{flex:1;min-height:38px;border-radius:11px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:rgba(247,242,248,.6);font-size:12px;font-weight:700}
-.us-cal-reminder-target-picker button.is-active{background:rgba(169,133,255,.22);border-color:rgba(169,133,255,.3);color:#fff7fb}
-.us-cal-reminder-target-picker button[hidden],.us-cal-reminder-picker button[hidden]{display:none!important}
 .us-cal-detail-reminders{padding:6px 18px 0;display:grid;gap:6px}
 .us-cal-detail-reminders:empty{display:none}
 .us-cal-detail-reminders h4{margin:4px 0 2px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:rgba(247,242,248,.55)}
@@ -124,11 +102,6 @@
 .us-cal-detail-reminder small{color:rgba(247,242,248,.5);font-size:10px;text-transform:uppercase;letter-spacing:.04em}
 /* hidden must always win: the global stylesheet styles these as block/flex. */
 .us-cal-field[hidden]{display:none!important}
-.us-cal-end-field[hidden]{display:none!important}
-/* Four chips must fit 390px: two per row on narrow screens. */
-@media(max-width:420px){
-  .us-cal-duration-picker{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-}
 .us-cal-field{display:block;margin-top:12px}
 .us-cal-field>span{display:block;margin:0 0 7px 3px;font-size:11px;font-weight:750;color:#b7bdc9}
 .us-cal-field>span i{font-style:normal;color:#707888;font-weight:500}
@@ -191,3 +164,24 @@ body.us-cal-open{overflow:hidden}
 .us-cal-tempo-copy p{margin:4px 0 0;font-size:12px;color:rgba(247,242,248,.55)}
 .us-cal-form-context{margin:0 2px;font-size:11.5px;font-style:italic;color:var(--muted)}
 .us-cal-form-context[hidden]{display:none}
+
+/* M9C — il calendario sceglie la data: tocco su un giorno = nuova voce. */
+.us-cal-hint{margin:2px 18px 0;text-align:center;font-size:11.5px;color:rgba(247,242,248,.46)}
+.us-cal-day{cursor:pointer}
+.us-cal-day:focus-visible,.us-cal-week-day-head:focus-visible{outline:2px solid rgba(169,133,255,.8);outline-offset:2px}
+@media(hover:hover){.us-cal-day:not(.is-outside):hover{border-color:rgba(169,133,255,.28);background:rgba(169,133,255,.06)}}
+.us-cal-week-day{cursor:pointer}
+.us-cal-pick-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 18px 0;padding:10px 12px 10px 14px;border-radius:16px;border:1px solid rgba(255,158,182,.24);background:linear-gradient(135deg,rgba(255,109,147,.12),rgba(155,124,255,.10))}
+.us-cal-pick-banner[hidden]{display:none!important}
+.us-cal-pick-banner span{min-width:0;display:flex;flex-direction:column;gap:2px}
+.us-cal-pick-banner small{font-size:10.5px;font-weight:750;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,205,225,.8)}
+.us-cal-pick-banner b{font-size:13.5px;color:#fff7fb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.us-cal-pick-banner button{flex:0 0 auto;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff7fb;font-size:12px;font-weight:700}
+.us-cal-form-day{margin:0 2px 2px;font:500 19px/1.2 var(--us-font-editorial);color:#fff7fb}
+.us-cal-form-day[hidden],.us-cal-form-day-entries[hidden]{display:none!important}
+.us-cal-form-day-entries{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px}
+.us-cal-form-day-kicker{width:100%;font-size:10.5px;font-weight:750;letter-spacing:.08em;text-transform:uppercase;color:rgba(247,242,248,.48)}
+.us-cal-form-day-entry{display:inline-flex;align-items:baseline;gap:6px;max-width:100%;min-height:36px;padding:7px 11px;border-radius:12px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.04);color:#fff7fb;font-size:12px;text-align:left}
+.us-cal-form-day-entry b{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.us-cal-form-day-entry small{flex:0 0 auto;color:rgba(247,242,248,.55);font-size:11px}
+.us-cal-pick-banner:not([hidden])+.us-cal-hint{display:none}

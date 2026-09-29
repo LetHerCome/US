@@ -16,19 +16,11 @@ const worker = () => read('supabase/functions/calendar-reminders-worker/index.ts
 const migration = () => read('supabase/migrations/20260928210000_m6d_calendar_reminders.sql');
 const config = () => read('supabase/config.toml');
 
-// (1) form: Ricordamelo con le 5 opzioni, Nessuno default.
-test('M6D (1): the form has a Ricordamelo picker with Nessuno default and the 4 offsets', () => {
+// (1) M9C: reminder configuration leaves the quick form; the domain stays.
+test('M6D (1): the quick form no longer configures reminders; the domain helpers remain', () => {
   const form = html().match(/<form class="us-cal-form"[\s\S]*?<\/form>/)?.[0] || '';
-  const durIdx = form.indexOf('id="usCalendarDurationField"');
-  const remIdx = form.indexOf('id="usCalendarReminderField"');
-  assert.ok(remIdx > durIdx, 'Ricordamelo comes after the duration field');
-  for (const label of ['Nessuno', '10 min prima', '30 min prima', '1 ora prima', '1 giorno prima']) {
-    assert.match(form, new RegExp(`>${label}</button>`));
-  }
-  assert.match(form, /data-us-cal-reminder="none" class="is-active"/, 'Nessuno is the visible default');
-  assert.match(form, /id="usCalendarReminderTargetPicker"/);
-  for (const label of ['Me', 'Partner', 'Entrambi']) assert.match(form, new RegExp(`data-us-cal-reminder-target="[^"]*"[^>]*>(?:<[^>]+>)?${label}</button>`));
-  assert.match(form, /data-us-cal-reminder-target="both"[^>]*hidden/, 'Entrambi starts hidden (only shared shows it)');
+  assert.doesNotMatch(form, /Ricordamelo|usCalendarReminderField|usCalendarReminderTargetPicker|data-us-cal-reminder/);
+  assert.deepEqual(cal.REMINDER_OPTIONS.map((o) => o.label), ['Nessuno', '10 min prima', '30 min prima', '1 ora prima', '1 giorno prima']);
 });
 
 // (2) all-day: solo Nessuno/1 giorno prima — le altre opzioni spariscono.
@@ -37,7 +29,6 @@ test('M6D (2): all-day events only allow Nessuno or 1 giorno prima (10m/30m/1h h
   assert.equal(cal.reminderOptionsFor(false).length, 5, 'timed keeps all 5 options');
   assert.equal(cal.reminderOffsetAllowed(10, true), false);
   assert.equal(cal.reminderOffsetAllowed(1440, true), true);
-  assert.match(js(), /setReminderPicker\(btn\.dataset\.usCalReminder === 'none' \? null : Number\(btn\.dataset\.usCalReminder\)\)/);
   // server-side: il check constraint impone lo stesso rule-set
   assert.match(migration(), /calendar_reminders_allday_offset_check/);
 });
@@ -46,7 +37,6 @@ test('M6D (2): all-day events only allow Nessuno or 1 giorno prima (10m/30m/1h h
 test('M6D (3): Entrambi renders only for shared events; rows resolve per-recipient', () => {
   assert.equal(cal.reminderTargetAllowed('both', 'shared'), true);
   assert.equal(cal.reminderTargetAllowed('both', 'personal'), false);
-  assert.match(js(), /both\.hidden = calendarKind !== 'shared'/);
   assert.deepEqual(cal.reminderRowsFor({ entryType: 'shared', target: 'both', requesterId: 'me1', partnerId: 'p1', offsetMinutes: 30 }), [
     { recipient_id: 'me1', offset_minutes: 30 },
     { recipient_id: 'p1', offset_minutes: 30 }
@@ -56,9 +46,7 @@ test('M6D (3): Entrambi renders only for shared events; rows resolve per-recipie
   ]);
   assert.deepEqual(cal.reminderRowsFor({ entryType: 'personal', target: 'both', requesterId: 'me1', partnerId: 'p1', offsetMinutes: 30 }), [],
     'personal + Entrambi produces no rows (UI hides it; helper refuses it)');
-  // niente hardcoded names: il partner è risolto dai profili reali
-  assert.match(js(), /function partnerIdFor\(\)/);
-  assert.match(js(), /profiles\.find\(\(p\) => p\.id !== me\)/);
+  // niente hardcoded names nel Calendario
   assert.doesNotMatch(js(), /['"]Francesco['"]|['"]Beatrice['"]/);
 });
 
@@ -80,15 +68,15 @@ test('M6D (5): triple no-duplicate guard — unique constraint, event-log dedupe
   assert.match(migration(), /create index calendar_reminders_pending_idx[\s\S]*where sent_at is null/);
 });
 
-// (6) update/delete evento aggiorna/cancella i reminder.
-test('M6D (6): entry delete cascades to reminders; edit re-syncs pending rows', () => {
+// (6) delete cascades; M9C: saving through the quick form never deletes or rewrites reminders.
+test('M6D (6): entry delete cascades to reminders; the quick form never deletes or re-syncs them', () => {
   assert.match(migration(), /entry_id uuid not null references public\.calendar_entries\(id\) on delete cascade/);
-  assert.match(js(), /async function syncEntryReminders\(entryId\)/);
-  assert.match(js(), /if \(savedEntryId\) await syncEntryReminders\(savedEntryId\);/);
-  assert.match(js(), /\.from\('calendar_reminders'\)\.delete\(\)\.eq\('id', row\.id\)/, 'stale pending rows are deleted, not left behind');
+  assert.doesNotMatch(js(), /syncEntryReminders/);
+  assert.doesNotMatch(js(), /\.from\('calendar_reminders'\)\.(delete|insert|update|upsert)\(/, 'the Calendar UI only reads reminders now');
+  assert.match(js(), /\.from\('calendar_reminders'\)\.select\('id,entry_id,recipient_id,offset_minutes,requested_by,sent_at'\)/, 'existing reminders are still read for the detail sheet');
   // M7C: a create from Da vivere is forced shared; every other create keeps calendarKind.
   assert.match(js(), /const kind = ideaLink \? 'shared' : calendarKind;/);
-  assert.match(js(), /const result = await sb\.from\('calendar_entries'\)\.insert\(withCreateAuthority\(payload, kind, window\.usProfile\)\)\.select\('id'\);/, 'create reads back the id so reminders can attach');
+  assert.match(js(), /const result = await sb\.from\('calendar_entries'\)\.insert\(withCreateAuthority\(payload, kind, window\.usProfile\)\)\.select\('id'\);/);
 });
 
 // (7) authorization: personal owner-only, shared couple, recipient in couple, isolation.
@@ -113,14 +101,12 @@ test('M6D (8): all-day reminders derive from start_date (the M6A all-day rule)',
 });
 
 // (9) regressione Calendar: il resto non è toccato.
-test('M6D (9): Calendar regression — detail shows reminders always; month/week/duration untouched', () => {
+test('M6D (9): Calendar regression — detail shows existing reminders always', () => {
   assert.match(html(), /id="usCalendarDetailReminders"/);
   assert.match(js(), /renderDetailReminders\(entry\);/);
   assert.match(js(), /if \(!rows\.length\) \{ container\.innerHTML = ''; return; \}/, 'empty is fine, hidden is not');
   assert.match(js(), /profileName\(r\.requested_by\)/, 'the recipient always sees who set the reminder');
   assert.match(css(), /\.us-cal-detail-reminder\{/);
-  assert.match(css(), /\.us-cal-reminder-picker\{display:grid;grid-template-columns:1fr 1fr;gap:6px\}/);
-  assert.match(css(), /@media\(max-width:420px\)[\s\S]*\.us-cal-duration-picker\{display:grid/);
   assert.match(config(), /\[functions\.calendar-reminders-worker\]/);
   assert.match(config(), /verify_jwt = false/);
 });

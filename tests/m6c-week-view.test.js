@@ -173,9 +173,10 @@ test('M6C (11): window labels read like 13:00 – 16:00 / dopo le 19:00 — neve
 // (12) responsive: one week list everywhere, month panes untouched, no tiny dual timelines.
 test('M6C (12): the week view is a single vertical list at every width; the month view DOM is untouched', () => {
   assert.match(html(), /id="usCalendarWeekList"/);
-  assert.match(html(), /<div class="us-cal-body" id="usCalendarBody">[\s\S]*?<\/div>\s*<button type="button" class="us-cal-fab[^>]*id="usCalendarAddBtn"/, 'the shared FAB stays outside the scrolling day-list body');
-  assert.match(css(), /\.us-cal-fab\{[^}]*display:flex;position:sticky;[^}]*margin:0 calc\(20px \+ var\(--us-safe-right\)\) 0 auto;bottom:6px;/, 'the FAB stays at the right edge and sticks inside the Calendar scroll surface');
-  assert.match(css(), /\.us-cal-surface\{[^}]*padding:0 0 calc\(18px \+ var\(--us-safe-bottom\)\)/, 'the existing surface safe-area padding combines with the sticky inset to keep the FAB above the home indicator');
+  // M9C: the floating + is gone — tapping a day is the create action.
+  assert.doesNotMatch(html(), /id="usCalendarAddBtn"|class="us-cal-fab/);
+  assert.doesNotMatch(css(), /\.us-cal-fab\{/);
+  assert.match(css(), /\.us-cal-surface\{[^}]*padding:0 0 calc\(18px \+ var\(--us-safe-bottom\)\)/, 'the surface keeps its safe-area padding');
   assert.match(css(), /\.us-cal-week-pane\{display:none\}/);
   assert.match(css(), /\.us-cal-body\.is-week-mode \.us-cal-pane-mobile,\r?\n\.us-cal-body\.is-week-mode \.us-cal-pane-wide\{display:none!important\}/);
   assert.match(css(), /\.us-cal-body\.is-week-mode \.us-cal-week-pane\{display:block\}/);
@@ -190,7 +191,9 @@ test('M6C (12): the week view is a single vertical list at every width; the mont
 // (13) detail / back flow: week items reuse the existing detail sheet; nav layers unchanged.
 test('M6C (13): week items open the existing detail; the navigation layer registry is unchanged', () => {
   assert.match(js(), /container\.querySelectorAll\('\[data-entry-id\]'\)\.forEach\(\(btn\) => btn\.addEventListener\('click', \(\) => openDetail\(btn\.dataset\.entryId\)\)\)/);
-  assert.match(js(), /container\.querySelectorAll\('\.us-cal-week-day-head\[data-date\]'\)\.forEach\(\(btn\) => btn\.addEventListener\('click', \(\) => openDaySheet\(btn\.dataset\.date\)\)\)/);
+  // M9C: the rest of a week day (head included) starts creation for that date;
+  // a tap on an entry never creates.
+  assert.match(js(), /container\.querySelectorAll\('\.us-cal-week-day\[data-date\]'\)\.forEach\(\(day\) => day\.addEventListener\('click', \(event\) => \{\s*if \(event\.target\.closest\?\.\('\[data-entry-id\]'\)\) return;\s*startCreateForDate\(day\.dataset\.date\);/);
   for (const name of ['calendar', 'calendar-day', 'calendar-detail', 'calendar-form']) {
     assert.match(nav(), new RegExp(`name:'${name}'`));
   }

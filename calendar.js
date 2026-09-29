@@ -299,6 +299,32 @@ function quickEntryError({ allDay, time }) {
   return null;
 }
 
+// M9C — the quick form only collects Titolo, Tutto il giorno and Ora. Every
+// field it no longer shows is decided here, never zeroed by accident:
+// * create: no description (a Da vivere idea may pass its own note), no
+//   location, the default duration, a single all-day day;
+// * edit: the entry's own description/location travel through unchanged, a
+//   timed entry that stays timed keeps its REAL duration, and an all-day
+//   entry that stays all-day keeps its own span.
+function quickEntryHiddenFields({ editingEntry = null, allDay = false, ideaNote = null } = {}) {
+  if (!editingEntry) {
+    return {
+      description: ideaNote ? String(ideaNote) : null,
+      location: null,
+      durationMinutes: US_CALENDAR_DEFAULT_DURATION_MINUTES,
+      spanDays: 0
+    };
+  }
+  const keepsTimed = !allDay && !editingEntry.is_all_day;
+  const keepsAllDay = allDay && editingEntry.is_all_day;
+  return {
+    description: editingEntry.description ?? null,
+    location: editingEntry.location ?? null,
+    durationMinutes: keepsTimed ? (originalDurationMinutes(editingEntry) || US_CALENDAR_DEFAULT_DURATION_MINUTES) : US_CALENDAR_DEFAULT_DURATION_MINUTES,
+    spanDays: keepsAllDay ? (originalAllDaySpanDays(editingEntry) || 0) : 0
+  };
+}
+
 // PostgREST reports an RLS-filtered UPDATE/DELETE as a *success* with zero
 // affected rows (HTTP 204, error: null) — not as an error. Without chaining
 // .select() and checking the returned row count, a mutation the RLS USING
@@ -384,7 +410,7 @@ const pureApi = {
   monthGridRange, windowForGrid, weekRangeFor, weekWindowFor, mondayOfISO, partitionDayBusy, tempoWindowLabel,
   durationMinutesFromTimes, REMINDER_OPTIONS, REMINDER_TARGETS, reminderTargetAllowed, reminderOffsetAllowed, reminderOptionsFor, reminderRowsFor, reminderCopy,
   buildEntryPayload, withCreateAuthority, canEditEntry,
-  quickEntryError, classifyMutationResult,
+  quickEntryError, quickEntryHiddenFields, classifyMutationResult,
   oggiEventLabel, composeOggiCalendarFact, oggiRemainingWindows
 };
 if (typeof module === 'object' && module.exports) Object.assign(module.exports, pureApi);
@@ -409,16 +435,19 @@ let calendarKind = 'personal';
 let calendarMode = 'month'; // 'month' | 'week'
 let weekStartISO = null;    // Monday of the visible week
 let editingFormEntry = null;
-let editingOriginalEndHHMM = ''; // M6C.1 — the end time the form was prefilled with
-let editingEntryReminders = []; // M6D — righe calendar_reminders dell entry in editing
-let formReminderOffset = null;   // null = Nessuno
-let formReminderTarget = 'me';
+// M6D — righe calendar_reminders della coppia: lette per il dettaglio. M9C: il
+// form rapido non le configura più e non le tocca mai (restano come sono).
+let editingEntryReminders = [];
+let formDateISO = null; // M9C — il giorno scelto toccando il calendario
 let detailEntry = null;
 let busy = false;
 // M7C — "Metti in calendario" da Da vivere: il form resta quello del
 // Calendario (autorità di data/ora/durata/reminder); questo contesto dice
 // solo che la creazione deve nascere shared e collegarsi a UN bucket_item.
 let pendingIdeaLink = null;
+// M9C — "Metti in calendario" sceglie il giorno dal calendario stesso: finché
+// è attivo, toccare un giorno apre il form già shared e collegato all'idea.
+let pendingIdeaPick = null;
 
 function ensureInitialMonth() {
   if (viewYear != null) return;
@@ -604,7 +633,9 @@ function renderDayCell(dateObj, dateISO, inMonth, dayEntries) {
   if (!inMonth) classes.push('is-outside');
   if (isToday) classes.push('is-today');
   if (isSelected) classes.push('is-selected');
-  return `<button type="button" class="${classes.join(' ')}" data-date="${dateISO}" aria-label="${esc(dateISO)}" aria-pressed="${isSelected}">
+  const count = dayEntries.length;
+  const label = `${longDayLabel(dateISO)}${count ? ` · ${count === 1 ? '1 impegno' : `${count} impegni`}` : ''} · aggiungi`;
+  return `<button type="button" class="${classes.join(' ')}" data-date="${dateISO}" aria-label="${esc(label)}" aria-pressed="${isSelected}">
     <span class="us-cal-day-num">${dateObj.getDate()}</span>
     <span class="us-cal-day-markers">${markers}</span>
   </button>`;
@@ -623,7 +654,8 @@ function renderGridInto(container, dateIndex, options = {}) {
   }
   const weekdayRow = WEEKDAYS_IT.map((w) => `<div class="us-cal-weekday">${w}</div>`).join('');
   container.innerHTML = `<div class="us-cal-weekday-row">${weekdayRow}</div><div class="us-cal-day-grid">${cells.join('')}</div>`;
-  container.querySelectorAll('.us-cal-day[data-date]').forEach((btn) => btn.addEventListener('click', () => openDaySheet(btn.dataset.date)));
+  // M9C — il calendario sceglie la data: toccare un giorno crea per quel giorno.
+  container.querySelectorAll('.us-cal-day[data-date]').forEach((btn) => btn.addEventListener('click', () => startCreateForDate(btn.dataset.date)));
 }
 
 function renderMobileGrid(dateIndex) { renderGridInto($('usCalendarGridMobile'), dateIndex); }
@@ -706,8 +738,8 @@ function renderWeekDay(dateISO, dayEntries, ordered) {
         renderDaySection('Insieme', dayEntries.filter((e) => entryLaneRole(e) === 'shared'), 'shared')
       ].join('')
     : '<p class="us-cal-day-empty">Niente in programma.</p>';
-  return `<article class="us-cal-week-day${isToday ? ' is-today' : ''}">
-    <button type="button" class="us-cal-week-day-head" data-date="${dateISO}" aria-label="${esc(`${weekday} ${d.getDate()} ${MONTHS_IT[d.getMonth()].toLowerCase()}`)}">
+  return `<article class="us-cal-week-day${isToday ? ' is-today' : ''}" data-date="${dateISO}">
+    <button type="button" class="us-cal-week-day-head" data-date="${dateISO}" aria-label="${esc(`${weekday} ${d.getDate()} ${MONTHS_IT[d.getMonth()].toLowerCase()} · aggiungi`)}">
       <span class="us-cal-week-day-name">${esc(weekday)}</span><span class="us-cal-week-day-num">${d.getDate()}</span>
     </button>
     <div class="us-cal-week-day-body">${body}</div>
@@ -730,7 +762,11 @@ function renderWeekList() {
   }
   container.innerHTML = days.join('');
   container.querySelectorAll('[data-entry-id]').forEach((btn) => btn.addEventListener('click', () => openDetail(btn.dataset.entryId)));
-  container.querySelectorAll('.us-cal-week-day-head[data-date]').forEach((btn) => btn.addEventListener('click', () => openDaySheet(btn.dataset.date)));
+  // M9C — un impegno apre il suo dettaglio; il resto del giorno crea per quella data.
+  container.querySelectorAll('.us-cal-week-day[data-date]').forEach((day) => day.addEventListener('click', (event) => {
+    if (event.target.closest?.('[data-entry-id]')) return;
+    startCreateForDate(day.dataset.date);
+  }));
 }
 
 function renderCalendar() {
@@ -867,160 +903,80 @@ async function deleteEntry() {
   }
 }
 
-function setKindPicker(kind) {
-  $('usCalendarKindPersonal')?.classList.toggle('is-active', kind === 'personal');
-  $('usCalendarKindShared')?.classList.toggle('is-active', kind === 'shared');
-  $('usCalendarKindPersonal')?.setAttribute('aria-pressed', String(kind === 'personal'));
-  $('usCalendarKindShared')?.setAttribute('aria-pressed', String(kind === 'shared'));
-}
 function toggleAllDayFields() {
   const allDay = Boolean($('usCalendarAllDayInput')?.checked);
   const timeField = $('usCalendarTimeField');
   if (timeField) timeField.hidden = allDay;
-  // M6C.1 — a timed duration makes no sense for an all-day entry: the whole
-  // duration UI (chips + custom end time) disappears with it.
-  const durationField = $('usCalendarDurationField');
-  if (durationField) durationField.hidden = allDay;
 }
-// M6C.1 — Quanto dura? One active chip at a time; Altro reveals the minimal
-// end-time control. values: 30 | 60 | 120 | 'custom'.
-function setDurationPicker(value) {
-  const picker = $('usCalendarDurationPicker');
-  if (!picker) return;
-  picker.querySelectorAll('button[data-us-cal-duration]').forEach((btn) => {
-    const active = String(btn.dataset.usCalDuration) === String(value);
-    btn.classList.toggle('is-active', active);
-    btn.setAttribute('aria-pressed', String(active));
-  });
-  const endField = $('usCalendarEndField');
-  if (endField) endField.hidden = String(value) !== 'custom';
+function longDayLabel(dateISO) {
+  const d = parseISODate(dateISO);
+  return `${capitalize(WEEKDAY_LONG_IT[(d.getDay() + 6) % 7])} ${d.getDate()} ${MONTHS_IT[d.getMonth()].toLowerCase()}`;
 }
-function getActiveDurationChoice() {
-  const active = $('usCalendarDurationPicker')?.querySelector('button.is-active[data-us-cal-duration]');
-  if (!active) return null;
-  return active.dataset.usCalDuration === 'custom' ? 'custom' : Number(active.dataset.usCalDuration);
-}
-// M6D — Ricordamelo: opzioni filtrate per tipo (all-day → solo Nessuno/1 giorno),
-// Ricorda a visibile solo con un reminder attivo; Entrambi solo per gli shared.
-function setReminderPicker(offsetMinutes) {
-  formReminderOffset = offsetMinutes;
-  const picker = $('usCalendarReminderPicker');
-  if (!picker) return;
-  const isAllDay = Boolean($('usCalendarAllDayInput')?.checked);
-  picker.querySelectorAll('button[data-us-cal-reminder]').forEach((btn) => {
-    const value = btn.dataset.usCalReminder === 'none' ? null : Number(btn.dataset.usCalReminder);
-    const visible = reminderOffsetAllowed(value, isAllDay);
-    btn.hidden = !visible;
-    const active = (value == null ? formReminderOffset == null : formReminderOffset === value);
-    btn.classList.toggle('is-active', active);
-    btn.setAttribute('aria-pressed', String(active));
-  });
-  // All-day può avere solo Nessuno o 1440: se l'utente passa a all-day con
-  // un offset timed selezionato, il reminder cade su Nessuno.
-  if (isAllDay && formReminderOffset != null && formReminderOffset !== 1440) {
-    formReminderOffset = null;
-    picker.querySelectorAll('button[data-us-cal-reminder]').forEach((btn) => {
-      const active = btn.dataset.usCalReminder === 'none';
-      btn.classList.toggle('is-active', active);
-      btn.setAttribute('aria-pressed', String(active));
-    });
-  }
-  updateReminderTargetVisibility();
-}
-function setReminderTarget(target) {
-  formReminderTarget = reminderTargetAllowed(target, calendarKind) ? target : 'me';
-  const picker = $('usCalendarReminderTargetPicker');
-  if (!picker) return;
-  picker.querySelectorAll('button[data-us-cal-reminder-target]').forEach((btn) => {
-    const active = btn.dataset.usCalReminderTarget === formReminderTarget;
-    btn.classList.toggle('is-active', active);
-    btn.setAttribute('aria-pressed', String(active));
-  });
-}
-function updateReminderTargetVisibility() {
-  const wrap = $('usCalendarReminderTargetWrap');
-  if (wrap) wrap.hidden = formReminderOffset == null;
-  const both = $('usCalendarReminderTargetPicker')?.querySelector('[data-us-cal-reminder-target=both]');
-  if (both) both.hidden = calendarKind !== 'shared';
-  if (calendarKind !== 'shared' && formReminderTarget === 'both') { formReminderTarget = 'me'; setReminderTarget('me'); }
-}
-function getActiveReminderOffset() {
-  return formReminderOffset;
-}
-function getActiveReminderTarget() {
-  return formReminderOffset == null ? null : formReminderTarget;
+// M9C — il giorno scelto e ciò che c'è già: ogni impegno resta toccabile e
+// apre il suo dettaglio (mai una creazione al suo posto).
+function renderFormDay(dateISO, mode) {
+  const dayLine = $('usCalendarFormDay');
+  if (dayLine) { dayLine.textContent = dateISO ? longDayLabel(dateISO) : ''; dayLine.hidden = mode === 'edit' || !dateISO; }
+  const box = $('usCalendarFormDayEntries');
+  if (!box) return;
+  const list = mode === 'edit' || !dateISO ? [] : (buildDateIndex().get(dateISO) || []);
+  box.hidden = !list.length;
+  box.innerHTML = list.length
+    ? `<span class="us-cal-form-day-kicker">Già quel giorno</span>${list.map((e) => `<button type="button" class="us-cal-form-day-entry us-cal-marker-host--${laneClass(entryLaneRole(e))}" data-entry-id="${esc(e.id)}"><b>${esc(e.title)}</b><small>${esc(entryTimeLabel(e))}</small></button>`).join('')}`
+    : '';
+  box.querySelectorAll('[data-entry-id]').forEach((btn) => btn.addEventListener('click', () => { closeCalendarFormSheet(); openDetail(btn.dataset.entryId); }));
 }
 function setFormStatus(msg) { const el = $('usCalendarFormStatus'); if (el) el.textContent = msg; }
 
-function openForm(mode, entry) {
+function openForm(mode, entry, dateISO) {
   pendingIdeaLink = null;
   const context = $('usCalendarFormContext');
   if (context) context.hidden = true;
   const title = $('usCalendarFormTitle');
   if (title) title.textContent = mode === 'edit' ? 'Modifica impegno' : 'Nuovo impegno';
-  const picker = $('usCalendarKindPicker');
-  if (picker) picker.hidden = mode === 'edit';
   setFormStatus('');
   const saveBtn = $('usCalendarFormSave');
   if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = mode === 'edit' ? 'Salva modifiche' : 'Salva impegno'; }
   editingFormEntry = mode === 'edit' ? entry : null;
+  // M9C — il form rapido crea sempre un impegno personale; gli eventi Insieme
+  // nascono da Da vivere e restano modificabili col loro tipo.
   calendarKind = mode === 'edit' ? entry.entry_type : 'personal';
-  setKindPicker(calendarKind);
 
   $('usCalendarTitleInput').value = entry?.title || '';
   $('usCalendarAllDayInput').checked = Boolean(entry?.is_all_day);
   if (entry?.is_all_day) {
-    $('usCalendarDateInput').value = entry.start_date;
+    formDateISO = entry.start_date;
     $('usCalendarTimeInput').value = '';
   } else if (entry) {
     const s = new Date(entry.starts_at);
-    $('usCalendarDateInput').value = localDateFromInstant(entry.starts_at);
+    formDateISO = localDateFromInstant(entry.starts_at);
     $('usCalendarTimeInput').value = `${pad2(s.getHours())}:${pad2(s.getMinutes())}`;
   } else {
-    $('usCalendarDateInput').value = selectedDate || todayISO();
+    formDateISO = dateISO || selectedDate || todayISO();
     $('usCalendarTimeInput').value = '';
   }
-  $('usCalendarNoteInput').value = entry?.description || '';
-  // M6C.1 — the duration picker opens on the entry's REAL duration when
-  // editing a timed entry (chip when it's 30/60/120, Altro with the entry's
-  // own end time otherwise); 1 hour is only the default for a NEW entry.
-  let durationChoice = US_CALENDAR_DEFAULT_DURATION_MINUTES;
-  let durationEnd = '';
-  editingOriginalEndHHMM = '';
-  if (entry && !entry.is_all_day) {
-    const real = originalDurationMinutes(entry);
-    if (real === 30 || real === 60 || real === 120) durationChoice = real;
-    else {
-      durationChoice = 'custom';
-      const e = new Date(entry.ends_at);
-      durationEnd = `${pad2(e.getHours())}:${pad2(e.getMinutes())}`;
-      editingOriginalEndHHMM = durationEnd;
-    }
-  }
-  setDurationPicker(durationChoice);
-  $('usCalendarEndInput').value = durationEnd;
+  // Giorno resta solo in modifica, per spostare un impegno esistente: in
+  // creazione la data è quella toccata sul calendario.
+  const dateField = $('usCalendarDateField');
+  if (dateField) dateField.hidden = mode !== 'edit';
+  $('usCalendarDateInput').value = formDateISO;
   toggleAllDayFields();
-  // M6D — prefill del reminder dalle righe esistenti dell'entry (edit):
-  // una riga per destinatario; 'both' = due righe stesso offset.
-  const entryRows = entry ? editingEntryReminders.filter((r) => r.entry_id === entry.id) : [];
-  if (entryRows.length) {
-    const meId = window.usProfile ? window.usProfile.id : null;
-    const meRows = entryRows.some((r) => r.recipient_id === meId);
-    const partnerRows = entryRows.some((r) => r.recipient_id !== meId);
-    formReminderOffset = entryRows[0].offset_minutes;
-    formReminderTarget = meRows && partnerRows ? 'both' : (meRows ? 'me' : 'partner');
-  } else {
-    formReminderOffset = null;
-    formReminderTarget = 'me';
-  }
-  setReminderPicker(formReminderOffset);
-  setReminderTarget(formReminderTarget);
+  renderFormDay(formDateISO, mode);
 
   const sheet = $('usCalendarFormSheet');
   if (!sheet) return;
   sheet.classList.add('open');
   sheet.setAttribute('aria-hidden', 'false');
   setTimeout(() => $('usCalendarTitleInput')?.focus({ preventScroll: true }), 80);
+}
+// M9C — tocco su un giorno: nuova voce per quella data (o, se si sta
+// scegliendo il giorno per un'idea Da vivere, l'evento Insieme collegato).
+function startCreateForDate(dateISO) {
+  if (!dateISO) return;
+  selectedDate = dateISO;
+  renderCalendar();
+  if (pendingIdeaPick) { openIdeaForm(pendingIdeaPick, dateISO); return; }
+  openForm('create', null, dateISO);
 }
 function closeCalendarFormSheet() {
   const sheet = $('usCalendarFormSheet');
@@ -1036,40 +992,16 @@ async function saveEntry(event) {
   if (busy || !window.usProfile) return;
   if (!navigator.onLine) { toast('Sei offline. Riprova quando torni online.'); return; }
   const title = $('usCalendarTitleInput').value.trim();
-  const date = $('usCalendarDateInput').value;
+  const date = editingFormEntry ? ($('usCalendarDateInput').value || formDateISO) : formDateISO;
   if (!title || !date) return;
   const allDay = $('usCalendarAllDayInput').checked;
   const time = $('usCalendarTimeInput').value;
   if (quickEntryError({ allDay, time }) === 'time') { setFormStatus('Scegli un\'ora.'); return; }
-  const description = $('usCalendarNoteInput').value.trim();
-  // M6C.1 — the duration is now EXPLICIT for every new timed entry: a chip
-  // (30/60/120) or Altro's own end time. The old invisible 60-minute
-  // assumption is gone; editing a timed entry that stays timed opens on its
-  // REAL duration (see openForm) and keeps it unless the user changes it.
-  let durationMinutes;
-  if (getActiveDurationChoice() === 'custom') {
-    const endTime = $('usCalendarEndInput')?.value;
-    if (!endTime) { setFormStatus("Scegli l'orario di fine."); return; }
-    // Editing a timed entry whose Fine alle is untouched preserves the entry's
-    // REAL duration even if only the start moved (mission rule: an edit never
-    // mutates an existing duration silently). A new/edited end recomputes.
-    const real = editingFormEntry && !editingFormEntry.is_all_day ? originalDurationMinutes(editingFormEntry) : null;
-    durationMinutes = (real && endTime === editingOriginalEndHHMM)
-      ? real
-      : durationMinutesFromTimes(time, endTime);
-    if (!durationMinutes) { setFormStatus("La fine deve essere dopo l'inizio."); return; }
-  } else {
-    durationMinutes = getActiveDurationChoice() || US_CALENDAR_DEFAULT_DURATION_MINUTES;
-  }
-  // The form no longer collects a location: an edit must carry the entry's
-  // existing value through unchanged, and only a create ever writes null.
-  const location = editingFormEntry ? (editingFormEntry.location ?? null) : null;
-  // An all-day entry staying all-day keeps its OWN original span, shifted to
-  // the chosen Giorno; every other case (create, or timed -> all-day) has no
-  // prior all-day span to preserve, so it collapses to a single day.
-  const spanDays = allDay && editingFormEntry && editingFormEntry.is_all_day
-    ? (originalAllDaySpanDays(editingFormEntry) || 0)
-    : 0;
+  const { description, location, durationMinutes, spanDays } = quickEntryHiddenFields({
+    editingEntry: editingFormEntry,
+    allDay,
+    ideaNote: pendingIdeaLink ? pendingIdeaLink.note : null
+  });
 
   const payload = buildEntryPayload({ title, description, location, allDay, date, time, durationMinutes, spanDays });
 
@@ -1100,12 +1032,9 @@ async function saveEntry(event) {
     }
     const wasEditing = Boolean(editingFormEntry);
     const linkedIdea = !wasEditing && Boolean(pendingIdeaLink);
-    // M6D — sync dei reminder dopo il salvataggio dell'entry:
-    // replace-all delle righe non ancora inviate (sent_at is null) con la
-    // scelta corrente del form; una riga già inviata non si tocca (storia).
-    const savedEntryId = wasEditing ? editingFormEntry.id : savedId;
-    if (savedEntryId) await syncEntryReminders(savedEntryId);
-    await loadEntryReminders();
+    // M9C — il form rapido non configura reminder: quelli esistenti restano
+    // esattamente come sono (nessuna sync che li cancelli).
+    if (linkedIdea) clearIdeaPick();
     closeCalendarFormSheet();
     await loadEntries();
     if ($('usCalendarDaySheet')?.classList.contains('open') && selectedDate) renderDaySections(selectedDate);
@@ -1130,26 +1059,6 @@ async function loadEntryReminders() {
   } catch (error) {
     console.warn('[US Calendar] reminders load', error);
     editingEntryReminders = [];
-  }
-}
-
-// Replace-all delle righe PENDENTI (sent_at is null) dell'entry con la
-// scelta corrente; le righe già inviate restano (storia, no spam).
-// Chiave unica (entry_id, recipient_id, offset_minutes) copre le race.
-async function syncEntryReminders(entryId) {
-  if (!window.usProfile) return;
-  const offset = getActiveReminderOffset();
-  const existing = editingEntryReminders.filter((r) => r.entry_id === entryId);
-  // Rimuovi le pendenti che non corrispondono alla scelta corrente.
-  const stale = existing.filter((r) => !r.sent_at && (r.offset_minutes !== offset || !reminderRowsFor({ entryType: calendarKind, target: formReminderTarget, requesterId: window.usProfile.id, partnerId: partnerIdFor(), offsetMinutes: offset }).some((row) => row.recipient_id === r.recipient_id && row.offset_minutes === offset)));
-  for (const row of stale) {
-    await sb.from('calendar_reminders').delete().eq('id', row.id).select('id');
-  }
-  // Aggiungi le righe mancanti (mesma scelta nuova, o switch target).
-  const wanted = reminderRowsFor({ entryType: calendarKind, target: formReminderTarget, requesterId: window.usProfile.id, partnerId: partnerIdFor(), offsetMinutes: offset });
-  const toAdd = wanted.filter((row) => !existing.some((r) => r.recipient_id === row.recipient_id && r.offset_minutes === row.offset_minutes && !r.sent_at));
-  if (toAdd.length) {
-    await sb.from('calendar_reminders').insert(toAdd.map((row) => ({ ...row, couple_id: window.usProfile.couple_id, entry_id: entryId, requested_by: window.usProfile.id })));
   }
 }
 
@@ -1263,6 +1172,7 @@ function closeCalendarSurface() {
     closeCalendarDaySheet();
     closeCalendarDetailSheet();
     closeCalendarFormSheet();
+    clearIdeaPick();
     selectedDate = null;
   };
   if (window.UsUiFoundation?.exitSurface) window.UsUiFoundation.exitSurface(overlay, finalize);
@@ -1284,13 +1194,8 @@ $('usCalendarDetailEdit')?.addEventListener('click', () => { if (detailEntry) op
 $('usCalendarDetailDelete')?.addEventListener('click', deleteEntry);
 $('usCalendarFormClose')?.addEventListener('click', closeCalendarFormSheet);
 $('usCalendarFormBackdrop')?.addEventListener('click', closeCalendarFormSheet);
-$('usCalendarAddBtn')?.addEventListener('click', () => openForm('create', null));
 $('usCalendarAllDayInput')?.addEventListener('change', toggleAllDayFields);
-$('usCalendarKindPersonal')?.addEventListener('click', () => { calendarKind = 'personal'; setKindPicker('personal'); });
-$('usCalendarKindShared')?.addEventListener('click', () => { calendarKind = 'shared'; setKindPicker('shared'); });
-$('usCalendarReminderPicker')?.querySelectorAll('button[data-us-cal-reminder]').forEach((btn) => btn.addEventListener('click', () => setReminderPicker(btn.dataset.usCalReminder === 'none' ? null : Number(btn.dataset.usCalReminder))));
-$('usCalendarReminderTargetPicker')?.querySelectorAll('button[data-us-cal-reminder-target]').forEach((btn) => btn.addEventListener('click', () => setReminderTarget(btn.dataset.usCalReminderTarget)));
-$('usCalendarDurationPicker')?.querySelectorAll('button[data-us-cal-duration]').forEach((btn) => btn.addEventListener('click', () => setDurationPicker(btn.dataset.usCalDuration)));
+$('usCalendarPickCancel')?.addEventListener('click', clearIdeaPick);
 $('usCalendarForm')?.addEventListener('submit', saveEntry);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('usCalendarOverlay')?.classList.contains('open')) closeCalendarSurface(); });
 
@@ -1324,21 +1229,30 @@ async function openCalendarForIdea(idea) {
   const identity = { userId: window.usProfile.id, coupleId: window.usProfile.couple_id };
   await openCalendarSurface();
   if (window.usProfile?.id !== identity.userId || !$('usCalendarOverlay')?.classList.contains('open')) return;
-  openForm('create', null);
-  pendingIdeaLink = { bucketItemId: idea.id, ...identity };
+  // M9C — niente date picker: il giorno lo sceglie il calendario.
+  pendingIdeaPick = { bucketItemId: idea.id, title: idea.title || '', note: idea.note || null, ...identity };
+  const banner = $('usCalendarPickBanner');
+  const bannerTitle = $('usCalendarPickTitle');
+  if (bannerTitle) bannerTitle.textContent = idea.title || 'la vostra idea';
+  if (banner) banner.hidden = false;
+}
+function clearIdeaPick() {
+  pendingIdeaPick = null;
+  const banner = $('usCalendarPickBanner');
+  if (banner) banner.hidden = true;
+}
+function openIdeaForm(pick, dateISO) {
+  if (window.usProfile?.id !== pick.userId || window.usProfile?.couple_id !== pick.coupleId) { clearIdeaPick(); return; }
+  openForm('create', null, dateISO);
+  pendingIdeaLink = { bucketItemId: pick.bucketItemId, userId: pick.userId, coupleId: pick.coupleId, note: pick.note };
   calendarKind = 'shared';
-  setKindPicker('shared');
-  const picker = $('usCalendarKindPicker');
-  if (picker) picker.hidden = true;
-  updateReminderTargetVisibility();
   const title = $('usCalendarFormTitle');
   if (title) title.textContent = 'Metti in calendario';
   const context = $('usCalendarFormContext');
   if (context) context.hidden = false;
   const saveBtn = $('usCalendarFormSave');
   if (saveBtn) saveBtn.textContent = 'Metti in calendario';
-  $('usCalendarTitleInput').value = idea.title || '';
-  $('usCalendarNoteInput').value = idea.note || '';
+  $('usCalendarTitleInput').value = pick.title;
 }
 
 // Letture minime per mostrare "In calendario · quando" in Da vivere, sempre

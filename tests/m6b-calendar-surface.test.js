@@ -113,10 +113,12 @@ test('M6B (11): shared create/read never duplicates a domain row per partner', (
   assert.equal(insertCalls.length, 1, 'exactly one insert call site — no per-partner duplication loop');
 });
 
-// (12) day sheet opens on day tap.
-test('M6B (12): tapping a day opens the day sheet', () => {
+// (12) M9C: tapping a day starts creation for that day; the day sheet stays
+// for the Oggi widget deep link (openCalendarSurface(date)).
+test('M6B (12): tapping a day starts creation for that date; the day sheet remains for deep links', () => {
   assert.match(js(), /function openDaySheet\(dateISO\)/);
-  assert.match(js(), /addEventListener\('click', ?\(\) => openDaySheet\(btn\.dataset\.date\)\)/);
+  assert.match(js(), /\.us-cal-day\[data-date\]'\)\.forEach\(\(btn\) => btn\.addEventListener\('click', \(\) => startCreateForDate\(btn\.dataset\.date\)\)\)/);
+  assert.match(js(), /openDaySheet\(targetDateISO\)/);
   assert.match(nav(), /name:'calendar-day',[\s\S]*?close:\(\)=>window\.closeCalendarDaySheet\?\.\(\)/);
 });
 
@@ -269,13 +271,15 @@ test('M6B (28): a restrained loading state, not a blocking full-screen spinner',
   assert.match(css(), /\.us-cal-body\.is-loading\{opacity:/);
 });
 
-// (29) empty calendar state keeps the copy, with the shared FAB as the sole create action.
-test('M6B (29): the empty calendar state has no duplicate CTA; the shared FAB is the create action', () => {
+// (29) empty calendar state keeps the copy; M9C: the day itself is the create action (no FAB).
+test('M6B (29): the empty calendar state has no duplicate CTA; tapping a day is the create action', () => {
   assert.match(html(), /<b>I vostri giorni, insieme\.<\/b>/);
   assert.match(html(), /Aggiungete i vostri impegni e US vi aiuterà a vedere come si incastrano le vostre giornate\./);
   assert.doesNotMatch(html(), /usCalendarEmptyCta|class="us-cal-empty-cta"/);
   assert.doesNotMatch(js(), /usCalendarEmptyCta/);
-  assert.match(html(), /id="usCalendarAddBtn" aria-label="Nuovo impegno"/);
+  assert.doesNotMatch(html(), /usCalendarAddBtn|us-cal-fab/);
+  assert.doesNotMatch(js(), /usCalendarAddBtn/);
+  assert.match(html(), /<p class="us-cal-hint">Tocca un giorno per aggiungere qualcosa\.<\/p>/);
 });
 
 // (30) error/retry state keeps last good data visible.
@@ -341,19 +345,21 @@ test('M6B (38): the private media cache name is preserved exactly', () => {
 
 // --- Quick-entry form refinement -----------------------------------------
 
-// (39) the refined form exposes exactly the six target fields, in order.
-test('M6B (39): the form exposes exactly Titolo, Giorno, Tutto il giorno, Ora, Per me/Insieme, Nota — in that order', () => {
+// (39) M9C: the quick form exposes only Titolo, Tutto il giorno, Ora (Giorno only when editing).
+test('M6B (39): the quick form exposes exactly Titolo, Tutto il giorno, Ora — no kind, note, duration or reminder', () => {
   const formBlock = html().match(/<form class="us-cal-form" id="usCalendarForm">[\s\S]*?<\/form>/)?.[0] || '';
   const order = [
     formBlock.indexOf('id="usCalendarTitleInput"'),
-    formBlock.indexOf('id="usCalendarDateInput"'),
     formBlock.indexOf('id="usCalendarAllDayInput"'),
-    formBlock.indexOf('id="usCalendarTimeInput"'),
-    formBlock.indexOf('id="usCalendarKindPicker"'),
-    formBlock.indexOf('id="usCalendarNoteInput"')
+    formBlock.indexOf('id="usCalendarTimeInput"')
   ];
-  assert.ok(order.every((i) => i >= 0), 'all six fields must be present');
+  assert.ok(order.every((i) => i >= 0), 'Titolo, Tutto il giorno and Ora must be present');
   for (let i = 1; i < order.length; i++) assert.ok(order[i] > order[i - 1], `field at index ${i} must come after the previous one`);
+  for (const gone of ['usCalendarKindPicker', 'usCalendarNoteInput', 'usCalendarDurationField', 'usCalendarReminderField', 'usCalendarEndInput']) {
+    assert.doesNotMatch(formBlock, new RegExp(gone), `${gone} is no longer part of the quick form`);
+  }
+  assert.match(formBlock, /<label class="us-cal-field" id="usCalendarDateField" hidden><span>Giorno<\/span>/, 'Giorno exists only for moving an existing entry, hidden by default');
+  assert.match(js(), /if \(dateField\) dateField\.hidden = mode !== 'edit';/);
 });
 
 // (40) the end-date, end-time and location inputs are gone from the markup.
@@ -377,10 +383,11 @@ test('M6B (42): the Ora field visibility is driven by the Tutto il giorno checkb
   assert.match(js(), /usCalendarAllDayInput'\)\?\.addEventListener\('change', ?toggleAllDayFields\)/);
 });
 
-// (43) the kind picker sits after the time field.
-test('M6B (43): the Per me/Insieme kind picker is ordered after the time field', () => {
-  const formBlock = html().match(/<form class="us-cal-form" id="usCalendarForm">[\s\S]*?<\/form>/)?.[0] || '';
-  assert.ok(formBlock.indexOf('id="usCalendarTimeField"') < formBlock.indexOf('id="usCalendarKindPicker"'));
+// (43) M9C: no Per me/Insieme control; a manual entry is always personal.
+test('M6B (43): manual quick entries are personal; Insieme is created from Da vivere', () => {
+  assert.doesNotMatch(html(), /usCalendarKindPicker|data-us-cal-kind/);
+  assert.match(js(), /calendarKind = mode === 'edit' \? entry\.entry_type : 'personal';/);
+  assert.match(js(), /const kind = ideaLink \? 'shared' : calendarKind;/);
 });
 
 // (44) all-day create sets start_date == end_date == Giorno, timestamps null.
@@ -412,9 +419,11 @@ test('M6B (46): editing a timed entry preserves its original duration, not the d
   // preselecting the entry's real duration (chip or Altro prefilled with its
   // own end time) instead of an invisible save-time fallback — the real
   // duration can never be silently rewritten to 60.
-  assert.match(js(), /if \(real === 30 \|\| real === 60 \|\| real === 120\) durationChoice = real;/, 'the picker opens on the entry\'s real duration');
-  assert.match(js(), /durationMinutes = \(real && endTime === editingOriginalEndHHMM\)[\s\S]{0,20}\? real/, 'an untouched Fine alle keeps the real duration even if the start moved');
-  assert.doesNotMatch(js(), /originalDurationMinutes\(editingFormEntry\) \|\| US_CALENDAR_DEFAULT_DURATION_MINUTES/, 'no silent save-time 60-minute rewrite');
+  // M9C: the quick form has no duration control — the hidden-field helper
+  // carries the entry's REAL duration through every edit that stays timed.
+  const hidden = cal.quickEntryHiddenFields({ editingEntry: existing, allDay: false });
+  assert.equal(hidden.durationMinutes, 240, 'an edit that stays timed keeps its real duration');
+  assert.equal(cal.quickEntryHiddenFields({ editingEntry: null, allDay: false }).durationMinutes, 60, 'only a create uses the default');
 });
 
 // (46b) editing a multi-day all-day entry preserves its original span — the
@@ -428,7 +437,8 @@ test('M6B (46b): editing a multi-day all-day entry preserves its original span, 
   assert.equal(payload.start_date, '2026-12-22');
   assert.equal(payload.end_date, '2027-01-02', 'the span must move with the start, not collapse to a single day');
   assert.equal(cal.entryDatesTouched(payload).length, 12, 'the day sheet must still bucket the entry across all 12 days');
-  assert.match(js(), /originalAllDaySpanDays\(editingFormEntry\) \|\| 0/, 'the fallback span (0 = single day) is only used for a missing/invalid original span, never a constant');
+  assert.match(js(), /originalAllDaySpanDays\(editingEntry\) \|\| 0/, 'the fallback span (0 = single day) is only used for a missing/invalid original span, never a constant');
+  assert.equal(cal.quickEntryHiddenFields({ editingEntry: existing, allDay: true }).spanDays, 11, 'the quick form keeps the span on edit');
 });
 
 // (46c) a single-day all-day entry stays a single day when edited.
@@ -454,7 +464,8 @@ test('M6B (46d): converting a timed entry to all-day produces a single day, not 
 test('M6B (47): editing an entry with a location preserves that location', () => {
   const payload = cal.buildEntryPayload({ title: 'Cena', allDay: true, date: '2026-11-05', location: 'Roma, casa' });
   assert.equal(payload.location, 'Roma, casa');
-  assert.match(js(), /const location = editingFormEntry \? \(editingFormEntry\.location \?\? null\) : null;/, 'edit must carry the existing location through unchanged; only create writes null');
+  assert.equal(cal.quickEntryHiddenFields({ editingEntry: { is_all_day: true, start_date: '2026-11-05', end_date: '2026-11-05', location: 'Roma, casa' }, allDay: true }).location, 'Roma, casa', 'edit must carry the existing location through unchanged');
+  assert.equal(cal.quickEntryHiddenFields({ editingEntry: null }).location, null, 'only create writes null');
 });
 
 // (48) the default duration is a single centralized constant, not scattered literals.
@@ -471,10 +482,7 @@ test('M6B (49): a single shared icon-centering rule is defined once and applied 
   const foundation = read('ui-foundation.css');
   assert.match(foundation, /\.us-icon-center\s*\{\s*display:inline-flex;\s*align-items:center;\s*justify-content:center;\s*\}/, 'the shared primitive must live in ui-foundation.css, the stated authority for cross-cutting UI primitives');
 
-  const fabBlock = css().match(/\.us-cal-fab\{[^}]*\}/)?.[0] || '';
-  assert.doesNotMatch(fabBlock, /place-items|display:grid/, 'the fab must rely on the shared centering class instead of its own duplicate rule');
-
-  for (const id of ['usCalendarClose', 'usCalendarPrev', 'usCalendarNext', 'usCalendarDayClose', 'usCalendarDetailClose', 'usCalendarFormClose', 'usCalendarAddBtn']) {
+  for (const id of ['usCalendarClose', 'usCalendarPrev', 'usCalendarNext', 'usCalendarDayClose', 'usCalendarDetailClose', 'usCalendarFormClose']) {
     const tag = html().match(new RegExp(`<[^>]*id="${id}"[^>]*>`))?.[0] || '';
     assert.ok(tag, `${id} must exist in the markup`);
     assert.match(tag, /class="[^"]*\bus-icon-center\b[^"]*"/, `${id} must use the shared centering class`);

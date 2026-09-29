@@ -15,23 +15,18 @@ const css = () => read('calendar.css');
 
 const localISO = (y, m, d, hh, mm) => new Date(y, m - 1, d, hh, mm, 0, 0).toISOString();
 
-// (1) the duration picker exists under Ora, with 30min/1h(default)/2h/Altro.
-test('M6C.1 (1): a Quanto dura? picker sits under Ora with 30 min / 1 ora (default) / 2 ore / Altro', () => {
+// (1) M9C: the duration stays in the domain but leaves the quick form.
+test('M6C.1 (1): the quick form has no duration UI; the domain keeps duration (ends_at) intact', () => {
   const form = html().match(/<form class="us-cal-form"[\s\S]*?<\/form>/)?.[0] || '';
-  const timeIdx = form.indexOf('id="usCalendarTimeField"');
-  const durIdx = form.indexOf('id="usCalendarDurationField"');
-  assert.ok(timeIdx > -1 && durIdx > timeIdx, 'duration UI comes right after Ora');
-  assert.match(form, /Quanto dura\?/);
-  assert.match(form, /data-us-cal-duration="30"[^>]*>30 min</);
-  assert.match(form, /data-us-cal-duration="60" class="is-active"[^>]*>1 ora</, '1 ora is the visible default');
-  assert.match(form, /data-us-cal-duration="120"[^>]*>2 ore</);
-  assert.match(form, /data-us-cal-duration="custom"[^>]*>Altro</);
-  assert.match(form, /id="usCalendarEndInput" type="time"/, 'Altro reveals a minimal end-time control');
+  assert.doesNotMatch(form, /Quanto dura\?|data-us-cal-duration|usCalendarEndInput/);
+  const payload = cal.buildEntryPayload({ title: 'X', allDay: false, date: '2026-09-29', time: '09:00', durationMinutes: 90 });
+  assert.equal(payload.ends_at, localISO(2026, 9, 29, 10, 30), 'ends_at is still a real column of the domain');
 });
 
-// (2) all-day hides the entire duration UI.
-test('M6C.1 (2): with Tutto il giorno the whole duration UI disappears', () => {
-  assert.match(js(), /durationField\.hidden = allDay/);
+// (2) all-day hides Ora only; there is no duration UI left to hide.
+test('M6C.1 (2): with Tutto il giorno only Ora disappears', () => {
+  assert.match(js(), /timeField\.hidden = allDay/);
+  assert.doesNotMatch(js(), /durationField/);
   assert.match(js(), /function toggleAllDayFields\(\)/);
 });
 
@@ -46,36 +41,31 @@ test('M6C.1 (3): ends_at derives from the explicit duration (30 min / 1 h / 2 h)
 });
 
 // (4) Altro: duration from the chosen end time; end <= start is rejected, never repaired.
-test('M6C.1 (4): Altro computes the duration from Fine alle; end <= start yields null (error, not repair)', () => {
+test('M6C.1 (4): the pure end-time helper still rejects end <= start (error, not repair)', () => {
   assert.equal(cal.durationMinutesFromTimes('09:00', '10:30'), 90);
   assert.equal(cal.durationMinutesFromTimes('21:30', '22:00'), 30);
   assert.equal(cal.durationMinutesFromTimes('10:00', '09:00'), null, 'end before start is invalid');
   assert.equal(cal.durationMinutesFromTimes('09:00', '09:00'), null, 'zero duration is invalid');
   assert.equal(cal.durationMinutesFromTimes('', '10:00'), null, 'missing start is invalid');
-  assert.match(js(), /durationMinutesFromTimes\(time, endTime\)/);
-  assert.match(js(), /La fine deve essere dopo l'inizio\./);
 });
 
-// (5) editing preserves the entry's REAL duration: chips map exactly, others open Altro prefilled.
-test('M6C.1 (5): editing opens on the entry\'s real duration and preserves it unless explicitly changed', () => {
-  // non-chip duration -> Altro prefilled with the entry's own end time
-  assert.match(js(), /durationChoice = 'custom';/);
-  assert.match(js(), /durationEnd = `\$\{pad2\(e\.getHours\(\)\)\}:\$\{pad2\(e\.getMinutes\(\)\)\}`;/);
-  assert.match(js(), /editingOriginalEndHHMM = durationEnd;/);
-  // untouched Fine alle -> real duration wins even if only the start moved
-  assert.match(js(), /durationMinutes = \(real && endTime === editingOriginalEndHHMM\)[\s\S]{0,20}\? real/);
-  // the old silent rewrite (fall back to 60 for every non-chip case) is gone
-  assert.doesNotMatch(js(), /originalDurationMinutes\(editingFormEntry\) \|\| US_CALENDAR_DEFAULT_DURATION_MINUTES/);
+// (5) M9C: editing preserves the entry's REAL duration even without a duration control.
+test('M6C.1 (5): editing a timed entry keeps its real duration; only create uses the default', () => {
+  const existing = { is_all_day: false, starts_at: localISO(2026, 9, 29, 9, 0), ends_at: localISO(2026, 9, 29, 10, 45), description: 'nota', location: null };
+  assert.equal(cal.quickEntryHiddenFields({ editingEntry: existing, allDay: false }).durationMinutes, 105);
+  assert.equal(cal.quickEntryHiddenFields({ editingEntry: existing, allDay: true }).durationMinutes, cal.US_CALENDAR_DEFAULT_DURATION_MINUTES, 'timed -> all-day has no duration to keep');
+  const allDay = { is_all_day: true, start_date: '2026-09-29', end_date: '2026-09-29' };
+  assert.equal(cal.quickEntryHiddenFields({ editingEntry: allDay, allDay: false }).durationMinutes, cal.US_CALENDAR_DEFAULT_DURATION_MINUTES, 'all-day -> timed starts from the default');
+  assert.match(js(), /originalDurationMinutes\(editingEntry\) \|\| US_CALENDAR_DEFAULT_DURATION_MINUTES/);
 });
 
-// (6) 60 minutes is no longer an invisible assumption for new entries.
-test('M6C.1 (6): new timed entries take their duration from the picker, not from a hidden 60-minute default', () => {
-  assert.match(js(), /durationMinutes = getActiveDurationChoice\(\) \|\| US_CALENDAR_DEFAULT_DURATION_MINUTES/, 'the constant survives only as a last-resort guard');
+// (6) new timed entries use the single default constant (60 minutes).
+test('M6C.1 (6): new timed quick entries use US_CALENDAR_DEFAULT_DURATION_MINUTES', () => {
+  const fresh = cal.quickEntryHiddenFields({ editingEntry: null, allDay: false });
+  assert.equal(fresh.durationMinutes, 60);
   const save = (js().match(/async function saveEntry\(event\)[\s\S]*?^}/m)?.[0] || '').replace(/\/\/.*$/gm, '');
-  const literals = save.match(/\b60\b/g) || [];
-  assert.equal(literals.length, 0, 'no bare 60-minute literal in the save path');
-  assert.match(js(), /function getActiveDurationChoice\(\)/);
-  assert.match(js(), /function setDurationPicker\(value\)/);
+  assert.equal((save.match(/\b60\b/g) || []).length, 0, 'no bare 60-minute literal in the save path');
+  assert.match(save, /quickEntryHiddenFields\(\{/);
 });
 
 // (7) Tempo insieme keeps using REAL intervals — regression on the M6C seam.
@@ -99,9 +89,7 @@ test('M6C.1 (7): Tempo insieme consumes real intervals via M6A (a 90-min busy bl
   ]);
 });
 
-// (8) picker styling follows the existing segmented-control idiom.
-test('M6C.1 (8): the duration picker reuses the M6B segmented-control styling', () => {
-  assert.match(css(), /\.us-cal-duration-picker\{display:flex;gap:6px;margin-top:2px\}/);
-  assert.match(css(), /\.us-cal-duration-picker button\.is-active\{background:rgba\(169,133,255,\.22\)/);
-  assert.match(css(), /\.us-cal-end-field\{margin-top:10px\}/);
+// (8) M9C: the old picker styling is gone with the picker.
+test('M6C.1 (8): no dead duration-picker styling remains', () => {
+  assert.doesNotMatch(css(), /\.us-cal-duration-picker|\.us-cal-end-field/);
 });

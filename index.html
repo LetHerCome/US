@@ -658,6 +658,8 @@ html.us-returning-device .auth-overlay{
       <button type="button" id="usCalendarViewWeek" class="" aria-pressed="false">Settimana</button>
     </div>
     <div class="us-cal-legend" id="usCalendarLegend" aria-hidden="true"></div>
+    <div class="us-cal-pick-banner" id="usCalendarPickBanner" role="status" hidden><span><small>Da vivere · tocca il giorno</small><b id="usCalendarPickTitle"></b></span><button type="button" id="usCalendarPickCancel">Annulla</button></div>
+    <p class="us-cal-hint">Tocca un giorno per aggiungere qualcosa.</p>
     <div class="us-cal-status" id="usCalendarStatus" role="status" aria-live="polite" hidden></div>
     <div class="us-cal-body" id="usCalendarBody">
       <div class="us-cal-pane-mobile" id="usCalendarPaneMobile">
@@ -681,7 +683,6 @@ html.us-returning-device .auth-overlay{
         <p>Aggiungete i vostri impegni e US vi aiuterà a vedere come si incastrano le vostre giornate.</p>
       </div>
     </div>
-    <button type="button" class="us-cal-fab us-icon-center" id="usCalendarAddBtn" aria-label="Nuovo impegno">＋</button>
   </section>
 
   <div class="us-cal-sheet-overlay" id="usCalendarDaySheet" aria-hidden="true">
@@ -720,43 +721,12 @@ html.us-returning-device .auth-overlay{
       </header>
       <form class="us-cal-form" id="usCalendarForm">
         <p class="us-cal-form-context" id="usCalendarFormContext" hidden>Da vivere · un evento insieme, per entrambi</p>
+        <p class="us-cal-form-day" id="usCalendarFormDay" hidden></p>
+        <div class="us-cal-form-day-entries" id="usCalendarFormDayEntries" hidden></div>
         <label class="us-cal-field"><span>Titolo</span><input id="usCalendarTitleInput" type="text" maxlength="200" required></label>
-        <label class="us-cal-field"><span>Giorno</span><input id="usCalendarDateInput" type="date" required></label>
+        <label class="us-cal-field" id="usCalendarDateField" hidden><span>Giorno</span><input id="usCalendarDateInput" type="date"></label>
         <label class="us-cal-field us-cal-allday-field"><input id="usCalendarAllDayInput" type="checkbox"><span>Tutto il giorno</span></label>
         <label class="us-cal-field" id="usCalendarTimeField"><span>Ora</span><input id="usCalendarTimeInput" type="time"></label>
-        <div class="us-cal-field" id="usCalendarDurationField">
-          <span>Quanto dura?</span>
-          <div class="us-cal-duration-picker" id="usCalendarDurationPicker" role="group" aria-label="Durata dell'impegno">
-            <button type="button" data-us-cal-duration="30" aria-pressed="false">30 min</button>
-            <button type="button" data-us-cal-duration="60" class="is-active" aria-pressed="true">1 ora</button>
-            <button type="button" data-us-cal-duration="120" aria-pressed="false">2 ore</button>
-            <button type="button" data-us-cal-duration="custom" aria-pressed="false">Altro</button>
-          </div>
-          <label class="us-cal-field us-cal-end-field" id="usCalendarEndField" hidden><span>Fine alle</span><input id="usCalendarEndInput" type="time"></label>
-        </div>
-        <div class="us-cal-field" id="usCalendarReminderField">
-          <span>Ricordamelo</span>
-          <div class="us-cal-reminder-picker" id="usCalendarReminderPicker" role="group" aria-label="Reminder">
-            <button type="button" data-us-cal-reminder="none" class="is-active" aria-pressed="true">Nessuno</button>
-            <button type="button" data-us-cal-reminder="10" aria-pressed="false">10 min prima</button>
-            <button type="button" data-us-cal-reminder="30" aria-pressed="false">30 min prima</button>
-            <button type="button" data-us-cal-reminder="60" aria-pressed="false">1 ora prima</button>
-            <button type="button" data-us-cal-reminder="1440" aria-pressed="false">1 giorno prima</button>
-          </div>
-          <div class="us-cal-reminder-target" id="usCalendarReminderTargetWrap" hidden>
-            <span>Ricorda a</span>
-            <div class="us-cal-reminder-target-picker" id="usCalendarReminderTargetPicker" role="group" aria-label="Destinatario del reminder">
-              <button type="button" data-us-cal-reminder-target="me" class="is-active" aria-pressed="true">Me</button>
-              <button type="button" data-us-cal-reminder-target="partner" aria-pressed="false">Partner</button>
-              <button type="button" data-us-cal-reminder-target="both" aria-pressed="false" hidden>Entrambi</button>
-            </div>
-          </div>
-        </div>
-        <div class="us-cal-kind-picker" id="usCalendarKindPicker" role="group" aria-label="Per chi è questo impegno">
-          <button type="button" class="is-active" data-us-cal-kind="personal" id="usCalendarKindPersonal" aria-pressed="true">Per me</button>
-          <button type="button" data-us-cal-kind="shared" id="usCalendarKindShared" aria-pressed="false">Insieme</button>
-        </div>
-        <label class="us-cal-field"><span>Una nota <i>opzionale</i></span><textarea id="usCalendarNoteInput" rows="3" maxlength="500"></textarea></label>
         <div class="us-cal-form-status" id="usCalendarFormStatus" role="status" aria-live="polite"></div>
         <button type="submit" class="primary us-cal-form-save" id="usCalendarFormSave">Salva impegno</button>
       </form>

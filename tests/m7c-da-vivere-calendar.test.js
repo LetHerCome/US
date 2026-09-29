@@ -163,7 +163,10 @@ test('M7C UI: Da vivere has no date/time editor of its own — "Metti in calenda
 test('M7C UI: the entry created from an idea is always shared, and never touches shared_events', () => {
   const src = calendar();
   assert.match(src, /const kind = ideaLink \? 'shared' : calendarKind;/);
-  assert.match(src, /pendingIdeaLink = \{ bucketItemId: idea\.id, \.\.\.identity \};\s*calendarKind = 'shared';/);
+  // M9C: the idea first becomes a pick (banner), then the tapped day opens the shared form.
+  assert.match(src, /pendingIdeaPick = \{ bucketItemId: idea\.id, title: idea\.title \|\| '', note: idea\.note \|\| null, \.\.\.identity \};/);
+  assert.match(src, /if \(pendingIdeaPick\) \{ openIdeaForm\(pendingIdeaPick, dateISO\); return; \}/);
+  assert.match(src, /pendingIdeaLink = \{ bucketItemId: pick\.bucketItemId, userId: pick\.userId, coupleId: pick\.coupleId, note: pick\.note \};\s*calendarKind = 'shared';/);
   assert.doesNotMatch(src, /shared_events/);
   assert.doesNotMatch(src, /from\('bucket_items'\)/, 'Calendar never writes bucket_items: Da vivere owns the link');
 });
