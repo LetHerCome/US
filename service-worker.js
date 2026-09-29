@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-static-runtime-32";
+const CACHE_NAME = "us-shell-static-runtime-33";
 const MEDIA_CACHE_NAME = "us-private-media-v1";
 
 const APP_SHELL = [
@@ -49,6 +49,10 @@ const APP_SHELL = [
   "/assets/icons/phosphor/cards-three-fill.svg",
   "/assets/icons/phosphor/calendar-dots-regular.svg",
   "/assets/icons/phosphor/question-regular.svg",
+  "/assets/icons/phosphor/infinity-regular.svg",
+  "/assets/icons/phosphor/compass-regular.svg",
+  "/assets/icons/phosphor/flag-banner-regular.svg",
+  "/assets/icons/phosphor/caret-left-regular.svg",
   "/assets/icons/phosphor/envelope-simple-regular.svg",
   "/assets/icons/phosphor/envelope-open-regular.svg",
   "/assets/icons/home-off.svg",
