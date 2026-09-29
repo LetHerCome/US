@@ -19,6 +19,7 @@ function go(id,options={}){
     if(id==='moments' && window.usProfile)hydrateMoments();
     if(id==='bond' && window.usProfile)hydrateBond();
     if(id==='settings' && window.usProfile)window.hydrateUsSettings?.();
+    if(id==='home' && window.usProfile)window.refreshOggiCalendarWidget?.();
     return;
   }
   const direction=Math.sign(pages.indexOf(id)-pages.indexOf(current));
@@ -36,6 +37,7 @@ function go(id,options={}){
   if(id==='moments' && window.usProfile) hydrateMoments();
   if(id==='bond' && window.usProfile) hydrateBond();
   if(id==='settings' && window.usProfile) window.hydrateUsSettings?.();
+  if(id==='home' && window.usProfile) window.refreshOggiCalendarWidget?.();
 }
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700)}
 let quizCat='',quizPos=0,quizSelected=null,quizQuestions=[],quizSet=null,quizState=null;
@@ -1184,6 +1186,85 @@ function startHomePhotoRotation(){
   homePhotoRotationTimer=setInterval(tick,60000);
 }
 startHomePhotoRotation();
+
+// M6E — Oggi calendar widget + Focus Photo. A single small glass card, fed by
+// calendar.js's window.getOggiCalendarInsightSource() (which itself reuses
+// UsCalendarDomain.computeFreeTogether — no algorithm is duplicated here).
+// Tapping it opens the existing Calendar on the exact date carried by the
+// fact; tapping the hero background instead toggles Focus Photo, fading this
+// widget plus the two pre-existing hero overlays (distance pill, push card)
+// while the photo and the bottom nav stay fully usable.
+function renderOggiCalendarWidget(fact){
+  const container=document.getElementById('usOggiCalendarWidget');
+  if(!container)return;
+  if(!fact){container.hidden=true;container.innerHTML='';return;}
+  if(fact.type==='loading'){
+    container.hidden=false;
+    container.innerHTML='<div class="us-oggi-card is-loading" aria-hidden="true"></div>';
+    return;
+  }
+  container.hidden=false;
+  container.innerHTML=`<button type="button" class="us-oggi-card" data-us-oggi-date="${escapeHtml(fact.dateISO)}" aria-label="${escapeHtml(fact.title)}: ${escapeHtml(fact.detail)}"><span class="us-oggi-card-mark" aria-hidden="true">♡</span><span class="us-oggi-card-copy"><b>${escapeHtml(fact.title)}</b><small>${escapeHtml(fact.detail)}</small></span></button>`;
+}
+document.getElementById('usOggiCalendarWidget')?.addEventListener('click',event=>{
+  const btn=event.target.closest?.('[data-us-oggi-date]');
+  if(!btn)return;
+  window.openCalendarSurface?.(btn.dataset.usOggiDate);
+});
+let usOggiCalendarRefreshId=0;
+async function refreshOggiCalendarWidget(){
+  // The id bumps before the no-profile early return too, so a logout/re-pair
+  // that fires while a previous refresh is still in flight always invalidates
+  // it — otherwise that stale call could still land its render after this one.
+  const refreshId=++usOggiCalendarRefreshId;
+  if(!window.usProfile){renderOggiCalendarWidget(null);return;}
+  const profileId=window.usProfile.id;
+  const coupleId=window.usProfile.couple_id;
+  // A newer refresh (refreshId mismatch) already owns the UI — leave it alone.
+  // Same generation but the identity moved (re-pair/logout) must clear the
+  // stale card rather than silently keeping whatever was on screen before.
+  const isCurrentGeneration=()=>refreshId===usOggiCalendarRefreshId;
+  const identityUnchanged=()=>Boolean(window.usProfile)&&window.usProfile.id===profileId&&window.usProfile.couple_id===coupleId;
+  renderOggiCalendarWidget({type:'loading'});
+  try{
+    const fact=await window.getOggiCalendarInsightSource?.();
+    if(!isCurrentGeneration())return;
+    if(!identityUnchanged()){renderOggiCalendarWidget(null);return;}
+    renderOggiCalendarWidget(fact||null);
+  }catch(error){
+    console.warn('[US Oggi] calendar widget',error);
+    if(!isCurrentGeneration())return;
+    if(!identityUnchanged()){renderOggiCalendarWidget(null);return;}
+    renderOggiCalendarWidget(null);
+  }
+}
+window.refreshOggiCalendarWidget=refreshOggiCalendarWidget;
+window.UsOggiCalendarWidget=Object.freeze({render:renderOggiCalendarWidget,refresh:refreshOggiCalendarWidget});
+
+// Focus Photo: a tap anywhere on the hero background toggles it; a tap on the
+// widget itself, the distance pill, the push card or the empty-state CTA
+// never does (they keep their own taps).
+function oggiIsWidgetTarget(target){
+  return Boolean(target&&typeof target.closest==='function'&&target.closest('.us-oggi-widgets,.home-distance-pill,.push-optin-card,.home-empty-state'));
+}
+let usOggiFocusPhotoActive=false;
+function setOggiFocusPhoto(active){
+  usOggiFocusPhotoActive=active;
+  const hero=document.getElementById('homeHero');
+  hero?.classList.toggle('us-oggi-focus',active);
+  document.getElementById('usOggiFocusToggle')?.setAttribute('aria-pressed',String(active));
+  const fadeTargets=[document.getElementById('usOggiCalendarWidget'),document.getElementById('distanceWidget'),document.getElementById('pushOptInCard')];
+  for(const el of fadeTargets){
+    if(!el)continue;
+    if(active)el.setAttribute('inert','');else el.removeAttribute('inert');
+  }
+}
+function toggleOggiFocusPhoto(){setOggiFocusPhoto(!usOggiFocusPhotoActive);}
+window.toggleOggiFocusPhoto=toggleOggiFocusPhoto;
+document.getElementById('homeHero')?.addEventListener('click',event=>{
+  if(oggiIsWidgetTarget(event.target))return;
+  toggleOggiFocusPhoto();
+});
 
 function selectRole(role){
   selectedRole=role;
@@ -2419,6 +2500,8 @@ async function hydrateCloud(){
 
     // Today is important but does not need to compete with the Home image.
     usRunWhenIdle(()=>hydrateToday(),320);
+    // M6E — Oggi calendar widget: small, secondary, only relevant on Home.
+    if(active==='home')usRunWhenIdle(()=>window.refreshOggiCalendarWidget?.(),260);
   }catch(e){console.warn(e)}
 }
 

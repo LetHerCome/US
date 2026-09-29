@@ -314,6 +314,69 @@ function classifyMutationResult({ data, error }) {
   return 'ok';
 }
 
+// M6E — Oggi calendar widget: a single "most useful current-day fact",
+// composed from the SAME partitioned busy intervals + computeFreeTogether
+// windows the day sheet already uses (never a second algorithm). The caller
+// (getOggiCalendarInsightSource) does the fetching/partitioning; this stays a
+// pure decision + label function so it is directly unit-testable.
+function oggiEventLabel(entries, nowMs) {
+  if (!entries || !entries.length) return 'Libera';
+  const allDay = entries.find((e) => e.is_all_day);
+  if (allDay) return allDay.title;
+  const timed = entries.filter((e) => !e.is_all_day).slice().sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at));
+  const ongoing = timed.find((e) => new Date(e.starts_at).getTime() <= nowMs && new Date(e.ends_at).getTime() > nowMs);
+  // Never the earliest event regardless of time — an already-ended event must
+  // never be reported as "what's happening": fall through to the next one
+  // whose end is still ahead of now, or "Libera" if everything already ended.
+  const upcoming = timed.find((e) => new Date(e.ends_at).getTime() > nowMs);
+  const chosen = ongoing || upcoming;
+  if (!chosen) return 'Libera';
+  const fmt = (iso) => { const d = new Date(iso); return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
+  return `${chosen.title} ${fmt(chosen.starts_at)}–${fmt(chosen.ends_at)}`;
+}
+
+// Drops windows that have already fully elapsed and clips a spanning window's
+// start up to now — a card must never advertise free time that is already in
+// the past. Shared by the composer (final label) and its orchestrator (the
+// decision to forward-scan), so the "is there anything usable left" check is
+// never implemented twice.
+function oggiRemainingWindows(freeWindows, nowISO) {
+  const nowMs = new Date(nowISO).getTime();
+  return (freeWindows || [])
+    .map((w) => ({ start: Math.max(new Date(w.start).getTime(), nowMs), end: new Date(w.end).getTime() }))
+    .filter((w) => w.end > w.start)
+    .map((w) => ({ start: new Date(w.start).toISOString(), end: new Date(w.end).toISOString() }));
+}
+
+// Three mutually-exclusive fact types, in priority order:
+//   1. free-all-day  — neither partner has anything on the calendar today.
+//   2. events        — at least one entry today; a shared free window today
+//                       (if any) is folded into the same card as a bonus line.
+//   3. next-together  — today is fully double-booked with zero shared free
+//                       time; nextTogetherDateISO (forward-scanned by the
+//                       caller with the exact same day-by-day helper) points
+//                       to the next day that does have one. If the scan found
+//                       nothing within its horizon, this falls back to (2)
+//                       rather than inventing a date.
+function composeOggiCalendarFact({ dayStartISO, dayEndISO, personA, personB, freeWindows = [], nextTogetherDateISO = null, nowISO = new Date().toISOString() }) {
+  const nowMs = new Date(nowISO).getTime();
+  const hasEntries = (personA.entries.length + personB.entries.length) > 0;
+  if (!hasEntries) {
+    return { type: 'free-all-day', title: 'Liberi insieme', detail: 'Nessun impegno per oggi.', dateISO: dayStartISO };
+  }
+  const eventsDetail = `${personA.name}: ${oggiEventLabel(personA.entries, nowMs)} · ${personB.name}: ${oggiEventLabel(personB.entries, nowMs)}`;
+  const remainingWindows = oggiRemainingWindows(freeWindows, nowISO);
+  if (!remainingWindows.length) {
+    if (nextTogetherDateISO) {
+      return { type: 'next-together', title: 'Prossima volta insieme', detail: formatDateRangeLabel(nextTogetherDateISO, nextTogetherDateISO), dateISO: nextTogetherDateISO };
+    }
+    return { type: 'events', title: 'Oggi', detail: eventsDetail, dateISO: dayStartISO };
+  }
+  const biggest = remainingWindows.slice().sort((a, b) => (new Date(b.end) - new Date(b.start)) - (new Date(a.end) - new Date(a.start)))[0];
+  const windowLabel = tempoWindowLabel(biggest.start, biggest.end, dayStartISO, dayEndISO);
+  return { type: 'events', title: 'Oggi', detail: `${eventsDetail} — Liberi insieme ${windowLabel}`, dateISO: dayStartISO };
+}
+
 const pureApi = {
   ROLE_ORDER, US_CALENDAR_DEFAULT_DURATION_MINUTES, roleRank, entryLaneRoleFor, entryDateSpan, entryDatesTouched,
   formatDateRangeLabel, localDateFromInstant, localDateTimeToISO, addMinutesToISO, originalDurationMinutes,
@@ -321,7 +384,8 @@ const pureApi = {
   monthGridRange, windowForGrid, weekRangeFor, weekWindowFor, mondayOfISO, partitionDayBusy, tempoWindowLabel,
   durationMinutesFromTimes, REMINDER_OPTIONS, REMINDER_TARGETS, reminderTargetAllowed, reminderOffsetAllowed, reminderOptionsFor, reminderRowsFor, reminderCopy,
   buildEntryPayload, withCreateAuthority, canEditEntry,
-  quickEntryError, classifyMutationResult
+  quickEntryError, classifyMutationResult,
+  oggiEventLabel, composeOggiCalendarFact, oggiRemainingWindows
 };
 if (typeof module === 'object' && module.exports) Object.assign(module.exports, pureApi);
 if (typeof window === 'undefined') return;
@@ -416,6 +480,108 @@ async function loadEntries() {
     if (token === loadToken) { loading = false; renderCalendar(); }
   }
 }
+
+// M6E — Oggi calendar widget data source. A read independent of the shared
+// `entries`/`profiles` module state above (so opening this widget can never
+// clobber an already-open calendar surface's own data), but built from the
+// exact same pieces: buildRangeOverlapFilter + filterEntriesInWindow for the
+// read, partitionDayBusy + UsCalendarDomain.computeFreeTogether for the
+// availability decision — never a second query/algorithm.
+const US_OGGI_NEXT_TOGETHER_HORIZON_DAYS = 7;
+
+async function fetchEntriesForRange(coupleId, startDateISO, endDateISOExclusive) {
+  const win = windowForGrid(parseISODate(startDateISO), parseISODate(endDateISOExclusive));
+  const filter = UsCalendarDomain.buildRangeOverlapFilter(win);
+  const { data, error } = await sb.from('calendar_entries')
+    .select('id,couple_id,entry_type,owner_id,title,is_all_day,starts_at,ends_at,start_date,end_date')
+    .eq('couple_id', coupleId)
+    .or(filter);
+  if (error) throw error;
+  return UsCalendarDomain.filterEntriesInWindow(data || [], win);
+}
+
+function freeTogetherWindowsForDay(entries, dateISO, roleOf) {
+  const partition = partitionDayBusy(entries, dateISO, roleOf);
+  const win = windowForGrid(parseISODate(dateISO), parseISODate(shiftISODate(dateISO, 1)));
+  return UsCalendarDomain.computeFreeTogether({
+    windowStart: win.windowStartAt,
+    windowEnd: win.windowEndAt,
+    personABusy: partition.personABusy,
+    personBBusy: partition.personBBusy,
+    sharedEvents: partition.sharedEvents,
+    minDurationMinutes: 30
+  });
+}
+
+// Bounded forward scan (one day at a time, one read per day) for the next day
+// with any shared free time — only ever invoked when today has none. Takes
+// the CAPTURED couple id from the caller, never the mutable global.
+async function findNextTogetherDate(coupleId, roleOf, stillCurrent) {
+  for (let i = 1; i <= US_OGGI_NEXT_TOGETHER_HORIZON_DAYS; i++) {
+    if (!stillCurrent()) return null;
+    const dateISO = shiftISODate(todayISO(), i);
+    const dayEntries = await fetchEntriesForRange(coupleId, dateISO, shiftISODate(dateISO, 1));
+    if (!stillCurrent()) return null;
+    if (freeTogetherWindowsForDay(dayEntries, dateISO, roleOf).length) return dateISO;
+  }
+  return null;
+}
+
+// The profile/couple is captured ONCE at the start and reused for every read
+// below (never re-read from the mutable window.usProfile mid-flight) — a
+// logout or re-pair while this is in flight must never surface the wrong
+// couple's names/events. `sameIdentity` is re-checked after every await, and
+// again before the final return, so a stale in-flight call resolves to null.
+async function getOggiCalendarInsightSource() {
+  const profile = window.usProfile;
+  if (!profile) return null;
+  const coupleId = profile.couple_id;
+  const sameIdentity = () => window.usProfile === profile && window.usProfile?.couple_id === coupleId;
+
+  const { data: profileRows, error: profilesError } = await sb.from('profiles').select('id,role,display_name').eq('couple_id', coupleId);
+  if (profilesError) { console.warn('[US Calendar] oggi widget profiles', profilesError); return null; }
+  if (!sameIdentity()) return null;
+
+  const roleById = new Map((profileRows || []).map((p) => [p.id, p.role]));
+  const nameByRole = new Map((profileRows || []).map((p) => [p.role, p.display_name]));
+  const roleOf = (entry) => entryLaneRoleFor(entry, roleById.get(entry.owner_id));
+
+  const nowISO = new Date().toISOString();
+  const today = todayISO();
+  const tomorrow = shiftISODate(today, 1);
+  const todayEntries = await fetchEntriesForRange(coupleId, today, tomorrow);
+  if (!sameIdentity()) return null;
+  const partition = partitionDayBusy(todayEntries, today, roleOf);
+  const win = windowForGrid(parseISODate(today), parseISODate(tomorrow));
+  const freeWindows = UsCalendarDomain.computeFreeTogether({
+    windowStart: win.windowStartAt,
+    windowEnd: win.windowEndAt,
+    personABusy: partition.personABusy,
+    personBBusy: partition.personBBusy,
+    sharedEvents: partition.sharedEvents,
+    minDurationMinutes: 30
+  });
+
+  const personAEntries = todayEntries.filter((e) => e.entry_type === 'shared' || roleOf(e) === ROLE_ORDER[0]);
+  const personBEntries = todayEntries.filter((e) => e.entry_type === 'shared' || roleOf(e) === ROLE_ORDER[1]);
+
+  let nextTogetherDateISO = null;
+  if (todayEntries.length && !oggiRemainingWindows(freeWindows, nowISO).length) {
+    nextTogetherDateISO = await findNextTogetherDate(coupleId, roleOf, sameIdentity);
+    if (!sameIdentity()) return null;
+  }
+
+  return composeOggiCalendarFact({
+    dayStartISO: win.windowStartDate,
+    dayEndISO: win.windowEndDate,
+    personA: { name: nameByRole.get(ROLE_ORDER[0]) || 'La tua persona', entries: personAEntries },
+    personB: { name: nameByRole.get(ROLE_ORDER[1]) || 'La tua persona', entries: personBEntries },
+    freeWindows,
+    nextTogetherDateISO,
+    nowISO
+  });
+}
+window.getOggiCalendarInsightSource = getOggiCalendarInsightSource;
 
 function markerFor(entry) {
   const role = entryLaneRole(entry);
@@ -1033,8 +1199,23 @@ function goToToday() {
   loadEntries();
 }
 
+// M6E — an optional target date (e.g. from the Oggi calendar widget) lands
+// the surface straight on that day/week instead of the current month; every
+// existing zero-arg caller (HTML onclick, navigation.js) is unaffected.
+// calendarOpenToken guards the awaited loads below: a close (or a second
+// open) bumps it, so a slow open that resolves after the surface moved on
+// never forces openDaySheet on a target the user didn't ask for.
+let calendarOpenToken = 0;
 async function openCalendarSurface() {
+  const targetDateISO = arguments[0];
+  const openToken = ++calendarOpenToken;
   ensureInitialMonth();
+  if (targetDateISO) {
+    const target = parseISODate(targetDateISO);
+    viewYear = target.getFullYear();
+    viewMonth = target.getMonth();
+    weekStartISO = mondayOfISO(targetDateISO);
+  }
   const overlay = $('usCalendarOverlay');
   if (!overlay) return;
   window.UsUiFoundation?.cancelSurfaceExit?.(overlay);
@@ -1046,10 +1227,12 @@ async function openCalendarSurface() {
   await loadProfiles();
   await loadEntryReminders();
   await loadEntries();
+  if (targetDateISO && openToken === calendarOpenToken && overlay.classList.contains('open')) openDaySheet(targetDateISO);
 }
 function closeCalendarSurface() {
   const overlay = $('usCalendarOverlay');
   if (!overlay || busy) return;
+  calendarOpenToken++;
   const finalize = () => {
     overlay.classList.remove('open');
     overlay.setAttribute('aria-hidden', 'true');
