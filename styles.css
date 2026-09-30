@@ -127,7 +127,7 @@ button{border:0;border-radius:var(--us-radius-control);padding:13px 16px;font:in
 .moment-change-chip{position:absolute;right:11px;bottom:11px;min-height:44px;padding:7px 10px;border-radius:var(--us-radius-pill);background:rgba(8,10,14,.70);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12);font-size:var(--us-text-meta);color:var(--us-color-text);font-weight:700}
 .moment-details{display:none;padding:12px 2px 2px}
 .moment-compose.has-photo .moment-picker-empty{display:none}.moment-compose.has-photo .moment-preview,.moment-compose.has-photo .moment-details{display:block}
-.moment-details>input{background:rgba(16,20,28,.9);border-radius:15px;padding:13px 14px}
+.moment-details>input{padding:13px 14px;border-radius:var(--us-radius-control)}
 .moment-compose-footer{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:stretch;margin-top:9px}
 .moment-date-control{min-width:0;border:1px solid var(--border);border-radius:15px;background:rgba(16,20,28,.9);padding:7px 10px;display:flex;flex-direction:column;gap:2px}
 .moment-date-control>span{font-size:var(--us-text-meta);color:var(--muted);font-weight:750;text-transform:uppercase;letter-spacing:.07em}

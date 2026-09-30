@@ -82,7 +82,7 @@
 .us-cal-field{display:block;margin-top:12px}
 .us-cal-field>span{display:block;margin:0 0 7px 3px;font-size:11px;font-weight:750;color:var(--us-color-text-2)}
 .us-cal-field>span i{font-style:normal;color:var(--us-color-text-3);font-weight:500}
-.us-cal-field input,.us-cal-field textarea{width:100%;background:var(--us-color-bg);border:1px solid rgba(255,255,255,.09);border-radius:16px;color:var(--us-color-text);padding:11px 13px;font-size:13px;font-family:inherit}
+.us-cal-field input,.us-cal-field textarea{width:100%;padding:11px 13px;font-size:13px;font-family:inherit;border-radius:var(--us-radius-control)}
 .us-cal-allday-field{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:15px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07)}
 .us-cal-allday-field input{width:20px;height:20px;flex:0 0 auto;accent-color:var(--us-color-violet)}
 .us-cal-allday-field span{font-size:12px;font-weight:650;color:var(--us-text)}
@@ -161,7 +161,7 @@ body.us-cal-open{overflow:hidden}
 .us-cal-form-day[hidden],.us-cal-form-day-entries[hidden]{display:none!important}
 .us-cal-form-day-entries{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px}
 .us-cal-form-day-kicker{width:100%;font-size:var(--us-type-eyebrow);font-weight:750;letter-spacing:var(--us-type-eyebrow-tracking);text-transform:uppercase;color:var(--us-color-accent-ink)}
-.us-cal-form-day-entry{display:inline-flex;align-items:baseline;gap:6px;max-width:100%;min-height:36px;padding:7px 11px;border-radius:12px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.04);color:var(--us-color-text);font-size:12px;text-align:left}
+.us-cal-form-day-entry{display:inline-flex;gap:6px;max-width:100%;color:var(--us-color-text);font-size:12px;text-align:left;align-items:center;min-height:44px;padding:0 12px;border-radius:var(--us-radius-control);border:var(--us-glass-1-border);background:var(--us-glass-1-bg)}
 .us-cal-form-day-entry b{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .us-cal-form-day-entry small{flex:0 0 auto;color:rgba(247,242,248,.55);font-size:11px}
 

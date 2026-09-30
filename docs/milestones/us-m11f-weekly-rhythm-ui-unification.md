@@ -157,6 +157,23 @@ private palette, scrim, sheet material or close button.
 - Full-screen pages (album viewer, Conservati detail, Da vivere, event form)
   go back with Phosphor CaretLeft; popups close with X.
 
+#### Radius and spacing
+- Tokens: `--us-radius-sm` 10, `--us-radius-control` 15 (buttons, fields,
+  rows), `--us-radius-card` 20, `--us-radius-sheet` 29 (every sheet and the
+  confirmation), `--us-radius-pill`. Every shared primitive uses them; the
+  sheets that carried 26/27/30px now inherit 29px. Spacing keeps the existing
+  4-8-10-12-16-18-22-24 scale with named aliases (compact, standard, section,
+  page). Feature-internal radii of cards and thumbnails were left as they are
+  (see limitations in the QA report).
+
+#### Duplicate patterns removed
+- Four `:root` palettes, the polish4 "shared liquid glass" block, nine scrim
+  recipes, per-feature sheet materials (Eventi, Impostazioni, Calendario,
+  Conservati, nuovo Moment, Lasciato per te, Oggi, Ti penso, Stories delete),
+  five close-button recipes, two primary CTA recipes, the bluish `.ghost`,
+  seven input background recipes, the retired legacy motion pair and the two
+  sheet keyframes that bypassed the shared surface motion.
+
 #### Controls and type
 - Buttons: `.primary` (accent gradient), `.ghost`/`.us-btn-secondary`,
   `.us-btn-quiet`, `.us-btn-danger`, `.us-icon-button`; one field recipe;
