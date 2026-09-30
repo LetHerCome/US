@@ -8,12 +8,12 @@
 if (window.USGameV2) return;
 
 const FAMILIES = [
-  { id: 'scopritevi', name: 'Scopritevi', line: 'Quello che forse non sapete ancora.', icon: 'binoculars' },
-  { id: 'confrontatevi', name: 'Confrontatevi', line: 'Stessa situazione, due sguardi.', icon: 'arrows-left-right' },
-  { id: 'ridete', name: 'Ridete', line: 'Scenari assurdi, risposte vere.', icon: 'smiley' },
-  { id: 'quanto_mi_conosci', name: 'Quanto mi conosci?', line: 'Uno risponde, l’altro indovina.', icon: 'eye' },
-  { id: 'rivivete', name: 'Rivivete', line: 'Lo stesso momento, due memorie.', icon: 'clock-counter-clockwise' },
-  { id: 'e_se', name: 'E se…?', line: 'Scelte, futuri, possibilità.', icon: 'signpost' },
+  { id: 'scopritevi', name: 'Scopritevi', icon: 'binoculars' },
+  { id: 'confrontatevi', name: 'Confrontatevi', icon: 'arrows-left-right' },
+  { id: 'ridete', name: 'Ridete', icon: 'smiley' },
+  { id: 'quanto_mi_conosci', name: 'Quanto mi conosci?', icon: 'eye' },
+  { id: 'rivivete', name: 'Rivivete', icon: 'clock-counter-clockwise' },
+  { id: 'e_se', name: 'E se…?', icon: 'signpost' },
 ];
 const FAMILY = Object.fromEntries(FAMILIES.map((f) => [f.id, f]));
 const PER_VOI = { id: 'per_voi', name: 'Per voi', icon: 'sparkle' };
@@ -41,13 +41,14 @@ const startRequestIds = new Map();
 
 // ---------------------------------------------------------------- status copy
 
+// A round's state in as few words as the tile can carry.
 function roundStatus(row) {
   if (!row) return null;
-  if (row.reveal_ready) return row.my_reveal_seen_at ? { text: 'Rivedi le risposte', tone: 'seen' } : { text: 'Le vostre risposte sono pronte ♡', tone: 'ready' };
-  if (row.my_complete) return { text: `Hai risposto. Aspettiamo ${partnerName()}.`, tone: 'waiting' };
-  if (row.partner_complete) return { text: `${partnerName()} ha già risposto. Tocca a te.`, tone: 'turn' };
-  if (row.my_answered_count > 0) return { text: `Sei a ${row.my_answered_count} di ${row.item_count}.`, tone: 'progress' };
-  if (row.started_by_role && row.started_by_role !== myRole()) return { text: `${partnerName()} ha iniziato una partita.`, tone: 'turn' };
+  if (row.reveal_ready) return row.my_reveal_seen_at ? { text: 'Rivedi', tone: 'seen' } : { text: 'Risposte pronte', tone: 'ready' };
+  if (row.my_complete) return { text: `Aspetti ${partnerName()}`, tone: 'waiting' };
+  if (row.partner_complete) return { text: 'Tocca a te', tone: 'turn' };
+  if (row.my_answered_count > 0) return { text: `${row.my_answered_count} di ${row.item_count}`, tone: 'progress' };
+  if (row.started_by_role && row.started_by_role !== myRole()) return { text: 'Tocca a te', tone: 'turn' };
   return { text: 'Da giocare', tone: 'progress' };
 }
 
@@ -55,12 +56,12 @@ function perVoiCopy() {
   const state = home?.per_voi?.state || 'idle';
   const row = (home?.open_rounds || []).concat(home?.recent || []).find((r) => r.id === home?.per_voi?.session_id);
   switch (state) {
-    case 'reveal_ready': return { title: 'Le vostre risposte sono pronte ♡', line: 'Scoprite cosa avete risposto.', cta: 'Scopri' };
-    case 'waiting': return { title: `Hai risposto. Aspettiamo ${partnerName()}.`, line: 'Le risposte si svelano quando avete finito entrambi.', cta: 'Apri' };
-    case 'pending': return { title: row?.partner_complete ? `${partnerName()} ha già risposto` : `${partnerName()} ha iniziato`, line: 'Tocca a te: cinque domande preparate per voi.', cta: 'Rispondi' };
-    case 'in_progress': return { title: 'Il vostro Per voi è a metà', line: 'Riprendi quando vuoi.', cta: 'Continua' };
-    case 'played': return { title: 'Giocato questa settimana', line: 'Il prossimo Per voi arriva lunedì.', cta: 'Rivedi' };
-    default: return { title: 'Non scegliete. US ha preparato qualcosa per voi.', line: 'Cinque domande, scelte tra tutto quello che avete.', cta: 'Inizia' };
+    case 'reveal_ready': return { line: 'Risposte pronte ♡', cta: 'Scopri' };
+    case 'waiting': return { line: `Aspettiamo ${partnerName()}`, cta: 'Apri' };
+    case 'pending': return { line: row?.partner_complete ? `${partnerName()} ha già risposto` : `${partnerName()} ha iniziato`, cta: 'Rispondi' };
+    case 'in_progress': return { line: 'A metà', cta: 'Continua' };
+    case 'played': return { line: 'Giocato · il prossimo lunedì', cta: 'Rivedi' };
+    default: return { line: 'Cinque domande', cta: 'Inizia' };
   }
 }
 
@@ -93,89 +94,91 @@ function renderTop() {
 const allowance = () => home?.allowance || null;
 const freeLeft = () => { const a = allowance(); return a ? Math.max(0, a.free_limit - a.free_used) : 2; };
 const playedThisWeek = (family) => allowance()?.families?.[family] || null;
-const EXHAUSTED = 'Per questa settimana avete giocato tutto. Nuovi giochi lunedì.';
+const EXHAUSTED = 'Nuovi giochi lunedì.';
 
+// QUESTA SETTIMANA ● ● ○ 1 di 3 — nothing else unless the week is spent.
 function rhythmStrip() {
   const a = allowance();
   if (!a) return '';
   const used = Math.min(a.used, a.limit);
   const dots = Array.from({ length: a.limit }, (_, i) => `<i data-on="${i < used ? 'true' : 'false'}"></i>`).join('');
   const done = used >= a.limit;
-  const line = done ? 'Per questa settimana avete giocato tutto.' : used === 0 ? `${a.limit} momenti da vivere insieme` : `${used} di ${a.limit} momenti giocati`;
-  const sub = done ? 'Nuovi giochi lunedì.' : 'Un Per voi e due giochi a scelta, ogni settimana.';
-  return `<section class="us-gv2-rhythm" data-gv2-rhythm="${done ? 'done' : 'open'}" aria-label="Questa settimana: ${esc(`${used} di ${a.limit} momenti giocati`)}">
+  return `<div class="us-gv2-rhythm" data-gv2-rhythm="${done ? 'done' : 'open'}" role="group" aria-label="Questa settimana: ${esc(`${used} di ${a.limit} momenti giocati`)}">
     <span class="us-gv2-kicker">QUESTA SETTIMANA</span>
-    <div class="us-gv2-rhythm-row"><span class="us-gv2-rhythm-dots" aria-hidden="true">${dots}</span><b>${esc(line)}</b></div>
-    <small>${esc(sub)}</small>
-  </section>`;
+    <span class="us-gv2-rhythm-row"><span class="us-gv2-rhythm-dots" aria-hidden="true">${dots}</span><b>${done ? 'Nuovi giochi lunedì' : `${used} di ${a.limit}`}</b></span>
+  </div>`;
 }
 
 function modeStatus(f, open) {
   if (open) return { ...roundStatus(open), state: 'open' };
-  if (playedThisWeek(f.id)) return { text: 'Giocato questa settimana', tone: 'seen', state: 'played' };
-  if (allowance() && !freeLeft()) return { text: 'Nuovi giochi lunedì', tone: 'locked', state: 'locked' };
+  if (playedThisWeek(f.id)) return { text: 'Giocato', tone: 'seen', state: 'played' };
+  if (allowance() && !freeLeft()) return { text: 'Lunedì', tone: 'locked', state: 'locked' };
   return null;
 }
 
 // ---------------------------------------------------------------- hub
 
+const glyph = (name) => `<span class="us-gv2-glyph" aria-hidden="true">${icon(name)}</span>`;
+
 function weeklyCard(w) {
   if (!w) return '';
   const unlock = mondayLabel(w.next_unlock);
+  const head = (name, title, line) => `<div class="us-gv2-weekly-head">${glyph(name)}<div><span class="us-gv2-kicker">LA VOSTRA DOMANDA</span><b>${esc(title)}</b>${line ? `<small>${esc(line)}</small>` : ''}</div></div>`;
   if (w.created_by_me) {
     const q = w.my_question;
     return `<section class="us-gv2-weekly is-locked" aria-label="La domanda della settimana">
-      <div class="us-gv2-weekly-head">${icon('lock-simple')}<div><span class="us-gv2-kicker">LA VOSTRA DOMANDA</span><b>Domanda creata</b><small>La prossima la sceglie ${esc(partnerName())}, da ${esc(unlock)}.</small></div></div>
-      ${q ? `<blockquote>${esc(q.question_text)}</blockquote><small class="us-gv2-note">${esc(partnerName())} la scoprirà solo giocando.</small>` : ''}
+      ${head('lock-simple', 'Domanda creata', `Poi tocca a ${partnerName()}, ${unlock}.`)}
+      ${q ? `<blockquote>${esc(q.question_text)}</blockquote><small class="us-gv2-note">${esc(partnerName())} la scoprirà giocando.</small>` : ''}
     </section>`;
   }
   if (w.partner_left_question) {
     return `<section class="us-gv2-weekly is-sealed" aria-label="La domanda della settimana">
-      <div class="us-gv2-weekly-head">${icon('feather')}<div><span class="us-gv2-kicker">LA VOSTRA DOMANDA</span><b>${esc(partnerName())} ha lasciato una domanda per voi.</b><small>La troverete in un prossimo Per voi.</small></div></div>
+      ${head('feather', `${partnerName()} ha lasciato una domanda`, 'La troverete giocando.')}
     </section>`;
   }
   if (w.my_turn) {
     return `<section class="us-gv2-weekly is-open" aria-label="La domanda della settimana">
-      <div class="us-gv2-weekly-head">${icon('feather')}<div><span class="us-gv2-kicker">LA VOSTRA DOMANDA</span><b>Questa settimana tocca a te.</b><small>Una domanda che solo tu potresti fare. Entrerà nei vostri giochi.</small></div></div>
+      ${head('feather', 'Tocca a te')}
       <button type="button" class="primary us-gv2-weekly-cta" data-gv2-action="weekly-create">Crea la domanda</button>
     </section>`;
   }
   return `<section class="us-gv2-weekly is-locked" aria-label="La domanda della settimana">
-    <div class="us-gv2-weekly-head">${icon('lock-simple')}<div><span class="us-gv2-kicker">LA VOSTRA DOMANDA</span><b>Questa settimana crea ${esc(label(w.assigned_role))}</b><small>${w.next_role === myRole() ? `Da ${esc(unlock)} tocca a te.` : `Il turno cambia ${esc(unlock)}.`}</small></div></div>
+    ${head('lock-simple', `Questa settimana crea ${label(w.assigned_role)}`, w.next_role === myRole() ? `Tocca a te da ${unlock}` : `Cambia ${unlock}`)}
   </section>`;
 }
 
+// Six tiles: icon, name, and a state only when there is one. The first and
+// last span the row so the grid has a rhythm.
 function renderHub() {
   const root = byId('quizHub');
   if (!root) return;
   const pv = perVoiCopy();
   const pvState = home?.per_voi?.state || 'idle';
   const openByFamily = new Map((home?.open_rounds || []).map((r) => [r.game_family, r]));
-  const others = (home?.open_rounds || []).filter((r) => r.game_family !== 'per_voi');
   const recent = (home?.recent || []).filter((r) => r.my_reveal_seen_at).slice(0, 4);
-  const modeTiles = FAMILIES.map((f) => {
+  const modeTiles = FAMILIES.map((f, i) => {
     const status = modeStatus(f, openByFamily.get(f.id));
     const locked = status?.state === 'locked';
-    return `<button type="button" class="us-gv2-mode" data-gv2-family="${f.id}" data-gv2-mode-state="${esc(status?.state || 'ready')}"${locked ? ' aria-disabled="true"' : ''}>
-      ${icon(f.icon)}<span class="us-gv2-mode-copy"><b>${esc(f.name)}</b><small>${esc(status ? status.text : f.line)}</small></span>
-      ${status && !locked ? `<i class="us-gv2-dot" data-tone="${esc(status.tone)}" aria-hidden="true"></i>` : ''}
+    const mark = status?.state === 'played' ? icon('check') : locked ? icon('lock-simple') : '';
+    return `<button type="button" class="us-gv2-mode${i === 0 || i === FAMILIES.length - 1 ? ' is-wide' : ''}" data-gv2-family="${f.id}" data-gv2-mode-state="${esc(status?.state || 'ready')}"${locked ? ' aria-disabled="true"' : ''}>
+      ${glyph(f.icon)}
+      <span class="us-gv2-mode-copy"><b>${esc(f.name)}</b>${status ? `<small class="us-gv2-mode-state">${mark}${esc(status.text)}</small>` : ''}</span>
+      ${status && !locked && status.state === 'open' ? `<i class="us-gv2-dot" data-tone="${esc(status.tone)}" aria-hidden="true"></i>` : ''}
     </button>`;
   }).join('');
   root.innerHTML = `
-    <header class="us-gv2-head"><span class="us-gv2-kicker">GIOCA</span><h2>Scopritevi, giocando</h2><p>Cinque domande alla volta. Le risposte restano vostre finché non avete finito entrambi.</p></header>
-    ${rhythmStrip()}
+    <header class="us-gv2-head"><h2>Gioca</h2>${rhythmStrip()}</header>
     <button type="button" class="us-gv2-pervoi us-attention-orbit" data-gv2-action="per-voi" data-gv2-state="${esc(pvState)}" data-us-attention="${pvState === 'pending' || pvState === 'reveal_ready' ? 'on' : 'off'}">
-      ${icon('sparkle')}<span class="us-gv2-pervoi-copy"><span class="us-gv2-kicker">PER VOI</span><b>${esc(pv.title)}</b><small>${esc(pv.line)}</small></span><span class="us-gv2-pervoi-cta">${esc(pv.cta)}</span>
+      ${glyph('sparkle')}<span class="us-gv2-pervoi-copy"><b>Per voi</b><small>${esc(pv.line)}</small></span><span class="us-gv2-pervoi-cta">${esc(pv.cta)}</span>
     </button>
+    <section class="us-gv2-modes" aria-label="Scegliete voi"><div class="us-gv2-mode-grid">${modeTiles}</div></section>
     ${weeklyCard(home?.weekly)}
-    ${others.length ? `<section class="us-gv2-list" aria-label="Partite in corso"><span class="us-gv2-kicker">IN CORSO</span>${others.map((r) => { const s = roundStatus(r); return `<button type="button" class="us-gv2-row" data-gv2-session="${esc(r.id)}"><span><b>${esc(familyName(r.game_family))}</b><small>${esc(s.text)}</small></span><i class="us-gv2-dot" data-tone="${esc(s.tone)}" aria-hidden="true"></i></button>`; }).join('')}</section>` : ''}
-    <section class="us-gv2-modes" aria-label="Scegliete voi"><span class="us-gv2-kicker">SCEGLIETE VOI</span><div class="us-gv2-mode-grid">${modeTiles}</div></section>
     ${recent.length ? `<section class="us-gv2-list" aria-label="Rivedi"><span class="us-gv2-kicker">RIVEDI</span>${recent.map((r) => `<button type="button" class="us-gv2-row is-quiet" data-gv2-session="${esc(r.id)}"><span><b>${esc(familyName(r.game_family))}</b><small>${esc(romeDate(String(r.completed_at || '').slice(0, 10), { day: 'numeric', month: 'long' }))}</small></span></button>`).join('')}</section>` : ''}`;
 }
 
 function renderHubError() {
   const root = byId('quizHub');
-  if (root) root.innerHTML = '<div class="us-gv2-empty">Non riesco a caricare Gioca. <button type="button" data-gv2-action="retry">Riprova</button></div>';
+  if (root) root.innerHTML = '<div class="us-gv2-empty">Gioca non risponde. <button type="button" data-gv2-action="retry">Riprova</button></div>';
 }
 
 async function load() {
@@ -238,7 +241,7 @@ async function startRound(family) {
     const msg = error?.message || '';
     if (/weekly per voi played|weekly allowance exhausted|too many open rounds/.test(msg)) startRequestIds.delete(family);
     toast(/not enough content/.test(msg) ? 'Non ci sono ancora abbastanza domande per questo gioco.'
-      : /weekly per voi played/.test(msg) ? 'Per voi è già stato giocato questa settimana. Il prossimo arriva lunedì.'
+      : /weekly per voi played/.test(msg) ? 'Per voi è già giocato. Il prossimo lunedì.'
       : /weekly allowance exhausted/.test(msg) ? EXHAUSTED
       : /too many open rounds/.test(msg) ? 'Prima finite una delle partite in corso.'
       : 'Non riesco ad aprire la partita. Riprova.');
@@ -263,7 +266,7 @@ async function chooseMode(family) {
     const ok = typeof ask === 'function' ? await ask({
       kicker: familyName(family).toUpperCase(),
       title: `Avete già giocato a ${familyName(family)} questa settimana`,
-      body: `Vi resta ${freeLeft() === 1 ? 'un momento' : `${freeLeft()} momenti`} fino a lunedì. Volete usarne uno per un’altra partita?`,
+      body: `Vi resta ${freeLeft() === 1 ? 'un momento' : `${freeLeft()} momenti`} fino a lunedì. Usarlo per un’altra partita?`,
       confirmLabel: 'Gioca ancora',
       cancelLabel: 'Non ora',
     }) : true;
@@ -337,7 +340,7 @@ function renderPlay() {
   const kicker = current.game_family === 'per_voi' ? `PER VOI · ${familyName(item.family).toUpperCase()}` : familyName(current.game_family).toUpperCase();
   const hint = itemHint(item);
   const input = item.answer_kind === 'open'
-    ? `<label class="us-gv2-sr" for="usGv2Answer">La tua risposta</label><textarea id="usGv2Answer" maxlength="1000" rows="5" placeholder="Scrivi con calma…">${esc(value ?? '')}</textarea>`
+    ? `<label class="us-gv2-sr" for="usGv2Answer">La tua risposta</label><textarea id="usGv2Answer" maxlength="1000" rows="5" placeholder="Scrivi…">${esc(value ?? '')}</textarea>`
     : `<fieldset class="us-gv2-choices"><legend class="us-gv2-sr">${item.my_item_role === 'predictor' ? 'La tua previsione' : 'La tua scelta'}</legend>${(item.options || []).map((o, i) => `<label class="us-gv2-choice"><input type="radio" name="gv2choice" value="${i}" ${Number(value) === i && value !== null && value !== undefined ? 'checked' : ''}><span>${esc(o)}</span></label>`).join('')}</fieldset>`;
   const last = index === total - 1;
   showPanel(`<article class="us-gv2-play" data-gv2-family="${esc(item.family || current.game_family)}">
@@ -421,7 +424,7 @@ function renderWaiting() {
     <div class="us-gv2-play-top">${backButton()}</div>
     <span class="us-gv2-kicker">${esc(familyName(current.game_family).toUpperCase())}</span>
     <h2>Hai risposto.</h2>
-    <p class="us-gv2-lead">Aspettiamo ${esc(partnerName())}. Le risposte si scoprono quando avete finito entrambi.</p>
+    <p class="us-gv2-lead">Aspettiamo ${esc(partnerName())}. Le risposte si scoprono insieme.</p>
     <ol class="us-gv2-mine">${current.items.map((i) => `<li><small>${esc(i.my_prompt || i.question_text)}</small><b>${esc(myAnswerText(i))}</b></li>`).join('')}</ol>
     <div class="us-gv2-actions"><button type="button" class="ghost" data-gv2-action="back">Torna a Gioca</button><button type="button" class="primary" data-gv2-action="refresh">Aggiorna</button></div>
   </article>`);
@@ -487,22 +490,21 @@ function renderWeeklyForm(error = '') {
   const root = showPanel(`<article class="us-gv2-weekly-form">
     <div class="us-gv2-play-top">${backButton()}</div>
     <span class="us-gv2-kicker">LA DOMANDA DELLA SETTIMANA</span>
-    <h2>Scrivi la vostra domanda</h2>
-    <p class="us-gv2-lead">Una sola a settimana. ${esc(partnerName())} la scoprirà solo giocando.</p>
+    <h2>Crea la domanda</h2>
+    <p class="us-gv2-lead">${esc(partnerName())} la scoprirà solo giocando.</p>
     <form id="usGv2WeeklyForm" novalidate>
-      <label for="usGv2WeeklyText">La domanda</label>
-      <textarea id="usGv2WeeklyText" name="question_text" maxlength="300" rows="3" required placeholder="Qualcosa che solo tu potresti chiedere…"></textarea>
+      <label class="us-gv2-sr" for="usGv2WeeklyText">La domanda</label>
+      <textarea id="usGv2WeeklyText" name="question_text" maxlength="300" rows="3" required placeholder="Scrivi la domanda"></textarea>
       <fieldset class="us-gv2-segment"><legend>Come si risponde?</legend>
         <label><input type="radio" name="answer_kind" value="open" checked><span>Risposta libera</span></label>
         <label><input type="radio" name="answer_kind" value="choice"><span>Scelta</span></label>
       </fieldset>
       <div id="usGv2WeeklyOptions" class="us-gv2-options" hidden>
-        <p>Da 2 a 4 possibilità.</p>
         ${[0, 1, 2, 3].map((i) => `<label class="us-gv2-sr" for="usGv2Option${i}">Opzione ${i + 1}</label><input id="usGv2Option${i}" name="option_${i}" maxlength="120" placeholder="Opzione ${i + 1}${i > 1 ? ' (facoltativa)' : ''}">`).join('')}
       </div>
-      <fieldset class="us-gv2-families"><legend>In quali giochi può comparire?</legend>
+      <fieldset class="us-gv2-families"><legend>Nei giochi</legend>
         ${FAMILIES.map((f) => `<label class="us-gv2-chip"><input type="checkbox" name="families" value="${f.id}" ${f.id === 'scopritevi' ? 'checked' : ''} ${f.id === 'quanto_mi_conosci' ? 'disabled' : ''}><span>${esc(f.name)}</span></label>`).join('')}
-        <small id="usGv2PredictionHint">“Quanto mi conosci?” funziona solo con risposte a scelta.</small>
+        <small id="usGv2PredictionHint">“Quanto mi conosci?” solo con risposte a scelta.</small>
       </fieldset>
       <p id="usGv2Error" class="us-gv2-error" role="alert" ${error ? '' : 'hidden'}>${esc(error)}</p>
       <button type="submit" class="primary us-gv2-submit">Salva la domanda</button>

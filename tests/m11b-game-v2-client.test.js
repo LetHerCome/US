@@ -90,10 +90,9 @@ test('M11B client: hub shows Per voi, the six modes and the weekly turn, with no
   const h = harness({ homeState: home({ weekly: weekly({ my_turn: true }) }) });
   await tick();
   const html = h.nodes.quizHub.innerHTML;
-  assert.match(html, /PER VOI/);
-  assert.match(html, /Non scegliete\. US ha preparato qualcosa per voi\./);
+  assert.match(html, /<b>Per voi<\/b><small>Cinque domande<\/small>/);
   for (const name of ['Scopritevi', 'Confrontatevi', 'Ridete', 'Quanto mi conosci\\?', 'Rivivete', 'E se…\\?']) assert.match(html, new RegExp(name));
-  assert.match(html, /Questa settimana tocca a te\./);
+  assert.match(html, /<b>Tocca a te<\/b>/);
   assert.match(html, /Crea la domanda/);
   assert.doesNotMatch(html, NO_SCORE);
   assert.deepEqual(h.calls.map(([n]) => n), ['get_game_v2_home']);
@@ -121,18 +120,18 @@ test('M11B client: weekly card states — locked, created by me, sealed for the 
   const locked = harness({ homeState: home({ weekly: weekly({ assigned_role: 'beatrice', next_role: 'francesco' }) }) });
   await tick();
   assert.match(locked.nodes.quizHub.innerHTML, /Questa settimana crea Bea/);
-  assert.match(locked.nodes.quizHub.innerHTML, /tocca a te/);
+  assert.match(locked.nodes.quizHub.innerHTML, /Tocca a te da lunedì 5 ottobre/);
   assert.doesNotMatch(locked.nodes.quizHub.innerHTML, /data-gv2-action="weekly-create"/);
 
   const mine = harness({ homeState: home({ weekly: weekly({ my_turn: false, created: true, created_by_me: true, my_question: { question_text: 'Cosa <ti> manca?' } }) }) });
   await tick();
   assert.match(mine.nodes.quizHub.innerHTML, /Domanda creata/);
-  assert.match(mine.nodes.quizHub.innerHTML, /La prossima la sceglie Bea, da lunedì 5 ottobre\./);
+  assert.match(mine.nodes.quizHub.innerHTML, /Poi tocca a Bea, lunedì 5 ottobre\./);
   assert.match(mine.nodes.quizHub.innerHTML, /Cosa &lt;ti&gt; manca\?/, 'author sees own text, escaped');
 
   const sealed = harness({ role: 'beatrice', homeState: home({ my_role: 'beatrice', partner_role: 'francesco', weekly: weekly({ created: true, partner_left_question: true }) }) });
   await tick();
-  assert.match(sealed.nodes.quizHub.innerHTML, /Francesco ha lasciato una domanda per voi\./);
+  assert.match(sealed.nodes.quizHub.innerHTML, /Francesco ha lasciato una domanda/);
   assert.doesNotMatch(sealed.nodes.quizHub.innerHTML, /blockquote/, 'the partner never sees the sealed text');
 });
 
@@ -285,7 +284,7 @@ test('M11B client: weekly question form sends only content, retries idempotently
   const form = el('usGv2WeeklyForm');
   h.nodes.usGameV2Panel.query['#usGv2WeeklyForm'] = form;
   h.nodes.quizHub.fire('click', { target: { closest: () => ({ dataset: { gv2Action: 'weekly-create' } }) } });
-  assert.match(h.nodes.usGameV2Panel.innerHTML, /Scrivi la vostra domanda/);
+  assert.match(h.nodes.usGameV2Panel.innerHTML, /Crea la domanda/);
   assert.match(h.nodes.usGameV2Panel.innerHTML, /value="quanto_mi_conosci"  disabled/, 'Quanto mi conosci? needs choices');
   form.fields = { question_text: '', answer_kind: 'open', families: ['scopritevi'] };
   form.query['button[type="submit"]'] = { disabled: false };
@@ -349,21 +348,20 @@ test('M11F client: the weekly strip reads the server allowance, restrained, neve
   const fresh = harness({ homeState: home({ allowance: allowance() }) });
   await tick();
   assert.match(fresh.nodes.quizHub.innerHTML, /QUESTA SETTIMANA/);
-  assert.match(fresh.nodes.quizHub.innerHTML, /3 momenti da vivere insieme/);
+  assert.match(fresh.nodes.quizHub.innerHTML, /data-gv2-rhythm="open"[\s\S]*<b>0 di 3<\/b>/);
   const mid = harness({ homeState: home({ allowance: allowance({ used: 2, per_voi_used: 1, free_used: 1, per_voi_available: false, families: { per_voi: { session_id: 'p', completed: true }, ridete: { session_id: 'r', completed: true } } }) }) });
   await tick();
   const html = mid.nodes.quizHub.innerHTML;
   assert.match(html, /2 di 3 momenti giocati/);
   assert.equal((html.match(/data-on="true"/g) || []).length, 2);
   assert.match(html, /data-gv2-family="ridete" data-gv2-mode-state="played"/);
-  assert.match(html, /Giocato questa settimana/);
+  assert.match(html, /Giocato<\/small>/);
   assert.doesNotMatch(html, /vite|energia|stamina|streak|serie/i, 'no game-energy language');
   const done = harness({ homeState: home({ per_voi: { state: 'played', session_id: 'p' }, allowance: allowance({ used: 3, per_voi_used: 1, free_used: 2, per_voi_available: false, free_available: false, families: { per_voi: { session_id: 'p', completed: true } } }) }) });
   await tick();
   const dh = done.nodes.quizHub.innerHTML;
-  assert.match(dh, /Per questa settimana avete giocato tutto\./);
-  assert.match(dh, /Nuovi giochi lunedì\./);
-  assert.match(dh, /Giocato questa settimana/, 'Per voi shows its played state');
+  assert.match(dh, /<b>Nuovi giochi lunedì<\/b>/);
+  assert.match(dh, /Giocato · il prossimo lunedì/, 'Per voi shows its played state');
   assert.match(dh, /data-gv2-family="scopritevi" data-gv2-mode-state="locked" aria-disabled="true"/, 'modes stay visible, locked');
   assert.equal(done.nodes.usPerVoiTop.dataset.gv2State, 'played');
   assert.equal(done.nodes.usPerVoiTop.dataset.usAttention, 'off');
@@ -376,7 +374,7 @@ test('M11F client: an exhausted week starts nothing; played modes open their rev
   await h.api.chooseMode('ridete');
   await tick();
   assert.equal(h.calls.some(([n]) => n === 'start_game_round'), false, 'no start call once the week is spent');
-  assert.match(h.notices.join('|'), /avete giocato tutto/);
+  assert.match(h.notices.join('|'), /Nuovi giochi lunedì/);
   assert.ok(h.calls.some(([n, a]) => n === 'get_game_session' && a.target_session_id === 'r1'), 'played mode opens its round');
 
   const refused = harness({ handlers: { start_game_round: () => { throw Object.assign(new Error('weekly allowance exhausted'), { code: 'P0001' }); } } });
