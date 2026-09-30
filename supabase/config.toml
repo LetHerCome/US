@@ -27,5 +27,11 @@ verify_jwt = false
 [functions.daily-question-push-worker]
 verify_jwt = false
 
+[functions.game-v2-push]
+verify_jwt = true
+
+[functions.game-v2-push-worker]
+verify_jwt = false
+
 [functions.spotify-search]
 verify_jwt = true

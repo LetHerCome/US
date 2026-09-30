@@ -12,7 +12,8 @@ const GAME_MIGRATIONS = fs.readdirSync(MIGRATIONS)
   .filter((f) => /^20260930(105724_m11a_|121312_m11a_1_|\d{6}_m11[b-e]_)/.test(f))
   .sort();
 
-// Production-shaped stand-ins for tables the context adapters read. Only the
+// Production-shaped stand-ins for tables the context adapters and push
+// functions read (vault / pg_cron / pg_net as in the M10C test). Only the
 // columns the repository already relies on are declared.
 const FIXTURE = `
   create role authenticated; create role anon; create role service_role;
@@ -57,6 +58,23 @@ const FIXTURE = `
   );
   create table public.daily_questions (id uuid primary key default gen_random_uuid(), question_date date, question text);
   create table public.daily_answers (id uuid primary key default gen_random_uuid(), question_id uuid, couple_id uuid, user_id uuid, answer text);
+  create schema vault;
+  create table vault.secrets (name text primary key, secret text);
+  create view vault.decrypted_secrets as select name, secret as decrypted_secret from vault.secrets;
+  create function vault.create_secret(value text, secret_name text) returns uuid language sql as $$
+    insert into vault.secrets values (secret_name, value); select gen_random_uuid();
+  $$;
+  create function public.gen_random_bytes(n integer) returns bytea language sql as $$ select decode(repeat('ab', n), 'hex') $$;
+  create schema cron;
+  create table cron.job (jobname text primary key, schedule text, command text);
+  create function cron.schedule(job_name text, job_schedule text, job_command text) returns bigint language sql as $$
+    insert into cron.job values (job_name, job_schedule, job_command); select 1::bigint;
+  $$;
+  create schema net;
+  create table net.calls (url text, headers jsonb, body jsonb);
+  create function net.http_post(url text, headers jsonb, body jsonb) returns bigint language sql as $$
+    insert into net.calls values (url, headers, body); select 1::bigint;
+  $$;
   create table public.notification_preferences (
     user_id uuid primary key, think boolean not null default true, today boolean not null default true,
     bond boolean not null default true, relationship boolean not null default true, left_for_you boolean not null default true,

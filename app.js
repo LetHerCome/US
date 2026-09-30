@@ -211,7 +211,9 @@ async function sendWebPushEvent(type,referenceId=null,extra={}){
   try{
     const {data:{session}}=await sb.auth.getSession();
     if(!session?.access_token)return null;
-    const response=await fetch(`${SB_URL}/functions/v1/send-web-push`,{
+    // M11D: Game V2 events have their own function; send-web-push is unchanged.
+    const endpoint=String(type).startsWith('game_')?'game-v2-push':'send-web-push';
+    const response=await fetch(`${SB_URL}/functions/v1/${endpoint}`,{
       method:'POST',
       // keepalive: la richiesta sopravvive se la PWA va in background o si chiude subito dopo l'invio.
       keepalive:true,

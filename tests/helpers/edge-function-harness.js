@@ -54,9 +54,14 @@ function createFakeAdmin({ tables = {}, users = {}, rpc = {}, errors = {} } = {}
         return user ? { data: { user }, error: null } : { data: { user: null }, error: { message: 'invalid token' } };
       },
     },
-    async rpc(name) {
+    async rpc(name, args) {
       log.rpc.push(name);
-      return name in rpc ? { data: rpc[name], error: null } : { data: null, error: { message: `no rpc ${name}` } };
+      if (!(name in rpc)) return { data: null, error: { message: `no rpc ${name}` } };
+      // A function double receives the call arguments (M11D server authority).
+      if (typeof rpc[name] === 'function') {
+        try { return { data: await rpc[name](args), error: null }; } catch (error) { return { data: null, error }; }
+      }
+      return { data: rpc[name], error: null };
     },
     from(table) {
       const filters = [];
