@@ -17,9 +17,9 @@ deployed on production.
 ## Migrations, in order
 
 1. `20260930121312_m11a_1_game_rpc_readonly_actor.sql` (already in production; ledger alignment only).
-2. `20260930150000_m11b_game_v2_core.sql`
-3. `20260930160000_m11c_game_v2_context.sql`
-4. `20260930170000_m11d_game_v2_push.sql`
+2. `20260930153745_m11b_game_v2_core.sql`
+3. `20260930153749_m11c_game_v2_context.sql`
+4. `20260930153755_m11d_game_v2_push.sql`
 
 All are additive and forward-only: new tables, columns and functions, widened
 checks, replaced function bodies with unchanged signatures. No applied
