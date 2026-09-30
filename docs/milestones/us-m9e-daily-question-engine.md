@@ -11,7 +11,7 @@
 - `public.get_daily_state(question_id)`: visibilità delle risposte e reveal.
 - `private.daily_question_reveal_ready` e `public.daily_question_outcomes` (M3).
 
-## Aggiunte (migration `20260930090000_m9e_daily_question_engine.sql`)
+## Aggiunte (migration `20260930045233_m9e_daily_question_engine.sql`)
 
 | Oggetto | Ruolo |
 | --- | --- |

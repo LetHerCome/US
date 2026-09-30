@@ -16,7 +16,7 @@ const PG_BIN = ['/usr/lib/postgresql/16/bin', '/usr/lib/postgresql/17/bin', '/us
 function execFileSyncOk(cmd, args) { try { return execFileSync(cmd, args, { stdio: 'pipe' }).toString(); } catch { return ''; } }
 const CAN_RUN = Boolean(PG_BIN) && process.getuid?.() === 0 && Boolean(execFileSyncOk('id', ['postgres'])) && fs.existsSync('/usr/sbin/runuser') && Boolean(execFileSyncOk('psql', ['--version']));
 const skip = CAN_RUN ? false : 'no local PostgreSQL server binaries / postgres OS user / root available';
-const MIGRATION = path.join(ROOT, 'supabase/migrations/20260930090000_m9e_daily_question_engine.sql');
+const MIGRATION = path.join(ROOT, 'supabase/migrations/20260930045233_m9e_daily_question_engine.sql');
 const uuid = () => crypto.randomUUID();
 
 const FIXTURE_SQL = `
