@@ -324,4 +324,3 @@ test('M10.2 dismiss: solo RPC canonica, non segna visto, aggiorna Oggi; errore â
   await wrong.hydrate();
   assert.equal((await wrong.window.dismissDailyRevealNotice('q-1')).status, 'error');
 });
-
