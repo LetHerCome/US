@@ -278,8 +278,8 @@ test('M6B (28): a restrained loading state, not a blocking full-screen spinner',
 
 // (29) empty calendar state keeps the copy; M9C: the day itself is the create action (no FAB).
 test('M6B (29): the empty calendar state has no duplicate CTA; tapping a day is the create action', () => {
-  assert.match(html(), /<b>I vostri giorni, insieme\.<\/b>/);
-  assert.match(html(), /Aggiungete i vostri impegni e US vi aiuterà a vedere come si incastrano le vostre giornate\./);
+  assert.match(html(), /<b>Nessun impegno<\/b>/);
+  assert.doesNotMatch(html(), /US vi aiuterà a vedere come si incastrano/, 'the empty state is a title, not a paragraph');
   assert.doesNotMatch(html(), /usCalendarEmptyCta|class="us-cal-empty-cta"/);
   assert.doesNotMatch(js(), /usCalendarEmptyCta/);
   assert.doesNotMatch(html(), /usCalendarAddBtn|us-cal-fab/);

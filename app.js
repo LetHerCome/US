@@ -249,7 +249,7 @@ async function refreshWebPushUi(){
   if(isIosDevice()&&!isStandaloneUs()){
     card.hidden=false;card.classList.add('install-only');
     if(title)title.textContent='Aggiungi US alla schermata Home';
-    if(text)text.textContent='Su iPhone le notifiche funzionano dalla web app installata nella Home.';
+    if(text)text.textContent='Su iPhone le notifiche funzionano solo dall’app installata.';
     if(button)button.hidden=true;
     if(settings)settings.hidden=true;
     return;
@@ -257,7 +257,7 @@ async function refreshWebPushUi(){
   if(Notification.permission==='denied'){
     card.hidden=false;card.classList.add('denied');
     if(title)title.textContent='Notifiche disattivate';
-    if(text)text.textContent='Riattivale dalle impostazioni notifiche del telefono per US.';
+    if(text)text.textContent='Riattivale dalle impostazioni del telefono.';
     if(button)button.hidden=true;
     setPushSettingsState('denied','Notifiche bloccate','Riattivale dalle impostazioni del telefono.','');
     return;
@@ -266,14 +266,14 @@ async function refreshWebPushUi(){
   if(Notification.permission==='granted'&&subscription){
     await syncPushSubscriptionToSupabase(subscription);
     card.hidden=true;
-    setPushSettingsState('active','Notifiche attive','Ti penso, Today e Bond possono raggiungerti a US chiusa.','Disattiva');
+    setPushSettingsState('active','Notifiche attive','Anche a US chiusa.','Disattiva');
     return;
   }
   card.hidden=false;
-  if(title)title.textContent='Rimani vicino anche quando US è chiusa';
-  if(text)text.textContent='Ricevi “Ti penso”, risposte e quest condivise.';
-  if(button){button.hidden=false;button.disabled=false;button.textContent=Notification.permission==='granted'?'Completa attivazione':'Attiva notifiche';}
-  setPushSettingsState('inactive','Notifiche non attive','Attivale quando vuoi.','Attiva');
+  if(title)title.textContent='Attiva le notifiche';
+  if(text)text.textContent='Ti penso, risposte e quest, anche a US chiusa.';
+  if(button){button.hidden=false;button.disabled=false;button.textContent=Notification.permission==='granted'?'Completa attivazione':'Attiva';}
+  setPushSettingsState('inactive','Notifiche non attive','','Attiva');
 }
 window.refreshWebPushUi=refreshWebPushUi;
 
@@ -573,9 +573,9 @@ function renderDistanceState(state,detail='',action='Aggiorna'){
   if(state==='ready')root.classList.add('ready');
   if(state==='denied')root.classList.add('denied');
   value.textContent=state==='unsupported'?'Posizione non supportata':state==='denied'?'Posizione disattivata':state==='loading'?'Aggiorno la distanza…':detail||'Attiva la distanza';
-  if(state==='unsupported')meta.textContent='Questo dispositivo non espone la geolocalizzazione.';
-  else if(state==='denied')meta.textContent='Riattiva la posizione dalle impostazioni del sito/app.';
-  else if(state==='loading')meta.textContent='Uso la posizione solo per calcolare quanto siete lontani.';
+  if(state==='unsupported')meta.textContent='Non disponibile su questo dispositivo.';
+  else if(state==='denied')meta.textContent='Riattivala dalle impostazioni.';
+  else if(state==='loading')meta.textContent='';
   btn.textContent=state==='denied'?'Permessi':action;
   btn.disabled=state==='loading';
 }
@@ -611,14 +611,14 @@ async function hydrateDistance(){
   if(!mine){
     root.classList.remove('ready');
     value.textContent='Attiva la distanza';
-    meta.textContent=`Condividi la tua posizione per vedere quanto sei lontano da ${partnerName}.`;
+    meta.textContent='Condividi la posizione per vedere la distanza.';
     btn.textContent='Attiva';btn.disabled=false;
     return;
   }
   if(!partner){
     root.classList.add('ready');
     value.textContent=`In attesa di ${partnerName}`;
-    meta.textContent=`La tua posizione è aggiornata · ${relativeLocationAge(mine.updated_at)}.`;
+    meta.textContent=`Aggiornata ${relativeLocationAge(mine.updated_at)}`;
     btn.textContent='Aggiorna';btn.disabled=false;
     return;
   }
@@ -626,7 +626,7 @@ async function hydrateDistance(){
   if(!validCoordinates){
     root.classList.add('stale');
     value.textContent='Distanza non disponibile';
-    meta.textContent='Una delle due posizioni non contiene coordinate valide.';
+    meta.textContent='Coordinate non valide.';
     btn.textContent='Aggiorna';btn.disabled=false;
     return;
   }
@@ -649,7 +649,7 @@ async function hydrateDistance(){
   root.classList.add('ready');
   value.textContent=`♡ ${formatDistance(km)} da ${partnerName}`;
   const accuracy=Number.isFinite(Number(partner.accuracy_m))?` · precisione ±${Math.round(Number(partner.accuracy_m))} m`:'';
-  meta.textContent=`Posizione di ${partnerName} aggiornata ${relativeLocationAge(partner.updated_at)}${accuracy}.`;
+  meta.textContent=`Aggiornata ${relativeLocationAge(partner.updated_at)}${accuracy}`;
   btn.innerHTML='<span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span>';btn.disabled=false;
 }
 
@@ -1140,7 +1140,7 @@ async function pairAccount(){
   }catch(err){
     const msg=String(err?.message||'accesso non riuscito');
     if(/anonymous sign-ins are disabled|anonymous/i.test(msg) && /disabled|not enabled/i.test(msg)){
-      s.textContent='Accesso anonimo non ancora attivo su Supabase.';
+      s.textContent='Accesso non disponibile per ora.';
     }else if(/Invalid private code/i.test(msg)){
       s.textContent='Codice privato non corretto.';
     }else{
@@ -1580,7 +1580,7 @@ function renderThinkReactionUi(){
   const buttons=root.querySelectorAll('[data-think-reaction]');
   const partner=partnerFromProfiles(window.usBondProfiles||[]);
   if(title)title.textContent=`${partner?.display_name||'La tua persona'} ti pensa`;
-  if(copy)copy.textContent='Un piccolo segnale, solo per voi due.';
+  if(copy)copy.hidden=true;
   buttons.forEach(button=>{
     const reaction=button.dataset.thinkReaction;
     button.classList.toggle('selected',reaction===usThinkReactionFinal);
@@ -1659,7 +1659,7 @@ function dailyQuestionOutcomeRuntime(){
   const ownOutcome=(state=current())=>state.rows.find(row=>row.author_role===ownRole())||null;
   const outcomeLabel=(row)=>row.author_role===ownRole()?'La tua riflessione':partnerLabel();
   const statusCopy=(status)=>({
-    loading:'Carico le riflessioni…', saved:'Riflessione salvata.', duplicate:'Riflessione già salvata.',
+    loading:'Carico…', saved:'Riflessione salvata.', duplicate:'Riflessione già salvata.',
     stale:'È arrivata una versione più recente: ho ricaricato il confronto.', already_absent:'La riflessione era già stata eliminata.',
     deleted:'Riflessione eliminata.', error:'Non riesco a sincronizzare ora. Il reveal resta disponibile.'
   })[status]||'';
@@ -1667,7 +1667,7 @@ function dailyQuestionOutcomeRuntime(){
     const state=current(),mine=ownOutcome(state),partner=state.rows.filter(row=>row.author_role!==ownRole());
     const rows=[...partner,...(mine?[mine]:[])].map(row=>`<article class="today-outcome-entry" data-us-today-outcome-${row.author_role===ownRole()?'owner':'partner'}><b>${escapeHtml(outcomeLabel(row))}</b><p>${escapeHtml(row.body||'')}</p></article>`).join('');
     const status=statusCopy(state.status);
-    return `<div class="today-outcome-head"><div><div class="qtag">DOPO IL REVEAL</div><h3>Parlatene insieme</h3></div></div><p class="today-outcome-copy">Una riflessione è facoltativa e resta privata tra voi.</p>${rows?`<div class="today-outcome-list">${rows}</div>`:''}<div class="today-outcome-compose" data-us-today-outcome-owner><label class="tiny" for="todayOutcomeBody">La tua riflessione</label><textarea id="todayOutcomeBody" rows="3" maxlength="1000" placeholder="Lascia un pensiero, se ti va…">${escapeHtml(state.draft||mine?.body||'')}</textarea><div class="today-outcome-actions"><button type="button" class="primary" onclick="saveDailyQuestionOutcome()">Salva riflessione</button>${mine?'<button type="button" class="today-outcome-delete" onclick="deleteDailyQuestionOutcome()">Elimina</button>':''}</div></div>${status?`<p class="today-outcome-status ${state.status==='error'?'error':''}" role="status">${status}</p>`:''}`;
+    return `<div class="today-outcome-head"><div><h3>Parlatene insieme</h3></div></div><p class="today-outcome-copy">Facoltativa e privata.</p>${rows?`<div class="today-outcome-list">${rows}</div>`:''}<div class="today-outcome-compose" data-us-today-outcome-owner><label class="tiny" for="todayOutcomeBody">La tua riflessione</label><textarea id="todayOutcomeBody" rows="3" maxlength="1000" placeholder="Un pensiero…">${escapeHtml(state.draft||mine?.body||'')}</textarea><div class="today-outcome-actions"><button type="button" class="primary" onclick="saveDailyQuestionOutcome()">Salva riflessione</button>${mine?'<button type="button" class="today-outcome-delete" onclick="deleteDailyQuestionOutcome()">Elimina</button>':''}</div></div>${status?`<p class="today-outcome-status ${state.status==='error'?'error':''}" role="status">${status}</p>`:''}`;
   };
   const render=()=>{
     const root=document.getElementById('todayOutcome');
@@ -1746,7 +1746,7 @@ function renderTodayQuestionUnavailable(status){
   const failed=status==='error';
   window.todayQuestion=null; window.todayState=null; window.todayRevealMeta=null;
   dailyQuestionOutcomes.hide();
-  if(qel)qel.textContent=failed?'Non riesco a caricare la domanda di oggi.':'Sto preparando la domanda di oggi…';
+  if(qel)qel.textContent=failed?'Non riesco a caricare la domanda di oggi.':'Un attimo…';
   if(locked)locked.textContent=failed?'Controlla la connessione e riprova.':'Un attimo, arriva subito.';
   if(reveal){reveal.classList.add('hidden');reveal.innerHTML='';}
   if(answerEl){answerEl.value='';answerEl.disabled=true;answerEl.hidden=true;}
@@ -1886,7 +1886,7 @@ async function hydrateToday(){
     btn.textContent='Rispondi';
   }
   if(state?.both_answered){
-    locked.innerHTML='♡ <b>Reveal sbloccato.</b> Avete risposto entrambi.';
+    locked.innerHTML='♡ <b>Risposte sbloccate</b>';
     answerEl.disabled=true; btn.disabled=true; btn.textContent='Risposte sbloccate';
     // M10.2 — stato personale (ricevuta, avviso, reazioni) dal server; mai testo qui.
     renderTodayReveal();
@@ -2019,7 +2019,7 @@ function resetMomentComposer(){
   const caption=document.getElementById('momentCaption');if(caption)caption.value='';
   const img=document.getElementById('momentPreviewImg');if(img)img.removeAttribute('src');
   document.getElementById('momentCompose')?.classList.remove('has-photo');
-  const detected=document.getElementById('momentDetectedDate');if(detected)detected.textContent='La data verrà letta automaticamente dalla foto.';
+  const detected=document.getElementById('momentDetectedDate');if(detected)detected.textContent='';
 }
 
 document.getElementById('momentFile')?.addEventListener('change',async(event)=>{
@@ -2199,7 +2199,7 @@ async function hydrateMomentsCore(){
   const pill=document.getElementById('momentsStatusPill');
   if(!grid)return;
   const profile=window.usProfile;
-  if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></div><b>Carico i vostri ricordi…</b></div>';
+  if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></div><b>Carico…</b></div>';
   const [{data:rows,error},{data:profiles,error:profilesError},{data:lived,error:livedError}]=await Promise.all([
     sb.from('moments').select('id,created_by,storage_path,caption,moment_date,created_at').order('moment_date',{ascending:false}).order('created_at',{ascending:false}),
     sb.from('profiles').select('id,display_name').eq('couple_id',profile.couple_id),
@@ -2217,7 +2217,7 @@ async function hydrateMomentsCore(){
   const signature=JSON.stringify([today,(rows||[]).map(r=>[r.id,r.created_by,r.storage_path,r.caption||'',r.moment_date,r.created_at]),livedRows.map(r=>[r.id,r.title,r.completed_at])]);
   if(grid.dataset.loaded==='1'&&grid.dataset.signature===signature)return;
   if(!rows?.length&&!livedRows.length){
-    grid.innerHTML='<div class="empty-state moment-loading ricordi-empty"><b>La vostra storia parte dal primo ricordo.</b><p>Scegli una foto: la data verrà letta automaticamente.</p></div>';
+    grid.innerHTML='<div class="empty-state moment-loading ricordi-empty"><b>La vostra storia parte da qui</b></div>';
     renderRicordiRivivi(null,new Map(),new Map());
     renderRicordiChapters([],new Map());
     grid.dataset.loaded='1';grid.dataset.signature=signature;return;
@@ -2570,7 +2570,7 @@ async function hydrateBond(){
   if(!window.usProfile)return;
   const list=document.getElementById('bondQuestList');
   if(!list)return;
-  if(list.dataset.loaded!=='1')list.innerHTML='<div class="empty-state"><div class="emoji">✦</div><b>Preparo le vostre quest…</b></div>';
+  if(list.dataset.loaded!=='1')list.innerHTML='<div class="empty-state"><div class="emoji">✦</div><b>Carico…</b></div>';
   await ensureBondWeek();
   const week=weekStartISO(),coupleId=window.usProfile.couple_id;
   const [{data:state,error:stateError},{data:quests,error:questError},{data:profiles,error:profilesError},{data:couple,error:coupleError},{count:completedCount,error:countError}]=await Promise.all([
@@ -2671,7 +2671,7 @@ function renderNoiIdeaActiveList(){
   }
   renderNoiHubSummary();
   if(!noiIdeaState.activeItems.length){
-    root.innerHTML='<div class="noi-quiet-state"><b>Niente in lista</b><span>Aggiungete la prima idea da vivere insieme.</span></div>';
+    root.innerHTML='<div class="noi-quiet-state"><b>Niente in lista</b><span>Aggiungete la prima.</span></div>';
     return;
   }
   root.innerHTML=noiIdeaState.activeItems.map(noiIdeaCardHtml).join('');
@@ -2684,11 +2684,11 @@ function renderNoiHubSummary(){
     if(noiIdeaState.loaded&&!noiIdeaState.error){
       const count=noiIdeaState.activeItems.length;
       const scheduled=noiIdeaState.activeItems.filter(i=>i.status==='scheduled').length;
-      ideasTitle.textContent=count?`${count} ${count===1?'idea':'idee'} da vivere`:'Nessuna idea, per ora';
-      ideasMeta.textContent=scheduled?`${scheduled} in calendario`:(count?'Nessuna ancora in calendario':'Aggiungete la prima');
+      ideasTitle.textContent=count?`${count} ${count===1?'idea':'idee'} da vivere`:'Nessuna idea';
+      ideasMeta.textContent=scheduled?`${scheduled} in calendario`:'';
     }else{
       ideasTitle.textContent='Le vostre idee';
-      ideasMeta.textContent='Cose da provare insieme';
+      ideasMeta.textContent='';
     }
   }
   const questTitle=document.getElementById('noiHubQuestTitle');
@@ -2698,10 +2698,10 @@ function renderNoiHubSummary(){
     if(quests.length){
       const done=quests.filter(q=>q.completed_at).length;
       questTitle.textContent=done===quests.length?'Tutte completate':`${done} di ${quests.length} completate`;
-      questMeta.textContent='Si rinnovano ogni lunedì';
+      questMeta.textContent='';
     }else{
-      questTitle.textContent='Le quest della settimana';
-      questMeta.textContent='Da fare insieme';
+      questTitle.textContent='Questa settimana';
+      questMeta.textContent='';
     }
   }
 }
@@ -2730,7 +2730,7 @@ async function hydrateNoiIdeas(){
   const list=document.getElementById('noiIdeaList');
   if(list&&!noiIdeaState.loaded){
     list.setAttribute('aria-busy','true');
-    list.innerHTML='<div class="empty-state" aria-busy="true"><div class="emoji"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></div><b>Carico le vostre idee…</b></div>';
+    list.innerHTML='<div class="empty-state" aria-busy="true"><div class="emoji"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></div><b>Carico…</b></div>';
   }
   const {data,error}=await sb.from('bucket_items')
     .select('id,title,note,link_url,status,calendar_entry_id,completed_at,created_at,lived_proposed_by')
@@ -3352,11 +3352,11 @@ function escapeHtml(s){
 }
 
 saveAnswer = async function(){
-  if(!window.usProfile){toast('Sync non pronta, riprova tra un attimo');return;}
+  if(!window.usProfile){toast('Riprova tra un attimo');return;}
   // M9E: senza una domanda valida il bottone è solo "Riprova", mai un invio.
   if(!window.todayQuestion)return hydrateToday();
   const v=document.getElementById('answer').value.trim();
-  if(!v)return toast('Scrivi qualcosa prima :)');
+  if(!v)return toast('Scrivi qualcosa prima');
   const btn=document.getElementById('todaySaveBtn');btn.disabled=true;btn.textContent='Salvo…';
   const {error}=await sb.from('daily_answers').upsert({
     question_id:window.todayQuestion.id,

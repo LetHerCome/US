@@ -945,7 +945,7 @@
       const hint = document.createElement('div');
       hint.id = 'usTodayAutoCloseHint';
       hint.className = 'us-today-autoclose';
-      hint.textContent = 'Reveal visto ♡ · torno alla Home tra pochi secondi';
+      hint.textContent = 'Visto ♡ · torno alla Home';
       reveal.appendChild(hint);
     }
     todayCloseTimer = setTimeout(() => {

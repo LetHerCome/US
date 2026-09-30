@@ -51,7 +51,7 @@ test('auth: due fasi reali — dopo email sent nessun campo password né updateU
   assert.doesNotMatch(handler, /updateUser\(\{password/);
   assert.match(handler, /btn\.disabled=true;\s*\/\/ single attempt: no retry path/);
   assert.match(handler, /\/rate\|too many\/i/);
-  assert.match(handler, /fallback admin richiesto sullo stesso UID/);
+  assert.match(handler, /Invio email bloccato/);
   assert.match(handler, /btn\.hidden=true/);
   assert.doesNotMatch(handler, /riprova|setTimeout[\s\S]*requestAccountEmailUpgrade|retr(y|ies)\s*\(/i);
 });
@@ -84,7 +84,7 @@ test('auth: reopen + pending stesso UID -> email button SEMPRE hidden/disabled (
 
 test('auth: reopen + awaiting -> solo Controlla la tua email; fallback -> messaggio admin', () => {
   const resume = resumeFn();
-  assert.match(resume, /pending\.phase==='admin_fallback_required'[\s\S]*?Serve il fallback admin sullo stesso account/);
+  assert.match(resume, /pending\.phase==='admin_fallback_required'[\s\S]*?Invio email bloccato/);
   assert.match(resume, /else\{\s*\r?\n\s*\$\('usUpgradeStatus'\)\.textContent='Controlla la tua email/);
 });
 

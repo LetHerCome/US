@@ -57,7 +57,7 @@ test('M8A capitoli: secondary collections by year, with real counts and the newe
 
 test('M8A page: Rivivi, Conservati, La vostra storia, Capitoli in this order inside Ricordi', () => {
   const page = read('index.html').match(/<main id="moments" class="page">[\s\S]*?<\/main>/)?.[0] || '';
-  const order = ['id="ricordiRivivi"', 'id="conservatiEntry"', 'LA VOSTRA STORIA', 'id="momentsGrid"', 'id="ricordiChapters"'].map((s) => page.indexOf(s));
+  const order = ['id="ricordiRivivi"', 'id="conservatiEntry"', 'Mese per mese', 'id="momentsGrid"', 'id="ricordiChapters"'].map((s) => page.indexOf(s));
   assert.ok(order.every((i) => i >= 0), 'all four surfaces exist');
   assert.deepEqual([...order].sort((a, b) => a - b), order);
 });

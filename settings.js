@@ -221,7 +221,7 @@ function homePhotoModal(){
 }
 
 async function showStoryArchive(){
-  openModal('Archivio Stories','<div class="us-settings-loading">Carico le vostre Stories…</div>','RICORDI');
+  openModal('Archivio Stories','<div class="us-settings-loading">Carico…</div>','RICORDI');
   try{
     const [{data:stories,error},{data:profiles}]=await Promise.all([
       sb.from('stories').select('id,author_id,media_path,caption,created_at,expires_at').eq('couple_id',window.usProfile.couple_id).lt('expires_at',new Date().toISOString()).order('created_at',{ascending:false}).limit(60),
@@ -229,7 +229,7 @@ async function showStoryArchive(){
     ]);
     if(error)throw error;
     if(!stories?.length){
-      $('usSettingsModalBody').innerHTML='<div class="us-settings-empty"><b>Archivio ancora vuoto</b><p>Le Stories scadute compariranno qui.</p></div>';return;
+      $('usSettingsModalBody').innerHTML='<div class="us-settings-empty"><b>Archivio vuoto</b></div>';return;
     }
     const names=new Map((profiles||[]).map(p=>[p.id,p.display_name||'Noi']));
     const paths=stories.map(s=>s.media_path);
@@ -260,7 +260,7 @@ function distanceModal(){
 async function locationAction(){
   const state=await locationState();
   if(state==='denied'){
-    openModal('Posizione','<div class="us-settings-copy"><p>La posizione è bloccata dalle impostazioni del telefono/browser.</p><p>US la usa soltanto quando aggiorni la distanza tra voi due.</p></div>','PERMESSO');
+    openModal('Posizione','<div class="us-settings-copy"><p>La posizione è bloccata dalle impostazioni del telefono.</p></div>','PERMESSO');
     return;
   }
   await window.refreshMyLocation?.();
@@ -281,7 +281,7 @@ async function notificationsModal(){
   const p=prefs||{think:true,today:true,bond:true,relationship:true,left_for_you:true,games:true};
   openModal('Notifiche',`
     <div class="us-settings2-push-master">
-      <span><b>${state.active?'Notifiche attive':'Notifiche non attive'}</b><small>${state.permission==='denied'?'Bloccate dal telefono/browser':'Le preferenze sotto sono personali'}</small></span>
+      <span><b>${state.active?'Notifiche attive':'Notifiche non attive'}</b><small>${state.permission==='denied'?'Bloccate dal telefono':''}</small></span>
       <button type="button" class="${state.active?'ghost':'primary'}" id="usSettingsPushAction" ${state.permission==='denied'?'disabled':''}>${state.active?'Disattiva':'Attiva'}</button>
     </div>
     <div class="us-settings2-toggle-list">
@@ -292,7 +292,6 @@ async function notificationsModal(){
       ${preferenceToggle('left_for_you','Lasciato per te',p.left_for_you!==false)}
       ${preferenceToggle('games','Gioca',p.games!==false)}
     </div>
-    <div class="us-settings2-footnote">Questi interruttori regolano realmente cosa il server invia al tuo profilo.</div>
   `,'QUESTO TELEFONO');
 
   $('usSettingsPushAction')?.addEventListener('click',async()=>{
@@ -315,7 +314,7 @@ async function notificationsModal(){
 }
 
 async function scriptableWidgetsModal(){
-  openModal('Widget US','<div class="us-settings-loading">Controllo accesso Scriptable…</div>','QUESTO TELEFONO');
+  openModal('Widget US','<div class="us-settings-loading">Controllo…</div>','QUESTO TELEFONO');
   const body=$('usSettingsModalBody');
   const modalGeneration=settingsModalGeneration;
   const refreshStatus=async()=>{
@@ -328,10 +327,10 @@ async function scriptableWidgetsModal(){
       const status=await refreshStatus();
       if(!isCurrentSettingsModal(modalGeneration))return;
       body.innerHTML=`
-        <div class="us-settings2-modal-copy">Scriptable usa due credenziali separate: la prima è read-only e, per Scriptable, restituisce solo nomi, data e giorni insieme e Foto Home selezionata; la seconda può inviare soltanto Ti penso. I token permanenti non vengono mostrati qui.</div>
+        <div class="us-settings2-modal-copy">Due accessi separati: uno in sola lettura (nomi, giorni insieme, Foto Home) e uno che può solo inviare Ti penso.</div>
         <div class="us-settings2-status-list"><div><span><b>Accesso Scriptable</b><small>${status.stateActive?'Stato attivo':'Stato non attivo'} · ${status.thinkActive?'Ti penso attivo':'Ti penso da rinnovare'}</small></span><i class="${status.active?'ok':''}">${status.active?'✓':'○'}</i></div></div>
         <div class="us-settings2-action-stack">${status.active?'':'<button type="button" class="primary" id="usScriptableIssue">Configura Scriptable</button>'}${status.active?'<button type="button" class="ghost" id="usScriptableRevoke">Revoca accesso Scriptable</button>':''}</div>
-        <div class="us-settings2-modal-copy" id="usScriptableStatus" role="status" aria-live="polite">Il codice di collegamento è monouso e scade dopo 10 minuti.</div>`;
+        <div class="us-settings2-modal-copy" id="usScriptableStatus" role="status" aria-live="polite"></div>`;
       $('usScriptableIssue')?.addEventListener('click',async()=>{
         const button=$('usScriptableIssue');const statusEl=$('usScriptableStatus');
         button.disabled=true;button.textContent='Creo il codice…';statusEl.textContent='';
@@ -340,22 +339,22 @@ async function scriptableWidgetsModal(){
         if(error||!data?.setupCode){button.disabled=false;button.textContent='Riprova';statusEl.textContent='Non riesco a creare il codice. Riprova.';return;}
         scriptableSetupCode=data.setupCode;
         scriptableSetupCodeOpen=true;
-        body.innerHTML=`<div class="us-settings2-modal-copy"><b>Incolla questo codice una sola volta in Scriptable.</b><br>Scade tra 10 minuti. È un codice di scambio monouso, non i token permanenti dei widget.</div><label class="us-settings2-field"><span>Codice monouso</span><input id="usScriptableSetupCode" type="text" readonly value="${esc(scriptableSetupCode)}" autocomplete="off" spellcheck="false"></label><div class="us-settings2-action-stack"><button type="button" class="primary" id="usScriptableCopyCode">Copia il codice</button><button type="button" class="ghost" id="usScriptableCodeDone">Fatto</button></div><div class="us-settings2-modal-copy" id="usScriptableStatus" role="status" aria-live="polite">Dopo lo scambio, US non mostrerà nuovamente questo codice.</div>`;
+        body.innerHTML=`<div class="us-settings2-modal-copy"><b>Incolla questo codice in Scriptable.</b><br>Monouso, scade tra 10 minuti.</div><label class="us-settings2-field"><span>Codice monouso</span><input id="usScriptableSetupCode" type="text" readonly value="${esc(scriptableSetupCode)}" autocomplete="off" spellcheck="false"></label><div class="us-settings2-action-stack"><button type="button" class="primary" id="usScriptableCopyCode">Copia il codice</button><button type="button" class="ghost" id="usScriptableCodeDone">Fatto</button></div><div class="us-settings2-modal-copy" id="usScriptableStatus" role="status" aria-live="polite"></div>`;
         $('usScriptableCopyCode')?.addEventListener('click',async()=>{
           const codeToCopy=scriptableSetupCode;
           try{
             await navigator.clipboard.writeText(codeToCopy);
             if(!isCurrentSettingsModal(modalGeneration))return;
-            $('usScriptableStatus').textContent='Codice copiato. Torna in Scriptable e incollalo nel primo widget.';
+            $('usScriptableStatus').textContent='Copiato. Incollalo in Scriptable.';
           }catch(_){
             if(!isCurrentSettingsModal(modalGeneration))return;
-            const input=$('usScriptableSetupCode');input.focus();input.select();$('usScriptableStatus').textContent='Seleziona e copia il codice, poi incollalo in Scriptable.';
+            const input=$('usScriptableSetupCode');input.focus();input.select();$('usScriptableStatus').textContent='Copia il codice e incollalo in Scriptable.';
           }
         });
         $('usScriptableCodeDone')?.addEventListener('click',closeModal);
       });
       $('usScriptableRevoke')?.addEventListener('click',()=>{
-        body.innerHTML='<div class="us-settings2-modal-copy">Revocare Scriptable? Entrambi i widget smetteranno di leggere lo stato e inviare Ti penso. Potrai collegarli di nuovo con un nuovo codice.</div><div class="us-settings2-action-stack"><button type="button" class="ghost" id="usCancelScriptableRevoke">Annulla</button><button type="button" class="us-settings2-disconnect" id="usConfirmScriptableRevoke">Revoca accesso</button></div><div class="us-settings2-modal-copy" id="usScriptableStatus" role="status" aria-live="polite"></div>';
+        body.innerHTML='<div class="us-settings2-modal-copy">Revocare Scriptable? I widget smetteranno di funzionare finché non li ricollegate.</div><div class="us-settings2-action-stack"><button type="button" class="ghost" id="usCancelScriptableRevoke">Annulla</button><button type="button" class="us-settings2-disconnect" id="usConfirmScriptableRevoke">Revoca accesso</button></div><div class="us-settings2-modal-copy" id="usScriptableStatus" role="status" aria-live="polite"></div>';
         $('usCancelScriptableRevoke')?.addEventListener('click',render);
         $('usConfirmScriptableRevoke')?.addEventListener('click',async()=>{
           const button=$('usConfirmScriptableRevoke');button.disabled=true;button.textContent='Revoco…';
@@ -368,7 +367,7 @@ async function scriptableWidgetsModal(){
     }catch(error){
       if(!isCurrentSettingsModal(modalGeneration))return;
       console.warn('[US Scriptable] status unavailable',error);
-      body.innerHTML='<div class="us-settings-empty"><b>Widget US non disponibile</b><p>Riprova quando la connessione è attiva.</p></div><button type="button" class="ghost" id="usScriptableRetry">Riprova</button>';
+      body.innerHTML='<div class="us-settings-empty"><b>Widget US non disponibile</b></div><button type="button" class="ghost" id="usScriptableRetry">Riprova</button>';
       $('usScriptableRetry')?.addEventListener('click',render);
     }
   };
@@ -376,7 +375,7 @@ async function scriptableWidgetsModal(){
 }
 
 async function syncStatusModal(){
-  openModal('Stato US','<div class="us-settings-loading">Controllo US…</div>','SINCRONIZZAZIONE');
+  openModal('Stato US','<div class="us-settings-loading">Controllo…</div>','SINCRONIZZAZIONE');
   const [loc,push,profilesRes]=await Promise.all([
     locationState(),
     pushState(),
@@ -397,10 +396,10 @@ async function syncStatusModal(){
 function privacyModal(){
   openModal('Privacy e dati',`
     <div class="us-settings-copy">
-      <p><b>Posizione</b> · viene salvata solo per calcolare la distanza tra voi.</p>
-      <p><b>Foto</b> · Moments, Stories e profili restano nello spazio della coppia.</p>
-      <p><b>Notifiche</b> · puoi decidere quali categorie ricevere dal tuo profilo.</p>
-      <p><b>Questo telefono</b> · la sessione resta collegata finché non scegli “Scollega questo telefono”.</p>
+      <p><b>Posizione</b> · salvata solo per la distanza tra voi.</p>
+      <p><b>Foto</b> · restano nello spazio della coppia.</p>
+      <p><b>Notifiche</b> · scegli tu quali ricevere.</p>
+      <p><b>Questo telefono</b> · resta collegato finché non lo scolleghi.</p>
     </div>
   `,'DATI');
 }
@@ -426,7 +425,7 @@ function logoutConfirmationModal(){
 function accountUpgradeModal(){
   openModal('Proteggi il tuo account',`
     <div class="us-settings2-modal-copy" id="usAccountUpgradeBody">
-      <p>Aggiungo un'email a questo account, senza cambiare identità o dati. Ti mando un solo link di conferma.</p>
+      <p>Aggiungi un’email a questo account. Riceverai un solo link di conferma.</p>
       <input id="usUpgradeEmail" type="email" inputmode="email" autocomplete="email" placeholder="tua@email.com" style="width:100%">
       <div class="us-settings2-action-stack">
         <button type="button" class="ghost" id="usCancelUpgrade">Annulla</button>
@@ -465,7 +464,7 @@ function accountUpgradeModal(){
             // no second email attempt, the email button stays disabled/hidden.
             btn.hidden=true;
             const emailInput=$('usUpgradeEmail');if(emailInput)emailInput.hidden=true;
-            st.textContent='Supabase ha bloccato l\'invio (rate limit): fallback admin richiesto sullo stesso UID. Il bottone email resta disabilitato: nessun secondo invio.';
+            st.textContent='Invio email bloccato. Non è possibile inviare di nuovo da qui.';
           }else{
             // Generic error: clear any pending state (never show a false "sent").
             window.clearPendingAccountUpgrade?.();
@@ -499,7 +498,7 @@ async function resumeAccountUpgradePhase(){
   if(cancelBtn){cancelBtn.disabled=true;cancelBtn.hidden=true;}
   if(user.is_anonymous||!user.email||!user.email_confirmed_at){
     if(pending.phase==='admin_fallback_required'){
-      $('usUpgradeStatus').textContent='Serve il fallback admin sullo stesso account: l\'invio email è stato bloccato. Nessun secondo invio è possibile da qui.';
+      $('usUpgradeStatus').textContent='Invio email bloccato. Non è possibile inviare di nuovo da qui.';
     }else{
       $('usUpgradeStatus').textContent='Controlla la tua email: apri il link di conferma su questo telefono, poi torna qui.';
     }
@@ -525,7 +524,7 @@ async function resumeAccountUpgradePhase(){
     try{
       await window.setPasswordFromActiveSession(document.getElementById('usUpgradePassword').value,pending.expectedUserId);
       window.clearPendingAccountUpgrade();
-      st.textContent='Account protetto ✓ Da ora puoi entrare anche con email e password.';
+      st.textContent='Account protetto ✓';
       closeModal();
       toast('Account protetto ♡');
     }catch(err){st.textContent='Errore: '+String(err?.message||'impostazione non riuscita');}

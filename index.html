@@ -120,7 +120,7 @@ html.us-returning-device .auth-overlay{
     <div class="auth-step active" id="authPair">
       <div class="tiny">SPAZIO PRIVATO</div>
       <h2>Chi sei?</h2>
-      <p>Scegli il tuo profilo e inserisci il codice privato. Nessuna email: questo telefono resterà collegato a US.</p>
+      <p>Scegli il tuo profilo e inserisci il codice. Questo telefono resterà collegato.</p>
       <div class="role-picker">
         <button type="button" class="role-btn" data-role="francesco" onclick="selectRole('francesco')"><span>F</span><b>Francesco</b></button>
         <button type="button" class="role-btn" data-role="beatrice" onclick="selectRole('beatrice')"><span>B</span><b>Beatrice</b></button>
@@ -128,12 +128,12 @@ html.us-returning-device .auth-overlay{
       <input id="pairCode" type="password" autocomplete="off" placeholder="Codice privato">
       <button id="pairBtn" type="button" class="primary" style="width:100%;margin-top:10px">Entra in US</button>
       <div class="auth-status" id="pairStatus" role="status" aria-live="polite"></div>
-      <button type="button" class="us-auth-link" onclick="showAuthStep('authLogin')">Hai già US? Accedi con email</button>
+      <button type="button" class="us-auth-link" onclick="showAuthStep('authLogin')">Accedi con email</button>
     </div>
     <div class="auth-step" id="authLogin">
       <div class="tiny">SPAZIO PRIVATO</div>
-      <h2>Hai già US? Accedi</h2>
-      <p>Accedi con l’email e la password del tuo account US. Nessuna nuova registrazione.</p>
+      <h2>Accedi</h2>
+      <p>Email e password del tuo account US.</p>
       <input id="loginEmail" type="email" inputmode="email" autocomplete="email" placeholder="tua@email.com">
       <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Password">
       <button id="loginBtn" type="button" class="primary" style="width:100%;margin-top:10px">Accedi</button>
@@ -163,18 +163,18 @@ html.us-returning-device .auth-overlay{
       <button type="button" id="usOggiFocusToggle" class="us-oggi-focus-toggle" aria-pressed="false" aria-label="Attiva la foto a schermo intero"></button>
       <div class="home-empty-state" id="homeEmptyState" hidden>
         <span class="home-empty-mark" aria-hidden="true">♡</span>
-        <span class="home-empty-copy"><b>Il primo ricordo può iniziare da qui.</b><small>Aggiungi un Moment e la Home lo custodirà per voi.</small></span>
+        <span class="home-empty-copy"><b>Il primo ricordo inizia da qui</b></span>
         <button type="button" class="home-empty-action" onclick="go('moments',{nav:true})">Aggiungi un ricordo</button>
       </div>
       <button type="button" class="home-distance-pill" id="distanceWidget" onclick="refreshMyLocation()" aria-label="Aggiorna distanza">
         <span class="distance-orbit" aria-hidden="true">♡</span>
-        <span class="distance-copy"><b id="distanceValue">Attiva la distanza</b><small id="distanceMeta">Tocca per aggiornare</small></span>
+        <span class="distance-copy"><b id="distanceValue">Attiva la distanza</b><small id="distanceMeta"></small></span>
         <span class="distance-action" id="distanceAction"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></span>
       </button>
       <aside class="push-optin-card" id="pushOptInCard" hidden aria-live="polite">
         <span class="push-optin-icon" aria-hidden="true">♡</span>
-        <span class="push-optin-copy"><b id="pushOptInTitle">Rimani vicino anche quando US è chiusa</b><small id="pushOptInText">Ricevi “Ti penso”, risposte e quest condivise.</small></span>
-        <button type="button" class="push-optin-action" id="pushEnableBtn" onclick="enableWebPush()">Attiva notifiche</button>
+        <span class="push-optin-copy"><b id="pushOptInTitle">Attiva le notifiche</b><small id="pushOptInText">Ti penso, risposte e quest, anche a US chiusa.</small></span>
+        <button type="button" class="push-optin-action" id="pushEnableBtn" onclick="enableWebPush()">Attiva</button>
       </aside>
     </section>
   </main>
@@ -184,15 +184,13 @@ html.us-returning-device .auth-overlay{
     <section class="today-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-label="Domanda del giorno" data-us-modal-panel>
       <div class="today-sheet-head"><div><div class="tiny">OGGI</div><h2>La domanda di oggi</h2></div><button type="button" class="today-close us-modal-close" onclick="closeToday()" aria-label="Chiudi domanda del giorno" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></div>
       <div class="card question">
-        <div class="qtag">LA DOMANDA DEL GIORNO</div>
-        <div class="qtext">Sto preparando la domanda di oggi…</div>
-        <textarea id="answer" rows="4" placeholder="Scrivi la tua risposta..." hidden disabled></textarea>
+        <div class="qtext">Un attimo…</div>
+        <textarea id="answer" rows="4" placeholder="Scrivi…" hidden disabled></textarea>
         <div class="row"><button class="primary" id="todaySaveBtn" onclick="saveAnswer()" hidden disabled>Rispondi</button></div>
-        <div class="locked" id="locked" role="status" aria-live="polite">Un attimo, arriva subito.</div>
+        <div class="locked" id="locked" role="status" aria-live="polite"></div>
         <div id="todayReveal" class="hidden"></div>
         <section id="todayOutcome" class="today-outcome hidden" data-us-today-outcome aria-live="polite" aria-label="Riflessioni dopo il reveal"></section>
       </div>
-      <div class="smallnote">Una domanda al giorno, uguale per entrambi. Le risposte restano private fino al reveal.</div>
       <div class="push-settings-row" id="pushSettingsRow" hidden>
         <span><b id="pushSettingsStatus">Notifiche</b><small id="pushSettingsDetail">Stato notifiche US</small></span>
         <button type="button" id="pushDisableBtn" onclick="disableWebPush()">Disattiva</button>
@@ -204,7 +202,7 @@ html.us-returning-device .auth-overlay{
     <div class="think-arrival-backdrop us-modal-backdrop" onclick="closeThinkArrival()"></div>
     <section class="think-arrival-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-label="Ti penso ricevuto" data-us-modal-panel>
       <header class="think-arrival-head"><div><div class="tiny">TI PENSO</div><h2 id="thinkArrivalTitle">La tua persona ti pensa</h2></div><button type="button" class="think-arrival-close us-modal-close" onclick="closeThinkArrival()" aria-label="Chiudi Ti penso"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
-      <p id="thinkArrivalCopy" class="think-arrival-copy">Un piccolo segnale, solo per voi due.</p>
+      <p id="thinkArrivalCopy" class="think-arrival-copy" hidden></p>
       <div class="think-reaction-grid" role="group" aria-label="Scegli una reazione">
         <button type="button" class="think-reaction-button" data-think-reaction="heart" aria-label="Reagisci con cuore" aria-pressed="false"><span class="think-reaction-glyph think-reaction-heart" aria-hidden="true">♥</span><span class="sr-only">heart</span></button>
         <button type="button" class="think-reaction-button" data-think-reaction="hug" aria-label="Reagisci con abbraccio" aria-pressed="false"><span class="think-reaction-glyph think-reaction-hug" aria-hidden="true">🫂</span><span class="sr-only">hug</span></button>
@@ -220,24 +218,23 @@ html.us-returning-device .auth-overlay{
       <section class="ricordi-rivivi" id="ricordiRivivi" aria-label="Rivivi" hidden></section>
       <button type="button" class="us-conservati-entry" id="conservatiEntry" onclick="openConservati()" aria-label="Apri Conservati">
         <span class="us-conservati-entry-mark" aria-hidden="true">✦</span>
-        <span class="us-conservati-entry-copy"><b>Conservati</b><small>Piccole cose che avete deciso di non perdere.</small></span>
+        <span class="us-conservati-entry-copy"><b>Conservati</b></span>
         <span class="us-conservati-entry-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></span>
       </button>
       <div class="moment-compose" id="momentCompose">
         <input id="momentFile" type="file" accept="image/jpeg,image/png,image/webp" hidden>
         <button type="button" class="moment-picker" onclick="pickMomentPhoto()" aria-label="Scegli una foto per il ricordo">
-          <span class="moment-picker-empty"><span class="moment-add-icon"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></span><span class="moment-picker-copy"><b>Aggiungi un ricordo</b><small>Tocca per scegliere una foto</small></span></span>
+          <span class="moment-picker-empty"><span class="moment-add-icon"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></span><span class="moment-picker-copy"><b>Aggiungi un ricordo</b></span></span>
           <span id="momentPreview" class="moment-preview"><img id="momentPreviewImg" alt="Anteprima ricordo"><span class="moment-change-chip">Cambia foto</span></span>
         </button>
         <div class="moment-details">
-          <input id="momentCaption" type="text" maxlength="180" placeholder="Scrivi una nota… (opzionale)">
-          <div class="moment-auto-date" id="momentDetectedDate">La data verrà letta automaticamente dalla foto.</div>
+          <input id="momentCaption" type="text" maxlength="180" placeholder="Nota (opzionale)">
+          <div class="moment-auto-date" id="momentDetectedDate"></div>
           <div class="moment-compose-footer"><button id="momentUploadBtn" type="button" class="primary moment-save" onclick="uploadMoment()">Salva ricordo</button></div>
-          <div class="moment-private">⌁ Solo voi due potete vederlo</div>
         </div>
       </div>
-      <div class="ricordi-section-head ricordi-story-head"><div class="ricordi-kicker">LA VOSTRA STORIA</div><h3>Mese per mese</h3></div>
-      <div id="momentsGrid" class="moment-grid ricordi-story" aria-live="polite"><div class="empty-state moment-loading" aria-busy="true"><div class="emoji"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></div><b>Carico i vostri ricordi…</b></div></div>
+      <div class="ricordi-section-head ricordi-story-head"><h3>Mese per mese</h3></div>
+      <div id="momentsGrid" class="moment-grid ricordi-story" aria-live="polite"><div class="empty-state moment-loading" aria-busy="true"><div class="emoji"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></div><b>Carico…</b></div></div>
       <section class="ricordi-chapters" id="ricordiChapters" aria-label="Capitoli" hidden></section>
     </section>
   </main>
@@ -248,7 +245,6 @@ html.us-returning-device .auth-overlay{
         <div>
           <div class="tiny">NOI</div>
           <h2>Il vostro spazio</h2>
-          <p>Quello che state costruendo insieme.</p>
         </div>
         <button type="button" class="us-calendar-btn us-important-control us-premium-control" id="usSettingsEntry" onclick="go('settings',{nav:true})" aria-label="Apri impostazioni">
           <span class="us-shell-icon" aria-hidden="true"><img class="us-shell-icon-off us-approved-custom-icon" src="/assets/source/ui/us-icon-settings-v1.png" alt=""><img class="us-shell-icon-on us-approved-custom-icon" src="/assets/source/ui/us-icon-settings-v1.png" alt=""></span>
@@ -267,15 +263,15 @@ html.us-returning-device .auth-overlay{
         </button>
         <button type="button" class="noi-hub-card noi-hub-card--ideas" data-noi-open="da-vivere">
           <span class="noi-hub-icon" aria-hidden="true"></span>
-          <span class="noi-hub-copy"><span class="noi-hub-kicker">Da vivere</span><b id="noiHubIdeasTitle">Le vostre idee</b><small id="noiHubIdeasMeta">Cose da provare insieme</small></span>
+          <span class="noi-hub-copy"><span class="noi-hub-kicker">Da vivere</span><b id="noiHubIdeasTitle">Le vostre idee</b><small id="noiHubIdeasMeta"></small></span>
         </button>
         <button type="button" class="noi-hub-card noi-hub-card--calendar" id="usCalendarEntry" onclick="openCalendarSurface()">
           <span class="noi-hub-icon" aria-hidden="true"></span>
-          <span class="noi-hub-copy"><span class="noi-hub-kicker">Calendario</span><b>I vostri giorni</b><small>Tocca un giorno per aggiungere</small></span>
+          <span class="noi-hub-copy"><span class="noi-hub-kicker">Calendario</span><b>I vostri giorni</b></span>
         </button>
         <button type="button" class="noi-hub-card noi-hub-card--quest" data-noi-open="quest">
           <span class="noi-hub-icon" aria-hidden="true"></span>
-          <span class="noi-hub-copy"><span class="noi-hub-kicker">Quest di coppia</span><b id="noiHubQuestTitle">Le quest della settimana</b><small id="noiHubQuestMeta">Da fare insieme</small></span>
+          <span class="noi-hub-copy"><span class="noi-hub-kicker">Quest di coppia</span><b id="noiHubQuestTitle">Questa settimana</b><small id="noiHubQuestMeta"></small></span>
         </button>
       </nav>
 
@@ -290,38 +286,35 @@ html.us-returning-device .auth-overlay{
         <div class="noi-resonance-stats">
           <span><small>XP totali accumulati insieme</small><b id="noiResonanceTotal">0</b></span>
         </div>
-        <div class="noi-section-kicker">COME CRESCE</div>
-        <h3 id="noiResonanceGuideTitle">Cresce con quello che completate insieme</h3>
+        <div class="noi-section-kicker" id="noiResonanceGuideTitle">COME CRESCE</div>
         <ul class="noi-resonance-sources">
-          <li><b>Quest di coppia</b><span>Quando la confermate entrambi, con gli XP scritti sulla quest.</span></li>
-          <li><b>I nostri eventi</b><span>Quando segnate un evento come fatto: da 25 a 60 XP.</span></li>
-          <li><b>Mesiversario e anniversario</b><span>60 XP ogni mesiversario, 200 per l'anniversario.</span></li>
+          <li><b>Quest di coppia</b><span>Quando la confermate entrambi.</span></li>
+          <li><b>I nostri eventi</b><span>Da 25 a 60 XP ciascuno.</span></li>
+          <li><b>Mesiversario e anniversario</b><span>60 XP e 200 XP.</span></li>
         </ul>
-        <p class="noi-resonance-note">Ogni livello chiede 150 XP in più del precedente.</p>
       </section>
 
       <section class="noi-living-section" aria-labelledby="noiLivingTitle">
-        <div class="noi-section-kicker">SPUNTO DELLA SETTIMANA</div>
-        <div class="noi-section-title-row"><div><h3 id="noiLivingTitle">Quest di coppia</h3><p>Un piccolo invito a fare qualcosa insieme.</p></div><span class="noi-section-symbol" aria-hidden="true">↗</span></div>
-        <div id="bondQuestList" class="bond-quest-list noi-living-list" aria-live="polite"><div class="noi-quiet-state"><b>La prossima quest</b><span>Il vostro prossimo spunto arriverà qui.</span></div></div>
+        <div class="noi-section-title-row"><div><h3 id="noiLivingTitle">Quest di coppia</h3></div><span class="noi-section-symbol" aria-hidden="true">↗</span></div>
+        <div id="bondQuestList" class="bond-quest-list noi-living-list" aria-live="polite"><div class="noi-quiet-state"><b>La prossima quest</b></div></div>
         <div class="bond-week-note" aria-hidden="true"><span id="bondWeekReset"></span><span></span></div>
       </section>
 
       <section class="noi-idea-section" aria-labelledby="noiIdeaTitle" hidden>
         <div class="noi-idea-browse" id="noiIdeaBrowse">
           <div class="noi-section-title-row">
-            <div><div class="noi-section-kicker">IDEE</div><h3 id="noiIdeaTitle">Da vivere</h3><p>Cose che volete provare, senza fretta.</p></div>
+            <div><h3 id="noiIdeaTitle">Da vivere</h3></div>
             <button type="button" class="noi-idea-add-btn" id="noiIdeaAddToggle" aria-expanded="false" aria-controls="noiIdeaQuickForm" aria-label="Aggiungi un'idea da vivere"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></button>
           </div>
           <form id="noiIdeaQuickForm" class="noi-idea-quick-form" hidden>
             <label class="noi-idea-sr" for="noiIdeaQuickTitle">Titolo dell'idea</label>
-            <input id="noiIdeaQuickTitle" type="text" maxlength="120" placeholder="Un'idea da vivere insieme…" required>
+            <input id="noiIdeaQuickTitle" type="text" maxlength="120" placeholder="Nuova idea" required>
             <button type="button" id="noiIdeaQuickMoreToggle" class="noi-idea-quick-more" aria-expanded="false" aria-controls="noiIdeaQuickExtra">+ nota o link</button>
             <div id="noiIdeaQuickExtra" class="noi-idea-quick-extra" hidden>
               <label class="noi-idea-sr" for="noiIdeaQuickNote">Nota</label>
-              <textarea id="noiIdeaQuickNote" rows="2" maxlength="500" placeholder="Una nota (opzionale)"></textarea>
+              <textarea id="noiIdeaQuickNote" rows="2" maxlength="500" placeholder="Nota"></textarea>
               <label class="noi-idea-sr" for="noiIdeaQuickLink">Link</label>
-              <input id="noiIdeaQuickLink" type="url" placeholder="Link (opzionale)">
+              <input id="noiIdeaQuickLink" type="url" placeholder="Link">
             </div>
             <div class="noi-idea-quick-actions">
               <button type="button" class="ghost" id="noiIdeaQuickCancel">Annulla</button>
@@ -339,9 +332,9 @@ html.us-returning-device .auth-overlay{
             <label class="noi-idea-sr" for="noiIdeaDetailTitle">Titolo</label>
             <input id="noiIdeaDetailTitle" type="text" maxlength="120" required>
             <label class="noi-idea-sr" for="noiIdeaDetailNote">Nota</label>
-            <textarea id="noiIdeaDetailNote" rows="3" maxlength="500" placeholder="Una nota (opzionale)"></textarea>
+            <textarea id="noiIdeaDetailNote" rows="3" maxlength="500" placeholder="Nota"></textarea>
             <label class="noi-idea-sr" for="noiIdeaDetailLink">Link</label>
-            <input id="noiIdeaDetailLink" type="url" placeholder="Link (opzionale)">
+            <input id="noiIdeaDetailLink" type="url" placeholder="Link">
             <p class="noi-idea-detail-hint" id="noiIdeaDetailHint" aria-hidden="true"></p>
             <div class="noi-idea-detail-calendar" id="noiIdeaDetailCalendar" hidden>
               <span class="noi-idea-detail-when"><small>In calendario</small><b id="noiIdeaDetailWhen"></b></span>
@@ -371,7 +364,6 @@ html.us-returning-device .auth-overlay{
         <div>
           <div class="tiny">IL VOSTRO SPAZIO</div>
           <h2>Impostazioni</h2>
-          <p>Solo ciò che serve davvero a voi e a questo telefono.</p>
         </div>
         <div class="us-settings2-device-dot" id="usSettingsDeviceDot" aria-label="Stato sincronizzazione">•</div>
       </div>
@@ -398,21 +390,21 @@ html.us-returning-device .auth-overlay{
       <div class="us-settings2-group">
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="relationship-date">
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="calendar-heart"></span></span>
-          <span class="us-setting-main"><b>Data della relazione</b><small>Regola mesiversari, anniversari e giorni insieme</small></span>
+          <span class="us-setting-main"><b>Data della relazione</b></span>
           <span class="us-setting-value" id="usRelationshipDateValue">…</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="profile-photo">
           <span class="us-settings2-icon us-settings2-photo-icon" aria-hidden="true"><span class="us-icon" data-us-icon="user-circle"></span></span>
-          <span class="us-setting-main"><b>Cambia foto profilo</b><small>Aggiorna la foto che vede il tuo partner</small></span><span class="us-setting-value">Modifica</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+          <span class="us-setting-main"><b>Cambia foto profilo</b></span><span class="us-setting-value">Modifica</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="home-photo">
           <span class="us-settings2-icon us-settings2-photo-icon" aria-hidden="true"><span class="us-icon" data-us-icon="image"></span></span>
-          <span class="us-setting-main"><b>Foto Home</b><small>La Home pesca automaticamente dai vostri Moments</small></span>
+          <span class="us-setting-main"><b>Foto Home</b></span>
           <span class="us-setting-value">Gestisci</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="story-archive">
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="clock-counter-clockwise"></span></span>
-          <span class="us-setting-main"><b>Archivio Stories</b><small>Rivedi le storie dopo le 24 ore</small></span>
+          <span class="us-setting-main"><b>Archivio Stories</b></span>
           <span class="us-setting-value" id="usStoryArchiveValue"></span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
       </div>
@@ -421,22 +413,22 @@ html.us-returning-device .auth-overlay{
       <div class="us-settings2-group">
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="notifications">
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="bell"></span></span>
-          <span class="us-setting-main"><b>Notifiche</b><small>Scegli cosa vuoi ricevere davvero</small></span>
+          <span class="us-setting-main"><b>Notifiche</b></span>
           <span class="us-setting-value" id="usNotificationsValue">…</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="scriptable-widgets">
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="heart"></span></span>
-          <span class="us-setting-main"><b>Widget US</b><small>Configura o revoca Scriptable</small></span>
+          <span class="us-setting-main"><b>Widget US</b><small>Scriptable</small></span>
           <span class="us-setting-value">Apri</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="distance">
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="arrows-left-right"></span></span>
-          <span class="us-setting-main"><b>Distanza</b><small>Unità usata nella Home</small></span>
+          <span class="us-setting-main"><b>Distanza</b></span>
           <span class="us-setting-value" id="usDistanceUnitValue">km</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="location">
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="map-pin"></span></span>
-          <span class="us-setting-main"><b>Posizione</b><small>Serve solo per calcolare la distanza tra voi</small></span>
+          <span class="us-setting-main"><b>Posizione</b><small>Solo per la distanza tra voi</small></span>
           <span class="us-setting-state" id="usLocationState">…</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
       </div>
@@ -445,12 +437,12 @@ html.us-returning-device .auth-overlay{
       <div class="us-settings2-group">
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="sync-status">
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="arrows-clockwise"></span></span>
-          <span class="us-setting-main"><b>Sincronizzazione</b><small>Profili, rete, push e stato di questo dispositivo</small></span>
+          <span class="us-setting-main"><b>Sincronizzazione</b></span>
           <span class="us-setting-value" id="usSyncValue">Controlla</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="account-upgrade" hidden id="usAccountUpgradeRow">
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="envelope"></span></span>
-          <span class="us-setting-main"><b>Proteggi il tuo account</b><small>Aggiungi un'email per non perdere mai l'accesso a US</small></span>
+          <span class="us-setting-main"><b>Proteggi il tuo account</b><small>Aggiungi un’email per non perdere l’accesso</small></span>
           <span class="us-setting-value">Attiva</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         <div class="us-settings2-version-row">
@@ -465,15 +457,13 @@ html.us-returning-device .auth-overlay{
 
       <div class="us-settings2-footer">
         <button type="button" data-us-setting="privacy">Privacy e dati</button>
-        <span>•</span>
-        <span>spazio privato condiviso</span>
       </div>
     </section>
   </main>
 
   <main id="quiz" class="page">
     <section class="section us-gv2-page">
-      <div id="quizHub" class="us-gv2-hub" aria-live="polite"><div class="us-gv2-empty" aria-busy="true">Preparo Gioca…</div></div>
+      <div id="quizHub" class="us-gv2-hub" aria-live="polite"><div class="us-gv2-empty" aria-busy="true">Carico…</div></div>
       <div id="usGameV2Panel" class="us-gv2-panel hidden" aria-live="polite"></div>
     </section>
   </main>
@@ -511,12 +501,12 @@ html.us-returning-device .auth-overlay{
       </div>
 
       <section class="us-events-subsection" id="usEventsDueSection" hidden>
-        <div class="us-events-list-head"><b>Da segnare</b><small>Eventi passati</small></div>
+        <div class="us-events-list-head"><b>Da segnare</b></div>
         <div class="us-events-list" id="usEventsDueList"></div>
       </section>
 
       <section class="us-events-subsection" id="usEventsDoneSection" hidden>
-        <div class="us-events-list-head"><b>Completati</b><small>XP già ottenuti</small></div>
+        <div class="us-events-list-head"><b>Completati</b></div>
         <div class="us-events-list us-events-done-list" id="usEventsDoneList"></div>
       </section>
 
@@ -524,19 +514,19 @@ html.us-returning-device .auth-overlay{
     </div>
 
     <form class="us-event-form" id="usEventForm" hidden>
-      <div class="us-event-form-title"><button type="button" class="us-event-back us-icon-button" onclick="cancelEventEdit()" aria-label="Torna agli eventi"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span></button><div><div class="tiny" id="usEventFormKicker">NUOVO EVENTO</div><h3 id="usEventFormTitle">Aggiungi qualcosa da aspettare insieme</h3></div></div>
+      <div class="us-event-form-title"><button type="button" class="us-event-back us-icon-button" onclick="cancelEventEdit()" aria-label="Torna agli eventi"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span></button><div><div class="tiny" id="usEventFormKicker">EVENTO</div><h3 id="usEventFormTitle">Nuovo evento</h3></div></div>
 
-      <label class="us-event-field"><span>Che cosa?</span><input id="usEventTitleInput" type="text" maxlength="120" placeholder="Es. Atene, concerto, anniversario…" required></label>
+      <label class="us-event-field"><span>Che cosa?</span><input id="usEventTitleInput" type="text" maxlength="120" placeholder="Es. Atene, concerto" required></label>
 
       <div class="us-event-row">
         <label class="us-event-field"><span>Quando?</span><input id="usEventDateInput" type="date" required></label>
         <label class="us-event-field"><span>Ora <i>opzionale</i></span><input id="usEventTimeInput" type="time"></label>
       </div>
 
-      <label class="us-event-field"><span>Dove? <i>opzionale</i></span><input id="usEventLocationInput" type="text" maxlength="160" placeholder="Es. Roma, casa, aeroporto…"></label>
-      <label class="us-event-field"><span>Una nota <i>opzionale</i></span><textarea id="usEventNoteInput" rows="3" maxlength="500" placeholder="Solo se serve ricordare qualcosa."></textarea></label>
+      <label class="us-event-field"><span>Dove? <i>opzionale</i></span><input id="usEventLocationInput" type="text" maxlength="160" placeholder="Es. Roma"></label>
+      <label class="us-event-field"><span>Una nota <i>opzionale</i></span><textarea id="usEventNoteInput" rows="3" maxlength="500" placeholder="Nota"></textarea></label>
 
-      <label class="us-event-repeat"><input id="usEventRecurringInput" type="checkbox"><span><b>Ogni anno</b><small>Per anniversari, compleanni e date ricorrenti.</small></span></label>
+      <label class="us-event-repeat"><input id="usEventRecurringInput" type="checkbox"><span><b>Ogni anno</b></span></label>
 
       <div class="us-event-status" id="usEventStatus" role="status" aria-live="polite"></div>
       <button type="button" class="us-event-complete" id="usEventCompleteBtn" hidden></button>
@@ -565,9 +555,9 @@ html.us-returning-device .auth-overlay{
       <button type="button" class="left-for-you-close us-modal-close" id="leftForYouClose" aria-label="Chiudi Lasciato per te" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
     </header>
     <div class="left-for-you-body">
-      <div class="left-for-you-loading" id="leftForYouLoading" aria-busy="true"><p>Preparo qualcosa per te…</p></div>
-      <div class="left-for-you-empty" id="leftForYouEmpty" hidden><h3>Lasciato per te</h3><p>Qui apparirà qualcosa che Beatrice ha lasciato per te.</p></div>
-      <div class="left-for-you-error" id="leftForYouError" hidden><h3>Non riesco ad aprirlo</h3><p>Il tuo spazio privato non ha risposto. Riprova senza perdere il messaggio.</p><button type="button" data-action id="leftForYouRetry">Riprova</button></div>
+      <div class="left-for-you-loading" id="leftForYouLoading" aria-busy="true"><p>Un attimo…</p></div>
+      <div class="left-for-you-empty" id="leftForYouEmpty" hidden><h3>Lasciato per te</h3><p>Niente per ora.</p></div>
+      <div class="left-for-you-error" id="leftForYouError" hidden><h3>Non riesco ad aprirlo</h3><button type="button" data-action id="leftForYouRetry">Riprova</button></div>
       <div class="left-for-you-card" id="leftForYouCard" hidden>
         <div class="left-for-you-meta"><span class="left-for-you-from"><span class="left-for-you-from-avatar" id="leftForYouFromFallback">♡</span><span>Da <b id="leftForYouFromName">la tua persona</b></span></span><span id="leftForYouCounter"></span></div>
         <div id="leftForYouContent"></div>
@@ -594,7 +584,7 @@ html.us-returning-device .auth-overlay{
         <button type="button" role="tab" aria-selected="false" data-us-composer-kind="music">Musica</button>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="text">
-        <textarea id="leftForYouComposerText" class="left-for-you-composer-text" maxlength="1000" rows="4" placeholder="Un pensiero lasciatelo qui…"></textarea>
+        <textarea id="leftForYouComposerText" class="left-for-you-composer-text" maxlength="1000" rows="4" placeholder="Un pensiero…"></textarea>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="photo" hidden>
         <div class="left-for-you-photo-actions"><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerPhotoPick">Scegli una foto</button><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerPhotoCamera">Scatta una foto</button></div>
@@ -643,11 +633,11 @@ html.us-returning-device .auth-overlay{
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite">Salvato ♡</div>
-<div class="app-status-bar" id="appStatusBar" data-kind="offline" role="alert" aria-live="assertive" hidden>Sei offline. Mostro ciò che è già disponibile; le azioni online riprenderanno alla riconnessione.</div>
-<div class="app-update-bar" id="appUpdateBar" role="status" aria-live="polite" hidden><span><b>Aggiornamento disponibile</b><small>Puoi aggiornare quando hai finito quello che stai facendo.</small></span><button type="button" id="appUpdateBtn">Aggiorna</button></div>
+<div class="app-status-bar" id="appStatusBar" data-kind="offline" role="alert" aria-live="assertive" hidden>Sei offline. Riprendo appena torni online.</div>
+<div class="app-update-bar" id="appUpdateBar" role="status" aria-live="polite" hidden><span><b>Aggiornamento disponibile</b></span><button type="button" id="appUpdateBtn">Aggiorna</button></div>
 
 <div class="moment-viewer" id="momentViewer" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Foto del ricordo" data-us-modal data-us-motion-surface onclick="if(event.target===this)closeMomentViewer()">
-  <div class="moment-viewer-card" data-us-modal-panel><button class="moment-viewer-close us-modal-close is-on-media" type="button" aria-label="Chiudi foto" data-us-modal-close onclick="closeMomentViewer()"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button><img id="momentViewerImg" alt="Ricordo a schermo intero"><div class="moment-viewer-info"><div class="moment-viewer-kicker" id="momentViewerAuthor">Noi</div><div class="moment-viewer-date" id="momentViewerDate"></div><p id="momentViewerCaption" hidden></p><div class="moment-viewer-hint">Scorri verso il basso per chiudere</div></div></div>
+  <div class="moment-viewer-card" data-us-modal-panel><button class="moment-viewer-close us-modal-close is-on-media" type="button" aria-label="Chiudi foto" data-us-modal-close onclick="closeMomentViewer()"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button><img id="momentViewerImg" alt="Ricordo a schermo intero"><div class="moment-viewer-info"><div class="moment-viewer-kicker" id="momentViewerAuthor">Noi</div><div class="moment-viewer-date" id="momentViewerDate"></div><p id="momentViewerCaption" hidden></p></div></div>
 </div>
 
 <div class="conservati-overlay" id="conservatiOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
@@ -658,9 +648,9 @@ html.us-returning-device .auth-overlay{
       <button type="button" class="conservati-close us-modal-close" id="conservatiClose" aria-label="Chiudi Conservati" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
     </header>
     <div class="conservati-body">
-      <div class="conservati-loading" id="conservatiLoading" hidden aria-busy="true"><p>Preparo i vostri Conservati…</p></div>
-      <div class="conservati-empty" id="conservatiEmpty" hidden><h3>Conservati</h3><p>Qui appariranno le piccole cose che avete deciso di non perdere insieme.</p></div>
-      <div class="conservati-error" id="conservatiError" hidden><h3>Non riesco ad aprirlo</h3><p>I vostri Conservati non hanno risposto. Riprova senza perdere nulla.</p><button type="button" data-action id="conservatiRetry">Riprova</button></div>
+      <div class="conservati-loading" id="conservatiLoading" hidden aria-busy="true"><p>Carico…</p></div>
+      <div class="conservati-empty" id="conservatiEmpty" hidden><h3>Conservati</h3><p>Quello che conservate da Lasciato per te arriva qui.</p></div>
+      <div class="conservati-error" id="conservatiError" hidden><h3>Non riesco ad aprirlo</h3><button type="button" data-action id="conservatiRetry">Riprova</button></div>
       <div class="conservati-list" id="conservatiList" hidden aria-live="polite"></div>
       <div class="conservati-detail" id="conservatiDetail" hidden></div>
     </div>
@@ -674,7 +664,6 @@ html.us-returning-device .auth-overlay{
       <div>
         <div class="tiny">NOI</div>
         <h2 id="usCalendarTitle"><span id="usCalendarMonthLabel">—</span></h2>
-        <p class="us-cal-subtitle">I vostri giorni, insieme.</p>
       </div>
       <button type="button" class="us-cal-close us-modal-close us-icon-center" id="usCalendarClose" aria-label="Chiudi calendario" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
     </header>
@@ -706,8 +695,7 @@ html.us-returning-device .auth-overlay{
         <div class="us-cal-week-list" id="usCalendarWeekList"></div>
       </div>
       <div class="us-cal-empty" id="usCalendarEmpty" hidden>
-        <b>I vostri giorni, insieme.</b>
-        <p>Aggiungete i vostri impegni e US vi aiuterà a vedere come si incastrano le vostre giornate.</p>
+        <b>Nessun impegno</b>
       </div>
     </div>
   </section>
@@ -736,7 +724,7 @@ html.us-returning-device .auth-overlay{
         <button type="button" class="us-cal-sheet-close us-modal-close us-icon-center" id="usCalendarFormClose" aria-label="Chiudi modulo"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
       </header>
       <form class="us-cal-form" id="usCalendarForm">
-        <p class="us-cal-form-context" id="usCalendarFormContext" hidden>Da vivere · un evento insieme, per entrambi</p>
+        <p class="us-cal-form-context" id="usCalendarFormContext" hidden>Da vivere · per entrambi</p>
         <p class="us-cal-form-day" id="usCalendarFormDay" hidden></p>
         <div class="us-cal-form-day-entries" id="usCalendarFormDayEntries" hidden></div>
         <label class="us-cal-field"><span>Titolo</span><input id="usCalendarTitleInput" type="text" maxlength="200" required></label>

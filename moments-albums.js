@@ -47,7 +47,7 @@ function ensureUi(){
             <input type="file" id="usAlbumFile" accept="image/jpeg,image/png,image/webp" hidden>
             <div class="us-album-composer" id="usAlbumComposer" hidden>
               <img class="us-album-composer-preview" id="usAlbumPreview" alt="Anteprima foto">
-              <input type="text" maxlength="180" id="usAlbumCaption" placeholder="Una piccola descrizione… (opzionale)">
+              <input type="text" maxlength="180" id="usAlbumCaption" placeholder="Descrizione (opzionale)">
               <div class="us-album-composer-actions">
                 <button type="button" class="us-album-cancel" id="usAlbumCancel">Annulla</button>
                 <button type="button" class="us-album-save" id="usAlbumSave">Aggiungi al momento</button>
@@ -201,7 +201,7 @@ async function saveAlbumPhoto(){
 async function loadAlbum(momentId){
   const seq=++albumLoadSeq;
   const grid=document.getElementById('usAlbumGrid');
-  if(grid)grid.innerHTML='<div class="us-album-empty">Carico le foto del momento…</div>';
+  if(grid)grid.innerHTML='<div class="us-album-empty">Carico…</div>';
   const [{data:rows,error},{data:profiles,error:profilesError}]=await Promise.all([
     sb.from('moment_photos').select('id,moment_id,created_by,storage_path,caption,position,created_at').eq('moment_id',momentId).order('position',{ascending:true}).order('created_at',{ascending:true}),
     sb.from('profiles').select('id,display_name').eq('couple_id',window.usProfile.couple_id)
@@ -257,7 +257,7 @@ function renderAlbum(){
   const grid=document.getElementById('usAlbumGrid');
   if(!grid)return;
   if(!albumRows.length){
-    grid.innerHTML='<div class="us-album-empty">Per ora c’è solo la foto principale.<br>Aggiungete qui altri pezzi dello stesso ricordo.</div>';
+    grid.innerHTML='<div class="us-album-empty">Solo la foto principale.</div>';
   }else{
     grid.innerHTML=albumRows.map((row,index)=>`
       <article class="us-album-photo-card" role="button" tabindex="0" data-album-index="${index+1}" aria-label="Apri foto aggiunta da ${esc(row.author)}">
@@ -571,9 +571,7 @@ console.info('[US] Moments Albums attivo');
     head.className = 'us-moments-head';
     head.innerHTML = `
       <div class="us-moments-head-copy">
-        <div class="us-moments-eyebrow">ARCHIVIO VIVO</div>
         <h2>Ricordi</h2>
-        <p>Quello che avete vissuto davvero.</p>
       </div>
       <div class="us-moments-head-actions">
         <span class="us-moments-total" id="usMomentsTotal"></span>
@@ -593,7 +591,7 @@ console.info('[US] Moments Albums attivo');
       <section class="us-moment-compose-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-label="Aggiungi un ricordo" data-us-modal-panel>
         <div class="us-moment-compose-grabber"></div>
         <div class="us-moment-compose-title">
-          <div><small>NUOVO MOMENT</small><b>Aggiungi un ricordo</b></div>
+          <div><b>Aggiungi un ricordo</b></div>
           <button type="button" class="us-moment-compose-close us-modal-close" id="usMomentComposeClose" aria-label="Chiudi" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
         </div>
         <div id="usMomentComposeMount"></div>

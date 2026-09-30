@@ -422,7 +422,7 @@ test('PWA Settings exposes one-time setup, active status, copy and revocation', 
   assert.match(settings, /operation:'issue'/);
   assert.match(settings, /operation:'status'/);
   assert.match(settings, /operation:'revoke'/);
-  assert.match(settings, /per Scriptable, restituisce solo nomi, data e giorni insieme e Foto Home selezionata/);
+  assert.match(settings, /uno in sola lettura \(nomi, giorni insieme, Foto Home\) e uno che può solo inviare Ti penso/);
   assert.match(settings, /\$\{status\.active\?'':'<button type="button" class="primary" id="usScriptableIssue">/);
   assert.match(settings, /Copia il codice/);
   assert.doesNotMatch(settings, /localStorage\.setItem\([^\n]*(?:token|credential)/i);

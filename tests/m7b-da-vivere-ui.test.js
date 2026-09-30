@@ -226,7 +226,7 @@ test('M7B runtime: apre e chiude il dettaglio senza toccare la lista sottostante
 
 test('M7B runtime: caricamento/vuoto/errore-con-retry sono tutti gestiti nel rendering della lista attiva', () => {
   const block = daVivereBlock();
-  assert.match(block, /Carico le vostre idee/);
+  assert.match(block, /<b>Carico…<\/b>/);
   assert.match(block, /Niente in lista/);
   assert.match(block, /Non riesco a caricare le idee/);
   assert.match(block, /onclick="hydrateNoiIdeas\(\)"/);

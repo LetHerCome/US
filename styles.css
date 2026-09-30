@@ -501,6 +501,7 @@ body.viewer-open{overflow:hidden}
 .noi-hub-copy{margin-top:auto;display:flex;flex-direction:column;gap:4px;min-width:0}
 .noi-hub-kicker{text-transform:uppercase;color:var(--noi-hub-tint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:var(--us-type-eyebrow);font-weight:750;letter-spacing:var(--us-type-eyebrow-tracking)}
 .noi-hub-copy b{font-family:var(--us-font-editorial,"Newsreader",Georgia,serif);font-size:19px;line-height:1.15;font-weight:500;color:#fff;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-wrap:pretty}
+.noi-hub-copy small:empty,.moment-auto-date:empty{display:none}
 .noi-hub-copy small{font-size:11.5px;line-height:1.3;color:rgba(255,255,255,.62);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .noi-hub-track{height:4px;flex:0 0 auto;margin-top:10px;border-radius:99px;background:rgba(255,255,255,.10);overflow:hidden}
 .noi-hub-track>span{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--us-color-rose),var(--us-color-violet));transition:width .5s ease}

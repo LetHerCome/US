@@ -100,7 +100,7 @@ test('M9D runtime: hub summaries come from loaded data only; sections open and c
 
   context.renderNoiHubSummary();
   assert.equal(el('noiHubIdeasTitle').textContent, 'Le vostre idee', 'nothing invented before the ideas load');
-  assert.equal(el('noiHubQuestTitle').textContent, 'Le quest della settimana');
+  assert.equal(el('noiHubQuestTitle').textContent, 'Questa settimana');
 
   context.noiIdeaState.loaded = true;
   context.noiIdeaState.activeItems = [{ status: 'idea' }, { status: 'scheduled' }, { status: 'idea' }];
@@ -112,7 +112,7 @@ test('M9D runtime: hub summaries come from loaded data only; sections open and c
   context.noiIdeaState.activeItems = [];
   window.usBondQuests = [{ completed_at: 'x' }];
   context.renderNoiHubSummary();
-  assert.equal(el('noiHubIdeasTitle').textContent, 'Nessuna idea, per ora');
+  assert.equal(el('noiHubIdeasTitle').textContent, 'Nessuna idea');
   assert.equal(el('noiHubQuestTitle').textContent, 'Tutte completate');
 
   window.openNoiSection('nope');

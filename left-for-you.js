@@ -208,7 +208,7 @@
     const conserve = document.getElementById('leftForYouConserve');
     if (!item || !content) return;
     activeItem = item;
-    content.innerHTML = '<div class="left-for-you-loading-inline" aria-busy="true">Apro il tuo messaggio…</div>';
+    content.innerHTML = '<div class="left-for-you-loading-inline" aria-busy="true">Un attimo…</div>';
     const url = await mediaUrl(item);
     content.innerHTML = renderItemMarkup(item, url);
     lastRenderedItemId = item.id;

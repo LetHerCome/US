@@ -86,7 +86,7 @@ test('M5E partner entry is one unified envelope control, not an avatar or Storie
 test('M5F visual shell keeps the top-right slot clean and the empty state intimate', () => {
   const html = read('index.html');
   const css = read('left-for-you.css');
-  assert.match(html, /Qui apparirà qualcosa che Beatrice ha lasciato per te/);
+  assert.match(html, /<div class="left-for-you-empty" id="leftForYouEmpty" hidden><h3>Lasciato per te<\/h3><p>Niente per ora\.<\/p>/);
   assert.doesNotMatch(html, /leftForYouEmpty[\s\S]*left-for-you-mark/);
   assert.match(css, /\.left-for-you-sheet\{[^}]*width:min\(100%,430px\)/);
   assert.doesNotMatch(html, /id="profileAvatarBtn"/);

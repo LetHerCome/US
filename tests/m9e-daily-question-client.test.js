@@ -65,7 +65,7 @@ test('M9E client: durante il caricamento nessuna textarea né invio', async () =
   const pending = deferred();
   const t = install({ rpc: (name) => (name === 'get_or_create_daily_question' ? pending.promise : ok()(name)) });
   const run = t.hydrate();
-  assert.equal(t.nodes.qtext.textContent, 'Sto preparando la domanda di oggi…');
+  assert.equal(t.nodes.qtext.textContent, 'Un attimo…');
   assert.equal(t.nodes.answer.hidden, true); assert.equal(t.nodes.answer.disabled, true);
   assert.equal(t.nodes.todaySaveBtn.hidden, true); assert.equal(t.nodes.todaySaveBtn.disabled, true);
   pending.resolve({ data: Q(), error: null });
@@ -205,7 +205,7 @@ test('M9E client: una sola authority, niente fallback da seed scaduto, card M9B 
   assert.match(css, /\.us-daily-ritual\[data-state="error"\]/);
   assert.match(css, /#answer\[hidden\],#todaySaveBtn\[hidden\]\{display:none!important\}/);
   const html = read('index.html');
-  assert.match(html, /<textarea id="answer" rows="4" placeholder="Scrivi la tua risposta\.\.\." hidden disabled><\/textarea>/);
+  assert.match(html, /<textarea id="answer" rows="4" placeholder="Scrivi…" hidden disabled><\/textarea>/);
   assert.match(html, /id="todaySaveBtn" onclick="saveAnswer\(\)" hidden disabled>/);
   assert.doesNotMatch(html, /Qual è una cosa che vorresti rifare insieme per la prima volta\?/, 'no hard-coded fake question before hydration');
 });

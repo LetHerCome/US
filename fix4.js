@@ -64,7 +64,7 @@
 
   function syncNetworkUi() {
     if (!navigator.onLine) {
-      showStatus('Sei offline. Mantengo quello che è già visibile; salvataggi e sincronizzazione ripartono appena torni online.', 'offline');
+      showStatus('Sei offline. Riprendo appena torni online.', 'offline');
       return;
     }
     if (onlineBadge?.classList.contains('warn')) {
@@ -93,7 +93,7 @@
       window.usProfile = cached;
       document.getElementById('authOverlay')?.classList.add('hidden');
       if (typeof window.setCloudBadge === 'function') window.setCloudBadge(false, 'offline');
-      showStatus('US è offline. Puoi consultare ciò che è già presente; le azioni che richiedono internet riprenderanno alla riconnessione.', 'offline');
+      showStatus('Sei offline. Riprendo appena torni online.', 'offline');
     } catch (_) {}
   }
 
@@ -231,7 +231,7 @@
   }
 
   window.addEventListener('online', () => {
-    showStatus('Connessione ripristinata. Sincronizzo US…', 'online', 2200);
+    showStatus('Di nuovo online. Sincronizzo…', 'online', 2200);
     setTimeout(() => {
       if (typeof window.hydrateCloud === 'function' && window.usProfile) window.hydrateCloud().catch?.(() => {});
       if (typeof window.refreshWebPushUi === 'function') window.refreshWebPushUi().catch?.(() => {});
