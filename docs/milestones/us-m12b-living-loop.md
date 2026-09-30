@@ -39,8 +39,8 @@ Release markers: build `us-m12b1-oggi-fit-20260930-1`, `version.json` equal, she
   Pre-apply read-only count was 0 rows; post-apply invariant count remains 0.
 
 ## Batch 3 · M12B.3 — Provenance foundation
-Database only; no client, Service Worker or cache change. Migrations in the repo, NOT applied.
-- `20260930233000_m12b_3_living_provenance.sql`
+Database only; no client, Service Worker or cache change. Migrations applied to production and ledger reconciled.
+- `20260930233501_m12b_3_living_provenance.sql`
   - `shared_event_completions.event_title_snapshot`: the event title when the occurrence was
     completed, written by a BEFORE INSERT trigger from the couple's own event and frozen on UPDATE.
     Older completions stay NULL (unknown, never guessed). The completion stays the only authority.
@@ -52,10 +52,10 @@ Database only; no client, Service Worker or cache change. Migrations in the repo
     locked actor, own Moment, same couple, lived source, server-written snapshot). Returns
     `linked` / `existing`; refuses a second Moment for a source and a second source for a Moment
     (23505). RLS forced, SELECT for the same couple, no client write grant. Owner = couple + role.
-- `20260930233100_m12b_3_game_v2_living_origin.sql`: `private.game_v2_ctx_moments` uses the
+- `20260930233503_m12b_3_game_v2_living_origin.sql`: `private.game_v2_ctx_moments` uses the
   provenance source as the candidate source, so a Moment and the lived fact it came from are one
   source for the existing per-round de-duplication and source cooldown. Unlinked Moments unchanged.
-- `20260930233200_m12b_3_event_completion_history.sql`: `public.relationship_event_history`
+- `20260930233506_m12b_3_event_completion_history.sql`: `public.relationship_event_history`
   (security_invoker, same-couple filter): one row per completion with historical title,
   `title_source` (`snapshot` | `live` | `missing`), current title and the optional kept Moment.
 - Not in this batch: Daily Question Conserva, text-only Moments, automatic Moments, client wiring.

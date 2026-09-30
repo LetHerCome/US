@@ -68,9 +68,9 @@ const EVENTS_FIXTURE = `
 `;
 
 const M12B3 = {
-  provenance: 'supabase/migrations/20260930233000_m12b_3_living_provenance.sql',
-  gameV2: 'supabase/migrations/20260930233100_m12b_3_game_v2_living_origin.sql',
-  history: 'supabase/migrations/20260930233200_m12b_3_event_completion_history.sql',
+  provenance: 'supabase/migrations/20260930233501_m12b_3_living_provenance.sql',
+  gameV2: 'supabase/migrations/20260930233503_m12b_3_game_v2_living_origin.sql',
+  history: 'supabase/migrations/20260930233506_m12b_3_event_completion_history.sql',
 };
 
 module.exports = { EVENTS_FIXTURE, M12B3 };

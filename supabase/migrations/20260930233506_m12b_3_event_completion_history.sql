@@ -32,8 +32,8 @@
 -- Existing completions are valid history immediately (no backfill, no
 -- provenance row fabricated for them).
 --
--- NOT applied in production by this milestone. Apply after
--- 20260930233000_m12b_3_living_provenance.sql.
+-- Applied to production as ledger migration 20260930233506, after
+-- 20260930233501_m12b_3_living_provenance.sql.
 
 create view public.relationship_event_history
 with (security_invoker = true)

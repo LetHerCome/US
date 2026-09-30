@@ -60,7 +60,7 @@
 -- moment_photos, bucket_items, calendar_entries, shared_events rows,
 -- complete_shared_event, daily_*, left_for_you, claim_us_role, Edge Functions.
 --
--- NOT applied in production by this milestone.
+-- Applied to production as ledger migration 20260930233501.
 
 -- 0. Preconditions: the production shape this file relies on. Fails before any
 --    change if production differs from what was verified.

@@ -21,8 +21,8 @@
 -- Rollback: re-create the M11C body (20260930153749_m11c_game_v2_context.sql,
 -- section 3); the provenance table can stay.
 --
--- NOT applied in production by this milestone. Apply after
--- 20260930233000_m12b_3_living_provenance.sql.
+-- Applied to production as ledger migration 20260930233503, after
+-- 20260930233501_m12b_3_living_provenance.sql.
 
 create or replace function private.game_v2_ctx_moments(target_couple uuid, target_family text, at_time timestamptz)
 returns setof private.game_v2_candidate language plpgsql stable set search_path = '' as $$
