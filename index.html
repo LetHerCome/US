@@ -180,10 +180,10 @@ html.us-returning-device .auth-overlay{
       <div class="today-sheet-head"><div><div class="tiny">OGGI</div><h2>La domanda di oggi</h2></div><button type="button" class="today-close us-modal-close" onclick="closeToday()" aria-label="Chiudi domanda del giorno" data-us-modal-close>×</button></div>
       <div class="card question">
         <div class="qtag">LA DOMANDA DEL GIORNO</div>
-        <div class="qtext">Qual è una cosa che vorresti rifare insieme per la prima volta?</div>
-        <textarea id="answer" rows="4" placeholder="Scrivi la tua risposta..."></textarea>
-        <div class="row"><button class="primary" id="todaySaveBtn" onclick="saveAnswer()">Rispondi</button></div>
-        <div class="locked" id="locked" role="status" aria-live="polite">🔒 La risposta dell’altra persona si sblocca quando avete risposto entrambi.</div>
+        <div class="qtext">Sto preparando la domanda di oggi…</div>
+        <textarea id="answer" rows="4" placeholder="Scrivi la tua risposta..." hidden disabled></textarea>
+        <div class="row"><button class="primary" id="todaySaveBtn" onclick="saveAnswer()" hidden disabled>Rispondi</button></div>
+        <div class="locked" id="locked" role="status" aria-live="polite">Un attimo, arriva subito.</div>
         <div id="todayReveal" class="hidden"></div>
         <section id="todayOutcome" class="today-outcome hidden" data-us-today-outcome aria-live="polite" aria-label="Riflessioni dopo il reveal"></section>
       </div>

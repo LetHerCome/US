@@ -1530,6 +1530,9 @@ function dailyRitualPartnerName(){
   return window.usProfile?.role==='francesco'?'Beatrice':'Francesco';
 }
 function dailyRitualViewModel(source){
+  // M9E: errore reale del backend → stato onesto con Riprova (apre il foglio,
+  // che ritenta get_or_create_daily_question). Mai una domanda inventata.
+  if(source?.status==='error')return {questionId:null,question:'La domanda di oggi non è arrivata.',state:'error',kicker:'Domanda del giorno',status:'Controlla la connessione e riprova.',cta:'Riprova'};
   const question=source?.question,state=source?.state;
   if(!question?.id||!question.question||!state)return null;
   const name=source.partnerName||'La tua persona';
@@ -1773,27 +1776,69 @@ window.deleteDailyQuestionOutcome=async()=>{
   if(result.status==='error')toast('Riflessione non eliminata: riprova quando torni online');
 };
 
-async function hydrateToday(){
-  if(!window.usProfile){window.UsTodayPriority?.render?.([]);return;}
-  const {data:q,error:qError}=await sb.from('daily_questions').select('id,question,question_date').eq('question_date',localDateISO()).maybeSingle();
-  if(qError){console.warn(qError);window.UsTodayPriority?.refresh?.({daily:null});return;}
+// M9E — la domanda di oggi arriva SOLO da get_or_create_daily_question: il
+// server decide il giorno (Europe/Rome) e materializza una sola istanza in
+// daily_questions. Qui non si calcola più la data sul client.
+const US_DAILY_QUESTION_TIMEZONE='Europe/Rome';
+function usDailyQuestionDay(at=new Date()){
+  try{return new Intl.DateTimeFormat('en-CA',{timeZone:US_DAILY_QUESTION_TIMEZONE,year:'numeric',month:'2-digit',day:'2-digit'}).format(at);}
+  catch(_e){return localDateISO();}
+}
+function validDailyQuestion(q){
+  return q&&typeof q==='object'&&typeof q.id==='string'&&q.id&&typeof q.question==='string'&&q.question.trim()?q:null;
+}
+// Stati senza domanda valida: 'loading' (in arrivo) o 'error' (backend/rete).
+// In entrambi niente textarea né invio: solo, in errore, un Riprova onesto.
+function renderTodayQuestionUnavailable(status){
   const qel=document.querySelector('#today .qtext');
   const locked=document.getElementById('locked'), reveal=document.getElementById('todayReveal'), btn=document.getElementById('todaySaveBtn');
   const answerEl=document.getElementById('answer');
-  if(!q){
-    window.todayQuestion=null; window.todayState=null;
-    dailyQuestionOutcomes.hide();
-    if(qel)qel.textContent='La prossima domanda sta arrivando…';
-    locked.textContent='Nessuna domanda disponibile per oggi.';
-    reveal.classList.add('hidden');
-    answerEl.disabled=true; btn.disabled=true; btn.textContent='Nessuna domanda';
+  const failed=status==='error';
+  window.todayQuestion=null; window.todayState=null;
+  dailyQuestionOutcomes.hide();
+  if(qel)qel.textContent=failed?'Non riesco a caricare la domanda di oggi.':'Sto preparando la domanda di oggi…';
+  if(locked)locked.textContent=failed?'Controlla la connessione e riprova.':'Un attimo, arriva subito.';
+  if(reveal){reveal.classList.add('hidden');reveal.innerHTML='';}
+  if(answerEl){answerEl.value='';answerEl.disabled=true;answerEl.hidden=true;}
+  if(btn){
+    btn.dataset.usTodayMode=failed?'retry':'loading';
+    btn.hidden=!failed; btn.disabled=!failed; btn.textContent=failed?'Riprova':'Un attimo…';
+  }
+}
+let usTodayHydrateSeq=0;
+async function hydrateToday(){
+  if(!window.usProfile){window.UsTodayPriority?.render?.([]);return;}
+  const seq=++usTodayHydrateSeq;
+  const previous=window.todayQuestion;
+  const keepPrevious=Boolean(previous?.id&&previous.question_date===usDailyQuestionDay());
+  if(!keepPrevious)renderTodayQuestionUnavailable('loading');
+  let q=null,qError=null;
+  try{
+    const result=await sb.rpc('get_or_create_daily_question');
+    qError=result.error||null;
+    q=validDailyQuestion(result.data);
+    if(!qError&&!q)qError=new Error('daily_question_invalid_payload');
+  }catch(error){qError=error;}
+  if(seq!==usTodayHydrateSeq)return;
+  if(qError){
+    console.warn('[US Today] Daily question',qError);
+    // Un errore transitorio non cancella la domanda già valida di oggi.
+    if(keepPrevious)return;
+    renderTodayQuestionUnavailable('error');
     updateHomeStatus();
-    window.UsTodayPriority?.refresh?.({daily:null});
+    window.UsTodayPriority?.refresh?.({daily:{status:'error'}});
     return;
   }
-  answerEl.disabled=false; btn.disabled=false;
+  const qel=document.querySelector('#today .qtext');
+  const locked=document.getElementById('locked'), reveal=document.getElementById('todayReveal'), btn=document.getElementById('todaySaveBtn');
+  const answerEl=document.getElementById('answer');
+  if(previous?.id!==q.id){window.todayState=null;if(previous?.id)answerEl.value='';}
+  answerEl.hidden=false; answerEl.disabled=false;
+  btn.hidden=false; btn.disabled=false; delete btn.dataset.usTodayMode;
+  if(!keepPrevious)btn.textContent='Rispondi';
   window.todayQuestion=q;if(qel)qel.textContent=q.question;
   const {data:state,error}=await sb.rpc('get_daily_state',{target_question_id:q.id});
+  if(seq!==usTodayHydrateSeq)return;
   if(error){console.warn(error);window.UsTodayPriority?.refresh?.({daily:null});return;}
   window.todayState=state;
   if(state?.my_answer){
@@ -3270,7 +3315,9 @@ function escapeHtml(s){
 }
 
 saveAnswer = async function(){
-  if(!window.usProfile || !window.todayQuestion){toast('Sync non pronta, riprova tra un attimo');return;}
+  if(!window.usProfile){toast('Sync non pronta, riprova tra un attimo');return;}
+  // M9E: senza una domanda valida il bottone è solo "Riprova", mai un invio.
+  if(!window.todayQuestion)return hydrateToday();
   const v=document.getElementById('answer').value.trim();
   if(!v)return toast('Scrivi qualcosa prima :)');
   const btn=document.getElementById('todaySaveBtn');btn.disabled=true;btn.textContent='Salvo…';

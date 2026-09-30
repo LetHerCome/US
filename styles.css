@@ -608,6 +608,10 @@ body.viewer-open{overflow:hidden}
 .us-daily-ritual[data-state="reveal"] .us-daily-ritual-kicker{color:#ffdcb8}
 .us-daily-ritual[data-state="reveal"] .us-daily-ritual-mark{color:#ffdcb8}
 .us-daily-ritual[data-state="reveal"] .us-daily-ritual-cta{background:linear-gradient(135deg,#ffb08a,#ff6d93)}
+.us-daily-ritual[data-state="error"]{background:linear-gradient(150deg,rgba(30,22,40,.72),rgba(16,14,22,.72));border-color:rgba(255,255,255,.09)}
+.us-daily-ritual[data-state="error"] .us-daily-ritual-question{color:rgba(255,255,255,.78);font-size:18px}
+.us-daily-ritual[data-state="error"] .us-daily-ritual-cta{background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);color:rgba(255,255,255,.86)}
+#answer[hidden],#todaySaveBtn[hidden]{display:none!important}
 @keyframes us-daily-ritual-wait{0%,100%{box-shadow:0 0 0 0 rgba(201,168,255,.45)}50%{box-shadow:0 0 0 5px rgba(201,168,255,0)}}
 #homeHero:has(.push-optin-card:not([hidden])) .us-daily-ritual{bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 118px)}
 .us-oggi-focus .us-daily-ritual{opacity:0!important;pointer-events:none!important}
