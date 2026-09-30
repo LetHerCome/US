@@ -60,36 +60,32 @@ test('M10A: gli impegni del Calendario sono informazione, mai attenzione animata
   assert.doesNotMatch(hero.match(/id="usOggiCalendarWidget"[^>]*>/)[0], /us-attention-orbit|data-us-attention/);
 });
 
-test('M10B: stati compatti della card — A da rispondere, B risposto, C scopri, D errore', () => {
+test('M10B/M10.1A: stati compatti della card — A da rispondere, D errore; risposto/entrambi nessuna card', () => {
   const { api } = installCard();
   const m = (state) => api.viewModel({ question, state, partnerName: 'Beatrice' });
   const a = m({ my_answer: null, partner_has_answer: false, both_answered: false });
   assert.deepEqual({ state: a.state, kicker: a.kicker, cta: a.cta, status: a.status }, { state: 'answer', kicker: 'Domanda del giorno', cta: 'Rispondi', status: '' });
   const a2 = m({ my_answer: null, partner_has_answer: true, both_answered: false });
   assert.deepEqual({ cta: a2.cta, status: a2.status }, { cta: 'Rispondi', status: '' }, 'partner answered first: same compact copy');
-  const b = m({ my_answer: 'Mia', partner_has_answer: false, both_answered: false });
-  assert.deepEqual({ state: b.state, cta: b.cta, status: b.status }, { state: 'waiting', cta: '', status: 'Risposto' });
-  const c = m({ my_answer: 'Mia', partner_has_answer: true, both_answered: true, partner_answer: 'Sua' });
-  assert.deepEqual({ state: c.state, cta: c.cta }, { state: 'reveal', cta: 'Scopri' });
+  assert.equal(m({ my_answer: 'Mia', partner_has_answer: false, both_answered: false }), null);
+  assert.equal(m({ my_answer: 'Mia', partner_has_answer: true, both_answered: true, partner_answer: 'Sua' }), null);
   const d = api.viewModel({ status: 'error' });
   assert.deepEqual({ state: d.state, cta: d.cta }, { state: 'error', cta: 'Riprova' });
 });
 
 test('M10B: la card contiene solo kicker, domanda e un segnale — niente testo esplicativo, niente risposte', () => {
   const { api, card } = installCard();
-  const secret = 'RISPOSTA-PARTNER'; const mine = 'RISPOSTA-MIA';
+  const secret = 'RISPOSTA-PARTNER';
   for (const state of [
     { my_answer: null, partner_has_answer: false, both_answered: false },
     { my_answer: null, partner_has_answer: true, both_answered: false, partner_answer: secret },
-    { my_answer: mine, partner_has_answer: false, both_answered: false },
-    { my_answer: mine, partner_has_answer: true, both_answered: true, partner_answer: secret },
   ]) {
     api.render(api.viewModel({ question, state, partnerName: 'Beatrice' }));
     const text = card.innerHTML.replace(/<[^>]+>/g, '|').split('|').filter(Boolean);
     assert.equal(text.length, 3, `kicker + question + one signal: ${text.join(' / ')}`);
     assert.equal(text[0], 'Domanda del giorno');
     assert.equal(text[1], question.question);
-    assert.doesNotMatch(card.innerHTML + JSON.stringify(card.attrs), new RegExp(`${secret}|${mine}`));
+    assert.doesNotMatch(card.innerHTML + JSON.stringify(card.attrs), new RegExp(secret));
   }
   assert.doesNotMatch(app, /Rispondete entrambi, poi scopritevi|Aspettiamo \$\{name\}|ti aspetta`,cta/);
   assert.match(css, /\.us-daily-ritual-question\{[^}]*-webkit-line-clamp:2/);

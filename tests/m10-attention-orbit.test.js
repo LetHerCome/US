@@ -60,7 +60,7 @@ test('M10E.2: l’attenzione segue my_answer, MAI both_answered', () => {
   assert.equal(orbit({ my_answer: 'Mia', partner_has_answer: false, both_answered: false }), 'off', 'waiting for the partner is not MY action');
   assert.equal(orbit({ my_answer: null, partner_has_answer: true, both_answered: false }), 'on');
   const vmSource = slice('function dailyRitualViewModel(source){', 'function renderDailyRitual(model){');
-  assert.match(vmSource, /const attention=state\.my_answer==null;/);
+  assert.match(vmSource, /if\(state\.my_answer!=null\)return null;/);
   assert.doesNotMatch(vmSource, /attention\s*=[^;\n]*both_answered/);
   assert.equal(orbit(undefined), 'off');
   const t = installOggi();

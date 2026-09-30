@@ -450,9 +450,11 @@ test('M5F envelope uses the canonical Phosphor pair and a restrained trace, not 
 
 test('M5F top chrome: question icon for the daily question, no legacy avatar control', () => {
   const html = read('index.html');
-  const css = read('identity.css');
-  assert.match(html, /us-phosphor-question/);
-  assert.match(css, /us-phosphor-question::before\{[^}]*mask:url\("\/assets\/icons\/phosphor\/question-regular\.svg"\)/);
+  const css = read('styles.css');
+  // M10.1B: l'icona domanda vive solo nella card di Oggi; il controllo top-left è rimosso.
+  assert.match(read('app.js'), /us-daily-ritual-mark us-phosphor-question/);
+  assert.match(css, /us-daily-ritual-mark::before\{[^}]*mask:url\("\/assets\/icons\/phosphor\/question-regular\.svg"\)/);
+  assert.doesNotMatch(html, /id="todayOrb"/);
   assert.doesNotMatch(html, /id="profileAvatarBtn"/);
   assert.doesNotMatch(html, /onclick="pickProfilePhoto\(\)"/);
   assert.match(html, /id="profileAvatarFile"/, 'il flusso foto profilo resta vivo tramite Impostazioni');

@@ -126,8 +126,8 @@ test('M1.6 rende Home full-bleed senza cambiare il padding globale delle seconda
 test('M1 topbar refinement bilancia tre zone senza ridurre i touch target', () => {
   const css = read('identity.css');
   assert.match(css, /\.top\.us-premium-top\{[^}]*display:grid[^}]*grid-template-columns:minmax\(0,1fr\) auto minmax\(0,1fr\)/);
-  assert.match(css, /\.top\.us-premium-top \.brand-row\{[^}]*justify-self:start/);
-  assert.match(css, /\.top\.us-premium-top \.top-actions\{[^}]*justify-self:end/);
+  assert.match(css, /\.top\.us-premium-top \.us-events-top-control\{grid-column:2\}/);
+  assert.match(css, /\.top\.us-premium-top \.top-actions\{[^}]*grid-column:3[^}]*justify-self:end/);
   assert.match(css, /\.top\.us-premium-top \.us-events-top-control\{[^}]*flex:0 1 auto[^}]*justify-self:center/);
   assert.match(css, /\.top\.us-premium-top \.us-brand-symbol-art\{[^}]*width:58px[^}]*height:39px/);
   assert.match(css, /\.top\.us-premium-top \.profile-avatar[^}]*min-width:44px/);

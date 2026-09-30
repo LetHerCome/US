@@ -1566,21 +1566,18 @@ function dailyRitualPartnerName(){
   return window.usProfile?.role==='francesco'?'Beatrice':'Francesco';
 }
 function dailyRitualViewModel(source){
-  // M10B — card compatta: kicker, domanda, un solo segnale di stato. Il foglio
-  // (openToday) resta l'unica superficie d'interazione; mai risposte inline.
-  // M10E.2 — attention è PERSONALE: accesa solo se manca la MIA risposta
-  // (get_daily_state().my_answer == null), mai derivata da both_answered.
+  // M10.1A — la card su Oggi dice a CHI guarda "hai ancora qualcosa da fare":
+  // esiste SOLO finché manca la MIA risposta (get_daily_state().my_answer ==
+  // null). Dopo la mia risposta sparisce del tutto (niente "Risposto", attesa,
+  // reveal): il foglio Today resta il flusso completo. Mai both_answered.
   const kicker='Domanda del giorno';
   // M9E: errore reale del backend → stato onesto con Riprova (apre il foglio,
   // che ritenta get_or_create_daily_question). Mai una domanda inventata.
   if(source?.status==='error')return {questionId:null,question:'La domanda di oggi non è arrivata.',state:'error',kicker,status:'',cta:'Riprova',attention:false};
   const question=source?.question,state=source?.state;
   if(!question?.id||!question.question||!state)return null;
-  const base={questionId:question.id,question:String(question.question),kicker};
-  const attention=state.my_answer==null;
-  if(!attention&&state.both_answered)return {...base,state:'reveal',status:'',cta:'Scopri',attention};
-  if(!attention)return {...base,state:'waiting',status:'Risposto',cta:'',attention};
-  return {...base,state:state.partner_has_answer?'invited':'answer',status:'',cta:'Rispondi',attention};
+  if(state.my_answer!=null)return null;
+  return {questionId:question.id,question:String(question.question),kicker,state:state.partner_has_answer?'invited':'answer',status:'',cta:'Rispondi',attention:true};
 }
 function renderDailyRitual(model){
   const card=document.getElementById('usDailyRitual');
@@ -1588,10 +1585,8 @@ function renderDailyRitual(model){
   if(!model){card.hidden=true;card.innerHTML='';card.removeAttribute('data-state');card.dataset.usAttention='off';return;}
   card.dataset.state=model.state;
   card.dataset.usAttention=model.attention?'on':'off';
-  const signal=model.cta||model.status;
-  card.setAttribute('aria-label',`${model.kicker}: ${model.question}. ${signal}`);
-  const action=model.cta?`<span class="us-daily-ritual-cta">${escapeHtml(model.cta)}</span>`:`<span class="us-daily-ritual-status">${escapeHtml(model.status)}</span>`;
-  card.innerHTML=`<span class="us-daily-ritual-head"><span class="us-daily-ritual-mark us-phosphor-question" aria-hidden="true"></span><span class="us-daily-ritual-kicker">${escapeHtml(model.kicker)}</span></span><span class="us-daily-ritual-question">${escapeHtml(model.question)}</span>${action}`;
+  card.setAttribute('aria-label',`${model.kicker}: ${model.question}. ${model.cta}`);
+  card.innerHTML=`<span class="us-daily-ritual-head"><span class="us-daily-ritual-mark us-phosphor-question" aria-hidden="true"></span><span class="us-daily-ritual-kicker">${escapeHtml(model.kicker)}</span></span><span class="us-daily-ritual-question">${escapeHtml(model.question)}</span><span class="us-daily-ritual-cta">${escapeHtml(model.cta)}</span>`;
   card.hidden=false;
 }
 window.UsDailyRitual=Object.freeze({viewModel:dailyRitualViewModel,render:renderDailyRitual});
@@ -1921,14 +1916,7 @@ async function updateHomeStatus(){
   if(!window.usProfile)return;
   const todayPill=document.getElementById('todayStatusPill');
   const quizPill=document.getElementById('quizStatusPill');
-  const todayOrb=document.getElementById('todayOrb');
-  const todayOrbDot=document.getElementById('todayOrbDot');
   const st=window.todayState;
-  if(todayOrb){
-    todayOrb.classList.toggle('done',Boolean(st?.my_answer));
-    todayOrb.classList.toggle('reveal',Boolean(st?.both_answered));
-  }
-  if(todayOrbDot)todayOrbDot.hidden=Boolean(st?.my_answer);
   const partner=window.usProfile.role==='francesco'?'Bea':'Francesco';
   if(todayPill){
     if(st?.both_answered) todayPill.textContent='💬 Today · reveal sbloccato';

@@ -30,35 +30,29 @@ function installRitual({ profiles = [], role = 'francesco' } = {}) {
 
 const question = { id: 'q-1', question: 'Cosa vorresti rifare con me?', question_date: '2026-09-29' };
 
-test('M9B/M10B: quattro stati reali — nessuno, io, partner, entrambi (copia compatta)', () => {
+test('M9B/M10.1A: stati reali — la card esiste solo finché manca la MIA risposta', () => {
   const { api } = installRitual();
   const vm0 = (state) => api.viewModel({ question, state, partnerName: 'Beatrice' });
   const none = vm0({ my_answer: null, partner_has_answer: false, both_answered: false });
   assert.equal(none.state, 'answer');
   assert.equal(none.cta, 'Rispondi');
-  const mine = vm0({ my_answer: 'La mia', partner_has_answer: false, both_answered: false });
-  assert.equal(mine.state, 'waiting');
-  assert.equal(mine.status, 'Risposto');
-  assert.equal(mine.cta, '');
+  assert.equal(vm0({ my_answer: 'La mia', partner_has_answer: false, both_answered: false }), null, 'ho risposto io → nessuna card');
   const invited = vm0({ my_answer: null, partner_has_answer: true, both_answered: false });
   assert.equal(invited.state, 'invited');
   assert.equal(invited.status, '');
   assert.equal(invited.cta, 'Rispondi');
-  const reveal = vm0({ my_answer: 'La mia', partner_answer: 'La sua', partner_has_answer: true, both_answered: true });
-  assert.equal(reveal.state, 'reveal');
-  assert.equal(reveal.cta, 'Scopri');
+  assert.equal(vm0({ my_answer: 'La mia', partner_answer: 'La sua', partner_has_answer: true, both_answered: true }), null, 'entrambi → nessuna card su Oggi');
   assert.equal(none.status, '', 'M10B: nessun testo esplicativo nello stato normale');
   assert.equal(api.viewModel({ question: null, state: {}, partnerName: 'X' }), null);
   assert.equal(api.viewModel({ question, state: null, partnerName: 'X' }), null);
 });
 
-test('M9B: la card non rivela mai la risposta del partner, nemmeno a reveal pronto', () => {
+test('M9B: la card non rivela mai la risposta del partner', () => {
   const { api, card } = installRitual();
   const secret = 'RISPOSTA-SEGRETA-PARTNER';
   const mine = 'RISPOSTA-MIA';
   for (const state of [
     { my_answer: null, partner_answer: secret, partner_has_answer: true, both_answered: false },
-    { my_answer: mine, partner_answer: secret, partner_has_answer: true, both_answered: true },
   ]) {
     api.render(api.viewModel({ question, state, partnerName: 'Beatrice' }));
     assert.equal(card.hidden, false);
@@ -100,7 +94,8 @@ test('M9B: stile premium con icona Phosphor approvata e rispetto di focus/reduce
   const css = read('styles.css');
   assert.match(css, /\.us-daily-ritual-mark::before\{[^}]*mask:url\("\/assets\/icons\/phosphor\/question-regular\.svg"\)/);
   assert.match(css, /\.us-daily-ritual-question\{[^}]*font-family:var\(--us-font-editorial/);
-  for (const state of ['waiting', 'invited', 'reveal']) assert.match(css, new RegExp(`\\.us-daily-ritual\\[data-state="${state}"\\]`));
+  assert.match(css, /\.us-daily-ritual\[data-state="invited"\]/);
+  for (const state of ['waiting', 'reveal']) assert.doesNotMatch(css, new RegExp(`\\.us-daily-ritual\\[data-state="${state}"\\]`));
   assert.match(css, /\.us-oggi-focus \.us-daily-ritual\{opacity:0!important;pointer-events:none!important\}/);
   assert.match(css, /prefers-reduced-motion:reduce\)\{\.us-daily-ritual\{transition:none\}/);
 });
