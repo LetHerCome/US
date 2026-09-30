@@ -2610,6 +2610,7 @@ async function hydrateBondSummary(){
   const {data,error}=await sb.from('couples').select('bond_xp').eq('id',window.usProfile.couple_id).maybeSingle();
   if(error){console.warn(error);return;}
   renderBondProgress(data?.bond_xp||0);
+  window.hydrateNoiEvents?.();
 }
 window.hydrateBondSummary=hydrateBondSummary;
 
@@ -3260,7 +3261,7 @@ window.closeNoiIdeaDetail=closeNoiIdeaDetail;
 // (nessun nuovo tab). Risonanza, Da vivere e Quest riusano i blocchi M3/M7
 // già presenti; Calendario apre l'overlay esistente. Il ritorno al hub passa
 // dal layer di navigation.js ('noi-section'), quindi anche il Back di sistema.
-const NOI_SECTIONS=['resonance','da-vivere','quest'];
+const NOI_SECTIONS=['resonance','da-vivere','quest','eventi'];
 function noiCanonicalPage(){return document.querySelector('#bond .noi-canonical-page');}
 function openNoiSection(view){
   const page=noiCanonicalPage();
@@ -3271,6 +3272,7 @@ function openNoiSection(view){
   const hub=document.getElementById('noiHub');if(hub)hub.hidden=true;
   scrollTo({top:0,behavior:'auto'});
   if(view==='da-vivere'&&window.usProfile&&!noiIdeaState.loaded)hydrateNoiIdeas();
+  if(view==='eventi')window.hydrateEvents?.();
   document.getElementById('noiSectionBack')?.focus({preventScroll:true});
 }
 function closeNoiSection(){

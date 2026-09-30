@@ -477,6 +477,7 @@ body.viewer-open{overflow:hidden}
 #bond .noi-canonical-page:not([data-noi-view="resonance"])>.noi-resonance,#bond .noi-canonical-page:not([data-noi-view="resonance"])>.noi-resonance-guide{display:none!important}
 #bond .noi-canonical-page:not([data-noi-view="quest"])>.noi-living-section{display:none!important}
 #bond .noi-canonical-page:not([data-noi-view="da-vivere"])>.noi-idea-section{display:none!important}
+#bond .noi-canonical-page:not([data-noi-view="eventi"])>.noi-events-section{display:none!important}
 .noi-hub{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;flex:0 0 auto}
 .noi-hub-card{position:relative;isolation:isolate;aspect-ratio:1/1;min-width:0;display:flex;flex-direction:column;align-items:stretch;padding:15px 15px 14px;border-radius:24px;text-align:left;color:#fff;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:linear-gradient(150deg,rgba(46,24,54,.80),rgba(20,15,28,.74) 62%,rgba(14,12,20,.78));box-shadow:0 16px 38px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.08);backdrop-filter:blur(22px) saturate(150%);-webkit-backdrop-filter:blur(22px) saturate(150%);transition:transform var(--us-motion-micro) var(--us-ease-standard),border-color var(--us-motion-fast) var(--us-ease-standard)}
 .noi-hub-card::before{content:"";position:absolute;inset:0 22% auto 10%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.34),transparent);pointer-events:none}
@@ -495,6 +496,8 @@ body.viewer-open{overflow:hidden}
 .noi-hub-card--ideas{--noi-hub-icon:url("/assets/icons/phosphor/compass-regular.svg");--noi-hub-tint:#ffdcb8;--noi-hub-glow:rgba(255,176,138,.30)}
 .noi-hub-card--calendar{--noi-hub-icon:url("/assets/icons/phosphor/calendar-dots-regular.svg");--noi-hub-tint:#e7cdf2;--noi-hub-glow:rgba(201,154,224,.30)}
 .noi-hub-card--quest{--noi-hub-icon:url("/assets/icons/phosphor/flag-banner-regular.svg");--noi-hub-tint:#dccbff;--noi-hub-glow:rgba(155,124,255,.34)}
+/* M12A.1 — Eventi: the fifth Noi card. It spans the row (like the first and last Gioca tiles) so the grid keeps its rhythm. */
+.noi-hub-card--events{--noi-hub-icon:url("/assets/icons/phosphor/calendar-heart-regular.svg");--noi-hub-tint:#ffc9d6;--noi-hub-glow:rgba(255,128,160,.32);grid-column:1/-1;aspect-ratio:auto;min-height:118px}
 .noi-section-bar{display:flex;align-items:center;flex:0 0 auto;margin-top:2px}
 .noi-section-back{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 15px 0 11px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#f4e9ff;font-size:13px;font-weight:700}
 .noi-section-back:focus-visible{outline:2px solid rgba(255,160,196,.85);outline-offset:3px}
@@ -559,7 +562,7 @@ body.viewer-open{overflow:hidden}
 .us-oggi-focus .us-daily-reveal-link{opacity:0!important;pointer-events:none!important}
 
 /* M12A — opening a Noi tile eases its destination in (fade + short rise), once per opening. */
-#bond .noi-canonical-page:not([data-noi-view="hub"])>:is(.noi-resonance,.noi-resonance-guide,.noi-living-section,.noi-idea-section){animation:us-content-enter var(--us-motion-fast) var(--us-ease-enter) 1 both}
+#bond .noi-canonical-page:not([data-noi-view="hub"])>:is(.noi-resonance,.noi-resonance-guide,.noi-living-section,.noi-idea-section,.noi-events-section){animation:us-content-enter var(--us-motion-fast) var(--us-ease-enter) 1 both}
 :root[data-us-motion="reduced"] #bond .noi-canonical-page>*{animation:none!important}
 @media(prefers-reduced-motion:reduce){#bond .noi-canonical-page>*{animation:none!important}}
 

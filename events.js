@@ -76,6 +76,77 @@ function relationshipButton(row){
   const subtitle=row.awarded?`Festeggiato · +${row.awarded.xp_awarded} XP`:`${row.months} ${row.months===1?'mese':'mesi'} insieme · +${row.xp} XP`;
   return `<div class="us-event-item us-event-system"><span class="us-event-datebox us-event-heart-date"><small>${esc(monthShort(row.effective_date))}</small><b>♡</b></span><span class="us-event-main"><b>${esc(row.title)}</b><small>${esc(subtitle)}</small></span><span class="us-event-chevron">✦</span></div>`;
 }
+// M12A.1 — Eventi as a Noi surface. A presentation layer over the SAME data
+// (upcomingRows / dueRows / completedRows): no new table, no second source of
+// truth. PROSSIMI = the next occurrences, QUESTO PERIODO = what is nearby
+// (still to mark + coming within two months), VISSUTI = completed events.
+const SURFACE_NEXT=3,SURFACE_PERIOD_DAYS=60;
+let loadedAt=0,surfaceSignature='';
+function evIcon(row){return row.system?'heart':row.recurs_yearly?'arrows-clockwise':row.location?'map-pin':'calendar-heart';}
+function evDay(value){const d=parseISO(value);return d.toLocaleDateString('it-IT',{day:'numeric',month:'long',year:d.getFullYear()!==new Date().getFullYear()?'numeric':undefined});}
+function evDateLine(row){const bits=[evDay(row.effective_date)];if(row.event_time)bits.push(String(row.event_time).slice(0,5));return bits.join(' · ');}
+function evIconChip(row){return `<span class="noi-ev-icon" aria-hidden="true"><span class="us-icon" data-us-icon="${evIcon(row)}"></span></span>`;}
+function evCard(row,i){
+  const main=`<span class="noi-ev-main"><b>${esc(row.title)}</b><small>${esc(evDateLine(row))}</small></span><span class="noi-ev-count">${esc(countdown(row.days_left))}</span>`;
+  if(row.system)return `<div class="noi-ev-card is-system" style="--i:${i}">${evIconChip(row)}${main}</div>`;
+  return `<button type="button" class="noi-ev-card" style="--i:${i}" data-id="${esc(row.id)}" data-occurrence="${esc(row.effective_date)}">${evIconChip(row)}${main}</button>`;
+}
+function evRow(row,i,state){
+  const day=Number(row.effective_date.slice(-2));
+  const note=state==='soon'?detailLine(row):evDay(row.effective_date);
+  const tail=state==='lived'?'<span class="us-icon" data-us-icon="check" aria-hidden="true"></span>':state==='due'?'<span class="noi-ev-chip">Da segnare</span>':'';
+  const inner=`<span class="noi-ev-when"><small>${esc(monthShort(row.effective_date))}</small><b>${day}</b></span><span class="noi-ev-main"><b>${esc(row.title)}</b><small>${esc(note)}</small></span>${tail}`;
+  const cls=`noi-ev-row is-${state}`;
+  if(row.system)return `<div class="${cls} is-system" style="--i:${i}">${inner}</div>`;
+  return `<button type="button" class="${cls}" style="--i:${i}" data-id="${esc(row.id)}" data-occurrence="${esc(row.effective_date)}">${inner}</button>`;
+}
+function surfaceModel(upcoming,due,done){
+  const next=upcoming.slice(0,SURFACE_NEXT);
+  const nearby=upcoming.slice(SURFACE_NEXT).filter(row=>row.days_left<=SURFACE_PERIOD_DAYS);
+  return {next,period:[...due.slice().reverse().map(row=>({row,state:'due'})),...nearby.map(row=>({row,state:'soon'}))],lived:done};
+}
+function renderSurface(upcoming,due,done){
+  const body=$('noiEventsBody');
+  if(!body)return;
+  const model=surfaceModel(upcoming,due,done);
+  const group=(label,content)=>`<section class="noi-ev-group"><div class="tiny noi-ev-label">${label}</div>${content}</section>`;
+  let html='';
+  let i=0;
+  if(model.next.length)html+=group('Prossimi',`<div class="noi-ev-cards">${model.next.map(row=>evCard(row,i++)).join('')}</div>`);
+  if(model.period.length)html+=group('Questo periodo',`<div class="noi-ev-timeline">${model.period.map(({row,state})=>evRow(row,i++,state)).join('')}</div>`);
+  if(model.lived.length)html+=group('Vissuti',`<div class="noi-ev-timeline">${model.lived.map(row=>evRow(row,i++,'lived')).join('')}</div>`);
+  if(!html)html='<div class="us-events-empty"><b>Niente in programma</b></div>';
+  // Identical output is not re-written, so the soft entrance never replays.
+  if(surfaceSignature===html)return;
+  surfaceSignature=html;
+  body.innerHTML=html;
+}
+function renderHubTile(upcoming){
+  const title=$('noiHubEventsTitle'),meta=$('noiHubEventsMeta');
+  if(!title||!meta)return;
+  const next=upcoming[0];
+  if(next){title.textContent=next.title;meta.textContent=countdown(next.days_left);}
+  else{title.textContent='Niente in programma';meta.textContent='';}
+}
+// The existing editor sheet is reused. Opened from the surface it returns to
+// the surface when it is saved, cancelled or closed.
+let editorFromSurface=false;
+function openEventEditor(id,occurrenceDate){
+  if(!$('usEventsOverlay'))return;
+  editorFromSurface=true;
+  openEvents();
+  if(id)editEvent(id,occurrenceDate);else beginAddEvent();
+}
+function hydrateNoiEvents(){
+  if(!window.usProfile)return Promise.resolve();
+  if(loadedAt&&Date.now()-loadedAt<30000){render();return Promise.resolve();}
+  return hydrateEvents();
+}
+function bindSurface(){
+  const body=$('noiEventsBody');
+  body?.addEventListener('click',event=>{const item=event.target.closest('[data-id]');if(item&&body.contains(item))openEventEditor(item.dataset.id,item.dataset.occurrence);});
+  $('noiEventsAdd')?.addEventListener('click',()=>openEventEditor(null));
+}
 function render(){
   const upcoming=upcomingRows(),due=dueRows(),done=completedRows();const list=$('usEventsList'),count=$('usEventsCount'),card=$('usNextEventCard'),dot=$('usCalendarDot');
   if(count)count.textContent=upcoming.length?`${upcoming.length} ${upcoming.length===1?'evento':'eventi'}`:'';
@@ -86,6 +157,7 @@ function render(){
     if(list)list.innerHTML=upcoming.map(row=>row.system?relationshipButton(row):eventButton(row)).join('');
     list?.querySelectorAll('.us-event-item[data-id]').forEach(btn=>btn.addEventListener('click',()=>editEvent(btn.dataset.id,btn.dataset.occurrence)));
   }
+  renderSurface(upcoming,due,done);renderHubTile(upcoming);
   const dueSection=$('usEventsDueSection'),dueList=$('usEventsDueList');if(dueSection)dueSection.hidden=!due.length;if(dueList)dueList.innerHTML=due.map(row=>eventButton(row,{due:true})).join('');dueList?.querySelectorAll('[data-id]').forEach(btn=>btn.addEventListener('click',()=>editEvent(btn.dataset.id,btn.dataset.occurrence)));
   const doneSection=$('usEventsDoneSection'),doneList=$('usEventsDoneList');if(doneSection)doneSection.hidden=!done.length;if(doneList)doneList.innerHTML=done.map(row=>eventButton(row,{done:true})).join('');doneList?.querySelectorAll('[data-id]').forEach(btn=>btn.addEventListener('click',()=>editEvent(btn.dataset.id,btn.dataset.occurrence)));
 }
@@ -98,13 +170,13 @@ async function loadEventsData(){
     sb.from('relationship_milestones').select('milestone_date,kind,months_together,xp_awarded,awarded_at').eq('couple_id',window.usProfile.couple_id).order('milestone_date',{ascending:false}).limit(24)
   ]);
   if(eventsRes.error)throw eventsRes.error;if(completionRes.error)throw completionRes.error;if(coupleRes.error)throw coupleRes.error;if(milestoneRes.error)throw milestoneRes.error;
-  rows=eventsRes.data||[];completions=completionRes.data||[];coupleStartedOn=coupleRes.data?.started_on||null;milestones=milestoneRes.data||[];
+  rows=eventsRes.data||[];loadedAt=Date.now();completions=completionRes.data||[];coupleStartedOn=coupleRes.data?.started_on||null;milestones=milestoneRes.data||[];
   return true;
 }
 async function hydrateEvents(){
   if(!window.usProfile)return;const list=$('usEventsList');
   try{await loadEventsData();render();}
-  catch(error){console.warn('[US Events] load',error);if(list)list.innerHTML='<div class="us-events-empty">Non riesco a caricare gli eventi. Controlla la connessione e riprova.</div>';}
+  catch(error){console.warn('[US Events] load',error);const failed='<div class="us-events-empty">Non riesco a caricare gli eventi. Controlla la connessione e riprova.</div>';if(list)list.innerHTML=failed;const surface=$('noiEventsBody');if(surface&&!loadedAt){surfaceSignature='';surface.innerHTML=failed;}}
 }
 async function getTodayEventPrioritySource(){
   if(!window.usProfile)return null;
@@ -122,7 +194,22 @@ function editEvent(id,occurrenceDate=null){
   else if(canComplete){completeBtn.hidden=false;completeBtn.disabled=false;completeBtn.textContent=`✓ Segna come fatto · +${previewXp(row,editingOccurrenceDate)} XP`;}
   const hasAnyCompletion=completions.some(c=>c.event_id===row.id);$('usEventDeleteBtn').hidden=hasAnyCompletion?true:false;if(hasAnyCompletion)$('usEventStatus').textContent='Gli eventi già completati restano nello storico.';else $('usEventDeleteBtn').hidden=false;showForm();
 }
-function cancelEventEdit(){resetForm();showBrowse();}
+// navigation.js pops one history entry per closed layer and, on each pop, closes
+// every open layer that is not the landing one. The surface -> sheet -> form
+// stack is three deep, so the pops must be taken one at a time, and the Noi
+// page is put back afterwards if the pops closed it underneath the sheet.
+function afterHistorySettles(fn){
+  let done=false,fallback=null;
+  const finish=()=>{if(done)return;done=true;window.removeEventListener('popstate',finish);clearTimeout(fallback);setTimeout(fn,0);};
+  window.addEventListener('popstate',finish);
+  fallback=setTimeout(finish,400);
+}
+function closeEditorToSurface(){afterHistorySettles(()=>closeEvents());}
+function restoreSurface(){
+  const page=document.querySelector('#bond .noi-canonical-page');
+  if(page&&$('bond')?.classList.contains('active')&&page.dataset.noiView!=='eventi')window.openNoiSection?.('eventi');
+}
+function cancelEventEdit(){resetForm();showBrowse();if(editorFromSurface)closeEditorToSurface();}
 async function completeEvent(){
   if(!editingId||!editingOccurrenceDate||busy||!window.usProfile)return;if(!navigator.onLine)return toast('Sei offline. Riprova quando torni online.');
   busy=true;const btn=$('usEventCompleteBtn');btn.disabled=true;btn.textContent='Segno…';
@@ -140,11 +227,11 @@ async function deleteEvent(){
   try{const {error}=await sb.from('shared_events').delete().eq('id',editingId);if(error)throw error;await hydrateEvents();cancelEventEdit();toast('Evento eliminato');}catch(error){console.warn('[US Events] delete',error);$('usEventStatus').textContent='Non riesco a eliminarlo. Riprova.';}finally{busy=false;btn.disabled=false;}
 }
 async function openEvents(){const overlay=$('usEventsOverlay');if(!overlay)return;window.UsUiFoundation?.cancelSurfaceExit?.(overlay);overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');document.body.classList.add('us-events-open');showBrowse();if(!window.usProfile){$('usEventsList').innerHTML='<div class="us-events-empty">Un attimo…</div>';return;}await hydrateEvents();}
-function closeEvents(){if(busy)return;const overlay=$('usEventsOverlay');if(!overlay)return;const finalize=()=>{overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');document.body.classList.remove('us-events-open');resetForm();showBrowse();};if(window.UsUiFoundation?.exitSurface)window.UsUiFoundation.exitSurface(overlay,finalize);else finalize();}
+function closeEvents(){if(busy)return;const overlay=$('usEventsOverlay');if(!overlay)return;const finalize=()=>{const fromSurface=editorFromSurface;editorFromSurface=false;if(fromSurface)afterHistorySettles(restoreSurface);overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');document.body.classList.remove('us-events-open');resetForm();showBrowse();};if(window.UsUiFoundation?.exitSurface)window.UsUiFoundation.exitSurface(overlay,finalize);else finalize();}
 function captureDeepLink(){try{const url=new URL(location.href);deepLinkPending=url.searchParams.get('open')==='events';if(!deepLinkPending)return;url.searchParams.delete('open');history.replaceState(history.state||{},'',url.pathname+url.search+url.hash);}catch(_){}}
 function flushDeepLink(){if(deepLinkPending&&window.usProfile){deepLinkPending=false;openEvents();}}
-window.openEvents=openEvents;window.closeEvents=closeEvents;window.beginAddEvent=beginAddEvent;window.editEvent=editEvent;window.cancelEventEdit=cancelEventEdit;window.hydrateEvents=hydrateEvents;window.getTodayEventPrioritySource=getTodayEventPrioritySource;window.completeEvent=completeEvent;
+window.hydrateNoiEvents=hydrateNoiEvents;window.openEventEditor=openEventEditor;window.openEvents=openEvents;window.closeEvents=closeEvents;window.beginAddEvent=beginAddEvent;window.editEvent=editEvent;window.cancelEventEdit=cancelEventEdit;window.hydrateEvents=hydrateEvents;window.getTodayEventPrioritySource=getTodayEventPrioritySource;window.completeEvent=completeEvent;
 $('usEventForm')?.addEventListener('submit',saveEvent);$('usEventDeleteBtn')?.addEventListener('click',deleteEvent);$('usEventCompleteBtn')?.addEventListener('click',completeEvent);document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('usEventsOverlay')?.classList.contains('open'))closeEvents();});document.addEventListener('visibilitychange',()=>{if(!document.hidden&&$('usEventsOverlay')?.classList.contains('open'))hydrateEvents();});window.addEventListener('online',()=>{if($('usEventsOverlay')?.classList.contains('open'))hydrateEvents();});
-captureDeepLink();const bootTimer=setInterval(()=>{flushDeepLink();if(window.usProfile)clearInterval(bootTimer);},300);setTimeout(()=>clearInterval(bootTimer),30000);setInterval(()=>{if(!document.hidden&&$('usEventsOverlay')?.classList.contains('open')&&window.usProfile)hydrateEvents();},60000);
+bindSurface();captureDeepLink();const bootTimer=setInterval(()=>{flushDeepLink();if(window.usProfile)clearInterval(bootTimer);},300);setTimeout(()=>clearInterval(bootTimer),30000);setInterval(()=>{if(!document.hidden&&$('usEventsOverlay')?.classList.contains('open')&&window.usProfile)hydrateEvents();},60000);
 console.info('[US Events] calendario + XP + ricorrenze attivi');
 })();

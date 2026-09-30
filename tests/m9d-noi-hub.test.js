@@ -10,14 +10,15 @@ const bond = () => read('index.html').match(/<main id="bond"[\s\S]*?<\/main>/)?.
 const app = () => read('app.js');
 const css = () => read('styles.css');
 
-test('M9D: Noi opens on a hub of four cards, in order, with no new bottom tab', () => {
+test('M9D (M12A.1): Noi opens on a hub of five cards, in order, with no new bottom tab', () => {
   const hub = bond().match(/<nav class="noi-hub" id="noiHub"[\s\S]*?<\/nav>/)?.[0] || '';
   assert.notEqual(hub, '');
   const kickers = [...hub.matchAll(/<span class="noi-hub-kicker">([^<]+)<\/span>/g)].map((m) => m[1]);
-  assert.deepEqual(kickers, ['Risonanza', 'Da vivere', 'Calendario', 'Quest di coppia']);
+  assert.deepEqual(kickers, ['Risonanza', 'Da vivere', 'Calendario', 'Quest di coppia', 'Eventi']);
   assert.match(hub, /data-noi-open="resonance"/);
   assert.match(hub, /data-noi-open="da-vivere"/);
   assert.match(hub, /data-noi-open="quest"/);
+  assert.match(hub, /data-noi-open="eventi"/);
   assert.match(hub, /id="usCalendarEntry" onclick="openCalendarSurface\(\)"/, 'Calendario opens the existing calendar surface');
   assert.match(bond(), /data-noi-view="hub"/);
   assert.match(bond(), /id="noiSectionBar" hidden/);

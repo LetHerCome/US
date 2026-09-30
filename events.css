@@ -55,3 +55,38 @@ body.us-keyboard-open .us-events-sheet{max-height:var(--us-viewport-height)}
 .us-event-complete{width:100%;min-height:50px;margin-top:15px;border-radius:17px;background:linear-gradient(135deg,rgba(100,217,139,.16),rgba(169,133,255,.12));border:1px solid rgba(100,217,139,.20);color:#dff9e8;font-size:11px;font-weight:800;letter-spacing:.01em}
 .us-event-complete:disabled{opacity:.72!important;background:rgba(100,217,139,.08);color:var(--us-color-positive)}
 .us-events-done-list{padding-bottom:4px}
+
+/* M12A.1 — Eventi as a Noi surface: a presentation of the same event data.
+   Uses the canonical tokens and the Noi section rhythm; the entrance is the
+   shared us-content-enter (soft fade + short rise), staggered by --i. */
+.noi-events-sub{margin:4px 0 0;color:var(--us-color-text-2);font-size:12px;line-height:1.4}
+.noi-events-body{display:flex;flex-direction:column;gap:22px;padding-top:6px}
+.noi-ev-group{display:flex;flex-direction:column;gap:10px}
+.noi-ev-label{padding:0 2px}
+.noi-ev-cards{display:flex;flex-direction:column;gap:10px}
+.noi-ev-card{position:relative;width:100%;min-height:76px;padding:14px;display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:13px;text-align:left;color:var(--us-color-text);border-radius:var(--us-radius-card,22px);border:1px solid rgba(255,255,255,.12);background:radial-gradient(circle at 92% 0%,rgba(169,133,255,.22),transparent 46%),var(--us-color-surface-2);overflow:hidden}
+.noi-ev-card:first-child{background:radial-gradient(circle at 92% 0%,rgba(255,102,142,.28),transparent 48%),radial-gradient(circle at 0% 100%,rgba(169,133,255,.20),transparent 52%),var(--us-color-surface-2)}
+.noi-ev-card.is-system{border-color:rgba(255,160,196,.22)}
+button.noi-ev-card{transition:transform var(--us-motion-fast) var(--us-ease-standard)}
+button.noi-ev-card:active,button.noi-ev-row:active{transform:scale(.985)}
+.noi-ev-card:focus-visible,.noi-ev-row:focus-visible{outline:2px solid rgba(255,160,196,.85);outline-offset:2px}
+.noi-ev-icon{width:44px;height:44px;border-radius:15px;display:grid;place-items:center;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.10);color:var(--us-color-rose-2)}
+.noi-ev-icon .us-icon{--us-icon-size:22px}
+.noi-ev-main{min-width:0;display:flex;flex-direction:column;gap:3px}
+.noi-ev-main b{font-family:var(--us-font-editorial,"Newsreader",Georgia,serif);font-weight:500;font-size:18px;line-height:1.15;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.noi-ev-main small{font-size:var(--us-text-meta,11.5px);color:var(--us-color-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.noi-ev-count{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.09);font-size:var(--us-text-meta,11.5px);font-weight:650;white-space:nowrap}
+.noi-ev-timeline{display:flex;flex-direction:column;gap:8px}
+.noi-ev-row{width:100%;min-height:60px;padding:9px 12px;display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:12px;text-align:left;color:var(--us-color-text);border-radius:18px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035)}
+.noi-ev-row .noi-ev-main b{font-size:16px}
+.noi-ev-when{height:44px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.07)}
+.noi-ev-when small{font-size:var(--us-text-decorative,9px);letter-spacing:.09em;font-weight:850;text-transform:uppercase;color:var(--us-color-rose-2)}
+.noi-ev-when b{font-size:17px;line-height:1.05}
+.noi-ev-chip{padding:5px 9px;border-radius:999px;background:var(--us-accent-gradient);color:var(--us-color-text-on-accent);font-size:var(--us-text-meta,11px);font-weight:700;white-space:nowrap}
+.noi-ev-row.is-lived{background:transparent;border-style:dashed}
+.noi-ev-row.is-lived .noi-ev-main b{color:var(--us-color-text-2)}
+.noi-ev-row.is-lived>.us-icon{--us-icon-size:18px;color:var(--us-color-rose-2)}
+.noi-ev-row.is-system .noi-ev-when b{color:var(--us-color-rose-2)}
+#bond .noi-canonical-page[data-noi-view="eventi"] :is(.noi-ev-card,.noi-ev-row){animation:us-content-enter var(--us-motion-fast) var(--us-ease-enter) 1 both;animation-delay:calc(min(var(--i,0),8)*45ms + 60ms)}
+:root[data-us-motion="reduced"] :is(.noi-ev-card,.noi-ev-row){animation:none!important}
+@media(prefers-reduced-motion:reduce){:is(.noi-ev-card,.noi-ev-row){animation:none!important;transition:none}}
