@@ -17,7 +17,7 @@ Stato: branch di candidato, **nessuna migration applicata, nessun deploy**. Base
 
 ## Backend (solo sorgente)
 
-`supabase/migrations/20260930093000_m10_2_daily_reveal_states.sql`
+`supabase/migrations/20260930080452_m10_2_daily_reveal_states.sql`
 
 - Tabella `daily_question_reveal_states`, chiave `(couple_id, question_id, actor_role)`. Ownership per **coppia + ruolo**, come `daily_question_outcomes` (M3): `claim_us_role` sostituisce l'UID al re-pair, il ruolo no; nessun user_id/couple_id/target dal client. RLS forzata, nessuna policy, nessun grant client.
 - RPC `SECURITY DEFINER`: `get_daily_reveal_meta`, `mark_daily_reveal_seen`, `dismiss_daily_reveal_notice`, `set_daily_answer_reaction` (`heart|angry|cry`, `null` la toglie). Reveal-ready delegato a `private.daily_question_reveal_ready` → `get_daily_state`.
