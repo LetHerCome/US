@@ -140,7 +140,9 @@ test('M2 mantiene il renderer estendibile a future arrival type senza impilarle'
   const { api, region } = installPriorityRuntime();
   api.render([{ id: 'future-1', category: 'received_ready', arrivalType: 'partner-reaction', title: 'Una reaction', detail: 'Dal partner', action: 'future', actionLabel: 'Apri' }]);
   assert.match(region.innerHTML, /data-us-arrival-type="partner-reaction"/);
-  assert.equal((region.innerHTML.match(/class="us-today-priority-card"/g) || []).length, 1);
+  assert.equal((region.innerHTML.match(/class="us-today-priority-card[ "]/g) || []).length, 1);
+  // M10E: an item with no personal attention flag never lights the orbit.
+  assert.match(region.innerHTML, /data-us-attention="off"/);
 });
 
 test('M2 isola una failure Events e non trasforma errori o assenza dati in priorita false', async () => {

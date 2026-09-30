@@ -209,3 +209,41 @@ h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
   backdrop-filter:blur(18px);
   -webkit-backdrop-filter:blur(18px);
 }
+
+/* M10E — Personal attention orbit: ONE shared primitive for "YOU still have
+   something to do or see". The host adds .us-attention-orbit and is
+   position:relative; its renderer sets data-us-attention="on"|"off" from its
+   own canonical state (never a second notification-state store). It never
+   replaces a label: every host keeps a readable state of its own. Paints
+   only on ::after with pointer-events:none, so taps, focus rings and aria
+   are untouched. */
+@property --us-attention-angle{syntax:'<angle>';inherits:false;initial-value:0deg}
+.us-attention-orbit::after{
+  content:"";
+  position:absolute;
+  inset:var(--us-attention-inset,-2px);
+  border-radius:inherit;
+  padding:var(--us-attention-width,1.5px);
+  background:conic-gradient(from var(--us-attention-angle),rgba(255,122,168,0) 0deg,rgba(255,122,168,0) 190deg,rgba(255,140,184,.80) 292deg,rgba(184,150,255,.64) 334deg,rgba(255,122,168,0) 360deg);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  mask-composite:exclude;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .28s var(--us-ease-standard,ease);
+}
+.us-attention-orbit[data-us-attention="on"]::after{
+  opacity:1;
+  animation:us-attention-orbit var(--us-attention-period,3.2s) linear infinite;
+}
+@keyframes us-attention-orbit{to{--us-attention-angle:360deg}}
+/* Reduced motion: no rotation, a static visible halo instead. */
+@media (prefers-reduced-motion:reduce){
+  .us-attention-orbit[data-us-attention="on"]::after{
+    animation:none;
+    padding:var(--us-attention-width-static,2px);
+    background:linear-gradient(135deg,rgba(255,140,184,.72),rgba(184,150,255,.52));
+    transition:none;
+  }
+}

@@ -1120,6 +1120,7 @@ function crossfadeHomePhoto(url){
     const firstValid=Boolean(url)&&!homePhotoHasPainted;
     hero.classList.toggle('is-empty',!url);
     if(empty)empty.hidden=Boolean(url);
+    if(!url&&typeof layoutOggiEmptyState==='function')requestAnimationFrame(layoutOggiEmptyState);
     next.style.backgroundImage=url?`url("${url}")`:'';
     const paint=()=>{
       next.classList.add('active');
@@ -1273,6 +1274,36 @@ document.getElementById('homeHero')?.addEventListener('click',event=>{
   if(oggiIsWidgetTarget(event.target))return;
   toggleOggiFocusPhoto();
 });
+
+// M10A — the empty-state invitation is a passive widget: it sits in the free
+// band between the Oggi stack and the bottom row, and drops its secondary lines
+// when that band is short, so it never slides under the stack.
+function layoutOggiEmptyState(){
+  const hero=document.getElementById('homeHero'),empty=document.getElementById('homeEmptyState'),stack=document.getElementById('usOggiStack');
+  if(!hero||!empty||!stack||empty.hidden)return;
+  const box=hero.getBoundingClientRect();
+  if(!box.height)return;
+  const gap=12;
+  const top=stack.getBoundingClientRect().bottom-box.top+gap;
+  let bottom=box.height-gap;
+  for(const id of ['distanceWidget','pushOptInCard']){
+    const el=document.getElementById(id);
+    const rect=el&&!el.hidden?el.getBoundingClientRect():null;
+    if(rect?.height)bottom=Math.min(bottom,rect.top-box.top-gap);
+  }
+  empty.classList.remove('is-compact');
+  if(empty.offsetHeight>bottom-top)empty.classList.add('is-compact');
+  const half=empty.offsetHeight/2,preferred=box.height*.48;
+  const center=top+half<=bottom-half?Math.min(Math.max(preferred,top+half),bottom-half):(top+bottom)/2;
+  empty.style.top=`${Math.round(center)}px`;
+}
+if(typeof ResizeObserver==='function'){
+  const oggiLayoutObserver=new ResizeObserver(()=>layoutOggiEmptyState());
+  for(const id of ['homeHero','usOggiStack','distanceWidget','pushOptInCard']){
+    const el=document.getElementById(id);
+    if(el)oggiLayoutObserver.observe(el);
+  }
+}
 
 function selectRole(role){
   selectedRole=role;
@@ -1464,7 +1495,7 @@ function dailyTodayPriorityViewModel(source){
   const question=source?.question,state=source?.state;
   if(!question?.id||!state)return null;
   const urgency=Date.parse(`${question.question_date||localDateISO()}T23:59:59`);
-  const common={factKey:`daily:${question.id}`,urgency:Number.isFinite(urgency)?urgency:Number.MAX_SAFE_INTEGER,recency:0,action:'today'};
+  const common={attention:false,factKey:`daily:${question.id}`,urgency:Number.isFinite(urgency)?urgency:Number.MAX_SAFE_INTEGER,recency:0,action:'today'};
   if(state.both_answered){
     return {...common,id:`daily-ready:${question.id}`,category:'received_ready',title:'Risposte pronte',detail:'La Domanda del giorno è pronta da leggere insieme.',actionLabel:'Scopri le risposte'};
   }
@@ -1487,6 +1518,8 @@ function eventTodayPriorityViewModel(source){
     id:`event:${source.id}:${source.effective_date}`,
     factKey:`event:${source.id}:${source.effective_date}`,
     category:'couple_context',
+    // Un impegno è informazione, non un'azione personale: niente attenzione.
+    attention:false,
     title:String(source.title),detail,action:'events',actionLabel:'Apri eventi',
     urgency:Number.isFinite(urgency)?urgency:Number.MAX_SAFE_INTEGER,
     recency:Number.isFinite(recency)?recency:0
@@ -1497,7 +1530,7 @@ function renderTodayPriorityItem(item,total=0){
   if(!region)return;
   if(!item){region.innerHTML='';region.hidden=true;return;}
   const queueLabel=total>1?` · 1/${total}`:'';
-  region.innerHTML=`<button type="button" class="us-today-priority-card" data-us-today-action="${escapeHtml(item.action)}" data-us-arrival-type="${escapeHtml(item.arrivalType||item.category||'arrival')}" aria-label="${escapeHtml(item.actionLabel)}: ${escapeHtml(item.title)}"><span class="us-today-priority-kind">${escapeHtml(US_TODAY_PRIORITY_LABELS[item.category]||'Oggi')}${queueLabel}</span><span class="us-today-priority-copy"><b>${escapeHtml(item.title)}</b><small>${escapeHtml(item.detail||'')}</small></span><span class="us-today-priority-action">${escapeHtml(item.actionLabel)}</span></button>`;
+  region.innerHTML=`<button type="button" class="us-today-priority-card us-attention-orbit" data-us-attention="${item.attention?'on':'off'}" data-us-today-action="${escapeHtml(item.action)}" data-us-arrival-type="${escapeHtml(item.arrivalType||item.category||'arrival')}" aria-label="${escapeHtml(item.actionLabel)}: ${escapeHtml(item.title)}"><span class="us-today-priority-kind">${escapeHtml(US_TODAY_PRIORITY_LABELS[item.category]||'Oggi')}${queueLabel}</span><span class="us-today-priority-copy"><b>${escapeHtml(item.title)}</b><small>${escapeHtml(item.detail||'')}</small></span><span class="us-today-priority-action">${escapeHtml(item.actionLabel)}</span></button>`;
   region.hidden=false;
 }
 function renderTodayPriorities(priorities=[]){
@@ -1514,6 +1547,9 @@ function thinkTodayPriorityViewModel(){
     factKey:`think:${signal.id}`,
     arrivalType:'think-received',
     category:'received_ready',
+    // M10E.3 — un Ti penso ricevuto e non ancora gestito (nessuna reazione
+    // finale) è un'azione reale per CHI lo riceve.
+    attention:true,
     title:`${partner?.display_name||'La tua persona'} ti pensa`,
     detail:'Ha lasciato un segnale per te.',
     action:'think',

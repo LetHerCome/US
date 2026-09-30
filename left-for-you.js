@@ -112,6 +112,7 @@
       el.classList.remove('is-open');
       el.setAttribute('aria-label', 'Lasciato per te');
       el.setAttribute('aria-busy', 'true');
+      el.dataset.usAttention = 'off';
       return;
     }
     el.classList.remove('is-loading');
@@ -120,6 +121,10 @@
     const wasClosed = el.classList.contains('is-closed');
     el.classList.toggle('is-closed', closed);
     el.classList.toggle('is-open', !closed);
+    // M10E.1 — personal attention: ON iff THIS recipient has unseen items
+    // (unseenCount comes from left_for_you where recipient_id = me). The
+    // partner's own unread state never reaches this control.
+    el.dataset.usAttention = unseenCount > 0 ? 'on' : 'off';
     const personName = partnerName();
     el.setAttribute('aria-label', closed ? `${personName} ti ha lasciato qualcosa` : `Lascia qualcosa a ${personName}`);
     if (transition && !closed && wasClosed) {

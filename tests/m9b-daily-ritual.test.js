@@ -87,7 +87,7 @@ test('M9B: una sola autorità — get_daily_state, foglio esistente, niente dupl
   const app = read('app.js');
   const html = read('index.html');
   const home = html.match(/<main id="home"[\s\S]*?<\/main>/)?.[0] || '';
-  assert.match(home, /<button type="button" class="us-daily-ritual" id="usDailyRitual" hidden onclick="openToday\(\)"><\/button>/);
+  assert.match(home, /<button type="button" class="us-daily-ritual us-attention-orbit" id="usDailyRitual" hidden onclick="openToday\(\)" data-us-attention="off"><\/button>/);
   assert.ok(home.indexOf('id="usDailyRitual"') > home.indexOf('id="homeHero"'));
   assert.equal((app.match(/rpc\('get_daily_state'/g) || []).length, 1, 'nessun secondo sistema Daily Question');
   const refresh = app.slice(app.indexOf('async function refreshTodayPriorities'), app.indexOf('window.UsTodayPriority=Object.freeze'));

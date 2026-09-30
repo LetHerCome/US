@@ -312,6 +312,8 @@ body:has(#home.page.active){overflow-y:hidden}
 #home .home-hero-only{height:calc(var(--us-viewport-height) - var(--us-safe-top))!important;min-height:0!important}
 #home .home-distance-pill{bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 18px)!important}
 #home .push-optin-card{bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 24px)!important}
+/* M10A — the opt-in sits above the distance row instead of covering it. */
+#home .home-distance-pill:not([hidden]) ~ .push-optin-card{bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 88px)!important}
 
 /* M1 topbar refinement: three balanced zones inside the approved pill. */
 .top.us-premium-top{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);column-gap:6px;justify-content:initial}

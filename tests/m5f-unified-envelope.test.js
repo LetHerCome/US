@@ -441,8 +441,11 @@ test('M5F envelope uses the canonical Phosphor pair and a restrained trace, not 
     const svg = read(`assets/icons/phosphor/${file}`);
     assert.match(svg, /viewBox="0 0 256 256"/);
   }
-  assert.match(css, /us-envelope-trace/);
-  assert.match(css, /@media\(prefers-reduced-motion:reduce\)\{#leftForYouPartnerEntry\.is-closed::before\{animation:none\}/);
+  // M10E: the restrained trace is now the shared personal attention orbit
+  // (ui-foundation.css), driven by unseenCount; reduced motion keeps a static halo.
+  assert.doesNotMatch(css, /us-envelope-trace/);
+  assert.match(read('index.html'), /class="us-envelope-control us-important-control us-attention-orbit is-loading" id="leftForYouPartnerEntry"/);
+  assert.match(read('ui-foundation.css'), /@media \(prefers-reduced-motion:reduce\)\{\s*\.us-attention-orbit\[data-us-attention="on"\]::after\{\s*animation:none;/);
 });
 
 test('M5F top chrome: question icon for the daily question, no legacy avatar control', () => {

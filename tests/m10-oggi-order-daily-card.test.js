@@ -102,3 +102,16 @@ test('M10B: un errore non mostra mai una risposta finta o modificabile', () => {
   assert.doesNotMatch(card.innerHTML, /<textarea|<input|contenteditable/);
   assert.match(card.innerHTML, /Riprova/);
 });
+
+test('M10A: invito empty-state e opt-in notifiche non si sovrappongono alla colonna Oggi', () => {
+  // The empty state is placed in the free band under the stack and sheds its secondary lines when short.
+  const layout = app.slice(app.indexOf('function layoutOggiEmptyState'), app.indexOf("if(typeof ResizeObserver==='function')"));
+  assert.match(layout, /stack\.getBoundingClientRect\(\)\.bottom/);
+  assert.match(layout, /\['distanceWidget','pushOptInCard'\]/);
+  assert.match(layout, /classList\.add\('is-compact'\)/);
+  assert.match(app, /new ResizeObserver\(\(\)=>layoutOggiEmptyState\(\)\)/);
+  assert.match(css, /\.home-empty-state\.is-compact \.home-empty-mark,\.home-empty-state\.is-compact \.home-empty-copy small\{display:none\}/);
+  // The push opt-in rises above the distance row instead of covering it.
+  assert.match(read('identity.css'), /#home \.home-distance-pill:not\(\[hidden\]\) ~ \.push-optin-card\{bottom:calc\(var\(--us-nav-height\) \+ var\(--us-safe-bottom\) \+ 88px\)!important\}/);
+  assert.ok(html.indexOf('id="distanceWidget"') < html.indexOf('id="pushOptInCard"'), 'sibling order the opt-in lift relies on');
+});
