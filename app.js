@@ -1954,6 +1954,7 @@ function renderTodayQuestionUnavailable(status){
 // M10.2 — reveal Daily: risposte da get_daily_state (invariata), stato PERSONALE
 // (ricevuta, avviso nascosto, reazione) da get_daily_reveal_meta. Il server è
 // l'unica autorità: nessuna copia locale, nessuno stato ottimistico che resti.
+const US_DAILY_REACTIONS=Object.freeze({heart:{glyph:'❤️',label:'Reagisci con cuore'},angry:{glyph:'😡',label:'Reagisci con faccina arrabbiata'},cry:{glyph:'😭',label:'Reagisci con pianto'}});
 async function loadDailyRevealMeta(questionId){
   try{
     const {data,error}=await sb.rpc('get_daily_reveal_meta',{target_question_id:questionId});
@@ -1965,9 +1966,14 @@ function dailyRevealPartnerLabel(){return window.usProfile?.role==='francesco'?'
 function renderTodayReveal(){
   const reveal=document.getElementById('todayReveal'),state=window.todayState;
   if(!reveal||!state?.both_answered)return;
-  const partner=dailyRevealPartnerLabel();
+  const meta=window.todayRevealMeta,partner=dailyRevealPartnerLabel();
+  const mine=meta?.my_reaction,theirs=meta?.partner_reaction;
+  // Sulla MIA risposta: solo la reazione del partner, passiva. Sulla risposta
+  // del PARTNER: i miei controlli (mai reagire alla propria).
+  const partnerNote=theirs&&US_DAILY_REACTIONS[theirs]?`<div class="today-reaction-note" data-us-daily-partner-reaction="${escapeHtml(theirs)}">${escapeHtml(partner)} ha reagito <span aria-hidden="true">${US_DAILY_REACTIONS[theirs].glyph}</span><span class="sr-only">${escapeHtml(US_DAILY_REACTIONS[theirs].label.replace('Reagisci con','con'))}</span></div>`:'';
+  const controls=meta?`<div class="today-reactions" role="group" aria-label="Reagisci alla risposta di ${escapeHtml(partner)}">${Object.entries(US_DAILY_REACTIONS).map(([key,item])=>`<button type="button" class="today-reaction" data-daily-reaction="${key}" aria-label="${escapeHtml(item.label)}" aria-pressed="${mine===key}"><span aria-hidden="true">${item.glyph}</span></button>`).join('')}</div>`:'';
   reveal.className='today-reveal';
-  reveal.innerHTML='<div class="today-answer" data-us-daily-answer="mine"><b>La tua risposta</b><p>'+escapeHtml(state.my_answer||'')+'</p></div><div class="today-answer" data-us-daily-answer="partner"><b>'+escapeHtml(partner)+'</b><p>'+escapeHtml(state.partner_answer||'')+'</p></div>';
+  reveal.innerHTML='<div class="today-answer" data-us-daily-answer="mine"><b>La tua risposta</b><p>'+escapeHtml(state.my_answer||'')+'</p>'+partnerNote+'</div><div class="today-answer" data-us-daily-answer="partner"><b>'+escapeHtml(partner)+'</b><p>'+escapeHtml(state.partner_answer||'')+'</p>'+controls+'</div>';
 }
 // "Visto" = il reveal è davvero mostrato in un foglio Today aperto: non il push,
 // non l'hydrate della Home, non il solo both_answered.
@@ -1987,6 +1993,35 @@ async function markDailyRevealSeenIfVisible(questionId,seq){
     console.warn('[US Today] Reveal seen non salvato',error);
   }finally{usDailyRevealSeenInFlight=null;}
 }
+let usDailyReactionInFlight=false;
+async function setDailyAnswerReaction(reaction){
+  const questionId=window.todayQuestion?.id,meta=window.todayRevealMeta;
+  if(!questionId||!meta||!window.todayState?.both_answered||usDailyReactionInFlight)return {status:'noop'};
+  if(!US_DAILY_REACTIONS[reaction])return {status:'noop'};
+  const previous=meta;
+  const next=meta.my_reaction===reaction?null:reaction;
+  usDailyReactionInFlight=true;
+  // Pressed provvisorio, con rollback: il server decide.
+  window.todayRevealMeta={...meta,my_reaction:next};renderTodayReveal();
+  try{
+    const {data,error}=await sb.rpc('set_daily_answer_reaction',{target_question_id:questionId,target_reaction:next});
+    if(error||!data||data.question_id!==questionId)throw error||new Error('daily_reaction_invalid');
+    if(window.todayQuestion?.id===questionId)window.todayRevealMeta=data;
+    renderTodayReveal();
+    return {status:'saved'};
+  }catch(error){
+    console.warn('[US Today] Reazione non salvata',error);
+    if(window.todayQuestion?.id===questionId)window.todayRevealMeta=previous;
+    renderTodayReveal();
+    toast('Reazione non salvata. Riprova.');
+    return {status:'error'};
+  }finally{usDailyReactionInFlight=false;}
+}
+window.setDailyAnswerReaction=setDailyAnswerReaction;
+document.getElementById('todayReveal')?.addEventListener?.('click',event=>{
+  const button=event.target.closest?.('[data-daily-reaction]');
+  if(button)setDailyAnswerReaction(button.dataset.dailyReaction);
+});
 let usDailyRevealDismissInFlight=false;
 async function dismissDailyRevealNotice(questionId){
   if(!questionId||usDailyRevealDismissInFlight)return {status:'busy'};
