@@ -11,7 +11,7 @@ const h = require('./helpers/game-v2-db');
 const { SKIP, CAN_RUN, startServer, asUser } = require('./helpers/game-v2-pg');
 
 const { createDb, couple, setClock, as, rpc, id, playSide, startRound, createWeekly } = h;
-const MIGRATION = path.join(h.ROOT, 'supabase/migrations/20260930180000_m11f_game_v2_weekly_rhythm.sql');
+const MIGRATION = path.join(h.ROOT, 'supabase/migrations/20260930172615_m11f_game_v2_weekly_rhythm.sql');
 const WED = '2026-09-30T10:00:00Z'; // week of Monday 2026-09-28
 const SUN_2359 = '2026-10-04T21:59:59Z'; // Sunday 23:59:59 Rome (CEST)
 const MON_0000 = '2026-10-04T22:00:00Z'; // Monday 00:00 Rome
