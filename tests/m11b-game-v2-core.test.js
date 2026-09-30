@@ -230,6 +230,8 @@ test('M11B history: editing or archiving a played question never rewrites the ro
   assert.equal(again.items.find((i) => i.id === item.id).question_text, 'Qual è la canzone che ti fa pensare a noi?');
   // Archived questions leave the pool.
   await playSide(db, f, s.id); await playSide(db, b, s.id);
+  // M11F: one Per voi per week, so the next one is next week's.
+  await setClock(db, new Date(Date.parse(WED) + 7 * 864e5).toISOString());
   const next = await startRound(db, f, 'per_voi');
   assert.ok(!next.items.some((i) => i.source_question_id === created.question_id));
 });
@@ -255,8 +257,9 @@ test('M11B re-pair: a new profile UID with the same role keeps rounds, answers, 
 test('M11B Per voi: always a valid round from curated fallback, diverse, cooled down, never archived content', async () => {
   const { db, f, b } = await world();
   const seen = new Set();
+  // M11F: one Per voi per week, so consecutive Per voi rounds are a week apart.
   for (let round = 0; round < 3; round += 1) {
-    await setClock(db, new Date(Date.parse(WED) + round * 864e5).toISOString());
+    await setClock(db, new Date(Date.parse(WED) + round * 7 * 864e5).toISOString());
     const s = await startRound(db, round % 2 ? b : f, 'per_voi');
     assert.equal(s.items.length, 5);
     const families = s.items.map((i) => i.family);
@@ -269,6 +272,7 @@ test('M11B Per voi: always a valid round from curated fallback, diverse, cooled 
   }
   // Exhaust a single mode: it keeps producing valid rounds (cooldowns relax LRU).
   for (let round = 0; round < 4; round += 1) {
+    await setClock(db, new Date(Date.parse(WED) + (3 + round) * 7 * 864e5).toISOString());
     const s = await startRound(db, f, 'rivivete');
     assert.equal(s.items.length, 5);
     await playSide(db, f, s.id); await playSide(db, b, s.id);
@@ -288,7 +292,7 @@ test('M11B home: restrained Per voi state for each partner', async () => {
   await playSide(db, b, s.id);
   assert.equal(await state(f), 'reveal_ready');
   await as(db, f, () => rpc(db, 'select public.mark_game_session_reveal_seen($1::uuid) r', [s.id]));
-  assert.equal(await state(f), 'idle');
+  assert.equal(await state(f), 'played', 'M11F: this week\'s Per voi is played until Monday');
   assert.equal(await state(b), 'reveal_ready');
   const home = await as(db, f, () => rpc(db, 'select public.get_game_v2_home() r'));
   assert.equal(home.recent.length, 1);

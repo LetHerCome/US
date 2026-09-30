@@ -171,7 +171,7 @@ test('M11B client: reveal copy — gendered prediction outcomes, Uguale / Una so
   assert.match(html, /Una sorpresa/);
   assert.match(html, /Tu pensavi/);
   assert.match(html, /Bea ha scelto/);
-  assert.match(html, /Facciamone un altro/);
+  assert.doesNotMatch(html, /Facciamone un altro/, 'M11F: no immediate replay invitation after a reveal');
   assert.doesNotMatch(html, NO_SCORE);
   assert.ok(f.calls.some(([n, a]) => n === 'mark_game_session_reveal_seen' && a.target_session_id === 's1'));
 
@@ -338,4 +338,70 @@ test('M11B client: static contract — one Gioca surface, Phosphor icons, no leg
     assert.ok(registry.some((i) => i.source === 'PHOSPHOR' && i.phosphorName === phosphor), `${phosphor} registered`);
   }
   assert.doesNotMatch(games + read('games.css'), /<svg|<path/, 'no hand-drawn icons');
+});
+
+// ---------------------------------------------------------------- M11F weekly rhythm
+
+const allowance = (over = {}) => ({ week_start: '2026-09-28', resets_on: '2026-10-05', per_voi_used: 0, per_voi_limit: 1, free_used: 0, free_limit: 2,
+  used: 0, limit: 3, per_voi_available: true, free_available: true, open_count: 0, open_limit: 3, families: {}, ...over });
+
+test('M11F client: the weekly strip reads the server allowance, restrained, never a counter game', async () => {
+  const fresh = harness({ homeState: home({ allowance: allowance() }) });
+  await tick();
+  assert.match(fresh.nodes.quizHub.innerHTML, /QUESTA SETTIMANA/);
+  assert.match(fresh.nodes.quizHub.innerHTML, /3 momenti da vivere insieme/);
+  const mid = harness({ homeState: home({ allowance: allowance({ used: 2, per_voi_used: 1, free_used: 1, per_voi_available: false, families: { per_voi: { session_id: 'p', completed: true }, ridete: { session_id: 'r', completed: true } } }) }) });
+  await tick();
+  const html = mid.nodes.quizHub.innerHTML;
+  assert.match(html, /2 di 3 momenti giocati/);
+  assert.equal((html.match(/data-on="true"/g) || []).length, 2);
+  assert.match(html, /data-gv2-family="ridete" data-gv2-mode-state="played"/);
+  assert.match(html, /Giocato questa settimana/);
+  assert.doesNotMatch(html, /vite|energia|stamina|streak|serie/i, 'no game-energy language');
+  const done = harness({ homeState: home({ per_voi: { state: 'played', session_id: 'p' }, allowance: allowance({ used: 3, per_voi_used: 1, free_used: 2, per_voi_available: false, free_available: false, families: { per_voi: { session_id: 'p', completed: true } } }) }) });
+  await tick();
+  const dh = done.nodes.quizHub.innerHTML;
+  assert.match(dh, /Per questa settimana avete giocato tutto\./);
+  assert.match(dh, /Nuovi giochi lunedì\./);
+  assert.match(dh, /Giocato questa settimana/, 'Per voi shows its played state');
+  assert.match(dh, /data-gv2-family="scopritevi" data-gv2-mode-state="locked" aria-disabled="true"/, 'modes stay visible, locked');
+  assert.equal(done.nodes.usPerVoiTop.dataset.gv2State, 'played');
+  assert.equal(done.nodes.usPerVoiTop.dataset.usAttention, 'off');
+});
+
+test('M11F client: an exhausted week starts nothing; played modes open their reveal; server refusals are explained', async () => {
+  const h = harness({ homeState: home({ allowance: allowance({ used: 3, free_used: 2, per_voi_used: 1, per_voi_available: false, free_available: false, families: { ridete: { session_id: 'r1', completed: true } } }) }) });
+  await tick();
+  await h.api.chooseMode('scopritevi');
+  await h.api.chooseMode('ridete');
+  await tick();
+  assert.equal(h.calls.some(([n]) => n === 'start_game_round'), false, 'no start call once the week is spent');
+  assert.match(h.notices.join('|'), /avete giocato tutto/);
+  assert.ok(h.calls.some(([n, a]) => n === 'get_game_session' && a.target_session_id === 'r1'), 'played mode opens its round');
+
+  const refused = harness({ handlers: { start_game_round: () => { throw Object.assign(new Error('weekly allowance exhausted'), { code: 'P0001' }); } } });
+  await tick();
+  await refused.api.startRound('e_se');
+  assert.match(refused.notices.join('|'), /Nuovi giochi lunedì/);
+  const pile = harness({ handlers: { start_game_round: () => { throw new Error('too many open rounds'); } } });
+  await tick();
+  await pile.api.startRound('e_se');
+  assert.match(pile.notices.join('|'), /Prima finite una delle partite in corso/);
+});
+
+test('M11F client: repeating a played mode asks once through the shared US confirm; an open round just resumes', async () => {
+  const asked = [];
+  const h = harness({ homeState: home({ open_rounds: [{ id: 'open-1', game_family: 'e_se', item_count: 5, my_answered_count: 1 }],
+    allowance: allowance({ used: 1, free_used: 1, families: { ridete: { session_id: 'r1', completed: true } } }) }) });
+  h.window.UsUiFoundation = { confirm: async (opts) => { asked.push(opts); return asked.length > 1; } };
+  await tick();
+  await h.api.chooseMode('ridete');
+  assert.equal(h.calls.some(([n]) => n === 'start_game_round'), false, 'declined: nothing started');
+  await h.api.chooseMode('ridete');
+  assert.ok(h.calls.some(([n, a]) => n === 'start_game_round' && a.target_family === 'ridete'));
+  assert.match(asked[0].title, /Avete già giocato a Ridete questa settimana/);
+  assert.match(asked[0].body, /un momento/);
+  await h.api.chooseMode('e_se');
+  assert.ok(h.calls.some(([n, a]) => n === 'get_game_session' && a.target_session_id === 'open-1'));
+  assert.equal(asked.length, 2, 'resuming never asks');
 });

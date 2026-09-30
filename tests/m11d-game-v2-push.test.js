@@ -197,7 +197,8 @@ test('M11D worker: recovers missed waiting and reveal events, skips seen reveals
   const now = new Date(WED);
   const a = await startRound(w.db, w.f, 'ridete');
   await playSide(w.db, w.f, a.id);
-  const bRound = await startRound(w.db, w.b, 'e_se');
+  // M11F: 1 Per voi + 2 free-choice rounds a week; Bea's round is the Per voi.
+  const bRound = await startRound(w.db, w.b, 'per_voi');
   await playSide(w.db, w.b, bRound.id); await playSide(w.db, w.f, bRound.id);
   await w.db.query(`update public.game_session_sides set completed_at = $1::timestamptz - interval '10 minutes' where completed_at is not null`, [WED]);
   await w.db.query(`update public.game_session_sides set completed_at = $1::timestamptz - interval '5 minutes' where session_id = $2 and actor_role = 'francesco'`, [WED, bRound.id]);

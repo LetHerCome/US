@@ -33,7 +33,20 @@
 .us-gv2-pervoi-copy b{display:block;margin-top:6px;font-family:var(--us-font-editorial);font-size:20px;font-weight:500;line-height:1.25;overflow-wrap:anywhere}
 .us-gv2-pervoi-copy small{display:block;margin-top:5px;color:var(--us-muted);font-size:var(--us-text-secondary);line-height:1.4}
 .us-gv2-pervoi-cta{grid-area:cta;justify-self:start;min-height:40px;display:inline-flex;align-items:center;padding:0 16px;border-radius:var(--us-radius-pill);background:linear-gradient(135deg,#ff638c 0%,#ff86a4 44%,#a985ff 125%);color:#fff;font-size:13px;font-weight:750}
-.us-gv2-pervoi[data-gv2-state="waiting"] .us-gv2-pervoi-cta{background:rgba(255,255,255,.08);color:#efe5f4;border:1px solid rgba(255,234,247,.12)}
+.us-gv2-pervoi[data-gv2-state="waiting"] .us-gv2-pervoi-cta,.us-gv2-pervoi[data-gv2-state="played"] .us-gv2-pervoi-cta{background:rgba(255,255,255,.08);color:#efe5f4;border:1px solid rgba(255,234,247,.12)}
+.us-gv2-pervoi[data-gv2-state="played"]>.us-gv2-icon{color:#a79bb0}
+
+/* M11F weekly rhythm: a quiet line, never a counter game. */
+.us-gv2-rhythm{margin:-4px 4px 0;display:grid;gap:5px}
+.us-gv2-rhythm-row{display:flex;align-items:center;gap:10px;min-width:0}
+.us-gv2-rhythm-row b{font-size:13px;font-weight:650;line-height:1.35;color:var(--us-ink)}
+.us-gv2-rhythm small{color:var(--us-muted);font-size:var(--us-text-meta);line-height:1.4}
+.us-gv2-rhythm-dots{display:inline-flex;gap:5px;flex:0 0 auto}
+.us-gv2-rhythm-dots i{width:7px;height:7px;border-radius:50%;border:1px solid rgba(214,176,232,.46);background:transparent}
+.us-gv2-rhythm-dots i[data-on="true"]{background:#d7a9e6;border-color:#d7a9e6}
+.us-gv2-mode[data-gv2-mode-state="played"] .us-gv2-mode-copy small{color:#b8a9c6}
+.us-gv2-mode[aria-disabled="true"]{color:#9c96a6}
+.us-gv2-mode[aria-disabled="true"]>.us-gv2-icon{color:#7d7589}
 
 .us-gv2-weekly{padding:16px;border-radius:var(--us-radius-card);background:linear-gradient(150deg,rgba(91,57,108,.20),rgba(22,19,31,.92) 55%),#15141d;border:1px solid rgba(204,170,222,.12)}
 .us-gv2-weekly-head{display:flex;gap:12px;align-items:flex-start}
@@ -92,6 +105,7 @@
 .us-gv2-actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:9px;margin-top:8px}
 .us-gv2-actions button{min-height:48px}
 .us-gv2-actions>span{display:block}
+.us-gv2-actions.is-single{grid-template-columns:1fr}
 .us-gv2-waiting h2,.us-gv2-reveal>h2,.us-gv2-weekly-form h2{margin:6px 0 8px;font-family:var(--us-font-editorial);font-size:24px;font-weight:500;line-height:1.25;color:var(--us-ink)}
 .us-gv2-lead{margin:0 0 16px!important;color:var(--us-muted)!important;font-size:14px!important;line-height:1.5}
 .us-gv2-mine{display:grid;gap:8px;margin:0 0 12px;padding:0;list-style:none}

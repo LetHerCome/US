@@ -59,6 +59,7 @@ function perVoiCopy() {
     case 'waiting': return { title: `Hai risposto. Aspettiamo ${partnerName()}.`, line: 'Le risposte si svelano quando avete finito entrambi.', cta: 'Apri' };
     case 'pending': return { title: row?.partner_complete ? `${partnerName()} ha già risposto` : `${partnerName()} ha iniziato`, line: 'Tocca a te: cinque domande preparate per voi.', cta: 'Rispondi' };
     case 'in_progress': return { title: 'Il vostro Per voi è a metà', line: 'Riprendi quando vuoi.', cta: 'Continua' };
+    case 'played': return { title: 'Giocato questa settimana', line: 'Il prossimo Per voi arriva lunedì.', cta: 'Rivedi' };
     default: return { title: 'Non scegliete. US ha preparato qualcosa per voi.', line: 'Cinque domande, scelte tra tutto quello che avete.', cta: 'Inizia' };
   }
 }
@@ -78,10 +79,42 @@ function renderTop() {
     pending: 'Per voi: tocca a te',
     waiting: `Per voi: aspettiamo ${partnerName()}`,
     reveal_ready: 'Per voi: le vostre risposte sono pronte',
+    played: 'Per voi: giocato questa settimana, il prossimo arriva lunedì',
   };
   button.setAttribute('aria-label', labels[state] || labels.idle);
   button.classList.remove('is-loading');
   button.removeAttribute('aria-busy');
+}
+
+// ---------------------------------------------------------------- weekly rhythm
+
+// M11F: the server counts the week's rounds (1 Per voi + 2 free choice) and
+// refuses a fourth; the client only reads that state and never decides it.
+const allowance = () => home?.allowance || null;
+const freeLeft = () => { const a = allowance(); return a ? Math.max(0, a.free_limit - a.free_used) : 2; };
+const playedThisWeek = (family) => allowance()?.families?.[family] || null;
+const EXHAUSTED = 'Per questa settimana avete giocato tutto. Nuovi giochi lunedì.';
+
+function rhythmStrip() {
+  const a = allowance();
+  if (!a) return '';
+  const used = Math.min(a.used, a.limit);
+  const dots = Array.from({ length: a.limit }, (_, i) => `<i data-on="${i < used ? 'true' : 'false'}"></i>`).join('');
+  const done = used >= a.limit;
+  const line = done ? 'Per questa settimana avete giocato tutto.' : used === 0 ? `${a.limit} momenti da vivere insieme` : `${used} di ${a.limit} momenti giocati`;
+  const sub = done ? 'Nuovi giochi lunedì.' : 'Un Per voi e due giochi a scelta, ogni settimana.';
+  return `<section class="us-gv2-rhythm" data-gv2-rhythm="${done ? 'done' : 'open'}" aria-label="Questa settimana: ${esc(`${used} di ${a.limit} momenti giocati`)}">
+    <span class="us-gv2-kicker">QUESTA SETTIMANA</span>
+    <div class="us-gv2-rhythm-row"><span class="us-gv2-rhythm-dots" aria-hidden="true">${dots}</span><b>${esc(line)}</b></div>
+    <small>${esc(sub)}</small>
+  </section>`;
+}
+
+function modeStatus(f, open) {
+  if (open) return { ...roundStatus(open), state: 'open' };
+  if (playedThisWeek(f.id)) return { text: 'Giocato questa settimana', tone: 'seen', state: 'played' };
+  if (allowance() && !freeLeft()) return { text: 'Nuovi giochi lunedì', tone: 'locked', state: 'locked' };
+  return null;
 }
 
 // ---------------------------------------------------------------- hub
@@ -121,15 +154,16 @@ function renderHub() {
   const others = (home?.open_rounds || []).filter((r) => r.game_family !== 'per_voi');
   const recent = (home?.recent || []).filter((r) => r.my_reveal_seen_at).slice(0, 4);
   const modeTiles = FAMILIES.map((f) => {
-    const open = openByFamily.get(f.id);
-    const status = open ? roundStatus(open) : null;
-    return `<button type="button" class="us-gv2-mode" data-gv2-family="${f.id}">
+    const status = modeStatus(f, openByFamily.get(f.id));
+    const locked = status?.state === 'locked';
+    return `<button type="button" class="us-gv2-mode" data-gv2-family="${f.id}" data-gv2-mode-state="${esc(status?.state || 'ready')}"${locked ? ' aria-disabled="true"' : ''}>
       ${icon(f.icon)}<span class="us-gv2-mode-copy"><b>${esc(f.name)}</b><small>${esc(status ? status.text : f.line)}</small></span>
-      ${status ? `<i class="us-gv2-dot" data-tone="${esc(status.tone)}" aria-hidden="true"></i>` : ''}
+      ${status && !locked ? `<i class="us-gv2-dot" data-tone="${esc(status.tone)}" aria-hidden="true"></i>` : ''}
     </button>`;
   }).join('');
   root.innerHTML = `
     <header class="us-gv2-head"><span class="us-gv2-kicker">GIOCA</span><h2>Scopritevi, giocando</h2><p>Cinque domande alla volta. Le risposte restano vostre finché non avete finito entrambi.</p></header>
+    ${rhythmStrip()}
     <button type="button" class="us-gv2-pervoi us-attention-orbit" data-gv2-action="per-voi" data-gv2-state="${esc(pvState)}" data-us-attention="${pvState === 'pending' || pvState === 'reveal_ready' ? 'on' : 'off'}">
       ${icon('sparkle')}<span class="us-gv2-pervoi-copy"><span class="us-gv2-kicker">PER VOI</span><b>${esc(pv.title)}</b><small>${esc(pv.line)}</small></span><span class="us-gv2-pervoi-cta">${esc(pv.cta)}</span>
     </button>
@@ -201,8 +235,41 @@ async function startRound(family) {
     await present(data);
   } catch (error) {
     console.warn('[US Gioca] start', error);
-    toast(/not enough content/.test(error?.message || '') ? 'Non ci sono ancora abbastanza domande per questo gioco.' : 'Non riesco ad aprire la partita. Riprova.');
+    const msg = error?.message || '';
+    if (/weekly per voi played|weekly allowance exhausted|too many open rounds/.test(msg)) startRequestIds.delete(family);
+    toast(/not enough content/.test(msg) ? 'Non ci sono ancora abbastanza domande per questo gioco.'
+      : /weekly per voi played/.test(msg) ? 'Per voi è già stato giocato questa settimana. Il prossimo arriva lunedì.'
+      : /weekly allowance exhausted/.test(msg) ? EXHAUSTED
+      : /too many open rounds/.test(msg) ? 'Prima finite una delle partite in corso.'
+      : 'Non riesco ad aprire la partita. Riprova.');
+    if (/weekly|too many open rounds/.test(msg)) load();
   } finally { busy = false; }
+}
+
+// A mode tile: resume its open round; a mode already played this week asks
+// once before spending a second moment on it; nothing starts once the
+// week's free moments are spent (history stays one tap away).
+async function chooseMode(family) {
+  if (busy) return;
+  const open = (home?.open_rounds || []).find((r) => r.game_family === family);
+  if (open) return openSession(open.id);
+  const played = playedThisWeek(family);
+  if (allowance() && !freeLeft()) {
+    if (played?.completed) return openSession(played.session_id);
+    return toast(EXHAUSTED);
+  }
+  if (played) {
+    const ask = window.UsUiFoundation?.confirm;
+    const ok = typeof ask === 'function' ? await ask({
+      kicker: familyName(family).toUpperCase(),
+      title: `Avete già giocato a ${familyName(family)} questa settimana`,
+      body: `Vi resta ${freeLeft() === 1 ? 'un momento' : `${freeLeft()} momenti`} fino a lunedì. Volete usarne uno per un’altra partita?`,
+      confirmLabel: 'Gioca ancora',
+      cancelLabel: 'Non ora',
+    }) : true;
+    if (!ok) return;
+  }
+  return startRound(family);
 }
 
 async function openSession(id) {
@@ -408,7 +475,7 @@ function renderReveal() {
     <span class="us-gv2-kicker">LE VOSTRE RISPOSTE</span>
     <h2>${esc(familyName(current.game_family))}</h2>
     <div class="us-gv2-reveal-list">${cards}</div>
-    <div class="us-gv2-actions"><button type="button" class="ghost" data-gv2-action="back">Torna a Gioca</button><button type="button" class="primary" data-gv2-action="again" data-gv2-again="${esc(current.game_family)}">Facciamone un altro</button></div>
+    <div class="us-gv2-actions is-single"><button type="button" class="primary" data-gv2-action="back">Torna a Gioca</button></div>
   </article>`);
 }
 
@@ -508,9 +575,8 @@ function onClick(event) {
   else if (action === 'back') showHub();
   else if (action === 'prev') { const item = current.items[index]; drafts.set(item.id, readInput(item)); index = Math.max(0, index - 1); renderPlay(); }
   else if (action === 'refresh') refresh();
-  else if (action === 'again') startRound(button.dataset.gv2Again || 'per_voi');
   else if (action === 'retry') load();
-  else if (button.dataset.gv2Family) startRound(button.dataset.gv2Family);
+  else if (button.dataset.gv2Family) chooseMode(button.dataset.gv2Family);
   else if (button.dataset.gv2Session) openSession(button.dataset.gv2Session);
 }
 
@@ -533,7 +599,7 @@ function boot() {
 }
 
 window.USGameV2 = {
-  load, refresh, showHub, openPerVoi, startRound, openSession,
+  load, refresh, showHub, openPerVoi, startRound, openSession, chooseMode,
   isOpen: () => view !== 'hub',
   close: showHub,
 };

@@ -9,7 +9,7 @@ const { PGlite } = require('@electric-sql/pglite');
 const ROOT = path.resolve(__dirname, '../..');
 const MIGRATIONS = path.join(ROOT, 'supabase/migrations');
 const GAME_MIGRATIONS = fs.readdirSync(MIGRATIONS)
-  .filter((f) => /^20260930(105724_m11a_|121312_m11a_1_|\d{6}_m11[b-e]_)/.test(f))
+  .filter((f) => /^20260930(105724_m11a_|121312_m11a_1_|\d{6}_m11[b-f]_)/.test(f))
   .sort();
 
 // Production-shaped stand-ins for tables the context adapters and push
