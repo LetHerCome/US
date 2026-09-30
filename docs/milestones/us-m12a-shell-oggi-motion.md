@@ -74,6 +74,19 @@ logic stays the availability source, so they return once the winner is consumed.
 - Weekly question: the save button morphs only after the server confirms; on
   failure the action is restored; reduced motion changes immediately.
 
+## M12A.1 — brand polish + Eventi surface
+- Top bar centre is the canonical PWA/launcher identity (`us-symbol-apk-foreground-v1.png`,
+  byte-identical to the Android adaptive foreground), cropped by the 38 px bar slot only.
+  The earlier UI derivative is not used anywhere.
+- Aurora: same layer and 12 s cycle; visibility is two tokens in `ui-foundation.css`
+  (`--us-aurora-ambient` .62, `--us-aurora-react` .96), wider drift, richer blend.
+- Eventi is the fifth Noi tile (wide, like the first/last Gioca tiles) and a Noi
+  section (same history layer, same back bar). It is a presentation of the existing
+  event data in `events.js`: PROSSIMI (next three), QUESTO PERIODO (still to mark +
+  the next 60 days), VISSUTI (completed). Tapping an event, or +, opens the existing
+  editor sheet; closing it returns to the page. No new table, RPC or CSS layer.
+  Calendar keeps its Eventi shortcut.
+
 ## Release markers
-Build `us-m12a-shell-motion-20260930-1`, `version.json` equal, shell cache
-`us-shell-static-runtime-42`, `us-private-media-v1` untouched.
+Build `us-m12a1-brand-events-20260930-1`, `version.json` equal, shell cache
+`us-shell-static-runtime-43`, `us-private-media-v1` untouched.
