@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-static-runtime-40";
+const CACHE_NAME = "us-shell-static-runtime-41";
 const MEDIA_CACHE_NAME = "us-private-media-v1";
 
 const APP_SHELL = [
