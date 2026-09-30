@@ -208,7 +208,7 @@ test('M10.1C: "Aggiungi impegno" is the explicit create affordance; no floating 
   assert.match(html, /<button type="button" class="us-cal-add" id="usCalendarAddEntry">Aggiungi impegno<\/button>/);
   assert.doesNotMatch(html, /usCalendarAddBtn|us-cal-fab/);
   assert.doesNotMatch(calSrc, /us-cal-fab/);
-  assert.ok(html.indexOf('id="usCalendarDayDetail"') > html.indexOf('id="usCalendarGridMobile"'), 'detail sits under the month grid');
+  assert.ok(html.indexOf('id="usCalendarDayDetail"') > html.indexOf('id="usCalendarGrid"'), 'detail sits under the month grid');
   assert.match(css, /\.us-cal-add\{[^}]*min-height:44px/);
 });
 
@@ -289,4 +289,39 @@ test('M10.1C: no calendar backend change — same table, same read filter, no ne
   assert.match(calSrc, /UsCalendarDomain\.buildRangeOverlapFilter\(win\)/);
   const migrations = fs.readdirSync(path.join(ROOT, 'supabase/migrations'));
   assert.ok(!migrations.some((m) => /m10_1|m101/.test(m)), 'M10.1 adds no migration');
+});
+
+// --- M10.1 final correction: ONE shared month at every width ----------------
+
+test('M10.1: one month grid — no per-partner months, no duplicated shared events', () => {
+  assert.equal((html.match(/class="us-cal-grid"/g) || []).length, 1);
+  assert.doesNotMatch(html, /usCalendarGridA|usCalendarGridB|usCalendarPaneWide|usCalendarWideHead|usCalendarGridMobile/);
+  assert.doesNotMatch(calSrc, /renderWideGrids|renderMobileGrid|roleFilter|usCalendarGridA/);
+  assert.doesNotMatch(css, /us-cal-pane-wide|us-cal-pane-mobile|us-cal-pane-col|us-cal-pane-head/);
+  const monthCalls = calSrc.match(/renderMonthGrid\(dateIndex\);/g) || [];
+  assert.equal(monthCalls.length, 1, 'the month is rendered exactly once per refresh');
+});
+
+test('M10.1: F, B and F+B coexist in the single month and a shared event is one marker, not two', () => {
+  const h = load();
+  const shared = timed(FR.id, 'shared', 21, 'Cena');
+  const list = [timed(FR.id, 'personal', 15, 'Lavoro'), timed(BE.id, 'personal', 9, 'Università'), shared];
+  const cell = dayCell(h, TODAY, list);
+  assert.deepEqual([...cell.matchAll(/us-cal-chip(?: us-cal-chip--shared)?" aria-hidden="true">([^<]+)</g)].map((m) => m[1]), ['F', 'B', 'F+B']);
+  // A shared event appears once in the day agenda, never in a "Francesco" copy plus a "Beatrice" copy.
+  const h2 = load({ entries: list });
+  h2.t.renderSelectedDay();
+  const out = h2.dom.get('usCalendarDaySections').innerHTML;
+  assert.equal((out.match(/Cena/g) || []).length, 2, 'title + aria-label of ONE row');
+  assert.equal((out.match(new RegExp(`data-entry-id="${shared.id}"`, 'g')) || []).length, 1);
+});
+
+test('M10.1: wide screens make the one month roomier and let the day detail use the width', () => {
+  const wide = css.match(/@media\(min-width:860px\)\{[\s\S]*?\n\}/)[0];
+  assert.match(wide, /\.us-cal-surface\{width:min\(760px,100%\)/, 'sensible max width for readability');
+  assert.match(wide, /\.us-cal-pane-month\{max-width:680px/);
+  assert.match(wide, /\.us-cal-day\{min-height:64px/);
+  assert.match(wide, /\.us-cal-chip\{height:15px/);
+  assert.match(wide, /\.us-cal-day-detail \.us-cal-day-sections\{grid-template-columns:repeat\(auto-fit,minmax\(280px,1fr\)\)/);
+  assert.ok(html.indexOf('id="usCalendarDayDetail"') > html.indexOf('id="usCalendarGrid"'), 'detail stays below the month');
 });

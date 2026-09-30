@@ -178,14 +178,12 @@ test('M6C (12): the week view is a single vertical list at every width; the mont
   assert.doesNotMatch(css(), /\.us-cal-fab\{/);
   assert.match(css(), /\.us-cal-surface\{[^}]*padding:0 0 calc\(18px \+ var\(--us-safe-bottom\)\)/, 'the surface keeps its safe-area padding');
   assert.match(css(), /\.us-cal-week-pane\{display:none\}/);
-  assert.match(css(), /\.us-cal-body\.is-week-mode \.us-cal-pane-mobile,\r?\n\.us-cal-body\.is-week-mode \.us-cal-pane-wide\{display:none!important\}/);
+  assert.match(css(), /\.us-cal-body\.is-week-mode \.us-cal-pane-month\{display:none!important\}/);
   assert.match(css(), /\.us-cal-body\.is-week-mode \.us-cal-week-pane\{display:block\}/);
   assert.match(css(), /\.us-cal-week-list\{display:grid;gap:12px;max-width:560px;margin:0 auto\}/, 'single constrained column, same list on mobile and wide');
-  // month view keeps both panes and their 860px breakpoint exactly as M6B shipped them
-  assert.match(css(), /\.us-cal-pane-wide\{display:none\}/);
+  // M10.1: month view is ONE grid at every width (the 860px breakpoint only makes it roomier)
   assert.match(css(), /@media\(min-width:860px\)/);
-  assert.match(js(), /renderMobileGrid\(dateIndex\)/);
-  assert.match(js(), /renderWideGrids\(dateIndex\)/);
+  assert.match(js(), /renderMonthGrid\(dateIndex\)/);
 });
 
 // (13) detail / back flow: week items reuse the existing detail sheet; nav layers unchanged.

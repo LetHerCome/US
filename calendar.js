@@ -695,7 +695,10 @@ function renderDayCell(dateObj, dateISO, inMonth, dayEntries) {
   </button>`;
 }
 
-function renderGridInto(container, dateIndex, options = {}) {
+// M10.1 — ONE shared month at every width. F / B / F+B markers say whose
+// commitment it is; there is no per-partner month and no duplicated shared event.
+function renderMonthGrid(dateIndex) {
+  const container = $('usCalendarGrid');
   if (!container) return;
   const { gridStart } = monthGridRange(viewYear, viewMonth);
   const cells = [];
@@ -703,8 +706,7 @@ function renderGridInto(container, dateIndex, options = {}) {
     const d = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + i);
     const dateISO = isoDate(d.getFullYear(), d.getMonth(), d.getDate());
     const inMonth = d.getMonth() === viewMonth && d.getFullYear() === viewYear;
-    const dayEntries = (dateIndex.get(dateISO) || []).filter((e) => !options.roleFilter || entryLaneRole(e) === 'shared' || entryLaneRole(e) === options.roleFilter);
-    cells.push(renderDayCell(d, dateISO, inMonth, dayEntries));
+    cells.push(renderDayCell(d, dateISO, inMonth, dateIndex.get(dateISO) || []));
   }
   const weekdayRow = WEEKDAYS_IT.map((w) => `<div class="us-cal-weekday">${w}</div>`).join('');
   container.innerHTML = `<div class="us-cal-weekday-row">${weekdayRow}</div><div class="us-cal-day-grid">${cells.join('')}</div>`;
@@ -712,17 +714,6 @@ function renderGridInto(container, dateIndex, options = {}) {
   // mostra gli impegni reali; creare è "Aggiungi impegno" (o, scegliendo il
   // giorno per un'idea Da vivere, il form collegato).
   container.querySelectorAll('.us-cal-day[data-date]').forEach((btn) => btn.addEventListener('click', () => selectDay(btn.dataset.date)));
-}
-
-function renderMobileGrid(dateIndex) { renderGridInto($('usCalendarGridMobile'), dateIndex); }
-function renderWideGrids(dateIndex) {
-  const ordered = sortedProfiles();
-  const a = ordered[0];
-  const b = ordered[1];
-  if ($('usCalendarWideHeadA')) $('usCalendarWideHeadA').textContent = a ? a.display_name : '';
-  if ($('usCalendarWideHeadB')) $('usCalendarWideHeadB').textContent = b ? b.display_name : '';
-  renderGridInto($('usCalendarGridA'), dateIndex, { roleFilter: a?.role });
-  renderGridInto($('usCalendarGridB'), dateIndex, { roleFilter: b?.role });
 }
 
 function renderLegend() {
@@ -847,8 +838,7 @@ function renderCalendar() {
   } else {
     ensureSelectedDate();
     const dateIndex = buildDateIndex();
-    renderMobileGrid(dateIndex);
-    renderWideGrids(dateIndex);
+    renderMonthGrid(dateIndex);
   }
   renderSelectedDay();
   renderLegend();

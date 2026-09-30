@@ -66,20 +66,20 @@ test('M6B (5): the Oggi control jumps to and selects the current day', () => {
   assert.match(js(), /selectedDate = todayISO\(\)/);
 });
 
-// (6) mobile single-grid mode.
-test('M6B (6): mobile shows exactly one shared month grid', () => {
-  assert.match(html(), /id="usCalendarGridMobile"/);
-  assert.match(css(), /\.us-cal-pane-wide\{display:none\}/, 'the dual pane must be hidden by default (mobile-first)');
+// (6) M10.1: ONE shared month grid, at every width.
+test('M6B (6): exactly one shared month grid, at every width', () => {
+  assert.equal((html().match(/class="us-cal-grid"/g) || []).length, 1);
+  assert.match(html(), /id="usCalendarGrid"/);
+  assert.doesNotMatch(html(), /usCalendarGridMobile|usCalendarGridA|usCalendarGridB|usCalendarPaneWide|usCalendarWideHead/);
 });
 
-// (7) wide dual-calendar mode.
-test('M6B (7): a wide viewport switches to two synchronized per-partner calendars', () => {
-  assert.match(html(), /id="usCalendarGridA"/);
-  assert.match(html(), /id="usCalendarGridB"/);
+// (7) M10.1: the wide breakpoint makes the ONE month roomier — it never splits it.
+test('M6B (7): a wide viewport enlarges the single month, it does not split it per partner', () => {
   const wideBlock = css().match(/@media\(min-width:860px\)\{[\s\S]*?\n\}/)?.[0] || '';
-  assert.match(wideBlock, /\.us-cal-pane-mobile\{display:none\}/);
-  assert.match(wideBlock, /\.us-cal-pane-wide\{display:grid/);
-  assert.match(js(), /renderGridInto\(\$\('usCalendarGridA'\)[\s\S]*?renderGridInto\(\$\('usCalendarGridB'\)/, 'both panes render from the same monthGridRange(viewYear,viewMonth) call, so they stay in sync');
+  assert.match(wideBlock, /\.us-cal-pane-month\{max-width:680px/);
+  assert.match(wideBlock, /\.us-cal-day\{min-height:64px/);
+  assert.doesNotMatch(css() + js(), /us-cal-pane-wide|pane-mobile|renderWideGrids|roleFilter/);
+  assert.equal((js().match(/function renderMonthGrid\(/g) || []).length, 1);
 });
 
 // (8) both partner identities shown, from live profile data, deterministically ordered.
