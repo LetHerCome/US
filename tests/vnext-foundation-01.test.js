@@ -45,7 +45,10 @@ test('partner apre solo Lasciato per te e il profilo resta un controllo foto', (
   assert.match(html, /id="usSettingsEntry"[\s\S]{0,160}onclick="go\('settings',\{nav:true\}\)"/);
   assert.match(read('identity.css'), /\.us-calendar-btn\{width:44px;min-width:44px;height:44px;min-height:44px/);
   assert.doesNotMatch(html, /id="usCalendarBtn"/);
-  assert.match(html, /id="usEventsTopEntry"[\s\S]{0,180}onclick="openEvents\(\)"/);
+  // M12A: il centro è il marchio US; "I nostri eventi" resta raggiungibile dal Calendario.
+  assert.doesNotMatch(html, /id="usEventsTopEntry"/);
+  assert.match(html, /class="us-top-brand"[^>]*role="img" aria-label="US"/);
+  assert.match(html, /id="usCalendarEventsLink"[\s\S]{0,200}Eventi/);
   assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,220}Cambia foto profilo/);
   assert.match(read('settings.js'), /window\.pickProfilePhoto\?\.\(\)/);
 });

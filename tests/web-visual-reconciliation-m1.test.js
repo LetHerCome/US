@@ -81,13 +81,14 @@ test('M1.2 usa una clearance authority e riserva spazio sulle tre secondary root
   assert.match(css, /#settings\{height:calc\(var\(--us-viewport-height\) - var\(--us-safe-top\)\)/);
 });
 
-test('M1.3 porta un solo opener I nostri eventi al centro della top chrome', () => {
+test('M1.3 (M12A) il centro della top chrome è il marchio US; I nostri eventi vive nel Calendario', () => {
   const html = read('index.html');
   const css = read('identity.css');
-  assert.match(html, /id="usEventsTopEntry"[^>]+onclick="openEvents\(\)"[\s\S]*I nostri eventi/);
+  assert.doesNotMatch(html, /id="usEventsTopEntry"/);
+  assert.match(html, /id="usCalendarEventsLink"[^>]*aria-label="Apri i nostri eventi"/);
   assert.doesNotMatch(html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '', /class="us-event-add"/);
-  assert.match(css, /\.us-events-top-control\{[^}]*min-width:92px[^}]*min-height:44px/);
-  assert.match(css, /\.us-events-top-control span:first-child\{[^}]*max-width:/);
+  assert.match(css, /\.us-top-brand\{[^}]*grid-column:2[^}]*pointer-events:none/);
+  assert.doesNotMatch(css, /us-events-top/);
 });
 
 test('M1.4 rende la top chrome una floating pill contenuta nella shell', () => {
@@ -96,8 +97,7 @@ test('M1.4 rende la top chrome una floating pill contenuta nella shell', () => {
   assert.match(css, /\.top\.us-premium-top\{[^}]*border-radius:28px/);
   assert.match(css, /\.top\.us-premium-top\{[^}]*overflow:hidden/);
   assert.match(css, /\.top\.us-premium-top::before\{[^}]*border-radius:inherit/);
-  assert.match(css, /\.us-events-top-control\{[^}]*background:transparent!important/);
-  assert.match(css, /\.us-events-top-control\{[^}]*border:0/);
+  assert.match(css, /\.top\.us-premium-top \.us-top-brand\{[^}]*overflow:hidden/);
 });
 
 test('M1.5 nasconde la priority region solo in Home e preserva il runtime Daily/Events', () => {
@@ -126,10 +126,10 @@ test('M1.6 rende Home full-bleed senza cambiare il padding globale delle seconda
 test('M1 topbar refinement bilancia tre zone senza ridurre i touch target', () => {
   const css = read('identity.css');
   assert.match(css, /\.top\.us-premium-top\{[^}]*display:grid[^}]*grid-template-columns:minmax\(0,1fr\) auto minmax\(0,1fr\)/);
-  assert.match(css, /\.top\.us-premium-top \.us-events-top-control\{grid-column:2\}/);
+  assert.match(css, /\.top\.us-premium-top \.us-top-brand\{[^}]*grid-column:2/);
   assert.match(css, /\.top\.us-premium-top \.top-actions\{[^}]*grid-column:3[^}]*justify-self:end/);
-  assert.match(css, /\.top\.us-premium-top \.us-events-top-control\{[^}]*flex:0 1 auto[^}]*justify-self:center/);
-  assert.match(css, /\.top\.us-premium-top \.us-brand-symbol-art\{[^}]*width:58px[^}]*height:39px/);
+  assert.match(css, /\.top\.us-premium-top \.us-top-brand\{[^}]*justify-self:center/);
+  assert.match(css, /\.us-top-brand-art\{[^}]*height:46px/);
   assert.match(css, /\.top\.us-premium-top \.profile-avatar[^}]*min-width:44px/);
   assert.match(css, /\.top\.us-premium-top \.us-calendar-btn[^}]*min-width:44px/);
 });

@@ -1265,6 +1265,18 @@ $('usCalendarTodayBtn')?.addEventListener('click', goToToday);
 $('usCalendarViewMonth')?.addEventListener('click', () => setMode('month'));
 $('usCalendarViewWeek')?.addEventListener('click', () => setMode('week'));
 $('usCalendarClose')?.addEventListener('click', closeCalendarSurface);
+// M12A — "I nostri eventi" lives here, in its product context, instead of owning the shell.
+$('usCalendarEventsLink')?.addEventListener('click', () => {
+  if (busy) return;
+  closeCalendarSurface();
+  // navigation.js consumes the calendar's history entry once it is closed, and
+  // that would also close a layer opened in the same tick: open Eventi after.
+  const openWhenClosed = (tries = 0) => {
+    if ($('usCalendarOverlay')?.classList.contains('open') && tries < 40) { setTimeout(() => openWhenClosed(tries + 1), 40); return; }
+    setTimeout(() => window.openEvents?.(), 120);
+  };
+  openWhenClosed();
+});
 $('usCalendarBackdrop')?.addEventListener('click', closeCalendarSurface);
 $('usCalendarAddEntry')?.addEventListener('click', () => startCreateForDate(selectedDate || todayISO()));
 $('usCalendarDetailClose')?.addEventListener('click', closeCalendarDetailSheet);

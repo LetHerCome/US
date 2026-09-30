@@ -161,6 +161,7 @@ async function runFix4({ online, badgeWarn = false, updateAvailable = false }) {
     querySelectorAll: () => []
   };
   document.documentElement.clientHeight = 844;
+  const timers = [];
   const window = {
     innerHeight: 844, usProfile: null,
     addEventListener() {},
@@ -171,11 +172,11 @@ async function runFix4({ online, badgeWarn = false, updateAvailable = false }) {
     fetch: async () => ({ ok: true, json: async () => ({ version: updateAvailable ? 'next-build' : 'current-build' }) }),
     localStorage: { getItem: () => null, setItem() {} }, location: { reload() {} },
     MutationObserver: class { observe() {} }, navigator: { onLine: online, serviceWorker: null },
-    Node: { ELEMENT_NODE: 1 }, setInterval: () => 1, setTimeout: () => 1, window
+    Node: { ELEMENT_NODE: 1 }, setInterval: () => 1, setTimeout: (fn) => timers.push(fn), window
   });
   vm.runInContext(read('fix4.js'), context);
   await new Promise((resolve) => setImmediate(resolve));
-  return { body, status, update };
+  return { body, status, update, timers };
 }
 
 test('fix4 espone gli stati layout per status e update senza sovrapporli implicitamente', async () => {
@@ -185,6 +186,10 @@ test('fix4 espone gli stati layout per status e update senza sovrapporli implici
   assert.equal(offline.body.classList.contains('us-update-visible'), false);
 
   const both = await runFix4({ online: true, badgeWarn: true, updateAvailable: true });
+  // M12A: a mere "connecting…" badge is debounced; it only surfaces if it lasts.
+  assert.equal(both.status.hidden, true);
+  assert.equal(both.timers.length >= 1, true);
+  both.timers.forEach((fn) => fn());
   assert.equal(both.status.hidden, false);
   assert.equal(both.update.hidden, false);
   assert.equal(both.body.classList.contains('us-status-visible'), true);

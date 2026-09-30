@@ -20,12 +20,12 @@ test('M5G5 enabled composer CTA has an explicit enabled visual state', () => {
   assert.match(css, /box-shadow:/);
 });
 
-test('M5G5 location policy treats twelve-hour-old coordinates as stale', () => {
+test('M5G5 location policy treats old coordinates as stale (M12A: the last value stays, marked stale)', () => {
   const app = read('app.js');
-  assert.match(app, /const LOCATION_STALE_MS=60\*60\*1000/);
-  assert.match(app, /if\(stalePartner\|\|staleMine\)\{/);
-  assert.match(app, /value\.textContent='Posizione non aggiornata'/);
-  assert.ok(app.indexOf('if(stalePartner||staleMine){') < app.indexOf('const km=distanceKm('));
+  assert.match(app, /const US_LOCATION_STALE_DISPLAY_MS=60\*60\*1000/);
+  assert.match(app, /const stale=oldest>US_LOCATION_STALE_DISPLAY_MS;/);
+  assert.match(app, /state:stale\?'stale':'ready'/);
+  assert.match(read('styles.css'), /\.us-distance-capsule\[data-us-distance-state="stale"\]/);
 });
 
 test('M5G5 missing profileAvatarImg cannot crash avatar hydration', () => {

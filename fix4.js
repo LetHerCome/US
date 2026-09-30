@@ -62,16 +62,33 @@
     syncRuntimeLayout();
   }
 
+  // M12A — healthy connectivity shows nothing. A definite offline state is
+  // shown at once; a mere "connecting…" badge must last CONNECTING_GRACE_MS
+  // before it is worth the user's attention (no flashes of network noise).
+  const CONNECTING_GRACE_MS = 5000;
+  let connectingTimer = null;
+  function clearConnectingTimer() {
+    if (connectingTimer !== null) clearTimeout(connectingTimer);
+    connectingTimer = null;
+  }
   function syncNetworkUi() {
     if (!navigator.onLine) {
+      clearConnectingTimer();
       showStatus('Sei offline. Riprendo appena torni online.', 'offline');
       return;
     }
     if (onlineBadge?.classList.contains('warn')) {
-      const detail = onlineBadge.textContent?.replace(/^●\s*/, '').trim() || 'Connessione in corso…';
-      showStatus(detail, 'offline');
+      const show = () => {
+        connectingTimer = null;
+        if (!navigator.onLine || !onlineBadge?.classList.contains('warn')) return;
+        const detail = onlineBadge.textContent?.replace(/^●\s*/, '').trim() || 'Connessione in corso…';
+        showStatus(detail, 'offline');
+      };
+      if (statusBar && !statusBar.hidden) show();
+      else if (connectingTimer === null) connectingTimer = setTimeout(show, CONNECTING_GRACE_MS);
       return;
     }
+    clearConnectingTimer();
     hideStatus();
   }
 

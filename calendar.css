@@ -216,3 +216,7 @@ body.us-cal-open{overflow:hidden}
   .us-cal-day-detail{max-width:680px;margin-left:auto;margin-right:auto}
   .us-cal-day{min-height:60px}
 }
+
+/* M12A — the Eventi entry sits next to Close in the Calendar head. */
+.us-cal-head-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.us-cal-events-link{min-height:44px;display:inline-flex;align-items:center;gap:6px;padding:0 14px;border-radius:999px;border:1px solid var(--us-color-line-strong);background:var(--us-glass-1-bg);color:var(--us-color-text);font-size:12px;font-weight:700;--us-icon-size:16px}

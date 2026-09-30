@@ -33,7 +33,7 @@ function locationHarness(localDev) {
         query: async () => ({ state: 'granted', onchange: null }),
       },
     },
-    document: { hidden: false },
+    document: { hidden: false, getElementById: () => null },
     localStorage: {
       values: new Map(),
       getItem(key) { return this.values.get(key) ?? null; },
@@ -65,14 +65,8 @@ function locationHarness(localDev) {
     Boolean,
     Promise,
   };
-  const source = [
-    'let locationRefreshInFlight=false;',
-    'let locationTimer=null;',
-    extract(appSource, 'async function saveMyLocation', 'function geolocationError'),
-    extract(appSource, 'function refreshMyLocation', 'window.refreshMyLocation=refreshMyLocation;'),
-    extract(appSource, 'async function maybeAutoRefreshLocation', 'function startLocationRefreshTimer'),
-    extract(appSource, 'function startLocationRefreshTimer', 'function setAvatarSlot'),
-  ].join('\n');
+  // M12A: the whole location block (policy, refresh, timer) runs against the stubs.
+  const source = extract(appSource, 'let locationRefreshInFlight=false;', 'function setAvatarSlot');
   vm.runInNewContext(source, vm.createContext(context), { filename: 'app-location-boundary.js' });
   return { context, calls };
 }
@@ -81,7 +75,7 @@ test('M5G local Visual Lab cannot save or even request a production location', a
   const { context, calls } = locationHarness(true);
   await context.saveMyLocation({ coords: { latitude: 1, longitude: 2, accuracy: 3 }, timestamp: Date.now() });
   context.refreshMyLocation({ silent: true });
-  await context.maybeAutoRefreshLocation();
+  await context.maybeAutoRefreshLocation('launch');
   context.startLocationRefreshTimer();
   assert.equal(calls.upserts, 0);
   assert.equal(calls.geolocation, 0);
@@ -99,7 +93,7 @@ test('M5G production runtime still requests geolocation and upserts the real cou
 test('M5G local-dev guard remains in front of timer and auto-refresh paths', () => {
   const source = appSource;
   assert.match(source, /function startLocationRefreshTimer\(\)\{\s*if\(window\.__US_LOCAL_DEV__\)return;/);
-  assert.match(source, /async function maybeAutoRefreshLocation\(\)\{\s*if\(window\.__US_LOCAL_DEV__\)return;/);
+  assert.match(source, /async function maybeAutoRefreshLocation\(reason='resume'\)\{\s*if\(window\.__US_LOCAL_DEV__\)return;/);
   assert.match(source, /async function saveMyLocation\(position\)\{\s*if\(window\.__US_LOCAL_DEV__\)return false;/);
   assert.match(source, /function refreshMyLocation\(options=\{\}\)\{\s*if\(window\.__US_LOCAL_DEV__\)return;/);
 });

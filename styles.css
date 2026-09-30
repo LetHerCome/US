@@ -264,13 +264,6 @@ body.viewer-open{overflow:hidden}
 .home-photo-layer{position:absolute!important;inset:0;z-index:0!important;background-size:cover;background-position:center;opacity:0;transform:scale(1.006);transition:opacity var(--us-motion-photo) var(--us-ease-standard),transform var(--us-motion-photo) var(--us-ease-standard);will-change:opacity,transform}
 .home-photo-layer.active{opacity:1;transform:scale(1)}
 .home-photo-shade{position:absolute!important;inset:0;z-index:1!important;background:linear-gradient(180deg,rgba(5,7,10,.04),rgba(5,7,10,.02) 55%,rgba(5,7,10,.42) 100%);pointer-events:none}
-.home-distance-pill{position:absolute!important;z-index:3!important;left:14px;right:14px;bottom:14px;width:calc(100% - 28px);padding:10px 12px;border-radius:17px;border:1px solid rgba(255,255,255,.14);background:rgba(10,12,17,.44);backdrop-filter:blur(18px);color:#fff;display:flex;align-items:center;gap:10px;text-align:left;box-shadow:0 10px 30px rgba(0,0,0,.18)}
-.home-distance-pill .distance-orbit{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.10);font-size:16px;flex:0 0 auto}
-.home-distance-pill .distance-copy{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px}
-.home-distance-pill .distance-copy b{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.home-distance-pill .distance-copy small{font-size:var(--us-text-meta);color:rgba(255,255,255,.62);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.home-distance-pill .distance-action{color:rgba(255,255,255,.72);flex:0 0 auto;--us-icon-size:17px;display:inline-grid;place-items:center}
-.home-distance-pill.denied{border-color:rgba(255,102,142,.35)}
 
 /* M6E — Oggi calendar widget + Focus Photo fade. */
 /* M10A — Oggi si legge dall'alto: priorità personale → impegni di oggi → Domanda del giorno, in UNA colonna (niente sovrapposizioni). */
@@ -289,9 +282,6 @@ body.viewer-open{overflow:hidden}
 .us-oggi-focus-toggle{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .us-oggi-focus .us-oggi-widgets,.us-oggi-focus .home-distance-pill,.us-oggi-focus .push-optin-card{opacity:0!important;pointer-events:none!important}
 @media(prefers-reduced-motion:reduce){.us-oggi-stack,.us-oggi-widgets,.us-oggi-card,.push-optin-card{transition:none!important}}
-.home-distance-pill.stale{border-color:rgba(255,180,92,.30);background:rgba(28,22,16,.48)!important}
-.home-distance-pill.stale .distance-orbit{background:rgba(255,180,92,.12);color:#ffd08a}
-.home-distance-pill.stale .distance-copy b{color:#ffe0a8}
 
 .today-overlay{position:fixed;inset:0;z-index:10020;display:none;align-items:flex-end;justify-content:center}
 .today-overlay.open{display:flex}
@@ -356,9 +346,6 @@ body.viewer-open{overflow:hidden}
 .home-photo-layer.active{transform:scale(1)!important}
 .home-hero-only[data-us-home-photo-instant] .home-photo-layer{transition:none!important}
 .home-photo-shade{background:linear-gradient(180deg,rgba(4,6,9,.03),rgba(4,6,9,.01) 58%,rgba(4,6,9,.46) 100%)!important}
-.home-distance-pill{bottom:26px!important;left:84px!important;right:14px!important;width:auto!important;padding:7px 9px!important;gap:8px!important;border-radius:16px!important;background:rgba(12,14,20,.44)!important;backdrop-filter:blur(18px) saturate(135%)!important;-webkit-backdrop-filter:blur(18px) saturate(135%)!important;box-shadow:0 9px 26px rgba(0,0,0,.20)!important;transition:bottom var(--us-motion-base) var(--us-ease-standard),transform var(--us-motion-fast) var(--us-ease-standard),background var(--us-motion-fast) var(--us-ease-standard),opacity var(--us-motion-base) var(--us-ease-standard)!important}
-.home-distance-pill:active{transform:scale(.985);background:rgba(12,14,20,.56)!important}
-@media(prefers-reduced-motion:reduce){.home-distance-pill{transition:none!important}}
 .home-empty-state[hidden]{display:none}
 .home-empty-state{position:absolute!important;z-index:2!important;left:28px;right:28px;top:48%;transform:translateY(-50%);display:grid;justify-items:center;gap:10px;text-align:center;color:var(--us-color-text);transition:top var(--us-motion-base) var(--us-ease-standard)}
 .home-empty-state.is-compact .home-empty-mark,.home-empty-state.is-compact .home-empty-copy small{display:none}
@@ -494,7 +481,6 @@ body.viewer-open{overflow:hidden}
 .noi-hub-card{position:relative;isolation:isolate;aspect-ratio:1/1;min-width:0;display:flex;flex-direction:column;align-items:stretch;padding:15px 15px 14px;border-radius:24px;text-align:left;color:#fff;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:linear-gradient(150deg,rgba(46,24,54,.80),rgba(20,15,28,.74) 62%,rgba(14,12,20,.78));box-shadow:0 16px 38px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.08);backdrop-filter:blur(22px) saturate(150%);-webkit-backdrop-filter:blur(22px) saturate(150%);transition:transform var(--us-motion-micro) var(--us-ease-standard),border-color var(--us-motion-fast) var(--us-ease-standard)}
 .noi-hub-card::before{content:"";position:absolute;inset:0 22% auto 10%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.34),transparent);pointer-events:none}
 .noi-hub-card::after{content:"";position:absolute;z-index:-1;right:-34%;top:-34%;width:96%;height:96%;border-radius:50%;background:radial-gradient(circle,var(--noi-hub-glow),transparent 68%);opacity:.6;pointer-events:none}
-.noi-hub-card:active{transform:scale(.975)}
 .noi-hub-card:focus-visible{outline:2px solid rgba(255,160,196,.85);outline-offset:3px}
 .noi-hub-icon{width:40px;height:40px;flex:0 0 auto;border-radius:14px;display:grid;place-items:center;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.10);color:var(--noi-hub-tint)}
 .noi-hub-icon::before{content:"";width:22px;height:22px;background:currentColor;-webkit-mask:var(--noi-hub-icon) center/contain no-repeat;mask:var(--noi-hub-icon) center/contain no-repeat}
@@ -571,3 +557,28 @@ body.viewer-open{overflow:hidden}
 .us-daily-reveal-link{position:relative;z-index:4;align-self:flex-start;max-width:100%;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.10);background:rgba(10,12,17,.46);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);color:rgba(255,255,255,.74);font:inherit;font-size:12px;font-weight:600;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:auto;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .us-daily-reveal-link:focus-visible{outline:2px solid rgba(255,160,196,.85);outline-offset:2px}
 .us-oggi-focus .us-daily-reveal-link{opacity:0!important;pointer-events:none!important}
+
+/* M12A — opening a Noi tile eases its destination in (fade + short rise), once per opening. */
+#bond .noi-canonical-page:not([data-noi-view="hub"])>:is(.noi-resonance,.noi-resonance-guide,.noi-living-section,.noi-idea-section){animation:us-content-enter var(--us-motion-fast) var(--us-ease-enter) 1 both}
+:root[data-us-motion="reduced"] #bond .noi-canonical-page>*{animation:none!important}
+@media(prefers-reduced-motion:reduce){#bond .noi-canonical-page>*{animation:none!important}}
+
+/* M12A — Location V2: the distance is an ambient capsule, never a card. One
+   line, no refresh affordance (the reading refreshes itself), stale readings
+   stay visible but quieter. */
+.home-distance-pill[hidden]{display:none!important}
+.us-distance-capsule{position:absolute!important;z-index:3;left:auto;right:14px;width:auto;max-width:calc(100% - 100px);height:36px;min-height:36px;padding:0 13px 0 11px;display:inline-flex;align-items:center;gap:6px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(12,14,20,.46);backdrop-filter:blur(18px) saturate(135%);-webkit-backdrop-filter:blur(18px) saturate(135%);box-shadow:0 8px 22px rgba(0,0,0,.18);color:#fff;font:inherit;font-size:13px;font-weight:650;line-height:1;white-space:nowrap;transition:opacity var(--us-motion-base) var(--us-ease-standard),background var(--us-motion-fast) var(--us-ease-standard),transform var(--us-motion-press) var(--us-ease-standard)}
+.us-distance-capsule::before{content:"";position:absolute;inset:-4px}
+.us-distance-capsule:active{transform:scale(.97);background:rgba(12,14,20,.6)}
+.us-distance-capsule:focus-visible{outline:2px solid rgba(255,160,196,.85);outline-offset:3px}
+.us-distance-capsule .us-icon{--us-icon-size:15px;color:var(--pink2);flex:0 0 auto}
+.us-distance-capsule b{font-weight:650;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.us-distance-capsule[data-us-distance-state="stale"]{opacity:.72}
+.us-distance-capsule[data-us-distance-state="stale"] .us-icon{color:#ffd08a}
+.us-distance-capsule[data-us-distance-state="denied"],.us-distance-capsule[data-us-distance-state="needs-permission"]{color:rgba(255,255,255,.8)}
+.us-distance-capsule[data-us-distance-state="denied"] .us-icon{color:var(--muted)}
+.us-oggi-focus .us-distance-capsule{opacity:0!important;pointer-events:none!important}
+@media(prefers-reduced-motion:reduce){.us-distance-capsule{transition:none}.us-distance-capsule:active{transform:none}}
+
+/* M12A — Oggi arbitration: a surface that lost the priority contest is only hidden, never removed. */
+[data-us-oggi-slot="suppressed"]{display:none!important}

@@ -139,9 +139,9 @@ test('M10.1B: il controllo top-left “Oggi / Domanda” (todayOrb) è rimosso',
   for (const file of fs.readdirSync(ROOT).filter((f) => f.endsWith('.css'))) {
     assert.doesNotMatch(read(file), /today-orb|\.brand-row/, `${file}: CSS obsoleto rimosso`);
   }
-  // Le tre zone della top bar restano bilanciate: eventi al centro, azioni a destra.
+  // M12A: le tre zone della top bar restano bilanciate: Per voi, marchio US al centro, Left for You a destra.
   const css = read('identity.css');
-  assert.match(css, /\.top\.us-premium-top \.us-events-top-control\{grid-column:2\}/);
+  assert.match(css, /\.top\.us-premium-top \.us-top-brand\{[^}]*grid-column:2/);
   assert.match(css, /\.top\.us-premium-top \.top-actions\{[^}]*grid-column:3/);
 });
 

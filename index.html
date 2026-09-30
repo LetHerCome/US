@@ -146,7 +146,7 @@ html.us-returning-device .auth-overlay{
 
 <div class="app">
 
-  <div class="top us-premium-top"><div class="us-top-left"><button type="button" class="us-pervoi-top us-important-control us-attention-orbit is-loading" id="usPerVoiTop" onclick="window.USGameV2?.openPerVoi()" aria-label="Per voi" aria-busy="true" data-us-attention="off" data-gv2-state="idle"><span class="us-pervoi-icon" aria-hidden="true"></span></button></div><button type="button" class="us-events-top-control us-important-control" id="usEventsTopEntry" onclick="openEvents()" aria-label="Apri i nostri eventi"><span>I nostri eventi</span><span class="us-events-top-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-down" aria-hidden="true"></span></span></button><div class="top-actions"><button type="button" class="us-envelope-control us-important-control us-attention-orbit is-loading" id="leftForYouPartnerEntry" onclick="usEnvelopeTap()" aria-label="Lasciato per te" aria-busy="true" data-us-envelope data-us-attention="off"><span class="us-envelope-mark" aria-hidden="true"><span class="us-envelope-icon"><span class="us-envelope-face us-envelope-face--closed" data-icon="/assets/icons/phosphor/envelope-simple-regular.svg"></span><span class="us-envelope-face us-envelope-face--open" data-icon="/assets/icons/phosphor/envelope-open-regular.svg"></span></span></span></button><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
+  <div class="top us-premium-top"><span class="us-aurora" aria-hidden="true"></span><div class="us-top-left"><button type="button" class="us-pervoi-top us-important-control us-attention-orbit is-loading" id="usPerVoiTop" onclick="window.USGameV2?.openPerVoi()" aria-label="Per voi" aria-busy="true" data-us-attention="off" data-gv2-state="idle"><span class="us-pervoi-icon" data-us-attention-icon aria-hidden="true"></span></button></div><div class="us-top-brand" role="img" aria-label="US"><img class="us-top-brand-art" src="/assets/derived/brand/us-symbol-ui-crisp-v1.png" alt="" aria-hidden="true" decoding="async" draggable="false"></div><div class="top-actions"><button type="button" class="us-envelope-control us-important-control us-attention-orbit is-loading" id="leftForYouPartnerEntry" onclick="usEnvelopeTap()" aria-label="Lasciato per te" aria-busy="true" data-us-envelope data-us-attention="off"><span class="us-envelope-mark" aria-hidden="true"><span class="us-envelope-icon" data-us-attention-icon><span class="us-envelope-face us-envelope-face--closed" data-icon="/assets/icons/phosphor/envelope-simple-regular.svg"></span><span class="us-envelope-face us-envelope-face--open" data-icon="/assets/icons/phosphor/envelope-open-regular.svg"></span></span></span></button><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
 
   <main id="home" class="page active">
     <section class="hero home-hero-only" id="homeHero" aria-label="Un vostro ricordo">
@@ -166,10 +166,8 @@ html.us-returning-device .auth-overlay{
         <span class="home-empty-copy"><b>Il primo ricordo inizia da qui</b></span>
         <button type="button" class="home-empty-action" onclick="go('moments',{nav:true})">Aggiungi un ricordo</button>
       </div>
-      <button type="button" class="home-distance-pill" id="distanceWidget" onclick="refreshMyLocation()" aria-label="Aggiorna distanza">
-        <span class="distance-orbit" aria-hidden="true">♡</span>
-        <span class="distance-copy"><b id="distanceValue">Attiva la distanza</b><small id="distanceMeta"></small></span>
-        <span class="distance-action" id="distanceAction"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></span>
+      <button type="button" class="home-distance-pill us-distance-capsule" id="distanceWidget" onclick="openDistanceDetail()" aria-haspopup="dialog" aria-label="Distanza tra voi" data-us-distance-state="unknown" hidden>
+        <span class="us-icon" data-us-icon="heart" aria-hidden="true"></span><b id="distanceValue"></b>
       </button>
       <aside class="push-optin-card" id="pushOptInCard" hidden aria-live="polite">
         <span class="push-optin-icon" aria-hidden="true">♡</span>
@@ -256,20 +254,20 @@ html.us-returning-device .auth-overlay{
       </div>
 
       <nav class="noi-hub" id="noiHub" aria-label="Sezioni di Noi">
-        <button type="button" class="noi-hub-card noi-hub-card--resonance" data-noi-open="resonance">
+        <button type="button" data-us-tile data-us-feedback="tap" class="noi-hub-card noi-hub-card--resonance" data-noi-open="resonance">
           <span class="noi-hub-icon" aria-hidden="true"></span>
           <span class="noi-hub-copy"><span class="noi-hub-kicker">Risonanza</span><b id="noiHubResonanceTitle">Primo legame</b><small id="noiHubResonanceMeta">Livello 1</small></span>
           <span class="noi-hub-track" aria-hidden="true"><span id="noiHubResonanceFill"></span></span>
         </button>
-        <button type="button" class="noi-hub-card noi-hub-card--ideas" data-noi-open="da-vivere">
+        <button type="button" data-us-tile data-us-feedback="tap" class="noi-hub-card noi-hub-card--ideas" data-noi-open="da-vivere">
           <span class="noi-hub-icon" aria-hidden="true"></span>
           <span class="noi-hub-copy"><span class="noi-hub-kicker">Da vivere</span><b id="noiHubIdeasTitle">Le vostre idee</b><small id="noiHubIdeasMeta"></small></span>
         </button>
-        <button type="button" class="noi-hub-card noi-hub-card--calendar" id="usCalendarEntry" onclick="openCalendarSurface()">
+        <button type="button" data-us-tile data-us-feedback="tap" class="noi-hub-card noi-hub-card--calendar" id="usCalendarEntry" onclick="openCalendarSurface()">
           <span class="noi-hub-icon" aria-hidden="true"></span>
           <span class="noi-hub-copy"><span class="noi-hub-kicker">Calendario</span><b>I vostri giorni</b></span>
         </button>
-        <button type="button" class="noi-hub-card noi-hub-card--quest" data-noi-open="quest">
+        <button type="button" data-us-tile data-us-feedback="tap" class="noi-hub-card noi-hub-card--quest" data-noi-open="quest">
           <span class="noi-hub-icon" aria-hidden="true"></span>
           <span class="noi-hub-copy"><span class="noi-hub-kicker">Quest di coppia</span><b id="noiHubQuestTitle">Questa settimana</b><small id="noiHubQuestMeta"></small></span>
         </button>
@@ -431,6 +429,11 @@ html.us-returning-device .auth-overlay{
           <span class="us-setting-main"><b>Posizione</b><small>Solo per la distanza tra voi</small></span>
           <span class="us-setting-state" id="usLocationState">…</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="feedback">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="sparkle"></span></span>
+          <span class="us-setting-main"><b>Suoni e vibrazione</b></span>
+          <span class="us-setting-value" id="usFeedbackValue">Attivi</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
       </div>
 
       <div class="us-settings2-label">STATO US</div>
@@ -472,10 +475,11 @@ html.us-returning-device .auth-overlay{
 <button type="button" id="thinkButton" class="us-floating-think us-premium-control" onclick="sendThinkSignal()" aria-label="Invia Ti penso" title="Ti penso"><span class="us-shell-icon us-shell-icon--think" aria-hidden="true"><img class="us-shell-icon-off" src="/assets/icons/think-off.svg" alt=""><img class="us-shell-icon-on" src="/assets/icons/think-on.svg" alt=""></span></button>
 
 <nav class="nav us-nav us-nav-premium" aria-label="Navigazione principale">
-<button class="active" data-page="home" onclick="go('home',{nav:true})" aria-label="Oggi" aria-current="page"><span class="nicon"><span class="us-nav-icon us-nav-icon--home" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/house-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/house-fill.svg"></span></span></span><span class="nlabel">Oggi</span></button>
-<button data-page="bond" onclick="go('bond',{nav:true})" aria-label="Noi"><span class="nicon"><span class="us-nav-icon us-nav-icon--bond" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/heart-straight-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/heart-straight-fill.svg"></span></span></span><span class="nlabel">Noi</span></button>
-<button data-page="moments" onclick="go('moments',{nav:true})" aria-label="Ricordi"><span class="nicon"><span class="us-nav-icon us-nav-icon--moments" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/images-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/images-fill.svg"></span></span></span><span class="nlabel">Ricordi</span></button>
-<button data-page="quiz" onclick="openQuizHub({nav:true})" aria-label="Gioca"><span class="nicon"><span class="us-nav-icon us-nav-icon--quiz" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/cards-three-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/cards-three-fill.svg"></span></span></span><span class="nlabel">Gioca</span></button>
+<span class="us-nav-track" aria-hidden="true"><span class="us-nav-indicator"></span></span>
+<button data-us-feedback="tap" class="active" data-page="home" onclick="go('home',{nav:true})" aria-label="Oggi" aria-current="page"><span class="nicon"><span class="us-nav-icon us-nav-icon--home" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/house-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/house-fill.svg"></span></span></span><span class="nlabel">Oggi</span></button>
+<button data-us-feedback="tap" data-page="bond" onclick="go('bond',{nav:true})" aria-label="Noi"><span class="nicon"><span class="us-nav-icon us-nav-icon--bond" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/heart-straight-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/heart-straight-fill.svg"></span></span></span><span class="nlabel">Noi</span></button>
+<button data-us-feedback="tap" data-page="moments" onclick="go('moments',{nav:true})" aria-label="Ricordi"><span class="nicon"><span class="us-nav-icon us-nav-icon--moments" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/images-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/images-fill.svg"></span></span></span><span class="nlabel">Ricordi</span></button>
+<button data-us-feedback="tap" data-page="quiz" onclick="openQuizHub({nav:true})" aria-label="Gioca"><span class="nicon"><span class="us-nav-icon us-nav-icon--quiz" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/cards-three-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/cards-three-fill.svg"></span></span></span><span class="nlabel">Gioca</span></button>
 </nav>
 
 
@@ -665,7 +669,10 @@ html.us-returning-device .auth-overlay{
         <div class="tiny">NOI</div>
         <h2 id="usCalendarTitle"><span id="usCalendarMonthLabel">—</span></h2>
       </div>
-      <button type="button" class="us-cal-close us-modal-close us-icon-center" id="usCalendarClose" aria-label="Chiudi calendario" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
+      <div class="us-cal-head-actions">
+        <button type="button" class="us-cal-events-link" id="usCalendarEventsLink" aria-label="Apri i nostri eventi"><span class="us-icon" data-us-icon="calendar-heart" aria-hidden="true"></span><span>Eventi</span></button>
+        <button type="button" class="us-cal-close us-modal-close us-icon-center" id="usCalendarClose" aria-label="Chiudi calendario" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
+      </div>
     </header>
     <div class="us-cal-toolbar">
       <button type="button" class="us-cal-nav us-icon-button us-icon-center" id="usCalendarPrev" aria-label="Mese precedente"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span></button>

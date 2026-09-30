@@ -505,7 +505,7 @@ async function initCloud(){
     usRunWhenIdle(()=>startUsRealtime(),420);
     usRunWhenIdle(()=>startLocationRefreshTimer(),650);
     usRunWhenIdle(()=>hydrateProfileAvatars(),520);
-    usRunWhenIdle(()=>maybeAutoRefreshLocation(),1400);
+    usRunWhenIdle(()=>maybeAutoRefreshLocation('launch'),1400);
     usRunWhenIdle(()=>refreshWebPushUi(),1100);
     usRunWhenIdle(()=>hydrateThink(),900);
 
@@ -532,9 +532,25 @@ function setCloudBadge(ok,text){
 }
 
 
+// ===== M12A — Location V2: ambient, automatic distance =====
+// The distance refreshes itself; nobody is asked to press "Aggiorna".
+//  - Triggers (event driven, no polling loop): US ready after launch, return to
+//    the foreground, and a slow visible-only check while the session stays open.
+//  - A reading is FRESH for 10 min (no geolocation call at all), becomes
+//    eligible for an automatic refresh after that, and is shown as STALE (quiet
+//    capsule, value kept) after 60 min.
+//  - Geolocation is only asked automatically when the browser already says
+//    "granted" (or cannot tell and the user enabled it before). "prompt" never
+//    triggers a dialog by itself; "denied" stops everything until the browser
+//    permission changes. Failures keep the last good distance and back off.
 let locationRefreshInFlight=false;
 let locationTimer=null;
-const LOCATION_STALE_MS=60*60*1000;
+const US_LOCATION_FRESH_MS=10*60*1000;
+const US_LOCATION_STALE_DISPLAY_MS=60*60*1000;
+const US_LOCATION_MIN_GAP_MS=45*1000;
+const US_LOCATION_FAILURE_BACKOFF_MS=5*60*1000;
+const US_LOCATION_CHECK_INTERVAL_MS=5*60*1000;
+const usLocationRuntime={permission:'unknown',lastAttemptAt:0,lastFailureAt:0,mineUpdatedAt:null,watching:false,snapshot:null,rows:null};
 
 function distanceKm(aLat,aLon,bLat,bLon){
   const rad=value=>value*Math.PI/180;
@@ -563,23 +579,6 @@ function validCoordinate(value,min,max){
   return Number.isFinite(number)&&number>=min&&number<=max;
 }
 
-function renderDistanceState(state,detail='',action='Aggiorna'){
-  const root=document.getElementById('distanceWidget');
-  const value=document.getElementById('distanceValue');
-  const meta=document.getElementById('distanceMeta');
-  const btn=document.getElementById('distanceAction');
-  if(!root||!value||!meta||!btn)return;
-  root.classList.remove('ready','denied');
-  if(state==='ready')root.classList.add('ready');
-  if(state==='denied')root.classList.add('denied');
-  value.textContent=state==='unsupported'?'Posizione non supportata':state==='denied'?'Posizione disattivata':state==='loading'?'Aggiorno la distanza…':detail||'Attiva la distanza';
-  if(state==='unsupported')meta.textContent='Non disponibile su questo dispositivo.';
-  else if(state==='denied')meta.textContent='Riattivala dalle impostazioni.';
-  else if(state==='loading')meta.textContent='';
-  btn.textContent=state==='denied'?'Permessi':action;
-  btn.disabled=state==='loading';
-}
-
 function formatDistance(km){
   const unit=localStorage.getItem('us:settings:distance-unit')||'km';
   if(unit==='mi'){
@@ -593,65 +592,72 @@ function formatDistance(km){
   return `${Math.round(km).toLocaleString('it-IT')} km`;
 }
 
+// Pure: should an automatic geolocation read happen right now?
+function decideLocationRefresh({now=Date.now(),mineUpdatedAt=null,lastAttemptAt=0,lastFailureAt=0,permission='unknown',enabledBefore=false,hidden=false,inFlight=false}={}){
+  if(inFlight)return {refresh:false,why:'in-flight'};
+  if(hidden)return {refresh:false,why:'hidden'};
+  if(permission==='denied')return {refresh:false,why:'denied'};
+  if(permission==='prompt')return {refresh:false,why:'needs-user-permission'};
+  if(permission!=='granted'&&!enabledBefore)return {refresh:false,why:'not-enabled'};
+  if(lastAttemptAt&&now-lastAttemptAt<US_LOCATION_MIN_GAP_MS)return {refresh:false,why:'too-soon'};
+  if(lastFailureAt&&now-lastFailureAt<US_LOCATION_FAILURE_BACKOFF_MS)return {refresh:false,why:'failure-backoff'};
+  const updated=Date.parse(mineUpdatedAt||'');
+  if(Number.isFinite(updated)&&now-updated<US_LOCATION_FRESH_MS)return {refresh:false,why:'fresh'};
+  return {refresh:true,why:Number.isFinite(updated)?'stale':'no-reading'};
+}
+
+// Pure: what the capsule says. `snapshot` is the last known couple reading.
+function distanceCapsuleModel({mine=null,partner=null,partnerName='',permission='unknown',supported=true,now=Date.now()}={}){
+  if(!supported)return {state:'unsupported',visible:false,text:'',detail:'Posizione non disponibile'};
+  const coords=row=>row&&validCoordinate(row.latitude,-90,90)&&validCoordinate(row.longitude,-180,180);
+  if(!mine){
+    if(permission==='denied')return {state:'denied',visible:true,text:'Posizione non disponibile',detail:'Riattivala dalle impostazioni del telefono.'};
+    if(permission==='granted')return {state:'pending',visible:false,text:'',detail:''};
+    return {state:'needs-permission',visible:true,text:'Attiva posizione',detail:'Serve solo per la distanza tra voi.'};
+  }
+  if(!partner)return {state:'waiting',visible:true,text:'In attesa',detail:`In attesa di ${partnerName||'chi ami'}`,age:mine.updated_at};
+  if(!coords(mine)||!coords(partner))return {state:'unavailable',visible:true,text:'Posizione non disponibile',detail:'Coordinate non valide.'};
+  const km=distanceKm(Number(mine.latitude),Number(mine.longitude),Number(partner.latitude),Number(partner.longitude));
+  const oldest=Math.max(locationAgeMs(mine.updated_at),locationAgeMs(partner.updated_at));
+  const stale=oldest>US_LOCATION_STALE_DISPLAY_MS;
+  const older=locationAgeMs(mine.updated_at)>=locationAgeMs(partner.updated_at)?mine.updated_at:partner.updated_at;
+  return {state:stale?'stale':'ready',visible:true,km,text:formatDistance(km),detail:`${formatDistance(km)} tra voi`,age:older,stale};
+}
+
+function renderDistanceCapsule(model){
+  const root=document.getElementById('distanceWidget');
+  const value=document.getElementById('distanceValue');
+  if(!root||!value)return;
+  root.hidden=!model.visible;
+  root.dataset.usDistanceState=model.state;
+  value.textContent=model.text||'';
+  root.setAttribute('aria-label',model.visible?`Distanza tra voi: ${model.text}`:'Distanza tra voi');
+}
+
+// Last good reading (shown again on any temporary failure) + current model.
+function applyLocationRows(rows){
+  const mine=(rows||[]).find(row=>row.user_id===window.usProfile.id)||null;
+  const partner=(rows||[]).find(row=>row.user_id!==window.usProfile.id)||null;
+  usLocationRuntime.rows=rows||[];
+  usLocationRuntime.mineUpdatedAt=mine?.updated_at||null;
+  const partnerName=window.usProfile.role==='francesco'?'Beatrice':'Francesco';
+  const model=distanceCapsuleModel({mine,partner,partnerName,permission:usLocationRuntime.permission,supported:Boolean(navigator.geolocation)});
+  if(model.km!==undefined)window.usDistanceKm=model.km;
+  usLocationRuntime.snapshot=model;
+  renderDistanceCapsule(model);
+  return model;
+}
+
 async function hydrateDistance(){
   if(!window.usProfile)return;
   const {data:rows,error}=await sb.from('couple_locations')
     .select('user_id,latitude,longitude,accuracy_m,updated_at')
     .eq('couple_id',window.usProfile.couple_id);
+  // A failed read never replaces a valid last-known distance.
   if(error){console.warn(error);return;}
-  const mine=(rows||[]).find(row=>row.user_id===window.usProfile.id);
-  const partner=(rows||[]).find(row=>row.user_id!==window.usProfile.id);
-  const partnerName=window.usProfile.role==='francesco'?'Beatrice':'Francesco';
-  const root=document.getElementById('distanceWidget');
-  const value=document.getElementById('distanceValue');
-  const meta=document.getElementById('distanceMeta');
-  const btn=document.getElementById('distanceAction');
-  if(!root||!value||!meta||!btn)return;
-  root.classList.remove('denied','stale');
-  if(!mine){
-    root.classList.remove('ready');
-    value.textContent='Attiva la distanza';
-    meta.textContent='Condividi la posizione per vedere la distanza.';
-    btn.textContent='Attiva';btn.disabled=false;
-    return;
-  }
-  if(!partner){
-    root.classList.add('ready');
-    value.textContent=`In attesa di ${partnerName}`;
-    meta.textContent=`Aggiornata ${relativeLocationAge(mine.updated_at)}`;
-    btn.textContent='Aggiorna';btn.disabled=false;
-    return;
-  }
-  const validCoordinates=validCoordinate(mine.latitude,-90,90)&&validCoordinate(mine.longitude,-180,180)&&validCoordinate(partner.latitude,-90,90)&&validCoordinate(partner.longitude,-180,180);
-  if(!validCoordinates){
-    root.classList.add('stale');
-    value.textContent='Distanza non disponibile';
-    meta.textContent='Coordinate non valide.';
-    btn.textContent='Aggiorna';btn.disabled=false;
-    return;
-  }
-  const stalePartner=locationAgeMs(partner.updated_at)>LOCATION_STALE_MS;
-  const staleMine=locationAgeMs(mine.updated_at)>LOCATION_STALE_MS;
-  if(stalePartner||staleMine){
-    root.classList.add('stale');
-    value.textContent='Posizione non aggiornata';
-    const staleOwner=stalePartner?partnerName:'la tua';
-    const staleAge=stalePartner?partner.updated_at:mine.updated_at;
-    const staleAgeLabel=relativeLocationAge(staleAge).replace(' giorni fa','g').replace(' giorno fa','g').replace(' ore fa','h').replace(' ora fa','h');
-    meta.textContent=stalePartner
-      ?`${partnerName}: ${staleAgeLabel} · deve aprire US.`
-      :`La tua posizione: ${staleAgeLabel} · riprova.`;
-    btn.textContent='Riprova';btn.disabled=false;
-    return;
-  }
-  const km=distanceKm(Number(mine.latitude),Number(mine.longitude),Number(partner.latitude),Number(partner.longitude));
-  window.usDistanceKm=km;
-  root.classList.add('ready');
-  value.textContent=`♡ ${formatDistance(km)} da ${partnerName}`;
-  const accuracy=Number.isFinite(Number(partner.accuracy_m))?` · precisione ±${Math.round(Number(partner.accuracy_m))} m`:'';
-  meta.textContent=`Aggiornata ${relativeLocationAge(partner.updated_at)}${accuracy}`;
-  btn.innerHTML='<span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span>';btn.disabled=false;
+  return applyLocationRows(rows);
 }
+window.hydrateDistance=hydrateDistance;
 
 async function saveMyLocation(position){
   if(window.__US_LOCAL_DEV__)return false;
@@ -670,33 +676,39 @@ async function saveMyLocation(position){
 }
 
 function geolocationError(error,silent=false){
+  usLocationRuntime.lastFailureAt=Date.now();
   if(error?.code===1){
+    // Permission refused: stop trying until the browser permission changes.
+    usLocationRuntime.permission='denied';
     localStorage.removeItem('usLocationEnabled');
-    renderDistanceState('denied');
     if(!silent)toast('Permesso posizione non attivo');
-  }else{
-    if(!silent)toast('Non riesco ad aggiornare la posizione');
-    hydrateDistance();
-  }
+  }else if(!silent)toast('Non riesco ad aggiornare la posizione');
+  // The last good distance (if any) stays on screen.
+  return hydrateDistance();
 }
 
+// Manual entry point: only the genuine "Attiva posizione" / Settings paths use
+// it without `silent`. Automatic refreshes always pass {silent:true}.
 function refreshMyLocation(options={}){
   if(window.__US_LOCAL_DEV__)return;
   const silent=Boolean(options?.silent);
   if(!window.usProfile)return toast('Connessione non pronta');
   if(!navigator.geolocation){
-    renderDistanceState('unsupported');
+    renderDistanceCapsule(distanceCapsuleModel({supported:false}));
     return;
   }
   if(locationRefreshInFlight)return;
   locationRefreshInFlight=true;
-  if(!silent)renderDistanceState('loading');
+  usLocationRuntime.lastAttemptAt=Date.now();
   navigator.geolocation.getCurrentPosition(async position=>{
     try{
+      usLocationRuntime.permission='granted';
       await saveMyLocation(position);
+      usLocationRuntime.lastFailureAt=0;
       await hydrateDistance();
       if(!silent)toast('Distanza aggiornata ♡');
     }catch(error){
+      usLocationRuntime.lastFailureAt=Date.now();
       console.warn(error);
       if(!silent)toast('Errore sync posizione');
     }finally{
@@ -706,51 +718,83 @@ function refreshMyLocation(options={}){
     locationRefreshInFlight=false;
     geolocationError(error,silent);
   },{
-    enableHighAccuracy:true,
-    timeout:20000,
-    maximumAge:silent?30000:0
+    // A city-to-city distance does not need GPS: cheap reads for automatic refreshes.
+    enableHighAccuracy:!silent,
+    timeout:silent?15000:20000,
+    maximumAge:silent?120000:0
   });
 }
 window.refreshMyLocation=refreshMyLocation;
 
-async function maybeAutoRefreshLocation(){
-  if(window.__US_LOCAL_DEV__)return;
-  if(!window.usProfile||!navigator.geolocation)return hydrateDistance();
-  await hydrateDistance();
-  if(localStorage.getItem('usLocationEnabled')==='1'){
-    refreshMyLocation({silent:true});
-    return;
-  }
-  if(!navigator.permissions?.query)return;
+async function locationPermissionState(){
   try{
+    if(!navigator.permissions?.query)return 'unknown';
     const permission=await navigator.permissions.query({name:'geolocation'});
-    if(permission.state==='granted')refreshMyLocation({silent:true});
-    if(permission.state==='denied')renderDistanceState('denied');
+    return permission.state||'unknown';
+  }catch(_e){return 'unknown';}
+}
+function watchLocationPermission(){
+  if(usLocationRuntime.watching||!navigator.permissions?.query)return;
+  usLocationRuntime.watching=true;
+  navigator.permissions.query({name:'geolocation'}).then(permission=>{
     permission.onchange=()=>{
+      usLocationRuntime.permission=permission.state||'unknown';
+      usLocationRuntime.lastFailureAt=0;
       if(permission.state==='granted')refreshMyLocation({silent:true});
-      else if(permission.state==='denied')renderDistanceState('denied');
       else hydrateDistance();
     };
-  }catch(_e){}
+  }).catch(()=>{usLocationRuntime.watching=false;});
 }
 
+// Called for: launch, foreground return, and the slow visible-only check.
+async function maybeAutoRefreshLocation(reason='resume'){
+  if(window.__US_LOCAL_DEV__)return;
+  if(!window.usProfile)return;
+  if(!navigator.geolocation){renderDistanceCapsule(distanceCapsuleModel({supported:false}));return;}
+  await hydrateDistance();
+  usLocationRuntime.permission=await locationPermissionState();
+  watchLocationPermission();
+  if(usLocationRuntime.rows)applyLocationRows(usLocationRuntime.rows);
+  const decision=decideLocationRefresh({
+    mineUpdatedAt:usLocationRuntime.mineUpdatedAt,
+    lastAttemptAt:usLocationRuntime.lastAttemptAt,
+    lastFailureAt:usLocationRuntime.lastFailureAt,
+    permission:usLocationRuntime.permission,
+    enabledBefore:localStorage.getItem('usLocationEnabled')==='1',
+    hidden:document.hidden,
+    inFlight:locationRefreshInFlight
+  });
+  if(decision.refresh)refreshMyLocation({silent:true});
+  return {reason,...decision};
+}
+
+// Slow, visible-only safety net for a session that simply stays open. It asks
+// the same policy as every other trigger, so a fresh reading never reads GPS.
 function startLocationRefreshTimer(){
   if(window.__US_LOCAL_DEV__)return;
   if(locationTimer)clearInterval(locationTimer);
   locationTimer=setInterval(()=>{
     if(window.__US_LOCAL_DEV__)return;
     if(document.hidden||!window.usProfile)return;
-    if(localStorage.getItem('usLocationEnabled')==='1'){
-      refreshMyLocation({silent:true});
-      return;
-    }
-    if(navigator.permissions?.query){
-      navigator.permissions.query({name:'geolocation'}).then(permission=>{
-        if(permission.state==='granted')refreshMyLocation({silent:true});
-      }).catch(()=>{});
-    }
-  },5*60*1000);
+    maybeAutoRefreshLocation('check').catch(()=>{});
+  },US_LOCATION_CHECK_INTERVAL_MS);
 }
+
+// The capsule's only interaction: a tiny sheet (same canonical surface as every
+// confirmation). "Attiva posizione" exists only where the permission is
+// genuinely still needed; there is never a manual refresh.
+async function openDistanceDetail(){
+  const model=usLocationRuntime.snapshot||distanceCapsuleModel({permission:usLocationRuntime.permission,supported:Boolean(navigator.geolocation)});
+  const ui=window.UsUiFoundation;
+  if(model.state==='needs-permission'){
+    const ok=await ui?.confirm?.({kicker:'POSIZIONE',title:'Attiva la posizione',body:model.detail,confirmLabel:'Attiva',cancelLabel:'Non ora'});
+    if(ok)refreshMyLocation({});
+    return;
+  }
+  const age=model.age?`Aggiornata ${relativeLocationAge(model.age)}`:'';
+  await ui?.notice?.({kicker:'DISTANZA',title:model.detail||'Posizione non disponibile',body:age});
+}
+window.openDistanceDetail=openDistanceDetail;
 
 function setAvatarSlot(containerId,signedUrl){
   const root=document.getElementById(containerId);if(!root)return;
@@ -1420,7 +1464,7 @@ function renderDailyRitual(model){
   card.dataset.state=model.state;
   card.dataset.usAttention=model.attention?'on':'off';
   card.setAttribute('aria-label',`${model.kicker}: ${model.question}. ${model.cta}`);
-  card.innerHTML=`<span class="us-daily-ritual-head"><span class="us-daily-ritual-mark us-phosphor-question" aria-hidden="true"></span><span class="us-daily-ritual-kicker">${escapeHtml(model.kicker)}</span></span><span class="us-daily-ritual-question">${escapeHtml(model.question)}</span><span class="us-daily-ritual-cta">${escapeHtml(model.cta)}</span>`;
+  card.innerHTML=`<span class="us-daily-ritual-head"><span class="us-daily-ritual-mark us-phosphor-question" data-us-attention-icon aria-hidden="true"></span><span class="us-daily-ritual-kicker">${escapeHtml(model.kicker)}</span></span><span class="us-daily-ritual-question">${escapeHtml(model.question)}</span><span class="us-daily-ritual-cta">${escapeHtml(model.cta)}</span>`;
   card.hidden=false;
 }
 window.UsDailyRitual=Object.freeze({viewModel:dailyRitualViewModel,render:renderDailyRitual});
@@ -1543,6 +1587,69 @@ window.UsTodayPriority=Object.freeze({
   render:renderTodayPriorities,
   refresh:refreshTodayPriorities
 });
+
+// ===== M12A — Oggi arbitration =====
+// The photo stays the dominant surface: at any moment Oggi shows AT MOST ONE
+// primary attention item and AT MOST ONE quiet informational item. The
+// choice is deterministic (slot, then rank, then id); surfaces that lose are
+// only suppressed (display), never destroyed, so they return the moment the
+// winner is resolved. Distance is a tiny ambient capsule and does not count.
+//
+//   PRIMARY (something for ME to do / see)        QUIET (information)
+//   10 Ti penso received                          10 today's / tomorrow's event
+//   20 "Risposte pronte" (reveal ready)           20 calendar insight
+//   30 waiting for me (priority queue)            30 "Rivedi le risposte di oggi"
+//   40 Daily Question, partner already answered   40 push opt-in / install hint
+//   50 Daily Question available
+//   60 Daily Question error (Riprova)
+const US_OGGI_PRIMARY_RANK=Object.freeze({received_ready:10,answers_ready:20,waiting_for_me:30});
+const US_OGGI_DAILY_RANK=Object.freeze({invited:40,answer:50,error:60});
+function arbitrateOggi(candidates=[]){
+  const best={primary:null,quiet:null};
+  for(const item of Array.isArray(candidates)?candidates:[]){
+    if(!item||!item.id||!(item.slot in best))continue;
+    const current=best[item.slot];
+    const rank=Number(item.rank);
+    if(!Number.isFinite(rank))continue;
+    if(!current||rank<current.rank||(rank===current.rank&&String(item.id)<String(current.id)))best[item.slot]={id:String(item.id),rank};
+  }
+  return {primary:best.primary?.id||null,quiet:best.quiet?.id||null};
+}
+const US_OGGI_SURFACES=Object.freeze(['usTodayPriorityRegion','usOggiCalendarWidget','usDailyRitual','usDailyRevealLink','pushOptInCard']);
+function collectOggiCandidates(){
+  const live=id=>{const el=document.getElementById(id);return el&&!el.hidden?el:null;};
+  const candidates=[];
+  if(live('usTodayPriorityRegion')){
+    const head=usTodayPriorityQueue[0];
+    if(US_OGGI_PRIMARY_RANK[head?.category])candidates.push({id:'usTodayPriorityRegion',slot:'primary',rank:US_OGGI_PRIMARY_RANK[head.category]});
+    else candidates.push({id:'usTodayPriorityRegion',slot:'quiet',rank:10});
+  }
+  const daily=live('usDailyRitual');
+  if(daily)candidates.push({id:'usDailyRitual',slot:'primary',rank:US_OGGI_DAILY_RANK[daily.dataset.state]||US_OGGI_DAILY_RANK.answer});
+  if(live('usOggiCalendarWidget'))candidates.push({id:'usOggiCalendarWidget',slot:'quiet',rank:20});
+  if(live('usDailyRevealLink'))candidates.push({id:'usDailyRevealLink',slot:'quiet',rank:30});
+  if(live('pushOptInCard'))candidates.push({id:'pushOptInCard',slot:'quiet',rank:40});
+  return candidates;
+}
+function applyOggiArbitration(){
+  const winner=arbitrateOggi(collectOggiCandidates());
+  for(const id of US_OGGI_SURFACES){
+    const el=document.getElementById(id);
+    if(!el)continue;
+    if(el.hidden){el.removeAttribute('data-us-oggi-slot');continue;}
+    el.setAttribute('data-us-oggi-slot',winner.primary===id?'primary':winner.quiet===id?'quiet':'suppressed');
+  }
+  return winner;
+}
+window.UsOggi=Object.freeze({arbitrate:arbitrateOggi,apply:applyOggiArbitration,collect:collectOggiCandidates});
+(()=>{
+  const hero=document.getElementById('homeHero');
+  if(!hero||typeof MutationObserver!=='function')return;
+  let queued=false;
+  const schedule=()=>{if(queued)return;queued=true;queueMicrotask(()=>{queued=false;applyOggiArbitration();});};
+  new MutationObserver(schedule).observe(hero,{subtree:true,childList:true,attributes:true,attributeFilter:['hidden','data-state']});
+  schedule();
+})();
 
 function localDateISO(){
   const d=new Date(), y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
@@ -2046,6 +2153,23 @@ document.getElementById('momentFile')?.addEventListener('change',async(event)=>{
 
 function momentExt(_file){return 'webp';}
 
+// M12A — a newly created Ricordo settles in and catches the light ONCE. The id
+// is remembered until its card is first rendered (a concurrent refresh may
+// draw the grid before our own), then forgotten: scrolling, later refreshes
+// and every other card never replay it.
+let usFreshRicordo=null;
+const US_FRESH_RICORDO_TTL_MS=30000;
+function markFreshRicordo(id){usFreshRicordo={id:String(id),at:Date.now()};}
+function consumeFreshRicordo(grid){
+  if(!usFreshRicordo)return false;
+  if(Date.now()-usFreshRicordo.at>US_FRESH_RICORDO_TTL_MS){usFreshRicordo=null;return false;}
+  const card=[...(grid?.querySelectorAll?.('.moment-card[data-moment-id]')||[])].find(c=>c.dataset.momentId===usFreshRicordo.id);
+  if(!card)return false;
+  usFreshRicordo=null;
+  return Boolean(window.UsUiFoundation?.playOnce?.(card,'ricordi-new',1300));
+}
+window.UsRicordiFresh=Object.freeze({mark:markFreshRicordo,consume:consumeFreshRicordo});
+
 async function uploadMoment(){
   if(!window.usProfile)return toast('Connessione non pronta');
   if(!pendingMomentFile)return toast('Scegli prima una foto');
@@ -2061,14 +2185,17 @@ async function uploadMoment(){
     btn.textContent='Carico…';
     const {error:uploadError}=await sb.storage.from('us-media').upload(path,compressed,{contentType:'image/webp',upsert:false,cacheControl:'3600'});
     if(uploadError)throw uploadError;
-    const {error:rowError}=await sb.from('moments').insert({
+    const {data:created,error:rowError}=await sb.from('moments').insert({
       couple_id:window.usProfile.couple_id,
       created_by:window.usProfile.id,
       storage_path:path,
       caption:caption||null,
       moment_date:momentDate
-    });
+    }).select('id').single();
     if(rowError){await sb.storage.from('us-media').remove([path]);throw rowError;}
+    // M12A — only THIS creation earns the one-shot light catch (see consumeFreshRicordo).
+    if(created?.id)markFreshRicordo(created.id);
+    window.UsFeedback?.success?.();
     resetMomentComposer();
     toast('Ricordo aggiunto ♡');
     await hydrateMoments();
@@ -2251,6 +2378,7 @@ async function hydrateMomentsCore(){
   closeRow();
   if(timeline.length){
     grid.innerHTML=html.join('');grid.dataset.loaded='1';grid.dataset.signature=signature;
+    consumeFreshRicordo(grid);
     renderRicordiRivivi(ricordiPickRivivi(rows||[],today),signedUrls,names);
     renderRicordiChapters(ricordiChapters(timeline),signedUrls);
   }
@@ -2441,7 +2569,7 @@ function renderBondBadges(level){
   try{
     const key=`usBondLastLevel:${window.usProfile?.couple_id||'local'}`;
     const prev=Number(localStorage.getItem(key)||0);
-    if(prev>0&&level>prev){window.usCelebrateLevel?.(level,bondRankTitle(level))||toast(`LV. ${level} · ${bondRankTitle(level)}`);window.UsPlatform?.haptic?.('success',[35,20,55])||navigator.vibrate?.([35,20,55]);}
+    if(prev>0&&level>prev){window.usCelebrateLevel?.(level,bondRankTitle(level))||toast(`LV. ${level} · ${bondRankTitle(level)}`);window.UsFeedback?.success?.();}
     if(level>prev)localStorage.setItem(key,String(level));
   }catch(_e){}
 }
@@ -2602,7 +2730,7 @@ async function confirmBondQuest(id){
   const {data,error}=await sb.rpc('confirm_bond_quest',{target_quest_id:id});
   if(error){console.warn(error);toast('Non riesco a confermare la quest');return;}
   sendWebPushEvent('quest_confirmed',id).catch(()=>{});
-  if(data?.xp_awarded){toast(`+${data.xp_awarded} Bond XP ♡`);window.UsPlatform?.haptic?.('success',[35,25,55])||navigator.vibrate?.([35,25,55]);}
+  if(data?.xp_awarded){toast(`+${data.xp_awarded} Bond XP ♡`);window.UsFeedback?.success?.();}
   else toast('Confermata. Aspettiamo l’altro ♡');
   await hydrateBond();
   await hydrateBondSummary();
@@ -3261,7 +3389,7 @@ async function sendThinkSignal(){
   usThinkOperationId=null;
   if(messageId)sendWebPushEvent('think',messageId).catch(()=>{});
   btn?.classList.add('sent');setTimeout(()=>btn?.classList.remove('sent'),700);
-  window.UsPlatform?.haptic?.('light',[30,25,45])||navigator.vibrate?.([30,25,45]);
+  window.UsFeedback?.action?.();
   toast(result?.duplicate?'Già inviato':'Inviato');
   await hydrateThink();
   setTimeout(()=>{if(btn)btn.disabled=false;},1800);
@@ -3273,10 +3401,17 @@ function handleIncomingThink(row){
   usIncomingThink={...row};usThinkReactionFinal=null;usThinkReactionInFlight=false;
   const partner=partnerFromProfiles(window.usBondProfiles||[]);
   toast(`${partner?.display_name||'L’altra persona'} ti pensa ♡`);
-  window.UsPlatform?.haptic?.('medium',[45,35,80])||navigator.vibrate?.([45,35,80]);
   const heart=document.getElementById('thinkButton');heart?.classList.add('received');setTimeout(()=>heart?.classList.remove('received'),900);
   hydrateThink().catch(()=>{});
-  window.UsTodayPriority?.refresh?.();
+  // M12A — the arrival is one calm event: the shared attention state (driven
+  // by the priority item), ONE soft halo on it, the aurora reaction and the
+  // attention tone — only because US is active right now.
+  window.UsFeedback?.attention?.();
+  window.UsUiFoundation?.auroraPulse?.();
+  Promise.resolve(window.UsTodayPriority?.refresh?.()).then(()=>{
+    const card=document.querySelector('#usTodayPriorityRegion [data-us-arrival-type="think-received"]');
+    window.UsUiFoundation?.playOnce?.(card,'us-attention-pulse',900);
+  }).catch(()=>{});
 }
 const usRealtimeRefreshTimers=new Map();
 function scheduleUsRealtimeRefresh(kind){
@@ -3688,9 +3823,11 @@ async function refreshVisibleState(options={}){
   if(options.foreground)hydrateThink().catch(()=>{});
   const active=document.querySelector('.page.active')?.id;
   const todayOpen=document.getElementById('today')?.classList.contains('open');
+  // M12A — returning to the foreground re-checks the location wherever the user lands.
+  if(options.foreground)maybeAutoRefreshLocation('resume').catch(()=>{});
   if(active==='home'||todayOpen){
     await hydrateToday();
-    if(options.foreground)maybeAutoRefreshLocation();else hydrateDistance();
+    if(!options.foreground)hydrateDistance();
     return;
   }
   if(active==='moments'){await hydrateMoments();return;}

@@ -108,6 +108,6 @@ test('M10A: invito empty-state e opt-in notifiche non si sovrappongono alla colo
   assert.match(app, /new ResizeObserver\(\(\)=>layoutOggiEmptyState\(\)\)/);
   assert.match(css, /\.home-empty-state\.is-compact \.home-empty-mark,\.home-empty-state\.is-compact \.home-empty-copy small\{display:none\}/);
   // The push opt-in rises above the distance row instead of covering it.
-  assert.match(read('identity.css'), /#home \.home-distance-pill:not\(\[hidden\]\) ~ \.push-optin-card\{bottom:calc\(var\(--us-nav-height\) \+ var\(--us-safe-bottom\) \+ 88px\)!important\}/);
+  assert.match(read('identity.css'), /#home \.home-distance-pill:not\(\[hidden\]\) ~ \.push-optin-card\{bottom:calc\(var\(--us-nav-height\) \+ var\(--us-safe-bottom\) \+ 62px\)!important\}/);
   assert.ok(html.indexOf('id="distanceWidget"') < html.indexOf('id="pushOptInCard"'), 'sibling order the opt-in lift relies on');
 });
