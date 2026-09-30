@@ -129,6 +129,7 @@ async function hydrateUsSettings(){
   $('usSettingsEventsCount').textContent=Number(eventsRes.count||0).toLocaleString('it-IT');
   $('usStoryArchiveValue').textContent=Number(archiveRes.count||0)?String(archiveRes.count):'';
   $('usDistanceUnitValue').textContent=unit==='mi'?'miglia':'km';
+  const feedbackValue=$('usFeedbackValue');if(feedbackValue)feedbackValue.textContent=feedbackSummary();
   $('usSettingsBuild').textContent=currentBuild();
 
   try{
@@ -273,6 +274,34 @@ function preferenceToggle(key,label,checked){
     <span><b>${label}</b><small>${key==='think'?'Segnali Ti penso':key==='today'?'Risposte e reveal di Today':key==='bond'?'Conferme delle quest Bond':key==='left_for_you'?'Quando la tua persona ti lascia qualcosa':key==='games'?'Tocca a te, risposte pronte, domanda della settimana':'Mesiversari e anniversari'}</small></span>
     <i class="${checked?'on':''}"><u></u></i>
   </button>`;
+}
+
+// M12A — device-local feedback preferences (sound / haptics), owned by UsFeedback.
+function feedbackSummary(){
+  const prefs=window.UsFeedback?.getPreferences?.()||{sounds:true,haptics:true};
+  return prefs.sounds&&prefs.haptics?'Attivi':!prefs.sounds&&!prefs.haptics?'Spenti':prefs.sounds?'Solo suoni':'Solo vibrazione';
+}
+function feedbackToggle(key,label,detail,checked){
+  return `<button type="button" class="us-settings2-toggle-row" data-feedback="${key}" aria-pressed="${checked?'true':'false'}">
+    <span><b>${label}</b><small>${detail}</small></span>
+    <i class="${checked?'on':''}"><u></u></i>
+  </button>`;
+}
+function feedbackModal(){
+  const prefs=window.UsFeedback?.getPreferences?.()||{sounds:true,haptics:true};
+  openModal('Suoni e vibrazione',`<div class="us-settings2-toggle-list">
+    ${feedbackToggle('sounds','Suoni','Toni discreti mentre usi US',prefs.sounds)}
+    ${feedbackToggle('haptics','Vibrazione','Un lieve tocco sui gesti',prefs.haptics)}
+  </div>`,'QUESTO TELEFONO');
+  $('usSettingsModalBody').querySelectorAll('[data-feedback]').forEach(btn=>btn.addEventListener('click',()=>{
+    const next=btn.getAttribute('aria-pressed')!=='true';
+    if(btn.dataset.feedback==='sounds')window.UsFeedback?.setSoundsEnabled?.(next);
+    else window.UsFeedback?.setHapticsEnabled?.(next);
+    btn.setAttribute('aria-pressed',next?'true':'false');
+    btn.querySelector('i')?.classList.toggle('on',next);
+    const value=$('usFeedbackValue');if(value)value.textContent=feedbackSummary();
+    if(next)window.UsFeedback?.[btn.dataset.feedback==='sounds'?'tap':'action']?.();
+  }));
 }
 
 async function notificationsModal(){
@@ -552,6 +581,7 @@ async function action(name){
   if(name==='notifications')return notificationsModal();
   if(name==='distance')return distanceModal();
   if(name==='location')return locationAction();
+  if(name==='feedback')return feedbackModal();
   if(name==='sync-status')return syncStatusModal();
   if(name==='scriptable-widgets')return scriptableWidgetsModal();
   if(name==='account-upgrade')return accountUpgradeModal();

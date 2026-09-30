@@ -193,17 +193,21 @@ test('M10E.3: solo un Ti penso ricevuto e non gestito accende l’orbit; impegni
 test('M10E: un solo primitive condiviso, in ui-foundation, senza animazioni parallele', () => {
   const foundation = read('ui-foundation.css');
   assert.match(foundation, /\.us-attention-orbit::after\{[\s\S]*pointer-events:none;/);
-  assert.match(foundation, /\.us-attention-orbit\[data-us-attention="on"\]::after\{[\s\S]*animation:us-attention-orbit var\(--us-attention-period,3\.2s\) linear infinite;/);
+  assert.match(foundation, /\.us-attention-orbit\[data-us-attention="on"\]::after\{[\s\S]*animation:us-attention-orbit var\(--us-attention-period,5\.2s\) linear infinite;/);
   const period = Number(foundation.match(/--us-attention-period,([\d.]+)s/)[1]);
-  assert.ok(period >= 2.5 && period <= 4, 'one rotation every 2.5–4 s');
+  // M12A: the ring turns for about half of the cycle, then rests; the icon itself breathes.
+  assert.ok(period >= 4 && period <= 7, 'a calm cycle with a rest, not a constant spin');
+  assert.match(foundation, /@keyframes us-attention-orbit\{[\s\S]*?64%,100%\{--us-attention-angle:360deg;opacity:0\}/, 'the ring rests');
+  assert.match(foundation, /\[data-us-attention="on"\] \[data-us-attention-icon\]\{[\s\S]*animation:us-attention-breathe/, 'the glyph is alive');
   const keyframes = ALL_CSS.filter(([, s]) => /@keyframes us-attention-orbit/.test(s)).map(([f]) => f);
   assert.deepEqual(keyframes, ['ui-foundation.css'], 'defined once');
   for (const [file, source] of ALL_CSS) {
     assert.doesNotMatch(source, /us-envelope-trace/, `${file}: the old bespoke envelope trace is gone`);
   }
-  // No flashing / scale pulse in the primitive.
-  const block = foundation.slice(foundation.indexOf('M10E — Personal attention orbit'));
-  assert.doesNotMatch(block, /scale\(|steps\(|infinite alternate/);
+  // No flashing or stepped animation in the primitive; the ring itself never scales.
+  const block = foundation.slice(foundation.indexOf('M10E / M12A — Personal attention'), foundation.indexOf('M12A — One-shot soft pulse'));
+  assert.doesNotMatch(block, /steps\(|infinite alternate/);
+  assert.doesNotMatch(block.match(/@keyframes us-attention-orbit\{[\s\S]*?64%,100%\{[^}]*\}/)[0], /scale/);
   // Every host writes the same attribute from its own canonical state.
   assert.match(app, /card\.dataset\.usAttention=model\.attention\?'on':'off';/);
   assert.match(app, /data-us-attention="\$\{item\.attention\?'on':'off'\}"/);
@@ -211,8 +215,9 @@ test('M10E: un solo primitive condiviso, in ui-foundation, senza animazioni para
 
 test('M10E: reduced motion → nessuna rotazione, alone statico visibile', () => {
   const foundation = read('ui-foundation.css');
-  const reduced = foundation.slice(foundation.lastIndexOf('@media (prefers-reduced-motion:reduce){'));
-  assert.match(reduced, /\.us-attention-orbit\[data-us-attention="on"\]::after\{[\s\S]*animation:none;[\s\S]*background:linear-gradient/);
+  const reduced = foundation.slice(foundation.indexOf('@media (prefers-reduced-motion:reduce){', foundation.indexOf('M10E / M12A — Personal attention')));
+  assert.match(reduced, /\.us-attention-orbit\[data-us-attention="on"\]::after,\s*\.us-attention-orbit\[data-us-attention="on"\] \[data-us-attention-icon\]\{animation:none\}/);
+  assert.match(reduced, /\.us-attention-orbit\[data-us-attention="on"\]::after\{[\s\S]*background:linear-gradient/);
 });
 
 test('M10E: il primitive non tocca tap, focus o aria degli host', () => {

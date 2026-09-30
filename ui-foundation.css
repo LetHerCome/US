@@ -323,13 +323,17 @@ h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
   -webkit-backdrop-filter:blur(18px);
 }
 
-/* M10E — Personal attention orbit: ONE shared primitive for "YOU still have
+/* M10E / M12A — Personal attention: ONE shared primitive for "YOU still have
    something to do or see". The host adds .us-attention-orbit and is
    position:relative; its renderer sets data-us-attention="on"|"off" from its
    own canonical state (never a second notification-state store). It never
-   replaces a label: every host keeps a readable state of its own. Paints
-   only on ::after with pointer-events:none, so taps, focus rings and aria
-   are untouched. */
+   replaces a label: every host keeps a readable state of its own.
+   While "on" the same slow cycle drives two layers: a thin reflection that
+   travels once around the host (::after, pointer-events:none so taps, focus
+   rings and aria are untouched) and, when the host marks its glyph with
+   [data-us-attention-icon], the glyph itself (breathe + tiny tilt + soft
+   halo via the independent scale/rotate properties, so a host's own
+   transform transitions keep working). Each cycle ends in a calm rest. */
 @property --us-attention-angle{syntax:'<angle>';inherits:false;initial-value:0deg}
 .us-attention-orbit::after{
   content:"";
@@ -348,18 +352,120 @@ h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
 }
 .us-attention-orbit[data-us-attention="on"]::after{
   opacity:1;
-  animation:us-attention-orbit var(--us-attention-period,3.2s) linear infinite;
+  animation:us-attention-orbit var(--us-attention-period,5.2s) linear infinite;
 }
-@keyframes us-attention-orbit{to{--us-attention-angle:360deg}}
-/* Reduced motion: no rotation, a static visible halo instead. */
+.us-attention-orbit[data-us-attention="on"] [data-us-attention-icon]{
+  transform-origin:50% 50%;
+  animation:us-attention-breathe var(--us-attention-period,5.2s) var(--us-ease-standard,ease) infinite;
+}
+@keyframes us-attention-orbit{
+  0%{--us-attention-angle:0deg;opacity:0}
+  8%{opacity:1}
+  52%{--us-attention-angle:360deg;opacity:1}
+  64%,100%{--us-attention-angle:360deg;opacity:0}
+}
+@keyframes us-attention-breathe{
+  0%,60%,100%{scale:1;rotate:0deg;filter:drop-shadow(0 0 0 rgba(255,140,184,0))}
+  14%{scale:1.1;rotate:-5deg;filter:drop-shadow(0 0 5px rgba(255,140,184,.62))}
+  28%{scale:1.04;rotate:3deg;filter:drop-shadow(0 0 3px rgba(255,140,184,.38))}
+  42%{scale:1.08;rotate:-2deg;filter:drop-shadow(0 0 5px rgba(184,150,255,.5))}
+}
+/* Reduced motion / hidden document: no travel, a static visible cue instead. */
+:root[data-us-motion="reduced"] .us-attention-orbit[data-us-attention="on"]::after,
+:root[data-us-motion="reduced"] .us-attention-orbit[data-us-attention="on"] [data-us-attention-icon]{animation:none}
+:root[data-us-motion="reduced"] .us-attention-orbit[data-us-attention="on"]::after{
+  padding:var(--us-attention-width-static,2px);
+  background:linear-gradient(135deg,rgba(255,140,184,.72),rgba(184,150,255,.52));
+  transition:none;
+}
+:root[data-us-motion="reduced"] .us-attention-orbit[data-us-attention="on"] [data-us-attention-icon]{filter:drop-shadow(0 0 4px rgba(255,140,184,.5))}
 @media (prefers-reduced-motion:reduce){
+  .us-attention-orbit[data-us-attention="on"]::after,
+  .us-attention-orbit[data-us-attention="on"] [data-us-attention-icon]{animation:none}
   .us-attention-orbit[data-us-attention="on"]::after{
-    animation:none;
     padding:var(--us-attention-width-static,2px);
     background:linear-gradient(135deg,rgba(255,140,184,.72),rgba(184,150,255,.52));
     transition:none;
   }
+  .us-attention-orbit[data-us-attention="on"] [data-us-attention-icon]{filter:drop-shadow(0 0 4px rgba(255,140,184,.5))}
 }
+:root[data-us-visibility="hidden"] .us-attention-orbit[data-us-attention="on"]::after,
+:root[data-us-visibility="hidden"] .us-attention-orbit[data-us-attention="on"] [data-us-attention-icon]{animation-play-state:paused}
+
+/* M12A — One-shot soft pulse (e.g. a received Ti penso): a single halo, never a loop. */
+.us-attention-pulse{position:relative}
+.us-attention-pulse::before{content:"";position:absolute;inset:-4px;border-radius:inherit;pointer-events:none;box-shadow:0 0 0 0 rgba(255,140,184,.46),0 0 18px 2px rgba(255,140,184,.30);opacity:0;animation:us-attention-pulse 900ms var(--us-ease-standard,ease) 1 both}
+@keyframes us-attention-pulse{0%{opacity:0;transform:scale(.94)}30%{opacity:1}100%{opacity:0;transform:scale(1.12)}}
+:root[data-us-motion="reduced"] .us-attention-pulse::before{animation:none;opacity:0}
+@media (prefers-reduced-motion:reduce){.us-attention-pulse::before{animation:none;opacity:0}}
+
+/* M12A — Shell aurora: ONE ambient light living behind the glass of the top
+   bar. Ambient state = a very slow, low-opacity drift of rose / violet / plum
+   light (transform + opacity only, no JS loop). The same layer reacts: the
+   bar's data-us-aurora="react" (set by UsUiFoundation.auroraPulse) lifts the
+   intensity for ~800ms and runs one travelling highlight, then returns. */
+.top.us-premium-top>.us-aurora{position:absolute;z-index:0;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none;contain:paint}
+.us-aurora::before,.us-aurora::after{content:"";position:absolute;top:-30%;bottom:-30%;pointer-events:none}
+.us-aurora::before{
+  left:-35%;width:170%;
+  background:
+    radial-gradient(34% 72% at 22% 50%,rgba(255,102,142,.55),transparent 72%),
+    radial-gradient(32% 72% at 52% 46%,rgba(158,118,255,.50),transparent 72%),
+    radial-gradient(30% 72% at 80% 54%,rgba(118,46,128,.60),transparent 72%);
+  opacity:var(--us-aurora-opacity,.26);
+  transition:opacity 260ms var(--us-ease-standard,ease);
+  animation:us-aurora-drift 12s ease-in-out infinite alternate;
+  will-change:transform;
+}
+.us-aurora::after{
+  left:0;width:38%;
+  background:linear-gradient(100deg,transparent,rgba(255,236,247,.34) 50%,transparent);
+  opacity:0;
+  transform:translate3d(-110%,0,0);
+}
+@keyframes us-aurora-drift{
+  from{transform:translate3d(-7%,0,0) scaleY(1)}
+  to{transform:translate3d(7%,0,0) scaleY(1.06)}
+}
+.top.us-premium-top[data-us-aurora="react"] .us-aurora::before{--us-aurora-opacity:.5;animation:us-aurora-drift 12s ease-in-out infinite alternate,us-aurora-surge 800ms var(--us-ease-standard,ease) 1}
+.top.us-premium-top[data-us-aurora="react"] .us-aurora::after{animation:us-aurora-sweep 800ms var(--us-ease-standard,ease) 1 both}
+@keyframes us-aurora-surge{0%,100%{translate:0 0}45%{translate:5% 0}}
+@keyframes us-aurora-sweep{0%{opacity:0;transform:translate3d(-110%,0,0)}25%{opacity:1}100%{opacity:0;transform:translate3d(280%,0,0)}}
+:root[data-us-visibility="hidden"] .us-aurora::before,
+:root[data-us-visibility="hidden"] .us-aurora::after{animation-play-state:paused}
+:root[data-us-motion="reduced"] .us-aurora::before,
+:root[data-us-motion="reduced"] .us-aurora::after{animation:none!important;transition:none;will-change:auto}
+:root[data-us-motion="reduced"] .us-aurora::before{transform:none}
+@media (prefers-reduced-motion:reduce){
+  .us-aurora::before,.us-aurora::after{animation:none!important;transition:none;will-change:auto}
+  .us-aurora::before{transform:none}
+}
+
+/* M12A — Tiles and their destinations: a tappable tile presses in, the
+   destination content eases in with a short fade + 8px rise. Purely
+   presentational: the tap handler navigates immediately. */
+[data-us-tile]{transition:transform var(--us-motion-press) var(--us-ease-standard)}
+[data-us-tile]:active{transform:scale(.975)}
+.us-content-enter{animation:us-content-enter var(--us-motion-fast) var(--us-ease-enter) 1 both}
+@keyframes us-content-enter{from{opacity:0;transform:translate3d(0,8px,0)}to{opacity:1;transform:none}}
+:root[data-us-motion="reduced"] [data-us-tile]:active{transform:none}
+:root[data-us-motion="reduced"] .us-content-enter{animation:none}
+@media (prefers-reduced-motion:reduce){[data-us-tile]:active{transform:none}.us-content-enter{animation:none}}
+
+/* M12A — Bottom navigation: ONE sliding indicator. It sits behind the labels
+   and moves between the four slots; the position is derived from the existing
+   .active class (no navigation logic involved). Browsers without :has() keep
+   the per-tab active styling and simply hide the indicator. */
+.us-nav-track{position:absolute;z-index:0;inset:0;padding:inherit;box-sizing:border-box;pointer-events:none;border-radius:inherit;overflow:hidden}
+.us-nav-indicator{display:block;height:100%;width:calc(100% / var(--us-nav-slots,4));border-radius:24px;background:linear-gradient(150deg,rgba(255,102,142,.20),rgba(149,112,255,.16));box-shadow:inset 0 0 0 1px rgba(255,255,255,.10),0 6px 18px rgba(141,107,255,.16);transform:translate3d(calc(var(--us-nav-index,0) * 100%),0,0);opacity:0;transition:transform 210ms var(--us-ease-standard),opacity 140ms var(--us-ease-standard)}
+.us-nav:has(> button.active) .us-nav-indicator{opacity:1}
+.us-nav:has(> button:nth-of-type(1).active){--us-nav-index:0}
+.us-nav:has(> button:nth-of-type(2).active){--us-nav-index:1}
+.us-nav:has(> button:nth-of-type(3).active){--us-nav-index:2}
+.us-nav:has(> button:nth-of-type(4).active){--us-nav-index:3}
+:root[data-us-motion="reduced"] .us-nav-indicator{transition:none}
+@media (prefers-reduced-motion:reduce){.us-nav-indicator{transition:none}}
+@supports not selector(:has(*)){.us-nav-indicator{display:none}}
 
 /* ==========================================================================
    US canonical primitives (US-UI-UNIFICATION-01)

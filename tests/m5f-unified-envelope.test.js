@@ -445,7 +445,7 @@ test('M5F envelope uses the canonical Phosphor pair and a restrained trace, not 
   // (ui-foundation.css), driven by unseenCount; reduced motion keeps a static halo.
   assert.doesNotMatch(css, /us-envelope-trace/);
   assert.match(read('index.html'), /class="us-envelope-control us-important-control us-attention-orbit is-loading" id="leftForYouPartnerEntry"/);
-  assert.match(read('ui-foundation.css'), /@media \(prefers-reduced-motion:reduce\)\{\s*\.us-attention-orbit\[data-us-attention="on"\]::after\{\s*animation:none;/);
+  assert.match(read('ui-foundation.css'), /@media \(prefers-reduced-motion:reduce\)\{\s*\.us-attention-orbit\[data-us-attention="on"\]::after,\s*\.us-attention-orbit\[data-us-attention="on"\] \[data-us-attention-icon\]\{animation:none\}/);
 });
 
 test('M5F top chrome: question icon for the daily question, no legacy avatar control', () => {

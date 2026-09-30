@@ -297,7 +297,7 @@
       const expires = new Date(Date.now() + STORY_LIFETIME_HOURS * 3600000).toISOString();
       const { error: rowError } = await sb.from('stories').insert({ couple_id: window.usProfile.couple_id, author_id: window.usProfile.id, media_path: path, duration_seconds: STORY_SECONDS, expires_at: expires });
       if (rowError) { await sb.storage.from('us-media').remove([path]); throw rowError; }
-      window.UsPlatform?.haptic?.('success',[28,18,38])||navigator.vibrate?.([28,18,38]);
+      window.UsFeedback?.success?.();
       toast('Story pubblicata ♡');
       await refreshStories();
       return true;

@@ -26,7 +26,7 @@ window.usCelebrateXp=function(amount,label='Bond'){
   root.querySelector('b').textContent=`+${value} XP Bond`;
   root.querySelector('small').textContent=label;
   requestAnimationFrame(()=>root.classList.add('show'));
-  navigator.vibrate?.([18,20,28]);
+  window.UsFeedback?.success?.();
   xpTimer=setTimeout(()=>{
     root.classList.add('leave');
     root.classList.remove('show');

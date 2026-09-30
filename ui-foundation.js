@@ -6,6 +6,7 @@
   }
   globalScope.UsUiFoundation = api;
   api.install(globalScope.document, globalScope);
+  if (!globalScope.UsFeedback) globalScope.UsFeedback = api.createFeedback(globalScope);
 })(typeof window !== 'undefined' ? window : globalThis, function createUsUiFoundation() {
   'use strict';
 
@@ -17,6 +18,9 @@
     cancelExit: () => {},
     exit: (_root, finalize) => finalize?.()
   };
+  let activeAurora = () => false;
+  let activePlayOnce = () => false;
+  const AURORA_REACT_MS = 800;
 
   const FOCUSABLE = [
     'button:not([disabled])',
@@ -129,6 +133,52 @@
       return true;
     };
     activeSurfaceMotion = { cancelExit: cancelSurfaceExit, exit: exitSurface };
+
+    // M12A — document visibility drives decorative motion (CSS pauses ambient
+    // animation while hidden); no JS animation loop exists anywhere.
+    const applyVisibility = () => documentRef.documentElement?.setAttribute('data-us-visibility', documentRef.hidden ? 'hidden' : 'visible');
+    documentRef.addEventListener?.('visibilitychange', applyVisibility);
+    applyVisibility();
+
+    // M12A — the shell aurora is ONE system: an ambient drift in CSS plus a
+    // short reaction (intensity + travelling highlight) driven from here.
+    let auroraTimer;
+    const auroraBar = () => documentRef.querySelector?.('.top.us-premium-top') || null;
+    const auroraPulse = () => {
+      const bar = auroraBar();
+      if (!bar || reducedMotion || documentRef.hidden) return false;
+      bar.removeAttribute('data-us-aurora');
+      void bar.offsetWidth;
+      bar.setAttribute('data-us-aurora', 'react');
+      if (auroraTimer !== undefined) cancelSchedule(auroraTimer);
+      auroraTimer = schedule(() => { bar.removeAttribute('data-us-aurora'); auroraTimer = undefined; }, AURORA_REACT_MS);
+      return true;
+    };
+    activeAurora = auroraPulse;
+    const AttentionObserver = environment.MutationObserver;
+    const attentionObserver = AttentionObserver ? new AttentionObserver((records) => {
+      for (const record of records) {
+        const target = record.target;
+        if (target?.getAttribute?.('data-us-attention') !== 'on' || record.oldValue === 'on') continue;
+        if (target.closest?.('.top.us-premium-top')) { auroraPulse(); break; }
+      }
+    }) : null;
+    attentionObserver?.observe(documentRef.body, { subtree: true, attributes: true, attributeFilter: ['data-us-attention'], attributeOldValue: true });
+
+    // One-shot decoration: add a class, drop it when it has played. Never
+    // under reduced motion, so the final state is always simply "there".
+    const oneShotTimers = new Map();
+    const playOnce = (element, className, duration = 900) => {
+      if (!element || !className || reducedMotion) return false;
+      const previous = oneShotTimers.get(element);
+      if (previous !== undefined) cancelSchedule(previous);
+      element.classList.remove(className);
+      void element.offsetWidth;
+      element.classList.add(className);
+      oneShotTimers.set(element, schedule(() => { element.classList.remove(className); oneShotTimers.delete(element); }, duration));
+      return true;
+    };
+    activePlayOnce = playOnce;
 
     const modalState = new Map();
     const inertState = new Map();
@@ -245,6 +295,13 @@
         if (motionQuery?.removeEventListener) motionQuery.removeEventListener('change', onMotionChange);
         else motionQuery?.removeListener?.(onMotionChange);
         motionSubscribers.clear();
+        attentionObserver?.disconnect();
+        documentRef.removeEventListener?.('visibilitychange', applyVisibility);
+        if (auroraTimer !== undefined) cancelSchedule(auroraTimer);
+        oneShotTimers.forEach((timer) => cancelSchedule(timer));
+        oneShotTimers.clear();
+        if (activeAurora === auroraPulse) activeAurora = () => false;
+        if (activePlayOnce === playOnce) activePlayOnce = () => false;
         surfaceExits.forEach((exit) => {
           exit.cancelled = true;
           if (exit.fallback !== undefined) cancelSchedule(exit.fallback);
@@ -272,6 +329,122 @@
     };
   }
 
+  // M12A — US feedback engine: the ONE place that vibrates or makes a sound.
+  // Progressive enhancement only: missing vibrate / AudioContext / storage is
+  // harmless, nothing ever carries essential meaning, and nothing fires while
+  // the document is hidden, before the first user gesture (no cold-launch
+  // sound) or when the user switched that channel off. Web push sound on a
+  // closed PWA is the OS/browser's, not ours.
+  const FEEDBACK_KEYS = { sounds: 'us:feedback:sounds', haptics: 'us:feedback:haptics' };
+  // Haptic profiles: [native kind, vibrate pattern (ms)]. Never longer than ~160ms.
+  const HAPTIC_PROFILES = Object.freeze({
+    tap: ['light', [8]],
+    action: ['medium', [14]],
+    success: ['success', [14, 40, 22]],
+    attention: ['light', [10, 50, 10]],
+    reveal: ['success', [12, 55, 18, 55, 26]]
+  });
+  // Sound profiles: short locally generated tones [frequency Hz, start s, duration s, peak gain, wave].
+  const SOUND_PROFILES = Object.freeze({
+    tap: [[2093, 0, 0.05, 0.03, 'sine'], [1397, 0.004, 0.06, 0.02, 'sine']],
+    action: [[523.25, 0, 0.09, 0.05, 'triangle'], [659.25, 0.07, 0.12, 0.05, 'triangle']],
+    success: [[523.25, 0, 0.08, 0.045, 'triangle'], [659.25, 0.06, 0.08, 0.045, 'triangle'], [783.99, 0.12, 0.16, 0.05, 'triangle']],
+    attention: [[880, 0, 0.36, 0.035, 'sine'], [1318.5, 0.04, 0.3, 0.018, 'sine']],
+    reveal: [[392, 0, 0.14, 0.04, 'sine'], [587.33, 0.1, 0.16, 0.045, 'sine'], [880, 0.22, 0.3, 0.05, 'sine'], [1760, 0.24, 0.26, 0.012, 'sine']]
+  });
+
+  function createFeedback(environment = {}) {
+    const navigatorRef = environment.navigator;
+    const documentRef = environment.document;
+    const platform = environment.UsPlatform;
+    const AudioContextClass = environment.AudioContext || environment.webkitAudioContext;
+    const storage = (() => { try { return environment.localStorage || null; } catch (_) { return null; } })();
+    const read = (key) => { try { return storage?.getItem(key); } catch (_) { return null; } };
+    const write = (key, value) => { try { storage?.setItem(key, value); } catch (_) { /* preference stays in memory */ } };
+    const preferences = { sounds: read(FEEDBACK_KEYS.sounds) !== '0', haptics: read(FEEDBACK_KEYS.haptics) !== '0' };
+    const listeners = new Set();
+    let context = null;
+    let unlocked = false;
+
+    const visible = () => !documentRef?.hidden;
+    function vibrate(kind) {
+      if (!preferences.haptics || !visible()) return false;
+      const [nativeKind, pattern] = HAPTIC_PROFILES[kind];
+      try {
+        if (typeof platform?.haptic === 'function') { platform.haptic(nativeKind, pattern); return true; }
+        if (typeof navigatorRef?.vibrate === 'function') return Boolean(navigatorRef.vibrate(pattern));
+      } catch (_) { /* unsupported: silently nothing */ }
+      return false;
+    }
+
+    function audioContext() {
+      if (context) return context;
+      if (typeof AudioContextClass !== 'function') return null;
+      try { context = new AudioContextClass(); } catch (_) { context = null; }
+      return context;
+    }
+    function unlock() {
+      if (unlocked) return;
+      unlocked = true;
+      const ctx = audioContext();
+      try { ctx?.resume?.()?.catch?.(() => {}); } catch (_) { /* stays suspended */ }
+    }
+    function playTones(ctx, tones) {
+      const now = ctx.currentTime || 0;
+      tones.forEach(([frequency, start, duration, peak, wave]) => {
+        const oscillator = ctx.createOscillator();
+        const gain = ctx.createGain();
+        oscillator.type = wave;
+        oscillator.frequency.value = frequency;
+        gain.gain.setValueAtTime(0.0001, now + start);
+        gain.gain.exponentialRampToValueAtTime(peak, now + start + Math.min(0.012, duration / 3));
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + start + duration);
+        oscillator.connect(gain);
+        gain.connect(ctx.destination);
+        oscillator.start(now + start);
+        oscillator.stop(now + start + duration + 0.02);
+      });
+    }
+    function sound(kind) {
+      if (!preferences.sounds || !visible() || !unlocked) return false;
+      const ctx = audioContext();
+      if (!ctx) return false;
+      try {
+        if (ctx.state === 'running') { playTones(ctx, SOUND_PROFILES[kind]); return true; }
+        // Suspended (autoplay policy): try to wake it, never queue the sound.
+        ctx.resume?.()?.catch?.(() => {});
+      } catch (_) { /* a failed tone is never an error */ }
+      return false;
+    }
+
+    const emit = (kind) => { const played = sound(kind); const vibrated = vibrate(kind); return played || vibrated; };
+    const api = {
+      tap: () => emit('tap'),
+      action: () => emit('action'),
+      success: () => emit('success'),
+      attention: () => emit('attention'),
+      reveal: () => emit('reveal'),
+      getPreferences: () => ({ ...preferences }),
+      setSoundsEnabled(enabled) { preferences.sounds = Boolean(enabled); write(FEEDBACK_KEYS.sounds, preferences.sounds ? '1' : '0'); listeners.forEach((l) => l({ ...preferences })); },
+      setHapticsEnabled(enabled) { preferences.haptics = Boolean(enabled); write(FEEDBACK_KEYS.haptics, preferences.haptics ? '1' : '0'); listeners.forEach((l) => l({ ...preferences })); },
+      onPreferenceChange(listener) { if (typeof listener !== 'function') return () => {}; listeners.add(listener); return () => listeners.delete(listener); },
+      unlock
+    };
+
+    // Audio is allowed only after a real gesture; one delegated listener also
+    // gives declarative feedback: [data-us-feedback="tap|action|..."].
+    if (documentRef?.addEventListener) {
+      ['pointerdown', 'keydown', 'touchend'].forEach((type) => documentRef.addEventListener(type, unlock, { capture: true, passive: true, once: true }));
+      documentRef.addEventListener('click', (event) => {
+        const host = event.target?.closest?.('[data-us-feedback]');
+        if (!host || host.disabled) return;
+        const kind = host.getAttribute('data-us-feedback');
+        if (HAPTIC_PROFILES[kind]) api[kind]();
+      }, true);
+    }
+    return api;
+  }
+
   // The one US confirmation: a small floating sheet on the shared scrim and
   // material, focus on the safe choice, Escape / backdrop / Annulla cancel.
   // Resolves true only for the explicit confirm button. Without a DOM (or if
@@ -290,7 +463,7 @@
       root.setAttribute('data-us-modal', '');
       root.setAttribute('data-us-motion-surface', '');
       root.setAttribute('aria-hidden', 'false');
-      const tone = options.tone === 'danger' ? 'us-btn-danger' : 'primary';
+      const tone = options.tone === 'danger' ? 'us-btn-danger' : options.single ? 'ghost' : 'primary';
       root.innerHTML = `<div class="us-modal-backdrop" data-us-confirm="cancel"></div>
         <section class="us-sheet us-confirm-sheet" role="alertdialog" aria-modal="true" aria-labelledby="${id}T" aria-describedby="${id}B" data-us-modal-panel>
           <span class="us-eyebrow"></span><h3 id="${id}T"></h3><p id="${id}B"></p>
@@ -300,8 +473,9 @@
       root.querySelector('h3').textContent = text(options.title);
       const body = root.querySelector('p');
       if (options.body) body.textContent = text(options.body); else body.remove();
-      root.querySelector('[data-us-confirm="cancel"].ghost').textContent = text(options.cancelLabel || 'Annulla');
-      root.querySelector('[data-us-confirm="ok"]').textContent = text(options.confirmLabel || 'Conferma');
+      const cancelButton = root.querySelector('[data-us-confirm="cancel"].ghost');
+      if (options.single) cancelButton.remove(); else cancelButton.textContent = text(options.cancelLabel || 'Annulla');
+      root.querySelector('[data-us-confirm="ok"]').textContent = text(options.confirmLabel || (options.single ? 'Chiudi' : 'Conferma'));
       let settled = false;
       const finish = (value) => {
         if (settled) return;
@@ -329,7 +503,12 @@
 
   return {
     install,
+    createFeedback,
+    auroraPulse: () => activeAurora(),
+    playOnce: (element, className, duration) => activePlayOnce(element, className, duration),
     confirm: (options) => confirmSurface(options),
+    // A one-button information sheet on the same canonical surface.
+    notice: (options) => confirmSurface({ ...options, single: true }),
     isReducedMotion: () => activeMotion.isReducedMotion(),
     onMotionPreferenceChange: (listener) => activeMotion.onChange(listener),
     cancelSurfaceExit: (root) => activeSurfaceMotion.cancelExit(root),
