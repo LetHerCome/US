@@ -258,14 +258,17 @@ button:focus-visible,
   outline-offset:2px;
 }
 
-/* M1.6 Home-only full-bleed fill: the shared app padding stays intact. */
-body:has(#home.page.active){overflow-y:hidden}
-#home.page.active{padding-bottom:0!important;overflow:hidden}
+/* M1.6 Home-only full-bleed fill. M12B.1 — Oggi is one frame exactly as tall
+   as the viewport: the hero already runs under the floating nav, so the
+   shared nav clearance of .app is dropped here instead of clipping it. */
+body:has(#home.page.active) .app{padding-bottom:0!important}
+#home.page.active{padding-bottom:0!important}
 #home .home-hero-only{height:calc(var(--us-viewport-height) - var(--us-safe-top))!important;min-height:0!important}
 #home .home-distance-pill{bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 18px)!important}
-#home .push-optin-card{bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 24px)!important}
-/* M10A — the opt-in sits above the distance row instead of covering it. */
-#home .home-distance-pill:not([hidden]) ~ .push-optin-card{bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 62px)!important}
+/* M10A — the opt-in sits above the bottom row instead of covering it.
+   M12B.1 — that row also holds the Ti penso button (nav + 25px, 48px tall),
+   so the card clears it too: 25 + 48 + 10px gap. */
+#home .push-optin-card{bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 83px)!important}
 
 /* M1 topbar refinement: three balanced zones inside the approved pill. */
 .top.us-premium-top{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);column-gap:6px;justify-content:initial}

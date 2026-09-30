@@ -107,7 +107,7 @@ test('M10A: invito empty-state e opt-in notifiche non si sovrappongono alla colo
   assert.match(layout, /classList\.add\('is-compact'\)/);
   assert.match(app, /new ResizeObserver\(\(\)=>layoutOggiEmptyState\(\)\)/);
   assert.match(css, /\.home-empty-state\.is-compact \.home-empty-mark,\.home-empty-state\.is-compact \.home-empty-copy small\{display:none\}/);
-  // The push opt-in rises above the distance row instead of covering it.
-  assert.match(read('identity.css'), /#home \.home-distance-pill:not\(\[hidden\]\) ~ \.push-optin-card\{bottom:calc\(var\(--us-nav-height\) \+ var\(--us-safe-bottom\) \+ 62px\)!important\}/);
-  assert.ok(html.indexOf('id="distanceWidget"') < html.indexOf('id="pushOptInCard"'), 'sibling order the opt-in lift relies on');
+  // The push opt-in rises above the whole bottom row (distance capsule and,
+  // since M12B.1, the Ti penso button) instead of covering it.
+  assert.match(read('identity.css'), /#home \.push-optin-card\{bottom:calc\(var\(--us-nav-height\) \+ var\(--us-safe-bottom\) \+ 83px\)!important\}/);
 });
