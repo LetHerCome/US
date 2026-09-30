@@ -278,17 +278,15 @@ html.us-returning-device .auth-overlay{
       </nav>
 
       <article class="noi-resonance" aria-label="Risonanza attuale">
-        <div class="noi-resonance-top"><div><div class="tiny">RISONANZA</div><b id="bondRankTitle">Primo legame</b></div><span class="noi-resonance-mark" aria-hidden="true">∞</span></div>
-        <div class="bond-xp-track"><div id="bondPageFill"></div></div>
-        <div class="noi-resonance-foot"><span>La vostra sintonia cresce con ciò che vivete.</span><span id="bondCompletedCount" aria-hidden="true">0 esperienze</span></div>
-        <div class="noi-resonance-legacy" aria-hidden="true"><span id="bondLevelValue">1</span><span id="bondTotalXp">0 XP totali</span><span id="bondNextXp">200 XP al prossimo livello</span><span id="bondLevelXp">0 / 200 XP</span><span id="bondRerollsLeft">3</span><span id="bondWeekReset">Nuove esperienze ogni lunedì</span><span id="bondBadges"></span></div>
+        <div class="noi-resonance-top"><div><div class="tiny">RISONANZA</div><b><span id="bondResonanceLevel" class="noi-resonance-level">Livello 1</span><span class="noi-resonance-dot" aria-hidden="true"> · </span><span id="bondRankTitle">Primo legame</span></b></div><span class="noi-resonance-mark" aria-hidden="true">∞</span></div>
+        <div class="bond-xp-track" id="bondProgressTrack" role="progressbar" aria-label="Progresso verso il prossimo livello" aria-valuemin="0" aria-valuemax="200" aria-valuenow="0" aria-valuetext="0 di 200 XP"><div id="bondPageFill"></div></div>
+        <div class="noi-resonance-foot"><span id="bondNextXp">200 XP al prossimo livello</span><span id="bondCompletedCount" aria-hidden="true">0 esperienze</span></div>
+        <div class="noi-resonance-legacy" aria-hidden="true"><span id="bondLevelValue">1</span><span id="bondTotalXp">0 XP totali</span><span id="bondLevelXp">0 / 200 XP</span><span id="bondRerollsLeft">3</span><span id="bondWeekReset">Nuove esperienze ogni lunedì</span><span id="bondBadges"></span></div>
       </article>
 
       <section class="noi-resonance-guide" aria-labelledby="noiResonanceGuideTitle">
         <div class="noi-resonance-stats">
-          <span><small>Livello</small><b id="noiResonanceLevel">1</b></span>
-          <span><small>XP totali</small><b id="noiResonanceTotal">0</b></span>
-          <span><small>Al prossimo livello</small><b id="noiResonanceNext">200</b></span>
+          <span><small>XP totali accumulati insieme</small><b id="noiResonanceTotal">0</b></span>
         </div>
         <div class="noi-section-kicker">COME CRESCE</div>
         <h3 id="noiResonanceGuideTitle">Cresce con quello che completate insieme</h3>
@@ -698,7 +696,6 @@ html.us-returning-device .auth-overlay{
     </div>
     <div class="us-cal-legend" id="usCalendarLegend" aria-hidden="true"></div>
     <div class="us-cal-pick-banner" id="usCalendarPickBanner" role="status" hidden><span><small>Da vivere · tocca il giorno</small><b id="usCalendarPickTitle"></b></span><button type="button" id="usCalendarPickCancel">Annulla</button></div>
-    <p class="us-cal-hint">Tocca un giorno per aggiungere qualcosa.</p>
     <div class="us-cal-status" id="usCalendarStatus" role="status" aria-live="polite" hidden></div>
     <div class="us-cal-body" id="usCalendarBody">
       <div class="us-cal-pane-mobile" id="usCalendarPaneMobile">
