@@ -381,6 +381,15 @@ function revealRows(item) {
   return [['Tu', myAnswerText(item)], [partner, partnerAnswerText(item)]];
 }
 
+// Longitudinal resurfacing: the earlier answers come from the server only
+// once this round is revealed.
+function previousAnswers(item) {
+  const then = item.previous;
+  if (!then) return '';
+  return `<div class="us-gv2-then"><span class="us-gv2-kicker">COSA AVEVATE RISPOSTO</span>
+    <dl><div><dt>Tu</dt><dd>${esc(then.my_answer_text ?? '—')}</dd></div><div><dt>${esc(partnerName())}</dt><dd>${esc(then.partner_answer_text ?? '—')}</dd></div></dl></div>`;
+}
+
 function renderReveal() {
   const cards = current.items.map((item) => {
     const out = outcome(item);
@@ -391,6 +400,7 @@ function renderReveal() {
       <h3>${esc(item.my_prompt || item.question_text)}</h3>
       ${out ? `<span class="us-gv2-outcome" data-same="${same ? 'true' : 'false'}">${esc(out)}</span>` : ''}
       <dl>${revealRows(item).map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>
+      ${previousAnswers(item)}
     </article>`;
   }).join('');
   showPanel(`<article class="us-gv2-reveal">

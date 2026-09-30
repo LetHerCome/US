@@ -1,0 +1,4 @@
+[
+  {"id": "da_vivere_lived-001", "family": "rivivete", "answer_kind": "open", "depth": 2, "topic": "ctx_vissuta_momento", "cooldown_class": "context", "kind_label": "L’avete vissuta", "question_text": "Di «{title}», qual è il momento che ti è rimasto addosso?"},
+  {"id": "da_vivere_lived-002", "family": "rivivete", "answer_kind": "choice", "depth": 1, "topic": "ctx_vissuta_rifarla", "cooldown_class": "context", "kind_label": "L’avete vissuta", "question_text": "Se potessimo rivivere «{title}» domani, cosa cambieresti?", "options": ["Niente, rifarei tutto così", "Solo il ritmo: più tempo", "Tutto: un’esperienza nuova"]}
+]

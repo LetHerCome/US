@@ -186,6 +186,25 @@ test('M11B client: reveal copy — gendered prediction outcomes, Uguale / Una so
   const bh = b.nodes.usGameV2Panel.innerHTML;
   for (const line of ['L’hai capito al volo ♡', 'Ti ha sorpresa', 'Ti ha capita al volo ♡', 'L’hai sorpreso', 'Francesco pensava']) assert.match(bh, new RegExp(line));
 });
+test('M11C client: context chip and longitudinal answers appear only as the server sends them', async () => {
+  const withContext = item({ id: 'l', source_type: 'game_history', context: { kind: 'longitudinal', kind_label: 'L’avete già giocata a gennaio' } });
+  const waiting = session({ my_complete: true, items: [{ ...withContext, my_answer_text: 'Oggi' }] });
+  const w = harness({ handlers: { get_game_session: () => waiting } });
+  await tick();
+  await w.api.openSession('s1');
+  assert.doesNotMatch(w.nodes.usGameV2Panel.innerHTML, /COSA AVEVATE RISPOSTO/);
+  const revealed = session({ my_complete: true, partner_complete: true, reveal_ready: true, completed_at: 'now',
+    items: [{ ...withContext, my_answer_text: 'Oggi', partner_answer_text: 'Adesso', previous: { my_answer_text: 'Allora <io>', partner_answer_text: 'Allora lei' } }] });
+  const r = harness({ handlers: { get_game_session: () => revealed } });
+  await tick();
+  await r.api.openSession('s1');
+  const html = r.nodes.usGameV2Panel.innerHTML;
+  assert.match(html, /class="us-gv2-context">L’avete già giocata a gennaio/);
+  assert.match(html, /COSA AVEVATE RISPOSTO/);
+  assert.match(html, /Allora &lt;io&gt;/);
+  assert.match(html, /Allora lei/);
+});
+
 async function h_open(h) { await h.api.openSession('s1'); await tick(); }
 
 test('M11B client: a round saves each own answer, finalizes once and sends only an id to push', async () => {

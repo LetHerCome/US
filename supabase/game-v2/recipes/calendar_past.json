@@ -1,0 +1,6 @@
+[
+  { "id": "calendar_past-001", "family": "rivivete", "answer_kind": "open", "depth": 1, "topic": "ctx_passato_dettaglio", "cooldown_class": "context", "kind_label": "Dal calendario",
+    "question_text": "«{title}», {when}: qual è il dettaglio che ricordi meglio?" },
+  { "id": "calendar_past-002", "family": "rivivete", "answer_kind": "open", "depth": 2, "topic": "ctx_passato_non_detto", "cooldown_class": "context", "kind_label": "Dal calendario",
+    "question_text": "Ripensando a «{title}», {when}, c’è qualcosa di quella giornata che non ti ho mai raccontato?" }
+]

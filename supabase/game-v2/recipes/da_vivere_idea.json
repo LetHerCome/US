@@ -1,0 +1,5 @@
+[
+  {"id": "da_vivere_idea-001", "family": "e_se", "answer_kind": "open", "depth": 1, "topic": "ctx_idea_immaginare", "cooldown_class": "context", "kind_label": "Da vivere", "question_text": "Se potessimo fare «{title}» questo fine settimana, senza organizzare niente, come immagini quella giornata?"},
+  {"id": "da_vivere_idea-002", "family": "confrontatevi", "answer_kind": "choice", "depth": 1, "topic": "ctx_idea_stile", "cooldown_class": "context", "kind_label": "Da vivere", "question_text": "«{title}»: per te è una cosa da preparare con cura o da vivere all’improvviso?", "options": ["Da preparare con cura", "Da vivere all’improvviso", "Un po’ e un po’"]},
+  {"id": "da_vivere_idea-003", "family": "e_se", "answer_kind": "open", "depth": 2, "topic": "ctx_idea_aspettativa", "cooldown_class": "context", "kind_label": "Da vivere", "question_text": "Quando arriverà il momento di «{title}», cosa speri che ti resti?"}
+]

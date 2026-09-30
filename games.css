@@ -108,6 +108,9 @@
 .us-gv2-reveal-card dl>div{display:grid;grid-template-columns:minmax(78px,32%) minmax(0,1fr);gap:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.05)}
 .us-gv2-reveal-card dt{color:#a39ab0;font-size:var(--us-text-meta);line-height:1.45}
 .us-gv2-reveal-card dd{margin:0;color:#f3ecf6;font-size:14px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
+.us-gv2-then{margin-top:12px;padding:11px 12px;border-radius:13px;background:rgba(139,114,248,.07);border:1px dashed rgba(169,133,255,.20)}
+.us-gv2-then dl{margin-top:7px}
+.us-gv2-then dd{color:#d9d1e2;font-size:13px}
 
 /* Weekly form */
 .us-gv2-weekly-form form>label,.us-gv2-segment legend,.us-gv2-families legend{color:#d6cbdc;font-size:var(--us-text-secondary);font-weight:700}

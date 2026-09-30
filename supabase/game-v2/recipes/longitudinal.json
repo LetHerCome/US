@@ -1,0 +1,4 @@
+[
+  { "id": "longitudinal-001", "family": null, "answer_kind": "open", "depth": 2, "topic": "ctx_longitudinale", "cooldown_class": "longitudinal", "kind_label": "L’avete già giocata {when}",
+    "question_text": "{previous_question}" }
+]

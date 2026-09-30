@@ -1,0 +1,6 @@
+[
+  { "id": "moment-001", "family": "rivivete", "answer_kind": "open", "depth": 2, "topic": "ctx_ricordo_pensiero", "cooldown_class": "context", "kind_label": "Dai Ricordi",
+    "question_text": "Il ricordo «{title}», {when}: cosa stavi pensando in quel momento?" },
+  { "id": "moment-002", "family": "rivivete", "answer_kind": "open", "depth": 1, "topic": "ctx_ricordo_suono", "cooldown_class": "context", "kind_label": "Dai Ricordi",
+    "question_text": "Se il ricordo «{title}» avesse una colonna sonora, quale canzone sarebbe?" }
+]

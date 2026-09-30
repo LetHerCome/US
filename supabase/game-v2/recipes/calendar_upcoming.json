@@ -1,0 +1,4 @@
+[
+  {"id": "calendar_upcoming-001", "family": "confrontatevi", "answer_kind": "open", "depth": 1, "topic": "ctx_evento_attesa", "cooldown_class": "context", "kind_label": "Nel calendario", "question_text": "Di «{title}», il {date}, qual è la parte che aspetti di più?"},
+  {"id": "calendar_upcoming-002", "family": "e_se", "answer_kind": "open", "depth": 2, "topic": "ctx_evento_meglio", "cooldown_class": "context", "kind_label": "Nel calendario", "question_text": "Se «{title}» andasse ancora meglio del previsto, cosa sarebbe successo?"}
+]
