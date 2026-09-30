@@ -97,3 +97,94 @@ nothing. **The play allowance resets; the memory does not.**
 
 - No new push behavior. Monday does not notify. Existing Game V2 pushes are
   unchanged; no Edge Function changed.
+
+## Part B — US-UI-UNIFICATION-01
+
+### Principle
+
+Same product, different rooms. `ui-foundation.css` owns every cross-cutting
+value; feature stylesheets keep layout and a small personality accent, never a
+private palette, scrim, sheet material or close button.
+
+### Audit (base 3c892b9, same container)
+
+| Measure | Base | Candidate |
+| --- | --- | --- |
+| `:root` palettes | 4 (styles, identity, ui-foundation, polish4 glass) | 1 (ui-foundation; identity keeps only brand icon URLs) |
+| Distinct colour literals in CSS | 783 | 585 |
+| Duration literals in transitions | 87 | 19 (the rest are loops/photo timings) |
+| Motion tokens in transitions | 47 | 114 |
+| Plain `ease` in transitions | 43 | 4 |
+| `backdrop-filter` declarations | 108 | 85 |
+| `!important` | 720 | 696 (none added by this mission) |
+| Native `confirm()` calls | 4 | 0 |
+| Scrim recipes | 9 (.16/3px to .72/12px) | 1 (`--us-scrim` .44 / 6px) |
+| Close buttons | × text glyph, 34–44px, 5 styles | one `.us-modal-close`, Phosphor X, 44px |
+
+### Decisions
+
+#### Palette
+- **Chosen:** plum-black canvas `#08040e`, warm light text `#f7f2f8` with
+  .70/.50 levels, accent rose `#ff668e` → violet `#a985ff`; lilac ink
+  `#dcbfe8` for eyebrows and icons. Blue-grey surfaces (Ricordi, Calendario,
+  Eventi, Impostazioni) are mapped by lightness to the plum surface tokens;
+  blue-grey text greys to the text levels.
+- **Rejected:** identity.css's muted accent (`#e88aa2`→`#8f86c8`), which
+  silently overrode the brighter CTA on some screens and not others.
+- **Personality kept:** Noi hub per-card tints (Risonanza rose, Da vivere
+  amber, Quest violet; Calendario moved from blue to lilac), Ricordi's paper
+  post-it and italic title, Ti penso emoji reactions, the approved custom
+  settings PNG icon.
+
+#### Surfaces and glass
+- Three levels: L1 groups content, L2 is an interactive card or control,
+  L3 floats. L3 is the approved Lasciato per te composer material and is now
+  `.us-sheet` for every popup: Oggi, Ti penso, Eventi, Impostazioni, Lasciato
+  per te (3 sheets), Conservati, Calendario (+ detail/form), nuovo Moment,
+  Stories delete, and the shared confirmation.
+- Sticky sheet headers use `--us-sheet-head-bg` so scrolled content never
+  shows through a title.
+
+#### Overlay, close, confirmation
+- One scrim (`.us-modal-backdrop`), one close (`.us-modal-close`, 44px glass,
+  Phosphor X; `.is-on-media` over photos and the camera), one enter/exit
+  motion (`[data-us-motion-surface]`, 260ms enter / 200ms exit, 1ms under
+  reduced motion).
+- `UsUiFoundation.confirm()` replaces native `confirm()` (Ricordi, Calendario,
+  Eventi, Moment; Game V2 repeat-mode question). Escape, backdrop and Annulla
+  resolve false; destructive actions use `tone: 'danger'`. Falls back to
+  `window.confirm` only when there is no DOM.
+- Full-screen pages (album viewer, Conservati detail, Da vivere, event form)
+  go back with Phosphor CaretLeft; popups close with X.
+
+#### Controls and type
+- Buttons: `.primary` (accent gradient), `.ghost`/`.us-btn-secondary`,
+  `.us-btn-quiet`, `.us-btn-danger`, `.us-icon-button`; one field recipe;
+  `.us-chip`/`.us-segment` (Mese/Settimana).
+- Tap targets raised to 44px: Oggi notice dismiss (36), calendar Oggi (36),
+  Mese/Settimana (32), calendar sheet close (38), calendar arrows (40),
+  Da vivere add (34), "Idee vissute" (22), Lasciato per te close (34).
+- One focus ring (`:focus-visible`, lilac, zero specificity).
+- Eyebrows share size/weight/tracking/colour (`--us-type-eyebrow`); page
+  titles share `--us-type-page` (26px, 23px under 370px).
+
+#### Icons
+- Phosphor only. Added official 2.1.1 regular SVG byte copies: X, CaretRight,
+  CaretDown, Plus, Bell, MapPin, ArrowsClockwise, UserCircle, Image,
+  CalendarHeart, Check, MusicNote, PencilSimple. Each is registered in
+  `assets/ICON_REGISTRY.json` and precached by the Service Worker. No icon was
+  drawn or edited; no approved asset in `ASSET_MANIFEST.json` was touched.
+
+#### What was not changed
+- No framework, no override file, no new `!important`.
+- Settings state marks (✓ × ○), the Ti penso emoji reactions and text-level
+  separators (· →) remain text.
+- Loop animations (record pulse, shimmer, attention orbit) keep their own
+  durations; they already stop under reduced motion.
+
+### Release markers
+
+Bumped once for the candidate: `us-build` / `version.json`
+`us-m11f-ui-unification-20260930-1`, shell cache `us-shell-static-runtime-40`,
+cache-busting query strings of the changed files. `us-private-media-v1` is
+unchanged.
