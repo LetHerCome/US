@@ -26,7 +26,7 @@ Release markers: build `us-m12b1-oggi-fit-20260930-1`, `version.json` equal, she
   and the M7A guard refuses deleting a linked row, so nobody could delete that shared event.
 - Invariant (CHECK `bucket_items_archived_unlived_unlinked_check`):
   `status = 'archived' AND completed_at IS NULL => calendar_entry_id IS NULL`.
-- Migration `20260930230000_m12b_2_da_vivere_archived_link_release.sql`: a BEFORE UPDATE trigger
+- Migration `20260930225935_m12b_2_da_vivere_archived_link_release.sql`: a BEFORE UPDATE trigger
   (fires after `bucket_items_guard_update` by name order) clears the link on archive of a
   never-lived idea, a one-time backfill clears it on rows already broken, then the CHECK.
   No row is deleted; guard, RPC, policies and `calendar_entries` are untouched.
@@ -35,4 +35,5 @@ Release markers: build `us-m12b1-oggi-fit-20260930-1`, `version.json` equal, she
 - Gates: `tests/m12b-da-vivere-archived-link.test.js` (PGlite, cases A–D, F, isolation, CHECK,
   trigger order, migration scan) and `tests/m12b-da-vivere-archived-link-race.test.js` (real
   PostgreSQL sessions, case E: archive vs delete in both orders, double archive, lived vs archive).
-- Prepared in the repo only; applied in production by Francesco.
+- Applied to production as ledger migration `20260930225935 m12b_2_da_vivere_archived_link_release`.
+  Pre-apply read-only count was 0 rows; post-apply invariant count remains 0.

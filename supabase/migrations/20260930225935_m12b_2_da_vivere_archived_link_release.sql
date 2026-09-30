@@ -40,7 +40,7 @@
 -- Not touched: calendar_entries rows and policies, shared_events,
 -- shared_event_completions, relationship_milestones, moments, claim_us_role.
 --
--- NOT applied in production by this milestone.
+-- Applied to production as ledger migration 20260930225935.
 
 create or replace function private.bucket_items_release_archived_link()
 returns trigger
