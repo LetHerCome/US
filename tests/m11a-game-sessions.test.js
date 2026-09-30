@@ -8,7 +8,7 @@ const { randomUUID } = require('node:crypto');
 const { PGlite } = require('@electric-sql/pglite');
 
 const ROOT = path.resolve(__dirname, '..');
-const MIGRATION = path.join(ROOT, 'supabase/migrations/20260930140000_m11a_game_sessions_custom_questions.sql');
+const MIGRATION = path.join(ROOT, 'supabase/migrations/20260930105724_m11a_game_sessions_custom_questions.sql');
 const id = () => randomUUID();
 
 const FIXTURE = `
