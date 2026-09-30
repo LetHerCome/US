@@ -144,7 +144,9 @@ test('logout attende il provisioning prima di revocare e cancellare la credentia
   const pendingIssue = new Promise((resolve) => { releaseIssue = resolve; });
   const harness = loadWidgetRuntime({ issueResult: pendingIssue });
   const ready = harness.widget.authReady({ id: 'user-1' });
-  for (let index = 0; index < 10 && harness.issueCalls === 0; index += 1) await new Promise(setImmediate);
+  // Provisioning awaits async crypto (thread pool): wait for it by deadline, not by a fixed tick count,
+  // so a busy parallel test run cannot starve it.
+  for (const deadline = Date.now() + 2000; harness.issueCalls === 0 && Date.now() < deadline;) await new Promise(setImmediate);
   assert.equal(harness.issueCalls, 1);
   const clearing = harness.widget.clear();
   await Promise.resolve();
