@@ -255,5 +255,6 @@ test('M10.2 migrazione: additiva, nessuna modifica a migration/authority esisten
   assert.doesNotMatch(code, /net\.http|send-web-push|push_event_log|push_subscriptions/i);
   assert.match(code, /private\.daily_question_reveal_ready\(target_question_id\)/, 'reveal semantics stay with get_daily_state');
   const migrations = fs.readdirSync(path.join(ROOT, 'supabase/migrations')).sort();
-  assert.equal(migrations[migrations.length - 1], path.basename(MIGRATION), 'newest migration');
+  assert.equal(migrations.filter(name => name.includes('m10_2_daily_reveal_states')).length, 1,
+    'M10.2 keeps one unchanged migration as later milestones add theirs');
 });

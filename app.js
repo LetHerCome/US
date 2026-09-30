@@ -85,9 +85,10 @@ async function loadWeeklyQuizHub(force=false){
   }
 }
 window.loadWeeklyQuizHub=loadWeeklyQuizHub;
-function openQuizHub(options={}){go('quiz',options);resetQuiz({reload:false});loadWeeklyQuizHub()}
+function openQuizHub(options={}){go('quiz',options);resetQuiz({reload:false});loadWeeklyQuizHub();window.USCustomGames?.load()}
 async function startQuiz(cat){
   if(!window.usProfile){toast('Sync non pronta');return;}
+  window.USCustomGames?.close({silent:true});
   quizCat=cat;quizPos=0;quizSelected=null;quizQuestions=[];quizSet=null;quizState=null;
   document.getElementById('quizHub').classList.add('hidden');
   document.getElementById('quizResult').classList.add('hidden');
@@ -229,6 +230,7 @@ async function refreshQuizState(){
   if(state){quizState=state;showQuizState(state,!wasBoth&&Boolean(state.both_complete));updateHomeStatus();}
 }
 function resetQuiz(options={}){
+  window.USCustomGames?.close({silent:true});
   quizSet=null;quizQuestions=[];quizState=null;quizPos=0;quizSelected=null;
   const matches=document.getElementById('quizMatches');if(matches){matches.classList.add('hidden');matches.innerHTML='';}
   const xpRoot=document.getElementById('quizXpEarned');if(xpRoot){xpRoot.classList.add('hidden');xpRoot.innerHTML='';}
@@ -236,7 +238,7 @@ function resetQuiz(options={}){
   document.getElementById('quizPlay').classList.add('hidden');
   document.getElementById('quizResult').classList.add('hidden');
   window.resetPartnerKnowledge?.({silent:true});
-  if(options.reload!==false){loadWeeklyQuizHub();window.loadUsExtraGames?.();}
+  if(options.reload!==false){loadWeeklyQuizHub();window.loadUsExtraGames?.();window.USCustomGames?.load();}
 }
 window.resetQuiz=resetQuiz;
 function startWeeklyQuizRefresh(){

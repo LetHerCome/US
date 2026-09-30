@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <meta name="theme-color" content="#0a0a0e"/>
 <meta name="color-scheme" content="dark"/>
-<meta name="us-build" content="us-m10-2-daily-reveal-20260930-1"/>
+<meta name="us-build" content="us-m11a-game-sessions-custom-questions-20260930-1"/>
 <link rel="manifest" href="/manifest.webmanifest?v=us-pwa-logo-v2"/>
 <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=us-pwa-logo-v2"/>
 <link rel="icon" type="image/png" sizes="1254x1254" href="/assets/derived/brand/us-symbol-apk-foreground-v1.png?v=us-pwa-logo-v2"/>
@@ -20,7 +20,7 @@
 <link rel="stylesheet" href="/fix4.css?v=fix4-20260820-1"/>
 <link rel="stylesheet" href="/events.css?v=us-events-1" media="print" onload="this.media='all'"/>
 <link rel="stylesheet" href="/moments-albums.css?v=us-m8a-ricordi-2" media="print" onload="this.media='all'"/>
-<link rel="stylesheet" href="/games.css?v=us-couple-loop-1" media="print" onload="this.media='all'"/>
+<link rel="stylesheet" href="/games.css?v=us-m11a-game-sessions-custom-questions-20260930-1" media="print" onload="this.media='all'"/>
 <link rel="stylesheet" href="/settings.css?v=us-motion-pass-1"/>
 <link rel="stylesheet" href="/identity.css?v=us-identity2"/>
 <link rel="stylesheet" href="/settings2.css?v=us-settings2-1" media="print" onload="this.media='all'"/>
@@ -476,6 +476,7 @@ html.us-returning-device .auth-overlay{
     <section class="section" style="margin-top:6px">
       <div class="quiz-head"><div><div class="tiny">US QUIZ</div><h2 style="margin:2px 0 0">Giochiamo insieme</h2></div></div>
       <div id="quizHub">
+        <div id="usCustomGamesHub" aria-live="polite"></div>
         <div class="quiz-week-card"><div><span class="quiz-week-kicker">SETTIMANALE</span><b id="quizWeekLabel">I quiz di questa settimana</b></div><small id="quizWeekReset">Cambiano automaticamente ogni 7 giorni</small></div>
         <div class="quiz-xp-rule">Ogni risposta uguale vale <b>+5 XP Bond</b> · massimo 50 XP per quiz.</div>
         <div class="quiz-grid" id="weeklyQuizGrid" aria-live="polite"><div class="quiz-week-loading" aria-busy="true">Preparo i quiz della settimana…</div></div>
@@ -483,6 +484,7 @@ html.us-returning-device .auth-overlay{
       </div>
       <div id="quizPlay" class="hidden"><div class="card"><div class="quiz-head"><div><span class="badge" id="quizCategory">PREFERENZE</span></div><div class="tiny"><span id="quizIndex">1</span>/<span id="quizTotal">10</span></div></div><div class="progress"><div id="quizProgress"></div></div><div class="qtext" id="quizQuestion" style="font-size:21px"></div><div class="tiny" id="quizWho">Rispondi per te. Il confronto resta nascosto fino alla fine.</div><div class="answers" id="quizAnswers"></div><button class="primary" id="quizNext" style="width:100%;margin-top:14px" onclick="nextQuiz()" disabled>Conferma</button></div></div>
       <div id="quizResult" class="hidden"><div class="card" style="text-align:center"><div class="tiny">RISULTATO DEL SET</div><div class="score-ring" id="scoreRing" style="--score:0"><div class="score-inner"><div><b id="scoreValue">0/10</b><br><span>risposte uguali</span></div></div></div><div class="qtext" id="scoreText" style="font-size:19px">Ci stiamo ancora studiando 👀</div><div class="csub" id="scoreSub">Il risultato si sblocca solo quando entrambi hanno completato il set.</div><div class="quiz-xp-earned hidden" id="quizXpEarned"></div><div class="quiz-matches hidden" id="quizMatches"></div><button class="primary" style="width:100%;margin-top:16px" onclick="resetQuiz()">Scegli un altro quiz</button></div></div>
+      <div id="usCustomGamePanel" class="hidden" aria-live="polite"></div>
     </section>
   </main>
 </div>
@@ -764,7 +766,7 @@ html.us-returning-device .auth-overlay{
 <script defer src="/fix4.js?v=fix4-20260820-1"></script>
 <script defer src="/left-for-you.js?v=us-m5j-conservati-20260925-1"></script>
 <script defer src="/events.js?v=us-couple-loop-1"></script>
-<script defer src="/games.js?v=us-final-polish-motion31-1"></script>
+<script defer src="/games.js?v=us-m11a-game-sessions-custom-questions-20260930-1"></script>
 <script defer src="/settings.js?v=us-scriptable-widgets-v1b-20260924-1"></script>
 <script defer src="/identity.js?v=us-identity1"></script>
 <script defer src="/polish4.js?v=us-final-polish-motion31-1"></script>
