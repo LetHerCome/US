@@ -26,7 +26,7 @@ nothing. **The play allowance resets; the memory does not.**
 - **Problem:** A modified client could call `start_game_round` in a loop.
 - **Chosen:** The budget is enforced inside `public.start_game_round` (same
   signature, same grants, body replaced by migration
-  `20260930180000_m11f_game_v2_weekly_rhythm.sql`). Couple and role still come
+  `20260930172615_m11f_game_v2_weekly_rhythm.sql`). Couple and role still come
   from `auth.uid()` through `private.m11a_actor_locked()`; the client sends only
   the mode and a request id.
 - **Rejected:** A client-side counter, or a new RPC in front of the old one.
