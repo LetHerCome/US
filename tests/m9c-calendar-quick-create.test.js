@@ -27,13 +27,13 @@ test('M9C: the quick form is only Titolo, Tutto il giorno and Ora (Giorno only w
   assert.match(js(), /if \(dateField\) dateField\.hidden = mode !== 'edit';/);
 });
 
-test('M9C: tapping a day creates for that date (month and week); tapping an event opens it', () => {
+test('M9C/M10.1C: month day selects, "Aggiungi impegno" and the week day create; tapping an event opens it', () => {
   const src = js();
   assert.match(src, /function startCreateForDate\(dateISO\)/);
-  assert.match(src, /startCreateForDate\(btn\.dataset\.date\)/, 'month cell');
+  assert.match(src, /selectDay\(btn\.dataset\.date\)/, 'month cell selects the day');
+  assert.match(src, /\$\('usCalendarAddEntry'\)\?\.addEventListener\('click', \(\) => startCreateForDate\(selectedDate \|\| todayISO\(\)\)\)/, 'explicit create');
   assert.match(src, /\.us-cal-week-day\[data-date\]'\)\.forEach\(\(day\) => day\.addEventListener\('click', \(event\) => \{\s*if \(event\.target\.closest\?\.\('\[data-entry-id\]'\)\) return;/, 'week day, but not when an event was tapped');
   assert.match(src, /querySelectorAll\('\[data-entry-id\]'\)\.forEach\(\(btn\) => btn\.addEventListener\('click', \(\) => openDetail\(btn\.dataset\.entryId\)\)\)/);
-  assert.match(html(), /Tocca un giorno per aggiungere qualcosa\./);
 });
 
 test('M9C: manual entries default to personal; Da vivere keeps creating shared entries', () => {

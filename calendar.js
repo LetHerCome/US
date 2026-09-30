@@ -31,6 +31,61 @@ function entryLaneRoleFor(entry, ownerRole) {
   return ownerRole || 'other';
 }
 
+// M10.1C — Ownership must be readable without colour: F = Francesco, B =
+// Beatrice, F+B = shared. Derived ONLY from the existing lane authority
+// (entry_type + the owner's stable role) — there is no second ownership field.
+const OWNER_MARK_BY_LANE = { francesco: 'F', beatrice: 'B', shared: 'F+B' };
+const OWNER_MARK_ORDER = ['F', 'B', 'F+B'];
+function ownerMarkFor(lane, displayName) {
+  if (OWNER_MARK_BY_LANE[lane]) return OWNER_MARK_BY_LANE[lane];
+  return String(displayName || '').trim().charAt(0).toUpperCase() || '·';
+}
+function ownerNameFor(lane, displayName) {
+  return lane === 'shared' ? 'Insieme' : (displayName || 'La tua persona');
+}
+function spokenTime(iso) {
+  const d = new Date(iso);
+  return d.getMinutes() === 0 ? String(d.getHours()) : `${d.getHours()}:${pad2(d.getMinutes())}`;
+}
+// "Università, Beatrice, ore 9" — ownership by name, never by colour or by the
+// bare initial.
+function entryAriaLabel({ title, lane, displayName, entry }) {
+  const when = entry.is_all_day ? 'tutto il giorno' : `ore ${spokenTime(entry.starts_at)}`;
+  return `${title}, ${ownerNameFor(lane, displayName)}, ${when}`;
+}
+// Month cell: which markers to draw — never a transcript of the day. Distinct
+// owners in fixed order (F, B, F+B), the remainder as "+N".
+function monthCellMarks(marks, maxChips = 3) {
+  const rank = (m) => { const i = OWNER_MARK_ORDER.indexOf(m); return i < 0 ? OWNER_MARK_ORDER.length : i; };
+  const distinct = [...new Set(marks)].sort((a, b) => rank(a) - rank(b));
+  const chips = distinct.slice(0, maxChips);
+  return { chips, more: Math.max(0, marks.length - chips.length) };
+}
+// All-day first, then by start; ties by title so the order is stable.
+function sortDayEntries(list) {
+  return (list || []).slice().sort((a, b) => {
+    if (Boolean(a.is_all_day) !== Boolean(b.is_all_day)) return a.is_all_day ? -1 : 1;
+    if (!a.is_all_day) {
+      const d = new Date(a.starts_at) - new Date(b.starts_at);
+      if (d) return d;
+    }
+    return String(a.title).localeCompare(String(b.title), 'it');
+  });
+}
+// Selected-day sections: only the lanes that really have something (no empty
+// scaffolding), personal lanes in the fixed role order, then Insieme, then any
+// lane whose owner could not be resolved (never silently dropped).
+function groupDayEntries(dayEntries, laneOf) {
+  const lanes = new Map();
+  for (const e of sortDayEntries(dayEntries)) {
+    const lane = laneOf(e);
+    if (!lanes.has(lane)) lanes.set(lane, []);
+    lanes.get(lane).push(e);
+  }
+  const rank = (lane) => (lane === 'shared' ? ROLE_ORDER.length : (ROLE_ORDER.includes(lane) ? roleRank(lane) : ROLE_ORDER.length + 1));
+  return [...lanes.entries()].sort((a, b) => rank(a[0]) - rank(b[0])).map(([lane, list]) => ({ lane, list }));
+}
+
 function localDateFromInstant(iso) { const d = new Date(iso); return isoDate(d.getFullYear(), d.getMonth(), d.getDate()); }
 
 function localDateTimeToISO(dateISO, timeHHMM) {
@@ -411,7 +466,8 @@ const pureApi = {
   durationMinutesFromTimes, REMINDER_OPTIONS, REMINDER_TARGETS, reminderTargetAllowed, reminderOffsetAllowed, reminderOptionsFor, reminderRowsFor, reminderCopy,
   buildEntryPayload, withCreateAuthority, canEditEntry,
   quickEntryError, quickEntryHiddenFields, classifyMutationResult,
-  oggiEventLabel, composeOggiCalendarFact, oggiRemainingWindows
+  oggiEventLabel, composeOggiCalendarFact, oggiRemainingWindows,
+  ownerMarkFor, ownerNameFor, entryAriaLabel, monthCellMarks, sortDayEntries, groupDayEntries
 };
 if (typeof module === 'object' && module.exports) Object.assign(module.exports, pureApi);
 if (typeof window === 'undefined') return;
@@ -616,26 +672,24 @@ async function getOggiCalendarInsightSource() {
 }
 window.getOggiCalendarInsightSource = getOggiCalendarInsightSource;
 
-function markerFor(entry) {
-  const role = entryLaneRole(entry);
-  const cls = laneClass(role);
-  if (role === 'shared') return '<span class="us-cal-marker us-cal-marker--shared" aria-hidden="true">♡</span>';
-  return `<span class="us-cal-marker us-cal-marker--${cls}" aria-hidden="true"></span>`;
+function ownerMarkOf(entry) { return ownerMarkFor(entryLaneRole(entry), profileById(entry.owner_id)?.display_name); }
+function ownerChip(mark) {
+  return `<span class="us-cal-chip${mark === 'F+B' ? ' us-cal-chip--shared' : ''}" aria-hidden="true">${esc(mark)}</span>`;
 }
 
 function renderDayCell(dateObj, dateISO, inMonth, dayEntries) {
   const isToday = dateISO === todayISO();
   const isSelected = dateISO === selectedDate;
-  const shown = dayEntries.slice(0, 4);
-  const overflow = dayEntries.length - shown.length;
-  const markers = shown.map(markerFor).join('') + (overflow > 0 ? `<span class="us-cal-marker-more">+${overflow}</span>` : '');
+  const { chips, more } = monthCellMarks(dayEntries.map(ownerMarkOf));
+  const markers = chips.map(ownerChip).join('') + (more > 0 ? `<span class="us-cal-chip-more" aria-hidden="true">+${more}</span>` : '');
   const classes = ['us-cal-day'];
   if (!inMonth) classes.push('is-outside');
   if (isToday) classes.push('is-today');
   if (isSelected) classes.push('is-selected');
   const count = dayEntries.length;
-  const label = `${longDayLabel(dateISO)}${count ? ` · ${count === 1 ? '1 impegno' : `${count} impegni`}` : ''} · aggiungi`;
-  return `<button type="button" class="${classes.join(' ')}" data-date="${dateISO}" aria-label="${esc(label)}" aria-pressed="${isSelected}">
+  const owners = [...new Set(dayEntries.map((e) => ownerNameFor(entryLaneRole(e), profileById(e.owner_id)?.display_name)))];
+  const label = `${longDayLabel(dateISO)}${count ? ` · ${count === 1 ? '1 impegno' : `${count} impegni`}: ${owners.join(', ')}` : ' · nessun impegno'}`;
+  return `<button type="button" class="${classes.join(' ')}" data-date="${dateISO}" aria-label="${esc(label)}" aria-pressed="${isSelected}"${isToday ? ' aria-current="date"' : ''}>
     <span class="us-cal-day-num">${dateObj.getDate()}</span>
     <span class="us-cal-day-markers">${markers}</span>
   </button>`;
@@ -654,8 +708,10 @@ function renderGridInto(container, dateIndex, options = {}) {
   }
   const weekdayRow = WEEKDAYS_IT.map((w) => `<div class="us-cal-weekday">${w}</div>`).join('');
   container.innerHTML = `<div class="us-cal-weekday-row">${weekdayRow}</div><div class="us-cal-day-grid">${cells.join('')}</div>`;
-  // M9C — il calendario sceglie la data: toccare un giorno crea per quel giorno.
-  container.querySelectorAll('.us-cal-day[data-date]').forEach((btn) => btn.addEventListener('click', () => startCreateForDate(btn.dataset.date)));
+  // M10.1C — toccare un giorno lo SELEZIONA: il dettaglio sotto la griglia
+  // mostra gli impegni reali; creare è "Aggiungi impegno" (o, scegliendo il
+  // giorno per un'idea Da vivere, il form collegato).
+  container.querySelectorAll('.us-cal-day[data-date]').forEach((btn) => btn.addEventListener('click', () => selectDay(btn.dataset.date)));
 }
 
 function renderMobileGrid(dateIndex) { renderGridInto($('usCalendarGridMobile'), dateIndex); }
@@ -673,12 +729,10 @@ function renderLegend() {
   const legend = $('usCalendarLegend');
   if (!legend) return;
   const ordered = sortedProfiles();
-  const a = ordered[0];
-  const b = ordered[1];
+  const item = (mark, name) => `<span class="us-cal-legend-item">${ownerChip(mark)}${esc(name)}</span>`;
   legend.innerHTML = [
-    a ? `<span class="us-cal-legend-item"><span class="us-cal-marker us-cal-marker--a" aria-hidden="true"></span>${esc(a.display_name)}</span>` : '',
-    b ? `<span class="us-cal-legend-item"><span class="us-cal-marker us-cal-marker--b" aria-hidden="true"></span>${esc(b.display_name)}</span>` : '',
-    '<span class="us-cal-legend-item"><span class="us-cal-marker us-cal-marker--shared" aria-hidden="true">♡</span>Insieme</span>'
+    ...ordered.map((p) => item(ownerMarkFor(p.role, p.display_name), p.display_name)),
+    item('F+B', 'Insieme')
   ].join('');
 }
 
@@ -720,18 +774,24 @@ function tempoWindowsForDay(dateISO) {
   return { windows, dayStartISO: win.windowStartDate, dayEndISO: win.windowEndDate };
 }
 
-function renderWeekDay(dateISO, dayEntries, ordered) {
-  const d = parseISODate(dateISO);
-  const weekday = capitalize(WEEKDAY_LONG_IT[(d.getDay() + 6) % 7]);
-  const isToday = dateISO === todayISO();
+// "Tempo insieme" for one day — the same block in the week list and under the
+// selected day (the free windows always come from computeFreeTogether).
+function renderTempoBlock(dateISO) {
   const { windows, dayStartISO, dayEndISO } = tempoWindowsForDay(dateISO);
   const tempoBody = windows.length
     ? `<ul>${windows.map((w) => `<li>${esc(tempoWindowLabel(w.start, w.end, dayStartISO, dayEndISO))}</li>`).join('')}</ul>`
     : '<p>Nessun momento libero insieme, oggi.</p>';
-  const tempo = `<div class="us-cal-tempo${windows.length ? '' : ' is-empty'}">
+  return `<div class="us-cal-tempo${windows.length ? '' : ' is-empty'}">
       <span class="us-cal-tempo-heart" aria-hidden="true">♡</span>
       <div class="us-cal-tempo-copy"><b>Tempo insieme</b>${tempoBody}</div>
     </div>`;
+}
+
+function renderWeekDay(dateISO, dayEntries, ordered) {
+  const d = parseISODate(dateISO);
+  const weekday = capitalize(WEEKDAY_LONG_IT[(d.getDay() + 6) % 7]);
+  const isToday = dateISO === todayISO();
+  const tempo = renderTempoBlock(dateISO);
   const body = dayEntries.length
     ? [
         ...ordered.map((p) => renderDaySection(p.display_name, dayEntries.filter((e) => entryLaneRole(e) === p.role), laneClass(p.role))),
@@ -785,10 +845,12 @@ function renderCalendar() {
   if (isWeek) {
     renderWeekList();
   } else {
+    ensureSelectedDate();
     const dateIndex = buildDateIndex();
     renderMobileGrid(dateIndex);
     renderWideGrids(dateIndex);
   }
+  renderSelectedDay();
   renderLegend();
   renderEmptyState();
   renderErrorState();
@@ -803,41 +865,75 @@ function entryTimeLabel(entry) {
   return `${fmt(s)} → ${fmt(e)}`;
 }
 
+// One event row for every surface (selected day, week list): ownership marker,
+// time, title and place. The whole row opens the existing detail/edit flow.
+function renderEventRow(e) {
+  const lane = entryLaneRole(e);
+  const ownerName = profileById(e.owner_id)?.display_name;
+  const mark = ownerMarkFor(lane, ownerName);
+  const label = entryAriaLabel({ title: e.title, lane, displayName: ownerName, entry: e });
+  const place = e.location ? `<small class="us-cal-event-place">${esc(e.location)}</small>` : '';
+  return `<button type="button" class="us-cal-event" data-entry-id="${esc(e.id)}" data-owner="${esc(mark)}" aria-label="${esc(label)}"><span class="us-cal-owner${mark === 'F+B' ? ' us-cal-owner--shared' : ''}" aria-hidden="true">${esc(mark)}</span><span class="us-cal-event-copy"><span class="us-cal-event-time">${esc(entryTimeLabel(e))}</span><b class="us-cal-event-title">${esc(e.title)}</b>${place}</span></button>`;
+}
+
 function renderDaySection(label, list, cls) {
-  const items = list.length
-    ? list.map((e) => `<button type="button" class="us-cal-day-item" data-entry-id="${esc(e.id)}"><span class="us-cal-day-item-mark us-cal-marker--${cls}" aria-hidden="true"></span><span class="us-cal-day-item-copy"><b>${esc(e.title)}</b><small>${esc(entryTimeLabel(e))}</small></span></button>`).join('')
-    : '<p class="us-cal-day-empty">Niente qui.</p>';
-  return `<section class="us-cal-day-section"><h4>${esc(label)}</h4>${items}</section>`;
+  const items = list.length ? sortDayEntries(list).map(renderEventRow).join('') : '<p class="us-cal-day-empty">Niente qui.</p>';
+  return `<section class="us-cal-day-section" data-lane="${esc(cls)}"><h4>${esc(label)}</h4>${items}</section>`;
 }
 
-function renderDaySections(dateISO) {
-  const dayEntries = buildDateIndex().get(dateISO) || [];
-  const sections = sortedProfiles().map((profile) => renderDaySection(profile.display_name, dayEntries.filter((e) => entryLaneRole(e) === profile.role), laneClass(profile.role)));
-  sections.push(renderDaySection('Insieme', dayEntries.filter((e) => entryLaneRole(e) === 'shared'), 'shared'));
+// Selected-day detail, under the month grid: only lanes that really have
+// something, grouped by person (F / B / Insieme), then "Tempo insieme".
+function renderSelectedDay() {
+  const panel = $('usCalendarDayDetail');
+  if (!panel) return;
+  const show = calendarMode === 'month' && Boolean(selectedDate);
+  panel.hidden = !show;
+  if (!show) return;
+  const dayEntries = buildDateIndex().get(selectedDate) || [];
+  const title = $('usCalendarDayDetailTitle');
+  if (title) title.textContent = longDayLabel(selectedDate);
+  const count = $('usCalendarDayDetailCount');
+  if (count) count.textContent = dayEntries.length ? (dayEntries.length === 1 ? '1 impegno' : `${dayEntries.length} impegni`) : '';
+  const groups = groupDayEntries(dayEntries, entryLaneRole);
+  const sections = groups.map(({ lane, list }) => {
+    const name = ownerNameFor(lane, profileById(list[0].owner_id)?.display_name);
+    const head = `<h4><span class="us-cal-owner us-cal-owner--sm${lane === 'shared' ? ' us-cal-owner--shared' : ''}" aria-hidden="true">${esc(ownerMarkFor(lane, name))}</span>${esc(name)}</h4>`;
+    return `<section class="us-cal-day-section" data-lane="${esc(laneClass(lane))}">${head}${list.map(renderEventRow).join('')}</section>`;
+  });
   const container = $('usCalendarDaySections');
-  if (!container) return;
-  container.innerHTML = sections.join('');
-  container.querySelectorAll('[data-entry-id]').forEach((btn) => btn.addEventListener('click', () => openDetail(btn.dataset.entryId)));
+  if (container) {
+    container.innerHTML = sections.length ? sections.join('') : '<p class="us-cal-day-empty">Niente in programma.</p>';
+    container.querySelectorAll('[data-entry-id]').forEach((btn) => btn.addEventListener('click', () => openDetail(btn.dataset.entryId)));
+  }
+  const tempo = $('usCalendarDayTempo');
+  if (tempo) tempo.innerHTML = renderTempoBlock(selectedDate);
 }
 
-function openDaySheet(dateISO) {
+// Month mode always has a selected day inside the visible grid: today when it
+// is visible, otherwise the first of the viewed month.
+function ensureSelectedDate() {
+  ensureInitialMonth();
+  const { gridStart, gridEnd } = monthGridRange(viewYear, viewMonth);
+  const lo = isoDate(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate());
+  const hi = isoDate(gridEnd.getFullYear(), gridEnd.getMonth(), gridEnd.getDate());
+  if (selectedDate && selectedDate >= lo && selectedDate < hi) return;
+  const today = todayISO();
+  selectedDate = today >= lo && today < hi && today.slice(0, 7) === isoDate(viewYear, viewMonth, 1).slice(0, 7) ? today : isoDate(viewYear, viewMonth, 1);
+}
+
+// Tocco su un giorno: lo seleziona e porta il dettaglio in vista. Solo quando
+// si sta scegliendo il giorno per un'idea Da vivere apre subito il form
+// collegato (evento Insieme).
+function selectDay(dateISO) {
+  if (!dateISO) return;
   selectedDate = dateISO;
   renderCalendar();
-  const d = parseISODate(dateISO);
-  const weekday = capitalize(WEEKDAY_LONG_IT[(d.getDay() + 6) % 7]);
-  const title = $('usCalendarDayTitle');
-  if (title) title.textContent = `${weekday} ${d.getDate()} ${MONTHS_IT[d.getMonth()].toLowerCase()}`;
-  renderDaySections(dateISO);
-  const sheet = $('usCalendarDaySheet');
-  if (!sheet) return;
-  sheet.classList.add('open');
-  sheet.setAttribute('aria-hidden', 'false');
-}
-function closeCalendarDaySheet() {
-  const sheet = $('usCalendarDaySheet');
-  if (!sheet) return;
-  sheet.classList.remove('open');
-  sheet.setAttribute('aria-hidden', 'true');
+  if (pendingIdeaPick) { openIdeaForm(pendingIdeaPick, dateISO); return; }
+  const panel = $('usCalendarDayDetail');
+  if (panel && typeof panel.scrollIntoView === 'function') {
+    const calm = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    panel.scrollIntoView({ block: 'nearest', behavior: calm ? 'auto' : 'smooth' });
+  }
 }
 
 function openDetail(entryId) {
@@ -892,7 +988,6 @@ async function deleteEntry() {
     editingEntryReminders = editingEntryReminders.filter((r) => r.entry_id !== detailEntry.id);
     closeCalendarDetailSheet();
     renderCalendar();
-    if ($('usCalendarDaySheet')?.classList.contains('open') && selectedDate) renderDaySections(selectedDate);
     toast('Impegno eliminato');
     window.hydrateNoiIdeas?.();
   } catch (error) {
@@ -922,7 +1017,7 @@ function renderFormDay(dateISO, mode) {
   const list = mode === 'edit' || !dateISO ? [] : (buildDateIndex().get(dateISO) || []);
   box.hidden = !list.length;
   box.innerHTML = list.length
-    ? `<span class="us-cal-form-day-kicker">Già quel giorno</span>${list.map((e) => `<button type="button" class="us-cal-form-day-entry us-cal-marker-host--${laneClass(entryLaneRole(e))}" data-entry-id="${esc(e.id)}"><b>${esc(e.title)}</b><small>${esc(entryTimeLabel(e))}</small></button>`).join('')}`
+    ? `<span class="us-cal-form-day-kicker">Già quel giorno</span>${list.map((e) => `<button type="button" class="us-cal-form-day-entry" data-entry-id="${esc(e.id)}" aria-label="${esc(entryAriaLabel({ title: e.title, lane: entryLaneRole(e), displayName: profileById(e.owner_id)?.display_name, entry: e }))}">${ownerChip(ownerMarkOf(e))}<b>${esc(e.title)}</b><small>${esc(entryTimeLabel(e))}</small></button>`).join('')}`
     : '';
   box.querySelectorAll('[data-entry-id]').forEach((btn) => btn.addEventListener('click', () => { closeCalendarFormSheet(); openDetail(btn.dataset.entryId); }));
 }
@@ -969,8 +1064,9 @@ function openForm(mode, entry, dateISO) {
   sheet.setAttribute('aria-hidden', 'false');
   setTimeout(() => $('usCalendarTitleInput')?.focus({ preventScroll: true }), 80);
 }
-// M9C — tocco su un giorno: nuova voce per quella data (o, se si sta
-// scegliendo il giorno per un'idea Da vivere, l'evento Insieme collegato).
+// M9C — nuova voce per una data (M10.1C: da "Aggiungi impegno" sul giorno
+// selezionato o dal giorno della settimana; se si sta scegliendo il giorno per
+// un'idea Da vivere, l'evento Insieme collegato).
 function startCreateForDate(dateISO) {
   if (!dateISO) return;
   selectedDate = dateISO;
@@ -1037,7 +1133,6 @@ async function saveEntry(event) {
     if (linkedIdea) clearIdeaPick();
     closeCalendarFormSheet();
     await loadEntries();
-    if ($('usCalendarDaySheet')?.classList.contains('open') && selectedDate) renderDaySections(selectedDate);
     toast(wasEditing ? 'Impegno aggiornato' : (linkedIdea ? 'In calendario' : 'Impegno aggiunto'));
   } catch (error) {
     console.warn('[US Calendar] save', error);
@@ -1132,21 +1227,19 @@ function goToToday() {
 }
 
 // M6E — an optional target date (e.g. from the Oggi calendar widget) lands
-// the surface straight on that day/week instead of the current month; every
-// existing zero-arg caller (HTML onclick, navigation.js) is unaffected.
-// calendarOpenToken guards the awaited loads below: a close (or a second
-// open) bumps it, so a slow open that resolves after the surface moved on
-// never forces openDaySheet on a target the user didn't ask for.
-let calendarOpenToken = 0;
+// the surface straight on that day/week instead of the current month, with
+// that day already selected (M10.1C: the detail sits under the grid, so there
+// is no separate day sheet to open); every existing zero-arg caller (HTML
+// onclick, navigation.js) is unaffected.
 async function openCalendarSurface() {
   const targetDateISO = arguments[0];
-  const openToken = ++calendarOpenToken;
   ensureInitialMonth();
   if (targetDateISO) {
     const target = parseISODate(targetDateISO);
     viewYear = target.getFullYear();
     viewMonth = target.getMonth();
     weekStartISO = mondayOfISO(targetDateISO);
+    selectedDate = targetDateISO;
   }
   const overlay = $('usCalendarOverlay');
   if (!overlay) return;
@@ -1159,17 +1252,14 @@ async function openCalendarSurface() {
   await loadProfiles();
   await loadEntryReminders();
   await loadEntries();
-  if (targetDateISO && openToken === calendarOpenToken && overlay.classList.contains('open')) openDaySheet(targetDateISO);
 }
 function closeCalendarSurface() {
   const overlay = $('usCalendarOverlay');
   if (!overlay || busy) return;
-  calendarOpenToken++;
   const finalize = () => {
     overlay.classList.remove('open');
     overlay.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('us-cal-open');
-    closeCalendarDaySheet();
     closeCalendarDetailSheet();
     closeCalendarFormSheet();
     clearIdeaPick();
@@ -1186,8 +1276,7 @@ $('usCalendarViewMonth')?.addEventListener('click', () => setMode('month'));
 $('usCalendarViewWeek')?.addEventListener('click', () => setMode('week'));
 $('usCalendarClose')?.addEventListener('click', closeCalendarSurface);
 $('usCalendarBackdrop')?.addEventListener('click', closeCalendarSurface);
-$('usCalendarDayClose')?.addEventListener('click', closeCalendarDaySheet);
-$('usCalendarDayBackdrop')?.addEventListener('click', closeCalendarDaySheet);
+$('usCalendarAddEntry')?.addEventListener('click', () => startCreateForDate(selectedDate || todayISO()));
 $('usCalendarDetailClose')?.addEventListener('click', closeCalendarDetailSheet);
 $('usCalendarDetailBackdrop')?.addEventListener('click', closeCalendarDetailSheet);
 $('usCalendarDetailEdit')?.addEventListener('click', () => { if (detailEntry) openForm('edit', detailEntry); });
@@ -1292,7 +1381,6 @@ async function openCalendarEntry(entryId) {
 window.UsCalendarLinks = Object.freeze({ openForIdea: openCalendarForIdea, openEntry: openCalendarEntry, getEntriesByIds: getCalendarEntriesByIds, whenLabel: calendarWhenLabel });
 window.openCalendarSurface = openCalendarSurface;
 window.closeCalendarSurface = closeCalendarSurface;
-window.closeCalendarDaySheet = closeCalendarDaySheet;
 window.closeCalendarDetailSheet = closeCalendarDetailSheet;
 window.closeCalendarFormSheet = closeCalendarFormSheet;
 console.info('[US Calendar] calendario condiviso attivo');

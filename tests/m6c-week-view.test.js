@@ -194,7 +194,7 @@ test('M6C (13): week items open the existing detail; the navigation layer regist
   // M9C: the rest of a week day (head included) starts creation for that date;
   // a tap on an entry never creates.
   assert.match(js(), /container\.querySelectorAll\('\.us-cal-week-day\[data-date\]'\)\.forEach\(\(day\) => day\.addEventListener\('click', \(event\) => \{\s*if \(event\.target\.closest\?\.\('\[data-entry-id\]'\)\) return;\s*startCreateForDate\(day\.dataset\.date\);/);
-  for (const name of ['calendar', 'calendar-day', 'calendar-detail', 'calendar-form']) {
+  for (const name of ['calendar', 'calendar-detail', 'calendar-form']) {
     assert.match(nav(), new RegExp(`name:'${name}'`));
   }
   assert.doesNotMatch(nav(), /name:'calendar-week'/, 'the week switch is a view, not a new navigation layer');

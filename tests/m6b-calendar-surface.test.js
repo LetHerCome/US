@@ -91,18 +91,20 @@ test('M6B (8): both partner identities render from live profile data in a fixed,
   assert.equal(cal.roleRank('beatrice'), cal.roleRank('beatrice'), 'rank is a pure function of the fixed role order, not of the viewer');
 });
 
-// (9) personal markers render with a non-color cue.
-test('M6B (9): personal entries resolve to their owner\'s lane, distinguished by shape as well as color', () => {
+// (9) M10.1C: personal ownership is TEXT (F / B), not a colour or a shape.
+test('M6B (9): personal entries resolve to their owner\'s lane and are marked F / B in text', () => {
   assert.equal(cal.entryLaneRoleFor({ entry_type: 'personal' }, 'francesco'), 'francesco');
   assert.equal(cal.entryLaneRoleFor({ entry_type: 'personal' }, 'beatrice'), 'beatrice');
-  assert.match(css(), /\.us-cal-marker--a\{[^}]*border-radius:50%/, 'lane A is a round dot');
-  assert.match(css(), /\.us-cal-marker--b\{[^}]*border-radius:2px/, 'lane B is a distinct bar shape, not just a different color');
+  assert.equal(cal.ownerMarkFor('francesco'), 'F');
+  assert.equal(cal.ownerMarkFor('beatrice'), 'B');
+  assert.match(css(), /\.us-cal-chip\{[^}]*font-weight:800/, 'the month marker is a text chip');
 });
 
-// (10) shared marker renders distinctly (heart glyph, not just a third color).
-test('M6B (10): shared entries render a distinct heart marker', () => {
+// (10) M10.1C: a shared entry reads F+B (text), with a warm tint only as extra.
+test('M6B (10): shared entries render the F+B text marker', () => {
   assert.equal(cal.entryLaneRoleFor({ entry_type: 'shared', owner_id: null }, ''), 'shared');
-  assert.match(js(), /us-cal-marker--shared[^"]*"[^>]*>♡</);
+  assert.equal(cal.ownerMarkFor('shared'), 'F+B');
+  assert.match(css(), /\.us-cal-chip--shared\{/);
 });
 
 // (11) a shared event is exactly one domain record, never duplicated per partner.
@@ -115,20 +117,21 @@ test('M6B (11): shared create/read never duplicates a domain row per partner', (
   assert.equal(insertCalls.length, 1, 'exactly one insert call site — no per-partner duplication loop');
 });
 
-// (12) M9C: tapping a day starts creation for that day; the day sheet stays
-// for the Oggi widget deep link (openCalendarSurface(date)).
-test('M6B (12): tapping a day starts creation for that date; the day sheet remains for deep links', () => {
-  assert.match(js(), /function openDaySheet\(dateISO\)/);
-  assert.match(js(), /\.us-cal-day\[data-date\]'\)\.forEach\(\(btn\) => btn\.addEventListener\('click', \(\) => startCreateForDate\(btn\.dataset\.date\)\)\)/);
-  assert.match(js(), /openDaySheet\(targetDateISO\)/);
-  assert.match(nav(), /name:'calendar-day',[\s\S]*?close:\(\)=>window\.closeCalendarDaySheet\?\.\(\)/);
+// (12) M10.1C: tapping a day SELECTS it; the detail sits under the grid and
+// creation is the explicit "Aggiungi impegno". The Oggi deep link selects the day.
+test('M6B (12): tapping a day selects it; the selected-day detail replaces the day sheet', () => {
+  assert.doesNotMatch(js(), /openDaySheet|closeCalendarDaySheet/);
+  assert.doesNotMatch(html(), /usCalendarDaySheet/);
+  assert.match(js(), /\.us-cal-day\[data-date\]'\)\.forEach\(\(btn\) => btn\.addEventListener\('click', \(\) => selectDay\(btn\.dataset\.date\)\)\)/);
+  assert.match(js(), /selectedDate = targetDateISO;/);
+  assert.match(html(), /id="usCalendarAddEntry"[^>]*>Aggiungi impegno</);
 });
 
-// (13) day sheet separates partner A / partner B / Insieme.
-test('M6B (13): the day sheet renders three separate sections: each partner and Insieme', () => {
-  assert.match(js(), /sortedProfiles\(\)\.map\(\(profile\)\s*=>\s*renderDaySection\(/);
-  assert.match(js(), /renderDaySection\('Insieme',/);
-  assert.match(js(), /Niente qui\./, 'each section has its own quiet empty state');
+// (13) the selected day separates partner A / partner B / Insieme — real lanes only.
+test('M6B (13): the selected day renders one section per lane that has something: each partner and Insieme', () => {
+  assert.match(js(), /groupDayEntries\(dayEntries, entryLaneRole\)/);
+  assert.match(js(), /ownerNameFor\(lane,/);
+  assert.match(js(), /Niente in programma\./, 'an empty day says so once, without empty lane scaffolding');
 });
 
 // (14) personal detail is read-only for the non-owner partner.
@@ -281,7 +284,8 @@ test('M6B (29): the empty calendar state has no duplicate CTA; tapping a day is 
   assert.doesNotMatch(js(), /usCalendarEmptyCta/);
   assert.doesNotMatch(html(), /usCalendarAddBtn|us-cal-fab/);
   assert.doesNotMatch(js(), /usCalendarAddBtn/);
-  assert.match(html(), /<p class="us-cal-hint">Tocca un giorno per aggiungere qualcosa\.<\/p>/);
+  // M10.1C: the explanatory hint is gone — the selected day carries its own "Aggiungi impegno".
+  assert.doesNotMatch(html(), /us-cal-hint/);
 });
 
 // (30) error/retry state keeps last good data visible.
@@ -294,7 +298,7 @@ test('M6B (30): a failed refresh shows an error/retry banner and keeps existing 
 // (31) browser back closes detail -> day sheet -> calendar -> Noi, via the shared layer mechanism only.
 test('M6B (31): browser Back is wired exclusively through navigation.js layers, in nesting order', () => {
   const layerNames = [...nav().matchAll(/name:'(calendar[\w-]*)'/g)].map((m) => m[1]);
-  assert.deepEqual(layerNames, ['calendar', 'calendar-day', 'calendar-detail', 'calendar-form']);
+  assert.deepEqual(layerNames, ['calendar', 'calendar-detail', 'calendar-form']);
   assert.doesNotMatch(js(), /history\.(push|replace)State|addEventListener\('popstate'/, 'no parallel history system inside calendar.js');
 });
 
@@ -484,7 +488,7 @@ test('M6B (49): a single shared icon-centering rule is defined once and applied 
   const foundation = read('ui-foundation.css');
   assert.match(foundation, /\.us-icon-center\s*\{\s*display:inline-flex;\s*align-items:center;\s*justify-content:center;\s*\}/, 'the shared primitive must live in ui-foundation.css, the stated authority for cross-cutting UI primitives');
 
-  for (const id of ['usCalendarClose', 'usCalendarPrev', 'usCalendarNext', 'usCalendarDayClose', 'usCalendarDetailClose', 'usCalendarFormClose']) {
+  for (const id of ['usCalendarClose', 'usCalendarPrev', 'usCalendarNext', 'usCalendarDetailClose', 'usCalendarFormClose']) {
     const tag = html().match(new RegExp(`<[^>]*id="${id}"[^>]*>`))?.[0] || '';
     assert.ok(tag, `${id} must exist in the markup`);
     assert.match(tag, /class="[^"]*\bus-icon-center\b[^"]*"/, `${id} must use the shared centering class`);

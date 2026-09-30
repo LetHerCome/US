@@ -714,6 +714,14 @@ html.us-returning-device .auth-overlay{
           <div class="us-cal-grid" id="usCalendarGridB"></div>
         </div>
       </div>
+      <section class="us-cal-day-detail" id="usCalendarDayDetail" aria-labelledby="usCalendarDayDetailTitle" aria-live="polite" hidden>
+        <header class="us-cal-day-detail-head">
+          <div class="us-cal-day-detail-titles"><h3 id="usCalendarDayDetailTitle">—</h3><small id="usCalendarDayDetailCount"></small></div>
+          <button type="button" class="us-cal-add" id="usCalendarAddEntry">Aggiungi impegno</button>
+        </header>
+        <div class="us-cal-day-sections" id="usCalendarDaySections"></div>
+        <div class="us-cal-day-tempo" id="usCalendarDayTempo"></div>
+      </section>
       <div class="us-cal-week-pane" id="usCalendarWeekPane" hidden>
         <div class="us-cal-week-list" id="usCalendarWeekList"></div>
       </div>
@@ -723,17 +731,6 @@ html.us-returning-device .auth-overlay{
       </div>
     </div>
   </section>
-
-  <div class="us-cal-sheet-overlay" id="usCalendarDaySheet" aria-hidden="true">
-    <div class="us-cal-sheet-backdrop" id="usCalendarDayBackdrop"></div>
-    <section class="us-cal-sheet" role="dialog" aria-modal="true" aria-labelledby="usCalendarDayTitle" data-us-modal-panel>
-      <header class="us-cal-sheet-head">
-        <h3 id="usCalendarDayTitle">—</h3>
-        <button type="button" class="us-cal-sheet-close us-icon-center" id="usCalendarDayClose" aria-label="Chiudi giornata">×</button>
-      </header>
-      <div class="us-cal-day-sections" id="usCalendarDaySections"></div>
-    </section>
-  </div>
 
   <div class="us-cal-sheet-overlay" id="usCalendarDetailSheet" aria-hidden="true">
     <div class="us-cal-sheet-backdrop" id="usCalendarDetailBackdrop"></div>

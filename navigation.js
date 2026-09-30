@@ -161,12 +161,6 @@ const layers=[
     close:()=>window.closeCalendarSurface?.()
   },
   {
-    name:'calendar-day',
-    find:()=>document.getElementById('usCalendarDaySheet'),
-    open:el=>el?.classList.contains('open'),
-    close:()=>window.closeCalendarDaySheet?.()
-  },
-  {
     name:'calendar-detail',
     find:()=>document.getElementById('usCalendarDetailSheet'),
     open:el=>el?.classList.contains('open'),

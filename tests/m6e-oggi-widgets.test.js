@@ -128,7 +128,7 @@ test('M6E (6): openCalendarSurface accepts an optional target date and opens str
   assert.match(source, /const targetDateISO = arguments\[0\]/);
   assert.match(source, /if \(targetDateISO\)/);
   assert.match(source, /weekStartISO = mondayOfISO\(targetDateISO\)/);
-  assert.match(source, /openDaySheet\(targetDateISO\)/);
+  assert.match(source, /selectedDate = targetDateISO;/);
   // existing zero-arg call site (HTML onclick) stays untouched
   assert.match(html(), /onclick="openCalendarSurface\(\)"/);
 });
@@ -391,14 +391,12 @@ test('M6E (19): getOggiCalendarInsightSource captures the couple id once and nev
 // P2 Calendar open/close race: a generation token makes a date-target open
 // cancellation-safe against a subsequent close or newer open.
 
-test('M6E (20): openCalendarSurface uses a generation token so a close or newer open invalidates a stale pending date-target opener', () => {
+test('M6E (20): M10.1C — the date target is selected up-front; no stale day-sheet opener remains', () => {
   const source = js();
-  assert.match(source, /let calendarOpenToken = 0/);
+  assert.doesNotMatch(source, /calendarOpenToken|openDaySheet/);
   const openSrc = source.match(/async function openCalendarSurface\(\)[\s\S]*?\n\}/)?.[0] || '';
-  assert.match(openSrc, /const openToken = \+\+calendarOpenToken/);
-  assert.match(openSrc, /if \(targetDateISO && openToken === calendarOpenToken && overlay\.classList\.contains\('open'\)\) openDaySheet\(targetDateISO\)/);
-  const closeSrc = source.match(/function closeCalendarSurface\(\)[\s\S]*?\n\}/)?.[0] || '';
-  assert.match(closeSrc, /calendarOpenToken\+\+/);
+  assert.match(openSrc, /selectedDate = targetDateISO;/);
+  assert.doesNotMatch(openSrc, /await[^\n]*\n[^\n]*selectedDate = targetDateISO/, 'selection happens before any await');
 });
 
 // ---------------------------------------------------------------------------
