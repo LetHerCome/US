@@ -6,7 +6,7 @@ const vm = require('node:vm');
 
 const ROOT = path.resolve(__dirname, '..');
 const ORIGIN = 'https://us.example.test';
-const CURRENT_SHELL = 'us-shell-static-runtime-33';
+const CURRENT_SHELL = 'us-shell-static-runtime-34';
 
 function readRequiredRuntimeFile(name) {
   const file = path.join(ROOT, name);
