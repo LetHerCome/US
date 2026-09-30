@@ -92,7 +92,7 @@ function weeklyCard(w) {
   if (w.created_by_me) {
     const q = w.my_question;
     return `<section class="us-gv2-weekly is-locked" aria-label="La domanda della settimana">
-      <div class="us-gv2-weekly-head">${icon('lock-simple')}<div><span class="us-gv2-kicker">LA VOSTRA DOMANDA</span><b>Domanda creata</b><small>Si sblocca ${esc(unlock)}</small></div></div>
+      <div class="us-gv2-weekly-head">${icon('lock-simple')}<div><span class="us-gv2-kicker">LA VOSTRA DOMANDA</span><b>Domanda creata</b><small>La prossima la sceglie ${esc(partnerName())}, da ${esc(unlock)}.</small></div></div>
       ${q ? `<blockquote>${esc(q.question_text)}</blockquote><small class="us-gv2-note">${esc(partnerName())} la scoprirà solo giocando.</small>` : ''}
     </section>`;
   }
@@ -108,7 +108,7 @@ function weeklyCard(w) {
     </section>`;
   }
   return `<section class="us-gv2-weekly is-locked" aria-label="La domanda della settimana">
-    <div class="us-gv2-weekly-head">${icon('lock-simple')}<div><span class="us-gv2-kicker">LA VOSTRA DOMANDA</span><b>Questa settimana crea ${esc(label(w.assigned_role))}</b><small>${w.next_role === myRole() ? `Da ${esc(unlock)} tocca a te.` : `Si sblocca ${esc(unlock)}`}</small></div></div>
+    <div class="us-gv2-weekly-head">${icon('lock-simple')}<div><span class="us-gv2-kicker">LA VOSTRA DOMANDA</span><b>Questa settimana crea ${esc(label(w.assigned_role))}</b><small>${w.next_role === myRole() ? `Da ${esc(unlock)} tocca a te.` : `Il turno cambia ${esc(unlock)}.`}</small></div></div>
   </section>`;
 }
 

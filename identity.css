@@ -90,7 +90,6 @@ textarea,input{
 
 /* Main titles share one hierarchy. Moments keeps its journal voice. */
 .section>h2,
-.quiz-head h2,
 .bond-page-head h2,
 .us-settings-head h2{
   letter-spacing:-.42px!important;
@@ -270,8 +269,7 @@ textarea,input{
   50%{transform:translateX(3px) scale(1.03);opacity:1}
 }
 .empty-state[aria-busy="true"]>.emoji{display:none!important}
-.empty-state[aria-busy="true"]>.us-id-loader,
-.quiz-week-loading[aria-busy="true"]>.us-id-loader{
+.empty-state[aria-busy="true"]>.us-id-loader{
   display:block;
 }
 

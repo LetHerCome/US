@@ -40,3 +40,21 @@ test('M11C real PG: two partners open a context round together, reads run READ O
   assert.match(out, /OK:5/);
   assert.match(out, /H:idle/);
 });
+
+test('M11D real PG: the service-role push derivations run READ ONLY and are closed to users', { skip: SKIP }, async () => {
+  const c = uuid(); const f = uuid(); const b = uuid();
+  pg.sql(`insert into public.couples(id) values ('${c}');
+    insert into public.profiles(id, couple_id, role) values ('${f}','${c}','francesco'),('${b}','${c}','beatrice');`);
+  const sid = pg.sql(`${asUser(f)} select public.start_game_round('ridete', '${uuid()}')->>'id';`).split('\n').filter(Boolean).pop();
+  const out = pg.sql(`set role service_role; begin read only;
+    select 'P:' || jsonb_typeof(public.game_v2_pending_pushes());
+    select 'S:' || coalesce(public.game_v2_push_for_session('${sid}', '${f}')::text, 'null');
+    select 'W:' || coalesce(public.game_v2_push_for_weekly('${uuid()}', '${f}')::text, 'null');
+    rollback;`);
+  assert.match(out, /P:array/);
+  assert.match(out, /S:null/); // Francesco has not finished his side yet
+  assert.match(out, /W:null/);
+  const s = pg.session();
+  s.send(`${asUser(f)} select public.game_v2_pending_pushes();`);
+  assert.match((await s.end()).err, /permission denied/);
+});

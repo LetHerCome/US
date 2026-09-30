@@ -127,7 +127,7 @@ test('M11B client: weekly card states — locked, created by me, sealed for the 
   const mine = harness({ homeState: home({ weekly: weekly({ my_turn: false, created: true, created_by_me: true, my_question: { question_text: 'Cosa <ti> manca?' } }) }) });
   await tick();
   assert.match(mine.nodes.quizHub.innerHTML, /Domanda creata/);
-  assert.match(mine.nodes.quizHub.innerHTML, /Si sblocca lunedì 5 ottobre/);
+  assert.match(mine.nodes.quizHub.innerHTML, /La prossima la sceglie Bea, da lunedì 5 ottobre\./);
   assert.match(mine.nodes.quizHub.innerHTML, /Cosa &lt;ti&gt; manca\?/, 'author sees own text, escaped');
 
   const sealed = harness({ role: 'beatrice', homeState: home({ my_role: 'beatrice', partner_role: 'francesco', weekly: weekly({ created: true, partner_left_question: true }) }) });

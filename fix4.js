@@ -7,7 +7,7 @@
   const updateBtn = document.getElementById('appUpdateBtn');
   const onlineBadge = document.getElementById('onlineBadge');
   const PROFILE_CACHE_KEY = 'us:fix4:last-profile';
-  const IMPORTANT_ACTIONS = '#todaySaveBtn,#momentUploadBtn,#quizNext,#thinkButton,.quest-confirm,.quest-reroll,#pushEnableBtn,#pushDisableBtn';
+  const IMPORTANT_ACTIONS = '#todaySaveBtn,#momentUploadBtn,#thinkButton,.quest-confirm,.quest-reroll,#pushEnableBtn,#pushDisableBtn';
   let statusTimer = null;
   let updateCheckTimer = null;
   let keyboardOpen = false;
@@ -105,7 +105,7 @@
       el.classList.toggle('us-action-busy', busy);
       if (busy) el.setAttribute('aria-busy', 'true'); else el.removeAttribute('aria-busy');
     }
-    if (el.matches('.empty-state,.quiz-week-loading')) {
+    if (el.matches('.empty-state')) {
       const text = (el.textContent || '').toLowerCase();
       if (/caric|preparo|aggiorn|sincron/.test(text)) el.setAttribute('aria-busy', 'true'); else el.removeAttribute('aria-busy');
     }
@@ -113,11 +113,10 @@
 
   function markBusyStates(root = document) {
     if (root instanceof Element) updateBusyElement(root);
-    root.querySelectorAll?.('button,.empty-state,.quiz-week-loading').forEach(updateBusyElement);
+    root.querySelectorAll?.('button,.empty-state').forEach(updateBusyElement);
   }
 
   const A11Y_LABELS = [
-    ['.quiz-head .ghost', 'Torna alla Home'],
     ['.memory-refresh', 'Aggiorna il ricordo'],
     ['.moment-delete', 'Elimina ricordo'],
     ['.us-story-close', 'Chiudi storia'],

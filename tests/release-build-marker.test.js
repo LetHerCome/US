@@ -26,7 +26,7 @@ test('release: the shell cache has one current name and the private media cache 
 
 test('release: every Phosphor icon the shell references exists and is precached', () => {
   const worker = read('service-worker.js');
-  const sources = ['index.html', 'styles.css', 'calendar.css', 'ui-foundation.css', 'app.js'].map(read).join('\n');
+  const sources = ['index.html', 'styles.css', 'calendar.css', 'ui-foundation.css', 'app.js', 'identity.css', 'games.css'].map(read).join('\n');
   const icons = [...new Set([...sources.matchAll(/\/assets\/icons\/phosphor\/([a-z0-9-]+\.svg)/g)].map((m) => m[1]))];
   assert.ok(icons.length > 0);
   for (const icon of icons) {

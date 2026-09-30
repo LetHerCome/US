@@ -12,7 +12,7 @@ function loader(){
 }
 
 function decorateBusy(root=document){
-  root.querySelectorAll?.('.empty-state[aria-busy="true"],.quiz-week-loading[aria-busy="true"]').forEach(el=>{
+  root.querySelectorAll?.('.empty-state[aria-busy="true"]').forEach(el=>{
     if(el.querySelector(':scope > .us-id-loader'))return;
     el.prepend(loader());
   });
@@ -26,7 +26,7 @@ function boot(){
     for(const record of records){
       for(const node of record.addedNodes){
         if(node.nodeType!==1)continue;
-        if(node.matches?.('.empty-state[aria-busy="true"],.quiz-week-loading[aria-busy="true"]')){
+        if(node.matches?.('.empty-state[aria-busy="true"]')){
           decorateBusy(node.parentElement||document);
         }else{
           decorateBusy(node);
