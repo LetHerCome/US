@@ -129,7 +129,7 @@ test('M1 topbar refinement bilancia tre zone senza ridurre i touch target', () =
   assert.match(css, /\.top\.us-premium-top \.us-top-brand\{[^}]*grid-column:2/);
   assert.match(css, /\.top\.us-premium-top \.top-actions\{[^}]*grid-column:3[^}]*justify-self:end/);
   assert.match(css, /\.top\.us-premium-top \.us-top-brand\{[^}]*justify-self:center/);
-  assert.match(css, /\.us-top-brand-art\{[^}]*height:46px/);
+  assert.match(css, /\.us-top-brand-art\{[^}]*height:58px/);
   assert.match(css, /\.top\.us-premium-top \.profile-avatar[^}]*min-width:44px/);
   assert.match(css, /\.top\.us-premium-top \.us-calendar-btn[^}]*min-width:44px/);
 });

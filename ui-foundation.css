@@ -404,30 +404,33 @@ h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
    light (transform + opacity only, no JS loop). The same layer reacts: the
    bar's data-us-aurora="react" (set by UsUiFoundation.auroraPulse) lifts the
    intensity for ~800ms and runs one travelling highlight, then returns. */
-.top.us-premium-top>.us-aurora{position:absolute;z-index:0;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none;contain:paint}
+.top.us-premium-top>.us-aurora{position:absolute;z-index:0;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none;contain:paint;
+  /* M12A.1 — visibility tokens: ambient is clearly there when you look at the
+     bar; the reaction lifts it briefly. Tune here, nowhere else. */
+  --us-aurora-ambient:.62;--us-aurora-react:.96}
 .us-aurora::before,.us-aurora::after{content:"";position:absolute;top:-30%;bottom:-30%;pointer-events:none}
 .us-aurora::before{
   left:-35%;width:170%;
   background:
-    radial-gradient(34% 72% at 22% 50%,rgba(255,102,142,.55),transparent 72%),
-    radial-gradient(32% 72% at 52% 46%,rgba(158,118,255,.50),transparent 72%),
-    radial-gradient(30% 72% at 80% 54%,rgba(118,46,128,.60),transparent 72%);
-  opacity:var(--us-aurora-opacity,.26);
+    radial-gradient(36% 86% at 20% 50%,rgba(255,102,142,.78),transparent 74%),
+    radial-gradient(34% 86% at 52% 44%,rgba(169,133,255,.72),transparent 74%),
+    radial-gradient(32% 86% at 82% 56%,rgba(160,62,150,.74),transparent 74%);
+  opacity:var(--us-aurora-opacity,var(--us-aurora-ambient));
   transition:opacity 260ms var(--us-ease-standard,ease);
   animation:us-aurora-drift 12s ease-in-out infinite alternate;
   will-change:transform;
 }
 .us-aurora::after{
   left:0;width:38%;
-  background:linear-gradient(100deg,transparent,rgba(255,236,247,.34) 50%,transparent);
+  background:linear-gradient(100deg,transparent,rgba(255,236,247,.46) 50%,transparent);
   opacity:0;
   transform:translate3d(-110%,0,0);
 }
 @keyframes us-aurora-drift{
-  from{transform:translate3d(-7%,0,0) scaleY(1)}
-  to{transform:translate3d(7%,0,0) scaleY(1.06)}
+  from{transform:translate3d(-14%,0,0) scaleY(1)}
+  to{transform:translate3d(14%,0,0) scaleY(1.1)}
 }
-.top.us-premium-top[data-us-aurora="react"] .us-aurora::before{--us-aurora-opacity:.5;animation:us-aurora-drift 12s ease-in-out infinite alternate,us-aurora-surge 800ms var(--us-ease-standard,ease) 1}
+.top.us-premium-top[data-us-aurora="react"] .us-aurora::before{--us-aurora-opacity:var(--us-aurora-react);animation:us-aurora-drift 12s ease-in-out infinite alternate,us-aurora-surge 800ms var(--us-ease-standard,ease) 1}
 .top.us-premium-top[data-us-aurora="react"] .us-aurora::after{animation:us-aurora-sweep 800ms var(--us-ease-standard,ease) 1 both}
 @keyframes us-aurora-surge{0%,100%{translate:0 0}45%{translate:5% 0}}
 @keyframes us-aurora-sweep{0%{opacity:0;transform:translate3d(-110%,0,0)}25%{opacity:1}100%{opacity:0;transform:translate3d(280%,0,0)}}

@@ -37,7 +37,6 @@ const APP_SHELL = [
   "/polish4.css",
   "/polish4.js",
   "/assets/derived/brand/us-symbol-apk-foreground-v1.png",
-  "/assets/derived/brand/us-symbol-ui-crisp-v1.png",
   "/assets/fonts/Inter-Variable.woff2",
   "/assets/fonts/Newsreader-Variable.woff2",
   "/assets/icons/phosphor/house-regular.svg",

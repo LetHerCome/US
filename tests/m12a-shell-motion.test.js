@@ -19,7 +19,7 @@ test('shell: Per voi left, the US mark at the centre, Left for You right', () =>
   const brand = topBar.indexOf('class="us-top-brand"');
   const envelope = topBar.indexOf('id="leftForYouPartnerEntry"');
   assert.ok(perVoi > 0 && brand > perVoi && envelope > brand, 'order: Per voi, US, Left for You');
-  assert.match(topBar, /<div class="us-top-brand" role="img" aria-label="US"><img[^>]+us-symbol-ui-crisp-v1\.png/);
+  assert.match(topBar, /<div class="us-top-brand" role="img" aria-label="US"><img[^>]+us-symbol-apk-foreground-v1\.png/);
   assert.match(identityCss, /\.top\.us-premium-top \.us-top-brand\{grid-column:2;/);
   assert.match(identityCss, /\.top\.us-premium-top\{display:grid;grid-template-columns:minmax\(0,1fr\) auto minmax\(0,1fr\)/);
 });
@@ -34,12 +34,12 @@ test('shell: Events no longer owns the global centre slot but stays reachable', 
   assert.match(read('app.js'), /if\(action==='events'\)window\.openEvents\?\.\(\)/);
 });
 
-test('shell: the approved US mark is used as-is (display cropping only) and is precached', () => {
+test('shell: the canonical PWA/launcher mark is used as-is (display cropping only)', () => {
   const manifest = JSON.parse(read('assets/ASSET_MANIFEST.json'));
-  const asset = manifest.assets.find((entry) => entry.path === 'assets/derived/brand/us-symbol-ui-crisp-v1.png');
+  const asset = manifest.assets.find((entry) => entry.path === 'assets/derived/brand/us-symbol-apk-foreground-v1.png');
   assert.equal(asset.status, 'APPROVED');
-  assert.match(read('service-worker.js'), /"\/assets\/derived\/brand\/us-symbol-ui-crisp-v1\.png"/);
-  assert.match(identityCss, /\.us-top-brand-art\{[^}]*height:46px/);
+  assert.match(read('service-worker.js'), /"\/assets\/derived\/brand\/us-symbol-apk-foreground-v1\.png"/);
+  assert.match(identityCss, /\.us-top-brand-art\{[^}]*height:58px[^}]*width:58px/);
 });
 
 async function runNetwork({ online, warn }) {

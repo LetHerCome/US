@@ -13,5 +13,6 @@ test('release gate: build marker, version.json and SW cache move together; priva
   const worker = read('service-worker.js');
   assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-42"/);
   assert.match(worker, /const MEDIA_CACHE_NAME = "us-private-media-v1"/);
-  assert.match(worker, /"\/assets\/derived\/brand\/us-symbol-ui-crisp-v1\.png"/);
+  assert.match(worker, /"\/assets\/derived\/brand\/us-symbol-apk-foreground-v1\.png"/);
+  assert.doesNotMatch(worker, /us-symbol-ui-crisp-v1/);
 });
