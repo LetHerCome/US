@@ -29,7 +29,7 @@ Defined once in `ui-foundation.css`; hosts set `data-us-attention="on|off"`. Per
 Reduced motion shows a static halo. Every host keeps a text state, so the animation is never the only signal.
 
 ## M10C — Daily Question system push
-- Migration `20260930150000_m10c_daily_question_push.sql` adds the cron key in the vault, `get_internal_daily_question_push_cron_key()` (service_role only), makes `push_event_log.sender_id` nullable when needed, and schedules the cron `us-daily-question-push` every 10 minutes. The cron materializes today's question, then calls the worker.
+- Migration `20260930061045_m10c_daily_question_push.sql` adds the cron key in the vault, `get_internal_daily_question_push_cron_key()` (service_role only), makes `push_event_log.sender_id` nullable when needed, and schedules the cron `us-daily-question-push` every 10 minutes. The cron materializes today's question, then calls the worker.
 - Edge Function `daily-question-push-worker` (`verify_jwt = false`, cron key required, takes no caller input) → `_shared/daily-question-push-core.mjs`.
 - Notification: title `US. · Domanda del giorno`, body `C'è una nuova domanda per voi.`, target Today. No question text and no sender.
 - Dedupe is `daily-question:<question id>:<user id>`. The key is released when nothing was delivered. 404/410 subscriptions are removed.
@@ -39,6 +39,6 @@ Reduced motion shows a static halo. Every host keeps a text state, so the animat
 `send-web-push` is unchanged. Regression tests run the real function: the first answer notifies only the partner, the second notifies both, and dedupe, the today preference, the target and privacy all hold.
 
 ## Apply / deploy (Francesco)
-1. Apply migration `20260930150000_m10c_daily_question_push.sql` (requires M9E, already on main).
+1. Apply migration `20260930061045_m10c_daily_question_push.sql` (requires M9E, already on main).
 2. Deploy Edge Function `daily-question-push-worker`.
 3. Ship the client release candidate.
