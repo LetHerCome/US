@@ -24,6 +24,15 @@
     { "id": "think-heart", "label": "Ti penso", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "Heart / HeartFill", "customAssetPath": null, "status": "APPROVED", "usedBy": ["home-ti-penso"] },
     { "id": "resonance", "label": "Risonanza", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "Infinity", "customAssetPath": null, "status": "APPROVED", "usedBy": ["noi-hub"] },
     { "id": "da-vivere", "label": "Da vivere", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "Compass", "customAssetPath": null, "status": "APPROVED", "usedBy": ["noi-hub"] },
-    { "id": "couple-quest", "label": "Quest di coppia", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "FlagBanner", "customAssetPath": null, "status": "APPROVED", "usedBy": ["noi-hub"] }
+    { "id": "couple-quest", "label": "Quest di coppia", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "FlagBanner", "customAssetPath": null, "status": "APPROVED", "usedBy": ["noi-hub"] },
+    { "id": "per-voi", "label": "Per voi", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "Sparkle", "customAssetPath": null, "status": "APPROVED", "usedBy": ["top-bar", "gioca"] },
+    { "id": "weekly-question", "label": "Domanda della settimana", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "Feather", "customAssetPath": null, "status": "APPROVED", "usedBy": ["gioca"] },
+    { "id": "weekly-locked", "label": "Domanda sigillata", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "LockSimple", "customAssetPath": null, "status": "APPROVED", "usedBy": ["gioca"] },
+    { "id": "game-scopritevi", "label": "Scopritevi", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "Binoculars", "customAssetPath": null, "status": "APPROVED", "usedBy": ["gioca"] },
+    { "id": "game-confrontatevi", "label": "Confrontatevi", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "ArrowsLeftRight", "customAssetPath": null, "status": "APPROVED", "usedBy": ["gioca"] },
+    { "id": "game-ridete", "label": "Ridete", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "Smiley", "customAssetPath": null, "status": "APPROVED", "usedBy": ["gioca"] },
+    { "id": "game-quanto-mi-conosci", "label": "Quanto mi conosci?", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "Eye", "customAssetPath": null, "status": "APPROVED", "usedBy": ["gioca"] },
+    { "id": "game-rivivete", "label": "Rivivete", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "ClockCounterClockwise", "customAssetPath": null, "status": "APPROVED", "usedBy": ["gioca"] },
+    { "id": "game-e-se", "label": "E se…?", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "Signpost", "customAssetPath": null, "status": "APPROVED", "usedBy": ["gioca"] }
   ]
 }

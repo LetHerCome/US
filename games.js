@@ -1,325 +1,534 @@
+// US Game V2 — Gioca: Per voi, six modes, the weekly couple question,
+// five-question rounds, prediction and reveal. Server RPCs are the only
+// authority: couple, role, week, content and reveal are never decided here.
+// Partner answers are rendered only from a reveal-ready server state and are
+// never written to local storage.
 (() => {
 'use strict';
-if(window.__usExtraGamesInstalled)return;
-window.__usExtraGamesInstalled=true;
+if (window.USGameV2) return;
 
-let gameData=null;
-let knowledgeData=null;
-let signature='';
-let knowledgeDeck=null;
-let knowledgeQuestions=[];
-let knowledgeIndex=0;
-let knowledgeGuesses={};
-let knowledgeBusy=false;
+const FAMILIES = [
+  { id: 'scopritevi', name: 'Scopritevi', line: 'Quello che forse non sapete ancora.', icon: 'binoculars' },
+  { id: 'confrontatevi', name: 'Confrontatevi', line: 'Stessa situazione, due sguardi.', icon: 'arrows-left-right' },
+  { id: 'ridete', name: 'Ridete', line: 'Scenari assurdi, risposte vere.', icon: 'smiley' },
+  { id: 'quanto_mi_conosci', name: 'Quanto mi conosci?', line: 'Uno risponde, l’altro indovina.', icon: 'eye' },
+  { id: 'rivivete', name: 'Rivivete', line: 'Lo stesso momento, due memorie.', icon: 'clock-counter-clockwise' },
+  { id: 'e_se', name: 'E se…?', line: 'Scelte, futuri, possibilità.', icon: 'signpost' },
+];
+const FAMILY = Object.fromEntries(FAMILIES.map((f) => [f.id, f]));
+const PER_VOI = { id: 'per_voi', name: 'Per voi', icon: 'sparkle' };
+const byId = (id) => document.getElementById(id);
+const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const label = (role) => (role === 'francesco' ? 'Francesco' : role === 'beatrice' ? 'Bea' : '');
+const myRole = () => window.usProfile?.role || null;
+const partnerRole = () => (myRole() === 'francesco' ? 'beatrice' : 'francesco');
+const partnerName = () => label(partnerRole());
+const familyName = (id) => (id === 'per_voi' ? PER_VOI.name : FAMILY[id]?.name || 'Gioca');
+const icon = (name) => `<span class="us-gv2-icon" data-gv2-icon="${esc(name)}" aria-hidden="true"></span>`;
+const uuid = () => window.crypto.randomUUID();
+const romeDate = (iso, opts) => (iso ? new Date(`${iso}T12:00:00Z`).toLocaleDateString('it-IT', { timeZone: 'UTC', ...opts }) : '');
+const mondayLabel = (iso) => romeDate(iso, { weekday: 'long', day: 'numeric', month: 'long' });
 
-const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-const meta={
-  never_have_i:{eyebrow:'NON HO MAI',title:'Non ho mai',desc:'Rispondete entrambi e scoprite cosa avete fatto davvero.',icon:'✦'},
-  agree_disagree:{eyebrow:'OPINIONI',title:'D’accordo / In disaccordo',desc:'Stessa frase, due punti di vista.',icon:'≈'},
-  would_you_rather:{eyebrow:'SCELTE',title:'Quale preferisci?',desc:'Due opzioni. Niente “dipende”.',icon:'↔'}
-};
-function ensureKnowledgeUi(){
-  if(document.getElementById('usKnowledgePlay'))return;
-  const result=document.getElementById('quizResult');if(!result)return;
-  result.insertAdjacentHTML('afterend',`<div id="usKnowledgePlay" class="us-knowledge hidden"><div class="us-knowledge-card"><div class="us-knowledge-top"><div><span id="usKnowledgeKicker">QUANTO CONOSCI</span><b id="usKnowledgeTitle">La tua persona</b></div><span id="usKnowledgeCounter">1/5</span></div><div class="us-knowledge-progress"><i id="usKnowledgeProgress"></i></div><h3 id="usKnowledgeQuestion"></h3><p id="usKnowledgeHint">Scegli cosa pensi abbia risposto l’altra persona.</p><div id="usKnowledgeAnswers" class="us-knowledge-answers"></div><button type="button" class="primary us-knowledge-next" id="usKnowledgeNext" disabled>Conferma</button></div></div><div id="usKnowledgeResult" class="us-knowledge hidden"></div>`);
-  document.getElementById('usKnowledgeNext')?.addEventListener('click',nextKnowledge);
-}
-function card(set,index){return `<button type="button" class="us-game-card" data-game-slug="${esc(set.slug)}"><span class="us-game-number">0${index+1}</span><b>${esc(set.title.replace(/ · \d+$/,''))}</b><small>6 domande</small><i>Apri ›</i></button>`;}
-function knowledgeCard(deck,index){const done=deck.completed;return `<button type="button" class="us-game-card us-knowledge-card-button ${done?'done':''}" data-knowledge-deck="${deck.deck}"><span class="us-game-number">0${index+1}</span><b>Round ${index+1}</b><small>${done?`${deck.score}/5 · +${deck.xp_awarded} XP`:'5 domande'}</small><i>${done?'Rivedi ✓':'Gioca ›'}</i></button>`;}
-function section(mode,sets){const m=meta[mode];return `<section class="us-game-section"><header><div><span>${m.eyebrow}</span><h3>${m.title}</h3><p>${m.desc}</p></div><i>${m.icon}</i></header><div class="us-game-row">${(sets||[]).map(card).join('')}</div></section>`;}
-function renderHub(){
-  const root=document.getElementById('usExtraGames');if(!root)return;const partner=knowledgeData?.partner_name||'l’altra persona';const decks=knowledgeData?.decks||[];
-  root.innerHTML=`<section class="us-game-section us-knowledge-section"><header><div><span>QUANTO CONOSCI</span><h3>Quanto conosci ${esc(partner)}?</h3><p>Le risposte giuste arrivano da ciò che ${esc(partner)} ha davvero risposto su US.</p></div><i>◉</i></header><div class="us-game-row">${decks.length?decks.map(knowledgeCard).join(''):'<div class="us-game-empty">Servono prima alcune risposte ai quiz classici.</div>'}</div></section>${section('never_have_i',gameData?.never_have_i)}${section('agree_disagree',gameData?.agree_disagree)}${section('would_you_rather',gameData?.would_you_rather)}`;
-  root.querySelectorAll('[data-game-slug]').forEach(btn=>btn.addEventListener('click',()=>window.startQuiz?.(btn.dataset.gameSlug)));
-  root.querySelectorAll('[data-knowledge-deck]').forEach(btn=>btn.addEventListener('click',()=>startPartnerKnowledge(Number(btn.dataset.knowledgeDeck))));
-}
-async function loadUsExtraGames(force=false){
-  if(!window.usProfile)return;const root=document.getElementById('usExtraGames');if(!root)return;
-  try{const [games,knowledge]=await Promise.all([sb.rpc('get_weekly_game_sets'),sb.rpc('get_partner_knowledge_hub')]);if(games.error)throw games.error;if(knowledge.error)throw knowledge.error;const sig=JSON.stringify([games.data?.week_start,knowledge.data?.week_start,knowledge.data?.decks?.map(d=>[d.deck,d.completed,d.score])]);if(!force&&sig===signature)return;signature=sig;gameData=games.data||{};knowledgeData=knowledge.data||{};renderHub();}
-  catch(error){console.warn('[US Games] hub',error);root.innerHTML='<div class="us-game-empty">Non riesco a caricare gli altri giochi. Riprova tra poco.</div>';}
-}
-window.loadUsExtraGames=loadUsExtraGames;
-
-async function startPartnerKnowledge(deckNumber){
-  window.USCustomGames?.close({silent:true});
-  ensureKnowledgeUi();if(!knowledgeData)await loadUsExtraGames(true);knowledgeDeck=(knowledgeData?.decks||[]).find(d=>Number(d.deck)===Number(deckNumber));if(!knowledgeDeck)return toast('Questo round non è ancora disponibile');
-  if(knowledgeDeck.completed){const {data,error}=await sb.rpc('complete_partner_knowledge_deck',{target_deck:deckNumber,target_guesses:{}});if(error){console.warn(error);return toast('Non riesco a riaprire il risultato');}return showKnowledgeResult(data);}
-  knowledgeQuestions=knowledgeDeck.questions||[];knowledgeIndex=0;knowledgeGuesses={};document.getElementById('quizHub')?.classList.add('hidden');document.getElementById('quizPlay')?.classList.add('hidden');document.getElementById('quizResult')?.classList.add('hidden');document.getElementById('usKnowledgeResult')?.classList.add('hidden');document.getElementById('usKnowledgePlay')?.classList.remove('hidden');renderKnowledgeQuestion();
-}
-window.startPartnerKnowledge=startPartnerKnowledge;
-function renderKnowledgeQuestion(){
-  const q=knowledgeQuestions[knowledgeIndex];if(!q)return;const partner=knowledgeData?.partner_name||'l’altra persona';document.getElementById('usKnowledgeKicker').textContent='QUANTO CONOSCI';document.getElementById('usKnowledgeTitle').textContent=partner;document.getElementById('usKnowledgeCounter').textContent=`${knowledgeIndex+1}/${knowledgeQuestions.length}`;document.getElementById('usKnowledgeProgress').style.width=`${((knowledgeIndex+1)/Math.max(1,knowledgeQuestions.length))*100}%`;document.getElementById('usKnowledgeQuestion').textContent=q.question;document.getElementById('usKnowledgeHint').textContent=`Cosa pensi abbia risposto ${partner}?`;
-  const box=document.getElementById('usKnowledgeAnswers');box.innerHTML='';(q.options||[]).forEach((answer,index)=>{const btn=document.createElement('button');btn.type='button';btn.textContent=answer;btn.className='us-knowledge-answer';btn.addEventListener('click',()=>{box.querySelectorAll('button').forEach(x=>x.classList.remove('selected'));btn.classList.add('selected');knowledgeGuesses[String(q.id)]=index;document.getElementById('usKnowledgeNext').disabled=false;});box.appendChild(btn);});const next=document.getElementById('usKnowledgeNext');next.disabled=true;next.textContent=knowledgeIndex===knowledgeQuestions.length-1?'Scopri il risultato':'Conferma';
-}
-async function nextKnowledge(){if(knowledgeBusy)return;const q=knowledgeQuestions[knowledgeIndex];if(!q||knowledgeGuesses[String(q.id)]===undefined)return;if(knowledgeIndex<knowledgeQuestions.length-1){knowledgeIndex++;renderKnowledgeQuestion();return;}knowledgeBusy=true;const btn=document.getElementById('usKnowledgeNext');btn.disabled=true;btn.textContent='Calcolo…';try{const {data,error}=await sb.rpc('complete_partner_knowledge_deck',{target_deck:Number(knowledgeDeck.deck),target_guesses:knowledgeGuesses});if(error)throw error;showKnowledgeResult(data);await window.hydrateBondSummary?.();if(data?.reward_granted_now){if(window.usCelebrateXp)window.usCelebrateXp(Number(data.xp_awarded||0),'Quanto conosci');else toast(`+${data.xp_awarded||0} XP Bond ✦`);}await loadUsExtraGames(true);}catch(error){console.warn('[US Games] knowledge',error);toast('Non riesco a calcolare il risultato');btn.disabled=false;btn.textContent='Riprova';}finally{knowledgeBusy=false;}}
-function showKnowledgeResult(data){
-  ensureKnowledgeUi();document.getElementById('quizHub')?.classList.add('hidden');document.getElementById('quizPlay')?.classList.add('hidden');document.getElementById('quizResult')?.classList.add('hidden');document.getElementById('usKnowledgePlay')?.classList.add('hidden');const root=document.getElementById('usKnowledgeResult');root.classList.remove('hidden');const partner=data?.partner_name||knowledgeData?.partner_name||'Partner';const questions=data?.questions||[];root.innerHTML=`<div class="us-knowledge-result-card"><span class="us-knowledge-result-kicker">QUANTO CONOSCI ${esc(partner).toUpperCase()}</span><div class="us-knowledge-score"><b>${Number(data?.score||0)}/5</b><span>risposte indovinate</span></div><div class="us-knowledge-xp">✦ +${Number(data?.xp_awarded||0)} XP Bond</div><div class="us-knowledge-review">${questions.map(q=>{const mine=(q.options||[])[Number(q.your_answer)]??'—',actual=(q.options||[])[Number(q.partner_answer)]??'—';return `<article class="${q.correct?'correct':'wrong'}"><small>${esc(q.question)}</small><div><span>Tu pensavi</span><b>${esc(mine)}</b></div><div><span>${esc(partner)} aveva risposto</span><b>${esc(actual)}</b></div></article>`;}).join('')}</div><button type="button" class="primary us-knowledge-back">Torna ai giochi</button></div>`;root.querySelector('.us-knowledge-back')?.addEventListener('click',()=>resetPartnerKnowledge());
-}
-function resetPartnerKnowledge(options={}){document.getElementById('usKnowledgePlay')?.classList.add('hidden');document.getElementById('usKnowledgeResult')?.classList.add('hidden');if(!options.silent)document.getElementById('quizHub')?.classList.remove('hidden');knowledgeDeck=null;knowledgeQuestions=[];knowledgeIndex=0;knowledgeGuesses={};}
-window.resetPartnerKnowledge=resetPartnerKnowledge;
-function boot(){ensureKnowledgeUi();if(window.usProfile)loadUsExtraGames();else setTimeout(boot,250);}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();document.addEventListener('visibilitychange',()=>{if(!document.hidden&&document.getElementById('quiz')?.classList.contains('active'))loadUsExtraGames();});
-console.info('[US Games] weekly social games + partner knowledge attivi');
-})();
-
-// M11A — couple-created questions
-(() => {
-'use strict';
-if (window.USCustomGames) return;
-
-const byId = id => document.getElementById(id);
-const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const label = role => role === 'francesco' ? 'Francesco' : 'Bea';
-const partnerName = () => label(window.usProfile?.role === 'francesco' ? 'beatrice' : 'francesco');
-let questions = [];
-let sessionRows = [];
-let current = null;
-let editing = null;
+let home = null;
+let current = null;      // server state of the open round
+let view = 'hub';        // hub | play | waiting | reveal | weekly
+let index = 0;           // item being answered
+const drafts = new Map(); // item id -> unsaved local draft (memory only)
 let busy = false;
-let createRequestId = null;
+let loadSeq = 0;
+let weeklyRequestId = null;
 const startRequestIds = new Map();
 
-function status(row) {
-  if (row.reveal_ready) return row.my_reveal_seen_at ? 'Rivedi le risposte' : 'Le vostre risposte sono pronte';
-  if (row.my_complete) return `Hai risposto. Aspettiamo ${partnerName()}.`;
-  if (row.partner_complete) return 'Tocca a te';
-  return 'Da giocare';
+// ---------------------------------------------------------------- status copy
+
+function roundStatus(row) {
+  if (!row) return null;
+  if (row.reveal_ready) return row.my_reveal_seen_at ? { text: 'Rivedi le risposte', tone: 'seen' } : { text: 'Le vostre risposte sono pronte ♡', tone: 'ready' };
+  if (row.my_complete) return { text: `Hai risposto. Aspettiamo ${partnerName()}.`, tone: 'waiting' };
+  if (row.partner_complete) return { text: `${partnerName()} ha già risposto. Tocca a te.`, tone: 'turn' };
+  if (row.my_answered_count > 0) return { text: `Sei a ${row.my_answered_count} di ${row.item_count}.`, tone: 'progress' };
+  if (row.started_by_role && row.started_by_role !== myRole()) return { text: `${partnerName()} ha iniziato una partita.`, tone: 'turn' };
+  return { text: 'Da giocare', tone: 'progress' };
+}
+
+function perVoiCopy() {
+  const state = home?.per_voi?.state || 'idle';
+  const row = (home?.open_rounds || []).concat(home?.recent || []).find((r) => r.id === home?.per_voi?.session_id);
+  switch (state) {
+    case 'reveal_ready': return { title: 'Le vostre risposte sono pronte ♡', line: 'Scoprite cosa avete risposto.', cta: 'Scopri' };
+    case 'waiting': return { title: `Hai risposto. Aspettiamo ${partnerName()}.`, line: 'Le risposte si svelano quando avete finito entrambi.', cta: 'Apri' };
+    case 'pending': return { title: row?.partner_complete ? `${partnerName()} ha già risposto` : `${partnerName()} ha iniziato`, line: 'Tocca a te: cinque domande preparate per voi.', cta: 'Rispondi' };
+    case 'in_progress': return { title: 'Il vostro Per voi è a metà', line: 'Riprendi quando vuoi.', cta: 'Continua' };
+    default: return { title: 'Non scegliete. US ha preparato qualcosa per voi.', line: 'Cinque domande, scelte tra tutto quello che avete.', cta: 'Inizia' };
+  }
+}
+
+// ---------------------------------------------------------------- top control
+
+function renderTop() {
+  const button = byId('usPerVoiTop');
+  if (!button) return;
+  const state = home?.per_voi?.state || 'idle';
+  const attention = state === 'pending' || state === 'reveal_ready';
+  button.dataset.gv2State = state;
+  button.dataset.usAttention = attention ? 'on' : 'off';
+  const labels = {
+    idle: 'Per voi: una partita preparata per voi',
+    in_progress: 'Per voi: riprendi la partita',
+    pending: 'Per voi: tocca a te',
+    waiting: `Per voi: aspettiamo ${partnerName()}`,
+    reveal_ready: 'Per voi: le vostre risposte sono pronte',
+  };
+  button.setAttribute('aria-label', labels[state] || labels.idle);
+  button.classList.remove('is-loading');
+  button.removeAttribute('aria-busy');
+}
+
+// ---------------------------------------------------------------- hub
+
+function weeklyCard(w) {
+  if (!w) return '';
+  const unlock = mondayLabel(w.next_unlock);
+  if (w.created_by_me) {
+    const q = w.my_question;
+    return `<section class="us-gv2-weekly is-locked" aria-label="La domanda della settimana">
+      <div class="us-gv2-weekly-head">${icon('lock-simple')}<div><span class="us-gv2-kicker">LA VOSTRA DOMANDA</span><b>Domanda creata</b><small>Si sblocca ${esc(unlock)}</small></div></div>
+      ${q ? `<blockquote>${esc(q.question_text)}</blockquote><small class="us-gv2-note">${esc(partnerName())} la scoprirà solo giocando.</small>` : ''}
+    </section>`;
+  }
+  if (w.partner_left_question) {
+    return `<section class="us-gv2-weekly is-sealed" aria-label="La domanda della settimana">
+      <div class="us-gv2-weekly-head">${icon('feather')}<div><span class="us-gv2-kicker">LA VOSTRA DOMANDA</span><b>${esc(partnerName())} ha lasciato una domanda per voi.</b><small>La troverete in un prossimo Per voi.</small></div></div>
+    </section>`;
+  }
+  if (w.my_turn) {
+    return `<section class="us-gv2-weekly is-open" aria-label="La domanda della settimana">
+      <div class="us-gv2-weekly-head">${icon('feather')}<div><span class="us-gv2-kicker">LA VOSTRA DOMANDA</span><b>Questa settimana tocca a te.</b><small>Una domanda che solo tu potresti fare. Entrerà nei vostri giochi.</small></div></div>
+      <button type="button" class="primary us-gv2-weekly-cta" data-gv2-action="weekly-create">Crea la domanda</button>
+    </section>`;
+  }
+  return `<section class="us-gv2-weekly is-locked" aria-label="La domanda della settimana">
+    <div class="us-gv2-weekly-head">${icon('lock-simple')}<div><span class="us-gv2-kicker">LA VOSTRA DOMANDA</span><b>Questa settimana crea ${esc(label(w.assigned_role))}</b><small>${w.next_role === myRole() ? `Da ${esc(unlock)} tocca a te.` : `Si sblocca ${esc(unlock)}`}</small></div></div>
+  </section>`;
 }
 
 function renderHub() {
-  const root = byId('usCustomGamesHub');
+  const root = byId('quizHub');
   if (!root) return;
-  const sessionsHtml = sessionRows.length ? `<div class="us-cg-sessions"><span class="us-cg-kicker">LE VOSTRE PARTITE</span>${sessionRows.map(row => `<article class="us-cg-session-row"><div><b>${esc(row.question_preview || 'Una vostra domanda')}</b><small>${esc(status(row))}</small></div><button type="button" data-cg-session="${esc(row.id)}">Apri</button></article>`).join('')}</div>` : '';
-  const libraryHtml = questions.length ? questions.map(q => {
-    const mine = q.author_role === window.usProfile?.role;
-    const detail = q.answer_kind === 'choice' ? `Scelta · ${q.options.length} opzioni` : 'Risposta libera';
-    return `<article class="us-cg-question"><p>${esc(q.question_text)}</p><small>${esc(detail)} · Creata da ${label(q.author_role)}</small><div class="us-cg-actions"><button type="button" data-cg-start="${esc(q.id)}">Gioca</button>${mine ? `<button type="button" data-cg-edit="${esc(q.id)}">Modifica</button><button type="button" data-cg-archive="${esc(q.id)}">Elimina</button>` : ''}</div></article>`;
-  }).join('') : '<p class="us-cg-empty">La prima domanda potete scriverla voi.</p>';
-  root.innerHTML = `<section class="us-cg-hub"><div class="us-cg-heading"><div><span class="us-cg-kicker">LE VOSTRE DOMANDE</span><h3>Le vostre domande</h3><p>Quelle che solo voi sapreste chiedervi.</p></div><button type="button" class="us-cg-create" data-cg-create>Crea una domanda</button></div>${sessionsHtml}<div class="us-cg-library">${libraryHtml}</div></section>`;
+  const pv = perVoiCopy();
+  const pvState = home?.per_voi?.state || 'idle';
+  const openByFamily = new Map((home?.open_rounds || []).map((r) => [r.game_family, r]));
+  const others = (home?.open_rounds || []).filter((r) => r.game_family !== 'per_voi');
+  const recent = (home?.recent || []).filter((r) => r.my_reveal_seen_at).slice(0, 4);
+  const modeTiles = FAMILIES.map((f) => {
+    const open = openByFamily.get(f.id);
+    const status = open ? roundStatus(open) : null;
+    return `<button type="button" class="us-gv2-mode" data-gv2-family="${f.id}">
+      ${icon(f.icon)}<span class="us-gv2-mode-copy"><b>${esc(f.name)}</b><small>${esc(status ? status.text : f.line)}</small></span>
+      ${status ? `<i class="us-gv2-dot" data-tone="${esc(status.tone)}" aria-hidden="true"></i>` : ''}
+    </button>`;
+  }).join('');
+  root.innerHTML = `
+    <header class="us-gv2-head"><span class="us-gv2-kicker">GIOCA</span><h2>Scopritevi, giocando</h2><p>Cinque domande alla volta. Le risposte restano vostre finché non avete finito entrambi.</p></header>
+    <button type="button" class="us-gv2-pervoi us-attention-orbit" data-gv2-action="per-voi" data-gv2-state="${esc(pvState)}" data-us-attention="${pvState === 'pending' || pvState === 'reveal_ready' ? 'on' : 'off'}">
+      ${icon('sparkle')}<span class="us-gv2-pervoi-copy"><span class="us-gv2-kicker">PER VOI</span><b>${esc(pv.title)}</b><small>${esc(pv.line)}</small></span><span class="us-gv2-pervoi-cta">${esc(pv.cta)}</span>
+    </button>
+    ${weeklyCard(home?.weekly)}
+    ${others.length ? `<section class="us-gv2-list" aria-label="Partite in corso"><span class="us-gv2-kicker">IN CORSO</span>${others.map((r) => { const s = roundStatus(r); return `<button type="button" class="us-gv2-row" data-gv2-session="${esc(r.id)}"><span><b>${esc(familyName(r.game_family))}</b><small>${esc(s.text)}</small></span><i class="us-gv2-dot" data-tone="${esc(s.tone)}" aria-hidden="true"></i></button>`; }).join('')}</section>` : ''}
+    <section class="us-gv2-modes" aria-label="Scegliete voi"><span class="us-gv2-kicker">SCEGLIETE VOI</span><div class="us-gv2-mode-grid">${modeTiles}</div></section>
+    ${recent.length ? `<section class="us-gv2-list" aria-label="Rivedi"><span class="us-gv2-kicker">RIVEDI</span>${recent.map((r) => `<button type="button" class="us-gv2-row is-quiet" data-gv2-session="${esc(r.id)}"><span><b>${esc(familyName(r.game_family))}</b><small>${esc(romeDate(String(r.completed_at || '').slice(0, 10), { day: 'numeric', month: 'long' }))}</small></span></button>`).join('')}</section>` : ''}`;
+}
+
+function renderHubError() {
+  const root = byId('quizHub');
+  if (root) root.innerHTML = '<div class="us-gv2-empty">Non riesco a caricare Gioca. <button type="button" data-gv2-action="retry">Riprova</button></div>';
 }
 
 async function load() {
-  if (!window.usProfile || !byId('usCustomGamesHub')) return;
+  if (!window.usProfile) return null;
+  const seq = ++loadSeq;
   try {
-    const [q, s] = await Promise.all([sb.rpc('list_couple_questions'), sb.rpc('list_game_sessions')]);
-    if (q.error) throw q.error;
-    if (s.error) throw s.error;
-    questions = Array.isArray(q.data) ? q.data : [];
-    sessionRows = Array.isArray(s.data) ? s.data : [];
-    renderHub();
+    const { data, error } = await sb.rpc('get_game_v2_home');
+    if (error) throw error;
+    if (seq !== loadSeq) return home;
+    home = data || null;
+    renderTop();
+    if (view === 'hub') renderHub();
+    return home;
   } catch (error) {
-    console.warn('[US custom games] hub', error);
-    byId('usCustomGamesHub').innerHTML = '<div class="us-game-empty">Non riesco a caricare le vostre domande. <button type="button" data-cg-retry>Riprova</button></div>';
+    console.warn('[US Gioca] home', error);
+    renderTop();
+    if (view === 'hub' && !home) renderHubError();
+    return null;
   }
 }
 
-function showPanel() {
+// ---------------------------------------------------------------- panel shell
+
+function panel() { return byId('usGameV2Panel'); }
+function showPanel(html) {
   byId('quizHub')?.classList.add('hidden');
-  byId('quizPlay')?.classList.add('hidden');
-  byId('quizResult')?.classList.add('hidden');
-  byId('usKnowledgePlay')?.classList.add('hidden');
-  byId('usKnowledgeResult')?.classList.add('hidden');
-  byId('usCustomGamePanel')?.classList.remove('hidden');
+  const root = panel();
+  if (!root) return null;
+  root.classList.remove('hidden');
+  root.innerHTML = html;
+  return root;
 }
-
-function close({ silent = false } = {}) {
+function showHub() {
+  view = 'hub';
   current = null;
-  editing = null;
-  byId('usCustomGamePanel')?.classList.add('hidden');
-  if (!silent) {
-    byId('quizHub')?.classList.remove('hidden');
-    load();
-  }
+  index = 0;
+  drafts.clear();
+  panel()?.classList.add('hidden');
+  if (panel()) panel().innerHTML = '';
+  byId('quizHub')?.classList.remove('hidden');
+  if (home) renderHub();
+  load();
 }
+const backButton = () => `<button type="button" class="us-gv2-back" data-gv2-action="back">${icon('caret-left')}<span>Gioca</span></button>`;
 
-function renderQuestionForm() {
-  const root = byId('usCustomGamePanel');
-  if (!root) return;
-  showPanel();
-  const q = editing;
-  root.innerHTML = `<div class="us-cg-panel"><button type="button" class="us-cg-back" data-cg-back>Torna a Gioca</button><span class="us-cg-kicker">LE VOSTRE DOMANDE</span><h2>${q ? 'Modifica la domanda' : 'Crea una domanda'}</h2><form id="usCgQuestionForm"><label for="usCgQuestionText">La vostra domanda</label><textarea id="usCgQuestionText" name="question_text" maxlength="300" required rows="3" placeholder="Un ricordo, una scelta, qualcosa che è solo vostro…">${esc(q?.question_text || '')}</textarea><label for="usCgKind">Tipo di risposta</label><select id="usCgKind" name="answer_kind"><option value="open" ${q?.answer_kind !== 'choice' ? 'selected' : ''}>Risposta libera</option><option value="choice" ${q?.answer_kind === 'choice' ? 'selected' : ''}>Scelta</option></select><div id="usCgOptions" ${q?.answer_kind === 'choice' ? '' : 'hidden'}><p>Scrivi da 2 a 4 possibilità.</p>${[0,1,2,3].map(i => `<label for="usCgOption${i}">Opzione ${i + 1}</label><input id="usCgOption${i}" name="option_${i}" maxlength="120" value="${esc(q?.options?.[i] || '')}" ${i < 2 ? 'data-cg-required' : ''}>`).join('')}</div><p id="usCgFormError" class="us-cg-error" role="alert" hidden></p><button class="primary us-cg-submit" type="submit">Salva domanda</button></form></div>`;
-  root.querySelector('#usCgKind')?.addEventListener('change', event => {
-    const box = root.querySelector('#usCgOptions');
-    if (box) box.hidden = event.target.value !== 'choice';
-  });
-  root.querySelector('#usCgQuestionForm')?.addEventListener('input', () => { createRequestId = null; });
-  root.querySelector('#usCgQuestionForm')?.addEventListener('submit', submitQuestionForm);
-}
+// ---------------------------------------------------------------- rounds
 
-function openCreate() { editing = null; createRequestId = null; renderQuestionForm(); }
-function openEdit(id) {
-  const q = questions.find(value => value.id === id);
-  if (!q || q.author_role !== window.usProfile?.role) return;
-  editing = q;
-  renderQuestionForm();
-}
-
-async function submitQuestionForm(event) {
-  event.preventDefault();
+async function startRound(family) {
   if (busy) return;
-  const form = event.currentTarget;
-  const data = new FormData(form);
-  const text = String(data.get('question_text') || '').trim();
-  const kind = data.get('answer_kind');
-  const rawOptions = [0,1,2,3].map(i => String(data.get(`option_${i}`) || '').trim());
-  const options = kind === 'choice' ? rawOptions.filter(Boolean) : [];
-  const errorRoot = byId('usCgFormError');
-  const error = !text || text.length > 300 ? 'Scrivi una domanda di massimo 300 caratteri.'
-    : kind === 'choice' && (!rawOptions[0] || !rawOptions[1] || options.length > 4 || options.some(option => option.length > 120)) ? 'Scrivi le prime due opzioni e, se vuoi, altre due. Massimo 120 caratteri ciascuna.' : '';
-  if (error) { errorRoot.textContent = error; errorRoot.hidden = false; return; }
   busy = true;
-  const button = form.querySelector('button[type="submit"]');
-  button.disabled = true;
   try {
-    const result = editing
-      ? await sb.rpc('update_couple_question', { target_question_id: editing.id, expected_version: editing.version, question_text: text, answer_kind: kind, options })
-      : await sb.rpc('create_couple_question', { request_id: (createRequestId ||= window.crypto.randomUUID()), question_text: text, answer_kind: kind, options });
-    if (result.error) throw result.error;
-    createRequestId = null;
-    close();
+    const requestId = startRequestIds.get(family) || uuid();
+    startRequestIds.set(family, requestId);
+    const { data, error } = await sb.rpc('start_game_round', { target_family: family, request_id: requestId });
+    if (error) throw error;
+    startRequestIds.delete(family);
+    await present(data);
   } catch (error) {
-    console.warn('[US custom games] save question', error);
-    errorRoot.textContent = 'Non riesco a salvare la domanda. Riprova.';
-    errorRoot.hidden = false;
-  } finally { busy = false; button.disabled = false; }
-}
-
-async function archiveQuestion(id) {
-  const q = questions.find(value => value.id === id);
-  if (!q || q.author_role !== window.usProfile?.role || busy) return;
-  if (!window.confirm('Eliminare questa domanda dalle vostre domande? Le partite già giocate resteranno disponibili.')) return;
-  busy = true;
-  try {
-    const { error } = await sb.rpc('archive_couple_question', { target_question_id: id });
-    if (error) throw error;
-    await load();
-  } catch (error) { console.warn('[US custom games] archive', error); toast('Non riesco a eliminare la domanda.'); }
-  finally { busy = false; }
-}
-
-async function startQuestion(id) {
-  if (busy) return;
-  busy = true;
-  try {
-    const requestId = startRequestIds.get(id) || window.crypto.randomUUID();
-    startRequestIds.set(id, requestId);
-    const { data, error } = await sb.rpc('start_custom_game_session', { target_question_id: id, request_id: requestId });
-    if (error) throw error;
-    startRequestIds.delete(id);
-    await presentSession(data);
-  } catch (error) { console.warn('[US custom games] start', error); toast('Non riesco ad aprire la partita. Riprova.'); }
-  finally { busy = false; }
-}
-
-function answerLabel(item, index) { return item.options?.[Number(index)] ?? '—'; }
-function answerCard(title, value) { return `<div class="us-cg-answer"><span>${esc(title)}</span><p>${esc(value)}</p></div>`; }
-
-function renderSession() {
-  if (!current) return;
-  const root = byId('usCustomGamePanel');
-  if (!root) return;
-  showPanel();
-  const item = current.items?.[0];
-  if (!item) { root.innerHTML = '<div class="us-cg-panel"><button type="button" data-cg-back>Torna a Gioca</button><p>Questa partita non è disponibile.</p></div>'; return; }
-  let body;
-  if (current.reveal_ready) {
-    body = `<span class="us-cg-state">LE VOSTRE RISPOSTE SONO PRONTE</span>${item.answer_kind === 'choice' ? `<h3 class="us-cg-outcome">${item.my_answer_index === item.partner_answer_index ? 'Uguale ♡' : 'Una sorpresa'}</h3>${answerCard('LA TUA RISPOSTA', answerLabel(item, item.my_answer_index))}${answerCard(partnerName().toUpperCase(), answerLabel(item, item.partner_answer_index))}` : `${answerCard('LA TUA RISPOSTA', item.my_answer_text)}${answerCard(partnerName().toUpperCase(), item.partner_answer_text)}`}`;
-  } else if (current.my_complete) {
-    const mine = item.answer_kind === 'choice' ? answerLabel(item, item.my_answer_index) : item.my_answer_text;
-    body = `<p class="us-cg-state">Hai risposto. Aspettiamo ${partnerName()}.</p>${answerCard('LA TUA RISPOSTA', mine)}<button type="button" class="us-cg-refresh" data-cg-refresh>Aggiorna</button>`;
-  } else {
-    const intro = current.partner_complete ? `${partnerName()} ha già risposto. Tocca a te.` : 'Tocca a te';
-    const input = item.answer_kind === 'open'
-      ? `<label for="usCgAnswer">La tua risposta</label><textarea id="usCgAnswer" maxlength="1000" rows="4" required placeholder="Scrivi la tua risposta…">${esc(item.my_answer_text || '')}</textarea>`
-      : `<fieldset class="us-cg-choices"><legend>La tua scelta</legend>${(item.options || []).map((option, index) => `<label><input type="radio" name="choice" value="${index}" ${item.my_answer_index === index ? 'checked' : ''}><span>${esc(option)}</span></label>`).join('')}</fieldset>`;
-    body = `<p class="us-cg-state">${esc(intro)}</p><form id="usCgAnswerForm">${input}<p id="usCgAnswerError" class="us-cg-error" role="alert" hidden></p><button class="primary us-cg-submit" type="submit">Conferma risposta</button></form>`;
-  }
-  root.innerHTML = `<div class="us-cg-panel"><button type="button" class="us-cg-back" data-cg-back>Torna a Gioca</button><span class="us-cg-kicker">LE VOSTRE DOMANDE</span><h2>${esc(item.question_text)}</h2>${body}</div>`;
-  root.querySelector('#usCgAnswerForm')?.addEventListener('submit', event => {
-    event.preventDefault();
-    const text = item.answer_kind === 'open' ? root.querySelector('#usCgAnswer')?.value : null;
-    const selected = item.answer_kind === 'choice' ? root.querySelector('input[name="choice"]:checked')?.value : null;
-    submitAnswer(text, selected === null || selected === undefined ? null : Number(selected));
-  });
-}
-
-async function presentSession(data) {
-  if (!data?.id || !Array.isArray(data.items)) throw new Error('invalid game session');
-  current = data;
-  renderSession();
-  if (data.reveal_ready && !data.my_reveal_seen_at) {
-    try {
-      const result = await sb.rpc('mark_game_session_reveal_seen', { target_session_id: data.id });
-      if (result.error) throw result.error;
-      if (result.data?.id === data.id) current = result.data;
-    } catch (error) { console.warn('[US custom games] reveal receipt', error); }
-  }
+    console.warn('[US Gioca] start', error);
+    toast(/not enough content/.test(error?.message || '') ? 'Non ci sono ancora abbastanza domande per questo gioco.' : 'Non riesco ad aprire la partita. Riprova.');
+  } finally { busy = false; }
 }
 
 async function openSession(id) {
   try {
     const { data, error } = await sb.rpc('get_game_session', { target_session_id: id });
     if (error) throw error;
-    await presentSession(data);
-  } catch (error) { console.warn('[US custom games] session', error); toast('Non riesco ad aprire la partita.'); }
+    await present(data);
+  } catch (error) { console.warn('[US Gioca] session', error); toast('Non riesco ad aprire la partita.'); }
 }
 
-async function submitAnswer(text, index) {
-  if (!current || current.my_complete || busy) return;
-  const item = current.items?.[0];
-  if (!item) return;
-  const answerText = item.answer_kind === 'open' ? String(text || '').trim() : null;
-  const answerIndex = item.answer_kind === 'choice' ? index : null;
-  const errorRoot = byId('usCgAnswerError');
-  if ((item.answer_kind === 'open' && (!answerText || answerText.length > 1000)) ||
-      (item.answer_kind === 'choice' && (!Number.isInteger(answerIndex) || answerIndex < 0 || answerIndex >= item.options.length))) {
-    if (errorRoot) { errorRoot.textContent = 'Scrivi una risposta o scegli un’opzione.'; errorRoot.hidden = false; }
+async function openPerVoi() {
+  if (document.querySelector('.page.active')?.id !== 'quiz') window.go?.('quiz', { nav: true });
+  if (!home) await load();
+  const sid = home?.per_voi?.session_id;
+  if (sid) return openSession(sid);
+  return startRound('per_voi');
+}
+
+async function present(state) {
+  if (!state?.id || !Array.isArray(state.items)) throw new Error('invalid game session');
+  current = state;
+  drafts.clear();
+  if (state.reveal_ready) {
+    view = 'reveal';
+    renderReveal();
+    if (!state.my_reveal_seen_at) {
+      try {
+        const res = await sb.rpc('mark_game_session_reveal_seen', { target_session_id: state.id });
+        if (res.error) throw res.error;
+        if (res.data?.id === state.id) current = res.data;
+      } catch (error) { console.warn('[US Gioca] reveal receipt', error); }
+      load();
+    }
     return;
   }
-  busy = true;
-  try {
-    const saved = await sb.rpc('save_game_session_answer', { target_session_id: current.id, target_item_id: item.id, target_answer_text: answerText, target_answer_index: answerIndex });
-    if (saved.error) throw saved.error;
-    current = saved.data;
-    const finished = await sb.rpc('complete_game_session_side', { target_session_id: current.id });
-    if (finished.error) throw finished.error;
-    await presentSession(finished.data);
-    await load();
-  } catch (error) {
-    console.warn('[US custom games] answer', error);
-    renderSession();
-    const message = byId('usCgAnswerError');
-    if (message) { message.textContent = 'Non riesco a confermare la risposta. Riprova.'; message.hidden = false; }
-  } finally { busy = false; }
+  if (state.my_complete) { view = 'waiting'; renderWaiting(); return; }
+  view = 'play';
+  const firstOpen = state.items.findIndex((i) => i.my_answer_text == null && i.my_answer_index == null);
+  index = firstOpen >= 0 ? firstOpen : state.items.length - 1;
+  renderPlay();
 }
 
-async function refresh() { if (current?.id) await openSession(current.id); else await load(); }
+function itemHint(item) {
+  if (item.my_item_role === 'predictor') return `Secondo te cosa ha scelto ${label(item.subject_role)}?`;
+  if (item.my_item_role === 'subject') return `Su di te · ${partnerName()} proverà a indovinare`;
+  return '';
+}
+
+function contextChip(item) {
+  const c = item.context || {};
+  if (!c.kind_label) return '';
+  return `<span class="us-gv2-context">${esc(c.kind_label)}</span>`;
+}
+
+function answerValue(item) {
+  if (drafts.has(item.id)) return drafts.get(item.id);
+  return item.answer_kind === 'choice' ? item.my_answer_index : item.my_answer_text;
+}
+
+function renderPlay() {
+  const item = current?.items?.[index];
+  if (!item) return;
+  const total = current.items.length;
+  const value = answerValue(item);
+  const kicker = current.game_family === 'per_voi' ? `PER VOI · ${familyName(item.family).toUpperCase()}` : familyName(current.game_family).toUpperCase();
+  const hint = itemHint(item);
+  const input = item.answer_kind === 'open'
+    ? `<label class="us-gv2-sr" for="usGv2Answer">La tua risposta</label><textarea id="usGv2Answer" maxlength="1000" rows="5" placeholder="Scrivi con calma…">${esc(value ?? '')}</textarea>`
+    : `<fieldset class="us-gv2-choices"><legend class="us-gv2-sr">${item.my_item_role === 'predictor' ? 'La tua previsione' : 'La tua scelta'}</legend>${(item.options || []).map((o, i) => `<label class="us-gv2-choice"><input type="radio" name="gv2choice" value="${i}" ${Number(value) === i && value !== null && value !== undefined ? 'checked' : ''}><span>${esc(o)}</span></label>`).join('')}</fieldset>`;
+  const last = index === total - 1;
+  showPanel(`<article class="us-gv2-play" data-gv2-family="${esc(item.family || current.game_family)}">
+    <div class="us-gv2-play-top">${backButton()}<span class="us-gv2-count">${index + 1} di ${total}</span></div>
+    <div class="us-gv2-progress" role="progressbar" aria-valuemin="1" aria-valuemax="${total}" aria-valuenow="${index + 1}" aria-label="Domanda ${index + 1} di ${total}"><i style="width:${((index + 1) / total) * 100}%"></i></div>
+    <span class="us-gv2-kicker">${esc(kicker)}</span>
+    ${contextChip(item)}
+    ${hint ? `<p class="us-gv2-hint">${esc(hint)}</p>` : ''}
+    <h2 class="us-gv2-question">${esc(item.my_prompt || item.question_text)}</h2>
+    <form id="usGv2AnswerForm" novalidate>${input}
+      <p id="usGv2Error" class="us-gv2-error" role="alert" hidden></p>
+      <div class="us-gv2-actions">${index > 0 ? '<button type="button" class="ghost" data-gv2-action="prev">Indietro</button>' : '<span></span>'}<button type="submit" class="primary">${last ? 'Conferma le risposte' : 'Avanti'}</button></div>
+    </form>
+    ${last ? '<p class="us-gv2-note">Dopo la conferma le risposte non si cambiano più.</p>' : ''}
+  </article>`);
+}
+
+function readInput(item) {
+  if (item.answer_kind === 'open') return String(byId('usGv2Answer')?.value ?? '');
+  const checked = panel()?.querySelector('input[name="gv2choice"]:checked');
+  return checked ? Number(checked.value) : null;
+}
+
+function showError(message) {
+  const el = byId('usGv2Error');
+  if (el) { el.textContent = message; el.hidden = false; }
+}
+
+async function saveCurrent() {
+  const item = current.items[index];
+  const raw = readInput(item);
+  drafts.set(item.id, raw);
+  const text = item.answer_kind === 'open' ? raw.trim() : null;
+  const choice = item.answer_kind === 'choice' ? raw : null;
+  if (item.answer_kind === 'open' ? !text || text.length > 1000 : !Number.isInteger(choice)) {
+    showError(item.answer_kind === 'open' ? 'Scrivi una risposta, anche breve.' : 'Scegli una risposta.');
+    return false;
+  }
+  if (text === item.my_answer_text && choice === (item.my_answer_index ?? null) && (item.my_answer_text != null || item.my_answer_index != null)) return true;
+  const { data, error } = await sb.rpc('save_game_session_answer', { target_session_id: current.id, target_item_id: item.id, target_answer_text: text, target_answer_index: choice });
+  if (error) throw error;
+  current = data;
+  drafts.delete(item.id);
+  return true;
+}
+
+async function submitAnswer() {
+  if (busy || !current) return;
+  busy = true;
+  const button = panel()?.querySelector('button[type="submit"]');
+  if (button) button.disabled = true;
+  try {
+    if (!(await saveCurrent())) return;
+    if (index < current.items.length - 1) { index += 1; renderPlay(); return; }
+    const missing = current.items.findIndex((i) => i.my_answer_text == null && i.my_answer_index == null);
+    if (missing >= 0) { index = missing; renderPlay(); showError('Manca ancora questa risposta.'); return; }
+    const { data, error } = await sb.rpc('complete_game_session_side', { target_session_id: current.id });
+    if (error) throw error;
+    window.sendWebPushEvent?.('game_session', data.id).catch?.(() => {});
+    await present(data);
+    load();
+  } catch (error) {
+    console.warn('[US Gioca] answer', error);
+    showError('Non riesco a salvare la risposta. Riprova.');
+  } finally {
+    busy = false;
+    const again = panel()?.querySelector('button[type="submit"]');
+    if (again) again.disabled = false;
+  }
+}
+
+function myAnswerText(item) {
+  return item.answer_kind === 'choice' ? (item.options || [])[Number(item.my_answer_index)] ?? '—' : item.my_answer_text ?? '—';
+}
+function partnerAnswerText(item) {
+  return item.answer_kind === 'choice' ? (item.options || [])[Number(item.partner_answer_index)] ?? '—' : item.partner_answer_text ?? '—';
+}
+
+function renderWaiting() {
+  showPanel(`<article class="us-gv2-waiting">
+    <div class="us-gv2-play-top">${backButton()}</div>
+    <span class="us-gv2-kicker">${esc(familyName(current.game_family).toUpperCase())}</span>
+    <h2>Hai risposto.</h2>
+    <p class="us-gv2-lead">Aspettiamo ${esc(partnerName())}. Le risposte si scoprono quando avete finito entrambi.</p>
+    <ol class="us-gv2-mine">${current.items.map((i) => `<li><small>${esc(i.my_prompt || i.question_text)}</small><b>${esc(myAnswerText(i))}</b></li>`).join('')}</ol>
+    <div class="us-gv2-actions"><button type="button" class="ghost" data-gv2-action="back">Torna a Gioca</button><button type="button" class="primary" data-gv2-action="refresh">Aggiorna</button></div>
+  </article>`);
+}
+
+// Gendered past participles agree with the object pronoun (it. "l’hai capita").
+const agree = (role, stem) => `${stem}${role === 'beatrice' ? 'a' : 'o'}`;
+function outcome(item) {
+  if (item.mechanic === 'prediction') {
+    const matched = item.prediction_matched === true;
+    if (item.my_item_role === 'predictor') return matched ? `L’hai ${agree(item.subject_role, 'capit')} al volo ♡` : `Ti ha ${agree(myRole(), 'sorpres')}`;
+    return matched ? `Ti ha ${agree(myRole(), 'capit')} al volo ♡` : `L’hai ${agree(partnerRole(), 'sorpres')}`;
+  }
+  if (item.answer_kind === 'choice') return item.my_answer_index === item.partner_answer_index ? 'Uguale ♡' : 'Una sorpresa';
+  return '';
+}
+
+function revealRows(item) {
+  const partner = partnerName();
+  if (item.mechanic === 'prediction') {
+    if (item.my_item_role === 'predictor') return [['Tu pensavi', myAnswerText(item)], [`${partner} ha scelto`, partnerAnswerText(item)]];
+    return [['Hai scelto', myAnswerText(item)], [`${partner} pensava`, partnerAnswerText(item)]];
+  }
+  return [['Tu', myAnswerText(item)], [partner, partnerAnswerText(item)]];
+}
+
+function renderReveal() {
+  const cards = current.items.map((item) => {
+    const out = outcome(item);
+    const same = item.mechanic === 'prediction' ? item.prediction_matched === true : item.answer_kind === 'choice' && item.my_answer_index === item.partner_answer_index;
+    return `<article class="us-gv2-reveal-card" data-gv2-family="${esc(item.family || current.game_family)}">
+      <span class="us-gv2-kicker">${esc(familyName(item.family || current.game_family).toUpperCase())}</span>
+      ${contextChip(item)}
+      <h3>${esc(item.my_prompt || item.question_text)}</h3>
+      ${out ? `<span class="us-gv2-outcome" data-same="${same ? 'true' : 'false'}">${esc(out)}</span>` : ''}
+      <dl>${revealRows(item).map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>
+    </article>`;
+  }).join('');
+  showPanel(`<article class="us-gv2-reveal">
+    <div class="us-gv2-play-top">${backButton()}</div>
+    <span class="us-gv2-kicker">LE VOSTRE RISPOSTE</span>
+    <h2>${esc(familyName(current.game_family))}</h2>
+    <div class="us-gv2-reveal-list">${cards}</div>
+    <div class="us-gv2-actions"><button type="button" class="ghost" data-gv2-action="back">Torna a Gioca</button><button type="button" class="primary" data-gv2-action="again" data-gv2-again="${esc(current.game_family)}">Facciamone un altro</button></div>
+  </article>`);
+}
+
+// ---------------------------------------------------------------- weekly form
+
+function renderWeeklyForm(error = '') {
+  const w = home?.weekly;
+  view = 'weekly';
+  const root = showPanel(`<article class="us-gv2-weekly-form">
+    <div class="us-gv2-play-top">${backButton()}</div>
+    <span class="us-gv2-kicker">LA DOMANDA DELLA SETTIMANA</span>
+    <h2>Scrivi la vostra domanda</h2>
+    <p class="us-gv2-lead">Una sola a settimana. ${esc(partnerName())} la scoprirà solo giocando.</p>
+    <form id="usGv2WeeklyForm" novalidate>
+      <label for="usGv2WeeklyText">La domanda</label>
+      <textarea id="usGv2WeeklyText" name="question_text" maxlength="300" rows="3" required placeholder="Qualcosa che solo tu potresti chiedere…"></textarea>
+      <fieldset class="us-gv2-segment"><legend>Come si risponde?</legend>
+        <label><input type="radio" name="answer_kind" value="open" checked><span>Risposta libera</span></label>
+        <label><input type="radio" name="answer_kind" value="choice"><span>Scelta</span></label>
+      </fieldset>
+      <div id="usGv2WeeklyOptions" class="us-gv2-options" hidden>
+        <p>Da 2 a 4 possibilità.</p>
+        ${[0, 1, 2, 3].map((i) => `<label class="us-gv2-sr" for="usGv2Option${i}">Opzione ${i + 1}</label><input id="usGv2Option${i}" name="option_${i}" maxlength="120" placeholder="Opzione ${i + 1}${i > 1 ? ' (facoltativa)' : ''}">`).join('')}
+      </div>
+      <fieldset class="us-gv2-families"><legend>In quali giochi può comparire?</legend>
+        ${FAMILIES.map((f) => `<label class="us-gv2-chip"><input type="checkbox" name="families" value="${f.id}" ${f.id === 'scopritevi' ? 'checked' : ''} ${f.id === 'quanto_mi_conosci' ? 'disabled' : ''}><span>${esc(f.name)}</span></label>`).join('')}
+        <small id="usGv2PredictionHint">“Quanto mi conosci?” funziona solo con risposte a scelta.</small>
+      </fieldset>
+      <p id="usGv2Error" class="us-gv2-error" role="alert" ${error ? '' : 'hidden'}>${esc(error)}</p>
+      <button type="submit" class="primary us-gv2-submit">Salva la domanda</button>
+    </form>
+  </article>`);
+  if (!root || !w) return;
+  const form = root.querySelector('#usGv2WeeklyForm');
+  form.addEventListener('input', () => { weeklyRequestId = null; });
+  form.addEventListener('change', (event) => {
+    if (event.target.name !== 'answer_kind') return;
+    const choice = event.target.value === 'choice';
+    root.querySelector('#usGv2WeeklyOptions').hidden = !choice;
+    const qmc = root.querySelector('input[name="families"][value="quanto_mi_conosci"]');
+    qmc.disabled = !choice;
+    if (!choice) qmc.checked = false;
+  });
+}
+
+async function submitWeekly(form) {
+  if (busy) return;
+  const data = new FormData(form);
+  const text = String(data.get('question_text') || '').trim();
+  const kind = data.get('answer_kind') === 'choice' ? 'choice' : 'open';
+  const raw = [0, 1, 2, 3].map((i) => String(data.get(`option_${i}`) || '').trim());
+  const options = kind === 'choice' ? raw.filter(Boolean) : [];
+  const families = data.getAll('families').map(String);
+  const problem = !text || text.length > 300 ? 'Scrivi una domanda di massimo 300 caratteri.'
+    : kind === 'choice' && (!raw[0] || !raw[1] || new Set(options).size !== options.length) ? 'Scrivi almeno due opzioni diverse.'
+    : !families.length ? 'Scegli almeno un gioco.' : '';
+  if (problem) return showError(problem);
+  busy = true;
+  const button = form.querySelector('button[type="submit"]');
+  button.disabled = true;
+  try {
+    weeklyRequestId ||= uuid();
+    const { data: state, error } = await sb.rpc('create_weekly_question', { request_id: weeklyRequestId, question_text: text, answer_kind: kind, options, families });
+    if (error) throw error;
+    weeklyRequestId = null;
+    if (home) home.weekly = state;
+    if (!state?.replayed) window.sendWebPushEvent?.('game_weekly', state?.question_id || null).catch?.(() => {});
+    toast('Domanda salvata ♡');
+    showHub();
+  } catch (error) {
+    console.warn('[US Gioca] weekly', error);
+    const msg = error?.message || '';
+    showError(/not your turn/.test(msg) ? 'Questa settimana non tocca a te.' : /already created/.test(msg) ? 'La domanda di questa settimana c’è già.' : 'Non riesco a salvare la domanda. Riprova.');
+  } finally { busy = false; button.disabled = false; }
+}
+
+// ---------------------------------------------------------------- wiring
+
+async function refresh() {
+  if (view === 'hub') return load();
+  if ((view === 'waiting' || view === 'play') && current?.id) {
+    const { data, error } = await sb.rpc('get_game_session', { target_session_id: current.id });
+    if (!error && data && (data.reveal_ready !== current.reveal_ready || data.partner_complete !== current.partner_complete)) {
+      if (view === 'waiting' || data.reveal_ready) await present(data);
+      else current = { ...current, partner_complete: data.partner_complete };
+    }
+  }
+  return load();
+}
+
+function onClick(event) {
+  const button = event.target.closest('button');
+  if (!button) return;
+  const action = button.dataset.gv2Action;
+  if (action === 'per-voi') openPerVoi();
+  else if (action === 'weekly-create') renderWeeklyForm();
+  else if (action === 'back') showHub();
+  else if (action === 'prev') { const item = current.items[index]; drafts.set(item.id, readInput(item)); index = Math.max(0, index - 1); renderPlay(); }
+  else if (action === 'refresh') refresh();
+  else if (action === 'again') startRound(button.dataset.gv2Again || 'per_voi');
+  else if (action === 'retry') load();
+  else if (button.dataset.gv2Family) startRound(button.dataset.gv2Family);
+  else if (button.dataset.gv2Session) openSession(button.dataset.gv2Session);
+}
+
+function onSubmit(event) {
+  if (event.target.id === 'usGv2AnswerForm') { event.preventDefault(); submitAnswer(); }
+  else if (event.target.id === 'usGv2WeeklyForm') { event.preventDefault(); submitWeekly(event.target); }
+}
 
 function boot() {
-  const hub = byId('usCustomGamesHub'), panel = byId('usCustomGamePanel');
-  if (!hub || !panel) return;
-  hub.addEventListener('click', event => {
-    const button = event.target.closest('button'); if (!button) return;
-    if (button.hasAttribute('data-cg-create')) openCreate();
-    else if (button.dataset.cgStart) startQuestion(button.dataset.cgStart);
-    else if (button.dataset.cgEdit) openEdit(button.dataset.cgEdit);
-    else if (button.dataset.cgArchive) archiveQuestion(button.dataset.cgArchive);
-    else if (button.dataset.cgSession) openSession(button.dataset.cgSession);
-    else if (button.hasAttribute('data-cg-retry')) load();
-  });
-  panel.addEventListener('click', event => {
-    const button = event.target.closest('button'); if (!button) return;
-    if (button.hasAttribute('data-cg-back')) close();
-    else if (button.hasAttribute('data-cg-refresh')) refresh();
-  });
+  const hub = byId('quizHub');
+  const root = panel();
+  if (!hub || !root) return;
+  if (!hub.dataset.gv2Bound) {
+    hub.dataset.gv2Bound = '1';
+    hub.addEventListener('click', onClick);
+    root.addEventListener('click', onClick);
+    root.addEventListener('submit', onSubmit);
+  }
   if (window.usProfile) load(); else setTimeout(boot, 250);
 }
 
-window.USCustomGames = { load, openCreate, openEdit, start: startQuestion, openSession, submitAnswer, close, refresh };
+window.USGameV2 = {
+  load, refresh, showHub, openPerVoi, startRound, openSession,
+  isOpen: () => view !== 'hub',
+  close: showHub,
+};
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
 else boot();
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && byId('quiz')?.classList.contains('active')) {
-    if (current) refresh(); else load();
-  }
-});
+document.addEventListener('visibilitychange', () => { if (!document.hidden && window.usProfile) refresh(); });
+setInterval(() => { if (!document.hidden && window.usProfile) refresh(); }, 45000);
 })();

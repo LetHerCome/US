@@ -345,7 +345,9 @@ test('i token motion legacy preservano le superfici rinviate alle milestone succ
   assert.match(settings, /var\(--us-motion-base\)/);
   assert.match(settings, /var\(--us-motion-legacy-base\)/);
   assert.match(events, /var\(--us-motion-legacy-base\)/);
-  assert.match(games, /var\(--us-motion-legacy-base\)/);
+  // M11B rebuilt Gioca on the shared motion tokens: the legacy contract is gone there.
+  assert.doesNotMatch(games, /--us-motion-legacy/);
+  assert.match(games, /var\(--us-motion-(press|base)\)/);
 });
 
 test('l exit surface completa sul transform della superficie e mantiene focus e inert fino alla chiusura semantica', () => {

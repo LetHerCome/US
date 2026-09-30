@@ -193,7 +193,8 @@ test('fix4 espone gli stati layout per status e update senza sovrapporli implici
 
 test('il Quiz hub usa la bottom navigation senza una seconda freccia Home', () => {
   const html = read('index.html');
-  const quizHeader = html.match(/<main id="quiz"[\s\S]*?<div id="quizHub">/)?.[0] || '';
+  const quizHeader = html.match(/<main id="quiz"[\s\S]*?<div id="quizHub"/)?.[0] || '';
+  assert.ok(quizHeader, 'Gioca page header found');
   assert.doesNotMatch(quizHeader, /onclick="go\('home'\)"/);
 });
 

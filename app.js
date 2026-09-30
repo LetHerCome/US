@@ -42,214 +42,11 @@ function go(id,options={}){
   if(id==='home' && window.usProfile) window.refreshOggiCalendarWidget?.();
 }
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700)}
-let quizCat='',quizPos=0,quizSelected=null,quizQuestions=[],quizSet=null,quizState=null;
-let weeklyQuizSignature='',weeklyQuizWeekStart='',weeklyQuizTimer=null;
-const QUIZ_META={
-  preferenze:{emoji:'💜',desc:'Gusti, abitudini e piccole scelte.'},
-  noi:{emoji:'❤️',desc:'Ricordi e dettagli della relazione.'},
-  quotidiano:{emoji:'☕',desc:'Come vivete le piccole cose.'},
-  futuro:{emoji:'✨',desc:'Sogni, progetti e desideri.'},
-  comunicazione:{emoji:'💬',desc:'Come vi capite quando conta.'},
-  viaggi:{emoji:'✈️',desc:'Il vostro modo ideale di partire.'},
-  intimita:{emoji:'🫶',desc:'Affetto, vicinanza e attenzioni.'},
-  nerd:{emoji:'🎮',desc:'Gaming, film, fantasy e serate.'},
-  random:{emoji:'🎲',desc:'Domande imprevedibili per scoprirvi ancora.'}
-};
-function formatQuizWeekDate(value){
-  if(!value)return '';
-  return new Date(value+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'short'});
-}
-async function loadWeeklyQuizHub(force=false){
-  if(!window.usProfile)return;
-  const grid=document.getElementById('weeklyQuizGrid');
-  if(!grid)return;
-  try{
-    const {data,error}=await sb.rpc('get_weekly_quiz_sets');
-    if(error)throw error;
-    const sets=Array.isArray(data?.sets)?data.sets:[];
-    const signature=JSON.stringify([data?.week_start||'',sets.map(x=>x.slug)]);
-    if(!force&&signature===weeklyQuizSignature)return;
-    weeklyQuizSignature=signature;weeklyQuizWeekStart=data?.week_start||'';
-    const label=document.getElementById('quizWeekLabel');
-    const reset=document.getElementById('quizWeekReset');
-    if(label)label.textContent='Settimana del '+formatQuizWeekDate(data?.week_start);
-    if(reset)reset.textContent='Nuovi quiz il '+formatQuizWeekDate(data?.next_refresh)+' · stessi per entrambi';
-    if(!sets.length){grid.innerHTML='<div class="quiz-week-loading">Nessun quiz disponibile.</div>';return;}
-    grid.innerHTML=sets.map((set,index)=>{
-      const meta=QUIZ_META[set.slug]||{emoji:'◎',desc:'10 domande per conoscervi meglio.'};
-      return `<button type="button" class="quiz-cat weekly-quiz-card" style="--quiz-delay:${index*55}ms" onclick="startQuiz('${escapeHtml(set.slug)}')"><span class="quiz-week-number">0${index+1}</span><span class="emoji">${meta.emoji}</span><b>${escapeHtml(set.title)}</b><small>${escapeHtml(meta.desc)}</small><i>10 domande</i></button>`;
-    }).join('');
-  }catch(error){
-    console.warn(error);
-    grid.innerHTML='<div class="quiz-week-loading">Non riesco a caricare i quiz. Riprova tra poco.</div>';
-  }
-}
-window.loadWeeklyQuizHub=loadWeeklyQuizHub;
-function openQuizHub(options={}){go('quiz',options);resetQuiz({reload:false});loadWeeklyQuizHub();window.USCustomGames?.load()}
-async function startQuiz(cat){
-  if(!window.usProfile){toast('Sync non pronta');return;}
-  window.USCustomGames?.close({silent:true});
-  quizCat=cat;quizPos=0;quizSelected=null;quizQuestions=[];quizSet=null;quizState=null;
-  document.getElementById('quizHub').classList.add('hidden');
-  document.getElementById('quizResult').classList.add('hidden');
-  document.getElementById('quizPlay').classList.remove('hidden');
-  document.getElementById('quizQuestion').textContent='Carico il set…';
-  document.getElementById('quizAnswers').innerHTML='';
-  try{
-    const {data:set,error:setError}=await sb.from('quiz_sets').select('id,slug,title,category,mode').eq('slug',cat).single();
-    if(setError) throw setError;
-    const {data:questions,error:qError}=await sb.from('quiz_questions').select('id,position,question,options').eq('set_id',set.id).order('position',{ascending:true});
-    if(qError) throw qError;
-    if(!questions || !questions.length) throw new Error('Set vuoto');
-    quizSet=set;quizQuestions=questions;
-    const {data:state,error:stateError}=await sb.rpc('get_quiz_state',{target_set_id:set.id});
-    if(stateError) throw stateError;
-    quizState=state;
-    if(state?.my_complete){showQuizState(state,false);return;}
-    const mine=state?.my_answers||{};
-    const first=quizQuestions.findIndex(q=>mine[String(q.id)]===undefined);
-    quizPos=first>=0?first:0;
-    renderQuiz();
-  }catch(e){
-    console.warn(e);resetQuiz();toast('Errore caricamento quiz');
-  }
-}
-function renderQuiz(){
-  const item=quizQuestions[quizPos];if(!item)return;
-  quizSelected=null;
-  document.getElementById('quizCategory').textContent=(quizSet?.title||quizCat).toUpperCase();
-  document.getElementById('quizIndex').textContent=quizPos+1;
-  const totalEl=document.getElementById('quizTotal');if(totalEl)totalEl.textContent=quizQuestions.length;
-  document.getElementById('quizProgress').style.width=(((quizPos+1)/quizQuestions.length)*100)+'%';
-  document.getElementById('quizQuestion').textContent=item.question;
-  const mode=quizSet?.mode||'match';
-  document.getElementById('quizWho').textContent=mode==='match'
-    ?'Rispondi per te. Il confronto resta nascosto fino alla fine.'
-    :'Rispondete entrambi. Alla fine vedrete tutte le vostre risposte.';
-  const box=document.getElementById('quizAnswers');box.innerHTML='';
-  (item.options||[]).forEach((ans,i)=>{
-    const b=document.createElement('button');b.className='answer-btn';b.textContent=ans;
-    b.onclick=()=>{document.querySelectorAll('#quizAnswers .answer-btn').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');quizSelected=i;document.getElementById('quizNext').disabled=false};
-    box.appendChild(b);
-  });
-  document.getElementById('quizNext').disabled=true;
-  document.getElementById('quizNext').textContent=quizPos===quizQuestions.length-1?'Completa':'Conferma';
-}
-async function nextQuiz(){
-  if(quizSelected===null || !quizSet)return;
-  const btn=document.getElementById('quizNext');btn.disabled=true;btn.textContent='Salvo…';
-  const item=quizQuestions[quizPos];
-  const {error}=await sb.rpc('save_quiz_answer',{target_question_id:item.id,target_answer_index:quizSelected});
-  if(error){console.warn(error);toast('Errore sync quiz');renderQuiz();return;}
-  const {data:state,error:stateError}=await sb.rpc('get_quiz_state',{target_set_id:quizSet.id});
-  if(stateError){console.warn(stateError);toast('Errore stato quiz');renderQuiz();return;}
-  quizState=state;updateHomeStatus();
-  if(state.my_complete){showQuizState(state,true);return;}
-  const mine=state.my_answers||{};
-  const next=quizQuestions.findIndex((q,i)=>i>quizPos && mine[String(q.id)]===undefined);
-  const any=quizQuestions.findIndex(q=>mine[String(q.id)]===undefined);
-  quizPos=next>=0?next:any;renderQuiz();
-}
-function renderQuizDifferences(state){
-  const root=document.getElementById('quizMatches');if(!root)return;
-  const mine=state?.my_answers||{},partner=state?.partner_answers||{};
-  const different=(quizQuestions||[]).filter(q=>mine[String(q.id)]!==undefined&&partner[String(q.id)]!==undefined&&mine[String(q.id)]!==partner[String(q.id)]);
-  root.classList.remove('hidden');
-  if(!different.length){root.innerHTML='<div class="quiz-match-empty">Avete risposto uguale a tutto. Nessuna risposta diversa da mostrare ♡</div>';return;}
-  const partnerName=window.usProfile?.role==='francesco'?'Bea':'Francesco';
-  root.innerHTML='<div class="quiz-match-title">Dove avete risposto diversamente</div>'+different.map(q=>{
-    const myIdx=Number(mine[String(q.id)]),partnerIdx=Number(partner[String(q.id)]);
-    const myAnswer=(q.options||[])[myIdx]??'—',partnerAnswer=(q.options||[])[partnerIdx]??'—';
-    return `<article class="quiz-match quiz-difference"><small>${escapeHtml(q.question)}</small><div><span>Tu</span><b>${escapeHtml(String(myAnswer))}</b></div><div><span>${escapeHtml(partnerName)}</span><b>${escapeHtml(String(partnerAnswer))}</b></div></article>`;
-  }).join('');
-}
-function renderQuizAllAnswers(state,mode='match'){
-  const root=document.getElementById('quizMatches');if(!root)return;
-  const mine=state?.my_answers||{},partner=state?.partner_answers||{};
-  const partnerName=window.usProfile?.role==='francesco'?'Bea':'Francesco';
-  const title=mode==='never_have_i'?'Quello che avete fatto davvero':mode==='agree_disagree'?'Come la pensate':mode==='would_you_rather'?'Le vostre scelte':'Le vostre risposte';
-  root.classList.remove('hidden');
-  root.innerHTML='<div class="quiz-match-title">'+escapeHtml(title)+'</div>'+(quizQuestions||[]).map(q=>{
-    const myIdx=Number(mine[String(q.id)]),partnerIdx=Number(partner[String(q.id)]);
-    const myAnswer=(q.options||[])[myIdx]??'—',partnerAnswer=(q.options||[])[partnerIdx]??'—';
-    const same=myIdx===partnerIdx;
-    const prompt=mode==='would_you_rather'?(q.options||[]).join('  ·  '):q.question;
-    return `<article class="quiz-match us-game-answer ${same?'same':'different'}"><small>${escapeHtml(prompt)}</small><div><span>Tu</span><b>${escapeHtml(String(myAnswer))}</b></div><div><span>${escapeHtml(partnerName)}</span><b>${escapeHtml(String(partnerAnswer))}</b></div></article>`;
-  }).join('');
-}
-
-function showQuizState(state,notify=false){
-  document.getElementById('quizPlay').classList.add('hidden');
-  document.getElementById('quizResult').classList.remove('hidden');
-  const xpRoot=document.getElementById('quizXpEarned');
-  const ringLabel=document.querySelector('#scoreRing .score-inner span');
-  const mode=state?.mode||quizSet?.mode||'match';
-  if(state.both_complete){
-    const score=Number(state.score||0),total=Number(state.total||quizQuestions.length||10),xp=Number(state.xp_awarded||0);
-    document.getElementById('scoreValue').textContent=score+'/'+total;
-    document.getElementById('scoreRing').style.setProperty('--score',Math.round(score/Math.max(1,total)*100));
-    if(mode==='match'){
-      if(ringLabel)ringLabel.textContent='risposte uguali';
-      document.getElementById('scoreText').textContent=score>=9?'Siete praticamente sincronizzati 😏':score>=7?'Molto allineati ❤️':score>=5?'Niente male, ma avete ancora cose da scoprire 👀':'Due teste, parecchie sorprese 😂';
-      document.getElementById('scoreSub').textContent='Ogni risposta uguale vale 5 XP. Qui sotto mostro solo dove avete risposto diversamente.';
-      if(xpRoot){xpRoot.classList.remove('hidden');xpRoot.innerHTML=`<span>✦</span><b>+${xp} XP Bond</b><small>${score} risposte uguali</small>`;}
-      renderQuizDifferences(state);
-    }else{
-      if(ringLabel)ringLabel.textContent='scelte uguali';
-      const titles={
-        never_have_i:'Adesso sapete qualcosa in più 👀',
-        agree_disagree:'Ecco dove siete sulla stessa linea',
-        would_you_rather:'Le vostre scelte, senza filtri'
-      };
-      document.getElementById('scoreText').textContent=titles[mode]||'Le vostre risposte';
-      document.getElementById('scoreSub').textContent=`Avete fatto ${score} scelte uguali su ${total}. Gli XP premiano il completamento e aggiungono un piccolo bonus quando vi allineate.`;
-      if(xpRoot){xpRoot.classList.remove('hidden');xpRoot.innerHTML=`<span>✦</span><b>+${xp} XP Bond</b><small>partecipazione + affinità</small>`;}
-      renderQuizAllAnswers(state,mode);
-    }
-    if(typeof hydrateBondSummary==='function')hydrateBondSummary();
-    window.loadUsExtraGames?.(true);
-    if(notify&&state.reward_granted_now){if(window.usCelebrateXp)window.usCelebrateXp(xp,'Quiz completato');else toast(`+${xp} XP Bond ✦`);}
-    else if(notify)toast('Confronto sbloccato ♡');
-  }else{
-    document.getElementById('scoreValue').textContent='✓';
-    document.getElementById('scoreRing').style.setProperty('--score',100);
-    if(ringLabel)ringLabel.textContent='completato';
-    document.getElementById('scoreText').textContent='Hai completato il set ♡';
-    const matches=document.getElementById('quizMatches');if(matches){matches.classList.add('hidden');matches.innerHTML='';}
-    if(xpRoot){xpRoot.classList.add('hidden');xpRoot.innerHTML='';}
-    const partner=window.usProfile?.role==='francesco'?'Bea':'Francesco';
-    document.getElementById('scoreSub').textContent='Ora aspettiamo '+partner+'. Il risultato e gli XP si sbloccano quando completa anche '+partner+'.';
-  }
-}
-async function refreshQuizState(){
-  if(!quizSet || !window.usProfile)return;
-  const resultVisible=!document.getElementById('quizResult').classList.contains('hidden');
-  if(!resultVisible)return;
-  const wasBoth=Boolean(quizState?.both_complete);
-  const {data:state}=await sb.rpc('get_quiz_state',{target_set_id:quizSet.id});
-  if(state){quizState=state;showQuizState(state,!wasBoth&&Boolean(state.both_complete));updateHomeStatus();}
-}
-function resetQuiz(options={}){
-  window.USCustomGames?.close({silent:true});
-  quizSet=null;quizQuestions=[];quizState=null;quizPos=0;quizSelected=null;
-  const matches=document.getElementById('quizMatches');if(matches){matches.classList.add('hidden');matches.innerHTML='';}
-  const xpRoot=document.getElementById('quizXpEarned');if(xpRoot){xpRoot.classList.add('hidden');xpRoot.innerHTML='';}
-  document.getElementById('quizHub').classList.remove('hidden');
-  document.getElementById('quizPlay').classList.add('hidden');
-  document.getElementById('quizResult').classList.add('hidden');
-  window.resetPartnerKnowledge?.({silent:true});
-  if(options.reload!==false){loadWeeklyQuizHub();window.loadUsExtraGames?.();window.USCustomGames?.load();}
-}
+// Game V2 — Gioca is owned by games.js (window.USGameV2); the legacy weekly quiz UI is retired.
+function openQuizHub(options={}){go('quiz',options);window.USGameV2?.showHub();}
+function resetQuiz(){window.USGameV2?.showHub();}
+window.openQuizHub=openQuizHub;
 window.resetQuiz=resetQuiz;
-function startWeeklyQuizRefresh(){
-  if(weeklyQuizTimer)clearInterval(weeklyQuizTimer);
-  weeklyQuizTimer=setInterval(()=>{
-    if(document.hidden||!window.usProfile)return;
-    if(document.getElementById('quiz')?.classList.contains('active')&&!document.getElementById('quizHub')?.classList.contains('hidden'))loadWeeklyQuizHub();
-  },15*60*1000);
-}
-startWeeklyQuizRefresh();
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&document.getElementById('quiz')?.classList.contains('active'))loadWeeklyQuizHub();});
 
 function updateTogetherDays(){
   const start = new Date('2026-04-21T00:00:00');
@@ -555,6 +352,7 @@ function performPushNavigation(target){
     setTimeout(()=>window.openLeftForYou?.(),120);
     return;
   }
+  if(target==='quiz'){openQuizHub();return;}
   if(pages.includes(target))go(target);
 }
 function captureInitialPushTarget(){
@@ -2120,7 +1918,6 @@ async function hydrateToday(){
 async function updateHomeStatus(){
   if(!window.usProfile)return;
   const todayPill=document.getElementById('todayStatusPill');
-  const quizPill=document.getElementById('quizStatusPill');
   const st=window.todayState;
   const partner=window.usProfile.role==='francesco'?'Bea':'Francesco';
   if(todayPill){
@@ -2128,12 +1925,6 @@ async function updateHomeStatus(){
     else if(st?.my_answer) todayPill.textContent='💬 Today · in attesa di '+partner;
     else if(st?.partner_has_answer) todayPill.textContent='💬 Today · risposta in attesa';
     else todayPill.textContent='💬 Today · da fare';
-  }
-  if(quizPill){
-    try{
-      const {count,error}=await sb.from('quiz_responses').select('id',{count:'exact',head:true});
-      if(!error)quizPill.textContent='🎯 Quiz · '+Number(count||0)+' risposte';
-    }catch(_e){}
   }
 }
 
@@ -3492,7 +3283,7 @@ function scheduleUsRealtimeRefresh(kind){
     if(!window.usProfile||document.hidden)return;
     const active=document.querySelector('.page.active')?.id;
     if(kind==='daily'){hydrateToday();return;}
-    if(kind==='quiz'){if(active==='quiz')refreshQuizState();return;}
+    if(kind==='quiz'){window.USGameV2?.refresh();return;}
     if(kind==='location'){if(active==='home')hydrateDistance();return;}
     if(kind==='moments'){
       if(active==='moments')hydrateMoments();
@@ -3515,7 +3306,6 @@ function startUsRealtime(){
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'shared_messages',filter:`recipient_id=eq.${userId}`},payload=>handleIncomingThink(payload.new))
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'think_reactions'},()=>scheduleUsRealtimeRefresh('think-reaction'))
     .on('postgres_changes',{event:'*',schema:'public',table:'daily_answers',filter:`couple_id=eq.${coupleId}`},()=>scheduleUsRealtimeRefresh('daily'))
-    .on('postgres_changes',{event:'*',schema:'public',table:'quiz_responses',filter:`couple_id=eq.${coupleId}`},()=>scheduleUsRealtimeRefresh('quiz'))
     .on('postgres_changes',{event:'*',schema:'public',table:'couple_locations',filter:`couple_id=eq.${coupleId}`},()=>scheduleUsRealtimeRefresh('location'))
     .on('postgres_changes',{event:'*',schema:'public',table:'moments',filter:`couple_id=eq.${coupleId}`},()=>scheduleUsRealtimeRefresh('moments'))
     .on('postgres_changes',{event:'*',schema:'public',table:'moment_photos',filter:`couple_id=eq.${coupleId}`},()=>scheduleUsRealtimeRefresh('moments'))
@@ -3597,7 +3387,8 @@ function swipeBlockedTarget(target){
     '.modal,.moment-viewer,.auth-overlay,.today-overlay,' +
     '.us-story-viewer,.us-camera-viewer,.us-events-overlay.open,' +
     '.us-settings-overlay.open,.us-album-overlay.show,' +
-    '.us-album-lightbox.show,.us-moment-compose-overlay.show'
+    '.us-album-lightbox.show,.us-moment-compose-overlay.show,' +
+    '.us-gv2-panel'
   ))return true;
   const button=target.closest('button');
   if(button&&!button.classList.contains('us-setting-row'))return true;
@@ -3899,7 +3690,7 @@ async function refreshVisibleState(options={}){
     return;
   }
   if(active==='moments'){await hydrateMoments();return;}
-  if(active==='quiz'){await refreshQuizState();return;}
+  if(active==='quiz'){await window.USGameV2?.refresh();return;}
   if(active==='bond'){await hydrateBondSummary();return;}
   if(active==='settings'){await window.hydrateUsSettings?.();}
 }

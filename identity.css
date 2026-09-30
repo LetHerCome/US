@@ -309,6 +309,16 @@ body:has(#home.page.active){overflow-y:hidden}
 .top.us-premium-top{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);column-gap:6px;justify-content:initial}
 .top.us-premium-top .us-events-top-control{grid-column:2}
 .top.us-premium-top .top-actions{grid-column:3;justify-self:end;min-width:0;gap:6px}
+.top.us-premium-top .us-top-left{grid-column:1;justify-self:start;display:flex;align-items:center;min-width:0}
+/* Game V2 — Per voi top control: the sparkle mirrors the envelope control;
+   its personal state rides the shared attention orbit, never a counter. */
+#usPerVoiTop.us-pervoi-top{--us-attention-inset:-3px;position:relative;width:38px;height:38px;padding:0;border:1px solid rgba(255,234,247,.10);border-radius:50%;background:rgba(255,255,255,.05);color:rgba(247,242,248,.84);display:grid;place-items:center;overflow:visible;box-shadow:none;transition:transform .12s var(--us-ease-standard),background .12s var(--us-ease-standard),color .12s var(--us-ease-standard)}
+#usPerVoiTop:active{transform:scale(.94);background:rgba(246,111,158,.14);color:#fff7fb}
+#usPerVoiTop.is-loading{opacity:.52;pointer-events:none}
+#usPerVoiTop .us-pervoi-icon{width:19px;height:19px;display:block;background-color:currentColor;-webkit-mask:url("/assets/icons/phosphor/sparkle-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/sparkle-regular.svg") center/contain no-repeat}
+#usPerVoiTop[data-gv2-state="pending"] .us-pervoi-icon,#usPerVoiTop[data-gv2-state="reveal_ready"] .us-pervoi-icon{-webkit-mask-image:url("/assets/icons/phosphor/sparkle-fill.svg");mask-image:url("/assets/icons/phosphor/sparkle-fill.svg");color:#ffd3e3}
+#usPerVoiTop[data-gv2-state="waiting"]{color:rgba(247,242,248,.62)}
+@media(prefers-reduced-motion:reduce){#usPerVoiTop{transition:none}#usPerVoiTop:active{transform:none}}
 .top.us-premium-top .us-events-top-control{flex:0 1 auto;justify-self:center;margin:0;max-width:150px}
 .top.us-premium-top .us-brand-symbol-art{width:58px;height:39px}
 .top.us-premium-top .profile-avatar,.top.us-premium-top .us-calendar-btn{min-width:44px;min-height:44px}

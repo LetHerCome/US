@@ -145,7 +145,7 @@ html.us-returning-device .auth-overlay{
 
 <div class="app">
 
-  <div class="top us-premium-top"><button type="button" class="us-events-top-control us-important-control" id="usEventsTopEntry" onclick="openEvents()" aria-label="Apri i nostri eventi"><span>I nostri eventi</span><span class="us-events-top-chevron" aria-hidden="true">⌄</span></button><div class="top-actions"><button type="button" class="us-envelope-control us-important-control us-attention-orbit is-loading" id="leftForYouPartnerEntry" onclick="usEnvelopeTap()" aria-label="Lasciato per te" aria-busy="true" data-us-envelope data-us-attention="off"><span class="us-envelope-mark" aria-hidden="true"><span class="us-envelope-icon"><span class="us-envelope-face us-envelope-face--closed" data-icon="/assets/icons/phosphor/envelope-simple-regular.svg"></span><span class="us-envelope-face us-envelope-face--open" data-icon="/assets/icons/phosphor/envelope-open-regular.svg"></span></span></span></button><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
+  <div class="top us-premium-top"><div class="us-top-left"><button type="button" class="us-pervoi-top us-important-control us-attention-orbit is-loading" id="usPerVoiTop" onclick="window.USGameV2?.openPerVoi()" aria-label="Per voi" aria-busy="true" data-us-attention="off" data-gv2-state="idle"><span class="us-pervoi-icon" aria-hidden="true"></span></button></div><button type="button" class="us-events-top-control us-important-control" id="usEventsTopEntry" onclick="openEvents()" aria-label="Apri i nostri eventi"><span>I nostri eventi</span><span class="us-events-top-chevron" aria-hidden="true">⌄</span></button><div class="top-actions"><button type="button" class="us-envelope-control us-important-control us-attention-orbit is-loading" id="leftForYouPartnerEntry" onclick="usEnvelopeTap()" aria-label="Lasciato per te" aria-busy="true" data-us-envelope data-us-attention="off"><span class="us-envelope-mark" aria-hidden="true"><span class="us-envelope-icon"><span class="us-envelope-face us-envelope-face--closed" data-icon="/assets/icons/phosphor/envelope-simple-regular.svg"></span><span class="us-envelope-face us-envelope-face--open" data-icon="/assets/icons/phosphor/envelope-open-regular.svg"></span></span></span></button><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
 
   <main id="home" class="page active">
     <section class="hero home-hero-only" id="homeHero" aria-label="Un vostro ricordo">
@@ -293,8 +293,6 @@ html.us-returning-device .auth-overlay{
         <h3 id="noiResonanceGuideTitle">Cresce con quello che completate insieme</h3>
         <ul class="noi-resonance-sources">
           <li><b>Quest di coppia</b><span>Quando la confermate entrambi, con gli XP scritti sulla quest.</span></li>
-          <li><b>Quiz della settimana</b><span>Quando lo finite entrambi: 5 XP per ogni risposta uguale, oppure partecipazione più affinità negli altri giochi.</span></li>
-          <li><b>Quanto conosci</b><span>Quando completate un round.</span></li>
           <li><b>I nostri eventi</b><span>Quando segnate un evento come fatto: da 25 a 60 XP.</span></li>
           <li><b>Mesiversario e anniversario</b><span>60 XP ogni mesiversario, 200 per l'anniversario.</span></li>
         </ul>
@@ -473,18 +471,9 @@ html.us-returning-device .auth-overlay{
   </main>
 
   <main id="quiz" class="page">
-    <section class="section" style="margin-top:6px">
-      <div class="quiz-head"><div><div class="tiny">US QUIZ</div><h2 style="margin:2px 0 0">Giochiamo insieme</h2></div></div>
-      <div id="quizHub">
-        <div id="usCustomGamesHub" aria-live="polite"></div>
-        <div class="quiz-week-card"><div><span class="quiz-week-kicker">SETTIMANALE</span><b id="quizWeekLabel">I quiz di questa settimana</b></div><small id="quizWeekReset">Cambiano automaticamente ogni 7 giorni</small></div>
-        <div class="quiz-xp-rule">Ogni risposta uguale vale <b>+5 XP Bond</b> · massimo 50 XP per quiz.</div>
-        <div class="quiz-grid" id="weeklyQuizGrid" aria-live="polite"><div class="quiz-week-loading" aria-busy="true">Preparo i quiz della settimana…</div></div>
-        <div id="usExtraGames" class="us-extra-games" aria-live="polite"></div>
-      </div>
-      <div id="quizPlay" class="hidden"><div class="card"><div class="quiz-head"><div><span class="badge" id="quizCategory">PREFERENZE</span></div><div class="tiny"><span id="quizIndex">1</span>/<span id="quizTotal">10</span></div></div><div class="progress"><div id="quizProgress"></div></div><div class="qtext" id="quizQuestion" style="font-size:21px"></div><div class="tiny" id="quizWho">Rispondi per te. Il confronto resta nascosto fino alla fine.</div><div class="answers" id="quizAnswers"></div><button class="primary" id="quizNext" style="width:100%;margin-top:14px" onclick="nextQuiz()" disabled>Conferma</button></div></div>
-      <div id="quizResult" class="hidden"><div class="card" style="text-align:center"><div class="tiny">RISULTATO DEL SET</div><div class="score-ring" id="scoreRing" style="--score:0"><div class="score-inner"><div><b id="scoreValue">0/10</b><br><span>risposte uguali</span></div></div></div><div class="qtext" id="scoreText" style="font-size:19px">Ci stiamo ancora studiando 👀</div><div class="csub" id="scoreSub">Il risultato si sblocca solo quando entrambi hanno completato il set.</div><div class="quiz-xp-earned hidden" id="quizXpEarned"></div><div class="quiz-matches hidden" id="quizMatches"></div><button class="primary" style="width:100%;margin-top:16px" onclick="resetQuiz()">Scegli un altro quiz</button></div></div>
-      <div id="usCustomGamePanel" class="hidden" aria-live="polite"></div>
+    <section class="section us-gv2-page">
+      <div id="quizHub" class="us-gv2-hub" aria-live="polite"><div class="us-gv2-empty" aria-busy="true">Preparo Gioca…</div></div>
+      <div id="usGameV2Panel" class="us-gv2-panel hidden" aria-live="polite"></div>
     </section>
   </main>
 </div>

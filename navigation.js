@@ -77,11 +77,8 @@ const layers=[
   {
     name:'quiz-subview',
     find:()=>document.getElementById('quiz'),
-    open:()=>Boolean(document.getElementById('quizHub')?.classList.contains('hidden')),
-    close:()=>{
-      const knowledgeOpen=!document.getElementById('usKnowledgePlay')?.classList.contains('hidden')||!document.getElementById('usKnowledgeResult')?.classList.contains('hidden');
-      if(knowledgeOpen)window.resetPartnerKnowledge?.();else window.resetQuiz?.();
-    }
+    open:()=>Boolean(window.USGameV2?.isOpen()),
+    close:()=>window.USGameV2?.close()
   },
   {
     // M9D — superficie interna del hub Noi (Risonanza, Da vivere, Quest).

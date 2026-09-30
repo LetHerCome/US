@@ -59,12 +59,12 @@ test('M9D: the back path is the shared navigation history (system Back included)
 test('M9D: Risonanza is explained only with the actions that award bond XP today', () => {
   const guide = bond().match(/<section class="noi-resonance-guide"[\s\S]*?<\/section>/)?.[0] || '';
   const sources = [...guide.matchAll(/<li><b>([^<]+)<\/b>/g)].map((m) => m[1]);
-  assert.deepEqual(sources, ['Quest di coppia', 'Quiz della settimana', 'Quanto conosci', 'I nostri eventi', 'Mesiversario e anniversario']);
+  // M11B retired the legacy weekly quiz and Partner Knowledge UI, so they are no longer listed.
+  assert.deepEqual(sources, ['Quest di coppia', 'I nostri eventi', 'Mesiversario e anniversario']);
   // each listed source is backed by a real XP award in the client contract
   assert.match(app(), /sb\.rpc\('confirm_bond_quest'/);
   assert.match(app(), /data\?\.xp_awarded/);
-  assert.match(app(), /Ogni risposta uguale vale 5 XP/);
-  assert.match(read('games.js'), /complete_partner_knowledge_deck[\s\S]*?xp_awarded/);
+  assert.doesNotMatch(guide, /Quiz|Quanto conosci|Gioca/, 'Game V2 does not award bond XP yet');
   assert.match(read('events.js'), /complete_shared_event/);
   assert.match(read('events.js'), /return lead>=7\?50:lead>=2\?35:25/);
   assert.match(read('events.js'), /kind==='anniversary'\?200:60/);
