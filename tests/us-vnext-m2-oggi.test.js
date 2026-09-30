@@ -84,22 +84,23 @@ test('M2 usa urgenza, recency e id come tie-break deterministico', () => {
   assert.deepEqual(second, first);
 });
 
-test('M2 deriva Daily Question soltanto da reveal pronto o risposta partner in attesa', () => {
+test('M2/M10.2 deriva Daily Question soltanto da reveal pronto e non ancora aperto/nascosto da me', () => {
   const { api } = installPriorityRuntime();
   const question = { id: 'q-1', question: 'Una domanda reale', question_date: '2026-09-01' };
+  const meta = (extra = {}) => ({ question_id: 'q-1', both_answered: true, my_reveal_seen_at: null, my_notice_dismissed_at: null, ...extra });
 
-  const ready = api.dailyViewModel({ question, state: { both_answered: true, my_answer: 'A' }, partnerName: 'Bea' });
-  assert.equal(ready.category, 'received_ready');
+  const ready = api.dailyViewModel({ question, state: { both_answered: true, my_answer: 'A' }, reveal: meta(), partnerName: 'Bea' });
+  assert.equal(ready.category, 'answers_ready');
   assert.equal(ready.action, 'today');
+  assert.equal(ready.canonical, true);
 
-  const waiting = api.dailyViewModel({ question, state: { partner_has_answer: true, my_answer: null }, partnerName: 'Bea' });
-  assert.equal(waiting.category, 'waiting_for_me');
-  assert.match(waiting.title, /Bea/);
-  assert.equal(waiting.action, 'today');
-
-  assert.equal(api.dailyViewModel({ question, state: { my_answer: 'A', both_answered: false }, partnerName: 'Bea' }), null);
+  // M10.1A: "aspetta te" non è più una priorità: è la card Daily (my_answer == null).
+  assert.equal(api.dailyViewModel({ question, state: { partner_has_answer: true, my_answer: null }, partnerName: 'Bea' }), null);
+  assert.equal(api.dailyViewModel({ question, state: { my_answer: 'A', both_answered: false }, reveal: meta(), partnerName: 'Bea' }), null);
   assert.equal(api.dailyViewModel({ question, state: { partner_has_answer: false }, partnerName: 'Bea' }), null);
   assert.equal(api.dailyViewModel({ question: null, state: null, partnerName: 'Bea' }), null);
+  // Senza stato personale caricato non si inventa nulla.
+  assert.equal(api.dailyViewModel({ question, state: { both_answered: true, my_answer: 'A' }, partnerName: 'Bea' }), null);
 });
 
 test('M2 accetta Events soltanto oggi o entro 48 ore e conserva openEvents come action', () => {

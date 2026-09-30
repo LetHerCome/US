@@ -1459,9 +1459,10 @@ let usThinkReactionFinal=null;
 let usThinkReactionInFlight=false;
 let usThinkKnownReactionSignature='';
 
-const US_TODAY_PRIORITY_ORDER=Object.freeze({received_ready:1,waiting_for_me:2,couple_context:3});
+const US_TODAY_PRIORITY_ORDER=Object.freeze({received_ready:1,answers_ready:2,waiting_for_me:3,couple_context:4});
 const US_TODAY_PRIORITY_LABELS=Object.freeze({
   received_ready:'Pronto per voi',
+  answers_ready:'Risposte pronte',
   waiting_for_me:'Aspetta te',
   couple_context:'Tra voi oggi'
 });
@@ -1491,19 +1492,44 @@ function composeTodayPriorities(candidates=[]){
   }
   return result;
 }
+// M10.2 — stato PERSONALE del reveal (get_daily_reveal_meta): l'avviso "Risposte
+// pronte" esiste solo per la domanda di OGGI (giorno Europe/Rome), a reveal
+// sbloccato, finché IO non l'ho né aperto né nascosto. Senza meta caricata
+// (errore/offline) non si inventa nulla: né avviso né link.
+function dailyRevealAccess(source){
+  const question=source?.question,state=source?.state,meta=source?.reveal;
+  if(!question?.id||!state?.both_answered||!meta?.both_answered||meta.question_id!==question.id)return null;
+  const today=typeof usDailyQuestionDay==='function'?usDailyQuestionDay():null;
+  if(today&&question.question_date&&String(question.question_date)!==today)return null;
+  return {question,unread:!meta.my_reveal_seen_at&&!meta.my_notice_dismissed_at};
+}
 function dailyTodayPriorityViewModel(source){
-  const question=source?.question,state=source?.state;
-  if(!question?.id||!state)return null;
-  const urgency=Date.parse(`${question.question_date||localDateISO()}T23:59:59`);
-  const common={attention:false,factKey:`daily:${question.id}`,urgency:Number.isFinite(urgency)?urgency:Number.MAX_SAFE_INTEGER,recency:0,action:'today'};
-  if(state.both_answered){
-    return {...common,id:`daily-ready:${question.id}`,category:'received_ready',title:'Risposte pronte',detail:'La Domanda del giorno è pronta da leggere insieme.',actionLabel:'Scopri le risposte'};
-  }
-  if(state.partner_has_answer&&!state.my_answer){
-    const partnerName=source.partnerName||'La tua persona';
-    return {...common,id:`daily-waiting:${question.id}`,category:'waiting_for_me',title:`La risposta di ${partnerName} ti aspetta`,detail:'Rispondi alla Domanda del giorno per sbloccarla.',actionLabel:'Rispondi ora'};
-  }
-  return null;
+  const access=dailyRevealAccess(source);
+  if(!access?.unread)return null;
+  const question=access.question;
+  const urgency=Date.parse(`${question.question_date||''}T23:59:59`);
+  return {
+    id:`daily-ready:${question.id}`,factKey:`daily:${question.id}`,category:'answers_ready',
+    arrivalType:'daily-reveal-ready',questionId:question.id,
+    // Personale e reale finché non l'ho aperto o nascosto: stesso orbit M10.
+    attention:true,canonical:true,dismissLabel:'Nascondi avviso Risposte pronte',
+    urgency:Number.isFinite(urgency)?urgency:Number.MAX_SAFE_INTEGER,recency:0,
+    title:'Le vostre risposte sono pronte',detail:'',action:'today',actionLabel:'Scopri'
+  };
+}
+// Accesso secondario, passivo: reveal di oggi già aperto o avviso nascosto.
+function dailyRevealLinkViewModel(source){
+  const access=dailyRevealAccess(source);
+  if(!access||access.unread)return null;
+  return {questionId:access.question.id,label:'Rivedi le risposte di oggi'};
+}
+function renderDailyRevealLink(model){
+  const link=document.getElementById('usDailyRevealLink');
+  if(!link)return;
+  if(!model){link.hidden=true;link.textContent='';link.removeAttribute('data-us-question-id');return;}
+  link.textContent=model.label;
+  link.dataset.usQuestionId=model.questionId;
+  link.hidden=false;
 }
 function eventTodayPriorityViewModel(source){
   if(source?.days_left===null||source?.days_left===undefined||!source?.effective_date)return null;
@@ -1530,7 +1556,11 @@ function renderTodayPriorityItem(item,total=0){
   if(!region)return;
   if(!item){region.innerHTML='';region.hidden=true;return;}
   const queueLabel=total>1?` · 1/${total}`:'';
-  region.innerHTML=`<button type="button" class="us-today-priority-card us-attention-orbit" data-us-attention="${item.attention?'on':'off'}" data-us-today-action="${escapeHtml(item.action)}" data-us-arrival-type="${escapeHtml(item.arrivalType||item.category||'arrival')}" aria-label="${escapeHtml(item.actionLabel)}: ${escapeHtml(item.title)}"><span class="us-today-priority-kind">${escapeHtml(US_TODAY_PRIORITY_LABELS[item.category]||'Oggi')}${queueLabel}</span><span class="us-today-priority-copy"><b>${escapeHtml(item.title)}</b><small>${escapeHtml(item.detail||'')}</small></span><span class="us-today-priority-action">${escapeHtml(item.actionLabel)}</span></button>`;
+  const card=`<button type="button" class="us-today-priority-card us-attention-orbit" data-us-attention="${item.attention?'on':'off'}" data-us-today-action="${escapeHtml(item.action)}" data-us-arrival-type="${escapeHtml(item.arrivalType||item.category||'arrival')}" aria-label="${escapeHtml(item.actionLabel)}: ${escapeHtml(item.title)}"><span class="us-today-priority-kind">${escapeHtml(US_TODAY_PRIORITY_LABELS[item.category]||'Oggi')}${queueLabel}</span><span class="us-today-priority-copy"><b>${escapeHtml(item.title)}</b><small>${escapeHtml(item.detail||'')}</small></span><span class="us-today-priority-action">${escapeHtml(item.actionLabel)}</span></button>`;
+  // M10.2 — avviso nascondibile: swipe orizzontale O bottone accessibile, stessa autorità.
+  region.innerHTML=item.dismissLabel
+    ?`<div class="us-today-priority-swipe has-dismiss" data-us-swipe-item data-us-question-id="${escapeHtml(item.questionId||'')}">${card}<button type="button" class="us-today-priority-dismiss" data-us-today-dismiss aria-label="${escapeHtml(item.dismissLabel)}">×</button></div>`
+    :card;
   region.hidden=false;
 }
 function renderTodayPriorities(priorities=[]){
@@ -1595,6 +1625,7 @@ async function refreshTodayPriorities({daily}={}){
   const dailySource=daily===undefined&&window.todayQuestion?{
     question:window.todayQuestion,
     state:window.todayState,
+    reveal:window.todayRevealMeta,
     partnerName:dailyRitualPartnerName()
   }:daily;
   const candidates=[];
@@ -1603,6 +1634,9 @@ async function refreshTodayPriorities({daily}={}){
   // M9B: la Domanda del giorno ha la sua card su Oggi (renderDailyRitual):
   // non entra più nella coda priority, così non compare due volte.
   renderDailyRitual(dailyRitualViewModel(dailySource));
+  // M10.2 — "Risposte pronte": piccolo avviso personale, mai la card Daily.
+  const revealNotice=dailyTodayPriorityViewModel(dailySource);
+  if(revealNotice)candidates.push(revealNotice);
   try{
     const eventSource=await window.getTodayEventPrioritySource?.();
     const eventPriority=eventTodayPriorityViewModel(eventSource);
@@ -1611,20 +1645,94 @@ async function refreshTodayPriorities({daily}={}){
   if(refreshId!==usTodayPriorityRefreshId)return [];
   const priorities=composeTodayPriorities(candidates);
   renderTodayPriorities(priorities);
+  // Un solo ingresso: il link passivo compare solo quando l'avviso non è in coda.
+  renderDailyRevealLink(priorities.some(item=>item.category==='answers_ready')?null:dailyRevealLinkViewModel(dailySource));
   return priorities;
 }
 document.getElementById('usTodayPriorityRegion')?.addEventListener('click',event=>{
+  if(usTodaySwipeState.suppressClick){usTodaySwipeState.suppressClick=false;event.preventDefault?.();return;}
   const control=event.target.closest?.('[data-us-today-action]');
   const action=control?.dataset.usTodayAction;
-  if(!action)return;
-  const current=usTodayPriorityQueue.shift();
-  if(current)usTodayConsumedFacts.add(String(current.factKey||current.id));
-  renderTodayPriorityItem(usTodayPriorityQueue[0],usTodayPriorityQueue.length);
+  if(!action){
+    // Bottone accessibile "Nascondi avviso": stessa autorità dello swipe.
+    const dismiss=event.target.closest?.('[data-us-today-dismiss]');
+    const questionId=dismiss?event.target.closest('[data-us-swipe-item]')?.dataset.usQuestionId:'';
+    if(questionId)window.dismissDailyRevealNotice?.(questionId);
+    return;
+  }
+  // M10.2: l'avviso Risposte pronte è stato canonico (server): sparisce solo
+  // quando il reveal è davvero aperto (hydrateToday → mark_daily_reveal_seen).
+  const current=usTodayPriorityQueue[0];
+  if(!current?.canonical){
+    usTodayPriorityQueue.shift();
+    if(current)usTodayConsumedFacts.add(String(current.factKey||current.id));
+    renderTodayPriorityItem(usTodayPriorityQueue[0],usTodayPriorityQueue.length);
+  }
   if(action==='today')window.openToday?.();
   if(action==='events')window.openEvents?.();
   if(action==='think')window.openThinkArrival?.();
 });
+// M10.2 — nascondere l'avviso "Risposte pronte" = "non lo voglio più su Oggi",
+// MAI "ho visto le risposte". L'autorità è window.dismissDailyRevealNotice
+// (definita accanto al reveal, dove vive l'accesso al backend): solo dopo il
+// dismiss canonico l'avviso resta nascosto, altrimenti la card torna al suo posto.
+const usTodaySwipeState={gesture:null,suppressClick:false};
+const US_SWIPE_INTENT_PX=10,US_SWIPE_MIN_PX=50,US_SWIPE_MAX_PX=70;
+function usTodaySwipeThreshold(width){return Math.min(US_SWIPE_MAX_PX,Math.max(US_SWIPE_MIN_PX,(Number(width)||0)*0.2));}
+function usTodaySwipeMotion(item,{transform,opacity,animate}){
+  const reduced=Boolean(window.UsUiFoundation?.isReducedMotion?.());
+  item.style.transition=animate&&!reduced?'transform .2s ease-out,opacity .2s ease-out':'none';
+  item.style.transform=transform;
+  item.style.opacity=opacity;
+}
+function usTodaySwipeReset(item){usTodaySwipeMotion(item,{transform:'translateX(0)',opacity:'',animate:true});}
+function installTodayNoticeSwipe(region){
+  if(!region?.addEventListener)return;
+  const itemOf=event=>event.target?.closest?.('[data-us-swipe-item]')||null;
+  region.addEventListener('pointerdown',event=>{
+    const item=itemOf(event);
+    if(!item||(event.button!==undefined&&event.button!==0)||event.target.closest?.('[data-us-today-dismiss]'))return;
+    usTodaySwipeState.gesture={item,pointerId:event.pointerId,x:event.clientX,y:event.clientY,dx:0,phase:'pending'};
+  });
+  region.addEventListener('pointermove',event=>{
+    const g=usTodaySwipeState.gesture;
+    if(!g||g.pointerId!==event.pointerId||g.phase==='ignored')return;
+    const dx=event.clientX-g.x,dy=event.clientY-g.y;
+    if(g.phase==='pending'){
+      const ax=Math.abs(dx),ay=Math.abs(dy);
+      if(ax<US_SWIPE_INTENT_PX&&ay<US_SWIPE_INTENT_PX)return;
+      // Intento orizzontale chiaro, altrimenti è scroll verticale: non si tocca.
+      if(ax>ay*1.5){g.phase='drag';g.item.setPointerCapture?.(event.pointerId);}
+      else{g.phase='ignored';return;}
+    }
+    g.dx=dx;
+    const width=g.item.getBoundingClientRect?.().width||0;
+    const fade=width?Math.min(Math.abs(dx)/width,1)*0.55:0;
+    usTodaySwipeMotion(g.item,{transform:`translateX(${dx}px)`,opacity:String(1-fade),animate:false});
+    event.preventDefault?.();
+  });
+  const finish=async(event,cancelled)=>{
+    const g=usTodaySwipeState.gesture;
+    if(!g||g.pointerId!==event.pointerId)return;
+    usTodaySwipeState.gesture=null;
+    if(g.phase!=='drag')return;
+    // Il click sintetico dopo un drag non deve aprire il reveal.
+    usTodaySwipeState.suppressClick=true;
+    setTimeout(()=>{usTodaySwipeState.suppressClick=false;},0);
+    const width=g.item.getBoundingClientRect?.().width||0;
+    if(cancelled||Math.abs(g.dx)<usTodaySwipeThreshold(width)){usTodaySwipeReset(g.item);return;}
+    const exit=(g.dx<0?-1:1)*Math.max(width,1);
+    usTodaySwipeMotion(g.item,{transform:`translateX(${exit}px)`,opacity:'0',animate:true});
+    const result=(await window.dismissDailyRevealNotice?.(g.item.dataset.usQuestionId))||{status:'error'};
+    // Dismiss non riuscito → la card torna (se il DOM è ancora quello).
+    if(result.status!=='dismissed'&&g.item.isConnected!==false)usTodaySwipeReset(g.item);
+  };
+  region.addEventListener('pointerup',event=>finish(event,false));
+  region.addEventListener('pointercancel',event=>finish(event,true));
+}
+installTodayNoticeSwipe(document.getElementById('usTodayPriorityRegion'));
 window.UsTodayPriority=Object.freeze({
+  revealLinkViewModel:dailyRevealLinkViewModel,
   compose:composeTodayPriorities,
   dailyViewModel:dailyTodayPriorityViewModel,
   eventViewModel:eventTodayPriorityViewModel,
@@ -1832,7 +1940,7 @@ function renderTodayQuestionUnavailable(status){
   const locked=document.getElementById('locked'), reveal=document.getElementById('todayReveal'), btn=document.getElementById('todaySaveBtn');
   const answerEl=document.getElementById('answer');
   const failed=status==='error';
-  window.todayQuestion=null; window.todayState=null;
+  window.todayQuestion=null; window.todayState=null; window.todayRevealMeta=null;
   dailyQuestionOutcomes.hide();
   if(qel)qel.textContent=failed?'Non riesco a caricare la domanda di oggi.':'Sto preparando la domanda di oggi…';
   if(locked)locked.textContent=failed?'Controlla la connessione e riprova.':'Un attimo, arriva subito.';
@@ -1843,6 +1951,59 @@ function renderTodayQuestionUnavailable(status){
     btn.hidden=!failed; btn.disabled=!failed; btn.textContent=failed?'Riprova':'Un attimo…';
   }
 }
+// M10.2 — reveal Daily: risposte da get_daily_state (invariata), stato PERSONALE
+// (ricevuta, avviso nascosto, reazione) da get_daily_reveal_meta. Il server è
+// l'unica autorità: nessuna copia locale, nessuno stato ottimistico che resti.
+async function loadDailyRevealMeta(questionId){
+  try{
+    const {data,error}=await sb.rpc('get_daily_reveal_meta',{target_question_id:questionId});
+    if(error||!data||data.question_id!==questionId)throw error||new Error('daily_reveal_meta_invalid');
+    return data;
+  }catch(error){console.warn('[US Today] Reveal meta',error);return null;}
+}
+function dailyRevealPartnerLabel(){return window.usProfile?.role==='francesco'?'Bea':'Francesco';}
+function renderTodayReveal(){
+  const reveal=document.getElementById('todayReveal'),state=window.todayState;
+  if(!reveal||!state?.both_answered)return;
+  const partner=dailyRevealPartnerLabel();
+  reveal.className='today-reveal';
+  reveal.innerHTML='<div class="today-answer" data-us-daily-answer="mine"><b>La tua risposta</b><p>'+escapeHtml(state.my_answer||'')+'</p></div><div class="today-answer" data-us-daily-answer="partner"><b>'+escapeHtml(partner)+'</b><p>'+escapeHtml(state.partner_answer||'')+'</p></div>';
+}
+// "Visto" = il reveal è davvero mostrato in un foglio Today aperto: non il push,
+// non l'hydrate della Home, non il solo both_answered.
+let usDailyRevealSeenInFlight=null;
+async function markDailyRevealSeenIfVisible(questionId,seq){
+  const meta=window.todayRevealMeta;
+  const open=document.getElementById('today')?.classList.contains('open');
+  if(!open||!meta||meta.question_id!==questionId||meta.my_reveal_seen_at||usDailyRevealSeenInFlight===questionId)return;
+  usDailyRevealSeenInFlight=questionId;
+  try{
+    const {data,error}=await sb.rpc('mark_daily_reveal_seen',{target_question_id:questionId});
+    if(error||!data||data.question_id!==questionId)throw error||new Error('daily_reveal_seen_invalid');
+    if(window.todayQuestion?.id===questionId)window.todayRevealMeta=data;
+  }catch(error){
+    // Il reveal resta leggibile e la meta canonica resta invariata: l'avviso
+    // rimane su Oggi, quindi basta riaprirlo per riprovare.
+    console.warn('[US Today] Reveal seen non salvato',error);
+  }finally{usDailyRevealSeenInFlight=null;}
+}
+let usDailyRevealDismissInFlight=false;
+async function dismissDailyRevealNotice(questionId){
+  if(!questionId||usDailyRevealDismissInFlight)return {status:'busy'};
+  usDailyRevealDismissInFlight=true;
+  try{
+    const {data,error}=await sb.rpc('dismiss_daily_reveal_notice',{target_question_id:questionId});
+    if(error||!data||data.question_id!==questionId)throw error||new Error('daily_reveal_dismiss_invalid');
+    if(window.todayQuestion?.id===questionId)window.todayRevealMeta=data;
+    await refreshTodayPriorities();
+    return {status:'dismissed'};
+  }catch(error){
+    console.warn('[US Oggi] Dismiss Risposte pronte',error);
+    toast('Non riesco a nascondere l’avviso. Riprova.');
+    return {status:'error'};
+  }finally{usDailyRevealDismissInFlight=false;}
+}
+window.dismissDailyRevealNotice=dismissDailyRevealNotice;
 let usTodayHydrateSeq=0;
 async function hydrateToday(){
   if(!window.usProfile){window.UsTodayPriority?.render?.([]);return;}
@@ -1870,7 +2031,7 @@ async function hydrateToday(){
   const qel=document.querySelector('#today .qtext');
   const locked=document.getElementById('locked'), reveal=document.getElementById('todayReveal'), btn=document.getElementById('todaySaveBtn');
   const answerEl=document.getElementById('answer');
-  if(previous?.id!==q.id){window.todayState=null;if(previous?.id)answerEl.value='';}
+  if(previous?.id!==q.id){window.todayState=null;window.todayRevealMeta=null;if(previous?.id)answerEl.value='';}
   answerEl.hidden=false; answerEl.disabled=false;
   btn.hidden=false; btn.disabled=false; delete btn.dataset.usTodayMode;
   if(!keepPrevious)btn.textContent='Rispondi';
@@ -1886,13 +2047,19 @@ async function hydrateToday(){
     btn.textContent='Rispondi';
   }
   if(state?.both_answered){
-    const partner=window.usProfile.role==='francesco'?'Bea':'Francesco';
     locked.innerHTML='♡ <b>Reveal sbloccato.</b> Avete risposto entrambi.';
-    reveal.className='today-reveal';
-    reveal.innerHTML='<div class="today-answer"><b>La tua risposta</b><p>'+escapeHtml(state.my_answer||'')+'</p></div><div class="today-answer"><b>'+partner+'</b><p>'+escapeHtml(state.partner_answer||'')+'</p></div>';
     answerEl.disabled=true; btn.disabled=true; btn.textContent='Risposte sbloccate';
+    // M10.2 — stato personale (ricevuta, avviso, reazioni) dal server; mai testo qui.
+    renderTodayReveal();
+    const meta=await loadDailyRevealMeta(q.id);
+    if(seq!==usTodayHydrateSeq)return;
+    if(meta)window.todayRevealMeta=meta;
+    renderTodayReveal();
+    await markDailyRevealSeenIfVisible(q.id,seq);
+    if(seq!==usTodayHydrateSeq)return;
     await dailyQuestionOutcomes.load(q,state);
   }else{
+    window.todayRevealMeta=null;
     reveal.classList.add('hidden');reveal.innerHTML='';
     dailyQuestionOutcomes.hide();
     if(state?.my_answer){
@@ -1908,6 +2075,7 @@ async function hydrateToday(){
   window.UsTodayPriority?.refresh?.({daily:{
     question:q,
     state,
+    reveal:window.todayRevealMeta,
     partnerName:dailyRitualPartnerName()
   }});
 }
