@@ -18,7 +18,7 @@ const skip = CAN_RUN ? false : 'no local PostgreSQL server binaries / postgres O
 
 const uuid = () => crypto.randomUUID();
 const M = ['20260929121350_m7a_da_vivere_bucket_items_domain', '20260929190126_m7c_da_vivere_calendar_unschedule',
-  '20260929190145_m7d_da_vivere_reciprocal_lived', '20260930230000_m12b_2_da_vivere_archived_link_release']
+  '20260929190145_m7d_da_vivere_reciprocal_lived', '20260930225935_m12b_2_da_vivere_archived_link_release']
   .map((n) => `supabase/migrations/${n}.sql`);
 
 const FIXTURE_SQL = `

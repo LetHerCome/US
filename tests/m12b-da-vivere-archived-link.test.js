@@ -13,7 +13,7 @@ const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const BEFORE = ['20260929121350_m7a_da_vivere_bucket_items_domain', '20260929190126_m7c_da_vivere_calendar_unschedule', '20260929190145_m7d_da_vivere_reciprocal_lived']
   .map((n) => `supabase/migrations/${n}.sql`);
-const M12B2 = 'supabase/migrations/20260930230000_m12b_2_da_vivere_archived_link_release.sql';
+const M12B2 = 'supabase/migrations/20260930225935_m12b_2_da_vivere_archived_link_release.sql';
 const uuid = () => crypto.randomUUID();
 
 const FIXTURE_SQL = `
