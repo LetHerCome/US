@@ -8,7 +8,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..');
-const M11B = fs.readFileSync(path.join(ROOT, 'supabase/migrations/20260930150000_m11b_game_v2_core.sql'), 'utf8');
+const M11B = fs.readFileSync(path.join(ROOT, 'supabase/migrations/20260930153745_m11b_game_v2_core.sql'), 'utf8');
 const load = () => import(path.join(ROOT, 'supabase/game-v2/catalog-contract.mjs'));
 
 test('M11B catalog: the migration seed is exactly the generated JSON source', async () => {
