@@ -1,0 +1,19 @@
+[
+  { "id": "rivivete-001", "mechanic": "reciprocal", "answer_kind": "open", "depth": 2, "topic": "giorno_qualunque", "cooldown_class": "standard",
+    "question_text": "Qual è un giorno qualunque tra noi che rivivresti volentieri, proprio perché non aveva niente di speciale?" },
+  { "id": "rivivete-002", "mechanic": "reciprocal", "answer_kind": "open", "depth": 2, "topic": "prima_impressione", "cooldown_class": "standard",
+    "question_text": "Qual è la prima cosa di me che ti è rimasta impressa, prima ancora di conoscermi bene?" },
+  { "id": "rivivete-003", "mechanic": "reciprocal", "answer_kind": "open", "depth": 3, "topic": "diventare_seri", "cooldown_class": "deep",
+    "question_text": "C’è stato un momento in cui hai capito che tra noi stava diventando una cosa seria? Cosa stavamo facendo?" },
+  { "id": "rivivete-004", "mechanic": "reciprocal", "answer_kind": "open", "depth": 1, "topic": "lessico_nostro", "cooldown_class": "light",
+    "question_text": "Quale nostra frase, battuta o parola inventata useresti per spiegare noi due a qualcuno?" },
+  { "id": "rivivete-005", "mechanic": "reciprocal", "answer_kind": "open", "depth": 2, "topic": "serata_da_rivivere", "cooldown_class": "standard",
+    "question_text": "Se potessi rivivere una sola serata passata insieme, quale sceglieresti, e cambieresti qualcosa?" },
+  { "id": "rivivete-006", "mechanic": "reciprocal", "answer_kind": "open", "depth": 2, "topic": "sorprese_ricevute", "cooldown_class": "standard",
+    "question_text": "Qual è una volta in cui ho fatto qualcosa che proprio non ti aspettavi da me?" },
+  { "id": "rivivete-007", "mechanic": "reciprocal", "answer_kind": "choice", "depth": 2, "topic": "il_nostro_inizio", "cooldown_class": "standard",
+    "question_text": "Pensando all’inizio di noi, cosa ti manca di più di quel periodo?",
+    "options": ["L’emozione di ogni messaggio", "Non sapere ancora tutto dell’altro", "Il tempo che sembrava infinito", "Niente: preferisco noi adesso"] },
+  { "id": "rivivete-008", "mechanic": "reciprocal", "answer_kind": "open", "depth": 1, "topic": "luoghi_nostri", "cooldown_class": "light",
+    "question_text": "Qual è un luogo che ormai non riesci più a vedere senza pensare a noi?" }
+]
