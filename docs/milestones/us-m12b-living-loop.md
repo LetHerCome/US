@@ -19,3 +19,20 @@ batch), D3 = A (Ricordi stay photo-backed).
 
 Release markers: build `us-m12b1-oggi-fit-20260930-1`, `version.json` equal, shell cache
 `us-shell-static-runtime-44`, `us-private-media-v1` untouched.
+
+## Batch 1 · M12B.2 — archived, never-lived ideas release their Calendario event
+- Bug (since M7C): archiving a scheduled idea kept `bucket_items.calendar_entry_id`. The M7C
+  BEFORE DELETE trigger only un-schedules rows still `scheduled`, the FK is `ON DELETE RESTRICT`
+  and the M7A guard refuses deleting a linked row, so nobody could delete that shared event.
+- Invariant (CHECK `bucket_items_archived_unlived_unlinked_check`):
+  `status = 'archived' AND completed_at IS NULL => calendar_entry_id IS NULL`.
+- Migration `20260930230000_m12b_2_da_vivere_archived_link_release.sql`: a BEFORE UPDATE trigger
+  (fires after `bucket_items_guard_update` by name order) clears the link on archive of a
+  never-lived idea, a one-time backfill clears it on rows already broken, then the CHECK.
+  No row is deleted; guard, RPC, policies and `calendar_entries` are untouched.
+- Lived history is kept: `completed_at` is server-owned and never cleared, so lived → archived keeps
+  its event and the delete stays refused.
+- Gates: `tests/m12b-da-vivere-archived-link.test.js` (PGlite, cases A–D, F, isolation, CHECK,
+  trigger order, migration scan) and `tests/m12b-da-vivere-archived-link-race.test.js` (real
+  PostgreSQL sessions, case E: archive vs delete in both orders, double archive, lived vs archive).
+- Prepared in the repo only; applied in production by Francesco.

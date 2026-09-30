@@ -29,7 +29,7 @@ const playBoth = async (db, f, b, sid) => { await playSide(db, f, sid); await pl
 
 test('M11F migration: next ledger version, additive only, applied migrations untouched', () => {
   const files = fs.readdirSync(path.join(h.ROOT, 'supabase/migrations')).sort();
-  assert.equal(files[files.length - 1], path.basename(MIGRATION), 'M11F is the newest migration');
+  // Later milestones (M12B.2) add migrations after it; M11F stays after the Game V2 ledger.
   assert.ok(files.indexOf(path.basename(MIGRATION)) > files.indexOf('20260930153755_m11d_game_v2_push.sql'));
   const sql = fs.readFileSync(MIGRATION, 'utf8').replace(/--[^\n]*/g, '');
   assert.doesNotMatch(sql, /\b(drop|truncate|delete\s+from|alter\s+table|create\s+table|update\s+public\.)/i, 'no schema or row change');
