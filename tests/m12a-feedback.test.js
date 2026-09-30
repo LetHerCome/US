@@ -137,14 +137,191 @@ test('native haptics go through the platform bridge when present', () => {
   assert.deepEqual(calls.map(([kind]) => kind), ['success', 'light']);
 });
 
-test('declarative feedback: [data-us-feedback] clicks route to the engine, disabled controls do not', () => {
-  const { feedback, vibrations, doc } = setup();
-  const host = (kind, disabled = false) => ({ target: { closest: () => ({ disabled, getAttribute: () => kind }) } });
-  doc.fire('click', host('tap'));
-  doc.fire('click', host('tap', true));
-  doc.fire('click', host('nonsense'));
+// ------------------------------------------------ default tap (M12A review fix)
+
+// Minimal element tree: enough selector support for the feedback authority.
+function node(tag, attrs = {}, parent = null) {
+  const el = {
+    tag, attrs, parent, disabled: 'disabled' in attrs, hidden: 'hidden' in attrs,
+    getAttribute: (k) => (k in attrs ? String(attrs[k]) : null),
+    hasAttribute: (k) => k in attrs,
+    matches: (selector) => matchesSelector(el, selector),
+    closest(selector) { for (let cur = el; cur; cur = cur.parent) if (matchesSelector(cur, selector)) return cur; return null; }
+  };
+  return el;
+}
+function matchesSelector(el, selector) {
+  return selector.split(',').map((part) => part.trim()).some((part) => {
+    const m = part.match(/^([a-z]*)((?:\[[^\]]+\])*)$/);
+    if (!m) return false;
+    if (m[1] && m[1] !== el.tag) return false;
+    return [...m[2].matchAll(/\[([a-z-]+)(?:="([^"]*)")?\]/g)].every(([, name, value]) => (value === undefined ? name in el.attrs : String(el.attrs[name]) === value));
+  });
+}
+const click = (doc, target, extra = {}) => doc.fire('click', { target, ...extra });
+const settle = () => new Promise((resolve) => setTimeout(resolve, 8));
+
+test('default tap: an ordinary button needs no data-us-feedback attribute', async () => {
+  const { vibrations, doc } = setup();
+  click(doc, node('button'));
+  await settle();
   assert.equal(vibrations.length, 1);
-  assert.ok(feedback);
+  assert.deepEqual(vibrations[0], [8], 'the tap profile');
+});
+
+test('default tap: links, role=button and role=tab count; passive areas and plain text do not', async () => {
+  const { vibrations, doc } = setup();
+  click(doc, node('a', { href: '/x' }));
+  click(doc, node('div', { role: 'button' }));
+  click(doc, node('span', { role: 'tab' }));
+  await settle();
+  assert.equal(vibrations.length, 1, 'taps of one gesture burst collapse, never machine-gun');
+  for (const passive of [node('div'), node('a'), node('p')]) { click(doc, passive); await settle(); }
+  assert.equal(vibrations.length, 1, 'no feedback for passive areas or links without href');
+  click(doc, node('span', { role: 'tab' })); await settle();
+  assert.equal(vibrations.length, 2);
+  // A tap inside a button (icon/label) resolves to the button.
+  const button = node('button'); click(doc, node('span', {}, button)); await settle();
+  assert.equal(vibrations.length, 3);
+});
+
+test('default tap: disabled, aria-disabled, hidden and inert controls stay silent', async () => {
+  const { vibrations, doc } = setup();
+  const inert = node('div', { inert: '' });
+  const hiddenBox = node('section', { hidden: '' });
+  for (const target of [node('button', { disabled: '' }), node('button', { 'aria-disabled': 'true' }), node('button', { hidden: '' }), node('button', {}, inert), node('button', {}, hiddenBox)]) {
+    click(doc, target); await settle();
+  }
+  assert.deepEqual(vibrations, []);
+  click(doc, node('button', { 'aria-disabled': 'false' })); await settle();
+  assert.equal(vibrations.length, 1);
+});
+
+test('default tap: programmatic clicks (isTrusted false) are not user gestures', async () => {
+  const { vibrations, doc } = setup();
+  click(doc, node('button'), { isTrusted: false });
+  click(doc, node('button'), { isTrusted: true });
+  await settle();
+  assert.equal(vibrations.length, 1);
+});
+
+test('override: data-us-feedback="action" replaces the tap, "off" (also on a container) is silent', async () => {
+  const { vibrations, doc } = setup();
+  click(doc, node('button', { 'data-us-feedback': 'action' })); await settle();
+  assert.deepEqual(vibrations, [[14]], 'action only, no tap on top');
+  click(doc, node('button', { 'data-us-feedback': 'off' })); await settle();
+  click(doc, node('button', {}, node('div', { 'data-us-feedback': 'off' }))); await settle();
+  click(doc, node('button', { 'data-us-feedback': 'nonsense' })); await settle();
+  assert.equal(vibrations.length, 1);
+  click(doc, node('button', { 'data-us-feedback': 'tap' })); await settle();
+  assert.equal(vibrations.length, 2, 'an explicit tap still works');
+});
+
+test('double feedback: an explicit action/success in the same gesture replaces the tap; confirmed async success follows it', async () => {
+  const { feedback, vibrations, doc } = setup();
+  // Handler calls action() synchronously during the click.
+  click(doc, node('button')); feedback.action(); await settle();
+  assert.deepEqual(vibrations, [[14]], 'one action, the tap was superseded');
+
+  // A tap now, and a confirmed success after the async work: two distinct moments.
+  vibrations.length = 0;
+  click(doc, node('button'));
+  await settle();
+  feedback.success();
+  assert.deepEqual(vibrations, [[8], [14, 40, 22]]);
+});
+
+test('default tap obeys preferences, hidden document and cold launch like every other feedback', async () => {
+  const off = setup();
+  off.feedback.setHapticsEnabled(false);
+  click(off.doc, node('button')); await settle();
+  assert.deepEqual(off.vibrations, []);
+
+  const hidden = setup({ doc: fakeDocument({ hidden: true }) });
+  click(hidden.doc, node('button')); await settle();
+  assert.deepEqual(hidden.vibrations, []);
+
+  const audio = fakeAudio();
+  const cold = setup({ audio });
+  click(cold.doc, node('button')); await settle();
+  assert.equal(audio.log.oscillators, 0, 'no sound before the first gesture unlocked audio');
+  cold.doc.fire('pointerdown');
+  click(cold.doc, node('button')); await settle();
+  assert.ok(audio.log.oscillators >= 1);
+});
+
+// ------------------------------------------------ attention from the shell
+
+function attentionHarness({ hidden = false } = {}) {
+  const { install } = require('../ui-foundation.js');
+  const audio = fakeAudio();
+  const doc = fakeDocument({ hidden });
+  const vibrations = [];
+  let clock = 1000;
+  const feedback = createFeedback({ navigator: { vibrate: (p) => { vibrations.push(p); return true; } }, document: doc, AudioContext: audio.AudioContext, localStorage: memoryStorage(), now: () => clock });
+  let observerCallback;
+  class Observer { constructor(cb) { this.cb = cb; } observe(t, o) { if (o.attributeFilter?.includes('data-us-attention')) observerCallback = this.cb; } disconnect() {} }
+  const bar = { offsetWidth: 0, setAttribute() {}, removeAttribute() {} };
+  const documentRef = Object.assign(doc, {
+    body: {}, documentElement: { setAttribute() {} }, querySelector: (s) => (s === '.top.us-premium-top' ? bar : null), querySelectorAll: () => [], removeEventListener() {}
+  });
+  const handle = install(documentRef, { matchMedia: () => ({ matches: false, addEventListener() {} }), MutationObserver: Observer, setTimeout: () => 1, clearTimeout() {}, UsFeedback: feedback });
+  const topTarget = (value) => ({ getAttribute: () => value, closest: (s) => (s === '.top.us-premium-top' ? {} : null) });
+  return { handle, feedback, vibrations, audio, doc, fire: (value, old) => observerCallback([{ target: topTarget(value), oldValue: old }]), advance: (ms) => { clock += ms; } };
+}
+
+test('top-bar attention: off -> on emits ONE attention feedback; on -> on and on -> off emit none', () => {
+  const h = attentionHarness();
+  h.doc.fire('pointerdown');
+  h.fire('on', 'off');
+  assert.deepEqual(h.vibrations, [[10, 50, 10]]);
+  h.fire('on', 'on');
+  h.fire('off', 'on');
+  assert.equal(h.vibrations.length, 1);
+  h.handle.destroy();
+});
+
+test('top-bar attention: a burst from several controls is still one event', () => {
+  const h = attentionHarness();
+  h.doc.fire('pointerdown');
+  h.fire('on', 'off'); h.fire('on', null);
+  assert.equal(h.vibrations.length, 1);
+  h.advance(5000);
+  h.fire('on', 'off');
+  assert.equal(h.vibrations.length, 2, 'a genuinely new transition later plays again');
+  h.handle.destroy();
+});
+
+test('top-bar attention: silent while hidden, before audio is unlocked, and when preferences are off', () => {
+  const hidden = attentionHarness({ hidden: true });
+  hidden.doc.fire('pointerdown');
+  hidden.fire('on', 'off');
+  assert.deepEqual(hidden.vibrations, []);
+  assert.equal(hidden.audio.log.oscillators, 0);
+
+  const cold = attentionHarness();
+  cold.fire('on', 'off');
+  assert.equal(cold.audio.log.contexts, 0, 'cold launch: no AudioContext, no sound');
+  assert.equal(cold.audio.log.oscillators, 0);
+
+  const muted = attentionHarness();
+  muted.doc.fire('pointerdown');
+  muted.feedback.setSoundsEnabled(false);
+  muted.feedback.setHapticsEnabled(false);
+  muted.fire('on', 'off');
+  assert.deepEqual(muted.vibrations, []);
+  assert.equal(muted.audio.log.oscillators, 0);
+});
+
+test('Ti penso does not double-fire: the explicit call and the shell transition share one attention event', () => {
+  const h = attentionHarness();
+  h.doc.fire('pointerdown');
+  h.feedback.attention(); // handleIncomingThink
+  h.fire('on', 'off');   // a top control reacting to the same arrival
+  assert.equal(h.vibrations.length, 1);
+  const app = read('app.js');
+  assert.equal((app.match(/UsFeedback\?\.attention\?\.\(\)/g) || []).length, 1, 'Ti penso keeps exactly one explicit call');
+  assert.match(read('ui-foundation.js'), /environment\.UsFeedback\?\.attention\?\.\(\)/);
 });
 
 test('no scattered vibration or audio APIs outside the feedback authority', () => {

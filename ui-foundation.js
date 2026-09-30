@@ -160,7 +160,12 @@
       for (const record of records) {
         const target = record.target;
         if (target?.getAttribute?.('data-us-attention') !== 'on' || record.oldValue === 'on') continue;
-        if (target.closest?.('.top.us-premium-top')) { auroraPulse(); break; }
+        if (target.closest?.('.top.us-premium-top')) {
+          // One generic reaction for any shell control: aurora + attention feedback.
+          auroraPulse();
+          try { environment.UsFeedback?.attention?.(); } catch (_) { /* feedback is never essential */ }
+          break;
+        }
       }
     }) : null;
     attentionObserver?.observe(documentRef.body, { subtree: true, attributes: true, attributeFilter: ['data-us-attention'], attributeOldValue: true });
@@ -353,6 +358,19 @@
     reveal: [[392, 0, 0.14, 0.04, 'sine'], [587.33, 0.1, 0.16, 0.045, 'sine'], [880, 0.22, 0.3, 0.05, 'sine'], [1760, 0.24, 0.26, 0.012, 'sine']]
   });
 
+  // Ordinary user interactions get a tap by default; data-us-feedback is only
+  // an override ("action", "success", ...) or an opt-out ("off").
+  const INTERACTIVE_SELECTOR = 'button, a[href], [role="button"], [role="tab"], [role="switch"], [role="menuitem"], summary';
+  function isFeedbackEligible(element) {
+    if (!element) return false;
+    if (element.disabled) return false;
+    const attr = (name) => element.getAttribute?.(name);
+    if (attr('aria-disabled') === 'true') return false;
+    if (element.hidden) return false;
+    if (element.closest?.('[inert], [hidden]')) return false;
+    return true;
+  }
+
   function createFeedback(environment = {}) {
     const navigatorRef = environment.navigator;
     const documentRef = environment.document;
@@ -417,7 +435,32 @@
       return false;
     }
 
-    const emit = (kind) => { const played = sound(kind); const vibrated = vibrate(kind); return played || vibrated; };
+    // A tap is deferred by one task so that an explicit, stronger feedback from
+    // the same gesture (action/success/reveal/attention) replaces it instead of
+    // stacking on top of it. Confirmed async results arrive later and play.
+    const timers = {
+      set: environment.setTimeout ? environment.setTimeout.bind(environment) : globalThis.setTimeout,
+      clear: environment.clearTimeout ? environment.clearTimeout.bind(environment) : globalThis.clearTimeout
+    };
+    const now = typeof environment.now === 'function' ? environment.now : () => Date.now();
+    const ATTENTION_GAP_MS = 1500;
+    let pendingTap = null;
+    let lastAttentionAt = -Infinity;
+    const cancelPendingTap = () => { if (pendingTap !== null) { timers.clear(pendingTap); pendingTap = null; } };
+    const emit = (kind) => {
+      if (kind !== 'tap') cancelPendingTap();
+      if (kind === 'attention') {
+        // The same arrival can be announced by more than one generic path: one event.
+        const at = now();
+        if (at - lastAttentionAt < ATTENTION_GAP_MS) return false;
+        lastAttentionAt = at;
+      }
+      const played = sound(kind); const vibrated = vibrate(kind); return played || vibrated;
+    };
+    const deferTap = () => {
+      if (pendingTap !== null) return;
+      pendingTap = timers.set(() => { pendingTap = null; emit('tap'); }, 0);
+    };
     const api = {
       tap: () => emit('tap'),
       action: () => emit('action'),
@@ -436,10 +479,19 @@
     if (documentRef?.addEventListener) {
       ['pointerdown', 'keydown', 'touchend'].forEach((type) => documentRef.addEventListener(type, unlock, { capture: true, passive: true, once: true }));
       documentRef.addEventListener('click', (event) => {
-        const host = event.target?.closest?.('[data-us-feedback]');
-        if (!host || host.disabled) return;
-        const kind = host.getAttribute('data-us-feedback');
-        if (HAPTIC_PROFILES[kind]) api[kind]();
+        if (event.isTrusted === false) return; // programmatic click(): not a user gesture
+        const target = event.target;
+        if (!target?.closest) return;
+        const control = target.closest(INTERACTIVE_SELECTOR);
+        const declared = target.closest('[data-us-feedback]');
+        // The nearest declaration wins; a control inside an "off" subtree stays silent.
+        const kind = declared ? declared.getAttribute('data-us-feedback') : 'tap';
+        if (kind === 'off') return;
+        // Only an interactive control (or a declared, focusable one) is a tap target.
+        const host = control || (declared?.hasAttribute?.('tabindex') ? declared : null);
+        if (!host || !isFeedbackEligible(host)) return;
+        if (!HAPTIC_PROFILES[kind]) return;
+        if (kind === 'tap') deferTap(); else api[kind]();
       }, true);
     }
     return api;

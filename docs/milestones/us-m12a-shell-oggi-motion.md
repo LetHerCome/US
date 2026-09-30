@@ -28,6 +28,15 @@ Question domain logic, push payloads, Auth, Sync or the private media cache.
   (Web Audio), only after a user gesture, never while hidden, never on cold
   launch. Preferences `us:feedback:sounds` / `us:feedback:haptics` (default on),
   one Settings row "Suoni e vibrazione". No custom push sound is promised.
+- Default tap: one delegated click listener gives every trusted click on a
+  `button`, `a[href]`, `[role=button|tab|switch|menuitem]` or `summary` a tap; disabled,
+  `aria-disabled=true`, hidden/inert and passive areas are silent. `data-us-feedback`
+  is only an override (`action`, `success`, ...) or an opt-out (`off`, also on a
+  container). The tap is deferred one task so an explicit stronger feedback from the
+  same gesture replaces it; a confirmed async success still plays afterwards.
+- Attention sound: a genuine off → on of `data-us-attention` on any top-bar control
+  calls `UsFeedback.attention()` next to the aurora reaction. Attention events are
+  deduplicated within 1.5 s, so a Ti penso arrival is one event.
 
 ## Oggi priority (app.js `UsOggi`)
 At most one primary and one quiet surface; lowest rank wins, ties by id;
