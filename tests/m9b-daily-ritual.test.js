@@ -30,7 +30,7 @@ function installRitual({ profiles = [], role = 'francesco' } = {}) {
 
 const question = { id: 'q-1', question: 'Cosa vorresti rifare con me?', question_date: '2026-09-29' };
 
-test('M9B: quattro stati reali — nessuno, io, partner, entrambi', () => {
+test('M9B/M10B: quattro stati reali — nessuno, io, partner, entrambi (copia compatta)', () => {
   const { api } = installRitual();
   const vm0 = (state) => api.viewModel({ question, state, partnerName: 'Beatrice' });
   const none = vm0({ my_answer: null, partner_has_answer: false, both_answered: false });
@@ -38,14 +38,16 @@ test('M9B: quattro stati reali — nessuno, io, partner, entrambi', () => {
   assert.equal(none.cta, 'Rispondi');
   const mine = vm0({ my_answer: 'La mia', partner_has_answer: false, both_answered: false });
   assert.equal(mine.state, 'waiting');
-  assert.equal(mine.status, 'Aspettiamo Beatrice');
+  assert.equal(mine.status, 'Risposto');
+  assert.equal(mine.cta, '');
   const invited = vm0({ my_answer: null, partner_has_answer: true, both_answered: false });
   assert.equal(invited.state, 'invited');
-  assert.equal(invited.status, 'La risposta di Beatrice ti aspetta');
+  assert.equal(invited.status, '');
   assert.equal(invited.cta, 'Rispondi');
   const reveal = vm0({ my_answer: 'La mia', partner_answer: 'La sua', partner_has_answer: true, both_answered: true });
   assert.equal(reveal.state, 'reveal');
-  assert.equal(reveal.cta, 'Scopri le risposte');
+  assert.equal(reveal.cta, 'Scopri');
+  assert.equal(none.status, '', 'M10B: nessun testo esplicativo nello stato normale');
   assert.equal(api.viewModel({ question: null, state: {}, partnerName: 'X' }), null);
   assert.equal(api.viewModel({ question, state: null, partnerName: 'X' }), null);
 });

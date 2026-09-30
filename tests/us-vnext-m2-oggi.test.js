@@ -39,15 +39,18 @@ function installPriorityRuntime({ eventSource } = {}) {
   return { api: window.UsTodayPriority, calls, listeners, region, window };
 }
 
-test('M2 colloca la priority region sopra l hero e la lascia strutturalmente vuota', () => {
+test('M2 colloca la priority region in cima a Oggi e la lascia strutturalmente vuota', () => {
   const html = read('index.html');
   const home = html.match(/<main id="home"[\s\S]*?<\/main>/)?.[0] || '';
   const region = '<div id="usTodayPriorityRegion" hidden aria-live="polite"></div>';
+  const stack = home.match(/<div class="us-oggi-stack" id="usOggiStack">[\s\S]*?\n      <\/div>/)?.[0] || '';
 
   assert.ok(home.indexOf(region) >= 0);
-  assert.ok(home.indexOf(region) < home.indexOf('id="homeHero"'));
+  // M10A: la priority region è la PRIMA voce della colonna Oggi.
+  assert.ok(stack.indexOf(region) >= 0);
+  assert.ok(stack.indexOf(region) < stack.indexOf('id="usOggiCalendarWidget"'));
   assert.match(read('styles.css'), /\.us-today-priority-card[\s\S]{0,500}min-height:44px/);
-  assert.match(read('styles.css'), /#usTodayPriorityRegion\{position:absolute/);
+  assert.match(read('styles.css'), /\.us-oggi-stack\{position:absolute/);
   assert.match(read('styles.css'), /#usTodayPriorityRegion\{[\s\S]*pointer-events:none/);
 });
 

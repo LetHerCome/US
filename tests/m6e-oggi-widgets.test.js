@@ -254,9 +254,10 @@ test('M6E (13): styles fade the exact three hero widgets under Focus Photo, and 
 });
 
 test('M6E polish: mobile Oggi widget sits just below the safe-area-aware top bar without changing desktop positioning', () => {
+  // M10A: the same offsets now position the Oggi stack that holds the widget.
   const css = read('styles.css');
-  assert.match(css, /\.us-oggi-widgets\{[^}]*top:calc\(var\(--us-top-chrome-clearance\) \+ 64px\)/);
-  const mobile = css.match(/@media\(max-width:600px\)\{[^}]*\.us-oggi-widgets\{[^}]*\}\}/)?.[0] || '';
+  assert.match(css, /\.us-oggi-stack\{[^}]*top:calc\(var\(--us-top-chrome-clearance\) \+ 64px\)/);
+  const mobile = css.match(/@media\(max-width:600px\)\{[^}]*\.us-oggi-stack\{[^}]*\}\}/)?.[0] || '';
   assert.match(mobile, /top:calc\(var\(--us-top-chrome-height\) \+ 20px\)/);
   assert.match(read('ui-foundation.css'), /--us-safe-top:var\(--safe-area-inset-top,env\(safe-area-inset-top,0px\)\)/);
 });
