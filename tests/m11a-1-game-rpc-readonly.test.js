@@ -11,7 +11,7 @@ const { PGlite } = require('@electric-sql/pglite');
 
 const ROOT = path.resolve(__dirname, '..');
 const M11A = path.join(ROOT, 'supabase/migrations/20260930105724_m11a_game_sessions_custom_questions.sql');
-const HOTFIX = path.join(ROOT, 'supabase/migrations/20260930120000_m11a_1_game_rpc_readonly_actor.sql');
+const HOTFIX = path.join(ROOT, 'supabase/migrations/20260930121312_m11a_1_game_rpc_readonly_actor.sql');
 const id = () => randomUUID();
 
 const FIXTURE = `
