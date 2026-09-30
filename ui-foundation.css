@@ -2,23 +2,84 @@
 @font-face{font-family:"Inter";src:url("/assets/fonts/Inter-Variable.woff2") format("woff2");font-style:normal;font-weight:100 900;font-display:swap}
 
 :root {
+  /* ==========================================================================
+     US canonical tokens (US-UI-UNIFICATION-01). This block is the ONE palette,
+     surface, radius, spacing, type and motion authority for the whole PWA.
+     Feature stylesheets consume these tokens; they do not define their own
+     :root palettes. Legacy names at the end are aliases, never new values.
+     ========================================================================== */
+
+  /* Colour — near-black plum canvas, warm light text, rose + violet accent. */
+  --us-color-bg:#08040e;                 /* brand canvas (manifest theme) */
+  --us-color-surface:#120e17;            /* raised content */
+  --us-color-surface-2:#17131d;
+  --us-color-elevated:#1d1824;           /* controls on a surface */
+  --us-color-sheet:#141019;              /* opaque fallback for sheets */
+  --us-color-text:#f7f2f8;
+  --us-color-text-2:rgba(247,242,248,.70);
+  --us-color-text-3:rgba(247,242,248,.50);
+  --us-color-text-on-accent:#fff;
+  --us-color-rose:#ff668e;
+  --us-color-rose-2:#ff8eaa;
+  --us-color-violet:#a985ff;
+  --us-color-plum:#28142f;
+  --us-color-accent-ink:#dcbfe8;         /* eyebrows, accent text, icons */
+  --us-color-accent-soft:rgba(169,133,255,.13);
+  --us-color-accent-line:rgba(214,176,232,.26);
+  --us-color-accent-strong:#c99ae0;      /* selected borders, focus */
+  --us-color-line:rgba(255,255,255,.08);
+  --us-color-line-strong:rgba(255,255,255,.14);
+  --us-color-positive:#72c998;
+  --us-color-warning:#f2b872;
+  --us-color-danger:#e45a68;
+  --us-color-danger-ink:#ffadb6;
+  --us-color-locked:rgba(247,242,248,.42);
+  --us-accent-gradient:linear-gradient(135deg,#ff668e 0%,#ff86a4 46%,#a985ff 130%);
+  --us-accent-shadow:0 8px 22px rgba(255,102,142,.14);
+
+  /* Surfaces — three glass levels. Glass is identity, not decoration:
+     L1 groups content, L2 is an interactive card, L3 floats (sheet/popup). */
+  --us-glass-1-bg:rgba(255,255,255,.035);
+  --us-glass-1-border:1px solid rgba(255,255,255,.07);
+  --us-glass-2-bg:linear-gradient(150deg,rgba(255,255,255,.055),rgba(255,255,255,.022));
+  --us-glass-2-border:1px solid rgba(255,255,255,.09);
+  --us-glass-2-shadow:0 10px 28px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.05);
+  --us-glass-2-blur:blur(14px) saturate(1.15);
+  --us-glass-3-bg:linear-gradient(165deg,rgba(255,255,255,.055),rgba(255,255,255,0) 34%),radial-gradient(120% 80% at 88% -6%,rgba(155,124,255,.12),transparent 52%),radial-gradient(130% 90% at 0% 106%,rgba(246,111,158,.11),transparent 52%),linear-gradient(150deg,rgba(40,31,46,.58),rgba(17,14,24,.66));
+  --us-glass-3-border:1px solid rgba(255,255,255,.13);
+  --us-glass-3-blur:blur(28px) saturate(1.35);
+  --us-glass-3-shadow:0 34px 90px rgba(0,0,0,.55),0 8px 26px rgba(18,9,28,.38),inset 0 1px 0 rgba(255,255,255,.11),inset 0 -1px 0 rgba(155,124,255,.07);
+  --us-glass-3-shadow-up:0 -26px 80px rgba(0,0,0,.55),0 -6px 22px rgba(18,9,28,.38),inset 0 1px 0 rgba(255,255,255,.11),inset 0 -1px 0 rgba(155,124,255,.07);
+  --us-glass-3-edge:linear-gradient(90deg,transparent,rgba(255,255,255,.34) 30%,rgba(228,200,255,.30) 70%,transparent);
+  /* Sticky sheet header: occludes scrolled content, keeps the glass tint. */
+  --us-sheet-head-bg:linear-gradient(180deg,rgba(28,22,34,.92),rgba(20,16,26,.86));
+  --us-sheet-head-blur:blur(20px) saturate(1.2);
+  /* One scrim for every overlay: the page stays perceptible underneath. */
+  --us-scrim:rgba(6,3,10,.44);
+  --us-scrim-blur:blur(6px);
+
+  /* Fields — one recipe for inputs and textareas. */
+  --us-field-bg:rgba(255,255,255,.045);
+  --us-field-border:1px solid rgba(255,255,255,.10);
+  --us-field-focus:0 0 0 3px rgba(201,154,224,.22);
+
   /* M1 shell authority: Midnight Correspondence typography and palette. */
-  --us-ink:#f7f2f8;
+  --us-ink:var(--us-color-text);
   --us-graphite:#121016;
-  --us-plum:#28142f;
+  --us-plum:var(--us-color-plum);
   --us-porpora:#6e356f;
   --us-pink:#f66f9e;
   --us-magenta:#d64bda;
-  --us-violet:#8b72f8;
-  --us-red:#e45a68;
+  --us-violet:var(--us-color-violet);
+  --us-red:var(--us-color-danger);
   --us-blue:#5b8def;
-  --us-text:#f7f2f8;
-  --us-muted:rgba(247,242,248,.68);
+  --us-text:var(--us-color-text);
+  --us-muted:var(--us-color-text-2);
   --us-font-editorial:"Newsreader",Georgia,serif;
   --us-font-ui:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   --us-top-chrome-height:56px;
   --us-top-chrome-clearance:68px;
-  /* Existing dominant values, named for gradual component adoption. */
+  /* Spacing: compact 8 · standard 12 · section 18 · page 16 gutter. */
   --us-space-1:4px;
   --us-space-2:8px;
   --us-space-3:10px;
@@ -27,35 +88,46 @@
   --us-space-6:18px;
   --us-space-7:22px;
   --us-space-8:24px;
+  --us-space-compact:var(--us-space-2);
+  --us-space-standard:var(--us-space-4);
+  --us-space-section:var(--us-space-6);
+  --us-space-page:var(--us-space-5);
+  /* Radii: small badge · control (buttons, fields, rows) · card · sheet. */
+  --us-radius-sm:10px;
   --us-radius-control:15px;
   --us-radius-card:20px;
   --us-radius-sheet:29px;
   --us-radius-pill:999px;
-  --us-surface-canvas:#0b0d12;
-  --us-surface-card:#171a23;
-  --us-surface-elevated:#1b202a;
-  --us-surface-sheet:#141821;
+  --us-surface-canvas:var(--us-color-bg);
+  --us-surface-card:var(--us-color-surface);
+  --us-surface-elevated:var(--us-color-elevated);
+  --us-surface-sheet:var(--us-color-sheet);
   --us-shadow-card:0 10px 28px rgba(0,0,0,.18);
   --us-shadow-sheet:0 -24px 70px rgba(0,0,0,.5);
+  /* Motion: press · micro · fast · base · surface enter · surface exit. */
   --us-motion-press:90ms;
   --us-motion-micro:140ms;
   --us-motion-fast:180ms;
   --us-motion-base:220ms;
   --us-motion-surface:260ms;
+  --us-motion-exit:200ms;
   --us-motion-immersive:300ms;
   --us-motion-photo:360ms;
   --us-motion-photo-slow:420ms;
-  /* Compatibility aliases keep deferred feature motion visually unchanged. */
-  --us-motion-legacy-fast:160ms;
-  --us-motion-legacy-base:200ms;
-  /* Kept until sheet-specific motion is migrated in a later milestone. */
-  --us-motion-sheet:.24s;
+  --us-motion-sheet:var(--us-motion-surface);
   --us-ease-standard:cubic-bezier(.22,.78,.24,1);
   --us-ease-enter:cubic-bezier(.16,1,.3,1);
   --us-ease-exit:cubic-bezier(.4,0,1,1);
+  /* Type: page title · section title · card title · body · secondary · meta · eyebrow. */
+  --us-type-page:26px;
+  --us-type-section:19px;
+  --us-type-card:15px;
+  --us-type-body:14px;
   --us-text-secondary:12px;
   --us-text-meta:11px;
   --us-text-decorative:9px;
+  --us-type-eyebrow:10px;
+  --us-type-eyebrow-tracking:.14em;
   --us-safe-top:var(--safe-area-inset-top,env(safe-area-inset-top,0px));
   --us-safe-right:var(--safe-area-inset-right,env(safe-area-inset-right,0px));
   --us-safe-bottom:var(--safe-area-inset-bottom,env(safe-area-inset-bottom,0px));
@@ -71,6 +143,42 @@
   --us-premium-shadow:0 18px 50px rgba(0,0,0,.34);
   --us-premium-inner-highlight:inset 0 1px 0 rgba(255,255,255,.055);
   --us-premium-active-glow:0 0 16px rgba(255,116,184,.30),0 0 32px rgba(176,116,255,.13);
+
+  /* Popup material names used by feature sheets (L3 aliases). */
+  --us-glass-dim:var(--us-scrim);
+  --us-glass-dim-blur:var(--us-scrim-blur);
+  --us-glass-blur:var(--us-glass-3-blur);
+  --us-glass-surface:var(--us-glass-3-bg);
+  --us-glass-border:var(--us-glass-3-border);
+  --us-glass-shadow-sheet:var(--us-glass-3-shadow);
+  --us-glass-shadow-bottom:var(--us-glass-3-shadow-up);
+  --us-glass-top-edge:var(--us-glass-3-edge);
+  --us-glass-inner-surface:var(--us-glass-2-bg);
+  --us-glass-inner-border:var(--us-glass-2-border);
+  --us-glass-inner-highlight:inset 0 1px 0 rgba(255,255,255,.055);
+
+  /* Legacy names (styles.css / identity.css era): aliases only. */
+  --bg:var(--us-color-bg);
+  --card:var(--us-color-surface);
+  --card2:var(--us-color-surface-2);
+  --text:var(--us-color-text);
+  --muted:var(--us-color-text-2);
+  --pink:var(--us-color-rose);
+  --pink2:var(--us-color-rose-2);
+  --violet:var(--us-color-violet);
+  --accent:var(--us-color-warning);
+  --green:var(--us-color-positive);
+  --border:var(--us-color-line);
+  --shadow:0 18px 50px rgba(0,0,0,.34);
+  --glass:rgba(18,15,24,.66);
+  --glass-border:var(--us-color-line-strong);
+  --apple-ease:var(--us-ease-standard);
+  --us-bg:var(--us-color-bg);
+  --us-surface:var(--us-color-surface);
+  --us-surface-2:var(--us-color-surface-2);
+  --us-line:var(--us-color-line);
+  --us-serif:var(--us-font-editorial);
+  --us-sans:var(--us-font-ui);
 }
 
 :where(button:not(:disabled):not([data-us-motion-tap="off"])) {
@@ -126,6 +234,7 @@
   --us-motion-fast:1ms;
   --us-motion-base:1ms;
   --us-motion-surface:1ms;
+  --us-motion-exit:1ms;
   --us-motion-immersive:1ms;
   --us-motion-photo:1ms;
   --us-motion-photo-slow:1ms;
@@ -146,6 +255,7 @@
     --us-motion-fast:1ms;
     --us-motion-base:1ms;
     --us-motion-surface:1ms;
+    --us-motion-exit:1ms;
     --us-motion-immersive:1ms;
     --us-motion-photo:1ms;
     --us-motion-photo-slow:1ms;
@@ -169,14 +279,15 @@
   -webkit-tap-highlight-color:transparent;
 }
 
-.nav button:focus-visible {
-  outline:2px solid rgba(232,138,162,.62);
-  outline-offset:-2px;
+/* One focus ring for the whole product (zero specificity: a component may
+   only move it, e.g. inset inside the nav pill). */
+:where(button,a[href],summary,[role="button"],[role="tab"],[tabindex]:not([tabindex="-1"])):focus-visible {
+  outline:2px solid var(--us-color-accent-strong);
+  outline-offset:2px;
 }
 
-.us-modal-close:focus-visible {
-  outline:2px solid rgba(232,138,162,.62);
-  outline-offset:2px;
+.nav button:focus-visible {
+  outline-offset:-2px;
 }
 
 /* Shared centering for round/glyph icon buttons — size, color, and position stay with the caller. */
@@ -245,5 +356,295 @@ h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
     padding:var(--us-attention-width-static,2px);
     background:linear-gradient(135deg,rgba(255,140,184,.72),rgba(184,150,255,.52));
     transition:none;
+  }
+}
+
+/* ==========================================================================
+   US canonical primitives (US-UI-UNIFICATION-01)
+   Small on purpose: icon, eyebrow, buttons, fields, chip/segment, close,
+   scrim, sheet material, confirmation. Feature files consume them and keep
+   only layout and personality (a photo, a tint), never their own recipe.
+   ========================================================================== */
+
+/* Icon: official Phosphor SVG painted as a mask, never redrawn. */
+.us-icon {
+  display:inline-block;
+  flex:0 0 auto;
+  width:var(--us-icon-size,20px);
+  height:var(--us-icon-size,20px);
+  background-color:currentColor;
+  -webkit-mask:var(--us-icon-src) center/contain no-repeat;
+  mask:var(--us-icon-src) center/contain no-repeat;
+  pointer-events:none;
+}
+.us-icon[data-us-icon="x"]{--us-icon-src:url("/assets/icons/phosphor/x-regular.svg")}
+.us-icon[data-us-icon="caret-left"]{--us-icon-src:url("/assets/icons/phosphor/caret-left-regular.svg")}
+.us-icon[data-us-icon="caret-right"]{--us-icon-src:url("/assets/icons/phosphor/caret-right-regular.svg")}
+.us-icon[data-us-icon="caret-down"]{--us-icon-src:url("/assets/icons/phosphor/caret-down-regular.svg")}
+.us-icon[data-us-icon="plus"]{--us-icon-src:url("/assets/icons/phosphor/plus-regular.svg")}
+.us-icon[data-us-icon="bell"]{--us-icon-src:url("/assets/icons/phosphor/bell-regular.svg")}
+.us-icon[data-us-icon="map-pin"]{--us-icon-src:url("/assets/icons/phosphor/map-pin-regular.svg")}
+.us-icon[data-us-icon="arrows-clockwise"]{--us-icon-src:url("/assets/icons/phosphor/arrows-clockwise-regular.svg")}
+.us-icon[data-us-icon="arrows-left-right"]{--us-icon-src:url("/assets/icons/phosphor/arrows-left-right-regular.svg")}
+.us-icon[data-us-icon="user-circle"]{--us-icon-src:url("/assets/icons/phosphor/user-circle-regular.svg")}
+.us-icon[data-us-icon="image"]{--us-icon-src:url("/assets/icons/phosphor/image-regular.svg")}
+.us-icon[data-us-icon="calendar-heart"]{--us-icon-src:url("/assets/icons/phosphor/calendar-heart-regular.svg")}
+.us-icon[data-us-icon="clock-counter-clockwise"]{--us-icon-src:url("/assets/icons/phosphor/clock-counter-clockwise-regular.svg")}
+.us-icon[data-us-icon="heart"]{--us-icon-src:url("/assets/icons/phosphor/heart-straight-regular.svg")}
+.us-icon[data-us-icon="envelope"]{--us-icon-src:url("/assets/icons/phosphor/envelope-simple-regular.svg")}
+.us-icon[data-us-icon="lock"]{--us-icon-src:url("/assets/icons/phosphor/lock-simple-regular.svg")}
+.us-icon[data-us-icon="sparkle"]{--us-icon-src:url("/assets/icons/phosphor/sparkle-regular.svg")}
+.us-icon[data-us-icon="check"]{--us-icon-src:url("/assets/icons/phosphor/check-regular.svg")}
+.us-icon[data-us-icon="music-note"]{--us-icon-src:url("/assets/icons/phosphor/music-note-regular.svg")}
+.us-icon[data-us-icon="pencil"]{--us-icon-src:url("/assets/icons/phosphor/pencil-simple-regular.svg")}
+
+/* Eyebrow: the small uppercase label above a title, one voice everywhere. */
+.tiny,
+.us-eyebrow {
+  display:block;
+  font-family:var(--us-font-ui);
+  font-size:var(--us-type-eyebrow);
+  font-weight:750;
+  line-height:1.3;
+  letter-spacing:var(--us-type-eyebrow-tracking);
+  text-transform:uppercase;
+  color:var(--us-color-accent-ink);
+  opacity:.82;
+}
+
+/* Buttons: primary · secondary (.ghost) · quiet · danger · icon. */
+.primary {
+  background:var(--us-accent-gradient);
+  color:var(--us-color-text-on-accent);
+  box-shadow:var(--us-accent-shadow);
+}
+.ghost,
+.us-btn-secondary {
+  background:rgba(255,255,255,.07);
+  color:var(--us-color-text);
+  box-shadow:inset 0 0 0 1px var(--us-color-line-strong);
+}
+.us-btn-quiet {
+  background:transparent;
+  color:var(--us-color-accent-ink);
+  box-shadow:none;
+}
+.us-btn-danger {
+  background:rgba(228,90,104,.12);
+  color:var(--us-color-danger-ink);
+  box-shadow:inset 0 0 0 1px rgba(228,90,104,.30);
+}
+.us-icon-button {
+  width:44px;
+  height:44px;
+  min-width:44px;
+  padding:0;
+  display:inline-grid;
+  place-items:center;
+  border-radius:50%;
+  background:var(--us-glass-2-bg);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.10),inset 0 1px 0 rgba(255,255,255,.055);
+  color:var(--us-color-text);
+}
+:where(button):disabled,
+:where(button)[aria-disabled="true"] {
+  cursor:not-allowed;
+}
+:where(.primary,.ghost,.us-btn-secondary,.us-btn-quiet,.us-btn-danger,.us-icon-button):disabled {
+  opacity:.46;
+  box-shadow:none;
+}
+
+/* Fields: one surface for every input and textarea. Zero specificity so a
+   feature may still set layout; colour and border come from here. */
+:where(textarea,input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"])) {
+  background:var(--us-field-bg);
+  border:var(--us-field-border);
+  border-radius:var(--us-radius-control);
+  color:var(--us-color-text);
+  transition:border-color var(--us-motion-micro) var(--us-ease-standard),box-shadow var(--us-motion-micro) var(--us-ease-standard);
+}
+:where(textarea,input)::placeholder {
+  color:var(--us-color-text-3);
+}
+:where(textarea,input:not([type="checkbox"]):not([type="radio"])):focus-visible {
+  outline:none;
+  border-color:var(--us-color-accent-strong);
+  box-shadow:var(--us-field-focus);
+}
+:where(input[type="checkbox"],input[type="radio"]) {
+  accent-color:var(--us-color-accent-strong);
+}
+
+/* Chip and segmented control: pill track, selected = accent soft. */
+.us-chip {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:32px;
+  padding:0 12px;
+  border-radius:var(--us-radius-pill);
+  background:var(--us-glass-1-bg);
+  box-shadow:inset 0 0 0 1px var(--us-color-line);
+  color:var(--us-color-text-2);
+  font-size:var(--us-text-secondary);
+  font-weight:650;
+}
+.us-segment {
+  display:flex;
+  gap:4px;
+  padding:4px;
+  border-radius:var(--us-radius-pill);
+  background:var(--us-glass-1-bg);
+  box-shadow:inset 0 0 0 1px var(--us-color-line);
+}
+.us-segment>button {
+  flex:1 1 0;
+  min-height:40px;
+  padding:0 14px;
+  border-radius:var(--us-radius-pill);
+  background:transparent;
+  color:var(--us-color-text-2);
+  font-size:13px;
+  font-weight:650;
+  transition:background var(--us-motion-micro) var(--us-ease-standard),color var(--us-motion-micro) var(--us-ease-standard);
+}
+.us-chip[aria-pressed="true"],
+.us-chip.is-active,
+.us-segment>button.is-active,
+.us-segment>button[aria-pressed="true"],
+.us-segment>button[aria-selected="true"] {
+  background:var(--us-color-accent-soft);
+  box-shadow:inset 0 0 0 1px var(--us-color-accent-line);
+  color:var(--us-color-text);
+}
+
+/* Close: one button for every popup, sheet and viewer (Phosphor X). */
+.us-modal-close {
+  width:44px;
+  height:44px;
+  padding:0;
+  flex:0 0 auto;
+  display:inline-grid;
+  place-items:center;
+  border:0;
+  border-radius:50%;
+  background:var(--us-glass-2-bg);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.10),inset 0 1px 0 rgba(255,255,255,.055);
+  -webkit-backdrop-filter:blur(10px) saturate(1.2);
+  backdrop-filter:blur(10px) saturate(1.2);
+  color:var(--us-color-text);
+  font-size:0;
+  line-height:0;
+}
+.us-modal-close>.us-icon{--us-icon-size:18px}
+.us-modal-close:not(:has(.us-icon))::before {
+  content:"";
+  width:18px;
+  height:18px;
+  background-color:currentColor;
+  -webkit-mask:url("/assets/icons/phosphor/x-regular.svg") center/contain no-repeat;
+  mask:url("/assets/icons/phosphor/x-regular.svg") center/contain no-repeat;
+}
+/* Over a photo or a camera feed the same button darkens for contrast. */
+.us-modal-close.is-on-media {
+  background:rgba(8,4,14,.42);
+}
+
+/* Scrim: the one overlay behind every popup and sheet. */
+.us-modal-backdrop {
+  background:var(--us-scrim);
+  -webkit-backdrop-filter:var(--us-scrim-blur);
+  backdrop-filter:var(--us-scrim-blur);
+}
+
+/* Sheet: the floating material (glass level 3). The approved baseline is the
+   Left for You composer; every popup, sheet and confirmation shares it. */
+.us-sheet {
+  position:relative;
+  background:var(--us-glass-3-bg);
+  border:var(--us-glass-3-border);
+  box-shadow:var(--us-glass-3-shadow);
+  -webkit-backdrop-filter:var(--us-glass-3-blur);
+  backdrop-filter:var(--us-glass-3-blur);
+  color:var(--us-color-text);
+}
+.us-sheet::before {
+  content:"";
+  position:absolute;
+  top:0;
+  left:14px;
+  right:14px;
+  height:1px;
+  background:var(--us-glass-3-edge);
+  pointer-events:none;
+  z-index:1;
+}
+/* Bottom-anchored sheets cast their shadow upward and open at the top only. */
+.us-sheet.is-bottom {
+  border-radius:var(--us-radius-sheet) var(--us-radius-sheet) 0 0;
+  border-bottom:0;
+  box-shadow:var(--us-glass-3-shadow-up);
+}
+.us-sheet.is-floating {
+  border-radius:var(--us-radius-sheet);
+}
+/* Sheet header: eyebrow + editorial title + close, same rhythm everywhere. */
+.us-sheet-title {
+  margin:4px 0 0;
+  font-family:var(--us-font-editorial);
+  font-size:24px;
+  font-weight:500;
+  line-height:1.15;
+  letter-spacing:-.3px;
+  color:var(--us-color-text);
+}
+
+/* Confirmation (UsUiFoundation.confirm): a small floating sheet. */
+.us-confirm {
+  position:fixed;
+  inset:0;
+  z-index:10300;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  padding:0 max(12px,var(--us-safe-right)) calc(max(12px,var(--us-safe-bottom)) + 8px) max(12px,var(--us-safe-left));
+}
+.us-confirm .us-modal-backdrop {
+  position:absolute;
+  inset:0;
+}
+.us-confirm-sheet {
+  width:min(100%,420px);
+  padding:22px 20px 18px;
+  border-radius:var(--us-radius-sheet);
+}
+.us-confirm-sheet h3 {
+  margin:6px 0 0;
+  font-family:var(--us-font-editorial);
+  font-size:22px;
+  font-weight:500;
+  line-height:1.2;
+  color:var(--us-color-text);
+  overflow-wrap:anywhere;
+}
+.us-confirm-sheet p {
+  margin:8px 0 0;
+  color:var(--us-color-text-2);
+  font-size:13px;
+  line-height:1.5;
+}
+.us-confirm-actions {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);
+  gap:9px;
+  margin-top:18px;
+}
+.us-confirm-actions button {
+  min-height:48px;
+}
+@media (min-width:700px) {
+  .us-confirm {
+    align-items:center;
   }
 }

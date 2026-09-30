@@ -332,21 +332,19 @@ test('il foglio fondazionale espone token conservativi e target comuni da 44px',
   assert.match(css, /\.us-modal-close[\s\S]*min-width:44px;[\s\S]*min-height:44px/);
 });
 
-test('i token motion legacy preservano le superfici rinviate alle milestone successive', () => {
+test('i token motion legacy sono ritirati: ogni superficie usa il contratto motion condiviso', () => {
   const foundation = fs.readFileSync(path.join(ROOT, 'ui-foundation.css'), 'utf8');
   const settings = fs.readFileSync(path.join(ROOT, 'settings.css'), 'utf8');
   const events = fs.readFileSync(path.join(ROOT, 'events.css'), 'utf8');
   const games = fs.readFileSync(path.join(ROOT, 'games.css'), 'utf8');
 
-  assert.match(foundation, /--us-motion-legacy-fast:160ms/);
-  assert.match(foundation, /--us-motion-legacy-base:200ms/);
-  // Ti Penso now uses the shared M5A feedback tokens; only the deferred
-  // Settings sheet still intentionally consumes the legacy motion contract.
+  // US-UI-UNIFICATION-01: Settings and Events sheets now enter/exit through
+  // [data-us-motion-surface] like every other popup; the legacy pair is gone.
+  for (const css of [foundation, settings, events, games]) assert.doesNotMatch(css, /--us-motion-legacy/);
+  assert.match(foundation, /--us-motion-exit:200ms/);
   assert.match(settings, /var\(--us-motion-base\)/);
-  assert.match(settings, /var\(--us-motion-legacy-base\)/);
-  assert.match(events, /var\(--us-motion-legacy-base\)/);
-  // M11B rebuilt Gioca on the shared motion tokens: the legacy contract is gone there.
-  assert.doesNotMatch(games, /--us-motion-legacy/);
+  assert.doesNotMatch(settings, /usSettingsUp/);
+  assert.doesNotMatch(events, /usEventsUp/);
   assert.match(games, /var\(--us-motion-(press|base)\)/);
 });
 

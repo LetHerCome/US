@@ -9,7 +9,7 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 test('M5G8 camera surface is registered in the existing modal foundation', () => {
   const html = read('index.html');
   assert.match(html, /id="leftForYouCameraOverlay"[^>]*data-us-modal[^>]*data-us-motion-surface/);
-  assert.match(html, /class="left-for-you-sheet left-for-you-camera-sheet"[^>]*data-us-modal-panel/);
+  assert.match(html, /class="left-for-you-sheet left-for-you-camera-sheet[^"]*"[^>]*data-us-modal-panel/);
   assert.match(html, /id="leftForYouCameraClose"[^>]*data-us-modal-close/);
 });
 

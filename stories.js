@@ -83,7 +83,7 @@
         </div>
         <img class="us-story-media" id="usStoryMedia" alt="Story privata" hidden>
         <div class="us-story-top"><div class="us-story-progress" id="usStoryProgress"></div><div class="us-story-author-row"><span class="us-story-author-text"><b id="usStoryAuthorName">US.</b><small id="usStoryTime"></small></span></div></div>
-        <button type="button" class="us-story-close us-modal-close" id="usStoryClose" aria-label="Chiudi" data-us-modal-close>×</button>
+        <button type="button" class="us-story-close us-modal-close is-on-media" id="usStoryClose" aria-label="Chiudi" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
         <button type="button" class="us-story-delete" id="usStoryDelete" aria-label="Elimina questa Story" hidden>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 9v8m4-8v8m4-8v8M5 6h14m-2 0-1 14H8L7 6m3-3h4l1 3H9z"/></svg>
         </button>
@@ -108,12 +108,13 @@
       confirmation.setAttribute('data-us-modal','');
       confirmation.innerHTML = `
         <div class="us-story-delete-backdrop us-modal-backdrop" id="usStoryDeleteBackdrop"></div>
-        <section class="us-story-delete-sheet" role="dialog" aria-modal="true" aria-labelledby="usStoryDeleteTitle" data-us-modal-panel>
+        <section class="us-story-delete-sheet us-sheet us-confirm-sheet" role="dialog" aria-modal="true" aria-labelledby="usStoryDeleteTitle" data-us-modal-panel>
+          <span class="us-eyebrow">STORIES</span>
           <h2 id="usStoryDeleteTitle">Eliminare questa Story?</h2>
           <p>Scomparirà subito dal vostro spazio condiviso.</p>
-          <div class="us-story-delete-actions">
+          <div class="us-story-delete-actions us-confirm-actions">
             <button type="button" class="ghost" id="usStoryDeleteCancel" data-us-modal-close>Annulla</button>
-            <button type="button" class="us-story-delete-confirm-btn" id="usStoryDeleteConfirmBtn">Elimina</button>
+            <button type="button" class="us-story-delete-confirm-btn us-btn-danger" id="usStoryDeleteConfirmBtn">Elimina</button>
           </div>
         </section>
       `;
@@ -137,7 +138,7 @@
         <video class="us-camera-video" id="usCameraVideo" playsinline autoplay muted></video>
         <img class="us-camera-switch-frame" id="usCameraSwitchFrame" alt="" aria-hidden="true" hidden>
         <div class="us-camera-shade"></div>
-        <div class="us-camera-top"><button type="button" class="us-camera-icon-btn us-modal-close" id="usCameraClose" aria-label="Chiudi fotocamera" data-us-modal-close>×</button><div class="us-camera-title">Story privata · foto</div><button type="button" class="us-camera-manage" id="usCameraManage" aria-label="Gestisci le tue Stories" hidden><svg viewBox="0 0 18 6" aria-hidden="true"><circle cx="3" cy="3" r="2"/><circle cx="9" cy="3" r="2"/><circle cx="15" cy="3" r="2"/></svg></button></div>
+        <div class="us-camera-top"><button type="button" class="us-camera-icon-btn us-modal-close is-on-media" id="usCameraClose" aria-label="Chiudi fotocamera" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button><div class="us-camera-title">Story privata · foto</div><button type="button" class="us-camera-manage" id="usCameraManage" aria-label="Gestisci le tue Stories" hidden><svg viewBox="0 0 18 6" aria-hidden="true"><circle cx="3" cy="3" r="2"/><circle cx="9" cy="3" r="2"/><circle cx="15" cy="3" r="2"/></svg></button></div>
         <div class="us-camera-feedback" role="status" aria-live="polite"><span id="usCameraStatus">Inquadra e scatta</span><button type="button" class="us-camera-retry" id="usCameraRetry" hidden>Riprova</button></div>
         <div class="us-camera-bottom"><span></span><button type="button" class="us-camera-capture" id="usCameraCapture" aria-label="Scatta foto"></button><button type="button" class="us-camera-flip" id="usCameraFlip" aria-label="Cambia fotocamera"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M6.1 9a7 7 0 0 1 11.5-2.4L20 9M4 15l2.4 2.4A7 7 0 0 0 17.9 15"/></svg></button></div>
       `;
@@ -159,7 +160,7 @@
       preview.setAttribute('aria-label','Anteprima profilo');
       preview.setAttribute('data-us-modal','');
       preview.setAttribute('data-us-modal-panel','');
-      preview.innerHTML = `<button type="button" class="us-profile-preview-close us-modal-close" id="usProfilePreviewClose" aria-label="Chiudi" data-us-modal-close>×</button><img class="us-profile-preview-photo" id="usProfilePreviewImg" alt="Foto profilo" hidden><div class="us-profile-preview-fallback" id="usProfilePreviewFallback" hidden>♡</div><div class="us-profile-preview-name" id="usProfilePreviewName"></div><div class="us-profile-preview-sub">solo voi due ♡</div>`;
+      preview.innerHTML = `<button type="button" class="us-profile-preview-close us-modal-close is-on-media" id="usProfilePreviewClose" aria-label="Chiudi" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button><img class="us-profile-preview-photo" id="usProfilePreviewImg" alt="Foto profilo" hidden><div class="us-profile-preview-fallback" id="usProfilePreviewFallback" hidden>♡</div><div class="us-profile-preview-name" id="usProfilePreviewName"></div><div class="us-profile-preview-sub">solo voi due ♡</div>`;
       document.body.appendChild(preview);
       preview.addEventListener('click', (event) => { if (event.target === preview) closeProfilePreview(); });
       document.getElementById('usProfilePreviewClose')?.addEventListener('click', closeProfilePreview);

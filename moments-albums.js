@@ -27,7 +27,7 @@ function ensureUi(){
   document.body.insertAdjacentHTML('beforeend',`
     <div class="us-album-overlay" id="usAlbumOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
       <div class="us-album-shell" role="dialog" aria-modal="true" aria-label="Album del Moment" data-us-modal-panel>
-        <button type="button" class="us-album-close us-modal-close" id="usAlbumClose" aria-label="Chiudi album" data-us-modal-close>‹</button>
+        <button type="button" class="us-album-close us-modal-close is-on-media" id="usAlbumClose" aria-label="Chiudi album" data-us-modal-close><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span></button>
         <div class="us-album-scroll" id="usAlbumScroll">
           <div class="us-album-cover-stage"><img id="usAlbumCover" alt="Foto principale del Moment"></div>
           <div class="us-album-info">
@@ -42,7 +42,7 @@ function ensureUi(){
           <section class="us-album-section">
             <div class="us-album-section-head">
               <div><div class="tiny">DENTRO QUESTO MOMENTO</div><h3>Le vostre foto</h3></div>
-              <button type="button" class="us-album-add" id="usAlbumAddBtn">＋ Aggiungi</button>
+              <button type="button" class="us-album-add" id="usAlbumAddBtn"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span> Aggiungi</button>
             </div>
             <input type="file" id="usAlbumFile" accept="image/jpeg,image/png,image/webp" hidden>
             <div class="us-album-composer" id="usAlbumComposer" hidden>
@@ -60,7 +60,7 @@ function ensureUi(){
     </div>
     <div class="us-album-lightbox" id="usAlbumLightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Foto del Moment" data-us-modal data-us-motion-surface>
       <div class="us-album-lightbox-stage" data-us-modal-panel>
-        <button type="button" class="us-album-lightbox-close us-modal-close" id="usAlbumLightboxClose" aria-label="Chiudi foto" data-us-modal-close>×</button>
+        <button type="button" class="us-album-lightbox-close us-modal-close is-on-media" id="usAlbumLightboxClose" aria-label="Chiudi foto" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
         <div class="us-album-lightbox-count" id="usAlbumLightboxCount"></div>
         <img class="us-album-lightbox-photo active" id="usAlbumLightboxImgA" alt="Foto del Moment">
         <img class="us-album-lightbox-photo" id="usAlbumLightboxImgB" alt="">
@@ -78,7 +78,7 @@ function ensureUi(){
     floating.id='usAlbumFloatingAdd';
     floating.className='us-album-floating-add';
     floating.setAttribute('aria-label','Aggiungi una foto a questo Moment');
-    floating.innerHTML='<span>＋</span><b>Aggiungi foto</b>';
+    floating.innerHTML='<span><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></span><b>Aggiungi foto</b>';
     floating.addEventListener('click',()=>document.getElementById('usAlbumFile')?.click());
     document.getElementById('usAlbumOverlay')?.appendChild(floating);
   }
@@ -288,7 +288,7 @@ async function handleGridClick(event){
 }
 async function deleteAlbumPhoto(id,path){
   if(!id||!window.usProfile)return;
-  if(!confirm('Eliminare questa foto dal momento?'))return;
+  if(!(await usConfirm({kicker:'MOMENT',title:'Eliminare questa foto dal momento?',confirmLabel:'Elimina',tone:'danger'})))return;
   const {error:rowError}=await sb.from('moment_photos').delete().eq('id',id).eq('created_by',window.usProfile.id);
   if(rowError){console.warn('[US Albums] delete row',rowError);toast('Non riesco a eliminare la foto');return;}
   const {error:storageError}=await sb.storage.from('us-media').remove([path]);
@@ -577,7 +577,7 @@ console.info('[US] Moments Albums attivo');
       </div>
       <div class="us-moments-head-actions">
         <span class="us-moments-total" id="usMomentsTotal"></span>
-        <button type="button" class="us-moments-add" id="usMomentsAdd" aria-label="Aggiungi un ricordo">＋</button>
+        <button type="button" class="us-moments-add" id="usMomentsAdd" aria-label="Aggiungi un ricordo"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></button>
       </div>
     `;
     section.insertBefore(head, originalTitle.nextSibling);
@@ -590,11 +590,11 @@ console.info('[US] Moments Albums attivo');
     overlay.setAttribute('data-us-motion-surface', '');
     overlay.innerHTML = `
       <div class="us-moment-compose-backdrop us-modal-backdrop" id="usMomentComposeBackdrop"></div>
-      <section class="us-moment-compose-sheet" role="dialog" aria-modal="true" aria-label="Aggiungi un ricordo" data-us-modal-panel>
+      <section class="us-moment-compose-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-label="Aggiungi un ricordo" data-us-modal-panel>
         <div class="us-moment-compose-grabber"></div>
         <div class="us-moment-compose-title">
           <div><small>NUOVO MOMENT</small><b>Aggiungi un ricordo</b></div>
-          <button type="button" class="us-moment-compose-close us-modal-close" id="usMomentComposeClose" aria-label="Chiudi" data-us-modal-close>×</button>
+          <button type="button" class="us-moment-compose-close us-modal-close" id="usMomentComposeClose" aria-label="Chiudi" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
         </div>
         <div id="usMomentComposeMount"></div>
       </section>
@@ -663,7 +663,7 @@ console.info('[US] Moments Albums attivo');
     tile.type = 'button';
     tile.id = 'usAlbumAddTile';
     tile.className = 'us-album-add-tile';
-    tile.innerHTML = '<span>＋</span> Aggiungi un altro pezzo di questo giorno';
+    tile.innerHTML = '<span><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></span> Aggiungi un altro pezzo di questo giorno';
     tile.addEventListener('click', () => document.getElementById('usAlbumFile')?.click());
     grid.insertAdjacentElement('afterend', tile);
   }
@@ -797,7 +797,7 @@ console.info('[US] Moments Albums attivo');
         ? (entry.source.body || 'Un pensiero per voi.')
         : kindLabel(entry.source.kind);
       return `<button type="button" class="conservati-card" data-conservati-open="${escapeConservati(entry.contribution.id)}" aria-label="Apri ${escapeConservati(kindLabel(entry.source.kind))} lasciato da ${escapeConservati(entry.senderName)}">
-        <span class="conservati-card-mark" aria-hidden="true">${entry.source.kind === 'text' ? '✎' : entry.source.kind === 'music' ? '♫' : '♡'}</span>
+        <span class="conservati-card-mark" aria-hidden="true">${entry.source.kind === 'text' ? '<span class="us-icon" data-us-icon="pencil" aria-hidden="true"></span>' : entry.source.kind === 'music' ? '<span class="us-icon" data-us-icon="music-note" aria-hidden="true"></span>' : '<span class="us-icon" data-us-icon="heart" aria-hidden="true"></span>'}</span>
         <span class="conservati-card-copy"><b>${escapeConservati(entry.senderName)}</b><small>${escapeConservati(formatConservatiDate(entry.source.created_at))}</small><span>${escapeConservati(preview)}</span></span>
         <span class="conservati-card-kind">${escapeConservati(kindLabel(entry.source.kind))}</span>
       </button>`;
@@ -814,7 +814,7 @@ console.info('[US] Moments Albums attivo');
     const content = mediaUnavailable
       ? '<p class="conservati-media-unavailable" role="status">Questo contenuto privato non è disponibile in questo momento.</p>'
       : renderer(source, entry.mediaUrl || '');
-    detail.innerHTML = `<button type="button" class="conservati-back" data-conservati-back aria-label="Torna ai Conservati">‹ <span>Conservati</span></button>
+    detail.innerHTML = `<button type="button" class="conservati-back" data-conservati-back aria-label="Torna ai Conservati"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span> <span>Conservati</span></button>
       <div class="conservati-provenance"><b>${escapeConservati(entry.senderName)}</b><time datetime="${escapeConservati(source.created_at)}">${escapeConservati(formatConservatiDate(source.created_at))}</time></div>
       <div class="conservati-item-content">${content}</div>`;
     showConservatiState('detail');

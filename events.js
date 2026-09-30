@@ -69,7 +69,7 @@ function eventButton(row,{due=false,done=false}={}){
   return `<button type="button" class="us-event-item ${due?'is-due':''} ${done?'is-done':''}" data-id="${esc(row.id)}" data-occurrence="${esc(row.effective_date)}">
     <span class="us-event-datebox"><small>${esc(monthShort(row.effective_date))}</small><b>${day}</b></span>
     <span class="us-event-main"><b>${esc(row.title)}</b><small>${done?`Completato · +${xp} XP`:due?`Da segnare · +${xp} XP`:esc(detailLine(row))}</small></span>
-    <span class="us-event-chevron">${done?'✓':'›'}</span>
+    <span class="us-event-chevron">${done?'<span class="us-icon" data-us-icon="check" aria-hidden="true"></span>':'<span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span>'}</span>
   </button>`;
 }
 function relationshipButton(row){
@@ -136,7 +136,7 @@ async function saveEvent(event){
   try{let result;if(editingId)result=await sb.from('shared_events').update(payload).eq('id',editingId);else result=await sb.from('shared_events').insert({...payload,couple_id:window.usProfile.couple_id,created_by:window.usProfile.id});if(result.error)throw result.error;const wasEditing=Boolean(editingId);await hydrateEvents();cancelEventEdit();toast(wasEditing?'Evento aggiornato':'Evento aggiunto');}catch(error){console.warn('[US Events] save',error);$('usEventStatus').textContent='Non riesco a salvarlo. Riprova.';}finally{busy=false;saveBtn.disabled=false;}
 }
 async function deleteEvent(){
-  if(!editingId||busy||!window.usProfile)return;if(completions.some(c=>c.event_id===editingId))return toast('Un evento completato resta nello storico');if(!confirm('Eliminare questo evento per entrambi?'))return;if(!navigator.onLine)return toast('Sei offline. Riprova quando torni online.');busy=true;const btn=$('usEventDeleteBtn');btn.disabled=true;$('usEventStatus').textContent='Elimino…';
+  if(!editingId||busy||!window.usProfile)return;if(completions.some(c=>c.event_id===editingId))return toast('Un evento completato resta nello storico');if(!(await usConfirm({kicker:'I NOSTRI EVENTI',title:'Eliminare questo evento?',body:'Sparirà per entrambi.',confirmLabel:'Elimina',tone:'danger'})))return;if(!navigator.onLine)return toast('Sei offline. Riprova quando torni online.');busy=true;const btn=$('usEventDeleteBtn');btn.disabled=true;$('usEventStatus').textContent='Elimino…';
   try{const {error}=await sb.from('shared_events').delete().eq('id',editingId);if(error)throw error;await hydrateEvents();cancelEventEdit();toast('Evento eliminato');}catch(error){console.warn('[US Events] delete',error);$('usEventStatus').textContent='Non riesco a eliminarlo. Riprova.';}finally{busy=false;btn.disabled=false;}
 }
 async function openEvents(){const overlay=$('usEventsOverlay');if(!overlay)return;window.UsUiFoundation?.cancelSurfaceExit?.(overlay);overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');document.body.classList.add('us-events-open');showBrowse();if(!window.usProfile){$('usEventsList').innerHTML='<div class="us-events-empty">Aspetto la sincronizzazione di US…</div>';return;}await hydrateEvents();}

@@ -187,7 +187,7 @@ test('M6B (20): an edit/update payload never includes couple_id, created_by, ent
 // (21) delete is gated by authority and confirmed.
 test('M6B (21): delete checks authority, asks a bounded confirmation, and calls the real delete', () => {
   assert.match(js(), /if \(!canEditEntry\(detailEntry, ?window\.usProfile\.id\)\) return;/);
-  assert.match(js(), /confirm\('Eliminare questo impegno\?'\)/);
+  assert.match(js(), /usConfirm\(\{ kicker: 'CALENDARIO', title: 'Eliminare questo impegno\?'[^}]*tone: 'danger' \}\)/, 'the shared US confirmation, not the browser dialog');
   assert.match(js(), /sb\.from\('calendar_entries'\)\.delete\(\)\.eq\('id', ?detailEntry\.id\)/);
 });
 

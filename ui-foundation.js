@@ -272,8 +272,64 @@
     };
   }
 
+  // The one US confirmation: a small floating sheet on the shared scrim and
+  // material, focus on the safe choice, Escape / backdrop / Annulla cancel.
+  // Resolves true only for the explicit confirm button. Without a DOM (or if
+  // building it fails) it degrades to the platform confirm.
+  let openConfirm = null;
+  function confirmSurface(options = {}, environment = globalThis) {
+    const documentRef = environment.document;
+    const text = (value) => String(value ?? '');
+    const fallback = () => Promise.resolve(Boolean(environment.confirm?.(text(options.title || options.body))));
+    if (!documentRef?.body || typeof documentRef.createElement !== 'function') return fallback();
+    if (openConfirm) openConfirm(false);
+    return new Promise((resolve) => {
+      const id = `usConfirm${Date.now().toString(36)}`;
+      const root = documentRef.createElement('div');
+      root.className = 'us-confirm';
+      root.setAttribute('data-us-modal', '');
+      root.setAttribute('data-us-motion-surface', '');
+      root.setAttribute('aria-hidden', 'false');
+      const tone = options.tone === 'danger' ? 'us-btn-danger' : 'primary';
+      root.innerHTML = `<div class="us-modal-backdrop" data-us-confirm="cancel"></div>
+        <section class="us-sheet us-confirm-sheet" role="alertdialog" aria-modal="true" aria-labelledby="${id}T" aria-describedby="${id}B" data-us-modal-panel>
+          <span class="us-eyebrow"></span><h3 id="${id}T"></h3><p id="${id}B"></p>
+          <div class="us-confirm-actions"><button type="button" class="ghost" data-us-confirm="cancel" data-us-modal-close></button><button type="button" class="${tone}" data-us-confirm="ok"></button></div>
+        </section>`;
+      root.querySelector('.us-eyebrow').textContent = text(options.kicker || 'US');
+      root.querySelector('h3').textContent = text(options.title);
+      const body = root.querySelector('p');
+      if (options.body) body.textContent = text(options.body); else body.remove();
+      root.querySelector('[data-us-confirm="cancel"].ghost').textContent = text(options.cancelLabel || 'Annulla');
+      root.querySelector('[data-us-confirm="ok"]').textContent = text(options.confirmLabel || 'Conferma');
+      let settled = false;
+      const finish = (value) => {
+        if (settled) return;
+        settled = true;
+        openConfirm = null;
+        documentRef.removeEventListener('keydown', onKey, true);
+        root.classList.remove('open');
+        const remove = () => { root.setAttribute('aria-hidden', 'true'); root.remove(); };
+        if (!activeSurfaceMotion.exit(root, remove)) remove();
+        resolve(value);
+      };
+      const onKey = (event) => { if (event.key === 'Escape') { event.preventDefault(); finish(false); } };
+      root.addEventListener('click', (event) => {
+        const choice = event.target.closest?.('[data-us-confirm]')?.getAttribute('data-us-confirm');
+        if (choice) finish(choice === 'ok');
+      });
+      documentRef.addEventListener('keydown', onKey, true);
+      openConfirm = finish;
+      documentRef.body.appendChild(root);
+      const show = () => root.classList.add('open');
+      if (typeof environment.requestAnimationFrame === 'function') environment.requestAnimationFrame(() => environment.requestAnimationFrame(show));
+      else show();
+    });
+  }
+
   return {
     install,
+    confirm: (options) => confirmSurface(options),
     isReducedMotion: () => activeMotion.isReducedMotion(),
     onMotionPreferenceChange: (listener) => activeMotion.onChange(listener),
     cancelSurfaceExit: (root) => activeSurfaceMotion.cancelExit(root),

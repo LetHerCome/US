@@ -42,6 +42,8 @@ function go(id,options={}){
   if(id==='home' && window.usProfile) window.refreshOggiCalendarWidget?.();
 }
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700)}
+// The one US confirmation sheet (ui-foundation); the platform dialog only as a fallback.
+function usConfirm(options){const ui=window.UsUiFoundation;return ui&&typeof ui.confirm==='function'?ui.confirm(options):Promise.resolve(window.confirm(options.title));}
 // Game V2 — Gioca is owned by games.js (window.USGameV2); the legacy weekly quiz UI is retired.
 function openQuizHub(options={}){go('quiz',options);window.USGameV2?.showHub();}
 function resetQuiz(){window.USGameV2?.showHub();}
@@ -648,7 +650,7 @@ async function hydrateDistance(){
   value.textContent=`♡ ${formatDistance(km)} da ${partnerName}`;
   const accuracy=Number.isFinite(Number(partner.accuracy_m))?` · precisione ±${Math.round(Number(partner.accuracy_m))} m`:'';
   meta.textContent=`Posizione di ${partnerName} aggiornata ${relativeLocationAge(partner.updated_at)}${accuracy}.`;
-  btn.textContent='↻';btn.disabled=false;
+  btn.innerHTML='<span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span>';btn.disabled=false;
 }
 
 async function saveMyLocation(position){
@@ -1361,7 +1363,7 @@ function renderTodayPriorityItem(item,total=0){
   const card=`<button type="button" class="us-today-priority-card us-attention-orbit" data-us-attention="${item.attention?'on':'off'}" data-us-today-action="${escapeHtml(item.action)}" data-us-arrival-type="${escapeHtml(item.arrivalType||item.category||'arrival')}" aria-label="${escapeHtml(item.actionLabel)}: ${escapeHtml(item.title)}"><span class="us-today-priority-kind">${escapeHtml(US_TODAY_PRIORITY_LABELS[item.category]||'Oggi')}${queueLabel}</span><span class="us-today-priority-copy"><b>${escapeHtml(item.title)}</b><small>${escapeHtml(item.detail||'')}</small></span><span class="us-today-priority-action">${escapeHtml(item.actionLabel)}</span></button>`;
   // M10.2 — avviso nascondibile: swipe orizzontale O bottone accessibile, stessa autorità.
   region.innerHTML=item.dismissLabel
-    ?`<div class="us-today-priority-swipe has-dismiss" data-us-swipe-item data-us-question-id="${escapeHtml(item.questionId||'')}">${card}<button type="button" class="us-today-priority-dismiss" data-us-today-dismiss aria-label="${escapeHtml(item.dismissLabel)}">×</button></div>`
+    ?`<div class="us-today-priority-swipe has-dismiss" data-us-swipe-item data-us-question-id="${escapeHtml(item.questionId||'')}">${card}<button type="button" class="us-today-priority-dismiss" data-us-today-dismiss aria-label="${escapeHtml(item.dismissLabel)}"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></div>`
     :card;
   region.hidden=false;
 }
@@ -2197,7 +2199,7 @@ async function hydrateMomentsCore(){
   const pill=document.getElementById('momentsStatusPill');
   if(!grid)return;
   const profile=window.usProfile;
-  if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">↻</div><b>Carico i vostri ricordi…</b></div>';
+  if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></div><b>Carico i vostri ricordi…</b></div>';
   const [{data:rows,error},{data:profiles,error:profilesError},{data:lived,error:livedError}]=await Promise.all([
     sb.from('moments').select('id,created_by,storage_path,caption,moment_date,created_at').order('moment_date',{ascending:false}).order('created_at',{ascending:false}),
     sb.from('profiles').select('id,display_name').eq('couple_id',profile.couple_id),
@@ -2371,7 +2373,7 @@ if(momentViewer){
 
 async function deleteMoment(id,path){
   if(!window.usProfile)return;
-  if(!confirm('Eliminare questo ricordo?'))return;
+  if(!(await usConfirm({kicker:'RICORDI',title:'Eliminare questo ricordo?',body:'La foto sparirà per entrambi.',confirmLabel:'Elimina',tone:'danger'})))return;
   const {error:storageError}=await sb.storage.from('us-media').remove([path]);
   if(storageError){console.warn(storageError);return toast('Non riesco a eliminare la foto');}
   const {error:rowError}=await sb.from('moments').delete().eq('id',id).eq('created_by',window.usProfile.id);
@@ -2560,7 +2562,7 @@ function renderBondQuest(q,state,profiles){
     <div class="quest-confirmers"><span class="${mine?'checked':''}">${myInitial}${mine?' ✓':''}</span><span class="quest-link"></span><span class="${partnerConfirmed?'checked':''}">${partnerInitial}${partnerConfirmed?' ✓':''}</span><small>${complete?'XP assegnati':'Conferma di entrambi'}</small></div>
     <div class="quest-actions">
       <button type="button" class="quest-confirm ${mine||complete?'confirmed':''}" ${mine||complete?'disabled':''} onclick="confirmBondQuest('${q.id}')">${confirmText}</button>
-      ${canReroll?`<button type="button" class="quest-reroll" onclick="rerollBondQuest('${q.id}')" aria-label="Cambia questa quest">↻</button>`:''}
+      ${canReroll?`<button type="button" class="quest-reroll" onclick="rerollBondQuest('${q.id}')" aria-label="Cambia questa quest"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></button>`:''}
     </div>
   </article>`;
 }
@@ -2728,7 +2730,7 @@ async function hydrateNoiIdeas(){
   const list=document.getElementById('noiIdeaList');
   if(list&&!noiIdeaState.loaded){
     list.setAttribute('aria-busy','true');
-    list.innerHTML='<div class="empty-state" aria-busy="true"><div class="emoji">↻</div><b>Carico le vostre idee…</b></div>';
+    list.innerHTML='<div class="empty-state" aria-busy="true"><div class="emoji"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></div><b>Carico le vostre idee…</b></div>';
   }
   const {data,error}=await sb.from('bucket_items')
     .select('id,title,note,link_url,status,calendar_entry_id,completed_at,created_at,lived_proposed_by')

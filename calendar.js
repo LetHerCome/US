@@ -962,7 +962,7 @@ function closeCalendarDetailSheet() {
 async function deleteEntry() {
   if (!detailEntry || busy || !window.usProfile) return;
   if (!canEditEntry(detailEntry, window.usProfile.id)) return;
-  if (!confirm('Eliminare questo impegno?')) return;
+  if (!(await usConfirm({ kicker: 'CALENDARIO', title: 'Eliminare questo impegno?', body: 'Sparirà dal calendario di entrambi.', confirmLabel: 'Elimina', tone: 'danger' }))) return;
   if (!navigator.onLine) { toast('Sei offline. Riprova quando torni online.'); return; }
   busy = true;
   try {

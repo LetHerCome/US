@@ -139,14 +139,14 @@ html.us-returning-device .auth-overlay{
       <button id="loginBtn" type="button" class="primary" style="width:100%;margin-top:10px">Accedi</button>
       <div class="auth-status" id="loginStatus" role="status" aria-live="polite"></div>
       <button id="magicLinkBtn" type="button" class="us-auth-link">Usa Magic Link come recupero</button>
-      <button type="button" class="us-auth-link" onclick="showAuthStep('authPair')">← Torna al collegamento</button>
+      <button type="button" class="us-auth-link" onclick="showAuthStep('authPair')">Torna al collegamento</button>
     </div>
   </div>
 </div>
 
 <div class="app">
 
-  <div class="top us-premium-top"><div class="us-top-left"><button type="button" class="us-pervoi-top us-important-control us-attention-orbit is-loading" id="usPerVoiTop" onclick="window.USGameV2?.openPerVoi()" aria-label="Per voi" aria-busy="true" data-us-attention="off" data-gv2-state="idle"><span class="us-pervoi-icon" aria-hidden="true"></span></button></div><button type="button" class="us-events-top-control us-important-control" id="usEventsTopEntry" onclick="openEvents()" aria-label="Apri i nostri eventi"><span>I nostri eventi</span><span class="us-events-top-chevron" aria-hidden="true">⌄</span></button><div class="top-actions"><button type="button" class="us-envelope-control us-important-control us-attention-orbit is-loading" id="leftForYouPartnerEntry" onclick="usEnvelopeTap()" aria-label="Lasciato per te" aria-busy="true" data-us-envelope data-us-attention="off"><span class="us-envelope-mark" aria-hidden="true"><span class="us-envelope-icon"><span class="us-envelope-face us-envelope-face--closed" data-icon="/assets/icons/phosphor/envelope-simple-regular.svg"></span><span class="us-envelope-face us-envelope-face--open" data-icon="/assets/icons/phosphor/envelope-open-regular.svg"></span></span></span></button><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
+  <div class="top us-premium-top"><div class="us-top-left"><button type="button" class="us-pervoi-top us-important-control us-attention-orbit is-loading" id="usPerVoiTop" onclick="window.USGameV2?.openPerVoi()" aria-label="Per voi" aria-busy="true" data-us-attention="off" data-gv2-state="idle"><span class="us-pervoi-icon" aria-hidden="true"></span></button></div><button type="button" class="us-events-top-control us-important-control" id="usEventsTopEntry" onclick="openEvents()" aria-label="Apri i nostri eventi"><span>I nostri eventi</span><span class="us-events-top-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-down" aria-hidden="true"></span></span></button><div class="top-actions"><button type="button" class="us-envelope-control us-important-control us-attention-orbit is-loading" id="leftForYouPartnerEntry" onclick="usEnvelopeTap()" aria-label="Lasciato per te" aria-busy="true" data-us-envelope data-us-attention="off"><span class="us-envelope-mark" aria-hidden="true"><span class="us-envelope-icon"><span class="us-envelope-face us-envelope-face--closed" data-icon="/assets/icons/phosphor/envelope-simple-regular.svg"></span><span class="us-envelope-face us-envelope-face--open" data-icon="/assets/icons/phosphor/envelope-open-regular.svg"></span></span></span></button><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
 
   <main id="home" class="page active">
     <section class="hero home-hero-only" id="homeHero" aria-label="Un vostro ricordo">
@@ -169,7 +169,7 @@ html.us-returning-device .auth-overlay{
       <button type="button" class="home-distance-pill" id="distanceWidget" onclick="refreshMyLocation()" aria-label="Aggiorna distanza">
         <span class="distance-orbit" aria-hidden="true">♡</span>
         <span class="distance-copy"><b id="distanceValue">Attiva la distanza</b><small id="distanceMeta">Tocca per aggiornare</small></span>
-        <span class="distance-action" id="distanceAction">↻</span>
+        <span class="distance-action" id="distanceAction"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></span>
       </button>
       <aside class="push-optin-card" id="pushOptInCard" hidden aria-live="polite">
         <span class="push-optin-icon" aria-hidden="true">♡</span>
@@ -181,8 +181,8 @@ html.us-returning-device .auth-overlay{
 
   <main id="today" class="today-overlay" aria-hidden="true" data-us-modal data-us-motion-surface>
     <div class="today-backdrop us-modal-backdrop" onclick="closeToday()"></div>
-    <section class="today-sheet" role="dialog" aria-modal="true" aria-label="Domanda del giorno" data-us-modal-panel>
-      <div class="today-sheet-head"><div><div class="tiny">OGGI</div><h2>La domanda di oggi</h2></div><button type="button" class="today-close us-modal-close" onclick="closeToday()" aria-label="Chiudi domanda del giorno" data-us-modal-close>×</button></div>
+    <section class="today-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-label="Domanda del giorno" data-us-modal-panel>
+      <div class="today-sheet-head"><div><div class="tiny">OGGI</div><h2>La domanda di oggi</h2></div><button type="button" class="today-close us-modal-close" onclick="closeToday()" aria-label="Chiudi domanda del giorno" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></div>
       <div class="card question">
         <div class="qtag">LA DOMANDA DEL GIORNO</div>
         <div class="qtext">Sto preparando la domanda di oggi…</div>
@@ -202,8 +202,8 @@ html.us-returning-device .auth-overlay{
 
   <main id="thinkArrival" class="think-arrival-overlay" aria-hidden="true" data-us-modal data-us-motion-surface>
     <div class="think-arrival-backdrop us-modal-backdrop" onclick="closeThinkArrival()"></div>
-    <section class="think-arrival-sheet" role="dialog" aria-modal="true" aria-label="Ti penso ricevuto" data-us-modal-panel>
-      <header class="think-arrival-head"><div><div class="tiny">TI PENSO</div><h2 id="thinkArrivalTitle">La tua persona ti pensa</h2></div><button type="button" class="think-arrival-close us-modal-close" onclick="closeThinkArrival()" aria-label="Chiudi Ti penso">×</button></header>
+    <section class="think-arrival-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-label="Ti penso ricevuto" data-us-modal-panel>
+      <header class="think-arrival-head"><div><div class="tiny">TI PENSO</div><h2 id="thinkArrivalTitle">La tua persona ti pensa</h2></div><button type="button" class="think-arrival-close us-modal-close" onclick="closeThinkArrival()" aria-label="Chiudi Ti penso"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
       <p id="thinkArrivalCopy" class="think-arrival-copy">Un piccolo segnale, solo per voi due.</p>
       <div class="think-reaction-grid" role="group" aria-label="Scegli una reazione">
         <button type="button" class="think-reaction-button" data-think-reaction="heart" aria-label="Reagisci con cuore" aria-pressed="false"><span class="think-reaction-glyph think-reaction-heart" aria-hidden="true">♥</span><span class="sr-only">heart</span></button>
@@ -221,12 +221,12 @@ html.us-returning-device .auth-overlay{
       <button type="button" class="us-conservati-entry" id="conservatiEntry" onclick="openConservati()" aria-label="Apri Conservati">
         <span class="us-conservati-entry-mark" aria-hidden="true">✦</span>
         <span class="us-conservati-entry-copy"><b>Conservati</b><small>Piccole cose che avete deciso di non perdere.</small></span>
-        <span class="us-conservati-entry-chevron" aria-hidden="true">›</span>
+        <span class="us-conservati-entry-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></span>
       </button>
       <div class="moment-compose" id="momentCompose">
         <input id="momentFile" type="file" accept="image/jpeg,image/png,image/webp" hidden>
         <button type="button" class="moment-picker" onclick="pickMomentPhoto()" aria-label="Scegli una foto per il ricordo">
-          <span class="moment-picker-empty"><span class="moment-add-icon">＋</span><span class="moment-picker-copy"><b>Aggiungi un ricordo</b><small>Tocca per scegliere una foto</small></span></span>
+          <span class="moment-picker-empty"><span class="moment-add-icon"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></span><span class="moment-picker-copy"><b>Aggiungi un ricordo</b><small>Tocca per scegliere una foto</small></span></span>
           <span id="momentPreview" class="moment-preview"><img id="momentPreviewImg" alt="Anteprima ricordo"><span class="moment-change-chip">Cambia foto</span></span>
         </button>
         <div class="moment-details">
@@ -237,7 +237,7 @@ html.us-returning-device .auth-overlay{
         </div>
       </div>
       <div class="ricordi-section-head ricordi-story-head"><div class="ricordi-kicker">LA VOSTRA STORIA</div><h3>Mese per mese</h3></div>
-      <div id="momentsGrid" class="moment-grid ricordi-story" aria-live="polite"><div class="empty-state moment-loading" aria-busy="true"><div class="emoji">↻</div><b>Carico i vostri ricordi…</b></div></div>
+      <div id="momentsGrid" class="moment-grid ricordi-story" aria-live="polite"><div class="empty-state moment-loading" aria-busy="true"><div class="emoji"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></div><b>Carico i vostri ricordi…</b></div></div>
       <section class="ricordi-chapters" id="ricordiChapters" aria-label="Capitoli" hidden></section>
     </section>
   </main>
@@ -334,7 +334,7 @@ html.us-returning-device .auth-overlay{
           <div id="noiIdeaLivedList" class="noi-idea-list noi-idea-lived-list" aria-live="polite" hidden></div>
         </div>
         <div class="noi-idea-detail" id="noiIdeaDetail" hidden>
-          <button type="button" class="noi-idea-detail-back" id="noiIdeaDetailBack">‹ Idee</button>
+          <button type="button" class="noi-idea-detail-back" id="noiIdeaDetailBack"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span><span>Idee</span></button>
           <form id="noiIdeaDetailForm">
             <label class="noi-idea-sr" for="noiIdeaDetailTitle">Titolo</label>
             <input id="noiIdeaDetailTitle" type="text" maxlength="120" required>
@@ -397,61 +397,61 @@ html.us-returning-device .auth-overlay{
       <div class="us-settings2-label">NOI</div>
       <div class="us-settings2-group">
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="relationship-date">
-          <span class="us-settings2-icon" aria-hidden="true">21</span>
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="calendar-heart"></span></span>
           <span class="us-setting-main"><b>Data della relazione</b><small>Regola mesiversari, anniversari e giorni insieme</small></span>
-          <span class="us-setting-value" id="usRelationshipDateValue">…</span><i>›</i>
+          <span class="us-setting-value" id="usRelationshipDateValue">…</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="profile-photo">
-          <span class="us-settings2-icon us-settings2-photo-icon" aria-hidden="true">◎</span>
-          <span class="us-setting-main"><b>Cambia foto profilo</b><small>Aggiorna la foto che vede il tuo partner</small></span><span class="us-setting-value">Modifica</span><i>›</i>
+          <span class="us-settings2-icon us-settings2-photo-icon" aria-hidden="true"><span class="us-icon" data-us-icon="user-circle"></span></span>
+          <span class="us-setting-main"><b>Cambia foto profilo</b><small>Aggiorna la foto che vede il tuo partner</small></span><span class="us-setting-value">Modifica</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="home-photo">
-          <span class="us-settings2-icon us-settings2-photo-icon" aria-hidden="true">▧</span>
+          <span class="us-settings2-icon us-settings2-photo-icon" aria-hidden="true"><span class="us-icon" data-us-icon="image"></span></span>
           <span class="us-setting-main"><b>Foto Home</b><small>La Home pesca automaticamente dai vostri Moments</small></span>
-          <span class="us-setting-value">Gestisci</span><i>›</i>
+          <span class="us-setting-value">Gestisci</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="story-archive">
-          <span class="us-settings2-icon" aria-hidden="true">◷</span>
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="clock-counter-clockwise"></span></span>
           <span class="us-setting-main"><b>Archivio Stories</b><small>Rivedi le storie dopo le 24 ore</small></span>
-          <span class="us-setting-value" id="usStoryArchiveValue"></span><i>›</i>
+          <span class="us-setting-value" id="usStoryArchiveValue"></span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
       </div>
 
       <div class="us-settings2-label">QUESTO TELEFONO</div>
       <div class="us-settings2-group">
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="notifications">
-          <span class="us-settings2-icon" aria-hidden="true">⌁</span>
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="bell"></span></span>
           <span class="us-setting-main"><b>Notifiche</b><small>Scegli cosa vuoi ricevere davvero</small></span>
-          <span class="us-setting-value" id="usNotificationsValue">…</span><i>›</i>
+          <span class="us-setting-value" id="usNotificationsValue">…</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="scriptable-widgets">
-          <span class="us-settings2-icon" aria-hidden="true">♡</span>
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="heart"></span></span>
           <span class="us-setting-main"><b>Widget US</b><small>Configura o revoca Scriptable</small></span>
-          <span class="us-setting-value">Apri</span><i>›</i>
+          <span class="us-setting-value">Apri</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="distance">
-          <span class="us-settings2-icon" aria-hidden="true">↔</span>
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="arrows-left-right"></span></span>
           <span class="us-setting-main"><b>Distanza</b><small>Unità usata nella Home</small></span>
-          <span class="us-setting-value" id="usDistanceUnitValue">km</span><i>›</i>
+          <span class="us-setting-value" id="usDistanceUnitValue">km</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="location">
-          <span class="us-settings2-icon" aria-hidden="true">⌖</span>
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="map-pin"></span></span>
           <span class="us-setting-main"><b>Posizione</b><small>Serve solo per calcolare la distanza tra voi</small></span>
-          <span class="us-setting-state" id="usLocationState">…</span><i>›</i>
+          <span class="us-setting-state" id="usLocationState">…</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
       </div>
 
       <div class="us-settings2-label">STATO US</div>
       <div class="us-settings2-group">
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="sync-status">
-          <span class="us-settings2-icon" aria-hidden="true">∞</span>
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="arrows-clockwise"></span></span>
           <span class="us-setting-main"><b>Sincronizzazione</b><small>Profili, rete, push e stato di questo dispositivo</small></span>
-          <span class="us-setting-value" id="usSyncValue">Controlla</span><i>›</i>
+          <span class="us-setting-value" id="usSyncValue">Controlla</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="account-upgrade" hidden id="usAccountUpgradeRow">
-          <span class="us-settings2-icon" aria-hidden="true">✉</span>
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="envelope"></span></span>
           <span class="us-setting-main"><b>Proteggi il tuo account</b><small>Aggiungi un'email per non perdere mai l'accesso a US</small></span>
-          <span class="us-setting-value">Attiva</span><i>›</i>
+          <span class="us-setting-value">Attiva</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         <div class="us-settings2-version-row">
           <span class="us-settings2-icon us-settings2-brand-mini" aria-hidden="true"><img class="us-brand-symbol-art" src="/assets/derived/brand/us-symbol-apk-foreground-v1.png" alt=""></span>
@@ -491,10 +491,10 @@ html.us-returning-device .auth-overlay{
 
 <div class="us-events-overlay" id="usEventsOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
   <div class="us-events-backdrop us-modal-backdrop" onclick="closeEvents()"></div>
-  <section class="us-events-sheet" role="dialog" aria-modal="true" aria-labelledby="usEventsTitle" data-us-modal-panel>
+  <section class="us-events-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="usEventsTitle" data-us-modal-panel>
     <header class="us-events-head">
       <div><div class="tiny">NOI DUE</div><h2 id="usEventsTitle">I nostri eventi</h2></div>
-      <button type="button" class="us-events-close us-modal-close" onclick="closeEvents()" aria-label="Chiudi eventi" data-us-modal-close>×</button>
+      <button type="button" class="us-events-close us-modal-close" onclick="closeEvents()" aria-label="Chiudi eventi" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
     </header>
 
     <div id="usEventsBrowse">
@@ -520,11 +520,11 @@ html.us-returning-device .auth-overlay{
         <div class="us-events-list us-events-done-list" id="usEventsDoneList"></div>
       </section>
 
-      <button type="button" class="us-event-add" onclick="beginAddEvent()"><span>＋</span>Aggiungi evento</button>
+      <button type="button" class="us-event-add" onclick="beginAddEvent()"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span>Aggiungi evento</button>
     </div>
 
     <form class="us-event-form" id="usEventForm" hidden>
-      <div class="us-event-form-title"><button type="button" class="us-event-back" onclick="cancelEventEdit()" aria-label="Torna agli eventi">←</button><div><div class="tiny" id="usEventFormKicker">NUOVO EVENTO</div><h3 id="usEventFormTitle">Aggiungi qualcosa da aspettare insieme</h3></div></div>
+      <div class="us-event-form-title"><button type="button" class="us-event-back us-icon-button" onclick="cancelEventEdit()" aria-label="Torna agli eventi"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span></button><div><div class="tiny" id="usEventFormKicker">NUOVO EVENTO</div><h3 id="usEventFormTitle">Aggiungi qualcosa da aspettare insieme</h3></div></div>
 
       <label class="us-event-field"><span>Che cosa?</span><input id="usEventTitleInput" type="text" maxlength="120" placeholder="Es. Atene, concerto, anniversario…" required></label>
 
@@ -550,19 +550,19 @@ html.us-returning-device .auth-overlay{
 
 <div class="us-settings-overlay" id="usSettingsOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
   <div class="us-settings-backdrop us-modal-backdrop" data-us-settings-close></div>
-  <section class="us-settings-sheet" role="dialog" aria-modal="true" aria-labelledby="usSettingsModalTitle" data-us-modal-panel>
+  <section class="us-settings-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="usSettingsModalTitle" data-us-modal-panel>
     <div class="us-settings-sheet-grabber"></div>
-    <header><div><div class="tiny" id="usSettingsModalKicker">US.</div><h3 id="usSettingsModalTitle">Impostazione</h3></div><button type="button" class="us-settings-close us-modal-close" data-us-settings-close data-us-modal-close aria-label="Chiudi">×</button></header>
+    <header><div><div class="tiny" id="usSettingsModalKicker">US.</div><h3 id="usSettingsModalTitle">Impostazione</h3></div><button type="button" class="us-settings-close us-modal-close" data-us-settings-close data-us-modal-close aria-label="Chiudi"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
     <div class="us-settings-modal-body" id="usSettingsModalBody"></div>
   </section>
 </div>
 
 <div class="left-for-you-overlay" id="leftForYouOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
   <div class="left-for-you-backdrop us-modal-backdrop" id="leftForYouBackdrop"></div>
-  <section class="left-for-you-sheet" role="dialog" aria-modal="true" aria-labelledby="leftForYouTitle" data-us-modal-panel>
+  <section class="left-for-you-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-labelledby="leftForYouTitle" data-us-modal-panel>
     <header class="left-for-you-head">
       <div><div class="tiny">PER VOI DUE</div><h2 id="leftForYouTitle">Lasciato per te</h2><small id="leftForYouPartnerName">La tua persona</small></div>
-      <button type="button" class="left-for-you-close us-modal-close" id="leftForYouClose" aria-label="Chiudi Lasciato per te" data-us-modal-close>×</button>
+      <button type="button" class="left-for-you-close us-modal-close" id="leftForYouClose" aria-label="Chiudi Lasciato per te" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
     </header>
     <div class="left-for-you-body">
       <div class="left-for-you-loading" id="leftForYouLoading" aria-busy="true"><p>Preparo qualcosa per te…</p></div>
@@ -580,10 +580,10 @@ html.us-returning-device .auth-overlay{
 
 <div class="left-for-you-overlay left-for-you-composer-overlay" id="leftForYouComposerOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
   <div class="left-for-you-backdrop us-modal-backdrop" id="leftForYouComposerBackdrop"></div>
-  <section class="left-for-you-sheet left-for-you-composer-sheet" role="dialog" aria-modal="true" aria-labelledby="leftForYouComposerTitle" data-us-modal-panel>
+  <section class="left-for-you-sheet left-for-you-composer-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-labelledby="leftForYouComposerTitle" data-us-modal-panel>
     <header class="left-for-you-head">
       <div><div class="tiny">PER VOI DUE</div><h2 id="leftForYouComposerTitle">Lascia qualcosa alla tua persona</h2></div>
-      <button type="button" class="left-for-you-close us-modal-close" id="leftForYouComposerClose" aria-label="Chiudi il compositore" data-us-modal-close>×</button>
+      <button type="button" class="left-for-you-close us-modal-close" id="leftForYouComposerClose" aria-label="Chiudi il compositore" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
     </header>
     <div class="left-for-you-body left-for-you-composer-body">
       <div class="left-for-you-composer-kinds" role="tablist" aria-label="Tipo di messaggio">
@@ -617,7 +617,7 @@ html.us-returning-device .auth-overlay{
         <ul class="left-for-you-music-results" id="leftForYouMusicResults" aria-label="Risultati Spotify" hidden></ul>
         <div class="left-for-you-music-selected" id="leftForYouMusicSelected" hidden>
           <span class="left-for-you-music-selected-label" id="leftForYouMusicSelectedLabel"></span>
-          <button type="button" class="left-for-you-music-clear" id="leftForYouMusicClear" aria-label="Rimuovi il brano scelto">×</button>
+          <button type="button" class="left-for-you-music-clear" id="leftForYouMusicClear" aria-label="Rimuovi il brano scelto"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
         </div>
         <details class="left-for-you-music-manual">
           <summary>Incolla link Spotify</summary>
@@ -632,8 +632,8 @@ html.us-returning-device .auth-overlay{
 
 <div class="left-for-you-overlay left-for-you-camera-overlay" id="leftForYouCameraOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
   <div class="left-for-you-backdrop us-modal-backdrop" id="leftForYouCameraBackdrop"></div>
-  <section class="left-for-you-sheet left-for-you-camera-sheet" role="dialog" aria-modal="true" aria-labelledby="leftForYouCameraTitle" data-us-modal-panel>
-    <header class="left-for-you-head"><div><div class="tiny">FOTO PRIVATA</div><h2 id="leftForYouCameraTitle">Scatta una foto</h2></div><button type="button" class="left-for-you-close" id="leftForYouCameraClose" aria-label="Chiudi fotocamera" data-us-modal-close>×</button></header>
+  <section class="left-for-you-sheet left-for-you-camera-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-labelledby="leftForYouCameraTitle" data-us-modal-panel>
+    <header class="left-for-you-head"><div><div class="tiny">FOTO PRIVATA</div><h2 id="leftForYouCameraTitle">Scatta una foto</h2></div><button type="button" class="left-for-you-close us-modal-close" id="leftForYouCameraClose" aria-label="Chiudi fotocamera" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
     <div class="left-for-you-body left-for-you-camera-body">
       <div class="left-for-you-camera-preview-wrap"><video id="leftForYouCameraPreview" autoplay playsinline muted></video><img id="leftForYouCameraCaptured" alt="Anteprima della foto" hidden></div>
       <div class="left-for-you-camera-status" id="leftForYouCameraStatus" role="status" aria-live="polite"></div>
@@ -647,15 +647,15 @@ html.us-returning-device .auth-overlay{
 <div class="app-update-bar" id="appUpdateBar" role="status" aria-live="polite" hidden><span><b>Aggiornamento disponibile</b><small>Puoi aggiornare quando hai finito quello che stai facendo.</small></span><button type="button" id="appUpdateBtn">Aggiorna</button></div>
 
 <div class="moment-viewer" id="momentViewer" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Foto del ricordo" data-us-modal data-us-motion-surface onclick="if(event.target===this)closeMomentViewer()">
-  <div class="moment-viewer-card" data-us-modal-panel><button class="moment-viewer-close us-modal-close" type="button" aria-label="Chiudi foto" data-us-modal-close onclick="closeMomentViewer()">×</button><img id="momentViewerImg" alt="Ricordo a schermo intero"><div class="moment-viewer-info"><div class="moment-viewer-kicker" id="momentViewerAuthor">Noi</div><div class="moment-viewer-date" id="momentViewerDate"></div><p id="momentViewerCaption" hidden></p><div class="moment-viewer-hint">Scorri verso il basso per chiudere</div></div></div>
+  <div class="moment-viewer-card" data-us-modal-panel><button class="moment-viewer-close us-modal-close is-on-media" type="button" aria-label="Chiudi foto" data-us-modal-close onclick="closeMomentViewer()"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button><img id="momentViewerImg" alt="Ricordo a schermo intero"><div class="moment-viewer-info"><div class="moment-viewer-kicker" id="momentViewerAuthor">Noi</div><div class="moment-viewer-date" id="momentViewerDate"></div><p id="momentViewerCaption" hidden></p><div class="moment-viewer-hint">Scorri verso il basso per chiudere</div></div></div>
 </div>
 
 <div class="conservati-overlay" id="conservatiOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
   <div class="conservati-backdrop us-modal-backdrop" id="conservatiBackdrop"></div>
-  <section class="conservati-sheet" role="dialog" aria-modal="true" aria-labelledby="conservatiTitle" data-us-modal-panel>
+  <section class="conservati-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="conservatiTitle" data-us-modal-panel>
     <header class="conservati-head">
       <div><div class="tiny">RICORDI</div><h2 id="conservatiTitle">Conservati</h2><small id="conservatiTagline">Piccole cose che avete deciso di non perdere.</small></div>
-      <button type="button" class="conservati-close us-modal-close" id="conservatiClose" aria-label="Chiudi Conservati" data-us-modal-close>×</button>
+      <button type="button" class="conservati-close us-modal-close" id="conservatiClose" aria-label="Chiudi Conservati" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
     </header>
     <div class="conservati-body">
       <div class="conservati-loading" id="conservatiLoading" hidden aria-busy="true"><p>Preparo i vostri Conservati…</p></div>
@@ -669,19 +669,19 @@ html.us-returning-device .auth-overlay{
 
 <div id="usCalendarOverlay" class="us-cal-overlay" aria-hidden="true" data-us-modal data-us-motion-surface>
   <div class="us-cal-backdrop us-modal-backdrop" id="usCalendarBackdrop"></div>
-  <section class="us-cal-surface" role="dialog" aria-modal="true" aria-labelledby="usCalendarTitle" data-us-modal-panel>
+  <section class="us-cal-surface us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="usCalendarTitle" data-us-modal-panel>
     <header class="us-cal-head">
       <div>
         <div class="tiny">NOI</div>
         <h2 id="usCalendarTitle"><span id="usCalendarMonthLabel">—</span></h2>
         <p class="us-cal-subtitle">I vostri giorni, insieme.</p>
       </div>
-      <button type="button" class="us-cal-close us-modal-close us-icon-center" id="usCalendarClose" aria-label="Chiudi calendario" data-us-modal-close>×</button>
+      <button type="button" class="us-cal-close us-modal-close us-icon-center" id="usCalendarClose" aria-label="Chiudi calendario" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
     </header>
     <div class="us-cal-toolbar">
-      <button type="button" class="us-cal-nav us-icon-center" id="usCalendarPrev" aria-label="Mese precedente">‹</button>
+      <button type="button" class="us-cal-nav us-icon-button us-icon-center" id="usCalendarPrev" aria-label="Mese precedente"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span></button>
       <button type="button" class="us-cal-today-btn" id="usCalendarTodayBtn">Oggi</button>
-      <button type="button" class="us-cal-nav us-icon-center" id="usCalendarNext" aria-label="Mese successivo">›</button>
+      <button type="button" class="us-cal-nav us-icon-button us-icon-center" id="usCalendarNext" aria-label="Mese successivo"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></button>
     </div>
     <div class="us-cal-view-switch" role="group" aria-label="Vista calendario">
       <button type="button" id="usCalendarViewMonth" class="is-active" aria-pressed="true">Mese</button>
@@ -713,11 +713,11 @@ html.us-returning-device .auth-overlay{
   </section>
 
   <div class="us-cal-sheet-overlay" id="usCalendarDetailSheet" aria-hidden="true">
-    <div class="us-cal-sheet-backdrop" id="usCalendarDetailBackdrop"></div>
-    <section class="us-cal-sheet" role="dialog" aria-modal="true" aria-labelledby="usCalendarDetailTitle" data-us-modal-panel>
+    <div class="us-cal-sheet-backdrop us-modal-backdrop" id="usCalendarDetailBackdrop"></div>
+    <section class="us-cal-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="usCalendarDetailTitle" data-us-modal-panel>
       <header class="us-cal-sheet-head">
         <h3 id="usCalendarDetailTitle">—</h3>
-        <button type="button" class="us-cal-sheet-close us-icon-center" id="usCalendarDetailClose" aria-label="Chiudi impegno">×</button>
+        <button type="button" class="us-cal-sheet-close us-modal-close us-icon-center" id="usCalendarDetailClose" aria-label="Chiudi impegno"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
       </header>
       <div class="us-cal-detail-body" id="usCalendarDetailBody"></div>
       <div class="us-cal-detail-reminders" id="usCalendarDetailReminders"></div>
@@ -729,11 +729,11 @@ html.us-returning-device .auth-overlay{
   </div>
 
   <div class="us-cal-sheet-overlay" id="usCalendarFormSheet" aria-hidden="true">
-    <div class="us-cal-sheet-backdrop" id="usCalendarFormBackdrop"></div>
-    <section class="us-cal-sheet" role="dialog" aria-modal="true" aria-labelledby="usCalendarFormTitle" data-us-modal-panel>
+    <div class="us-cal-sheet-backdrop us-modal-backdrop" id="usCalendarFormBackdrop"></div>
+    <section class="us-cal-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="usCalendarFormTitle" data-us-modal-panel>
       <header class="us-cal-sheet-head">
         <h3 id="usCalendarFormTitle">Nuovo impegno</h3>
-        <button type="button" class="us-cal-sheet-close us-icon-center" id="usCalendarFormClose" aria-label="Chiudi modulo">×</button>
+        <button type="button" class="us-cal-sheet-close us-modal-close us-icon-center" id="usCalendarFormClose" aria-label="Chiudi modulo"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
       </header>
       <form class="us-cal-form" id="usCalendarForm">
         <p class="us-cal-form-context" id="usCalendarFormContext" hidden>Da vivere · un evento insieme, per entrambi</p>

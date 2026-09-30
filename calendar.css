@@ -5,14 +5,13 @@
 .us-cal-overlay{position:fixed;inset:0;z-index:10140;display:none;align-items:flex-end;justify-content:center;padding-top:var(--us-safe-top);background:rgba(3,4,8,.62);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .us-cal-overlay.open{display:flex}
 .us-cal-backdrop{position:absolute;inset:0}
-.us-cal-surface{position:relative;z-index:1;width:min(920px,100%);max-height:calc(var(--us-viewport-height,100dvh) - var(--us-safe-top));overflow:auto;overscroll-behavior:contain;padding:0 0 calc(18px + var(--us-safe-bottom));border:1px solid rgba(255,255,255,.10);border-bottom:0;border-radius:27px 27px 0 0;background:radial-gradient(circle at 90% -10%,rgba(91,141,239,.12),transparent 35%),radial-gradient(circle at 10% 0%,rgba(139,114,248,.10),transparent 40%),linear-gradient(160deg,#15131c,#0c0b11 72%);box-shadow:0 -20px 65px rgba(0,0,0,.44);color:var(--us-text)}
-.us-cal-head{position:sticky;top:0;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 19px 11px;background:rgba(15,12,19,.94);border-bottom:1px solid rgba(255,255,255,.07);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.us-cal-surface{position:relative;z-index:1;width:min(920px,100%);max-height:calc(var(--us-viewport-height,100dvh) - var(--us-safe-top));overflow:auto;overscroll-behavior:contain;padding:0 0 calc(18px + var(--us-safe-bottom));color:var(--us-text)}
+.us-cal-head{position:sticky;top:0;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 19px 11px;background:var(--us-sheet-head-bg);-webkit-backdrop-filter:var(--us-sheet-head-blur);backdrop-filter:var(--us-sheet-head-blur);border-bottom:1px solid var(--us-color-line)}
 .us-cal-head h2{margin:3px 0 0;font:400 24px/1.05 var(--us-font-editorial);letter-spacing:-.02em}
 .us-cal-subtitle{margin:5px 0 0;max-width:310px;color:rgba(247,242,248,.63);font-size:11px;line-height:1.4}
-.us-cal-close{width:40px;height:40px;flex:0 0 auto;padding:0;border:1px solid rgba(255,255,255,.10);border-radius:50%;background:rgba(255,255,255,.05);color:var(--us-text);font-size:23px}
 
 .us-cal-toolbar{display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 18px 4px}
-.us-cal-nav{width:40px;height:40px;flex:0 0 auto;border-radius:50%;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.05);color:var(--us-text);font-size:18px}
+.us-cal-nav{flex:0 0 auto}
 .us-cal-today-btn{min-height:36px;padding:0 16px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:var(--us-text);font-size:12px;font-weight:700}
 
 .us-cal-legend{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;padding:6px 18px 2px}
@@ -47,15 +46,14 @@
 .us-cal-empty p{max-width:320px;margin:0 auto 14px;font-size:12px;line-height:1.5}
 
 /* Nested sheets (day / detail / form) — same overlay, additional slide-up layers. */
-.us-cal-sheet-overlay{position:fixed;inset:0;z-index:10145;display:none;align-items:flex-end;justify-content:center;background:rgba(3,4,8,.58);backdrop-filter:blur(8px)}
+.us-cal-sheet-overlay{position:fixed;inset:0;z-index:10145;display:none;align-items:flex-end;justify-content:center}
 .us-cal-sheet-overlay.open{display:flex}
 .us-cal-sheet-backdrop{position:absolute;inset:0}
-.us-cal-sheet{position:relative;z-index:1;width:min(480px,100%);max-height:82dvh;overflow:auto;overscroll-behavior:contain;padding:0 0 calc(18px + var(--us-safe-bottom));border:1px solid rgba(255,255,255,.10);border-bottom:0;border-radius:26px 26px 0 0;background:linear-gradient(180deg,#181420 0%,#100e15 100%);box-shadow:0 -20px 60px rgba(0,0,0,.48);color:var(--us-text);transition:transform var(--us-motion-surface) var(--us-ease-enter),opacity var(--us-motion-micro) var(--us-ease-standard)}
+.us-cal-sheet{position:relative;z-index:1;width:min(480px,100%);max-height:82dvh;overflow:auto;overscroll-behavior:contain;padding:0 0 calc(18px + var(--us-safe-bottom));color:var(--us-text);transition:transform var(--us-motion-surface) var(--us-ease-enter),opacity var(--us-motion-micro) var(--us-ease-standard)}
 .us-cal-sheet-overlay:not(.open) .us-cal-sheet{transform:translateY(16px);opacity:0}
 @media(prefers-reduced-motion:reduce){.us-cal-sheet{transition:none}.us-cal-sheet-overlay:not(.open) .us-cal-sheet{transform:none}}
-.us-cal-sheet-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 18px 12px;background:rgba(16,13,19,.92);border-bottom:1px solid rgba(255,255,255,.07)}
+.us-cal-sheet-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 18px 12px;background:var(--us-sheet-head-bg);-webkit-backdrop-filter:var(--us-sheet-head-blur);backdrop-filter:var(--us-sheet-head-blur);border-bottom:1px solid var(--us-color-line)}
 .us-cal-sheet-head h3{margin:0;font:400 18px/1.2 var(--us-font-editorial)}
-.us-cal-sheet-close{width:38px;height:38px;flex:0 0 auto;padding:0;border-radius:50%;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.05);color:var(--us-text);font-size:21px}
 
 .us-cal-day-sections{padding:6px 18px 4px;display:grid;gap:16px}
 .us-cal-day-section h4{margin:0 0 8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:rgba(247,242,248,.55)}
@@ -94,15 +92,15 @@
 body.us-cal-open{overflow:hidden}
 
 @media(max-width:360px){
-  .us-cal-surface{border-radius:22px 22px 0 0}
   .us-cal-day{min-height:46px}
 }
 
 /* Wide/tablet: still ONE shared month — just roomier — with the selected day below. */
 @media(min-width:860px){
   .us-cal-overlay{padding-top:0;align-items:center}
-  .us-cal-surface{width:min(760px,100%);border-radius:27px;border-bottom:1px solid rgba(255,255,255,.10);max-height:min(92dvh,900px)}
-  .us-cal-head{border-radius:27px 27px 0 0}
+  .us-cal-surface{width:min(760px,100%);max-height:min(92dvh,900px)}
+  .us-cal-surface.is-bottom{border-radius:var(--us-radius-sheet);border-bottom:var(--us-glass-3-border);box-shadow:var(--us-glass-3-shadow)}
+  .us-cal-head{border-radius:var(--us-radius-sheet) var(--us-radius-sheet) 0 0}
   .us-cal-body{padding:14px 28px 60px}
   .us-cal-pane-month{max-width:680px;margin:0 auto}
   .us-cal-weekday-row,.us-cal-day-grid{gap:6px}
