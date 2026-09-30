@@ -23,6 +23,7 @@
   --us-color-rose-2:#ff8eaa;
   --us-color-violet:#a985ff;
   --us-color-plum:#28142f;
+  --us-color-paper:#e9e2d5;             /* photo-journal post-it signature */
   --us-color-accent-ink:#dcbfe8;         /* eyebrows, accent text, icons */
   --us-color-accent-soft:rgba(169,133,255,.13);
   --us-color-accent-line:rgba(214,176,232,.26);
@@ -179,6 +180,7 @@
   --us-line:var(--us-color-line);
   --us-serif:var(--us-font-editorial);
   --us-sans:var(--us-font-ui);
+  --us-paper:var(--us-color-paper);
 }
 
 :where(button:not(:disabled):not([data-us-motion-tap="off"])) {
@@ -646,5 +648,12 @@ h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
 @media (min-width:700px) {
   .us-confirm {
     align-items:center;
+  }
+}
+
+/* Page titles step down once on the narrowest phones. */
+@media (max-width:370px) {
+  :root {
+    --us-type-page:23px;
   }
 }

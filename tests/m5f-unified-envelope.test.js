@@ -671,7 +671,7 @@ test('M5G2 voice control uses a red dot idle and a stop square while recording',
   const html = read('index.html');
   const css = read('left-for-you.css');
   assert.doesNotMatch(html, /leftForYouComposerAudioRecord[^>]*>[^<]*Registra/);
-  assert.match(css, /left-for-you-record-icon[^}]*background:#e/);
+  assert.match(css, /left-for-you-record-icon[^}]*background:(#e|var\(--us-color-danger\))/);
   assert.match(css, /\.left-for-you-record-control\.is-recording[^}]*\.left-for-you-record-icon/);
 });
 

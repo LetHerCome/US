@@ -214,7 +214,10 @@ test('M11C longitudinal: a revealed prompt resurfaces once, after 90 days, with 
   assert.equal(revealF.previous.partner_answer_text, `B-allora-${original.position}`);
   assert.equal(revealB.previous.my_answer_text, `B-allora-${original.position}`);
   assert.equal(revealB.my_answer_text, `B-ora-${item.position}`);
-  assert.equal((await candidates(db, c, 'scopritevi')).filter((r) => r.source_type === 'game_history').length, 1,
+  // Whether a second prompt is eligible depends on how many longitudinal
+  // prompts the random first round drew (1 or more), so only the invariant
+  // is asserted: at most one resurfacing at a time, and it stays cooled.
+  assert.ok((await candidates(db, c, 'scopritevi')).filter((r) => r.source_type === 'game_history').length <= 1,
     'another eligible prompt may be offered, but the recipe cooldown keeps it cooled');
   const s = await scored(db, c, 'scopritevi');
   for (const [k, r] of Object.entries(s)) if (k.startsWith('longitudinal:')) assert.equal(r.cooled, true, `${k} waits 60 days`);

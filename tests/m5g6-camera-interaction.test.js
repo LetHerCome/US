@@ -36,6 +36,6 @@ test('M5G6 camera use-photo flow selects the capture and returns to the composer
 
 test('M5G6 enabled CTA has active foreground and disabled CTA stays muted', () => {
   const css = read('left-for-you.css');
-  assert.match(css, /button:not\(:disabled\)\{[^}]*color:#fffafc/);
+  assert.match(css, /button:not\(:disabled\)\{[^}]*color:(#fffafc|var\(--us-color-text\))/);
   assert.match(css, /button:disabled\{[^}]*color:rgba\(247,242,248,\.48\)/);
 });

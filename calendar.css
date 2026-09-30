@@ -12,7 +12,7 @@
 
 .us-cal-toolbar{display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 18px 4px}
 .us-cal-nav{flex:0 0 auto}
-.us-cal-today-btn{min-height:36px;padding:0 16px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:var(--us-text);font-size:12px;font-weight:700}
+.us-cal-today-btn{padding:0 16px;border-radius:999px;font-size:12px;font-weight:700;min-height:44px;border:1px solid var(--us-color-line-strong);background:var(--us-glass-1-bg);color:var(--us-color-text)}
 
 .us-cal-legend{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;padding:6px 18px 2px}
 .us-cal-legend-item{display:inline-flex;align-items:center;gap:6px;color:rgba(247,242,248,.68);font-size:11px}
@@ -36,13 +36,13 @@
 .us-cal-day-num{min-width:24px;height:24px;padding:0 3px;display:inline-grid;place-items:center;border-radius:999px;font-size:13px;font-weight:650;font-variant-numeric:tabular-nums}
 .us-cal-day-markers{display:flex;align-items:center;justify-content:center;gap:2px;flex-wrap:wrap;min-height:13px;max-width:100%}
 /* M10.1C — ownership is text (F / B / F+B), never colour alone. */
-.us-cal-chip{display:inline-flex;align-items:center;justify-content:center;min-width:12px;height:13px;padding:0 3px;border-radius:5px;border:1px solid rgba(255,255,255,.26);background:rgba(255,255,255,.07);color:#f7f2f8;font-size:8.5px;font-weight:800;line-height:1;letter-spacing:.01em}
+.us-cal-chip{display:inline-flex;align-items:center;justify-content:center;min-width:12px;height:13px;padding:0 3px;border-radius:5px;border:1px solid rgba(255,255,255,.26);background:rgba(255,255,255,.07);color:var(--us-color-text);font-size:8.5px;font-weight:800;line-height:1;letter-spacing:.01em}
 .us-cal-chip--shared{border-color:rgba(255,158,182,.42);background:rgba(255,158,182,.10);color:#ffd3de}
 .us-cal-chip-more{font-size:8.5px;font-weight:700;line-height:13px;color:rgba(247,242,248,.62)}
 
 .us-cal-empty{margin-top:14px;padding:22px;border-radius:20px;border:1px dashed rgba(255,255,255,.14);background:rgba(255,255,255,.025);text-align:center;color:var(--us-muted)}
 .us-cal-empty[hidden]{display:none!important}
-.us-cal-empty b{display:block;font:500 19px/1.2 var(--us-font-editorial);color:#fff7fb;margin-bottom:6px}
+.us-cal-empty b{display:block;font:500 19px/1.2 var(--us-font-editorial);color:var(--us-color-text);margin-bottom:6px}
 .us-cal-empty p{max-width:320px;margin:0 auto 14px;font-size:12px;line-height:1.5}
 
 /* Nested sheets (day / detail / form) — same overlay, additional slide-up layers. */
@@ -66,8 +66,8 @@
 .us-cal-detail-actions{display:flex;gap:9px;padding:14px 18px 2px}
 .us-cal-detail-actions[hidden]{display:none!important}
 .us-cal-detail-actions button{flex:1;min-height:46px;border-radius:15px;font-size:12px;font-weight:700}
-.us-cal-detail-edit{border:1px solid rgba(169,133,255,.26);background:rgba(169,133,255,.12);color:#fff7fb}
-.us-cal-detail-delete{border:1px solid rgba(255,94,126,.18);background:rgba(255,94,126,.09);color:#ff91aa}
+.us-cal-detail-edit{border:1px solid rgba(169,133,255,.26);background:rgba(169,133,255,.12);color:var(--us-color-text)}
+.us-cal-detail-delete{border:1px solid rgba(255,94,126,.18);background:rgba(255,94,126,.09);color:var(--us-color-rose-2)}
 
 .us-cal-form{padding:8px 18px 2px}
 
@@ -80,13 +80,13 @@
 /* hidden must always win: the global stylesheet styles these as block/flex. */
 .us-cal-field[hidden]{display:none!important}
 .us-cal-field{display:block;margin-top:12px}
-.us-cal-field>span{display:block;margin:0 0 7px 3px;font-size:11px;font-weight:750;color:#b7bdc9}
-.us-cal-field>span i{font-style:normal;color:#707888;font-weight:500}
-.us-cal-field input,.us-cal-field textarea{width:100%;background:#0d1016;border:1px solid rgba(255,255,255,.09);border-radius:16px;color:#f5f6fa;padding:11px 13px;font-size:13px;font-family:inherit}
+.us-cal-field>span{display:block;margin:0 0 7px 3px;font-size:11px;font-weight:750;color:var(--us-color-text-2)}
+.us-cal-field>span i{font-style:normal;color:var(--us-color-text-3);font-weight:500}
+.us-cal-field input,.us-cal-field textarea{width:100%;background:var(--us-color-bg);border:1px solid rgba(255,255,255,.09);border-radius:16px;color:var(--us-color-text);padding:11px 13px;font-size:13px;font-family:inherit}
 .us-cal-allday-field{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:15px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07)}
-.us-cal-allday-field input{width:20px;height:20px;flex:0 0 auto;accent-color:#8b72f8}
+.us-cal-allday-field input{width:20px;height:20px;flex:0 0 auto;accent-color:var(--us-color-violet)}
 .us-cal-allday-field span{font-size:12px;font-weight:650;color:var(--us-text)}
-.us-cal-form-status{min-height:18px;margin-top:9px;color:#8e96a6;font-size:11px}
+.us-cal-form-status{min-height:18px;margin-top:9px;color:var(--us-color-text-2);font-size:11px}
 .us-cal-form-save{width:100%;min-height:48px;margin-top:14px;border-radius:16px}
 
 body.us-cal-open{overflow:hidden}
@@ -115,9 +115,8 @@ body.us-cal-open{overflow:hidden}
 }
 
 /* M6C · Mese | Settimana switch — same segmented-control idiom as the kind picker. */
-.us-cal-view-switch{display:flex;justify-content:center;gap:4px;margin:10px auto 0;padding:4px;width:max-content;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09)}
-.us-cal-view-switch button{min-height:32px;padding:0 18px;border-radius:999px;border:0;background:transparent;color:rgba(247,242,248,.6);font-size:12px;font-weight:700}
-.us-cal-view-switch button.is-active{background:rgba(169,133,255,.22);color:#fff7fb}
+.us-cal-view-switch{justify-content:center;margin:10px auto 0;width:max-content}
+.us-cal-view-switch button{padding:0 20px}
 
 /* M6C · Week view: one vertical day-list at every width — never two tiny
    side-by-side timelines. Partner lanes reuse the day-sheet sections. */
@@ -127,7 +126,7 @@ body.us-cal-open{overflow:hidden}
 .us-cal-week-list{display:grid;gap:12px;max-width:560px;margin:0 auto}
 .us-cal-week-day{padding:13px 14px;border:1px solid rgba(255,255,255,.08);border-radius:20px;background:rgba(255,255,255,.03)}
 .us-cal-week-day.is-today{border-color:rgba(169,133,255,.45)}
-.us-cal-week-day-head{display:flex;align-items:baseline;gap:8px;width:100%;padding:2px 4px;text-align:left;border:0;background:transparent;color:#fff7fb}
+.us-cal-week-day-head{display:flex;align-items:baseline;gap:8px;width:100%;padding:2px 4px;text-align:left;border:0;background:transparent;color:var(--us-color-text)}
 .us-cal-week-day-head:active{opacity:.8}
 .us-cal-week-day-name{font:400 15px/1.2 var(--us-font-editorial)}
 .us-cal-week-day-num{font-size:12px;color:rgba(247,242,248,.55)}
@@ -138,7 +137,7 @@ body.us-cal-open{overflow:hidden}
 /* M6C · ♡ Tempo insieme — warm, not corporate. */
 .us-cal-tempo{display:flex;gap:10px;margin-top:12px;padding:11px 13px;border-radius:16px;border:1px solid rgba(255,158,182,.16);background:rgba(255,158,182,.06)}
 .us-cal-tempo.is-empty{opacity:.75}
-.us-cal-tempo-heart{font-size:16px;color:#ff9eb6;line-height:1.25}
+.us-cal-tempo-heart{font-size:16px;color:var(--us-color-rose-2);line-height:1.25}
 .us-cal-tempo-copy{min-width:0}
 .us-cal-tempo-copy b{display:block;font-size:12px;font-weight:700;color:#ffd3de;letter-spacing:.02em}
 .us-cal-tempo-copy ul{margin:4px 0 0;padding:0;list-style:none;display:grid;gap:2px}
@@ -156,13 +155,13 @@ body.us-cal-open{overflow:hidden}
 .us-cal-pick-banner[hidden]{display:none!important}
 .us-cal-pick-banner span{min-width:0;display:flex;flex-direction:column;gap:2px}
 .us-cal-pick-banner small{font-size:10.5px;font-weight:750;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,205,225,.8)}
-.us-cal-pick-banner b{font-size:13.5px;color:#fff7fb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.us-cal-pick-banner button{flex:0 0 auto;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff7fb;font-size:12px;font-weight:700}
-.us-cal-form-day{margin:0 2px 2px;font:500 19px/1.2 var(--us-font-editorial);color:#fff7fb}
+.us-cal-pick-banner b{font-size:13.5px;color:var(--us-color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.us-cal-pick-banner button{flex:0 0 auto;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:var(--us-color-text);font-size:12px;font-weight:700}
+.us-cal-form-day{margin:0 2px 2px;font:500 19px/1.2 var(--us-font-editorial);color:var(--us-color-text)}
 .us-cal-form-day[hidden],.us-cal-form-day-entries[hidden]{display:none!important}
 .us-cal-form-day-entries{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px}
-.us-cal-form-day-kicker{width:100%;font-size:10.5px;font-weight:750;letter-spacing:.08em;text-transform:uppercase;color:rgba(247,242,248,.48)}
-.us-cal-form-day-entry{display:inline-flex;align-items:baseline;gap:6px;max-width:100%;min-height:36px;padding:7px 11px;border-radius:12px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.04);color:#fff7fb;font-size:12px;text-align:left}
+.us-cal-form-day-kicker{width:100%;font-size:var(--us-type-eyebrow);font-weight:750;letter-spacing:var(--us-type-eyebrow-tracking);text-transform:uppercase;color:var(--us-color-accent-ink)}
+.us-cal-form-day-entry{display:inline-flex;align-items:baseline;gap:6px;max-width:100%;min-height:36px;padding:7px 11px;border-radius:12px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.04);color:var(--us-color-text);font-size:12px;text-align:left}
 .us-cal-form-day-entry b{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .us-cal-form-day-entry small{flex:0 0 auto;color:rgba(247,242,248,.55);font-size:11px}
 
@@ -172,9 +171,9 @@ body.us-cal-open{overflow:hidden}
 .us-cal-body.is-week-mode .us-cal-day-detail{display:none}
 .us-cal-day-detail-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
 .us-cal-day-detail-titles{min-width:0}
-.us-cal-day-detail-titles h3{margin:0;font:400 21px/1.15 var(--us-font-editorial);letter-spacing:-.01em;color:#fff7fb;overflow-wrap:anywhere}
+.us-cal-day-detail-titles h3{margin:0;font:400 21px/1.15 var(--us-font-editorial);letter-spacing:-.01em;color:var(--us-color-text);overflow-wrap:anywhere}
 .us-cal-day-detail-titles small{display:block;margin-top:3px;min-height:14px;font-size:11.5px;color:rgba(247,242,248,.55)}
-.us-cal-add{flex:0 0 auto;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid rgba(200,182,255,.34);background:rgba(169,133,255,.14);color:#fff7fb;font-size:12.5px;font-weight:750;white-space:nowrap}
+.us-cal-add{flex:0 0 auto;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid rgba(200,182,255,.34);background:rgba(169,133,255,.14);color:var(--us-color-text);font-size:12.5px;font-weight:750;white-space:nowrap}
 .us-cal-add:active{background:rgba(169,133,255,.24)}
 .us-cal-add:focus-visible,.us-cal-event:focus-visible{outline:2px solid rgba(200,182,255,.85);outline-offset:2px}
 .us-cal-day-detail .us-cal-day-sections{padding:0;gap:18px}
@@ -184,7 +183,7 @@ body.us-cal-open{overflow:hidden}
 .us-cal-day-tempo .us-cal-tempo{margin-top:0}
 
 /* One event row everywhere (selected day, week): [F|B|F+B] · time · title · place. */
-.us-cal-owner{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 6px;border-radius:10px;border:1px solid rgba(255,255,255,.24);background:rgba(255,255,255,.07);color:#fff7fb;font-size:12px;font-weight:800;letter-spacing:.01em;line-height:1}
+.us-cal-owner{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 6px;border-radius:10px;border:1px solid rgba(255,255,255,.24);background:rgba(255,255,255,.07);color:var(--us-color-text);font-size:12px;font-weight:800;letter-spacing:.01em;line-height:1}
 .us-cal-owner--sm{min-width:24px;height:22px;padding:0 5px;border-radius:8px;font-size:10.5px}
 .us-cal-owner--shared{min-width:38px;border-color:rgba(255,158,182,.42);background:rgba(255,158,182,.10);color:#ffd3de}
 .us-cal-event{width:100%;min-height:60px;margin:0 0 8px;padding:12px 13px;display:flex;align-items:flex-start;gap:12px;text-align:left;border:1px solid rgba(255,255,255,.08);border-radius:16px;background:rgba(255,255,255,.04);color:var(--us-text)}
@@ -193,7 +192,7 @@ body.us-cal-open{overflow:hidden}
 .us-cal-event .us-cal-owner{margin-top:1px}
 .us-cal-event-copy{min-width:0;flex:1 1 auto;display:grid;gap:3px}
 .us-cal-event-time{font-size:12px;font-weight:650;color:rgba(247,242,248,.62);font-variant-numeric:tabular-nums}
-.us-cal-event-title{font-size:15.5px;line-height:1.28;font-weight:650;color:#fff7fb;overflow-wrap:anywhere;word-break:break-word}
+.us-cal-event-title{font-size:15.5px;line-height:1.28;font-weight:650;color:var(--us-color-text);overflow-wrap:anywhere;word-break:break-word}
 .us-cal-event-place{font-size:12.5px;line-height:1.35;color:rgba(247,242,248,.58);overflow-wrap:anywhere}
 .us-cal-form-day-entry .us-cal-chip{align-self:center}
 .us-cal-legend-item .us-cal-chip{font-size:9px;height:15px;min-width:14px}

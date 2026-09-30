@@ -4,31 +4,7 @@
    ========================================================= */
 
 :root{
-  --bg:#090a0e;
-  --card:#11131a;
-  --card2:#161921;
-  --text:#f3f1ed;
-  --muted:#918d99;
-  --pink:#e88aa2;
-  --pink2:#f0a0b4;
-  --violet:#8f86c8;
-  --accent:#d5a7a3;
-  --green:#72c998;
-  --border:rgba(255,255,255,.075);
-  --shadow:0 18px 50px rgba(0,0,0,.34);
-
-  --us-bg:#090a0e;
-  --us-surface:#11131a;
-  --us-surface-2:#161921;
-  --us-ink:#f7f2f8;
-  --us-muted:rgba(247,242,248,.68);
-  --us-pink:#f66f9e;
-  --us-violet:#8b72f8;
-  --us-paper:#e9e2d5;
-  --us-line:rgba(255,255,255,.075);
-  --us-serif:"Newsreader",Georgia,serif;
-  --us-sans:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  --us-accent-gradient:linear-gradient(135deg,#e88aa2 0%,#b98dbb 50%,#8f86c8 100%);
+  /* Palette: ui-foundation.css is the only authority (US-UI-UNIFICATION-01). */
   --us-brand-icon-home:url("/assets/brand/us-icon-home.svg");
   --us-brand-icon-moments:url("/assets/brand/us-icon-moments.svg");
   --us-brand-icon-quiz:url("/assets/brand/us-icon-quiz.svg");
@@ -77,16 +53,8 @@ html,body{
 .bond-xp-track>div{
   background:var(--us-accent-gradient)!important;
 }
-.qtag,.heart,.coming-tag{color:var(--us-pink)!important}
-textarea,input{
-  background:#0d0f14!important;
-  border-color:var(--us-line)!important;
-}
-.tiny{
-  color:var(--us-muted)!important;
-  letter-spacing:.105em;
-  font-weight:650;
-}
+.heart,.coming-tag{color:var(--us-color-rose)!important}
+textarea,input{background:var(--us-field-bg)!important;border-color:rgba(255,255,255,.10)!important}
 
 /* Main titles share one hierarchy. Moments keeps its journal voice. */
 .section>h2,
@@ -137,7 +105,7 @@ textarea,input{
 .profile-avatar .fallback{font-size:0!important}
 .profile-avatar .fallback::before{content:"";width:22px;height:22px;background:url("/assets/icons/profile-off.svg") center/contain no-repeat}
 .profile-avatar:active .fallback::before{background-image:url("/assets/icons/profile-on.svg")}
-.profile-avatar .camera-dot{right:-3px;bottom:-3px;width:19px;height:19px;padding:2px;background:#17131e!important;border-color:#0d0c14!important}
+.profile-avatar .camera-dot{right:-3px;bottom:-3px;width:19px;height:19px;padding:2px;background:#17131e!important;border-color:var(--us-color-bg)!important}
 .profile-avatar .camera-dot .us-shell-icon{width:100%;height:100%}
 
 /* --- M1 APK shell navigation ---------------------------------- */
@@ -199,13 +167,13 @@ textarea,input{
 .us-nav-icon [data-icon$="cards-three-regular.svg"]{-webkit-mask-image:url("/assets/icons/phosphor/cards-three-regular.svg");mask-image:url("/assets/icons/phosphor/cards-three-regular.svg")}
 .us-nav-icon [data-icon$="cards-three-fill.svg"]{-webkit-mask-image:url("/assets/icons/phosphor/cards-three-fill.svg");mask-image:url("/assets/icons/phosphor/cards-three-fill.svg")}
 .us-nav-premium .nlabel{display:block;font-size:10px;font-weight:400;letter-spacing:0;line-height:1.1;white-space:nowrap}
-.us-nav-premium button.active{color:#fff7fb!important;background:transparent!important}
+.us-nav-premium button.active{color:var(--us-color-text)!important;background:transparent!important}
 .us-nav-premium button.active .nicon{background:radial-gradient(circle,rgba(217,70,239,.14),transparent 69%)!important;color:#ee91ff;transform:none}
-.us-nav-premium button.active .nicon::before{content:"";position:absolute;inset:-1px;border-radius:50%;padding:1.5px;background:conic-gradient(from 80deg,transparent 0 20%,#8066ff 36%,#d946ef 58%,#ff4f8b 74%,transparent 92%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:us-nav-orbit 4.8s linear infinite;pointer-events:none}
+.us-nav-premium button.active .nicon::before{content:"";position:absolute;inset:-1px;border-radius:50%;padding:1.5px;background:conic-gradient(from 80deg,transparent 0 20%,#8066ff 36%,#d946ef 58%,var(--us-color-rose) 74%,transparent 92%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:us-nav-orbit 4.8s linear infinite;pointer-events:none}
 .us-nav-premium button.active .us-nav-icon-off{display:none!important}
 .us-nav-premium button.active .us-nav-icon-on{display:block!important}
-.us-nav-premium button.active::after{content:"";width:4px;height:4px;margin-top:1px;border-radius:50%;background:#ff4f8b;box-shadow:0 0 9px rgba(255,79,139,.65)}
-.us-nav-premium button.active .nlabel{font-weight:500;color:#fff7fb}
+.us-nav-premium button.active::after{content:"";width:4px;height:4px;margin-top:1px;border-radius:50%;background:var(--us-color-rose);box-shadow:0 0 9px rgba(255,79,139,.65)}
+.us-nav-premium button.active .nlabel{font-weight:500;color:var(--us-color-text)}
 @keyframes us-nav-orbit{to{transform:rotate(1turn)}}
 
 /* M1 top chrome: APK shell treatment only; Home layout remains Web-owned. */
@@ -218,7 +186,7 @@ textarea,input{
 .top.us-premium-top .us-calendar-btn{background:rgba(12,9,15,.48)!important;border:1px solid rgba(255,247,251,.14)!important;backdrop-filter:blur(18px) saturate(120%);-webkit-backdrop-filter:blur(18px) saturate(120%)}
 .top.us-premium-top .profile-avatar{background:linear-gradient(145deg,rgba(242,85,101,.42),rgba(82,149,255,.3))!important;border:1px solid rgba(255,247,251,.14)!important;box-shadow:none!important}
 #home #usTodayPriorityRegion[hidden]{display:none!important}
-.us-events-top-control{flex:1 1 auto;min-width:92px;max-width:150px;min-height:44px;height:44px;margin:0 4px;padding:2px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;border:0;background:transparent!important;color:#fff7fb;touch-action:manipulation;white-space:nowrap}
+.us-events-top-control{flex:1 1 auto;min-width:92px;max-width:150px;min-height:44px;height:44px;margin:0 4px;padding:2px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;border:0;background:transparent!important;color:var(--us-color-text);touch-action:manipulation;white-space:nowrap}
 .us-events-top-control span:first-child{max-width:112px;overflow:hidden;text-overflow:ellipsis;font-size:12px;font-weight:550;line-height:1.05}
 .us-events-top-chevron{color:rgba(255,247,251,.9);display:inline-grid;--us-icon-size:14px}
 @media(max-width:360px){.us-events-top-control{min-width:80px;max-width:112px;margin:0 2px;padding-inline:4px}.us-events-top-control span:first-child{max-width:96px;font-size:11px}}
@@ -276,7 +244,7 @@ textarea,input{
 /* --- Common emotional feedback --------------------------------- */
 .toast{
   background:#f1eee8!important;
-  color:#16171c!important;
+  color:var(--us-color-surface)!important;
   box-shadow:0 12px 32px rgba(0,0,0,.24)!important;
 }
 
@@ -310,8 +278,8 @@ body:has(#home.page.active){overflow-y:hidden}
 .top.us-premium-top .us-top-left{grid-column:1;justify-self:start;display:flex;align-items:center;min-width:0}
 /* Game V2 — Per voi top control: the sparkle mirrors the envelope control;
    its personal state rides the shared attention orbit, never a counter. */
-#usPerVoiTop.us-pervoi-top{--us-attention-inset:-3px;position:relative;width:38px;height:38px;padding:0;border:1px solid rgba(255,234,247,.10);border-radius:50%;background:rgba(255,255,255,.05);color:rgba(247,242,248,.84);display:grid;place-items:center;overflow:visible;box-shadow:none;transition:transform .12s var(--us-ease-standard),background .12s var(--us-ease-standard),color .12s var(--us-ease-standard)}
-#usPerVoiTop:active{transform:scale(.94);background:rgba(246,111,158,.14);color:#fff7fb}
+#usPerVoiTop.us-pervoi-top{--us-attention-inset:-3px;position:relative;width:38px;height:38px;padding:0;border:1px solid rgba(255,234,247,.10);border-radius:50%;background:rgba(255,255,255,.05);color:rgba(247,242,248,.84);display:grid;place-items:center;overflow:visible;box-shadow:none;transition:transform var(--us-motion-press) var(--us-ease-standard),background var(--us-motion-press) var(--us-ease-standard),color var(--us-motion-press) var(--us-ease-standard)}
+#usPerVoiTop:active{transform:scale(.94);background:rgba(246,111,158,.14);color:var(--us-color-text)}
 #usPerVoiTop.is-loading{opacity:.52;pointer-events:none}
 #usPerVoiTop .us-pervoi-icon{width:19px;height:19px;display:block;background-color:currentColor;-webkit-mask:url("/assets/icons/phosphor/sparkle-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/sparkle-regular.svg") center/contain no-repeat}
 #usPerVoiTop[data-gv2-state="pending"] .us-pervoi-icon,#usPerVoiTop[data-gv2-state="reveal_ready"] .us-pervoi-icon{-webkit-mask-image:url("/assets/icons/phosphor/sparkle-fill.svg");mask-image:url("/assets/icons/phosphor/sparkle-fill.svg");color:#ffd3e3}

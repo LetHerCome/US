@@ -29,7 +29,7 @@
   background:
     radial-gradient(circle at 18% -6%,rgba(232,138,162,.075),transparent 31%),
     radial-gradient(circle at 92% 5%,rgba(143,134,200,.06),transparent 26%),
-    var(--us-bg,#090a0e)!important;
+    var(--us-bg,var(--us-color-bg))!important;
   transform:translate3d(var(--us-motion31-x,100%),0,0)!important;
   transition:none!important;
   will-change:transform;
@@ -106,13 +106,13 @@ html.us-motion31-promoting .page.active.us-motion5-enter-prev{
   justify-content:center;
   gap:9px;
   background:rgba(240,237,231,.96);
-  color:#16171c;
+  color:var(--us-color-surface);
   box-shadow:0 15px 38px rgba(0,0,0,.28);
   backdrop-filter:blur(18px);
   -webkit-backdrop-filter:blur(18px);
   transition:
-    transform .28s cubic-bezier(.22,.78,.24,1),
-    opacity .2s ease;
+    transform var(--us-motion-surface) var(--us-ease-standard),
+    opacity var(--us-motion-fast) var(--us-ease-standard);
 }
 .us-xp-celebration.show{opacity:1;transform:translate3d(-50%,0,0) scale(1)}
 .us-xp-celebration.leave{opacity:0;transform:translate3d(-50%,-13px,0) scale(.98)}
@@ -135,7 +135,7 @@ html.us-motion31-promoting .page.active.us-motion5-enter-prev{
   padding:var(--us-space-8);
   pointer-events:none;
   background:rgba(7,8,12,0);
-  transition:background .25s ease;
+  transition:background var(--us-motion-base) var(--us-ease-standard);
 }
 .us-level-celebration.show{background:rgba(7,8,12,.34)}
 .us-level-celebration>div{
@@ -145,12 +145,12 @@ html.us-motion31-promoting .page.active.us-motion5-enter-prev{
   border-radius:27px;
   background:
     radial-gradient(circle at 50% -15%,rgba(232,138,162,.16),transparent 45%),
-    #13151c;
+    var(--us-color-surface);
   border:1px solid rgba(255,255,255,.08);
   box-shadow:0 24px 70px rgba(0,0,0,.43);
   transform:scale(.9);
   opacity:0;
-  transition:transform .3s cubic-bezier(.18,.8,.2,1),opacity .2s ease;
+  transition:transform var(--us-motion-immersive) var(--us-ease-enter),opacity var(--us-motion-fast) var(--us-ease-standard);
 }
 .us-level-celebration.show>div{transform:scale(1);opacity:1}
 .us-level-celebration i{
@@ -194,7 +194,7 @@ html.us-motion31-promoting .page.active.us-motion5-enter-prev{
   border-color:rgba(114,201,152,.09)!important;
   background:linear-gradient(90deg,rgba(114,201,152,.035),transparent),rgba(255,255,255,.018)!important;
 }
-.us-event-item.is-done .us-event-chevron{color:#72c998!important}
+.us-event-item.is-done .us-event-chevron{color:var(--us-color-positive)!important}
 
 /* Bond rank gets editorial emphasis. */
 .bond-rank{
