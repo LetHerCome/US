@@ -120,13 +120,19 @@ function modeStatus(f, open) {
 
 const glyph = (name) => `<span class="us-gv2-glyph" aria-hidden="true">${icon(name)}</span>`;
 
+// M12A — the hub card that follows a just-saved weekly question settles in
+// once. The flag is 'pending' through the immediate hub render and becomes
+// true for the render that follows the fresh server state, which consumes it.
+let weeklyJustCreated = false;
 function weeklyCard(w) {
   if (!w) return '';
   const unlock = mondayLabel(w.next_unlock);
   const head = (name, title, line) => `<div class="us-gv2-weekly-head">${glyph(name)}<div><span class="us-gv2-kicker">LA VOSTRA DOMANDA</span><b>${esc(title)}</b>${line ? `<small>${esc(line)}</small>` : ''}</div></div>`;
   if (w.created_by_me) {
     const q = w.my_question;
-    return `<section class="us-gv2-weekly is-locked" aria-label="La domanda della settimana">
+    const settle = weeklyJustCreated === true ? ' is-just-created' : '';
+    if (weeklyJustCreated === true) weeklyJustCreated = false;
+    return `<section class="us-gv2-weekly is-locked${settle}" aria-label="La domanda della settimana">
       ${head('lock-simple', 'Domanda creata', `Poi tocca a ${partnerName()}, ${unlock}.`)}
       ${q ? `<blockquote>${esc(q.question_text)}</blockquote><small class="us-gv2-note">${esc(partnerName())} la scoprirà giocando.</small>` : ''}
     </section>`;
@@ -160,7 +166,7 @@ function renderHub() {
     const status = modeStatus(f, openByFamily.get(f.id));
     const locked = status?.state === 'locked';
     const mark = status?.state === 'played' ? icon('check') : locked ? icon('lock-simple') : '';
-    return `<button type="button" class="us-gv2-mode${i === 0 || i === FAMILIES.length - 1 ? ' is-wide' : ''}" data-gv2-family="${f.id}" data-gv2-mode-state="${esc(status?.state || 'ready')}"${locked ? ' aria-disabled="true"' : ''}>
+    return `<button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-mode${i === 0 || i === FAMILIES.length - 1 ? ' is-wide' : ''}" data-gv2-family="${f.id}" data-gv2-mode-state="${esc(status?.state || 'ready')}"${locked ? ' aria-disabled="true"' : ''}>
       ${glyph(f.icon)}
       <span class="us-gv2-mode-copy"><b>${esc(f.name)}</b>${status ? `<small class="us-gv2-mode-state">${mark}${esc(status.text)}</small>` : ''}</span>
       ${status && !locked && status.state === 'open' ? `<i class="us-gv2-dot" data-tone="${esc(status.tone)}" aria-hidden="true"></i>` : ''}
@@ -168,8 +174,8 @@ function renderHub() {
   }).join('');
   root.innerHTML = `
     <header class="us-gv2-head"><h2>Gioca</h2>${rhythmStrip()}</header>
-    <button type="button" class="us-gv2-pervoi us-attention-orbit" data-gv2-action="per-voi" data-gv2-state="${esc(pvState)}" data-us-attention="${pvState === 'pending' || pvState === 'reveal_ready' ? 'on' : 'off'}">
-      ${glyph('sparkle')}<span class="us-gv2-pervoi-copy"><b>Per voi</b><small>${esc(pv.line)}</small></span><span class="us-gv2-pervoi-cta">${esc(pv.cta)}</span>
+    <button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-pervoi us-attention-orbit" data-gv2-action="per-voi" data-gv2-state="${esc(pvState)}" data-us-attention="${pvState === 'pending' || pvState === 'reveal_ready' ? 'on' : 'off'}">
+      ${glyph('sparkle').replace('class="us-gv2-glyph"', 'class="us-gv2-glyph" data-us-attention-icon')}<span class="us-gv2-pervoi-copy"><b>Per voi</b><small>${esc(pv.line)}</small></span><span class="us-gv2-pervoi-cta">${esc(pv.cta)}</span>
     </button>
     <section class="us-gv2-modes" aria-label="Scegliete voi"><div class="us-gv2-mode-grid">${modeTiles}</div></section>
     ${weeklyCard(home?.weekly)}
@@ -189,11 +195,13 @@ async function load() {
     if (error) throw error;
     if (seq !== loadSeq) return home;
     home = data || null;
+    if (weeklyJustCreated === 'pending') weeklyJustCreated = true;
     renderTop();
     if (view === 'hub') renderHub();
     return home;
   } catch (error) {
     console.warn('[US Gioca] home', error);
+    weeklyJustCreated = false;
     renderTop();
     if (view === 'hub' && !home) renderHubError();
     return null;
@@ -204,11 +212,14 @@ async function load() {
 
 function panel() { return byId('usGameV2Panel'); }
 function showPanel(html) {
+  const fromHub = !byId('quizHub')?.classList.contains('hidden');
   byId('quizHub')?.classList.add('hidden');
   const root = panel();
   if (!root) return null;
   root.classList.remove('hidden');
   root.innerHTML = html;
+  // M12A — entering a mode from the hub eases the destination in once.
+  if (fromHub) window.UsUiFoundation?.playOnce?.(root, 'us-content-enter', 260);
   return root;
 }
 function showHub() {
@@ -297,7 +308,11 @@ async function present(state) {
   drafts.clear();
   if (state.reveal_ready) {
     view = 'reveal';
-    renderReveal();
+    // M12A — only the FIRST reveal is staged; a revisit shows everything at once.
+    // The decoration is CSS-only and never gates the data (all rows are in the DOM).
+    const first = !state.my_reveal_seen_at;
+    renderReveal({ first });
+    if (first) window.UsFeedback?.reveal?.();
     if (!state.my_reveal_seen_at) {
       try {
         const res = await sb.rpc('mark_game_session_reveal_seen', { target_session_id: state.id });
@@ -460,11 +475,12 @@ function previousAnswers(item) {
     <dl><div><dt>Tu</dt><dd>${esc(then.my_answer_text ?? '—')}</dd></div><div><dt>${esc(partnerName())}</dt><dd>${esc(then.partner_answer_text ?? '—')}</dd></div></dl></div>`;
 }
 
-function renderReveal() {
+function renderReveal({ first = false } = {}) {
   const cards = current.items.map((item) => {
     const out = outcome(item);
     const same = item.mechanic === 'prediction' ? item.prediction_matched === true : item.answer_kind === 'choice' && item.my_answer_index === item.partner_answer_index;
-    return `<article class="us-gv2-reveal-card" data-gv2-family="${esc(item.family || current.game_family)}">
+    return `<article class="us-gv2-reveal-card" data-gv2-family="${esc(item.family || current.game_family)}" data-gv2-mechanic="${esc(item.mechanic || '')}">
+      <i class="us-gv2-lightsplit" aria-hidden="true"></i>
       <span class="us-gv2-kicker">${esc(familyName(item.family || current.game_family).toUpperCase())}</span>
       ${contextChip(item)}
       <h3>${esc(item.my_prompt || item.question_text)}</h3>
@@ -473,7 +489,7 @@ function renderReveal() {
       ${previousAnswers(item)}
     </article>`;
   }).join('');
-  showPanel(`<article class="us-gv2-reveal">
+  showPanel(`<article class="us-gv2-reveal${first ? ' is-first-reveal' : ''}">
     <div class="us-gv2-play-top">${backButton()}</div>
     <span class="us-gv2-kicker">LE VOSTRE RISPOSTE</span>
     <h2>${esc(familyName(current.game_family))}</h2>
@@ -481,6 +497,8 @@ function renderReveal() {
     <div class="us-gv2-actions is-single"><button type="button" class="primary" data-gv2-action="back">Torna a Gioca</button></div>
   </article>`);
 }
+
+const WEEKLY_MORPH_MS = 480;
 
 // ---------------------------------------------------------------- weekly form
 
@@ -523,6 +541,16 @@ function renderWeeklyForm(error = '') {
   });
 }
 
+// M12A — server-confirmed only: the button turns into the saved check, then
+// the hub shows the locked card. Without the shared motion system (or under
+// reduced motion) the change is immediate.
+async function morphWeeklySaved(button) {
+  if (window.UsUiFoundation?.isReducedMotion?.() !== false) return;
+  button.classList.add('is-saved');
+  button.innerHTML = `${icon('check')}<span>Domanda salvata</span>`;
+  await new Promise((resolve) => setTimeout(resolve, WEEKLY_MORPH_MS));
+}
+
 async function submitWeekly(form) {
   if (busy) return;
   const data = new FormData(form);
@@ -546,6 +574,9 @@ async function submitWeekly(form) {
     if (home) home.weekly = state;
     if (!state?.replayed) window.sendWebPushEvent?.('game_weekly', state?.question_id || null).catch?.(() => {});
     toast('Domanda salvata ♡');
+    window.UsFeedback?.success?.();
+    await morphWeeklySaved(button);
+    weeklyJustCreated = 'pending';
     showHub();
   } catch (error) {
     console.warn('[US Gioca] weekly', error);

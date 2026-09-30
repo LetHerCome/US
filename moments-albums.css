@@ -747,3 +747,13 @@ body.us-keyboard-open .us-album-floating-add,
 #usAlbumOverlay .us-album-photo-copy{padding:9px 11px 11px!important}
 #usAlbumOverlay .us-album-photo-copy p{color:rgba(246,247,251,.8)!important}
 #usAlbumOverlay .us-album-photo-copy small{color:var(--muted,var(--us-color-text-2))!important}
+
+/* M12A — a newly created Ricordo settles in and catches the light once (.ricordi-new
+   is added by UsUiFoundation.playOnce and removed when it has played). Independent
+   translate/scale keep the card's own rotation and transitions untouched. */
+#moments .moment-card.ricordi-new{animation:ricordi-settle 420ms var(--us-ease-enter) 1 both}
+#moments .moment-card.ricordi-new::after{content:"";position:absolute;inset:0;z-index:2;border-radius:inherit;pointer-events:none;background:linear-gradient(105deg,transparent 35%,rgba(255,244,250,.55) 50%,transparent 65%);background-size:260% 100%;background-position:130% 0;animation:ricordi-light-catch 900ms 240ms var(--us-ease-standard) 1 both}
+@keyframes ricordi-settle{from{opacity:0;translate:0 12px;scale:.97}to{opacity:1;translate:0 0;scale:1}}
+@keyframes ricordi-light-catch{0%{background-position:130% 0;opacity:1}80%{opacity:1}100%{background-position:-30% 0;opacity:0}}
+@media(prefers-reduced-motion:reduce){#moments .moment-card.ricordi-new,#moments .moment-card.ricordi-new::after{animation:none}}
+:root[data-us-motion="reduced"] #moments .moment-card.ricordi-new,:root[data-us-motion="reduced"] #moments .moment-card.ricordi-new::after{animation:none}

@@ -40,7 +40,6 @@
 
 .us-gv2-pervoi,.us-gv2-mode{position:relative;isolation:isolate;overflow:hidden;color:var(--us-ink);text-align:left;border-radius:var(--us-radius-card);background:linear-gradient(150deg,rgba(46,24,54,.80),rgba(20,15,28,.74) 62%,rgba(14,12,20,.78));border:1px solid rgba(255,255,255,.12);box-shadow:var(--us-glass-2-shadow);-webkit-backdrop-filter:var(--us-glass-2-blur);backdrop-filter:var(--us-glass-2-blur);transition:transform var(--us-motion-press) var(--us-ease-standard),border-color var(--us-motion-fast) var(--us-ease-standard)}
 .us-gv2-pervoi::after,.us-gv2-mode::after{content:"";position:absolute;z-index:-1;right:-34%;top:-34%;width:96%;height:96%;border-radius:50%;background:radial-gradient(circle,var(--gv2-glow,rgba(255,102,142,.30)),transparent 68%);opacity:.6;pointer-events:none}
-.us-gv2-pervoi:active,.us-gv2-mode:active{transform:scale(.98)}
 
 .us-gv2-pervoi{--gv2-tint:var(--us-color-rose-2);--gv2-glow:rgba(255,102,142,.34);width:100%;min-height:88px;display:flex;align-items:center;gap:14px;padding:16px;--us-attention-inset:-2px}
 .us-gv2-pervoi .us-gv2-glyph{width:44px;height:44px;border-radius:15px}
@@ -168,3 +167,33 @@
 @media(max-height:700px){.us-gv2-mode{padding:12px}.us-gv2-mode-copy b{font-size:17px}}
 @media(min-width:650px){.us-gv2-mode{aspect-ratio:1/.72}.us-gv2-mode:hover,.us-gv2-pervoi:hover{border-color:rgba(255,255,255,.22)}}
 @media(prefers-reduced-motion:reduce){.us-gv2-pervoi,.us-gv2-mode,.us-gv2-progress i{transition:none}.us-gv2-pervoi:active,.us-gv2-mode:active{transform:none}}
+
+/* M12A — First reveal: a thin light travels through the card, then the two
+   perspectives open out of it (mine, a short beat, theirs, then the outcome).
+   Everything is already in the DOM and readable; this only decorates, in
+   about 900ms, and only on the first reveal (.is-first-reveal). */
+.us-gv2-reveal-card{position:relative;overflow:hidden}
+.us-gv2-lightsplit{display:none}
+.us-gv2-reveal.is-first-reveal .us-gv2-lightsplit{display:block;position:absolute;left:12px;right:12px;top:58%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,226,240,.95) 50%,transparent);box-shadow:0 0 10px 1px rgba(255,140,184,.45);transform-origin:left center;opacity:0;pointer-events:none;animation:gv2-light-travel 420ms var(--us-ease-standard) both}
+@keyframes gv2-light-travel{0%{opacity:0;transform:scaleX(0)}25%{opacity:1}70%{opacity:1;transform:scaleX(1)}100%{opacity:0;transform:scaleX(1)}}
+.us-gv2-reveal.is-first-reveal .us-gv2-reveal-card>dl>div:nth-child(1){animation:gv2-split-up 260ms var(--us-ease-enter) 240ms both}
+.us-gv2-reveal.is-first-reveal .us-gv2-reveal-card>dl>div:nth-child(2){animation:gv2-split-down 260ms var(--us-ease-enter) 400ms both}
+.us-gv2-reveal.is-first-reveal .us-gv2-reveal-card[data-gv2-mechanic="prediction"]>dl>div:nth-child(2){animation-delay:520ms}
+.us-gv2-reveal.is-first-reveal .us-gv2-outcome{animation:gv2-split-down 240ms var(--us-ease-enter) 560ms both}
+.us-gv2-reveal.is-first-reveal .us-gv2-reveal-card[data-gv2-mechanic="prediction"] .us-gv2-outcome{animation-delay:700ms}
+.us-gv2-reveal.is-first-reveal .us-gv2-then{animation:gv2-split-down 240ms var(--us-ease-enter) 620ms both}
+@keyframes gv2-split-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes gv2-split-down{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+:root[data-us-motion="reduced"] .us-gv2-reveal.is-first-reveal .us-gv2-lightsplit{display:none}
+:root[data-us-motion="reduced"] .us-gv2-reveal.is-first-reveal :is(.us-gv2-reveal-card>dl>div,.us-gv2-outcome,.us-gv2-then){animation:none}
+@media(prefers-reduced-motion:reduce){.us-gv2-reveal.is-first-reveal .us-gv2-lightsplit{display:none}.us-gv2-reveal.is-first-reveal :is(.us-gv2-reveal-card>dl>div,.us-gv2-outcome,.us-gv2-then){animation:none}}
+
+/* M12A — Weekly question: the save button becomes the confirmed check, then
+   the locked card settles in. Driven only by the server's answer. */
+.us-gv2-submit.is-saved{display:inline-flex;align-items:center;justify-content:center;gap:8px;animation:gv2-saved 260ms var(--us-ease-enter) 1 both}
+@keyframes gv2-saved{from{transform:scale(.97);opacity:.8}to{transform:none;opacity:1}}
+.us-gv2-weekly.is-just-created{animation:us-content-enter var(--us-motion-base) var(--us-ease-enter) 1 both}
+.us-gv2-weekly.is-just-created .us-gv2-glyph{animation:gv2-lock-settle 420ms var(--us-ease-enter) 1 both}
+@keyframes gv2-lock-settle{from{transform:scale(.72);opacity:0}to{transform:none;opacity:1}}
+:root[data-us-motion="reduced"] :is(.us-gv2-submit.is-saved,.us-gv2-weekly.is-just-created,.us-gv2-weekly.is-just-created .us-gv2-glyph){animation:none}
+@media(prefers-reduced-motion:reduce){:is(.us-gv2-submit.is-saved,.us-gv2-weekly.is-just-created,.us-gv2-weekly.is-just-created .us-gv2-glyph){animation:none}}

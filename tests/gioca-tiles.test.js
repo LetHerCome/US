@@ -34,7 +34,7 @@ const allowance = (over = {}) => ({ week_start: '2026-09-28', resets_on: '2026-1
 
 test('Gioca tiles: a fresh week is six tiles of icon and name, with no taglines or state lines', async () => {
   const html = await hub(homeOf({ allowance: allowance() })).html();
-  const tiles = html.match(/<button type="button" class="us-gv2-mode[^"]*" data-gv2-family="[a-z_]+"[\s\S]*?<\/button>/g) || [];
+  const tiles = html.match(/<button type="button" (?:data-us-[a-z-]+(?:="[a-z]+")? )*class="us-gv2-mode[^"]*" data-gv2-family="[a-z_]+"[\s\S]*?<\/button>/g) || [];
   assert.equal(tiles.length, 6);
   for (const tile of tiles) {
     assert.match(tile, /class="us-gv2-glyph"/, 'each tile leads with the icon chip');
