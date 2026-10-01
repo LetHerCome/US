@@ -59,6 +59,6 @@ const DAILY_FIXTURE = `
   grant execute on function public.get_daily_state(uuid) to authenticated;
 `;
 
-const M12B4 = 'supabase/migrations/20261001090000_m12b_4_daily_question_keepsakes.sql';
+const M12B4 = 'supabase/migrations/20261001093123_m12b_4_daily_question_keepsakes.sql';
 
 module.exports = { DAILY_FIXTURE, M12B4 };

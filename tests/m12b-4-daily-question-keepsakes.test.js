@@ -311,13 +311,13 @@ test('J — M12B.3 is untouched: same catalog, both source kinds still link, Dai
   assert.deepEqual(hist, [{ source_key: `shared_event_completion:${done}`, moment_id: m1 }]);
 });
 
-test('K — static: additive, versioned after M12B.3, not applied, no Game V2 or Daily authority change', () => {
+test('K — static: additive, versioned after M12B.3, ledger-declared, no Game V2 or Daily authority change', () => {
   const sql = read(M12B4);
   const file = path.basename(M12B4);
   const versions = fs.readdirSync(path.join(ROOT, 'supabase/migrations')).map((f) => f.slice(0, 14)).sort();
   assert.equal(versions.at(-1), file.slice(0, 14), 'newest migration');
   assert.ok(file.slice(0, 14) > '20260930233506');
-  assert.match(sql, /NOT applied in production/);
+  assert.match(sql, /Applied to production/);
   const code = sql.replace(/--.*$/gm, '');
   assert.doesNotMatch(code, /living_provenance|relationship_event_history|game_v2|moments\b/i, 'no M12B.3 / Game V2 / moments object is touched');
   assert.doesNotMatch(code, /function public\.get_daily_state|alter table public\.daily_(answers|questions)|create trigger [\s\S]*? on public\.daily_(answers|questions)/i);

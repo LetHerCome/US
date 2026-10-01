@@ -60,8 +60,8 @@
 -- living_provenance, relationship_event_history, moments, Game V2,
 -- claim_us_role, Edge Functions.
 --
--- NOT applied in production. Apply after 20260930233506 (no dependency on the
--- M12B.3 objects; ordering only).
+-- Applied to production as ledger version 20261001093123. Repository filename
+-- reconciled to that ledger version; follows 20260930233506.
 
 -- 0. Preconditions: the production shape this file relies on. Fails before any
 --    change if production differs from what was verified.
