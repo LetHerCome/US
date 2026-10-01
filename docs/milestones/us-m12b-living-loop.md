@@ -62,3 +62,23 @@ Database only; no client, Service Worker or cache change. Migrations applied to 
 - Gates: `tests/m12b-3-living-provenance.test.js` (A–F, H–J, preconditions, migration scan),
   `tests/m12b-3-game-v2-living-origin.test.js` (G), `tests/m12b-3-living-provenance-race.test.js`
   (real PostgreSQL: concurrent links, delete during link).
+
+## Batch 5 · M12B.5 — Rivivi over the Living Archive
+Client only; no migration, no backfill, no Edge Function. Build `us-m12b5-rivivi-archive-20261001-2`,
+cache `us-shell-static-runtime-47`, `us-private-media-v1` unchanged.
+- One archive adapter (`ricordiTimeline` in `app.js`) over existing reads, used by the story,
+  Capitoli and Rivivi. Families and canonical keys: `moment:<id>` (unlinked Moment),
+  `da_vivere:<bucket_item id>` (lived), `shared_event_completion:<completion id>`
+  (`relationship_event_history`), `daily_question:<question id>` (`daily_question_keepsakes`).
+- Dedup only by canonical key: a Moment linked by `living_provenance` (or the history view's
+  `moment_id`) takes its source's key and becomes that experience's photo. Never by title.
+  For linked Da vivere, the immutable provenance `source_title/source_date` remains the historical
+  presentation authority; for Events, `relationship_event_history` remains the title/date authority.
+- Rivivi: anniversary (±3 days, past year; closest, then most recent, then key), else a 30+ day
+  entry chosen by days-since-epoch (stable for the day, rotates on consecutive days). No storage.
+- Source-aware card: photo entries open the existing Moment viewer; Events (historical title,
+  declared live fallback), lived Da vivere (link to its detail) and kept Dailies (frozen answer
+  pair) open in place, read-only.
+- Excluded: Conservati (`conserva_contributions`) — payload resolved live from `left_for_you`,
+  no snapshot, a one-way personal message outside the Ricordi story; unkept Daily answers.
+- Gate: `tests/m12b-5-rivivi-living-archive.test.js`.

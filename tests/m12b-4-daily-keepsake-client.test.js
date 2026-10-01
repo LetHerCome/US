@@ -170,12 +170,12 @@ test('M12B.4 archive wiring: Ricordi reads the keepsakes as an optional enrichme
   const core = between('async function hydrateMomentsCore(){', 'let momentsHydrateInFlight');
   assert.match(core, /sb\.from\('daily_question_keepsakes'\)\.select\('id,source_key,question_text,question_date,francesco_answer,beatrice_answer,revealed_at'\)/);
   assert.match(core, /const keptRows=keptError\?\[\]:\(kept\|\|\[\]\);/, 'an unreadable keepsake table never breaks Ricordi');
-  assert.match(core, /ricordiTimeline\([^;]*livedRows,keptRows\)/);
+  assert.match(core, /ricordiTimeline\([^;]*livedRows,keptRows,eventRows,provenanceRows\)/);
   assert.match(core, /if\(item\.kind==='daily'\)\{closeRow\(\);html\.push\(ricordiDailyCard\(item\.row\)\);continue;\}/);
   assert.match(core, /keptRows\.map\(r=>\[r\.id,r\.question_date\]\)/, 'a new keepsake re-renders the story');
-  assert.match(core, /if\(!rows\?\.length&&!livedRows\.length&&!keptRows\.length\)/);
-  assert.match(between('function ricordiPickRivivi', 'function ricordiChapters'), /moments/, 'Rivivi is unchanged (M12B.5 will consume the source)');
-  assert.doesNotMatch(between('function ricordiPickRivivi', 'function ricordiChapters'), /daily/);
+  assert.match(core, /if\(!rows\?\.length&&!livedRows\.length&&!keptRows\.length&&!eventRows\.length\)/);
+  // M12B.5 deliberately made Rivivi a consumer of the archive entries (kept Dailies included, never unkept ones).
+  assert.match(core, /renderRicordiRivivi\(ricordiPickRivivi\(timeline,today\)/);
   const css = read('moments-albums.css');
   assert.match(css, /#moments \.ricordi-daily-mark::before\{[^}]*mask-image:url\("\/assets\/icons\/phosphor\/question-regular\.svg"\)/, 'approved Phosphor icon already in the shell');
   assert.match(read('service-worker.js'), /"\/assets\/icons\/phosphor\/question-regular\.svg"/);

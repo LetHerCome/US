@@ -747,6 +747,32 @@ body.us-keyboard-open .us-album-floating-add,
 #moments .ricordi-chapter small{font-size:10.5px;color:rgba(255,255,255,.72)}
 @media(min-width:720px){#moments .ricordi-rivivi-card img{aspect-ratio:16/10}}
 
+/* M12B.5 · Rivivi source-aware: una voce senza foto (esperienza Da vivere,
+   Evento vissuto, Domanda conservata) nello stesso vetro di Rivivi, aperta sul
+   posto in sola lettura. Icone Phosphor già nella shell. */
+#moments .ricordi-rivivi-card.ricordi-rivivi-note{background:radial-gradient(circle at 0% 0%,rgba(255,102,142,.18),transparent 58%),radial-gradient(circle at 100% 100%,rgba(169,133,255,.18),transparent 60%),rgba(22,16,30,.94);color:var(--text,var(--us-color-text))}
+#moments .ricordi-rivivi-note::after{display:none}
+#moments .ricordi-rivivi-note:active{transform:none}
+#moments .ricordi-rivivi-note summary{display:flex;align-items:flex-start;gap:14px;min-height:44px;padding:20px 18px;cursor:pointer;list-style:none}
+#moments .ricordi-rivivi-note summary::-webkit-details-marker{display:none}
+#moments .ricordi-rivivi-note summary:focus-visible{outline:2px solid var(--us-color-focus,#ffc3d3);outline-offset:-2px;border-radius:26px}
+#moments .ricordi-rivivi-mark{flex:0 0 40px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#ffc3d3}
+#moments .ricordi-rivivi-mark::before{content:"";width:18px;height:18px;background:currentColor;-webkit-mask:url("/assets/icons/phosphor/heart-straight-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/heart-straight-regular.svg") center/contain no-repeat}
+#moments .ricordi-rivivi-mark-event::before,#moments .ricordi-event-mark::before{-webkit-mask-image:url("/assets/icons/phosphor/calendar-heart-regular.svg");mask-image:url("/assets/icons/phosphor/calendar-heart-regular.svg")}
+#moments .ricordi-rivivi-mark-daily{color:#d8c8ff}
+#moments .ricordi-rivivi-mark-daily::before{-webkit-mask-image:url("/assets/icons/phosphor/question-regular.svg");mask-image:url("/assets/icons/phosphor/question-regular.svg")}
+#moments .ricordi-rivivi-text{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:6px}
+#moments .ricordi-rivivi-text small{font-size:11px;font-weight:700;letter-spacing:.02em;color:#ffc3d3}
+#moments .ricordi-rivivi-text b{font-family:Georgia,serif;font-weight:500;font-size:24px;line-height:1.12;letter-spacing:-.3px;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+#moments .ricordi-rivivi-note[open] .ricordi-rivivi-text b{display:block;-webkit-line-clamp:unset}
+#moments .ricordi-rivivi-text span{font-size:11.5px;color:var(--muted,var(--us-color-text-2))}
+#moments .ricordi-rivivi-body{padding:0 18px 18px}
+#moments .ricordi-rivivi-body .ricordi-daily-answers{padding:0}
+#moments .ricordi-rivivi-detail{margin:0;font-size:13.5px;line-height:1.45;color:var(--muted,var(--us-color-text-2))}
+#moments .ricordi-rivivi-link{margin-top:12px;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:var(--text,var(--us-color-text));font:inherit;font-size:13px;font-weight:600}
+#moments .ricordi-story .ricordi-event{border-color:rgba(169,133,255,.18)}
+#moments .ricordi-moment-source{display:block;margin-top:3px;font-size:10.5px;color:var(--muted,var(--us-color-text-2));overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
 /* Moment detail immersivo. */
 #usAlbumOverlay .us-album-story{padding:18px 22px 22px}
 #usAlbumOverlay .us-album-provenance{display:block;font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#d8c6ff}
@@ -769,3 +795,4 @@ body.us-keyboard-open .us-album-floating-add,
 @keyframes ricordi-light-catch{0%{background-position:130% 0;opacity:1}80%{opacity:1}100%{background-position:-30% 0;opacity:0}}
 @media(prefers-reduced-motion:reduce){#moments .moment-card.ricordi-new,#moments .moment-card.ricordi-new::after{animation:none}}
 :root[data-us-motion="reduced"] #moments .moment-card.ricordi-new,:root[data-us-motion="reduced"] #moments .moment-card.ricordi-new::after{animation:none}
+@media(prefers-reduced-motion:reduce){#moments .ricordi-rivivi-card:active{transform:none}}

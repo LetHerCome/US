@@ -22,7 +22,8 @@ const m = (id, date, extra = {}) => ({ id, moment_date: date, created_at: `${dat
 
 test('M8A Rivivi: an anniversary within ±3 days of a past year wins, closest first', () => {
   const api = loadArchive();
-  const pick = api.pickRivivi([m('a', '2026-09-20'), m('b', '2025-10-01'), m('c', '2024-09-29'), m('d', '2025-06-01')], '2026-09-29');
+  // M12B.5: Rivivi consumes the archive entries (same truth as the story).
+  const pick = api.pickRivivi(api.timeline([m('a', '2026-09-20'), m('b', '2025-10-01'), m('c', '2024-09-29'), m('d', '2025-06-01')]), '2026-09-29');
   assert.equal(pick.row.id, 'c');
   assert.equal(pick.reason, 'anniversary');
   assert.equal(pick.label, '2 anni fa, in questi giorni');
@@ -30,14 +31,14 @@ test('M8A Rivivi: an anniversary within ±3 days of a past year wins, closest fi
 
 test('M8A Rivivi: otherwise a real memory at least 30 days old, stable for the day; never a recent one, never filler', () => {
   const api = loadArchive();
-  const rows = [m('recent', '2026-09-20'), m('old1', '2026-06-01'), m('old2', '2026-03-10')];
+  const rows = api.timeline([m('recent', '2026-09-20'), m('old1', '2026-06-01'), m('old2', '2026-03-10')]);
   const a = api.pickRivivi(rows, '2026-09-29');
   const b = api.pickRivivi(rows, '2026-09-29');
   assert.equal(a.row.id, b.row.id);
   assert.notEqual(a.row.id, 'recent');
   assert.equal(a.reason, 'resurface');
   assert.match(a.label, /mesi fa|mese fa/);
-  assert.equal(api.pickRivivi([m('recent', '2026-09-20')], '2026-09-29'), null);
+  assert.equal(api.pickRivivi(api.timeline([m('recent', '2026-09-20')]), '2026-09-29'), null);
   assert.equal(api.pickRivivi([], '2026-09-29'), null);
 });
 
@@ -62,10 +63,10 @@ test('M8A page: Rivivi, Conservati, La vostra storia, Capitoli in this order ins
   assert.deepEqual([...order].sort((a, b) => a - b), order);
 });
 
-test('M8A data: reads only existing domains (moments, profiles, lived bucket_items, M12B.4 kept Dailies) and writes nothing new', () => {
+test('M8A data: reads only existing domains (moments, profiles, lived bucket_items, M12B.4 kept Dailies, M12B.3 event history + provenance) and writes nothing new', () => {
   const src = app().match(/async function hydrateMomentsCore\(\)\{[\s\S]*?\n\}/)?.[0] || '';
   const tables = [...src.matchAll(/sb\.from\('([a-z_]+)'\)/g)].map((x) => x[1]).sort();
-  assert.deepEqual(tables, ['bucket_items', 'daily_question_keepsakes', 'moments', 'profiles']);
+  assert.deepEqual(tables, ['bucket_items', 'daily_question_keepsakes', 'living_provenance', 'moments', 'profiles', 'relationship_event_history']);
   assert.match(src, /from\('bucket_items'\)\.select\('id,title,completed_at'\)\.eq\('couple_id',profile\.couple_id\)\.eq\('status','lived'\)/);
   assert.doesNotMatch(src + archiveBlock(), /\.insert\(|\.update\(|\.delete\(|\.upsert\(/);
   assert.match(src, /if\(window\.usProfile!==profile\)return;/, 'identity switch mid-load never paints the old couple');

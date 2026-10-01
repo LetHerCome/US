@@ -2280,8 +2280,10 @@ window.uploadMoment=uploadMoment;
 
 // ===== M8A — Ricordi living archive =====
 // Ricordi da album a storia viva, SOLO da dati reali e dalle loro fonti:
-// moments (+ moment_photos via albums) e le esperienze Da vivere vissute
-// (bucket_items status=lived, sola lettura, mai copiate). Nessuna tabella,
+// moments (+ moment_photos via albums), le esperienze Da vivere vissute
+// (bucket_items status=lived), le occorrenze di Eventi vissute
+// (relationship_event_history, M12B.3) e le Domande del giorno conservate
+// (M12B.4); sola lettura, mai copiate. Nessuna tabella,
 // nessun ranking, nessun testo generato: Rivivi riemerge un ricordo vero,
 // La vostra storia è cronologica, Capitoli raggruppa per anno.
 const RICORDI_MONTHS=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
@@ -2295,44 +2297,89 @@ function ricordiLocalISO(instant){
   if(Number.isNaN(d.getTime()))return null;
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
-// Timeline unificata, più recente prima; ogni voce porta tipo e provenienza.
-// M12B.4: anche le Domande del giorno conservate (daily_question_keepsakes),
-// datate al giorno della domanda, mai una Domanda solo risposta.
-function ricordiTimeline(moments,lived,kept){
-  const items=[];
-  for(const row of moments||[])if(row?.moment_date)items.push({kind:'moment',date:row.moment_date,at:row.created_at||'',row});
-  for(const row of lived||[]){const date=ricordiLocalISO(row?.completed_at);if(date)items.push({kind:'experience',date,at:row.completed_at,row});}
-  for(const row of kept||[])if(row?.id&&/^\d{4}-\d{2}-\d{2}$/.test(String(row.question_date||''))&&row.question_text)items.push({kind:'daily',date:String(row.question_date),at:row.revealed_at||'',row});
-  return items.sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(a.at<b.at?1:a.at>b.at?-1:0));
+// M12B.5 — un solo modello d'archivio sopra i dati esistenti, mai una copia.
+// Ogni voce porta la sua identità canonica (sourceKey):
+//   moment:<id>                    Moment senza provenienza
+//   da_vivere:<bucket_item id>     esperienza Da vivere vissuta
+//   shared_event_completion:<id>   occorrenza di un Evento vissuta
+//   daily_question:<question id>   Domanda del giorno conservata (M12B.4)
+// Un Moment collegato da living_provenance (M12B.3) NON è una seconda
+// esperienza: prende la chiave della sua fonte e ne diventa la foto. La
+// deduplica è solo per chiave canonica, mai per titolo.
+const RICORDI_SOURCE_LABEL=Object.freeze({experience:'Da vivere',event:'Evento vissuto',daily:'Domanda del giorno'});
+function ricordiTimeline(moments,lived,kept,events,provenance){
+  const byKey=new Map();
+  const add=entry=>{if(!byKey.has(entry.sourceKey))byKey.set(entry.sourceKey,entry);return byKey.get(entry.sourceKey);};
+  for(const row of lived||[]){const date=ricordiLocalISO(row?.completed_at);if(row?.id&&date)add({kind:'experience',sourceKey:`da_vivere:${row.id}`,date,at:row.completed_at,row,title:row.title||'',moment:null});}
+  for(const row of events||[]){
+    if(!row?.source_ref||!/^\d{4}-\d{2}-\d{2}$/.test(String(row.occurrence_date||'')))continue;
+    add({kind:'event',sourceKey:`shared_event_completion:${row.source_ref}`,date:String(row.occurrence_date),at:row.completed_at||'',row,title:row.title||'',moment:null});
+  }
+  for(const row of kept||[])if(row?.id&&/^daily_question:/.test(String(row.source_key||''))&&/^\d{4}-\d{2}-\d{2}$/.test(String(row.question_date||''))&&row.question_text)add({kind:'daily',sourceKey:String(row.source_key),date:String(row.question_date),at:row.revealed_at||'',row,title:row.question_text,moment:null});
+  // Moment → fonte: dalla tabella di provenienza e, per gli Eventi, dalla vista storica.
+  const sourceOf=new Map();
+  for(const p of provenance||[]){
+    if(p?.target_moment_id&&p.source_kind&&p.source_ref)sourceOf.set(p.target_moment_id,p);
+    // Per Da vivere la provenance congela il fatto storico quando la foto
+    // viene collegata: data vissuta server-authoritative e titolo di allora.
+    // Lo snapshot resta la verità anche se il bucket item è ancora leggibile
+    // (e magari in seguito rinominato). Gli Eventi invece restano autorità
+    // di relationship_event_history, incluso il fallback title_source='live'.
+    if(p?.source_kind==='da_vivere'&&p.source_ref){
+      const existing=byKey.get(`da_vivere:${p.source_ref}`);
+      if(existing){
+        if(/^\d{4}-\d{2}-\d{2}$/.test(String(p.source_date||'')))existing.date=String(p.source_date);
+        if(p.source_title){existing.title=p.source_title;existing.row={...existing.row,title:p.source_title};}
+      }
+    }
+  }
+  for(const row of events||[])if(row?.moment_id&&row.source_ref&&!sourceOf.has(row.moment_id))sourceOf.set(row.moment_id,{source_kind:'shared_event_completion',source_ref:row.source_ref});
+  for(const row of moments||[]){
+    if(!row?.id||!row.moment_date)continue;
+    const p=sourceOf.get(row.id);
+    const kind=p?.source_kind==='da_vivere'?'experience':p?.source_kind==='shared_event_completion'?'event':null;
+    if(!kind){add({kind:'moment',sourceKey:`moment:${row.id}`,date:row.moment_date,at:row.created_at||'',row,title:row.caption||'',moment:row});continue;}
+    const sourceKey=`${p.source_kind}:${p.source_ref}`;
+    const existing=byKey.get(sourceKey);
+    if(existing){if(!existing.moment)existing.moment=row;continue;}
+    // Fonte non leggibile (non più vissuta o rimossa): resta la sua istantanea.
+    const date=/^\d{4}-\d{2}-\d{2}$/.test(String(p.source_date||''))?String(p.source_date):row.moment_date;
+    add({kind,sourceKey,date,at:row.created_at||'',row:{id:p.source_ref,title:p.source_title||''},title:p.source_title||row.caption||'',moment:row,orphan:true});
+  }
+  return [...byKey.values()].sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(a.at<b.at?1:a.at>b.at?-1:(a.sourceKey<b.sourceKey?-1:a.sourceKey>b.sourceKey?1:0)));
 }
 function ricordiPeriodKey(dateISO){return dateISO.slice(0,7);}
 function ricordiPeriodLabel(dateISO){const [y,m]=dateISO.split('-');return {month:RICORDI_MONTHS[Number(m)-1]||'',year:y};}
-// Rivivi: prima un anniversario vero (stesso periodo dell'anno, ±3 giorni,
-// in un anno passato), altrimenti un ricordo di almeno 30 giorni fa scelto in
-// modo stabile per la giornata. Niente di recente, niente riempitivi.
-function ricordiPickRivivi(moments,todayISO){
-  const rows=(moments||[]).filter(r=>r?.moment_date&&r.moment_date<todayISO);
+// Rivivi: consuma le stesse voci della storia (stessa verità di Capitoli).
+// Prima un anniversario vero (stesso periodo dell'anno, ±3 giorni, in un anno
+// passato; il più vicino, poi il più recente, poi la chiave), altrimenti una
+// voce di almeno 30 giorni fa scelta per il giorno: stabile per tutta la
+// giornata e diversa dal giorno prima (indice = giorno dall'epoca). Niente di
+// recente, niente riempitivi, niente casualità.
+function ricordiPickRivivi(entries,todayISO){
+  const rows=(entries||[]).filter(e=>e?.sourceKey&&/^\d{4}-\d{2}-\d{2}$/.test(String(e.date||''))&&e.date<todayISO);
   if(!rows.length)return null;
   const [ty]=todayISO.split('-').map(Number);
   let best=null;
-  for(const r of rows){
-    const years=ty-Number(r.moment_date.slice(0,4));
+  for(const e of rows){
+    const years=ty-Number(e.date.slice(0,4));
     if(years<1)continue;
-    const sameYearDay=`${ty}${r.moment_date.slice(4)}`;
+    const sameYearDay=`${ty}${e.date.slice(4)}`;
     const off=Math.abs(ricordiDayDiff(sameYearDay,todayISO));
-    if(off<=3&&(!best||off<best.off||(off===best.off&&years<best.years)))best={row:r,off,years};
+    if(off<=3&&(!best||off<best.off||(off===best.off&&(years<best.years||(years===best.years&&e.sourceKey<best.entry.sourceKey)))))best={entry:e,off,years};
   }
-  if(best)return {row:best.row,reason:'anniversary',label:best.years===1?'Un anno fa, in questi giorni':`${best.years} anni fa, in questi giorni`};
-  const older=rows.filter(r=>ricordiDayDiff(todayISO,r.moment_date)>=30).sort((a,b)=>a.moment_date<b.moment_date?-1:1);
+  if(best)return {entry:best.entry,row:best.entry.row,reason:'anniversary',label:best.years===1?'Un anno fa, in questi giorni':`${best.years} anni fa, in questi giorni`};
+  const older=rows.filter(e=>ricordiDayDiff(todayISO,e.date)>=30).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:(a.sourceKey<b.sourceKey?-1:1));
   if(!older.length)return null;
-  const seed=Number(todayISO.replaceAll('-',''))||0;
-  const row=older[seed%older.length];
-  const days=ricordiDayDiff(todayISO,row.moment_date);
+  const dayIndex=Math.max(0,ricordiDayDiff(todayISO,'1970-01-01'));
+  const entry=older[dayIndex%older.length];
+  const days=ricordiDayDiff(todayISO,entry.date);
   const months=Math.floor(days/30.44);
   const label=days>=365?(Math.floor(days/365)===1?'Un anno fa':`${Math.floor(days/365)} anni fa`):(months<=1?'Un mese fa':`${months} mesi fa`);
-  return {row,reason:'resurface',label};
+  return {entry,row:entry.row,reason:'resurface',label};
 }
-// Capitoli: raccolte secondarie per anno, con la copertina più recente.
+// Capitoli: raccolte secondarie per anno, contate sulle stesse voci (una
+// esperienza con la sua foto conta una volta), copertina = foto più recente.
 function ricordiChapters(timeline){
   const byYear=new Map();
   for(const item of timeline){
@@ -2340,35 +2387,75 @@ function ricordiChapters(timeline){
     if(!byYear.has(year))byYear.set(year,{year,count:0,moments:0,experiences:0,dailies:0,cover:null});
     const ch=byYear.get(year);
     ch.count++;
-    if(item.kind==='moment'){ch.moments++;if(!ch.cover)ch.cover=item.row;}else if(item.kind==='daily')ch.dailies++;else ch.experiences++;
+    if(item.kind==='moment')ch.moments++;else if(item.kind==='daily')ch.dailies++;else ch.experiences++;
+    if(!ch.cover&&item.moment)ch.cover=item.moment;
   }
   return [...byYear.values()];
 }
 window.UsRicordiArchive=Object.freeze({timeline:ricordiTimeline,pickRivivi:ricordiPickRivivi,chapters:ricordiChapters,periodLabel:ricordiPeriodLabel});
 
-function ricordiMomentCard(row,signedUrl,author,own,feature){
-  const dateLabel=new Date(row.moment_date+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
-  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-moment-iso="${escapeHtml(row.moment_date)}" data-url="${escapeHtml(signedUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(row.caption||'')}" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(signedUrl)}" alt="Ricordo condiviso" loading="lazy">${own?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}','${escapeHtml(row.storage_path)}')"><span class="us-overflow-icon" aria-hidden="true"><svg viewBox="0 0 18 6"><circle cx="3" cy="3" r="2"/><circle cx="9" cy="3" r="2"/><circle cx="15" cy="3" r="2"/></svg></span></button>`:''}<div class="moment-meta"><div class="moment-by">${escapeHtml(author||'Noi')}</div><b>${dateLabel}</b>${row.caption?`<p>${escapeHtml(row.caption)}</p>`:''}</div></article>`;
+function ricordiMomentCard(row,signedUrl,author,own,feature,source){
+  const displayISO=/^\d{4}-\d{2}-\d{2}$/.test(String(source?.date||''))?String(source.date):row.moment_date;
+  const dateLabel=new Date(displayISO+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
+  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(signedUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(row.caption||'')}" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(signedUrl)}" alt="Ricordo condiviso" loading="lazy">${own?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}','${escapeHtml(row.storage_path)}')"><span class="us-overflow-icon" aria-hidden="true"><svg viewBox="0 0 18 6"><circle cx="3" cy="3" r="2"/><circle cx="9" cy="3" r="2"/><circle cx="15" cy="3" r="2"/></svg></span></button>`:''}<div class="moment-meta"><div class="moment-by">${escapeHtml(author||'Noi')}</div><b>${dateLabel}</b>${source?`<small class="ricordi-moment-source" data-source-key="${escapeHtml(source.sourceKey)}">${escapeHtml(RICORDI_SOURCE_LABEL[source.kind]||'')}${source.title?` · ${escapeHtml(source.title)}`:''}</small>`:''}${row.caption?`<p>${escapeHtml(row.caption)}</p>`:''}</div></article>`;
 }
-function ricordiExperienceCard(row){
-  const d=new Date(row.completed_at);
-  const day=d.toLocaleDateString('it-IT',{day:'numeric',month:'long'});
+function ricordiExperienceCard(row,sourceDate){
+  const date=/^\d{4}-\d{2}-\d{2}$/.test(String(sourceDate||''))?String(sourceDate):ricordiLocalISO(row.completed_at);
+  const day=new Date(date+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long'});
   return `<button type="button" class="ricordi-experience" data-ricordi-experience="${escapeHtml(row.id)}"><span class="ricordi-experience-mark" aria-hidden="true"></span><span class="ricordi-experience-copy"><small>Vissuta insieme · ${escapeHtml(day)}</small><b>${escapeHtml(row.title)}</b></span><span class="ricordi-experience-source">Da vivere</span></button>`;
 }
 // M12B.4 — una Domanda del giorno conservata: provenienza esplicita e le due
 // risposte come erano al reveal (snapshot del server), apribile sul posto.
 function ricordiDailyCard(row){
   const day=new Date(String(row.question_date)+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long'});
+  return `<details class="ricordi-daily" data-ricordi-daily="${escapeHtml(row.id)}" data-source-key="${escapeHtml(row.source_key||'')}"><summary><span class="ricordi-experience-mark ricordi-daily-mark" aria-hidden="true"></span><span class="ricordi-experience-copy"><small>Domanda del giorno · ${escapeHtml(day)}</small><b>${escapeHtml(row.question_text)}</b></span><span class="ricordi-experience-source">Conservata</span></summary>${ricordiDailyAnswers(row)}</details>`;
+}
+function ricordiDailyAnswers(row){
   const answer=(label,text)=>`<div class="ricordi-daily-answer"><b>${escapeHtml(label)}</b><p>${escapeHtml(text||'')}</p></div>`;
-  return `<details class="ricordi-daily" data-ricordi-daily="${escapeHtml(row.id)}" data-source-key="${escapeHtml(row.source_key||'')}"><summary><span class="ricordi-experience-mark ricordi-daily-mark" aria-hidden="true"></span><span class="ricordi-experience-copy"><small>Domanda del giorno · ${escapeHtml(day)}</small><b>${escapeHtml(row.question_text)}</b></span><span class="ricordi-experience-source">Conservata</span></summary><div class="ricordi-daily-answers">${answer('Francesco',row.francesco_answer)}${answer('Bea',row.beatrice_answer)}</div></details>`;
+  return `<div class="ricordi-daily-answers">${answer('Francesco',row.francesco_answer)}${answer('Bea',row.beatrice_answer)}</div>`;
+}
+// M12B.5 — un Evento vissuto senza foto resta un record evento (D3=A): titolo
+// storico (snapshot al completamento, altrimenti il titolo attuale dichiarato
+// come tale), data dell'occorrenza, nessuna azione sull'evento mutabile.
+function ricordiEventTitle(row){return row?.title||'Evento';}
+function ricordiEventCard(row){
+  const day=new Date(String(row.occurrence_date)+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long'});
+  return `<article class="ricordi-experience ricordi-event" data-source-key="shared_event_completion:${escapeHtml(row.source_ref)}" data-title-source="${escapeHtml(row.title_source||'')}"><span class="ricordi-experience-mark ricordi-event-mark" aria-hidden="true"></span><span class="ricordi-experience-copy"><small>Vissuto insieme · ${escapeHtml(day)}</small><b>${escapeHtml(ricordiEventTitle(row))}</b></span><span class="ricordi-experience-source">Evento</span></article>`;
+}
+// M12B.5 — Rivivi parla la lingua della fonte, in un solo linguaggio visivo:
+// con foto apre il Moment viewer esistente (anche quando la foto è l'immagine
+// di un'esperienza o di un Evento vissuto); senza foto si apre sul posto in
+// sola lettura con i valori storici (risposte conservate, data vissuta).
+function ricordiRiviviDate(iso){return new Date(String(iso)+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'});}
+function ricordiRiviviTitle(entry){
+  if(entry.kind==='moment')return entry.row.caption||'';
+  if(entry.kind==='event')return entry.orphan?(entry.title||'Evento'):ricordiEventTitle(entry.row);
+  return entry.title||'';
 }
 function renderRicordiRivivi(pick,signedUrls,names){
   const root=document.getElementById('ricordiRivivi');
   if(!root)return;
-  const url=pick?signedUrls.get(pick.row.storage_path):null;
-  if(!pick||!url){root.hidden=true;root.innerHTML='';return;}
-  const date=new Date(pick.row.moment_date+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'});
-  root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><button type="button" class="ricordi-rivivi-card" data-ricordi-open="${escapeHtml(pick.row.id)}" aria-label="Rivivi: ${escapeHtml(pick.row.caption||date)}"><img src="${escapeHtml(url)}" alt="" loading="lazy"><span class="ricordi-rivivi-copy"><small>${escapeHtml(pick.label)}</small><b>${escapeHtml(pick.row.caption||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(names.get(pick.row.created_by)||'Noi')}</span></span></button>`;
+  const entry=pick?.entry;
+  if(!entry){root.hidden=true;root.innerHTML='';return;}
+  const date=ricordiRiviviDate(entry.date);
+  const title=ricordiRiviviTitle(entry);
+  const url=entry.moment?signedUrls.get(entry.moment.storage_path):null;
+  if(url){
+    const m=entry.moment;
+    const author=names.get(m.created_by)||'Noi';
+    const meta=entry.kind==='moment'?author:RICORDI_SOURCE_LABEL[entry.kind];
+    const viewerISO=entry.kind==='moment'?m.moment_date:entry.date;
+    const viewerDate=new Date(viewerISO+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
+    root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><button type="button" class="ricordi-rivivi-card" data-ricordi-open="${escapeHtml(m.id)}" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}" data-url="${escapeHtml(url)}" data-author="${escapeHtml(author)}" data-date="${escapeHtml(viewerDate)}" data-caption="${escapeHtml(m.caption||title)}" aria-label="Rivivi: ${escapeHtml(title||date)}"><img src="${escapeHtml(url)}" alt="" loading="lazy"><span class="ricordi-rivivi-copy"><small>${escapeHtml(pick.label)}</small><b>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(meta)}</span></span></button>`;
+    root.hidden=false;
+    return;
+  }
+  if(entry.kind==='moment'){root.hidden=true;root.innerHTML='';return;}
+  let body='';
+  if(entry.kind==='daily')body=ricordiDailyAnswers(entry.row);
+  else if(entry.kind==='event')body=`<p class="ricordi-rivivi-detail">Vissuto insieme il ${escapeHtml(date)}.${entry.row.title_source==='live'?' Il titolo è quello di oggi: quello di allora non era registrato.':''}</p>`;
+  else body=`<p class="ricordi-rivivi-detail">Vissuta insieme il ${escapeHtml(date)}.</p>${entry.orphan?'':`<button type="button" class="ricordi-rivivi-link" data-ricordi-experience="${escapeHtml(entry.row.id)}">Apri in Da vivere</button>`}`;
+  root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><details class="ricordi-rivivi-card ricordi-rivivi-note" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}"><summary aria-label="Rivivi: ${escapeHtml(title||date)}"><span class="ricordi-rivivi-mark ricordi-rivivi-mark-${escapeHtml(entry.kind)}" aria-hidden="true"></span><span class="ricordi-rivivi-text"><small>${escapeHtml(pick.label)}</small><b>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(RICORDI_SOURCE_LABEL[entry.kind])}</span></span></summary><div class="ricordi-rivivi-body">${body}</div></details>`;
   root.hidden=false;
 }
 function renderRicordiChapters(chapters,signedUrls){
@@ -2388,11 +2475,7 @@ function openRicordiExperience(id){
 }
 document.getElementById('moments')?.addEventListener('click',event=>{
   const rivivi=event.target.closest('[data-ricordi-open]');
-  if(rivivi){
-    const card=[...document.querySelectorAll('#momentsGrid .moment-card[data-moment-id]')].find(c=>c.dataset.momentId===rivivi.dataset.ricordiOpen);
-    if(card)openMomentViewer(card);
-    return;
-  }
+  if(rivivi){openMomentViewer(rivivi);return;}
   const experience=event.target.closest('[data-ricordi-experience]');
   if(experience){openRicordiExperience(experience.dataset.ricordiExperience);return;}
   const chapter=event.target.closest('[data-ricordi-year]');
@@ -2409,11 +2492,13 @@ async function hydrateMomentsCore(){
   if(!grid)return;
   const profile=window.usProfile;
   if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></div><b>Carico…</b></div>';
-  const [{data:rows,error},{data:profiles,error:profilesError},{data:lived,error:livedError},{data:kept,error:keptError}]=await Promise.all([
+  const [{data:rows,error},{data:profiles,error:profilesError},{data:lived,error:livedError},{data:kept,error:keptError},{data:events,error:eventsError},{data:provenance,error:provenanceError}]=await Promise.all([
     sb.from('moments').select('id,created_by,storage_path,caption,moment_date,created_at').order('moment_date',{ascending:false}).order('created_at',{ascending:false}),
     sb.from('profiles').select('id,display_name').eq('couple_id',profile.couple_id),
     sb.from('bucket_items').select('id,title,completed_at').eq('couple_id',profile.couple_id).eq('status','lived'),
-    sb.from('daily_question_keepsakes').select('id,source_key,question_text,question_date,francesco_answer,beatrice_answer,revealed_at').order('question_date',{ascending:false})
+    sb.from('daily_question_keepsakes').select('id,source_key,question_text,question_date,francesco_answer,beatrice_answer,revealed_at').order('question_date',{ascending:false}),
+    sb.from('relationship_event_history').select('source_ref,occurrence_date,completed_at,title,title_source,moment_id'),
+    sb.from('living_provenance').select('source_kind,source_ref,source_title,source_date,target_moment_id')
   ]);
   if(window.usProfile!==profile)return;
   if(error){console.warn(error);if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">!</div><b>Ricordi non disponibili</b><p>Riprova tra un momento.</p></div>';return;}
@@ -2424,11 +2509,18 @@ async function hydrateMomentsCore(){
   const livedRows=livedError?[]:(lived||[]);
   if(keptError)console.warn(keptError);
   const keptRows=keptError?[]:(kept||[]);
+  // M12B.5: Eventi vissuti e provenienza sono arricchimenti come i precedenti.
+  // Senza provenienza un Moment collegato e la sua fonte restano due voci
+  // finché la lettura non torna: mai inventate, mai unite per titolo.
+  if(eventsError)console.warn(eventsError);
+  const eventRows=eventsError?[]:(events||[]);
+  if(provenanceError)console.warn(provenanceError);
+  const provenanceRows=provenanceError?[]:(provenance||[]);
   if(pill)pill.textContent='📸 Moments · '+(rows?.length||0);
   const today=localDateISO();
-  const signature=JSON.stringify([today,(rows||[]).map(r=>[r.id,r.created_by,r.storage_path,r.caption||'',r.moment_date,r.created_at]),livedRows.map(r=>[r.id,r.title,r.completed_at]),keptRows.map(r=>[r.id,r.question_date])]);
+  const signature=JSON.stringify([today,(rows||[]).map(r=>[r.id,r.created_by,r.storage_path,r.caption||'',r.moment_date,r.created_at]),livedRows.map(r=>[r.id,r.title,r.completed_at]),keptRows.map(r=>[r.id,r.question_date]),eventRows.map(r=>[r.source_ref,r.occurrence_date,r.title,r.title_source,r.moment_id]),provenanceRows.map(r=>[r.source_kind,r.source_ref,r.target_moment_id])]);
   if(grid.dataset.loaded==='1'&&grid.dataset.signature===signature)return;
-  if(!rows?.length&&!livedRows.length&&!keptRows.length){
+  if(!rows?.length&&!livedRows.length&&!keptRows.length&&!eventRows.length){
     grid.innerHTML='<div class="empty-state moment-loading ricordi-empty"><b>La vostra storia parte da qui</b></div>';
     renderRicordiRivivi(null,new Map(),new Map());
     renderRicordiChapters([],new Map());
@@ -2437,7 +2529,7 @@ async function hydrateMomentsCore(){
   const names=new Map((profiles||[]).map(p=>[p.id,p.display_name||'Noi']));
   const signedUrls=await usGetSignedUrls((rows||[]).map(row=>row.storage_path),21600);
   if(window.usProfile!==profile)return;
-  const timeline=ricordiTimeline((rows||[]).filter(r=>signedUrls.get(r.storage_path)),livedRows,keptRows);
+  const timeline=ricordiTimeline((rows||[]).filter(r=>signedUrls.get(r.storage_path)),livedRows,keptRows,eventRows,provenanceRows);
   const html=[];
   let period='';
   // Ritmo editoriale: la prima foto del mese è a tutta larghezza, le altre in
@@ -2453,19 +2545,21 @@ async function hydrateMomentsCore(){
       const {month,year}=ricordiPeriodLabel(item.date);
       html.push(`<div class="ricordi-period" data-period="${key}" data-year="${year}"><b>${month}</b><span>${year}</span></div>`);
     }
-    if(item.kind==='experience'){closeRow();html.push(ricordiExperienceCard(item.row));continue;}
+    if(item.kind==='experience'&&!item.moment){closeRow();html.push(ricordiExperienceCard(item.row,item.date));continue;}
+    if(item.kind==='event'&&!item.moment){closeRow();html.push(ricordiEventCard(item.row));continue;}
     if(item.kind==='daily'){closeRow();html.push(ricordiDailyCard(item.row));continue;}
-    const row=item.row;
+    // Un Moment, o la foto di un'esperienza/Evento vissuto: una sola voce.
+    const row=item.moment;
     const own=row.created_by===profile.id;
     const author=names.get(row.created_by)||(own?profile.display_name:'Noi');
-    html.push(ricordiMomentCard(row,signedUrls.get(row.storage_path),author,own,opensPeriod));
+    html.push(ricordiMomentCard(row,signedUrls.get(row.storage_path),author,own,opensPeriod,item.kind==='moment'?null:{kind:item.kind,sourceKey:item.sourceKey,title:ricordiRiviviTitle(item),date:item.date}));
     if(!opensPeriod)loneHalf=loneHalf>=0?-1:html.length-1;
   }
   closeRow();
   if(timeline.length){
     grid.innerHTML=html.join('');grid.dataset.loaded='1';grid.dataset.signature=signature;
     consumeFreshRicordo(grid);
-    renderRicordiRivivi(ricordiPickRivivi(rows||[],today),signedUrls,names);
+    renderRicordiRivivi(ricordiPickRivivi(timeline,today),signedUrls,names);
     renderRicordiChapters(ricordiChapters(timeline),signedUrls);
   }
   else if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">!</div><b>Foto non disponibili</b><p>Riprova tra un momento.</p></div>';
