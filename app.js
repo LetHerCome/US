@@ -2696,17 +2696,30 @@ window.deleteMoment=deleteMoment;
 
 
 // ===== Bond progression + Weekly Quests =====
-function weekStartISO(){
-  const now=new Date();
-  const d=new Date(now.getFullYear(),now.getMonth(),now.getDate());
-  const mondayOffset=(d.getDay()+6)%7;
-  d.setDate(d.getDate()-mondayOffset);
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+// M12D: the Quest week is the Monday of the Europe/Rome calendar (same clock
+// as Daily and Game V2), so two phones in different time zones share it.
+const QUEST_WEEK_TIMEZONE='Europe/Rome';
+function questRomeDay(now=new Date()){
+  const parts=new Intl.DateTimeFormat('en-CA',{timeZone:QUEST_WEEK_TIMEZONE,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now);
+  const get=type=>Number(parts.find(p=>p.type===type)?.value);
+  return new Date(Date.UTC(get('year'),get('month')-1,get('day')));
 }
-function nextWeekLabel(){
-  const [y,m,d]=weekStartISO().split('-').map(Number);
-  const next=new Date(y,m-1,d+7);
-  return next.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'short'});
+function weekStartISO(now=new Date()){
+  const d=questRomeDay(now);
+  d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));
+  return d.toISOString().slice(0,10);
+}
+function questWeekDate(week,days=0){
+  const [y,m,d]=String(week).split('-').map(Number);
+  return new Date(Date.UTC(y,m-1,d+days));
+}
+function questDayLabel(date,options){return date.toLocaleDateString('it-IT',{timeZone:'UTC',...options});}
+function nextWeekLabel(week=weekStartISO()){
+  return questDayLabel(questWeekDate(week,7),{weekday:'long',day:'numeric',month:'short'});
+}
+function questWeekRangeLabel(week){
+  const from=questWeekDate(week),to=questWeekDate(week,6);
+  return `${questDayLabel(from,{day:'numeric',month:'short'})} – ${questDayLabel(to,{day:'numeric',month:'short'})}`;
 }
 function bondLevelInfo(totalXp=0){
   const total=Math.max(0,Number(totalXp)||0);
@@ -2890,9 +2903,17 @@ function selectInitialQuestTemplates(templates,mode,week,coupleId){
     return picked;
   }).filter(Boolean);
 }
-async function ensureBondWeek(){
-  if(!window.usProfile)return;
-  const coupleId=window.usProfile.couple_id,week=weekStartISO();
+// M12D: a reroll proposes the same mode-eligible, not-already-on-the-board
+// templates as before, but picks deterministically (no Math.random): both
+// phones propose the same replacement and reroll_bond_quest stays the authority.
+function pickRerollQuestTemplate(templates,mode,usedKeys,seedText){
+  const used=usedKeys instanceof Set?usedKeys:new Set(usedKeys||[]);
+  const candidates=(templates||[]).filter(t=>(t.mode==='any'||t.mode===mode)&&!used.has(t.key)).sort((a,b)=>a.key.localeCompare(b.key));
+  return candidates.length?candidates[hashSeed(seedText)%candidates.length]:null;
+}
+async function ensureBondWeek(profile=window.usProfile,week=weekStartISO()){
+  if(!profile)return;
+  const coupleId=profile.couple_id;
   const {data:state}=await sb.from('bond_weekly_state').select('couple_id,week_start,rerolls_used').eq('couple_id',coupleId).eq('week_start',week).maybeSingle();
   if(!state){
     const {error}=await sb.from('bond_weekly_state').insert({couple_id:coupleId,week_start:week});
@@ -2915,93 +2936,247 @@ async function ensureBondWeek(){
     if(error&&error.code!=='23505')console.warn(error);
   }
 }
+
+// ===== M12D · Quest V2 — one weekly board over the existing Quest domain =====
+// Server authorities stay where they were: confirm_bond_quest owns each
+// confirmation, both-partner completion and the XP award into couples.bond_xp;
+// reroll_bond_quest owns the weekly reroll budget. Every state shown here is
+// derived from persisted bond_weekly_state / bond_weekly_quests rows.
+const QUEST_SLOTS=3,QUEST_WEEKLY_REROLLS=3,QUEST_RECENT_WEEKS=3;
+const questActionsInFlight=new Set();
+let questBoardSeq=0,questBoardView=null;
 function questCategoryIcon(category){
   return ({connection:'♡',fun:'✦',adventure:'⌁',discover:'?',memory:'▧',surprise:'✧',chill:'☕'})[category]||'✦';
 }
 function questCategoryLabel(category){
-  return ({connection:'Connection',fun:'Fun',adventure:'Adventure',discover:'Discover',memory:'Memory',surprise:'Surprise',chill:'Chill'})[category]||category;
+  return ({connection:'Connessione',fun:'Divertimento',adventure:'Avventura',discover:'Scoperta',memory:'Ricordo',surprise:'Sorpresa',chill:'Relax'})[category]||category||'Quest';
 }
-function renderBondQuest(q,state,profiles){
-  const confirmed=Array.isArray(q.confirmed_by)?q.confirmed_by:[];
-  const mine=confirmed.includes(window.usProfile.id);
-  const partner=(profiles||[]).find(p=>p.id!==window.usProfile.id);
-  const partnerConfirmed=partner?confirmed.includes(partner.id):false;
-  const complete=Boolean(q.completed_at);
-  const rerollsLeft=Math.max(0,3-Number(state?.rerolls_used||0));
-  const canReroll=!complete&&confirmed.length===0&&rerollsLeft>0;
-  const myInitial=(window.usProfile.display_name||'Tu').slice(0,1).toUpperCase();
-  const partnerInitial=(partner?.display_name||'B').slice(0,1).toUpperCase();
-  const confirmText=complete?`Completata · +${q.xp} XP`:mine?'✓ Confermata da te':'Ho completato questa quest';
-  return `<article class="bond-quest rarity-${escapeHtml(q.rarity)} ${complete?'completed':''}">
-    <div class="quest-top"><span class="quest-category"><i>${questCategoryIcon(q.category)}</i>${escapeHtml(questCategoryLabel(q.category))}</span><span class="quest-rarity">${escapeHtml(q.rarity.toUpperCase())} · +${q.xp} XP</span></div>
+function questRarityLabel(rarity){
+  return ({common:'Comune',uncommon:'Non comune',rare:'Rara',epic:'Epica'})[rarity]||rarity||'';
+}
+function questRerollsLeft(state){
+  return Math.max(0,QUEST_WEEKLY_REROLLS-Math.max(0,Number(state?.rerolls_used)||0));
+}
+function questOwnerKey(profile){return profile?`${profile.couple_id}|${profile.id}`:'';}
+function questPartner(profiles,me){return (profiles||[]).find(p=>p&&p.id!==me)||null;}
+function questViewState(q,{me,partnerId,rerollsLeft}){
+  const confirmed=(Array.isArray(q?.confirmed_by)?q.confirmed_by:[]).map(String);
+  const mine=Boolean(me)&&confirmed.includes(String(me));
+  const partner=partnerId?confirmed.includes(String(partnerId)):confirmed.some(id=>id!==String(me));
+  const completed=Boolean(q?.completed_at);
+  const status=completed?'completed':mine?'you-confirmed':partner?'partner-confirmed':'available';
+  const lockReason=completed?'completed':confirmed.length?'confirmed':rerollsLeft<=0?'budget':null;
+  return {status,mine,partner,completed,rerollable:!lockReason,lockReason};
+}
+function questBoardSummary(quests,state){
+  const rows=Array.isArray(quests)?quests:[];
+  return {total:QUEST_SLOTS,present:rows.length,completed:rows.filter(q=>q?.completed_at).length,rerollsLeft:questRerollsLeft(state)};
+}
+function questRecentWeeks(rows,currentWeek,limit=QUEST_RECENT_WEEKS){
+  const byWeek=new Map();
+  for(const row of rows||[]){
+    if(!row?.week_start||row.week_start>=currentWeek)continue;
+    if(!byWeek.has(row.week_start))byWeek.set(row.week_start,[]);
+    byWeek.get(row.week_start).push(row);
+  }
+  return [...byWeek.entries()].sort((a,b)=>a[0]<b[0]?1:-1).slice(0,limit).map(([week,list])=>{
+    const done=list.filter(q=>q.completed_at).sort((a,b)=>(a.slot||0)-(b.slot||0));
+    return {week,completed:done.length,total:Math.max(QUEST_SLOTS,list.length),titles:done.map(q=>q.title||'Quest di coppia')};
+  });
+}
+function questIcon(name){return `<span class="us-icon" data-us-icon="${name}" aria-hidden="true"></span>`;}
+function questCountLabel(n,one,many){return `${n} ${n===1?one:many}`;}
+function renderQuestWeekHeader(summary,week,{stale=false}={}){
+  const marks=Array.from({length:summary.total},(_,i)=>`<i class="${i<summary.completed?'is-done':''}"></i>`).join('');
+  const rerollText=summary.rerollsLeft>0?`${questCountLabel(summary.rerollsLeft,'cambio rimasto','cambi rimasti')}`:'Cambi finiti';
+  return `<div class="quest-week-top"><div class="quest-week-id"><span class="tiny">Questa settimana</span><b>${escapeHtml(questWeekRangeLabel(week))}</b></div><div class="quest-week-count"><b>${summary.completed}</b><span>/ ${summary.total}</span><small>completate</small></div></div>
+    <div class="quest-week-track" role="progressbar" aria-label="Quest completate questa settimana" aria-valuemin="0" aria-valuemax="${summary.total}" aria-valuenow="${summary.completed}" aria-valuetext="${summary.completed} di ${summary.total} completate">${marks}</div>
+    <div class="quest-week-meta"><span class="quest-week-rerolls" data-quest-rerolls="${summary.rerollsLeft}">${questIcon('arrows-clockwise')}${rerollText}</span><span class="quest-week-reset">${questIcon('calendar-heart')}Nuove quest ${escapeHtml(nextWeekLabel(week))}</span></div>
+    ${stale?`<div class="quest-week-stale" role="status"><span>Non aggiornato: controlla la connessione.</span><button type="button" class="quest-week-retry" data-quest-retry>Riprova</button></div>`:''}`;
+}
+function questStatusLine(view,partnerName,xp){
+  if(view.status==='completed')return `${questIcon('check')}<span>Completata insieme · +${xp} XP assegnati</span>`;
+  if(view.status==='you-confirmed')return `<span>Hai confermato · aspettiamo ${escapeHtml(partnerName)}</span>`;
+  if(view.status==='partner-confirmed')return `<span>${escapeHtml(partnerName)} ha confermato · manca la tua conferma</span>`;
+  return '<span>Si completa quando confermate entrambi</span>';
+}
+function renderBondQuest(q,ctx){
+  const me=ctx.me,partner=ctx.partner;
+  const view=questViewState(q,{me,partnerId:partner?.id,rerollsLeft:ctx.rerollsLeft});
+  const xp=Math.max(0,Number(q.xp)||0);
+  const partnerName=partner?.display_name||'l’altra persona';
+  const confirmBusy=questActionsInFlight.has(`confirm:${q.id}`);
+  const rerollBusy=questActionsInFlight.has(`reroll:${q.id}`);
+  const confirmText=confirmBusy?'Confermo…':view.completed?`Completata · +${xp} XP`:view.mine?'Confermata da te':view.partner?'Conferma anche tu':'Ho completato questa quest';
+  const confirmDisabled=view.completed||view.mine||confirmBusy;
+  const person=(name,done,label)=>`<li class="quest-person ${done?'checked':''}"><span class="quest-person-initial" aria-hidden="true">${escapeHtml((name||'?').slice(0,1).toUpperCase())}</span><span class="quest-person-name">${escapeHtml(label)}</span><span class="quest-person-state">${done?`${questIcon('check')}<span class="sr-only">confermato</span>`:'in attesa'}</span></li>`;
+  const lockText=view.lockReason==='confirmed'?'Già confermata: non si può più cambiare':'Cambi finiti per questa settimana';
+  const reroll=view.completed?'':view.rerollable
+    ?`<button type="button" class="quest-reroll" data-quest-action="reroll" ${rerollBusy?'disabled aria-busy="true"':''} onclick="rerollBondQuest('${escapeHtml(q.id)}')" aria-label="Cambia questa quest (${questCountLabel(ctx.rerollsLeft,'cambio rimasto','cambi rimasti')})">${questIcon('arrows-clockwise')}</button>`
+    :`<button type="button" class="quest-reroll is-locked" data-quest-action="reroll" disabled aria-label="${lockText}" title="${lockText}">${questIcon('lock')}</button>`;
+  return `<article class="bond-quest quest-v2 rarity-${escapeHtml(q.rarity)} ${view.completed?'completed':''}" data-quest-id="${escapeHtml(q.id)}" data-quest-slot="${escapeHtml(q.slot)}" data-quest-state="${view.status}" data-quest-reroll="${view.rerollable?'rerollable':'locked'}">
+    <div class="quest-top"><span class="quest-category"><i aria-hidden="true">${questCategoryIcon(q.category)}</i>${escapeHtml(questCategoryLabel(q.category))}</span><span class="quest-rarity">${escapeHtml(questRarityLabel(q.rarity))} · +${xp} XP</span></div>
     <h4>${escapeHtml(q.title)}</h4>
-    <div class="quest-confirmers"><span class="${mine?'checked':''}">${myInitial}${mine?' ✓':''}</span><span class="quest-link"></span><span class="${partnerConfirmed?'checked':''}">${partnerInitial}${partnerConfirmed?' ✓':''}</span><small>${complete?'XP assegnati':'Conferma di entrambi'}</small></div>
+    <p class="quest-status">${questStatusLine(view,partnerName,xp)}</p>
+    <ul class="quest-confirmers" aria-label="Conferme">${person(ctx.myName,view.mine,'Tu')}${person(partnerName,view.partner,partnerName)}</ul>
     <div class="quest-actions">
-      <button type="button" class="quest-confirm ${mine||complete?'confirmed':''}" ${mine||complete?'disabled':''} onclick="confirmBondQuest('${q.id}')">${confirmText}</button>
-      ${canReroll?`<button type="button" class="quest-reroll" onclick="rerollBondQuest('${q.id}')" aria-label="Cambia questa quest"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></button>`:''}
+      <button type="button" class="quest-confirm ${confirmDisabled?'confirmed':''}" data-quest-action="confirm" ${confirmDisabled?'disabled':''} ${confirmBusy?'aria-busy="true"':''} onclick="confirmBondQuest('${escapeHtml(q.id)}')">${confirmText}</button>
+      ${reroll}
     </div>
   </article>`;
 }
+function renderQuestRecent(weeks){
+  const root=document.getElementById('questRecent');
+  const list=document.getElementById('questRecentList');
+  if(!root||!list)return;
+  if(!weeks?.length){root.hidden=true;list.innerHTML='';return;}
+  list.innerHTML=weeks.map(w=>`<li class="quest-recent-week" data-quest-week="${escapeHtml(w.week)}"><span class="quest-recent-head"><b>${escapeHtml(questWeekRangeLabel(w.week))}</b><span>${w.completed} / ${w.total}</span></span><span class="quest-recent-titles">${w.titles.length?w.titles.map(escapeHtml).join(' · '):'Nessuna completata'}</span></li>`).join('');
+  root.hidden=false;
+}
+function paintQuestBoard(){
+  const v=questBoardView;
+  const list=document.getElementById('bondQuestList');
+  if(!v||!list||list.dataset.owner!==v.owner)return;
+  const summary=questBoardSummary(v.quests,v.state);
+  const header=document.getElementById('questWeekBoard');
+  if(header){header.innerHTML=renderQuestWeekHeader(summary,v.week,{stale:v.stale});header.hidden=false;}
+  const ctx={me:v.me,partner:questPartner(v.profiles,v.me),rerollsLeft:summary.rerollsLeft,myName:v.myName};
+  const signature=JSON.stringify([v.week,summary.rerollsLeft,[...questActionsInFlight].sort(),v.quests.map(q=>[q.id,q.slot,q.template_key,q.title,q.category,q.rarity,q.xp,q.confirmed_by,q.completed_at]),(v.profiles||[]).map(p=>[p.id,p.display_name])]);
+  if(list.dataset.loaded==='1'&&list.dataset.signature===signature)return;
+  list.innerHTML=v.quests.map(q=>renderBondQuest(q,ctx)).join('')||'<div class="empty-state quest-empty"><b>Le quest della settimana stanno arrivando</b><p>Riprova tra un momento.</p><button type="button" class="ghost quest-week-retry" data-quest-retry>Riprova</button></div>';
+  list.dataset.loaded='1';list.dataset.signature=signature;
+}
+function resetQuestBoard(list,owner){
+  list.dataset.owner=owner;list.dataset.loaded='';list.dataset.signature='';
+  questBoardView=null;questActionsInFlight.clear();
+  window.usBondQuests=[];window.usBondState=null;window.usBondProfiles=[];
+  const header=document.getElementById('questWeekBoard');if(header){header.innerHTML='';header.hidden=true;}
+  renderQuestRecent([]);
+}
 async function hydrateBond(){
-  if(!window.usProfile)return;
+  const profile=window.usProfile;
+  if(!profile)return;
   const list=document.getElementById('bondQuestList');
   if(!list)return;
-  if(list.dataset.loaded!=='1')list.innerHTML='<div class="empty-state"><div class="emoji">✦</div><b>Carico…</b></div>';
-  await ensureBondWeek();
-  const week=weekStartISO(),coupleId=window.usProfile.couple_id;
-  const [{data:state,error:stateError},{data:quests,error:questError},{data:profiles,error:profilesError},{data:couple,error:coupleError},{count:completedCount,error:countError}]=await Promise.all([
+  const owner=questOwnerKey(profile);
+  // Identity switch: never keep the previous actor's or couple's confirmations on screen.
+  if(list.dataset.owner!==owner)resetQuestBoard(list,owner);
+  const seq=++questBoardSeq;
+  const current=()=>seq===questBoardSeq&&questOwnerKey(window.usProfile)===owner;
+  if(list.dataset.loaded!=='1')list.innerHTML='<div class="empty-state" aria-busy="true"><div class="emoji">✦</div><b>Carico…</b></div>';
+  const week=weekStartISO(),coupleId=profile.couple_id;
+  await ensureBondWeek(profile,week);
+  if(!current())return;
+  const [{data:state,error:stateError},{data:quests,error:questError},{data:profiles,error:profilesError},{data:couple,error:coupleError},{count:completedCount,error:countError},{data:recent,error:recentError}]=await Promise.all([
     sb.from('bond_weekly_state').select('rerolls_used').eq('couple_id',coupleId).eq('week_start',week).maybeSingle(),
     sb.from('bond_weekly_quests').select('id,slot,template_key,title,category,rarity,xp,confirmed_by,completed_at').eq('couple_id',coupleId).eq('week_start',week).order('slot'),
     sb.from('profiles').select('id,display_name,role').eq('couple_id',coupleId),
     sb.from('couples').select('bond_xp').eq('id',coupleId).maybeSingle(),
-    sb.from('bond_weekly_quests').select('id',{count:'exact',head:true}).eq('couple_id',coupleId).not('completed_at','is',null)
+    sb.from('bond_weekly_quests').select('id',{count:'exact',head:true}).eq('couple_id',coupleId).not('completed_at','is',null),
+    sb.from('bond_weekly_quests').select('id,week_start,slot,title,completed_at').eq('couple_id',coupleId).lt('week_start',week).order('week_start',{ascending:false}).order('slot').limit(QUEST_SLOTS*QUEST_RECENT_WEEKS)
   ]);
-  if(stateError||questError||profilesError||coupleError){console.warn(stateError||questError||profilesError||coupleError);if(list.dataset.loaded!=='1')list.innerHTML='<div class="empty-state"><div class="emoji">!</div><b>Bond non disponibile</b><p>Riprova tra un momento.</p></div>';return;}
+  if(!current())return;
+  if(stateError||questError||profilesError||coupleError){
+    console.warn(stateError||questError||profilesError||coupleError);
+    if(list.dataset.loaded==='1'&&questBoardView){questBoardView.stale=true;list.dataset.signature='';paintQuestBoard();}
+    else list.innerHTML='<div class="empty-state quest-error" role="status"><div class="emoji">!</div><b>Quest non disponibili</b><p>Controlla la connessione e riprova.</p><button type="button" class="ghost quest-week-retry" data-quest-retry>Riprova</button></div>';
+    return;
+  }
   if(countError)console.warn(countError);
+  if(recentError)console.warn(recentError);
   window.usBondProfiles=profiles||[];
   window.usBondState=state||{rerolls_used:0};
   window.usBondQuests=quests||[];
   renderNoiHubSummary();
   renderBondProgress(couple?.bond_xp||0);
   const countEl=document.getElementById('bondCompletedCount');if(countEl)countEl.textContent=`${Number(completedCount||0)} quest completate`;
-  const rerollsLeft=Math.max(0,3-Number(state?.rerolls_used||0));
-  const rerollEl=document.getElementById('bondRerollsLeft');if(rerollEl)rerollEl.textContent=rerollsLeft;
-  const resetEl=document.getElementById('bondWeekReset');if(resetEl)resetEl.textContent=`Nuove quest ${nextWeekLabel()}`;
-  const signature=JSON.stringify([state?.rerolls_used||0,couple?.bond_xp||0,completedCount||0,(quests||[]).map(q=>[q.id,q.template_key,q.title,q.rarity,q.xp,q.confirmed_by,q.completed_at])]);
-  if(list.dataset.loaded==='1'&&list.dataset.signature===signature)return;
-  list.innerHTML=(quests||[]).map(q=>renderBondQuest(q,state,profiles)).join('')||'<div class="empty-state"><b>Nessuna quest disponibile.</b></div>';
-  list.dataset.loaded='1';list.dataset.signature=signature;
+  const rerollEl=document.getElementById('bondRerollsLeft');if(rerollEl)rerollEl.textContent=questRerollsLeft(state);
+  const resetEl=document.getElementById('bondWeekReset');if(resetEl)resetEl.textContent=`Nuove quest ${nextWeekLabel(week)}`;
+  const me=profile.id;
+  questBoardView={owner,week,me,myName:profile.display_name||'Tu',profiles:profiles||[],state:state||{rerolls_used:0},quests:quests||[],stale:false};
+  paintQuestBoard();
+  renderQuestRecent(recentError?[]:questRecentWeeks(recent,week));
 }
 window.hydrateBond=hydrateBond;
+function setQuestAction(key,busy){
+  if(busy)questActionsInFlight.add(key);else questActionsInFlight.delete(key);
+  const list=document.getElementById('bondQuestList');if(list)list.dataset.signature='';
+  paintQuestBoard();
+}
 async function confirmBondQuest(id){
-  if(!window.usProfile)return;
-  const {data,error}=await sb.rpc('confirm_bond_quest',{target_quest_id:id});
-  if(error){console.warn(error);toast('Non riesco a confermare la quest');return;}
-  sendWebPushEvent('quest_confirmed',id).catch(()=>{});
-  if(data?.xp_awarded){toast(`+${data.xp_awarded} Bond XP ♡`);window.UsFeedback?.success?.();}
-  else toast('Confermata. Aspettiamo l’altro ♡');
+  const profile=window.usProfile;
+  if(!profile||!id)return;
+  const key=`confirm:${id}`;
+  if(questActionsInFlight.has(key))return;
+  const current=(window.usBondQuests||[]).find(q=>q.id===id);
+  if(current&&(current.completed_at||(current.confirmed_by||[]).includes(profile.id)))return;
+  const owner=questOwnerKey(profile);
+  setQuestAction(key,true);
+  let result;
+  try{result=await sb.rpc('confirm_bond_quest',{target_quest_id:id});}
+  catch(error){result={data:null,error};}
+  finally{questActionsInFlight.delete(key);}
+  if(questOwnerKey(window.usProfile)!==owner)return;
+  if(result.error){console.warn(result.error);toast('Conferma non riuscita. Riprova.');}
+  else{
+    sendWebPushEvent('quest_confirmed',id).catch(()=>{});
+    const awarded=Number(result.data?.xp_awarded)||0;
+    if(awarded>0){toast(`Quest completata · +${awarded} XP ♡`);window.UsFeedback?.success?.();}
+    else toast('Confermata. Ora tocca all’altra persona ♡');
+  }
+  setQuestAction(key,false);
   await hydrateBond();
   await hydrateBondSummary();
 }
 window.confirmBondQuest=confirmBondQuest;
 async function rerollBondQuest(id){
-  const state=window.usBondState||{rerolls_used:3};
-  if(Number(state.rerolls_used)>=3)return toast('Avete finito i 3 refresh');
+  const profile=window.usProfile;
+  if(!profile||!id)return;
+  const key=`reroll:${id}`;
+  // One reroll at a time per phone: the weekly budget is shared by the whole board.
+  if([...questActionsInFlight].some(k=>k.startsWith('reroll:')))return;
+  const state=window.usBondState;
+  const rerollsLeft=questRerollsLeft(state||{rerolls_used:QUEST_WEEKLY_REROLLS});
+  if(rerollsLeft<=0)return toast('Avete finito i cambi di questa settimana');
   const current=(window.usBondQuests||[]).find(q=>q.id===id);
-  if(!current||current.completed_at||(current.confirmed_by||[]).length)return toast('Questa quest è già stata confermata');
-  const mode=await currentQuestMode();
-  const {data:templates,error}=await sb.from('bond_quest_templates').select('key,title,category,rarity,xp,mode').eq('active',true);
-  if(error||!templates?.length){console.warn(error);return toast('Nessuna quest disponibile');}
-  const used=new Set((window.usBondQuests||[]).map(q=>q.template_key));
-  const candidates=templates.filter(t=>(t.mode==='any'||t.mode===mode)&&!used.has(t.key));
-  if(!candidates.length)return toast('Nessuna alternativa disponibile');
-  const pick=candidates[Math.floor(Math.random()*candidates.length)];
-  const result=await sb.rpc('reroll_bond_quest',{target_quest_id:id,target_template_key:pick.key});
-  if(result.error){console.warn(result.error);toast(result.error.message?.includes('No rerolls')?'Avete finito i 3 refresh':'Non riesco a cambiare la quest');return;}
-  toast(`Nuova quest · ${3-Number(result.data?.rerolls_used||3)} refresh rimasti`);
+  if(!current)return;
+  const view=questViewState(current,{me:profile.id,partnerId:questPartner(window.usBondProfiles,profile.id)?.id,rerollsLeft});
+  if(!view.rerollable)return toast(view.completed?'Questa quest è già completata':'Questa quest è già stata confermata');
+  const owner=questOwnerKey(profile);
+  setQuestAction(key,true);
+  let result=null;
+  try{
+    const week=weekStartISO();
+    const [mode,{data:templates,error}]=await Promise.all([
+      currentQuestMode(),
+      sb.from('bond_quest_templates').select('key,title,category,rarity,xp,mode').eq('active',true)
+    ]);
+    if(error||!templates?.length){console.warn(error);result={skip:'Nessuna quest disponibile'};}
+    else{
+      const used=new Set((window.usBondQuests||[]).map(q=>q.template_key));
+      const pick=pickRerollQuestTemplate(templates,mode,used,`${profile.couple_id}|${week}|${current.slot}|reroll|${Number(state?.rerolls_used)||0}|${current.template_key}`);
+      result=pick?await sb.rpc('reroll_bond_quest',{target_quest_id:id,target_template_key:pick.key}):{skip:'Nessuna alternativa disponibile'};
+    }
+  }catch(error){result={error};}
+  finally{questActionsInFlight.delete(key);}
+  if(questOwnerKey(window.usProfile)!==owner)return;
+  if(result?.skip)toast(result.skip);
+  else if(result?.error){console.warn(result.error);toast(String(result.error.message||'').includes('No rerolls')?'Avete finito i cambi di questa settimana':'Cambio non riuscito. Riprova.');}
+  else{
+    const used=Number(result?.data?.rerolls_used);
+    toast(Number.isFinite(used)?`Nuova quest · ${questCountLabel(Math.max(0,QUEST_WEEKLY_REROLLS-used),'cambio rimasto','cambi rimasti')}`:'Nuova quest');
+  }
+  setQuestAction(key,false);
   await hydrateBond();
 }
 window.rerollBondQuest=rerollBondQuest;
+document.addEventListener('click',event=>{
+  if(!event.target?.closest?.('[data-quest-retry]'))return;
+  event.preventDefault();
+  hydrateBond();
+});
+window.addEventListener('online',()=>{if(document.getElementById('bond')?.classList.contains('active'))hydrateBond();});
+window.UsQuest=Object.freeze({viewState:questViewState,summary:questBoardSummary,recentWeeks:questRecentWeeks,pickReroll:pickRerollQuestTemplate,weekStart:weekStartISO,weekRange:questWeekRangeLabel,nextWeek:nextWeekLabel});
 
 // ===== M7B — Da vivere (bucket_items) =====
 // Solo bucket_items (M7A). Nessuna nuova tabella/RPC/persistenza locale.
@@ -3521,6 +3696,7 @@ function openNoiSection(view){
   if(view==='resonance')window.hydrateResonanceHistory?.();
   if(view==='da-vivere'&&window.usProfile&&!noiIdeaState.loaded)hydrateNoiIdeas();
   if(view==='eventi')window.hydrateEvents?.();
+  if(view==='quest'&&window.usProfile)hydrateBond();
   document.getElementById('noiSectionBack')?.focus({preventScroll:true});
 }
 function closeNoiSection(){

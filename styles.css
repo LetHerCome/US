@@ -598,3 +598,46 @@ body.viewer-open{overflow:hidden}
 
 /* M12A — Oggi arbitration: a surface that lost the priority contest is only hidden, never removed. */
 [data-us-oggi-slot="suppressed"]{display:none!important}
+
+/* M12D · Quest V2: one weekly board. States come from persisted rows; text and icons carry them, never color alone. */
+.quest-week{display:flex;flex-direction:column;gap:10px;margin-top:10px;padding:14px 15px;border-radius:22px;border:1px solid rgba(255,255,255,.10);background:linear-gradient(145deg,rgba(169,133,255,.08),rgba(255,102,142,.05)),rgba(255,255,255,.025)}
+.quest-week[hidden]{display:none}
+.quest-week-top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.quest-week-id{min-width:0}.quest-week-id b{display:block;margin-top:3px;font-family:Georgia,serif;font-size:19px;font-weight:500;line-height:1.15;color:var(--us-color-text)}
+.quest-week-count{display:grid;grid-template-columns:auto auto;align-items:baseline;column-gap:4px;text-align:right;flex:0 0 auto}
+.quest-week-count b{font-family:Georgia,serif;font-size:26px;font-weight:500;line-height:1;color:var(--us-color-text)}.quest-week-count>span{font-size:14px;color:var(--us-color-text-2)}
+.quest-week-count small{grid-column:1/-1;font-size:var(--us-text-meta);color:var(--muted)}
+.quest-week-track{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.quest-week-track i{height:5px;border-radius:999px;background:rgba(255,255,255,.10)}
+.quest-week-track i.is-done{background:linear-gradient(90deg,var(--us-color-rose),var(--us-color-violet))}
+.quest-week-meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:var(--us-text-meta);color:var(--us-color-text-2)}
+.quest-week-meta>span{display:inline-flex;align-items:center;gap:6px;--us-icon-size:14px}.quest-week-meta .us-icon{color:var(--pink2)}
+.quest-week-rerolls[data-quest-rerolls="0"]{color:var(--muted)}.quest-week-rerolls[data-quest-rerolls="0"] .us-icon{color:var(--muted)}
+.quest-week-stale{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:var(--us-text-meta);color:var(--us-color-warning)}
+.quest-week-retry{min-height:44px;padding:0 16px;border-radius:13px;border:1px solid var(--border);background:var(--us-color-elevated);color:var(--us-color-text);font-size:12px;font-weight:700}
+.noi-living-list .bond-quest.quest-v2{justify-content:flex-start}
+.noi-living-list .bond-quest.quest-v2 .quest-rarity{display:inline;font-size:10px;letter-spacing:.04em}
+.noi-living-list .bond-quest.quest-v2 h4{margin:10px 0 6px;overflow-wrap:anywhere}
+.quest-v2 .quest-status{display:flex;align-items:center;gap:6px;margin:0 0 10px;font-size:12px;line-height:1.35;color:var(--us-color-text-2);--us-icon-size:15px}
+.quest-v2[data-quest-state="completed"] .quest-status{color:var(--us-color-positive)}
+.quest-v2[data-quest-state="partner-confirmed"] .quest-status{color:var(--us-color-text)}
+.quest-v2 .quest-confirmers{list-style:none;padding:0;margin:0 0 10px;display:flex;flex-wrap:wrap;gap:6px}
+.quest-v2 .quest-person{display:inline-flex;align-items:center;gap:6px;min-height:30px;padding:3px 10px 3px 3px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.035);font-size:11px;color:var(--us-color-text-2);max-width:100%}
+.quest-v2 .quest-person-initial{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;flex:0 0 auto;background:var(--us-color-elevated);font-size:10px;font-weight:900;color:var(--us-color-text-2)}
+.quest-v2 .quest-person-name{font-weight:750;color:var(--us-color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.quest-v2 .quest-person-state{display:inline-flex;align-items:center;gap:3px;--us-icon-size:12px}
+.quest-v2 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.quest-v2 .quest-person.checked{border-color:rgba(100,217,139,.30);background:rgba(100,217,139,.08)}
+.quest-v2 .quest-person.checked .quest-person-initial{background:rgba(100,217,139,.16);color:var(--us-color-positive)}
+.quest-v2 .quest-person.checked .quest-person-state{color:var(--us-color-positive)}
+.quest-v2.completed{opacity:1}.quest-v2.completed:after{content:none}
+.quest-v2 .quest-confirm{font-size:12px;font-weight:750}
+.quest-v2 .quest-confirm[aria-busy="true"]{opacity:.72}
+.quest-v2 .quest-reroll.is-locked{color:var(--muted);background:rgba(255,255,255,.03)}
+.quest-recent{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.quest-recent[hidden]{display:none}
+.quest-recent-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.quest-recent-week{display:flex;flex-direction:column;gap:3px;padding:10px 13px;border-radius:16px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025)}
+.quest-recent-head{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--us-color-text-2)}.quest-recent-head b{color:var(--us-color-text);font-weight:700}
+.quest-recent-titles{font-size:var(--us-text-meta);line-height:1.35;color:var(--muted);overflow-wrap:anywhere}
+@media(prefers-reduced-motion:reduce){.quest-v2,.quest-v2 *{transition:none!important;animation:none!important}}
