@@ -10,18 +10,19 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const html = read('index.html');
 const foundationCss = read('ui-foundation.css');
 const identityCss = read('identity.css');
-const topBar = html.match(/<div class="top us-premium-top">[\s\S]*?<\/div>\s*<main id="home"/)[0];
+const topBar = html.match(/<div class="top us-premium-top">[\s\S]*?<\/div><\/div>/)[0];
 
 // ---------------------------------------------------------------- SHELL
 
-test('shell: Per voi left, the US mark at the centre, Left for You right', () => {
-  const perVoi = topBar.indexOf('id="usPerVoiTop"');
-  const brand = topBar.indexOf('class="us-top-brand"');
-  const envelope = topBar.indexOf('id="leftForYouPartnerEntry"');
-  assert.ok(perVoi > 0 && brand > perVoi && envelope > brand, 'order: Per voi, US, Left for You');
-  assert.match(topBar, /<div class="us-top-brand" role="img" aria-label="US"><img[^>]+us-symbol-apk-foreground-v1\.png/);
-  assert.match(identityCss, /\.top\.us-premium-top \.us-top-brand\{grid-column:2;/);
-  assert.match(identityCss, /\.top\.us-premium-top\{display:grid;grid-template-columns:minmax\(0,1fr\) auto minmax\(0,1fr\)/);
+// US-HUMAN-UI-01 replaced the M12A top bar (Per voi · US · Left for You)
+// with ONE floating control and a transient capsule where the US mark speaks.
+test('shell: no top bar — one floating control (Left for You), the US mark lives in the capsule', () => {
+  assert.match(topBar, /id="leftForYouPartnerEntry"/);
+  assert.equal((topBar.match(/<button/g) || []).length, 1, 'one persistent top control');
+  assert.doesNotMatch(topBar, /usPerVoiTop|us-top-brand|us-aurora/);
+  assert.match(html, /<div class="us-capsule" id="usCapsule" aria-live="polite" aria-atomic="true"><\/div><template id="usCapsuleMark"><img class="us-brand-symbol-art us-capsule-mark" src="\/assets\/derived\/brand\/us-symbol-apk-foreground-v1\.png" alt="" aria-hidden="true"><\/template>/);
+  assert.match(foundationCss, /\.top\.us-premium-top\{position:absolute;z-index:10;top:var\(--us-shell-top\);[^}]*background:none;border:0;[^}]*pointer-events:none\}/);
+  assert.doesNotMatch(identityCss, /\.top\.us-premium-top\{display:grid/);
 });
 
 test('shell: Events no longer owns the global centre slot but stays reachable', () => {
@@ -39,7 +40,9 @@ test('shell: the canonical PWA/launcher mark is used as-is (display cropping onl
   const asset = manifest.assets.find((entry) => entry.path === 'assets/derived/brand/us-symbol-apk-foreground-v1.png');
   assert.equal(asset.status, 'APPROVED');
   assert.match(read('service-worker.js'), /"\/assets\/derived\/brand\/us-symbol-apk-foreground-v1\.png"/);
-  assert.match(identityCss, /\.us-top-brand-art\{[^}]*height:58px[^}]*width:58px/);
+  // Cloned into the capsule as-is; only its display box is set.
+  assert.match(foundationCss, /\.us-capsule \.us-capsule-mark\{flex:0 0 auto;width:38px;height:38px;margin:-9px -6px -9px -9px;object-fit:contain\}/);
+  assert.match(read('ui-foundation.js'), /getElementById\?\.\('usCapsuleMark'\)\?\.content\?\.firstElementChild[\s\S]{0,80}brand\.cloneNode\(true\)/);
 });
 
 async function runNetwork({ online, warn }) {
@@ -85,26 +88,20 @@ test('connection: healthy shows nothing, offline is immediate, "connecting" wait
 });
 
 test('connection: the top-bar badge itself never occupies shell space', () => {
-  assert.match(identityCss, /\.top\.us-premium-top \.online-badge\{display:none!important\}/);
+  assert.match(foundationCss, /\.top\.us-premium-top \.online-badge\{display:none!important\}/);
   assert.match(read('fix4.css'), /\.online-badge\.ok\{display:none!important\}/);
 });
 
-// ---------------------------------------------------------------- AURORA
+// ---------------------------------------------------------------- CAPSULE
 
-test('aurora: one canonical layer with ambient drift, reaction and reduced-motion state', () => {
-  assert.match(topBar, /<span class="us-aurora" aria-hidden="true"><\/span>/);
-  assert.match(foundationCss, /\.top\.us-premium-top>\.us-aurora\{[^}]*overflow:hidden[^}]*pointer-events:none/);
-  assert.match(foundationCss, /animation:us-aurora-drift 12s ease-in-out infinite alternate/);
-  assert.match(foundationCss, /\[data-us-aurora="react"\] \.us-aurora::before/);
-  assert.match(foundationCss, /\[data-us-aurora="react"\] \.us-aurora::after\{animation:us-aurora-sweep 800ms/);
-  // Reduced motion: no continuous travel.
-  assert.match(foundationCss, /:root\[data-us-motion="reduced"\] \.us-aurora::before,\s*:root\[data-us-motion="reduced"\] \.us-aurora::after\{animation:none!important/);
-  assert.match(foundationCss, /@media \(prefers-reduced-motion:reduce\)\{\s*\.us-aurora::before,\.us-aurora::after\{animation:none!important/);
-  // A hidden document pauses the ambient animation.
-  assert.match(foundationCss, /:root\[data-us-visibility="hidden"\] \.us-aurora::before/);
-  // Cheap by construction: only transform/opacity, no filters, no JS loop.
-  const block = foundationCss.slice(foundationCss.indexOf('M12A — Shell aurora'), foundationCss.indexOf('M12A — Tiles and their destinations'));
-  assert.doesNotMatch(block, /filter:|blur\(/);
+test('capsule: transient by construction — hidden when empty, one entry transition, no loop, reduced-motion aware', () => {
+  const block = foundationCss.slice(foundationCss.indexOf('US-HUMAN-UI-01 — Shell'), foundationCss.indexOf('/* Dock.'));
+  assert.match(block, /\.us-capsule:empty\{display:none\}/);
+  assert.match(block, /\.us-capsule\[data-state="shown"\] \.us-capsule-pill\{opacity:1;transform:none\}/);
+  assert.match(block, /:root\[data-us-motion="reduced"\] \.us-capsule-pill\{transform:none;transition:opacity 1ms\}/);
+  assert.match(block, /@media \(prefers-reduced-motion:reduce\)\{\.us-capsule-pill\{transform:none;transition:opacity 1ms\}\}/);
+  assert.doesNotMatch(block, /infinite|animation:/, 'the capsule never loops');
+  assert.doesNotMatch(foundationCss, /us-aurora/, 'the ambient aurora is gone');
   assert.doesNotMatch(read('ui-foundation.js'), /setInterval/, 'no perpetual JS loop');
 });
 
@@ -115,12 +112,22 @@ function foundationHarness({ reduced = false } = {}) {
   const barAttrs = new Map();
   const bar = { offsetWidth: 0, setAttribute: (k, v) => barAttrs.set(k, v), removeAttribute: (k) => barAttrs.delete(k), getAttribute: (k) => barAttrs.get(k) ?? null };
   const docListeners = new Map();
+  const fakeEl = (tag) => {
+    const a = new Map();
+    return { tagName: tag, children: [], listeners: {}, className: '', textContent: '', type: '', firstChild: null, offsetWidth: 0,
+      setAttribute: (k, v) => a.set(k, String(v)), getAttribute: (k) => a.get(k) ?? null, removeAttribute: (k) => a.delete(k),
+      addEventListener(t, fn) { this.listeners[t] = fn; }, append(...c) { this.children.push(...c); this.firstChild = this.children[0]; },
+      replaceChildren(...c) { this.children = c; this.firstChild = c[0] || null; } };
+  };
+  const capsule = fakeEl('div');
   const documentRef = {
     hidden: false,
     body: { tagName: 'BODY' },
     documentElement: { setAttribute: (k, v) => attrs.set(k, v) },
     activeElement: null,
     querySelector: (s) => (s === '.top.us-premium-top' ? bar : null),
+    getElementById: (id) => (id === 'usCapsule' ? capsule : null),
+    createElement: (tag) => fakeEl(tag),
     querySelectorAll: () => [],
     addEventListener: (t, fn) => docListeners.set(t, fn),
     removeEventListener: (t) => docListeners.delete(t)
@@ -133,7 +140,7 @@ function foundationHarness({ reduced = false } = {}) {
     setTimeout: (fn, ms) => { timers.push({ fn, ms }); return timers.length; },
     clearTimeout() {}
   });
-  return { handle, attrs, barAttrs, docListeners, documentRef, timers, fire: (records) => observerCallback(records) };
+  return { handle, attrs, barAttrs, capsule, docListeners, documentRef, timers, fire: (records) => observerCallback(records) };
 }
 
 test('aurora: visibility drives a data attribute (CSS pauses the animation while hidden)', () => {
@@ -145,50 +152,64 @@ test('aurora: visibility drives a data attribute (CSS pauses the animation while
   h.handle.destroy();
 });
 
-test('aurora: the same layer reacts briefly when attention turns on in the top bar, then returns', () => {
-  const { auroraPulse } = require('../ui-foundation.js');
+test('capsule: attention turning on in the floating control or the dock names the arrival once, then leaves', () => {
   const h = foundationHarness();
-  const topTarget = (value) => ({ getAttribute: () => value, closest: (s) => (s === '.top.us-premium-top' ? {} : null) });
-  h.fire([{ target: topTarget('on'), oldValue: 'off' }]);
-  assert.equal(h.barAttrs.get('data-us-aurora'), 'react');
-  const reset = h.timers.find((t) => t.ms === 800);
-  assert.ok(reset, 'reaction lasts about 800ms');
-  reset.fn();
-  assert.equal(h.barAttrs.get('data-us-aurora'), undefined, 'returns to the ambient state');
-
-  // Not for already-on, off, or controls outside the top bar (e.g. the Oggi cards).
-  h.fire([{ target: topTarget('on'), oldValue: 'on' }]);
-  h.fire([{ target: topTarget('off'), oldValue: 'on' }]);
-  h.fire([{ target: { getAttribute: () => 'on', closest: () => null }, oldValue: 'off' }]);
-  assert.equal(h.barAttrs.get('data-us-aurora'), undefined);
-
-  assert.equal(auroraPulse(), true, 'an explicit pulse (Ti penso arrival) uses the same system');
+  let clicked = 0;
+  const shellTarget = (value, label = 'Bea ti ha lasciato qualcosa') => ({
+    getAttribute: (k) => (k === 'data-us-attention' ? value : k === 'aria-label' ? label : null),
+    closest: (sel) => (sel === '.us-nav' ? {} : null), click: () => { clicked += 1; }
+  });
+  h.fire([{ target: shellTarget('on'), oldValue: 'off' }]);
+  assert.equal(h.capsule.getAttribute('data-state'), 'shown');
+  const pill = h.capsule.firstChild;
+  assert.equal(pill.tagName, 'button', 'a real destination makes the capsule tappable');
+  assert.equal(pill.children[1].textContent, 'Bea ti ha lasciato qualcosa');
+  // A second arrival does not push the first one out.
+  h.fire([{ target: shellTarget('on', 'Gioca · Bea ha iniziato'), oldValue: 'off' }]);
+  assert.equal(h.capsule.firstChild.children[1].textContent, 'Bea ti ha lasciato qualcosa');
+  pill.listeners.click();
+  assert.equal(clicked, 1, 'tap opens the control\'s own destination');
+  assert.equal(h.capsule.getAttribute('data-state'), 'leaving');
+  // Already-on, off, and controls outside the shell (the Oggi cards) never speak.
+  const fresh = foundationHarness();
+  fresh.fire([{ target: shellTarget('on'), oldValue: 'on' }]);
+  fresh.fire([{ target: shellTarget('off'), oldValue: 'on' }]);
+  fresh.fire([{ target: { getAttribute: () => 'on', closest: () => null }, oldValue: 'off' }]);
+  assert.equal(fresh.capsule.getAttribute('data-state'), null);
+  fresh.handle.destroy();
   h.handle.destroy();
 });
 
-test('aurora: reduced motion never pulses', () => {
-  const h = foundationHarness({ reduced: true });
-  const { auroraPulse, isReducedMotion } = require('../ui-foundation.js');
-  assert.equal(isReducedMotion(), true);
-  assert.equal(auroraPulse(), false);
-  assert.equal(h.barAttrs.get('data-us-aurora'), undefined);
+test('capsule: it auto-hides, and a hidden document never shows it', () => {
+  const { capsule } = require('../ui-foundation.js');
+  const h = foundationHarness();
+  assert.equal(capsule({ text: 'Bea ti pensa' }), true);
+  assert.equal(h.capsule.firstChild.tagName, 'span', 'no destination, no button');
+  const hide = h.timers.find((t) => t.ms === 3600);
+  assert.ok(hide, 'shown for a few seconds');
+  hide.fn();
+  assert.equal(h.capsule.getAttribute('data-state'), 'leaving');
+  h.documentRef.hidden = true;
+  assert.equal(capsule({ text: 'Bea ti pensa' }), false);
   h.handle.destroy();
 });
 
 // ---------------------------------------------------------------- ATTENTION
 
-test('attention: Per voi and Left for You use the same primitive, driven by data-us-attention', () => {
-  for (const id of ['usPerVoiTop', 'leftForYouPartnerEntry']) {
-    const tag = topBar.match(new RegExp(`<button[^>]*id="${id}"[^>]*>`))[0];
-    assert.match(tag, /us-attention-orbit/);
-    assert.match(tag, /data-us-attention="off"/);
-  }
-  assert.equal((topBar.match(/data-us-attention-icon/g) || []).length, 2, 'both mark their glyph for the primitive');
+test('attention: Left for You and Gioca (Per voi) use the same primitive, driven by data-us-attention', () => {
+  const envelope = topBar.match(/<button[^>]*id="leftForYouPartnerEntry"[^>]*>/)[0];
+  assert.match(envelope, /us-attention-orbit/);
+  assert.match(envelope, /data-us-attention="off"/);
+  assert.equal((topBar.match(/data-us-attention-icon/g) || []).length, 1);
+  const gioca = html.match(/<button[^>]*id="usNavGioca"[^>]*>/)[0];
+  assert.match(gioca, /data-page="quiz"/);
+  assert.match(gioca, /data-us-attention="off"/);
+  assert.match(read('games.js'), /byId\('usNavGioca'\)/);
   assert.match(read('games.js'), /us-gv2-pervoi us-attention-orbit[^`]*data-us-attention=/);
 });
 
 test('attention: the primitive is generic (no envelope/Per voi selectors), slow with a rest, and reduced-motion aware', () => {
-  const block = foundationCss.slice(foundationCss.indexOf('M10E / M12A'), foundationCss.indexOf('M12A — Shell aurora'));
+  const block = foundationCss.slice(foundationCss.indexOf('M10E / M12A'), foundationCss.indexOf('M12A — Tiles and their destinations'));
   assert.doesNotMatch(block, /envelope|pervoi|leftForYou|usPerVoiTop/i);
   assert.match(block, /\.us-attention-orbit\[data-us-attention="on"\] \[data-us-attention-icon\]\{[^}]*animation:us-attention-breathe/);
   assert.match(block, /us-attention-period,5\.2s/);
@@ -209,8 +230,9 @@ test('nav: a single sliding indicator whose slot follows the active tab', () => 
   for (let i = 1; i <= 4; i += 1) {
     assert.match(foundationCss, new RegExp(`\\.us-nav:has\\(> button:nth-of-type\\(${i}\\)\\.active\\)\\{--us-nav-index:${i - 1}\\}`));
   }
-  assert.match(foundationCss, /\.us-nav-indicator\{[^}]*transform:translate3d\(calc\(var\(--us-nav-index,0\) \* 100%\),0,0\)[^}]*transition:transform 210ms/);
-  assert.match(foundationCss, /@media \(prefers-reduced-motion:reduce\)\{\.us-nav-indicator\{transition:none\}\}/);
+  // US-HUMAN-UI-01: the glide settles with a short, small overshoot.
+  assert.match(foundationCss, /\.us-nav-indicator\{[^}]*transform:translate3d\(calc\(var\(--us-nav-index,0\) \* 100%\),0,0\)[^}]*transition:transform 300ms cubic-bezier\(\.3,1\.25,\.5,1\)/);
+  assert.match(foundationCss, /@media \(prefers-reduced-motion:reduce\)\{\.us-nav-indicator\{transition:none\}/);
 });
 
 test('nav: navigation logic is untouched (go() still only toggles the active class)', () => {

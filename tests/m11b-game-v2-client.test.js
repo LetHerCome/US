@@ -45,7 +45,7 @@ const session = (over = {}) => ({
 });
 
 function harness({ role = 'francesco', homeState = home(), handlers = {} } = {}) {
-  const nodes = Object.fromEntries(['quizHub', 'usGameV2Panel', 'usPerVoiTop', 'usGv2Answer', 'usGv2Error'].map((k) => [k, el(k)]));
+  const nodes = Object.fromEntries(['quizHub', 'usGameV2Panel', 'usNavGioca', 'usGv2Answer', 'usGv2Error'].map((k) => [k, el(k)]));
   const calls = []; const notices = []; const pushes = [];
   const base = {
     get_game_v2_home: () => homeState,
@@ -99,20 +99,27 @@ test('M11B client: hub shows Per voi, the six modes and the weekly turn, with no
   assert.deepEqual(h.calls[0][1], undefined, 'no client-supplied couple, user or role');
 });
 
-test('M11B client: the top Per voi control mirrors the server state with the shared attention orbit', async () => {
+// US-HUMAN-UI-01: the Per voi signal moved from the retired top bar to the
+// Gioca dock destination (static mark + accessible name + shell capsule).
+test('M11B client: the Gioca dock destination mirrors the Per voi server state with the shared attention primitive', async () => {
   const expectations = { idle: 'off', in_progress: 'off', waiting: 'off', pending: 'on', reveal_ready: 'on' };
   for (const [state, attention] of Object.entries(expectations)) {
     const h = harness({ homeState: home({ per_voi: { state, session_id: state === 'idle' ? undefined : 's1' } }) });
     await tick();
-    const top = h.nodes.usPerVoiTop;
-    assert.equal(top.dataset.gv2State, state);
-    assert.equal(top.dataset.usAttention, attention, state);
-    assert.equal(top.classList.contains('is-loading'), false);
-    assert.match(top.getAttribute('aria-label'), /^Per voi/);
+    const tab = h.nodes.usNavGioca;
+    assert.equal(tab.dataset.gv2State, state);
+    assert.equal(tab.dataset.usAttention, attention, state);
+    if (attention === 'on') {
+      assert.match(tab.getAttribute('aria-label'), /^Gioca · Per voi/, 'the reason is in the accessible name');
+      assert.match(tab.dataset.usCapsule, /^Per voi/, 'and is what the capsule says');
+    } else {
+      assert.equal(tab.getAttribute('aria-label'), 'Gioca');
+      assert.equal(tab.dataset.usCapsule, '');
+    }
   }
   const failed = harness({ handlers: { get_game_v2_home: () => { throw new Error('offline'); } } });
   await tick();
-  assert.equal(failed.nodes.usPerVoiTop.classList.contains('is-loading'), false, 'a failed load never leaves the control disabled');
+  assert.equal(failed.nodes.usNavGioca.dataset.usAttention ?? 'off', 'off', 'a failed load never raises attention');
   assert.match(failed.nodes.quizHub.innerHTML, /Riprova/);
 });
 
@@ -315,11 +322,10 @@ test('M11B client: static contract — one Gioca surface, Phosphor icons, no leg
   const app = read('app.js');
   const games = read('games.js');
   const css = read('games.css') + read('identity.css');
-  const top = html.match(/<button[^>]*id="usPerVoiTop"[^>]*>/)?.[0] || '';
-  assert.match(top, /us-attention-orbit/);
-  assert.match(top, /data-us-attention="off"/);
-  assert.match(top, /onclick="window\.USGameV2\?\.openPerVoi\(\)"/);
-  assert.match(html, /<div class="us-top-left"><button[^>]*id="usPerVoiTop"/);
+  const tab = html.match(/<button[^>]*id="usNavGioca"[^>]*>/)?.[0] || '';
+  assert.match(tab, /data-page="quiz"/);
+  assert.match(tab, /data-us-attention="off"/);
+  assert.doesNotMatch(html, /usPerVoiTop|us-top-left/, 'Per voi is reached from its dominant card in Gioca');
   assert.match(html, /<div id="quizHub" class="us-gv2-hub"/);
   assert.match(html, /<div id="usGameV2Panel" class="us-gv2-panel hidden"/);
   assert.doesNotMatch(html, /weeklyQuizGrid|usExtraGames|usCustomGamesHub|quizPlay|scoreRing/);
@@ -363,8 +369,8 @@ test('M11F client: the weekly strip reads the server allowance, restrained, neve
   assert.match(dh, /<b>Nuovi giochi lunedì<\/b>/);
   assert.match(dh, /Giocato · il prossimo lunedì/, 'Per voi shows its played state');
   assert.match(dh, /data-gv2-family="scopritevi" data-gv2-mode-state="locked" aria-disabled="true"/, 'modes stay visible, locked');
-  assert.equal(done.nodes.usPerVoiTop.dataset.gv2State, 'played');
-  assert.equal(done.nodes.usPerVoiTop.dataset.usAttention, 'off');
+  assert.equal(done.nodes.usNavGioca.dataset.gv2State, 'played');
+  assert.equal(done.nodes.usNavGioca.dataset.usAttention, 'off');
 });
 
 test('M11F client: an exhausted week starts nothing; played modes open their reveal; server refusals are explained', async () => {

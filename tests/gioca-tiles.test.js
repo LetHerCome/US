@@ -23,7 +23,7 @@ function hub(homeState) {
     sb: { rpc: async () => ({ data: homeState, error: null }) },
     toast() {}, FormData: class {}, console: { warn() {} }, setTimeout: () => 1, setInterval: () => 1,
   };
-  node('quizHub'); node('usGameV2Panel'); node('usPerVoiTop');
+  node('quizHub'); node('usGameV2Panel'); node('usNavGioca');
   vm.runInNewContext(read('games.js'), sandbox);
   return { nodes, html: async () => { await tick(); return nodes.quizHub.innerHTML; } };
 }

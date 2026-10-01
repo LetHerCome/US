@@ -40,64 +40,70 @@ test('M1 bottom navigation usa Phosphor regular/fill senza cambiare le quattro r
   assert.doesNotMatch(html, /data-page="settings"/);
 });
 
-test('M1 active orbit è continua, non intercetta touch e rispetta reduced motion', () => {
-  const css = identity();
-  assert.match(css, /@keyframes us-nav-orbit/);
-  assert.match(css, /animation:us-nav-orbit [^;]+infinite/);
-  assert.match(css, /pointer-events:none/);
-  assert.match(css, /@media\(prefers-reduced-motion:reduce\)[\s\S]*?us-nav-premium button\.active \.nicon::before\{animation:none!important\}/);
+// US-HUMAN-UI-01: the dock selection is the indicator + filled icon + label
+// weight; the continuous orbit, glow and dot are gone. The dock lives in
+// ui-foundation.css (its only owner now).
+test('M1 dock: nessuna orbit continua, selezione senza colore soltanto, reduced motion', () => {
+  const css = foundation() + identity();
+  assert.doesNotMatch(css, /us-nav-orbit/);
+  assert.doesNotMatch(css, /\.us-nav[^{]*\{[^}]*infinite/, 'nothing in the dock loops');
+  assert.match(foundation(), /\.us-nav\.us-nav-premium>button\.active \.nlabel\{font-weight:680\}/);
+  assert.match(foundation(), /\.us-nav\.us-nav-premium>button\.active \.us-nav-icon\{animation:us-nav-settle 380ms var\(--us-ease-enter\) 1 both\}/);
+  assert.match(foundation(), /:root\[data-us-motion="reduced"\] \.us-nav\.us-nav-premium>button\.active \.us-nav-icon\{animation:none\}/);
+  assert.match(foundation(), /\.us-nav-track\{[^}]*pointer-events:none/);
 });
 
-test('M1 conserva target touch da 44px anche con cerchio visuale da 38px', () => {
-  const css = identity();
-  assert.match(css, /\.us-nav-premium button\{[\s\S]*?min-width:44px!important;[\s\S]*?min-height:58px!important/);
-  assert.match(css, /\.us-nav-premium button \.nicon\{[\s\S]*?width:38px!important;[\s\S]*?height:38px!important/);
+test('M1 dock conserva target touch da 44px (slot alto 52px)', () => {
+  const css = foundation();
+  assert.match(css, /\.us-nav\.us-nav-premium>button\{[^}]*min-width:44px;min-height:52px/);
+  assert.match(css, /@media \(orientation:landscape\) and \(max-height:560px\)\{[\s\S]*?\.us-nav\.us-nav-premium>button\{min-height:44px/);
 });
 
 test('M1 applica il top chrome APK senza introdurre fullscreen/settings o relocation Home', () => {
-  const css = identity();
+  const css = foundation();
   const html = index();
   assert.match(css, /\.top\.us-premium-top\{position:absolute/);
-  assert.match(css, /\.top\.us-premium-top::before\{content:""/);
+  assert.doesNotMatch(identity(), /\.top\.us-premium-top::before/);
   assert.doesNotMatch(html, /data-us-fullscreen-page|usSettingsBack|usHeroOverlayLayer|thinkReceivedContext/);
   assert.doesNotMatch(html, /native-entry\.js|reliability\.js|vendor\/supabase\.js/);
 });
 
-test('M1 ancora il top chrome al contenitore mobile .app, non al viewport desktop', () => {
-  const css = read('fix4.css') + read('identity.css');
+test('M1 ancora il controllo superiore al contenitore mobile .app, non al viewport desktop', () => {
+  const css = read('fix4.css') + read('identity.css') + read('ui-foundation.css');
   assert.match(css, /\.app\{[^}]*position:relative/);
   assert.match(css, /\.top\.us-premium-top\{position:absolute/);
 });
 
+// US-HUMAN-UI-01: no top bar. The floating corner control is 44px; pages keep
+// a small clearance and their title rows leave the corner to the control.
 test('M1.2 usa una clearance authority e riserva spazio sulle tre secondary root pages', () => {
   const css = read('identity.css') + read('fix4.css') + read('ui-foundation.css');
-  assert.match(css, /--us-top-chrome-height:56px/);
-  assert.match(css, /--us-top-chrome-clearance:68px/);
+  assert.match(css, /--us-top-chrome-height:44px/);
+  assert.match(css, /--us-top-chrome-clearance:8px/);
+  assert.match(css, /--us-shell-top:calc\(var\(--us-safe-top\) \+ 6px\)/);
   assert.match(css, /\.top\.us-premium-top\{[^}]*height:var\(--us-top-chrome-height\)/);
-  assert.match(css, /\.top\.us-premium-top::before\{[^}]*height:var\(--us-top-chrome-clearance\)/);
-  assert.match(css, /#bond,#moments,#quiz\{padding-top:calc\(var\(--us-top-chrome-clearance\) \+ var\(--us-space-2\)\);box-sizing:border-box\}/);
+  assert.match(css, /#bond,#moments,#quiz\{padding-top:var\(--us-top-chrome-clearance\);box-sizing:border-box\}/);
+  assert.match(css, /\.noi-canonical-head,\.us-moments-head,\.us-gv2-head,\.us-settings2-head,\.noi-section-bar\{padding-right:var\(--us-shell-control-space\)/);
   assert.match(css, /#bond>\.section,#moments>\.section,#quiz>\.section\{margin-top:0!important\}/);
   assert.doesNotMatch(css, /#home\{padding-top:/);
   assert.match(css, /#settings\{height:calc\(var\(--us-viewport-height\) - var\(--us-safe-top\)\)/);
 });
 
-test('M1.3 (M12A) il centro della top chrome è il marchio US; I nostri eventi vive nel Calendario', () => {
+test('M1.3 (US-HUMAN-UI-01) il marchio US vive nella capsule; I nostri eventi vive nel Calendario', () => {
   const html = read('index.html');
   const css = read('identity.css');
   assert.doesNotMatch(html, /id="usEventsTopEntry"/);
   assert.match(html, /id="usCalendarEventsLink"[^>]*aria-label="Apri i nostri eventi"/);
   assert.doesNotMatch(html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '', /class="us-event-add"/);
-  assert.match(css, /\.us-top-brand\{[^}]*grid-column:2[^}]*pointer-events:none/);
-  assert.doesNotMatch(css, /us-events-top/);
+  assert.match(html, /<template id="usCapsuleMark"><img class="us-brand-symbol-art us-capsule-mark"/);
+  assert.doesNotMatch(css, /us-events-top|us-top-brand/);
 });
 
-test('M1.4 rende la top chrome una floating pill contenuta nella shell', () => {
-  const css = read('identity.css');
-  assert.match(css, /\.top\.us-premium-top\{[^}]*left:10px;right:10px/);
-  assert.match(css, /\.top\.us-premium-top\{[^}]*border-radius:28px/);
-  assert.match(css, /\.top\.us-premium-top\{[^}]*overflow:hidden/);
-  assert.match(css, /\.top\.us-premium-top::before\{[^}]*border-radius:inherit/);
-  assert.match(css, /\.top\.us-premium-top \.us-top-brand\{[^}]*overflow:hidden/);
+test('M1.4 il controllo superiore è un angolo flottante, senza barra né vetro a tutta larghezza', () => {
+  const css = foundation();
+  assert.match(css, /\.top\.us-premium-top\{[^}]*right:max\(10px,calc\(var\(--us-safe-right\) \+ 10px\)\);left:auto;width:auto/);
+  assert.match(css, /\.top\.us-premium-top\{[^}]*background:none;border:0;border-radius:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none/);
+  assert.match(css, /\.top\.us-premium-top>\*\{pointer-events:auto\}/);
 });
 
 test('M1.5 nasconde la priority region solo in Home e preserva il runtime Daily/Events', () => {
@@ -116,24 +122,21 @@ test('M1.5 nasconde la priority region solo in Home e preserva il runtime Daily/
 test('M1.6 rende Home full-bleed senza cambiare il padding globale delle secondary pages', () => {
   const css = read('identity.css') + read('fix4.css') + read('styles.css');
   // M12B.1: Oggi fits by dropping the nav clearance of .app, never by clipping overflow.
-  assert.match(css, /#home\.page\.active\{padding-bottom:0!important\}/);
-  assert.match(css, /body:has\(#home\.page\.active\) \.app\{padding-bottom:0!important\}/);
-  assert.match(css, /#home \.home-hero-only\{[^}]*height:calc\(var\(--us-viewport-height\) - var\(--us-safe-top\)\)!important[^}]*min-height:0!important/);
+  assert.match(css, /#home\.page\.active\{padding-bottom:0!important;margin-top:0\}/);
+  // US-HUMAN-UI-01: the Oggi photo reaches the physical top edge (behind the status bar).
+  assert.match(css, /#home \.home-hero-only\{[^}]*height:var\(--us-viewport-height\)!important[^}]*min-height:0!important/);
+  assert.match(css, /body:has\(#home\.page\.active\) \.app\{padding-top:0!important;padding-bottom:0!important\}/);
   assert.match(css, /#home \.home-distance-pill\{[^}]*bottom:calc\(var\(--us-nav-height\) \+ var\(--us-safe-bottom\) \+ 18px\)!important/);
   assert.match(css, /#home \.push-optin-card\{[^}]*bottom:calc\(var\(--us-nav-height\) \+ var\(--us-safe-bottom\) \+ 83px\)!important/);
   assert.match(css, /\.app\{[^}]*padding-bottom:calc\(var\(--us-nav-height\) \+ var\(--us-safe-bottom\) \+ 34px\)!important/);
   assert.match(css, /\.home-photo-layer\{[\s\S]*background-size:cover/);
 });
 
-test('M1 topbar refinement bilancia tre zone senza ridurre i touch target', () => {
-  const css = read('identity.css');
-  assert.match(css, /\.top\.us-premium-top\{[^}]*display:grid[^}]*grid-template-columns:minmax\(0,1fr\) auto minmax\(0,1fr\)/);
-  assert.match(css, /\.top\.us-premium-top \.us-top-brand\{[^}]*grid-column:2/);
-  assert.match(css, /\.top\.us-premium-top \.top-actions\{[^}]*grid-column:3[^}]*justify-self:end/);
-  assert.match(css, /\.top\.us-premium-top \.us-top-brand\{[^}]*justify-self:center/);
-  assert.match(css, /\.us-top-brand-art\{[^}]*height:58px/);
-  assert.match(css, /\.top\.us-premium-top \.profile-avatar[^}]*min-width:44px/);
-  assert.match(css, /\.top\.us-premium-top \.us-calendar-btn[^}]*min-width:44px/);
+test('M1 il controllo flottante conserva il target touch da 44px', () => {
+  const css = read('left-for-you.css') + foundation();
+  assert.match(css, /--us-top-chrome-height:44px/);
+  assert.match(css, /\.top\.us-premium-top\{[^}]*height:var\(--us-top-chrome-height\)/);
+  assert.match(read('left-for-you.css'), /\.us-envelope-control\{[^}]*width:44px[^}]*height:44px/);
 });
 
 test('M1 shell assets sono presenti nel Web source e non dipendono dal bundle APK', () => {

@@ -18,9 +18,12 @@
     cancelExit: () => {},
     exit: (_root, finalize) => finalize?.()
   };
-  let activeAurora = () => false;
+  let activeCapsule = () => false;
+  let activeAnnounce = () => false;
   let activePlayOnce = () => false;
-  const AURORA_REACT_MS = 800;
+  // US-HUMAN-UI-01 — the transient capsule stays a few seconds, then leaves.
+  const CAPSULE_MS = 3600;
+  const CAPSULE_EXIT_MS = 260;
 
   const FOCUSABLE = [
     'button:not([disabled])',
@@ -140,29 +143,93 @@
     documentRef.addEventListener?.('visibilitychange', applyVisibility);
     applyVisibility();
 
-    // M12A — the shell aurora is ONE system: an ambient drift in CSS plus a
-    // short reaction (intensity + travelling highlight) driven from here.
-    let auroraTimer;
-    const auroraBar = () => documentRef.querySelector?.('.top.us-premium-top') || null;
-    const auroraPulse = () => {
-      const bar = auroraBar();
-      if (!bar || reducedMotion || documentRef.hidden) return false;
-      bar.removeAttribute('data-us-aurora');
-      void bar.offsetWidth;
-      bar.setAttribute('data-us-aurora', 'react');
-      if (auroraTimer !== undefined) cancelSchedule(auroraTimer);
-      auroraTimer = schedule(() => { bar.removeAttribute('data-us-aurora'); auroraTimer = undefined; }, AURORA_REACT_MS);
+    // US-HUMAN-UI-01 — the transient capsule: ONE small status surface at the
+    // top of the safe area for something real that just arrived. It shows the
+    // arrival in a few words, is a button only when the arrival has a real
+    // destination, and leaves by itself. aria-live on its host announces it.
+    let capsuleTimer;
+    let capsuleExitTimer;
+    const capsuleRoot = () => documentRef.getElementById?.('usCapsule') || null;
+    const hideCapsule = () => {
+      const root = capsuleRoot();
+      if (capsuleTimer !== undefined) { cancelSchedule(capsuleTimer); capsuleTimer = undefined; }
+      if (!root || !root.firstChild) return false;
+      root.setAttribute('data-state', 'leaving');
+      if (capsuleExitTimer !== undefined) cancelSchedule(capsuleExitTimer);
+      capsuleExitTimer = schedule(() => {
+        capsuleExitTimer = undefined;
+        if (root.getAttribute('data-state') !== 'leaving') return;
+        root.removeAttribute('data-state');
+        root.textContent = '';
+      }, reducedMotion ? 1 : CAPSULE_EXIT_MS);
       return true;
     };
-    activeAurora = auroraPulse;
+    const showCapsule = (options = {}) => {
+      const root = capsuleRoot();
+      const text = String(options.text || '').trim();
+      if (!root || !text || documentRef.hidden) return false;
+      if (capsuleExitTimer !== undefined) { cancelSchedule(capsuleExitTimer); capsuleExitTimer = undefined; }
+      const action = typeof options.action === 'function' ? options.action : null;
+      const pill = documentRef.createElement(action ? 'button' : 'span');
+      pill.className = 'us-capsule-pill';
+      if (action) {
+        pill.type = 'button';
+        pill.setAttribute('data-us-feedback', 'tap');
+        pill.addEventListener('click', () => { hideCapsule(); try { action(); } catch (_) { /* the destination owns its errors */ } });
+      }
+      // The capsule is where US itself speaks: it leads with the canonical
+      // US mark (cloned, never redrawn); the Phosphor icon is the fallback.
+      const brand = documentRef.getElementById?.('usCapsuleMark')?.content?.firstElementChild;
+      const mark = brand ? brand.cloneNode(true) : documentRef.createElement('span');
+      if (!brand) {
+        mark.className = 'us-icon';
+        mark.setAttribute('data-us-icon', options.icon || 'heart');
+        mark.setAttribute('aria-hidden', 'true');
+      }
+      const label = documentRef.createElement('span');
+      label.className = 'us-capsule-text';
+      label.textContent = text;
+      pill.append(mark, label);
+      if (action) {
+        const go = documentRef.createElement('span');
+        go.className = 'us-icon us-capsule-go';
+        go.setAttribute('data-us-icon', 'caret-right');
+        go.setAttribute('aria-hidden', 'true');
+        pill.append(go);
+      }
+      root.removeAttribute('data-state');
+      root.replaceChildren(pill);
+      void root.offsetWidth;
+      root.setAttribute('data-state', 'shown');
+      if (capsuleTimer !== undefined) cancelSchedule(capsuleTimer);
+      capsuleTimer = schedule(hideCapsule, Number(options.duration) > 0 ? Number(options.duration) : CAPSULE_MS);
+      return true;
+    };
+    activeCapsule = showCapsule;
+    // Local feedback keeps its words for screen readers in one quiet live line.
+    const announce = (message) => {
+      const line = documentRef.getElementById?.('usLocalStatus');
+      if (!line || !message) return false;
+      line.textContent = '';
+      schedule(() => { line.textContent = String(message); }, 30);
+      return true;
+    };
+    activeAnnounce = announce;
     const AttentionObserver = environment.MutationObserver;
     const attentionObserver = AttentionObserver ? new AttentionObserver((records) => {
       for (const record of records) {
         const target = record.target;
         if (target?.getAttribute?.('data-us-attention') !== 'on' || record.oldValue === 'on') continue;
-        if (target.closest?.('.top.us-premium-top')) {
-          // One generic reaction for any shell control: aurora + attention feedback.
-          auroraPulse();
+        if (target.closest?.('.top.us-premium-top') || target.closest?.('.us-nav')) {
+          // One generic reaction for any shell control: the capsule names the
+          // arrival (tap = the control's own destination) + attention feedback.
+          // An arrival already on screen is never pushed out by a second one.
+          if (capsuleRoot()?.getAttribute?.('data-state') === 'shown') break;
+          showCapsule({
+            text: target.getAttribute('data-us-capsule') || target.getAttribute('aria-label'),
+            icon: target.getAttribute('data-us-capsule-icon') || 'heart',
+            action: () => target.click()
+          });
           try { environment.UsFeedback?.attention?.(); } catch (_) { /* feedback is never essential */ }
           break;
         }
@@ -302,10 +369,12 @@
         motionSubscribers.clear();
         attentionObserver?.disconnect();
         documentRef.removeEventListener?.('visibilitychange', applyVisibility);
-        if (auroraTimer !== undefined) cancelSchedule(auroraTimer);
+        if (capsuleTimer !== undefined) cancelSchedule(capsuleTimer);
+        if (capsuleExitTimer !== undefined) cancelSchedule(capsuleExitTimer);
         oneShotTimers.forEach((timer) => cancelSchedule(timer));
         oneShotTimers.clear();
-        if (activeAurora === auroraPulse) activeAurora = () => false;
+        if (activeCapsule === showCapsule) activeCapsule = () => false;
+        if (activeAnnounce === announce) activeAnnounce = () => false;
         if (activePlayOnce === playOnce) activePlayOnce = () => false;
         surfaceExits.forEach((exit) => {
           exit.cancelled = true;
@@ -556,7 +625,8 @@
   return {
     install,
     createFeedback,
-    auroraPulse: () => activeAurora(),
+    capsule: (options) => activeCapsule(options),
+    announce: (message) => activeAnnounce(message),
     playOnce: (element, className, duration) => activePlayOnce(element, className, duration),
     confirm: (options) => confirmSurface(options),
     // A one-button information sheet on the same canonical surface.

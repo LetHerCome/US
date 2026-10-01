@@ -39,7 +39,8 @@ test('Foundation 01 conserva quattro tab primarie e Stories fuori dalla bottom n
 });
 
 test('M5E mantiene gli SVG come asset diretti e il build marker allineato', () => {
-  const css = read('identity.css');
+  // US-HUMAN-UI-01: the dock (icons included) is owned by ui-foundation.css.
+  const css = read('ui-foundation.css');
   const html = read('index.html');
   const version = JSON.parse(read('version.json')).version;
   const build = html.match(/meta name="us-build" content="([^"]+)"/)?.[1];

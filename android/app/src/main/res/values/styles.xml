@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
@@ -13,6 +13,17 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
+        <!-- US-HUMAN-UI-01: the WebView canvas runs behind the system bars.
+             Any strip the system still owns (Android 14 and older, or a
+             WebView without inset passthrough) shows the same US canvas with
+             light icons, never a light theme default or a contrast scrim. -->
+        <item name="android:windowBackground">@color/us_splash_background</item>
+        <item name="android:statusBarColor">@color/us_splash_background</item>
+        <item name="android:navigationBarColor">@color/us_splash_background</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">false</item>
+        <item name="android:enforceStatusBarContrast" tools:targetApi="29">false</item>
+        <item name="android:enforceNavigationBarContrast" tools:targetApi="29">false</item>
     </style>
 
 

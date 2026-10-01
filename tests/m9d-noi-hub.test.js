@@ -26,11 +26,15 @@ test('M9D (M12A.1): Noi opens on a hub of five cards, in order, with no new bott
   assert.deepEqual([...nav.matchAll(/data-page="([^"]+)"/g)].map((m) => m[1]), ['home', 'bond', 'moments', 'quiz'], 'bottom navigation keeps its four tabs');
 });
 
-test('M9D: square premium cards in two columns, one column on very narrow screens, Phosphor icons only', () => {
+// US-HUMAN-UI-01: Risonanza is the one dominant object; the other destinations
+// are editorial list rows (icon · name + state · caret), 64px tall.
+test('M9D: Risonanza leads as a full-width object, the rest are editorial rows, Phosphor icons only', () => {
   const s = css();
-  assert.match(s, /\.noi-hub\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
-  assert.match(s, /\.noi-hub-card\{[^}]*aspect-ratio:1\/1/);
-  assert.match(s, /@media\(max-width:340px\)\{\.noi-hub\{grid-template-columns:1fr\}/);
+  assert.match(s, /\.noi-hub\{display:grid;grid-template-columns:minmax\(0,1fr\);gap:0/);
+  assert.match(s, /\.noi-hub-card\{[^}]*grid-template-columns:24px minmax\(0,1fr\) 16px;[^}]*min-height:64px/);
+  assert.match(s, /\.noi-hub-card\.noi-hub-card--resonance\{[^}]*min-height:212px/);
+  assert.match(s, /\/assets\/icons\/phosphor\/caret-right-regular\.svg/);
+  assert.doesNotMatch(s, /\.noi-hub-card\{[^}]*aspect-ratio:1\/1/);
   for (const icon of ['infinity-regular', 'compass-regular', 'calendar-dots-regular', 'flag-banner-regular', 'caret-left-regular']) {
     assert.match(s, new RegExp(`/assets/icons/phosphor/${icon}\\.svg`));
     const svg = read(`assets/icons/phosphor/${icon}.svg`);

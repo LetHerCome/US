@@ -78,8 +78,11 @@
   --us-muted:var(--us-color-text-2);
   --us-font-editorial:"Newsreader",Georgia,serif;
   --us-font-ui:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  --us-top-chrome-height:56px;
-  --us-top-chrome-clearance:68px;
+  /* US-HUMAN-UI-01 — no top bar: one 44px floating control row inside the
+     safe area; pages begin right under the system bar. */
+  --us-top-chrome-height:44px;
+  --us-top-chrome-clearance:8px;
+  --us-shell-top:calc(var(--us-safe-top) + 6px);
   /* Spacing: compact 8 · standard 12 · section 18 · page 16 gutter. */
   --us-space-1:4px;
   --us-space-2:8px;
@@ -133,7 +136,7 @@
   --us-safe-right:var(--safe-area-inset-right,env(safe-area-inset-right,0px));
   --us-safe-bottom:var(--safe-area-inset-bottom,env(safe-area-inset-bottom,0px));
   --us-safe-left:var(--safe-area-inset-left,env(safe-area-inset-left,0px));
-  --us-nav-height:68px;
+  --us-nav-height:60px;
   --us-viewport-height:100dvh;
   --us-focus:0 0 0 3px rgba(169,133,255,.28);
   --us-premium-glass:rgba(24,20,31,.68);
@@ -399,51 +402,6 @@ h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
 :root[data-us-motion="reduced"] .us-attention-pulse::before{animation:none;opacity:0}
 @media (prefers-reduced-motion:reduce){.us-attention-pulse::before{animation:none;opacity:0}}
 
-/* M12A — Shell aurora: ONE ambient light living behind the glass of the top
-   bar. Ambient state = a very slow, low-opacity drift of rose / violet / plum
-   light (transform + opacity only, no JS loop). The same layer reacts: the
-   bar's data-us-aurora="react" (set by UsUiFoundation.auroraPulse) lifts the
-   intensity for ~800ms and runs one travelling highlight, then returns. */
-.top.us-premium-top>.us-aurora{position:absolute;z-index:0;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none;contain:paint;
-  /* M12A.1 — visibility tokens: ambient is clearly there when you look at the
-     bar; the reaction lifts it briefly. Tune here, nowhere else. */
-  --us-aurora-ambient:.62;--us-aurora-react:.96}
-.us-aurora::before,.us-aurora::after{content:"";position:absolute;top:-30%;bottom:-30%;pointer-events:none}
-.us-aurora::before{
-  left:-35%;width:170%;
-  background:
-    radial-gradient(36% 86% at 20% 50%,rgba(255,102,142,.78),transparent 74%),
-    radial-gradient(34% 86% at 52% 44%,rgba(169,133,255,.72),transparent 74%),
-    radial-gradient(32% 86% at 82% 56%,rgba(160,62,150,.74),transparent 74%);
-  opacity:var(--us-aurora-opacity,var(--us-aurora-ambient));
-  transition:opacity 260ms var(--us-ease-standard,ease);
-  animation:us-aurora-drift 12s ease-in-out infinite alternate;
-  will-change:transform;
-}
-.us-aurora::after{
-  left:0;width:38%;
-  background:linear-gradient(100deg,transparent,rgba(255,236,247,.46) 50%,transparent);
-  opacity:0;
-  transform:translate3d(-110%,0,0);
-}
-@keyframes us-aurora-drift{
-  from{transform:translate3d(-14%,0,0) scaleY(1)}
-  to{transform:translate3d(14%,0,0) scaleY(1.1)}
-}
-.top.us-premium-top[data-us-aurora="react"] .us-aurora::before{--us-aurora-opacity:var(--us-aurora-react);animation:us-aurora-drift 12s ease-in-out infinite alternate,us-aurora-surge 800ms var(--us-ease-standard,ease) 1}
-.top.us-premium-top[data-us-aurora="react"] .us-aurora::after{animation:us-aurora-sweep 800ms var(--us-ease-standard,ease) 1 both}
-@keyframes us-aurora-surge{0%,100%{translate:0 0}45%{translate:5% 0}}
-@keyframes us-aurora-sweep{0%{opacity:0;transform:translate3d(-110%,0,0)}25%{opacity:1}100%{opacity:0;transform:translate3d(280%,0,0)}}
-:root[data-us-visibility="hidden"] .us-aurora::before,
-:root[data-us-visibility="hidden"] .us-aurora::after{animation-play-state:paused}
-:root[data-us-motion="reduced"] .us-aurora::before,
-:root[data-us-motion="reduced"] .us-aurora::after{animation:none!important;transition:none;will-change:auto}
-:root[data-us-motion="reduced"] .us-aurora::before{transform:none}
-@media (prefers-reduced-motion:reduce){
-  .us-aurora::before,.us-aurora::after{animation:none!important;transition:none;will-change:auto}
-  .us-aurora::before{transform:none}
-}
-
 /* M12A — Tiles and their destinations: a tappable tile presses in, the
    destination content eases in with a short fade + 8px rise. Purely
    presentational: the tap handler navigates immediately. */
@@ -455,20 +413,95 @@ h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
 :root[data-us-motion="reduced"] .us-content-enter{animation:none}
 @media (prefers-reduced-motion:reduce){[data-us-tile]:active{transform:none}.us-content-enter{animation:none}}
 
-/* M12A — Bottom navigation: ONE sliding indicator. It sits behind the labels
-   and moves between the four slots; the position is derived from the existing
-   .active class (no navigation logic involved). Browsers without :has() keep
-   the per-tab active styling and simply hide the indicator. */
+/* US-HUMAN-UI-01 — Shell. The display is the canvas: page backgrounds and the
+   Oggi photo run behind the system bars, interactive controls stay inside the
+   safe area. There is no top bar any more: ONE floating control (Lasciato per
+   te, the only entry to it) sits in the top-right safe corner and each page
+   title shares its line. This block is the only owner of .top and .nav. */
+.top.us-premium-top{position:absolute;z-index:10;top:var(--us-shell-top);right:max(10px,calc(var(--us-safe-right) + 10px));left:auto;width:auto;height:var(--us-top-chrome-height);min-height:0;margin:0;padding:0;display:flex;align-items:center;gap:8px;background:none;border:0;border-radius:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;overflow:visible;pointer-events:none}
+.top.us-premium-top>*{pointer-events:auto}
+.top.us-premium-top .top-actions{display:flex;align-items:center;gap:8px;min-width:0}
+.top.us-premium-top .online-badge{display:none!important}
+/* Page title rows leave the corner to the floating control. */
+:root{--us-shell-control-space:calc(var(--us-top-chrome-height) + 10px)}
+
+/* Transient capsule: a small status surface that appears for a few seconds
+   when something real arrives (Ti penso, Lasciato per te, Per voi), then
+   leaves. Never a loop, never a fake cutout; tappable only when the arrival
+   has a real destination. Driven by UsUiFoundation.capsule(). */
+.us-capsule{position:fixed;z-index:60;top:var(--us-shell-top);left:50%;width:max-content;max-width:min(300px,calc(100% - 2 * var(--us-shell-control-space) - var(--us-safe-left) - var(--us-safe-right)));transform:translateX(-50%);display:flex;justify-content:center;pointer-events:none}
+.us-capsule:empty{display:none}
+.us-capsule-pill{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;min-width:0;max-width:100%;min-height:var(--us-top-chrome-height);padding:0 16px 0 13px;border:1px solid rgba(255,255,255,.10);border-radius:var(--us-radius-pill);background:rgba(14,9,19,.80);box-shadow:0 10px 28px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.06);-webkit-backdrop-filter:blur(18px) saturate(1.4);backdrop-filter:blur(18px) saturate(1.4);color:var(--us-color-text);font:600 13px/1.2 var(--us-font-ui);text-align:left;white-space:nowrap;opacity:0;transform:translate3d(0,-8px,0) scale(.94);transition:opacity var(--us-motion-fast) var(--us-ease-standard),transform var(--us-motion-surface) var(--us-ease-enter)}
+.us-capsule[data-state="shown"] .us-capsule-pill{opacity:1;transform:none}
+.us-capsule .us-icon{--us-icon-size:17px;color:var(--us-color-rose-2)}
+.us-capsule .us-capsule-mark{flex:0 0 auto;width:38px;height:38px;margin:-9px -6px -9px -9px;object-fit:contain}
+.us-capsule-text{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.us-capsule-go{--us-icon-size:14px;color:var(--us-color-text-3)!important}
+:root[data-us-motion="reduced"] .us-capsule-pill{transform:none;transition:opacity 1ms}
+@media (prefers-reduced-motion:reduce){.us-capsule-pill{transform:none;transition:opacity 1ms}}
+
+/* Screen-reader-only live line for local feedback (UsUiFoundation.announce):
+   the visible confirmation stays on the control that was pressed. */
+.us-sr-status{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* Dock. Four destinations, persistent labels, ONE moving selection surface.
+   Visual weight is light; each slot keeps a 52px-tall hit area. Selection
+   reads without colour: filled icon + heavier label + the indicator. */
+.us-nav.us-nav-premium{position:fixed;z-index:20;left:50%;bottom:max(8px,var(--us-safe-bottom));transform:translateX(-50%);width:min(420px,calc(100% - max(24px,calc(var(--us-safe-left) + var(--us-safe-right) + 24px))));min-height:var(--us-nav-height);padding:4px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border:1px solid rgba(255,255,255,.09);border-radius:26px;background:rgba(17,12,22,.72);box-shadow:0 12px 32px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.07);-webkit-backdrop-filter:blur(22px) saturate(1.4);backdrop-filter:blur(22px) saturate(1.4);overflow:hidden;isolation:isolate}
+.us-nav.us-nav-premium>button{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:44px;min-height:52px;padding:4px 2px;border:0;border-radius:22px;background:transparent;color:rgba(247,242,248,.60);font-size:inherit;font-weight:500;box-shadow:none;transition:color var(--us-motion-fast) var(--us-ease-standard)}
+.us-nav.us-nav-premium .nicon{position:relative;display:grid;place-items:center;width:30px;height:26px;margin:0;border-radius:0;background:none;box-shadow:none;font-size:0;transition:transform var(--us-motion-press) var(--us-ease-standard)}
+/* PULL: the glyph gives under the finger and settles on release. */
+.us-nav.us-nav-premium>button:active .nicon{transform:scale(.86)}
+.us-nav-icon{position:relative;display:block;width:22px;height:22px;color:currentColor}
+.us-nav-icon [data-icon]{position:absolute;inset:0;width:100%;height:100%;display:block;background-color:currentColor;-webkit-mask-position:center;mask-position:center;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-size:contain;mask-size:contain}
+.us-nav-icon-on{display:none!important}
+.us-nav-icon [data-icon$="house-regular.svg"]{-webkit-mask-image:url("/assets/icons/phosphor/house-regular.svg");mask-image:url("/assets/icons/phosphor/house-regular.svg")}
+.us-nav-icon [data-icon$="house-fill.svg"]{-webkit-mask-image:url("/assets/icons/phosphor/house-fill.svg");mask-image:url("/assets/icons/phosphor/house-fill.svg")}
+.us-nav-icon [data-icon$="heart-straight-regular.svg"]{-webkit-mask-image:url("/assets/icons/phosphor/heart-straight-regular.svg");mask-image:url("/assets/icons/phosphor/heart-straight-regular.svg")}
+.us-nav-icon [data-icon$="heart-straight-fill.svg"]{-webkit-mask-image:url("/assets/icons/phosphor/heart-straight-fill.svg");mask-image:url("/assets/icons/phosphor/heart-straight-fill.svg")}
+.us-nav-icon [data-icon$="images-regular.svg"]{-webkit-mask-image:url("/assets/icons/phosphor/images-regular.svg");mask-image:url("/assets/icons/phosphor/images-regular.svg")}
+.us-nav-icon [data-icon$="images-fill.svg"]{-webkit-mask-image:url("/assets/icons/phosphor/images-fill.svg");mask-image:url("/assets/icons/phosphor/images-fill.svg")}
+.us-nav-icon [data-icon$="cards-three-regular.svg"]{-webkit-mask-image:url("/assets/icons/phosphor/cards-three-regular.svg");mask-image:url("/assets/icons/phosphor/cards-three-regular.svg")}
+.us-nav-icon [data-icon$="cards-three-fill.svg"]{-webkit-mask-image:url("/assets/icons/phosphor/cards-three-fill.svg");mask-image:url("/assets/icons/phosphor/cards-three-fill.svg")}
+.us-nav.us-nav-premium .nlabel{display:block;font-size:10.5px;font-weight:500;letter-spacing:.01em;line-height:1.15;white-space:nowrap}
+.us-nav.us-nav-premium>button.active{color:var(--us-color-text)}
+.us-nav.us-nav-premium>button.active .us-nav-icon-off{display:none!important}
+.us-nav.us-nav-premium>button.active .us-nav-icon-on{display:block!important}
+.us-nav.us-nav-premium>button.active .nlabel{font-weight:680}
+/* SETTLE, once, when a destination becomes the current one; each keeps a
+   tiny gesture of its own. Never looped; off under reduced motion. */
+.us-nav.us-nav-premium>button.active .us-nav-icon{animation:us-nav-settle 380ms var(--us-ease-enter) 1 both}
+.us-nav.us-nav-premium>button[data-page="bond"].active .us-nav-icon{animation-name:us-nav-pulse}
+.us-nav.us-nav-premium>button[data-page="moments"].active .us-nav-icon{animation-name:us-nav-align}
+.us-nav.us-nav-premium>button[data-page="quiz"].active .us-nav-icon{animation-name:us-nav-tilt}
+@keyframes us-nav-settle{0%{transform:scale(.84)}60%{transform:scale(1.05)}100%{transform:none}}
+@keyframes us-nav-pulse{0%{transform:scale(1)}45%{transform:scale(1.13)}100%{transform:none}}
+@keyframes us-nav-align{0%{transform:translate3d(-2px,2px,0) rotate(-7deg)}100%{transform:none}}
+@keyframes us-nav-tilt{0%{transform:rotate(-12deg) scale(.92)}55%{transform:rotate(4deg)}100%{transform:none}}
+/* A destination that holds something for YOU (Per voi on Gioca): a static
+   mark beside the glyph, with the reason in the button's accessible name. */
+.us-nav.us-nav-premium>button[data-us-attention="on"] .nicon::after{content:"";position:absolute;top:0;right:0;width:7px;height:7px;border-radius:50%;background:var(--us-color-rose-2);box-shadow:0 0 0 2px rgba(17,12,22,.92)}
+/* The indicator: the one moving surface. It glides to the new slot and
+   settles with a short, small overshoot. Position comes from .active. */
 .us-nav-track{position:absolute;z-index:0;inset:0;padding:inherit;box-sizing:border-box;pointer-events:none;border-radius:inherit;overflow:hidden}
-.us-nav-indicator{display:block;height:100%;width:calc(100% / var(--us-nav-slots,4));border-radius:24px;background:linear-gradient(150deg,rgba(255,102,142,.20),rgba(149,112,255,.16));box-shadow:inset 0 0 0 1px rgba(255,255,255,.10),0 6px 18px rgba(141,107,255,.16);transform:translate3d(calc(var(--us-nav-index,0) * 100%),0,0);opacity:0;transition:transform 210ms var(--us-ease-standard),opacity 140ms var(--us-ease-standard)}
+.us-nav-indicator{display:block;height:100%;width:calc(100% / var(--us-nav-slots,4));border-radius:22px;background:linear-gradient(180deg,rgba(255,134,170,.15),rgba(169,133,255,.10));box-shadow:inset 0 0 0 1px rgba(255,255,255,.09);transform:translate3d(calc(var(--us-nav-index,0) * 100%),0,0);opacity:0;transition:transform 300ms cubic-bezier(.3,1.25,.5,1),opacity 140ms var(--us-ease-standard)}
 .us-nav:has(> button.active) .us-nav-indicator{opacity:1}
 .us-nav:has(> button:nth-of-type(1).active){--us-nav-index:0}
 .us-nav:has(> button:nth-of-type(2).active){--us-nav-index:1}
 .us-nav:has(> button:nth-of-type(3).active){--us-nav-index:2}
 .us-nav:has(> button:nth-of-type(4).active){--us-nav-index:3}
+/* Without :has() the indicator hides and the slot itself carries the surface. */
+@supports not selector(:has(*)){.us-nav-indicator{display:none}.us-nav.us-nav-premium>button.active{background:rgba(255,255,255,.08)}}
 :root[data-us-motion="reduced"] .us-nav-indicator{transition:none}
-@media (prefers-reduced-motion:reduce){.us-nav-indicator{transition:none}}
-@supports not selector(:has(*)){.us-nav-indicator{display:none}}
+:root[data-us-motion="reduced"] .us-nav.us-nav-premium>button.active .us-nav-icon{animation:none}
+:root[data-us-motion="reduced"] .us-nav.us-nav-premium>button:active .nicon{transform:none}
+@media (prefers-reduced-motion:reduce){.us-nav-indicator{transition:none}.us-nav.us-nav-premium>button.active .us-nav-icon{animation:none}.us-nav.us-nav-premium>button:active .nicon{transform:none}}
+@media (max-width:360px){.us-nav.us-nav-premium .nlabel{font-size:10px}}
+@media (orientation:landscape) and (max-height:560px){
+  :root{--us-nav-height:52px}
+  .us-nav.us-nav-premium{padding:3px;border-radius:22px}
+  .us-nav.us-nav-premium>button{min-height:44px;flex-direction:row;gap:6px}
+}
 
 /* ==========================================================================
    US canonical primitives (US-UI-UNIFICATION-01)

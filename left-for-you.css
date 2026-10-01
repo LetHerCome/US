@@ -1,14 +1,15 @@
-.top.us-premium-top .top-actions{min-width:80px;gap:8px}
 
 /* M5F — ONE unified envelope control. State A closed / State B open. */
-#leftForYouPartnerEntry.us-envelope-control{--us-attention-inset:-3px;position:relative;flex:0 0 38px;width:38px;height:38px;padding:0;border:1px solid rgba(255,234,247,.10);border-radius:50%;background:rgba(255,255,255,.05);color:rgba(247,242,248,.84);display:grid;place-items:center;align-self:center;overflow:visible;box-shadow:none;transition:transform var(--us-motion-press) var(--us-ease-standard),background var(--us-motion-press) var(--us-ease-standard),border-color var(--us-motion-press) var(--us-ease-standard),color var(--us-motion-press) var(--us-ease-standard)}
+/* US-HUMAN-UI-01 — the one persistent top control floats on its own: 44px,
+   a small dark glass disc so it reads over any photo, no bar around it. */
+#leftForYouPartnerEntry.us-envelope-control{--us-attention-inset:-3px;position:relative;flex:0 0 44px;width:44px;height:44px;padding:0;border:1px solid rgba(255,255,255,.12);border-radius:50%;background:rgba(12,8,17,.40);-webkit-backdrop-filter:blur(12px) saturate(1.3);backdrop-filter:blur(12px) saturate(1.3);color:rgba(247,242,248,.92);display:grid;place-items:center;align-self:center;overflow:visible;box-shadow:0 6px 18px rgba(0,0,0,.22);transition:transform var(--us-motion-press) var(--us-ease-standard),background var(--us-motion-press) var(--us-ease-standard),border-color var(--us-motion-press) var(--us-ease-standard),color var(--us-motion-press) var(--us-ease-standard)}
 /* Touch feedback: fast, restrained press. No gaming bounce. */
 #leftForYouPartnerEntry:active{transform:scale(.94);background:rgba(246,111,158,.14);border-color:rgba(246,111,158,.28);color:var(--us-color-text)}
 /* Loading: neutral and safely non-interactive until the unseen state resolves. */
 #leftForYouPartnerEntry.is-loading{opacity:.52;pointer-events:none}
 #leftForYouPartnerEntry.is-loading .us-envelope-icon{animation:left-for-you-pulse 2.6s var(--us-ease-standard) infinite}
-.us-envelope-mark{position:relative;width:38px;height:38px;display:grid;place-items:center;border-radius:50%}
-.us-envelope-icon{position:relative;width:19px;height:19px;transition:transform var(--us-motion-photo) var(--us-ease-standard)}
+.us-envelope-mark{position:relative;width:100%;height:100%;display:grid;place-items:center;border-radius:50%}
+.us-envelope-icon{position:relative;width:20px;height:20px;transition:transform var(--us-motion-photo) var(--us-ease-standard)}
 .us-envelope-face{position:absolute;inset:0;display:block;background-color:currentColor;-webkit-mask-position:center;mask-position:center;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-size:contain;mask-size:contain;transition:opacity var(--us-motion-immersive) var(--us-ease-standard),transform var(--us-motion-immersive) var(--us-ease-standard)}
 .us-envelope-face--closed{-webkit-mask-image:url("/assets/icons/phosphor/envelope-simple-regular.svg");mask-image:url("/assets/icons/phosphor/envelope-simple-regular.svg")}
 .us-envelope-face--open{-webkit-mask-image:url("/assets/icons/phosphor/envelope-open-regular.svg");mask-image:url("/assets/icons/phosphor/envelope-open-regular.svg")}

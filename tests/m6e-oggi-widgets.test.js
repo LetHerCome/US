@@ -253,12 +253,11 @@ test('M6E (13): styles fade the exact three hero widgets under Focus Photo, and 
   assert.match(css, /@media\(prefers-reduced-motion:reduce\)\{[^}]*us-oggi[^}]*transition:none/s);
 });
 
-test('M6E polish: mobile Oggi widget sits just below the safe-area-aware top bar without changing desktop positioning', () => {
-  // M10A: the same offsets now position the Oggi stack that holds the widget.
+test('M6E polish: the Oggi widget column is anchored above the safe-area-aware dock at every width', () => {
+  // US-HUMAN-UI-01: no top bar to sit under; the stack (holding the widget) rests above the dock.
   const css = read('styles.css');
-  assert.match(css, /\.us-oggi-stack\{[^}]*top:calc\(var\(--us-top-chrome-clearance\) \+ 64px\)/);
-  const mobile = css.match(/@media\(max-width:600px\)\{[^}]*\.us-oggi-stack\{[^}]*\}\}/)?.[0] || '';
-  assert.match(mobile, /top:calc\(var\(--us-top-chrome-height\) \+ 20px\)/);
+  assert.match(css, /\.us-oggi-stack\{[^}]*top:auto;bottom:calc\(max\(8px,var\(--us-safe-bottom\)\) \+ var\(--us-nav-height\) \+ 84px\)/);
+  assert.doesNotMatch(css, /@media\(max-width:600px\)\{[^}]*\.us-oggi-stack\{/, 'one position for every width');
   assert.match(read('ui-foundation.css'), /--us-safe-top:var\(--safe-area-inset-top,env\(safe-area-inset-top,0px\)\)/);
 });
 

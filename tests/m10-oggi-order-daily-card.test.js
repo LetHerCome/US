@@ -41,7 +41,8 @@ test('M10A: una sola colonna Oggi — priorità, poi Calendario, poi Domanda del
     assert.ok(hero.indexOf(passive) > hero.indexOf('id="usOggiStack"'));
   }
   // One flow container: children are not absolutely positioned against each other.
-  assert.match(css, /\.us-oggi-stack\{position:absolute;[^}]*display:flex;flex-direction:column;gap:8px/);
+  // US-HUMAN-UI-01: the column is anchored low over the photo (image first, then the cards).
+  assert.match(css, /\.us-oggi-stack\{position:absolute;[^}]*top:auto;bottom:calc\([^}]*display:flex;flex-direction:column;gap:10px/);
   assert.match(css, /\.us-oggi-widgets\{position:relative;/);
   assert.match(css, /\.us-daily-ritual\{position:relative;/);
   assert.match(css, /#usTodayPriorityRegion\{position:relative;/);
@@ -102,7 +103,10 @@ test('M10B: un errore non mostra mai una risposta finta o modificabile', () => {
 test('M10A: invito empty-state e opt-in notifiche non si sovrappongono alla colonna Oggi', () => {
   // The empty state is placed in the free band under the stack and sheds its secondary lines when short.
   const layout = app.slice(app.indexOf('function layoutOggiEmptyState'), app.indexOf("if(typeof ResizeObserver==='function')"));
-  assert.match(layout, /stack\.getBoundingClientRect\(\)\.bottom/);
+  // US-HUMAN-UI-01: with the stack anchored low, the free band runs from the floating control down to the stack.
+  assert.match(layout, /stackBox=stack\.getBoundingClientRect\(\)/);
+  assert.match(layout, /stackLow\?Math\.min\(box\.height-gap,stackBox\.top-box\.top-gap\)/);
+  assert.match(layout, /stackBox\.bottom-box\.top\+gap/);
   assert.match(layout, /\['distanceWidget','pushOptInCard'\]/);
   assert.match(layout, /classList\.add\('is-compact'\)/);
   assert.match(app, /new ResizeObserver\(\(\)=>layoutOggiEmptyState\(\)\)/);

@@ -34,7 +34,7 @@ const item = (over = {}) => ({
 const session = (over = {}) => ({ id: 's1', game_family: 'per_voi', engine_version: 2, started_by_role: 'francesco', my_role: 'francesco', my_complete: true, partner_complete: true, reveal_ready: true, completed_at: 'now', my_reveal_seen_at: null, items: [item()], ...over });
 
 function harness({ homeState = home(), handlers = {}, motion = false } = {}) {
-  const nodes = Object.fromEntries(['quizHub', 'usGameV2Panel', 'usPerVoiTop', 'usGv2Answer', 'usGv2Error'].map((k) => [k, el(k)]));
+  const nodes = Object.fromEntries(['quizHub', 'usGameV2Panel', 'usNavGioca', 'usGv2Answer', 'usGv2Error'].map((k) => [k, el(k)]));
   const calls = []; const notices = []; const feedback = []; const played = [];
   const base = {
     get_game_v2_home: () => homeState,
@@ -232,7 +232,9 @@ test('ti penso: one soft pulse, the shared attention state and the attention ton
   const at = app.indexOf('function handleIncomingThink');
   const body = app.slice(at, app.indexOf('const usRealtimeRefreshTimers', at));
   assert.match(body, /window\.UsFeedback\?\.attention\?\.\(\)/);
-  assert.match(body, /window\.UsUiFoundation\?\.auroraPulse\?\.\(\)/);
+  // US-HUMAN-UI-01: the arrival speaks once in the shell capsule (the aurora is retired).
+  assert.match(body, /window\.UsUiFoundation\?\.capsule\?\.\(\{text:`\$\{thinker\} ti pensa`,icon:'heart',action:\(\)=>window\.openThinkArrival\?\.\(\)\}\)/);
+  assert.doesNotMatch(body, /auroraPulse/);
   assert.match(body, /playOnce\?\.\(card,'us-attention-pulse',900\)/);
   assert.match(body, /\[data-us-arrival-type="think-received"\]/);
   const css = read('ui-foundation.css');

@@ -197,3 +197,27 @@
 @keyframes gv2-lock-settle{from{transform:scale(.72);opacity:0}to{transform:none;opacity:1}}
 :root[data-us-motion="reduced"] :is(.us-gv2-submit.is-saved,.us-gv2-weekly.is-just-created,.us-gv2-weekly.is-just-created .us-gv2-glyph){animation:none}
 @media(prefers-reduced-motion:reduce){:is(.us-gv2-submit.is-saved,.us-gv2-weekly.is-just-created,.us-gv2-weekly.is-just-created .us-gv2-glyph){animation:none}}
+
+/* US-HUMAN-UI-01 · Gioca stops mirroring Noi. Per voi is the one dominant
+   object (US prepared it for you); the six games are a hand of cards you
+   flick through: a horizontal deck that snaps, each card with a tinted face
+   and a stacked edge, tilting under the finger and settling back. No glow
+   blobs. Logic, hooks and markup are unchanged. */
+.us-gv2-pervoi{min-height:184px;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:12px;padding:20px;border-radius:30px;border-color:rgba(255,160,196,.16);background:radial-gradient(130% 95% at 100% 0%,rgba(255,102,142,.30),transparent 58%),radial-gradient(90% 80% at 0% 100%,rgba(169,133,255,.18),transparent 60%),linear-gradient(165deg,#2a1531,#150f1d 72%)}
+.us-gv2-pervoi::after,.us-gv2-mode::after{display:none}
+.us-gv2-pervoi-copy b{font-size:32px;line-height:1.04;letter-spacing:-.4px}
+.us-gv2-pervoi-copy small{margin-top:6px;font-size:14px}
+.us-gv2-pervoi-cta{min-height:44px;padding:0 22px}
+.us-gv2-pervoi:active{transform:scale(.985)}
+.us-gv2-modes{margin-inline:-16px}
+.us-gv2-mode-grid{display:flex;gap:12px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-padding-inline:16px;padding:4px 16px 12px;scrollbar-width:none}
+.us-gv2-mode-grid::-webkit-scrollbar{display:none}
+.us-gv2-mode,.us-gv2-mode.is-wide{flex:0 0 148px;aspect-ratio:auto;height:188px;min-height:0;flex-direction:column;align-items:stretch;gap:0;padding:14px;scroll-snap-align:start;border-radius:22px;border-color:rgba(255,255,255,.10);background:linear-gradient(172deg,var(--gv2-glow),transparent 64%),#17111f;box-shadow:4px 4px 0 -1px rgba(255,255,255,.035),0 14px 28px rgba(0,0,0,.30);-webkit-backdrop-filter:none;backdrop-filter:none;transform-origin:50% 90%}
+.us-gv2-mode.is-wide .us-gv2-mode-copy{margin-top:auto}
+.us-gv2-mode .us-gv2-mode-copy b{font-size:18px;hyphens:auto;overflow-wrap:anywhere}
+.us-gv2-mode:not([aria-disabled="true"]):active{transform:translateY(2px) rotate(-1.6deg) scale(.97)}
+.us-gv2-mode[data-gv2-mode-state="played"],.us-gv2-mode[aria-disabled="true"]{background:#141019}
+:root[data-us-motion="reduced"] .us-gv2-mode:active,:root[data-us-motion="reduced"] .us-gv2-pervoi:active{transform:none}
+@media(prefers-reduced-motion:reduce){.us-gv2-mode:active,.us-gv2-pervoi:active{transform:none}}
+/* When Per voi waits for YOU, its glyph fills (the same fill-means-yours cue as the dock). */
+.us-gv2-pervoi:is([data-gv2-state="pending"],[data-gv2-state="reveal_ready"]) .us-gv2-icon[data-gv2-icon="sparkle"]{-webkit-mask-image:url("/assets/icons/phosphor/sparkle-fill.svg");mask-image:url("/assets/icons/phosphor/sparkle-fill.svg")}

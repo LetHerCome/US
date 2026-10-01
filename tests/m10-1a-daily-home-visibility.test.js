@@ -139,10 +139,10 @@ test('M10.1B: il controllo top-left “Oggi / Domanda” (todayOrb) è rimosso',
   for (const file of fs.readdirSync(ROOT).filter((f) => f.endsWith('.css'))) {
     assert.doesNotMatch(read(file), /today-orb|\.brand-row/, `${file}: CSS obsoleto rimosso`);
   }
-  // M12A: le tre zone della top bar restano bilanciate: Per voi, marchio US al centro, Left for You a destra.
-  const css = read('identity.css');
-  assert.match(css, /\.top\.us-premium-top \.us-top-brand\{[^}]*grid-column:2/);
-  assert.match(css, /\.top\.us-premium-top \.top-actions\{[^}]*grid-column:3/);
+  // US-HUMAN-UI-01: nessuna top bar; un solo controllo flottante (Lasciato per te) nell'angolo sicuro.
+  const css = read('ui-foundation.css');
+  assert.match(css, /\.top\.us-premium-top\{position:absolute;[^}]*left:auto;width:auto/);
+  assert.match(css, /\.top\.us-premium-top \.top-actions\{display:flex/);
 });
 
 test('M10.1B: openToday(), target push "today" e foglio Daily Question restano vivi', () => {

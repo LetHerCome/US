@@ -1124,16 +1124,21 @@ document.getElementById('homeHero')?.addEventListener('click',event=>{
 });
 
 // M10A — the empty-state invitation is a passive widget: it sits in the free
-// band between the Oggi stack and the bottom row, and drops its secondary lines
+// band left by the Oggi stack and the bottom row, and drops its secondary lines
 // when that band is short, so it never slides under the stack.
+// US-HUMAN-UI-01 — the stack now rests low (thumb zone): the free band is then
+// between the floating top control and the stack, instead of below the stack.
 function layoutOggiEmptyState(){
   const hero=document.getElementById('homeHero'),empty=document.getElementById('homeEmptyState'),stack=document.getElementById('usOggiStack');
   if(!hero||!empty||!stack||empty.hidden)return;
   const box=hero.getBoundingClientRect();
   if(!box.height)return;
   const gap=12;
-  const top=stack.getBoundingClientRect().bottom-box.top+gap;
-  let bottom=box.height-gap;
+  const stackBox=stack.getBoundingClientRect();
+  const stackLow=stackBox.top-box.top>box.height/2;
+  const shell=stackLow?document.querySelector('.top.us-premium-top')?.getBoundingClientRect():null;
+  const top=stackLow?Math.max(gap,(shell?.bottom||box.top)-box.top+gap):stackBox.bottom-box.top+gap;
+  let bottom=stackLow?Math.min(box.height-gap,stackBox.top-box.top-gap):box.height-gap;
   for(const id of ['distanceWidget','pushOptInCard']){
     const el=document.getElementById(id);
     const rect=el&&!el.hidden?el.getBoundingClientRect():null;
@@ -3097,16 +3102,29 @@ async function confirmBondQuest(id){
   catch(error){result={data:null,error};}
   finally{questActionsInFlight.delete(key);}
   if(questOwnerKey(window.usProfile)!==owner)return;
+  let settled='';
   if(result.error){console.warn(result.error);toast('Conferma non riuscita. Riprova.');}
   else{
     sendWebPushEvent('quest_confirmed',id).catch(()=>{});
     const awarded=Number(result.data?.xp_awarded)||0;
-    if(awarded>0){toast(`Quest completata · +${awarded} XP ♡`);window.UsFeedback?.success?.();}
-    else toast('Confermata. Ora tocca all’altra persona ♡');
+    if(awarded>0){settled=`Quest completata · +${awarded} XP ♡`;window.UsFeedback?.success?.();}
+    else settled='Confermata. Ora tocca all’altra persona ♡';
   }
   setQuestAction(key,false);
   await hydrateBond();
+  if(settled)questLocalFeedback(id,settled);
   await hydrateBondSummary();
+}
+// The confirmation lands on the row itself (its state line has already
+// changed): one SETTLE on that row plus a polite announcement. The global
+// toast is only the fallback when the UI foundation is not loaded.
+function questLocalFeedback(id,message){
+  const ui=window.UsUiFoundation;
+  if(!ui?.announce){toast(message);return;}
+  ui.announce(message);
+  const list=document.getElementById('bondQuestList');
+  const row=[...(list?.querySelectorAll?.('article[data-quest-id]')||[])].find(a=>a.dataset.questId===id);
+  if(row)ui.playOnce?.(row,'is-just-confirmed',800);
 }
 window.confirmBondQuest=confirmBondQuest;
 async function rerollBondQuest(id){
@@ -3796,9 +3814,13 @@ async function sendThinkSignal(){
   if(messageId)sendWebPushEvent('think',messageId).catch(()=>{});
   btn?.classList.add('sent');setTimeout(()=>btn?.classList.remove('sent'),700);
   window.UsFeedback?.action?.();
-  toast(result?.duplicate?'Già inviato':'Inviato');
+  // US-HUMAN-UI-01 — the heart itself says it went: it stays filled while the
+  // send settles (data-us-think="sent"), and the outcome is announced.
+  const sentText=result?.duplicate?'Già inviato':'Inviato';
+  if(btn&&window.UsUiFoundation?.announce){btn.dataset.usThink='sent';window.UsUiFoundation.announce(`Ti penso · ${sentText}`);}
+  else toast(sentText);
   await hydrateThink();
-  setTimeout(()=>{if(btn)btn.disabled=false;},1800);
+  setTimeout(()=>{if(btn){btn.disabled=false;delete btn.dataset.usThink;}},1800);
   return true;
 }
 window.sendThinkSignal=sendThinkSignal;
@@ -3806,14 +3828,16 @@ function handleIncomingThink(row){
   if(!row||row.kind!=='think'||row.recipient_id!==window.usProfile?.id)return;
   usIncomingThink={...row};usThinkReactionFinal=null;usThinkReactionInFlight=false;
   const partner=partnerFromProfiles(window.usBondProfiles||[]);
-  toast(`${partner?.display_name||'L’altra persona'} ti pensa ♡`);
+  const thinker=partner?.display_name||'L’altra persona';
+  // US-HUMAN-UI-01 — the arrival speaks once in the shell capsule (tap opens
+  // the existing Ti penso sheet); the toast stays only as a fallback.
+  if(!window.UsUiFoundation?.capsule?.({text:`${thinker} ti pensa`,icon:'heart',action:()=>window.openThinkArrival?.()}))toast(`${thinker} ti pensa ♡`);
   const heart=document.getElementById('thinkButton');heart?.classList.add('received');setTimeout(()=>heart?.classList.remove('received'),900);
   hydrateThink().catch(()=>{});
   // M12A — the arrival is one calm event: the shared attention state (driven
-  // by the priority item), ONE soft halo on it, the aurora reaction and the
+  // by the priority item), ONE soft halo on it, the capsule and the
   // attention tone — only because US is active right now.
   window.UsFeedback?.attention?.();
-  window.UsUiFoundation?.auroraPulse?.();
   Promise.resolve(window.UsTodayPriority?.refresh?.()).then(()=>{
     const card=document.querySelector('#usTodayPriorityRegion [data-us-arrival-type="think-received"]');
     window.UsUiFoundation?.playOnce?.(card,'us-attention-pulse',900);

@@ -110,6 +110,8 @@ test('le risorse base Android hanno una sola authority per type e name', () => {
   for (const file of fs.readdirSync(values).filter((name) => name.endsWith('.xml'))) {
     const contents = fs.readFileSync(path.join(values, file), 'utf8');
     for (const match of contents.matchAll(/<([a-z-]+)\s+name="([^"]+)"/g)) {
+      // A theme <item> is an attribute of its <style>, not a resource of its own.
+      if (match[1] === 'item') continue;
       const key = `${match[1]}:${match[2]}`;
       assert.equal(seen.has(key), false, `risorsa Android duplicata: ${key} in ${seen.get(key)} e ${file}`);
       seen.set(key, file);

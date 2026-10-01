@@ -65,15 +65,17 @@ function perVoiCopy() {
   }
 }
 
-// ---------------------------------------------------------------- top control
+// ---------------------------------------------------------------- dock signal
 
+// US-HUMAN-UI-01 — Per voi left the top of the shell: Gioca already leads with
+// it. Its personal state ("tocca a te", "risposte pronte") now marks the Gioca
+// destination in the dock (static mark + accessible name) and, when it turns
+// on, the shell capsule names it once. Same states, same words as before.
 function renderTop() {
-  const button = byId('usPerVoiTop');
+  const button = byId('usNavGioca');
   if (!button) return;
   const state = home?.per_voi?.state || 'idle';
   const attention = state === 'pending' || state === 'reveal_ready';
-  button.dataset.gv2State = state;
-  button.dataset.usAttention = attention ? 'on' : 'off';
   const labels = {
     idle: 'Per voi: una partita preparata per voi',
     in_progress: 'Per voi: riprendi la partita',
@@ -82,9 +84,12 @@ function renderTop() {
     reveal_ready: 'Per voi: le vostre risposte sono pronte',
     played: 'Per voi: giocato questa settimana, il prossimo arriva lunedì',
   };
-  button.setAttribute('aria-label', labels[state] || labels.idle);
-  button.classList.remove('is-loading');
-  button.removeAttribute('aria-busy');
+  const label = labels[state] || labels.idle;
+  button.dataset.gv2State = state;
+  button.dataset.usCapsule = attention ? label : '';
+  button.dataset.usCapsuleIcon = 'sparkle';
+  button.setAttribute('aria-label', attention ? `Gioca · ${label}` : 'Gioca');
+  button.dataset.usAttention = attention ? 'on' : 'off';
 }
 
 // ---------------------------------------------------------------- weekly rhythm

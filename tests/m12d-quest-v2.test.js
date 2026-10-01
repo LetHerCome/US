@@ -197,6 +197,20 @@ test('M12D: rapid double tap and a retry while in flight send exactly one confir
   assert.ok(h.toasts.includes('Confermata. Ora tocca all’altra persona ♡'));
 });
 
+test('US-HUMAN-UI-01: a confirmation settles its own row and is announced, not toasted', async () => {
+  const h = harness({ quests: three() });
+  await h.t.hydrateBond();
+  const announced = [], played = [];
+  const row = { dataset: { questId: 'q1' } };
+  h.els.bondQuestList.querySelectorAll = () => [{ dataset: { questId: 'q0' } }, row];
+  h.window.UsUiFoundation = { announce: (m) => announced.push(m), playOnce: (el, cls) => played.push([el, cls]) };
+  h.db.handlers.confirm_bond_quest = () => Promise.resolve({ data: { xp_awarded: 0 }, error: null });
+  await h.t.confirmBondQuest('q1');
+  assert.deepEqual(announced, ['Confermata. Ora tocca all’altra persona ♡']);
+  assert.deepEqual(played, [[row, 'is-just-confirmed']], 'one SETTLE on the confirmed row, after the repaint');
+  assert.ok(!h.toasts.includes('Confermata. Ora tocca all’altra persona ♡'), 'no global toast when local feedback is available');
+});
+
 test('M12D: an already confirmed or completed Quest does not call the RPC again', async () => {
   const h = harness({ quests: three({ 1: { confirmed_by: [F] }, 2: { confirmed_by: [F, B], completed_at: '2026-09-30T10:00:00Z' } }) });
   await h.t.hydrateBond();

@@ -25,8 +25,10 @@ test('M12B.1 static: Oggi keeps no overflow clip on body, html or #home', () => 
 
 test('M12B.1 static: the Oggi frame drops the nav clearance of .app, only while Oggi is active', () => {
   const identity = read('identity.css');
-  assert.match(identity, /body:has\(#home\.page\.active\) \.app\{padding-bottom:0!important\}/);
-  assert.match(identity, /#home \.home-hero-only\{height:calc\(var\(--us-viewport-height\) - var\(--us-safe-top\)\)!important;min-height:0!important\}/);
+  // US-HUMAN-UI-01: Oggi is edge-to-edge — the frame also drops the safe-top padding of .app
+  // and the photo spans the whole viewport, behind the status bar.
+  assert.match(identity, /body:has\(#home\.page\.active\) \.app\{padding-top:0!important;padding-bottom:0!important\}/);
+  assert.match(identity, /#home \.home-hero-only\{height:var\(--us-viewport-height\)!important;min-height:0!important;border:0!important\}/);
   // Every other page keeps the shared clearance for the floating nav.
   assert.match(read('fix4.css'), /\.app\{[^}]*padding-bottom:calc\(var\(--us-nav-height\) \+ var\(--us-safe-bottom\) \+ 34px\)!important/);
 });

@@ -269,9 +269,20 @@ body.viewer-open{overflow:hidden}
 
 /* M6E — Oggi calendar widget + Focus Photo fade. */
 /* M10A — Oggi si legge dall'alto: priorità personale → impegni di oggi → Domanda del giorno, in UNA colonna (niente sovrapposizioni). */
-.us-oggi-stack{position:absolute;z-index:4;top:calc(var(--us-top-chrome-clearance) + 64px);left:14px;right:14px;display:flex;flex-direction:column;gap:8px;pointer-events:none;transition:opacity var(--us-motion-base) var(--us-ease-standard)}
-/* The app and top bar already share the safe-top inset; relative to the hero, it cancels. */
-@media(max-width:600px){.us-oggi-stack{top:calc(var(--us-top-chrome-height) + 20px)}}
+/* US-HUMAN-UI-01 — the photo leads; the one thing that matters now sits low,
+   in the thumb zone, over the photo's own shade: primary first, then at most
+   one quiet line. Order and arbitration stay M12A's (data-us-oggi-slot). The
+   stack rests just above the bottom row (Ti penso + distance), and above the
+   push opt-in when that holds the quiet slot. Same place with or without a
+   photo, so nothing jumps. */
+.us-oggi-stack{position:absolute;z-index:4;top:auto;bottom:calc(max(8px,var(--us-safe-bottom)) + var(--us-nav-height) + 84px);left:max(14px,var(--us-safe-left));right:max(14px,var(--us-safe-right));max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:10px;pointer-events:none;transition:opacity var(--us-motion-base) var(--us-ease-standard)}
+#homeHero:has(#pushOptInCard:not([hidden]):not([data-us-oggi-slot="suppressed"])) .us-oggi-stack{bottom:calc(max(8px,var(--us-safe-bottom)) + var(--us-nav-height) + 214px)}
+/* Quiet = a line of text on the shade, not another glass slab. */
+.us-oggi-stack [data-us-oggi-slot="quiet"] .us-oggi-card,.us-oggi-stack .us-oggi-widgets[data-us-oggi-slot="quiet"] .us-oggi-card{min-height:44px;padding:6px 2px;border:0;border-radius:12px;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;text-shadow:0 1px 10px rgba(0,0,0,.55)}
+.us-oggi-stack [data-us-oggi-slot="quiet"] .us-oggi-card-mark{background:none;width:20px;height:20px;color:var(--us-color-rose-2)}
+.us-oggi-stack [data-us-oggi-slot="quiet"] .us-oggi-card-copy small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:rgba(255,255,255,.78)}
+#usTodayPriorityRegion[data-us-oggi-slot="quiet"] .us-today-priority-card{background:rgba(10,6,14,.30);border-color:rgba(255,255,255,.08);box-shadow:none}
+.us-oggi-stack .us-daily-reveal-link[data-us-oggi-slot="quiet"]{background:none;border-color:transparent;padding:0 2px;-webkit-backdrop-filter:none;backdrop-filter:none;text-shadow:0 1px 10px rgba(0,0,0,.55)}
 .us-oggi-widgets{position:relative;z-index:3;display:flex;flex-direction:column;gap:8px;pointer-events:auto;transition:opacity var(--us-motion-base) var(--us-ease-standard)}
 .us-oggi-widgets[hidden]{display:none!important}
 .us-oggi-card{min-height:44px;width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:18px;border:1px solid rgba(255,255,255,.14);background:rgba(10,12,17,.46);backdrop-filter:blur(18px) saturate(150%);-webkit-backdrop-filter:blur(18px) saturate(150%);color:#fff;text-align:left;box-shadow:0 10px 30px rgba(0,0,0,.18)}
@@ -347,7 +358,10 @@ body.viewer-open{overflow:hidden}
 .home-photo-layer{transition:opacity var(--us-motion-photo-slow) var(--us-ease-standard),transform var(--us-motion-photo-slow) var(--us-ease-standard)!important;transform:scale(1.006)!important}
 .home-photo-layer.active{transform:scale(1)!important}
 .home-hero-only[data-us-home-photo-instant] .home-photo-layer{transition:none!important}
-.home-photo-shade{background:linear-gradient(180deg,rgba(4,6,9,.03),rgba(4,6,9,.01) 58%,rgba(4,6,9,.46) 100%)!important}
+/* US-HUMAN-UI-01 — localized protection only: a short band under the status
+   bar (light system icons over a bright photo) and the low shade the Oggi copy
+   sits on. The middle of the photo stays untouched. */
+.home-photo-shade{background:linear-gradient(180deg,rgba(6,3,10,.50) 0,rgba(6,3,10,.20) calc(var(--us-safe-top) + 34px),rgba(6,3,10,0) calc(var(--us-safe-top) + 96px)),linear-gradient(180deg,rgba(6,3,10,0) 42%,rgba(6,3,10,.34) 66%,rgba(6,3,10,.80) 100%)!important}
 .home-empty-state[hidden]{display:none}
 .home-empty-state{position:absolute!important;z-index:2!important;left:28px;right:28px;top:48%;transform:translateY(-50%);display:grid;justify-items:center;gap:10px;text-align:center;color:var(--us-color-text);transition:top var(--us-motion-base) var(--us-ease-standard)}
 .home-empty-state.is-compact .home-empty-mark,.home-empty-state.is-compact .home-empty-copy small{display:none}
@@ -357,14 +371,7 @@ body.viewer-open{overflow:hidden}
 
 /* Today: mini capsule leggibile accanto a Us. */
 
-/* Bottom navigation: un unico dock glass arrotondato che raggruppa le 5 icone. */
-.nav{bottom:calc(10px + var(--us-safe-bottom))!important;width:min(456px,calc(100% - 22px))!important;padding:7px 7px!important;border:1px solid rgba(255,255,255,.13)!important;border-radius:30px!important;background:rgba(17,20,27,.68)!important;backdrop-filter:blur(28px) saturate(170%)!important;-webkit-backdrop-filter:blur(28px) saturate(170%)!important;box-shadow:0 18px 60px rgba(0,0,0,.36),inset 0 1px 0 rgba(255,255,255,.06)!important;overflow:hidden}
-.nav:before{content:"";position:absolute;inset:0;background:linear-gradient(110deg,rgba(255,255,255,.06),transparent 38%,rgba(169,133,255,.045) 68%,rgba(255,102,142,.05));pointer-events:none}
-.nav button{position:relative;z-index:1;border-radius:22px!important;padding:5px 2px 6px!important;transition:transform var(--us-motion-press) var(--us-ease-standard),color var(--us-motion-micro) var(--us-ease-standard),background var(--us-motion-micro) var(--us-ease-standard)!important}
-.nav button:active{transform:scale(.965)}
-.nav button .nicon{width:32px;height:32px;margin:0 auto 2px!important;border-radius:50%;display:grid!important;place-items:center;font-size:18px!important;transition:background var(--us-motion-micro) var(--us-ease-standard),box-shadow var(--us-motion-micro) var(--us-ease-standard),transform var(--us-motion-micro) var(--us-ease-standard)!important}
-.nav button.active{color:#fff!important;background:rgba(255,255,255,.035)!important}
-.nav button.active .nicon{background:linear-gradient(145deg,rgba(255,102,142,.90),rgba(149,112,255,.90));box-shadow:0 7px 18px rgba(141,107,255,.22),inset 0 1px 0 rgba(255,255,255,.22);transform:translateY(-1px)}
+/* Bottom navigation: owned by ui-foundation.css (US-HUMAN-UI-01 dock). */
 .app{padding-bottom:calc(112px + var(--us-safe-bottom))!important}
 
 @keyframes xpPop{0%{opacity:0;transform:scale(.92)}65%{transform:scale(1.025)}100%{opacity:1;transform:none}}
@@ -376,7 +383,6 @@ body.viewer-open{overflow:hidden}
   .online-badge{font-size:8px!important}
   .us-today-priority-card{padding:11px}.us-today-priority-action{font-size:9px}
   .home-hero-only{min-height:470px!important}
-  .nav{width:calc(100% - 16px)!important}
 }
 
 /* ===== US v20 · Web Push Foundation ===== */
@@ -481,28 +487,50 @@ body.viewer-open{overflow:hidden}
 #bond .noi-canonical-page:not([data-noi-view="quest"])>.noi-living-section{display:none!important}
 #bond .noi-canonical-page:not([data-noi-view="da-vivere"])>.noi-idea-section{display:none!important}
 #bond .noi-canonical-page:not([data-noi-view="eventi"])>.noi-events-section{display:none!important}
-.noi-hub{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;flex:0 0 auto}
-.noi-hub-card{position:relative;isolation:isolate;aspect-ratio:1/1;min-width:0;display:flex;flex-direction:column;align-items:stretch;padding:15px 15px 14px;border-radius:24px;text-align:left;color:#fff;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:linear-gradient(150deg,rgba(46,24,54,.80),rgba(20,15,28,.74) 62%,rgba(14,12,20,.78));box-shadow:0 16px 38px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.08);backdrop-filter:blur(22px) saturate(150%);-webkit-backdrop-filter:blur(22px) saturate(150%);transition:transform var(--us-motion-micro) var(--us-ease-standard),border-color var(--us-motion-fast) var(--us-ease-standard)}
-.noi-hub-card::before{content:"";position:absolute;inset:0 22% auto 10%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.34),transparent);pointer-events:none}
-.noi-hub-card::after{content:"";position:absolute;z-index:-1;right:-34%;top:-34%;width:96%;height:96%;border-radius:50%;background:radial-gradient(circle,var(--noi-hub-glow),transparent 68%);opacity:.6;pointer-events:none}
-.noi-hub-card:focus-visible{outline:2px solid rgba(255,160,196,.85);outline-offset:3px}
-.noi-hub-icon{width:40px;height:40px;flex:0 0 auto;border-radius:14px;display:grid;place-items:center;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.10);color:var(--noi-hub-tint)}
+/* US-HUMAN-UI-01 — Noi: Risonanza is THE object of the page; the other four
+   destinations read as one editorial list (name, current state, caret,
+   hairline separators), not as five equal glowing tiles. Same buttons, same
+   hooks (data-noi-open, #usCalendarEntry, data-us-tile), same order. */
+.noi-hub{display:grid;grid-template-columns:minmax(0,1fr);gap:0;flex:0 0 auto}
+.noi-hub-card{position:relative;isolation:isolate;min-width:0;display:grid;grid-template-columns:24px minmax(0,1fr) 16px;align-items:center;column-gap:14px;min-height:64px;padding:12px 16px;border-radius:0;text-align:left;color:var(--us-color-text);overflow:hidden;border:0;border-top:1px solid var(--us-color-line);background:rgba(255,255,255,.028);box-shadow:none;transition:transform var(--us-motion-micro) var(--us-ease-standard),background var(--us-motion-micro) var(--us-ease-standard)}
+.noi-hub-card:nth-child(2){margin-top:14px;border-top:0;border-radius:20px 20px 0 0}
+.noi-hub-card:last-child{border-radius:0 0 20px 20px}
+.noi-hub-card:active{background:rgba(255,255,255,.06)}
+.noi-hub-card::before{content:none}
+/* The row caret (Phosphor caret-right) — the list's only ornament. */
+.noi-hub-card::after{content:"";grid-column:3;grid-row:1;width:16px;height:16px;background:var(--us-color-text-3);-webkit-mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;pointer-events:none}
+.noi-hub-card:focus-visible{outline:2px solid rgba(255,160,196,.85);outline-offset:-2px}
+.noi-hub-icon{grid-column:1;grid-row:1;width:24px;height:24px;flex:0 0 auto;display:grid;place-items:center;color:var(--noi-hub-tint)}
 .noi-hub-icon::before{content:"";width:22px;height:22px;background:currentColor;-webkit-mask:var(--noi-hub-icon) center/contain no-repeat;mask:var(--noi-hub-icon) center/contain no-repeat}
-.noi-hub-copy{margin-top:auto;display:flex;flex-direction:column;gap:4px;min-width:0}
-.noi-hub-kicker{text-transform:uppercase;color:var(--noi-hub-tint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:var(--us-type-eyebrow);font-weight:750;letter-spacing:var(--us-type-eyebrow-tracking)}
-.noi-hub-copy b{font-family:var(--us-font-editorial,"Newsreader",Georgia,serif);font-size:19px;line-height:1.15;font-weight:500;color:#fff;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-wrap:pretty}
+.noi-hub-copy{grid-column:2;grid-row:1;display:flex;flex-direction:column;gap:3px;min-width:0}
+.noi-hub-kicker{color:var(--us-color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:15px;font-weight:650;line-height:1.2;letter-spacing:-.005em}
+.noi-hub-copy b{font-family:var(--us-font-ui);font-size:12.5px;line-height:1.3;font-weight:500;color:var(--us-color-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .noi-hub-copy small:empty,.moment-auto-date:empty{display:none}
-.noi-hub-copy small{font-size:11.5px;line-height:1.3;color:rgba(255,255,255,.62);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.noi-hub-track{height:4px;flex:0 0 auto;margin-top:10px;border-radius:99px;background:rgba(255,255,255,.10);overflow:hidden}
+.noi-hub-copy small{font-size:11.5px;line-height:1.3;color:var(--us-color-text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.noi-hub-track{height:6px;flex:0 0 auto;border-radius:99px;background:rgba(255,255,255,.10);overflow:hidden}
 .noi-hub-track>span{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--us-color-rose),var(--us-color-violet));transition:width .5s ease}
-.noi-hub-card--resonance{--noi-hub-icon:url("/assets/icons/phosphor/infinity-regular.svg");--noi-hub-tint:#ffc3d8;--noi-hub-glow:rgba(255,109,147,.36)}
-.noi-hub-card--ideas{--noi-hub-icon:url("/assets/icons/phosphor/compass-regular.svg");--noi-hub-tint:#ffdcb8;--noi-hub-glow:rgba(255,176,138,.30)}
-.noi-hub-card--calendar{--noi-hub-icon:url("/assets/icons/phosphor/calendar-dots-regular.svg");--noi-hub-tint:#e7cdf2;--noi-hub-glow:rgba(201,154,224,.30)}
-.noi-hub-card--quest{--noi-hub-icon:url("/assets/icons/phosphor/flag-banner-regular.svg");--noi-hub-tint:#dccbff;--noi-hub-glow:rgba(155,124,255,.34)}
-/* M12A.1 — Eventi: the fifth Noi card. It spans the row (like the first and last Gioca tiles) so the grid keeps its rhythm. */
-.noi-hub-card--events{--noi-hub-icon:url("/assets/icons/phosphor/calendar-heart-regular.svg");--noi-hub-tint:#ffc9d6;--noi-hub-glow:rgba(255,128,160,.32);grid-column:1/-1;aspect-ratio:auto;min-height:118px}
+.noi-hub-card--resonance{--noi-hub-icon:url("/assets/icons/phosphor/infinity-regular.svg");--noi-hub-tint:#ffc3d8}
+.noi-hub-card--ideas{--noi-hub-icon:url("/assets/icons/phosphor/compass-regular.svg");--noi-hub-tint:#ffdcb8}
+.noi-hub-card--calendar{--noi-hub-icon:url("/assets/icons/phosphor/calendar-dots-regular.svg");--noi-hub-tint:#e7cdf2}
+.noi-hub-card--quest{--noi-hub-icon:url("/assets/icons/phosphor/flag-banner-regular.svg");--noi-hub-tint:#dccbff}
+/* M12A.1 — Eventi: the fifth Noi destination, last row of the list. */
+.noi-hub-card--events{--noi-hub-icon:url("/assets/icons/phosphor/calendar-heart-regular.svg");--noi-hub-tint:#ffc9d6;grid-column:1/-1}
+/* Risonanza: one calm object of light. Ink, a still orb with the infinity
+   mark, the level as a title, a real progress line. No loop: the light only
+   answers a press. */
+.noi-hub-card.noi-hub-card--resonance{grid-column:1/-1;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-end;gap:12px;min-height:212px;padding:20px 20px 18px;border:1px solid rgba(255,255,255,.08);border-radius:28px;background:radial-gradient(90% 80% at 100% 0%,rgba(255,102,142,.16),transparent 60%),radial-gradient(90% 90% at 0% 100%,rgba(169,133,255,.12),transparent 62%),linear-gradient(165deg,#1a0f21,#0d0912 78%);box-shadow:0 18px 44px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.06)}
+.noi-hub-card--resonance::after{position:absolute;z-index:-1;top:-28px;right:-18px;width:168px;height:168px;border-radius:50%;background:radial-gradient(circle at 42% 38%,rgba(255,226,236,.50),rgba(255,122,160,.30) 26%,rgba(169,133,255,.16) 52%,transparent 70%);-webkit-mask:none;mask:none;box-shadow:inset 0 0 0 1px rgba(255,214,230,.06);opacity:.82;transform:scale(1);transition:transform 420ms var(--us-ease-enter),opacity 420ms var(--us-ease-standard)}
+.noi-hub-card--resonance:active{transform:scale(.985);background-color:transparent}
+.noi-hub-card--resonance:active::after{opacity:1;transform:scale(1.07)}
+.noi-hub-card--resonance .noi-hub-icon{position:absolute;top:34px;right:46px;width:48px;height:48px;color:#ffe3ee}
+.noi-hub-card--resonance .noi-hub-icon::before{width:40px;height:40px}
+.noi-hub-card--resonance .noi-hub-copy{gap:6px;margin-top:auto}
+.noi-hub-card--resonance .noi-hub-kicker{font-size:var(--us-type-eyebrow);font-weight:750;letter-spacing:var(--us-type-eyebrow-tracking);text-transform:uppercase;color:var(--noi-hub-tint)}
+.noi-hub-card--resonance .noi-hub-copy b{font-family:var(--us-font-editorial,"Newsreader",Georgia,serif);font-size:30px;font-weight:500;line-height:1.08;letter-spacing:-.4px;color:#fff;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;text-wrap:pretty}
+.noi-hub-card--resonance .noi-hub-copy small{font-size:12.5px;color:var(--us-color-text-2)}
+:root[data-us-motion="reduced"] .noi-hub-card--resonance::after{transition:none}
 .noi-section-bar{display:flex;align-items:center;flex:0 0 auto;margin-top:2px}
-.noi-section-back{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 15px 0 11px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#f4e9ff;font-size:13px;font-weight:700}
+.noi-section-back{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 15px 0 11px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#f4e9ff;font-size:13px;font-weight:700}
 .noi-section-back:focus-visible{outline:2px solid rgba(255,160,196,.85);outline-offset:3px}
 .noi-section-back-icon{width:16px;height:16px;background:currentColor;-webkit-mask:url("/assets/icons/phosphor/caret-left-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/caret-left-regular.svg") center/contain no-repeat}
 /* Da vivere mantiene il gate M7B: altezza fissa, scorre solo la lista idee. */
@@ -531,10 +559,9 @@ body.viewer-open{overflow:hidden}
 .noi-resonance-sources b{font-size:13px;font-weight:700}
 .noi-resonance-sources span{font-size:12px;line-height:1.35;color:var(--muted)}
 .noi-resonance-note{margin:2px 0 0;font-size:11.5px;line-height:1.35;color:var(--muted)}
-@media(max-height:700px){#bond .noi-canonical-page[data-noi-view="hub"] .noi-canonical-head p{display:none}.noi-hub{gap:10px}.noi-hub-card{padding:13px 13px 12px}.noi-hub-copy b{font-size:17px}}
-@media(max-width:340px){.noi-hub{grid-template-columns:1fr}.noi-hub-card{aspect-ratio:auto;min-height:128px}}
-@media(min-width:700px){.noi-hub{gap:16px}.noi-hub-card{padding:20px}.noi-hub-copy b{font-size:22px}.noi-hub-card:hover{border-color:rgba(255,255,255,.22)}}
-@media(prefers-reduced-motion:reduce){.noi-hub-card,.noi-hub-track>span{transition:none}}
+@media(max-height:700px){#bond .noi-canonical-page[data-noi-view="hub"] .noi-canonical-head p{display:none}.noi-hub-card.noi-hub-card--resonance{min-height:176px}.noi-hub-card--resonance .noi-hub-copy b{font-size:26px}}
+@media(min-width:700px){.noi-hub-card.noi-hub-card--resonance{min-height:240px;padding:26px}.noi-hub-card:hover{background:rgba(255,255,255,.05)}}
+@media(prefers-reduced-motion:reduce){.noi-hub-card,.noi-hub-track>span,.noi-hub-card--resonance::after{transition:none}}
 
 /* ===== M4B · Ti penso liquid-glass arrival ===== */
 .think-arrival-overlay{position:fixed;inset:0;z-index:10030;display:none;align-items:flex-end;justify-content:center;padding:0 16px calc(var(--us-nav-height) + var(--us-safe-bottom) + 18px);pointer-events:none}
@@ -641,3 +668,35 @@ body.viewer-open{overflow:hidden}
 .quest-recent-head{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--us-color-text-2)}.quest-recent-head b{color:var(--us-color-text);font-weight:700}
 .quest-recent-titles{font-size:var(--us-text-meta);line-height:1.35;color:var(--muted);overflow-wrap:anywhere}
 @media(prefers-reduced-motion:reduce){.quest-v2,.quest-v2 *{transition:none!important;animation:none!important}}
+/* US-HUMAN-UI-01 · Quest as a living weekly list. The three quests read as
+   numbered rows of ONE list (not three isolated cards): the number carries
+   the order, rarity tints the number, state is said in text and icons.
+   Press gives under the finger; a confirmation settles the row in place and
+   is announced, instead of a global toast. Hooks and markup are unchanged. */
+#bondQuestList.noi-living-list:has(>.quest-v2){counter-reset:us-quest;gap:0;border-radius:24px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.028);overflow:hidden}
+.noi-living-list .bond-quest.quest-v2{counter-increment:us-quest;display:grid;grid-template-columns:34px minmax(0,1fr);column-gap:12px;align-items:start;padding:16px 16px 16px 14px;border:0;border-top:1px solid rgba(255,255,255,.07);border-radius:0;background:none;box-shadow:none!important;overflow:visible;transition:background var(--us-motion-fast) var(--us-ease-standard)}
+.noi-living-list .bond-quest.quest-v2:first-child{border-top:0}
+.noi-living-list .bond-quest.quest-v2>*{grid-column:2;min-width:0}
+.noi-living-list .bond-quest.quest-v2::before{content:counter(us-quest);position:static;grid-column:1;grid-row:1 / span 5;width:auto;height:auto;padding-top:1px;background:none;font-family:Georgia,serif;font-size:28px;font-weight:500;line-height:1;text-align:center;color:var(--us-color-text-3)}
+.noi-living-list .bond-quest.quest-v2.rarity-uncommon::before{color:var(--us-color-positive)}
+.noi-living-list .bond-quest.quest-v2.rarity-rare::before{color:#c2aaff}
+.noi-living-list .bond-quest.quest-v2.rarity-epic::before{color:var(--us-color-warning)}
+.noi-living-list .bond-quest.quest-v2 .quest-category i{width:auto;height:auto;background:none;border-radius:0}
+.noi-living-list .bond-quest.quest-v2 h4{margin:8px 0 6px;font-size:19px}
+.noi-living-list .bond-quest.quest-v2 .quest-confirmers{margin:0 0 10px}
+.noi-living-list .bond-quest.quest-v2 .quest-person{min-height:28px}
+/* Completed rows step back: the title quiets, the number becomes a check. */
+.noi-living-list .bond-quest.quest-v2[data-quest-state="completed"]::before{content:"";justify-self:center;width:22px;height:22px;margin-top:3px;background-color:var(--us-color-positive);-webkit-mask:url("/assets/icons/phosphor/check-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/check-regular.svg") center/contain no-repeat}
+.noi-living-list .bond-quest.quest-v2[data-quest-state="completed"] h4{color:var(--us-color-text-2)}
+.noi-living-list .bond-quest.quest-v2[data-quest-state="completed"] .quest-actions{display:none}
+/* Your turn: the row that waits for YOU is the only one lit. */
+.noi-living-list .bond-quest.quest-v2[data-quest-state="partner-confirmed"]{background:linear-gradient(90deg,rgba(255,102,142,.08),rgba(169,133,255,.04) 70%,transparent)}
+/* PULL: the confirm button gives under the finger. */
+.quest-v2 .quest-confirm{transition:transform var(--us-motion-press) var(--us-ease-standard),background var(--us-motion-fast) var(--us-ease-standard)}
+.quest-v2 .quest-confirm:not(:disabled):active{transform:scale(.97)}
+/* SETTLE, once, on the row whose state just changed. */
+.noi-living-list .bond-quest.quest-v2.is-just-confirmed{animation:us-quest-settle 760ms var(--us-ease-enter) 1 both}
+.noi-living-list .bond-quest.quest-v2.is-just-confirmed::before{animation:us-quest-number 520ms var(--us-ease-enter) 1 both}
+@keyframes us-quest-settle{0%{background-color:rgba(255,134,170,.14)}100%{background-color:transparent}}
+@keyframes us-quest-number{0%{transform:scale(.7);opacity:.4}60%{transform:scale(1.12);opacity:1}100%{transform:none}}
+:root[data-us-motion="reduced"] .quest-v2 .quest-confirm:active{transform:none}
