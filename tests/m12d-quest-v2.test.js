@@ -11,7 +11,9 @@ const vm = require('node:vm');
 
 const ROOT = path.resolve(__dirname, '..');
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
+const AUTHORITY_MIGRATION = '20261001133906_m12d_quest_server_authority.sql';
 const app = read('app.js'), html = read('index.html'), css = read('styles.css');
+const authoritySql = read(`supabase/migrations/${AUTHORITY_MIGRATION}`);
 function slice(from, to) { const a = app.indexOf(from), b = app.indexOf(to, a); assert.ok(a >= 0 && b > a, `${from}…${to}`); return app.slice(a, b); }
 const WEEK_BLOCK = slice("const QUEST_WEEK_TIMEZONE='Europe/Rome';", 'function bondLevelInfo(totalXp=0){');
 const QUEST_BLOCK = slice('async function currentQuestMode(){', '\n// ===== M7B');
@@ -171,9 +173,10 @@ test('M12D: confirm calls only the existing RPC with the quest id, renders the s
     return { data: { xp_awarded: 50 }, error: null };
   };
   await h.t.confirmBondQuest('q2');
-  assert.deepEqual(h.db.log.rpc.map((r) => [r.name, Object.keys(r.args)]), [['confirm_bond_quest', ['target_quest_id']]]);
-  assert.equal(h.db.log.rpc[0].args.target_quest_id, 'q2');
-  assert.deepEqual(h.db.log.writes.filter((w) => w.table !== 'bond_weekly_state'), [], 'no client write: no XP, no confirmed_by, no completed_at');
+  const confirmCalls = h.db.log.rpc.filter((r) => r.name === 'confirm_bond_quest');
+  assert.deepEqual(confirmCalls.map((r) => [r.name, Object.keys(r.args)]), [['confirm_bond_quest', ['target_quest_id']]]);
+  assert.equal(confirmCalls[0].args.target_quest_id, 'q2');
+  assert.deepEqual(h.db.log.writes, [], 'no client write: Quest state and XP are RPC-only');
   assert.equal(h.rows.couples[0].bond_xp, 340, 'bond_xp is only the server’s to change');
   assert.ok(h.toasts.includes('Quest completata · +50 XP ♡'), 'XP shown is the server-returned award');
   assert.deepEqual(h.pushes, [['quest_confirmed', 'q2']]);
@@ -199,7 +202,7 @@ test('M12D: an already confirmed or completed Quest does not call the RPC again'
   await h.t.hydrateBond();
   await h.t.confirmBondQuest('q1');
   await h.t.confirmBondQuest('q2');
-  assert.equal(h.db.log.rpc.length, 0);
+  assert.equal(h.db.log.rpc.filter((r) => r.name === 'confirm_bond_quest').length, 0);
 });
 
 test('M12D: confirmation failure keeps the persisted truth and tells the user to retry', async () => {
@@ -220,7 +223,7 @@ test('M12D: reroll respects the board state and weekly budget before calling the
   assert.match(zero.els.questWeekBoard.innerHTML, /Cambi finiti/);
   assert.match(zero.cards()[0].body, /class="quest-reroll is-locked"[^>]*disabled[^>]*aria-label="Cambi finiti per questa settimana"/);
   await zero.t.rerollBondQuest('q1');
-  assert.equal(zero.db.log.rpc.length, 0);
+  assert.equal(zero.db.log.rpc.filter((r) => r.name === 'reroll_bond_quest').length, 0);
   assert.ok(zero.toasts.includes('Avete finito i cambi di questa settimana'));
 
   const confirmed = harness({ quests: three({ 1: { confirmed_by: [B] }, 2: { confirmed_by: [F, B], completed_at: '2026-09-30T10:00:00Z' } }) });
@@ -228,7 +231,7 @@ test('M12D: reroll respects the board state and weekly budget before calling the
   assert.match(confirmed.cards()[0].body, /aria-label="Già confermata: non si può più cambiare"/);
   await confirmed.t.rerollBondQuest('q1');
   await confirmed.t.rerollBondQuest('q2');
-  assert.equal(confirmed.db.log.rpc.length, 0, 'a confirmed or completed Quest can never be replaced');
+  assert.equal(confirmed.db.log.rpc.filter((r) => r.name === 'reroll_bond_quest').length, 0, 'a confirmed or completed Quest can never be replaced');
 });
 
 test('M12D: reroll is deterministic, mode-aware, one at a time, and rerenders from the server', async () => {
@@ -388,21 +391,33 @@ test('M12D: empty week shows a calm empty state with retry, no fake slots', asyn
   assert.match(h.els.questWeekBoard.innerHTML, /0<\/b><span>\/ 3/);
 });
 
-test('M12D: week initialization keeps the existing idempotent slot fill and the 23505 tolerance', () => {
+test('M12D: week initialization is RPC-only and the browser cannot create weekly Quest rows', () => {
   const ensure = slice('async function ensureBondWeek(', '// ===== M12D · Quest V2');
-  assert.match(ensure, /if\(\(existing\|\|\[\]\)\.length>=3\)return;/);
-  assert.match(ensure, /if\(existingSlots\.has\(slot\)\|\|!t\)continue;/);
-  assert.match(ensure, /error\.code!=='23505'/);
-  assert.doesNotMatch(ensure, /\.update\(|\.delete\(|\.upsert\(/);
+  assert.match(ensure, /sb\.rpc\('ensure_bond_week'\)/);
+  assert.doesNotMatch(ensure, /\.from\(|\.insert\(|\.update\(|\.delete\(|\.upsert\(/);
+  assert.match(authoritySql, /insert into public\.bond_weekly_state[\s\S]*on conflict \(couple_id, week_start\) do nothing/i);
+  assert.match(authoritySql, /from public\.bond_weekly_state[\s\S]*for update/i);
+  assert.match(authoritySql, /for slot_no in 1\.\.3 loop/i);
 });
 
-test('M12D: no client XP authority, no Quest-only total, no direct writes to confirmation or bond_xp', () => {
+test('M12D: no client Quest mutation or XP authority remains', () => {
   assert.doesNotMatch(app, /from\('couples'\)\.update|bond_xp\s*:/);
-  assert.doesNotMatch(BOARD_BLOCK, /from\('bond_weekly_quests'\)\.(update|upsert|delete)|from\('bond_weekly_state'\)\.(update|upsert|delete)/);
-  assert.doesNotMatch(BOARD_BLOCK, /[{,]\s*(confirmed_by|completed_at|xp_awarded|bond_xp)\s*:/, 'no object literal that writes these fields');
+  assert.doesNotMatch(app, /from\('bond_weekly_(?:quests|state)'\)\.(?:insert|update|upsert|delete)/);
+  assert.doesNotMatch(BOARD_BLOCK, /[{,]\s*(confirmed_by|completed_at|xp_awarded|bond_xp)\s*:/, 'no object literal that writes server-owned state');
   assert.doesNotMatch(BOARD_BLOCK, /reduce\([^)]*xp/, 'no summed Quest XP total');
+  assert.match(app, /sb\.rpc\('ensure_bond_week'\)/);
   assert.match(app, /sb\.rpc\('confirm_bond_quest',\{target_quest_id:id\}\)/);
   assert.match(app, /sb\.rpc\('reroll_bond_quest',\{target_quest_id:id,target_template_key:pick\.key\}\)/);
+  assert.match(authoritySql, /create or replace function private\.ensure_bond_week_internal\(\)[\s\S]*security definer[\s\S]*set search_path = ''/i);
+  assert.match(authoritySql, /create or replace function private\.confirm_bond_quest_internal\(target_quest_id uuid\)[\s\S]*security definer[\s\S]*set search_path = ''/i);
+  assert.match(authoritySql, /create or replace function private\.reroll_bond_quest_internal[\s\S]*security definer[\s\S]*set search_path = ''/i);
+  assert.match(authoritySql, /create or replace function public\.ensure_bond_week\(\)[\s\S]*security invoker[\s\S]*private\.ensure_bond_week_internal/i);
+  assert.match(authoritySql, /grant usage on schema private to authenticated, service_role/i);
+  assert.doesNotMatch(authoritySql, /create or replace function public\.(?:ensure_bond_week|confirm_bond_quest|reroll_bond_quest)[\s\S]{0,220}security definer/i);
+  assert.match(authoritySql, /revoke all on table public\.bond_weekly_quests from anon, authenticated/i);
+  assert.match(authoritySql, /revoke all on table public\.bond_weekly_state from anon, authenticated/i);
+  assert.match(authoritySql, /grant update \(name, started_on, home_photo_path\)[\s\S]*to authenticated/i);
+  assert.doesNotMatch(authoritySql, /grant update \([^)]*bond_xp/i);
 });
 
 test('M12D: one weekly surface inside the existing Quest section; no new page or navigation', () => {
@@ -423,8 +438,17 @@ test('M12D: accessibility — 44px actions, focusable retry, reduced motion', ()
   assert.match(html, /id="bondQuestList" class="bond-quest-list noi-living-list" aria-live="polite"/);
 });
 
-test('M12D: no migration, no Game V2, Daily, Event or Living Archive change from the Quest block', () => {
+test('M12D: one Quest authority migration hardens the existing domain without touching other product domains', () => {
   const migrations = fs.readdirSync(path.join(ROOT, 'supabase/migrations')).sort();
-  assert.equal(migrations.at(-1), '20261001093123_m12b_4_daily_question_keepsakes.sql');
+  assert.equal(migrations.at(-1), AUTHORITY_MIGRATION);
+  assert.match(authoritySql, /create or replace function private\.ensure_bond_week_internal\(\)[\s\S]*security definer[\s\S]*for slot_no in 1\.\.3 loop/i);
+  assert.match(authoritySql, /create or replace function private\.confirm_bond_quest_internal\(target_quest_id uuid\)[\s\S]*for update/i);
+  assert.match(authoritySql, /create or replace function private\.reroll_bond_quest_internal[\s\S]*for update[\s\S]*rerolls_used >= 3/i);
+  assert.match(authoritySql, /create or replace function public\.confirm_bond_quest\(target_quest_id uuid\)[\s\S]*security invoker[\s\S]*private\.confirm_bond_quest_internal/i);
+  assert.match(authoritySql, /create or replace function public\.reroll_bond_quest[\s\S]*security invoker[\s\S]*private\.reroll_bond_quest_internal/i);
+  assert.match(authoritySql, /private\.bond_week_start_rome\(now\(\)\)/i);
+  assert.match(authoritySql, /unique \(couple_id, week_start, template_key\)/i);
+  assert.match(authoritySql, /drop policy if exists bond_quests_insert/i);
+  assert.match(authoritySql, /drop policy if exists bond_weekly_state_update/i);
   assert.doesNotMatch(BOARD_BLOCK, /game_v2|game_sessions|start_game_round|daily_|shared_event|moments|living_provenance|keepsake/i);
 });

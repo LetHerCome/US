@@ -290,7 +290,8 @@ test('M12B.5 media and icons: signed URLs only, private media cache untouched, P
   }
 });
 
-test('M12B.5 data: no new migration; M12B.3 / M12B.4 / Game V2 SQL untouched', () => {
+test('M12B.5 data: no M12B.5 migration; M12B.3 / M12B.4 / Game V2 SQL untouched', () => {
   const migrations = fs.readdirSync(path.join(ROOT, 'supabase/migrations')).sort();
-  assert.equal(migrations.at(-1), '20261001093123_m12b_4_daily_question_keepsakes.sql');
+  assert.ok(migrations.includes('20261001093123_m12b_4_daily_question_keepsakes.sql'));
+  assert.equal(migrations.filter((file) => /m12b[_-]?5/i.test(file)).length, 0);
 });

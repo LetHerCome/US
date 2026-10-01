@@ -68,8 +68,9 @@ test('M12C: new surface hides outside Risonanza, can scroll, and shares reduced-
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
 });
 
-test('M12C: no migration/backfill and Game V2 untouched',()=>{
+test('M12C: no M12C migration/backfill and Game V2 untouched',()=>{
   const migrations=fs.readdirSync(path.join(ROOT,'supabase/migrations')).sort();
-  assert.equal(migrations.at(-1),'20261001093123_m12b_4_daily_question_keepsakes.sql');
+  assert.ok(migrations.includes('20261001093123_m12b_4_daily_question_keepsakes.sql'));
+  assert.equal(migrations.filter((file)=>/m12c/i.test(file)).length,0);
   assert.doesNotMatch(slice('const RESONANCE_HISTORY_LIMIT=6;','function hashSeed(text){'),/game_v2|backfill/i);
 });

@@ -315,7 +315,8 @@ test('K — static: additive, versioned after M12B.3, ledger-declared, no Game V
   const sql = read(M12B4);
   const file = path.basename(M12B4);
   const versions = fs.readdirSync(path.join(ROOT, 'supabase/migrations')).map((f) => f.slice(0, 14)).sort();
-  assert.equal(versions.at(-1), file.slice(0, 14), 'newest migration');
+  assert.ok(versions.includes(file.slice(0, 14)), 'M12B.4 migration remains in the ledger');
+  assert.equal(versions.filter((v) => v === file.slice(0, 14)).length, 1, 'M12B.4 migration is unique');
   assert.ok(file.slice(0, 14) > '20260930233506');
   assert.match(sql, /Applied to production/);
   const code = sql.replace(/--.*$/gm, '');

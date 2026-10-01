@@ -2911,37 +2911,17 @@ function pickRerollQuestTemplate(templates,mode,usedKeys,seedText){
   const candidates=(templates||[]).filter(t=>(t.mode==='any'||t.mode===mode)&&!used.has(t.key)).sort((a,b)=>a.key.localeCompare(b.key));
   return candidates.length?candidates[hashSeed(seedText)%candidates.length]:null;
 }
-async function ensureBondWeek(profile=window.usProfile,week=weekStartISO()){
+async function ensureBondWeek(profile=window.usProfile){
   if(!profile)return;
-  const coupleId=profile.couple_id;
-  const {data:state}=await sb.from('bond_weekly_state').select('couple_id,week_start,rerolls_used').eq('couple_id',coupleId).eq('week_start',week).maybeSingle();
-  if(!state){
-    const {error}=await sb.from('bond_weekly_state').insert({couple_id:coupleId,week_start:week});
-    if(error&&error.code!=='23505')console.warn(error);
-  }
-  const {data:existing,error:questError}=await sb.from('bond_weekly_quests').select('id,slot').eq('couple_id',coupleId).eq('week_start',week).order('slot');
-  if(questError){console.warn(questError);return;}
-  if((existing||[]).length>=3)return;
-  const [{data:templates,error:templatesError},mode]=await Promise.all([
-    sb.from('bond_quest_templates').select('key,title,category,rarity,xp,mode').eq('active',true),
-    currentQuestMode()
-  ]);
-  if(templatesError||!templates?.length){console.warn(templatesError);return;}
-  const picks=selectInitialQuestTemplates(templates,mode,week,coupleId);
-  const existingSlots=new Set((existing||[]).map(q=>q.slot));
-  for(let i=0;i<3;i++){
-    const slot=i+1,t=picks[i];
-    if(existingSlots.has(slot)||!t)continue;
-    const {error}=await sb.from('bond_weekly_quests').insert({couple_id:coupleId,week_start:week,slot,template_key:t.key,title:t.title,category:t.category,rarity:t.rarity,xp:t.xp});
-    if(error&&error.code!=='23505')console.warn(error);
-  }
+  const {error}=await sb.rpc('ensure_bond_week');
+  if(error)console.warn(error);
 }
 
 // ===== M12D · Quest V2 — one weekly board over the existing Quest domain =====
-// Server authorities stay where they were: confirm_bond_quest owns each
-// confirmation, both-partner completion and the XP award into couples.bond_xp;
-// reroll_bond_quest owns the weekly reroll budget. Every state shown here is
-// derived from persisted bond_weekly_state / bond_weekly_quests rows.
+// Server authority is explicit: ensure_bond_week owns weekly creation,
+// confirm_bond_quest owns both-partner completion and the XP award, and
+// reroll_bond_quest owns the weekly reroll budget. The client only reads the
+// persisted bond_weekly_state / bond_weekly_quests rows and invokes those RPCs.
 const QUEST_SLOTS=3,QUEST_WEEKLY_REROLLS=3,QUEST_RECENT_WEEKS=3;
 const questActionsInFlight=new Set();
 let questBoardSeq=0,questBoardView=null;
@@ -3065,7 +3045,7 @@ async function hydrateBond(){
   const current=()=>seq===questBoardSeq&&questOwnerKey(window.usProfile)===owner;
   if(list.dataset.loaded!=='1')list.innerHTML='<div class="empty-state" aria-busy="true"><div class="emoji">✦</div><b>Carico…</b></div>';
   const week=weekStartISO(),coupleId=profile.couple_id;
-  await ensureBondWeek(profile,week);
+  await ensureBondWeek(profile);
   if(!current())return;
   const [{data:state,error:stateError},{data:quests,error:questError},{data:profiles,error:profilesError},{data:couple,error:coupleError},{count:completedCount,error:countError},{data:recent,error:recentError}]=await Promise.all([
     sb.from('bond_weekly_state').select('rerolls_used').eq('couple_id',coupleId).eq('week_start',week).maybeSingle(),
