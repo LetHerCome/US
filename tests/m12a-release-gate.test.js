@@ -9,9 +9,9 @@ const read = (file) => fs.readFileSync(path.join(path.resolve(__dirname, '..'), 
 test('release gate: build marker, version.json and SW cache move together; private media cache is untouched', () => {
   const build = read('index.html').match(/<meta name="us-build" content="([^"]+)"/)[1];
   assert.equal(JSON.parse(read('version.json')).version, build);
-  assert.equal(build, 'us-m12b1-oggi-fit-20260930-1');
+  assert.equal(build, 'us-m12b4-daily-keepsake-20261001-1');
   const worker = read('service-worker.js');
-  assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-44"/);
+  assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-45"/);
   assert.match(worker, /const MEDIA_CACHE_NAME = "us-private-media-v1"/);
   assert.match(worker, /"\/assets\/derived\/brand\/us-symbol-apk-foreground-v1\.png"/);
   assert.doesNotMatch(worker, /us-symbol-ui-crisp-v1/);

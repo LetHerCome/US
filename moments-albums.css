@@ -721,6 +721,18 @@ body.us-keyboard-open .us-album-floating-add,
 #moments .ricordi-experience-copy small{font-size:10.5px;color:var(--muted,var(--us-color-text-2))}
 #moments .ricordi-experience-copy b{font-family:Georgia,serif;font-weight:500;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #moments .ricordi-experience-source{flex:0 0 auto;font-size:10px;font-style:italic;color:var(--muted,var(--us-color-text-2))}
+/* M12B.4 — Domanda del giorno conservata: stessa famiglia della card esperienza, apribile sul posto. */
+#moments .ricordi-story .ricordi-daily{grid-column:1/-1;width:100%;border-radius:20px;border:1px solid rgba(169,133,255,.18);background:radial-gradient(circle at 0% 0%,rgba(169,133,255,.16),transparent 55%),linear-gradient(145deg,rgba(255,102,142,.08),rgba(255,255,255,.02)),rgba(22,16,30,.9);color:var(--text,var(--us-color-text))}
+#moments .ricordi-daily summary{display:flex;align-items:center;gap:12px;min-height:44px;padding:13px 14px;cursor:pointer;list-style:none;text-align:left}
+#moments .ricordi-daily summary::-webkit-details-marker{display:none}
+#moments .ricordi-daily summary:focus-visible{outline:2px solid var(--us-color-focus,#ffc3d3);outline-offset:-2px;border-radius:20px}
+#moments .ricordi-daily-mark{color:#d8c8ff}
+#moments .ricordi-daily-mark::before{-webkit-mask-image:url("/assets/icons/phosphor/question-regular.svg");mask-image:url("/assets/icons/phosphor/question-regular.svg")}
+#moments .ricordi-daily[open] .ricordi-experience-copy b{white-space:normal}
+#moments .ricordi-daily-answers{display:grid;gap:8px;padding:0 14px 14px}
+#moments .ricordi-daily-answer{padding:11px 12px;border-radius:14px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08)}
+#moments .ricordi-daily-answer b{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted,var(--us-color-text-2))}
+#moments .ricordi-daily-answer p{margin:5px 0 0;white-space:pre-wrap;line-height:1.45;font-size:14px}
 #moments .ricordi-empty b{font-family:Georgia,serif;font-weight:500}
 
 /* Capitoli: raccolte secondarie, una riga orizzontale discreta. */

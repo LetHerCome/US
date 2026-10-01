@@ -333,7 +333,7 @@ test('M6B (36): the service worker precaches the three new runtime files and kee
   assert.match(worker(), /"\/calendar-domain\.js"/);
   assert.match(worker(), /"\/calendar\.css"/);
   assert.match(worker(), /"\/calendar\.js"/);
-  assert.match(worker(), /const CACHE_NAME = "us-shell-static-runtime-44"/);
+  assert.match(worker(), /const CACHE_NAME = "us-shell-static-runtime-45"/);
 });
 
 // (37) Capacitor staging includes the new assets.

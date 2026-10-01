@@ -62,10 +62,10 @@ test('M8A page: Rivivi, Conservati, La vostra storia, Capitoli in this order ins
   assert.deepEqual([...order].sort((a, b) => a - b), order);
 });
 
-test('M8A data: reads only existing domains (moments, profiles, lived bucket_items) and writes nothing new', () => {
+test('M8A data: reads only existing domains (moments, profiles, lived bucket_items, M12B.4 kept Dailies) and writes nothing new', () => {
   const src = app().match(/async function hydrateMomentsCore\(\)\{[\s\S]*?\n\}/)?.[0] || '';
   const tables = [...src.matchAll(/sb\.from\('([a-z_]+)'\)/g)].map((x) => x[1]).sort();
-  assert.deepEqual(tables, ['bucket_items', 'moments', 'profiles']);
+  assert.deepEqual(tables, ['bucket_items', 'daily_question_keepsakes', 'moments', 'profiles']);
   assert.match(src, /from\('bucket_items'\)\.select\('id,title,completed_at'\)\.eq\('couple_id',profile\.couple_id\)\.eq\('status','lived'\)/);
   assert.doesNotMatch(src + archiveBlock(), /\.insert\(|\.update\(|\.delete\(|\.upsert\(/);
   assert.match(src, /if\(window\.usProfile!==profile\)return;/, 'identity switch mid-load never paints the old couple');

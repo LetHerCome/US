@@ -397,7 +397,8 @@ test('migration preconditions: a production shape mismatch fails before any chan
 test('M12B.3 migrations: later ledger versions, additive, pinned search_path, explicit grants', () => {
   const files = fs.readdirSync(path.join(ROOT, 'supabase/migrations')).sort();
   const last = files.indexOf('20260930225935_m12b_2_da_vivere_archived_link_release.sql');
-  assert.deepEqual(files.slice(last + 1), Object.values(M12B3).map((f) => path.basename(f)), 'the three M12B.3 files follow the production ledger, in order');
+  // M12B.4 and later batches may follow; the three M12B.3 files come right after M12B.2, in order.
+  assert.deepEqual(files.slice(last + 1, last + 4), Object.values(M12B3).map((f) => path.basename(f)), 'the three M12B.3 files follow the production ledger, in order');
   for (const f of Object.values(M12B3)) {
     const sql = read(f);
     const code = sql.replace(/--[^\n]*/g, '');

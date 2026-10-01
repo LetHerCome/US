@@ -1833,6 +1833,72 @@ window.deleteDailyQuestionOutcome=async()=>{
   if(result.status==='error')toast('Riflessione non eliminata: riprova quando torni online');
 };
 
+// M12B.4 — Conserva: dopo il reveal, uno dei due può conservare lo scambio
+// della domanda nei Ricordi. Il server decide (keep_daily_question: reveal di
+// get_daily_state, una sola copia per coppia e domanda, snapshot lato server);
+// qui solo lo stato del bottone. Lo stato "già conservata" si rilegge dalla
+// tabella (RLS: stessa coppia) a ogni apertura, mai da una copia locale.
+function dailyKeepsakeRuntime(){
+  let state={questionId:null,status:'hidden'};
+  const unavailable=(error)=>['42P01','PGRST205','PGRST202','42883'].includes(error?.code)||/daily_question_keepsake|keep_daily_question/.test(String(error?.message||''))&&/does not exist|could not find|schema cache/i.test(String(error?.message||''));
+  const active=()=>Boolean(state.questionId&&state.questionId===window.todayQuestion?.id&&window.todayState?.both_answered);
+  const view=()=>{
+    if(state.status==='kept')return '<p class="today-keep-done" role="status"><span class="us-icon" data-us-icon="check" aria-hidden="true"></span>Conservato nei Ricordi</p>';
+    const saving=state.status==='saving',failed=state.status==='error';
+    return `<button type="button" class="today-keep-button" data-us-daily-keep ${saving?'disabled aria-busy="true"':''}>${saving?'Conservo…':failed?'Riprova':'Conserva'}</button>${failed?'<p class="today-keep-status" role="status">Non conservata. Riprova quando torni online.</p>':''}`;
+  };
+  const render=()=>{
+    const root=document.getElementById('todayKeep');
+    if(!root)return;
+    const show=active()&&['idle','saving','error','kept'].includes(state.status);
+    root.hidden=!show;
+    root.innerHTML=show?view():'';
+  };
+  const hide=()=>{state={questionId:null,status:'hidden'};render();};
+  const load=async(questionId)=>{
+    state={questionId,status:'loading'};render();
+    try{
+      const {data,error}=await sb.from('daily_question_keepsakes').select('id,kept_at,kept_by_role').eq('question_id',questionId).limit(1);
+      if(state.questionId!==questionId)return state;
+      if(error)throw error;
+      state={questionId,status:Array.isArray(data)&&data.length?'kept':'idle'};
+    }catch(error){
+      if(state.questionId!==questionId)return state;
+      console.warn('[US Today] Conserva stato',error);
+      // Senza backend Conserva (migration non applicata) niente bottone; un
+      // errore di rete lascia Conserva: la RPC è idempotente e risponde 'existing'.
+      state={questionId,status:unavailable(error)?'hidden':'idle'};
+    }
+    render();return state;
+  };
+  const keep=async()=>{
+    const questionId=state.questionId;
+    if(!active()||state.status==='saving'||state.status==='kept')return {status:'noop'};
+    state={questionId,status:'saving'};render();
+    try{
+      const {data,error}=await sb.rpc('keep_daily_question',{target_question_id:questionId});
+      if(error)throw error;
+      if(!['kept','existing'].includes(data?.status)||data.question_id!==questionId)throw new Error('daily_keepsake_invalid');
+      if(state.questionId!==questionId)return {status:'stale'};
+      state={questionId,status:'kept'};render();
+      if(data.status==='kept')toast('Conservato nei Ricordi ♡');
+      if(document.getElementById('momentsGrid')?.dataset.loaded==='1')Promise.resolve(window.hydrateMoments?.()).catch(()=>{});
+      return data;
+    }catch(error){
+      console.warn('[US Today] Conserva',error);
+      if(state.questionId!==questionId)return {status:'stale'};
+      state={questionId,status:/daily_question_reveal_not_ready/.test(String(error?.message||''))||unavailable(error)?'hidden':'error'};render();
+      return {status:'error',error};
+    }
+  };
+  return {hide,load,keep,render,state:()=>state};
+}
+const dailyKeepsake=dailyKeepsakeRuntime();
+window.UsDailyKeepsake=dailyKeepsake;
+document.getElementById('todayKeep')?.addEventListener?.('click',event=>{
+  if(event.target.closest?.('[data-us-daily-keep]'))dailyKeepsake.keep();
+});
+
 // M9E — la domanda di oggi arriva SOLO da get_or_create_daily_question: il
 // server decide il giorno (Europe/Rome) e materializza una sola istanza in
 // daily_questions. Qui non si calcola più la data sul client.
@@ -1853,6 +1919,7 @@ function renderTodayQuestionUnavailable(status){
   const failed=status==='error';
   window.todayQuestion=null; window.todayState=null; window.todayRevealMeta=null;
   dailyQuestionOutcomes.hide();
+  window.UsDailyKeepsake?.hide?.();
   if(qel)qel.textContent=failed?'Non riesco a caricare la domanda di oggi.':'Un attimo…';
   if(locked)locked.textContent=failed?'Controlla la connessione e riprova.':'Un attimo, arriva subito.';
   if(reveal){reveal.classList.add('hidden');reveal.innerHTML='';}
@@ -2004,10 +2071,15 @@ async function hydrateToday(){
     await markDailyRevealSeenIfVisible(q.id,seq);
     if(seq!==usTodayHydrateSeq)return;
     await dailyQuestionOutcomes.load(q,state);
+    if(seq!==usTodayHydrateSeq)return;
+    // M12B.4 — Conserva solo qui, dove lo scambio è legittimamente visibile.
+    await window.UsDailyKeepsake?.load?.(q.id);
+    if(seq!==usTodayHydrateSeq)return;
   }else{
     window.todayRevealMeta=null;
     reveal.classList.add('hidden');reveal.innerHTML='';
     dailyQuestionOutcomes.hide();
+    window.UsDailyKeepsake?.hide?.();
     if(state?.my_answer){
       const partner=window.usProfile.role==='francesco'?'Bea':'Francesco';
       locked.innerHTML='✓ Hai risposto. <b>In attesa di '+partner+'…</b>';
@@ -2224,10 +2296,13 @@ function ricordiLocalISO(instant){
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 // Timeline unificata, più recente prima; ogni voce porta tipo e provenienza.
-function ricordiTimeline(moments,lived){
+// M12B.4: anche le Domande del giorno conservate (daily_question_keepsakes),
+// datate al giorno della domanda, mai una Domanda solo risposta.
+function ricordiTimeline(moments,lived,kept){
   const items=[];
   for(const row of moments||[])if(row?.moment_date)items.push({kind:'moment',date:row.moment_date,at:row.created_at||'',row});
   for(const row of lived||[]){const date=ricordiLocalISO(row?.completed_at);if(date)items.push({kind:'experience',date,at:row.completed_at,row});}
+  for(const row of kept||[])if(row?.id&&/^\d{4}-\d{2}-\d{2}$/.test(String(row.question_date||''))&&row.question_text)items.push({kind:'daily',date:String(row.question_date),at:row.revealed_at||'',row});
   return items.sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(a.at<b.at?1:a.at>b.at?-1:0));
 }
 function ricordiPeriodKey(dateISO){return dateISO.slice(0,7);}
@@ -2262,10 +2337,10 @@ function ricordiChapters(timeline){
   const byYear=new Map();
   for(const item of timeline){
     const year=item.date.slice(0,4);
-    if(!byYear.has(year))byYear.set(year,{year,count:0,moments:0,experiences:0,cover:null});
+    if(!byYear.has(year))byYear.set(year,{year,count:0,moments:0,experiences:0,dailies:0,cover:null});
     const ch=byYear.get(year);
     ch.count++;
-    if(item.kind==='moment'){ch.moments++;if(!ch.cover)ch.cover=item.row;}else ch.experiences++;
+    if(item.kind==='moment'){ch.moments++;if(!ch.cover)ch.cover=item.row;}else if(item.kind==='daily')ch.dailies++;else ch.experiences++;
   }
   return [...byYear.values()];
 }
@@ -2279,6 +2354,13 @@ function ricordiExperienceCard(row){
   const d=new Date(row.completed_at);
   const day=d.toLocaleDateString('it-IT',{day:'numeric',month:'long'});
   return `<button type="button" class="ricordi-experience" data-ricordi-experience="${escapeHtml(row.id)}"><span class="ricordi-experience-mark" aria-hidden="true"></span><span class="ricordi-experience-copy"><small>Vissuta insieme · ${escapeHtml(day)}</small><b>${escapeHtml(row.title)}</b></span><span class="ricordi-experience-source">Da vivere</span></button>`;
+}
+// M12B.4 — una Domanda del giorno conservata: provenienza esplicita e le due
+// risposte come erano al reveal (snapshot del server), apribile sul posto.
+function ricordiDailyCard(row){
+  const day=new Date(String(row.question_date)+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long'});
+  const answer=(label,text)=>`<div class="ricordi-daily-answer"><b>${escapeHtml(label)}</b><p>${escapeHtml(text||'')}</p></div>`;
+  return `<details class="ricordi-daily" data-ricordi-daily="${escapeHtml(row.id)}" data-source-key="${escapeHtml(row.source_key||'')}"><summary><span class="ricordi-experience-mark ricordi-daily-mark" aria-hidden="true"></span><span class="ricordi-experience-copy"><small>Domanda del giorno · ${escapeHtml(day)}</small><b>${escapeHtml(row.question_text)}</b></span><span class="ricordi-experience-source">Conservata</span></summary><div class="ricordi-daily-answers">${answer('Francesco',row.francesco_answer)}${answer('Bea',row.beatrice_answer)}</div></details>`;
 }
 function renderRicordiRivivi(pick,signedUrls,names){
   const root=document.getElementById('ricordiRivivi');
@@ -2295,7 +2377,7 @@ function renderRicordiChapters(chapters,signedUrls){
   if(!chapters.length){root.hidden=true;root.innerHTML='';return;}
   root.innerHTML=`<div class="ricordi-section-head"><div class="ricordi-kicker">CAPITOLI</div><h3>Per anno</h3></div><div class="ricordi-chapter-row">${chapters.map(ch=>{
     const url=ch.cover?signedUrls.get(ch.cover.storage_path):null;
-    const parts=[ch.moments?`${ch.moments} ${ch.moments===1?'ricordo':'ricordi'}`:'',ch.experiences?`${ch.experiences} ${ch.experiences===1?'esperienza':'esperienze'}`:''].filter(Boolean).join(' · ');
+    const parts=[ch.moments?`${ch.moments} ${ch.moments===1?'ricordo':'ricordi'}`:'',ch.experiences?`${ch.experiences} ${ch.experiences===1?'esperienza':'esperienze'}`:'',ch.dailies?`${ch.dailies} ${ch.dailies===1?'domanda':'domande'}`:''].filter(Boolean).join(' · ');
     return `<button type="button" class="ricordi-chapter" data-ricordi-year="${escapeHtml(ch.year)}">${url?`<img src="${escapeHtml(url)}" alt="" loading="lazy">`:''}<span><b>${escapeHtml(ch.year)}</b><small>${escapeHtml(parts)}</small></span></button>`;
   }).join('')}</div>`;
   root.hidden=false;
@@ -2327,10 +2409,11 @@ async function hydrateMomentsCore(){
   if(!grid)return;
   const profile=window.usProfile;
   if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></div><b>Carico…</b></div>';
-  const [{data:rows,error},{data:profiles,error:profilesError},{data:lived,error:livedError}]=await Promise.all([
+  const [{data:rows,error},{data:profiles,error:profilesError},{data:lived,error:livedError},{data:kept,error:keptError}]=await Promise.all([
     sb.from('moments').select('id,created_by,storage_path,caption,moment_date,created_at').order('moment_date',{ascending:false}).order('created_at',{ascending:false}),
     sb.from('profiles').select('id,display_name').eq('couple_id',profile.couple_id),
-    sb.from('bucket_items').select('id,title,completed_at').eq('couple_id',profile.couple_id).eq('status','lived')
+    sb.from('bucket_items').select('id,title,completed_at').eq('couple_id',profile.couple_id).eq('status','lived'),
+    sb.from('daily_question_keepsakes').select('id,source_key,question_text,question_date,francesco_answer,beatrice_answer,revealed_at').order('question_date',{ascending:false})
   ]);
   if(window.usProfile!==profile)return;
   if(error){console.warn(error);if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">!</div><b>Ricordi non disponibili</b><p>Riprova tra un momento.</p></div>';return;}
@@ -2339,11 +2422,13 @@ async function hydrateMomentsCore(){
   // resta quella dei Moments, mai un errore dell'intera pagina.
   if(livedError)console.warn(livedError);
   const livedRows=livedError?[]:(lived||[]);
+  if(keptError)console.warn(keptError);
+  const keptRows=keptError?[]:(kept||[]);
   if(pill)pill.textContent='📸 Moments · '+(rows?.length||0);
   const today=localDateISO();
-  const signature=JSON.stringify([today,(rows||[]).map(r=>[r.id,r.created_by,r.storage_path,r.caption||'',r.moment_date,r.created_at]),livedRows.map(r=>[r.id,r.title,r.completed_at])]);
+  const signature=JSON.stringify([today,(rows||[]).map(r=>[r.id,r.created_by,r.storage_path,r.caption||'',r.moment_date,r.created_at]),livedRows.map(r=>[r.id,r.title,r.completed_at]),keptRows.map(r=>[r.id,r.question_date])]);
   if(grid.dataset.loaded==='1'&&grid.dataset.signature===signature)return;
-  if(!rows?.length&&!livedRows.length){
+  if(!rows?.length&&!livedRows.length&&!keptRows.length){
     grid.innerHTML='<div class="empty-state moment-loading ricordi-empty"><b>La vostra storia parte da qui</b></div>';
     renderRicordiRivivi(null,new Map(),new Map());
     renderRicordiChapters([],new Map());
@@ -2352,7 +2437,7 @@ async function hydrateMomentsCore(){
   const names=new Map((profiles||[]).map(p=>[p.id,p.display_name||'Noi']));
   const signedUrls=await usGetSignedUrls((rows||[]).map(row=>row.storage_path),21600);
   if(window.usProfile!==profile)return;
-  const timeline=ricordiTimeline((rows||[]).filter(r=>signedUrls.get(r.storage_path)),livedRows);
+  const timeline=ricordiTimeline((rows||[]).filter(r=>signedUrls.get(r.storage_path)),livedRows,keptRows);
   const html=[];
   let period='';
   // Ritmo editoriale: la prima foto del mese è a tutta larghezza, le altre in
@@ -2369,6 +2454,7 @@ async function hydrateMomentsCore(){
       html.push(`<div class="ricordi-period" data-period="${key}" data-year="${year}"><b>${month}</b><span>${year}</span></div>`);
     }
     if(item.kind==='experience'){closeRow();html.push(ricordiExperienceCard(item.row));continue;}
+    if(item.kind==='daily'){closeRow();html.push(ricordiDailyCard(item.row));continue;}
     const row=item.row;
     const own=row.created_by===profile.id;
     const author=names.get(row.created_by)||(own?profile.display_name:'Noi');
