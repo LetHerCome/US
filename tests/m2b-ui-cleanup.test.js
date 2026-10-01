@@ -153,9 +153,9 @@ test('shell, build e asset Stories restano coerenti per upgrade e offline', () =
   const version = JSON.parse(read('version.json')).version;
   const build = html.match(/meta name="us-build" content="([^"]+)"/)?.[1];
 
-  assert.equal(version, 'us-m12b5-rivivi-archive-20261001-2');
+  assert.equal(version, 'us-m12c-risonanza-v2-20261001-1');
   assert.equal(build, version);
-  assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-47"/);
+  assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-48"/);
   assert.match(html, /settings\.js\?v=us-m11-game-v2-20260930-1/);
   assert.match(worker, /"\/stories\.css"/);
   assert.doesNotMatch(worker, /"\/motion3\.css"/);

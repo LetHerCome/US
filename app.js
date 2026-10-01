@@ -2794,6 +2794,73 @@ async function hydrateBondSummary(){
 }
 window.hydrateBondSummary=hydrateBondSummary;
 
+// ===== M12C · Risonanza V2 — recent real growth, read-only =====
+const RESONANCE_HISTORY_LIMIT=6;
+function resonanceHistoryEntries(quests,eventCompletions,eventHistory){
+  const historyByRef=new Map((eventHistory||[]).filter(row=>row?.source_ref).map(row=>[String(row.source_ref),row]));
+  const byKey=new Map();
+  for(const row of quests||[]){
+    const xp=Math.max(0,Number(row?.xp)||0);
+    if(!row?.id||!row.completed_at||xp<=0)continue;
+    const sourceKey=`quest:${row.id}`;
+    if(!byKey.has(sourceKey))byKey.set(sourceKey,{kind:'quest',sourceKey,title:row.title||'Quest di coppia',xp,at:row.completed_at,titleSource:'snapshot'});
+  }
+  for(const row of eventCompletions||[]){
+    const xp=Math.max(0,Number(row?.xp_awarded)||0);
+    if(!row?.id||!row.completed_at||xp<=0)continue;
+    const history=historyByRef.get(String(row.id));
+    const sourceKey=`shared_event_completion:${row.id}`;
+    const title=history?.title||row.event_title_snapshot||'Evento vissuto';
+    if(!byKey.has(sourceKey))byKey.set(sourceKey,{kind:'event',sourceKey,title,xp,at:row.completed_at,titleSource:history?.title_source||(row.event_title_snapshot?'snapshot':'missing')});
+  }
+  return [...byKey.values()]
+    .sort((a,b)=>a.at<b.at?1:a.at>b.at?-1:(a.sourceKey<b.sourceKey?-1:a.sourceKey>b.sourceKey?1:0))
+    .slice(0,RESONANCE_HISTORY_LIMIT);
+}
+function resonanceHistoryDate(at){
+  const d=new Date(at);
+  return Number.isNaN(d.getTime())?'':d.toLocaleDateString('it-IT',{day:'numeric',month:'short'});
+}
+function renderResonanceHistory(entries){
+  const root=document.getElementById('noiResonanceHistory');
+  if(!root)return;
+  root.setAttribute('aria-busy','false');
+  if(!entries?.length){
+    root.innerHTML='<div class="noi-resonance-history-empty"><b>La prossima crescita apparirà qui</b><span>Quest ed eventi completati aggiungono XP reali alla vostra Risonanza.</span></div>';
+    return;
+  }
+  root.innerHTML=entries.map(entry=>{
+    const kindLabel=entry.kind==='quest'?'Quest di coppia':'Evento vissuto';
+    const liveNote=entry.kind==='event'&&entry.titleSource==='live'?' · titolo attuale':'';
+    const date=resonanceHistoryDate(entry.at);
+    return `<article class="noi-resonance-history-row" data-resonance-source="${escapeHtml(entry.sourceKey)}" data-resonance-kind="${escapeHtml(entry.kind)}"><span class="noi-resonance-history-mark" aria-hidden="true"></span><span class="noi-resonance-history-copy"><small>${escapeHtml(kindLabel)}${date?` · ${escapeHtml(date)}`:''}${liveNote}</small><b>${escapeHtml(entry.title)}</b></span><strong>+${entry.xp.toLocaleString('it-IT')} XP</strong></article>`;
+  }).join('');
+}
+async function hydrateResonanceHistory(){
+  const profile=window.usProfile;
+  const root=document.getElementById('noiResonanceHistory');
+  if(!profile||!root)return;
+  root.setAttribute('aria-busy','true');
+  const coupleId=profile.couple_id;
+  const [{data:quests,error:questError},{data:events,error:eventError},{data:history,error:historyError}]=await Promise.all([
+    sb.from('bond_weekly_quests').select('id,title,xp,completed_at').eq('couple_id',coupleId).not('completed_at','is',null).order('completed_at',{ascending:false}).limit(8),
+    sb.from('shared_event_completions').select('id,xp_awarded,completed_at,event_title_snapshot').eq('couple_id',coupleId).order('completed_at',{ascending:false}).limit(8),
+    sb.from('relationship_event_history').select('source_ref,title,title_source,completed_at').order('completed_at',{ascending:false}).limit(8)
+  ]);
+  if(window.usProfile!==profile)return;
+  if(questError)console.warn(questError);
+  if(eventError)console.warn(eventError);
+  if(historyError)console.warn(historyError);
+  if(questError&&eventError){
+    root.setAttribute('aria-busy','false');
+    root.innerHTML='<div class="noi-resonance-history-empty"><b>Crescita non disponibile</b><span>Riprova tra un momento.</span></div>';
+    return;
+  }
+  renderResonanceHistory(resonanceHistoryEntries(questError?[]:(quests||[]),eventError?[]:(events||[]),historyError?[]:(history||[])));
+}
+window.hydrateResonanceHistory=hydrateResonanceHistory;
+window.UsResonance=Object.freeze({historyEntries:resonanceHistoryEntries,renderHistory:renderResonanceHistory});
+
 function hashSeed(text){
   let h=2166136261;
   for(let i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619);}
@@ -3451,6 +3518,7 @@ function openNoiSection(view){
   const bar=document.getElementById('noiSectionBar');if(bar)bar.hidden=false;
   const hub=document.getElementById('noiHub');if(hub)hub.hidden=true;
   scrollTo({top:0,behavior:'auto'});
+  if(view==='resonance')window.hydrateResonanceHistory?.();
   if(view==='da-vivere'&&window.usProfile&&!noiIdeaState.loaded)hydrateNoiIdeas();
   if(view==='eventi')window.hydrateEvents?.();
   document.getElementById('noiSectionBack')?.focus({preventScroll:true});
