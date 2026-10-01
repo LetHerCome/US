@@ -401,7 +401,9 @@ test('M12B.3 migrations: later ledger versions, additive, pinned search_path, ex
   for (const f of Object.values(M12B3)) {
     const sql = read(f);
     const code = sql.replace(/--[^\n]*/g, '');
-    assert.match(sql, /NOT applied in production/);
+    // Each file states its production state: "NOT applied in production" before the rollout,
+    // "Applied to production as ledger migration <version>" once the ledger is reconciled.
+    assert.match(sql, /(NOT applied in|Applied to) production/, `${f}: states its production ledger status`);
     assert.doesNotMatch(code, /\bdrop\s+(table|column|view|function|policy)\b|\btruncate\b|\bdelete\s+from\b|\bupdate\s+public\./i, `${f}: additive, no row rewritten`);
     assert.doesNotMatch(code, /alter table public\.(moments|moment_photos|bucket_items|calendar_entries|shared_events)\b/i, `${f}: those authorities keep their schema`);
     assert.doesNotMatch(code, /claim_us_role|net\.http|us-private-media|storage\.objects|openai|anthropic/i);
