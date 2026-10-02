@@ -939,3 +939,59 @@ body.viewer-open{overflow:hidden}
     min-height:54px;
   }
 }
+
+
+/* ===== US-SECONDARY-SURFACES-01 · Today + Noi subviews ===== */
+#today .today-sheet{
+  max-height:90dvh;
+  padding:14px 14px calc(18px + var(--us-safe-bottom));
+}
+#today .today-sheet-head{margin:0 1px 9px}
+#today .today-sheet-head h2{font-size:18px}
+#today .question{padding:14px;border-radius:18px}
+#today .qtext{margin:8px 0 12px;font-size:19px;line-height:1.2}
+#today .locked{margin-top:10px;padding:10px;border-radius:13px;font-size:11.5px}
+#today textarea{padding:11px 12px}
+#today .row{margin-top:7px}
+#today .row button{min-height:44px}
+
+#bond .noi-canonical-page:not([data-noi-view="hub"]){gap:10px}
+#bond .noi-resonance-history{margin-top:2px}
+#bond .noi-resonance-history-list{gap:6px}
+#bond .noi-resonance-history-row{min-height:48px;padding:7px 9px;border-radius:14px}
+#bond .noi-resonance-guide{gap:8px;padding:12px;border-radius:19px}
+#bond .noi-resonance-stats{gap:6px;margin-bottom:2px}
+#bond .noi-resonance-stats span{padding:8px 10px;border-radius:13px}
+#bond .noi-resonance-stats b{font-size:17px}
+#bond .noi-resonance-guide h3{font-size:16px}
+#bond .noi-resonance-sources{gap:6px}
+#bond .noi-resonance-sources li{padding:8px 10px;border-radius:13px}
+#bond .noi-resonance-sources b{font-size:12px}
+#bond .noi-resonance-sources span{font-size:10.5px}
+
+#bond .noi-idea-browse .noi-idea-list{gap:6px;margin-top:7px}
+#bond .noi-idea-browse .noi-idea-card{
+  min-height:54px;
+  padding:8px 10px;
+  border-radius:15px;
+}
+#bond .noi-idea-card-copy b{font-size:12.5px}
+#bond .noi-idea-card-copy small{font-size:9.5px}
+#bond .noi-idea-quick-form{margin-top:7px;padding:9px 10px;border-radius:15px}
+#bond .noi-idea-detail{gap:7px}
+#bond .noi-idea-detail form{gap:7px}
+#bond .noi-idea-detail-calendar{padding:8px 10px;border-radius:14px}
+#bond .noi-idea-lived-action{padding:9px 11px;border-radius:13px;font-size:12px}
+
+#bond .quest-week{gap:7px;margin-top:6px;padding:10px 11px;border-radius:18px}
+#bond .quest-week-id b{font-size:17px}
+#bond .quest-week-count b{font-size:22px}
+#bond .noi-living-list{margin-top:7px;gap:8px}
+#bond .noi-living-list .bond-quest{
+  padding:11px 12px;
+  border-radius:18px;
+  box-shadow:0 10px 26px rgba(0,0,0,.18);
+}
+#bond .noi-living-list .bond-quest h4{margin:7px 0 7px;font-size:17px;line-height:1.15}
+#bond .quest-v2 .quest-status{margin-bottom:7px;font-size:11px}
+#bond .quest-v2 .quest-confirmers{margin-bottom:7px}
