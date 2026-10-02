@@ -1018,3 +1018,33 @@ body:has(#moments.page.active) #thinkButton{
 #usAlbumOverlay .us-album-section{padding-left:14px;padding-right:14px}
 #usAlbumOverlay .us-album-section-head{margin-bottom:8px}
 #usAlbumOverlay .us-album-section-head h3{font-size:18px}
+
+/* ===== Ricordi · Elimina → Eliminato · Annulla =====
+   One 44px pill that grows in place (112 → 206px). Nothing is deleted while
+   the fuse burns; Annulla only cancels the timer. No modal, no success toast. */
+.us-undo-delete{position:relative;display:inline-flex;align-items:center;flex:0 0 auto;width:112px;height:44px;margin-top:14px;border-radius:22px;overflow:hidden;isolation:isolate;
+  border:1px solid color-mix(in srgb,var(--us-color-danger) 38%,rgba(255,255,255,.1));
+  background:color-mix(in srgb,var(--us-color-danger) 13%,rgba(255,255,255,.03));
+  transition:width 440ms cubic-bezier(.3,1.28,.42,1),background-color 220ms ease,border-color 220ms ease}
+.us-undo-delete[hidden]{display:none!important}
+.us-undo-delete[data-state="done"],.us-undo-delete[data-state="committing"]{width:206px;background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.13)}
+.us-undo-delete-go{position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;border-radius:inherit;background:transparent;color:var(--us-color-danger-ink);font:650 14px/1 var(--us-font-ui);letter-spacing:.005em;transition:opacity 150ms ease,transform 240ms cubic-bezier(.2,.9,.3,1)}
+.us-undo-delete-go:active{background:color-mix(in srgb,var(--us-color-danger) 10%,transparent)}
+.us-undo-delete-done{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 5px 0 16px;opacity:0;transform:translateX(10px);pointer-events:none;transition:opacity 200ms 70ms ease,transform 280ms 70ms cubic-bezier(.2,.9,.3,1)}
+.us-undo-delete-label{color:var(--us-color-text-2);font:600 13.5px/1 var(--us-font-ui);white-space:nowrap}
+.us-undo-delete-undo{height:34px;padding:0 15px;border:0;border-radius:17px;background:var(--us-color-text);color:#150f19;font:700 13px/1 var(--us-font-ui);white-space:nowrap}
+.us-undo-delete-undo:active{transform:scale(.96)}
+.us-undo-delete-undo:disabled{opacity:.45}
+.us-undo-delete:is([data-state="done"],[data-state="committing"]) .us-undo-delete-go{opacity:0;transform:translateX(-12px);pointer-events:none}
+.us-undo-delete:is([data-state="done"],[data-state="committing"]) .us-undo-delete-done{opacity:1;transform:none;pointer-events:auto}
+.us-undo-delete-fuse{position:absolute;left:16px;right:98px;bottom:9px;height:2px;border-radius:2px;background:color-mix(in srgb,var(--us-color-danger-ink) 70%,transparent);transform-origin:left center;transform:scaleX(0);opacity:0}
+.us-undo-delete[data-state="done"] .us-undo-delete-fuse{opacity:1;animation:us-undo-fuse var(--us-undo-grace,4000ms) linear forwards}
+.us-undo-delete[data-state="committing"] .us-undo-delete-fuse{opacity:0}
+@keyframes us-undo-fuse{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+#momentsGrid .moment-card.is-pending-delete{display:none!important}
+#usAlbumOverlay .us-album-cover-stage img{transition:opacity 260ms ease,filter 260ms ease}
+#usAlbumOverlay.is-pending-delete .us-album-cover-stage img{opacity:.3;filter:grayscale(.7)}
+#usAlbumOverlay.is-pending-delete :is(.us-album-add,.us-album-floating-add,.us-album-section){opacity:.35;pointer-events:none}
+@media(prefers-reduced-motion:reduce){
+  .us-undo-delete,.us-undo-delete-go,.us-undo-delete-done,#usAlbumOverlay .us-album-cover-stage img{transition:none!important}
+}

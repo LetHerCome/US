@@ -50,7 +50,7 @@
 .us-gv2-pervoi-copy{grid-column:1;grid-row:2;min-width:0}
 .us-gv2-pervoi-copy b{display:block;font-family:var(--us-font-editorial);font-size:26px;font-weight:500;line-height:1.1;overflow-wrap:anywhere}
 .us-gv2-pervoi-copy small{display:block;margin-top:4px;color:var(--us-color-text-2);font-size:13px;line-height:1.35}
-.us-gv2-pervoi-cta{grid-column:2;grid-row:2;flex:0 0 auto;min-height:44px;display:inline-flex;align-items:center;padding:0 18px;border-radius:var(--us-radius-pill);background:var(--us-accent-gradient);color:#fff;font-size:14px;font-weight:750}
+.us-gv2-pervoi-cta{grid-column:2;grid-row:2;flex:0 0 auto;min-height:44px;display:inline-flex;align-items:center;padding:0 18px;border-radius:var(--us-radius-pill);background:var(--us-accent-gradient);color:var(--us-color-text-on-accent);font-size:14px;font-weight:750}
 .us-gv2-pervoi[data-gv2-state="waiting"] .us-gv2-pervoi-cta,.us-gv2-pervoi[data-gv2-state="played"] .us-gv2-pervoi-cta{background:rgba(255,255,255,.08);color:#efe5f4;border:1px solid rgba(255,234,247,.12)}
 .us-gv2-pervoi[data-gv2-state="played"] .us-gv2-glyph{color:var(--us-color-text-3)}
 

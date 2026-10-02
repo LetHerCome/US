@@ -34,7 +34,7 @@ test('copy: explanatory and duplicate lines removed in this pass stay removed', 
 test('copy: text kept on purpose (destructive, reveal, privacy, irreversible) is still there', () => {
   const text = all();
   for (const phrase of [
-    'Eliminare questo impegno?', 'Sparirà dal calendario di entrambi.', 'Eliminare questo ricordo?', 'La foto sparirà per entrambi.',
+    'Eliminare questo impegno?', 'Sparirà dal calendario di entrambi.', 'Elimina questo ricordo per entrambi', '>Eliminato<', '>Annulla<',
     'Sparirà per entrambi.', 'Dopo la conferma le risposte non si cambiano più.', 'Le risposte si sbloccano quando avete risposto entrambi.',
     'Scollega questo telefono', 'Dovrai inserire di nuovo il codice privato per rientrare in US.', 'Revocare Scriptable?',
     'Sei offline.', 'Facoltativa e privata.', 'Su di te · ',

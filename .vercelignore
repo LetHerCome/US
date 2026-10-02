@@ -1,4 +1,4 @@
-# Frontend-only Vercel deployment. Keep root web runtime and assets.
+# Legacy Vercel project (rollback only — production is Cloudflare Pages). Keep root web runtime and assets.
 android/
 dist/
 docs/

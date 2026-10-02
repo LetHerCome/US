@@ -135,44 +135,55 @@
 .left-for-you-composer-text{min-height:104px}
 
 
-/* ===== BENCHO VOICE NOTE V1 · real recorder, Left for You only ===== */
+/* ===== BENCHO VOICE NOTE V2 · tap to record, tap to stop · Left for You only =====
+   ONE control morphs in place: a 56px mic button (idle) → a recording pill
+   (stop · timer · live waveform) → the preview pill (play · scrub · time · ✕).
+   Glyphs are optically centred, not just box-centred: the mic sits 1px high
+   (its base reads as weight), the play triangle sits ~1px right of the box
+   centre (halfway between box centre and centroid). */
 .left-for-you-vn-frame{
   display:grid;
   justify-items:center;
-  gap:8px;
+  gap:7px;
   width:100%;
   padding:8px 0 2px;
 }
 .left-for-you-vn{
-  --pull:0;
   position:relative;
-  width:min(216px,100%);
+  width:56px;
   height:56px;
   overflow:hidden;
-  border:1px solid rgba(255,255,255,.13);
+  border:1px solid rgba(255,255,255,.16);
   border-radius:28px;
+  background:var(--us-accent-gradient);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 10px 26px rgba(0,0,0,.28),0 0 0 5px var(--us-color-accent-soft);
+  color:var(--us-color-text-on-accent);
+  cursor:pointer;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  outline:none;
+  transition:
+    width 380ms cubic-bezier(.2,1.22,.32,1),
+    background-color 200ms var(--us-ease-standard),
+    box-shadow 200ms var(--us-ease-standard),
+    transform 140ms var(--us-ease-standard);
+}
+.left-for-you-vn[data-phase="idle"]:active{transform:scale(.94)}
+.left-for-you-vn[aria-disabled="true"]{cursor:default}
+.left-for-you-vn[data-phase="rec"],
+.left-for-you-vn[data-phase="clip"]{
+  width:min(316px,100%);
+  border-color:rgba(255,255,255,.13);
   background:
     radial-gradient(90% 180% at 15% -60%,rgba(255,255,255,.09),transparent 60%),
     linear-gradient(145deg,rgba(42,38,47,.98),rgba(27,24,31,.98));
   box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 10px 24px rgba(0,0,0,.24);
   color:var(--us-color-text);
-  user-select:none;
-  -webkit-user-select:none;
-  touch-action:pan-y;
-  outline:none;
-  transition:
-    width 360ms cubic-bezier(.2,1.28,.3,1),
-    border-radius 360ms cubic-bezier(.2,1.28,.3,1),
-    transform 180ms var(--us-ease-standard),
-    border-color 180ms var(--us-ease-standard);
 }
-.left-for-you-vn[data-phase="rec"],
-.left-for-you-vn[data-phase="clip"]{
-  width:min(316px,100%);
-}
-.left-for-you-vn[data-phase="rec"]{
-  border-color:rgba(255,255,255,.18);
-}
+.left-for-you-vn[data-phase="rec"]{border-color:color-mix(in srgb,var(--us-color-danger) 34%,rgba(255,255,255,.12))}
+.left-for-you-vn[data-phase="clip"]{cursor:default}
 .left-for-you-vn:focus-visible{
   box-shadow:0 0 0 2px color-mix(in srgb,var(--us-color-accent-ink) 68%,white),0 10px 24px rgba(0,0,0,.24);
 }
@@ -182,25 +193,18 @@
   display:flex;
   align-items:center;
   min-width:0;
-  padding:6px;
+  padding:5px;
 }
 .left-for-you-vn-in[hidden]{display:none!important}
-.left-for-you-vn-idle{
-  justify-content:center;
-  gap:10px;
-  padding-inline:18px;
-  font-size:14px;
-}
-.left-for-you-vn-idle b{
-  font-weight:650;
-  letter-spacing:-.01em;
-}
+.left-for-you-vn-idle{justify-content:center;padding:0}
+/* Microphone: 20px artboard, capsule + cradle + stem + foot. */
 .left-for-you-vn-mic{
   position:relative;
   display:block;
   width:20px;
   height:20px;
   flex:0 0 20px;
+  transform:translateY(-1px);
 }
 .left-for-you-vn-mic::before{
   content:"";
@@ -223,6 +227,7 @@
   border:2px solid currentColor;
   border-top:0;
   border-radius:0 0 8px 8px;
+  box-sizing:border-box;
   transform:translateX(-50%);
 }
 .left-for-you-vn-mic i{
@@ -247,28 +252,43 @@
   transform:translate(-50%,2px);
 }
 .left-for-you-vn-rec{
-  gap:9px;
-  padding-inline:12px 10px;
-  transform:translateX(calc(var(--pull) * -45px));
-  transition:transform 90ms linear;
+  gap:10px;
+  padding-right:14px;
 }
-.left-for-you-vn-dot{
-  width:8px;
-  height:8px;
-  flex:0 0 8px;
+/* Stop: the same spot the mic occupied, now a red key with a square. */
+.left-for-you-vn-stop{
+  position:relative;
+  display:grid;
+  place-items:center;
+  flex:0 0 44px;
+  width:44px;
+  height:44px;
   border-radius:50%;
   background:var(--us-color-danger);
-  box-shadow:0 0 0 4px color-mix(in srgb,var(--us-color-danger) 15%,transparent);
+  box-shadow:0 0 0 0 color-mix(in srgb,var(--us-color-danger) 40%,transparent);
+  animation:left-for-you-vn-live 1.6s ease-out infinite;
+}
+.left-for-you-vn-stop i{
+  display:block;
+  width:14px;
+  height:14px;
+  border-radius:3.5px;
+  background:#fff;
+}
+@keyframes left-for-you-vn-live{
+  0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--us-color-danger) 42%,transparent)}
+  100%{box-shadow:0 0 0 9px color-mix(in srgb,var(--us-color-danger) 0%,transparent)}
 }
 .left-for-you-vn-time{
   flex:0 0 auto;
   min-width:31px;
   color:var(--us-color-text-2);
-  font-size:11px;
+  font-size:11.5px;
   font-weight:650;
   font-variant-numeric:tabular-nums;
   white-space:nowrap;
 }
+.left-for-you-vn-rec .left-for-you-vn-time{color:var(--us-color-text)}
 .left-for-you-vn-wave{
   display:grid;
   grid-template-columns:repeat(28,minmax(1px,1fr));
@@ -285,61 +305,34 @@
   height:calc(3px + var(--level,0.04) * 23px);
   max-height:26px;
   border-radius:999px;
-  background:rgba(255,255,255,.27);
+  background:rgba(255,255,255,.3);
   transform-origin:50% 50%;
   transition:height 100ms linear,background-color 90ms linear,opacity 90ms linear;
 }
+.left-for-you-vn-rec .left-for-you-vn-bar{background:rgba(255,255,255,.62)}
 .left-for-you-vn-bar[data-played="true"]{
   background:color-mix(in srgb,var(--us-color-accent-ink) 78%,white);
 }
-.left-for-you-vn-cancel{
-  position:absolute;
-  z-index:4;
-  left:11px;
-  top:50%;
-  display:grid;
-  place-items:center;
-  width:32px;
-  height:32px;
-  margin-top:-16px;
-  border-radius:50%;
-  background:rgba(12,10,15,.72);
-  color:var(--us-color-text-2);
-  opacity:0;
-  transform:scale(.7);
-  pointer-events:none;
-  transition:opacity 130ms ease,transform 180ms cubic-bezier(.2,1.3,.3,1),color 130ms ease;
-}
-.left-for-you-vn[data-phase="rec"][data-armed="true"] .left-for-you-vn-cancel{
-  opacity:1;
-  transform:scale(1);
-  color:var(--us-color-danger);
-}
 .left-for-you-vn-hint{
-  min-height:16px;
+  min-height:15px;
   color:var(--us-color-text-3);
   font-size:10.5px;
   letter-spacing:.01em;
-  opacity:0;
-  transform:translateY(-3px);
-  transition:opacity 140ms ease,transform 180ms ease,color 140ms ease;
+  font-variant-numeric:tabular-nums;
+  transition:color 140ms ease;
 }
-.left-for-you-vn-hint[data-on="true"]{
-  opacity:1;
-  transform:none;
-}
-.left-for-you-vn-hint[data-armed="true"]{
-  color:var(--us-color-danger);
-}
+.left-for-you-vn-hint[hidden]{display:block!important;visibility:hidden}
+.left-for-you-vn-hint[data-phase="rec"]{color:var(--us-color-text-2)}
 .left-for-you-vn-clip{
   gap:8px;
-  padding:6px;
+  padding:5px 6px 5px 5px;
 }
 .left-for-you-vn-play,
 .left-for-you-vn-x{
   display:grid;
   place-items:center;
   flex:0 0 auto;
+  padding:0;
   border:0;
   color:var(--us-color-text);
 }
@@ -347,8 +340,8 @@
   width:44px;
   height:44px;
   border-radius:22px;
-  background:rgba(255,255,255,.10);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);
+  background:rgba(255,255,255,.11);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.07);
 }
 .left-for-you-vn-x{
   position:relative;
@@ -365,7 +358,7 @@
   position:absolute;
   left:50%;
   top:50%;
-  width:17px;
+  width:15px;
   height:2px;
   border-radius:999px;
   background:currentColor;
@@ -375,6 +368,9 @@
 .left-for-you-vn-x::after{transform:translate(-50%,-50%) rotate(-45deg)}
 .left-for-you-vn-play:active,
 .left-for-you-vn-x:active{transform:scale(.94)}
+/* Play/pause on a 20px artboard. Triangle 12×14 at x=5: box centre 11px
+   (+1), centroid 9px (−1) — halfway between the two, which reads centred.
+   The former x=6 + 1.5px nudge put even the centroid 1.5px right. */
 .left-for-you-vn-playmark{
   position:relative;
   display:block;
@@ -387,12 +383,12 @@
   background:currentColor;
 }
 .left-for-you-vn-playmark i:first-child{
-  left:6px;
+  left:5px;
   top:3px;
-  width:11px;
+  width:12px;
   height:14px;
+  border-radius:1.5px;
   clip-path:polygon(0 0,100% 50%,0 100%);
-  transform:translate(1.5px,0);
 }
 .left-for-you-vn-playmark i:last-child{
   display:none;
@@ -403,8 +399,8 @@
   top:3px;
   width:4px;
   height:14px;
+  border-radius:1.5px;
   clip-path:none;
-  transform:none;
 }
 .left-for-you-vn-play[data-playing="true"] .left-for-you-vn-playmark i:first-child{left:4px}
 .left-for-you-vn-play[data-playing="true"] .left-for-you-vn-playmark i:last-child{left:12px}
@@ -440,10 +436,10 @@
   align-items:center;
   justify-content:center;
   min-width:0;
-  height:36px;
-  padding:0 14px;
+  height:44px;
+  padding:0 16px;
   border:1px solid rgba(255,255,255,.11);
-  border-radius:18px;
+  border-radius:22px;
   background:rgba(255,255,255,.06);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
 }
@@ -499,8 +495,8 @@
   42%{transform:scaleY(1.36)}
 }
 .left-for-you-spl-tool{
-  flex:0 0 36px;
-  width:36px;
+  flex:0 0 44px;
+  width:44px;
   padding:0;
 }
 .left-for-you-spl-go{
@@ -522,7 +518,7 @@
   stroke-width:1.8;
   stroke-linejoin:round;
   stroke-linecap:round;
-  transform:translateX(1px);
+  transform:translateX(0);
   transition:transform 220ms cubic-bezier(.2,.8,.2,1);
 }
 .left-for-you-step-player[data-playing="true"] .left-for-you-spl-go svg{
@@ -543,10 +539,10 @@
 @media(prefers-reduced-motion:reduce){
   .left-for-you-vn,
   .left-for-you-vn-hint,
-  .left-for-you-vn-cancel,
   .left-for-you-vn-playmark i,
   .left-for-you-spl-dot{
     transition:none!important;
   }
+  .left-for-you-vn-stop{animation:none!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--us-color-danger) 26%,transparent)}
   .left-for-you-spl-dot.is-wake{animation:none!important}
 }

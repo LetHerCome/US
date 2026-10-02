@@ -2440,7 +2440,7 @@ window.UsRicordiArchive=Object.freeze({timeline:ricordiTimeline,pickRivivi:ricor
 function ricordiMomentCard(row,signedUrl,author,own,feature,source){
   const displayISO=/^\d{4}-\d{2}-\d{2}$/.test(String(source?.date||''))?String(source.date):row.moment_date;
   const dateLabel=new Date(displayISO+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
-  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(signedUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(row.caption||'')}" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(signedUrl)}" alt="Ricordo condiviso" loading="lazy">${own?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}','${escapeHtml(row.storage_path)}')"><span class="us-overflow-icon" aria-hidden="true"><svg viewBox="0 0 18 6"><circle cx="3" cy="3" r="2"/><circle cx="9" cy="3" r="2"/><circle cx="15" cy="3" r="2"/></svg></span></button>`:''}<div class="moment-meta"><div class="moment-by">${escapeHtml(author||'Noi')}</div><b>${dateLabel}</b>${source?`<small class="ricordi-moment-source" data-source-key="${escapeHtml(source.sourceKey)}">${escapeHtml(RICORDI_SOURCE_LABEL[source.kind]||'')}${source.title?` · ${escapeHtml(source.title)}`:''}</small>`:''}${row.caption?`<p>${escapeHtml(row.caption)}</p>`:''}</div></article>`;
+  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(signedUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(row.caption||'')}" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(signedUrl)}" alt="Ricordo condiviso" loading="lazy">${own?`<button class="moment-delete" type="button" aria-label="Opzioni del ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}')"><span class="us-overflow-icon" aria-hidden="true"><svg viewBox="0 0 18 6"><circle cx="3" cy="3" r="2"/><circle cx="9" cy="3" r="2"/><circle cx="15" cy="3" r="2"/></svg></span></button>`:''}<div class="moment-meta"><div class="moment-by">${escapeHtml(author||'Noi')}</div><b>${dateLabel}</b>${source?`<small class="ricordi-moment-source" data-source-key="${escapeHtml(source.sourceKey)}">${escapeHtml(RICORDI_SOURCE_LABEL[source.kind]||'')}${source.title?` · ${escapeHtml(source.title)}`:''}</small>`:''}${row.caption?`<p>${escapeHtml(row.caption)}</p>`:''}</div></article>`;
 }
 function ricordiExperienceCard(row,sourceDate){
   const date=/^\d{4}-\d{2}-\d{2}$/.test(String(sourceDate||''))?String(sourceDate):ricordiLocalISO(row.completed_at);
@@ -2723,17 +2723,32 @@ if(momentViewer){
   },{passive:true});
 }
 
-async function deleteMoment(id,path){
-  if(!window.usProfile)return;
-  if(!(await usConfirm({kicker:'RICORDI',title:'Eliminare questo ricordo?',body:'La foto sparirà per entrambi.',confirmLabel:'Elimina',tone:'danger'})))return;
-  const {error:storageError}=await sb.storage.from('us-media').remove([path]);
-  if(storageError){console.warn(storageError);return toast('Non riesco a eliminare la foto');}
-  const {error:rowError}=await sb.from('moments').delete().eq('id',id).eq('created_by',window.usProfile.id);
-  if(rowError){console.warn(rowError);return toast('Foto eliminata, aggiorno Moments');}
-  toast('Ricordo eliminato');
-  await hydrateMoments();
-  await hydrateHomeMemory();
-  if(path===homePhotoPath){homePhotoPath='';await hydrateHomePhoto(true);}
+// Ricordi delete — the ONLY place a Moment is permanently removed. Callers own
+// the undo grace period (moments-albums.js); this runs once it has expired.
+// Row first (RLS: own row in own couple; .select proves a row really went),
+// then the us-media object through the Storage API, then every surface that
+// can show the photo. Returns false and changes nothing visible on failure.
+async function commitMomentDeletion(id,path){
+  if(!window.usProfile||!id)return false;
+  const {data,error:rowError}=await sb.from('moments').delete().eq('id',id).eq('created_by',window.usProfile.id).select('id');
+  if(rowError||!data?.length){console.warn('[US Ricordi] delete row',rowError||'no row deleted');return false;}
+  if(path){
+    const {error:storageError}=await sb.storage.from('us-media').remove([path]);
+    if(storageError)console.warn('[US Ricordi] storage cleanup',storageError);
+  }
+  try{
+    await hydrateMoments();
+    await hydrateHomeMemory();
+    if(path===homePhotoPath){homePhotoPath='';await hydrateHomePhoto(true);}
+  }catch(error){console.warn('[US Ricordi] refresh after delete',error);}
+  return true;
+}
+window.usCommitMomentDeletion=commitMomentDeletion;
+
+// The card overflow opens the Moment, where the delete control lives.
+function deleteMoment(id){
+  const card=[...document.querySelectorAll('#momentsGrid .moment-card[data-moment-id]')].find(c=>c.dataset.momentId===id);
+  if(card&&typeof window.openUsMomentAlbum==='function')window.openUsMomentAlbum(card,{focusDelete:true});
 }
 window.deleteMoment=deleteMoment;
 

@@ -7,9 +7,9 @@
 
   const kinds = new Set(['text', 'photo', 'audio', 'video', 'music']);
   // Bencho voice-note interaction, adapted to the real US recorder/player.
+  // Tap once to start, tap the same control again to stop: no hold gesture.
   const VOICE_NOTE_BARS = 28;
   const VOICE_SAMPLE_MS = 70;
-  const VOICE_CANCEL_PX = 90;
   const VOICE_MIN_MS = 500;
   const VOICE_MAX_MS = 30000;
   const RECEIVER_AUDIO_STEPS = 5;
@@ -50,11 +50,6 @@
     recordingAnalyser: null,
     recordingAnalyserData: null,
     recordingSource: null,
-    recordingPointerId: null,
-    recordingPointerStartX: 0,
-    recordingPressHeld: false,
-    recordingRequireHold: false,
-    recordingPull: 0,
     previewRaf: 0,
     previewScrubbing: false,
     cameraStream: null,
@@ -129,7 +124,7 @@
         <div class="left-for-you-spl-slab"><div class="left-for-you-spl-track">${steps}</div></div>
         <div class="left-for-you-spl-slab left-for-you-spl-tool">
           <button type="button" class="left-for-you-spl-go" data-left-audio-toggle aria-label="Riproduci">
-            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path data-left-audio-mark-l d="${left}"></path><path data-left-audio-mark-r d="${right}"></path></svg>
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path data-left-audio-mark-l d="${left}"></path><path data-left-audio-mark-r d="${right}"></path></svg>
           </button>
         </div>
       </div>
@@ -911,18 +906,11 @@
     ).join('');
   }
 
-  function setRecordingPull(value) {
-    composer.recordingPull = clamp(Number(value) || 0, 0, 1);
-    const record = document.getElementById('leftForYouComposerAudioRecord');
-    const hint = document.getElementById('leftForYouComposerAudioHint');
-    if (record) {
-      record.style?.setProperty?.('--pull', composer.recordingPull.toFixed(3));
-      record.dataset.armed = composer.recordingPull >= 1 ? 'true' : 'false';
-    }
-    if (hint) {
-      hint.dataset.armed = composer.recordingPull >= 1 ? 'true' : 'false';
-      hint.textContent = composer.recordingPull >= 1 ? 'Rilascia per annullare' : '‹ Scorri per annullare';
-    }
+  function voiceHintText(state) {
+    if (state === 'starting') return 'Un attimo…';
+    if (state === 'recording') return `Tocca per fermare · massimo ${formatRecordingDuration(VOICE_MAX_MS / 1000)}`;
+    if (state === 'ready') return '';
+    return 'Tocca per registrare';
   }
 
   function stopRecordingVisualizer() {
@@ -1065,15 +1053,18 @@
     } else {
       record.setAttribute('role', 'button');
       record.tabIndex = 0;
-      record.setAttribute('aria-label', recording ? 'Registrazione in corso. Rilascia per salvare, scorri a sinistra per annullare.' : 'Tieni premuto per registrare una voce');
+      record.setAttribute('aria-label', recording ? 'Registrazione in corso. Tocca per fermare.' : 'Tocca per registrare una voce');
     }
+    record.setAttribute('aria-pressed', recording ? 'true' : 'false');
     if (idle) idle.hidden = state !== 'idle';
     if (rec) rec.hidden = !recording;
     if (clip) clip.hidden = !ready;
     if (remove) remove.hidden = !ready;
     if (hint) {
-      hint.dataset.on = recording ? 'true' : 'false';
-      hint.hidden = !recording;
+      const text = voiceHintText(state);
+      hint.textContent = text;
+      hint.dataset.phase = record.dataset.phase;
+      hint.hidden = !text;
     }
     if (preview) {
       if (ready && composer.recording?.url && preview.src !== composer.recording.url) {
@@ -1086,7 +1077,6 @@
     }
     if (ready) paintComposerPreview();
     if (state === 'idle') {
-      setRecordingPull(0);
       const timer = document.getElementById('leftForYouComposerAudioTimer');
       if (timer) timer.textContent = '0:00';
     }
@@ -1100,7 +1090,6 @@
 
   function discardRecording() {
     composer.recordingDiscarded = true;
-    composer.recordingPressHeld = false;
     clearRecordingTimer();
     stopComposerPreview();
     stopRecordingVisualizer();
@@ -1119,7 +1108,7 @@
     updateComposerValidity();
   }
 
-  async function startRecording({ requireHold = false } = {}) {
+  async function startRecording() {
     if (composer.sending || composer.recordingState === 'recording' || composer.recordingState === 'starting') return;
     const mediaDevices = window.navigator?.mediaDevices;
     const MediaRecorderCtor = window.MediaRecorder;
@@ -1127,16 +1116,13 @@
       setComposerStatus('La registrazione vocale non è disponibile in questo browser.', 'error');
       return;
     }
-    const heldAtStart = Boolean(requireHold && composer.recordingPressHeld);
     discardRecording();
-    composer.recordingPressHeld = heldAtStart;
     composer.recordingDiscarded = false;
-    composer.recordingRequireHold = requireHold;
     composer.recordingState = 'starting';
     updateRecorderUi();
     try {
       const stream = await mediaDevices.getUserMedia({ audio: true });
-      if (composer.recordingState !== 'starting' || (requireHold && !composer.recordingPressHeld)) {
+      if (composer.recordingState !== 'starting') {
         for (const track of stream.getTracks?.() || stream.tracks || []) track.stop?.();
         composer.recordingState = 'idle';
         updateRecorderUi();
@@ -1195,7 +1181,6 @@
       stopRecordingVisualizer();
       releaseMediaStream();
       composer.mediaRecorder = null;
-      composer.recordingPressHeld = false;
       composer.recordingState = 'idle';
       updateRecorderUi();
       setComposerStatus(error?.name === 'NotAllowedError' ? 'Il microfono non è disponibile. Controlla i permessi e riprova.' : 'Non riesco ad avviare la registrazione. Riprova.', 'error');
@@ -1215,38 +1200,14 @@
     }
   }
 
-  function beginVoicePress(event) {
-    if (composer.sending || composer.recordingState !== 'idle') return;
-    if (event?.button != null && event.button !== 0) return;
-    event?.preventDefault?.();
-    composer.recordingPointerId = event?.pointerId ?? null;
-    composer.recordingPointerStartX = Number(event?.clientX) || 0;
-    composer.recordingPressHeld = true;
-    setRecordingPull(0);
-    try { event?.currentTarget?.setPointerCapture?.(event.pointerId); } catch (_) { /* scripted pointer */ }
-    startRecording({ requireHold: true });
-  }
-
-  function moveVoicePress(event) {
-    if (!composer.recordingPressHeld || (composer.recordingState !== 'recording' && composer.recordingState !== 'starting')) return;
-    if (composer.recordingPointerId != null && event?.pointerId !== composer.recordingPointerId) return;
-    const distance = composer.recordingPointerStartX - (Number(event?.clientX) || composer.recordingPointerStartX);
-    setRecordingPull(distance / VOICE_CANCEL_PX);
-  }
-
-  function endVoicePress(event, { cancel = false } = {}) {
-    if (composer.recordingPointerId != null && event?.pointerId != null && event.pointerId !== composer.recordingPointerId) return;
-    try { event?.currentTarget?.releasePointerCapture?.(event.pointerId); } catch (_) { /* not captured */ }
-    const armed = composer.recordingPull >= 1;
-    composer.recordingPressHeld = false;
-    composer.recordingPointerId = null;
-    if (composer.recordingState === 'starting') {
-      if (cancel || armed) composer.recordingDiscarded = true;
-      return;
-    }
-    if (composer.recordingState !== 'recording') return;
-    if (cancel || armed) discardRecording();
-    else stopRecording();
+  // One control, two taps: idle -> recording -> (tap) -> preview. While the
+  // microphone permission is pending the control ignores taps; a tap while
+  // recording always stops (never discards), so the take is kept for preview.
+  function toggleVoiceRecording(event) {
+    if (event?.target?.closest?.('#leftForYouComposerAudioClip')) return;
+    if (composer.sending) return;
+    if (composer.recordingState === 'idle') startRecording();
+    else if (composer.recordingState === 'recording') stopRecording();
   }
 
   function fileExtension(file) {
@@ -1440,27 +1401,16 @@
     document.getElementById('leftForYouCameraUse')?.addEventListener('click', useCameraPhoto);
     document.getElementById('leftForYouCameraRetake')?.addEventListener('click', retakeCameraPhoto);
     const voiceRecord = document.getElementById('leftForYouComposerAudioRecord');
-    voiceRecord?.addEventListener('pointerdown', beginVoicePress);
-    voiceRecord?.addEventListener('pointermove', moveVoicePress);
-    voiceRecord?.addEventListener('pointerup', (event) => endVoicePress(event));
-    voiceRecord?.addEventListener('pointercancel', (event) => endVoicePress(event, { cancel: true }));
+    voiceRecord?.addEventListener('click', toggleVoiceRecording);
     voiceRecord?.addEventListener('contextmenu', (event) => event.preventDefault());
     voiceRecord?.addEventListener('keydown', (event) => {
-      if ((event.key === ' ' || event.key === 'Enter') && !event.repeat && composer.recordingState === 'idle') {
+      if (event.target !== voiceRecord) return;
+      if ((event.key === ' ' || event.key === 'Enter') && !event.repeat) {
         event.preventDefault();
-        composer.recordingPressHeld = true;
-        startRecording({ requireHold: true });
-      } else if (event.key === 'Escape' && (composer.recordingState === 'recording' || composer.recordingState === 'starting')) {
+        toggleVoiceRecording(event);
+      } else if (event.key === 'Escape' && composer.recordingState === 'recording') {
         event.preventDefault();
-        composer.recordingPressHeld = false;
-        if (composer.recordingState === 'recording') discardRecording();
-      }
-    });
-    voiceRecord?.addEventListener('keyup', (event) => {
-      if ((event.key === ' ' || event.key === 'Enter') && composer.recordingPressHeld) {
-        event.preventDefault();
-        composer.recordingPressHeld = false;
-        if (composer.recordingState === 'recording') stopRecording();
+        discardRecording();
       }
     });
     document.getElementById('leftForYouComposerAudioDelete')?.addEventListener('click', (event) => {
@@ -1519,7 +1469,7 @@
     isUnseen, renderItemMarkup, labelForKind, open, close, load, conserve, retry, boot,
     tap, applyEnvelopeState, updateEntry, envelopeStateFor, envelopeIsResolved, subscribeRealtime, handleIncoming, alignCurrentToRenderedItem,
     setComposerKind, openComposer, closeComposer, send, updateComposerValidity, composerCanSend,
-    startRecording, stopRecording, discardRecording, beginVoicePress, moveVoicePress, endVoicePress,
+    startRecording, stopRecording, discardRecording, toggleVoiceRecording,
     bindAudioStepPlayer, paintAudioStepPlayer, stopActiveAudioPlayer,
     openCamera, closeCamera, switchCamera, captureCameraPhoto, useCameraPhoto, retakeCameraPhoto, discardCameraCapture, composer,
     extractSpotifyTrackId, canonicalSpotifyTrackUrl, spotifyEmbedUrl,
