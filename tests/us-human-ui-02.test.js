@@ -53,11 +53,13 @@ test('top: the pill is only as tall as its 44px controls and content starts righ
   assert.match(tokens, /--us-top-chrome-height:46px;/);
   assert.match(tokens, /--us-top-chrome-clearance:56px;/);
   assert.match(read('identity.css'), /\.top\.us-premium-top\{top:calc\(var\(--us-safe-top\) \+ 6px\);left:max\(34px,var\(--us-safe-left\)\);right:max\(34px,var\(--us-safe-right\)\);padding:0 1px!important;/);
-  // Same three controls, no new permanent surface.
+  // Global shell: Ti penso and Lasciato per te flank the product mark.
   const top = html.split('\n').find((line) => line.includes('<div class="top us-premium-top">')) || '';
-  assert.match(top, /id="usPerVoiTop" onclick="window\.USGameV2\?\.openPerVoi\(\)"/);
+  assert.match(top, /id="thinkButton" class="us-top-think us-premium-control" onclick="sendThinkSignal\(\)"/);
   assert.match(top, /id="leftForYouPartnerEntry"/);
   assert.match(top, /class="us-top-brand"/);
+  assert.doesNotMatch(top, /id="usPerVoiTop"/, 'Per voi belongs to Gioca, not global chrome');
+  assert.equal((html.match(/id="thinkButton"/g) || []).length, 1, 'one global Ti penso action');
 });
 
 test('HUMAN-UI-01 is not reintroduced: no capsule, no floating envelope shell', () => {
@@ -349,4 +351,16 @@ test('Oggi density: arbitration stays authoritative while primary and quiet surf
   const app = read('app.js');
   assert.match(app, /US_OGGI_SURFACES=Object\.freeze\(\['usTodayPriorityRegion','usOggiCalendarWidget','usDailyRitual','usDailyRevealLink','pushOptInCard'\]\)/);
   assert.match(app, /winner\.primary===id\?'primary':winner\.quiet===id\?'quiet':'suppressed'/);
+});
+
+
+test('shell: Ti penso lives in top chrome and Per voi stays inside Gioca', () => {
+  const top = html.split('\n').find((line) => line.includes('<div class="top us-premium-top">')) || '';
+  assert.match(top, /id="thinkButton"/);
+  assert.match(top, /id="leftForYouPartnerEntry"/);
+  assert.doesNotMatch(top, /usPerVoiTop/);
+  assert.equal((html.match(/id="thinkButton"/g) || []).length, 1);
+  assert.match(read('identity.css'), /US-SHELL-THINK-01/);
+  assert.match(read('polish4.css'), /Ti penso is global top chrome/);
+  assert.match(read('games.js'), /data-gv2-action="per-voi"/);
 });
