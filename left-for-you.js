@@ -127,6 +127,9 @@
     el.dataset.usAttention = unseenCount > 0 ? 'on' : 'off';
     const personName = partnerName();
     el.setAttribute('aria-label', closed ? `${personName} ti ha lasciato qualcosa` : `Lascia qualcosa a ${personName}`);
+    // HUMAN-UI-03 — the expanded Island shows what the same tap does.
+    const label = document.getElementById('leftForYouPartnerEntryLabel');
+    if (label) label.textContent = closed ? 'Lasciato per te' : 'Lascia qualcosa';
     if (transition && !closed && wasClosed) {
       el.classList.add('is-opening');
       clearTimeout(envelopeOpeningTimer);
@@ -134,9 +137,23 @@
     }
   }
 
-  function updateEntry(count = 0) {
+  function updateEntry(count = 0, { arrival = false } = {}) {
+    const previous = unseenCount;
     unseenCount = count;
     applyEnvelopeState({ transition: true });
+    if (arrival && count > previous) announceArrival();
+  }
+
+  // HUMAN-UI-03 — a NEW item arriving while US is open (never the initial
+  // load, never while the inbox is already open) morphs the US Island into an
+  // action notice. Only a tap runs the existing tap() → inbox.
+  function announceArrival() {
+    if (root()?.classList.contains('open')) return false;
+    return Boolean(window.UsUiFoundation?.island?.notify?.({
+      key: 'left-for-you', icon: 'envelope', text: `Qualcosa da ${partnerName()}`, actionLabel: 'Apri',
+      onAction: () => tap(),
+      isValid: () => unseenCount > 0 && !root()?.classList.contains('open'),
+    }));
   }
 
   // Pure state derivation: unseen >= 1 → closed (State A); zero → open (State B).
@@ -181,8 +198,9 @@
       currentIndex = 0;
       activeItem = null;
     }
+    const wasResolved = envelopeResolved;
     envelopeResolved = true;
-    updateEntry(pending.length);
+    updateEntry(pending.length, { arrival: wasResolved });
     return items;
   }
 

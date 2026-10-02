@@ -8,14 +8,15 @@ const vm = require('node:vm');
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const html = read('index.html');
-const topBar = html.match(/<div class="top us-premium-top">[\s\S]*?<\/div>\s*<main id="home"/)?.[0] || '';
+// HUMAN-UI-03 — the top bar became the US Island; the canonical mark is its trigger.
+const topBar = html.match(/<div class="us-island" id="usIsland"[\s\S]*?<span class="us-island-live"/)?.[0] || '';
 const foundation = read('ui-foundation.css');
 const CANONICAL = 'assets/derived/brand/us-symbol-apk-foreground-v1.png';
 
 // ---------------------------------------------------------------- TOP BAR
 
 test('top bar: the centre is the canonical identity used by the PWA icon and launcher, not a UI variant', () => {
-  assert.match(topBar, new RegExp(`<div class="us-top-brand" role="img" aria-label="US"><img class="us-top-brand-art" src="/${CANONICAL}"`));
+  assert.match(topBar, new RegExp(`<span class="us-island-mark-art" aria-hidden="true"><img src="/${CANONICAL}"`));
   assert.doesNotMatch(html, /us-symbol-ui-crisp-v1/, 'the old UI logo is used nowhere');
   assert.doesNotMatch(read('service-worker.js'), /us-symbol-ui-crisp-v1/);
   const webManifest = JSON.parse(read('manifest.webmanifest'));
@@ -25,35 +26,21 @@ test('top bar: the centre is the canonical identity used by the PWA icon and lau
   assert.deepEqual(fs.readFileSync(path.join(ROOT, CANONICAL)), fs.readFileSync(path.join(ROOT, 'android/app/src/main/res/drawable-nodpi/us_adaptive_foreground_v1.png')));
 });
 
-test('top bar: accessible, inert, centred, and still three balanced zones', () => {
-  assert.match(topBar, /class="us-top-brand" role="img" aria-label="US"/);
-  assert.match(topBar, /class="us-top-brand-art"[^>]*alt="" aria-hidden="true"/);
-  const css = read('identity.css');
-  assert.match(css, /\.top\.us-premium-top \.us-top-brand\{grid-column:2;[^}]*overflow:hidden;pointer-events:none/);
-  assert.match(css, /\.us-top-brand-art\{[^}]*height:58px;width:58px/, 'the square mark is cropped inside the 38px bar slot');
-  assert.ok(topBar.indexOf('id="usPerVoiTop"') < topBar.indexOf('us-top-brand') && topBar.indexOf('us-top-brand') < topBar.indexOf('id="leftForYouPartnerEntry"'));
+test('top bar: accessible, centred, and still Per voi · US · Left for You when expanded', () => {
+  // HUMAN-UI-03: the mark is now the island's one real button with an accessible name.
+  assert.match(topBar, /<button type="button" class="us-island-mark" id="usIslandTrigger" aria-label="Apri menu US" aria-expanded="false"/);
+  assert.match(topBar, /<span class="us-island-mark-art" aria-hidden="true"><img [^>]*alt=""/);
+  assert.match(foundation, /\.us-island-mark-art\{[^}]*overflow:hidden;pointer-events:none/);
+  assert.match(foundation, /\.us-island-mark-art img\{[^}]*width:46px;height:46px/, 'the square mark is cropped inside the compact pill');
+  assert.ok(topBar.indexOf('id="usPerVoiTop"') < topBar.indexOf('usIslandTrigger') && topBar.indexOf('usIslandTrigger') < topBar.indexOf('id="leftForYouPartnerEntry"'));
 });
 
-// ---------------------------------------------------------------- AURORA
+// ---------------------------------------------------------------- AURORA (retired)
 
-test('aurora: visibility is tunable from two tokens, clearly raised, CSS only', () => {
-  const tokens = foundation.match(/--us-aurora-ambient:([\d.]+);--us-aurora-react:([\d.]+)/);
-  assert.ok(tokens, 'ambient + reaction visibility tokens exist');
-  const [ambient, react] = [Number(tokens[1]), Number(tokens[2])];
-  assert.ok(ambient >= 0.5 && ambient <= 0.75, `ambient ${ambient} is visible but not loud`);
-  assert.ok(react > ambient && react <= 1, 'the reaction is stronger than the ambient state');
-  assert.match(foundation, /opacity:var\(--us-aurora-opacity,var\(--us-aurora-ambient\)\)/);
-  assert.match(foundation, /\[data-us-aurora="react"\] \.us-aurora::before\{--us-aurora-opacity:var\(--us-aurora-react\)/);
-  assert.match(foundation, /animation:us-aurora-drift 12s ease-in-out infinite alternate/, 'same 12s slow cycle');
-  const block = foundation.slice(foundation.indexOf('M12A — Shell aurora'), foundation.indexOf('M12A — Tiles and their destinations'));
-  assert.doesNotMatch(block, /filter:|blur\(/, 'still cheap: no filters');
-  assert.doesNotMatch(read('ui-foundation.js'), /setInterval|requestAnimationFrame\(.*aurora/i);
-});
-
-test('aurora: reduced motion and hidden document behaviour is intact', () => {
-  assert.match(foundation, /:root\[data-us-motion="reduced"\] \.us-aurora::before,\s*:root\[data-us-motion="reduced"\] \.us-aurora::after\{animation:none!important/);
-  assert.match(foundation, /@media \(prefers-reduced-motion:reduce\)\{\s*\.us-aurora::before,\.us-aurora::after\{animation:none!important/);
-  assert.match(foundation, /:root\[data-us-visibility="hidden"\] \.us-aurora::before,\s*:root\[data-us-visibility="hidden"\] \.us-aurora::after\{animation-play-state:paused\}/);
+test('aurora: retired by HUMAN-UI-03 — no tokens, no ambient loop, no JS', () => {
+  assert.doesNotMatch(foundation, /--us-aurora|us-aurora-drift/);
+  assert.doesNotMatch(html, /us-aurora/);
+  assert.doesNotMatch(read('ui-foundation.js'), /aurora/i);
 });
 
 // ---------------------------------------------------------------- EVENTI: information architecture

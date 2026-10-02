@@ -3796,7 +3796,11 @@ async function hydrateThink(){
   const live=document.getElementById('thinkLiveText');if(live&&received)live.textContent=`Ultimo segnale da ${partnerName} · ${relativeSignalAge(received.created_at)}`;
   if(sentReaction){
     const signature=`${sent.id}:${sentReaction.reaction}:${sentReaction.updated_at||''}`;
-    if(usThinkKnownReactionSignature&&usThinkKnownReactionSignature!==signature)toast(`Ha reagito ${thinkReactionLabel(sentReaction.reaction)}`);
+    if(usThinkKnownReactionSignature&&usThinkKnownReactionSignature!==signature){
+      // HUMAN-UI-03 — a passive relationship notice: the Island morphs, it never navigates.
+      const shown=window.UsUiFoundation?.island?.notify?.({key:`think-reaction:${signature}`,icon:'heart',text:`${partnerName} ha reagito ${thinkReactionLabel(sentReaction.reaction)}`});
+      if(!shown)toast(`Ha reagito ${thinkReactionLabel(sentReaction.reaction)}`);
+    }
     usThinkKnownReactionSignature=signature;
   }
   window.UsTodayPriority?.refresh?.();
@@ -3828,14 +3832,22 @@ function handleIncomingThink(row){
   if(!row||row.kind!=='think'||row.recipient_id!==window.usProfile?.id)return;
   usIncomingThink={...row};usThinkReactionFinal=null;usThinkReactionInFlight=false;
   const partner=partnerFromProfiles(window.usBondProfiles||[]);
-  toast(`${partner?.display_name||'L’altra persona'} ti pensa ♡`);
+  const name=partner?.display_name||'L’altra persona';
+  // HUMAN-UI-03 — the arrival morphs the US Island into an action notice;
+  // only a tap opens the existing Ti penso arrival. Without the island (or
+  // while a sheet owns the screen) the existing toast stays the feedback.
+  const shown=window.UsUiFoundation?.island?.notify?.({
+    key:`think:${row.id}`,icon:'heart',text:`${name} ti pensa`,actionLabel:'Apri',
+    onAction:()=>window.openThinkArrival?.(),
+    isValid:()=>usIncomingThink?.id===row.id&&!usThinkReactionFinal
+  });
+  if(!shown)toast(`${name} ti pensa ♡`);
   const heart=document.getElementById('thinkButton');heart?.classList.add('received');setTimeout(()=>heart?.classList.remove('received'),900);
   hydrateThink().catch(()=>{});
   // M12A — the arrival is one calm event: the shared attention state (driven
-  // by the priority item), ONE soft halo on it, the aurora reaction and the
-  // attention tone — only because US is active right now.
+  // by the priority item), ONE soft halo on it and the attention tone — only
+  // because US is active right now.
   window.UsFeedback?.attention?.();
-  window.UsUiFoundation?.auroraPulse?.();
   Promise.resolve(window.UsTodayPriority?.refresh?.()).then(()=>{
     const card=document.querySelector('#usTodayPriorityRegion [data-us-arrival-type="think-received"]');
     window.UsUiFoundation?.playOnce?.(card,'us-attention-pulse',900);
@@ -3968,9 +3980,9 @@ function appViewportBounds(){
   const width=Math.min(window.innerWidth,rect?.width||window.innerWidth);
   const left=rect?Math.max(0,rect.left):Math.max(0,(window.innerWidth-width)/2);
   const navTop=document.querySelector('.nav')?.getBoundingClientRect()?.top||window.innerHeight;
-  const topRect=document.querySelector('.top')?.getBoundingClientRect();
-  const top=Math.max(0,topRect?.bottom||0);
-  return {left,width,top,bottom:Math.min(window.innerHeight,navTop)};
+  // HUMAN-UI-03 — pages are edge-to-edge and own their top clearance: the
+  // swipe preview starts at y=0 like the real page; the Island floats above.
+  return {left,width,top:0,bottom:Math.min(window.innerHeight,navTop)};
 }
 
 function recordSwipeSample(g,x,time){

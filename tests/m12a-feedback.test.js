@@ -261,12 +261,12 @@ function attentionHarness({ hidden = false } = {}) {
   const feedback = createFeedback({ navigator: { vibrate: (p) => { vibrations.push(p); return true; } }, document: doc, AudioContext: audio.AudioContext, localStorage: memoryStorage(), now: () => clock });
   let observerCallback;
   class Observer { constructor(cb) { this.cb = cb; } observe(t, o) { if (o.attributeFilter?.includes('data-us-attention')) observerCallback = this.cb; } disconnect() {} }
-  const bar = { offsetWidth: 0, setAttribute() {}, removeAttribute() {} };
   const documentRef = Object.assign(doc, {
-    body: {}, documentElement: { setAttribute() {} }, querySelector: (s) => (s === '.top.us-premium-top' ? bar : null), querySelectorAll: () => [], removeEventListener() {}
+    body: {}, documentElement: { setAttribute() {} }, querySelector: () => null, querySelectorAll: () => [], removeEventListener() {}
   });
   const handle = install(documentRef, { matchMedia: () => ({ matches: false, addEventListener() {} }), MutationObserver: Observer, setTimeout: () => 1, clearTimeout() {}, UsFeedback: feedback });
-  const topTarget = (value) => ({ getAttribute: () => value, closest: (s) => (s === '.top.us-premium-top' ? {} : null) });
+  // HUMAN-UI-03: the shell controls live inside the US Island.
+  const topTarget = (value) => ({ getAttribute: () => value, classList: { contains: () => false }, closest: (s) => (s === '.us-island' ? {} : null) });
   return { handle, feedback, vibrations, audio, doc, fire: (value, old) => observerCallback([{ target: topTarget(value), oldValue: old }]), advance: (ms) => { clock += ms; } };
 }
 

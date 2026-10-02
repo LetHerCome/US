@@ -76,7 +76,9 @@ test('M5E disables the legacy media surface in the active Web/PWA shell', () => 
 test('M5E partner entry is one unified envelope control, not an avatar or Stories ring', () => {
   const css = read('left-for-you.css');
   const html = read('index.html');
-  assert.match(css, /#leftForYouPartnerEntry\.us-envelope-control\{[^}]*border:1px solid/);
+  // HUMAN-UI-03: the envelope is one US Island action (one control, never an avatar ring).
+  assert.match(html, /<button type="button" class="us-island-action us-envelope-control is-loading" id="leftForYouPartnerEntry"/);
+  assert.equal((html.match(/id="leftForYouPartnerEntry"/g) || []).length, 1);
   assert.match(css, /\.us-envelope-face--closed\{[^}]*mask-image:url\("\/assets\/icons\/phosphor\/envelope-simple-regular\.svg"\)/);
   assert.match(css, /\.us-envelope-face--open\{[^}]*mask-image:url\("\/assets\/icons\/phosphor\/envelope-open-regular\.svg"\)/);
   assert.doesNotMatch(html, /id="leftForYouPartnerBadge"/);
@@ -90,8 +92,10 @@ test('M5F visual shell keeps the top-right slot clean and the empty state intima
   assert.doesNotMatch(html, /leftForYouEmpty[\s\S]*left-for-you-mark/);
   assert.match(css, /\.left-for-you-sheet\{[^}]*width:min\(100%,430px\)/);
   assert.doesNotMatch(html, /id="profileAvatarBtn"/);
-  assert.match(css, /#leftForYouPartnerEntry\.is-loading\{[^}]*pointer-events:none/);
-  assert.match(css, /#leftForYouPartnerEntry:active\{[^}]*transform:scale\(\.94\)/);
+  // HUMAN-UI-03: loading/press states come from the island action primitive.
+  const foundation = read('ui-foundation.css');
+  assert.match(foundation, /\.us-island-action\.is-loading\{[^}]*pointer-events:none/);
+  assert.match(foundation, /\.us-island-action:active\{/);
 });
 
 test('M5E media uses the existing private signed-url helper', () => {

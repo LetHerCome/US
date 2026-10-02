@@ -47,7 +47,8 @@ test('partner apre solo Lasciato per te e il profilo resta un controllo foto', (
   assert.doesNotMatch(html, /id="usCalendarBtn"/);
   // M12A: il centro è il marchio US; "I nostri eventi" resta raggiungibile dal Calendario.
   assert.doesNotMatch(html, /id="usEventsTopEntry"/);
-  assert.match(html, /class="us-top-brand"[^>]*role="img" aria-label="US"/);
+  // HUMAN-UI-03: the centre is the US mark, now the Island trigger.
+  assert.match(html, /class="us-island-mark" id="usIslandTrigger" aria-label="Apri menu US"/);
   assert.match(html, /id="usCalendarEventsLink"[\s\S]{0,200}Eventi/);
   assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,220}Cambia foto profilo/);
   assert.match(read('settings.js'), /window\.pickProfilePhoto\?\.\(\)/);

@@ -67,11 +67,33 @@ function perVoiCopy() {
 
 // ---------------------------------------------------------------- top control
 
+// HUMAN-UI-03 — the top control lives in the US Island. When Per voi turns
+// into "your move" while US is open (a real get_game_v2_home transition, never
+// the first load, never while Gioca is already on screen) the island shows an
+// action notice; only a tap runs the existing openPerVoi().
+let topSeen = null;
+function announcePerVoi(state) {
+  if (document.querySelector('.page.active')?.id === 'quiz') return false;
+  const ready = state === 'reveal_ready';
+  return Boolean(window.UsUiFoundation?.island?.notify?.({
+    key: `per-voi:${state}:${home?.per_voi?.session_id || ''}`,
+    icon: 'sparkle',
+    text: ready ? 'Per voi · risposte pronte' : 'Per voi · tocca a te',
+    actionLabel: ready ? 'Scopri' : 'Apri',
+    onAction: () => openPerVoi(),
+    isValid: () => (home?.per_voi?.state || 'idle') === state,
+  }));
+}
+
 function renderTop() {
   const button = byId('usPerVoiTop');
   if (!button) return;
   const state = home?.per_voi?.state || 'idle';
   const attention = state === 'pending' || state === 'reveal_ready';
+  if (home) {
+    if (topSeen !== null && attention && topSeen !== state) announcePerVoi(state);
+    topSeen = state;
+  }
   button.dataset.gv2State = state;
   button.dataset.usAttention = attention ? 'on' : 'off';
   const labels = {

@@ -232,7 +232,8 @@ test('ti penso: one soft pulse, the shared attention state and the attention ton
   const at = app.indexOf('function handleIncomingThink');
   const body = app.slice(at, app.indexOf('const usRealtimeRefreshTimers', at));
   assert.match(body, /window\.UsFeedback\?\.attention\?\.\(\)/);
-  assert.match(body, /window\.UsUiFoundation\?\.auroraPulse\?\.\(\)/);
+  // HUMAN-UI-03: the aurora is retired; the arrival morphs the US Island instead.
+  assert.match(body, /window\.UsUiFoundation\?\.island\?\.notify\?\.\(\{/);
   assert.match(body, /playOnce\?\.\(card,'us-attention-pulse',900\)/);
   assert.match(body, /\[data-us-arrival-type="think-received"\]/);
   const css = read('ui-foundation.css');

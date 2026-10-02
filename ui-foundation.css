@@ -78,10 +78,17 @@
   --us-muted:var(--us-color-text-2);
   --us-font-editorial:"Newsreader",Georgia,serif;
   --us-font-ui:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  /* HUMAN-UI-02 — compact shell: a slim top pill (44px controls, no extra
-     padding) and a ~56px bottom nav before the device safe area. */
-  --us-top-chrome-height:46px;
-  --us-top-chrome-clearance:56px;
+  /* HUMAN-UI-03 — the top shell is the US Island: a 44px touch row starting
+     2px under the safe-area top inset, a 38px visible pill inside it, and
+     page content starting right below that row (48px past the inset). The
+     ~56px bottom nav (HUMAN-UI-02) is unchanged. */
+  --us-island-top:calc(var(--us-safe-top) + 2px);
+  --us-island-hit:44px;
+  --us-island-inset:3px;
+  --us-island-morph:280ms;
+  --us-island-content:200ms;
+  --us-island-spring:cubic-bezier(.3,1.32,.5,1);
+  --us-top-chrome-clearance:48px;
   /* Spacing: compact 8 · standard 12 · section 18 · page 16 gutter. */
   --us-space-1:4px;
   --us-space-2:8px;
@@ -404,50 +411,77 @@ h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
 :root[data-us-motion="reduced"] .us-attention-pulse::before{animation:none;opacity:0}
 @media (prefers-reduced-motion:reduce){.us-attention-pulse::before{animation:none;opacity:0}}
 
-/* M12A — Shell aurora: ONE ambient light living behind the glass of the top
-   bar. Ambient state = a very slow, low-opacity drift of rose / violet / plum
-   light (transform + opacity only, no JS loop). The same layer reacts: the
-   bar's data-us-aurora="react" (set by UsUiFoundation.auroraPulse) lifts the
-   intensity for ~800ms and runs one travelling highlight, then returns. */
-.top.us-premium-top>.us-aurora{position:absolute;z-index:0;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none;contain:paint;
-  /* M12A.1 — visibility tokens: ambient is clearly there when you look at the
-     bar; the reaction lifts it briefly. Tune here, nowhere else. */
-  --us-aurora-ambient:.62;--us-aurora-react:.96}
-.us-aurora::before,.us-aurora::after{content:"";position:absolute;top:-30%;bottom:-30%;pointer-events:none}
-.us-aurora::before{
-  left:-35%;width:170%;
-  background:
-    radial-gradient(36% 86% at 20% 50%,rgba(255,102,142,.78),transparent 74%),
-    radial-gradient(34% 86% at 52% 44%,rgba(169,133,255,.72),transparent 74%),
-    radial-gradient(32% 86% at 82% 56%,rgba(160,62,150,.74),transparent 74%);
-  opacity:var(--us-aurora-opacity,var(--us-aurora-ambient));
-  transition:opacity 260ms var(--us-ease-standard,ease);
-  animation:us-aurora-drift 12s ease-in-out infinite alternate;
-  will-change:transform;
-}
-.us-aurora::after{
-  left:0;width:38%;
-  background:linear-gradient(100deg,transparent,rgba(255,236,247,.46) 50%,transparent);
-  opacity:0;
-  transform:translate3d(-110%,0,0);
-}
-@keyframes us-aurora-drift{
-  from{transform:translate3d(-14%,0,0) scaleY(1)}
-  to{transform:translate3d(14%,0,0) scaleY(1.1)}
-}
-.top.us-premium-top[data-us-aurora="react"] .us-aurora::before{--us-aurora-opacity:var(--us-aurora-react);animation:us-aurora-drift 12s ease-in-out infinite alternate,us-aurora-surge 800ms var(--us-ease-standard,ease) 1}
-.top.us-premium-top[data-us-aurora="react"] .us-aurora::after{animation:us-aurora-sweep 800ms var(--us-ease-standard,ease) 1 both}
-@keyframes us-aurora-surge{0%,100%{translate:0 0}45%{translate:5% 0}}
-@keyframes us-aurora-sweep{0%{opacity:0;transform:translate3d(-110%,0,0)}25%{opacity:1}100%{opacity:0;transform:translate3d(280%,0,0)}}
-:root[data-us-visibility="hidden"] .us-aurora::before,
-:root[data-us-visibility="hidden"] .us-aurora::after{animation-play-state:paused}
-:root[data-us-motion="reduced"] .us-aurora::before,
-:root[data-us-motion="reduced"] .us-aurora::after{animation:none!important;transition:none;will-change:auto}
-:root[data-us-motion="reduced"] .us-aurora::before{transform:none}
+/* HUMAN-UI-03 — US Island: the ONE top shell. A tiny glass pill with the
+   canonical US mark that morphs (width + content) into the expanded menu or
+   into a notice. Two layers: the page canvas paints to the physical top
+   edge; the island itself always sits below the safe-area top inset, centred
+   between the left/right insets. The 44px row is the touch target; the
+   visible pill is inset inside it. No ambient loop: the only glow is the
+   one-shot arrival/glint, and the attention cue is static. */
+.us-island{position:fixed;z-index:25;top:var(--us-island-top);left:max(12px,var(--us-safe-left));right:max(12px,var(--us-safe-right));height:var(--us-island-hit);display:flex;justify-content:center;pointer-events:none}
+.us-island-shell{position:relative;display:flex;align-items:center;height:100%;max-width:100%;padding:0 3px;box-sizing:border-box;pointer-events:auto;overflow-x:clip;overflow-y:visible;transition:width var(--us-island-morph) var(--us-island-spring)}
+.us-island-shell::before{content:"";position:absolute;z-index:0;inset:var(--us-island-inset) 0;border-radius:var(--us-radius-pill);background:radial-gradient(120% 160% at 50% -40%,rgba(201,154,224,.16),transparent 62%),linear-gradient(180deg,rgba(38,22,44,.78),rgba(12,7,16,.86));border:1px solid rgba(255,234,247,.13);box-shadow:0 6px 18px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.07);backdrop-filter:blur(22px) saturate(140%);-webkit-backdrop-filter:blur(22px) saturate(140%);pointer-events:none;transition:box-shadow var(--us-motion-base) var(--us-ease-standard),border-color var(--us-motion-base) var(--us-ease-standard)}
+.us-island[data-us-island-motion="shrink"] .us-island-shell{transition-timing-function:var(--us-ease-standard)}
+.us-island-shell>*{position:relative;z-index:1}
+.us-island button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.us-island button:focus-visible{outline-offset:-4px;border-radius:var(--us-radius-pill)}
+/* Compact: only the US mark. */
+.us-island-mark{flex:0 0 auto;width:48px;height:var(--us-island-hit);padding:0;border:0;border-radius:var(--us-radius-pill);background:none;display:grid;place-items:center;cursor:pointer}
+.us-island-mark-art{position:relative;display:block;width:38px;height:28px;overflow:hidden;pointer-events:none;user-select:none;-webkit-user-select:none}
+.us-island-mark-art img{position:absolute;left:50%;top:50%;width:46px;height:46px;max-width:none;transform:translate(-50%,-50%);-webkit-user-drag:none}
+.us-island-mark:active .us-island-mark-art{transform:scale(.94)}
+/* Static attention cue (never animated): something waits in the menu. */
+.us-island-mark::after{content:"";position:absolute;top:9px;right:6px;width:7px;height:7px;border-radius:50%;background:#ff8cb8;box-shadow:0 0 0 2px rgba(14,8,18,.92),0 0 8px rgba(255,140,184,.55);opacity:0;transform:scale(.4);transition:opacity var(--us-motion-fast) var(--us-ease-standard),transform var(--us-motion-fast) var(--us-ease-standard)}
+.us-island[data-us-attention="on"]:not([data-us-island="expanded"]) .us-island-mark::after{opacity:1;transform:none}
+/* Expanded: the existing Per voi and Lasciato per te controls. */
+.us-island-action{display:none;flex:0 0 auto;align-items:center;gap:7px;height:var(--us-island-hit);min-width:44px;padding:0 12px;border:0;border-radius:var(--us-radius-pill);background:none;color:rgba(247,242,248,.9);font:600 13px/1 var(--us-font-ui);letter-spacing:-.005em;white-space:nowrap;cursor:pointer}
+.us-island-action:active{color:var(--us-color-text)}
+.us-island-action.is-loading{opacity:.52;pointer-events:none}
+.us-island-action-icon{position:relative;flex:0 0 auto;width:19px;height:19px;display:block}
+.us-island-action[data-us-attention="on"] .us-island-action-icon::after{content:"";position:absolute;top:-3px;right:-4px;width:6px;height:6px;border-radius:50%;background:#ff8cb8;box-shadow:0 0 0 2px rgba(14,8,18,.92)}
+.us-island-action[data-us-attention="on"]{color:#ffe1ec}
+.us-pervoi-icon{background-color:currentColor;-webkit-mask:url("/assets/icons/phosphor/sparkle-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/sparkle-regular.svg") center/contain no-repeat}
+#usPerVoiTop[data-gv2-state="pending"] .us-pervoi-icon,#usPerVoiTop[data-gv2-state="reveal_ready"] .us-pervoi-icon{-webkit-mask-image:url("/assets/icons/phosphor/sparkle-fill.svg");mask-image:url("/assets/icons/phosphor/sparkle-fill.svg")}
+#usPerVoiTop[data-gv2-state="waiting"]{color:rgba(247,242,248,.66)}
+.us-island[data-us-island="expanded"] .us-island-action{display:inline-flex;animation:us-island-content-in var(--us-island-content) var(--us-ease-enter) both}
+.us-island[data-us-island="expanded"] #usPerVoiTop{padding-right:6px;--us-island-from:8px}
+.us-island[data-us-island="expanded"] #leftForYouPartnerEntry{padding-left:6px;--us-island-from:-8px}
+/* Notice / action notice: the island itself becomes the message. */
+.us-island-notice{display:none;flex:0 1 auto;min-width:0;align-items:center;gap:9px;height:var(--us-island-hit);padding:0 6px 0 13px;border:0;border-radius:var(--us-radius-pill);background:none;color:var(--us-color-text);font:600 13px/1.2 var(--us-font-ui);text-align:left;cursor:pointer}
+.us-island[data-us-island="notice"] .us-island-notice{padding-right:16px}
+.us-island[data-us-island="notice"] .us-island-mark,.us-island[data-us-island="action-notice"] .us-island-mark{display:none}
+.us-island[data-us-island="notice"] .us-island-notice,.us-island[data-us-island="action-notice"] .us-island-notice{display:inline-flex;animation:us-island-content-in var(--us-island-content) var(--us-ease-enter) both}
+.us-island-notice-icon{flex:0 0 auto;width:18px;height:18px;background-color:#ff9dc4;-webkit-mask:url("/assets/icons/phosphor/heart-straight-fill.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/heart-straight-fill.svg") center/contain no-repeat}
+.us-island-notice-icon[data-us-notice-icon="envelope"]{background-color:#f3d4ff;-webkit-mask-image:url("/assets/icons/phosphor/envelope-simple-regular.svg");mask-image:url("/assets/icons/phosphor/envelope-simple-regular.svg")}
+.us-island-notice-icon[data-us-notice-icon="sparkle"]{background-color:#ffd3e3;-webkit-mask-image:url("/assets/icons/phosphor/sparkle-fill.svg");mask-image:url("/assets/icons/phosphor/sparkle-fill.svg")}
+.us-island-notice-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.us-island-notice-action{flex:0 0 auto;display:inline-flex;align-items:center;height:30px;padding:0 12px;border-radius:var(--us-radius-pill);background:linear-gradient(135deg,rgba(246,111,158,.92),rgba(169,110,226,.9));color:#fff;font:700 12px/1 var(--us-font-ui)}
+.us-island-notice-action[hidden]{display:none}
+.us-island-notice[aria-busy="true"]{opacity:.7}
+.us-island-live{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.us-island .online-badge{display:none!important}
+@keyframes us-island-content-in{from{opacity:0;transform:translateX(var(--us-island-from,0)) scale(.96)}to{opacity:1;transform:none}}
+/* Event-bound only: one arrival bloom for a notice, one glint for a new attention. */
+.us-island.us-island-arrive .us-island-shell::before{animation:us-island-arrive 700ms var(--us-ease-standard) 1}
+.us-island.us-island-glint .us-island-shell::before{animation:us-island-glint 900ms var(--us-ease-standard) 1}
+@keyframes us-island-arrive{0%{box-shadow:0 6px 18px rgba(0,0,0,.26),0 0 0 0 rgba(255,140,184,0)}35%{box-shadow:0 8px 22px rgba(0,0,0,.3),0 0 22px 2px rgba(255,140,184,.34)}100%{box-shadow:0 6px 18px rgba(0,0,0,.26),0 0 0 0 rgba(255,140,184,0)}}
+@keyframes us-island-glint{0%,100%{border-color:rgba(255,234,247,.13)}40%{border-color:rgba(255,157,205,.55)}}
+/* Reduced motion: no spring travel, no scale: state changes are a quick crossfade. */
+:root[data-us-motion="reduced"] .us-island-shell{transition:none}
+:root[data-us-motion="reduced"] .us-island-action,:root[data-us-motion="reduced"] .us-island-notice{animation-name:us-island-fade!important;animation-duration:120ms!important}
+:root[data-us-motion="reduced"] .us-island-mark:active .us-island-mark-art{transform:none}
 @media (prefers-reduced-motion:reduce){
-  .us-aurora::before,.us-aurora::after{animation:none!important;transition:none;will-change:auto}
-  .us-aurora::before{transform:none}
+  .us-island-shell{transition:none}
+  .us-island[data-us-island] .us-island-action,.us-island[data-us-island] .us-island-notice{animation-name:us-island-fade;animation-duration:120ms}
+  .us-island-mark:active .us-island-mark-art{transform:none}
 }
+@keyframes us-island-fade{from{opacity:0}to{opacity:1}}
+/* Edge-to-edge legibility: a soft veil only inside the status-bar inset, so
+   content scrolled under the system clock stays readable. It has no colour
+   band of its own (it fades to transparent) and is absent where the inset
+   is 0 (browser tabs). Oggi's photo already carries its own top shade. */
+.us-status-veil{position:fixed;z-index:24;top:0;left:0;right:0;height:calc(var(--us-safe-top) + 10px);max-height:calc(var(--us-safe-top) * 2);background:linear-gradient(180deg,rgba(8,4,14,.62),rgba(8,4,14,0));pointer-events:none}
+body:has(#home.page.active) .us-status-veil{display:none}
 
 /* M12A — Tiles and their destinations: a tappable tile presses in, the
    destination content eases in with a short fade + 8px rise. Purely
