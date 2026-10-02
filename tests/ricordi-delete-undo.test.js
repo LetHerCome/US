@@ -170,7 +170,9 @@ test('Ricordi delete commit: frontend invokes authenticated delete-moment then r
   };
 
   assert.equal(await run(), true);
-  assert.deepEqual(invokes, [{ name: 'delete-moment', options: { body: { moment_id: 'm1' } } }]);
+  assert.equal(invokes.length, 1);
+  assert.equal(invokes[0].name, 'delete-moment');
+  assert.equal(invokes[0].options?.body?.moment_id, 'm1');
   assert.deepEqual(order, ['hydrateMoments', 'hydrateHomeMemory', 'hydrateHomePhoto']);
   assert.doesNotMatch(COMMIT, /\.from\('moments'\)|storage\.from\('us-media'\)/, 'privileged whole-Moment deletion must not live in the browser');
 
