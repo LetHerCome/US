@@ -27,6 +27,7 @@ test('Swipe V1 client: Gioca exposes a dedicated sealed 8-card swipe flow', () =
   assert.match(js, /Non è un punteggio/);
 
   assert.match(css, /\.us-gv2-swipe-entry/);
+  assert.match(css, /data-gv2-icon="cards-three"[^\n]*cards-three-regular\.svg/);
   assert.match(css, /\.us-gv2-swipe-card/);
   assert.match(css, /touch-action:pan-y/);
   assert.match(css, /\.us-gv2-swipe-reveal-card/);
