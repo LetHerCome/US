@@ -360,8 +360,8 @@ test('M11F client: the weekly strip reads the server allowance, restrained, neve
   const done = harness({ homeState: home({ per_voi: { state: 'played', session_id: 'p' }, allowance: allowance({ used: 3, per_voi_used: 1, free_used: 2, per_voi_available: false, free_available: false, families: { per_voi: { session_id: 'p', completed: true } } }) }) });
   await tick();
   const dh = done.nodes.quizHub.innerHTML;
-  assert.match(dh, /<b>Nuovi giochi lunedì<\/b>/);
-  assert.match(dh, /Giocato · il prossimo lunedì/, 'Per voi shows its played state');
+  assert.match(dh, /<b>3 di 3<\/b>/);
+  assert.match(dh, /Giocato questa settimana/, 'Per voi shows its played state without repeating the unlock day');
   assert.match(dh, /data-gv2-family="scopritevi" data-gv2-mode-state="locked" aria-disabled="true"/, 'modes stay visible, locked');
   assert.equal(done.nodes.usPerVoiTop.dataset.gv2State, 'played');
   assert.equal(done.nodes.usPerVoiTop.dataset.usAttention, 'off');
