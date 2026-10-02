@@ -274,7 +274,8 @@ test('M12B.5 wiring: Ricordi reads event history and provenance as optional, rea
   assert.match(CORE, /sb\.from\('living_provenance'\)\.select\('source_kind,source_ref,source_title,source_date,target_moment_id'\)/);
   assert.match(CORE, /const eventRows=eventsError\?\[\]:\(events\|\|\[\]\);/);
   assert.match(CORE, /const provenanceRows=provenanceError\?\[\]:\(provenance\|\|\[\]\);/);
-  assert.match(CORE, /renderRicordiRivivi\(ricordiPickRivivi\(timeline,today\),signedUrls,names\);/);
+  assert.match(CORE, /const riviviPick=ricordiPickRivivi\(timeline,today\);/);
+  assert.match(CORE, /renderRicordiRivivi\(riviviPick\?\.reason==='anniversary'\?riviviPick:null,signedUrls,names\);/);
   assert.match(CORE, /renderRicordiChapters\(ricordiChapters\(timeline\),signedUrls\);/);
   assert.doesNotMatch(CORE + ARCHIVE, /\.insert\(|\.update\(|\.delete\(|\.upsert\(|\.rpc\(|link_moment_to_source|conserva_contributions|left_for_you/);
   assert.doesNotMatch(ARCHIVE, /Math\.random|crypto\.|localStorage|sessionStorage/, 'deterministic, no new storage');

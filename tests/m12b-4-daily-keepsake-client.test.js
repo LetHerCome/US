@@ -174,8 +174,9 @@ test('M12B.4 archive wiring: Ricordi reads the keepsakes as an optional enrichme
   assert.match(core, /if\(item\.kind==='daily'\)\{closeRow\(\);html\.push\(ricordiDailyCard\(item\.row\)\);continue;\}/);
   assert.match(core, /keptRows\.map\(r=>\[r\.id,r\.question_date\]\)/, 'a new keepsake re-renders the story');
   assert.match(core, /if\(!rows\?\.length&&!livedRows\.length&&!keptRows\.length&&!eventRows\.length\)/);
-  // M12B.5 deliberately made Rivivi a consumer of the archive entries (kept Dailies included, never unkept ones).
-  assert.match(core, /renderRicordiRivivi\(ricordiPickRivivi\(timeline,today\)/);
+  // The archive selector still sees kept Dailies; US 1.0 paints the card only for a real anniversary.
+  assert.match(core, /const riviviPick=ricordiPickRivivi\(timeline,today\);/);
+  assert.match(core, /renderRicordiRivivi\(riviviPick\?\.reason==='anniversary'\?riviviPick:null,signedUrls,names\);/);
   const css = read('moments-albums.css');
   assert.match(css, /#moments \.ricordi-daily-mark::before\{[^}]*mask-image:url\("\/assets\/icons\/phosphor\/question-regular\.svg"\)/, 'approved Phosphor icon already in the shell');
   assert.match(read('service-worker.js'), /"\/assets\/icons\/phosphor\/question-regular\.svg"/);
