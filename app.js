@@ -1518,7 +1518,7 @@ function renderDailyRitual(model){
   card.hidden=false;
 }
 window.UsDailyRitual=Object.freeze({viewModel:dailyRitualViewModel,render:renderDailyRitual});
-async function refreshTodayPriorities({daily}={}){
+async function refreshTodayPriorities({daily,freshEvents=false}={}){
   const refreshId=++usTodayPriorityRefreshId;
   const dailySource=daily===undefined&&window.todayQuestion?{
     question:window.todayQuestion,
@@ -1536,7 +1536,7 @@ async function refreshTodayPriorities({daily}={}){
   const revealNotice=dailyTodayPriorityViewModel(dailySource);
   if(revealNotice)candidates.push(revealNotice);
   try{
-    const eventSource=await window.getTodayEventPrioritySource?.();
+    const eventSource=await window.getTodayEventPrioritySource?.({fresh:freshEvents});
     const eventPriority=eventTodayPriorityViewModel(eventSource);
     if(eventPriority)candidates.push(eventPriority);
   }catch(error){console.warn('[US Oggi] Events priority',error);}
@@ -3887,7 +3887,7 @@ function scheduleUsRealtimeRefresh(kind){
     }
     if(kind==='events'){
       if(document.getElementById('usEventsOverlay')?.classList.contains('open'))window.hydrateEvents?.();
-      window.UsTodayPriority?.refresh?.();
+      window.UsTodayPriority?.refresh?.({freshEvents:true});
     }
     if(kind==='think-reaction'){hydrateThink().catch(()=>{});return;}
   },180);

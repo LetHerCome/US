@@ -178,9 +178,18 @@ async function hydrateEvents(){
   try{await loadEventsData();render();}
   catch(error){console.warn('[US Events] load',error);const failed='<div class="us-events-empty">Non riesco a caricare gli eventi. Controlla la connessione e riprova.</div>';if(list)list.innerHTML=failed;const surface=$('noiEventsBody');if(surface&&!loadedAt){surfaceSignature='';surface.innerHTML=failed;}}
 }
-async function getTodayEventPrioritySource(){
+// Oggi refreshes that land together (Daily, Ti penso, foreground) share one
+// in-flight read; a realtime Events change always asks for a fresh one.
+let prioritySourceLoad=null;
+async function getTodayEventPrioritySource({fresh=false}={}){
   if(!window.usProfile)return null;
-  await loadEventsData();
+  let load=prioritySourceLoad;
+  if(fresh||!load){
+    load=loadEventsData();prioritySourceLoad=load;
+    const release=()=>{if(prioritySourceLoad===load)prioritySourceLoad=null;};
+    load.then(release,release);
+  }
+  await load;
   return upcomingRows().find(row=>row.days_left>=0&&row.days_left<=2)||null;
 }
 function showBrowse(){$('usEventsBrowse').hidden=false;$('usEventForm').hidden=true;editingId=null;editingOccurrenceDate=null;}
