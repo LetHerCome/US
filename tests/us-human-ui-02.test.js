@@ -104,7 +104,7 @@ test('Gioca: the same six game IDs, in order, as one deck after the Per voi hero
   const html = await gioca(homeOf()).hubHtml();
   const ids = [...html.matchAll(/data-gv2-family="([a-z_]+)"/g)].map((m) => m[1]);
   assert.deepEqual(ids, ['scopritevi', 'confrontatevi', 'ridete', 'quanto_mi_conosci', 'rivivete', 'e_se']);
-  assert.ok(html.indexOf('data-gv2-action="per-voi"') < html.indexOf('us-gv2-deck'), 'Per voi comes first and dominates');
+  assert.ok(html.indexOf('data-gv2-action="per-voi"') < html.indexOf('us-gv2-deck'), 'Per voi remains before the game deck');
   assert.equal((html.match(/data-gv2-action="per-voi"/g) || []).length, 1);
   assert.match(html, /<section class="us-gv2-modes" aria-label="Scegliete voi"><div class="us-gv2-mode-grid us-gv2-deck">/);
 });
@@ -123,6 +123,7 @@ test('Gioca: chips are plain readings of open_rounds / recent, with real counts'
   const html = await gioca(state).hubHtml();
   const chips = [...html.matchAll(/data-gv2-filter="([a-z]+)" aria-pressed="false" aria-controls="usGv2FilterList"><span>([^<]+)<\/span><b>(\d+)<\/b>/g)].map((m) => [m[1], m[2], Number(m[3])]);
   assert.deepEqual(chips, [['turn', 'Tocca a te', 2], ['ready', 'Risposte pronte', 1], ['waiting', 'Aspetti Bea', 1], ['done', 'Completati', 1]]);
+  assert.ok(html.indexOf('us-gv2-filters') < html.indexOf('data-gv2-action="per-voi"'), 'status chips surface before Per voi when rounds exist');
   assert.match(html, /id="usGv2FilterList" aria-live="polite" hidden><\/div>/, 'no list until a chip is chosen');
 });
 
@@ -312,4 +313,14 @@ test('no new dependencies', () => {
   const pkg = JSON.parse(read('package.json'));
   assert.deepEqual(Object.keys(pkg.dependencies).sort(), ['@capacitor/android', '@capacitor/app', '@capacitor/core', '@capacitor/haptics', '@supabase/supabase-js', '@us/widget-bridge']);
   assert.deepEqual(Object.keys(pkg.devDependencies).sort(), ['@capacitor/cli', '@electric-sql/pglite', 'esbuild']);
+});
+
+
+test('Gioca density: played Per voi, deck and weekly question use compact hub geometry', () => {
+  const css = read('games.css');
+  assert.match(css, /US-GIOCA-DENSITY-01/);
+  assert.match(css, /#quiz \.us-gv2-pervoi\[data-gv2-state="played"\]\{[\s\S]*?min-height:64px/);
+  assert.match(css, /#quiz \.us-gv2-mode\{[\s\S]*?width:116px;[\s\S]*?min-height:126px/);
+  assert.match(css, /#quiz \.us-gv2-weekly\.is-open\{[\s\S]*?grid-template-columns:minmax\(0,1fr\) auto/);
+  assert.match(css, /body:has\(#quiz\.page\.active\) #thinkButton\{display:none!important\}/);
 });
