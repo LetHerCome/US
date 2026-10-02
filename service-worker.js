@@ -1,4 +1,4 @@
-const BUILD_ID = "us-rewards-v2-20261002-1";
+const BUILD_ID = "us-device-personal-v1-20261002-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
