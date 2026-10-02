@@ -44,6 +44,10 @@ test('Bencho voice note replaces the native Left for You recorder surface', () =
   assert.match(css, /width:min\(216px,100%\)/);
   assert.match(css, /width:min\(316px,100%\)/);
   assert.match(css, /grid-template-columns:repeat\(28/);
+  assert.match(css, /\.left-for-you-vn-mic::before\{[\s\S]*left:50%/);
+  assert.match(css, /\.left-for-you-vn-mic i::after\{/);
+  assert.match(css, /\.left-for-you-vn-playmark\{[\s\S]*transform:translateX\(1px\)/);
+  assert.match(css, /\.left-for-you-vn-play\[data-playing="true"\] \.left-for-you-vn-playmark\{[\s\S]*translateX\(0\)/);
   assert.match(css, /prefers-reduced-motion:reduce/);
 });
 
@@ -66,6 +70,8 @@ test('received Left for You audio uses the Bencho step-player instead of native 
   assert.match(js, /morphAudioPlayerMark/);
   assert.match(js, /audio\.currentTime = \(index \/ dots\.length\) \* audio\.duration/);
   assert.match(css, /\.left-for-you-spl-dot\[aria-current="step"\]/);
+  assert.match(css, /\.left-for-you-spl-go svg\{[\s\S]*transform:translateX\(1px\)/);
+  assert.match(css, /\.left-for-you-step-player\[data-playing="true"\] \.left-for-you-spl-go svg\{[\s\S]*translateX\(0\)/);
   assert.match(css, /@keyframes left-for-you-step-wake/);
 });
 
