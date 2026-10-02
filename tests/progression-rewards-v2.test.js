@@ -178,8 +178,8 @@ test('Rewards V2 client: equipped slots paint locally; re-tap unequips without a
 test('Rewards V2 client: two phones can equip different cosmetics from the same shared progression state', async () => {
   const serverPrefs = { frame_reward_id: null, theme_reward_id: 'theme_film', accent_reward_id: null, effect_reward_id: null, badge_reward_id: null, sticker_reward_id: null, ring_reward_id: null };
   const sharedState = () => ({
-    total_xp: 6000, level: 9, rhythm_days: 2, rhythm_today: true,
-    rewards: catalog.map((r) => ({ ...r, unlocked: r.level_required <= 9, equipped: serverPrefs[`${r.category}_reward_id`] === r.id })),
+    total_xp: 12000, level: 12, rhythm_days: 2, rhythm_today: true,
+    rewards: catalog.map((r) => ({ ...r, unlocked: r.level_required <= 12, equipped: serverPrefs[`${r.category}_reward_id`] === r.id })),
     pending_unlocks: [], next_reward: null, preferences: { ...serverPrefs }
   });
   const phoneA = runProgression(() => sharedState());
