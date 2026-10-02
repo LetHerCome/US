@@ -105,17 +105,18 @@ test('Motion 3 legacy e Motion Pass inutilizzato non restano nel runtime', () =>
   assert.match(read('app.js'), /us-motion31-current/);
 });
 
-test('i piccoli controlli delete e overflow hanno target 44px e icone SVG stabili', () => {
+test('i controlli delete restano espliciti e hanno target 44px', () => {
   const app = read('app.js');
   const albums = read('moments-albums.js');
-  const css = read('moments-albums.css');
+  const albumCss = read('moments-albums.css');
+  const styles = read('styles.css');
 
-  assert.match(app, /class="us-overflow-icon"/);
+  assert.match(app, /class="moment-delete"[^>]*aria-label="Elimina ricordo"[^>]*>Elimina<\/button>/);
+  assert.doesNotMatch(app, /class="us-overflow-icon"/, 'Ricordi usa un’azione Elimina esplicita, non un overflow ambiguo');
   assert.match(albums, /class="us-delete-icon"/);
-  assert.doesNotMatch(app, /class="moment-delete"[^>]*>×<\/button>/);
   assert.doesNotMatch(albums, /class="us-album-photo-delete"[^>]*>×<\/button>/);
-  assert.match(css, /\.moment-delete\{[^}]*width:44px[^}]*height:44px/s);
-  assert.match(css, /\.us-album-photo-delete\{[^}]*width:44px[^}]*height:44px/s);
+  assert.match(styles, /\.moment-delete\{[^}]*height:44px/s);
+  assert.match(albumCss, /\.us-album-photo-delete\{[^}]*width:44px[^}]*height:44px/s);
 });
 
 test('Settings riusa il proprio modal al posto dei confirm browser', () => {
