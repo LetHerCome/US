@@ -95,3 +95,16 @@ test('M8A icon authority: the lived experience mark is the approved Phosphor hea
   assert.match(read('moments-albums.css'), /#moments \.ricordi-experience-mark::before\{[^}]*mask:url\("\/assets\/icons\/phosphor\/heart-straight-regular\.svg"\)/);
   assert.ok(fs.existsSync(path.join(ROOT, 'assets/icons/phosphor/heart-straight-regular.svg')));
 });
+
+
+test('M8A density pass: Ricordi prioritizes memories over chrome without changing archive order', () => {
+  const css = read('moments-albums.css');
+  assert.match(css, /US-RICORDI-DENSITY-01/);
+  assert.match(css, /#moments \.ricordi-rivivi-card:not\(\.ricordi-rivivi-note\)\{[\s\S]*?grid-template-columns:108px minmax\(0,1fr\)/);
+  assert.match(css, /#moments \.us-conservati-entry\{[\s\S]*?min-height:54px/);
+  assert.match(css, /#moments \.ricordi-story \.moment-card\.moment-postit\.ricordi-feature img\{\s*aspect-ratio:16\/9!important;/);
+  assert.match(css, /body:has\(#moments\.page\.active\) #thinkButton\{\s*display:none!important;/);
+  const page = read('index.html').match(/<main id="moments" class="page">[\s\S]*?<\/main>/)?.[0] || '';
+  const order = ['id="ricordiRivivi"', 'id="conservatiEntry"', 'Mese per mese', 'id="momentsGrid"'].map((s) => page.indexOf(s));
+  assert.deepEqual([...order].sort((a,b)=>a-b), order);
+});
