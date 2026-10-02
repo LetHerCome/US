@@ -31,6 +31,7 @@ html,body{
   line-height:1;
 }
 .us-brand-symbol-art{display:block;width:58px;height:39px;object-fit:contain}
+.top .us-brand-symbol-art{width:52px;height:34px}
 .auth-logo.us-brand-symbol{margin-bottom:11px}
 .auth-logo .us-brand-symbol-art{width:132px;height:88px}
 .us-settings2-brand-mini .us-brand-symbol-art{width:36px;height:24px}
@@ -69,6 +70,8 @@ textarea,input{background:var(--us-field-bg)!important;border-color:rgba(255,255
 }
 
 /* --- Top chrome ------------------------------------------------- */
+.top.us-premium-top{border-bottom:0}
+.us-premium-top .top-actions{gap:8px}
 .online-badge{
   letter-spacing:.015em;
 }
@@ -175,10 +178,17 @@ textarea,input{background:var(--us-field-bg)!important;border-color:rgba(255,255
 .us-nav-premium button.active .us-nav-icon-on{color:#ee91ff}
 .us-nav-premium button.active .nlabel{font-weight:600;color:var(--us-color-text)}
 
+/* M1 top chrome: APK shell treatment only; Home layout remains Web-owned. */
+.top.us-premium-top{position:absolute;z-index:10;top:max(0px,calc(var(--us-safe-top) - 3px));left:10px;right:10px;height:var(--us-top-chrome-height);padding:4px 16px!important;display:flex;align-items:center;justify-content:space-between;background:transparent!important;border:1px solid rgba(255,247,251,.12);border-radius:28px;box-sizing:border-box;overflow:hidden;box-shadow:0 10px 28px rgba(0,0,0,.18);isolation:isolate}
+.top.us-premium-top::before{content:"";position:absolute;z-index:0;top:0;left:0;right:0;height:var(--us-top-chrome-clearance);border-radius:inherit;background:linear-gradient(180deg,rgba(12,9,15,.48),rgba(12,9,15,.14) 72%,transparent);backdrop-filter:blur(18px) saturate(120%);-webkit-backdrop-filter:blur(18px) saturate(120%);pointer-events:none}
+.top.us-premium-top>*{position:relative;z-index:1}
+.top.us-premium-top .top-actions{gap:10px}
+.top.us-premium-top .online-badge{display:none!important}
+.top.us-premium-top .profile-avatar,.top.us-premium-top .us-calendar-btn{width:44px!important;height:44px!important;min-width:44px!important;min-height:44px!important}
+.top.us-premium-top .us-calendar-btn{background:rgba(12,9,15,.48)!important;border:1px solid rgba(255,247,251,.14)!important;backdrop-filter:blur(18px) saturate(120%);-webkit-backdrop-filter:blur(18px) saturate(120%)}
+.top.us-premium-top .profile-avatar{background:linear-gradient(145deg,rgba(242,85,101,.42),rgba(82,149,255,.3))!important;border:1px solid rgba(255,247,251,.14)!important;box-shadow:none!important}
 #home #usTodayPriorityRegion[hidden]{display:none!important}
-/* HUMAN-UI-03 — edge-to-edge: .app no longer reserves the status-bar inset; each page
-   starts its own content under the inset + the Island row, its canvas reaches y=0. */
-#bond,#moments,#quiz{padding-top:calc(var(--us-safe-top) + var(--us-top-chrome-clearance));box-sizing:border-box}
+#bond,#moments,#quiz{padding-top:calc(var(--us-top-chrome-clearance) + var(--us-space-2));box-sizing:border-box}
 #bond>.section,#moments>.section,#quiz>.section{margin-top:0!important}
 
 
@@ -252,14 +262,42 @@ button:focus-visible,
    shared nav clearance of .app is dropped here instead of clipping it. */
 body:has(#home.page.active) .app{padding-bottom:0!important}
 #home.page.active{padding-bottom:0!important}
-#home .home-hero-only{height:var(--us-viewport-height)!important;min-height:0!important}
+#home .home-hero-only{height:calc(var(--us-viewport-height) - var(--us-safe-top))!important;min-height:0!important}
 #home .home-distance-pill{bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 18px)!important}
 /* M10A — the opt-in sits above the bottom row instead of covering it.
    M12B.1 — that row also holds the Ti penso button (nav + 25px, 48px tall),
    so the card clears it too: 25 + 48 + 10px gap. */
 #home .push-optin-card{bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 83px)!important}
 
+/* M1 topbar refinement: three balanced zones inside the approved pill. */
+.top.us-premium-top{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);column-gap:6px;justify-content:initial}
+.top.us-premium-top .top-actions{grid-column:3;justify-self:end;min-width:0;gap:6px}
+/* M12A — the centre of the shell is the product: the approved US mark, never a feature. */
+.top.us-premium-top .us-top-brand{grid-column:2;justify-self:center;align-self:center;position:relative;width:48px;height:38px;overflow:hidden;pointer-events:none;user-select:none;-webkit-user-select:none}
+.us-top-brand-art{position:absolute;left:50%;top:50%;height:58px;width:58px;max-width:none;transform:translate(-50%,-50%);-webkit-user-drag:none}
+.top.us-premium-top .us-top-left{grid-column:1;justify-self:start;display:flex;align-items:center;min-width:0}
+/* Game V2 — Per voi top control: the sparkle mirrors the envelope control;
+   its personal state rides the shared attention orbit, never a counter. */
+#usPerVoiTop.us-pervoi-top{--us-attention-inset:-3px;position:relative;width:38px;height:38px;padding:0;border:1px solid rgba(255,234,247,.10);border-radius:50%;background:rgba(255,255,255,.05);color:rgba(247,242,248,.84);display:grid;place-items:center;overflow:visible;box-shadow:none;transition:transform var(--us-motion-press) var(--us-ease-standard),background var(--us-motion-press) var(--us-ease-standard),color var(--us-motion-press) var(--us-ease-standard)}
+#usPerVoiTop:active{transform:scale(.94);background:rgba(246,111,158,.14);color:var(--us-color-text)}
+#usPerVoiTop.is-loading{opacity:.52;pointer-events:none}
+#usPerVoiTop .us-pervoi-icon{width:19px;height:19px;display:block;background-color:currentColor;-webkit-mask:url("/assets/icons/phosphor/sparkle-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/sparkle-regular.svg") center/contain no-repeat}
+#usPerVoiTop[data-gv2-state="pending"] .us-pervoi-icon,#usPerVoiTop[data-gv2-state="reveal_ready"] .us-pervoi-icon{-webkit-mask-image:url("/assets/icons/phosphor/sparkle-fill.svg");mask-image:url("/assets/icons/phosphor/sparkle-fill.svg");color:#ffd3e3}
+#usPerVoiTop[data-gv2-state="waiting"]{color:rgba(247,242,248,.62)}
+@media(prefers-reduced-motion:reduce){#usPerVoiTop{transition:none}#usPerVoiTop:active{transform:none}}
+.top.us-premium-top .us-brand-symbol-art{width:58px;height:39px}
+.top.us-premium-top .profile-avatar,.top.us-premium-top .us-calendar-btn{min-width:44px;min-height:44px}
+.top.us-premium-top .us-shell-icon{width:20px;height:20px}
+.top.us-premium-top .profile-avatar .fallback::before{width:20px;height:20px}
+.top.us-premium-top .profile-avatar .camera-dot{width:17px;height:17px}
+
 @media(max-width:360px){
+  .top.us-premium-top .us-brand-symbol-art{width:52px;height:34px}
+  .top.us-premium-top{column-gap:2px}
+  .top.us-premium-top .top-actions{gap:4px}
+  .top .us-brand-symbol-art{width:48px;height:32px}
+  .top{gap:8px}
+  .top-actions{gap:4px}
   .us-nav.us-nav-premium .us-nav-icon{width:23px;height:23px}
 }
 @media(orientation:landscape) and (max-height:560px){
@@ -268,12 +306,18 @@ body:has(#home.page.active) .app{padding-bottom:0!important}
   .us-nav.us-nav-premium button .nicon{height:26px!important;min-height:26px!important}
   .us-nav.us-nav-premium .us-nav-icon{width:22px;height:22px}
 }
+@media(max-width:420px){.top .online-badge{display:none!important}}
 @media(prefers-reduced-motion:reduce){
   .us-id-loader i{animation:none!important}
 }
 
 /* ===== MOBILE POLISH 20260922 ===== */
-#settings{height:var(--us-viewport-height);overflow-y:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;padding-top:calc(var(--us-safe-top) + var(--us-top-chrome-clearance));box-sizing:border-box}
+/* HUMAN-UI-02 — the pill is only as tall as its 44px controls. */
+.top.us-premium-top{top:calc(var(--us-safe-top) + 6px);padding:0 1px!important;border-radius:999px;background:linear-gradient(145deg,rgba(255,255,255,.085),rgba(255,255,255,.025)),rgba(17,20,27,.68)!important;border-color:rgba(255,255,255,.14);box-shadow:0 18px 44px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08);backdrop-filter:blur(25px) saturate(155%);-webkit-backdrop-filter:blur(25px) saturate(155%);overflow:visible}
+.top.us-premium-top::before{background:linear-gradient(180deg,rgba(255,255,255,.10),transparent 70%);backdrop-filter:none;-webkit-backdrop-filter:none}
+.top.us-premium-top .top-actions{width:auto;min-width:88px;justify-content:flex-end;gap:4px}
+.top.us-premium-top .us-top-profiles{width:44px;justify-content:flex-end;margin-left:0}
+#settings{height:calc(var(--us-viewport-height) - var(--us-safe-top));overflow-y:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;padding-top:calc(var(--us-top-chrome-clearance) + 10px);box-sizing:border-box}
 #settings .us-settings2-page{padding-top:4px!important;padding-bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 28px)!important}
 .noi-canonical-page{height:auto!important;min-height:calc(var(--us-viewport-height) - var(--us-top-chrome-clearance) - var(--us-safe-top) - var(--us-safe-bottom) - 12px);overflow:visible!important}
 .noi-living-section{overflow:visible!important}

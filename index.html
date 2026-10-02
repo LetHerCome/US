@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<meta name="theme-color" content="#08040e"/>
+<meta name="theme-color" content="#0a0a0e"/>
 <meta name="color-scheme" content="dark"/>
-<meta name="us-build" content="us-human-ui-03-20261002-1"/>
+<meta name="us-build" content="us-human-ui-02-20261002-1"/>
 <!-- Game V2 production rollout -->
 <link rel="manifest" href="/manifest.webmanifest?v=us-pwa-logo-v2"/>
 <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=us-pwa-logo-v2"/>
@@ -18,17 +18,17 @@
 <title>US — Francesco & Beatrice</title>
 <link rel="stylesheet" href="/styles.css"/>
 <link rel="stylesheet" href="/ui-foundation.css"/>
-<link rel="stylesheet" href="/fix4.css?v=fix4-us-human-ui-03-20261002-1"/>
-<link rel="stylesheet" href="/events.css?v=us-human-ui-03-20261002-1" media="print" onload="this.media='all'"/>
-<link rel="stylesheet" href="/moments-albums.css?v=us-human-ui-03-20261002-1" media="print" onload="this.media='all'"/>
-<link rel="stylesheet" href="/games.css?v=us-human-ui-03-20261002-1" media="print" onload="this.media='all'"/>
-<link rel="stylesheet" href="/settings.css?v=us-human-ui-03-20261002-1"/>
-<link rel="stylesheet" href="/identity.css?v=us-identity3-us-human-ui-03-20261002-1"/>
-<link rel="stylesheet" href="/settings2.css?v=us-human-ui-03-20261002-1" media="print" onload="this.media='all'"/>
-<link rel="stylesheet" href="/polish4.css?v=us-human-ui-03-20261002-1"/>
+<link rel="stylesheet" href="/fix4.css?v=fix4-us-human-ui-02-20261002-1"/>
+<link rel="stylesheet" href="/events.css?v=us-human-ui-02-20261002-1" media="print" onload="this.media='all'"/>
+<link rel="stylesheet" href="/moments-albums.css?v=us-human-ui-02-20261002-1" media="print" onload="this.media='all'"/>
+<link rel="stylesheet" href="/games.css?v=us-human-ui-02-20261002-1" media="print" onload="this.media='all'"/>
+<link rel="stylesheet" href="/settings.css?v=us-human-ui-02-20261002-1"/>
+<link rel="stylesheet" href="/identity.css?v=us-identity3-us-human-ui-02-20261002-1"/>
+<link rel="stylesheet" href="/settings2.css?v=us-human-ui-02-20261002-1" media="print" onload="this.media='all'"/>
+<link rel="stylesheet" href="/polish4.css?v=us-human-ui-02-20261002-1"/>
 <link rel="stylesheet" href="/stories.css"/>
-<link rel="stylesheet" href="/left-for-you.css?v=us-human-ui-03-20261002-1"/>
-<link rel="stylesheet" href="/calendar.css?v=us-human-ui-03-20261002-1"/>
+<link rel="stylesheet" href="/left-for-you.css?v=us-m5i-ephemeral-20260930-1"/>
+<link rel="stylesheet" href="/calendar.css?v=us-human-ui-02-20261002-1"/>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://iiakdfsxpywdkxravqjh.supabase.co" crossorigin>
 <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
@@ -146,20 +146,7 @@ html.us-returning-device .auth-overlay{
 
 <div class="app">
 
-  <!-- HUMAN-UI-03 — the ONE top shell: the adaptive US Island. Compact = the US mark;
-       expanded = Per voi · US · Lascia qualcosa (the same controls as before, same
-       handlers and ids); notice = an existing in-app arrival morphing the island. -->
-  <div class="us-status-veil" aria-hidden="true"></div>
-  <div class="us-island" id="usIsland" data-us-island="compact" data-us-attention="off">
-    <div class="us-island-shell" id="usIslandShell">
-      <button type="button" class="us-island-action us-pervoi-top is-loading" id="usPerVoiTop" onclick="window.USGameV2?.openPerVoi()" aria-label="Per voi" aria-busy="true" data-us-attention="off" data-gv2-state="idle"><span class="us-island-action-icon us-pervoi-icon" data-us-attention-icon aria-hidden="true"></span><span class="us-island-label" aria-hidden="true">Per voi</span></button>
-      <button type="button" class="us-island-mark" id="usIslandTrigger" aria-label="Apri menu US" aria-expanded="false" aria-controls="usIslandShell"><span class="us-island-mark-art" aria-hidden="true"><img src="/assets/derived/brand/us-symbol-apk-foreground-v1.png" alt="" decoding="async" draggable="false"></span></button>
-      <button type="button" class="us-island-action us-envelope-control is-loading" id="leftForYouPartnerEntry" onclick="usEnvelopeTap()" aria-label="Lasciato per te" aria-busy="true" data-us-envelope data-us-attention="off"><span class="us-island-action-icon us-envelope-icon" data-us-attention-icon aria-hidden="true"><span class="us-envelope-face us-envelope-face--closed" data-icon="/assets/icons/phosphor/envelope-simple-regular.svg"></span><span class="us-envelope-face us-envelope-face--open" data-icon="/assets/icons/phosphor/envelope-open-regular.svg"></span></span><span class="us-island-label" id="leftForYouPartnerEntryLabel" aria-hidden="true">Lascia qualcosa</span></button>
-      <button type="button" class="us-island-notice" id="usIslandNotice" tabindex="-1"><span class="us-island-notice-icon" aria-hidden="true"></span><span class="us-island-notice-text"></span><span class="us-island-notice-action" aria-hidden="true"></span></button>
-    </div>
-    <span class="us-island-live" id="usIslandLive" role="status" aria-live="polite"></span>
-    <div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden>
-  </div>
+  <div class="top us-premium-top"><span class="us-aurora" aria-hidden="true"></span><div class="us-top-left"><button type="button" class="us-pervoi-top us-important-control us-attention-orbit is-loading" id="usPerVoiTop" onclick="window.USGameV2?.openPerVoi()" aria-label="Per voi" aria-busy="true" data-us-attention="off" data-gv2-state="idle"><span class="us-pervoi-icon" data-us-attention-icon aria-hidden="true"></span></button></div><div class="us-top-brand" role="img" aria-label="US"><img class="us-top-brand-art" src="/assets/derived/brand/us-symbol-apk-foreground-v1.png" alt="" aria-hidden="true" decoding="async" draggable="false"></div><div class="top-actions"><button type="button" class="us-envelope-control us-important-control us-attention-orbit is-loading" id="leftForYouPartnerEntry" onclick="usEnvelopeTap()" aria-label="Lasciato per te" aria-busy="true" data-us-envelope data-us-attention="off"><span class="us-envelope-mark" aria-hidden="true"><span class="us-envelope-icon" data-us-attention-icon><span class="us-envelope-face us-envelope-face--closed" data-icon="/assets/icons/phosphor/envelope-simple-regular.svg"></span><span class="us-envelope-face us-envelope-face--open" data-icon="/assets/icons/phosphor/envelope-open-regular.svg"></span></span></span></button><div class="online-badge warn" id="onlineBadge" role="status" aria-live="polite">● connessione…</div><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden></div></div>
 
   <main id="home" class="page active">
     <section class="hero home-hero-only" id="homeHero" aria-label="Un vostro ricordo">
@@ -806,15 +793,15 @@ html.us-returning-device .auth-overlay{
 <script defer src="/app.js"></script>
 <script defer src="/stories.js"></script>
 <script defer src="/fix4.js?v=fix4-us-m11-game-v2-20260930-1"></script>
-<script defer src="/left-for-you.js?v=us-human-ui-03-20261002-1"></script>
-<script defer src="/events.js?v=us-human-ui-03-20261002-1"></script>
-<script defer src="/games.js?v=us-human-ui-03-20261002-1"></script>
+<script defer src="/left-for-you.js?v=us-m5j-conservati-20260925-1"></script>
+<script defer src="/events.js?v=us-human-ui-02-20261002-1"></script>
+<script defer src="/games.js?v=us-human-ui-02-20261002-1"></script>
 <script defer src="/settings.js?v=us-m11-game-v2-20260930-1"></script>
 <script defer src="/identity.js?v=us-identity2-us-m11-game-v2-20260930-1"></script>
 <script defer src="/polish4.js?v=us-final-polish-motion31-1"></script>
-<script defer src="/moments-albums.js?v=us-human-ui-03-20261002-1"></script>
+<script defer src="/moments-albums.js?v=us-human-ui-02-20261002-1"></script>
 <script defer src="/calendar-domain.js?v=us-m6c1-duration-1"></script>
-<script defer src="/calendar.js?v=us-human-ui-03-20261002-1"></script>
+<script defer src="/calendar.js?v=us-human-ui-02-20261002-1"></script>
 <script defer src="/navigation.js?v=us-m11-game-v2-20260930-1"></script>
 <script defer src="/ui-foundation.js"></script>
 </body></html>

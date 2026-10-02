@@ -6,8 +6,10 @@ radial-gradient(circle at 90% 10%,rgba(169,133,255,.10),transparent 28%),var(--b
 color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
 body{min-height:100vh}
 .app{max-width:480px;margin:0 auto;min-height:100vh;padding:var(--us-safe-top) 16px calc(92px + var(--us-safe-bottom))}
+.top{padding:18px 4px 12px;display:flex;justify-content:space-between;align-items:center}
 .brand{font-family:Georgia,serif;font-style:italic;font-size:31px;letter-spacing:-1px}
 .heart{color:var(--pink)}
+.top-actions{display:flex;align-items:center;gap:9px}
 .profile-avatar{position:relative;width:40px;height:40px;border-radius:50%;padding:0;border:1px solid rgba(255,255,255,.16);background:linear-gradient(135deg,var(--us-color-rose),#7e6bff);display:grid;place-items:center;color:white;font-weight:800;overflow:visible;box-shadow:var(--shadow)}
 .profile-avatar img,.pair-avatar img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
 .profile-avatar .fallback,.pair-avatar .fallback{display:grid;place-items:center;width:100%;height:100%;border-radius:inherit}
@@ -267,9 +269,9 @@ body.viewer-open{overflow:hidden}
 
 /* M6E — Oggi calendar widget + Focus Photo fade. */
 /* M10A — Oggi si legge dall'alto: priorità personale → impegni di oggi → Domanda del giorno, in UNA colonna (niente sovrapposizioni). */
-.us-oggi-stack{position:absolute;z-index:4;top:calc(var(--us-safe-top) + var(--us-top-chrome-clearance) + 56px);left:14px;right:14px;display:flex;flex-direction:column;gap:8px;pointer-events:none;transition:opacity var(--us-motion-base) var(--us-ease-standard)}
-/* HUMAN-UI-03 — the hero starts at y=0 (edge-to-edge): the stack clears the inset + the Island row. */
-@media(max-width:600px){.us-oggi-stack{top:calc(var(--us-safe-top) + var(--us-top-chrome-clearance) + 8px)}}
+.us-oggi-stack{position:absolute;z-index:4;top:calc(var(--us-top-chrome-clearance) + 64px);left:14px;right:14px;display:flex;flex-direction:column;gap:8px;pointer-events:none;transition:opacity var(--us-motion-base) var(--us-ease-standard)}
+/* The app and top bar already share the safe-top inset; relative to the hero, it cancels. */
+@media(max-width:600px){.us-oggi-stack{top:calc(var(--us-top-chrome-height) + 20px)}}
 .us-oggi-widgets{position:relative;z-index:3;display:flex;flex-direction:column;gap:8px;pointer-events:auto;transition:opacity var(--us-motion-base) var(--us-ease-standard)}
 .us-oggi-widgets[hidden]{display:none!important}
 .us-oggi-card{min-height:44px;width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:18px;border:1px solid rgba(255,255,255,.14);background:rgba(10,12,17,.46);backdrop-filter:blur(18px) saturate(150%);-webkit-backdrop-filter:blur(18px) saturate(150%);color:#fff;text-align:left;box-shadow:0 10px 30px rgba(0,0,0,.18)}

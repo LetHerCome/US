@@ -139,10 +139,10 @@ test('M10.1B: il controllo top-left “Oggi / Domanda” (todayOrb) è rimosso',
   for (const file of fs.readdirSync(ROOT).filter((f) => f.endsWith('.css'))) {
     assert.doesNotMatch(read(file), /today-orb|\.brand-row/, `${file}: CSS obsoleto rimosso`);
   }
-  // HUMAN-UI-03: la top shell è l'Isola US; espansa resta Per voi · marchio US · Left for You.
-  const island = html.match(/<div class="us-island" id="usIsland"[\s\S]*?<span class="us-island-live"/)?.[0] || '';
-  assert.ok(island.indexOf('id="usPerVoiTop"') < island.indexOf('id="usIslandTrigger"'));
-  assert.ok(island.indexOf('id="usIslandTrigger"') < island.indexOf('id="leftForYouPartnerEntry"'));
+  // M12A: le tre zone della top bar restano bilanciate: Per voi, marchio US al centro, Left for You a destra.
+  const css = read('identity.css');
+  assert.match(css, /\.top\.us-premium-top \.us-top-brand\{[^}]*grid-column:2/);
+  assert.match(css, /\.top\.us-premium-top \.top-actions\{[^}]*grid-column:3/);
 });
 
 test('M10.1B: openToday(), target push "today" e foglio Daily Question restano vivi', () => {

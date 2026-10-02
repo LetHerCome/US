@@ -18,8 +18,9 @@
     cancelExit: () => {},
     exit: (_root, finalize) => finalize?.()
   };
+  let activeAurora = () => false;
   let activePlayOnce = () => false;
-  let activeIsland = null;
+  const AURORA_REACT_MS = 800;
 
   const FOCUSABLE = [
     'button:not([disabled])',
@@ -139,25 +140,32 @@
     documentRef.addEventListener?.('visibilitychange', applyVisibility);
     applyVisibility();
 
-    // HUMAN-UI-03 — the shell's personal attention lives on the Island: any
-    // island control turning "on" gives ONE event-bound reaction (a single
-    // glint + the attention feedback); the compact island keeps a static cue.
-    let island = null;
+    // M12A — the shell aurora is ONE system: an ambient drift in CSS plus a
+    // short reaction (intensity + travelling highlight) driven from here.
+    let auroraTimer;
+    const auroraBar = () => documentRef.querySelector?.('.top.us-premium-top') || null;
+    const auroraPulse = () => {
+      const bar = auroraBar();
+      if (!bar || reducedMotion || documentRef.hidden) return false;
+      bar.removeAttribute('data-us-aurora');
+      void bar.offsetWidth;
+      bar.setAttribute('data-us-aurora', 'react');
+      if (auroraTimer !== undefined) cancelSchedule(auroraTimer);
+      auroraTimer = schedule(() => { bar.removeAttribute('data-us-aurora'); auroraTimer = undefined; }, AURORA_REACT_MS);
+      return true;
+    };
+    activeAurora = auroraPulse;
     const AttentionObserver = environment.MutationObserver;
     const attentionObserver = AttentionObserver ? new AttentionObserver((records) => {
-      let react = false;
-      let touched = false;
       for (const record of records) {
         const target = record.target;
-        // Only the island's own controls count (the host mirrors them).
-        if (!target?.closest?.('.us-island') || target.classList?.contains('us-island')) continue;
-        touched = true;
-        if (target.getAttribute?.('data-us-attention') === 'on' && record.oldValue !== 'on') react = true;
-      }
-      if (touched) island?.syncAttention();
-      if (react) {
-        island?.glint();
-        try { environment.UsFeedback?.attention?.(); } catch (_) { /* feedback is never essential */ }
+        if (target?.getAttribute?.('data-us-attention') !== 'on' || record.oldValue === 'on') continue;
+        if (target.closest?.('.top.us-premium-top')) {
+          // One generic reaction for any shell control: aurora + attention feedback.
+          auroraPulse();
+          try { environment.UsFeedback?.attention?.(); } catch (_) { /* feedback is never essential */ }
+          break;
+        }
       }
     }) : null;
     attentionObserver?.observe(documentRef.body, { subtree: true, attributes: true, attributeFilter: ['data-us-attention'], attributeOldValue: true });
@@ -284,15 +292,6 @@
     documentRef.addEventListener('keydown', onKeydown);
     sync();
 
-    island = createIsland(documentRef, environment, {
-      isReducedMotion: () => reducedMotion,
-      hasOpenModal: () => Boolean(activeModal),
-      playOnce,
-      schedule,
-      cancelSchedule
-    });
-    activeIsland = island;
-
     return {
       sync,
       destroy() {
@@ -303,10 +302,10 @@
         motionSubscribers.clear();
         attentionObserver?.disconnect();
         documentRef.removeEventListener?.('visibilitychange', applyVisibility);
-        island?.destroy();
-        if (activeIsland === island) activeIsland = null;
+        if (auroraTimer !== undefined) cancelSchedule(auroraTimer);
         oneShotTimers.forEach((timer) => cancelSchedule(timer));
         oneShotTimers.clear();
+        if (activeAurora === auroraPulse) activeAurora = () => false;
         if (activePlayOnce === playOnce) activePlayOnce = () => false;
         surfaceExits.forEach((exit) => {
           exit.cancelled = true;
@@ -332,287 +331,6 @@
       onMotionPreferenceChange: motion.onChange,
       cancelSurfaceExit,
       exitSurface
-    };
-  }
-
-  // HUMAN-UI-03 — US Island: the ONE top shell object. Four presentation
-  // states, all memory-only (never persisted, never a second source of
-  // product state): COMPACT shows the US mark, EXPANDED shows the existing
-  // Per voi / Lasciato per te controls around it, NOTICE / ACTION_NOTICE let
-  // an existing in-app arrival morph the island for a few seconds. The
-  // island never navigates on its own: only a user activation runs the
-  // notice's existing destination.
-  const ISLAND_STATES = Object.freeze({ COMPACT: 'compact', EXPANDED: 'expanded', NOTICE: 'notice', ACTION_NOTICE: 'action-notice' });
-  const ISLAND_TIMING = Object.freeze({ morph: 280, notice: 4200, actionNotice: 5200, hold: 1600, gap: 360, queue: 3 });
-  const ISLAND_ICONS = new Set(['heart', 'envelope', 'sparkle']);
-
-  // Bounded, de-duplicated, latest-valid queue: a key replaces its older
-  // copy, the oldest entry drops beyond the limit, and an entry whose own
-  // source state stopped being true is skipped when its turn comes.
-  function createNoticeQueue(limit = ISLAND_TIMING.queue) {
-    let items = [];
-    return {
-      push(notice) {
-        items = items.filter((item) => item.key !== notice.key);
-        items.push(notice);
-        while (items.length > limit) items.shift();
-        return items.length;
-      },
-      next() {
-        while (items.length) {
-          const item = items.shift();
-          if (typeof item.isValid !== 'function' || item.isValid()) return item;
-        }
-        return null;
-      },
-      clear() { items = []; },
-      get size() { return items.length; }
-    };
-  }
-
-  function normalizeNotice(input) {
-    const text = typeof input?.text === 'string' ? input.text.trim() : '';
-    if (!text) return null;
-    const onAction = typeof input.onAction === 'function' ? input.onAction : null;
-    return {
-      key: String(input.key || text),
-      text,
-      icon: ISLAND_ICONS.has(input.icon) ? input.icon : 'heart',
-      actionLabel: onAction ? String(input.actionLabel || 'Apri') : '',
-      onAction,
-      isValid: typeof input.isValid === 'function' ? input.isValid : null,
-      announce: input.announce !== false
-    };
-  }
-
-  function createIsland(documentRef, environment = {}, deps = {}) {
-    const byId = (id) => documentRef?.getElementById?.(id) || null;
-    const host = byId('usIsland');
-    const shell = byId('usIslandShell');
-    const trigger = byId('usIslandTrigger');
-    const noticeEl = byId('usIslandNotice');
-    if (!host || !shell || !trigger || !noticeEl) return null;
-    const live = byId('usIslandLive');
-    const schedule = deps.schedule || environment.setTimeout || setTimeout;
-    const cancel = deps.cancelSchedule || environment.clearTimeout || clearTimeout;
-    const reduced = () => Boolean(deps.isReducedMotion?.());
-    const modalOpen = () => Boolean(deps.hasOpenModal?.());
-    const queue = createNoticeQueue();
-    let state = ISLAND_STATES.COMPACT;
-    let current = null;
-    let held = false;
-    let busy = false;
-    let dwellTimer;
-    let morphTimer;
-    let pumpTimer;
-
-    const actions = () => Array.from(host.querySelectorAll('.us-island-action'));
-    const focusInside = () => Boolean(documentRef.activeElement && host.contains(documentRef.activeElement));
-    const attentionOn = () => actions().some((el) => el.getAttribute('data-us-attention') === 'on');
-    const clearTimer = (timer) => { if (timer !== undefined) cancel(timer); return undefined; };
-
-    function syncTrigger() {
-      const expanded = state === ISLAND_STATES.EXPANDED;
-      trigger.setAttribute('aria-expanded', String(expanded));
-      trigger.setAttribute('aria-label', expanded ? 'Chiudi menu US' : (attentionOn() ? 'Apri menu US, c’è qualcosa per te' : 'Apri menu US'));
-    }
-    function syncAttention() {
-      const value = attentionOn() ? 'on' : 'off';
-      if (host.getAttribute('data-us-attention') !== value) host.setAttribute('data-us-attention', value);
-      syncTrigger();
-    }
-
-    // The morph needs no library: measure the natural width of the next
-    // state, then let the CSS width transition run between the two numbers.
-    // Reduced motion (or a hidden document) simply switches state.
-    function setState(next) {
-      if (state === next) return;
-      const animate = !reduced() && !documentRef.hidden && typeof shell.getBoundingClientRect === 'function';
-      const from = animate ? shell.getBoundingClientRect().width : 0;
-      state = next;
-      host.setAttribute('data-us-island', next);
-      syncTrigger();
-      morphTimer = clearTimer(morphTimer);
-      shell.style.width = '';
-      if (!animate) { host.removeAttribute('data-us-island-motion'); return; }
-      const to = shell.getBoundingClientRect().width;
-      if (!from || !to || Math.abs(to - from) < 1) return;
-      host.setAttribute('data-us-island-motion', to > from ? 'grow' : 'shrink');
-      shell.style.transition = 'none';
-      shell.style.width = `${from}px`;
-      void shell.offsetWidth;
-      shell.style.transition = '';
-      shell.style.width = `${to}px`;
-      morphTimer = schedule(() => { shell.style.width = ''; morphTimer = undefined; }, ISLAND_TIMING.morph + 60);
-    }
-
-    function renderNotice(notice) {
-      const icon = noticeEl.querySelector('.us-island-notice-icon');
-      const text = noticeEl.querySelector('.us-island-notice-text');
-      const action = noticeEl.querySelector('.us-island-notice-action');
-      icon?.setAttribute('data-us-notice-icon', notice.icon);
-      if (text) text.textContent = notice.text;
-      if (action) { action.textContent = notice.actionLabel; action.hidden = !notice.onAction; }
-      noticeEl.setAttribute('aria-label', notice.onAction ? `${notice.text}. ${notice.actionLabel}` : `${notice.text}. Chiudi avviso`);
-      noticeEl.setAttribute('data-us-notice-kind', notice.onAction ? 'action' : 'passive');
-      noticeEl.tabIndex = notice.onAction ? 0 : -1;
-      noticeEl.removeAttribute('aria-busy');
-    }
-
-    function pumpLater() {
-      if (pumpTimer === undefined) pumpTimer = schedule(() => { pumpTimer = undefined; pump(); }, ISLAND_TIMING.gap);
-    }
-    // One notice at a time, only from the resting compact island: an open
-    // menu, keyboard focus inside the island or a modal defer it.
-    function pump() {
-      if (pumpTimer !== undefined || current || state !== ISLAND_STATES.COMPACT || focusInside() || modalOpen()) return false;
-      const next = queue.next();
-      if (!next) return false;
-      current = next;
-      renderNotice(next);
-      setState(next.onAction ? ISLAND_STATES.ACTION_NOTICE : ISLAND_STATES.NOTICE);
-      deps.playOnce?.(host, 'us-island-arrive', 700);
-      if (next.announce && live) live.textContent = next.onAction ? `${next.text}. ${next.actionLabel}` : next.text;
-      startDwell();
-      return true;
-    }
-    function startDwell(ms) {
-      dwellTimer = clearTimer(dwellTimer);
-      if (!current || held || busy || documentRef.hidden) return;
-      dwellTimer = schedule(() => { dwellTimer = undefined; endNotice(); }, ms ?? (current.onAction ? ISLAND_TIMING.actionNotice : ISLAND_TIMING.notice));
-    }
-    function endNotice() {
-      if (!current) return false;
-      dwellTimer = clearTimer(dwellTimer);
-      const hadFocus = documentRef.activeElement === noticeEl;
-      current = null;
-      held = false;
-      busy = false;
-      setState(ISLAND_STATES.COMPACT);
-      if (live) live.textContent = '';
-      if (hadFocus) trigger.focus?.({ preventScroll: true });
-      pumpLater();
-      return true;
-    }
-
-    function notify(input) {
-      const notice = normalizeNotice(input);
-      if (!notice || modalOpen()) return false;
-      if (current && current.key === notice.key) {
-        current = notice;
-        renderNotice(notice);
-        startDwell();
-        return true;
-      }
-      queue.push(notice);
-      pump();
-      return true;
-    }
-    function expand() {
-      if (state !== ISLAND_STATES.COMPACT) return false;
-      setState(ISLAND_STATES.EXPANDED);
-      return true;
-    }
-    function collapse() {
-      if (state === ISLAND_STATES.EXPANDED) {
-        setState(ISLAND_STATES.COMPACT);
-        pumpLater();
-        return true;
-      }
-      return endNotice();
-    }
-    const toggle = () => (state === ISLAND_STATES.EXPANDED ? collapse() : expand());
-
-    // A passive notice only closes; an action notice runs its existing
-    // destination and stays until that action has completed.
-    async function activateNotice() {
-      const notice = current;
-      if (!notice || busy) return;
-      if (!notice.onAction) { endNotice(); return; }
-      busy = true;
-      dwellTimer = clearTimer(dwellTimer);
-      noticeEl.setAttribute('aria-busy', 'true');
-      try { await notice.onAction(); } catch (error) { environment.console?.warn?.('[US Island] notice action', error); }
-      if (current === notice) endNotice();
-    }
-
-    const onTrigger = () => { toggle(); };
-    // An island action already ran its own handler for this click; the
-    // island only folds back (focus stays on the island for keyboard users).
-    const onHostClick = (event) => {
-      if (state !== ISLAND_STATES.EXPANDED || !event.target?.closest?.('.us-island-action')) return;
-      const refocus = focusInside();
-      setState(ISLAND_STATES.COMPACT);
-      if (refocus) trigger.focus?.({ preventScroll: true });
-      pumpLater();
-    };
-    // An outside click folds the menu without consuming the click: the page
-    // under it still receives its normal action. Touch scrolling produces no
-    // click, so beginning or completing a scroll never folds the Island.
-    const onOutside = (event) => {
-      if (state === ISLAND_STATES.EXPANDED && !host.contains(event.target)) collapse();
-    };
-    const onKey = (event) => {
-      if (event.key !== 'Escape' || modalOpen()) return;
-      if (state === ISLAND_STATES.EXPANDED) {
-        const refocus = focusInside();
-        collapse();
-        if (refocus) trigger.focus?.({ preventScroll: true });
-      } else if (current) {
-        endNotice();
-      } else return;
-      event.preventDefault?.();
-    };
-    const onFocusOut = (event) => {
-      const next = event.relatedTarget;
-      if (next && host.contains(next)) return;
-      if (next && state === ISLAND_STATES.EXPANDED) collapse();
-      pumpLater();
-    };
-    const hold = () => { if (!current) return; held = true; dwellTimer = clearTimer(dwellTimer); };
-    const release = () => { if (!current || !held) return; held = false; startDwell(ISLAND_TIMING.hold); };
-    const onVisibility = () => { if (!documentRef.hidden && current && dwellTimer === undefined) startDwell(); };
-
-    trigger.addEventListener('click', onTrigger);
-    host.addEventListener('click', onHostClick);
-    host.addEventListener('focusout', onFocusOut);
-    noticeEl.addEventListener('click', activateNotice);
-    noticeEl.addEventListener('pointerenter', hold);
-    noticeEl.addEventListener('focus', hold);
-    noticeEl.addEventListener('pointerleave', release);
-    noticeEl.addEventListener('blur', release);
-    documentRef.addEventListener('click', onOutside, true);
-    documentRef.addEventListener('keydown', onKey);
-    documentRef.addEventListener('visibilitychange', onVisibility);
-    host.setAttribute('data-us-island', state);
-    syncAttention();
-
-    return {
-      state: () => state,
-      expand,
-      collapse,
-      toggle,
-      notify,
-      dismiss: endNotice,
-      syncAttention,
-      glint: () => Boolean(deps.playOnce?.(host, 'us-island-glint', 900)),
-      destroy() {
-        dwellTimer = clearTimer(dwellTimer);
-        morphTimer = clearTimer(morphTimer);
-        pumpTimer = clearTimer(pumpTimer);
-        queue.clear();
-        trigger.removeEventListener('click', onTrigger);
-        host.removeEventListener('click', onHostClick);
-        host.removeEventListener('focusout', onFocusOut);
-        noticeEl.removeEventListener('click', activateNotice);
-        noticeEl.removeEventListener('pointerenter', hold);
-        noticeEl.removeEventListener('focus', hold);
-        noticeEl.removeEventListener('pointerleave', release);
-        noticeEl.removeEventListener('blur', release);
-        documentRef.removeEventListener('click', onOutside, true);
-        documentRef.removeEventListener('keydown', onKey);
-        documentRef.removeEventListener('visibilitychange', onVisibility);
-      }
     };
   }
 
@@ -838,22 +556,7 @@
   return {
     install,
     createFeedback,
-    ISLAND_STATES,
-    ISLAND_TIMING,
-    createNoticeQueue,
-    createIsland,
-    // Presentation-only facade over the installed Island (memory only, never
-    // persisted). notify() returns false when the island cannot present right
-    // now (no island, or a modal owns the screen): the caller keeps its own
-    // existing feedback (toast) in that case.
-    island: {
-      state: () => activeIsland?.state() || null,
-      expand: () => Boolean(activeIsland?.expand()),
-      collapse: () => Boolean(activeIsland?.collapse()),
-      toggle: () => Boolean(activeIsland?.toggle()),
-      notify: (notice) => Boolean(activeIsland?.notify(notice)),
-      dismiss: () => Boolean(activeIsland?.dismiss())
-    },
+    auroraPulse: () => activeAurora(),
     playOnce: (element, className, duration) => activePlayOnce(element, className, duration),
     confirm: (options) => confirmSurface(options),
     // A one-button information sheet on the same canonical surface.

@@ -181,11 +181,8 @@ test('M10E.3: solo un Ti penso ricevuto e non gestito accende l’orbit; impegni
   assert.match(app, /arrivalType:'think-received',\s*category:'received_ready',[\s\S]{0,200}attention:true/);
   // Calendar widget, distance, push opt-in, empty state, memories: never hosts.
   const hosts = [...html.matchAll(/<[^>]+class="[^"]*us-attention-orbit[^"]*"[^>]*>/g)].map((m) => m[0].match(/id="([^"]+)"/)?.[1]);
-  // HUMAN-UI-03: Per voi and Lasciato per te moved into the US Island, whose
-  // attention cue is static (no looping orbit); their data-us-attention is unchanged.
-  assert.deepEqual(hosts.sort(), ['usDailyRitual']);
-  assert.match(html, /id="usPerVoiTop"[^>]*data-us-attention="off"/);
-  assert.match(html, /id="leftForYouPartnerEntry"[^>]*data-us-attention="off"/);
+  // M11B adds the top Per voi control: personal ("tocca a te" / reveal ready), server-derived.
+  assert.deepEqual(hosts.sort(), ['leftForYouPartnerEntry', 'usDailyRitual', 'usPerVoiTop']);
   for (const passive of ['renderOggiCalendarWidget', 'function renderHomeMoment', 'function refreshMyLocation']) {
     const at = app.indexOf(passive);
     if (at >= 0) assert.doesNotMatch(app.slice(at, at + 1500), /us-attention-orbit|usAttention/);
@@ -224,8 +221,8 @@ test('M10E: reduced motion → nessuna rotazione, alone statico visibile', () =>
 });
 
 test('M10E: il primitive non tocca tap, focus o aria degli host', () => {
-  // HUMAN-UI-03: the envelope is an Island action; its attention cue is a static pseudo-element.
-  assert.match(read('ui-foundation.css'), /\.us-island-action\[data-us-attention="on"\] \.us-island-action-icon::after\{content:"";position:absolute;/);
+  const lfyCss = read('left-for-you.css');
+  assert.match(lfyCss, /#leftForYouPartnerEntry\.us-envelope-control\{--us-attention-inset:-3px;position:relative;/);
   assert.match(read('styles.css'), /\.us-today-priority-card\{position:relative;pointer-events:auto\}/);
   assert.match(read('styles.css'), /\.us-daily-ritual\{position:relative;/);
   assert.match(read('styles.css'), /\.us-daily-ritual:focus-visible\{outline/);

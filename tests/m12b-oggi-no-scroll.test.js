@@ -26,8 +26,7 @@ test('M12B.1 static: Oggi keeps no overflow clip on body, html or #home', () => 
 test('M12B.1 static: the Oggi frame drops the nav clearance of .app, only while Oggi is active', () => {
   const identity = read('identity.css');
   assert.match(identity, /body:has\(#home\.page\.active\) \.app\{padding-bottom:0!important\}/);
-  // HUMAN-UI-03: edge-to-edge, the Oggi frame is the whole viewport (it starts at y=0).
-  assert.match(identity, /#home \.home-hero-only\{height:var\(--us-viewport-height\)!important;min-height:0!important\}/);
+  assert.match(identity, /#home \.home-hero-only\{height:calc\(var\(--us-viewport-height\) - var\(--us-safe-top\)\)!important;min-height:0!important\}/);
   // Every other page keeps the shared clearance for the floating nav.
   assert.match(read('fix4.css'), /\.app\{[^}]*padding-bottom:calc\(var\(--us-nav-height\) \+ var\(--us-safe-bottom\) \+ 34px\)!important/);
 });
@@ -75,7 +74,7 @@ async function measure(page) {
     const visible = (el) => { if (!el || el.closest('[hidden]')) return false; const cs = getComputedStyle(el); if (cs.display === 'none' || cs.visibility === 'hidden') return false; const r = el.getBoundingClientRect(); return r.width > 4 && r.height > 4; };
     const box = (el) => { const r = el.getBoundingClientRect(); return { top: r.top, bottom: r.bottom, left: r.left, right: r.right }; };
     const clip = (el) => /hidden|clip/.test(getComputedStyle(el).overflowY);
-    const top = box(document.querySelector('#usIsland'));
+    const top = box(document.querySelector('.top.us-premium-top'));
     const nav = box(document.querySelector('.nav'));
     // Oggi surfaces: the stack cards, the empty state, the bottom row.
     const surfaceIds = ['usTodayPriorityRegion', 'usOggiCalendarWidget', 'usDailyRitual', 'usDailyRevealLink', 'homeEmptyState', 'distanceWidget', 'pushOptInCard', 'thinkButton'];

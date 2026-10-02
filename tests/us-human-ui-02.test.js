@@ -37,9 +37,7 @@ test('nav: ~56px before the safe area, 44px+ targets, 24px icons, no looping ani
   const tokens = read('ui-foundation.css');
   assert.match(tokens, /--us-nav-height:56px;/);
   const id = read('identity.css');
-  // HUMAN-UI-03 removed the old top-chrome rules that followed the nav block.
-  const block = id.slice(id.indexOf('/* --- M1 APK shell navigation'), id.indexOf('#home #usTodayPriorityRegion[hidden]'));
-  assert.ok(block.length > 200);
+  const block = id.slice(id.indexOf('/* --- M1 APK shell navigation'), id.indexOf('/* M1 top chrome'));
   assert.match(block, /\.us-nav-premium button\{[\s\S]*?min-width:44px!important;[\s\S]*?min-height:46px!important/);
   assert.match(block, /\.us-nav-icon\{position:relative;display:block;width:24px;height:24px;/);
   assert.doesNotMatch(block, /infinite/, 'no looping animation on the nav');
@@ -50,23 +48,22 @@ test('nav: ~56px before the safe area, 44px+ targets, 24px icons, no looping ani
   assert.match(read('fix4.css'), /@media \(orientation:landscape\) and \(max-height:560px\)\{:root\{--us-nav-height:52px\}/);
 });
 
-test('top: the shell is only as tall as its 44px controls and content starts right after it', () => {
-  // HUMAN-UI-03: the HUMAN-UI-02 pill became the US Island; the clearance shrank further (56 → 48).
+test('top: the pill is only as tall as its 44px controls and content starts right after it', () => {
   const tokens = read('ui-foundation.css');
-  assert.match(tokens, /--us-island-hit:44px;/);
-  assert.match(tokens, /--us-top-chrome-clearance:48px;/);
+  assert.match(tokens, /--us-top-chrome-height:46px;/);
+  assert.match(tokens, /--us-top-chrome-clearance:56px;/);
+  assert.match(read('identity.css'), /\.top\.us-premium-top\{top:calc\(var\(--us-safe-top\) \+ 6px\);padding:0 1px!important;/);
   // Same three controls, no new permanent surface.
-  const top = html.match(/<div class="us-island" id="usIsland"[\s\S]*?<span class="us-island-live"/)?.[0] || '';
+  const top = html.split('\n').find((line) => line.includes('<div class="top us-premium-top">')) || '';
   assert.match(top, /id="usPerVoiTop" onclick="window\.USGameV2\?\.openPerVoi\(\)"/);
   assert.match(top, /id="leftForYouPartnerEntry"/);
-  assert.match(top, /id="usIslandTrigger"/);
+  assert.match(top, /class="us-top-brand"/);
 });
 
 test('HUMAN-UI-01 is not reintroduced: no capsule, no floating envelope shell', () => {
   assert.doesNotMatch(html, /us-capsule|usCapsuleMark|usNavGioca/);
   assert.doesNotMatch(read('ui-foundation.js'), /capsule\(/);
-  // HUMAN-UI-03 replaced the top pill (and its aurora) with the US Island, built from this code, not from HUMAN-UI-01.
-  assert.match(html, /<div class="us-island" id="usIsland"/);
+  assert.match(html, /<div class="top us-premium-top"><span class="us-aurora"/, 'the production top pill (with its aurora) stays');
 });
 
 // ---------------------------------------------------------------- Gioca
@@ -280,14 +277,14 @@ test('Settings: ownership matches storage (shared rows write couple data, person
 
 test('release: one bump for this candidate, private media cache untouched', () => {
   const build = html.match(/<meta name="us-build" content="([^"]+)"\/>/)?.[1];
-  assert.equal(build, 'us-human-ui-03-20261002-1');
+  assert.equal(build, 'us-human-ui-02-20261002-1');
   assert.equal(JSON.parse(read('version.json')).version, build);
   const worker = read('service-worker.js');
-  assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-53";/);
+  assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-52";/);
   assert.match(worker, /const MEDIA_CACHE_NAME = "us-private-media-v1";/);
-  assert.match(html, /\/games\.css\?v=us-human-ui-03-20261002-1/);
-  assert.match(html, /\/settings2\.css\?v=us-human-ui-03-20261002-1/);
-  assert.match(html, /\/identity\.css\?v=us-identity3-us-human-ui-03-20261002-1/);
+  assert.match(html, /\/games\.css\?v=us-human-ui-02-20261002-1/);
+  assert.match(html, /\/settings2\.css\?v=us-human-ui-02-20261002-1/);
+  assert.match(html, /\/identity\.css\?v=us-identity3-us-human-ui-02-20261002-1/);
 });
 
 test('no new dependencies', () => {

@@ -9,9 +9,7 @@ const BRAND = 'assets/derived/brand/us-symbol-apk-foreground-v1.png';
 
 test('Settings usa lo stesso opener ricollocato nella root Noi, non nella topbar', () => {
   const html = read('index.html');
-  // HUMAN-UI-03: the top shell is the US Island.
-  const top = html.match(/<div class="us-island" id="usIsland"[\s\S]*?<main id="home"/)?.[0] || '';
-  assert.ok(top.includes('id="usIslandTrigger"'));
+  const top = html.match(/<div class="top us-premium-top">[\s\S]*?<\/div>\s*<main id="home"/)?.[0] || '';
   const noi = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
 
   assert.doesNotMatch(top, /id="usSettingsEntry"/);

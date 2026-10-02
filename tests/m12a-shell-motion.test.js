@@ -1,6 +1,4 @@
-// M12A — global shell, universal attention, sliding nav, tile opening.
-// HUMAN-UI-03 — the top bar and its aurora became the adaptive US Island; the
-// shell assertions below follow the island markup.
+// M12A — global shell, aurora, universal attention, sliding nav, tile opening.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -12,16 +10,18 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const html = read('index.html');
 const foundationCss = read('ui-foundation.css');
 const identityCss = read('identity.css');
-const topBar = html.match(/<div class="us-island" id="usIsland"[\s\S]*?<span class="us-island-live"/)[0];
+const topBar = html.match(/<div class="top us-premium-top">[\s\S]*?<\/div>\s*<main id="home"/)[0];
 
 // ---------------------------------------------------------------- SHELL
 
 test('shell: Per voi left, the US mark at the centre, Left for You right', () => {
   const perVoi = topBar.indexOf('id="usPerVoiTop"');
-  const brand = topBar.indexOf('id="usIslandTrigger"');
+  const brand = topBar.indexOf('class="us-top-brand"');
   const envelope = topBar.indexOf('id="leftForYouPartnerEntry"');
   assert.ok(perVoi > 0 && brand > perVoi && envelope > brand, 'order: Per voi, US, Left for You');
-  assert.match(topBar, /<button type="button" class="us-island-mark" id="usIslandTrigger" aria-label="Apri menu US"[^>]*><span class="us-island-mark-art" aria-hidden="true"><img[^>]+us-symbol-apk-foreground-v1\.png/);
+  assert.match(topBar, /<div class="us-top-brand" role="img" aria-label="US"><img[^>]+us-symbol-apk-foreground-v1\.png/);
+  assert.match(identityCss, /\.top\.us-premium-top \.us-top-brand\{grid-column:2;/);
+  assert.match(identityCss, /\.top\.us-premium-top\{display:grid;grid-template-columns:minmax\(0,1fr\) auto minmax\(0,1fr\)/);
 });
 
 test('shell: Events no longer owns the global centre slot but stays reachable', () => {
@@ -39,8 +39,7 @@ test('shell: the canonical PWA/launcher mark is used as-is (display cropping onl
   const asset = manifest.assets.find((entry) => entry.path === 'assets/derived/brand/us-symbol-apk-foreground-v1.png');
   assert.equal(asset.status, 'APPROVED');
   assert.match(read('service-worker.js'), /"\/assets\/derived\/brand\/us-symbol-apk-foreground-v1\.png"/);
-  assert.match(foundationCss, /\.us-island-mark-art\{[^}]*overflow:hidden/);
-  assert.match(foundationCss, /\.us-island-mark-art img\{[^}]*width:46px;height:46px/);
+  assert.match(identityCss, /\.us-top-brand-art\{[^}]*height:58px[^}]*width:58px/);
 });
 
 async function runNetwork({ online, warn }) {
@@ -86,32 +85,42 @@ test('connection: healthy shows nothing, offline is immediate, "connecting" wait
 });
 
 test('connection: the top-bar badge itself never occupies shell space', () => {
-  assert.match(foundationCss, /\.us-island \.online-badge\{display:none!important\}/);
+  assert.match(identityCss, /\.top\.us-premium-top \.online-badge\{display:none!important\}/);
   assert.match(read('fix4.css'), /\.online-badge\.ok\{display:none!important\}/);
 });
 
-// ---------------------------------------------------------------- AURORA (retired)
+// ---------------------------------------------------------------- AURORA
 
-test('aurora: retired with the old top bar — the Island carries no ambient loop', () => {
-  assert.doesNotMatch(html, /us-aurora/);
-  assert.doesNotMatch(foundationCss, /us-aurora/);
-  const block = foundationCss.slice(foundationCss.indexOf('HUMAN-UI-03 — US Island'), foundationCss.indexOf('M12A — Tiles and their destinations'));
-  assert.ok(block.length > 0);
-  assert.doesNotMatch(block, /infinite/);
-  assert.doesNotMatch(read('ui-foundation.js'), /setInterval|auroraPulse/, 'no perpetual JS loop, no aurora API');
+test('aurora: one canonical layer with ambient drift, reaction and reduced-motion state', () => {
+  assert.match(topBar, /<span class="us-aurora" aria-hidden="true"><\/span>/);
+  assert.match(foundationCss, /\.top\.us-premium-top>\.us-aurora\{[^}]*overflow:hidden[^}]*pointer-events:none/);
+  assert.match(foundationCss, /animation:us-aurora-drift 12s ease-in-out infinite alternate/);
+  assert.match(foundationCss, /\[data-us-aurora="react"\] \.us-aurora::before/);
+  assert.match(foundationCss, /\[data-us-aurora="react"\] \.us-aurora::after\{animation:us-aurora-sweep 800ms/);
+  // Reduced motion: no continuous travel.
+  assert.match(foundationCss, /:root\[data-us-motion="reduced"\] \.us-aurora::before,\s*:root\[data-us-motion="reduced"\] \.us-aurora::after\{animation:none!important/);
+  assert.match(foundationCss, /@media \(prefers-reduced-motion:reduce\)\{\s*\.us-aurora::before,\.us-aurora::after\{animation:none!important/);
+  // A hidden document pauses the ambient animation.
+  assert.match(foundationCss, /:root\[data-us-visibility="hidden"\] \.us-aurora::before/);
+  // Cheap by construction: only transform/opacity, no filters, no JS loop.
+  const block = foundationCss.slice(foundationCss.indexOf('M12A — Shell aurora'), foundationCss.indexOf('M12A — Tiles and their destinations'));
+  assert.doesNotMatch(block, /filter:|blur\(/);
+  assert.doesNotMatch(read('ui-foundation.js'), /setInterval/, 'no perpetual JS loop');
 });
 
 function foundationHarness({ reduced = false } = {}) {
   const { install } = require('../ui-foundation.js');
   const timers = [];
   const attrs = new Map();
+  const barAttrs = new Map();
+  const bar = { offsetWidth: 0, setAttribute: (k, v) => barAttrs.set(k, v), removeAttribute: (k) => barAttrs.delete(k), getAttribute: (k) => barAttrs.get(k) ?? null };
   const docListeners = new Map();
   const documentRef = {
     hidden: false,
     body: { tagName: 'BODY' },
     documentElement: { setAttribute: (k, v) => attrs.set(k, v) },
     activeElement: null,
-    querySelector: () => null,
+    querySelector: (s) => (s === '.top.us-premium-top' ? bar : null),
     querySelectorAll: () => [],
     addEventListener: (t, fn) => docListeners.set(t, fn),
     removeEventListener: (t) => docListeners.delete(t)
@@ -124,10 +133,10 @@ function foundationHarness({ reduced = false } = {}) {
     setTimeout: (fn, ms) => { timers.push({ fn, ms }); return timers.length; },
     clearTimeout() {}
   });
-  return { handle, attrs, docListeners, documentRef, timers, fire: (records) => observerCallback(records) };
+  return { handle, attrs, barAttrs, docListeners, documentRef, timers, fire: (records) => observerCallback(records) };
 }
 
-test('visibility: a data attribute lets CSS pause decorative motion while hidden', () => {
+test('aurora: visibility drives a data attribute (CSS pauses the animation while hidden)', () => {
   const h = foundationHarness();
   assert.equal(h.attrs.get('data-us-visibility'), 'visible');
   h.documentRef.hidden = true;
@@ -136,13 +145,42 @@ test('visibility: a data attribute lets CSS pause decorative motion while hidden
   h.handle.destroy();
 });
 
+test('aurora: the same layer reacts briefly when attention turns on in the top bar, then returns', () => {
+  const { auroraPulse } = require('../ui-foundation.js');
+  const h = foundationHarness();
+  const topTarget = (value) => ({ getAttribute: () => value, closest: (s) => (s === '.top.us-premium-top' ? {} : null) });
+  h.fire([{ target: topTarget('on'), oldValue: 'off' }]);
+  assert.equal(h.barAttrs.get('data-us-aurora'), 'react');
+  const reset = h.timers.find((t) => t.ms === 800);
+  assert.ok(reset, 'reaction lasts about 800ms');
+  reset.fn();
+  assert.equal(h.barAttrs.get('data-us-aurora'), undefined, 'returns to the ambient state');
+
+  // Not for already-on, off, or controls outside the top bar (e.g. the Oggi cards).
+  h.fire([{ target: topTarget('on'), oldValue: 'on' }]);
+  h.fire([{ target: topTarget('off'), oldValue: 'on' }]);
+  h.fire([{ target: { getAttribute: () => 'on', closest: () => null }, oldValue: 'off' }]);
+  assert.equal(h.barAttrs.get('data-us-aurora'), undefined);
+
+  assert.equal(auroraPulse(), true, 'an explicit pulse (Ti penso arrival) uses the same system');
+  h.handle.destroy();
+});
+
+test('aurora: reduced motion never pulses', () => {
+  const h = foundationHarness({ reduced: true });
+  const { auroraPulse, isReducedMotion } = require('../ui-foundation.js');
+  assert.equal(isReducedMotion(), true);
+  assert.equal(auroraPulse(), false);
+  assert.equal(h.barAttrs.get('data-us-aurora'), undefined);
+  h.handle.destroy();
+});
+
 // ---------------------------------------------------------------- ATTENTION
 
 test('attention: Per voi and Left for You use the same primitive, driven by data-us-attention', () => {
   for (const id of ['usPerVoiTop', 'leftForYouPartnerEntry']) {
     const tag = topBar.match(new RegExp(`<button[^>]*id="${id}"[^>]*>`))[0];
-    // HUMAN-UI-03: inside the Island the cue is static (no looping orbit class).
-    assert.doesNotMatch(tag, /us-attention-orbit/);
+    assert.match(tag, /us-attention-orbit/);
     assert.match(tag, /data-us-attention="off"/);
   }
   assert.equal((topBar.match(/data-us-attention-icon/g) || []).length, 2, 'both mark their glyph for the primitive');
@@ -150,7 +188,7 @@ test('attention: Per voi and Left for You use the same primitive, driven by data
 });
 
 test('attention: the primitive is generic (no envelope/Per voi selectors), slow with a rest, and reduced-motion aware', () => {
-  const block = foundationCss.slice(foundationCss.indexOf('M10E / M12A'), foundationCss.indexOf('HUMAN-UI-03 — US Island'));
+  const block = foundationCss.slice(foundationCss.indexOf('M10E / M12A'), foundationCss.indexOf('M12A — Shell aurora'));
   assert.doesNotMatch(block, /envelope|pervoi|leftForYou|usPerVoiTop/i);
   assert.match(block, /\.us-attention-orbit\[data-us-attention="on"\] \[data-us-attention-icon\]\{[^}]*animation:us-attention-breathe/);
   assert.match(block, /us-attention-period,5\.2s/);

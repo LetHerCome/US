@@ -314,12 +314,12 @@ test('M11B client: static contract — one Gioca surface, Phosphor icons, no leg
   const html = read('index.html');
   const app = read('app.js');
   const games = read('games.js');
-  const css = read('games.css') + read('identity.css') + read('ui-foundation.css');
+  const css = read('games.css') + read('identity.css');
   const top = html.match(/<button[^>]*id="usPerVoiTop"[^>]*>/)?.[0] || '';
+  assert.match(top, /us-attention-orbit/);
   assert.match(top, /data-us-attention="off"/);
   assert.match(top, /onclick="window\.USGameV2\?\.openPerVoi\(\)"/);
-  // HUMAN-UI-03: the control is the left action of the US Island.
-  assert.match(html, /<div class="us-island-shell" id="usIslandShell">\s*<button[^>]*id="usPerVoiTop"/);
+  assert.match(html, /<div class="us-top-left"><button[^>]*id="usPerVoiTop"/);
   assert.match(html, /<div id="quizHub" class="us-gv2-hub"/);
   assert.match(html, /<div id="usGameV2Panel" class="us-gv2-panel hidden"/);
   assert.doesNotMatch(html, /weeklyQuizGrid|usExtraGames|usCustomGamesHub|quizPlay|scoreRing/);
