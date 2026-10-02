@@ -191,7 +191,7 @@ test('Ricordi delete: visible action, no client secret, no SQL storage deletes, 
   assert.doesNotMatch(app, /toast\('Ricordo eliminato'\)/);
   assert.match(app, /aria-label="Elimina ricordo"[^>]*>Elimina<\/button>/);
   assert.match(app, /sb\.functions\.invoke\('delete-moment'/);
-  assert.match(styles, /\.moment-delete\{[^}]*min-width:68px/);
+  assert.match(styles, /\.moment-delete\{[^}]*min-width:72px[^}]*height:44px/);
   assert.match(albums, /const DELETE_GRACE_MS=4000/);
   assert.match(albums, /currentAlbum\.owner===window\.usProfile\.id&&albumLoaded\)/);
   assert.doesNotMatch(albums, /albumRows\.length===0/);
