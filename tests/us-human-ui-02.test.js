@@ -338,3 +338,15 @@ test('Settings density: utility rows, couple card and footer stay compact withou
     assert.match(page, new RegExp(`data-us-setting="${name}"`), name);
   }
 });
+
+
+test('Oggi density: arbitration stays authoritative while primary and quiet surfaces use compact geometry', () => {
+  const css = read('styles.css');
+  assert.match(css, /US-OGGI-DENSITY-01/);
+  assert.match(css, /#home \.us-daily-ritual\[data-us-oggi-slot="primary"\]\{[\s\S]*?min-height:70px/);
+  assert.match(css, /#home #usOggiCalendarWidget\[data-us-oggi-slot="quiet"\] \.us-oggi-card\{[\s\S]*?min-height:46px/);
+  assert.match(css, /#home #usTodayPriorityRegion\[data-us-oggi-slot="primary"\] \.us-today-priority-card\{[\s\S]*?min-height:58px/);
+  const app = read('app.js');
+  assert.match(app, /US_OGGI_SURFACES=Object\.freeze\(\['usTodayPriorityRegion','usOggiCalendarWidget','usDailyRitual','usDailyRevealLink','pushOptInCard'\]\)/);
+  assert.match(app, /winner\.primary===id\?'primary':winner\.quiet===id\?'quiet':'suppressed'/);
+});
