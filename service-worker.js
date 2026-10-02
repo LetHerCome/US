@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-static-runtime-61";
+const CACHE_NAME = "us-shell-static-runtime-62";
 const MEDIA_CACHE_NAME = "us-private-media-v1";
 
 const APP_SHELL = [
@@ -14,6 +14,7 @@ const APP_SHELL = [
   "/left-for-you.css?v=us-secondary-surfaces-v1-20261002-1",
   "/calendar-domain.js",
   "/calendar.css?v=us-secondary-surfaces-v1-20261002-1",
+  "/state-system.css?v=us-state-system-v1-20261002-1",
   "/calendar.js",
   "/assets/third-party/spotify/spotify-full-logo-white.svg",
   "/styles.css?v=us-secondary-surfaces-v1-20261002-1",
