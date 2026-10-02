@@ -425,3 +425,43 @@ test('PWA hardening: update navigation refreshes index and version checks do not
   assert.match(fix, /window\.location\.replace\(refreshUrl\.href\)/);
   assert.match(fix, /currentUrl\.searchParams\.delete\('us-refresh'\)/);
 });
+
+
+test('Auth first-run: private entry is compact, device-aware and keeps backend ownership unchanged', () => {
+  const auth = html.match(/<div class="auth-overlay" id="authOverlay">[\s\S]*?<div class="app">/)?.[0] || '';
+  const css = read('auth-first-run.css');
+  const firstRun = read('auth-first-run.js');
+  const app = read('app.js');
+
+  assert.match(css, /US-AUTH-FIRST-RUN-01/);
+  assert.match(auth, /Collega questo telefono/);
+  assert.match(auth, /Bentornato/);
+  assert.match(auth, /id="usAuthInstall"/);
+  assert.match(auth, /aria-pressed="false"/);
+  assert.match(app, /showAuthStep\(returningDevice\?'authLogin':'authPair'\)/);
+  assert.match(app, /Questo telefono era già collegato\. Accedi di nuovo per continuare\./);
+  assert.match(app, /pairEnter\.addEventListener\('keydown'/);
+  assert.match(app, /passwordEnter\.addEventListener\('keydown'/);
+
+  assert.match(app, /sb\.rpc\('claim_us_role',\{invite_code:code,chosen_role:selectedRole\}\)/);
+  assert.match(app, /sb\.auth\.signInWithPassword\(\{email,password\}\)/);
+  assert.match(app, /shouldCreateUser:false/);
+
+  assert.match(firstRun, /beforeinstallprompt/);
+  assert.match(firstRun, /event\.preventDefault\(\)/);
+  assert.match(firstRun, /deferredInstallPrompt\.prompt\(\)/);
+  assert.match(firstRun, /appinstalled/);
+  assert.match(firstRun, /navigator\.standalone === true/);
+  assert.match(firstRun, /Aggiungi alla schermata Home/);
+});
+
+test('Auth first-run: new assets follow the canonical BUILD_ID contract', () => {
+  const build = html.match(/<meta name="us-build" content="([^"]+)"\/>/)?.[1];
+  assert.ok(build);
+  assert.match(html, new RegExp(`/auth-first-run\\.css\\?v=${build}`));
+  assert.match(html, new RegExp(`/auth-first-run\\.js\\?v=${build}`));
+  const worker = read('service-worker.js');
+  assert.match(worker, /versioned\("\/auth-first-run\.css"\)/);
+  assert.match(worker, /versioned\("\/auth-first-run\.js"\)/);
+  assert.equal(JSON.parse(read('version.json')).version, build);
+});
