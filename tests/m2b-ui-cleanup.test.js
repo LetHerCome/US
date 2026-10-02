@@ -92,7 +92,7 @@ test('Stories usa CSS statico senza reiniezione runtime', () => {
   assert.match(css, /\.us-top-story-ring/);
   assert.match(css, /\.us-story-viewer\.open/);
   assert.match(css, /\.us-camera-viewer/);
-  assert.match(html, /<link rel="stylesheet" href="\/stories\.css"\/>/);
+  assert.match(html, /<link rel="stylesheet" href="\/stories\.css(?:\?v=[^"]+)?"\/>/);
 });
 
 test('Motion 3 legacy e Motion Pass inutilizzato non restano nel runtime', () => {
