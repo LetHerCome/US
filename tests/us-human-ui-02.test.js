@@ -486,5 +486,5 @@ test('QA 1.0: build:id also versions previously bare local CSS/JS refs', () => {
   const script = read('scripts/set-build-id.mjs');
   assert.match(script, /href\|src/);
   assert.match(script, /css\|js/);
-  assert.match(script, /\?v=\\\$\{buildId\}/);
+  assert.match(script, /\?v=\$\{buildId\}/);
 });
