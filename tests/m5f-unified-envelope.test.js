@@ -580,12 +580,14 @@ test('M5G internal recorder transitions idle → recording → ready and release
   await api.startRecording();
   assert.equal(api.composer.recordingState, 'recording');
   assert.equal(stream.tracks[0].stopped, false);
+  api.composer.recordingStartedAt = Date.now() - 600;
   api.stopRecording();
   assert.equal(api.composer.recordingState, 'ready');
   assert.equal(api.composer.recording.ready, true);
   assert.equal(stream.tracks[0].stopped, true);
-  assert.equal(el('leftForYouComposerAudioRecord').hidden, true);
-  assert.equal(el('leftForYouComposerAudioRetry').hidden, false);
+  assert.equal(el('leftForYouComposerAudioRecord').hidden, false);
+  assert.equal(el('leftForYouComposerAudioClip').hidden, false);
+  assert.equal(el('leftForYouComposerAudioIdle').hidden, true);
   assert.equal(el('leftForYouComposerAudioDelete').hidden, false);
 
   await api.startRecording();
@@ -594,14 +596,18 @@ test('M5G internal recorder transitions idle → recording → ready and release
   assert.equal(stream.tracks[0].stopped, true);
 });
 
-test('M5G1 composer surface removes note inputs and uses a circular centered recorder control', () => {
+test('M5G1 composer surface removes note inputs and uses the hold-to-record Bencho pill', () => {
   const html = read('index.html');
   const css = read('left-for-you.css');
+  const source = read('left-for-you.js');
   assert.doesNotMatch(html, /left-for-you-composer-note/);
-  assert.match(html, /class="left-for-you-record-control" id="leftForYouComposerAudioRecord"/);
-  assert.match(html, /aria-label="Registra la voce"/);
-  assert.match(css, /\.left-for-you-record-control\{[^}]*border-radius:50%/);
-  assert.match(css, /\.left-for-you-record-control\.is-recording/);
+  assert.match(html, /class="left-for-you-vn" id="leftForYouComposerAudioRecord"[^>]*data-phase="idle"/);
+  assert.match(html, /Tieni premuto/);
+  assert.match(html, /leftForYouComposerAudioClipWave/);
+  assert.match(css, /\.left-for-you-vn\{[^}]*width:min\(216px,100%\)/);
+  assert.match(css, /\.left-for-you-vn\[data-phase="rec"\]/);
+  assert.match(source, /VOICE_CANCEL_PX = 90/);
+  assert.match(source, /VOICE_MIN_MS = 500/);
 });
 
 test('M5G1 live DOM events immediately enable and disable the send CTA for every kind', async () => {
