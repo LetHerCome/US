@@ -6,6 +6,15 @@
   'use strict';
 
   const kinds = new Set(['text', 'photo', 'audio', 'video', 'music']);
+  // Bencho voice-note interaction, adapted to the real US recorder/player.
+  const VOICE_NOTE_BARS = 28;
+  const VOICE_SAMPLE_MS = 70;
+  const VOICE_CANCEL_PX = 90;
+  const VOICE_MIN_MS = 500;
+  const VOICE_MAX_MS = 30000;
+  const RECEIVER_AUDIO_STEPS = 5;
+  const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+  let activeAudioPlayer = null;
   let items = [];
   let currentIndex = 0;
   let activeItem = null;
@@ -33,6 +42,21 @@
     recordingChunks: [],
     recordingDiscarded: false,
     recordingStartedAt: 0,
+    recordingTimer: null,
+    recordingVisualizer: null,
+    recordingMaxTimer: null,
+    recordingLevels: [],
+    recordingAudioContext: null,
+    recordingAnalyser: null,
+    recordingAnalyserData: null,
+    recordingSource: null,
+    recordingPointerId: null,
+    recordingPointerStartX: 0,
+    recordingPressHeld: false,
+    recordingRequireHold: false,
+    recordingPull: 0,
+    previewRaf: 0,
+    previewScrubbing: false,
     cameraStream: null,
     cameraFacing: 'environment',
     cameraCapture: null,
@@ -72,6 +96,182 @@
   function canonicalSpotifyTrackUrl(id) { return `https://open.spotify.com/track/${id}`; }
   function spotifyEmbedUrl(id) { return `https://open.spotify.com/embed/track/${id}`; }
 
+  // ---- Bencho Step Player adapted to real received audio ----
+  const AUDIO_PLAY_L = [6.5, 4, 13.25, 8, 13.25, 16, 6.5, 20];
+  const AUDIO_PAUSE_L = [6, 4, 10, 4, 10, 20, 6, 20];
+  const AUDIO_PLAY_R = [13.25, 8, 20, 12, 20, 12, 13.25, 16];
+  const AUDIO_PAUSE_R = [14, 4, 18, 4, 18, 20, 14, 20];
+
+  function audioQuad(a, b, t) {
+    let d = '';
+    for (let i = 0; i < 8; i += 2) {
+      const x = a[i] + (b[i] - a[i]) * t;
+      const y = a[i + 1] + (b[i + 1] - a[i + 1]) * t;
+      d += `${i ? 'L' : 'M'}${x.toFixed(2)} ${y.toFixed(2)}`;
+    }
+    return `${d}Z`;
+  }
+
+  function reducedMotion() {
+    return Boolean(typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+  }
+
+  function renderAudioStepPlayerMarkup(mediaUrl) {
+    const src = escapeHtml(mediaUrl || '');
+    const steps = Array.from({ length: RECEIVER_AUDIO_STEPS }, (_, index) =>
+      `<button type="button" class="left-for-you-spl-dot" data-left-audio-step="${index}" aria-label="Vai al tratto ${index + 1}"${index === 0 ? ' aria-current="step"' : ''}><i class="left-for-you-spl-ink"></i></button>`
+    ).join('');
+    const left = audioQuad(AUDIO_PLAY_L, AUDIO_PAUSE_L, 0);
+    const right = audioQuad(AUDIO_PLAY_R, AUDIO_PAUSE_R, 0);
+    return `<div class="left-for-you-step-player" data-left-audio-player data-playing="false">
+      <audio data-left-audio-el preload="metadata" src="${src}" hidden></audio>
+      <div class="left-for-you-spl-row">
+        <div class="left-for-you-spl-slab"><div class="left-for-you-spl-track">${steps}</div></div>
+        <div class="left-for-you-spl-slab left-for-you-spl-tool">
+          <button type="button" class="left-for-you-spl-go" data-left-audio-toggle aria-label="Riproduci">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path data-left-audio-mark-l d="${left}"></path><path data-left-audio-mark-r d="${right}"></path></svg>
+          </button>
+        </div>
+      </div>
+      <span class="left-for-you-spl-time" data-left-audio-time>0:00</span>
+    </div>`;
+  }
+
+  function morphAudioPlayerMark(player, playing) {
+    if (!player) return;
+    const left = player.querySelector('[data-left-audio-mark-l]');
+    const right = player.querySelector('[data-left-audio-mark-r]');
+    if (!left || !right) return;
+    const target = playing ? 1 : 0;
+    const from = Number(player.dataset.markT || 0);
+    if (reducedMotion()) {
+      player.dataset.markT = String(target);
+      left.setAttribute('d', audioQuad(AUDIO_PLAY_L, AUDIO_PAUSE_L, target));
+      right.setAttribute('d', audioQuad(AUDIO_PLAY_R, AUDIO_PAUSE_R, target));
+      return;
+    }
+    const start = performance.now();
+    const tick = (now) => {
+      const u = Math.min(1, (now - start) / 260);
+      const eased = 1 - Math.pow(1 - u, 4);
+      const t = from + (target - from) * eased;
+      player.dataset.markT = String(t);
+      left.setAttribute('d', audioQuad(AUDIO_PLAY_L, AUDIO_PAUSE_L, t));
+      right.setAttribute('d', audioQuad(AUDIO_PLAY_R, AUDIO_PAUSE_R, t));
+      if (u < 1 && player.isConnected) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+
+  function wakeAudioSteps(player, from, to) {
+    if (!player || reducedMotion() || from === to || from < 0) return;
+    const dots = [...player.querySelectorAll('[data-left-audio-step]')];
+    const direction = to > from ? 1 : -1;
+    let order = 0;
+    for (let i = from + direction; direction > 0 ? i <= to : i >= to; i += direction) {
+      const dot = dots[i];
+      if (!dot) continue;
+      dot.classList.remove('is-wake');
+      dot.style.setProperty('--wake-delay', `${order * 52}ms`);
+      void dot.offsetWidth;
+      dot.classList.add('is-wake');
+      setTimeout(() => dot.classList.remove('is-wake'), 520 + order * 52);
+      order += 1;
+    }
+  }
+
+  function paintAudioStepPlayer(player) {
+    if (!player?.isConnected) return;
+    const audio = player.querySelector('[data-left-audio-el]');
+    const dots = [...player.querySelectorAll('[data-left-audio-step]')];
+    const time = player.querySelector('[data-left-audio-time]');
+    if (!audio || !dots.length) return;
+    const duration = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : 0;
+    const ratio = duration ? clamp(audio.currentTime / duration, 0, 1) : 0;
+    const scaled = ratio * dots.length;
+    const step = ratio >= 1 ? dots.length - 1 : Math.min(dots.length - 1, Math.floor(scaled));
+    const local = ratio >= 1 ? 1 : clamp(scaled - step, 0, 1);
+    const previous = Number(player.dataset.stepIndex ?? -1);
+    if (previous !== step) {
+      wakeAudioSteps(player, previous, step);
+      player.dataset.stepIndex = String(step);
+    }
+    dots.forEach((dot, index) => {
+      const current = index === step;
+      const done = index < step || ratio >= 1;
+      dot.setAttribute('aria-current', current ? 'step' : 'false');
+      dot.dataset.state = done && !current ? 'done' : current ? 'current' : 'next';
+      dot.style.setProperty('--fill', String(done && !current ? 1 : current ? local : 0));
+    });
+    if (time) {
+      const current = formatRecordingDuration(audio.currentTime || 0);
+      const total = duration ? formatRecordingDuration(duration) : '0:00';
+      time.textContent = `${current} / ${total}`;
+    }
+  }
+
+  function stopActiveAudioPlayer() {
+    const player = activeAudioPlayer;
+    if (!player) return;
+    if (player._raf) cancelAnimationFrame(player._raf);
+    player._raf = 0;
+    const audio = player.querySelector?.('[data-left-audio-el]');
+    if (audio && !audio.paused) audio.pause();
+    activeAudioPlayer = null;
+  }
+
+  function runAudioPlayer(player) {
+    if (!player) return;
+    if (player._raf) cancelAnimationFrame(player._raf);
+    const tick = () => {
+      paintAudioStepPlayer(player);
+      const audio = player.querySelector('[data-left-audio-el]');
+      if (audio && !audio.paused && !audio.ended && player.isConnected) player._raf = requestAnimationFrame(tick);
+      else player._raf = 0;
+    };
+    player._raf = requestAnimationFrame(tick);
+  }
+
+  function bindAudioStepPlayer(scope) {
+    stopActiveAudioPlayer();
+    const player = scope?.querySelector?.('[data-left-audio-player]');
+    if (!player) return;
+    const audio = player.querySelector('[data-left-audio-el]');
+    const toggle = player.querySelector('[data-left-audio-toggle]');
+    const dots = [...player.querySelectorAll('[data-left-audio-step]')];
+    if (!audio || !toggle) return;
+    activeAudioPlayer = player;
+    player.dataset.stepIndex = '-1';
+    player.dataset.markT = '0';
+
+    const setPlaying = (playing) => {
+      player.dataset.playing = playing ? 'true' : 'false';
+      toggle.setAttribute('aria-label', playing ? 'Pausa' : 'Riproduci');
+      morphAudioPlayerMark(player, playing);
+      if (playing) runAudioPlayer(player);
+      else paintAudioStepPlayer(player);
+    };
+
+    toggle.addEventListener('click', async () => {
+      if (audio.paused || audio.ended) {
+        if (audio.ended) audio.currentTime = 0;
+        try { await audio.play(); } catch (error) { console.warn('[US Left for You] audio play', error); }
+      } else audio.pause();
+    });
+    audio.addEventListener('loadedmetadata', () => paintAudioStepPlayer(player));
+    audio.addEventListener('play', () => setPlaying(true));
+    audio.addEventListener('pause', () => setPlaying(false));
+    audio.addEventListener('ended', () => { setPlaying(false); paintAudioStepPlayer(player); });
+    dots.forEach((dot, index) => dot.addEventListener('click', () => {
+      if (!Number.isFinite(audio.duration) || audio.duration <= 0) return;
+      const from = Number(player.dataset.stepIndex ?? 0);
+      audio.currentTime = (index / dots.length) * audio.duration;
+      wakeAudioSteps(player, from, index);
+      paintAudioStepPlayer(player);
+    }));
+    paintAudioStepPlayer(player);
+  }
+
   const isUnseen = (item) => !item?.seen_at;
   const partner = () => profiles.get(items[0]?.sender_id) || [...profiles.values()].find((p) => p.id !== window.usProfile?.id) || null;
   const labelForKind = (kind) => ({ text: 'Un pensiero', photo: 'Una foto', audio: 'Una voce', video: 'Un momento', music: 'Musica' }[kind] || 'Lasciato per te');
@@ -82,7 +282,7 @@
     let content = '';
     if (kind === 'text') content = `<div class="left-for-you-text">${escapeHtml(item?.body || 'Un pensiero per te.')}</div>`;
     if (kind === 'photo') content = `<img class="left-for-you-photo" src="${escapeHtml(mediaUrl)}" alt="Foto lasciata per te" loading="eager">${body}`;
-    if (kind === 'audio') content = `<div class="left-for-you-media-shell"><span class="left-for-you-media-mark" aria-hidden="true">◖</span><audio controls preload="metadata" src="${escapeHtml(mediaUrl)}"></audio></div>${body}`;
+    if (kind === 'audio') content = `${renderAudioStepPlayerMarkup(mediaUrl)}${body}`;
     if (kind === 'video') content = `<video class="left-for-you-video" controls preload="metadata" playsinline src="${escapeHtml(mediaUrl)}"></video>${body}`;
     if (kind === 'music') {
       const trackId = extractSpotifyTrackId(item?.media_path || '');
@@ -210,7 +410,9 @@
     activeItem = item;
     content.innerHTML = '<div class="left-for-you-loading-inline" aria-busy="true">Un attimo…</div>';
     const url = await mediaUrl(item);
+    stopActiveAudioPlayer();
     content.innerHTML = renderItemMarkup(item, url);
+    if (item.kind === 'audio') bindAudioStepPlayer(content);
     lastRenderedItemId = item.id;
     if (counter) counter.textContent = items.length > 1 ? `${currentIndex + 1} di ${items.length}` : '';
     if (conserve) {
@@ -258,6 +460,7 @@
   function close() {
     const modal = root();
     if (!modal) return;
+    stopActiveAudioPlayer();
     modal.classList.remove('open'); modal.setAttribute('aria-hidden', 'true');
     activeItem = null;
     items = [];
@@ -679,11 +882,107 @@
   function clearRecordingTimer() {
     if (composer.recordingTimer) clearInterval(composer.recordingTimer);
     composer.recordingTimer = null;
+    if (composer.recordingMaxTimer) clearTimeout(composer.recordingMaxTimer);
+    composer.recordingMaxTimer = null;
   }
 
   function formatRecordingDuration(seconds) {
     const safe = Math.max(0, Math.floor(Number(seconds) || 0));
-    return `${String(Math.floor(safe / 60)).padStart(2, '0')}:${String(safe % 60).padStart(2, '0')}`;
+    return `${Math.floor(safe / 60)}:${String(safe % 60).padStart(2, '0')}`;
+  }
+
+  function voiceResample(source, count = VOICE_NOTE_BARS) {
+    const src = Array.isArray(source) ? source : [];
+    if (!src.length) return Array(count).fill(0.04);
+    return Array.from({ length: count }, (_, index) => {
+      const a = Math.floor((index * src.length) / count);
+      const b = Math.max(a + 1, Math.floor(((index + 1) * src.length) / count));
+      let peak = 0;
+      for (let i = a; i < b && i < src.length; i += 1) peak = Math.max(peak, Number(src[i]) || 0);
+      return clamp(peak, 0.04, 1);
+    });
+  }
+
+  function paintVoiceWave(element, levels, progress = null) {
+    if (!element) return;
+    const sampled = voiceResample(levels, VOICE_NOTE_BARS);
+    element.innerHTML = sampled.map((level, index) =>
+      `<i class="left-for-you-vn-bar" style="--level:${clamp(level, 0.04, 1).toFixed(3)}" data-played="${progress != null && index / sampled.length <= progress ? 'true' : 'false'}"></i>`
+    ).join('');
+  }
+
+  function setRecordingPull(value) {
+    composer.recordingPull = clamp(Number(value) || 0, 0, 1);
+    const record = document.getElementById('leftForYouComposerAudioRecord');
+    const hint = document.getElementById('leftForYouComposerAudioHint');
+    if (record) {
+      record.style?.setProperty?.('--pull', composer.recordingPull.toFixed(3));
+      record.dataset.armed = composer.recordingPull >= 1 ? 'true' : 'false';
+    }
+    if (hint) {
+      hint.dataset.armed = composer.recordingPull >= 1 ? 'true' : 'false';
+      hint.textContent = composer.recordingPull >= 1 ? 'Rilascia per annullare' : '‹ Scorri per annullare';
+    }
+  }
+
+  function stopRecordingVisualizer() {
+    if (composer.recordingVisualizer) clearInterval(composer.recordingVisualizer);
+    composer.recordingVisualizer = null;
+    try { composer.recordingSource?.disconnect?.(); } catch (_) { /* already disconnected */ }
+    composer.recordingSource = null;
+    composer.recordingAnalyser = null;
+    composer.recordingAnalyserData = null;
+    const ctx = composer.recordingAudioContext;
+    composer.recordingAudioContext = null;
+    if (ctx?.close) Promise.resolve(ctx.close()).catch(() => {});
+  }
+
+  function sampleRecordingLevel() {
+    const analyser = composer.recordingAnalyser;
+    const data = composer.recordingAnalyserData;
+    if (!analyser || !data || composer.recordingState !== 'recording') return;
+    analyser.getByteTimeDomainData(data);
+    let sum = 0;
+    for (let i = 0; i < data.length; i += 1) {
+      const centered = (data[i] - 128) / 128;
+      sum += centered * centered;
+    }
+    const rms = Math.sqrt(sum / Math.max(1, data.length));
+    const level = clamp(0.04 + rms * 6.8, 0.04, 1);
+    composer.recordingLevels.push(level);
+    const recent = composer.recordingLevels.slice(-VOICE_NOTE_BARS);
+    paintVoiceWave(document.getElementById('leftForYouComposerAudioWave'), recent);
+  }
+
+  function startRecordingVisualizer(stream) {
+    stopRecordingVisualizer();
+    composer.recordingLevels = [];
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+    if (AudioContextCtor) {
+      try {
+        const ctx = new AudioContextCtor();
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 256;
+        analyser.smoothingTimeConstant = 0.68;
+        const source = ctx.createMediaStreamSource(stream);
+        source.connect(analyser);
+        composer.recordingAudioContext = ctx;
+        composer.recordingAnalyser = analyser;
+        composer.recordingSource = source;
+        composer.recordingAnalyserData = new Uint8Array(analyser.fftSize);
+        Promise.resolve(ctx.resume?.()).catch(() => {});
+      } catch (error) {
+        console.warn('[US Left for You] voice analyser', error);
+      }
+    }
+    paintVoiceWave(document.getElementById('leftForYouComposerAudioWave'), []);
+    composer.recordingVisualizer = typeof setInterval === 'function' ? setInterval(() => {
+      if (composer.recordingAnalyser) sampleRecordingLevel();
+      else if (composer.recordingState === 'recording') {
+        composer.recordingLevels.push(0.08);
+        paintVoiceWave(document.getElementById('leftForYouComposerAudioWave'), composer.recordingLevels.slice(-VOICE_NOTE_BARS));
+      }
+    }, VOICE_SAMPLE_MS) : null;
   }
 
   function updateRecordingTimer() {
@@ -692,29 +991,105 @@
     timer.textContent = formatRecordingDuration((Date.now() - composer.recordingStartedAt) / 1000);
   }
 
+  function stopComposerPreview() {
+    if (composer.previewRaf) cancelAnimationFrame(composer.previewRaf);
+    composer.previewRaf = 0;
+    const preview = document.getElementById('leftForYouComposerAudioPreview');
+    if (preview && !preview.paused && typeof preview.pause === 'function') preview.pause();
+  }
+
+  function paintComposerPreview() {
+    const preview = document.getElementById('leftForYouComposerAudioPreview');
+    const wave = document.getElementById('leftForYouComposerAudioClipWave');
+    const time = document.getElementById('leftForYouComposerAudioPreviewTime');
+    const toggle = document.getElementById('leftForYouComposerAudioPreviewToggle');
+    if (!preview || !composer.recording) return;
+    const duration = Number.isFinite(preview.duration) && preview.duration > 0 ? preview.duration : Number(composer.recording.duration) || 0;
+    const progress = duration ? clamp(preview.currentTime / duration, 0, 1) : 0;
+    paintVoiceWave(wave, composer.recording.levels || [], progress);
+    if (time) time.textContent = formatRecordingDuration(preview.currentTime > 0 ? preview.currentTime : duration);
+    if (toggle) {
+      toggle.dataset.playing = preview.paused ? 'false' : 'true';
+      toggle.setAttribute('aria-label', preview.paused ? 'Riproduci la registrazione' : 'Pausa');
+    }
+  }
+
+  function runComposerPreview() {
+    if (composer.previewRaf) cancelAnimationFrame(composer.previewRaf);
+    const tick = () => {
+      paintComposerPreview();
+      const preview = document.getElementById('leftForYouComposerAudioPreview');
+      if (preview && !preview.paused && !preview.ended) composer.previewRaf = requestAnimationFrame(tick);
+      else composer.previewRaf = 0;
+    };
+    composer.previewRaf = requestAnimationFrame(tick);
+  }
+
+  async function toggleComposerPreview() {
+    const preview = document.getElementById('leftForYouComposerAudioPreview');
+    if (!preview || composer.recordingState !== 'ready') return;
+    if (preview.paused || preview.ended) {
+      if (preview.ended) preview.currentTime = 0;
+      try { await preview.play(); } catch (error) { console.warn('[US Left for You] preview play', error); }
+    } else preview.pause();
+  }
+
+  function seekComposerPreview(clientX) {
+    const preview = document.getElementById('leftForYouComposerAudioPreview');
+    const wave = document.getElementById('leftForYouComposerAudioClipWave');
+    if (!preview || !wave || !Number.isFinite(preview.duration) || preview.duration <= 0) return;
+    const box = wave.getBoundingClientRect();
+    preview.currentTime = clamp((clientX - box.left) / Math.max(1, box.width), 0, 1) * preview.duration;
+    paintComposerPreview();
+  }
+
   function updateRecorderUi() {
     const record = document.getElementById('leftForYouComposerAudioRecord');
-    const timer = document.getElementById('leftForYouComposerAudioTimer');
-    const preview = document.getElementById('leftForYouComposerAudioPreview');
-    const retry = document.getElementById('leftForYouComposerAudioRetry');
+    const idle = document.getElementById('leftForYouComposerAudioIdle');
+    const rec = document.getElementById('leftForYouComposerAudioRecording');
+    const clip = document.getElementById('leftForYouComposerAudioClip');
     const remove = document.getElementById('leftForYouComposerAudioDelete');
+    const hint = document.getElementById('leftForYouComposerAudioHint');
+    const preview = document.getElementById('leftForYouComposerAudioPreview');
     if (!record) return;
     const state = composer.recordingState;
-    record.setAttribute('aria-label', state === 'recording' ? 'Ferma la registrazione' : 'Registra la voce');
-    record.classList.toggle('is-recording', state === 'recording');
-    record.hidden = state === 'ready';
-    record.disabled = composer.sending || state === 'starting';
-    if (timer) {
-      timer.hidden = state !== 'recording';
-      if (state === 'idle') timer.textContent = '00:00';
+    record.hidden = false;
+    const recording = state === 'recording' || state === 'starting';
+    const ready = state === 'ready';
+    record.dataset.phase = ready ? 'clip' : recording ? 'rec' : 'idle';
+    record.setAttribute('aria-disabled', composer.sending || state === 'starting' ? 'true' : 'false');
+    if (ready) {
+      record.removeAttribute('role');
+      record.tabIndex = -1;
+      record.removeAttribute('aria-label');
+    } else {
+      record.setAttribute('role', 'button');
+      record.tabIndex = 0;
+      record.setAttribute('aria-label', recording ? 'Registrazione in corso. Rilascia per salvare, scorri a sinistra per annullare.' : 'Tieni premuto per registrare una voce');
+    }
+    if (idle) idle.hidden = state !== 'idle';
+    if (rec) rec.hidden = !recording;
+    if (clip) clip.hidden = !ready;
+    if (remove) remove.hidden = !ready;
+    if (hint) {
+      hint.dataset.on = recording ? 'true' : 'false';
+      hint.hidden = !recording;
     }
     if (preview) {
-      preview.hidden = state !== 'ready';
-      if (state === 'ready' && composer.recording?.url) preview.src = composer.recording.url;
-      if (state !== 'ready') preview.removeAttribute('src');
+      if (ready && composer.recording?.url && preview.src !== composer.recording.url) {
+        preview.src = composer.recording.url;
+        preview.currentTime = 0;
+        preview.load?.();
+      } else if (!ready) {
+        preview.removeAttribute('src');
+      }
     }
-    if (retry) retry.hidden = state !== 'ready';
-    if (remove) remove.hidden = state !== 'ready';
+    if (ready) paintComposerPreview();
+    if (state === 'idle') {
+      setRecordingPull(0);
+      const timer = document.getElementById('leftForYouComposerAudioTimer');
+      if (timer) timer.textContent = '0:00';
+    }
   }
 
   function makeRecordedFile(blob) {
@@ -725,7 +1100,10 @@
 
   function discardRecording() {
     composer.recordingDiscarded = true;
+    composer.recordingPressHeld = false;
     clearRecordingTimer();
+    stopComposerPreview();
+    stopRecordingVisualizer();
     const recorder = composer.mediaRecorder;
     if (recorder && recorder.state === 'recording') {
       try { recorder.stop(); } catch (_) { /* recorder already stopped */ }
@@ -736,11 +1114,12 @@
     if (composer.recording?.url && typeof window.URL?.revokeObjectURL === 'function') window.URL.revokeObjectURL(composer.recording.url);
     composer.recording = null;
     composer.recordingState = 'idle';
+    composer.recordingLevels = [];
     updateRecorderUi();
     updateComposerValidity();
   }
 
-  async function startRecording() {
+  async function startRecording({ requireHold = false } = {}) {
     if (composer.sending || composer.recordingState === 'recording' || composer.recordingState === 'starting') return;
     const mediaDevices = window.navigator?.mediaDevices;
     const MediaRecorderCtor = window.MediaRecorder;
@@ -748,14 +1127,19 @@
       setComposerStatus('La registrazione vocale non è disponibile in questo browser.', 'error');
       return;
     }
+    const heldAtStart = Boolean(requireHold && composer.recordingPressHeld);
     discardRecording();
+    composer.recordingPressHeld = heldAtStart;
     composer.recordingDiscarded = false;
+    composer.recordingRequireHold = requireHold;
     composer.recordingState = 'starting';
     updateRecorderUi();
     try {
       const stream = await mediaDevices.getUserMedia({ audio: true });
-      if (composer.recordingState !== 'starting') {
+      if (composer.recordingState !== 'starting' || (requireHold && !composer.recordingPressHeld)) {
         for (const track of stream.getTracks?.() || stream.tracks || []) track.stop?.();
+        composer.recordingState = 'idle';
+        updateRecorderUi();
         return;
       }
       composer.mediaStream = stream;
@@ -765,6 +1149,7 @@
       composer.mediaRecorder = recorder;
       composer.recordingState = 'recording';
       composer.recordingStartedAt = Date.now();
+      startRecordingVisualizer(stream);
       recorder.ondataavailable = (event) => { if (event.data?.size) composer.recordingChunks.push(event.data); };
       recorder.onerror = () => {
         setComposerStatus('Non riesco a registrare la voce. Riprova.', 'error');
@@ -773,13 +1158,17 @@
       recorder.onstop = () => {
         const ignored = composer.recordingDiscarded;
         const chunks = composer.recordingChunks;
+        const tookMs = Date.now() - composer.recordingStartedAt;
+        const levels = composer.recordingLevels.slice();
         clearRecordingTimer();
+        stopRecordingVisualizer();
         releaseMediaStream();
         composer.mediaRecorder = null;
         composer.recordingChunks = [];
-        if (ignored || !chunks.length) {
+        if (ignored || !chunks.length || tookMs < VOICE_MIN_MS) {
           composer.recordingState = 'idle';
           composer.recording = null;
+          composer.recordingLevels = [];
           updateRecorderUi();
           updateComposerValidity();
           return;
@@ -788,18 +1177,25 @@
         const blob = new BlobCtor(chunks, { type: recorder.mimeType || chunks[0]?.type || 'audio/webm' });
         const file = makeRecordedFile(blob);
         const url = typeof window.URL?.createObjectURL === 'function' ? window.URL.createObjectURL(blob) : '';
-        composer.recording = { ready: true, file, url, duration: (Date.now() - composer.recordingStartedAt) / 1000 };
+        composer.recording = { ready: true, file, url, duration: tookMs / 1000, levels };
         composer.recordingState = 'ready';
+        composer.recordingLevels = levels;
         updateRecorderUi();
         updateComposerValidity();
       };
       recorder.start();
-      composer.recordingTimer = typeof setInterval === 'function' ? setInterval(updateRecordingTimer, 250) : null;
+      composer.recordingTimer = typeof setInterval === 'function' ? setInterval(updateRecordingTimer, 200) : null;
+      composer.recordingMaxTimer = setTimeout(() => {
+        if (composer.recordingState === 'recording') stopRecording();
+      }, VOICE_MAX_MS);
+      updateRecordingTimer();
       updateRecorderUi();
     } catch (error) {
       console.warn('[US Left for You] recorder', error);
+      stopRecordingVisualizer();
       releaseMediaStream();
       composer.mediaRecorder = null;
+      composer.recordingPressHeld = false;
       composer.recordingState = 'idle';
       updateRecorderUi();
       setComposerStatus(error?.name === 'NotAllowedError' ? 'Il microfono non è disponibile. Controlla i permessi e riprova.' : 'Non riesco ad avviare la registrazione. Riprova.', 'error');
@@ -811,11 +1207,46 @@
     if (composer.recordingState !== 'recording') return;
     const recorder = composer.mediaRecorder;
     if (!recorder) return;
+    clearRecordingTimer();
+    stopRecordingVisualizer();
     try { recorder.stop(); } catch (error) {
       console.warn('[US Left for You] recorder stop', error);
       discardRecording();
     }
-    releaseMediaStream();
+  }
+
+  function beginVoicePress(event) {
+    if (composer.sending || composer.recordingState !== 'idle') return;
+    if (event?.button != null && event.button !== 0) return;
+    event?.preventDefault?.();
+    composer.recordingPointerId = event?.pointerId ?? null;
+    composer.recordingPointerStartX = Number(event?.clientX) || 0;
+    composer.recordingPressHeld = true;
+    setRecordingPull(0);
+    try { event?.currentTarget?.setPointerCapture?.(event.pointerId); } catch (_) { /* scripted pointer */ }
+    startRecording({ requireHold: true });
+  }
+
+  function moveVoicePress(event) {
+    if (!composer.recordingPressHeld || (composer.recordingState !== 'recording' && composer.recordingState !== 'starting')) return;
+    if (composer.recordingPointerId != null && event?.pointerId !== composer.recordingPointerId) return;
+    const distance = composer.recordingPointerStartX - (Number(event?.clientX) || composer.recordingPointerStartX);
+    setRecordingPull(distance / VOICE_CANCEL_PX);
+  }
+
+  function endVoicePress(event, { cancel = false } = {}) {
+    if (composer.recordingPointerId != null && event?.pointerId != null && event.pointerId !== composer.recordingPointerId) return;
+    try { event?.currentTarget?.releasePointerCapture?.(event.pointerId); } catch (_) { /* not captured */ }
+    const armed = composer.recordingPull >= 1;
+    composer.recordingPressHeld = false;
+    composer.recordingPointerId = null;
+    if (composer.recordingState === 'starting') {
+      if (cancel || armed) composer.recordingDiscarded = true;
+      return;
+    }
+    if (composer.recordingState !== 'recording') return;
+    if (cancel || armed) discardRecording();
+    else stopRecording();
   }
 
   function fileExtension(file) {
@@ -1008,12 +1439,56 @@
     document.getElementById('leftForYouCameraCapture')?.addEventListener('click', captureCameraPhoto);
     document.getElementById('leftForYouCameraUse')?.addEventListener('click', useCameraPhoto);
     document.getElementById('leftForYouCameraRetake')?.addEventListener('click', retakeCameraPhoto);
-    document.getElementById('leftForYouComposerAudioRecord')?.addEventListener('click', () => {
-      if (composer.recordingState === 'recording') stopRecording();
-      else startRecording();
+    const voiceRecord = document.getElementById('leftForYouComposerAudioRecord');
+    voiceRecord?.addEventListener('pointerdown', beginVoicePress);
+    voiceRecord?.addEventListener('pointermove', moveVoicePress);
+    voiceRecord?.addEventListener('pointerup', (event) => endVoicePress(event));
+    voiceRecord?.addEventListener('pointercancel', (event) => endVoicePress(event, { cancel: true }));
+    voiceRecord?.addEventListener('contextmenu', (event) => event.preventDefault());
+    voiceRecord?.addEventListener('keydown', (event) => {
+      if ((event.key === ' ' || event.key === 'Enter') && !event.repeat && composer.recordingState === 'idle') {
+        event.preventDefault();
+        composer.recordingPressHeld = true;
+        startRecording({ requireHold: true });
+      } else if (event.key === 'Escape' && (composer.recordingState === 'recording' || composer.recordingState === 'starting')) {
+        event.preventDefault();
+        composer.recordingPressHeld = false;
+        if (composer.recordingState === 'recording') discardRecording();
+      }
     });
-    document.getElementById('leftForYouComposerAudioRetry')?.addEventListener('click', startRecording);
-    document.getElementById('leftForYouComposerAudioDelete')?.addEventListener('click', discardRecording);
+    voiceRecord?.addEventListener('keyup', (event) => {
+      if ((event.key === ' ' || event.key === 'Enter') && composer.recordingPressHeld) {
+        event.preventDefault();
+        composer.recordingPressHeld = false;
+        if (composer.recordingState === 'recording') stopRecording();
+      }
+    });
+    document.getElementById('leftForYouComposerAudioDelete')?.addEventListener('click', (event) => {
+      event.stopPropagation();
+      discardRecording();
+    });
+    document.getElementById('leftForYouComposerAudioPreviewToggle')?.addEventListener('click', (event) => {
+      event.stopPropagation();
+      toggleComposerPreview();
+    });
+    const previewAudio = document.getElementById('leftForYouComposerAudioPreview');
+    previewAudio?.addEventListener('play', runComposerPreview);
+    previewAudio?.addEventListener('pause', paintComposerPreview);
+    previewAudio?.addEventListener('loadedmetadata', paintComposerPreview);
+    previewAudio?.addEventListener('ended', paintComposerPreview);
+    const previewWave = document.getElementById('leftForYouComposerAudioClipWave');
+    previewWave?.addEventListener('pointerdown', (event) => {
+      event.stopPropagation();
+      composer.previewScrubbing = true;
+      try { previewWave.setPointerCapture?.(event.pointerId); } catch (_) { /* scripted pointer */ }
+      seekComposerPreview(event.clientX);
+    });
+    previewWave?.addEventListener('pointermove', (event) => { if (composer.previewScrubbing) seekComposerPreview(event.clientX); });
+    previewWave?.addEventListener('pointerup', (event) => {
+      composer.previewScrubbing = false;
+      try { previewWave.releasePointerCapture?.(event.pointerId); } catch (_) { /* not captured */ }
+    });
+    previewWave?.addEventListener('pointercancel', () => { composer.previewScrubbing = false; });
     updateComposerValidity();
   }
 
@@ -1044,7 +1519,9 @@
     isUnseen, renderItemMarkup, labelForKind, open, close, load, conserve, retry, boot,
     tap, applyEnvelopeState, updateEntry, envelopeStateFor, envelopeIsResolved, subscribeRealtime, handleIncoming, alignCurrentToRenderedItem,
     setComposerKind, openComposer, closeComposer, send, updateComposerValidity, composerCanSend,
-    startRecording, stopRecording, discardRecording, openCamera, closeCamera, switchCamera, captureCameraPhoto, useCameraPhoto, retakeCameraPhoto, discardCameraCapture, composer,
+    startRecording, stopRecording, discardRecording, beginVoicePress, moveVoicePress, endVoicePress,
+    bindAudioStepPlayer, paintAudioStepPlayer, stopActiveAudioPlayer,
+    openCamera, closeCamera, switchCamera, captureCameraPhoto, useCameraPhoto, retakeCameraPhoto, discardCameraCapture, composer,
     extractSpotifyTrackId, canonicalSpotifyTrackUrl, spotifyEmbedUrl,
     renderMusicResults, selectMusicResult, clearMusicSelection, resetMusicSearchUi, runMusicSearch, scheduleMusicSearch, musicSearch, musicSearchErrorMessage,
   };

@@ -324,14 +324,18 @@ test('Ti penso does not double-fire: the explicit call and the shell transition 
   assert.match(read('ui-foundation.js'), /environment\.UsFeedback\?\.attention\?\.\(\)/);
 });
 
-test('no scattered vibration or audio APIs outside the feedback authority', () => {
+test('no scattered vibration or playback-audio APIs outside the feedback authority', () => {
   const offenders = [];
   for (const file of fs.readdirSync(ROOT).filter((name) => /\.(js|mjs)$/.test(name))) {
     if (['ui-foundation.js', 'platform.js', 'service-worker.js'].includes(file)) continue;
     const source = read(file);
-    if (/navigator\.vibrate|new Audio\(|AudioContext/.test(source)) offenders.push(file);
+    if (/navigator\.vibrate|new Audio\(/.test(source)) offenders.push(file);
+    if (/AudioContext/.test(source) && file !== 'left-for-you.js') offenders.push(file);
   }
   assert.deepEqual(offenders, []);
+  const voice = read('left-for-you.js');
+  assert.match(voice, /createMediaStreamSource\(stream\)/, 'Left for You may analyse the live microphone only');
+  assert.doesNotMatch(voice, /createOscillator|\.destination/, 'capture analysis must never become a feedback sound path');
 });
 
 test('settings exposes one row to switch sounds and haptics off', () => {
