@@ -14,7 +14,7 @@ test('M9D (US 1.0): Noi opens on four active cards, in order, with no new bottom
   const hub = bond().match(/<nav class="noi-hub" id="noiHub"[\s\S]*?<\/nav>/)?.[0] || '';
   assert.notEqual(hub, '');
   const kickers = [...hub.matchAll(/<span class="noi-hub-kicker">([^<]+)<\/span>/g)].map((m) => m[1]);
-  assert.deepEqual(kickers, ['Risonanza', 'Calendario', 'Quest di coppia', 'Eventi']);
+  assert.deepEqual(kickers, ['Sintonia', 'Calendario', 'Quest di coppia', 'Eventi']);
   assert.match(hub, /data-noi-open="resonance"/);
   assert.doesNotMatch(hub, /data-noi-open="da-vivere"/);
   assert.match(hub, /data-noi-open="quest"/);
@@ -26,7 +26,7 @@ test('M9D (US 1.0): Noi opens on four active cards, in order, with no new bottom
   assert.deepEqual([...nav.matchAll(/data-page="([^"]+)"/g)].map((m) => m[1]), ['home', 'bond', 'moments', 'quiz'], 'bottom navigation keeps its four tabs');
 });
 
-test('M9D + HUMAN-UI-02: Risonanza is the one hero, the other destinations are compact rows, Phosphor icons only', () => {
+test('M9D + HUMAN-UI-02: Sintonia keeps the one-hero geometry, other destinations stay compact', () => {
   const s = css();
   assert.match(s, /\.noi-hub\{display:grid;grid-template-columns:minmax\(0,1fr\);/);
   assert.match(s, /\.noi-hub-card--resonance\{min-height:150px;/);
@@ -57,25 +57,18 @@ test('M9D: the back path is the shared navigation history (system Back included)
   assert.match(app(), /function openNoiIdeaDetail\(id\)\{\s*const item=noiIdeaFindItem\(id\);\s*if\(!item\)return;\s*openNoiSection\('da-vivere'\);/, 'Ricordi deep links land inside Da vivere');
 });
 
-test('M9D: Risonanza is explained only with the actions that award bond XP today', () => {
+test('M9D/Progression V1: Sintonia explains only server-backed meaningful actions', () => {
   const guide = bond().match(/<section class="noi-resonance-guide"[\s\S]*?<\/section>/)?.[0] || '';
   const sources = [...guide.matchAll(/<li><b>([^<]+)<\/b>/g)].map((m) => m[1]);
-  // M11B retired the legacy weekly quiz and Partner Knowledge UI, so they are no longer listed.
-  assert.deepEqual(sources, ['Quest di coppia', 'I nostri eventi', 'Mesiversario e anniversario']);
-  // each listed source is backed by a real XP award in the client contract
-  assert.match(app(), /sb\.rpc\('confirm_bond_quest'/);
-  assert.match(app(), /data\?\.xp_awarded/);
-  assert.doesNotMatch(guide, /Quiz|Quanto conosci|Gioca/, 'Game V2 does not award bond XP yet');
-  assert.match(read('events.js'), /complete_shared_event/);
-  assert.match(read('events.js'), /return lead>=7\?50:lead>=2\?35:25/);
-  assert.match(read('events.js'), /kind==='anniversary'\?200:60/);
-  assert.match(app(), /needed=200\+\(level-1\)\*150/, '"ogni livello chiede 150 XP in più" matches the level curve');
-  assert.doesNotMatch(guide, /Ti penso|Lasciato per te|Domanda del giorno|foto/i, 'no invented sources');
-  // no parallel scoring: the surface only reads couples.bond_xp through renderBondProgress
+  assert.deepEqual(sources, ['Quest ed eventi', 'Domanda del giorno e Gioca', 'Ti penso e Ricordi', 'Mesiversario e anniversario']);
+  const migration = read('supabase/migrations/20261002181500_us_progression_v1.sql');
+  for (const kind of ['quest','event','daily','game','think','moment','milestone']) assert.match(migration, new RegExp(`'${kind}'`), kind);
+  assert.match(migration, /progression_award/);
+  assert.match(migration, /unique \(couple_id, source_kind, source_key\)/, 'one source cannot farm progression');
+  assert.match(app(), /needed=200\+\(level-1\)\*150/, 'level curve stays the existing Bond curve');
   assert.match(app(), /const resTotal=document\.getElementById\('noiResonanceTotal'\);if\(resTotal\)resTotal\.textContent=info\.total/);
-  assert.doesNotMatch(app(), /bond_xp\s*[+:]=|update\(\{bond_xp/);
+  assert.doesNotMatch(app(), /bond_xp\s*[+:]=|update\(\{bond_xp/, 'client never becomes progression authority');
 });
-
 test('M9D runtime: hub summaries come from loaded data only; sections open and close', () => {
   const src = app();
   const start = src.indexOf('function renderNoiHubSummary(){');

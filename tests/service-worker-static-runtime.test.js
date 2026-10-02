@@ -309,13 +309,14 @@ test('index carica Supabase, auth storage, app e Stories in questo ordine', () =
   const supabaseIndex = sources.findIndex((src) => src.includes('@supabase/supabase-js'));
   const authIndex = sources.findIndex((src) => src.startsWith('/auth-storage.js'));
   const appIndex = sources.findIndex((src) => src.startsWith('/app.js'));
+  const progressionIndex = sources.findIndex((src) => src.startsWith('/progression.js'));
   const storiesIndex = sources.findIndex((src) => src.startsWith('/stories.js'));
   const firstExistingScriptIndex = sources.findIndex((src) => src.startsWith('/fix4.js'));
 
   assert.ok(supabaseIndex >= 0, 'script Supabase non trovato');
   assert.deepEqual(
-    [authIndex, appIndex, storiesIndex, firstExistingScriptIndex],
-    [supabaseIndex + 1, supabaseIndex + 2, supabaseIndex + 3, supabaseIndex + 4]
+    [authIndex, appIndex, progressionIndex, storiesIndex, firstExistingScriptIndex],
+    [supabaseIndex + 1, supabaseIndex + 2, supabaseIndex + 3, supabaseIndex + 4, supabaseIndex + 5]
   );
 });
 

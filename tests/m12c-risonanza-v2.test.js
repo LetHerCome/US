@@ -54,9 +54,9 @@ test('M12C: hydration reads same-couple authorities and guards identity switches
   assert.match(block,/if\(window\.usProfile!==profile\)return;/);
 });
 
-test('M12C: opening Risonanza refreshes history without changing other Noi routes',()=>{
+test('M12C/Progression V1: opening Sintonia refreshes history and progression without changing other Noi routes',()=>{
   const block=slice('function openNoiSection(view){','function closeNoiSection(){');
-  assert.match(block,/if\(view==='resonance'\)window\.hydrateResonanceHistory\?\.\(\)/);
+  assert.match(block,/if\(view==='resonance'\)\{window\.hydrateResonanceHistory\?\.\(\);window\.USProgression\?\.hydrate\?\.\(\{showUnlocks:true,force:true\}\);\}/);
   assert.match(block,/if\(view==='da-vivere'/);
   assert.match(block,/if\(view==='eventi'\)/);
 });

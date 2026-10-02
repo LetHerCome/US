@@ -132,13 +132,13 @@ test('Progression V1: completed Game adds 15 once; existing Quest/Event XP is on
 
 test('Progression V1: Ritmo is couple-level, Rome-day consecutive, and automatic milestones do not maintain it',async()=>{
   const {db,c,f}=await fresh();
-  const today=(await db.query("select (now() at time zone 'Europe/Rome')::date d")).rows[0].d;
+  const today=(await db.query("select ((now() at time zone 'Europe/Rome')::date)::text d")).rows[0].d;
   await db.query("select private.progression_award($1,$2,'think','r1',0,now()-interval '2 days',true,false)",[c,f]);
   await db.query("select private.progression_award($1,$2,'think','r2',0,now()-interval '1 day',true,false)",[c,f]);
   await db.query("select private.progression_award($1,$2,'think','r3',0,now(),true,false)",[c,f]);
   const s=await state(db,f);
   assert.equal(s.rhythm_days,3); assert.equal(s.rhythm_today,true);
-  assert.equal(String(s.today).slice(0,10),String(today).slice(0,10));
+  assert.equal(String(s.today).slice(0,10),today);
 
   const {db:db2,c:c2,f:f2}=await fresh();
   await db2.query("select private.progression_award($1,null,'milestone','auto',60,now(),false,false)",[c2]);

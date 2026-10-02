@@ -440,7 +440,8 @@ test('M12D: accessibility — 44px actions, focusable retry, reduced motion', ()
 
 test('M12D: one Quest authority migration hardens the existing domain without touching other product domains', () => {
   const migrations = fs.readdirSync(path.join(ROOT, 'supabase/migrations')).sort();
-  assert.equal(migrations.at(-1), AUTHORITY_MIGRATION);
+  assert.ok(migrations.includes(AUTHORITY_MIGRATION), 'Quest authority migration remains in history');
+  assert.ok(migrations.indexOf(AUTHORITY_MIGRATION) < migrations.length - 1, 'later product migrations may build on the hardened Quest authority');
   assert.match(authoritySql, /create or replace function private\.ensure_bond_week_internal\(\)[\s\S]*security definer[\s\S]*for slot_no in 1\.\.3 loop/i);
   assert.match(authoritySql, /create or replace function private\.confirm_bond_quest_internal\(target_quest_id uuid\)[\s\S]*for update/i);
   assert.match(authoritySql, /create or replace function private\.reroll_bond_quest_internal[\s\S]*for update[\s\S]*rerolls_used >= 3/i);
