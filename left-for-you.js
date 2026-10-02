@@ -916,7 +916,7 @@
     const record = document.getElementById('leftForYouComposerAudioRecord');
     const hint = document.getElementById('leftForYouComposerAudioHint');
     if (record) {
-      record.style.setProperty('--pull', composer.recordingPull.toFixed(3));
+      record.style?.setProperty?.('--pull', composer.recordingPull.toFixed(3));
       record.dataset.armed = composer.recordingPull >= 1 ? 'true' : 'false';
     }
     if (hint) {
