@@ -10,7 +10,7 @@ alter table public.game_sessions add constraint game_sessions_v2_family_check
     or game_family = any (private.game_v2_families())
   );
 
-create table public.game_swipe_v1_catalog (
+create table private.game_swipe_v1_catalog (
   id text primary key check (id ~ '^swipe-[0-9]{3}$'),
   version integer not null default 1 check (version > 0),
   question_text text not null check (char_length(btrim(question_text)) between 12 and 240),
@@ -29,14 +29,10 @@ create table public.game_swipe_v1_catalog (
   )
 );
 
-comment on table public.game_swipe_v1_catalog is
-  'Swipe V1 curated binary-choice cards. Server-only; materialized into immutable Game V2 session items.';
+comment on table private.game_swipe_v1_catalog is
+  'Swipe V1 curated binary-choice cards. Private server-only catalog; materialized into immutable Game V2 session items.';
 
-alter table public.game_swipe_v1_catalog enable row level security;
-alter table public.game_swipe_v1_catalog force row level security;
-revoke all on public.game_swipe_v1_catalog from public, anon, authenticated;
-
-insert into public.game_swipe_v1_catalog (id, version, question_text, options, topic) values
+insert into private.game_swipe_v1_catalog (id, version, question_text, options, topic) values
   ('swipe-001', 1, 'Una serata perfetta per noi sarebbe più bella fuori casa o sul divano?', '["Fuori casa","Sul divano"]'::jsonb, 'serata_perfetta'),
   ('swipe-002', 1, 'Se partissimo domani senza programmi, ti divertirebbe davvero?', '["Sì, andiamo","No, organizziamo"]'::jsonb, 'partire_senza_programmi'),
   ('swipe-003', 1, 'Quando siamo stanchi, preferisci parlare comunque o stare vicini in silenzio?', '["Parlare","Silenzio insieme"]'::jsonb, 'stanchezza'),
@@ -166,7 +162,7 @@ begin
           c.id || ':' || actor.caller_couple::text || ':' ||
           private.game_v2_week_start(at_time)::text || ':' || ordinal::text
         ) as sort_key
-      from public.game_swipe_v1_catalog c
+      from private.game_swipe_v1_catalog c
       where c.active
     ) ranked
     order by ranked.last_played asc nulls first, ranked.sort_key
