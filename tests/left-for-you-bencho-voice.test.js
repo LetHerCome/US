@@ -46,8 +46,10 @@ test('Bencho voice note replaces the native Left for You recorder surface', () =
   assert.match(css, /grid-template-columns:repeat\(28/);
   assert.match(css, /\.left-for-you-vn-mic::before\{[\s\S]*left:50%/);
   assert.match(css, /\.left-for-you-vn-mic i::after\{/);
-  assert.match(css, /\.left-for-you-vn-playmark\{[\s\S]*transform:translateX\(1px\)/);
-  assert.match(css, /\.left-for-you-vn-play\[data-playing="true"\] \.left-for-you-vn-playmark\{[\s\S]*translateX\(0\)/);
+  assert.match(css, /\.left-for-you-vn-playmark i:first-child\{[\s\S]*clip-path:polygon\(0 0,100% 50%,0 100%\)/);
+  assert.match(css, /\.left-for-you-vn-playmark i:last-child\{[\s\S]*display:none/);
+  assert.match(css, /\.left-for-you-vn-x::before,[\s\S]*\.left-for-you-vn-x::after/);
+  assert.match(css, /\.left-for-you-vn-x \.us-icon\{display:none\}/);
   assert.match(css, /prefers-reduced-motion:reduce/);
 });
 
