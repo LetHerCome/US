@@ -1052,6 +1052,7 @@
     const preview = document.getElementById('leftForYouComposerAudioPreview');
     if (!record) return;
     const state = composer.recordingState;
+    record.hidden = false;
     const recording = state === 'recording' || state === 'starting';
     const ready = state === 'ready';
     record.dataset.phase = ready ? 'clip' : recording ? 'rec' : 'idle';
