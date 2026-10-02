@@ -364,3 +364,21 @@ test('shell: Ti penso lives in top chrome and Per voi stays inside Gioca', () =>
   assert.match(read('polish4.css'), /Ti penso is global top chrome/);
   assert.match(read('games.js'), /data-gv2-action="per-voi"/);
 });
+
+
+test('secondary surfaces: internal destinations use the same compact sheet and row rhythm', () => {
+  const calendar = read('calendar.css');
+  const events = read('events.css');
+  const moments = read('moments-albums.css');
+  const left = read('left-for-you.css');
+  const settings = read('settings.css');
+  const styles = read('styles.css');
+  for (const css of [calendar, events, moments, left, settings, styles]) assert.match(css, /US-SECONDARY-SURFACES-01/);
+  assert.match(calendar, /\.us-cal-day\{min-height:50px/);
+  assert.match(events, /\.us-event-item\{[\s\S]*?min-height:60px/);
+  assert.match(moments, /\.conservati-card\{[\s\S]*?min-height:60px/);
+  assert.match(left, /\.left-for-you-head h2\{font-size:22px/);
+  assert.match(settings, /\.us-setting-choice button\{min-height:48px/);
+  assert.match(styles, /#today \.question\{padding:14px/);
+  assert.match(styles, /#bond \.noi-living-list \.bond-quest\{[\s\S]*?padding:11px 12px/);
+});
