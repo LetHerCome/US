@@ -141,7 +141,7 @@ button{border:0;border-radius:var(--us-radius-control);padding:13px 16px;font:in
 .moment-card{position:relative;overflow:hidden;border-radius:18px;background:var(--card);border:1px solid var(--border);min-height:190px}
 .moment-card img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;background:var(--us-color-bg)}
 .moment-meta{padding:10px}.moment-meta b{font-size:12px;display:block}.moment-meta p{font-size:12px!important;margin:4px 0 0!important;line-height:1.35;color:var(--muted)}
-.moment-delete{position:absolute;top:8px;right:8px;width:30px;height:30px;padding:0;border-radius:50%;background:rgba(10,12,17,.78);color:white;border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(10px);display:grid;place-items:center}
+.moment-delete{position:absolute;top:8px;right:8px;min-width:68px;height:32px;padding:0 12px;border-radius:16px;background:rgba(10,12,17,.82);color:#fff;border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(10px);display:inline-flex;align-items:center;justify-content:center;font:700 11px/1 var(--us-font-ui);letter-spacing:.02em}
 .moment-loading{grid-column:1/-1}
 @media(max-width:360px){.moment-grid{grid-template-columns:1fr}.moment-actions{grid-template-columns:1fr}}
 
