@@ -1,0 +1,21 @@
+name: Temporary Preview Icon QA
+
+on:
+  push:
+    branches:
+      - fix/voice-preview-icons-v2
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node --test tests/left-for-you-bencho-voice.test.js tests/m5f-unified-envelope.test.js
+      - run: npm run build:cloudflare-pages
