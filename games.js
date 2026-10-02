@@ -60,7 +60,7 @@ function perVoiCopy() {
     case 'waiting': return { line: `Aspettiamo ${partnerName()}`, cta: 'Apri' };
     case 'pending': return { line: row?.partner_complete ? `${partnerName()} ha già risposto` : `${partnerName()} ha iniziato`, cta: 'Rispondi' };
     case 'in_progress': return { line: 'A metà', cta: 'Continua' };
-    case 'played': return { line: 'Giocato · il prossimo lunedì', cta: 'Rivedi' };
+    case 'played': return { line: 'Giocato questa settimana', cta: 'Rivedi' };
     default: return { line: 'Cinque domande', cta: 'Inizia' };
   }
 }
@@ -105,7 +105,7 @@ function rhythmStrip() {
   const done = used >= a.limit;
   return `<div class="us-gv2-rhythm" data-gv2-rhythm="${done ? 'done' : 'open'}" role="group" aria-label="Questa settimana: ${esc(`${used} di ${a.limit} momenti giocati`)}">
     <span class="us-gv2-kicker">QUESTA SETTIMANA</span>
-    <span class="us-gv2-rhythm-row"><span class="us-gv2-rhythm-dots" aria-hidden="true">${dots}</span><b>${done ? 'Nuovi giochi lunedì' : `${used} di ${a.limit}`}</b></span>
+    <span class="us-gv2-rhythm-row"><span class="us-gv2-rhythm-dots" aria-hidden="true">${dots}</span><b>${used} di ${a.limit}</b></span>
   </div>`;
 }
 
@@ -205,10 +205,10 @@ function renderHub() {
   }).join('');
   root.innerHTML = `
     <header class="us-gv2-head"><h2>Gioca</h2>${rhythmStrip()}</header>
+    ${filterRow(filters)}
     <button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-pervoi us-attention-orbit" data-gv2-action="per-voi" data-gv2-state="${esc(pvState)}" data-us-attention="${pvState === 'pending' || pvState === 'reveal_ready' ? 'on' : 'off'}">
       ${glyph('sparkle').replace('class="us-gv2-glyph"', 'class="us-gv2-glyph" data-us-attention-icon')}<span class="us-gv2-pervoi-copy"><b>Per voi</b><small>${esc(pv.line)}</small></span><span class="us-gv2-pervoi-cta">${esc(pv.cta)}</span>
     </button>
-    ${filterRow(filters)}
     <section class="us-gv2-modes" aria-label="Scegliete voi"><div class="us-gv2-mode-grid us-gv2-deck">${modeTiles}</div></section>
     ${weeklyCard(home?.weekly)}`;
 }
