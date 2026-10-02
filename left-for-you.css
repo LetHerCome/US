@@ -351,12 +351,28 @@
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);
 }
 .left-for-you-vn-x{
+  position:relative;
   width:32px;
   height:32px;
   border-radius:16px;
   background:transparent;
   color:var(--us-color-text-3);
 }
+.left-for-you-vn-x .us-icon{display:none}
+.left-for-you-vn-x::before,
+.left-for-you-vn-x::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:17px;
+  height:2px;
+  border-radius:999px;
+  background:currentColor;
+  transform-origin:center;
+}
+.left-for-you-vn-x::before{transform:translate(-50%,-50%) rotate(45deg)}
+.left-for-you-vn-x::after{transform:translate(-50%,-50%) rotate(-45deg)}
 .left-for-you-vn-play:active,
 .left-for-you-vn-x:active{transform:scale(.94)}
 .left-for-you-vn-playmark{
@@ -364,43 +380,34 @@
   display:block;
   width:20px;
   height:20px;
-  transform:translateX(1px);
-  transition:transform 220ms cubic-bezier(.2,.8,.2,1);
-}
-.left-for-you-vn-play[data-playing="true"] .left-for-you-vn-playmark{
-  transform:translateX(0);
 }
 .left-for-you-vn-playmark i{
   position:absolute;
-  top:3px;
-  width:7px;
-  height:14px;
+  display:block;
   background:currentColor;
-  transition:
-    left 220ms cubic-bezier(.2,.8,.2,1),
-    clip-path 220ms cubic-bezier(.2,.8,.2,1),
-    transform 220ms cubic-bezier(.2,.8,.2,1);
 }
 .left-for-you-vn-playmark i:first-child{
-  left:4px;
-  clip-path:polygon(0 0,100% 24%,100% 76%,0 100%);
-  transform:translateX(2px);
+  left:6px;
+  top:3px;
+  width:11px;
+  height:14px;
+  clip-path:polygon(0 0,100% 50%,0 100%);
+  transform:translate(.5px,0);
 }
 .left-for-you-vn-playmark i:last-child{
-  left:9px;
-  clip-path:polygon(0 24%,100% 50%,100% 50%,0 76%);
-  transform:translateX(1px);
+  display:none;
 }
-.left-for-you-vn-play[data-playing="true"] .left-for-you-vn-playmark i:first-child{
-  left:4px;
-  clip-path:polygon(0 0,100% 0,100% 100%,0 100%);
-  transform:none;
-}
+.left-for-you-vn-play[data-playing="true"] .left-for-you-vn-playmark i:first-child,
 .left-for-you-vn-play[data-playing="true"] .left-for-you-vn-playmark i:last-child{
-  left:11px;
-  clip-path:polygon(0 0,100% 0,100% 100%,0 100%);
+  display:block;
+  top:3px;
+  width:4px;
+  height:14px;
+  clip-path:none;
   transform:none;
 }
+.left-for-you-vn-play[data-playing="true"] .left-for-you-vn-playmark i:first-child{left:4px}
+.left-for-you-vn-play[data-playing="true"] .left-for-you-vn-playmark i:last-child{left:12px}
 .left-for-you-vn-scrub{
   cursor:pointer;
   touch-action:none;
