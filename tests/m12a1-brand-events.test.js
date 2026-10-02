@@ -11,16 +11,20 @@ const html = read('index.html');
 const topBar = html.match(/<div class="top us-premium-top">[\s\S]*?<\/div>\s*<main id="home"/)?.[0] || '';
 const foundation = read('ui-foundation.css');
 const CANONICAL = 'assets/derived/brand/us-symbol-apk-foreground-v1.png';
+// In-app display uses the runtime-sized derivative of that master (perf 1.0).
+const RUNTIME = 'assets/derived/runtime/us-symbol-256-v1.png';
 
 // ---------------------------------------------------------------- TOP BAR
 
 test('top bar: the centre is the canonical identity used by the PWA icon and launcher, not a UI variant', () => {
-  assert.match(topBar, new RegExp(`<div class="us-top-brand" role="img" aria-label="US"><img class="us-top-brand-art" src="/${CANONICAL}"`));
+  assert.match(topBar, new RegExp(`<div class="us-top-brand" role="img" aria-label="US"><img class="us-top-brand-art" src="/${RUNTIME}"`));
   assert.doesNotMatch(html, /us-symbol-ui-crisp-v1/, 'the old UI logo is used nowhere');
   assert.doesNotMatch(read('service-worker.js'), /us-symbol-ui-crisp-v1/);
   const webManifest = JSON.parse(read('manifest.webmanifest'));
   assert.ok(webManifest.icons.some((icon) => icon.src.startsWith(`/${CANONICAL}`)), 'the same asset is a PWA manifest icon');
-  assert.match(html, new RegExp(`rel="icon"[^>]+href="/${CANONICAL}`));
+  assert.match(html, new RegExp(`rel="icon"[^>]+href="/${RUNTIME}`));
+  const derived = JSON.parse(read('assets/ASSET_MANIFEST.json')).assets.find((entry) => entry.path === RUNTIME);
+  assert.equal(derived?.source, CANONICAL, 'the runtime mark derives from the canonical master');
   // The approved file is byte-identical to the Android adaptive foreground: never modified.
   assert.deepEqual(fs.readFileSync(path.join(ROOT, CANONICAL)), fs.readFileSync(path.join(ROOT, 'android/app/src/main/res/drawable-nodpi/us_adaptive_foreground_v1.png')));
 });

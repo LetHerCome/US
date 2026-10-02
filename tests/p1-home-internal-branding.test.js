@@ -70,7 +70,8 @@ test('P1 recupera gli artefatti di verifica interrotti senza copiarli negli asse
 
 test('P1 integra il monogramma US netto in auth, header e mini-branding', () => {
   const html = read('index.html');
-  assert.equal((html.match(/assets\/derived\/brand\/us-symbol-apk-foreground-v1\.png/g) || []).length, 4, 'icon link, auth logo, top bar (M12A.1) and settings mini-branding');
+  assert.equal((html.match(/assets\/derived\/runtime\/us-symbol-256-v1\.png/g) || []).length, 4, 'icon link, auth logo, top bar (M12A.1) and settings mini-branding');
+  assert.doesNotMatch(html, /us-symbol-apk-foreground-v1/, 'the 1254 px master is never loaded by the app shell');
   assert.doesNotMatch(html, /assets\/derived\/brand\/us-symbol-ui-transparent-v1\.png/);
   assert.doesNotMatch(html, /assets\/brand\/us-wordmark-premium\.svg/);
 });
@@ -99,7 +100,7 @@ test('P1 usa esclusivamente Heart e HeartFill Phosphor per la CTA Ti Penso', () 
 
 test('P1 precarica il simbolo web e non mantiene la vecchia icona Ti Penso come asset shell', () => {
   const worker = read('service-worker.js');
-  assert.match(worker, /"\/assets\/derived\/brand\/us-symbol-apk-foreground-v1\.png"/);
+  assert.match(worker, /"\/assets\/derived\/runtime\/us-symbol-256-v1\.png"/);
   assert.doesNotMatch(worker, /"\/assets\/derived\/brand\/us-symbol-ui-transparent-v1\.png"/);
   assert.doesNotMatch(worker, /"\/assets\/source\/ui\/us-icon-ti-penso-v1\.png"/);
 });

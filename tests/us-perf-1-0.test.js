@@ -93,7 +93,7 @@ test('perf 1.0: a launch inside the same build serves the precached shell withou
   await sw.extendable('install');
   await sw.extendable('activate');
   sw.network.length = 0;
-  for (const asset of [...localRuntime(), '/assets/fonts/Inter-Variable.woff2', '/assets/source/ui/us-icon-settings-v1.png', '/assets/derived/brand/us-symbol-apk-foreground-v1.png', '/assets/icons/phosphor/house-fill.svg']) {
+  for (const asset of [...localRuntime(), '/assets/fonts/Inter-Variable.woff2', '/assets/derived/runtime/us-icon-settings-128-v1.png', '/assets/derived/runtime/us-symbol-256-v1.png', '/assets/icons/phosphor/house-fill.svg']) {
     const response = await sw.fetchEvent(asset);
     assert.equal(await response.text(), `asset:${asset.split('?')[0]}`, asset);
   }
@@ -149,4 +149,30 @@ test('perf 1.0: concurrent Oggi refreshes share one Events read; a realtime chan
   const app = read('app.js');
   assert.match(app, /getTodayEventPrioritySource\?\.\(\{fresh:freshEvents\}\)/);
   assert.match(app, /if\(kind==='events'\)\{[\s\S]{0,160}window\.UsTodayPriority\?\.refresh\?\.\(\{freshEvents:true\}\);/);
+});
+
+test('perf 1.0: runtime derivatives are reproducible, registered, small and leave every master untouched', async () => {
+  const crypto = require('node:crypto');
+  const { DERIVATIVES, buildDerivative, decodePng } = await import('../scripts/build-runtime-derivatives.mjs');
+  const manifest = JSON.parse(read('assets/ASSET_MANIFEST.json'));
+  const sha = (file) => crypto.createHash('sha256').update(fs.readFileSync(path.join(ROOT, file))).digest('hex');
+  assert.equal(DERIVATIVES.length, 3);
+  for (const entry of DERIVATIVES) {
+    assert.equal(sha(entry.source), entry.sourceSha256, `${entry.source}: master is byte-identical to its approved hash`);
+    const committed = fs.readFileSync(path.join(ROOT, entry.output));
+    assert.ok(buildDerivative(entry).equals(committed), `${entry.output} is exactly what the script produces from the master`);
+    const record = manifest.assets.find((asset) => asset.path === entry.output);
+    assert.equal(record?.status, 'APPROVED');
+    assert.equal(record.sha256, sha(entry.output));
+    assert.equal(record.source, entry.source);
+    assert.equal(record.sourceSha256, entry.sourceSha256);
+    assert.ok(committed.length < 40 * 1024, `${entry.output} is ${committed.length} bytes`);
+    const master = decodePng(fs.readFileSync(path.join(ROOT, entry.source)));
+    const derived = decodePng(committed);
+    assert.equal(derived.width, entry.width);
+    assert.equal(derived.height, Math.round((master.height * entry.width) / master.width), 'aspect ratio preserved');
+  }
+  // Displayed sizes (CSS px) the derivatives must cover at 3x: logo 58, settings/stories 22.
+  assert.ok(DERIVATIVES.find((d) => /symbol/.test(d.output)).width >= 58 * 3);
+  assert.ok(DERIVATIVES.filter((d) => /icon/.test(d.output)).every((d) => d.width >= 22 * 3));
 });

@@ -30,18 +30,33 @@ test('V0E usa direttamente i sei master custom approvati nelle rispettive superf
   assert.doesNotMatch(html, /id="todayOrb"/);
   assert.match(html, /id="usDailyRitual"/);
   assert.doesNotMatch(html.match(/<button[^>]+id="thinkButton"[\s\S]*?<\/button>/)?.[0] || '', /us-icon-ti-penso-v1\.png/);
-  assert.match(stories, /id="usStoryAdd"[\s\S]{0,340}assets\/source\/ui\/us-icon-stories-v1\.png/);
+  assert.match(stories, /id="usStoryAdd"[\s\S]{0,340}assets\/derived\/runtime\/us-icon-stories-128-v1\.png/);
 });
 
-test('V0E conserva i master senza stretching o decorazioni CSS duplicate e li precarica', () => {
+test('V0E conserva i master senza stretching o decorazioni CSS duplicate; il runtime precarica solo i derivati dimensionati', () => {
   const css = read('identity.css');
   const worker = read('service-worker.js');
+  const manifest = JSON.parse(read('assets/ASSET_MANIFEST.json'));
 
   assert.match(css, /\.us-approved-custom-icon\{[\s\S]*object-fit:contain/);
   assert.match(css, /\.us-approved-custom-icon\{[\s\S]*background:transparent/);
   assert.match(css, /\.us-approved-custom-icon\{[\s\S]*box-shadow:none/);
+
+  // Perf 1.0: the masters (1.3-1.8 MB each) are never loaded or precached by the shell.
+  // Settings and Stories are shown at icon size, through their 128 px derivatives.
+  for (const [id, runtime] of [['settings', 'assets/derived/runtime/us-icon-settings-128-v1.png'], ['stories', 'assets/derived/runtime/us-icon-stories-128-v1.png']]) {
+    const derived = manifest.assets.find((entry) => entry.path === runtime);
+    assert.equal(derived?.status, 'APPROVED', runtime);
+    assert.equal(derived?.source, CUSTOM_ICONS[id], 'derived from the approved master, which stays untouched');
+    assert.ok(worker.includes(`"/${runtime}"`), `${runtime} is precached`);
+  }
+  assert.match(read('index.html'), /us-approved-custom-icon" src="\/assets\/derived\/runtime\/us-icon-settings-128-v1\.png"/);
+  for (const file of ['index.html', 'stories.js', 'identity.css', 'stories.css']) {
+    assert.doesNotMatch(read(file), /us-icon-(settings|stories)-v1\.png/, `${file} loads no master`);
+  }
   Object.values(CUSTOM_ICONS).forEach((asset) => {
-    assert.match(worker, new RegExp(`"\\/${asset.replaceAll('/', '\\/').replaceAll('.', '\\.') }"`));
+    assert.ok(!worker.includes(`"/${asset}"`), `${asset}: the master is not part of the shell precache`);
+    assert.ok(fs.existsSync(path.join(ROOT, asset)), `${asset}: the master stays in the repository`);
   });
   assert.match(worker, /"\/assets\/icons\/phosphor\/calendar-dots-regular\.svg"/);
 });
