@@ -2803,12 +2803,6 @@ function renderBondBadges(level){
     cards.push(`<div class="bond-badge-card ${unlocked?'unlocked':'locked'}"><span>${bondBadgeIcon(l)}</span><b>LV. ${l}</b><small>${escapeHtml(bondRankTitle(l))}</small></div>`);
   }
   root.innerHTML=cards.join('');
-  try{
-    const key=`usBondLastLevel:${window.usProfile?.couple_id||'local'}`;
-    const prev=Number(localStorage.getItem(key)||0);
-    if(prev>0&&level>prev){window.usCelebrateLevel?.(level,bondRankTitle(level))||toast(`LV. ${level} · ${bondRankTitle(level)}`);window.UsFeedback?.success?.();}
-    if(level>prev)localStorage.setItem(key,String(level));
-  }catch(_e){}
 }
 
 function renderBondProgress(totalXp){
@@ -2842,6 +2836,7 @@ function renderBondProgress(totalXp){
   window.usBondXp=info.total;
   renderBondBadges(info.level);
 }
+window.renderBondProgress=renderBondProgress;
 async function hydrateBondSummary(){
   if(!window.usProfile)return;
   const {data,error}=await sb.from('couples').select('bond_xp').eq('id',window.usProfile.couple_id).maybeSingle();
@@ -2883,7 +2878,7 @@ function renderResonanceHistory(entries){
   if(!root)return;
   root.setAttribute('aria-busy','false');
   if(!entries?.length){
-    root.innerHTML='<div class="noi-resonance-history-empty"><b>La prossima crescita apparirà qui</b><span>Quest ed eventi completati aggiungono XP reali alla vostra Risonanza.</span></div>';
+    root.innerHTML='<div class="noi-resonance-history-empty"><b>La prossima crescita apparirà qui</b><span>Quest ed eventi completati aggiungono punti reali alla vostra Sintonia.</span></div>';
     return;
   }
   root.innerHTML=entries.map(entry=>{
@@ -3717,7 +3712,7 @@ function openNoiSection(view){
   const bar=document.getElementById('noiSectionBar');if(bar)bar.hidden=false;
   const hub=document.getElementById('noiHub');if(hub)hub.hidden=true;
   scrollTo({top:0,behavior:'auto'});
-  if(view==='resonance')window.hydrateResonanceHistory?.();
+  if(view==='resonance'){window.hydrateResonanceHistory?.();window.USProgression?.hydrate?.({showUnlocks:true,force:true});}
   if(view==='da-vivere'&&window.usProfile&&!noiIdeaState.loaded)hydrateNoiIdeas();
   if(view==='eventi')window.hydrateEvents?.();
   if(view==='quest'&&window.usProfile)hydrateBond();
@@ -3902,7 +3897,7 @@ function startUsRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:'shared_event_completions',filter:`couple_id=eq.${coupleId}`},()=>{scheduleUsRealtimeRefresh('events');hydrateBondSummary();})
     .on('postgres_changes',{event:'*',schema:'public',table:'relationship_milestones',filter:`couple_id=eq.${coupleId}`},()=>{scheduleUsRealtimeRefresh('events');hydrateBondSummary();})
     .on('postgres_changes',{event:'*',schema:'public',table:'bond_weekly_quests',filter:`couple_id=eq.${coupleId}`},()=>{hydrateBondSummary();if(document.getElementById('bond')?.classList.contains('active'))hydrateBond();})
-    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'couples',filter:`id=eq.${coupleId}`},payload=>renderBondProgress(payload.new?.bond_xp||0))
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'couples',filter:`id=eq.${coupleId}`},payload=>{renderBondProgress(payload.new?.bond_xp||0);window.USProgression?.refreshAfterAction?.();})
     .subscribe();
 }
 window.startUsRealtime=startUsRealtime;

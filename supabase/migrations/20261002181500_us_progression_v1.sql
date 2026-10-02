@@ -667,6 +667,19 @@ begin
 end;
 $$;
 
+revoke all on function private.progression_level(integer) from public, anon, authenticated;
+revoke all on function private.progression_level_info(integer) from public, anon, authenticated;
+revoke all on function private.progression_sync_unlocks(uuid, integer) from public, anon, authenticated;
+revoke all on function private.progression_award(uuid, uuid, text, text, integer, timestamptz, boolean, boolean) from public, anon, authenticated;
+revoke all on function private.progression_couples_xp_trigger() from public, anon, authenticated;
+revoke all on function private.progression_quest_trigger() from public, anon, authenticated;
+revoke all on function private.progression_event_trigger() from public, anon, authenticated;
+revoke all on function private.progression_milestone_trigger() from public, anon, authenticated;
+revoke all on function private.progression_game_trigger() from public, anon, authenticated;
+revoke all on function private.progression_daily_trigger() from public, anon, authenticated;
+revoke all on function private.progression_think_trigger() from public, anon, authenticated;
+revoke all on function private.progression_moment_trigger() from public, anon, authenticated;
+
 revoke all on function public.get_progression_v1() from public, anon;
 revoke all on function public.ack_progression_unlock(text) from public, anon;
 revoke all on function public.equip_progression_reward(text) from public, anon;

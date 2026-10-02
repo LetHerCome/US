@@ -1,3 +1,6 @@
+#bond .noi-canonical-page:not([data-noi-view="resonance"])>.us-progression-next,
+#bond .noi-canonical-page:not([data-noi-view="resonance"])>.us-progression-rewards-section{display:none!important}
+
 /* US Progression V1 — Sintonia, Ritmo, cosmetic unlocks. */
 
 .us-progression-rhythm{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;margin-top:13px;padding:11px 12px;border-radius:17px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035)}
@@ -41,7 +44,7 @@
 .us-progression-unlock-card>*{position:relative;z-index:1}
 .us-progression-unlock-kicker{font-size:10px;font-weight:850;letter-spacing:.14em;color:#ffc9db}
 .us-progression-unlock-count{display:block;min-height:14px;margin-top:3px;font-size:10px;color:var(--us-color-text-3)}
-.us-progression-unlock-preview{width:108px;height:108px;margin:16px auto;border-radius:32px;border:1px solid rgba(255,255,255,.16);background:linear-gradient(145deg,rgba(255,102,142,.24),rgba(169,133,255,.28));box-shadow:0 18px 44px rgba(0,0,0,.32),0 0 44px rgba(169,133,255,.12)}
+.us-progression-unlock-preview{position:relative;width:108px;height:108px;margin:16px auto;border-radius:32px;border:1px solid rgba(255,255,255,.16);background:linear-gradient(145deg,rgba(255,102,142,.24),rgba(169,133,255,.28));box-shadow:0 18px 44px rgba(0,0,0,.32),0 0 44px rgba(169,133,255,.12)}
 .us-progression-unlock-preview::before{content:"";position:absolute;inset:26px;border:3px solid rgba(255,255,255,.72);border-radius:14px}
 .us-progression-unlock-preview[data-reward-token="frame_aurora"]{background:linear-gradient(135deg,#ff6f9f,#6eb4ff 52%,#aa85ff)}
 .us-progression-unlock-preview[data-reward-token="theme_rose"]{background:linear-gradient(145deg,#3a1227,#a43b6d)}
