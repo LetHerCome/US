@@ -382,3 +382,20 @@ test('secondary surfaces: internal destinations use the same compact sheet and r
   assert.match(styles, /#today \.question\{padding:14px/);
   assert.match(styles, /#bond \.noi-living-list \.bond-quest\{[\s\S]*?padding:11px 12px/);
 });
+
+
+test('state system: loading, empty, error, retry and connectivity share one visual authority', () => {
+  const css = read('state-system.css');
+  assert.match(css, /US-STATE-SYSTEM-01/);
+  assert.match(css, /\.us-state--loading/);
+  assert.match(css, /\.app-status-bar\[data-kind="error"\]/);
+  assert.match(css, /\.app-status-bar\[data-kind="online"\]/);
+  assert.match(css, /\.conservati-error/);
+  assert.match(css, /\.left-for-you-error/);
+  assert.match(css, /\.us-gv2-error/);
+  assert.match(css, /\.us-cal-empty/);
+  assert.match(css, /\.us-settings-empty/);
+  assert.match(html, /\/state-system\.css\?v=us-state-system-v1-20261002-1/);
+  assert.match(read('service-worker.js'), /\/state-system\.css\?v=us-state-system-v1-20261002-1/);
+  assert.match(read('fix4.js'), /showStatus\('Sei offline\. Riprendo appena torni online\.', 'offline'\)/);
+});
