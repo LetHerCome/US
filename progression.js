@@ -13,8 +13,9 @@ let unlockQueue = [];
 let unlockIndex = 0;
 let unlockBusy = false;
 
-// Rewards V2 — one independent slot per category. The server owns the catalog,
-// the unlocks and what is equipped; this map is presentation only.
+// Rewards V2 — one independent slot per category. The server owns progression,
+// catalog and unlock eligibility. What each phone equips is intentionally local
+// to that installed PWA, so Francesco and Bea can personalize US independently.
 const SLOTS = Object.freeze({
   frame: { pref: 'frame_reward_id', label: 'Cornici', place: 'sulla foto di Oggi', unlock: 'NUOVA CORNICE' },
   sticker: { pref: 'sticker_reward_id', label: 'Adesivi', place: 'su Oggi e sull’ultimo ricordo', unlock: 'NUOVO ADESIVO' },
@@ -25,6 +26,89 @@ const SLOTS = Object.freeze({
   effect: { pref: 'effect_reward_id', label: 'Effetti', place: 'sul simbolo US', unlock: 'NUOVO EFFETTO' }
 });
 const SLOT_ORDER = Object.keys(SLOTS);
+const DEVICE_PREFS_VERSION = 1;
+const DEVICE_PREFS_PREFIX = 'us:cosmetics:v1:';
+
+function devicePreferenceKey() {
+  const profile = window.usProfile;
+  if (!profile?.id || !profile?.couple_id) return '';
+  return `${DEVICE_PREFS_PREFIX}${profile.couple_id}:${profile.id}`;
+}
+function emptyDevicePreferences() {
+  return SLOT_ORDER.reduce((prefs, category) => {
+    prefs[SLOTS[category].pref] = null;
+    return prefs;
+  }, {});
+}
+function sanitizeDevicePreferences(candidate, next) {
+  const prefs = emptyDevicePreferences();
+  const rewards = Array.isArray(next?.rewards) ? next.rewards : [];
+  for (const category of SLOT_ORDER) {
+    const pref = SLOTS[category].pref;
+    const id = typeof candidate?.[pref] === 'string' ? candidate[pref] : null;
+    const reward = id ? rewards.find((item) => item.id === id) : null;
+    if (reward?.unlocked && reward.category === category) prefs[pref] = reward.id;
+  }
+  return prefs;
+}
+function persistDevicePreferences(prefs) {
+  const key = devicePreferenceKey();
+  if (!key) return false;
+  try {
+    window.localStorage.setItem(key, JSON.stringify({
+      version: DEVICE_PREFS_VERSION,
+      couple_id: window.usProfile.couple_id,
+      profile_id: window.usProfile.id,
+      preferences: prefs
+    }));
+    return true;
+  } catch (error) {
+    console.warn('[US Progression] device preferences', error);
+    return false;
+  }
+}
+function readDevicePreferences(next) {
+  const fallback = sanitizeDevicePreferences(next?.preferences || {}, next);
+  const key = devicePreferenceKey();
+  if (!key) return fallback;
+  try {
+    const saved = JSON.parse(window.localStorage.getItem(key) || 'null');
+    if (saved?.version === DEVICE_PREFS_VERSION && saved?.preferences) {
+      return sanitizeDevicePreferences(saved.preferences, next);
+    }
+  } catch (error) {
+    console.warn('[US Progression] read device preferences', error);
+  }
+  // One-time compatibility seed: preserve the look that was previously stored
+  // for the couple, then this phone diverges independently from this point on.
+  persistDevicePreferences(fallback);
+  return fallback;
+}
+function applyDevicePreferences(next) {
+  if (!next) return next;
+  const prefs = readDevicePreferences(next);
+  next.preferences = prefs;
+  next.rewards = (Array.isArray(next.rewards) ? next.rewards : []).map((reward) => ({
+    ...reward,
+    equipped: Boolean(reward.unlocked && SLOTS[reward.category] && prefs[SLOTS[reward.category].pref] === reward.id)
+  }));
+  return next;
+}
+function setDeviceReward(reward, { ensureEquipped = false } = {}) {
+  if (!state || !reward?.unlocked || !SLOTS[reward.category]) return false;
+  const pref = SLOTS[reward.category].pref;
+  const prefs = { ...emptyDevicePreferences(), ...(state.preferences || {}) };
+  const alreadyEquipped = prefs[pref] === reward.id;
+  if (ensureEquipped && alreadyEquipped) return true;
+  prefs[pref] = alreadyEquipped ? null : reward.id;
+  if (!persistDevicePreferences(prefs)) return false;
+  state.preferences = prefs;
+  state.rewards = state.rewards.map((item) => ({
+    ...item,
+    equipped: Boolean(item.unlocked && SLOTS[item.category] && prefs[SLOTS[item.category].pref] === item.id)
+  }));
+  return true;
+}
 
 function rewardById(id) {
   return state?.rewards?.find((reward) => reward.id === id) || null;
@@ -244,16 +328,16 @@ async function dismissUnlock() {
 }
 async function equipReward(rewardId, { acknowledge = false, ensureEquipped = false } = {}) {
   if (unlockBusy || !rewardId) return false;
+  const reward = rewardById(rewardId);
+  if (!reward?.unlocked) return false;
   // "Usalo ora" must never toggle an already-equipped reward off.
-  if (ensureEquipped && rewardById(rewardId)?.equipped) {
+  if (ensureEquipped && reward.equipped) {
     if (acknowledge) await ackReward(rewardId).catch((error) => console.warn('[US Progression] ack unlock', error));
     return true;
   }
   unlockBusy = true;
   try {
-    const { data, error } = await sb.rpc('equip_progression_reward', { target_reward_id: rewardId });
-    if (error) throw error;
-    state = data || state;
+    if (!setDeviceReward(reward, { ensureEquipped })) throw new Error('device_preferences_unavailable');
     render(state);
     if (acknowledge) await ackReward(rewardId);
     return true;
@@ -282,7 +366,7 @@ async function hydrate({ showUnlocks = true, force = false } = {}) {
       console.warn('[US Progression] hydrate', error);
       return null;
     }
-    state = data || null;
+    state = applyDevicePreferences(data || null);
     render(state);
     if (showUnlocks) startUnlockQueue(state?.pending_unlocks || []);
     return state;
