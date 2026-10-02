@@ -465,3 +465,26 @@ test('Auth first-run: new assets follow the canonical BUILD_ID contract', () => 
   assert.match(worker, /versioned\("\/auth-first-run\.js"\)/);
   assert.equal(JSON.parse(read('version.json')).version, build);
 });
+
+
+test('QA 1.0: every local CSS/JS loaded by HTML is pinned to the canonical BUILD_ID', () => {
+  const build = html.match(/<meta name="us-build" content="([^"]+)"\/>/)?.[1];
+  assert.ok(build);
+  const refs = [...html.matchAll(/<(?:link|script)\b[^>]*(?:href|src)="([^"]+)"/g)]
+    .map((match) => match[1])
+    .filter((ref) => ref.startsWith('/') && /\.(?:css|js)(?:\?|$)/.test(ref));
+  assert.ok(refs.length > 30, 'critical shell refs found');
+  for (const ref of refs) {
+    assert.match(ref, new RegExp(`\\?v=${build.replace(/[.*+?^$\{\}()|[\\]\\\\]/g, '\\$&')}$`), ref);
+  }
+  for (const critical of ['/app.js','/platform.js','/auth-storage.js','/ui-foundation.js','/ui-foundation.css','/stories.js','/stories.css','/ti-penso-widget.js']) {
+    assert.ok(refs.some((ref) => ref === `${critical}?v=${build}`), critical);
+  }
+});
+
+test('QA 1.0: build:id also versions previously bare local CSS/JS refs', () => {
+  const script = read('scripts/set-build-id.mjs');
+  assert.match(script, /href\|src/);
+  assert.match(script, /css\|js/);
+  assert.match(script, /\?v=\\\$\{buildId\}/);
+});
