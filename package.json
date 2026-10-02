@@ -6,6 +6,7 @@
     "node": ">=22"
   },
   "scripts": {
+    "build:id": "node scripts/set-build-id.mjs",
     "test": "node --test",
     "assets:android-brand": "node scripts/build-android-brand-assets.mjs",
     "assets:web-brand": "node scripts/build-web-brand-assets.mjs",
