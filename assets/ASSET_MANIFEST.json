@@ -15,7 +15,11 @@
       "sha256": "a4efb5ab73eec83dcdcd4c2cedb450e78f0282fe0a720896891260c25985ef24",
       "immutable": true,
       "purpose": "Deterministic crisp transparent web derivative of the approved isolated US symbol",
-      "usedBy": ["auth-branding", "home-header-branding", "settings-branding"],
+      "usedBy": [
+        "auth-branding",
+        "home-header-branding",
+        "settings-branding"
+      ],
       "source": "assets/source/brand/us-wordmark-v1.png",
       "sourceSha256": "e8e3007c9ada499e4fc68aa68179d6e4046d21df14351e6c7144bca5d8b28f97",
       "operation": "REMOVE_LOW_ALPHA_GLOW_PRESERVE_US_GEOMETRY"
@@ -26,7 +30,9 @@
       "sha256": "f71c0cf6cbca172b7833754f6eaa2b4addfab6381a696bdccf070d83ea690868",
       "immutable": true,
       "purpose": "Byte-identical Web/PWA derivative of the official Android adaptive foreground",
-      "usedBy": ["auth-branding", "home-header-branding", "settings-branding", "pwa-install-branding"],
+      "usedBy": [
+        "pwa-install-branding"
+      ],
       "source": "android/app/src/main/res/drawable-nodpi/us_adaptive_foreground_v1.png",
       "sourceSha256": "f71c0cf6cbca172b7833754f6eaa2b4addfab6381a696bdccf070d83ea690868",
       "operation": "BYTE_COPY_OFFICIAL_ANDROID_FOREGROUND"
@@ -61,7 +67,10 @@
       "sha256": "e8e3007c9ada499e4fc68aa68179d6e4046d21df14351e6c7144bca5d8b28f97",
       "immutable": true,
       "purpose": "Official US supporting wordmark",
-      "usedBy": ["android-ti-penso-widget", "web-internal-brand-derivative"]
+      "usedBy": [
+        "android-ti-penso-widget",
+        "web-internal-brand-derivative"
+      ]
     },
     {
       "path": "assets/source/ui/us-icon-bond-v1.png",
@@ -69,7 +78,10 @@
       "sha256": "b61fcd1be9380d572fc23c1561e21910b3270c7f33d7ce8f140aa6998d47e80d",
       "immutable": true,
       "purpose": "Official US Bond custom icon",
-      "usedBy": ["bottom-navigation", "bond"]
+      "usedBy": [
+        "bottom-navigation",
+        "bond"
+      ]
     },
     {
       "path": "assets/source/ui/us-icon-stories-v1.png",
@@ -77,7 +89,7 @@
       "sha256": "455422f08fe0334bfc6d780ace5f1881d84f878e4c41b676c7daa7ef6858bc06",
       "immutable": true,
       "purpose": "Official US Stories custom icon",
-      "usedBy": ["header-stories-trigger", "stories-viewer"]
+      "usedBy": []
     },
     {
       "path": "assets/source/ui/us-icon-moments-v1.png",
@@ -85,7 +97,10 @@
       "sha256": "319a98637ec62445f6329f3d8ea2fb7cccd2602fc2b97c8737e089f80c812627",
       "immutable": true,
       "purpose": "Official US Moments custom icon",
-      "usedBy": ["bottom-navigation", "moments"]
+      "usedBy": [
+        "bottom-navigation",
+        "moments"
+      ]
     },
     {
       "path": "assets/source/ui/us-icon-daily-question-v1.png",
@@ -93,7 +108,9 @@
       "sha256": "a74741e415df001e11b83493b65c9aa80acb3619af3652a26e82bb07a047ffa3",
       "immutable": true,
       "purpose": "Official US Daily Question custom icon",
-      "usedBy": ["quiz-daily-question"]
+      "usedBy": [
+        "quiz-daily-question"
+      ]
     },
     {
       "path": "assets/source/ui/us-icon-ti-penso-v1.png",
@@ -101,7 +118,9 @@
       "sha256": "f1910a3aaf8267de807df476e35ac893a34092cbbeb3917c8f3ff15edc307e8e",
       "immutable": true,
       "purpose": "Official US Ti Penso custom icon",
-      "usedBy": ["android-ti-penso-widget"]
+      "usedBy": [
+        "android-ti-penso-widget"
+      ]
     },
     {
       "path": "assets/source/ui/us-icon-settings-v1.png",
@@ -109,7 +128,7 @@
       "sha256": "c939f83506dc0bf323f194d4c88c6ccd5530d7f78954b43e3f4ef297b7876e88",
       "immutable": true,
       "purpose": "Official US Settings custom icon",
-      "usedBy": ["bottom-navigation", "settings"]
+      "usedBy": []
     },
     {
       "path": "assets/derived/runtime/us-symbol-256-v1.png",
@@ -117,7 +136,11 @@
       "sha256": "689be0ce9847fd3760b96cdb98cd5344acd2135f892ad4adc1da4f92898f3df0",
       "immutable": true,
       "purpose": "Runtime-sized (256 px) derivative of the canonical US symbol for in-app display; the master stays the PWA install icon",
-      "usedBy": ["auth-branding", "home-header-branding", "settings-branding"],
+      "usedBy": [
+        "auth-branding",
+        "home-header-branding",
+        "settings-branding"
+      ],
       "source": "assets/derived/brand/us-symbol-apk-foreground-v1.png",
       "sourceSha256": "f71c0cf6cbca172b7833754f6eaa2b4addfab6381a696bdccf070d83ea690868",
       "operation": "AREA_AVERAGE_DOWNSCALE_256_PRESERVE_ASPECT"
@@ -128,7 +151,9 @@
       "sha256": "7ee4d47099a990a40e6a0609c926e2478576dc2d4d2fd4f547042237025113ef",
       "immutable": true,
       "purpose": "Runtime-sized (128 px wide) derivative of the approved Settings custom icon",
-      "usedBy": ["settings"],
+      "usedBy": [
+        "settings"
+      ],
       "source": "assets/source/ui/us-icon-settings-v1.png",
       "sourceSha256": "c939f83506dc0bf323f194d4c88c6ccd5530d7f78954b43e3f4ef297b7876e88",
       "operation": "AREA_AVERAGE_DOWNSCALE_128_PRESERVE_ASPECT"
@@ -139,7 +164,9 @@
       "sha256": "95261e63a4c3342d1882f5dca6d0eaf547cf5f039d58fccf2df2b05f03660ff8",
       "immutable": true,
       "purpose": "Runtime-sized (128 px wide) derivative of the approved Stories custom icon",
-      "usedBy": ["header-stories-trigger"],
+      "usedBy": [
+        "header-stories-trigger"
+      ],
       "source": "assets/source/ui/us-icon-stories-v1.png",
       "sourceSha256": "455422f08fe0334bfc6d780ace5f1881d84f878e4c41b676c7daa7ef6858bc06",
       "operation": "AREA_AVERAGE_DOWNSCALE_128_PRESERVE_ASPECT"

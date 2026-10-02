@@ -176,3 +176,13 @@ test('perf 1.0: runtime derivatives are reproducible, registered, small and leav
   assert.ok(DERIVATIVES.find((d) => /symbol/.test(d.output)).width >= 58 * 3);
   assert.ok(DERIVATIVES.filter((d) => /icon/.test(d.output)).every((d) => d.width >= 22 * 3));
 });
+
+
+test('perf 1.0: build:id pins newly-added bare local CSS/JS refs', () => {
+  const helper = read('scripts/set-build-id.mjs');
+  assert.match(
+    helper,
+    /\(\(\?:href\|src\)="\\\/\[\^"\]\+\\\.\(\?:css\|js\)\)/,
+    'build:id must add ?v=BUILD_ID even when a future local CSS/JS ref was introduced bare'
+  );
+});

@@ -1,4 +1,4 @@
-// Runtime-sized derivatives of two approved masters. The masters are only ever
+// Runtime-sized derivatives of three approved masters. The masters are only ever
 // READ here (their SHA-256 is verified first); each output is a deterministic
 // area-average downscale (premultiplied alpha) of its master, written under
 // assets/derived/runtime/ and registered in ASSET_MANIFEST.json.
