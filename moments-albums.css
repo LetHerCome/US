@@ -994,3 +994,27 @@ body:has(#moments.page.active) #thinkButton{
   #moments .ricordi-rivivi-card:not(.ricordi-rivivi-note) .ricordi-rivivi-copy b,
   #moments .ricordi-rivivi-text b{font-size:18px}
 }
+
+
+/* ===== US-SECONDARY-SURFACES-01 · Conservati + album utility density ===== */
+.conservati-head{padding:14px 16px 10px}
+.conservati-head h2{margin:2px 0 3px;font-size:23px}
+.conservati-head small{font-size:10.5px}
+.conservati-body{padding:9px 14px 0}
+.conservati-loading,.conservati-empty,.conservati-error{padding:26px 10px 30px}
+.conservati-list{gap:7px}
+.conservati-card{
+  min-height:60px;
+  padding:8px 9px;
+  gap:9px;
+  border-radius:15px;
+}
+.conservati-card-mark{width:32px;height:32px;border-radius:11px;--us-icon-size:16px}
+.conservati-card-copy{gap:2px}
+.conservati-card-copy b{font-size:11.5px}
+.conservati-card-copy small{font-size:9.5px}
+.conservati-card-copy>span{font-size:10.5px}
+.conservati-provenance{margin:3px 2px 9px}
+#usAlbumOverlay .us-album-section{padding-left:14px;padding-right:14px}
+#usAlbumOverlay .us-album-section-head{margin-bottom:8px}
+#usAlbumOverlay .us-album-section-head h3{font-size:18px}
