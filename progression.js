@@ -68,7 +68,7 @@ function renderRewards(next = state) {
   root.innerHTML = rewards.map((reward) => {
     const locked = !reward.unlocked;
     const equipped = Boolean(reward.equipped);
-    const label = locked ? `Livello ${reward.level_required}` : equipped ? 'In uso' : 'Sbloccato';
+    const label = locked ? `Livello ${reward.level_required}` : equipped ? 'In uso · tocca per togliere' : 'Sbloccato';
     return `<button type="button" class="us-progression-reward ${locked ? 'is-locked' : 'is-unlocked'} ${equipped ? 'is-equipped' : ''}" data-progression-reward="${esc(reward.id)}" ${locked ? 'disabled' : ''} aria-label="${esc(reward.title)} · ${esc(label)}">
       <span class="us-progression-reward-preview" data-reward-token="${esc(reward.token)}" aria-hidden="true"></span>
       <span class="us-progression-reward-copy"><small>${esc(label)}</small><b>${esc(reward.title)}</b><span>${esc(reward.description)}</span></span>
