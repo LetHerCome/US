@@ -26,9 +26,10 @@ test('Progression V1: unlock moment is prominent, actionable and server-acknowle
   assert.match(css,/@keyframes us-progression-swoosh/);
   assert.match(css,/prefers-reduced-motion:reduce/);
   assert.doesNotMatch(js,/localStorage|sessionStorage|indexedDB/,'unlock authority is never device-local');
+  assert.match(js,/In uso · tocca per togliere/);
 });
 
-test('Progression V1: cosmetic preferences map only to explicit theme/frame/effect datasets',()=>{
+test('Progression V1: reward collection scales as an internal scrollable grid',()=>{\n  assert.match(css,/grid-template-columns:repeat\\(2,minmax\\(0,1fr\\)\\)/);\n  assert.match(css,/max-height:min\\(330px,42dvh\\)/);\n  assert.match(css,/overflow-y:auto/);\n});\n\ntest('Progression V1: cosmetic preferences map only to explicit theme/frame/effect datasets',()=>{
   assert.match(js,/dataset\.usTheme/);
   assert.match(js,/dataset\.usEffect/);
   assert.match(js,/dataset\.usFrame/);
