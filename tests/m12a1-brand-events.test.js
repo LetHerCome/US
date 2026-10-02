@@ -66,7 +66,8 @@ test('Noi: Eventi is a real tile of the hub, using the existing tile system and 
   assert.match(hub, /<span class="noi-hub-kicker">Eventi<\/span>/);
   const styles = read('styles.css');
   assert.match(styles, /\.noi-hub-card--events\{--noi-hub-icon:url\("\/assets\/icons\/phosphor\/calendar-heart-regular\.svg"\)/);
-  assert.match(styles, /\.noi-hub-card--events\{[^}]*grid-column:1\/-1/, 'the odd fifth card spans the row');
+  // HUMAN-UI-02 — Eventi is one of the compact rows under the Risonanza hero.
+  assert.match(styles, /\.noi-hub-card:not\(\.noi-hub-card--resonance\)\{flex-direction:row;/);
   assert.ok(fs.existsSync(path.join(ROOT, 'assets/icons/phosphor/calendar-heart-regular.svg')));
 });
 

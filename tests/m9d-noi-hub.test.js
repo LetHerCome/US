@@ -26,11 +26,11 @@ test('M9D (M12A.1): Noi opens on a hub of five cards, in order, with no new bott
   assert.deepEqual([...nav.matchAll(/data-page="([^"]+)"/g)].map((m) => m[1]), ['home', 'bond', 'moments', 'quiz'], 'bottom navigation keeps its four tabs');
 });
 
-test('M9D: square premium cards in two columns, one column on very narrow screens, Phosphor icons only', () => {
+test('M9D + HUMAN-UI-02: Risonanza is the one hero, the other destinations are compact rows, Phosphor icons only', () => {
   const s = css();
-  assert.match(s, /\.noi-hub\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
-  assert.match(s, /\.noi-hub-card\{[^}]*aspect-ratio:1\/1/);
-  assert.match(s, /@media\(max-width:340px\)\{\.noi-hub\{grid-template-columns:1fr\}/);
+  assert.match(s, /\.noi-hub\{display:grid;grid-template-columns:minmax\(0,1fr\);/);
+  assert.match(s, /\.noi-hub-card--resonance\{min-height:150px;/);
+  assert.match(s, /\.noi-hub-card:not\(\.noi-hub-card--resonance\)\{flex-direction:row;[^}]*min-height:64px/);
   for (const icon of ['infinity-regular', 'compass-regular', 'calendar-dots-regular', 'flag-banner-regular', 'caret-left-regular']) {
     assert.match(s, new RegExp(`/assets/icons/phosphor/${icon}\\.svg`));
     const svg = read(`assets/icons/phosphor/${icon}.svg`);

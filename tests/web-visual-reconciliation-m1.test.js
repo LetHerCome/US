@@ -40,18 +40,17 @@ test('M1 bottom navigation usa Phosphor regular/fill senza cambiare le quattro r
   assert.doesNotMatch(html, /data-page="settings"/);
 });
 
-test('M1 active orbit è continua, non intercetta touch e rispetta reduced motion', () => {
+// HUMAN-UI-02 retired the infinite active orbit: the nav carries no looping animation.
+test('HUMAN-UI-02 la nav attiva non ha animazioni in loop', () => {
   const css = identity();
-  assert.match(css, /@keyframes us-nav-orbit/);
-  assert.match(css, /animation:us-nav-orbit [^;]+infinite/);
-  assert.match(css, /pointer-events:none/);
-  assert.match(css, /@media\(prefers-reduced-motion:reduce\)[\s\S]*?us-nav-premium button\.active \.nicon::before\{animation:none!important\}/);
+  assert.doesNotMatch(css, /us-nav-orbit/);
+  assert.doesNotMatch(css, /us-nav-premium[^{]*\{[^}]*animation:[^;}]*infinite/);
 });
 
-test('M1 conserva target touch da 44px anche con cerchio visuale da 38px', () => {
+test('HUMAN-UI-02 conserva target touch >= 44px con una nav compatta', () => {
   const css = identity();
-  assert.match(css, /\.us-nav-premium button\{[\s\S]*?min-width:44px!important;[\s\S]*?min-height:58px!important/);
-  assert.match(css, /\.us-nav-premium button \.nicon\{[\s\S]*?width:38px!important;[\s\S]*?height:38px!important/);
+  assert.match(css, /\.us-nav-premium button\{[\s\S]*?min-width:44px!important;[\s\S]*?min-height:46px!important/);
+  assert.match(css, /\.us-nav-premium button \.nicon\{[\s\S]*?width:32px!important;[\s\S]*?height:28px!important/);
 });
 
 test('M1 applica il top chrome APK senza introdurre fullscreen/settings o relocation Home', () => {
@@ -71,8 +70,8 @@ test('M1 ancora il top chrome al contenitore mobile .app, non al viewport deskto
 
 test('M1.2 usa una clearance authority e riserva spazio sulle tre secondary root pages', () => {
   const css = read('identity.css') + read('fix4.css') + read('ui-foundation.css');
-  assert.match(css, /--us-top-chrome-height:56px/);
-  assert.match(css, /--us-top-chrome-clearance:68px/);
+  assert.match(css, /--us-top-chrome-height:46px/);
+  assert.match(css, /--us-top-chrome-clearance:56px/);
   assert.match(css, /\.top\.us-premium-top\{[^}]*height:var\(--us-top-chrome-height\)/);
   assert.match(css, /\.top\.us-premium-top::before\{[^}]*height:var\(--us-top-chrome-clearance\)/);
   assert.match(css, /#bond,#moments,#quiz\{padding-top:calc\(var\(--us-top-chrome-clearance\) \+ var\(--us-space-2\)\);box-sizing:border-box\}/);

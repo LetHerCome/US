@@ -396,6 +396,26 @@ body.viewer-open{overflow:hidden}
 .noi-canonical-head h2{margin:3px 0 0!important;letter-spacing:-.5px;font-size:var(--us-type-page)!important}
 .noi-canonical-head p{margin:5px 0 0;font-size:12px;color:var(--muted);line-height:1.3}
 .noi-canonical-head .us-calendar-btn{flex:0 0 44px}
+#bond .noi-canonical-page[data-noi-view="hub"]{min-height:0}
+/* HUMAN-UI-02 — Noi opens on the couple: two existing photos, two names and
+   the existing distance reading between them. Read-only; unknown stays unknown. */
+.noi-sr{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px!important;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.noi-couple-head{align-items:center}
+.noi-couple{flex:1 1 auto;min-width:0;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:6px}
+.noi-couple-person{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:56px}
+.noi-couple-avatar{position:relative;width:52px;height:52px;border-radius:50%;padding:2px;background:var(--us-accent-gradient);box-shadow:0 8px 22px rgba(0,0,0,.28)}
+.noi-couple-avatar img,.noi-couple-avatar .fallback{width:100%;height:100%;border-radius:50%;border:2px solid var(--us-color-bg);box-sizing:border-box;object-fit:cover;display:block}
+.noi-couple-avatar img[hidden]{display:none}
+.noi-couple-avatar .fallback{display:grid;place-items:center;background:var(--us-color-surface-2);color:var(--us-color-text);font-family:var(--us-font-editorial);font-size:20px}
+.noi-couple-name{max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--us-color-text-2);font-size:12px;font-weight:600;line-height:1.2}
+.noi-couple-link{display:flex;align-items:center;gap:6px;min-width:0;margin-bottom:18px}
+.noi-couple-link>i{flex:1 1 8px;min-width:8px;height:0;border-top:1.5px solid rgba(255,142,170,.55)}
+.noi-couple-link>i:last-child{border-color:rgba(169,133,255,.55)}
+.noi-couple-link>b{flex:0 1 auto;min-width:0;padding:5px 10px;border-radius:var(--us-radius-pill);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);color:var(--us-color-text);font-size:13px;font-weight:650;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;text-align:center}
+.noi-couple-link[data-us-distance-state="unknown"]>b{white-space:normal;font-size:12px;border-radius:14px}
+.noi-couple-link[data-us-distance-state="stale"]>b{color:var(--us-color-text-2)}
+.noi-couple-link[data-us-distance-state="unknown"]>b{background:transparent;border-style:dashed;color:var(--us-color-text-3);font-weight:500;font-style:italic}
+.noi-couple-link[data-us-distance-state="unknown"]>i,.noi-couple-link[data-us-distance-state="stale"]>i{border-top-style:dashed;opacity:.6}
 .noi-resonance{position:relative;flex:0 0 auto;padding:14px 15px;border-radius:22px;background:linear-gradient(145deg,rgba(255,102,142,.10),rgba(169,133,255,.11)),rgba(20,24,33,.82);border:1px solid rgba(255,255,255,.11);box-shadow:0 13px 32px rgba(0,0,0,.18)}
 .noi-resonance-top{display:flex;align-items:center;justify-content:space-between;gap:12px}.noi-resonance-top b{display:block;margin-top:3px;font-family:Georgia,serif;font-size:18px;font-weight:500}.noi-resonance-mark{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#e7d9ff;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);font-size:20px}
 .noi-resonance .bond-xp-track{height:8px;margin-top:14px}.noi-resonance-foot{display:flex;justify-content:space-between;gap:10px;margin-top:9px;color:rgba(247,242,248,.72);font-size:12px;font-weight:600;line-height:1.25;font-variant-numeric:tabular-nums}.noi-resonance-level{color:rgba(247,242,248,.72);font-size:16px}.noi-resonance-dot{color:rgba(247,242,248,.4)}.noi-resonance-legacy{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
@@ -481,8 +501,8 @@ body.viewer-open{overflow:hidden}
 #bond .noi-canonical-page:not([data-noi-view="quest"])>.noi-living-section{display:none!important}
 #bond .noi-canonical-page:not([data-noi-view="da-vivere"])>.noi-idea-section{display:none!important}
 #bond .noi-canonical-page:not([data-noi-view="eventi"])>.noi-events-section{display:none!important}
-.noi-hub{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;flex:0 0 auto}
-.noi-hub-card{position:relative;isolation:isolate;aspect-ratio:1/1;min-width:0;display:flex;flex-direction:column;align-items:stretch;padding:15px 15px 14px;border-radius:24px;text-align:left;color:#fff;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:linear-gradient(150deg,rgba(46,24,54,.80),rgba(20,15,28,.74) 62%,rgba(14,12,20,.78));box-shadow:0 16px 38px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.08);backdrop-filter:blur(22px) saturate(150%);-webkit-backdrop-filter:blur(22px) saturate(150%);transition:transform var(--us-motion-micro) var(--us-ease-standard),border-color var(--us-motion-fast) var(--us-ease-standard)}
+.noi-hub{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;flex:0 0 auto}
+.noi-hub-card{position:relative;isolation:isolate;aspect-ratio:auto;min-width:0;display:flex;flex-direction:column;align-items:stretch;padding:15px 15px 14px;border-radius:24px;text-align:left;color:#fff;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:linear-gradient(150deg,rgba(46,24,54,.80),rgba(20,15,28,.74) 62%,rgba(14,12,20,.78));box-shadow:0 16px 38px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.08);backdrop-filter:blur(22px) saturate(150%);-webkit-backdrop-filter:blur(22px) saturate(150%);transition:transform var(--us-motion-micro) var(--us-ease-standard),border-color var(--us-motion-fast) var(--us-ease-standard)}
 .noi-hub-card::before{content:"";position:absolute;inset:0 22% auto 10%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.34),transparent);pointer-events:none}
 .noi-hub-card::after{content:"";position:absolute;z-index:-1;right:-34%;top:-34%;width:96%;height:96%;border-radius:50%;background:radial-gradient(circle,var(--noi-hub-glow),transparent 68%);opacity:.6;pointer-events:none}
 .noi-hub-card:focus-visible{outline:2px solid rgba(255,160,196,.85);outline-offset:3px}
@@ -500,7 +520,23 @@ body.viewer-open{overflow:hidden}
 .noi-hub-card--calendar{--noi-hub-icon:url("/assets/icons/phosphor/calendar-dots-regular.svg");--noi-hub-tint:#e7cdf2;--noi-hub-glow:rgba(201,154,224,.30)}
 .noi-hub-card--quest{--noi-hub-icon:url("/assets/icons/phosphor/flag-banner-regular.svg");--noi-hub-tint:#dccbff;--noi-hub-glow:rgba(155,124,255,.34)}
 /* M12A.1 — Eventi: the fifth Noi card. It spans the row (like the first and last Gioca tiles) so the grid keeps its rhythm. */
-.noi-hub-card--events{--noi-hub-icon:url("/assets/icons/phosphor/calendar-heart-regular.svg");--noi-hub-tint:#ffc9d6;--noi-hub-glow:rgba(255,128,160,.32);grid-column:1/-1;aspect-ratio:auto;min-height:118px}
+.noi-hub-card--events{--noi-hub-icon:url("/assets/icons/phosphor/calendar-heart-regular.svg");--noi-hub-tint:#ffc9d6;--noi-hub-glow:rgba(255,128,160,.32)}
+/* HUMAN-UI-02 — Risonanza stays the one dominant relationship object; Da
+   vivere, Calendario, Quest and Eventi become editorial rows (name, one line
+   of real state, chevron). Same buttons, same data-noi-open targets. */
+.noi-hub-card--resonance{min-height:150px;padding:16px 16px 15px;border-radius:24px;margin-bottom:6px}
+.noi-hub-card--resonance .noi-hub-copy b{font-size:26px;line-height:1.1}
+.noi-hub-card--resonance .noi-hub-copy small{font-size:13px}
+.noi-hub-card--resonance .noi-hub-track{height:6px;margin-top:12px}
+.noi-hub-card:not(.noi-hub-card--resonance){flex-direction:row;align-items:center;gap:12px;min-height:64px;padding:10px 40px 10px 12px;border-radius:18px;background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.08);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+.noi-hub-card:not(.noi-hub-card--resonance)::before,.noi-hub-card:not(.noi-hub-card--resonance)::after{display:none}
+.noi-hub-card:not(.noi-hub-card--resonance) .noi-hub-icon{width:40px;height:40px;border-radius:13px}
+.noi-hub-card:not(.noi-hub-card--resonance) .noi-hub-icon::before{width:21px;height:21px}
+.noi-hub-card:not(.noi-hub-card--resonance) .noi-hub-copy{margin-top:0;gap:2px}
+.noi-hub-card:not(.noi-hub-card--resonance) .noi-hub-kicker{text-transform:none;letter-spacing:0;font-size:16px;font-weight:650;color:var(--us-color-text)}
+.noi-hub-card:not(.noi-hub-card--resonance) .noi-hub-copy b{font-family:var(--us-font-ui);font-size:13px;font-weight:500;line-height:1.3;color:var(--us-color-text-2);-webkit-line-clamp:1}
+.noi-hub-card:not(.noi-hub-card--resonance) .noi-hub-copy small{font-size:12px;-webkit-line-clamp:1;color:var(--us-color-text-3)}
+.noi-hub-card:not(.noi-hub-card--resonance) .noi-hub-copy::after{content:"";position:absolute;right:14px;top:50%;width:16px;height:16px;margin-top:-8px;background:var(--us-color-text-3);-webkit-mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat}
 .noi-section-bar{display:flex;align-items:center;flex:0 0 auto;margin-top:2px}
 .noi-section-back{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 15px 0 11px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#f4e9ff;font-size:13px;font-weight:700}
 .noi-section-back:focus-visible{outline:2px solid rgba(255,160,196,.85);outline-offset:3px}
@@ -509,7 +545,10 @@ body.viewer-open{overflow:hidden}
 #bond .noi-canonical-page[data-noi-view="da-vivere"]{height:calc(var(--us-viewport-height) - var(--us-top-chrome-clearance) - var(--us-safe-top) - var(--us-safe-bottom) - var(--us-nav-height) - 86px)!important;min-height:0!important;overflow:hidden!important}
 #bond .noi-canonical-page[data-noi-view="quest"] .noi-living-list{height:auto!important;overflow:visible!important}
 /* Hub, Risonanza e Quest scorrono con la pagina: l'ultima riga resta sopra nav e Ti penso. */
-#bond .noi-canonical-page:not([data-noi-view="da-vivere"]){padding-bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 44px)!important}
+#bond .noi-canonical-page:not([data-noi-view="da-vivere"]):not([data-noi-view="hub"]){padding-bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 44px)!important}
+/* HUMAN-UI-02 — the hub already sits inside .app's nav clearance; it only
+   adds what the Ti penso button needs (nav + 25 + 48, minus .app's 34px). */
+#bond .noi-canonical-page[data-noi-view="hub"]{padding-bottom:46px!important}
 #bond .noi-canonical-page[data-noi-view="resonance"]{height:auto!important;min-height:calc(100svh - var(--us-top-chrome-clearance) - var(--us-safe-top) - var(--us-safe-bottom) - 12px)!important;overflow:visible!important}
 /* M12C · Risonanza V2: recent traceable XP awards; never a relationship score. */
 .noi-resonance-history{display:flex;flex-direction:column;gap:9px;flex:0 0 auto;padding:14px 15px;border-radius:24px;border:1px solid rgba(255,255,255,.10);background:linear-gradient(145deg,rgba(255,102,142,.055),rgba(169,133,255,.055)),rgba(255,255,255,.025)}
@@ -531,9 +570,9 @@ body.viewer-open{overflow:hidden}
 .noi-resonance-sources b{font-size:13px;font-weight:700}
 .noi-resonance-sources span{font-size:12px;line-height:1.35;color:var(--muted)}
 .noi-resonance-note{margin:2px 0 0;font-size:11.5px;line-height:1.35;color:var(--muted)}
-@media(max-height:700px){#bond .noi-canonical-page[data-noi-view="hub"] .noi-canonical-head p{display:none}.noi-hub{gap:10px}.noi-hub-card{padding:13px 13px 12px}.noi-hub-copy b{font-size:17px}}
-@media(max-width:340px){.noi-hub{grid-template-columns:1fr}.noi-hub-card{aspect-ratio:auto;min-height:128px}}
-@media(min-width:700px){.noi-hub{gap:16px}.noi-hub-card{padding:20px}.noi-hub-copy b{font-size:22px}.noi-hub-card:hover{border-color:rgba(255,255,255,.22)}}
+@media(max-height:700px){.noi-hub-card--resonance{min-height:0}.noi-hub-card--resonance .noi-hub-icon{display:none}.noi-hub-card--resonance .noi-hub-copy b{font-size:22px}.noi-hub-card:not(.noi-hub-card--resonance){min-height:56px;padding-top:6px;padding-bottom:6px}}
+@media(max-width:340px){.noi-couple-avatar{width:46px;height:46px}.noi-couple-link>b{padding:4px 8px;font-size:12px}}
+@media(min-width:700px){.noi-hub-card:hover{border-color:rgba(255,255,255,.22)}}
 @media(prefers-reduced-motion:reduce){.noi-hub-card,.noi-hub-track>span{transition:none}}
 
 /* ===== M4B · Ti penso liquid-glass arrival ===== */

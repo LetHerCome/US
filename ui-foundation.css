@@ -78,8 +78,10 @@
   --us-muted:var(--us-color-text-2);
   --us-font-editorial:"Newsreader",Georgia,serif;
   --us-font-ui:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  --us-top-chrome-height:56px;
-  --us-top-chrome-clearance:68px;
+  /* HUMAN-UI-02 — compact shell: a slim top pill (44px controls, no extra
+     padding) and a ~56px bottom nav before the device safe area. */
+  --us-top-chrome-height:46px;
+  --us-top-chrome-clearance:56px;
   /* Spacing: compact 8 · standard 12 · section 18 · page 16 gutter. */
   --us-space-1:4px;
   --us-space-2:8px;
@@ -119,7 +121,10 @@
   --us-ease-standard:cubic-bezier(.22,.78,.24,1);
   --us-ease-enter:cubic-bezier(.16,1,.3,1);
   --us-ease-exit:cubic-bezier(.4,0,1,1);
-  /* Type: page title · section title · card title · body · secondary · meta · eyebrow. */
+  /* Type: page title · section title · card title · body · secondary · meta · eyebrow.
+     HUMAN-UI-02 hierarchy: one page title (~26px), section ~20px, object
+     ~17–19px, body 15px, state/meta 12–13px. Only one object per page may be
+     larger (Per voi, Risonanza, the Oggi photo). */
   --us-type-page:26px;
   --us-type-section:19px;
   --us-type-card:15px;
@@ -133,7 +138,7 @@
   --us-safe-right:var(--safe-area-inset-right,env(safe-area-inset-right,0px));
   --us-safe-bottom:var(--safe-area-inset-bottom,env(safe-area-inset-bottom,0px));
   --us-safe-left:var(--safe-area-inset-left,env(safe-area-inset-left,0px));
-  --us-nav-height:68px;
+  --us-nav-height:56px;
   --us-viewport-height:100dvh;
   --us-focus:0 0 0 3px rgba(169,133,255,.28);
   --us-premium-glass:rgba(24,20,31,.68);

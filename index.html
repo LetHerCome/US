@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <meta name="theme-color" content="#0a0a0e"/>
 <meta name="color-scheme" content="dark"/>
-<meta name="us-build" content="us-m12d-quest-v2-20261001-2"/>
+<meta name="us-build" content="us-human-ui-02-20261002-1"/>
 <!-- Game V2 production rollout -->
 <link rel="manifest" href="/manifest.webmanifest?v=us-pwa-logo-v2"/>
 <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=us-pwa-logo-v2"/>
@@ -18,17 +18,17 @@
 <title>US — Francesco & Beatrice</title>
 <link rel="stylesheet" href="/styles.css"/>
 <link rel="stylesheet" href="/ui-foundation.css"/>
-<link rel="stylesheet" href="/fix4.css?v=fix4-us-m12d-quest-v2-20261001-2"/>
-<link rel="stylesheet" href="/events.css?v=us-m12d-quest-v2-20261001-2" media="print" onload="this.media='all'"/>
-<link rel="stylesheet" href="/moments-albums.css?v=us-m12d-quest-v2-20261001-2" media="print" onload="this.media='all'"/>
-<link rel="stylesheet" href="/games.css?v=us-m12d-quest-v2-20261001-2" media="print" onload="this.media='all'"/>
-<link rel="stylesheet" href="/settings.css?v=us-m12d-quest-v2-20261001-2"/>
-<link rel="stylesheet" href="/identity.css?v=us-identity3-us-m12d-quest-v2-20261001-2"/>
-<link rel="stylesheet" href="/settings2.css?v=us-m12d-quest-v2-20261001-2" media="print" onload="this.media='all'"/>
-<link rel="stylesheet" href="/polish4.css?v=us-m12d-quest-v2-20261001-2"/>
+<link rel="stylesheet" href="/fix4.css?v=fix4-us-human-ui-02-20261002-1"/>
+<link rel="stylesheet" href="/events.css?v=us-human-ui-02-20261002-1" media="print" onload="this.media='all'"/>
+<link rel="stylesheet" href="/moments-albums.css?v=us-human-ui-02-20261002-1" media="print" onload="this.media='all'"/>
+<link rel="stylesheet" href="/games.css?v=us-human-ui-02-20261002-1" media="print" onload="this.media='all'"/>
+<link rel="stylesheet" href="/settings.css?v=us-human-ui-02-20261002-1"/>
+<link rel="stylesheet" href="/identity.css?v=us-identity3-us-human-ui-02-20261002-1"/>
+<link rel="stylesheet" href="/settings2.css?v=us-human-ui-02-20261002-1" media="print" onload="this.media='all'"/>
+<link rel="stylesheet" href="/polish4.css?v=us-human-ui-02-20261002-1"/>
 <link rel="stylesheet" href="/stories.css"/>
 <link rel="stylesheet" href="/left-for-you.css?v=us-m5i-ephemeral-20260930-1"/>
-<link rel="stylesheet" href="/calendar.css?v=us-m12d-quest-v2-20261001-2"/>
+<link rel="stylesheet" href="/calendar.css?v=us-human-ui-02-20261002-1"/>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://iiakdfsxpywdkxravqjh.supabase.co" crossorigin>
 <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
@@ -240,10 +240,22 @@ html.us-returning-device .auth-overlay{
 
   <main id="bond" class="page">
     <section class="section bond-page noi-canonical-page" data-noi-view="hub" style="margin-top:6px" aria-label="Noi">
-      <header class="noi-canonical-head">
-        <div>
-          <div class="tiny">NOI</div>
-          <h2>Il vostro spazio</h2>
+      <header class="noi-canonical-head noi-couple-head">
+        <h2 class="noi-sr">Noi</h2>
+        <!-- HUMAN-UI-02 — the couple at a glance: existing photos, names and the
+             existing distance reading. Unknown stays unknown; nothing here writes. -->
+        <div class="noi-couple" id="noiCouple" role="group" aria-label="Francesco e Beatrice">
+          <span class="noi-couple-person" data-noi-couple-role="francesco">
+            <span class="noi-couple-avatar" id="pairAvatarFrancesco"><img alt="" hidden><span class="fallback" aria-hidden="true">F</span></span>
+            <small class="noi-couple-name" data-noi-couple-name="francesco">Francesco</small>
+          </span>
+          <span class="noi-couple-link" id="noiCoupleLink" data-us-distance-state="unknown">
+            <i aria-hidden="true"></i><b id="noiCoupleDistance">distanza non nota</b><i aria-hidden="true"></i>
+          </span>
+          <span class="noi-couple-person" data-noi-couple-role="beatrice">
+            <span class="noi-couple-avatar" id="pairAvatarBeatrice"><img alt="" hidden><span class="fallback" aria-hidden="true">B</span></span>
+            <small class="noi-couple-name" data-noi-couple-name="beatrice">Beatrice</small>
+          </span>
         </div>
         <button type="button" class="us-calendar-btn us-important-control us-premium-control" id="usSettingsEntry" onclick="go('settings',{nav:true})" aria-label="Apri impostazioni">
           <span class="us-shell-icon" aria-hidden="true"><img class="us-shell-icon-off us-approved-custom-icon" src="/assets/source/ui/us-icon-settings-v1.png" alt=""><img class="us-shell-icon-on us-approved-custom-icon" src="/assets/source/ui/us-icon-settings-v1.png" alt=""></span>
@@ -386,13 +398,68 @@ html.us-returning-device .auth-overlay{
   <main id="settings" class="page">
     <section class="section us-settings-page us-settings2-page">
       <div class="us-settings2-head">
-        <div>
-          <div class="tiny">IL VOSTRO SPAZIO</div>
-          <h2>Impostazioni</h2>
-        </div>
+        <h2>Impostazioni</h2>
         <div class="us-settings2-device-dot" id="usSettingsDeviceDot" aria-label="Stato sincronizzazione">•</div>
       </div>
 
+      <!-- HUMAN-UI-02 — TU: what belongs to the current person and this phone.
+           VOI: what the couple shares. Same rows, same data-us-setting actions;
+           only their grouping changed. -->
+      <section class="us-settings2-section" data-us-settings-scope="tu" aria-labelledby="usSettingsTuTitle">
+        <div class="us-settings2-section-head"><h3 id="usSettingsTuTitle">Tu</h3><small>Solo per te</small></div>
+        <div class="us-settings2-group">
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="profile-photo">
+          <span class="us-settings2-icon us-settings2-photo-icon" aria-hidden="true"><span class="us-icon" data-us-icon="user-circle"></span></span>
+          <span class="us-setting-main"><b>Cambia foto profilo</b></span><span class="us-setting-value">Modifica</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="notifications">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="bell"></span></span>
+          <span class="us-setting-main"><b>Notifiche</b></span>
+          <span class="us-setting-value" id="usNotificationsValue">…</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="location">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="map-pin"></span></span>
+          <span class="us-setting-main"><b>Posizione</b><small>Solo per la distanza tra voi</small></span>
+          <span class="us-setting-state" id="usLocationState">…</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="account-upgrade" hidden id="usAccountUpgradeRow">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="envelope"></span></span>
+          <span class="us-setting-main"><b>Proteggi il tuo account</b><small>Aggiungi un’email per non perdere l’accesso</small></span>
+          <span class="us-setting-value">Attiva</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
+        </div>
+        <div class="us-settings2-label">SU QUESTO TELEFONO</div>
+        <div class="us-settings2-group">
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="distance">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="arrows-left-right"></span></span>
+          <span class="us-setting-main"><b>Distanza</b></span>
+          <span class="us-setting-value" id="usDistanceUnitValue">km</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="feedback">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="sparkle"></span></span>
+          <span class="us-setting-main"><b>Suoni e vibrazione</b></span>
+          <span class="us-setting-value" id="usFeedbackValue">Attivi</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="home-photo">
+          <span class="us-settings2-icon us-settings2-photo-icon" aria-hidden="true"><span class="us-icon" data-us-icon="image"></span></span>
+          <span class="us-setting-main"><b>Foto Home</b></span>
+          <span class="us-setting-value">Gestisci</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="scriptable-widgets">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="heart"></span></span>
+          <span class="us-setting-main"><b>Widget US</b><small>Scriptable</small></span>
+          <span class="us-setting-value">Apri</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="sync-status">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="arrows-clockwise"></span></span>
+          <span class="us-setting-main"><b>Sincronizzazione</b></span>
+          <span class="us-setting-value" id="usSyncValue">Controlla</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
+        </div>
+      </section>
+
+      <section class="us-settings2-section" data-us-settings-scope="voi" aria-labelledby="usSettingsVoiTitle">
+        <div class="us-settings2-section-head"><h3 id="usSettingsVoiTitle">Voi</h3><small>Condiviso tra voi</small></div>
       <article class="us-couple-id-card" id="usCoupleIdCard" aria-live="polite">
         <div class="us-couple-id-top">
           <div class="us-couple-avatars" id="usCoupleAvatars">
@@ -410,71 +477,21 @@ html.us-returning-device .auth-overlay{
           <span><b id="usSettingsEventsCount">—</b><small>vissuti</small></span>
         </div>
       </article>
-
-      <div class="us-settings2-label">NOI</div>
-      <div class="us-settings2-group">
+        <div class="us-settings2-group">
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="relationship-date">
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="calendar-heart"></span></span>
           <span class="us-setting-main"><b>Data della relazione</b></span>
           <span class="us-setting-value" id="usRelationshipDateValue">…</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
-        </button>
-        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="profile-photo">
-          <span class="us-settings2-icon us-settings2-photo-icon" aria-hidden="true"><span class="us-icon" data-us-icon="user-circle"></span></span>
-          <span class="us-setting-main"><b>Cambia foto profilo</b></span><span class="us-setting-value">Modifica</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
-        </button>
-        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="home-photo">
-          <span class="us-settings2-icon us-settings2-photo-icon" aria-hidden="true"><span class="us-icon" data-us-icon="image"></span></span>
-          <span class="us-setting-main"><b>Foto Home</b></span>
-          <span class="us-setting-value">Gestisci</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="story-archive">
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="clock-counter-clockwise"></span></span>
           <span class="us-setting-main"><b>Archivio Stories</b></span>
           <span class="us-setting-value" id="usStoryArchiveValue"></span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
-      </div>
+        </div>
+      </section>
 
-      <div class="us-settings2-label">QUESTO TELEFONO</div>
-      <div class="us-settings2-group">
-        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="notifications">
-          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="bell"></span></span>
-          <span class="us-setting-main"><b>Notifiche</b></span>
-          <span class="us-setting-value" id="usNotificationsValue">…</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
-        </button>
-        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="scriptable-widgets">
-          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="heart"></span></span>
-          <span class="us-setting-main"><b>Widget US</b><small>Scriptable</small></span>
-          <span class="us-setting-value">Apri</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
-        </button>
-        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="distance">
-          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="arrows-left-right"></span></span>
-          <span class="us-setting-main"><b>Distanza</b></span>
-          <span class="us-setting-value" id="usDistanceUnitValue">km</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
-        </button>
-        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="location">
-          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="map-pin"></span></span>
-          <span class="us-setting-main"><b>Posizione</b><small>Solo per la distanza tra voi</small></span>
-          <span class="us-setting-state" id="usLocationState">…</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
-        </button>
-        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="feedback">
-          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="sparkle"></span></span>
-          <span class="us-setting-main"><b>Suoni e vibrazione</b></span>
-          <span class="us-setting-value" id="usFeedbackValue">Attivi</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
-        </button>
-      </div>
-
-      <div class="us-settings2-label">STATO US</div>
-      <div class="us-settings2-group">
-        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="sync-status">
-          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="arrows-clockwise"></span></span>
-          <span class="us-setting-main"><b>Sincronizzazione</b></span>
-          <span class="us-setting-value" id="usSyncValue">Controlla</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
-        </button>
-        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="account-upgrade" hidden id="usAccountUpgradeRow">
-          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="envelope"></span></span>
-          <span class="us-setting-main"><b>Proteggi il tuo account</b><small>Aggiungi un’email per non perdere l’accesso</small></span>
-          <span class="us-setting-value">Attiva</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
-        </button>
+      <div class="us-settings2-group us-settings2-about">
         <div class="us-settings2-version-row">
           <span class="us-settings2-icon us-settings2-brand-mini" aria-hidden="true"><img class="us-brand-symbol-art" src="/assets/derived/brand/us-symbol-apk-foreground-v1.png" alt=""></span>
           <span><b>US 1.0</b><small id="usSettingsBuild">Build corrente</small></span>
@@ -777,14 +794,14 @@ html.us-returning-device .auth-overlay{
 <script defer src="/stories.js"></script>
 <script defer src="/fix4.js?v=fix4-us-m11-game-v2-20260930-1"></script>
 <script defer src="/left-for-you.js?v=us-m5j-conservati-20260925-1"></script>
-<script defer src="/events.js?v=us-m12d-quest-v2-20261001-2"></script>
-<script defer src="/games.js?v=us-m12d-quest-v2-20261001-2"></script>
+<script defer src="/events.js?v=us-human-ui-02-20261002-1"></script>
+<script defer src="/games.js?v=us-human-ui-02-20261002-1"></script>
 <script defer src="/settings.js?v=us-m11-game-v2-20260930-1"></script>
 <script defer src="/identity.js?v=us-identity2-us-m11-game-v2-20260930-1"></script>
 <script defer src="/polish4.js?v=us-final-polish-motion31-1"></script>
-<script defer src="/moments-albums.js?v=us-m12d-quest-v2-20261001-2"></script>
+<script defer src="/moments-albums.js?v=us-human-ui-02-20261002-1"></script>
 <script defer src="/calendar-domain.js?v=us-m6c1-duration-1"></script>
-<script defer src="/calendar.js?v=us-m12d-quest-v2-20261001-2"></script>
+<script defer src="/calendar.js?v=us-human-ui-02-20261002-1"></script>
 <script defer src="/navigation.js?v=us-m11-game-v2-20260930-1"></script>
 <script defer src="/ui-foundation.js"></script>
 </body></html>

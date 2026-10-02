@@ -153,20 +153,51 @@ function weeklyCard(w) {
   </section>`;
 }
 
-// Six tiles: icon, name, and a state only when there is one. The first and
-// last span the row so the grid has a rhythm.
+// HUMAN-UI-02 — status filters. Every chip is a plain reading of the
+// server's round summaries (open_rounds / recent); nothing is decided here
+// and a chip exists only while it has at least one round behind it.
+const ROUND_FILTERS = [
+  { id: 'turn', label: () => 'Tocca a te', match: (h) => (h?.open_rounds || []).filter((r) => !r.my_complete) },
+  { id: 'ready', label: () => 'Risposte pronte', match: (h) => (h?.recent || []).filter((r) => r.reveal_ready && !r.my_reveal_seen_at) },
+  { id: 'waiting', label: () => `Aspetti ${partnerName()}`, match: (h) => (h?.open_rounds || []).filter((r) => r.my_complete) },
+  { id: 'done', label: () => 'Completati', match: (h) => (h?.recent || []).filter((r) => r.reveal_ready && r.my_reveal_seen_at) },
+];
+let hubFilter = null;   // view state only (memory), never persisted
+
+function roundFilters(h) {
+  return ROUND_FILTERS.map((f) => ({ id: f.id, label: f.label(), rounds: f.match(h) })).filter((f) => f.rounds.length > 0);
+}
+
+function roundRow(r) {
+  const status = roundStatus(r);
+  const when = r.completed_at ? romeDate(String(r.completed_at).slice(0, 10), { day: 'numeric', month: 'long' }) : '';
+  return `<button type="button" class="us-gv2-row" data-gv2-session="${esc(r.id)}"><span><b>${esc(familyName(r.game_family))}</b>${when ? `<small>${esc(when)}</small>` : ''}</span>${status ? `<small class="us-gv2-row-state" data-tone="${esc(status.tone)}">${esc(status.text)}</small>` : ''}</button>`;
+}
+
+function filterRow(filters) {
+  if (!filters.length) return '';
+  const chips = filters.map((f) => `<button type="button" class="us-gv2-filter" data-gv2-filter="${f.id}" aria-pressed="${hubFilter === f.id ? 'true' : 'false'}" aria-controls="usGv2FilterList"><span>${esc(f.label)}</span><b>${f.rounds.length}</b></button>`).join('');
+  const open = filters.find((f) => f.id === hubFilter);
+  return `<div class="us-gv2-filters" role="group" aria-label="Le vostre partite">${chips}</div>
+    <div class="us-gv2-filter-list" id="usGv2FilterList" aria-live="polite"${open ? '' : ' hidden'}>${open ? open.rounds.map(roundRow).join('') : ''}</div>`;
+}
+
+// HUMAN-UI-02 — Per voi is the one hero; the six modes are a horizontal deck
+// of small physical cards (the next one peeks from the right); the status
+// chips sit between them. Mode IDs, states and actions are unchanged.
 function renderHub() {
   const root = byId('quizHub');
   if (!root) return;
   const pv = perVoiCopy();
   const pvState = home?.per_voi?.state || 'idle';
   const openByFamily = new Map((home?.open_rounds || []).map((r) => [r.game_family, r]));
-  const recent = (home?.recent || []).filter((r) => r.my_reveal_seen_at).slice(0, 4);
-  const modeTiles = FAMILIES.map((f, i) => {
+  const filters = roundFilters(home);
+  if (hubFilter && !filters.some((f) => f.id === hubFilter)) hubFilter = null;
+  const modeTiles = FAMILIES.map((f) => {
     const status = modeStatus(f, openByFamily.get(f.id));
     const locked = status?.state === 'locked';
     const mark = status?.state === 'played' ? icon('check') : locked ? icon('lock-simple') : '';
-    return `<button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-mode${i === 0 || i === FAMILIES.length - 1 ? ' is-wide' : ''}" data-gv2-family="${f.id}" data-gv2-mode-state="${esc(status?.state || 'ready')}"${locked ? ' aria-disabled="true"' : ''}>
+    return `<button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-mode" data-gv2-family="${f.id}" data-gv2-mode-state="${esc(status?.state || 'ready')}"${locked ? ' aria-disabled="true"' : ''}>
       ${glyph(f.icon)}
       <span class="us-gv2-mode-copy"><b>${esc(f.name)}</b>${status ? `<small class="us-gv2-mode-state">${mark}${esc(status.text)}</small>` : ''}</span>
       ${status && !locked && status.state === 'open' ? `<i class="us-gv2-dot" data-tone="${esc(status.tone)}" aria-hidden="true"></i>` : ''}
@@ -177,9 +208,15 @@ function renderHub() {
     <button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-pervoi us-attention-orbit" data-gv2-action="per-voi" data-gv2-state="${esc(pvState)}" data-us-attention="${pvState === 'pending' || pvState === 'reveal_ready' ? 'on' : 'off'}">
       ${glyph('sparkle').replace('class="us-gv2-glyph"', 'class="us-gv2-glyph" data-us-attention-icon')}<span class="us-gv2-pervoi-copy"><b>Per voi</b><small>${esc(pv.line)}</small></span><span class="us-gv2-pervoi-cta">${esc(pv.cta)}</span>
     </button>
-    <section class="us-gv2-modes" aria-label="Scegliete voi"><div class="us-gv2-mode-grid">${modeTiles}</div></section>
-    ${weeklyCard(home?.weekly)}
-    ${recent.length ? `<section class="us-gv2-list" aria-label="Rivedi"><span class="us-gv2-kicker">RIVEDI</span>${recent.map((r) => `<button type="button" class="us-gv2-row is-quiet" data-gv2-session="${esc(r.id)}"><span><b>${esc(familyName(r.game_family))}</b><small>${esc(romeDate(String(r.completed_at || '').slice(0, 10), { day: 'numeric', month: 'long' }))}</small></span></button>`).join('')}</section>` : ''}`;
+    ${filterRow(filters)}
+    <section class="us-gv2-modes" aria-label="Scegliete voi"><div class="us-gv2-mode-grid us-gv2-deck">${modeTiles}</div></section>
+    ${weeklyCard(home?.weekly)}`;
+}
+
+function toggleFilter(id) {
+  hubFilter = hubFilter === id ? null : id;
+  renderHub();
+  byId('quizHub')?.querySelector?.(`[data-gv2-filter="${id}"]`)?.focus?.({ preventScroll: true });
 }
 
 function renderHubError() {
@@ -609,6 +646,7 @@ function onClick(event) {
   else if (action === 'prev') { const item = current.items[index]; drafts.set(item.id, readInput(item)); index = Math.max(0, index - 1); renderPlay(); }
   else if (action === 'refresh') refresh();
   else if (action === 'retry') load();
+  else if (button.dataset.gv2Filter) toggleFilter(button.dataset.gv2Filter);
   else if (button.dataset.gv2Family) chooseMode(button.dataset.gv2Family);
   else if (button.dataset.gv2Session) openSession(button.dataset.gv2Session);
 }

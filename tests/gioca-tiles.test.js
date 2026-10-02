@@ -41,7 +41,9 @@ test('Gioca tiles: a fresh week is six tiles of icon and name, with no taglines 
     assert.match(tile, /<b>[^<]+<\/b>/, 'and carries its name');
     assert.doesNotMatch(tile, /<small/, 'a ready tile has no state line');
   }
-  assert.equal((html.match(/is-wide/g) || []).length, 2, 'first and last tile span the row');
+  // HUMAN-UI-02 — the six tiles are one horizontal deck: no tile spans a row any more.
+  assert.doesNotMatch(html, /is-wide/);
+  assert.match(html, /<div class="us-gv2-mode-grid us-gv2-deck">/);
   for (const gone of ['Quello che forse non sapete ancora', 'Stessa situazione, due sguardi', 'Scenari assurdi', 'Uno risponde, l’altro indovina', 'Lo stesso momento, due memorie', 'Scelte, futuri, possibilità']) {
     assert.doesNotMatch(html, new RegExp(gone));
   }
@@ -78,9 +80,10 @@ test('Gioca hub: Per voi is one line of state plus one action', async () => {
 test('Gioca CSS: tiles use the canonical tokens and the Noi chip recipe, never a new palette', () => {
   const css = read('games.css');
   assert.match(css, /\.us-gv2-glyph\{[^}]*width:40px;height:40px;border-radius:14px/);
-  assert.match(css, /\.us-gv2-mode\{aspect-ratio:1\/\.88/);
-  assert.match(css, /\.us-gv2-mode-grid\{display:grid;grid-template-columns:repeat\(2/);
-  assert.doesNotMatch(css, /grid-template-columns:repeat\(3/, 'the app column is phone-width on every screen: two columns, first and last tile wide');
+  // HUMAN-UI-02 — the modes are a horizontal deck of small portrait cards.
+  assert.match(css, /\.us-gv2-deck\{display:flex;[^}]*overflow-x:auto/);
+  assert.match(css, /\.us-gv2-mode\{flex:0 0 auto;width:132px;/);
+  assert.doesNotMatch(css, /\.us-gv2-mode-grid\{display:grid/);
   assert.doesNotMatch(css, /:root\s*\{/, 'no palette of its own');
   assert.match(css, /var\(--us-radius-card\)/);
   assert.match(css, /var\(--us-accent-gradient\)/);

@@ -624,7 +624,27 @@ function distanceCapsuleModel({mine=null,partner=null,partnerName='',permission=
   return {state:stale?'stale':'ready',visible:true,km,text:formatDistance(km),detail:`${formatDistance(km)} tra voi`,age:older,stale};
 }
 
+// HUMAN-UI-02 — the Noi couple row reads the same model. Only a real reading
+// (ready, or stale = last known) carries a number; every other state is shown
+// as unknown. There is no "together" state in the domain, so none is shown.
+function noiDistanceLine(model){
+  const state=model?.state||'unknown';
+  if(state==='ready'&&model.text)return {state,text:model.text,label:`${model.text} tra voi`};
+  if(state==='stale'&&model.text)return {state,text:model.text,label:`Ultima distanza nota: ${model.text}`};
+  return {state:'unknown',text:'distanza non nota',label:'Distanza tra voi non nota'};
+}
+function renderNoiDistance(model){
+  const link=document.getElementById('noiCoupleLink');
+  const value=document.getElementById('noiCoupleDistance');
+  if(!link||!value)return;
+  const line=noiDistanceLine(model);
+  link.dataset.usDistanceState=line.state;
+  value.textContent=line.text;
+  link.setAttribute('aria-label',line.label);
+}
+
 function renderDistanceCapsule(model){
+  renderNoiDistance(model);
   const root=document.getElementById('distanceWidget');
   const value=document.getElementById('distanceValue');
   if(!root||!value)return;
@@ -814,6 +834,8 @@ async function hydrateProfileAvatars(){
   const {data:profiles,error}=await sb.from('profiles').select('id,display_name,role,avatar_path').eq('couple_id',window.usProfile.couple_id);
   if(error){console.warn(error);return;}
   for(const profile of profiles||[]){
+    const nameEl=document.querySelector(`[data-noi-couple-name="${profile.role}"]`);
+    if(nameEl&&profile.display_name)nameEl.textContent=profile.display_name;
     const url=await signedAvatarUrl(profile.avatar_path);
     if(profile.role==='francesco')setAvatarSlot('pairAvatarFrancesco',url);
     if(profile.role==='beatrice')setAvatarSlot('pairAvatarBeatrice',url);
