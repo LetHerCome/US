@@ -25,16 +25,16 @@ const home = (db, uid) =>
 
 test('Swipe V1 migration is isolated, server-only and has 32 binary cards', async () => {
   const { db, f } = await world();
-  const count = (await db.query('select count(*)::int n from public.game_swipe_v1_catalog')).rows[0].n;
+  const count = (await db.query('select count(*)::int n from private.game_swipe_v1_catalog')).rows[0].n;
   assert.equal(count, 32);
   const bad = (await db.query(`
     select count(*)::int n
-    from public.game_swipe_v1_catalog
+    from private.game_swipe_v1_catalog
     where jsonb_array_length(options) <> 2 or options->>0 = options->>1
   `)).rows[0].n;
   assert.equal(bad, 0);
 
-  await assert.rejects(as(db, f, () => db.query('select * from public.game_swipe_v1_catalog')), /permission denied/);
+  await assert.rejects(as(db, f, () => db.query('select * from private.game_swipe_v1_catalog')), /permission denied/);
   await assert.rejects(startRound(db, f, 'swipe'), /invalid family/, 'generic Game V2 family selector must not own Swipe');
 
   const fn = (await db.query(`
