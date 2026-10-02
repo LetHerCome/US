@@ -1,0 +1,124 @@
+/* ===== US-STATE-SYSTEM-01 · shared loading / empty / error / offline language =====
+   Presentation only. Existing feature renderers remain authoritative. */
+
+:root{
+  --us-state-bg:rgba(255,255,255,.026);
+  --us-state-border:1px solid rgba(255,255,255,.085);
+  --us-state-border-soft:1px dashed rgba(255,255,255,.11);
+  --us-state-error-bg:linear-gradient(135deg,rgba(228,90,104,.065),rgba(255,255,255,.018));
+  --us-state-error-border:1px solid rgba(228,90,104,.18);
+  --us-state-online-bg:linear-gradient(135deg,rgba(114,201,152,.10),rgba(255,255,255,.025));
+  --us-state-offline-bg:linear-gradient(135deg,rgba(242,184,114,.10),rgba(255,255,255,.025));
+}
+
+.us-state{
+  min-height:74px;padding:16px 14px;border-radius:18px;border:var(--us-state-border-soft);
+  background:var(--us-state-bg);color:var(--us-color-text-2);text-align:center;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px
+}
+.us-state>b,.us-state>h3{margin:0;font:500 18px/1.15 var(--us-font-editorial);color:var(--us-color-text)}
+.us-state>p,.us-state>small{margin:0;max-width:300px;color:var(--us-color-text-2);font-size:11.5px;line-height:1.4}
+.us-state--error{background:var(--us-state-error-bg);border:var(--us-state-error-border)}
+.us-state--loading{position:relative;overflow:hidden}
+.us-state--loading::after{
+  content:"";position:absolute;inset:0;transform:translateX(-110%);
+  background:linear-gradient(105deg,transparent 24%,rgba(255,255,255,.05) 48%,transparent 72%);
+  animation:us-state-sweep 1.55s ease-in-out infinite
+}
+@keyframes us-state-sweep{to{transform:translateX(110%)}}
+
+:is(
+  .empty-state,.us-gv2-empty,.us-gv2-error,.us-events-empty,.us-cal-empty,.us-cal-day-empty,
+  .us-album-empty,.conservati-empty,.conservati-error,.left-for-you-empty,.left-for-you-error,
+  .us-settings-empty,.noi-resonance-history-empty
+){
+  min-height:74px;padding:16px 14px!important;border-radius:18px!important;
+  border:var(--us-state-border-soft)!important;background:var(--us-state-bg)!important;
+  color:var(--us-color-text-2)!important;box-shadow:none!important;text-align:center
+}
+
+:is(.us-gv2-error,.conservati-error,.left-for-you-error){
+  border:var(--us-state-error-border)!important;background:var(--us-state-error-bg)!important
+}
+
+:is(
+  .empty-state,.us-gv2-empty,.us-gv2-error,.us-events-empty,.us-cal-empty,.us-album-empty,
+  .conservati-empty,.conservati-error,.left-for-you-empty,.left-for-you-error,
+  .us-settings-empty,.noi-resonance-history-empty
+) :is(h3,b){
+  color:var(--us-color-text)!important;font-family:var(--us-font-editorial)!important;
+  font-size:18px!important;font-weight:500!important;line-height:1.15!important
+}
+
+:is(
+  .empty-state,.us-gv2-empty,.us-gv2-error,.us-events-empty,.us-cal-empty,.us-album-empty,
+  .conservati-empty,.conservati-error,.left-for-you-empty,.left-for-you-error,
+  .us-settings-empty,.noi-resonance-history-empty
+) :is(p,small,span){
+  color:var(--us-color-text-2);font-size:11.5px;line-height:1.4
+}
+
+:is(
+  .empty-state[aria-busy="true"],.us-gv2-empty[aria-busy="true"],.us-album-loading,
+  .conservati-loading,.left-for-you-loading,.left-for-you-loading-inline,.moment-loading
+){
+  position:relative;overflow:hidden;border-color:rgba(255,255,255,.075)!important;
+  background:rgba(255,255,255,.022)!important;color:var(--us-color-text-3)!important;box-shadow:none!important
+}
+:is(
+  .empty-state[aria-busy="true"],.us-gv2-empty[aria-busy="true"],.us-album-loading,
+  .conservati-loading,.left-for-you-loading,.left-for-you-loading-inline,.moment-loading
+)::after{
+  content:"";position:absolute;inset:0;pointer-events:none;transform:translateX(-110%);
+  background:linear-gradient(105deg,transparent 24%,rgba(255,255,255,.05) 48%,transparent 72%);
+  animation:us-state-sweep 1.55s ease-in-out infinite
+}
+
+:is(
+  .us-gv2-empty,.us-gv2-error,.conservati-error,.left-for-you-error,.us-cal-empty,
+  .noi-idea-error,.us-settings-empty
+) button,.quest-week-retry{
+  min-height:44px!important;margin-top:10px;padding:0 14px!important;border-radius:14px!important;
+  border:1px solid rgba(255,255,255,.11)!important;background:rgba(255,255,255,.055)!important;
+  color:var(--us-color-text)!important;box-shadow:none!important;font:650 11.5px/1 var(--us-font-ui)!important
+}
+
+:is(
+  .auth-status,.us-event-status,.us-cal-form-status,.left-for-you-status,.left-for-you-camera-status,
+  .left-for-you-music-search-status,.noi-idea-form-status,.today-outcome-status,.today-keep-status
+){
+  min-height:15px;color:var(--us-color-text-3);font-size:10.5px;line-height:1.35
+}
+:is(
+  .left-for-you-status[data-kind="error"],.left-for-you-camera-status[data-kind="error"],
+  .left-for-you-music-search-status[data-kind="error"],.today-outcome-status.error
+){color:var(--us-color-danger-ink)!important}
+.left-for-you-status[data-kind="success"]{color:var(--us-color-positive)!important}
+
+.app-status-bar{
+  min-height:44px;padding:9px 12px!important;border-radius:15px!important;
+  border:1px solid rgba(242,184,114,.18)!important;background:var(--us-state-offline-bg)!important;
+  color:var(--us-color-text-2)!important;box-shadow:0 10px 28px rgba(0,0,0,.22)!important;
+  font-size:10.5px!important;line-height:1.35!important
+}
+.app-status-bar::before{width:7px!important;height:7px!important;background:var(--us-color-warning)!important}
+.app-status-bar[data-kind="error"]{border-color:rgba(228,90,104,.20)!important;background:var(--us-state-error-bg)!important}
+.app-status-bar[data-kind="error"]::before{background:var(--us-color-danger)!important}
+.app-status-bar[data-kind="online"]{border-color:rgba(114,201,152,.18)!important;background:var(--us-state-online-bg)!important}
+.app-status-bar[data-kind="online"]::before{background:var(--us-color-positive)!important}
+
+.us-cal-status{
+  min-height:44px;margin-top:7px!important;padding:8px 10px!important;border-radius:14px!important;
+  font-size:10.5px!important;line-height:1.35
+}
+.us-cal-status button{min-height:40px!important}
+
+:is(.empty-state,.us-gv2-empty,.us-gv2-error,.us-settings-empty)>.emoji{display:none!important}
+
+@media(prefers-reduced-motion:reduce){
+  .us-state--loading::after,
+  :is(
+    .empty-state[aria-busy="true"],.us-gv2-empty[aria-busy="true"],.us-album-loading,
+    .conservati-loading,.left-for-you-loading,.left-for-you-loading-inline,.moment-loading
+  )::after{animation:none!important;display:none}
+}
