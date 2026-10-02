@@ -30,7 +30,8 @@ if (!/const BUILD_ID = "[^"]+";/.test(worker)) {
 
 index = index
   .replace(/<meta name="us-build" content="[^"]+"\/>/, `<meta name="us-build" content="${buildId}"/>`)
-  .replace(/\?v=[^"'&\s>]+/g, `?v=${buildId}`);
+  .replace(/\?v=[^"'&\s>]+/g, `?v=${buildId}`)
+  .replace(/((?:href|src)="\/[^"]+\.(?:css|js))(?:\?v=[^"]+)?(")/g, `$1?v=${buildId}$2`);
 
 worker = worker.replace(/const BUILD_ID = "[^"]+";/, `const BUILD_ID = "${buildId}";`);
 manifest = manifest.replace(/\?v=[^"]+/g, `?v=${buildId}`);
