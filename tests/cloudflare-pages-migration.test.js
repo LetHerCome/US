@@ -57,3 +57,22 @@ test('Cloudflare Pages bundle is a curated host-agnostic PWA', async () => {
   assert.match(headers, /\/service-worker\.js[\s\S]*no-cache, no-store/);
   assert.match(headers, /\/version\.json[\s\S]*no-cache, no-store/);
 });
+
+test('Cloudflare Pages is the only production frontend referenced by runtime code', async () => {
+  const { execFileSync: run } = await import('node:child_process');
+  // Edge Functions are excluded on purpose: their VAPID_SUBJECT is a Web Push
+  // sender contact (not a frontend URL) and their source is pinned to the
+  // deployed bytes (tests/m10-2-daily-reactions.test.js).
+  const tracked = run('git', ['ls-files', '*.js', '*.mjs', '*.html', '*.json', '*.webmanifest'], { cwd: ROOT, encoding: 'utf8' })
+    .split('\n').filter((file) => file && !file.startsWith('tests/') && !file.startsWith('supabase/') && file !== 'package-lock.json');
+  const offenders = [];
+  for (const file of tracked) {
+    const source = await readFile(path.join(ROOT, file), 'utf8').catch(() => '');
+    if (/vercel\.app/i.test(source)) offenders.push(file);
+  }
+  assert.deepEqual(offenders, [], 'runtime code must not point at the legacy Vercel frontend');
+  for (const widget of ['US-Noi.js', 'US-Ti-Penso.js']) {
+    const source = await readFile(path.join(ROOT, 'integrations/widgets/scriptable', widget), 'utf8');
+    assert.match(source, /const APP_URL = "https:\/\/us-a33\.pages\.dev\/";/, widget);
+  }
+});

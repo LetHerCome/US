@@ -1,13 +1,13 @@
 # US — Frontend deployment (Cloudflare Pages)
 
-**Status: Cloudflare Pages is the production frontend.** The migration described
-below is complete. Vercel is no longer a production target; it is kept only as a
+**Status: Cloudflare Pages is the production frontend: https://us-a33.pages.dev**
+The migration described below is complete. Vercel is no longer a production target; it is kept only as a
 cold rollback origin until it is removed from the account (not from this repo's
 scope). Do not add Vercel-specific code, config or runtime dependencies.
 
 ## Architecture
 
-- Frontend PWA: **Cloudflare Pages** (production)
+- Frontend PWA: **Cloudflare Pages** (production) — `https://us-a33.pages.dev`
 - Auth, database, storage, RPCs, Edge Functions and push backend: Supabase project `iiakdfsxpywdkxravqjh`
 - Legacy Vercel deployment: rollback only, not maintained
 
@@ -70,17 +70,25 @@ Supabase backend and no data lives on the host.
    deployment (Deployments → previous build → Rollback).
 2. Emergency only: point users at the legacy Vercel origin (same backend).
 
-## Known host references outside the PWA bundle
+## Host references outside the PWA bundle
 
-These intentionally still mention the old Vercel hostname and are **not** part
-of the Pages bundle:
+The PWA itself is host-agnostic (`location.origin`, `self.location.origin`).
+The one place that must name the production frontend explicitly uses
+`https://us-a33.pages.dev` (guarded by `tests/cloudflare-pages-migration.test.js`):
 
-- `supabase/functions/**` `VAPID_SUBJECT`: a contact identifier required by the
-  Web Push spec, not a redirect. Changing it means redeploying every push Edge
-  Function; it has no user-visible effect.
-- `integrations/widgets/scriptable/*.js` `APP_URL`: the URL the iOS widgets open.
-  Update it to the production Pages origin (or the custom domain) and re-install
-  the widgets once that origin is final.
+- `integrations/widgets/scriptable/*.js` `APP_URL`: the URL the iOS widgets
+  open. Re-install / update the two Scriptable scripts on each iPhone so the
+  copies on the devices pick it up.
+
+Intentionally unchanged: `supabase/functions/**` `VAPID_SUBJECT` still reads
+`https://usfinal.vercel.app`. It is the Web Push sender contact (`sub` claim
+of the VAPID JWT), not a frontend URL: it never decides where a notification
+opens (the service worker uses `self.location.origin`). The Edge Function
+sources are pinned to their deployed bytes (`tests/m10-2-daily-reactions.test.js`),
+so change it only together with a coordinated redeploy of every push function.
+
+If a custom domain replaces `us-a33.pages.dev`, update `APP_URL` together with
+the Supabase Auth redirect allow-list.
 
 ## Custom domain
 

@@ -1,6 +1,6 @@
 // US · Noi — Scriptable relationship/photo widget. No private media beyond the canonical Home photo.
 const SUPABASE = "https://iiakdfsxpywdkxravqjh.supabase.co";
-const APP_URL = "https://usfinal.vercel.app/";
+const APP_URL = "https://us-a33.pages.dev/";
 const STATE_KEY = "US_WIDGET_STATE_TOKEN";
 const THINK_KEY = "US_WIDGET_THINK_TOKEN";
 const DEVICE_KEY = "US_WIDGET_DEVICE_HASH";

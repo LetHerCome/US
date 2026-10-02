@@ -373,7 +373,7 @@ test('Noi reads only the state token and canonical relationship/photo fields wit
   assert.match(source, /relationship\.daysTogether/);
   assert.match(source, /homePhotoUrl/);
   assert.match(source, /FileManager/);
-  assert.match(source, /https:\/\/usfinal\.vercel\.app/);
+  assert.match(source, /const APP_URL = "https:\/\/us-a33\.pages\.dev\/";/);
   assert.doesNotMatch(source, /Keychain\.get\(THINK_KEY\)|widget-think-send|\?token=|service_role/i);
   assert.doesNotMatch(source, /source\?\.bond|source\?\.xp|["']bond["']|["']xp["']/i);
 });
