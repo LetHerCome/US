@@ -248,10 +248,10 @@ test('Noi density: Risonanza is the only hero and the four destinations share on
     assert.match(group, new RegExp(`noi-hub-card--${kind}`), kind);
   }
   const css = read('styles.css');
-  assert.match(css, /US-NOI-DENSITY-01/);
+  assert.match(css, /US-NOI-DENSITY-02/);
   assert.match(css, /\.noi-hub-card--resonance\{min-height:116px;/);
-  assert.match(css, /\.noi-hub-destinations[\s\S]*?border-radius:22px/);
-  assert.match(css, /min-height:56px/);
+  assert.match(css, /\.noi-hub-destinations[\s\S]*?border-radius:20px/);
+  assert.match(css, /min-height:54px/);
 });
 
 test('Quest: action paths are untouched (server-authoritative confirm / reroll)', () => {
