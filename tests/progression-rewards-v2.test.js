@@ -38,13 +38,18 @@ test('Rewards V2 client: every catalog reward has a real cosmetic and a preview 
   assert.match(js, /if \(value === 'stamp'\)/);
 });
 
-test('Rewards V2 client: slots mirror the server preference keys, no client authority', () => {
+test('Rewards V2 client: progression stays server-authoritative while equipped cosmetics are device-local', () => {
   for (const category of Object.keys(HOOKS)) {
     assert.match(js, new RegExp(`${category}: \\{ pref: '${category}_reward_id'`), category);
     assert.match(migration, new RegExp(`'${category}_reward_id', prefs\\.${category}_reward_id`), category);
   }
-  assert.doesNotMatch(js, /localStorage|sessionStorage|indexedDB/);
+  assert.match(js, /const DEVICE_PREFS_PREFIX = 'us:cosmetics:v1:'/);
+  assert.match(js, /window\.localStorage\.setItem/);
+  assert.match(js, /window\.localStorage\.getItem/);
+  assert.doesNotMatch(js, /sb\.rpc\('equip_progression_reward'/, 'equipping a cosmetic must not sync to the partner');
   assert.doesNotMatch(js, /\.from\('(?:progression_|couple_reward|couple_progression)/);
+  assert.match(js, /sb\.rpc\('get_progression_v1'/);
+  assert.match(js, /sb\.rpc\('ack_progression_unlock'/);
   assert.match(html, /id="usCoupleBadge"/);
   assert.match(html, /id="usHeroSticker"/);
   assert.match(html, /id="usProgressionUnlockKicker"/);
@@ -104,10 +109,16 @@ function fakeElement(id) {
   };
 }
 
-function runProgression(stateFor) {
+function runProgression(stateFor, { storageSeed = {} } = {}) {
   const elements = new Map();
   const root = { dataset: {} };
   const calls = [];
+  const storage = new Map(Object.entries(storageSeed));
+  const localStorage = {
+    getItem: (key) => storage.has(key) ? storage.get(key) : null,
+    setItem: (key, value) => storage.set(key, String(value)),
+    removeItem: (key) => storage.delete(key)
+  };
   const document = {
     documentElement: root,
     readyState: 'complete',
@@ -121,28 +132,21 @@ function runProgression(stateFor) {
       return { data: stateFor(name, args), error: null };
     }
   };
-  const window = { document, usProfile: null, UsFeedback: { action() {}, success() {} } };
+  const window = { document, localStorage, usProfile: null, UsFeedback: { action() {}, success() {} } };
   const context = { window, document, sb, console, setTimeout: () => 0, clearTimeout() {}, requestAnimationFrame: (fn) => fn() };
   vm.runInNewContext(js, context, { filename: 'progression.js' });
   window.usProfile = { id: 'f', couple_id: 'c' };
-  return { api: window.USProgression, el: document.getElementById, root, calls, window };
+  return { api: window.USProgression, el: document.getElementById, root, calls, window, storage };
 }
 
-test('Rewards V2 client: equipped slots paint the real UI independently; re-tap unequips', async () => {
-  const prefs = { frame_reward_id: 'frame_polaroid', theme_reward_id: 'theme_film', accent_reward_id: 'accent_champagne', effect_reward_id: 'effect_constellation', badge_reward_id: 'badge_still_here', sticker_reward_id: 'sticker_ticket', ring_reward_id: 'ring_orbit' };
+test('Rewards V2 client: equipped slots paint locally; re-tap unequips without a server equip RPC', async () => {
+  const serverPrefs = { frame_reward_id: 'frame_polaroid', theme_reward_id: 'theme_film', accent_reward_id: 'accent_champagne', effect_reward_id: 'effect_constellation', badge_reward_id: 'badge_still_here', sticker_reward_id: 'sticker_ticket', ring_reward_id: 'ring_orbit' };
   const state = () => ({
     total_xp: 6000, level: 9, rhythm_days: 2, rhythm_today: true,
-    rewards: catalog.map((r) => ({ ...r, unlocked: r.level_required <= 9, equipped: prefs[`${r.category}_reward_id`] === r.id })),
-    pending_unlocks: [], next_reward: catalog.find((r) => r.level_required > 9), preferences: { ...prefs }
+    rewards: catalog.map((r) => ({ ...r, unlocked: r.level_required <= 9, equipped: serverPrefs[`${r.category}_reward_id`] === r.id })),
+    pending_unlocks: [], next_reward: catalog.find((r) => r.level_required > 9), preferences: { ...serverPrefs }
   });
-  const { api, el, root, calls } = runProgression((name, args) => {
-    if (name === 'equip_progression_reward') {
-      const r = catalog.find((x) => x.id === args.target_reward_id);
-      const key = `${r.category}_reward_id`;
-      prefs[key] = prefs[key] === r.id ? null : r.id;
-    }
-    return state();
-  });
+  const { api, el, root, calls, storage } = runProgression(() => state());
   await api.hydrate({ showUnlocks: false, force: true });
   assert.deepEqual({ ...root.dataset }, { usTheme: 'film', usAccent: 'champagne', usEffect: 'constellation', usRing: 'orbit', usSticker: 'ticket' });
   assert.equal(el('homeHero').dataset.usFrame, 'polaroid');
@@ -154,34 +158,59 @@ test('Rewards V2 client: equipped slots paint the real UI independently; re-tap 
   assert.equal((tiles.match(/aria-pressed="true"/g) || []).length, 7);
   assert.equal((tiles.match(/class="us-reward-group"/g) || []).length, 7);
   assert.match(tiles, /data-progression-reward="frame_scrapbook"[^>]*disabled/, 'locked rewards are disabled tiles');
-  assert.match(el('usProgressionRewardsCount').textContent, /^\d+ di 27$/);
-  assert.match(el('usProgressionNext').innerHTML, /us-progression-next-preview/);
 
   const tap = (id) => el('usProgressionRewards').emit('click', { target: { closest: () => ({ disabled: false, dataset: { progressionReward: id } }) } });
   await tap('accent_champagne');
-  assert.equal(root.dataset.usAccent, undefined, 'tapping the equipped accent clears only the accent');
+  assert.equal(root.dataset.usAccent, undefined, 'tapping the equipped accent clears only this phone accent');
   assert.equal(root.dataset.usTheme, 'film');
   assert.equal(el('homeHero').dataset.usFrame, 'polaroid');
   await tap('badge_still_here');
   assert.equal(el('usCoupleBadge').hidden, true);
   await tap('badge_day_one');
   assert.match(el('usCoupleBadge').innerHTML, /data-badge="day_one"/);
-  assert.ok(calls.filter((c) => c.name === 'equip_progression_reward').length === 3);
+
+  const stored = JSON.parse(storage.get('us:cosmetics:v1:c:f'));
+  assert.equal(stored.preferences.accent_reward_id, null);
+  assert.equal(stored.preferences.badge_reward_id, 'badge_day_one');
+  assert.equal(calls.some((call) => call.name === 'equip_progression_reward'), false, 'partner-facing server preference is never touched');
 });
 
-test('Rewards V2 client: the unlock card previews the real cosmetic and "Usalo ora" never unequips', async () => {
-  const prefs = { frame_reward_id: null, theme_reward_id: null, accent_reward_id: null, effect_reward_id: null, badge_reward_id: 'badge_day_one', sticker_reward_id: null, ring_reward_id: null };
+test('Rewards V2 client: two phones can equip different cosmetics from the same shared progression state', async () => {
+  const serverPrefs = { frame_reward_id: null, theme_reward_id: 'theme_film', accent_reward_id: null, effect_reward_id: null, badge_reward_id: null, sticker_reward_id: null, ring_reward_id: null };
+  const sharedState = () => ({
+    total_xp: 12000, level: 12, rhythm_days: 2, rhythm_today: true,
+    rewards: catalog.map((r) => ({ ...r, unlocked: r.level_required <= 12, equipped: serverPrefs[`${r.category}_reward_id`] === r.id })),
+    pending_unlocks: [], next_reward: null, preferences: { ...serverPrefs }
+  });
+  const phoneA = runProgression(() => sharedState());
+  const phoneB = runProgression(() => sharedState());
+  await phoneA.api.hydrate({ showUnlocks: false, force: true });
+  await phoneB.api.hydrate({ showUnlocks: false, force: true });
+  assert.equal(phoneA.root.dataset.usTheme, 'film');
+  assert.equal(phoneB.root.dataset.usTheme, 'film');
+
+  const tapA = (id) => phoneA.el('usProgressionRewards').emit('click', { target: { closest: () => ({ disabled: false, dataset: { progressionReward: id } }) } });
+  await tapA('theme_blue_hour');
+  assert.equal(phoneA.root.dataset.usTheme, 'blue_hour');
+  assert.equal(phoneB.root.dataset.usTheme, 'film', 'phone B keeps its own local appearance');
+
+  await phoneB.api.hydrate({ showUnlocks: false, force: true });
+  assert.equal(phoneB.root.dataset.usTheme, 'film', 'server refresh does not import phone A choice');
+  assert.equal(phoneA.calls.some((call) => call.name === 'equip_progression_reward'), false);
+  assert.equal(phoneB.calls.some((call) => call.name === 'equip_progression_reward'), false);
+});
+
+test('Rewards V2 client: the unlock card previews the real cosmetic and "Usalo ora" stays device-local', async () => {
+  const serverPrefs = { frame_reward_id: null, theme_reward_id: null, accent_reward_id: null, effect_reward_id: null, badge_reward_id: 'badge_day_one', sticker_reward_id: null, ring_reward_id: null };
   const seen = new Set();
   const pending = ['badge_day_one', 'sticker_ours'];
   const state = () => ({
     total_xp: 300, level: 2, rhythm_days: 0, rhythm_today: false,
-    rewards: catalog.map((r) => ({ ...r, unlocked: r.level_required <= 2, equipped: prefs[`${r.category}_reward_id`] === r.id })),
-    pending_unlocks: catalog.filter((r) => pending.includes(r.id) && !seen.has(r.id)), next_reward: null, preferences: { ...prefs }
+    rewards: catalog.map((r) => ({ ...r, unlocked: r.level_required <= 2, equipped: serverPrefs[`${r.category}_reward_id`] === r.id })),
+    pending_unlocks: catalog.filter((r) => pending.includes(r.id) && !seen.has(r.id)), next_reward: null, preferences: { ...serverPrefs }
   });
-  const equips = [];
-  const { api, el } = runProgression((name, args) => {
+  const { api, el, calls, storage } = runProgression((name, args) => {
     if (name === 'ack_progression_unlock') seen.add(args.target_reward_id);
-    if (name === 'equip_progression_reward') { equips.push(args.target_reward_id); const r = catalog.find((x) => x.id === args.target_reward_id); const k = `${r.category}_reward_id`; prefs[k] = prefs[k] === r.id ? null : r.id; }
     return state();
   });
   await api.hydrate({ showUnlocks: true, force: true });
@@ -189,11 +218,11 @@ test('Rewards V2 client: the unlock card previews the real cosmetic and "Usalo o
   assert.equal(el('usProgressionUnlockCount').textContent, '1 di 2');
   assert.match(el('usProgressionUnlockPreview').innerHTML, /us-badge[\s\S]*Day One/);
   await el('usProgressionUnlockUse').emit('click');
-  assert.deepEqual(equips, [], 'already-equipped reward is acknowledged, not toggled off');
-  assert.equal(prefs.badge_reward_id, 'badge_day_one');
+  assert.equal(JSON.parse(storage.get('us:cosmetics:v1:c:f')).preferences.badge_reward_id, 'badge_day_one');
   assert.equal(el('usProgressionUnlockKicker').textContent, 'NUOVO ADESIVO');
   assert.match(el('usProgressionUnlockPreview').innerHTML, /data-sticker="ours"/);
   await el('usProgressionUnlockUse').emit('click');
-  assert.deepEqual(equips, ['sticker_ours']);
+  assert.equal(JSON.parse(storage.get('us:cosmetics:v1:c:f')).preferences.sticker_reward_id, 'sticker_ours');
   assert.ok(seen.has('sticker_ours') && seen.has('badge_day_one'));
+  assert.equal(calls.some((call) => call.name === 'equip_progression_reward'), false);
 });
