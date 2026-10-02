@@ -63,7 +63,7 @@ function harness({ owner = 'me', partnerPhotos = [], commitResult = true } = {})
     document: doc,
     usProfile: { id: 'me', couple_id: 'c' },
     usGetSignedUrls: async (paths) => new Map(paths.map((p) => [p, `signed:${p}`])),
-    usCommitMomentDeletion: async (id, p) => { commits.push({ id, path: p }); return commitResult; },
+    usCommitMomentDeletion: async (id) => { commits.push({ id }); return commitResult; },
     UsFeedback: { action() {} }
   };
   const context = {
@@ -134,7 +134,7 @@ test('Ricordi delete: grace expiry commits exactly once, then the viewer closes'
   h.el('usAlbumDeleteGo').click();
   h.el('usAlbumDeleteGo').click();
   await h.fireGrace();
-  assert.deepEqual(h.commits, [{ id: 'm1', path: 'c/me/moments/m1.webp' }]);
+  assert.deepEqual(h.commits, [{ id: 'm1' }]);
   assert.equal(h.window.USRicordiDelete.pending(), null);
   assert.equal(h.el('usAlbumOverlay').classList.contains('show'), false);
   assert.deepEqual(h.toasts, [], 'no success toast');
