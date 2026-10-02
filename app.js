@@ -431,14 +431,24 @@ async function initCloud(){
     }
 
     if(!session){
+      const returningDevice=Boolean(cachedDeviceProfile);
       resetNoiIdeasForIdentityChange();
       window.usProfile = null;
       window.UsThinkWidget?.clear?.().catch(()=>{});
       document.documentElement.classList.remove('us-returning-device','us-auth-pending');
-      setCloudBadge(false,'offline');
+      setCloudBadge(false,navigator.onLine?'da collegare':'offline');
       document.getElementById('authOverlay').classList.remove('hidden');
-      showAuthStep('authPair');
-      window.dispatchEvent(new CustomEvent('us-auth-resolved',{detail:{paired:false}}));
+      showAuthStep(returningDevice?'authLogin':'authPair');
+      if(returningDevice){
+        setAuthStatus(
+          'loginStatus',
+          navigator.onLine
+            ? 'Questo telefono era già collegato. Accedi di nuovo per continuare.'
+            : 'Sei offline. Riconnettiti per accedere.',
+          navigator.onLine?'neutral':'error'
+        );
+      }
+      window.dispatchEvent(new CustomEvent('us-auth-resolved',{detail:{paired:false,returningDevice}}));
       return;
     }
 
@@ -476,8 +486,7 @@ async function initCloud(){
         // Permanent authenticated user without a valid US profile:
         // show an error, never create or migrate anything.
         showAuthStep('authLogin');
-        const st=document.getElementById('loginStatus');
-        if(st)st.textContent='Nessun profilo US valido associato a questo account. Accesso negato.';
+        setAuthStatus('loginStatus','Nessun profilo US valido associato a questo account.','error');
       }else{
         showAuthStep('authPair');
       }
@@ -520,9 +529,19 @@ async function initCloud(){
   }
 }
 
+function setAuthStatus(id,message='',kind='neutral'){
+  const node=document.getElementById(id);
+  if(!node)return;
+  node.textContent=message;
+  if(message)node.dataset.kind=kind;
+  else node.removeAttribute('data-kind');
+}
+window.setAuthStatus=setAuthStatus;
+
 function showAuthStep(id){
   document.querySelectorAll('.auth-step').forEach(x=>x.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  const next=document.getElementById(id);
+  if(next)next.classList.add('active');
 }
 
 function setCloudBadge(ok,text){
@@ -1182,8 +1201,12 @@ if(typeof ResizeObserver==='function'){
 
 function selectRole(role){
   selectedRole=role;
-  document.querySelectorAll('.role-btn').forEach(btn=>btn.classList.toggle('selected',btn.dataset.role===role));
-  document.getElementById('pairStatus').textContent='';
+  document.querySelectorAll('.role-btn').forEach(btn=>{
+    const selected=btn.dataset.role===role;
+    btn.classList.toggle('selected',selected);
+    btn.setAttribute('aria-pressed',String(selected));
+  });
+  setAuthStatus('pairStatus','');
 }
 window.selectRole=selectRole;
 
@@ -1191,10 +1214,10 @@ async function pairAccount(){
   const code=document.getElementById('pairCode').value.trim().toUpperCase();
   const s=document.getElementById('pairStatus');
   const btn=document.getElementById('pairBtn');
-  if(!selectedRole){s.textContent='Prima scegli Francesco o Beatrice.';return;}
-  if(!code){s.textContent='Inserisci il codice privato.';return;}
+  if(!selectedRole){setAuthStatus('pairStatus','Prima scegli Francesco o Beatrice.','error');return;}
+  if(!code){setAuthStatus('pairStatus','Inserisci il codice privato.','error');return;}
   btn.disabled=true;
-  s.textContent='Accesso…';
+  setAuthStatus('pairStatus','Collego questo telefono…');
   try{
     let {data:{session},error:sessionError}=await sb.auth.getSession();
     if(sessionError) throw sessionError;
@@ -1205,17 +1228,17 @@ async function pairAccount(){
     }
     const {error}=await sb.rpc('claim_us_role',{invite_code:code,chosen_role:selectedRole});
     if(error) throw error;
-    s.textContent='Questo telefono è collegato ♡';
+    setAuthStatus('pairStatus','Questo telefono è collegato ♡','success');
     document.getElementById('pairCode').value='';
     await initCloud();
   }catch(err){
     const msg=String(err?.message||'accesso non riuscito');
     if(/anonymous sign-ins are disabled|anonymous/i.test(msg) && /disabled|not enabled/i.test(msg)){
-      s.textContent='Accesso non disponibile per ora.';
+      setAuthStatus('pairStatus','Accesso non disponibile per ora.','error');
     }else if(/Invalid private code/i.test(msg)){
-      s.textContent='Codice privato non corretto.';
+      setAuthStatus('pairStatus','Codice privato non corretto.','error');
     }else{
-      s.textContent='Errore: '+msg;
+      setAuthStatus('pairStatus','Non riesco a collegare il telefono: '+msg,'error');
     }
   }finally{
     btn.disabled=false;
@@ -1228,10 +1251,10 @@ async function loginAccount(){
   const password=document.getElementById('loginPassword').value;
   const s=document.getElementById('loginStatus');
   const btn=document.getElementById('loginBtn');
-  if(!email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){s.textContent='Inserisci un indirizzo email valido.';return;}
-  if(!password){s.textContent='Inserisci la password.';return;}
+  if(!email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){setAuthStatus('loginStatus','Inserisci un indirizzo email valido.','error');return;}
+  if(!password){setAuthStatus('loginStatus','Inserisci la password.','error');return;}
   btn.disabled=true;
-  s.textContent='Accesso…';
+  setAuthStatus('loginStatus','Accesso…');
   try{
     const {error}=await sb.auth.signInWithPassword({email,password});
     if(error) throw error;
@@ -1239,7 +1262,7 @@ async function loginAccount(){
     await initCloud();
   }catch(err){
     const msg=String(err?.message||'invio non riuscito');
-    s.textContent='Errore: '+msg;
+    setAuthStatus('loginStatus','Accesso non riuscito: '+msg,'error');
   }finally{
     btn.disabled=false;
   }
@@ -1317,13 +1340,13 @@ async function sendMagicLinkRecovery(){
   const email=document.getElementById('loginEmail').value.trim();
   const s=document.getElementById('loginStatus');
   const btn=document.getElementById('magicLinkBtn');
-  if(!email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){s.textContent='Inserisci un indirizzo email valido.';return;}
+  if(!email||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){setAuthStatus('loginStatus','Inserisci un indirizzo email valido.','error');return;}
   btn.disabled=true;
   try{
     const {error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:location.origin+'/'}});
     if(error)throw error;
-    s.textContent='Link di recupero inviato a '+email+'.';
-  }catch(err){s.textContent='Errore: '+String(err?.message||'invio non riuscito');}
+    setAuthStatus('loginStatus','Link di recupero inviato a '+email+'.','success');
+  }catch(err){setAuthStatus('loginStatus','Invio non riuscito: '+String(err?.message||'errore'),'error');}
   finally{btn.disabled=false;}
 }
 window.sendMagicLinkRecovery=sendMagicLinkRecovery;
@@ -4280,8 +4303,12 @@ const loginBtn=document.getElementById('loginBtn');
 if(loginBtn) loginBtn.addEventListener('click', loginAccount);
 const magicLinkBtn=document.getElementById('magicLinkBtn');
 if(magicLinkBtn) magicLinkBtn.addEventListener('click', sendMagicLinkRecovery);
+const pairEnter=document.getElementById('pairCode');
+if(pairEnter) pairEnter.addEventListener('keydown',(e)=>{if(e.key==='Enter')pairAccount();});
 const loginEnter=document.getElementById('loginEmail');
+const passwordEnter=document.getElementById('loginPassword');
 if(loginEnter) loginEnter.addEventListener('keydown',(e)=>{if(e.key==='Enter')loginAccount();});
+if(passwordEnter) passwordEnter.addEventListener('keydown',(e)=>{if(e.key==='Enter')loginAccount();});
 
 initCloud();
 
