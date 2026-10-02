@@ -293,11 +293,10 @@ function renderAlbum(){
 }
 
 // ===== Ricordi · Elimina → Eliminato · Annulla (in place, no modal, no toast) =====
-// Only the uploader sees it (moments RLS: created_by = auth.uid()), and only on
-// a cover-only Moment: deleting a Moment cascades its album rows, and the
-// partner's album files are not ours to remove from Storage.
+// Only the Moment creator sees it. Whole-Moment deletion is handled by the
+// authenticated delete-moment Edge Function, which also cleans album media.
 function canDeleteCurrentAlbum(){
-  return Boolean(currentAlbum&&window.usProfile&&currentAlbum.owner===window.usProfile.id&&albumLoaded&&albumRows.length===0);
+  return Boolean(currentAlbum&&window.usProfile&&currentAlbum.owner===window.usProfile.id&&albumLoaded);
 }
 function momentCardById(id){
   return [...document.querySelectorAll('#momentsGrid .moment-card[data-moment-id]')].find(card=>card.dataset.momentId===id)||null;
@@ -325,7 +324,7 @@ async function commitPendingDelete(){
   job.committing=true;
   paintDeleteControl();
   let ok=false;
-  try{ok=typeof window.usCommitMomentDeletion==='function'&&await window.usCommitMomentDeletion(job.id,job.path);}
+  try{ok=typeof window.usCommitMomentDeletion==='function'&&await window.usCommitMomentDeletion(job.id);}
   catch(error){console.warn('[US Albums] delete commit',error);}
   if(pendingDelete===job)pendingDelete=null;
   if(ok){
@@ -341,9 +340,7 @@ function startMomentDelete(){
   if(!canDeleteCurrentAlbum()||pendingDelete?.id===currentAlbum.id)return;
   // A second Moment deleted inside another's grace commits the first now.
   if(pendingDelete&&!pendingDelete.committing)commitPendingDelete();
-  const card=momentCardById(currentAlbum.id);
-  const job={id:currentAlbum.id,path:card?.dataset.storagePath||currentAlbum.path||'',committing:false,timer:0};
-  if(!job.path){console.warn('[US Albums] delete: storage path unknown');return;}
+  const job={id:currentAlbum.id,committing:false,timer:0};
   job.timer=setTimeout(commitPendingDelete,DELETE_GRACE_MS);
   pendingDelete=job;
   setMomentCardHidden(job.id,true);
