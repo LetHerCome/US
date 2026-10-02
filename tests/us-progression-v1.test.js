@@ -29,9 +29,9 @@ test('Progression V1: unlock moment is prominent, actionable and server-acknowle
   assert.match(js,/In uso · tocca per togliere/);
 });
 
-test('Progression V1: reward collection scales as an internal scrollable grid',()=>{
-  assert.match(css,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
-  assert.match(css,/max-height:min\(330px,42dvh\)/);
+test('Progression V1: reward collection scales as an internal scrollable grid (V2: grouped by slot, 3 columns)',()=>{
+  assert.match(css,/\.us-reward-grid\{display:grid;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(css,/max-height:min\(440px,56dvh\)/);
   assert.match(css,/overflow-y:auto/);
 });
 

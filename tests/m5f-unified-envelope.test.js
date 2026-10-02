@@ -597,18 +597,76 @@ test('M5G internal recorder transitions idle → recording → ready and release
   assert.equal(stream.tracks[0].stopped, true);
 });
 
-test('M5G1 composer surface removes note inputs and uses the hold-to-record Bencho pill', () => {
+test('M5G1 composer surface removes note inputs and uses the tap-to-record Bencho control', () => {
   const html = read('index.html');
   const css = read('left-for-you.css');
   const source = read('left-for-you.js');
   assert.doesNotMatch(html, /left-for-you-composer-note/);
   assert.match(html, /class="left-for-you-vn" id="leftForYouComposerAudioRecord"[^>]*data-phase="idle"/);
-  assert.match(html, /Tieni premuto/);
+  assert.doesNotMatch(html, /Tieni premuto/);
+  assert.match(html, /Tocca per registrare/);
   assert.match(html, /leftForYouComposerAudioClipWave/);
-  assert.match(css, /\.left-for-you-vn\{[^}]*width:min\(216px,100%\)/);
+  assert.match(css, /\.left-for-you-vn\{[^}]*width:56px/);
   assert.match(css, /\.left-for-you-vn\[data-phase="rec"\]/);
-  assert.match(source, /VOICE_CANCEL_PX = 90/);
+  assert.doesNotMatch(source, /VOICE_CANCEL_PX/);
   assert.match(source, /VOICE_MIN_MS = 500/);
+});
+
+test('Voice V2: one tap starts, a second tap stops — no finger has to stay down', async () => {
+  const harness = createHarness();
+  const { api, el, stream } = harness;
+  await api.load();
+  api.setComposerKind('audio');
+  const record = el('leftForYouComposerAudioRecord');
+
+  record.click();
+  await sleep(1);
+  assert.equal(api.composer.recordingState, 'recording', 'first tap records');
+  assert.equal(harness.lastRecorder.state, 'recording', 'the real MediaRecorder path is used');
+  assert.equal(record.dataset.phase, 'rec');
+  assert.equal(record.getAttribute('aria-pressed'), 'true');
+  assert.match(el('leftForYouComposerAudioHint').textContent, /Tocca per fermare/);
+  await sleep(5);
+  assert.equal(api.composer.recordingState, 'recording', 'still recording with no pointer held');
+
+  api.composer.recordingStartedAt = Date.now() - 1200;
+  record.click();
+  assert.equal(api.composer.recordingState, 'ready', 'second tap stops and keeps the take');
+  assert.equal(record.dataset.phase, 'clip');
+  assert.equal(el('leftForYouComposerAudioClip').hidden, false);
+  assert.equal(el('leftForYouComposerAudioDelete').hidden, false);
+  assert.equal(stream.tracks[0].stopped, true);
+  assert.equal(el('leftForYouComposerAudioHint').hidden, true);
+  assert.equal(api.composerCanSend(), true);
+
+  record.click();
+  assert.equal(api.composer.recordingState, 'ready', 'taps on the preview pill never restart or discard');
+
+  el('leftForYouComposerAudioDelete').dispatchEvent({ type: 'click', stopPropagation() {} });
+  assert.equal(api.composer.recordingState, 'idle', 'discard returns to idle');
+  assert.equal(record.dataset.phase, 'idle');
+  assert.equal(el('leftForYouComposerAudioHint').textContent, 'Tocca per registrare');
+  assert.equal(api.composerCanSend(), false);
+});
+
+test('Voice V2: taps while the microphone permission is pending are ignored; a too-short take is dropped', async () => {
+  const harness = createHarness();
+  const { api, el } = harness;
+  await api.load();
+  api.setComposerKind('audio');
+  let grant;
+  harness.window.mediaDevices.getUserMedia = () => new Promise((resolve) => { grant = () => resolve(harness.stream); });
+  const record = el('leftForYouComposerAudioRecord');
+  record.click();
+  assert.equal(api.composer.recordingState, 'starting');
+  assert.equal(record.getAttribute('aria-disabled'), 'true');
+  record.click();
+  assert.equal(api.composer.recordingState, 'starting');
+  grant();
+  await sleep(1);
+  assert.equal(api.composer.recordingState, 'recording');
+  record.click();
+  assert.equal(api.composer.recordingState, 'idle', 'under VOICE_MIN_MS nothing is kept');
 });
 
 test('M5G1 live DOM events immediately enable and disable the send CTA for every kind', async () => {
@@ -675,14 +733,14 @@ test('M5G1 profile hydration does not overwrite a valid CTA and send reset disab
   assert.equal(el('leftForYouComposerSend').disabled, true);
 });
 
-test('M5G2 voice control uses the Bencho mic idle state and a red live-recording dot', () => {
+test('M5G2 voice control uses the Bencho mic idle state and a red live-recording stop key', () => {
   const html = read('index.html');
   const css = read('left-for-you.css');
   assert.match(html, /class="left-for-you-vn-mic"/);
-  assert.match(html, /class="left-for-you-vn-dot"/);
+  assert.match(html, /class="left-for-you-vn-stop"/);
   assert.doesNotMatch(html, /class="left-for-you-record-control"/);
   assert.match(css, /\.left-for-you-vn-mic::before\{[^}]*background:currentColor/);
-  assert.match(css, /\.left-for-you-vn-dot\{[^}]*background:var\(--us-color-danger\)/);
+  assert.match(css, /\.left-for-you-vn-stop\{[^}]*background:var\(--us-color-danger\)/);
 });
 
 test('M5G2 client media limits keep photo/audio at 25 MB and allow video up to 40 MB', async () => {

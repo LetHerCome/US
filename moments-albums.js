@@ -18,6 +18,11 @@ let lightboxActiveLayer='A';
 let lightboxRenderToken=0;
 let lightboxSettleCancel=null;
 let albumUploadBusy=false;
+let albumLoaded=false;
+// Ricordi delete-with-undo: at most one Moment waits in its grace period.
+// Nothing is deleted until the grace expires; Annulla only cancels a timer.
+const DELETE_GRACE_MS=4000;
+let pendingDelete=null;
 
 function esc(value){
   return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -38,6 +43,11 @@ function ensureUi(){
             <small class="us-album-provenance" id="usAlbumProvenance"></small>
             <h2 class="us-album-title" id="usAlbumTitle"></h2>
             <p class="us-album-byline" id="usAlbumByline"></p>
+            <div class="us-undo-delete" id="usAlbumDelete" data-state="idle" style="--us-undo-grace:${DELETE_GRACE_MS}ms" hidden>
+              <button type="button" class="us-undo-delete-go" id="usAlbumDeleteGo" aria-label="Elimina questo ricordo per entrambi">Elimina</button>
+              <span class="us-undo-delete-done" role="status" aria-live="polite"><span class="us-undo-delete-label">Eliminato</span><button type="button" class="us-undo-delete-undo" id="usAlbumDeleteUndo" tabindex="-1">Annulla</button></span>
+              <i class="us-undo-delete-fuse" aria-hidden="true"></i>
+            </div>
           </header>
           <section class="us-album-section">
             <div class="us-album-section-head">
@@ -70,6 +80,8 @@ function ensureUi(){
   `);
 
   document.getElementById('usAlbumClose')?.addEventListener('click',closeAlbum);
+  document.getElementById('usAlbumDeleteGo')?.addEventListener('click',startMomentDelete);
+  document.getElementById('usAlbumDeleteUndo')?.addEventListener('click',undoMomentDelete);
   document.getElementById('usAlbumAddBtn')?.addEventListener('click',()=>document.getElementById('usAlbumFile')?.click());
 
   if(!document.getElementById('usAlbumFloatingAdd')){
@@ -200,6 +212,8 @@ async function saveAlbumPhoto(){
 
 async function loadAlbum(momentId){
   const seq=++albumLoadSeq;
+  albumLoaded=false;
+  paintDeleteControl();
   const grid=document.getElementById('usAlbumGrid');
   if(grid)grid.innerHTML='<div class="us-album-empty">Carico…</div>';
   const [{data:rows,error},{data:profiles,error:profilesError}]=await Promise.all([
@@ -228,6 +242,7 @@ async function loadAlbum(momentId){
     hydrated.push({...row,url:signedUrl,author:names.get(row.created_by)||'Noi',own:row.created_by===window.usProfile.id});
   }
   albumRows=hydrated;
+  albumLoaded=(rows||[]).length===hydrated.length;
   renderAlbum();
 }
 
@@ -274,7 +289,84 @@ function renderAlbum(){
     {url:currentAlbum.url,author:currentAlbum.author,caption:currentAlbum.caption||'',date:currentAlbum.date||'',cover:true},
     ...albumRows
   ];
+  paintDeleteControl();
 }
+
+// ===== Ricordi · Elimina → Eliminato · Annulla (in place, no modal, no toast) =====
+// Only the uploader sees it (moments RLS: created_by = auth.uid()), and only on
+// a cover-only Moment: deleting a Moment cascades its album rows, and the
+// partner's album files are not ours to remove from Storage.
+function canDeleteCurrentAlbum(){
+  return Boolean(currentAlbum&&window.usProfile&&currentAlbum.owner===window.usProfile.id&&albumLoaded&&albumRows.length===0);
+}
+function momentCardById(id){
+  return [...document.querySelectorAll('#momentsGrid .moment-card[data-moment-id]')].find(card=>card.dataset.momentId===id)||null;
+}
+function paintDeleteControl(){
+  const control=document.getElementById('usAlbumDelete');
+  if(!control)return;
+  const pendingHere=Boolean(pendingDelete&&currentAlbum&&pendingDelete.id===currentAlbum.id);
+  control.hidden=!(pendingHere||canDeleteCurrentAlbum());
+  control.dataset.state=pendingHere?(pendingDelete.committing?'committing':'done'):'idle';
+  const undo=document.getElementById('usAlbumDeleteUndo');
+  const go=document.getElementById('usAlbumDeleteGo');
+  if(undo){undo.tabIndex=pendingHere?0:-1;undo.disabled=Boolean(pendingDelete?.committing);}
+  if(go)go.tabIndex=pendingHere?-1:0;
+  document.getElementById('usAlbumOverlay')?.classList.toggle('is-pending-delete',pendingHere);
+}
+function setMomentCardHidden(id,hidden){
+  const card=momentCardById(id);
+  if(card)card.classList.toggle('is-pending-delete',hidden);
+}
+async function commitPendingDelete(){
+  const job=pendingDelete;
+  if(!job||job.committing)return;
+  clearTimeout(job.timer);
+  job.committing=true;
+  paintDeleteControl();
+  let ok=false;
+  try{ok=typeof window.usCommitMomentDeletion==='function'&&await window.usCommitMomentDeletion(job.id,job.path);}
+  catch(error){console.warn('[US Albums] delete commit',error);}
+  if(pendingDelete===job)pendingDelete=null;
+  if(ok){
+    if(currentAlbum?.id===job.id&&document.getElementById('usAlbumOverlay')?.classList.contains('show'))closeAlbum();
+    else paintDeleteControl();
+    return;
+  }
+  setMomentCardHidden(job.id,false);
+  paintDeleteControl();
+  toast('Non riesco a eliminare il ricordo. Riprova.');
+}
+function startMomentDelete(){
+  if(!canDeleteCurrentAlbum()||pendingDelete?.id===currentAlbum.id)return;
+  // A second Moment deleted inside another's grace commits the first now.
+  if(pendingDelete&&!pendingDelete.committing)commitPendingDelete();
+  const card=momentCardById(currentAlbum.id);
+  const job={id:currentAlbum.id,path:card?.dataset.storagePath||currentAlbum.path||'',committing:false,timer:0};
+  if(!job.path){console.warn('[US Albums] delete: storage path unknown');return;}
+  job.timer=setTimeout(commitPendingDelete,DELETE_GRACE_MS);
+  pendingDelete=job;
+  setMomentCardHidden(job.id,true);
+  paintDeleteControl();
+  window.UsFeedback?.action?.();
+  document.getElementById('usAlbumDeleteUndo')?.focus({preventScroll:true});
+}
+function undoMomentDelete(){
+  const job=pendingDelete;
+  if(!job||job.committing)return;
+  clearTimeout(job.timer);
+  pendingDelete=null;
+  setMomentCardHidden(job.id,false);
+  paintDeleteControl();
+  document.getElementById('usAlbumDeleteGo')?.focus({preventScroll:true});
+}
+window.USRicordiDelete=Object.freeze({
+  start:startMomentDelete,
+  undo:undoMomentDelete,
+  commitNow:commitPendingDelete,
+  pending:()=>pendingDelete?{id:pendingDelete.id,committing:pendingDelete.committing}:null,
+  graceMs:DELETE_GRACE_MS
+});
 
 async function handleGridClick(event){
   const deleteButton=event.target.closest('[data-album-delete]');
@@ -298,7 +390,7 @@ async function deleteAlbumPhoto(id,path){
   await decorateMomentCards();
 }
 
-async function openAlbum(card){
+async function openAlbum(card,{focusDelete=false}={}){
   ensureUi();
   const id=card?.dataset?.momentId;
   if(!id){legacyOpenMomentViewer?.(card);return;}
@@ -309,9 +401,10 @@ async function openAlbum(card){
     date:card.dataset.date||'',
     iso:card.dataset.momentIso||'',
     owner:card.dataset.momentOwner||'',
+    path:card.dataset.storagePath||'',
     caption:card.dataset.caption||''
   };
-  albumRows=[];resetComposer();
+  albumRows=[];albumLoaded=false;resetComposer();
   const overlay=document.getElementById('usAlbumOverlay');
   const cover=document.getElementById('usAlbumCover');
   const addBtn=document.getElementById('usAlbumAddBtn');
@@ -336,6 +429,13 @@ async function openAlbum(card){
   const scroll=document.getElementById('usAlbumScroll');if(scroll)scroll.scrollTop=0;
   lightboxItems=[{url:currentAlbum.url,author:currentAlbum.author,caption:currentAlbum.caption,cover:true}];
   await loadAlbum(id);
+  if(focusDelete&&currentAlbum?.id===id){
+    const control=document.getElementById('usAlbumDelete');
+    if(control&&!control.hidden){
+      control.scrollIntoView({block:'center',behavior:'smooth'});
+      document.getElementById('usAlbumDeleteGo')?.focus({preventScroll:true});
+    }
+  }
 }
 window.refreshOpenMomentAlbum=function(){
   if(currentAlbum?.id&&document.getElementById('usAlbumOverlay')?.classList.contains('show'))return loadAlbum(currentAlbum.id);
@@ -348,7 +448,8 @@ function closeAlbum(){
     ++albumLoadSeq;resetComposer();
     overlay.classList.remove('show');overlay.setAttribute('aria-hidden','true');
     document.body.classList.remove('us-album-open');
-    currentAlbum=null;albumRows=[];
+    currentAlbum=null;albumRows=[];albumLoaded=false;
+    paintDeleteControl();
   };
   closeLightbox();
   if(window.UsUiFoundation?.exitSurface)window.UsUiFoundation.exitSurface(overlay,finalize);else finalize();

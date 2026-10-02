@@ -46,7 +46,7 @@ html,body{
 .primary,
 .answer-btn.selected{
   background:var(--us-accent-gradient)!important;
-  color:#fff!important;
+  color:var(--us-color-text-on-accent)!important;
 }
 .fill,
 .progress>div,
