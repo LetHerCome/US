@@ -361,6 +361,7 @@ test('M5F composer sends photo, audio and video through the private us-media nam
     api.setComposerKind(item.kind);
     if (item.kind === 'audio') {
       await api.startRecording();
+      api.composer.recordingStartedAt = Date.now() - 600;
       api.stopRecording();
     } else {
       const input = el(item.pickId);
@@ -636,6 +637,7 @@ test('M5G1 live DOM events immediately enable and disable the send CTA for every
   api.setComposerKind('audio');
   await api.startRecording();
   assert.equal(send.disabled, true);
+  api.composer.recordingStartedAt = Date.now() - 600;
   api.stopRecording();
   assert.equal(send.disabled, false);
   api.discardRecording();
