@@ -675,12 +675,14 @@ test('M5G1 profile hydration does not overwrite a valid CTA and send reset disab
   assert.equal(el('leftForYouComposerSend').disabled, true);
 });
 
-test('M5G2 voice control uses a red dot idle and a stop square while recording', () => {
+test('M5G2 voice control uses the Bencho mic idle state and a red live-recording dot', () => {
   const html = read('index.html');
   const css = read('left-for-you.css');
-  assert.doesNotMatch(html, /leftForYouComposerAudioRecord[^>]*>[^<]*Registra/);
-  assert.match(css, /left-for-you-record-icon[^}]*background:(#e|var\(--us-color-danger\))/);
-  assert.match(css, /\.left-for-you-record-control\.is-recording[^}]*\.left-for-you-record-icon/);
+  assert.match(html, /class="left-for-you-vn-mic"/);
+  assert.match(html, /class="left-for-you-vn-dot"/);
+  assert.doesNotMatch(html, /class="left-for-you-record-control"/);
+  assert.match(css, /\.left-for-you-vn-mic::before\{[^}]*background:currentColor/);
+  assert.match(css, /\.left-for-you-vn-dot\{[^}]*background:var\(--us-color-danger\)/);
 });
 
 test('M5G2 client media limits keep photo/audio at 25 MB and allow video up to 40 MB', async () => {
