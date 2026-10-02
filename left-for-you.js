@@ -1124,7 +1124,9 @@
       setComposerStatus('La registrazione vocale non è disponibile in questo browser.', 'error');
       return;
     }
+    const heldAtStart = Boolean(requireHold && composer.recordingPressHeld);
     discardRecording();
+    composer.recordingPressHeld = heldAtStart;
     composer.recordingDiscarded = false;
     composer.recordingRequireHold = requireHold;
     composer.recordingState = 'starting';
@@ -1190,6 +1192,7 @@
       stopRecordingVisualizer();
       releaseMediaStream();
       composer.mediaRecorder = null;
+      composer.recordingPressHeld = false;
       composer.recordingState = 'idle';
       updateRecorderUi();
       setComposerStatus(error?.name === 'NotAllowedError' ? 'Il microfono non è disponibile. Controlla i permessi e riprova.' : 'Non riesco ad avviare la registrazione. Riprova.', 'error');
