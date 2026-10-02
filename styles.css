@@ -760,3 +760,182 @@ body.viewer-open{overflow:hidden}
   .noi-couple-avatar{width:40px;height:40px}
   .noi-hub-destinations .noi-hub-kicker{font-size:14px!important}
 }
+
+
+/* ===== US-OGGI-DENSITY-01 · photo first, one action + one quiet fact =====
+   Presentation only. M12A arbitration remains the single source of visible state. */
+#home .us-oggi-stack{
+  gap:6px;
+  left:12px;
+  right:12px;
+}
+
+/* Primary attention should feel actionable, not like a second hero. */
+#home #usTodayPriorityRegion[data-us-oggi-slot="primary"] .us-today-priority-card{
+  min-height:58px;
+  padding:8px 11px;
+  border-radius:17px;
+  gap:2px 10px;
+  background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.02)),rgba(13,11,18,.62);
+  backdrop-filter:blur(18px) saturate(135%);
+  -webkit-backdrop-filter:blur(18px) saturate(135%);
+  box-shadow:0 9px 24px rgba(0,0,0,.18);
+}
+#home #usTodayPriorityRegion[data-us-oggi-slot="primary"] .us-today-priority-kind{
+  font-size:7.5px;
+}
+#home #usTodayPriorityRegion[data-us-oggi-slot="primary"] .us-today-priority-copy{
+  gap:1px;
+}
+#home #usTodayPriorityRegion[data-us-oggi-slot="primary"] .us-today-priority-copy b{
+  font-size:12.5px;
+  line-height:1.18;
+}
+#home #usTodayPriorityRegion[data-us-oggi-slot="primary"] .us-today-priority-copy small{
+  font-size:9.5px;
+  line-height:1.25;
+}
+#home #usTodayPriorityRegion[data-us-oggi-slot="primary"] .us-today-priority-action{
+  font-size:10px;
+}
+
+/* Daily Question: compact editorial prompt, still the main action when it wins. */
+#home .us-daily-ritual[data-us-oggi-slot="primary"]{
+  min-height:70px;
+  padding:9px 10px 10px 12px;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-areas:"head action" "question action";
+  gap:3px 10px;
+  border-radius:18px;
+  box-shadow:0 10px 26px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.06);
+}
+#home .us-daily-ritual[data-us-oggi-slot="primary"] .us-daily-ritual-head{
+  gap:5px;
+}
+#home .us-daily-ritual[data-us-oggi-slot="primary"] .us-daily-ritual-mark{
+  width:18px;
+  height:18px;
+  flex-basis:18px;
+}
+#home .us-daily-ritual[data-us-oggi-slot="primary"] .us-daily-ritual-mark::before{
+  width:11px;
+  height:11px;
+}
+#home .us-daily-ritual[data-us-oggi-slot="primary"] .us-daily-ritual-kicker{
+  font-size:8.5px;
+}
+#home .us-daily-ritual[data-us-oggi-slot="primary"] .us-daily-ritual-question{
+  font-size:15.5px;
+  line-height:1.16;
+}
+#home .us-daily-ritual[data-us-oggi-slot="primary"] .us-daily-ritual-cta{
+  min-height:44px;
+  padding:0 12px;
+  font-size:11.5px;
+  box-shadow:none;
+}
+
+/* Quiet facts are strips, not cards that compete with the action. */
+#home #usTodayPriorityRegion[data-us-oggi-slot="quiet"] .us-today-priority-card,
+#home #usOggiCalendarWidget[data-us-oggi-slot="quiet"] .us-oggi-card{
+  min-height:46px;
+  padding:6px 9px;
+  border-radius:15px;
+  background:rgba(10,12,17,.40);
+  border-color:rgba(255,255,255,.095);
+  box-shadow:0 7px 18px rgba(0,0,0,.13);
+  backdrop-filter:blur(14px) saturate(125%);
+  -webkit-backdrop-filter:blur(14px) saturate(125%);
+}
+#home #usTodayPriorityRegion[data-us-oggi-slot="quiet"] .us-today-priority-card{
+  gap:1px 8px;
+}
+#home #usTodayPriorityRegion[data-us-oggi-slot="quiet"] .us-today-priority-kind{
+  font-size:7px;
+}
+#home #usTodayPriorityRegion[data-us-oggi-slot="quiet"] .us-today-priority-copy b{
+  font-size:11.5px;
+}
+#home #usTodayPriorityRegion[data-us-oggi-slot="quiet"] .us-today-priority-copy small{
+  font-size:9px;
+}
+#home #usOggiCalendarWidget[data-us-oggi-slot="quiet"] .us-oggi-card{
+  align-items:center;
+  gap:8px;
+}
+#home #usOggiCalendarWidget[data-us-oggi-slot="quiet"] .us-oggi-card-mark{
+  width:22px;
+  height:22px;
+  margin-top:0;
+  font-size:12px;
+}
+#home #usOggiCalendarWidget[data-us-oggi-slot="quiet"] .us-oggi-card-copy{
+  gap:1px;
+}
+#home #usOggiCalendarWidget[data-us-oggi-slot="quiet"] .us-oggi-card-copy b{
+  font-size:11.5px;
+}
+#home #usOggiCalendarWidget[data-us-oggi-slot="quiet"] .us-oggi-card-lines{
+  gap:1px;
+}
+#home #usOggiCalendarWidget[data-us-oggi-slot="quiet"] .us-oggi-card-line{
+  grid-template-columns:minmax(58px,auto) minmax(0,1fr);
+  column-gap:6px;
+  font-size:9.25px;
+  line-height:1.15;
+}
+#home #usOggiCalendarWidget[data-us-oggi-slot="quiet"] .us-oggi-card-line[data-kind="together"]{
+  padding-top:2px;
+}
+
+/* Passive reveal access is a chip-sized affordance. */
+#home .us-daily-reveal-link[data-us-oggi-slot="quiet"]{
+  min-height:44px;
+  padding:0 12px;
+  border-radius:14px;
+  font-size:10.5px;
+  background:rgba(10,12,17,.38);
+}
+
+/* Install/push guidance stays secondary at the bottom of the photo. */
+#home .push-optin-card[data-us-oggi-slot="quiet"]{
+  min-height:54px;
+  padding:8px 9px 8px 10px;
+  border-radius:17px;
+}
+#home .push-optin-card[data-us-oggi-slot="quiet"] .push-optin-copy{
+  gap:1px;
+}
+#home .push-optin-card[data-us-oggi-slot="quiet"] .push-optin-copy b{
+  font-size:11.5px;
+}
+#home .push-optin-card[data-us-oggi-slot="quiet"] .push-optin-copy small{
+  font-size:9.5px;
+  line-height:1.2;
+}
+#home .push-optin-card[data-us-oggi-slot="quiet"] .push-optin-action{
+  min-height:44px;
+  padding:0 11px;
+  font-size:10.5px;
+}
+
+/* Slightly calmer photo shading: chrome is readable without dimming the memory. */
+#home .home-photo-shade{
+  background:linear-gradient(180deg,rgba(4,6,9,.08) 0%,rgba(4,6,9,.015) 40%,rgba(4,6,9,.16) 70%,rgba(4,6,9,.62) 100%)!important;
+}
+
+@media(max-height:700px){
+  #home .us-oggi-stack{gap:5px}
+  #home .us-daily-ritual[data-us-oggi-slot="primary"]{
+    min-height:64px;
+    padding-top:7px;
+    padding-bottom:8px;
+  }
+  #home .us-daily-ritual[data-us-oggi-slot="primary"] .us-daily-ritual-question{
+    font-size:14.5px;
+    -webkit-line-clamp:2;
+  }
+  #home #usTodayPriorityRegion[data-us-oggi-slot="primary"] .us-today-priority-card{
+    min-height:54px;
+  }
+}
