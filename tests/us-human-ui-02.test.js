@@ -156,10 +156,10 @@ test('Gioca: deck cards keep the existing mode action (start_game_round with the
   assert.ok(log.some(([n, a]) => n === 'start_game_round' && a.target_family === 'per_voi'), 'Per voi still starts the per_voi round');
 });
 
-test('Gioca: no new RPC, storage or authority in games.js', () => {
+test('Gioca: RPC surface is explicit; Swipe adds only its start authority and no client storage', () => {
   const src = read('games.js');
   const rpcs = [...new Set([...src.matchAll(/sb\.rpc\('([a-z_0-9]+)'/g)].map((m) => m[1]))].sort();
-  assert.deepEqual(rpcs, ['complete_game_session_side', 'create_weekly_question', 'get_game_session', 'get_game_v2_home', 'mark_game_session_reveal_seen', 'save_game_session_answer', 'start_game_round']);
+  assert.deepEqual(rpcs, ['complete_game_session_side', 'create_weekly_question', 'get_game_session', 'get_game_v2_home', 'mark_game_session_reveal_seen', 'save_game_session_answer', 'start_game_round', 'start_swipe_round']);
   assert.doesNotMatch(src, /localStorage|sessionStorage|indexedDB/);
 });
 

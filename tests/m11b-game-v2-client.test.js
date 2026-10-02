@@ -331,7 +331,7 @@ test('M11B client: static contract — one Gioca surface, Phosphor icons, no leg
   assert.doesNotMatch(games, /localStorage|sessionStorage|indexedDB|fetch\(|openai|anthropic|bond_xp/i);
   assert.doesNotMatch(games, /couple_id|user_id|auth\.uid/, 'never sends identity; the server derives it');
   const rpcs = [...new Set([...games.matchAll(/sb\.rpc\('([a-z_0-9]+)'/g)].map((m) => m[1]))].sort();
-  assert.deepEqual(rpcs, ['complete_game_session_side', 'create_weekly_question', 'get_game_session', 'get_game_v2_home', 'mark_game_session_reveal_seen', 'save_game_session_answer', 'start_game_round']);
+  assert.deepEqual(rpcs, ['complete_game_session_side', 'create_weekly_question', 'get_game_session', 'get_game_v2_home', 'mark_game_session_reveal_seen', 'save_game_session_answer', 'start_game_round', 'start_swipe_round']);
   const registry = JSON.parse(read('assets/ICON_REGISTRY.json')).icons;
   for (const [file, phosphor] of [['sparkle-regular', 'Sparkle'], ['sparkle-fill', 'Sparkle'], ['feather-regular', 'Feather'], ['lock-simple-regular', 'LockSimple'], ['binoculars-regular', 'Binoculars'], ['arrows-left-right-regular', 'ArrowsLeftRight'], ['smiley-regular', 'Smiley'], ['eye-regular', 'Eye'], ['clock-counter-clockwise-regular', 'ClockCounterClockwise'], ['signpost-regular', 'Signpost']]) {
     assert.ok(fs.existsSync(path.join(ROOT, 'assets/icons/phosphor', `${file}.svg`)), file);
