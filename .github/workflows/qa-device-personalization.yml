@@ -1,0 +1,42 @@
+name: QA device-local cosmetics + Ricordi delete
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'app.js'
+      - 'progression.js'
+      - 'moments-albums.js'
+      - 'styles.css'
+      - 'index.html'
+      - 'manifest.webmanifest'
+      - 'service-worker.js'
+      - 'version.json'
+      - 'supabase/config.toml'
+      - 'supabase/functions/delete-moment/**'
+      - 'tests/progression-rewards-v2.test.js'
+      - 'tests/us-progression-v1.test.js'
+      - 'tests/ricordi-delete-undo.test.js'
+      - 'tests/ricordi-delete-edge.test.js'
+      - '.github/workflows/qa-device-personalization.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Targeted regression
+        run: node --test tests/progression-rewards-v2.test.js tests/us-progression-v1.test.js tests/ricordi-delete-undo.test.js tests/ricordi-delete-edge.test.js
+      - name: Full suite
+        run: npm test
+      - name: Cloudflare Pages build
+        run: npm run build:cloudflare-pages
