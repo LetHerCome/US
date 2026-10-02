@@ -1,42 +1,46 @@
-const CACHE_NAME = "us-shell-static-runtime-62";
+const BUILD_ID = "us-pwa-hardening-v1-20261002-1";
+const SHELL_CACHE_PREFIX = "us-shell-";
+const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
+const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
 const MEDIA_CACHE_NAME = "us-private-media-v1";
+const versioned = (path) => `${path}?v=${encodeURIComponent(BUILD_ID)}`;
 
 const APP_SHELL = [
   "/",
   "/index.html",
-  "/auth-storage.js",
-  "/platform.js",
-  "/ti-penso-widget.js",
-  "/app.js",
-  "/stories.js",
-  "/stories.css",
-  "/left-for-you.js",
-  "/left-for-you.css?v=us-secondary-surfaces-v1-20261002-1",
-  "/calendar-domain.js",
-  "/calendar.css?v=us-secondary-surfaces-v1-20261002-1",
-  "/state-system.css?v=us-state-system-v1-20261002-1",
-  "/calendar.js",
+  versioned("/auth-storage.js"),
+  versioned("/platform.js"),
+  versioned("/ti-penso-widget.js"),
+  versioned("/app.js"),
+  versioned("/stories.js"),
+  versioned("/stories.css"),
+  versioned("/left-for-you.js"),
+  versioned("/left-for-you.css"),
+  versioned("/calendar-domain.js"),
+  versioned("/calendar.css"),
+  versioned("/state-system.css"),
+  versioned("/calendar.js"),
   "/assets/third-party/spotify/spotify-full-logo-white.svg",
-  "/styles.css?v=us-secondary-surfaces-v1-20261002-1",
-  "/ui-foundation.css",
-  "/ui-foundation.js",
-  "/fix4.css",
-  "/fix4.js",
-  "/fastboot2.js",
-  "/events.css?v=us-secondary-surfaces-v1-20261002-1",
-  "/events.js",
-  "/moments-albums.css?v=us-secondary-surfaces-v1-20261002-1",
-  "/moments-albums.js",
-  "/navigation.js",
-  "/games.css?v=us-gioca-density-v1-20261002-1",
-  "/games.js?v=us-gioca-density-v1-20261002-1",
-  "/settings.css?v=us-secondary-surfaces-v1-20261002-1",
-  "/settings.js",
-  "/identity.css?v=us-shell-think-v1-20261002-1",
-  "/identity.js",
-  "/settings2.css?v=us-settings-density-v1-20261002-1",
-  "/polish4.css?v=us-shell-think-v1-20261002-1",
-  "/polish4.js",
+  versioned("/styles.css"),
+  versioned("/ui-foundation.css"),
+  versioned("/ui-foundation.js"),
+  versioned("/fix4.css"),
+  versioned("/fix4.js"),
+  versioned("/fastboot2.js"),
+  versioned("/events.css"),
+  versioned("/events.js"),
+  versioned("/moments-albums.css"),
+  versioned("/moments-albums.js"),
+  versioned("/navigation.js"),
+  versioned("/games.css"),
+  versioned("/games.js"),
+  versioned("/settings.css"),
+  versioned("/settings.js"),
+  versioned("/identity.css"),
+  versioned("/identity.js"),
+  versioned("/settings2.css"),
+  versioned("/polish4.css"),
+  versioned("/polish4.js"),
   "/assets/derived/brand/us-symbol-apk-foreground-v1.png",
   "/assets/fonts/Inter-Variable.woff2",
   "/assets/fonts/Newsreader-Variable.woff2",
@@ -105,10 +109,10 @@ const APP_SHELL = [
   "/assets/source/ui/us-icon-daily-question-v1.png",
   "/assets/source/ui/us-icon-settings-v1.png",
   "/version.json",
-  "/manifest.webmanifest",
-  "/icon-192.png",
-  "/icon-512.png",
-  "/apple-touch-icon.png",
+  versioned("/manifest.webmanifest"),
+  versioned("/icon-192.png"),
+  versioned("/icon-512.png"),
+  versioned("/apple-touch-icon.png"),
   "/favicon-32.png",
   "/favicon.svg"
 ];
@@ -116,9 +120,14 @@ const APP_SHELL = [
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
-    await cache.addAll(APP_SHELL);
+    const requests = APP_SHELL.map((url) => new Request(url, { cache: "reload" }));
+    await cache.addAll(requests);
     await self.skipWaiting();
   })());
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "US_SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
@@ -127,7 +136,11 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key !== CACHE_NAME && key !== MEDIA_CACHE_NAME)
+            .filter((key) =>
+              key !== CACHE_NAME &&
+              key !== MEDIA_CACHE_NAME &&
+              (key.startsWith(SHELL_CACHE_PREFIX) || key.startsWith(LEGACY_SHELL_CACHE_PREFIX))
+            )
             .map((key) => caches.delete(key))
         )
       )
@@ -247,16 +260,17 @@ self.addEventListener("fetch", (event) => {
 
   // Update detection must always see the freshest build marker.
   if (url.pathname === "/version.json") {
+    const versionKey = new Request("/version.json");
     event.respondWith(
       fetch(request, { cache: "no-store" })
         .then((response) => {
           const copy = response.clone();
           event.waitUntil(
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy))
+            caches.open(CACHE_NAME).then((cache) => cache.put(versionKey, copy))
           );
           return response;
         })
-        .catch(() => caches.match(request))
+        .catch(() => caches.match(versionKey))
     );
     return;
   }
@@ -265,7 +279,7 @@ self.addEventListener("fetch", (event) => {
   // fix4.js calls /?us-refresh=<timestamp> after registration.update().
   // Previously this branch still returned cached index.html, causing:
   // old BUILD -> new version.json -> update banner -> reload -> old BUILD -> loop.
-  if (request.mode === "navigate" && url.searchParams.has("us-refresh")) {
+  if (url.searchParams.has("us-refresh")) {
     event.respondWith((async () => {
       try {
         const response = await fetch(request, {
@@ -302,6 +316,22 @@ self.addEventListener("fetch", (event) => {
       }
 
       return refresh.catch(() => caches.match("/index.html"));
+    })());
+    return;
+  }
+
+  // Assets tied to this build are immutable. Never overwrite them in-place:
+  // a different BUILD_ID gets a different URL and a different shell cache.
+  if (url.searchParams.get("v") === BUILD_ID) {
+    event.respondWith((async () => {
+      const cached = await caches.match(request);
+      if (cached) return cached;
+      const response = await fetch(request, { cache: "no-store" });
+      if (response.ok) {
+        const cache = await caches.open(CACHE_NAME);
+        await cache.put(request, response.clone());
+      }
+      return response;
     })());
     return;
   }
