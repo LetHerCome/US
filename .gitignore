@@ -1,3 +1,4 @@
 /node_modules/
 /dist/capacitor/
 /_handoff/
+/dist/cloudflare-pages/
