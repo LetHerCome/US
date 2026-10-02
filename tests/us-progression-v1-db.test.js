@@ -6,7 +6,8 @@ const { PGlite } = require('@electric-sql/pglite');
 
 const ROOT = path.resolve(__dirname, '..');
 const MIGRATION = path.join(ROOT, 'supabase/migrations/20261002181500_us_progression_v1.sql');
-const sql = () => fs.readFileSync(MIGRATION, 'utf8');
+const TOGGLE_MIGRATION = path.join(ROOT, 'supabase/migrations/20261002171949_progression_reward_toggle_unequip.sql');
+const sql = () => `${fs.readFileSync(MIGRATION, 'utf8')}\n${fs.readFileSync(TOGGLE_MIGRATION, 'utf8')}`;
 const uuid = (() => { let n = 1; return () => `00000000-0000-4000-8000-${String(n++).padStart(12,'0')}`; })();
 
 const FIXTURE = `
@@ -162,6 +163,15 @@ test('Progression V1: pending unlock is per person; equip requires an unlocked r
   sb=await state(db,b);
   assert.equal(sb.preferences.frame_reward_id,'frame_glow');
   assert.equal(sb.rewards.find(r=>r.id==='frame_glow').equipped,true);
+
+  await asUser(db,f,()=>db.query("select public.equip_progression_reward('frame_glow')"));
+  sb=await state(db,b);
+  assert.equal(sb.preferences.frame_reward_id,null,'clicking the equipped reward unequips it for the couple');
+  assert.equal(sb.rewards.find(r=>r.id==='frame_glow').equipped,false);
+
+  await asUser(db,f,()=>db.query("select public.equip_progression_reward('frame_glow')"));
+  sb=await state(db,b);
+  assert.equal(sb.preferences.frame_reward_id,'frame_glow','clicking again equips it');
   await assert.rejects(asUser(db,f,()=>db.query("select public.equip_progression_reward('frame_aurora')")),/reward not unlocked/);
 });
 
