@@ -299,16 +299,27 @@ test('Settings: ownership matches storage (shared rows write couple data, person
 
 // ---------------------------------------------------------------- release
 
-test('release: one bump for this candidate, private media cache untouched', () => {
+test('release: one BUILD_ID owns HTML, version marker and atomic shell cache', () => {
   const build = html.match(/<meta name="us-build" content="([^"]+)"\/>/)?.[1];
-  assert.equal(build, 'us-human-ui-02-20261002-1');
+  assert.ok(build, 'HTML exposes a build id');
   assert.equal(JSON.parse(read('version.json')).version, build);
+
   const worker = read('service-worker.js');
-  assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-52";/);
+  const workerBuild = worker.match(/const BUILD_ID = "([^"]+)";/)?.[1];
+  assert.equal(workerBuild, build);
+  assert.match(worker, /const CACHE_NAME = `\$\{SHELL_CACHE_PREFIX\}\$\{BUILD_ID\}`;/);
   assert.match(worker, /const MEDIA_CACHE_NAME = "us-private-media-v1";/);
-  assert.match(html, /\/games\.css\?v=us-human-ui-02-20261002-1/);
-  assert.match(html, /\/settings2\.css\?v=us-human-ui-02-20261002-1/);
-  assert.match(html, /\/identity\.css\?v=us-identity3-us-human-ui-02-20261002-1/);
+  assert.match(worker, /new Request\(url, \{ cache: "reload" \}\)/, 'install precache is atomic and bypasses stale HTTP cache');
+  assert.match(worker, /url\.searchParams\.get\("v"\) === BUILD_ID/, 'build assets are immutable inside a release');
+
+  const versionedHtml = [...html.matchAll(/(?:href|src)="([^"]+\?v=([^"&]+))"/g)];
+  assert.ok(versionedHtml.length > 10, 'critical shell assets are versioned');
+  for (const [, asset, version] of versionedHtml) assert.equal(version, build, asset);
+
+  const manifest = read('manifest.webmanifest');
+  for (const match of manifest.matchAll(/"src":\s*"([^"]+\?v=([^"&]+))"/g)) {
+    assert.equal(match[2], build, match[1]);
+  }
 });
 
 test('no new dependencies', () => {
@@ -395,7 +406,22 @@ test('state system: loading, empty, error, retry and connectivity share one visu
   assert.match(css, /\.us-gv2-error/);
   assert.match(css, /\.us-cal-empty/);
   assert.match(css, /\.us-settings-empty/);
-  assert.match(html, /\/state-system\.css\?v=us-state-system-v1-20261002-1/);
-  assert.match(read('service-worker.js'), /\/state-system\.css\?v=us-state-system-v1-20261002-1/);
+  const build = html.match(/<meta name="us-build" content="([^"]+)"\/>/)?.[1];
+  assert.match(html, new RegExp(`/state-system\\.css\\?v=${build}`));
+  assert.match(read('service-worker.js'), /versioned\("\/state-system\.css"\)/);
   assert.match(read('fix4.js'), /showStatus\('Sei offline\. Riprendo appena torni online\.', 'offline'\)/);
+});
+
+
+test('PWA hardening: update navigation refreshes index and version checks do not leak timestamp cache keys', () => {
+  const worker = read('service-worker.js');
+  const fix = read('fix4.js');
+  assert.match(worker, /const versionKey = new Request\("\/version\.json"\);/);
+  assert.match(worker, /cache\.put\(versionKey, copy\)/);
+  assert.doesNotMatch(worker, /cache\.put\(request, copy\)[\s\S]{0,180}version\.json/);
+  assert.match(worker, /if \(url\.searchParams\.has\("us-refresh"\)\)/);
+  assert.match(worker, /cache\.put\("\/index\.html", response\.clone\(\)\)/);
+  assert.match(fix, /refreshUrl\.searchParams\.set\('us-refresh', String\(Date\.now\(\)\)\)/);
+  assert.match(fix, /window\.location\.replace\(refreshUrl\.href\)/);
+  assert.match(fix, /currentUrl\.searchParams\.delete\('us-refresh'\)/);
 });
