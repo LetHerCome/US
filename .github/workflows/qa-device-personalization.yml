@@ -1,3 +1,4 @@
+# PR #39 temporary validation; removed before merge.
 name: QA device-local cosmetics + Ricordi delete
 
 on:
