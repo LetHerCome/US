@@ -16,16 +16,18 @@ test('Progression V1: user-facing Risonanza becomes Sintonia and exposes Ritmo +
   assert.doesNotMatch(bond,/>Risonanza</);
 });
 
-test('Progression V1: unlock moment is prominent, actionable and server-acknowledged exactly through RPCs',()=>{
+test('Progression V1: unlock authority stays server-side while cosmetic equip is local to this device',()=>{
   assert.match(html,/id="usProgressionUnlock"[^>]*aria-hidden="true"/);
   assert.match(html,/id="usProgressionUnlockUse"/);
   assert.match(html,/id="usProgressionUnlockLater"/);
   assert.match(js,/sb\.rpc\('ack_progression_unlock'/);
-  assert.match(js,/sb\.rpc\('equip_progression_reward'/);
+  assert.match(js,/sb\.rpc\('get_progression_v1'/);
+  assert.doesNotMatch(js,/sb\.rpc\('equip_progression_reward'/,'equipped cosmetics must not propagate to the partner');
   assert.match(js,/pending_unlocks/);
+  assert.match(js,/DEVICE_PREFS_PREFIX = 'us:cosmetics:v1:'/);
+  assert.match(js,/window\.localStorage\.setItem/);
   assert.match(css,/@keyframes us-progression-swoosh/);
   assert.match(css,/prefers-reduced-motion:reduce/);
-  assert.doesNotMatch(js,/localStorage|sessionStorage|indexedDB/,'unlock authority is never device-local');
   assert.match(js,/In uso · tocca per togliere/);
 });
 
