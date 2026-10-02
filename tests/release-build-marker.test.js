@@ -17,9 +17,13 @@ test('release: the index.html build marker and version.json never diverge', () =
   assert.match(version, /^us-[a-z0-9-]+-\d{8}-\d+$/);
 });
 
-test('release: the shell cache has one current name and the private media cache is untouched', () => {
+test('release: the shell cache is derived from BUILD_ID and the private media cache is untouched', () => {
   const worker = read('service-worker.js');
-  assert.equal([...worker.matchAll(/const CACHE_NAME = "(us-shell-static-runtime-\d+)";/g)].length, 1);
+  const marker = read('index.html').match(/<meta name="us-build" content="([^"]+)"\/>/)?.[1];
+  const build = worker.match(/const BUILD_ID = "([^"]+)";/)?.[1];
+  assert.equal(build, marker);
+  assert.match(worker, /const SHELL_CACHE_PREFIX = "us-shell-";/);
+  assert.ok(worker.includes('const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;'));
   assert.match(worker, /const MEDIA_CACHE_NAME = "us-private-media-v1";/);
   assert.match(worker, /key !== CACHE_NAME && key !== MEDIA_CACHE_NAME/);
 });

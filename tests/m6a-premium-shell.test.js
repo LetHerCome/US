@@ -6,7 +6,6 @@ const test = require('node:test');
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const PRIMARY_NAV = ['home', 'bond', 'moments', 'quiz'];
-const SHELL_ICONS = [...PRIMARY_NAV, 'settings', 'stories', 'calendar', 'profile', 'add', 'think'];
 
 test('M6A conserva coppie SVG OFF/ON reali senza tint o mask', () => {
   const html = read('index.html');
@@ -30,16 +29,17 @@ test('M6A precarica tutti gli asset shell premium e mantiene il contratto PWA', 
   const build = html.match(/meta name="us-build" content="([^"]+)"/)?.[1];
 
   assert.match(worker, /const MEDIA_CACHE_NAME = "us-private-media-v1"/);
-  assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-52"/);
+  assert.ok(build);
   assert.equal(build, version);
+  assert.ok(worker.includes(`const BUILD_ID = "${build}";`));
+  assert.ok(worker.includes('const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;'));
   assert.match(worker, /"\/assets\/derived\/runtime\/us-symbol-256-v1\.png"/);
-  SHELL_ICONS.forEach((name) => {
-    ['off', 'on'].forEach((state) => {
-      const file = `assets/icons/${name}-${state}.svg`;
-      assert.ok(fs.existsSync(path.join(ROOT, file)), `${file} deve essere disponibile al runtime`);
-      assert.match(worker, new RegExp(`"/${file.replace('.', '\\.') }"`));
-    });
-  });
+  const referencedPhosphor = [...new Set([...html.matchAll(/data-icon="(\/assets\/icons\/phosphor\/[^"]+\.svg)"/g)].map((m) => m[1]))];
+  assert.ok(referencedPhosphor.length >= 8);
+  for (const file of referencedPhosphor) {
+    assert.ok(fs.existsSync(path.join(ROOT, file.slice(1))), `${file} deve essere disponibile al runtime`);
+    assert.ok(worker.includes(`"${file}"`), `${file} deve essere precachato`);
+  }
   ['Inter-Variable.woff2', 'Newsreader-Variable.woff2',
     'house-regular.svg', 'house-fill.svg',
     'heart-straight-regular.svg', 'heart-straight-fill.svg',

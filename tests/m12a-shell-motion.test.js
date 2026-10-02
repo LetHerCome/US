@@ -14,11 +14,12 @@ const topBar = html.match(/<div class="top us-premium-top">[\s\S]*?<\/div>\s*<ma
 
 // ---------------------------------------------------------------- SHELL
 
-test('shell: Per voi left, the US mark at the centre, Left for You right', () => {
-  const perVoi = topBar.indexOf('id="usPerVoiTop"');
+test('shell: Ti penso left, the US mark at the centre, Left for You right', () => {
+  const think = topBar.indexOf('id="thinkButton"');
   const brand = topBar.indexOf('class="us-top-brand"');
   const envelope = topBar.indexOf('id="leftForYouPartnerEntry"');
-  assert.ok(perVoi > 0 && brand > perVoi && envelope > brand, 'order: Per voi, US, Left for You');
+  assert.ok(think > 0 && brand > think && envelope > brand, 'order: Ti penso, US, Left for You');
+  assert.doesNotMatch(topBar, /id="usPerVoiTop"/, 'Per voi belongs to Gioca, not global chrome');
   assert.match(topBar, /<div class="us-top-brand" role="img" aria-label="US"><img[^>]+us-symbol-256-v1\.png/);
   assert.match(identityCss, /\.top\.us-premium-top \.us-top-brand\{grid-column:2;/);
   assert.match(identityCss, /\.top\.us-premium-top\{display:grid;grid-template-columns:minmax\(0,1fr\) auto minmax\(0,1fr\)/);
@@ -178,14 +179,16 @@ test('aurora: reduced motion never pulses', () => {
 
 // ---------------------------------------------------------------- ATTENTION
 
-test('attention: Per voi and Left for You use the same primitive, driven by data-us-attention', () => {
-  for (const id of ['usPerVoiTop', 'leftForYouPartnerEntry']) {
-    const tag = topBar.match(new RegExp(`<button[^>]*id="${id}"[^>]*>`))[0];
-    assert.match(tag, /us-attention-orbit/);
-    assert.match(tag, /data-us-attention="off"/);
-  }
-  assert.equal((topBar.match(/data-us-attention-icon/g) || []).length, 2, 'both mark their glyph for the primitive');
-  assert.match(read('games.js'), /us-gv2-pervoi us-attention-orbit[^`]*data-us-attention=/);
+test('attention: global Left for You and Gioca Per voi share the same primitive', () => {
+  const envelope = topBar.match(/<button[^>]*id="leftForYouPartnerEntry"[^>]*>/)?.[0] || '';
+  assert.match(envelope, /us-attention-orbit/);
+  assert.match(envelope, /data-us-attention="off"/);
+  assert.equal((topBar.match(/data-us-attention-icon/g) || []).length, 1, 'only the global envelope owns an attention glyph in the top bar');
+  const games = read('games.js');
+  assert.match(games, /us-gv2-pervoi us-attention-orbit/);
+  assert.match(games, /data-gv2-action="per-voi"/);
+  assert.match(games, /data-us-attention=/);
+  assert.match(games, /data-us-attention-icon/);
 });
 
 test('attention: the primitive is generic (no envelope/Per voi selectors), slow with a rest, and reduced-motion aware', () => {

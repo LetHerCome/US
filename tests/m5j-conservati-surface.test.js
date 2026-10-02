@@ -224,9 +224,10 @@ test('M5J versions the static shell without changing the private media cache', (
   const version = JSON.parse(read('version.json')).version;
   const build = html.match(/<meta\s+name="us-build"\s+content="([^"]+)"/)?.[1];
 
-  assert.equal(build, 'us-human-ui-02-20261002-1');
+  assert.ok(build);
   assert.equal(version, build);
-  assert.ok(/const CACHE_NAME = "us-shell-static-runtime-52"/.test(worker));
+  assert.ok(worker.includes(`const BUILD_ID = "${build}";`));
+  assert.ok(worker.includes('const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;'));
   assert.ok(/const MEDIA_CACHE_NAME = "us-private-media-v1"/.test(worker));
 });
 

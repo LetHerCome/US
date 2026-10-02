@@ -30,7 +30,7 @@ test('il branding PWA usa il foreground ufficiale già derivato per Android', ()
     sha256: 'f71c0cf6cbca172b7833754f6eaa2b4addfab6381a696bdccf070d83ea690868',
     immutable: true,
     purpose: 'Byte-identical Web/PWA derivative of the official Android adaptive foreground',
-    usedBy: ['auth-branding', 'home-header-branding', 'settings-branding', 'pwa-install-branding'],
+    usedBy: ['pwa-install-branding'],
     source: 'android/app/src/main/res/drawable-nodpi/us_adaptive_foreground_v1.png',
     sourceSha256: 'f71c0cf6cbca172b7833754f6eaa2b4addfab6381a696bdccf070d83ea690868',
     operation: 'BYTE_COPY_OFFICIAL_ANDROID_FOREGROUND'
@@ -39,6 +39,9 @@ test('il branding PWA usa il foreground ufficiale già derivato per Android', ()
   assert.equal(webManifest.theme_color, '#08040E');
   assert.deepEqual(webManifest.icons.map((icon) => icon.sizes), ['192x192', '512x512', '1254x1254']);
   assert.ok(webManifest.icons.some((icon) => icon.src.startsWith(`/${BRAND}`)));
+  const runtime = assetManifest.assets.find((entry) => entry.path === 'assets/derived/runtime/us-symbol-256-v1.png');
+  assert.equal(runtime.source, BRAND);
+  assert.equal(runtime.sourceSha256, asset.sha256);
   assert.match(html, /rel="icon"[^>]+href="\/assets\/derived\/runtime\/us-symbol-256-v1\.png/, 'the in-app favicon is the runtime derivative of that master');
   assert.match(html, /rel="apple-touch-icon"[^>]+href="\/apple-touch-icon\.png\?v=us-[a-z0-9-]+/);
 });

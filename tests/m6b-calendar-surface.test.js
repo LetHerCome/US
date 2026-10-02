@@ -330,10 +330,11 @@ test('M6B (35): Eventi/shared_events keeps rendering exactly as before; the cale
 
 // (36) service worker / static runtime updated correctly for the new assets.
 test('M6B (36): the service worker precaches the three new runtime files and keeps its cache name convention', () => {
-  assert.match(worker(), /"\/calendar-domain\.js"/);
-  assert.match(worker(), /"\/calendar\.css"/);
-  assert.match(worker(), /"\/calendar\.js"/);
-  assert.match(worker(), /const CACHE_NAME = "us-shell-static-runtime-52"/);
+  assert.match(worker(), /versioned\("\/calendar-domain\.js"\)/);
+  assert.match(worker(), /versioned\("\/calendar\.css"\)/);
+  assert.match(worker(), /versioned\("\/calendar\.js"\)/);
+  assert.match(worker(), /const SHELL_CACHE_PREFIX = "us-shell-"/);
+  assert.ok(worker().includes('const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;'));
 });
 
 // (37) Capacitor staging includes the new assets.

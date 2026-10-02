@@ -315,11 +315,13 @@ test('M11B client: static contract — one Gioca surface, Phosphor icons, no leg
   const app = read('app.js');
   const games = read('games.js');
   const css = read('games.css') + read('identity.css');
-  const top = html.match(/<button[^>]*id="usPerVoiTop"[^>]*>/)?.[0] || '';
-  assert.match(top, /us-attention-orbit/);
-  assert.match(top, /data-us-attention="off"/);
-  assert.match(top, /onclick="window\.USGameV2\?\.openPerVoi\(\)"/);
-  assert.match(html, /<div class="us-top-left"><button[^>]*id="usPerVoiTop"/);
+  const top = html.match(/<div class="top us-premium-top">[\s\S]*?<\/div>\s*<main id="home"/)?.[0] || '';
+  assert.match(top, /id="thinkButton"/);
+  assert.doesNotMatch(top, /id="usPerVoiTop"/, 'Per voi is a Gioca action, not a global top-bar action');
+  assert.match(games, /class="us-gv2-pervoi us-attention-orbit"/);
+  assert.match(games, /data-gv2-action="per-voi"/);
+  assert.match(games, /data-us-attention=/);
+  assert.match(games, /data-us-attention-icon/);
   assert.match(html, /<div id="quizHub" class="us-gv2-hub"/);
   assert.match(html, /<div id="usGameV2Panel" class="us-gv2-panel hidden"/);
   assert.doesNotMatch(html, /weeklyQuizGrid|usExtraGames|usCustomGamesHub|quizPlay|scoreRing/);

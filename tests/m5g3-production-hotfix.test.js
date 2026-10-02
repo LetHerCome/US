@@ -11,14 +11,15 @@ test('M5G3 release coherency versions the composer assets and shell without touc
   const version = JSON.parse(read('version.json')).version;
   const worker = read('service-worker.js');
   const build = html.match(/meta name="us-build" content="([^"]+)"/)?.[1];
-  assert.equal(build, 'us-human-ui-02-20261002-1');
+  assert.ok(build);
   assert.equal(version, build);
-  assert.match(html, /left-for-you\.css\?v=us-m5i-ephemeral-\d{8}-\d+/);
-  assert.match(html, /left-for-you\.js\?v=us-m5j-conservati-20260925-1/);
-  assert.match(worker, /const CACHE_NAME = "us-shell-static-runtime-52"/);
+  assert.ok(html.includes(`/left-for-you.css?v=${build}`));
+  assert.ok(html.includes(`/left-for-you.js?v=${build}`));
+  assert.ok(worker.includes(`const BUILD_ID = "${build}";`));
+  assert.ok(worker.includes('const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;'));
   assert.match(worker, /const MEDIA_CACHE_NAME = "us-private-media-v1"/);
-  assert.match(worker, /"\/left-for-you\.css"/);
-  assert.match(worker, /"\/left-for-you\.js"/);
+  assert.match(worker, /versioned\("\/left-for-you\.css"\)/);
+  assert.match(worker, /versioned\("\/left-for-you\.js"\)/);
 });
 
 test('M5G3 camera button remains explicitly bound and opens the existing camera flow', () => {
