@@ -1083,7 +1083,12 @@ function renderOggiCalendarWidget(fact){
     return;
   }
   container.hidden=false;
-  container.innerHTML=`<button type="button" class="us-oggi-card" data-us-oggi-date="${escapeHtml(fact.dateISO)}" aria-label="${escapeHtml(fact.title)}: ${escapeHtml(fact.detail)}"><span class="us-oggi-card-mark" aria-hidden="true">♡</span><span class="us-oggi-card-copy"><b>${escapeHtml(fact.title)}</b><small>${escapeHtml(fact.detail)}</small></span></button>`;
+  const rows=Array.isArray(fact.rows)?fact.rows.filter(row=>row&&row.label&&row.value):[];
+  const rowsHtml=rows.length
+    ? `<span class="us-oggi-card-lines">${rows.map(row=>`<span class="us-oggi-card-line" data-kind="${escapeHtml(row.kind||'person')}"><span class="us-oggi-card-line-label">${escapeHtml(row.label)}</span><span class="us-oggi-card-line-value">${escapeHtml(row.value)}</span></span>`).join('')}</span>`
+    : `<small>${escapeHtml(fact.detail)}</small>`;
+  const ariaDetail=rows.length?rows.map(row=>`${row.label} ${row.value}`).join('. '):fact.detail;
+  container.innerHTML=`<button type="button" class="us-oggi-card" data-us-oggi-date="${escapeHtml(fact.dateISO)}" aria-label="${escapeHtml(fact.title)}: ${escapeHtml(ariaDetail)}"><span class="us-oggi-card-mark" aria-hidden="true">♡</span><span class="us-oggi-card-copy"><b>${escapeHtml(fact.title)}</b>${rowsHtml}</span></button>`;
 }
 document.getElementById('usOggiCalendarWidget')?.addEventListener('click',event=>{
   const btn=event.target.closest?.('[data-us-oggi-date]');
