@@ -92,5 +92,5 @@ test('Gioca CSS: tiles use the canonical tokens and the Noi chip recipe, never a
 
 test('Gioca hub: a fresh hub explains the low-friction entry without adding authority', async () => {
   const html = await hub(homeOf()).html();
-  assert.match(html, /class="us-gv2-invite">Scegliete un gioco\. Bastano pochi minuti\.<\/p>/);
+  assert.match(html, /class="us-gv2-entry-note">Scegliete un gioco\. Bastano pochi minuti\.<\/p>/);
 });

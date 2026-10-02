@@ -498,31 +498,37 @@ test('M6B (49): a single shared icon-centering rule is defined once and applied 
 // --- Ora validation ----------------------------------------------------------
 
 // (50) quickEntryError is a pure function: Ora is mandatory for a timed entry only.
-test('M6B (50): quickEntryError flags a missing Ora only for a timed entry, never for all-day', () => {
-  assert.equal(cal.quickEntryError({ allDay: false, time: '' }), 'time', 'a timed entry with no Ora must be rejected');
-  assert.equal(cal.quickEntryError({ allDay: false, time: '09:00' }), null, 'a timed entry with an Ora is valid');
-  assert.equal(cal.quickEntryError({ allDay: true, time: '' }), null, 'an all-day entry must never be blocked by its hidden, empty Ora field');
+test('M6B (50): quickEntryError supports the legacy single-time helper and validates the new explicit range', () => {
+  assert.equal(cal.quickEntryError({ allDay: false, time: '' }), 'time');
+  assert.equal(cal.quickEntryError({ allDay: false, time: '09:00' }), null);
+  assert.equal(cal.quickEntryError({ allDay: false, startTime: '', endTime: '10:00' }), 'start');
+  assert.equal(cal.quickEntryError({ allDay: false, startTime: '09:00', endTime: '' }), 'end');
+  assert.equal(cal.quickEntryError({ allDay: false, startTime: '10:00', endTime: '09:00' }), 'range');
+  assert.equal(cal.quickEntryError({ allDay: false, startTime: '09:00', endTime: '10:00' }), null);
+  assert.equal(cal.quickEntryError({ allDay: true, startTime: '', endTime: '' }), null);
 });
 
 // (51) saveEntry gates on the pure helper, before building the payload, via the existing error surface — and the old silent 00:00 default is gone.
-test('M6B (51): saveEntry rejects a missing Ora through the existing form-status error surface, before building the payload', () => {
+test('M6B (51): saveEntry validates Inizio/Fine through the pure helper before building the payload', () => {
   const saveBlock = js().match(/async function saveEntry\(event\)[\s\S]*?\n\}/)?.[0] || '';
-  assert.match(saveBlock, /quickEntryError\(\{ allDay, time \}\) === 'time'/, 'saveEntry must gate on the pure helper, not reimplement the rule inline');
-  assert.match(saveBlock, /setFormStatus\('Scegli un\\'ora\.'\)/, 'the existing form-status error surface must show the Ora message');
+  assert.match(saveBlock, /quickEntryError\(\{ allDay, startTime, endTime \}\)/);
+  assert.match(saveBlock, /Inserisci l\\'ora di inizio/);
+  assert.match(saveBlock, /Inserisci l\\'ora di fine/);
   const guardIdx = saveBlock.indexOf('quickEntryError');
   const payloadIdx = saveBlock.indexOf('buildEntryPayload(');
-  assert.ok(guardIdx > 0 && payloadIdx > guardIdx, 'the Ora check must run before the payload is built');
-  assert.match(js(), /const time = \$\('usCalendarTimeInput'\)\.value;/, 'the silent 00:00 default for a missing Ora must be removed');
+  assert.ok(guardIdx > 0 && payloadIdx > guardIdx);
+  assert.doesNotMatch(saveBlock, /usCalendarTimeInput/);
 });
 
 
-test('1.0 calendar: compact time parser and overnight duration are deterministic', () => {
+test('1.0 calendar: compact time parser is deterministic and preserves the same-day range invariant', () => {
   assert.equal(cal.normalizeQuickTime('9'), '09:00');
   assert.equal(cal.normalizeQuickTime('930'), '09:30');
   assert.equal(cal.normalizeQuickTime('18:45'), '18:45');
   assert.equal(cal.normalizeQuickTime('25:00'), '');
-  assert.equal(cal.addClockMinutes('23:30'), '00:30');
-  assert.equal(cal.durationMinutesFromTimes('23:30', '01:00'), 90);
+  assert.equal(cal.addClockMinutes('09:30'), '10:30');
+  assert.equal(cal.addClockMinutes('23:30'), '');
+  assert.equal(cal.durationMinutesFromTimes('23:30', '01:00'), null);
   assert.equal(cal.durationMinutesFromTimes('09:00', '09:00'), null);
   assert.equal(cal.quickEntryError({ allDay: false, startTime: '09:00', endTime: '10:00' }), null);
 });

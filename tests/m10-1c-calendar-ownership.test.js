@@ -212,10 +212,10 @@ test('M10.1C: "Aggiungi impegno" is the explicit create affordance; no floating 
   assert.match(css, /\.us-cal-add\{[^}]*min-height:44px/);
 });
 
-test('M10.1C: quick create still collects only title, all-day and time; manual is personal, Da vivere shared', () => {
+test('M10.1C/US 1.0: quick create collects presets/title, all-day and explicit start/end; authority is unchanged', () => {
   const form = html.match(/<form class="us-cal-form" id="usCalendarForm">[\s\S]*?<\/form>/)[0];
   const inputs = [...form.matchAll(/<(?:input|textarea|select)[^>]*id="([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(inputs, ['usCalendarTitleInput', 'usCalendarDateInput', 'usCalendarAllDayInput', 'usCalendarTimeInput'], 'date input is edit-only (hidden when creating)');
+  assert.deepEqual(inputs, ['usCalendarTitleInput', 'usCalendarDateInput', 'usCalendarAllDayInput', 'usCalendarStartTimeInput', 'usCalendarEndTimeInput'], 'date input is edit-only; timed entries expose a compact range');
   assert.doesNotMatch(form, /Durata|duration|Ricordamelo|reminder|<textarea|Nota/i);
   assert.match(calSrc, /calendarKind = mode === 'edit' \? entry\.entry_type : 'personal';/);
   assert.match(calSrc, /const kind = ideaLink \? 'shared' : calendarKind;/);

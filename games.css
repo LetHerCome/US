@@ -397,4 +397,4 @@ body:has(#quiz.page.active) #thinkButton{display:none!important}
 
 
 /* ===== US-1.0 GIOCA ENTRY · useful context when the hub is fresh ===== */
-.us-gv2-invite{margin:2px 4px -2px;color:var(--us-color-text-3);font-size:12px;line-height:1.35}
+.us-gv2-entry-note{margin:2px 4px -2px;color:var(--us-color-text-3);font-size:12px;line-height:1.35}

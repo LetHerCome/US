@@ -13,16 +13,19 @@ const css = () => read('calendar.css');
 const form = () => html().match(/<form class="us-cal-form"[\s\S]*?<\/form>/)?.[0] || '';
 const localISO = (y, m, d, hh, mm) => new Date(y, m - 1, d, hh, mm, 0, 0).toISOString();
 
-test('M9C: the quick form is only Titolo, Tutto il giorno and Ora (Giorno only while editing)', () => {
+test('M9C/US 1.0: the quick form keeps one title flow and explicit keyboard Inizio/Fine', () => {
   const f = form();
+  for (const preset of ['Lavoro', 'Università', 'Uscita']) assert.match(f, new RegExp(`data-us-calendar-preset="${preset}"`));
   assert.match(f, /id="usCalendarTitleInput"/);
   assert.match(f, /id="usCalendarAllDayInput"/);
-  assert.match(f, /id="usCalendarTimeInput"/);
-  assert.match(f, /id="usCalendarDateField"[^>]*hidden/, 'Giorno starts hidden: create uses the tapped day');
+  assert.match(f, /id="usCalendarStartTimeInput"[^>]*inputmode="numeric"/);
+  assert.match(f, /id="usCalendarEndTimeInput"[^>]*inputmode="numeric"/);
+  assert.doesNotMatch(f, /type="time"/);
+  assert.match(f, /id="usCalendarDateField"[^>]*hidden/);
   for (const gone of [/Quanto dura/, /Ricordamelo/, /Ricorda a/, /Una nota/, /usCalendarNoteInput/, /usCalendarKindPicker/, /data-us-cal-duration/, /data-us-cal-reminder/]) {
     assert.doesNotMatch(f, gone);
   }
-  assert.doesNotMatch(html(), /id="usCalendarAddBtn"|us-cal-fab/, 'no floating +');
+  assert.doesNotMatch(html(), /id="usCalendarAddBtn"|us-cal-fab/);
   assert.doesNotMatch(css(), /\.us-cal-fab|\.us-cal-kind-picker|\.us-cal-reminder-picker/);
   assert.match(js(), /if \(dateField\) dateField\.hidden = mode !== 'edit';/);
 });

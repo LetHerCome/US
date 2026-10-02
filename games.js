@@ -204,7 +204,7 @@ function renderHub() {
     </button>`;
   }).join('');
   const invite = !filters.length && pvState === 'idle'
-    ? '<p class="us-gv2-invite">Scegliete un gioco. Bastano pochi minuti.</p>'
+    ? '<p class="us-gv2-entry-note">Scegliete un gioco. Bastano pochi minuti.</p>'
     : '';
   root.innerHTML = `
     <header class="us-gv2-head"><h2>Gioca</h2>${rhythmStrip()}</header>

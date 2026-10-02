@@ -90,7 +90,7 @@ test('M11B client: hub shows Per voi, the six modes and the weekly turn, with no
   const h = harness({ homeState: home({ weekly: weekly({ my_turn: true }) }) });
   await tick();
   const html = h.nodes.quizHub.innerHTML;
-  assert.match(html, /<b>Per voi<\/b><small>Cinque domande<\/small>/);
+  assert.match(html, /<b>Per voi<\/b><small>5 domande scelte per voi<\/small>/);
   for (const name of ['Scopritevi', 'Confrontatevi', 'Ridete', 'Quanto mi conosci\\?', 'Rivivete', 'E se…\\?']) assert.match(html, new RegExp(name));
   assert.match(html, /<b>Tocca a te<\/b>/);
   assert.match(html, /Crea la domanda/);

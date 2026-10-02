@@ -268,7 +268,7 @@ test('M7B fix: la Quest settimanale non si presenta più come una seconda "Da vi
 test('M7B fix (M9D): Da vivere è una superficie focalizzata del hub Noi, senza scroll di pagina — scorre solo la lista idee', () => {
   const main = bondMain();
   assert.ok(main.indexOf('noi-idea-section') >= 0 && main.indexOf('noi-living-section') >= 0, 'both surfaces must still exist in the Noi markup');
-  assert.match(main, /data-noi-open="da-vivere"/, 'the hub card opens Da vivere');
+  assert.doesNotMatch(main.match(/<nav class="noi-hub" id="noiHub"[\s\S]*?<\/nav>/)?.[0] || '', /data-noi-open="da-vivere"/, 'Da vivere is no longer advertised in the 1.0 hub');
   const css = read('styles.css');
   assert.match(css, /\.noi-canonical-page\{[^}]*overflow:hidden/);
   assert.doesNotMatch(css, /\.noi-idea-section\s*\{[^}]*overflow-y\s*:\s*auto/i, 'the Da vivere section itself never scrolls as a whole');

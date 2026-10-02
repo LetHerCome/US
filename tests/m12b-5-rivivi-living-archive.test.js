@@ -167,6 +167,10 @@ test('M12B.5 selection: consecutive days rotate (also across a month boundary), 
   }
 });
 
+test('US 1.0 presentation: Ricordi paints Rivivi only for a true anniversary', () => {
+  assert.match(CORE, /const riviviPick=ricordiPickRivivi\(timeline,today\);\s*renderRicordiRivivi\(riviviPick\?\.reason==='anniversary'\?riviviPick:null,signedUrls,names\);/);
+});
+
 test('M12B.5 selection: only recent history, or nothing, gives no Rivivi (never filler)', () => {
   const { api } = load();
   assert.equal(api.pickRivivi(api.timeline([m('m1', '2026-09-10')], [lived('b1', 'X', '2026-09-20T10:00:00Z')], [], [], []), TODAY), null);

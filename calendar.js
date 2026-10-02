@@ -278,21 +278,22 @@ function addClockMinutes(value, minutes = US_CALENDAR_DEFAULT_DURATION_MINUTES) 
   const normalized = normalizeQuickTime(value);
   if (!normalized) return '';
   const [h, m] = normalized.split(':').map(Number);
-  const total = (h * 60 + m + minutes) % 1440;
+  const total = h * 60 + m + minutes;
+  if (total >= 1440) return '';
   return `${pad2(Math.floor(total / 60))}:${pad2(total % 60)}`;
 }
 
-// Duration from two local clock times. An end earlier than the start means the
-// activity crosses midnight (23:30 → 01:00 = 90 min); equal times are invalid.
+// Duration from two local clock times. Keep the existing calendar invariant:
+// a timed quick entry ends later on the same local day.
 function durationMinutesFromTimes(startHHMM, endHHMM) {
   const startValue = normalizeQuickTime(startHHMM);
   const endValue = normalizeQuickTime(endHHMM);
-  if (!startValue || !endValue || startValue === endValue) return null;
+  if (!startValue || !endValue) return null;
   const [sh, sm] = startValue.split(':').map(Number);
   const [eh, em] = endValue.split(':').map(Number);
   const start = sh * 60 + sm;
   const end = eh * 60 + em;
-  const diff = end > start ? end - start : (1440 - start) + end;
+  const diff = end - start;
   return diff > 0 ? diff : null;
 }
 
@@ -379,7 +380,9 @@ function canEditEntry(entry, viewerId) {
 // platform clock picker; validation remains strict and server timestamps stay canonical.
 function quickEntryError({ allDay, startTime, endTime, time }) {
   if (allDay) return null;
-  const start = normalizeQuickTime(startTime || time);
+  const usesExplicitRange = startTime !== undefined || endTime !== undefined;
+  if (!usesExplicitRange) return normalizeQuickTime(time) ? null : 'time';
+  const start = normalizeQuickTime(startTime);
   const end = normalizeQuickTime(endTime);
   if (!start) return 'start';
   if (!end) return 'end';
@@ -1074,12 +1077,17 @@ function renderFormDay(dateISO, mode) {
 }
 function setFormStatus(msg) { const el = $('usCalendarFormStatus'); if (el) el.textContent = msg; }
 
-const CALENDAR_TITLE_PRESETS = Object.freeze(['Lavoro', 'Università', 'Uscita']);
+const CALENDAR_TITLE_PRESETS = Object.freeze([
+  { id: 'usCalendarPresetWork', title: 'Lavoro' },
+  { id: 'usCalendarPresetUniversity', title: 'Università' },
+  { id: 'usCalendarPresetOut', title: 'Uscita' }
+]);
 function syncCalendarPresetState() {
   const title = $('usCalendarTitleInput')?.value.trim() || '';
-  document.querySelectorAll('[data-us-calendar-preset]').forEach((button) => {
-    button.setAttribute('aria-pressed', String(button.dataset.usCalendarPreset === title));
-  });
+  for (const preset of CALENDAR_TITLE_PRESETS) {
+    const button = $(preset.id);
+    if (button) button.setAttribute('aria-pressed', String(preset.title === title));
+  }
 }
 function normalizeTimeField(id) {
   const input = $(id);
@@ -1381,13 +1389,15 @@ $('usCalendarDetailDelete')?.addEventListener('click', deleteEntry);
 $('usCalendarFormClose')?.addEventListener('click', closeCalendarFormSheet);
 $('usCalendarFormBackdrop')?.addEventListener('click', closeCalendarFormSheet);
 $('usCalendarAllDayInput')?.addEventListener('change', toggleAllDayFields);
-document.querySelectorAll('[data-us-calendar-preset]').forEach((button) => button.addEventListener('click', () => {
-  const input = $('usCalendarTitleInput');
-  if (!input) return;
-  input.value = button.dataset.usCalendarPreset || '';
-  syncCalendarPresetState();
-  input.focus({ preventScroll: true });
-}));
+for (const preset of CALENDAR_TITLE_PRESETS) {
+  $(preset.id)?.addEventListener('click', () => {
+    const input = $('usCalendarTitleInput');
+    if (!input) return;
+    input.value = preset.title;
+    syncCalendarPresetState();
+    input.focus({ preventScroll: true });
+  });
+}
 $('usCalendarTitleInput')?.addEventListener('input', syncCalendarPresetState);
 $('usCalendarStartTimeInput')?.addEventListener('blur', fillDefaultEndFromStart);
 $('usCalendarEndTimeInput')?.addEventListener('blur', () => normalizeTimeField('usCalendarEndTimeInput'));

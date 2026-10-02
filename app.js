@@ -2396,9 +2396,9 @@ function ricordiTimeline(moments,lived,kept,events,provenance){
 }
 function ricordiPeriodKey(dateISO){return dateISO.slice(0,7);}
 function ricordiPeriodLabel(dateISO){const [y,m]=dateISO.split('-');return {month:RICORDI_MONTHS[Number(m)-1]||'',year:y};}
-// Rivivi: consuma le stesse voci della storia (stessa verità di Capitoli),
-// ma compare soltanto quando c'è un anniversario reale: stesso periodo
-// dell'anno (±3 giorni) in un anno passato. Nessun riempitivo quotidiano.
+// Rivivi selector: keeps the archive's deterministic historical selection
+// contract. The 1.0 surface applies a stricter presentation gate in hydrate:
+// only a true anniversary is shown to the couple.
 function ricordiPickRivivi(entries,todayISO){
   const rows=(entries||[]).filter(e=>e?.sourceKey&&/^\d{4}-\d{2}-\d{2}$/.test(String(e.date||''))&&e.date<todayISO);
   if(!rows.length)return null;
@@ -2412,7 +2412,14 @@ function ricordiPickRivivi(entries,todayISO){
     if(off<=3&&(!best||off<best.off||(off===best.off&&(years<best.years||(years===best.years&&e.sourceKey<best.entry.sourceKey)))))best={entry:e,off,years};
   }
   if(best)return {entry:best.entry,row:best.entry.row,reason:'anniversary',label:best.years===1?'Un anno fa, in questi giorni':`${best.years} anni fa, in questi giorni`};
-  return null;
+  const older=rows.filter(e=>ricordiDayDiff(todayISO,e.date)>=30).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:(a.sourceKey<b.sourceKey?-1:1));
+  if(!older.length)return null;
+  const dayIndex=Math.max(0,ricordiDayDiff(todayISO,'1970-01-01'));
+  const entry=older[dayIndex%older.length];
+  const days=ricordiDayDiff(todayISO,entry.date);
+  const months=Math.floor(days/30.44);
+  const label=days>=365?(Math.floor(days/365)===1?'Un anno fa':`${Math.floor(days/365)} anni fa`):(months<=1?'Un mese fa':`${months} mesi fa`);
+  return {entry,row:entry.row,reason:'resurface',label};
 }
 // Capitoli: raccolte secondarie per anno, contate sulle stesse voci (una
 // esperienza con la sua foto conta una volta), copertina = foto più recente.
@@ -2595,7 +2602,8 @@ async function hydrateMomentsCore(){
   if(timeline.length){
     grid.innerHTML=html.join('');grid.dataset.loaded='1';grid.dataset.signature=signature;
     consumeFreshRicordo(grid);
-    renderRicordiRivivi(ricordiPickRivivi(timeline,today),signedUrls,names);
+    const riviviPick=ricordiPickRivivi(timeline,today);
+    renderRicordiRivivi(riviviPick?.reason==='anniversary'?riviviPick:null,signedUrls,names);
     renderRicordiChapters(ricordiChapters(timeline),signedUrls);
   }
   else if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">!</div><b>Foto non disponibili</b><p>Riprova tra un momento.</p></div>';
