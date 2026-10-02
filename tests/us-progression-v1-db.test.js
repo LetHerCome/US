@@ -167,7 +167,7 @@ test('Progression V1: pending unlock is per person; equip requires an unlocked r
   await asUser(db,f,()=>db.query("select public.equip_progression_reward('frame_glow')"));
   sb=await state(db,b);
   assert.equal(sb.preferences.frame_reward_id,null,'clicking the equipped reward unequips it for the couple');
-  assert.equal(sb.rewards.find(r=>r.id==='frame_glow').equipped,false);
+  assert.equal(Boolean(sb.rewards.find(r=>r.id==='frame_glow').equipped),false);
 
   await asUser(db,f,()=>db.query("select public.equip_progression_reward('frame_glow')"));
   sb=await state(db,b);
