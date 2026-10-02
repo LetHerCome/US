@@ -1,4 +1,4 @@
-const BUILD_ID = "us-noi-liquid-v1-20261002-1";
+const BUILD_ID = "us-left-voice-v1-20261002-4";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
