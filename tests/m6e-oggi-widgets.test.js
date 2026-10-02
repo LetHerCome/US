@@ -67,6 +67,11 @@ test('M6E (2): both partners with events today composes an events fact naming bo
   assert.match(fact.detail, /Francesco/);
   assert.match(fact.detail, /Cena/);
   assert.match(fact.detail, /Palestra/);
+  assert.deepEqual(fact.rows.map(({ kind, label, value }) => ({ kind, label, value })), [
+    { kind: 'person', label: 'Beatrice', value: 'Cena 20:00–22:00' },
+    { kind: 'person', label: 'Francesco', value: 'Palestra 18:00–19:00' },
+    { kind: 'together', label: 'Insieme', value: '09:00 – 18:00' }
+  ]);
 });
 
 test('M6E (3): a fully double-booked day with no shared window composes a next-together fact from the forward scan', () => {
@@ -217,10 +222,24 @@ test('M6E (9): the widget renders a tappable card that carries the fact\'s date,
   assert.equal(rt.widget.hidden, true);
   assert.equal(rt.widget.innerHTML, '');
 
-  rt.window.UsOggiCalendarWidget?.render?.({ type: 'events', title: 'Oggi', detail: 'Beatrice: Cena 20:00–22:00', dateISO: '2026-09-29' });
+  rt.window.UsOggiCalendarWidget?.render?.({
+    type: 'events',
+    title: 'Oggi',
+    detail: 'Beatrice: Cena 20:00–22:00',
+    rows: [
+      { kind: 'person', label: 'Beatrice', value: 'Cena 20:00–22:00' },
+      { kind: 'person', label: 'Francesco', value: 'Nessun impegno' },
+      { kind: 'together', label: 'Insieme', value: 'dopo le 22:00' }
+    ],
+    dateISO: '2026-09-29'
+  });
   assert.equal(rt.widget.hidden, false);
   assert.match(rt.widget.innerHTML, /data-us-oggi-date="2026-09-29"/);
-  assert.match(rt.widget.innerHTML, /Cena/);
+  assert.match(rt.widget.innerHTML, /us-oggi-card-lines/);
+  assert.match(rt.widget.innerHTML, /Beatrice/);
+  assert.match(rt.widget.innerHTML, /Francesco/);
+  assert.match(rt.widget.innerHTML, /Insieme/);
+  assert.match(rt.widget.innerHTML, /Nessun impegno/);
 });
 
 test('M6E (10): tapping the rendered widget opens the Calendar on the exact date carried by the fact', () => {
