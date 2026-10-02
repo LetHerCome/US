@@ -198,31 +198,53 @@
 .left-for-you-vn-mic{
   position:relative;
   display:block;
-  width:21px;
-  height:21px;
-  flex:0 0 21px;
+  width:20px;
+  height:20px;
+  flex:0 0 20px;
 }
 .left-for-you-vn-mic::before{
   content:"";
   position:absolute;
-  left:7px;
+  left:50%;
   top:1px;
   width:7px;
-  height:12px;
+  height:11px;
   border-radius:5px;
   background:currentColor;
+  transform:translateX(-50%);
 }
 .left-for-you-vn-mic::after{
   content:"";
   position:absolute;
-  left:4px;
-  top:9px;
-  width:11px;
+  left:50%;
+  top:8px;
+  width:12px;
   height:8px;
   border:2px solid currentColor;
   border-top:0;
   border-radius:0 0 8px 8px;
-  box-shadow:4px 6px 0 -3px currentColor;
+  transform:translateX(-50%);
+}
+.left-for-you-vn-mic i{
+  position:absolute;
+  left:50%;
+  top:15px;
+  width:2px;
+  height:4px;
+  border-radius:999px;
+  background:currentColor;
+  transform:translateX(-50%);
+}
+.left-for-you-vn-mic i::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:0;
+  width:8px;
+  height:2px;
+  border-radius:999px;
+  background:currentColor;
+  transform:translate(-50%,2px);
 }
 .left-for-you-vn-rec{
   gap:9px;
@@ -342,6 +364,11 @@
   display:block;
   width:20px;
   height:20px;
+  transform:translateX(1px);
+  transition:transform 220ms cubic-bezier(.2,.8,.2,1);
+}
+.left-for-you-vn-play[data-playing="true"] .left-for-you-vn-playmark{
+  transform:translateX(0);
 }
 .left-for-you-vn-playmark i{
   position:absolute;
@@ -488,6 +515,11 @@
   stroke-width:1.8;
   stroke-linejoin:round;
   stroke-linecap:round;
+  transform:translateX(1px);
+  transition:transform 220ms cubic-bezier(.2,.8,.2,1);
+}
+.left-for-you-step-player[data-playing="true"] .left-for-you-spl-go svg{
+  transform:translateX(0);
 }
 .left-for-you-spl-time{
   color:var(--us-color-text-3);
