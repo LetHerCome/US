@@ -63,7 +63,7 @@ function harness({ owner = 'me', partnerPhotos = [], commitResult = true } = {})
     document: doc,
     usProfile: { id: 'me', couple_id: 'c' },
     usGetSignedUrls: async (paths) => new Map(paths.map((p) => [p, `signed:${p}`])),
-    usCommitMomentDeletion: async (id, p) => { commits.push({ id, path: p }); return commitResult; },
+    usCommitMomentDeletion: async (id) => { commits.push({ id }); return commitResult; },
     UsFeedback: { action() {} }
   };
   const context = {
@@ -84,7 +84,7 @@ function harness({ owner = 'me', partnerPhotos = [], commitResult = true } = {})
   return { window, el, card, commits, toasts, timers, doc, fireGrace, open: () => window.openUsMomentAlbum(card) };
 }
 
-test('Ricordi delete: own cover-only Moment shows Elimina; partner Moment never does', async () => {
+test('Ricordi delete: own Moment always shows Elimina; partner Moment never does', async () => {
   const own = harness();
   await own.open();
   assert.equal(own.el('usAlbumDelete').hidden, false);
@@ -92,13 +92,13 @@ test('Ricordi delete: own cover-only Moment shows Elimina; partner Moment never 
 
   const partner = harness({ owner: 'partner' });
   await partner.open();
-  assert.equal(partner.el('usAlbumDelete').hidden, true, 'RLS forbids it, so the UI never offers it');
+  assert.equal(partner.el('usAlbumDelete').hidden, true, 'only the Moment creator can delete the whole Moment');
   partner.el('usAlbumDeleteGo').click();
   assert.equal(partner.window.USRicordiDelete.pending(), null);
 
   const album = harness({ partnerPhotos: [{ id: 'p1', moment_id: 'm1', created_by: 'partner', storage_path: 'c/partner/x.webp', position: 1 }] });
   await album.open();
-  assert.equal(album.el('usAlbumDelete').hidden, true, 'a Moment holding the partner\'s album photos cannot be deleted here');
+  assert.equal(album.el('usAlbumDelete').hidden, false, 'partner-added album photos must not hide deletion of the creator-owned Moment');
 });
 
 test('Ricordi delete: Elimina only starts a grace period — nothing is deleted, no modal, no toast', async () => {
@@ -134,7 +134,7 @@ test('Ricordi delete: grace expiry commits exactly once, then the viewer closes'
   h.el('usAlbumDeleteGo').click();
   h.el('usAlbumDeleteGo').click();
   await h.fireGrace();
-  assert.deepEqual(h.commits, [{ id: 'm1', path: 'c/me/moments/m1.webp' }]);
+  assert.deepEqual(h.commits, [{ id: 'm1' }]);
   assert.equal(h.window.USRicordiDelete.pending(), null);
   assert.equal(h.el('usAlbumOverlay').classList.contains('show'), false);
   assert.deepEqual(h.toasts, [], 'no success toast');
@@ -151,45 +151,52 @@ test('Ricordi delete: a failed commit restores the photo and the control', async
   assert.equal(h.toasts.length, 1, 'only failure speaks');
 });
 
-test('Ricordi delete commit: row first (own row proven by .select), then Storage API, then dependent surfaces', async () => {
+test('Ricordi delete commit: frontend invokes authenticated delete-moment then refreshes dependent surfaces', async () => {
   const order = [];
-  const makeDelete = (rows, error = null) => {
-    const q = { delete: () => { order.push('moments.delete'); return q; }, eq: (col, v) => { order.push(`eq:${col}=${v}`); return q; }, select: (cols) => { order.push(`select:${cols}`); return Promise.resolve({ data: rows, error }); } };
-    return q;
-  };
-  const run = async (rows, error) => {
+  const invokes = [];
+  const run = async ({ data = { deleted: true, storage_cleanup: true }, error = null } = {}) => {
     order.length = 0;
+    invokes.length = 0;
     const ctx = {
       window: { usProfile: { id: 'me' } }, console: { warn() {} },
-      sb: { from: (t) => { order.push(`from:${t}`); return makeDelete(rows, error); }, storage: { from: (b) => ({ remove: async (paths) => { order.push(`storage:${b}:${paths.join(',')}`); return { error: null }; } }) } },
+      sb: { functions: { invoke: async (name, options) => { invokes.push({ name, options }); return { data, error }; } } },
       hydrateMoments: async () => order.push('hydrateMoments'),
       hydrateHomeMemory: async () => order.push('hydrateHomeMemory'),
       hydrateHomePhoto: async () => order.push('hydrateHomePhoto'),
-      homePhotoPath: 'c/me/moments/m1.webp'
+      homePhotoPath: 'old-path'
     };
-    vm.runInNewContext(`${COMMIT}\nthis.result = commitMomentDeletion('m1','c/me/moments/m1.webp');`, ctx);
+    vm.runInNewContext(`${COMMIT}\nthis.result = commitMomentDeletion('m1');`, ctx);
     return ctx.result;
   };
-  assert.equal(await run([{ id: 'm1' }]), true);
-  assert.deepEqual(order, ['from:moments', 'moments.delete', 'eq:id=m1', 'eq:created_by=me', 'select:id', 'storage:us-media:c/me/moments/m1.webp', 'hydrateMoments', 'hydrateHomeMemory', 'hydrateHomePhoto']);
-  assert.equal(await run([]), false, 'RLS that silently deletes nothing is a failure');
-  assert.ok(!order.some((o) => o.startsWith('storage:')), 'storage is never touched if the row survived');
-  assert.equal(await run(null, { message: 'denied' }), false);
+
+  assert.equal(await run(), true);
+  assert.deepEqual(invokes, [{ name: 'delete-moment', options: { body: { moment_id: 'm1' } } }]);
+  assert.deepEqual(order, ['hydrateMoments', 'hydrateHomeMemory', 'hydrateHomePhoto']);
+  assert.doesNotMatch(COMMIT, /\.from\('moments'\)|storage\.from\('us-media'\)/, 'privileged whole-Moment deletion must not live in the browser');
+
+  assert.equal(await run({ data: null, error: { message: 'denied' } }), false);
+  assert.deepEqual(order, [], 'failed deletion does not pretend the UI was refreshed');
+  assert.equal(await run({ data: { deleted: false }, error: null }), false);
 });
 
-test('Ricordi delete: no service role, no SQL storage deletes, legacy confirm path removed', () => {
+test('Ricordi delete: visible action, no client secret, no SQL storage deletes, legacy confirm path removed', () => {
   const albums = read('moments-albums.js');
   const app = read('app.js');
   const css = read('moments-albums.css');
-  assert.doesNotMatch(albums + app, /service_role|storage\.objects/);
+  const styles = read('styles.css');
+  assert.doesNotMatch(albums + app, /service_role|SUPABASE_SECRET|storage\.objects/);
   assert.doesNotMatch(app, /title:'Eliminare questo ricordo\?'/);
   assert.doesNotMatch(app, /toast\('Ricordo eliminato'\)/);
+  assert.match(app, /aria-label="Elimina ricordo"[^>]*>Elimina<\/button>/);
+  assert.match(app, /sb\.functions\.invoke\('delete-moment'/);
+  assert.match(styles, /\.moment-delete\{[^}]*min-width:68px/);
   assert.match(albums, /const DELETE_GRACE_MS=4000/);
+  assert.match(albums, /currentAlbum\.owner===window\.usProfile\.id&&albumLoaded\)/);
+  assert.doesNotMatch(albums, /albumRows\.length===0/);
   assert.match(albums, />Elimina</);
   assert.match(albums, />Eliminato</);
   assert.match(albums, />Annulla</);
   assert.match(css, /\.us-undo-delete\{[^}]*width:112px[^}]*height:44px/);
   assert.match(css, /\.us-undo-delete\[data-state="done"\],\.us-undo-delete\[data-state="committing"\]\{width:206px/);
   assert.match(css, /@keyframes us-undo-fuse/);
-  assert.match(app, /data-storage-path="\$\{escapeHtml\(row\.storage_path\)\}"/);
 });
