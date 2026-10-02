@@ -1,4 +1,4 @@
-const BUILD_ID = "us-auth-first-run-v1-20261002-1";
+const BUILD_ID = "us-qa1-pwa-shell-v1-20261002-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
