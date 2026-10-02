@@ -976,13 +976,13 @@
       }
     }
     paintVoiceWave(document.getElementById('leftForYouComposerAudioWave'), []);
-    composer.recordingVisualizer = setInterval(() => {
+    composer.recordingVisualizer = typeof setInterval === 'function' ? setInterval(() => {
       if (composer.recordingAnalyser) sampleRecordingLevel();
       else if (composer.recordingState === 'recording') {
         composer.recordingLevels.push(0.08);
         paintVoiceWave(document.getElementById('leftForYouComposerAudioWave'), composer.recordingLevels.slice(-VOICE_NOTE_BARS));
       }
-    }, VOICE_SAMPLE_MS);
+    }, VOICE_SAMPLE_MS) : null;
   }
 
   function updateRecordingTimer() {
@@ -995,7 +995,7 @@
     if (composer.previewRaf) cancelAnimationFrame(composer.previewRaf);
     composer.previewRaf = 0;
     const preview = document.getElementById('leftForYouComposerAudioPreview');
-    if (preview && !preview.paused) preview.pause();
+    if (preview && !preview.paused && typeof preview.pause === 'function') preview.pause();
   }
 
   function paintComposerPreview() {
