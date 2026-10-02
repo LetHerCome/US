@@ -61,10 +61,10 @@ test('Gioca hub: no page header prose, no separate in-progress list, one week st
   assert.equal((html.match(/us-gv2-rhythm"/g) || []).length, 1);
 });
 
-test('Gioca hub: a spent week says it once, in the strip, and locks the tiles with an icon', async () => {
+test('Gioca hub: a spent week stays compact and locks unplayed tiles with an icon', async () => {
   const html = await hub(homeOf({ per_voi: { state: 'played', session_id: 'p' },
     allowance: allowance({ used: 3, per_voi_used: 1, free_used: 2, per_voi_available: false, free_available: false, families: { per_voi: { session_id: 'p', completed: true } } }) })).html();
-  assert.equal((html.match(/Nuovi giochi lunedì/g) || []).length, 1);
+  assert.doesNotMatch(html, /Nuovi giochi lunedì/, 'the hub does not duplicate exhaustion prose; tiles carry the state');
   assert.match(html, /data-gv2-family="scopritevi" data-gv2-mode-state="locked" aria-disabled="true"[\s\S]*?data-gv2-icon="lock-simple"/);
   assert.match(html, /<small class="us-gv2-mode-state"><span class="us-gv2-icon" data-gv2-icon="lock-simple" aria-hidden="true"><\/span>Lunedì<\/small>/);
 });

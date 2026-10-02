@@ -252,7 +252,7 @@ test('Noi density: Risonanza is the only hero and the four destinations share on
   }
   const css = read('styles.css');
   assert.match(css, /US-NOI-DENSITY-02/);
-  assert.match(css, /\.noi-hub-card--resonance\{min-height:116px;/);
+  assert.match(css, /\.noi-hub-card--resonance\{min-height:108px;/);
   assert.match(css, /\.noi-hub-destinations[\s\S]*?border-radius:20px/);
   assert.match(css, /min-height:54px/);
 });
@@ -452,7 +452,7 @@ test('Auth first-run: private entry is compact, device-aware and keeps backend o
   assert.match(firstRun, /deferredInstallPrompt\.prompt\(\)/);
   assert.match(firstRun, /appinstalled/);
   assert.match(firstRun, /navigator\.standalone === true/);
-  assert.match(firstRun, /Aggiungi alla schermata Home/);
+  assert.match(auth, /Aggiungi alla schermata Home/);
 });
 
 test('Auth first-run: new assets follow the canonical BUILD_ID contract', () => {

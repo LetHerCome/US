@@ -6,7 +6,10 @@ const vm = require('node:vm');
 
 const ROOT = path.resolve(__dirname, '..');
 const ORIGIN = 'https://us.example.test';
-const CURRENT_SHELL = 'us-shell-static-runtime-52';
+const WORKER_SOURCE = fs.readFileSync(path.join(ROOT, 'service-worker.js'), 'utf8');
+const CURRENT_BUILD = WORKER_SOURCE.match(/const BUILD_ID = "([^"]+)";/)?.[1];
+assert.ok(CURRENT_BUILD, 'service-worker BUILD_ID not found');
+const CURRENT_SHELL = `us-shell-${CURRENT_BUILD}`;
 
 function readRequiredRuntimeFile(name) {
   const file = path.join(ROOT, name);
@@ -20,7 +23,7 @@ function cacheKey(input) {
 }
 
 function createServiceWorkerHarness({ failPrecachePath = null } = {}) {
-  const source = fs.readFileSync(path.join(ROOT, 'service-worker.js'), 'utf8');
+  const source = WORKER_SOURCE;
   const listeners = new Map();
   const cacheBuckets = new Map();
   const deletedCaches = [];
@@ -108,12 +111,18 @@ function createServiceWorkerHarness({ failPrecachePath = null } = {}) {
     async skipWaiting() { skipWaitingCalls += 1; }
   };
 
+  class AbsoluteRequest extends Request {
+    constructor(input, init) {
+      super(typeof input === 'string' ? new URL(input, ORIGIN).href : input, init);
+    }
+  }
+
   const context = vm.createContext({
     self,
     caches,
     fetch: async (input) => responseFor(input),
     URL,
-    Request,
+    Request: AbsoluteRequest,
     Response,
     console
   });
@@ -288,7 +297,7 @@ test('/app.js viene servito dal service worker senza trasformazioni', async () =
   const harness = createServiceWorkerHarness();
 
   await harness.dispatchExtendable('install');
-  const response = await harness.dispatchFetch('/app.js');
+  const response = await harness.dispatchFetch(`/app.js?v=${CURRENT_BUILD}`);
 
   assert.equal(await response.text(), harness.rawApp);
 });
@@ -458,14 +467,15 @@ test('installazione pulita precachea l’intero runtime statico prima di skipWai
   await harness.dispatchExtendable('install');
 
   const shell = harness.cacheBuckets.get(CURRENT_SHELL);
-  assert.ok(shell.has(`${ORIGIN}/auth-storage.js`));
-  assert.ok(shell.has(`${ORIGIN}/app.js`));
-  assert.ok(shell.has(`${ORIGIN}/stories.js`));
-  assert.ok(shell.has(`${ORIGIN}/stories.css`));
-  assert.ok(shell.has(`${ORIGIN}/ui-foundation.css`));
-  assert.ok(shell.has(`${ORIGIN}/ui-foundation.js`));
-  assert.ok(shell.has(`${ORIGIN}/platform.js`));
-  assert.ok(shell.has(`${ORIGIN}/ti-penso-widget.js`));
+  const v = (path) => `${ORIGIN}${path}?v=${CURRENT_BUILD}`;
+  assert.ok(shell.has(v('/auth-storage.js')));
+  assert.ok(shell.has(v('/app.js')));
+  assert.ok(shell.has(v('/stories.js')));
+  assert.ok(shell.has(v('/stories.css')));
+  assert.ok(shell.has(v('/ui-foundation.css')));
+  assert.ok(shell.has(v('/ui-foundation.js')));
+  assert.ok(shell.has(v('/platform.js')));
+  assert.ok(shell.has(v('/ti-penso-widget.js')));
   assert.ok(shell.has(`${ORIGIN}/assets/third-party/spotify/spotify-full-logo-white.svg`));
   assert.equal(harness.skipWaitingCalls, 1);
 });
@@ -509,9 +519,9 @@ test('reload offline usa index e runtime della nuova shell cache', async () => {
   harness.setOnline(false);
 
   const documentResponse = await harness.dispatchFetch('/home', { mode: 'navigate' });
-  const appResponse = await harness.dispatchFetch('/app.js');
-  const storiesResponse = await harness.dispatchFetch('/stories.js');
-  const storiesCssResponse = await harness.dispatchFetch('/stories.css');
+  const appResponse = await harness.dispatchFetch(`/app.js?v=${CURRENT_BUILD}`);
+  const storiesResponse = await harness.dispatchFetch(`/stories.js?v=${CURRENT_BUILD}`);
+  const storiesCssResponse = await harness.dispatchFetch(`/stories.css?v=${CURRENT_BUILD}`);
 
   assert.equal(await documentResponse.text(), 'asset:/index.html');
   assert.equal(await appResponse.text(), harness.rawApp);

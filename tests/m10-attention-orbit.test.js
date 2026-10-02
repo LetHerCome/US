@@ -181,8 +181,9 @@ test('M10E.3: solo un Ti penso ricevuto e non gestito accende l’orbit; impegni
   assert.match(app, /arrivalType:'think-received',\s*category:'received_ready',[\s\S]{0,200}attention:true/);
   // Calendar widget, distance, push opt-in, empty state, memories: never hosts.
   const hosts = [...html.matchAll(/<[^>]+class="[^"]*us-attention-orbit[^"]*"[^>]*>/g)].map((m) => m[0].match(/id="([^"]+)"/)?.[1]);
-  // M11B adds the top Per voi control: personal ("tocca a te" / reveal ready), server-derived.
-  assert.deepEqual(hosts.sort(), ['leftForYouPartnerEntry', 'usDailyRitual', 'usPerVoiTop']);
+  // Per voi is dynamically rendered inside Gioca and is covered by the Game V2 attention contract.
+  // Static/global attention hosts remain only the envelope and Daily Ritual.
+  assert.deepEqual(hosts.sort(), ['leftForYouPartnerEntry', 'usDailyRitual']);
   for (const passive of ['renderOggiCalendarWidget', 'function renderHomeMoment', 'function refreshMyLocation']) {
     const at = app.indexOf(passive);
     if (at >= 0) assert.doesNotMatch(app.slice(at, at + 1500), /us-attention-orbit|usAttention/);
