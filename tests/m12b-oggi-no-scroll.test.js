@@ -77,9 +77,9 @@ async function measure(page) {
     const top = box(document.querySelector('.top.us-premium-top'));
     const nav = box(document.querySelector('.nav'));
     // Oggi surfaces: the stack cards, the empty state, the bottom row.
-    const surfaceIds = ['usTodayPriorityRegion', 'usOggiCalendarWidget', 'usDailyRitual', 'usDailyRevealLink', 'homeEmptyState', 'distanceWidget', 'pushOptInCard', 'thinkButton'];
+    const surfaceIds = ['usTodayPriorityRegion', 'usOggiCalendarWidget', 'usDailyRitual', 'usDailyRevealLink', 'homeEmptyState', 'distanceWidget', 'pushOptInCard'];
     const surfaces = surfaceIds.map((id) => document.getElementById(id)).filter(visible).map((el) => ({ id: el.id, ...box(el) }));
-    const controls = [...document.querySelectorAll('#homeHero button, #homeHero a, #homeHero [role=button], #thinkButton')]
+    const controls = [...document.querySelectorAll('#homeHero button, #homeHero a, #homeHero [role=button]')]
       .filter((el) => el.id !== 'usOggiFocusToggle' && visible(el)).map((el) => ({ id: el.id || el.className, ...box(el) }));
     const slots = [...document.querySelectorAll('#homeHero [data-us-oggi-slot]')].filter(visible).map((el) => el.getAttribute('data-us-oggi-slot'));
     return {
