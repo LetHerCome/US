@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-static-runtime-60";
+const CACHE_NAME = "us-shell-static-runtime-61";
 const MEDIA_CACHE_NAME = "us-private-media-v1";
 
 const APP_SHELL = [
@@ -11,25 +11,25 @@ const APP_SHELL = [
   "/stories.js",
   "/stories.css",
   "/left-for-you.js",
-  "/left-for-you.css",
+  "/left-for-you.css?v=us-secondary-surfaces-v1-20261002-1",
   "/calendar-domain.js",
-  "/calendar.css",
+  "/calendar.css?v=us-secondary-surfaces-v1-20261002-1",
   "/calendar.js",
   "/assets/third-party/spotify/spotify-full-logo-white.svg",
-  "/styles.css?v=us-oggi-density-v1-20261002-1",
+  "/styles.css?v=us-secondary-surfaces-v1-20261002-1",
   "/ui-foundation.css",
   "/ui-foundation.js",
   "/fix4.css",
   "/fix4.js",
   "/fastboot2.js",
-  "/events.css",
+  "/events.css?v=us-secondary-surfaces-v1-20261002-1",
   "/events.js",
-  "/moments-albums.css?v=us-ricordi-density-v1-20261002-1",
+  "/moments-albums.css?v=us-secondary-surfaces-v1-20261002-1",
   "/moments-albums.js",
   "/navigation.js",
   "/games.css?v=us-gioca-density-v1-20261002-1",
   "/games.js?v=us-gioca-density-v1-20261002-1",
-  "/settings.css",
+  "/settings.css?v=us-secondary-surfaces-v1-20261002-1",
   "/settings.js",
   "/identity.css?v=us-shell-think-v1-20261002-1",
   "/identity.js",
