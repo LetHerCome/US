@@ -220,3 +220,11 @@ html.us-motion31-promoting .page.active.us-motion5-enter-prev{
    the inner card of the Daily sheet keeps a local (L2) treatment here. */
 .today-sheet .card{background:var(--us-glass-2-bg);border:var(--us-glass-2-border);box-shadow:var(--us-glass-inner-highlight)}
 .us-next-event{background:radial-gradient(circle at 90% 12%,rgba(169,133,255,.32),transparent 34%),radial-gradient(circle at 90% 90%,rgba(255,102,142,.22),transparent 38%),linear-gradient(150deg,rgba(255,255,255,.05),rgba(20,23,32,.42));border:var(--us-glass-inner-border);box-shadow:var(--us-glass-inner-highlight);-webkit-backdrop-filter:blur(12px) saturate(1.2);backdrop-filter:blur(12px) saturate(1.2)}
+
+
+/* ===== US-SHELL-THINK-01 · Ti penso is global top chrome, never page furniture ===== */
+body:has(#moments.page.active) .top.us-premium-top #thinkButton.us-top-think,
+body:has(#quiz.page.active) .top.us-premium-top #thinkButton.us-top-think,
+body:has(#settings.page.active) .top.us-premium-top #thinkButton.us-top-think{
+  display:grid!important;
+}
