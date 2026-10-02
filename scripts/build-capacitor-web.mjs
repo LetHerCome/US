@@ -116,8 +116,8 @@ html = html
   .replace(/<link\s+rel=["']dns-prefetch["']\s+href=["']\/\/cdn\.jsdelivr\.net["'][^>]*>\s*/i, '')
   .replace(`${sourceCdn}"></script>`, '/vendor/supabase.js"></script>')
   .replace(
-    '<script defer src="/platform.js"></script>',
-    '<script defer src="/native-entry.js"></script>\n<script defer src="/platform.js"></script>'
+    /(<script defer src="\/platform\.js(?:\?v=[^"]+)?"><\/script>)/,
+    '<script defer src="/native-entry.js"></script>\n$1'
   )
   .replace(
     /(<script\s+defer\s+src=["']\/left-for-you\.js[^>]*><\/script>)/i,
