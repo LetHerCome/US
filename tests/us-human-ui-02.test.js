@@ -233,6 +233,27 @@ test('Noi: the couple row reuses the existing avatar slots; Risonanza stays the 
   }
 });
 
+
+
+test('Noi density: Risonanza is the only hero and the four destinations share one compact surface', () => {
+  const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
+  const hub = bond.match(/<nav class="noi-hub" id="noiHub"[\s\S]*?<\/nav>/)?.[0] || '';
+  const group = hub.match(/<div class="noi-hub-destinations" role="group" aria-label="Voi">[\s\S]*?<\/div>/)?.[0] || '';
+  assert.match(hub, /noi-hub-card--resonance/);
+  assert.doesNotMatch(
+    hub.slice(0, hub.indexOf('noi-hub-destinations')),
+    /noi-hub-card--ideas|noi-hub-card--calendar|noi-hub-card--quest|noi-hub-card--events/
+  );
+  for (const kind of ['ideas', 'calendar', 'quest', 'events']) {
+    assert.match(group, new RegExp(`noi-hub-card--${kind}`), kind);
+  }
+  const css = read('styles.css');
+  assert.match(css, /US-NOI-DENSITY-01/);
+  assert.match(css, /\.noi-hub-card--resonance\{min-height:116px;/);
+  assert.match(css, /\.noi-hub-destinations[\s\S]*?border-radius:22px/);
+  assert.match(css, /min-height:56px/);
+});
+
 test('Quest: action paths are untouched (server-authoritative confirm / reroll)', () => {
   assert.match(app, /sb\.rpc\('confirm_bond_quest'/);
   assert.match(app, /sb\.rpc\('reroll_bond_quest'/);
