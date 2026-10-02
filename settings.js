@@ -590,13 +590,25 @@ async function action(name){
 }
 
 
+// Settings is never the launch surface: pre-fill it after the first Home
+// paint and its data instead of racing them. Opening Settings hydrates it on
+// demand anyway (go('settings')).
+function hydrateWhenHomeSettles(){
+  if(document.getElementById('settings')?.classList.contains('active'))return hydrateUsSettings();
+  const run=()=>hydrateUsSettings();
+  setTimeout(()=>{
+    if('requestIdleCallback' in window)requestIdleCallback(run,{timeout:2000});
+    else run();
+  },1500);
+}
+
 function boot(){
   document.querySelectorAll('[data-us-setting]').forEach(row=>row.addEventListener('click',()=>action(row.dataset.usSetting)));
   document.querySelectorAll('[data-us-settings-close]').forEach(el=>el.addEventListener('click',closeModal));
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('usSettingsOverlay')?.classList.contains('open'))closeModal();});
   const wait=setInterval(()=>{
     const heart=$('thinkButton');if(heart)heart.hidden=!window.usProfile;
-    if(window.usProfile){clearInterval(wait);hydrateUsSettings();}
+    if(window.usProfile){clearInterval(wait);hydrateWhenHomeSettles();}
   },250);
   setTimeout(()=>clearInterval(wait),30000);
 }
