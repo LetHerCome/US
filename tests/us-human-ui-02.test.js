@@ -233,6 +233,13 @@ test('Noi: the couple row reuses the existing avatar slots; Risonanza stays the 
   }
 });
 
+test('Noi visual hierarchy: only Risonanza keeps a decorated hero; secondary destinations are editorial rows', () => {
+  const css = read('styles.css');
+  assert.match(css, /\.noi-hub-card--resonance\{[\s\S]*?background:linear-gradient[\s\S]*?box-shadow:/);
+  assert.match(css, /\.noi-hub-card:not\(\.noi-hub-card--resonance\)\{[\s\S]*?border:0;[\s\S]*?border-top:1px solid[\s\S]*?background:transparent;[\s\S]*?box-shadow:none/);
+  assert.match(css, /\.noi-hub-card:not\(\.noi-hub-card--resonance\) \.noi-hub-icon\{[\s\S]*?background:transparent;[\s\S]*?box-shadow:none/);
+});
+
 test('Quest: action paths are untouched (server-authoritative confirm / reroll)', () => {
   assert.match(app, /sb\.rpc\('confirm_bond_quest'/);
   assert.match(app, /sb\.rpc\('reroll_bond_quest'/);
