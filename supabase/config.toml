@@ -35,3 +35,6 @@ verify_jwt = false
 
 [functions.spotify-search]
 verify_jwt = true
+
+[functions.delete-moment]
+verify_jwt = true
