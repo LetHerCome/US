@@ -52,7 +52,7 @@ test('top: the pill is only as tall as its 44px controls and content starts righ
   const tokens = read('ui-foundation.css');
   assert.match(tokens, /--us-top-chrome-height:46px;/);
   assert.match(tokens, /--us-top-chrome-clearance:56px;/);
-  assert.match(read('identity.css'), /\.top\.us-premium-top\{top:calc\(var\(--us-safe-top\) \+ 6px\);left:max\(20px,var\(--us-safe-left\)\);right:max\(20px,var\(--us-safe-right\)\);padding:0 1px!important;/);
+  assert.match(read('identity.css'), /\.top\.us-premium-top\{top:calc\(var\(--us-safe-top\) \+ 6px\);left:max\(34px,var\(--us-safe-left\)\);right:max\(34px,var\(--us-safe-right\)\);padding:0 1px!important;/);
   // Same three controls, no new permanent surface.
   const top = html.split('\n').find((line) => line.includes('<div class="top us-premium-top">')) || '';
   assert.match(top, /id="usPerVoiTop" onclick="window\.USGameV2\?\.openPerVoi\(\)"/);
