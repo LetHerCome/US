@@ -13,7 +13,8 @@
     "assets:widget": "node scripts/sync-approved-widget-assets.mjs",
     "prebuild:capacitor-web": "npm run assets:widget && npm run assets:web-brand",
     "build:capacitor-web": "node scripts/build-capacitor-web.mjs",
-    "visual-lab": "node scripts/visual-lab-server.mjs"
+    "visual-lab": "node scripts/visual-lab-server.mjs",
+    "build:cloudflare-pages": "node scripts/build-cloudflare-pages.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.5.0",
