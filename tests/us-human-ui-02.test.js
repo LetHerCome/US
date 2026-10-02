@@ -324,3 +324,17 @@ test('Gioca density: played Per voi, deck and weekly question use compact hub ge
   assert.match(css, /#quiz \.us-gv2-weekly\.is-open\{[\s\S]*?grid-template-columns:minmax\(0,1fr\) auto/);
   assert.match(css, /body:has\(#quiz\.page\.active\) #thinkButton\{display:none!important\}/);
 });
+
+
+test('Settings density: utility rows, couple card and footer stay compact without changing controls', () => {
+  const css = read('settings2.css');
+  assert.match(css, /US-SETTINGS-DENSITY-01/);
+  assert.match(css, /#settings \.us-settings2-row\{[\s\S]*?min-height:48px!important;/);
+  assert.match(css, /#settings \.us-settings2-icon\{[\s\S]*?width:28px;[\s\S]*?height:28px;/);
+  assert.match(css, /#settings \.us-couple-id-card\{[\s\S]*?padding:10px 11px;/);
+  assert.match(css, /body:has\(#settings\.page\.active\) #thinkButton\{\s*display:none!important;/);
+  const page = html.match(/<main id="settings"[\s\S]*?<\/main>/)?.[0] || '';
+  for (const name of ['profile-photo','notifications','location','distance','feedback','home-photo','scriptable-widgets','sync-status','relationship-date','story-archive']) {
+    assert.match(page, new RegExp(`data-us-setting="${name}"`), name);
+  }
+});
