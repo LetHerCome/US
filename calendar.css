@@ -220,3 +220,33 @@ body.us-cal-open{overflow:hidden}
 /* M12A — the Eventi entry sits next to Close in the Calendar head. */
 .us-cal-head-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
 .us-cal-events-link{min-height:44px;display:inline-flex;align-items:center;gap:6px;padding:0 14px;border-radius:999px;border:1px solid var(--us-color-line-strong);background:var(--us-glass-1-bg);color:var(--us-color-text);font-size:12px;font-weight:700;--us-icon-size:16px}
+
+
+/* ===== US-SECONDARY-SURFACES-01 · Calendar density ===== */
+.us-cal-head{padding:14px 16px 9px}
+.us-cal-head h2{font-size:21px}
+.us-cal-subtitle{margin-top:3px;font-size:10.5px}
+.us-cal-toolbar{gap:8px;padding:10px 14px 3px}
+.us-cal-legend{gap:12px;padding:4px 14px 1px}
+.us-cal-body{padding:8px 14px 72px}
+.us-cal-day-grid,.us-cal-weekday-row{gap:3px}
+.us-cal-day{min-height:50px;padding:5px 2px 4px;gap:3px;border-radius:12px}
+.us-cal-day-num{height:22px;min-width:22px;font-size:12px}
+.us-cal-day-markers{min-height:12px}
+.us-cal-chip{height:12px;min-width:11px;font-size:8px}
+.us-cal-empty{margin-top:10px;padding:16px;border-radius:17px}
+.us-cal-empty b{font-size:17px}
+.us-cal-sheet{max-height:88dvh}
+.us-cal-sheet-head{padding:13px 15px 9px}
+.us-cal-sheet-head h3{font-size:17px}
+.us-cal-day-sections{padding:5px 15px 3px;gap:12px}
+.us-cal-day-section h4{margin-bottom:6px;font-size:10px}
+.us-cal-day-empty{padding:10px;border-radius:12px;font-size:11px}
+.us-cal-detail-body{padding:7px 15px 3px;gap:6px}
+.us-cal-detail-body p{font-size:11.5px;line-height:1.4}
+.us-cal-detail-reminders{padding:5px 15px 0}
+.us-cal-detail-actions{padding:10px 15px 2px}
+.us-cal-form{padding:6px 15px 2px}
+.us-cal-field{margin-top:9px}
+.us-cal-field>span{margin-bottom:5px;font-size:10.5px}
+.us-cal-field input,.us-cal-field textarea{padding:10px 12px}
