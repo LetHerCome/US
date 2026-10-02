@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-static-runtime-55";
+const CACHE_NAME = "us-shell-static-runtime-56";
 const MEDIA_CACHE_NAME = "us-private-media-v1";
 
 const APP_SHELL = [
@@ -24,7 +24,7 @@ const APP_SHELL = [
   "/fastboot2.js",
   "/events.css",
   "/events.js",
-  "/moments-albums.css",
+  "/moments-albums.css?v=us-ricordi-density-v1-20261002-1",
   "/moments-albums.js",
   "/navigation.js",
   "/games.css",
