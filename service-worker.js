@@ -1,4 +1,4 @@
-const CACHE_NAME = "us-shell-static-runtime-57";
+const CACHE_NAME = "us-shell-static-runtime-58";
 const MEDIA_CACHE_NAME = "us-private-media-v1";
 
 const APP_SHELL = [
@@ -33,7 +33,7 @@ const APP_SHELL = [
   "/settings.js",
   "/identity.css?v=us-post-v1-rollback-20261002-1",
   "/identity.js",
-  "/settings2.css",
+  "/settings2.css?v=us-settings-density-v1-20261002-1",
   "/polish4.css",
   "/polish4.js",
   "/assets/derived/brand/us-symbol-apk-foreground-v1.png",
