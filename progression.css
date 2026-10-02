@@ -15,12 +15,12 @@
 .us-progression-next b{font:500 20px/1.15 var(--us-font-editorial);color:var(--us-color-text)}
 .us-progression-next span{font-size:11.5px;line-height:1.35;color:var(--us-color-text-2)}
 
-.us-progression-rewards-section{padding:14px 15px}
+.us-progression-rewards-section{padding:14px 15px;overflow:hidden}
 .us-progression-rewards-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:10px}
 .us-progression-rewards-head h3{margin:2px 0 0;font:500 20px/1.1 var(--us-font-editorial)}
 .us-progression-rewards-head span{font-size:10.5px;color:var(--us-color-text-3)}
-.us-progression-rewards{display:grid;gap:8px}
-.us-progression-reward{width:100%;min-height:70px;display:grid;grid-template-columns:46px minmax(0,1fr);align-items:center;gap:11px;padding:10px 11px;text-align:left;border-radius:17px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035);color:var(--us-color-text)}
+.us-progression-rewards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:min(330px,42dvh);overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding-right:2px;-webkit-overflow-scrolling:touch}
+.us-progression-reward{width:100%;min-height:132px;display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:8px;padding:10px 11px;text-align:left;border-radius:17px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035);color:var(--us-color-text)}
 .us-progression-reward.is-unlocked:not(:disabled):active{background:rgba(255,255,255,.065)}
 .us-progression-reward.is-equipped{border-color:rgba(255,158,182,.30);background:linear-gradient(135deg,rgba(255,102,142,.08),rgba(169,133,255,.08))}
 .us-progression-reward.is-locked{opacity:.48}
@@ -33,7 +33,8 @@
 .us-progression-reward-copy{min-width:0;display:flex;flex-direction:column;gap:2px}
 .us-progression-reward-copy small{font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--us-color-accent-ink)}
 .us-progression-reward-copy b{font-size:13px;font-weight:750}
-.us-progression-reward-copy span{font-size:10.5px;line-height:1.3;color:var(--us-color-text-3)}
+.us-progression-reward-copy span{font-size:10.5px;line-height:1.3;color:var(--us-color-text-3);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+@media(min-width:560px){.us-progression-rewards{grid-template-columns:repeat(3,minmax(0,1fr));max-height:min(390px,46dvh)}}
 
 .us-progression-unlock{position:fixed;inset:0;z-index:10120;display:none;place-items:center;padding:24px max(18px,var(--us-safe-right)) max(24px,var(--us-safe-bottom));background:rgba(5,2,9,.70);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .us-progression-unlock.open{display:grid}
