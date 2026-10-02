@@ -12,6 +12,7 @@
 /* Phosphor icons, painted with the official SVG as a mask (never redrawn). */
 .us-gv2-icon{flex:0 0 auto;display:inline-block;width:20px;height:20px;background-color:currentColor;-webkit-mask-position:center;mask-position:center;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-size:contain;mask-size:contain}
 .us-gv2-icon[data-gv2-icon="sparkle"]{-webkit-mask-image:url("/assets/icons/phosphor/sparkle-regular.svg");mask-image:url("/assets/icons/phosphor/sparkle-regular.svg")}
+.us-gv2-icon[data-gv2-icon="cards-three"]{-webkit-mask-image:url("/assets/icons/phosphor/cards-three-regular.svg");mask-image:url("/assets/icons/phosphor/cards-three-regular.svg")}
 .us-gv2-icon[data-gv2-icon="feather"]{-webkit-mask-image:url("/assets/icons/phosphor/feather-regular.svg");mask-image:url("/assets/icons/phosphor/feather-regular.svg")}
 .us-gv2-icon[data-gv2-icon="lock-simple"]{-webkit-mask-image:url("/assets/icons/phosphor/lock-simple-regular.svg");mask-image:url("/assets/icons/phosphor/lock-simple-regular.svg")}
 .us-gv2-icon[data-gv2-icon="binoculars"]{-webkit-mask-image:url("/assets/icons/phosphor/binoculars-regular.svg");mask-image:url("/assets/icons/phosphor/binoculars-regular.svg")}
