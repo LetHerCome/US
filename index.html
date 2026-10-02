@@ -673,9 +673,30 @@ html.us-returning-device .auth-overlay{
         <span class="left-for-you-composer-file" id="leftForYouComposerPhotoName"></span>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="audio" hidden>
-        <div class="left-for-you-recorder-controls"><button type="button" class="left-for-you-record-control" id="leftForYouComposerAudioRecord" aria-label="Registra la voce"><span class="left-for-you-record-icon" aria-hidden="true"></span></button><span class="left-for-you-recorder-timer" id="leftForYouComposerAudioTimer" hidden>00:00</span></div>
-        <audio class="left-for-you-recorder-preview" id="leftForYouComposerAudioPreview" controls preload="metadata" hidden></audio>
-        <div class="left-for-you-recorder-actions"><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerAudioRetry" hidden>Rifai</button><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerAudioDelete" hidden>Elimina</button></div>
+        <div class="left-for-you-vn-frame">
+          <div class="left-for-you-vn" id="leftForYouComposerAudioRecord" data-phase="idle" role="button" tabindex="0" aria-label="Tieni premuto per registrare una voce" style="--pull:0">
+            <span class="left-for-you-vn-in left-for-you-vn-idle" id="leftForYouComposerAudioIdle">
+              <span class="left-for-you-vn-mic" aria-hidden="true"><i></i></span>
+              <b>Tieni premuto</b>
+            </span>
+            <span class="left-for-you-vn-in left-for-you-vn-rec" id="leftForYouComposerAudioRecording" hidden>
+              <span class="left-for-you-vn-dot" aria-hidden="true"></span>
+              <span class="left-for-you-vn-time" id="leftForYouComposerAudioTimer">0:00</span>
+              <span class="left-for-you-vn-wave" id="leftForYouComposerAudioWave" aria-hidden="true"></span>
+            </span>
+            <span class="left-for-you-vn-cancel" aria-hidden="true"><span class="us-icon" data-us-icon="x"></span></span>
+            <span class="left-for-you-vn-in left-for-you-vn-clip" id="leftForYouComposerAudioClip" hidden>
+              <button type="button" class="left-for-you-vn-play" id="leftForYouComposerAudioPreviewToggle" aria-label="Riproduci la registrazione" data-playing="false">
+                <span class="left-for-you-vn-playmark" aria-hidden="true"><i></i><i></i></span>
+              </button>
+              <span class="left-for-you-vn-wave left-for-you-vn-scrub" id="leftForYouComposerAudioClipWave" aria-label="Scorri la registrazione"></span>
+              <span class="left-for-you-vn-time" id="leftForYouComposerAudioPreviewTime">0:00</span>
+              <button type="button" class="left-for-you-vn-x" id="leftForYouComposerAudioDelete" aria-label="Elimina la registrazione"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
+              <audio id="leftForYouComposerAudioPreview" preload="metadata" hidden></audio>
+            </span>
+          </div>
+          <span class="left-for-you-vn-hint" id="leftForYouComposerAudioHint" data-on="false" data-armed="false" hidden aria-hidden="true">‹ Scorri per annullare</span>
+        </div>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="video" hidden>
         <button type="button" class="left-for-you-composer-pick" id="leftForYouComposerVideoPick">Scegli un video</button><input type="file" id="leftForYouComposerVideoFile" accept="video/*" hidden>
