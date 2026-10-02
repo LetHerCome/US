@@ -260,9 +260,9 @@ button:focus-visible,
 /* M1.6 Home-only full-bleed fill. M12B.1 — Oggi is one frame exactly as tall
    as the viewport: the hero already runs under the floating nav, so the
    shared nav clearance of .app is dropped here instead of clipping it. */
-body:has(#home.page.active) .app{padding-bottom:0!important}
+body:has(#home.page.active) .app{padding-top:0!important;padding-bottom:0!important}
 #home.page.active{padding-bottom:0!important}
-#home .home-hero-only{height:calc(var(--us-viewport-height) - var(--us-safe-top))!important;min-height:0!important}
+#home .home-hero-only{height:var(--us-viewport-height)!important;min-height:0!important}
 #home .home-distance-pill{bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 18px)!important}
 /* M10A — the opt-in sits above the bottom row instead of covering it.
    M12B.1 — that row also holds the Ti penso button (nav + 25px, 48px tall),
