@@ -1048,6 +1048,7 @@
     const idle = document.getElementById('leftForYouComposerAudioIdle');
     const rec = document.getElementById('leftForYouComposerAudioRecording');
     const clip = document.getElementById('leftForYouComposerAudioClip');
+    const remove = document.getElementById('leftForYouComposerAudioDelete');
     const hint = document.getElementById('leftForYouComposerAudioHint');
     const preview = document.getElementById('leftForYouComposerAudioPreview');
     if (!record) return;
@@ -1069,6 +1070,7 @@
     if (idle) idle.hidden = state !== 'idle';
     if (rec) rec.hidden = !recording;
     if (clip) clip.hidden = !ready;
+    if (remove) remove.hidden = !ready;
     if (hint) {
       hint.dataset.on = recording ? 'true' : 'false';
       hint.hidden = !recording;
