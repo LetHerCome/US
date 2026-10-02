@@ -1,5 +1,5 @@
-// US Game V2 — Gioca: Per voi, six modes, the weekly couple question,
-// five-question rounds, prediction and reveal. Server RPCs are the only
+// US Game V2 — Gioca: Per voi, six modes, Swipe, the weekly couple question,
+// sealed couple rounds, prediction and reveal. Server RPCs are the only
 // authority: couple, role, week, content and reveal are never decided here.
 // Partner answers are rendered only from a reveal-ready server state and are
 // never written to local storage.
@@ -17,13 +17,14 @@ const FAMILIES = [
 ];
 const FAMILY = Object.fromEntries(FAMILIES.map((f) => [f.id, f]));
 const PER_VOI = { id: 'per_voi', name: 'Per voi', icon: 'sparkle' };
+const SWIPE = { id: 'swipe', name: 'Swipe', icon: 'cards-three' };
 const byId = (id) => document.getElementById(id);
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const label = (role) => (role === 'francesco' ? 'Francesco' : role === 'beatrice' ? 'Bea' : '');
 const myRole = () => window.usProfile?.role || null;
 const partnerRole = () => (myRole() === 'francesco' ? 'beatrice' : 'francesco');
 const partnerName = () => label(partnerRole());
-const familyName = (id) => (id === 'per_voi' ? PER_VOI.name : FAMILY[id]?.name || 'Gioca');
+const familyName = (id) => (id === 'per_voi' ? PER_VOI.name : id === 'swipe' ? SWIPE.name : FAMILY[id]?.name || 'Gioca');
 const icon = (name) => `<span class="us-gv2-icon" data-gv2-icon="${esc(name)}" aria-hidden="true"></span>`;
 const uuid = () => window.crypto.randomUUID();
 const romeDate = (iso, opts) => (iso ? new Date(`${iso}T12:00:00Z`).toLocaleDateString('it-IT', { timeZone: 'UTC', ...opts }) : '');
@@ -203,6 +204,16 @@ function renderHub() {
       ${status && !locked && status.state === 'open' ? `<i class="us-gv2-dot" data-tone="${esc(status.tone)}" aria-hidden="true"></i>` : ''}
     </button>`;
   }).join('');
+  const swipeState = modeStatus(SWIPE, openByFamily.get('swipe'));
+  const swipeLocked = swipeState?.state === 'locked';
+  const swipeMark = swipeState?.state === 'played' ? icon('check') : swipeLocked ? icon('lock-simple') : '';
+  const swipeLine = swipeState?.state === 'open' ? swipeState.text
+    : swipeState?.state === 'played' ? 'Giocato questa settimana'
+    : swipeLocked ? 'Nuove carte lunedì'
+    : '8 carte · scegli senza pensarci troppo';
+  const swipeCta = swipeState?.state === 'open' ? 'Continua'
+    : swipeState?.state === 'played' ? 'Rivedi'
+    : swipeLocked ? 'Lunedì' : 'Swipe';
   const invite = !filters.length && pvState === 'idle'
     ? '<p class="us-gv2-entry-note">Scegliete un gioco. Bastano pochi minuti.</p>'
     : '';
@@ -212,6 +223,11 @@ function renderHub() {
     ${filterRow(filters)}
     <button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-pervoi us-attention-orbit" data-gv2-action="per-voi" data-gv2-state="${esc(pvState)}" data-us-attention="${pvState === 'pending' || pvState === 'reveal_ready' ? 'on' : 'off'}">
       ${glyph('sparkle').replace('class="us-gv2-glyph"', 'class="us-gv2-glyph" data-us-attention-icon')}<span class="us-gv2-pervoi-copy"><b>Per voi</b><small>${esc(pv.line)}</small></span><span class="us-gv2-pervoi-cta">${esc(pv.cta)}</span>
+    </button>
+    <button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-swipe-entry" data-gv2-action="swipe" data-gv2-mode-state="${esc(swipeState?.state || 'ready')}"${swipeLocked ? ' aria-disabled="true"' : ''}>
+      <span class="us-gv2-swipe-entry-icon">${icon('cards-three')}</span>
+      <span class="us-gv2-swipe-entry-copy"><span class="us-gv2-kicker">VELOCE · PRIVATO</span><b>Swipe</b><small>${swipeMark}${esc(swipeLine)}</small></span>
+      <span class="us-gv2-swipe-entry-cta">${esc(swipeCta)}</span>
     </button>
     <section class="us-gv2-modes" aria-label="Scegliete voi"><div class="us-gv2-mode-grid us-gv2-deck">${modeTiles}</div></section>
     ${weeklyCard(home?.weekly)}`;
@@ -304,6 +320,51 @@ async function startRound(family) {
 // A mode tile: resume its open round; a mode already played this week asks
 // once before spending a second moment on it; nothing starts once the
 // week's free moments are spent (history stays one tap away).
+async function startSwipe() {
+  if (busy) return;
+  busy = true;
+  try {
+    const requestId = startRequestIds.get('swipe') || uuid();
+    startRequestIds.set('swipe', requestId);
+    const { data, error } = await sb.rpc('start_swipe_round', { request_id: requestId });
+    if (error) throw error;
+    startRequestIds.delete('swipe');
+    await present(data);
+  } catch (error) {
+    console.warn('[US Gioca] swipe start', error);
+    const msg = error?.message || '';
+    if (/weekly allowance exhausted|too many open rounds|not enough swipe content/.test(msg)) startRequestIds.delete('swipe');
+    toast(/weekly allowance exhausted/.test(msg) ? EXHAUSTED
+      : /too many open rounds/.test(msg) ? 'Prima finite una delle partite in corso.'
+      : /not enough swipe content/.test(msg) ? 'Le nuove carte Swipe non sono ancora pronte.'
+      : 'Non riesco ad aprire Swipe. Riprova.');
+    if (/weekly|too many open rounds/.test(msg)) load();
+  } finally { busy = false; }
+}
+
+async function chooseSwipe() {
+  if (busy) return;
+  const open = (home?.open_rounds || []).find((r) => r.game_family === 'swipe');
+  if (open) return openSession(open.id);
+  const played = playedThisWeek('swipe');
+  if (allowance() && !freeLeft()) {
+    if (played?.completed) return openSession(played.session_id);
+    return toast(EXHAUSTED);
+  }
+  if (played) {
+    const ask = window.UsUiFoundation?.confirm;
+    const ok = typeof ask === 'function' ? await ask({
+      kicker: 'SWIPE',
+      title: 'Avete già fatto Swipe questa settimana',
+      body: `Vi resta ${freeLeft() === 1 ? 'un momento' : `${freeLeft()} momenti`} fino a lunedì. Usarlo per altre 8 carte?`,
+      confirmLabel: 'Altre 8',
+      cancelLabel: 'Non ora',
+    }) : true;
+    if (!ok) return;
+  }
+  return startSwipe();
+}
+
 async function chooseMode(family) {
   if (busy) return;
   const open = (home?.open_rounds || []).find((r) => r.game_family === family);
@@ -388,7 +449,146 @@ function answerValue(item) {
   return item.answer_kind === 'choice' ? item.my_answer_index : item.my_answer_text;
 }
 
+function renderSwipePlay() {
+  const item = current?.items?.[index];
+  if (!item || item.answer_kind !== 'choice' || (item.options || []).length !== 2) return;
+  const total = current.items.length;
+  const left = item.options[0];
+  const right = item.options[1];
+  const root = showPanel(`<article class="us-gv2-swipe-play">
+    <div class="us-gv2-play-top">${backButton()}<span class="us-gv2-count">${index + 1} di ${total}</span></div>
+    <div class="us-gv2-swipe-progress" role="progressbar" aria-valuemin="1" aria-valuemax="${total}" aria-valuenow="${index + 1}" aria-label="Carta ${index + 1} di ${total}">
+      ${Array.from({ length: total }, (_, i) => `<i data-state="${i < index ? 'done' : i === index ? 'now' : 'next'}"></i>`).join('')}
+    </div>
+    <section class="us-gv2-swipe-stage" aria-label="Carta Swipe">
+      <article class="us-gv2-swipe-card" id="usGv2SwipeCard" tabindex="0" aria-label="${esc(item.question_text)}. Freccia sinistra: ${esc(left)}. Freccia destra: ${esc(right)}.">
+        <span class="us-gv2-kicker">SWIPE · SCELTA ${index + 1}</span>
+        <h2>${esc(item.question_text)}</h2>
+        <span class="us-gv2-swipe-stamp is-left" aria-hidden="true">${esc(left)}</span>
+        <span class="us-gv2-swipe-stamp is-right" aria-hidden="true">${esc(right)}</span>
+        <div class="us-gv2-swipe-card-foot" aria-hidden="true"><span>← ${esc(left)}</span><span>${esc(right)} →</span></div>
+      </article>
+    </section>
+    <div class="us-gv2-swipe-actions" role="group" aria-label="Scegli una risposta">
+      <button type="button" data-gv2-swipe-choice="0" aria-label="${esc(left)}"><span aria-hidden="true">←</span><b>${esc(left)}</b></button>
+      <button type="button" data-gv2-swipe-choice="1" aria-label="${esc(right)}"><b>${esc(right)}</b><span aria-hidden="true">→</span></button>
+    </div>
+    <p id="usGv2Error" class="us-gv2-error" role="alert" hidden></p>
+    <p class="us-gv2-swipe-note">Trascina la carta oppure usa i due pulsanti. ${partnerName()} non vedrà le tue scelte finché non avrete finito entrambi.</p>
+  </article>`);
+  bindSwipeGesture(root);
+}
+
+function bindSwipeGesture(root) {
+  const card = root?.querySelector('#usGv2SwipeCard');
+  if (!card) return;
+  let pointerId = null;
+  let startX = 0;
+  let deltaX = 0;
+  const reduced = window.UsUiFoundation?.isReducedMotion?.() !== false;
+
+  const paint = (value) => {
+    const width = Math.max(1, card.getBoundingClientRect().width);
+    deltaX = Math.max(-width * 0.7, Math.min(width * 0.7, value));
+    card.dataset.swipeSide = deltaX < -8 ? 'left' : deltaX > 8 ? 'right' : 'none';
+    const rotate = reduced ? 0 : deltaX / 22;
+    card.style.transform = `translate3d(${deltaX}px,0,0) rotate(${rotate}deg)`;
+  };
+  const reset = () => {
+    deltaX = 0;
+    card.dataset.swipeSide = 'none';
+    card.style.transform = '';
+  };
+  const finish = () => {
+    const threshold = Math.min(92, Math.max(64, card.getBoundingClientRect().width * 0.22));
+    if (Math.abs(deltaX) >= threshold) {
+      const choice = deltaX < 0 ? 0 : 1;
+      commitSwipeChoice(choice, deltaX < 0 ? 'left' : 'right');
+    } else {
+      reset();
+    }
+    pointerId = null;
+  };
+
+  card.addEventListener('pointerdown', (event) => {
+    if (busy || event.button !== 0) return;
+    pointerId = event.pointerId;
+    startX = event.clientX;
+    deltaX = 0;
+    card.setPointerCapture?.(pointerId);
+    card.classList.add('is-dragging');
+  });
+  card.addEventListener('pointermove', (event) => {
+    if (pointerId !== event.pointerId) return;
+    paint(event.clientX - startX);
+  });
+  card.addEventListener('pointerup', (event) => {
+    if (pointerId !== event.pointerId) return;
+    card.classList.remove('is-dragging');
+    finish();
+  });
+  card.addEventListener('pointercancel', () => {
+    card.classList.remove('is-dragging');
+    pointerId = null;
+    reset();
+  });
+  card.addEventListener('keydown', (event) => {
+    if (busy || (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')) return;
+    event.preventDefault();
+    commitSwipeChoice(event.key === 'ArrowLeft' ? 0 : 1, event.key === 'ArrowLeft' ? 'left' : 'right');
+  });
+}
+
+async function commitSwipeChoice(choice, direction = 'tap') {
+  if (busy || !current || current.game_family !== 'swipe') return;
+  const item = current.items[index];
+  if (!item || !Number.isInteger(choice) || choice < 0 || choice > 1) return;
+  busy = true;
+  const root = panel();
+  const card = root?.querySelector('#usGv2SwipeCard');
+  root?.querySelectorAll('[data-gv2-swipe-choice]').forEach((button) => { button.disabled = true; });
+  try {
+    if (card) {
+      card.dataset.swipeSide = choice === 0 ? 'left' : 'right';
+      card.classList.add('is-committing');
+      if (window.UsUiFoundation?.isReducedMotion?.() === false) {
+        card.style.transform = `translate3d(${choice === 0 ? '-115%' : '115%'},0,0) rotate(${choice === 0 ? -9 : 9}deg)`;
+        await new Promise((resolve) => setTimeout(resolve, 150));
+      }
+    }
+    const { data, error } = await sb.rpc('save_game_session_answer', {
+      target_session_id: current.id,
+      target_item_id: item.id,
+      target_answer_text: null,
+      target_answer_index: choice
+    });
+    if (error) throw error;
+    current = data;
+    window.UsFeedback?.tap?.();
+
+    if (index < current.items.length - 1) {
+      index += 1;
+      renderSwipePlay();
+      return;
+    }
+
+    const { data: done, error: completeError } = await sb.rpc('complete_game_session_side', { target_session_id: current.id });
+    if (completeError) throw completeError;
+    window.sendWebPushEvent?.('game_session', done.id).catch?.(() => {});
+    await present(done);
+    load();
+  } catch (error) {
+    console.warn('[US Gioca] swipe answer', error, direction);
+    renderSwipePlay();
+    showError('Non riesco a salvare questa scelta. Riprova.');
+  } finally {
+    busy = false;
+    panel()?.querySelectorAll('[data-gv2-swipe-choice]').forEach((button) => { button.disabled = false; });
+  }
+}
+
 function renderPlay() {
+  if (current?.game_family === 'swipe') return renderSwipePlay();
   const item = current?.items?.[index];
   if (!item) return;
   const total = current.items.length;
@@ -475,7 +675,19 @@ function partnerAnswerText(item) {
   return item.answer_kind === 'choice' ? (item.options || [])[Number(item.partner_answer_index)] ?? '—' : item.partner_answer_text ?? '—';
 }
 
+function renderSwipeWaiting() {
+  showPanel(`<article class="us-gv2-waiting us-gv2-swipe-waiting">
+    <div class="us-gv2-play-top">${backButton()}</div>
+    <span class="us-gv2-kicker">SWIPE · SCELTE SIGILLATE</span>
+    <h2>Le tue 8 scelte sono dentro.</h2>
+    <p class="us-gv2-lead">Aspettiamo ${esc(partnerName())}. Finché non finisce, le vostre risposte restano separate.</p>
+    <ol class="us-gv2-swipe-mine">${current.items.map((item, i) => `<li><span>${i + 1}</span><small>${esc(item.question_text)}</small><b>${esc(myAnswerText(item))}</b></li>`).join('')}</ol>
+    <div class="us-gv2-actions"><button type="button" class="ghost" data-gv2-action="back">Torna a Gioca</button><button type="button" class="primary" data-gv2-action="refresh">Controlla</button></div>
+  </article>`);
+}
+
 function renderWaiting() {
+  if (current?.game_family === 'swipe') return renderSwipeWaiting();
   showPanel(`<article class="us-gv2-waiting">
     <div class="us-gv2-play-top">${backButton()}</div>
     <span class="us-gv2-kicker">${esc(familyName(current.game_family).toUpperCase())}</span>
@@ -516,7 +728,29 @@ function previousAnswers(item) {
     <dl><div><dt>Tu</dt><dd>${esc(then.my_answer_text ?? '—')}</dd></div><div><dt>${esc(partnerName())}</dt><dd>${esc(then.partner_answer_text ?? '—')}</dd></div></dl></div>`;
 }
 
+function renderSwipeReveal({ first = false } = {}) {
+  const sameCount = current.items.filter((item) => item.my_answer_index === item.partner_answer_index).length;
+  const differentCount = current.items.length - sameCount;
+  const cards = current.items.map((item, i) => {
+    const same = item.my_answer_index === item.partner_answer_index;
+    return `<article class="us-gv2-swipe-reveal-card" data-same="${same ? 'true' : 'false'}">
+      <div class="us-gv2-swipe-reveal-head"><span>${i + 1}</span><b>${same ? 'Uguale ♡' : 'Diversi qui'}</b></div>
+      <h3>${esc(item.question_text)}</h3>
+      <dl><div><dt>Tu</dt><dd>${esc(myAnswerText(item))}</dd></div><div><dt>${esc(partnerName())}</dt><dd>${esc(partnerAnswerText(item))}</dd></div></dl>
+    </article>`;
+  }).join('');
+  showPanel(`<article class="us-gv2-reveal us-gv2-swipe-reveal${first ? ' is-first-reveal' : ''}">
+    <div class="us-gv2-play-top">${backButton()}</div>
+    <span class="us-gv2-kicker">SWIPE · REVEAL</span>
+    <div class="us-gv2-swipe-score"><strong>${sameCount}<small>/${current.items.length}</small></strong><span>scelte uguali</span><i aria-hidden="true"></i><b>${differentCount} diverse</b></div>
+    <p class="us-gv2-swipe-reveal-copy">Non è un punteggio: è solo la mappa di dove avete scelto la stessa cosa e dove no.</p>
+    <div class="us-gv2-swipe-reveal-list">${cards}</div>
+    <div class="us-gv2-actions is-single"><button type="button" class="primary" data-gv2-action="back">Torna a Gioca</button></div>
+  </article>`);
+}
+
 function renderReveal({ first = false } = {}) {
+  if (current?.game_family === 'swipe') return renderSwipeReveal({ first });
   const cards = current.items.map((item) => {
     const out = outcome(item);
     const same = item.mechanic === 'prediction' ? item.prediction_matched === true : item.answer_kind === 'choice' && item.my_answer_index === item.partner_answer_index;
@@ -645,6 +879,8 @@ function onClick(event) {
   if (!button) return;
   const action = button.dataset.gv2Action;
   if (action === 'per-voi') openPerVoi();
+  else if (action === 'swipe') chooseSwipe();
+  else if (button.dataset.gv2SwipeChoice != null) commitSwipeChoice(Number(button.dataset.gv2SwipeChoice), 'tap');
   else if (action === 'weekly-create') renderWeeklyForm();
   else if (action === 'back') showHub();
   else if (action === 'prev') { const item = current.items[index]; drafts.set(item.id, readInput(item)); index = Math.max(0, index - 1); renderPlay(); }
@@ -674,7 +910,7 @@ function boot() {
 }
 
 window.USGameV2 = {
-  load, refresh, showHub, openPerVoi, startRound, openSession, chooseMode,
+  load, refresh, showHub, openPerVoi, startRound, startSwipe, openSession, chooseMode, chooseSwipe,
   isOpen: () => view !== 'hub',
   close: showHub,
 };
