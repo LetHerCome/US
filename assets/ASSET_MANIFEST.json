@@ -110,6 +110,39 @@
       "immutable": true,
       "purpose": "Official US Settings custom icon",
       "usedBy": ["bottom-navigation", "settings"]
+    },
+    {
+      "path": "assets/derived/runtime/us-symbol-256-v1.png",
+      "status": "APPROVED",
+      "sha256": "689be0ce9847fd3760b96cdb98cd5344acd2135f892ad4adc1da4f92898f3df0",
+      "immutable": true,
+      "purpose": "Runtime-sized (256 px) derivative of the canonical US symbol for in-app display; the master stays the PWA install icon",
+      "usedBy": ["auth-branding", "home-header-branding", "settings-branding"],
+      "source": "assets/derived/brand/us-symbol-apk-foreground-v1.png",
+      "sourceSha256": "f71c0cf6cbca172b7833754f6eaa2b4addfab6381a696bdccf070d83ea690868",
+      "operation": "AREA_AVERAGE_DOWNSCALE_256_PRESERVE_ASPECT"
+    },
+    {
+      "path": "assets/derived/runtime/us-icon-settings-128-v1.png",
+      "status": "APPROVED",
+      "sha256": "7ee4d47099a990a40e6a0609c926e2478576dc2d4d2fd4f547042237025113ef",
+      "immutable": true,
+      "purpose": "Runtime-sized (128 px wide) derivative of the approved Settings custom icon",
+      "usedBy": ["settings"],
+      "source": "assets/source/ui/us-icon-settings-v1.png",
+      "sourceSha256": "c939f83506dc0bf323f194d4c88c6ccd5530d7f78954b43e3f4ef297b7876e88",
+      "operation": "AREA_AVERAGE_DOWNSCALE_128_PRESERVE_ASPECT"
+    },
+    {
+      "path": "assets/derived/runtime/us-icon-stories-128-v1.png",
+      "status": "APPROVED",
+      "sha256": "95261e63a4c3342d1882f5dca6d0eaf547cf5f039d58fccf2df2b05f03660ff8",
+      "immutable": true,
+      "purpose": "Runtime-sized (128 px wide) derivative of the approved Stories custom icon",
+      "usedBy": ["header-stories-trigger"],
+      "source": "assets/source/ui/us-icon-stories-v1.png",
+      "sourceSha256": "455422f08fe0334bfc6d780ace5f1881d84f878e4c41b676c7daa7ef6858bc06",
+      "operation": "AREA_AVERAGE_DOWNSCALE_128_PRESERVE_ASPECT"
     }
   ]
 }
