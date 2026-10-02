@@ -90,3 +90,42 @@ button.noi-ev-card:active,button.noi-ev-row:active{transform:scale(.985)}
 #bond .noi-canonical-page[data-noi-view="eventi"] :is(.noi-ev-card,.noi-ev-row){animation:us-content-enter var(--us-motion-fast) var(--us-ease-enter) 1 both;animation-delay:calc(min(var(--i,0),8)*45ms + 60ms)}
 :root[data-us-motion="reduced"] :is(.noi-ev-card,.noi-ev-row){animation:none!important}
 @media(prefers-reduced-motion:reduce){:is(.noi-ev-card,.noi-ev-row){animation:none!important;transition:none}}
+
+
+/* ===== US-SECONDARY-SURFACES-01 · Events density ===== */
+.us-events-sheet{
+  max-height:min(90dvh,820px);
+  padding:14px 14px calc(18px + var(--us-safe-bottom));
+}
+.us-events-head{padding:1px 2px 10px}
+.us-events-head h2{font-size:22px}
+.us-next-event{
+  min-height:112px;
+  padding:13px 15px!important;
+  border-radius:20px;
+  box-shadow:0 10px 26px rgba(0,0,0,.18);
+}
+.us-next-event strong{margin-top:9px;font-size:19px}
+.us-next-event-date{margin-top:5px;font-size:10.5px}
+.us-next-event b{margin-top:8px;padding:5px 8px;font-size:10px}
+.us-events-list-head{padding:14px 3px 7px}
+.us-events-list{gap:6px}
+.us-event-item{
+  min-height:60px;
+  padding:8px 9px;
+  grid-template-columns:40px 1fr 24px;
+  gap:9px;
+  border-radius:16px;
+}
+.us-event-datebox{width:40px;height:42px;border-radius:12px}
+.us-event-datebox b{font-size:16px}
+.us-event-main b{font-size:12.5px}
+.us-event-main small{margin-top:2px;font-size:10px}
+.us-event-add{min-height:48px;margin-top:10px;border-radius:15px}
+.us-event-form-title{margin:1px 0 12px}
+.us-event-field{margin-top:9px}
+.us-event-field>span{margin-bottom:5px;font-size:10.5px}
+.us-event-repeat{margin-top:10px;padding:9px 10px;border-radius:14px}
+.us-event-actions{margin-top:6px}
+.us-event-actions button{min-height:44px}
+.us-event-complete{min-height:44px;margin-top:10px}
