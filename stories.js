@@ -830,23 +830,6 @@
     currentViewerAuthor = null;
   }
 
-  async function openProfilePreview(profile) {
-    const root = document.getElementById('usProfilePreview');
-    const img = document.getElementById('usProfilePreviewImg');
-    const fallback = document.getElementById('usProfilePreviewFallback');
-    const name = document.getElementById('usProfilePreviewName');
-    if (!root || !img || !fallback || !name) return;
-    name.textContent = profile.display_name || 'Partner';
-    fallback.textContent = (profile.display_name || '?').slice(0,1).toUpperCase();
-    let url = null;
-    try { if (typeof signedAvatarUrl === 'function') url = await signedAvatarUrl(profile.avatar_path); } catch (_) {}
-    if (url) { img.src = url; img.hidden = false; fallback.hidden = true; }
-    else { img.hidden = true; fallback.hidden = false; }
-    root.classList.add('open');
-    root.setAttribute('aria-hidden','false');
-    document.body.style.overflow = 'hidden';
-  }
-
   function closeProfilePreview() {
     const root = document.getElementById('usProfilePreview');
     root?.classList.remove('open');

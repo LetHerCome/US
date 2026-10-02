@@ -907,8 +907,6 @@ async function compressImageFile(file,{maxDimension=1920,quality=.82}={}){
   return new File([blob],(file.name||'image').replace(/\.[^.]+$/,'')+'.webp',{type:'image/webp',lastModified:Date.now()});
 }
 
-function avatarExt(_file){return 'webp';}
-
 async function uploadProfilePhoto(file){
   if(!window.usProfile||!file)return;
   if(!['image/jpeg','image/png','image/webp'].includes(file.type))return toast('Per ora usa JPG, PNG o WebP');
@@ -2272,8 +2270,6 @@ document.getElementById('momentFile')?.addEventListener('change',async(event)=>{
   img.src=pendingMomentPreviewUrl;
   compose?.classList.add('has-photo');
 });
-
-function momentExt(_file){return 'webp';}
 
 // M12A — a newly created Ricordo settles in and catches the light ONCE. The id
 // is remembered until its card is first rendered (a concurrent refresh may
@@ -4322,9 +4318,3 @@ if (canUseUsServiceWorker()) {
 
 
 document.addEventListener('keydown',(event)=>{if(event.key==='Escape')closeToday();});
-
-(() => {
-  if (window.__usFastRefreshV19Installed) return;
-  window.__usFastRefreshV19Installed = true;
-  console.info('[US Sync] legacy polling 3s disattivato · Performance 1');
-})();

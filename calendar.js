@@ -1175,14 +1175,6 @@ async function loadEntryReminders() {
   }
 }
 
-// Il partner reale dai profili caricati (mai hardcoding): l'altro profilo
-// della coppia rispetto al viewer.
-function partnerIdFor() {
-  const me = window.usProfile ? window.usProfile.id : null;
-  const other = profiles.find((p) => p.id !== me);
-  return other ? other.id : null;
-}
-
 // Dettaglio: i reminder dell'entry sono SEMPRE visibili, con il richiedente
 // ("il destinatario deve sapere chi lo ha creato") e lo stato.
 function renderDetailReminders(entry) {

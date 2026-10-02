@@ -336,7 +336,6 @@
 
   // ---- M5F sender composer ----
 
-  function composerRoot() { return document.getElementById('leftForYouComposerOverlay'); }
   function setComposerStatus(message, kind = '') {
     const status = document.getElementById('leftForYouComposerStatus');
     if (status) { status.textContent = message || ''; status.dataset.kind = kind; }
