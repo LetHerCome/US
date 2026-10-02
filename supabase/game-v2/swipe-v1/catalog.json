@@ -1,0 +1,328 @@
+{
+  "version": 1,
+  "family": "swipe",
+  "cards_per_round": 8,
+  "privacy": "partner answers remain sealed until both sides complete",
+  "items": [
+    {
+      "id": "swipe-001",
+      "version": 1,
+      "question_text": "Una serata perfetta per noi sarebbe più bella fuori casa o sul divano?",
+      "options": [
+        "Fuori casa",
+        "Sul divano"
+      ],
+      "topic": "serata_perfetta"
+    },
+    {
+      "id": "swipe-002",
+      "version": 1,
+      "question_text": "Se partissimo domani senza programmi, ti divertirebbe davvero?",
+      "options": [
+        "Sì, andiamo",
+        "No, organizziamo"
+      ],
+      "topic": "partire_senza_programmi"
+    },
+    {
+      "id": "swipe-003",
+      "version": 1,
+      "question_text": "Quando siamo stanchi, preferisci parlare comunque o stare vicini in silenzio?",
+      "options": [
+        "Parlare",
+        "Silenzio insieme"
+      ],
+      "topic": "stanchezza"
+    },
+    {
+      "id": "swipe-004",
+      "version": 1,
+      "question_text": "Per un weekend insieme sceglieresti mare o montagna?",
+      "options": [
+        "Mare",
+        "Montagna"
+      ],
+      "topic": "weekend"
+    },
+    {
+      "id": "swipe-005",
+      "version": 1,
+      "question_text": "Ti piacerebbe avere una nostra tradizione fissa ogni mese?",
+      "options": [
+        "Sì",
+        "No, meglio spontanei"
+      ],
+      "topic": "tradizione"
+    },
+    {
+      "id": "swipe-006",
+      "version": 1,
+      "question_text": "Se abbiamo un giorno libero, preferisci svegliarti presto o senza sveglia?",
+      "options": [
+        "Presto",
+        "Senza sveglia"
+      ],
+      "topic": "giorno_libero"
+    },
+    {
+      "id": "swipe-007",
+      "version": 1,
+      "question_text": "Una sorpresa organizzata dall’altro ti entusiasma o ti mette un po’ in ansia?",
+      "options": [
+        "Mi entusiasma",
+        "Preferisco saperlo"
+      ],
+      "topic": "sorpresa"
+    },
+    {
+      "id": "swipe-008",
+      "version": 1,
+      "question_text": "Se potessimo scegliere adesso, cena elegante o street food?",
+      "options": [
+        "Cena elegante",
+        "Street food"
+      ],
+      "topic": "cena"
+    },
+    {
+      "id": "swipe-009",
+      "version": 1,
+      "question_text": "Ti piacerebbe riguardare insieme tutte le nostre foto una sera?",
+      "options": [
+        "Sì",
+        "Non fa per me"
+      ],
+      "topic": "foto"
+    },
+    {
+      "id": "swipe-010",
+      "version": 1,
+      "question_text": "In viaggio preferisci vedere tantissime cose o prendercela lenta?",
+      "options": [
+        "Vedere tutto",
+        "Andare lenti"
+      ],
+      "topic": "viaggio"
+    },
+    {
+      "id": "swipe-011",
+      "version": 1,
+      "question_text": "Se uno dei due è giù, meglio coccole subito o prima un po’ di spazio?",
+      "options": [
+        "Coccole subito",
+        "Un po’ di spazio"
+      ],
+      "topic": "supporto"
+    },
+    {
+      "id": "swipe-012",
+      "version": 1,
+      "question_text": "Ti divertirebbe scegliere a turno una serata senza poter dire di no?",
+      "options": [
+        "Sì",
+        "No"
+      ],
+      "topic": "serata_turno"
+    },
+    {
+      "id": "swipe-013",
+      "version": 1,
+      "question_text": "Preferisci ricevere un regalo utile o una cosa totalmente inutile ma romantica?",
+      "options": [
+        "Utile",
+        "Romantico e inutile"
+      ],
+      "topic": "regali"
+    },
+    {
+      "id": "swipe-014",
+      "version": 1,
+      "question_text": "Una vacanza insieme: città piena di cose da fare o posto isolato?",
+      "options": [
+        "Città",
+        "Posto isolato"
+      ],
+      "topic": "vacanza"
+    },
+    {
+      "id": "swipe-015",
+      "version": 1,
+      "question_text": "Ti piacerebbe avere più foto spontanee di noi anche se vengono male?",
+      "options": [
+        "Sì",
+        "No, poche ma belle"
+      ],
+      "topic": "foto_spontanee"
+    },
+    {
+      "id": "swipe-016",
+      "version": 1,
+      "question_text": "Quando discutiamo, preferisci risolvere tutto subito o dormirci sopra?",
+      "options": [
+        "Subito",
+        "Dormirci sopra"
+      ],
+      "topic": "discussioni"
+    },
+    {
+      "id": "swipe-017",
+      "version": 1,
+      "question_text": "Se cuciniamo insieme, vuoi una ricetta precisa o improvvisiamo?",
+      "options": [
+        "Ricetta precisa",
+        "Improvvisiamo"
+      ],
+      "topic": "cucinare"
+    },
+    {
+      "id": "swipe-018",
+      "version": 1,
+      "question_text": "Ti piacerebbe fare una lista di posti da vedere insieme e spuntarli?",
+      "options": [
+        "Sì",
+        "No, decidiamo al momento"
+      ],
+      "topic": "posti"
+    },
+    {
+      "id": "swipe-019",
+      "version": 1,
+      "question_text": "Una domenica senza impegni: serie tutto il giorno o uscita improvvisata?",
+      "options": [
+        "Serie tutto il giorno",
+        "Uscita improvvisata"
+      ],
+      "topic": "domenica"
+    },
+    {
+      "id": "swipe-020",
+      "version": 1,
+      "question_text": "Se avessimo una casa insieme, preferiresti minimal o piena di nostre cose?",
+      "options": [
+        "Minimal",
+        "Piena di noi"
+      ],
+      "topic": "casa"
+    },
+    {
+      "id": "swipe-021",
+      "version": 1,
+      "question_text": "Ti piacerebbe festeggiare anche le piccole ricorrenze, non solo quelle importanti?",
+      "options": [
+        "Sì",
+        "No"
+      ],
+      "topic": "ricorrenze"
+    },
+    {
+      "id": "swipe-022",
+      "version": 1,
+      "question_text": "Quando siamo lontani, preferisci più messaggi brevi o una chiamata lunga?",
+      "options": [
+        "Più messaggi",
+        "Una chiamata lunga"
+      ],
+      "topic": "distanza"
+    },
+    {
+      "id": "swipe-023",
+      "version": 1,
+      "question_text": "Se dobbiamo scegliere un film, meglio qualcosa che fa piangere o ridere?",
+      "options": [
+        "Piangere",
+        "Ridere"
+      ],
+      "topic": "film"
+    },
+    {
+      "id": "swipe-024",
+      "version": 1,
+      "question_text": "Ti piacerebbe provare insieme un hobby che nessuno dei due sa fare?",
+      "options": [
+        "Sì",
+        "No"
+      ],
+      "topic": "hobby"
+    },
+    {
+      "id": "swipe-025",
+      "version": 1,
+      "question_text": "Per un anniversario preferisci un’esperienza o un oggetto da conservare?",
+      "options": [
+        "Esperienza",
+        "Oggetto"
+      ],
+      "topic": "anniversario"
+    },
+    {
+      "id": "swipe-026",
+      "version": 1,
+      "question_text": "Se uno propone un piano assurdo all’ultimo minuto, la risposta ideale è sì?",
+      "options": [
+        "Sì",
+        "Dipende troppo"
+      ],
+      "topic": "spontaneita"
+    },
+    {
+      "id": "swipe-027",
+      "version": 1,
+      "question_text": "Preferisci che ci diciamo sempre tutto subito o che ognuno abbia anche cose solo sue?",
+      "options": [
+        "Dirci quasi tutto",
+        "Avere spazi propri"
+      ],
+      "topic": "spazi_personali"
+    },
+    {
+      "id": "swipe-028",
+      "version": 1,
+      "question_text": "Ti piacerebbe avere una canzone nuova che diventa nostra ogni anno?",
+      "options": [
+        "Sì",
+        "No"
+      ],
+      "topic": "musica"
+    },
+    {
+      "id": "swipe-029",
+      "version": 1,
+      "question_text": "Se potessimo vivere sei mesi altrove, sceglieresti una grande città o un posto piccolo?",
+      "options": [
+        "Grande città",
+        "Posto piccolo"
+      ],
+      "topic": "vivere_altrove"
+    },
+    {
+      "id": "swipe-030",
+      "version": 1,
+      "question_text": "Meglio una giornata pianificata benissimo o una che cambia completamente strada facendo?",
+      "options": [
+        "Pianificata",
+        "Improvvisata"
+      ],
+      "topic": "programma"
+    },
+    {
+      "id": "swipe-031",
+      "version": 1,
+      "question_text": "Ti piacerebbe ricevere più piccoli gesti senza occasione particolare?",
+      "options": [
+        "Sì",
+        "Non mi serve"
+      ],
+      "topic": "piccoli_gesti"
+    },
+    {
+      "id": "swipe-032",
+      "version": 1,
+      "question_text": "Se avessimo solo due ore insieme, preferisci fare qualcosa o non fare assolutamente niente?",
+      "options": [
+        "Fare qualcosa",
+        "Niente insieme"
+      ],
+      "topic": "tempo_insieme"
+    }
+  ]
+}
