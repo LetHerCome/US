@@ -2,6 +2,15 @@
   'use strict';
 
   const BUILD = document.querySelector('meta[name="us-build"]')?.content || 'fix4-unknown';
+  // A refresh navigation is only a cache-bypass transport. Keep the user's
+  // actual deep-link query, but remove the temporary update token once loaded.
+  try {
+    const currentUrl = new URL(window.location.href);
+    if (currentUrl.searchParams.has('us-refresh')) {
+      currentUrl.searchParams.delete('us-refresh');
+      history.replaceState(history.state, '', currentUrl.pathname + currentUrl.search + currentUrl.hash);
+    }
+  } catch (_) {}
   const statusBar = document.getElementById('appStatusBar');
   const updateBar = document.getElementById('appUpdateBar');
   const updateBtn = document.getElementById('appUpdateBtn');
@@ -214,10 +223,13 @@
     try {
       const registration = await navigator.serviceWorker?.getRegistration?.();
       await registration?.update?.();
-      await fetch(`/?us-refresh=${Date.now()}`, { cache: 'reload' }).catch(() => null);
-    } finally {
-      location.reload();
+      registration?.waiting?.postMessage?.({ type: 'US_SKIP_WAITING' });
+    } catch (_) {
+      // The navigation below is still the source-of-truth refresh path.
     }
+    const refreshUrl = new URL(window.location.href);
+    refreshUrl.searchParams.set('us-refresh', String(Date.now()));
+    window.location.replace(refreshUrl.href);
   }
 
   function setupUpdateChecks() {
