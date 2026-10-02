@@ -439,23 +439,51 @@ function oggiRemainingWindows(freeWindows, nowISO) {
 //                       to the next day that does have one. If the scan found
 //                       nothing within its horizon, this falls back to (2)
 //                       rather than inventing a date.
+function oggiPersonSummary(person, nowMs) {
+  const value = oggiEventLabel(person.entries, nowMs);
+  return { kind: 'person', label: person.name, value: value === 'Libera' ? 'Nessun impegno' : value };
+}
+
 function composeOggiCalendarFact({ dayStartISO, dayEndISO, personA, personB, freeWindows = [], nextTogetherDateISO = null, nowISO = new Date().toISOString() }) {
   const nowMs = new Date(nowISO).getTime();
   const hasEntries = (personA.entries.length + personB.entries.length) > 0;
   if (!hasEntries) {
-    return { type: 'free-all-day', title: 'Liberi insieme', detail: 'Nessun impegno per oggi.', dateISO: dayStartISO };
+    return {
+      type: 'free-all-day',
+      title: 'Oggi',
+      detail: 'Liberi insieme · Nessun impegno per oggi.',
+      rows: [{ kind: 'together', label: 'Insieme', value: 'Liberi tutto il giorno' }],
+      dateISO: dayStartISO
+    };
   }
+
+  const personRows = [oggiPersonSummary(personA, nowMs), oggiPersonSummary(personB, nowMs)];
   const eventsDetail = `${personA.name}: ${oggiEventLabel(personA.entries, nowMs)} · ${personB.name}: ${oggiEventLabel(personB.entries, nowMs)}`;
   const remainingWindows = oggiRemainingWindows(freeWindows, nowISO);
+
   if (!remainingWindows.length) {
     if (nextTogetherDateISO) {
-      return { type: 'next-together', title: 'Prossima volta insieme', detail: formatDateRangeLabel(nextTogetherDateISO, nextTogetherDateISO), dateISO: nextTogetherDateISO };
+      const nextLabel = formatDateRangeLabel(nextTogetherDateISO, nextTogetherDateISO);
+      return {
+        type: 'next-together',
+        title: 'Prossima volta insieme',
+        detail: nextLabel,
+        rows: [{ kind: 'together', label: 'Insieme', value: nextLabel }],
+        dateISO: nextTogetherDateISO
+      };
     }
-    return { type: 'events', title: 'Oggi', detail: eventsDetail, dateISO: dayStartISO };
+    return { type: 'events', title: 'Oggi', detail: eventsDetail, rows: personRows, dateISO: dayStartISO };
   }
+
   const biggest = remainingWindows.slice().sort((a, b) => (new Date(b.end) - new Date(b.start)) - (new Date(a.end) - new Date(a.start)))[0];
   const windowLabel = tempoWindowLabel(biggest.start, biggest.end, dayStartISO, dayEndISO);
-  return { type: 'events', title: 'Oggi', detail: `${eventsDetail} — Liberi insieme ${windowLabel}`, dateISO: dayStartISO };
+  return {
+    type: 'events',
+    title: 'Oggi',
+    detail: `${eventsDetail} — Liberi insieme ${windowLabel}`,
+    rows: [...personRows, { kind: 'together', label: 'Insieme', value: windowLabel }],
+    dateISO: dayStartISO
+  };
 }
 
 const pureApi = {
