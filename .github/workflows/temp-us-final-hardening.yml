@@ -17,7 +17,18 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - name: Provide PowerShell compatibility alias for legacy asset tests
-        if: runner.os == 'Linux'
-        run: sudo ln -sf "$(command -v pwsh)" /usr/local/bin/powershell.exe
       - run: npm test
+
+  windows-brand:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: node --test tests/n3-android-brand-assets.test.js tests/p1-home-internal-branding.test.js

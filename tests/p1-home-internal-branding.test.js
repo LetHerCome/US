@@ -3,6 +3,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
+const windowsTest = process.platform === 'win32' ? test : test.skip;
 const { execFileSync } = require('node:child_process');
 
 const ROOT = path.resolve(__dirname, '..');
@@ -16,7 +17,7 @@ const PHOSPHOR_HEART_FILL_PATH = 'M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const hash = (file) => crypto.createHash('sha256').update(fs.readFileSync(path.join(ROOT, file))).digest('hex');
 
-test('P1 usa un monogramma US netto senza glow diffuso e senza alterare i source approvati', () => {
+windowsTest('P1 usa un monogramma US netto senza glow diffuso e senza alterare i source approvati', () => {
   const approvedDerivativeMtime = fs.statSync(path.join(ROOT, DERIVATIVE)).mtimeMs;
   execFileSync(process.execPath, ['scripts/build-web-brand-assets.mjs'], { cwd: ROOT });
   const firstHash = hash(DERIVATIVE);
@@ -48,7 +49,7 @@ test('P1 usa un monogramma US netto senza glow diffuso e senza alterare i source
   assert.equal(alpha.length, 0);
 });
 
-test('P1 recupera gli artefatti di verifica interrotti senza copiarli negli asset distribuiti', () => {
+windowsTest('P1 recupera gli artefatti di verifica interrotti senza copiarli negli asset distribuiti', () => {
   const lockPath = path.join(ROOT, LEGACY_LOCK);
   const strandedCandidate = path.join(ROOT, `${DERIVATIVE}.verify-4242.tmp`);
   fs.mkdirSync(lockPath, { recursive: true });

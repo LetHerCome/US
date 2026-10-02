@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
+const windowsTest = process.platform === 'win32' ? test : test.skip;
 
 const ROOT = path.resolve(__dirname, '..');
 const BRAND_MANIFEST = path.join(ROOT, 'android', 'brand-assets-manifest.json');
@@ -36,7 +37,7 @@ function runBrandBuildAsync() {
   });
 }
 
-test('la build brand Android crea derivative tracciabili e ripetibili senza alterare i master', () => {
+windowsTest('la build brand Android crea derivative tracciabili e ripetibili senza alterare i master', () => {
   const before = Object.fromEntries(SOURCES.map((source) => [source, sha256(path.join(ROOT, source))]));
   runBrandBuild();
   const first = JSON.parse(fs.readFileSync(BRAND_MANIFEST, 'utf8'));
@@ -58,7 +59,7 @@ test('la build brand Android crea derivative tracciabili e ripetibili senza alte
   });
 });
 
-test('due build brand concorrenti completano senza corrompere le risorse', async () => {
+windowsTest('due build brand concorrenti completano senza corrompere le risorse', async () => {
   const results = await Promise.all([runBrandBuildAsync(), runBrandBuildAsync()]);
   assert.deepEqual(results, [0, 0]);
   const manifest = JSON.parse(fs.readFileSync(BRAND_MANIFEST, 'utf8'));
@@ -67,7 +68,7 @@ test('due build brand concorrenti completano senza corrompere le risorse', async
   });
 });
 
-test('launcher e splash Android usano soltanto il nuovo set brand', () => {
+windowsTest('launcher e splash Android usano soltanto il nuovo set brand', () => {
   runBrandBuild();
   const manifest = fs.readFileSync(path.join(ROOT, 'android/app/src/main/AndroidManifest.xml'), 'utf8');
   const baseStyles = fs.readFileSync(path.join(ROOT, 'android/app/src/main/res/values/styles.xml'), 'utf8');
@@ -84,7 +85,7 @@ test('launcher e splash Android usano soltanto il nuovo set brand', () => {
   assert.match(v31Styles, /postSplashScreenTheme/);
 });
 
-test('foreground Android deriva dal master trasparente e il launcher non espone sfondo chiaro', () => {
+windowsTest('foreground Android deriva dal master trasparente e il launcher non espone sfondo chiaro', () => {
   runBrandBuild();
   const brand = JSON.parse(fs.readFileSync(BRAND_MANIFEST, 'utf8'));
   const foreground = brand.derivatives.find((entry) => entry.path.endsWith('/us_adaptive_foreground_v1.png'));

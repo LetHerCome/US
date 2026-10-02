@@ -62,7 +62,7 @@ function createServiceWorkerHarness({ failPrecachePath = null } = {}) {
         async addAll(paths) {
           const staged = [];
           for (const item of paths) {
-            const request = new Request(new URL(item, ORIGIN));
+            const request = typeof item === 'string' ? new Request(new URL(item, ORIGIN)) : item;
             staged.push([cacheKey(request), responseFor(request)]);
           }
           for (const [key, response] of staged) entries.set(key, response.clone());

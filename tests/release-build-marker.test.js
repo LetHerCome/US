@@ -25,7 +25,10 @@ test('release: the shell cache is derived from BUILD_ID and the private media ca
   assert.match(worker, /const SHELL_CACHE_PREFIX = "us-shell-";/);
   assert.ok(worker.includes('const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;'));
   assert.match(worker, /const MEDIA_CACHE_NAME = "us-private-media-v1";/);
-  assert.match(worker, /key !== CACHE_NAME && key !== MEDIA_CACHE_NAME/);
+  assert.match(worker, /key !== CACHE_NAME/);
+  assert.match(worker, /key !== MEDIA_CACHE_NAME/);
+  assert.match(worker, /key\.startsWith\(SHELL_CACHE_PREFIX\)/);
+  assert.match(worker, /key\.startsWith\(LEGACY_SHELL_CACHE_PREFIX\)/);
 });
 
 test('release: every Phosphor icon the shell references exists and is precached', () => {
