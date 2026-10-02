@@ -119,6 +119,13 @@ const APP_SHELL = [
   "/favicon.svg"
 ];
 
+// Every other APP_SHELL entry was fetched fresh (cache: "reload") when this
+// build installed and cannot change inside the build: serving it cache-first
+// avoids re-downloading identical bytes in the background on every launch.
+const BUILD_SHELL_ASSETS = new Set(
+  APP_SHELL.filter((path) => path !== "/" && path !== "/index.html" && path !== "/version.json")
+);
+
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
@@ -334,6 +341,24 @@ self.addEventListener("fetch", (event) => {
         await cache.put(request, response.clone());
       }
       return response;
+    })());
+    return;
+  }
+
+  if (BUILD_SHELL_ASSETS.has(url.pathname + url.search)) {
+    event.respondWith((async () => {
+      const cached = await caches.match(request);
+      if (cached) return cached;
+      try {
+        const response = await fetch(request);
+        if (response.ok) {
+          const cache = await caches.open(CACHE_NAME);
+          await cache.put(request, response.clone());
+        }
+        return response;
+      } catch (_) {
+        return (await caches.match(request)) || Response.error();
+      }
     })());
     return;
   }
