@@ -233,18 +233,33 @@ test('controller: compact ⇄ expanded through the one trigger, aria-expanded fo
   h.api.destroy();
 });
 
-test('6. outside tap folds the menu without consuming the page gesture; scroll never folds it', () => {
+test('6. outside click folds the menu, while a touch-style scroll gesture leaves it expanded', () => {
   const h = islandHarness();
   h.api.expand();
-  const inside = { target: h.perVoi, preventDefault() { throw new Error('never prevented'); } };
-  h.doc.fire('pointerdown', inside);
-  assert.equal(h.api.state(), 'expanded', 'a tap inside the island keeps it open');
+
+  // A gesture that becomes a scroll starts with pointerdown, moves, scrolls
+  // and ends with pointerup. None of those events may collapse the Island.
+  const touch = { target: h.page, preventDefault() { throw new Error('never prevented'); } };
+  h.doc.fire('pointerdown', touch);
+  h.doc.fire('pointermove', touch);
   h.doc.fire('scroll', {});
-  assert.equal(h.api.state(), 'expanded', 'scrolling is not a collapse signal');
+  h.doc.fire('pointerup', touch);
+  assert.equal(h.api.state(), 'expanded', 'touch scrolling alone never collapses the Island');
+
+  // A real outside click collapses during capture but does not consume the
+  // click, so the underlying page control still runs normally.
   let prevented = false;
-  h.doc.fire('pointerdown', { target: h.page, preventDefault() { prevented = true; } });
+  let pageClicks = 0;
+  h.page.addEventListener('click', () => { pageClicks += 1; });
+  const outsideClick = { target: h.page, preventDefault() { prevented = true; } };
+  h.doc.fire('click', outsideClick);
+  h.page.dispatch('click');
   assert.equal(h.api.state(), 'compact');
-  assert.equal(prevented, false, 'the page still receives the tap');
+  assert.equal(prevented, false, 'outside collapse never prevents the underlying click');
+  assert.equal(pageClicks, 1, 'the underlying page action still executes');
+
+  assert.ok(!foundationJs.includes("addEventListener('pointerdown', onOutside"), 'outside collapse is not bound to pointerdown');
+  assert.ok(foundationJs.includes("addEventListener('click', onOutside, true)"), 'outside collapse waits for a completed click');
   assert.ok(!foundationJs.includes("addEventListener('scroll'"), 'no scroll listener at all');
   h.api.destroy();
 });

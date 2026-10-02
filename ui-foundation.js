@@ -546,8 +546,9 @@
       if (refocus) trigger.focus?.({ preventScroll: true });
       pumpLater();
     };
-    // Outside tap folds the menu without consuming the tap: the page under
-    // it still receives its own gesture. Scrolling never folds it.
+    // An outside click folds the menu without consuming the click: the page
+    // under it still receives its normal action. Touch scrolling produces no
+    // click, so beginning or completing a scroll never folds the Island.
     const onOutside = (event) => {
       if (state === ISLAND_STATES.EXPANDED && !host.contains(event.target)) collapse();
     };
@@ -580,7 +581,7 @@
     noticeEl.addEventListener('focus', hold);
     noticeEl.addEventListener('pointerleave', release);
     noticeEl.addEventListener('blur', release);
-    documentRef.addEventListener('pointerdown', onOutside, true);
+    documentRef.addEventListener('click', onOutside, true);
     documentRef.addEventListener('keydown', onKey);
     documentRef.addEventListener('visibilitychange', onVisibility);
     host.setAttribute('data-us-island', state);
@@ -608,7 +609,7 @@
         noticeEl.removeEventListener('focus', hold);
         noticeEl.removeEventListener('pointerleave', release);
         noticeEl.removeEventListener('blur', release);
-        documentRef.removeEventListener('pointerdown', onOutside, true);
+        documentRef.removeEventListener('click', onOutside, true);
         documentRef.removeEventListener('keydown', onKey);
         documentRef.removeEventListener('visibilitychange', onVisibility);
       }
