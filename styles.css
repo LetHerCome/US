@@ -995,3 +995,12 @@ body.viewer-open{overflow:hidden}
 #bond .noi-living-list .bond-quest h4{margin:7px 0 7px;font-size:17px;line-height:1.15}
 #bond .quest-v2 .quest-status{margin-bottom:7px;font-size:11px}
 #bond .quest-v2 .quest-confirmers{margin-bottom:7px}
+
+
+/* ===== US-1.0 NOI ALIGNMENT · settings must not shift the couple ===== */
+#bond .noi-couple-head{position:relative;display:block;box-sizing:border-box;padding-inline:48px}
+#bond .noi-couple-head .noi-couple{width:100%;margin:0 auto}
+#bond .noi-couple-head #usSettingsEntry{position:absolute;right:0;top:50%;margin:0;transform:translateY(-50%);z-index:2}
+@media(max-width:340px){
+  #bond .noi-couple-head{padding-inline:42px}
+}

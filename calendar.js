@@ -252,18 +252,47 @@ function windowForGrid(gridStart, gridEnd) {
 // from the entry being edited (0 for create, or when there is no prior
 // all-day span to preserve), never a constant — otherwise editing a
 // multi-day all-day entry would silently truncate it to a single day.
-// M6C.1 — Duration from two local "HH:MM" times, in minutes. null when either
-// value is malformed or end <= start (a timed entry must always end after it
-// starts — ends_at > starts_at is an invariant, never silently repaired).
+// Fast time entry: accepts "9", "930", "09:30" and returns canonical HH:MM.
+// Invalid values stay empty instead of being guessed.
+function normalizeQuickTime(value) {
+  const raw = String(value ?? '').trim();
+  if (!raw) return '';
+  let h;
+  let m;
+  const colon = raw.match(/^(\d{1,2}):(\d{1,2})$/);
+  if (colon) {
+    h = Number(colon[1]);
+    m = Number(colon[2]);
+  } else {
+    const digits = raw.replace(/\D/g, '');
+    if (!digits || digits.length > 4) return '';
+    if (digits.length <= 2) { h = Number(digits); m = 0; }
+    else if (digits.length === 3) { h = Number(digits.slice(0, 1)); m = Number(digits.slice(1)); }
+    else { h = Number(digits.slice(0, 2)); m = Number(digits.slice(2)); }
+  }
+  if (!Number.isInteger(h) || !Number.isInteger(m) || h < 0 || h > 23 || m < 0 || m > 59) return '';
+  return `${pad2(h)}:${pad2(m)}`;
+}
+
+function addClockMinutes(value, minutes = US_CALENDAR_DEFAULT_DURATION_MINUTES) {
+  const normalized = normalizeQuickTime(value);
+  if (!normalized) return '';
+  const [h, m] = normalized.split(':').map(Number);
+  const total = (h * 60 + m + minutes) % 1440;
+  return `${pad2(Math.floor(total / 60))}:${pad2(total % 60)}`;
+}
+
+// Duration from two local clock times. An end earlier than the start means the
+// activity crosses midnight (23:30 → 01:00 = 90 min); equal times are invalid.
 function durationMinutesFromTimes(startHHMM, endHHMM) {
-  const toMin = (v) => {
-    if (!/^\d{1,2}:\d{2}$/.test(String(v || ''))) return NaN;
-    const [h, m] = String(v).split(':').map(Number);
-    return h * 60 + m;
-  };
-  const start = toMin(startHHMM);
-  const end = toMin(endHHMM);
-  const diff = end - start;
+  const startValue = normalizeQuickTime(startHHMM);
+  const endValue = normalizeQuickTime(endHHMM);
+  if (!startValue || !endValue || startValue === endValue) return null;
+  const [sh, sm] = startValue.split(':').map(Number);
+  const [eh, em] = endValue.split(':').map(Number);
+  const start = sh * 60 + sm;
+  const end = eh * 60 + em;
+  const diff = end > start ? end - start : (1440 - start) + end;
   return diff > 0 ? diff : null;
 }
 
@@ -346,15 +375,19 @@ function canEditEntry(entry, viewerId) {
   return entry.entry_type === 'shared' ? entry.created_by === viewerId : entry.owner_id === viewerId;
 }
 
-// Ora is mandatory for a TIMED entry, but the field is hidden (and therefore
-// empty) whenever Tutto il giorno is on — an all-day entry must never be
-// blocked by this check.
-function quickEntryError({ allDay, time }) {
-  if (!allDay && !time) return 'time';
+// A timed entry needs both clock values. The compact text fields avoid the
+// platform clock picker; validation remains strict and server timestamps stay canonical.
+function quickEntryError({ allDay, startTime, endTime, time }) {
+  if (allDay) return null;
+  const start = normalizeQuickTime(startTime || time);
+  const end = normalizeQuickTime(endTime);
+  if (!start) return 'start';
+  if (!end) return 'end';
+  if (!durationMinutesFromTimes(start, end)) return 'range';
   return null;
 }
 
-// M9C — the quick form only collects Titolo, Tutto il giorno and Ora. Every
+// 1.0 polish — the quick form collects a fast title, Tutto il giorno and explicit Inizio/Fine. Every
 // field it no longer shows is decided here, never zeroed by accident:
 // * create: no description (a Da vivere idea may pass its own note), no
 //   location, the default duration, a single all-day day;
@@ -491,7 +524,7 @@ const pureApi = {
   formatDateRangeLabel, localDateFromInstant, localDateTimeToISO, addMinutesToISO, originalDurationMinutes,
   shiftISODate, originalAllDaySpanDays,
   monthGridRange, windowForGrid, weekRangeFor, weekWindowFor, mondayOfISO, partitionDayBusy, tempoWindowLabel,
-  durationMinutesFromTimes, REMINDER_OPTIONS, REMINDER_TARGETS, reminderTargetAllowed, reminderOffsetAllowed, reminderOptionsFor, reminderRowsFor, reminderCopy,
+  normalizeQuickTime, addClockMinutes, durationMinutesFromTimes, REMINDER_OPTIONS, REMINDER_TARGETS, reminderTargetAllowed, reminderOffsetAllowed, reminderOptionsFor, reminderRowsFor, reminderCopy,
   buildEntryPayload, withCreateAuthority, canEditEntry,
   quickEntryError, quickEntryHiddenFields, classifyMutationResult,
   oggiEventLabel, composeOggiCalendarFact, oggiRemainingWindows,
@@ -1018,8 +1051,8 @@ async function deleteEntry() {
 
 function toggleAllDayFields() {
   const allDay = Boolean($('usCalendarAllDayInput')?.checked);
-  const timeField = $('usCalendarTimeField');
-  if (timeField) timeField.hidden = allDay;
+  const timeFields = $('usCalendarTimeFields');
+  if (timeFields) timeFields.hidden = allDay;
 }
 function longDayLabel(dateISO) {
   const d = parseISODate(dateISO);
@@ -1041,6 +1074,26 @@ function renderFormDay(dateISO, mode) {
 }
 function setFormStatus(msg) { const el = $('usCalendarFormStatus'); if (el) el.textContent = msg; }
 
+const CALENDAR_TITLE_PRESETS = Object.freeze(['Lavoro', 'Università', 'Uscita']);
+function syncCalendarPresetState() {
+  const title = $('usCalendarTitleInput')?.value.trim() || '';
+  document.querySelectorAll('[data-us-calendar-preset]').forEach((button) => {
+    button.setAttribute('aria-pressed', String(button.dataset.usCalendarPreset === title));
+  });
+}
+function normalizeTimeField(id) {
+  const input = $(id);
+  if (!input) return '';
+  const normalized = normalizeQuickTime(input.value);
+  if (normalized) input.value = normalized;
+  return normalized;
+}
+function fillDefaultEndFromStart() {
+  const start = normalizeTimeField('usCalendarStartTimeInput');
+  const end = $('usCalendarEndTimeInput');
+  if (start && end && !String(end.value || '').trim()) end.value = addClockMinutes(start);
+}
+
 function openForm(mode, entry, dateISO) {
   pendingIdeaLink = null;
   const context = $('usCalendarFormContext');
@@ -1056,17 +1109,24 @@ function openForm(mode, entry, dateISO) {
   calendarKind = mode === 'edit' ? entry.entry_type : 'personal';
 
   $('usCalendarTitleInput').value = entry?.title || '';
+  syncCalendarPresetState();
   $('usCalendarAllDayInput').checked = Boolean(entry?.is_all_day);
+  const startInput = $('usCalendarStartTimeInput');
+  const endInput = $('usCalendarEndTimeInput');
   if (entry?.is_all_day) {
     formDateISO = entry.start_date;
-    $('usCalendarTimeInput').value = '';
+    if (startInput) startInput.value = '';
+    if (endInput) endInput.value = '';
   } else if (entry) {
-    const s = new Date(entry.starts_at);
+    const start = new Date(entry.starts_at);
+    const end = new Date(entry.ends_at);
     formDateISO = localDateFromInstant(entry.starts_at);
-    $('usCalendarTimeInput').value = `${pad2(s.getHours())}:${pad2(s.getMinutes())}`;
+    if (startInput) startInput.value = `${pad2(start.getHours())}:${pad2(start.getMinutes())}`;
+    if (endInput) endInput.value = `${pad2(end.getHours())}:${pad2(end.getMinutes())}`;
   } else {
     formDateISO = dateISO || selectedDate || todayISO();
-    $('usCalendarTimeInput').value = '';
+    if (startInput) startInput.value = '';
+    if (endInput) endInput.value = '';
   }
   // Giorno resta solo in modifica, per spostare un impegno esistente: in
   // creazione la data è quella toccata sul calendario.
@@ -1109,15 +1169,30 @@ async function saveEntry(event) {
   const date = editingFormEntry ? ($('usCalendarDateInput').value || formDateISO) : formDateISO;
   if (!title || !date) return;
   const allDay = $('usCalendarAllDayInput').checked;
-  const time = $('usCalendarTimeInput').value;
-  if (quickEntryError({ allDay, time }) === 'time') { setFormStatus('Scegli un\'ora.'); return; }
-  const { description, location, durationMinutes, spanDays } = quickEntryHiddenFields({
+  const startTime = allDay ? '' : normalizeTimeField('usCalendarStartTimeInput');
+  const endTime = allDay ? '' : normalizeTimeField('usCalendarEndTimeInput');
+  const timeError = quickEntryError({ allDay, startTime, endTime });
+  if (timeError) {
+    setFormStatus(timeError === 'start' ? 'Inserisci l\'ora di inizio.' : timeError === 'end' ? 'Inserisci l\'ora di fine.' : 'Inizio e fine non possono coincidere.');
+    return;
+  }
+  const hidden = quickEntryHiddenFields({
     editingEntry: editingFormEntry,
     allDay,
     ideaNote: pendingIdeaLink ? pendingIdeaLink.note : null
   });
+  const durationMinutes = allDay ? hidden.durationMinutes : durationMinutesFromTimes(startTime, endTime);
 
-  const payload = buildEntryPayload({ title, description, location, allDay, date, time, durationMinutes, spanDays });
+  const payload = buildEntryPayload({
+    title,
+    description: hidden.description,
+    location: hidden.location,
+    allDay,
+    date,
+    time: startTime,
+    durationMinutes,
+    spanDays: hidden.spanDays
+  });
 
   busy = true;
   const saveBtn = $('usCalendarFormSave');
@@ -1306,6 +1381,16 @@ $('usCalendarDetailDelete')?.addEventListener('click', deleteEntry);
 $('usCalendarFormClose')?.addEventListener('click', closeCalendarFormSheet);
 $('usCalendarFormBackdrop')?.addEventListener('click', closeCalendarFormSheet);
 $('usCalendarAllDayInput')?.addEventListener('change', toggleAllDayFields);
+document.querySelectorAll('[data-us-calendar-preset]').forEach((button) => button.addEventListener('click', () => {
+  const input = $('usCalendarTitleInput');
+  if (!input) return;
+  input.value = button.dataset.usCalendarPreset || '';
+  syncCalendarPresetState();
+  input.focus({ preventScroll: true });
+}));
+$('usCalendarTitleInput')?.addEventListener('input', syncCalendarPresetState);
+$('usCalendarStartTimeInput')?.addEventListener('blur', fillDefaultEndFromStart);
+$('usCalendarEndTimeInput')?.addEventListener('blur', () => normalizeTimeField('usCalendarEndTimeInput'));
 $('usCalendarPickCancel')?.addEventListener('click', clearIdeaPick);
 $('usCalendarForm')?.addEventListener('submit', saveEntry);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('usCalendarOverlay')?.classList.contains('open')) closeCalendarSurface(); });
@@ -1364,6 +1449,7 @@ function openIdeaForm(pick, dateISO) {
   const saveBtn = $('usCalendarFormSave');
   if (saveBtn) saveBtn.textContent = 'Metti in calendario';
   $('usCalendarTitleInput').value = pick.title;
+  syncCalendarPresetState();
 }
 
 // Letture minime per mostrare "In calendario · quando" in Da vivere, sempre

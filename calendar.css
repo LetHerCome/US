@@ -250,3 +250,19 @@ body.us-cal-open{overflow:hidden}
 .us-cal-field{margin-top:9px}
 .us-cal-field>span{margin-bottom:5px;font-size:10.5px}
 .us-cal-field input,.us-cal-field textarea{padding:10px 12px}
+
+
+/* ===== US-1.0 QUICK CALENDAR · presets + keyboard time entry ===== */
+.us-cal-presets{display:flex;gap:7px;margin:8px 0 2px;overflow-x:auto;scrollbar-width:none}
+.us-cal-presets::-webkit-scrollbar{display:none}
+.us-cal-presets button{flex:0 0 auto;min-height:38px;padding:0 13px;border-radius:999px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.045);color:var(--us-color-text-2);font-size:10.5px;font-weight:800;letter-spacing:.055em;text-transform:uppercase}
+.us-cal-presets button[aria-pressed="true"]{border-color:rgba(255,158,182,.30);background:rgba(255,158,182,.12);color:#ffd3de}
+.us-cal-time-fields{display:grid;grid-template-columns:minmax(0,1fr) 18px minmax(0,1fr);align-items:end;gap:8px}
+.us-cal-time-fields[hidden]{display:none!important}
+.us-cal-time-fields .us-cal-field{min-width:0}
+.us-cal-time-input{text-align:center;font-variant-numeric:tabular-nums;letter-spacing:.05em;font-size:16px!important}
+.us-cal-time-arrow{display:grid;place-items:center;height:42px;padding-bottom:2px;color:var(--us-color-text-3);font-size:15px}
+@media(max-width:340px){
+  .us-cal-time-fields{gap:5px;grid-template-columns:minmax(0,1fr) 14px minmax(0,1fr)}
+  .us-cal-presets button{padding:0 10px}
+}

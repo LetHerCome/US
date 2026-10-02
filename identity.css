@@ -373,3 +373,7 @@ body:has(#home.page.active) .app{padding-bottom:0!important}
 @media(max-width:360px){
   .top.us-premium-top{left:max(34px,var(--us-safe-left));right:max(34px,var(--us-safe-right))}
 }
+
+
+/* ===== US-1.0 HOME SEMANTICS · distance lives in Noi, not over the daily photo ===== */
+#home .home-distance-pill{display:none!important}

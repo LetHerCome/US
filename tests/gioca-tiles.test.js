@@ -70,7 +70,7 @@ test('Gioca hub: a spent week stays compact and locks unplayed tiles with an ico
 });
 
 test('Gioca hub: Per voi is one line of state plus one action', async () => {
-  const expectations = { idle: ['Cinque domande', 'Inizia'], pending: ['Bea ha iniziato', 'Rispondi'], waiting: ['Aspettiamo Bea', 'Apri'], reveal_ready: ['Risposte pronte ♡', 'Scopri'], in_progress: ['A metà', 'Continua'] };
+  const expectations = { idle: ['5 domande scelte per voi', 'Inizia'], pending: ['Bea ha iniziato', 'Rispondi'], waiting: ['Aspettiamo Bea', 'Apri'], reveal_ready: ['Risposte pronte ♡', 'Scopri'], in_progress: ['A metà', 'Continua'] };
   for (const [state, [line, cta]] of Object.entries(expectations)) {
     const html = await hub(homeOf({ per_voi: { state, session_id: 's' } })).html();
     assert.match(html, new RegExp(`<b>Per voi</b><small>${line}</small></span><span class="us-gv2-pervoi-cta">${cta}</span>`), state);
@@ -87,4 +87,10 @@ test('Gioca CSS: tiles use the canonical tokens and the Noi chip recipe, never a
   assert.doesNotMatch(css, /:root\s*\{/, 'no palette of its own');
   assert.match(css, /var\(--us-radius-card\)/);
   assert.match(css, /var\(--us-accent-gradient\)/);
+});
+
+
+test('Gioca hub: a fresh hub explains the low-friction entry without adding authority', async () => {
+  const html = await hub(homeOf()).html();
+  assert.match(html, /class="us-gv2-invite">Scegliete un gioco\. Bastano pochi minuti\.<\/p>/);
 });

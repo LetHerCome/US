@@ -61,7 +61,7 @@ function perVoiCopy() {
     case 'pending': return { line: row?.partner_complete ? `${partnerName()} ha già risposto` : `${partnerName()} ha iniziato`, cta: 'Rispondi' };
     case 'in_progress': return { line: 'A metà', cta: 'Continua' };
     case 'played': return { line: 'Giocato questa settimana', cta: 'Rivedi' };
-    default: return { line: 'Cinque domande', cta: 'Inizia' };
+    default: return { line: '5 domande scelte per voi', cta: 'Inizia' };
   }
 }
 
@@ -203,8 +203,12 @@ function renderHub() {
       ${status && !locked && status.state === 'open' ? `<i class="us-gv2-dot" data-tone="${esc(status.tone)}" aria-hidden="true"></i>` : ''}
     </button>`;
   }).join('');
+  const invite = !filters.length && pvState === 'idle'
+    ? '<p class="us-gv2-invite">Scegliete un gioco. Bastano pochi minuti.</p>'
+    : '';
   root.innerHTML = `
     <header class="us-gv2-head"><h2>Gioca</h2>${rhythmStrip()}</header>
+    ${invite}
     ${filterRow(filters)}
     <button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-pervoi us-attention-orbit" data-gv2-action="per-voi" data-gv2-state="${esc(pvState)}" data-us-attention="${pvState === 'pending' || pvState === 'reveal_ready' ? 'on' : 'off'}">
       ${glyph('sparkle').replace('class="us-gv2-glyph"', 'class="us-gv2-glyph" data-us-attention-icon')}<span class="us-gv2-pervoi-copy"><b>Per voi</b><small>${esc(pv.line)}</small></span><span class="us-gv2-pervoi-cta">${esc(pv.cta)}</span>

@@ -219,7 +219,7 @@ test('Noi distance: the existing capsule render also fills the couple row, and o
   assert.doesNotMatch(render, /sb\.|localStorage|upsert|insert|update\(/);
 });
 
-test('Noi: the couple row reuses the existing avatar slots; Risonanza stays the hero; destinations unchanged', () => {
+test('Noi: the couple row stays centered, Risonanza stays the hero, and only active destinations are exposed', () => {
   const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
   const head = bond.match(/<header class="noi-canonical-head noi-couple-head">[\s\S]*?<\/header>/)?.[0] || '';
   assert.match(head, /id="pairAvatarFrancesco"><img alt="" hidden><span class="fallback"/);
@@ -230,24 +230,25 @@ test('Noi: the couple row reuses the existing avatar slots; Risonanza stays the 
   assert.match(app, /if\(profile\.role==='beatrice'\)setAvatarSlot\('pairAvatarBeatrice',url\);/);
   const hub = bond.match(/<nav class="noi-hub" id="noiHub"[\s\S]*?<\/nav>/)?.[0] || '';
   const targets = [...hub.matchAll(/class="noi-hub-card noi-hub-card--([a-z]+)"(?: data-noi-open="([a-z-]+)"| id="usCalendarEntry" onclick="openCalendarSurface\(\)")/g)].map((m) => [m[1], m[2] || 'calendar-surface']);
-  assert.deepEqual(targets, [['resonance', 'resonance'], ['ideas', 'da-vivere'], ['calendar', 'calendar-surface'], ['quest', 'quest'], ['events', 'eventi']]);
-  for (const id of ['noiHubResonanceTitle', 'noiHubResonanceMeta', 'noiHubResonanceFill', 'noiHubIdeasTitle', 'noiHubIdeasMeta', 'noiHubQuestTitle', 'noiHubQuestMeta', 'noiHubEventsTitle', 'noiHubEventsMeta']) {
+  assert.deepEqual(targets, [['resonance', 'resonance'], ['calendar', 'calendar-surface'], ['quest', 'quest'], ['events', 'eventi']]);
+  assert.doesNotMatch(hub, /data-noi-open="da-vivere"|noi-hub-card--ideas/);
+  for (const id of ['noiHubResonanceTitle', 'noiHubResonanceMeta', 'noiHubResonanceFill', 'noiHubQuestTitle', 'noiHubQuestMeta', 'noiHubEventsTitle', 'noiHubEventsMeta']) {
     assert.equal((html.match(new RegExp(`id="${id}"`, 'g')) || []).length, 1, id);
   }
 });
 
 
 
-test('Noi density: Risonanza is the only hero and the four destinations share one compact surface', () => {
+test('Noi density: Risonanza is the only hero and the three active destinations share one compact surface', () => {
   const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
   const hub = bond.match(/<nav class="noi-hub" id="noiHub"[\s\S]*?<\/nav>/)?.[0] || '';
   const group = hub.match(/<div class="noi-hub-destinations" role="group" aria-label="Voi">[\s\S]*?<\/div>/)?.[0] || '';
   assert.match(hub, /noi-hub-card--resonance/);
   assert.doesNotMatch(
     hub.slice(0, hub.indexOf('noi-hub-destinations')),
-    /noi-hub-card--ideas|noi-hub-card--calendar|noi-hub-card--quest|noi-hub-card--events/
+    /noi-hub-card--calendar|noi-hub-card--quest|noi-hub-card--events/
   );
-  for (const kind of ['ideas', 'calendar', 'quest', 'events']) {
+  for (const kind of ['calendar', 'quest', 'events']) {
     assert.match(group, new RegExp(`noi-hub-card--${kind}`), kind);
   }
   const css = read('styles.css');
@@ -464,4 +465,13 @@ test('Auth first-run: new assets follow the canonical BUILD_ID contract', () => 
   assert.match(worker, /versioned\("\/auth-first-run\.css"\)/);
   assert.match(worker, /versioned\("\/auth-first-run\.js"\)/);
   assert.equal(JSON.parse(read('version.json')).version, build);
+});
+
+
+test('US 1.0 polish: Settings is out of the Noi couple flow and Home no longer shows distance', () => {
+  const css = read('styles.css');
+  const identity = read('identity.css');
+  assert.match(css, /#bond \.noi-couple-head\{position:relative;display:block/);
+  assert.match(css, /#bond \.noi-couple-head #usSettingsEntry\{position:absolute/);
+  assert.match(identity, /#home \.home-distance-pill\{display:none!important\}/);
 });

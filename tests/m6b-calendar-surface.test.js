@@ -352,41 +352,40 @@ test('M6B (38): the private media cache name is preserved exactly', () => {
 
 // --- Quick-entry form refinement -----------------------------------------
 
-// (39) M9C: the quick form exposes only Titolo, Tutto il giorno, Ora (Giorno only when editing).
-test('M6B (39): the quick form exposes exactly Titolo, Tutto il giorno, Ora — no kind, note, duration or reminder', () => {
+// (39) 1.0: the quick form exposes presets plus explicit start/end without the native clock picker.
+test('M6B (39): quick entry has presets, title, all-day and keyboard start/end fields', () => {
   const formBlock = html().match(/<form class="us-cal-form" id="usCalendarForm">[\s\S]*?<\/form>/)?.[0] || '';
-  const order = [
-    formBlock.indexOf('id="usCalendarTitleInput"'),
-    formBlock.indexOf('id="usCalendarAllDayInput"'),
-    formBlock.indexOf('id="usCalendarTimeInput"')
-  ];
-  assert.ok(order.every((i) => i >= 0), 'Titolo, Tutto il giorno and Ora must be present');
-  for (let i = 1; i < order.length; i++) assert.ok(order[i] > order[i - 1], `field at index ${i} must come after the previous one`);
-  for (const gone of ['usCalendarKindPicker', 'usCalendarNoteInput', 'usCalendarDurationField', 'usCalendarReminderField', 'usCalendarEndInput']) {
-    assert.doesNotMatch(formBlock, new RegExp(gone), `${gone} is no longer part of the quick form`);
+  for (const preset of ['Lavoro', 'Università', 'Uscita']) assert.match(formBlock, new RegExp(`data-us-calendar-preset="${preset}"`));
+  assert.match(formBlock, /id="usCalendarTitleInput"/);
+  assert.match(formBlock, /id="usCalendarAllDayInput"/);
+  assert.match(formBlock, /id="usCalendarStartTimeInput"[^>]*type="text"[^>]*inputmode="numeric"/);
+  assert.match(formBlock, /id="usCalendarEndTimeInput"[^>]*type="text"[^>]*inputmode="numeric"/);
+  assert.doesNotMatch(formBlock, /type="time"/, 'native clock picker must not return');
+  for (const gone of ['usCalendarKindPicker', 'usCalendarNoteInput', 'usCalendarDurationField', 'usCalendarReminderField']) {
+    assert.doesNotMatch(formBlock, new RegExp(gone), `${gone} is not part of the quick form`);
   }
-  assert.match(formBlock, /<label class="us-cal-field" id="usCalendarDateField" hidden><span>Giorno<\/span>/, 'Giorno exists only for moving an existing entry, hidden by default');
-  assert.match(js(), /if \(dateField\) dateField\.hidden = mode !== 'edit';/);
+  assert.match(formBlock, /<label class="us-cal-field" id="usCalendarDateField" hidden><span>Giorno<\/span>/);
 });
 
-// (40) the end-date, end-time and location inputs are gone from the markup.
-test('M6B (40): the end-date, end-time and location inputs no longer exist', () => {
+// (40) end time is explicit; end date/location remain out of the quick form.
+test('M6B (40): explicit end time exists without reintroducing end-date or location fields', () => {
+  assert.match(html(), /usCalendarEndTimeInput/);
   assert.doesNotMatch(html(), /usCalendarEndDateInput/);
-  assert.doesNotMatch(html(), /usCalendarEndTimeInput/);
-  assert.doesNotMatch(html(), /usCalendarEndTimeField/);
   assert.doesNotMatch(html(), /usCalendarLocationInput/);
 });
 
-// (41) no "Data inizio"/"Ora inizio" wording remains anywhere in the form.
-test('M6B (41): no "Data inizio"/"Ora inizio" wording remains in the calendar form', () => {
-  assert.doesNotMatch(html(), /Data inizio/);
-  assert.doesNotMatch(html(), /Ora inizio/);
+// (41) concise Inizio/Fine labels replace the old picker wording.
+test('M6B (41): time labels are compact Inizio and Fine', () => {
+  const formBlock = html().match(/<form class="us-cal-form" id="usCalendarForm">[\s\S]*?<\/form>/)?.[0] || '';
+  assert.match(formBlock, /<span>Inizio<\/span>/);
+  assert.match(formBlock, /<span>Fine<\/span>/);
+  assert.doesNotMatch(formBlock, /Data inizio|Ora inizio/);
 });
 
-// (42) the Ora field is hidden when Tutto il giorno is checked, shown when unchecked.
-test('M6B (42): the Ora field visibility is driven by the Tutto il giorno checkbox', () => {
+// (42) the whole Inizio/Fine row hides for all-day entries.
+test('M6B (42): Inizio/Fine visibility follows Tutto il giorno', () => {
   assert.match(js(), /function toggleAllDayFields\(\)/);
-  assert.match(js(), /timeField\.hidden = allDay/);
+  assert.match(js(), /timeFields\.hidden = allDay/);
   assert.match(js(), /usCalendarAllDayInput'\)\?\.addEventListener\('change', ?toggleAllDayFields\)/);
 });
 
@@ -514,4 +513,16 @@ test('M6B (51): saveEntry rejects a missing Ora through the existing form-status
   const payloadIdx = saveBlock.indexOf('buildEntryPayload(');
   assert.ok(guardIdx > 0 && payloadIdx > guardIdx, 'the Ora check must run before the payload is built');
   assert.match(js(), /const time = \$\('usCalendarTimeInput'\)\.value;/, 'the silent 00:00 default for a missing Ora must be removed');
+});
+
+
+test('1.0 calendar: compact time parser and overnight duration are deterministic', () => {
+  assert.equal(cal.normalizeQuickTime('9'), '09:00');
+  assert.equal(cal.normalizeQuickTime('930'), '09:30');
+  assert.equal(cal.normalizeQuickTime('18:45'), '18:45');
+  assert.equal(cal.normalizeQuickTime('25:00'), '');
+  assert.equal(cal.addClockMinutes('23:30'), '00:30');
+  assert.equal(cal.durationMinutesFromTimes('23:30', '01:00'), 90);
+  assert.equal(cal.durationMinutesFromTimes('09:00', '09:00'), null);
+  assert.equal(cal.quickEntryError({ allDay: false, startTime: '09:00', endTime: '10:00' }), null);
 });
