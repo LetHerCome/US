@@ -1,15 +1,15 @@
 {
   "version": 1,
   "updatedAt": "2026-10-03",
-  "mainSha": "98c473c3b5616dcb952b1a2e883de2e6c93b6667",
-  "currentMission": "F0.1",
-  "currentLabel": "Test Harness Hardening",
+  "mainSha": "b06ab2e4ae269e4ea134c987471f46e6ec7d6bb9",
+  "currentMission": "F1C",
+  "currentLabel": "Authority / RLS Write-Boundary Hardening",
   "state": {
     "F0": "done",
-    "F0.1": "doing",
+    "F0.1": "done",
     "F1A": "done",
     "F1B": "done",
-    "F1C": "todo",
+    "F1C": "doing",
     "F2A": "todo",
     "F2B": "todo",
     "F2C": "todo",
@@ -33,5 +33,5 @@
     "N4": "todo",
     "N5": "todo"
   },
-  "note": "F1B independently audited and merged via PR #50. F0.1 remains active; F1C is the next Opus security mission."
+  "note": "F0.1 Windows test-harness hardening merged via PR #51 with full Windows suite green. F1C is active with Opus."
 }
