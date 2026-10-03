@@ -12,7 +12,7 @@
 --   * The BEGIN READ ONLY / ROLLBACK lines around the file make an accidental
 --     write fail if the whole file is run at once.
 --
--- Blocks c01–c10 are small or medium. c11a/c11b list every function.
+-- Blocks c01–c10b are small or medium (c10b may be ~80 KB). c11a/c11b list every function.
 -- c12–c20 hold the full definitions in ~55 KB buckets. A bucket block that
 -- returns null is empty: the remaining ones are empty too.
 --
@@ -167,6 +167,7 @@ select jsonb_build_object(
     'bond_quest_templates', (select jsonb_build_object('n', count(*), 'md5', md5(string_agg(x::text, '|' order by x::text))) from public.bond_quest_templates x),
     'daily_question_templates', (select jsonb_build_object('n', count(*), 'md5', md5(string_agg(x::text, '|' order by x::text))) from public.daily_question_templates x),
     'game_v2_catalog', (select jsonb_build_object('n', count(*), 'md5', md5(string_agg(x::text, '|' order by x::text))) from public.game_v2_catalog x),
+    'game_v2_recipes', (select jsonb_build_object('n', count(*), 'md5', md5(string_agg(x::text, '|' order by x::text))) from public.game_v2_recipes x),
     'progression_reward_catalog', (select jsonb_build_object('n', count(*), 'md5', md5(string_agg(x::text, '|' order by x::text))) from public.progression_reward_catalog x),
     'game_swipe_v1_catalog', (select jsonb_build_object('n', count(*), 'md5', md5(string_agg(x::text, '|' order by x::text))) from private.game_swipe_v1_catalog x),
     'quiz_sets', (select jsonb_build_object('n', count(*), 'md5', md5(string_agg(x::text, '|' order by x::text))) from public.quiz_sets x),
@@ -175,6 +176,16 @@ select jsonb_build_object(
                  from supabase_migrations.schema_migrations
                  where version in ('20260928210000', '20260820181734', '20260820181751'))
 ) as f2a1_c10_content;
+
+-- c10b. Full content of the catalog tables that repo migrations seed, so the
+--       baseline can carry them after the old migrations become history-only.
+select jsonb_build_object(
+  'game_v2_catalog', (select jsonb_agg(to_jsonb(x) order by to_jsonb(x)::text) from public.game_v2_catalog x),
+  'game_v2_recipes', (select jsonb_agg(to_jsonb(x) order by to_jsonb(x)::text) from public.game_v2_recipes x),
+  'daily_question_templates', (select jsonb_agg(to_jsonb(x) order by to_jsonb(x)::text) from public.daily_question_templates x),
+  'progression_reward_catalog', (select jsonb_agg(to_jsonb(x) order by to_jsonb(x)::text) from public.progression_reward_catalog x),
+  'game_swipe_v1_catalog', (select jsonb_agg(to_jsonb(x) order by to_jsonb(x)::text) from private.game_swipe_v1_catalog x)
+) as f2a1_c10b_catalog_content;
 
 -- c11a. Function manifest, public: header attributes, hashes, and the bucket
 --       each definition falls in (buckets are computed over all functions).
