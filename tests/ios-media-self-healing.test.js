@@ -28,9 +28,9 @@ test('avatar e immagini private possono rinnovare il signed URL dopo un errore',
 
 test('foreground ripara Home avatar e Ricordi senza richiedere un nuovo login', async () => {
   const app = await src('app.js');
-  assert.match(app, /if\(options\.foreground\)\{[\s\S]*hydrateProfileAvatars\(\)[\s\S]*hydrateHomePhoto\(false\)/);
+  assert.match(app, /if\(options\.foreground\)hydrateProfileAvatars\(\)\.catch\(\(\)=>\{\}\);[\s\S]*if\(options\.foreground\)hydrateHomePhoto\(false\)\.catch\(\(\)=>\{\}\)/);
   assert.match(app, /hydrateMoments\(\{forceMedia:Boolean\(options\.foreground\)\}\)/);
-  assert.match(app, /usGetSignedUrls\([^\n]+\{force:Boolean\(options\.forceMedia\)\}\)/);
+  assert.match(app, /usGetSignedUrls\([^\n]+\{force:forceMedia\}\)/);
 });
 
 test('Stories Left for You e album hanno recovery media esplicita', async () => {
