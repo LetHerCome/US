@@ -1,4 +1,4 @@
-const BUILD_ID = "us-ios-media-hotfix-v1-20261003-1";
+const BUILD_ID = "us-ios-media-hotfix-v2-20261003-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -257,8 +257,17 @@ self.addEventListener("fetch", (event) => {
 
       const response = await fetch(request);
       if (response.ok || response.type === "opaque") {
-        await cache.put(key, response.clone());
-        event.waitUntil(usPruneMediaCache(cache));
+        const copy = response.clone();
+        event.waitUntil((async () => {
+          try {
+            await cache.put(key, copy);
+            await usPruneMediaCache(cache);
+          } catch (_) {
+            // CacheStorage is only an optimization. A cache write failure must
+            // never turn a successful private-media network response into a
+            // broken image, especially on Safari/iOS.
+          }
+        })());
       }
       return response;
     })());

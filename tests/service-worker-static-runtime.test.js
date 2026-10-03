@@ -22,7 +22,7 @@ function cacheKey(input) {
   return input.url;
 }
 
-function createServiceWorkerHarness({ failPrecachePath = null, redirectRefresh = false, userAgent = '' } = {}) {
+function createServiceWorkerHarness({ failPrecachePath = null, redirectRefresh = false, userAgent = '', failMediaCachePut = false } = {}) {
   const source = WORKER_SOURCE;
   const listeners = new Map();
   const cacheBuckets = new Map();
@@ -74,6 +74,7 @@ function createServiceWorkerHarness({ failPrecachePath = null, redirectRefresh =
           return entries.get(cacheKey(input))?.clone();
         },
         async put(input, response) {
+          if (failMediaCachePut && name === 'us-private-media-v1') throw new Error('media cache put failed');
           entries.set(cacheKey(input), response.clone());
         },
         async keys() {
@@ -540,6 +541,16 @@ test('iOS PWA: le immagini private bypassano il service worker e la vecchia medi
 
   assert.equal(intercepted, null, 'iOS image request must be handled directly by Safari');
   assert.equal(harness.cacheBuckets.has('us-private-media-v1'), false);
+});
+
+test('media cache write failure never breaks a successful signed image response', async () => {
+  const harness = createServiceWorkerHarness({ failMediaCachePut: true });
+  const signedUrl = 'https://iiakdfsxpywdkxravqjh.supabase.co/storage/v1/object/sign/us-media/private/photo.jpg?token=fresh';
+
+  const response = await harness.dispatchFetch(signedUrl, { destination: 'image' });
+
+  assert.equal(response.status, 200);
+  assert.equal(await response.text(), 'asset:/storage/v1/object/sign/us-media/private/photo.jpg');
 });
 
 test('reload offline usa index e runtime della nuova shell cache', async () => {
