@@ -865,10 +865,11 @@ function setAvatarImage(img,fallback,path,signedUrl){
   img.onload=()=>{img.hidden=false;if(fallback)fallback.style.display='none';img.dataset.usMediaRetry='0';};
   img.onerror=async()=>{
     showFallback();
-    if(!path||img.dataset.usMediaRetry==='1')return;
+    const retryPath=path||img.dataset?.usMediaPath||'';
+    if(!retryPath||img.dataset.usMediaRetry==='1')return;
     img.dataset.usMediaRetry='1';
-    usInvalidateSignedUrl(path);
-    const fresh=await usGetSignedUrl(path,21600,{force:true});
+    usInvalidateSignedUrl(retryPath);
+    const fresh=await usGetSignedUrl(retryPath,21600,{force:true});
     if(fresh)img.src=fresh;
   };
   if(!signedUrl){img.removeAttribute('src');showFallback();return;}
