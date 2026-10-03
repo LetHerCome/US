@@ -13,7 +13,7 @@ async function src(file) {
 
 test('Home photo commits cache state only after a successful image load and retries once fresh', async () => {
   const app = await src('app.js');
-  assert.match(app, /preload\.onload=async\(\)=>\{[\s\S]*writeHomeBootCache\(/);
+  assert.match(app, /function crossfadeHomePhoto\([\s\S]*writeHomeBootCache\([\s\S]*preload\.onload=async\(\)=>\{[\s\S]*apply\(\)/);
   assert.match(app, /preload\.onerror=async\(\)=>\{[\s\S]*usInvalidateSignedUrl\(path\)[\s\S]*usGetSignedUrl\(path,21600,\{force:true\}\)/);
   assert.match(app, /homePhotoPath=''[\s\S]*homePhotoHasPainted=false/);
 });
