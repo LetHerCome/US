@@ -68,9 +68,9 @@ function persistDevicePreferences(prefs) {
   }
 }
 function readDevicePreferences(next) {
-  const fallback = sanitizeDevicePreferences(next?.preferences || {}, next);
+  const fresh = sanitizeDevicePreferences({}, next);
   const key = devicePreferenceKey();
-  if (!key) return fallback;
+  if (!key) return fresh;
   try {
     const saved = JSON.parse(window.localStorage.getItem(key) || 'null');
     if (saved?.version === DEVICE_PREFS_VERSION && saved?.preferences) {
@@ -79,10 +79,11 @@ function readDevicePreferences(next) {
   } catch (error) {
     console.warn('[US Progression] read device preferences', error);
   }
-  // One-time compatibility seed: preserve the look that was previously stored
-  // for the couple, then this phone diverges independently from this point on.
-  persistDevicePreferences(fallback);
-  return fallback;
+  // A phone with no local cosmetic state starts from the standard US look.
+  // Never seed a new device from the couple-level legacy preferences: those
+  // are shared history, not a signal that this phone chose the same cosmetics.
+  persistDevicePreferences(fresh);
+  return fresh;
 }
 function applyDevicePreferences(next) {
   if (!next) return next;
