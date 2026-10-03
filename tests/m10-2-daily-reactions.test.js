@@ -87,8 +87,8 @@ test('M10.2 reazioni: nessuna prima del reveal, valori non validi ignorati, una 
 });
 
 test('M10.2 nessuna notifica per reazioni/receipt: send-web-push invariato, nessun push dai nuovi percorsi', () => {
-  const edge = fs.readFileSync(path.join(ROOT, 'supabase/functions/send-web-push/index.ts'));
-  assert.equal(crypto.createHash('sha256').update(edge).digest('hex'), '069c044b6aa849337b094980905b15097ee5982c899ca4f512969fcf9122086c', 'send-web-push is byte-identical to the M10 production source');
+  const edge = fs.readFileSync(path.join(ROOT, 'supabase/functions/send-web-push/index.ts'), 'utf8').replace(/\r\n/g, '\n');
+  assert.equal(crypto.createHash('sha256').update(edge, 'utf8').digest('hex'), '069c044b6aa849337b094980905b15097ee5982c899ca4f512969fcf9122086c', 'send-web-push content is identical to the M10 production source');
   const newPaths = [slice('// M10.2 — reveal Daily', 'let usTodayHydrateSeq=0;'), slice('installTodayNoticeSwipe(', 'window.UsTodayPriority=Object.freeze')].join('\n');
   assert.doesNotMatch(newPaths, /sendWebPushEvent|push_event_log|sendNotification/);
   assert.match(app, /sendWebPushEvent\('daily_answer',window\.todayQuestion\.id\)/, 'the second-answer push still originates from the saved answer');

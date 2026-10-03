@@ -39,7 +39,9 @@ function runBrandBuildAsync() {
 
 windowsTest('la build brand Android crea derivative tracciabili e ripetibili senza alterare i master', () => {
   const before = Object.fromEntries(SOURCES.map((source) => [source, sha256(path.join(ROOT, source))]));
+  const manifestBefore = fs.readFileSync(BRAND_MANIFEST);
   runBrandBuild();
+  assert.deepEqual(fs.readFileSync(BRAND_MANIFEST), manifestBefore, 'la build non deve riscrivere il manifest tracciato');
   const first = JSON.parse(fs.readFileSync(BRAND_MANIFEST, 'utf8'));
   const firstHash = sha256(BRAND_MANIFEST);
   runBrandBuild();

@@ -5,13 +5,14 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 const crypto = require('node:crypto');
 
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const CORE = path.join(ROOT, 'supabase/functions/_shared/left-for-you-push-core.mjs');
 const MIGRATION = 'supabase/migrations/20260929201958_m9a_left_for_you_push_reliability.sql';
-const loadCore = () => import(CORE);
+const loadCore = () => import(pathToFileURL(CORE).href);
 
 const COUPLE = 'couple-1';
 const FRANCESCO = 'francesco-id';
@@ -243,7 +244,7 @@ test('M9A: send-web-push valida mittente/coppia/partner e delega al core condivi
 test('M9A: il worker di recupero è solo cron, usa la stessa chiave e salta ciò che è già notificato', () => {
   const worker = read('supabase/functions/left-for-you-push-worker/index.ts');
   const config = read('supabase/config.toml');
-  assert.match(config, /\[functions\.left-for-you-push-worker\]\nverify_jwt = false/);
+  assert.match(config, /\[functions\.left-for-you-push-worker\]\r?\nverify_jwt = false/);
   assert.match(worker, /x-us-cron-key/);
   assert.match(worker, /get_internal_left_for_you_push_cron_key/);
   assert.ok(worker.indexOf('cronKey !== expectedKey') < worker.indexOf('.from("left_for_you")'), 'autorizzazione prima di leggere i dati');

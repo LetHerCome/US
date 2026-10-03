@@ -14,7 +14,7 @@ const { PGlite } = require('@electric-sql/pglite');
 const { EVENTS_FIXTURE, M12B3 } = require('./helpers/m12b-3-events-fixture');
 
 const ROOT = path.resolve(__dirname, '..');
-const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
+const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8').replace(/\r\n/g, '\n');
 const DA_VIVERE = ['20260929121350_m7a_da_vivere_bucket_items_domain', '20260929190126_m7c_da_vivere_calendar_unschedule',
   '20260929190145_m7d_da_vivere_reciprocal_lived', '20260930225935_m12b_2_da_vivere_archived_link_release']
   .map((n) => `supabase/migrations/${n}.sql`);

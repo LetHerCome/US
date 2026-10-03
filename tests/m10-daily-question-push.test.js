@@ -6,12 +6,13 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 const crypto = require('node:crypto');
 const { loadEdgeFunction, createFakeAdmin, createFakeWebPush } = require('./helpers/edge-function-harness.js');
 
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
-const loadCore = () => import(path.join(ROOT, 'supabase/functions/_shared/daily-question-push-core.mjs'));
+const loadCore = () => import(pathToFileURL(path.join(ROOT, 'supabase/functions/_shared/daily-question-push-core.mjs')).href);
 const MIGRATION = 'supabase/migrations/20260930061045_m10c_daily_question_push.sql';
 const M9E = 'supabase/migrations/20260930045233_m9e_daily_question_engine.sql';
 
@@ -268,7 +269,7 @@ test('M10C: un client normale non può chiedere la push di sistema (send-web-pus
   assert.doesNotMatch(worker, /request\.json|request\.text|searchParams/, 'the worker takes no caller input');
   assert.doesNotMatch(worker, /SUPABASE_SERVICE_ROLE_KEY|service_role_key/i);
   assert.ok(worker.indexOf('cronKey !== expectedKey') < worker.indexOf('dispatchDailyQuestionPush(admin'), 'auth before any work');
-  assert.match(read('supabase/config.toml'), /\[functions\.daily-question-push-worker\]\nverify_jwt = false/);
+  assert.match(read('supabase/config.toml'), /\[functions\.daily-question-push-worker\]\r?\nverify_jwt = false/);
 });
 
 // ---- Migration su Postgres embedded ----

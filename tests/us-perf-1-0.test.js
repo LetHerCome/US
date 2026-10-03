@@ -6,7 +6,7 @@ const vm = require('node:vm');
 
 const ROOT = path.resolve(__dirname, '..');
 const ORIGIN = 'https://us.example.test';
-const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
+const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8').replace(/\r\n/g, '\n');
 const html = read('index.html');
 const worker = read('service-worker.js');
 const build = html.match(/<meta name="us-build" content="([^"]+)"\/>/)?.[1];

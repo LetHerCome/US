@@ -6,13 +6,14 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 const h = require('./helpers/game-v2-db');
 const { loadEdgeFunction, createFakeAdmin, createFakeWebPush } = require('./helpers/edge-function-harness.js');
 
 const { createDb, couple, setClock, as, readOnly, rpc, id, playSide, startRound, createWeekly } = h;
 const ROOT = h.ROOT;
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
-const loadCore = () => import(path.join(ROOT, 'supabase/functions/_shared/game-v2-push-core.mjs'));
+const loadCore = () => import(pathToFileURL(path.join(ROOT, 'supabase/functions/_shared/game-v2-push-core.mjs')).href);
 const M11D = 'supabase/migrations/20260930153755_m11d_game_v2_push.sql';
 const WED = '2026-09-30T10:00:00Z'; // Francesco's week
 
@@ -237,8 +238,8 @@ test('M11D migration: dedicated vault key, idempotent cron, service-role grants 
   assert.match(sql, /if not exists \(select 1 from cron\.job where jobname = 'us-game-v2-push'\)/, 'job scheduled once');
   assert.doesNotMatch(sql, /\bdrop table\b|\btruncate\b|\bdelete from\b/i);
   assert.doesNotMatch(sql, /question_text|answer_text|predict_text|daily_answers|left_for_you\b.*body/i, 'events are built from ids and roles only');
-  assert.match(read('supabase/config.toml'), /\[functions\.game-v2-push-worker\]\nverify_jwt = false/);
-  assert.match(read('supabase/config.toml'), /\[functions\.game-v2-push\]\nverify_jwt = true/);
+  assert.match(read('supabase/config.toml'), /\[functions\.game-v2-push-worker\]\r?\nverify_jwt = false/);
+  assert.match(read('supabase/config.toml'), /\[functions\.game-v2-push\]\r?\nverify_jwt = true/);
   const app = read('app.js');
   const send = app.slice(app.indexOf('async function sendWebPushEvent'), app.indexOf('window.sendWebPushEvent=sendWebPushEvent'));
   assert.match(send, /const endpoint=String\(type\)\.startsWith\('game_'\)\?'game-v2-push':'send-web-push';/, 'one client helper, same auth and keepalive');
