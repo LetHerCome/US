@@ -109,7 +109,7 @@ function fakeElement(id) {
   };
 }
 
-function runProgression(stateFor, { storageSeed = {} } = {}) {
+function runProgression(stateFor, { storageSeed = {}, profile = { id: 'f', couple_id: 'c', role: 'francesco' } } = {}) {
   const elements = new Map();
   const root = { dataset: {} };
   const calls = [];
@@ -135,7 +135,7 @@ function runProgression(stateFor, { storageSeed = {} } = {}) {
   const window = { document, localStorage, usProfile: null, UsFeedback: { action() {}, success() {} } };
   const context = { window, document, sb, console, setTimeout: () => 0, clearTimeout() {}, requestAnimationFrame: (fn) => fn() };
   vm.runInNewContext(js, context, { filename: 'progression.js' });
-  window.usProfile = { id: 'f', couple_id: 'c' };
+  window.usProfile = profile;
   return { api: window.USProgression, el: document.getElementById, root, calls, window, storage };
 }
 
@@ -146,7 +146,8 @@ test('Rewards V2 client: equipped slots paint locally; re-tap unequips without a
     rewards: catalog.map((r) => ({ ...r, unlocked: r.level_required <= 9, equipped: serverPrefs[`${r.category}_reward_id`] === r.id })),
     pending_unlocks: [], next_reward: catalog.find((r) => r.level_required > 9), preferences: { ...serverPrefs }
   });
-  const { api, el, root, calls, storage } = runProgression(() => state());
+  const localPrefs = JSON.stringify({ version: 2, couple_id: 'c', profile_id: 'f', preferences: serverPrefs });
+  const { api, el, root, calls, storage } = runProgression(() => state(), { storageSeed: { 'us:cosmetics:v1:c:f': localPrefs } });
   await api.hydrate({ showUnlocks: false, force: true });
   assert.deepEqual({ ...root.dataset }, { usTheme: 'film', usAccent: 'champagne', usEffect: 'constellation', usRing: 'orbit', usSticker: 'ticket' });
   assert.equal(el('homeHero').dataset.usFrame, 'polaroid');
@@ -175,6 +176,34 @@ test('Rewards V2 client: equipped slots paint locally; re-tap unequips without a
   assert.equal(calls.some((call) => call.name === 'equip_progression_reward'), false, 'partner-facing server preference is never touched');
 });
 
+test('Rewards V2 client: V1 compatibility seed is cleared once for Bea but preserved for Francesco', async () => {
+  const serverPrefs = { frame_reward_id: 'frame_polaroid', theme_reward_id: 'theme_film', accent_reward_id: 'accent_champagne', effect_reward_id: null, badge_reward_id: null, sticker_reward_id: null, ring_reward_id: null };
+  const sharedState = () => ({
+    total_xp: 6000, level: 9, rhythm_days: 2, rhythm_today: true,
+    rewards: catalog.map((r) => ({ ...r, unlocked: r.level_required <= 9, equipped: serverPrefs[`${r.category}_reward_id`] === r.id })),
+    pending_unlocks: [], next_reward: null, preferences: { ...serverPrefs }
+  });
+  const v1Francesco = JSON.stringify({ version: 1, couple_id: 'c', profile_id: 'f', preferences: serverPrefs });
+  const v1Bea = JSON.stringify({ version: 1, couple_id: 'c', profile_id: 'b', preferences: serverPrefs });
+  const francesco = runProgression(() => sharedState(), {
+    storageSeed: { 'us:cosmetics:v1:c:f': v1Francesco },
+    profile: { id: 'f', couple_id: 'c', role: 'francesco' }
+  });
+  const bea = runProgression(() => sharedState(), {
+    storageSeed: { 'us:cosmetics:v1:c:b': v1Bea },
+    profile: { id: 'b', couple_id: 'c', role: 'beatrice' }
+  });
+
+  await francesco.api.hydrate({ showUnlocks: false, force: true });
+  await bea.api.hydrate({ showUnlocks: false, force: true });
+
+  assert.equal(francesco.root.dataset.usTheme, 'film', 'Francesco keeps his existing local look');
+  assert.equal(bea.root.dataset.usTheme, undefined, 'Bea legacy inherited look is reset to standard');
+  assert.equal(JSON.parse(francesco.storage.get('us:cosmetics:v1:c:f')).version, 2);
+  assert.equal(JSON.parse(bea.storage.get('us:cosmetics:v1:c:b')).version, 2);
+  assert.equal(JSON.parse(bea.storage.get('us:cosmetics:v1:c:b')).preferences.theme_reward_id, null);
+});
+
 test('Rewards V2 client: two phones can equip different cosmetics from the same shared progression state', async () => {
   const serverPrefs = { frame_reward_id: null, theme_reward_id: 'theme_film', accent_reward_id: null, effect_reward_id: null, badge_reward_id: null, sticker_reward_id: null, ring_reward_id: null };
   const sharedState = () => ({
@@ -182,20 +211,26 @@ test('Rewards V2 client: two phones can equip different cosmetics from the same 
     rewards: catalog.map((r) => ({ ...r, unlocked: r.level_required <= 12, equipped: serverPrefs[`${r.category}_reward_id`] === r.id })),
     pending_unlocks: [], next_reward: null, preferences: { ...serverPrefs }
   });
-  const phoneA = runProgression(() => sharedState());
+  const phoneALocal = JSON.stringify({
+    version: 1,
+    couple_id: 'c',
+    profile_id: 'f',
+    preferences: { ...serverPrefs }
+  });
+  const phoneA = runProgression(() => sharedState(), { storageSeed: { 'us:cosmetics:v1:c:f': phoneALocal } });
   const phoneB = runProgression(() => sharedState());
   await phoneA.api.hydrate({ showUnlocks: false, force: true });
   await phoneB.api.hydrate({ showUnlocks: false, force: true });
   assert.equal(phoneA.root.dataset.usTheme, 'film');
-  assert.equal(phoneB.root.dataset.usTheme, 'film');
+  assert.equal(phoneB.root.dataset.usTheme, undefined, 'a fresh phone starts with the standard US look');
 
   const tapA = (id) => phoneA.el('usProgressionRewards').emit('click', { target: { closest: () => ({ disabled: false, dataset: { progressionReward: id } }) } });
   await tapA('theme_blue_hour');
   assert.equal(phoneA.root.dataset.usTheme, 'blue_hour');
-  assert.equal(phoneB.root.dataset.usTheme, 'film', 'phone B keeps its own local appearance');
+  assert.equal(phoneB.root.dataset.usTheme, undefined, 'phone B keeps its own standard local appearance');
 
   await phoneB.api.hydrate({ showUnlocks: false, force: true });
-  assert.equal(phoneB.root.dataset.usTheme, 'film', 'server refresh does not import phone A choice');
+  assert.equal(phoneB.root.dataset.usTheme, undefined, 'server refresh never imports couple-level legacy cosmetics');
   assert.equal(phoneA.calls.some((call) => call.name === 'equip_progression_reward'), false);
   assert.equal(phoneB.calls.some((call) => call.name === 'equip_progression_reward'), false);
 });

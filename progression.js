@@ -26,7 +26,7 @@ const SLOTS = Object.freeze({
   effect: { pref: 'effect_reward_id', label: 'Effetti', place: 'sul simbolo US', unlock: 'NUOVO EFFETTO' }
 });
 const SLOT_ORDER = Object.keys(SLOTS);
-const DEVICE_PREFS_VERSION = 1;
+const DEVICE_PREFS_VERSION = 2;
 const DEVICE_PREFS_PREFIX = 'us:cosmetics:v1:';
 
 function devicePreferenceKey() {
@@ -68,21 +68,31 @@ function persistDevicePreferences(prefs) {
   }
 }
 function readDevicePreferences(next) {
-  const fallback = sanitizeDevicePreferences(next?.preferences || {}, next);
+  const fresh = sanitizeDevicePreferences({}, next);
   const key = devicePreferenceKey();
-  if (!key) return fallback;
+  if (!key) return fresh;
   try {
     const saved = JSON.parse(window.localStorage.getItem(key) || 'null');
     if (saved?.version === DEVICE_PREFS_VERSION && saved?.preferences) {
       return sanitizeDevicePreferences(saved.preferences, next);
     }
+    if (saved?.version === 1 && saved?.preferences) {
+      // V1 was introduced with a compatibility seed that copied the old
+      // couple-level equipped look onto every phone. Bea's first login happened
+      // during that window, so reset that contaminated seed once. Francesco's
+      // already-local choices are migrated intact.
+      const migrated = window.usProfile?.role === 'beatrice'
+        ? fresh
+        : sanitizeDevicePreferences(saved.preferences, next);
+      persistDevicePreferences(migrated);
+      return migrated;
+    }
   } catch (error) {
     console.warn('[US Progression] read device preferences', error);
   }
-  // One-time compatibility seed: preserve the look that was previously stored
-  // for the couple, then this phone diverges independently from this point on.
-  persistDevicePreferences(fallback);
-  return fallback;
+  // A phone with no local cosmetic state starts from the standard US look.
+  persistDevicePreferences(fresh);
+  return fresh;
 }
 function applyDevicePreferences(next) {
   if (!next) return next;
