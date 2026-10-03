@@ -146,7 +146,8 @@ test('Rewards V2 client: equipped slots paint locally; re-tap unequips without a
     rewards: catalog.map((r) => ({ ...r, unlocked: r.level_required <= 9, equipped: serverPrefs[`${r.category}_reward_id`] === r.id })),
     pending_unlocks: [], next_reward: catalog.find((r) => r.level_required > 9), preferences: { ...serverPrefs }
   });
-  const { api, el, root, calls, storage } = runProgression(() => state());
+  const localPrefs = JSON.stringify({ version: 1, couple_id: 'c', profile_id: 'f', preferences: serverPrefs });
+  const { api, el, root, calls, storage } = runProgression(() => state(), { storageSeed: { 'us:cosmetics:v1:c:f': localPrefs } });
   await api.hydrate({ showUnlocks: false, force: true });
   assert.deepEqual({ ...root.dataset }, { usTheme: 'film', usAccent: 'champagne', usEffect: 'constellation', usRing: 'orbit', usSticker: 'ticket' });
   assert.equal(el('homeHero').dataset.usFrame, 'polaroid');
@@ -182,20 +183,26 @@ test('Rewards V2 client: two phones can equip different cosmetics from the same 
     rewards: catalog.map((r) => ({ ...r, unlocked: r.level_required <= 12, equipped: serverPrefs[`${r.category}_reward_id`] === r.id })),
     pending_unlocks: [], next_reward: null, preferences: { ...serverPrefs }
   });
-  const phoneA = runProgression(() => sharedState());
+  const phoneALocal = JSON.stringify({
+    version: 1,
+    couple_id: 'c',
+    profile_id: 'f',
+    preferences: { ...serverPrefs }
+  });
+  const phoneA = runProgression(() => sharedState(), { storageSeed: { 'us:cosmetics:v1:c:f': phoneALocal } });
   const phoneB = runProgression(() => sharedState());
   await phoneA.api.hydrate({ showUnlocks: false, force: true });
   await phoneB.api.hydrate({ showUnlocks: false, force: true });
   assert.equal(phoneA.root.dataset.usTheme, 'film');
-  assert.equal(phoneB.root.dataset.usTheme, 'film');
+  assert.equal(phoneB.root.dataset.usTheme, undefined, 'a fresh phone starts with the standard US look');
 
   const tapA = (id) => phoneA.el('usProgressionRewards').emit('click', { target: { closest: () => ({ disabled: false, dataset: { progressionReward: id } }) } });
   await tapA('theme_blue_hour');
   assert.equal(phoneA.root.dataset.usTheme, 'blue_hour');
-  assert.equal(phoneB.root.dataset.usTheme, 'film', 'phone B keeps its own local appearance');
+  assert.equal(phoneB.root.dataset.usTheme, undefined, 'phone B keeps its own standard local appearance');
 
   await phoneB.api.hydrate({ showUnlocks: false, force: true });
-  assert.equal(phoneB.root.dataset.usTheme, 'film', 'server refresh does not import phone A choice');
+  assert.equal(phoneB.root.dataset.usTheme, undefined, 'server refresh never imports couple-level legacy cosmetics');
   assert.equal(phoneA.calls.some((call) => call.name === 'equip_progression_reward'), false);
   assert.equal(phoneB.calls.some((call) => call.name === 'equip_progression_reward'), false);
 });
