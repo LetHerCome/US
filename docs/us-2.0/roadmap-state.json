@@ -1,15 +1,15 @@
 {
   "version": 1,
   "updatedAt": "2026-10-03",
-  "mainSha": "b06ab2e4ae269e4ea134c987471f46e6ec7d6bb9",
-  "currentMission": "F1C",
-  "currentLabel": "Authority / RLS Hardening — rebase before review",
+  "mainSha": "42a307e9d05c64aca6a7a6cd883f55a1bde273a6",
+  "currentMission": "F2A",
+  "currentLabel": "Next: Backend Source-of-Truth / Drift Cleanup",
   "state": {
     "F0": "done",
     "F0.1": "done",
     "F1A": "done",
     "F1B": "done",
-    "F1C": "doing",
+    "F1C": "done",
     "F2A": "todo",
     "F2B": "todo",
     "F2C": "todo",
@@ -33,5 +33,5 @@
     "N4": "todo",
     "N5": "todo"
   },
-  "note": "F1C production migration is applied and Opus reports READY_FOR_REVIEW, but the local branch was created before F0.1 merged. Rebase onto current main b06ab2e4..., rerun the now-clean Windows suite, then push for independent audit."
+  "note": "F1C independently audited and merged via PR #52. Foundation & Security is complete. F2A is next and can be run in Projects/cloud as a read-only/source-of-truth mission."
 }
