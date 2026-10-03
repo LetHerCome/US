@@ -123,6 +123,11 @@ function usReadSignedUrlCache(path){
   }
   return hit.url;
 }
+function usInvalidateSignedUrl(path){
+  if(!path)return;
+  US_SIGNED_URL_CACHE.delete(path);
+  usPersistSignedUrlCache();
+}
 function usWriteSignedUrlCache(path,url,expiresIn){
   if(path&&url){
     US_SIGNED_URL_CACHE.set(path,{url,expiresAt:Date.now()+Math.max(60,Number(expiresIn)||60)*1000});
@@ -131,17 +136,19 @@ function usWriteSignedUrlCache(path,url,expiresIn){
   return url||null;
 }
 usLoadSignedUrlCache();
-async function usGetSignedUrl(path,expiresIn=21600){
+async function usGetSignedUrl(path,expiresIn=21600,options={}){
   if(!path)return null;
+  if(options.force)usInvalidateSignedUrl(path);
   const cached=usReadSignedUrlCache(path);if(cached)return cached;
   const {data,error}=await sb.storage.from('us-media').createSignedUrl(path,expiresIn);
   if(error||!data?.signedUrl){if(error)console.warn('[US Media] signed url',error);return null;}
   return usWriteSignedUrlCache(path,data.signedUrl,expiresIn);
 }
-async function usGetSignedUrls(paths,expiresIn=21600){
+async function usGetSignedUrls(paths,expiresIn=21600,options={}){
   const unique=[...new Set((paths||[]).filter(Boolean))];
   const result=new Map(),missing=[];
   for(const path of unique){
+    if(options.force)usInvalidateSignedUrl(path);
     const cached=usReadSignedUrlCache(path);
     if(cached)result.set(path,cached);else missing.push(path);
   }
@@ -159,13 +166,26 @@ async function usGetSignedUrls(paths,expiresIn=21600){
   }
   const unresolved=missing.filter(path=>!result.has(path));
   if(unresolved.length){
-    const fallback=await Promise.all(unresolved.map(async path=>[path,await usGetSignedUrl(path,expiresIn)]));
+    const fallback=await Promise.all(unresolved.map(async path=>[path,await usGetSignedUrl(path,expiresIn,{force:options.force})]));
     for(const [path,url] of fallback)if(url)result.set(path,url);
   }
   return result;
 }
+async function usRecoverPrivateImage(img,path=''){
+  if(!img)return false;
+  const storagePath=path||img.dataset?.usMediaPath||img.closest?.('[data-storage-path]')?.dataset?.storagePath||'';
+  if(!storagePath||img.dataset?.usMediaRetry==='1')return false;
+  img.dataset.usMediaRetry='1';
+  usInvalidateSignedUrl(storagePath);
+  const fresh=await usGetSignedUrl(storagePath,21600,{force:true});
+  if(!fresh)return false;
+  img.src=fresh;
+  return true;
+}
 window.usGetSignedUrl=usGetSignedUrl;
 window.usGetSignedUrls=usGetSignedUrls;
+window.usInvalidateSignedUrl=usInvalidateSignedUrl;
+window.usRecoverPrivateImage=usRecoverPrivateImage;
 
 // ===== US v20 · Web Push Foundation =====
 const US_VAPID_PUBLIC_KEY='BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss';
@@ -831,11 +851,26 @@ async function openDistanceDetail(){
 }
 window.openDistanceDetail=openDistanceDetail;
 
-function setAvatarSlot(containerId,signedUrl){
+function setAvatarImage(img,fallback,path,signedUrl){
+  if(!img)return;
+  const showFallback=()=>{img.hidden=true;if(fallback)fallback.style.display='grid';};
+  img.onload=()=>{img.hidden=false;if(fallback)fallback.style.display='none';img.dataset.usMediaRetry='0';};
+  img.onerror=async()=>{
+    showFallback();
+    if(!path||img.dataset.usMediaRetry==='1')return;
+    img.dataset.usMediaRetry='1';
+    usInvalidateSignedUrl(path);
+    const fresh=await usGetSignedUrl(path,21600,{force:true});
+    if(fresh)img.src=fresh;
+  };
+  if(!signedUrl){img.removeAttribute('src');showFallback();return;}
+  showFallback();
+  img.dataset.usMediaRetry='0';
+  img.src=signedUrl;
+}
+function setAvatarSlot(containerId,signedUrl,path=''){
   const root=document.getElementById(containerId);if(!root)return;
-  const img=root.querySelector('img'),fallback=root.querySelector('.fallback');
-  if(signedUrl){img.src=signedUrl;img.hidden=false;if(fallback)fallback.style.display='none';}
-  else{img.removeAttribute('src');img.hidden=true;if(fallback)fallback.style.display='grid';}
+  setAvatarImage(root.querySelector('img'),root.querySelector('.fallback'),path,signedUrl);
 }
 
 async function signedAvatarUrl(path){
@@ -852,14 +887,11 @@ async function hydrateProfileAvatars(){
     const nameEl=document.querySelector(`[data-noi-couple-name="${profile.role}"]`);
     if(nameEl&&profile.display_name)nameEl.textContent=profile.display_name;
     const url=await signedAvatarUrl(profile.avatar_path);
-    if(profile.role==='francesco')setAvatarSlot('pairAvatarFrancesco',url);
-    if(profile.role==='beatrice')setAvatarSlot('pairAvatarBeatrice',url);
+    if(profile.role==='francesco')setAvatarSlot('pairAvatarFrancesco',url,profile.avatar_path);
+    if(profile.role==='beatrice')setAvatarSlot('pairAvatarBeatrice',url,profile.avatar_path);
     if(profile.id===window.usProfile.id){
       const img=document.getElementById('profileAvatarImg');
-      if(img){
-        if(url){img.src=url;img.hidden=false;if(fallback)fallback.style.display='none';}
-        else{img.removeAttribute('src');img.hidden=true;if(fallback)fallback.style.display='grid';}
-      }
+      if(img)setAvatarImage(img,fallback,profile.avatar_path,url);
       window.usProfile.avatar_path=profile.avatar_path||null;
     }
   }
