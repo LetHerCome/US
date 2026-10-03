@@ -47,8 +47,8 @@ test('Cloudflare Pages bundle is a curated host-agnostic PWA', async () => {
   }
 
   const app = await readFile(path.join(OUTPUT, 'app.js'), 'utf8');
-  assert.match(app, /emailRedirectTo:location\.origin\+'\/'/);
-  assert.doesNotMatch(app, /usfinal\.vercel\.app/i);
+  assert.match(app, /sb\.auth\.signInWithPassword\(\{email,password\}\)/);
+  assert.doesNotMatch(app, /signInWithOtp|emailRedirectTo|usfinal\.vercel\.app/i);
 
   const serviceWorker = await readFile(path.join(OUTPUT, 'service-worker.js'), 'utf8');
   assert.match(serviceWorker, /self\.location\.origin/);
