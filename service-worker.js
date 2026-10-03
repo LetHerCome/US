@@ -257,8 +257,17 @@ self.addEventListener("fetch", (event) => {
 
       const response = await fetch(request);
       if (response.ok || response.type === "opaque") {
-        await cache.put(key, response.clone());
-        event.waitUntil(usPruneMediaCache(cache));
+        const copy = response.clone();
+        event.waitUntil((async () => {
+          try {
+            await cache.put(key, copy);
+            await usPruneMediaCache(cache);
+          } catch (_) {
+            // CacheStorage is only an optimization. A cache write failure must
+            // never turn a successful private-media network response into a
+            // broken image, especially on Safari/iOS.
+          }
+        })());
       }
       return response;
     })());
