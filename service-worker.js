@@ -306,7 +306,12 @@ self.addEventListener("fetch", (event) => {
       fetch(request, { cache: "no-store" })
         .then((response) => {
           const copy = response.clone();
-          event.waitUntil(usBestEffortCachePut(CACHE_NAME, versionKey, copy));
+          event.waitUntil((async () => {
+            try {
+              const cache = await caches.open(CACHE_NAME);
+              await cache.put(versionKey, copy);
+            } catch (_) {}
+          })());
           return response;
         })
         .catch(() => caches.match(versionKey))
@@ -322,7 +327,12 @@ self.addEventListener("fetch", (event) => {
     event.respondWith((async () => {
       try {
         const response = await usFetchNavigation(request, { noCacheHeader: true });
-        event.waitUntil(usBestEffortCachePut(CACHE_NAME, "/index.html", response.clone()));
+        event.waitUntil((async () => {
+          try {
+            const cache = await caches.open(CACHE_NAME);
+            await cache.put("/index.html", response.clone());
+          } catch (_) {}
+        })());
         return response;
       } catch (_) {
         return (await caches.match("/index.html")) || Response.error();
