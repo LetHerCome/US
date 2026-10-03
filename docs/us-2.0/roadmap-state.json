@@ -1,7 +1,7 @@
 {
   "version": 1,
   "updatedAt": "2026-10-03",
-  "mainSha": "59dfb0e7609c976ecb97bf8e324bbb4f86f75000",
+  "mainSha": "ada99bfa1eaa633cbb8b09e5175ee96580fc6adb",
   "currentMission": "F2A.1",
   "currentLabel": "Next: Production Baseline & Missing-Source Recovery",
   "state": {
@@ -34,5 +34,5 @@
     "N5": "todo",
     "F2A.1": "todo"
   },
-  "note": "F2A audit completed and merged via PR #54. Production evidence is captured read-only. Next is F2A.1 with Opus High: recover canonical baseline and missing production-only source into the repo, with no production mutations."
+  "note": "F2A audit completed and merged via PR #54. Production evidence is captured read-only. Next is F2A.1 with Opus High: recover canonical baseline and missing production-only source into the repo, with no production mutations. iOS media hotfix merged via PR #55: Supabase iPhone Storage logs showed signed URL creation and image GETs at HTTP 200, so iOS WebKit now bypasses the private media Service Worker cache and clears stale media cache on activation. F3B still owns the broader PWA update/cache contract."
 }
