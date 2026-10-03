@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 const ROOT = path.resolve(__dirname, '..');
-const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
+const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8').replace(/\r\n/g, '\n');
 const bond = () => read('index.html').match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
 const app = () => read('app.js');
 const css = () => read('styles.css');
