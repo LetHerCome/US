@@ -6,7 +6,7 @@
   "currentLabel": "RPC / Function Grant Hardening",
   "state": {
     "F0": "done",
-    "F0.1": "todo",
+    "F0.1": "doing",
     "F1A": "done",
     "F1B": "doing",
     "F1C": "todo",
@@ -33,5 +33,5 @@
     "N4": "todo",
     "N5": "todo"
   },
-  "note": "F1A merged to main via PR #48. F1B is now the active mission."
+  "note": "F1B is active with Opus. F0.1 test-harness hardening is running in parallel on a repo-only branch."
 }
