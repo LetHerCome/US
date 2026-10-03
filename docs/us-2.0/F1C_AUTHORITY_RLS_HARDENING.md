@@ -7,8 +7,9 @@
 ## SOURCE
 
 - **Branch:** `mission/us-2-0-f1c-authority-rls-hardening`, in a fresh worktree `.claude/worktrees/us-2-0-f1c-authority-rls`. The F1B worktree was not reused. No F1C branch or worktree existed beforehand.
-- **Base:** `origin/main` `98c473c3b5616dcb952b1a2e883de2e6c93b6667` (F1B merge). It had not moved since the mission was issued.
-- **Head:** see the completion report. It is the doc commit on top of `8d3655a` (migration + tests).
+- **Current base:** `origin/main` `b06ab2e4ae269e4ea134c987471f46e6ec7d6bb9`. That is F0.1, the Windows test-harness fix, which landed on `main` after F1C started.
+- **History.** F1C was authored on `98c473c3b5616dcb952b1a2e883de2e6c93b6667` (the F1B merge). The production migration was applied from the pre-rebase commit `8d3655a` (pre-rebase branch HEAD `a9cc8de`). The branch was then rebased onto `b06ab2e` with no conflicts. The migration and test commit is now `7bce885`.
+- **Migration bytes are unchanged across the rebase.** SHA-256 of `supabase/migrations/20261003200000_f1c_authority_write_boundaries.sql` is `829685204d67c27247c6ee9f9894418da0d282d79850ae7dcc70afa772d702dd` both before and after, so production holds exactly the file in this branch.
 
 ---
 
@@ -172,10 +173,13 @@ New: `tests/f1c-authority-write-boundaries.test.js` (8 tests). It uses pglite wi
 | `node --test tests/f1c-authority-write-boundaries.test.js` | 8 pass, 0 fail |
 | `node --test tests/f1a-auth-shutdown.test.js tests/f1b-rpc-grant-hardening.test.js tests/beatrice-password-login.test.js tests/m6a-calendar-domain-backend.test.js tests/us-human-ui-02.test.js` | 78 pass, 0 fail |
 | `node --test tests/m6d-reminders.test.js tests/m4a-think-backend.test.js tests/m4b-think-ui.test.js tests/m12a1-brand-events.test.js` | 36 pass, 0 fail |
-| `npm test` | 1307 tests: 1237 pass, **37 fail**, 33 skipped |
-| Failure set vs the known Windows baseline | **identical** 37 (M9A, M10C, M11B catalog, M11C recipes and M11D push suites). 0 new, 0 fixed. The test count is 1299 + 8 = 1307. |
+| `node --test tests/f1c-authority-write-boundaries.test.js tests/f1a-auth-shutdown.test.js tests/f1b-rpc-grant-hardening.test.js` (after rebase) | 27 pass, 0 fail |
+| Related suites after rebase: `beatrice-password-login`, `local-dev-mode`, `us-human-ui-02`, `m4a-think-backend`, `m4b-think-ui`, `m12a1-brand-events`, `m6a-calendar-domain-backend`, `m6d-reminders`, `m10-1c-calendar-ownership`, `cloudflare-pages-migration` | 122 pass, 0 fail |
+| `npm test` (after rebase onto F0.1) | 1307 tests: **1274 pass, 0 fail**, 33 skipped (the existing skips, unchanged) |
 | `npm run build:cloudflare-pages` | OK, 141 files |
-| `npm run build:capacitor-web` | OK, 139 files. Its whitespace-only `android/brand-assets-manifest.json` rewrite was reverted. |
+| `npm run build:capacitor-web` | OK, 139 files. No working-tree changes. |
+
+Before the rebase, on the `98c473c` base, the same `npm test` showed the 37 Windows-harness failures that F0.1 has since fixed. F1C added none of them.
 
 No runtime file changed, so there is no build-id bump and no Service Worker impact.
 
