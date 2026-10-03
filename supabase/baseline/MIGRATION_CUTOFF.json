@@ -1,0 +1,977 @@
+{
+  "generated_by": "scripts/build-supabase-baseline.mjs",
+  "source": "supabase/migrations + docs/us-2.0/F2A_PRODUCTION_RESULTS_01_05.json (b01 ledger)",
+  "production_ledger_tip": "20261003200000",
+  "baseline_represents": "production schema at ledger tip 20261003200000 (F1C), captured read-only in F2A.1",
+  "baseline_version": "chosen in F2A.2: one new 14-digit version greater than every ledger version",
+  "forward_migrations": [],
+  "counts": {
+    "repo_files": 47,
+    "repo_same_version": 37,
+    "repo_alternate_version": 10,
+    "ledger_rows": 83,
+    "ledger_pre_repo_base": 36,
+    "replay_hazards": 7
+  },
+  "repo": [
+    {
+      "file": "20260831131130_widget_think_silent_send.sql",
+      "version": "20260831131130",
+      "recorded_as": "20260831212415",
+      "match": "alternate_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260831213000_fix_widget_think_couple_id_ambiguity.sql",
+      "version": "20260831213000",
+      "recorded_as": "20260831213824",
+      "match": "alternate_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": "succeeds and downgrades public.widget_send_think_internal to its 2026-08-31 body"
+    },
+    {
+      "file": "20260901192817_daily_question_outcomes.sql",
+      "version": "20260901192817",
+      "recorded_as": "20260901192817",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260902101619_daily_question_reveal_authority.sql",
+      "version": "20260902101619",
+      "recorded_as": "20260902101619",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260902114732_think_reactions.sql",
+      "version": "20260902114732",
+      "recorded_as": "20260902114732",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260922120726_think_send_idempotency_final_reaction.sql",
+      "version": "20260922120726",
+      "recorded_as": "20260922120726",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260922120945_fix_send_think_conflict_ambiguity.sql",
+      "version": "20260922120945",
+      "recorded_as": "20260922120945",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260922180436_left_for_you_v1.sql",
+      "version": "20260922180436",
+      "recorded_as": "20260922180436",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260922182210_fix_left_for_you_partner_scope_and_grants.sql",
+      "version": "20260922182210",
+      "recorded_as": "20260922182210",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260923100236_enforce_left_for_you_insert_unseen.sql",
+      "version": "20260923100236",
+      "recorded_as": "20260923100236",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260923110119_m5c_left_for_you_rich_media.sql",
+      "version": "20260923110119",
+      "recorded_as": "20260923110119",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260923112331_m5d_conserva_contribution.sql",
+      "version": "20260923112331",
+      "recorded_as": "20260923112331",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260923112428_harden_conserva_contribution_grants.sql",
+      "version": "20260923112428",
+      "recorded_as": "20260923112428",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260923180800_m5g2_video_upload_limit_40mb.sql",
+      "version": "20260923180800",
+      "recorded_as": "20260923200535",
+      "match": "alternate_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260923210000_m5g3_left_for_you_notification_preference.sql",
+      "version": "20260923210000",
+      "recorded_as": "20260924072631",
+      "match": "alternate_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": "succeeds and downgrades get/set_notification_preference(s) to their pre-M11D bodies"
+    },
+    {
+      "file": "20260924160000_m5i_ephemeral_left_for_you.sql",
+      "version": "20260924160000",
+      "recorded_as": "20260928050608",
+      "match": "alternate_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": "mostly re-runnable; overwrites public.claim_left_for_you_cleanup (same logic, comments restored)"
+    },
+    {
+      "file": "20260924194500_widget_scriptable_setup.sql",
+      "version": "20260924194500",
+      "recorded_as": "20260925143951",
+      "match": "alternate_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260928071627_m6a_shared_calendar_domain.sql",
+      "version": "20260928071627",
+      "recorded_as": "20260928071627",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260928071749_m6a_claim_us_role_calendar_entries_transfer.sql",
+      "version": "20260928071749",
+      "recorded_as": "20260928071749",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260928210000_m6d_calendar_reminders.sql",
+      "version": "20260928210000",
+      "recorded_as": "20260928210000",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": "cannot apply: calendar_reminders_allday_offset_check uses a sub-query in CHECK (production uses calendar_reminder_offset_valid)"
+    },
+    {
+      "file": "20260929121350_m7a_da_vivere_bucket_items_domain.sql",
+      "version": "20260929121350",
+      "recorded_as": "20260929121350",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260929121430_m7a_claim_us_role_bucket_items_transfer.sql",
+      "version": "20260929121430",
+      "recorded_as": "20260929121430",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260929190126_m7c_da_vivere_calendar_unschedule.sql",
+      "version": "20260929190126",
+      "recorded_as": "20260929190126",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260929190145_m7d_da_vivere_reciprocal_lived.sql",
+      "version": "20260929190145",
+      "recorded_as": "20260929190145",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260929201958_m9a_left_for_you_push_reliability.sql",
+      "version": "20260929201958",
+      "recorded_as": "20260929201958",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260930045233_m9e_daily_question_engine.sql",
+      "version": "20260930045233",
+      "recorded_as": "20260930045233",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260930061045_m10c_daily_question_push.sql",
+      "version": "20260930061045",
+      "recorded_as": "20260930061045",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260930080452_m10_2_daily_reveal_states.sql",
+      "version": "20260930080452",
+      "recorded_as": "20260930080452",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260930105724_m11a_game_sessions_custom_questions.sql",
+      "version": "20260930105724",
+      "recorded_as": "20260930105724",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": "re-grants functions that F1B revoked"
+    },
+    {
+      "file": "20260930121312_m11a_1_game_rpc_readonly_actor.sql",
+      "version": "20260930121312",
+      "recorded_as": "20260930121312",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260930153745_m11b_game_v2_core.sql",
+      "version": "20260930153745",
+      "recorded_as": "20260930153745",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260930153749_m11c_game_v2_context.sql",
+      "version": "20260930153749",
+      "recorded_as": "20260930153749",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260930153755_m11d_game_v2_push.sql",
+      "version": "20260930153755",
+      "recorded_as": "20260930153755",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260930172615_m11f_game_v2_weekly_rhythm.sql",
+      "version": "20260930172615",
+      "recorded_as": "20260930172615",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260930225935_m12b_2_da_vivere_archived_link_release.sql",
+      "version": "20260930225935",
+      "recorded_as": "20260930225935",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260930233501_m12b_3_living_provenance.sql",
+      "version": "20260930233501",
+      "recorded_as": "20260930233501",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260930233503_m12b_3_game_v2_living_origin.sql",
+      "version": "20260930233503",
+      "recorded_as": "20260930233503",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20260930233506_m12b_3_event_completion_history.sql",
+      "version": "20260930233506",
+      "recorded_as": "20260930233506",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20261001093123_m12b_4_daily_question_keepsakes.sql",
+      "version": "20261001093123",
+      "recorded_as": "20261001093123",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20261001133906_m12d_quest_server_authority.sql",
+      "version": "20261001133906",
+      "recorded_as": "20261001144011",
+      "match": "alternate_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20261002181500_us_progression_v1.sql",
+      "version": "20261002181500",
+      "recorded_as": "20261002171243",
+      "match": "alternate_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": "partly re-runnable; downgrades public.get_progression_v1 and public.equip_progression_reward"
+    },
+    {
+      "file": "20261002181501_progression_reward_toggle_unequip.sql",
+      "version": "20261002181501",
+      "recorded_as": "20261002171949",
+      "match": "alternate_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": "succeeds and downgrades public.equip_progression_reward (superseded by Rewards V2)"
+    },
+    {
+      "file": "20261002190000_swipe_v1.sql",
+      "version": "20261002190000",
+      "recorded_as": "20261002181136",
+      "match": "alternate_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20261003090000_progression_rewards_v2.sql",
+      "version": "20261003090000",
+      "recorded_as": "20261003090000",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20261003160000_f1a_revoke_claim_us_role.sql",
+      "version": "20261003160000",
+      "recorded_as": "20261003160000",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20261003180000_f1b_rpc_grant_hardening.sql",
+      "version": "20261003180000",
+      "recorded_as": "20261003180000",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    },
+    {
+      "file": "20261003200000_f1c_authority_write_boundaries.sql",
+      "version": "20261003200000",
+      "recorded_as": "20261003200000",
+      "match": "same_version",
+      "after_f2a2": "history_only",
+      "replay_hazard": null
+    }
+  ],
+  "ledger": [
+    {
+      "version": "20260818181916",
+      "name": "init_us_sync_schema",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260818181951",
+      "name": "add_private_pairing_and_seed",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260818190722",
+      "name": "anonymous_private_pairing_v2",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260818190733",
+      "name": "remove_legacy_pairing_rpc",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260818190758",
+      "name": "protect_pairing_role_transfer",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260818190816",
+      "name": "prevent_direct_pairing_table_reads",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260818191114",
+      "name": "lock_private_helper_schema",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260818192540",
+      "name": "fix_claim_us_role_digest_schema",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260818205935",
+      "name": "real_quiz_sync_and_private_results",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260818210022",
+      "name": "normalize_quiz_questions_for_shared_comparison",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260818210158",
+      "name": "seed_daily_questions_aug_sep_2026",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260818213545",
+      "name": "clean_quiz_wording_for_both_partners",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260818235522",
+      "name": "add_profile_avatar_path",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260819001505",
+      "name": "add_shared_home_photo",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260819002337",
+      "name": "add_couple_locations",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260819191457",
+      "name": "add_device_push_tokens",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260819232627",
+      "name": "weekly_quiz_rotation_and_bond_xp",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260820003327",
+      "name": "web_push_foundation",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260820003406",
+      "name": "web_push_vapid_vault_access",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260820003821",
+      "name": "web_push_rpc_permissions_fix",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260820120335",
+      "name": "add_shared_events_and_widget_tokens",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260820120559",
+      "name": "widget_tokens_service_only_public",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260820160643",
+      "name": "add_moment_album_photos",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260820163727",
+      "name": "performance1_enable_targeted_realtime",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260820181414",
+      "name": "us_event_rewards_and_milestones",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260820181437",
+      "name": "us_quiz_modes_engine",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260820181506",
+      "name": "us_partner_knowledge_engine",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260820181601",
+      "name": "seed_never_have_i_games",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260820181658",
+      "name": "seed_agree_disagree_games",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260820181724",
+      "name": "seed_would_you_rather_games",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260820181734",
+      "name": "us_monthiversary_scheduler",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260820181751",
+      "name": "us_monthiversary_award_rpc",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260820193608",
+      "name": "settings2_notification_preferences",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260821121754",
+      "name": "harden_private_repair_profile_migration",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260821122729",
+      "name": "fix_repair_claim_us_role_order",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260821123104",
+      "name": "fix_role_repair_atomic_profile_bridge",
+      "repo_file": null,
+      "class": "pre_repo_base",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260831212415",
+      "name": "widget_think_silent_send",
+      "repo_file": "20260831131130_widget_think_silent_send.sql",
+      "class": "repo_alternate_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260831213824",
+      "name": "fix_widget_think_couple_id_ambiguity",
+      "repo_file": "20260831213000_fix_widget_think_couple_id_ambiguity.sql",
+      "class": "repo_alternate_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260901192817",
+      "name": "20260901160000_daily_question_outcomes.sql",
+      "repo_file": "20260901192817_daily_question_outcomes.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260902101619",
+      "name": "20260902120000_daily_question_reveal_authority.sql",
+      "repo_file": "20260902101619_daily_question_reveal_authority.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260902114732",
+      "name": "20260902140000_think_reactions.sql",
+      "repo_file": "20260902114732_think_reactions.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260922120726",
+      "name": "think_send_idempotency_final_reaction",
+      "repo_file": "20260922120726_think_send_idempotency_final_reaction.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260922120945",
+      "name": "fix_send_think_conflict_ambiguity",
+      "repo_file": "20260922120945_fix_send_think_conflict_ambiguity.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260922180436",
+      "name": "left_for_you_v1",
+      "repo_file": "20260922180436_left_for_you_v1.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260922182210",
+      "name": "fix_left_for_you_partner_scope_and_grants",
+      "repo_file": "20260922182210_fix_left_for_you_partner_scope_and_grants.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260923100236",
+      "name": "enforce_left_for_you_insert_unseen",
+      "repo_file": "20260923100236_enforce_left_for_you_insert_unseen.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260923110119",
+      "name": "m5c_left_for_you_rich_media",
+      "repo_file": "20260923110119_m5c_left_for_you_rich_media.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260923112331",
+      "name": "m5d_conserva_contribution",
+      "repo_file": "20260923112331_m5d_conserva_contribution.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260923112428",
+      "name": "harden_conserva_contribution_grants",
+      "repo_file": "20260923112428_harden_conserva_contribution_grants.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260923200535",
+      "name": "m5g2_video_upload_limit_40mb",
+      "repo_file": "20260923180800_m5g2_video_upload_limit_40mb.sql",
+      "class": "repo_alternate_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260924072631",
+      "name": "m5g3_left_for_you_notification_preference",
+      "repo_file": "20260923210000_m5g3_left_for_you_notification_preference.sql",
+      "class": "repo_alternate_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260925143951",
+      "name": "widget_scriptable_setup",
+      "repo_file": "20260924194500_widget_scriptable_setup.sql",
+      "class": "repo_alternate_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260928050608",
+      "name": "m5i_ephemeral_left_for_you",
+      "repo_file": "20260924160000_m5i_ephemeral_left_for_you.sql",
+      "class": "repo_alternate_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260928071627",
+      "name": "m6a_shared_calendar_domain",
+      "repo_file": "20260928071627_m6a_shared_calendar_domain.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260928071749",
+      "name": "m6a_claim_us_role_calendar_entries_transfer",
+      "repo_file": "20260928071749_m6a_claim_us_role_calendar_entries_transfer.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260928210000",
+      "name": "m6d_calendar_reminders",
+      "repo_file": "20260928210000_m6d_calendar_reminders.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260929121350",
+      "name": "m7a_da_vivere_bucket_items_domain",
+      "repo_file": "20260929121350_m7a_da_vivere_bucket_items_domain.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260929121430",
+      "name": "m7a_claim_us_role_bucket_items_transfer",
+      "repo_file": "20260929121430_m7a_claim_us_role_bucket_items_transfer.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260929190126",
+      "name": "m7c_da_vivere_calendar_unschedule",
+      "repo_file": "20260929190126_m7c_da_vivere_calendar_unschedule.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260929190145",
+      "name": "m7d_da_vivere_reciprocal_lived",
+      "repo_file": "20260929190145_m7d_da_vivere_reciprocal_lived.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260929201958",
+      "name": "m9a_left_for_you_push_reliability",
+      "repo_file": "20260929201958_m9a_left_for_you_push_reliability.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260930045233",
+      "name": "m9e_daily_question_engine",
+      "repo_file": "20260930045233_m9e_daily_question_engine.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260930061045",
+      "name": "m10c_daily_question_push",
+      "repo_file": "20260930061045_m10c_daily_question_push.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260930080452",
+      "name": "m10_2_daily_reveal_states",
+      "repo_file": "20260930080452_m10_2_daily_reveal_states.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260930105724",
+      "name": "m11a_game_sessions_custom_questions",
+      "repo_file": "20260930105724_m11a_game_sessions_custom_questions.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260930121312",
+      "name": "m11a_1_game_rpc_readonly_actor",
+      "repo_file": "20260930121312_m11a_1_game_rpc_readonly_actor.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260930153745",
+      "name": "m11b_game_v2_core",
+      "repo_file": "20260930153745_m11b_game_v2_core.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260930153749",
+      "name": "m11c_game_v2_context",
+      "repo_file": "20260930153749_m11c_game_v2_context.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260930153755",
+      "name": "m11d_game_v2_push",
+      "repo_file": "20260930153755_m11d_game_v2_push.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260930172615",
+      "name": "m11f_game_v2_weekly_rhythm",
+      "repo_file": "20260930172615_m11f_game_v2_weekly_rhythm.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260930225935",
+      "name": "m12b_2_da_vivere_archived_link_release",
+      "repo_file": "20260930225935_m12b_2_da_vivere_archived_link_release.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260930233501",
+      "name": "m12b_3_living_provenance",
+      "repo_file": "20260930233501_m12b_3_living_provenance.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260930233503",
+      "name": "m12b_3_game_v2_living_origin",
+      "repo_file": "20260930233503_m12b_3_game_v2_living_origin.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20260930233506",
+      "name": "m12b_3_event_completion_history",
+      "repo_file": "20260930233506_m12b_3_event_completion_history.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20261001093123",
+      "name": "m12b_4_daily_question_keepsakes",
+      "repo_file": "20261001093123_m12b_4_daily_question_keepsakes.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20261001144011",
+      "name": "m12d_quest_server_authority",
+      "repo_file": "20261001133906_m12d_quest_server_authority.sql",
+      "class": "repo_alternate_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20261002171243",
+      "name": "us_progression_v1",
+      "repo_file": "20261002181500_us_progression_v1.sql",
+      "class": "repo_alternate_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20261002171949",
+      "name": "progression_reward_toggle_unequip",
+      "repo_file": "20261002181501_progression_reward_toggle_unequip.sql",
+      "class": "repo_alternate_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20261002181136",
+      "name": "swipe_v1",
+      "repo_file": "20261002190000_swipe_v1.sql",
+      "class": "repo_alternate_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20261003090000",
+      "name": "progression_rewards_v2",
+      "repo_file": "20261003090000_progression_rewards_v2.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20261003160000",
+      "name": "f1a_revoke_claim_us_role",
+      "repo_file": "20261003160000_f1a_revoke_claim_us_role.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20261003180000",
+      "name": "f1b_rpc_grant_hardening",
+      "repo_file": "20261003180000_f1b_rpc_grant_hardening.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    },
+    {
+      "version": "20261003200000",
+      "name": "f1c_authority_write_boundaries",
+      "repo_file": "20261003200000_f1c_authority_write_boundaries.sql",
+      "class": "repo_same_version",
+      "after_f2a2": "reverted_in_ledger_after_export"
+    }
+  ]
+}
