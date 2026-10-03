@@ -1,4 +1,4 @@
-const BUILD_ID = "us-ios-sw-redirect-hotfix-v1-20261003-1";
+const BUILD_ID = "us-ios-media-hotfix-v1-20261003-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -126,11 +126,12 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) =>
-              key !== CACHE_NAME &&
-              key !== MEDIA_CACHE_NAME &&
-              (key.startsWith(SHELL_CACHE_PREFIX) || key.startsWith(LEGACY_SHELL_CACHE_PREFIX))
-            )
+            .filter((key) => {
+              if (usIsIOSWebKit() && key === MEDIA_CACHE_NAME) return true;
+              return key !== CACHE_NAME &&
+                key !== MEDIA_CACHE_NAME &&
+                (key.startsWith(SHELL_CACHE_PREFIX) || key.startsWith(LEGACY_SHELL_CACHE_PREFIX));
+            })
             .map((key) => caches.delete(key))
         )
       )
@@ -202,6 +203,11 @@ async function usPruneMediaCache(cache, maxEntries = 100) {
   } catch (_) {}
 }
 
+function usIsIOSWebKit() {
+  const ua = String(self.navigator?.userAgent || "");
+  return /iPad|iPhone|iPod/i.test(ua) || /Macintosh/i.test(ua) && /Mobile\//i.test(ua);
+}
+
 function usSafeNavigationResponse(response) {
   return Boolean(
     response &&
@@ -238,6 +244,7 @@ self.addEventListener("fetch", (event) => {
   // underlying storage path does not. Cache by storage path, not by token.
   const supabaseStoragePath = usStoragePathFromUrl(url);
   if (
+    !usIsIOSWebKit() &&
     url.origin === "https://iiakdfsxpywdkxravqjh.supabase.co" &&
     supabaseStoragePath &&
     request.destination === "image"
