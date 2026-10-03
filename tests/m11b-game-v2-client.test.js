@@ -350,11 +350,11 @@ test('M11F client: the weekly strip reads the server allowance, restrained, neve
   const fresh = harness({ homeState: home({ allowance: allowance() }) });
   await tick();
   assert.match(fresh.nodes.quizHub.innerHTML, /QUESTA SETTIMANA/);
-  assert.match(fresh.nodes.quizHub.innerHTML, /data-gv2-rhythm="open"[\s\S]*<b>0 di 3<\/b>/);
+  assert.match(fresh.nodes.quizHub.innerHTML, /data-gv2-rhythm="open"[\s\S]*<b>3 rimasti<\/b>/);
   const mid = harness({ homeState: home({ allowance: allowance({ used: 2, per_voi_used: 1, free_used: 1, per_voi_available: false, families: { per_voi: { session_id: 'p', completed: true }, ridete: { session_id: 'r', completed: true } } }) }) });
   await tick();
   const html = mid.nodes.quizHub.innerHTML;
-  assert.match(html, /2 di 3 momenti giocati/);
+  assert.match(html, /1 rimasto da giocare/);
   assert.equal((html.match(/data-on="true"/g) || []).length, 2);
   assert.match(html, /data-gv2-family="ridete" data-gv2-mode-state="played"/);
   assert.match(html, /Giocato<\/small>/);
@@ -362,7 +362,7 @@ test('M11F client: the weekly strip reads the server allowance, restrained, neve
   const done = harness({ homeState: home({ per_voi: { state: 'played', session_id: 'p' }, allowance: allowance({ used: 3, per_voi_used: 1, free_used: 2, per_voi_available: false, free_available: false, families: { per_voi: { session_id: 'p', completed: true } } }) }) });
   await tick();
   const dh = done.nodes.quizHub.innerHTML;
-  assert.match(dh, /<b>3 di 3<\/b>/);
+  assert.match(dh, /<b>0 rimasti<\/b>/);
   assert.match(dh, /Giocato questa settimana/, 'Per voi shows its played state without repeating the unlock day');
   assert.match(dh, /data-gv2-family="scopritevi" data-gv2-mode-state="locked" aria-disabled="true"/, 'modes stay visible, locked');
   assert.equal(done.nodes.usPerVoiTop.dataset.gv2State, 'played');
