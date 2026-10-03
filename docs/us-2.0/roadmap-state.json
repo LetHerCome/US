@@ -2,12 +2,12 @@
   "version": 1,
   "updatedAt": "2026-10-03",
   "mainSha": "c8de18dd650487e39196b2014ce479314fe1c1c0",
-  "currentMission": "F1A",
-  "currentLabel": "Legacy Auth Shutdown — Ready for review",
+  "currentMission": "F1B",
+  "currentLabel": "Next: RPC / Function Grant Hardening",
   "state": {
     "F0": "done",
     "F0.1": "todo",
-    "F1A": "doing",
+    "F1A": "done",
     "F1B": "todo",
     "F1C": "todo",
     "F2A": "todo",
@@ -33,5 +33,5 @@
     "N4": "todo",
     "N5": "todo"
   },
-  "note": "Production hardening applied; awaiting real-device login/reopen verification and remote branch review before merge."
+  "note": "F1A verified on both real devices and ready to merge. F1B is the next mission."
 }
