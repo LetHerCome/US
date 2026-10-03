@@ -2360,7 +2360,7 @@ window.UsRicordiArchive=Object.freeze({timeline:ricordiTimeline,pickRivivi:ricor
 function ricordiMomentCard(row,signedUrl,author,canDelete,feature,source){
   const displayISO=/^\d{4}-\d{2}-\d{2}$/.test(String(source?.date||''))?String(source.date):row.moment_date;
   const dateLabel=new Date(displayISO+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
-  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(signedUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(row.caption||'')}" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(signedUrl)}" alt="Ricordo condiviso" loading="lazy">${canDelete?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}')">Elimina</button>`:''}<div class="moment-meta"><div class="moment-by">${escapeHtml(author||'Noi')}</div><b>${dateLabel}</b>${source?`<small class="ricordi-moment-source" data-source-key="${escapeHtml(source.sourceKey)}">${escapeHtml(RICORDI_SOURCE_LABEL[source.kind]||'')}${source.title?` · ${escapeHtml(source.title)}`:''}</small>`:''}${row.caption?`<p>${escapeHtml(row.caption)}</p>`:''}</div></article>`;
+  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(signedUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(row.caption||'')}" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(signedUrl)}" data-us-media-path="${escapeHtml(row.storage_path)}" onerror="usRecoverPrivateImage(this)" alt="Ricordo condiviso" loading="lazy">${canDelete?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}')">Elimina</button>`:''}<div class="moment-meta"><div class="moment-by">${escapeHtml(author||'Noi')}</div><b>${dateLabel}</b>${source?`<small class="ricordi-moment-source" data-source-key="${escapeHtml(source.sourceKey)}">${escapeHtml(RICORDI_SOURCE_LABEL[source.kind]||'')}${source.title?` · ${escapeHtml(source.title)}`:''}</small>`:''}${row.caption?`<p>${escapeHtml(row.caption)}</p>`:''}</div></article>`;
 }
 function ricordiExperienceCard(row,sourceDate){
   const date=/^\d{4}-\d{2}-\d{2}$/.test(String(sourceDate||''))?String(sourceDate):ricordiLocalISO(row.completed_at);
@@ -2409,7 +2409,7 @@ function renderRicordiRivivi(pick,signedUrls,names){
     const meta=entry.kind==='moment'?author:RICORDI_SOURCE_LABEL[entry.kind];
     const viewerISO=entry.kind==='moment'?m.moment_date:entry.date;
     const viewerDate=new Date(viewerISO+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
-    root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><button type="button" class="ricordi-rivivi-card" data-ricordi-open="${escapeHtml(m.id)}" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}" data-url="${escapeHtml(url)}" data-author="${escapeHtml(author)}" data-date="${escapeHtml(viewerDate)}" data-caption="${escapeHtml(m.caption||title)}" aria-label="Rivivi: ${escapeHtml(title||date)}"><img src="${escapeHtml(url)}" alt="" loading="lazy"><span class="ricordi-rivivi-copy"><small>${escapeHtml(pick.label)}</small><b>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(meta)}</span></span></button>`;
+    root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><button type="button" class="ricordi-rivivi-card" data-ricordi-open="${escapeHtml(m.id)}" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}" data-url="${escapeHtml(url)}" data-author="${escapeHtml(author)}" data-date="${escapeHtml(viewerDate)}" data-caption="${escapeHtml(m.caption||title)}" aria-label="Rivivi: ${escapeHtml(title||date)}"><img src="${escapeHtml(url)}" data-us-media-path="${escapeHtml(m.storage_path)}" onerror="usRecoverPrivateImage(this)" alt="" loading="lazy"><span class="ricordi-rivivi-copy"><small>${escapeHtml(pick.label)}</small><b>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(meta)}</span></span></button>`;
     root.hidden=false;
     return;
   }
@@ -2428,7 +2428,7 @@ function renderRicordiChapters(chapters,signedUrls){
   root.innerHTML=`<div class="ricordi-section-head"><div class="ricordi-kicker">CAPITOLI</div><h3>Per anno</h3></div><div class="ricordi-chapter-row">${chapters.map(ch=>{
     const url=ch.cover?signedUrls.get(ch.cover.storage_path):null;
     const parts=[ch.moments?`${ch.moments} ${ch.moments===1?'ricordo':'ricordi'}`:'',ch.experiences?`${ch.experiences} ${ch.experiences===1?'esperienza':'esperienze'}`:'',ch.dailies?`${ch.dailies} ${ch.dailies===1?'domanda':'domande'}`:''].filter(Boolean).join(' · ');
-    return `<button type="button" class="ricordi-chapter" data-ricordi-year="${escapeHtml(ch.year)}">${url?`<img src="${escapeHtml(url)}" alt="" loading="lazy">`:''}<span><b>${escapeHtml(ch.year)}</b><small>${escapeHtml(parts)}</small></span></button>`;
+    return `<button type="button" class="ricordi-chapter" data-ricordi-year="${escapeHtml(ch.year)}">${url?`<img src="${escapeHtml(url)}" data-us-media-path="${escapeHtml(ch.cover.storage_path)}" onerror="usRecoverPrivateImage(this)" alt="" loading="lazy">`:''}<span><b>${escapeHtml(ch.year)}</b><small>${escapeHtml(parts)}</small></span></button>`;
   }).join('')}</div>`;
   root.hidden=false;
 }
@@ -2448,7 +2448,7 @@ document.getElementById('moments')?.addEventListener('click',event=>{
   }
 });
 
-async function hydrateMomentsCore(){
+async function hydrateMomentsCore(options={}){
   if(!window.usProfile)return;
   const grid=document.getElementById('momentsGrid');
   const pill=document.getElementById('momentsStatusPill');
@@ -2482,7 +2482,7 @@ async function hydrateMomentsCore(){
   if(pill)pill.textContent='📸 Moments · '+(rows?.length||0);
   const today=localDateISO();
   const signature=JSON.stringify([today,(rows||[]).map(r=>[r.id,r.created_by,r.storage_path,r.caption||'',r.moment_date,r.created_at]),livedRows.map(r=>[r.id,r.title,r.completed_at]),keptRows.map(r=>[r.id,r.question_date]),eventRows.map(r=>[r.source_ref,r.occurrence_date,r.title,r.title_source,r.moment_id]),provenanceRows.map(r=>[r.source_kind,r.source_ref,r.target_moment_id])]);
-  if(grid.dataset.loaded==='1'&&grid.dataset.signature===signature)return;
+  if(grid.dataset.loaded==='1'&&grid.dataset.signature===signature&&!options.forceMedia)return;
   if(!rows?.length&&!livedRows.length&&!keptRows.length&&!eventRows.length){
     grid.innerHTML='<div class="empty-state moment-loading ricordi-empty"><b>La vostra storia parte da qui</b></div>';
     renderRicordiRivivi(null,new Map(),new Map());
@@ -2490,7 +2490,7 @@ async function hydrateMomentsCore(){
     grid.dataset.loaded='1';grid.dataset.signature=signature;return;
   }
   const names=new Map((profiles||[]).map(p=>[p.id,p.display_name||'Noi']));
-  const signedUrls=await usGetSignedUrls((rows||[]).map(row=>row.storage_path),21600);
+  const signedUrls=await usGetSignedUrls((rows||[]).map(row=>row.storage_path),21600,{force:Boolean(options.forceMedia)});
   if(window.usProfile!==profile)return;
   const timeline=ricordiTimeline((rows||[]).filter(r=>signedUrls.get(r.storage_path)),livedRows,keptRows,eventRows,provenanceRows);
   const html=[];
@@ -2531,9 +2531,9 @@ async function hydrateMomentsCore(){
   else if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">!</div><b>Foto non disponibili</b><p>Riprova tra un momento.</p></div>';
 }
 let momentsHydrateInFlight=null;
-async function hydrateMoments(){
+async function hydrateMoments(options={}){
   if(momentsHydrateInFlight)return momentsHydrateInFlight;
-  momentsHydrateInFlight=hydrateMomentsCore().finally(()=>{momentsHydrateInFlight=null;});
+  momentsHydrateInFlight=hydrateMomentsCore(options).finally(()=>{momentsHydrateInFlight=null;});
   return momentsHydrateInFlight;
 }
 window.hydrateMoments=hydrateMoments;
@@ -2565,7 +2565,7 @@ async function hydrateHomeMemory(forceNext=false){
   const caption=document.getElementById('homeMemoryCaption');
   caption.textContent=row.caption||'';
   caption.hidden=!row.caption;
-  card.dataset.url=signed.signedUrl;
+  card.dataset.url=signedUrl;
   card.dataset.author=author;
   card.dataset.date=dateLabel;
   card.dataset.caption=row.caption||'';
@@ -4206,13 +4206,17 @@ async function refreshVisibleState(options={}){
   const active=document.querySelector('.page.active')?.id;
   const todayOpen=document.getElementById('today')?.classList.contains('open');
   // M12A — returning to the foreground re-checks the location wherever the user lands.
-  if(options.foreground)maybeAutoRefreshLocation('resume').catch(()=>{});
+  if(options.foreground){
+    maybeAutoRefreshLocation('resume').catch(()=>{});
+    hydrateProfileAvatars().catch(()=>{});
+  }
   if(active==='home'||todayOpen){
+    if(options.foreground)hydrateHomePhoto(false).catch(()=>{});
     await hydrateToday();
     if(!options.foreground)hydrateDistance();
     return;
   }
-  if(active==='moments'){await hydrateMoments();return;}
+  if(active==='moments'){await hydrateMoments({forceMedia:Boolean(options.foreground)});return;}
   if(active==='quiz'){await window.USGameV2?.refresh();return;}
   if(active==='bond'){await hydrateBondSummary();return;}
   if(active==='settings'){await window.hydrateUsSettings?.();}
