@@ -16,3 +16,5 @@ test('iPhone PWA: app shell cannot exceed the visible viewport width', () => {
   assert.match(css, /body\{width:100%;max-width:100%/);
   assert.match(css, /\.app\{position:relative;width:100%;max-width:480px;overflow-x:clip/);
 });
+
+// QA trigger: isolated branch run.
