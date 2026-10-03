@@ -182,3 +182,24 @@ test('auth: l auth non tocca il dominio M5B left_for_you', () => {
   assert.ok(m5b.length >= 2, 'la migration history M5B deve restare intatta');
   assert.doesNotMatch(read('index.html'), /left_for_you/);
 });
+
+test('auth: front door is email + password only — no pairing and no magic link', () => {
+  const index = read('index.html');
+  const src = app();
+
+  assert.match(index, /class="auth-step active" id="authLogin"/,
+    'login email/password deve essere la porta iniziale');
+  assert.doesNotMatch(index, /id="authPair"|id="pairBtn"|id="pairCode"/,
+    'il pairing non deve essere una porta utente');
+  assert.doesNotMatch(index, /id="magicLinkBtn"|Magic Link/i,
+    'nessun Magic Link nel login');
+  assert.match(index, /id="loginEmail"[^>]*type="email"/);
+  assert.match(index, /id="loginPassword"[^>]*type="password"/);
+
+  assert.match(src, /sb\.auth\.signInWithPassword\(\{email,password\}\)/);
+  assert.doesNotMatch(src, /signInWithOtp|sendMagicLinkRecovery|signInAnonymously|claim_us_role/,
+    'il front door non deve mantenere percorsi OTP o pairing legacy');
+  assert.doesNotMatch(src, /returningDevice\?'authLogin':'authPair'/,
+    'un telefono nuovo deve vedere lo stesso login email/password');
+  assert.match(src, /if\(!session\)[\s\S]*showAuthStep\('authLogin'\)/);
+});
