@@ -5,10 +5,11 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 
 const ROOT = path.resolve(__dirname, '..');
 const M11C = fs.readFileSync(path.join(ROOT, 'supabase/migrations/20260930153749_m11c_game_v2_context.sql'), 'utf8');
-const load = () => import(path.join(ROOT, 'supabase/game-v2/catalog-contract.mjs'));
+const load = () => import(pathToFileURL(path.join(ROOT, 'supabase/game-v2/catalog-contract.mjs')).href);
 
 test('M11C recipes: the migration seed is exactly the generated JSON source', async () => {
   const c = await load();
