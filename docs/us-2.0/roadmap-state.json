@@ -3,7 +3,7 @@
   "updatedAt": "2026-10-03",
   "mainSha": "b06ab2e4ae269e4ea134c987471f46e6ec7d6bb9",
   "currentMission": "F1C",
-  "currentLabel": "Authority / RLS Write-Boundary Hardening",
+  "currentLabel": "Authority / RLS Hardening — rebase before review",
   "state": {
     "F0": "done",
     "F0.1": "done",
@@ -33,5 +33,5 @@
     "N4": "todo",
     "N5": "todo"
   },
-  "note": "F0.1 Windows test-harness hardening merged via PR #51 with full Windows suite green. F1C is active with Opus."
+  "note": "F1C production migration is applied and Opus reports READY_FOR_REVIEW, but the local branch was created before F0.1 merged. Rebase onto current main b06ab2e4..., rerun the now-clean Windows suite, then push for independent audit."
 }
