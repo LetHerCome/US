@@ -33,5 +33,5 @@
     "N4": "todo",
     "N5": "todo"
   },
-  "note": "F1C independently audited and merged via PR #52. Foundation & Security is complete. F2A is next and can be run in Projects/cloud as a read-only/source-of-truth mission."
+  "note": "F1C independently audited and merged via PR #52. Foundation & Security is complete. F2A is next and can be run in Projects/cloud as a read-only/source-of-truth mission. F3B requirement: reproduce and fix the real iOS/Safari PWA failure “Response served by service worker has redirections” seen on Bea’s iPhone after the Vercel → Cloudflare origin change. F3B must ensure redirected navigation responses are never cached/served as app-shell documents, cover the us-refresh/update path, and verify recovery/reinstall/update behavior on iOS standalone PWA."
 }
