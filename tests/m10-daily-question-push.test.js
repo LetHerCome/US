@@ -6,12 +6,13 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 const crypto = require('node:crypto');
 const { loadEdgeFunction, createFakeAdmin, createFakeWebPush } = require('./helpers/edge-function-harness.js');
 
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
-const loadCore = () => import(path.join(ROOT, 'supabase/functions/_shared/daily-question-push-core.mjs'));
+const loadCore = () => import(pathToFileURL(path.join(ROOT, 'supabase/functions/_shared/daily-question-push-core.mjs')).href);
 const MIGRATION = 'supabase/migrations/20260930061045_m10c_daily_question_push.sql';
 const M9E = 'supabase/migrations/20260930045233_m9e_daily_question_engine.sql';
 
