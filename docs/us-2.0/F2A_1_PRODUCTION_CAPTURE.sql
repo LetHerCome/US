@@ -186,9 +186,16 @@ select jsonb_build_object(
     'game_swipe_v1_catalog', (select jsonb_build_object('n', count(*), 'md5', md5(string_agg(x::text, '|' order by x::text))) from private.game_swipe_v1_catalog x),
     'quiz_sets', (select jsonb_build_object('n', count(*), 'md5', md5(string_agg(x::text, '|' order by x::text))) from public.quiz_sets x),
     'quiz_questions', (select jsonb_build_object('n', count(*), 'md5', md5(string_agg(x::text, '|' order by x::text))) from public.quiz_questions x)),
-  'ledger_sql', (select jsonb_agg(jsonb_build_object('v', version, 'n', name, 'statements', statements) order by version)
-                 from supabase_migrations.schema_migrations
-                 where version in ('20260928210000', '20260820181734', '20260820181751'))
+  -- Applied SQL can embed a literal secret (e.g. a vault.create_secret value):
+  -- every quoted literal of 20+ key-like characters with a digit is replaced before it
+  -- leaves the database, and the count of replacements is reported.
+  'ledger_sql', (select jsonb_agg(jsonb_build_object('v', m.version, 'n', m.name,
+                   'statements', (select jsonb_agg(regexp_replace(st, '''(?=[^'']*[0-9])[A-Za-z0-9+/=_-]{20,}''', '''<redacted>''', 'g') order by i)
+                                  from unnest(m.statements) with ordinality as u(st, i)),
+                   'redacted_literals', (select coalesce(sum((select count(*) from regexp_matches(st, '''(?=[^'']*[0-9])[A-Za-z0-9+/=_-]{20,}''', 'g'))), 0)
+                                         from unnest(m.statements) as u(st))) order by m.version)
+                 from supabase_migrations.schema_migrations m
+                 where m.version in ('20260928210000', '20260820181734', '20260820181751'))
 ) as f2a1_c10_content;
 
 -- c10b. Full content of the catalog tables that repo migrations seed, so the
