@@ -1,5 +1,20 @@
 project_id = "iiakdfsxpywdkxravqjh"
 
+# US 2.0 F1A — Auth legacy shutdown. Only the properties declared here are
+# managed by `supabase config push`; every other remote Auth setting is left
+# unchanged. US is a private two-person app: email + password is the only
+# login path, accounts are provisioned by the owner, never self-signed-up.
+[auth]
+site_url = "https://us-a33.pages.dev"
+additional_redirect_urls = ["https://us-a33.pages.dev"]
+enable_signup = false
+enable_anonymous_sign_ins = false
+# Only the retired anonymous -> email upgrade flow ever needed this.
+enable_manual_linking = false
+
+[auth.sms.twilio]
+enabled = false
+
 [functions.widget-device-token]
 verify_jwt = true
 

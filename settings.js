@@ -132,18 +132,6 @@ async function hydrateUsSettings(){
   const feedbackValue=$('usFeedbackValue');if(feedbackValue)feedbackValue.textContent=feedbackSummary();
   $('usSettingsBuild').textContent=currentBuild();
 
-  try{
-      const {data:{user}}=await sb.auth.getUser();
-      const upgradeRow=$('usAccountUpgradeRow');
-      if(upgradeRow){
-        const pending=window.readPendingAccountUpgrade?.();
-        const pendingMine=pending&&user?pending.expectedUserId===user.id:false;
-        // Visible while anonymous OR while a pending upgrade belongs to this
-        // (now email-confirmed) UID, so it does not disappear after confirmation.
-        upgradeRow.hidden=!(Boolean(user?.is_anonymous)||(pending&&pendingMine));
-      }
-    }catch(_){/* row stays hidden on session errors */}
-
   const locEl=$('usLocationState');
   locEl.className='us-setting-state';
   if(loc==='granted'){locEl.textContent='✓';locEl.classList.add('ok');}
@@ -445,121 +433,6 @@ function logoutConfirmationModal(){
   $('usConfirmLogout')?.addEventListener('click',logout);
 }
 
-// Two-phase in-place account upgrade for anonymous sessions (never creates a
-// new auth user). Phase 1: request the confirmation email exactly once and show
-// ONLY "controlla la tua email" — no password field yet. Phase 2 (after the
-// email link is confirmed and the app is reopened): verify the ORIGINAL UID
-// saved before the upgrade, then allow the password set. Passwords and emails
-// are entered directly by the user and never logged or persisted.
-function accountUpgradeModal(){
-  openModal('Proteggi il tuo account',`
-    <div class="us-settings2-modal-copy" id="usAccountUpgradeBody">
-      <p>Aggiungi un’email a questo account. Riceverai un solo link di conferma.</p>
-      <input id="usUpgradeEmail" type="email" inputmode="email" autocomplete="email" placeholder="tua@email.com" style="width:100%">
-      <div class="us-settings2-action-stack">
-        <button type="button" class="ghost" id="usCancelUpgrade">Annulla</button>
-        <button type="button" class="primary" id="usSendUpgrade" style="width:100%">Invia email di conferma</button>
-      </div>
-      <div class="auth-status" id="usUpgradeStatus" role="status" aria-live="polite"></div>
-    </div>
-  `,'ACCOUNT');
-  const body=document.getElementById('usAccountUpgradeBody');
-  $('usCancelUpgrade')?.addEventListener('click',closeModal);
-  $('usSendUpgrade')?.addEventListener('click',async()=>{
-    const btn=$('usSendUpgrade');
-    const st=$('usUpgradeStatus');
-    // A pending upgrade for this account is the UI authority: no second send,
-    // even after a reload that recreated this modal.
-    if(window.readPendingAccountUpgrade?.()){
-      btn.disabled=true;
-      st.textContent='Una richiesta di upgrade è già in corso per questo account.';
-      return;
-    }
-    btn.disabled=true;
-    st.textContent='';
-    try{
-          await window.requestAccountEmailUpgrade(document.getElementById('usUpgradeEmail').value);
-          // Phase boundary: after the email request only "check your email" is shown.
-          // The password field appears ONLY after the email is confirmed and the
-          // pending original-UID state matches the current session.
-          btn.disabled=true;
-          btn.textContent='Email inviata';
-          st.textContent='Controlla la tua email: apri il link di conferma su questo telefono. Torna qui dopo la conferma per impostare la password.';
-        }catch(err){
-          const msg=String(err?.message||'invio non riuscito');
-          btn.disabled=true; // single attempt: no retry path
-          if(/rate|too many/i.test(msg)){
-            // Pending state survives as admin_fallback_required (original UID kept);
-            // no second email attempt, the email button stays disabled/hidden.
-            btn.hidden=true;
-            const emailInput=$('usUpgradeEmail');if(emailInput)emailInput.hidden=true;
-            st.textContent='Invio email bloccato. Non è possibile inviare di nuovo da qui.';
-          }else{
-            // Generic error: clear any pending state (never show a false "sent").
-            window.clearPendingAccountUpgrade?.();
-            st.textContent='Errore: '+msg;
-          }
-        }
-      });
-  // The pending upgrade is the UI authority on reopen: decide the phase.
-  resumeAccountUpgradePhase();
-}
-
-async function resumeAccountUpgradePhase(){
-  const body=document.getElementById('usAccountUpgradeBody');
-  if(!body)return;
-  const pending=window.readPendingAccountUpgrade?.();
-  if(!pending)return;
-  const {data:{user}}=await sb.auth.getUser();
-  if(!user){window.clearPendingAccountUpgrade();return;}
-  if(user.id!==pending.expectedUserId){
-    // Pending state of a different UID: ignore and remove it safely.
-    window.clearPendingAccountUpgrade();
-    return;
-  }
-  // Same UID with a pending upgrade: the email request phase can never come
-  // back — hide/disable it regardless of the pending phase.
-  const emailInput=$('usUpgradeEmail');
-  if(emailInput){emailInput.disabled=true;emailInput.hidden=true;}
-  const sendBtn=$('usSendUpgrade');
-  if(sendBtn){sendBtn.disabled=true;sendBtn.hidden=true;}
-  const cancelBtn=$('usCancelUpgrade');
-  if(cancelBtn){cancelBtn.disabled=true;cancelBtn.hidden=true;}
-  if(user.is_anonymous||!user.email||!user.email_confirmed_at){
-    if(pending.phase==='admin_fallback_required'){
-      $('usUpgradeStatus').textContent='Invio email bloccato. Non è possibile inviare di nuovo da qui.';
-    }else{
-      $('usUpgradeStatus').textContent='Controlla la tua email: apri il link di conferma su questo telefono, poi torna qui.';
-    }
-    return;
-  }
-  // Same UID, confirmed: straight to the password phase (normal confirmation
-  // or admin fallback are both acceptable).
-    // Resume confirmed: hide the email request phase entirely.
-    $('usUpgradeEmail')?.setAttribute('hidden','');
-
-    body.insertAdjacentHTML('beforeend',`
-    <p>Sei entrata dall'email. Ora scegli una password per questo account.</p>
-    <input id="usUpgradePassword" type="password" autocomplete="new-password" placeholder="Nuova password (min 6)" style="width:100%;margin-top:10px">
-    <div class="us-settings2-action-stack"><button type="button" class="primary" id="usSetPassword" style="width:100%">Imposta password</button></div>`);
-  $('usSetPassword')?.addEventListener('click',async()=>{
-    const btn=$('usSetPassword');
-    const st=$('usUpgradeStatus');
-    const pending=window.readPendingAccountUpgrade?.();
-    btn.disabled=true;
-    // The pending expectedUserId (original anonymous UID) is the authority;
-    // passing the freshly-read session user.id here would be self-referential.
-    if(!pending){st.textContent='Nessuna richiesta di upgrade attiva.';return;}
-    try{
-      await window.setPasswordFromActiveSession(document.getElementById('usUpgradePassword').value,pending.expectedUserId);
-      window.clearPendingAccountUpgrade();
-      st.textContent='Account protetto ✓';
-      closeModal();
-      toast('Account protetto ♡');
-    }catch(err){st.textContent='Errore: '+String(err?.message||'impostazione non riuscita');}
-  });
-}
-
 async function logout(){
   if(logoutInFlight)return;
   logoutInFlight=true;
@@ -584,7 +457,6 @@ async function action(name){
   if(name==='feedback')return feedbackModal();
   if(name==='sync-status')return syncStatusModal();
   if(name==='scriptable-widgets')return scriptableWidgetsModal();
-  if(name==='account-upgrade')return accountUpgradeModal();
   if(name==='privacy')return privacyModal();
   if(name==='logout')return logoutConfirmationModal();
 }
