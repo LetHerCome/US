@@ -660,7 +660,7 @@
     };
     media.onerror = async () => {
       if (loadToken !== storyLoadToken) return;
-      if(!mediaRetried&&typeof window.usGetSignedUrl==='function'){
+      if(navigator.onLine!==false&&!mediaRetried&&typeof window.usGetSignedUrl==='function'){
         mediaRetried=true;
         window.usInvalidateSignedUrl?.(story.media_path);
         let fresh=null;
