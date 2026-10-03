@@ -1,16 +1,16 @@
 {
   "version": 1,
   "updatedAt": "2026-10-03",
-  "mainSha": "f99c4d94bf3062393bd05c48e8afcb710e4d917a",
-  "currentMission": "F2A",
-  "currentLabel": "Backend Source-of-Truth — production evidence captured",
+  "mainSha": "59dfb0e7609c976ecb97bf8e324bbb4f86f75000",
+  "currentMission": "F2A.1",
+  "currentLabel": "Next: Production Baseline & Missing-Source Recovery",
   "state": {
     "F0": "done",
     "F0.1": "done",
     "F1A": "done",
     "F1B": "done",
     "F1C": "done",
-    "F2A": "todo",
+    "F2A": "done",
     "F2B": "todo",
     "F2C": "todo",
     "F2D": "todo",
@@ -31,7 +31,8 @@
     "N2": "todo",
     "N3": "todo",
     "N4": "todo",
-    "N5": "todo"
+    "N5": "todo",
+    "F2A.1": "todo"
   },
-  "note": "F1C independently audited and merged via PR #52. Foundation & Security is complete. F2A is next and can be run in Projects/cloud as a read-only/source-of-truth mission. F3B requirement: reproduce and fix the real iOS/Safari PWA failure “Response served by service worker has redirections” seen on Bea’s iPhone after the Vercel → Cloudflare origin change. F3B must ensure redirected navigation responses are never cached/served as app-shell documents, cover the us-refresh/update path, and verify recovery/reinstall/update behavior on iOS standalone PWA. Emergency iOS PWA hotfix merged on main at f99c4d94: Service Worker now rejects redirected navigation responses (including us-refresh), preserves the last good cached index, and build id was bumped. Keep F3B scheduled for the broader update/reinstall/origin-migration contract. F2A production read-only evidence was captured through the Supabase connector and committed to the F2A branch: 14 SQL blocks, migration ledger, Edge Functions, recovered monthiversary-job source, and schema snapshot. No production mutations."
+  "note": "F2A audit completed and merged via PR #54. Production evidence is captured read-only. Next is F2A.1 with Opus High: recover canonical baseline and missing production-only source into the repo, with no production mutations."
 }
