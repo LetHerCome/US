@@ -2,7 +2,7 @@ name: QA iPhone viewport + local cosmetics
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, fix/iphone13-default-cosmetics-viewport]
     paths:
       - 'progression.js'
       - 'fix4.css'
