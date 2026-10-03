@@ -193,8 +193,8 @@ test('Ricordi delete: visible action, no client secret, no SQL storage deletes, 
   assert.match(app, /sb\.functions\.invoke\('delete-moment'/);
   assert.match(styles, /\.moment-delete\{[^}]*min-width:72px[^}]*height:44px/);
   assert.match(albums, /const DELETE_GRACE_MS=4000/);
-  assert.match(albums, /currentAlbum\.owner===window\.usProfile\.id&&albumLoaded\)/);
-  assert.doesNotMatch(albums, /albumRows\.length===0/);
+  assert.match(albums, /window\.usProfile\?\.couple_id&&albumLoaded\)/);
+  assert.doesNotMatch(albums, /currentAlbum\.owner===window\.usProfile\.id|albumRows\.length===0/);
   assert.match(albums, />Elimina</);
   assert.match(albums, />Eliminato</);
   assert.match(albums, />Annulla</);

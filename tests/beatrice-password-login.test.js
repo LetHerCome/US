@@ -10,7 +10,7 @@ const app = () => read('app.js');
 const settings = () => read('settings.js');
 const appAuthBlock = () => {
   const src = app();
-  return src.slice(src.indexOf('async function setPasswordFromActiveSession'), src.indexOf('async function sendMagicLinkRecovery'));
+  return src.slice(src.indexOf('async function setPasswordFromActiveSession'), src.indexOf('let usIncomingThink=null;'));
 };
 const resumeFn = () => {
   const src = settings();
@@ -160,17 +160,16 @@ test('auth: nessuna email/password salvata in storage; niente signUp/claim_us_ro
   assert.match(fn, /JSON\.stringify\(\{expectedUserId,phase:'awaiting_email_confirmation'\}\)/);
 });
 
-test('auth: Francesco continua a funzionare col percorso generalizzato; pairing intatto', () => {
+test('auth: Francesco continua a funzionare col login password-only', () => {
   const src = app();
+  const index = read('index.html');
   assert.match(src, /sb\.auth\.signInWithPassword\(\{email,password\}\)/);
   assert.doesNotMatch(src, /Sessione Francesco non valida/);
   assert.match(src, /window\.setPasswordFromActiveSession=setPasswordFromActiveSession/);
-  assert.match(src, /sb\.rpc\('claim_us_role',\{invite_code:code,chosen_role:selectedRole\}\)/);
-  assert.equal((src.match(/claim_us_role/g) || []).length, 1);
-  assert.equal((src.match(/signInAnonymously/g) || []).length, 1);
+  assert.doesNotMatch(src, /claim_us_role|signInAnonymously|signInWithOtp/);
+  assert.doesNotMatch(index, /id="authPair"|id="pairBtn"|id="pairCode"|id="magicLinkBtn"/);
   const s = settings();
   assert.doesNotMatch(s, /c42c0170-10c8-43f8-b08f-c46e97770e6d/);
-  assert.match(read('index.html'), /id="pairBtn"/);
 });
 
 test('auth: l auth non tocca il dominio M5B left_for_you', () => {
@@ -181,4 +180,25 @@ test('auth: l auth non tocca il dominio M5B left_for_you', () => {
     .filter((m) => m.includes('left_for_you'));
   assert.ok(m5b.length >= 2, 'la migration history M5B deve restare intatta');
   assert.doesNotMatch(read('index.html'), /left_for_you/);
+});
+
+test('auth: front door is email + password only — no pairing and no magic link', () => {
+  const index = read('index.html');
+  const src = app();
+
+  assert.match(index, /class="auth-step active" id="authLogin"/,
+    'login email/password deve essere la porta iniziale');
+  assert.doesNotMatch(index, /id="authPair"|id="pairBtn"|id="pairCode"/,
+    'il pairing non deve essere una porta utente');
+  assert.doesNotMatch(index, /id="magicLinkBtn"|Magic Link/i,
+    'nessun Magic Link nel login');
+  assert.match(index, /id="loginEmail"[^>]*type="email"/);
+  assert.match(index, /id="loginPassword"[^>]*type="password"/);
+
+  assert.match(src, /sb\.auth\.signInWithPassword\(\{email,password\}\)/);
+  assert.doesNotMatch(src, /signInWithOtp|sendMagicLinkRecovery|signInAnonymously|claim_us_role/,
+    'il front door non deve mantenere percorsi OTP o pairing legacy');
+  assert.doesNotMatch(src, /returningDevice\?'authLogin':'authPair'/,
+    'un telefono nuovo deve vedere lo stesso login email/password');
+  assert.match(src, /if\(!session\)[\s\S]*showAuthStep\('authLogin'\)/);
 });
