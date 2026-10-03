@@ -128,6 +128,14 @@ function usInvalidateSignedUrl(path){
   US_SIGNED_URL_CACHE.delete(path);
   usPersistSignedUrlCache();
 }
+function usStoragePathFromSignedUrl(url){
+  const marker='/storage/v1/object/sign/us-media/';
+  const value=String(url||'');
+  const index=value.indexOf(marker);
+  if(index<0)return '';
+  const raw=value.slice(index+marker.length).split('?')[0];
+  try{return decodeURIComponent(raw);}catch(_e){return raw;}
+}
 function usWriteSignedUrlCache(path,url,expiresIn){
   if(path&&url){
     US_SIGNED_URL_CACHE.set(path,{url,expiresAt:Date.now()+Math.max(60,Number(expiresIn)||60)*1000});
@@ -870,7 +878,7 @@ function setAvatarImage(img,fallback,path,signedUrl){
 }
 function setAvatarSlot(containerId,signedUrl,path=''){
   const root=document.getElementById(containerId);if(!root)return;
-  setAvatarImage(root.querySelector('img'),root.querySelector('.fallback'),path,signedUrl);
+  setAvatarImage(root.querySelector('img'),root.querySelector('.fallback'),path||usStoragePathFromSignedUrl(signedUrl),signedUrl);
 }
 
 async function signedAvatarUrl(path){
@@ -887,11 +895,13 @@ async function hydrateProfileAvatars(){
     const nameEl=document.querySelector(`[data-noi-couple-name="${profile.role}"]`);
     if(nameEl&&profile.display_name)nameEl.textContent=profile.display_name;
     const url=await signedAvatarUrl(profile.avatar_path);
-    if(profile.role==='francesco')setAvatarSlot('pairAvatarFrancesco',url,profile.avatar_path);
-    if(profile.role==='beatrice')setAvatarSlot('pairAvatarBeatrice',url,profile.avatar_path);
+    if(profile.role==='francesco')setAvatarSlot('pairAvatarFrancesco',url);
+    if(profile.role==='beatrice')setAvatarSlot('pairAvatarBeatrice',url);
     if(profile.id===window.usProfile.id){
       const img=document.getElementById('profileAvatarImg');
-      if(img)setAvatarImage(img,fallback,profile.avatar_path,url);
+      if(img){
+        setAvatarImage(img,fallback,profile.avatar_path,url);
+      }
       window.usProfile.avatar_path=profile.avatar_path||null;
     }
   }
@@ -2493,7 +2503,9 @@ async function hydrateMomentsCore(){
     grid.dataset.loaded='1';grid.dataset.signature=signature;return;
   }
   const names=new Map((profiles||[]).map(p=>[p.id,p.display_name||'Noi']));
-  const signedUrls=await usGetSignedUrls((rows||[]).map(row=>row.storage_path),21600,{force:forceMedia});
+  const mediaPaths=(rows||[]).map(row=>row.storage_path);
+  if(forceMedia)mediaPaths.forEach(usInvalidateSignedUrl);
+  const signedUrls=await usGetSignedUrls((rows||[]).map(row=>row.storage_path),21600);
   if(window.usProfile!==profile)return;
   const timeline=ricordiTimeline((rows||[]).filter(r=>signedUrls.get(r.storage_path)),livedRows,keptRows,eventRows,provenanceRows);
   const html=[];
