@@ -3,7 +3,7 @@
   "updatedAt": "2026-10-03",
   "mainSha": "9a28b3751b027747b6acf7c34d416b74113329e3",
   "currentMission": "F2A.1",
-  "currentLabel": "Next: Production Baseline & Missing-Source Recovery",
+  "currentLabel": "Production Baseline — capture complete, Claude finalizing",
   "state": {
     "F0": "done",
     "F0.1": "done",
@@ -34,5 +34,5 @@
     "N5": "todo",
     "F2A.1": "todo"
   },
-  "note": "F2A audit completed and merged via PR #54. Production evidence is captured read-only. Next is F2A.1 with Opus High: recover canonical baseline and missing production-only source into the repo, with no production mutations. iOS media hotfix merged via PR #55: Supabase iPhone Storage logs showed signed URL creation and image GETs at HTTP 200, so iOS WebKit now bypasses the private media Service Worker cache and clears stale media cache on activation. F3B still owns the broader PWA update/cache contract. PR #56 merged: private-media CacheStorage writes are now non-blocking so a Safari cache failure cannot discard a successful signed-image response. Build id bumped; F3B still owns the full PWA cache/update contract. PR #57 merged: iOS private-media self-healing added across Home, avatars, Ricordi, Stories, Left for You and albums; foreground refresh and best-effort SW update caching included. F3B still owns the broader PWA update/cache contract. iOS media self-healing hotfix merged via PR #57: one-shot signed-URL recovery for Home/avatars/Ricordi/Stories/Left for You/albums, foreground refresh, best-effort SW update cache writes, dead signed.signedUrl fix. Verified 29/29 focused, full suite 1284 pass / 0 fail / 33 skipped; Cloudflare and Capacitor builds pass."
+  "note": "iPhone PWA media recovery is confirmed working by Bea after PR #57. F2A.1 production capture is complete: 22/22 read-only blocks committed on mission/us-2-0-f2a-1-production-baseline in three JSON artifacts; c10 redaction fields verified and no unredacted key-like literals found. Claude can now generate the baseline/rebuild result, then rebase onto current main 9a28b375."
 }
