@@ -1,4 +1,4 @@
-const BUILD_ID = "us-f1a-auth-shutdown-v1-20261003-1";
+const BUILD_ID = "us-ios-sw-redirect-hotfix-v1-20261003-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -202,6 +202,31 @@ async function usPruneMediaCache(cache, maxEntries = 100) {
   } catch (_) {}
 }
 
+function usSafeNavigationResponse(response) {
+  return Boolean(
+    response &&
+    response.ok &&
+    !response.redirected &&
+    response.type !== "opaqueredirect"
+  );
+}
+
+async function usFetchNavigation(request, { noCacheHeader = false } = {}) {
+  const response = await fetch(request, {
+    cache: "no-store",
+    redirect: "follow",
+    ...(noCacheHeader ? { headers: { "Cache-Control": "no-cache" } } : {})
+  });
+
+  // Safari/iOS rejects redirected responses returned by a Service Worker for
+  // navigations ("Response served by service worker has redirections").
+  // Never cache or serve such a response as the app document.
+  if (!usSafeNavigationResponse(response)) {
+    throw new Error("unsafe redirected navigation response");
+  }
+  return response;
+}
+
 self.addEventListener("fetch", (event) => {
   const request = event.request;
 
@@ -272,12 +297,7 @@ self.addEventListener("fetch", (event) => {
   if (url.searchParams.has("us-refresh")) {
     event.respondWith((async () => {
       try {
-        const response = await fetch(request, {
-          cache: "no-store",
-          headers: { "Cache-Control": "no-cache" }
-        });
-        if (!response.ok) throw new Error("refresh navigation failed");
-
+        const response = await usFetchNavigation(request, { noCacheHeader: true });
         const cache = await caches.open(CACHE_NAME);
         await cache.put("/index.html", response.clone());
         return response;
@@ -292,7 +312,7 @@ self.addEventListener("fetch", (event) => {
   if (request.mode === "navigate") {
     event.respondWith((async () => {
       const cached = await caches.match("/index.html");
-      const refresh = fetch(request, { cache: "no-store" })
+      const refresh = usFetchNavigation(request)
         .then(async (response) => {
           const copy = response.clone();
           const cache = await caches.open(CACHE_NAME);

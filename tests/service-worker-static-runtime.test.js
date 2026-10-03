@@ -22,7 +22,7 @@ function cacheKey(input) {
   return input.url;
 }
 
-function createServiceWorkerHarness({ failPrecachePath = null } = {}) {
+function createServiceWorkerHarness({ failPrecachePath = null, redirectRefresh = false } = {}) {
   const source = WORKER_SOURCE;
   const listeners = new Map();
   const cacheBuckets = new Map();
@@ -40,6 +40,9 @@ function createServiceWorkerHarness({ failPrecachePath = null } = {}) {
     const url = new URL(cacheKey(input));
     if (url.pathname === failPrecachePath) {
       throw new Error(`precache failed for ${url.pathname}`);
+    }
+    if (redirectRefresh && url.searchParams.has('us-refresh')) {
+      return Response.redirect(`${ORIGIN}/index.html`, 302);
     }
     if (url.pathname === '/app.js') {
       return new Response(rawApp, {
@@ -528,6 +531,21 @@ test('reload offline usa index e runtime della nuova shell cache', async () => {
   assert.equal(await appResponse.text(), harness.rawApp);
   assert.equal(await storiesResponse.text(), 'asset:/stories.js');
   assert.equal(await storiesCssResponse.text(), 'asset:/stories.css');
+});
+
+test('iOS PWA: un redirect durante us-refresh non viene servito o salvato come documento', async () => {
+  const harness = createServiceWorkerHarness({ redirectRefresh: true });
+  await harness.dispatchExtendable('install');
+  await harness.dispatchExtendable('activate');
+
+  const before = await harness.cacheBuckets.get(CURRENT_SHELL).get(`${ORIGIN}/index.html`).clone().text();
+  const response = await harness.dispatchFetch('/?us-refresh=123', { mode: 'navigate' });
+  const after = await harness.cacheBuckets.get(CURRENT_SHELL).get(`${ORIGIN}/index.html`).clone().text();
+
+  assert.equal(response.redirected, false);
+  assert.equal(response.status, 200);
+  assert.equal(await response.text(), 'asset:/index.html');
+  assert.equal(after, before, 'redirected navigation must not poison cached index.html');
 });
 
 test('push e notification click mantengono payload e navigazione esistenti', async () => {
