@@ -3,7 +3,7 @@
   "updatedAt": "2026-10-03",
   "mainSha": "9e86b53630552acaf62e19ea834a7dd95e9a29b6",
   "currentMission": "F1B",
-  "currentLabel": "RPC / Function Grant Hardening",
+  "currentLabel": "RPC / Function Grant Hardening — Ready for review",
   "state": {
     "F0": "done",
     "F0.1": "doing",
@@ -33,5 +33,5 @@
     "N4": "todo",
     "N5": "todo"
   },
-  "note": "F1B is active with Opus. F0.1 test-harness hardening is running in parallel on a repo-only branch."
+  "note": "F1B production hardening completed by Opus and is awaiting push + independent branch review. F0.1 remains in progress separately."
 }
