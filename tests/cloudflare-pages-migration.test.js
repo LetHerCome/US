@@ -64,7 +64,7 @@ test('Cloudflare Pages is the only production frontend referenced by runtime cod
   // sender contact (not a frontend URL) and their source is pinned to the
   // deployed bytes (tests/m10-2-daily-reactions.test.js).
   const tracked = run('git', ['ls-files', '*.js', '*.mjs', '*.html', '*.json', '*.webmanifest'], { cwd: ROOT, encoding: 'utf8' })
-    .split('\n').filter((file) => file && !file.startsWith('tests/') && !file.startsWith('supabase/') && file !== 'package-lock.json');
+    .split('\n').filter((file) => file && !file.startsWith('tests/') && !file.startsWith('supabase/') && !file.startsWith('docs/') && file !== 'package-lock.json');
   const offenders = [];
   for (const file of tracked) {
     const source = await readFile(path.join(ROOT, file), 'utf8').catch(() => '');
