@@ -648,10 +648,9 @@
       return;
     }
     if (!media) return;
-    media.dataset.usMediaRetry='0';
+    let mediaRetried=false;
     media.onload = () => {
       if (loadToken !== storyLoadToken || currentViewerStories[currentViewerIndex]?.id !== story.id) return;
-      media.dataset.usMediaRetry='0';
       media.hidden = false;
       setStoryViewerState('ready');
       if (story.author_id !== window.usProfile?.id) markStorySeen(story.id);
@@ -661,10 +660,11 @@
     };
     media.onerror = async () => {
       if (loadToken !== storyLoadToken) return;
-      if(media.dataset.usMediaRetry!=='1'&&typeof window.usGetSignedUrl==='function'){
-        media.dataset.usMediaRetry='1';
+      if(!mediaRetried&&typeof window.usGetSignedUrl==='function'){
+        mediaRetried=true;
         window.usInvalidateSignedUrl?.(story.media_path);
-        const fresh=await window.usGetSignedUrl(story.media_path,600,{force:true}).catch?.(()=>null);
+        let fresh=null;
+        try{fresh=await window.usGetSignedUrl(story.media_path,600,{force:true});}catch(_error){}
         if(fresh&&loadToken===storyLoadToken&&currentViewerStories[currentViewerIndex]?.id===story.id){
           media.src=fresh;
           return;
