@@ -244,7 +244,7 @@ test('M9A: send-web-push valida mittente/coppia/partner e delega al core condivi
 test('M9A: il worker di recupero è solo cron, usa la stessa chiave e salta ciò che è già notificato', () => {
   const worker = read('supabase/functions/left-for-you-push-worker/index.ts');
   const config = read('supabase/config.toml');
-  assert.match(config, /\[functions\.left-for-you-push-worker\]\nverify_jwt = false/);
+  assert.match(config, /\[functions\.left-for-you-push-worker\]\r?\nverify_jwt = false/);
   assert.match(worker, /x-us-cron-key/);
   assert.match(worker, /get_internal_left_for_you_push_cron_key/);
   assert.ok(worker.indexOf('cronKey !== expectedKey') < worker.indexOf('.from("left_for_you")'), 'autorizzazione prima di leggere i dati');
