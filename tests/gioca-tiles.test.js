@@ -55,7 +55,7 @@ test('Gioca hub: no page header prose, no separate in-progress list, one week st
   for (const gone of ['Scopritevi, giocando', 'Cinque domande alla volta', 'Un Per voi e due giochi a scelta', 'IN CORSO', 'SCEGLIETE VOI', 'Non scegliete. US ha preparato']) assert.doesNotMatch(html, new RegExp(gone));
   assert.match(html, /<h2>Gioca<\/h2>/);
   assert.match(html, /QUESTA SETTIMANA/);
-  assert.match(html, /<b>1 di 3<\/b>/);
+  assert.match(html, /<b>2 rimasti<\/b>/);
   assert.match(html, /data-gv2-family="e_se" data-gv2-mode-state="open"[\s\S]*?<small class="us-gv2-mode-state">2 di 5<\/small>/, 'an open round shows on its own tile');
   assert.match(html, /data-gv2-family="ridete" data-gv2-mode-state="played"[\s\S]*?us-gv2-icon" data-gv2-icon="check"/);
   assert.equal((html.match(/us-gv2-rhythm"/g) || []).length, 1);
@@ -65,6 +65,7 @@ test('Gioca hub: a spent week stays compact and locks unplayed tiles with an ico
   const html = await hub(homeOf({ per_voi: { state: 'played', session_id: 'p' },
     allowance: allowance({ used: 3, per_voi_used: 1, free_used: 2, per_voi_available: false, free_available: false, families: { per_voi: { session_id: 'p', completed: true } } }) })).html();
   assert.doesNotMatch(html, /Nuovi giochi lunedì/, 'the hub does not duplicate exhaustion prose; tiles carry the state');
+  assert.match(html, /<b>0 rimasti<\/b>/, 'the top-right strip says how many games are actually still available');
   assert.match(html, /data-gv2-family="scopritevi" data-gv2-mode-state="locked" aria-disabled="true"[\s\S]*?data-gv2-icon="lock-simple"/);
   assert.match(html, /<small class="us-gv2-mode-state"><span class="us-gv2-icon" data-gv2-icon="lock-simple" aria-hidden="true"><\/span>Lunedì<\/small>/);
 });

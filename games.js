@@ -97,16 +97,19 @@ const freeLeft = () => { const a = allowance(); return a ? Math.max(0, a.free_li
 const playedThisWeek = (family) => allowance()?.families?.[family] || null;
 const EXHAUSTED = 'Nuovi giochi lunedì.';
 
-// QUESTA SETTIMANA ● ● ○ 1 di 3 — nothing else unless the week is spent.
+// Show what the couple can still play, not the inverse "used / limit" count.
+// "3 di 3" looked like three games were available even when the week was spent.
 function rhythmStrip() {
   const a = allowance();
   if (!a) return '';
   const used = Math.min(a.used, a.limit);
+  const remaining = Math.max(0, a.limit - used);
   const dots = Array.from({ length: a.limit }, (_, i) => `<i data-on="${i < used ? 'true' : 'false'}"></i>`).join('');
-  const done = used >= a.limit;
-  return `<div class="us-gv2-rhythm" data-gv2-rhythm="${done ? 'done' : 'open'}" role="group" aria-label="Questa settimana: ${esc(`${used} di ${a.limit} momenti giocati`)}">
+  const done = remaining === 0;
+  const remainingLabel = remaining === 1 ? '1 rimasto' : `${remaining} rimasti`;
+  return `<div class="us-gv2-rhythm" data-gv2-rhythm="${done ? 'done' : 'open'}" role="group" aria-label="Questa settimana: ${esc(`${remainingLabel} da giocare`)}">
     <span class="us-gv2-kicker">QUESTA SETTIMANA</span>
-    <span class="us-gv2-rhythm-row"><span class="us-gv2-rhythm-dots" aria-hidden="true">${dots}</span><b>${used} di ${a.limit}</b></span>
+    <span class="us-gv2-rhythm-row"><span class="us-gv2-rhythm-dots" aria-hidden="true">${dots}</span><b>${remainingLabel}</b></span>
   </div>`;
 }
 

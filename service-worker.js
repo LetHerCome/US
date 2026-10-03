@@ -1,4 +1,4 @@
-const BUILD_ID = "us-iphone13-cosmetics-viewport-v1-20261003-1";
+const BUILD_ID = "us-gioca-weekly-remaining-v1-20261003-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
