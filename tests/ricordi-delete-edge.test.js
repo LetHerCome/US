@@ -43,3 +43,8 @@ test('whole-Moment privileged cleanup never exposes server credentials to the PW
   assert.doesNotMatch(app, /SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET_KEYS|supabaseSecretKey/);
   assert.match(app, /sb\.functions\.invoke\('delete-moment'/);
 });
+test('Ricordi grid exposes Elimina on every shared Moment card', () => {
+  assert.match(app, /ricordiMomentCard\(row,signedUrls\.get\(row\.storage_path\),author,true,/);
+  assert.match(app, /aria-label="Elimina ricordo"/);
+});
+
