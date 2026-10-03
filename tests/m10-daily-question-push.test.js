@@ -269,7 +269,7 @@ test('M10C: un client normale non può chiedere la push di sistema (send-web-pus
   assert.doesNotMatch(worker, /request\.json|request\.text|searchParams/, 'the worker takes no caller input');
   assert.doesNotMatch(worker, /SUPABASE_SERVICE_ROLE_KEY|service_role_key/i);
   assert.ok(worker.indexOf('cronKey !== expectedKey') < worker.indexOf('dispatchDailyQuestionPush(admin'), 'auth before any work');
-  assert.match(read('supabase/config.toml'), /\[functions\.daily-question-push-worker\]\nverify_jwt = false/);
+  assert.match(read('supabase/config.toml'), /\[functions\.daily-question-push-worker\]\r?\nverify_jwt = false/);
 });
 
 // ---- Migration su Postgres embedded ----
