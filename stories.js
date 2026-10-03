@@ -658,20 +658,30 @@
       applyStoryMediaEntry(direction);
       startStoryPlayback(duration);
     };
-    media.onerror = async () => {
+    media.onerror = () => {
       if (loadToken !== storyLoadToken) return;
-      if(navigator.onLine!==false&&!mediaRetried&&typeof window.usGetSignedUrl==='function'){
-        mediaRetried=true;
-        window.usInvalidateSignedUrl?.(story.media_path);
-        let fresh=null;
-        try{fresh=await window.usGetSignedUrl(story.media_path,600,{force:true});}catch(_error){}
-        if(fresh&&loadToken===storyLoadToken&&currentViewerStories[currentViewerIndex]?.id===story.id){
-          media.src=fresh;
-          return;
-        }
+      if(navigator.onLine===false){
+        setStoryViewerState('offline', 'Story non disponibile offline.');
+        return;
       }
-      const offline = navigator.onLine === false;
-      setStoryViewerState(offline ? 'offline' : 'error', offline ? 'Story non disponibile offline.' : 'La Story non si è caricata.');
+      if(!mediaRetried&&typeof window.usGetSignedUrl==='function'){
+        mediaRetried=true;
+        setStoryViewerState('loading', 'Riprovo la Story…');
+        Promise.resolve().then(async()=>{
+          window.usInvalidateSignedUrl?.(story.media_path);
+          let fresh=null;
+          try{fresh=await window.usGetSignedUrl(story.media_path,600,{force:true});}catch(_error){}
+          if(fresh&&loadToken===storyLoadToken&&currentViewerStories[currentViewerIndex]?.id===story.id){
+            media.src=fresh;
+            return;
+          }
+          if(loadToken===storyLoadToken)setStoryViewerState('error', 'La Story non si è caricata.');
+        }).catch(()=>{
+          if(loadToken===storyLoadToken)setStoryViewerState('error', 'La Story non si è caricata.');
+        });
+        return;
+      }
+      setStoryViewerState('error', 'La Story non si è caricata.');
     };
     media.src = storySignedUrl;
   }
