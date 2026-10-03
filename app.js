@@ -2448,7 +2448,10 @@ document.getElementById('moments')?.addEventListener('click',event=>{
   }
 });
 
-async function hydrateMomentsCore(options={}){
+let usForceMomentsMediaRefresh=false;
+async function hydrateMomentsCore(){
+  const forceMedia=usForceMomentsMediaRefresh;
+  usForceMomentsMediaRefresh=false;
   if(!window.usProfile)return;
   const grid=document.getElementById('momentsGrid');
   const pill=document.getElementById('momentsStatusPill');
@@ -2482,7 +2485,7 @@ async function hydrateMomentsCore(options={}){
   if(pill)pill.textContent='📸 Moments · '+(rows?.length||0);
   const today=localDateISO();
   const signature=JSON.stringify([today,(rows||[]).map(r=>[r.id,r.created_by,r.storage_path,r.caption||'',r.moment_date,r.created_at]),livedRows.map(r=>[r.id,r.title,r.completed_at]),keptRows.map(r=>[r.id,r.question_date]),eventRows.map(r=>[r.source_ref,r.occurrence_date,r.title,r.title_source,r.moment_id]),provenanceRows.map(r=>[r.source_kind,r.source_ref,r.target_moment_id])]);
-  if(grid.dataset.loaded==='1'&&grid.dataset.signature===signature&&!options.forceMedia)return;
+  if(grid.dataset.loaded==='1'&&grid.dataset.signature===signature&&!forceMedia)return;
   if(!rows?.length&&!livedRows.length&&!keptRows.length&&!eventRows.length){
     grid.innerHTML='<div class="empty-state moment-loading ricordi-empty"><b>La vostra storia parte da qui</b></div>';
     renderRicordiRivivi(null,new Map(),new Map());
@@ -2490,7 +2493,7 @@ async function hydrateMomentsCore(options={}){
     grid.dataset.loaded='1';grid.dataset.signature=signature;return;
   }
   const names=new Map((profiles||[]).map(p=>[p.id,p.display_name||'Noi']));
-  const signedUrls=await usGetSignedUrls((rows||[]).map(row=>row.storage_path),21600,{force:Boolean(options.forceMedia)});
+  const signedUrls=await usGetSignedUrls((rows||[]).map(row=>row.storage_path),21600,{force:forceMedia});
   if(window.usProfile!==profile)return;
   const timeline=ricordiTimeline((rows||[]).filter(r=>signedUrls.get(r.storage_path)),livedRows,keptRows,eventRows,provenanceRows);
   const html=[];
@@ -2532,8 +2535,9 @@ async function hydrateMomentsCore(options={}){
 }
 let momentsHydrateInFlight=null;
 async function hydrateMoments(options={}){
+  if(options.forceMedia)usForceMomentsMediaRefresh=true;
   if(momentsHydrateInFlight)return momentsHydrateInFlight;
-  momentsHydrateInFlight=hydrateMomentsCore(options).finally(()=>{momentsHydrateInFlight=null;});
+  momentsHydrateInFlight=hydrateMomentsCore().finally(()=>{momentsHydrateInFlight=null;});
   return momentsHydrateInFlight;
 }
 window.hydrateMoments=hydrateMoments;
@@ -4206,10 +4210,8 @@ async function refreshVisibleState(options={}){
   const active=document.querySelector('.page.active')?.id;
   const todayOpen=document.getElementById('today')?.classList.contains('open');
   // M12A — returning to the foreground re-checks the location wherever the user lands.
-  if(options.foreground){
-    maybeAutoRefreshLocation('resume').catch(()=>{});
-    hydrateProfileAvatars().catch(()=>{});
-  }
+  if(options.foreground)maybeAutoRefreshLocation('resume').catch(()=>{});
+  if(options.foreground)hydrateProfileAvatars().catch(()=>{});
   if(active==='home'||todayOpen){
     if(options.foreground)hydrateHomePhoto(false).catch(()=>{});
     await hydrateToday();
