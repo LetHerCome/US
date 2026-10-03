@@ -2595,7 +2595,9 @@ async function hydrateMomentsCore(){
     const row=item.moment;
     const own=row.created_by===profile.id;
     const author=names.get(row.created_by)||(own?profile.display_name:'Noi');
-    html.push(ricordiMomentCard(row,signedUrls.get(row.storage_path),author,own,opensPeriod,item.kind==='moment'?null:{kind:item.kind,sourceKey:item.sourceKey,title:ricordiRiviviTitle(item),date:item.date}));
+    // Every Moment returned here already belongs to the signed-in user's couple.
+    // Deletion is a couple-level action; the Edge Function re-validates membership.
+    html.push(ricordiMomentCard(row,signedUrls.get(row.storage_path),author,true,opensPeriod,item.kind==='moment'?null:{kind:item.kind,sourceKey:item.sourceKey,title:ricordiRiviviTitle(item),date:item.date}));
     if(!opensPeriod)loneHalf=loneHalf>=0?-1:html.length-1;
   }
   closeRow();
