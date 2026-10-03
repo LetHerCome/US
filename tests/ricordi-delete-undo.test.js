@@ -84,7 +84,7 @@ function harness({ owner = 'me', partnerPhotos = [], commitResult = true } = {})
   return { window, el, card, commits, toasts, timers, doc, fireGrace, open: () => window.openUsMomentAlbum(card) };
 }
 
-test('Ricordi delete: own Moment always shows Elimina; partner Moment never does', async () => {
+test('Ricordi delete: both partners can delete a shared Moment', async () => {
   const own = harness();
   await own.open();
   assert.equal(own.el('usAlbumDelete').hidden, false);
@@ -92,13 +92,13 @@ test('Ricordi delete: own Moment always shows Elimina; partner Moment never does
 
   const partner = harness({ owner: 'partner' });
   await partner.open();
-  assert.equal(partner.el('usAlbumDelete').hidden, true, 'only the Moment creator can delete the whole Moment');
+  assert.equal(partner.el('usAlbumDelete').hidden, false, 'shared Moments are deletable by either partner');
   partner.el('usAlbumDeleteGo').click();
-  assert.equal(partner.window.USRicordiDelete.pending(), null);
+  assert.equal(partner.window.USRicordiDelete.pending()?.id, 'm1');
 
   const album = harness({ partnerPhotos: [{ id: 'p1', moment_id: 'm1', created_by: 'partner', storage_path: 'c/partner/x.webp', position: 1 }] });
   await album.open();
-  assert.equal(album.el('usAlbumDelete').hidden, false, 'partner-added album photos must not hide deletion of the creator-owned Moment');
+  assert.equal(album.el('usAlbumDelete').hidden, false, 'album photos do not hide whole-Moment deletion');
 });
 
 test('Ricordi delete: Elimina only starts a grace period — nothing is deleted, no modal, no toast', async () => {

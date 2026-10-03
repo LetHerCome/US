@@ -45,7 +45,7 @@ Deno.serve(async (request) => {
       .maybeSingle();
     if (momentError) throw momentError;
     if (!moment) return json({ error: "Moment not found" }, 404);
-    if (moment.couple_id !== profile.couple_id || moment.created_by !== authData.user.id) {
+    if (moment.couple_id !== profile.couple_id) {
       return json({ error: "Forbidden" }, 403);
     }
 
@@ -67,7 +67,6 @@ Deno.serve(async (request) => {
       .delete()
       .eq("id", momentId)
       .eq("couple_id", profile.couple_id)
-      .eq("created_by", authData.user.id)
       .select("id");
     if (deleteError) throw deleteError;
     if (!deleted?.length) return json({ error: "Moment not deleted" }, 409);

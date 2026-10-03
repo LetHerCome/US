@@ -18,12 +18,13 @@ test('delete-moment Edge Function is JWT protected and validates the real caller
   assert.match(source, /const UUID = /);
 });
 
-test('delete-moment accepts only a moment id and derives ownership and media server-side', () => {
+test('delete-moment accepts only a moment id and derives couple membership and media server-side', () => {
   assert.match(source, /const momentId = typeof body\?\.moment_id/);
   assert.doesNotMatch(source, /body\?\.(?:storage|path|couple|created_by)/);
   assert.match(source, /\.from\("profiles"\)[\s\S]*\.eq\("id", authData\.user\.id\)/);
   assert.match(source, /\.from\("moments"\)[\s\S]*\.eq\("id", momentId\)/);
-  assert.match(source, /moment\.couple_id !== profile\.couple_id \|\| moment\.created_by !== authData\.user\.id/);
+  assert.match(source, /moment\.couple_id !== profile\.couple_id/);
+  assert.doesNotMatch(source, /moment\.created_by !== authData\.user\.id/);
   assert.match(source, /\.from\("moment_photos"\)[\s\S]*\.eq\("moment_id", momentId\)/);
   assert.match(source, /path\.startsWith\(prefix\)/);
 });
@@ -33,7 +34,8 @@ test('delete-moment removes the authorized row then cleans cover and album objec
   const storageDelete = source.indexOf('admin.storage.from("us-media").remove(paths)');
   assert.ok(rowDelete >= 0, 'authorized Moment delete is present');
   assert.ok(storageDelete > rowDelete, 'Storage cleanup happens after the row deletion is proven');
-  assert.match(source, /\.eq\("created_by", authData\.user\.id\)[\s\S]*\.select\("id"\)/);
+  assert.match(source, /\.eq\("couple_id", profile\.couple_id\)[\s\S]*\.select\("id"\)/);
+  assert.doesNotMatch(source, /\.eq\("created_by", authData\.user\.id\)/);
   assert.match(source, /return json\(\{ deleted: true, storage_cleanup: storageCleanup/);
 });
 
@@ -41,3 +43,8 @@ test('whole-Moment privileged cleanup never exposes server credentials to the PW
   assert.doesNotMatch(app, /SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET_KEYS|supabaseSecretKey/);
   assert.match(app, /sb\.functions\.invoke\('delete-moment'/);
 });
+test('Ricordi grid exposes Elimina on every shared Moment card', () => {
+  assert.match(app, /ricordiMomentCard\(row,signedUrls\.get\(row\.storage_path\),author,true,/);
+  assert.match(app, /aria-label="Elimina ricordo"/);
+});
+
