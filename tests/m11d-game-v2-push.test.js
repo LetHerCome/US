@@ -6,13 +6,14 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 const h = require('./helpers/game-v2-db');
 const { loadEdgeFunction, createFakeAdmin, createFakeWebPush } = require('./helpers/edge-function-harness.js');
 
 const { createDb, couple, setClock, as, readOnly, rpc, id, playSide, startRound, createWeekly } = h;
 const ROOT = h.ROOT;
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
-const loadCore = () => import(path.join(ROOT, 'supabase/functions/_shared/game-v2-push-core.mjs'));
+const loadCore = () => import(pathToFileURL(path.join(ROOT, 'supabase/functions/_shared/game-v2-push-core.mjs')).href);
 const M11D = 'supabase/migrations/20260930153755_m11d_game_v2_push.sql';
 const WED = '2026-09-30T10:00:00Z'; // Francesco's week
 
