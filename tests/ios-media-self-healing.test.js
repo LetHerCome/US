@@ -30,7 +30,7 @@ test('foreground ripara Home avatar e Ricordi senza richiedere un nuovo login', 
   const app = await src('app.js');
   assert.match(app, /if\(options\.foreground\)hydrateProfileAvatars\(\)\.catch\(\(\)=>\{\}\);[\s\S]*if\(options\.foreground\)hydrateHomePhoto\(false\)\.catch\(\(\)=>\{\}\)/);
   assert.match(app, /hydrateMoments\(\{forceMedia:Boolean\(options\.foreground\)\}\)/);
-  assert.match(app, /usGetSignedUrls\([^\n]+\{force:forceMedia\}\)/);
+  assert.match(app, /if\(forceMedia\)mediaPaths\.forEach\(usInvalidateSignedUrl\);[\s\S]*usGetSignedUrls\(\(rows\|\|\[\]\)\.map\(row=>row\.storage_path\),21600\)/);
 });
 
 test('Stories Left for You e album hanno recovery media esplicita', async () => {
@@ -53,6 +53,6 @@ test('Home Memory dead path uses the actual signedUrl variable', async () => {
 test('Service Worker cache writes after install are best effort', async () => {
   const worker = await src('service-worker.js');
   assert.match(worker, /async function usBestEffortCachePut/);
-  assert.match(worker, /event\.waitUntil\(usBestEffortCachePut\(CACHE_NAME, "\/index\.html", response\.clone\(\)\)\)/);
-  assert.doesNotMatch(worker, /await cache\.put\("\/index\.html"/);
+  assert.match(worker, /event\.waitUntil\(\(async \(\) => \{[\s\S]*await cache\.put\("\/index\.html", response\.clone\(\)\);[\s\S]*catch \(_\) \{\}/);
+  assert.match(worker, /event\.waitUntil\(usBestEffortCachePut\(CACHE_NAME, request, response\.clone\(\)\)\)/);
 });
