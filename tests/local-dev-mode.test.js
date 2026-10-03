@@ -23,8 +23,8 @@ test('local dev disabilita soltanto Service Worker, Web Push e update checker', 
   assert.match(app, /!window\.__US_LOCAL_DEV__&&window\.UsPlatform\?\.canUseServiceWorker/);
   assert.match(app, /!window\.__US_LOCAL_DEV__&&window\.UsPlatform\?\.canUseWebPush/);
   assert.match(fix4, /!window\.__US_LOCAL_DEV__ && window\.UsPlatform\?\.canUsePwaUpdates/);
-  assert.match(app, /signInAnonymously/);
-  assert.match(app, /claim_us_role/);
+  assert.match(app, /sb\.auth\.signInWithPassword\(\{email,password\}\)/);
+  assert.doesNotMatch(app, /signInAnonymously|claim_us_role|signInWithOtp/);
 });
 
 test('il service worker production resta invariato e la modalità dev non altera la pipeline native', () => {
