@@ -648,8 +648,10 @@
       return;
     }
     if (!media) return;
+    media.dataset.usMediaRetry='0';
     media.onload = () => {
       if (loadToken !== storyLoadToken || currentViewerStories[currentViewerIndex]?.id !== story.id) return;
+      media.dataset.usMediaRetry='0';
       media.hidden = false;
       setStoryViewerState('ready');
       if (story.author_id !== window.usProfile?.id) markStorySeen(story.id);
@@ -657,8 +659,17 @@
       applyStoryMediaEntry(direction);
       startStoryPlayback(duration);
     };
-    media.onerror = () => {
+    media.onerror = async () => {
       if (loadToken !== storyLoadToken) return;
+      if(media.dataset.usMediaRetry!=='1'&&typeof window.usGetSignedUrl==='function'){
+        media.dataset.usMediaRetry='1';
+        window.usInvalidateSignedUrl?.(story.media_path);
+        const fresh=await window.usGetSignedUrl(story.media_path,600,{force:true}).catch?.(()=>null);
+        if(fresh&&loadToken===storyLoadToken&&currentViewerStories[currentViewerIndex]?.id===story.id){
+          media.src=fresh;
+          return;
+        }
+      }
       const offline = navigator.onLine === false;
       setStoryViewerState(offline ? 'offline' : 'error', offline ? 'Story non disponibile offline.' : 'La Story non si è caricata.');
     };
