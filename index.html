@@ -121,39 +121,16 @@ html.us-returning-device .auth-overlay{
     <div class="auth-logo us-brand-symbol" aria-label="US"><img class="us-brand-symbol-art" src="/assets/derived/runtime/us-symbol-256-v1.png" alt="" aria-hidden="true"></div>
     <div class="us-auth-context" aria-label="Spazio privato di Francesco e Beatrice"><span>Francesco</span><span aria-hidden="true">♡</span><span>Beatrice</span></div>
 
-    <div class="auth-step active" id="authPair">
+    <div class="auth-step active" id="authLogin">
       <div class="tiny">US · SPAZIO PRIVATO</div>
-      <h2>Collega questo telefono</h2>
-      <p class="us-auth-lede">Scegli chi sei e usa il codice privato. Dopo il primo accesso, US ti riconoscerà.</p>
-
-      <div class="role-picker" role="group" aria-label="Scegli il tuo profilo">
-        <button type="button" class="role-btn" data-role="francesco" aria-pressed="false" onclick="selectRole('francesco')"><span>F</span><b>Francesco</b></button>
-        <button type="button" class="role-btn" data-role="beatrice" aria-pressed="false" onclick="selectRole('beatrice')"><span>B</span><b>Beatrice</b></button>
-      </div>
-
-      <label class="us-auth-field" for="pairCode"><span>Codice privato</span><input id="pairCode" type="password" autocomplete="off" placeholder="Inserisci il codice"></label>
-      <button id="pairBtn" type="button" class="primary us-auth-primary">Collega e continua</button>
-      <div class="auth-status" id="pairStatus" role="status" aria-live="polite"></div>
-
-      <div class="us-auth-links">
-        <button type="button" class="us-auth-link" onclick="showAuthStep('authLogin')">Questo telefono era già collegato?</button>
-      </div>
-    </div>
-
-    <div class="auth-step" id="authLogin">
-      <div class="tiny">US · DISPOSITIVO ESISTENTE</div>
       <h2>Bentornato</h2>
-      <p class="us-auth-lede">Accedi al tuo account US per continuare su questo telefono.</p>
+      <p class="us-auth-lede">Accedi con la tua email e password.</p>
 
       <label class="us-auth-field" for="loginEmail"><span>Email</span><input id="loginEmail" type="email" inputmode="email" autocomplete="email" placeholder="tua@email.com"></label>
       <label class="us-auth-field" for="loginPassword"><span>Password</span><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Password"></label>
       <button id="loginBtn" type="button" class="primary us-auth-primary">Accedi</button>
       <div class="auth-status" id="loginStatus" role="status" aria-live="polite"></div>
 
-      <div class="us-auth-links">
-        <button id="magicLinkBtn" type="button" class="us-auth-link">Invia un Magic Link di recupero</button>
-        <button type="button" class="us-auth-link" onclick="showAuthStep('authPair')">Collega un nuovo telefono</button>
-      </div>
     </div>
 
     <section class="us-auth-install" id="usAuthInstall" hidden aria-label="Installa US">
