@@ -1,4 +1,4 @@
-const BUILD_ID = "us-ios-media-hotfix-v2-20261003-1";
+const BUILD_ID = "us-ios-media-self-heal-v1-20261003-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -203,6 +203,16 @@ async function usPruneMediaCache(cache, maxEntries = 100) {
   } catch (_) {}
 }
 
+async function usBestEffortCachePut(cacheName, key, response) {
+  try {
+    const cache = await caches.open(cacheName);
+    await cache.put(key, response);
+  } catch (_) {
+    // CacheStorage is an optimization after install. A successful network
+    // response must remain usable even when Safari refuses a cache write.
+  }
+}
+
 function usIsIOSWebKit() {
   const ua = String(self.navigator?.userAgent || "");
   return /iPad|iPhone|iPod/i.test(ua) || /Macintosh/i.test(ua) && /Mobile\//i.test(ua);
@@ -296,9 +306,12 @@ self.addEventListener("fetch", (event) => {
       fetch(request, { cache: "no-store" })
         .then((response) => {
           const copy = response.clone();
-          event.waitUntil(
-            caches.open(CACHE_NAME).then((cache) => cache.put(versionKey, copy))
-          );
+          event.waitUntil((async () => {
+            try {
+              const cache = await caches.open(CACHE_NAME);
+              await cache.put(versionKey, copy);
+            } catch (_) {}
+          })());
           return response;
         })
         .catch(() => caches.match(versionKey))
@@ -314,8 +327,12 @@ self.addEventListener("fetch", (event) => {
     event.respondWith((async () => {
       try {
         const response = await usFetchNavigation(request, { noCacheHeader: true });
-        const cache = await caches.open(CACHE_NAME);
-        await cache.put("/index.html", response.clone());
+        event.waitUntil((async () => {
+          try {
+            const cache = await caches.open(CACHE_NAME);
+            await cache.put("/index.html", response.clone());
+          } catch (_) {}
+        })());
         return response;
       } catch (_) {
         return (await caches.match("/index.html")) || Response.error();
@@ -329,10 +346,8 @@ self.addEventListener("fetch", (event) => {
     event.respondWith((async () => {
       const cached = await caches.match("/index.html");
       const refresh = usFetchNavigation(request)
-        .then(async (response) => {
-          const copy = response.clone();
-          const cache = await caches.open(CACHE_NAME);
-          await cache.put("/index.html", copy);
+        .then((response) => {
+          event.waitUntil(usBestEffortCachePut(CACHE_NAME, "/index.html", response.clone()));
           return response;
         });
 
@@ -354,8 +369,7 @@ self.addEventListener("fetch", (event) => {
       if (cached) return cached;
       const response = await fetch(request, { cache: "no-store" });
       if (response.ok) {
-        const cache = await caches.open(CACHE_NAME);
-        await cache.put(request, response.clone());
+        event.waitUntil(usBestEffortCachePut(CACHE_NAME, request, response.clone()));
       }
       return response;
     })());
@@ -369,8 +383,7 @@ self.addEventListener("fetch", (event) => {
       try {
         const response = await fetch(request);
         if (response.ok) {
-          const cache = await caches.open(CACHE_NAME);
-          await cache.put(request, response.clone());
+          event.waitUntil(usBestEffortCachePut(CACHE_NAME, request, response.clone()));
         }
         return response;
       } catch (_) {
@@ -384,10 +397,8 @@ self.addEventListener("fetch", (event) => {
   event.respondWith((async () => {
     const cached = await caches.match(request);
     const refresh = fetch(request)
-      .then(async (response) => {
-        const copy = response.clone();
-        const cache = await caches.open(CACHE_NAME);
-        await cache.put(request, copy);
+      .then((response) => {
+        event.waitUntil(usBestEffortCachePut(CACHE_NAME, request, response.clone()));
         return response;
       });
 

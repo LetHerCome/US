@@ -22,7 +22,7 @@ function cacheKey(input) {
   return input.url;
 }
 
-function createServiceWorkerHarness({ failPrecachePath = null, redirectRefresh = false, userAgent = '', failMediaCachePut = false } = {}) {
+function createServiceWorkerHarness({ failPrecachePath = null, redirectRefresh = false, userAgent = '', failMediaCachePut = false, failRuntimeCachePut = false } = {}) {
   const source = WORKER_SOURCE;
   const listeners = new Map();
   const cacheBuckets = new Map();
@@ -75,6 +75,7 @@ function createServiceWorkerHarness({ failPrecachePath = null, redirectRefresh =
         },
         async put(input, response) {
           if (failMediaCachePut && name === 'us-private-media-v1') throw new Error('media cache put failed');
+          if (failRuntimeCachePut && name === CURRENT_SHELL) throw new Error('runtime cache put failed');
           entries.set(cacheKey(input), response.clone());
         },
         async keys() {
@@ -583,6 +584,17 @@ test('iOS PWA: un redirect durante us-refresh non viene servito o salvato come d
   assert.equal(response.status, 200);
   assert.equal(await response.text(), 'asset:/index.html');
   assert.equal(after, before, 'redirected navigation must not poison cached index.html');
+});
+
+test('Safari CacheStorage failure non rompe una navigazione di update riuscita', async () => {
+  const harness = createServiceWorkerHarness({ failRuntimeCachePut: true });
+  await harness.dispatchExtendable('install');
+  await harness.dispatchExtendable('activate');
+
+  const response = await harness.dispatchFetch('/?us-refresh=456', { mode: 'navigate' });
+
+  assert.equal(response.status, 200);
+  assert.equal(await response.text(), 'asset:/');
 });
 
 test('push e notification click mantengono payload e navigazione esistenti', async () => {

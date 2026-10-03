@@ -276,7 +276,7 @@
     const body = item?.body ? `<p class="left-for-you-note">${escapeHtml(item.body)}</p>` : '';
     let content = '';
     if (kind === 'text') content = `<div class="left-for-you-text">${escapeHtml(item?.body || 'Un pensiero per te.')}</div>`;
-    if (kind === 'photo') content = `<img class="left-for-you-photo" src="${escapeHtml(mediaUrl)}" alt="Foto lasciata per te" loading="eager">${body}`;
+    if (kind === 'photo') content = `<img class="left-for-you-photo" src="${escapeHtml(mediaUrl)}" data-us-media-path="${escapeHtml(item?.media_path||'')}" onerror="usRecoverPrivateImage(this)" alt="Foto lasciata per te" loading="eager">${body}`;
     if (kind === 'audio') content = `${renderAudioStepPlayerMarkup(mediaUrl)}${body}`;
     if (kind === 'video') content = `<video class="left-for-you-video" controls preload="metadata" playsinline src="${escapeHtml(mediaUrl)}"></video>${body}`;
     if (kind === 'music') {

@@ -123,6 +123,19 @@ function usReadSignedUrlCache(path){
   }
   return hit.url;
 }
+function usInvalidateSignedUrl(path){
+  if(!path)return;
+  US_SIGNED_URL_CACHE.delete(path);
+  usPersistSignedUrlCache();
+}
+function usStoragePathFromSignedUrl(url){
+  const marker='/storage/v1/object/sign/us-media/';
+  const value=String(url||'');
+  const index=value.indexOf(marker);
+  if(index<0)return '';
+  const raw=value.slice(index+marker.length).split('?')[0];
+  try{return decodeURIComponent(raw);}catch(_e){return raw;}
+}
 function usWriteSignedUrlCache(path,url,expiresIn){
   if(path&&url){
     US_SIGNED_URL_CACHE.set(path,{url,expiresAt:Date.now()+Math.max(60,Number(expiresIn)||60)*1000});
@@ -131,17 +144,19 @@ function usWriteSignedUrlCache(path,url,expiresIn){
   return url||null;
 }
 usLoadSignedUrlCache();
-async function usGetSignedUrl(path,expiresIn=21600){
+async function usGetSignedUrl(path,expiresIn=21600,options={}){
   if(!path)return null;
+  if(options.force)usInvalidateSignedUrl(path);
   const cached=usReadSignedUrlCache(path);if(cached)return cached;
   const {data,error}=await sb.storage.from('us-media').createSignedUrl(path,expiresIn);
   if(error||!data?.signedUrl){if(error)console.warn('[US Media] signed url',error);return null;}
   return usWriteSignedUrlCache(path,data.signedUrl,expiresIn);
 }
-async function usGetSignedUrls(paths,expiresIn=21600){
+async function usGetSignedUrls(paths,expiresIn=21600,options={}){
   const unique=[...new Set((paths||[]).filter(Boolean))];
   const result=new Map(),missing=[];
   for(const path of unique){
+    if(options.force)usInvalidateSignedUrl(path);
     const cached=usReadSignedUrlCache(path);
     if(cached)result.set(path,cached);else missing.push(path);
   }
@@ -159,13 +174,26 @@ async function usGetSignedUrls(paths,expiresIn=21600){
   }
   const unresolved=missing.filter(path=>!result.has(path));
   if(unresolved.length){
-    const fallback=await Promise.all(unresolved.map(async path=>[path,await usGetSignedUrl(path,expiresIn)]));
+    const fallback=await Promise.all(unresolved.map(async path=>[path,await usGetSignedUrl(path,expiresIn,{force:options.force})]));
     for(const [path,url] of fallback)if(url)result.set(path,url);
   }
   return result;
 }
+async function usRecoverPrivateImage(img,path=''){
+  if(!img)return false;
+  const storagePath=path||img.dataset?.usMediaPath||img.closest?.('[data-storage-path]')?.dataset?.storagePath||'';
+  if(!storagePath||img.dataset?.usMediaRetry==='1')return false;
+  img.dataset.usMediaRetry='1';
+  usInvalidateSignedUrl(storagePath);
+  const fresh=await usGetSignedUrl(storagePath,21600,{force:true});
+  if(!fresh)return false;
+  img.src=fresh;
+  return true;
+}
 window.usGetSignedUrl=usGetSignedUrl;
 window.usGetSignedUrls=usGetSignedUrls;
+window.usInvalidateSignedUrl=usInvalidateSignedUrl;
+window.usRecoverPrivateImage=usRecoverPrivateImage;
 
 // ===== US v20 · Web Push Foundation =====
 const US_VAPID_PUBLIC_KEY='BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss';
@@ -831,11 +859,27 @@ async function openDistanceDetail(){
 }
 window.openDistanceDetail=openDistanceDetail;
 
-function setAvatarSlot(containerId,signedUrl){
+function setAvatarImage(img,fallback,path,signedUrl){
+  if(!img)return;
+  const showFallback=()=>{img.hidden=true;if(fallback)fallback.style.display='grid';};
+  img.onload=()=>{img.hidden=false;if(fallback)fallback.style.display='none';img.dataset.usMediaRetry='0';};
+  img.onerror=async()=>{
+    showFallback();
+    const retryPath=path||img.dataset?.usMediaPath||'';
+    if(!retryPath||img.dataset.usMediaRetry==='1')return;
+    img.dataset.usMediaRetry='1';
+    usInvalidateSignedUrl(retryPath);
+    const fresh=await usGetSignedUrl(retryPath,21600,{force:true});
+    if(fresh)img.src=fresh;
+  };
+  if(!signedUrl){img.removeAttribute('src');showFallback();return;}
+  showFallback();
+  img.dataset.usMediaRetry='0';
+  img.src=signedUrl;
+}
+function setAvatarSlot(containerId,signedUrl,path=''){
   const root=document.getElementById(containerId);if(!root)return;
-  const img=root.querySelector('img'),fallback=root.querySelector('.fallback');
-  if(signedUrl){img.src=signedUrl;img.hidden=false;if(fallback)fallback.style.display='none';}
-  else{img.removeAttribute('src');img.hidden=true;if(fallback)fallback.style.display='grid';}
+  setAvatarImage(root.querySelector('img'),root.querySelector('.fallback'),path||usStoragePathFromSignedUrl(signedUrl),signedUrl);
 }
 
 async function signedAvatarUrl(path){
@@ -857,8 +901,7 @@ async function hydrateProfileAvatars(){
     if(profile.id===window.usProfile.id){
       const img=document.getElementById('profileAvatarImg');
       if(img){
-        if(url){img.src=url;img.hidden=false;if(fallback)fallback.style.display='none';}
-        else{img.removeAttribute('src');img.hidden=true;if(fallback)fallback.style.display='grid';}
+        setAvatarImage(img,fallback,profile.avatar_path,url);
       }
       window.usProfile.avatar_path=profile.avatar_path||null;
     }
@@ -990,7 +1033,7 @@ async function getHomeRotationPath(){
   return couple?.home_photo_path||null;
 }
 
-function crossfadeHomePhoto(url){
+function crossfadeHomePhoto(url,{path='',hourKey='',allowRetry=true}={}){
   const requestId=++homePhotoRequestId;
   const hero=document.getElementById('homeHero');
   const empty=document.getElementById('homeEmptyState');
@@ -1009,8 +1052,17 @@ function crossfadeHomePhoto(url){
       next.classList.add('active');
       current.classList.remove('active');
       homePhotoActiveLayer=nextKey;
-      if(url)homePhotoHasPainted=true;
-      else homePhotoHasPainted=false;
+      if(url){
+        homePhotoHasPainted=true;
+        if(path){
+          homePhotoPath=path;
+          homePhotoHourKey=hourKey||homeRotationKey();
+          writeHomeBootCache(homePhotoHourKey,path,url);
+        }
+      }else{
+        homePhotoHasPainted=false;
+        homePhotoPath='';
+      }
     };
     if(firstValid){
       hero.setAttribute('data-us-home-photo-instant','');
@@ -1026,46 +1078,58 @@ function crossfadeHomePhoto(url){
     try{if(typeof preload.decode==='function')await preload.decode();}catch(_e){}
     apply();
   };
-  preload.onerror=()=>console.warn('[US Home] preload foto fallito');
+  preload.onerror=async()=>{
+    if(requestId!==homePhotoRequestId)return;
+    console.warn('[US Home] preload foto fallito');
+    if(path&&allowRetry){
+      usInvalidateSignedUrl(path);
+      const fresh=await usGetSignedUrl(path,21600,{force:true});
+      if(fresh&&fresh!==url){
+        crossfadeHomePhoto(fresh,{path,hourKey,allowRetry:false});
+        return;
+      }
+    }
+    homePhotoPath='';
+    homePhotoHasPainted=false;
+    try{
+      const cached=JSON.parse(localStorage.getItem(US_HOME_BOOT_CACHE_KEY)||'null');
+      if(!path||cached?.path===path)localStorage.removeItem(US_HOME_BOOT_CACHE_KEY);
+    }catch(_e){}
+  };
   preload.src=url;
 }
 
 async function hydrateHomePhoto(force=false){
   if(!window.usProfile)return;
   const hourKey=homeRotationKey();
-  if(!force && homePhotoHourKey===hourKey && homePhotoPath)return;
+  if(!force && homePhotoHourKey===hourKey && homePhotoPath && homePhotoHasPainted)return;
 
   // Paint the previous valid image first, even if the rotation hour changed.
   // Then refresh the correct hourly image silently in the background.
   if(!force && !homePhotoPath){
     const cached=readHomeBootCache(hourKey);
     if(cached){
-      homePhotoHourKey=cached.hourKey||'';
-      homePhotoPath=cached.path;
-      crossfadeHomePhoto(cached.url);
+      crossfadeHomePhoto(cached.url,{path:cached.path,hourKey:cached.hourKey||hourKey});
       if(cached.currentHour)return;
     }
   }
 
   const path=await getHomeRotationPath();
   if(path===undefined)return;
-  homePhotoHourKey=hourKey;
   if(!path){
+    homePhotoHourKey=hourKey;
     homePhotoPath='';
     try{localStorage.removeItem(US_HOME_BOOT_CACHE_KEY);}catch(_e){}
     crossfadeHomePhoto('');
     return;
   }
-  if(!force && path===homePhotoPath){
-    // It is already visible; only normalize the current rotation key.
+  if(!force && path===homePhotoPath && homePhotoHasPainted){
     homePhotoHourKey=hourKey;
     return;
   }
-  const signedUrl=await usGetSignedUrl(path,21600);
+  const signedUrl=await usGetSignedUrl(path,21600,{force});
   if(!signedUrl)return;
-  homePhotoPath=path;
-  writeHomeBootCache(hourKey,path,signedUrl);
-  crossfadeHomePhoto(signedUrl);
+  crossfadeHomePhoto(signedUrl,{path,hourKey});
 }
 window.hydrateHomePhoto=hydrateHomePhoto;
 
@@ -2307,7 +2371,7 @@ window.UsRicordiArchive=Object.freeze({timeline:ricordiTimeline,pickRivivi:ricor
 function ricordiMomentCard(row,signedUrl,author,canDelete,feature,source){
   const displayISO=/^\d{4}-\d{2}-\d{2}$/.test(String(source?.date||''))?String(source.date):row.moment_date;
   const dateLabel=new Date(displayISO+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
-  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(signedUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(row.caption||'')}" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(signedUrl)}" alt="Ricordo condiviso" loading="lazy">${canDelete?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}')">Elimina</button>`:''}<div class="moment-meta"><div class="moment-by">${escapeHtml(author||'Noi')}</div><b>${dateLabel}</b>${source?`<small class="ricordi-moment-source" data-source-key="${escapeHtml(source.sourceKey)}">${escapeHtml(RICORDI_SOURCE_LABEL[source.kind]||'')}${source.title?` · ${escapeHtml(source.title)}`:''}</small>`:''}${row.caption?`<p>${escapeHtml(row.caption)}</p>`:''}</div></article>`;
+  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(signedUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(row.caption||'')}" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(signedUrl)}" data-us-media-path="${escapeHtml(row.storage_path)}" onerror="usRecoverPrivateImage(this)" alt="Ricordo condiviso" loading="lazy">${canDelete?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}')">Elimina</button>`:''}<div class="moment-meta"><div class="moment-by">${escapeHtml(author||'Noi')}</div><b>${dateLabel}</b>${source?`<small class="ricordi-moment-source" data-source-key="${escapeHtml(source.sourceKey)}">${escapeHtml(RICORDI_SOURCE_LABEL[source.kind]||'')}${source.title?` · ${escapeHtml(source.title)}`:''}</small>`:''}${row.caption?`<p>${escapeHtml(row.caption)}</p>`:''}</div></article>`;
 }
 function ricordiExperienceCard(row,sourceDate){
   const date=/^\d{4}-\d{2}-\d{2}$/.test(String(sourceDate||''))?String(sourceDate):ricordiLocalISO(row.completed_at);
@@ -2356,7 +2420,7 @@ function renderRicordiRivivi(pick,signedUrls,names){
     const meta=entry.kind==='moment'?author:RICORDI_SOURCE_LABEL[entry.kind];
     const viewerISO=entry.kind==='moment'?m.moment_date:entry.date;
     const viewerDate=new Date(viewerISO+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
-    root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><button type="button" class="ricordi-rivivi-card" data-ricordi-open="${escapeHtml(m.id)}" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}" data-url="${escapeHtml(url)}" data-author="${escapeHtml(author)}" data-date="${escapeHtml(viewerDate)}" data-caption="${escapeHtml(m.caption||title)}" aria-label="Rivivi: ${escapeHtml(title||date)}"><img src="${escapeHtml(url)}" alt="" loading="lazy"><span class="ricordi-rivivi-copy"><small>${escapeHtml(pick.label)}</small><b>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(meta)}</span></span></button>`;
+    root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><button type="button" class="ricordi-rivivi-card" data-ricordi-open="${escapeHtml(m.id)}" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}" data-url="${escapeHtml(url)}" data-author="${escapeHtml(author)}" data-date="${escapeHtml(viewerDate)}" data-caption="${escapeHtml(m.caption||title)}" aria-label="Rivivi: ${escapeHtml(title||date)}"><img src="${escapeHtml(url)}" data-us-media-path="${escapeHtml(m.storage_path)}" onerror="usRecoverPrivateImage(this)" alt="" loading="lazy"><span class="ricordi-rivivi-copy"><small>${escapeHtml(pick.label)}</small><b>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(meta)}</span></span></button>`;
     root.hidden=false;
     return;
   }
@@ -2375,7 +2439,7 @@ function renderRicordiChapters(chapters,signedUrls){
   root.innerHTML=`<div class="ricordi-section-head"><div class="ricordi-kicker">CAPITOLI</div><h3>Per anno</h3></div><div class="ricordi-chapter-row">${chapters.map(ch=>{
     const url=ch.cover?signedUrls.get(ch.cover.storage_path):null;
     const parts=[ch.moments?`${ch.moments} ${ch.moments===1?'ricordo':'ricordi'}`:'',ch.experiences?`${ch.experiences} ${ch.experiences===1?'esperienza':'esperienze'}`:'',ch.dailies?`${ch.dailies} ${ch.dailies===1?'domanda':'domande'}`:''].filter(Boolean).join(' · ');
-    return `<button type="button" class="ricordi-chapter" data-ricordi-year="${escapeHtml(ch.year)}">${url?`<img src="${escapeHtml(url)}" alt="" loading="lazy">`:''}<span><b>${escapeHtml(ch.year)}</b><small>${escapeHtml(parts)}</small></span></button>`;
+    return `<button type="button" class="ricordi-chapter" data-ricordi-year="${escapeHtml(ch.year)}">${url?`<img src="${escapeHtml(url)}" data-us-media-path="${escapeHtml(ch.cover.storage_path)}" onerror="usRecoverPrivateImage(this)" alt="" loading="lazy">`:''}<span><b>${escapeHtml(ch.year)}</b><small>${escapeHtml(parts)}</small></span></button>`;
   }).join('')}</div>`;
   root.hidden=false;
 }
@@ -2395,7 +2459,10 @@ document.getElementById('moments')?.addEventListener('click',event=>{
   }
 });
 
+let usForceMomentsMediaRefresh=false;
 async function hydrateMomentsCore(){
+  const forceMedia=usForceMomentsMediaRefresh;
+  usForceMomentsMediaRefresh=false;
   if(!window.usProfile)return;
   const grid=document.getElementById('momentsGrid');
   const pill=document.getElementById('momentsStatusPill');
@@ -2429,7 +2496,7 @@ async function hydrateMomentsCore(){
   if(pill)pill.textContent='📸 Moments · '+(rows?.length||0);
   const today=localDateISO();
   const signature=JSON.stringify([today,(rows||[]).map(r=>[r.id,r.created_by,r.storage_path,r.caption||'',r.moment_date,r.created_at]),livedRows.map(r=>[r.id,r.title,r.completed_at]),keptRows.map(r=>[r.id,r.question_date]),eventRows.map(r=>[r.source_ref,r.occurrence_date,r.title,r.title_source,r.moment_id]),provenanceRows.map(r=>[r.source_kind,r.source_ref,r.target_moment_id])]);
-  if(grid.dataset.loaded==='1'&&grid.dataset.signature===signature)return;
+  if(grid.dataset.loaded==='1'&&grid.dataset.signature===signature&&!forceMedia)return;
   if(!rows?.length&&!livedRows.length&&!keptRows.length&&!eventRows.length){
     grid.innerHTML='<div class="empty-state moment-loading ricordi-empty"><b>La vostra storia parte da qui</b></div>';
     renderRicordiRivivi(null,new Map(),new Map());
@@ -2437,6 +2504,8 @@ async function hydrateMomentsCore(){
     grid.dataset.loaded='1';grid.dataset.signature=signature;return;
   }
   const names=new Map((profiles||[]).map(p=>[p.id,p.display_name||'Noi']));
+  const mediaPaths=(rows||[]).map(row=>row.storage_path);
+  if(forceMedia)mediaPaths.forEach(usInvalidateSignedUrl);
   const signedUrls=await usGetSignedUrls((rows||[]).map(row=>row.storage_path),21600);
   if(window.usProfile!==profile)return;
   const timeline=ricordiTimeline((rows||[]).filter(r=>signedUrls.get(r.storage_path)),livedRows,keptRows,eventRows,provenanceRows);
@@ -2478,7 +2547,8 @@ async function hydrateMomentsCore(){
   else if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">!</div><b>Foto non disponibili</b><p>Riprova tra un momento.</p></div>';
 }
 let momentsHydrateInFlight=null;
-async function hydrateMoments(){
+async function hydrateMoments(options={}){
+  if(options.forceMedia)usForceMomentsMediaRefresh=true;
   if(momentsHydrateInFlight)return momentsHydrateInFlight;
   momentsHydrateInFlight=hydrateMomentsCore().finally(()=>{momentsHydrateInFlight=null;});
   return momentsHydrateInFlight;
@@ -2512,7 +2582,7 @@ async function hydrateHomeMemory(forceNext=false){
   const caption=document.getElementById('homeMemoryCaption');
   caption.textContent=row.caption||'';
   caption.hidden=!row.caption;
-  card.dataset.url=signed.signedUrl;
+  card.dataset.url=signedUrl;
   card.dataset.author=author;
   card.dataset.date=dateLabel;
   card.dataset.caption=row.caption||'';
@@ -4154,12 +4224,14 @@ async function refreshVisibleState(options={}){
   const todayOpen=document.getElementById('today')?.classList.contains('open');
   // M12A — returning to the foreground re-checks the location wherever the user lands.
   if(options.foreground)maybeAutoRefreshLocation('resume').catch(()=>{});
+  if(options.foreground)hydrateProfileAvatars().catch(()=>{});
   if(active==='home'||todayOpen){
+    if(options.foreground)hydrateHomePhoto(false).catch(()=>{});
     await hydrateToday();
     if(!options.foreground)hydrateDistance();
     return;
   }
-  if(active==='moments'){await hydrateMoments();return;}
+  if(active==='moments'){await hydrateMoments({forceMedia:Boolean(options.foreground)});return;}
   if(active==='quiz'){await window.USGameV2?.refresh();return;}
   if(active==='bond'){await hydrateBondSummary();return;}
   if(active==='settings'){await window.hydrateUsSettings?.();}
