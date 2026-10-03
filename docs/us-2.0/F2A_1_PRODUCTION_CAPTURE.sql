@@ -130,11 +130,21 @@ select jsonb_build_object(
                                where d.objid = c.oid and d.deptype in ('a', 'i') limit 1)) order by 1)
                 from pg_class c join pg_namespace n on n.oid = c.relnamespace
                 where c.relkind = 'S' and n.nspname in ('public', 'private')),
-  'types', (select jsonb_agg(jsonb_build_object('type', n.nspname || '.' || t.typname, 'kind', t.typtype) order by 1)
+  'types', (select jsonb_agg(jsonb_build_object('type', n.nspname || '.' || t.typname, 'kind', t.typtype,
+              'owner', pg_get_userbyid(t.typowner), 'acl', t.typacl::text, 'comment', obj_description(t.oid, 'pg_type'),
+              'attributes', case when t.typtype = 'c' then (select jsonb_agg(jsonb_build_object('n', a.attname,
+                  'type', format_type(a.atttypid, a.atttypmod)) order by a.attnum)
+                from pg_attribute a where a.attrelid = t.typrelid and a.attnum > 0 and not a.attisdropped) end,
+              'labels', case when t.typtype = 'e' then (select jsonb_agg(e.enumlabel order by e.enumsortorder)
+                from pg_enum e where e.enumtypid = t.oid) end,
+              'domain', case when t.typtype = 'd' then jsonb_build_object('base', format_type(t.typbasetype, t.typtypmod),
+                'notnull', t.typnotnull, 'default', t.typdefault,
+                'checks', (select jsonb_agg(pg_get_constraintdef(k.oid) order by k.conname) from pg_constraint k where k.contypid = t.oid)) end)
+              order by n.nspname, t.typname)
             from pg_type t join pg_namespace n on n.oid = t.typnamespace
-            where n.nspname in ('public', 'private') and t.typtype in ('e', 'd', 'r', 'm')
-               or (n.nspname in ('public', 'private') and t.typtype = 'c'
-                   and (select relkind from pg_class where oid = t.typrelid) = 'c'))
+            where n.nspname in ('public', 'private')
+              and (t.typtype in ('e', 'd', 'r', 'm')
+                   or (t.typtype = 'c' and (select relkind from pg_class where oid = t.typrelid) = 'c')))
 ) as f2a1_c07_views_sequences_types;
 
 -- c08. Realtime publication and storage configuration.
