@@ -31,6 +31,9 @@ set local statement_timeout = '60s';
 select jsonb_build_object(
   'server_version', current_setting('server_version'),
   'server_version_num', current_setting('server_version_num')::int,
+  -- deparsed SQL (constraints, defaults, policies, views) is printed relative
+  -- to this search_path, so the baseline replays under the same one.
+  'search_path', current_setting('search_path'),
   'schemas', (select jsonb_agg(jsonb_build_object('s', n.nspname, 'owner', pg_get_userbyid(n.nspowner),
                 'acl', n.nspacl::text, 'comment', obj_description(n.oid, 'pg_namespace')) order by n.nspname)
               from pg_namespace n where n.nspname in ('public', 'private')),
