@@ -22,7 +22,7 @@ function cacheKey(input) {
   return input.url;
 }
 
-function createServiceWorkerHarness({ failPrecachePath = null, redirectRefresh = false } = {}) {
+function createServiceWorkerHarness({ failPrecachePath = null, redirectRefresh = false, userAgent = '' } = {}) {
   const source = WORKER_SOURCE;
   const listeners = new Map();
   const cacheBuckets = new Map();
@@ -102,6 +102,7 @@ function createServiceWorkerHarness({ failPrecachePath = null, redirectRefresh =
 
   const self = {
     location: { origin: ORIGIN },
+    navigator: { userAgent },
     registration: {
       async showNotification(title, options) { notifications.push({ title, options }); }
     },
@@ -157,6 +158,7 @@ function createServiceWorkerHarness({ failPrecachePath = null, redirectRefresh =
       respondWith(promise) { responsePromise = Promise.resolve(promise); },
       waitUntil(promise) { waits.push(Promise.resolve(promise)); }
     });
+    if (!responsePromise && init.allowPassthrough) return null;
     assert.ok(responsePromise, `nessuna risposta SW per ${pathname}`);
     const response = await responsePromise;
     await Promise.all(waits);
@@ -514,6 +516,30 @@ test('cache privata continua a riusare il media per path con signed URL differen
 
   assert.equal(await cached.text(), await first.text());
   assert.equal(harness.cacheBuckets.get('us-private-media-v1').size, 1);
+});
+
+test('iOS PWA: le immagini private bypassano il service worker e la vecchia media cache viene rimossa', async () => {
+  const harness = createServiceWorkerHarness({
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1'
+  });
+  const staleKey = `${ORIGIN}/__us_media_cache__?path=private%2Fphoto.jpg`;
+  harness.cacheBuckets.set('us-private-media-v1', new Map([
+    [staleKey, new Response('stale private photo')]
+  ]));
+
+  await harness.dispatchExtendable('install');
+  await harness.dispatchExtendable('activate');
+
+  assert.equal(harness.cacheBuckets.has('us-private-media-v1'), false);
+
+  const signedUrl = 'https://iiakdfsxpywdkxravqjh.supabase.co/storage/v1/object/sign/us-media/private/photo.jpg?token=fresh';
+  const intercepted = await harness.dispatchFetch(signedUrl, {
+    destination: 'image',
+    allowPassthrough: true
+  });
+
+  assert.equal(intercepted, null, 'iOS image request must be handled directly by Safari');
+  assert.equal(harness.cacheBuckets.has('us-private-media-v1'), false);
 });
 
 test('reload offline usa index e runtime della nuova shell cache', async () => {
