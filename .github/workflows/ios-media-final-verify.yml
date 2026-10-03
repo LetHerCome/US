@@ -1,0 +1,35 @@
+name: iOS media final verification
+
+on:
+  push:
+    branches:
+      - hotfix/ios-media-self-healing
+
+concurrency:
+  group: ios-media-final
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Media recovery tests
+        run: node --test tests/ios-media-self-healing.test.js tests/service-worker-static-runtime.test.js tests/cloudflare-pages-migration.test.js tests/iphone-pwa-viewport.test.js
+      - name: Full suite
+        run: npm test
+      - name: Cloudflare build
+        run: npm run build:cloudflare-pages
+      - name: Capacitor build
+        run: npm run build:capacitor-web
+      - name: Clean tree
+        run: git diff --exit-code
