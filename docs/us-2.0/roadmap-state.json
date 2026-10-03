@@ -1,7 +1,7 @@
 {
   "version": 1,
   "updatedAt": "2026-10-03",
-  "mainSha": "42a307e9d05c64aca6a7a6cd883f55a1bde273a6",
+  "mainSha": "f99c4d94bf3062393bd05c48e8afcb710e4d917a",
   "currentMission": "F2A",
   "currentLabel": "Next: Backend Source-of-Truth / Drift Cleanup",
   "state": {
@@ -33,5 +33,5 @@
     "N4": "todo",
     "N5": "todo"
   },
-  "note": "F1C independently audited and merged via PR #52. Foundation & Security is complete. F2A is next and can be run in Projects/cloud as a read-only/source-of-truth mission. F3B requirement: reproduce and fix the real iOS/Safari PWA failure “Response served by service worker has redirections” seen on Bea’s iPhone after the Vercel → Cloudflare origin change. F3B must ensure redirected navigation responses are never cached/served as app-shell documents, cover the us-refresh/update path, and verify recovery/reinstall/update behavior on iOS standalone PWA."
+  "note": "F1C independently audited and merged via PR #52. Foundation & Security is complete. F2A is next and can be run in Projects/cloud as a read-only/source-of-truth mission. F3B requirement: reproduce and fix the real iOS/Safari PWA failure “Response served by service worker has redirections” seen on Bea’s iPhone after the Vercel → Cloudflare origin change. F3B must ensure redirected navigation responses are never cached/served as app-shell documents, cover the us-refresh/update path, and verify recovery/reinstall/update behavior on iOS standalone PWA. Emergency iOS PWA hotfix merged on main at f99c4d94: Service Worker now rejects redirected navigation responses (including us-refresh), preserves the last good cached index, and build id was bumped. Keep F3B scheduled for the broader update/reinstall/origin-migration contract."
 }
