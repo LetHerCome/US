@@ -5,13 +5,14 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 const crypto = require('node:crypto');
 
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const CORE = path.join(ROOT, 'supabase/functions/_shared/left-for-you-push-core.mjs');
 const MIGRATION = 'supabase/migrations/20260929201958_m9a_left_for_you_push_reliability.sql';
-const loadCore = () => import(CORE);
+const loadCore = () => import(pathToFileURL(CORE).href);
 
 const COUPLE = 'couple-1';
 const FRANCESCO = 'francesco-id';
