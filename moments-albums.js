@@ -293,10 +293,11 @@ function renderAlbum(){
 }
 
 // ===== Ricordi · Elimina → Eliminato · Annulla (in place, no modal, no toast) =====
-// Only the Moment creator sees it. Whole-Moment deletion is handled by the
-// authenticated delete-moment Edge Function, which also cleans album media.
+// Both partners can delete a shared Moment. Whole-Moment deletion is handled
+// by the authenticated delete-moment Edge Function, which re-validates that
+// the caller belongs to the same couple and also cleans album media.
 function canDeleteCurrentAlbum(){
-  return Boolean(currentAlbum&&window.usProfile&&currentAlbum.owner===window.usProfile.id&&albumLoaded);
+  return Boolean(currentAlbum&&window.usProfile?.couple_id&&albumLoaded);
 }
 function momentCardById(id){
   return [...document.querySelectorAll('#momentsGrid .moment-card[data-moment-id]')].find(card=>card.dataset.momentId===id)||null;
