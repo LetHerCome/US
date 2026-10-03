@@ -1,14 +1,14 @@
 {
   "version": 1,
   "updatedAt": "2026-10-03",
-  "mainSha": "c8de18dd650487e39196b2014ce479314fe1c1c0",
+  "mainSha": "9e86b53630552acaf62e19ea834a7dd95e9a29b6",
   "currentMission": "F1B",
-  "currentLabel": "Next: RPC / Function Grant Hardening",
+  "currentLabel": "RPC / Function Grant Hardening",
   "state": {
     "F0": "done",
     "F0.1": "todo",
     "F1A": "done",
-    "F1B": "todo",
+    "F1B": "doing",
     "F1C": "todo",
     "F2A": "todo",
     "F2B": "todo",
@@ -33,5 +33,5 @@
     "N4": "todo",
     "N5": "todo"
   },
-  "note": "F1A verified on both real devices and ready to merge. F1B is the next mission."
+  "note": "F1A merged to main via PR #48. F1B is now the active mission."
 }
