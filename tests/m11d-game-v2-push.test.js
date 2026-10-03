@@ -238,8 +238,8 @@ test('M11D migration: dedicated vault key, idempotent cron, service-role grants 
   assert.match(sql, /if not exists \(select 1 from cron\.job where jobname = 'us-game-v2-push'\)/, 'job scheduled once');
   assert.doesNotMatch(sql, /\bdrop table\b|\btruncate\b|\bdelete from\b/i);
   assert.doesNotMatch(sql, /question_text|answer_text|predict_text|daily_answers|left_for_you\b.*body/i, 'events are built from ids and roles only');
-  assert.match(read('supabase/config.toml'), /\[functions\.game-v2-push-worker\]\nverify_jwt = false/);
-  assert.match(read('supabase/config.toml'), /\[functions\.game-v2-push\]\nverify_jwt = true/);
+  assert.match(read('supabase/config.toml'), /\[functions\.game-v2-push-worker\]\r?\nverify_jwt = false/);
+  assert.match(read('supabase/config.toml'), /\[functions\.game-v2-push\]\r?\nverify_jwt = true/);
   const app = read('app.js');
   const send = app.slice(app.indexOf('async function sendWebPushEvent'), app.indexOf('window.sendWebPushEvent=sendWebPushEvent'));
   assert.match(send, /const endpoint=String\(type\)\.startsWith\('game_'\)\?'game-v2-push':'send-web-push';/, 'one client helper, same auth and keepalive');
