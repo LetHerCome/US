@@ -177,6 +177,17 @@ Excluded: data volumes, cron run history, ledger rows, and vault values, which t
 - the run was capture → generate → rebuild → capture again;
 - one CHECK differed only by the deparse round trip, and the test's canonical replay accepts it.
 
+### Tests (Linux, Node, `npm ci`, same container)
+
+| Run | Tests | Pass | Fail | Skipped |
+|---|---|---|---|---|
+| base `59dfb0e` | 1308 | 1302 | 0 | 6 |
+| head (this branch) | 1321 | 1312 | 0 | 9 |
+
+- The 13 new tests are all in `tests/f2a1-production-baseline.test.js`. 10 pass now and 3 skip with the reason `PENDING CAPTURE`: determinism, capture agrees with F2A, and the full rebuild fingerprint.
+- The brief expected 33 skipped on base. Here base skips 6, because the Windows-only tests run on Linux. That is an environment difference, measured on base in the same container, not a change.
+- `git diff --check` is clean.
+
 ---
 
 ## FORWARD MIGRATION CUTOFF
