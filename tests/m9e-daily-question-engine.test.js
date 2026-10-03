@@ -16,7 +16,7 @@ const crypto = require('node:crypto');
 const { PGlite } = require('@electric-sql/pglite');
 
 const ROOT = path.resolve(__dirname, '..');
-const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
+const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8').replace(/\r\n/g, '\n');
 const M9E = 'supabase/migrations/20260930045233_m9e_daily_question_engine.sql';
 const M3 = ['supabase/migrations/20260901192817_daily_question_outcomes.sql', 'supabase/migrations/20260902101619_daily_question_reveal_authority.sql'];
 const uuid = () => crypto.randomUUID();
