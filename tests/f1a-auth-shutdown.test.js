@@ -4,7 +4,7 @@
 //    anonymous sign-in, OTP/Magic Link, SMS, signup, pairing or
 //    anonymous -> email upgrade path remains.
 // 2. Auth config (supabase/config.toml, applied with `supabase config push`):
-//    signup, anonymous sign-ins, manual linking and Twilio SMS are declared
+//    signup, anonymous sign-ins, manual linking and phone/SMS sign-in are declared
 //    off, and site_url/redirects point at the canonical Cloudflare Pages
 //    origin only.
 // 3. claim_us_role: the F1A migration is exercised against an embedded
@@ -83,18 +83,21 @@ test('F1A: Settings no longer carries the anonymous account upgrade row', () => 
 function authConfig() {
   const toml = read('supabase/config.toml');
   const auth = toml.match(/^\[auth\]\n([\s\S]*?)(?=^\[)/m)?.[1] || '';
-  const twilio = toml.match(/^\[auth\.sms\.twilio\]\n([\s\S]*?)(?=^\[|$(?![\s\S]))/m)?.[1] || '';
-  return { toml, auth, twilio };
+  const sms = toml.match(/^\[auth\.sms\]\n([\s\S]*?)(?=^\[)/m)?.[1] || '';
+  return { toml, auth, sms };
 }
 
-test('F1A: Auth config declares signup, anonymous, manual linking and Twilio off', () => {
-  const { auth, twilio } = authConfig();
+test('F1A: Auth config declares signup, anonymous, manual linking and phone sign-in off', () => {
+  const { toml, auth, sms } = authConfig();
   assert.match(auth, /^enable_signup = false$/m);
   assert.match(auth, /^enable_anonymous_sign_ins = false$/m);
   assert.match(auth, /^enable_manual_linking = false$/m);
-  assert.match(twilio, /^enabled = false$/m);
+  assert.match(sms, /^enable_signup = false$/m);
+  // config push cannot encode the SMS provider toggle: never declare it, or
+  // the file would claim a state production does not have.
+  assert.doesNotMatch(toml, /^\[auth\.sms\.twilio\]/m);
   // config push only writes declared properties: never declare secrets here.
-  assert.doesNotMatch(auth + twilio, /auth_token|secret|password|account_sid/i);
+  assert.doesNotMatch(auth + sms,/auth_token|secret|password|account_sid/i);
 });
 
 test('F1A: Auth URLs point only at the canonical Cloudflare Pages origin', () => {
