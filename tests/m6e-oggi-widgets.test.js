@@ -162,9 +162,9 @@ test('M6E (8): the widget region is not a fourth bottom-nav destination and does
 function oggiWidgetRuntimeSource() {
   const source = appJs();
   const start = source.indexOf('function renderOggiCalendarWidget(');
-  const end = source.indexOf('function selectRole(role)', start);
+  const end = source.indexOf('async function loginAccount()', start);
   assert.notEqual(start, -1, 'app.js must implement the Oggi widget runtime');
-  assert.notEqual(end, -1, 'the Oggi widget runtime must stay a focused block ending before selectRole');
+  assert.notEqual(end, -1, 'the Oggi widget runtime must stay a focused block ending before loginAccount');
   return source.slice(start, end);
 }
 
