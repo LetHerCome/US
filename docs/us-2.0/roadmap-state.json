@@ -3,7 +3,7 @@
   "updatedAt": "2026-10-03",
   "mainSha": "c8de18dd650487e39196b2014ce479314fe1c1c0",
   "currentMission": "F1A",
-  "currentLabel": "Legacy Auth Shutdown",
+  "currentLabel": "Legacy Auth Shutdown — Ready for review",
   "state": {
     "F0": "done",
     "F0.1": "todo",
@@ -32,5 +32,6 @@
     "N3": "todo",
     "N4": "todo",
     "N5": "todo"
-  }
+  },
+  "note": "Production hardening applied; awaiting real-device login/reopen verification and remote branch review before merge."
 }
