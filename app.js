@@ -1022,7 +1022,7 @@ async function getHomeRotationPath(){
   return couple?.home_photo_path||null;
 }
 
-function crossfadeHomePhoto(url){
+function crossfadeHomePhoto(url,{path='',hourKey='',allowRetry=true}={}){
   const requestId=++homePhotoRequestId;
   const hero=document.getElementById('homeHero');
   const empty=document.getElementById('homeEmptyState');
@@ -1041,8 +1041,17 @@ function crossfadeHomePhoto(url){
       next.classList.add('active');
       current.classList.remove('active');
       homePhotoActiveLayer=nextKey;
-      if(url)homePhotoHasPainted=true;
-      else homePhotoHasPainted=false;
+      if(url){
+        homePhotoHasPainted=true;
+        if(path){
+          homePhotoPath=path;
+          homePhotoHourKey=hourKey||homeRotationKey();
+          writeHomeBootCache(homePhotoHourKey,path,url);
+        }
+      }else{
+        homePhotoHasPainted=false;
+        homePhotoPath='';
+      }
     };
     if(firstValid){
       hero.setAttribute('data-us-home-photo-instant','');
@@ -1058,46 +1067,58 @@ function crossfadeHomePhoto(url){
     try{if(typeof preload.decode==='function')await preload.decode();}catch(_e){}
     apply();
   };
-  preload.onerror=()=>console.warn('[US Home] preload foto fallito');
+  preload.onerror=async()=>{
+    if(requestId!==homePhotoRequestId)return;
+    console.warn('[US Home] preload foto fallito');
+    if(path&&allowRetry){
+      usInvalidateSignedUrl(path);
+      const fresh=await usGetSignedUrl(path,21600,{force:true});
+      if(fresh&&fresh!==url){
+        crossfadeHomePhoto(fresh,{path,hourKey,allowRetry:false});
+        return;
+      }
+    }
+    homePhotoPath='';
+    homePhotoHasPainted=false;
+    try{
+      const cached=JSON.parse(localStorage.getItem(US_HOME_BOOT_CACHE_KEY)||'null');
+      if(!path||cached?.path===path)localStorage.removeItem(US_HOME_BOOT_CACHE_KEY);
+    }catch(_e){}
+  };
   preload.src=url;
 }
 
 async function hydrateHomePhoto(force=false){
   if(!window.usProfile)return;
   const hourKey=homeRotationKey();
-  if(!force && homePhotoHourKey===hourKey && homePhotoPath)return;
+  if(!force && homePhotoHourKey===hourKey && homePhotoPath && homePhotoHasPainted)return;
 
   // Paint the previous valid image first, even if the rotation hour changed.
   // Then refresh the correct hourly image silently in the background.
   if(!force && !homePhotoPath){
     const cached=readHomeBootCache(hourKey);
     if(cached){
-      homePhotoHourKey=cached.hourKey||'';
-      homePhotoPath=cached.path;
-      crossfadeHomePhoto(cached.url);
+      crossfadeHomePhoto(cached.url,{path:cached.path,hourKey:cached.hourKey||hourKey});
       if(cached.currentHour)return;
     }
   }
 
   const path=await getHomeRotationPath();
   if(path===undefined)return;
-  homePhotoHourKey=hourKey;
   if(!path){
+    homePhotoHourKey=hourKey;
     homePhotoPath='';
     try{localStorage.removeItem(US_HOME_BOOT_CACHE_KEY);}catch(_e){}
     crossfadeHomePhoto('');
     return;
   }
-  if(!force && path===homePhotoPath){
-    // It is already visible; only normalize the current rotation key.
+  if(!force && path===homePhotoPath && homePhotoHasPainted){
     homePhotoHourKey=hourKey;
     return;
   }
-  const signedUrl=await usGetSignedUrl(path,21600);
+  const signedUrl=await usGetSignedUrl(path,21600,{force});
   if(!signedUrl)return;
-  homePhotoPath=path;
-  writeHomeBootCache(hourKey,path,signedUrl);
-  crossfadeHomePhoto(signedUrl);
+  crossfadeHomePhoto(signedUrl,{path,hourKey});
 }
 window.hydrateHomePhoto=hydrateHomePhoto;
 
