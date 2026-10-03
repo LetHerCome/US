@@ -1,14 +1,14 @@
 {
   "version": 1,
   "updatedAt": "2026-10-03",
-  "mainSha": "9e86b53630552acaf62e19ea834a7dd95e9a29b6",
-  "currentMission": "F1B",
-  "currentLabel": "RPC / Function Grant Hardening — Ready for review",
+  "mainSha": "98c473c3b5616dcb952b1a2e883de2e6c93b6667",
+  "currentMission": "F0.1",
+  "currentLabel": "Test Harness Hardening",
   "state": {
     "F0": "done",
     "F0.1": "doing",
     "F1A": "done",
-    "F1B": "doing",
+    "F1B": "done",
     "F1C": "todo",
     "F2A": "todo",
     "F2B": "todo",
@@ -33,5 +33,5 @@
     "N4": "todo",
     "N5": "todo"
   },
-  "note": "F1B production hardening completed by Opus and is awaiting push + independent branch review. F0.1 remains in progress separately."
+  "note": "F1B independently audited and merged via PR #50. F0.1 remains active; F1C is the next Opus security mission."
 }
