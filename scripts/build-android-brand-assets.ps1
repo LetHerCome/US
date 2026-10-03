@@ -162,5 +162,6 @@ $output = [ordered]@{
   derivatives = @($derivatives | Sort-Object path)
 }
 $manifestPath = Join-Path $root 'android/brand-assets-manifest.json'
-[System.IO.File]::WriteAllText($manifestPath, ($output | ConvertTo-Json -Depth 6), (New-Object System.Text.UTF8Encoding($false)))
+$manifestJson = ($output | ConvertTo-Json -Depth 6).Replace("`r`n", "`n")
+[System.IO.File]::WriteAllText($manifestPath, $manifestJson, (New-Object System.Text.UTF8Encoding($false)))
 Write-Output 'Android brand assets generated'
