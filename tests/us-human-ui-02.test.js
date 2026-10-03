@@ -435,18 +435,17 @@ test('Auth first-run: private entry is compact, device-aware and keeps backend o
   const app = read('app.js');
 
   assert.match(css, /US-AUTH-FIRST-RUN-01/);
-  assert.match(auth, /Collega questo telefono/);
+  assert.match(auth, /US · SPAZIO PRIVATO/);
   assert.match(auth, /Bentornato/);
+  assert.match(auth, /Accedi con la tua email e password\./);
   assert.match(auth, /id="usAuthInstall"/);
-  assert.match(auth, /aria-pressed="false"/);
-  assert.match(app, /showAuthStep\(returningDevice\?'authLogin':'authPair'\)/);
-  assert.match(app, /Questo telefono era già collegato\. Accedi di nuovo per continuare\./);
-  assert.match(app, /pairEnter\.addEventListener\('keydown'/);
+  assert.doesNotMatch(auth, /authPair|pairBtn|pairCode|Magic Link/);
+  assert.match(app, /showAuthStep\('authLogin'\)/);
+  assert.match(app, /Accedi con email e password per entrare in US\./);
   assert.match(app, /passwordEnter\.addEventListener\('keydown'/);
 
-  assert.match(app, /sb\.rpc\('claim_us_role',\{invite_code:code,chosen_role:selectedRole\}\)/);
   assert.match(app, /sb\.auth\.signInWithPassword\(\{email,password\}\)/);
-  assert.match(app, /shouldCreateUser:false/);
+  assert.doesNotMatch(app, /claim_us_role|signInAnonymously|signInWithOtp|shouldCreateUser:false/);
 
   assert.match(firstRun, /beforeinstallprompt/);
   assert.match(firstRun, /event\.preventDefault\(\)/);
