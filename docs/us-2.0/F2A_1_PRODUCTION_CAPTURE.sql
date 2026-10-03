@@ -181,6 +181,7 @@ select jsonb_build_object(
     'daily_question_templates', (select jsonb_build_object('n', count(*), 'md5', md5(string_agg(x::text, '|' order by x::text))) from public.daily_question_templates x),
     'game_v2_catalog', (select jsonb_build_object('n', count(*), 'md5', md5(string_agg(x::text, '|' order by x::text))) from public.game_v2_catalog x),
     'game_v2_recipes', (select jsonb_build_object('n', count(*), 'md5', md5(string_agg(x::text, '|' order by x::text))) from public.game_v2_recipes x),
+    'game_v2_cooldowns', (select jsonb_build_object('n', count(*), 'md5', md5(string_agg(x::text, '|' order by x::text))) from public.game_v2_cooldowns x),
     'progression_reward_catalog', (select jsonb_build_object('n', count(*), 'md5', md5(string_agg(x::text, '|' order by x::text))) from public.progression_reward_catalog x),
     'game_swipe_v1_catalog', (select jsonb_build_object('n', count(*), 'md5', md5(string_agg(x::text, '|' order by x::text))) from private.game_swipe_v1_catalog x),
     'quiz_sets', (select jsonb_build_object('n', count(*), 'md5', md5(string_agg(x::text, '|' order by x::text))) from public.quiz_sets x),
@@ -193,6 +194,7 @@ select jsonb_build_object(
 -- c10b. Full content of the catalog tables that repo migrations seed, so the
 --       baseline can carry them after the old migrations become history-only.
 select jsonb_build_object(
+  'game_v2_cooldowns', (select jsonb_agg(to_jsonb(x) order by to_jsonb(x)::text) from public.game_v2_cooldowns x),
   'game_v2_catalog', (select jsonb_agg(to_jsonb(x) order by to_jsonb(x)::text) from public.game_v2_catalog x),
   'game_v2_recipes', (select jsonb_agg(to_jsonb(x) order by to_jsonb(x)::text) from public.game_v2_recipes x),
   'daily_question_templates', (select jsonb_agg(to_jsonb(x) order by to_jsonb(x)::text) from public.daily_question_templates x),
