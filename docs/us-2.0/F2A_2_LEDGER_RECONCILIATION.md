@@ -114,6 +114,32 @@ The test `F2A.2 postcondition` asserts this. Running both commands literally fro
 - the F2A.1 baseline rebuild still reproduces the production fingerprint;
 - empty PostgreSQL + `supabase/migrations` (+ the cron source) gives the same fingerprint as the baseline.
 
+## TESTS
+
+Linux, Node, same container, same `node_modules`.
+
+| Run | Tests | Pass | Fail | Skipped |
+|---|---|---|---|---|
+| base `origin/main` `6dd23d7` | 1349 | 1343 | 0 | 6 |
+| head (this branch) | 1362 | 1356 | 0 | 6 |
+
+- The 13 new tests in `tests/f2a2-ledger-reconciliation.test.js` all run; none skips.
+- The 6 skips are the same Windows-only tests on base and head.
+- `node scripts/build-supabase-baseline.mjs --check` and `git diff --check` are clean.
+
+## PRODUCTION CHANGES
+
+Ledger rows only, in `supabase_migrations.schema_migrations`: 83 deleted, 1 inserted. No schema and no application data changed: the 22-block digest is identical before and after.
+
+## NEXT
+
+**F2C Edge & cron source of truth** (Opus, High):
+- deploy `monthiversary-job` from the repo;
+- move the 7 cron jobs from `supabase/baseline/90_cron.sql` into a migration newer than the baseline, with a parametrised URL;
+- decide `VAPID_SUBJECT` and the `calendar-reminders-worker` `setVapidDetails` fix.
+
+Its first step is the read-only check F2A.2 could not run literally: `supabase migration list --linked` and `supabase db push --dry-run --linked` from a linked CLI.
+
 ## DEFERRED
 
 - **F2C:** deploy `monthiversary-job` from the repo; move the cron jobs into a migration with a parametrised URL; `VAPID_SUBJECT`; the `calendar-reminders-worker` `setVapidDetails` bug.
