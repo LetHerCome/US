@@ -132,8 +132,8 @@ function runProgression(stateFor, { storageSeed = {}, profile = { id: 'f', coupl
       return { data: stateFor(name, args), error: null };
     }
   };
-  const window = { document, localStorage, usProfile: null, UsFeedback: { action() {}, success() {} } };
-  const context = { window, document, sb, console, setTimeout: () => 0, clearTimeout() {}, requestAnimationFrame: (fn) => fn() };
+  const window = { document, localStorage, usProfile: null, UsFeedback: { action() {}, success() {} }, dispatchEvent() {} };
+  const context = { window, document, sb, console, CustomEvent, setTimeout: () => 0, clearTimeout() {}, requestAnimationFrame: (fn) => fn() };
   vm.runInNewContext(js, context, { filename: 'progression.js' });
   window.usProfile = profile;
   return { api: window.USProgression, el: document.getElementById, root, calls, window, storage };

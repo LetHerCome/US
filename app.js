@@ -401,6 +401,7 @@ if(canUseUsServiceWorker()){navigator.serviceWorker.addEventListener('message',e
 let selectedRole = null;
 
 async function clearPrivateDeviceState(profileId=window.usProfile?.id||''){
+  window.USCountdown?.reset?.();
   try{US_SIGNED_URL_CACHE.clear();}catch(_e){}
   const storageKeys=[
     'us:fix4:last-profile',
@@ -1251,7 +1252,7 @@ window.UsOggiCalendarWidget=Object.freeze({render:renderOggiCalendarWidget,refre
 // widget itself, the distance pill, the push card or the empty-state CTA
 // never does (they keep their own taps).
 function oggiIsWidgetTarget(target){
-  return Boolean(target&&typeof target.closest==='function'&&target.closest('.us-oggi-stack,.us-oggi-widgets,.home-distance-pill,.push-optin-card,.home-empty-state'));
+  return Boolean(target&&typeof target.closest==='function'&&target.closest('.us-oggi-stack,.us-oggi-widgets,.home-distance-pill,.push-optin-card,.home-empty-state,.us-countdown-display,.us-countdown-entry'));
 }
 let usOggiFocusPhotoActive=false;
 function setOggiFocusPhoto(active){
@@ -1259,7 +1260,7 @@ function setOggiFocusPhoto(active){
   const hero=document.getElementById('homeHero');
   hero?.classList.toggle('us-oggi-focus',active);
   document.getElementById('usOggiFocusToggle')?.setAttribute('aria-pressed',String(active));
-  const fadeTargets=[document.getElementById('usTodayPriorityRegion'),document.getElementById('usOggiCalendarWidget'),document.getElementById('usDailyRitual'),document.getElementById('distanceWidget'),document.getElementById('pushOptInCard')];
+  const fadeTargets=[document.getElementById('usTodayPriorityRegion'),document.getElementById('usOggiCalendarWidget'),document.getElementById('usDailyRitual'),document.getElementById('distanceWidget'),document.getElementById('pushOptInCard'),document.getElementById('usCountdownDisplay'),document.getElementById('usCountdownEntry')];
   for(const el of fadeTargets){
     if(!el)continue;
     if(active)el.setAttribute('inert','');else el.removeAttribute('inert');

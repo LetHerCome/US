@@ -1,4 +1,4 @@
-const BUILD_ID = "us-ios-boot-hardening-v1-20261005-1";
+const BUILD_ID = "us-countdown-oggi-v1-20261004-2";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -38,6 +38,8 @@ const APP_SHELL = [
   versioned("/games.js"),
   versioned("/progression.css"),
   versioned("/progression.js"),
+  versioned("/countdown.css"),
+  versioned("/countdown.js"),
   versioned("/settings.css"),
   versioned("/settings.js"),
   versioned("/identity.css"),
