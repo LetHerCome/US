@@ -118,13 +118,13 @@ The tests `F2A.1 drift` assert all 8. One of them runs both `set_think_reaction`
 | `private.bucket_items_guard_calendar_link` | `4ccf01d7…` | `7d15ce40…` (m7a `20260929121350`) | PRODUCTION_CANONICAL (logic = repo) | prod = repo body with **CRLF** | none |
 | `private.bucket_items_guard_delete` | `b8416771…` | `f9d5aac0…` (m7a `20260929121350`) | PRODUCTION_CANONICAL (logic = repo) | prod = repo body with **CRLF** | none |
 | `public.claim_left_for_you_cleanup` | `de5f5ee6…` | `cd83ab26…` (m5i `20260924160000`, ledger `20260928050608`) | PRODUCTION_CANONICAL (logic = repo) | prod = current repo body (since `afc8f54` "disambiguate") with the full-line `--` comments removed. The older `d313e18` body does not match | none. The m5i file is a replay hazard only for comments |
-| `public.send_think` | `018e7147…` | `0a9cb916…` (`20260922120945`) | PRODUCTION_CANONICAL | prod = repo body without its 3 comment lines, and the unresolved-conflict error `think_send_conflict_unresolved` is raised as **`P0001`** where the repo says `23505`. No caller reads the code: `app.js:3714` toasts on any error | none. Replaying `20260922120945` would switch the code back (now a listed replay hazard) |
+| `public.send_think` | `018e7147…` | `0a9cb916…` (`20260922120945`) | PRODUCTION_CANONICAL | prod = repo body without its 3 comment lines, and the unresolved-conflict error `think_send_conflict_unresolved` is raised as **`P0001`** where the repo says `23505`. No caller reads the code: `app.js:3784` toasts on any error | none. Replaying `20260922120945` would switch the code back (now a listed replay hazard) |
 | `public.set_think_reaction` | `15e7492e…` | `37543eef…` (`20260922120726`) | PRODUCTION_CANONICAL (production is the fix) | prod aliases `shared_messages` as **`msg`**. The repo aliases it as `message`, which collides with the record variable `message`. Run on the rebuild, the repo body fails with `column reference "message.*" is ambiguous` on every call; production reaches its own `think recipient required` check. Otherwise formatting only | none. Replaying `20260922120726` would **break Ti penso reactions** (now a listed replay hazard) |
 | `public.widget_send_think_internal` | `1d28cbb5…` | `345cd0a0…` (`20260922120726`) | PRODUCTION_CANONICAL (logic = repo) | prod = repo body with different line breaks and 2 extra blank lines; the logic is identical | none |
 
 Callers:
-- `send_think`: `app.js:3714`.
-- `set_think_reaction`: `app.js:1634`.
+- `send_think`: `app.js:3784`.
+- `set_think_reaction`: `app.js:1698`.
 - `widget_send_think_internal`: Edge `widget-think-send` (Scriptable and the Android widget).
 - `claim_left_for_you_cleanup`: Edge `cleanup-left-for-you`, which is not deployed.
 - `claim_us_role`: none (revoked in F1A).
