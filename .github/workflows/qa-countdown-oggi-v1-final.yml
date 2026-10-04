@@ -8,7 +8,7 @@ on:
 jobs:
   validate-web-and-browser:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
         with:
@@ -18,12 +18,12 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Full test suite
+        run: npm test -- --test-concurrency=1
       - name: Add isolated Playwright runtime
         run: npm install --no-save --package-lock=false playwright@1.58.2
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
-      - name: Full test suite
-        run: npm test -- --test-concurrency=1
       - name: Focused countdown browser
         run: node --test tests/countdown-oggi-v1-browser.test.js
       - run: npm run build:cloudflare-pages
