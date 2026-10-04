@@ -1,8 +1,10 @@
 // The single US 2.0 baseline migration (F2A.2 step 4): the generated
 // supabase/baseline files in MANIFEST order, without 00_extensions.sql
-// (platform-managed) and without 90_cron.sql (stays a source file until F2C
-// parametrises the project URL). It is the only executable migration up to
-// BASELINE_VERSION; the 47 earlier files are history in
+// (platform-managed) and without 90_cron.sql (the F2A.1 cron capture; since
+// F2C the executable cron source is the forward migration
+// 20261004110718_f2c_edge_cron_source_of_truth.sql, so 90_cron.sql is never
+// applied on top of supabase/migrations). It is the only executable migration
+// up to BASELINE_VERSION; the 47 earlier files are history in
 // supabase/migrations_history/ and never run again.
 const path = require('node:path');
 const crypto = require('node:crypto');

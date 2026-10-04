@@ -2,7 +2,8 @@
 //
 // Proves, without production access, that:
 //   * the 47 pre-baseline migrations are archived unchanged and can never run;
-//   * supabase/migrations holds exactly one migration, the generated baseline;
+//   * supabase/migrations starts with the generated baseline (later forward
+//     migrations, from F2C on, are newer than it);
 //   * an empty Supabase-like PostgreSQL + that migration (+ the cron source)
 //     gives the same schema fingerprint as supabase/baseline, i.e. production;
 //   * the read-only packs (ledger export, schema digest) can only read;
@@ -90,9 +91,12 @@ test('F2A.2 rebuild: empty PostgreSQL + supabase/migrations (+ cron source) = th
   const expected = await fingerprint(fromBaseline, searchPath);
   await fromBaseline.close();
 
+  // The F2A.2 claim, kept as history: the baseline migration + the F2A.1 cron
+  // capture (90_cron.sql) is production. Since F2C the executable cron source
+  // is the F2C migration instead (tests/f2c-edge-cron-source-truth.test.js);
+  // 90_cron.sql is never applied on top of supabase/migrations.
   const db = await newDb();
-  for (const file of sqlFiles(MIGRATIONS)) await db.exec(read(`${MIGRATIONS}/${file}`));
-  // Cron jobs stay a source file (supabase/baseline/90_cron.sql) until F2C.
+  await db.exec(read(`${MIGRATIONS}/${BASELINE_FILE}`));
   const noCron = await fingerprint(db, searchPath);
   assert.deepEqual(noCron.f2a.f2a_11_cron.jobs, null, 'the migration schedules no cron job');
   await db.exec(readBaseline()['90_cron.sql']);
@@ -230,7 +234,10 @@ test('F2A.2 repair record: guarded 83-row revert, one baseline row, nothing else
 // committed post-repair ledger.)
 test('F2A.2 postcondition: remote ledger = local migrations = the committed baseline file', { skip: !DIGEST_POST && pending('docs/us-2.0/F2A_2_SCHEMA_DIGEST_POST.json') }, () => {
   const remote = DIGEST_POST.f2a2_d01_digest.ledger;
-  assert.deepEqual(remote.map((r) => r.v), sqlFiles(MIGRATIONS).map((f) => f.slice(0, 14)), 'nothing to push, nothing unknown remotely');
+  // At F2A.2 the baseline was the only migration; later ones (F2C on) are
+  // forward migrations that `db push` applies after review.
+  const atF2A2 = sqlFiles(MIGRATIONS).map((f) => f.slice(0, 14)).filter((v) => v <= BASELINE_VERSION);
+  assert.deepEqual(remote.map((r) => r.v), atF2A2, 'nothing to push, nothing unknown remotely');
   // The ledger row stores the committed baseline migration, byte for byte.
   const baseline = read(`${MIGRATIONS}/${BASELINE_FILE}`);
   assert.equal(remote[0].stmts, 1);

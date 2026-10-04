@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.112.4";
 import webpush from "npm:web-push@3.6.7";
+import { vapidSubject } from "../_shared/web-push-vapid.mjs";
 import { supabaseSecretKey } from "../_shared/supabase-secret.ts";
 import { dispatchLeftForYouPush, leftForYouDedupeKey } from "../_shared/left-for-you-push-core.mjs";
 
@@ -15,7 +16,6 @@ import { dispatchLeftForYouPush, leftForYouDedupeKey } from "../_shared/left-for
 // e la notifica con la stessa logica e la stessa chiave (nessun duplicato).
 
 const VAPID_PUBLIC_KEY = "BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss";
-const VAPID_SUBJECT = "https://usfinal.vercel.app";
 // Lascia al percorso veloce il tempo di completare prima di intervenire.
 const GRACE_SECONDS = 45;
 // Oltre questa finestra una notifica "ti ha lasciato qualcosa" non ha più senso.
@@ -69,7 +69,7 @@ Deno.serve(async (request) => {
       if (vapidReady) return;
       const { data: vapidPrivate, error: vapidError } = await admin.rpc("get_internal_vapid_private_key");
       if (vapidError || !vapidPrivate) throw new Error("push_configuration_unavailable");
-      webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, vapidPrivate as string);
+      webpush.setVapidDetails(vapidSubject(), VAPID_PUBLIC_KEY, vapidPrivate as string);
       vapidReady = true;
     };
 
