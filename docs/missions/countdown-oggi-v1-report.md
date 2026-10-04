@@ -1,5 +1,17 @@
 # Countdown Oggi V1 — candidato riallineato
 
+## Decisione creativa confermata — 2026-10-05
+
+L'utente ha scelto di mantenere i **sei stili originali del candidate**, descritti nella tabella seguente. Gli otto concept della successiva visual exploration sono accantonati e non devono essere implementati.
+
+- Disponibili subito: **Editoriale, Segnale, Vetro**.
+- Sintonia, tramite unlock esistenti: **Aurora** (`frame_aurora`, livello 4), **Orbita** (`ring_orbit`, livello 9), **Cromo** (`frame_chrome`, livello 12).
+- Conservare i trattamenti visuali e il comportamento già implementati, senza sostituirli con i concept esplorativi.
+- Posizione finale richiesta: countdown più in alto, subito sotto la top bar, rispettando safe area e lasciando Daily Question e gli altri elementi in spazi separati. **Questo spostamento non è ancora applicato al candidate** e richiede una successiva patch e verifica mobile proporzionata.
+- Restano invariati i vincoli: foto corrente, tempo protagonista, copy minimo, nessuna foto/card aggiuntiva, nessuna nuova economia, nessuna modifica Arcade o redesign calendario.
+
+Riferimento tecnico verificato: `d92254814bc88b343ebdfe5eb720a4acd5f4a95a`. La selezione dei sei stili non richiede un ripristino: sono tuttora quelli presenti nell'app. I risultati tecnici sotto sono quelli della verifica precedente, non una nuova esecuzione dopo questa decisione documentale. Nessuna modifica runtime in questo aggiornamento.
+
 Branch `codex/countdown-oggi-v1`, base esatta `main` `f463c7d73c9cba86c22130179a3fb79c405cfa3e`. Repository `F:\AI\US`, worktree isolato `C:\Users\Francesco\.codex\worktrees\c8c3\US`.
 
 Candidate originale `0459046db43b48ea9e6675b36255053188e4ecce` conservato nel ref locale `codex/countdown-oggi-v1-original`. Rebase del solo candidate, nessun merge. Nessun push, PR, deploy o modifica production/Supabase remoto.

@@ -10,6 +10,8 @@ Oggi: foto a due layer, Focus Photo, stack arbitrato M12A (una azione e un fatto
 
 ## Design
 
+Decisione creativa confermata dall'utente il 2026-10-05: utilizzare i sei stili originali qui descritti; accantonare gli otto concept della visual exploration. Nessun nuovo stile da implementare. Rimane da applicare la posizione più alta, subito sotto la top bar, con safe area e separazione da Daily Question; il candidate tecnico `d922548` conserva ancora la posizione precedente.
+
 Un solo tempo scelto dalla coppia, direttamente sulla foto. Titolo massimo 32 caratteri, nessuna foto propria. Insieme da: giorni di calendario Europe/Rome dalla data esistente, senza copia della data. Countdown: giorni di calendario oppure istante assoluto, salvato UTC e modificato nell'orario locale del dispositivo. Scaduti: zero, nessun tempo negativo o cambio automatico. Massimo 12 countdown condivisi.
 
 Stili: Editoriale (serif, immediato), Segnale (monospace, immediato), Vetro (glass, immediato), Aurora (frame_aurora, livello 4), Orbita (ring_orbit, livello 9), Cromo (frame_chrome, livello 12). Gli unlock esistenti abilitano anche lo stile, senza equipaggiare o cambiare altri slot; entitlement server, nessun XP aggiuntivo.
