@@ -181,16 +181,39 @@ test('F1B parity: every RPC the shipped client calls is CLIENT_REQUIRED and stay
   for (const name of declared) assert.ok(called.has(name), `${name} is CLIENT_REQUIRED but the client no longer calls it`);
 });
 
-test('F1B parity: every RPC an Edge Function calls keeps service_role', () => {
+test('F1B parity: every RPC an Edge Function calls keeps service_role', async () => {
   const files = edgeFiles();
   const called = rpcNames(files);
   // game-v2-push-core derives through `admin.rpc(fn, …)`; name those targets too.
   for (const file of files) for (const m of read(file).matchAll(/derive\(admin,\s*'([a-z_0-9]+)'/g)) called.add(m[1]);
   called.add('game_v2_pending_pushes');
+  const added = [];
   for (const name of called) {
     const row = byName.get(name);
-    assert.ok(row, `edge calls ${name}, which is missing from the manifest`);
-    assert.equal(row.after[2], 'S', `${name} must stay executable by service_role`);
+    if (row) assert.equal(row.after[2], 'S', `${name} must stay executable by service_role`);
+    else added.push(name);
+  }
+  // F1B's captured matrix stays exact. Later RPCs must be implemented by the
+  // real forward migrations and prove their ACLs, never a name allowlist.
+  if (added.length) {
+    const { newDb } = require('../scripts/supabase-baseline/rebuild.cjs');
+    const db = await newDb();
+    try {
+      for (const file of fs.readdirSync(path.join(ROOT, 'supabase/migrations')).filter((f) => f.endsWith('.sql')).sort()) {
+        await db.exec(read(`supabase/migrations/${file}`));
+      }
+      for (const name of added) {
+        const functions = (await db.query(`select p.oid, p.oid::regprocedure::text as signature
+          from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname=$1`, [name])).rows;
+        assert.ok(functions.length, `edge calls ${name}, missing from both F1B and forward migrations`);
+        for (const fn of functions) {
+          for (const role of ['service_role', 'anon', 'authenticated']) {
+            const allowed = (await db.query('select has_function_privilege($1,$2::oid,\'execute\') as allowed', [role, fn.oid])).rows[0].allowed;
+            assert.equal(allowed, role === 'service_role', `${fn.signature}: later Edge RPC must be service-only (${role})`);
+          }
+        }
+      }
+    } finally { await db.close(); }
   }
 });
 

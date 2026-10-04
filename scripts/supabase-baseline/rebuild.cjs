@@ -17,6 +17,10 @@ async function newDb() {
   const { uuid_ossp } = await import('@electric-sql/pglite/contrib/uuid_ossp');
   const db = new PGlite({ extensions: { pgcrypto, uuid_ossp } });
   await db.exec(fs.readFileSync(PLATFORM, 'utf8'));
+  // Captured production JSON fingerprints render timestamptz in UTC.
+  // PGlite otherwise inherits the host timezone (e.g. Windows Europe/Rome),
+  // changing hashes without changing any stored instant or content.
+  await db.exec("set time zone 'UTC'");
   return db;
 }
 

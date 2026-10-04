@@ -67,6 +67,9 @@ const SEED = `
 async function database({ hardened }) {
   const db = await newDb();
   for (const file of fs.readdirSync(MIGRATIONS).filter((f) => f.endsWith('.sql')).sort()) {
+    // These before/after assertions describe the SEC mission's exact state.
+    // Later missions test their own additions without rewriting this audit.
+    if (file > SEC_FILE) continue;
     if (file === SEC_FILE && !hardened) continue;
     await db.exec(read(path.join(MIGRATIONS, file)));
   }
@@ -102,9 +105,10 @@ test.after(async () => {
 
 // ------------------------------------------------------------ migration source
 
-test('SEC migration: newest forward migration, after F2C, no data or function change', () => {
+test('SEC migration: follows F2C, permits later migrations, no data or function change', () => {
   const files = fs.readdirSync(MIGRATIONS).filter((f) => f.endsWith('.sql')).sort();
-  assert.equal(files.at(-1), SEC_FILE);
+  assert.deepEqual(files.slice(0, 3), ['20261004000000_us_2_0_baseline.sql', F2C_FILE, SEC_FILE]);
+  for (const later of files.slice(3)) assert.ok(later.slice(0, 14) > SEC_FILE.slice(0, 14), `${later}: strictly newer than SEC`);
   assert.ok(SEC_FILE.slice(0, 14) > F2C_FILE.slice(0, 14));
   const cutoff = JSON.parse(read(path.join(ROOT, 'supabase/baseline/MIGRATION_CUTOFF.json')));
   assert.ok(cutoff.forward_migrations.includes(SEC_FILE), 'run node scripts/build-supabase-baseline.mjs');

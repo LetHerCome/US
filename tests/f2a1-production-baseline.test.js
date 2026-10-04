@@ -234,7 +234,14 @@ test('F2A.1 secrets manifest: every vault name and Edge env name, names only', (
   // Production's vault names at F2A, plus names a later mission introduces
   // (marked introduced_by, provisioned in that mission's rollout).
   assert.deepEqual(manifest.vault.filter((v) => !v.introduced_by).map((v) => v.name).sort(), [...F2A.f2a_13_vault_secret_names].sort());
-  assert.deepEqual(manifest.vault.filter((v) => v.introduced_by).map((v) => v.name), ['us_project_url']);
+  const introduced = manifest.vault.filter((v) => v.introduced_by);
+  assert.equal(introduced[0].name, 'us_project_url');
+  assert.equal(new Set(manifest.vault.map((v) => v.name)).size, manifest.vault.length, 'no duplicate Vault names');
+  for (const v of introduced) {
+    const migration = v.introduced_by.match(/supabase\/migrations\/\d{14}_[a-z0-9_]+\.sql/);
+    assert.ok(migration, `${v.name}: names its forward migration`);
+    assert.ok(read(migration[0]).includes(`'${v.name}'`), `${v.name}: consumed in its migration`);
+  }
   const envNames = new Set();
   const walk = (dir) => {
     for (const e of fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true })) {
@@ -253,6 +260,7 @@ test('F2A.1 secrets manifest: every vault name and Edge env name, names only', (
     get_internal_daily_question_push_cron_key: 'us_daily_question_push_cron_key',
     get_internal_game_v2_push_cron_key: 'us_game_v2_push_cron_key',
     get_internal_left_for_you_push_cron_key: 'us_left_for_you_push_cron_key',
+    get_internal_left_for_you_cleanup_cron_key: 'us_left_for_you_cleanup_cron_key',
   };
   const shared = new Map();
   for (const f of fs.readdirSync(path.join(ROOT, 'supabase/functions/_shared'))) shared.set(f, read(`supabase/functions/_shared/${f}`));

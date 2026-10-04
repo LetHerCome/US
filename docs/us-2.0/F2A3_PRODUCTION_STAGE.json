@@ -1,0 +1,53 @@
+{
+  "status": "F2A3_PRODUCTION_VERIFIED_MERGE_READY",
+  "project_id": "iiakdfsxpywdkxravqjh",
+  "source_head": "fb62cd94dd37d101d9fbe7822f689fe07d0acdad",
+  "backup_gate": {
+    "verified": true,
+    "outside_repo": true,
+    "files_nonempty": true,
+    "sha256_recorded": true,
+    "client": "PostgreSQL 17.11 native"
+  },
+  "migration": {
+    "version": "20261004184758",
+    "name": "f2a3_retention_operations",
+    "applied": true
+  },
+  "cleanup_worker": {
+    "deployed": true,
+    "version": 1,
+    "verify_jwt": false,
+    "wrong_key_http_status": 401,
+    "authenticated_noop_claimed": 0
+  },
+  "retention_run": {
+    "cron_success": 745,
+    "cron_unsuccessful": 0,
+    "widget_action_tokens": 59,
+    "widget_tokens": 0,
+    "widget_scriptable_setup_codes": 0,
+    "widget_scriptable_installations": 0,
+    "left_for_you_cleanup_queue": 0,
+    "push_event_log_deleted": false
+  },
+  "post_verify": {
+    "push_event_log_rows": 151,
+    "widget_action_tokens_rows": 135,
+    "security_advisors_unchanged": true
+  },
+  "cron_jobs": [
+    {
+      "jobid": 10,
+      "name": "us-operational-retention-daily",
+      "schedule": "20 3 * * *",
+      "active": true
+    },
+    {
+      "jobid": 11,
+      "name": "us-left-for-you-cleanup-daily",
+      "schedule": "40 3 * * *",
+      "active": true
+    }
+  ]
+}
