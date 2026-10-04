@@ -38,6 +38,7 @@ const RUNTIME_FILES = [
   'progression.js',
   'countdown.css',
   'countdown.js',
+  'home-cleanup.js',
   'settings.css',
   'settings.js',
   'identity.css',
