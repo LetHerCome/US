@@ -1,0 +1,5 @@
+# F2A.1: production bytes, never converted. Some function bodies are stored
+# in production with CRLF line endings; the baseline must keep them exactly.
+supabase/baseline/** -text whitespace=cr-at-eol
+supabase/functions/monthiversary-job/** -text
+docs/us-2.0/F2A_1_PRODUCTION_CAPTURE_*.json -text

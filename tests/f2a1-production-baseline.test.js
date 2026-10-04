@@ -26,7 +26,7 @@ const sha256 = (buf) => crypto.createHash('sha256').update(buf).digest('hex');
 
 const F2A = loadF2A();
 const CAPTURE = loadCapture();
-const PENDING = CAPTURE ? false : 'pending: F2A.1 production capture (docs/us-2.0/F2A_1_PRODUCTION_CAPTURE*.json) not committed yet';
+assert.ok(CAPTURE, 'docs/us-2.0/F2A_1_PRODUCTION_CAPTURE*.json is committed');
 const prodFunctions = new Map(F2A.f2a_04_functions.map((f) => [f.f.slice(0, f.f.indexOf('(')), f]));
 
 // ------------------------------------------------------------ monthiversary
@@ -109,13 +109,42 @@ test('F2A.1 drift: 5 of the 8 drifted bodies are the repo body with CRLF or with
   }
 });
 
-test('F2A.1 drift: the 3 Ti penso bodies are not a cosmetic variant of any repo body', () => {
-  const variants = (b) => [b, b.replace(/\n/g, '\r\n'), b.split('\n').filter((l) => !l.trim().startsWith('--')).join('\n')];
-  for (const name of ['public.send_think', 'public.set_think_reaction', 'public.widget_send_think_internal']) {
+// The 3 Ti penso bodies, decided from the captured pg_get_functiondef. Their
+// repo files were written after apply (6472885) and drifted from what ran.
+// Each is the latest repo body plus exactly the edits listed here, compared
+// with whitespace and full-line comments ignored.
+const capturedBody = (qualified) => {
+  const defs = ['c12', 'c13', 'c14', 'c15', 'c16', 'c17', 'c18', 'c19', 'c20'].flatMap((b) => CAPTURE[`f2a1_${b}_functions`] || []);
+  const def = defs.find((d) => d.f.startsWith(`${qualified}(`)).def;
+  return def.match(/AS \$(\w*)\$([\s\S]*)\$\1\$\s*$/)[2];
+};
+const logic = (b) => b.split('\n').filter((l) => !l.trim().startsWith('--')).join(' ').replace(/\s+/g, ' ').trim();
+const TI_PENSO_DRIFT = {
+  // Formatting only (line breaks and blank lines).
+  'public.widget_send_think_internal': (b) => b,
+  // The unresolved-conflict error is raised as P0001, not 23505. No caller
+  // reads the code: app.js only toasts on any error.
+  'public.send_think': (b) => b.replace("errcode = '23505', message = 'think_send_conflict_unresolved'", "errcode = 'P0001', message = 'think_send_conflict_unresolved'"),
+  // The shared_messages alias is msg. The repo's alias `message` collides
+  // with the record variable `message` and fails at run time (proved on the
+  // rebuild below).
+  'public.set_think_reaction': (b) => b.replace(/select message\.\* into message\s+from public\.shared_messages as message\s+where message\.id = target_message_id\s+and message\.kind = 'think'\s+and message\.couple_id = current_couple\s+and message\.recipient_id = auth\.uid\(\)/,
+    "select msg.* into message from public.shared_messages as msg where msg.id = target_message_id and msg.kind = 'think' and msg.couple_id = current_couple and msg.recipient_id = auth.uid()"),
+};
+
+test('F2A.1 drift: the 3 Ti penso bodies are the repo body plus one listed production edit each', () => {
+  for (const [name, edit] of Object.entries(TI_PENSO_DRIFT)) {
     const repo = latestRepoBody(name);
-    for (const v of variants(repo)) assert.notEqual(md5(v), prodFunctions.get(name).body_md5, name);
+    const prod = capturedBody(name);
+    assert.equal(md5(prod), prodFunctions.get(name).body_md5, `${name}: capture is the F2A body`);
+    assert.notEqual(md5(repo), md5(prod), `${name} still drifts`);
+    if (name !== 'public.widget_send_think_internal') {
+      assert.notEqual(logic(repo), logic(prod), `${name}: a logic edit, not formatting`);
+      assert.notEqual(edit(repo), repo, `${name}: the listed edit applies to the repo body`);
+    }
+    assert.equal(logic(edit(repo)), logic(prod), name);
   }
-  assert.deepEqual([...Object.keys(COSMETIC_DRIFT), 'public.send_think', 'public.set_think_reaction', 'public.widget_send_think_internal'].sort(), [...DRIFTED_FUNCTIONS].sort());
+  assert.deepEqual([...Object.keys(COSMETIC_DRIFT), ...Object.keys(TI_PENSO_DRIFT)].sort(), [...DRIFTED_FUNCTIONS].sort());
 });
 
 // ------------------------------------------------------------ capture pack
@@ -171,6 +200,16 @@ test('F2A.1 m6d: the committed m6d file cannot be replayed (sub-query CHECK), as
   assert.equal(prodCheck.def, 'CHECK (calendar_reminder_offset_valid(entry_id, offset_minutes))');
   assert.ok(prodFunctions.has('public.calendar_reminder_offset_valid'), 'production helper exists');
   assert.equal(latestRepoBody('public.calendar_reminder_offset_valid'), null, 'helper exists in no repo migration');
+  // What production ran under the same version (ledger, c10): the repo file
+  // plus the helper and its ACL, with the CHECK calling the helper.
+  const applied = read('supabase/baseline/recovered/ledger/20260928210000_m6d_calendar_reminders.sql');
+  const norm = (t) => t.split('\n').filter((l) => !l.trim().startsWith('--')).join(' ').replace(/;/g, ' ').replace(/\s+/g, ' ').trim();
+  const helperStart = applied.indexOf('create or replace function public.calendar_reminder_offset_valid(');
+  const helperEnd = applied.indexOf('to authenticated;', applied.indexOf('grant execute on function public.calendar_reminder_offset_valid(', helperStart)) + 'to authenticated;'.length;
+  assert.ok(helperStart > 0 && helperEnd > helperStart, 'applied m6d defines the helper');
+  const appliedWithoutHelper = applied.slice(0, helperStart) + applied.slice(helperEnd);
+  const repoWithHelperCheck = sql.replace(check[0], 'constraint calendar_reminders_allday_offset_check\n    check (public.calendar_reminder_offset_valid(entry_id, offset_minutes)),\n\n');
+  assert.equal(norm(appliedWithoutHelper), norm(repoWithHelperCheck));
 });
 
 // ------------------------------------------------------------ secrets
@@ -222,7 +261,7 @@ test('F2A.1 secrets manifest: every vault name and Edge env name, names only', (
 
 // ------------------------------------------------------------ baseline (needs the capture)
 
-test('F2A.1 baseline: supabase/baseline is exactly what the generator prints from the capture', { skip: PENDING }, () => {
+test('F2A.1 baseline: supabase/baseline is exactly what the generator prints from the capture', () => {
   const files = generate(CAPTURE, F2A);
   const disk = readBaseline();
   for (const [name, text] of Object.entries(files)) {
@@ -231,7 +270,7 @@ test('F2A.1 baseline: supabase/baseline is exactly what the generator prints fro
   }
 });
 
-test('F2A.1 capture: agrees with the F2A production evidence it extends', { skip: PENDING }, () => {
+test('F2A.1 capture: agrees with the F2A production evidence it extends', () => {
   const manifest = [...CAPTURE.f2a1_c11a_function_manifest_public, ...CAPTURE.f2a1_c11b_function_manifest_private];
   assert.equal(manifest.length, F2A.f2a_04_functions.length);
   const byF2A = new Map(F2A.f2a_04_functions.map((f) => [f.f, f]));
@@ -251,6 +290,7 @@ test('F2A.1 capture: agrees with the F2A production evidence it extends', { skip
   const checks = CAPTURE.f2a1_c04_constraints.filter((k) => k.type === 'c');
   assert.equal(checks.length, F2A.f2a_06_triggers_checks.checks.length);
   for (const k of F2A.f2a_06_triggers_checks.checks) assert.ok(checks.find((c) => c.con === k.con && c.def === k.def), k.con);
+  assert.deepEqual(CAPTURE.f2a1_c01_meta.ledger.map((r) => [r.v, r.n]), F2A.f2a_01_ledger.ledger.map((r) => [r.v, r.n]), 'no migration landed between F2A and the capture');
   for (const name of [...PRODUCTION_ONLY_FUNCTIONS, ...DRIFTED_FUNCTIONS]) assert.ok(manifest.find((f) => f.f.startsWith(`${name}(`)), name);
 });
 
@@ -280,7 +320,7 @@ async function canonicalPolicy(db, p) {
 
 const sortRows = (rows) => [...(rows || [])].map((r) => JSON.stringify(r)).sort();
 
-test('F2A.1 rebuild: empty Supabase-like PostgreSQL + baseline reproduces the production fingerprint', { skip: PENDING, timeout: 300000 }, async (t) => {
+test('F2A.1 rebuild: empty Supabase-like PostgreSQL + baseline reproduces the production fingerprint', { timeout: 300000 }, async (t) => {
   const db = await rebuild();
   const searchPath = CAPTURE.f2a1_c01_meta.search_path;
   const got = await fingerprint(db, searchPath);
@@ -300,6 +340,10 @@ test('F2A.1 rebuild: empty Supabase-like PostgreSQL + baseline reproduces the pr
 
   const cap = CAPTURE;
   const g = got.capture;
+  await t.test('F2A.1 schema private: owner and ACL (public and default privileges are platform-owned)', () => {
+    const own = (meta) => meta.schemas.filter((s) => s.s === 'private');
+    assert.deepEqual(own(g.f2a1_c01_meta), own(cap.f2a1_c01_meta));
+  });
   await t.test('F2A.1 tables and columns: types, defaults, nullability, identity, ACLs, comments', () => {
     assert.deepEqual(g.f2a1_c02_tables_a, cap.f2a1_c02_tables_a);
     assert.deepEqual(g.f2a1_c03_tables_b, cap.f2a1_c03_tables_b);
@@ -346,6 +390,29 @@ test('F2A.1 rebuild: empty Supabase-like PostgreSQL + baseline reproduces the pr
   await t.test('F2A.1 functions: every header attribute and full definition hash', () => {
     assert.deepEqual(g.f2a1_c11a_function_manifest_public, cap.f2a1_c11a_function_manifest_public);
     assert.deepEqual(g.f2a1_c11b_function_manifest_private, cap.f2a1_c11b_function_manifest_private);
+  });
+  await t.test('F2A.1 drift: production set_think_reaction runs; the repo body fails on its alias', async () => {
+    // A recipient with no such message: production reaches its own 42501
+    // check, the repo body dies on the ambiguous alias before it.
+    const call = async () => {
+      await db.exec('begin');
+      try {
+        await db.exec(`select set_config('request.jwt.claim.sub', '${crypto.randomUUID()}', true)`);
+        await db.query(`select public.set_think_reaction('${crypto.randomUUID()}', 'heart')`);
+        return 'no error';
+      } catch (e) { return e.message; } finally { await db.exec('rollback'); }
+    };
+    assert.equal(await call(), 'think recipient required');
+    const file = read('supabase/migrations/20260922120726_think_send_idempotency_final_reaction.sql');
+    const from = file.indexOf('create or replace function public.set_think_reaction(');
+    const repoSql = file.slice(from, file.indexOf('$$;', file.indexOf('as $$', from) + 5) + 3);
+    await db.exec('begin');
+    try {
+      await db.exec(repoSql);
+      await db.exec(`select set_config('request.jwt.claim.sub', '${crypto.randomUUID()}', true)`);
+      await assert.rejects(db.query(`select public.set_think_reaction('${crypto.randomUUID()}', 'heart')`), /column reference "message\.\*" is ambiguous/);
+    } finally { await db.exec('rollback'); }
+    assert.equal(await call(), 'think recipient required', 'rollback restored the production body');
   });
   t.diagnostic(`deparse round-trip only: ${roundTrip.length ? roundTrip.join(', ') : 'none'}`);
   await db.close();

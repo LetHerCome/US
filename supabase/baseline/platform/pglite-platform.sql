@@ -51,7 +51,10 @@ create schema storage;
 create table storage.buckets (
   id text primary key, name text not null, owner uuid, created_at timestamptz default now(),
   updated_at timestamptz default now(), public boolean default false, avif_autodetection boolean default false,
-  file_size_limit bigint, allowed_mime_types text[], owner_id text, type text default 'STANDARD'
+  file_size_limit bigint, allowed_mime_types text[], owner_id text, type text default 'STANDARD',
+  -- Newer storage columns seen in the production bucket row (c08); types are
+  -- the test skeleton's stand-ins, the platform owns the real ones.
+  versioning_status text default 'DISABLED', lifecycle_configuration jsonb, lifecycle_configuration_generation bigint
 );
 create table storage.objects (
   id uuid primary key default gen_random_uuid(), bucket_id text references storage.buckets(id), name text,

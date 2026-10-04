@@ -369,7 +369,7 @@ function realtimeFile(x) {
     throw new Error('supabase_realtime has non-default publication options');
   }
   for (const m of x.realtime.members || []) {
-    const table = x.tables.find((t) => t.t === m.t);
+    const table = (x.allTables || x.tables).find((t) => t.t === m.t);
     if (!table) throw new Error(`realtime member ${m.t} is not a captured table`);
     const allCols = table.cols.map((c) => c.n);
     const cols = m.attnames && m.attnames.join(',') !== allCols.join(',') ? ` (${m.attnames.map(ident).join(', ')})` : '';
@@ -529,6 +529,7 @@ function subset(x, spec) {
   return {
     ...x,
     tables: x.tables.filter((t) => tables.has(t.t)),
+    allTables: x.tables,
     constraints: x.constraints.filter((k) => tables.has(k.t)),
     indexes: x.indexes.filter((i) => tables.has(i.t)),
     triggers: x.triggers.filter((t) => tables.has(t.t)),
@@ -575,6 +576,26 @@ function sliceFile(x, name, purpose, spec) {
   return out.join('\n');
 }
 
+// The SQL production recorded in its ledger for the versions whose repo file
+// is missing or differs (c10; key-like literals masked at capture). History
+// only: kept so the repo shows what ran, never executed by anything.
+function ledgerFiles(x) {
+  const out = {};
+  for (const l of x.content.ledger_sql || []) {
+    if (l.redacted_literals == null) throw new Error(`ledger ${l.v}: capture without the redaction count`);
+    const text = [
+      `-- US backend recovered source: production ledger ${l.v} ${l.n}`,
+      '-- GENERATED from the production capture (c10, supabase_migrations.schema_migrations.statements)',
+      `-- by scripts/build-supabase-baseline.mjs. ${l.statements.length} statement(s), ${l.redacted_literals} key-like literal(s) masked.`,
+      '-- HISTORY ONLY: what production ran under this version. Never apply it.',
+      '',
+      ...l.statements.map((st) => `${st.replace(/\s+$/, '')};\n`),
+    ].join('\n');
+    out[`recovered/ledger/${l.v}_${l.n}.sql`] = text;
+  }
+  return out;
+}
+
 function generate(capture, f2a, { slices = true } = {}) {
   const x = inputs(capture, f2a);
   const files = {};
@@ -592,7 +613,8 @@ function generate(capture, f2a, { slices = true } = {}) {
   };
   if (slices) {
     for (const [name, purpose, spec] of SLICES) files[`recovered/${name}`] = sliceFile(x, name, purpose, spec);
-    manifest.recovered = Object.fromEntries(SLICES.map(([name]) => [`recovered/${name}`, sha256(files[`recovered/${name}`])]));
+    Object.assign(files, ledgerFiles(x));
+    manifest.recovered = Object.fromEntries(Object.keys(files).filter((n) => n.startsWith('recovered/')).map((n) => [n, sha256(files[n])]));
   }
   files['MANIFEST.json'] = `${JSON.stringify(manifest, null, 2)}\n`;
   return files;

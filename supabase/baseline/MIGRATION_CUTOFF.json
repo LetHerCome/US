@@ -11,7 +11,7 @@
     "repo_alternate_version": 10,
     "ledger_rows": 83,
     "ledger_pre_repo_base": 36,
-    "replay_hazards": 7
+    "replay_hazards": 9
   },
   "repo": [
     {
@@ -60,7 +60,7 @@
       "recorded_as": "20260922120726",
       "match": "same_version",
       "after_f2a2": "history_only",
-      "replay_hazard": null
+      "replay_hazard": "succeeds and replaces public.set_think_reaction with a body that fails at run time (alias \"message\" collides with the record variable)"
     },
     {
       "file": "20260922120945_fix_send_think_conflict_ambiguity.sql",
@@ -68,7 +68,7 @@
       "recorded_as": "20260922120945",
       "match": "same_version",
       "after_f2a2": "history_only",
-      "replay_hazard": null
+      "replay_hazard": "succeeds and changes the send_think unresolved-conflict errcode from P0001 back to 23505"
     },
     {
       "file": "20260922180436_left_for_you_v1.sql",

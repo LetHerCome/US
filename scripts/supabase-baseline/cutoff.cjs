@@ -23,7 +23,7 @@ const ALTERNATE_LEDGER_VERSION = {
 };
 
 // What replaying the file on top of production would do today (F2A replay
-// analysis + F2A.1 drift resolution). A file is only safe to keep executable
+// analysis + F2A.1 drift resolution from the captured definitions). A file is only safe to keep executable
 // if replaying it is impossible or a no-op.
 const REPLAY_HAZARDS = {
   20260831213000: 'succeeds and downgrades public.widget_send_think_internal to its 2026-08-31 body',
@@ -31,6 +31,8 @@ const REPLAY_HAZARDS = {
   20260924160000: 'mostly re-runnable; overwrites public.claim_left_for_you_cleanup (same logic, comments restored)',
   20261002181500: 'partly re-runnable; downgrades public.get_progression_v1 and public.equip_progression_reward',
   20261002181501: 'succeeds and downgrades public.equip_progression_reward (superseded by Rewards V2)',
+  20260922120726: 'succeeds and replaces public.set_think_reaction with a body that fails at run time (alias "message" collides with the record variable)',
+  20260922120945: 'succeeds and changes the send_think unresolved-conflict errcode from P0001 back to 23505',
   20260928210000: 'cannot apply: calendar_reminders_allday_offset_check uses a sub-query in CHECK (production uses calendar_reminder_offset_valid)',
   20260930105724: 're-grants functions that F1B revoked',
 };
