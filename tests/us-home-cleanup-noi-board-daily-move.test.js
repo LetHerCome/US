@@ -38,6 +38,7 @@ test('Noi Lavagna: it replaces the Calendar tile and reads the existing calendar
   assert.match(source, /sb\.from\('profiles'\)\.select\('id,display_name'\)/);
   assert.match(source, /window\.openCalendarSurface\?\.\(date\)/);
   assert.doesNotMatch(source, /localStorage|sessionStorage|indexedDB|\.insert\(|\.update\(|\.upsert\(|sb\.rpc\(/);
+  assert.match(calendar, /if \(\$\('bond'\)\?\.classList\.contains\('active'\)\) window\.refreshNoiWeekBoard\?\.\(\);/);
 });
 
 function dailyModel(state, reveal = null) {
