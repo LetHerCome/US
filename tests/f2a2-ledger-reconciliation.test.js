@@ -218,6 +218,6 @@ test('F2A.2 repair output: migration list is local = remote baseline, push dry-r
   const out = read(REPAIR_OUTPUT);
   const after = out.slice(out.lastIndexOf('migration list --linked'));
   assert.deepEqual(parseMigrationList(after.slice(0, after.indexOf('db push'))), [{ local: BASELINE_VERSION, remote: BASELINE_VERSION }]);
-  assert.match(out.slice(out.lastIndexOf('db push --dry-run')), /up to date/i);
+  assert.match(out.slice(out.lastIndexOf('db push --dry-run --linked')), /up to date/i);
   assert.match(out, /F2A\.2 ledger repair complete/);
 });
