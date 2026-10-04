@@ -1,7 +1,7 @@
 import webpush from "npm:web-push@3.6.7";
+import { vapidSubject } from "./web-push-vapid.mjs";
 
 const VAPID_PUBLIC_KEY = "BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss";
-const VAPID_SUBJECT = "https://usfinal.vercel.app";
 
 type ThinkPushArgs = {
   senderId: string;
@@ -23,7 +23,7 @@ export async function dispatchThinkWebPush(admin: any, args: ThinkPushArgs) {
 
   const { data: vapidPrivate, error: vapidError } = await admin.rpc("get_internal_vapid_private_key");
   if (vapidError || !vapidPrivate) throw new Error("push_configuration_unavailable");
-  webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, vapidPrivate as string);
+  webpush.setVapidDetails(vapidSubject(), VAPID_PUBLIC_KEY, vapidPrivate as string);
 
   const { error: dedupeError } = await admin.from("push_event_log").insert({
     dedupe_key: dedupeKey,
@@ -88,7 +88,7 @@ export async function dispatchThinkReactionWebPush(admin: any, args: ThinkReacti
 
   const { data: vapidPrivate, error: vapidError } = await admin.rpc("get_internal_vapid_private_key");
   if (vapidError || !vapidPrivate) throw new Error("push_configuration_unavailable");
-  webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, vapidPrivate as string);
+  webpush.setVapidDetails(vapidSubject(), VAPID_PUBLIC_KEY, vapidPrivate as string);
 
   const { error: dedupeError } = await admin.from("push_event_log").insert({
     dedupe_key: dedupeKey,

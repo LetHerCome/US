@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.112.4";
 import webpush from "npm:web-push@3.6.7";
+import { vapidSubject } from "../_shared/web-push-vapid.mjs";
 import { supabaseSecretKey } from "../_shared/supabase-secret.ts";
 import { dispatchGameSessionPush, dispatchGameWeeklyPush } from "../_shared/game-v2-push-core.mjs";
 
@@ -12,7 +13,6 @@ import { dispatchGameSessionPush, dispatchGameWeeklyPush } from "../_shared/game
 // (public.game_v2_push_for_session / game_v2_push_for_weekly).
 
 const VAPID_PUBLIC_KEY = "BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss";
-const VAPID_SUBJECT = "https://usfinal.vercel.app";
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization,x-client-info,apikey,content-type", "Access-Control-Allow-Methods": "POST,OPTIONS", "Content-Type": "application/json" };
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: cors });
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -40,7 +40,7 @@ Deno.serve(async (request) => {
       ensureVapid: async () => {
         const { data: vapidPrivate, error: vapidError } = await admin.rpc("get_internal_vapid_private_key");
         if (vapidError || !vapidPrivate) throw new Error("push_configuration_unavailable");
-        webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, vapidPrivate as string);
+        webpush.setVapidDetails(vapidSubject(), VAPID_PUBLIC_KEY, vapidPrivate as string);
       },
       sendNotification: (subscription: unknown, payload: string, options: unknown) => webpush.sendNotification(subscription as any, payload, options as any),
     };

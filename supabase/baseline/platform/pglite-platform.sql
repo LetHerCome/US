@@ -106,7 +106,9 @@ create table cron.job (
   jobid bigserial primary key, schedule text not null, command text not null,
   nodename text not null default 'localhost', nodeport integer not null default 5432,
   database text not null default 'postgres', username text not null default current_user,
-  active boolean not null default true, jobname text unique
+  active boolean not null default true, jobname text,
+  -- pg_cron 1.6 (production) keys jobs on (jobname, username).
+  constraint jobname_username_uniq unique (jobname, username)
 );
 create table cron.job_run_details (
   jobid bigint, runid bigserial primary key, job_pid integer, database text, username text, command text,
@@ -116,13 +118,24 @@ create function cron.schedule(job_name text, schedule text, command text) return
 declare id bigint;
 begin
   insert into cron.job (jobname, schedule, command) values (job_name, schedule, command)
-  on conflict (jobname) do update set schedule = excluded.schedule, command = excluded.command
+  on conflict on constraint jobname_username_uniq do update set schedule = excluded.schedule, command = excluded.command
   returning jobid into id;
   return id;
 end
 $$;
 create function cron.unschedule(job_name text) returns boolean language sql as $$
-  with d as (delete from cron.job where jobname = job_name returning 1) select exists (select 1 from d)
+  with d as (delete from cron.job where jobname = job_name and username = current_user returning 1) select exists (select 1 from d)
+$$;
+create function cron.alter_job(job_id bigint, schedule text default null, command text default null,
+  database text default null, username text default null, active boolean default null)
+returns void language plpgsql as $$
+begin
+  update cron.job j set schedule = coalesce(alter_job.schedule, j.schedule), command = coalesce(alter_job.command, j.command),
+    database = coalesce(alter_job.database, j.database), username = coalesce(alter_job.username, j.username),
+    active = coalesce(alter_job.active, j.active)
+  where j.jobid = job_id;
+  if not found then raise exception 'Could not find valid entry for job %', job_id; end if;
+end
 $$;
 
 -- pg_net ------------------------------------------------------------------

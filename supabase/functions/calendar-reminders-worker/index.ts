@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.112.4";
 import webpush from "npm:web-push@3.6.7";
+import { vapidSubject } from "../_shared/web-push-vapid.mjs";
 import { supabaseSecretKey } from "../_shared/supabase-secret.ts";
 
 // M6D — Calendar reminders worker.
@@ -14,7 +15,6 @@ import { supabaseSecretKey } from "../_shared/supabase-secret.ts";
 // arrivano la sera prima, gli altri all-day col 1 giorno prima pure).
 
 const VAPID_PUBLIC_KEY = "BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss";
-const VAPID_SUBJECT = "https://usfinal.vercel.app";
 // L'app vive in Italia: l'ora fissa all-day è decisa qui, non nello schema.
 const TIMEZONE = "Europe/Rome";
 const ALLDAY_REMINDER_HOUR = 18; // 18:00 locali del giorno precedente
@@ -151,6 +151,14 @@ Deno.serve(async (request) => {
       if (dueFor(entry, reminder.offset_minutes, nowMs)) dueRows.push({ reminder, entry });
     }
     if (!dueRows.length) return json({ ok: true, due: 0, delivered: 0, failed: 0 });
+
+    // F2C: identità VAPID configurata PRIMA di consumare qualsiasi chiave
+    // dedupe (come gli altri worker push). Senza, il push service rifiuta
+    // l'invio e il reminder andava perso al giro successivo (23505).
+    // Configurazione mancante → 500, nessuna chiave consumata, si ritenta.
+    const { data: vapidPrivate, error: vapidError } = await admin.rpc("get_internal_vapid_private_key");
+    if (vapidError || !vapidPrivate) throw new Error("push_configuration_unavailable");
+    webpush.setVapidDetails(vapidSubject(), VAPID_PUBLIC_KEY, vapidPrivate as string);
 
     // Dedupe a livello evento: push_event_log con chiave stabile
     // `calendar-reminder:<reminder_id>` — anche se il cron riparte, un

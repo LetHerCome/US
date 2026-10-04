@@ -6,9 +6,12 @@
   "baseline_version": "20261004000000",
   "baseline_file": "supabase/migrations/20261004000000_us_2_0_baseline.sql",
   "executable_migrations": [
-    "20261004000000_us_2_0_baseline.sql"
+    "20261004000000_us_2_0_baseline.sql",
+    "20261004110718_f2c_edge_cron_source_of_truth.sql"
   ],
-  "forward_migrations": [],
+  "forward_migrations": [
+    "20261004110718_f2c_edge_cron_source_of_truth.sql"
+  ],
   "counts": {
     "repo_files": 47,
     "repo_same_version": 37,

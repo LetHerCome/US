@@ -31,7 +31,14 @@ const prodFunctions = new Map(F2A.f2a_04_functions.map((f) => [f.f.slice(0, f.f.
 
 // ------------------------------------------------------------ monthiversary
 
-test('F2A.1 monthiversary-job: repo source is the deployed v4 bytes, unedited', () => {
+// F2C changed exactly one thing in the recovered source: the VAPID subject
+// comes from Edge configuration (supabase/functions/_shared/web-push-vapid.mjs).
+const f2cMonthiversaryEdit = (text) => text
+  .replace('const VAPID_SUBJECT="https://usfinal.vercel.app";\n', '')
+  .replace('import webpush from "npm:web-push@3.6.7";\n', 'import webpush from "npm:web-push@3.6.7";\nimport { vapidSubject } from "../_shared/web-push-vapid.mjs";\n')
+  .replace('webpush.setVapidDetails(VAPID_SUBJECT,', 'webpush.setVapidDetails(vapidSubject(),');
+
+test('F2A.1 monthiversary-job: repo source is the deployed v4 bytes plus only the F2C VAPID edit', () => {
   const deployed = F2A.monthiversary_job;
   assert.equal(deployed.slug, 'monthiversary-job');
   assert.equal(deployed.version, 4);
@@ -39,10 +46,13 @@ test('F2A.1 monthiversary-job: repo source is the deployed v4 bytes, unedited', 
   const names = deployed.files.map((f) => f.name).sort();
   assert.deepEqual(names, ['deno.json', 'index.ts']);
   for (const file of deployed.files) {
-    const local = fs.readFileSync(path.join(ROOT, 'supabase/functions/monthiversary-job', file.name));
-    assert.equal(local.toString('utf8'), file.content, `${file.name} differs from the deployed source`);
+    const local = fs.readFileSync(path.join(ROOT, 'supabase/functions/monthiversary-job', file.name)).toString('utf8');
+    const expected = file.name === 'index.ts' ? f2cMonthiversaryEdit(file.content) : file.content;
+    if (file.name === 'index.ts') assert.notEqual(expected, file.content, 'the F2C edit applies to the recovered bytes');
+    assert.equal(local, expected, `${file.name} differs from the deployed source beyond the F2C edit`);
   }
   const provenance = read('supabase/functions/monthiversary-job/PROVENANCE.md');
+  assert.match(provenance, new RegExp(sha256(deployed.files.find((f) => f.name === 'index.ts').content)), 'the recovered v4 hash stays recorded');
   assert.match(provenance, new RegExp(sha256(fs.readFileSync(path.join(ROOT, 'supabase/functions/monthiversary-job/index.ts')))));
   assert.match(provenance, new RegExp(sha256(fs.readFileSync(path.join(ROOT, 'supabase/functions/monthiversary-job/deno.json')))));
   assert.match(provenance, new RegExp(deployed.ezbr_sha256));
@@ -177,7 +187,9 @@ test('F2A.1 cutoff: MIGRATION_CUTOFF.json is current and accounts for every file
     ledger_rows: 83, ledger_pre_repo_base: 36, replay_hazards: Object.keys(REPLAY_HAZARDS).length,
   });
   assert.equal(cutoff.production_ledger_tip, '20261003200000');
-  assert.deepEqual(cutoff.forward_migrations, [], 'production already ran every repo migration');
+  // Production ran every pre-baseline migration; forward ones (F2C on) are
+  // all newer than the baseline and reach production only through review.
+  for (const file of cutoff.forward_migrations) assert.ok(file.slice(0, 14) > cutoff.baseline_version, `${file} is newer than the baseline`);
   for (const version of Object.keys(REPLAY_HAZARDS)) {
     const row = cutoff.repo.find((r) => r.version === version);
     assert.ok(row && row.after_f2a2 === 'history_only', `${version} must never be replayable`);
@@ -219,7 +231,10 @@ test('F2A.1 m6d: the committed m6d file cannot be replayed (sub-query CHECK), as
 
 test('F2A.1 secrets manifest: every vault name and Edge env name, names only', () => {
   const manifest = JSON.parse(read('supabase/SECRETS_MANIFEST.json'));
-  assert.deepEqual(manifest.vault.map((v) => v.name).sort(), [...F2A.f2a_13_vault_secret_names].sort());
+  // Production's vault names at F2A, plus names a later mission introduces
+  // (marked introduced_by, provisioned in that mission's rollout).
+  assert.deepEqual(manifest.vault.filter((v) => !v.introduced_by).map((v) => v.name).sort(), [...F2A.f2a_13_vault_secret_names].sort());
+  assert.deepEqual(manifest.vault.filter((v) => v.introduced_by).map((v) => v.name), ['us_project_url']);
   const envNames = new Set();
   const walk = (dir) => {
     for (const e of fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true })) {
@@ -252,7 +267,7 @@ test('F2A.1 secrets manifest: every vault name and Edge env name, names only', (
   }
   // Names and consumers only: no field that could carry a value, and nothing
   // shaped like a JWT, a Supabase key or a VAPID private key.
-  const allowed = new Set(['purpose', 'verified', 'vault', 'edge_env', 'name', 'created_by', 'read_by_sql', 'edge_consumers', 'store', 'pairs_with']);
+  const allowed = new Set(['purpose', 'verified', 'vault', 'edge_env', 'name', 'created_by', 'introduced_by', 'read_by_sql', 'edge_consumers', 'store', 'pairs_with']);
   const keys = (node) => (Array.isArray(node) ? node.flatMap(keys) : node && typeof node === 'object' ? Object.entries(node).flatMap(([k, v]) => [k, ...keys(v)]) : []);
   for (const key of keys(manifest)) assert.ok(allowed.has(key), `unexpected field ${key}`);
   const text = read('supabase/SECRETS_MANIFEST.json');

@@ -1,0 +1,77 @@
+{
+  "purpose": "US 2.0 F2C production rollout evidence. Names, versions, digests and statuses only: no secret value. The only value shown is the non-secret project URL.",
+  "project": "iiakdfsxpywdkxravqjh",
+  "rollout_head": "4eb1842af286ae0d2b8095223a63a91fe541535c",
+  "base": "2ace4fab934e3af5668b664d9b1123205de14a4c",
+  "executed_at_utc": "2026-10-04 14:15–14:22",
+  "hard_gate": {
+    "head": "4eb1842af286ae0d2b8095223a63a91fe541535c (equal to origin, clean tree)",
+    "linked_project": "iiakdfsxpywdkxravqjh"
+  },
+  "preflight": {
+    "migration_list": [{ "local": "20261004000000", "remote": "20261004000000" }, { "local": "20261004110718", "remote": "" }],
+    "dry_run": { "upToDate": false, "migrations": ["20261004110718_f2c_edge_cron_source_of_truth.sql"] },
+    "cron": "7 jobs, jobids 1-7, owner postgres, active, command md5 equal to the pre-F2C hashes in F2C_PRODUCTION_PREFLIGHT.json",
+    "vault_names": ["us_calendar_reminders_cron_key", "us_daily_question_push_cron_key", "us_game_v2_push_cron_key", "us_left_for_you_push_cron_key", "us_monthiversary_cron_key", "us_web_push_vapid_private"],
+    "edge_versions": { "monthiversary-job": 4, "calendar-reminders-worker": 1, "daily-question-push-worker": 1, "game-v2-push": 1, "game-v2-push-worker": 1, "left-for-you-push-worker": 1, "send-web-push": 8, "widget-think-send": 3 },
+    "edge_secret_VAPID_SUBJECT": "absent",
+    "result": "PASS: equal to the reviewed expectations"
+  },
+  "writes": [
+    { "step": 2, "what": "vault.create_secret us_project_url", "at": "2026-10-04 14:15:38 UTC", "verified": "exactly one row; decrypted value = https://iiakdfsxpywdkxravqjh.supabase.co" },
+    { "step": 3, "what": "supabase secrets set VAPID_SUBJECT", "at": "2026-10-04 14:15:51 UTC", "verified": "listed; digest = sha256('https://usfinal.vercel.app') = 13943e922524dd9b5ef957bf5318d300e2a579f2fe28e7e9dee9764251225eb8" },
+    { "step": 4, "what": "supabase functions deploy --use-api of the 8 reviewed functions, one at a time, from the rollout head (no --prune)", "at": "2026-10-04 14:16:23–14:17:39 UTC" },
+    { "step": 5, "what": "supabase db push --linked: applied 20261004110718_f2c_edge_cron_source_of_truth.sql only; the migration guard passed", "at": "2026-10-04 14:18 UTC (after the 14:18:00 cron tick; first run with an F2C command 14:19:00)" }
+  ],
+  "edge_after": [
+    { "slug": "calendar-reminders-worker", "version_before": 1, "version": 3, "status": "ACTIVE", "verify_jwt": false, "ezbr_sha256": "9709ba7fccef474a3ef51a4a32821684e7b9deaeae60318f0ab186766aa46bd8" },
+    { "slug": "monthiversary-job", "version_before": 4, "version": 6, "status": "ACTIVE", "verify_jwt": false, "ezbr_sha256": "5876c02062a2044edc3aa8914da64e6e3f1253641866440b855603884ebd8d5f" },
+    { "slug": "daily-question-push-worker", "version_before": 1, "version": 3, "status": "ACTIVE", "verify_jwt": false, "ezbr_sha256": "7f4dbc9a6dfbe8da560380ab01b7d1b28e69a36777c7b4a7a31bbcc59a0ef035" },
+    { "slug": "left-for-you-push-worker", "version_before": 1, "version": 3, "status": "ACTIVE", "verify_jwt": false, "ezbr_sha256": "140526ea6539cdee1fe92872e6565bf5dd37580c30036ffa70756d03ab7fab22" },
+    { "slug": "game-v2-push-worker", "version_before": 1, "version": 3, "status": "ACTIVE", "verify_jwt": false, "ezbr_sha256": "57196e336f9e7e64d8480c2b625234109e5d24848ef4375a447d8639a89f9dc1" },
+    { "slug": "game-v2-push", "version_before": 1, "version": 3, "status": "ACTIVE", "verify_jwt": true, "ezbr_sha256": "28f2c26a64e9b5d658a9017ebbc50a9777b1f235be7a815977296174c3d0434d" },
+    { "slug": "send-web-push", "version_before": 8, "version": 10, "status": "ACTIVE", "verify_jwt": true, "ezbr_sha256": "6d3a2e2c40ef32875f046d5e385a0697935ac81f5d19883e4cc0d3abe6686d95" },
+    { "slug": "widget-think-send", "version_before": 3, "version": 5, "status": "ACTIVE", "verify_jwt": false, "ezbr_sha256": "75e5e54612f0d17d3df0f60a0492b500a0f66f05bedc44953c9222dad12ea71a" }
+  ],
+  "edge_not_deployed": [
+    { "slug": "delete-moment", "version_before": 2, "version": 3, "ezbr_sha256_unchanged": true, "updated_at_unchanged": true },
+    { "slug": "spotify-search", "version_before": 1, "version": 2, "ezbr_sha256_unchanged": true, "updated_at_unchanged": true },
+    { "slug": "us-widget-state", "version_before": 4, "version": 5, "ezbr_sha256_unchanged": true, "updated_at_unchanged": true },
+    { "slug": "widget-device-token", "version_before": 3, "version": 4, "ezbr_sha256_unchanged": true, "updated_at_unchanged": true },
+    { "slug": "widget-scriptable-setup", "version_before": 1, "version": 2, "ezbr_sha256_unchanged": true, "updated_at_unchanged": true }
+  ],
+  "edge_version_note": "Every function's version moved by one at step 3 (secrets set gives each function a new version for the environment change; bundle and updated_at unchanged), so each deployed function moved by two. No function outside the reviewed eight was deployed.",
+  "cron_after": [
+    { "jobid": 1, "jobname": "us-monthiversary-hourly", "schedule": "5 * * * *", "username": "postgres", "active": true, "command_md5": "b2920d6da6807bf0baa3ad51340c80ce" },
+    { "jobid": 2, "jobname": "us-widget-scriptable-state-expiry", "schedule": "* * * * *", "username": "postgres", "active": true, "command_md5": "4352b18b72d70db23cd378e7aa3601ec" },
+    { "jobid": 3, "jobname": "us-calendar-reminders-dispatch", "schedule": "* * * * *", "username": "postgres", "active": true, "command_md5": "37200156b93c39e535624b94d1edbc28" },
+    { "jobid": 4, "jobname": "us-left-for-you-push-sweep", "schedule": "* * * * *", "username": "postgres", "active": true, "command_md5": "28476a2ea4706f63129805b69d6453e0" },
+    { "jobid": 5, "jobname": "us-daily-question-materialize", "schedule": "1 * * * *", "username": "postgres", "active": true, "command_md5": "e277a76b9c1b07691fda007fc25461d8" },
+    { "jobid": 6, "jobname": "us-daily-question-push", "schedule": "*/10 * * * *", "username": "postgres", "active": true, "command_md5": "821f9e44350d47cf57019bd666557b9d" },
+    { "jobid": 7, "jobname": "us-game-v2-push", "schedule": "*/10 * * * *", "username": "postgres", "active": true, "command_md5": "9f40b6b65cf0cf1b77ad7da198f8fe0a" }
+  ],
+  "cron_checks": { "total_jobs": 7, "one_row_per_name": true, "hardcoded_supabase_co_url": false, "all_md5_equal_expected": true },
+  "configuration_after": {
+    "vault_names": ["us_calendar_reminders_cron_key", "us_daily_question_push_cron_key", "us_game_v2_push_cron_key", "us_left_for_you_push_cron_key", "us_monthiversary_cron_key", "us_project_url", "us_web_push_vapid_private"],
+    "edge_secret_names": ["SPOTIFY_CLIENT_ID", "SPOTIFY_CLIENT_SECRET", "SUPABASE_ANON_KEY", "SUPABASE_DB_URL", "SUPABASE_JWKS", "SUPABASE_PUBLISHABLE_KEYS", "SUPABASE_SECRET_KEYS", "SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_URL", "VAPID_SUBJECT"]
+  },
+  "smoke": {
+    "window": "2026-10-04 14:18:00–14:21:34 UTC",
+    "cron_runs": { "us-calendar-reminders-dispatch": "4 succeeded", "us-left-for-you-push-sweep": "4 succeeded", "us-widget-scriptable-state-expiry": "4 succeeded", "us-daily-question-push": "1 succeeded (14:20)", "us-game-v2-push": "1 succeeded (14:20)", "failed": 0 },
+    "runs_with_f2c_command": "8 succeeded (the 14:18:00 ticks still ran the previous commands; the push landed just after)",
+    "pg_net": "only HTTP 200, no error_msg, no push_configuration_unavailable in any body",
+    "worker_bodies": [
+      "{\"ok\":true,\"due\":0,\"delivered\":0,\"failed\":0}",
+      "{\"ok\":true,\"pending\":0,\"delivered\":0}",
+      "{\"ok\":true,\"day\":\"2026-10-04\",\"reason\":null,\"delivered\":0,\"outcomes\":{\"deduplicated\":1,\"already-answered\":1}}",
+      "{\"ok\":true,\"reason\":null,\"delivered\":0,\"outcomes\":{\"game_weekly_turn:deduplicated\":1}}"
+    ],
+    "no_cron_key": { "calendar-reminders-worker": 401, "monthiversary-job": 401 },
+    "edge_logs": "not read: the CLI has no function-log command. The pg_net response bodies above are the evidence; push_configuration_unavailable would surface there as a 500.",
+    "not_exercised": "No real Web Push was sent in the window (every worker was idle or deduplicated), so the VAPID path ran in tests only. No reminder or application data was created for testing."
+  },
+  "final_gate": {
+    "migration_list": [{ "local": "20261004000000", "remote": "20261004000000" }, { "local": "20261004110718", "remote": "20261004110718" }],
+    "dry_run": { "upToDate": true, "dryRun": true, "migrations": [], "message": "Remote database is up to date." }
+  }
+}

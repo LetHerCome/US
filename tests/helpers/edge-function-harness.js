@@ -44,7 +44,7 @@ async function bundle(entry) {
 // builder surface the Edge Functions use.
 function createFakeAdmin({ tables = {}, users = {}, rpc = {}, errors = {} } = {}) {
   const db = Object.fromEntries(Object.entries(tables).map(([name, rows]) => [name, rows.map((row) => ({ ...row }))]));
-  const log = { reads: [], inserts: [], deletes: [], rpc: [] };
+  const log = { reads: [], inserts: [], updates: [], deletes: [], rpc: [] };
   const admin = {
     db,
     log,
@@ -76,6 +76,12 @@ function createFakeAdmin({ tables = {}, users = {}, rpc = {}, errors = {} } = {}
           log.inserts.push({ table, row: { ...payload } });
           return { data: null, error: null };
         }
+        if (mode === 'update') {
+          const touched = rows();
+          for (const row of touched) Object.assign(row, payload);
+          log.updates.push({ table, rows: touched.map((row) => ({ ...row })), values: { ...payload } });
+          return { data: null, error: null };
+        }
         if (mode === 'delete') {
           const doomed = rows();
           db[table] = db[table].filter((row) => !doomed.includes(row));
@@ -96,6 +102,7 @@ function createFakeAdmin({ tables = {}, users = {}, rpc = {}, errors = {} } = {}
         order() { return builder; },
         limit() { return builder; },
         insert(value) { mode = 'insert'; payload = value; return builder; },
+        update(value) { mode = 'update'; payload = value; return builder; },
         delete() { mode = 'delete'; return builder; },
         async maybeSingle() {
           const result = run();
@@ -110,13 +117,16 @@ function createFakeAdmin({ tables = {}, users = {}, rpc = {}, errors = {} } = {}
   return admin;
 }
 
-function createFakeWebPush({ failures = {} } = {}) {
+// requireVapid: like a real push service, reject a send that was never signed
+// (subscriptions carry an applicationServerKey, so VAPID is mandatory; F2C).
+function createFakeWebPush({ failures = {}, requireVapid = false } = {}) {
   const sent = [];
   return {
     sent,
     vapid: [],
     setVapidDetails(...args) { this.vapid.push(args); },
     async sendNotification(subscription, payload, options) {
+      if (requireVapid && !this.vapid.length) { const error = new Error('push service rejected an unsigned request'); error.statusCode = 403; throw error; }
       const status = failures[subscription.endpoint];
       if (status) { const error = new Error('push failed'); error.statusCode = status; throw error; }
       sent.push({ endpoint: subscription.endpoint, payload: JSON.parse(payload), options });
@@ -138,7 +148,7 @@ async function loadEdgeFunction(name, { admin, webpush, env = {} } = {}) {
     createClient: (...args) => { createClientCalls.push(args); return admin; },
     webpush,
   };
-  const environment = { SUPABASE_URL: 'https://example.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'service-role-test', ...env };
+  const environment = { SUPABASE_URL: 'https://example.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'service-role-test', VAPID_SUBJECT: 'mailto:push-test@example.invalid', ...env };
   globalThis.Deno = { env: { get: (key) => environment[key] }, serve: (fn) => { handler = fn; } };
   try {
     new Function(code)();

@@ -1,8 +1,8 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 import webpush from "npm:web-push@3.6.7";
+import { vapidSubject } from "../_shared/web-push-vapid.mjs";
 const VAPID_PUBLIC_KEY="BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss";
-const VAPID_SUBJECT="https://usfinal.vercel.app";
 function secretKey(){const modern=Deno.env.get("SUPABASE_SECRET_KEYS");if(modern){try{const p=JSON.parse(modern);if(p?.default)return p.default;const first=Object.values(p||{})[0];if(typeof first==="string")return first;}catch(_){}}return Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";}
 function romeParts(){const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Rome",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",hourCycle:"h23"}).formatToParts(new Date());const get=(t:string)=>Number(parts.find(p=>p.type===t)?.value||0);return{year:get("year"),month:get("month"),day:get("day"),hour:get("hour")};}
 function iso(y:number,m:number,d:number){return `${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;}
@@ -15,7 +15,7 @@ Deno.serve(async(req:Request)=>{
     if(keyError||!expected||supplied!==expected)return new Response("Unauthorized",{status:401});
     const now=romeParts();if(now.hour!==9)return Response.json({skipped:true,reason:"outside-local-hour"});const today=iso(now.year,now.month,now.day);
     const {data:couples,error:couplesError}=await admin.from("couples").select("id,started_on");if(couplesError)throw couplesError;
-    const {data:vapidPrivate,error:vapidError}=await admin.rpc("get_internal_vapid_private_key");if(vapidError||!vapidPrivate)throw new Error("VAPID unavailable");webpush.setVapidDetails(VAPID_SUBJECT,VAPID_PUBLIC_KEY,vapidPrivate as string);
+    const {data:vapidPrivate,error:vapidError}=await admin.rpc("get_internal_vapid_private_key");if(vapidError||!vapidPrivate)throw new Error("VAPID unavailable");webpush.setVapidDetails(vapidSubject(),VAPID_PUBLIC_KEY,vapidPrivate as string);
     let awarded=0,delivered=0;
     for(const couple of couples||[]){
       const [sy,sm,sd]=String(couple.started_on||"").split("-").map(Number);if(!sy||!sm||!sd||sd!==now.day)continue;
