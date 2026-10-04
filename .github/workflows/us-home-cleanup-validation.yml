@@ -44,7 +44,18 @@ jobs:
         run: npm test
       - name: Cloudflare Pages build
         run: npm run build:cloudflare-pages
-      - name: Capacitor web build
-        run: npm run build:capacitor-web
       - name: Diff check
         run: git diff --check "${{ github.event.pull_request.base.sha }}..HEAD"
+
+  capacitor_windows:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Capacitor web build
+        run: npm run build:capacitor-web
