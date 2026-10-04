@@ -78,7 +78,7 @@ function latestRepoBody(qualified) {
   const [schema, fn] = qualified.split('.');
   const dir = path.join(ROOT, 'supabase/migrations_history');
   let body = null;
-  for (const file of fs.readdirSync(dir).sort()) {
+  for (const file of fs.readdirSync(dir).filter((f) => f.endsWith('.sql')).sort()) {
     // Git stores migration sources with LF; Windows checkout may materialize CRLF.
     // Normalize here so drift decisions compare the canonical repository bytes,
     // not the platform-specific working-tree representation.
