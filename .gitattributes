@@ -6,5 +6,5 @@ docs/us-2.0/F2A_1_PRODUCTION_CAPTURE_*.json -text
 # F2A.2: the baseline migration carries the same production bytes, and the
 # archived migrations and ledger history are kept exactly as they were.
 supabase/migrations/20261004000000_us_2_0_baseline.sql -text whitespace=cr-at-eol
-supabase/migrations_history/** -text
+supabase/migrations_history/** -text whitespace=cr-at-eol
 docs/us-2.0/F2A_2_*.json -text

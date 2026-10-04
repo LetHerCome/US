@@ -58,7 +58,8 @@ function ledgerHistoryFiles(exported) {
       ...(r.statements || []).map((st) => `${st.replace(/\s+$/, '')};\n`),
     ].join('\n');
   }
-  const index = rows.map(({ statements, ...rest }) => rest);
+  // other_columns minus `bucket`, which is the export pack's own paging column.
+  const index = rows.map(({ statements, other_columns: { bucket, ...other } = {}, ...rest }) => ({ ...rest, other_columns: other }));
   files['LEDGER.json'] = `${JSON.stringify(index, null, 2)}\n`;
   return { rows, files };
 }

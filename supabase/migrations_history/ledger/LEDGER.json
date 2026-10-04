@@ -1,0 +1,1081 @@
+[
+  {
+    "n": "init_us_sync_schema",
+    "v": "20260818181916",
+    "len": 9215,
+    "md5": "165f048a780836692989c55122c77c84",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "add_private_pairing_and_seed",
+    "v": "20260818181951",
+    "len": 3167,
+    "md5": "88729e86176a7a295d106938543bdc09",
+    "stmts": 1,
+    "redacted": 2,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "anonymous_private_pairing_v2",
+    "v": "20260818190722",
+    "len": 9442,
+    "md5": "36c2be8c20eb446dcedf2d05cd816a31",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "remove_legacy_pairing_rpc",
+    "v": "20260818190733",
+    "len": 102,
+    "md5": "37da087d354783b40c38372020f732e3",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "protect_pairing_role_transfer",
+    "v": "20260818190758",
+    "len": 3173,
+    "md5": "ec26686df5e56f3bec35fa10bb674f1b",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "prevent_direct_pairing_table_reads",
+    "v": "20260818190816",
+    "len": 754,
+    "md5": "2e479f04cc592d9b1db63fa72c5437f5",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "lock_private_helper_schema",
+    "v": "20260818191114",
+    "len": 237,
+    "md5": "2f15fc3048463e6d587327e4e219fe28",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "fix_claim_us_role_digest_schema",
+    "v": "20260818192540",
+    "len": 2980,
+    "md5": "e9db0c9d39824ec9dcfe38e673fc08f0",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "real_quiz_sync_and_private_results",
+    "v": "20260818205935",
+    "len": 9666,
+    "md5": "31c1d418ba03adc44058092b30dff043",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "normalize_quiz_questions_for_shared_comparison",
+    "v": "20260818210022",
+    "len": 1694,
+    "md5": "abd091a4bd94065a212b715a2ea903b0",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "seed_daily_questions_aug_sep_2026",
+    "v": "20260818210158",
+    "len": 2730,
+    "md5": "4e0dac5edb4a7429f6e6512ba2f6db4d",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "clean_quiz_wording_for_both_partners",
+    "v": "20260818213545",
+    "len": 1212,
+    "md5": "d7ff509e3b602c5c63a1c50535b4704d",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "add_profile_avatar_path",
+    "v": "20260818235522",
+    "len": 70,
+    "md5": "cc12dfdb39a4a1827fd50134af43f671",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "add_shared_home_photo",
+    "v": "20260819001505",
+    "len": 301,
+    "md5": "08eb37b33e1ec063dd9d468dc20f0b98",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "add_couple_locations",
+    "v": "20260819002337",
+    "len": 1713,
+    "md5": "27b9d1f492cbe5b0a6757b34a6b9eba9",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "add_device_push_tokens",
+    "v": "20260819191457",
+    "len": 2145,
+    "md5": "477c464fbada062d0478ca9fa82d7857",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "weekly_quiz_rotation_and_bond_xp",
+    "v": "20260819232627",
+    "len": 7410,
+    "md5": "628da54017e750473f54220bd352e2ae",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "web_push_foundation",
+    "v": "20260820003327",
+    "len": 4158,
+    "md5": "f0075d26167a7337a088944ff1b1c37c",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "web_push_vapid_vault_access",
+    "v": "20260820003406",
+    "len": 827,
+    "md5": "328719632adf3b661ed9bee9fbf55d28",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "web_push_rpc_permissions_fix",
+    "v": "20260820003821",
+    "len": 519,
+    "md5": "6e0616b6370823c5f81f446e30556635",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "add_shared_events_and_widget_tokens",
+    "v": "20260820120335",
+    "len": 3073,
+    "md5": "692c99a26b92bc80e76d095348acf5a9",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "widget_tokens_service_only_public",
+    "v": "20260820120559",
+    "len": 263,
+    "md5": "febcbc31b8e260a445c5d6729327c942",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "add_moment_album_photos",
+    "v": "20260820160643",
+    "len": 2345,
+    "md5": "e9eddad94031731926b81012bc08c423",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "performance1_enable_targeted_realtime",
+    "v": "20260820163727",
+    "len": 427,
+    "md5": "b565bc88065b2630d91aad41c1e263fb",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "us_event_rewards_and_milestones",
+    "v": "20260820181414",
+    "len": 4797,
+    "md5": "f44bd27e37f9a622d2667f9ceaaf59bc",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "us_quiz_modes_engine",
+    "v": "20260820181437",
+    "len": 6228,
+    "md5": "f9713c2c92402335d2408eb453ef2403",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "us_partner_knowledge_engine",
+    "v": "20260820181506",
+    "len": 7558,
+    "md5": "0d7c51779652fbec30017cfdf5c1bc66",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "seed_never_have_i_games",
+    "v": "20260820181601",
+    "len": 15555,
+    "md5": "15130fa014d3071ed12f585d0f00bb27",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "seed_agree_disagree_games",
+    "v": "20260820181658",
+    "len": 9240,
+    "md5": "6b57c1747ec2615600c57af56be15619",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "seed_would_you_rather_games",
+    "v": "20260820181724",
+    "len": 5131,
+    "md5": "b1bab30875c5507d990e5361e1e6bfeb",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "us_monthiversary_scheduler",
+    "v": "20260820181734",
+    "len": 1525,
+    "md5": "a0c684bede67648aeabdf0a16041d75c",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "us_monthiversary_award_rpc",
+    "v": "20260820181751",
+    "len": 1347,
+    "md5": "ff9c1643cffba1f5a244ee76d1f4e3dc",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "settings2_notification_preferences",
+    "v": "20260820193608",
+    "len": 3383,
+    "md5": "02b9edb7172f89cf088c99a9308610dd",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "harden_private_repair_profile_migration",
+    "v": "20260821121754",
+    "len": 4440,
+    "md5": "e40355cacf55031137c5ecc5e5a6c984",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "fix_repair_claim_us_role_order",
+    "v": "20260821122729",
+    "len": 5079,
+    "md5": "1060f46f72e5faa72837d00a44727389",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "fix_role_repair_atomic_profile_bridge",
+    "v": "20260821123104",
+    "len": 5495,
+    "md5": "f6c012a8c736fd2c0a50a1ba7dd8c845",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "widget_think_silent_send",
+    "v": "20260831212415",
+    "len": 4449,
+    "md5": "8067f2c523c51e80dbc852b46edc381c",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "fix_widget_think_couple_id_ambiguity",
+    "v": "20260831213824",
+    "len": 2886,
+    "md5": "8f2c1bfd103d0553db9910fd24ee766f",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "20260901160000_daily_question_outcomes.sql",
+    "v": "20260901192817",
+    "len": 7773,
+    "md5": "9a349f11f4aa97a8a6b2be10b2da1a19",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "20260902120000_daily_question_reveal_authority.sql",
+    "v": "20260902101619",
+    "len": 816,
+    "md5": "5778cee406ed2be0eae96852f658a49c",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "20260902140000_think_reactions.sql",
+    "v": "20260902114732",
+    "len": 4071,
+    "md5": "659e5b6e92f43aafd265efa1c330d670",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "think_send_idempotency_final_reaction",
+    "v": "20260922120726",
+    "len": 8699,
+    "md5": "4638ca523e1c1c0813ae0eaf41b9aea5",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "fix_send_think_conflict_ambiguity",
+    "v": "20260922120945",
+    "len": 2363,
+    "md5": "1bffc334eea01511ebd021f8874af4ef",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "left_for_you_v1",
+    "v": "20260922180436",
+    "len": 3667,
+    "md5": "c4fb56ebfcfab160d2fb4fb6754c5100",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "fix_left_for_you_partner_scope_and_grants",
+    "v": "20260922182210",
+    "len": 2512,
+    "md5": "5dba9ef028d4ca49fdfeba83fd83669a",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "enforce_left_for_you_insert_unseen",
+    "v": "20260923100236",
+    "len": 710,
+    "md5": "0c8b5c6e7b3e93a0b2f2c0569f731905",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m5c_left_for_you_rich_media",
+    "v": "20260923110119",
+    "len": 1962,
+    "md5": "c0c458ea29a44c21f3a481fdbaeca28d",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m5d_conserva_contribution",
+    "v": "20260923112331",
+    "len": 6072,
+    "md5": "98064cb2ccfc45d36fbd964f36883ef0",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "harden_conserva_contribution_grants",
+    "v": "20260923112428",
+    "len": 155,
+    "md5": "88fab7573a20fe594a12accf27f2cc13",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m5g2_video_upload_limit_40mb",
+    "v": "20260923200535",
+    "len": 76,
+    "md5": "8a4a42610342cf037c02100fd102396c",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m5g3_left_for_you_notification_preference",
+    "v": "20260924072631",
+    "len": 2640,
+    "md5": "4c66f93a64215bc9041c818d7a76641f",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "widget_scriptable_setup",
+    "v": "20260925143951",
+    "len": 9995,
+    "md5": "5b5a905324f3b4dbfbb06a4a5c493df1",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m5i_ephemeral_left_for_you",
+    "v": "20260928050608",
+    "len": 10738,
+    "md5": "996bfb32eb362f06adb2e7e009cf21f9",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m6a_shared_calendar_domain",
+    "v": "20260928071627",
+    "len": 9923,
+    "md5": "eabe72ece6b77ac015af25e9d58890b1",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m6a_claim_us_role_calendar_entries_transfer",
+    "v": "20260928071749",
+    "len": 8088,
+    "md5": "36ca381559697af03cc677d4eaee6a30",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m6d_calendar_reminders",
+    "v": "20260928210000",
+    "len": 9304,
+    "md5": "537dd245066dc732c6946940f1f1ad09",
+    "stmts": 23,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": null,
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m7a_da_vivere_bucket_items_domain",
+    "v": "20260929121350",
+    "len": 16281,
+    "md5": "823eb26dfcdd6fd333505e464462ecb0",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m7a_claim_us_role_bucket_items_transfer",
+    "v": "20260929121430",
+    "len": 8423,
+    "md5": "6ea8424585cdfb4e0d63900fbe7dd550",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m7c_da_vivere_calendar_unschedule",
+    "v": "20260929190126",
+    "len": 4852,
+    "md5": "9c607ab17f912969368872f78fdcca03",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m7d_da_vivere_reciprocal_lived",
+    "v": "20260929190145",
+    "len": 11503,
+    "md5": "77737bdf3bcd2c08595260d3122335c7",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m9a_left_for_you_push_reliability",
+    "v": "20260929201958",
+    "len": 3433,
+    "md5": "25ba6dcf9dffb85479b0dcae66652942",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m9e_daily_question_engine",
+    "v": "20260930045233",
+    "len": 28919,
+    "md5": "4db2837df340eca864a015f32536611c",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m10c_daily_question_push",
+    "v": "20260930061045",
+    "len": 3455,
+    "md5": "fd0f61ff98f374c1f80ac56946b48a2e",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m10_2_daily_reveal_states",
+    "v": "20260930080452",
+    "len": 9780,
+    "md5": "7b90338129b238b5f75dd7c2ca0c81e9",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m11a_game_sessions_custom_questions",
+    "v": "20260930105724",
+    "len": 25193,
+    "md5": "b48fa11ab40b5e955e41237992656d77",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m11a_1_game_rpc_readonly_actor",
+    "v": "20260930121312",
+    "len": 13515,
+    "md5": "3ee33980e7ba10a9fb8d360e9e4eaece",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m11b_game_v2_core",
+    "v": "20260930153745",
+    "len": 64052,
+    "md5": "e28396b06a3e65d4fe0851377ec11e2b",
+    "stmts": 1,
+    "redacted": 12,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m11c_game_v2_context",
+    "v": "20260930153749",
+    "len": 36494,
+    "md5": "d3396dcc8f6f213e96d5544e80fac09a",
+    "stmts": 1,
+    "redacted": 2,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m11d_game_v2_push",
+    "v": "20260930153755",
+    "len": 13148,
+    "md5": "0b0659c8eab59ab35da123e5559932de",
+    "stmts": 1,
+    "redacted": 4,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m11f_game_v2_weekly_rhythm",
+    "v": "20260930172615",
+    "len": 15388,
+    "md5": "904870cbfa63615eae1bade41346e985",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m12b_2_da_vivere_archived_link_release",
+    "v": "20260930225935",
+    "len": 1198,
+    "md5": "ca827a62c5c3e288528a198d1923201b",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m12b_3_living_provenance",
+    "v": "20260930233501",
+    "len": 17624,
+    "md5": "9b35bb503164f7a18812db5ec52e2d74",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m12b_3_game_v2_living_origin",
+    "v": "20260930233503",
+    "len": 3525,
+    "md5": "9bde1bcca575f0d795e1c4a664d52bc4",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m12b_3_event_completion_history",
+    "v": "20260930233506",
+    "len": 3441,
+    "md5": "12f977ded90a6046e7db8e192bc5a7b0",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m12b_4_daily_question_keepsakes",
+    "v": "20261001093123",
+    "len": 12571,
+    "md5": "624df3aa52407bcdbe33ba460f76e87b",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "m12d_quest_server_authority",
+    "v": "20261001144011",
+    "len": 14255,
+    "md5": "38cd6b61c3a5337c93eb8593ee86fd3b",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "us_progression_v1",
+    "v": "20261002171243",
+    "len": 27714,
+    "md5": "ee8099806db5bfc8dedc7722db4135dd",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "progression_reward_toggle_unequip",
+    "v": "20261002171949",
+    "len": 2549,
+    "md5": "5e21f792cbf1e80517e07985289f5967",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "swipe_v1",
+    "v": "20261002181136",
+    "len": 11403,
+    "md5": "b91200e627774ed0ae5fe025ea9b1366",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": "montifrancesco22@gmail.com",
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "progression_rewards_v2",
+    "v": "20261003090000",
+    "len": 14867,
+    "md5": "8ae1225b314ead99c9ef7c41b1741e27",
+    "stmts": 1,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": null,
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "f1a_revoke_claim_us_role",
+    "v": "20261003160000",
+    "len": 1746,
+    "md5": "11da93c51f35ee66422bae3dcd1d2c01",
+    "stmts": 3,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": null,
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "f1b_rpc_grant_hardening",
+    "v": "20261003180000",
+    "len": 6663,
+    "md5": "c7c3d0ce66372f0aaafb41350e918441",
+    "stmts": 29,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": null,
+      "idempotency_key": null
+    }
+  },
+  {
+    "n": "f1c_authority_write_boundaries",
+    "v": "20261003200000",
+    "len": 4274,
+    "md5": "f8dda5f5d8432dd03eb7262a6648ff5b",
+    "stmts": 7,
+    "redacted": 0,
+    "other_columns": {
+      "rollback": null,
+      "created_by": null,
+      "idempotency_key": null
+    }
+  }
+]
