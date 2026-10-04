@@ -23,7 +23,7 @@ from (
   group by j.jobid,j.jobname,j.schedule,j.active,j.username
 ) x;
 
--- r03. Retention preview; counts only.
+-- r03. Retention preview plus persistent push-ledger monitoring.
 select jsonb_build_object(
   'cron_success_14d', (select count(*) from cron.job_run_details where status='succeeded' and end_time < now()-interval '14 days'),
   'cron_failure_30d', (select count(*) from cron.job_run_details where status<>'succeeded' and end_time < now()-interval '30 days'),
