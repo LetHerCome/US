@@ -4,7 +4,8 @@
 **Branch:** `mission/us-2-0-security-rls-hardening-t4fvlh` · **Base:** `main` `489fe711457439af39ba09a6db608a3f5560f0f6` (F2A.1 + F2A.2 + F2C merged)
 **Production changes:** NONE (no write, no deploy, no `db push`, no auth config change)
 **Candidate migration:** `supabase/migrations/20261004150000_sec_rls_hardening.sql`
-**Tests:** `tests/sec-rls-hardening.test.js` (17 tests)
+**Tests:** `tests/sec-rls-hardening.test.js` (18 tests, all passing against the committed production run)
+**Production evidence:** `docs/us-2.0/SEC_RLS_AUDIT_PRODUCTION.json` (pack s01–s11, read-only, 2026-10-04) and `docs/us-2.0/SEC_RLS_AUDIT_ADVISORS.json` (security advisors, 2026-10-04 15:28 UTC), both run by Francesco
 **Production pack:** `docs/us-2.0/SEC_RLS_AUDIT_READONLY.sql` (11 read-only blocks, s01–s11)
 
 ---
@@ -19,7 +20,7 @@ This cloud session has no production access (egress proxy 403, no connector, no 
 
 On that rebuild, the pack `SEC_RLS_AUDIT_READONLY.sql` (the same SQL Francesco will run on production) produced the inventory, and the tests seed two couples (C1 = Francesco + Beatrice, C2 = a foreign couple), an email user without profile and `anon`, then try every access path as each of them. Each finding below says whether it is **proven** (test reproduces it), **code-read** (Edge source, cannot run Deno here) or **catalog** (pure catalog fact).
 
-The only thing still open is the fresh production run of the pack + the Supabase security advisors (§8).
+Francesco then ran the pack on production (`iiakdfsxpywdkxravqjh`, one block at a time, read-only) and the security advisors. Test 17 compares that run with the rebuild and test 18 maps every advisor finding to this classification (§4, §8).
 
 ---
 
@@ -64,7 +65,8 @@ Severity is for this deployment (one real couple, signup and anonymous sign-in d
 | SEC-12 | Low | intentionally broad (Edge) | `delete-moment` lets either partner delete a shared Moment (intended, matches the UI) and then removes the `storage_path` values the creator wrote at insert, with the service key. A partner could thus remove the other partner's own object in the couple folder (e.g. a Left for You file), which `us_media_delete_own` would refuse. Cross-couple is blocked by the `<couple>/` prefix filter. | code-read | ACCEPT (inside the couple). Later: restrict removal to `moments`/album files, or add a folder CHECK like SEC-01. |
 | SEC-13 | Info | intentionally broad | `register_web_push_subscription` upserts on `endpoint` and moves the row to the caller. Needs the secret endpoint URL of the other device; meant for device hand-over. | code-read | ACCEPT. |
 | SEC-14 | Info | oracle | FK errors and `bucket_items_guard_calendar_link` distinguish "not found" from "other couple" for guessed UUIDs. | catalog | ACCEPT. |
-| SEC-15 | Info | safe | `profiles.avatar_path` is client-writable without folder check, but nothing signs it with the service key (clients sign with their own RLS). | code-read | ACCEPT (add the SEC-01 shape check if a server-side signer appears). |
+| SEC-15 | Info | safe | `profiles.avatar_path` is client-writable without folder check, but nothing signs it with the service key (clients sign with their own RLS). Production: 0 avatar paths outside their couple folder. | code-read + production s10 | ACCEPT (add the SEC-01 shape check if a server-side signer appears). |
+| SEC-16 | Low | auth config | Advisor `auth_leaked_password_protection` (WARN): Supabase Auth does not check new passwords against HaveIBeenPwned. The check only runs when a password is **set** (sign-up, password change or reset). In US none of these exists: signup is disabled (F1A, `config.toml`), the client has no `signUp` / `updateUser` / `resetPasswordForEmail` call, and the two real accounts already have passwords, which the setting would never re-check. Enabling it is an Auth configuration change, which this mission must not make. F1A already listed it as deferred. | advisor + code (test 18) | ACCEPT. Enable it in the same step that adds any password-setting flow, or as a standalone Auth setting (Dashboard > Authentication, password security; it may depend on the plan). Zero app impact either way. |
 
 Everything not listed was classified **safe**. Summary of §3.1–§3.4:
 
@@ -87,15 +89,27 @@ Every authenticated-callable definer RPC derives the couple from `auth.uid()` (`
 
 ## 4. Production vs repo drift
 
-| Area | Repo (supabase/migrations) | Production | Drift |
-|---|---|---|---|
-| Tables, RLS flags, ACLs, policies, functions (bodies + ACLs), views, storage, realtime | baseline 20261004000000 | F2A.1 capture, F2A.2 digest PRE=POST | **none** (fingerprint tests) |
-| Cron | F2C 20261004110718 | F2C applied 2026-10-04 14:18 UTC | none (F2C post evidence) |
-| Ledger | 2 executable migrations | 2 rows (baseline, F2C) | none |
-| Edge `us-widget-state` | repo source | deployed v4 (not re-deployed by F2C) | **not byte-verified**. SEC-01 is fixed in the database, so it holds whatever the deployed bytes are. |
-| Fresh state | — | to be read by the pack | **pending** (§8) |
+Production run of the pack (s01–s11) compared with the repo rebuild (baseline + F2C) by test 17:
 
-Intent vs production: F1A/F1B/F1C intent holds in production as captured (claim_us_role closed, 0 anon-callable functions, authority columns locked). The open F1B/F1C follow-ups map to SEC-02 (fixed), SEC-03/04 (inert), SEC-05, SEC-08, SEC-11 (accepted).
+| Block | What | Result |
+|---|---|---|
+| s01 | ledger, roles | Ledger = `20261004000000 us_2_0_baseline`, `20261004110718 f2c_edge_cron_source_of_truth`: SEC is the next push. PG 17.6. Only `service_role` bypasses RLS. `authenticator` role settings carry no `pgrst.db_schemas` (exposed schemas are set in the API settings, not on the role); `private` is not exposed either way, and nothing in it is anon-callable. |
+| s02 | 57 public + 2 private tables, RLS flags, client privileges | **equal** |
+| s03 | 73 public + 4 storage policies | **equal** |
+| s04 | 145 functions: definer, search_path, ACL, client EXECUTE, body md5 | **equal** |
+| s05 | column grants | **equal** |
+| s06 | views | **equal** |
+| s07 | storage bucket | **equal** |
+| s08 | realtime tables, `private` schema ACL | **equal**. Default privileges and the `public` schema ACL are platform-owned and differ only by platform entries (`postgres`, `supabase_admin`); they confirm SEC-08 (new functions in `public` start executable by `anon`). |
+| s09 | auth.role / JWT / metadata usage | **equal** (2 functions, no policy) |
+| s10 | data (counts only) | 1 couple, 2 profiles, 11 auth users (8 anonymous, 9 without profile), 51 objects all in the couple folder. `home_photo_path` = 1 row, inside its folder (SEC-01 precondition holds). `calendar_reminders` = 0. Moments, album photos, avatars, Left for You media: 0 paths outside their folder. |
+| s11 | realtime authorization | `realtime.messages` exists with **no policy**: every private broadcast/presence channel is refused. The client uses none. |
+
+Arrays are compared as sets: production sorts with its collation, the rebuild with C (same rows, different order).
+
+**Drift: none** in tables, RLS, policies, functions, grants, views, storage or realtime. Repo intent (F1A–F1C, F2A.1 baseline, F2C) equals production.
+
+Not covered by SQL: the deployed bytes of `us-widget-state` v4 (SEC-01 is fixed in the database, so it holds whatever they are) and Auth settings (SEC-16).
 
 ---
 
@@ -134,7 +148,8 @@ App impact: none. The current client never writes `home_photo_path` (it only rea
 | 9–13 | invariants | RLS everywhere; 0 anon functions; reviewed authenticated RPC list; pinned search_path; UPDATE USING+CHECK; no tautology; anon-reachable policies identity-bound; no JWT/metadata authorization; views invoker; storage private and folder-scoped |
 | 14–15 | isolation | two couples isolated, partners share, answers private; anon / profile-less read nothing but catalogs |
 | 16 | pack | read-only, one SELECT per block, no secret column, runs on the rebuild |
-| 17 | pack vs production | compares s02–s09 of the committed production run with the rebuild, and the s10 preconditions. **Skipped until the results are committed.** |
+| 17 | pack vs production | s02–s09 of the committed production run equal the rebuild; s10 preconditions; ledger; SEC-08 default ACL; realtime has no private-channel policy |
+| 18 | advisors | exactly 3 lints: `rls_enabled_no_policy` names = the 23 deny-all tables; `authenticated_security_definer_function_executable` names = the reviewed definer surface (34), and SEC-02 removes exactly the 2 helpers (32); `auth_leaked_password_protection` = SEC-16, with no password-setting call in the client |
 
 `tests/f2c-edge-cron-source-truth.test.js` now accepts forward migrations newer than F2C (it pinned the list to exactly two files).
 
@@ -142,17 +157,19 @@ App impact: none. The current client never writes `home_photo_path` (it only rea
 
 ## 7. Remaining accepted risks
 
-SEC-03 … SEC-15 above. The ones worth a later mission: SEC-08 (default privileges) and SEC-05 (anon grants) as one "closed by default" step; SEC-12 (delete-moment removal scope); policy cleanup for SEC-03/04.
+SEC-03 … SEC-16 above. The ones worth a later mission: SEC-08 (default privileges) and SEC-05 (anon grants) as one "closed by default" step; SEC-12 (delete-moment removal scope); policy cleanup for SEC-03/04.
 
 ---
 
-## 8. Needed from Francesco (read-only)
+## 8. Security advisors (production, 2026-10-04 15:28 UTC)
 
-1. Run `docs/us-2.0/SEC_RLS_AUDIT_READONLY.sql`, blocks s01–s11, one at a time; save as `docs/us-2.0/SEC_RLS_AUDIT_PRODUCTION.json` (`{"captured_at", "project_id", "blocks": {"s01": …}}`).
-2. Supabase security advisors (`get_advisors` type `security`) → `docs/us-2.0/SEC_RLS_AUDIT_ADVISORS.json`.
-3. Commit both to this branch. Test 17 then compares production with the repo.
+| Lint | Level | Count | Classification |
+|---|---|---|---|
+| `rls_enabled_no_policy` | INFO | 23 | Intentional deny-all tables (RPC- or service-only), same 23 names as §2. Matches the expectation. |
+| `authenticated_security_definer_function_executable` | WARN | 34 | The reviewed client RPC surface (§3.3), same 34 names. Matches the expectation. Becomes **32** after SEC-02. |
+| `auth_leaked_password_protection` | WARN | 1 | Not classified before: now **SEC-16**, accepted with rationale (§3). |
 
-Expected advisors (from the rebuild): no `rls_disabled_in_public`, no `security_definer_view`, no `function_search_path_mutable`, 0 `anon_security_definer_function_executable`, 34 `authenticated_security_definer_function_executable` (the reviewed RPC surface; 32 after SEC-02), INFO `rls_enabled_no_policy` ×23 (intentional), plus any auth-config lint (e.g. leaked-password protection) which this mission does not change.
+Absent, as expected: `rls_disabled_in_public`, `policy_exists_rls_disabled`, `security_definer_view`, `function_search_path_mutable`, `anon_security_definer_function_executable`, `auth_allow_anonymous_sign_ins`.
 
 ---
 
@@ -161,7 +178,7 @@ Expected advisors (from the rebuild): no `rls_disabled_in_public`, no `security_
 1. **Gate:** HEAD = reviewed SHA, clean tree, linked project `iiakdfsxpywdkxravqjh`.
 2. **Preflight (read-only):** `supabase migration list --linked` → remote has 20261004000000 and 20261004110718, local adds 20261004150000. `supabase db push --dry-run --linked` → exactly `20261004150000_sec_rls_hardening.sql`. Pack s10: `home_photo_path.outside = 0`, `calendar_reminders` unchanged.
 3. **Apply:** `supabase db push --linked` (one migration; its own pre/post guards abort atomically on any mismatch).
-4. **Postcheck (read-only):** pack s04 → both helpers `authenticated: false`, `service_role: true`; `select conname, convalidated from pg_constraint where conname = 'couples_home_photo_path_own_folder'` → validated; advisors → `authenticated_security_definer_function_executable` −2, nothing new.
+4. **Postcheck (read-only):** pack s04 → both helpers `authenticated: false`, `service_role: true`; `select conname, convalidated from pg_constraint where conname = 'couples_home_photo_path_own_folder'` → validated; advisors → `authenticated_security_definer_function_executable` 34 → 32, the other two lints unchanged, nothing new.
 5. **Smoke:** Oggi home photo and widget state load; Calendar shows reminders; the next `us-calendar-reminders-dispatch` cron run succeeds (no permission error in `net._http_response`).
 6. **Rollback (only if needed):** `alter table public.couples drop constraint couples_home_photo_path_own_folder; grant execute on function public.calendar_reminder_recipient_in_couple(uuid, uuid), public.calendar_reminder_offset_valid(uuid, integer) to authenticated;` as a new forward migration.
 

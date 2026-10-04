@@ -405,6 +405,11 @@ test('pack: read-only, one SELECT per block, no secret, runs on the rebuilt data
 });
 
 const COMPARED = ['s02', 's03', 's04', 's05', 's06', 's07', 's08', 's09'];
+// Production sorts text with its database collation, the rebuild with C:
+// compare as sets (every array sorted), never by position.
+const canonical = (v) => Array.isArray(v)
+  ? v.map(canonical).sort((x, y) => (JSON.stringify(x) < JSON.stringify(y) ? -1 : 1))
+  : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, canonical(v[k])])) : v;
 
 test('pack vs production: the committed production run equals the audited repo state', async (t) => {
   if (!fs.existsSync(PROD_RESULTS)) {
@@ -416,10 +421,52 @@ test('pack vs production: the committed production run equals the audited repo s
   for (const file of [fs.readdirSync(MIGRATIONS).find((f) => f.startsWith('20261004000000')), F2C_FILE]) await db.exec(read(path.join(MIGRATIONS, file)));
   for (const label of COMPARED) {
     const local = Object.values((await db.query(PACK_BLOCKS[label])).rows[0])[0];
-    assert.deepEqual(prod[label], local, `${label}: production drifted from the repo`);
+    // Default privileges are platform-owned (the test skeleton only stands in
+    // for them); production's are asserted on their own below (SEC-08).
+    // The public schema ACL is platform-owned too (production also lists postgres=U).
+    const strip = (v) => (label === 's08' ? { ...v, default_acl: null, schemas: v.schemas.filter((x) => x.s !== 'public') } : v);
+    assert.deepEqual(canonical(strip(prod[label])), canonical(strip(local)), `${label}: production drifted from the repo`);
   }
   await db.close();
   // Data preconditions of SEC-01 and SEC-02.
   assert.equal(prod.s10.home_photo_path.outside, 0);
   assert.equal(prod.s10.calendar_reminders, 0);
+  // The ledger holds exactly the baseline and F2C: SEC is the next push.
+  assert.deepEqual(prod.s01.ledger.map((r) => r.v), ['20261004000000', F2C_FILE.slice(0, 14)]);
+  // SEC-08 as accepted: new public functions start executable by anon (platform default).
+  for (const role of ['postgres', 'supabase_admin']) {
+    const f = prod.s08.default_acl.find((d) => d.role === role && d.objtype === 'f');
+    assert.match(f.acl, /anon=X/, `${role} default function ACL`);
+  }
+  // Realtime private channels: the table exists with no policy, so every private channel is refused.
+  assert.deepEqual(prod.s11, { policies: null, realtime_messages_exists: true });
+});
+
+const ADVISORS = path.join(ROOT, 'docs/us-2.0/SEC_RLS_AUDIT_ADVISORS.json');
+
+test('advisors: the production security lints are exactly the classified ones', async (t) => {
+  if (!fs.existsSync(ADVISORS)) {
+    t.skip('docs/us-2.0/SEC_RLS_AUDIT_ADVISORS.json not committed yet');
+    return;
+  }
+  const lints = Object.fromEntries(JSON.parse(read(ADVISORS)).lints.map((l) => [l.name, l]));
+  assert.deepEqual(Object.keys(lints).sort(), ['auth_leaked_password_protection', 'authenticated_security_definer_function_executable', 'rls_enabled_no_policy']);
+  const names = (lint) => lint.findings.map((f) => f.metadata.name).sort();
+  // INFO rls_enabled_no_policy = the deny-all tables (RPC / service only).
+  const noPolicy = (await q(base, `select c.relname from pg_class c where c.relnamespace = 'public'::regnamespace
+    and c.relkind = 'r' and not exists (select 1 from pg_policy p where p.polrelid = c.oid) order by 1`)).map((r) => r.relname);
+  assert.deepEqual(names(lints.rls_enabled_no_policy), noPolicy);
+  // WARN authenticated definer = the reviewed RPC surface in public, before SEC-02...
+  const surface = async (db) => (await q(db, `select p.proname from pg_proc p where p.pronamespace = 'public'::regnamespace
+    and p.prosecdef and has_function_privilege('authenticated', p.oid, 'EXECUTE') order by 1`)).map((r) => r.proname);
+  assert.deepEqual(names(lints.authenticated_security_definer_function_executable), await surface(base));
+  // ...and SEC-02 removes exactly the two calendar helpers from it.
+  const after = await surface(head);
+  assert.equal(after.length, 32);
+  assert.deepEqual((await surface(base)).filter((n) => !after.includes(n)), ['calendar_reminder_offset_valid', 'calendar_reminder_recipient_in_couple']);
+  // WARN leaked password protection: auth config, accepted (SEC-16). No client flow sets a password.
+  assert.equal(lints.auth_leaked_password_protection.count, 1);
+  for (const file of fs.readdirSync(ROOT).filter((f) => f.endsWith('.js'))) {
+    assert.doesNotMatch(read(path.join(ROOT, file)), /\.(updateUser|signUp|resetPasswordForEmail)\(/, `${file} sets a password`);
+  }
 });
