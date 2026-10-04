@@ -57,6 +57,7 @@ test('copy: Noi and Settings rows carry a label, not a description', () => {
   assert.match(html, /<b>Notifiche<\/b><\/span>/);
   assert.match(html, /<b>Sincronizzazione<\/b><\/span>/);
   assert.match(html, /<b>Distanza<\/b><\/span>/);
-  assert.match(html, /<b>I vostri giorni<\/b><\/span>/);
+  assert.match(html, /<small>LA NOSTRA SETTIMANA<\/small><b>Lavagna<\/b>/);
+  assert.match(html, /Apri calendario ›/);
   assert.match(read('app.js'), /questTitle\.textContent='Questa settimana';\s*questMeta\.textContent='';/);
 });
