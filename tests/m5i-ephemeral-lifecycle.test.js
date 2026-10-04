@@ -56,8 +56,9 @@ test('M5I migration protects the dedicated media namespace and Conserva lock', (
   const edge = read('supabase/functions/cleanup-left-for-you/index.ts');
   assert.match(sql, /starts_with\(media_path,[\s\S]*\/left\//i);
   assert.match(sql, /from public\.left_for_you as entry[\s\S]*for update/i);
-  assert.match(edge, /x-m5i-cleanup-secret/);
-  assert.match(edge, /M5I_CLEANUP_SECRET/);
+  assert.match(edge, /x-us-cron-key/);
+  assert.match(edge, /get_internal_left_for_you_cleanup_cron_key/);
+  assert.doesNotMatch(edge, /M5I_CLEANUP_SECRET|x-m5i-cleanup-secret/);
   assert.match(edge, /row\.couple_id.*row\.sender_id.*left\//s);
   assert.match(edge, /storage\.from\(['"]us-media['"]\)\.remove/);
   assert.match(edge, /finalize_left_for_you_cleanup/);

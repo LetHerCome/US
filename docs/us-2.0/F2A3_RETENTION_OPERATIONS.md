@@ -1,6 +1,6 @@
 # US 2.0 — F2A.3 Retention & Operations Audit
 
-**Status:** F2A3_AUDIT_READY — implementation not started  
+**Status:** Audit authoritative; repository implementation ready for review (see `F2A3_ROLLOUT.md`)
 **Branch:** `mission/us-2-0-f2a3-retention-operations`  
 **Base:** `main` `9907e1c0e879c39fae3cc1b8745915d0bbff0a6c`  
 **Production changes:** NONE  
@@ -128,3 +128,15 @@ Implementation should add:
 - production pre/post evidence and runbook.
 
 First implementation pass is repo/local only. No production write until independent review.
+
+## Repo/local implementation — 2026-10-04
+
+The CLI-created forward migration, dedicated service-only cleanup-key RPC,
+modernized worker and two guarded daily cron jobs are implemented at source
+level. Both new jobs initially remain paused; a fresh off-site logical dump is
+a hard precondition before future destructive activation. The original seven
+cron definitions and all audit facts above remain unchanged.
+
+See `F2A3_ROLLOUT.md` for exact cutoff semantics, local test evidence, future
+backup/provision/deploy/no-op/activation sequence, rollback and accepted native
+and Storage follow-ups. Production changes in this implementation pass: **NONE**.

@@ -462,6 +462,20 @@ test('F2C secrets: no VAPID private value in the repo, the new names are listed 
   const manifest = JSON.parse(read('supabase/SECRETS_MANIFEST.json'));
   const url = manifest.vault.find((v) => v.name === 'us_project_url');
   assert.ok(url && /F2C/.test(url.introduced_by));
-  assert.deepEqual(url.read_by_sql, EXPECTED_JOBS.filter((j) => j[2]).map((j) => `cron ${j[0]}`));
+  const originalConsumers = EXPECTED_JOBS.filter((j) => j[2]).map((j) => `cron ${j[0]}`);
+  // F2C consumers remain exact; later missions may add jobs using the same
+  // project configuration, provided the forward migration really uses it.
+  assert.deepEqual(url.read_by_sql.filter((name) => originalConsumers.includes(name)), originalConsumers);
+  assert.equal(new Set(url.read_by_sql).size, url.read_by_sql.length);
+  for (const name of url.read_by_sql.filter((name) => !originalConsumers.includes(name))) {
+    assert.match(name, /^cron [a-z0-9-]+$/);
+    const jobname = name.slice(5);
+    const later = fs.readdirSync(path.join(ROOT, MIGRATIONS)).filter((file) => file.endsWith('.sql') && file > F2C_FILE);
+    assert.ok(later.some((file) => {
+      const sql = read(`${MIGRATIONS}/${file}`);
+      const command = sql.match(new RegExp(`\\('${jobname}', '[^']+', \\$cron\\$([\\s\\S]*?)\\$cron\\$\\)`));
+      return command && command[1].includes("name = 'us_project_url'");
+    }), `${name}: must consume us_project_url in a later migration`);
+  }
   assert.ok(manifest.vault.find((v) => v.name === 'us_web_push_vapid_private').edge_consumers.includes('calendar-reminders-worker'));
 });

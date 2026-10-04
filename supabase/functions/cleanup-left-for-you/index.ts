@@ -4,7 +4,7 @@ import { supabaseSecretKey } from "../_shared/supabase-secret.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "content-type,x-m5i-cleanup-secret",
+  "Access-Control-Allow-Headers": "content-type,x-us-cron-key",
   "Access-Control-Allow-Methods": "POST,OPTIONS",
   "Content-Type": "application/json",
 };
@@ -34,12 +34,6 @@ Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
-  const expectedSecret = Deno.env.get("M5I_CLEANUP_SECRET") || "";
-  const receivedSecret = request.headers.get("x-m5i-cleanup-secret") || "";
-  if (!expectedSecret || receivedSecret !== expectedSecret) {
-    return json({ error: "Unauthorized" }, 401);
-  }
-
   try {
     const url = Deno.env.get("SUPABASE_URL") || "";
     const secret = supabaseSecretKey();
@@ -48,6 +42,12 @@ Deno.serve(async (request) => {
     const admin = createClient(url, secret, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
+    // Cron-only: a dedicated Vault key, read through the service-only RPC.
+    const cronKey = (request.headers.get("x-us-cron-key") || "").trim();
+    if (!cronKey) return json({ error: "Unauthorized" }, 401);
+    const { data: expectedKey, error: keyError } = await admin.rpc("get_internal_left_for_you_cleanup_cron_key");
+    if (keyError || !expectedKey || cronKey !== expectedKey) return json({ error: "Unauthorized" }, 401);
+
     const body = await request.json().catch(() => ({}));
     const batchSize = Number.isInteger(body?.batch_size) ? Math.max(1, Math.min(body.batch_size, 100)) : 50;
 
