@@ -78,10 +78,12 @@ const provisionUrl = (db, value) => db.query(`select vault.create_secret($1, 'us
 
 test('F2C migration: created by the CLI after the baseline, the only forward migration', () => {
   const files = fs.readdirSync(path.join(ROOT, MIGRATIONS)).filter((f) => f.endsWith('.sql')).sort();
-  assert.deepEqual(files, [BASELINE_FILE, F2C_FILE]);
+  // Later missions add forward migrations after F2C, never before it.
+  assert.deepEqual(files.slice(0, 2), [BASELINE_FILE, F2C_FILE]);
+  for (const later of files.slice(2)) assert.ok(later.slice(0, 14) > F2C_FILE.slice(0, 14), `${later} is newer than F2C`);
   assert.ok(F2C_FILE.slice(0, 14) > BASELINE_VERSION);
   const cutoff = JSON.parse(read('supabase/baseline/MIGRATION_CUTOFF.json'));
-  assert.deepEqual(cutoff.forward_migrations, [F2C_FILE]);
+  assert.deepEqual(cutoff.forward_migrations, files.slice(1));
   // 90_cron.sql stays the F2A.1 capture: never part of an executable migration.
   assert.doesNotMatch(BASELINE_SQL, /cron\.schedule/);
   assert.doesNotMatch(F2C, /90_cron\.sql[^\n]*apply|\\i /);

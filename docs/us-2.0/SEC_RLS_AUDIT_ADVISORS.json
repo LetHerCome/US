@@ -1,0 +1,638 @@
+{
+  "captured_at": "2026-10-04T15:28:39Z",
+  "project_id": "iiakdfsxpywdkxravqjh",
+  "type": "security",
+  "source": "Supabase get_advisors",
+  "lints": [
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "count": 23,
+      "findings": [
+        {
+          "detail": "Table \\`public.couple_invites\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "couple_invites",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Table \\`public.couple_progression_preferences\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "couple_progression_preferences",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Table \\`public.couple_questions\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "couple_questions",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Table \\`public.couple_reward_unlocks\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "couple_reward_unlocks",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Table \\`public.daily_question_reveal_states\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "daily_question_reveal_states",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Table \\`public.daily_question_templates\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "daily_question_templates",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Table \\`public.game_session_answers\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "game_session_answers",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Table \\`public.game_session_items\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "game_session_items",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Table \\`public.game_session_sides\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "game_session_sides",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Table \\`public.game_sessions\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "game_sessions",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Table \\`public.game_v2_catalog\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "game_v2_catalog",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Table \\`public.game_v2_cooldowns\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "game_v2_cooldowns",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Table \\`public.game_v2_recipes\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "game_v2_recipes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Table \\`public.progression_events\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "progression_events",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Table \\`public.progression_reward_catalog\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "progression_reward_catalog",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Table \\`public.progression_reward_views\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "progression_reward_views",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Table \\`public.push_event_log\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "push_event_log",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Table \\`public.push_subscriptions\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "push_subscriptions",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Table \\`public.widget_action_receipts\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "widget_action_receipts",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Table \\`public.widget_action_tokens\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "widget_action_tokens",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Table \\`public.widget_scriptable_installations\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "widget_scriptable_installations",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Table \\`public.widget_scriptable_setup_codes\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "widget_scriptable_setup_codes",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Table \\`public.widget_tokens\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "widget_tokens",
+            "type": "table",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        }
+      ]
+    },
+    {
+      "name": "authenticated_security_definer_function_executable",
+      "title": "Signed-In Users Can Execute SECURITY DEFINER Function",
+      "level": "WARN",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects `SECURITY DEFINER` functions that are callable by signed-in users. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if signed-in users should not call it.",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable",
+      "count": 34,
+      "findings": [
+        {
+          "detail": "Function `public.ack_progression_unlock(target_reward_id text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/ack_progression_unlock`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "ack_progression_unlock",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "target_reward_id text",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.calendar_reminder_offset_valid(p_entry_id uuid, p_offset_minutes integer)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/calendar_reminder_offset_valid`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "calendar_reminder_offset_valid",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "p_entry_id uuid, p_offset_minutes integer",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.calendar_reminder_recipient_in_couple(p_couple_id uuid, p_recipient_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/calendar_reminder_recipient_in_couple`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "calendar_reminder_recipient_in_couple",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "p_couple_id uuid, p_recipient_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.complete_game_session_side(target_session_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/complete_game_session_side`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "complete_game_session_side",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "target_session_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.complete_shared_event(target_event_id uuid, target_occurrence_date date)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/complete_shared_event`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "complete_shared_event",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "target_event_id uuid, target_occurrence_date date",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.confirm_bucket_item_lived(p_item_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/confirm_bucket_item_lived`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "confirm_bucket_item_lived",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_item_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.conserve_left_for_you(target_item_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/conserve_left_for_you`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "conserve_left_for_you",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "target_item_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.create_weekly_question(request_id uuid, question_text text, answer_kind text, options jsonb, families text[])` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/create_weekly_question`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "create_weekly_question",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "request_id uuid, question_text text, answer_kind text, options jsonb, families text[]",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.delete_daily_question_outcome(target_question_id uuid, expected_revision integer)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/delete_daily_question_outcome`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "delete_daily_question_outcome",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "target_question_id uuid, expected_revision integer",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.dismiss_daily_reveal_notice(target_question_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/dismiss_daily_reveal_notice`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "dismiss_daily_reveal_notice",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "target_question_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.equip_progression_reward(target_reward_id text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/equip_progression_reward`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "equip_progression_reward",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "target_reward_id text",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.get_daily_reveal_meta(target_question_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/get_daily_reveal_meta`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "get_daily_reveal_meta",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "target_question_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.get_daily_state(target_question_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/get_daily_state`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "get_daily_state",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "target_question_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.get_game_session(target_session_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/get_game_session`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "get_game_session",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "target_session_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.get_game_v2_home()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/get_game_v2_home`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "get_game_v2_home",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.get_notification_preferences()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/get_notification_preferences`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "get_notification_preferences",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.get_or_create_daily_question()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/get_or_create_daily_question`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "get_or_create_daily_question",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.get_progression_v1()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/get_progression_v1`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "get_progression_v1",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.get_weekly_question_state()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/get_weekly_question_state`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "get_weekly_question_state",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.keep_daily_question(target_question_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/keep_daily_question`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "keep_daily_question",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "target_question_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.link_moment_to_source(target_moment_id uuid, source_kind text, source_ref uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/link_moment_to_source`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "link_moment_to_source",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "target_moment_id uuid, source_kind text, source_ref uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.mark_daily_reveal_seen(target_question_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/mark_daily_reveal_seen`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "mark_daily_reveal_seen",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "target_question_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.mark_game_session_reveal_seen(target_session_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/mark_game_session_reveal_seen`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "mark_game_session_reveal_seen",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "target_session_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.mark_left_item_seen(target_item_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/mark_left_item_seen`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "mark_left_item_seen",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "target_item_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.register_web_push_subscription(target_endpoint text, target_p256dh text, target_auth text, target_expiration_time bigint, target_user_agent text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/register_web_push_subscription`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "register_web_push_subscription",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "target_endpoint text, target_p256dh text, target_auth text, target_expiration_time bigint, target_user_agent text",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.remove_web_push_subscription(target_endpoint text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/remove_web_push_subscription`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "remove_web_push_subscription",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "target_endpoint text",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.save_daily_question_outcome(target_question_id uuid, target_body text, operation_id uuid, expected_revision integer)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/save_daily_question_outcome`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "save_daily_question_outcome",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "target_question_id uuid, target_body text, operation_id uuid, expected_revision integer",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.save_game_session_answer(target_session_id uuid, target_item_id uuid, target_answer_text text, target_answer_index smallint)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/save_game_session_answer`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "save_game_session_answer",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "target_session_id uuid, target_item_id uuid, target_answer_text text, target_answer_index smallint",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.send_think(operation_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/send_think`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "send_think",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "operation_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.set_daily_answer_reaction(target_question_id uuid, target_reaction text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/set_daily_answer_reaction`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "set_daily_answer_reaction",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "target_question_id uuid, target_reaction text",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.set_notification_preference(target_key text, target_value boolean)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/set_notification_preference`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "set_notification_preference",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "target_key text, target_value boolean",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.set_think_reaction(target_message_id uuid, target_reaction text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/set_think_reaction`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "set_think_reaction",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "target_message_id uuid, target_reaction text",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.start_game_round(target_family text, request_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/start_game_round`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "start_game_round",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "target_family text, request_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        },
+        {
+          "detail": "Function `public.start_swipe_round(request_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/start_swipe_round`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "start_swipe_round",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "request_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-04T15:29:21.821Z"
+        }
+      ]
+    },
+    {
+      "name": "auth_leaked_password_protection",
+      "title": "Leaked Password Protection Disabled",
+      "level": "WARN",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Leaked password protection is currently disabled.",
+      "remediation": "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection",
+      "count": 1,
+      "findings": [
+        {
+          "detail": "Supabase Auth prevents the use of compromised passwords by checking against HaveIBeenPwned.org. Enable this feature to enhance security.",
+          "metadata": {
+            "type": "auth",
+            "entity": "Auth"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,189 @@
+{
+  "purpose": "US 2.0 Security / RLS hardening production rollout evidence. No secret values.",
+  "project": "iiakdfsxpywdkxravqjh",
+  "reviewed_head": "cfbbd228056fa32c98f3cb63ac2f5fca1a533203",
+  "base": "489fe711457439af39ba09a6db608a3f5560f0f6",
+  "executed_at_utc": "2026-10-04 17:39–17:40 UTC",
+  "execution_method": {
+    "kind": "Supabase MCP direct SQL transaction",
+    "note": "The reviewed migration SQL was executed atomically and the exact migration version 20261004150000/name sec_rls_hardening was inserted into supabase_migrations.schema_migrations in the same transaction, preserving the repo/remote ledger identity. The local Supabase CLI was not available in this environment."
+  },
+  "hard_gate": {
+    "branch_head": "cfbbd228056fa32c98f3cb63ac2f5fca1a533203",
+    "project_id": "iiakdfsxpywdkxravqjh",
+    "remote_migrations_before": [
+      "20261004000000",
+      "20261004110718"
+    ],
+    "branch_migration_files": [
+      "20261004000000_us_2_0_baseline.sql",
+      "20261004110718_f2c_edge_cron_source_of_truth.sql",
+      "20261004150000_sec_rls_hardening.sql"
+    ],
+    "pre_s10": {
+      "home_photo_path_outside": 0,
+      "calendar_reminders": 0
+    },
+    "result": "PASS"
+  },
+  "production_writes": [
+    {
+      "what": "Applied reviewed migration 20261004150000_sec_rls_hardening.sql",
+      "scope": [
+        "validated CHECK couples_home_photo_path_own_folder",
+        "REVOKE EXECUTE on 2 calendar reminder SECURITY DEFINER helpers from public, anon, authenticated",
+        "migration ledger row 20261004150000 / sec_rls_hardening"
+      ],
+      "application_data_changed": false,
+      "edge_deploy": false,
+      "auth_config_changed": false,
+      "frontend_changed": false
+    }
+  ],
+  "migration_after": {
+    "list": [
+      {
+        "version": "20261004000000",
+        "name": "us_2_0_baseline"
+      },
+      {
+        "version": "20261004110718",
+        "name": "f2c_edge_cron_source_of_truth"
+      },
+      {
+        "version": "20261004150000",
+        "name": "sec_rls_hardening"
+      }
+    ],
+    "ledger_row": {
+      "version": "20261004150000",
+      "name": "sec_rls_hardening",
+      "statement_count": 1,
+      "statement_md5": "cc10ca5ca78e5a39ca93b35c907a7a26"
+    },
+    "repo_remote_versions_equal": true,
+    "cli_dry_run": "not available in this environment; repo migration-file set and remote ledger version set are equal after rollout"
+  },
+  "sec01": {
+    "constraint": {
+      "conname": "couples_home_photo_path_own_folder",
+      "convalidated": true,
+      "definition": "CHECK (((home_photo_path IS NULL) OR (starts_with(home_photo_path, ((id)::text || '/'::text)) AND (POSITION(('..'::text) IN (home_photo_path)) = 0))))"
+    },
+    "post_s10": {
+      "home_photo_path": {
+        "null": 0,
+        "outside": 0,
+        "own_folder": 1
+      },
+      "path_outside_counts": {
+        "avatar_path_outside_own_couple": 0,
+        "moments_path_outside_couple": 0,
+        "moment_photos_path_outside_couple": 0,
+        "left_for_you_media_outside_sender": 0
+      }
+    }
+  },
+  "sec02": {
+    "privileges": [
+      {
+        "function_name": "calendar_reminder_offset_valid(uuid,integer)",
+        "role": "anon",
+        "can_execute": false
+      },
+      {
+        "function_name": "calendar_reminder_offset_valid(uuid,integer)",
+        "role": "authenticated",
+        "can_execute": false
+      },
+      {
+        "function_name": "calendar_reminder_offset_valid(uuid,integer)",
+        "role": "service_role",
+        "can_execute": true
+      },
+      {
+        "function_name": "calendar_reminder_recipient_in_couple(uuid,uuid)",
+        "role": "anon",
+        "can_execute": false
+      },
+      {
+        "function_name": "calendar_reminder_recipient_in_couple(uuid,uuid)",
+        "role": "authenticated",
+        "can_execute": false
+      },
+      {
+        "function_name": "calendar_reminder_recipient_in_couple(uuid,uuid)",
+        "role": "service_role",
+        "can_execute": true
+      }
+    ]
+  },
+  "advisors_after": [
+    {
+      "name": "rls_enabled_no_policy",
+      "level": "INFO",
+      "count": 23
+    },
+    {
+      "name": "authenticated_security_definer_function_executable",
+      "level": "WARN",
+      "count": 32
+    },
+    {
+      "name": "auth_leaked_password_protection",
+      "level": "WARN",
+      "count": 1
+    }
+  ],
+  "expected_advisors": {
+    "rls_enabled_no_policy": 23,
+    "authenticated_security_definer_function_executable": 32,
+    "auth_leaked_password_protection": 1,
+    "new_lints": false
+  },
+  "calendar_smoke": {
+    "latest_cron_run": {
+      "runid": 31118,
+      "jobid": 3,
+      "status": "succeeded",
+      "start_time": "2026-10-04 17:41:00.038397+00",
+      "end_time": "2026-10-04 17:41:00.047283+00",
+      "return_message": "1 row"
+    },
+    "latest_worker_http_response": {
+      "id": 17867,
+      "status_code": 200,
+      "content_type": "application/json",
+      "timed_out": false,
+      "error_msg": null,
+      "created": "2026-10-04 17:41:00.046133+00",
+      "content": "{\"ok\":true,\"due\":0,\"delivered\":0,\"failed\":0}"
+    },
+    "expected": "cron succeeded and calendar worker HTTP 200"
+  },
+  "post_s10": {
+    "couples": 1,
+    "profiles": 2,
+    "auth_users": {
+      "total": 11,
+      "anonymous": 8,
+      "without_profile": 9
+    },
+    "home_photo_path": {
+      "null": 0,
+      "outside": 0,
+      "own_folder": 1
+    },
+    "storage_objects": {
+      "total": 51,
+      "other_buckets": 0,
+      "us_media_outside_known_couples": 0
+    },
+    "calendar_reminders": 0,
+    "moments_path_outside_couple": 0,
+    "avatar_path_outside_own_couple": 0,
+    "left_for_you_media_outside_sender": 0,
+    "moment_photos_path_outside_couple": 0
+  },
+  "status": "SECURITY_PRODUCTION_ROLLOUT_EVIDENCE_RECORDED"
+}
