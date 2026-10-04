@@ -202,10 +202,18 @@ Excluded: data volumes, cron run history, ledger rows, and vault values, which t
 
 The skeleton needed one change for the real capture: production's `storage.buckets` has 3 newer columns (`versioning_status`, `lifecycle_configuration`, `lifecycle_configuration_generation`). The skeleton gives them stand-in types because the platform owns them.
 
-### Tests (Linux, Node, `npm ci`, same container)
+### Tests (Linux, Node, same container, same `node_modules`)
 
 | Run | Tests | Pass | Fail | Skipped |
 |---|---|---|---|---|
+| base `origin/main` `9a28b37` | 1317 | 1311 | 0 | 6 |
+| head (this branch, rebased) | 1349 | 1343 | 0 | 6 |
+
+- All 32 new tests are in `tests/f2a1-production-baseline.test.js`: 13 top-level tests plus the 19 rebuild subtests. None is skipped any more.
+- The 6 skips are the same Windows-only tests on base and head.
+- `node scripts/build-supabase-baseline.mjs --check` reports no stale file, and `git diff --check` is clean.
+
+---|---|---|---|---|
 | base `59dfb0e` | 1308 | 1302 | 0 | 6 |
 | head (this branch) | 1321 | 1312 | 0 | 9 |
 
