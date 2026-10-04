@@ -1,0 +1,3639 @@
+{
+  "captured_at": "2026-10-04T15:28:39Z",
+  "project_id": "iiakdfsxpywdkxravqjh",
+  "source": "Supabase production, read-only; s01-s11 executed individually, then captured again in one read-only aggregate query",
+  "blocks": {
+    "s01": {
+      "ledger": [
+        {
+          "n": "us_2_0_baseline",
+          "v": "20261004000000"
+        },
+        {
+          "n": "f2c_edge_cron_source_of_truth",
+          "v": "20261004110718"
+        }
+      ],
+      "api_roles": [
+        {
+          "role": "anon",
+          "super": false,
+          "inherit": true,
+          "bypassrls": false
+        },
+        {
+          "role": "authenticated",
+          "super": false,
+          "inherit": true,
+          "bypassrls": false
+        },
+        {
+          "role": "authenticator",
+          "super": false,
+          "inherit": false,
+          "bypassrls": false
+        },
+        {
+          "role": "service_role",
+          "super": false,
+          "inherit": true,
+          "bypassrls": true
+        }
+      ],
+      "server_version": "17.6",
+      "authenticator_config": [
+        "session_preload_libraries=supautils, safeupdate",
+        "statement_timeout=8s",
+        "lock_timeout=8s"
+      ]
+    },
+    "s02": [
+      {
+        "t": "private.game_swipe_v1_catalog",
+        "rls": false,
+        "anon": "",
+        "kind": "r",
+        "force": false,
+        "policies": 0,
+        "authenticated": ""
+      },
+      {
+        "t": "private.left_for_you_cleanup_queue",
+        "rls": false,
+        "anon": "",
+        "kind": "r",
+        "force": false,
+        "policies": 0,
+        "authenticated": ""
+      },
+      {
+        "t": "public.activity",
+        "rls": true,
+        "anon": "S,I,U,D,T",
+        "kind": "r",
+        "force": false,
+        "policies": 2,
+        "authenticated": "S,I,U,D,T"
+      },
+      {
+        "t": "public.bond_quest_templates",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": false,
+        "policies": 1,
+        "authenticated": "S"
+      },
+      {
+        "t": "public.bond_weekly_quests",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": false,
+        "policies": 1,
+        "authenticated": "S"
+      },
+      {
+        "t": "public.bond_weekly_state",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": false,
+        "policies": 1,
+        "authenticated": "S"
+      },
+      {
+        "t": "public.bucket_items",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": false,
+        "policies": 4,
+        "authenticated": "S,I,U,D"
+      },
+      {
+        "t": "public.calendar_entries",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": true,
+        "policies": 7,
+        "authenticated": "S,I,U,D"
+      },
+      {
+        "t": "public.calendar_reminders",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": true,
+        "policies": 4,
+        "authenticated": "S"
+      },
+      {
+        "t": "public.conserva_contributions",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": true,
+        "policies": 1,
+        "authenticated": "S"
+      },
+      {
+        "t": "public.couple_invites",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": false,
+        "policies": 0,
+        "authenticated": ""
+      },
+      {
+        "t": "public.couple_locations",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": false,
+        "policies": 3,
+        "authenticated": "S,I,U,D,T"
+      },
+      {
+        "t": "public.couple_progression_preferences",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": true,
+        "policies": 0,
+        "authenticated": ""
+      },
+      {
+        "t": "public.couple_questions",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": true,
+        "policies": 0,
+        "authenticated": ""
+      },
+      {
+        "t": "public.couple_reward_unlocks",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": true,
+        "policies": 0,
+        "authenticated": ""
+      },
+      {
+        "t": "public.couples",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": false,
+        "policies": 2,
+        "authenticated": "S"
+      },
+      {
+        "t": "public.daily_answers",
+        "rls": true,
+        "anon": "S,I,U,D,T",
+        "kind": "r",
+        "force": false,
+        "policies": 3,
+        "authenticated": "S,I,U,D,T"
+      },
+      {
+        "t": "public.daily_question_keepsakes",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": true,
+        "policies": 1,
+        "authenticated": "S"
+      },
+      {
+        "t": "public.daily_question_outcomes",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": true,
+        "policies": 1,
+        "authenticated": "S"
+      },
+      {
+        "t": "public.daily_question_reveal_states",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": true,
+        "policies": 0,
+        "authenticated": ""
+      },
+      {
+        "t": "public.daily_question_templates",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": true,
+        "policies": 0,
+        "authenticated": ""
+      },
+      {
+        "t": "public.daily_questions",
+        "rls": true,
+        "anon": "S,I,U,D,T",
+        "kind": "r",
+        "force": false,
+        "policies": 1,
+        "authenticated": "S,I,U,D,T"
+      },
+      {
+        "t": "public.device_push_tokens",
+        "rls": true,
+        "anon": "S,I,U,D,T",
+        "kind": "r",
+        "force": false,
+        "policies": 2,
+        "authenticated": "S,I,U,D,T"
+      },
+      {
+        "t": "public.game_session_answers",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": true,
+        "policies": 0,
+        "authenticated": ""
+      },
+      {
+        "t": "public.game_session_items",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": true,
+        "policies": 0,
+        "authenticated": ""
+      },
+      {
+        "t": "public.game_session_sides",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": true,
+        "policies": 0,
+        "authenticated": ""
+      },
+      {
+        "t": "public.game_sessions",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": true,
+        "policies": 0,
+        "authenticated": ""
+      },
+      {
+        "t": "public.game_v2_catalog",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": true,
+        "policies": 0,
+        "authenticated": ""
+      },
+      {
+        "t": "public.game_v2_cooldowns",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": true,
+        "policies": 0,
+        "authenticated": ""
+      },
+      {
+        "t": "public.game_v2_recipes",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": true,
+        "policies": 0,
+        "authenticated": ""
+      },
+      {
+        "t": "public.left_for_you",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": true,
+        "policies": 2,
+        "authenticated": "S,I"
+      },
+      {
+        "t": "public.living_provenance",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": true,
+        "policies": 1,
+        "authenticated": "S"
+      },
+      {
+        "t": "public.moment_photos",
+        "rls": true,
+        "anon": "S,I,U,D,T",
+        "kind": "r",
+        "force": false,
+        "policies": 4,
+        "authenticated": "S,I,U,D,T"
+      },
+      {
+        "t": "public.moments",
+        "rls": true,
+        "anon": "S,I,U,D,T",
+        "kind": "r",
+        "force": false,
+        "policies": 4,
+        "authenticated": "S,I,U,D,T"
+      },
+      {
+        "t": "public.moods",
+        "rls": true,
+        "anon": "S,I,U,D,T",
+        "kind": "r",
+        "force": false,
+        "policies": 3,
+        "authenticated": "S,I,U,D,T"
+      },
+      {
+        "t": "public.notification_preferences",
+        "rls": true,
+        "anon": "S,I,U,D,T",
+        "kind": "r",
+        "force": false,
+        "policies": 3,
+        "authenticated": "S,I,U,D,T"
+      },
+      {
+        "t": "public.partner_knowledge_attempts",
+        "rls": true,
+        "anon": "S,I,U,D,T",
+        "kind": "r",
+        "force": false,
+        "policies": 1,
+        "authenticated": "S,I,U,D,T"
+      },
+      {
+        "t": "public.profiles",
+        "rls": true,
+        "anon": "S,I,D,T",
+        "kind": "r",
+        "force": false,
+        "policies": 2,
+        "authenticated": "S,I,D,T"
+      },
+      {
+        "t": "public.progression_events",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": true,
+        "policies": 0,
+        "authenticated": ""
+      },
+      {
+        "t": "public.progression_reward_catalog",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": true,
+        "policies": 0,
+        "authenticated": ""
+      },
+      {
+        "t": "public.progression_reward_views",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": true,
+        "policies": 0,
+        "authenticated": ""
+      },
+      {
+        "t": "public.push_event_log",
+        "rls": true,
+        "anon": "S,I,U,D,T",
+        "kind": "r",
+        "force": false,
+        "policies": 0,
+        "authenticated": "S,I,U,D,T"
+      },
+      {
+        "t": "public.push_subscriptions",
+        "rls": true,
+        "anon": "S,I,U,D,T",
+        "kind": "r",
+        "force": false,
+        "policies": 0,
+        "authenticated": "S,I,U,D,T"
+      },
+      {
+        "t": "public.quiz_questions",
+        "rls": true,
+        "anon": "S,I,U,D,T",
+        "kind": "r",
+        "force": false,
+        "policies": 1,
+        "authenticated": "S,I,U,D,T"
+      },
+      {
+        "t": "public.quiz_responses",
+        "rls": true,
+        "anon": "S,I,U,D,T",
+        "kind": "r",
+        "force": false,
+        "policies": 1,
+        "authenticated": "S,I,U,D,T"
+      },
+      {
+        "t": "public.quiz_sets",
+        "rls": true,
+        "anon": "S,I,U,D,T",
+        "kind": "r",
+        "force": false,
+        "policies": 1,
+        "authenticated": "S,I,U,D,T"
+      },
+      {
+        "t": "public.relationship_event_history",
+        "rls": false,
+        "anon": "",
+        "kind": "v",
+        "force": false,
+        "policies": 0,
+        "authenticated": "S"
+      },
+      {
+        "t": "public.relationship_milestones",
+        "rls": true,
+        "anon": "S,I,U,D,T",
+        "kind": "r",
+        "force": false,
+        "policies": 1,
+        "authenticated": "S,I,U,D,T"
+      },
+      {
+        "t": "public.shared_event_completions",
+        "rls": true,
+        "anon": "S,I,U,D,T",
+        "kind": "r",
+        "force": false,
+        "policies": 1,
+        "authenticated": "S,I,U,D,T"
+      },
+      {
+        "t": "public.shared_events",
+        "rls": true,
+        "anon": "S,I,D,T",
+        "kind": "r",
+        "force": false,
+        "policies": 4,
+        "authenticated": "S,I,D,T"
+      },
+      {
+        "t": "public.shared_messages",
+        "rls": true,
+        "anon": "S,I,D,T",
+        "kind": "r",
+        "force": false,
+        "policies": 3,
+        "authenticated": "S,I,D,T"
+      },
+      {
+        "t": "public.stories",
+        "rls": true,
+        "anon": "S,I,U,D,T",
+        "kind": "r",
+        "force": false,
+        "policies": 3,
+        "authenticated": "S,I,U,D,T"
+      },
+      {
+        "t": "public.story_views",
+        "rls": true,
+        "anon": "S,I,U,D,T",
+        "kind": "r",
+        "force": false,
+        "policies": 2,
+        "authenticated": "S,I,U,D,T"
+      },
+      {
+        "t": "public.think_reactions",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": true,
+        "policies": 1,
+        "authenticated": "S"
+      },
+      {
+        "t": "public.weekly_quiz_rewards",
+        "rls": true,
+        "anon": "S,I,U,D,T",
+        "kind": "r",
+        "force": false,
+        "policies": 1,
+        "authenticated": "S,I,U,D,T"
+      },
+      {
+        "t": "public.widget_action_receipts",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": false,
+        "policies": 0,
+        "authenticated": ""
+      },
+      {
+        "t": "public.widget_action_tokens",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": false,
+        "policies": 0,
+        "authenticated": ""
+      },
+      {
+        "t": "public.widget_scriptable_installations",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": false,
+        "policies": 0,
+        "authenticated": ""
+      },
+      {
+        "t": "public.widget_scriptable_setup_codes",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": false,
+        "policies": 0,
+        "authenticated": ""
+      },
+      {
+        "t": "public.widget_tokens",
+        "rls": true,
+        "anon": "",
+        "kind": "r",
+        "force": false,
+        "policies": 0,
+        "authenticated": ""
+      }
+    ],
+    "s03": [
+      {
+        "p": "activity_insert_same_couple",
+        "t": "public.activity",
+        "cmd": "INSERT",
+        "check": "((couple_id = private.current_couple_id()) AND (actor_id = auth.uid()))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": null,
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "activity_read_same_couple",
+        "t": "public.activity",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(couple_id = private.current_couple_id())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "bond_templates_read",
+        "t": "public.bond_quest_templates",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(active = true)",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "bond_quests_select",
+        "t": "public.bond_weekly_quests",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(couple_id = private.current_couple_id())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "bond_weekly_state_select",
+        "t": "public.bond_weekly_state",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(couple_id = private.current_couple_id())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "bucket_delete_same_couple",
+        "t": "public.bucket_items",
+        "cmd": "DELETE",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(couple_id = private.current_couple_id())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "bucket_insert_same_couple",
+        "t": "public.bucket_items",
+        "cmd": "INSERT",
+        "check": "((couple_id = private.current_couple_id()) AND (created_by = auth.uid()))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": null,
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "bucket_read_same_couple",
+        "t": "public.bucket_items",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(couple_id = private.current_couple_id())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "bucket_update_same_couple",
+        "t": "public.bucket_items",
+        "cmd": "UPDATE",
+        "check": "(couple_id = private.current_couple_id())",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(couple_id = private.current_couple_id())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "calendar_entries_delete_personal",
+        "t": "public.calendar_entries",
+        "cmd": "DELETE",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((entry_type = 'personal'::text) AND (couple_id = private.current_couple_id()) AND (owner_id = auth.uid()))",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "calendar_entries_delete_shared",
+        "t": "public.calendar_entries",
+        "cmd": "DELETE",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((entry_type = 'shared'::text) AND (couple_id = private.current_couple_id()) AND (created_by = auth.uid()))",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "calendar_entries_insert_personal",
+        "t": "public.calendar_entries",
+        "cmd": "INSERT",
+        "check": "((entry_type = 'personal'::text) AND (couple_id = private.current_couple_id()) AND (created_by = auth.uid()) AND (owner_id = auth.uid()))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": null,
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "calendar_entries_insert_shared",
+        "t": "public.calendar_entries",
+        "cmd": "INSERT",
+        "check": "((entry_type = 'shared'::text) AND (couple_id = private.current_couple_id()) AND (created_by = auth.uid()) AND (owner_id IS NULL))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": null,
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "calendar_entries_select_couple",
+        "t": "public.calendar_entries",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(couple_id = private.current_couple_id())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "calendar_entries_update_personal",
+        "t": "public.calendar_entries",
+        "cmd": "UPDATE",
+        "check": "((entry_type = 'personal'::text) AND (couple_id = private.current_couple_id()) AND (owner_id = auth.uid()))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((entry_type = 'personal'::text) AND (couple_id = private.current_couple_id()) AND (owner_id = auth.uid()))",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "calendar_entries_update_shared",
+        "t": "public.calendar_entries",
+        "cmd": "UPDATE",
+        "check": "((entry_type = 'shared'::text) AND (couple_id = private.current_couple_id()) AND (created_by = auth.uid()))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((entry_type = 'shared'::text) AND (couple_id = private.current_couple_id()) AND (created_by = auth.uid()))",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "calendar_reminders_delete_requester",
+        "t": "public.calendar_reminders",
+        "cmd": "DELETE",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((couple_id = private.current_couple_id()) AND ((requested_by = auth.uid()) OR (recipient_id = auth.uid())))",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "calendar_reminders_insert_couple",
+        "t": "public.calendar_reminders",
+        "cmd": "INSERT",
+        "check": "((couple_id = private.current_couple_id()) AND (requested_by = auth.uid()) AND (EXISTS ( SELECT 1\n   FROM profiles p\n  WHERE ((p.id = calendar_reminders.recipient_id) AND (p.couple_id = p.couple_id)))) AND (EXISTS ( SELECT 1\n   FROM calendar_entries e\n  WHERE ((e.id = calendar_reminders.entry_id) AND (e.couple_id = e.couple_id) AND ((e.entry_type = 'shared'::text) OR (e.owner_id = auth.uid()))))))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": null,
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "calendar_reminders_select_couple",
+        "t": "public.calendar_reminders",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(couple_id = private.current_couple_id())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "calendar_reminders_update_requester",
+        "t": "public.calendar_reminders",
+        "cmd": "UPDATE",
+        "check": "((couple_id = private.current_couple_id()) AND (requested_by = auth.uid()))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((couple_id = private.current_couple_id()) AND (requested_by = auth.uid()))",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "conserva_select_same_couple",
+        "t": "public.conserva_contributions",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(couple_id = private.current_couple_id())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "couple_locations_insert_self",
+        "t": "public.couple_locations",
+        "cmd": "INSERT",
+        "check": "((user_id = ( SELECT auth.uid() AS uid)) AND (couple_id = private.current_couple_id()))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": null,
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "couple_locations_select_same_couple",
+        "t": "public.couple_locations",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(couple_id = private.current_couple_id())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "couple_locations_update_self",
+        "t": "public.couple_locations",
+        "cmd": "UPDATE",
+        "check": "((user_id = ( SELECT auth.uid() AS uid)) AND (couple_id = private.current_couple_id()))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((user_id = ( SELECT auth.uid() AS uid)) AND (couple_id = private.current_couple_id()))",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "couples_select_own",
+        "t": "public.couples",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(id = private.current_couple_id())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "couples_update_own",
+        "t": "public.couples",
+        "cmd": "UPDATE",
+        "check": "(id = private.current_couple_id())",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(id = private.current_couple_id())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "daily_answers_insert_own",
+        "t": "public.daily_answers",
+        "cmd": "INSERT",
+        "check": "((user_id = auth.uid()) AND (couple_id = private.current_couple_id()))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": null,
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "daily_answers_read_own",
+        "t": "public.daily_answers",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(user_id = auth.uid())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "daily_answers_update_own",
+        "t": "public.daily_answers",
+        "cmd": "UPDATE",
+        "check": "((user_id = auth.uid()) AND (couple_id = private.current_couple_id()))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(user_id = auth.uid())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "daily_question_keepsakes_select_same_couple",
+        "t": "public.daily_question_keepsakes",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(couple_id = private.current_couple_id())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "daily_question_outcomes_select_after_reveal",
+        "t": "public.daily_question_outcomes",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((couple_id = private.current_couple_id()) AND private.daily_question_reveal_ready(question_id))",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "daily_questions_read",
+        "t": "public.daily_questions",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "true",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "device_push_tokens_delete_own",
+        "t": "public.device_push_tokens",
+        "cmd": "DELETE",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(user_id = auth.uid())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "device_push_tokens_select_own",
+        "t": "public.device_push_tokens",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(user_id = auth.uid())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "left_for_you_insert_own",
+        "t": "public.left_for_you",
+        "cmd": "INSERT",
+        "check": "((couple_id = private.current_couple_id()) AND (sender_id = auth.uid()) AND (recipient_id <> sender_id) AND (seen_at IS NULL) AND (EXISTS ( SELECT 1\n   FROM profiles partner\n  WHERE ((partner.id = left_for_you.recipient_id) AND (partner.couple_id = private.current_couple_id())))) AND ((kind <> ALL (ARRAY['photo'::text, 'audio'::text, 'video'::text])) OR starts_with(media_path, ((((couple_id)::text || '/'::text) || (auth.uid())::text) || '/left/'::text))) AND ((kind <> 'music'::text) OR (NOT starts_with(media_path, ((((couple_id)::text || '/'::text) || (auth.uid())::text) || '/left/'::text)))))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": null,
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "left_for_you_select_participants",
+        "t": "public.left_for_you",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((couple_id = private.current_couple_id()) AND ((auth.uid() = sender_id) OR (auth.uid() = recipient_id)))",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "living_provenance_select_same_couple",
+        "t": "public.living_provenance",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(couple_id = private.current_couple_id())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "moment_photos_delete_own",
+        "t": "public.moment_photos",
+        "cmd": "DELETE",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((couple_id = private.current_couple_id()) AND (created_by = auth.uid()))",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "moment_photos_insert_own",
+        "t": "public.moment_photos",
+        "cmd": "INSERT",
+        "check": "((couple_id = private.current_couple_id()) AND (created_by = auth.uid()) AND (EXISTS ( SELECT 1\n   FROM moments m\n  WHERE ((m.id = moment_photos.moment_id) AND (m.couple_id = private.current_couple_id())))))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": null,
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "moment_photos_select_same_couple",
+        "t": "public.moment_photos",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((couple_id = private.current_couple_id()) AND (EXISTS ( SELECT 1\n   FROM moments m\n  WHERE ((m.id = moment_photos.moment_id) AND (m.couple_id = private.current_couple_id())))))",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "moment_photos_update_own",
+        "t": "public.moment_photos",
+        "cmd": "UPDATE",
+        "check": "((couple_id = private.current_couple_id()) AND (created_by = auth.uid()))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((couple_id = private.current_couple_id()) AND (created_by = auth.uid()))",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "moments_delete_own",
+        "t": "public.moments",
+        "cmd": "DELETE",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((couple_id = private.current_couple_id()) AND (created_by = auth.uid()))",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "moments_insert_own",
+        "t": "public.moments",
+        "cmd": "INSERT",
+        "check": "((couple_id = private.current_couple_id()) AND (created_by = auth.uid()))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": null,
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "moments_select_same_couple",
+        "t": "public.moments",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(couple_id = private.current_couple_id())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "moments_update_own",
+        "t": "public.moments",
+        "cmd": "UPDATE",
+        "check": "((couple_id = private.current_couple_id()) AND (created_by = auth.uid()))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((couple_id = private.current_couple_id()) AND (created_by = auth.uid()))",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "moods_insert_own",
+        "t": "public.moods",
+        "cmd": "INSERT",
+        "check": "((couple_id = private.current_couple_id()) AND (user_id = auth.uid()))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": null,
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "moods_read_same_couple",
+        "t": "public.moods",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(couple_id = private.current_couple_id())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "moods_update_own",
+        "t": "public.moods",
+        "cmd": "UPDATE",
+        "check": "((couple_id = private.current_couple_id()) AND (user_id = auth.uid()))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(user_id = auth.uid())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "notification_preferences_insert_self",
+        "t": "public.notification_preferences",
+        "cmd": "INSERT",
+        "check": "(user_id = auth.uid())",
+        "roles": [
+          "public"
+        ],
+        "using": null,
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "notification_preferences_select_self",
+        "t": "public.notification_preferences",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "public"
+        ],
+        "using": "(user_id = auth.uid())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "notification_preferences_update_self",
+        "t": "public.notification_preferences",
+        "cmd": "UPDATE",
+        "check": "(user_id = auth.uid())",
+        "roles": [
+          "public"
+        ],
+        "using": "(user_id = auth.uid())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "partner_knowledge_attempts_read_own",
+        "t": "public.partner_knowledge_attempts",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "public"
+        ],
+        "using": "(user_id = auth.uid())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "profiles_select_same_couple",
+        "t": "public.profiles",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((id = auth.uid()) OR (couple_id = private.current_couple_id()))",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "profiles_update_self",
+        "t": "public.profiles",
+        "cmd": "UPDATE",
+        "check": "(id = auth.uid())",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(id = auth.uid())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "quiz_questions_read",
+        "t": "public.quiz_questions",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "true",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "quiz_responses_read_own",
+        "t": "public.quiz_responses",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(user_id = auth.uid())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "quiz_sets_read",
+        "t": "public.quiz_sets",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "true",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "relationship_milestones_select_same_couple",
+        "t": "public.relationship_milestones",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "public"
+        ],
+        "using": "(couple_id = private.current_couple_id())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "shared_event_completions_select_same_couple",
+        "t": "public.shared_event_completions",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "public"
+        ],
+        "using": "(couple_id = private.current_couple_id())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "shared_events_delete_same_couple",
+        "t": "public.shared_events",
+        "cmd": "DELETE",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(couple_id = private.current_couple_id())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "shared_events_insert_same_couple",
+        "t": "public.shared_events",
+        "cmd": "INSERT",
+        "check": "((couple_id = private.current_couple_id()) AND (created_by = auth.uid()))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": null,
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "shared_events_select_same_couple",
+        "t": "public.shared_events",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(couple_id = private.current_couple_id())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "shared_events_update_same_couple",
+        "t": "public.shared_events",
+        "cmd": "UPDATE",
+        "check": "(couple_id = private.current_couple_id())",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(couple_id = private.current_couple_id())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "messages_insert_own",
+        "t": "public.shared_messages",
+        "cmd": "INSERT",
+        "check": "((couple_id = private.current_couple_id()) AND (sender_id = auth.uid()) AND (EXISTS ( SELECT 1\n   FROM profiles p\n  WHERE ((p.id = shared_messages.recipient_id) AND (p.couple_id = private.current_couple_id())))))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": null,
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "messages_read_own_couple",
+        "t": "public.shared_messages",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((couple_id = private.current_couple_id()) AND ((sender_id = auth.uid()) OR (recipient_id = auth.uid())))",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "messages_update_recipient",
+        "t": "public.shared_messages",
+        "cmd": "UPDATE",
+        "check": "((couple_id = private.current_couple_id()) AND (recipient_id = auth.uid()))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(recipient_id = auth.uid())",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "stories_delete_own",
+        "t": "public.stories",
+        "cmd": "DELETE",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((couple_id = ( SELECT private.current_couple_id() AS current_couple_id)) AND (author_id = ( SELECT auth.uid() AS uid)))",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "stories_insert_own",
+        "t": "public.stories",
+        "cmd": "INSERT",
+        "check": "((couple_id = ( SELECT private.current_couple_id() AS current_couple_id)) AND (author_id = ( SELECT auth.uid() AS uid)) AND (expires_at <= (now() + '24:05:00'::interval)) AND (expires_at > now()))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": null,
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "stories_select_same_couple",
+        "t": "public.stories",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(couple_id = ( SELECT private.current_couple_id() AS current_couple_id))",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "story_views_insert_self",
+        "t": "public.story_views",
+        "cmd": "INSERT",
+        "check": "((viewer_id = ( SELECT auth.uid() AS uid)) AND (EXISTS ( SELECT 1\n   FROM stories s\n  WHERE ((s.id = story_views.story_id) AND (s.couple_id = ( SELECT private.current_couple_id() AS current_couple_id)) AND (s.expires_at > now())))))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": null,
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "story_views_select_same_couple",
+        "t": "public.story_views",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(EXISTS ( SELECT 1\n   FROM stories s\n  WHERE ((s.id = story_views.story_id) AND (s.couple_id = ( SELECT private.current_couple_id() AS current_couple_id)))))",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "think_reactions_select_couple_members",
+        "t": "public.think_reactions",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(EXISTS ( SELECT 1\n   FROM shared_messages message\n  WHERE ((message.id = think_reactions.message_id) AND (message.kind = 'think'::text) AND (message.couple_id = private.current_couple_id()) AND ((message.sender_id = auth.uid()) OR (message.recipient_id = auth.uid())))))",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "weekly_quiz_rewards_same_couple_select",
+        "t": "public.weekly_quiz_rewards",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(EXISTS ( SELECT 1\n   FROM profiles p\n  WHERE ((p.id = auth.uid()) AND (p.couple_id = weekly_quiz_rewards.couple_id))))",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "us_media_delete_own",
+        "t": "storage.objects",
+        "cmd": "DELETE",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((bucket_id = 'us-media'::text) AND (owner_id = ( SELECT (auth.uid())::text AS uid)) AND ((storage.foldername(name))[1] = ( SELECT (private.current_couple_id())::text AS current_couple_id)))",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "us_media_insert_own_folder",
+        "t": "storage.objects",
+        "cmd": "INSERT",
+        "check": "((bucket_id = 'us-media'::text) AND ((storage.foldername(name))[1] = ( SELECT (private.current_couple_id())::text AS current_couple_id)) AND ((storage.foldername(name))[2] = ( SELECT (auth.uid())::text AS uid)))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": null,
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "us_media_select_same_couple",
+        "t": "storage.objects",
+        "cmd": "SELECT",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((bucket_id = 'us-media'::text) AND ((storage.foldername(name))[1] = ( SELECT (private.current_couple_id())::text AS current_couple_id)))",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "p": "us_media_update_own",
+        "t": "storage.objects",
+        "cmd": "UPDATE",
+        "check": "((bucket_id = 'us-media'::text) AND (owner_id = ( SELECT (auth.uid())::text AS uid)) AND ((storage.foldername(name))[1] = ( SELECT (private.current_couple_id())::text AS current_couple_id)) AND ((storage.foldername(name))[2] = ( SELECT (auth.uid())::text AS uid)))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((bucket_id = 'us-media'::text) AND (owner_id = ( SELECT (auth.uid())::text AS uid)) AND ((storage.foldername(name))[1] = ( SELECT (private.current_couple_id())::text AS current_couple_id)))",
+        "permissive": "PERMISSIVE"
+      }
+    ],
+    "s04": [
+      {
+        "f": "ack_progression_unlock(text)",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "d30430bd0a2a7daf78f119b4de58a2a3",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "archive_couple_question(uuid)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "59570a5e74a23fd4860ed1394552492b",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "award_relationship_milestone(uuid,date,integer,text,integer)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public"
+        ],
+        "definer": true,
+        "body_md5": "5d5a8ffad17dc6a14447574f00c79f27",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "calendar_reminder_offset_valid(uuid,integer)",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public"
+        ],
+        "definer": true,
+        "body_md5": "fbfbb036bf0437325e780590e4028625",
+        "volatility": "s",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "calendar_reminder_recipient_in_couple(uuid,uuid)",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public"
+        ],
+        "definer": true,
+        "body_md5": "55d685c13994d71656cf7d236fcdc414",
+        "volatility": "s",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "claim_left_for_you_cleanup(integer)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "de5f5ee60cadb6bdce9506f2961c8361",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "claim_us_role(text,text)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public, auth, extensions"
+        ],
+        "definer": true,
+        "body_md5": "9548d2d63c9b64cb1869a3ef41d5d98d",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "complete_game_session_side(uuid)",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "16b2830aac7493adc540c6f8f07c1277",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "complete_left_for_you_cleanup(uuid)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "b1283c8f42bcd326c96b8dd52f1d9036",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "complete_partner_knowledge_deck(smallint,jsonb)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public"
+        ],
+        "definer": true,
+        "body_md5": "69b8002ee747a27ca681041d9bf64291",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "complete_shared_event(uuid,date)",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public, private, auth"
+        ],
+        "definer": true,
+        "body_md5": "6e436f425d0b89aac0c8fcb97ad429cb",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "confirm_bond_quest(uuid)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "ab1e1650b560e0df4402df0ec6f52b08",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "confirm_bucket_item_lived(uuid)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "271a72018a12563ad617fc6f7fecd973",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "conserve_left_for_you(uuid)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "35094e913b269d7c9d2f94bfeccaab85",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "create_couple_question(uuid,text,text,jsonb)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "2810f49ba2d8f0e2aca459150f87b858",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "create_weekly_question(uuid,text,text,jsonb,text[])",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "5cf1c77b005ca0603a8143f5ca338901",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "delete_daily_question_outcome(uuid,integer)",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "970dc85382768952d7fee0786d204fcf",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "delete_think_reaction(uuid)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "bfe2932f8e13f122040824b6db3c1312",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "dismiss_daily_reveal_notice(uuid)",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "bed5ef48ee63143d9dac8ecad3495efc",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "ensure_bond_week()",
+        "acl": "{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "ceb35d69213ab6fcb25aa58d81826160",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "equip_progression_reward(text)",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "dd1787455d6b761fc5a090bb372f4f4e",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "finalize_left_for_you_cleanup(uuid)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "a2f9469bb9322b093131f3dccc3da2bd",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "game_v2_pending_pushes()",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "58f3f7ea91c3e69726c2beddae96253a",
+        "volatility": "s",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "game_v2_push_for_session(uuid,uuid)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "4566392594efe3f5404411cb8fcaac01",
+        "volatility": "s",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "game_v2_push_for_weekly(uuid,uuid)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "1bf7a5e676262ef9a8e0cd7be834afce",
+        "volatility": "s",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "get_daily_reveal_meta(uuid)",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "7519906a8cb9f0fb775a85859da7fa4e",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "get_daily_state(uuid)",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public"
+        ],
+        "definer": true,
+        "body_md5": "8fb27e9ae787ec2b792e963428c8938c",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "get_game_session(uuid)",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "1338f4db46f6e60253fc43200791dae8",
+        "volatility": "s",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "get_game_v2_home()",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "83b0c852f0af34e5b0f96d23d19585f9",
+        "volatility": "s",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "get_internal_calendar_reminders_cron_key()",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public, vault"
+        ],
+        "definer": true,
+        "body_md5": "fbfda62a9cd9de8622dcb9a4be0a23ec",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "get_internal_daily_question_push_cron_key()",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public, vault"
+        ],
+        "definer": true,
+        "body_md5": "d49157542e011b309b0f9bf0fe52fcc3",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "get_internal_game_v2_push_cron_key()",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public, vault"
+        ],
+        "definer": true,
+        "body_md5": "eaec9759da52ac69dd0eb7dd4cb2b716",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "get_internal_left_for_you_push_cron_key()",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public, vault"
+        ],
+        "definer": true,
+        "body_md5": "413ee2032b311b6e8ac56137da010c7e",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "get_internal_monthiversary_cron_key()",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public, vault"
+        ],
+        "definer": true,
+        "body_md5": "3ab62a7d1362cc9b789e1efe5d8ed41a",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "get_internal_vapid_private_key()",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public, vault"
+        ],
+        "definer": true,
+        "body_md5": "f317a4438ff655f3b054d720fc543de4",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "get_notification_preferences()",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public"
+        ],
+        "definer": true,
+        "body_md5": "44940c24b8b6baf270ab09d1a779cfb7",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "get_or_create_daily_question()",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "44db5cef359b0cd01937b04858119626",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "get_partner_knowledge_hub()",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public"
+        ],
+        "definer": true,
+        "body_md5": "c2bec210b71ca06f5d1d71b8349d8136",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "get_progression_v1()",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "441c080df4869fca29e1e1b0213ff27b",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "get_quiz_state(uuid)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public"
+        ],
+        "definer": true,
+        "body_md5": "47921dac74c76c0484d8f476a2753041",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "get_web_push_status()",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public"
+        ],
+        "definer": true,
+        "body_md5": "ed020281956e56c1f42756d3b0f54f24",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "get_weekly_game_sets()",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public"
+        ],
+        "definer": true,
+        "body_md5": "492601cc8124fad4723449ad2d51c090",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "get_weekly_question_state()",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "936f8b243d57d1e8ffcaefb8c36dda71",
+        "volatility": "s",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "get_weekly_quiz_sets()",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public"
+        ],
+        "definer": true,
+        "body_md5": "edaa1e21a8106654107edb9e6cb52455",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "keep_daily_question(uuid)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "2a6293237a2a79c718fce0c6e229baec",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "link_moment_to_source(uuid,text,uuid)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "983bfa2ae718c84329efe6e0482ab15f",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "list_couple_questions()",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "4436dff336651b9aeb6f1da4a2ad1b74",
+        "volatility": "s",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "list_game_sessions()",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "9a61313c70b2379ee87f63586200d100",
+        "volatility": "s",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "mark_daily_reveal_seen(uuid)",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "6b1a8fa24784f611848dd08871745171",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "mark_game_session_reveal_seen(uuid)",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "ad323f000d85547aef66b7d10dce6605",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "mark_left_item_seen(uuid)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "29ec733d63f220007251b1805b0a4fe4",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "private.bond_hash_seed(text)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=pg_catalog"
+        ],
+        "definer": false,
+        "body_md5": "8a27b1ab6f6c72989a00eb29b673b338",
+        "volatility": "i",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.bond_mode_for_couple(uuid)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "62a3a52ba88ef96a58c1fe76a5277046",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.bond_week_start_rome(timestamp with time zone)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=pg_catalog"
+        ],
+        "definer": false,
+        "body_md5": "6e4f0e0f635c945a86d95997b9a1df7f",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.bucket_items_guard_calendar_link(uuid,uuid)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "4ccf01d75708dfb2f5ba74b868fd38e0",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.bucket_items_guard_delete()",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "b8416771ad468d679e1c3fb73ebe9716",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.bucket_items_guard_insert()",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "adfe2549ad38670156b5fc936a3b47ca",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.bucket_items_guard_update()",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "edee0cdc386ffba3138eaf539fc1d64e",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.bucket_items_release_archived_link()",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "b3b38a95baf7b9227c8783df4bf492c5",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.calendar_entries_guard_update()",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "0b1837a7a0a32d719c3b60d9600883b6",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.calendar_entries_unschedule_bucket_items()",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "3d8ca6c25fa7fb2e1907780140adcec7",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.confirm_bond_quest_internal(uuid)",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "4c7ea4fb27c45ee5ae981e1c82798a56",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "private.current_couple_id()",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public"
+        ],
+        "definer": true,
+        "body_md5": "99636b9fc32f107ef3cf1375b53de198",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": true
+      },
+      {
+        "f": "private.daily_question_day(timestamp with time zone)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "e4d6437f13470b2e4d49a97537d8e2f1",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.daily_question_keepsake_json(daily_question_keepsakes,text)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "772dbca214fddaa6b760ac4cf52959d5",
+        "volatility": "i",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.daily_question_keepsakes_guard_update()",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "dd4cff92c9f3db7e09cc6a01b8cb9f68",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.daily_question_reveal_ready(uuid)",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "4aabbd5ff7f6cb7df6814ed0bfe7a03b",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": true
+      },
+      {
+        "f": "private.daily_reveal_context(uuid)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "7bed641cb85c022c29e485481924020c",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.daily_reveal_meta(uuid,uuid,text,boolean)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "7786dfb8de2ad0e8817df54298d130b7",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.ensure_bond_week_internal()",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "09066914a7836cacd6fec56d28ca2ccf",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "private.game_v2_assign_subjects(uuid,jsonb,text)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "8768b27936edf34933af7fd5059daaba",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_candidates(uuid,text,timestamp with time zone)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "5b527bfaa1275ad39df5b48f5a96b253",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_clean_title(text)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "fe6c1d83166b531afd2606d2478896cf",
+        "volatility": "i",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_clock()",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "c6cc5aedf06b326b93be09bbe76052cd",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_context_candidates(uuid,text,timestamp with time zone)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "f84e797068a91a6374a21dab30c0c955",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_ctx_calendar(uuid,text,timestamp with time zone)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "c0320f32debf39d05d92ed761d1d4e76",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_ctx_conservati(uuid,text,timestamp with time zone)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "92b3ef6aa076a8b15bff67d88a205f7a",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_ctx_da_vivere(uuid,text,timestamp with time zone)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "a318af4f7d5a0518fe253f96cd731887",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_ctx_longitudinal(uuid,text,timestamp with time zone)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "9b8db3fc94be98079431ed5129ee8d27",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_ctx_moments(uuid,text,timestamp with time zone)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "41dffe8d3c3529fc84caaf0fba3f568a",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_day_label(date)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "0c9e388d7437a5977f1fd664e5f92fbb",
+        "volatility": "i",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_families()",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "7fb25833b1a818dfa1b429d1654d170a",
+        "volatility": "i",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_fill(text,jsonb)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "b3e0f8d9d3e38b9d2c277f7db80306db",
+        "volatility": "i",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_items_immutable()",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "74463851d9a859bf3e80822ca92bff2c",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_month_name(date)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "aa156227ad7a733897a453999e691cfb",
+        "volatility": "i",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_partner_role(text)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "2f9df426601ef07293bbb750990f8f7e",
+        "volatility": "i",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_push_event(text,uuid,text,text,text)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "6f3ada70d1cf7ae91b514bbd9e988e83",
+        "volatility": "i",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_question_sealed(uuid,text,text,text)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "cf6741b0e90b90a07e27df4ee69d1f5a",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_recipe_candidates(text,text,text,jsonb,timestamp with time zone)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "12025c3695253d88517954741db0fef6",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_render_options(jsonb,text)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "718e1358ddda1b4391e4102337b5c6c2",
+        "volatility": "i",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_render(text,text)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "5bf8ae0b8a3c7bf2007ad2eb6b1a2070",
+        "volatility": "i",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_role_label(text)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "23f8a7d5792d1a0f41da1e57ef8df264",
+        "volatility": "i",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_scored_candidates(uuid,text,timestamp with time zone,integer)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "6e0a09a71b17cea9381e1eaeaa5c57c7",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_select_items(uuid,text,timestamp with time zone,integer)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "ebcd093a7119123559634ad1d6d80200",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_session_summary(uuid,uuid,text)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "b3ada28741f9b03d5b621ec8878522c7",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_valid_families(text[],text)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "e7f6f4cda07009255cddc0afb75df63d",
+        "volatility": "i",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_week_bounds(timestamp with time zone)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "89ef2df389971c997751e9a03848ec7f",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_week_limits()",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "fb327da7656ee8dfdcdb7913bdc4b4f4",
+        "volatility": "i",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_week_start(timestamp with time zone)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "597e659069ad20de34daf2ef63528cc5",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_week_usage(uuid,timestamp with time zone)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "af3a142c75dee8217b5ceb65900b74fc",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_weekly_role(date)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "845c13aa35cf49f474e0df7774085007",
+        "volatility": "i",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_weekly_state(uuid,text,timestamp with time zone)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "ce22e3a1172fc31e2e0ab6aa695b3f02",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.game_v2_when_label(date,date)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "1e9a6e4cfbe82b57b8ddcd50fbfd86e8",
+        "volatility": "i",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.living_provenance_guard_update()",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "466f946345036c3e27ac90702484cc51",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.m11a_actor_locked()",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "05d1d0c6d321d60e0c5c626c01b7db34",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.m11a_actor()",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "378363308695859acc8b06d54a836110",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.m11a_question_json(couple_questions)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "e92c52021f8465ca1a8c822115bbf1eb",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.m11a_session_state(uuid,uuid,text)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "1a77b609b882dff2dc62ea9bb6d6efd5",
+        "volatility": "s",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.m11a_valid_options(text,text,jsonb)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "30be349f676cf8668846720d05f8d679",
+        "volatility": "i",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.materialize_daily_question(date)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "1143ae96b5ef681304f23c12e57c2621",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.progression_award(uuid,uuid,text,text,integer,timestamp with time zone,boolean,boolean)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "153e00d4b47e17d306d5ad018f73087e",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.progression_couples_xp_trigger()",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "133c500b572fdb1623dbaa54c1a8ddfb",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.progression_daily_trigger()",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "135c4d294ae7e1599bffd7d6ae6e7a90",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.progression_event_trigger()",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "a4a522d33afda2d63a7cde0504bd50ab",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.progression_game_trigger()",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "ee40ac80f710036f5fa597174c6a8729",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.progression_level_info(integer)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "d9008b4850b7e9fe0ac832f8b688df0a",
+        "volatility": "i",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.progression_level(integer)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "60d1a63dae0f5cb0f35eab56a75d3fe9",
+        "volatility": "i",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.progression_milestone_trigger()",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "0c20ee3038ec6cfc767d3f15553d3b34",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.progression_moment_trigger()",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "b0856c970642046675ae26a6c0006404",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.progression_quest_trigger()",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "b1fdce305eb4dacf1df810f69f440d02",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.progression_sync_unlocks(uuid,integer)",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "da62f098f9c56fdabca0b36714a250d6",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.progression_think_trigger()",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "4634653f031f240b81a926b10032eae5",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.reroll_bond_quest_internal(uuid,text)",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "515065f851e4afa5d4cb1e9f40635e11",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "private.set_left_for_you_cleanup_eligible_at()",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "bf82776655c7bf6cc812410641183590",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.shared_event_completions_title_snapshot()",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "499b81ae788218dfa94853452e325bc8",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "private.us_touch_updated_at()",
+        "acl": "{postgres=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "body_md5": "9b1889f56258bf9d6554213c05019c76",
+        "volatility": "v",
+        "service_role": false,
+        "authenticated": false
+      },
+      {
+        "f": "register_push_token(text,text)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public, auth"
+        ],
+        "definer": true,
+        "body_md5": "34ec40ac897fc7ea63fc951f89b1bb72",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "register_web_push_subscription(text,text,text,bigint,text)",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public"
+        ],
+        "definer": true,
+        "body_md5": "6f86114a622b376f55bafa281ce1a673",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "remove_web_push_subscription(text)",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public"
+        ],
+        "definer": true,
+        "body_md5": "ccc5d36d9b0aa16d3cd53a338e3c55a5",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "reroll_bond_quest(uuid,text)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "body_md5": "1124269db66e493b3c5943ef1cfd4802",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "save_daily_question_outcome(uuid,text,uuid,integer)",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "e54083ac540b65a7e0d7751dcdbc0093",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "save_game_session_answer(uuid,uuid,text,smallint)",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "ac8f9b8b3f9122e6d347c48f4f387cfc",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "save_quiz_answer(uuid,smallint)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public"
+        ],
+        "definer": true,
+        "body_md5": "d911ebeaf4036f82134ca16cadc21cd9",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "send_think(uuid)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "018e714772a488f06edad708acf9b3b1",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "set_daily_answer_reaction(uuid,text)",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "e07f2ea6a80341db3ec36e9bd4290fc0",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "set_notification_preference(text,boolean)",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=public"
+        ],
+        "definer": true,
+        "body_md5": "d3448092da148db194ad9c0e91b3ddda",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "set_think_reaction(uuid,text)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "15e7492eae982912bb4951e3004f0449",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "start_custom_game_session(uuid,uuid)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "623d42a0563ad7ecfb00f4c8384bfb10",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "start_game_round(text,uuid)",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "c57ba90dcafa8fc117eb456907c0225f",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "start_swipe_round(uuid)",
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "e408d3e89dc882f78fa684950c965fa7",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": true
+      },
+      {
+        "f": "update_couple_question(uuid,integer,text,text,jsonb)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "6bb7f0f02aea67c3b7dd9bace971f7aa",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "widget_scriptable_exchange_internal(text,text,text,text)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "0b862a7faf59cd0d070012d3aaeaa39c",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "widget_scriptable_issue_code_internal(uuid,uuid,text,timestamp with time zone)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "394f4740599f7d413d39f0d208f67ce1",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "widget_scriptable_revoke_internal(uuid)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "dd044ed0e64829469f3fbc8de51350c7",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      },
+      {
+        "f": "widget_send_think_internal(text,uuid)",
+        "acl": "{postgres=X/postgres,service_role=X/postgres}",
+        "anon": false,
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "body_md5": "1d28cbb537964c1b01e5694235b048c0",
+        "volatility": "v",
+        "service_role": true,
+        "authenticated": false
+      }
+    ],
+    "s05": [
+      {
+        "t": "public.couples",
+        "cols": "home_photo_path,name,started_on",
+        "priv": "UPDATE",
+        "role": "authenticated"
+      },
+      {
+        "t": "public.profiles",
+        "cols": "avatar_path",
+        "priv": "UPDATE",
+        "role": "authenticated"
+      },
+      {
+        "t": "public.shared_events",
+        "cols": "event_date,event_time,location,note,recurs_yearly,title",
+        "priv": "UPDATE",
+        "role": "authenticated"
+      }
+    ],
+    "s06": [
+      {
+        "v": "public.relationship_event_history",
+        "acl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=r/postgres}",
+        "kind": "v",
+        "options": [
+          "security_invoker=true"
+        ]
+      }
+    ],
+    "s07": [
+      {
+        "id": "us-media",
+        "public": false,
+        "file_size_limit": 41943040,
+        "allowed_mime_types": [
+          "image/jpeg",
+          "image/png",
+          "image/webp",
+          "image/heic",
+          "image/heif",
+          "audio/webm",
+          "audio/mp4",
+          "audio/mpeg",
+          "audio/ogg",
+          "video/mp4",
+          "video/webm",
+          "video/quicktime"
+        ]
+      }
+    ],
+    "s08": {
+      "schemas": [
+        {
+          "s": "private",
+          "acl": "{postgres=UC/postgres,authenticated=U/postgres,service_role=U/postgres}"
+        },
+        {
+          "s": "public",
+          "acl": "{pg_database_owner=UC/pg_database_owner,=U/pg_database_owner,postgres=U/pg_database_owner,anon=U/pg_database_owner,authenticated=U/pg_database_owner,service_role=U/pg_database_owner}"
+        }
+      ],
+      "default_acl": [
+        {
+          "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}",
+          "role": "postgres",
+          "schema": "public",
+          "objtype": "S"
+        },
+        {
+          "acl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+          "role": "postgres",
+          "schema": "public",
+          "objtype": "f"
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "role": "postgres",
+          "schema": "public",
+          "objtype": "r"
+        },
+        {
+          "acl": "{postgres=rwU/supabase_admin,anon=rwU/supabase_admin,authenticated=rwU/supabase_admin,service_role=rwU/supabase_admin}",
+          "role": "supabase_admin",
+          "schema": "public",
+          "objtype": "S"
+        },
+        {
+          "acl": "{postgres=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}",
+          "role": "supabase_admin",
+          "schema": "public",
+          "objtype": "f"
+        },
+        {
+          "acl": "{postgres=arwdDxtm/supabase_admin,anon=arwdDxtm/supabase_admin,authenticated=arwdDxtm/supabase_admin,service_role=arwdDxtm/supabase_admin}",
+          "role": "supabase_admin",
+          "schema": "public",
+          "objtype": "r"
+        }
+      ],
+      "realtime_tables": [
+        "public.bond_weekly_quests",
+        "public.couple_locations",
+        "public.couples",
+        "public.daily_answers",
+        "public.left_for_you",
+        "public.moment_photos",
+        "public.moments",
+        "public.quiz_responses",
+        "public.relationship_milestones",
+        "public.shared_event_completions",
+        "public.shared_events",
+        "public.shared_messages",
+        "public.stories",
+        "public.story_views",
+        "public.think_reactions"
+      ]
+    },
+    "s09": {
+      "policies": null,
+      "functions": [
+        {
+          "f": "claim_us_role(text,text)",
+          "auth_jwt": false,
+          "auth_role": false,
+          "app_metadata": true,
+          "user_metadata": true
+        },
+        {
+          "f": "get_internal_vapid_private_key()",
+          "auth_jwt": false,
+          "auth_role": true,
+          "app_metadata": false,
+          "user_metadata": false
+        }
+      ]
+    },
+    "s10": {
+      "couples": 1,
+      "profiles": 2,
+      "auth_users": {
+        "total": 11,
+        "anonymous": 8,
+        "without_profile": 9
+      },
+      "home_photo_path": {
+        "null": 0,
+        "outside": 0,
+        "own_folder": 1
+      },
+      "storage_objects": {
+        "total": 51,
+        "other_buckets": 0,
+        "us_media_outside_known_couples": 0
+      },
+      "calendar_reminders": 0,
+      "moments_path_outside_couple": 0,
+      "avatar_path_outside_own_couple": 0,
+      "left_for_you_media_outside_sender": 0,
+      "moment_photos_path_outside_couple": 0
+    },
+    "s11": {
+      "policies": null,
+      "realtime_messages_exists": true
+    }
+  }
+}
