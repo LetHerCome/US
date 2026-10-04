@@ -1,6 +1,6 @@
 # US 2.0 — F2C Edge & cron source of truth
 
-**Status:** `F2C_READY_FOR_REVIEW`. This pass is repo and local work only; nothing in production changed. The production rollout below is a plan awaiting approval.
+**Status:** `F2C_ROLLOUT_READY`. The independent review passed on `25e7f3ecdbe7eb1560e2a9eee2c29968e58c4ad7`, and the Edge parity of the other six producers is verified (see EDGE PARITY). Nothing in production has changed. The production rollout below is a plan awaiting approval; nothing is deployed.
 **Project:** Supabase `iiakdfsxpywdkxravqjh`
 
 ## SOURCE
@@ -150,6 +150,30 @@ The manifest test still requires the vault names without `introduced_by` to equa
   - `tests/m10-2-daily-reactions.test.js`: the `send-web-push` pin becomes the M10 production hash after undoing exactly the F2C edit;
   - `tests/helpers/edge-function-harness.js`: `update()`, opt-in `requireVapid`, default `VAPID_SUBJECT`.
 
+## EDGE PARITY (read-only, independent review)
+
+Every deployed bundle file was compared with the repo at base `main` `2ace4fa`. Recorded in `F2C_PRODUCTION_PREFLIGHT.json` (`edge_parity`).
+
+| Function | Result |
+|---|---|
+| `monthiversary-job` | byte-identical (deployed v4) |
+| `calendar-reminders-worker` | byte-identical (deployed v1) |
+| `daily-question-push-worker` | all bundle files equal |
+| `game-v2-push` | all bundle files equal |
+| `game-v2-push-worker` | all bundle files equal |
+| `left-for-you-push-worker` | all bundle files equal |
+| `send-web-push` | all bundle files equal, including `_shared/think-web-push.ts` |
+| `widget-think-send` | known delta, see below |
+
+**`widget-think-send`, known bundled-helper delta:**
+- `index.ts` differs only by the final newline.
+- `_shared/widget-think-contract.mjs` and `_shared/supabase-secret.ts` are equal.
+- The deployed `_shared/think-web-push.ts` is an older, repo-compatible version that ends before `dispatchThinkReactionWebPush`. `main` only adds that reaction helper below that point, and `widget-think-send` does not use it (it imports only `dispatchThinkWebPush`).
+- So the F2C deploy of `widget-think-send` (rollout step 4.8) ships the current helper:
+  - `dispatchThinkWebPush` with the F2C VAPID edit;
+  - the unused reaction helper as dead code in that bundle.
+- No other behaviour changes, and no unknown production source is overwritten.
+
 ## PRODUCTION ROLLOUT — PLAN ONLY, NOT EXECUTED
 
 Run from a clean checkout of the reviewed commit, with the Supabase CLI linked to `iiakdfsxpywdkxravqjh`. Stop at the first failed check.
@@ -161,8 +185,8 @@ Run from a clean checkout of the reviewed commit, with the Supabase CLI linked t
    - Vault names: the same six, with `us_project_url` absent.
    - `supabase functions list`: record the current versions. `monthiversary-job` is v4 and `calendar-reminders-worker` is v1; the others are recorded for rollback.
    - `supabase secrets list`: record whether `VAPID_SUBJECT` exists.
-   - **Parity of the six other producers:** `supabase functions download <slug>` into a scratch directory (read-only), then diff against `main` `2ace4fa`. The six are `daily-question-push-worker`, `game-v2-push`, `game-v2-push-worker`, `left-for-you-push-worker`, `send-web-push` and `widget-think-send`.
-     - Any difference beyond what the repo already has → STOP for that function and report. Deploying it would replace production code the repo does not know.
+   - **Parity of the six other producers:** already verified read-only against `main` `2ace4fa` (see EDGE PARITY). At rollout, `supabase functions list` must show the same versions as that check.
+     - If any version moved, download that function again and diff it. A difference beyond the known `widget-think-send` delta → STOP for that function.
      - Confirm that every deployed producer uses `https://usfinal.vercel.app` (the value to preserve).
 2. **Provision `us_project_url`** (Vault write). It does not affect the running jobs, which do not read it yet.
    - `select vault.create_secret('https://iiakdfsxpywdkxravqjh.supabase.co', 'us_project_url', 'US project origin; pg_cron builds Edge Function URLs from it (F2C)');`
@@ -241,7 +265,7 @@ The tests use the same Windows machine and the same `node_modules` (`F:\AI\US\no
   - Its guards abort, changing nothing, on any mismatch.
   - A `supabase db start` plus `db reset` run on Docker before rollout would add real pg_cron evidence.
 - **Role during `db push`:** the jobs belong to `postgres`. If `db push` ran as another role, the ownership guard would abort the migration (safe, no duplicates) and it would need a rerun as `postgres`.
-- **Eight functions to deploy.** Only `monthiversary-job` and `calendar-reminders-worker` are verified byte-identical to the repo. Step 1 checks the other six before any deploy.
+- **Eight functions to deploy: CLOSED.** All eight match the repo at base `2ace4fa`, so F2C overwrites no unknown production source. `monthiversary-job` and `calendar-reminders-worker` are byte-identical (preflight); the other six were checked file by file (see EDGE PARITY). The only delta is the known `widget-think-send` bundled helper, and deploying it is intended.
 - **The `VAPID_SUBJECT` value is the owner's choice.** It preserves `https://usfinal.vercel.app` (Apple and FCM do not fetch it). A `mailto:` contact would decouple it from any web domain, and that is a later one-line secret change.
 - **Fresh projects still need the other vault values by hand:** the five cron keys and the VAPID private key (as before F2C), plus `us_project_url`.
 - **Calendar reminders already lost:** reminders marked sent after a failed push are not recoverable. Each was a single notification.

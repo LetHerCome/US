@@ -51,6 +51,22 @@
     "All seven commands are byte-identical (md5 and length) to the F2A.1 capture c09: no cron drift since F2A.1.",
     "All seven jobs are owned by postgres, active, database postgres.",
     "pg_cron keys jobs on (jobname, username): cron.schedule(name, ...) by another role would add a second job, so the migration updates existing jobs in place with cron.alter_job and refuses a foreign owner.",
-    "us_project_url is not provisioned yet: rollout step 2 must create it before the migration, which refuses to run otherwise."
-  ]
+    "us_project_url is not provisioned yet: rollout step 2 must create it before the migration, which refuses to run otherwise.",
+    "Edge parity (independent review): all eight Web Push functions match main 2ace4fa; the only delta is widget-think-send's older bundled think-web-push.ts, which lacks the unused reaction helper."
+  ],
+  "edge_parity": {
+    "checked_by": "independent review, read-only (deployed bundle files downloaded and compared), after the F2C review PASS on 25e7f3ecdbe7eb1560e2a9eee2c29968e58c4ad7",
+    "compared_against": "main 2ace4fab934e3af5668b664d9b1123205de14a4c",
+    "functions": [
+      { "slug": "monthiversary-job", "result": "identical", "detail": "deployed v4 byte-identical to the repo (F2A.1 recovery; re-confirmed before F2C)" },
+      { "slug": "calendar-reminders-worker", "result": "identical", "detail": "deployed v1 byte-identical to the repo" },
+      { "slug": "daily-question-push-worker", "result": "identical", "detail": "all deployed bundle files exactly equal the repo" },
+      { "slug": "game-v2-push", "result": "identical", "detail": "all deployed bundle files exactly equal the repo" },
+      { "slug": "game-v2-push-worker", "result": "identical", "detail": "all deployed bundle files exactly equal the repo" },
+      { "slug": "left-for-you-push-worker", "result": "identical", "detail": "all deployed bundle files exactly equal the repo" },
+      { "slug": "send-web-push", "result": "identical", "detail": "all deployed bundle files exactly equal the repo, including _shared/think-web-push.ts" },
+      { "slug": "widget-think-send", "result": "known_delta", "detail": "index.ts differs only by the final newline; _shared/widget-think-contract.mjs and _shared/supabase-secret.ts exactly equal; deployed _shared/think-web-push.ts is the older repo-compatible version ending before dispatchThinkReactionWebPush, and main only adds that reaction helper below that point, which widget-think-send does not use" }
+    ],
+    "conclusion": "No unknown production Edge source would be overwritten by the F2C deploys."
+  }
 }
