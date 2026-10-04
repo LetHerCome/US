@@ -246,6 +246,8 @@ function createAuthStorageContext({ idbEntries = [], localEntries = [] } = {}) {
   const sandbox = {
     console: { info() {}, warn() {} },
     navigator: { storage: { persist: async () => true } },
+    setTimeout,
+    clearTimeout,
     indexedDB: idb.indexedDB,
     supabase: { createClient() {} },
     localStorage: {

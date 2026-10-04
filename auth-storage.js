@@ -6,7 +6,37 @@
 
   const DB_NAME = 'us-pwa-auth';
   const STORE_NAME = 'sessions';
+  const configuredTimeout = Number(window.__US_AUTH_IDB_TIMEOUT_MS__);
+  const IDB_TIMEOUT_MS = Number.isFinite(configuredTimeout) && configuredTimeout > 0
+    ? Math.max(50, configuredTimeout)
+    : 1800;
   let dbPromise = null;
+
+  function withIdbDeadline(promise, label) {
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        reject(new Error(`${label} timed out`));
+      }, IDB_TIMEOUT_MS);
+
+      Promise.resolve(promise).then(
+        (value) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          resolve(value);
+        },
+        (error) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          reject(error);
+        }
+      );
+    });
+  }
 
   function openDb() {
     if (!('indexedDB' in window)) {
@@ -17,6 +47,18 @@
 
     dbPromise = new Promise((resolve, reject) => {
       const request = indexedDB.open(DB_NAME, 1);
+      let settled = false;
+
+      const rejectOnce = (error) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        reject(error);
+      };
+
+      const timer = setTimeout(() => {
+        rejectOnce(new Error('IndexedDB open timed out'));
+      }, IDB_TIMEOUT_MS);
 
       request.onupgradeneeded = () => {
         const db = request.result;
@@ -25,9 +67,27 @@
         }
       };
 
-      request.onsuccess = () => resolve(request.result);
+      request.onsuccess = () => {
+        const db = request.result;
+        if (settled) {
+          try { db.close(); } catch (_) {}
+          return;
+        }
+        settled = true;
+        clearTimeout(timer);
+        db.onversionchange = () => {
+          try { db.close(); } catch (_) {}
+          dbPromise = null;
+        };
+        resolve(db);
+      };
       request.onerror = () =>
-        reject(request.error || new Error('IndexedDB open failed'));
+        rejectOnce(request.error || new Error('IndexedDB open failed'));
+      request.onblocked = () =>
+        rejectOnce(new Error('IndexedDB open blocked'));
+    }).catch((error) => {
+      dbPromise = null;
+      throw error;
     });
 
     return dbPromise;
@@ -35,18 +95,20 @@
 
   async function idbGet(key) {
     const db = await openDb();
-    return new Promise((resolve, reject) => {
+    return withIdbDeadline(new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, 'readonly');
       const request = tx.objectStore(STORE_NAME).get(key);
       request.onsuccess = () => resolve(request.result ?? null);
       request.onerror = () =>
         reject(request.error || new Error('IndexedDB read failed'));
-    });
+      tx.onabort = () =>
+        reject(tx.error || new Error('IndexedDB read aborted'));
+    }), 'IndexedDB read');
   }
 
   async function idbSet(key, value) {
     const db = await openDb();
-    return new Promise((resolve, reject) => {
+    return withIdbDeadline(new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, 'readwrite');
       tx.objectStore(STORE_NAME).put(value, key);
       tx.oncomplete = () => resolve();
@@ -54,12 +116,12 @@
         reject(tx.error || new Error('IndexedDB write failed'));
       tx.onabort = () =>
         reject(tx.error || new Error('IndexedDB write aborted'));
-    });
+    }), 'IndexedDB write');
   }
 
   async function idbRemove(key) {
     const db = await openDb();
-    return new Promise((resolve, reject) => {
+    return withIdbDeadline(new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, 'readwrite');
       tx.objectStore(STORE_NAME).delete(key);
       tx.oncomplete = () => resolve();
@@ -67,7 +129,7 @@
         reject(tx.error || new Error('IndexedDB delete failed'));
       tx.onabort = () =>
         reject(tx.error || new Error('IndexedDB delete aborted'));
-    });
+    }), 'IndexedDB delete');
   }
 
   function sessionExpiry(value) {
