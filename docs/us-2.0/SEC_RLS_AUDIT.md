@@ -1,12 +1,13 @@
 # US 2.0 — Security / RLS Hardening audit
 
-**Status:** SECURITY_AUDIT_READY_FOR_REVIEW (DO NOT MERGE)
+**Status:** SECURITY_PRODUCTION_VERIFIED — MERGE READY
 **Branch:** `mission/us-2-0-security-rls-hardening-t4fvlh` · **Base:** `main` `489fe711457439af39ba09a6db608a3f5560f0f6` (F2A.1 + F2A.2 + F2C merged)
-**Production changes:** NONE (no write, no deploy, no `db push`, no auth config change)
+**Production changes:** SEC-01/SEC-02 migration applied and verified on 2026-10-04; no Edge deploy, Auth config change, frontend change, or application-data mutation.
 **Candidate migration:** `supabase/migrations/20261004150000_sec_rls_hardening.sql`
 **Tests:** `tests/sec-rls-hardening.test.js` (18 tests, all passing against the committed production run)
 **Production evidence:** `docs/us-2.0/SEC_RLS_AUDIT_PRODUCTION.json` (pack s01–s11, read-only, 2026-10-04) and `docs/us-2.0/SEC_RLS_AUDIT_ADVISORS.json` (security advisors, 2026-10-04 15:28 UTC), both run by Francesco
 **Production pack:** `docs/us-2.0/SEC_RLS_AUDIT_READONLY.sql` (11 read-only blocks, s01–s11)
+**Production rollout evidence:** `docs/us-2.0/SEC_RLS_PRODUCTION_POST.json`
 
 ---
 
@@ -173,13 +174,20 @@ Absent, as expected: `rls_disabled_in_public`, `policy_exists_rls_disabled`, `se
 
 ---
 
-## 9. Future rollout plan (only after review and merge, by Francesco)
+## 9. Production rollout result
 
-1. **Gate:** HEAD = reviewed SHA, clean tree, linked project `iiakdfsxpywdkxravqjh`.
-2. **Preflight (read-only):** `supabase migration list --linked` → remote has 20261004000000 and 20261004110718, local adds 20261004150000. `supabase db push --dry-run --linked` → exactly `20261004150000_sec_rls_hardening.sql`. Pack s10: `home_photo_path.outside = 0`, `calendar_reminders` unchanged.
-3. **Apply:** `supabase db push --linked` (one migration; its own pre/post guards abort atomically on any mismatch).
-4. **Postcheck (read-only):** pack s04 → both helpers `authenticated: false`, `service_role: true`; `select conname, convalidated from pg_constraint where conname = 'couples_home_photo_path_own_folder'` → validated; advisors → `authenticated_security_definer_function_executable` 34 → 32, the other two lints unchanged, nothing new.
-5. **Smoke:** Oggi home photo and widget state load; Calendar shows reminders; the next `us-calendar-reminders-dispatch` cron run succeeds (no permission error in `net._http_response`).
-6. **Rollback (only if needed):** `alter table public.couples drop constraint couples_home_photo_path_own_folder; grant execute on function public.calendar_reminder_recipient_in_couple(uuid, uuid), public.calendar_reminder_offset_valid(uuid, integer) to authenticated;` as a new forward migration.
+The reviewed migration `20261004150000_sec_rls_hardening.sql` was applied atomically to production on 2026-10-04 and recorded in the remote migration ledger with the exact reviewed version/name.
 
-No Edge deploy, no auth change, no client release in this rollout.
+Post-rollout verification:
+
+- `couples_home_photo_path_own_folder` exists and is validated;
+- `anon` and `authenticated` cannot execute the two calendar reminder SECURITY DEFINER helpers; `service_role` still can;
+- security advisors are 23 / 32 / 1, with no new lint;
+- `us-calendar-reminders-dispatch` succeeded after rollout and its worker returned HTTP 200;
+- migration ledger is baseline + F2C + SEC;
+- post-rollout s10 remains clean;
+- no Edge, Auth, frontend or application-data change was made.
+
+Authoritative evidence: `docs/us-2.0/SEC_RLS_PRODUCTION_POST.json`.
+
+Rollback, if ever required, must be a new forward migration; do not rewrite migration history.
