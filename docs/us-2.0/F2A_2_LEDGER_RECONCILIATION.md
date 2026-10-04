@@ -1,6 +1,6 @@
 # US 2.0 — F2A.2 Ledger Reconciliation
 
-**Status:** `F2A_2_AWAITING_PREFLIGHT`. The repository side is done. The production steps need Francesco, because this environment has no production access. Not merged.
+**Status:** `F2A_2_PREFLIGHT_PASSED`. The ledger repair is not executed yet. The production steps need Francesco, because this environment has no production access. Not merged.
 **Project:** Supabase `iiakdfsxpywdkxravqjh`
 **Authorization:** Francesco, 2026-10-04 07:54 UTC. It covers the migration-ledger repair from the F2A.1 plan, including its ledger DML, and no schema or application-data change.
 
@@ -16,9 +16,9 @@
 | Step (F2A.1 plan) | What | Where | State |
 |---|---|---|---|
 | 1. Freeze | no backend migration between the F2A.1 capture and the repair | — | holds: the ledger tip is still `20261003200000` |
-| 2. Re-verify, read-only | re-run `F2A_1_PRODUCTION_CAPTURE.sql`; every block must equal the F2A.1 capture | `docs/us-2.0/F2A_2_PREFLIGHT_CAPTURE_*.json` | **Francesco** |
-| 2b. Schema digest, read-only | `F2A_2_SCHEMA_DIGEST.sql` before the repair | `docs/us-2.0/F2A_2_SCHEMA_DIGEST_PRE.json` | **Francesco** |
-| 3. Export the ledger, read-only | `F2A_2_LEDGER_EXPORT.sql`: all 83 rows, masked in the database | `docs/us-2.0/F2A_2_LEDGER_EXPORT_*.json` → `supabase/migrations_history/ledger/` | **Francesco**, then generated |
+| 2. Re-verify, read-only | re-run `F2A_1_PRODUCTION_CAPTURE.sql`; every block must equal the F2A.1 capture | `docs/us-2.0/F2A_2_PREFLIGHT_CAPTURE_*.json` | **PASS**: all 22 aliases deep-equal the F2A.1 capture, no drift |
+| 2b. Schema digest, read-only | `F2A_2_SCHEMA_DIGEST.sql` before the repair | `docs/us-2.0/F2A_2_SCHEMA_DIGEST_PRE.json` | **PASS**: 22 block digests; ledger = the 83 F2A.1 rows |
+| 3. Export the ledger, read-only | `F2A_2_LEDGER_EXPORT.sql`: all 83 rows, masked in the database | `docs/us-2.0/F2A_2_LEDGER_EXPORT_*.json` → `supabase/migrations_history/ledger/` | **PASS**: 83 rows, version / name / count / length / unmasked md5 equal to F2A.1 c01; `l13` null; 20 values masked in 4 rows; 83 history files + `LEDGER.json` |
 | 4. Move files (repo) | 47 migrations to `supabase/migrations_history/`; one baseline migration | repo | **done** |
 | 5. Ledger repair (the only write) | revert the 83 versions; record the baseline as applied | `scripts/f2a2-ledger-repair.mjs --execute` | **Francesco**, after the preflight passes here |
 | 6. Prove it is clean | `migration list --linked`, `db push --dry-run --linked`, digest after, rebuild | `docs/us-2.0/F2A_2_LEDGER_REPAIR_OUTPUT.txt`, `…_DIGEST_POST.json` | **Francesco**, then verified here |
@@ -68,7 +68,7 @@ The tests that need production evidence skip with `pending: … not committed ye
   5. `supabase db push --dry-run --linked`
 
 `scripts/f2a2-ledger-repair.mjs` runs exactly these commands, and it aborts before any write if:
-- HEAD is not the reviewed commit, or the tree is dirty;
+- HEAD is not the reviewed commit, or a tracked file is modified (untracked `supabase/.temp/` from `supabase link` is fine);
 - `LEDGER_REPAIR.json` is stale;
 - the remote ledger is not exactly the 83 versions;
 - the local migrations are anything but the baseline.
@@ -77,7 +77,17 @@ After the write, it requires one ledger row with local = remote and a dry-run th
 
 ## RESULTS
 
-PENDING the production steps above.
+**Preflight (read-only, 2026-10-04, by Francesco through the connector): PASS.** Production is exactly the F2A.1 state.
+
+**Masked values in the exported ledger:**
+- `20260818181951 add_private_pairing_and_seed`: 2 literals hashed into the pairing seed. These are real secrets, masked.
+- `m11b`, `m11c`, `m11d`: 12, 2 and 4 catalog slugs or keys that look like tokens. These are false positives; their content is in the archived files and the baseline.
+
+The ledger's other columns:
+- `rollback` and `idempotency_key` are null on every row;
+- `created_by` is the owner account on 78 rows and null on 5.
+
+**Ledger repair, list, dry-run, post digest:** PENDING Francesco's run of `scripts/f2a2-ledger-repair.mjs --execute`.
 
 ## DEFERRED
 

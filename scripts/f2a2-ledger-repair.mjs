@@ -8,7 +8,7 @@
 // rows and nothing else: it never executes migration SQL.
 //
 // Guards before any write:
-//   * the working tree is clean and HEAD is the reviewed commit (--expect-head),
+//   * tracked files are unmodified and HEAD is the reviewed commit (--expect-head),
 //     so the baseline row recorded as applied is the committed file;
 //   * supabase/baseline/LEDGER_REPAIR.json is what the generator prints;
 //   * `migration list --linked` shows exactly the expected 83 remote versions
@@ -55,7 +55,9 @@ const supabase = (commandArgs, options) => {
 if (!expectHead || expectHead.startsWith('--')) fail('pass --expect-head <reviewed commit sha>');
 const head = run('git', ['rev-parse', 'HEAD'], { capture: true }).trim().split('\n')[0];
 if (!head.startsWith(expectHead)) fail(`HEAD is ${head}, expected ${expectHead}`);
-if (run('git', ['status', '--porcelain'], { capture: true }).trim()) fail('working tree is not clean');
+// Tracked files only: `supabase link` keeps untracked state in supabase/.temp/.
+// An untracked migration would still show up as a local version below.
+if (run('git', ['status', '--porcelain', '--untracked-files=no'], { capture: true }).trim()) fail('tracked files are modified');
 
 // 2. The committed repair set is the generated one.
 const set = repairSet(loadCapture());
