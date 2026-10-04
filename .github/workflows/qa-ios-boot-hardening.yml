@@ -1,6 +1,9 @@
 name: iOS boot hardening validation
 
 on:
+  push:
+    branches:
+      - qa/ios-boot-hardening-v1-validation
   pull_request:
     branches:
       - hotfix/ios-boot-hardening-v1
