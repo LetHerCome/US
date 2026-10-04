@@ -6,6 +6,9 @@
 
 Questo documento è l’autorità persistente della product vision US vNext. Le specification di milestone possono restringere e rendere eseguibile questa vision, ma non possono contraddirne il modello di prodotto senza una decisione esplicita di Francesco.
 
+> **Operational status note (2026-10-04):** Product principles in this document remain authoritative. Any embedded “current state” snapshot is historical; use [`docs/CURRENT_STATE.md`](../CURRENT_STATE.md) for the current implementation status.
+
+
 ---
 
 ## 1. Visione
