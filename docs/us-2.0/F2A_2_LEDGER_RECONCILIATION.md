@@ -10,7 +10,10 @@
 - **Base:** `origin/main` `6dd23d7b2f5e57c7fd078df6783a46689baccf43` (F2A.1, PR #58, merged).
 - **Repair gate commit:** `2851314265dc16e6788298a82f53bf6f1378e4d6` (reviewed before the write).
 - **HEAD:** the commit carrying this document; the thread reply reports the SHA.
-- **Production access from this environment:** none (egress proxy). Francesco runs every production step himself: read-only packs through the Supabase connector, and the repair through the Supabase CLI with `scripts/f2a2-ledger-repair.mjs`. The final read-only CLI gate ran from a local linked checkout.
+- **Production access:** none from the authoring environment (egress proxy).
+  - The read-only packs and the ledger repair were executed through the Supabase connector. The repair was one atomic SQL transaction, guarded on the 83 reviewed versions.
+  - `scripts/f2a2-ledger-repair.mjs` was reviewed but **not executed** against production (see RESULTS).
+  - Only the final read-only gate, `migration list --linked` and `db push --dry-run --linked`, ran through a real Supabase CLI, from a local linked checkout.
 
 ## PLAN AND STATE
 
@@ -21,7 +24,7 @@
 | 2b. Schema digest, read-only | `F2A_2_SCHEMA_DIGEST.sql` before the repair | `docs/us-2.0/F2A_2_SCHEMA_DIGEST_PRE.json` | **PASS**: 22 block digests; ledger = the 83 F2A.1 rows |
 | 3. Export the ledger, read-only | `F2A_2_LEDGER_EXPORT.sql`: all 83 rows, masked in the database | `docs/us-2.0/F2A_2_LEDGER_EXPORT_*.json` → `supabase/migrations_history/ledger/` | **PASS**: 83 rows, version / name / count / length / unmasked md5 equal to F2A.1 c01; `l13` null; 20 values masked in 4 rows; 83 history files + `LEDGER.json` |
 | 4. Move files (repo) | 47 migrations to `supabase/migrations_history/`; one baseline migration | repo | **done** |
-| 5. Ledger repair (the only write) | revert the 83 versions; record the baseline as applied | executed by Francesco through the Supabase connector (see RESULTS) | **done**, 2026-10-04 |
+| 5. Ledger repair (the only write) | revert the 83 versions; record the baseline as applied | executed through the Supabase connector as one guarded SQL transaction (see RESULTS) | **done**, 2026-10-04 |
 | 6. Prove it is clean | `migration list --linked`, `db push --dry-run --linked`, digest after, rebuild | `docs/us-2.0/F2A_2_LEDGER_REPAIR_OUTPUT.txt`, `…_DIGEST_POST.json` | **done**: digest and ledger verified here; both CLI commands run literally, read-only, on 2026-10-04 (see RESULTS) |
 | 7. Guard | test: nothing older than the baseline is executable | `tests/f2a2-ledger-reconciliation.test.js` | **done** |
 
@@ -68,7 +71,7 @@ The tests that need production evidence skip with `pending: … not committed ye
   4. `supabase migration list --linked`
   5. `supabase db push --dry-run --linked`
 
-`scripts/f2a2-ledger-repair.mjs` runs exactly these commands, and it aborts before any write if:
+`scripts/f2a2-ledger-repair.mjs` is the reviewed CLI runner for these commands. It was **not executed** against production: the repair went through the Supabase connector (see RESULTS). The runner aborts before any write if:
 - HEAD is not the reviewed commit, or a tracked file is modified (untracked `supabase/.temp/` from `supabase link` is fine);
 - `LEDGER_REPAIR.json` is stale;
 - the remote ledger is not exactly the 83 versions;
@@ -78,7 +81,7 @@ After the write, it requires one ledger row with local = remote and a dry-run th
 
 ## RESULTS
 
-**Preflight (read-only, 2026-10-04, by Francesco through the connector): PASS.** Production is exactly the F2A.1 state.
+**Preflight (read-only, 2026-10-04, through the Supabase connector): PASS.** Production is exactly the F2A.1 state.
 
 **Masked values in the exported ledger:**
 - `20260818181951 add_private_pairing_and_seed`: 2 literals hashed into the pairing seed. These are real secrets, masked.
@@ -88,8 +91,8 @@ The ledger's other columns:
 - `rollback` and `idempotency_key` are null on every row;
 - `created_by` is the owner account on 78 rows and null on 5.
 
-**Ledger repair (the only production write): DONE.** Francesco ran it on 2026-10-04 at gate commit `2851314`.
-- **How it ran:** his environment reaches production only through the Supabase connector, not a linked CLI. So `scripts/f2a2-ledger-repair.mjs` was **not run**. Its effect was applied as one SQL transaction on `supabase_migrations.schema_migrations`, with the same pre-write guard: the live versions had to equal the reviewed 83, or nothing was written.
+**Ledger repair (the only production write): DONE.** It was executed on 2026-10-04 at gate commit `2851314`.
+- **How it ran:** it was executed through the Supabase connector, not a linked CLI. `scripts/f2a2-ledger-repair.mjs` was reviewed but **not run**. Its effect was applied as one SQL transaction on `supabase_migrations.schema_migrations`, with the same pre-write guard: the live versions had to equal the reviewed 83, or nothing was written.
 - **Writes:** delete the 83 reviewed rows; insert 1 row, `20261004000000 us_2_0_baseline`. Nothing else: no migration SQL, no schema or application data.
 - **Record:** `docs/us-2.0/F2A_2_LEDGER_REPAIR_OUTPUT.txt`.
 
@@ -106,7 +109,7 @@ The stored row holds the committed baseline migration byte for byte: 1 statement
 
 **`migration list --linked` and `db push --dry-run --linked`: PASS, run as real CLI commands.**
 - **At repair time** they could not run: the record's `migration list` table is a transcript built from the live ledger, not CLI stdout, and it is now labelled as reconstructed.
-- **Later, read-only (2026-10-04):** Francesco's local checkout ran both commands with a linked Supabase CLI v2.117.0, at HEAD `dcace83550b79cd9256ad9d715f5300599c5aa8e`. Nothing was written: no real `db push` and no `migration repair`. The real stdout is appended to `F2A_2_LEDGER_REPAIR_OUTPUT.txt` under "REAL CLI VERIFICATION".
+- **Later, read-only (2026-10-04):** both commands were run for real from a local checkout with a linked Supabase CLI v2.117.0, at HEAD `dcace83550b79cd9256ad9d715f5300599c5aa8e`. Nothing was written: no real `db push` and no `migration repair`. The real stdout is appended to `F2A_2_LEDGER_REPAIR_OUTPUT.txt` under "REAL CLI VERIFICATION".
 
 | Command | Result |
 |---|---|
