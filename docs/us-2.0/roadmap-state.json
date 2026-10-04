@@ -1,9 +1,9 @@
 {
   "version": 1,
   "updatedAt": "2026-10-03",
-  "mainSha": "9a28b3751b027747b6acf7c34d416b74113329e3",
-  "currentMission": "F2A.1",
-  "currentLabel": "Production Baseline — capture complete, Claude finalizing",
+  "mainSha": "6dd23d7b2f5e57c7fd078df6783a46689baccf43",
+  "currentMission": "F2A.2",
+  "currentLabel": "Awaiting approval: Ledger Reconciliation",
   "state": {
     "F0": "done",
     "F0.1": "done",
@@ -32,7 +32,8 @@
     "N3": "todo",
     "N4": "todo",
     "N5": "todo",
-    "F2A.1": "todo"
+    "F2A.1": "done",
+    "F2A.2": "todo"
   },
-  "note": "iPhone PWA media recovery is confirmed working by Bea after PR #57. F2A.1 production capture is complete: 22/22 read-only blocks committed on mission/us-2-0-f2a-1-production-baseline in three JSON artifacts; c10 redaction fields verified and no unredacted key-like literals found. Claude can now generate the baseline/rebuild result, then rebase onto current main 9a28b375."
+  "note": "F2A.1 independently reviewed and merged via PR #58. Production baseline/rebuild is complete; all 8 function drifts are production-canonical. Independent Windows verification: 32/32 F2A.1 tests, full suite 1316 pass / 0 fail / 33 skipped, baseline and diff checks clean. F2A.2 is next but ledger repair is a production ledger write and must not start without Francesco's explicit authorization."
 }
