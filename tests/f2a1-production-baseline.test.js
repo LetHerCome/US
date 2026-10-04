@@ -79,7 +79,10 @@ function latestRepoBody(qualified) {
   const dir = path.join(ROOT, 'supabase/migrations');
   let body = null;
   for (const file of fs.readdirSync(dir).sort()) {
-    const text = fs.readFileSync(path.join(dir, file), 'utf8');
+    // Git stores migration sources with LF; Windows checkout may materialize CRLF.
+    // Normalize here so drift decisions compare the canonical repository bytes,
+    // not the platform-specific working-tree representation.
+    const text = fs.readFileSync(path.join(dir, file), 'utf8').replace(/\r\n/g, '\n');
     const re = new RegExp(`create\\s+(?:or\\s+replace\\s+)?function\\s+${schema}\\.${fn}\\s*\\(`, 'gi');
     for (const m of text.matchAll(re)) {
       const rest = text.slice(m.index + m[0].length);
@@ -187,7 +190,7 @@ test('F2A.1 cutoff: MIGRATION_CUTOFF.json is current and accounts for every file
 
 test('F2A.1 m6d: the committed m6d file cannot be replayed (sub-query CHECK), as production proves', async () => {
   const sql = read('supabase/migrations/20260928210000_m6d_calendar_reminders.sql');
-  const check = sql.match(/constraint calendar_reminders_allday_offset_check\s+check \(([\s\S]*?)\),\n\n/);
+  const check = sql.match(/constraint calendar_reminders_allday_offset_check\s+check \(([\s\S]*?)\),\r?\n\r?\n/);
   assert.ok(check, 'repo m6d still carries the sub-query CHECK');
   assert.match(check[1], /not exists \(\s*select 1 from public\.calendar_entries/);
   const db = await newDb();
