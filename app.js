@@ -434,6 +434,32 @@ function usRunWhenIdle(task,timeout=1000){
   setTimeout(run,Math.min(120,timeout));
 }
 
+const US_AUTH_SESSION_TIMEOUT_MS=3200;
+function usWithDeadline(promise,ms,label='operation timeout'){
+  return new Promise((resolve,reject)=>{
+    let settled=false;
+    const timer=setTimeout(()=>{
+      if(settled)return;
+      settled=true;
+      reject(new Error(label));
+    },ms);
+    Promise.resolve(promise).then(
+      value=>{
+        if(settled)return;
+        settled=true;
+        clearTimeout(timer);
+        resolve(value);
+      },
+      error=>{
+        if(settled)return;
+        settled=true;
+        clearTimeout(timer);
+        reject(error);
+      }
+    );
+  });
+}
+
 async function initCloud(){
   if(usInitCloudInFlight)return usInitCloudInFlight;
 
@@ -444,7 +470,19 @@ async function initCloud(){
       if(cached?.id&&cached?.couple_id)cachedDeviceProfile=cached;
     }catch(_e){}
 
-    let { data: { session } } = await sb.auth.getSession();
+    let session=null;
+    let authBootstrapIssue=false;
+    try{
+      const authState=await usWithDeadline(
+        sb.auth.getSession(),
+        US_AUTH_SESSION_TIMEOUT_MS,
+        'auth session restore timed out'
+      );
+      session=authState?.data?.session||null;
+    }catch(error){
+      authBootstrapIssue=true;
+      console.warn('[US Auth] session restore unavailable',error);
+    }
 
     // A returning PWA can briefly report no session while its durable
     // IndexedDB storage is warming. Never flash the pairing UI for that race.
@@ -453,8 +491,13 @@ async function initCloud(){
       // refreshSession here. Supabase auto-refresh + its lock own token rotation.
       await new Promise(resolve=>setTimeout(resolve,420));
       try{
-        const retry=await sb.auth.getSession();
+        const retry=await usWithDeadline(
+          sb.auth.getSession(),
+          1600,
+          'auth session retry timed out'
+        );
         session=retry?.data?.session||null;
+        if(session)authBootstrapIssue=false;
       }catch(_e){}
     }
 
@@ -470,9 +513,11 @@ async function initCloud(){
       setAuthStatus(
         'loginStatus',
         navigator.onLine
-          ? (returningDevice
-              ? 'Accedi di nuovo con email e password per continuare.'
-              : 'Accedi con email e password per entrare in US.')
+          ? (authBootstrapIssue
+              ? 'Non riesco a ripristinare la sessione. Accedi di nuovo per continuare.'
+              : (returningDevice
+                  ? 'Accedi di nuovo con email e password per continuare.'
+                  : 'Accedi con email e password per entrare in US.'))
           : 'Sei offline. Riconnettiti per accedere.',
         navigator.onLine?'neutral':'error'
       );
