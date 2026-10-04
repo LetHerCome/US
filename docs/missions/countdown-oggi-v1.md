@@ -1,11 +1,11 @@
 # Missione countdown-oggi-v1
 
-Base: `F:\AI\US` HEAD `f15d441`. Worktree: `C:\Users\Francesco\.codex\worktrees\c8c3\US`. Branch: `codex/countdown-oggi-v1`.
+Base attuale: `main` esatto `f463c7d73c9cba86c22130179a3fb79c405cfa3e`, repository `F:\AI\US`. Candidate originale preservato: `0459046db43b48ea9e6675b36255053188e4ecce` nel ref locale `codex/countdown-oggi-v1-original`. Worktree: `C:\Users\Francesco\.codex\worktrees\c8c3\US`. Branch: `codex/countdown-oggi-v1`.
 Mandato: audit, progetto e implementazione candidati; nessun deploy, merge o modifica production.
 
 ## Audit e authority
 
-`docs/CURRENT_STATE.md` assente anche nel checkout richiesto. Letti AGENTS, M2 Oggi, M10 attention, M12C Sintonia, foundation JS/CSS, asset manifest; codice corrente prevale sulle milestone storiche.
+Al primo audit `docs/CURRENT_STATE.md` era assente. Dopo il riallineamento sono presenti e lette le nuove authority: AGENTS, missione attiva, CURRENT_STATE, DECISIONS, ARCHITECTURE, product vision e checklist frontend/review/Supabase. CURRENT_STATE prevale sugli snapshot storici. Foundation e asset manifest rimangono autorità UI/visual.
 Oggi: foto a due layer, Focus Photo, stack arbitrato M12A (una azione e un fatto). Daily Question: riusare stati/overlay, non duplicare risposte. Relazione: `couples.started_on`, modificabile dalle impostazioni. Sintonia: `get_progression_v1`, catalogo e `couple_reward_unlocks`, nessuna nuova economia.
 
 ## Design
@@ -38,3 +38,13 @@ Task 4 complete: review indipendente READY come candidato locale, nessun P1/P2 r
 Ruling: loader ESM Windows temporaneo fuori repository per eseguire i test preesistenti che usano import(path assoluto). Nessun cambio al codice dei sottosistemi coinvolti. La suite genera un manifest Android equivalente con CRLF: verificata identità JSON e testo senza CR prima della pulizia; rerun Scriptable 23/23.
 
 Stato finale: candidate locale completo, nessun deploy/push/merge. Vedi `countdown-oggi-v1-report.md`.
+
+## Riallineamento sul main richiesto
+
+Rebase del solo commit candidate su `f463c7d73c9cba86c22130179a3fb79c405cfa3e`, senza merge. Conflitti risolti nei marker PWA e nel fixture rewards, conservando il codice corrente di main. Marker candidate `us-countdown-oggi-v1-20261004-2`. Nessuna modifica alle authority ricevute da main.
+
+Nessun conflitto concettuale: quattro tab, foto/tempo in primo piano, Daily in banda distinta, unlock server esistenti; slot cosmetici di main restano locali al dispositivo, scelta countdown condivisa per esplicito mandato della missione. Nessun impatto su Arcade/Pulse o calendario. Security/RLS e self-heal iOS conservati.
+
+Integrazione baseline: indice MIGRATION_CUTOFF rigenerato dal workflow esistente (solo aggiunta countdown); gate F1B esteso con il pattern forward RPC già adottato per Edge, applicando migrazioni reali e verificando authenticated sì / anon e PUBLIC no. Snapshot MATRIX storico invariato. RED con grant anon temporaneo osservato, SQL ripristinato, GREEN reale.
+
+Verifica finale aggiornata: suite completa 1423 test, 1383 pass, 40 skip, zero fail; browser countdown separato 7/7 senza skip; mirati 48/48; build web 143 e native 141 file; 16 asset APPROVED invariati. Manifest Android resta pulito dopo la suite. Review indipendente READY senza P1/P2. Cinque preview di Oggi generate (giorni, clock, Insieme da, countdown+Daily, Aurora Sintonia) con fixture locale e nessun pageerror. Report aggiornato contiene log, percorsi e limiti.
