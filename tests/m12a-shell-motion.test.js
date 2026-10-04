@@ -225,9 +225,12 @@ test('nav: navigation logic is untouched (go() still only toggles the active cla
 
 // ---------------------------------------------------------------- TILES
 
-test('tiles: Noi and Gioca tiles share one press + destination primitive', () => {
-  assert.equal((html.match(/noi-hub-card[^"]*"[^>]*>/g) || []).length, 4);
+test('tiles: Noi and Gioca destinations share one press + destination primitive', () => {
+  assert.equal((html.match(/<button[^>]*class="noi-hub-card[^>]*>/g) || []).length, 3);
   for (const card of html.match(/<button[^>]*class="noi-hub-card[^>]*>/g)) assert.match(card, /data-us-tile/);
+  const board = html.match(/<button[^>]*id="noiWeekBoardOpen"[^>]*>/)?.[0] || '';
+  assert.match(board, /data-us-tile/);
+  assert.match(board, /data-us-feedback="tap"/);
   const games = read('games.js');
   assert.match(games, /data-us-tile data-us-feedback="tap" class="us-gv2-mode/);
   assert.match(games, /data-us-tile data-us-feedback="tap" class="us-gv2-pervoi/);
