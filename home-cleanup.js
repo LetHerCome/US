@@ -33,15 +33,21 @@ function dailyMarkup(model) {
   return `<button type="button" class="us-gv2-daily us-attention-orbit" data-us-daily-entry data-daily-state="${esc(model.state)}" data-us-attention="${model.nudge ? 'on' : 'off'}" aria-label="Domanda del giorno: ${esc(model.question)}. ${esc(model.cta)}"><span class="us-gv2-daily-mark" aria-hidden="true"></span><span class="us-gv2-daily-copy"><small>DOMANDA DI OGGI</small><b>${esc(model.question)}</b><span class="us-gv2-daily-state">${esc(model.meta)}</span></span><span class="us-gv2-daily-cta">${esc(model.cta)}</span></button>`;
 }
 
+function dailySignature(model) {
+  return model ? `${model.questionId}:${model.state}:${model.cta}:${model.meta}` : '';
+}
 function paintDailyInGioca() {
   const hub = $('quizHub');
   if (!hub) return;
-  hub.querySelector?.('[data-us-daily-entry]')?.remove?.();
   const model = dailyModel();
-  if (!model || hub.classList.contains('hidden')) return;
+  const existing = hub.querySelector?.('[data-us-daily-entry]');
+  if (!model || hub.classList.contains('hidden')) { existing?.remove?.(); return; }
+  const signature = dailySignature(model);
+  if (existing?.dataset?.usDailySignature === signature) return;
+  existing?.remove?.();
   const head = hub.querySelector?.('.us-gv2-head');
   if (!head) return;
-  head.insertAdjacentHTML('afterend', dailyMarkup(model));
+  head.insertAdjacentHTML('afterend', dailyMarkup(model).replace('data-us-daily-entry', `data-us-daily-entry data-us-daily-signature="${esc(signature)}"`));
 }
 
 const nudgeSeen = new Set();
@@ -135,5 +141,4 @@ document.addEventListener('click', (event) => {
 window.UsDailyQuestionHub = Object.freeze({ model: dailyModel, paint: syncDailySurfaces, open: openDailyInGioca });
 syncDailySurfaces();
 if ($('bond')?.classList.contains('active')) window.refreshNoiWeekBoard?.();
-if (window.usProfile && typeof window.hydrateToday === 'function') window.hydrateToday().catch?.(() => {});
 })();
