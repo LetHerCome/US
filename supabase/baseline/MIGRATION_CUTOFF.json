@@ -10,7 +10,7 @@
     "20261004110718_f2c_edge_cron_source_of_truth.sql",
     "20261004150000_sec_rls_hardening.sql",
     "20261004184758_f2a3_retention_operations.sql",
-    "20261004204518_countdown_oggi_v1.sql"
+    "20261004231911_countdown_oggi_v1.sql"
   ],
   "forward_migrations": [
     "20261004110718_f2c_edge_cron_source_of_truth.sql",
