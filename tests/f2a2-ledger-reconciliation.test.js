@@ -225,8 +225,9 @@ test('F2A.2 repair record: guarded 83-row revert, one baseline row, nothing else
 
 // What `supabase db push --dry-run --linked` decides, computed from the
 // evidence: it compares local migration versions with the remote ledger.
-// (The repair ran through the connector, so the CLI command itself was not
-// run; this is the same comparison on the committed post-repair ledger.)
+// (The repair ran through the connector; the real CLI output, run later
+// read-only, is in the repair record. This is the same comparison on the
+// committed post-repair ledger.)
 test('F2A.2 postcondition: remote ledger = local migrations = the committed baseline file', { skip: !DIGEST_POST && pending('docs/us-2.0/F2A_2_SCHEMA_DIGEST_POST.json') }, () => {
   const remote = DIGEST_POST.f2a2_d01_digest.ledger;
   assert.deepEqual(remote.map((r) => r.v), sqlFiles(MIGRATIONS).map((f) => f.slice(0, 14)), 'nothing to push, nothing unknown remotely');

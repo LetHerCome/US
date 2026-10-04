@@ -1,6 +1,6 @@
 # US 2.0 — F2A.2 Ledger Reconciliation
 
-**Status:** `F2A_2_READY_FOR_REVIEW`. The ledger repair is done in production and verified from the committed evidence. Not merged; waiting for independent review.
+**Status:** `F2A_2_MERGE_READY`. The ledger repair is done in production, verified from the committed evidence, and confirmed by a real linked-CLI `migration list` and `db push --dry-run`. Not merged yet.
 **Project:** Supabase `iiakdfsxpywdkxravqjh`
 **Authorization:** Francesco, 2026-10-04 07:54 UTC. It covers the migration-ledger repair from the F2A.1 plan, including its ledger DML, and no schema or application-data change.
 
@@ -10,7 +10,7 @@
 - **Base:** `origin/main` `6dd23d7b2f5e57c7fd078df6783a46689baccf43` (F2A.1, PR #58, merged).
 - **Repair gate commit:** `2851314265dc16e6788298a82f53bf6f1378e4d6` (reviewed before the write).
 - **HEAD:** the commit carrying this document; the thread reply reports the SHA.
-- **Production access from this environment:** none (egress proxy). Francesco runs every production step himself: read-only packs through the Supabase connector, and the repair through the Supabase CLI with `scripts/f2a2-ledger-repair.mjs`.
+- **Production access from this environment:** none (egress proxy). Francesco runs every production step himself: read-only packs through the Supabase connector, and the repair through the Supabase CLI with `scripts/f2a2-ledger-repair.mjs`. The final read-only CLI gate ran from a local linked checkout.
 
 ## PLAN AND STATE
 
@@ -22,7 +22,7 @@
 | 3. Export the ledger, read-only | `F2A_2_LEDGER_EXPORT.sql`: all 83 rows, masked in the database | `docs/us-2.0/F2A_2_LEDGER_EXPORT_*.json` → `supabase/migrations_history/ledger/` | **PASS**: 83 rows, version / name / count / length / unmasked md5 equal to F2A.1 c01; `l13` null; 20 values masked in 4 rows; 83 history files + `LEDGER.json` |
 | 4. Move files (repo) | 47 migrations to `supabase/migrations_history/`; one baseline migration | repo | **done** |
 | 5. Ledger repair (the only write) | revert the 83 versions; record the baseline as applied | executed by Francesco through the Supabase connector (see RESULTS) | **done**, 2026-10-04 |
-| 6. Prove it is clean | `migration list --linked`, `db push --dry-run --linked`, digest after, rebuild | `docs/us-2.0/F2A_2_LEDGER_REPAIR_OUTPUT.txt`, `…_DIGEST_POST.json` | **done**: digest and ledger verified here; the CLI commands were not run literally (see RESULTS) |
+| 6. Prove it is clean | `migration list --linked`, `db push --dry-run --linked`, digest after, rebuild | `docs/us-2.0/F2A_2_LEDGER_REPAIR_OUTPUT.txt`, `…_DIGEST_POST.json` | **done**: digest and ledger verified here; both CLI commands run literally, read-only, on 2026-10-04 (see RESULTS) |
 | 7. Guard | test: nothing older than the baseline is executable | `tests/f2a2-ledger-reconciliation.test.js` | **done** |
 
 The tests that need production evidence skip with `pending: … not committed yet` until it is committed. The mission is complete only when none skips.
@@ -104,11 +104,16 @@ The stored row holds the committed baseline migration byte for byte: 1 statement
 
 **Schema unchanged:** all 22 capture-block digests are identical before and after the repair (c16–c20 are null both times, since every function fit in c12–c15).
 
-**`migration list --linked` and `db push --dry-run --linked`: NOT run as CLI commands.** The record says so explicitly. Its `migration list` table is a transcript built from the live ledger, not CLI stdout. What *is* verified, from the committed evidence:
-- the remote ledger versions equal the local `supabase/migrations` versions, exactly `[20261004000000]`;
-- so `migration list` would show one row with local = remote, and `db push --dry-run` would have no version to push.
+**`migration list --linked` and `db push --dry-run --linked`: PASS, run as real CLI commands.**
+- **At repair time** they could not run: the record's `migration list` table is a transcript built from the live ledger, not CLI stdout, and it is now labelled as reconstructed.
+- **Later, read-only (2026-10-04):** Francesco's local checkout ran both commands with a linked Supabase CLI v2.117.0, at HEAD `dcace83550b79cd9256ad9d715f5300599c5aa8e`. Nothing was written: no real `db push` and no `migration repair`. The real stdout is appended to `F2A_2_LEDGER_REPAIR_OUTPUT.txt` under "REAL CLI VERIFICATION".
 
-The test `F2A.2 postcondition` asserts this. Running both commands literally from a linked CLI is read-only and is the one check still open (see NEXT).
+| Command | Result |
+|---|---|
+| `supabase migration list --linked` | one row: local `20261004000000`, remote `20261004000000` |
+| `supabase db push --dry-run --linked` | `"upToDate":true`, `"migrations":[]`, "Remote database is up to date.", exit 0 |
+
+The test `F2A.2 postcondition` checks the same comparison from the committed post-repair ledger.
 
 **Rebuild:**
 - the F2A.1 baseline rebuild still reproduces the production fingerprint;
@@ -127,6 +132,10 @@ Linux, Node, same container, same `node_modules`.
 - The 6 skips are the same Windows-only tests on base and head.
 - `node scripts/build-supabase-baseline.mjs --check` and `git diff --check` are clean.
 
+**CLI gate run (Windows, local linked checkout, 2026-10-04):**
+- `tests/f2a2-ledger-reconciliation.test.js`: 13/13 pass, none skipped. `build-supabase-baseline.mjs --check` and `git diff --check` are clean.
+- `tests/f2a1-production-baseline.test.js`: the PGlite rebuild fails on `bond_quest_templates` (content md5 differs, 33 rows). This is an environment difference, not an F2A.2 regression: `main` `6dd23d7` fails the same way on this machine, and the Linux run above passes.
+
 ## PRODUCTION CHANGES
 
 Ledger rows only, in `supabase_migrations.schema_migrations`: 83 deleted, 1 inserted. No schema and no application data changed: the 22-block digest is identical before and after.
@@ -138,7 +147,7 @@ Ledger rows only, in `supabase_migrations.schema_migrations`: 83 deleted, 1 inse
 - move the 7 cron jobs from `supabase/baseline/90_cron.sql` into a migration newer than the baseline, with a parametrised URL;
 - decide `VAPID_SUBJECT` and the `calendar-reminders-worker` `setVapidDetails` fix.
 
-Its first step is the read-only check F2A.2 could not run literally: `supabase migration list --linked` and `supabase db push --dry-run --linked` from a linked CLI.
+The linked-CLI check that F2A.2 left open is closed (see RESULTS).
 
 ## DEFERRED
 
