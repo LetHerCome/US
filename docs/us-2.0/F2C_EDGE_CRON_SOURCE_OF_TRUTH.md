@@ -1,6 +1,6 @@
 # US 2.0 — F2C Edge & cron source of truth
 
-**Status:** `F2C_ROLLOUT_READY`. The independent review passed on `25e7f3ecdbe7eb1560e2a9eee2c29968e58c4ad7`, and the Edge parity of the other six producers is verified (see EDGE PARITY). Nothing in production has changed. The production rollout below is a plan awaiting approval; nothing is deployed.
+**Status:** `F2C_PRODUCTION_VERIFIED`. The rollout ran on 2026-10-04 (14:15–14:22 UTC) from the reviewed HEAD `4eb1842af286ae0d2b8095223a63a91fe541535c` and is verified in production (see ROLLOUT RESULT and `F2C_PRODUCTION_POST.json`). Not merged.
 **Project:** Supabase `iiakdfsxpywdkxravqjh`
 
 ## SOURCE
@@ -174,7 +174,7 @@ Every deployed bundle file was compared with the repo at base `main` `2ace4fa`. 
   - the unused reaction helper as dead code in that bundle.
 - No other behaviour changes, and no unknown production source is overwritten.
 
-## PRODUCTION ROLLOUT — PLAN ONLY, NOT EXECUTED
+## PRODUCTION ROLLOUT (the approved plan, executed as written)
 
 Run from a clean checkout of the reviewed commit, with the Supabase CLI linked to `iiakdfsxpywdkxravqjh`. Stop at the first failed check.
 
@@ -254,9 +254,59 @@ The tests use the same Windows machine and the same `node_modules` (`F:\AI\US\no
 - `node scripts/build-supabase-baseline.mjs --check` and `git diff --check` are clean.
 - **Known environment failure (not F2C):** the F2A.1 PGlite rebuild fails on `bond_quest_templates` content md5 on this Windows machine. `main` fails the same way here, and the Linux runs recorded in F2A.2 pass.
 
-## PRODUCTION CHANGES IN THIS PASS
+## ROLLOUT RESULT (2026-10-04)
 
-**NONE.** Only read-only `select` queries ran (see `F2C_PRODUCTION_PREFLIGHT.json`).
+Evidence: `docs/us-2.0/F2C_PRODUCTION_POST.json`.
+
+1. **Hard gate:** HEAD `4eb1842…` equal to origin, clean tree, linked project `iiakdfsxpywdkxravqjh`.
+2. **Preflight PASS:**
+   - migrations: local `20261004000000` and `20261004110718`, remote `20261004000000` only;
+   - the dry-run proposed only the F2C migration;
+   - the 7 jobs equal the pre-F2C hashes;
+   - Edge versions: v4, v1, v1, v1, v1, v1, v8, v3;
+   - `us_project_url` and `VAPID_SUBJECT` absent.
+3. **Writes, in this order:**
+   1. vault `us_project_url` created (14:15:38). One row; its value equals the project URL.
+   2. Edge secret `VAPID_SUBJECT` set (14:15:51). The digest equals `https://usfinal.vercel.app`.
+   3. The 8 functions deployed one at a time with `--use-api`, without `--prune`. Each is ACTIVE with the expected `verify_jwt`:
+
+      | Function | Version | `verify_jwt` |
+      |---|---|---|
+      | `calendar-reminders-worker` | v1 → v3 | false |
+      | `monthiversary-job` | v4 → v6 | false |
+      | `daily-question-push-worker` | v1 → v3 | false |
+      | `left-for-you-push-worker` | v1 → v3 | false |
+      | `game-v2-push-worker` | v1 → v3 | false |
+      | `game-v2-push` | v1 → v3 | true |
+      | `send-web-push` | v8 → v10 | true |
+      | `widget-think-send` | v3 → v5 | false |
+
+   4. `supabase db push --linked` applied only `20261004110718_f2c_edge_cron_source_of_truth.sql`, and the guard passed (about 14:18).
+4. **Cron after:**
+   - jobids 1–7, same names and schedules, owner `postgres`, all active;
+   - all seven md5 equal the expected "after" values;
+   - one row per name, no hard-coded URL.
+5. **Smoke checks** (14:18–14:21):
+   - every cron run succeeded, and 8 of them already ran F2C commands (first at 14:19:00);
+   - pg_net: only HTTP 200, no error, no `push_configuration_unavailable`;
+   - the workers answered with their normal idle or deduplicated JSON;
+   - `calendar-reminders-worker` and `monthiversary-job` without `x-us-cron-key` → 401.
+6. **Final gate:**
+   - `migration list`: local = remote = `20261004000000`, `20261004110718`;
+   - `db push --dry-run`: `upToDate: true`, 0 migrations.
+
+**Anomalies, none blocking:**
+- **Versions moved by two, not one.** `secrets set` gave every function a new version for the environment change. The five functions not deployed also moved by one, with an unchanged bundle hash and `updated_at`. No function outside the reviewed eight was deployed.
+- **Edge logs were not read.** The CLI has no function-log command. The pg_net response bodies are the evidence.
+- **The live VAPID path is not exercised yet.** No real Web Push was sent in the window (all workers idle or deduplicated), so it is proven by tests only. The first real reminder or push will exercise it. No data was created to test it.
+
+## PRODUCTION CHANGES
+
+- **Vault:** `us_project_url` (new).
+- **Edge secret:** `VAPID_SUBJECT` (new, the preserved value).
+- **Edge:** 8 functions redeployed from the reviewed HEAD.
+- **Cron:** the 7 jobs' commands updated in place by the F2C migration (ledger `20261004110718`).
+- **Nothing else:** no application data, no other function, no frontend.
 
 ## RISKS / OPEN QUESTIONS
 
@@ -272,4 +322,4 @@ The tests use the same Windows machine and the same `node_modules` (`F:\AI\US\no
 
 ## NEXT
 
-Independent review of this candidate, then approval of the rollout above. F2C does not deploy, push or merge on its own.
+Review of the production evidence, then the PR/merge of this branch into `main`. Not merged yet.
