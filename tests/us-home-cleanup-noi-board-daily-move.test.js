@@ -18,7 +18,7 @@ test('Home cleanup: Oggi keeps photo/countdown dominant and retires the dashboar
   const home = html.match(/<main id="home"[\s\S]*?<\/main>/)?.[0] || '';
   assert.match(home, /id="usCountdownDisplay"/);
   assert.match(home, /id="usOggiStack"/, 'legacy state anchors remain mounted for existing authorities');
-  assert.match(styles, /#home #usOggiStack\{display:none!important\}/);
+  assert.match(styles, /#home #usOggiStack\{height:0!important;[^}]*visibility:hidden!important;[^}]*pointer-events:none!important\}/);
   assert.doesNotMatch(home, /noi-week-board|us-gv2-daily/, 'new destinations do not leak back into Oggi');
 });
 
