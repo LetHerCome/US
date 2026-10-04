@@ -1,10 +1,14 @@
-// The forward-migration boundary (F2A.1 Phase G), computed from the repo
-// migration files and the production ledger captured in F2A (b01). It only
-// describes the plan F2A.2 executes; it moves no file and touches no ledger.
+// The forward-migration boundary (F2A.1 Phase G, executed in F2A.2), computed
+// from the archived repo migration files, the executable migrations and the
+// production ledger captured in F2A (b01). It touches no ledger.
 const fs = require('node:fs');
 const path = require('node:path');
 const { ROOT } = require('./evidence.cjs');
+const { BASELINE_VERSION, BASELINE_FILE } = require('./migration.cjs');
 
+// Since F2A.2 the 47 pre-baseline files are history; supabase/migrations holds
+// only the baseline and anything newer.
+const HISTORY = path.join(ROOT, 'supabase/migrations_history');
 const MIGRATIONS = path.join(ROOT, 'supabase/migrations');
 
 // Same migration, recorded in the ledger under another version (F2A, matched
@@ -37,8 +41,9 @@ const REPLAY_HAZARDS = {
   20260930105724: 're-grants functions that F1B revoked',
 };
 
+const sqlFiles = (dir) => (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^\d{14}_.+\.sql$/.test(f)).sort() : []);
 function repoMigrations() {
-  return fs.readdirSync(MIGRATIONS).filter((f) => /^\d{14}_.+\.sql$/.test(f)).sort();
+  return sqlFiles(HISTORY);
 }
 
 function buildCutoff(f2a) {
@@ -73,11 +78,13 @@ function buildCutoff(f2a) {
   const tip = ledger[ledger.length - 1].v;
   return {
     generated_by: 'scripts/build-supabase-baseline.mjs',
-    source: 'supabase/migrations + docs/us-2.0/F2A_PRODUCTION_RESULTS_01_05.json (b01 ledger)',
+    source: 'supabase/migrations_history + supabase/migrations + docs/us-2.0/F2A_PRODUCTION_RESULTS_01_05.json (b01 ledger)',
     production_ledger_tip: tip,
     baseline_represents: `production schema at ledger tip ${tip} (F1C), captured read-only in F2A.1`,
-    baseline_version: 'chosen in F2A.2: one new 14-digit version greater than every ledger version',
-    forward_migrations: repo.filter((r) => r.after_f2a2 === 'forward').map((r) => r.file),
+    baseline_version: BASELINE_VERSION,
+    baseline_file: `supabase/migrations/${BASELINE_FILE}`,
+    executable_migrations: sqlFiles(MIGRATIONS),
+    forward_migrations: sqlFiles(MIGRATIONS).filter((f) => f !== BASELINE_FILE),
     counts: {
       repo_files: repo.length,
       repo_same_version: repo.filter((r) => r.match === 'same_version').length,

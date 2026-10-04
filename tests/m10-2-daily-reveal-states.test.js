@@ -14,8 +14,8 @@ const { PGlite } = require('@electric-sql/pglite');
 
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
-const MIGRATION = 'supabase/migrations/20260930080452_m10_2_daily_reveal_states.sql';
-const M3 = ['supabase/migrations/20260901192817_daily_question_outcomes.sql', 'supabase/migrations/20260902101619_daily_question_reveal_authority.sql'];
+const MIGRATION = 'supabase/migrations_history/20260930080452_m10_2_daily_reveal_states.sql';
+const M3 = ['supabase/migrations_history/20260901192817_daily_question_outcomes.sql', 'supabase/migrations_history/20260902101619_daily_question_reveal_authority.sql'];
 const uuid = () => crypto.randomUUID();
 
 const FIXTURE_SQL = `
@@ -254,7 +254,7 @@ test('M10.2 migrazione: additiva, nessuna modifica a migration/authority esisten
   assert.doesNotMatch(code, /create or replace function public\.(get_daily_state|claim_us_role)/i);
   assert.doesNotMatch(code, /net\.http|send-web-push|push_event_log|push_subscriptions/i);
   assert.match(code, /private\.daily_question_reveal_ready\(target_question_id\)/, 'reveal semantics stay with get_daily_state');
-  const migrations = fs.readdirSync(path.join(ROOT, 'supabase/migrations')).sort();
+  const migrations = fs.readdirSync(path.join(ROOT, 'supabase/migrations_history')).sort();
   assert.equal(migrations.filter(name => name.includes('m10_2_daily_reveal_states')).length, 1,
     'M10.2 keeps one unchanged migration as later milestones add theirs');
 });

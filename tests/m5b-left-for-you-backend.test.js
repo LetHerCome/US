@@ -6,8 +6,8 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 
-const V1 = 'supabase/migrations/20260922180436_left_for_you_v1.sql';
-const FIX = 'supabase/migrations/20260922182210_fix_left_for_you_partner_scope_and_grants.sql';
+const V1 = 'supabase/migrations_history/20260922180436_left_for_you_v1.sql';
+const FIX = 'supabase/migrations_history/20260922182210_fix_left_for_you_partner_scope_and_grants.sql';
 const stripComments = (sql) => sql.replace(/--[^\n]*/g, '');
 
 test('M5B history: due migration forward-only allineate al remote', () => {

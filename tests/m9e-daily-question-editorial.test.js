@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..');
-const sql = fs.readFileSync(path.join(ROOT, 'supabase/migrations/20260930045233_m9e_daily_question_engine.sql'), 'utf8').replace(/\r\n/g, '\n');
+const sql = fs.readFileSync(path.join(ROOT, 'supabase/migrations_history/20260930045233_m9e_daily_question_engine.sql'), 'utf8').replace(/\r\n/g, '\n');
 const seed = sql.slice(sql.indexOf('insert into public.daily_question_templates'));
 const rows = [...seed.matchAll(/^\s+\('([a-z_]+-\d{2})', (\d), (\d+), '([^']+)', '([a-z_]+)'\)[,\n]/gm)]
   .map(([, id, slot, sequence, question, theme]) => ({ id, slot: Number(slot), sequence: Number(sequence), question, theme }));

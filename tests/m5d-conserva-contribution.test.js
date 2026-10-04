@@ -6,12 +6,12 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 
-const M5D = 'supabase/migrations/20260923112331_m5d_conserva_contribution.sql';
-const M5D_HARDEN = 'supabase/migrations/20260923112428_harden_conserva_contribution_grants.sql';
-const M5B_V1 = 'supabase/migrations/20260922180436_left_for_you_v1.sql';
-const M5B_FIX = 'supabase/migrations/20260922182210_fix_left_for_you_partner_scope_and_grants.sql';
-const M5B_HARDEN = 'supabase/migrations/20260923100236_enforce_left_for_you_insert_unseen.sql';
-const M5C = 'supabase/migrations/20260923110119_m5c_left_for_you_rich_media.sql';
+const M5D = 'supabase/migrations_history/20260923112331_m5d_conserva_contribution.sql';
+const M5D_HARDEN = 'supabase/migrations_history/20260923112428_harden_conserva_contribution_grants.sql';
+const M5B_V1 = 'supabase/migrations_history/20260922180436_left_for_you_v1.sql';
+const M5B_FIX = 'supabase/migrations_history/20260922182210_fix_left_for_you_partner_scope_and_grants.sql';
+const M5B_HARDEN = 'supabase/migrations_history/20260923100236_enforce_left_for_you_insert_unseen.sql';
+const M5C = 'supabase/migrations_history/20260923110119_m5c_left_for_you_rich_media.sql';
 const stripComments = (sql) => sql.replace(/--[^\n]*/g, '');
 
 const m5d = () => read(M5D);

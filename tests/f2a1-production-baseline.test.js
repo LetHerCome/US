@@ -76,7 +76,7 @@ test('F2A.1 monthiversary-job: only the cron key, the VAPID key and the award RP
 // exactly the text pg_proc.prosrc stores.
 function latestRepoBody(qualified) {
   const [schema, fn] = qualified.split('.');
-  const dir = path.join(ROOT, 'supabase/migrations');
+  const dir = path.join(ROOT, 'supabase/migrations_history');
   let body = null;
   for (const file of fs.readdirSync(dir).sort()) {
     // Git stores migration sources with LF; Windows checkout may materialize CRLF.
@@ -189,7 +189,7 @@ test('F2A.1 cutoff: MIGRATION_CUTOFF.json is current and accounts for every file
 // ------------------------------------------------------------ m6d
 
 test('F2A.1 m6d: the committed m6d file cannot be replayed (sub-query CHECK), as production proves', async () => {
-  const sql = read('supabase/migrations/20260928210000_m6d_calendar_reminders.sql');
+  const sql = read('supabase/migrations_history/20260928210000_m6d_calendar_reminders.sql');
   const check = sql.match(/constraint calendar_reminders_allday_offset_check\s+check \(([\s\S]*?)\),\r?\n\r?\n/);
   assert.ok(check, 'repo m6d still carries the sub-query CHECK');
   assert.match(check[1], /not exists \(\s*select 1 from public\.calendar_entries/);
@@ -406,7 +406,7 @@ test('F2A.1 rebuild: empty Supabase-like PostgreSQL + baseline reproduces the pr
       } catch (e) { return e.message; } finally { await db.exec('rollback'); }
     };
     assert.equal(await call(), 'think recipient required');
-    const file = read('supabase/migrations/20260922120726_think_send_idempotency_final_reaction.sql');
+    const file = read('supabase/migrations_history/20260922120726_think_send_idempotency_final_reaction.sql');
     const from = file.indexOf('create or replace function public.set_think_reaction(');
     const repoSql = file.slice(from, file.indexOf('$$;', file.indexOf('as $$', from) + 5) + 3);
     await db.exec('begin');

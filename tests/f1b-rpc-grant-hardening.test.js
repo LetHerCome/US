@@ -21,7 +21,7 @@ const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
-const F1B_MIGRATION = 'supabase/migrations/20261003180000_f1b_rpc_grant_hardening.sql';
+const F1B_MIGRATION = 'supabase/migrations_history/20261003180000_f1b_rpc_grant_hardening.sql';
 
 const MATRIX = [
   ['private.confirm_bond_quest_internal(uuid)', '-AS-', '-AS-', 'INTERNAL_HELPER'],

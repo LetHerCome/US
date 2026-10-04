@@ -1,13 +1,13 @@
 // Game V2 test database: an isolated PGlite with the minimal Supabase surface
 // (auth.uid(), roles, couples/profiles) plus the real M11A, M11A.1 and Game
-// V2 migrations from supabase/migrations. Nothing here touches production.
+// V2 migrations from supabase/migrations_history. Nothing here touches production.
 const fs = require('node:fs');
 const path = require('node:path');
 const { randomUUID } = require('node:crypto');
 const { PGlite } = require('@electric-sql/pglite');
 
 const ROOT = path.resolve(__dirname, '../..');
-const MIGRATIONS = path.join(ROOT, 'supabase/migrations');
+const MIGRATIONS = path.join(ROOT, 'supabase/migrations_history');
 const GAME_MIGRATIONS = fs.readdirSync(MIGRATIONS)
   .filter((f) => /^20260930(105724_m11a_|121312_m11a_1_|\d{6}_m11[b-f]_)/.test(f))
   .sort();

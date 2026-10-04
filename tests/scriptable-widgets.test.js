@@ -239,10 +239,10 @@ test('randomDeviceHash lowercases uppercase UUID output in both widgets', () => 
 test('setup Edge Function exchanges a short-lived code once for two independent credentials', () => {
   const fn = read('supabase/functions/widget-scriptable-setup/index.ts');
   const config = read('supabase/config.toml');
-  const migration = fs.readdirSync(file('supabase/migrations'))
+  const migration = fs.readdirSync(file('supabase/migrations_history'))
     .filter((name) => name.endsWith('_widget_scriptable_setup.sql'));
   assert.equal(migration.length, 1);
-  const sql = read(`supabase/migrations/${migration[0]}`);
+  const sql = read(`supabase/migrations_history/${migration[0]}`);
   assert.match(config, /\[functions\.widget-scriptable-setup\][\s\S]*verify_jwt\s*=\s*false/);
   assert.match(fn, /auth\.getUser/);
   assert.match(fn, /operation.*issue|issue.*operation/);
@@ -266,8 +266,8 @@ test('setup Edge Function exchanges a short-lived code once for two independent 
 
 test('existing Think endpoint remains untouched and the exchange targets the separate token authorities', () => {
   const setup = read('supabase/functions/widget-scriptable-setup/index.ts');
-  const migration = fs.readdirSync(file('supabase/migrations')).find((name) => name.endsWith('_widget_scriptable_setup.sql'));
-  const sql = read(`supabase/migrations/${migration}`);
+  const migration = fs.readdirSync(file('supabase/migrations_history')).find((name) => name.endsWith('_widget_scriptable_setup.sql'));
+  const sql = read(`supabase/migrations_history/${migration}`);
   const think = read('supabase/functions/widget-think-send/index.ts');
   const originalThink = require('node:child_process').execFileSync('git', ['show', 'origin/main:supabase/functions/widget-think-send/index.ts'], { cwd: root, encoding: 'utf8' });
   const contract = read('supabase/functions/_shared/widget-think-contract.mjs');
@@ -282,7 +282,7 @@ test('existing Think endpoint remains untouched and the exchange targets the sep
 
 test('setup code is profile/couple-bound, expires in ten minutes, and rejects replay', () => {
   const fn = read('supabase/functions/widget-scriptable-setup/index.ts');
-  const sql = read(`supabase/migrations/${fs.readdirSync(file('supabase/migrations')).find((name) => name.endsWith('_widget_scriptable_setup.sql'))}`);
+  const sql = read(`supabase/migrations_history/${fs.readdirSync(file('supabase/migrations_history')).find((name) => name.endsWith('_widget_scriptable_setup.sql'))}`);
   assert.match(fn, /Date\.now\(\) \+ 10 \* 60 \* 1000/);
   assert.match(sql, /profile\.id = p_profile_id and profile\.couple_id = p_couple_id/);
   assert.match(sql, /code\.consumed_at is null[\s\S]*code\.revoked_at is null[\s\S]*code\.expires_at > now\(\)/i);
@@ -291,8 +291,8 @@ test('setup code is profile/couple-bound, expires in ten minutes, and rejects re
 });
 
 test('exchange rejects a setup code after the issuing profile moves from couple A to B', () => {
-  const migration = fs.readdirSync(file('supabase/migrations')).find((name) => name.endsWith('_widget_scriptable_setup.sql'));
-  const sql = read(`supabase/migrations/${migration}`);
+  const migration = fs.readdirSync(file('supabase/migrations_history')).find((name) => name.endsWith('_widget_scriptable_setup.sql'));
+  const sql = read(`supabase/migrations_history/${migration}`);
   const exchange = sql.slice(sql.indexOf('create or replace function public.widget_scriptable_exchange_internal'), sql.indexOf('create or replace function public.widget_scriptable_revoke_internal'));
   const setupCode = { profile_id: 'profile-1', couple_id: 'couple-a' };
   const currentProfile = { id: 'profile-1', couple_id: setupCode.couple_id };
@@ -310,8 +310,8 @@ test('exchange rejects a setup code after the issuing profile moves from couple 
 });
 
 test('same device hash cannot revoke Scriptable credentials owned by another profile/couple', () => {
-  const migration = fs.readdirSync(file('supabase/migrations')).find((name) => name.endsWith('_widget_scriptable_setup.sql'));
-  const sql = read(`supabase/migrations/${migration}`);
+  const migration = fs.readdirSync(file('supabase/migrations_history')).find((name) => name.endsWith('_widget_scriptable_setup.sql'));
+  const sql = read(`supabase/migrations_history/${migration}`);
   const exchange = sql.slice(sql.indexOf('create or replace function public.widget_scriptable_exchange_internal'), sql.indexOf('create or replace function public.widget_scriptable_revoke_internal'));
   const installations = [
     { profile: 'profile-a', couple: 'couple-a', device: 'same-device' },
@@ -327,8 +327,8 @@ test('same device hash cannot revoke Scriptable credentials owned by another pro
 });
 
 test('Scriptable installation tracks shared expiry and state cleanup leaves legacy widget tokens unchanged', () => {
-  const migration = fs.readdirSync(file('supabase/migrations')).find((name) => name.endsWith('_widget_scriptable_setup.sql'));
-  const sql = read(`supabase/migrations/${migration}`);
+  const migration = fs.readdirSync(file('supabase/migrations_history')).find((name) => name.endsWith('_widget_scriptable_setup.sql'));
+  const sql = read(`supabase/migrations_history/${migration}`);
   const setup = read('supabase/functions/widget-scriptable-setup/index.ts');
   assert.match(sql, /action_expiry timestamptz := now\(\) \+ interval '180 days'/);
   assert.match(sql, /action_token_id, expires_at/);
@@ -341,7 +341,7 @@ test('Scriptable installation tracks shared expiry and state cleanup leaves lega
 
 test('raw setup and permanent tokens stay out of database columns/logs; revocation is Scriptable-scoped', () => {
   const fn = read('supabase/functions/widget-scriptable-setup/index.ts');
-  const sql = read(`supabase/migrations/${fs.readdirSync(file('supabase/migrations')).find((name) => name.endsWith('_widget_scriptable_setup.sql'))}`);
+  const sql = read(`supabase/migrations_history/${fs.readdirSync(file('supabase/migrations_history')).find((name) => name.endsWith('_widget_scriptable_setup.sql'))}`);
   assert.match(fn, /p_state_token_hash: await sha256Hex\(stateToken\)/);
   assert.match(fn, /p_action_token_hash: await sha256Hex\(thinkToken\)/);
   assert.match(fn, /return json\(\{ stateToken, thinkToken, expiresAt:/);

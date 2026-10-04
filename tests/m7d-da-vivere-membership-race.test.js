@@ -20,7 +20,7 @@ const skip = CAN_RUN ? false : 'no local PostgreSQL server binaries / postgres O
 
 const uuid = () => crypto.randomUUID();
 const M = ['20260929121350_m7a_da_vivere_bucket_items_domain', '20260929190126_m7c_da_vivere_calendar_unschedule', '20260929190145_m7d_da_vivere_reciprocal_lived']
-  .map((n) => `supabase/migrations/${n}.sql`);
+  .map((n) => `supabase/migrations_history/${n}.sql`);
 
 const FIXTURE_SQL = `
   create role authenticated; create role anon;

@@ -61,7 +61,7 @@ test('M9D/Progression V1: Sintonia explains only server-backed meaningful action
   const guide = bond().match(/<section class="noi-resonance-guide"[\s\S]*?<\/section>/)?.[0] || '';
   const sources = [...guide.matchAll(/<li><b>([^<]+)<\/b>/g)].map((m) => m[1]);
   assert.deepEqual(sources, ['Quest ed eventi', 'Domanda del giorno e Gioca', 'Ti penso e Ricordi', 'Mesiversario e anniversario']);
-  const migration = read('supabase/migrations/20261002181500_us_progression_v1.sql');
+  const migration = read('supabase/migrations_history/20261002181500_us_progression_v1.sql');
   for (const kind of ['quest','event','daily','game','think','moment','milestone']) assert.match(migration, new RegExp(`'${kind}'`), kind);
   assert.match(migration, /progression_award/);
   assert.match(migration, /unique \(couple_id, source_kind, source_key\)/, 'one source cannot farm progression');

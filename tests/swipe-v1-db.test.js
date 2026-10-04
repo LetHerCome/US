@@ -5,7 +5,7 @@ const path = require('node:path');
 const h = require('./helpers/game-v2-db');
 
 const { createDb, couple, setClock, as, rpc, id, playSide, startRound } = h;
-const MIGRATION = path.join(h.ROOT, 'supabase/migrations/20261002190000_swipe_v1.sql');
+const MIGRATION = path.join(h.ROOT, 'supabase/migrations_history/20261002190000_swipe_v1.sql');
 const WED = '2026-09-30T10:00:00Z';
 
 async function world() {

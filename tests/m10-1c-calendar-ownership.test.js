@@ -287,7 +287,7 @@ test('M10.1C: the legend explains the markers in text', () => {
 test('M10.1C: no calendar backend change — same table, same read filter, no new migration', () => {
   assert.equal((calSrc.match(/sb\.from\('calendar_entries'\)/g) || []).length >= 3, true);
   assert.match(calSrc, /UsCalendarDomain\.buildRangeOverlapFilter\(win\)/);
-  const migrations = fs.readdirSync(path.join(ROOT, 'supabase/migrations'));
+  const migrations = fs.readdirSync(path.join(ROOT, 'supabase/migrations_history'));
   assert.ok(!migrations.some((m) => /m10_1|m101/.test(m)), 'M10.1 adds no migration');
 });
 

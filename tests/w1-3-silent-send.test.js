@@ -53,11 +53,11 @@ test('token hash è deterministico e non conserva il token raw', async () => {
 });
 
 test('migration limita la credential a think:send e rende atomica idempotenza + insert', () => {
-  const directory = file('supabase/migrations');
+  const directory = file('supabase/migrations_history');
   assert.ok(fs.existsSync(directory), 'migration W1.3 mancante');
   const migrations = fs.readdirSync(directory).filter((name) => name.endsWith('_widget_think_silent_send.sql'));
   assert.equal(migrations.length, 1, 'deve esistere una sola migration W1.3');
-  const sql = read(`supabase/migrations/${migrations[0]}`);
+  const sql = read(`supabase/migrations_history/${migrations[0]}`);
   assert.match(sql, /think:send/);
   assert.match(sql, /widget_action_receipts/i);
   assert.match(sql, /unique\s*\([^)]*token_id[^)]*action_id/i);
@@ -75,10 +75,10 @@ test('migration limita la credential a think:send e rende atomica idempotenza + 
 });
 
 test('migration hotfix qualifica couple_id nella funzione widget per evitare ambiguita PL/pgSQL', () => {
-  const directory = file('supabase/migrations');
+  const directory = file('supabase/migrations_history');
   const migrations = fs.readdirSync(directory).filter((name) => name.endsWith('_fix_widget_think_couple_id_ambiguity.sql'));
   assert.equal(migrations.length, 1, 'serve una sola migration hotfix per couple_id');
-  const sql = read(`supabase/migrations/${migrations[0]}`);
+  const sql = read(`supabase/migrations_history/${migrations[0]}`);
   assert.match(sql, /from\s+public\.profiles\s+as\s+partner/i);
   assert.match(sql, /partner\.couple_id\s*=\s*credential\.couple_id/i);
   assert.match(sql, /partner\.id\s*<>\s*credential\.profile_id/i);

@@ -16,7 +16,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..');
-const F1C_MIGRATION = path.join(ROOT, 'supabase/migrations/20261003200000_f1c_authority_write_boundaries.sql');
+const F1C_MIGRATION = path.join(ROOT, 'supabase/migrations_history/20261003200000_f1c_authority_write_boundaries.sql');
 
 const C1 = '11111111-1111-4111-8111-111111111111';
 const C2 = '22222222-2222-4222-8222-222222222222';

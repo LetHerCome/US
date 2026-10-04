@@ -8,7 +8,7 @@ const path = require('node:path');
 const h = require('./helpers/game-v2-db');
 
 const { createDb, couple, setClock, as, readOnly, rpc, id, playSide, startRound, createWeekly } = h;
-const M11B = path.join(h.ROOT, 'supabase/migrations/20260930153745_m11b_game_v2_core.sql');
+const M11B = path.join(h.ROOT, 'supabase/migrations_history/20260930153745_m11b_game_v2_core.sql');
 const WED = '2026-09-30T10:00:00Z'; // week of Monday 2026-09-28 -> francesco
 
 async function world(clock = WED) {

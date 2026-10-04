@@ -5,7 +5,7 @@ const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
-const MIGRATION = 'supabase/migrations/20260924160000_m5i_ephemeral_left_for_you.sql';
+const MIGRATION = 'supabase/migrations_history/20260924160000_m5i_ephemeral_left_for_you.sql';
 
 test('M5I client loads only unseen items and cannot deep-link into historical content', () => {
   const source = read('left-for-you.js');

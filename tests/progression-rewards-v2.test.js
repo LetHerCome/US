@@ -6,7 +6,7 @@ const vm = require('node:vm');
 
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
-const migration = read('supabase/migrations/20261003090000_progression_rewards_v2.sql');
+const migration = read('supabase/migrations_history/20261003090000_progression_rewards_v2.sql');
 const css = read('progression.css');
 const js = read('progression.js');
 const html = read('index.html');

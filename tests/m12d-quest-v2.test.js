@@ -13,7 +13,7 @@ const ROOT = path.resolve(__dirname, '..');
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 const AUTHORITY_MIGRATION = '20261001133906_m12d_quest_server_authority.sql';
 const app = read('app.js'), html = read('index.html'), css = read('styles.css');
-const authoritySql = read(`supabase/migrations/${AUTHORITY_MIGRATION}`);
+const authoritySql = read(`supabase/migrations_history/${AUTHORITY_MIGRATION}`);
 function slice(from, to) { const a = app.indexOf(from), b = app.indexOf(to, a); assert.ok(a >= 0 && b > a, `${from}…${to}`); return app.slice(a, b); }
 const WEEK_BLOCK = slice("const QUEST_WEEK_TIMEZONE='Europe/Rome';", 'function bondLevelInfo(totalXp=0){');
 const QUEST_BLOCK = slice('async function currentQuestMode(){', '\n// ===== M7B');
@@ -439,7 +439,7 @@ test('M12D: accessibility — 44px actions, focusable retry, reduced motion', ()
 });
 
 test('M12D: one Quest authority migration hardens the existing domain without touching other product domains', () => {
-  const migrations = fs.readdirSync(path.join(ROOT, 'supabase/migrations')).sort();
+  const migrations = fs.readdirSync(path.join(ROOT, 'supabase/migrations_history')).sort();
   assert.ok(migrations.includes(AUTHORITY_MIGRATION), 'Quest authority migration remains in history');
   assert.ok(migrations.indexOf(AUTHORITY_MIGRATION) < migrations.length - 1, 'later product migrations may build on the hardened Quest authority');
   assert.match(authoritySql, /create or replace function private\.ensure_bond_week_internal\(\)[\s\S]*security definer[\s\S]*for slot_no in 1\.\.3 loop/i);

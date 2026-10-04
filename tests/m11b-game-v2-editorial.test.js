@@ -9,7 +9,7 @@ const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 
 const ROOT = path.resolve(__dirname, '..');
-const M11B = fs.readFileSync(path.join(ROOT, 'supabase/migrations/20260930153745_m11b_game_v2_core.sql'), 'utf8');
+const M11B = fs.readFileSync(path.join(ROOT, 'supabase/migrations_history/20260930153745_m11b_game_v2_core.sql'), 'utf8');
 const load = () => import(pathToFileURL(path.join(ROOT, 'supabase/game-v2/catalog-contract.mjs')).href);
 const normalizeEol = (value) => value.replace(/\r\n/g, '\n');
 

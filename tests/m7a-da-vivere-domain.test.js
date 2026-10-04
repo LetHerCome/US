@@ -6,14 +6,14 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 
-const MIGRATION = 'supabase/migrations/20260929121350_m7a_da_vivere_bucket_items_domain.sql';
-const CLAIM_ROLE_FIX = 'supabase/migrations/20260929121430_m7a_claim_us_role_bucket_items_transfer.sql';
+const MIGRATION = 'supabase/migrations_history/20260929121350_m7a_da_vivere_bucket_items_domain.sql';
+const CLAIM_ROLE_FIX = 'supabase/migrations_history/20260929121430_m7a_claim_us_role_bucket_items_transfer.sql';
 const stripComments = (sql) => sql.replace(/--[^\n]*/g, '');
 
 test('M7A migrations exist as fresh forward-only files after the M6 history', () => {
   assert.ok(fs.existsSync(path.join(ROOT, MIGRATION)), 'domain migration missing');
   assert.ok(fs.existsSync(path.join(ROOT, CLAIM_ROLE_FIX)), 'claim_us_role fix migration missing');
-  const files = fs.readdirSync(path.join(ROOT, 'supabase/migrations')).sort();
+  const files = fs.readdirSync(path.join(ROOT, 'supabase/migrations_history')).sort();
   // Later milestones (M7C+) may append migrations; M7A's pair must still sit
   // right after the full M6 history, in order.
   const m6d = files.indexOf('20260928210000_m6d_calendar_reminders.sql');

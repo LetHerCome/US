@@ -47,7 +47,7 @@ test('auth: l auth non tocca il dominio M5B left_for_you', () => {
   // La history M5B esiste ed è canonical (missioni M5B successive alla auth);
   // il confine valido qui è che il codice auth/produzione non la referenzia.
   const m5b = fs
-    .readdirSync(path.join(ROOT, 'supabase', 'migrations'))
+    .readdirSync(path.join(ROOT, 'supabase', 'migrations_history'))
     .filter((m) => m.includes('left_for_you'));
   assert.ok(m5b.length >= 2, 'la migration history M5B deve restare intatta');
   assert.doesNotMatch(read('index.html'), /left_for_you/);

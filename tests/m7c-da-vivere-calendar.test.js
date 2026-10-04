@@ -16,8 +16,8 @@ const { PGlite } = require('@electric-sql/pglite');
 
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
-const M7A = 'supabase/migrations/20260929121350_m7a_da_vivere_bucket_items_domain.sql';
-const M7C = 'supabase/migrations/20260929190126_m7c_da_vivere_calendar_unschedule.sql';
+const M7A = 'supabase/migrations_history/20260929121350_m7a_da_vivere_bucket_items_domain.sql';
+const M7C = 'supabase/migrations_history/20260929190126_m7c_da_vivere_calendar_unschedule.sql';
 const uuid = () => crypto.randomUUID();
 
 const FIXTURE_SQL = `
@@ -141,7 +141,7 @@ test('M7C migration: additive, forward-only, never touches shared_events or othe
   const sql = read(M7C).replace(/--.*$/gm, '');
   assert.doesNotMatch(sql, /shared_events|moments|moment_photos|drop table|drop column|truncate|alter table/i);
   assert.match(sql, /create trigger calendar_entries_unschedule_bucket_items\s+before delete on public\.calendar_entries/);
-  const files = fs.readdirSync(path.join(ROOT, 'supabase/migrations')).sort();
+  const files = fs.readdirSync(path.join(ROOT, 'supabase/migrations_history')).sort();
   assert.ok(files.indexOf(path.basename(M7C)) > files.indexOf(path.basename(M7A)));
 });
 
