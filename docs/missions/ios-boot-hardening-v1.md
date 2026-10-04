@@ -1,6 +1,6 @@
 # Mission — iOS Boot Hardening V1
 
-**Status:** CANDIDATE  
+**Status:** CANDIDATE
 **Branch:** `hotfix/ios-boot-hardening-v1`
 
 ## Goal
