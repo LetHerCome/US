@@ -181,6 +181,7 @@ function relationshipDateConfirmation(value){
   $('usConfirmRelationshipDate')?.addEventListener('click',async()=>{
     const btn=$('usConfirmRelationshipDate');btn.disabled=true;btn.textContent='Salvo…';
     const {error}=await sb.from('couples').update({started_on:value}).eq('id',window.usProfile.couple_id);
+    if(!error)window.USCountdown?.refresh?.();
     if(error){console.warn(error);btn.disabled=false;btn.textContent='Conferma data';return toast('Non riesco a salvare la data');}
     await hydrateUsSettings();
     window.hydrateEvents?.();
