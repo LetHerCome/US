@@ -140,3 +140,12 @@ cron definitions and all audit facts above remain unchanged.
 See `F2A3_ROLLOUT.md` for exact cutoff semantics, local test evidence, future
 backup/provision/deploy/no-op/activation sequence, rollback and accepted native
 and Storage follow-ups. Production changes in this implementation pass: **NONE**.
+
+
+## Production rollout — 2026-10-04
+
+Status: **F2A3_PRODUCTION_VERIFIED — MERGE READY**.
+
+Production verification completed after a fresh off-repository logical backup gate. The reviewed migration is applied; cleanup worker v1 is deployed with dedicated Vault authentication; authenticated cleanup smoke claimed zero rows; the first operational-retention run removed only eligible technical residue (745 successful cron-history rows and 59 widget action tokens), with all other retention counters zero. The persistent `push_event_log` ledger was not touched and remained at 151 rows. Security advisors remained unchanged. Cron jobs 10 and 11 are enabled on their reviewed daily schedules.
+
+Local acceptance on the exact rollout branch: 1,408 tests total, 1,375 passed, zero failed, 33 environment skips; baseline check and `git diff --check` passed.
