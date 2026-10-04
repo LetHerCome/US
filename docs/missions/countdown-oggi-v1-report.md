@@ -7,14 +7,26 @@ L'utente ha scelto di mantenere i **sei stili originali del candidate**, descrit
 - Disponibili subito: **Editoriale, Segnale, Vetro**.
 - Sintonia, tramite unlock esistenti: **Aurora** (`frame_aurora`, livello 4), **Orbita** (`ring_orbit`, livello 9), **Cromo** (`frame_chrome`, livello 12).
 - Conservare i trattamenti visuali e il comportamento già implementati, senza sostituirli con i concept esplorativi.
-- Posizione finale richiesta: countdown più in alto, subito sotto la top bar, rispettando safe area e lasciando Daily Question e gli altri elementi in spazi separati. **Questo spostamento non è ancora applicato al candidate** e richiede una successiva patch e verifica mobile proporzionata.
+- Posizione finale richiesta e ora applicata su successivo mandato: countdown più in alto, subito sotto la top bar, rispettando safe area e lasciando Daily Question e gli altri elementi in spazi separati.
 - Restano invariati i vincoli: foto corrente, tempo protagonista, copy minimo, nessuna foto/card aggiuntiva, nessuna nuova economia, nessuna modifica Arcade o redesign calendario.
 
-Riferimento tecnico verificato: `d92254814bc88b343ebdfe5eb720a4acd5f4a95a`. La selezione dei sei stili non richiede un ripristino: sono tuttora quelli presenti nell'app. I risultati tecnici sotto sono quelli della verifica precedente, non una nuova esecuzione dopo questa decisione documentale. Nessuna modifica runtime in questo aggiornamento.
+Riferimento tecnico precedente allo spostamento: `d92254814bc88b343ebdfe5eb720a4acd5f4a95a`. La selezione dei sei stili non richiede un ripristino: sono tuttora quelli presenti nell'app. La decisione documentale è nel commit `1eb9eac`; la successiva patch di posizione è descritta di seguito.
 
 Branch `codex/countdown-oggi-v1`, base esatta `main` `f463c7d73c9cba86c22130179a3fb79c405cfa3e`. Repository `F:\AI\US`, worktree isolato `C:\Users\Francesco\.codex\worktrees\c8c3\US`.
 
 Candidate originale `0459046db43b48ea9e6675b36255053188e4ecce` conservato nel ref locale `codex/countdown-oggi-v1-original`. Rebase del solo candidate, nessun merge. Nessun push, PR, deploy o modifica production/Supabase remoto.
+
+## Spostamento sotto la top bar — 2026-10-05
+
+Patch limitata a `countdown.css`: ancoraggio alto nella griglia esistente e spazio sopra pari all'altezza chrome più 22 px. Hero e top bar condividono già safe-top, quindi nessuna duplicazione dell'inset. Rimossa la precedente distanza superiore speciale sui viewport bassi. I sei stili e la banda Daily Question restano invariati.
+
+Test browser esteso con posizione 8–32 px sotto il bordo reale della barra, safe top 24/bottom 20, su sei stili × tre viewport. RED osservato prima del CSS, poi **7/7 PASS senza skip**. Verificati anche collisioni, overflow, Focus Photo, reduced motion e tastiera tramite harness corrente. Review indipendente READY senza P1/P2.
+
+Preview: `countdown-topbar/position-before.png`, `position-after.png`, `position-comparison.png` e sei stili × tre viewport nella directory visualizations della chat. Before/after con stessa fixture e safe area; foto simulata, nessun media privato letto.
+
+Verifica aggiornata: **suite completa `npm test -- --test-concurrency=1`: 1423 test, 1383 pass, 40 skip, 0 fail**, exit 0. `npm run build:cloudflare-pages`: 143 file, PASS. Browser 7/7; syntax test e `git diff --check` PASS. Asset APPROVED invariati; nessuna modifica Android residua. Log `countdown-topbar-full-suite-serial.log` e `countdown-topbar-browser.log` nella directory visualizations della chat.
+
+Il tentativo parallelo aveva un solo fail Scriptable: il suo controllo git status aveva osservato il PNG Android durante la riscrittura del generatore già esistente. Il PNG finale è byte-identico a HEAD (SHA256 `f71c0cf6cbca172b7833754f6eaa2b4addfab6381a696bdccf070d83ea690868`). Nessun cleanup/revert necessario. Rerun dell'intera suite in serie elimina la race, senza modificare i test o il generatore Android. Restano i limiti di emulazione e rollout già riportati. Nessun push, deploy, merge o intervento production.
 
 ## Authority e compatibilità
 
@@ -43,7 +55,7 @@ Countdown giorni di calendario Europe/Rome oppure clock UTC reale, automatico �
 | Orbita | Fili circolari, punto orbitante | `ring_orbit`, Sintonia 9 |
 | Cromo | Tipografia scolpita e riflessi | `frame_chrome`, Sintonia 12 |
 
-## Verifica sul main riallineato
+## Verifica sul main riallineato prima dello spostamento
 
 - **Suite completa `npm test`: 1423 test, 1383 pass, 40 skip, 0 fail**, exit 0. Durata ~95 s. Log `countdown-rebased-full-suite-final.log`. Fix manifest proveniente da main verificato: test Scriptable passa, nessuna modifica Android generata.
 - Node 24 Windows: usato loader ESM temporaneo esterno per i test storici con import(path assoluto). Nessun cambio runtime/package. La suite completa non espone Playwright tramite env e salta i browser opzionali; il browser countdown è eseguito separatamente, senza skip.

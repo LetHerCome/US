@@ -10,7 +10,7 @@ Oggi: foto a due layer, Focus Photo, stack arbitrato M12A (una azione e un fatto
 
 ## Design
 
-Decisione creativa confermata dall'utente il 2026-10-05: utilizzare i sei stili originali qui descritti; accantonare gli otto concept della visual exploration. Nessun nuovo stile da implementare. Rimane da applicare la posizione più alta, subito sotto la top bar, con safe area e separazione da Daily Question; il candidate tecnico `d922548` conserva ancora la posizione precedente.
+Decisione creativa confermata dall'utente il 2026-10-05: utilizzare i sei stili originali qui descritti; accantonare gli otto concept della visual exploration. Nessun nuovo stile da implementare. Su successivo mandato esplicito è stata applicata la posizione più alta, subito sotto la top bar, con safe area e separazione da Daily Question. Il candidate tecnico `d922548` resta il riferimento precedente allo spostamento.
 
 Un solo tempo scelto dalla coppia, direttamente sulla foto. Titolo massimo 32 caratteri, nessuna foto propria. Insieme da: giorni di calendario Europe/Rome dalla data esistente, senza copia della data. Countdown: giorni di calendario oppure istante assoluto, salvato UTC e modificato nell'orario locale del dispositivo. Scaduti: zero, nessun tempo negativo o cambio automatico. Massimo 12 countdown condivisi.
 
@@ -50,3 +50,5 @@ Nessun conflitto concettuale: quattro tab, foto/tempo in primo piano, Daily in b
 Integrazione baseline: indice MIGRATION_CUTOFF rigenerato dal workflow esistente (solo aggiunta countdown); gate F1B esteso con il pattern forward RPC già adottato per Edge, applicando migrazioni reali e verificando authenticated sì / anon e PUBLIC no. Snapshot MATRIX storico invariato. RED con grant anon temporaneo osservato, SQL ripristinato, GREEN reale.
 
 Verifica finale aggiornata: suite completa 1423 test, 1383 pass, 40 skip, zero fail; browser countdown separato 7/7 senza skip; mirati 48/48; build web 143 e native 141 file; 16 asset APPROVED invariati. Manifest Android resta pulito dopo la suite. Review indipendente READY senza P1/P2. Cinque preview di Oggi generate (giorni, clock, Insieme da, countdown+Daily, Aurora Sintonia) con fixture locale e nessun pageerror. Report aggiornato contiene log, percorsi e limiti.
+
+2026-10-05, patch autorizzata di posizione: sei stili originali conservati; countdown allineato in alto, sotto la top bar. Test esteso con gap 8–32 px e safe top24/bottom20 su 18 combinazioni, RED prima del CSS e GREEN 7/7 browser. Before/after verificato con stessa fixture. Review indipendente READY senza P1/P2. Suite completa in serie 1383 pass / 40 skip / 0 fail, build Cloudflare 143 file PASS, diff check pulito. La modalità in serie evita una race preesistente del test Scriptable contro il generatore PNG Android; byte finali identici a HEAD, nessuna modifica Android. Nessun deploy/push/merge.

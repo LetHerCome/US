@@ -2,8 +2,9 @@
 .us-countdown-display[hidden],.us-countdown-overlay [hidden]{display:none!important}
 .us-countdown-entry{position:absolute;z-index:5;right:16px;bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 16px);width:44px;height:44px;padding:0;display:grid;place-items:center;border:0;border-radius:50%;background:rgba(10,10,16,.18);color:#fff;backdrop-filter:blur(8px);cursor:pointer}
 .us-countdown-entry .us-icon{width:19px;height:19px}
-.us-countdown-display{position:relative;z-index:4;grid-area:time;align-self:center;justify-self:center;max-width:100%;padding:0 12px;border:0;background:none;color:#fff;cursor:pointer;text-align:center;min-height:44px;transition:opacity .25s}
-#homeHero[data-us-countdown]{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"time" "attention";gap:18px;padding:calc(var(--us-top-chrome-height) + 64px) 20px calc(var(--us-nav-height) + var(--us-safe-bottom) + 88px)}
+.us-countdown-display{position:relative;z-index:4;grid-area:time;align-self:start;justify-self:center;max-width:100%;padding:0 12px;border:0;background:none;color:#fff;cursor:pointer;text-align:center;min-height:44px;transition:opacity .25s}
+/* Hero and top bar already share safe-top; reserve the chrome plus a small gap. */
+#homeHero[data-us-countdown]{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"time" "attention";gap:18px;padding:calc(var(--us-top-chrome-height) + 22px) 20px calc(var(--us-nav-height) + var(--us-safe-bottom) + 88px)}
 #home #homeHero[data-us-countdown] .us-oggi-stack{position:relative;grid-area:attention;top:auto;left:auto;right:auto;width:100%;align-self:end;}
 .us-countdown-art{position:relative;isolation:isolate;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;line-height:1;min-width:0;text-shadow:0 2px 24px rgba(0,0,0,.55);padding:12px 20px;}
 .us-countdown-title{font:500 11px/1.3 var(--us-font-body,Inter,sans-serif);letter-spacing:.14em;margin-bottom:4px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -86,7 +87,7 @@
 .us-countdown-status:has(#usCountdownStatus:empty){display:none;}
 .us-countdown-status button{min-height:44px;flex-shrink:0;}
 @media(max-height:700px){
-  #homeHero[data-us-countdown]{padding-top:calc(var(--us-top-chrome-height) + 58px);padding-bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 76px);gap:12px;}
+  #homeHero[data-us-countdown]{padding-bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 76px);gap:12px;}
   #home .us-countdown-number{font-size:76px;}
   #home .us-countdown-art{padding:6px 18px;}
   #home [data-countdown-style="glass"]{padding:14px 24px;border-radius:30px;}

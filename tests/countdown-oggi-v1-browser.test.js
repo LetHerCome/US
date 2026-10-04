@@ -6,6 +6,7 @@ test('countdown and daily question never overlap at base viewports, all styles a
  const h=await start();if(!h)return t.skip('Playwright unavailable');
  try{for(const [width,height] of [[320,568],[390,844],[844,390]])for(const style of ['editorial','signal','glass','aurora','orbit','chrome']){
   const {page,ctx,errors}=await pageFor(h,{width,height,style,mode:style==='signal'?'clock':'days'});
+  await page.evaluate(()=>{document.documentElement.style.setProperty('--us-safe-top','24px');document.documentElement.style.setProperty('--us-safe-bottom','20px');});
   await page.waitForSelector('#usCountdownDisplay:not([hidden])');
   const m=await page.evaluate(()=>{
    const box=e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height};};
@@ -13,6 +14,7 @@ test('countdown and daily question never overlap at base viewports, all styles a
    return {count:box(document.getElementById('usCountdownDisplay')),number:box(document.querySelector('#usCountdownDisplay .us-countdown-number')),entry:box(document.getElementById('usCountdownEntry')),stack:box(document.getElementById('usOggiStack')),top:box(document.querySelector('.top')),nav:box(document.querySelector('.nav')),surfaces:[...document.querySelectorAll('#usOggiStack > *')].filter(visible).map(box),sw:document.scrollingElement.scrollWidth,sh:document.scrollingElement.scrollHeight,w:innerWidth,h:innerHeight};
   });
   const overlap=(a,b)=>a.x<b.right-.5&&b.x<a.right-.5&&a.y<b.bottom-.5&&b.y<a.bottom-.5;
+  assert.ok(m.count.y-m.top.bottom>=8&&m.count.y-m.top.bottom<=32,`${width}×${height} ${style} must sit immediately below top bar: ${JSON.stringify(m)}`);
   assert.equal(overlap(m.count,m.stack),false,`${width}×${height} ${style} collision ${JSON.stringify(m)}`);
   for(const b of [m.count,m.entry,...m.surfaces]){assert.ok(b.y>=m.top.bottom-.5&&b.bottom<=m.nav.y+.5,`${style} outside chrome ${JSON.stringify(m)}`);assert.ok(b.x>=0&&b.right<=width+.5,`${style} horizontal overflow`);}
   assert.ok(m.number.x>=0&&m.number.right<=width+.5);assert.ok(m.sh<=m.h);assert.ok(m.sw<=m.w);assert.deepEqual(errors,[]);
