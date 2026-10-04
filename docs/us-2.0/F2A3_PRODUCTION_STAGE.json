@@ -1,68 +1,53 @@
 {
-  "status": "F2A3_PRODUCTION_STAGED_BACKUP_GATE",
+  "status": "F2A3_PRODUCTION_VERIFIED_MERGE_READY",
   "project_id": "iiakdfsxpywdkxravqjh",
-  "source_head": "a1d3beb5fa936673a72ddddcebd24f3b5acb0c5f",
-  "production_changes": {
-    "migration": {
-      "version": "20261004184758",
-      "name": "f2a3_retention_operations",
-      "applied": true,
-      "destructive_retention_executed": false
+  "source_head": "fb62cd94dd37d101d9fbe7822f689fe07d0acdad",
+  "backup_gate": {
+    "verified": true,
+    "outside_repo": true,
+    "files_nonempty": true,
+    "sha256_recorded": true,
+    "client": "PostgreSQL 17.11 native"
+  },
+  "migration": {
+    "version": "20261004184758",
+    "name": "f2a3_retention_operations",
+    "applied": true
+  },
+  "cleanup_worker": {
+    "deployed": true,
+    "version": 1,
+    "verify_jwt": false,
+    "wrong_key_http_status": 401,
+    "authenticated_noop_claimed": 0
+  },
+  "retention_run": {
+    "cron_success": 745,
+    "cron_unsuccessful": 0,
+    "widget_action_tokens": 59,
+    "widget_tokens": 0,
+    "widget_scriptable_setup_codes": 0,
+    "widget_scriptable_installations": 0,
+    "left_for_you_cleanup_queue": 0,
+    "push_event_log_deleted": false
+  },
+  "post_verify": {
+    "push_event_log_rows": 151,
+    "widget_action_tokens_rows": 135,
+    "security_advisors_unchanged": true
+  },
+  "cron_jobs": [
+    {
+      "jobid": 10,
+      "name": "us-operational-retention-daily",
+      "schedule": "20 3 * * *",
+      "active": true
     },
-    "cron_jobs": [
-      {
-        "jobid": 10,
-        "name": "us-operational-retention-daily",
-        "schedule": "20 3 * * *",
-        "active": false
-      },
-      {
-        "jobid": 11,
-        "name": "us-left-for-you-cleanup-daily",
-        "schedule": "40 3 * * *",
-        "active": false
-      }
-    ],
-    "vault": {
-      "us_left_for_you_cleanup_cron_key": "PRESENT_VALUE_NOT_RECORDED"
-    },
-    "edge_function": {
-      "slug": "cleanup-left-for-you",
-      "version": 1,
-      "verify_jwt": false,
-      "status": "ACTIVE",
-      "ezbr_sha256": "cab6af1882df18ccc359b759ae270c7c964b58effb78da9b12214f2abffe790d"
+    {
+      "jobid": 11,
+      "name": "us-left-for-you-cleanup-daily",
+      "schedule": "40 3 * * *",
+      "active": true
     }
-  },
-  "verification": {
-    "migration_transactional_dry_run_against_production_schema": "PASS_ROLLED_BACK_BEFORE_REAL_APPLY",
-    "client_acl_retention_function": "DENIED",
-    "service_role_acl_retention_function": "DENIED",
-    "client_acl_cleanup_key_rpc": "DENIED",
-    "service_role_acl_cleanup_key_rpc": "ALLOWED",
-    "wrong_cleanup_cron_key_http_status": 401,
-    "wrong_cleanup_cron_key_response": "Unauthorized",
-    "security_advisors": {
-      "rls_enabled_no_policy": 23,
-      "authenticated_security_definer_function_executable": 32,
-      "auth_leaked_password_protection": 1,
-      "new_lints": false
-    },
-    "retention_preview": {
-      "cron_success_14d": 745,
-      "cron_unsuccessful_30d": 0,
-      "widget_action_tokens_30d": 57,
-      "left_for_you_eligible": 0,
-      "cleanup_queue_pending": 0,
-      "push_event_log_total": 151
-    }
-  },
-  "hard_gate": {
-    "off_site_logical_dump_verified": false,
-    "authenticated_cleanup_noop_run": false,
-    "manual_retention_run": false,
-    "cron_activation": false,
-    "reason": "Supabase Free-plan rollout requires a fresh off-site logical database dump before the first destructive worker/retention invocation. This environment has no Supabase CLI/db password/backup-download capability."
-  },
-  "safety_note": "push_event_log is not a retention target and remains an indefinite idempotency ledger."
+  ]
 }
