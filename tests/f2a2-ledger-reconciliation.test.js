@@ -214,10 +214,25 @@ test('F2A.2 digest after repair: schema unchanged, ledger is the baseline only',
   assert.deepEqual(post.ledger.map((r) => [r.v, r.n]), [[BASELINE_VERSION, BASELINE_NAME]]);
 });
 
-test('F2A.2 repair output: migration list is local = remote baseline, push dry-run is a no-op', { skip: !fs.existsSync(path.join(ROOT, REPAIR_OUTPUT)) && pending(REPAIR_OUTPUT) }, () => {
+test('F2A.2 repair record: guarded 83-row revert, one baseline row, nothing else', { skip: !fs.existsSync(path.join(ROOT, REPAIR_OUTPUT)) && pending(REPAIR_OUTPUT) }, () => {
   const out = read(REPAIR_OUTPUT);
-  const after = out.slice(out.lastIndexOf('migration list --linked'));
-  assert.deepEqual(parseMigrationList(after.slice(0, after.indexOf('db push'))), [{ local: BASELINE_VERSION, remote: BASELINE_VERSION }]);
-  assert.match(out.slice(out.lastIndexOf('db push --dry-run --linked')), /up to date/i);
-  assert.match(out, /F2A\.2 ledger repair complete/);
+  assert.match(out, /Reviewed HEAD: [0-9a-f]{40}/);
+  assert.match(out, /matched exactly those 83 versions/);
+  assert.match(out, /Deleted exactly the 83 reviewed schema_migrations rows/);
+  assert.match(out, new RegExp(`version: ${BASELINE_VERSION}\\s+name: ${BASELINE_NAME}`));
+  assert.match(out, /No migration SQL was executed/);
+});
+
+// What `supabase db push --dry-run --linked` decides, computed from the
+// evidence: it compares local migration versions with the remote ledger.
+// (The repair ran through the connector, so the CLI command itself was not
+// run; this is the same comparison on the committed post-repair ledger.)
+test('F2A.2 postcondition: remote ledger = local migrations = the committed baseline file', { skip: !DIGEST_POST && pending('docs/us-2.0/F2A_2_SCHEMA_DIGEST_POST.json') }, () => {
+  const remote = DIGEST_POST.f2a2_d01_digest.ledger;
+  assert.deepEqual(remote.map((r) => r.v), sqlFiles(MIGRATIONS).map((f) => f.slice(0, 14)), 'nothing to push, nothing unknown remotely');
+  // The ledger row stores the committed baseline migration, byte for byte.
+  const baseline = read(`${MIGRATIONS}/${BASELINE_FILE}`);
+  assert.equal(remote[0].stmts, 1);
+  assert.equal(remote[0].len, baseline.length);
+  assert.equal(remote[0].md5, crypto.createHash('md5').update(baseline).digest('hex'));
 });

@@ -1,6 +1,6 @@
 # US 2.0 — F2A.2 Ledger Reconciliation
 
-**Status:** `F2A_2_PREFLIGHT_PASSED`. The ledger repair is not executed yet. The production steps need Francesco, because this environment has no production access. Not merged.
+**Status:** `F2A_2_READY_FOR_REVIEW`. The ledger repair is done in production and verified from the committed evidence. Not merged; waiting for independent review.
 **Project:** Supabase `iiakdfsxpywdkxravqjh`
 **Authorization:** Francesco, 2026-10-04 07:54 UTC. It covers the migration-ledger repair from the F2A.1 plan, including its ledger DML, and no schema or application-data change.
 
@@ -8,6 +8,7 @@
 
 - **Branch:** `mission/us-2-0-f2a-2-ledger-reconciliation`.
 - **Base:** `origin/main` `6dd23d7b2f5e57c7fd078df6783a46689baccf43` (F2A.1, PR #58, merged).
+- **Repair gate commit:** `2851314265dc16e6788298a82f53bf6f1378e4d6` (reviewed before the write).
 - **HEAD:** the commit carrying this document; the thread reply reports the SHA.
 - **Production access from this environment:** none (egress proxy). Francesco runs every production step himself: read-only packs through the Supabase connector, and the repair through the Supabase CLI with `scripts/f2a2-ledger-repair.mjs`.
 
@@ -20,8 +21,8 @@
 | 2b. Schema digest, read-only | `F2A_2_SCHEMA_DIGEST.sql` before the repair | `docs/us-2.0/F2A_2_SCHEMA_DIGEST_PRE.json` | **PASS**: 22 block digests; ledger = the 83 F2A.1 rows |
 | 3. Export the ledger, read-only | `F2A_2_LEDGER_EXPORT.sql`: all 83 rows, masked in the database | `docs/us-2.0/F2A_2_LEDGER_EXPORT_*.json` → `supabase/migrations_history/ledger/` | **PASS**: 83 rows, version / name / count / length / unmasked md5 equal to F2A.1 c01; `l13` null; 20 values masked in 4 rows; 83 history files + `LEDGER.json` |
 | 4. Move files (repo) | 47 migrations to `supabase/migrations_history/`; one baseline migration | repo | **done** |
-| 5. Ledger repair (the only write) | revert the 83 versions; record the baseline as applied | `scripts/f2a2-ledger-repair.mjs --execute` | **Francesco**, after the preflight passes here |
-| 6. Prove it is clean | `migration list --linked`, `db push --dry-run --linked`, digest after, rebuild | `docs/us-2.0/F2A_2_LEDGER_REPAIR_OUTPUT.txt`, `…_DIGEST_POST.json` | **Francesco**, then verified here |
+| 5. Ledger repair (the only write) | revert the 83 versions; record the baseline as applied | executed by Francesco through the Supabase connector (see RESULTS) | **done**, 2026-10-04 |
+| 6. Prove it is clean | `migration list --linked`, `db push --dry-run --linked`, digest after, rebuild | `docs/us-2.0/F2A_2_LEDGER_REPAIR_OUTPUT.txt`, `…_DIGEST_POST.json` | **done**: digest and ledger verified here; the CLI commands were not run literally (see RESULTS) |
 | 7. Guard | test: nothing older than the baseline is executable | `tests/f2a2-ledger-reconciliation.test.js` | **done** |
 
 The tests that need production evidence skip with `pending: … not committed yet` until it is committed. The mission is complete only when none skips.
@@ -87,7 +88,31 @@ The ledger's other columns:
 - `rollback` and `idempotency_key` are null on every row;
 - `created_by` is the owner account on 78 rows and null on 5.
 
-**Ledger repair, list, dry-run, post digest:** PENDING Francesco's run of `scripts/f2a2-ledger-repair.mjs --execute`.
+**Ledger repair (the only production write): DONE.** Francesco ran it on 2026-10-04 at gate commit `2851314`.
+- **How it ran:** his environment reaches production only through the Supabase connector, not a linked CLI. So `scripts/f2a2-ledger-repair.mjs` was **not run**. Its effect was applied as one SQL transaction on `supabase_migrations.schema_migrations`, with the same pre-write guard: the live versions had to equal the reviewed 83, or nothing was written.
+- **Writes:** delete the 83 reviewed rows; insert 1 row, `20261004000000 us_2_0_baseline`. Nothing else: no migration SQL, no schema or application data.
+- **Record:** `docs/us-2.0/F2A_2_LEDGER_REPAIR_OUTPUT.txt`.
+
+**Ledger before and after** (from the committed digests, not from the record):
+
+| | Rows | Versions |
+|---|---|---|
+| Before (`F2A_2_SCHEMA_DIGEST_PRE.json`) | 83 | `20260818181916` … `20261003200000`, equal to F2A.1 c01 |
+| After (`F2A_2_SCHEMA_DIGEST_POST.json`) | 1 | `20261004000000 us_2_0_baseline` |
+
+The stored row holds the committed baseline migration byte for byte: 1 statement, 488,901 characters, md5 `819fa722…b355`, equal to `supabase/migrations/20261004000000_us_2_0_baseline.sql`. The CLI's own `repair --status applied` would have split it into many statements. Only the version is compared by `db push` and `migration list`, so the difference has no effect on them.
+
+**Schema unchanged:** all 22 capture-block digests are identical before and after the repair (c16–c20 are null both times, since every function fit in c12–c15).
+
+**`migration list --linked` and `db push --dry-run --linked`: NOT run as CLI commands.** The record says so explicitly. Its `migration list` table is a transcript built from the live ledger, not CLI stdout. What *is* verified, from the committed evidence:
+- the remote ledger versions equal the local `supabase/migrations` versions, exactly `[20261004000000]`;
+- so `migration list` would show one row with local = remote, and `db push --dry-run` would have no version to push.
+
+The test `F2A.2 postcondition` asserts this. Running both commands literally from a linked CLI is read-only and is the one check still open (see NEXT).
+
+**Rebuild:**
+- the F2A.1 baseline rebuild still reproduces the production fingerprint;
+- empty PostgreSQL + `supabase/migrations` (+ the cron source) gives the same fingerprint as the baseline.
 
 ## DEFERRED
 
