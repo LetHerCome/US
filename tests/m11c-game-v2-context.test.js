@@ -10,7 +10,7 @@ const path = require('node:path');
 const h = require('./helpers/game-v2-db');
 
 const { createDb, couple, setClock, as, readOnly, rpc, id, playSide, startRound } = h;
-const M11C = path.join(h.ROOT, 'supabase/migrations/20260930153749_m11c_game_v2_context.sql');
+const M11C = path.join(h.ROOT, 'supabase/migrations_history/20260930153749_m11c_game_v2_context.sql');
 const NOW = '2026-09-30T10:00:00Z';
 const days = (iso, n) => new Date(new Date(iso).getTime() + n * 86400000).toISOString();
 

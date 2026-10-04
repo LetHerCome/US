@@ -17,8 +17,8 @@ const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8').replace(/\r\n/g, '\n');
 const DA_VIVERE = ['20260929121350_m7a_da_vivere_bucket_items_domain', '20260929190126_m7c_da_vivere_calendar_unschedule',
   '20260929190145_m7d_da_vivere_reciprocal_lived', '20260930225935_m12b_2_da_vivere_archived_link_release']
-  .map((n) => `supabase/migrations/${n}.sql`);
-const M11A1 = 'supabase/migrations/20260930121312_m11a_1_game_rpc_readonly_actor.sql';
+  .map((n) => `supabase/migrations_history/${n}.sql`);
+const M11A1 = 'supabase/migrations_history/20260930121312_m11a_1_game_rpc_readonly_actor.sql';
 const uuid = () => crypto.randomUUID();
 const ACTOR_LOCKED = read(M11A1).match(/create function private\.m11a_actor_locked\(\)[\s\S]*?\$\$;\n/)[0];
 
@@ -314,7 +314,7 @@ test('J — M12B.3 is untouched: same catalog, both source kinds still link, Dai
 test('K — static: additive, versioned after M12B.3, ledger-declared, no Game V2 or Daily authority change', () => {
   const sql = read(M12B4);
   const file = path.basename(M12B4);
-  const versions = fs.readdirSync(path.join(ROOT, 'supabase/migrations')).map((f) => f.slice(0, 14)).sort();
+  const versions = fs.readdirSync(path.join(ROOT, 'supabase/migrations_history')).map((f) => f.slice(0, 14)).sort();
   assert.ok(versions.includes(file.slice(0, 14)), 'M12B.4 migration remains in the ledger');
   assert.equal(versions.filter((v) => v === file.slice(0, 14)).length, 1, 'M12B.4 migration is unique');
   assert.ok(file.slice(0, 14) > '20260930233506');

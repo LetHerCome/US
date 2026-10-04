@@ -18,8 +18,8 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8').replace(/\r\n/g, '\n');
 
-const F1A_MIGRATION = 'supabase/migrations/20261003160000_f1a_revoke_claim_us_role.sql';
-const CLAIM_ROLE_LATEST = 'supabase/migrations/20260929121430_m7a_claim_us_role_bucket_items_transfer.sql';
+const F1A_MIGRATION = 'supabase/migrations_history/20261003160000_f1a_revoke_claim_us_role.sql';
+const CLAIM_ROLE_LATEST = 'supabase/migrations_history/20260929121430_m7a_claim_us_role_bucket_items_transfer.sql';
 const CANONICAL_ORIGIN = 'https://us-a33.pages.dev';
 
 function runtimeFiles() {

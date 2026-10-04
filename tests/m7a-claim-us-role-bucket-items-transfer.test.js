@@ -6,7 +6,7 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 
-const MIGRATION = 'supabase/migrations/20260929121430_m7a_claim_us_role_bucket_items_transfer.sql';
+const MIGRATION = 'supabase/migrations_history/20260929121430_m7a_claim_us_role_bucket_items_transfer.sql';
 const stripComments = (sql) => sql.replace(/--[^\n]*/g, '');
 
 // Every reassignment statement present in claim_us_role as of the M6A fix

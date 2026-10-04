@@ -122,7 +122,7 @@ test('M3 mantiene openToday/closeToday, refresh su apertura e visibilita senza n
 });
 
 test('M3 reveal helper delega a get_daily_state e non conta daily_answers autonomamente', () => {
-  const migration = read('supabase/migrations/20260902101619_daily_question_reveal_authority.sql');
+  const migration = read('supabase/migrations_history/20260902101619_daily_question_reveal_authority.sql');
   assert.match(migration, /create or replace function private\.daily_question_reveal_ready\(target_question_id uuid\)/);
   assert.match(migration, /public\.get_daily_state\(target_question_id\)/);
   assert.match(migration, /->>\s*'both_answered'/);

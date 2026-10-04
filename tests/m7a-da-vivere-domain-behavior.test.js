@@ -24,8 +24,8 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 
 const ROOT = path.resolve(__dirname, '..');
-const MIGRATION = path.join(ROOT, 'supabase/migrations/20260929121350_m7a_da_vivere_bucket_items_domain.sql');
-const CLAIM_ROLE_FIX = path.join(ROOT, 'supabase/migrations/20260929121430_m7a_claim_us_role_bucket_items_transfer.sql');
+const MIGRATION = path.join(ROOT, 'supabase/migrations_history/20260929121350_m7a_da_vivere_bucket_items_domain.sql');
+const CLAIM_ROLE_FIX = path.join(ROOT, 'supabase/migrations_history/20260929121430_m7a_claim_us_role_bucket_items_transfer.sql');
 
 const { PGlite } = require('@electric-sql/pglite');
 

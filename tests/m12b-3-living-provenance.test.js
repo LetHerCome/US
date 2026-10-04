@@ -17,8 +17,8 @@ const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8').replace(/\r\n/g, '\n');
 const DA_VIVERE = ['20260929121350_m7a_da_vivere_bucket_items_domain', '20260929190126_m7c_da_vivere_calendar_unschedule',
   '20260929190145_m7d_da_vivere_reciprocal_lived', '20260930225935_m12b_2_da_vivere_archived_link_release']
-  .map((n) => `supabase/migrations/${n}.sql`);
-const M11A1 = 'supabase/migrations/20260930121312_m11a_1_game_rpc_readonly_actor.sql';
+  .map((n) => `supabase/migrations_history/${n}.sql`);
+const M11A1 = 'supabase/migrations_history/20260930121312_m11a_1_game_rpc_readonly_actor.sql';
 const uuid = () => crypto.randomUUID();
 
 // The production actor helper, taken verbatim from the M11A.1 migration.
@@ -395,7 +395,7 @@ test('migration preconditions: a production shape mismatch fails before any chan
 });
 
 test('M12B.3 migrations: later ledger versions, additive, pinned search_path, explicit grants', () => {
-  const files = fs.readdirSync(path.join(ROOT, 'supabase/migrations')).sort();
+  const files = fs.readdirSync(path.join(ROOT, 'supabase/migrations_history')).sort();
   const last = files.indexOf('20260930225935_m12b_2_da_vivere_archived_link_release.sql');
   // M12B.4 and later batches may follow; the three M12B.3 files come right after M12B.2, in order.
   assert.deepEqual(files.slice(last + 1, last + 4), Object.values(M12B3).map((f) => path.basename(f)), 'the three M12B.3 files follow the production ledger, in order');

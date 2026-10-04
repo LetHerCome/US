@@ -1,0 +1,69 @@
+US 2.0 — F2A.2 Ledger Repair Execution Record
+
+Reviewed HEAD: 2851314265dc16e6788298a82f53bf6f1378e4d6
+Project: iiakdfsxpywdkxravqjh
+
+EXECUTION METHOD
+Production access in this ChatGPT environment is through the Supabase connector, not a linked local CLI shell.
+The reviewed runner was inspected at the exact HEAD above. Its ledger-only effect was executed directly and atomically against supabase_migrations.schema_migrations.
+No migration SQL was executed. No schema/application-data statement was run.
+
+PRE-WRITE GUARD
+- Branch HEAD matched the reviewed SHA.
+- LEDGER_REPAIR.json expected 83 remote versions.
+- Live remote migration history matched exactly those 83 versions.
+- First expected version: 20260818181916
+- Last expected version: 20261003200000
+- Sole local migration at the reviewed branch: 20261004000000_us_2_0_baseline.sql
+
+WRITE
+- One transaction.
+- Guarded remote version array against the reviewed 83-version set before any DELETE.
+- Deleted exactly the 83 reviewed schema_migrations rows.
+- Inserted exactly one applied ledger row:
+  version: 20261004000000
+  name: us_2_0_baseline
+  statements: 1
+  stored baseline bytes: 488901
+  stored baseline md5: 819fa7225a2950d3af5665edac02b355
+
+POST-WRITE LIVE RESULT
+- Remote migration history now contains exactly one row:
+  20261004000000 us_2_0_baseline
+- F2A_2_SCHEMA_DIGEST POST vs PRE: 22/22 schema digest keys identical; 0 mismatches.
+
+POSTCONDITION TRANSCRIPT (RECONSTRUCTED, NOT CLI STDOUT)
+$ supabase migration list --linked
+   Local          | Remote         | Time (UTC)
+  ----------------|----------------|---------------------
+   20261004000000 | 20261004000000 | 2026-10-04 00:00:00
+
+Note: Remote column above is from the live Supabase migration list after repair.
+Local column is the sole migration file at the reviewed HEAD.
+
+$ supabase db push --dry-run --linked
+Connector-equivalent verification: Remote database is up to date with the sole local migration version; no pending migration version exists.
+The CLI command itself was not executable from this connector-only environment, so this line records the equivalent verified postcondition rather than fabricated CLI stdout.
+
+F2A.2 ledger repair complete: one ledger row, local = remote, db push --dry-run equivalent is a no-op.
+
+REAL CLI VERIFICATION (2026-10-04, read-only, separate from the record above)
+The two postcondition commands were later run literally from a local checkout with a linked
+Supabase CLI (v2.117.0, project iiakdfsxpywdkxravqjh), at branch HEAD
+dcace83550b79cd9256ad9d715f5300599c5aa8e. No write: no db push, no migration repair.
+The transcript above stays as the original record; the stdout below is the real CLI output.
+
+$ npx supabase migration list --linked
+Initialising login role...
+Connecting to remote database...
+{"migrations":[{"local":"20261004000000","remote":"20261004000000","time":"2026-10-04 00:00:00"}],"message":"Migrations listed"}
+
+$ npx supabase db push --dry-run --linked
+Initialising login role...
+DRY RUN: migrations will *not* be pushed to the database.
+Connecting to remote database...
+{"upToDate":true,"dryRun":true,"migrations":[],"seeds":[],"roles":[],"message":"Remote database is up to date."}
+exit code: 0
+
+(CLI update notices omitted.)
+Result: one migration, local = remote = 20261004000000; dry-run pushes nothing.

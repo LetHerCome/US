@@ -7,7 +7,7 @@ const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 
 test('M4A recupera la migration think_reactions autorevole e conserva il contratto remoto', () => {
-  const sql = read('supabase/migrations/20260902114732_think_reactions.sql');
+  const sql = read('supabase/migrations_history/20260902114732_think_reactions.sql');
   assert.match(sql, /create table public\.think_reactions/i);
   assert.match(sql, /unique references public\.shared_messages/i);
   assert.match(sql, /heart.*hug.*miss_you/s);
@@ -17,8 +17,8 @@ test('M4A recupera la migration think_reactions autorevole e conserva il contrat
 });
 
 test('M4A protegge send_think con operation id e rende la reaction terminale', () => {
-  const sql = read('supabase/migrations/20260922120726_think_send_idempotency_final_reaction.sql');
-  const fix = read('supabase/migrations/20260922120945_fix_send_think_conflict_ambiguity.sql');
+  const sql = read('supabase/migrations_history/20260922120726_think_send_idempotency_final_reaction.sql');
+  const fix = read('supabase/migrations_history/20260922120945_fix_send_think_conflict_ambiguity.sql');
   assert.match(sql, /add column if not exists think_operation_id uuid/i);
   assert.match(sql, /shared_messages_think_operation_idx/i);
   assert.match(sql, /create or replace function public\.send_think\(operation_id uuid\)/i);

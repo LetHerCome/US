@@ -14,7 +14,7 @@ const { createDb, couple, setClock, as, readOnly, rpc, id, playSide, startRound,
 const ROOT = h.ROOT;
 const read = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 const loadCore = () => import(pathToFileURL(path.join(ROOT, 'supabase/functions/_shared/game-v2-push-core.mjs')).href);
-const M11D = 'supabase/migrations/20260930153755_m11d_game_v2_push.sql';
+const M11D = 'supabase/migrations_history/20260930153755_m11d_game_v2_push.sql';
 const WED = '2026-09-30T10:00:00Z'; // Francesco's week
 
 const PUSH_TABLES = `

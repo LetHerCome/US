@@ -1,9 +1,13 @@
 {
   "generated_by": "scripts/build-supabase-baseline.mjs",
-  "source": "supabase/migrations + docs/us-2.0/F2A_PRODUCTION_RESULTS_01_05.json (b01 ledger)",
+  "source": "supabase/migrations_history + supabase/migrations + docs/us-2.0/F2A_PRODUCTION_RESULTS_01_05.json (b01 ledger)",
   "production_ledger_tip": "20261003200000",
   "baseline_represents": "production schema at ledger tip 20261003200000 (F1C), captured read-only in F2A.1",
-  "baseline_version": "chosen in F2A.2: one new 14-digit version greater than every ledger version",
+  "baseline_version": "20261004000000",
+  "baseline_file": "supabase/migrations/20261004000000_us_2_0_baseline.sql",
+  "executable_migrations": [
+    "20261004000000_us_2_0_baseline.sql"
+  ],
   "forward_migrations": [],
   "counts": {
     "repo_files": 47,

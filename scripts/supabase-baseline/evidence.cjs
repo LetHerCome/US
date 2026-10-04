@@ -85,4 +85,17 @@ function loadCapture(dir = DOCS) {
   return out;
 }
 
-module.exports = { ROOT, DOCS, unwrap, collectAliases, loadF2A, loadCapture, captureFiles };
+// F2A.2 evidence, or null while not committed: the preflight re-run of the
+// F2A.1 pack, the ledger export, and the schema digest before / after repair.
+function loadEvidence(pattern, prefix, dir = DOCS) {
+  const files = fs.readdirSync(dir).filter((f) => pattern.test(f)).sort();
+  if (!files.length) return null;
+  const out = {};
+  for (const file of files) collectAliases(readJson(path.join(dir, file)), prefix, out);
+  return out;
+}
+const loadPreflight = (dir) => loadEvidence(/^F2A_2_PREFLIGHT_CAPTURE.*\.json$/, 'f2a1_', dir);
+const loadLedgerExport = (dir) => loadEvidence(/^F2A_2_LEDGER_EXPORT.*\.json$/, 'f2a2_', dir);
+const loadDigest = (when, dir) => loadEvidence(new RegExp(`^F2A_2_SCHEMA_DIGEST_${when}\\.json$`), 'f2a2_', dir);
+
+module.exports = { ROOT, DOCS, unwrap, collectAliases, loadF2A, loadCapture, captureFiles, loadPreflight, loadLedgerExport, loadDigest };

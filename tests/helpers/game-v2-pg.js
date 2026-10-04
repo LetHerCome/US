@@ -29,7 +29,7 @@ function startServer(port) {
   const sql = (text) => execFileSync('psql', [...args, '-c', text], { env }).toString().trim();
   const file = (f) => execFileSync('psql', [...args, '-v', 'ON_ERROR_STOP=1', '-f', f], { env });
   sql(FIXTURE);
-  for (const f of GAME_MIGRATIONS) file(path.join(ROOT, 'supabase/migrations', f));
+  for (const f of GAME_MIGRATIONS) file(path.join(ROOT, 'supabase/migrations_history', f));
   function session() {
     const p = spawn('psql', args, { env });
     let out = ''; let err = '';

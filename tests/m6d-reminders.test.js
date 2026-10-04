@@ -13,7 +13,7 @@ const html = () => read('index.html');
 const js = () => read('calendar.js');
 const css = () => read('calendar.css');
 const worker = () => read('supabase/functions/calendar-reminders-worker/index.ts');
-const migration = () => read('supabase/migrations/20260928210000_m6d_calendar_reminders.sql');
+const migration = () => read('supabase/migrations_history/20260928210000_m6d_calendar_reminders.sql');
 const config = () => read('supabase/config.toml');
 
 // (1) M9C: reminder configuration leaves the quick form; the domain stays.

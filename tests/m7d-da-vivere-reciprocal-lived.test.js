@@ -9,9 +9,9 @@ const { PGlite } = require('@electric-sql/pglite');
 
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
-const M7A = 'supabase/migrations/20260929121350_m7a_da_vivere_bucket_items_domain.sql';
-const M7C = 'supabase/migrations/20260929190126_m7c_da_vivere_calendar_unschedule.sql';
-const M7D = 'supabase/migrations/20260929190145_m7d_da_vivere_reciprocal_lived.sql';
+const M7A = 'supabase/migrations_history/20260929121350_m7a_da_vivere_bucket_items_domain.sql';
+const M7C = 'supabase/migrations_history/20260929190126_m7c_da_vivere_calendar_unschedule.sql';
+const M7D = 'supabase/migrations_history/20260929190145_m7d_da_vivere_reciprocal_lived.sql';
 const uuid = () => crypto.randomUUID();
 
 const FIXTURE_SQL = `

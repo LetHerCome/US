@@ -5,8 +5,8 @@ const path = require('node:path');
 const { PGlite } = require('@electric-sql/pglite');
 
 const ROOT = path.resolve(__dirname, '..');
-const MIGRATION = path.join(ROOT, 'supabase/migrations/20261002181500_us_progression_v1.sql');
-const TOGGLE_MIGRATION = path.join(ROOT, 'supabase/migrations/20261002181501_progression_reward_toggle_unequip.sql');
+const MIGRATION = path.join(ROOT, 'supabase/migrations_history/20261002181500_us_progression_v1.sql');
+const TOGGLE_MIGRATION = path.join(ROOT, 'supabase/migrations_history/20261002181501_progression_reward_toggle_unequip.sql');
 const sql = () => `${fs.readFileSync(MIGRATION, 'utf8')}\n${fs.readFileSync(TOGGLE_MIGRATION, 'utf8')}`;
 const uuid = (() => { let n = 1; return () => `00000000-0000-4000-8000-${String(n++).padStart(12,'0')}`; })();
 

@@ -12,8 +12,8 @@ const { PGlite } = require('@electric-sql/pglite');
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const BEFORE = ['20260929121350_m7a_da_vivere_bucket_items_domain', '20260929190126_m7c_da_vivere_calendar_unschedule', '20260929190145_m7d_da_vivere_reciprocal_lived']
-  .map((n) => `supabase/migrations/${n}.sql`);
-const M12B2 = 'supabase/migrations/20260930225935_m12b_2_da_vivere_archived_link_release.sql';
+  .map((n) => `supabase/migrations_history/${n}.sql`);
+const M12B2 = 'supabase/migrations_history/20260930225935_m12b_2_da_vivere_archived_link_release.sql';
 const uuid = () => crypto.randomUUID();
 
 const FIXTURE_SQL = `
@@ -268,7 +268,7 @@ test('migration: minimal, forward-only, touches only bucket_items and never dele
   assert.match(sql, /create trigger bucket_items_release_archived_link\s+before update on public\.bucket_items/);
   assert.match(sql, /check \(status <> 'archived' or completed_at is not null or calendar_entry_id is null\)/);
   // Applies after every migration it builds on, and after the last one in production at M12B (M11F).
-  for (const before of [...BEFORE, 'supabase/migrations/20260930172615_m11f_game_v2_weekly_rhythm.sql']) {
+  for (const before of [...BEFORE, 'supabase/migrations_history/20260930172615_m11f_game_v2_weekly_rhythm.sql']) {
     assert.ok(path.basename(before) < path.basename(M12B2), `${before} must precede M12B.2`);
   }
 });

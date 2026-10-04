@@ -1,0 +1,10 @@
+-- Production ledger 20260818210022 normalize_quiz_questions_for_shared_comparison: the SQL supabase_migrations.schema_migrations
+-- recorded for this version before the F2A.2 ledger repair. HISTORY ONLY: never apply.
+-- 1 statement(s); unmasked md5 abd091a4bd94065a212b715a2ea903b0; 0 secret-shaped value(s) masked in the database.
+-- Exported read-only by docs/us-2.0/F2A_2_LEDGER_EXPORT.sql; written by scripts/build-supabase-baseline.mjs.
+
+update public.quiz_questions q set question=v.question from public.quiz_sets s join (values
+('preferenze',1,'Qual è la tua serata perfetta?'),('preferenze',2,'Che tipo di regalo apprezzi di più?'),('preferenze',3,'Quando sei sotto stress, cosa preferisci?'),('preferenze',4,'Quale vacanza sceglieresti?'),('preferenze',5,'Che cosa sceglieresti più facilmente?'),('preferenze',6,'Qual è il tuo modo preferito di ricevere affetto?'),('preferenze',7,'Una domenica libera ideale?'),('preferenze',8,'Cosa ti fa ridere di più?'),('preferenze',9,'Se potessi scegliere adesso?'),('preferenze',10,'Quale sorpresa gradiresti di più?'),
+('quotidiano',1,'Qual è la prima cosa che fai appena ti svegli?'),('quotidiano',2,'Quando hai fame diventi...'),('quotidiano',3,'Come preferisci organizzare una giornata?'),('quotidiano',4,'Nei messaggi cosa preferisci?'),('quotidiano',5,'Quando guardi una serie...'),('quotidiano',6,'Che cosa dimentichi più facilmente?'),('quotidiano',7,'La tua comfort food?'),('quotidiano',8,'Quando sei in ritardo...'),('quotidiano',9,'In casa preferisci...'),('quotidiano',10,'Per decidere dove mangiare...'),
+('futuro',1,'Quale viaggio vorresti fare prima?'),('futuro',2,'Che casa immagini?'),('futuro',3,'Quale esperienza vorresti fare insieme?'),('futuro',4,'Quanto vuoi pianificare il futuro?'),('futuro',5,'Cosa conta di più per te nei prossimi anni?'),('futuro',6,'Un sogno condiviso sarebbe...'),('futuro',7,'Dove passeresti volentieri un mese?'),('futuro',8,'Cosa vorresti imparare insieme?'),('futuro',9,'Weekend improvviso: dove?'),('futuro',10,'Tra 10 anni ci immagini...')
+) as v(slug,position,question) on s.slug=v.slug where q.set_id=s.id and q.position=v.position;;

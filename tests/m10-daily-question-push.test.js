@@ -13,8 +13,8 @@ const { loadEdgeFunction, createFakeAdmin, createFakeWebPush } = require('./help
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const loadCore = () => import(pathToFileURL(path.join(ROOT, 'supabase/functions/_shared/daily-question-push-core.mjs')).href);
-const MIGRATION = 'supabase/migrations/20260930061045_m10c_daily_question_push.sql';
-const M9E = 'supabase/migrations/20260930045233_m9e_daily_question_engine.sql';
+const MIGRATION = 'supabase/migrations_history/20260930061045_m10c_daily_question_push.sql';
+const M9E = 'supabase/migrations_history/20260930045233_m9e_daily_question_engine.sql';
 
 const COUPLE = 'couple-1';
 const F = 'francesco-id';

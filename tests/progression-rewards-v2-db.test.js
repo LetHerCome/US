@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { readMigration, fresh, asUser, state, equip } = require('./helpers/progression-db');
 
-const V2 = 'supabase/migrations/20261003090000_progression_rewards_v2.sql';
+const V2 = 'supabase/migrations_history/20261003090000_progression_rewards_v2.sql';
 const CATEGORIES = ['frame', 'theme', 'accent', 'effect', 'badge', 'sticker', 'ring'];
 const LEGACY = [['frame_glow', 2], ['theme_rose', 3], ['frame_aurora', 4], ['theme_midnight', 5], ['effect_pulse', 6]];
 const xpForLevel = (level) => { let xp = 0; for (let n = 1; n < level; n += 1) xp += 200 + (n - 1) * 150; return xp; };

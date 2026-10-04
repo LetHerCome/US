@@ -61,7 +61,7 @@ test('M5G3 push navigation routes left_for_you to Home and the existing recipien
 });
 
 test('M5G3 keeps the dedicated notification preference migration prepared but unapplied', () => {
-  const migration = read('supabase/migrations/20260923210000_m5g3_left_for_you_notification_preference.sql');
+  const migration = read('supabase/migrations_history/20260923210000_m5g3_left_for_you_notification_preference.sql');
   assert.match(migration, /add column if not exists left_for_you boolean not null default true/);
   assert.match(migration, /set_notification_preference/);
   assert.match(migration, /get_notification_preferences/);

@@ -11,7 +11,7 @@ const h = require('./helpers/game-v2-db');
 const { SKIP, CAN_RUN, startServer, asUser } = require('./helpers/game-v2-pg');
 
 const { createDb, couple, setClock, as, rpc, id, playSide, startRound, createWeekly } = h;
-const MIGRATION = path.join(h.ROOT, 'supabase/migrations/20260930172615_m11f_game_v2_weekly_rhythm.sql');
+const MIGRATION = path.join(h.ROOT, 'supabase/migrations_history/20260930172615_m11f_game_v2_weekly_rhythm.sql');
 const WED = '2026-09-30T10:00:00Z'; // week of Monday 2026-09-28
 const SUN_2359 = '2026-10-04T21:59:59Z'; // Sunday 23:59:59 Rome (CEST)
 const MON_0000 = '2026-10-04T22:00:00Z'; // Monday 00:00 Rome
@@ -28,7 +28,7 @@ const count = async (db, c) => (await db.query(`select count(*)::int n from publ
 const playBoth = async (db, f, b, sid) => { await playSide(db, f, sid); await playSide(db, b, sid); };
 
 test('M11F migration: next ledger version, additive only, applied migrations untouched', () => {
-  const files = fs.readdirSync(path.join(h.ROOT, 'supabase/migrations')).sort();
+  const files = fs.readdirSync(path.join(h.ROOT, 'supabase/migrations_history')).sort();
   // Later milestones (M12B.2) add migrations after it; M11F stays after the Game V2 ledger.
   assert.ok(files.indexOf(path.basename(MIGRATION)) > files.indexOf('20260930153755_m11d_game_v2_push.sql'));
   const sql = fs.readFileSync(MIGRATION, 'utf8').replace(/--[^\n]*/g, '');
