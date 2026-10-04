@@ -27,7 +27,8 @@ from (
 select jsonb_build_object(
   'cron_success_14d', (select count(*) from cron.job_run_details where status='succeeded' and end_time < now()-interval '14 days'),
   'cron_failure_30d', (select count(*) from cron.job_run_details where status<>'succeeded' and end_time < now()-interval '30 days'),
-  'push_event_log_180d', (select count(*) from public.push_event_log where created_at < now()-interval '180 days'),
+  'push_event_log_total', (select count(*) from public.push_event_log),
+  'push_event_log_oldest', (select min(created_at) from public.push_event_log),
   'widget_action_tokens_30d', (select count(*) from public.widget_action_tokens where revoked_at < now()-interval '30 days' or expires_at < now()-interval '30 days'),
   'widget_tokens_30d', (select count(*) from public.widget_tokens where revoked_at < now()-interval '30 days'),
   'setup_codes_30d', (select count(*) from public.widget_scriptable_setup_codes where (consumed_at is not null and consumed_at < now()-interval '30 days') or (revoked_at is not null and revoked_at < now()-interval '30 days') or expires_at < now()-interval '30 days'),

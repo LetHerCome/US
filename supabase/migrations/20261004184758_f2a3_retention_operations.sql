@@ -32,9 +32,9 @@ begin
   get diagnostics affected = row_count;
   counts := counts || jsonb_build_object('cron_unsuccessful', affected);
 
-  delete from public.push_event_log where created_at < now() - interval '180 days';
-  get diagnostics affected = row_count;
-  counts := counts || jsonb_build_object('push_event_log', affected);
+  -- push_event_log is a persistent idempotency ledger. Some authenticated
+  -- fast paths can validly reference old source rows; pruning the dedupe key
+  -- would allow an old logical event to be notified again.
 
   -- Receipts and linked installations use the EXISTING token FK cascades.
   -- Do not prune receipts independently: live credentials keep idempotency.

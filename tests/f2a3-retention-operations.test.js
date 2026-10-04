@@ -43,7 +43,7 @@ test('F2A3 source: only the approved technical tables are deleted; no Storage me
   const code = SQL.replace(/--[^\n]*/g, '');
   const targets = [...code.matchAll(/delete\s+from\s+([a-z_.]+)/gi)].map((m) => m[1]);
   assert.deepEqual([...new Set(targets)].sort(), [
-    'cron.job_run_details', 'public.push_event_log', 'public.widget_action_tokens', 'public.widget_tokens',
+    'cron.job_run_details', 'public.widget_action_tokens', 'public.widget_tokens',
     'public.widget_scriptable_setup_codes', 'public.widget_scriptable_installations', 'private.left_for_you_cleanup_queue',
   ].sort());
   assert.doesNotMatch(code, /vault\.(create_secret|update_secret)|delete\s+from\s+storage\.|truncate/i);
@@ -97,7 +97,7 @@ test('F2A3 cron guards: other owner, duplicate, command/schedule/database drift 
   }
 }));
 
-test('F2A3 cutoffs: strict 14/30-day cron and 180-day push boundaries, unfinished runs preserved, repeat is a no-op', { timeout: 120000 }, () => withDb(async (db) => {
+test('F2A3 cutoffs: strict 14/30-day cron boundaries, push idempotency ledger retained indefinitely, unfinished runs preserved, repeat is a no-op', { timeout: 120000 }, () => withDb(async (db) => {
   await db.exec(SQL);
   await seedOwners(db);
   await db.exec('begin'); // now() remains fixed across all boundary assertions
@@ -107,15 +107,17 @@ test('F2A3 cutoffs: strict 14/30-day cron and 180-day push boundaries, unfinishe
         values ($1, $2, now()-make_interval(days=>$3)+make_interval(secs=>$4))`, [status, `${status}:${offset}`, days, offset]);
     }
     await db.exec(`insert into cron.job_run_details(status, return_message, end_time) values ('failed','unfinished',null)`);
-    for (const offset of [-1, 0, 1]) await db.query(`insert into public.push_event_log(dedupe_key,couple_id,event_type,created_at)
-      values ($1, '${C}', 'test', now()-interval '180 days'+make_interval(secs=>$2))`, [`push:${offset}`, offset]);
+    await db.exec(`insert into public.push_event_log(dedupe_key,couple_id,event_type,created_at)
+      values ('push:180d','00000000-0000-0000-0000-000000000001','test',now()-interval '180 days'),
+             ('push:2y','00000000-0000-0000-0000-000000000001','test',now()-interval '730 days')`);
     const counts = (await run(db)).rows[0].counts;
     assert.equal(counts.cron_success, 1);
     assert.equal(counts.cron_unsuccessful, 2);
-    assert.equal(counts.push_event_log, 1);
+    assert.equal(Object.prototype.hasOwnProperty.call(counts, 'push_event_log'), false);
     assert.deepEqual((await db.query('select return_message from cron.job_run_details order by return_message')).rows.map((r) => r.return_message),
       ['failed:0', 'failed:1', 'running:0', 'running:1', 'succeeded:0', 'succeeded:1', 'unfinished']);
-    assert.deepEqual((await db.query('select dedupe_key from public.push_event_log order by dedupe_key')).rows.map((r) => r.dedupe_key), ['push:0', 'push:1']);
+    assert.deepEqual((await db.query('select dedupe_key from public.push_event_log order by dedupe_key')).rows.map((r) => r.dedupe_key),
+      ['push:180d', 'push:2y']);
     assert.ok(Object.values((await run(db)).rows[0].counts).every((n) => n === 0));
   } finally { await db.exec('rollback'); }
 }));

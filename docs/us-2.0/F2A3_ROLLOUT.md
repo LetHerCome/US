@@ -16,14 +16,15 @@ CLI 2.117.0 created `supabase/migrations/20261004184758_f2a3_retention_operation
 |---|---|
 | `cron.job_run_details`, succeeded | `end_time < now() - 14 days` |
 | Other cron run statuses | `end_time < now() - 30 days`; null end times survive |
-| `push_event_log` | `created_at < now() - 180 days` |
 | `widget_action_tokens` | `revoked_at` OR `expires_at < now() - 30 days` |
 | `widget_tokens` | `revoked_at < now() - 30 days` |
 | `widget_scriptable_setup_codes` | `consumed_at` OR `revoked_at` OR `expires_at < now() - 30 days` |
 | `widget_scriptable_installations` | `revoked_at` OR `expires_at < now() - 30 days` |
 | `private.left_for_you_cleanup_queue` | `completed_at < now() - 30 days`; pending outbox entries survive |
 
-Times exactly at each cutoff survive. Receipt deletion happens only through the existing action-token FK cascade, which also removes linked installation metadata. The returned installation count excludes rows already removed by that cascade. Active-token receipts survive regardless of their age; receipt deletion does not cascade into message history.
+`push_event_log` is retained indefinitely because it is a persistent idempotency ledger for logical notifications. Selective retention is deferred until every push producer has an explicit source-age/replay guard.
+
+Times exactly at each remaining cutoff survive. Receipt deletion happens only through the existing action-token FK cascade, which also removes linked installation metadata. The returned installation count excludes rows already removed by that cascade. Active-token receipts survive regardless of their age; receipt deletion does not cascade into message history.
 
 Messages, moments, quiz responses, game history, daily answers, progression events, activity, calendar content, profiles, couples and other product/history tables are outside operational retention. The existing separate Left-for-You lifecycle remains unchanged: seen for more than 30 days, eligible under the legacy boundary, not conserved; durable queue; finalize the source before deleting owned media with the Storage API; retry incomplete outbox work.
 
@@ -62,7 +63,7 @@ Future activation is an operator step, never inferred from applying or reapplyin
 
 Focused tests execute real baseline/migration SQL in embedded PostgreSQL, including actual widget FK cascades and role ACLs. The real TypeScript worker is bundled by esbuild and its no-op claim/key lookups execute against that local database. Vault/pg_cron/pg_net platform surfaces use the existing test skeleton; native extension scheduling and actual network delivery remain rollout checks.
 
-Coverage: strict 14/30/180-day boundaries and null timestamps; idempotent retention; product table snapshots with old messages/moments/progression/Left-for-You data retained; Storage metadata retained; live receipts retained; expired/revoked token cascades; fresh database and captured production cron upgrade; no duplicates and atomic rejection of foreign owner/drift; paused-state preservation; explicit API revocations and service-only Vault RPC; legacy/bearer/wrong/missing-key refusal; real no-op cleanup twice with recently seen/unseen data retained.
+Coverage: strict 14/30-day boundaries and null timestamps; arbitrarily old push-event dedupe rows retained; idempotent retention; product table snapshots with old messages/moments/progression/Left-for-You data retained; Storage metadata retained; live receipts retained; expired/revoked token cascades; fresh database and captured production cron upgrade; no duplicates and atomic rejection of foreign owner/drift; paused-state preservation; explicit API revocations and service-only Vault RPC; legacy/bearer/wrong/missing-key refusal; real no-op cleanup twice with recently seen/unseen data retained.
 
 Historical F1B/F2C assertions continue to validate their original matrix and seven jobs. Later Edge RPCs prove ACLs by applying real forward migrations; later Vault consumers must exist in those migrations. The baseline rebuild harness explicitly uses UTC, matching production timestamp JSON fingerprints on Windows without changing any production capture or expected hash.
 

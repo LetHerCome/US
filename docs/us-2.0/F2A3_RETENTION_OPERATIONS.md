@@ -17,7 +17,7 @@ Close the last backend-foundation housekeeping gap without deleting user history
 - Current seven cron jobs had **0 non-success runs in the last 7 days**.
 - Supabase documentation states pg_cron does **not** automatically prune `cron.job_run_details`.
 - `net._http_response`: ~6 hours of data, matching pg_net's managed default TTL. No custom cleanup needed.
-- `push_event_log`: 151 rows. It is a delivery/idempotency ledger; do not aggressively prune it.
+- `push_event_log`: 151 rows. It is a persistent delivery/idempotency ledger and is retained indefinitely in F2A.3.
 - `widget_action_tokens`: 194 rows, **192 revoked**; 52 revoked rows are already >30 days old. Three old receipts reference revoked tokens. One active Scriptable installation references an active token.
 - Native Android `authReady()` currently provisions a fresh action credential each time and the Edge endpoint revokes the previous token. This explains the churn. The PWA path is unaffected.
 - `left_for_you`: 32 rows; 0 are currently eligible for the existing 30-day cleanup rule. Oldest seen item is 2026-09-23.
@@ -52,7 +52,6 @@ Proposed daily database housekeeping:
 |---|---:|---|
 | successful `cron.job_run_details` | 14 days | enough operational history; table otherwise grows without bound |
 | non-success cron runs | 30 days | preserve failures longer for diagnosis |
-| `push_event_log` | 180 days | conservative dedupe window; all current recovery workers operate on windows <= 7 days / 48 hours / same-day |
 | revoked or long-expired `widget_action_tokens` | 30 days | unusable credentials; deleting cascades obsolete receipts/installations |
 | revoked `widget_tokens` | 30 days | unusable state credentials |
 | consumed/revoked/expired `widget_scriptable_setup_codes` | 30 days | one-time setup material |
@@ -60,6 +59,8 @@ Proposed daily database housekeeping:
 | completed `private.left_for_you_cleanup_queue` rows | 30 days | completed durable outbox entries |
 
 Do not independently delete `widget_action_receipts`; they are retained with their token and removed by the token's FK cascade. This preserves action-id idempotency while a credential remains usable.
+
+`push_event_log` is **not** an operational-retention target. Authenticated fast paths can still validate old source records (for example Think/reaction/daily/quest events), and the push ledger is the persistent dedupe barrier. Deleting an old dedupe row could allow the same old logical event to notify again. Selective retention is a future option only after every producer has an explicit source-age/replay guard.
 
 ### Left for You cleanup activation
 
@@ -104,7 +105,6 @@ For the current Free plan, repeat logical exports regularly or move to a plan wi
 - cron failure history eligible at 30 days: 0;
 - widget action tokens eligible at 30 days: 52;
 - other widget/setup/install/cleanup-queue rows eligible at 30 days: 0;
-- push event rows eligible at 180 days: 0;
 - Left for You items eligible at 30 days: 0.
 
 So the first rollout can be low-risk: it primarily bounds cron history and removes already-revoked widget credentials.
