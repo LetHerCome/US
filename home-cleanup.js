@@ -99,6 +99,16 @@ $('quizHub')?.addEventListener('click', (event) => {
   }
 });
 
+const todaySheet = $('today');
+if (todaySheet && typeof MutationObserver === 'function') {
+  let dailyQueued = false;
+  new MutationObserver(() => {
+    if (dailyQueued) return;
+    dailyQueued = true;
+    queueMicrotask(() => { dailyQueued = false; syncDailySurfaces(); });
+  }).observe(todaySheet, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden', 'class'] });
+}
+
 const quizHub = $('quizHub');
 if (quizHub && typeof MutationObserver === 'function') {
   let queued = false;
