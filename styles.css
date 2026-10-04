@@ -1008,6 +1008,7 @@ body.viewer-open{overflow:hidden}
 
 /* US Home Cleanup — Noi weekly board + transient Daily Question nudge. */
 .noi-week-board{flex:0 0 auto;margin:0 0 2px}
+#bond .noi-canonical-page:not([data-noi-view="hub"])>.noi-week-board{display:none!important}
 .noi-week-board-shell{width:100%;display:block;padding:14px 14px 12px;border:1px solid rgba(255,255,255,.09);border-radius:22px;background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018));color:var(--us-color-text);text-align:left;box-shadow:none}
 .noi-week-board-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
 .noi-week-board-head>span:first-child{display:flex;flex-direction:column;gap:2px;min-width:0}
