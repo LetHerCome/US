@@ -9,7 +9,7 @@ on:
       - hotfix/ios-boot-hardening-v1
 
 jobs:
-  validate:
+  validate-web:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -23,6 +23,17 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build:cloudflare-pages
-      - run: npm run build:capacitor-web
       - name: Diff check candidate
         run: git diff --check 108189181a188530d55916f52af8eaf2f78e3512^ 108189181a188530d55916f52af8eaf2f78e3512
+
+  validate-capacitor-windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build:capacitor-web
