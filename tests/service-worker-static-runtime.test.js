@@ -482,6 +482,8 @@ test('installazione pulita precachea l’intero runtime statico prima di skipWai
   assert.ok(shell.has(v('/stories.css')));
   assert.ok(shell.has(v('/ui-foundation.css')));
   assert.ok(shell.has(v('/ui-foundation.js')));
+  assert.ok(shell.has(v('/countdown.js')));
+  assert.ok(shell.has(v('/countdown.css')));
   assert.ok(shell.has(v('/platform.js')));
   assert.ok(shell.has(v('/ti-penso-widget.js')));
   assert.ok(shell.has(`${ORIGIN}/assets/third-party/spotify/spotify-full-logo-white.svg`));
