@@ -1,0 +1,23 @@
+name: Countdown Oggi V1 fast full-suite
+
+on:
+  push:
+    branches:
+      - qa/countdown-oggi-v1-fast
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build:cloudflare-pages
+      - run: git diff --check c173abefe8e26fd57c78501724fd3743e4c84d8b 8e7bed4458c931f1dde5b93fdb2eb89bcb462b9c
