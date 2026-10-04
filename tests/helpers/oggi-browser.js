@@ -16,7 +16,11 @@ const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/ja
 function loadChromium() {
   const bases = [ROOT, process.env.PLAYWRIGHT_NODE_MODULES, '/opt/node22/lib/node_modules'].filter(Boolean);
   for (const base of bases) {
-    try { return createRequire(path.join(base, 'noop.js'))('playwright').chromium; } catch (_) { /* next */ }
+    try {
+      const chromium = createRequire(path.join(base, 'noop.js'))('playwright').chromium;
+      const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
+      return executablePath ? { launch: (options = {}) => chromium.launch({ ...options, executablePath }) } : chromium;
+    } catch (_) { /* next */ }
   }
   return null;
 }

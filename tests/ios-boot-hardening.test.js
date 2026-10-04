@@ -81,8 +81,8 @@ test('iOS boot hardening: build id è allineato tra shell, worker, manifest e ve
   const version = JSON.parse(fs.readFileSync(path.join(ROOT, 'version.json'), 'utf8'));
   const build = html.match(/<meta name="us-build" content="([^"]+)"/)?.[1];
 
-  assert.equal(build, 'us-ios-boot-hardening-v1-20261005-1');
-  assert.match(worker, /const BUILD_ID = "us-ios-boot-hardening-v1-20261005-1"/);
-  assert.match(manifest, /us-ios-boot-hardening-v1-20261005-1/);
+  assert.match(build || '', /^us-[a-z0-9-]+-\d{8}-\d+$/);
+  assert.equal(worker.match(/const BUILD_ID = "([^"]+)"/)?.[1], build);
+  assert.ok(manifest.includes(`?v=${build}`), 'manifest assets use the active build id');
   assert.equal(version.version, build);
 });

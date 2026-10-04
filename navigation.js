@@ -45,6 +45,12 @@ if(originalGo){
 
 const layers=[
   {
+    name:'countdown',
+    find:()=>document.getElementById('usCountdownSheet'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.USCountdown?.close?.()
+  },
+  {
     name:'today',
     find:()=>document.getElementById('today'),
     open:el=>el?.classList.contains('open'),

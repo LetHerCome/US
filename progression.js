@@ -269,6 +269,7 @@ function render(next = state) {
   renderNext(next);
   renderRewards(next);
   applyPreferences(next);
+  window.dispatchEvent(new CustomEvent('us:progression-updated'));
 }
 
 function unlockRoot() { return $('usProgressionUnlock'); }
