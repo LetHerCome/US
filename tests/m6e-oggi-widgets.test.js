@@ -134,8 +134,10 @@ test('M6E (6): openCalendarSurface accepts an optional target date and opens str
   assert.match(source, /if \(targetDateISO\)/);
   assert.match(source, /weekStartISO = mondayOfISO\(targetDateISO\)/);
   assert.match(source, /selectedDate = targetDateISO;/);
-  // existing zero-arg call site (HTML onclick) stays untouched
-  assert.match(html(), /onclick="openCalendarSurface\(\)"/);
+  // The old Noi Calendar tile is intentionally gone; Lavagna now passes its
+  // first relevant date into the same Calendar surface. No second calendar exists.
+  assert.match(js(), /\$\('noiWeekBoardOpen'\)\?\.addEventListener\('click',[\s\S]*?window\.openCalendarSurface\?\.\(date\)/);
+  assert.doesNotMatch(html(), /id="usCalendarEntry"/);
 });
 
 // ---------------------------------------------------------------------------
