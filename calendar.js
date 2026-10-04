@@ -796,8 +796,9 @@ function renderNoiWeekBoard(model) {
     body.innerHTML = '<span class="noi-week-board-empty"><b>Settimana libera</b><small>Nessun impegno nei prossimi 7 giorni.</small></span>';
     return;
   }
-  body.innerHTML = model.rows.map((row) => `<span class="noi-week-board-row" data-shared="${row.shared ? 'true' : 'false'}"><span class="noi-week-board-day">${esc(row.day)}</span><span class="noi-week-board-copy"><b>${esc(row.owner)} · ${esc(row.title)}</b><small>${esc(row.time)}</small></span></span>`).join('')
-    + (model.total > model.rows.length ? `<span class="noi-week-board-more">+${model.total - model.rows.length} altri impegni</span>` : '');
+  const visibleRows = window.innerHeight <= 700 ? model.rows.slice(0, 2) : model.rows;
+  body.innerHTML = visibleRows.map((row) => `<span class="noi-week-board-row" data-shared="${row.shared ? 'true' : 'false'}"><span class="noi-week-board-day">${esc(row.day)}</span><span class="noi-week-board-copy"><b>${esc(row.owner)} · ${esc(row.title)}</b><small>${esc(row.time)}</small></span></span>`).join('')
+    + (model.total > visibleRows.length ? `<span class="noi-week-board-more">+${model.total - visibleRows.length} altri impegni</span>` : '');
 }
 let noiWeekBoardRefreshId = 0;
 async function refreshNoiWeekBoard() {
