@@ -30,7 +30,7 @@ function dailyModel() {
 
 function dailyMarkup(model) {
   if (!model) return '';
-  return `<button type="button" class="us-gv2-daily us-attention-orbit" data-us-daily-entry data-daily-state="${esc(model.state)}" data-us-attention="${model.nudge ? 'on' : 'off'}" aria-label="Domanda del giorno: ${esc(model.question)}. ${esc(model.cta)}"><span class="us-gv2-daily-mark" aria-hidden="true"></span><span class="us-gv2-daily-copy"><small>DOMANDA DI OGGI</small><b>${esc(model.question)}</b><span class="us-gv2-daily-state">${esc(model.meta)}</span></span><span class="us-gv2-daily-cta">${esc(model.cta)}</span></button>`;
+  return `<button type="button" class="us-gv2-daily" data-us-daily-entry data-daily-state="${esc(model.state)}" aria-label="Domanda del giorno: ${esc(model.question)}. ${esc(model.cta)}"><span class="us-gv2-daily-mark" aria-hidden="true"></span><span class="us-gv2-daily-copy"><small>DOMANDA DI OGGI</small><b>${esc(model.question)}</b><span class="us-gv2-daily-state">${esc(model.meta)}</span></span><span class="us-gv2-daily-cta">${esc(model.cta)}</span></button>`;
 }
 
 function dailySignature(model) {
@@ -58,19 +58,16 @@ function paintDailyNudge({ force = false } = {}) {
   const model = dailyModel();
   if (!model?.nudge) {
     root.hidden = true;
-    root.dataset.usAttention = 'off';
     return;
   }
   const signature = `${model.questionId}:${model.state}:${model.cta}`;
   if (!force && nudgeSeen.has(signature)) return;
   nudgeSeen.add(signature);
   root.innerHTML = `<span class="us-daily-nudge-copy"><small>DOMANDA DI OGGI</small><b>${esc(model.meta)}</b></span><span class="us-daily-nudge-cta">${esc(model.cta)} ›</span>`;
-  root.dataset.usAttention = 'on';
   root.hidden = false;
   clearTimeout(nudgeTimer);
   nudgeTimer = setTimeout(() => {
     root.hidden = true;
-    root.dataset.usAttention = 'off';
   }, 6500);
 }
 
