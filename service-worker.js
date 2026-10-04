@@ -1,4 +1,4 @@
-const BUILD_ID = "us-countdown-oggi-v1-20261004-2";
+const BUILD_ID = "us-home-cleanup-noi-board-daily-move-20261005-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -40,6 +40,7 @@ const APP_SHELL = [
   versioned("/progression.js"),
   versioned("/countdown.css"),
   versioned("/countdown.js"),
+  versioned("/home-cleanup.js"),
   versioned("/settings.css"),
   versioned("/settings.js"),
   versioned("/identity.css"),
