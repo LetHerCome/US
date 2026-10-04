@@ -6,6 +6,9 @@
 
 Questa roadmap deriva dalla product vision e dallo stato reale del repository, non da un ordine o da nomi milestone precedentemente discussi. Gli stati sono espliciti e deve esistere sempre una sola milestone `CURRENT`.
 
+> **Operational status note (2026-10-04):** This roadmap records planning history and product sequencing. Use [`docs/CURRENT_STATE.md`](../CURRENT_STATE.md) for the current implementation status and active focus.
+
+
 ## 1. Stato sintetico
 
 | Milestone | Stato | Valore principale |
