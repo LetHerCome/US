@@ -1444,6 +1444,7 @@ function closeCalendarSurface() {
     closeCalendarFormSheet();
     clearIdeaPick();
     selectedDate = null;
+    if ($('bond')?.classList.contains('active')) window.refreshNoiWeekBoard?.();
   };
   if (window.UsUiFoundation?.exitSurface) window.UsUiFoundation.exitSurface(overlay, finalize);
   else finalize();
