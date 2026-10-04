@@ -55,3 +55,8 @@ verify_jwt = true
 
 [functions.delete-moment]
 verify_jwt = true
+
+# Recovered in F2A.1 from the deployed v4 (never deployed from the repo yet).
+# Called only by cron `us-monthiversary-hourly`, authenticated by x-us-cron-key.
+[functions.monthiversary-job]
+verify_jwt = false

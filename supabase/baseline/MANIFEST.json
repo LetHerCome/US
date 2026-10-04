@@ -1,0 +1,141 @@
+{
+  "generated_by": "scripts/build-supabase-baseline.mjs",
+  "source": "docs/us-2.0/F2A_1_PRODUCTION_CAPTURE*.json + docs/us-2.0/F2A_PRODUCTION_RESULTS_06_10.json (b09)",
+  "production_server_version": "17.6",
+  "search_path": "\"\\$user\", public, extensions",
+  "apply_order": [
+    "00_extensions.sql",
+    "10_schemas.sql",
+    "15_types.sql",
+    "20_tables.sql",
+    "30_functions.sql",
+    "35_column_defaults.sql",
+    "40_constraints.sql",
+    "50_indexes.sql",
+    "55_views.sql",
+    "60_triggers.sql",
+    "65_rls_policies.sql",
+    "70_grants.sql",
+    "80_realtime.sql",
+    "85_storage.sql",
+    "90_cron.sql",
+    "95_reference_data.sql"
+  ],
+  "counts": {
+    "tables": {
+      "public": 57,
+      "private": 2
+    },
+    "columns": 495,
+    "constraints": {
+      "p": 59,
+      "u": 36,
+      "x": 0,
+      "c": 154,
+      "f": 114
+    },
+    "indexes": 59,
+    "functions": {
+      "public": 70,
+      "private": 75
+    },
+    "types": 1,
+    "views": 1,
+    "sequences": 0,
+    "triggers": 20,
+    "policies": {
+      "public": 73,
+      "private": 0,
+      "storage": 4
+    },
+    "column_grants": 10,
+    "realtime_members": 15,
+    "buckets": 1,
+    "cron_jobs": 7,
+    "extensions": 6,
+    "reference_rows": {
+      "public.bond_quest_templates": 33,
+      "public.daily_question_templates": 182,
+      "public.game_v2_cooldowns": 6,
+      "public.game_v2_catalog": 62,
+      "public.game_v2_recipes": 13,
+      "public.progression_reward_catalog": 27,
+      "private.game_swipe_v1_catalog": 32
+    }
+  },
+  "vault_secret_names": [
+    "us_calendar_reminders_cron_key",
+    "us_daily_question_push_cron_key",
+    "us_game_v2_push_cron_key",
+    "us_left_for_you_push_cron_key",
+    "us_monthiversary_cron_key",
+    "us_web_push_vapid_private"
+  ],
+  "default_privileges": [
+    {
+      "acl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}",
+      "role": "postgres",
+      "schema": "public",
+      "objtype": "S"
+    },
+    {
+      "acl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "role": "postgres",
+      "schema": "public",
+      "objtype": "f"
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "role": "postgres",
+      "schema": "public",
+      "objtype": "r"
+    },
+    {
+      "acl": "{postgres=rwU/supabase_admin,anon=rwU/supabase_admin,authenticated=rwU/supabase_admin,service_role=rwU/supabase_admin}",
+      "role": "supabase_admin",
+      "schema": "public",
+      "objtype": "S"
+    },
+    {
+      "acl": "{postgres=X/supabase_admin,anon=X/supabase_admin,authenticated=X/supabase_admin,service_role=X/supabase_admin}",
+      "role": "supabase_admin",
+      "schema": "public",
+      "objtype": "f"
+    },
+    {
+      "acl": "{postgres=arwdDxtm/supabase_admin,anon=arwdDxtm/supabase_admin,authenticated=arwdDxtm/supabase_admin,service_role=arwdDxtm/supabase_admin}",
+      "role": "supabase_admin",
+      "schema": "public",
+      "objtype": "r"
+    }
+  ],
+  "files": {
+    "00_extensions.sql": "7b890967f4527840e9d9d3120e072a40787ec39dfded5b1d32a630d4763a34e5",
+    "10_schemas.sql": "9d78e6496d38af02089e9807d1dc368518227aefe0f105dfb4c4ed2145b45012",
+    "15_types.sql": "9791e581673e17972262cba6d117c65fbddbf36687cb2790ed2c3d77fb8475d6",
+    "20_tables.sql": "10ebdf91c96c2b9c427c70203db51b7e03118817b0b43a3a7a5b519f9d39e433",
+    "30_functions.sql": "867732ae238eb7fa520e49a7629b9f7d948566a1098bac116ef50774cb8e067f",
+    "35_column_defaults.sql": "4515f6e2e222f6c6911053ed9273efb2582bed2bb14a07b3dd132b0336c5275a",
+    "40_constraints.sql": "33dd6a89cf56f04a947b98167a9050cfd2a0af976018166b135ecd5429cd091f",
+    "50_indexes.sql": "f78c736da6238527095f005b14a8441ee7b8452ad1f0f50fd3562c8c9acf3f98",
+    "55_views.sql": "317712a360d36d9dcb6b8512495a86ce026bc086d282823101d0d579648cc0a4",
+    "60_triggers.sql": "9eb712112e0e6f39a59dfe60b8db3f953bce13f31a61ab44ed10f6a9979acc40",
+    "65_rls_policies.sql": "a05f90aa0c897e31942070dec01f262ba0ca473fd9f04b360c6acec28f307d01",
+    "70_grants.sql": "566a5069112bd12d8e7c66590e13ed708b064295fad61f8a7460277fa8c70244",
+    "80_realtime.sql": "28bd39b60ff9836118467f2717af0a58cf79025b498ef448d48d097a8c933a2a",
+    "85_storage.sql": "e9fd0d10ef5e85df0db5eb4dcf248af8e78660bc1ea6a53397f86573a9782d62",
+    "90_cron.sql": "8430d27cfe47c81873855ebc67a3cd316b7177e32f1d6921b3878c9ee4b28337",
+    "95_reference_data.sql": "9cd3690a60071ef3e5bac97d3756c573a95e3f48afd9a49e3e4d482fd59a0dbd"
+  },
+  "recovered": {
+    "recovered/m6d_calendar_reminders_applied.sql": "3aa0eed73d34b45f31599c0430106729e183e77ab83fffa29ae8ef1a8d66be52",
+    "recovered/monthiversary.sql": "75cfae390171afaf77a9c0b52abc1a3808e387db7d9fa67177c0b6efee1fc039",
+    "recovered/quest.sql": "2068006c4908294f9aa40be423092924525129271c7db8b3e59f0cb20fa651f4",
+    "recovered/production_only_functions.sql": "4c1d6af190f8b45cdfeb845fb859ea80127b75c4629f4fb4749180fbc09e2115",
+    "recovered/function_drift_production.sql": "6e9d50b0c81eabd1492b14f963ecc6bc973a4e75e439595754ca240e91358f9b",
+    "recovered/storage_realtime.sql": "ae65248de350125097283eca70431c47e4f441ff0c7ff5bdc7198916264d1427",
+    "recovered/ledger/20260820181734_us_monthiversary_scheduler.sql": "f5d7b361eead36bc07f00fe9469a36c3a2d9c2c3f4a90c1f82d46f416fbd7276",
+    "recovered/ledger/20260820181751_us_monthiversary_award_rpc.sql": "0e54343061faf9f4b7b7ff60868768ebe92de0e487ff4cc27921ded938c660e2",
+    "recovered/ledger/20260928210000_m6d_calendar_reminders.sql": "b3d423432b3e77c6dbff121c25c0b96a03b216972301e75d56a5c39dddca7bac"
+  }
+}
