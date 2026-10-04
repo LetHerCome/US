@@ -1,0 +1,36 @@
+name: Countdown Oggi V1 validation
+
+on:
+  push:
+    branches:
+      - qa/countdown-oggi-v1-c173-validation
+
+jobs:
+  validate-web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build:cloudflare-pages
+      - name: Diff check candidate
+        run: git diff --check c173abefe8e26fd57c78501724fd3743e4c84d8b f7ae7179b6e96308af77c5968c7e8791aa644e54
+
+  validate-capacitor-windows:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build:capacitor-web
