@@ -20,6 +20,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Install Chromium for real browser QA
+        run: npx playwright install --with-deps chromium
       - name: PWA startup soak
         run: node --test tests/pwa-startup-browser.test.js
       - name: Countdown regressions
