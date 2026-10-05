@@ -159,11 +159,11 @@ html.us-returning-device .auth-overlay{
       <div class="home-photo-layer" id="homePhotoLayerB"></div>
       <div class="home-photo-shade"></div>
       <span class="us-hero-sticker" id="usHeroSticker" aria-hidden="true" hidden></span>
-      <button type="button" id="usCountdownEntry" class="us-countdown-entry" aria-label="Gestisci countdown" aria-haspopup="dialog"><span class="us-icon" data-us-icon="clock-counter-clockwise" aria-hidden="true"></span></button>
+      <button type="button" id="usCountdownEntry" class="us-countdown-entry" aria-label="Gestisci countdown" aria-haspopup="dialog" hidden tabindex="-1" aria-hidden="true"><span class="us-icon" data-us-icon="clock-counter-clockwise" aria-hidden="true"></span></button>
       <button type="button" id="usCountdownDisplay" class="us-countdown-display" aria-haspopup="dialog" hidden></button>
-      <!-- Oggi: foto e countdown. These legacy state anchors stay mounted but the stack is visually retired; Calendar is surfaced in Noi and Daily Question in Gioca. -->
+      <div id="usTodayPriorityRegion" hidden aria-live="polite"></div>
+      <!-- Oggi: photo + countdown. Legacy Calendar/Daily anchors stay mounted but visually retired. -->
       <div class="us-oggi-stack" id="usOggiStack">
-        <div id="usTodayPriorityRegion" hidden aria-live="polite"></div>
         <div class="us-oggi-widgets" id="usOggiCalendarWidget" hidden aria-live="polite"></div>
         <button type="button" class="us-daily-ritual us-attention-orbit" id="usDailyRitual" hidden onclick="openToday()" data-us-attention="off"></button>
         <button type="button" class="us-daily-reveal-link" id="usDailyRevealLink" hidden onclick="openToday()"></button>
