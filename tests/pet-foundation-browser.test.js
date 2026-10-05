@@ -7,11 +7,33 @@ async function preview(h,options){
  const view=await pageFor(h,options);
  await view.page.goto(h.base+'/?us-dev=1&us-pet=preview',{waitUntil:'load'});
  await view.page.waitForFunction(()=>window.USPet?.enabled&&document.getElementById('usPetLayer').dataset.petState);
- // The Daily nudge is transient (6.5 s) and owns the space above the nav while shown.
- await view.page.evaluate(()=>{document.getElementById('usDailyNudge').hidden=false;});await view.page.waitForTimeout(300);
- assert.equal(await view.page.evaluate(()=>getComputedStyle(document.getElementById('usPetLayer')).visibility),'hidden');
- assert.deepEqual(await view.page.evaluate(()=>({blockers:window.USPet.blockers(),running:window.USPet.snapshot().running,react:window.USPet.react('reward')})),{blockers:['nudge'],running:false,react:false},'the runtime stops too, not only the paint');
- await view.page.evaluate(()=>{document.getElementById('usDailyNudge').hidden=true;document.documentElement.style.setProperty('--us-safe-bottom','20px');window.dispatchEvent(new Event('resize'));});
+ // Daily Question and Ti penso are transient: the PET must stay alive above both.
+ await view.page.evaluate(()=>{
+   document.getElementById('usDailyNudge').hidden=false;
+   document.getElementById('toast').classList.add('show');
+ });
+ await view.page.waitForTimeout(300);
+ const overlay=await view.page.evaluate(()=>{
+   const pet=document.getElementById('usPetLayer'),nudge=document.getElementById('usDailyNudge'),toast=document.getElementById('toast');
+   return {
+     visibility:getComputedStyle(pet).visibility,
+     petZ:Number(getComputedStyle(pet).zIndex),
+     nudgeZ:Number(getComputedStyle(nudge).zIndex),
+     toastZ:Number(getComputedStyle(toast).zIndex),
+     blockers:window.USPet.blockers(),
+     running:window.USPet.snapshot().running,
+     react:window.USPet.react('reward')
+   };
+ });
+ assert.equal(overlay.visibility,'visible');
+ assert.ok(overlay.petZ>overlay.nudgeZ&&overlay.petZ>overlay.toastZ,JSON.stringify(overlay));
+ assert.deepEqual({blockers:overlay.blockers,running:overlay.running,react:overlay.react},{blockers:[],running:true,react:true});
+ await view.page.evaluate(()=>{
+   document.getElementById('usDailyNudge').hidden=true;
+   document.getElementById('toast').classList.remove('show');
+   document.documentElement.style.setProperty('--us-safe-bottom','20px');
+   window.dispatchEvent(new Event('resize'));
+ });
  await view.page.waitForTimeout(400);
  assert.equal(await view.page.evaluate(()=>window.USPet.snapshot().running),true);
  return view;
