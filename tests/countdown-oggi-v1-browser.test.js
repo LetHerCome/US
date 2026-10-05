@@ -11,14 +11,14 @@ test('countdown and daily question never overlap at base viewports, all styles a
   const m=await page.evaluate(()=>{
    const box=e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height};};
    const visible=e=>!e.hidden&&getComputedStyle(e).display!=='none'&&getComputedStyle(e).visibility!=='hidden';
-   return {count:box(document.getElementById('usCountdownDisplay')),number:box(document.querySelector('#usCountdownDisplay .us-countdown-number')),entry:box(document.getElementById('usCountdownEntry')),stack:box(document.getElementById('usOggiStack')),top:box(document.querySelector('.top')),nav:box(document.querySelector('.nav')),surfaces:[...document.querySelectorAll('#usOggiStack > *')].filter(visible).map(box),sw:document.scrollingElement.scrollWidth,sh:document.scrollingElement.scrollHeight,w:innerWidth,h:innerHeight};
+   return {count:box(document.getElementById('usCountdownDisplay')),number:box(document.querySelector('#usCountdownDisplay .us-countdown-number')),stack:box(document.getElementById('usOggiStack')),top:box(document.querySelector('.top')),nav:box(document.querySelector('.nav')),surfaces:[...document.querySelectorAll('#usOggiStack > *')].filter(visible).map(box),sw:document.scrollingElement.scrollWidth,sh:document.scrollingElement.scrollHeight,w:innerWidth,h:innerHeight};
   });
   const overlap=(a,b)=>a.x<b.right-.5&&b.x<a.right-.5&&a.y<b.bottom-.5&&b.y<a.bottom-.5;
   assert.ok(m.count.y-m.top.bottom>=8&&m.count.y-m.top.bottom<=32,`${width}×${height} ${style} must sit immediately below top bar: ${JSON.stringify(m)}`);
   assert.equal(overlap(m.count,m.stack),false,`${width}×${height} ${style} collision ${JSON.stringify(m)}`);
-  for(const b of [m.count,m.entry,...m.surfaces]){assert.ok(b.y>=m.top.bottom-.5&&b.bottom<=m.nav.y+.5,`${style} outside chrome ${JSON.stringify(m)}`);assert.ok(b.x>=0&&b.right<=width+.5,`${style} horizontal overflow`);}
+  for(const b of [m.count,...m.surfaces]){assert.ok(b.y>=m.top.bottom-.5&&b.bottom<=m.nav.y+.5,`${style} outside chrome ${JSON.stringify(m)}`);assert.ok(b.x>=0&&b.right<=width+.5,`${style} horizontal overflow`);}
   assert.ok(m.number.x>=0&&m.number.right<=width+.5);assert.ok(m.sh<=m.h);assert.ok(m.sw<=m.w);assert.deepEqual(errors,[]);
-  if(output){fs.mkdirSync(output,{recursive:true});await page.screenshot({path:path.join(output,`${style}-${width}x${height}.png`)});if(style==='editorial'&&width===390){await page.evaluate(()=>{document.getElementById('usCountdownDisplay').hidden=true;document.getElementById('usCountdownEntry').hidden=true;document.getElementById('homeHero').removeAttribute('data-us-countdown');});await page.screenshot({path:path.join(output,'before-390x844.png')});}}
+  if(output){fs.mkdirSync(output,{recursive:true});await page.screenshot({path:path.join(output,`${style}-${width}x${height}.png`)});if(style==='editorial'&&width===390){await page.evaluate(()=>{document.getElementById('usCountdownDisplay').hidden=true;document.getElementById('homeHero').removeAttribute('data-us-countdown');});await page.screenshot({path:path.join(output,'before-390x844.png')});}}
   await ctx.close();
  }}finally{await h.close();}
 });
@@ -26,7 +26,7 @@ test('shared editor creates, edits, selects, hides and deletes without lost or f
  const h=await start();if(!h)return t.skip('Playwright unavailable');
  try{
   const {page,ctx,errors}=await pageFor(h,{unlocked:false});
-  await page.click('#usCountdownEntry');await page.click('#usCountdownNew');
+  await page.click('#usCountdownDisplay');await page.click('#usCountdownBack');await page.click('#usCountdownNew');
   await page.fill('#usCountdownDate','2027-12-24');assert.equal(await page.locator('#usCountdownSave').isDisabled(),true,'a valid date must not enable an empty title');
   await page.fill('#usCountdownTitle','   ');assert.equal(await page.locator('#usCountdownSave').isDisabled(),true,'whitespace is not a title');
   await page.fill('#usCountdownTitle','La nostra cena');
@@ -53,10 +53,10 @@ test('unavailable backend retries are throttled',async t=>{
 test('ownership switch during a slow save restores fields for the next identity',async t=>{
  const h=await start();if(!h)return t.skip('Playwright unavailable');
  try{
-  const {page,ctx}=await pageFor(h);await page.click('#usCountdownEntry');await page.click('#usCountdownNew');await page.fill('#usCountdownTitle','Prima coppia');await page.fill('#usCountdownDate','2027-12-24');
+  const {page,ctx}=await pageFor(h);await page.click('#usCountdownDisplay');await page.click('#usCountdownBack');await page.click('#usCountdownNew');await page.fill('#usCountdownTitle','Prima coppia');await page.fill('#usCountdownDate','2027-12-24');
   await page.evaluate(()=>window.__QA.saveDelay=1800);await page.click('#usCountdownSave');assert.equal(await page.locator('#usCountdownTitle').isDisabled(),true);
   await page.evaluate(()=>{window.usProfile={id:'new-user',couple_id:'new-couple',role:'francesco'};});await page.waitForTimeout(2200);
-  await page.click('#usCountdownEntry');await page.click('#usCountdownNew');
+  await page.evaluate(()=>window.USCountdown.open());await page.click('#usCountdownNew');
   for(const id of ['usCountdownTitle','usCountdownMode','usCountdownDate'])assert.equal(await page.locator('#'+id).isDisabled(),false,`${id} stays usable after owner reset`);
   await ctx.close();
  }finally{await h.close();}
@@ -66,7 +66,7 @@ test('editing a DST fold instant preserves its exact target and saving locks the
  try{
   const {page,ctx}=await pageFor(h,{mode:'clock'});
   await page.evaluate(()=>{const s=window.__QA.countdown;s.items[0].target='2026-10-25T01:30:37.000Z';return window.USCountdown.refresh();});
-  await page.click('#usCountdownEntry');await page.click('#usCountdownList .us-countdown-row:last-child [data-countdown-edit]');await page.fill('#usCountdownTitle','Un nuovo titolo');await page.click('#usCountdownSave');await page.waitForSelector('#usCountdownCollection:not([hidden])');
+  await page.click('#usCountdownDisplay');await page.fill('#usCountdownTitle','Un nuovo titolo');await page.click('#usCountdownSave');await page.waitForSelector('#usCountdownCollection:not([hidden])');
   assert.equal(await page.evaluate(()=>window.__QA.countdown.items[0].target),'2026-10-25T01:30:37.000Z','title/style-only edits preserve both fold offset and seconds');
   await page.click('#usCountdownList .us-countdown-row:last-child [data-countdown-edit]');await page.fill('#usCountdownTitle','Ultima modifica');await page.evaluate(()=>window.__QA.saveDelay=800);await page.click('#usCountdownSave');
   assert.equal(await page.locator('#usCountdownTitle').isDisabled(),true,'typing must not silently change the draft after its payload was sent');assert.equal(await page.locator('#usCountdownMode').isDisabled(),true);assert.equal(await page.locator('#usCountdownDate').isDisabled(),true);
@@ -80,15 +80,15 @@ test('reduced motion, keyboard, focus return, back navigation, missing backend a
  try{
   const {page,ctx}=await pageFor(h,{reduced:true,style:'orbit'});
   assert.equal(await page.locator('#usCountdownDisplay .us-countdown-art').evaluate(e=>getComputedStyle(e,'::after').animationName),'none');
-  await page.click('#usCountdownEntry');await page.click('#usCountdownNew');await page.fill('#usCountdownTitle','Con te');
+  await page.click('#usCountdownDisplay');await page.click('#usCountdownBack');await page.click('#usCountdownNew');await page.fill('#usCountdownTitle','Con te');
   await page.setViewportSize({width:390,height:420});await page.fill('#usCountdownDate','2027-02-14');await page.locator('#usCountdownSave').scrollIntoViewIfNeeded();assert.equal(await page.locator('#usCountdownSave').isVisible(),true);
   await page.click('[data-countdown-close][data-us-modal-close]');await page.waitForFunction(()=>document.getElementById('usCountdownSheet').getAttribute('aria-hidden')==='true');
-  assert.equal(await page.evaluate(()=>document.activeElement.id),'usCountdownEntry');
-  await page.click('#usCountdownEntry');await page.goBack();await page.waitForFunction(()=>!document.getElementById('usCountdownSheet').classList.contains('open'));
+  assert.equal(await page.evaluate(()=>document.activeElement.id),'usCountdownDisplay');
+  await page.click('#usCountdownDisplay');await page.goBack();await page.waitForFunction(()=>!document.getElementById('usCountdownSheet').classList.contains('open'));
   await page.evaluate(()=>window.toggleOggiFocusPhoto());assert.equal(await page.locator('#usCountdownDisplay').getAttribute('inert'),'');await page.evaluate(()=>window.toggleOggiFocusPhoto());
   await page.evaluate(()=>{window.__QA.readDelay=700;window.USCountdown.refresh();window.usProfile=null;});await page.waitForTimeout(1300);assert.equal(await page.locator('#usCountdownDisplay').isHidden(),true);assert.equal(await page.locator('#usCountdownSheet').getAttribute('aria-hidden'),'true');
   await ctx.close();
-  const missing=await pageFor(h,{missing:true});await missing.page.click('#usCountdownEntry');assert.match(await missing.page.locator('#usCountdownStatus').innerText(),/non disponibile/);assert.equal(await missing.page.locator('#usCountdownNew').isDisabled(),true);await missing.ctx.close();
+  const missing=await pageFor(h,{missing:true});await missing.page.evaluate(()=>window.USCountdown.open());assert.match(await missing.page.locator('#usCountdownStatus').innerText(),/non disponibile/);assert.equal(await missing.page.locator('#usCountdownNew').isDisabled(),true);await missing.ctx.close();
  }finally{await h.close();}
 });
 
@@ -100,7 +100,7 @@ test('unselected, automatic relationship, empty photo, long titles and safe area
   await page.evaluate(()=>window.hydrateDistance?.());await page.waitForTimeout(120);
   const clear=()=>page.evaluate(()=>{
    const visible=e=>e&&!e.hidden&&getComputedStyle(e).display!=='none'&&getComputedStyle(e).visibility!=='hidden';
-   const ids=['usCountdownDisplay','usCountdownEntry','distanceWidget','usDailyRitual','usOggiCalendarWidget','homeEmptyState'];
+   const ids=['usCountdownDisplay','distanceWidget','usDailyRitual','usOggiCalendarWidget','homeEmptyState'];
    const list=ids.map(id=>document.getElementById(id)).filter(visible).map(e=>({id:e.id,r:e.getBoundingClientRect().toJSON()}));
    const collisions=[];for(let i=0;i<list.length;i++)for(let j=i+1;j<list.length;j++){const a=list[i],b=list[j];if(a.r.left<b.r.right-.5&&b.r.left<a.r.right-.5&&a.r.top<b.r.bottom-.5&&b.r.top<a.r.bottom-.5)collisions.push(`${a.id}/${b.id}`);}return {collisions,width:document.scrollingElement.scrollWidth,height:document.scrollingElement.scrollHeight,w:innerWidth,h:innerHeight};
   });
