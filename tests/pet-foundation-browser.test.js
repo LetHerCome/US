@@ -24,17 +24,17 @@ const geometry=page=>page.evaluate(()=>{
  return {nav:box(nav),layer:box(layer),actor:box(actor),tabs,petTakesInput:Boolean(onPet&&layer.contains(onPet)),visibility:getComputedStyle(layer).visibility,sw:document.scrollingElement.scrollWidth,w:innerWidth};
 });
 
-test('PET is unmounted without an approved asset or an explicit preview',async t=>{
+test('PET production kitten mounts without a preview query',async t=>{
  const h=await start();if(!h)return t.skip('Playwright unavailable');
  try{
   const {page,ctx,errors}=await pageFor(h,{});
-  assert.equal(await page.evaluate(()=>window.USPet.enabled),false);
-  assert.equal(await page.locator('#usPetLayer').isHidden(),true);
-  assert.equal(await page.evaluate(()=>document.querySelector('#usPetLayer .us-pet-actor').innerHTML),'');
+  await page.waitForFunction(()=>window.USPet?.enabled&&document.getElementById('usPetLayer').dataset.petRenderer==='sprite');
+  assert.equal(await page.evaluate(()=>window.USPet.enabled),true);
+  assert.equal(await page.evaluate(()=>document.getElementById('usPetLayer').dataset.petRenderer),'sprite');
+  assert.equal(await page.locator('#usPetLayer [data-pet-production="kitten-v0"]').count(),1);
   assert.deepEqual(errors,[]);await ctx.close();
  }finally{await h.close();}
 });
-
 test('PET preview lives on the nav rim, never covers or blocks a tab, at every base viewport',async t=>{
  const h=await start();if(!h)return t.skip('Playwright unavailable');
  try{for(const [width,height] of [[320,568],[390,844],[844,390]]){

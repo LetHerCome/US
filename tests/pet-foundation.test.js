@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const crypto = require('node:crypto');
 
 const ROOT = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
@@ -177,18 +178,17 @@ function fakeWindow(href, storage = new Map()) {
   return { w, layer, actor, attrs, listeners, storage, body, nudge, toast, hero, auth, observed, mutate, tick, timers: () => scheduled, active: () => pending.size };
 }
 
-test('PET gate: without an approved asset the layer stays unmounted, with zero timers and listeners', () => {
-  assert.equal(Pet.PET_ASSET_STATUS, 'PLACEHOLDER');
+test('PET production gate: approved kitten v0 mounts by default', () => {
+  assert.equal(Pet.PET_ASSET_STATUS, 'APPROVED');
   const f = fakeWindow('https://us.example/');
   Pet.install(f.w);
-  assert.equal(f.w.USPet.enabled, false);
-  assert.equal(f.layer.hidden, true);
-  assert.equal(f.actor.innerHTML, '');
-  assert.equal(f.timers(), 0);
-  assert.deepEqual(Object.keys(f.listeners), []);
-  assert.equal(f.w.USPet.react('reward'), false, 'callers can always call react safely');
+  assert.equal(f.w.USPet.enabled, true);
+  assert.equal(f.layer.hidden, false);
+  assert.equal(f.layer.dataset.petRenderer, 'sprite');
+  assert.match(f.actor.innerHTML, /data-pet-production="kitten-v0"/);
+  assert.equal(f.active(), 1, 'one scheduler timer while the production PET is alive');
+  assert.ok(f.listeners['d:visibilitychange'] && f.listeners['w:pagehide'] && f.listeners['w:us:pet']);
 });
-
 test('PET gate: ?us-pet=preview mounts the placeholder on this device; ?us-pet=off clears it', () => {
   const storage = new Map();
   const on = fakeWindow('http://127.0.0.1:5173/?us-pet=preview', storage);
@@ -351,7 +351,7 @@ test('F2 renderers fail closed: placeholder is preview-only, unknown ids keep th
   try { assert.equal(f.w.USPet.useRenderer('test-throws'), false); } finally { console.warn = warn; }
   assert.equal(f.layer.dataset.petRenderer, 'placeholder');
   assert.equal(f.actor.innerHTML, before);
-  assert.match(petJs, /if\(!useRenderer\(approved\?'sprite':'placeholder'\)\)\{api\.enabled=false;return;\}/, 'nothing mounts if the chosen renderer cannot');
+  assert.match(petJs, /if\(!useRenderer\(preview\?'placeholder':approved\?'sprite':'placeholder'\)\)\{api\.enabled=false;return;\}/, 'nothing mounts if the chosen renderer cannot');
   assert.doesNotMatch(petJs, /renderers\.get\(id\)\|\|renderers\.get\('placeholder'\)/, 'no placeholder fallback');
 });
 
@@ -485,10 +485,10 @@ test('F5 reactions honour blockers synchronously, before the MutationObserver de
   }
 });
 
-test('Kitten preview v0 follows the approved concept and stays preview-only', () => {
+test('Kitten production v0 matches its approved source and keeps preview isolated', () => {
   const spec = read('docs/missions/us-pet-asset-spec-v1.md');
   assert.match(spec, /\*\*Concept approvato:\*\* un piccolo gattino, pelo bianco e grigio, occhi azzurri\./);
-  assert.match(spec, /asset finali NON ancora approvati/);
+  assert.match(spec, /PRODUCTION V0 APPROVATO/);
   // Same part names as the final asset contract, in the documented draw order.
   const parts = ['k-tail', 'k-leg-hind-far', 'k-leg-front-far', 'k-body', 'k-leg-hind-near', 'k-leg-front-near', 'k-head', 'k-ear-far', 'k-ear-near', 'k-face', 'k-eyes-open', 'k-eyes-closed', 'k-nose', 'k-mouth', 'k-collar'];
   let last = -1;
@@ -502,10 +502,18 @@ test('Kitten preview v0 follows the approved concept and stays preview-only', ()
   for (const hex of ['#fbf8f4', '#a7acb5', '#7c818b', '#b4dcff', '#5e9ce0', '#3a6cab']) assert.ok(petJs.includes(hex), hex);
   assert.equal((petJs.match(/var\(--us-color-accent-strong/g) || []).length, 1, 'only the collar accessory takes the theme accent');
   assert.match(petJs, /data-pet-placeholder data-pet-preview="kitten-v0"/);
-  assert.match(petJs, /id:'placeholder',\n  mount\(host\)\{\n    host\.innerHTML='<span class="us-pet-shadow"><\/span><span class="us-pet-figure" data-pet-placeholder data-pet-preview="kitten-v0">'\+KITTEN_PREVIEW_SVG/);
-  assert.equal(Pet.canMount('placeholder'), false, 'the kitten preview is never a production renderer');
-  const manifest = read('assets/ASSET_MANIFEST.json');
-  assert.doesNotMatch(manifest, /kitten|\/pet\//, 'the preview is not registered as an approved asset');
+  assert.match(petJs, /data-pet-production="kitten-v0"/);
+  assert.match(petJs, /id:'sprite'/);
+  assert.equal(Pet.canMount('placeholder'), false, 'placeholder still requires explicit preview');
+  assert.equal(Pet.canMount('sprite'), true, 'approved production renderer is mountable');
+  const sourcePath = 'assets/source/pet/us-pet-kitten-base-v0.svg';
+  const source = read(sourcePath);
+  const inline = petJs.match(/const KITTEN_V0_SVG='([^']+)'/)?.[1];
+  assert.equal(inline, source.trimEnd(), 'runtime drawing is identical to the approved source asset');
+  const manifest = JSON.parse(read('assets/ASSET_MANIFEST.json'));
+  const asset = manifest.assets.find((row) => row.path === sourcePath);
+  assert.equal(asset?.status, 'APPROVED');
+  assert.equal(asset?.sha256, crypto.createHash('sha256').update(source).digest('hex'));
   // Every state has a static pose (survives reduced motion) and only the collar accessory exists.
   for (const [state, rule] of [['rest', /\[data-pet-state="rest"\] \.k-eyes-closed\{opacity:1\}/], ['rest', /\[data-pet-state="rest"\] \.k-leg\{opacity:0\}/], ['react', /\[data-pet-state="react"\] \.k-ear\{transform:scale\(1\.14\)\}/], ['walk', /\[data-pet-state="walk"\] \.k-tail\{transform:rotate\(16deg\)\}/]]) {
     assert.match(petCss, rule, state);

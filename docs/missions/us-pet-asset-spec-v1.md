@@ -1,10 +1,10 @@
 # US PET — Asset requirement V1
 
-**Status:** CONCEPT APPROVATO (personaggio) · asset finali NON ancora approvati
+**Status:** PRODUCTION V0 APPROVATO · direzione artistica futura ancora iterabile
 **Concept approvato:** un piccolo gattino, pelo bianco e grigio, occhi azzurri.
-**Owner decision:** Francesco (approva gli asset finali e li registra come `APPROVED` in `assets/ASSET_MANIFEST.json`)
+**Owner decision:** Francesco ha approvato il kitten v0 per l'uso live; eventuali sostituzioni future richiedono una nuova approvazione.
 
-Il personaggio è deciso; i file definitivi no. Finché non esiste un asset finale `APPROVED`, il PET resta spento in produzione. Il renderer `placeholder` di `pet.js` disegna il **kitten preview v0**, un'interpretazione temporanea di questo concept, visibile solo in preview esplicita (`?us-pet=preview`). Non è un asset finale e non va nel manifest.
+Il personaggio è deciso e il **kitten v0** è approvato come asset production corrente. Il sorgente canonico è `assets/source/pet/us-pet-kitten-base-v0.svg`, registrato `APPROVED` nel manifest; `pet.js` incorpora byte-for-byte lo stesso SVG per mantenere le animazioni CSS sulle parti. Il renderer `sprite` è quello production; `placeholder` resta disponibile solo con `?us-pet=preview` per QA. Il v0 è sostituibile in futuro, ma non va modificato in-place: una nuova arte deve avere un nuovo asset/versione e nuova approvazione.
 
 ## Direzione
 
@@ -104,5 +104,5 @@ Il kitten preview v0 in `pet.js` / `pet.css` usa già queste classi e questo ord
   | `destroy()` | quando il renderer viene sostituito | — |
 
   La posizione orizzontale resta del runtime (transform sul contenitore): il renderer disegna solo la figura e non dipende dalle classi CSS del placeholder. Il runtime chiama i metodi solo se presenti.
-- Selezione fail-closed e atomica: un id sconosciuto o un `mount` che fallisce (anche dopo aver modificato il proprio host) lascia intatti renderer, host e nodi vivi correnti; il `destroy()` del precedente avviene solo dopo un mount riuscito; il `placeholder` (kitten preview v0) si monta solo in preview esplicita, mai come fallback di produzione.
-- Con l'asset approvato: aggiungere le voci `APPROVED` al manifest, i file al precache SW e alle build, registrare `sprite`, poi impostare `PET_ASSET_STATUS = 'APPROVED'`.
+- Selezione fail-closed e atomica: un id sconosciuto o un `mount` che fallisce (anche dopo aver modificato il proprio host) lascia intatti renderer, host e nodi vivi correnti; il `destroy()` del precedente avviene solo dopo un mount riuscito; il `placeholder` si monta solo in preview esplicita, mentre `sprite` usa il kitten v0 approvato in produzione.
+- Stato corrente: `PET_ASSET_STATUS = 'APPROVED'`; il sorgente v0 è nel manifest e il renderer production è `sprite`. `?us-pet=off` resta un kill switch per il singolo caricamento.

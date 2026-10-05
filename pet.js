@@ -8,10 +8,11 @@
 // navigation. It never receives input (pointer-events:none), never covers a tab,
 // and owns no data: it only reacts to facts other authorities announce.
 //
-// No approved PET asset exists yet (docs/missions/us-pet-asset-spec-v1.md), so
-// the layer stays unmounted in production. Developers and real-device QA opt in
-// with ?us-pet=preview (persisted on that device) and opt out with ?us-pet=off.
-const PET_ASSET_STATUS='PLACEHOLDER';
+// The owner-approved kitten v0 is the current production PET asset. The renderer
+// contract stays replaceable so a later art pass can land without changing the
+// scheduler/lifecycle architecture. ?us-pet=preview keeps the explicit QA renderer;
+// ?us-pet=off is a one-load emergency kill switch.
+const PET_ASSET_STATUS='APPROVED';
 const PREVIEW_KEY='us:pet:v1:preview';
 const STATES=Object.freeze(['idle','walk','rest','react']);
 const REASONS=Object.freeze(['think','left-for-you','reward','streak','daily-question']);
@@ -111,17 +112,22 @@ function registerRenderer(renderer){
   renderers.set(renderer.id,renderer);
   return renderer.id;
 }
-// PREVIEW RENDERER — "kitten preview v0" after the approved concept (white/gray
-// kitten, blue eyes; docs/missions/us-pet-asset-spec-v1.md). Preview-only and
-// NOT the final asset: it keeps the 'placeholder' id, so canMount() still only
-// allows it in explicit preview mode and it is never a production fallback.
-const KITTEN_PREVIEW_SVG='<svg class="us-pet-kitten" viewBox="0 0 40 40" width="40" height="40" aria-hidden="true" focusable="false"><defs><linearGradient id="usPetKWhite" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbf8f4"/><stop offset="1" stop-color="#e2dbd3"/></linearGradient><linearGradient id="usPetKGray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a7acb5"/><stop offset="1" stop-color="#7c818b"/></linearGradient><radialGradient id="usPetKIris" cx="45%" cy="38%" r="70%"><stop offset="0" stop-color="#b4dcff"/><stop offset=".55" stop-color="#5e9ce0"/><stop offset="1" stop-color="#3a6cab"/></radialGradient></defs><g class="k-tail"><path d="M9.2 29.2C4.6 28.4 2.6 23.6 4.2 18.6" fill="none" stroke="url(#usPetKGray)" stroke-width="3.2" stroke-linecap="round"/></g><g class="k-leg k-leg-hind-far"><rect x="10.4" y="31" width="3" height="7.2" rx="1.5" fill="#757a84"/></g><g class="k-leg k-leg-front-far"><rect x="21.4" y="31" width="3" height="7.2" rx="1.5" fill="#d6cfc7"/></g><g class="k-body"><ellipse cx="17" cy="29.6" rx="10" ry="6.2" fill="url(#usPetKWhite)"/><path d="M7.3 28.6C7.8 24 12.4 23.1 17 23.3C20.6 23.5 23.1 24.6 24.6 26.5C21 27.7 16 28.3 11.5 30.3C9.5 31.1 7.9 30.7 7.3 28.6Z" fill="url(#usPetKGray)"/></g><g class="k-leg k-leg-hind-near"><rect x="13.2" y="31.4" width="3.2" height="7.2" rx="1.6" fill="url(#usPetKGray)"/><ellipse cx="14.8" cy="38.1" rx="1.9" ry="1" fill="#f4efe9"/></g><g class="k-leg k-leg-front-near"><rect x="24.2" y="31.4" width="3.2" height="7.2" rx="1.6" fill="url(#usPetKWhite)"/><ellipse cx="25.8" cy="38.1" rx="1.9" ry="1" fill="#fbf8f4"/></g><g class="k-head"><g class="k-ear k-ear-far"><path d="M22.2 15.2L23.4 6.6L28.2 12Z" fill="#878c95"/><path d="M23.3 13.5L24 8.8L26.7 12Z" fill="#dea0aa"/></g><g class="k-ear k-ear-near"><path d="M29.6 11.6L34.8 5.8L35.8 14.6Z" fill="url(#usPetKGray)"/><path d="M31 11.7L34.2 8.3L34.8 13.1Z" fill="#e8a7b0"/></g><circle cx="29.2" cy="19.6" r="8.3" fill="url(#usPetKGray)"/><path class="k-face" d="M30 12.6C30.5 15.1 31.2 17.6 32.2 20.3C33.6 21.1 35.6 21.4 36.4 23.1C37 25.5 34.6 27.9 30.8 28.1C27 28.3 24 26.9 23.6 24.7C23.4 23.1 25.6 21.3 27.8 20.5C28.8 17.6 29.5 15.1 30 12.6Z" fill="url(#usPetKWhite)"/><ellipse class="k-blush" cx="34.7" cy="24.4" rx="1.3" ry=".8" fill="#f1b6bf" opacity=".45"/><g class="k-eyes-open"><g class="k-eye k-eye-far"><ellipse cx="26.2" cy="19.5" rx="1.35" ry="1.7" fill="url(#usPetKIris)"/><ellipse cx="26.35" cy="19.6" rx=".45" ry="1.15" fill="#1c2230"/><circle cx="25.85" cy="18.9" r=".4" fill="#fff"/></g><g class="k-eye k-eye-near"><ellipse cx="34" cy="19.4" rx="1.6" ry="1.95" fill="url(#usPetKIris)"/><ellipse cx="34.2" cy="19.5" rx=".52" ry="1.3" fill="#1c2230"/><circle cx="33.6" cy="18.7" r=".45" fill="#fff"/></g></g><g class="k-eyes-closed" fill="none" stroke="#4a505a" stroke-width=".7" stroke-linecap="round"><path d="M24.9 19.9q1.3.9 2.6 0"/><path d="M32.5 19.8q1.5 1 3 0"/></g><path class="k-nose" d="M30.4 22.6h1.9l-.95 1.15Z" fill="#e39aa6" stroke="#e39aa6" stroke-width=".3" stroke-linejoin="round"/><path class="k-mouth" d="M31.35 23.8v.6M31.35 24.4c-.35.55-1.1.55-1.4.1M31.35 24.4c.35.55 1.1.55 1.4.1" fill="none" stroke="#9c8a8d" stroke-width=".42" stroke-linecap="round"/><g class="k-collar"><path d="M23.8 25.6C26.6 28.5 32.4 28.9 35.5 26.4" fill="none" stroke="var(--us-color-accent-strong,#ef9bc1)" stroke-width="1.4" stroke-linecap="round"/><circle cx="29.6" cy="28.5" r="1" fill="#f3d28b"/></g></g></svg>';
+// OWNER-APPROVED PRODUCTION V0 — white/gray kitten with blue eyes.
+// The same drawing is also available through the explicit placeholder renderer
+// for QA. Source authority: assets/source/pet/us-pet-kitten-base-v0.svg.
+const KITTEN_V0_SVG='<svg class="us-pet-kitten" viewBox="0 0 40 40" width="40" height="40" aria-hidden="true" focusable="false"><defs><linearGradient id="usPetKWhite" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbf8f4"/><stop offset="1" stop-color="#e2dbd3"/></linearGradient><linearGradient id="usPetKGray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a7acb5"/><stop offset="1" stop-color="#7c818b"/></linearGradient><radialGradient id="usPetKIris" cx="45%" cy="38%" r="70%"><stop offset="0" stop-color="#b4dcff"/><stop offset=".55" stop-color="#5e9ce0"/><stop offset="1" stop-color="#3a6cab"/></radialGradient></defs><g class="k-tail"><path d="M9.2 29.2C4.6 28.4 2.6 23.6 4.2 18.6" fill="none" stroke="url(#usPetKGray)" stroke-width="3.2" stroke-linecap="round"/></g><g class="k-leg k-leg-hind-far"><rect x="10.4" y="31" width="3" height="7.2" rx="1.5" fill="#757a84"/></g><g class="k-leg k-leg-front-far"><rect x="21.4" y="31" width="3" height="7.2" rx="1.5" fill="#d6cfc7"/></g><g class="k-body"><ellipse cx="17" cy="29.6" rx="10" ry="6.2" fill="url(#usPetKWhite)"/><path d="M7.3 28.6C7.8 24 12.4 23.1 17 23.3C20.6 23.5 23.1 24.6 24.6 26.5C21 27.7 16 28.3 11.5 30.3C9.5 31.1 7.9 30.7 7.3 28.6Z" fill="url(#usPetKGray)"/></g><g class="k-leg k-leg-hind-near"><rect x="13.2" y="31.4" width="3.2" height="7.2" rx="1.6" fill="url(#usPetKGray)"/><ellipse cx="14.8" cy="38.1" rx="1.9" ry="1" fill="#f4efe9"/></g><g class="k-leg k-leg-front-near"><rect x="24.2" y="31.4" width="3.2" height="7.2" rx="1.6" fill="url(#usPetKWhite)"/><ellipse cx="25.8" cy="38.1" rx="1.9" ry="1" fill="#fbf8f4"/></g><g class="k-head"><g class="k-ear k-ear-far"><path d="M22.2 15.2L23.4 6.6L28.2 12Z" fill="#878c95"/><path d="M23.3 13.5L24 8.8L26.7 12Z" fill="#dea0aa"/></g><g class="k-ear k-ear-near"><path d="M29.6 11.6L34.8 5.8L35.8 14.6Z" fill="url(#usPetKGray)"/><path d="M31 11.7L34.2 8.3L34.8 13.1Z" fill="#e8a7b0"/></g><circle cx="29.2" cy="19.6" r="8.3" fill="url(#usPetKGray)"/><path class="k-face" d="M30 12.6C30.5 15.1 31.2 17.6 32.2 20.3C33.6 21.1 35.6 21.4 36.4 23.1C37 25.5 34.6 27.9 30.8 28.1C27 28.3 24 26.9 23.6 24.7C23.4 23.1 25.6 21.3 27.8 20.5C28.8 17.6 29.5 15.1 30 12.6Z" fill="url(#usPetKWhite)"/><ellipse class="k-blush" cx="34.7" cy="24.4" rx="1.3" ry=".8" fill="#f1b6bf" opacity=".45"/><g class="k-eyes-open"><g class="k-eye k-eye-far"><ellipse cx="26.2" cy="19.5" rx="1.35" ry="1.7" fill="url(#usPetKIris)"/><ellipse cx="26.35" cy="19.6" rx=".45" ry="1.15" fill="#1c2230"/><circle cx="25.85" cy="18.9" r=".4" fill="#fff"/></g><g class="k-eye k-eye-near"><ellipse cx="34" cy="19.4" rx="1.6" ry="1.95" fill="url(#usPetKIris)"/><ellipse cx="34.2" cy="19.5" rx=".52" ry="1.3" fill="#1c2230"/><circle cx="33.6" cy="18.7" r=".45" fill="#fff"/></g></g><g class="k-eyes-closed" fill="none" stroke="#4a505a" stroke-width=".7" stroke-linecap="round"><path d="M24.9 19.9q1.3.9 2.6 0"/><path d="M32.5 19.8q1.5 1 3 0"/></g><path class="k-nose" d="M30.4 22.6h1.9l-.95 1.15Z" fill="#e39aa6" stroke="#e39aa6" stroke-width=".3" stroke-linejoin="round"/><path class="k-mouth" d="M31.35 23.8v.6M31.35 24.4c-.35.55-1.1.55-1.4.1M31.35 24.4c.35.55 1.1.55 1.4.1" fill="none" stroke="#9c8a8d" stroke-width=".42" stroke-linecap="round"/><g class="k-collar"><path d="M23.8 25.6C26.6 28.5 32.4 28.9 35.5 26.4" fill="none" stroke="var(--us-color-accent-strong,#ef9bc1)" stroke-width="1.4" stroke-linecap="round"/><circle cx="29.6" cy="28.5" r="1" fill="#f3d28b"/></g></g></svg>';
+function mountKittenV0(host,{preview=false}={}){
+  const marker=preview?' data-pet-placeholder data-pet-preview="kitten-v0"':' data-pet-production="kitten-v0"';
+  host.innerHTML='<span class="us-pet-shadow"></span><span class="us-pet-figure"'+marker+'>'+KITTEN_V0_SVG+'</span>';
+  return {destroy(){host.innerHTML='';}};
+}
 registerRenderer({
   id:'placeholder',
-  mount(host){
-    host.innerHTML='<span class="us-pet-shadow"></span><span class="us-pet-figure" data-pet-placeholder data-pet-preview="kitten-v0">'+KITTEN_PREVIEW_SVG+'</span>';
-    return {destroy(){host.innerHTML='';}};
-  }
+  mount(host){return mountKittenV0(host,{preview:true});}
+});
+registerRenderer({
+  id:'sprite',
+  mount(host){return mountKittenV0(host);}
 });
 
 function previewRequested(w){
@@ -131,6 +137,11 @@ function previewRequested(w){
     if(flag==='off')w.localStorage?.removeItem(PREVIEW_KEY);
     return flag==='preview'||(flag!=='off'&&w.localStorage?.getItem(PREVIEW_KEY)==='1');
   }catch(_){return false;}
+}
+
+function disabledRequested(w){
+  try{return new URL(w.location.href).searchParams.get('us-pet')==='off';}
+  catch(_){return false;}
 }
 
 // Renderer selection fails closed: the placeholder exists only for explicit
@@ -164,7 +175,8 @@ function install(w){
   // The placeholder is never a production fallback: an approved asset needs its own renderer.
   const approved=PET_ASSET_STATUS==='APPROVED'&&renderers.has('sprite');
   const preview=Boolean(layer&&actor&&nav)&&previewRequested(w);
-  api.enabled=Boolean(layer&&actor&&nav&&(approved||preview));
+  const disabled=Boolean(layer&&actor&&nav)&&disabledRequested(w);
+  api.enabled=Boolean(layer&&actor&&nav&&!disabled&&(approved||preview));
   if(!api.enabled)return; // zero cost: no timers, no observers, nothing painted
   let view=null,host=null,appearance={skin:'',accessory:''},facing='',pageHidden=false;
   const pet=createPet({
@@ -212,7 +224,7 @@ function install(w){
   // start()/stop() are idempotent: repeated mutations restart at most once, and
   // stop() drops any queued reaction, so nothing accumulates while blocked.
   function sync(){if(blockers(d,layer,{pageHidden}).length)pet.stop();else pet.start();}
-  if(!useRenderer(approved?'sprite':'placeholder')){api.enabled=false;return;}
+  if(!useRenderer(preview?'placeholder':approved?'sprite':'placeholder')){api.enabled=false;return;}
   layer.hidden=false;
   measure();
   if(typeof w.ResizeObserver==='function')new w.ResizeObserver(measure).observe(nav);
