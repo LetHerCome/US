@@ -1252,7 +1252,7 @@ window.UsOggiCalendarWidget=Object.freeze({render:renderOggiCalendarWidget,refre
 // widget itself, the distance pill, the push card or the empty-state CTA
 // never does (they keep their own taps).
 function oggiIsWidgetTarget(target){
-  return Boolean(target&&typeof target.closest==='function'&&target.closest('.us-oggi-stack,.us-oggi-widgets,.home-distance-pill,.push-optin-card,.home-empty-state,.us-countdown-display,.us-countdown-entry'));
+  return Boolean(target&&typeof target.closest==='function'&&target.closest('#usTodayPriorityRegion,.us-oggi-stack,.us-oggi-widgets,.home-distance-pill,.push-optin-card,.home-empty-state,.us-countdown-display,.us-countdown-entry'));
 }
 let usOggiFocusPhotoActive=false;
 function setOggiFocusPhoto(active){
@@ -1437,7 +1437,9 @@ function renderTodayPriorityItem(item,total=0){
   region.hidden=false;
 }
 function renderTodayPriorities(priorities=[]){
-  usTodayPriorityQueue=Array.isArray(priorities)?priorities.slice():[];
+  // Oggi keeps only actionable personal notices. Passive calendar/event facts
+  // live in Noi/Lavagna after the Home cleanup.
+  usTodayPriorityQueue=(Array.isArray(priorities)?priorities:[]).filter(item=>item?.attention).slice();
   renderTodayPriorityItem(usTodayPriorityQueue[0],usTodayPriorityQueue.length);
 }
 function thinkTodayPriorityViewModel(){
