@@ -173,19 +173,24 @@ function install(w){
     $('usCountdownDateLabel').textContent=clock?'Data e ora · sul tuo telefono':'Data';
   }
   function collection(){draft=null;$('usCountdownEditor').hidden=true;$('usCountdownCollection').hidden=false;paintList();status('');}
-  async function open(){
+  async function open(mode='collection'){
     if(!key())return;
     if(key()!==owner)clear();
-    w.UsUiFoundation?.cancelSurfaceExit?.(root);root.setAttribute('aria-hidden','false');root.classList.add('open');if(busy)return;collection();
+    w.UsUiFoundation?.cancelSurfaceExit?.(root);root.setAttribute('aria-hidden','false');root.classList.add('open');if(busy)return;
+    if(mode==='active'&&state?.active_id)editor(state.active_id);else collection();
     await Promise.all([hydrate(),w.USProgression?.hydrate?.({showUnlocks:false})]);
-    if(opened()){paintList();if(draft){styles();preview();}}
+    if(opened()){
+      paintList();
+      if(mode==='active'&&state?.active_id)editor(state.active_id);
+      else if(draft){styles();preview();}
+    }
   }
   function close(){
     const finish=()=>{root.classList.remove('open');root.setAttribute('aria-hidden','true');};
     if(!opened())return;root.classList.remove('open');
     if(!w.UsUiFoundation?.exitSurface?.(root,finish))finish();
   }
-  $('usCountdownEntry').addEventListener('click',open);surface.addEventListener('click',open);
+  $('usCountdownEntry')?.addEventListener('click',()=>open());surface.addEventListener('click',()=>open('active'));
   root.querySelectorAll('[data-countdown-close]').forEach(e=>e.addEventListener('click',close));
   $('usCountdownBack').addEventListener('click',collection);
   $('usCountdownNew').addEventListener('click',()=>editor());

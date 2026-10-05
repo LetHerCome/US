@@ -1,4 +1,4 @@
-const BUILD_ID = "us-home-cleanup-noi-board-daily-move-20261005-1";
+const BUILD_ID = "us-countdown-direct-edit-bottom-notice-20261005-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;

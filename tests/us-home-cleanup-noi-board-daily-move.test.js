@@ -19,6 +19,8 @@ test('Home cleanup: Oggi keeps photo/countdown dominant and retires the dashboar
   assert.match(home, /id="usCountdownDisplay"/);
   assert.match(home, /id="usOggiStack"/, 'legacy state anchors remain mounted for existing authorities');
   assert.match(styles, /#home #usOggiStack\{height:0!important;[^}]*visibility:hidden!important;[^}]*pointer-events:none!important\}/);
+  assert.ok(home.indexOf('id="usTodayPriorityRegion"') < home.indexOf('id="usOggiStack"'), 'actionable notice lives outside the retired dashboard stack');
+  assert.match(styles, /#home #usTodayPriorityRegion\{[\s\S]*?position:fixed!important;[\s\S]*?bottom:calc\(10px \+ var\(--us-safe-bottom\) \+ var\(--us-nav-height\) \+ 12px\)!important;/);
   assert.doesNotMatch(home, /noi-week-board|us-gv2-daily/, 'new destinations do not leak back into Oggi');
 });
 
@@ -87,7 +89,7 @@ test('Daily Question: Gioca owns the visible entry; transient nudge and existing
 
 test('Home cleanup runtime is present in Cloudflare/native builds and in the atomic PWA shell', () => {
   const build = JSON.parse(read('version.json')).version;
-  assert.equal(build, 'us-home-cleanup-noi-board-daily-move-20261005-1');
+  assert.equal(build, 'us-countdown-direct-edit-bottom-notice-20261005-1');
   assert.equal(html.match(/<meta name="us-build" content="([^"]+)"/)?.[1], build);
   assert.equal(worker.match(/const BUILD_ID = "([^"]+)"/)?.[1], build);
   assert.match(worker, /versioned\("\/home-cleanup\.js"\)/);

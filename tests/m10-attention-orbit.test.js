@@ -177,7 +177,8 @@ test('M10E.3: solo un Ti penso ricevuto e non gestito accende l’orbit; impegni
   const event = api.eventViewModel({ id: 'e', title: 'Cena', days_left: 0, effective_date: '2026-10-05', event_time: '20:30' });
   assert.equal(event.attention, false);
   api.render([event]);
-  assert.match(t.region.innerHTML, /data-us-attention="off"/);
+  assert.equal(t.region.hidden, true, 'passive calendar/event facts no longer render on Oggi after Home cleanup');
+  assert.equal(t.region.innerHTML, '');
   assert.match(app, /arrivalType:'think-received',\s*category:'received_ready',[\s\S]{0,200}attention:true/);
   // Calendar widget, distance, push opt-in, empty state, memories: never hosts.
   const hosts = [...html.matchAll(/<[^>]+class="[^"]*us-attention-orbit[^"]*"[^>]*>/g)].map((m) => m[0].match(/id="([^"]+)"/)?.[1]);

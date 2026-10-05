@@ -30,27 +30,21 @@ function installCard() {
 }
 const question = { id: 'q-1', question: 'Cosa ti farebbe partire bene questa settimana?', question_date: '2026-10-05' };
 
-test('M10A: una sola colonna Oggi — priorità, poi Calendario, poi Domanda del giorno; i widget passivi restano sotto', () => {
+test('M10A follow-up: Oggi keeps only the actionable notice outside the retired Calendar/Daily stack', () => {
   const stack = hero.match(/<div class="us-oggi-stack" id="usOggiStack">[\s\S]*?\n {6}<\/div>/)?.[0] || '';
-  assert.ok(stack, 'Oggi stack exists inside the hero');
-  const order = ['id="usTodayPriorityRegion"', 'id="usOggiCalendarWidget"', 'id="usDailyRitual"'].map((id) => stack.indexOf(id));
-  assert.ok(order.every((i) => i >= 0), 'the three regions live in the stack');
-  assert.deepEqual([...order].sort((a, b) => a - b), order, 'priority → calendar → daily question');
+  assert.ok(stack, 'legacy Oggi stack remains mounted for existing authorities');
+  assert.equal(stack.indexOf('id="usTodayPriorityRegion"'), -1, 'personal notice no longer lives in the retired stack');
+  assert.ok(hero.indexOf('id="usTodayPriorityRegion"') >= 0, 'personal notice remains inside the Home hero');
+  assert.ok(hero.indexOf('id="usTodayPriorityRegion"') < hero.indexOf('id="usOggiStack"'), 'notice is structurally separate from the retired stack');
+  for (const legacy of ['id="usOggiCalendarWidget"', 'id="usDailyRitual"']) assert.ok(stack.indexOf(legacy) >= 0, `${legacy} remains mounted for its authority`);
   for (const passive of ['id="distanceWidget"', 'id="pushOptInCard"', 'id="homeEmptyState"']) {
-    assert.equal(stack.indexOf(passive), -1, `${passive} is not in the priority stack`);
-    assert.ok(hero.indexOf(passive) > hero.indexOf('id="usOggiStack"'));
+    assert.equal(stack.indexOf(passive), -1, `${passive} is not in the retired stack`);
   }
-  // One flow container: children are not absolutely positioned against each other.
-  assert.match(css, /\.us-oggi-stack\{position:absolute;[^}]*display:flex;flex-direction:column;gap:8px/);
-  assert.match(css, /\.us-oggi-widgets\{position:relative;/);
-  assert.match(css, /\.us-daily-ritual\{position:relative;/);
-  assert.match(css, /#usTodayPriorityRegion\{position:relative;/);
-  assert.doesNotMatch(css, /\.us-daily-ritual\{[^}]*bottom:calc/, 'the Daily Question is no longer pinned to the bottom');
-  // No duplicate Calendar data: one widget region, M6E authority unchanged.
+  assert.match(css, /#home #usOggiStack\{height:0!important;[^}]*visibility:hidden!important;[^}]*pointer-events:none!important\}/);
+  assert.match(css, /#home #usTodayPriorityRegion\{[\s\S]*?position:fixed!important;[\s\S]*?bottom:calc\(10px \+ var\(--us-safe-bottom\) \+ var\(--us-nav-height\) \+ 12px\)!important;/);
   assert.equal((html.match(/id="usOggiCalendarWidget"/g) || []).length, 1);
   assert.match(app, /const fact=await window\.getOggiCalendarInsightSource\?\.\(\);/);
-  // Taps on the stack never toggle Focus Photo; Focus Photo fades and inerts all of it.
-  assert.match(app, /target\.closest\('\.us-oggi-stack,/);
+  assert.match(app, /target\.closest\('#usTodayPriorityRegion,/);
   assert.match(app, /const fadeTargets=\[document\.getElementById\('usTodayPriorityRegion'\),document\.getElementById\('usOggiCalendarWidget'\),document\.getElementById\('usDailyRitual'\)/);
 });
 

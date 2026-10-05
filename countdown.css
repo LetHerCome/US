@@ -1,7 +1,6 @@
 /* One timepiece on the existing photograph. Six treatments, no new assets. */
 .us-countdown-display[hidden],.us-countdown-overlay [hidden]{display:none!important}
-.us-countdown-entry{position:absolute;z-index:5;right:16px;bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 16px);width:44px;height:44px;padding:0;display:grid;place-items:center;border:0;border-radius:50%;background:rgba(10,10,16,.18);color:#fff;backdrop-filter:blur(8px);cursor:pointer}
-.us-countdown-entry .us-icon{width:19px;height:19px}
+.us-countdown-entry{display:none!important}
 .us-countdown-display{position:relative;z-index:4;grid-area:time;align-self:start;justify-self:center;max-width:100%;padding:0 12px;border:0;background:none;color:#fff;cursor:pointer;text-align:center;min-height:44px;transition:opacity .25s}
 /* Hero and top bar already share safe-top; reserve the chrome plus a small gap. */
 #homeHero[data-us-countdown]{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"time" "attention";gap:18px;padding:calc(var(--us-top-chrome-height) + 22px) 20px calc(var(--us-nav-height) + var(--us-safe-bottom) + 88px)}
@@ -41,8 +40,8 @@
 /* Cromo: heavy sculptural type, silver highlights, dark engraved edge. */
 [data-countdown-style="chrome"] .us-countdown-number{font-family:var(--us-font-body,Inter,sans-serif);font-weight:850;letter-spacing:-.085em;background:linear-gradient(175deg,#fff 5%,#e0e6ef 25%,#718090 44%,#f7f4fb 48%,#fff 54%,#aeb6c2 74%,#f5ebef);background-clip:text;-webkit-background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 1px 0 #29313f) drop-shadow(0 5px 0 rgba(19,24,33,.55)) drop-shadow(0 14px 18px rgba(0,0,0,.4));}
 [data-countdown-style="chrome"] .us-countdown-title{text-transform:uppercase;font-size:9px;letter-spacing:.24em;}
-.us-oggi-focus .us-countdown-display,.us-oggi-focus .us-countdown-entry{opacity:0;pointer-events:none;}
-.us-countdown-display:focus-visible,.us-countdown-entry:focus-visible,.us-countdown-style:focus-visible{outline:2px solid var(--us-color-accent-ink);outline-offset:5px;}
+.us-oggi-focus .us-countdown-display{opacity:0;pointer-events:none;}
+.us-countdown-display:focus-visible,.us-countdown-style:focus-visible{outline:2px solid var(--us-color-accent-ink);outline-offset:5px;}
 /* Canonical sheet, content scrolls including the action when the keyboard opens. */
 .us-countdown-overlay{position:fixed;inset:0;z-index:1000;display:none;align-items:end;justify-content:center;}
 .us-countdown-overlay[aria-hidden="false"]{display:flex;}
