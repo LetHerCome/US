@@ -41,6 +41,8 @@ test('Noi Lavagna: it replaces the Calendar tile and reads the existing calendar
   assert.match(source, /window\.openCalendarSurface\?\.\(date\)/);
   assert.doesNotMatch(source, /localStorage|sessionStorage|indexedDB|\.insert\(|\.update\(|\.upsert\(|sb\.rpc\(/);
   assert.match(calendar, /if \(\$\('bond'\)\?\.classList\.contains\('active'\)\) window\.refreshNoiWeekBoard\?\.\(\);/);
+  assert.match(source, /keep the last resolved board visible while the canonical calendar refreshes/);
+  assert.doesNotMatch(source, /if \(body\) body\.innerHTML = '<span class="noi-week-board-loading">Carico gli impegni…<\/span>';/, 'same-couple refresh never replaces resolved Lavagna with a loader');
 });
 
 function dailyModel(state, reveal = null) {
