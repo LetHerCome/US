@@ -1077,8 +1077,8 @@ body:has(#home.active #usTodayPriorityRegion:not([hidden])) .us-daily-nudge{
   content:"";
   position:absolute;
   z-index:0;
-  top:0;
-  bottom:0;
+  top:55px;
+  bottom:11px;
   left:67px;
   width:1px;
   background:linear-gradient(180deg,transparent 4%,rgba(255,153,187,.17) 22%,rgba(255,153,187,.10) 82%,transparent 98%);
