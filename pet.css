@@ -5,7 +5,20 @@
 .us-pet-layer{position:fixed;z-index:var(--us-layer-ambient);left:50%;bottom:calc(max(8px,var(--us-safe-bottom)) + var(--us-pet-nav-h,68px) - 3px);width:var(--us-pet-track,min(456px,calc(100% - 18px)));height:40px;transform:translateX(-50%);pointer-events:none;contain:layout style size;transition:opacity 220ms var(--us-ease-standard),visibility 0s linear 0s}
 .us-pet-layer[hidden]{display:none!important}
 .us-pet-layer,.us-pet-layer *{pointer-events:none!important;user-select:none;-webkit-user-select:none}
-.us-pet-actor{position:absolute;left:14px;bottom:0;width:40px;height:40px;transform:translate3d(var(--us-pet-x,6px),0,0);transition:transform var(--us-pet-move,0ms) linear;will-change:transform}
+.us-pet-actor{position:absolute;left:14px;bottom:0;width:40px;height:40px;transform:translate3d(calc(var(--us-pet-x,6px) + var(--us-pet-dx,0px)),var(--us-pet-dy,0px),0);transition:transform var(--us-pet-move,0ms) linear;will-change:transform}
+/* Maudit V1 — the layer above stays pointer-transparent. Only this bounded
+   target on the cat itself takes a touch; it moves with the actor and it is
+   gone whenever Maudit is (hidden layer, visibility:hidden, inert, Off). Its
+   bottom stays clear of the nav so a tab never loses its tap. */
+.us-pet-layer .us-pet-hit{position:absolute;left:14px;bottom:4px;width:40px;height:34px;transform:translate3d(calc(var(--us-pet-x,6px) + var(--us-pet-dx,0px)),var(--us-pet-dy,0px),0);transition:transform var(--us-pet-move,0ms) linear;pointer-events:auto!important;touch-action:pan-y;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;cursor:grab}
+/* On a card plane the layer is a short segment of that card's rim, placed in
+   document coordinates so it scrolls with the card; off the safe band it hides. */
+.us-pet-layer[data-pet-plane]:not([data-pet-plane="nav"]){position:absolute;left:var(--us-pet-plane-left);top:var(--us-pet-plane-top);bottom:auto;width:var(--us-pet-plane-w);transform:none}
+.us-pet-layer[data-pet-offstage]{opacity:0;visibility:hidden;transition:opacity 120ms var(--us-ease-standard),visibility 0s linear 120ms}
+.us-pet-layer[data-pet-state="held"] .us-pet-actor,.us-pet-layer[data-pet-state="held"] .us-pet-hit{transition:transform 70ms cubic-bezier(.2,.7,.3,1);cursor:grabbing}
+.us-pet-layer[data-pet-state="snap"] .us-pet-actor,.us-pet-layer[data-pet-state="snap"] .us-pet-hit{transition:transform 240ms cubic-bezier(.3,.6,.35,1)}
+.us-pet-layer[data-pet-flip] .us-pet-actor,.us-pet-layer[data-pet-flip] .us-pet-hit{transition:none!important}
+.us-pet-layer[data-pet-arrive] .us-pet-actor{animation:us-pet-arrive 240ms var(--us-ease-standard) both}
 /* Each renderer owns one host inside the actor, so replacing a renderer is atomic. */
 .us-pet-renderer{position:absolute;inset:0;display:block}
 .us-pet-figure{position:absolute;inset:0;transform-origin:50% 100%;transition:transform 160ms var(--us-ease-standard)}
@@ -63,6 +76,28 @@ body:has(.auth-overlay:not(.hidden)) .us-pet-layer{opacity:0;visibility:hidden;t
 .us-pet-layer[data-pet-state="react"] .k-ear{transform:scale(1.14)}
 .us-pet-layer[data-pet-state="react"] .k-eyes-open{transform:scale(1.1)}
 .us-pet-layer[data-pet-state="react"] .k-tail{transform:rotate(34deg);animation:us-kitten-quiver .18s ease-in-out 4 alternate}
+/* pet — a stroke: head lifts into the hand, ears ease back, eyes soften shut,
+   the body settles and the tail answers once. No text, no hop, no heart. */
+.us-pet-layer[data-pet-state="pet"] .k-head{transform:rotate(-9deg) translateY(-.3px)}
+.us-pet-layer[data-pet-state="pet"] .k-ear{transform:rotate(-12deg) scale(.94)}
+.us-pet-layer[data-pet-state="pet"] .k-eyes-open{opacity:0}
+.us-pet-layer[data-pet-state="pet"] .k-eyes-closed{opacity:1}
+.us-pet-layer[data-pet-state="pet"] .k-body{transform:scale(1.025,.97)}
+.us-pet-layer[data-pet-state="pet"] .k-tail{animation:us-kitten-pet-tail 1.3s ease-in-out 1}
+/* held — carried by the scruff: the whole kitten hangs from the back of the
+   neck, legs dangle loose, tail hangs relaxed, head stays calm and a little up. */
+.us-pet-kitten{transition:transform 200ms var(--us-ease-standard)}
+.us-pet-layer[data-pet-state="held"] .us-pet-shadow{opacity:0;transform:scale(.5)}
+.us-pet-layer[data-pet-state="held"] .us-pet-kitten{transform-origin:62% 38%;transform:rotate(-28deg);animation:us-kitten-dangle 1.9s ease-in-out .2s infinite alternate}
+.us-pet-layer[data-pet-state="held"] .k-head{transform:rotate(14deg)}
+.us-pet-layer[data-pet-state="held"] .k-ear{transform:rotate(-8deg)}
+.us-pet-layer[data-pet-state="held"] .k-eyes-open{transform:scaleY(.8)}
+.us-pet-layer[data-pet-state="held"] .k-body{transform:scale(.95,1.05)}
+.us-pet-layer[data-pet-state="held"] .k-leg-front-near,.us-pet-layer[data-pet-state="held"] .k-leg-front-far{transform:rotate(30deg) scaleY(1.08)}
+.us-pet-layer[data-pet-state="held"] .k-leg-hind-near,.us-pet-layer[data-pet-state="held"] .k-leg-hind-far{transform:rotate(30deg) scaleY(1.12)}
+.us-pet-layer[data-pet-state="held"] .k-tail{transform:rotate(-118deg) scale(.86)}
+/* snap — lands on the plane: travel is the actor transition, then one soft squash. */
+.us-pet-layer[data-pet-state="snap"] .us-pet-kitten{animation:us-pet-land 180ms ease-out 230ms 1}
 @keyframes us-kitten-breathe{0%,100%{transform:none}50%{transform:scale(1.02,1.035)}}
 @keyframes us-kitten-sway{from{transform:rotate(-6deg)}to{transform:rotate(9deg)}}
 @keyframes us-kitten-blink{0%,90%,96%,100%{transform:none}93%{transform:scaleY(.1)}}
@@ -71,6 +106,10 @@ body:has(.auth-overlay:not(.hidden)) .us-pet-layer{opacity:0;visibility:hidden;t
 @keyframes us-kitten-sleep{0%,100%{transform:translateY(3.4px) scale(1.06,.9)}50%{transform:translateY(3.2px) scale(1.08,.93)}}
 @keyframes us-kitten-quiver{from{transform:rotate(30deg)}to{transform:rotate(38deg)}}
 @keyframes us-pet-hop{0%,100%{transform:none}35%{transform:translateY(-9px)}60%{transform:translateY(0) scale(1.05,.94)}}
+@keyframes us-kitten-pet-tail{0%,100%{transform:none}35%{transform:rotate(14deg)}70%{transform:rotate(-5deg)}}
+@keyframes us-kitten-dangle{from{transform:rotate(-31deg)}to{transform:rotate(-25deg)}}
+@keyframes us-pet-land{0%,100%{transform:none}45%{transform:scale(1.05,.93)}}
+@keyframes us-pet-arrive{from{opacity:0}to{opacity:1}}
 @keyframes us-pet-shadow{0%,100%{transform:none}35%{transform:scale(.6);opacity:.5}}
 
 /* Background, reduced motion: same poses, no movement at all. */

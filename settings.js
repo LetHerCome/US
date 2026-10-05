@@ -130,6 +130,7 @@ async function hydrateUsSettings(){
   $('usStoryArchiveValue').textContent=Number(archiveRes.count||0)?String(archiveRes.count):'';
   $('usDistanceUnitValue').textContent=unit==='mi'?'miglia':'km';
   const feedbackValue=$('usFeedbackValue');if(feedbackValue)feedbackValue.textContent=feedbackSummary();
+  syncMauditSetting();
   $('usSettingsBuild').textContent=currentBuild();
 
   const locEl=$('usLocationState');
@@ -291,6 +292,21 @@ function feedbackModal(){
     const value=$('usFeedbackValue');if(value)value.textContent=feedbackSummary();
     if(next)window.UsFeedback?.[btn.dataset.feedback==='sounds'?'tap':'action']?.();
   }));
+}
+
+// Maudit V1 — device-local On/Off, owned by USPet (pet.js). Off unmounts it.
+function mauditEnabled(){
+  if(typeof window.USPet?.isEnabled==='function')return window.USPet.isEnabled();
+  try{return localStorage.getItem('us:maudit:v1:enabled')!=='0';}catch(_){return true;}
+}
+function syncMauditSetting(){
+  const row=$('usMauditSetting');
+  if(row)row.setAttribute('aria-checked',mauditEnabled()?'true':'false');
+}
+function toggleMaudit(){
+  const next=!mauditEnabled();
+  window.USPet?.setEnabled?.(next); // USPet owns the device-local preference
+  syncMauditSetting();
 }
 
 async function notificationsModal(){
@@ -456,6 +472,7 @@ async function action(name){
   if(name==='distance')return distanceModal();
   if(name==='location')return locationAction();
   if(name==='feedback')return feedbackModal();
+  if(name==='maudit')return toggleMaudit();
   if(name==='sync-status')return syncStatusModal();
   if(name==='scriptable-widgets')return scriptableWidgetsModal();
   if(name==='privacy')return privacyModal();
@@ -476,6 +493,7 @@ function hydrateWhenHomeSettles(){
 }
 
 function boot(){
+  syncMauditSetting();
   document.querySelectorAll('[data-us-setting]').forEach(row=>row.addEventListener('click',()=>action(row.dataset.usSetting)));
   document.querySelectorAll('[data-us-settings-close]').forEach(el=>el.addEventListener('click',closeModal));
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('usSettingsOverlay')?.classList.contains('open'))closeModal();});

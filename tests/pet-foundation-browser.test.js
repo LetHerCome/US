@@ -47,7 +47,9 @@ const geometry=page=>page.evaluate(()=>{
  const nav=document.querySelector('.nav'),layer=document.getElementById('usPetLayer'),actor=layer.querySelector('.us-pet-actor');
  const tabs=[...nav.querySelectorAll('button')].map(b=>{const r=b.getBoundingClientRect();const hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return b.contains(hit);});
  const a=actor.getBoundingClientRect();const onPet=document.elementFromPoint(a.x+a.width/2,a.y+a.height/2);
- return {nav:box(nav),layer:box(layer),actor:box(actor),tabs,petTakesInput:Boolean(onPet&&layer.contains(onPet)),visibility:getComputedStyle(layer).visibility,sw:document.scrollingElement.scrollWidth,w:innerWidth};
+ // Maudit V1: only its bounded hit target takes input; the rest of the layer stays transparent.
+ const beside=document.elementFromPoint(Math.min(innerWidth-2,a.right+30),a.y+a.height/2);
+ return {nav:box(nav),layer:box(layer),actor:box(actor),tabs,petTakesInput:onPet&&layer.contains(onPet)?(onPet.classList.contains('us-pet-hit')?'hit':'layer'):'none',besideIsPet:Boolean(beside&&layer.contains(beside)),visibility:getComputedStyle(layer).visibility,sw:document.scrollingElement.scrollWidth,w:innerWidth};
 });
 
 test('PET production kitten mounts without a preview query',async t=>{
@@ -70,7 +72,7 @@ test('PET preview lives on the nav rim, never covers or blocks a tab, at every b
   assert.ok(m.layer.x>=m.nav.x-.5&&m.layer.right<=m.nav.right+.5,`${width}×${height} pet stays inside the nav width`);
   assert.ok(m.actor.x>=m.nav.x&&m.actor.right<=m.nav.right,`${width}×${height} actor inside track`);
   assert.deepEqual(m.tabs,[true,true,true,true],`${width}×${height} every tab still receives its tap`);
-  assert.equal(m.petTakesInput,false);assert.ok(m.sw<=m.w);
+  assert.equal(m.petTakesInput,'hit','only Maudit\'s own hit target takes a touch');assert.equal(m.besideIsPet,false,'the layer around Maudit stays transparent');assert.ok(m.sw<=m.w);
   await page.evaluate(()=>window.USPet.react('reward'));
   assert.equal(await page.evaluate(()=>document.getElementById('usPetLayer').dataset.petState),'react');
   await shot(page,`pet-preview-${width}x${height}`);
