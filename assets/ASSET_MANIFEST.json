@@ -170,6 +170,16 @@
       "source": "assets/source/ui/us-icon-stories-v1.png",
       "sourceSha256": "455422f08fe0334bfc6d780ace5f1881d84f878e4c41b676c7daa7ef6858bc06",
       "operation": "AREA_AVERAGE_DOWNSCALE_128_PRESERVE_ASPECT"
+    },
+    {
+      "path": "assets/source/pet/us-pet-kitten-base-v0.svg",
+      "status": "APPROVED",
+      "sha256": "a86b0cf1e8d7e30e3655c218e0bd288d65c43c1694767b72b317f330001705d9",
+      "immutable": true,
+      "purpose": "Owner-approved temporary production PET v0: white/gray kitten with blue eyes",
+      "usedBy": [
+        "pet-production"
+      ]
     }
   ]
 }
