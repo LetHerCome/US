@@ -41,7 +41,8 @@
 
 /* M5F sender composer: private object, same glass language as the receiver. */
 .left-for-you-composer-body{display:grid;gap:12px}
-.left-for-you-composer-kinds{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+/* minmax(0,1fr): five kinds always share the sheet width, never push it wider (320px). */
+.left-for-you-composer-kinds{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
 .left-for-you-composer-kinds button{min-height:36px;padding:0 4px;border:1px solid rgba(255,234,247,.10);border-radius:12px;background:rgba(255,255,255,.04);color:rgba(247,242,248,.62);font-size:11px;font-weight:600}
 .left-for-you-composer-kinds button.is-active{border-color:rgba(246,111,158,.34);background:linear-gradient(115deg,rgba(235,73,141,.28),rgba(113,79,207,.24));color:var(--us-color-text)}
 .left-for-you-composer-text{width:100%;padding:14px 15px;border:1px solid rgba(255,234,247,.12);border-radius:16px;background:rgba(255,255,255,.045);color:var(--us-color-text);font:400 17px/1.4 var(--us-font-editorial);resize:vertical;min-height:74px}
@@ -130,7 +131,7 @@
 .left-for-you-actions{gap:7px;padding-top:10px}
 .left-for-you-actions button{min-height:44px}
 .left-for-you-composer-kinds{gap:5px}
-.left-for-you-composer-kinds button{min-height:40px;padding:0 10px;font-size:10.5px}
+.left-for-you-composer-kinds button{min-height:40px;padding:0 6px;font-size:10.5px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .left-for-you-composer-panel{margin-top:8px}
 .left-for-you-composer-text{min-height:104px}
 

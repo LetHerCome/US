@@ -451,6 +451,9 @@ html.us-returning-device .auth-overlay{
 
   <main id="settings" class="page">
     <section class="section us-settings-page us-settings2-page">
+      <div class="noi-section-bar us-settings-back-bar">
+        <button type="button" class="noi-section-back" id="usSettingsBack" aria-label="Torna a Noi"><span class="noi-section-back-icon" aria-hidden="true"></span><span>Noi</span></button>
+      </div>
       <div class="us-settings2-head">
         <h2>Impostazioni</h2>
         <div class="us-settings2-device-dot" id="usSettingsDeviceDot" aria-label="Stato sincronizzazione">•</div>
@@ -788,7 +791,7 @@ html.us-returning-device .auth-overlay{
     </header>
     <div class="conservati-body">
       <div class="conservati-loading" id="conservatiLoading" hidden aria-busy="true"><p>Carico…</p></div>
-      <div class="conservati-empty" id="conservatiEmpty" hidden><h3>Conservati</h3><p>Quello che conservate da Lasciato per te arriva qui.</p></div>
+      <div class="conservati-empty" id="conservatiEmpty" hidden><p>Quello che conservate da Lasciato per te arriva qui.</p></div>
       <div class="conservati-error" id="conservatiError" hidden><h3>Non riesco ad aprirlo</h3><button type="button" data-action id="conservatiRetry">Riprova</button></div>
       <div class="conservati-list" id="conservatiList" hidden aria-live="polite"></div>
       <div class="conservati-detail" id="conservatiDetail" hidden></div>

@@ -36,7 +36,9 @@ function go(id,options={}){
     el.classList.toggle('active',pageId===id);
   });
   if(options.nav&&!options.motionCommit&&direction)animatePageEntry(document.getElementById(id),direction);
-  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
+  // Settings opens from Noi and has no tab of its own: Noi stays the active tab.
+  const navPage=id==='settings'?'bond':id;
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===navPage));
   if(options.swipe&&!options.motionCommit)setTimeout(()=>document.getElementById(id)?.classList.remove('swipe-next','swipe-prev'),190);
   scrollTo({top:0,behavior:(options.swipe||options.motionCommit)?'auto':'smooth'});
   if(id==='moments' && window.usProfile) hydrateMoments();
@@ -3741,6 +3743,13 @@ function closeNoiSection(){
 }
 window.openNoiSection=openNoiSection;
 window.closeNoiSection=closeNoiSection;
+// Settings' back pill behaves like the system Back when Settings was opened
+// from Noi (one history step), so the trail never grows bond→settings→bond.
+document.getElementById('usSettingsBack')?.addEventListener('click',()=>{
+  const state=history.state;
+  if(state?.__usNav&&state.page==='settings'&&state.entryIndex>0)history.back();
+  else go('bond',{nav:true});
+});
 document.getElementById('noiHub')?.addEventListener('click',(event)=>{
   const card=event.target.closest('[data-noi-open]');
   if(card)openNoiSection(card.dataset.noiOpen);
