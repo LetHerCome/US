@@ -484,3 +484,33 @@ test('F5 reactions honour blockers synchronously, before the MutationObserver de
     assert.equal(busy.active(), 0);
   }
 });
+
+test('Kitten preview v0 follows the approved concept and stays preview-only', () => {
+  const spec = read('docs/missions/us-pet-asset-spec-v1.md');
+  assert.match(spec, /\*\*Concept approvato:\*\* un piccolo gattino, pelo bianco e grigio, occhi azzurri\./);
+  assert.match(spec, /asset finali NON ancora approvati/);
+  // Same part names as the final asset contract, in the documented draw order.
+  const parts = ['k-tail', 'k-leg-hind-far', 'k-leg-front-far', 'k-body', 'k-leg-hind-near', 'k-leg-front-near', 'k-head', 'k-ear-far', 'k-ear-near', 'k-face', 'k-eyes-open', 'k-eyes-closed', 'k-nose', 'k-mouth', 'k-collar'];
+  let last = -1;
+  for (const part of parts) {
+    assert.ok(spec.includes(`\`${part}\``), `spec documents ${part}`);
+    const at = petJs.search(new RegExp(`class="(?:[a-z-]+ )*${part}[ "]`));
+    assert.ok(at > last, `${part} drawn in order`);
+    last = at;
+  }
+  // Palette: white/gray fur, blue iris, no theme colour in the fur.
+  for (const hex of ['#fbf8f4', '#a7acb5', '#7c818b', '#b4dcff', '#5e9ce0', '#3a6cab']) assert.ok(petJs.includes(hex), hex);
+  assert.equal((petJs.match(/var\(--us-color-accent-strong/g) || []).length, 1, 'only the collar accessory takes the theme accent');
+  assert.match(petJs, /data-pet-placeholder data-pet-preview="kitten-v0"/);
+  assert.match(petJs, /id:'placeholder',\n  mount\(host\)\{\n    host\.innerHTML='<span class="us-pet-shadow"><\/span><span class="us-pet-figure" data-pet-placeholder data-pet-preview="kitten-v0">'\+KITTEN_PREVIEW_SVG/);
+  assert.equal(Pet.canMount('placeholder'), false, 'the kitten preview is never a production renderer');
+  const manifest = read('assets/ASSET_MANIFEST.json');
+  assert.doesNotMatch(manifest, /kitten|\/pet\//, 'the preview is not registered as an approved asset');
+  // Every state has a static pose (survives reduced motion) and only the collar accessory exists.
+  for (const [state, rule] of [['rest', /\[data-pet-state="rest"\] \.k-eyes-closed\{opacity:1\}/], ['rest', /\[data-pet-state="rest"\] \.k-leg\{opacity:0\}/], ['react', /\[data-pet-state="react"\] \.k-ear\{transform:scale\(1\.14\)\}/], ['walk', /\[data-pet-state="walk"\] \.k-tail\{transform:rotate\(16deg\)\}/]]) {
+    assert.match(petCss, rule, state);
+  }
+  assert.match(petCss, /\.us-pet-layer\[data-pet-accessory="collar"\] \.us-pet-kitten \.k-collar\{display:inline\}/);
+  assert.doesNotMatch(petCss, /data-pet-placeholder\]\{outline/, 'no dashed debug slot around the kitten');
+  assert.doesNotMatch(petJs + petCss, /[\u{1F300}-\u{1FAFF}❤♥]/u, 'no emoji or heart glyphs');
+});
