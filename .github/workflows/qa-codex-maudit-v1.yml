@@ -1,0 +1,85 @@
+name: Codex Maudit V1 Review
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  linux_review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Focused Maudit + PET + Settings + navigation
+        run: |
+          node --test tests/maudit-interaction.test.js
+          node --test tests/maudit-interaction-browser.test.js
+          node --test tests/pet-foundation.test.js tests/pet-foundation-browser.test.js
+          node --test tests/navigation-soak-browser.test.js tests/us-human-ui-02.test.js
+      - name: M12B geometry candidate repeated
+        run: |
+          for i in 1 2 3 4 5; do
+            echo "candidate geometry run $i"
+            node --test tests/m12b-oggi-no-scroll.test.js
+          done
+      - name: Candidate full suite
+        id: candidate_full
+        continue-on-error: true
+        run: npm test
+      - name: Candidate geometry after full suite
+        if: always()
+        run: node --test tests/m12b-oggi-no-scroll.test.js
+      - name: Base full suite, same runner
+        id: base_full
+        continue-on-error: true
+        shell: bash
+        run: |
+          git checkout --detach origin/main
+          node --test
+      - name: Base geometry repeated, same runner
+        if: always()
+        shell: bash
+        run: |
+          for i in 1 2 3; do
+            echo "base geometry run $i"
+            node --test tests/m12b-oggi-no-scroll.test.js
+          done
+      - name: Return to candidate
+        if: always()
+        run: git checkout --detach ${{ github.event.pull_request.head.sha }}
+      - name: Cloudflare build
+        if: always()
+        run: npm run build:cloudflare-pages
+      - name: Diff check candidate payload only
+        if: always()
+        shell: bash
+        run: git diff --check origin/main..8bc3e72539d2a79c44a667228c39b8484a78fbf3
+
+  windows_capacitor:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 8bc3e72539d2a79c44a667228c39b8484a78fbf3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Capacitor web build on Windows
+        run: npm run build:capacitor-web
