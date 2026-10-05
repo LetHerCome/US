@@ -150,9 +150,10 @@ function canMount(id,{preview=false}={}){
   return renderers.has(id)&&(id!=='placeholder'||preview===true);
 }
 
-// The one runtime decision on whether the PET may live right now. Every surface
-// that owns the space above the nav (or makes the shell non-interactive) is a
-// blocker; pet.css mirrors the same list visually.
+// The one runtime decision on whether the PET may live right now. Transient
+// notifications (Daily nudge / Ti penso toast) are deliberately NOT blockers:
+// the PET has its own pointer-transparent overlay layer above them. Only surfaces
+// that make the shell non-interactive or need exclusive focus stop the PET.
 function blockers(d,layer,{pageHidden=false}={}){
   const body=d.body,has=(node,name)=>Boolean(node?.classList?.contains?.(name));
   const list=[];
@@ -161,8 +162,6 @@ function blockers(d,layer,{pageHidden=false}={}){
   if(layer?.hasAttribute?.('inert'))list.push('inert');
   if(has(body,'us-status-visible'))list.push('status');
   if(has(body,'us-update-visible'))list.push('update');
-  const nudge=d.getElementById('usDailyNudge');if(nudge&&!nudge.hidden)list.push('nudge');
-  if(has(d.getElementById('toast'),'show'))list.push('toast');
   if(has(d.getElementById('homeHero'),'us-oggi-focus'))list.push('focus');
   if([...(d.querySelectorAll?.('.auth-overlay')||[])].some(node=>!has(node,'hidden')))list.push('auth');
   return list;
@@ -241,8 +240,6 @@ function install(w){
     const watch=(node,attributes)=>{if(node)observer.observe(node,{attributes:true,attributeFilter:attributes});};
     watch(d.body,['class']);
     watch(layer,['inert']);
-    watch(d.getElementById('usDailyNudge'),['hidden']);
-    watch(d.getElementById('toast'),['class']);
     watch(d.getElementById('homeHero'),['class']);
     (d.querySelectorAll?.('.auth-overlay')||[]).forEach(node=>watch(node,['class']));
   }
