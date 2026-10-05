@@ -1055,3 +1055,202 @@ body:has(#home.active #usTodayPriorityRegion:not([hidden])) .us-daily-nudge{
 .us-daily-nudge-cta{flex:0 0 auto;font-size:11px;font-weight:750;color:#ffd3e3}
 @media(max-height:640px){.noi-week-board-shell{padding:11px 12px}.noi-week-board-body{gap:5px;margin-top:8px}.noi-week-board-copy{padding:5px 0}.us-daily-nudge{bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 8px)}}
 @media(prefers-reduced-motion:reduce){.us-daily-nudge{transition:none!important}}
+
+/* ===== US-NOI-CARDS-POLISH-01 · Lavagna + Sintonia identity pass =====
+   Presentation only: no data, navigation, progression or calendar behavior changes. */
+
+/* Lavagna: a shared-week surface, closer to an intimate agenda than a generic card. */
+#bond .noi-week-board-shell{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  padding:15px 16px 13px;
+  border-color:rgba(255,210,226,.12);
+  background:
+    radial-gradient(110% 95% at 4% -10%,rgba(255,121,163,.11),transparent 48%),
+    linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018)),
+    repeating-linear-gradient(180deg,transparent 0 31px,rgba(255,255,255,.022) 31px 32px),
+    rgba(17,13,20,.82);
+  box-shadow:0 14px 34px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.055);
+}
+#bond .noi-week-board-shell::before{
+  content:"";
+  position:absolute;
+  z-index:0;
+  top:55px;
+  bottom:11px;
+  left:67px;
+  width:1px;
+  background:linear-gradient(180deg,transparent 4%,rgba(255,153,187,.17) 22%,rgba(255,153,187,.10) 82%,transparent 98%);
+  pointer-events:none;
+}
+#bond .noi-week-board-shell::after{
+  content:"";
+  position:absolute;
+  z-index:0;
+  width:86px;
+  height:86px;
+  top:-55px;
+  right:52px;
+  border-radius:50%;
+  border:1px solid rgba(255,192,214,.12);
+  box-shadow:0 0 38px rgba(255,112,158,.055),inset 0 0 28px rgba(169,133,255,.035);
+  pointer-events:none;
+}
+#bond .noi-week-board-shell>*{position:relative;z-index:1}
+#bond .noi-week-board-head{align-items:center;gap:10px}
+#bond .noi-week-board-head>span:first-child{gap:1px}
+#bond .noi-week-board-head small{
+  color:rgba(255,186,209,.72);
+  letter-spacing:.18em;
+}
+#bond .noi-week-board-head b{
+  font-size:23px;
+  line-height:1.02;
+  letter-spacing:-.015em;
+}
+#bond .noi-week-board-open{
+  display:inline-flex;
+  min-height:30px;
+  align-items:center;
+  padding:0 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.075);
+  background:rgba(255,255,255,.035);
+  color:rgba(247,242,248,.72);
+  font-size:9.5px;
+  font-weight:650;
+}
+#bond .noi-week-board-body{gap:4px;margin-top:11px}
+#bond .noi-week-board-row{
+  grid-template-columns:60px minmax(0,1fr);
+  gap:9px;
+  min-height:34px;
+}
+#bond .noi-week-board-day{
+  justify-self:start;
+  display:inline-flex;
+  align-items:center;
+  min-height:24px;
+  padding:0 7px;
+  border-radius:999px;
+  border:1px solid rgba(255,168,198,.095);
+  background:rgba(255,126,169,.045);
+  color:#ffb7cf;
+  font-size:8px;
+  letter-spacing:.13em;
+}
+#bond .noi-week-board-copy{
+  min-height:34px;
+  padding:7px 0;
+  border-top:1px solid rgba(255,255,255,.055);
+}
+#bond .noi-week-board-row:first-child .noi-week-board-copy{
+  border-top:0;
+  padding-top:7px;
+}
+#bond .noi-week-board-copy b{font-size:12.25px;letter-spacing:-.01em}
+#bond .noi-week-board-copy small{font-size:10px;color:rgba(247,242,248,.62)}
+#bond .noi-week-board-more{
+  margin-top:2px;
+  padding-left:69px;
+  color:rgba(247,242,248,.47);
+  font-size:9.75px;
+}
+
+/* Sintonia: two overlapping orbits make the relationship object recognisable
+   without introducing a second score, copy or decorative asset. */
+#bond .noi-hub-card--resonance{
+  min-height:116px;
+  padding:13px 14px 12px;
+  border-color:rgba(255,182,209,.15);
+  background:
+    linear-gradient(124deg,rgba(89,31,65,.32),transparent 46%),
+    linear-gradient(155deg,rgba(42,24,51,.92),rgba(19,14,26,.91) 64%,rgba(14,12,19,.94));
+  box-shadow:0 15px 34px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.08);
+}
+#bond .noi-hub-card--resonance::before,
+#bond .noi-hub-card--resonance::after{
+  content:"";
+  display:block;
+  position:absolute;
+  z-index:0;
+  width:106px;
+  height:106px;
+  border-radius:50%;
+  background:transparent;
+  pointer-events:none;
+}
+#bond .noi-hub-card--resonance::before{
+  inset:-32px 34px auto auto;
+  border:1px solid rgba(255,160,195,.18);
+  box-shadow:0 0 44px rgba(255,104,151,.075),inset 0 0 34px rgba(255,104,151,.035);
+}
+#bond .noi-hub-card--resonance::after{
+  right:-21px;
+  top:-15px;
+  border:1px solid rgba(182,153,255,.17);
+  box-shadow:0 0 42px rgba(169,133,255,.06),inset 0 0 30px rgba(169,133,255,.03);
+  opacity:1;
+}
+#bond .noi-hub-card--resonance>*{position:relative;z-index:1}
+#bond .noi-hub-card--resonance .noi-hub-icon{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  background:linear-gradient(145deg,rgba(255,147,184,.15),rgba(169,133,255,.09));
+  box-shadow:inset 0 0 0 1px rgba(255,210,226,.14),0 5px 18px rgba(255,99,151,.08);
+}
+#bond .noi-hub-card--resonance .noi-hub-icon::before{width:18px;height:18px}
+#bond .noi-hub-card--resonance .noi-hub-copy{gap:1px;margin-top:10px}
+#bond .noi-hub-card--resonance .noi-hub-kicker{
+  color:#ffb6cf;
+  font-size:9px;
+  letter-spacing:.16em;
+}
+#bond .noi-hub-card--resonance .noi-hub-copy b{
+  max-width:78%;
+  font-size:24px;
+  line-height:1.02;
+  letter-spacing:-.02em;
+  text-shadow:0 6px 24px rgba(0,0,0,.22);
+}
+#bond .noi-hub-card--resonance .noi-hub-copy small{
+  max-width:78%;
+  margin-top:2px;
+  font-size:11px;
+  color:rgba(247,242,248,.58);
+}
+#bond .noi-hub-card--resonance .noi-hub-track{
+  height:5px;
+  margin-top:9px;
+  padding:1px;
+  background:rgba(255,255,255,.075);
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.22);
+}
+#bond .noi-hub-card--resonance .noi-hub-track>span{
+  height:3px;
+  box-shadow:0 0 12px rgba(255,102,142,.30);
+}
+
+@media(max-width:340px){
+  #bond .noi-week-board-shell{padding-inline:13px}
+  #bond .noi-week-board-shell::before{left:61px}
+  #bond .noi-week-board-row{grid-template-columns:54px minmax(0,1fr);gap:8px}
+  #bond .noi-week-board-more{padding-left:62px}
+  #bond .noi-week-board-open{padding-inline:8px;font-size:9px}
+  #bond .noi-hub-card--resonance .noi-hub-copy b,
+  #bond .noi-hub-card--resonance .noi-hub-copy small{max-width:74%}
+}
+@media(max-height:700px){
+  #bond .noi-week-board-shell{padding-top:12px;padding-bottom:10px}
+  #bond .noi-week-board-body{margin-top:8px}
+  #bond .noi-week-board-row{min-height:30px}
+  #bond .noi-week-board-copy{min-height:30px;padding-block:5px}
+  #bond .noi-week-board-row:first-child .noi-week-board-copy{padding-top:5px}
+  #bond .noi-hub-card--resonance{min-height:102px;padding:10px 12px 9px}
+  #bond .noi-hub-card--resonance .noi-hub-copy{margin-top:6px}
+  #bond .noi-hub-card--resonance .noi-hub-copy b{font-size:21px}
+  #bond .noi-hub-card--resonance::before,
+  #bond .noi-hub-card--resonance::after{width:90px;height:90px}
+}
