@@ -1,4 +1,4 @@
-const BUILD_ID = "us-android-pwa-navigation-hardening-v1-20261005-1";
+const BUILD_ID = "us-rewards-countdown-pet-foundation-v1-20261005-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -40,6 +40,8 @@ const APP_SHELL = [
   versioned("/progression.js"),
   versioned("/countdown.css"),
   versioned("/countdown.js"),
+  versioned("/pet.css"),
+  versioned("/pet.js"),
   versioned("/home-cleanup.js"),
   versioned("/settings.css"),
   versioned("/settings.js"),

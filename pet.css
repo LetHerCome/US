@@ -1,0 +1,53 @@
+/* US PET Foundation V1 — one small companion on the rim of the bottom nav.
+   The layer never takes input and never overlaps the four tabs: it stands on
+   the nav's top edge, inside the nav's width. Motion is CSS only; pet.js just
+   picks the next state and target. */
+.us-pet-layer{position:fixed;z-index:19;left:50%;bottom:calc(max(8px,var(--us-safe-bottom)) + var(--us-pet-nav-h,68px) - 3px);width:var(--us-pet-track,min(456px,calc(100% - 18px)));height:40px;transform:translateX(-50%);pointer-events:none;contain:layout style size;transition:opacity 220ms var(--us-ease-standard),visibility 0s linear 0s}
+.us-pet-layer[hidden]{display:none!important}
+.us-pet-layer,.us-pet-layer *{pointer-events:none!important;user-select:none;-webkit-user-select:none}
+.us-pet-actor{position:absolute;left:14px;bottom:0;width:40px;height:40px;transform:translate3d(var(--us-pet-x,6px),0,0);transition:transform var(--us-pet-move,0ms) linear;will-change:transform}
+/* Each renderer owns one host inside the actor, so replacing a renderer is atomic. */
+.us-pet-renderer{position:absolute;inset:0;display:block}
+.us-pet-figure{position:absolute;inset:0;transform-origin:50% 100%;transition:transform 160ms var(--us-ease-standard)}
+.us-pet-layer[data-pet-facing="left"] .us-pet-figure{transform:scaleX(-1)}
+.us-pet-shadow{position:absolute;left:9px;right:9px;bottom:-1px;height:5px;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.45),transparent);transform-origin:50% 50%}
+
+/* Something else needs the space above the nav, or the shell is not interactive: step aside. */
+/* Two rules on purpose: a browser without :has() must still honour the first. */
+body.us-keyboard-open .us-pet-layer,
+.us-pet-layer[inert],
+body.us-status-visible .us-pet-layer,
+body.us-update-visible .us-pet-layer{opacity:0;visibility:hidden;transition:opacity 160ms var(--us-ease-standard),visibility 0s linear 160ms}
+body:has(#usDailyNudge:not([hidden])) .us-pet-layer,
+body:has(#toast.show) .us-pet-layer,
+body:has(#homeHero.us-oggi-focus) .us-pet-layer,
+body:has(.auth-overlay:not(.hidden)) .us-pet-layer{opacity:0;visibility:hidden;transition:opacity 160ms var(--us-ease-standard),visibility 0s linear 160ms}
+
+/* ---------- PLACEHOLDER renderer (development only, not a design proposal) ----------
+   A dashed slot marks where the approved asset will stand. Replace with the
+   renderer described in docs/missions/us-pet-asset-spec-v1.md. */
+[data-pet-placeholder]{outline:1px dashed rgba(255,255,255,.22);outline-offset:1px;border-radius:12px}
+.us-pet-body{position:absolute;left:8px;right:8px;bottom:2px;height:22px;border-radius:52% 52% 44% 44%/62% 62% 38% 38%;background:radial-gradient(70% 60% at 35% 30%,#fffaf2,#e9dfd2 55%,#b9aea3);box-shadow:inset 0 -3px 5px rgba(80,60,70,.25);transform-origin:50% 100%}
+.us-pet-eye{position:absolute;left:24px;bottom:13px;width:3px;height:4px;border-radius:2px;background:#2a2230;transform-origin:50% 50%}
+.us-pet-light{position:absolute;left:18px;bottom:28px;width:5px;height:5px;border-radius:50%;background:var(--us-color-accent-strong,#ef9bc1);box-shadow:0 0 8px var(--us-color-accent-strong,#ef9bc1);opacity:.75}
+
+.us-pet-layer[data-pet-state="idle"] .us-pet-body{animation:us-pet-breathe 2.6s ease-in-out infinite}
+.us-pet-layer[data-pet-state="walk"] .us-pet-body{animation:us-pet-step .42s ease-in-out infinite alternate}
+.us-pet-layer[data-pet-state="walk"] .us-pet-eye,.us-pet-layer[data-pet-state="walk"] .us-pet-light{animation:us-pet-step .42s ease-in-out infinite alternate}
+.us-pet-layer[data-pet-state="rest"] .us-pet-body{transform:scale(1.06,.8);animation:us-pet-sleep 4.2s ease-in-out infinite}
+.us-pet-layer[data-pet-state="rest"] .us-pet-eye{height:1px;bottom:10px}
+.us-pet-layer[data-pet-state="rest"] .us-pet-light{opacity:.35;bottom:21px}
+.us-pet-layer[data-pet-state="react"] .us-pet-figure>*{animation:us-pet-hop .8s cubic-bezier(.3,.7,.3,1) 2}
+.us-pet-layer[data-pet-state="react"] .us-pet-light{animation:us-pet-hop .8s cubic-bezier(.3,.7,.3,1) 2,us-pet-flare 1.6s ease-out 1}
+.us-pet-layer[data-pet-state="react"] .us-pet-shadow{animation:us-pet-shadow .8s cubic-bezier(.3,.7,.3,1) 2}
+@keyframes us-pet-breathe{0%,100%{transform:none}50%{transform:scale(1.03,.97)}}
+@keyframes us-pet-step{from{transform:translateY(0)}to{transform:translateY(-2px)}}
+@keyframes us-pet-sleep{0%,100%{transform:scale(1.06,.8)}50%{transform:scale(1.08,.77)}}
+@keyframes us-pet-hop{0%,100%{transform:none}35%{transform:translateY(-10px)}60%{transform:translateY(0) scale(1.06,.92)}}
+@keyframes us-pet-flare{0%{opacity:.75;box-shadow:0 0 8px var(--us-color-accent-strong,#ef9bc1)}30%{opacity:1;box-shadow:0 0 18px 4px var(--us-color-accent-strong,#ef9bc1)}100%{opacity:.75}}
+@keyframes us-pet-shadow{0%,100%{transform:none}35%{transform:scale(.6);opacity:.5}}
+
+/* Background, reduced motion: same poses, no movement at all. */
+html[data-us-visibility="hidden"] .us-pet-layer *{animation-play-state:paused!important}
+:root[data-us-motion="reduced"] .us-pet-layer *{animation:none!important;transition:none!important}
+@media(prefers-reduced-motion:reduce){.us-pet-layer *{animation:none!important;transition:none!important}}

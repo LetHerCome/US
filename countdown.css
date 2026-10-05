@@ -1,4 +1,4 @@
-/* One timepiece on the existing photograph. Six treatments, no new assets. */
+/* One timepiece on the existing photograph. Six identities, no new assets. */
 .us-countdown-display[hidden],.us-countdown-overlay [hidden]{display:none!important}
 .us-countdown-entry{display:none!important}
 .us-countdown-display{position:relative;z-index:4;grid-area:time;align-self:start;justify-self:center;max-width:100%;padding:0 12px;border:0;background:none;color:#fff;cursor:pointer;text-align:center;min-height:44px;transition:opacity .25s}
@@ -11,35 +11,67 @@
 .us-countdown-art[data-countdown-clock="true"] .us-countdown-number{font-size:clamp(32px,11vw,56px);letter-spacing:-.045em;}
 .us-countdown-unit{font-size:12px;letter-spacing:.12em;margin-top:7px;opacity:.88;}
 .us-countdown-sub{font:500 14px/1.3 var(--us-font-body,Inter,sans-serif);font-variant-numeric:tabular-nums;letter-spacing:.08em;margin-top:8px;}
-.us-countdown-unit:empty,.us-countdown-sub:empty,.us-countdown-title:empty{display:none}
+.us-countdown-art .us-countdown-unit:empty,.us-countdown-art .us-countdown-sub:empty,.us-countdown-art .us-countdown-title:empty{display:none!important}
 .us-countdown-digit{display:inline-block;}
 .us-countdown-digit.is-changing{animation:us-countdown-tick .38s cubic-bezier(.2,.7,.2,1)}
 @keyframes us-countdown-tick{0%{opacity:.3;transform:translateY(7px);filter:blur(2px)}100%{opacity:1;transform:none;filter:none}}
-/* Editoriale: oversized serif and an almost invisible hairline. */
-[data-countdown-style="editorial"] .us-countdown-unit::before{content:"";display:block;width:22px;height:1px;background:rgba(255,255,255,.55);margin:0 auto 10px;}
-/* Segnale: compact technical digits, quiet accents. */
-[data-countdown-style="signal"] .us-countdown-number{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:clamp(62px,20vw,92px);font-weight:600;letter-spacing:-.085em;}
-[data-countdown-style="signal"] .us-countdown-title{font-family:ui-monospace,monospace;text-transform:uppercase;color:#e3d8f8;letter-spacing:.2em;font-size:9px;}
-[data-countdown-style="signal"] .us-countdown-unit{color:#e3d8f8;text-transform:uppercase;font-size:9px;letter-spacing:.3em;}
-[data-countdown-style="signal"] .us-countdown-sub{font-family:ui-monospace,monospace;color:#f2d8e6;}
-/* Vetro: a small lens; the photograph remains visible through it. */
-[data-countdown-style="glass"]{border-radius:40px;padding:22px 30px;background:linear-gradient(140deg,rgba(255,255,255,.13),rgba(255,255,255,.025));border:1px solid rgba(255,255,255,.25);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 18px 50px rgba(0,0,0,.15);backdrop-filter:blur(9px) saturate(120%);-webkit-backdrop-filter:blur(9px) saturate(120%);}
-[data-countdown-style="glass"] .us-countdown-number{font-family:var(--us-font-body,Inter,sans-serif);font-weight:250;letter-spacing:-.08em;font-size:clamp(72px,22vw,100px);}
-/* Aurora: color lives inside the type, never over the entire photograph. */
-[data-countdown-style="aurora"] .us-countdown-number{font-family:var(--us-font-body,Inter,sans-serif);font-weight:650;letter-spacing:-.09em;background:linear-gradient(120deg,#fff4ed 15%,#ffc8df 35%,#ddd2ff 55%,#bff4ec 75%,#fff4ed);background-size:220% 100%;background-clip:text;-webkit-background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 2px 10px rgba(16,10,25,.7));animation:us-countdown-aurora 14s ease-in-out infinite alternate;}
-[data-countdown-style="aurora"] .us-countdown-unit{color:#f5dcf0}
+/* Six identities, not six colors. Each style owns typography, composition and
+   at most one slow motion; the decorative layer (.us-countdown-deco) never
+   takes layout space and is paused/removed with the rest of the art. */
+.us-countdown-deco{position:absolute;z-index:-1;inset:0;pointer-events:none;border-radius:inherit;}
+.us-countdown-deco>i{display:none;}
+.us-countdown-digit.is-sep{opacity:.82;}
+/* Editoriale — a magazine cover: tracked small caps, optical serif, italic unit between hairlines. */
+[data-countdown-style="editorial"] .us-countdown-title{font:600 9.5px/1.3 var(--us-font-body,Inter,sans-serif);letter-spacing:.34em;text-transform:uppercase;margin-bottom:8px;opacity:.92;}
+[data-countdown-style="editorial"] .us-countdown-number{font-weight:300;font-size:clamp(84px,25vw,122px);letter-spacing:-.06em;font-optical-sizing:auto;}
+[data-countdown-style="editorial"] .us-countdown-unit{display:flex;align-items:center;gap:10px;font:italic 400 19px/1 var(--us-font-editorial,Newsreader,Georgia,serif);letter-spacing:.01em;margin-top:4px;opacity:.96;}
+[data-countdown-style="editorial"] .us-countdown-unit::before,[data-countdown-style="editorial"] .us-countdown-unit::after{content:"";width:22px;height:1px;background:rgba(255,255,255,.55);}
+[data-countdown-style="editorial"] .us-countdown-sub{font:italic 400 15px/1.2 var(--us-font-editorial,Newsreader,Georgia,serif);letter-spacing:.02em;}
+[data-countdown-style="editorial"] .us-countdown-digit.is-changing{animation:us-countdown-rise .46s cubic-bezier(.2,.75,.2,1);}
+@keyframes us-countdown-rise{0%{opacity:0;transform:translateY(.16em);clip-path:inset(0 0 40% 0)}100%{opacity:1;transform:none;clip-path:inset(0)}}
+/* Partenze — a station board: every digit on its own dark flap, one amber destination tag. */
+[data-countdown-style="signal"]{text-shadow:none;filter:drop-shadow(0 10px 22px rgba(0,0,0,.42));}
+[data-countdown-style="signal"] .us-countdown-title{display:inline-block;max-width:100%;padding:.42em .8em;border-radius:5px;background:rgba(12,10,16,.78);box-shadow:inset 0 0 0 1px rgba(243,210,139,.22);color:#f3d28b;font:700 9px/1.2 var(--us-font-body,Inter,sans-serif);letter-spacing:.26em;text-transform:uppercase;margin-bottom:10px;}
+[data-countdown-style="signal"] .us-countdown-number{gap:5px;font:600 clamp(54px,17vw,78px)/1 var(--us-font-body,Inter,sans-serif);letter-spacing:0;color:#f4efe4;}
+[data-countdown-style="signal"] .us-countdown-digit{position:relative;min-width:.66em;padding:.1em .04em .08em;border-radius:.1em;text-align:center;background:linear-gradient(180deg,#2a2631 0 49.5%,#16141b 50.5% 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.09),inset 0 -1px 0 rgba(0,0,0,.5),0 1px 0 rgba(0,0,0,.6);transform-origin:50% 50%;}
+[data-countdown-style="signal"] .us-countdown-digit::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.72);box-shadow:0 1px 0 rgba(255,255,255,.05);}
+[data-countdown-style="signal"] .us-countdown-digit.is-sep{min-width:.3em;padding:0;background:none;box-shadow:none;color:#f3d28b;opacity:1;}
+[data-countdown-style="signal"] .us-countdown-digit.is-sep::after{content:none;}
+[data-countdown-style="signal"][data-countdown-clock="true"] .us-countdown-number{font-size:clamp(30px,10vw,46px);gap:3px;}
+[data-countdown-style="signal"] .us-countdown-unit{font:700 9px/1 var(--us-font-body,Inter,sans-serif);letter-spacing:.32em;text-transform:uppercase;color:rgba(244,239,228,.82);margin-top:10px;}
+[data-countdown-style="signal"] .us-countdown-sub{font:600 13px/1 var(--us-font-body,Inter,sans-serif);letter-spacing:.14em;color:#f3d28b;margin-top:7px;}
+[data-countdown-style="signal"] .us-countdown-digit.is-changing{animation:us-countdown-flap .42s cubic-bezier(.3,.7,.25,1);}
+@keyframes us-countdown-flap{0%{transform:perspective(320px) rotateX(-88deg);filter:brightness(1.6)}60%{transform:perspective(320px) rotateX(10deg)}100%{transform:none;filter:none}}
+/* Vetro — a horizontal lens: title on the rim, thin number, unit on the baseline, one rare glint. */
+[data-countdown-style="glass"]{display:grid;grid-template-columns:auto auto;grid-template-areas:"title title" "number unit" "sub sub";align-items:baseline;justify-content:center;column-gap:10px;border-radius:32px;padding:16px 28px 18px;overflow:hidden;background:linear-gradient(140deg,rgba(255,255,255,.15),rgba(255,255,255,.03) 60%,rgba(255,255,255,.07));border:1px solid rgba(255,255,255,.26);box-shadow:inset 0 1px 0 rgba(255,255,255,.34),inset 0 -12px 24px rgba(255,255,255,.03),0 18px 50px rgba(0,0,0,.16);backdrop-filter:blur(10px) saturate(125%);-webkit-backdrop-filter:blur(10px) saturate(125%);}
+[data-countdown-style="glass"] .us-countdown-title{grid-area:title;justify-self:start;font:500 11px/1.3 var(--us-font-body,Inter,sans-serif);letter-spacing:.06em;margin:0 0 2px 2px;opacity:.88;}
+[data-countdown-style="glass"] .us-countdown-number{grid-area:number;font:200 clamp(70px,21vw,96px)/1 var(--us-font-body,Inter,sans-serif);letter-spacing:-.075em;}
+[data-countdown-style="glass"] .us-countdown-unit{grid-area:unit;align-self:end;margin:0 0 .9em;font:400 15px/1 var(--us-font-body,Inter,sans-serif);letter-spacing:.02em;text-align:left;}
+[data-countdown-style="glass"] .us-countdown-sub{grid-area:sub;margin-top:4px;}
+[data-countdown-style="glass"][data-countdown-clock="true"] .us-countdown-unit{display:none;}
+[data-countdown-style="glass"] .us-countdown-deco>i{display:block;position:absolute;top:-30%;bottom:-30%;left:0;width:34%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.2) 48%,rgba(255,255,255,.04) 56%,transparent);transform:translateX(-140%) skewX(-14deg);animation:us-countdown-glint 11s cubic-bezier(.5,0,.3,1) 2s infinite;}
+@keyframes us-countdown-glint{0%,78%{transform:translateX(-140%) skewX(-14deg)}100%{transform:translateX(420%) skewX(-14deg)}}
+/* Aurora — italic serif with the light living inside the figures, one soft halo beneath. */
+[data-countdown-style="aurora"] .us-countdown-title{font:italic 400 16px/1.2 var(--us-font-editorial,Newsreader,Georgia,serif);letter-spacing:.01em;margin-bottom:0;}
+[data-countdown-style="aurora"] .us-countdown-number{font:italic 400 clamp(86px,25vw,120px)/1 var(--us-font-editorial,Newsreader,Georgia,serif);letter-spacing:-.045em;padding:0 .08em;background:linear-gradient(120deg,#fff4ed 15%,#ffc8df 35%,#ddd2ff 55%,#bff4ec 75%,#fff4ed);background-size:220% 100%;background-clip:text;-webkit-background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 2px 10px rgba(16,10,25,.7));animation:us-countdown-aurora 14s ease-in-out infinite alternate;}
+[data-countdown-style="aurora"] .us-countdown-unit{font:600 9px/1 var(--us-font-body,Inter,sans-serif);letter-spacing:.34em;text-transform:uppercase;color:#f5dcf0;margin-top:6px;}
+[data-countdown-style="aurora"] .us-countdown-deco{inset:22% -4% 4%;border-radius:50%;background:radial-gradient(closest-side,rgba(255,170,214,.30),rgba(170,182,255,.14) 58%,transparent);filter:blur(12px);}
 @keyframes us-countdown-aurora{to{background-position:100% 50%}}
-/* Orbita: one restrained trajectory and one point of light, no particle field. */
-[data-countdown-style="orbit"]{width:190px;height:190px;border:1px solid rgba(255,235,220,.28);border-radius:50%;padding:20px;}
-[data-countdown-style="orbit"]::before{content:"";position:absolute;inset:-7px;border:1px solid rgba(255,235,220,.12);border-radius:50%;}
-[data-countdown-style="orbit"]::after{content:"";position:absolute;inset:-1px;border-radius:50%;background:radial-gradient(circle at 50% 0%,#ffe5c9 0 3px,transparent 4px);animation:us-countdown-orbit 32s linear infinite;pointer-events:none;}
-[data-countdown-style="orbit"] .us-countdown-number{font-size:82px;font-weight:350;}
-[data-countdown-style="orbit"] .us-countdown-title{font-size:9px;letter-spacing:.1em;}
+/* Orbita — a dial: sixty ticks and one point of light that runs with the real seconds. */
+[data-countdown-style="orbit"]{width:190px;height:190px;border:1px solid rgba(255,235,220,.22);border-radius:50%;padding:20px;}
+[data-countdown-style="orbit"]::before{content:"";position:absolute;inset:-7px;border:1px solid rgba(255,235,220,.10);border-radius:50%;}
+[data-countdown-style="orbit"] .us-countdown-deco{inset:5px;border-radius:50%;background:repeating-conic-gradient(from -.4deg,rgba(255,235,220,.62) 0 .8deg,transparent .8deg 30deg),repeating-conic-gradient(from -.25deg,rgba(255,235,220,.26) 0 .5deg,transparent .5deg 6deg);-webkit-mask:radial-gradient(closest-side,transparent calc(100% - 6px),#000 calc(100% - 5px));mask:radial-gradient(closest-side,transparent calc(100% - 6px),#000 calc(100% - 5px));}
+[data-countdown-style="orbit"]::after{content:"";position:absolute;inset:-1px;border-radius:50%;background:radial-gradient(circle at 50% 0%,#fff1df 0 2.5px,rgba(255,213,170,.55) 3.5px,transparent 7px);transform:rotate(var(--us-cd-sweep,0deg));transition:transform 1s linear;pointer-events:none;}
+[data-countdown-style="orbit"][data-sweep-jump]::after{transition:none;}
+[data-countdown-style="orbit"] .us-countdown-number{font-size:78px;font-weight:300;}
+[data-countdown-style="orbit"] .us-countdown-title{font:600 8.5px/1.3 var(--us-font-body,Inter,sans-serif);letter-spacing:.22em;text-transform:uppercase;max-width:120px;}
+[data-countdown-style="orbit"] .us-countdown-unit{font:italic 400 14px/1 var(--us-font-editorial,Newsreader,Georgia,serif);letter-spacing:.01em;margin-top:3px;}
 [data-countdown-style="orbit"][data-countdown-clock="true"] .us-countdown-number{font-size:32px;}
-@keyframes us-countdown-orbit{to{transform:rotate(360deg)}}
-/* Cromo: heavy sculptural type, silver highlights, dark engraved edge. */
-[data-countdown-style="chrome"] .us-countdown-number{font-family:var(--us-font-body,Inter,sans-serif);font-weight:850;letter-spacing:-.085em;background:linear-gradient(175deg,#fff 5%,#e0e6ef 25%,#718090 44%,#f7f4fb 48%,#fff 54%,#aeb6c2 74%,#f5ebef);background-clip:text;-webkit-background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 1px 0 #29313f) drop-shadow(0 5px 0 rgba(19,24,33,.55)) drop-shadow(0 14px 18px rgba(0,0,0,.4));}
-[data-countdown-style="chrome"] .us-countdown-title{text-transform:uppercase;font-size:9px;letter-spacing:.24em;}
+/* Cromo — sculpted metal with an engraved plate; light crosses the figures every few seconds. */
+[data-countdown-style="chrome"] .us-countdown-number{font-family:var(--us-font-body,Inter,sans-serif);font-weight:850;letter-spacing:-.085em;padding-right:.06em;background:linear-gradient(175deg,#fff 0%,#e0e6ef 12%,#718090 22%,#f7f4fb 24%,#fff 27%,#aeb6c2 37%,#f5ebef 50%,#e0e6ef 62%,#718090 72%,#f7f4fb 74%,#fff 77%,#aeb6c2 87%,#fff 100%);background-size:100% 200%;background-clip:text;-webkit-background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 1px 0 #29313f) drop-shadow(0 5px 0 rgba(19,24,33,.55)) drop-shadow(0 14px 18px rgba(0,0,0,.4));animation:us-countdown-chrome 9s ease-in-out 1.5s infinite;}
+@keyframes us-countdown-chrome{0%,70%{background-position:50% 0}100%{background-position:50% 100%}}
+[data-countdown-style="chrome"] .us-countdown-title{padding:.45em 1em;border-radius:999px;background:linear-gradient(180deg,#f5f6f9,#a3acb9 55%,#e1e5ec);color:#262c37;text-shadow:0 1px 0 rgba(255,255,255,.55);box-shadow:inset 0 1px 0 #fff,inset 0 -1px 0 rgba(0,0,0,.25),0 3px 10px rgba(0,0,0,.35);font:800 8.5px/1.2 var(--us-font-body,Inter,sans-serif);letter-spacing:.26em;text-transform:uppercase;margin-bottom:6px;}
+[data-countdown-style="chrome"] .us-countdown-unit{font:800 9px/1 var(--us-font-body,Inter,sans-serif);letter-spacing:.3em;text-transform:uppercase;color:#e3e7ee;}
 .us-oggi-focus .us-countdown-display{opacity:0;pointer-events:none;}
 .us-countdown-display:focus-visible,.us-countdown-style:focus-visible{outline:2px solid var(--us-color-accent-ink);outline-offset:5px;}
 /* Canonical sheet, content scrolls including the action when the keyboard opens. */
@@ -103,8 +135,13 @@
   #home .us-countdown-art{padding:8px 16px;}
   #home [data-countdown-style="orbit"]{width:130px;height:130px;}
   #home .us-countdown-art[data-countdown-clock="true"] .us-countdown-number{font-size:30px;}
+  #home [data-countdown-style="chrome"] .us-countdown-title{letter-spacing:.14em;padding:.4em .7em;}
   .us-countdown-sheet{max-height:calc(var(--us-viewport-height) - 8px);padding-top:15px;}
 }
 @media(prefers-reduced-motion:reduce){.us-countdown-art *,.us-countdown-art::after{animation:none!important;transition:none!important;}.us-countdown-display{transition:none;}}
+/* Reduced motion: every identity stays, nothing moves; the orbit light rests at twelve. */
+:root[data-us-motion="reduced"] .us-countdown-art *,:root[data-us-motion="reduced"] .us-countdown-art::after{animation:none!important;transition:none!important;}
+@media(prefers-reduced-motion:reduce){[data-countdown-style="orbit"]::after{transform:none!important;}}
+:root[data-us-motion="reduced"] [data-countdown-style="orbit"]::after{transform:none!important;}
 html[data-us-visibility="hidden"] .us-countdown-art *,html[data-us-visibility="hidden"] .us-countdown-art::after{animation-play-state:paused!important;}
 #home:not(.active) .us-countdown-art *,#home:not(.active) .us-countdown-art::after,.us-oggi-focus .us-countdown-art *,.us-oggi-focus .us-countdown-art::after{animation-play-state:paused!important;}

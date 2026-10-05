@@ -5,11 +5,12 @@
 })(typeof window!=='undefined'?window:globalThis,function(){
 'use strict';
 const STYLES=Object.freeze([
-  {id:'editorial',name:'Editoriale',note:'Il tempo, in grande.'},
-  {id:'signal',name:'Segnale',note:'Ogni secondo conta.'},
-  {id:'glass',name:'Vetro',note:'Luce sospesa.'},
-  {id:'aurora',name:'Aurora',note:'Un riflesso che respira.',reward:'frame_aurora',level:4},
-  {id:'orbit',name:'Orbita',note:'Il vostro piccolo universo.',reward:'ring_orbit',level:9},
+  // Ids are validated by save_countdown_oggi_v1: names and art may evolve, ids may not.
+  {id:'editorial',name:'Editoriale',note:'Il tempo, in copertina.'},
+  {id:'signal',name:'Partenze',note:'Come un tabellone in stazione.'},
+  {id:'glass',name:'Vetro',note:'Una lente sulla vostra foto.'},
+  {id:'aurora',name:'Aurora',note:'La luce dentro le cifre.',reward:'frame_aurora',level:4},
+  {id:'orbit',name:'Orbita',note:'Un giro di luce ogni minuto.',reward:'ring_orbit',level:9},
   {id:'chrome',name:'Cromo',note:'Il tempo diventa materia.',reward:'frame_chrome',level:12}
 ]);
 const civil=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'});
@@ -58,7 +59,7 @@ function install(w){
   }
   function markup(view,title,style){
     if(!view)return '';
-    return `<span class="us-countdown-art" data-countdown-style="${esc(style)}" data-countdown-clock="${view.value.includes(':')}"><span class="us-countdown-title">${esc(title)}</span><span class="us-countdown-number" aria-hidden="true">${[...view.value].map(c=>`<span class="us-countdown-digit">${esc(c)}</span>`).join('')}</span><span class="us-countdown-unit">${esc(view.unit)}</span><span class="us-countdown-sub">${esc(view.label)}</span></span>`;
+    return `<span class="us-countdown-art" data-countdown-style="${esc(style)}" data-countdown-clock="${view.value.includes(':')}"><span class="us-countdown-deco" aria-hidden="true"><i></i></span><span class="us-countdown-title">${esc(title)}</span><span class="us-countdown-number" aria-hidden="true">${[...view.value].map(c=>`<span class="us-countdown-digit${/\d/.test(c)?'':' is-sep'}">${esc(c)}</span>`).join('')}</span><span class="us-countdown-unit">${esc(view.unit)}</span><span class="us-countdown-sub">${esc(view.label)}</span></span>`;
   }
   function tick(){
     if(key()!==owner){clear();if(key())hydrate();return;}
@@ -75,8 +76,11 @@ function install(w){
       surface.querySelector('.us-countdown-unit').textContent=view.unit;
       surface.querySelector('.us-countdown-sub').textContent=view.label;
     }
-    const art=surface.querySelector('.us-countdown-art');if(art)art.dataset.countdownClock=String(view.value.includes(':'));
+    const art=surface.querySelector('.us-countdown-art');if(art){art.dataset.countdownClock=String(view.value.includes(':'));if(e.style==='orbit')sweep(art);}
   }
+  // Orbita: the light advances one tick per real second. Any jump (first paint,
+  // return from background, hour wrap) is applied without a transition.
+  function sweep(art){const s=Math.floor(Date.now()/1000)%3600,prev=Number(art.dataset.sweep);art.toggleAttribute('data-sweep-jump',s!==prev+1);art.dataset.sweep=String(s);art.style.setProperty('--us-cd-sweep',`${s*6}deg`);}
   function styles(){
     $('usCountdownStyles').innerHTML=STYLES.map(s=>{
       const unlocked=available(s.id,progression()),active=draft?.style===s.id;
@@ -240,6 +244,8 @@ function install(w){
   },1000);}
   startTimer();
   const api=w.USCountdown;api.open=open;api.close=close;api.refresh=hydrate;api.reset=()=>clear(true);
+  // Shared sample used by the sheet tiles, the Sintonia collection and the unlock moment.
+  api.previewMarkup=style=>STYLES.some(s=>s.id===style)?markup({value:'12',unit:'giorni',label:''},'',style):'';
   if(typeof sb!=='undefined')sb.auth.onAuthStateChange(event=>{if(event==='SIGNED_OUT')clear(true);});
   if(key())hydrate();
 }

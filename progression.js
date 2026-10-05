@@ -17,13 +17,13 @@ let unlockBusy = false;
 // catalog and unlock eligibility. What each phone equips is intentionally local
 // to that installed PWA, so Francesco and Bea can personalize US independently.
 const SLOTS = Object.freeze({
-  frame: { pref: 'frame_reward_id', label: 'Cornici', place: 'sulla foto di Oggi', unlock: 'NUOVA CORNICE' },
-  sticker: { pref: 'sticker_reward_id', label: 'Adesivi', place: 'su Oggi e sull’ultimo ricordo', unlock: 'NUOVO ADESIVO' },
-  badge: { pref: 'badge_reward_id', label: 'Spille', place: 'tra voi due, in Noi', unlock: 'NUOVA SPILLA' },
-  ring: { pref: 'ring_reward_id', label: 'Anelli', place: 'attorno ai vostri ritratti', unlock: 'NUOVO ANELLO' },
-  theme: { pref: 'theme_reward_id', label: 'Temi', place: 'l’atmosfera di tutta US', unlock: 'NUOVO TEMA' },
-  accent: { pref: 'accent_reward_id', label: 'Accenti', place: 'controlli, progressi, navigazione', unlock: 'NUOVO ACCENTO' },
-  effect: { pref: 'effect_reward_id', label: 'Effetti', place: 'sul simbolo US', unlock: 'NUOVO EFFETTO' }
+  frame: { pref: 'frame_reward_id', label: 'Cornici', place: 'sulla foto di Oggi', unlock: 'NUOVA CORNICE', where: 'Sulla foto di Oggi' },
+  sticker: { pref: 'sticker_reward_id', label: 'Adesivi', place: 'su Oggi e sull’ultimo ricordo', unlock: 'NUOVO ADESIVO', where: 'Su Oggi e sull’ultimo ricordo' },
+  badge: { pref: 'badge_reward_id', label: 'Spille', place: 'tra voi due, in Noi', unlock: 'NUOVA SPILLA', where: 'In Noi, tra i vostri ritratti' },
+  ring: { pref: 'ring_reward_id', label: 'Anelli', place: 'attorno ai vostri ritratti', unlock: 'NUOVO ANELLO', where: 'In Noi, attorno ai vostri ritratti' },
+  theme: { pref: 'theme_reward_id', label: 'Temi', place: 'l’atmosfera di tutta US', unlock: 'NUOVO TEMA', where: 'In tutta US' },
+  accent: { pref: 'accent_reward_id', label: 'Accenti', place: 'controlli, progressi, navigazione', unlock: 'NUOVO ACCENTO', where: 'Su controlli, progressi e navigazione' },
+  effect: { pref: 'effect_reward_id', label: 'Effetti', place: 'sul simbolo US', unlock: 'NUOVO EFFETTO', where: 'Sul simbolo US, in alto' }
 });
 const SLOT_ORDER = Object.keys(SLOTS);
 const DEVICE_PREFS_VERSION = 2;
@@ -118,6 +118,19 @@ function setDeviceReward(reward, { ensureEquipped = false } = {}) {
     equipped: Boolean(item.unlocked && SLOTS[item.category] && prefs[SLOTS[item.category].pref] === item.id)
   }));
   return true;
+}
+
+// Countdown styles are not a second catalog: USCountdown.STYLES names the
+// existing reward that entitles each premium style, and only that row decides.
+function countdownStyles() {
+  const styles = window.USCountdown?.STYLES;
+  return Array.isArray(styles) ? styles : [];
+}
+function countdownStyleFor(reward) {
+  return reward?.id ? countdownStyles().find((style) => style.reward === reward.id) || null : null;
+}
+function countdownPreview(styleId) {
+  return window.USCountdown?.previewMarkup?.(styleId) || '';
 }
 
 function rewardById(id) {
@@ -239,9 +252,28 @@ function rewardTile(reward) {
   const status = locked ? `Livello ${reward.level_required}` : equipped ? 'In uso' : 'Sbloccato';
   const label = locked ? `Livello ${reward.level_required}` : equipped ? 'In uso · tocca per togliere' : 'Sbloccato · tocca per usare';
   return `<button type="button" class="us-progression-reward ${locked ? 'is-locked' : 'is-unlocked'} ${equipped ? 'is-equipped' : ''}" data-progression-reward="${esc(reward.id)}" data-category="${esc(reward.category)}" ${locked ? 'disabled' : ''} aria-pressed="${equipped ? 'true' : 'false'}" aria-label="${esc(reward.title)} · ${esc(label)}. ${esc(reward.description)}">
-      <span class="us-progression-reward-preview" data-reward-token="${esc(reward.token)}" aria-hidden="true">${previewMarkup(reward)}</span>
+      <span class="us-progression-reward-preview" data-reward-token="${esc(reward.token)}" aria-hidden="true">${previewMarkup(reward)}${countdownStyleFor(reward) ? '<i class="us-progression-reward-plus">+ Countdown</i>' : ''}</span>
       <span class="us-progression-reward-copy"><b>${esc(reward.title)}</b><small>${esc(status)}</small></span>
     </button>`;
+}
+
+function countdownTile(style, next) {
+  const reward = style.reward ? (next?.rewards || []).find((item) => item.id === style.reward) : null;
+  const unlocked = !style.reward || Boolean(reward?.unlocked);
+  const status = !style.reward ? 'Incluso' : unlocked ? 'Sbloccato' : `Con ${reward?.title || style.name} · livello ${style.level}`;
+  return `<button type="button" class="us-progression-reward us-progression-countdown-style ${unlocked ? 'is-unlocked' : 'is-locked'}" data-countdown-style-open="${esc(style.id)}" ${unlocked ? '' : 'disabled'} aria-label="Stile Countdown ${esc(style.name)} · ${esc(status)}. ${esc(style.note || '')}">
+      <span class="us-progression-reward-preview" aria-hidden="true"><span class="us-cos-stage us-cos-countdown">${countdownPreview(style.id)}</span></span>
+      <span class="us-progression-reward-copy"><b>${esc(style.name)}</b><small>${esc(status)}</small></span>
+    </button>`;
+}
+function countdownGroup(next) {
+  const styles = countdownStyles();
+  if (!styles.length || !window.USCountdown?.previewMarkup) return '';
+  const owned = styles.filter((style) => !style.reward || next?.rewards?.some((r) => r.id === style.reward && r.unlocked)).length;
+  return `<section class="us-reward-group" data-category="countdown" aria-label="Stili Countdown">
+      <header class="us-reward-group-head"><b>Stili Countdown</b><span>il vostro tempo sulla foto di Oggi</span><em>${owned}/${styles.length}</em></header>
+      <div class="us-reward-grid">${styles.map((style) => countdownTile(style, next)).join('')}</div>
+    </section>`;
 }
 
 function renderRewards(next = state) {
@@ -257,7 +289,7 @@ function renderRewards(next = state) {
       <header class="us-reward-group-head"><b>${esc(SLOTS[category].label)}</b><span>${esc(SLOTS[category].place)}</span><em>${owned}/${group.length}</em></header>
       <div class="us-reward-grid">${group.map(rewardTile).join('')}</div>
     </section>`;
-  }).join('');
+  }).join('') + countdownGroup(next);
   const count = $('usProgressionRewardsCount');
   if (count) count.textContent = `${known.filter((reward) => reward.unlocked).length} di ${known.length}`;
 }
@@ -288,6 +320,19 @@ function paintUnlock() {
   $('usProgressionUnlockDescription').textContent = reward.description;
   const kicker = $('usProgressionUnlockKicker');
   if (kicker) kicker.textContent = SLOTS[reward.category]?.unlock || 'HAI SBLOCCATO';
+  root.dataset.category = reward.category || '';
+  const place = $('usProgressionUnlockPlace');
+  if (place) {
+    place.textContent = SLOTS[reward.category]?.where || '';
+    place.hidden = !place.textContent;
+  }
+  const extra = $('usProgressionUnlockExtra');
+  if (extra) {
+    const style = countdownStyleFor(reward);
+    const art = style ? countdownPreview(style.id) : '';
+    extra.innerHTML = style ? `<span class="us-progression-unlock-extra-art" aria-hidden="true">${art}</span><span class="us-progression-unlock-extra-copy"><small>IN PIÙ</small><b>Stile Countdown «${esc(style.name)}»</b></span>` : '';
+    extra.hidden = !style;
+  }
   const preview = $('usProgressionUnlockPreview');
   if (preview) {
     preview.dataset.rewardToken = reward.token || '';
@@ -321,6 +366,8 @@ async function advanceUnlock() {
     hideUnlock();
     unlockQueue = [];
     unlockIndex = 0;
+    // The moment is over and the shell is visible again: the PET may celebrate.
+    window.USPet?.react?.('reward');
     await hydrate({ showUnlocks: false, force: true });
   }
 }
@@ -393,8 +440,13 @@ function refreshAfterAction() {
 }
 
 $('usProgressionRewards')?.addEventListener('click', async (event) => {
-  const button = event.target.closest?.('[data-progression-reward]');
+  const button = event.target.closest?.('[data-progression-reward],[data-countdown-style-open]');
   if (!button || button.disabled) return;
+  if (button.dataset?.countdownStyleOpen) {
+    window.UsFeedback?.action?.();
+    window.USCountdown?.open?.();
+    return;
+  }
   const rewardId = button.dataset.progressionReward;
   const ok = await equipReward(rewardId);
   if (ok) {
