@@ -1,0 +1,53 @@
+name: Countdown Direct Edit Final QA
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Focused tests
+        run: >
+          node --test
+          tests/countdown-direct-edit-bottom-notice.test.js
+          tests/countdown-oggi-v1.test.js
+          tests/countdown-oggi-v1-browser.test.js
+          tests/m10-attention-orbit.test.js
+          tests/m10-oggi-order-daily-card.test.js
+          tests/m12a-oggi-priority.test.js
+          tests/m12b-oggi-no-scroll.test.js
+          tests/us-home-cleanup-noi-board-daily-move.test.js
+          tests/us-vnext-m2-oggi.test.js
+      - name: Full test suite
+        run: npm test
+      - name: Cloudflare Pages build
+        run: npm run build:cloudflare-pages
+      - name: Diff check
+        run: git diff --check "${{ github.event.pull_request.base.sha }}..HEAD"
+
+  capacitor_windows:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Capacitor web build
+        run: npm run build:capacitor-web
