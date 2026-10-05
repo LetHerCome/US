@@ -1,0 +1,77 @@
+name: QA pre-native cleanup v1
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  linux_review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Focused pre-native cleanup contracts
+        run: |
+          node --test tests/pre-native-cleanup.test.js
+          node --test tests/pre-native-cleanup-browser.test.js
+          node --test tests/us-human-ui-02.test.js
+          node --test tests/us-home-cleanup-noi-board-daily-move.test.js
+          node --test tests/maudit-interaction.test.js tests/pet-foundation.test.js
+      - name: Candidate full suite
+        id: candidate
+        continue-on-error: true
+        run: npm test
+      - name: Base full suite same runner
+        id: base
+        continue-on-error: true
+        shell: bash
+        run: |
+          git checkout --detach origin/main
+          npm test
+      - name: Enforce no full-suite regression
+        if: always()
+        shell: bash
+        run: |
+          echo "candidate=${{ steps.candidate.outcome }}"
+          echo "base=${{ steps.base.outcome }}"
+          if [ "${{ steps.candidate.outcome }}" = "failure" ] && [ "${{ steps.base.outcome }}" != "failure" ]; then
+            echo "Candidate introduced a full-suite regression"
+            exit 1
+          fi
+      - name: Return to exact candidate
+        if: always()
+        run: git checkout --detach 6ed7567f24bfed5fefa02d1ed259efdb4b6b5c0e
+      - name: Cloudflare build
+        run: npm run build:cloudflare-pages
+      - name: Candidate diff check
+        shell: bash
+        run: git diff --check origin/main..6ed7567f24bfed5fefa02d1ed259efdb4b6b5c0e
+
+  windows_capacitor:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 6ed7567f24bfed5fefa02d1ed259efdb4b6b5c0e
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Capacitor web build on Windows
+        run: npm run build:capacitor-web
