@@ -1008,6 +1008,25 @@ body.viewer-open{overflow:hidden}
 
 /* US Home Cleanup — Noi weekly board + transient Daily Question nudge. */
 #home #usOggiStack{height:0!important;overflow:hidden!important;opacity:0!important;visibility:hidden!important;pointer-events:none!important}
+#home #usTodayPriorityRegion{
+  position:fixed!important;
+  z-index:19;
+  left:50%!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:calc(10px + var(--us-safe-bottom) + var(--us-nav-height) + 12px)!important;
+  width:min(420px,calc(100% - 28px));
+  transform:translateX(-50%);
+  opacity:1!important;
+  visibility:visible!important;
+  pointer-events:none;
+}
+#home #usTodayPriorityRegion:not([hidden]){display:block!important}
+#home #usTodayPriorityRegion .us-today-priority-card,
+#home #usTodayPriorityRegion .us-today-priority-swipe{pointer-events:auto}
+body:has(#home.active #usTodayPriorityRegion:not([hidden])) .us-daily-nudge{
+  bottom:calc(10px + var(--us-safe-bottom) + var(--us-nav-height) + 82px);
+}
 .noi-week-board{flex:0 0 auto;margin:0 0 2px}
 #bond .noi-canonical-page:not([data-noi-view="hub"])>.noi-week-board{display:none!important}
 .noi-week-board-shell{width:100%;display:block;padding:14px 14px 12px;border:1px solid rgba(255,255,255,.09);border-radius:22px;background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018));color:var(--us-color-text);text-align:left;box-shadow:none}
