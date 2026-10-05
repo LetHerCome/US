@@ -125,7 +125,19 @@ function fakeWindow(href, storage = new Map()) {
   const attrs = {};
   const observed = [];
   const layerAttrs = new Set();
-  const actor = { innerHTML: '' };
+  // Minimal live nodes: identity, parent links and children matter for F4.
+  const node = (tagName) => ({
+    tagName, className: '', innerHTML: '', parentNode: null, children: [],
+    appendChild(child) { child.parentNode?.removeChild(child); child.parentNode = this; this.children.push(child); return child; },
+    removeChild(child) { this.children = this.children.filter((n) => n !== child); child.parentNode = null; return child; },
+    remove() { this.parentNode?.removeChild(this); }
+  });
+  const actor = node('span');
+  Object.defineProperty(actor, 'innerHTML', {
+    get() { return this.children.map((n) => n.innerHTML).join(''); },
+    // Writing the actor directly (the pre-F4 behaviour) wipes every live child.
+    set(value) { this.children.forEach((n) => { n.parentNode = null; }); this.children = value ? [{ innerHTML: value, parentNode: this }] : []; }
+  });
   const layer = {
     hidden: true, dataset: {}, style: { setProperty(k, v) { attrs[k] = v; } },
     querySelector: (s) => (s === '.us-pet-actor' ? actor : null),
@@ -146,6 +158,7 @@ function fakeWindow(href, storage = new Map()) {
     getElementById: (id) => ids[id] || null,
     querySelector: (s) => (s === '.nav' ? nav : null),
     querySelectorAll: (s) => (s === '.auth-overlay' ? [auth] : []),
+    createElement: (tag) => node(tag),
     addEventListener(type, fn) { (listeners[`d:${type}`] ||= []).push(fn); }
   };
   const w = {
@@ -373,4 +386,101 @@ test('F3 renderer contract: setFacing(facing) is its own call, setState carries 
   const spec = read('docs/missions/us-pet-asset-spec-v1.md');
   assert.match(spec, /setFacing\(facing\)/);
   assert.match(spec, /setState\(state, \{ reason \}\)/);
+});
+
+test('F4 atomic renderer swap: a candidate that mutates its host and throws leaves the current renderer intact', () => {
+  const log = [];
+  Pet.registerRenderer({
+    id: 'test-live',
+    mount(host) {
+      host.innerHTML = '<i data-live-figure></i>';
+      host.liveFigure = { listening: true }; // a live reference the renderer keeps
+      return { setState: (state) => log.push(['state', state]), setFacing: () => {}, destroy: () => log.push(['destroy']) };
+    }
+  });
+  Pet.registerRenderer({
+    id: 'test-mutate-throw',
+    mount(host) {
+      host.innerHTML = '<b>half-mounted</b>';
+      host.className = 'corrupted';
+      throw new Error('asset decode failed');
+    }
+  });
+  const f = fakeWindow('http://127.0.0.1/?us-pet=preview');
+  Pet.install(f.w);
+  assert.equal(f.w.USPet.useRenderer('test-live'), true);
+  assert.equal(f.actor.children.length, 1, 'the placeholder host was replaced, not stacked');
+  const liveHost = f.actor.children[0];
+  const liveHtml = liveHost.innerHTML;
+  const liveFigure = liveHost.liveFigure;
+  log.length = 0;
+  const warn = console.warn;
+  console.warn = () => {};
+  try { assert.equal(f.w.USPet.useRenderer('test-mutate-throw'), false); } finally { console.warn = warn; }
+  assert.equal(f.actor.children.length, 1, 'the failed candidate host is never attached');
+  assert.equal(f.actor.children[0], liveHost, 'same live host node');
+  assert.equal(liveHost.parentNode, f.actor);
+  assert.equal(liveHost.innerHTML, liveHtml, 'current renderer DOM untouched');
+  assert.equal(liveHost.className, 'us-pet-renderer');
+  assert.equal(liveHost.liveFigure, liveFigure, 'live references survive');
+  assert.equal(f.layer.dataset.petRenderer, 'test-live');
+  assert.deepEqual(log, [], 'the current view was not destroyed');
+  f.w.USPet.react('think');
+  assert.deepEqual(log, [['state', 'react']], 'the current view is still the one being driven');
+  // A successful swap destroys the old view first, then promotes the new host.
+  assert.equal(f.w.USPet.useRenderer('placeholder'), true);
+  assert.deepEqual(log.at(-1), ['destroy']);
+  assert.equal(liveHost.parentNode, null);
+  assert.equal(f.actor.children.length, 1);
+  assert.match(f.actor.children[0].innerHTML, /data-pet-placeholder/);
+});
+
+test('F4 initial install: if the first renderer fails to mount, the PET stays disabled with nothing attached', () => {
+  const modulePath = require.resolve('../pet.js');
+  delete require.cache[modulePath];
+  const Fresh = require('../pet.js');
+  delete require.cache[modulePath];
+  Fresh.registerRenderer({ id: 'placeholder', mount(host) { host.innerHTML = '<b>partial</b>'; throw new Error('broken'); } });
+  const f = fakeWindow('http://127.0.0.1/?us-pet=preview');
+  f.w.USPet = { ...Fresh };
+  const warn = console.warn;
+  console.warn = () => {};
+  try { Fresh.install(f.w); } finally { console.warn = warn; }
+  assert.equal(f.w.USPet.enabled, false);
+  assert.equal(f.layer.hidden, true);
+  assert.equal(f.actor.children.length, 0);
+  assert.equal(f.active(), 0);
+  assert.equal(f.observed.length, 0);
+  assert.equal(f.w.USPet.react('reward'), false);
+});
+
+test('F5 reactions honour blockers synchronously, before the MutationObserver delivers', () => {
+  const guards = [
+    ['keyboard', (f) => f.body.classList.add('us-keyboard-open')],
+    ['nudge', (f) => { f.nudge.hidden = false; }],
+    ['toast', (f) => f.toast.classList.add('show')],
+    ['inert', (f) => f.layer.setAttribute('inert')]
+  ];
+  for (const [name, block] of guards) {
+    // Idle pet: nothing may start.
+    const idle = fakeWindow('http://127.0.0.1/?us-pet=preview');
+    Pet.install(idle.w);
+    block(idle); // DOM changed, observer NOT delivered
+    assert.equal(idle.w.USPet.snapshot().running, true, `${name}: observer has not run yet`);
+    assert.equal(idle.w.USPet.react('reward'), false, `${name}: api.react refused`);
+    idle.listeners['w:us:pet'][0]({ detail: { type: 'react', reason: 'think' } });
+    assert.deepEqual([idle.w.USPet.snapshot().state, idle.layer.dataset.petState, idle.layer.dataset.petReason], ['idle', 'idle', undefined], `${name}: us:pet refused`);
+    // Reaction in flight: nothing may be queued or replaced.
+    const busy = fakeWindow('http://127.0.0.1/?us-pet=preview');
+    Pet.install(busy.w);
+    assert.equal(busy.w.USPet.react('think'), true);
+    block(busy);
+    assert.equal(busy.w.USPet.react('streak'), false);
+    busy.listeners['w:us:pet'][0]({ detail: { type: 'react', reason: 'daily-question' } });
+    const snap = busy.w.USPet.snapshot();
+    assert.deepEqual([snap.state, snap.reason, snap.pending], ['react', 'think', null], `${name}: no queued reaction`);
+    // The observer still owns scheduler stop/resume once it delivers.
+    busy.mutate(() => {});
+    assert.equal(busy.active(), 0);
+  }
 });

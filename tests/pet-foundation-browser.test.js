@@ -117,3 +117,32 @@ test('Sintonia collection preview: Countdown styles group with real locks (scree
   assert.deepEqual(errors,[]);await ctx.close();
  }finally{await h.close();}
 });
+
+test('F4/F5 in a real DOM: failed renderer swap keeps the live placeholder; reactions refused before observer delivery',async t=>{
+ const h=await start();if(!h)return t.skip('Playwright unavailable');
+ try{
+  const {page,ctx,errors}=await preview(h,{});
+  const swap=await page.evaluate(()=>{
+   const actor=document.querySelector('#usPetLayer .us-pet-actor');
+   const host=actor.firstElementChild,figure=host.querySelector('[data-pet-placeholder]'),html=host.innerHTML;
+   window.USPet.registerRenderer({id:'qa-throws',mount(stage){stage.innerHTML='<b>half</b>';stage.dataset.broken='1';throw new Error('qa');}});
+   const warn=console.warn;console.warn=()=>{};let ok;try{ok=window.USPet.useRenderer('qa-throws');}finally{console.warn=warn;}
+   return {ok,children:actor.children.length,sameHost:actor.firstElementChild===host,sameFigure:host.querySelector('[data-pet-placeholder]')===figure&&figure.isConnected,html:host.innerHTML===html,renderer:document.getElementById('usPetLayer').dataset.petRenderer,stray:!!document.querySelector('[data-broken]')};
+  });
+  assert.deepEqual(swap,{ok:false,children:1,sameHost:true,sameFigure:true,html:true,renderer:'placeholder',stray:false});
+  const sync=await page.evaluate(()=>{
+   // Same synchronous task: the MutationObserver cannot have delivered yet.
+   document.body.classList.add('us-keyboard-open');
+   const running=window.USPet.snapshot().running;
+   const api=window.USPet.react('reward');
+   window.dispatchEvent(new CustomEvent('us:pet',{detail:{type:'react',reason:'think'}}));
+   const state=window.USPet.snapshot().state;
+   return {running,api,state};
+  });
+  assert.deepEqual(sync,{running:true,api:false,state:'idle'});
+  await page.waitForFunction(()=>window.USPet.snapshot().running===false);
+  await page.evaluate(()=>document.body.classList.remove('us-keyboard-open'));
+  await page.waitForFunction(()=>window.USPet.snapshot().running===true);
+  assert.deepEqual(errors,[]);await ctx.close();
+ }finally{await h.close();}
+});

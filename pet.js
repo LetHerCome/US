@@ -162,7 +162,7 @@ function install(w){
   const preview=Boolean(layer&&actor&&nav)&&previewRequested(w);
   api.enabled=Boolean(layer&&actor&&nav&&(approved||preview));
   if(!api.enabled)return; // zero cost: no timers, no observers, nothing painted
-  let view=null,appearance={skin:'',accessory:''},facing='',pageHidden=false;
+  let view=null,host=null,appearance={skin:'',accessory:''},facing='',pageHidden=false;
   const pet=createPet({
     schedule:(fn,ms)=>w.setTimeout(fn,ms),cancel:id=>w.clearTimeout(id),
     render({state,x,facing:nextFacing,duration,reason}){
@@ -175,12 +175,21 @@ function install(w){
     }
   });
   // Renderer contract: mount(host) → { setState(state,{reason}), setFacing(facing), setAppearance(appearance), destroy() }.
+  // Atomic replacement: the candidate mounts into its own detached host. The
+  // current renderer, its host and its live nodes are untouched until the
+  // candidate has mounted successfully; a failing candidate is simply dropped.
   function useRenderer(id){
     if(!canMount(id,{preview}))return false;
+    const stage=d.createElement('span');
+    stage.className='us-pet-renderer';
     let next;
-    try{next=renderers.get(id).mount(actor)||{};}catch(error){console.warn('[US PET] renderer',error);return false;}
-    if(view&&view!==next)view.destroy?.();
-    view=next;
+    try{next=renderers.get(id).mount(stage)||{};}
+    catch(error){console.warn('[US PET] renderer',error);return false;}
+    const previous=view,previousHost=host;
+    if(previous){try{previous.destroy?.();}catch(error){console.warn('[US PET] renderer destroy',error);}}
+    previousHost?.remove?.();
+    actor.appendChild(stage);
+    view=next;host=stage;
     layer.dataset.petRenderer=id;
     const snap=pet.snapshot();
     facing=snap.facing;
@@ -222,8 +231,14 @@ function install(w){
     (d.querySelectorAll?.('.auth-overlay')||[]).forEach(node=>watch(node,['class']));
   }
   // Event interface for features that live in other files. Ignored while blocked.
-  w.addEventListener('us:pet',event=>{if(event?.detail?.type==='react')pet.react(event.detail.reason);});
-  api.react=reason=>pet.react(reason);
+  // The observer stops the scheduler asynchronously; reactions must not wait for
+  // it, so the canonical decision is evaluated right here, before anything changes.
+  function react(reason){
+    if(blockers(d,layer,{pageHidden}).length)return false;
+    return pet.react(reason);
+  }
+  w.addEventListener('us:pet',event=>{if(event?.detail?.type==='react')react(event.detail.reason);});
+  api.react=react;
   api.useRenderer=useRenderer;
   api.blockers=()=>blockers(d,layer,{pageHidden});
   api.setAppearance=(next={})=>{

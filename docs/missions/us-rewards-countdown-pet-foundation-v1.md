@@ -128,6 +128,9 @@ Non toccati: Supabase (schema, RPC, migrazioni), `app.js`, navigation authority,
   - **F1** una sola decisione runtime `blockers()` (hidden/pagehide, keyboard, inert, status, update, nudge, toast, Focus Photo, auth). Bloccato ⇒ `pet.stop()`, zero timer, reazioni ignorate e coda svuotata; sbloccato ⇒ un solo restart. Reattivo via MutationObserver limitato ai 6 nodi/attributi letti (niente subtree, polling o rAF).
   - **F2** `useRenderer` fail-closed: `placeholder` solo in preview, id sconosciuti o mount che falliscono restituiscono `false` e mantengono il renderer valido; senza renderer montabile il PET resta disattivato.
   - **F3** contratto renderer allineato: `setFacing(facing)` separato (al mount e a ogni cambio di direzione), `setState(state, { reason })`; specifica asset aggiornata.
+- Seconda review — F1/F2/F3 confermati (`52395cb`); due ultimi punti:
+  - **F4** sostituzione renderer atomica: ogni renderer ha il proprio host `.us-pet-renderer`; il candidato monta in un host staccato; renderer, host e nodi correnti non vengono toccati finché il mount non riesce; in caso di errore il candidato viene scartato. Se il primo mount all'install fallisce, il PET resta disattivato senza nulla agganciato.
+  - **F5** un solo ingresso `react()` per `USPet.react` e l'evento `us:pet`: valuta `blockers()` in modo sincrono prima di toccare la macchina, quindi rifiuta anche prima che il MutationObserver consegni la mutazione. L'observer resta il responsabile di stop/resume dello scheduler.
 
 ## Acceptance (questa candidate)
 

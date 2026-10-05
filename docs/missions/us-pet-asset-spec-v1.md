@@ -43,7 +43,7 @@ Reduced motion: serve **una posa statica per stato** (frame 0) leggibile senza a
 
 ## Integrazione
 
-- Il renderer sprite/vector si registra con `USPet.registerRenderer({ id: 'sprite', mount(host) })`. `mount` riceve il box 40 × 40 e restituisce:
+- Il renderer sprite/vector si registra con `USPet.registerRenderer({ id: 'sprite', mount(host) })`. `mount` riceve un host dedicato 40 × 40, ancora staccato dal DOM: viene agganciato solo se il mount riesce. Restituisce:
 
   | Metodo | Quando | Argomenti |
   |---|---|---|
@@ -53,5 +53,5 @@ Reduced motion: serve **una posa statica per stato** (frame 0) leggibile senza a
   | `destroy()` | quando il renderer viene sostituito | — |
 
   La posizione orizzontale resta del runtime (transform sul contenitore): il renderer disegna solo la figura e non dipende dalle classi CSS del placeholder. Il runtime chiama i metodi solo se presenti.
-- Selezione fail-closed: un id sconosciuto o un `mount` che fallisce lascia montato il renderer corrente; il `placeholder` si monta solo in preview esplicita, mai come fallback di produzione.
+- Selezione fail-closed e atomica: un id sconosciuto o un `mount` che fallisce (anche dopo aver modificato il proprio host) lascia intatti renderer, host e nodi vivi correnti; il `destroy()` del precedente avviene solo dopo un mount riuscito; il `placeholder` si monta solo in preview esplicita, mai come fallback di produzione.
 - Con l'asset approvato: aggiungere le voci `APPROVED` al manifest, i file al precache SW e alle build, registrare `sprite`, poi impostare `PET_ASSET_STATUS = 'APPROVED'`.
