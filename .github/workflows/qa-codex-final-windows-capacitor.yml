@@ -1,0 +1,25 @@
+name: Codex Final Windows Capacitor Gate
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  capacitor_windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Capacitor web build
+        run: npm run build:capacitor-web
+      - name: Diff check
+        shell: bash
+        run: git diff --check origin/main..HEAD
