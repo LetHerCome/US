@@ -39,19 +39,17 @@ function installPriorityRuntime({ eventSource } = {}) {
   return { api: window.UsTodayPriority, calls, listeners, region, window };
 }
 
-test('M2 colloca la priority region in cima a Oggi e la lascia strutturalmente vuota', () => {
+test('M2 follow-up: la priority region resta in Oggi ma fuori dallo stack ritirato', () => {
   const html = read('index.html');
   const home = html.match(/<main id="home"[\s\S]*?<\/main>/)?.[0] || '';
   const region = '<div id="usTodayPriorityRegion" hidden aria-live="polite"></div>';
   const stack = home.match(/<div class="us-oggi-stack" id="usOggiStack">[\s\S]*?\n      <\/div>/)?.[0] || '';
 
   assert.ok(home.indexOf(region) >= 0);
-  // M10A: la priority region è la PRIMA voce della colonna Oggi.
-  assert.ok(stack.indexOf(region) >= 0);
-  assert.ok(stack.indexOf(region) < stack.indexOf('id="usOggiCalendarWidget"'));
+  assert.equal(stack.indexOf(region), -1, 'la notice personale non torna nello stack legacy');
+  assert.ok(home.indexOf(region) < home.indexOf('id="usOggiStack"'));
   assert.match(read('styles.css'), /\.us-today-priority-card[\s\S]{0,500}min-height:44px/);
-  assert.match(read('styles.css'), /\.us-oggi-stack\{position:absolute/);
-  assert.match(read('styles.css'), /#usTodayPriorityRegion\{[\s\S]*pointer-events:none/);
+  assert.match(read('styles.css'), /#home #usTodayPriorityRegion\{[\s\S]*?position:fixed!important;[\s\S]*?pointer-events:none/);
 });
 
 test('M2 compone le priorita in ordine P1 P2 P3 ma il renderer ne mostra una sola', () => {
@@ -116,15 +114,15 @@ test('M2 accetta Events soltanto oggi o entro 48 ore e conserva openEvents come 
   assert.equal(api.eventViewModel({ ...base, effective_date: null, days_left: 0 }), null);
 });
 
-test('M2 mantiene la region hidden senza placeholder e usa solo gli opener esistenti', () => {
+test('M2 follow-up: la region resta hidden senza placeholder per fatti passivi e usa gli opener esistenti per azioni personali', () => {
   const { api, calls, listeners, region } = installPriorityRuntime();
   api.render([]);
   assert.equal(region.hidden, true);
   assert.equal(region.innerHTML, '');
 
   api.render([
-    { id: 'daily', category: 'received_ready', title: 'Risposte pronte', detail: 'Ora potete leggerle.', action: 'today', actionLabel: 'Apri' },
-    { id: 'event', category: 'couple_context', title: 'Cena', detail: 'Domani', action: 'events', actionLabel: 'Apri' },
+    { id: 'daily', category: 'received_ready', attention: true, title: 'Risposte pronte', detail: 'Ora potete leggerle.', action: 'today', actionLabel: 'Apri' },
+    { id: 'event', category: 'couple_context', attention: false, title: 'Cena', detail: 'Domani', action: 'events', actionLabel: 'Apri' },
   ]);
   assert.equal(region.hidden, false);
   assert.match(region.innerHTML, /data-us-today-action="today"/);
@@ -132,18 +130,17 @@ test('M2 mantiene la region hidden senza placeholder e usa solo gli opener esist
 
   const click = listeners.get('click');
   click({ target: { closest: () => ({ dataset: { usTodayAction: 'today' } }) } });
-  assert.match(region.innerHTML, /data-us-today-action="events"/);
-  click({ target: { closest: () => ({ dataset: { usTodayAction: 'events' } }) } });
-  assert.deepEqual(calls, ['today', 'events']);
+  assert.equal(region.hidden, true, 'dopo l’azione non resta il fatto passivo Eventi');
+  assert.equal(region.innerHTML, '');
+  assert.deepEqual(calls, ['today']);
 });
 
 test('M2 mantiene il renderer estendibile a future arrival type senza impilarle', () => {
   const { api, region } = installPriorityRuntime();
-  api.render([{ id: 'future-1', category: 'received_ready', arrivalType: 'partner-reaction', title: 'Una reaction', detail: 'Dal partner', action: 'future', actionLabel: 'Apri' }]);
+  api.render([{ id: 'future-1', category: 'received_ready', attention: true, arrivalType: 'partner-reaction', title: 'Una reaction', detail: 'Dal partner', action: 'future', actionLabel: 'Apri' }]);
   assert.match(region.innerHTML, /data-us-arrival-type="partner-reaction"/);
   assert.equal((region.innerHTML.match(/class="us-today-priority-card[ "]/g) || []).length, 1);
-  // M10E: an item with no personal attention flag never lights the orbit.
-  assert.match(region.innerHTML, /data-us-attention="off"/);
+  assert.match(region.innerHTML, /data-us-attention="on"/);
 });
 
 test('M2 isola una failure Events e non trasforma errori o assenza dati in priorita false', async () => {
