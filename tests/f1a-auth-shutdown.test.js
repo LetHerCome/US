@@ -108,7 +108,7 @@ test('F1A: Auth URLs point only at the canonical Cloudflare Pages origin', () =>
   assert.doesNotMatch(toml, /vercel\.app|127\.0\.0\.1|localhost/);
   // The canonical origin is the one the repo already treats as production.
   assert.match(read('docs/cloudflare-pages-migration.md'), new RegExp(`production frontend: ${CANONICAL_ORIGIN.replace(/\./g, '\\.')}`));
-  assert.match(read('integrations/widgets/scriptable/US-Noi.js'), new RegExp(`APP_URL = "${CANONICAL_ORIGIN.replace(/\./g, '\\.')}/"`));
+  assert.equal(fs.existsSync(path.join(ROOT, 'integrations/widgets/scriptable/US-Noi.js')), false, 'retired Scriptable frontend stays absent');
 });
 
 // --------------------------------------------------------- claim_us_role

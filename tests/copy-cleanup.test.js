@@ -24,7 +24,7 @@ test('copy: explanatory and duplicate lines removed in this pass stay removed', 
     'Aggiungete solo le date che vale davvero la pena aspettare', 'US vi aiuterà a vedere come si incastrano',
     'Per questa settimana avete giocato tutto. Nuovi giochi lunedì', 'Una domanda che solo tu potresti fare',
     'Cinque domande, scelte tra tutto quello che avete', 'Supabase ha bloccato', 'fallback admin', 'Il server invia',
-    'Mostro ciò che è già disponibile', 'Piccole cose che avete deciso di non perdere insieme',
+    'Mostro ciò che è già disponibile', 'Piccole cose che avete deciso di non perdere insieme', 'Revocare Scriptable?', 'Configura Scriptable',
   ];
   const text = all();
   for (const phrase of removed) assert.ok(!text.includes(phrase), `"${phrase}" is gone`);
@@ -36,7 +36,7 @@ test('copy: text kept on purpose (destructive, reveal, privacy, irreversible) is
   for (const phrase of [
     'Eliminare questo impegno?', 'Sparirà dal calendario di entrambi.', 'Elimina questo ricordo per entrambi', '>Eliminato<', '>Annulla<',
     'Sparirà per entrambi.', 'Dopo la conferma le risposte non si cambiano più.', 'Le risposte si sbloccano quando avete risposto entrambi.',
-    'Scollega questo telefono', 'Dovrai inserire di nuovo il codice privato per rientrare in US.', 'Revocare Scriptable?',
+    'Scollega questo telefono', 'Dovrai inserire di nuovo il codice privato per rientrare in US.',
     'Sei offline.', 'Facoltativa e privata.', 'Su di te · ',
   ]) assert.ok(text.includes(phrase), `"${phrase}" kept`);
   assert.match(text, /scoprirà giocando/);
