@@ -89,7 +89,7 @@ test('Daily Question: Gioca owns the visible entry; transient nudge and existing
 
 test('Home cleanup runtime is present in Cloudflare/native builds and in the atomic PWA shell', () => {
   const build = JSON.parse(read('version.json')).version;
-  assert.equal(build, 'us-rewards-countdown-pet-foundation-v1-20261005-1');
+  assert.equal(build, 'us-pet-kitten-preview-v1-20261005-1');
   assert.equal(html.match(/<meta name="us-build" content="([^"]+)"/)?.[1], build);
   assert.equal(worker.match(/const BUILD_ID = "([^"]+)"/)?.[1], build);
   assert.match(worker, /versioned\("\/home-cleanup\.js"\)/);
