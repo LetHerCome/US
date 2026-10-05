@@ -1,0 +1,119 @@
+name: Codex Noi Cards Polish QA
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install Playwright Chromium for visual smoke
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Focused static regressions
+        run: node --test tests/us-human-ui-02.test.js tests/us-home-cleanup-noi-board-daily-move.test.js tests/m12b-oggi-no-scroll.test.js
+      - name: Noi cards browser smoke + screenshots
+        shell: bash
+        run: |
+          python3 -m http.server 4173 >/tmp/us-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true' EXIT
+          sleep 1
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          const fs = require('fs');
+          (async()=>{
+            fs.mkdirSync('qa-noi-cards',{recursive:true});
+            const browser=await chromium.launch({headless:true});
+            for(const width of [320,390,412]){
+              const page=await browser.newPage({viewport:{width,height:915}});
+              await page.goto('http://127.0.0.1:4173/?us-pet=off',{waitUntil:'domcontentloaded'});
+              await page.evaluate(()=>{
+                const auth=document.getElementById('authOverlay'); if(auth)auth.classList.add('hidden');
+                document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+                const bond=document.getElementById('bond'); bond?.classList.add('active');
+                const canonical=bond?.querySelector('.noi-canonical-page'); if(canonical)canonical.dataset.noiView='hub';
+                const bar=document.getElementById('noiSectionBar'); if(bar)bar.hidden=true;
+                const hub=document.getElementById('noiHub'); if(hub)hub.hidden=false;
+                const board=document.getElementById('noiWeekBoard'); if(board)board.hidden=false;
+                const body=document.getElementById('noiWeekBoardBody');
+                if(body)body.innerHTML=[
+                  '<span class="noi-week-board-row"><span class="noi-week-board-day">OGGI</span><span class="noi-week-board-copy"><b>Francesco · Lavoro</b><small>09:30–15:30</small></span></span>',
+                  '<span class="noi-week-board-row"><span class="noi-week-board-day">OGGI</span><span class="noi-week-board-copy"><b>Beatrice · Università</b><small>14:30–16:30</small></span></span>',
+                  '<span class="noi-week-board-row"><span class="noi-week-board-day">DOMANI</span><span class="noi-week-board-copy"><b>Beatrice · Università</b><small>14:30–18:30</small></span></span>',
+                  '<span class="noi-week-board-more">+6 altri impegni</span>'
+                ].join('');
+                const title=document.getElementById('noiHubResonanceTitle'); if(title)title.textContent='Anime sincronizzate';
+                const meta=document.getElementById('noiHubResonanceMeta'); if(meta)meta.textContent='Livello 4';
+                const fill=document.getElementById('noiHubResonanceFill'); if(fill)fill.style.width='28%';
+                window.scrollTo(0,0);
+              });
+              await page.waitForTimeout(150);
+              const check=await page.evaluate(()=>{
+                const pick=s=>document.querySelector(s);
+                const board=pick('.noi-week-board-shell')?.getBoundingClientRect();
+                const resonance=pick('.noi-hub-card--resonance')?.getBoundingClientRect();
+                const destinations=pick('.noi-hub-destinations')?.getBoundingClientRect();
+                const open=pick('.noi-week-board-open')?.getBoundingClientRect();
+                const headTitle=pick('.noi-week-board-head>span:first-child')?.getBoundingClientRect();
+                const title=pick('#noiHubResonanceTitle');
+                return {
+                  viewport:innerWidth,
+                  scrollWidth:document.documentElement.scrollWidth,
+                  board,
+                  resonance,
+                  destinations,
+                  headOverlap:Boolean(open&&headTitle&&open.left<headTitle.right+6),
+                  titleOverflow:Boolean(title&&title.scrollWidth>title.clientWidth+1)
+                };
+              });
+              const boxes=[check.board,check.resonance,check.destinations];
+              if(check.scrollWidth>check.viewport+1)throw new Error(`horizontal overflow @ ${width}: ${check.scrollWidth} > ${check.viewport}`);
+              if(boxes.some(b=>!b||b.left<0||b.right>check.viewport+1))throw new Error(`card outside viewport @ ${width}`);
+              if(check.headOverlap)throw new Error(`Lavagna header overlap @ ${width}`);
+              if(check.titleOverflow)throw new Error(`Sintonia title overflow @ ${width}`);
+              if(check.resonance.bottom>check.destinations.top+1)throw new Error(`Sintonia overlaps destinations @ ${width}`);
+              await page.screenshot({path:`qa-noi-cards/noi-${width}.png`,fullPage:true});
+              await page.close();
+            }
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: noi-cards-polish-screenshots
+          path: qa-noi-cards/*.png
+          if-no-files-found: error
+      - name: Full suite
+        run: npm test
+      - name: Cloudflare build
+        run: npm run build:cloudflare-pages
+      - name: Diff check
+        run: git diff --check origin/main..HEAD
+
+  capacitor_windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Capacitor web build
+        run: npm run build:capacitor-web
