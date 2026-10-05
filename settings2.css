@@ -78,8 +78,6 @@
 #settings .us-settings2-page{
   padding-bottom:10px!important;
 }
-/* Same back pill as a Noi section: Settings is reached from Noi. */
-#settings .us-settings-back-bar{margin:2px 0 10px}
 #settings .us-settings2-head{
   gap:10px;
   margin:0 2px 7px;
