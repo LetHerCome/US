@@ -129,30 +129,65 @@ function previewRequested(w){
   }catch(_){return false;}
 }
 
+// Renderer selection fails closed: the placeholder exists only for explicit
+// preview mode, and an unknown id never replaces a valid renderer.
+function canMount(id,{preview=false}={}){
+  return renderers.has(id)&&(id!=='placeholder'||preview===true);
+}
+
+// The one runtime decision on whether the PET may live right now. Every surface
+// that owns the space above the nav (or makes the shell non-interactive) is a
+// blocker; pet.css mirrors the same list visually.
+function blockers(d,layer,{pageHidden=false}={}){
+  const body=d.body,has=(node,name)=>Boolean(node?.classList?.contains?.(name));
+  const list=[];
+  if(d.hidden||pageHidden)list.push('hidden');
+  if(has(body,'us-keyboard-open'))list.push('keyboard');
+  if(layer?.hasAttribute?.('inert'))list.push('inert');
+  if(has(body,'us-status-visible'))list.push('status');
+  if(has(body,'us-update-visible'))list.push('update');
+  const nudge=d.getElementById('usDailyNudge');if(nudge&&!nudge.hidden)list.push('nudge');
+  if(has(d.getElementById('toast'),'show'))list.push('toast');
+  if(has(d.getElementById('homeHero'),'us-oggi-focus'))list.push('focus');
+  if([...(d.querySelectorAll?.('.auth-overlay')||[])].some(node=>!has(node,'hidden')))list.push('auth');
+  return list;
+}
+
 function install(w){
   const d=w?.document,api=w?.USPet;
   if(!d?.getElementById||!api)return;
   const layer=d.getElementById('usPetLayer'),actor=layer?.querySelector('.us-pet-actor'),nav=d.querySelector('.nav');
   // The placeholder is never a production fallback: an approved asset needs its own renderer.
   const approved=PET_ASSET_STATUS==='APPROVED'&&renderers.has('sprite');
-  api.enabled=Boolean(layer&&actor&&nav&&(approved||previewRequested(w)));
+  const preview=Boolean(layer&&actor&&nav)&&previewRequested(w);
+  api.enabled=Boolean(layer&&actor&&nav&&(approved||preview));
   if(!api.enabled)return; // zero cost: no timers, no observers, nothing painted
-  let view=null,appearance={skin:'',accessory:''};
+  let view=null,appearance={skin:'',accessory:''},facing='',pageHidden=false;
   const pet=createPet({
     schedule:(fn,ms)=>w.setTimeout(fn,ms),cancel:id=>w.clearTimeout(id),
-    render({state,x,facing,duration,reason}){
-      layer.dataset.petState=state;layer.dataset.petFacing=facing;
+    render({state,x,facing:nextFacing,duration,reason}){
+      layer.dataset.petState=state;layer.dataset.petFacing=nextFacing;
       if(reason)layer.dataset.petReason=reason;else delete layer.dataset.petReason;
       layer.style.setProperty('--us-pet-x',`${x}px`);
       layer.style.setProperty('--us-pet-move',`${duration}ms`);
-      view?.setState?.(state,{facing,reason});
+      if(nextFacing!==facing){facing=nextFacing;view?.setFacing?.(facing);}
+      view?.setState?.(state,{reason});
     }
   });
+  // Renderer contract: mount(host) → { setState(state,{reason}), setFacing(facing), setAppearance(appearance), destroy() }.
   function useRenderer(id){
-    const renderer=renderers.get(id)||renderers.get('placeholder');
-    view?.destroy?.();view=renderer.mount(actor)||{};
-    layer.dataset.petRenderer=renderer.id;
+    if(!canMount(id,{preview}))return false;
+    let next;
+    try{next=renderers.get(id).mount(actor)||{};}catch(error){console.warn('[US PET] renderer',error);return false;}
+    if(view&&view!==next)view.destroy?.();
+    view=next;
+    layer.dataset.petRenderer=id;
+    const snap=pet.snapshot();
+    facing=snap.facing;
+    view.setFacing?.(facing);
+    view.setState?.(snap.state,{reason:snap.reason});
     view.setAppearance?.(appearance);
+    return true;
   }
   function measure(){
     const rect=nav.getBoundingClientRect();
@@ -161,8 +196,10 @@ function install(w){
     layer.style.setProperty('--us-pet-nav-h',`${Math.round(rect.height)}px`);
     pet.setTrack(rect.width-28); // keep clear of the nav's rounded ends
   }
-  function sync(){if(d.hidden)pet.stop();else pet.start();}
-  useRenderer(approved?'sprite':'placeholder');
+  // start()/stop() are idempotent: repeated mutations restart at most once, and
+  // stop() drops any queued reaction, so nothing accumulates while blocked.
+  function sync(){if(blockers(d,layer,{pageHidden}).length)pet.stop();else pet.start();}
+  if(!useRenderer(approved?'sprite':'placeholder')){api.enabled=false;return;}
   layer.hidden=false;
   measure();
   if(typeof w.ResizeObserver==='function')new w.ResizeObserver(measure).observe(nav);
@@ -171,12 +208,24 @@ function install(w){
   pet.setReduced(foundation?.isReducedMotion?.()||false);
   foundation?.onMotionPreferenceChange?.(value=>pet.setReduced(value));
   d.addEventListener('visibilitychange',sync);
-  w.addEventListener('pagehide',()=>pet.stop());
-  w.addEventListener('pageshow',sync);
-  // Event interface for features that live in other files.
+  w.addEventListener('pagehide',()=>{pageHidden=true;sync();});
+  w.addEventListener('pageshow',()=>{pageHidden=false;sync();});
+  // Bounded observation: only the nodes and attributes the blockers read. No subtree, no polling.
+  if(typeof w.MutationObserver==='function'){
+    const observer=new w.MutationObserver(sync);
+    const watch=(node,attributes)=>{if(node)observer.observe(node,{attributes:true,attributeFilter:attributes});};
+    watch(d.body,['class']);
+    watch(layer,['inert']);
+    watch(d.getElementById('usDailyNudge'),['hidden']);
+    watch(d.getElementById('toast'),['class']);
+    watch(d.getElementById('homeHero'),['class']);
+    (d.querySelectorAll?.('.auth-overlay')||[]).forEach(node=>watch(node,['class']));
+  }
+  // Event interface for features that live in other files. Ignored while blocked.
   w.addEventListener('us:pet',event=>{if(event?.detail?.type==='react')pet.react(event.detail.reason);});
   api.react=reason=>pet.react(reason);
   api.useRenderer=useRenderer;
+  api.blockers=()=>blockers(d,layer,{pageHidden});
   api.setAppearance=(next={})=>{
     appearance={skin:String(next.skin||'').replace(/[^a-z0-9_-]/g,''),accessory:String(next.accessory||'').replace(/[^a-z0-9_-]/g,'')};
     if(appearance.skin)layer.dataset.petSkin=appearance.skin;else delete layer.dataset.petSkin;
@@ -189,10 +238,11 @@ function install(w){
 
 // Before install (or when disabled) every entry point is a safe no-op.
 return {
-  PET_ASSET_STATUS,STATES,REASONS,TIMING,decide,createPet,registerRenderer,install,
+  PET_ASSET_STATUS,STATES,REASONS,TIMING,decide,createPet,registerRenderer,canMount,computeBlockers:blockers,install,
   enabled:false,
   react:()=>false,
-  useRenderer:()=>{},
+  useRenderer:()=>false,
+  blockers:()=>[],
   setAppearance:()=>{},
   snapshot:()=>null
 };

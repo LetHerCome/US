@@ -10,8 +10,10 @@ async function preview(h,options){
  // The Daily nudge is transient (6.5 s) and owns the space above the nav while shown.
  await view.page.evaluate(()=>{document.getElementById('usDailyNudge').hidden=false;});await view.page.waitForTimeout(300);
  assert.equal(await view.page.evaluate(()=>getComputedStyle(document.getElementById('usPetLayer')).visibility),'hidden');
+ assert.deepEqual(await view.page.evaluate(()=>({blockers:window.USPet.blockers(),running:window.USPet.snapshot().running,react:window.USPet.react('reward')})),{blockers:['nudge'],running:false,react:false},'the runtime stops too, not only the paint');
  await view.page.evaluate(()=>{document.getElementById('usDailyNudge').hidden=true;document.documentElement.style.setProperty('--us-safe-bottom','20px');window.dispatchEvent(new Event('resize'));});
  await view.page.waitForTimeout(400);
+ assert.equal(await view.page.evaluate(()=>window.USPet.snapshot().running),true);
  return view;
 }
 const geometry=page=>page.evaluate(()=>{
@@ -56,8 +58,10 @@ test('PET steps aside for the keyboard, sleeps in background and never walks wit
   const {page,ctx,errors}=await preview(h,{});
   await page.evaluate(()=>document.body.classList.add('us-keyboard-open'));await page.waitForTimeout(350);
   assert.equal((await geometry(page)).visibility,'hidden');
+  assert.deepEqual(await page.evaluate(()=>({blockers:window.USPet.blockers(),running:window.USPet.snapshot().running,react:window.USPet.react('think')})),{blockers:['keyboard'],running:false,react:false});
   await page.evaluate(()=>document.body.classList.remove('us-keyboard-open'));await page.waitForTimeout(350);
   assert.equal((await geometry(page)).visibility,'visible');
+  assert.deepEqual(await page.evaluate(()=>({blockers:window.USPet.blockers(),running:window.USPet.snapshot().running,state:window.USPet.snapshot().state})),{blockers:[],running:true,state:'idle'});
   await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'));});
   assert.equal(await page.evaluate(()=>window.USPet.snapshot().running),false);
   await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>false});document.dispatchEvent(new Event('visibilitychange'));});

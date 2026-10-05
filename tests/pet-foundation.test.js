@@ -114,30 +114,54 @@ test('PET machine: switching to reduced motion stops a walk in place; a narrower
   assert.ok(pet.snapshot().x <= 80 - Pet.TIMING.size - Pet.TIMING.edge);
 });
 
+function classes(initial = []) {
+  const set = new Set(initial);
+  return { contains: (n) => set.has(n), add: (n) => set.add(n), remove: (n) => set.delete(n) };
+}
+// A browser-shaped window: timers are tracked (scheduled and still pending),
+// MutationObserver callbacks are fired by the test like the real engine would.
 function fakeWindow(href, storage = new Map()) {
   const listeners = {};
   const attrs = {};
+  const observed = [];
+  const layerAttrs = new Set();
+  const actor = { innerHTML: '' };
   const layer = {
     hidden: true, dataset: {}, style: { setProperty(k, v) { attrs[k] = v; } },
-    querySelector: (s) => (s === '.us-pet-actor' ? actor : null)
+    querySelector: (s) => (s === '.us-pet-actor' ? actor : null),
+    hasAttribute: (n) => layerAttrs.has(n), setAttribute: (n) => layerAttrs.add(n), removeAttribute: (n) => layerAttrs.delete(n)
   };
-  const actor = { innerHTML: '' };
   const nav = { getBoundingClientRect: () => ({ width: 360, height: 68 }) };
-  let timers = 0;
+  const body = { classList: classes() };
+  const nudge = { hidden: true };
+  const toast = { classList: classes() };
+  const hero = { classList: classes() };
+  const auth = { classList: classes(['hidden']) };
+  const ids = { usPetLayer: layer, usDailyNudge: nudge, toast, homeHero: hero };
+  let scheduled = 0;
+  let seq = 0;
+  const pending = new Map();
   const document = {
-    hidden: false,
-    getElementById: (id) => (id === 'usPetLayer' ? layer : null),
+    hidden: false, body,
+    getElementById: (id) => ids[id] || null,
     querySelector: (s) => (s === '.nav' ? nav : null),
+    querySelectorAll: (s) => (s === '.auth-overlay' ? [auth] : []),
     addEventListener(type, fn) { (listeners[`d:${type}`] ||= []).push(fn); }
   };
   const w = {
     document, location: { href },
     localStorage: { getItem: (k) => storage.get(k) ?? null, setItem: (k, v) => storage.set(k, String(v)), removeItem: (k) => storage.delete(k) },
-    setTimeout: () => ++timers, clearTimeout() {},
+    setTimeout: (fn) => { scheduled++; const id = ++seq; pending.set(id, fn); return id; },
+    clearTimeout: (id) => pending.delete(id),
+    MutationObserver: class { constructor(cb) { this.cb = cb; } observe(node, options) { observed.push({ node, options, cb: this.cb }); } },
     addEventListener(type, fn) { (listeners[`w:${type}`] ||= []).push(fn); },
     USPet: { ...Pet }
   };
-  return { w, layer, actor, attrs, listeners, storage, timers: () => timers };
+  // Apply a DOM change, then deliver it to the observers like the engine would.
+  const mutate = (change) => { change(); new Set(observed.map((o) => o.cb)).forEach((cb) => cb([])); };
+  // Run the oldest pending timer (one scheduler step).
+  const tick = () => { const first = pending.entries().next().value; if (first) { pending.delete(first[0]); first[1](); } };
+  return { w, layer, actor, attrs, listeners, storage, body, nudge, toast, hero, auth, observed, mutate, tick, timers: () => scheduled, active: () => pending.size };
 }
 
 test('PET gate: without an approved asset the layer stays unmounted, with zero timers and listeners', () => {
@@ -218,4 +242,135 @@ test('PET layer: :has() guards live in their own rule so older engines keep the 
   const rules = petCss.replace(/\/\*[\s\S]*?\*\//g, '').split('}').filter((rule) => rule.includes('.us-pet-layer') && rule.includes('visibility:hidden'));
   const plain = rules.find((rule) => rule.includes('body.us-keyboard-open'));
   assert.ok(plain && !plain.includes(':has('), 'keyboard/inert guard must not share a selector list with :has()');
+});
+
+test('F1 occlusion: keyboard stops the PET with zero pending timers, ignores reactions, resumes once', () => {
+  const f = fakeWindow('http://127.0.0.1/?us-pet=preview');
+  Pet.install(f.w);
+  assert.equal(f.w.USPet.snapshot().running, true);
+  assert.equal(f.active(), 1, 'one scheduler timer while alive');
+  f.mutate(() => f.body.classList.add('us-keyboard-open'));
+  assert.deepEqual(f.w.USPet.blockers(), ['keyboard']);
+  assert.equal(f.w.USPet.snapshot().running, false);
+  assert.equal(f.active(), 0, 'no PET timer survives while the keyboard owns the space');
+  assert.equal(f.w.USPet.react('reward'), false, 'reactions are ignored while blocked');
+  f.listeners['w:us:pet'][0]({ detail: { type: 'react', reason: 'think' } });
+  assert.equal(f.layer.dataset.petState, 'idle');
+  f.mutate(() => {}); // unrelated mutation while still blocked: still stopped, still no timer
+  assert.equal(f.active(), 0);
+  f.mutate(() => f.body.classList.remove('us-keyboard-open'));
+  assert.equal(f.w.USPet.snapshot().running, true);
+  assert.equal(f.active(), 1, 'restarted exactly once');
+  f.mutate(() => {}); // a second unrelated mutation must not stack another scheduler
+  assert.equal(f.active(), 1);
+  assert.equal(f.w.USPet.snapshot().pending, null);
+  assert.equal(f.layer.dataset.petState, 'idle');
+});
+
+test('F1 occlusion: transient UI guards stop the PET and resume it cleanly, dropping queued reactions', () => {
+  const guards = [
+    ['nudge', (f) => { f.nudge.hidden = false; }, (f) => { f.nudge.hidden = true; }],
+    ['toast', (f) => f.toast.classList.add('show'), (f) => f.toast.classList.remove('show')],
+    ['inert', (f) => f.layer.setAttribute('inert'), (f) => f.layer.removeAttribute('inert')],
+    ['focus', (f) => f.hero.classList.add('us-oggi-focus'), (f) => f.hero.classList.remove('us-oggi-focus')],
+    ['auth', (f) => f.auth.classList.remove('hidden'), (f) => f.auth.classList.add('hidden')],
+    ['status', (f) => f.body.classList.add('us-status-visible'), (f) => f.body.classList.remove('us-status-visible')],
+    ['update', (f) => f.body.classList.add('us-update-visible'), (f) => f.body.classList.remove('us-update-visible')]
+  ];
+  for (const [name, on, off] of guards) {
+    const f = fakeWindow('http://127.0.0.1/?us-pet=preview');
+    Pet.install(f.w);
+    // A reaction in flight with one queued behind it must not survive the occlusion.
+    f.w.USPet.react('think');
+    f.w.USPet.react('streak');
+    assert.equal(f.w.USPet.snapshot().pending, 'streak');
+    f.mutate(() => on(f));
+    assert.deepEqual(f.w.USPet.blockers(), [name]);
+    assert.equal(f.active(), 0, `${name}: zero pending timers`);
+    assert.equal(f.w.USPet.react('reward'), false, `${name}: reaction ignored`);
+    f.mutate(() => off(f));
+    assert.equal(f.w.USPet.snapshot().running, true, `${name}: resumed`);
+    assert.equal(f.active(), 1, `${name}: one scheduler`);
+    assert.equal(f.w.USPet.snapshot().pending, null, `${name}: no accumulated reaction`);
+    assert.equal(f.w.USPet.snapshot().state, 'idle', `${name}: resumes from idle, not the stale reaction`);
+  }
+});
+
+test('F1 occlusion: observation is bounded to blocker nodes/attributes; hidden and pagehide still stop', () => {
+  const f = fakeWindow('http://127.0.0.1/?us-pet=preview');
+  Pet.install(f.w);
+  assert.equal(f.observed.length, 6, 'body, layer, nudge, toast, hero, auth overlay');
+  for (const { options } of f.observed) {
+    assert.equal(options.subtree, undefined, 'never a subtree observer');
+    assert.equal(options.childList, undefined);
+    assert.ok(Array.isArray(options.attributeFilter) && options.attributeFilter.length === 1);
+  }
+  f.w.document.hidden = true;
+  f.listeners['d:visibilitychange'][0]();
+  assert.equal(f.active(), 0);
+  f.w.document.hidden = false;
+  f.listeners['d:visibilitychange'][0]();
+  assert.equal(f.active(), 1);
+  f.listeners['w:pagehide'][0]();
+  assert.deepEqual(f.w.USPet.blockers(), ['hidden']);
+  assert.equal(f.active(), 0);
+  f.mutate(() => {}); // a DOM change after pagehide must not restart the PET
+  assert.equal(f.active(), 0);
+  f.listeners['w:pageshow'][0]();
+  assert.equal(f.active(), 1);
+  assert.doesNotMatch(petJs, /setInterval|requestAnimationFrame/, 'no polling, no rAF');
+});
+
+test('F2 renderers fail closed: placeholder is preview-only, unknown ids keep the current renderer', () => {
+  assert.equal(Pet.canMount('placeholder'), false, 'production/approved mode never mounts the placeholder');
+  assert.equal(Pet.canMount('placeholder', { preview: false }), false);
+  assert.equal(Pet.canMount('placeholder', { preview: true }), true);
+  assert.equal(Pet.canMount('sprite-that-does-not-exist', { preview: true }), false);
+  const f = fakeWindow('http://127.0.0.1/?us-pet=preview');
+  Pet.install(f.w);
+  const before = f.actor.innerHTML;
+  assert.equal(f.w.USPet.useRenderer('missing-renderer'), false);
+  assert.equal(f.layer.dataset.petRenderer, 'placeholder');
+  assert.equal(f.actor.innerHTML, before, 'the valid renderer stays mounted');
+  Pet.registerRenderer({ id: 'test-throws', mount() { throw new Error('broken asset'); } });
+  const warn = console.warn;
+  console.warn = () => {};
+  try { assert.equal(f.w.USPet.useRenderer('test-throws'), false); } finally { console.warn = warn; }
+  assert.equal(f.layer.dataset.petRenderer, 'placeholder');
+  assert.equal(f.actor.innerHTML, before);
+  assert.match(petJs, /if\(!useRenderer\(approved\?'sprite':'placeholder'\)\)\{api\.enabled=false;return;\}/, 'nothing mounts if the chosen renderer cannot');
+  assert.doesNotMatch(petJs, /renderers\.get\(id\)\|\|renderers\.get\('placeholder'\)/, 'no placeholder fallback');
+});
+
+test('F3 renderer contract: setFacing(facing) is its own call, setState carries state and reason only', () => {
+  const calls = [];
+  Pet.registerRenderer({
+    id: 'test-recorder',
+    mount() {
+      return {
+        setState: (state, meta) => calls.push(['state', state, { ...meta }]),
+        setFacing: (facing) => calls.push(['facing', facing]),
+        setAppearance: (a) => calls.push(['appearance', { ...a }]),
+        destroy: () => calls.push(['destroy'])
+      };
+    }
+  });
+  const f = fakeWindow('http://127.0.0.1/?us-pet=preview');
+  Pet.install(f.w);
+  assert.equal(f.w.USPet.useRenderer('test-recorder'), true);
+  assert.equal(f.layer.dataset.petRenderer, 'test-recorder');
+  assert.deepEqual(calls.slice(0, 2), [['facing', 'right'], ['state', 'idle', { reason: '' }]]);
+  calls.length = 0;
+  f.w.USPet.react('think');
+  assert.deepEqual(calls, [['state', 'react', { reason: 'think' }]], 'no facing inside setState, no redundant setFacing');
+  calls.length = 0;
+  // Drive the scheduler until the pet turns, to prove setFacing fires on change.
+  for (let i = 0; i < 400 && !calls.some((c) => c[0] === 'facing'); i++) f.tick();
+  const turns = calls.filter((c) => c[0] === 'facing');
+  assert.equal(turns.length, 1);
+  assert.equal(turns[0][1], 'left');
+  assert.ok(calls.every((c) => c[0] !== 'state' || !('facing' in c[2])));
+  const spec = read('docs/missions/us-pet-asset-spec-v1.md');
+  assert.match(spec, /setFacing\(facing\)/);
+  assert.match(spec, /setState\(state, \{ reason \}\)/);
 });

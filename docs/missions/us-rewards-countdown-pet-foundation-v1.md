@@ -78,7 +78,7 @@ Vincoli: solo `transform`/`opacity`/`background-position`; pausa con pagina nasc
 - **Layer**: `#usPetLayer`, fratello di `.nav` nel body, `position:fixed`, `pointer-events:none` su layer e discendenti, `aria-hidden="true"`, `z-index:19`. Allineato ai bordi della nav misurati con `ResizeObserver`; poggia sul bordo superiore della nav e non la copre mai.
 - **Stati**: `idle`, `walk`, `rest`, `react` (+ `hidden` come stato del layer). Uno scheduler a timer, senza rAF, sceglie pause naturali (idle 2.5–7 s, rest 9–22 s) e destinazioni lungo l'asse della nav. Lo spostamento è una `transition` CSS su `transform` con durata proporzionale alla distanza.
 - **Lifecycle**: timer fermi con `document.hidden`, keyboard aperta, modale aperta (il layer eredita `inert`), Focus Photo, toast/status/update bar/nudge visibili. Reduced motion: nessuna camminata, nessun loop, `react` come semplice cambio di posa.
-- **Renderer sostituibile**: `USPet.registerRenderer({ id, mount(host) → { setState, setFacing, setAppearance, destroy } })`. Il renderer di default è `placeholder`, un segnaposto geometrico dichiarato **non finale**.
+- **Renderer sostituibile**: `USPet.registerRenderer({ id, mount(host) → { setState(state, { reason }), setFacing(facing), setAppearance({ skin, accessory }), destroy() } })`. Selezione fail-closed (`canMount`): id sconosciuto o mount fallito lasciano il renderer corrente; `placeholder` (segnaposto geometrico **non finale**) si monta solo in preview esplicita, mai come fallback.
 - **Gate asset**: senza un asset `APPROVED` il PET resta spento in produzione. Si accende solo in locale (`?us-pet=preview` o `localStorage['us:pet:v1:preview']='1'`). Specifica in [`us-pet-asset-spec-v1.md`](us-pet-asset-spec-v1.md).
 - **Event interface**: `USPet.react(reason)` oppure `window.dispatchEvent(new CustomEvent('us:pet', { detail: { type: 'react', reason } }))`. Motivi ammessi: `think`, `left-for-you`, `reward`, `streak`, `daily-question`; con rate limit e coda di una sola reazione. In V1 è collegato solo `reward` (unlock moment).
 - **Aspetto / rewards**: `USPet.setAppearance({ skin, accessory })` scrive `data-pet-skin` / `data-pet-accessory`. Futuri slot `pet_skin` / `pet_accessory` nello stesso modello device-local di `progression.js`.
@@ -123,7 +123,11 @@ Non toccati: Supabase (schema, RPC, migrazioni), `app.js`, navigation authority,
 - 2026-10-05 — Audit e piano (questo file) + specifica asset PET. Nessun blocker architetturale: stili Countdown sugli id esistenti, nessuna migrazione; PET dietro gate asset.
 - Countdown visual pass: sei identità, `previewMarkup` condiviso, Orbita sincronizzata ai secondi reali senza loop JS.
 - Unlock moment V2 + gruppo “Stili Countdown” nella collezione; il PET reagisce a `reward` solo dopo la chiusura del momento.
-- PET Foundation: `pet.js` / `pet.css`, layer sul bordo della nav, stati, gate, event API; marker build `us-rewards-countdown-pet-foundation-v1-20261005-1`.
+- PET Foundation: `pet.js` / `pet.css`, layer sul bordo della nav, stati, gate, event API; marker build `us-rewards-countdown-pet-foundation-v1-20261005-1`. Candidate `014d61e` pubblicata su origin.
+- Review indipendente — 2 blocker + 1 contratto, corretti sullo stesso branch:
+  - **F1** una sola decisione runtime `blockers()` (hidden/pagehide, keyboard, inert, status, update, nudge, toast, Focus Photo, auth). Bloccato ⇒ `pet.stop()`, zero timer, reazioni ignorate e coda svuotata; sbloccato ⇒ un solo restart. Reattivo via MutationObserver limitato ai 6 nodi/attributi letti (niente subtree, polling o rAF).
+  - **F2** `useRenderer` fail-closed: `placeholder` solo in preview, id sconosciuti o mount che falliscono restituiscono `false` e mantengono il renderer valido; senza renderer montabile il PET resta disattivato.
+  - **F3** contratto renderer allineato: `setFacing(facing)` separato (al mount e a ogni cambio di direzione), `setState(state, { reason })`; specifica asset aggiornata.
 
 ## Acceptance (questa candidate)
 

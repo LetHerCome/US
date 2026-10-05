@@ -20,7 +20,7 @@ Preferito: **SVG a parti separate** (corpo, occhio/i, punto di luce, ombra) con 
 |---|---|
 | Ingombro logico | 40 × 40 px (box), corpo ≤ 32 px di altezza |
 | Piedi/base | appoggiati sulla riga inferiore del box (y = 40) |
-| Direzione | disegnato rivolto a destra; la sinistra si ottiene in CSS con `scaleX(-1)` |
+| Direzione | disegnato rivolto a destra; il renderer riceve `setFacing('left')` e può specchiare la figura (es. `scaleX(-1)`) |
 | Peso | SVG ≤ 6 KB per stato; sprite ≤ 40 KB totali |
 | Sfondo | trasparente; nessuna ombra esterna “cotta” nell'asset (l'ombra è CSS) |
 
@@ -43,5 +43,15 @@ Reduced motion: serve **una posa statica per stato** (frame 0) leggibile senza a
 
 ## Integrazione
 
-- Il renderer sprite/vector implementa il contratto `USPet.registerRenderer({ id, mount(host) })` già presente.
-- Con l'asset approvato: aggiungere le voci `APPROVED` al manifest, i file al precache SW e alle build, poi togliere il gate `PET_ASSET_STATUS`.
+- Il renderer sprite/vector si registra con `USPet.registerRenderer({ id: 'sprite', mount(host) })`. `mount` riceve il box 40 × 40 e restituisce:
+
+  | Metodo | Quando | Argomenti |
+  |---|---|---|
+  | `setState(state, { reason })` | a ogni cambio di stato | `idle` / `walk` / `rest` / `react`; `reason` solo per `react` |
+  | `setFacing(facing)` | al mount e quando la direzione cambia | `'left'` / `'right'` |
+  | `setAppearance({ skin, accessory })` | al mount e quando cambia il premio equipaggiato | token già sanificati `[a-z0-9_-]` |
+  | `destroy()` | quando il renderer viene sostituito | — |
+
+  La posizione orizzontale resta del runtime (transform sul contenitore): il renderer disegna solo la figura e non dipende dalle classi CSS del placeholder. Il runtime chiama i metodi solo se presenti.
+- Selezione fail-closed: un id sconosciuto o un `mount` che fallisce lascia montato il renderer corrente; il `placeholder` si monta solo in preview esplicita, mai come fallback di produzione.
+- Con l'asset approvato: aggiungere le voci `APPROVED` al manifest, i file al precache SW e alle build, registrare `sprite`, poi impostare `PET_ASSET_STATUS = 'APPROVED'`.
