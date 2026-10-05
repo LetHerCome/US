@@ -11,26 +11,29 @@ async function preview(h,options){
  await view.page.evaluate(()=>{
    document.getElementById('usDailyNudge').hidden=false;
    document.getElementById('toast').classList.add('show');
+   document.querySelector('.think-arrival-overlay')?.classList.add('open');
  });
  await view.page.waitForTimeout(300);
  const overlay=await view.page.evaluate(()=>{
-   const pet=document.getElementById('usPetLayer'),nudge=document.getElementById('usDailyNudge'),toast=document.getElementById('toast');
+   const pet=document.getElementById('usPetLayer'),nudge=document.getElementById('usDailyNudge'),toast=document.getElementById('toast'),think=document.querySelector('.think-arrival-overlay');
    return {
      visibility:getComputedStyle(pet).visibility,
      petZ:Number(getComputedStyle(pet).zIndex),
      nudgeZ:Number(getComputedStyle(nudge).zIndex),
      toastZ:Number(getComputedStyle(toast).zIndex),
+     thinkZ:Number(getComputedStyle(think).zIndex),
      blockers:window.USPet.blockers(),
      running:window.USPet.snapshot().running,
      react:window.USPet.react('reward')
    };
  });
  assert.equal(overlay.visibility,'visible');
- assert.ok(overlay.petZ>overlay.nudgeZ&&overlay.petZ>overlay.toastZ,JSON.stringify(overlay));
+ assert.ok(overlay.petZ>overlay.nudgeZ&&overlay.petZ>overlay.toastZ&&overlay.petZ>overlay.thinkZ,JSON.stringify(overlay));
  assert.deepEqual({blockers:overlay.blockers,running:overlay.running,react:overlay.react},{blockers:[],running:true,react:true});
  await view.page.evaluate(()=>{
    document.getElementById('usDailyNudge').hidden=true;
    document.getElementById('toast').classList.remove('show');
+   document.querySelector('.think-arrival-overlay')?.classList.remove('open');
    document.documentElement.style.setProperty('--us-safe-bottom','20px');
    window.dispatchEvent(new Event('resize'));
  });
