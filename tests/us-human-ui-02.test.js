@@ -224,8 +224,10 @@ test('Noi: the couple row stays centered, the weekly board owns Calendar, and ac
   const head = bond.match(/<header class="noi-canonical-head noi-couple-head">[\s\S]*?<\/header>/)?.[0] || '';
   assert.match(head, /id="pairAvatarFrancesco"><img alt="" hidden><span class="fallback"/);
   assert.match(head, /id="pairAvatarBeatrice"><img alt="" hidden><span class="fallback"/);
+  assert.match(head, /id="noiCoupleCard" role="group" aria-label="Francesco, Beatrice, distanza e impostazioni"/);
   assert.match(head, /id="noiCoupleLink" data-us-distance-state="unknown"/);
   assert.match(head, /id="usSettingsEntry" onclick="go\('settings',\{nav:true\}\)"/);
+  assert.ok(head.indexOf('id="noiCoupleCard"') < head.indexOf('id="usSettingsEntry"'), 'Settings lives inside the couple card');
   assert.match(app, /if\(profile\.role==='francesco'\)setAvatarSlot\('pairAvatarFrancesco',url\);/);
   assert.match(app, /if\(profile\.role==='beatrice'\)setAvatarSlot\('pairAvatarBeatrice',url\);/);
   const board = bond.match(/<section class="noi-week-board" id="noiWeekBoard"[\s\S]*?<\/section>/)?.[0] || '';
@@ -277,7 +279,7 @@ const scope = (name) => settingsPage.match(new RegExp(`<section class="us-settin
 const settingsIn = (chunk) => [...chunk.matchAll(/data-us-setting="([a-z-]+)"/g)].map((m) => m[1]);
 
 test('Settings: TU holds what is the actor\'s or this phone\'s, VOI what the couple shares', () => {
-  assert.deepEqual(settingsIn(scope('tu')), ['profile-photo', 'notifications', 'location', 'distance', 'feedback', 'maudit', 'home-photo', 'scriptable-widgets', 'sync-status']);
+  assert.deepEqual(settingsIn(scope('tu')), ['profile-photo', 'notifications', 'location', 'distance', 'feedback', 'maudit', 'home-photo', 'sync-status']);
   assert.deepEqual(settingsIn(scope('voi')), ['relationship-date', 'story-archive']);
   assert.match(scope('voi'), /<article class="us-couple-id-card" id="usCoupleIdCard"/, 'the couple card is shared state');
   assert.match(scope('tu'), /<h3 id="usSettingsTuTitle">Tu<\/h3>/);
@@ -287,7 +289,7 @@ test('Settings: TU holds what is the actor\'s or this phone\'s, VOI what the cou
 test('Settings: every control exists exactly once and keeps its existing action', () => {
   const all = settingsIn(settingsPage);
   assert.equal(new Set(all).size, all.length, 'no duplicated control');
-  assert.deepEqual([...all].sort(), ['distance', 'feedback', 'home-photo', 'location', 'logout', 'maudit', 'notifications', 'privacy', 'profile-photo', 'relationship-date', 'scriptable-widgets', 'story-archive', 'sync-status']);
+  assert.deepEqual([...all].sort(), ['distance', 'feedback', 'home-photo', 'location', 'logout', 'maudit', 'notifications', 'privacy', 'profile-photo', 'relationship-date', 'story-archive', 'sync-status']);
   const settingsJs = read('settings.js');
   for (const name of all) assert.match(settingsJs, new RegExp(`if\\(name==='${name}'\\)`), `${name} is still handled`);
   for (const id of ['usRelationshipDateValue', 'usNotificationsValue', 'usDistanceUnitValue', 'usLocationState', 'usFeedbackValue', 'usSyncValue', 'usStoryArchiveValue', 'usSettingsBuild', 'usCoupleAvatars', 'usCoupleNames', 'usTogetherLine', 'usSettingsDeviceDot']) {
@@ -352,7 +354,7 @@ test('Settings density: utility rows, couple card and footer stay compact withou
   assert.match(css, /#settings \.us-couple-id-card\{[\s\S]*?padding:10px 11px;/);
   assert.match(css, /body:has\(#settings\.page\.active\) #thinkButton\{\s*display:none!important;/);
   const page = html.match(/<main id="settings"[\s\S]*?<\/main>/)?.[0] || '';
-  for (const name of ['profile-photo','notifications','location','distance','feedback','home-photo','scriptable-widgets','sync-status','relationship-date','story-archive']) {
+  for (const name of ['profile-photo','notifications','location','distance','feedback','home-photo','sync-status','relationship-date','story-archive']) {
     assert.match(page, new RegExp(`data-us-setting="${name}"`), name);
   }
 });
@@ -473,10 +475,12 @@ test('Auth first-run: new assets follow the canonical BUILD_ID contract', () => 
 });
 
 
-test('US 1.0 polish: Settings is out of the Noi couple flow and Home no longer shows distance', () => {
+test('Pre-native polish: Settings has one explicit home inside the couple card and Home no longer shows distance', () => {
   const css = read('styles.css');
   const identity = read('identity.css');
-  assert.match(css, /#bond \.noi-couple-head\{position:relative;display:block/);
-  assert.match(css, /#bond \.noi-couple-head #usSettingsEntry\{position:absolute/);
+  assert.match(css, /#bond \.noi-couple-card\{/);
+  assert.match(css, /#bond \.noi-couple-card #usSettingsEntry\{/);
+  assert.match(css, /right:8px;/);
+  assert.match(css, /top:8px;/);
   assert.match(identity, /#home \.home-distance-pill\{display:none!important\}/);
 });

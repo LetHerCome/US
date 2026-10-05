@@ -35,37 +35,6 @@ function daysBetween(from: string, to: string) {
   return Math.round((dateOnlyUtc(to) - dateOnlyUtc(from)) / 86400000);
 }
 
-function isActiveScriptableInstallation(installation: any, tokenRow: any, now = Date.now()) {
-  if (!installation || !tokenRow) return false;
-  if (installation.profile_id !== tokenRow.profile_id || installation.couple_id !== tokenRow.couple_id) return false;
-  if (installation.revoked_at !== null) return false;
-  const expiresAt = Date.parse(String(installation.expires_at || ""));
-  return Number.isFinite(expiresAt) && expiresAt > now;
-}
-
-function isOrphanedScriptableToken(tokenRow: any, installation: any) {
-  // The label only fails closed on an orphan; a linked installation is the lifecycle authority.
-  return tokenRow?.device_label === "Scriptable" && !installation;
-}
-
-function makeScriptableWidgetState(todayDate: string, generatedAt: string, me: any, partner: any, couple: any, homePhotoUrl: string | null) {
-  const daysTogether = couple.started_on ? Math.max(0, daysBetween(couple.started_on, todayDate)) : null;
-  return {
-    version: 1,
-    generatedAt,
-    todayDate,
-    user: { displayName: me.display_name, partnerName: partner?.display_name || "Partner" },
-    relationship: { startedOn: couple.started_on, daysTogether },
-    homePhotoUrl
-  };
-}
-
-function resolveHomePhotoUrl(homePhotoPath: string | null, signed: any, signingError: any) {
-  if (!homePhotoPath) return null;
-  if (signingError || !signed?.signedUrl) throw new Error("home_photo_signing_failed");
-  return signed.signedUrl;
-}
-
 function bondLevelInfo(totalXp = 0) {
   const total = Math.max(0, Number(totalXp) || 0);
   let level = 1, floor = 0, needed = 200;
@@ -113,48 +82,9 @@ Deno.serve(async (req) => {
 
     if (tokenError) throw tokenError;
     if (!tokenRow) return json({ error: "invalid_token" }, 401);
-
-    const { data: scriptableInstallation, error: installationError } = await admin
-      .from("widget_scriptable_installations")
-      .select("profile_id,couple_id,revoked_at,expires_at")
-      .eq("state_token_hash", tokenHash)
-      .maybeSingle();
-    if (installationError) throw installationError;
-    if (isOrphanedScriptableToken(tokenRow, scriptableInstallation)) return json({ error: "invalid_token" }, 401);
-    const isScriptableToken = Boolean(scriptableInstallation);
-    if (isScriptableToken && !isActiveScriptableInstallation(scriptableInstallation, tokenRow)) {
-      return json({ error: "invalid_token" }, 401);
-    }
+    if (tokenRow.device_label === "Scriptable") return json({ error: "invalid_token" }, 401);
 
     await admin.from("widget_tokens").update({ last_used_at: new Date().toISOString() }).eq("id", tokenRow.id);
-
-    if (isScriptableToken) {
-      const today = romeToday();
-      const [coupleResult, profilesResult] = await Promise.all([
-        admin.from("couples").select("started_on,home_photo_path").eq("id", tokenRow.couple_id).single(),
-        admin.from("profiles").select("id,display_name").eq("couple_id", tokenRow.couple_id)
-      ]);
-      if (coupleResult.error) throw coupleResult.error;
-      if (profilesResult.error) throw profilesResult.error;
-      const couple = coupleResult.data;
-      const profiles = profilesResult.data || [];
-      const me = profiles.find((profile: any) => profile.id === tokenRow.profile_id);
-      const partner = profiles.find((profile: any) => profile.id !== tokenRow.profile_id) || null;
-      if (!me) return json({ error: "invalid_token" }, 401);
-
-      const signedResult = couple.home_photo_path
-        ? await admin.storage.from("us-media").createSignedUrl(couple.home_photo_path, 86400)
-        : { data: null, error: null };
-      const homePhotoUrl = resolveHomePhotoUrl(couple.home_photo_path, signedResult.data, signedResult.error);
-      return json(makeScriptableWidgetState(
-        today,
-        new Date().toISOString(),
-        me,
-        partner,
-        couple,
-        homePhotoUrl
-      ));
-    }
 
     const today = romeToday();
     const [coupleResult, profileResult, profilesResult, eventsResult, questionResult, thinkResult] = await Promise.all([
