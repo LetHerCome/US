@@ -36,7 +36,7 @@ jobs:
         run: npm run build:cloudflare-pages
       - name: Diff check
         shell: bash
-        run: git diff --check origin/main..e900178396396cb9824c6c9dbb917bd7d4b48920
+        run: git diff --check origin/main..7e8ddc3dba2029d9f59aada565a5863308592aec
 
   windows_capacitor:
     runs-on: windows-latest
@@ -44,7 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: e900178396396cb9824c6c9dbb917bd7d4b48920
+          ref: 7e8ddc3dba2029d9f59aada565a5863308592aec
       - uses: actions/setup-node@v4
         with:
           node-version: 22

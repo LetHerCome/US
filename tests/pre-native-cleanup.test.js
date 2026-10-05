@@ -8,7 +8,7 @@ const settings = read('settings.js');
 const styles = read('styles.css');
 const widgetState = read('supabase/functions/us-widget-state/index.ts');
 
-test('pre-native: couple identity is one compact card with Settings in the top-right corner', () => {
+test('pre-native: couple identity is one light bridge with Settings in the top-right corner', () => {
   const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
   const header = bond.match(/<header class="noi-canonical-head noi-couple-head">[\s\S]*?<\/header>/)?.[0] || '';
   assert.match(header, /id="noiCoupleCard"/);
@@ -18,7 +18,8 @@ test('pre-native: couple identity is one compact card with Settings in the top-r
   assert.match(header, /id="usSettingsEntry"[\s\S]*?aria-label="Apri impostazioni"/);
   assert.ok(header.indexOf('id="noiCoupleCard"') < header.indexOf('id="usSettingsEntry"'));
   assert.match(styles, /#bond \.noi-couple-card\{/);
-  assert.match(styles, /#bond \.noi-couple-card #usSettingsEntry\{[\s\S]*?right:8px;[\s\S]*?top:8px;/);
+  assert.match(styles, /#bond \.noi-couple-card #usSettingsEntry\{[\s\S]*?right:2px;[\s\S]*?top:4px;/);
+  assert.match(styles, /#bond \.noi-couple-card\{[\s\S]*?background:transparent;[\s\S]*?border:0;/);
 });
 
 test('pre-native: Scriptable is retired from the product client and dedicated integration source', () => {
