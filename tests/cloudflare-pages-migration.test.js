@@ -71,8 +71,6 @@ test('Cloudflare Pages is the only production frontend referenced by runtime cod
     if (/vercel\.app/i.test(source)) offenders.push(file);
   }
   assert.deepEqual(offenders, [], 'runtime code must not point at the legacy Vercel frontend');
-  for (const widget of ['US-Noi.js', 'US-Ti-Penso.js']) {
-    const source = await readFile(path.join(ROOT, 'integrations/widgets/scriptable', widget), 'utf8');
-    assert.match(source, /const APP_URL = "https:\/\/us-a33\.pages\.dev\/";/, widget);
-  }
+  const retiredScriptable = run('git', ['ls-files', 'integrations/widgets/scriptable'], { cwd: ROOT, encoding: 'utf8' }).trim();
+  assert.equal(retiredScriptable, '', 'retired Scriptable integration must not return to runtime source');
 });

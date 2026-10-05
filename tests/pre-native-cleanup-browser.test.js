@@ -31,9 +31,9 @@ test('pre-native browser: couple card stays compact, contained and opens Setting
       });
 
       assert.ok(geometry.card.left >= 0 && geometry.card.right <= geometry.viewport.width + 0.5, width + ': card contained');
-      assert.ok(geometry.card.height >= 70 && geometry.card.height <= 100, width + ': compact card');
+      assert.ok(geometry.card.height >= 72 && geometry.card.height <= 98, width + ': light bridge stays compact');
       assert.ok(geometry.settings.left >= geometry.card.left && geometry.settings.right <= geometry.card.right, width + ': Settings inside card');
-      assert.ok(geometry.settings.top >= geometry.card.top && geometry.settings.bottom <= geometry.card.bottom, width + ': Settings vertically inside card');
+      assert.ok(geometry.settings.top >= geometry.card.top && geometry.settings.bottom <= geometry.card.bottom, width + ': Settings stays inside the bridge bounds');
       assert.ok(geometry.settings.left >= geometry.beatrice.right - 1, width + ': Settings does not cover Beatrice');
       assert.ok(geometry.board.top > geometry.card.bottom, width + ': Lavagna stays below the card');
       assert.deepEqual(geometry.names, ['Francesco', 'Beatrice']);
@@ -45,6 +45,34 @@ test('pre-native browser: couple card stays compact, contained and opens Setting
       assert.deepEqual(view.errors, [], width + ': no page errors');
       await view.ctx.close();
     }
+  } finally {
+    await h.close();
+  }
+});
+
+
+test('Noi return: Lavagna keeps resolved content visible while it refreshes in the background', async (t) => {
+  const h = await start();
+  if (!h) return t.skip('Playwright unavailable');
+  try {
+    const view = await pageFor(h, { width: 390, height: 844 });
+    const { page } = view;
+    await page.evaluate(() => window.go('bond', { nav: true }));
+    await page.waitForFunction(() => !document.querySelector('#noiWeekBoardBody .noi-week-board-loading'));
+    const before = await page.locator('#noiWeekBoardBody').innerHTML();
+    await page.evaluate(() => window.go('home', { nav: true }));
+    await page.waitForTimeout(80);
+    await page.evaluate(() => window.go('bond', { nav: true }));
+    const immediate = await page.evaluate(() => ({
+      loading: Boolean(document.querySelector('#noiWeekBoardBody .noi-week-board-loading')),
+      html: document.getElementById('noiWeekBoardBody').innerHTML
+    }));
+    assert.equal(immediate.loading, false, 'returning to Noi never flashes the loader');
+    assert.equal(immediate.html, before, 'the last resolved board stays painted during refresh');
+    await page.waitForTimeout(500);
+    assert.equal(await page.locator('#noiWeekBoardBody .noi-week-board-loading').count(), 0);
+    assert.deepEqual(view.errors, []);
+    await view.ctx.close();
   } finally {
     await h.close();
   }

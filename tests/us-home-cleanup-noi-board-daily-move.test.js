@@ -41,6 +41,8 @@ test('Noi Lavagna: it replaces the Calendar tile and reads the existing calendar
   assert.match(source, /window\.openCalendarSurface\?\.\(date\)/);
   assert.doesNotMatch(source, /localStorage|sessionStorage|indexedDB|\.insert\(|\.update\(|\.upsert\(|sb\.rpc\(/);
   assert.match(calendar, /if \(\$\('bond'\)\?\.classList\.contains\('active'\)\) window\.refreshNoiWeekBoard\?\.\(\);/);
+  assert.match(source, /keep the last resolved board visible while the canonical calendar refreshes/);
+  assert.doesNotMatch(source, /if \(body\) body\.innerHTML = '<span class="noi-week-board-loading">Carico gli impegni…<\/span>';/, 'same-couple refresh never replaces resolved Lavagna with a loader');
 });
 
 function dailyModel(state, reveal = null) {
@@ -89,7 +91,7 @@ test('Daily Question: Gioca owns the visible entry; transient nudge and existing
 
 test('Home cleanup runtime is present in Cloudflare/native builds and in the atomic PWA shell', () => {
   const build = JSON.parse(read('version.json')).version;
-  assert.equal(build, 'us-pre-native-cleanup-v1-20261006-1');
+  assert.equal(build, 'us-noi-bridge-board-return-v1-20261006-1');
   assert.equal(html.match(/<meta name="us-build" content="([^"]+)"/)?.[1], build);
   assert.equal(worker.match(/const BUILD_ID = "([^"]+)"/)?.[1], build);
   assert.match(worker, /versioned\("\/home-cleanup\.js"\)/);

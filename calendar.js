@@ -801,18 +801,34 @@ function renderNoiWeekBoard(model) {
     + (model.total > visibleRows.length ? `<span class="noi-week-board-more">+${model.total - visibleRows.length} altri impegni</span>` : '');
 }
 let noiWeekBoardRefreshId = 0;
+let noiWeekBoardIdentityKey = '';
 async function refreshNoiWeekBoard() {
   const refreshId = ++noiWeekBoardRefreshId;
   const body = $('noiWeekBoardBody');
-  if (!window.usProfile) { if (body) body.innerHTML = ''; return; }
-  if (body) body.innerHTML = '<span class="noi-week-board-loading">Carico gli impegni…</span>';
+  const shell = $('noiWeekBoardOpen');
+  if (!window.usProfile) {
+    noiWeekBoardIdentityKey = '';
+    if (body) body.innerHTML = '';
+    shell?.removeAttribute('data-noi-week-date');
+    return;
+  }
+  const identityKey = `${window.usProfile.id}:${window.usProfile.couple_id}`;
+  const identityChanged = Boolean(noiWeekBoardIdentityKey && noiWeekBoardIdentityKey !== identityKey);
+  noiWeekBoardIdentityKey = identityKey;
+  // Re-entering Noi must not collapse Lavagna back to a loading placeholder:
+  // keep the last resolved board visible while the canonical calendar refreshes.
+  // Only a real identity change clears stale couple data.
+  if (identityChanged && body) {
+    body.innerHTML = '<span class="noi-week-board-loading">Carico gli impegni…</span>';
+    shell?.removeAttribute('data-noi-week-date');
+  }
   try {
     const model = await getNoiWeekBoardSource();
     if (refreshId !== noiWeekBoardRefreshId) return;
     renderNoiWeekBoard(model);
   } catch (error) {
     console.warn('[US Noi] week board', error);
-    if (refreshId === noiWeekBoardRefreshId) renderNoiWeekBoard(null);
+    if (refreshId === noiWeekBoardRefreshId && identityChanged) renderNoiWeekBoard(null);
   }
 }
 $('noiWeekBoardOpen')?.addEventListener('click', () => {
