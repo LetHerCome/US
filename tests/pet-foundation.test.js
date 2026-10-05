@@ -229,8 +229,10 @@ test('PET layer: never takes input, never covers the nav, steps aside and respec
   assert.match(html, /<\/nav>\n<!-- US PET V1[^\n]*-->\n<div class="us-pet-layer" id="usPetLayer" aria-hidden="true" hidden><span class="us-pet-actor"><\/span><\/div>/);
   assert.ok(html.indexOf('src="/pet.js') > html.indexOf('src="/ui-foundation.js'), 'pet reads the foundation motion authority');
   assert.match(petCss, /\.us-pet-layer,\.us-pet-layer \*\{pointer-events:none!important/);
+  assert.match(petCss, /\.us-pet-layer\{position:fixed;z-index:70;/, 'transient notifications stay below the PET overlay');
+  assert.doesNotMatch(petCss, /#usDailyNudge:not\(\[hidden\]\)\) \.us-pet-layer|#toast\.show\) \.us-pet-layer/, 'Daily/Ti penso never hide the PET');
   assert.match(petCss, /\.us-pet-layer\{position:fixed;z-index:19;[^}]*bottom:calc\(max\(8px,var\(--us-safe-bottom\)\) \+ var\(--us-pet-nav-h,68px\) - 3px\)/);
-  for (const guard of ['body.us-keyboard-open .us-pet-layer', '.us-pet-layer[inert]', 'body.us-status-visible .us-pet-layer', 'body.us-update-visible .us-pet-layer', 'body:has(#usDailyNudge:not([hidden])) .us-pet-layer', 'body:has(#toast.show) .us-pet-layer', 'body:has(#homeHero.us-oggi-focus) .us-pet-layer']) {
+  for (const guard of ['body.us-keyboard-open .us-pet-layer', '.us-pet-layer[inert]', 'body.us-status-visible .us-pet-layer', 'body.us-update-visible .us-pet-layer', 'body:has(#homeHero.us-oggi-focus) .us-pet-layer']) {
     assert.ok(petCss.includes(guard), guard);
   }
   assert.match(petCss, /html\[data-us-visibility="hidden"\] \.us-pet-layer \*\{animation-play-state:paused!important\}/);
@@ -280,35 +282,41 @@ test('F1 occlusion: keyboard stops the PET with zero pending timers, ignores rea
   assert.equal(f.layer.dataset.petState, 'idle');
 });
 
-test('F1 occlusion: transient UI guards stop the PET and resume it cleanly, dropping queued reactions', () => {
+test('F1 occlusion: exclusive UI guards stop the PET and resume it cleanly, dropping queued reactions', () => {
   const guards = [
-    ['nudge', (f) => { f.nudge.hidden = false; }, (f) => { f.nudge.hidden = true; }],
-    ['toast', (f) => f.toast.classList.add('show'), (f) => f.toast.classList.remove('show')],
     ['inert', (f) => f.layer.setAttribute('inert'), (f) => f.layer.removeAttribute('inert')],
     ['focus', (f) => f.hero.classList.add('us-oggi-focus'), (f) => f.hero.classList.remove('us-oggi-focus')],
     ['auth', (f) => f.auth.classList.remove('hidden'), (f) => f.auth.classList.add('hidden')],
     ['status', (f) => f.body.classList.add('us-status-visible'), (f) => f.body.classList.remove('us-status-visible')],
     ['update', (f) => f.body.classList.add('us-update-visible'), (f) => f.body.classList.remove('us-update-visible')]
   ];
-  for (const [name, on, off] of guards) {
+  for (const [name, block, unblock] of guards) {
     const f = fakeWindow('http://127.0.0.1/?us-pet=preview');
     Pet.install(f.w);
-    // A reaction in flight with one queued behind it must not survive the occlusion.
-    f.w.USPet.react('think');
-    f.w.USPet.react('streak');
-    assert.equal(f.w.USPet.snapshot().pending, 'streak');
-    f.mutate(() => on(f));
-    assert.deepEqual(f.w.USPet.blockers(), [name]);
-    assert.equal(f.active(), 0, `${name}: zero pending timers`);
-    assert.equal(f.w.USPet.react('reward'), false, `${name}: reaction ignored`);
-    f.mutate(() => off(f));
+    assert.equal(f.w.USPet.react('think'), true);
+    block(f); f.mutate(() => {});
+    assert.equal(f.w.USPet.snapshot().running, false, name);
+    assert.equal(f.active(), 0, `${name}: no timer while blocked`);
+    assert.equal(f.w.USPet.react('reward'), false);
+    unblock(f); f.mutate(() => {});
     assert.equal(f.w.USPet.snapshot().running, true, `${name}: resumed`);
-    assert.equal(f.active(), 1, `${name}: one scheduler`);
-    assert.equal(f.w.USPet.snapshot().pending, null, `${name}: no accumulated reaction`);
-    assert.equal(f.w.USPet.snapshot().state, 'idle', `${name}: resumes from idle, not the stale reaction`);
+    assert.equal(f.active(), 1, `${name}: one scheduler timer`);
+    assert.equal(f.w.USPet.snapshot().pending, null, `${name}: queued reaction dropped`);
   }
 });
 
+test('Transient Daily/Ti-penso surfaces never block or stop the PET', () => {
+  const f = fakeWindow('http://127.0.0.1/?us-pet=preview');
+  Pet.install(f.w);
+  f.nudge.hidden = false;
+  f.toast.classList.add('show');
+  assert.deepEqual(f.w.USPet.blockers(), []);
+  assert.equal(f.w.USPet.snapshot().running, true);
+  assert.equal(f.w.USPet.react('think'), true);
+  f.mutate(() => {});
+  assert.equal(f.w.USPet.snapshot().running, true, 'observer delivery does not stop for transient notifications');
+  assert.equal(f.active(), 1);
+});
 test('F1 occlusion: observation is bounded to blocker nodes/attributes; hidden and pagehide still stop', () => {
   const f = fakeWindow('http://127.0.0.1/?us-pet=preview');
   Pet.install(f.w);
@@ -457,8 +465,6 @@ test('F4 initial install: if the first renderer fails to mount, the PET stays di
 test('F5 reactions honour blockers synchronously, before the MutationObserver delivers', () => {
   const guards = [
     ['keyboard', (f) => f.body.classList.add('us-keyboard-open')],
-    ['nudge', (f) => { f.nudge.hidden = false; }],
-    ['toast', (f) => f.toast.classList.add('show')],
     ['inert', (f) => f.layer.setAttribute('inert')]
   ];
   for (const [name, block] of guards) {
