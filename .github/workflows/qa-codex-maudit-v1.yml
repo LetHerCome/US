@@ -83,3 +83,44 @@ jobs:
       - run: npm ci
       - name: Capacitor web build on Windows
         run: npm run build:capacitor-web
+
+  geometry_compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: 8bc3e72539d2a79c44a667228c39b8484a78fbf3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Candidate M12B x5
+        run: for i in 1 2 3 4 5; do node --test tests/m12b-oggi-no-scroll.test.js; done
+      - name: Base M12B x5
+        shell: bash
+        run: |
+          git checkout --detach origin/main
+          for i in 1 2 3 4 5; do node --test tests/m12b-oggi-no-scroll.test.js; done
+
+  candidate_full_clean:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 8bc3e72539d2a79c44a667228c39b8484a78fbf3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Full suite candidate clean
+        run: npm test
+
