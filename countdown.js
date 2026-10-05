@@ -185,7 +185,11 @@ function install(w){
     if(!opened())return;root.classList.remove('open');
     if(!w.UsUiFoundation?.exitSurface?.(root,finish))finish();
   }
-  $('usCountdownEntry').addEventListener('click',open);surface.addEventListener('click',open);
+  async function openActive(){
+    await open();
+    if(opened()&&state?.active_id)editor(state.active_id);
+  }
+  $('usCountdownEntry')?.addEventListener('click',open);surface.addEventListener('click',openActive);
   root.querySelectorAll('[data-countdown-close]').forEach(e=>e.addEventListener('click',close));
   $('usCountdownBack').addEventListener('click',collection);
   $('usCountdownNew').addEventListener('click',()=>editor());
