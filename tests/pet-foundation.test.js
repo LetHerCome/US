@@ -351,7 +351,7 @@ test('F2 renderers fail closed: placeholder is preview-only, unknown ids keep th
   try { assert.equal(f.w.USPet.useRenderer('test-throws'), false); } finally { console.warn = warn; }
   assert.equal(f.layer.dataset.petRenderer, 'placeholder');
   assert.equal(f.actor.innerHTML, before);
-  assert.match(petJs, /if\(!useRenderer\(approved\?'sprite':'placeholder'\)\)\{api\.enabled=false;return;\}/, 'nothing mounts if the chosen renderer cannot');
+  assert.match(petJs, /if\(!useRenderer\(preview\?'placeholder':approved\?'sprite':'placeholder'\)\)\{api\.enabled=false;return;\}/, 'nothing mounts if the chosen renderer cannot');
   assert.doesNotMatch(petJs, /renderers\.get\(id\)\|\|renderers\.get\('placeholder'\)/, 'no placeholder fallback');
 });
 
