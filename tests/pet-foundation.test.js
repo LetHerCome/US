@@ -231,7 +231,7 @@ test('PET layer: never takes input, never covers the nav, steps aside and respec
   assert.match(petCss, /\.us-pet-layer,\.us-pet-layer \*\{pointer-events:none!important/);
   assert.match(petCss, /\.us-pet-layer\{position:fixed;z-index:10040;/, 'transient notifications stay below the PET overlay');
   assert.doesNotMatch(petCss, /#usDailyNudge:not\(\[hidden\]\)\) \.us-pet-layer|#toast\.show\) \.us-pet-layer/, 'Daily/Ti penso never hide the PET');
-  assert.match(petCss, /\.us-pet-layer\{position:fixed;z-index:19;[^}]*bottom:calc\(max\(8px,var\(--us-safe-bottom\)\) \+ var\(--us-pet-nav-h,68px\) - 3px\)/);
+  assert.match(petCss, /\.us-pet-layer\{position:fixed;z-index:10040;[^}]*bottom:calc\(max\(8px,var\(--us-safe-bottom\)\) \+ var\(--us-pet-nav-h,68px\) - 3px\)/);
   for (const guard of ['body.us-keyboard-open .us-pet-layer', '.us-pet-layer[inert]', 'body.us-status-visible .us-pet-layer', 'body.us-update-visible .us-pet-layer', 'body:has(#homeHero.us-oggi-focus) .us-pet-layer']) {
     assert.ok(petCss.includes(guard), guard);
   }
