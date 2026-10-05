@@ -34,10 +34,15 @@ function createServiceWorkerHarness({ failPrecachePath = null, redirectRefresh =
   let skipWaitingCalls = 0;
   let claimCalls = 0;
   let networkAvailable = true;
+  let oneShotNotFoundPath = null;
 
   const responseFor = (input) => {
     if (!networkAvailable) throw new Error('network offline');
     const url = new URL(cacheKey(input));
+    if (oneShotNotFoundPath && url.pathname === oneShotNotFoundPath) {
+      oneShotNotFoundPath = null;
+      return new Response('transient not found', { status: 404 });
+    }
     if (url.pathname === failPrecachePath) {
       throw new Error(`precache failed for ${url.pathname}`);
     }
@@ -177,6 +182,12 @@ function createServiceWorkerHarness({ failPrecachePath = null, redirectRefresh =
     dispatchExtendable,
     dispatchFetch,
     setOnline(value) { networkAvailable = value; },
+    failNextPathWith404(pathname) { oneShotNotFoundPath = pathname; },
+    evictAppDocuments() {
+      const shell = cacheBuckets.get(CURRENT_SHELL);
+      shell?.delete(ORIGIN + '/index.html');
+      shell?.delete(ORIGIN + '/');
+    },
     get skipWaitingCalls() { return skipWaitingCalls; },
     get claimCalls() { return claimCalls; }
   };
@@ -573,6 +584,33 @@ test('reload offline usa index e runtime della nuova shell cache', async () => {
   assert.equal(await appResponse.text(), harness.rawApp);
   assert.equal(await storiesResponse.text(), 'asset:/stories.js');
   assert.equal(await storiesCssResponse.text(), 'asset:/stories.css');
+});
+
+test('Android PWA: cache del documento assente + primo 404 ripiega su /index.html canonico', async () => {
+  const harness = createServiceWorkerHarness();
+  await harness.dispatchExtendable('install');
+  await harness.dispatchExtendable('activate');
+  harness.evictAppDocuments();
+  harness.failNextPathWith404('/');
+
+  const response = await harness.dispatchFetch('/', { mode: 'navigate' });
+
+  assert.equal(response.status, 200);
+  assert.equal(await response.text(), 'asset:/index.html');
+});
+
+test('Android PWA: cache assente + rete offline restituisce comunque una Response HTML valida', async () => {
+  const harness = createServiceWorkerHarness();
+  await harness.dispatchExtendable('install');
+  await harness.dispatchExtendable('activate');
+  harness.evictAppDocuments();
+  harness.setOnline(false);
+
+  const response = await harness.dispatchFetch('/qualunque-stato-ripristinato', { mode: 'navigate' });
+
+  assert.equal(response.status, 503);
+  assert.match(response.headers.get('content-type') || '', /text\/html/);
+  assert.match(await response.text(), /US non è raggiungibile/);
 });
 
 test('iOS PWA: un redirect durante us-refresh non viene servito o salvato come documento', async () => {
