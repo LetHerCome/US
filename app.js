@@ -24,6 +24,9 @@ function go(id,options={}){
     return;
   }
   if(current==='bond')window.closeNoiSection?.();
+  // Focus Photo is a state of Oggi only: left on, it kept Oggi's widgets inert
+  // and the PET hidden on every other page until the user came back and tapped.
+  if(current==='home'&&document.getElementById('homeHero')?.classList.contains('us-oggi-focus'))setOggiFocusPhoto(false);
   const direction=Math.sign(pages.indexOf(id)-pages.indexOf(current));
   pages.forEach(pageId=>{
     const el=document.getElementById(pageId);

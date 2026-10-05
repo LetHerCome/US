@@ -10,7 +10,8 @@ test('M5G5 camera overlay participates in the fixed modal and open selectors', (
   const css = read('left-for-you.css');
   assert.match(css, /#leftForYouOverlay,#leftForYouComposerOverlay,#leftForYouCameraOverlay\{/);
   assert.match(css, /#leftForYouOverlay\.open,#leftForYouComposerOverlay\.open,#leftForYouCameraOverlay\.open\{/);
-  assert.match(css, /\.left-for-you-camera-overlay\{z-index:10030\}/);
+  // The camera stacks one step above the composer on the sheet rung of the ladder.
+  assert.match(css, /#leftForYouCameraOverlay\{z-index:calc\(var\(--us-layer-sheet\) \+ 10\)\}/);
 });
 
 test('M5G5 enabled composer CTA has an explicit enabled visual state', () => {

@@ -9,6 +9,25 @@
      :root palettes. Legacy names at the end are aliases, never new values.
      ========================================================================== */
 
+  /* Layers — ONE ladder for every fixed surface, bottom to top:
+       content    0–19   pages, Oggi widgets (inside #homeHero, isolated)
+       chrome     20     bottom nav (top bar 10 lives in the page)
+       notices    30–70  toast 30 · Daily nudge 65 · status/update bars 70
+       transient  10030  Ti penso arrival (passes through, never exclusive)
+       ambient    10040  PET: above notices + transient, pointer-events:none
+       sheets     10060+ every exclusive sheet/viewer; later ones stack above
+                         (stories 10050 is a full-screen viewer that hides the
+                         PET through the exclusive-surface rule, see pet.js)
+       rewards    10120  unlock / XP / level presentation
+       confirm    10300  the one confirmation sheet
+       auth       10250  front door: above every sheet it may interrupt
+     Feature files use these tokens instead of inventing new numbers. */
+  --us-layer-chrome:20;
+  --us-layer-transient:10030;
+  --us-layer-ambient:10040;
+  --us-layer-sheet:10060;
+  --us-layer-auth:10250;
+
   /* Colour — near-black plum canvas, warm light text, rose + violet accent. */
   --us-color-bg:#08040e;                 /* brand canvas (manifest theme) */
   --us-color-surface:#120e17;            /* raised content */

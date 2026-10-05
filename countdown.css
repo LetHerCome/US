@@ -75,7 +75,7 @@
 .us-oggi-focus .us-countdown-display{opacity:0;pointer-events:none;}
 .us-countdown-display:focus-visible,.us-countdown-style:focus-visible{outline:2px solid var(--us-color-accent-ink);outline-offset:5px;}
 /* Canonical sheet, content scrolls including the action when the keyboard opens. */
-.us-countdown-overlay{position:fixed;inset:0;z-index:1000;display:none;align-items:end;justify-content:center;}
+.us-countdown-overlay{position:fixed;inset:0;z-index:var(--us-layer-sheet);display:none;align-items:end;justify-content:center;}
 .us-countdown-overlay[aria-hidden="false"]{display:flex;}
 .us-countdown-sheet{position:relative;width:min(100%,540px);max-height:calc(var(--us-viewport-height,100dvh) - var(--us-safe-top) - 16px);overflow-y:auto;overscroll-behavior:contain;padding:22px 20px calc(20px + var(--us-safe-bottom));border-radius:30px 30px 0 0;}
 .us-countdown-head{display:flex;align-items:center;justify-content:space-between;gap:12px;}

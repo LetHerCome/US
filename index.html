@@ -234,7 +234,7 @@ html.us-returning-device .auth-overlay{
     </section>
   </main>
 
-  <main id="thinkArrival" class="think-arrival-overlay" aria-hidden="true" data-us-modal data-us-motion-surface>
+  <main id="thinkArrival" class="think-arrival-overlay" aria-hidden="true" data-us-modal data-us-transient data-us-motion-surface>
     <div class="think-arrival-backdrop us-modal-backdrop" onclick="closeThinkArrival()"></div>
     <section class="think-arrival-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-label="Ti penso ricevuto" data-us-modal-panel>
       <header class="think-arrival-head"><div><div class="tiny">TI PENSO</div><h2 id="thinkArrivalTitle">La tua persona ti pensa</h2></div><button type="button" class="think-arrival-close us-modal-close" onclick="closeThinkArrival()" aria-label="Chiudi Ti penso"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
@@ -575,7 +575,7 @@ html.us-returning-device .auth-overlay{
 <button data-us-feedback="tap" data-page="quiz" onclick="openQuizHub({nav:true})" aria-label="Gioca"><span class="nicon"><span class="us-nav-icon us-nav-icon--quiz" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/cards-three-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/cards-three-fill.svg"></span></span></span><span class="nlabel">Gioca</span></button>
 </nav>
 <!-- US PET V1: decorative layer on the nav rim; unmounted until an approved asset exists. -->
-<div class="us-pet-layer" id="usPetLayer" aria-hidden="true" hidden><span class="us-pet-actor"></span></div>
+<div class="us-pet-layer" id="usPetLayer" aria-hidden="true" data-us-ambient hidden><span class="us-pet-actor"></span></div>
 
 
 <div class="us-events-overlay" id="usEventsOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
