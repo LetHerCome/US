@@ -2,7 +2,7 @@
    The layer never takes input and never overlaps the four tabs: it stands on
    the nav's top edge, inside the nav's width. Motion is CSS only; pet.js just
    picks the next state and target. */
-.us-pet-layer{position:fixed;z-index:70;left:50%;bottom:calc(max(8px,var(--us-safe-bottom)) + var(--us-pet-nav-h,68px) - 3px);width:var(--us-pet-track,min(456px,calc(100% - 18px)));height:40px;transform:translateX(-50%);pointer-events:none;contain:layout style size;transition:opacity 220ms var(--us-ease-standard),visibility 0s linear 0s}
+.us-pet-layer{position:fixed;z-index:10040;left:50%;bottom:calc(max(8px,var(--us-safe-bottom)) + var(--us-pet-nav-h,68px) - 3px);width:var(--us-pet-track,min(456px,calc(100% - 18px)));height:40px;transform:translateX(-50%);pointer-events:none;contain:layout style size;transition:opacity 220ms var(--us-ease-standard),visibility 0s linear 0s}
 .us-pet-layer[hidden]{display:none!important}
 .us-pet-layer,.us-pet-layer *{pointer-events:none!important;user-select:none;-webkit-user-select:none}
 .us-pet-actor{position:absolute;left:14px;bottom:0;width:40px;height:40px;transform:translate3d(var(--us-pet-x,6px),0,0);transition:transform var(--us-pet-move,0ms) linear;will-change:transform}
