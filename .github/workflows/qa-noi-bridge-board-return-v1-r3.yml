@@ -1,0 +1,58 @@
+name: QA Noi bridge and Lavagna return R3
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  linux_review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Focused Noi/Lavagna browser gates
+        run: |
+          node --test tests/pre-native-cleanup-browser.test.js
+          node --test tests/us-home-cleanup-noi-board-daily-move.test.js
+          node --test tests/navigation-soak-browser.test.js
+          node --test tests/us-human-ui-02.test.js
+          node --test tests/pre-native-cleanup.test.js
+          node --test tests/cloudflare-pages-migration.test.js
+          node --test tests/copy-cleanup.test.js
+          node --test tests/f1a-auth-shutdown.test.js
+      - name: Full suite
+        run: npm test
+      - name: Cloudflare build
+        run: npm run build:cloudflare-pages
+      - name: Diff check
+        shell: bash
+        run: git diff --check origin/main..7e8ddc3dba2029d9f59aada565a5863308592aec
+
+  windows_capacitor:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 7e8ddc3dba2029d9f59aada565a5863308592aec
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Capacitor web build on Windows
+        run: npm run build:capacitor-web
