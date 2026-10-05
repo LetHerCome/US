@@ -6,6 +6,9 @@
 //    clipping rule is in effect while measuring, every visible Oggi control
 //    sits between the top bar and the bottom nav, Oggi surfaces never overlap,
 //    and M12A arbitration still shows at most 1 primary + 1 quiet item.
+//    Since US Home Cleanup the dashboard stack (#usOggiStack) is retired and
+//    stays mounted but invisible; what Oggi shows is the photo/countdown, the
+//    fixed priority notice and the transient Daily Question nudge.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -60,13 +63,15 @@ function fixtures({ moments = true, event = true, eventTitle = 'Concerto di Elis
   };
 }
 
+// What each state must put on Oggi under the post-Home-Cleanup contract:
+// `nudge` is the transient Daily Question nudge (its copy), null means no nudge.
 const STATES = {
-  'busy: event + Daily Question (partner answered)': fixtures(),
-  'long texts: long event title + long question': fixtures({ eventTitle: 'La cena di compleanno a sorpresa con tutta la famiglia di Beatrice a Trastevere' }),
-  'answers ready notice (dismissable) + event': fixtures({ daily: 'ready' }),
-  'empty: no Ricordo yet + Daily Question': fixtures({ moments: false, event: false, daily: 'answer' }),
-  'quiet push opt-in wins the quiet slot': fixtures({ event: false, push: true, daily: 'answer' }),
-  'calm: nothing to do': fixtures({ event: false, daily: 'answered' })
+  'busy: event + Daily Question (partner answered)': { fx: fixtures(), nudge: /ha già risposto · tocca a te/ },
+  'long texts: long event title + long question': { fx: fixtures({ eventTitle: 'La cena di compleanno a sorpresa con tutta la famiglia di Beatrice a Trastevere' }), nudge: /ha già risposto · tocca a te/ },
+  'answers ready notice (dismissable) + event': { fx: fixtures({ daily: 'ready' }), nudge: /Le vostre risposte sono pronte/ },
+  'empty: no Ricordo yet + Daily Question': { fx: fixtures({ moments: false, event: false, daily: 'answer' }), nudge: /Una domanda per voi oggi/ },
+  'quiet push opt-in wins the quiet slot': { fx: fixtures({ event: false, push: true, daily: 'answer' }), nudge: /Una domanda per voi oggi/ },
+  'calm: nothing to do': { fx: fixtures({ event: false, daily: 'answered' }), nudge: null }
 };
 
 async function measure(page) {
@@ -76,17 +81,23 @@ async function measure(page) {
     const clip = (el) => /hidden|clip/.test(getComputedStyle(el).overflowY);
     const top = box(document.querySelector('.top.us-premium-top'));
     const nav = box(document.querySelector('.nav'));
-    // Oggi surfaces: the stack cards, the empty state, the bottom row.
-    const surfaceIds = ['usTodayPriorityRegion', 'usOggiCalendarWidget', 'usDailyRitual', 'usDailyRevealLink', 'homeEmptyState', 'distanceWidget', 'pushOptInCard'];
+    // Oggi surfaces after Home Cleanup: the fixed priority notice, the
+    // transient Daily Question nudge, the empty state and the bottom row.
+    const surfaceIds = ['usTodayPriorityRegion', 'usDailyNudge', 'homeEmptyState', 'distanceWidget', 'pushOptInCard'];
     const surfaces = surfaceIds.map((id) => document.getElementById(id)).filter(visible).map((el) => ({ id: el.id, ...box(el) }));
-    const controls = [...document.querySelectorAll('#homeHero button, #homeHero a, #homeHero [role=button]')]
+    const controls = [...document.querySelectorAll('#homeHero button, #homeHero a, #homeHero [role=button], #usDailyNudge')]
       .filter((el) => el.id !== 'usOggiFocusToggle' && visible(el)).map((el) => ({ id: el.id || el.className, ...box(el) }));
+    const stack = document.getElementById('usOggiStack');
+    const stackStyle = getComputedStyle(stack);
+    const retiredStack = { mounted: Boolean(stack), visibility: stackStyle.visibility, height: stack.getBoundingClientRect().height, pointerEvents: stackStyle.pointerEvents };
+    const nudge = document.getElementById('usDailyNudge');
+    const nudgeText = visible(nudge) ? nudge.textContent.replace(/\s+/g, ' ').trim() : null;
     const slots = [...document.querySelectorAll('#homeHero [data-us-oggi-slot]')].filter(visible).map((el) => el.getAttribute('data-us-oggi-slot'));
     return {
       innerHeight, innerWidth,
       scrollHeight: document.scrollingElement.scrollHeight, scrollWidth: document.scrollingElement.scrollWidth,
       clipped: { html: clip(document.documentElement), body: clip(document.body), home: clip(document.getElementById('home')) },
-      top, nav, surfaces, controls, slots
+      top, nav, surfaces, controls, slots, retiredStack, nudgeText
     };
   });
 }
@@ -98,7 +109,7 @@ test('M12B.1 geometry: Oggi fits every supported viewport without clipping', asy
   const base = `http://127.0.0.1:${server.address().port}`;
   const browser = await chromium.launch();
   try {
-    for (const [name, fx] of Object.entries(STATES)) {
+    for (const [name, { fx, nudge }] of Object.entries(STATES)) {
       for (const vp of VIEWPORTS) {
         const label = `${name} @ ${vp.join('x')}`;
         const mobile = vp[0] < 800;
@@ -140,7 +151,6 @@ test('M12B.1 geometry: Oggi fits every supported viewport without clipping', asy
           assert.ok(c.top >= m.top.bottom - 0.5 && c.bottom <= m.nav.top + 0.5, `${label}: ${c.id} (${Math.round(c.top)}-${Math.round(c.bottom)}) not between top bar ${Math.round(m.top.bottom)} and nav ${Math.round(m.nav.top)}`);
           assert.ok(c.left >= -0.5 && c.right <= m.innerWidth + 0.5, `${label}: ${c.id} outside the width`);
         }
-        const inStack = new Set(['usTodayPriorityRegion', 'usOggiCalendarWidget', 'usDailyRitual', 'usDailyRevealLink']);
         for (let i = 0; i < m.surfaces.length; i += 1) {
           for (let j = i + 1; j < m.surfaces.length; j += 1) {
             const a = m.surfaces[i], b = m.surfaces[j];
@@ -148,7 +158,15 @@ test('M12B.1 geometry: Oggi fits every supported viewport without clipping', asy
             assert.equal(overlap, false, `${label}: ${a.id} overlaps ${b.id}`);
           }
         }
-        assert.ok(m.surfaces.some((s) => inStack.has(s.id)) || name.startsWith('calm'), `${label}: expected an Oggi card`);
+        // The retired dashboard stack stays mounted for its authorities but never shows.
+        assert.deepEqual(m.retiredStack, { mounted: true, visibility: 'hidden', height: 0, pointerEvents: 'none' }, `${label}: the retired Oggi stack is visible`);
+        if (nudge) {
+          assert.match(m.nudgeText || '', nudge, `${label}: expected the Daily Question nudge`);
+          const n = m.surfaces.find((s) => s.id === 'usDailyNudge');
+          assert.ok(n.top >= m.top.bottom - 0.5 && n.bottom <= m.nav.top + 0.5, `${label}: the nudge is not between top bar and nav`);
+        } else {
+          assert.equal(m.nudgeText, null, `${label}: no Daily Question nudge when there is nothing to do`);
+        }
         assert.ok(m.slots.filter((s) => s === 'primary').length <= 1, `${label}: more than one primary`);
         assert.ok(m.slots.filter((s) => s === 'quiet').length <= 1, `${label}: more than one quiet`);
         assert.equal(m.slots.includes('suppressed'), false, `${label}: a suppressed surface is still visible`);
