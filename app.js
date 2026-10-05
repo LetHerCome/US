@@ -44,7 +44,10 @@ function go(id,options={}){
   if(id==='settings' && window.usProfile) window.hydrateUsSettings?.();
   if(id==='home' && window.usProfile) window.refreshOggiCalendarWidget?.();
 }
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700)}
+// One timer for the one toast: a second message restarts the 1.7 s window
+// instead of being cut short by the first message's pending hide.
+let usToastTimer=null;
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(usToastTimer);usToastTimer=setTimeout(()=>t.classList.remove('show'),1700)}
 // The one US confirmation sheet (ui-foundation); the platform dialog only as a fallback.
 function usConfirm(options){const ui=window.UsUiFoundation;return ui&&typeof ui.confirm==='function'?ui.confirm(options):Promise.resolve(window.confirm(options.title));}
 // Game V2 — Gioca is owned by games.js (window.USGameV2); the legacy weekly quiz UI is retired.

@@ -8,6 +8,10 @@ let historyReady=false;
 let layerScanQueued=false;
 let currentEntryIndex=0;
 const layerStates=new Map();
+// Layer name -> the history entry index that represents it. Back closes only
+// the layers whose own entry lies beyond the destination entry, so a deeper
+// stack (Noi section -> Calendar -> form) unwinds one level at a time.
+const layerEntries=new Map();
 
 const originalGo=typeof window.go==='function'?window.go:null;
 
@@ -28,9 +32,15 @@ function pushPage(page){
   currentEntryIndex=entryIndex()+1;
   history.pushState({__usNav:1,kind:'page',page,entryIndex:currentEntryIndex},'',location.href);
 }
+function replaceLayer(name){
+  currentEntryIndex=entryIndex();
+  history.replaceState({__usNav:1,kind:'layer',layer:name,page:activePage(),entryIndex:currentEntryIndex},'',location.href);
+  layerEntries.set(name,currentEntryIndex);
+}
 function pushLayer(name){
   currentEntryIndex=entryIndex()+1;
   history.pushState({__usNav:1,kind:'layer',layer:name,page:activePage(),entryIndex:currentEntryIndex},'',location.href);
+  layerEntries.set(name,currentEntryIndex);
 }
 
 if(originalGo){
@@ -75,6 +85,20 @@ const layers=[
     close:()=>window.UsLeftForYou?.close?.()
   },
   {
+    // The sender composer opens on its own when nothing is waiting, so it is
+    // a layer of its own: Back closes it instead of changing the page below.
+    name:'left-for-you-composer',
+    find:()=>document.getElementById('leftForYouComposerOverlay'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsLeftForYou?.closeComposer?.()
+  },
+  {
+    name:'left-for-you-camera',
+    find:()=>document.getElementById('leftForYouCameraOverlay'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsLeftForYou?.closeCamera?.()
+  },
+  {
     name:'event-form',
     find:()=>document.getElementById('usEventForm'),
     open:el=>Boolean(el&&!el.hidden),
@@ -83,7 +107,9 @@ const layers=[
   {
     name:'quiz-subview',
     find:()=>document.getElementById('quiz'),
-    open:()=>Boolean(window.USGameV2?.isOpen()),
+    // Only while Gioca is the visible page: a round left open behind another
+    // tab must not swallow the native Back of the page the user is looking at.
+    open:el=>Boolean(el?.classList.contains('active')&&window.USGameV2?.isOpen()),
     close:()=>window.USGameV2?.close()
   },
   {
@@ -178,6 +204,8 @@ const layers=[
 ];
 
 function scanLayers({initialize=false}={}){
+  const opened=[];
+  const closed=[];
   for(const layer of layers){
     const el=layer.find();
     const open=Boolean(el&&layer.open(el));
@@ -193,20 +221,24 @@ function scanLayers({initialize=false}={}){
 
     if(open===previous)continue;
     layerStates.set(layer.name,open);
+    if(!open)layerEntries.delete(layer.name);
 
     if(applyingHistory||!historyReady)continue;
-
-    if(open){
-      if(!sameLayerState(layer.name))pushLayer(layer.name);
-      continue;
-    }
-
-    // A close button / swipe consumed a layer. Consume its matching browser
-    // history entry too, so the next system Back continues naturally.
-    if(sameLayerState(layer.name)){
-      history.back();
-    }
+    (open?opened:closed).push(layer.name);
   }
+
+  // A close button / swipe consumed a layer. Consume its matching browser
+  // history entry too, so the next system Back continues naturally.
+  let consumed=closed.some(name=>sameLayerState(name));
+  for(const name of opened){
+    if(sameLayerState(name))continue;
+    // One surface handed over to the next in the same task (Lasciato per te
+    // with nothing waiting opens the composer): reuse the entry. A back()
+    // racing a push would land on the old entry and close the new surface.
+    if(consumed){replaceLayer(name);consumed=false;continue;}
+    pushLayer(name);
+  }
+  if(consumed)history.back();
 }
 
 function queueLayerScan(){
@@ -218,11 +250,16 @@ function queueLayerScan(){
   });
 }
 
-function closeLayersExcept(targetName=null){
+function closeLayersAbove(targetIndex,targetName=null){
   // Close top-most visual layers first. During popstate, observers are muted.
+  // A layer whose own history entry is at or below the destination was open
+  // there too: it stays exactly as the user left it.
   [...layers].reverse().forEach(layer=>{
     const el=layer.find();
     if(!el||!layer.open(el)||layer.name===targetName)return;
+    const at=layerEntries.get(layer.name);
+    if(at!==undefined&&at<=targetIndex)return;
+    layerEntries.delete(layer.name);
     try{layer.close();}catch(_e){}
   });
 }
@@ -272,7 +309,7 @@ function applyHistoryState(state){
   const targetPage=state?.page||'home';
   const targetLayer=state?.kind==='layer'?state.layer:null;
 
-  closeLayersExcept(targetLayer);
+  closeLayersAbove(entryIndex(state),targetLayer);
 
   if(originalGo&&targetPage&&activePage()!==targetPage){
     originalGo(targetPage,{history:false});
