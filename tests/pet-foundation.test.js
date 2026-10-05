@@ -145,7 +145,8 @@ function fakeWindow(href, storage = new Map()) {
     hasAttribute: (n) => layerAttrs.has(n), setAttribute: (n) => layerAttrs.add(n), removeAttribute: (n) => layerAttrs.delete(n)
   };
   const nav = { getBoundingClientRect: () => ({ width: 360, height: 68 }) };
-  const body = { classList: classes() };
+  const bodyAttrs = new Map();
+  const body = { classList: classes(), getAttribute: (n) => bodyAttrs.get(n) ?? null, setAttribute: (n, v) => bodyAttrs.set(n, String(v)), removeAttribute: (n) => bodyAttrs.delete(n) };
   const nudge = { hidden: true };
   const toast = { classList: classes() };
   const hero = { classList: classes() };
@@ -226,14 +227,17 @@ test('PET gate: APPROVED requires a manifest entry and a sprite renderer, never 
 });
 
 test('PET layer: never takes input, never covers the nav, steps aside and respects motion preferences', () => {
-  assert.match(html, /<\/nav>\n<!-- US PET V1[^\n]*-->\n<div class="us-pet-layer" id="usPetLayer" aria-hidden="true" hidden><span class="us-pet-actor"><\/span><\/div>/);
+  assert.match(html, /<\/nav>\n<!-- US PET V1[^\n]*-->\n<div class="us-pet-layer" id="usPetLayer" aria-hidden="true" data-us-ambient hidden><span class="us-pet-actor"><\/span><\/div>/);
   assert.ok(html.indexOf('src="/pet.js') > html.indexOf('src="/ui-foundation.js'), 'pet reads the foundation motion authority');
   assert.match(petCss, /\.us-pet-layer,\.us-pet-layer \*\{pointer-events:none!important/);
-  assert.match(petCss, /\.us-pet-layer\{position:fixed;z-index:10040;/, 'transient notifications stay below the PET overlay');
+  assert.match(petCss, /\.us-pet-layer\{position:fixed;z-index:var\(--us-layer-ambient\);/, 'the PET takes the ambient rung of the layer ladder');
   assert.doesNotMatch(petCss, /#usDailyNudge:not\(\[hidden\]\)\) \.us-pet-layer|#toast\.show\) \.us-pet-layer/, 'Daily/Ti penso never hide the PET');
-  assert.match(petCss, /\.us-pet-layer\{position:fixed;z-index:10040;[^}]*bottom:calc\(max\(8px,var\(--us-safe-bottom\)\) \+ var\(--us-pet-nav-h,68px\) - 3px\)/);
-  for (const guard of ['body.us-keyboard-open .us-pet-layer', '.us-pet-layer[inert]', 'body.us-status-visible .us-pet-layer', 'body.us-update-visible .us-pet-layer', 'body:has(#homeHero.us-oggi-focus) .us-pet-layer']) {
+  assert.match(petCss, /\.us-pet-layer\{position:fixed;z-index:var\(--us-layer-ambient\);[^}]*bottom:calc\(max\(8px,var\(--us-safe-bottom\)\) \+ var\(--us-pet-nav-h,68px\) - 3px\)/);
+  for (const guard of ['body.us-keyboard-open .us-pet-layer', '.us-pet-layer[inert]', 'body[data-us-surface="open"] .us-pet-layer', 'body:has(#homeHero.us-oggi-focus) .us-pet-layer']) {
     assert.ok(petCss.includes(guard), guard);
+  }
+  for (const notice of ['body.us-status-visible .us-pet-layer', 'body.us-update-visible .us-pet-layer']) {
+    assert.ok(!petCss.includes(notice), `${notice}: notices never hide the PET`);
   }
   assert.match(petCss, /html\[data-us-visibility="hidden"\] \.us-pet-layer \*\{animation-play-state:paused!important\}/);
   assert.match(petCss, /:root\[data-us-motion="reduced"\] \.us-pet-layer \*\{animation:none!important;transition:none!important\}/);
@@ -287,8 +291,7 @@ test('F1 occlusion: exclusive UI guards stop the PET and resume it cleanly, drop
     ['inert', (f) => f.layer.setAttribute('inert'), (f) => f.layer.removeAttribute('inert')],
     ['focus', (f) => f.hero.classList.add('us-oggi-focus'), (f) => f.hero.classList.remove('us-oggi-focus')],
     ['auth', (f) => f.auth.classList.remove('hidden'), (f) => f.auth.classList.add('hidden')],
-    ['status', (f) => f.body.classList.add('us-status-visible'), (f) => f.body.classList.remove('us-status-visible')],
-    ['update', (f) => f.body.classList.add('us-update-visible'), (f) => f.body.classList.remove('us-update-visible')]
+    ['surface', (f) => f.body.setAttribute('data-us-surface', 'open'), (f) => f.body.removeAttribute('data-us-surface')]
   ];
   for (const [name, block, unblock] of guards) {
     const f = fakeWindow('http://127.0.0.1/?us-pet=preview');
@@ -310,6 +313,10 @@ test('Transient Daily/Ti-penso surfaces never block or stop the PET', () => {
   Pet.install(f.w);
   f.nudge.hidden = false;
   f.toast.classList.add('show');
+  // Notices that used to hide it "at random": a status line on every reconnect
+  // or error toast, and the update bar that can stay up for hours.
+  f.body.classList.add('us-status-visible');
+  f.body.classList.add('us-update-visible');
   assert.deepEqual(f.w.USPet.blockers(), []);
   assert.equal(f.w.USPet.snapshot().running, true);
   assert.equal(f.w.USPet.react('think'), true);
@@ -324,7 +331,7 @@ test('F1 occlusion: observation is bounded to blocker nodes/attributes; hidden a
   for (const { options } of f.observed) {
     assert.equal(options.subtree, undefined, 'never a subtree observer');
     assert.equal(options.childList, undefined);
-    assert.ok(Array.isArray(options.attributeFilter) && options.attributeFilter.length === 1);
+    assert.ok(Array.isArray(options.attributeFilter) && options.attributeFilter.length >= 1 && options.attributeFilter.length <= 2);
   }
   f.w.document.hidden = true;
   f.listeners['d:visibilitychange'][0]();

@@ -425,7 +425,9 @@ test('PWA hardening: update navigation refreshes index and version checks do not
   assert.match(worker, /cache\.put\(versionKey, copy\)/);
   assert.doesNotMatch(worker, /cache\.put\(request, copy\)[\s\S]{0,180}version\.json/);
   assert.match(worker, /if \(url\.searchParams\.has\("us-refresh"\)\)/);
-  assert.match(worker, /cache\.put\("\/index\.html", response\.clone\(\)\)/);
+  // The refreshed document still lands in the shell, through the same-build guard.
+  assert.match(worker, /if \(url\.searchParams\.has\("us-refresh"\)\)[\s\S]*?usCacheDocumentForThisBuild\(response\.clone\(\)\)/);
+  assert.match(worker, /await cache\.put\("\/index\.html", response\)/);
   assert.match(fix, /refreshUrl\.searchParams\.set\('us-refresh', String\(Date\.now\(\)\)\)/);
   assert.match(fix, /window\.location\.replace\(refreshUrl\.href\)/);
   assert.match(fix, /currentUrl\.searchParams\.delete\('us-refresh'\)/);

@@ -53,6 +53,8 @@ test('Home Memory dead path uses the actual signedUrl variable', async () => {
 test('Service Worker cache writes after install are best effort', async () => {
   const worker = await src('service-worker.js');
   assert.match(worker, /async function usBestEffortCachePut/);
-  assert.match(worker, /event\.waitUntil\(\(async \(\) => \{[\s\S]*await cache\.put\("\/index\.html", response\.clone\(\)\);[\s\S]*catch \(_\) \{\}/);
+  // The refreshed document is written through one guarded helper (same build only).
+  assert.match(worker, /async function usCacheDocumentForThisBuild\(response\) \{[\s\S]*?await cache\.put\("\/index\.html", response\);[\s\S]*?\} catch \(_\) \{/);
+  assert.match(worker, /event\.waitUntil\(usCacheDocumentForThisBuild\(response\.clone\(\)\)\)/);
   assert.match(worker, /event\.waitUntil\(usBestEffortCachePut\(CACHE_NAME, request, response\.clone\(\)\)\)/);
 });

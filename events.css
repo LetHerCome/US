@@ -5,7 +5,7 @@
 .us-calendar-btn:active{transform:scale(.94)}
 .us-calendar-btn i{position:absolute;right:3px;top:3px;width:7px;height:7px;border-radius:50%;background:var(--us-color-rose);border:2px solid var(--us-color-bg)}
 .us-calendar-btn i[hidden]{display:none!important}
-.us-events-overlay{position:fixed;inset:0;z-index:900;display:none;align-items:flex-end;justify-content:center}
+.us-events-overlay{position:fixed;inset:0;z-index:var(--us-layer-sheet);display:none;align-items:flex-end;justify-content:center}
 .us-events-overlay.open{display:flex}
 .us-events-sheet{position:relative;width:min(480px,100%);max-height:min(86dvh,780px);overflow:auto;overscroll-behavior:contain;padding:var(--us-space-6) var(--us-space-5) calc(var(--us-space-7) + var(--us-safe-bottom))}
 .us-events-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:3px 2px 15px}

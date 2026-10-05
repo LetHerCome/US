@@ -212,7 +212,7 @@ body.us-album-open{overflow:hidden;touch-action:none}
 
 /* Composer becomes a focused bottom sheet instead of occupying the feed */
 .us-moment-compose-overlay{
-  position:fixed;inset:0;z-index:10040;display:none;
+  position:fixed;inset:0;z-index:var(--us-layer-sheet);display:none;
   align-items:flex-end;justify-content:center;
   background:transparent;
   padding-top:calc(var(--us-safe-top) + 10px);

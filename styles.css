@@ -103,7 +103,7 @@ button{border:0;border-radius:var(--us-radius-control);padding:13px 16px;font:in
 .activity b{font-size:13px}.activity div div{font-size:12px;color:var(--muted);margin-top:3px}
 
 
-.auth-overlay{position:fixed;inset:0;background:rgba(7,9,13,.94);backdrop-filter:blur(18px);z-index:100;display:flex;align-items:flex-end;justify-content:center;padding:14px}
+.auth-overlay{position:fixed;inset:0;background:rgba(7,9,13,.94);backdrop-filter:blur(18px);z-index:var(--us-layer-auth);display:flex;align-items:flex-end;justify-content:center;padding:14px}
 .auth-overlay.hidden{display:none}
 .auth-card{width:min(480px,100%);background:var(--us-color-surface-2);border:1px solid var(--border);border-radius:28px;padding:22px;box-shadow:0 -20px 70px rgba(0,0,0,.55)}
 .auth-logo{font-family:Georgia,serif;font-style:italic;font-size:40px;margin-bottom:8px}
@@ -152,7 +152,7 @@ button{border:0;border-radius:var(--us-radius-control);padding:13px 16px;font:in
 .moment-card:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
 .moment-by{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--pink2);margin-bottom:4px}
 body.viewer-open{overflow:hidden}
-.moment-viewer{position:fixed;inset:0;z-index:80;background:rgba(3,5,9,.94);backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;padding:max(18px,var(--us-safe-top)) 14px max(18px,var(--us-safe-bottom));opacity:0;pointer-events:none;transition:opacity var(--us-motion-surface) var(--us-ease-standard)}
+.moment-viewer{position:fixed;inset:0;z-index:var(--us-layer-sheet);background:rgba(3,5,9,.94);backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;padding:max(18px,var(--us-safe-top)) 14px max(18px,var(--us-safe-bottom));opacity:0;pointer-events:none;transition:opacity var(--us-motion-surface) var(--us-ease-standard)}
 .moment-viewer.show{opacity:1;pointer-events:auto}
 .moment-viewer-card{width:min(100%,520px);max-height:100%;display:flex;flex-direction:column;border-radius:24px;overflow:hidden;background:var(--us-color-surface);border:1px solid rgba(255,255,255,.10);box-shadow:0 28px 80px rgba(0,0,0,.55)}
 .moment-viewer-card>img{width:100%;min-height:280px;max-height:68vh;aspect-ratio:4/5;object-fit:contain;background:var(--us-color-bg);display:block;opacity:.38;transition:opacity var(--us-motion-micro) var(--us-ease-standard)}
@@ -291,7 +291,7 @@ body.viewer-open{overflow:hidden}
 .us-oggi-focus .us-oggi-widgets,.us-oggi-focus .home-distance-pill,.us-oggi-focus .push-optin-card{opacity:0!important;pointer-events:none!important}
 @media(prefers-reduced-motion:reduce){.us-oggi-stack,.us-oggi-widgets,.us-oggi-card,.push-optin-card{transition:none!important}}
 
-.today-overlay{position:fixed;inset:0;z-index:10020;display:none;align-items:flex-end;justify-content:center}
+.today-overlay{position:fixed;inset:0;z-index:var(--us-layer-sheet);display:none;align-items:flex-end;justify-content:center}
 .today-overlay.open{display:flex}
 .today-backdrop{position:absolute;inset:0}
 .today-sheet{position:relative;z-index:1;width:min(480px,100%);max-height:88vh;overflow:auto;padding:20px 16px calc(26px + var(--us-safe-bottom))}
@@ -582,7 +582,7 @@ body.viewer-open{overflow:hidden}
 @media(prefers-reduced-motion:reduce){.noi-hub-card,.noi-hub-track>span{transition:none}}
 
 /* ===== M4B · Ti penso liquid-glass arrival ===== */
-.think-arrival-overlay{position:fixed;inset:0;z-index:10030;display:none;align-items:flex-end;justify-content:center;padding:0 16px calc(var(--us-nav-height) + var(--us-safe-bottom) + 18px);pointer-events:none}
+.think-arrival-overlay{position:fixed;inset:0;z-index:var(--us-layer-transient);display:none;align-items:flex-end;justify-content:center;padding:0 16px calc(var(--us-nav-height) + var(--us-safe-bottom) + 18px);pointer-events:none}
 .think-arrival-overlay.open{display:flex}
 .think-arrival-backdrop{position:absolute;inset:0;pointer-events:auto}
 .think-arrival-sheet{position:relative;z-index:1;width:min(342px,100%);padding:15px 15px 14px;overflow:hidden;pointer-events:auto}

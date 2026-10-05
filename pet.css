@@ -2,7 +2,7 @@
    The layer never takes input and never overlaps the four tabs: it stands on
    the nav's top edge, inside the nav's width. Motion is CSS only; pet.js just
    picks the next state and target. */
-.us-pet-layer{position:fixed;z-index:10040;left:50%;bottom:calc(max(8px,var(--us-safe-bottom)) + var(--us-pet-nav-h,68px) - 3px);width:var(--us-pet-track,min(456px,calc(100% - 18px)));height:40px;transform:translateX(-50%);pointer-events:none;contain:layout style size;transition:opacity 220ms var(--us-ease-standard),visibility 0s linear 0s}
+.us-pet-layer{position:fixed;z-index:var(--us-layer-ambient);left:50%;bottom:calc(max(8px,var(--us-safe-bottom)) + var(--us-pet-nav-h,68px) - 3px);width:var(--us-pet-track,min(456px,calc(100% - 18px)));height:40px;transform:translateX(-50%);pointer-events:none;contain:layout style size;transition:opacity 220ms var(--us-ease-standard),visibility 0s linear 0s}
 .us-pet-layer[hidden]{display:none!important}
 .us-pet-layer,.us-pet-layer *{pointer-events:none!important;user-select:none;-webkit-user-select:none}
 .us-pet-actor{position:absolute;left:14px;bottom:0;width:40px;height:40px;transform:translate3d(var(--us-pet-x,6px),0,0);transition:transform var(--us-pet-move,0ms) linear;will-change:transform}
@@ -12,13 +12,13 @@
 .us-pet-layer[data-pet-facing="left"] .us-pet-figure{transform:scaleX(-1)}
 .us-pet-shadow{position:absolute;left:9px;right:9px;bottom:-1px;height:5px;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.45),transparent);transform-origin:50% 50%}
 
-/* Transient notifications sit below this pointer-transparent layer. Exclusive
-   shell states still own the space and make the PET step aside. */
+/* Notices and the Ti penso arrival sit below this pointer-transparent layer.
+   Exclusive shell states still own the screen and make the PET step aside;
+   the list mirrors blockers() in pet.js. */
 /* Two rules on purpose: a browser without :has() must still honour the first. */
 body.us-keyboard-open .us-pet-layer,
 .us-pet-layer[inert],
-body.us-status-visible .us-pet-layer,
-body.us-update-visible .us-pet-layer{opacity:0;visibility:hidden;transition:opacity 160ms var(--us-ease-standard),visibility 0s linear 160ms}
+body[data-us-surface="open"] .us-pet-layer{opacity:0;visibility:hidden;transition:opacity 160ms var(--us-ease-standard),visibility 0s linear 160ms}
 body:has(#homeHero.us-oggi-focus) .us-pet-layer,
 body:has(.auth-overlay:not(.hidden)) .us-pet-layer{opacity:0;visibility:hidden;transition:opacity 160ms var(--us-ease-standard),visibility 0s linear 160ms}
 

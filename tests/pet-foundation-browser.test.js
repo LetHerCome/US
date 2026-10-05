@@ -11,7 +11,8 @@ async function preview(h,options){
  await view.page.evaluate(()=>{
    document.getElementById('usDailyNudge').hidden=false;
    document.getElementById('toast').classList.add('show');
-   document.querySelector('.think-arrival-overlay')?.classList.add('open');
+   // The real arrival path: openThinkArrival() makes it an (aria) modal.
+   usIncomingThink={id:'qa-think',sender_id:'b1',created_at:new Date().toISOString()};window.openThinkArrival();
  });
  await view.page.waitForTimeout(300);
  const overlay=await view.page.evaluate(()=>{
@@ -33,7 +34,7 @@ async function preview(h,options){
  await view.page.evaluate(()=>{
    document.getElementById('usDailyNudge').hidden=true;
    document.getElementById('toast').classList.remove('show');
-   document.querySelector('.think-arrival-overlay')?.classList.remove('open');
+   window.closeThinkArrival();
    document.documentElement.style.setProperty('--us-safe-bottom','20px');
    window.dispatchEvent(new Event('resize'));
  });
@@ -155,6 +156,8 @@ test('F4/F5 in a real DOM: failed renderer swap keeps the live placeholder; reac
    return {ok,children:actor.children.length,sameHost:actor.firstElementChild===host,sameFigure:host.querySelector('[data-pet-placeholder]')===figure&&figure.isConnected,html:host.innerHTML===html,renderer:document.getElementById('usPetLayer').dataset.petRenderer,stray:!!document.querySelector('[data-broken]')};
   });
   assert.deepEqual(swap,{ok:false,children:1,sameHost:true,sameFigure:true,html:true,renderer:'placeholder',stray:false});
+  // preview() ends on a reaction that lasts TIMING.react: start from a settled PET.
+  await page.waitForFunction(()=>window.USPet.snapshot().state!=='react');
   const sync=await page.evaluate(()=>{
    // Same synchronous task: the MutationObserver cannot have delivered yet.
    document.body.classList.add('us-keyboard-open');
@@ -168,6 +171,65 @@ test('F4/F5 in a real DOM: failed renderer swap keeps the live placeholder; reac
   await page.waitForFunction(()=>window.USPet.snapshot().running===false);
   await page.evaluate(()=>document.body.classList.remove('us-keyboard-open'));
   await page.waitForFunction(()=>window.USPet.snapshot().running===true);
+  assert.deepEqual(errors,[]);await ctx.close();
+ }finally{await h.close();}
+});
+
+test('PET stays through notices and the Ti penso arrival, steps aside for exclusive sheets and comes back after navigation',async t=>{
+ const h=await start();if(!h)return t.skip('Playwright unavailable');
+ try{
+  const {page,ctx,errors}=await pageFor(h,{});
+  const pet=()=>page.evaluate(()=>({vis:getComputedStyle(document.getElementById('usPetLayer')).visibility,blockers:window.USPet.blockers(),running:window.USPet.snapshot().running,inert:document.getElementById('usPetLayer').hasAttribute('inert')}));
+  const alive={vis:'visible',blockers:[],running:true,inert:false};
+  await page.waitForFunction(()=>window.USPet?.enabled);
+  // Offline/online status line and the update bar are notices, not exclusive states.
+  await page.evaluate(()=>{const s=document.getElementById('appStatusBar'),u=document.getElementById('appUpdateBar');s.textContent='Sei offline. Riprendo appena torni online.';s.hidden=false;u.hidden=false;document.body.classList.add('us-status-visible','us-update-visible');});
+  await page.waitForTimeout(250);assert.deepEqual(await pet(),alive,'status + update bars');
+  await page.evaluate(()=>{document.getElementById('appStatusBar').hidden=true;document.getElementById('appUpdateBar').hidden=true;document.body.classList.remove('us-status-visible','us-update-visible');});
+  // Ti penso arrival is transient: the PET stays above it.
+  await page.evaluate(()=>{usIncomingThink={id:'qa-think',sender_id:'b1',created_at:new Date().toISOString()};window.openThinkArrival();});
+  await page.waitForTimeout(300);assert.deepEqual(await pet(),alive,'Ti penso arrival');
+  await page.evaluate(()=>window.closeThinkArrival());await page.waitForTimeout(400);
+  // Exclusive sheets: the PET steps aside, then returns.
+  for(const [name,open,close] of [
+   ['countdown',()=>window.USCountdown.open(),()=>window.USCountdown.close()],
+   ['calendar',()=>window.openCalendarSurface(),()=>window.closeCalendarSurface()],
+   ['left-for-you',()=>window.UsLeftForYou.openComposer(),()=>window.UsLeftForYou.closeComposer()]
+  ]){
+   await page.evaluate(open);await page.waitForTimeout(350);
+   const during=await pet();assert.deepEqual({vis:during.vis,blockers:during.blockers,running:during.running},{vis:'hidden',blockers:['surface'],running:false},name);
+   await page.evaluate(close);await page.waitForTimeout(700);
+   assert.deepEqual(await pet(),alive,`${name} closed`);
+  }
+  // Focus Photo is an Oggi state: leaving Oggi gives the PET (and Oggi's widgets) back.
+  await page.evaluate(()=>window.toggleOggiFocusPhoto());await page.waitForTimeout(250);
+  assert.deepEqual((await pet()).blockers,['focus']);
+  await page.click('.nav button[data-page="bond"]');await page.waitForTimeout(350);
+  assert.deepEqual(await pet(),alive,'Focus Photo does not follow the user to Noi');
+  await page.click('.nav button[data-page="home"]');await page.waitForTimeout(350);
+  assert.equal(await page.evaluate(()=>document.getElementById('usTodayPriorityRegion').hasAttribute('inert')),false,'Oggi widgets are usable again');
+  assert.deepEqual(errors,[]);await ctx.close();
+ }finally{await h.close();}
+});
+
+test('layer ladder: content < nav < notices < Ti penso < PET < every sheet < confirm, auth above sheets',async t=>{
+ const h=await start();if(!h)return t.skip('Playwright unavailable');
+ try{
+  const {page,ctx,errors}=await pageFor(h,{});
+  const z=await page.evaluate(()=>{const v=q=>Number(getComputedStyle(document.querySelector(q)).zIndex);
+   return {nav:v('.nav'),toast:v('#toast'),nudge:v('#usDailyNudge'),status:v('#appStatusBar'),update:v('#appUpdateBar'),think:v('#thinkArrival'),pet:v('#usPetLayer'),
+    sheets:['#today','#usCountdownSheet','#usEventsOverlay','#leftForYouOverlay','#leftForYouComposerOverlay','#leftForYouCameraOverlay','#momentViewer','#usMomentComposeOverlay','#usSettingsOverlay','#usCalendarOverlay','#conservatiOverlay','#usAlbumOverlay'].map(q=>[q,v(q)]),
+    unlock:v('#usProgressionUnlock'),auth:v('#authOverlay')};});
+  assert.ok(z.nav<z.toast&&z.toast<=z.nudge&&z.nudge<=z.status&&z.status===z.update&&z.update<z.think&&z.think<z.pet,JSON.stringify(z));
+  for(const [q,value] of z.sheets)assert.ok(value>z.pet,`${q} (${value}) sits above the PET (${z.pet})`);
+  assert.ok(z.unlock>z.pet);
+  assert.ok(z.sheets.every(([,value])=>z.auth>value),'auth covers any sheet it interrupts');
+  const confirmZ=await page.evaluate(()=>{const answer=window.UsUiFoundation.confirm({title:'QA',confirmLabel:'Ok'});const value=Number(getComputedStyle(document.querySelector('.us-confirm')).zIndex);document.querySelector('[data-us-confirm="cancel"]')?.click();return answer.then(()=>value);});
+  assert.ok(z.sheets.every(([,value])=>confirmZ>value)&&confirmZ>z.pet,`confirm ${confirmZ}`);
+  // No accidental stacking context traps a fixed surface below its rung.
+  const trapped=await page.evaluate(()=>['#thinkArrival','#usPetLayer','#today','#usCountdownSheet','#authOverlay','#toast','#usDailyNudge'].filter(q=>{
+   for(let p=document.querySelector(q).parentElement;p&&p!==document.body;p=p.parentElement){const s=getComputedStyle(p);if(s.transform!=='none'||s.filter!=='none'||s.isolation==='isolate'||(s.position!=='static'&&s.zIndex!=='auto')||Number(s.opacity)<1)return true;}return false;}));
+  assert.deepEqual(trapped,[]);
   assert.deepEqual(errors,[]);await ctx.close();
  }finally{await h.close();}
 });

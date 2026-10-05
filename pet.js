@@ -150,18 +150,21 @@ function canMount(id,{preview=false}={}){
   return renderers.has(id)&&(id!=='placeholder'||preview===true);
 }
 
-// The one runtime decision on whether the PET may live right now. Transient
-// notifications (Daily nudge / Ti penso toast) are deliberately NOT blockers:
-// the PET has its own pointer-transparent overlay layer above them. Only surfaces
-// that make the shell non-interactive or need exclusive focus stop the PET.
+// The one runtime decision on whether the PET may live right now. Notices
+// (toast, Daily nudge, offline/online status, the update bar) and the Ti penso
+// arrival are deliberately NOT blockers: they sit below the PET's ambient layer
+// (see the layer ladder in ui-foundation.css). The update bar can stay up for
+// hours, a status line appears on every reconnect or error toast: hiding for
+// them made the PET vanish "at random". Only states that own the whole screen
+// or the keyboard stop it: background, keyboard, an exclusive sheet/viewer
+// (body[data-us-surface], kept by ui-foundation), Focus Photo, the front door.
 function blockers(d,layer,{pageHidden=false}={}){
   const body=d.body,has=(node,name)=>Boolean(node?.classList?.contains?.(name));
   const list=[];
   if(d.hidden||pageHidden)list.push('hidden');
   if(has(body,'us-keyboard-open'))list.push('keyboard');
   if(layer?.hasAttribute?.('inert'))list.push('inert');
-  if(has(body,'us-status-visible'))list.push('status');
-  if(has(body,'us-update-visible'))list.push('update');
+  if(body?.getAttribute?.('data-us-surface')==='open')list.push('surface');
   if(has(d.getElementById('homeHero'),'us-oggi-focus'))list.push('focus');
   if([...(d.querySelectorAll?.('.auth-overlay')||[])].some(node=>!has(node,'hidden')))list.push('auth');
   return list;
@@ -238,7 +241,7 @@ function install(w){
   if(typeof w.MutationObserver==='function'){
     const observer=new w.MutationObserver(sync);
     const watch=(node,attributes)=>{if(node)observer.observe(node,{attributes:true,attributeFilter:attributes});};
-    watch(d.body,['class']);
+    watch(d.body,['class','data-us-surface']);
     watch(layer,['inert']);
     watch(d.getElementById('homeHero'),['class']);
     (d.querySelectorAll?.('.auth-overlay')||[]).forEach(node=>watch(node,['class']));

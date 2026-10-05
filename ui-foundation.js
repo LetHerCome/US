@@ -59,7 +59,9 @@
       const parent = current.parentElement;
       if (!parent) break;
       Array.from(parent.children).forEach((sibling) => {
-        if (sibling !== current) background.add(sibling);
+        // Ambient decoration (the PET) takes no input and is aria-hidden:
+        // it decides its own visibility instead of being frozen by a modal.
+        if (sibling !== current && !sibling.hasAttribute?.('data-us-ambient')) background.add(sibling);
       });
       current = parent;
     }
@@ -240,6 +242,11 @@
         openModals.sort((left, right) => left.state.order - right.state.order);
         const nextActive = openModals.length ? openModals[openModals.length - 1].modal : null;
         setInert(nextActive ? backgroundFor(nextActive, documentRef.body) : new Set());
+        // One public fact for ambient layers: is an exclusive surface (any
+        // modal not marked data-us-transient) owning the screen right now?
+        const exclusive = openModals.some(({ modal }) => !modal.hasAttribute('data-us-transient'));
+        if (exclusive) documentRef.body.setAttribute?.('data-us-surface', 'open');
+        else documentRef.body.removeAttribute?.('data-us-surface');
 
         const previousActive = activeModal;
         if (nextActive && nextActive !== previousActive && !nextActive.contains(documentRef.activeElement)) {
@@ -326,6 +333,7 @@
           };
         }
         setInert(new Set());
+        documentRef.body.removeAttribute?.('data-us-surface');
       },
       isReducedMotion: motion.isReducedMotion,
       onMotionPreferenceChange: motion.onChange,

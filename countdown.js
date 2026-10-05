@@ -44,6 +44,9 @@ function install(w){
   let state=null,owner='',generation=0,loading=null,busy=false,draft=null,timer=null,lastAttempt=0,suspendedOwner='';
   let originalInput='',originalTarget=null,originalMode='';
   let pendingControls=null;
+  // True once the user changed anything in the open editor. A late server
+  // answer may refresh an untouched editor, never replace the user's edits.
+  let touched=false;
   const key=()=>w.usProfile?`${w.usProfile.id}:${w.usProfile.couple_id}`:'';
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const progression=()=>w.USProgression?.getState?.();
@@ -166,6 +169,7 @@ function install(w){
     $('usCountdownMode').value=draft.mode;
     dateField(draft.target);
     $('usCountdownDelete').hidden=!e;
+    touched=false;
     styles();preview();status('');
   }
   function dateField(target){
@@ -182,10 +186,14 @@ function install(w){
     if(key()!==owner)clear();
     w.UsUiFoundation?.cancelSurfaceExit?.(root);root.setAttribute('aria-hidden','false');root.classList.add('open');if(busy)return;
     if(mode==='active'&&state?.active_id)editor(state.active_id);else collection();
+    const shown=draft;
     await Promise.all([hydrate(),w.USProgression?.hydrate?.({showUnlocks:false})]);
     if(opened()){
       paintList();
-      if(mode==='active'&&state?.active_id)editor(state.active_id);
+      // Only the surface this open() showed, still untouched, follows the
+      // fresh state. If the user went back, started a new countdown or typed
+      // meanwhile, the slow answer must not swap their draft for the stored one.
+      if(mode==='active'&&state?.active_id&&draft===shown&&!touched)editor(state.active_id);
       else if(draft){styles();preview();}
     }
   }
@@ -207,11 +215,14 @@ function install(w){
   $('usCountdownStyles').addEventListener('click',event=>{
     const b=event.target.closest('[data-countdown-pick]');if(!b||!draft||busy)return;
     const id=b.dataset.countdownPick,s=STYLES.find(s=>s.id===id);
-    draft.style=id;styles();preview();w.UsFeedback?.action?.();
+    draft.style=id;touched=true;styles();preview();w.UsFeedback?.action?.();
     status(available(id,progression())?'':`Si sblocca con ${s.name} in Sintonia, al livello ${s.level}.`);
   });
-  $('usCountdownTitle').addEventListener('input',preview);$('usCountdownDate').addEventListener('input',preview);
-  $('usCountdownMode').addEventListener('change',()=>{draft.mode=$('usCountdownMode').value;dateField('');preview();});
+  // Native date/time pickers (iOS wheels, Android dialogs) may report only
+  // "change": both events keep the preview and the Save state in step.
+  const edited=()=>{if(!draft)return;touched=true;preview();};
+  for(const id of ['usCountdownTitle','usCountdownDate'])['input','change'].forEach(type=>$(id).addEventListener(type,edited));
+  $('usCountdownMode').addEventListener('change',()=>{if(!draft)return;draft.mode=$('usCountdownMode').value;touched=true;dateField('');preview();});
   $('usCountdownForm').addEventListener('submit',async event=>{
     event.preventDefault();if(!draft||busy||!state||$('usCountdownSave').disabled)return;
     let next=copy();
