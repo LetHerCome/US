@@ -112,11 +112,26 @@ const BUILD_SHELL_ASSETS = new Set(
   APP_SHELL.filter((path) => path !== "/" && path !== "/index.html" && path !== "/version.json")
 );
 
+// The app document is stored by hand, never through addAll(): Cloudflare Pages
+// answers /index.html with a 308 to /, and a Response that remembers a
+// redirect is rejected when it is replayed for a navigation. Chrome/Android
+// then shows its own "Impossibile raggiungere il sito" page (ERR_FAILED) and
+// Safari reports "Response served by service worker has redirections".
+const APP_DOCUMENTS = new Set(["/", "/index.html"]);
+
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
+    const documentResponse = await usStorableAppDocument(
+      await fetch(new Request("/", { cache: "reload" }))
+    );
+    if (!documentResponse) throw new Error("app document unavailable during install");
     const cache = await caches.open(CACHE_NAME);
-    const requests = APP_SHELL.map((url) => new Request(url, { cache: "reload" }));
+    const requests = APP_SHELL
+      .filter((url) => !APP_DOCUMENTS.has(url))
+      .map((url) => new Request(url, { cache: "reload" }));
     await cache.addAll(requests);
+    await cache.put("/", documentResponse.clone());
+    await cache.put("/index.html", documentResponse);
     await self.skipWaiting();
   })());
 });
@@ -248,24 +263,62 @@ async function usFetchNavigation(request, { noCacheHeader = false } = {}) {
   return response;
 }
 
-async function usCachedAppDocument() {
+// A document is replayable for a navigation only when it is a plain, final
+// 200. A same-origin redirect onto the app document itself (/index.html -> /)
+// is rebuilt as a fresh Response: same bytes and headers, no redirect memory.
+// Anything else redirected (another origin, another path) is refused.
+async function usStorableAppDocument(response) {
+  if (!response || !response.ok || response.type === "opaqueredirect") return null;
+  if (!response.redirected) return response;
+  let finalUrl;
+  try { finalUrl = new URL(response.url); } catch (_) { return null; }
+  if (finalUrl.origin !== self.location.origin || !APP_DOCUMENTS.has(finalUrl.pathname)) return null;
   try {
-    const current = await caches.open(CACHE_NAME);
-    const index = await current.match("/index.html");
-    if (index) return index;
-    const root = await current.match("/");
-    if (root) return root;
-  } catch (_) {}
-
-  try {
-    return (await caches.match("/index.html")) || (await caches.match("/")) || null;
+    const body = await response.blob();
+    return new Response(body, { status: response.status, statusText: response.statusText, headers: response.headers });
   } catch (_) {
     return null;
   }
 }
 
+// Only a document of this very build may become this build's cached shell.
+// A newer index.html written into an older shell cache would reference asset
+// URLs that the older worker never precached: online it works by luck,
+// offline (or on a flaky reopen) it starts as a broken, half-loaded app.
+async function usCacheDocumentForThisBuild(response) {
+  try {
+    const text = await response.clone().text();
+    if (!text.includes(`name="us-build" content="${BUILD_ID}"`)) return;
+    const cache = await caches.open(CACHE_NAME);
+    await cache.put("/index.html", response);
+  } catch (_) {
+    // CacheStorage is an optimization after install (Safari may refuse it).
+  }
+}
+
+async function usCachedAppDocument() {
+  const candidates = [];
+  try {
+    const current = await caches.open(CACHE_NAME);
+    candidates.push(() => current.match("/index.html"), () => current.match("/"));
+  } catch (_) {}
+  candidates.push(() => caches.match("/index.html"), () => caches.match("/"));
+
+  for (const read of candidates) {
+    try {
+      // Shell caches written by earlier builds may still hold a redirected
+      // copy: never hand one of those to the browser as it is.
+      const usable = await usStorableAppDocument(await read());
+      if (usable) return usable;
+    } catch (_) {}
+  }
+  return null;
+}
+
 async function usFetchCanonicalAppDocument() {
-  const request = new Request(new URL("/index.html", self.location.origin).href, { method: "GET" });
+  // "/" is the canonical document: "/index.html" is itself a redirect on
+  // Cloudflare Pages, so retrying it could never succeed there.
+  const request = new Request(new URL("/", self.location.origin).href, { method: "GET" });
   return usFetchNavigation(request, { noCacheHeader: true });
 }
 
@@ -286,8 +339,11 @@ async function usFetchAppDocument(request, options = {}) {
 }
 
 function usNavigationUnavailableResponse() {
+  // Last resort only (no network and no usable cached shell). It is still a
+  // real US page: it retries by itself when the connection comes back and
+  // offers one explicit retry, instead of leaving the browser error page.
   return new Response(
-    '<!doctype html><html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>US</title><body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#08040e;color:#fff;font:16px system-ui"><main style="padding:24px;text-align:center"><strong>US non è raggiungibile in questo momento.</strong><p style="opacity:.72">Controlla la connessione e riapri l’app.</p></main></body></html>',
+    '<!doctype html><html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>US</title><body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#08040e;color:#fff;font:16px system-ui"><main style="padding:24px;text-align:center"><strong>US non è raggiungibile in questo momento.</strong><p style="opacity:.72">Controlla la connessione: riapro US appena torna.</p><button type="button" id="usRetry" style="min-height:44px;padding:0 22px;border-radius:22px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font:inherit">Riprova</button></main><script>(function(){var go=function(){location.reload();};document.getElementById("usRetry").addEventListener("click",go);addEventListener("online",go,{once:true});})();</script></body></html>',
     {
       status: 503,
       headers: {
@@ -382,12 +438,7 @@ self.addEventListener("fetch", (event) => {
     event.respondWith((async () => {
       try {
         const response = await usFetchAppDocument(request, { noCacheHeader: true });
-        event.waitUntil((async () => {
-          try {
-            const cache = await caches.open(CACHE_NAME);
-            await cache.put("/index.html", response.clone());
-          } catch (_) {}
-        })());
+        event.waitUntil(usCacheDocumentForThisBuild(response.clone()));
         return response;
       } catch (_) {
         return (await usCachedAppDocument()) || usNavigationUnavailableResponse();
@@ -402,7 +453,7 @@ self.addEventListener("fetch", (event) => {
       const cached = await usCachedAppDocument();
       const refresh = usFetchAppDocument(request)
         .then((response) => {
-          event.waitUntil(usBestEffortCachePut(CACHE_NAME, "/index.html", response.clone()));
+          event.waitUntil(usCacheDocumentForThisBuild(response.clone()));
           return response;
         });
 

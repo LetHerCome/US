@@ -1,10 +1,8 @@
 const {startServer,FAKE_SUPABASE,loadChromium}=require('./oggi-browser');
 async function start(){const chromium=loadChromium();if(!chromium)return null;const server=await startServer();let browser;try{browser=await chromium.launch();}catch(e){await new Promise(r=>server.close(r));throw e;}return {browser,server,base:`http://127.0.0.1:${server.address().port}`,close:async()=>{await browser.close();await new Promise(r=>server.close(r));}};}
-async function pageFor(h,{width=390,height=844,reduced=false,style='editorial',mode='days',unlocked=true,missing=false,started='2022-06-23',active='custom'}={}){
- const ctx=await h.browser.newContext({viewport:{width,height},isMobile:width<800,hasTouch:true,timezoneId:'Europe/Rome',serviceWorkers:'block',reducedMotion:reduced?'reduce':'no-preference'});
- const page=await ctx.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.route('**/*',route=>{const u=route.request().url();if(u.startsWith(h.base))return route.continue();if(/supabase-js/.test(u))return route.fulfill({contentType:'text/javascript',body:FAKE_SUPABASE});return route.abort();});
- await page.addInitScript(({style,mode,unlocked,missing,started,active})=>{
+// Shared in-page fixture (fake Supabase answers from window.__QA). Exported so
+// other real-app browser tests (startup, navigation soak) run the same couple.
+const qaFixture=({style,mode,unlocked,missing,started,active})=>{
   const now=new Date(),date=new Date(+now+12*86400000).toLocaleDateString('en-CA');
   const item={id:'00000000-0000-4000-8000-000000000001',title:'Il nostro viaggio',mode,target:mode==='days'?date:new Date(+now+31337000).toISOString(),style};
   const countdown={items:[item],active_id:active==='together'?'together':active==='none'?null:item.id,together_style:style,version:0,started_on:started};
@@ -24,10 +22,15 @@ async function pageFor(h,{width=390,height=844,reduced=false,style='editorial',m
    get_notification_preferences:async()=>({data:{think:true,today:true,bond:true},error:null})
   }};
   localStorage.clear();sessionStorage.clear();
- },{style,mode,unlocked,missing,started,active});
+ };
+async function pageFor(h,{width=390,height=844,reduced=false,style='editorial',mode='days',unlocked=true,missing=false,started='2022-06-23',active='custom'}={}){
+ const ctx=await h.browser.newContext({viewport:{width,height},isMobile:width<800,hasTouch:true,timezoneId:'Europe/Rome',serviceWorkers:'block',reducedMotion:reduced?'reduce':'no-preference'});
+ const page=await ctx.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('**/*',route=>{const u=route.request().url();if(u.startsWith(h.base))return route.continue();if(/supabase-js/.test(u))return route.fulfill({contentType:'text/javascript',body:FAKE_SUPABASE});return route.abort();});
+ await page.addInitScript(qaFixture,{style,mode,unlocked,missing,started,active});
  await page.goto(h.base+'/?us-dev=1',{waitUntil:'load'});
  await page.waitForFunction(()=>window.usProfile&&window.USCountdown?.open);
  await page.waitForTimeout(1700);
  return {page,ctx,errors};
 }
-module.exports={start,pageFor};
+module.exports={start,pageFor,qaFixture};

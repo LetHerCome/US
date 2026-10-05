@@ -35,6 +35,7 @@ function createServiceWorkerHarness({ failPrecachePath = null, redirectRefresh =
   let claimCalls = 0;
   let networkAvailable = true;
   let oneShotNotFoundPath = null;
+  let runtimeCachePutFails = failRuntimeCachePut;
 
   const responseFor = (input) => {
     if (!networkAvailable) throw new Error('network offline');
@@ -80,7 +81,7 @@ function createServiceWorkerHarness({ failPrecachePath = null, redirectRefresh =
         },
         async put(input, response) {
           if (failMediaCachePut && name === 'us-private-media-v1') throw new Error('media cache put failed');
-          if (failRuntimeCachePut && name === CURRENT_SHELL) throw new Error('runtime cache put failed');
+          if (runtimeCachePutFails && name === CURRENT_SHELL) throw new Error('runtime cache put failed');
           entries.set(cacheKey(input), response.clone());
         },
         async keys() {
@@ -183,6 +184,7 @@ function createServiceWorkerHarness({ failPrecachePath = null, redirectRefresh =
     dispatchFetch,
     setOnline(value) { networkAvailable = value; },
     failNextPathWith404(pathname) { oneShotNotFoundPath = pathname; },
+    setRuntimeCachePutFailure(value) { runtimeCachePutFails = value; },
     evictAppDocuments() {
       const shell = cacheBuckets.get(CURRENT_SHELL);
       shell?.delete(ORIGIN + '/index.html');
@@ -580,13 +582,14 @@ test('reload offline usa index e runtime della nuova shell cache', async () => {
   const storiesResponse = await harness.dispatchFetch(`/stories.js?v=${CURRENT_BUILD}`);
   const storiesCssResponse = await harness.dispatchFetch(`/stories.css?v=${CURRENT_BUILD}`);
 
-  assert.equal(await documentResponse.text(), 'asset:/index.html');
+  // The shell document is precached from "/", the canonical non-redirected URL.
+  assert.equal(await documentResponse.text(), 'asset:/');
   assert.equal(await appResponse.text(), harness.rawApp);
   assert.equal(await storiesResponse.text(), 'asset:/stories.js');
   assert.equal(await storiesCssResponse.text(), 'asset:/stories.css');
 });
 
-test('Android PWA: cache del documento assente + primo 404 ripiega su /index.html canonico', async () => {
+test('Android PWA: cache del documento assente + primo 404 ripiega sul documento canonico /', async () => {
   const harness = createServiceWorkerHarness();
   await harness.dispatchExtendable('install');
   await harness.dispatchExtendable('activate');
@@ -596,7 +599,7 @@ test('Android PWA: cache del documento assente + primo 404 ripiega su /index.htm
   const response = await harness.dispatchFetch('/', { mode: 'navigate' });
 
   assert.equal(response.status, 200);
-  assert.equal(await response.text(), 'asset:/index.html');
+  assert.equal(await response.text(), 'asset:/');
 });
 
 test('Android PWA: cache assente + rete offline restituisce comunque una Response HTML valida', async () => {
@@ -624,14 +627,15 @@ test('iOS PWA: un redirect durante us-refresh non viene servito o salvato come d
 
   assert.equal(response.redirected, false);
   assert.equal(response.status, 200);
-  assert.equal(await response.text(), 'asset:/index.html');
+  assert.equal(await response.text(), 'asset:/');
   assert.equal(after, before, 'redirected navigation must not poison cached index.html');
 });
 
 test('Safari CacheStorage failure non rompe una navigazione di update riuscita', async () => {
-  const harness = createServiceWorkerHarness({ failRuntimeCachePut: true });
+  const harness = createServiceWorkerHarness();
   await harness.dispatchExtendable('install');
   await harness.dispatchExtendable('activate');
+  harness.setRuntimeCachePutFailure(true);
 
   const response = await harness.dispatchFetch('/?us-refresh=456', { mode: 'navigate' });
 
