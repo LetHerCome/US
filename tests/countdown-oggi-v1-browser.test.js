@@ -112,3 +112,46 @@ test('unselected, automatic relationship, empty photo, long titles and safe area
   await ctx.close();
  }}finally{await h.close();}
 });
+
+test('a slow Countdown answer never replaces a new countdown or edits the user already started',async t=>{
+ const h=await start();if(!h)return t.skip('Playwright unavailable');
+ try{
+  const {page,ctx,errors}=await pageFor(h);
+  // Opened from the Oggi countdown (active editor) while the read is still in flight.
+  await page.evaluate(()=>window.__QA.readDelay=1200);
+  await page.click('#usCountdownDisplay');await page.click('#usCountdownBack');await page.click('#usCountdownNew');
+  await page.fill('#usCountdownTitle','Nuovo viaggio');await page.fill('#usCountdownDate','2027-03-01');
+  await page.waitForTimeout(1400); // the 1.2 s read has answered
+  assert.deepEqual(await page.evaluate(()=>({title:document.getElementById('usCountdownTitle').value,date:document.getElementById('usCountdownDate').value,heading:document.getElementById('usCountdownEditorHeading').textContent})),
+   {title:'Nuovo viaggio',date:'2027-03-01',heading:'Un momento da aspettare'},'the new draft survives the late answer');
+  await page.click('#usCountdownSave');await page.waitForSelector('#usCountdownCollection:not([hidden])');
+  assert.deepEqual(await page.evaluate(()=>window.__QA.countdown.items.map(i=>i.title)),['Il nostro viaggio','Nuovo viaggio']);
+  // Editing the active one: typing before the answer arrives is kept and saved.
+  await page.click('[data-countdown-close][data-us-modal-close]');await page.waitForFunction(()=>document.getElementById('usCountdownSheet').getAttribute('aria-hidden')==='true');
+  await page.click('#usCountdownDisplay');await page.fill('#usCountdownTitle','La cena per due');await page.waitForTimeout(1500);
+  assert.equal(await page.inputValue('#usCountdownTitle'),'La cena per due');
+  await page.click('#usCountdownSave');await page.waitForSelector('#usCountdownCollection:not([hidden])');
+  assert.equal(await page.evaluate(()=>window.__QA.countdown.items.find(i=>i.id===window.__QA.countdown.active_id).title),'La cena per due');
+  // Untouched, the same editor still follows the fresh state (partner edit).
+  await page.evaluate(()=>{window.__QA.countdown.items[0].title='Cambiato da Beatrice';window.__QA.countdown.active_id=window.__QA.countdown.items[0].id;window.__QA.countdown.version++;});
+  await page.click('[data-countdown-close][data-us-modal-close]');await page.waitForFunction(()=>document.getElementById('usCountdownSheet').getAttribute('aria-hidden')==='true');
+  await page.evaluate(()=>window.USCountdown.open('active'));await page.waitForTimeout(1500);
+  assert.equal(await page.inputValue('#usCountdownTitle'),'Cambiato da Beatrice');
+  assert.deepEqual(errors,[]);await ctx.close();
+ }finally{await h.close();}
+});
+
+test('a date picker that only reports "change" still enables Save (iOS/Android native pickers)',async t=>{
+ const h=await start();if(!h)return t.skip('Playwright unavailable');
+ try{
+  const {page,ctx,errors}=await pageFor(h);
+  await page.evaluate(()=>window.USCountdown.open());await page.click('#usCountdownNew');
+  await page.fill('#usCountdownTitle','Il concerto');
+  assert.equal(await page.locator('#usCountdownSave').isDisabled(),true);
+  await page.evaluate(()=>{const input=document.getElementById('usCountdownDate');input.value='2027-05-20';input.dispatchEvent(new Event('change',{bubbles:true}));});
+  assert.equal(await page.locator('#usCountdownSave').isDisabled(),false);
+  await page.click('#usCountdownSave');await page.waitForSelector('#usCountdownCollection:not([hidden])');
+  assert.equal(await page.evaluate(()=>window.__QA.countdown.items.at(-1).target),'2027-05-20');
+  assert.deepEqual(errors,[]);await ctx.close();
+ }finally{await h.close();}
+});
