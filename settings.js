@@ -7,17 +7,11 @@ const $=id=>document.getElementById(id);
 const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 let settingsSnapshot=null;
 let logoutInFlight=false;
-let scriptableSetupCodeOpen=false;
-let settingsModalGeneration=0;
-let scriptableSetupCode='';
 
 function currentBuild(){return document.querySelector('meta[name="us-build"]')?.content||'';}
 
 function openModal(title,body,kicker='US.'){
-  settingsModalGeneration+=1;
   const modalBody=$('usSettingsModalBody');
-  if(scriptableSetupCodeOpen){modalBody.innerHTML='';scriptableSetupCodeOpen=false;}
-  scriptableSetupCode='';
   $('usSettingsModalTitle').textContent=title;
   $('usSettingsModalKicker').textContent=kicker;
   modalBody.innerHTML=body;
@@ -30,19 +24,12 @@ function openModal(title,body,kicker='US.'){
 function closeModal(){
   const root=$('usSettingsOverlay');
   if(!root)return;
-  settingsModalGeneration+=1;
-  if(scriptableSetupCodeOpen){$('usSettingsModalBody').innerHTML='';scriptableSetupCodeOpen=false;}
-  scriptableSetupCode='';
   const finalize=()=>{
     root.classList.remove('open');
     root.setAttribute('aria-hidden','true');
     document.body.classList.remove('us-settings-modal-open');
   };
   if(window.UsUiFoundation?.exitSurface)window.UsUiFoundation.exitSurface(root,finalize);else finalize();
-}
-function isCurrentSettingsModal(generation){
-  const root=$('usSettingsOverlay');
-  return generation===settingsModalGeneration&&Boolean(root&&root.classList.contains('open'));
 }
 window.closeUsSettingsModal=closeModal;
 
@@ -347,67 +334,6 @@ async function notificationsModal(){
   }));
 }
 
-async function scriptableWidgetsModal(){
-  openModal('Widget US','<div class="us-settings-loading">Controllo…</div>','QUESTO TELEFONO');
-  const body=$('usSettingsModalBody');
-  const modalGeneration=settingsModalGeneration;
-  const refreshStatus=async()=>{
-    const {data,error}=await sb.functions.invoke('widget-scriptable-setup',{body:{operation:'status'}});
-    if(error)throw error;
-    return data||{active:false,installations:0};
-  };
-  const render=async()=>{
-    try{
-      const status=await refreshStatus();
-      if(!isCurrentSettingsModal(modalGeneration))return;
-      body.innerHTML=`
-        <div class="us-settings2-modal-copy">Due accessi separati: uno in sola lettura (nomi, giorni insieme, Foto Home) e uno che può solo inviare Ti penso.</div>
-        <div class="us-settings2-status-list"><div><span><b>Accesso Scriptable</b><small>${status.stateActive?'Stato attivo':'Stato non attivo'} · ${status.thinkActive?'Ti penso attivo':'Ti penso da rinnovare'}</small></span><i class="${status.active?'ok':''}">${status.active?'✓':'○'}</i></div></div>
-        <div class="us-settings2-action-stack">${status.active?'':'<button type="button" class="primary" id="usScriptableIssue">Configura Scriptable</button>'}${status.active?'<button type="button" class="ghost" id="usScriptableRevoke">Revoca accesso Scriptable</button>':''}</div>
-        <div class="us-settings2-modal-copy" id="usScriptableStatus" role="status" aria-live="polite"></div>`;
-      $('usScriptableIssue')?.addEventListener('click',async()=>{
-        const button=$('usScriptableIssue');const statusEl=$('usScriptableStatus');
-        button.disabled=true;button.textContent='Creo il codice…';statusEl.textContent='';
-        const {data,error}=await sb.functions.invoke('widget-scriptable-setup',{body:{operation:'issue'}});
-        if(!isCurrentSettingsModal(modalGeneration))return;
-        if(error||!data?.setupCode){button.disabled=false;button.textContent='Riprova';statusEl.textContent='Non riesco a creare il codice. Riprova.';return;}
-        scriptableSetupCode=data.setupCode;
-        scriptableSetupCodeOpen=true;
-        body.innerHTML=`<div class="us-settings2-modal-copy"><b>Incolla questo codice in Scriptable.</b><br>Monouso, scade tra 10 minuti.</div><label class="us-settings2-field"><span>Codice monouso</span><input id="usScriptableSetupCode" type="text" readonly value="${esc(scriptableSetupCode)}" autocomplete="off" spellcheck="false"></label><div class="us-settings2-action-stack"><button type="button" class="primary" id="usScriptableCopyCode">Copia il codice</button><button type="button" class="ghost" id="usScriptableCodeDone">Fatto</button></div><div class="us-settings2-modal-copy" id="usScriptableStatus" role="status" aria-live="polite"></div>`;
-        $('usScriptableCopyCode')?.addEventListener('click',async()=>{
-          const codeToCopy=scriptableSetupCode;
-          try{
-            await navigator.clipboard.writeText(codeToCopy);
-            if(!isCurrentSettingsModal(modalGeneration))return;
-            $('usScriptableStatus').textContent='Copiato. Incollalo in Scriptable.';
-          }catch(_){
-            if(!isCurrentSettingsModal(modalGeneration))return;
-            const input=$('usScriptableSetupCode');input.focus();input.select();$('usScriptableStatus').textContent='Copia il codice e incollalo in Scriptable.';
-          }
-        });
-        $('usScriptableCodeDone')?.addEventListener('click',closeModal);
-      });
-      $('usScriptableRevoke')?.addEventListener('click',()=>{
-        body.innerHTML='<div class="us-settings2-modal-copy">Revocare Scriptable? I widget smetteranno di funzionare finché non li ricollegate.</div><div class="us-settings2-action-stack"><button type="button" class="ghost" id="usCancelScriptableRevoke">Annulla</button><button type="button" class="us-settings2-disconnect" id="usConfirmScriptableRevoke">Revoca accesso</button></div><div class="us-settings2-modal-copy" id="usScriptableStatus" role="status" aria-live="polite"></div>';
-        $('usCancelScriptableRevoke')?.addEventListener('click',render);
-        $('usConfirmScriptableRevoke')?.addEventListener('click',async()=>{
-          const button=$('usConfirmScriptableRevoke');button.disabled=true;button.textContent='Revoco…';
-          const {error}=await sb.functions.invoke('widget-scriptable-setup',{body:{operation:'revoke'}});
-          if(!isCurrentSettingsModal(modalGeneration))return;
-          if(error){button.disabled=false;button.textContent='Riprova';$('usScriptableStatus').textContent='Revoca non riuscita. Riprova.';return;}
-          await render();
-        });
-      });
-    }catch(error){
-      if(!isCurrentSettingsModal(modalGeneration))return;
-      console.warn('[US Scriptable] status unavailable',error);
-      body.innerHTML='<div class="us-settings-empty"><b>Widget US non disponibile</b></div><button type="button" class="ghost" id="usScriptableRetry">Riprova</button>';
-      $('usScriptableRetry')?.addEventListener('click',render);
-    }
-  };
-  await render();
-}
-
 async function syncStatusModal(){
   openModal('Stato US','<div class="us-settings-loading">Controllo…</div>','SINCRONIZZAZIONE');
   const [loc,push,profilesRes]=await Promise.all([
@@ -474,7 +400,6 @@ async function action(name){
   if(name==='feedback')return feedbackModal();
   if(name==='maudit')return toggleMaudit();
   if(name==='sync-status')return syncStatusModal();
-  if(name==='scriptable-widgets')return scriptableWidgetsModal();
   if(name==='privacy')return privacyModal();
   if(name==='logout')return logoutConfirmationModal();
 }

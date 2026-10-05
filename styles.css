@@ -997,12 +997,47 @@ body.viewer-open{overflow:hidden}
 #bond .quest-v2 .quest-confirmers{margin-bottom:7px}
 
 
-/* ===== US-1.0 NOI ALIGNMENT · settings must not shift the couple ===== */
-#bond .noi-couple-head{position:relative;display:block;box-sizing:border-box;padding-inline:48px}
-#bond .noi-couple-head .noi-couple{width:100%;margin:0 auto}
-#bond .noi-couple-head #usSettingsEntry{position:absolute;right:0;top:50%;margin:0;transform:translateY(-50%);z-index:2}
+/* ===== US PRE-NATIVE · compact couple card owns the Settings entry ===== */
+#bond .noi-couple-head{position:relative;display:block;box-sizing:border-box;padding:0}
+#bond .noi-couple-card{
+  position:relative;
+  box-sizing:border-box;
+  width:100%;
+  padding:8px 50px 7px;
+  border-radius:22px;
+  overflow:hidden;
+  background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.025));
+  border:1px solid rgba(255,255,255,.11);
+  box-shadow:0 12px 30px rgba(0,0,0,.16);
+}
+#bond .noi-couple-card:before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:radial-gradient(circle at 18% 0%,rgba(255,142,170,.08),transparent 38%),radial-gradient(circle at 82% 100%,rgba(169,133,255,.08),transparent 40%);
+}
+#bond .noi-couple-card .noi-couple{position:relative;z-index:1;width:100%;margin:0 auto}
+#bond .noi-couple-card #usSettingsEntry{
+  position:absolute;
+  right:8px;
+  top:8px;
+  z-index:3;
+  width:38px;
+  height:38px;
+  min-width:38px;
+  min-height:38px;
+  margin:0;
+  transform:none;
+  border-radius:13px;
+  background:rgba(255,255,255,.055);
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:none;
+}
+#bond .noi-couple-card #usSettingsEntry .us-shell-icon{width:20px;height:20px}
 @media(max-width:340px){
-  #bond .noi-couple-head{padding-inline:42px}
+  #bond .noi-couple-card{padding-inline:42px}
+  #bond .noi-couple-card #usSettingsEntry{right:6px;top:7px}
 }
 
 

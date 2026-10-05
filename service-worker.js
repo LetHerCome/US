@@ -1,4 +1,4 @@
-const BUILD_ID = "us-maudit-interaction-v1-20261005-1";
+const BUILD_ID = "us-pre-native-cleanup-v1-20261006-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
