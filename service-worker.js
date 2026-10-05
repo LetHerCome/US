@@ -1,4 +1,4 @@
-const BUILD_ID = "us-countdown-direct-edit-bottom-notice-20261005-1";
+const BUILD_ID = "us-android-pwa-navigation-hardening-v1-20261005-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -246,6 +246,56 @@ async function usFetchNavigation(request, { noCacheHeader = false } = {}) {
   return response;
 }
 
+async function usCachedAppDocument() {
+  try {
+    const current = await caches.open(CACHE_NAME);
+    const index = await current.match("/index.html");
+    if (index) return index;
+    const root = await current.match("/");
+    if (root) return root;
+  } catch (_) {}
+
+  try {
+    return (await caches.match("/index.html")) || (await caches.match("/")) || null;
+  } catch (_) {
+    return null;
+  }
+}
+
+async function usFetchCanonicalAppDocument() {
+  const request = new Request(new URL("/index.html", self.location.origin).href, { method: "GET" });
+  return usFetchNavigation(request, { noCacheHeader: true });
+}
+
+async function usFetchAppDocument(request, options = {}) {
+  try {
+    return await usFetchNavigation(request, options);
+  } catch (firstError) {
+    // Android/Chrome may resume a standalone PWA before its previous document
+    // is available in CacheStorage or while the first navigation briefly
+    // returns an error. Retry against the canonical app document once instead
+    // of letting the navigation resolve without a Response.
+    try {
+      return await usFetchCanonicalAppDocument();
+    } catch (_) {
+      throw firstError;
+    }
+  }
+}
+
+function usNavigationUnavailableResponse() {
+  return new Response(
+    '<!doctype html><html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>US</title><body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#08040e;color:#fff;font:16px system-ui"><main style="padding:24px;text-align:center"><strong>US non è raggiungibile in questo momento.</strong><p style="opacity:.72">Controlla la connessione e riapri l’app.</p></main></body></html>',
+    {
+      status: 503,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-store"
+      }
+    }
+  );
+}
+
 self.addEventListener("fetch", (event) => {
   const request = event.request;
 
@@ -329,7 +379,7 @@ self.addEventListener("fetch", (event) => {
   if (url.searchParams.has("us-refresh")) {
     event.respondWith((async () => {
       try {
-        const response = await usFetchNavigation(request, { noCacheHeader: true });
+        const response = await usFetchAppDocument(request, { noCacheHeader: true });
         event.waitUntil((async () => {
           try {
             const cache = await caches.open(CACHE_NAME);
@@ -338,7 +388,7 @@ self.addEventListener("fetch", (event) => {
         })());
         return response;
       } catch (_) {
-        return (await caches.match("/index.html")) || Response.error();
+        return (await usCachedAppDocument()) || usNavigationUnavailableResponse();
       }
     })());
     return;
@@ -347,8 +397,8 @@ self.addEventListener("fetch", (event) => {
   // Normal cold launch remains cache-first for speed.
   if (request.mode === "navigate") {
     event.respondWith((async () => {
-      const cached = await caches.match("/index.html");
-      const refresh = usFetchNavigation(request)
+      const cached = await usCachedAppDocument();
+      const refresh = usFetchAppDocument(request)
         .then((response) => {
           event.waitUntil(usBestEffortCachePut(CACHE_NAME, "/index.html", response.clone()));
           return response;
@@ -359,7 +409,11 @@ self.addEventListener("fetch", (event) => {
         return cached;
       }
 
-      return refresh.catch(() => caches.match("/index.html"));
+      try {
+        return await refresh;
+      } catch (_) {
+        return (await usCachedAppDocument()) || usNavigationUnavailableResponse();
+      }
     })());
     return;
   }
