@@ -320,7 +320,7 @@ test('Transient Daily/Ti-penso surfaces never block or stop the PET', () => {
 test('F1 occlusion: observation is bounded to blocker nodes/attributes; hidden and pagehide still stop', () => {
   const f = fakeWindow('http://127.0.0.1/?us-pet=preview');
   Pet.install(f.w);
-  assert.equal(f.observed.length, 6, 'body, layer, nudge, toast, hero, auth overlay');
+  assert.equal(f.observed.length, 4, 'body, layer, hero, auth overlay; transient notifications are not observed');
   for (const { options } of f.observed) {
     assert.equal(options.subtree, undefined, 'never a subtree observer');
     assert.equal(options.childList, undefined);
