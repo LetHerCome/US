@@ -15,8 +15,8 @@ test('Countdown: corner edit button is visually retired and the visible countdow
   const home = html.match(/<main id="home"[\s\S]*?<\/main>/)?.[0] || '';
   assert.match(home, /id="usCountdownEntry"[^>]*hidden[^>]*tabindex="-1"[^>]*aria-hidden="true"/);
   assert.match(countdownCss, /\.us-countdown-entry\{display:none!important\}/);
-  assert.match(countdown, /async function openActive\(\)\{[\s\S]*?await open\(\);[\s\S]*?if\(opened\(\)&&state\?\.active_id\)editor\(state\.active_id\);[\s\S]*?\}/);
-  assert.match(countdown, /surface\.addEventListener\('click',openActive\)/);
+  assert.match(countdown, /async function open\(mode='collection'\)\{[\s\S]*?if\(mode==='active'&&state\?\.active_id\)editor\(state\.active_id\);else collection\(\);/);
+  assert.match(countdown, /surface\.addEventListener\('click',\(\)=>open\('active'\)\)/);
   assert.match(countdown, /Modifica countdown/);
 });
 
