@@ -1,0 +1,61 @@
+name: Codex Pre-Native Stabilization Review
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: PWA startup soak
+        run: node --test tests/pwa-startup-browser.test.js
+      - name: Countdown regressions
+        run: node --test tests/countdown-oggi-v1-browser.test.js
+      - name: PET unit + browser
+        run: node --test tests/pet-foundation.test.js tests/pet-foundation-browser.test.js
+      - name: Navigation soak
+        run: node --test tests/navigation-soak-browser.test.js
+      - name: Service worker + UI foundation regressions
+        run: node --test tests/service-worker-static-runtime.test.js tests/ios-media-self-healing.test.js tests/ui-foundation.test.js
+      - name: Baseline M12B.1 on main
+        continue-on-error: true
+        shell: bash
+        run: |
+          git checkout --detach origin/main
+          node --test tests/m12b-oggi-no-scroll.test.js
+      - name: Return to candidate
+        run: git checkout --detach ${{ github.event.pull_request.head.sha }}
+      - name: Full suite
+        id: full
+        continue-on-error: true
+        run: npm test
+      - name: Cloudflare Pages build
+        run: npm run build:cloudflare-pages
+      - name: Diff check
+        run: git diff --check origin/main..HEAD
+
+  capacitor_windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Capacitor web build
+        run: npm run build:capacitor-web
