@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const {fresh,asUser,uuid}=require('./helpers/progression-db');
-const sql=fs.readFileSync(path.join(__dirname,'../supabase/migrations/20261004204518_countdown_oggi_v1.sql'),'utf8');
+const sql=fs.readFileSync(path.join(__dirname,'../supabase/migrations/20261004231911_countdown_oggi_v1.sql'),'utf8');
 const get=(db,u)=>asUser(db,u,()=>db.query('select public.get_countdown_oggi_v1() s').then(r=>r.rows[0].s));
 const save=(db,u,s,v)=>asUser(db,u,()=>db.query('select public.save_countdown_oggi_v1($1::jsonb,$2) s',[JSON.stringify(s),v]).then(r=>r.rows[0].s));
 async function fixture(){const f=await fresh();await f.db.exec('alter table public.couples add column started_on date;');await f.db.exec(sql);return f;}

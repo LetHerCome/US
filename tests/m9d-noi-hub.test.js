@@ -10,16 +10,21 @@ const bond = () => read('index.html').match(/<main id="bond"[\s\S]*?<\/main>/)?.
 const app = () => read('app.js');
 const css = () => read('styles.css');
 
-test('M9D (US 1.0): Noi opens on four active cards, in order, with no new bottom tab', () => {
-  const hub = bond().match(/<nav class="noi-hub" id="noiHub"[\s\S]*?<\/nav>/)?.[0] || '';
+test('M9D: Noi opens on Lavagna plus three active destinations, with no new bottom tab', () => {
+  const page = bond();
+  const hub = page.match(/<nav class="noi-hub" id="noiHub"[\s\S]*?<\/nav>/)?.[0] || '';
   assert.notEqual(hub, '');
   const kickers = [...hub.matchAll(/<span class="noi-hub-kicker">([^<]+)<\/span>/g)].map((m) => m[1]);
-  assert.deepEqual(kickers, ['Sintonia', 'Calendario', 'Quest di coppia', 'Eventi']);
+  assert.deepEqual(kickers, ['Sintonia', 'Quest di coppia', 'Eventi']);
+  assert.match(page, /id="noiWeekBoard"/);
+  assert.match(page, /id="noiWeekBoardOpen" data-noi-week-board-open/);
+  assert.ok(page.indexOf('id="noiWeekBoard"') < page.indexOf('id="noiHub"'));
   assert.match(hub, /data-noi-open="resonance"/);
   assert.doesNotMatch(hub, /data-noi-open="da-vivere"/);
   assert.match(hub, /data-noi-open="quest"/);
   assert.match(hub, /data-noi-open="eventi"/);
-  assert.match(hub, /id="usCalendarEntry" onclick="openCalendarSurface\(\)"/, 'Calendario opens the existing calendar surface');
+  assert.doesNotMatch(hub, /id="usCalendarEntry"/);
+  assert.match(read('calendar.js'), /\$\('noiWeekBoardOpen'\)\?\.addEventListener\('click',[\s\S]*?window\.openCalendarSurface\?\.\(date\)/, 'Lavagna opens the existing Calendar surface');
   assert.match(bond(), /data-noi-view="hub"/);
   assert.match(bond(), /id="noiSectionBar" hidden/);
   const nav = read('index.html').match(/<nav class="nav[^"]*"[\s\S]*?<\/nav>/)?.[0] || '';

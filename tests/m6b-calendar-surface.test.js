@@ -16,13 +16,14 @@ const nav = () => read('navigation.js');
 const worker = () => read('service-worker.js');
 const capacitorBuild = () => read('scripts/build-capacitor-web.mjs');
 
-// (1) entry point exists, inside Noi (#bond), not a bottom-nav tab.
-test('M6B (1): a single Calendario entry point lives inside Noi', () => {
+// (1) the weekly board is the single Calendar entry point inside Noi.
+test('M6B (1): Lavagna is the single Calendario entry point inside Noi', () => {
   const bond = html().match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
-  assert.match(bond, /id="usCalendarEntry"[^>]*onclick="openCalendarSurface\(\)"/);
-  // M9D: the entry point is the Calendario card of the Noi hub.
-  assert.match(bond, /class="noi-hub-card noi-hub-card--calendar" id="usCalendarEntry" onclick="openCalendarSurface\(\)"/);
-  assert.match(bond, /<span class="noi-hub-kicker">Calendario<\/span><b>I vostri giorni<\/b>/);
+  assert.match(bond, /id="noiWeekBoard"/);
+  assert.match(bond, /id="noiWeekBoardOpen" data-noi-week-board-open/);
+  assert.match(bond, /<small>LA NOSTRA SETTIMANA<\/small><b>Lavagna<\/b>/);
+  assert.doesNotMatch(bond, /id="usCalendarEntry"|noi-hub-card--calendar/);
+  assert.match(js(), /\$\('noiWeekBoardOpen'\)\?\.addEventListener\('click',[\s\S]*?window\.openCalendarSurface\?\.\(date\)/);
   assert.doesNotMatch(html(), /data-page="calendar"/, 'must not become a bottom-nav destination');
 });
 

@@ -736,6 +736,93 @@ async function getOggiCalendarInsightSource() {
 }
 window.getOggiCalendarInsightSource = getOggiCalendarInsightSource;
 
+// Weekly board for Noi. This is a compact read-only projection of the existing
+// Calendar authority: same RLS-scoped calendar_entries source, no new storage.
+const US_NOI_WEEK_BOARD_LIMIT = 3;
+function noiBoardClock(entry) {
+  if (entry.is_all_day) return 'Tutto il giorno';
+  const fmt = (iso) => { const d = new Date(iso); return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
+  return `${fmt(entry.starts_at)}–${fmt(entry.ends_at)}`;
+}
+function noiBoardDayLabel(dateISO, today) {
+  if (dateISO === today) return 'OGGI';
+  if (dateISO === shiftISODate(today, 1)) return 'DOMANI';
+  const d = parseISODate(dateISO);
+  return `${WEEKDAYS_IT[(d.getDay() + 6) % 7]} ${d.getDate()}`;
+}
+async function getNoiWeekBoardSource() {
+  const profile = window.usProfile;
+  if (!profile) return null;
+  const coupleId = profile.couple_id;
+  const sameIdentity = () => window.usProfile === profile && window.usProfile?.couple_id === coupleId;
+  const today = todayISO();
+  const end = shiftISODate(today, 7);
+  const [{ data: profileRows, error: profilesError }, weekEntries] = await Promise.all([
+    sb.from('profiles').select('id,display_name').eq('couple_id', coupleId),
+    fetchEntriesForRange(coupleId, today, end)
+  ]);
+  if (profilesError) throw profilesError;
+  if (!sameIdentity()) return null;
+  const names = new Map((profileRows || []).map((p) => [p.id, p.display_name]));
+  const rows = [];
+  for (const entry of weekEntries || []) {
+    const dateISO = entryDatesTouched(entry).find((date) => date >= today && date < end);
+    if (!dateISO) continue;
+    rows.push({
+      id: entry.id,
+      dateISO,
+      day: noiBoardDayLabel(dateISO, today),
+      owner: entry.entry_type === 'shared' ? 'Insieme' : (names.get(entry.owner_id) || 'Impegno'),
+      title: entry.title || 'Impegno',
+      time: noiBoardClock(entry),
+      shared: entry.entry_type === 'shared'
+    });
+  }
+  rows.sort((a, b) => a.dateISO.localeCompare(b.dateISO)
+    || String((weekEntries || []).find((e) => e.id === a.id)?.starts_at || '').localeCompare(String((weekEntries || []).find((e) => e.id === b.id)?.starts_at || ''))
+    || String(a.id).localeCompare(String(b.id)));
+  return { today, rows: rows.slice(0, US_NOI_WEEK_BOARD_LIMIT), total: rows.length };
+}
+function renderNoiWeekBoard(model) {
+  const body = $('noiWeekBoardBody');
+  const shell = $('noiWeekBoardOpen');
+  if (!body || !shell) return;
+  if (!model) {
+    body.innerHTML = '<span class="noi-week-board-empty"><b>Calendario non disponibile</b><small>Aprilo per riprovare.</small></span>';
+    return;
+  }
+  shell.dataset.noiWeekDate = model.rows[0]?.dateISO || model.today;
+  if (!model.rows.length) {
+    body.innerHTML = '<span class="noi-week-board-empty"><b>Settimana libera</b><small>Nessun impegno nei prossimi 7 giorni.</small></span>';
+    return;
+  }
+  const visibleRows = window.innerHeight <= 700 ? model.rows.slice(0, 2) : model.rows;
+  body.innerHTML = visibleRows.map((row) => `<span class="noi-week-board-row" data-shared="${row.shared ? 'true' : 'false'}"><span class="noi-week-board-day">${esc(row.day)}</span><span class="noi-week-board-copy"><b>${esc(row.owner)} · ${esc(row.title)}</b><small>${esc(row.time)}</small></span></span>`).join('')
+    + (model.total > visibleRows.length ? `<span class="noi-week-board-more">+${model.total - visibleRows.length} altri impegni</span>` : '');
+}
+let noiWeekBoardRefreshId = 0;
+async function refreshNoiWeekBoard() {
+  const refreshId = ++noiWeekBoardRefreshId;
+  const body = $('noiWeekBoardBody');
+  if (!window.usProfile) { if (body) body.innerHTML = ''; return; }
+  if (body) body.innerHTML = '<span class="noi-week-board-loading">Carico gli impegni…</span>';
+  try {
+    const model = await getNoiWeekBoardSource();
+    if (refreshId !== noiWeekBoardRefreshId) return;
+    renderNoiWeekBoard(model);
+  } catch (error) {
+    console.warn('[US Noi] week board', error);
+    if (refreshId === noiWeekBoardRefreshId) renderNoiWeekBoard(null);
+  }
+}
+$('noiWeekBoardOpen')?.addEventListener('click', () => {
+  const date = $('noiWeekBoardOpen')?.dataset.noiWeekDate || todayISO();
+  window.openCalendarSurface?.(date);
+});
+window.getNoiWeekBoardSource = getNoiWeekBoardSource;
+window.refreshNoiWeekBoard = refreshNoiWeekBoard;
+window.UsNoiWeekBoard = Object.freeze({ refresh: refreshNoiWeekBoard, render: renderNoiWeekBoard });
+
 function ownerMarkOf(entry) { return ownerMarkFor(entryLaneRole(entry), profileById(entry.owner_id)?.display_name); }
 function ownerChip(mark) {
   return `<span class="us-cal-chip${mark === 'F+B' ? ' us-cal-chip--shared' : ''}" aria-hidden="true">${esc(mark)}</span>`;
@@ -1357,6 +1444,7 @@ function closeCalendarSurface() {
     closeCalendarFormSheet();
     clearIdeaPick();
     selectedDate = null;
+    if ($('bond')?.classList.contains('active')) window.refreshNoiWeekBoard?.();
   };
   if (window.UsUiFoundation?.exitSurface) window.UsUiFoundation.exitSurface(overlay, finalize);
   else finalize();

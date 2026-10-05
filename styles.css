@@ -1004,3 +1004,35 @@ body.viewer-open{overflow:hidden}
 @media(max-width:340px){
   #bond .noi-couple-head{padding-inline:42px}
 }
+
+
+/* US Home Cleanup — Noi weekly board + transient Daily Question nudge. */
+#home #usOggiStack{height:0!important;overflow:hidden!important;opacity:0!important;visibility:hidden!important;pointer-events:none!important}
+.noi-week-board{flex:0 0 auto;margin:0 0 2px}
+#bond .noi-canonical-page:not([data-noi-view="hub"])>.noi-week-board{display:none!important}
+.noi-week-board-shell{width:100%;display:block;padding:14px 14px 12px;border:1px solid rgba(255,255,255,.09);border-radius:22px;background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018));color:var(--us-color-text);text-align:left;box-shadow:none}
+.noi-week-board-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.noi-week-board-head>span:first-child{display:flex;flex-direction:column;gap:2px;min-width:0}
+.noi-week-board-head small{font-size:8.5px;font-weight:800;letter-spacing:.16em;color:var(--us-color-text-3)}
+.noi-week-board-head b{font:500 21px/1.08 var(--us-font-editorial,Georgia,serif)}
+.noi-week-board-open{font-size:10px;color:var(--us-color-text-2);white-space:nowrap;padding-top:4px}
+.noi-week-board-body{display:flex;flex-direction:column;gap:7px;margin-top:12px}
+.noi-week-board-row{display:grid;grid-template-columns:54px minmax(0,1fr);gap:10px;align-items:center;min-width:0}
+.noi-week-board-day{font-size:8.5px;font-weight:850;letter-spacing:.12em;color:var(--us-color-accent-ink)}
+.noi-week-board-copy{display:flex;align-items:baseline;justify-content:space-between;gap:10px;min-width:0;padding:7px 0;border-top:1px solid rgba(255,255,255,.06)}
+.noi-week-board-row:first-child .noi-week-board-copy{border-top:0;padding-top:0}
+.noi-week-board-copy b{font-size:12px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.noi-week-board-copy small{font-size:10px;color:var(--us-color-text-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.noi-week-board-row[data-shared="true"] .noi-week-board-day,.noi-week-board-row[data-shared="true"] .noi-week-board-copy b{color:#ffd5e6}
+.noi-week-board-more,.noi-week-board-loading,.noi-week-board-empty{display:block;font-size:10px;color:var(--us-color-text-3)}
+.noi-week-board-empty{display:flex;flex-direction:column;gap:3px}
+.noi-week-board-empty b{font-size:12px;color:var(--us-color-text);font-weight:650}
+.noi-week-board-empty small{font-size:10px;color:var(--us-color-text-3)}
+.us-daily-nudge{position:fixed;left:50%;bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 14px);z-index:65;width:min(360px,calc(100% - 28px));transform:translateX(-50%);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid rgba(255,255,255,.13);border-radius:18px;background:rgba(18,14,24,.92);backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);box-shadow:0 16px 44px rgba(0,0,0,.34);color:#fff;text-align:left}
+.us-daily-nudge[hidden]{display:none!important}
+.us-daily-nudge-copy{display:flex;flex-direction:column;gap:2px;min-width:0}
+.us-daily-nudge-copy small{font-size:8.5px;font-weight:850;letter-spacing:.14em;color:#ffb8d0}
+.us-daily-nudge-copy b{font-size:12px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.us-daily-nudge-cta{flex:0 0 auto;font-size:11px;font-weight:750;color:#ffd3e3}
+@media(max-height:640px){.noi-week-board-shell{padding:11px 12px}.noi-week-board-body{gap:5px;margin-top:8px}.noi-week-board-copy{padding:5px 0}.us-daily-nudge{bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 8px)}}
+@media(prefers-reduced-motion:reduce){.us-daily-nudge{transition:none!important}}
