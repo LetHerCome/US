@@ -39,3 +39,11 @@ Only durable decisions belong here. New missions should not reopen them without 
 - Public URL scheme `com.usapp.us`; reserved App Group `group.com.usapp.us.shared` for all future extensions; refresh tokens never go in the App Group.
 - WebView data (session) is excluded from iOS backups, mirroring Android `allowBackup=false`.
 - The iOS WebView origin (`capacitor://localhost`) is frozen: changing it orphans stored sessions.
+
+### Native Security V1
+
+- Biometrics gate access to the existing Supabase session on this phone; they never create an identity, replace email + password, or revive an expired/revoked session.
+- The Supabase session stays in the WebView store; only a protection record (no credential) goes to Android Keystore-encrypted prefs / iOS Keychain `ThisDeviceOnly`.
+- Android accepts only **class 3 (strong)** biometrics, bound to a Keystore key invalidated by a new enrollment. iOS uses Face ID / Touch ID only (no passcode shortcut) and checks the enrollment hash.
+- Locked on cold start and after **60 s** in background; shorter interruptions never re-prompt.
+- Off by default, device-local, never a couple setting. Any end of the session removes it; recovery is always the email + password login.
