@@ -1,0 +1,123 @@
+name: iOS native validation
+
+# Proves the Capacitor iOS target builds on a clean macOS runner without any
+# Apple signing material: unsigned iOS Simulator builds only. No archive, no
+# TestFlight upload, no secrets.
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'ios/**'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'native-entry.mjs'
+      - 'app-links.mjs'
+      - 'scripts/build-capacitor-web.mjs'
+      - 'scripts/build-web-brand-assets.mjs'
+      - 'tests/ios-native-baseline.test.js'
+      - '.github/workflows/ios-native.yml'
+  pull_request:
+    paths:
+      - 'ios/**'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'native-entry.mjs'
+      - 'app-links.mjs'
+      - 'scripts/build-capacitor-web.mjs'
+      - 'scripts/build-web-brand-assets.mjs'
+      - 'tests/ios-native-baseline.test.js'
+      - '.github/workflows/ios-native.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-native-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  simulator-build:
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Select newest installed Xcode
+        run: |
+          ls -d /Applications/Xcode*.app
+          XCODE=$(ls -d /Applications/Xcode_*.app | sort -V | tail -n 1)
+          sudo xcode-select -s "$XCODE/Contents/Developer"
+          xcodebuild -version
+          xcrun simctl list runtimes | grep -i ios || true
+
+      - name: npm ci
+        run: npm ci
+
+      - name: Native contract tests
+        run: node --test tests/ios-native-baseline.test.js tests/native-web-staging.test.js tests/native-foundation.test.js
+
+      - name: npm run build:capacitor-web
+        run: npm run build:capacitor-web
+
+      - name: npx cap sync ios
+        run: npx cap sync ios
+
+      - name: Sync leaves committed iOS project unchanged
+        run: git diff --exit-code -- ios
+
+      - name: Xcode build (Debug, iOS Simulator, unsigned)
+        run: |
+          set -o pipefail
+          mkdir -p build
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/ios-derived \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build | tee build/xcodebuild-debug.log | grep -E "warning:|error:|BUILD (SUCCEEDED|FAILED)" || true
+          grep -q "BUILD SUCCEEDED" build/xcodebuild-debug.log
+
+      - name: Xcode build (Release, iOS Simulator, unsigned)
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/ios-derived \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build | tee build/xcodebuild-release.log | grep -E "warning:|error:|BUILD (SUCCEEDED|FAILED)" || true
+          grep -q "BUILD SUCCEEDED" build/xcodebuild-release.log
+
+      - name: Inspect built app
+        run: |
+          APP=$(find build/ios-derived/Build/Products -maxdepth 2 -name App.app -type d | head -n 1)
+          echo "$APP"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c "Print :MinimumOSVersion" "$APP/Info.plist"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist")" = "com.usapp.us"
+          test -f "$APP/public/index.html"
+          test -f "$APP/public/native-entry.js"
+          test ! -f "$APP/public/stories.js"
+          test ! -f "$APP/public/service-worker.js"
+
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-xcodebuild-logs
+          path: build/*.log
+          if-no-files-found: ignore
