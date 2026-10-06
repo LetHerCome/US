@@ -47,3 +47,12 @@ Only durable decisions belong here. New missions should not reopen them without 
 - Android accepts only **class 3 (strong)** biometrics, bound to a Keystore key invalidated by a new enrollment. iOS uses Face ID / Touch ID only (no passcode shortcut) and checks the enrollment hash.
 - Locked on cold start and after **60 s** in background; shorter interruptions never re-prompt.
 - Off by default, device-local, never a couple setting. Any end of the session removes it; recovery is always the email + password login.
+
+### Native Notifications V1
+
+- One notification domain: producers authorize and apply preferences, then hand ONE canonical notification (`_shared/notification-core.mjs`) to one dispatcher; Web Push, FCM and APNs only serialize it. No per-transport business rules.
+- Dedupe stays logical: one `push_event_log` claim per event covers every transport; released when nothing was delivered.
+- iOS uses direct APNs (token auth), not FCM-for-iOS: no Firebase SDK in the iOS app.
+- Native registration is per app installation (random UUID, rotated at logout), only through authenticated RPCs; logout removes only this installation.
+- Payloads carry an allow-listed target and an optional UUID, never a URL; navigation waits for the session and the app lock. Notification actions never mutate data.
+- Native credentials live only in Supabase Edge secrets; unset = native transport off, Web Push unchanged.

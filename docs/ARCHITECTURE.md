@@ -26,7 +26,8 @@
 | Stories | `stories.js`, `stories.css` |
 | Settings | `settings.js`, `settings.css`, `settings2.css` |
 | UI primitives | `ui-foundation.js`, `ui-foundation.css` |
-| Platform/native boundary | `platform.js`, `native-entry.mjs`, `app-links.mjs`, `android/`, `ios/` (see `docs/native/IOS_BASELINE.md`); biometric app lock `app-lock.js` + `native-plugins/us-app-lock` (see `docs/native/NATIVE_SECURITY_V1.md`) |
+| Platform/native boundary | `platform.js`, `native-entry.mjs`, `app-links.mjs`, `android/`, `ios/` (see `docs/native/IOS_BASELINE.md`); biometric app lock `app-lock.js` + `native-plugins/us-app-lock` (see `docs/native/NATIVE_SECURITY_V1.md`); native push `notifications.js` + `native-plugins/us-push-support` (see `docs/native/NATIVE_NOTIFICATIONS_V1.md`) |
+| Notification domain (Web Push + FCM + APNs) | `supabase/functions/_shared/notification-core.mjs`, `native-push-transport.mjs`, `native-push-env.ts` |
 | Service worker / PWA caching | `service-worker.js` |
 | Supabase source | `supabase/` |
 | Tests | `tests/` |
