@@ -107,7 +107,8 @@ struct UsAppLockRecord: Codable, Equatable {
                                            state: UsAppLockPolicy.stateCorrupted, domainSource: nil, domainHash: nil)
 
     static func decode(_ data: Data?) -> UsAppLockRecord? {
-        guard let data = data, !data.isEmpty else { return nil }
+        guard let data = data else { return nil }
+        guard !data.isEmpty else { return .corrupted }
         guard let record = try? JSONDecoder().decode(UsAppLockRecord.self, from: data), record.isValid else {
             return .corrupted
         }
