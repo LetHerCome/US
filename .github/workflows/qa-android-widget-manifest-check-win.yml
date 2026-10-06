@@ -1,0 +1,45 @@
+name: QA Android Widget Manifest Check Windows
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  inspect_apk:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 0b015c5945e452ea61f52beb18f35c260feb95b8
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - run: npm ci
+      - run: npm run build:capacitor-web
+      - run: npx cap sync android
+      - name: Build debug APK
+        working-directory: android
+        run: .\gradlew.bat --no-daemon :app:assembleDebug
+      - name: Inspect packaged widget providers
+        shell: pwsh
+        run: |
+          $aapt2 = Get-ChildItem "$env:ANDROID_HOME\build-tools" -Recurse -Filter aapt2.exe |
+            Sort-Object FullName | Select-Object -Last 1
+          if (-not $aapt2) { throw "aapt2.exe not found" }
+          & $aapt2.FullName dump xmltree android/app/build/outputs/apk/debug/app-debug.apk --file AndroidManifest.xml |
+            Set-Content manifest-dump.txt
+          Get-Content manifest-dump.txt | Select-String -Pattern 'UsThinkWidgetProvider|UsCountdownWidgetProvider' -Context 8,8
+          $dump = Get-Content manifest-dump.txt -Raw
+          if ($dump -notmatch 'com\.usapp\.widget\.UsThinkWidgetProvider') { throw 'Ti penso provider missing from APK' }
+          if ($dump -notmatch 'com\.usapp\.widget\.UsCountdownWidgetProvider') { throw 'Countdown provider missing from APK' }
