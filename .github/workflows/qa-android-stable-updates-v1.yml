@@ -1,0 +1,73 @@
+name: QA Android Stable Updates V1
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 11d3a4816c4bfcf41c545e4efef51bf6778bb1e5
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node --test tests/android-stable-signing.test.js tests/n2-native-experience.test.js tests/m12a-feedback.test.js
+      - run: npm test
+      - run: git diff --check origin/main..11d3a4816c4bfcf41c545e4efef51bf6778bb1e5
+
+  windows_release_signing:
+    runs-on: windows-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 11d3a4816c4bfcf41c545e4efef51bf6778bb1e5
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - run: npm ci
+      - name: Create ephemeral QA signing key
+        shell: pwsh
+        run: |
+          $path = Join-Path $env:RUNNER_TEMP "qa-signing.jks"
+          keytool -genkeypair -v -keystore $path -storetype PKCS12 -storepass qa-only-password -keypass qa-only-password -alias qa-only -keyalg RSA -keysize 2048 -validity 2 -dname "CN=US QA,O=US,C=IT"
+          "US_ANDROID_KEYSTORE_PATH=$path" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "US_ANDROID_KEYSTORE_PASSWORD=qa-only-password" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "US_ANDROID_KEY_ALIAS=qa-only" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "US_ANDROID_KEY_PASSWORD=qa-only-password" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "US_ANDROID_VERSION_CODE=1900000001" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "US_ANDROID_VERSION_NAME=1.0-qa" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - run: npm run build:capacitor-web
+      - run: npx cap sync android
+      - name: Build signed release
+        working-directory: android
+        run: .\gradlew.bat --no-daemon testDebugUnitTest assembleRelease
+      - name: Verify signed APK and metadata
+        shell: pwsh
+        run: |
+          $apk = "android/app/build/outputs/apk/release/app-release.apk"
+          if (-not (Test-Path $apk)) { throw "release APK missing" }
+          $apksigner = Get-ChildItem "$env:ANDROID_HOME\build-tools" -Recurse -Filter apksigner.bat | Sort-Object FullName | Select-Object -Last 1
+          & $apksigner.FullName verify --verbose --print-certs $apk
+          if ($LASTEXITCODE -ne 0) { throw "signature verification failed" }
+          $aapt2 = Get-ChildItem "$env:ANDROID_HOME\build-tools" -Recurse -Filter aapt2.exe | Sort-Object FullName | Select-Object -Last 1
+          & $aapt2.FullName dump badging $apk | Tee-Object -FilePath badging.txt
+          $badging = Get-Content badging.txt -Raw
+          if ($badging -notmatch "package: name='com.usapp.us' versionCode='1900000001'") { throw "wrong package/version metadata" }
