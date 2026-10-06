@@ -93,6 +93,32 @@ window.UsWidgetCredentialApi=Object.freeze({
   }
 });
 
+// Native widgets read US through this narrow door: semantic values and, for
+// Foto & Noi, a short-lived signed URL that stays inside the WebView (widgets.js
+// downloads and downsizes the image, native only ever receives bytes).
+window.UsWidgetDataApi=Object.freeze({
+  async couple(){
+    const cid=window.usProfile?.couple_id;
+    if(!window.UsPlatform?.isNative||!cid)return null;
+    const [coupleRes,profilesRes]=await Promise.all([
+      sb.from('couples').select('started_on').eq('id',cid).maybeSingle(),
+      sb.from('profiles').select('display_name').eq('couple_id',cid).order('created_at',{ascending:true})
+    ]);
+    if(coupleRes.error||profilesRes.error)throw coupleRes.error||profilesRes.error;
+    return {startedOn:coupleRes.data?.started_on||'',names:(profilesRes.data||[]).map(p=>p.display_name).filter(Boolean)};
+  },
+  async latestPhoto(){
+    if(!window.UsPlatform?.isNative||!window.usProfile)return null;
+    const {data,error}=await sb.from('moments').select('id,storage_path,moment_date,created_at').order('created_at',{ascending:false}).limit(1);
+    if(error)throw error;
+    const row=data?.[0];
+    if(!row?.storage_path)return null;
+    const url=await usGetSignedUrl(row.storage_path,3600);
+    if(!url)throw new Error('widget_photo_unavailable');
+    return {id:row.id,path:row.storage_path,takenOn:row.moment_date||'',url};
+  }
+});
+
 const US_SIGNED_URL_CACHE=new Map();
 const US_SIGNED_URL_SKEW_MS=5*60*1000;
 const US_SIGNED_URL_STORAGE_KEY='us:signed-url-cache:v2';
@@ -426,7 +452,7 @@ async function revokeCurrentDevice(){
   const profileId=window.usProfile?.id||'';
   try{await disableWebPush({silent:true,refreshUi:false,profileId});}catch(error){console.warn('[US Logout] push revoke',error);}
   try{await clearPrivateDeviceState(profileId);}catch(error){console.warn('[US Logout] private cleanup',error);}
-  try{await window.UsThinkWidget?.clear?.();}catch(error){console.warn('[US Logout] widget cleanup',error);}
+  try{await window.UsWidgets?.clear?.();}catch(error){console.warn('[US Logout] widget cleanup',error);}
 }
 window.revokeCurrentDevice=revokeCurrentDevice;
 
@@ -512,7 +538,7 @@ async function initCloud(){
       const returningDevice=Boolean(cachedDeviceProfile);
       resetNoiIdeasForIdentityChange();
       window.usProfile = null;
-      window.UsThinkWidget?.clear?.().catch(()=>{});
+      window.UsWidgets?.clear?.().catch(()=>{});
       document.documentElement.classList.remove('us-returning-device','us-auth-pending');
       setCloudBadge(false,navigator.onLine?'accesso richiesto':'offline');
       document.getElementById('authOverlay').classList.remove('hidden');
@@ -558,7 +584,7 @@ async function initCloud(){
     if(!profile){
       resetNoiIdeasForIdentityChange();
       window.usProfile = null;
-      window.UsThinkWidget?.clear?.().catch(()=>{});
+      window.UsWidgets?.clear?.().catch(()=>{});
       document.documentElement.classList.remove('us-returning-device','us-auth-pending');
       setCloudBadge(false,'da collegare');
       document.getElementById('authOverlay').classList.remove('hidden');
@@ -572,7 +598,7 @@ async function initCloud(){
 
     resetNoiIdeasForIdentityChange();
     window.usProfile = profile;
-    window.UsThinkWidget?.authReady?.(profile).catch(error=>console.warn('[US Widget] auth ready',error));
+    window.UsWidgets?.authReady?.(profile).catch(error=>console.warn('[US Widget] auth ready',error));
     selectedRole = profile.role;
     try{localStorage.setItem('us:fix4:last-profile',JSON.stringify(profile));}catch(_e){}
     document.getElementById('authOverlay').classList.add('hidden');
@@ -2555,7 +2581,7 @@ async function hydrateMomentsCore(){
     grid.innerHTML='<div class="empty-state moment-loading ricordi-empty"><b>La vostra storia parte da qui</b></div>';
     renderRicordiRivivi(null,new Map(),new Map());
     renderRicordiChapters([],new Map());
-    grid.dataset.loaded='1';grid.dataset.signature=signature;return;
+    grid.dataset.loaded='1';grid.dataset.signature=signature;window.dispatchEvent(new CustomEvent('us:moments-updated'));return;
   }
   const names=new Map((profiles||[]).map(p=>[p.id,p.display_name||'Noi']));
   const mediaPaths=(rows||[]).map(row=>row.storage_path);
@@ -2594,6 +2620,7 @@ async function hydrateMomentsCore(){
   if(timeline.length){
     grid.innerHTML=html.join('');grid.dataset.loaded='1';grid.dataset.signature=signature;
     consumeFreshRicordo(grid);
+    window.dispatchEvent(new CustomEvent('us:moments-updated'));
     const riviviPick=ricordiPickRivivi(timeline,today);
     renderRicordiRivivi(riviviPick?.reason==='anniversary'?riviviPick:null,signedUrls,names);
     renderRicordiChapters(ricordiChapters(timeline),signedUrls);
@@ -3825,7 +3852,7 @@ async function hydrateThink(){
     usThinkKnownReactionSignature=signature;
   }
   window.UsTodayPriority?.refresh?.();
-  window.UsThinkWidget?.publishThink?.({partnerName,lastReceivedAt:received?.created_at||'',lastSentAt:sent?.created_at||''}).catch(()=>{});
+  window.UsWidgets?.publishThink?.({partnerName,lastReceivedAt:received?.created_at||'',lastSentAt:sent?.created_at||'',lastAnsweredAt:receivedReaction?.updated_at||''}).catch(()=>{});
 }
 window.hydrateThink=hydrateThink;
 async function sendThinkSignal(){

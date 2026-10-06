@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/us_widget_background"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:padding="10dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:lineSpacingExtra="1dp"
+        android:maxLines="2"
+        android:textColor="@color/us_widget_text"
+        android:textSize="15sp"
+        android:textStyle="bold"
+            android:text="Beatrice ti sta pensando" />
+
+    <FrameLayout
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_marginTop="2dp"
+        android:foregroundGravity="center">
+
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_gravity="center"
+            android:contentDescription="@string/us_widget_send"
+            android:scaleType="centerInside"
+            android:src="@drawable/us_widget_heart" />
+
+        <ImageView
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_gravity="center"
+            android:contentDescription="@string/us_widget_send"
+            android:scaleType="centerInside"
+            android:src="@drawable/us_widget_heart"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="1dp"
+        android:includeFontPadding="false"
+        android:letterSpacing="0.08"
+        android:textAllCaps="true"
+        android:textColor="@color/us_widget_accent"
+        android:textSize="11sp"
+        android:textStyle="bold"
+            android:text="Ricambia" />
+</LinearLayout>

@@ -8,7 +8,7 @@ android {
     namespace = "com.usapp.widget"
     compileSdk = project.hasProperty('compileSdkVersion') ? rootProject.ext.compileSdkVersion : 36
     defaultConfig {
-        minSdkVersion project.hasProperty('minSdkVersion') ? rootProject.ext.minSdkVersion : 24
+        minSdkVersion project.hasProperty('minSdkVersion') ? rootProject.ext.minSdkVersion : 26
         targetSdkVersion project.hasProperty('targetSdkVersion') ? rootProject.ext.targetSdkVersion : 36
         versionCode 1
         versionName "1.0"
@@ -26,4 +26,7 @@ repositories {
 
 dependencies {
     implementation project(':capacitor-android')
+    // The widget contract/models are pure Java; JVM tests need a real org.json.
+    testImplementation "junit:junit:${project.hasProperty('junitVersion') ? rootProject.ext.junitVersion : '4.13.2'}"
+    testImplementation "org.json:json:20250517"
 }

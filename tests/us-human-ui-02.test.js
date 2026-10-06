@@ -291,7 +291,7 @@ const scope = (name) => settingsPage.match(new RegExp(`<section class="us-settin
 const settingsIn = (chunk) => [...chunk.matchAll(/data-us-setting="([a-z-]+)"/g)].map((m) => m[1]);
 
 test('Settings: TU holds what is the actor\'s or this phone\'s, VOI what the couple shares', () => {
-  assert.deepEqual(settingsIn(scope('tu')), ['profile-photo', 'notifications', 'location', 'distance', 'feedback', 'maudit', 'home-photo', 'sync-status']);
+  assert.deepEqual(settingsIn(scope('tu')), ['profile-photo', 'notifications', 'location', 'distance', 'feedback', 'maudit', 'widgets', 'home-photo', 'sync-status']);
   assert.deepEqual(settingsIn(scope('voi')), ['relationship-date', 'story-archive']);
   assert.match(scope('voi'), /<article class="us-couple-id-card" id="usCoupleIdCard"/, 'the couple card is shared state');
   assert.match(scope('tu'), /<h3 id="usSettingsTuTitle">Tu<\/h3>/);
@@ -301,7 +301,7 @@ test('Settings: TU holds what is the actor\'s or this phone\'s, VOI what the cou
 test('Settings: every control exists exactly once and keeps its existing action', () => {
   const all = settingsIn(settingsPage);
   assert.equal(new Set(all).size, all.length, 'no duplicated control');
-  assert.deepEqual([...all].sort(), ['distance', 'feedback', 'home-photo', 'location', 'logout', 'maudit', 'notifications', 'privacy', 'profile-photo', 'relationship-date', 'story-archive', 'sync-status']);
+  assert.deepEqual([...all].sort(), ['distance', 'feedback', 'home-photo', 'location', 'logout', 'maudit', 'notifications', 'privacy', 'profile-photo', 'relationship-date', 'story-archive', 'sync-status', 'widgets']);
   const settingsJs = read('settings.js');
   for (const name of all) assert.match(settingsJs, new RegExp(`if\\(name==='${name}'\\)`), `${name} is still handled`);
   for (const id of ['usRelationshipDateValue', 'usNotificationsValue', 'usDistanceUnitValue', 'usLocationState', 'usFeedbackValue', 'usSyncValue', 'usStoryArchiveValue', 'usSettingsBuild', 'usCoupleAvatars', 'usCoupleNames', 'usTogetherLine', 'usSettingsDeviceDot']) {

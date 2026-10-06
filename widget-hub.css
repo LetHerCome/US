@@ -1,0 +1,79 @@
+/* US · Widget Hub (Impostazioni → Widget). Reuses the Settings sheet primitive;
+   previews mirror the native RemoteViews widgets (same colours, same type roles). */
+.us-widget-hub-sheet{min-height:min(78dvh,720px)}
+.us-widget-hub-list{display:flex;flex-direction:column;gap:10px}
+.us-widget-hub-card{display:grid;grid-template-columns:132px minmax(0,1fr);gap:14px;align-items:center;padding:12px;border-radius:22px;background:var(--us-glass-1-bg);border:var(--us-glass-1-border)}
+.us-widget-hub-preview{display:grid;place-items:center;min-height:116px}
+.us-widget-hub-copy{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.us-widget-hub-title{display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px}
+.us-widget-hub-title b{font-size:16px;font-weight:680;letter-spacing:-.15px;color:var(--us-color-text)}
+.us-widget-hub-chip{padding:3px 8px;border-radius:999px;background:rgba(114,201,152,.12);color:var(--us-color-positive);font-size:11px;font-weight:700;letter-spacing:.02em}
+.us-widget-hub-copy p{margin:0!important;color:var(--us-color-text-2)!important;font-size:var(--us-text-secondary)!important;line-height:1.4}
+.us-widget-hub-add{margin-top:4px;min-height:38px;padding:0 14px;border-radius:999px;background:var(--us-color-accent-soft);border:1px solid var(--us-color-accent-line);color:var(--us-color-text);font-size:13px;font-weight:680}
+.us-widget-hub-add:disabled{opacity:.55}
+.us-widget-hub-status{min-height:0;color:var(--us-color-text-3);font-size:var(--us-text-meta);line-height:1.35}
+.us-widget-hub-status:empty{display:none}
+.us-widget-hub-manual{margin-top:12px;padding:14px;border-radius:20px;border:1px dashed var(--us-color-line-strong);display:flex;flex-direction:column;gap:8px}
+.us-widget-hub-manual[hidden],.us-widget-hub-vendor[hidden]{display:none}
+.us-widget-hub-manual>b{font-size:14px;color:var(--us-color-text)}
+.us-widget-hub-path{margin:0!important;color:var(--us-color-text)!important;font-size:var(--us-text-secondary)!important;line-height:1.55}
+.us-widget-hub-path span{color:var(--us-color-accent-ink)}
+.us-widget-hub-vendor{display:flex;flex-direction:column;gap:8px}
+.us-widget-hub-vendor p{margin:0!important;color:var(--us-color-text-2)!important;font-size:var(--us-text-meta)!important;line-height:1.45}
+.us-widget-hub-vendor button{align-self:flex-start;min-height:38px;padding:0 14px;border-radius:999px;font-size:13px}
+
+/* ---------- previews: the native widget surface ---------- */
+.us-widget-hub-preview>div{--wp-bg:linear-gradient(180deg,rgba(17,11,24,.95),rgba(10,7,16,.95));position:relative;overflow:hidden;width:112px;height:112px;border-radius:22px;background:var(--wp-bg);box-shadow:0 10px 24px rgba(0,0,0,.3),inset 0 0 0 1px rgba(255,255,255,.05);color:#fff8fd;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:10px;box-sizing:border-box}
+.us-widget-hub-preview.is-wide>div{width:128px;height:64px;align-items:flex-start;text-align:left;padding:9px 12px}
+
+.us-wp-think b{flex:1;display:flex;align-items:center;font-size:12px;font-weight:700;line-height:1.2}
+.us-wp-think i{display:block;width:40px;height:40px}
+.us-wp-think svg{width:100%;height:100%;fill:#ff5f87}
+.us-wp-think small{margin-top:1px;color:#ff8ead;font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+
+.us-wp-countdown .us-wp-cd-title{max-width:100%;font-size:7.5px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:rgba(255,248,253,.9)}
+.us-wp-countdown b{margin:2px 0;font:300 40px/1 var(--us-font-body,Inter,sans-serif);letter-spacing:-.05em}
+.us-wp-countdown b.is-clock{font-size:22px;letter-spacing:-.02em}
+.us-wp-countdown .us-wp-cd-unit{font:italic 400 12px/1 var(--us-font-editorial,Newsreader,Georgia,serif)}
+.us-wp-countdown .us-wp-cd-sub{margin-top:3px;font:italic 400 10px/1 var(--us-font-editorial,Newsreader,Georgia,serif);color:#ff8ead}
+.us-wp-countdown p{margin:0!important;color:#b9adb9!important;font-size:11px!important;line-height:1.35}
+.us-wp-countdown[data-style="signal"]{--wp-bg:linear-gradient(180deg,#1c1a22,#0e0d12);box-shadow:0 10px 24px rgba(0,0,0,.3),inset 0 0 0 1px rgba(243,210,139,.22)}
+.us-wp-countdown[data-style="signal"] .us-wp-cd-title{padding:2px 6px;border-radius:4px;background:rgba(12,10,16,.78);box-shadow:inset 0 0 0 1px rgba(243,210,139,.22);color:#f3d28b}
+.us-wp-countdown[data-style="signal"] b{font-weight:900;color:#f4efe4;letter-spacing:0}
+.us-wp-countdown[data-style="signal"] .us-wp-cd-unit,.us-wp-countdown[data-style="aurora"] .us-wp-cd-unit,.us-wp-countdown[data-style="chrome"] .us-wp-cd-unit{font:600 7.5px/1 var(--us-font-body,Inter,sans-serif);letter-spacing:.3em;text-transform:uppercase}
+.us-wp-countdown[data-style="signal"] .us-wp-cd-unit{color:rgba(244,239,228,.82)}
+.us-wp-countdown[data-style="glass"]{--wp-bg:linear-gradient(135deg,rgba(255,255,255,.16),rgba(255,255,255,.03) 60%,rgba(255,255,255,.07)),linear-gradient(180deg,#141019,#0a0710);box-shadow:0 10px 24px rgba(0,0,0,.3),inset 0 0 0 1px rgba(255,255,255,.26)}
+.us-wp-countdown[data-style="glass"] b{font-weight:200}
+.us-wp-countdown[data-style="glass"] .us-wp-cd-unit{font:400 11px/1 var(--us-font-body,Inter,sans-serif)}
+.us-wp-countdown[data-style="aurora"]{--wp-bg:radial-gradient(circle at 50% 55%,rgba(255,170,214,.3),rgba(170,182,255,.14) 45%,transparent 70%),linear-gradient(150deg,#1a0f25,#140e20 50%,#0e1820)}
+.us-wp-countdown[data-style="aurora"] b{font:italic 400 42px/1 var(--us-font-editorial,Newsreader,Georgia,serif);color:#ffc8df}
+.us-wp-countdown[data-style="aurora"] .us-wp-cd-unit{color:#f5dcf0}
+.us-wp-countdown[data-style="orbit"]::before{content:"";position:absolute;inset:8px;border-radius:50%;border:1px solid rgba(255,235,220,.22)}
+.us-wp-countdown[data-style="orbit"]::after{content:"";position:absolute;top:5px;left:calc(50% - 3px);width:7px;height:7px;border-radius:50%;background:#fff1df;box-shadow:0 0 6px rgba(255,213,170,.7)}
+.us-wp-countdown[data-style="chrome"] .us-wp-cd-title{padding:2px 7px;border-radius:999px;background:linear-gradient(180deg,#f5f6f9,#a3acb9 55%,#e1e5ec);color:#262c37}
+.us-wp-countdown[data-style="chrome"] b{font-weight:900;color:#e0e6ef;letter-spacing:-.06em}
+.us-wp-countdown[data-style="chrome"] .us-wp-cd-unit{color:#e3e7ee}
+
+.us-wp-noi span{display:flex;align-items:center;gap:6px;max-width:100%;font-size:10px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.us-wp-noi span i{flex:none;width:10px;height:2px;border-radius:2px;background:var(--wp-accent,#ff8ead)}
+.us-wp-noi b{display:flex;align-items:center;gap:6px;margin-top:4px;font:300 26px/1 var(--us-font-body,Inter,sans-serif);letter-spacing:-.03em}
+.us-wp-noi b small{font:italic 400 10.5px/1.1 var(--us-font-editorial,Newsreader,Georgia,serif);color:var(--wp-accent,#ff8ead);letter-spacing:0}
+.us-wp-noi[data-frame="aurora"]{--wp-accent:#ffc8df}
+.us-wp-noi[data-frame="chrome"]{--wp-accent:#c9d1dc}
+.us-wp-noi[data-frame="glow"]{--wp-accent:#ffd9a8}
+.us-wp-noi[data-frame="negative"]{--wp-accent:#f2f2f2}
+.us-wp-noi[data-frame="polaroid"]{--wp-accent:#fff8ee}
+.us-wp-noi[data-frame="scrapbook"]{--wp-accent:#e8c9a0}
+
+.us-wp-photo{justify-content:flex-start!important;padding:0!important}
+.us-wp-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.us-wp-photo.has-photo::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(10,7,16,.85),rgba(10,7,16,.2) 50%,transparent)}
+.us-wp-photo p{margin:0 0 22px!important;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:0 10px;color:#b9adb9!important;font-size:9.5px!important;line-height:1.3}
+.us-wp-photo p svg{width:20px;height:20px;fill:rgba(255,248,253,.65)}
+.us-wp-photo-days{position:absolute;left:10px;bottom:8px;z-index:1;display:flex;align-items:baseline;gap:4px;text-shadow:0 1px 6px rgba(0,0,0,.6)}
+.us-wp-photo-days b{font:300 20px/1 var(--us-font-body,Inter,sans-serif)}
+.us-wp-photo-days small{font:italic 400 9.5px/1 var(--us-font-editorial,Newsreader,Georgia,serif)}
+
+@media (max-width:360px){
+  .us-widget-hub-card{grid-template-columns:1fr;justify-items:start}
+}

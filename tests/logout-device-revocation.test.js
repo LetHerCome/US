@@ -90,7 +90,7 @@ function createHarness(overrides = {}) {
     },
     window: {
       usProfile: { id: 'user-1' },
-      UsThinkWidget: {
+      UsWidgets: {
         async clear() {
           events.push('widget:clear');
           if (overrides.widgetClearError) throw new Error('widget clear failed');

@@ -96,7 +96,8 @@ async function hydrateUsSettings(){
     sb.from('profiles').select('id,display_name,role,avatar_path').eq('couple_id',cid).order('created_at',{ascending:true}),
     sb.from('moments').select('id',{count:'exact',head:true}).eq('couple_id',cid),
     sb.from('shared_event_completions').select('event_id',{count:'exact',head:true}).eq('couple_id',cid),
-    sb.from('stories').select('id',{count:'exact',head:true}).eq('couple_id',cid).lt('expires_at',new Date().toISOString()),
+    // Stories are retired on native (the archive row is stripped from the APK web bundle).
+    window.UsPlatform?.isNative?Promise.resolve({count:0}):sb.from('stories').select('id',{count:'exact',head:true}).eq('couple_id',cid).lt('expires_at',new Date().toISOString()),
     locationState(),
     pushState(),
     sb.rpc('get_notification_preferences')
@@ -114,7 +115,7 @@ async function hydrateUsSettings(){
   $('usSettingsBondLevel').textContent=`LV ${bondLevel(couple.bond_xp)}`;
   $('usSettingsMomentsCount').textContent=Number(momentsRes.count||0).toLocaleString('it-IT');
   $('usSettingsEventsCount').textContent=Number(eventsRes.count||0).toLocaleString('it-IT');
-  $('usStoryArchiveValue').textContent=Number(archiveRes.count||0)?String(archiveRes.count):'';
+  const archiveValue=$('usStoryArchiveValue');if(archiveValue)archiveValue.textContent=Number(archiveRes.count||0)?String(archiveRes.count):'';
   $('usDistanceUnitValue').textContent=unit==='mi'?'miglia':'km';
   const feedbackValue=$('usFeedbackValue');if(feedbackValue)feedbackValue.textContent=feedbackSummary();
   syncMauditSetting();
@@ -399,6 +400,7 @@ async function action(name){
   if(name==='location')return locationAction();
   if(name==='feedback')return feedbackModal();
   if(name==='maudit')return toggleMaudit();
+  if(name==='widgets')return window.UsWidgetHub?.open?.();
   if(name==='sync-status')return syncStatusModal();
   if(name==='privacy')return privacyModal();
   if(name==='logout')return logoutConfirmationModal();
