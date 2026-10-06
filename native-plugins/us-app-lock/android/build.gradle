@@ -26,6 +26,8 @@ repositories {
 
 dependencies {
     implementation project(':capacitor-android')
+    // Plugin.getActivity() returns AppCompatActivity; same version the app already ships.
+    implementation "androidx.appcompat:appcompat:${project.hasProperty('androidxAppCompatVersion') ? rootProject.ext.androidxAppCompatVersion : '1.7.1'}"
     // Stable AndroidX biometric API (BiometricPrompt + BiometricManager);
     // replaces the deprecated FingerprintManager path.
     implementation "androidx.biometric:biometric:1.1.0"
