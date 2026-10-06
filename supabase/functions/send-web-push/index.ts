@@ -5,6 +5,8 @@ import { vapidSubject } from "../_shared/web-push-vapid.mjs";
 import { dispatchThinkReactionWebPush, dispatchThinkWebPush } from "../_shared/think-web-push.ts";
 import { dispatchLeftForYouPush } from "../_shared/left-for-you-push-core.mjs";
 import { supabaseSecretKey } from "../_shared/supabase-secret.ts";
+import { buildNotification, deliverNotification } from "../_shared/notification-core.mjs";
+import { nativeTransport } from "../_shared/native-push-env.ts";
 
 const VAPID_PUBLIC_KEY = "BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss";
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization,x-client-info,apikey,content-type", "Access-Control-Allow-Methods": "POST,OPTIONS", "Content-Type": "application/json" };
@@ -90,23 +92,19 @@ Deno.serve(async (request) => {
           webpush.setVapidDetails(vapidSubject(), VAPID_PUBLIC_KEY, vapidPrivate as string);
         },
         sendNotification: (subscription: unknown, payload: string, options: unknown) => webpush.sendNotification(subscription as any, payload, options as any),
+        native: nativeTransport(),
       }));
     }
 
-    const { data: vapidPrivate, error: vapidError } = await admin.rpc("get_internal_vapid_private_key");
-    if (vapidError || !vapidPrivate) return json({ error: "Push configuration unavailable" }, 500);
-    webpush.setVapidDetails(vapidSubject(), VAPID_PUBLIC_KEY, vapidPrivate as string);
+    // Native Notifications V1: one canonical notification per logical event,
+    // delivered by the shared dispatcher to Web Push AND the native apps.
     let recipientIds: string[] = [];
-    let title = "US.";
-    let notificationBody = "";
-    let target = "home";
-    let tag = "us";
+    let notification: ReturnType<typeof buildNotification> | null = null;
     let dedupeKey: string | null = null;
     let prefKey: "today" | "bond" | null = null;
     if (type === "test") {
       recipientIds = [sender.id];
-      notificationBody = "Notifiche attive. US può raggiungerti anche quando è chiusa ♡";
-      tag = "us-push-test";
+      notification = buildNotification("test");
     }
     if (type === "daily_answer") {
       if (!partner || !body.reference_id) return json({ error: "Missing daily reference" }, 400);
@@ -117,18 +115,14 @@ Deno.serve(async (request) => {
       if (error) throw error;
       const answered = new Set((answers || []).map((row: { user_id: string }) => row.user_id));
       if (!answered.has(sender.id)) return json({ error: "Answer not saved" }, 409);
-      title = "US. · Today";
-      target = "today";
       prefKey = "today";
       if (answered.has(partner.id)) {
         recipientIds = [sender.id, partner.id];
-        notificationBody = "Le vostre risposte sono pronte ♡";
-        tag = `daily-reveal-${questionId}`;
+        notification = buildNotification("daily_reveal", { questionId });
         dedupeKey = `daily-reveal:${sender.couple_id}:${questionId}`;
       } else {
         recipientIds = [partner.id];
-        notificationBody = `${sender.display_name || "La tua persona"} ha risposto. Ora tocca a te.`;
-        tag = `daily-answer-${questionId}`;
+        notification = buildNotification("daily_answer", { questionId, senderName: sender.display_name });
         dedupeKey = `daily-answer:${questionId}:${sender.id}`;
       }
     }
@@ -138,46 +132,43 @@ Deno.serve(async (request) => {
       const { data: quest, error } = await admin.from("bond_weekly_quests").select("id,couple_id,title,confirmed_by").eq("id", questId).maybeSingle();
       if (error || !quest || quest.couple_id !== sender.couple_id || !(quest.confirmed_by || []).includes(sender.id)) return json({ error: "Quest confirmation not found" }, 409);
       recipientIds = [partner.id];
-      title = "US. · Bond";
-      notificationBody = `${sender.display_name || "La tua persona"} ha confermato la quest.`;
-      target = "bond";
-      tag = `quest-${questId}`;
+      notification = buildNotification("quest_confirmed", { questId, senderName: sender.display_name });
       dedupeKey = `quest-confirmed:${questId}:${sender.id}`;
       prefKey = "bond";
     }
-    if (!recipientIds.length) return json({ delivered: 0, reason: "no-recipient" });
+    if (!recipientIds.length || !notification) return json({ delivered: 0, reason: "no-recipient" });
     if (prefKey) {
       const { data: preferences } = await admin.from("notification_preferences").select("user_id,think,today,bond,relationship").in("user_id", recipientIds);
       const byUser = new Map((preferences || []).map((preference: any) => [preference.user_id, preference]));
       recipientIds = recipientIds.filter((id) => byUser.has(id) ? Boolean(byUser.get(id)[prefKey!]) : true);
       if (!recipientIds.length) return json({ delivered: 0, reason: "disabled-by-preference" });
     }
-    if (dedupeKey) {
-      const { error } = await admin.from("push_event_log").insert({ dedupe_key: dedupeKey, couple_id: sender.couple_id, sender_id: sender.id, event_type: type });
-      if (error?.code === "23505") return json({ delivered: 0, deduplicated: true });
-      if (error) throw error;
+    let result;
+    try {
+      result = await deliverNotification(admin, {
+        notification,
+        recipientIds,
+        coupleId: sender.couple_id,
+        senderId: sender.id,
+        dedupeKey,
+        eventType: type,
+        web: {
+          ensure: async () => {
+            const { data: vapidPrivate, error: vapidError } = await admin.rpc("get_internal_vapid_private_key");
+            if (vapidError || !vapidPrivate) throw new Error("push_configuration_unavailable");
+            webpush.setVapidDetails(vapidSubject(), VAPID_PUBLIC_KEY, vapidPrivate as string);
+          },
+          send: (subscription: unknown, payload: string, options: unknown) => webpush.sendNotification(subscription as any, payload, options as any),
+        },
+        native: nativeTransport(),
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === "push_configuration_unavailable") return json({ error: "Push configuration unavailable" }, 500);
+      throw error;
     }
-    const { data: subscriptions, error: subscriptionError } = await admin.from("push_subscriptions").select("id,endpoint,p256dh,auth_key").in("user_id", recipientIds);
-    if (subscriptionError) throw subscriptionError;
-    if (!subscriptions?.length) {
-      if (dedupeKey) await admin.from("push_event_log").delete().eq("dedupe_key", dedupeKey);
-      return json({ delivered: 0, reason: "recipient-not-subscribed" });
-    }
-    const payload = JSON.stringify({ title, body: notificationBody, icon: "/icon-192.png", badge: "/icon-192.png", tag, target, url: `/?open=${encodeURIComponent(target)}&from=push` });
-    let delivered = 0;
-    let failed = 0;
-    for (const subscription of subscriptions) {
-      try {
-        await webpush.sendNotification({ endpoint: subscription.endpoint, keys: { p256dh: subscription.p256dh, auth: subscription.auth_key } }, payload, { TTL: 60 * 60 * 12, urgency: "normal" });
-        delivered += 1;
-      } catch (error) {
-        failed += 1;
-        const status = Number((error as { statusCode?: number })?.statusCode || 0);
-        if (status === 404 || status === 410) await admin.from("push_subscriptions").delete().eq("id", subscription.id);
-      }
-    }
-    if (!delivered && dedupeKey) await admin.from("push_event_log").delete().eq("dedupe_key", dedupeKey);
-    return json({ delivered, failed });
+    if (result.deduplicated) return json({ delivered: 0, deduplicated: true });
+    if (result.reason) return json({ delivered: 0, reason: result.reason });
+    return json({ delivered: result.delivered, failed: result.failed });
   } catch (error) {
     console.error("send-web-push fatal", error instanceof Error ? error.message : "unknown");
     return json({ error: "Push send failed" }, 500);

@@ -116,12 +116,17 @@ test('Web Push Think ha una sola implementation condivisa', () => {
   const shared = read('supabase/functions/_shared/think-web-push.ts');
   const web = read('supabase/functions/send-web-push/index.ts');
   const widget = read('supabase/functions/widget-think-send/index.ts');
+  // Native Notifications V1: subscriptions, dedupe and fan-out live in the
+  // shared dispatcher; the Think module keeps the preference and VAPID setup.
+  const core = read('supabase/functions/_shared/notification-core.mjs');
   assert.match(shared, /export\s+async\s+function\s+dispatchThinkWebPush/);
-  assert.match(shared, /push_subscriptions/);
+  assert.match(shared, /deliverNotification/);
+  assert.match(shared, /get_internal_vapid_private_key/);
+  assert.match(core, /push_subscriptions/);
   assert.match(shared, /notification_preferences/);
-  assert.match(shared, /push_event_log/);
+  assert.match(core, /push_event_log/);
   assert.ok(
-    shared.indexOf('get_internal_vapid_private_key') < shared.indexOf('.from("push_event_log").insert'),
+    core.indexOf('await web.ensure()') > 0 && core.indexOf('await web.ensure()') < core.indexOf("from('push_event_log').insert"),
     'la configurazione VAPID deve essere validata prima di consumare la chiave dedupe'
   );
   assert.match(web, /dispatchThinkWebPush/);

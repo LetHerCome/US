@@ -43,3 +43,14 @@ baseline), plus deleting push_subscriptions rows on 404/410 from the push servic
 Env: SUPABASE_URL, SUPABASE_SECRET_KEYS or SUPABASE_SERVICE_ROLE_KEY (platform).
 Env: VAPID_SUBJECT (Edge configuration, since F2C).
 Known, kept as deployed: supabase-js 2.57.4 pin.
+
+Native Notifications V1 (N2, not deployed) changed index.ts in exactly one
+more way: the per-subscription Web Push loop is replaced by the shared
+dispatcher (`../_shared/notification-core.mjs` `deliverNotification` with the
+same title/body/tag/TTL/urgency), so the anniversary also reaches the native
+apps (`../_shared/native-push-env.ts` + `native-push-transport.mjs`, FCM/APNs from Edge secrets,
+skipped while unconfigured). Award logic, preferences, cron key and VAPID
+are unchanged; tests/f2a1-production-baseline.test.js applies the F2C edit
+and then this N2 edit to the recovered bytes.
+N2_INDEX_TS_SHA256:
+39500d8fe52f2043c267f32f43eb561009b7c464c5a66c65c61183d240bff0b5

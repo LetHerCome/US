@@ -15,6 +15,11 @@
 //   * il destinatario è sempre la riga (recipient_id), mai il mittente;
 //   * notification_preferences.left_for_you=false la disattiva;
 //   * nessuna subscription → nessun invio; 404/410 → subscription rimossa.
+//   * Native Notifications V1: la consegna passa dal dispatcher condiviso
+//     (notification-core.mjs), quindi la stessa notifica logica raggiunge
+//     Web Push e le app native sotto UNA chiave.
+
+import { buildNotification, deliverNotification, webPushPayload } from './notification-core.mjs';
 
 export const LEFT_FOR_YOU_EVENT_TYPE = 'left_for_you';
 export const LEFT_FOR_YOU_PUSH_TTL_SECONDS = 60 * 60 * 12;
@@ -27,20 +32,12 @@ export function leftForYouDedupeKey(itemId) {
 }
 
 export function leftForYouPushPayload({ itemId, senderName }) {
-  return JSON.stringify({
-    title: 'US.',
-    // Mai il contenuto dell'item: solo chi l'ha lasciato.
-    body: `${senderName || 'La tua persona'} ti ha lasciato qualcosa ♡`,
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
-    tag: `left-for-you:${itemId}`,
-    target: 'left_for_you',
-    url: '/?open=left_for_you&from=push',
-  });
+  // Mai il contenuto dell'item: solo chi l'ha lasciato.
+  return webPushPayload(leftForYouNotification({ itemId, senderName }));
 }
 
-async function releaseClaim(admin, dedupeKey) {
-  await admin.from('push_event_log').delete().eq('dedupe_key', dedupeKey);
+export function leftForYouNotification({ itemId, senderName }) {
+  return buildNotification('left_for_you', { itemId, senderName });
 }
 
 /**
@@ -50,9 +47,10 @@ async function releaseClaim(admin, dedupeKey) {
  * @param options.skipIfSeen        il worker non notifica item già aperti
  * @param options.ensureVapid       async () => void, validato PRIMA di consumare la chiave
  * @param options.sendNotification  async (subscription, payload, options) => void
+ * @param options.native            trasporto nativo (native-push-transport.mjs) o null
  */
 export async function dispatchLeftForYouPush(admin, options) {
-  const { itemId, expectedSenderId = null, skipIfSeen = false, ensureVapid, sendNotification } = options || {};
+  const { itemId, expectedSenderId = null, skipIfSeen = false, ensureVapid, sendNotification, native = null } = options || {};
   if (!itemId) return { delivered: 0, failed: 0, reason: 'missing-item' };
 
   const { data: row, error: rowError } = await admin.from('left_for_you')
@@ -88,53 +86,14 @@ export async function dispatchLeftForYouPush(admin, options) {
     return { delivered: 0, failed: 0, reason: 'disabled-by-preference' };
   }
 
-  if (typeof ensureVapid === 'function') await ensureVapid();
-
-  const dedupeKey = leftForYouDedupeKey(row.id);
-  const { error: claimError } = await admin.from('push_event_log').insert({
-    dedupe_key: dedupeKey,
-    couple_id: row.couple_id,
-    sender_id: row.sender_id,
-    event_type: LEFT_FOR_YOU_EVENT_TYPE,
+  return deliverNotification(admin, {
+    notification: leftForYouNotification({ itemId: row.id, senderName: sender.display_name }),
+    recipientIds: [row.recipient_id],
+    coupleId: row.couple_id,
+    senderId: row.sender_id,
+    dedupeKey: leftForYouDedupeKey(row.id),
+    eventType: LEFT_FOR_YOU_EVENT_TYPE,
+    web: typeof sendNotification === 'function' ? { ensure: ensureVapid, send: sendNotification } : null,
+    native,
   });
-  if (claimError?.code === '23505') return { delivered: 0, failed: 0, deduplicated: true };
-  if (claimError) throw claimError;
-
-  let subscriptions;
-  try {
-    const { data, error } = await admin.from('push_subscriptions')
-      .select('id,endpoint,p256dh,auth_key')
-      .eq('user_id', row.recipient_id);
-    if (error) throw error;
-    subscriptions = data || [];
-  } catch (error) {
-    await releaseClaim(admin, dedupeKey);
-    throw error;
-  }
-  if (!subscriptions.length) {
-    await releaseClaim(admin, dedupeKey);
-    return { delivered: 0, failed: 0, reason: 'recipient-not-subscribed' };
-  }
-
-  const payload = leftForYouPushPayload({ itemId: row.id, senderName: sender.display_name });
-  let delivered = 0;
-  let failed = 0;
-  for (const subscription of subscriptions) {
-    try {
-      await sendNotification(
-        { endpoint: subscription.endpoint, keys: { p256dh: subscription.p256dh, auth: subscription.auth_key } },
-        payload,
-        { TTL: LEFT_FOR_YOU_PUSH_TTL_SECONDS, urgency: LEFT_FOR_YOU_PUSH_URGENCY },
-      );
-      delivered += 1;
-    } catch (error) {
-      failed += 1;
-      const status = Number(error?.statusCode || 0);
-      if (status === 404 || status === 410) {
-        await admin.from('push_subscriptions').delete().eq('id', subscription.id);
-      }
-    }
-  }
-  if (!delivered) await releaseClaim(admin, dedupeKey);
-  return { delivered, failed };
 }

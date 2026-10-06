@@ -38,8 +38,11 @@ test('M4A push reaction valida l oggetto e usa dedupe stabile', () => {
   const edge = read('supabase/functions/send-web-push/index.ts');
   assert.match(shared, /dispatchThinkReactionWebPush/);
   assert.match(shared, /think-reaction:/);
-  assert.match(shared, /Ha reagito al tuo Ti penso/);
-  assert.doesNotMatch(shared, /ha risposto con/);
+  // Native Notifications V1: the copy lives once, in the shared catalogue.
+  const catalogue = read('supabase/functions/_shared/notification-core.mjs');
+  assert.match(shared, /buildNotification\("think_reaction"/);
+  assert.match(catalogue, /Ha reagito al tuo Ti penso/);
+  assert.doesNotMatch(shared + catalogue, /ha risposto con/);
   assert.match(edge, /think_reaction/);
   assert.match(edge, /think_reactions/);
   assert.match(edge, /message\.recipient_id/);
