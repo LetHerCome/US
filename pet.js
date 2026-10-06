@@ -11,8 +11,9 @@
 // Maudit Interaction V1: the kitten is now Maudit. The layer itself stays
 // pointer-transparent; only one bounded hit target on the cat takes input
 // (tap = pet, hold or a sideways pull = pick up by the scruff). Released, it
-// snaps onto the nearest explicit plane (nav rim or a registered card rim of
-// the active page) and the user's spot is remembered on this device.
+// falls under gravity onto the first safe plane below it (a registered card rim,
+// with the nav rim as the final floor). The user's spot is remembered only once
+// the landing is complete.
 //
 // The owner-approved kitten v0 is the current production PET asset. The renderer
 // contract stays replaceable so a later art pass can land without changing the
@@ -20,14 +21,14 @@
 // ?us-pet=off is a one-load emergency kill switch.
 const PET_ASSET_STATUS='APPROVED';
 const PREVIEW_KEY='us:pet:v1:preview';
-const STATES=Object.freeze(['idle','walk','rest','react','pet','held','snap']);
+const STATES=Object.freeze(['idle','walk','rest','react','pet','held','fall','snap']);
 const REASONS=Object.freeze(['think','left-for-you','reward','streak','daily-question']);
 const TIMING=Object.freeze({
   idle:[2500,7000],   // a natural pause between decisions
   rest:[9000,22000],  // sitting down for a while
   react:1600,         // one short, non-looping gesture
   pet:1400,           // a stroke: lean in, eyes soften, tail answers
-  snap:420,           // settle onto a plane: short travel + a soft landing
+  snap:220,           // landing squash after gravity reaches a plane
   speed:26,           // px per second: a stroll, never a run
   minStep:36,         // walks shorter than this look like jitter
   walkMin:900,
@@ -99,7 +100,7 @@ function createPet({schedule=setTimeout,cancel=clearTimeout,now=Date.now,random=
       if(x>max||walk&&walk.to>max){
         x=clamp(position(),TIMING.edge,max);walk=null;
         // A held or settling Maudit belongs to the gesture, not to the scheduler.
-        if(running&&state!=='held'&&state!=='snap'){state='idle';emit(0);arm(between(random,TIMING.idle));}
+        if(running&&state!=='held'&&state!=='fall'&&state!=='snap'){state='idle';emit(0);arm(between(random,TIMING.idle));}
       }
     },
     setReduced(next){
@@ -110,29 +111,41 @@ function createPet({schedule=setTimeout,cancel=clearTimeout,now=Date.now,random=
     react(next){
       if(!running||!REASONS.includes(next))return false;
       // At most one queued reaction; a held/settling Maudit plays it once it lands.
-      if(state==='react'||state==='held'||state==='snap'){pending=next;return true;}
+      if(state==='react'||state==='held'||state==='fall'||state==='snap'){pending=next;return true;}
       x=position();walk=null;
       apply({state:'react',x,reason:next,duration:TIMING.react});
       return true;
     },
     // Tap: one affectionate reaction, never while held or settling.
     caress(){
-      if(!running||state==='held'||state==='snap')return false;
+      if(!running||state==='held'||state==='fall'||state==='snap')return false;
       x=position();walk=null;
       apply({state:'pet',x,duration:TIMING.pet});
       return true;
     },
     // Pickup: the autonomous scheduler stops completely while the cat is held.
     hold(){
-      if(!running||state==='held'||state==='snap')return false;
+      if(!running||state==='held'||state==='fall'||state==='snap')return false;
       x=position();walk=null;
       if(timer!==null)cancel(timer);timer=null;
       state='held';reason='';emit(0);
       return true;
     },
-    // Release onto a plane: exactly one timer resumes, then idle.
+    // Legacy/direct settle path used when a drag is cancelled.
     release({x:next,duration=TIMING.snap}={}){
       if(state!=='held')return false;
+      if(Number.isFinite(next))x=clamp(Math.round(next),TIMING.edge,maxX());
+      state='snap';reason='';emit(0);
+      if(running)arm(duration);
+      return true;
+    },
+    // Gravity path: the DOM runtime owns the short airborne timer.
+    fall(){
+      if(state!=='held')return false;
+      state='fall';reason='';emit(0);return true;
+    },
+    land({x:next,duration=TIMING.snap}={}){
+      if(state!=='fall')return false;
       if(Number.isFinite(next))x=clamp(Math.round(next),TIMING.edge,maxX());
       state='snap';reason='';emit(0);
       if(running)arm(duration);
@@ -217,6 +230,12 @@ function blockers(d,layer,{pageHidden=false}={}){
 
 // ---------- Maudit V1: pure interaction rules (no DOM, unit-tested) ----------
 const MAUDIT_KEYS=Object.freeze({enabled:'us:maudit:v1:enabled',placement:'us:maudit:v1:placement'});
+const GRAVITY=Object.freeze({
+  acceleration:2200,
+  terminal:1500,
+  frame:16,
+  maxDt:.034
+});
 const GESTURE=Object.freeze({
   slop:10,         // px: below this a press is still a tap/hold, never a drag
   hold:260,        // ms: a still press this long picks Maudit up
@@ -296,6 +315,24 @@ function choosePlane(foot,candidates,{radius=GESTURE.snapRadius}={}){
       const left=clamp(foot.x-TIMING.size/2,a,b);
       const score=Math.hypot((left+TIMING.size/2-foot.x)*.6,candidate.rim-foot.y);
       if(score<=radius&&(!best||score<best.score))best={id:candidate.id,a,b,left,rim:candidate.rim,score};
+    }
+  }
+  return best;
+}
+
+function chooseFallPlane(foot,candidates,{epsilon=1}={}){
+  const actorLeft=foot.x-TIMING.size/2;
+  let best=null;
+  for(const candidate of candidates||[]){
+    if(!Number.isFinite(candidate?.rim)||candidate.rim<foot.y-epsilon)continue;
+    for(const [a,b] of candidate.segments||[]){
+      const direct=actorLeft>=a&&actorLeft<=b;
+      if(!direct&&candidate.id!=='nav')continue;
+      const left=direct?actorLeft:clamp(actorLeft,a,b);
+      const drop=Math.max(0,candidate.rim-foot.y);
+      if(!best||drop<best.drop||(drop===best.drop&&candidate.id!=='nav'&&best.id==='nav')){
+        best={id:candidate.id,a,b,left,rim:candidate.rim,drop};
+      }
     }
   }
   return best;
@@ -522,7 +559,7 @@ function install(w){
       const track=target.b-target.a+TIMING.size+2*TIMING.edge;
       layer.dataset.petPlane=target.id;
       layer.style.setProperty('--us-pet-plane-left',`${Math.round(target.a-14-TIMING.edge+scrollX())}px`);
-      layer.style.setProperty('--us-pet-plane-top',`${Math.round(target.rimDoc-38)}px`);
+      layer.style.setProperty('--us-pet-plane-top',`${Math.round(target.rimDoc-TIMING.size)}px`);
       layer.style.setProperty('--us-pet-plane-w',`${Math.round(track+28)}px`);
       pet.setTrack(track);
       bindScroll(true);onScroll();
@@ -531,7 +568,7 @@ function install(w){
     // Viewport position of the actor's box for the current frame (no offsets).
     function actorBase(){
       const x=pet.snapshot().x;
-      if(current?.kind==='page')return {left:current.a-TIMING.edge+x,top:current.rimDoc-38-scrollY()};
+      if(current?.kind==='page')return {left:current.a-TIMING.edge+x,top:current.rimDoc-TIMING.size-scrollY()};
       const geo=navGeometry();
       return geo?{left:geo.rect.left+14+x,top:geo.rect.top+3-TIMING.size}:{left:0,top:0};
     }
@@ -550,8 +587,10 @@ function install(w){
       offset(0,0);
     }
     function settle(target,from){
-      const x=frame(target);
-      if(pet.snapshot().state==='held')pet.release({x});else pet.place(x);
+      const x=frame(target),state=pet.snapshot().state;
+      if(state==='held')pet.release({x});
+      else if(state==='fall')pet.land({x});
+      else pet.place(x);
       if(from)flip(from);else offset(0,0);
     }
     function arrive(target){
@@ -562,7 +601,7 @@ function install(w){
     const samePlace=(a,b)=>a&&b&&a.kind===b.kind&&(a.kind==='nav'||a.id===b.id&&a.a===b.a&&a.b===b.b&&Math.round(a.rimDoc)===Math.round(b.rimDoc));
     // Re-evaluated on page change, page resize and viewport resize only.
     function evaluate(){
-      if(press?.picked)return;
+      if(press?.picked||falling)return;
       measure();
       const target=resolve();
       if(samePlace(target,current))return;
@@ -580,15 +619,17 @@ function install(w){
     // ---------- gesture: tap / hold / pull / drag ----------
     const hit=d.createElement('span');
     hit.className='us-pet-hit';
-    let press=null;
+    let press=null,falling=null;
     function endPress(){
       drop('hold');
       const id=press?.id;press=null;
       if(id!==undefined){try{if(hit.hasPointerCapture?.(id))hit.releasePointerCapture(id);}catch(_){}}
     }
     function bounds(){
-      const {w:vw,h:vh}=viewport();
-      return {left:4,right:vw-TIMING.size-4,top:Math.max(4,cssPx('--us-safe-top')+2),bottom:vh-Math.max(4,cssPx('--us-safe-bottom'))-TIMING.size};
+      const {w:vw,h:vh}=viewport(),navGeo=navGeometry();
+      const viewportFloor=vh-Math.max(4,cssPx('--us-safe-bottom'))-TIMING.size;
+      const navFloor=navGeo?navGeo.rim-TIMING.size:viewportFloor;
+      return {left:4,right:vw-TIMING.size-4,top:Math.max(4,cssPx('--us-safe-top')+2),bottom:Math.min(viewportFloor,navFloor)};
     }
     function follow(px,py){
       const g=press.drag,b=g.bounds;
@@ -606,13 +647,10 @@ function install(w){
       follow(px,py);
       w.UsFeedback?.tap?.();
     }
-    function candidates(foot){
-      const free=sampler(),list=[];
-      const page=activePage();
+    function fallCandidates(){
+      const free=sampler(),list=[],page=activePage();
       for(const def of PLANES){
         if(def.page!==page)continue;
-        const anchor=d.querySelector(def.selector),rect=rectOf(anchor);
-        if(!rect||Math.abs(rect.top-foot.y)>GESTURE.snapRadius)continue; // cheap prefilter: only nearby rims are sampled
         const geo=planeGeometry(def,free);
         if(geo)list.push({...geo,rim:geo.rim});
       }
@@ -620,26 +658,62 @@ function install(w){
       if(navGeo)list.push({id:'nav',rim:navGeo.rim,segments:[[navGeo.min,navGeo.max]]});
       return list;
     }
+    function targetFromPick(pick,list){
+      if(!pick)return null;
+      if(pick.id==='nav')return {kind:'nav',actorLeft:pick.left};
+      const geo=list.find(item=>item.id===pick.id);
+      return geo?pageTarget({...geo,segments:[[pick.a,pick.b]]},pick.left):null;
+    }
+    function persistTarget(target){
+      if(target?.kind==='nav'){
+        const geo=navGeometry();
+        if(geo)store.set(MAUDIT_KEYS.placement,encodePlacement('nav',(target.actorLeft-geo.min)/Math.max(1,geo.max-geo.min)));
+      }else if(target?.kind==='page'){
+        store.set(MAUDIT_KEYS.placement,encodePlacement(target.id,(target.actorLeft-target.left)/Math.max(1,target.right-target.left-TIMING.size)));
+      }
+    }
+    function finishFall(){
+      const f=falling;if(!f)return;
+      drop('fall');falling=null;
+      const x=frame(f.target);
+      if(!pet.land({x}))pet.place(x);
+      offset(0,0);
+      persistTarget(f.target);
+    }
+    function fallStep(){
+      const f=falling;if(!f)return;
+      if(blockers(d,layer,{pageHidden}).length){cancelFall({restore:false});pet.stop();return;}
+      const now=clock(),dt=Math.min(GRAVITY.maxDt,Math.max(.001,(now-f.at)/1000));
+      f.at=now;f.velocity=Math.min(GRAVITY.terminal,f.velocity+GRAVITY.acceleration*dt);
+      f.top=Math.min(f.targetTop,f.top+f.velocity*dt);
+      f.last={left:f.left,top:f.top};
+      const base=actorBase();offset(f.left-base.left,f.top-base.top);
+      if(f.top>=f.targetTop-.25){finishFall();return;}
+      later('fall',fallStep,GRAVITY.frame);
+    }
+    function startFall(g,last){
+      const foot={x:last.left+TIMING.size/2,y:last.top+TIMING.size};
+      const list=fallCandidates(),pick=chooseFallPlane(foot,list);
+      const target=targetFromPick(pick,list)||navTarget(null);
+      if(!target||!pet.fall()){settle(restorable(g.from),last);return;}
+      const rim=pick?.rim??navGeometry()?.rim??(last.top+TIMING.size);
+      falling={from:g.from,target,left:pick?.left??last.left,top:last.top,targetTop:rim-TIMING.size,velocity:0,at:clock(),last:{...last}};
+      if(pet.snapshot().reduced||falling.targetTop<=falling.top){falling.top=falling.targetTop;finishFall();return;}
+      later('fall',fallStep,GRAVITY.frame);
+    }
     function release(){
       const g=press.drag;endPress();
       const last=g.last||g.base;
-      const foot={x:last.left+TIMING.size/2,y:last.top+TIMING.size};
-      const list=candidates(foot);
-      const pick=choosePlane(foot,list);
-      let target;
-      if(pick&&pick.id==='nav'){
-        const navGeo=navGeometry();
-        target={kind:'nav',actorLeft:pick.left};
-        store.set(MAUDIT_KEYS.placement,encodePlacement('nav',(pick.left-navGeo.min)/Math.max(1,navGeo.max-navGeo.min)));
-      }else if(pick){
-        const geo=list.find(item=>item.id===pick.id);
-        target=pageTarget({...geo,segments:[[pick.a,pick.b]]},pick.left);
-        store.set(MAUDIT_KEYS.placement,encodePlacement(pick.id,(pick.left-geo.left)/Math.max(1,geo.right-geo.left-TIMING.size)));
-      }else target=restorable(g.from);
-      settle(target,last);
+      startFall(g,last);
     }
-    // Where an interrupted or far-away drop goes back to: the previous plane
-    // when it still exists, otherwise the nav rim.
+    function cancelFall({restore=true}={}){
+      if(!falling)return;
+      const f=falling;falling=null;drop('fall');
+      if(restore&&pet.snapshot().state==='fall')settle(restorable(f.from),f.last);
+      else offset(0,0);
+    }
+    // Where an interrupted drop goes back to: the previous plane when it still
+    // exists, otherwise the nav rim.
     function restorable(from){
       if(from?.kind==='page'){
         const geo=planeGeometry(PLANE_BY_ID.get(from.id));
@@ -655,7 +729,7 @@ function install(w){
       settle(target,animate?(g.last||g.base):null);
     }
     function onDown(event){
-      if(press||event.isPrimary===false||event.pointerType==='mouse'&&event.button!==0)return;
+      if(press||falling||event.isPrimary===false||event.pointerType==='mouse'&&event.button!==0)return;
       if(blockers(d,layer,{pageHidden}).length||!pet.snapshot().running||'petOffstage' in layer.dataset)return;
       if(event.pointerType==='mouse')event.preventDefault?.(); // no text selection, no native drag
       press={id:event.pointerId,type:event.pointerType||'touch',x:event.clientX,y:event.clientY,at:clock(),picked:false,drag:null};
@@ -698,7 +772,7 @@ function install(w){
     // stop() drops any queued reaction, so nothing accumulates while blocked.
     // A blocker during a drag ends it first: no capture, no held pose survives.
     function sync(){
-      if(blockers(d,layer,{pageHidden}).length){cancelDrag();pet.stop();}
+      if(blockers(d,layer,{pageHidden}).length){cancelDrag();cancelFall({restore:false});pet.stop();}
       else pet.start();
     }
     layer.hidden=false;
@@ -706,15 +780,15 @@ function install(w){
     let pageId=activePage();
     let pageNode=null,watchPage=()=>{};
     if(typeof w.ResizeObserver==='function'){
-      const navObserver=new w.ResizeObserver(()=>{measure();if(current?.kind==='page')later('settle',evaluate,160);});
+      const navObserver=new w.ResizeObserver(()=>{if(falling)cancelFall();measure();if(current?.kind==='page')later('settle',evaluate,160);});
       navObserver.observe(nav);observers.push(navObserver);
       // Page content height (async loads, sections) can move a card rim.
-      const pageObserver=new w.ResizeObserver(()=>later('settle',evaluate,160));
+      const pageObserver=new w.ResizeObserver(()=>{if(falling)cancelFall();later('settle',evaluate,160);});
       observers.push(pageObserver);
       watchPage=()=>{const next=d.getElementById(pageId);if(next===pageNode)return;if(pageNode)pageObserver.unobserve(pageNode);pageNode=next;if(next)pageObserver.observe(next);};
       watchPage();
     }
-    on(w,'resize',()=>{cancelDrag();measure();later('settle',evaluate,160);},{passive:true});
+    on(w,'resize',()=>{cancelDrag();cancelFall();measure();later('settle',evaluate,160);},{passive:true});
     const foundation=w.UsUiFoundation;
     pet.setReduced(foundation?.isReducedMotion?.()||false);
     const unMotion=foundation?.onMotionPreferenceChange?.(value=>pet.setReduced(value));
@@ -739,6 +813,7 @@ function install(w){
           if(next===pageId)return;
           pageId=next;
           cancelDrag();
+          cancelFall();
           watchPage();
           // The old page's card is gone: stand on the nav until the new page settles.
           if(current?.kind==='page')settle(navTarget(null),null);
@@ -765,10 +840,11 @@ function install(w){
       snapshot:()=>pet.snapshot(),
       placement:()=>current&&{...current,saved:readPlacement()},
       planes:()=>{const free=sampler();return PLANES.filter(def=>def.page&&def.page===activePage()).map(def=>planeGeometry(def,free)).filter(Boolean);},
-      inspect:()=>({mounted:true,listeners:cleanups.length+(scrollBound?1:0),observers:observers.length,timers:timers.size,pressing:Boolean(press),held:Boolean(press?.picked),hit:hit.isConnected!==false&&Boolean(hit.parentNode)}),
+      inspect:()=>({mounted:true,listeners:cleanups.length+(scrollBound?1:0),observers:observers.length,timers:timers.size,pressing:Boolean(press),held:Boolean(press?.picked),falling:Boolean(falling),hit:hit.isConnected!==false&&Boolean(hit.parentNode)}),
       evaluate,
       destroy(){
         cancelDrag();
+        cancelFall({restore:false});
         pet.stop();
         timers.forEach(id=>w.clearTimeout(id));timers.clear();
         observers.forEach(observer=>observer.disconnect?.());
@@ -803,7 +879,7 @@ function install(w){
     api.snapshot=runtime?runtime.snapshot:()=>({state:'disabled',running:false});
     api.placement=runtime?runtime.placement:()=>null;
     api.planes=runtime?runtime.planes:()=>[];
-    api.inspect=runtime?runtime.inspect:()=>({mounted:false,listeners:0,observers:0,timers:0,pressing:false,held:false,hit:Boolean(layer?.querySelector?.('.us-pet-hit'))});
+    api.inspect=runtime?runtime.inspect:()=>({mounted:false,listeners:0,observers:0,timers:0,pressing:false,held:false,falling:false,hit:Boolean(layer?.querySelector?.('.us-pet-hit'))});
     api.evaluate=runtime?runtime.evaluate:()=>{};
   }
   // Settings → Maudit. Off unmounts everything: renderer, hit target, timers,
@@ -822,7 +898,7 @@ function install(w){
 // Before install (or when disabled) every entry point is a safe no-op.
 return {
   PET_ASSET_STATUS,STATES,REASONS,TIMING,decide,createPet,registerRenderer,canMount,computeBlockers:blockers,install,
-  MAUDIT_KEYS,GESTURE,PLANES,classifyPress,encodePlacement,decodePlacement,freeSegments,choosePlane,
+  MAUDIT_KEYS,GRAVITY,GESTURE,PLANES,classifyPress,encodePlacement,decodePlacement,freeSegments,choosePlane,chooseFallPlane,
   enabled:false,
   react:()=>false,
   useRenderer:()=>false,

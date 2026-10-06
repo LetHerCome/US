@@ -1,7 +1,6 @@
-/* US PET Foundation V1 — one small companion on the rim of the bottom nav.
-   The layer never takes input and never overlaps the four tabs: it stands on
-   the nav's top edge, inside the nav's width. Motion is CSS only; pet.js just
-   picks the next state and target. */
+/* US PET Foundation V1 — one small companion on safe UI rims.
+   Autonomous motion stays CSS-driven; Maudit Gravity V1 uses a short JS timer
+   only while the user has just released the cat and it is physically falling. */
 .us-pet-layer{position:fixed;z-index:var(--us-layer-ambient);left:50%;bottom:calc(max(8px,var(--us-safe-bottom)) + var(--us-pet-nav-h,68px) - 3px);width:var(--us-pet-track,min(456px,calc(100% - 18px)));height:40px;transform:translateX(-50%);pointer-events:none;contain:layout style size;transition:opacity 220ms var(--us-ease-standard),visibility 0s linear 0s}
 .us-pet-layer[hidden]{display:none!important}
 .us-pet-layer,.us-pet-layer *{pointer-events:none!important;user-select:none;-webkit-user-select:none}
@@ -16,7 +15,9 @@
 .us-pet-layer[data-pet-plane]:not([data-pet-plane="nav"]){position:absolute;left:var(--us-pet-plane-left);top:var(--us-pet-plane-top);bottom:auto;width:var(--us-pet-plane-w);transform:none}
 .us-pet-layer[data-pet-offstage]{opacity:0;visibility:hidden;transition:opacity 120ms var(--us-ease-standard),visibility 0s linear 120ms}
 .us-pet-layer[data-pet-state="held"] .us-pet-actor,.us-pet-layer[data-pet-state="held"] .us-pet-hit{transition:transform 70ms cubic-bezier(.2,.7,.3,1);cursor:grabbing}
-.us-pet-layer[data-pet-state="snap"] .us-pet-actor,.us-pet-layer[data-pet-state="snap"] .us-pet-hit{transition:transform 240ms cubic-bezier(.3,.6,.35,1)}
+.us-pet-layer[data-pet-state="fall"] .us-pet-actor,.us-pet-layer[data-pet-state="fall"] .us-pet-hit{transition:none!important}
+.us-pet-layer[data-pet-state="fall"] .us-pet-hit{pointer-events:none!important}
+.us-pet-layer[data-pet-state="snap"] .us-pet-actor,.us-pet-layer[data-pet-state="snap"] .us-pet-hit{transition:transform 120ms cubic-bezier(.3,.6,.35,1)}
 .us-pet-layer[data-pet-flip] .us-pet-actor,.us-pet-layer[data-pet-flip] .us-pet-hit{transition:none!important}
 .us-pet-layer[data-pet-arrive] .us-pet-actor{animation:us-pet-arrive 240ms var(--us-ease-standard) both}
 /* Each renderer owns one host inside the actor, so replacing a renderer is atomic. */
@@ -96,8 +97,13 @@ body:has(.auth-overlay:not(.hidden)) .us-pet-layer{opacity:0;visibility:hidden;t
 .us-pet-layer[data-pet-state="held"] .k-leg-front-near,.us-pet-layer[data-pet-state="held"] .k-leg-front-far{transform:rotate(30deg) scaleY(1.08)}
 .us-pet-layer[data-pet-state="held"] .k-leg-hind-near,.us-pet-layer[data-pet-state="held"] .k-leg-hind-far{transform:rotate(30deg) scaleY(1.12)}
 .us-pet-layer[data-pet-state="held"] .k-tail{transform:rotate(-118deg) scale(.86)}
-/* snap — lands on the plane: travel is the actor transition, then one soft squash. */
-.us-pet-layer[data-pet-state="snap"] .us-pet-kitten{animation:us-pet-land 180ms ease-out 230ms 1}
+/* fall — finger is gone: body straightens under gravity, legs and tail trail naturally. */
+.us-pet-layer[data-pet-state="fall"] .us-pet-shadow{opacity:0}
+.us-pet-layer[data-pet-state="fall"] .us-pet-kitten{transform-origin:50% 55%;transform:rotate(-4deg) scale(.98,1.04)}
+.us-pet-layer[data-pet-state="fall"] .k-leg{transform:rotate(8deg) scaleY(1.06)}
+.us-pet-layer[data-pet-state="fall"] .k-tail{transform:rotate(-92deg) scale(.9)}
+/* snap — gravity already reached the rim; only a tiny landing compression remains. */
+.us-pet-layer[data-pet-state="snap"] .us-pet-kitten{animation:us-pet-land 180ms ease-out 1}
 @keyframes us-kitten-breathe{0%,100%{transform:none}50%{transform:scale(1.02,1.035)}}
 @keyframes us-kitten-sway{from{transform:rotate(-6deg)}to{transform:rotate(9deg)}}
 @keyframes us-kitten-blink{0%,90%,96%,100%{transform:none}93%{transform:scaleY(.1)}}

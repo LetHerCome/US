@@ -99,6 +99,36 @@ test('nearest plane is predictable; too far means no plane (caller returns to th
   assert.equal(Pet.choosePlane({ x: 200, y: 520 }, candidates), null, 'mid-screen, far from every rim');
 });
 
+test('gravity chooses the first safe plane below the feet and keeps nav as the final floor', () => {
+  const candidates = [
+    { id: 'nav', rim: 780, segments: [[30, 300]] },
+    { id: 'upper', rim: 220, segments: [[80, 200]] },
+    { id: 'lower', rim: 410, segments: [[80, 200]] }
+  ];
+  assert.equal(Pet.chooseFallPlane({ x: 140, y: 250 }, candidates).id, 'lower');
+  assert.equal(Pet.chooseFallPlane({ x: 140, y: 100 }, candidates).id, 'upper');
+  const nav = Pet.chooseFallPlane({ x: 350, y: 250 }, candidates);
+  assert.deepEqual([nav.id, nav.left], ['nav', 300]);
+  assert.ok(Pet.GRAVITY.acceleration > 0 && Pet.GRAVITY.frame <= 20);
+});
+
+test('machine: held → fall has no scheduler timer; land resumes exactly one and queued reactions wait', () => {
+  const { c, pet, states } = machine();
+  pet.start(); pet.hold();
+  assert.equal(c.pending(), 0);
+  assert.equal(pet.react('think'), true);
+  assert.equal(pet.fall(), true);
+  assert.deepEqual([pet.snapshot().state, c.pending()], ['fall', 0]);
+  assert.equal(pet.caress(), false);
+  assert.equal(pet.land({ x: 120 }), true);
+  assert.deepEqual([pet.snapshot().state, pet.snapshot().x, c.pending()], ['snap', 120, 1]);
+  c.advance(Pet.TIMING.snap);
+  assert.equal(pet.snapshot().state, 'react');
+  c.advance(Pet.TIMING.react);
+  assert.equal(pet.snapshot().state, 'idle');
+  assert.ok(states().includes('held') && states().includes('fall') && states().includes('snap'));
+});
+
 test('machine: held stops every autonomous timer; release resumes exactly one; reactions wait for the landing', () => {
   const { c, pet, states } = machine();
   pet.start();
@@ -238,13 +268,14 @@ test('pointer contract: the layer stays transparent; only the bounded hit target
   assert.doesNotMatch(petJs, /subtree:true|childList:true/, 'no broad MutationObservers');
 });
 
-test('poses: pet / held / snap are CSS transforms of the approved articulated kitten, with reduced-motion static poses', () => {
-  for (const state of ['pet', 'held', 'snap']) assert.ok(Pet.STATES.includes(state), state);
+test('poses: pet / held / fall / snap are CSS transforms of the approved articulated kitten, with reduced-motion static poses', () => {
+  for (const state of ['pet', 'held', 'fall', 'snap']) assert.ok(Pet.STATES.includes(state), state);
   assert.match(petCss, /\[data-pet-state="pet"\] \.k-eyes-closed\{opacity:1\}/, 'eyes soften');
   assert.match(petCss, /\[data-pet-state="pet"\] \.k-head\{transform:rotate\(-9deg\)/, 'head leans into the hand');
   assert.match(petCss, /\[data-pet-state="held"\] \.us-pet-kitten\{transform-origin:62% 38%;transform:rotate\(-28deg\)/, 'hangs from the scruff');
   assert.match(petCss, /\[data-pet-state="held"\] \.k-tail\{transform:rotate\(-118deg\)/, 'tail hangs relaxed');
   assert.match(petCss, /\[data-pet-state="held"\] \.k-leg-hind-near,[^{]+\{transform:rotate\(30deg\) scaleY\(1\.12\)\}/, 'legs dangle');
+  assert.match(petCss, /\[data-pet-state="fall"\] \.us-pet-kitten\{[^}]*scale\(\.98,1\.04\)/, 'airborne pose');
   assert.match(petCss, /:root\[data-us-motion="reduced"\] \.us-pet-layer \*\{animation:none!important;transition:none!important\}/);
   // Same approved drawing: no new production asset was introduced.
   const manifest = JSON.parse(read('assets/ASSET_MANIFEST.json'));

@@ -50,7 +50,7 @@ async function pickUp(view, wait = 340) {
   await view.touch.start(from); await view.page.waitForTimeout(wait);
   return from;
 }
-async function carryTo(view, from, to) { await view.touch.path(from, to); await view.touch.end(); await settle(view.page, 650); }
+async function carryTo(view, from, to) { await view.touch.path(from, to); await view.touch.end(); await settle(view.page, 1100); }
 const actorBox = (page) => page.evaluate(() => { const r = document.querySelector('#usPetLayer .us-pet-actor').getBoundingClientRect(); return { x: r.x, y: r.y, right: r.right, bottom: r.bottom }; });
 // Every point of the viewport that the PET swallows must lie inside the bounded hit target.
 const pointerFootprint = (page) => page.evaluate(() => {
@@ -88,7 +88,7 @@ test('Maudit toggle: on by default; Off removes renderer, hit target and activit
         stored: localStorage.getItem('us:maudit:v1:enabled') };
     }, before);
     assert.deepEqual(off, { checked: 'false', hidden: true, display: 'none', hits: 0, renderers: 0,
-      inspect: { mounted: false, listeners: 0, observers: 0, timers: 0, pressing: false, held: false, hit: false },
+      inspect: { mounted: false, listeners: 0, observers: 0, timers: 0, pressing: false, held: false, falling: false, hit: false },
       snap: { state: 'disabled', running: false }, enabled: false, react: false, swallowed: false, stored: '0' });
     assert.deepEqual(await pointerFootprint(page), { swallowed: 0, outside: 0 }, 'Off leaves no invisible hitbox');
     await shot(page, 'maudit-settings-off-390x844');
@@ -141,7 +141,7 @@ test('tap pets Maudit exactly once, never starts a drag and never reaches the co
   } finally { await h.close(); }
 });
 
-test('pickup and drag: hold threshold, sideways pull, pointer capture, release snaps onto a card plane and is remembered', async (t) => {
+test('pickup and drag: hold threshold, sideways pull, gravity falls onto a card plane and remembers the landing', async (t) => {
   const h = await start(); if (!h) return t.skip('Playwright unavailable');
   try {
     const view = await open(h, {});
@@ -163,8 +163,18 @@ test('pickup and drag: hold threshold, sideways pull, pointer capture, release s
     assert.ok(await page.evaluate(() => window.__maudit.captures >= 1), 'pointer capture taken');
     assert.equal(await page.evaluate(() => scrollY), 0, 'no page scroll while held');
     await shot(page, 'maudit-held-390x844');
-    await touch.path({ x: target.x, y: target.y - 60 }, target, 4);
-    await touch.end(); await settle(page, 650);
+    await touch.path({ x: target.x, y: target.y - 60 }, { x: target.x, y: target.y - 90 }, 4);
+    await page.evaluate(() => { window.__maudit.states.length = 0; });
+    await touch.end();
+    await page.waitForFunction(() => window.USPet.snapshot().state === 'fall');
+    const airborne = await state(page);
+    assert.equal(airborne.saved, null, 'nothing persisted while airborne');
+    const airBox = await actorBox(page);
+    await settle(page, 100);
+    const lowerBox = await actorBox(page);
+    assert.ok(lowerBox.y > airBox.y, `gravity moves down ${airBox.y} → ${lowerBox.y}`);
+    await page.waitForFunction(() => window.USPet.snapshot().state !== 'fall', { timeout: 1800 });
+    await settle(page, 300);
     const landed = await state(page);
     assert.equal(landed.placement.kind, 'page');
     assert.equal(landed.placement.id, 'noi-sintonia-top');
@@ -172,9 +182,9 @@ test('pickup and drag: hold threshold, sideways pull, pointer capture, release s
     assert.ok(landed.saved.x >= 0 && landed.saved.x <= 1, `normalized x ${landed.saved.x}`);
     assert.deepEqual([landed.snap.state, landed.inspect.held, landed.inspect.pressing, landed.dx], ['idle', false, false, '0px']);
     assert.ok(await page.evaluate(() => window.__maudit.lost >= 1), 'pointer capture released');
-    assert.deepEqual(await page.evaluate(() => window.__maudit.states.slice(-3)), ['held', 'snap', 'idle'], 'held → snap → idle');
+    assert.deepEqual(await page.evaluate(() => window.__maudit.states.slice(-3)), ['fall', 'snap', 'idle'], 'fall → snap → idle');
     const box = await actorBox(page);
-    assert.ok(Math.abs(box.bottom - sintonia.rim) <= 3, `stands on the rim ${box.bottom} vs ${sintonia.rim}`);
+    assert.ok(Math.abs(box.bottom - sintonia.rim) <= 1.5, `stands on the rim ${box.bottom} vs ${sintonia.rim}`);
     assert.ok(box.x >= a - 1 && box.x <= b + 1, 'inside the free segment');
     await shot(page, 'maudit-landed-noi-390x844');
     // A sideways pull picks up at once, without waiting for the hold.
@@ -234,7 +244,7 @@ test('vertical swipes on Maudit scroll the page; cancel, navigation and a modal 
   } finally { await h.close(); }
 });
 
-test('planes: nearest card wins, hidden cards are ignored, a far drop returns, saved plane is page-scoped and restores', async (t) => {
+test('planes: first valid card below wins, hidden cards are ignored, nav catches fall-through, saved plane is page-scoped and restores', async (t) => {
   const h = await start(); if (!h) return t.skip('Playwright unavailable');
   try {
     const view = await open(h, {});
@@ -246,19 +256,21 @@ test('planes: nearest card wins, hidden cards are ignored, a far drop returns, s
     await page.evaluate(() => { document.getElementById('conservatiEntry').hidden = true; });
     assert.equal((await page.evaluate(() => window.USPet.planes().map((p) => p.id))).includes('ricordi-conservati-top'), false);
     await page.evaluate(() => { document.getElementById('conservatiEntry').hidden = false; });
-    // Released between two rims: the nearer one is chosen.
+    // Released above two rims: the first valid one below catches the fall.
     const conservati = await plane(page, 'ricordi-conservati-top');
     const month = await plane(page, 'ricordi-month-top');
     let p = await pickUp(view);
-    const grip = gripFor(month.rim - 12, month.segments[0][0] + 10);
-    await carryTo(view, p, grip);
+    const first = conservati.rim < month.rim ? conservati : month;
+    const sharedLeft = Math.max(conservati.segments[0][0], month.segments[0][0]) + 12;
+    const upperY = Math.min(conservati.rim, month.rim) - 90;
+    await carryTo(view, p, { x: sharedLeft + 20, y: upperY - 14 });
     let s = await state(page);
-    assert.equal(s.placement.id, 'ricordi-month-top', `nearest of ${conservati.rim}/${month.rim}`);
-    // Far from every rim: back to the previous plane, saved placement untouched.
+    assert.equal(s.placement.id, first.id, `first plane below wins: ${conservati.rim}/${month.rim}`);
+    // Where no card segment catches, the nav is the final floor.
     p = await pickUp(view);
-    await carryTo(view, p, { x: 195, y: month.rim + 110 });
+    await carryTo(view, p, { x: 8, y: upperY - 14 });
     s = await state(page);
-    assert.deepEqual([s.placement.id, s.saved.plane, s.snap.state], ['ricordi-month-top', 'ricordi-month-top', 'idle'], 'no floating mid-screen');
+    assert.deepEqual([s.placement.kind, s.saved.plane, s.snap.state], ['nav', 'nav', 'idle'], 'nav floor; no floating mid-screen');
     // Another page: temporary nav, the saved Ricordi placement is not corrupted.
     await tab(page, 'home');
     s = await state(page);
