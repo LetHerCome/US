@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Countdown "Orbita": the ring and its point of light. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <stroke android:width="1dp" android:color="#38FFEBDC" />
+        </shape>
+    </item>
+    <item android:left="6dp" android:top="6dp" android:right="6dp" android:bottom="6dp">
+        <shape android:shape="oval">
+            <stroke android:width="1dp" android:color="#1AFFEBDC" android:dashWidth="1dp" android:dashGap="5dp" />
+        </shape>
+    </item>
+    <item android:gravity="top|center_horizontal" android:width="7dp" android:height="7dp">
+        <shape android:shape="oval">
+            <solid android:color="#FFFFF1DF" />
+        </shape>
+    </item>
+</layer-list>
