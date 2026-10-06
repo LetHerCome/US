@@ -41,6 +41,8 @@ function available(id,progression){const s=STYLES.find(s=>s.id===id);return Bool
 function install(w){
   const d=w.document,$=id=>d.getElementById(id),hero=$('homeHero'),root=$('usCountdownSheet'),surface=$('usCountdownDisplay');
   if(!hero||!root||!surface)return;
+  const pinButton=$('usCountdownPin');
+  if(pinButton&&w.UsPlatform?.isNative)pinButton.hidden=false;
   let state=null,owner='',generation=0,loading=null,busy=false,draft=null,timer=null,lastAttempt=0,suspendedOwner='';
   let originalInput='',originalTarget=null,originalMode='';
   let pendingControls=null;
@@ -226,6 +228,22 @@ function install(w){
   $('usCountdownBack').addEventListener('click',collection);
   $('usCountdownNew').addEventListener('click',()=>editor());
   $('usCountdownHide').addEventListener('click',()=>persist({...copy(),active_id:null}));
+  pinButton?.addEventListener('click',async()=>{
+    if(!w.UsPlatform?.isNative||pinButton.disabled)return;
+    pinButton.disabled=true;
+    status('Apro la schermata Home…');
+    try{
+      await w.UsThinkWidget?.syncCountdown?.();
+      const result=await w.UsPlatform.pinCountdownWidget?.();
+      if(result?.requested)status('Conferma il widget nella schermata Home.');
+      else if(result?.supported)status('HyperOS non ha accettato la richiesta. Riprova dalla Home.');
+      else status('Il launcher non supporta l’aggiunta diretta.');
+    }catch(_e){
+      status('Non riesco ad aggiungere il widget ora.');
+    }finally{
+      pinButton.disabled=false;
+    }
+  });
   $('usCountdownRetry').addEventListener('click',()=>hydrate());
   $('usCountdownList').addEventListener('click',async event=>{
     const edit=event.target.closest('[data-countdown-edit]');if(edit)return editor(edit.dataset.countdownEdit);

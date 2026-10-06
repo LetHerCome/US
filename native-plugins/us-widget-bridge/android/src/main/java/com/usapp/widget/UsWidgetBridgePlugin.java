@@ -74,6 +74,27 @@ public class UsWidgetBridgePlugin extends Plugin {
         call.resolve();
     }
 
+    @PluginMethod
+    public void pinCountdownWidget(PluginCall call) {
+        JSObject result = new JSObject();
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) {
+            call.resolve(result.put("supported", false).put("requested", false));
+            return;
+        }
+        AppWidgetManager manager = AppWidgetManager.getInstance(getContext());
+        if (!manager.isRequestPinAppWidgetSupported()) {
+            call.resolve(result.put("supported", false).put("requested", false));
+            return;
+        }
+        try {
+            ComponentName provider = new ComponentName(getContext(), UsCountdownWidgetProvider.class);
+            boolean requested = manager.requestPinAppWidget(provider, null, null);
+            call.resolve(result.put("supported", true).put("requested", requested));
+        } catch (IllegalStateException error) {
+            call.resolve(result.put("supported", true).put("requested", false));
+        }
+    }
+
     private void refreshWidgets() {
         AppWidgetManager manager = AppWidgetManager.getInstance(getContext());
         ComponentName thinkComponent = new ComponentName(getContext(), UsThinkWidgetProvider.class);

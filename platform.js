@@ -162,6 +162,20 @@
     return true;
   }
 
+  async function pinCountdownWidget() {
+    const plugin = widgetBridge();
+    if (!plugin || typeof plugin.pinCountdownWidget !== 'function') return { supported: false, requested: false };
+    try {
+      const result = await plugin.pinCountdownWidget();
+      return {
+        supported: result?.supported === true,
+        requested: result?.requested === true
+      };
+    } catch (_) {
+      return { supported: false, requested: false };
+    }
+  }
+
   async function getNativeLaunchUrl() {
     const app = getNativeApp();
     if (!app || typeof app.getLaunchUrl !== 'function') return null;
@@ -198,6 +212,7 @@
     getWidgetDeviceIdentity,
     storeWidgetActionCredential,
     clearWidgetActionCredential,
+    pinCountdownWidget,
     getNativeLaunchUrl,
     listenForNativeAppUrl
   });

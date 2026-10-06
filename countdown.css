@@ -134,3 +134,7 @@
 :root[data-us-motion="reduced"] [data-countdown-style="orbit"]::after{transform:none!important;}
 html[data-us-visibility="hidden"] .us-countdown-art *,html[data-us-visibility="hidden"] .us-countdown-art::after{animation-play-state:paused!important;}
 #home:not(.active) .us-countdown-art *,#home:not(.active) .us-countdown-art::after,.us-oggi-focus .us-countdown-art *,.us-oggi-focus .us-countdown-art::after{animation-play-state:paused!important;}
+
+/* Native Android affordance: bypass OEM picker quirks with the platform pin request. */
+.us-countdown-pin{width:100%;margin-top:10px;min-height:46px;border:1px solid rgba(255,255,255,.14);border-radius:14px;background:rgba(255,255,255,.06);color:#fff;font:650 13px/1 var(--us-font-body,Inter,sans-serif);letter-spacing:.01em}
+.us-countdown-pin:disabled{opacity:.5}

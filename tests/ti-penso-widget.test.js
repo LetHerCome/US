@@ -77,6 +77,7 @@ test('browser/PWA mantiene il bridge widget come no-op fail-safe', async () => {
   assert.equal(await platform.getWidgetDeviceIdentity(), null);
   assert.equal(await platform.storeWidgetActionCredential('a'.repeat(64), 'A'.repeat(43)), false);
   assert.equal(await platform.clearWidgetActionCredential(), false);
+  assert.deepEqual(await platform.pinCountdownWidget(), { supported: false, requested: false });
 });
 
 test('boundary inoltra solo snapshot e owner hash, mai credenziali', async () => {

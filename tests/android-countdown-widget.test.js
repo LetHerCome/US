@@ -52,3 +52,18 @@ test('tap on Countdown opens the app through the existing native URL bridge', ()
   assert.match(coordinator, /USCountdown\?\.open/);
   assert.match(coordinator, /window\.go === 'function'/);
 });
+
+test('Countdown can be pinned directly from the foreground app, bypassing OEM picker discovery', () => {
+  const plugin = read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsWidgetBridgePlugin.java');
+  const platform = read('platform.js');
+  const countdown = read('countdown.js');
+  const html = read('index.html');
+  assert.match(plugin, /@PluginMethod\s+public void pinCountdownWidget/);
+  assert.match(plugin, /isRequestPinAppWidgetSupported\(\)/);
+  assert.match(plugin, /requestPinAppWidget\(provider, null, null\)/);
+  assert.match(plugin, /UsCountdownWidgetProvider\.class/);
+  assert.match(platform, /async function pinCountdownWidget\(\)/);
+  assert.match(countdown, /UsPlatform\.pinCountdownWidget/);
+  assert.match(countdown, /UsThinkWidget\?\.syncCountdown/);
+  assert.match(html, /id="usCountdownPin"/);
+});
