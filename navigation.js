@@ -132,6 +132,12 @@ const layers=[
     close:()=>window.closeUsSettingsModal?.()
   },
   {
+    name:'widget-hub',
+    find:()=>document.getElementById('usWidgetHub'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.closeUsWidgetHub?.()
+  },
+  {
     name:'moment-compose',
     find:()=>document.getElementById('usMomentComposeOverlay'),
     open:el=>el?.classList.contains('show'),

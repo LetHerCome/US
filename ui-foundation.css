@@ -523,6 +523,7 @@ h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
 .us-icon[data-us-icon="arrows-left-right"]{--us-icon-src:url("/assets/icons/phosphor/arrows-left-right-regular.svg")}
 .us-icon[data-us-icon="user-circle"]{--us-icon-src:url("/assets/icons/phosphor/user-circle-regular.svg")}
 .us-icon[data-us-icon="image"]{--us-icon-src:url("/assets/icons/phosphor/image-regular.svg")}
+.us-icon[data-us-icon="squares-four"]{--us-icon-src:url("/assets/icons/phosphor/squares-four-regular.svg")}
 .us-icon[data-us-icon="calendar-heart"]{--us-icon-src:url("/assets/icons/phosphor/calendar-heart-regular.svg")}
 .us-icon[data-us-icon="clock-counter-clockwise"]{--us-icon-src:url("/assets/icons/phosphor/clock-counter-clockwise-regular.svg")}
 .us-icon[data-us-icon="heart"]{--us-icon-src:url("/assets/icons/phosphor/heart-straight-regular.svg")}

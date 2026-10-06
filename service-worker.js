@@ -1,4 +1,4 @@
-const BUILD_ID = "us-maudit-gravity-v1-20261006-1";
+const BUILD_ID = "us-native-widgets-v1-20261006-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -10,7 +10,9 @@ const APP_SHELL = [
   "/index.html",
   versioned("/auth-storage.js"),
   versioned("/platform.js"),
-  versioned("/ti-penso-widget.js"),
+  versioned("/widgets.js"),
+  versioned("/widget-hub.js"),
+  versioned("/widget-hub.css"),
   versioned("/app.js"),
   versioned("/stories.js"),
   versioned("/stories.css"),
@@ -87,6 +89,7 @@ const APP_SHELL = [
   "/assets/icons/phosphor/caret-down-regular.svg",
   "/assets/icons/phosphor/plus-regular.svg",
   "/assets/icons/phosphor/bell-regular.svg",
+  "/assets/icons/phosphor/squares-four-regular.svg",
   "/assets/icons/phosphor/map-pin-regular.svg",
   "/assets/icons/phosphor/arrows-clockwise-regular.svg",
   "/assets/icons/phosphor/user-circle-regular.svg",
