@@ -26,6 +26,16 @@
 
         </activity>
 
+        <!-- Native Notifications V1: FCM notification messages shown by the OS while US
+             is in the background or closed. Small icon = the approved US mark's alpha
+             (no new asset); the default channel is created by @us/push-support. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/us_adaptive_foreground_v1" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="us_partner" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

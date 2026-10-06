@@ -437,6 +437,7 @@
 
   async function lockForResume() {
     await refreshStatus();
+    if (phase === 'locked') return;
     if (!status?.protection?.enabled) { releaseCover(); return; }
     if (status.protection.state !== 'ok') {
       showLock('account', status.protection.state === 'invalidated' ? COPY.invalidated : COPY.corrupted);
@@ -447,11 +448,37 @@
     autoPrompt();
   }
 
+  // One resume lock at a time: the native event and whenOpen() can both see it.
+  let resumeLocking = null;
+  function resumeLock() {
+    if (!resumeLocking) resumeLocking = lockForResume().catch(() => {}).finally(() => { resumeLocking = null; });
+    return resumeLocking;
+  }
+
   if (plugin && typeof plugin.addListener === 'function') {
     Promise.resolve(plugin.addListener('lockRequired', () => {
-      if (phase === 'open') lockForResume().catch(() => {});
+      if (phase === 'open') resumeLock();
       else releaseCover();
     })).catch(() => {});
+  }
+
+  /**
+   * Native Notifications V1: resolves true only once US is open for the person
+   * (protection off, or unlocked after the session check); false if the lock
+   * ended in the account login instead. A notification tap can arrive before
+   * the native "lockRequired" event of the same resume, so the native lock
+   * state is re-read first: navigation never runs behind a lock that is about
+   * to appear.
+   */
+  async function whenOpen() {
+    if (!plugin) return true;
+    await statusReady;
+    if (phase === 'open') {
+      await refreshStatus();
+      if (phase === 'open' && status?.protection?.enabled && status.locked) await resumeLock();
+    }
+    if (phase === 'booting' || phase === 'locked') return (await waitForOpen()) === 'open';
+    return phase === 'open' || phase === 'off';
   }
 
   // ---- Settings -----------------------------------------------------------
@@ -536,6 +563,7 @@
     reset,
     unlock,
     accountLogin,
+    whenOpen,
     isLocked: () => phase === 'locked' || phase === 'booting',
     labels: Object.freeze({ unlockLabel, settingLabel }),
     _state: () => ({ phase, mode, message, working })

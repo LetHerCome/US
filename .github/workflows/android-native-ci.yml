@@ -18,6 +18,8 @@ on:
       - 'native-entry.mjs'
       - 'app-lock.js'
       - 'app-lock.css'
+      - 'notifications.js'
+      - 'tests/native-notifications-v1-native.test.js'
       - 'scripts/build-capacitor-web.mjs'
       - '.github/workflows/android-native-ci.yml'
   pull_request:
@@ -58,7 +60,7 @@ jobs:
         run: npm ci
 
       - name: Native contract tests
-        run: node --test tests/native-security-v1.test.js tests/android-scaffold.test.js tests/android-stable-signing.test.js tests/native-foundation.test.js
+        run: node --test tests/native-security-v1.test.js tests/android-scaffold.test.js tests/android-stable-signing.test.js tests/native-foundation.test.js tests/native-notifications-v1-native.test.js
 
       - name: npm run build:capacitor-web
         run: npm run build:capacitor-web

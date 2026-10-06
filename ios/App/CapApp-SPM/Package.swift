@@ -14,7 +14,9 @@ let package = Package(
         .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.5.0"),
         .package(name: "CapacitorApp", path: "../../../node_modules/@capacitor/app"),
         .package(name: "CapacitorHaptics", path: "../../../node_modules/@capacitor/haptics"),
-        .package(name: "UsAppLock", path: "../../../native-plugins/us-app-lock")
+        .package(name: "CapacitorPushNotifications", path: "../../../node_modules/@capacitor/push-notifications"),
+        .package(name: "UsAppLock", path: "../../../native-plugins/us-app-lock"),
+        .package(name: "UsPushSupport", path: "../../../native-plugins/us-push-support")
     ],
     targets: [
         .target(
@@ -24,7 +26,9 @@ let package = Package(
                 .product(name: "Cordova", package: "capacitor-swift-pm"),
                 .product(name: "CapacitorApp", package: "CapacitorApp"),
                 .product(name: "CapacitorHaptics", package: "CapacitorHaptics"),
-                .product(name: "UsAppLock", package: "UsAppLock")
+                .product(name: "CapacitorPushNotifications", package: "CapacitorPushNotifications"),
+                .product(name: "UsAppLock", package: "UsAppLock"),
+                .product(name: "UsPushSupport", package: "UsPushSupport")
             ]
         )
     ]

@@ -46,7 +46,9 @@ test('M15 iOS: progetto Xcode con bundle id, deployment target 16.0 e nessun tea
   assert.ok(targets.every((value) => value === '16.0'), `deployment target: ${targets.join(',')}`);
   assert.doesNotMatch(pbx, /DEVELOPMENT_TEAM\s*=/, 'nessun Apple Team ID nel repo');
   assert.doesNotMatch(pbx, /PROVISIONING_PROFILE/);
-  assert.doesNotMatch(pbx, /CODE_SIGN_ENTITLEMENTS/, 'nessuna capability firmata in questa milestone');
+  // Native Notifications V1: the only signed capability is Push (aps-environment).
+  const entitlements = [...pbx.matchAll(/CODE_SIGN_ENTITLEMENTS = ([^;]+);/g)].map((match) => match[1]);
+  assert.deepEqual(entitlements, ['App/App.entitlements', 'App/App.entitlements']);
 
   for (const file of ['UsBridgeViewController.swift', 'UsAppConfiguration.swift', 'UsPrivateStorage.swift']) {
     assert.match(pbx, new RegExp(`/\\* ${file.replace('.', '\\.')} in Sources \\*/,`), `${file} deve compilare nel target App`);
@@ -74,7 +76,8 @@ test('M15 iOS: Info.plist dichiara scheme, permessi reali e nessuna capability p
   }
   const privacy = read('ios/App/App/PrivacyInfo.xcprivacy');
   assert.match(privacy, /<key>NSPrivacyTracking<\/key>\s*<false\/>/);
-  assert.deepEqual(fs.readdirSync(IOS_APP).filter((name) => name.endsWith('.entitlements')), []);
+  assert.deepEqual(fs.readdirSync(IOS_APP).filter((name) => name.endsWith('.entitlements')), ['App.entitlements']);
+  assert.deepEqual(plistKeys(read('ios/App/App/App.entitlements')), ['aps-environment'], 'Native Notifications V1: Push only, no App Group or other capability yet');
 });
 
 test('M15 iOS: Back nativo = swipe dal bordo sinistro sulla stessa history di Android, mai uscita', () => {
