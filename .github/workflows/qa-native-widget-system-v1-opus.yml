@@ -1,0 +1,99 @@
+name: QA Native Widget System V1 Opus
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  linux_review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 2785dac4e35077cd460fafa04d4a955594098388
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Focused widget contracts
+        run: |
+          node --test tests/widget-system.test.js
+          node --test tests/countdown-oggi-v1.test.js
+          node --test tests/native-web-staging.test.js
+          node --test tests/w1-3-silent-send.test.js
+          node --test tests/logout-device-revocation.test.js
+      - name: Full suite
+        run: npm test
+      - name: Diff check
+        run: git diff --check origin/main..2785dac4e35077cd460fafa04d4a955594098388
+
+  windows_apk:
+    runs-on: windows-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 2785dac4e35077cd460fafa04d4a955594098388
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - run: npm ci
+      - name: Stage Capacitor web bundle
+        run: npm run build:capacitor-web
+      - name: Sync Capacitor Android
+        run: npx cap sync android
+      - name: Native unit tests + assemble APK
+        working-directory: android
+        run: .\gradlew.bat --no-daemon testDebugUnitTest assembleDebug
+      - name: Assert four widget providers are packaged
+        shell: pwsh
+        run: |
+          $aapt2 = Get-ChildItem "$env:ANDROID_HOME\build-tools" -Recurse -Filter aapt2.exe |
+            Sort-Object FullName | Select-Object -Last 1
+          if (-not $aapt2) { throw "aapt2.exe not found" }
+          & $aapt2.FullName dump xmltree android/app/build/outputs/apk/debug/app-debug.apk --file AndroidManifest.xml |
+            Set-Content manifest-dump.txt
+          $dump = Get-Content manifest-dump.txt -Raw
+          foreach ($provider in @(
+            'com.usapp.widget.UsThinkWidgetProvider',
+            'com.usapp.widget.UsCountdownWidgetProvider',
+            'com.usapp.widget.UsNoiWidgetProvider',
+            'com.usapp.widget.UsPhotoWidgetProvider'
+          )) {
+            if ($dump -notmatch [regex]::Escape($provider)) { throw "$provider missing from APK" }
+          }
+      - name: Package physical QA candidate
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path out | Out-Null
+          Copy-Item android/app/build/outputs/apk/debug/app-debug.apk out/US-Native-Widget-System-V1-Opus.apk
+          $hash=(Get-FileHash out/US-Native-Widget-System-V1-Opus.apk -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  US-Native-Widget-System-V1-Opus.apk" | Set-Content out/US-Native-Widget-System-V1-Opus.sha256.txt
+          @"
+          source_sha=2785dac4e35077cd460fafa04d4a955594098388
+          application_id=com.usapp.us
+          build_type=debug
+          widget_system=opus-v1
+          providers=think,countdown,noi,photo
+          min_sdk=26
+          sha256=$hash
+          "@ | Set-Content out/US-Native-Widget-System-V1-build-info.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: US-Native-Widget-System-V1-Opus
+          path: out/
+          if-no-files-found: error
+          retention-days: 14
