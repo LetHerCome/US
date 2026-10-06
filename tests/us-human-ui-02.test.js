@@ -43,6 +43,7 @@ test('nav: ~56px before the safe area, 44px+ targets, 24px icons, no looping ani
   const block = id.slice(id.indexOf('/* --- M1 APK shell navigation'), id.indexOf('/* M1 top chrome'));
   assert.match(block, /\.us-nav-premium button\{[\s\S]*?min-width:44px!important;[\s\S]*?min-height:46px!important/);
   assert.match(block, /\.us-nav-icon\{position:relative;display:block;width:24px;height:24px;/);
+  assert.match(block, /\.us-nav-icon--quiz\{transform:translateY\(-2px\)\}/, 'only the controller glyph gets optical vertical alignment');
   assert.doesNotMatch(block, /infinite/, 'no looping animation on the nav');
   assert.doesNotMatch(block, /button\.active::after/, 'no extra dot under the active label');
   assert.match(block, /button\.active \.us-nav-icon-on\{display:block!important\}/, 'active is still unmistakable: filled icon');

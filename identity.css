@@ -168,6 +168,8 @@ textarea,input{background:var(--us-field-bg)!important;border-color:rgba(255,255
 .us-nav-icon [data-icon$="images-fill.svg"]{-webkit-mask-image:url("/assets/icons/phosphor/images-fill.svg");mask-image:url("/assets/icons/phosphor/images-fill.svg")}
 .us-nav-icon [data-icon$="game-controller-regular.svg"]{-webkit-mask-image:url("/assets/icons/phosphor/game-controller-regular.svg");mask-image:url("/assets/icons/phosphor/game-controller-regular.svg")}
 .us-nav-icon [data-icon$="game-controller-fill.svg"]{-webkit-mask-image:url("/assets/icons/phosphor/game-controller-fill.svg");mask-image:url("/assets/icons/phosphor/game-controller-fill.svg")}
+/* Optical alignment: the controller drawing has more visual mass below center. Keep the tab box/label untouched. */
+.us-nav-icon--quiz{transform:translateY(-2px)}
 .us-nav-premium .nlabel{display:block;font-size:10px;font-weight:400;letter-spacing:.01em;line-height:1.1;white-space:nowrap;color:rgba(220,209,222,.62)}
 .us-nav-premium button.active{color:var(--us-color-text)!important;background:transparent!important}
 .us-nav-premium button.active .nicon{background:transparent!important;color:#ee91ff;transform:none}

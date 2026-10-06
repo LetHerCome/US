@@ -42,13 +42,21 @@ test('shell polish keeps Ricordi/Gioca labels semantic-only and Gioca uses the c
       ricordiTitleClass: document.querySelector('#moments > .section > h2')?.className || '',
       giocaTitleClass: document.querySelector('#quizHub .us-gv2-head h2')?.className || '',
       quizOff: document.querySelector('.nav button[data-page="quiz"] [data-icon].us-nav-icon-off')?.dataset.icon || '',
-      quizOn: document.querySelector('.nav button[data-page="quiz"] [data-icon].us-nav-icon-on')?.dataset.icon || ''
+      quizOn: document.querySelector('.nav button[data-page="quiz"] [data-icon].us-nav-icon-on')?.dataset.icon || '',
+      transforms: Object.fromEntries(['home','bond','moments','quiz'].map((pageName) => {
+        const icon = document.querySelector(`.nav button[data-page="${pageName}"] .us-nav-icon`);
+        return [pageName, getComputedStyle(icon).transform];
+      }))
     }));
     assert.equal(shell.ricordiTitle, 'absolute');
     assert.match(shell.ricordiTitleClass, /noi-sr/);
     assert.match(shell.giocaTitleClass, /us-gv2-sr/);
     assert.match(shell.quizOff, /game-controller-regular\.svg$/);
     assert.match(shell.quizOn, /game-controller-fill\.svg$/);
+    assert.equal(shell.transforms.home, 'none');
+    assert.equal(shell.transforms.bond, 'none');
+    assert.equal(shell.transforms.moments, 'none');
+    assert.match(shell.transforms.quiz, /matrix\(1, 0, 0, 1, 0, -2\)/, 'Gioca glyph is optically raised without moving its tab box');
     assert.deepEqual(errors, []);
     await ctx.close();
   } finally {
