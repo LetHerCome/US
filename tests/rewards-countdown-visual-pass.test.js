@@ -148,13 +148,13 @@ test('Collection: Countdown styles are a visible group whose locks follow the ex
   assert.match(markup, /data-countdown-style-select="chrome" disabled/);
   assert.match(markup, /Con Cromo · livello 12/);
   assert.doesNotMatch(markup, /data-countdown-style-select="orbit" disabled/);
-  assert.match(markup, /data-countdown-style-select="editorial"[^>]*is-equipped[^>]*aria-pressed="true"/);
+  assert.match(markup, /class="[^"]*us-progression-countdown-style[^"]*is-equipped[^"]*"[^>]*data-countdown-style-select="editorial"[^>]*aria-pressed="true"/);
   assert.equal((markup.match(/us-progression-reward-plus/g) || []).length, 3, 'Aurora, Orbita and Cromo say they also unlock a Countdown style');
   assert.equal(el('usProgressionRewardsCount').textContent, '3 di 4', 'the catalog count is still the server catalog');
   await el('usProgressionRewards').emit('click', { target: { closest: () => ({ disabled: false, dataset: { countdownStyleSelect: 'orbit' } }) } });
   assert.deepEqual(applied, ['orbit']);
   markup = el('usProgressionRewards').innerHTML;
-  assert.match(markup, /data-countdown-style-select="orbit"[^>]*is-equipped[^>]*aria-pressed="true"/);
+  assert.match(markup, /class="[^"]*us-progression-countdown-style[^"]*is-equipped[^"]*"[^>]*data-countdown-style-select="orbit"[^>]*aria-pressed="true"/);
   assert.match(markup, />Orbita<\/b><small>In uso<\/small>/);
 });
 
