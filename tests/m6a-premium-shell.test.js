@@ -44,7 +44,7 @@ test('M6A precarica tutti gli asset shell premium e mantiene il contratto PWA', 
     'house-regular.svg', 'house-fill.svg',
     'heart-straight-regular.svg', 'heart-straight-fill.svg',
     'images-regular.svg', 'images-fill.svg',
-    'cards-three-regular.svg', 'cards-three-fill.svg', 'calendar-dots-regular.svg'].forEach((name) => {
+    'cards-three-regular.svg', 'game-controller-regular.svg', 'game-controller-fill.svg', 'calendar-dots-regular.svg'].forEach((name) => {
     const file = name.endsWith('.woff2') ? `assets/fonts/${name}` : `assets/icons/phosphor/${name}`;
     assert.match(worker, new RegExp(`"/${file.replaceAll('.', '\\.') }"`));
   });

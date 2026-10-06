@@ -30,9 +30,9 @@ test('shared editor creates, edits, selects, hides and deletes without lost or f
   await page.fill('#usCountdownDate','2027-12-24');assert.equal(await page.locator('#usCountdownSave').isDisabled(),true,'a valid date must not enable an empty title');
   await page.fill('#usCountdownTitle','   ');assert.equal(await page.locator('#usCountdownSave').isDisabled(),true,'whitespace is not a title');
   await page.fill('#usCountdownTitle','La nostra cena');
-  await page.click('[data-countdown-pick="aurora"]');assert.equal(await page.locator('#usCountdownSave').isDisabled(),true);assert.match(await page.locator('#usCountdownStatus').innerText(),/Sintonia/);
-  if(output){await page.locator('#usCountdownStyles').screenshot({path:path.join(output,'style-collection.png')});}
-  await page.click('[data-countdown-pick="glass"]');await page.click('#usCountdownSave');
+  assert.equal(await page.locator('#usCountdownStyles').count(),0,'style selection lives only in the Sintonia collection');
+  assert.equal(await page.locator('[data-countdown-pick]').count(),0,'editor has no duplicate cosmetic picker');
+  await page.click('#usCountdownSave');
   await page.waitForSelector('#usCountdownCollection:not([hidden])');assert.equal(await page.locator('#usCountdownList [data-countdown-select]').count(),3);
   await page.click('#usCountdownHide');await page.waitForSelector('#usCountdownDisplay[hidden]',{state:'attached'});
   await page.click('[data-countdown-select="together"]');await page.waitForSelector('#usCountdownDisplay:not([hidden])');assert.match(await page.locator('#usCountdownDisplay').getAttribute('aria-label'),/Insieme da/);

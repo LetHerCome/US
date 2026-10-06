@@ -53,7 +53,7 @@ test('Gioca hub: no page header prose, no separate in-progress list, one week st
   const html = await hub(homeOf({ allowance: allowance({ used: 1, free_used: 1, families: { ridete: { session_id: 'r', completed: true } } }),
     open_rounds: [{ id: 'o1', game_family: 'e_se', item_count: 5, my_answered_count: 2 }] })).html();
   for (const gone of ['Scopritevi, giocando', 'Cinque domande alla volta', 'Un Per voi e due giochi a scelta', 'IN CORSO', 'SCEGLIETE VOI', 'Non scegliete. US ha preparato']) assert.doesNotMatch(html, new RegExp(gone));
-  assert.match(html, /<h2>Gioca<\/h2>/);
+  assert.match(html, /<h2 class="us-gv2-sr">Gioca<\/h2>/);
   assert.match(html, /QUESTA SETTIMANA/);
   assert.match(html, /<b>2 rimasti<\/b>/);
   assert.match(html, /data-gv2-family="e_se" data-gv2-mode-state="open"[\s\S]*?<small class="us-gv2-mode-state">2 di 5<\/small>/, 'an open round shows on its own tile');

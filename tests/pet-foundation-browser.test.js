@@ -136,10 +136,10 @@ test('Sintonia collection preview: Countdown styles group with real locks (scree
   });
   await page.waitForSelector('#usProgressionRewards [data-category="countdown"]');
   await page.locator('#usProgressionRewards [data-category="countdown"]').scrollIntoViewIfNeeded();await page.waitForTimeout(400);
-  assert.equal(await page.locator('[data-countdown-style-open]').count(),6);
-  assert.equal(await page.locator('[data-countdown-style-open][disabled]').count(),1);
-  const art=await page.locator('[data-countdown-style-open="orbit"] .us-countdown-art').boundingBox();
-  const tile=await page.locator('[data-countdown-style-open="orbit"] .us-progression-reward-preview').boundingBox();
+  assert.equal(await page.locator('[data-countdown-style-select]').count(),6);
+  assert.equal(await page.locator('[data-countdown-style-select][disabled]').count(),1);
+  const art=await page.locator('[data-countdown-style-select="orbit"] .us-countdown-art').boundingBox();
+  const tile=await page.locator('[data-countdown-style-select="orbit"] .us-progression-reward-preview').boundingBox();
   assert.ok(art.x>=tile.x-1&&art.x+art.width<=tile.x+tile.width+1,'preview art is centered inside its tile');
   await shot(page,'sintonia-countdown-styles-390x844');
   assert.deepEqual(errors,[]);await ctx.close();

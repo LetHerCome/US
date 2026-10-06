@@ -221,7 +221,7 @@ function renderHub() {
     ? '<p class="us-gv2-entry-note">Scegliete un gioco. Bastano pochi minuti.</p>'
     : '';
   root.innerHTML = `
-    <header class="us-gv2-head"><h2>Gioca</h2>${rhythmStrip()}</header>
+    <header class="us-gv2-head"><h2 class="us-gv2-sr">Gioca</h2>${rhythmStrip()}</header>
     ${invite}
     ${filterRow(filters)}
     <button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-pervoi us-attention-orbit" data-gv2-action="per-voi" data-gv2-state="${esc(pvState)}" data-us-attention="${pvState === 'pending' || pvState === 'reveal_ready' ? 'on' : 'off'}">

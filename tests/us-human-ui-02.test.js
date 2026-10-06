@@ -26,6 +26,9 @@ test('nav: the same four destinations, in order, with the same handlers and name
   ]);
   assert.equal((nav.match(/aria-current="page"/g) || []).length, 1, 'one current page at boot');
   assert.match(nav, /class="active" data-page="home"[^>]*aria-current="page"/);
+  assert.match(nav, /game-controller-regular\.svg/);
+  assert.match(nav, /game-controller-fill\.svg/);
+  assert.doesNotMatch(nav, /cards-three-(?:regular|fill)\.svg/, 'Gioca uses the minimal controller glyph');
 });
 
 test('nav: aria-current still follows the .active tab (ui-foundation sync is unchanged)', () => {
@@ -66,6 +69,14 @@ test('HUMAN-UI-01 is not reintroduced: no capsule, no floating envelope shell', 
   assert.doesNotMatch(html, /us-capsule|usCapsuleMark|usNavGioca/);
   assert.doesNotMatch(read('ui-foundation.js'), /capsule\(/);
   assert.match(html, /<div class="top us-premium-top"><span class="us-aurora"/, 'the production top pill (with its aurora) stays');
+});
+
+test('page labels: Ricordi and Gioca stay accessible without a visible top-left title', () => {
+  const moments = html.match(/<main id="moments"[\s\S]*?<\/main>/)?.[0] || '';
+  assert.match(moments, /<h2 class="noi-sr">Ricordi<\/h2>/);
+  assert.doesNotMatch(moments, /<h2>Ricordi<\/h2>/);
+  const games = read('games.js');
+  assert.match(games, /<header class="us-gv2-head"><h2 class="us-gv2-sr">Gioca<\/h2>\$\{rhythmStrip\(\)\}<\/header>/);
 });
 
 // ---------------------------------------------------------------- Gioca

@@ -17,8 +17,8 @@ const PHOSPHOR_NAV_ASSETS = [
   'heart-straight-fill.svg',
   'images-regular.svg',
   'images-fill.svg',
-  'cards-three-regular.svg',
-  'cards-three-fill.svg',
+  'game-controller-regular.svg',
+  'game-controller-fill.svg',
 ];
 
 test('M1 usa Inter e Newsreader self-hosted con fallback locale', () => {

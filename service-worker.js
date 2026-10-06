@@ -1,4 +1,4 @@
-const BUILD_ID = "us-noi-bridge-board-return-v1-20261006-1";
+const BUILD_ID = "us-shell-countdown-polish-v1-20261006-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -62,7 +62,8 @@ const APP_SHELL = [
   "/assets/icons/phosphor/images-regular.svg",
   "/assets/icons/phosphor/images-fill.svg",
   "/assets/icons/phosphor/cards-three-regular.svg",
-  "/assets/icons/phosphor/cards-three-fill.svg",
+  "/assets/icons/phosphor/game-controller-regular.svg",
+  "/assets/icons/phosphor/game-controller-fill.svg",
   "/assets/icons/phosphor/calendar-dots-regular.svg",
   "/assets/icons/phosphor/question-regular.svg",
   "/assets/icons/phosphor/infinity-regular.svg",

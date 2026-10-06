@@ -88,7 +88,8 @@ function runProgression({ level, pending = [], withCountdown = true }) {
   const elements = new Map();
   const seen = new Set();
   const reactions = [];
-  const opened = [];
+  const applied = [];
+  let activeCountdownStyle = 'editorial';
   const state = () => ({
     total_xp: 100, level, rhythm_days: 0, rhythm_today: false,
     rewards: catalog.map((r) => ({ ...r, unlocked: r.level_required <= level, equipped: false })),
@@ -106,11 +107,18 @@ function runProgression({ level, pending = [], withCountdown = true }) {
     localStorage: { getItem: (k) => storage.get(k) ?? null, setItem: (k, v) => storage.set(k, String(v)), removeItem: (k) => storage.delete(k) },
     UsFeedback: { action() {}, success() {} }, dispatchEvent() {},
     USPet: { react: (reason) => reactions.push(reason) },
-    USCountdown: withCountdown ? { STYLES: Countdown.STYLES, previewMarkup: (id) => `<span class="us-countdown-art" data-countdown-style="${id}"></span>`, open: () => opened.push('open') } : undefined
+    USCountdown: withCountdown ? {
+      STYLES: Countdown.STYLES,
+      previewMarkup: (id) => `<span class="us-countdown-art" data-countdown-style="${id}"></span>`,
+      activeStyle: () => activeCountdownStyle,
+      hasActive: () => true,
+      setStyle: async (id) => { activeCountdownStyle = id; applied.push(id); return true; }
+    } : undefined,
+    toast() {}
   };
   vm.runInNewContext(progressionJs, { window, document, sb, console, CustomEvent, setTimeout: () => 0, clearTimeout() {}, requestAnimationFrame: (fn) => fn() }, { filename: 'progression.js' });
   window.usProfile = { id: 'f', couple_id: 'c', role: 'francesco' };
-  return { api: window.USProgression, el: document.getElementById, reactions, opened };
+  return { api: window.USProgression, el: document.getElementById, reactions, applied };
 }
 
 test('Unlock moment: tells where the piece lives and which Countdown style comes with it', async () => {
@@ -132,18 +140,22 @@ test('Unlock moment: tells where the piece lives and which Countdown style comes
 });
 
 test('Collection: Countdown styles are a visible group whose locks follow the existing reward rows', async () => {
-  const { api, el, opened } = runProgression({ level: 9 });
+  const { api, el, applied } = runProgression({ level: 9 });
   await api.hydrate({ showUnlocks: false, force: true });
-  const markup = el('usProgressionRewards').innerHTML;
+  let markup = el('usProgressionRewards').innerHTML;
   assert.match(markup, /data-category="countdown" aria-label="Stili Countdown"/);
   assert.match(markup, /<em>5\/6<\/em>/, 'three free + Aurora (L4) + Orbita (L9); Cromo still locked');
-  assert.match(markup, /data-countdown-style-open="chrome" disabled/);
+  assert.match(markup, /data-countdown-style-select="chrome" disabled/);
   assert.match(markup, /Con Cromo · livello 12/);
-  assert.doesNotMatch(markup, /data-countdown-style-open="orbit" disabled/);
-  assert.equal((markup.match(/us-progression-reward-plus/g) || []).length, 3, 'Aurora, Orbita and Cromo say they also open a Countdown style');
+  assert.doesNotMatch(markup, /data-countdown-style-select="orbit" disabled/);
+  assert.match(markup, /class="[^"]*us-progression-countdown-style[^"]*is-equipped[^"]*"[^>]*data-countdown-style-select="editorial"[^>]*aria-pressed="true"/);
+  assert.equal((markup.match(/us-progression-reward-plus/g) || []).length, 3, 'Aurora, Orbita and Cromo say they also unlock a Countdown style');
   assert.equal(el('usProgressionRewardsCount').textContent, '3 di 4', 'the catalog count is still the server catalog');
-  await el('usProgressionRewards').emit('click', { target: { closest: () => ({ disabled: false, dataset: { countdownStyleOpen: 'orbit' } }) } });
-  assert.deepEqual(opened, ['open']);
+  await el('usProgressionRewards').emit('click', { target: { closest: () => ({ disabled: false, dataset: { countdownStyleSelect: 'orbit' } }) } });
+  assert.deepEqual(applied, ['orbit']);
+  markup = el('usProgressionRewards').innerHTML;
+  assert.match(markup, /class="[^"]*us-progression-countdown-style[^"]*is-equipped[^"]*"[^>]*data-countdown-style-select="orbit"[^>]*aria-pressed="true"/);
+  assert.match(markup, />Orbita<\/b><small>In uso<\/small>/);
 });
 
 test('Collection: without the Countdown runtime the collection is unchanged', async () => {
