@@ -271,16 +271,26 @@ test('planes: first valid card below wins, hidden cards are ignored, nav catches
     await carryTo(view, p, { x: 8, y: upperY - 14 });
     s = await state(page);
     assert.deepEqual([s.placement.kind, s.saved.plane, s.snap.state], ['nav', 'nav', 'idle'], 'nav floor; no floating mid-screen');
+
+    // Put Maudit back on the caught Ricordi plane; only then test semantic restore.
+    const savedPlane = first.id;
+    const liveFirst = await plane(page, savedPlane);
+    p = await pickUp(view);
+    await carryTo(view, p, gripFor(liveFirst.rim, liveFirst.segments[0][0] + 12));
+    s = await state(page);
+    assert.equal(s.saved.plane, savedPlane, 'card landing becomes the semantic placement again');
+
     // Another page: temporary nav, the saved Ricordi placement is not corrupted.
     await tab(page, 'home');
     s = await state(page);
-    assert.deepEqual([s.placement.kind, s.saved.plane], ['nav', 'ricordi-month-top']);
+    assert.deepEqual([s.placement.kind, s.saved.plane], ['nav', savedPlane]);
     await tab(page, 'moments'); await settle(page, 300);
     s = await state(page);
-    assert.equal(s.placement.id, 'ricordi-month-top', 'restored on return');
+    assert.equal(s.placement.id, savedPlane, 'restored on return');
+    const restoredPlane = await plane(page, savedPlane);
     const box = await actorBox(page);
-    assert.ok(Math.abs(box.bottom - month.rim) <= 3);
-    await shot(page, 'maudit-ricordi-month-390x844');
+    assert.ok(Math.abs(box.bottom - restoredPlane.rim) <= 1.5);
+    await shot(page, 'maudit-ricordi-restored-390x844');
     // Same semantic placement on a narrower phone.
     const stored = await page.evaluate(() => Object.entries(localStorage).filter(([k]) => k.startsWith('us:maudit:')));
     await view.ctx.close();
@@ -291,7 +301,7 @@ test('planes: first valid card below wins, hidden cards are ignored, nav catches
     await settle(narrow.page, 1200);
     await tab(narrow.page, 'moments');
     const n = await state(narrow.page);
-    assert.equal(n.placement.id, 'ricordi-month-top', 'placement survives a different phone width');
+    assert.equal(n.placement.id, savedPlane, 'placement survives a different phone width');
     const nb = await actorBox(narrow.page);
     assert.ok(nb.x >= 0 && nb.right <= 320 && nb.y >= 0 && nb.bottom <= 568, JSON.stringify(nb));
     assert.ok(nb.x >= n.placement.a - 1 && nb.x <= n.placement.b + 1, 'clamped into the live segment');

@@ -697,7 +697,7 @@ function install(w){
       const target=targetFromPick(pick,list)||navTarget(null);
       if(!target||!pet.fall()){settle(restorable(g.from),last);return;}
       const rim=pick?.rim??navGeometry()?.rim??(last.top+TIMING.size);
-      falling={from:g.from,target,left:pick?.left??last.left,top:last.top,targetTop:rim-TIMING.size,velocity:0,at:clock(),last:{...last}};
+      falling={from:g.from,target,left:last.left,top:last.top,targetTop:rim-TIMING.size,velocity:0,at:clock(),last:{...last}};
       if(pet.snapshot().reduced||falling.targetTop<=falling.top){falling.top=falling.targetTop;finishFall();return;}
       later('fall',fallStep,GRAVITY.frame);
     }
