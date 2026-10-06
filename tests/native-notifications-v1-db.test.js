@@ -153,6 +153,15 @@ test('N2 register: token refresh updates in place; the token moving to a new ins
   assert.deepEqual((await rows(db)).map((r) => [r.installation_id, r.token]), [[I2, FCM_B]]);
 });
 
+test('N2 register: another account cannot claim a provider token already owned by someone else', async () => {
+  await as(db, F, register(I1, FCM_A));
+  const hijack = await as(db, X, register(I2, FCM_A));
+  assert.equal(hijack.code, '23505', 'unique token ownership blocks cross-account reassignment');
+  const after = await rows(db);
+  assert.equal(after.length, 1);
+  assert.deepEqual(after[0], { user_id: F, couple_id: C1, installation_id: I1, token: FCM_A, platform: 'android', provider: 'fcm', apns_environment: null });
+});
+
 test('N2 register: another account cannot take over an existing installation id', async () => {
   await as(db, B, register(I3, FCM_B)); // Beatrice's own phone
   await as(db, F, register(I1, FCM_A));
