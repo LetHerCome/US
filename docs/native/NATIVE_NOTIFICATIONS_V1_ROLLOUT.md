@@ -16,8 +16,9 @@ Go on only if `n02.rows = 0` and `n02.has_installation_id = false` (the migratio
 `supabase/migrations/20261006200000_native_notifications_v1.sql` (forward, after every applied migration).
 It only reshapes the empty, never-used `device_push_tokens`, removes client table access, drops the retired
 `register_push_token(text,text)` and adds `register_native_push_device` / `unregister_native_push_device`
-(EXECUTE: authenticated only). It sends nothing. Its own self-check aborts the transaction if a privilege
-postcondition does not hold.
+(EXECUTE: authenticated only). Both mutation paths are ownership-scoped: an authenticated account cannot
+take over or delete another account's installation row. It sends nothing. Its own self-check aborts the
+transaction if a privilege postcondition does not hold.
 
 ## 2. Edge Functions (same code paths, Web Push unchanged)
 
