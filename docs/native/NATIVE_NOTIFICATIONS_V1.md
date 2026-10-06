@@ -135,14 +135,15 @@ Forward migration `supabase/migrations/20261006200000_native_notifications_v1.sq
   the service role;
 - `register_native_push_device(installation, platform, provider, token, environment, retired_installation)`
   — SECURITY DEFINER, `auth.uid()` only (no client user id), requires a non-anonymous `auth.users` row, a
-  profile and a current couple, bounded token shape per provider; deletes the row of a
-  `retired_installation` of this phone (an offline logout, see 2.6), deletes the same token on another
-  installation (token moved), then upserts the installation → an account switch on the same phone
-  **moves** the row, it never keeps the old owner;
-- `unregister_native_push_device(installation)` — authenticated, deletes the row of that one installation
-  (other devices of the account are never touched). The installation UUID (122 random bits, never shown or
-  sent anywhere else) is the proof of possession, so the retry after an offline logout works even when the
-  next account on the phone is a different one;
+  profile and a current couple, bounded token shape per provider; a retired installation is deleted only
+  when it belongs to the same `auth.uid()`; an existing installation id owned by another account cannot
+  be taken over. A provider token can still move to the currently registering installation (provider token
+  possession is the provider-side identity);
+- `unregister_native_push_device(installation)` — authenticated and ownership-scoped:
+  `installation_id = target AND user_id = auth.uid()`. Other users' rows and other devices are never
+  touched. An offline logout still unregisters the provider token locally and rotates the installation id;
+  if the next login is a different account, the stale server row is left for provider invalid-token
+  pruning rather than allowing cross-account deletion;
 - both are EXECUTE for `authenticated` only (F1B rule for client RPCs: never `anon`);
 - `register_push_token` is dropped (retired since F1B, incompatible shape).
 
@@ -160,7 +161,9 @@ Forward migration `supabase/migrations/20261006200000_native_notifications_v1.sq
   *pending revoke*; native `unregister()` (FCM token deleted / APNs unregistered) stops delivery to this
   phone even while the server row survives; delivered notifications and badge cleared; **the installation
   id rotates**, so the next account gets a new identity. The pending revoke is retried at the next
-  authenticated boot and passed as `retired_installation` to the next registration.
+  authenticated boot. The RPC removes it only if it still belongs to that authenticated user; after an
+  account switch it is deliberately left for provider invalid-token pruning rather than permitting
+  cross-account mutation.
 - Foreground: `presentationOptions: []` (no OS banner while US is open). The app shows a short toast
   (only while unlocked), a light haptic, and refreshes the affected state.
 - Taps (foreground, background, cold start, iOS action `Ricambia`): parsed against the allow-list
