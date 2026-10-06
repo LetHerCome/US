@@ -466,7 +466,12 @@ async function usVerifySessionForAppLock(){
     session=state?.data?.session||null;
   }catch(_e){return 'unknown';}
   if(!session)return 'invalid';
-  if(!navigator.onLine)return 'unknown';
+  // A cached Supabase session can still exist while its access token is already
+  // expired. Offline we cannot ask the server, so fail closed on local expiry
+  // and only allow the offline path while the cached access token is current.
+  const expiresAtMs=Number(session.expires_at||0)*1000;
+  if(expiresAtMs&&expiresAtMs<=Date.now()+5000)return 'invalid';
+  if(!navigator.onLine)return 'valid';
   try{
     const {data,error}=await usWithDeadline(sb.auth.getUser(),2500,'app lock user check timed out');
     if(error){
