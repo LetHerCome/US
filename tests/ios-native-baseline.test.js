@@ -61,7 +61,7 @@ test('M15 iOS: Info.plist dichiara scheme, permessi reali e nessuna capability p
   const plist = read('ios/App/App/Info.plist');
   const keys = plistKeys(plist);
   assert.match(plist, /<key>CFBundleURLSchemes<\/key>\s*<array>\s*<string>com\.usapp\.us<\/string>\s*<\/array>/);
-  for (const key of ['NSCameraUsageDescription', 'NSMicrophoneUsageDescription', 'NSLocationWhenInUseUsageDescription', 'NSPhotoLibraryUsageDescription']) {
+  for (const key of ['NSCameraUsageDescription', 'NSMicrophoneUsageDescription', 'NSLocationWhenInUseUsageDescription', 'NSPhotoLibraryUsageDescription', 'NSFaceIDUsageDescription']) {
     assert.ok(keys.includes(key), `${key} mancante`);
   }
   assert.match(plist, /<key>ITSAppUsesNonExemptEncryption<\/key>\s*<false\/>/);
@@ -69,7 +69,7 @@ test('M15 iOS: Info.plist dichiara scheme, permessi reali e nessuna capability p
   assert.match(plist, /<key>UIStatusBarStyle<\/key>\s*<string>UIStatusBarStyleLightContent<\/string>/);
   assert.match(plist, /<string>arm64<\/string>/);
   assert.doesNotMatch(plist, /armv7/);
-  for (const forbidden of ['NSAppTransportSecurity', 'NSAllowsArbitraryLoads', 'UIBackgroundModes', 'NSLocationAlwaysAndWhenInUseUsageDescription', 'NSFaceIDUsageDescription', 'UIApplicationShortcutItems', 'WKAppBoundDomains']) {
+  for (const forbidden of ['NSAppTransportSecurity', 'NSAllowsArbitraryLoads', 'UIBackgroundModes', 'NSLocationAlwaysAndWhenInUseUsageDescription', 'UIApplicationShortcutItems', 'WKAppBoundDomains']) {
     assert.ok(!keys.includes(forbidden), `${forbidden} appartiene a una milestone successiva`);
   }
   const privacy = read('ios/App/App/PrivacyInfo.xcprivacy');

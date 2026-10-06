@@ -21,6 +21,8 @@ const RUNTIME_FILES = [
   'ui-foundation.css',
   'ui-foundation.js',
   'platform.js',
+  'app-lock.js',
+  'app-lock.css',
   'widgets.js',
   'widget-hub.js',
   'widget-hub.css',
@@ -129,9 +131,14 @@ html = html
   .replace(
     /(<script defer src="\/platform\.js(?:\?v=[^"]+)?"><\/script>)/,
     '<script defer src="/native-entry.js"></script>\n$1'
-  );
+  )
+  // Native Security V1: the native shell starts behind the app-lock shield so
+  // nothing private paints before app-lock.js has asked the native lock state.
+  .replace(/<html lang="it">/, '<html lang="it" class="us-app-lock-pending">');
 if (
   !html.includes('src="/native-entry.js"') ||
+  !html.includes('<html lang="it" class="us-app-lock-pending">') ||
+  !html.includes('id="usAppLock"') ||
   html.includes('rel="manifest"') ||
   html.includes('src="/stories.js') ||
   html.includes('href="/stories.css') ||

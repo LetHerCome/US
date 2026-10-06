@@ -71,7 +71,7 @@ windowsTest('P1 recupera gli artefatti di verifica interrotti senza copiarli neg
 
 test('P1 integra il monogramma US netto in auth, header e mini-branding', () => {
   const html = read('index.html');
-  assert.equal((html.match(/assets\/derived\/runtime\/us-symbol-256-v1\.png/g) || []).length, 4, 'icon link, auth logo, top bar (M12A.1) and settings mini-branding');
+  assert.equal((html.match(/assets\/derived\/runtime\/us-symbol-256-v1\.png/g) || []).length, 5, 'icon link, native app-lock screen (Native Security V1), auth logo, top bar (M12A.1) and settings mini-branding');
   assert.doesNotMatch(html, /us-symbol-apk-foreground-v1/, 'the 1254 px master is never loaded by the app shell');
   assert.doesNotMatch(html, /assets\/derived\/brand\/us-symbol-ui-transparent-v1\.png/);
   assert.doesNotMatch(html, /assets\/brand\/us-wordmark-premium\.svg/);

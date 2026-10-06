@@ -27,6 +27,7 @@
   --us-layer-ambient:10040;
   --us-layer-sheet:10060;
   --us-layer-auth:10250;
+  --us-layer-app-lock:2147483000;     /* Native Security V1: above everything, incl. auth */
 
   /* Colour — near-black plum canvas, warm light text, rose + violet accent. */
   --us-color-bg:#08040e;                 /* brand canvas (manifest theme) */

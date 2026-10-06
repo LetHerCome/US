@@ -41,6 +41,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>US usa la fotocamera per scattare le foto e i video che condividi con il tuo partner.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>US usa Face ID per proteggere l’accesso all’app su questo telefono, se lo attivi tu.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>US usa la tua posizione solo mentre la app è aperta, per calcolare la distanza tra voi due.</string>
 	<key>NSMicrophoneUsageDescription</key>

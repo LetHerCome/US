@@ -17,6 +17,8 @@ on:
       - 'scripts/build-capacitor-web.mjs'
       - 'scripts/build-web-brand-assets.mjs'
       - 'tests/ios-native-baseline.test.js'
+      - 'native-plugins/us-app-lock/**'
+      - 'tests/native-security-v1.test.js'
       - '.github/workflows/ios-native.yml'
   pull_request:
     paths:
@@ -29,6 +31,8 @@ on:
       - 'scripts/build-capacitor-web.mjs'
       - 'scripts/build-web-brand-assets.mjs'
       - 'tests/ios-native-baseline.test.js'
+      - 'native-plugins/us-app-lock/**'
+      - 'tests/native-security-v1.test.js'
       - '.github/workflows/ios-native.yml'
 
 permissions:
@@ -62,7 +66,15 @@ jobs:
         run: npm ci
 
       - name: Native contract tests
-        run: node --test tests/ios-native-baseline.test.js tests/native-web-staging.test.js tests/native-foundation.test.js
+        run: node --test tests/ios-native-baseline.test.js tests/native-web-staging.test.js tests/native-foundation.test.js tests/native-security-v1.test.js
+
+      - name: App lock policy checks (host swiftc, no simulator)
+        run: |
+          mkdir -p build
+          swiftc native-plugins/us-app-lock/ios/Sources/UsAppLockPlugin/UsAppLockPolicy.swift \
+            native-plugins/us-app-lock/ios/Tests/PolicyCheck/main.swift \
+            -o build/us-app-lock-policy-check
+          build/us-app-lock-policy-check
 
       - name: npm run build:capacitor-web
         run: npm run build:capacitor-web
@@ -113,6 +125,9 @@ jobs:
           test -f "$APP/public/native-entry.js"
           test ! -f "$APP/public/stories.js"
           test ! -f "$APP/public/service-worker.js"
+          test -f "$APP/public/app-lock.js"
+          /usr/libexec/PlistBuddy -c "Print :NSFaceIDUsageDescription" "$APP/Info.plist"
+          grep -q UsAppLockPlugin "$APP/capacitor.config.json"
 
       - name: Upload build logs
         if: always()

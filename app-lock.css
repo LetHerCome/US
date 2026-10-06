@@ -1,0 +1,110 @@
+/* ===== Native Security V1 · app lock (native app only) =====
+   html.us-app-lock-pending  native shell booting: brand canvas only, nothing private paints.
+   html.us-app-locked        lock screen up: the rest of the page is hidden and inert. */
+
+html.us-app-lock-pending body > :not(#usAppLock),
+html.us-app-locked body > :not(#usAppLock){
+  visibility:hidden!important;
+}
+
+.us-app-lock{display:none}
+
+html.us-app-lock-pending .us-app-lock,
+html.us-app-locked .us-app-lock{
+  position:fixed;
+  inset:0;
+  z-index:var(--us-layer-app-lock,2147483000);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:
+    max(24px,var(--us-safe-top,env(safe-area-inset-top,0px)))
+    max(24px,var(--us-safe-right,env(safe-area-inset-right,0px)))
+    max(28px,var(--us-safe-bottom,env(safe-area-inset-bottom,0px)))
+    max(24px,var(--us-safe-left,env(safe-area-inset-left,0px)));
+  background:
+    radial-gradient(90% 70% at 14% 4%,rgba(255,102,142,.10),transparent 58%),
+    radial-gradient(85% 70% at 94% 94%,rgba(169,133,255,.12),transparent 56%),
+    var(--us-color-bg,#08040e);
+  color:var(--us-color-text,#f7f2f8);
+  overscroll-behavior:contain;
+  touch-action:manipulation;
+}
+
+html.us-app-lock-pending .us-app-lock-card{visibility:hidden}
+
+.us-app-lock-card{
+  width:min(320px,100%);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  animation:us-app-lock-in var(--us-motion-base,240ms) var(--us-ease-standard,ease) both;
+}
+
+.us-app-lock-logo{
+  width:64px;
+  height:64px;
+  margin-bottom:18px;
+  display:grid;
+  place-items:center;
+}
+.us-app-lock-logo .us-brand-symbol-art{width:100%;height:100%;object-fit:contain}
+
+.us-app-lock-title{
+  margin:0;
+  font-family:var(--us-font-editorial,Georgia,serif);
+  font-size:25px;
+  font-weight:500;
+  letter-spacing:-.01em;
+}
+
+.us-app-lock-copy{
+  margin:10px 0 0;
+  max-width:28ch;
+  color:var(--us-color-text-2,rgba(247,242,248,.7));
+  font-size:14px;
+  line-height:1.45;
+}
+
+.us-app-lock-actions{
+  width:100%;
+  margin-top:28px;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:6px;
+}
+.us-app-lock-primary{width:100%;min-height:50px}
+
+.us-app-lock-secondary{
+  min-height:44px;
+  border:0;
+  background:none;
+  color:var(--us-color-text-3,rgba(247,242,248,.5));
+  font:inherit;
+  font-size:13.5px;
+  font-weight:600;
+  cursor:pointer;
+}
+.us-app-lock-secondary:focus-visible{outline:2px solid var(--us-color-accent-strong,#c99ae0);outline-offset:2px;border-radius:12px}
+
+.us-app-lock-status{
+  min-height:20px;
+  margin:12px 0 0;
+  color:var(--us-color-danger-ink,#ffadb6);
+  font-size:13px;
+  line-height:1.4;
+}
+.us-app-lock-status:empty{visibility:hidden}
+
+@keyframes us-app-lock-in{
+  from{opacity:0;transform:translateY(6px)}
+  to{opacity:1;transform:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .us-app-lock-card{animation:none}
+}
+
+/* Settings row (settings.js): biometrics not configured on this phone yet. */
+.us-settings2-row.is-unavailable .us-settings2-switch{opacity:.42}
