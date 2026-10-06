@@ -17,8 +17,6 @@ const RUNTIME_FILES = [
   'index.html',
   'auth-storage.js',
   'app.js',
-  'stories.js',
-  'stories.css',
   'styles.css',
   'ui-foundation.css',
   'ui-foundation.js',
@@ -118,22 +116,29 @@ let html = await readFile(stagedIndexPath, 'utf8');
 if (!html.includes(sourceCdn)) throw new Error(`index.html does not use Supabase JS ${supabaseVersion}`);
 html = html
   .replace(/<link\s+rel=["']manifest["'][^>]*>\s*/i, '')
-  .replace(/<script>window\.__US_LEFT_FOR_YOU_ACTIVE__\s*=\s*true;<\/script>/i, '<script>window.__US_LEFT_FOR_YOU_ACTIVE__ = false;</script>')
-  .replace(/<button\b(?=[^>]*\bid=["']leftForYouPartnerEntry["'])[^>]*>[\s\S]*?<\/button>\s*/i, '')
-  .replace(/<div\s+class=["']left-for-you-overlay["'][\s\S]*?<\/div>\s*\n\s*<div\s+class=["']toast["']/i, '<div class="toast"')
-  .replace('aria-label="Aggiorna foto profilo" onclick="pickProfilePhoto()"', 'aria-label="Apri le tue Stories" onclick="openOwnStories()"')
+  // Stories were retired from the product surface. Native must not resurrect
+  // the old partner bubble, Story add control, archive row or runtime.
+  .replace(/<link\s+rel=["']stylesheet["']\s+href=["']\/stories\.css(?:\?v=[^"']+)?["'][^>]*>\s*/i, '')
+  .replace(/<script\s+defer\s+src=["']\/stories\.js(?:\?v=[^"']+)?["']><\/script>\s*/i, '')
+  .replace(/<button\b(?=[^>]*\bdata-us-setting=["']story-archive["'])[^>]*>[\s\S]*?<\/button>\s*/i, '')
   .replace(/<link\s+rel=["']preconnect["']\s+href=["']https:\/\/cdn\.jsdelivr\.net["'][^>]*>\s*/i, '')
   .replace(/<link\s+rel=["']dns-prefetch["']\s+href=["']\/\/cdn\.jsdelivr\.net["'][^>]*>\s*/i, '')
   .replace(`${sourceCdn}"></script>`, '/vendor/supabase.js"></script>')
   .replace(
     /(<script defer src="\/platform\.js(?:\?v=[^"]+)?"><\/script>)/,
     '<script defer src="/native-entry.js"></script>\n$1'
-  )
-  .replace(
-    /(<script\s+defer\s+src=["']\/left-for-you\.js[^>]*><\/script>)/i,
-    '<script>window.__US_LEFT_FOR_YOU_RENDERER_ONLY__ = true;</script>\n$1'
   );
-if (!html.includes('src="/native-entry.js"') || html.includes('rel="manifest"')) {
+if (
+  !html.includes('src="/native-entry.js"') ||
+  html.includes('rel="manifest"') ||
+  html.includes('src="/stories.js') ||
+  html.includes('href="/stories.css') ||
+  html.includes('data-us-setting="story-archive"') ||
+  !html.includes('id="leftForYouPartnerEntry"') ||
+  !html.includes('id="leftForYouOverlay"') ||
+  !html.includes('window.__US_LEFT_FOR_YOU_ACTIVE__ = true') ||
+  html.includes('window.__US_LEFT_FOR_YOU_RENDERER_ONLY__ = true')
+) {
   throw new Error('Native index transformation incomplete');
 }
 await writeFile(stagedIndexPath, html, 'utf8');

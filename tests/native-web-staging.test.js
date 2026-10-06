@@ -47,6 +47,8 @@ test('staging pulisce stale files e copia soltanto la allowlist native', () => {
   assert.ok(files.includes('platform.js'));
   assert.ok(files.includes('native-entry.js'));
   assert.ok(files.includes('vendor/supabase.js'));
+  assert.equal(files.includes('stories.js'), false);
+  assert.equal(files.includes('stories.css'), false);
   assert.ok(files.some((file) => file.startsWith('assets/')));
   assert.equal(files.includes('service-worker.js'), false);
   assert.equal(files.includes('manifest.webmanifest'), false);
@@ -55,25 +57,29 @@ test('staging pulisce stale files e copia soltanto la allowlist native', () => {
   assert.equal(files.some((file) => file.startsWith('.git/')), false);
 });
 
-test('staging native conserva soltanto il renderer Left for You per Conservati', () => {
+test('staging native mantiene Lasciato per te completo e non reintroduce Stories', () => {
   const manifest = runStaging();
   const files = manifest.files.map((entry) => entry.path);
   const nativeHtml = fs.readFileSync(path.join(OUTPUT, 'index.html'), 'utf8');
 
   assert.ok(files.includes('left-for-you.js'));
   assert.ok(files.includes('left-for-you.css'));
+  assert.equal(files.includes('stories.js'), false);
+  assert.equal(files.includes('stories.css'), false);
 
-  const rendererOnlyFlag = nativeHtml.indexOf('window.__US_LEFT_FOR_YOU_RENDERER_ONLY__ = true');
-  const leftForYouScript = nativeHtml.indexOf('src="/left-for-you.js');
-  assert.ok(rendererOnlyFlag >= 0, 'native deve attivare il renderer-only mode');
-  assert.ok(leftForYouScript > rendererOnlyFlag, 'il flag renderer-only deve precedere left-for-you.js');
+  assert.match(nativeHtml, /window\.__US_LEFT_FOR_YOU_ACTIVE__\s*=\s*true/);
+  assert.match(nativeHtml, /id="leftForYouPartnerEntry"/);
+  assert.match(nativeHtml, /id="leftForYouOverlay"/);
+  assert.match(nativeHtml, /id="leftForYouComposerOverlay"/);
+  assert.doesNotMatch(nativeHtml, /window\.__US_LEFT_FOR_YOU_RENDERER_ONLY__\s*=\s*true/);
 
-  assert.match(nativeHtml, /window\.__US_LEFT_FOR_YOU_ACTIVE__\s*=\s*false/);
-  assert.doesNotMatch(nativeHtml, /id="leftForYouPartnerEntry"/);
-  assert.doesNotMatch(nativeHtml, /id="leftForYouOverlay"/);
+  assert.doesNotMatch(nativeHtml, /src="\/stories\.js/);
+  assert.doesNotMatch(nativeHtml, /href="\/stories\.css/);
+  assert.doesNotMatch(nativeHtml, /data-us-setting="story-archive"/);
+  assert.doesNotMatch(nativeHtml, /Apri le tue Stories|Aggiungi una story|Stories del partner/);
 });
 
-test('Left for You renderer-only espone il renderer senza avviare inbox o Realtime', () => {
+test('Left for You renderer-only resta disponibile come modalità interna senza avviare inbox o Realtime', () => {
   const source = fs.readFileSync(path.join(ROOT, 'left-for-you.js'), 'utf8');
   const fromCalls = [];
   const channelCalls = [];
