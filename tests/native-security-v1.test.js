@@ -509,10 +509,11 @@ test('N1 senza profilo non si può attivare la protezione', async () => {
 
 test('N1 app.js: gate dopo la sessione e prima di profilo/foto; login senza sessione azzera il lock', () => {
   const app = read('app.js');
-  const gate = app.indexOf('window.UsAppLock.gate({userId:session.user.id})');
-  const noSession = app.indexOf('if(!session){\n      // No session on this phone');
-  const cachedPaint = app.indexOf('if(cachedProfile){\n      resetNoiIdeasForIdentityChange();');
-  const profileFetch = app.indexOf(".from('profiles')\n      .select('id,display_name,role,couple_id,avatar_path')");
+  const normalizedApp = app.replace(/\r\n/g, '\n');
+  const gate = normalizedApp.indexOf('window.UsAppLock.gate({userId:session.user.id})');
+  const noSession = normalizedApp.indexOf('if(!session){\n      // No session on this phone');
+  const cachedPaint = normalizedApp.indexOf('if(cachedProfile){\n      resetNoiIdeasForIdentityChange();');
+  const profileFetch = normalizedApp.indexOf(".from('profiles')\n      .select('id,display_name,role,couple_id,avatar_path')");
   assert.ok(gate > 0 && noSession > gate && cachedPaint > noSession && profileFetch > cachedPaint);
   assert.match(app, /await window\.UsAppLock\?\.signedOut\?\.\(\)/);
   assert.match(app, /window\.UsAppLock\?\.configure\?\.\(\{verifySession:usVerifySessionForAppLock,accountLogin:usAppLockAccountLogin\}\)/);
@@ -548,7 +549,7 @@ test('N1 HTML/CSS: lo shield copre tutto e il lock sta sopra ogni layer', () => 
   const build = read('scripts/build-capacitor-web.mjs');
   assert.match(build, /<html lang="it" class="us-app-lock-pending">/);
   for (const file of ['scripts/build-capacitor-web.mjs', 'scripts/build-cloudflare-pages.mjs']) {
-    assert.match(read(file), /'app-lock\.js',\n  'app-lock\.css',/);
+    assert.match(read(file), /'app-lock\.js',\r?\n  'app-lock\.css',/);
   }
   assert.match(read('service-worker.js'), /versioned\("\/app-lock\.js"\),\n  versioned\("\/app-lock\.css"\),/);
 });
@@ -575,7 +576,7 @@ test('N1 Android: BiometricPrompt forte + Keystore, nessuna API deprecata, ident
   assert.match(app, /applicationId "com\.usapp\.us"/);
   assert.match(app, /namespace = "com\.usapp\.us"/);
   assert.match(read('android/app/src/main/java/com/usapp/us/MainActivity.java'), /public class MainActivity extends BridgeActivity \{\}/);
-  assert.match(read('android/capacitor.settings.gradle'), /include ':us-app-lock'\nproject\(':us-app-lock'\)\.projectDir = new File\('\.\.\/native-plugins\/us-app-lock\/android'\)/);
+  assert.match(read('android/capacitor.settings.gradle'), /include ':us-app-lock'\r?\nproject\(':us-app-lock'\)\.projectDir = new File\('\.\.\/native-plugins\/us-app-lock\/android'\)/);
   assert.match(read('android/app/capacitor.build.gradle'), /implementation project\(':us-app-lock'\)/);
   assert.match(read('android/app/src/main/AndroidManifest.xml'), /android:allowBackup="false"/);
 });
