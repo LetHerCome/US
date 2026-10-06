@@ -1,0 +1,72 @@
+name: M14 First Android APK
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build_apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 52a80a1da77d41c670c208f3df9893daf288078d
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Native foundation tests
+        run: |
+          node --test tests/android-scaffold.test.js
+          node --test tests/native-foundation.test.js
+          node --test tests/native-web-staging.test.js
+          node --test tests/native-back-platform.test.js
+          node --test tests/native-back-navigation.test.js
+
+      - name: Stage Capacitor web bundle
+        run: npm run build:capacitor-web
+
+      - name: Sync Capacitor Android
+        run: npx cap sync android
+
+      - name: Assemble debug APK
+        working-directory: android
+        run: ./gradlew --no-daemon :app:assembleDebug
+
+      - name: Package install candidate
+        shell: bash
+        run: |
+          mkdir -p out
+          cp android/app/build/outputs/apk/debug/app-debug.apk out/US-M14-Android-Debug.apk
+          sha256sum out/US-M14-Android-Debug.apk | tee out/US-M14-Android-Debug.sha256.txt
+          {
+            echo "source_sha=52a80a1da77d41c670c208f3df9893daf288078d"
+            echo "application_id=com.usapp.us"
+            echo "version_name=1.0"
+            echo "version_code=1"
+            echo "build_type=debug"
+          } > out/US-M14-build-info.txt
+          ls -lh out/US-M14-Android-Debug.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: US-M14-Android-Debug
+          path: out/
+          if-no-files-found: error
+          retention-days: 14
