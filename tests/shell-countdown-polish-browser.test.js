@@ -39,11 +39,13 @@ test('shell polish keeps Ricordi/Gioca labels semantic-only and Gioca uses the c
     const { page, ctx, errors } = await pageFor(h, { width: 390, height: 844 });
     const shell = await page.evaluate(() => ({
       ricordiTitle: getComputedStyle(document.querySelector('#moments > .section > h2')).position,
+      ricordiTitleClass: document.querySelector('#moments > .section > h2')?.className || '',
       giocaTitleClass: document.querySelector('#quizHub .us-gv2-head h2')?.className || '',
       quizOff: document.querySelector('.nav button[data-page="quiz"] [data-icon].us-nav-icon-off')?.dataset.icon || '',
       quizOn: document.querySelector('.nav button[data-page="quiz"] [data-icon].us-nav-icon-on')?.dataset.icon || ''
     }));
     assert.equal(shell.ricordiTitle, 'absolute');
+    assert.match(shell.ricordiTitleClass, /noi-sr/);
     assert.match(shell.giocaTitleClass, /us-gv2-sr/);
     assert.match(shell.quizOff, /game-controller-regular\.svg$/);
     assert.match(shell.quizOn, /game-controller-fill\.svg$/);

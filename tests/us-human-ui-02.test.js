@@ -73,7 +73,7 @@ test('HUMAN-UI-01 is not reintroduced: no capsule, no floating envelope shell', 
 
 test('page labels: Ricordi and Gioca stay accessible without a visible top-left title', () => {
   const moments = html.match(/<main id="moments"[\s\S]*?<\/main>/)?.[0] || '';
-  assert.match(moments, /<h2 class="sr-only">Ricordi<\/h2>/);
+  assert.match(moments, /<h2 class="noi-sr">Ricordi<\/h2>/);
   assert.doesNotMatch(moments, /<h2>Ricordi<\/h2>/);
   const games = read('games.js');
   assert.match(games, /<header class="us-gv2-head"><h2 class="us-gv2-sr">Gioca<\/h2>\$\{rhythmStrip\(\)\}<\/header>/);
