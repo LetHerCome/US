@@ -1,0 +1,61 @@
+name: M14 Android Baseline 02 Fast APK
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 476f01e1983dfe916d7ac4b8184f0c1abef86011
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - run: npm ci
+      - name: Stage native bundle
+        run: npm run build:capacitor-web
+      - name: Assert parity
+        shell: pwsh
+        run: |
+          $html = Get-Content dist/capacitor/index.html -Raw
+          if ($html -match 'stories\.js|stories\.css|story-archive|Apri le tue Stories|Aggiungi una story') { throw 'Stories residue found in native bundle' }
+          if ($html -notmatch 'id="leftForYouPartnerEntry"') { throw 'Left for You top entry missing' }
+          if ($html -notmatch 'id="leftForYouOverlay"') { throw 'Left for You inbox missing' }
+          if ($html -notmatch 'id="leftForYouComposerOverlay"') { throw 'Left for You composer missing' }
+          if ($html -match '__US_LEFT_FOR_YOU_RENDERER_ONLY__\s*=\s*true') { throw 'Left for You renderer-only residue found' }
+      - run: npx cap sync android
+      - name: Assemble debug APK
+        working-directory: android
+        run: .\gradlew.bat --no-daemon :app:assembleDebug
+      - name: Package APK
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path out | Out-Null
+          Copy-Item android/app/build/outputs/apk/debug/app-debug.apk out/US-M14-Android-Baseline-02.apk
+          $hash = (Get-FileHash out/US-M14-Android-Baseline-02.apk -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  US-M14-Android-Baseline-02.apk" | Set-Content out/US-M14-Android-Baseline-02.sha256.txt
+          @"
+          source_sha=476f01e1983dfe916d7ac4b8184f0c1abef86011
+          application_id=com.usapp.us
+          native_parity=no-stories+left-for-you
+          sha256=$hash
+          "@ | Set-Content out/US-M14-Baseline-02-build-info.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: US-M14-Android-Baseline-02
+          path: out/
+          if-no-files-found: error
+          retention-days: 14
