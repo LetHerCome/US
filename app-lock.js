@@ -148,7 +148,7 @@
       primaryText = COPY.retry;
     }
     if (copy) { copy.textContent = copyText; copy.hidden = !copyText; }
-    if (primary) { primary.textContent = primaryText; primary.disabled = working; }
+    if (primary) { primary.textContent = primaryText; primary.disabled = working || (promptBusy && mode === 'locked'); }
     if (secondary) { secondary.textContent = secondaryText; secondary.hidden = !secondaryText; secondary.disabled = working; }
     if (note) note.textContent = mode === 'locked' ? message : '';
   }
@@ -298,13 +298,12 @@
     if (!plugin || phase !== 'locked' || promptBusy || mode !== 'locked') return false;
     promptBusy = true;
     message = '';
-    setWorking(true);
+    render();
     try {
       status = normalizeStatus(await plugin.unlock(promptOptions(unlockLabel())));
       const verdict = await (sessionCheck || checkSession());
       if (verdict === 'invalid') {
         promptBusy = false;
-        setWorking(false);
         await accountLogin(COPY.expired);
         return false;
       }
@@ -316,7 +315,7 @@
       return false;
     } finally {
       promptBusy = false;
-      setWorking(false);
+      render();
     }
   }
 

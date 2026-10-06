@@ -216,6 +216,8 @@ test('N1 biometria ON: lock prima di qualsiasi contenuto privato, poi sblocco ri
   assert.equal(env.nodes.get('usAppLock').dataset.mode, 'locked');
   assert.equal(env.nodes.get('usAppLockPrimary').textContent, 'Sblocca con l’impronta');
   assert.equal(result, null, 'initCloud resta fermo finché non si sblocca');
+  assert.equal(env.nodes.get('usAppLockPrimary').disabled, true, 'nessun secondo prompt mentre il primo è aperto');
+  assert.equal(env.nodes.get('usAppLockSecondary').disabled, false, 'l’accesso con account resta sempre raggiungibile');
   const unlockCall = plugin.calls.find(([name]) => name === 'unlock');
   assert.ok(unlockCall, 'il prompt parte da solo');
   assert.equal(unlockCall[1].title, 'Sblocca con l’impronta');
