@@ -43,7 +43,7 @@ function setup({ vibrate = true, audio = fakeAudio(), storage = memoryStorage(),
 
 test('haptic: unsupported vibrate is harmless, supported vibrate fires short patterns only', () => {
   const none = setup({ vibrate: false, audio: { AudioContext: undefined, log: {} } });
-  for (const kind of ['tap', 'action', 'success', 'attention', 'reveal']) assert.doesNotThrow(() => none.feedback[kind]());
+  for (const kind of ['tap', 'selection', 'action', 'success', 'error', 'attention', 'reveal', 'landing']) assert.doesNotThrow(() => none.feedback[kind]());
 
   const ok = setup();
   ok.feedback.tap();
@@ -183,6 +183,28 @@ test('default tap: links, role=button and role=tab count; passive areas and plai
   // A tap inside a button (icon/label) resolves to the button.
   const button = node('button'); click(doc, node('span', {}, button)); await settle();
   assert.equal(vibrations.length, 3);
+});
+
+test('native grammar: tabs and switches use selection instead of generic tap', async () => {
+  const calls = [];
+  const { doc } = setup({ platform: { haptic: (kind, pattern) => { calls.push([kind, pattern]); return Promise.resolve(true); } } });
+  click(doc, node('span', { role: 'tab' })); await settle();
+  click(doc, node('button', { role: 'switch' })); await settle();
+  assert.deepEqual(calls.map(([kind]) => kind), ['selection', 'selection']);
+});
+
+test('native grammar: error and Maudit landing are explicit haptic-only events', () => {
+  const calls = [];
+  const audio = fakeAudio();
+  const { feedback, doc } = setup({ audio, platform: { haptic: (kind, pattern) => { calls.push([kind, pattern]); return Promise.resolve(true); } } });
+  doc.fire('pointerdown');
+  feedback.error();
+  feedback.landing();
+  assert.deepEqual(calls.map(([kind]) => kind), ['error', 'heavy']);
+  assert.equal(audio.log.oscillators, 0, 'error e landing non aggiungono suoni sintetici');
+  assert.match(read('pet.js'), /UsFeedback\?\.landing\?\.\(\)/);
+  assert.match(read('countdown.js'), /UsFeedback\?\.error\?\.\(\)/);
+  assert.ok((read('app.js').match(/UsFeedback\?\.error\?\.\(\)/g) || []).length >= 2);
 });
 
 test('default tap: disabled, aria-disabled, hidden and inert controls stay silent', async () => {

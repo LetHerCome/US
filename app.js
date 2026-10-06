@@ -2330,7 +2330,7 @@ async function uploadMoment(){
     await hydrateMoments();
     await hydrateHomeMemory();
     if(!homePhotoPath)await hydrateHomePhoto(true);
-  }catch(err){console.warn(err);toast(err?.message==='SOURCE_TOO_LARGE'?'Foto troppo grande: massimo 20 MB':'Upload non riuscito');}
+  }catch(err){console.warn(err);window.UsFeedback?.error?.();toast(err?.message==='SOURCE_TOO_LARGE'?'Foto troppo grande: massimo 20 MB':'Upload non riuscito');}
   finally{btn.disabled=false;btn.textContent='Salva ricordo';}
 }
 window.uploadMoment=uploadMoment;
@@ -3863,7 +3863,7 @@ async function sendThinkSignal(){
   if(!usThinkOperationId)usThinkOperationId=globalThis.crypto?.randomUUID?.()||String(Date.now())+'-'+Math.random().toString(16).slice(2);
   if(btn)btn.disabled=true;
   const {data,error}=await sb.rpc('send_think',{operation_id:usThinkOperationId});
-  if(error){console.warn(error);toast('Non riesco a inviare il segnale');if(btn)btn.disabled=false;return false;}
+  if(error){console.warn(error);window.UsFeedback?.error?.();toast('Non riesco a inviare il segnale');if(btn)btn.disabled=false;return false;}
   const result=Array.isArray(data)?data[0]:data;
   const messageId=result?.message_id;
   usThinkOperationId=null;

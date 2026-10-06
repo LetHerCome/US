@@ -35,15 +35,26 @@
     }
   }
 
+  const NATIVE_HAPTIC_KINDS = Object.freeze({
+    success: ['notification', 'SUCCESS'],
+    warning: ['notification', 'WARNING'],
+    error: ['notification', 'ERROR'],
+    light: ['impact', 'LIGHT'],
+    medium: ['impact', 'MEDIUM'],
+    heavy: ['impact', 'HEAVY'],
+    selection: ['selection', '']
+  });
+
   function haptic(kind, fallbackPattern) {
     const haptics = isNative ? (runtime?.haptics || getNativePlugin('Haptics')) : null;
+    const profile = NATIVE_HAPTIC_KINDS[kind];
     let call = null;
-    if (kind === 'success' && typeof haptics?.notification === 'function') {
-      call = () => haptics.notification({ type: 'SUCCESS' });
-    } else if (kind === 'light' && typeof haptics?.impact === 'function') {
-      call = () => haptics.impact({ style: 'LIGHT' });
-    } else if (kind === 'medium' && typeof haptics?.impact === 'function') {
-      call = () => haptics.impact({ style: 'MEDIUM' });
+    if (profile?.[0] === 'notification' && typeof haptics?.notification === 'function') {
+      call = () => haptics.notification({ type: profile[1] });
+    } else if (profile?.[0] === 'impact' && typeof haptics?.impact === 'function') {
+      call = () => haptics.impact({ style: profile[1] });
+    } else if (profile?.[0] === 'selection' && typeof haptics?.selectionChanged === 'function') {
+      call = () => haptics.selectionChanged();
     }
     if (!call) return Promise.resolve(vibrateFallback(fallbackPattern));
     return Promise.resolve(call()).catch(() => vibrateFallback(fallbackPattern));

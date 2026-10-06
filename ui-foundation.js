@@ -352,10 +352,13 @@
   // Haptic profiles: [native kind, vibrate pattern (ms)]. Never longer than ~160ms.
   const HAPTIC_PROFILES = Object.freeze({
     tap: ['light', [8]],
+    selection: ['selection', [5]],
     action: ['medium', [14]],
     success: ['success', [14, 40, 22]],
+    error: ['error', [24, 40, 24]],
     attention: ['light', [10, 50, 10]],
-    reveal: ['success', [12, 55, 18, 55, 26]]
+    reveal: ['success', [12, 55, 18, 55, 26]],
+    landing: ['heavy', [18]]
   });
   // Sound profiles: short locally generated tones [frequency Hz, start s, duration s, peak gain, wave].
   const SOUND_PROFILES = Object.freeze({
@@ -433,10 +436,12 @@
     }
     function sound(kind) {
       if (!preferences.sounds || !visible() || !unlocked) return false;
+      const tones = SOUND_PROFILES[kind];
+      if (!tones) return false; // selection / error / landing are intentionally haptic-only
       const ctx = audioContext();
       if (!ctx) return false;
       try {
-        if (ctx.state === 'running') { playTones(ctx, SOUND_PROFILES[kind]); return true; }
+        if (ctx.state === 'running') { playTones(ctx, tones); return true; }
         // Suspended (autoplay policy): try to wake it, never queue the sound.
         ctx.resume?.()?.catch?.(() => {});
       } catch (_) { /* a failed tone is never an error */ }
@@ -471,10 +476,13 @@
     };
     const api = {
       tap: () => emit('tap'),
+      selection: () => emit('selection'),
       action: () => emit('action'),
       success: () => emit('success'),
+      error: () => emit('error'),
       attention: () => emit('attention'),
       reveal: () => emit('reveal'),
+      landing: () => emit('landing'),
       getPreferences: () => ({ ...preferences }),
       setSoundsEnabled(enabled) { preferences.sounds = Boolean(enabled); write(FEEDBACK_KEYS.sounds, preferences.sounds ? '1' : '0'); listeners.forEach((l) => l({ ...preferences })); },
       setHapticsEnabled(enabled) { preferences.haptics = Boolean(enabled); write(FEEDBACK_KEYS.haptics, preferences.haptics ? '1' : '0'); listeners.forEach((l) => l({ ...preferences })); },
@@ -492,12 +500,14 @@
         if (!target?.closest) return;
         const control = target.closest(INTERACTIVE_SELECTOR);
         const declared = target.closest('[data-us-feedback]');
-        // The nearest declaration wins; a control inside an "off" subtree stays silent.
-        const kind = declared ? declared.getAttribute('data-us-feedback') : 'tap';
-        if (kind === 'off') return;
         // Only an interactive control (or a declared, focusable one) is a tap target.
         const host = control || (declared?.hasAttribute?.('tabindex') ? declared : null);
         if (!host || !isFeedbackEligible(host)) return;
+        // The nearest declaration wins. Tabs/switches/menu choices use the OS selection tick.
+        const role = host.getAttribute?.('role');
+        const automatic = role === 'tab' || role === 'switch' || role === 'menuitem' ? 'selection' : 'tap';
+        const kind = declared ? declared.getAttribute('data-us-feedback') : automatic;
+        if (kind === 'off') return;
         if (!HAPTIC_PROFILES[kind]) return;
         if (kind === 'tap') deferTap(); else api[kind]();
       }, true);
