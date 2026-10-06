@@ -1,0 +1,17 @@
+{
+  "name": "@us/app-lock",
+  "version": "1.0.0",
+  "private": true,
+  "description": "US Native Security V1: device-local biometric app lock (Android BiometricPrompt + Keystore, iOS LocalAuthentication + Keychain).",
+  "capacitor": {
+    "android": {
+      "src": "android"
+    },
+    "ios": {
+      "src": "ios"
+    }
+  },
+  "peerDependencies": {
+    "@capacitor/core": "8.5.0"
+  }
+}

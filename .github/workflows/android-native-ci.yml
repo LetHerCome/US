@@ -1,0 +1,93 @@
+name: Android native validation
+
+# Proves the Capacitor Android project compiles and its JVM unit tests pass on
+# a clean runner, for branches other than main. Debug + unsigned release only:
+# no keystore, no secrets, no upload. The signed internal APK stays owned by
+# android-internal-release.yml (main only).
+
+on:
+  workflow_dispatch:
+  push:
+    branches-ignore: [main]
+    paths:
+      - 'android/**'
+      - 'native-plugins/**'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'native-entry.mjs'
+      - 'app-lock.js'
+      - 'app-lock.css'
+      - 'scripts/build-capacitor-web.mjs'
+      - '.github/workflows/android-native-ci.yml'
+  pull_request:
+    paths:
+      - 'android/**'
+      - 'native-plugins/**'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/android-native-ci.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-native-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compile-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: npm ci
+        run: npm ci
+
+      - name: Native contract tests
+        run: node --test tests/native-security-v1.test.js tests/android-scaffold.test.js tests/android-stable-signing.test.js tests/native-foundation.test.js
+
+      - name: npm run build:capacitor-web
+        run: npm run build:capacitor-web
+
+      - name: npx cap sync android
+        run: npx cap sync android
+
+      - name: Sync leaves committed Android project unchanged
+        run: git diff --exit-code -- android
+
+      - name: Gradle unit tests, debug and unsigned release builds
+        working-directory: android
+        run: bash ./gradlew --no-daemon testDebugUnitTest assembleDebug assembleRelease
+
+      - name: Inspect built APKs
+        run: |
+          META=android/app/build/outputs/apk/debug/output-metadata.json
+          cat "$META"
+          grep -q '"applicationId": "com.usapp.us"' "$META"
+          ls -la android/app/build/outputs/apk/debug android/app/build/outputs/apk/release
+          test -f android/app/build/outputs/apk/release/app-release-unsigned.apk
+
+      - name: Upload unit test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-unit-test-reports
+          path: |
+            android/app/build/reports/tests/
+            native-plugins/*/android/build/reports/tests/
+            native-plugins/*/android/build/test-results/
+          if-no-files-found: ignore
