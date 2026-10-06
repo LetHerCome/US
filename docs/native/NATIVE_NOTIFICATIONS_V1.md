@@ -137,8 +137,8 @@ Forward migration `supabase/migrations/20261006200000_native_notifications_v1.sq
   — SECURITY DEFINER, `auth.uid()` only (no client user id), requires a non-anonymous `auth.users` row, a
   profile and a current couple, bounded token shape per provider; a retired installation is deleted only
   when it belongs to the same `auth.uid()`; an existing installation id owned by another account cannot
-  be taken over. A provider token can still move to the currently registering installation (provider token
-  possession is the provider-side identity);
+  be taken over. A provider token may move to another installation only within the same authenticated
+  account; the token string itself is never treated as authorization;
 - `unregister_native_push_device(installation)` — authenticated and ownership-scoped:
   `installation_id = target AND user_id = auth.uid()`. Other users' rows and other devices are never
   touched. An offline logout still unregisters the provider token locally and rotates the installation id;
