@@ -1,4 +1,4 @@
-const BUILD_ID = "us-noi-bridge-board-return-v1-20261006-1";
+const BUILD_ID = "us-shell-countdown-polish-v1-20261006-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
