@@ -132,12 +132,15 @@ test('Web Push Think ha una sola implementation condivisa', () => {
 
 test('heart usa receiver silent e body continua ad aprire Home', () => {
   const provider = read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsThinkWidgetProvider.java');
+  const widgets = read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsWidgets.java');
   const receiver = read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsThinkWidgetActionReceiver.java');
   const manifest = read('native-plugins/us-widget-bridge/android/src/main/AndroidManifest.xml');
-  assert.match(provider, /setOnClickPendingIntent\(R\.id\.us_widget_root,\s*launchIntent/);
-  assert.match(provider, /setOnClickPendingIntent\(R\.id\.us_widget_heart,\s*sendIntent/);
+  assert.match(provider, /setOnClickPendingIntent\(R\.id\.us_widget_root,\s*UsWidgets\.open\(context,\s*"think"/);
+  assert.match(provider, /model\.canSend \? sendIntent\(context\)/);
+  assert.match(provider, /setOnClickPendingIntent\(R\.id\.us_widget_heart,\s*heart\)/);
   assert.match(provider, /PendingIntent\.getBroadcast/);
-  assert.match(provider, /PendingIntent\.getActivity/);
+  assert.match(widgets, /PendingIntent\.getActivity/);
+  assert.match(widgets, /Intent\.ACTION_VIEW,\s*Uri\.parse\("us:\/\/widget\/"/);
   assert.doesNotMatch(receiver, /startActivity|getLaunchIntentForPackage/);
   assert.match(receiver, /goAsync\(\)/);
   assert.match(receiver, /ACTION_SEND_THINK/);
@@ -171,18 +174,21 @@ test('credential native è Keystore encrypted, non-backup e account-isolated', (
 
 test('feedback widget distingue sending, sent e failed senza animazione fragile', () => {
   const provider = read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsThinkWidgetProvider.java');
+  const models = read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsWidgetModels.java');
   const layout = read('native-plugins/us-widget-bridge/android/src/main/res/layout/us_widget_think.xml');
   assert.match(layout, /us_widget_heart_pulse/);
-  assert.match(provider, /lastActionStatus/);
-  assert.match(provider, /Invio…/);
-  assert.match(provider, /Inviato/);
-  assert.match(provider, /Riprova/);
-  assert.doesNotMatch(provider, /AnimationDrawable|ObjectAnimator|ValueAnimator/);
+  assert.match(provider, /UsWidgetModels\.think\(/);
+  assert.match(models, /status\.equals\("sending"\)/);
+  assert.match(models, /Invio…/);
+  assert.match(models, /Inviato/);
+  assert.match(models, /Riprova/);
+  assert.doesNotMatch(provider + models, /AnimationDrawable|ObjectAnimator|ValueAnimator/);
 });
 
 test('MainActivity resta vuota e nessuna credential entra nello snapshot', () => {
   const activity = read('android/app/src/main/java/com/usapp/us/MainActivity.java').replace(/\r\n/g, '\n').trim();
-  const snapshot = read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsWidgetSnapshotStore.java');
+  const snapshot = read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsWidgetStore.java')
+    + read('native-plugins/us-widget-bridge/android/src/main/java/com/usapp/widget/UsWidgetContract.java');
   assert.equal(activity, 'package com.usapp.us;\n\nimport com.getcapacitor.BridgeActivity;\n\npublic class MainActivity extends BridgeActivity {}');
   assert.doesNotMatch(snapshot, /token|credential|Authorization/i);
 });

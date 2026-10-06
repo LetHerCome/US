@@ -191,6 +191,18 @@ function install(w){
       else if(draft)preview();
     }
   }
+  // Native widgets: the same selection Oggi shows, as semantic data (never markup).
+  // null = not known yet (state or rewards still loading): the widget keeps its last value.
+  function widgetState(){
+    if(!state)return null;
+    const e=selected();
+    if(!e||!e.view)return {active:false,style:e?.style||'editorial'};
+    const premium=STYLES.find(s=>s.id===e.style)?.reward;
+    if(premium&&!progression())return null;
+    if(!available(e.style,progression()))return {active:false,style:e.style};
+    if(state.active_id==='together')return {active:true,kind:'together',title:'Insieme da',target:state.started_on||'',style:e.style||'editorial'};
+    return {active:true,kind:e.mode==='clock'?'clock':'days',title:e.title||'Il nostro momento',target:e.target||'',style:e.style||'editorial'};
+  }
   function activeStyle(){return selected()?.style||'';}
   function hasActive(){return Boolean(state?.active_id);}
   async function setStyle(styleId){
@@ -259,7 +271,7 @@ function install(w){
     }
   },1000);}
   startTimer();
-  const api=w.USCountdown;api.open=open;api.close=close;api.refresh=hydrate;api.reset=()=>clear(true);api.setStyle=setStyle;api.activeStyle=activeStyle;api.hasActive=hasActive;
+  const api=w.USCountdown;api.open=open;api.close=close;api.refresh=hydrate;api.reset=()=>clear(true);api.setStyle=setStyle;api.activeStyle=activeStyle;api.hasActive=hasActive;api.widgetState=widgetState;
   // Shared sample used by the sheet tiles, the Sintonia collection and the unlock moment.
   api.previewMarkup=style=>STYLES.some(s=>s.id===style)?markup({value:'12',unit:'giorni',label:''},'',style):'';
   if(typeof sb!=='undefined')sb.auth.onAuthStateChange(event=>{if(event==='SIGNED_OUT')clear(true);});
