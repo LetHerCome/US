@@ -303,6 +303,18 @@ async function refreshWebPushUi(){
   const card=document.getElementById('pushOptInCard'),title=document.getElementById('pushOptInTitle'),text=document.getElementById('pushOptInText'),button=document.getElementById('pushEnableBtn'),settings=document.getElementById('pushSettingsRow');
   if(!card||!window.usProfile){if(card)card.hidden=true;if(settings)settings.hidden=true;return;}
   card.classList.remove('install-only','denied');
+  if(window.UsNotifications?.supported?.()){
+    // Native app: the card only invites; the OS permission is asked after "Attiva".
+    // Denied / unavailable / settings states live in Settings › Notifiche.
+    const state=await window.UsNotifications.getState();
+    if(settings)settings.hidden=true;
+    if(state.kind!=='inactive'){card.hidden=true;return;}
+    card.hidden=false;
+    if(title)title.textContent='Attiva le notifiche';
+    if(text)text.textContent='Ti penso, risposte e promemoria, anche a US chiusa.';
+    if(button){button.hidden=false;button.disabled=false;button.textContent='Attiva';}
+    return;
+  }
   if(!isWebPushSupported()){
     card.hidden=true;if(settings)settings.hidden=true;return;
   }
@@ -337,7 +349,21 @@ async function refreshWebPushUi(){
 }
 window.refreshWebPushUi=refreshWebPushUi;
 
+async function enableNativePush(){
+  const button=document.getElementById('pushEnableBtn');
+  if(button){button.disabled=true;button.textContent='Attivo…';}
+  let result={ok:false,kind:'error'};
+  try{result=await window.UsNotifications.enable();}catch(error){console.warn('[US Notifications] enable',error);}
+  if(result.ok){toast('Notifiche attive ♡');setTimeout(()=>sendWebPushEvent('test'),350);}
+  else if(result.kind==='denied')toast('Permesso negato: puoi consentirle dalle impostazioni del telefono');
+  else if(result.kind==='unavailable')toast('Notifiche non disponibili in questa versione di US');
+  else if(result.kind!=='busy')toast('Non riesco ad attivare le notifiche');
+  if(button)button.disabled=false;
+  try{await refreshWebPushUi();}catch(_e){}
+  return result;
+}
 async function enableWebPush(){
+  if(window.UsNotifications?.supported?.())return enableNativePush();
   if(usPushUiBusy||!window.usProfile)return;
   if(!isWebPushSupported())return toast('Notifiche non supportate su questo browser');
   if(isIosDevice()&&!isStandaloneUs())return refreshWebPushUi();
@@ -407,18 +433,40 @@ async function disableWebPush(options={}){
 }
 window.disableWebPush=disableWebPush;
 
-function performPushNavigation(target){
-  if(!target)return;
+// Native Notifications V1: one allow-listed target per notification (Web Push
+// and native alike), never a URL. `ref` (a UUID, native only) narrows the
+// surface; every surface re-reads its data through the normal RLS/RPC paths.
+const US_PUSH_TARGETS=Object.freeze(['home','today','think','left_for_you','quiz','bond','calendar']);
+async function performPushNavigation(target,intent={}){
+  if(!US_PUSH_TARGETS.includes(target))return;
   if(!window.usProfile){usPendingPushTarget=target;return;}
+  const ref=typeof intent?.ref==='string'?intent.ref:'';
   if(target==='today'){openToday();return;}
+  if(target==='think'){
+    // Ti penso and its "Ricambia" action: the one-tap reaction sheet, nothing is sent from here.
+    if(document.querySelector('.page.active')?.id!=='home')go('home',{motionCommit:true});
+    try{await hydrateThink();}catch(error){console.warn('[US Push] think',error);}
+    if(usIncomingThink&&(!ref||usIncomingThink.id===ref))openThinkArrival();
+    return;
+  }
   if(target==='left_for_you'){
     if(document.querySelector('.page.active')?.id!=='home')go('home',{motionCommit:true});
     setTimeout(()=>window.openLeftForYou?.(),120);
     return;
   }
-  if(target==='quiz'){openQuizHub();return;}
+  if(target==='quiz'){
+    openQuizHub();
+    if(ref)window.USGameV2?.openSession?.(ref);
+    return;
+  }
+  if(target==='calendar'){
+    if(ref&&window.UsCalendarLinks?.openEntry)window.UsCalendarLinks.openEntry(ref);
+    else window.openCalendarSurface?.();
+    return;
+  }
   if(pages.includes(target))go(target);
 }
+window.UsNotifications?.onNavigate?.(intent=>performPushNavigation(intent.target,intent));
 function captureInitialPushTarget(){
   try{
     const url=new URL(location.href),target=url.searchParams.get('open');
@@ -451,6 +499,8 @@ async function clearPrivateDeviceState(profileId=window.usProfile?.id||''){
 async function revokeCurrentDevice(){
   const profileId=window.usProfile?.id||'';
   try{await disableWebPush({silent:true,refreshUi:false,profileId});}catch(error){console.warn('[US Logout] push revoke',error);}
+  // Native app: only this installation's push registration, with a retry if offline.
+  try{await window.UsNotifications?.revokeDevice?.();}catch(error){console.warn('[US Logout] native push revoke',error);}
   try{await clearPrivateDeviceState(profileId);}catch(error){console.warn('[US Logout] private cleanup',error);}
   try{await window.UsWidgets?.clear?.();}catch(error){console.warn('[US Logout] widget cleanup',error);}
 }
@@ -585,6 +635,7 @@ async function initCloud(){
     if(!session){
       // No session on this phone: nothing left to protect, the login is the way in.
       try{await window.UsAppLock?.signedOut?.();}catch(_e){}
+      window.UsNotifications?.signedOut?.();
       const returningDevice=Boolean(cachedDeviceProfile);
       resetNoiIdeasForIdentityChange();
       window.usProfile = null;
@@ -633,6 +684,7 @@ async function initCloud(){
 
     if(!profile){
       resetNoiIdeasForIdentityChange();
+      window.UsNotifications?.signedOut?.();
       window.usProfile = null;
       window.UsWidgets?.clear?.().catch(()=>{});
       document.documentElement.classList.remove('us-returning-device','us-auth-pending');
@@ -649,6 +701,9 @@ async function initCloud(){
     resetNoiIdeasForIdentityChange();
     window.usProfile = profile;
     window.UsWidgets?.authReady?.(profile).catch(error=>console.warn('[US Widget] auth ready',error));
+    // Native push: pending notification taps run now (after the lock gate above),
+    // then this installation's registration is refreshed if it was activated here.
+    window.UsNotifications?.authReady?.(profile)?.catch?.(error=>console.warn('[US Notifications] auth ready',error));
     selectedRole = profile.role;
     try{localStorage.setItem('us:fix4:last-profile',JSON.stringify(profile));}catch(_e){}
     document.getElementById('authOverlay').classList.add('hidden');

@@ -8,8 +8,14 @@ project(':capacitor-app').projectDir = new File('../node_modules/@capacitor/app/
 include ':capacitor-haptics'
 project(':capacitor-haptics').projectDir = new File('../node_modules/@capacitor/haptics/android')
 
+include ':capacitor-push-notifications'
+project(':capacitor-push-notifications').projectDir = new File('../node_modules/@capacitor/push-notifications/android')
+
 include ':us-app-lock'
 project(':us-app-lock').projectDir = new File('../native-plugins/us-app-lock/android')
+
+include ':us-push-support'
+project(':us-push-support').projectDir = new File('../native-plugins/us-push-support/android')
 
 include ':us-widget-bridge'
 project(':us-widget-bridge').projectDir = new File('../native-plugins/us-widget-bridge/android')

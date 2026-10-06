@@ -14,6 +14,9 @@
       "insetsHandling": "css",
       "style": "DARK",
       "hidden": false
+    },
+    "PushNotifications": {
+      "presentationOptions": []
     }
   }
 }

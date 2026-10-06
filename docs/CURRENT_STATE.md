@@ -35,7 +35,7 @@ Important live capabilities:
 - Gioca Game V2 with Per voi, Swipe, six game families, sealed rounds/reveal and weekly custom question;
 - calendar month/week, start/end time and quick presets;
 - Stories and archive;
-- Web Push;
+- Web Push (Native Notifications V1 — FCM/APNs through the same dispatcher — is a review candidate, not live: needs Firebase/APNs configuration and the rollout in `docs/native/NATIVE_NOTIFICATIONS_V1_ROLLOUT.md`);
 - PWA + existing Capacitor/native support.
 
 ## Current product focus: Gioca

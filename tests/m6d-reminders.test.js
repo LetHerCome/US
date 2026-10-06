@@ -63,7 +63,10 @@ test('M6D (4): the worker computes due-time from real entries (timed offset; all
 test('M6D (5): triple no-duplicate guard — unique constraint, event-log dedupe, sent_at gate', () => {
   assert.match(migration(), /calendar_reminders_entry_recipient_offset_unique\s+unique \(entry_id, recipient_id, offset_minutes\)/);
   assert.match(worker(), /calendar-reminder:\$\{reminder\.id\}/);
-  assert.match(worker(), /23505/);
+  // Native Notifications V1: the 23505 claim lives in the shared dispatcher the worker delegates to.
+  assert.match(worker(), /dedupeKey: `calendar-reminder:\$\{reminder\.id\}`/);
+  assert.match(worker(), /if \(result\.deduplicated\)/);
+  assert.match(read('supabase/functions/_shared/notification-core.mjs'), /claimError\?\.code === '23505'/);
   assert.match(worker(), /\.is\("sent_at", null\)/);
   assert.match(migration(), /create index calendar_reminders_pending_idx[\s\S]*where sent_at is null/);
 });

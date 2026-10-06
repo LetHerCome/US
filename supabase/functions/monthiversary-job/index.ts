@@ -2,6 +2,8 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 import webpush from "npm:web-push@3.6.7";
 import { vapidSubject } from "../_shared/web-push-vapid.mjs";
+import { buildNotification, deliverNotification } from "../_shared/notification-core.mjs";
+import { nativeTransport } from "../_shared/native-push-env.ts";
 const VAPID_PUBLIC_KEY="BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss";
 function secretKey(){const modern=Deno.env.get("SUPABASE_SECRET_KEYS");if(modern){try{const p=JSON.parse(modern);if(p?.default)return p.default;const first=Object.values(p||{})[0];if(typeof first==="string")return first;}catch(_){}}return Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";}
 function romeParts(){const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Rome",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",hourCycle:"h23"}).formatToParts(new Date());const get=(t:string)=>Number(parts.find(p=>p.type===t)?.value||0);return{year:get("year"),month:get("month"),day:get("day"),hour:get("hour")};}
@@ -25,10 +27,8 @@ Deno.serve(async(req:Request)=>{
       if(awardError){console.error("milestone award",awardError);continue;}if(!granted)continue;awarded++;
       const {data:profiles}=await admin.from("profiles").select("id").eq("couple_id",couple.id);let ids=(profiles||[]).map((p:{id:string})=>p.id);if(!ids.length)continue;
       const {data:prefs}=await admin.from("notification_preferences").select("user_id,relationship").in("user_id",ids);const prefMap=new Map((prefs||[]).map((p:any)=>[p.user_id,p.relationship]));ids=ids.filter(id=>prefMap.has(id)?Boolean(prefMap.get(id)):true);if(!ids.length)continue;
-      const {data:subs}=await admin.from("push_subscriptions").select("id,user_id,endpoint,p256dh,auth_key").in("user_id",ids);
       const title=kind==="anniversary"?"US. · Anniversario ♡":"US. · Mesiversario ♡";const body=kind==="anniversary"?`${months/12} ${months/12===1?"anno":"anni"} insieme · +${xp} XP Bond`:`Oggi sono ${months} mesi insieme · +${xp} XP Bond`;
-      const payload=JSON.stringify({title,body,icon:"/icon-192.png",badge:"/icon-192.png",tag:`relationship-${today}`,target:"home",url:"/?open=home&from=push"});
-      for(const sub of subs||[]){try{await webpush.sendNotification({endpoint:sub.endpoint,keys:{p256dh:sub.p256dh,auth:sub.auth_key}},payload,{TTL:60*60*24,urgency:"normal"});delivered++;}catch(error){const status=Number((error as {statusCode?:number})?.statusCode||0);if(status===404||status===410)await admin.from("push_subscriptions").delete().eq("id",sub.id);}}
+      const result=await deliverNotification(admin,{notification:buildNotification("relationship",{title,body,tag:`relationship-${today}`}),recipientIds:ids,coupleId:couple.id,eventType:kind,web:{send:(s:unknown,p:string,o:unknown)=>webpush.sendNotification(s as any,p,o as any)},native:nativeTransport()});delivered+=result.delivered||0;
     }
     return Response.json({ok:true,awarded,delivered,date:today});
   }catch(error){console.error(error);return Response.json({error:"job failed"},{status:500});}

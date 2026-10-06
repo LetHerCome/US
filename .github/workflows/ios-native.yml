@@ -19,6 +19,9 @@ on:
       - 'tests/ios-native-baseline.test.js'
       - 'native-plugins/us-app-lock/**'
       - 'tests/native-security-v1.test.js'
+      - 'native-plugins/us-push-support/**'
+      - 'notifications.js'
+      - 'tests/native-notifications-v1-native.test.js'
       - '.github/workflows/ios-native.yml'
   pull_request:
     paths:
@@ -33,6 +36,9 @@ on:
       - 'tests/ios-native-baseline.test.js'
       - 'native-plugins/us-app-lock/**'
       - 'tests/native-security-v1.test.js'
+      - 'native-plugins/us-push-support/**'
+      - 'notifications.js'
+      - 'tests/native-notifications-v1-native.test.js'
       - '.github/workflows/ios-native.yml'
 
 permissions:
@@ -66,7 +72,7 @@ jobs:
         run: npm ci
 
       - name: Native contract tests
-        run: node --test tests/ios-native-baseline.test.js tests/native-web-staging.test.js tests/native-foundation.test.js tests/native-security-v1.test.js
+        run: node --test tests/ios-native-baseline.test.js tests/native-web-staging.test.js tests/native-foundation.test.js tests/native-security-v1.test.js tests/native-notifications-v1-native.test.js
 
       - name: App lock policy checks (host swiftc, no simulator)
         run: |
@@ -75,6 +81,13 @@ jobs:
             native-plugins/us-app-lock/ios/Tests/PolicyCheck/main.swift \
             -o build/us-app-lock-policy-check
           build/us-app-lock-policy-check
+
+      - name: Push environment checks (host swiftc, no simulator)
+        run: |
+          swiftc native-plugins/us-push-support/ios/Sources/UsPushSupportPlugin/UsPushEnvironment.swift \
+            native-plugins/us-push-support/ios/Tests/EnvironmentCheck/main.swift \
+            -o build/us-push-environment-check
+          build/us-push-environment-check
 
       - name: npm run build:capacitor-web
         run: npm run build:capacitor-web
@@ -128,6 +141,9 @@ jobs:
           test -f "$APP/public/app-lock.js"
           /usr/libexec/PlistBuddy -c "Print :NSFaceIDUsageDescription" "$APP/Info.plist"
           grep -q UsAppLockPlugin "$APP/capacitor.config.json"
+          grep -q UsPushSupportPlugin "$APP/capacitor.config.json"
+          grep -q PushNotificationsPlugin "$APP/capacitor.config.json"
+          test -f "$APP/public/notifications.js"
 
       - name: Upload build logs
         if: always()

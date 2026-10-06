@@ -624,7 +624,10 @@ test('N1 iOS: LocalAuthentication + Keychain solo su questo dispositivo, Face ID
   const pkg = read(`${PLUGIN}/Package.swift`);
   assert.match(pkg, /name: "UsAppLock"/);
   assert.match(pkg, /path: "ios\/Sources\/UsAppLockPlugin"/);
-  assert.equal(fs.readdirSync(path.join(ROOT, 'ios/App/App')).filter((name) => name.endsWith('.entitlements')).length, 0, 'il Keychain dell’app non richiede entitlement');
+  // Native Notifications V1 adds App.entitlements for Push only: still no Keychain sharing group.
+  const entitlementFiles = fs.readdirSync(path.join(ROOT, 'ios/App/App')).filter((name) => name.endsWith('.entitlements'));
+  assert.deepEqual(entitlementFiles, ['App.entitlements']);
+  assert.doesNotMatch(read('ios/App/App/App.entitlements'), /keychain-access-groups|application-groups/, 'il Keychain dell’app non richiede entitlement');
   const workflow = read('.github/workflows/ios-native.yml');
   assert.match(workflow, /swiftc native-plugins\/us-app-lock\/ios\/Sources\/UsAppLockPlugin\/UsAppLockPolicy\.swift/);
 });

@@ -1,4 +1,4 @@
-const BUILD_ID = "us-native-security-v1-20261006-1";
+const BUILD_ID = "us-native-notifications-v1-20261006-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -12,6 +12,7 @@ const APP_SHELL = [
   versioned("/platform.js"),
   versioned("/app-lock.js"),
   versioned("/app-lock.css"),
+  versioned("/notifications.js"),
   versioned("/widgets.js"),
   versioned("/widget-hub.js"),
   versioned("/widget-hub.css"),
@@ -165,6 +166,12 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+// Native Notifications V1: a notification can only name an allow-listed US
+// surface. Its URL is always rebuilt here, same-origin; a payload URL is never opened.
+const US_PUSH_TARGETS = ["home", "today", "think", "left_for_you", "quiz", "bond", "calendar"];
+const usPushTarget = (value) => (US_PUSH_TARGETS.includes(value) ? value : "home");
+const usPushUrl = (target) => `/?open=${encodeURIComponent(usPushTarget(target))}&from=push`;
+
 self.addEventListener("push", (event) => {
   let data = {};
   try { data = event.data ? event.data.json() : {}; } catch (_) {
@@ -178,8 +185,8 @@ self.addEventListener("push", (event) => {
     tag: data.tag || "us-notification",
     renotify: false,
     data: {
-      target: data.target || "home",
-      url: data.url || "/?open=home&from=push"
+      target: usPushTarget(data.target),
+      url: usPushUrl(data.target)
     }
   };
   event.waitUntil(self.registration.showNotification(title, options));
@@ -188,8 +195,8 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const data = event.notification.data || {};
-  const target = data.target || "home";
-  const targetUrl = new URL(data.url || `/?open=${encodeURIComponent(target)}&from=push`, self.location.origin).href;
+  const target = usPushTarget(data.target);
+  const targetUrl = new URL(usPushUrl(target), self.location.origin).href;
   event.waitUntil((async () => {
     const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
     for (const client of windows) {

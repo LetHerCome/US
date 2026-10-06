@@ -17,6 +17,10 @@
 //   * notification_preferences.today=false la disattiva; nessuna riga = attiva;
 //   * chi ha già risposto alla domanda di oggi non riceve "nuova domanda";
 //   * 404/410 → subscription rimossa.
+//   * Native Notifications V1: consegna dal dispatcher condiviso
+//     (notification-core.mjs): Web Push + app native sotto la stessa chiave.
+
+import { buildNotification, deliverNotification, webPushPayload } from './notification-core.mjs';
 
 export const DAILY_QUESTION_EVENT_TYPE = 'daily_question';
 export const DAILY_QUESTION_PUSH_TTL_SECONDS = 60 * 60 * 12;
@@ -34,16 +38,8 @@ export function dailyQuestionDedupeKey(questionId, userId) {
 }
 
 export function dailyQuestionPushPayload({ questionId }) {
-  return JSON.stringify({
-    title: 'US. · Domanda del giorno',
-    // Mai il testo della domanda: solo l'invito.
-    body: "C'è una nuova domanda per voi.",
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
-    tag: `daily-question-${questionId}`,
-    target: 'today',
-    url: '/?open=today&from=push',
-  });
+  // Mai il testo della domanda: solo l'invito.
+  return webPushPayload(buildNotification('daily_question', { questionId }));
 }
 
 // Giorno e ora correnti in Europe/Rome (stessa autorità di
@@ -56,63 +52,22 @@ export function romeClock(now = new Date()) {
   return { day: `${parts.year}-${parts.month}-${parts.day}`, hour: Number(parts.hour) };
 }
 
-async function releaseClaim(admin, dedupeKey) {
-  await admin.from('push_event_log').delete().eq('dedupe_key', dedupeKey);
-}
-
-async function deliverToUser(admin, { question, user, ensureVapid, sendNotification }) {
-  if (typeof ensureVapid === 'function') await ensureVapid();
-
-  const dedupeKey = dailyQuestionDedupeKey(question.id, user.id);
-  const { error: claimError } = await admin.from('push_event_log').insert({
-    dedupe_key: dedupeKey,
-    couple_id: user.couple_id,
-    sender_id: null,
-    event_type: DAILY_QUESTION_EVENT_TYPE,
+async function deliverToUser(admin, { question, user, ensureVapid, sendNotification, native }) {
+  const result = await deliverNotification(admin, {
+    notification: buildNotification('daily_question', { questionId: question.id }),
+    recipientIds: [user.id],
+    coupleId: user.couple_id,
+    senderId: null,
+    dedupeKey: dailyQuestionDedupeKey(question.id, user.id),
+    eventType: DAILY_QUESTION_EVENT_TYPE,
+    web: typeof sendNotification === 'function' ? { ensure: ensureVapid, send: sendNotification } : null,
+    native,
   });
-  if (claimError?.code === '23505') return { outcome: 'deduplicated', delivered: 0, failed: 0 };
-  if (claimError) throw claimError;
-
-  let subscriptions;
-  try {
-    const { data, error } = await admin.from('push_subscriptions')
-      .select('id,endpoint,p256dh,auth_key')
-      .eq('user_id', user.id);
-    if (error) throw error;
-    subscriptions = data || [];
-  } catch (error) {
-    await releaseClaim(admin, dedupeKey);
-    throw error;
-  }
-  if (!subscriptions.length) {
-    await releaseClaim(admin, dedupeKey);
-    return { outcome: 'not-subscribed', delivered: 0, failed: 0 };
-  }
-
-  const payload = dailyQuestionPushPayload({ questionId: question.id });
-  let delivered = 0;
-  let failed = 0;
-  for (const subscription of subscriptions) {
-    try {
-      await sendNotification(
-        { endpoint: subscription.endpoint, keys: { p256dh: subscription.p256dh, auth: subscription.auth_key } },
-        payload,
-        { TTL: DAILY_QUESTION_PUSH_TTL_SECONDS, urgency: DAILY_QUESTION_PUSH_URGENCY },
-      );
-      delivered += 1;
-    } catch (error) {
-      failed += 1;
-      const status = Number(error?.statusCode || 0);
-      if (status === 404 || status === 410) {
-        await admin.from('push_subscriptions').delete().eq('id', subscription.id);
-      }
-    }
-  }
-  if (!delivered) {
-    await releaseClaim(admin, dedupeKey);
-    return { outcome: 'failed', delivered, failed };
-  }
-  return { outcome: 'delivered', delivered, failed };
+  if (result.deduplicated) return { outcome: 'deduplicated', delivered: 0, failed: 0 };
+  if (result.reason === 'recipient-not-subscribed') return { outcome: 'not-subscribed', delivered: 0, failed: 0 };
+  if (result.reason) return { outcome: result.reason, delivered: 0, failed: 0 };
+  if (!result.delivered) return { outcome: 'failed', delivered: 0, failed: result.failed };
+  return { outcome: 'delivered', delivered: result.delivered, failed: result.failed };
 }
 
 /**
@@ -124,9 +79,10 @@ async function deliverToUser(admin, { question, user, ensureVapid, sendNotificat
  * @param options.now               Date corrente (iniettabile nei test)
  * @param options.ensureVapid       async () => void, validato PRIMA di consumare una chiave
  * @param options.sendNotification  async (subscription, payload, options) => void
+ * @param options.native            trasporto nativo (native-push-transport.mjs) o null
  */
 export async function dispatchDailyQuestionPush(admin, options) {
-  const { now = new Date(), ensureVapid, sendNotification } = options || {};
+  const { now = new Date(), ensureVapid, sendNotification, native = null } = options || {};
   const clock = romeClock(now);
   if (clock.hour < DAILY_QUESTION_SEND_START_HOUR || clock.hour >= DAILY_QUESTION_SEND_END_HOUR) {
     return { day: clock.day, reason: 'outside-window', delivered: 0, recipients: [] };
@@ -177,7 +133,7 @@ export async function dispatchDailyQuestionPush(admin, options) {
     // senza consegna, quindi il run successivo riprova.
     let result;
     try {
-      result = await deliverToUser(admin, { question, user, ensureVapid, sendNotification });
+      result = await deliverToUser(admin, { question, user, ensureVapid, sendNotification, native });
     } catch (error) {
       result = { outcome: 'error', delivered: 0, failed: 0, error: error instanceof Error ? error.message : 'unknown' };
     }

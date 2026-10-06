@@ -3,6 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.112.4";
 import webpush from "npm:web-push@3.6.7";
 import { vapidSubject } from "../_shared/web-push-vapid.mjs";
 import { supabaseSecretKey } from "../_shared/supabase-secret.ts";
+import { nativeTransport } from "../_shared/native-push-env.ts";
 import { dispatchLeftForYouPush, leftForYouDedupeKey } from "../_shared/left-for-you-push-core.mjs";
 
 // M9A — Rete di sicurezza per le notifiche di "Lasciato per te".
@@ -38,6 +39,8 @@ Deno.serve(async (request) => {
     const secret = supabaseSecretKey();
     if (!url || !secret) return json({ error: "Server configuration missing" }, 500);
     const admin = createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
+    // Native Notifications V1: FCM / APNs from Edge secrets; unconfigured = skipped (fail closed).
+    const native = nativeTransport();
 
     const cronKey = (request.headers.get("x-us-cron-key") || "").trim();
     if (!cronKey) return json({ error: "Unauthorized" }, 401);
@@ -81,6 +84,7 @@ Deno.serve(async (request) => {
         skipIfSeen: true,
         ensureVapid,
         sendNotification: (subscription: unknown, payload: string, options: unknown) => webpush.sendNotification(subscription as any, payload, options as any),
+        native,
       });
       if (result.delivered) delivered += 1;
       const outcome = result.delivered ? "delivered" : (result.deduplicated ? "deduplicated" : (result.reason || "failed"));

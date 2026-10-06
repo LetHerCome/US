@@ -18,6 +18,10 @@
 //     failed read, means enabled (like every other preference).
 //   * Payloads carry no question, answer, prediction result or context.
 //   * 404/410 remove the subscription.
+//   * Native Notifications V1: delivery goes through the shared dispatcher
+//     (notification-core.mjs): Web Push and the native apps under one key.
+
+import { buildNotification, deliverNotification, webPushPayload } from './notification-core.mjs';
 
 export const GAME_PUSH_KINDS = ['game_waiting', 'game_reveal', 'game_weekly_created', 'game_weekly_turn'];
 export const GAME_PUSH_TTL_SECONDS = 60 * 60 * 12;
@@ -36,23 +40,14 @@ const DEDUPE = {
   game_weekly_turn: /^game-weekly-turn:[0-9a-f-]{36}:\d{4}-\d{2}-\d{2}$/,
 };
 
+export function gameNotification(event, { senderName } = {}) {
+  // waiting / reveal keys carry the round id: the app can open that exact round.
+  const sessionId = /^game-(waiting|reveal):([0-9a-f-]{36}):/.exec(String(event.dedupe_key || ''))?.[2] || null;
+  return buildNotification(event.kind, { senderName, sessionId, tag: event.dedupe_key });
+}
+
 export function gamePushPayload(event, { senderName } = {}) {
-  const name = senderName || 'La tua persona';
-  const body = {
-    game_waiting: `${name} ha risposto. Ora tocca a te.`,
-    game_reveal: 'Le vostre risposte sono pronte ♡',
-    game_weekly_created: `${name} ha lasciato la domanda della settimana ♡`,
-    game_weekly_turn: 'Questa settimana la domanda per voi la scegli tu.',
-  }[event.kind];
-  return JSON.stringify({
-    title: 'US. · Gioca',
-    body,
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
-    tag: event.dedupe_key,
-    target: 'quiz',
-    url: '/?open=quiz&from=push',
-  });
+  return webPushPayload(gameNotification(event, { senderName }));
 }
 
 export function romeHour(now = new Date()) {
@@ -66,12 +61,8 @@ function validEvent(event) {
     && DEDUPE[event.kind].test(String(event.dedupe_key || '')));
 }
 
-async function releaseClaim(admin, dedupeKey) {
-  await admin.from('push_event_log').delete().eq('dedupe_key', dedupeKey);
-}
-
 /** Delivers one server-derived event. */
-export async function deliverGamePush(admin, event, { ensureVapid, sendNotification } = {}) {
+export async function deliverGamePush(admin, event, { ensureVapid, sendNotification, native = null } = {}) {
   if (!validEvent(event)) return { outcome: 'invalid-event', delivered: 0, failed: 0 };
   const { data: members, error: membersError } = await admin.from('profiles')
     .select('id,couple_id,role,display_name')
@@ -87,54 +78,21 @@ export async function deliverGamePush(admin, event, { ensureVapid, sendNotificat
     .maybeSingle();
   if (!preferenceError && preference?.games === false) return { outcome: 'disabled-by-preference', delivered: 0, failed: 0 };
 
-  if (typeof ensureVapid === 'function') await ensureVapid();
-  const { error: claimError } = await admin.from('push_event_log').insert({
-    dedupe_key: event.dedupe_key,
-    couple_id: event.couple_id,
-    sender_id: sender?.id || null,
-    event_type: event.kind,
+  const result = await deliverNotification(admin, {
+    notification: gameNotification(event, { senderName: sender ? (ROLE_LABEL[sender.role] || sender.display_name) : null }),
+    recipientIds: [recipient.id],
+    coupleId: event.couple_id,
+    senderId: sender?.id || null,
+    dedupeKey: event.dedupe_key,
+    eventType: event.kind,
+    web: typeof sendNotification === 'function' ? { ensure: ensureVapid, send: sendNotification } : null,
+    native,
   });
-  if (claimError?.code === '23505') return { outcome: 'deduplicated', delivered: 0, failed: 0 };
-  if (claimError) throw claimError;
-
-  let subscriptions;
-  try {
-    const { data, error } = await admin.from('push_subscriptions')
-      .select('id,endpoint,p256dh,auth_key')
-      .eq('user_id', recipient.id);
-    if (error) throw error;
-    subscriptions = data || [];
-  } catch (error) {
-    await releaseClaim(admin, event.dedupe_key);
-    throw error;
-  }
-  if (!subscriptions.length) {
-    await releaseClaim(admin, event.dedupe_key);
-    return { outcome: 'not-subscribed', delivered: 0, failed: 0 };
-  }
-
-  const payload = gamePushPayload(event, { senderName: sender ? (ROLE_LABEL[sender.role] || sender.display_name) : null });
-  let delivered = 0;
-  let failed = 0;
-  for (const subscription of subscriptions) {
-    try {
-      await sendNotification(
-        { endpoint: subscription.endpoint, keys: { p256dh: subscription.p256dh, auth: subscription.auth_key } },
-        payload,
-        { TTL: GAME_PUSH_TTL_SECONDS, urgency: GAME_PUSH_URGENCY },
-      );
-      delivered += 1;
-    } catch (error) {
-      failed += 1;
-      const status = Number(error?.statusCode || 0);
-      if (status === 404 || status === 410) await admin.from('push_subscriptions').delete().eq('id', subscription.id);
-    }
-  }
-  if (!delivered) {
-    await releaseClaim(admin, event.dedupe_key);
-    return { outcome: 'failed', delivered, failed };
-  }
-  return { outcome: 'delivered', delivered, failed };
+  if (result.deduplicated) return { outcome: 'deduplicated', delivered: 0, failed: 0 };
+  if (result.reason === 'recipient-not-subscribed') return { outcome: 'not-subscribed', delivered: 0, failed: 0 };
+  if (result.reason) return { outcome: result.reason, delivered: 0, failed: 0 };
+  if (!result.delivered) return { outcome: 'failed', delivered: 0, failed: result.failed };
+  return { outcome: 'delivered', delivered: result.delivered, failed: result.failed };
 }
 
 async function derive(admin, fn, args) {

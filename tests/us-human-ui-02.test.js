@@ -343,7 +343,7 @@ test('release: one BUILD_ID owns HTML, version marker and atomic shell cache', (
 
 test('no new dependencies', () => {
   const pkg = JSON.parse(read('package.json'));
-  assert.deepEqual(Object.keys(pkg.dependencies).sort(), ['@capacitor/android', '@capacitor/app', '@capacitor/core', '@capacitor/haptics', '@capacitor/ios', '@supabase/supabase-js', '@us/app-lock', '@us/widget-bridge']); // M15: iOS platform; Native Security V1: local app-lock plugin
+  assert.deepEqual(Object.keys(pkg.dependencies).sort(), ['@capacitor/android', '@capacitor/app', '@capacitor/core', '@capacitor/haptics', '@capacitor/ios', '@capacitor/push-notifications', '@supabase/supabase-js', '@us/app-lock', '@us/push-support', '@us/widget-bridge']); // M15: iOS platform; Native Security V1: local app-lock plugin; Native Notifications V1: official push plugin + local push-support
   assert.deepEqual(Object.keys(pkg.devDependencies).sort(), ['@capacitor/cli', '@electric-sql/pglite', 'esbuild']);
 });
 

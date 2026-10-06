@@ -662,7 +662,8 @@ test('push e notification click mantengono payload e navigazione esistenti', asy
       badge: '/icon-192.png',
       tag: 'us-notification',
       renotify: false,
-      data: { target: 'today', url: '/?open=home&from=push' }
+      // Native Notifications V1: the URL is rebuilt from the allow-listed target.
+      data: { target: 'today', url: '/?open=today&from=push' }
     }
   }]);
 
@@ -675,7 +676,13 @@ test('push e notification click mantengono payload e navigazione esistenti', asy
   });
 
   assert.equal(closed, 1);
-  assert.deepEqual(harness.openedWindows, [`${ORIGIN}/?open=home&from=push`]);
+  assert.deepEqual(harness.openedWindows, [`${ORIGIN}/?open=today&from=push`]);
+
+  // A payload URL or an unknown target never leaves the allow-list.
+  await harness.dispatchExtendable('notificationclick', {
+    notification: { data: { target: 'javascript:alert(1)', url: 'https://evil.example/' }, close() {} }
+  });
+  assert.equal(harness.openedWindows.at(-1), `${ORIGIN}/?open=home&from=push`);
 });
 
 test('fallimento del precache non chiama skipWaiting e lascia intatta la shell precedente', async () => {

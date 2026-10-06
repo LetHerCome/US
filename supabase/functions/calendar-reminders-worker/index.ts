@@ -3,6 +3,8 @@ import { createClient } from "npm:@supabase/supabase-js@2.112.4";
 import webpush from "npm:web-push@3.6.7";
 import { vapidSubject } from "../_shared/web-push-vapid.mjs";
 import { supabaseSecretKey } from "../_shared/supabase-secret.ts";
+import { buildNotification, deliverNotification } from "../_shared/notification-core.mjs";
+import { nativeTransport } from "../_shared/native-push-env.ts";
 
 // M6D — Calendar reminders worker.
 // Chiamato SOLO dal cron pg_cron (chiave dedicata via Edge secret,
@@ -46,25 +48,41 @@ type EntryRow = {
   start_date: string | null;
 };
 
+// Native Notifications V1: a reminder that could not reach any device is
+// retried every run for this long after it was due, then given up (never a
+// "tomorrow" reminder arriving the day after).
+const RETRY_WINDOW_MS = 60 * 60000;
+
 function dueFor(entry: EntryRow, offsetMinutes: number, nowMs: number): boolean {
   if (entry.is_all_day) {
-    // Momento all-day: 18:00 Europe/Rome del giorno prima di start_date,
-    // indipendentemente dall'offset (l'offset resta nello schema per
-    // coerenza, ma l'unico istante sensato per un all-day è la sera prima).
-    const [y, m, d] = String(entry.start_date || "").split("-").map(Number);
-    if (!y || !m || !d) return false;
-    // 18:00 del giorno (d-1) in Europe/Rome: costruito via UTC offset fisso
-    // sarebbe sbagliato con DST; qui usiamo la conversione Intl per trovare
-    // l'offset del fuso in quel giorno, poi l'istante UTC equivalente.
-    const dayPrevUtc = Date.UTC(y, m - 1, d - 1, 12); // mezzogiorno UTC del giorno prima
-    const tzOffsetMin = tzOffsetMinutes(new Date(dayPrevUtc));
-    // 18:00 locali = (18*60 - tzOffsetMin) minuti da mezzanotte UTC del giorno
-    const targetUtc = Date.UTC(y, m - 1, d - 1, 0, 0) + (ALLDAY_REMINDER_HOUR * 60 - tzOffsetMin) * 60000;
-    return nowMs >= targetUtc;
+    const at = allDayDueAt(entry.start_date);
+    return Number.isFinite(at) && nowMs >= at;
   }
   const startsAt = entry.starts_at ? Date.parse(entry.starts_at) : NaN;
   if (Number.isNaN(startsAt)) return false;
   return nowMs >= startsAt - offsetMinutes * 60000;
+}
+
+// Istante della notifica (NaN se non calcolabile): usato per la finestra di retry.
+function dueAt(entry: EntryRow, offsetMinutes: number): number {
+  if (entry.is_all_day) return allDayDueAt(entry.start_date);
+  const startsAt = entry.starts_at ? Date.parse(entry.starts_at) : NaN;
+  return startsAt - offsetMinutes * 60000;
+}
+
+function allDayDueAt(startDate: string | null): number {
+  // Momento all-day: 18:00 Europe/Rome del giorno prima di start_date,
+  // indipendentemente dall'offset (l'offset resta nello schema per
+  // coerenza, ma l'unico istante sensato per un all-day è la sera prima).
+  const [y, m, d] = String(startDate || "").split("-").map(Number);
+  if (!y || !m || !d) return NaN;
+  // 18:00 del giorno (d-1) in Europe/Rome: costruito via UTC offset fisso
+  // sarebbe sbagliato con DST; qui usiamo la conversione Intl per trovare
+  // l'offset del fuso in quel giorno, poi l'istante UTC equivalente.
+  const dayPrevUtc = Date.UTC(y, m - 1, d - 1, 12); // mezzogiorno UTC del giorno prima
+  const tzOffsetMin = tzOffsetMinutes(new Date(dayPrevUtc));
+  // 18:00 locali = (18*60 - tzOffsetMin) minuti da mezzanotte UTC del giorno
+  return Date.UTC(y, m - 1, d - 1, 0, 0) + (ALLDAY_REMINDER_HOUR * 60 - tzOffsetMin) * 60000;
 }
 
 function tzOffsetMinutes(at: Date): number {
@@ -153,30 +171,24 @@ Deno.serve(async (request) => {
     if (!dueRows.length) return json({ ok: true, due: 0, delivered: 0, failed: 0 });
 
     // F2C: identità VAPID configurata PRIMA di consumare qualsiasi chiave
-    // dedupe (come gli altri worker push). Senza, il push service rifiuta
-    // l'invio e il reminder andava perso al giro successivo (23505).
-    // Configurazione mancante → 500, nessuna chiave consumata, si ritenta.
-    const { data: vapidPrivate, error: vapidError } = await admin.rpc("get_internal_vapid_private_key");
-    if (vapidError || !vapidPrivate) throw new Error("push_configuration_unavailable");
-    webpush.setVapidDetails(vapidSubject(), VAPID_PUBLIC_KEY, vapidPrivate as string);
+    // dedupe (come gli altri worker push). Configurazione mancante (e nessun
+    // trasporto nativo configurato) → 500, nessuna chiave consumata, si ritenta.
+    let vapidReady = false;
+    const ensureVapid = async () => {
+      if (vapidReady) return;
+      const { data: vapidPrivate, error: vapidError } = await admin.rpc("get_internal_vapid_private_key");
+      if (vapidError || !vapidPrivate) throw new Error("push_configuration_unavailable");
+      webpush.setVapidDetails(vapidSubject(), VAPID_PUBLIC_KEY, vapidPrivate as string);
+      vapidReady = true;
+    };
+    const native = nativeTransport();
+    const markSent = (id: string) => admin.from("calendar_reminders").update({ sent_at: new Date().toISOString() }).eq("id", id);
 
     // Dedupe a livello evento: push_event_log con chiave stabile
     // `calendar-reminder:<reminder_id>` — anche se il cron riparte, un
-    // reminder già inviato non viene mai duplicato.
+    // reminder già inviato non viene mai duplicato. Native Notifications V1:
+    // la consegna (Web Push + app native) passa dal dispatcher condiviso.
     for (const { reminder, entry } of dueRows) {
-      const dedupeKey = `calendar-reminder:${reminder.id}`;
-      const { error: dedupeError } = await admin.from("push_event_log").insert({
-        dedupe_key: dedupeKey,
-        couple_id: reminder.couple_id,
-        sender_id: reminder.requested_by,
-        event_type: "calendar_reminder"
-      });
-      if (dedupeError?.code === "23505") {
-        await admin.from("calendar_reminders").update({ sent_at: new Date().toISOString() }).eq("id", reminder.id);
-        continue;
-      }
-      if (dedupeError) throw dedupeError;
-
       const requesterName = nameByRequester.get(reminder.requested_by) || "La tua persona";
       // Copia: se il destinatario È il richiedente → "Tra un'ora — Titolo";
       // se è l'altro → "Francesco ti ricorda — Cena alle 20:30 ♡".
@@ -188,41 +200,33 @@ Deno.serve(async (request) => {
         ? `${humanOffset(reminder.offset_minutes)} — ${entry.title}`
         : `${requesterName} ti ricorda — ${entry.title}${when && when !== "oggi" ? ` alle ${when}` : ""} ♡`;
 
-      const payload = JSON.stringify({
-        title: "US. · Calendar",
-        body,
-        icon: "/icon-192.png",
-        badge: "/icon-192.png",
-        tag: `calendar-reminder-${reminder.id}`,
-        target: "home",
-        url: "/?open=home&from=calendar-reminder"
+      const result = await deliverNotification(admin, {
+        notification: buildNotification("calendar_reminder", { reminderId: reminder.id, entryId: entry.id, body }),
+        recipientIds: [reminder.recipient_id],
+        coupleId: reminder.couple_id,
+        senderId: reminder.requested_by,
+        dedupeKey: `calendar-reminder:${reminder.id}`,
+        eventType: "calendar_reminder",
+        web: {
+          ensure: ensureVapid,
+          send: (subscription: unknown, payload: string, options: unknown) => webpush.sendNotification(subscription as any, payload, options as any),
+        },
+        native,
       });
-
-      const { data: subscriptions, error: subsError } = await admin
-        .from("push_subscriptions")
-        .select("id,endpoint,p256dh,auth_key")
-        .eq("user_id", reminder.recipient_id);
-      if (subsError) throw subsError;
-      let sent = 0;
-      for (const subscription of (subscriptions || [])) {
-        try {
-          await webpush.sendNotification({
-            endpoint: subscription.endpoint,
-            keys: { p256dh: subscription.p256dh, auth: subscription.auth_key }
-          }, payload, { TTL: 60 * 60 * 12, urgency: "high" });
-          sent += 1;
-        } catch (error) {
-          const status = Number((error as { statusCode?: number })?.statusCode || 0);
-          if (status === 404 || status === 410) {
-            await admin.from("push_subscriptions").delete().eq("id", subscription.id);
-          }
-        }
+      if (result.deduplicated) {
+        await markSent(reminder.id);
+        continue;
       }
-      if (sent > 0) {
-        await admin.from("calendar_reminders").update({ sent_at: new Date().toISOString() }).eq("id", reminder.id);
+      if (result.delivered > 0) {
+        await markSent(reminder.id);
         delivered += 1;
-      } else {
-        failed += 1;
+        continue;
+      }
+      failed += 1;
+      // Nessun device da raggiungere, o finestra di retry scaduta: chiuso.
+      // Altrimenti (errori transitori, trasporto non configurato) si ritenta.
+      if (result.reason === "recipient-not-subscribed" || nowMs - dueAt(entry, reminder.offset_minutes) > RETRY_WINDOW_MS) {
+        await markSent(reminder.id);
       }
     }
 

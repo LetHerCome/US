@@ -38,7 +38,20 @@ const f2cMonthiversaryEdit = (text) => text
   .replace('import webpush from "npm:web-push@3.6.7";\n', 'import webpush from "npm:web-push@3.6.7";\nimport { vapidSubject } from "../_shared/web-push-vapid.mjs";\n')
   .replace('webpush.setVapidDetails(VAPID_SUBJECT,', 'webpush.setVapidDetails(vapidSubject(),');
 
-test('F2A.1 monthiversary-job: repo source is the deployed v4 bytes plus only the F2C VAPID edit', () => {
+// Native Notifications V1 (N2): the delivery loop goes through the shared
+// dispatcher (Web Push + native), nothing else changes.
+const N2_MONTHIVERSARY = {
+  "L28": "      const {data:subs}=await admin.from(\"push_subscriptions\").select(\"id,user_id,endpoint,p256dh,auth_key\").in(\"user_id\",ids);",
+  "L30": "      const payload=JSON.stringify({title,body,icon:\"/icon-192.png\",badge:\"/icon-192.png\",tag:`relationship-${today}`,target:\"home\",url:\"/?open=home&from=push\"});",
+  "L31": "      for(const sub of subs||[]){try{await webpush.sendNotification({endpoint:sub.endpoint,keys:{p256dh:sub.p256dh,auth:sub.auth_key}},payload,{TTL:60*60*24,urgency:\"normal\"});delivered++;}catch(error){const status=Number((error as {statusCode?:number})?.statusCode||0);if(status===404||status===410)await admin.from(\"push_subscriptions\").delete().eq(\"id\",sub.id);}}",
+  "NEW": "      const result=await deliverNotification(admin,{notification:buildNotification(\"relationship\",{title,body,tag:`relationship-${today}`}),recipientIds:ids,coupleId:couple.id,eventType:kind,web:{send:(s:unknown,p:string,o:unknown)=>webpush.sendNotification(s as any,p,o as any)},native:nativeTransport()});delivered+=result.delivered||0;"
+};
+const n2MonthiversaryEdit = (text) => text
+  .replace('import { vapidSubject } from "../_shared/web-push-vapid.mjs";\n', 'import { vapidSubject } from "../_shared/web-push-vapid.mjs";\nimport { buildNotification, deliverNotification } from "../_shared/notification-core.mjs";\nimport { nativeTransport } from "../_shared/native-push-env.ts";\n')
+  .replace(`${N2_MONTHIVERSARY.L28}\n`, '')
+  .replace(`${N2_MONTHIVERSARY.L30}\n${N2_MONTHIVERSARY.L31}`, N2_MONTHIVERSARY.NEW);
+
+test('F2A.1 monthiversary-job: repo source is the deployed v4 bytes plus only the F2C VAPID edit and the N2 dispatcher edit', () => {
   const deployed = F2A.monthiversary_job;
   assert.equal(deployed.slug, 'monthiversary-job');
   assert.equal(deployed.version, 4);
@@ -47,9 +60,12 @@ test('F2A.1 monthiversary-job: repo source is the deployed v4 bytes plus only th
   assert.deepEqual(names, ['deno.json', 'index.ts']);
   for (const file of deployed.files) {
     const local = fs.readFileSync(path.join(ROOT, 'supabase/functions/monthiversary-job', file.name)).toString('utf8');
-    const expected = file.name === 'index.ts' ? f2cMonthiversaryEdit(file.content) : file.content;
-    if (file.name === 'index.ts') assert.notEqual(expected, file.content, 'the F2C edit applies to the recovered bytes');
-    assert.equal(local, expected, `${file.name} differs from the deployed source beyond the F2C edit`);
+    const expected = file.name === 'index.ts' ? n2MonthiversaryEdit(f2cMonthiversaryEdit(file.content)) : file.content;
+    if (file.name === 'index.ts') {
+      assert.notEqual(f2cMonthiversaryEdit(file.content), file.content, 'the F2C edit applies to the recovered bytes');
+      assert.notEqual(expected, f2cMonthiversaryEdit(file.content), 'the N2 edit applies on top of F2C');
+    }
+    assert.equal(local, expected, `${file.name} differs from the deployed source beyond the F2C and N2 edits`);
   }
   const provenance = read('supabase/functions/monthiversary-job/PROVENANCE.md');
   assert.match(provenance, new RegExp(sha256(deployed.files.find((f) => f.name === 'index.ts').content)), 'the recovered v4 hash stays recorded');

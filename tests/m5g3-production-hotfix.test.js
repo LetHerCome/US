@@ -46,10 +46,13 @@ test('M5G3 Edge Function validates sender-owned left_for_you references and hide
   assert.match(edge, /row\.couple_id.*sender\.couple_id|sender\.couple_id.*row\.couple_id/);
   assert.match(edge, /row\.recipient_id.*partner\.id|partner\.id.*row\.recipient_id/);
   // M9A: payload e dedupe vivono nel core condiviso con il worker di recupero.
+  // N2: the copy lives in the shared notification catalogue.
   const core = read('supabase/functions/_shared/left-for-you-push-core.mjs');
+  const catalogue = read('supabase/functions/_shared/notification-core.mjs');
   assert.match(edge, /dispatchLeftForYouPush/);
   assert.match(core, /left-for-you:/);
-  assert.match(core, /ti ha lasciato qualcosa/);
+  assert.match(catalogue, /left_for_you: \(a\) => \(\{[^\n]*ti ha lasciato qualcosa/);
+  assert.doesNotMatch(catalogue, /left_for_you: \(a\) => \(\{[^\n]*a\.body/);
   assert.doesNotMatch(edge, /notificationBody\s*=\s*.*body\./);
   assert.doesNotMatch(core, /body:\s*`[^`]*row\.body/);
 });

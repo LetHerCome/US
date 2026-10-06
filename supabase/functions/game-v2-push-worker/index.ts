@@ -3,6 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.112.4";
 import webpush from "npm:web-push@3.6.7";
 import { vapidSubject } from "../_shared/web-push-vapid.mjs";
 import { supabaseSecretKey } from "../_shared/supabase-secret.ts";
+import { nativeTransport } from "../_shared/native-push-env.ts";
 import { dispatchGameV2PendingPushes } from "../_shared/game-v2-push-core.mjs";
 
 // M11D — Game V2 system pushes: the weekly turn and recovery of "tocca a te",
@@ -29,6 +30,8 @@ Deno.serve(async (request) => {
     const secret = supabaseSecretKey();
     if (!url || !secret) return json({ error: "Server configuration missing" }, 500);
     const admin = createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
+    // Native Notifications V1: FCM / APNs from Edge secrets; unconfigured = skipped (fail closed).
+    const native = nativeTransport();
 
     const cronKey = (request.headers.get("x-us-cron-key") || "").trim();
     if (!cronKey) return json({ error: "Unauthorized" }, 401);
@@ -48,6 +51,7 @@ Deno.serve(async (request) => {
       now: new Date(),
       ensureVapid,
       sendNotification: (subscription: unknown, payload: string, options: unknown) => webpush.sendNotification(subscription as any, payload, options as any),
+        native,
     });
     // Aggregates only: no ids, no endpoints, no content.
     const outcomes: Record<string, number> = {};
