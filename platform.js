@@ -85,7 +85,12 @@
 
   function normalizeWidgetSnapshot(input = {}) {
     const think = input?.modules?.think || {};
+    const countdown = input?.modules?.countdown || {};
     const allowedStatus = new Set(['idle', 'sending', 'sent', 'failed']);
+    const allowedCountdownModes = new Set(['relationship', 'days', 'clock']);
+    const countdownMode = allowedCountdownModes.has(countdown.mode) ? countdown.mode : '';
+    const countdownTarget = typeof countdown.target === 'string' && countdown.target.length <= 40 ? countdown.target : '';
+    const countdownStyle = typeof countdown.style === 'string' && /^[a-z0-9_-]{1,32}$/i.test(countdown.style) ? countdown.style : '';
     return {
       schemaVersion: 1,
       ownerHash: validOwnerHash(input.ownerHash),
@@ -97,6 +102,13 @@
           lastSentAt: safeTimestamp(think.lastSentAt),
           lastActionStatus: allowedStatus.has(think.lastActionStatus) ? think.lastActionStatus : 'idle',
           lastActionAt: safeTimestamp(think.lastActionAt)
+        },
+        countdown: {
+          active: countdown.active === true && Boolean(countdownMode && countdownTarget),
+          title: typeof countdown.title === 'string' ? countdown.title.slice(0, 80) : '',
+          mode: countdownMode,
+          target: countdownTarget,
+          style: countdownStyle
         }
       }
     };

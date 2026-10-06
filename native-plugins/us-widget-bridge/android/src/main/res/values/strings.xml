@@ -3,4 +3,8 @@
     <string name="us_widget_send">Invia Ti penso</string>
     <string name="us_widget_cta">Ricambia</string>
     <string name="us_widget_description">Ti penso · US</string>
+    <string name="us_widget_countdown_name">Countdown</string>
+    <string name="us_widget_countdown_description">Countdown · US</string>
+    <string name="us_widget_countdown_empty">Apri US per scegliere un Countdown</string>
+    <string name="us_widget_countdown_brand">US · COUNTDOWN</string>
 </resources>

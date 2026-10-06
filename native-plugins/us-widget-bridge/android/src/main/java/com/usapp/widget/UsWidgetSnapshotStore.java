@@ -74,10 +74,11 @@ final class UsWidgetSnapshotStore {
         if (input == null || input.optInt("schemaVersion", 0) != SCHEMA_VERSION) return null;
         String ownerHash = input.optString("ownerHash", "");
         if (!validOwner(ownerHash)) return null;
-        JSONObject inputThink = input.optJSONObject("modules") == null
-            ? null
-            : input.optJSONObject("modules").optJSONObject("think");
+        JSONObject modules = input.optJSONObject("modules");
+        JSONObject inputThink = modules == null ? null : modules.optJSONObject("think");
+        JSONObject inputCountdown = modules == null ? null : modules.optJSONObject("countdown");
         if (inputThink == null) inputThink = new JSONObject();
+        if (inputCountdown == null) inputCountdown = new JSONObject();
         String status = inputThink.optString("lastActionStatus", "idle");
         if (!status.equals("idle") && !status.equals("sending") && !status.equals("sent") && !status.equals("failed")) status = "idle";
         try {
@@ -87,11 +88,22 @@ final class UsWidgetSnapshotStore {
                 .put("lastSentAt", limit(inputThink.optString("lastSentAt", ""), 40))
                 .put("lastActionStatus", status)
                 .put("lastActionAt", limit(inputThink.optString("lastActionAt", ""), 40));
+            String mode = inputCountdown.optString("mode", "");
+            if (!mode.equals("relationship") && !mode.equals("days") && !mode.equals("clock")) mode = "";
+            String target = limit(inputCountdown.optString("target", ""), 40);
+            String style = limit(inputCountdown.optString("style", ""), 32);
+            boolean active = inputCountdown.optBoolean("active", false) && !mode.isEmpty() && !target.isEmpty();
+            JSONObject countdown = new JSONObject()
+                .put("active", active)
+                .put("title", limit(inputCountdown.optString("title", ""), 80))
+                .put("mode", mode)
+                .put("target", target)
+                .put("style", style);
             return new JSONObject()
                 .put("schemaVersion", SCHEMA_VERSION)
                 .put("ownerHash", ownerHash)
                 .put("updatedAt", limit(input.optString("updatedAt", ""), 40))
-                .put("modules", new JSONObject().put("think", think));
+                .put("modules", new JSONObject().put("think", think).put("countdown", countdown));
         } catch (Exception ignored) {
             return null;
         }

@@ -76,8 +76,9 @@ public class UsWidgetBridgePlugin extends Plugin {
 
     private void refreshWidgets() {
         AppWidgetManager manager = AppWidgetManager.getInstance(getContext());
-        ComponentName component = new ComponentName(getContext(), UsThinkWidgetProvider.class);
-        int[] ids = manager.getAppWidgetIds(component);
-        UsThinkWidgetProvider.updateAll(getContext(), manager, ids);
+        ComponentName thinkComponent = new ComponentName(getContext(), UsThinkWidgetProvider.class);
+        UsThinkWidgetProvider.updateAll(getContext(), manager, manager.getAppWidgetIds(thinkComponent));
+        ComponentName countdownComponent = new ComponentName(getContext(), UsCountdownWidgetProvider.class);
+        UsCountdownWidgetProvider.updateAll(getContext(), manager, manager.getAppWidgetIds(countdownComponent));
     }
 }

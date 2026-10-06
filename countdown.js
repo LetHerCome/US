@@ -191,6 +191,14 @@ function install(w){
       else if(draft)preview();
     }
   }
+  function widgetState(){
+    const e=selected();
+    if(!e||!e.view||!available(e.style,progression()))return {active:false,title:'',mode:'',target:'',style:''};
+    if(state?.active_id==='together'){
+      return {active:true,title:'Insieme da',mode:'relationship',target:state.started_on||'',style:e.style||'editorial'};
+    }
+    return {active:true,title:e.title||'Il nostro momento',mode:e.mode||'',target:e.target||'',style:e.style||'editorial'};
+  }
   function activeStyle(){return selected()?.style||'';}
   function hasActive(){return Boolean(state?.active_id);}
   async function setStyle(styleId){
@@ -259,7 +267,7 @@ function install(w){
     }
   },1000);}
   startTimer();
-  const api=w.USCountdown;api.open=open;api.close=close;api.refresh=hydrate;api.reset=()=>clear(true);api.setStyle=setStyle;api.activeStyle=activeStyle;api.hasActive=hasActive;
+  const api=w.USCountdown;api.open=open;api.close=close;api.refresh=hydrate;api.reset=()=>clear(true);api.setStyle=setStyle;api.activeStyle=activeStyle;api.hasActive=hasActive;api.widgetState=widgetState;
   // Shared sample used by the sheet tiles, the Sintonia collection and the unlock moment.
   api.previewMarkup=style=>STYLES.some(s=>s.id===style)?markup({value:'12',unit:'giorni',label:''},'',style):'';
   if(typeof sb!=='undefined')sb.auth.onAuthStateChange(event=>{if(event==='SIGNED_OUT')clear(true);});

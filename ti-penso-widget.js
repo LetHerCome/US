@@ -16,6 +16,13 @@
     lastActionStatus: 'idle',
     lastActionAt: ''
   };
+  let countdownState = {
+    active: false,
+    title: '',
+    mode: '',
+    target: '',
+    style: ''
+  };
 
   async function hashOwner(value) {
     const bytes = new TextEncoder().encode(String(value || ''));
@@ -28,7 +35,10 @@
       schemaVersion: 1,
       ownerHash,
       updatedAt: new Date().toISOString(),
-      modules: { think: { ...thinkState } }
+      modules: {
+        think: { ...thinkState },
+        countdown: { ...countdownState }
+      }
     };
   }
 
@@ -57,19 +67,53 @@
     return writeSnapshot();
   }
 
+  async function publishCountdown(next = {}) {
+    const allowedModes = new Set(['relationship', 'days', 'clock']);
+    const mode = allowedModes.has(next.mode) ? next.mode : '';
+    const target = typeof next.target === 'string' && next.target.length <= 40 ? next.target : '';
+    countdownState = {
+      active: next.active === true && Boolean(mode && target),
+      title: String(next.title || '').slice(0, 80),
+      mode,
+      target,
+      style: /^[a-z0-9_-]{1,32}$/i.test(String(next.style || '')) ? String(next.style) : ''
+    };
+    return writeSnapshot();
+  }
+
+  function syncCountdown() {
+    const next = window.USCountdown?.widgetState?.();
+    return next ? publishCountdown(next) : Promise.resolve(false);
+  }
+
   function parseAction(value) {
     const urlValue = typeof value === 'string' ? value : value?.url;
     if (!urlValue) return null;
     try {
       const url = new URL(urlValue);
-      if (url.protocol !== 'us:' || url.hostname !== 'widget' || url.pathname !== '/think/open') return null;
-      return 'open';
+      if (url.protocol !== 'us:' || url.hostname !== 'widget') return null;
+      if (url.pathname === '/think/open') return 'think-open';
+      if (url.pathname === '/countdown/open') return 'countdown-open';
+      return null;
     } catch (_) { return null; }
+  }
+
+  function openCountdownSurface() {
+    if (!window.USCountdown?.open) return false;
+    window.USCountdown.open('active');
+    return true;
   }
 
   async function runAction(action) {
     if (!action) return false;
     if (typeof window.go === 'function') window.go('home');
+    if (action === 'countdown-open') {
+      if (!openCountdownSurface()) {
+        const onReady = () => setTimeout(openCountdownSurface, 120);
+        window.addEventListener?.('us-auth-resolved', onReady, { once: true });
+        setTimeout(openCountdownSurface, 260);
+      }
+    }
     return true;
   }
 
@@ -94,10 +138,15 @@
   async function authReady(profile) {
     if (!nativeEnabled || !profile?.id) return false;
     const nextHash = await hashOwner(profile.id);
-    if (ownerHash && ownerHash !== nextHash) thinkState = { partnerName: '', lastReceivedAt: '', lastSentAt: '', lastActionStatus: 'idle', lastActionAt: '' };
+    if (ownerHash && ownerHash !== nextHash) {
+      thinkState = { partnerName: '', lastReceivedAt: '', lastSentAt: '', lastActionStatus: 'idle', lastActionAt: '' };
+    countdownState = { active: false, title: '', mode: '', target: '', style: '' };
+      countdownState = { active: false, title: '', mode: '', target: '', style: '' };
+    }
     ownerHash = nextHash;
     try { await platform.activateWidgetAccount(ownerHash); }
     catch (error) { console.warn('[US Widget] account activation', error); }
+    try { await syncCountdown(); } catch (_) {}
     const previous = credentialProvisionInFlight;
     const task = Promise.resolve(previous).catch(() => false).then(() => provisionCredential(nextHash));
     credentialProvisionInFlight = task;
@@ -130,9 +179,10 @@
     return runAction(action);
   }
 
-  window.UsThinkWidget = Object.freeze({ authReady, publishThink, publishActionStatus, clear });
+  window.UsThinkWidget = Object.freeze({ authReady, publishThink, publishActionStatus, publishCountdown, syncCountdown, clear });
 
   if (nativeEnabled) {
+    window.addEventListener?.('us:countdown-updated', () => syncCountdown().catch(() => {}));
     platform.listenForNativeAppUrl?.((event) => acceptUrl(event));
     Promise.resolve(platform.getNativeLaunchUrl?.()).then(acceptUrl).catch(() => {});
   }

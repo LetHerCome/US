@@ -96,13 +96,19 @@ test('boundary inoltra solo snapshot e owner hash, mai credenziali', async () =>
     schemaVersion: 1,
     ownerHash: 'a'.repeat(64),
     updatedAt: '2026-08-31T12:00:00.000Z',
-    modules: { think: { partnerName: 'F', lastReceivedAt: '', lastSentAt: '', lastActionStatus: 'idle', lastActionAt: '' } },
+    modules: {
+      think: { partnerName: 'F', lastReceivedAt: '', lastSentAt: '', lastActionStatus: 'idle', lastActionAt: '' },
+      countdown: { active: true, title: 'Padova', mode: 'days', target: '2026-10-20', style: 'orbit' }
+    },
     accessToken: 'secret', refreshToken: 'secret', supabaseUrl: 'secret', supabaseKey: 'secret'
   });
   assert.deepEqual(JSON.parse(JSON.stringify(calls[0])), ['activate', { ownerHash: 'a'.repeat(64) }]);
   const serialized = JSON.stringify(calls[1]);
   assert.doesNotMatch(serialized, /secret|accessToken|refreshToken|supabaseUrl|supabaseKey/);
   assert.equal(calls[1][1].snapshot.schemaVersion, 1);
+  assert.deepEqual(JSON.parse(JSON.stringify(calls[1][1].snapshot.modules.countdown)), {
+    active: true, title: 'Padova', mode: 'days', target: '2026-10-20', style: 'orbit'
+  });
 });
 
 test('listener URL native è singolo e auth ready provisiona una credential device-scoped', async () => {

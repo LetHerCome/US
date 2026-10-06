@@ -3,4 +3,6 @@
     <color name="us_widget_text">#FFF8FD</color>
     <color name="us_widget_accent">#FF8EAD</color>
     <color name="us_widget_heart">#FF5F87</color>
+    <color name="us_widget_muted">#B9ADB9</color>
+    <color name="us_widget_countdown_value">#FFF8FD</color>
 </resources>
