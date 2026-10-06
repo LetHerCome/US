@@ -21,7 +21,8 @@ test('lo scaffold Android mantiene identità US e MainActivity priva di feature 
   assert.match(activity, /public class MainActivity extends BridgeActivity \{\}/);
   assert.doesNotMatch(activity, /registerPlugin|onCreate|WebView|Supabase|Push|Widget/);
   assert.equal(config.server, undefined);
-  assert.equal(fs.existsSync(path.join(ROOT, 'ios')), false);
+  // M15: iOS is a sibling target (ios/); its options must not reach Android.
+  assert.equal(config.android, undefined);
 });
 
 test('il manifest dichiara soltanto i permessi necessari alle capability web esistenti', () => {

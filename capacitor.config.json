@@ -2,6 +2,13 @@
   "appId": "com.usapp.us",
   "appName": "US",
   "webDir": "dist/capacitor",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#08040E",
+    "allowsLinkPreview": false,
+    "preferredContentMode": "mobile",
+    "limitsNavigationsToAppBoundDomains": false
+  },
   "plugins": {
     "SystemBars": {
       "insetsHandling": "css",

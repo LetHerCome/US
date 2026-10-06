@@ -184,7 +184,7 @@ test('update checker PWA non installa listener o timer nel container native', ()
   assert.deepEqual(events, ['layout']);
 });
 
-test('config Capacitor resta bundled-only e non introduce una piattaforma iOS', () => {
+test('config Capacitor resta bundled-only; iOS (M15) e Android condividono la stessa identità', () => {
   const config = JSON.parse(read('capacitor.config.json'));
   assert.equal(config.appId, 'com.usapp.us');
   assert.equal(config.appName, 'US');
@@ -196,5 +196,5 @@ test('config Capacitor resta bundled-only e non introduce una piattaforma iOS', 
     hidden: false
   });
   assert.equal(fs.existsSync(path.join(ROOT, 'android')), true);
-  assert.equal(fs.existsSync(path.join(ROOT, 'ios')), false);
+  assert.equal(fs.existsSync(path.join(ROOT, 'ios', 'App', 'App.xcodeproj')), true);
 });

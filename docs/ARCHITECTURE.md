@@ -26,7 +26,7 @@
 | Stories | `stories.js`, `stories.css` |
 | Settings | `settings.js`, `settings.css`, `settings2.css` |
 | UI primitives | `ui-foundation.js`, `ui-foundation.css` |
-| Platform/native boundary | `platform.js`, `native-entry.mjs`, `android/` |
+| Platform/native boundary | `platform.js`, `native-entry.mjs`, `app-links.mjs`, `android/`, `ios/` (see `docs/native/IOS_BASELINE.md`) |
 | Service worker / PWA caching | `service-worker.js` |
 | Supabase source | `supabase/` |
 | Tests | `tests/` |

@@ -28,3 +28,14 @@ Only durable decisions belong here. New missions should not reopen them without 
 - Do not add new top-level navigation tabs for these features.
 - Do not add fake currencies, energy systems or grind loops.
 - Engagement should come from partner consequence, anticipation, live play and meaningful shared outcomes.
+
+## 2026-10-06
+
+### Native iOS (M15)
+
+- iOS is a Capacitor 8 target in `ios/` (Swift Package Manager) sharing the Android web bundle; bundle id `com.usapp.us`, deployment target **iOS 16.0**.
+- Shared product JS stays platform-neutral; iOS specifics live in `ios/` and native-only glue in `native-entry.mjs` / `app-links.mjs`.
+- iOS Back = left-edge swipe into `UsNavigation.handleNativeBack()`; never exits the app.
+- Public URL scheme `com.usapp.us`; reserved App Group `group.com.usapp.us.shared` for all future extensions; refresh tokens never go in the App Group.
+- WebView data (session) is excluded from iOS backups, mirroring Android `allowBackup=false`.
+- The iOS WebView origin (`capacitor://localhost`) is frozen: changing it orphans stored sessions.

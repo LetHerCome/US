@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "generator": "scripts/build-ios-brand-assets.py",
+  "background": "#08040E",
+  "derivatives": [
+    {
+      "path": "ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png",
+      "sha256": "03c3b1fb0a84c4db7a792890a5d32831d3c6226d1232ab4b9956f3bf980a0540",
+      "operation": "FIT_CENTER_DARK_08040E_OPAQUE",
+      "sources": {
+        "assets/source/brand/us-symbol-master-v1.png": "bcbb3f3060edd5cf7218f245e1b56053de2c011ea5244e49f9e5f325269d28fd"
+      }
+    },
+    {
+      "path": "ios/App/App/Assets.xcassets/Splash.imageset/us-launch-symbol@3x.png",
+      "sha256": "41e3ab5ad42f4d4317469fa5023395e22377a4881c3404df1f41d0345e0041e0",
+      "operation": "BYTE_COPY_ANDROID_SPLASH_SYMBOL",
+      "sources": {
+        "android/app/src/main/res/drawable-nodpi/us_splash_symbol.png": "41e3ab5ad42f4d4317469fa5023395e22377a4881c3404df1f41d0345e0041e0"
+      }
+    }
+  ]
+}
