@@ -14,14 +14,11 @@ The signing key must never be committed to Git.
 
 ## GitHub Actions secrets
 
-Create these repository secrets:
+Create one repository secret:
 
-- `ANDROID_KEYSTORE_BASE64`
-- `ANDROID_KEYSTORE_PASSWORD`
-- `ANDROID_KEY_ALIAS`
-- `ANDROID_KEY_PASSWORD`
+- `ANDROID_SIGNING_BUNDLE_B64`
 
-The workflow decodes the keystore into the runner temporary directory and deletes it with the runner.
+The private bundle contains the keystore bytes plus its credentials. The workflow decodes it only into the runner temporary directory; nothing is committed to Git.
 
 ## Local Windows build
 

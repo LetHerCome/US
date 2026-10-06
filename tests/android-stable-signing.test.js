@@ -31,9 +31,8 @@ test('Android internal builds can override versionCode and versionName for safe 
 
 test('signed Android CI verifies the APK before publishing it', () => {
   const workflow = read('.github/workflows/android-internal-release.yml');
-  for (const secret of ['ANDROID_KEYSTORE_BASE64','ANDROID_KEYSTORE_PASSWORD','ANDROID_KEY_ALIAS','ANDROID_KEY_PASSWORD']) {
-    assert.match(workflow, new RegExp(secret));
-  }
+  assert.match(workflow, /ANDROID_SIGNING_BUNDLE_B64/);
+  assert.match(workflow, /ConvertFrom-Json/);
   assert.match(workflow, /assembleRelease/);
   assert.match(workflow, /apksigner\.bat/);
   assert.match(workflow, /verify --verbose --print-certs/);
