@@ -320,12 +320,26 @@ test('N1 sessione scaduta o revocata: la biometria non resuscita nulla, si va al
   assert.equal(env.html.classList.contains('us-app-locked'), false);
 });
 
-test('N1 offline: verifica server non disponibile non blocca chi si sblocca con la biometria', async () => {
+test('N1 offline: una sessione locale ancora valida può aprirsi dopo la biometria', async () => {
+  const owner = await sha256(USER);
+  const plugin = makePlugin(nativeStatus({ enabled: true, ownerHash: owner }));
+  const env = loadAppLock({ plugin });
+  hooks(env, { verdict: 'valid' });
+  assert.equal(await env.lock.gate({ userId: USER }), 'open');
+});
+
+test('N1 verifica sessione indeterminata: dopo la biometria resta bloccata', async () => {
   const owner = await sha256(USER);
   const plugin = makePlugin(nativeStatus({ enabled: true, ownerHash: owner }));
   const env = loadAppLock({ plugin });
   hooks(env, { verdict: 'unknown' });
-  assert.equal(await env.lock.gate({ userId: USER }), 'open');
+  let result = null;
+  env.lock.gate({ userId: USER }).then((value) => { result = value; });
+  await settle(10);
+  assert.equal(result, null);
+  assert.equal(env.lock._state().phase, 'locked');
+  assert.equal(env.nodes.get('usAppLock').dataset.mode, 'error');
+  assert.equal(env.nodes.get('usAppLockPrimary').textContent, 'Riprova');
 });
 
 test('N1 biometria cambiata (nuova impronta / Face ID): solo accesso con account', async () => {
@@ -503,6 +517,8 @@ test('N1 app.js: gate dopo la sessione e prima di profilo/foto; login senza sess
   assert.match(app, /await window\.UsAppLock\?\.signedOut\?\.\(\)/);
   assert.match(app, /window\.UsAppLock\?\.configure\?\.\(\{verifySession:usVerifySessionForAppLock,accountLogin:usAppLockAccountLogin\}\)/);
   assert.match(app, /sb\.auth\.getUser\(\)/, 'la sessione viene verificata sul server quando online');
+  assert.match(app, /session\.expires_at/, 'anche offline una sessione localmente scaduta non può aprire US');
+  assert.match(app, /if\(!navigator\.onLine\)return 'valid'/, 'offline è ammesso solo dopo il controllo locale di scadenza');
   assert.match(app, /sb\.auth\.signOut\(\{scope:'local'\}\)/, 'il fallback non scollega gli altri dispositivi');
   assert.doesNotMatch(app, /signInWithOtp|magiclink|signInWithIdToken/i, 'nessun OTP/magic-link reintrodotto');
   assert.match(app, /signInWithPassword/, 'email + password resta l’accesso');
@@ -590,6 +606,7 @@ test('N1 iOS: LocalAuthentication + Keychain solo su questo dispositivo, Face ID
   assert.match(plugin, /UIApplication\.didEnterBackgroundNotification/);
   assert.match(plugin, /clock_gettime_nsec_np\(CLOCK_MONOTONIC\)/);
   assert.match(keychain, /kSecAttrAccessibleWhenUnlockedThisDeviceOnly/);
+  assert.match(keychain, /return \.record\(\.corrupted\)/, 'un item Keychain presente ma illeggibile non può disattivare il lock');
   assert.doesNotMatch(keychain, /kSecAttrSynchronizable/);
   assert.match(policy, /graceMilliseconds: UInt64 = 60_000/);
   for (const source of [plugin, keychain, policy]) {
