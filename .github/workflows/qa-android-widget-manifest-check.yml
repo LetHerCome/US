@@ -1,0 +1,52 @@
+name: QA Android Widget Manifest Check
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  inspect_apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 0b015c5945e452ea61f52beb18f35c260feb95b8
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - run: npm ci
+      - run: npm run build:capacitor-web
+      - run: npx cap sync android
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew --no-daemon :app:assembleDebug
+      - name: Inspect merged manifest
+        shell: bash
+        run: |
+          echo "=== merged manifest receivers ==="
+          find android/app/build/intermediates -path '*merged_manifests*' -name AndroidManifest.xml -print
+          MANIFEST="$(find android/app/build/intermediates -path '*merged_manifests*' -name AndroidManifest.xml | head -n 1)"
+          if [ -n "$MANIFEST" ]; then
+            grep -n -E 'UsThinkWidgetProvider|UsCountdownWidgetProvider|appwidget.provider|us_widget_(think|countdown)_info' "$MANIFEST" || true
+          fi
+          echo "=== aapt2 manifest dump ==="
+          AAPT2="$(find "$ANDROID_HOME/build-tools" -type f -name aapt2 | sort -V | tail -n 1)"
+          "$AAPT2" dump xmltree android/app/build/outputs/apk/debug/app-debug.apk --file AndroidManifest.xml | grep -E -C 8 'UsThinkWidgetProvider|UsCountdownWidgetProvider'
+      - name: Assert both providers are packaged
+        shell: bash
+        run: |
+          AAPT2="$(find "$ANDROID_HOME/build-tools" -type f -name aapt2 | sort -V | tail -n 1)"
+          "$AAPT2" dump xmltree android/app/build/outputs/apk/debug/app-debug.apk --file AndroidManifest.xml > /tmp/manifest.txt
+          grep -q 'com.usapp.widget.UsThinkWidgetProvider' /tmp/manifest.txt
+          grep -q 'com.usapp.widget.UsCountdownWidgetProvider' /tmp/manifest.txt
