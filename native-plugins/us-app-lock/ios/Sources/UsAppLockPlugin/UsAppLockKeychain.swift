@@ -30,7 +30,9 @@ final class UsAppLockKeychain {
         let status = SecItemCopyMatching(query as CFDictionary, &item)
         switch status {
         case errSecSuccess:
-            guard let record = UsAppLockRecord.decode(item as? Data) else { return .none }
+            guard let data = item as? Data, let record = UsAppLockRecord.decode(data) else {
+                return .record(.corrupted)
+            }
             return .record(record)
         case errSecItemNotFound:
             return .none
