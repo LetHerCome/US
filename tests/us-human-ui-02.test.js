@@ -343,7 +343,7 @@ test('release: one BUILD_ID owns HTML, version marker and atomic shell cache', (
 
 test('no new dependencies', () => {
   const pkg = JSON.parse(read('package.json'));
-  assert.deepEqual(Object.keys(pkg.dependencies).sort(), ['@capacitor/android', '@capacitor/app', '@capacitor/core', '@capacitor/haptics', '@supabase/supabase-js', '@us/widget-bridge']);
+  assert.deepEqual(Object.keys(pkg.dependencies).sort(), ['@capacitor/android', '@capacitor/app', '@capacitor/core', '@capacitor/haptics', '@capacitor/ios', '@supabase/supabase-js', '@us/widget-bridge']); // M15: iOS platform
   assert.deepEqual(Object.keys(pkg.devDependencies).sort(), ['@capacitor/cli', '@electric-sql/pglite', 'esbuild']);
 });
 
