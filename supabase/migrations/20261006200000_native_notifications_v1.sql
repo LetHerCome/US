@@ -129,8 +129,13 @@ begin
     where d.installation_id = target_retired_installation_id
       and d.user_id = uid;
   end if;
-  -- The token moved to this installation (reinstall, restored app data).
-  delete from public.device_push_tokens d where d.token = clean_token and d.installation_id <> target_installation_id;
+  -- The provider token may move between installations of the SAME account
+  -- (reinstall / restored app data). A token string is not authorization and
+  -- can never be used to delete or take over another user's row.
+  delete from public.device_push_tokens d
+  where d.token = clean_token
+    and d.installation_id <> target_installation_id
+    and d.user_id = uid;
 
   insert into public.device_push_tokens as d
     (user_id, couple_id, installation_id, token, platform, provider, apns_environment, created_at, last_seen_at, token_updated_at)
