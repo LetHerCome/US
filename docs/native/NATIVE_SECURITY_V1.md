@@ -13,9 +13,11 @@ a credential or a login method.
    setting, never sent to Supabase.
 3. With protection on, US opens on a lock screen; biometrics unlock the app UI and the existing
    Supabase session continues.
-4. Supabase stays authoritative. Before US opens, the session is re-read (`getSession`, which refreshes
-   it) and, when online, checked on the server (`getUser`). Expired or revoked → the local session is
-   destroyed and the normal login appears. Biometrics never resurrect a session.
+4. Supabase stays authoritative. Before US opens, the session is re-read (`getSession`). Its local
+   `expires_at` is checked even offline; when online, the account is also checked on the server
+   (`getUser`). A locally expired session or a server-confirmed expiry/revocation → the local session
+   is destroyed and the normal login appears. If an online server check is indeterminate, US stays
+   locked instead of opening. Biometrics never resurrect a session.
 
 ## What is stored, and where
 
@@ -25,7 +27,8 @@ a credential or a login method.
 | Protection record `{v, ownerHash, enabledAt, state}` (+ iOS enrollment hash) | Android: private SharedPreferences, **AES-256-GCM with an Android Keystore key**. iOS: **Keychain**, generic password, `WhenUnlockedThisDeviceOnly`, not synchronizable. | `ownerHash` = SHA-256 of the user id, so another account on the same phone never inherits it. No password, token or PII. |
 | Biometric key (Android) | Android Keystore, AES-256-GCM, `setUserAuthenticationRequired(true)`, `AUTH_BIOMETRIC_STRONG` (API 30+), `setInvalidatedByBiometricEnrollment(true)` | Every unlock runs through `BiometricPrompt.CryptoObject`; success is proven by using the key. |
 
-Nothing security-related lives in localStorage, IndexedDB, plain preferences or committed config.
+No app-lock protection material lives in localStorage, IndexedDB, plain preferences or committed config.
+The pre-existing Supabase session remains in its existing durable WebView auth storage as shown above.
 
 ## How biometrics gate access
 
