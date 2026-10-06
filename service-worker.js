@@ -1,4 +1,4 @@
-const BUILD_ID = "us-native-widgets-v1-20261006-1";
+const BUILD_ID = "us-native-security-v1-20261006-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -10,6 +10,8 @@ const APP_SHELL = [
   "/index.html",
   versioned("/auth-storage.js"),
   versioned("/platform.js"),
+  versioned("/app-lock.js"),
+  versioned("/app-lock.css"),
   versioned("/widgets.js"),
   versioned("/widget-hub.js"),
   versioned("/widget-hub.css"),

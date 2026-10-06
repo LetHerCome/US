@@ -456,6 +456,42 @@ async function revokeCurrentDevice(){
 }
 window.revokeCurrentDevice=revokeCurrentDevice;
 
+// Native Security V1 — the app lock (app-lock.js) never decides on its own
+// whether the account is still valid: before it opens US it asks Supabase, and
+// its "account login" fallback destroys the local session first.
+async function usVerifySessionForAppLock(){
+  let session=null;
+  try{
+    const state=await usWithDeadline(sb.auth.getSession(),US_AUTH_SESSION_TIMEOUT_MS,'app lock session check timed out');
+    session=state?.data?.session||null;
+  }catch(_e){return 'unknown';}
+  if(!session)return 'invalid';
+  if(!navigator.onLine)return 'unknown';
+  try{
+    const {data,error}=await usWithDeadline(sb.auth.getUser(),2500,'app lock user check timed out');
+    if(error){
+      const status=Number(error.status||0);
+      return status===401||status===403||error.name==='AuthSessionMissingError'?'invalid':'unknown';
+    }
+    return data?.user?.id===session.user.id?'valid':'invalid';
+  }catch(_e){return 'unknown';}
+}
+
+async function usAppLockAccountLogin(){
+  try{await revokeCurrentDevice();}catch(error){console.warn('[US AppLock] device cleanup',error);}
+  try{
+    const {error}=await sb.auth.signOut({scope:'local'});
+    if(!error)return true;
+  }catch(_e){}
+  // Offline or server unreachable: drop the local copy of the session directly.
+  try{
+    await window.usDurableAuthStorage?.removeItem?.(sb.auth.storageKey||'sb-iiakdfsxpywdkxravqjh-auth-token');
+    return true;
+  }catch(error){console.warn('[US AppLock] local session removal',error);return false;}
+}
+
+window.UsAppLock?.configure?.({verifySession:usVerifySessionForAppLock,accountLogin:usAppLockAccountLogin});
+
 let usInitCloudInFlight=null;
 
 function usRunWhenIdle(task,timeout=1000){
@@ -534,7 +570,16 @@ async function initCloud(){
       }catch(_e){}
     }
 
+    // Native Security V1: with biometric protection on, nothing private is
+    // painted or fetched until the person unlocks (or chooses the account login).
+    if(session&&window.UsAppLock){
+      const access=await window.UsAppLock.gate({userId:session.user.id});
+      if(access!=='open')return;
+    }
+
     if(!session){
+      // No session on this phone: nothing left to protect, the login is the way in.
+      try{await window.UsAppLock?.signedOut?.();}catch(_e){}
       const returningDevice=Boolean(cachedDeviceProfile);
       resetNoiIdeasForIdentityChange();
       window.usProfile = null;

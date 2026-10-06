@@ -119,6 +119,7 @@ async function hydrateUsSettings(){
   $('usDistanceUnitValue').textContent=unit==='mi'?'miglia':'km';
   const feedbackValue=$('usFeedbackValue');if(feedbackValue)feedbackValue.textContent=feedbackSummary();
   syncMauditSetting();
+  syncAppLockSetting().catch(()=>{});
   $('usSettingsBuild').textContent=currentBuild();
 
   const locEl=$('usLocationState');
@@ -282,6 +283,43 @@ function feedbackModal(){
   }));
 }
 
+// Native Security V1 — device-local biometric protection, owned by UsAppLock
+// (app-lock.js + native plugin). Never a couple setting, never synced.
+let appLockBusy=false;
+async function syncAppLockSetting(){
+  const row=$('usAppLockSetting');
+  if(!row||!window.UsAppLock?.supported?.())return;
+  const state=await window.UsAppLock.settingState();
+  row.hidden=!state.visible;
+  if(!state.visible)return;
+  row.setAttribute('aria-checked',state.enabled?'true':'false');
+  row.classList.toggle('is-unavailable',!state.available&&!state.enabled);
+  $('usAppLockSettingLabel').textContent=state.label;
+  $('usAppLockSettingDetail').textContent=state.detail;
+}
+async function toggleAppLock(){
+  if(appLockBusy||!window.UsAppLock?.supported?.())return;
+  appLockBusy=true;
+  try{
+    const state=await window.UsAppLock.settingState();
+    if(!state.enabled&&!state.available){toast(state.detail);return;}
+    const result=state.enabled?await window.UsAppLock.disable():await window.UsAppLock.enable();
+    if(result.ok){
+      window.UsFeedback?.success?.();
+      toast(state.enabled?'Protezione disattivata':'US è protetta su questo telefono');
+    }else if(result.code==='lockout'||result.code==='lockout_permanent'){
+      toast('Troppi tentativi. Riprova tra poco');
+    }else if(result.code==='not_enrolled'||result.code==='unavailable'||result.code==='unsupported'){
+      toast('Biometria non disponibile ora');
+    }else if(result.code!=='cancelled'&&result.code!=='fallback'&&result.code!=='busy'&&result.code!=='invalidated'){
+      toast('Non riesco a cambiarla adesso');
+    }
+  }finally{
+    appLockBusy=false;
+    syncAppLockSetting().catch(()=>{});
+  }
+}
+
 // Maudit V1 — device-local On/Off, owned by USPet (pet.js). Off unmounts it.
 function mauditEnabled(){
   if(typeof window.USPet?.isEnabled==='function')return window.USPet.isEnabled();
@@ -386,6 +424,8 @@ async function logout(){
   try{
     const {error}=await sb.auth.signOut();
     if(error)throw error;
+    // Session gone: drop this phone's biometric protection record too.
+    try{await window.UsAppLock?.reset?.();}catch(_e){}
     location.reload();
   }catch(error){logoutInFlight=false;if(btn){btn.disabled=false;btn.textContent='Scollega questo telefono';}console.warn(error);toast('Non riesco a scollegarlo');}
 }
@@ -400,6 +440,7 @@ async function action(name){
   if(name==='location')return locationAction();
   if(name==='feedback')return feedbackModal();
   if(name==='maudit')return toggleMaudit();
+  if(name==='app-lock')return toggleAppLock();
   if(name==='widgets')return window.UsWidgetHub?.open?.();
   if(name==='sync-status')return syncStatusModal();
   if(name==='privacy')return privacyModal();
@@ -421,6 +462,7 @@ function hydrateWhenHomeSettles(){
 
 function boot(){
   syncMauditSetting();
+  syncAppLockSetting().catch(()=>{});
   document.querySelectorAll('[data-us-setting]').forEach(row=>row.addEventListener('click',()=>action(row.dataset.usSetting)));
   document.querySelectorAll('[data-us-settings-close]').forEach(el=>el.addEventListener('click',closeModal));
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('usSettingsOverlay')?.classList.contains('open'))closeModal();});
