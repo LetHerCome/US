@@ -42,7 +42,7 @@ final class UsWidgetCredentialStore {
         return writeAtomic(deviceFile, created) ? created : "";
     }
 
-    synchronized boolean write(String ownerHash, String token) {
+    synchronized boolean write(String ownerHash, String token, String expiresAt) {
         if (!OWNER.matcher(ownerHash).matches() || !TOKEN.matcher(token).matches()) return false;
         try {
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
@@ -50,6 +50,7 @@ final class UsWidgetCredentialStore {
             byte[] encrypted = cipher.doFinal(token.getBytes(StandardCharsets.UTF_8));
             JSONObject payload = new JSONObject()
                 .put("ownerHash", ownerHash)
+                .put("expiresAt", UsWidgetContract.instantText(expiresAt))
                 .put("iv", Base64.encodeToString(cipher.getIV(), Base64.NO_WRAP))
                 .put("ciphertext", Base64.encodeToString(encrypted, Base64.NO_WRAP));
             return writeAtomic(credentialFile, payload.toString());
@@ -58,10 +59,12 @@ final class UsWidgetCredentialStore {
         }
     }
 
-    synchronized String readToken() {
+    /** The token, only when it was issued for {@code ownerHash} (the active account). */
+    synchronized String readToken(String ownerHash) {
         try {
             JSONObject payload = new JSONObject(readAtomic(credentialFile));
-            if (!OWNER.matcher(payload.optString("ownerHash", "")).matches()) return "";
+            String owner = payload.optString("ownerHash", "");
+            if (!OWNER.matcher(owner).matches() || !owner.equals(ownerHash)) return "";
             byte[] iv = Base64.decode(payload.getString("iv"), Base64.NO_WRAP);
             byte[] encrypted = Base64.decode(payload.getString("ciphertext"), Base64.NO_WRAP);
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
@@ -70,6 +73,23 @@ final class UsWidgetCredentialStore {
             return TOKEN.matcher(token).matches() ? token : "";
         } catch (Exception ignored) {
             return "";
+        }
+    }
+
+    /**
+     * missing | ready | renew. "renew" asks the app to provision a fresh
+     * credential (expiring within 30 days, or unreadable after a restore).
+     */
+    synchronized String status(String ownerHash) {
+        try {
+            JSONObject payload = new JSONObject(readAtomic(credentialFile));
+            if (!payload.optString("ownerHash", "").equals(ownerHash)) return "missing";
+            if (readToken(ownerHash).isEmpty()) return "renew";
+            java.time.Instant expires = UsWidgetContract.instant(payload.optString("expiresAt", ""));
+            if (expires == null) return "renew";
+            return expires.minus(java.time.Duration.ofDays(30)).isBefore(java.time.Instant.now()) ? "renew" : "ready";
+        } catch (Exception ignored) {
+            return "missing";
         }
     }
 

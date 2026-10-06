@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Lets HyperOS/MIUI list "Home screen shortcuts" for US, which gates requestPinAppWidget there. -->
+    <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
+
     <application>
+        <!-- Ti penso keeps its historical class name: widgets already placed keep working. -->
         <receiver
             android:name="com.usapp.widget.UsThinkWidgetProvider"
             android:exported="false"
-            android:label="Ti penso">
+            android:label="@string/us_widget_think_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -13,7 +18,50 @@
                 android:resource="@xml/us_widget_think_info" />
         </receiver>
         <receiver
+            android:name="com.usapp.widget.UsCountdownWidgetProvider"
+            android:exported="false"
+            android:label="@string/us_widget_countdown_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/us_widget_countdown_info" />
+        </receiver>
+        <receiver
+            android:name="com.usapp.widget.UsNoiWidgetProvider"
+            android:exported="false"
+            android:label="@string/us_widget_noi_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/us_widget_noi_info" />
+        </receiver>
+        <receiver
+            android:name="com.usapp.widget.UsPhotoWidgetProvider"
+            android:exported="false"
+            android:label="@string/us_widget_photo_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/us_widget_photo_info" />
+        </receiver>
+        <receiver
             android:name="com.usapp.widget.UsThinkWidgetActionReceiver"
             android:exported="false" />
+        <receiver
+            android:name="com.usapp.widget.UsWidgetSystemReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.LOCALE_CHANGED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>
