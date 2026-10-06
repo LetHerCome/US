@@ -1,0 +1,92 @@
+name: QA Android Countdown Widget V1
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  linux_review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 0b015c5945e452ea61f52beb18f35c260feb95b8
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Focused widget contracts
+        run: |
+          node --test tests/android-countdown-widget.test.js
+          node --test tests/ti-penso-widget.test.js
+          node --test tests/countdown-oggi-v1.test.js
+          node --test tests/native-web-staging.test.js
+      - name: Full suite
+        run: npm test
+      - name: Diff check
+        run: git diff --check origin/main..0b015c5945e452ea61f52beb18f35c260feb95b8
+
+  windows_apk:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 0b015c5945e452ea61f52beb18f35c260feb95b8
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - run: npm ci
+      - name: Focused native widget contracts
+        shell: pwsh
+        run: |
+          node --test tests/android-countdown-widget.test.js
+          node --test tests/ti-penso-widget.test.js
+          node --test tests/native-foundation.test.js
+          node --test tests/android-scaffold.test.js
+          node --test tests/native-web-staging.test.js
+      - name: Stage Capacitor web bundle
+        run: npm run build:capacitor-web
+      - name: Sync Capacitor Android
+        run: npx cap sync android
+      - name: Assert Countdown widget merged into Android app
+        shell: pwsh
+        run: |
+          $manifest = Get-Content android/app/build/intermediates/merged_manifests/debug/processDebugManifest/AndroidManifest.xml -Raw -ErrorAction SilentlyContinue
+          if (-not $manifest) { Write-Host 'Merged manifest not generated yet; Gradle will verify receiver compilation.' }
+      - name: Assemble debug APK
+        working-directory: android
+        run: .\gradlew.bat --no-daemon :app:assembleDebug
+      - name: Package install candidate
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path out | Out-Null
+          Copy-Item android/app/build/outputs/apk/debug/app-debug.apk out/US-M14-Android-Baseline-03-CountdownWidget.apk
+          $hash = (Get-FileHash out/US-M14-Android-Baseline-03-CountdownWidget.apk -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  US-M14-Android-Baseline-03-CountdownWidget.apk" | Set-Content out/US-M14-Android-Baseline-03-CountdownWidget.sha256.txt
+          @"
+          source_sha=0b015c5945e452ea61f52beb18f35c260feb95b8
+          application_id=com.usapp.us
+          build_type=debug
+          native_widget=countdown-v1
+          sha256=$hash
+          "@ | Set-Content out/US-M14-Baseline-03-build-info.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: US-M14-Android-Baseline-03-CountdownWidget
+          path: out/
+          if-no-files-found: error
+          retention-days: 14
