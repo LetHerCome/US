@@ -140,7 +140,6 @@
     const nextHash = await hashOwner(profile.id);
     if (ownerHash && ownerHash !== nextHash) {
       thinkState = { partnerName: '', lastReceivedAt: '', lastSentAt: '', lastActionStatus: 'idle', lastActionAt: '' };
-    countdownState = { active: false, title: '', mode: '', target: '', style: '' };
       countdownState = { active: false, title: '', mode: '', target: '', style: '' };
     }
     ownerHash = nextHash;
@@ -166,6 +165,7 @@
     ownerHash = '';
     deviceIdHash = '';
     thinkState = { partnerName: '', lastReceivedAt: '', lastSentAt: '', lastActionStatus: 'idle', lastActionAt: '' };
+    countdownState = { active: false, title: '', mode: '', target: '', style: '' };
     if (!nativeEnabled) return false;
     try { await platform.clearWidgetActionCredential?.(); }
     catch (error) { console.warn('[US Widget] credential clear', error); }
