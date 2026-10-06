@@ -1,0 +1,154 @@
+name: Android bootstrap APK
+
+on:
+  push:
+    branches:
+      - mission/us-android-stable-updates-v1
+    paths:
+      - '.github/workflows/android-bootstrap-apk.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Generate permanent signing identity for bootstrap install
+        shell: bash
+        run: |
+          set -euo pipefail
+          STORE_PASSWORD="$(openssl rand -hex 24)"
+          KEY_PASSWORD="$(openssl rand -hex 24)"
+          KEY_ALIAS="us-internal"
+          KEYSTORE="$RUNNER_TEMP/us-internal-signing.jks"
+          keytool -genkeypair -v             -keystore "$KEYSTORE"             -storetype JKS             -storepass "$STORE_PASSWORD"             -keypass "$KEY_PASSWORD"             -alias "$KEY_ALIAS"             -keyalg RSA -keysize 3072 -validity 10000             -dname "CN=US Internal, OU=US, O=US, L=Pescara, ST=Abruzzo, C=IT"
+
+          VERSION_CODE="$(date -u +%s)"
+          echo "US_ANDROID_KEYSTORE_PATH=$KEYSTORE" >> "$GITHUB_ENV"
+          echo "US_ANDROID_KEYSTORE_PASSWORD=$STORE_PASSWORD" >> "$GITHUB_ENV"
+          echo "US_ANDROID_KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
+          echo "US_ANDROID_KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
+          echo "US_ANDROID_VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
+          echo "US_ANDROID_VERSION_NAME=1.0-internal.$VERSION_CODE" >> "$GITHUB_ENV"
+
+          python - <<'PY'
+          import os, json, base64
+          from pathlib import Path
+          p = Path(os.environ["RUNNER_TEMP"]) / "us-internal-signing.jks"
+          bundle = {
+              "keystoreBase64": base64.b64encode(p.read_bytes()).decode("ascii"),
+              "storePassword": os.environ["STORE_PASSWORD"] if "STORE_PASSWORD" in os.environ else "",
+              "keyAlias": "us-internal",
+              "keyPassword": os.environ["KEY_PASSWORD"] if "KEY_PASSWORD" in os.environ else "",
+          }
+          # passwords are supplied below through a temporary env-safe file instead
+          PY
+
+          printf '%s' "$STORE_PASSWORD" > "$RUNNER_TEMP/store-pass.txt"
+          printf '%s' "$KEY_PASSWORD" > "$RUNNER_TEMP/key-pass.txt"
+
+      - name: Create encrypted signing handoff
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          python - <<'PY'
+          import os, json, base64
+          from pathlib import Path
+          temp = Path(os.environ["RUNNER_TEMP"])
+          keystore = temp / "us-internal-signing.jks"
+          bundle = {
+              "keystoreBase64": base64.b64encode(keystore.read_bytes()).decode("ascii"),
+              "storePassword": (temp / "store-pass.txt").read_text(),
+              "keyAlias": "us-internal",
+              "keyPassword": (temp / "key-pass.txt").read_text(),
+          }
+          encoded = base64.b64encode(json.dumps(bundle, separators=(",", ":")).encode()).decode()
+          Path("out/ANDROID_SIGNING_BUNDLE_B64.txt").write_text(encoded)
+          PY
+          cat > "$RUNNER_TEMP/handoff.crt" <<'CERT'
+-----BEGIN CERTIFICATE-----
+MIIFEzCCAvugAwIBAgIUaP9kr7oh+lOUUz2kP83l8oh8rj8wDQYJKoZIhvcNAQEL
+BQAwGTEXMBUGA1UEAwwOVVMgQVBLIGhhbmRvZmYwHhcNMjYxMDA2MTY1NTQzWhcN
+MjYxMDA4MTY1NTQzWjAZMRcwFQYDVQQDDA5VUyBBUEsgaGFuZG9mZjCCAiIwDQYJ
+KoZIhvcNAQEBBQADggIPADCCAgoCggIBANm1cZf+83S58Yqxv8Zyz2YeUfejiJSh
+B/8JiReQWINdRdNWDJQs3B0ta3/ZAZas2S2huYgAdt/AMwLN7KgvKEKtF5COLPZL
+kRHp+RqGLMUZ+CHsVw5APdV/93J7fki9mX4CqTG6Xmi+iCTpMpln5nhyOh3eIeui
+pucvOsF5nC0yNB+xWiut2esHsN2SmNewVPata0gwgm1MQeNmAI/rjitat7JLqcKG
+Eh+3VXpgYn2+N1jfk9lyierWWCnsd1ubxqSdkKad+/hJHujkZipJuo4VSxggpllt
+splmsfXDmOnSFwvEmdr6LsbSsnAdjKkJz7eb7PDF2UE6dqRQgNMOMeO9JGgB/Ngq
+r+CEmG/y87ybfR8kskMwv2cz9ThGS4nC5X/Vmd/gXgn8hdMEdz8gaEr5uRFtFGZ6
+a4g6snVrzkladCzyKFWo6Hh4u5nSUmcTTHqVBk5+FogSkPcVTxdlY9UUXI0y0MIr
+m8LDvmwwdh0+X44R6MxIlVztcHCRD5upOinHtFkDoKTojW5ulHEE6bqU/kD8aIWO
+rQadLKiUbOpLpBlljSjBE60oRI4rNjCVqmu3wvnp+tX4bHNc1p9zQtoKyaTibSE8
+Vko2/HHKqCRDO+YoW5kdoY4DW0XhXPPhxUV0azuSNiwdi32+6imQi0VJBvz0Y7Cv
+N6ru4nferafRAgMBAAGjUzBRMB0GA1UdDgQWBBSaPDJ9TO6852FQKsJ/nAzA5vbK
+6jAfBgNVHSMEGDAWgBSaPDJ9TO6852FQKsJ/nAzA5vbK6jAPBgNVHRMBAf8EBTAD
+AQH/MA0GCSqGSIb3DQEBCwUAA4ICAQARwSc73T96z1b0FGMK0fwdC0mqgG/MTNJP
+bqW7euEik0Jap4b6guQQOsg37Zi9sXgntFllta/MCpXDfj6metwM/JnG1Y9MBnAm
+x4zF+bTQkcO8j3ERrl7CLJf16IaIGnQ6NiqvauUycDshT85BIaV1bk0G2BTZd6UM
+N0vn3K+5BX9mp4jrd/evxP0nT9TLv6oXwYcWN5C28HCLX76J6w6NbyLc8K67WzNP
+rpfebMzG0ip+c0PjDAVAMPeGb/THXmJ4XD0lctmM/Rav0T5z8cwR6HxcS/Zolrkk
+SIgFlzliypE0HDx/zjmTxB+SFckwcqvRsW0iyCS5i1QxYtNZsw6auHrM9Evf+3A7
+2dcCfY4KxKSpyCD0De16iKEvZK+524QyLVTR0vgGCMdtwOAipWoa/5x+t9yOHUC7
+kZLV9ORfbZNY/FAkAv3pc9rl3VEa7E7IMEZ5sHiTfzSqUriwOXjYw+gHTGxG5Yyd
+GpTpZMnFefekKzmyRO1S2hZ/tAUZDRRzw0W8Tc17KbaoJkworpu1DwZPfOJb8H9T
+lY2bgU25lhDGv2IipjflgqUwVt9fJsX3qToacPwRZTfw3Rd3uTtOy8qPLUJRUCa6
+1EzKsbjrH9S5tWTnsFc9lQ9kLKBovWJ1/G+y8bSCIW829u9j67HMxAwEHROfW9sI
+Jqyj1B1jnQ==
+-----END CERTIFICATE-----
+CERT
+          openssl cms -encrypt -binary -aes256             -in out/ANDROID_SIGNING_BUNDLE_B64.txt             -out out/ANDROID_SIGNING_BUNDLE_B64.cms             -outform DER "$RUNNER_TEMP/handoff.crt"
+          rm out/ANDROID_SIGNING_BUNDLE_B64.txt "$RUNNER_TEMP/store-pass.txt" "$RUNNER_TEMP/key-pass.txt"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Stage Capacitor web bundle
+        run: npm run build:capacitor-web
+
+      - name: Sync Android
+        run: npx cap sync android
+
+      - name: Build signed release APK
+        working-directory: android
+        run: ./gradlew --no-daemon testDebugUnitTest assembleRelease
+
+      - name: Verify and package
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="android/app/build/outputs/apk/release/app-release.apk"
+          test -f "$APK"
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -1)"
+          "$APKSIGNER" verify --verbose --print-certs "$APK" | tee out/signature.txt
+          cp "$APK" out/US-Android.apk
+          sha256sum out/US-Android.apk > out/US-Android.sha256.txt
+          {
+            echo "source_sha=$GITHUB_SHA"
+            echo "application_id=com.usapp.us"
+            echo "version_code=$US_ANDROID_VERSION_CODE"
+            echo "version_name=$US_ANDROID_VERSION_NAME"
+          } > out/US-Android-build-info.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: US-Android-Bootstrap
+          path: out/
+          if-no-files-found: error
+          retention-days: 1
