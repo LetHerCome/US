@@ -307,6 +307,10 @@
         await accountLogin(COPY.expired);
         return false;
       }
+      if (verdict !== 'valid') {
+        showLock('error');
+        return false;
+      }
       window.UsFeedback?.success?.();
       openApp();
       return true;
