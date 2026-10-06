@@ -145,6 +145,7 @@ function install(w){
       state=data;lastAttempt=Date.now();w.UsFeedback?.success?.();paint();w.dispatchEvent?.(new CustomEvent('us:countdown-updated'));return true;
     }catch(err){
       if(token!==generation||key()!==identity)return false;
+      w.UsFeedback?.error?.();
       if(err?.code==='40001'||/countdown_conflict/.test(err?.message||'')){await hydrate();status('È cambiato sull’altro telefono. Le tue modifiche sono qui: controlla e salva di nuovo.');}
       else status('Non salvato. Controlla la connessione e riprova.');return false;
     }finally{

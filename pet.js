@@ -679,6 +679,7 @@ function install(w){
       if(!pet.land({x}))pet.place(x);
       offset(0,0);
       persistTarget(f.target);
+      w.UsFeedback?.landing?.();
     }
     function fallStep(){
       const f=falling;if(!f)return;
