@@ -153,27 +153,35 @@ test('N2 register: token refresh updates in place; the token moving to a new ins
   assert.deepEqual((await rows(db)).map((r) => [r.installation_id, r.token]), [[I2, FCM_B]]);
 });
 
-test('N2 register: account switch on the same phone moves the row; other devices are untouched', async () => {
+test('N2 register: another account cannot take over an existing installation id', async () => {
   await as(db, B, register(I3, FCM_B)); // Beatrice's own phone
   await as(db, F, register(I1, FCM_A));
-  await as(db, X, register(I1, FCM_A));
+  const takeover = await as(db, X, register(I1, FCM_A));
+  assert.equal(takeover.code, '42501');
   const after = await rows(db);
-  assert.deepEqual(after.find((r) => r.installation_id === I1), { user_id: X, couple_id: C2, installation_id: I1, token: FCM_A, platform: 'android', provider: 'fcm', apns_environment: null });
+  assert.deepEqual(after.find((r) => r.installation_id === I1), { user_id: F, couple_id: C1, installation_id: I1, token: FCM_A, platform: 'android', provider: 'fcm', apns_environment: null });
   assert.equal(after.find((r) => r.installation_id === I3).user_id, B);
   assert.equal(after.length, 2);
 });
 
-test('N2 register: an offline-retired installation of this phone is removed at the next registration', async () => {
+test('N2 register: retired cleanup is ownership-scoped', async () => {
   await as(db, F, register(I1, FCM_A));
-  await as(db, B, register(I3, FCM_B));
-  await as(db, B, register(I2, `fcmC:${'c'.repeat(60)}`, { retired: I1 }));
-  assert.deepEqual((await rows(db)).map((r) => r.installation_id).sort(), [I2, I3]);
+  await as(db, F, register(I2, `fcmC:${'c'.repeat(60)}`, { retired: I1 }));
+  assert.deepEqual((await rows(db)).map((r) => r.installation_id), [I2], 'same user can clean its retired installation');
+
+  await as(db, F, register(I1, FCM_A));
+  await as(db, B, register(I3, FCM_B, { retired: I1 }));
+  const after = await rows(db);
+  assert.equal(after.find((r) => r.installation_id === I1).user_id, F, 'another account cannot delete the retired row');
+  assert.equal(after.find((r) => r.installation_id === I3).user_id, B);
 });
 
-test('N2 unregister: removes exactly one installation, never other devices of the account', async () => {
+test('N2 unregister: removes only an installation owned by auth.uid()', async () => {
   await as(db, F, register(I1, FCM_A));
   await as(db, F, register(I2, APNS, { platform: 'ios', provider: 'apns', env: 'production' }));
   assert.equal((await as(db, '', unregister(I1))).code, '42501');
+  assert.deepEqual((await as(db, X, unregister(I1))).data[0].r, { removed: false }, 'another account cannot delete it');
+  assert.equal((await rows(db)).find((r) => r.installation_id === I1).user_id, F);
   assert.deepEqual((await as(db, F, unregister(I1))).data[0].r, { removed: true });
   assert.deepEqual((await as(db, F, unregister(I1))).data[0].r, { removed: false });
   assert.deepEqual((await rows(db)).map((r) => r.installation_id), [I2]);
