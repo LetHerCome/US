@@ -9,8 +9,8 @@ permissions:
 
 jobs:
   build_apk:
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
+    runs-on: windows-latest
+    timeout-minutes: 55
     steps:
       - uses: actions/checkout@v4
         with:
@@ -32,12 +32,14 @@ jobs:
         run: npm ci
 
       - name: Native foundation tests
+        shell: pwsh
         run: |
           node --test tests/android-scaffold.test.js
           node --test tests/native-foundation.test.js
           node --test tests/native-web-staging.test.js
           node --test tests/native-back-platform.test.js
           node --test tests/native-back-navigation.test.js
+          node --test tests/n3-android-brand-assets.test.js
 
       - name: Stage Capacitor web bundle
         run: npm run build:capacitor-web
@@ -47,22 +49,24 @@ jobs:
 
       - name: Assemble debug APK
         working-directory: android
-        run: ./gradlew --no-daemon :app:assembleDebug
+        run: .\gradlew.bat --no-daemon :app:assembleDebug
 
       - name: Package install candidate
-        shell: bash
+        shell: pwsh
         run: |
-          mkdir -p out
-          cp android/app/build/outputs/apk/debug/app-debug.apk out/US-M14-Android-Debug.apk
-          sha256sum out/US-M14-Android-Debug.apk | tee out/US-M14-Android-Debug.sha256.txt
-          {
-            echo "source_sha=52a80a1da77d41c670c208f3df9893daf288078d"
-            echo "application_id=com.usapp.us"
-            echo "version_name=1.0"
-            echo "version_code=1"
-            echo "build_type=debug"
-          } > out/US-M14-build-info.txt
-          ls -lh out/US-M14-Android-Debug.apk
+          New-Item -ItemType Directory -Force -Path out | Out-Null
+          Copy-Item android/app/build/outputs/apk/debug/app-debug.apk out/US-M14-Android-Debug.apk
+          $hash = (Get-FileHash out/US-M14-Android-Debug.apk -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  US-M14-Android-Debug.apk" | Set-Content out/US-M14-Android-Debug.sha256.txt
+          @"
+          source_sha=52a80a1da77d41c670c208f3df9893daf288078d
+          application_id=com.usapp.us
+          version_name=1.0
+          version_code=1
+          build_type=debug
+          sha256=$hash
+          "@ | Set-Content out/US-M14-build-info.txt
+          Get-Item out/US-M14-Android-Debug.apk | Format-List Name,Length,LastWriteTime
 
       - uses: actions/upload-artifact@v4
         with:
