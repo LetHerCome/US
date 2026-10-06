@@ -1,0 +1,109 @@
+name: Native Security V1 signed QA APK
+
+on:
+  push:
+    branches:
+      - mission/us-native-security-v1-f0l05a
+    paths:
+      - '.github/workflows/android-native-security-qa.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  signed-qa:
+    runs-on: windows-latest
+    timeout-minutes: 70
+    env:
+      SIGNING_BUNDLE_B64: ${{ secrets.ANDROID_SIGNING_BUNDLE_B64 }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Require signing material
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:SIGNING_BUNDLE_B64)) { throw "ANDROID_SIGNING_BUNDLE_B64 missing" }
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Restore permanent keystore
+        shell: pwsh
+        run: |
+          $jsonBytes = [Convert]::FromBase64String($env:SIGNING_BUNDLE_B64)
+          $bundle = [Text.Encoding]::UTF8.GetString($jsonBytes) | ConvertFrom-Json
+          if (-not $bundle.keystoreBase64 -or -not $bundle.storePassword -or -not $bundle.keyAlias -or -not $bundle.keyPassword) {
+            throw "Signing bundle is incomplete"
+          }
+          $path = Join-Path $env:RUNNER_TEMP "us-internal-signing.jks"
+          [IO.File]::WriteAllBytes($path, [Convert]::FromBase64String($bundle.keystoreBase64))
+          "US_ANDROID_KEYSTORE_PATH=$path" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "US_ANDROID_KEYSTORE_PASSWORD=$($bundle.storePassword)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "US_ANDROID_KEY_ALIAS=$($bundle.keyAlias)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "US_ANDROID_KEY_PASSWORD=$($bundle.keyPassword)" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Assign QA version
+        shell: pwsh
+        run: |
+          $code = [int][DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+          "US_ANDROID_VERSION_CODE=$code" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "US_ANDROID_VERSION_NAME=1.0-security-qa.$code" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Full test suite
+        run: npm test
+
+      - name: Stage Capacitor bundle
+        run: npm run build:capacitor-web
+
+      - name: Sync Android
+        run: npx cap sync android
+
+      - name: Verify sync is clean
+        shell: pwsh
+        run: |
+          git diff --exit-code -- android
+          if ($LASTEXITCODE -ne 0) { throw "cap sync changed committed Android files" }
+
+      - name: Test and assemble signed release
+        working-directory: android
+        run: .\gradlew.bat --no-daemon testDebugUnitTest assembleRelease
+
+      - name: Verify signature and package
+        shell: pwsh
+        run: |
+          $apk = "android/app/build/outputs/apk/release/app-release.apk"
+          if (-not (Test-Path $apk)) { throw "Signed release APK missing" }
+          $apksigner = Get-ChildItem "$env:ANDROID_HOME\build-tools" -Recurse -Filter apksigner.bat |
+            Sort-Object FullName | Select-Object -Last 1
+          if (-not $apksigner) { throw "apksigner.bat not found" }
+          New-Item -ItemType Directory -Force -Path out | Out-Null
+          & $apksigner.FullName verify --verbose --print-certs $apk | Tee-Object -FilePath out/signature.txt
+          if ($LASTEXITCODE -ne 0) { throw "APK signature verification failed" }
+          Copy-Item $apk out/US-Native-Security-V1-QA.apk
+          $hash=(Get-FileHash out/US-Native-Security-V1-QA.apk -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  US-Native-Security-V1-QA.apk" | Set-Content out/US-Native-Security-V1-QA.sha256.txt
+          @"
+          source_sha=${{ github.sha }}
+          application_id=com.usapp.us
+          version_code=$env:US_ANDROID_VERSION_CODE
+          version_name=$env:US_ANDROID_VERSION_NAME
+          sha256=$hash
+          "@ | Set-Content out/build-info.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: US-Native-Security-V1-QA
+          path: out/
+          if-no-files-found: error
+          retention-days: 2
