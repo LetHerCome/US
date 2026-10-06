@@ -1,0 +1,27 @@
+name: Native Notifications review checks
+
+on:
+  push:
+    branches:
+      - mission/us-native-notifications-v1-1zrc8s
+    paths:
+      - '.github/workflows/native-notifications-review.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Focused Native Notifications tests
+        run: node --test tests/native-notifications-v1-db.test.js tests/native-notifications-v1-dispatch.test.js tests/native-notifications-v1-native.test.js tests/native-notifications-v1-browser.test.js
+      - name: Diff check
+        run: git diff --check origin/main...HEAD
