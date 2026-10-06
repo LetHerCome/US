@@ -1,0 +1,139 @@
+name: QA Native Haptics V1
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  linux_tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: b87fca155841c0eaa28263597bb97606d1fa08dc
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Focused haptics contracts
+        run: |
+          node --test tests/m12a-feedback.test.js
+          node --test tests/n2-native-experience.test.js
+          node --test tests/maudit-interaction.test.js
+          node --test tests/countdown-oggi-v1.test.js
+      - name: Full suite
+        run: npm test
+      - name: Diff check
+        run: git diff --check origin/main..b87fca155841c0eaa28263597bb97606d1fa08dc
+
+  windows_android:
+    runs-on: windows-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: b87fca155841c0eaa28263597bb97606d1fa08dc
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - run: npm ci
+      - name: Focused haptics contracts
+        run: |
+          node --test tests/m12a-feedback.test.js
+          node --test tests/n2-native-experience.test.js
+      - name: Stage Capacitor web bundle
+        run: npm run build:capacitor-web
+      - name: Sync Capacitor Android
+        run: npx cap sync android
+      - name: Native unit tests + APK
+        working-directory: android
+        run: .\gradlew.bat --no-daemon testDebugUnitTest assembleDebug
+      - name: Package physical QA APK
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path out | Out-Null
+          Copy-Item android/app/build/outputs/apk/debug/app-debug.apk out/US-Native-Haptics-V1.apk
+          $hash=(Get-FileHash out/US-Native-Haptics-V1.apk -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  US-Native-Haptics-V1.apk" | Set-Content out/US-Native-Haptics-V1.sha256.txt
+          @"
+          source_sha=b87fca155841c0eaa28263597bb97606d1fa08dc
+          application_id=com.usapp.us
+          build_type=debug
+          feature=native-haptics-v1
+          sha256=$hash
+          "@ | Set-Content out/US-Native-Haptics-V1-build-info.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: US-Native-Haptics-V1
+          path: out/
+          if-no-files-found: error
+          retention-days: 14
+
+  macos_ios:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: b87fca155841c0eaa28263597bb97606d1fa08dc
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Select newest installed Xcode
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | sort -V | tail -n 1)
+          sudo xcode-select -s "$XCODE/Contents/Developer"
+          xcodebuild -version
+      - run: npm ci
+      - name: Focused haptics contracts
+        run: |
+          node --test tests/m12a-feedback.test.js
+          node --test tests/n2-native-experience.test.js
+          node --test tests/ios-native-baseline.test.js
+      - name: Stage Capacitor web bundle
+        run: npm run build:capacitor-web
+      - name: Sync Capacitor iOS
+        run: npx cap sync ios
+      - name: Sync leaves iOS project unchanged
+        run: git diff --exit-code -- ios
+      - name: Xcode Debug simulator build
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/ios-derived \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build | tee build-xcode-debug.log
+          grep -q "BUILD SUCCEEDED" build-xcode-debug.log
+      - name: Xcode Release simulator build
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/ios-derived \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build | tee build-xcode-release.log
+          grep -q "BUILD SUCCEEDED" build-xcode-release.log
