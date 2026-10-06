@@ -260,8 +260,9 @@ function rewardTile(reward) {
 function countdownTile(style, next) {
   const reward = style.reward ? (next?.rewards || []).find((item) => item.id === style.reward) : null;
   const unlocked = !style.reward || Boolean(reward?.unlocked);
-  const status = !style.reward ? 'Incluso' : unlocked ? 'Sbloccato' : `Con ${reward?.title || style.name} · livello ${style.level}`;
-  return `<button type="button" class="us-progression-reward us-progression-countdown-style ${unlocked ? 'is-unlocked' : 'is-locked'}" data-countdown-style-open="${esc(style.id)}" ${unlocked ? '' : 'disabled'} aria-label="Stile Countdown ${esc(style.name)} · ${esc(status)}. ${esc(style.note || '')}">
+  const active = unlocked && window.USCountdown?.activeStyle?.() === style.id;
+  const status = active ? 'In uso' : !style.reward ? 'Incluso' : unlocked ? 'Sbloccato' : `Con ${reward?.title || style.name} · livello ${style.level}`;
+  return `<button type="button" class="us-progression-reward us-progression-countdown-style ${unlocked ? 'is-unlocked' : 'is-locked'} ${active ? 'is-equipped' : ''}" data-countdown-style-select="${esc(style.id)}" ${unlocked ? '' : 'disabled'} aria-pressed="${active ? 'true' : 'false'}" aria-label="Stile Countdown ${esc(style.name)} · ${esc(status)}. ${esc(style.note || '')}">
       <span class="us-progression-reward-preview" aria-hidden="true"><span class="us-cos-stage us-cos-countdown">${countdownPreview(style.id)}</span></span>
       <span class="us-progression-reward-copy"><b>${esc(style.name)}</b><small>${esc(status)}</small></span>
     </button>`;
@@ -440,11 +441,20 @@ function refreshAfterAction() {
 }
 
 $('usProgressionRewards')?.addEventListener('click', async (event) => {
-  const button = event.target.closest?.('[data-progression-reward],[data-countdown-style-open]');
+  const button = event.target.closest?.('[data-progression-reward],[data-countdown-style-select]');
   if (!button || button.disabled) return;
-  if (button.dataset?.countdownStyleOpen) {
-    window.UsFeedback?.action?.();
-    window.USCountdown?.open?.();
+  if (button.dataset?.countdownStyleSelect) {
+    if (!window.USCountdown?.hasActive?.()) {
+      window.toast?.('Scegli prima un countdown da mostrare in Oggi.');
+      return;
+    }
+    const ok = await window.USCountdown?.setStyle?.(button.dataset.countdownStyleSelect);
+    if (ok) {
+      window.UsFeedback?.action?.();
+      renderRewards(state);
+    } else {
+      window.toast?.('Non riesco ad applicarlo ora. Riprova.');
+    }
     return;
   }
   const rewardId = button.dataset.progressionReward;
@@ -454,6 +464,7 @@ $('usProgressionRewards')?.addEventListener('click', async (event) => {
     await hydrate({ showUnlocks: false, force: true });
   }
 });
+window.addEventListener?.('us:countdown-updated', () => renderRewards(state));
 $('usProgressionUnlockUse')?.addEventListener('click', useUnlock);
 $('usProgressionUnlockLater')?.addEventListener('click', dismissUnlock);
 

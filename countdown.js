@@ -84,12 +84,6 @@ function install(w){
   // Orbita: the light advances one tick per real second. Any jump (first paint,
   // return from background, hour wrap) is applied without a transition.
   function sweep(art){const s=Math.floor(Date.now()/1000)%3600,prev=Number(art.dataset.sweep);art.toggleAttribute('data-sweep-jump',s!==prev+1);art.dataset.sweep=String(s);art.style.setProperty('--us-cd-sweep',`${s*6}deg`);}
-  function styles(){
-    $('usCountdownStyles').innerHTML=STYLES.map(s=>{
-      const unlocked=available(s.id,progression()),active=draft?.style===s.id;
-      return `<button type="button" class="us-countdown-style ${active?'is-selected':''}" data-countdown-pick="${s.id}" data-locked="${!unlocked}" aria-pressed="${active}" aria-label="${unlocked?s.name:`Anteprima ${s.name}, Sintonia livello ${s.level}`}" ${busy?'disabled':''}>${markup({value:'12',unit:'giorni',label:''},'',s.id)}<b>${s.name}</b><small>${unlocked?s.note:`Sintonia · livello ${s.level}`}</small></button>`;
-    }).join('');
-  }
   function paintList(){
     const together=relationship(state?.started_on);
     const entries=[{id:'together',title:'Insieme da',detail:together?`${together.value} ${together.unit}`:'Imposta la data in Noi → Impostazioni',disabled:!together},...(state?.items||[]).map(e=>({id:e.id,title:e.title,detail:[display(e)?.value,display(e)?.unit].filter(Boolean).join(' ')}))];
@@ -131,7 +125,7 @@ function install(w){
         if(token!==generation||key()!==identity)return null;
         if(err||!data||!Array.isArray(data.items))throw err||new Error('invalid_countdown_state');
         if(state&&data.version<state.version)return state;
-        state=data;status('');paint();return data;
+        state=data;status('');paint();w.dispatchEvent?.(new CustomEvent('us:countdown-updated'));return data;
       }catch(err){if(token===generation&&key()===identity){status('Countdown non disponibile ora. Riprova.');paint();}return null;}
     })();loading=task;try{return await task;}finally{if(loading===task)loading=null;}
   }
@@ -148,19 +142,19 @@ function install(w){
       const {data,error:err}=await sb.rpc('save_countdown_oggi_v1',{next_state:next,expected_version:state.version});
       if(token!==generation||key()!==identity)return false;
       if(err)throw err;if(!data||!Array.isArray(data.items))throw new Error('invalid_countdown_state');
-      state=data;lastAttempt=Date.now();w.UsFeedback?.success?.();paint();return true;
+      state=data;lastAttempt=Date.now();w.UsFeedback?.success?.();paint();w.dispatchEvent?.(new CustomEvent('us:countdown-updated'));return true;
     }catch(err){
       if(token!==generation||key()!==identity)return false;
       if(err?.code==='40001'||/countdown_conflict/.test(err?.message||'')){await hydrate();status('È cambiato sull’altro telefono. Le tue modifiche sono qui: controlla e salva di nuovo.');}
       else status('Non salvato. Controlla la connessione e riprova.');return false;
     }finally{
-      if(token===generation){busy=false;root.removeAttribute('aria-busy');restoreControls();paintList();if(draft){styles();preview();}}
+      if(token===generation){busy=false;root.removeAttribute('aria-busy');restoreControls();paintList();if(draft)preview();}
     }
   }
   function editor(id){
     if(busy||!state)return;
     const e=state.items.find(e=>e.id===id);
-    draft=id==='together'?{id,style:state.together_style,mode:'days'}:e?{...e}:{id:w.crypto.randomUUID(),title:'',mode:'days',target:'',style:'editorial'};
+    draft=id==='together'?{id,style:state.together_style,mode:'days'}:e?{...e}:{id:w.crypto.randomUUID(),title:'',mode:'days',target:'',style:selected()?.style||'editorial'};
     const automatic=id==='together';
     $('usCountdownEditor').hidden=false;$('usCountdownCollection').hidden=true;
     $('usCountdownEditorHeading').textContent=automatic?'Il vostro tempo':e?'Modifica countdown':'Un momento da aspettare';
@@ -170,7 +164,7 @@ function install(w){
     dateField(draft.target);
     $('usCountdownDelete').hidden=!e;
     touched=false;
-    styles();preview();status('');
+    preview();status('');
   }
   function dateField(target){
     const input=$('usCountdownDate'),clock=draft?.mode==='clock';
@@ -194,9 +188,26 @@ function install(w){
       // fresh state. If the user went back, started a new countdown or typed
       // meanwhile, the slow answer must not swap their draft for the stored one.
       if(mode==='active'&&state?.active_id&&draft===shown&&!touched)editor(state.active_id);
-      else if(draft){styles();preview();}
+      else if(draft)preview();
     }
   }
+  function activeStyle(){return selected()?.style||'';}
+  function hasActive(){return Boolean(state?.active_id);}
+  async function setStyle(styleId){
+    if(!key())return false;
+    if(key()!==owner)clear();
+    if(!state)await hydrate();
+    if(busy||!state||!state.active_id||!available(styleId,progression()))return false;
+    const next=copy();
+    if(next.active_id==='together')next.together_style=styleId;
+    else{
+      const index=next.items.findIndex(item=>item.id===next.active_id);
+      if(index<0)return false;
+      next.items[index]={...next.items[index],style:styleId};
+    }
+    return persist(next);
+  }
+
   function close(){
     const finish=()=>{root.classList.remove('open');root.setAttribute('aria-hidden','true');};
     if(!opened())return;root.classList.remove('open');
@@ -211,12 +222,6 @@ function install(w){
   $('usCountdownList').addEventListener('click',async event=>{
     const edit=event.target.closest('[data-countdown-edit]');if(edit)return editor(edit.dataset.countdownEdit);
     const select=event.target.closest('[data-countdown-select]');if(select&&!select.disabled)await persist({...copy(),active_id:select.dataset.countdownSelect});
-  });
-  $('usCountdownStyles').addEventListener('click',event=>{
-    const b=event.target.closest('[data-countdown-pick]');if(!b||!draft||busy)return;
-    const id=b.dataset.countdownPick,s=STYLES.find(s=>s.id===id);
-    draft.style=id;touched=true;styles();preview();w.UsFeedback?.action?.();
-    status(available(id,progression())?'':`Si sblocca con ${s.name} in Sintonia, al livello ${s.level}.`);
   });
   // Native date/time pickers (iOS wheels, Android dialogs) may report only
   // "change": both events keep the preview and the Save state in step.
@@ -243,7 +248,7 @@ function install(w){
     if(await persist(next))collection();
   });
   d.addEventListener('visibilitychange',()=>{w.clearInterval(timer);timer=null;if(!d.hidden){tick();if(key())hydrate();startTimer();}});
-  w.addEventListener('us:progression-updated',()=>{paint();if(draft&&opened()){styles();preview();}});
+  w.addEventListener('us:progression-updated',()=>{paint();if(draft&&opened())preview();});
   // Reconcile partner changes at most once per minute, only while Oggi is visible.
   // Identity changes clear immediately on the next lifecycle tick. No private local storage.
   function startTimer(){if(timer||d.hidden)return;timer=w.setInterval(()=>{
@@ -254,7 +259,7 @@ function install(w){
     }
   },1000);}
   startTimer();
-  const api=w.USCountdown;api.open=open;api.close=close;api.refresh=hydrate;api.reset=()=>clear(true);
+  const api=w.USCountdown;api.open=open;api.close=close;api.refresh=hydrate;api.reset=()=>clear(true);api.setStyle=setStyle;api.activeStyle=activeStyle;api.hasActive=hasActive;
   // Shared sample used by the sheet tiles, the Sintonia collection and the unlock moment.
   api.previewMarkup=style=>STYLES.some(s=>s.id===style)?markup({value:'12',unit:'giorni',label:''},'',style):'';
   if(typeof sb!=='undefined')sb.auth.onAuthStateChange(event=>{if(event==='SIGNED_OUT')clear(true);});

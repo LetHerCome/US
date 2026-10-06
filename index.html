@@ -205,8 +205,6 @@ html.us-returning-device .auth-overlay{
             <label for="usCountdownMode">Tempo<select id="usCountdownMode"><option value="days">Giorni</option><option value="clock">Ore, minuti, secondi</option></select></label>
             <label for="usCountdownDate"><span id="usCountdownDateLabel">Data</span><input id="usCountdownDate" type="date" min="2000-01-01" max="2100-12-31"></label>
           </div>
-          <div class="us-countdown-style-head"><b>Scegli il tuo stile</b><small>Gli sblocchi crescono con Sintonia.</small></div>
-          <div id="usCountdownStyles" class="us-countdown-styles" role="group" aria-label="Stili countdown"></div>
           <div class="us-countdown-editor-actions"><button id="usCountdownSave" type="submit" class="primary">Salva e mostra</button><button id="usCountdownDelete" type="button" class="ghost" hidden>Elimina</button></div>
         </form>
       </div>
@@ -250,7 +248,7 @@ html.us-returning-device .auth-overlay{
 
   <main id="moments" class="page">
     <section class="section" style="margin-top:6px">
-      <h2>Ricordi</h2>
+      <h2 class="sr-only">Ricordi</h2>
       <section class="ricordi-rivivi" id="ricordiRivivi" aria-label="Rivivi" hidden></section>
       <button type="button" class="us-conservati-entry" id="conservatiEntry" onclick="openConservati()" aria-label="Apri Conservati">
         <span class="us-conservati-entry-mark" aria-hidden="true">✦</span>
@@ -572,7 +570,7 @@ html.us-returning-device .auth-overlay{
 <button data-us-feedback="tap" class="active" data-page="home" onclick="go('home',{nav:true})" aria-label="Oggi" aria-current="page"><span class="nicon"><span class="us-nav-icon us-nav-icon--home" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/house-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/house-fill.svg"></span></span></span><span class="nlabel">Oggi</span></button>
 <button data-us-feedback="tap" data-page="bond" onclick="go('bond',{nav:true})" aria-label="Noi"><span class="nicon"><span class="us-nav-icon us-nav-icon--bond" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/heart-straight-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/heart-straight-fill.svg"></span></span></span><span class="nlabel">Noi</span></button>
 <button data-us-feedback="tap" data-page="moments" onclick="go('moments',{nav:true})" aria-label="Ricordi"><span class="nicon"><span class="us-nav-icon us-nav-icon--moments" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/images-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/images-fill.svg"></span></span></span><span class="nlabel">Ricordi</span></button>
-<button data-us-feedback="tap" data-page="quiz" onclick="openQuizHub({nav:true})" aria-label="Gioca"><span class="nicon"><span class="us-nav-icon us-nav-icon--quiz" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/cards-three-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/cards-three-fill.svg"></span></span></span><span class="nlabel">Gioca</span></button>
+<button data-us-feedback="tap" data-page="quiz" onclick="openQuizHub({nav:true})" aria-label="Gioca"><span class="nicon"><span class="us-nav-icon us-nav-icon--quiz" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/game-controller-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/game-controller-fill.svg"></span></span></span><span class="nlabel">Gioca</span></button>
 </nav>
 <!-- US PET V1: decorative layer on the nav rim; unmounted until an approved asset exists. -->
 <div class="us-pet-layer" id="usPetLayer" aria-hidden="true" data-us-ambient hidden><span class="us-pet-actor"></span></div>
