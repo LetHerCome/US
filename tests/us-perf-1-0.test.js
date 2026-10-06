@@ -29,12 +29,19 @@ test('perf 1.0: every versioned runtime file is in the build precache', () => {
   }
 });
 
-test('perf 1.0: the native staging copies every runtime file index.html loads', () => {
+test('perf 1.0: native staging copies runtime files except product surfaces deliberately retired from native', () => {
   const staging = read('scripts/build-capacitor-web.mjs');
+  const retiredFromNative = new Set(['stories.js', 'stories.css']);
   for (const asset of localRuntime()) {
     const file = asset.slice(1).split('?')[0];
+    if (retiredFromNative.has(file)) {
+      assert.doesNotMatch(staging, new RegExp(`\\n\\s*'${file.replace('.', '\\.')}',`), `${file} is intentionally absent from RUNTIME_FILES`);
+      continue;
+    }
     assert.match(staging, new RegExp(`'${file.replace('.', '\\.')}'`), `${file} is in RUNTIME_FILES`);
   }
+  assert.match(staging, /stories\\\.js/, 'native staging explicitly strips the retired Stories script tag');
+  assert.match(staging, /stories\\\.css/, 'native staging explicitly strips the retired Stories stylesheet');
   assert.match(staging, /\/\(<script defer src="\\\/platform\\\.js\(\?:\\\?v=\[\^"\]\+\)\?"><\\\/script>\)\//, 'native-entry.js is inserted whatever the platform.js query');
 });
 
