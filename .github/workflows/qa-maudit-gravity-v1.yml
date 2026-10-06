@@ -1,0 +1,55 @@
+name: QA Maudit Gravity V1
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  linux_review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 19bea87bc9dfbf8f1931f2505bb8f76b12da7e66
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Focused Maudit gravity contracts
+        run: |
+          node --test tests/maudit-interaction.test.js
+          node --test tests/maudit-interaction-browser.test.js
+          node --test tests/pet-foundation.test.js
+          node --test tests/pet-foundation-browser.test.js
+      - name: Full suite
+        run: npm test
+      - name: Cloudflare build
+        run: npm run build:cloudflare-pages
+      - name: Diff check
+        shell: bash
+        run: git diff --check origin/main..19bea87bc9dfbf8f1931f2505bb8f76b12da7e66
+
+  windows_capacitor:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 19bea87bc9dfbf8f1931f2505bb8f76b12da7e66
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Capacitor web build
+        run: npm run build:capacitor-web
