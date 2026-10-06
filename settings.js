@@ -73,6 +73,11 @@ async function locationState(){
   }catch(_){return 'unknown';}
 }
 async function pushState(){
+  if(window.UsNotifications?.supported?.()){
+    // Native app: state of THIS installation (FCM on Android, APNs on iOS).
+    const state=await window.UsNotifications.getState();
+    return {native:true,kind:state.kind,active:state.kind==='active',permission:state.kind==='denied'?'denied':'native'};
+  }
   if(!('Notification' in window))return {permission:'unsupported',active:false};
   const permission=Notification.permission;
   let active=false;
@@ -129,7 +134,7 @@ async function hydrateUsSettings(){
   else locEl.textContent='○';
 
   const pushEl=$('usNotificationsValue');
-  pushEl.textContent=push.active?'Attive':push.permission==='denied'?'Bloccate':'Non attive';
+  pushEl.textContent=push.native?({active:'Attive',inactive:'Non attive',denied:'Permesso negato',settings:'Da attivare',unavailable:'Non disponibili'}[push.kind]||'Non disponibili'):push.active?'Attive':push.permission==='denied'?'Bloccate':'Non attive';
   $('usSyncValue').textContent=navigator.onLine&&profiles.length>=2?'Tutto ok':navigator.onLine?'Parziale':'Offline';
   const dot=$('usSettingsDeviceDot');
   dot.classList.toggle('ok',Boolean(navigator.onLine&&profiles.length>=2));
@@ -335,15 +340,44 @@ function toggleMaudit(){
   syncMauditSetting();
 }
 
+// Native Notifications V1: what this phone can do, in the person's words.
+const US_NATIVE_PUSH_COPY=Object.freeze({
+  active:{title:'Attive su questo dispositivo',detail:'Anche a US chiusa.',action:'Disattiva su questo dispositivo',kind:'ghost'},
+  inactive:{title:'Non attive',detail:'Ti penso, risposte e promemoria, anche a US chiusa.',action:'Attiva',kind:'primary'},
+  denied:{title:'Permesso negato',detail:'Consentile a US nelle impostazioni del telefono.',action:'Apri impostazioni di sistema',kind:'primary'},
+  settings:{title:'Da attivare nelle impostazioni',detail:'Le notifiche di US sono spente nel telefono.',action:'Apri impostazioni di sistema',kind:'primary'},
+  unavailable:{title:'Configurazione non disponibile',detail:'Questa versione di US non può ancora ricevere notifiche.',action:'',kind:'ghost'}
+});
+function pushMasterMarkup(state){
+  if(state.native){
+    const copy=US_NATIVE_PUSH_COPY[state.kind]||US_NATIVE_PUSH_COPY.unavailable;
+    return `<div class="us-settings2-push-master" data-push-state="${esc(state.kind||'unavailable')}">
+      <span><b>${copy.title}</b><small>${copy.detail}</small></span>
+      ${copy.action?`<button type="button" class="${copy.kind}" id="usSettingsPushAction">${copy.action}</button>`:''}
+    </div>`;
+  }
+  return `<div class="us-settings2-push-master">
+      <span><b>${state.active?'Notifiche attive':'Notifiche non attive'}</b><small>${state.permission==='denied'?'Bloccate dal telefono':''}</small></span>
+      <button type="button" class="${state.active?'ghost':'primary'}" id="usSettingsPushAction" ${state.permission==='denied'?'disabled':''}>${state.active?'Disattiva':'Attiva'}</button>
+    </div>`;
+}
+async function nativePushAction(state){
+  const api=window.UsNotifications;
+  if(state.kind==='active'){
+    const result=await api.disable();
+    toast(result.ok?'Notifiche disattivate su questo dispositivo':'Non riesco a disattivarle adesso');
+    return;
+  }
+  if(state.kind==='denied'||state.kind==='settings'){await api.openSettings();return;}
+  if(state.kind==='inactive')await window.enableWebPush?.();
+}
+
 async function notificationsModal(){
   const state=await pushState();
   const {data:prefs}=await sb.rpc('get_notification_preferences');
   const p=prefs||{think:true,today:true,bond:true,relationship:true,left_for_you:true,games:true};
   openModal('Notifiche',`
-    <div class="us-settings2-push-master">
-      <span><b>${state.active?'Notifiche attive':'Notifiche non attive'}</b><small>${state.permission==='denied'?'Bloccate dal telefono':''}</small></span>
-      <button type="button" class="${state.active?'ghost':'primary'}" id="usSettingsPushAction" ${state.permission==='denied'?'disabled':''}>${state.active?'Disattiva':'Attiva'}</button>
-    </div>
+    ${pushMasterMarkup(state)}
     <div class="us-settings2-toggle-list">
       ${preferenceToggle('think','Ti penso',p.think!==false)}
       ${preferenceToggle('today','Today',p.today!==false)}
@@ -356,7 +390,8 @@ async function notificationsModal(){
 
   $('usSettingsPushAction')?.addEventListener('click',async()=>{
     const btn=$('usSettingsPushAction');btn.disabled=true;
-    if(state.active)await window.disableWebPush?.();else await window.enableWebPush?.();
+    if(state.native)await nativePushAction(state);
+    else if(state.active)await window.disableWebPush?.();else await window.enableWebPush?.();
     closeModal();setTimeout(()=>{hydrateUsSettings();notificationsModal();},250);
   });
 
@@ -384,7 +419,7 @@ async function syncStatusModal(){
   const rows=[
     ['Rete',navigator.onLine?'Online':'Offline',navigator.onLine],
     ['Coppia',profiles.length>=2?`${profiles.length}/2 profili collegati`:`${profiles.length}/2 profili`,profiles.length>=2],
-    ['Push',push.active?'Attive':push.permission==='denied'?'Bloccate':'Non attive',push.active],
+    ['Push',push.native?(US_NATIVE_PUSH_COPY[push.kind]||US_NATIVE_PUSH_COPY.unavailable).title:push.active?'Attive':push.permission==='denied'?'Bloccate':'Non attive',push.active],
     ['Posizione',loc==='granted'?'Consentita':loc==='denied'?'Bloccata':'Da chiedere',loc==='granted']
   ];
   $('usSettingsModalBody').innerHTML=`<div class="us-settings2-status-list">${rows.map(([label,value,ok])=>`

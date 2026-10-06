@@ -23,6 +23,7 @@ const RUNTIME_FILES = [
   'platform.js',
   'app-lock.js',
   'app-lock.css',
+  'notifications.js',
   'widgets.js',
   'widget-hub.js',
   'widget-hub.css',
