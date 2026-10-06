@@ -1,0 +1,54 @@
+name: QA Gioca nav optical align
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  linux_review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: f9cda736f8a917c1cc2d97088724df321124484e
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Focused nav contracts
+        run: |
+          node --test tests/us-human-ui-02.test.js
+          node --test tests/web-visual-reconciliation-m1.test.js
+          node --test tests/shell-countdown-polish-browser.test.js
+      - name: Full suite
+        run: npm test
+      - name: Cloudflare build
+        run: npm run build:cloudflare-pages
+      - name: Diff check
+        shell: bash
+        run: git diff --check origin/main..f9cda736f8a917c1cc2d97088724df321124484e
+
+  windows_capacitor:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: f9cda736f8a917c1cc2d97088724df321124484e
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Capacitor web build
+        run: npm run build:capacitor-web
