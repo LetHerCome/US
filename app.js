@@ -4499,6 +4499,31 @@ const passwordEnter=document.getElementById('loginPassword');
 if(loginEnter) loginEnter.addEventListener('keydown',(e)=>{if(e.key==='Enter')loginAccount();});
 if(passwordEnter) passwordEnter.addEventListener('keydown',(e)=>{if(e.key==='Enter')loginAccount();});
 
+function normalizeAndroidNaturalTextInputs(root=document){
+  if(!window.UsPlatform?.isNative||!document.documentElement.classList.contains('us-native-android'))return;
+  const nodes=[];
+  if(root?.matches?.('textarea,input'))nodes.push(root);
+  root?.querySelectorAll?.('textarea,input')?.forEach?.(node=>nodes.push(node));
+  for(const el of nodes){
+    if(el.closest?.('.auth-overlay'))continue;
+    const tag=el.tagName?.toLowerCase();
+    const type=String(el.getAttribute?.('type')||'text').toLowerCase();
+    const mode=String(el.getAttribute?.('inputmode')||'').toLowerCase();
+    if(tag!=='textarea'&&type!=='text')continue;
+    if(mode&&mode!=='text')continue;
+    el.setAttribute('inputmode','text');
+    el.setAttribute('autocapitalize','sentences');
+    el.setAttribute('autocorrect','on');
+    el.setAttribute('spellcheck','true');
+  }
+}
+normalizeAndroidNaturalTextInputs();
+if(window.UsPlatform?.isNative&&document.documentElement.classList.contains('us-native-android')&&typeof MutationObserver==='function'){
+  new MutationObserver(records=>{
+    for(const record of records)for(const node of record.addedNodes||[])if(node?.nodeType===1)normalizeAndroidNaturalTextInputs(node);
+  }).observe(document.body,{childList:true,subtree:true});
+}
+
 initCloud();
 
 if (canUseUsServiceWorker()) {
