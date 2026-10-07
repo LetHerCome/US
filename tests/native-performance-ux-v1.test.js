@@ -62,6 +62,19 @@ test('N3.5 Ricordi prioritizes above-fold media and quick tab revisits avoid red
   assert.match(app, /loading="\$\{priority\?'eager':'lazy'\}"/);
 });
 
+test('N3.5 Android native WebView normalizes only ordinary web-edit text for the IME', () => {
+  const webView = read('android/app/src/main/java/com/usapp/us/UsWebView.java');
+  const layout = read('android/app/src/main/res/layout/capacitor_bridge_layout_main.xml');
+  assert.match(webView, /extends CapacitorWebView/);
+  assert.match(webView, /super\.onCreateInputConnection\(outAttrs\)/);
+  assert.match(webView, /variation == InputType\.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT/);
+  assert.match(webView, /InputType\.TYPE_TEXT_VARIATION_NORMAL/);
+  assert.match(webView, /~InputType\.TYPE_TEXT_FLAG_NO_SUGGESTIONS/);
+  assert.doesNotMatch(webView, /TYPE_TEXT_VARIATION_PASSWORD\s*==|TYPE_TEXT_VARIATION_EMAIL_ADDRESS\s*==/);
+  assert.match(layout, /<com\.usapp\.us\.UsWebView/);
+  assert.match(layout, /android:id="@\+id\/webview"/);
+});
+
 test('N3.5 native density/render guardrails are scoped to native', () => {
   const css = read('styles.css');
   assert.match(css, /html\.us-native\{/);
