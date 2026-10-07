@@ -63,3 +63,13 @@ test('N3.5 shell build id advances so PWA clients can receive shared performance
   assert.equal(version.version, 'us-native-ux-polish-v1b-20261007-1');
   assert.match(sw, /const BUILD_ID = "us-native-ux-polish-v1b-20261007-1";/);
 });
+
+
+test('N3.5 all local JS/CSS asset query versions match the build marker', () => {
+  const html = read('index.html');
+  const build = html.match(/name="us-build" content="([^"]+)"/)?.[1];
+  assert.ok(build);
+  const versions = [...html.matchAll(/(?:src|href)="\/[^"]+\.(?:js|css)\?v=([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(versions.length > 10);
+  assert.ok(versions.every((value) => value === build), JSON.stringify([...new Set(versions)]));
+});
