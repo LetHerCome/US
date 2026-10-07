@@ -8,7 +8,10 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const app = read('app.js');
 const settings = read('settings.js');
 const html = read('index.html');
-const migration = read('supabase/migrations/20261007160000_ricordi_thumbnails_v1.sql');
+const migration = [
+  read('supabase/migrations/20261007160733_ricordi_thumbnails_v1_column.sql'),
+  read('supabase/migrations/20261007160744_ricordi_thumbnails_v1_rpc.sql')
+].join('\n');
 const deleteMoment = read('supabase/functions/delete-moment/index.ts');
 
 test('Ricordi thumbnails keep the original and add one optional derivative path', () => {
