@@ -4505,7 +4505,7 @@ if (canUseUsServiceWorker()) {
 // a WebView. US provides a small, device-local quick picker for free-text
 // fields instead of depending on OEM keyboard chrome.
 function installNativeEmojiAssist(){
-  if(!window.UsPlatform?.isNative||document.getElementById('usNativeEmojiTrigger'))return;
+  if(!window.UsPlatform?.isNative||!document.documentElement.classList.contains('us-native-android')||document.getElementById('usNativeEmojiTrigger'))return;
   const emojis=['❤️','🥰','😘','😂','🥹','😭','🫶','✨','🥺','😈','🔥','🤍'];
   let target=null;
   const trigger=document.createElement('button');
