@@ -10,6 +10,8 @@ const APP_SHELL = [
   "/index.html",
   versioned("/auth-storage.js"),
   versioned("/platform.js"),
+  versioned("/media-picker.js"),
+  versioned("/media-picker.css"),
   versioned("/app-lock.js"),
   versioned("/app-lock.css"),
   versioned("/notifications.js"),
