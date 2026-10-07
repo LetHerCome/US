@@ -27,6 +27,7 @@ on:
       - 'tests/native-notifications-v1-native.test.js'
       - 'tests/native-performance-ux-v1.test.js'
       - 'tests/ricordi-thumbnails-v1.test.js'
+      - 'tests/settings-v2-consumer.test.js'
       - 'scripts/build-capacitor-web.mjs'
       - '.github/workflows/android-native-ci.yml'
   pull_request:
@@ -40,6 +41,7 @@ on:
       - 'platform.js'
       - 'app.js'
       - 'settings.js'
+      - 'settings2.css'
       - 'index.html'
       - 'styles.css'
       - 'moments-albums.js'
@@ -47,7 +49,8 @@ on:
       - 'supabase/migrations/**'
       - 'tests/native-performance-ux-v1.test.js'
       - 'tests/ricordi-thumbnails-v1.test.js'
-      - 'tests/ricordi-delete-edge.test.js'
+      - 'tests/settings-v2-consumer.test.js'
+      - 'tests/ricordi-delete-edge.test.js tests/settings-v2-consumer.test.js'
       - 'scripts/build-capacitor-web.mjs'
       - '.github/workflows/android-native-ci.yml'
 
@@ -80,7 +83,7 @@ jobs:
         run: npm ci
 
       - name: Native contract tests
-        run: node --test tests/native-security-v1.test.js tests/android-scaffold.test.js tests/android-stable-signing.test.js tests/native-foundation.test.js tests/native-notifications-v1-native.test.js tests/native-performance-ux-v1.test.js tests/ricordi-thumbnails-v1.test.js tests/ricordi-delete-edge.test.js
+        run: node --test tests/native-security-v1.test.js tests/android-scaffold.test.js tests/android-stable-signing.test.js tests/native-foundation.test.js tests/native-notifications-v1-native.test.js tests/native-performance-ux-v1.test.js tests/ricordi-thumbnails-v1.test.js tests/ricordi-delete-edge.test.js tests/settings-v2-consumer.test.js
 
       - name: npm run build:capacitor-web
         run: npm run build:capacitor-web
