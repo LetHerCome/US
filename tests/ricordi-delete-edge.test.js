@@ -29,13 +29,14 @@ test('delete-moment accepts only a moment id and derives couple membership and m
   assert.match(source, /path\.startsWith\(prefix\)/);
 });
 
-test('delete-moment removes the authorized row then cleans cover and album objects through Storage API', () => {
+test('delete-moment removes the authorized row then cleans cover, thumbnail and album objects through Storage API', () => {
   const rowDelete = source.indexOf('.from("moments")\n      .delete()');
   const storageDelete = source.indexOf('admin.storage.from("us-media").remove(paths)');
   assert.ok(rowDelete >= 0, 'authorized Moment delete is present');
   assert.ok(storageDelete > rowDelete, 'Storage cleanup happens after the row deletion is proven');
   assert.match(source, /\.eq\("couple_id", profile\.couple_id\)[\s\S]*\.select\("id"\)/);
   assert.doesNotMatch(source, /\.eq\("created_by", authData\.user\.id\)/);
+  assert.match(source, /moment\.thumbnail_path/);
   assert.match(source, /return json\(\{ deleted: true, storage_cleanup: storageCleanup/);
 });
 
@@ -44,7 +45,7 @@ test('whole-Moment privileged cleanup never exposes server credentials to the PW
   assert.match(app, /sb\.functions\.invoke\('delete-moment'/);
 });
 test('Ricordi grid exposes Elimina on every shared Moment card', () => {
-  assert.match(app, /ricordiMomentCard\(row,signedUrls\.get\(row\.storage_path\),author,true,/);
+  assert.match(app, /ricordiMomentCard\(row,signedUrls,author,true,/);
   assert.match(app, /aria-label="Elimina ricordo"/);
 });
 
