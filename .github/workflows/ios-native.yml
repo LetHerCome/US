@@ -19,7 +19,9 @@ on:
       - 'moments-albums.js'
       - 'tests/native-performance-ux-v1.test.js'
       - 'tests/ricordi-thumbnails-v1.test.js'
+      - 'tests/settings-v2-consumer.test.js'
       - 'settings.js'
+      - 'settings2.css'
       - 'index.html'
       - 'supabase/functions/delete-moment/**'
       - 'supabase/migrations/**'
@@ -34,6 +36,7 @@ on:
       - 'tests/native-notifications-v1-native.test.js'
       - 'tests/native-performance-ux-v1.test.js'
       - 'tests/ricordi-thumbnails-v1.test.js'
+      - 'tests/settings-v2-consumer.test.js'
       - '.github/workflows/ios-native.yml'
   pull_request:
     paths:
@@ -89,7 +92,7 @@ jobs:
         run: npm ci
 
       - name: Native contract tests
-        run: node --test tests/ios-native-baseline.test.js tests/native-web-staging.test.js tests/native-foundation.test.js tests/native-security-v1.test.js tests/native-notifications-v1-native.test.js tests/native-performance-ux-v1.test.js tests/ricordi-thumbnails-v1.test.js tests/ricordi-delete-edge.test.js
+        run: node --test tests/ios-native-baseline.test.js tests/native-web-staging.test.js tests/native-foundation.test.js tests/native-security-v1.test.js tests/native-notifications-v1-native.test.js tests/native-performance-ux-v1.test.js tests/ricordi-thumbnails-v1.test.js tests/ricordi-delete-edge.test.js tests/settings-v2-consumer.test.js
 
       - name: App lock policy checks (host swiftc, no simulator)
         run: |
