@@ -1,0 +1,137 @@
+name: Android signed candidate APK
+
+on:
+  push:
+    branches:
+      - mission/us-multicouple-foundation-v1-clean
+    paths:
+      - 'app.js'
+      - 'android/**'
+      - 'native-plugins/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'capacitor.config.json'
+      - 'scripts/build-capacitor-web.mjs'
+      - 'tests/multicouple-foundation-v1.test.js'
+      - 'tests/native-boot-auth-safety.test.js'
+      - 'tests/beatrice-password-login.test.js'
+      - 'tests/sec-rls-hardening.test.js'
+      - '.github/workflows/android-candidate-signed.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-candidate-multicouple
+  cancel-in-progress: true
+
+jobs:
+  signed-candidate:
+    runs-on: windows-latest
+    timeout-minutes: 70
+    env:
+      SIGNING_BUNDLE_B64: ${{ secrets.ANDROID_SIGNING_BUNDLE_B64 }}
+      GOOGLE_SERVICES_JSON_B64: ${{ secrets.ANDROID_GOOGLE_SERVICES_JSON_B64 }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Require permanent signing material
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:SIGNING_BUNDLE_B64)) {
+            throw "ANDROID_SIGNING_BUNDLE_B64 is required for a candidate APK"
+          }
+
+      - name: Restore permanent keystore
+        shell: pwsh
+        run: |
+          $jsonBytes = [Convert]::FromBase64String($env:SIGNING_BUNDLE_B64)
+          $bundle = [Text.Encoding]::UTF8.GetString($jsonBytes) | ConvertFrom-Json
+          if (-not $bundle.keystoreBase64 -or -not $bundle.storePassword -or -not $bundle.keyAlias -or -not $bundle.keyPassword) {
+            throw "Signing bundle is incomplete"
+          }
+          $path = Join-Path $env:RUNNER_TEMP "us-candidate-signing.jks"
+          [IO.File]::WriteAllBytes($path, [Convert]::FromBase64String($bundle.keystoreBase64))
+          "US_ANDROID_KEYSTORE_PATH=$path" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "US_ANDROID_KEYSTORE_PASSWORD=$($bundle.storePassword)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "US_ANDROID_KEY_ALIAS=$($bundle.keyAlias)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "US_ANDROID_KEY_PASSWORD=$($bundle.keyPassword)" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Restore Firebase Android config
+        shell: pwsh
+        run: |
+          $configured = -not [string]::IsNullOrWhiteSpace($env:GOOGLE_SERVICES_JSON_B64)
+          "US_FIREBASE_CONFIGURED=$($configured.ToString().ToLowerInvariant())" | Out-File -FilePath $env:GITHUB_ENV -Append
+          if (-not $configured) { exit 0 }
+          $bytes = [Convert]::FromBase64String($env:GOOGLE_SERVICES_JSON_B64)
+          $path = Join-Path $env:GITHUB_WORKSPACE "android/app/google-services.json"
+          [IO.File]::WriteAllBytes($path, $bytes)
+          $json = Get-Content $path -Raw | ConvertFrom-Json
+          $package = @($json.client | ForEach-Object { $_.client_info.android_client_info.package_name }) | Where-Object { $_ -eq "com.usapp.us" }
+          if (-not $package) { throw "google-services.json does not contain com.usapp.us" }
+
+      - name: Assign candidate version
+        shell: pwsh
+        run: |
+          $code = [int][DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+          "US_ANDROID_VERSION_CODE=$code" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "US_ANDROID_VERSION_NAME=1.0-candidate.$code" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Multi-couple and auth safety gate
+        run: node --test tests/multicouple-foundation-v1.test.js tests/native-boot-auth-safety.test.js tests/beatrice-password-login.test.js tests/sec-rls-hardening.test.js tests/native-security-v1.test.js tests/native-foundation.test.js tests/native-notifications-v1-native.test.js
+
+      - name: Stage Capacitor bundle
+        run: npm run build:capacitor-web
+
+      - name: Sync Android
+        run: npx cap sync android
+
+      - name: Test and assemble signed candidate
+        working-directory: android
+        run: .\gradlew.bat --no-daemon testDebugUnitTest assembleRelease
+
+      - name: Verify candidate
+        shell: pwsh
+        run: |
+          $apk = "android/app/build/outputs/apk/release/app-release.apk"
+          if (-not (Test-Path $apk)) { throw "Signed candidate APK missing" }
+          $apksigner = Get-ChildItem "$env:ANDROID_HOME\build-tools" -Recurse -Filter apksigner.bat |
+            Sort-Object FullName | Select-Object -Last 1
+          if (-not $apksigner) { throw "apksigner.bat not found" }
+          & $apksigner.FullName verify --verbose --print-certs $apk | Tee-Object -FilePath signature.txt
+          if ($LASTEXITCODE -ne 0) { throw "APK signature verification failed" }
+          New-Item -ItemType Directory -Force -Path out | Out-Null
+          Copy-Item $apk out/US-Android-Multicouple-Candidate.apk
+          $hash=(Get-FileHash out/US-Android-Multicouple-Candidate.apk -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  US-Android-Multicouple-Candidate.apk" | Set-Content out/US-Android-Multicouple-Candidate.sha256.txt
+          @"
+          source_sha=${{ github.sha }}
+          application_id=com.usapp.us
+          version_code=$env:US_ANDROID_VERSION_CODE
+          version_name=$env:US_ANDROID_VERSION_NAME
+          firebase_configured=$env:US_FIREBASE_CONFIGURED
+          sha256=$hash
+          "@ | Set-Content out/build-info.txt
+          Copy-Item signature.txt out/signature.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: US-Android-Multicouple-Candidate
+          path: out/
+          if-no-files-found: error
+          retention-days: 14
