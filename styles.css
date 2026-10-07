@@ -1365,3 +1365,12 @@ html.us-native{
     contain-intrinsic-size:auto 270px;
   }
 }
+
+
+/* Android WebView: keep tab changes perceptibly immediate. The shared motion
+   language stays intact, but the entry transition is shorter than the PWA
+   because WebView also has to composite native system-bar insets. */
+html.us-native-android .page.active.us-motion5-enter-next,
+html.us-native-android .page.active.us-motion5-enter-prev{
+  animation-duration:100ms!important;
+}
