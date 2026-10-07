@@ -1145,9 +1145,14 @@ async function hydrateProfileAvatars(){
 }
 window.hydrateProfileAvatars=hydrateProfileAvatars;
 
-function pickProfilePhoto(){
+async function pickProfilePhoto(){
   if(!window.usProfile)return toast('Connessione non pronta');
-  document.getElementById('profileAvatarFile').click();
+  if(window.UsPlatform?.isNative&&window.UsMediaPicker?.chooseImage){
+    const file=await window.UsMediaPicker.chooseImage({title:'Foto profilo'});
+    if(file)await uploadProfilePhoto(file);
+    return;
+  }
+  document.getElementById('profileAvatarFile')?.click();
 }
 window.pickProfilePhoto=pickProfilePhoto;
 
@@ -1264,7 +1269,7 @@ window.UsRicordiThumbnails=Object.freeze({
 
 async function uploadProfilePhoto(file){
   if(!window.usProfile||!file)return;
-  if(!['image/jpeg','image/png','image/webp'].includes(file.type))return toast('Per ora usa JPG, PNG o WebP');
+  if(!isUsImageFile(file))return toast('Scegli una foto');
   if(file.size>20*1024*1024)return toast('Foto troppo grande: massimo 20 MB');
   const oldPath=window.usProfile.avatar_path||null;
   const btn=document.getElementById('profileAvatarBtn');
@@ -2482,8 +2487,39 @@ function updateDetectedMomentDate(){
   if(el)el.textContent=`Data foto · ${formatMomentDetectedDate(pendingMomentDate)}`;
 }
 
-function pickMomentPhoto(){
-  document.getElementById('momentFile').click();
+function isUsImageFile(file){return Boolean(file&&String(file.type||'').toLowerCase().startsWith('image/'));}
+
+async function applyMomentPhotoFile(file,{input=null}={}){
+  const compose=document.getElementById('momentCompose');
+  const img=document.getElementById('momentPreviewImg');
+  if(!file)return false;
+  if(!isUsImageFile(file)){
+    if(input)input.value='';
+    toast('Scegli una foto');
+    return false;
+  }
+  if(file.size>20*1024*1024){
+    if(input)input.value='';
+    toast('Foto troppo grande: massimo 20 MB');
+    return false;
+  }
+  pendingMomentFile=file;
+  pendingMomentDate=await detectMomentDate(file);
+  updateDetectedMomentDate();
+  if(pendingMomentPreviewUrl)URL.revokeObjectURL(pendingMomentPreviewUrl);
+  pendingMomentPreviewUrl=URL.createObjectURL(file);
+  if(img)img.src=pendingMomentPreviewUrl;
+  compose?.classList.add('has-photo');
+  return true;
+}
+
+async function pickMomentPhoto(){
+  if(window.UsPlatform?.isNative&&window.UsMediaPicker?.chooseImage){
+    const file=await window.UsMediaPicker.chooseImage({title:'Aggiungi un ricordo'});
+    if(file)await applyMomentPhotoFile(file);
+    return;
+  }
+  document.getElementById('momentFile')?.click();
 }
 window.pickMomentPhoto=pickMomentPhoto;
 
@@ -2498,26 +2534,11 @@ function resetMomentComposer(){
   const detected=document.getElementById('momentDetectedDate');if(detected)detected.textContent='';
 }
 
-document.getElementById('momentFile')?.addEventListener('change',async(event)=>{
-  const file=event.target.files?.[0]||null;
-  const compose=document.getElementById('momentCompose');
-  const img=document.getElementById('momentPreviewImg');
-  if(!file)return;
-  if(!['image/jpeg','image/png','image/webp'].includes(file.type)){
-    event.target.value='';
-    return toast('Per ora usa JPG, PNG o WebP');
-  }
-  if(file.size>20*1024*1024){
-    event.target.value='';
-    return toast('Foto troppo grande: massimo 20 MB');
-  }
-  pendingMomentFile=file;
-  pendingMomentDate=await detectMomentDate(file);
-  updateDetectedMomentDate();
-  if(pendingMomentPreviewUrl)URL.revokeObjectURL(pendingMomentPreviewUrl);
-  pendingMomentPreviewUrl=URL.createObjectURL(file);
-  img.src=pendingMomentPreviewUrl;
-  compose?.classList.add('has-photo');
+document.getElementById('momentFile')?.addEventListener('change',(event)=>{
+  applyMomentPhotoFile(event.target.files?.[0]||null,{input:event.target}).catch(error=>{
+    console.warn('[US Media] Moment selection',error);
+    toast('Non riesco ad aprire questa foto');
+  });
 });
 
 // M12A — a newly created Ricordo settles in and catches the light ONCE. The id
