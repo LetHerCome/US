@@ -238,6 +238,35 @@ window.usGetSignedUrls=usGetSignedUrls;
 window.usInvalidateSignedUrl=usInvalidateSignedUrl;
 window.usRecoverPrivateImage=usRecoverPrivateImage;
 
+let usNativeMediaPrewarmedFor='';
+async function usPrewarmNativeMomentMedia(limit=4){
+  const profile=window.usProfile;
+  if(!window.UsPlatform?.isNative||!profile?.couple_id||usNativeMediaPrewarmedFor===profile.couple_id)return;
+  const connection=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
+  if(connection?.saveData||String(connection?.effectiveType||'').includes('2g'))return;
+  usNativeMediaPrewarmedFor=profile.couple_id;
+  try{
+    const {data:rows,error}=await sb.from('moments')
+      .select('storage_path')
+      .eq('couple_id',profile.couple_id)
+      .order('moment_date',{ascending:false})
+      .order('created_at',{ascending:false})
+      .limit(limit);
+    if(error||window.usProfile!==profile){if(error)throw error;return;}
+    const urls=await usGetSignedUrls((rows||[]).map(row=>row.storage_path),21600);
+    await Promise.allSettled([...urls.values()].slice(0,limit).map(url=>new Promise(resolve=>{
+      const img=new Image();
+      img.decoding='async';
+      try{img.fetchPriority='low';}catch(_e){}
+      img.onload=img.onerror=()=>resolve();
+      img.src=url;
+    })));
+  }catch(error){
+    usNativeMediaPrewarmedFor='';
+    console.warn('[US Media] native prewarm',error);
+  }
+}
+
 // ===== US v20 · Web Push Foundation =====
 const US_VAPID_PUBLIC_KEY='BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss';
 let usPushUiBusy=false;
@@ -735,6 +764,9 @@ async function initCloud(){
     usRunWhenIdle(()=>maybeAutoRefreshLocation('launch'),1400);
     usRunWhenIdle(()=>refreshWebPushUi(),1100);
     usRunWhenIdle(()=>hydrateThink(),900);
+    // Native has no service-worker image cache. Prewarm only the first few
+    // Ricordi after Home is usable so opening the archive feels immediate.
+    usRunWhenIdle(()=>usPrewarmNativeMomentMedia(),2200);
 
     // Push navigation itself is user intent, so keep it immediate.
     flushPendingPushTarget();
