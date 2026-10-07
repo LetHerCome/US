@@ -24,7 +24,8 @@ on:
       - 'app-lock.js'
       - 'app-lock.css'
       - 'notifications.js'
-      - 'tests/native-notifications-v1-native.test.js tests/native-performance-ux-v1.test.js'
+      - 'tests/native-notifications-v1-native.test.js'
+      - 'tests/native-performance-ux-v1.test.js'
       - 'scripts/build-capacitor-web.mjs'
       - '.github/workflows/android-native-ci.yml'
   pull_request:
@@ -34,6 +35,17 @@ on:
       - 'capacitor.config.json'
       - 'package.json'
       - 'package-lock.json'
+      - 'native-entry.mjs'
+      - 'platform.js'
+      - 'app.js'
+      - 'styles.css'
+      - 'moments-albums.js'
+      - 'tests/native-performance-ux-v1.test.js'
+      - 'app-lock.js'
+      - 'app-lock.css'
+      - 'notifications.js'
+      - 'tests/native-notifications-v1-native.test.js'
+      - 'scripts/build-capacitor-web.mjs'
       - '.github/workflows/android-native-ci.yml'
 
 permissions:
@@ -65,7 +77,7 @@ jobs:
         run: npm ci
 
       - name: Native contract tests
-        run: node --test tests/native-security-v1.test.js tests/android-scaffold.test.js tests/android-stable-signing.test.js tests/native-foundation.test.js tests/native-notifications-v1-native.test.js
+        run: node --test tests/native-security-v1.test.js tests/android-scaffold.test.js tests/android-stable-signing.test.js tests/native-foundation.test.js tests/native-notifications-v1-native.test.js tests/native-performance-ux-v1.test.js
 
       - name: npm run build:capacitor-web
         run: npm run build:capacitor-web
