@@ -38,18 +38,15 @@ test('N3.5 new private media paths are long-cache immutable uploads', () => {
   assert.doesNotMatch(albums, /cacheControl:'3600'/);
   assert.ok((app.match(/cacheControl:'31536000'/g) || []).length >= 2);
   assert.match(albums, /cacheControl:'31536000'/);
+  assert.match(app, /compressImageFile\(file,\{maxDimension:1600,quality:\.80\}\)/);
+  assert.match(albums, /compressor\(pendingFile,\{maxDimension:1600,quality:\.80\}\)/);
 });
 
-test('N3.5 Android gets a native-only emoji fallback without changing auth fields', () => {
-  const platform = read('platform.js');
+test('N3.5 Android does not ship an in-app emoji replacement', () => {
   const app = read('app.js');
   const css = read('styles.css');
-  assert.match(platform, /classList\.add\('us-native'\)/);
-  assert.match(platform, /us-native-\$\{platformName\}/);
-  assert.match(app, /classList\.contains\('us-native-android'\)/);
-  assert.match(app, /const emojis=\['❤️'/);
-  assert.match(app, /el\.closest\('\.auth-overlay'\)/);
-  assert.match(css, /\.us-native-emoji-panel/);
+  assert.doesNotMatch(app, /installNativeEmojiAssist|usNativeEmojiTrigger|const emojis=/);
+  assert.doesNotMatch(css, /us-native-emoji-(trigger|panel)/);
 });
 
 test('N3.5 native density/render guardrails are scoped to native', () => {
@@ -63,6 +60,16 @@ test('N3.5 native density/render guardrails are scoped to native', () => {
 test('N3.5 shell build id advances so PWA clients can receive shared performance fixes', () => {
   const sw = read('service-worker.js');
   const version = JSON.parse(read('version.json'));
-  assert.equal(version.version, 'us-native-performance-v1-20261007-1');
-  assert.match(sw, /const BUILD_ID = "us-native-performance-v1-20261007-1";/);
+  assert.equal(version.version, 'us-native-ux-polish-v1b-20261007-1');
+  assert.match(sw, /const BUILD_ID = "us-native-ux-polish-v1b-20261007-1";/);
+});
+
+
+test('N3.5 all local JS/CSS asset query versions match the build marker', () => {
+  const html = read('index.html');
+  const build = html.match(/name="us-build" content="([^"]+)"/)?.[1];
+  assert.ok(build);
+  const versions = [...html.matchAll(/(?:src|href)="\/[^"]+\.(?:js|css)\?v=([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(versions.length > 10);
+  assert.ok(versions.every((value) => value === build), JSON.stringify([...new Set(versions)]));
 });

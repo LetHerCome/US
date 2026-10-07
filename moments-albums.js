@@ -183,7 +183,7 @@ async function saveAlbumPhoto(){
   try{
     const compressor=window.compressImageFile;
     if(typeof compressor!=='function')throw new Error('COMPRESSION_UNAVAILABLE');
-    const compressed=await compressor(pendingFile,{maxDimension:1920,quality:.82});
+    const compressed=await compressor(pendingFile,{maxDimension:1600,quality:.80});
     path=`${window.usProfile.couple_id}/${window.usProfile.id}/moment-albums/${currentAlbum.id}/${Date.now()}-${crypto.randomUUID()}.webp`;
     if(save)save.textContent='Carico…';
     const {error:uploadError}=await sb.storage.from('us-media').upload(path,compressed,{contentType:'image/webp',upsert:false,cacheControl:'31536000'});
