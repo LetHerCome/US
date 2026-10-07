@@ -56,3 +56,16 @@ Only durable decisions belong here. New missions should not reopen them without 
 - Native registration is per app installation (random UUID, rotated at logout), only through authenticated RPCs; logout removes only this installation.
 - Payloads carry an allow-listed target and an optional UUID, never a URL; navigation waits for the session and the app lock. Notification actions never mutate data.
 - Native credentials live only in Supabase Edge secrets; unset = native transport off, Web Push unchanged.
+
+
+## 2026-10-07
+
+### Multi-couple foundation
+
+- US is a single-couple UX on a multi-couple architecture.
+- `couple_id` is the tenant boundary for shared state and authorization.
+- V1 keeps `profiles.id = auth.users.id` plus `profiles.couple_id` as the active membership authority.
+- A separate `couple_members` table is deferred until an account needs multiple simultaneous or historical couple memberships.
+- Relationship age is data-driven from `couples.started_on`; no private-couple date belongs in runtime logic.
+- Legacy `francesco | beatrice` values remain compatibility slot tokens for now. Their database-wide normalization is a separate atomic migration.
+- Any auth/bootstrap change must pass the dedicated Boot/Auth safety contract and a signed Android candidate must be tested before merge.

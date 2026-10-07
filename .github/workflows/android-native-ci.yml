@@ -18,6 +18,10 @@ on:
       - 'native-entry.mjs'
       - 'platform.js'
       - 'app.js'
+      - 'tests/multicouple-foundation-v1.test.js'
+      - 'tests/native-boot-auth-safety.test.js'
+      - 'tests/beatrice-password-login.test.js'
+      - 'tests/sec-rls-hardening.test.js'
       - 'styles.css'
       - 'moments-albums.js'
       - 'tests/native-performance-ux-v1.test.js'
@@ -39,6 +43,10 @@ on:
       - 'native-entry.mjs'
       - 'platform.js'
       - 'app.js'
+      - 'tests/multicouple-foundation-v1.test.js'
+      - 'tests/native-boot-auth-safety.test.js'
+      - 'tests/beatrice-password-login.test.js'
+      - 'tests/sec-rls-hardening.test.js'
       - 'settings.js'
       - 'index.html'
       - 'styles.css'
@@ -80,7 +88,7 @@ jobs:
         run: npm ci
 
       - name: Native contract tests
-        run: node --test tests/native-security-v1.test.js tests/android-scaffold.test.js tests/android-stable-signing.test.js tests/native-foundation.test.js tests/native-notifications-v1-native.test.js tests/native-performance-ux-v1.test.js tests/ricordi-thumbnails-v1.test.js tests/ricordi-delete-edge.test.js
+        run: node --test tests/native-security-v1.test.js tests/android-scaffold.test.js tests/android-stable-signing.test.js tests/native-foundation.test.js tests/native-notifications-v1-native.test.js tests/native-performance-ux-v1.test.js tests/ricordi-thumbnails-v1.test.js tests/ricordi-delete-edge.test.js tests/multicouple-foundation-v1.test.js tests/native-boot-auth-safety.test.js tests/beatrice-password-login.test.js tests/sec-rls-hardening.test.js
 
       - name: npm run build:capacitor-web
         run: npm run build:capacitor-web
