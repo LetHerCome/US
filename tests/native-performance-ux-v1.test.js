@@ -9,9 +9,10 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 
 test('N3.5 navigation paints before heavy page hydration', () => {
   const app = read('app.js');
-  assert.match(app, /function schedulePageHydration\(id\)/);
+  assert.match(app, /function schedulePageHydration\(id,\{force=false\}=\{\}\)/);
   assert.match(app, /requestAnimationFrame\(\(\)=>setTimeout\(/);
-  assert.match(app, /schedulePageHydration\(id\);\n}/);
+  assert.match(app, /schedulePageHydration\(id,\{force:true\}\);\n    return;/);
+  assert.match(app, /scrollTo\([\s\S]*?schedulePageHydration\(id\);\n}/);
   assert.doesNotMatch(app, /if\(id==='moments' && window\.usProfile\) hydrateMoments\(\)/);
 });
 
@@ -44,7 +45,7 @@ test('N3.5 Android uses normal text IME hints and ships no in-app emoji substitu
   const platform = read('platform.js');
   const app = read('app.js');
   const css = read('styles.css');
-  assert.match(platform, /classList\.add\('us-native'\)/);
+  assert.match(platform, /classList\?\.add\('us-native'\)/);
   assert.match(platform, /us-native-\$\{platformName\}/);
   assert.match(app, /function normalizeAndroidNaturalTextInputs/);
   assert.match(app, /setAttribute\('inputmode','text'\)/);
@@ -86,6 +87,6 @@ test('N3.5 native density/render guardrails are scoped to native', () => {
 test('N3.5 shell build id advances so PWA clients can receive shared performance fixes', () => {
   const sw = read('service-worker.js');
   const version = JSON.parse(read('version.json'));
-  assert.equal(version.version, 'us-native-ime-performance-v1-20261007-1');
-  assert.match(sw, /const BUILD_ID = "us-native-ime-performance-v1-20261007-1";/);
+  assert.equal(version.version, 'us-ricordi-thumbnails-v1-20261007-1');
+  assert.match(sw, /const BUILD_ID = "us-ricordi-thumbnails-v1-20261007-1";/);
 });

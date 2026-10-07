@@ -125,6 +125,7 @@ async function hydrateUsSettings(){
   const feedbackValue=$('usFeedbackValue');if(feedbackValue)feedbackValue.textContent=feedbackSummary();
   syncMauditSetting();
   syncAppLockSetting().catch(()=>{});
+  syncRicordiOptimizationSetting().catch(()=>{});
   $('usSettingsBuild').textContent=currentBuild();
 
   const locEl=$('usLocationState');
@@ -286,6 +287,79 @@ function feedbackModal(){
     const value=$('usFeedbackValue');if(value)value.textContent=feedbackSummary();
     if(next)window.UsFeedback?.[btn.dataset.feedback==='sounds'?'tap':'action']?.();
   }));
+}
+
+// Ricordi thumbnails: one-time native maintenance for legacy full-size Moments.
+// It never replaces or deletes the originals; it only creates private derivatives.
+async function syncRicordiOptimizationSetting(){
+  const row=$('usOptimizeRicordiSetting');
+  const value=$('usOptimizeRicordiValue');
+  if(!row)return;
+  if(!window.UsPlatform?.isNative||!window.UsRicordiThumbnails?.missingCount){
+    row.hidden=true;
+    return;
+  }
+  try{
+    const count=await window.UsRicordiThumbnails.missingCount();
+    row.hidden=count<=0;
+    if(value)value.textContent=count>0?`${count} da fare`:'';
+  }catch(error){
+    console.warn('[US Settings] Ricordi optimization status',error);
+    row.hidden=true;
+  }
+}
+function ricordiOptimizationModal(){
+  if(!window.UsPlatform?.isNative||!window.UsRicordiThumbnails?.optimizeLegacy)return;
+  openModal('Ottimizza Ricordi',`
+    <div class="us-settings-copy">
+      <p>US creerà anteprime leggere dei Ricordi più vecchi per aprirli molto più velocemente.</p>
+      <p><b>Le foto originali restano intatte.</b> L'operazione scarica temporaneamente le foto: falla una volta quando sei sotto Wi-Fi.</p>
+    </div>
+    <div class="us-settings2-action-stack">
+      <button type="button" class="primary" id="usOptimizeRicordiStart">Ottimizza adesso</button>
+      <button type="button" class="ghost" id="usOptimizeRicordiCancel">Più tardi</button>
+    </div>
+    <p class="us-settings2-modal-copy" id="usOptimizeRicordiProgress" role="status" aria-live="polite"></p>
+  `,'QUESTO TELEFONO');
+  $('usOptimizeRicordiCancel')?.addEventListener('click',closeModal);
+  $('usOptimizeRicordiStart')?.addEventListener('click',async()=>{
+    const btn=$('usOptimizeRicordiStart');
+    const cancel=$('usOptimizeRicordiCancel');
+    const progress=$('usOptimizeRicordiProgress');
+    btn.disabled=true;if(cancel)cancel.disabled=true;
+    btn.textContent='Ottimizzo…';
+    const result=await window.UsRicordiThumbnails.optimizeLegacy({
+      onProgress:state=>{
+        if(!progress)return;
+        const processed=Math.min(state.total,state.done+state.failed);
+        progress.textContent=state.total?`${processed} / ${state.total}${state.failed?` · ${state.failed} da riprovare`:''}`:'Niente da ottimizzare';
+      }
+    }).catch(error=>({ok:false,code:'error',error}));
+    if(result.code==='offline'){
+      if(progress)progress.textContent='Serve una connessione. Riprova sotto Wi-Fi.';
+      btn.disabled=false;if(cancel)cancel.disabled=false;btn.textContent='Riprova';
+      return;
+    }
+    if(result.code==='data_saver'){
+      if(progress)progress.textContent='Risparmio dati attivo. Disattivalo o usa il Wi-Fi e riprova.';
+      btn.disabled=false;if(cancel)cancel.disabled=false;btn.textContent='Riprova';
+      return;
+    }
+    if(result.code==='busy'){
+      if(progress)progress.textContent='Ottimizzazione già in corso.';
+      return;
+    }
+    if(result.failed>0){
+      if(progress)progress.textContent=`${result.done} ottimizzati · ${result.failed} da riprovare.`;
+      btn.disabled=false;if(cancel)cancel.disabled=false;btn.textContent='Riprova i rimanenti';
+      await syncRicordiOptimizationSetting();
+      return;
+    }
+    if(progress)progress.textContent=result.total?'Ricordi ottimizzati.':'Era già tutto ottimizzato.';
+    window.UsFeedback?.success?.();
+    await syncRicordiOptimizationSetting();
+    setTimeout(()=>{closeModal();toast('Ricordi più leggeri ✓');hydrateUsSettings();},450);
+  });
 }
 
 // Native Security V1 — device-local biometric protection, owned by UsAppLock
@@ -474,6 +548,7 @@ async function action(name){
   if(name==='distance')return distanceModal();
   if(name==='location')return locationAction();
   if(name==='feedback')return feedbackModal();
+  if(name==='optimize-ricordi')return ricordiOptimizationModal();
   if(name==='maudit')return toggleMaudit();
   if(name==='app-lock')return toggleAppLock();
   if(name==='widgets')return window.UsWidgetHub?.open?.();

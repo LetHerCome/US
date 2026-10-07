@@ -40,7 +40,7 @@ Deno.serve(async (request) => {
 
     const { data: moment, error: momentError } = await admin
       .from("moments")
-      .select("id,couple_id,created_by,storage_path")
+      .select("id,couple_id,created_by,storage_path,thumbnail_path")
       .eq("id", momentId)
       .maybeSingle();
     if (momentError) throw momentError;
@@ -59,6 +59,7 @@ Deno.serve(async (request) => {
     const prefix = `${profile.couple_id}/`;
     const paths = [...new Set([
       moment.storage_path,
+      moment.thumbnail_path,
       ...(albumRows || []).map((row) => row.storage_path),
     ].filter((path) => typeof path === "string" && path.startsWith(prefix)))];
 

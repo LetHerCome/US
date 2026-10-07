@@ -1,4 +1,4 @@
-const BUILD_ID = "us-native-ime-performance-v1-20261007-1";
+const BUILD_ID = "us-ricordi-thumbnails-v1-20261007-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
