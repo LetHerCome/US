@@ -57,6 +57,7 @@
     cameraCapture: null,
     cameraOpen: false,
     cameraRequestId: 0,
+    nativePhotoFile: null,
   };
 
   function getClient() {
@@ -589,6 +590,7 @@
   }
 
   function selectedComposerFile(kind = composer.kind) {
+    if (kind === 'photo' && composer.nativePhotoFile) return composer.nativePhotoFile;
     if (kind === 'photo' && composer.cameraCapture?.selected && composer.cameraCapture.file) return composer.cameraCapture.file;
     const id = { photo: 'leftForYouComposerPhotoFile', video: 'leftForYouComposerVideoFile' }[kind];
     return id ? document.getElementById(id)?.files?.[0] || null : null;
@@ -1254,6 +1256,7 @@
     closeCamera();
     discardRecording();
     discardCameraCapture();
+    composer.nativePhotoFile=null;
     const text = document.getElementById('leftForYouComposerText');
     if (text) text.value = '';
     document.querySelectorAll('[data-us-composer-panel] input[type="file"]').forEach((input) => { input.value = ''; });
@@ -1350,21 +1353,37 @@
     document.querySelectorAll('[data-us-composer-kind]').forEach((tab) => {
       tab.addEventListener('click', () => setComposerKind(tab.dataset.usComposerKind));
     });
-    const pickBindings = [
-      ['leftForYouComposerPhotoPick', 'leftForYouComposerPhotoFile', 'leftForYouComposerPhotoName'],
-      ['leftForYouComposerVideoPick', 'leftForYouComposerVideoFile', 'leftForYouComposerVideoName'],
-    ];
-    for (const [pickId, fileId, nameId] of pickBindings) {
-      const pick = document.getElementById(pickId);
-      const file = document.getElementById(fileId);
-      pick?.addEventListener('click', () => file?.click());
-      file?.addEventListener('change', () => {
-        if (fileId === 'leftForYouComposerPhotoFile' && file.files?.[0]) discardCameraCapture();
-        const slot = document.getElementById(nameId);
-        if (slot) slot.textContent = file.files?.[0]?.name || '';
+    const photoPick=document.getElementById('leftForYouComposerPhotoPick');
+    const photoFile=document.getElementById('leftForYouComposerPhotoFile');
+    const photoName=document.getElementById('leftForYouComposerPhotoName');
+    photoPick?.addEventListener('click',async()=>{
+      if(window.UsPlatform?.isNative&&window.UsMediaPicker?.pickImage){
+        const picked=await window.UsMediaPicker.pickImage({source:'library'});
+        if(!picked)return;
+        discardCameraCapture();
+        composer.nativePhotoFile=picked;
+        if(photoFile)photoFile.value='';
+        if(photoName)photoName.textContent=window.UsMediaPicker.safeFileName?.(picked,'Foto')||picked.name||'Foto';
         updateComposerValidity();
-      });
-    }
+        return;
+      }
+      photoFile?.click();
+    });
+    photoFile?.addEventListener('change',()=>{
+      const picked=photoFile.files?.[0]||null;
+      if(picked){discardCameraCapture();composer.nativePhotoFile=null;}
+      if(photoName)photoName.textContent=picked?.name||'';
+      updateComposerValidity();
+    });
+
+    const videoPick=document.getElementById('leftForYouComposerVideoPick');
+    const videoFile=document.getElementById('leftForYouComposerVideoFile');
+    const videoName=document.getElementById('leftForYouComposerVideoName');
+    videoPick?.addEventListener('click',()=>videoFile?.click());
+    videoFile?.addEventListener('change',()=>{
+      if(videoName)videoName.textContent=videoFile.files?.[0]?.name||'';
+      updateComposerValidity();
+    });
     document.getElementById('leftForYouComposerText')?.addEventListener('input', updateComposerValidity);
     document.getElementById('leftForYouComposerText')?.addEventListener('change', updateComposerValidity);
     document.getElementById('leftForYouComposerMusic')?.addEventListener('input', updateComposerValidity);
@@ -1386,7 +1405,21 @@
       selectMusicResult(item);
     });
     document.getElementById('leftForYouMusicClear')?.addEventListener('click', clearMusicSelection);
-    document.getElementById('leftForYouComposerPhotoCamera')?.addEventListener('click', openCamera);
+    document.getElementById('leftForYouComposerPhotoCamera')?.addEventListener('click', async()=>{
+      if(window.UsPlatform?.isNative&&window.UsMediaPicker?.pickImage){
+        const picked=await window.UsMediaPicker.pickImage({source:'camera'});
+        if(!picked)return;
+        closeCamera();
+        discardCameraCapture();
+        composer.nativePhotoFile=picked;
+        const file=document.getElementById('leftForYouComposerPhotoFile');if(file)file.value='';
+        const slot=document.getElementById('leftForYouComposerPhotoName');
+        if(slot)slot.textContent=window.UsMediaPicker.safeFileName?.(picked,'Foto scattata')||picked.name||'Foto scattata';
+        updateComposerValidity();
+        return;
+      }
+      openCamera();
+    });
     const cameraOverlay = document.getElementById('leftForYouCameraOverlay');
     const cameraBackdrop = document.getElementById('leftForYouCameraBackdrop');
     cameraOverlay?.addEventListener('click', (event) => {
