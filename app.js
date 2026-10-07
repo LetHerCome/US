@@ -13,20 +13,29 @@ function animatePageEntry(page,direction){
   setTimeout(()=>page.classList.remove(entry),US_MOTION_FAST_MS);
 }
 let usPageHydrationTicket=0;
-function hydrateActivePage(id){
+const US_HEAVY_PAGE_HYDRATION_FRESH_MS=15000;
+const usPageHydratedAt=new Map();
+async function hydrateActivePage(id,{force=false}={}){
   if(!window.usProfile||document.querySelector('.page.active')?.id!==id)return;
-  if(id==='moments'){hydrateMoments().catch(()=>{});return;}
-  if(id==='bond'){Promise.resolve(hydrateBond()).catch(()=>{});Promise.resolve(hydrateNoiIdeas()).catch(()=>{});return;}
-  if(id==='settings'){Promise.resolve(window.hydrateUsSettings?.()).catch(()=>{});return;}
-  if(id==='home')Promise.resolve(window.refreshOggiCalendarWidget?.()).catch(()=>{});
+  const heavy=id==='moments'||id==='bond'||id==='settings';
+  const last=usPageHydratedAt.get(id)||0;
+  if(heavy&&!force&&Date.now()-last<US_HEAVY_PAGE_HYDRATION_FRESH_MS)return;
+  const work=[];
+  if(id==='moments')work.push(Promise.resolve(hydrateMoments()));
+  if(id==='bond'){work.push(Promise.resolve(hydrateBond()));work.push(Promise.resolve(hydrateNoiIdeas()));}
+  if(id==='settings')work.push(Promise.resolve(window.hydrateUsSettings?.()));
+  if(id==='home')work.push(Promise.resolve(window.refreshOggiCalendarWidget?.()));
+  if(!work.length)return;
+  await Promise.allSettled(work);
+  if(heavy&&document.querySelector('.page.active')?.id===id)usPageHydratedAt.set(id,Date.now());
 }
-function schedulePageHydration(id){
+function schedulePageHydration(id,{force=false}={}){
   const ticket=++usPageHydrationTicket;
   // Let the tab become visible first. Heavy Supabase/DOM work starts after the
   // browser has had one frame to commit the navigation.
   requestAnimationFrame(()=>setTimeout(()=>{
     if(ticket!==usPageHydrationTicket)return;
-    hydrateActivePage(id);
+    hydrateActivePage(id,{force}).catch(()=>{});
   },0));
 }
 function go(id,options={}){
@@ -34,7 +43,7 @@ function go(id,options={}){
   if(current===id){
     if(id==='bond'&&options.nav)window.closeNoiSection?.();
     scrollTo({top:0,behavior:options.motionCommit?'auto':'smooth'});
-    schedulePageHydration(id);
+    schedulePageHydration(id,{force:true});
     return;
   }
   if(current==='bond')window.closeNoiSection?.();
@@ -2596,10 +2605,10 @@ function ricordiChapters(timeline){
 }
 window.UsRicordiArchive=Object.freeze({timeline:ricordiTimeline,pickRivivi:ricordiPickRivivi,chapters:ricordiChapters,periodLabel:ricordiPeriodLabel});
 
-function ricordiMomentCard(row,signedUrl,author,canDelete,feature,source){
+function ricordiMomentCard(row,signedUrl,author,canDelete,feature,source,priority=false){
   const displayISO=/^\d{4}-\d{2}-\d{2}$/.test(String(source?.date||''))?String(source.date):row.moment_date;
   const dateLabel=new Date(displayISO+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
-  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(signedUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(row.caption||'')}" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(signedUrl)}" data-us-media-path="${escapeHtml(row.storage_path)}" onerror="usRecoverPrivateImage(this)" alt="Ricordo condiviso" loading="lazy" decoding="async">${canDelete?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}')">Elimina</button>`:''}<div class="moment-meta"><div class="moment-by">${escapeHtml(author||'Noi')}</div><b>${dateLabel}</b>${source?`<small class="ricordi-moment-source" data-source-key="${escapeHtml(source.sourceKey)}">${escapeHtml(RICORDI_SOURCE_LABEL[source.kind]||'')}${source.title?` · ${escapeHtml(source.title)}`:''}</small>`:''}${row.caption?`<p>${escapeHtml(row.caption)}</p>`:''}</div></article>`;
+  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(signedUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(row.caption||'')}" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(signedUrl)}" data-us-media-path="${escapeHtml(row.storage_path)}" onerror="usRecoverPrivateImage(this)" alt="Ricordo condiviso" loading="${priority?'eager':'lazy'}" decoding="async"${priority?' fetchpriority="high"':''}>${canDelete?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}')">Elimina</button>`:''}<div class="moment-meta"><div class="moment-by">${escapeHtml(author||'Noi')}</div><b>${dateLabel}</b>${source?`<small class="ricordi-moment-source" data-source-key="${escapeHtml(source.sourceKey)}">${escapeHtml(RICORDI_SOURCE_LABEL[source.kind]||'')}${source.title?` · ${escapeHtml(source.title)}`:''}</small>`:''}${row.caption?`<p>${escapeHtml(row.caption)}</p>`:''}</div></article>`;
 }
 function ricordiExperienceCard(row,sourceDate){
   const date=/^\d{4}-\d{2}-\d{2}$/.test(String(sourceDate||''))?String(sourceDate):ricordiLocalISO(row.completed_at);
@@ -2648,7 +2657,7 @@ function renderRicordiRivivi(pick,signedUrls,names){
     const meta=entry.kind==='moment'?author:RICORDI_SOURCE_LABEL[entry.kind];
     const viewerISO=entry.kind==='moment'?m.moment_date:entry.date;
     const viewerDate=new Date(viewerISO+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
-    root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><button type="button" class="ricordi-rivivi-card" data-ricordi-open="${escapeHtml(m.id)}" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}" data-url="${escapeHtml(url)}" data-author="${escapeHtml(author)}" data-date="${escapeHtml(viewerDate)}" data-caption="${escapeHtml(m.caption||title)}" aria-label="Rivivi: ${escapeHtml(title||date)}"><img src="${escapeHtml(url)}" data-us-media-path="${escapeHtml(m.storage_path)}" onerror="usRecoverPrivateImage(this)" alt="" loading="lazy" decoding="async"><span class="ricordi-rivivi-copy"><small>${escapeHtml(pick.label)}</small><b>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(meta)}</span></span></button>`;
+    root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><button type="button" class="ricordi-rivivi-card" data-ricordi-open="${escapeHtml(m.id)}" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}" data-url="${escapeHtml(url)}" data-author="${escapeHtml(author)}" data-date="${escapeHtml(viewerDate)}" data-caption="${escapeHtml(m.caption||title)}" aria-label="Rivivi: ${escapeHtml(title||date)}"><img src="${escapeHtml(url)}" data-us-media-path="${escapeHtml(m.storage_path)}" onerror="usRecoverPrivateImage(this)" alt="" loading="eager" decoding="async" fetchpriority="high"><span class="ricordi-rivivi-copy"><small>${escapeHtml(pick.label)}</small><b>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(meta)}</span></span></button>`;
     root.hidden=false;
     return;
   }
@@ -2752,6 +2761,7 @@ async function hydrateMomentsCore(){
   // Ritmo editoriale: la prima foto del mese è a tutta larghezza, le altre in
   // coppia; una foto rimasta sola prima di una voce larga si allarga anch'essa.
   let loneHalf=-1;
+  let visiblePhotoIndex=0;
   const closeRow=()=>{if(loneHalf>=0){html[loneHalf]=html[loneHalf].replace('class="moment-card moment-postit"','class="moment-card moment-postit ricordi-wide"');loneHalf=-1;}};
   for(const item of timeline){
     const key=ricordiPeriodKey(item.date);
@@ -2771,7 +2781,7 @@ async function hydrateMomentsCore(){
     const author=names.get(row.created_by)||(own?profile.display_name:'Noi');
     // Every Moment returned here already belongs to the signed-in user's couple.
     // Deletion is a couple-level action; the Edge Function re-validates membership.
-    html.push(ricordiMomentCard(row,signedUrls.get(row.storage_path),author,true,opensPeriod,item.kind==='moment'?null:{kind:item.kind,sourceKey:item.sourceKey,title:ricordiRiviviTitle(item),date:item.date}));
+    html.push(ricordiMomentCard(row,signedUrls.get(row.storage_path),author,true,opensPeriod,item.kind==='moment'?null:{kind:item.kind,sourceKey:item.sourceKey,title:ricordiRiviviTitle(item),date:item.date},visiblePhotoIndex++<2));
     if(!opensPeriod)loneHalf=loneHalf>=0?-1:html.length-1;
   }
   closeRow();
@@ -4490,6 +4500,31 @@ const passwordEnter=document.getElementById('loginPassword');
 if(loginEnter) loginEnter.addEventListener('keydown',(e)=>{if(e.key==='Enter')loginAccount();});
 if(passwordEnter) passwordEnter.addEventListener('keydown',(e)=>{if(e.key==='Enter')loginAccount();});
 
+function normalizeAndroidNaturalTextInputs(root=document){
+  if(!window.UsPlatform?.isNative||!document.documentElement.classList.contains('us-native-android'))return;
+  const nodes=[];
+  if(root?.matches?.('textarea,input'))nodes.push(root);
+  root?.querySelectorAll?.('textarea,input')?.forEach?.(node=>nodes.push(node));
+  for(const el of nodes){
+    if(el.closest?.('.auth-overlay'))continue;
+    const tag=el.tagName?.toLowerCase();
+    const type=String(el.getAttribute?.('type')||'text').toLowerCase();
+    const mode=String(el.getAttribute?.('inputmode')||'').toLowerCase();
+    if(tag!=='textarea'&&type!=='text')continue;
+    if(mode&&mode!=='text')continue;
+    el.setAttribute('inputmode','text');
+    el.setAttribute('autocapitalize','sentences');
+    el.setAttribute('autocorrect','on');
+    el.setAttribute('spellcheck','true');
+  }
+}
+normalizeAndroidNaturalTextInputs();
+if(window.UsPlatform?.isNative&&document.documentElement.classList.contains('us-native-android')&&typeof MutationObserver==='function'){
+  new MutationObserver(records=>{
+    for(const record of records)for(const node of record.addedNodes||[])if(node?.nodeType===1)normalizeAndroidNaturalTextInputs(node);
+  }).observe(document.body,{childList:true,subtree:true});
+}
+
 initCloud();
 
 if (canUseUsServiceWorker()) {
@@ -4500,67 +4535,5 @@ if (canUseUsServiceWorker()) {
   });
 }
 
-
-// Native Android IMEs do not all expose the emoji switch consistently inside
-// a WebView. US provides a small, device-local quick picker for free-text
-// fields instead of depending on OEM keyboard chrome.
-function installNativeEmojiAssist(){
-  if(!window.UsPlatform?.isNative||!document.documentElement.classList.contains('us-native-android')||document.getElementById('usNativeEmojiTrigger'))return;
-  const emojis=['❤️','🥰','😘','😂','🥹','😭','🫶','✨','🥺','😈','🔥','🤍'];
-  let target=null;
-  const trigger=document.createElement('button');
-  trigger.type='button';
-  trigger.id='usNativeEmojiTrigger';
-  trigger.className='us-native-emoji-trigger';
-  trigger.setAttribute('aria-label','Apri emoji');
-  trigger.textContent='☺';
-  trigger.hidden=true;
-  const panel=document.createElement('div');
-  panel.className='us-native-emoji-panel';
-  panel.hidden=true;
-  panel.setAttribute('role','toolbar');
-  panel.setAttribute('aria-label','Emoji rapide');
-  panel.innerHTML=emojis.map(emoji=>`<button type="button" data-us-emoji="${emoji}" aria-label="Inserisci ${emoji}">${emoji}</button>`).join('');
-  document.body.append(trigger,panel);
-
-  const eligible=el=>{
-    if(!el?.matches||el.disabled||el.readOnly||el.closest('.auth-overlay'))return false;
-    if(el.matches('textarea'))return true;
-    if(!el.matches('input'))return false;
-    const type=String(el.type||'text').toLowerCase();
-    const mode=String(el.inputMode||'').toLowerCase();
-    return type==='text'&&!['numeric','decimal','tel','email','url'].includes(mode);
-  };
-  const hide=()=>{target=null;trigger.hidden=true;panel.hidden=true;trigger.setAttribute('aria-expanded','false');};
-  const show=el=>{target=el;trigger.hidden=false;trigger.setAttribute('aria-expanded','false');};
-  document.addEventListener('focusin',event=>{if(eligible(event.target))show(event.target);else hide();});
-  document.addEventListener('focusout',()=>setTimeout(()=>{if(target&&document.activeElement!==target)hide();},0));
-  trigger.addEventListener('pointerdown',event=>event.preventDefault());
-  trigger.addEventListener('click',()=>{
-    if(!target)return;
-    panel.hidden=!panel.hidden;
-    trigger.setAttribute('aria-expanded',panel.hidden?'false':'true');
-  });
-  panel.addEventListener('pointerdown',event=>event.preventDefault());
-  panel.addEventListener('click',event=>{
-    const button=event.target.closest('[data-us-emoji]');
-    const emoji=button?.dataset?.usEmoji;
-    if(!emoji||!target)return;
-    const value=String(target.value||'');
-    const start=Number.isInteger(target.selectionStart)?target.selectionStart:value.length;
-    const end=Number.isInteger(target.selectionEnd)?target.selectionEnd:start;
-    target.value=value.slice(0,start)+emoji+value.slice(end);
-    const caret=start+emoji.length;
-    try{target.setSelectionRange(caret,caret);}catch(_e){}
-    try{target.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'insertText',data:emoji}));}
-    catch(_e){target.dispatchEvent(new Event('input',{bubbles:true}));}
-    target.focus({preventScroll:true});
-    panel.hidden=true;
-    trigger.setAttribute('aria-expanded','false');
-    window.UsFeedback?.selection?.();
-  });
-  document.addEventListener('visibilitychange',()=>{if(document.hidden)hide();});
-}
-installNativeEmojiAssist();
 
 document.addEventListener('keydown',(event)=>{if(event.key==='Escape')closeToday();});
