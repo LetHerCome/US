@@ -2665,16 +2665,30 @@ async function hydrateMomentsCore(){
   if(!grid)return;
   const profile=window.usProfile;
   if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></div><b>Carico…</b></div>';
-  const [{data:rows,error},{data:profiles,error:profilesError},{data:lived,error:livedError},{data:kept,error:keptError},{data:events,error:eventsError},{data:provenance,error:provenanceError}]=await Promise.all([
-    sb.from('moments').select('id,created_by,storage_path,caption,moment_date,created_at').order('moment_date',{ascending:false}).order('created_at',{ascending:false}),
-    sb.from('profiles').select('id,display_name').eq('couple_id',profile.couple_id),
-    sb.from('bucket_items').select('id,title,completed_at').eq('couple_id',profile.couple_id).eq('status','lived'),
-    sb.from('daily_question_keepsakes').select('id,source_key,question_text,question_date,francesco_answer,beatrice_answer,revealed_at').order('question_date',{ascending:false}),
-    sb.from('relationship_event_history').select('source_ref,occurrence_date,completed_at,title,title_source,moment_id'),
-    sb.from('living_provenance').select('source_kind,source_ref,source_title,source_date,target_moment_id')
-  ]);
+  // Start all archive reads together, but as soon as Moments arrive start
+  // resolving their signed media URLs too. Previously media resolution waited
+  // for every enrichment query, adding a full network round-trip to first paint.
+  const momentsPromise=sb.from('moments').select('id,created_by,storage_path,caption,moment_date,created_at').order('moment_date',{ascending:false}).order('created_at',{ascending:false});
+  const profilesPromise=sb.from('profiles').select('id,display_name').eq('couple_id',profile.couple_id);
+  const livedPromise=sb.from('bucket_items').select('id,title,completed_at').eq('couple_id',profile.couple_id).eq('status','lived');
+  const keptPromise=sb.from('daily_question_keepsakes').select('id,source_key,question_text,question_date,francesco_answer,beatrice_answer,revealed_at').order('question_date',{ascending:false});
+  const eventsPromise=sb.from('relationship_event_history').select('source_ref,occurrence_date,completed_at,title,title_source,moment_id');
+  const provenancePromise=sb.from('living_provenance').select('source_kind,source_ref,source_title,source_date,target_moment_id');
+  const {data:rows,error}=await momentsPromise;
   if(window.usProfile!==profile)return;
   if(error){console.warn(error);if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">!</div><b>Ricordi non disponibili</b><p>Riprova tra un momento.</p></div>';return;}
+  const mediaPaths=(rows||[]).map(row=>row.storage_path);
+  if(forceMedia)mediaPaths.forEach(usInvalidateSignedUrl);
+  const signedUrlsPromise=usGetSignedUrls(mediaPaths,21600);
+  const [
+    {data:profiles,error:profilesError},
+    {data:lived,error:livedError},
+    {data:kept,error:keptError},
+    {data:events,error:eventsError},
+    {data:provenance,error:provenanceError},
+    signedUrls
+  ]=await Promise.all([profilesPromise,livedPromise,keptPromise,eventsPromise,provenancePromise,signedUrlsPromise]);
+  if(window.usProfile!==profile)return;
   if(profilesError)console.warn(profilesError);
   // Le esperienze vissute sono un arricchimento: se non si leggono, la storia
   // resta quella dei Moments, mai un errore dell'intera pagina.
@@ -2700,10 +2714,6 @@ async function hydrateMomentsCore(){
     grid.dataset.loaded='1';grid.dataset.signature=signature;window.dispatchEvent(new CustomEvent('us:moments-updated'));return;
   }
   const names=new Map((profiles||[]).map(p=>[p.id,p.display_name||'Noi']));
-  const mediaPaths=(rows||[]).map(row=>row.storage_path);
-  if(forceMedia)mediaPaths.forEach(usInvalidateSignedUrl);
-  const signedUrls=await usGetSignedUrls((rows||[]).map(row=>row.storage_path),21600);
-  if(window.usProfile!==profile)return;
   const timeline=ricordiTimeline((rows||[]).filter(r=>signedUrls.get(r.storage_path)),livedRows,keptRows,eventRows,provenanceRows);
   const html=[];
   let period='';
