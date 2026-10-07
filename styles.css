@@ -1350,3 +1350,18 @@ body:has(#home.active #usTodayPriorityRegion:not([hidden])) .us-daily-nudge{
   #bond .noi-hub-card--resonance::before,
   #bond .noi-hub-card--resonance::after{width:90px;height:90px}
 }
+
+
+/* Native performance/density guardrails.
+   Keep OEM WebView font boosting from changing the designed scale, and skip
+   layout/paint for off-screen Ricordi cards until they approach the viewport. */
+html.us-native{
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
+@supports (content-visibility:auto){
+  html.us-native .moment-grid .moment-card{
+    content-visibility:auto;
+    contain-intrinsic-size:auto 270px;
+  }
+}
