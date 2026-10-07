@@ -91,3 +91,21 @@ test('multi-couple browser: a completely different couple renders its own names 
   });
   assert.deepEqual(errors, []);
 });
+
+
+test('multi-couple: shipped shell has no private-couple visible placeholders and one coherent build id', () => {
+  const index = read('index.html');
+  const worker = read('service-worker.js');
+  const manifest = read('manifest.webmanifest');
+  const version = JSON.parse(read('version.json'));
+
+  assert.doesNotMatch(index, />Francesco</);
+  assert.doesNotMatch(index, />Beatrice</);
+  assert.match(index, /<title>US — Solo voi<\/title>/);
+
+  const build = index.match(/<meta name="us-build" content="([^"]+)"\/>/)?.[1];
+  assert.ok(build, 'index build id');
+  assert.equal(version.version, build);
+  assert.match(worker, new RegExp(`const BUILD_ID = "${build.replace(/[.*+?^$\{\}()|[\]\\\\]/g, '\\\\$&')}";`));
+  assert.ok(manifest.includes(`?v=${build}`), 'manifest uses the same build id');
+});
