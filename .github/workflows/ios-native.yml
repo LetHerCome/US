@@ -15,6 +15,11 @@ on:
       - 'native-entry.mjs'
       - 'platform.js'
       - 'app.js'
+      - 'games.js'
+      - 'calendar.js'
+      - 'tests/multicouple-foundation-v1.test.js'
+      - 'tests/native-boot-auth-safety.test.js'
+      - 'tests/helpers/countdown-browser.js'
       - 'styles.css'
       - 'moments-albums.js'
       - 'tests/native-performance-ux-v1.test.js'
@@ -44,6 +49,11 @@ on:
       - 'native-entry.mjs'
       - 'platform.js'
       - 'app.js'
+      - 'games.js'
+      - 'calendar.js'
+      - 'tests/multicouple-foundation-v1.test.js'
+      - 'tests/native-boot-auth-safety.test.js'
+      - 'tests/helpers/countdown-browser.js'
       - 'styles.css'
       - 'moments-albums.js'
       - 'tests/native-performance-ux-v1.test.js'
@@ -89,7 +99,7 @@ jobs:
         run: npm ci
 
       - name: Native contract tests
-        run: node --test tests/ios-native-baseline.test.js tests/native-web-staging.test.js tests/native-foundation.test.js tests/native-security-v1.test.js tests/native-notifications-v1-native.test.js tests/native-performance-ux-v1.test.js tests/ricordi-thumbnails-v1.test.js tests/ricordi-delete-edge.test.js
+        run: node --test tests/ios-native-baseline.test.js tests/native-web-staging.test.js tests/native-foundation.test.js tests/native-security-v1.test.js tests/native-notifications-v1-native.test.js tests/native-performance-ux-v1.test.js tests/ricordi-thumbnails-v1.test.js tests/ricordi-delete-edge.test.js tests/multicouple-foundation-v1.test.js tests/native-boot-auth-safety.test.js
 
       - name: App lock policy checks (host swiftc, no simulator)
         run: |
