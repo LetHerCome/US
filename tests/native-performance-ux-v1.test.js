@@ -87,6 +87,6 @@ test('N3.5 native density/render guardrails are scoped to native', () => {
 test('N3.5 shell build id advances so PWA clients can receive shared performance fixes', () => {
   const sw = read('service-worker.js');
   const version = JSON.parse(read('version.json'));
-  assert.equal(version.version, 'us-settings-v2-20261007-1');
-  assert.match(sw, /const BUILD_ID = "us-settings-v2-20261007-1";/);
+  assert.equal(version.version, 'us-native-media-v1-20261007-1');
+  assert.match(sw, /const BUILD_ID = "us-native-media-v1-20261007-1";/);
 });
