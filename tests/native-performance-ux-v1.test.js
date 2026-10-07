@@ -40,16 +40,26 @@ test('N3.5 new private media paths are long-cache immutable uploads', () => {
   assert.match(albums, /cacheControl:'31536000'/);
 });
 
-test('N3.5 Android gets a native-only emoji fallback without changing auth fields', () => {
+test('N3.5 Android uses normal text IME hints and ships no in-app emoji substitute', () => {
   const platform = read('platform.js');
   const app = read('app.js');
   const css = read('styles.css');
   assert.match(platform, /classList\.add\('us-native'\)/);
   assert.match(platform, /us-native-\$\{platformName\}/);
-  assert.match(app, /classList\.contains\('us-native-android'\)/);
-  assert.match(app, /const emojis=\['❤️'/);
-  assert.match(app, /el\.closest\('\.auth-overlay'\)/);
-  assert.match(css, /\.us-native-emoji-panel/);
+  assert.match(app, /function normalizeAndroidNaturalTextInputs/);
+  assert.match(app, /setAttribute\('inputmode','text'\)/);
+  assert.match(app, /setAttribute\('autocorrect','on'\)/);
+  assert.match(app, /setAttribute\('spellcheck','true'\)/);
+  assert.doesNotMatch(app, /installNativeEmojiAssist|usNativeEmojiTrigger|const emojis=/);
+  assert.doesNotMatch(css, /us-native-emoji-trigger|us-native-emoji-panel/);
+});
+
+test('N3.5 Ricordi prioritizes above-fold media and quick tab revisits avoid redundant heavy hydration', () => {
+  const app = read('app.js');
+  assert.match(app, /US_HEAVY_PAGE_HYDRATION_FRESH_MS=15000/);
+  assert.match(app, /visiblePhotoIndex\+\+<2/);
+  assert.match(app, /fetchpriority="high"/);
+  assert.match(app, /loading="\$\{priority\?'eager':'lazy'\}"/);
 });
 
 test('N3.5 native density/render guardrails are scoped to native', () => {
