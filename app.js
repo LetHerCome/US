@@ -1150,7 +1150,7 @@ async function uploadProfilePhoto(file){
   try{
     const compressed=await compressImageFile(file,{maxDimension:512,quality:.82});
     const path=`${window.usProfile.couple_id}/${window.usProfile.id}/avatar-${Date.now()}-${crypto.randomUUID()}.webp`;
-    const {error:uploadError}=await sb.storage.from('us-media').upload(path,compressed,{contentType:'image/webp',upsert:false,cacheControl:'3600'});
+    const {error:uploadError}=await sb.storage.from('us-media').upload(path,compressed,{contentType:'image/webp',upsert:false,cacheControl:'31536000'});
     if(uploadError)throw uploadError;
     const {error:updateError}=await sb.from('profiles').update({avatar_path:path}).eq('id',window.usProfile.id);
     if(updateError){await sb.storage.from('us-media').remove([path]);throw updateError;}
@@ -2428,7 +2428,7 @@ async function uploadMoment(){
     const safeName=`${Date.now()}-${crypto.randomUUID()}.webp`;
     const path=`${window.usProfile.couple_id}/${window.usProfile.id}/${safeName}`;
     btn.textContent='Carico…';
-    const {error:uploadError}=await sb.storage.from('us-media').upload(path,compressed,{contentType:'image/webp',upsert:false,cacheControl:'3600'});
+    const {error:uploadError}=await sb.storage.from('us-media').upload(path,compressed,{contentType:'image/webp',upsert:false,cacheControl:'31536000'});
     if(uploadError)throw uploadError;
     const {data:created,error:rowError}=await sb.from('moments').insert({
       couple_id:window.usProfile.couple_id,
