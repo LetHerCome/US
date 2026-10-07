@@ -84,9 +84,14 @@ test('N3.5 native density/render guardrails are scoped to native', () => {
   assert.match(css, /content-visibility:auto/);
 });
 
-test('N3.5 shell build id advances so PWA clients can receive shared performance fixes', () => {
+test('N3.5 shell build id stays coherent so PWA clients receive shared fixes atomically', () => {
+  const index = read('index.html');
   const sw = read('service-worker.js');
   const version = JSON.parse(read('version.json'));
-  assert.equal(version.version, 'us-ricordi-thumbnails-v1-20261007-1');
-  assert.match(sw, /const BUILD_ID = "us-ricordi-thumbnails-v1-20261007-1";/);
+  const build = index.match(/<meta name="us-build" content="([^"]+)"\/>/)?.[1];
+  assert.ok(build, 'index.html exposes the current build id');
+  assert.equal(version.version, build);
+  assert.ok(sw.includes(`const BUILD_ID = "${build}";`));
+  assert.notEqual(build, 'us-native-performance-ux-v1-20261007-1',
+    'the original N3.5 marker must advance when later shared fixes ship');
 });
