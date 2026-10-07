@@ -87,6 +87,7 @@ test('contract: every catalogue entry builds a valid, URL-free, allow-listed not
     assert.deepEqual(Object.keys(n).sort(), ['badge', 'body', 'category', 'channel', 'ref', 'tag', 'target', 'title', 'ttl', 'type', 'urgency', 'v']);
     assert.ok(core.NOTIFICATION_TARGETS.includes(n.target), type);
     assert.ok(core.NOTIFICATION_CHANNELS.includes(n.channel), type);
+    assert.equal(n.badge, 1, `${type}: native badge is the binary unread signal`);
     assert.doesNotMatch(JSON.stringify(n), /https?:|\/\/|token|@/i, `${type}: no URL, token or address`);
   }
   assert.throws(() => core.buildNotification('nope'), /notification_type_invalid/);
@@ -305,6 +306,7 @@ test('transport FCM: signed RS256 assertion, HTTP v1 message, channel and data c
   const message = JSON.parse(send.init.body).message;
   assert.deepEqual(message.data, { v: '1', type: 'calendar_reminder', target: 'calendar', ref: MSG, tag: 'calendar-reminder-r1' });
   assert.equal(message.android.notification.channel_id, 'us_reminders');
+  assert.equal(message.android.notification.notification_count, 1);
   assert.equal(message.android.priority, 'HIGH');
   assert.doesNotMatch(send.init.body, /private_key|BEGIN|https?:\/\/(?!)/);
 });
@@ -334,7 +336,7 @@ test('transport APNs: ES256 provider token, sandbox vs production host, headers,
   const body = JSON.parse(calls[0].init.body);
   assert.equal(body.aps.category, 'US_THINK');
   assert.deepEqual(body.us, { v: 1, type: 'think', target: 'think', ref: MSG, tag: `think-${MSG}` });
-  assert.equal(body.aps.badge, undefined, 'no badge count is invented');
+  assert.equal(body.aps.badge, 1, 'binary unread badge');
 });
 
 test('transport: provider errors are classified (invalid token / transient / config / rejected)', async () => {
