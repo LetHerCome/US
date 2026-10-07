@@ -13,20 +13,29 @@ function animatePageEntry(page,direction){
   setTimeout(()=>page.classList.remove(entry),US_MOTION_FAST_MS);
 }
 let usPageHydrationTicket=0;
-function hydrateActivePage(id){
+const US_HEAVY_PAGE_HYDRATION_FRESH_MS=15000;
+const usPageHydratedAt=new Map();
+async function hydrateActivePage(id,{force=false}={}){
   if(!window.usProfile||document.querySelector('.page.active')?.id!==id)return;
-  if(id==='moments'){hydrateMoments().catch(()=>{});return;}
-  if(id==='bond'){Promise.resolve(hydrateBond()).catch(()=>{});Promise.resolve(hydrateNoiIdeas()).catch(()=>{});return;}
-  if(id==='settings'){Promise.resolve(window.hydrateUsSettings?.()).catch(()=>{});return;}
-  if(id==='home')Promise.resolve(window.refreshOggiCalendarWidget?.()).catch(()=>{});
+  const heavy=id==='moments'||id==='bond'||id==='settings';
+  const last=usPageHydratedAt.get(id)||0;
+  if(heavy&&!force&&Date.now()-last<US_HEAVY_PAGE_HYDRATION_FRESH_MS)return;
+  const work=[];
+  if(id==='moments')work.push(Promise.resolve(hydrateMoments()));
+  if(id==='bond'){work.push(Promise.resolve(hydrateBond()));work.push(Promise.resolve(hydrateNoiIdeas()));}
+  if(id==='settings')work.push(Promise.resolve(window.hydrateUsSettings?.()));
+  if(id==='home')work.push(Promise.resolve(window.refreshOggiCalendarWidget?.()));
+  if(!work.length)return;
+  await Promise.allSettled(work);
+  if(heavy&&document.querySelector('.page.active')?.id===id)usPageHydratedAt.set(id,Date.now());
 }
-function schedulePageHydration(id){
+function schedulePageHydration(id,{force=false}={}){
   const ticket=++usPageHydrationTicket;
   // Let the tab become visible first. Heavy Supabase/DOM work starts after the
   // browser has had one frame to commit the navigation.
   requestAnimationFrame(()=>setTimeout(()=>{
     if(ticket!==usPageHydrationTicket)return;
-    hydrateActivePage(id);
+    hydrateActivePage(id,{force}).catch(()=>{});
   },0));
 }
 function go(id,options={}){
@@ -34,7 +43,7 @@ function go(id,options={}){
   if(current===id){
     if(id==='bond'&&options.nav)window.closeNoiSection?.();
     scrollTo({top:0,behavior:options.motionCommit?'auto':'smooth'});
-    schedulePageHydration(id);
+    schedulePageHydration(id,{force:true});
     return;
   }
   if(current==='bond')window.closeNoiSection?.();
