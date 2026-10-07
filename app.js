@@ -12,15 +12,29 @@ function animatePageEntry(page,direction){
   page.classList.add(entry);
   setTimeout(()=>page.classList.remove(entry),US_MOTION_FAST_MS);
 }
+let usPageHydrationTicket=0;
+function hydrateActivePage(id){
+  if(!window.usProfile||document.querySelector('.page.active')?.id!==id)return;
+  if(id==='moments'){hydrateMoments().catch(()=>{});return;}
+  if(id==='bond'){Promise.resolve(hydrateBond()).catch(()=>{});Promise.resolve(hydrateNoiIdeas()).catch(()=>{});return;}
+  if(id==='settings'){Promise.resolve(window.hydrateUsSettings?.()).catch(()=>{});return;}
+  if(id==='home')Promise.resolve(window.refreshOggiCalendarWidget?.()).catch(()=>{});
+}
+function schedulePageHydration(id){
+  const ticket=++usPageHydrationTicket;
+  // Let the tab become visible first. Heavy Supabase/DOM work starts after the
+  // browser has had one frame to commit the navigation.
+  requestAnimationFrame(()=>setTimeout(()=>{
+    if(ticket!==usPageHydrationTicket)return;
+    hydrateActivePage(id);
+  },0));
+}
 function go(id,options={}){
   const current=document.querySelector('.page.active')?.id;
   if(current===id){
     if(id==='bond'&&options.nav)window.closeNoiSection?.();
     scrollTo({top:0,behavior:options.motionCommit?'auto':'smooth'});
-    if(id==='moments' && window.usProfile)hydrateMoments();
-    if(id==='bond' && window.usProfile){hydrateBond();hydrateNoiIdeas();}
-    if(id==='settings' && window.usProfile)window.hydrateUsSettings?.();
-    if(id==='home' && window.usProfile)window.refreshOggiCalendarWidget?.();
+    schedulePageHydration(id);
     return;
   }
   if(current==='bond')window.closeNoiSection?.();
@@ -39,10 +53,7 @@ function go(id,options={}){
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
   if(options.swipe&&!options.motionCommit)setTimeout(()=>document.getElementById(id)?.classList.remove('swipe-next','swipe-prev'),190);
   scrollTo({top:0,behavior:(options.swipe||options.motionCommit)?'auto':'smooth'});
-  if(id==='moments' && window.usProfile) hydrateMoments();
-  if(id==='bond' && window.usProfile){hydrateBond();hydrateNoiIdeas();}
-  if(id==='settings' && window.usProfile) window.hydrateUsSettings?.();
-  if(id==='home' && window.usProfile) window.refreshOggiCalendarWidget?.();
+  schedulePageHydration(id);
 }
 // One timer for the one toast: a second message restarts the 1.7 s window
 // instead of being cut short by the first message's pending hide.
@@ -4417,7 +4428,9 @@ async function refreshVisibleState(options={}){
     if(!options.foreground)hydrateDistance();
     return;
   }
-  if(active==='moments'){await hydrateMoments({forceMedia:Boolean(options.foreground)});return;}
+  // Foregrounding must not invalidate valid signed media URLs. A failed image
+  // already self-recovers through usRecoverPrivateImage().
+  if(active==='moments'){await hydrateMoments();return;}
   if(active==='quiz'){await window.USGameV2?.refresh();return;}
   if(active==='bond'){await hydrateBondSummary();return;}
   if(active==='settings'){await window.hydrateUsSettings?.();}
