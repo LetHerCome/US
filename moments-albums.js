@@ -82,7 +82,7 @@ function ensureUi(){
   document.getElementById('usAlbumClose')?.addEventListener('click',closeAlbum);
   document.getElementById('usAlbumDeleteGo')?.addEventListener('click',startMomentDelete);
   document.getElementById('usAlbumDeleteUndo')?.addEventListener('click',undoMomentDelete);
-  document.getElementById('usAlbumAddBtn')?.addEventListener('click',()=>document.getElementById('usAlbumFile')?.click());
+  document.getElementById('usAlbumAddBtn')?.addEventListener('click',pickAlbumPhoto);
 
   if(!document.getElementById('usAlbumFloatingAdd')){
     const floating=document.createElement('button');
@@ -91,7 +91,7 @@ function ensureUi(){
     floating.className='us-album-floating-add';
     floating.setAttribute('aria-label','Aggiungi una foto a questo Moment');
     floating.innerHTML='<span><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></span><b>Aggiungi foto</b>';
-    floating.addEventListener('click',()=>document.getElementById('usAlbumFile')?.click());
+    floating.addEventListener('click',pickAlbumPhoto);
     document.getElementById('usAlbumOverlay')?.appendChild(floating);
   }
   document.getElementById('usAlbumCancel')?.addEventListener('click',resetComposer);
@@ -163,15 +163,36 @@ function resetComposer(){
   const caption=document.getElementById('usAlbumCaption');if(caption)caption.value='';
   const composer=document.getElementById('usAlbumComposer');if(composer)composer.hidden=true;
 }
-function handleFileSelected(event){
-  const file=event.target.files?.[0];if(!file)return;
-  if(!/^image\/(jpeg|png|webp)$/i.test(file.type||'')){toast('Scegli una foto JPG, PNG o WebP');event.target.value='';return;}
+function applyAlbumFile(file,{input=null}={}){
+  if(!file)return false;
+  if(!String(file.type||'').toLowerCase().startsWith('image/')){
+    if(input)input.value='';
+    toast('Scegli una foto');
+    return false;
+  }
+  if(file.size>20*1024*1024){
+    if(input)input.value='';
+    toast('Foto troppo grande: massimo 20 MB');
+    return false;
+  }
   if(pendingPreviewUrl)URL.revokeObjectURL(pendingPreviewUrl);
   pendingFile=file;pendingPreviewUrl=URL.createObjectURL(file);
   const preview=document.getElementById('usAlbumPreview');if(preview)preview.src=pendingPreviewUrl;
   const composer=document.getElementById('usAlbumComposer');if(composer)composer.hidden=false;
   document.getElementById('usAlbumCaption')?.focus({preventScroll:true});
   setTimeout(()=>composer?.scrollIntoView({behavior:'smooth',block:'nearest'}),60);
+  return true;
+}
+async function pickAlbumPhoto(){
+  if(window.UsPlatform?.isNative&&window.UsMediaPicker?.chooseImage){
+    const file=await window.UsMediaPicker.chooseImage({title:'Aggiungi al momento'});
+    if(file)applyAlbumFile(file);
+    return;
+  }
+  document.getElementById('usAlbumFile')?.click();
+}
+function handleFileSelected(event){
+  applyAlbumFile(event.target.files?.[0]||null,{input:event.target});
 }
 
 async function saveAlbumPhoto(){
