@@ -212,6 +212,50 @@ test('N2 browser: permission only after "Attiva"; registration per installation;
   await ctx.close();
 });
 
+test('N3 browser: foreground resume clears seen notifications, revalidates the installation and accepts token rotation', async (t) => {
+  const h = await harness(t);
+  if (!h) return;
+  const { page, ctx, errors } = await h.page({ permission: 'granted' });
+  await page.waitForFunction(() => window.usProfile);
+  await page.waitForTimeout(400);
+
+  const enabled = await page.evaluate(() => window.UsNotifications.enable());
+  assert.equal(enabled.ok, true);
+  const first = await page.evaluate(() => ({
+    installation: localStorage.getItem('us:notifications:v1:installation'),
+    rpcCount: window.__PUSH.rpc.filter((entry) => entry.name === 'register_native_push_device').length
+  }));
+  assert.equal(first.rpcCount, 1);
+
+  // Same process foreground recovery is cheap: clear seen OS notifications,
+  // ask FCM for the current token, but do not rewrite the same server row.
+  await page.evaluate(() => { window.__PUSH.calls.length = 0; window.__PUSH.rpc.length = 0; });
+  await page.evaluate(() => window.UsNotifications.resume());
+  const resumed = await page.evaluate(() => ({ calls: window.__PUSH.calls, rpc: window.__PUSH.rpc }));
+  assert.deepEqual(resumed.calls, ['removeAll', 'register']);
+  assert.equal(resumed.rpc.length, 0);
+
+  // Provider rotation is authoritative even without an app restart.
+  const rotated = `fcmQA:${'y'.repeat(80)}`;
+  await page.evaluate((value) => window.__PUSH.emit('registration', { value }), rotated);
+  await page.waitForFunction(() => window.__PUSH.rpc.some((entry) => entry.name === 'register_native_push_device'));
+  const rotation = await page.evaluate(() => window.__PUSH.rpc.at(-1));
+  assert.equal(rotation.args.target_installation_id, first.installation);
+  assert.equal(rotation.args.target_token, rotated);
+
+  // A cold WebView process confirms the server row once even when the local
+  // daily signature is still valid (repairs remote pruning).
+  await page.reload({ waitUntil: 'load' });
+  await page.waitForFunction(() => window.usProfile);
+  await page.waitForFunction(() => window.__PUSH.rpc.some((entry) => entry.name === 'register_native_push_device'), null, { timeout: 5000 });
+  const cold = await page.evaluate(() => ({ calls: window.__PUSH.calls, rpc: window.__PUSH.rpc.at(-1) }));
+  assert.ok(cold.calls.includes('removeAll'));
+  assert.ok(cold.calls.includes('register'));
+  assert.equal(cold.rpc.args.target_installation_id, first.installation);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
 test('N2 browser: without a Firebase configuration nothing native is touched and Settings says so', async (t) => {
   const h = await harness(t);
   if (!h) return;

@@ -122,6 +122,10 @@ export function fcmMessage(notification, token) {
           tag: notification.tag,
           default_sound: true,
           default_vibrate_timings: true,
+          // Android launcher badges are implementation-dependent, but FCM's
+          // notification_count gives supporting launchers the same binary
+          // "something new" signal used by APNs.
+          notification_count: Number.isInteger(notification.badge) && notification.badge >= 0 ? notification.badge : undefined,
         },
       },
     },

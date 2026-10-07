@@ -69,7 +69,9 @@ export function buildNotification(type, args = {}) {
     category: raw.category || null,
     urgency: raw.urgency === 'high' ? 'high' : 'normal',
     ttl: Number.isInteger(raw.ttl) && raw.ttl > 0 && raw.ttl <= 60 * 60 * 24 * 7 ? raw.ttl : HOURS_12,
-    badge: null,
+    // Native badge semantics are intentionally binary: "US has something new".
+    // The client clears it only after the private app is visible and unlocked.
+    badge: Number.isInteger(raw.badge) && raw.badge >= 0 ? raw.badge : 1,
   };
   if (!notification.title || !notification.body) throw new Error('notification_copy_missing');
   if (!NOTIFICATION_TARGETS.includes(notification.target)) throw new Error('notification_target_invalid');
