@@ -20,6 +20,7 @@ on:
       - 'app.js'
       - 'fastboot2.js'
       - 'games.js'
+      - 'progression.js'
       - 'calendar.js'
       - 'tests/multicouple-foundation-v1.test.js'
       - 'tests/native-boot-auth-safety.test.js'
@@ -47,6 +48,7 @@ on:
       - 'app.js'
       - 'fastboot2.js'
       - 'games.js'
+      - 'progression.js'
       - 'calendar.js'
       - 'tests/multicouple-foundation-v1.test.js'
       - 'tests/native-boot-auth-safety.test.js'
@@ -93,6 +95,12 @@ jobs:
 
       - name: Native contract tests
         run: node --test tests/native-security-v1.test.js tests/android-scaffold.test.js tests/android-stable-signing.test.js tests/native-foundation.test.js tests/native-notifications-v1-native.test.js tests/native-performance-ux-v1.test.js tests/ricordi-thumbnails-v1.test.js tests/ricordi-delete-edge.test.js tests/multicouple-foundation-v1.test.js tests/native-boot-auth-safety.test.js
+
+      - name: Full application tests
+        run: npm test
+
+      - name: Cloudflare production build
+        run: npm run build:cloudflare-pages
 
       - name: npm run build:capacitor-web
         run: npm run build:capacitor-web
