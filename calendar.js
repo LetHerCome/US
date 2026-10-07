@@ -842,7 +842,7 @@ window.UsNoiWeekBoard = Object.freeze({ refresh: refreshNoiWeekBoard, render: re
 
 function ownerMarkOf(entry) { return ownerMarkFor(entryLaneRole(entry), profileById(entry.owner_id)?.display_name); }
 function ownerChip(mark) {
-  return `<span class="us-cal-chip${mark === 'F+B' ? ' us-cal-chip--shared' : ''}" aria-hidden="true">${esc(mark)}</span>`;
+  return `<span class="us-cal-chip${mark === '♡' ? ' us-cal-chip--shared' : ''}" aria-hidden="true">${esc(mark)}</span>`;
 }
 
 function renderDayCell(dateObj, dateISO, inMonth, dayEntries) {
@@ -863,8 +863,8 @@ function renderDayCell(dateObj, dateISO, inMonth, dayEntries) {
   </button>`;
 }
 
-// M10.1 — ONE shared month at every width. F / B / F+B markers say whose
-// commitment it is; there is no per-partner month and no duplicated shared event.
+// M10.1 — ONE shared month at every width. Profile initials and the shared
+// couple mark identify ownership; there is no per-partner month or duplicate event.
 function renderMonthGrid(dateIndex) {
   const container = $('usCalendarGrid');
   if (!container) return;
@@ -1031,7 +1031,7 @@ function renderEventRow(e) {
   const mark = ownerMarkFor(lane, ownerName);
   const label = entryAriaLabel({ title: e.title, lane, displayName: ownerName, entry: e });
   const place = e.location ? `<small class="us-cal-event-place">${esc(e.location)}</small>` : '';
-  return `<button type="button" class="us-cal-event" data-entry-id="${esc(e.id)}" data-owner="${esc(mark)}" aria-label="${esc(label)}"><span class="us-cal-owner${mark === 'F+B' ? ' us-cal-owner--shared' : ''}" aria-hidden="true">${esc(mark)}</span><span class="us-cal-event-copy"><span class="us-cal-event-time">${esc(entryTimeLabel(e))}</span><b class="us-cal-event-title">${esc(e.title)}</b>${place}</span></button>`;
+  return `<button type="button" class="us-cal-event" data-entry-id="${esc(e.id)}" data-owner="${esc(mark)}" aria-label="${esc(label)}"><span class="us-cal-owner${mark === '♡' ? ' us-cal-owner--shared' : ''}" aria-hidden="true">${esc(mark)}</span><span class="us-cal-event-copy"><span class="us-cal-event-time">${esc(entryTimeLabel(e))}</span><b class="us-cal-event-title">${esc(e.title)}</b>${place}</span></button>`;
 }
 
 function renderDaySection(label, list, cls) {
