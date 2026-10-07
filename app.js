@@ -129,13 +129,14 @@ window.UsWidgetDataApi=Object.freeze({
   },
   async latestPhoto(){
     if(!window.UsPlatform?.isNative||!window.usProfile)return null;
-    const {data,error}=await sb.from('moments').select('id,storage_path,moment_date,created_at').order('created_at',{ascending:false}).limit(1);
+    const {data,error}=await sb.from('moments').select('id,storage_path,thumbnail_path,moment_date,created_at').order('created_at',{ascending:false}).limit(1);
     if(error)throw error;
     const row=data?.[0];
     if(!row?.storage_path)return null;
-    const url=await usGetSignedUrl(row.storage_path,3600);
+    const mediaPath=row.thumbnail_path||row.storage_path;
+    const url=await usGetSignedUrl(mediaPath,3600);
     if(!url)throw new Error('widget_photo_unavailable');
-    return {id:row.id,path:row.storage_path,takenOn:row.moment_date||'',url};
+    return {id:row.id,path:mediaPath,sourcePath:row.storage_path,takenOn:row.moment_date||'',url};
   }
 });
 
@@ -256,13 +257,13 @@ async function usPrewarmNativeMomentMedia(limit=4){
   usNativeMediaPrewarmedFor=profile.couple_id;
   try{
     const {data:rows,error}=await sb.from('moments')
-      .select('storage_path')
+      .select('storage_path,thumbnail_path')
       .eq('couple_id',profile.couple_id)
       .order('moment_date',{ascending:false})
       .order('created_at',{ascending:false})
       .limit(limit);
     if(error||window.usProfile!==profile){if(error)throw error;return;}
-    const urls=await usGetSignedUrls((rows||[]).map(row=>row.storage_path),21600);
+    const urls=await usGetSignedUrls((rows||[]).map(row=>row.thumbnail_path||row.storage_path),21600);
     await Promise.allSettled([...urls.values()].slice(0,limit).map(url=>new Promise(resolve=>{
       const img=new Image();
       img.decoding='async';
@@ -1178,8 +1179,88 @@ async function compressImageFile(file,{maxDimension=1920,quality=.82}={}){
   if(bitmap?.close)bitmap.close();
   if(revokeUrl)URL.revokeObjectURL(revokeUrl);
   if(!blob)throw new Error('COMPRESSION_FAILED');
+
   return new File([blob],(file.name||'image').replace(/\.[^.]+$/,'')+'.webp',{type:'image/webp',lastModified:Date.now()});
 }
+
+let usRicordiThumbnailBackfillBusy=false;
+async function usMissingRicordiThumbnailCount(){
+  if(!window.usProfile)return 0;
+  const {count,error}=await sb.from('moments')
+    .select('id',{count:'exact',head:true})
+    .eq('couple_id',window.usProfile.couple_id)
+    .is('thumbnail_path',null);
+  if(error)throw error;
+  return Number(count||0);
+}
+async function usOptimizeLegacyRicordiThumbnails({onProgress}={}){
+  if(usRicordiThumbnailBackfillBusy)return {ok:false,code:'busy'};
+  if(!window.UsPlatform?.isNative)return {ok:false,code:'native_only'};
+  if(!window.usProfile)return {ok:false,code:'not_ready'};
+  if(!navigator.onLine)return {ok:false,code:'offline'};
+  const connection=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
+  if(connection?.saveData)return {ok:false,code:'data_saver'};
+  usRicordiThumbnailBackfillBusy=true;
+  const createdPaths=[];
+  try{
+    const {data:rows,error}=await sb.from('moments')
+      .select('id,storage_path,thumbnail_path,created_at')
+      .eq('couple_id',window.usProfile.couple_id)
+      .is('thumbnail_path',null)
+      .order('created_at',{ascending:false});
+    if(error)throw error;
+    const total=(rows||[]).length;
+    let done=0,failed=0;
+    for(const row of rows||[]){
+      let thumbnailPath='';
+      try{
+        onProgress?.({done,total,failed,current:row.id});
+        const signedUrl=await usGetSignedUrl(row.storage_path,21600);
+        if(!signedUrl)throw new Error('source_url_unavailable');
+        const response=await fetch(signedUrl,{cache:'force-cache'});
+        if(!response.ok)throw new Error('source_download_failed');
+        const blob=await response.blob();
+        if(!blob.type.startsWith('image/'))throw new Error('source_not_image');
+        const sourceFile=new File([blob],`moment-${row.id}`,{type:blob.type,lastModified:Date.now()});
+        const thumbnail=await compressImageFile(sourceFile,{maxDimension:720,quality:.72});
+        thumbnailPath=`${window.usProfile.couple_id}/${window.usProfile.id}/derived-thumbnails/${row.id}-${crypto.randomUUID()}.webp`;
+        const {error:uploadError}=await sb.storage.from('us-media').upload(thumbnailPath,thumbnail,{
+          contentType:'image/webp',upsert:false,cacheControl:'31536000'
+        });
+        if(uploadError)throw uploadError;
+        createdPaths.push(thumbnailPath);
+        const {data:set,error:setError}=await sb.rpc('set_moment_thumbnail',{
+          target_moment_id:row.id,
+          target_thumbnail_path:thumbnailPath
+        });
+        if(setError||set!==true){
+          await sb.storage.from('us-media').remove([thumbnailPath]).catch?.(()=>{});
+          const index=createdPaths.indexOf(thumbnailPath);if(index>=0)createdPaths.splice(index,1);
+          if(setError)throw setError;
+          throw new Error('thumbnail_not_attached');
+        }
+        done++;
+      }catch(error){
+        failed++;
+        console.warn('[US Media] legacy thumbnail',error);
+        if(thumbnailPath&&createdPaths.includes(thumbnailPath)){
+          try{await sb.storage.from('us-media').remove([thumbnailPath]);}catch(_e){}
+          const index=createdPaths.indexOf(thumbnailPath);if(index>=0)createdPaths.splice(index,1);
+        }
+      }
+      onProgress?.({done,total,failed,current:null});
+    }
+    try{await hydrateMoments({forceMedia:true});}catch(_e){}
+    return {ok:failed===0,done,total,failed,remaining:Math.max(0,total-done)};
+  }finally{
+    usRicordiThumbnailBackfillBusy=false;
+  }
+}
+window.UsRicordiThumbnails=Object.freeze({
+  missingCount:usMissingRicordiThumbnailCount,
+  optimizeLegacy:usOptimizeLegacyRicordiThumbnails,
+  busy:()=>usRicordiThumbnailBackfillBusy
+});
 
 async function uploadProfilePhoto(file){
   if(!window.usProfile||!file)return;
@@ -2620,10 +2701,16 @@ function ricordiChapters(timeline){
 }
 window.UsRicordiArchive=Object.freeze({timeline:ricordiTimeline,pickRivivi:ricordiPickRivivi,chapters:ricordiChapters,periodLabel:ricordiPeriodLabel});
 
-function ricordiMomentCard(row,signedUrl,author,canDelete,feature,source,priority=false){
+function ricordiPreviewPath(row){return row?.thumbnail_path||row?.storage_path||'';}
+function ricordiPreviewUrl(row,signedUrls){return signedUrls.get(ricordiPreviewPath(row))||signedUrls.get(row?.storage_path)||null;}
+function ricordiMomentCard(row,signedUrls,author,canDelete,feature,source,priority=false){
   const displayISO=/^\d{4}-\d{2}-\d{2}$/.test(String(source?.date||''))?String(source.date):row.moment_date;
   const dateLabel=new Date(displayISO+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
-  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(signedUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(row.caption||'')}" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(signedUrl)}" data-us-media-path="${escapeHtml(row.storage_path)}" onerror="usRecoverPrivateImage(this)" alt="Ricordo condiviso" loading="${priority?'eager':'lazy'}" decoding="async"${priority?' fetchpriority="high"':''}>${canDelete?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}')">Elimina</button>`:''}<div class="moment-meta"><div class="moment-by">${escapeHtml(author||'Noi')}</div><b>${dateLabel}</b>${source?`<small class="ricordi-moment-source" data-source-key="${escapeHtml(source.sourceKey)}">${escapeHtml(RICORDI_SOURCE_LABEL[source.kind]||'')}${source.title?` · ${escapeHtml(source.title)}`:''}</small>`:''}${row.caption?`<p>${escapeHtml(row.caption)}</p>`:''}</div></article>`;
+  const fullUrl=signedUrls.get(row.storage_path);
+  const previewPath=ricordiPreviewPath(row);
+  const previewUrl=ricordiPreviewUrl(row,signedUrls);
+  if(!fullUrl||!previewUrl)return '';
+  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(fullUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(row.caption||'')}" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(previewUrl)}" data-us-media-path="${escapeHtml(previewPath)}" onerror="usRecoverPrivateImage(this)" alt="Ricordo condiviso" loading="${priority?'eager':'lazy'}" decoding="async"${priority?' fetchpriority="high"':''}>${canDelete?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}')">Elimina</button>`:''}<div class="moment-meta"><div class="moment-by">${escapeHtml(author||'Noi')}</div><b>${dateLabel}</b>${source?`<small class="ricordi-moment-source" data-source-key="${escapeHtml(source.sourceKey)}">${escapeHtml(RICORDI_SOURCE_LABEL[source.kind]||'')}${source.title?` · ${escapeHtml(source.title)}`:''}</small>`:''}${row.caption?`<p>${escapeHtml(row.caption)}</p>`:''}</div></article>`;
 }
 function ricordiExperienceCard(row,sourceDate){
   const date=/^\d{4}-\d{2}-\d{2}$/.test(String(sourceDate||''))?String(sourceDate):ricordiLocalISO(row.completed_at);
@@ -2665,14 +2752,16 @@ function renderRicordiRivivi(pick,signedUrls,names){
   if(!entry){root.hidden=true;root.innerHTML='';return;}
   const date=ricordiRiviviDate(entry.date);
   const title=ricordiRiviviTitle(entry);
-  const url=entry.moment?signedUrls.get(entry.moment.storage_path):null;
-  if(url){
+  const fullUrl=entry.moment?signedUrls.get(entry.moment.storage_path):null;
+  if(fullUrl){
     const m=entry.moment;
+    const previewPath=ricordiPreviewPath(m);
+    const previewUrl=ricordiPreviewUrl(m,signedUrls)||fullUrl;
     const author=names.get(m.created_by)||'Noi';
     const meta=entry.kind==='moment'?author:RICORDI_SOURCE_LABEL[entry.kind];
     const viewerISO=entry.kind==='moment'?m.moment_date:entry.date;
     const viewerDate=new Date(viewerISO+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
-    root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><button type="button" class="ricordi-rivivi-card" data-ricordi-open="${escapeHtml(m.id)}" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}" data-url="${escapeHtml(url)}" data-author="${escapeHtml(author)}" data-date="${escapeHtml(viewerDate)}" data-caption="${escapeHtml(m.caption||title)}" aria-label="Rivivi: ${escapeHtml(title||date)}"><img src="${escapeHtml(url)}" data-us-media-path="${escapeHtml(m.storage_path)}" onerror="usRecoverPrivateImage(this)" alt="" loading="eager" decoding="async" fetchpriority="high"><span class="ricordi-rivivi-copy"><small>${escapeHtml(pick.label)}</small><b>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(meta)}</span></span></button>`;
+    root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><button type="button" class="ricordi-rivivi-card" data-ricordi-open="${escapeHtml(m.id)}" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}" data-url="${escapeHtml(fullUrl)}" data-author="${escapeHtml(author)}" data-date="${escapeHtml(viewerDate)}" data-caption="${escapeHtml(m.caption||title)}" aria-label="Rivivi: ${escapeHtml(title||date)}"><img src="${escapeHtml(previewUrl)}" data-us-media-path="${escapeHtml(previewPath)}" onerror="usRecoverPrivateImage(this)" alt="" loading="eager" decoding="async" fetchpriority="high"><span class="ricordi-rivivi-copy"><small>${escapeHtml(pick.label)}</small><b>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(meta)}</span></span></button>`;
     root.hidden=false;
     return;
   }
@@ -2689,9 +2778,10 @@ function renderRicordiChapters(chapters,signedUrls){
   if(!root)return;
   if(!chapters.length){root.hidden=true;root.innerHTML='';return;}
   root.innerHTML=`<div class="ricordi-section-head"><div class="ricordi-kicker">CAPITOLI</div><h3>Per anno</h3></div><div class="ricordi-chapter-row">${chapters.map(ch=>{
-    const url=ch.cover?signedUrls.get(ch.cover.storage_path):null;
+    const previewPath=ch.cover?ricordiPreviewPath(ch.cover):'';
+    const url=ch.cover?ricordiPreviewUrl(ch.cover,signedUrls):null;
     const parts=[ch.moments?`${ch.moments} ${ch.moments===1?'ricordo':'ricordi'}`:'',ch.experiences?`${ch.experiences} ${ch.experiences===1?'esperienza':'esperienze'}`:'',ch.dailies?`${ch.dailies} ${ch.dailies===1?'domanda':'domande'}`:''].filter(Boolean).join(' · ');
-    return `<button type="button" class="ricordi-chapter" data-ricordi-year="${escapeHtml(ch.year)}">${url?`<img src="${escapeHtml(url)}" data-us-media-path="${escapeHtml(ch.cover.storage_path)}" onerror="usRecoverPrivateImage(this)" alt="" loading="lazy" decoding="async">`:''}<span><b>${escapeHtml(ch.year)}</b><small>${escapeHtml(parts)}</small></span></button>`;
+    return `<button type="button" class="ricordi-chapter" data-ricordi-year="${escapeHtml(ch.year)}">${url?`<img src="${escapeHtml(url)}" data-us-media-path="${escapeHtml(previewPath)}" onerror="usRecoverPrivateImage(this)" alt="" loading="lazy" decoding="async">`:''}<span><b>${escapeHtml(ch.year)}</b><small>${escapeHtml(parts)}</small></span></button>`;
   }).join('')}</div>`;
   root.hidden=false;
 }
@@ -2724,7 +2814,7 @@ async function hydrateMomentsCore(){
   // Start all archive reads together, but as soon as Moments arrive start
   // resolving their signed media URLs too. Previously media resolution waited
   // for every enrichment query, adding a full network round-trip to first paint.
-  const momentsPromise=sb.from('moments').select('id,created_by,storage_path,caption,moment_date,created_at').order('moment_date',{ascending:false}).order('created_at',{ascending:false});
+  const momentsPromise=sb.from('moments').select('id,created_by,storage_path,thumbnail_path,caption,moment_date,created_at').order('moment_date',{ascending:false}).order('created_at',{ascending:false});
   const profilesPromise=sb.from('profiles').select('id,display_name').eq('couple_id',profile.couple_id);
   const livedPromise=sb.from('bucket_items').select('id,title,completed_at').eq('couple_id',profile.couple_id).eq('status','lived');
   const keptPromise=sb.from('daily_question_keepsakes').select('id,source_key,question_text,question_date,francesco_answer,beatrice_answer,revealed_at').order('question_date',{ascending:false});
@@ -2733,7 +2823,7 @@ async function hydrateMomentsCore(){
   const {data:rows,error}=await momentsPromise;
   if(window.usProfile!==profile)return;
   if(error){console.warn(error);if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">!</div><b>Ricordi non disponibili</b><p>Riprova tra un momento.</p></div>';return;}
-  const mediaPaths=(rows||[]).map(row=>row.storage_path);
+  const mediaPaths=[...new Set((rows||[]).flatMap(row=>[row.storage_path,row.thumbnail_path]).filter(Boolean))];
   if(forceMedia)mediaPaths.forEach(usInvalidateSignedUrl);
   const signedUrlsPromise=usGetSignedUrls(mediaPaths,21600);
   const [
@@ -2761,7 +2851,7 @@ async function hydrateMomentsCore(){
   const provenanceRows=provenanceError?[]:(provenance||[]);
   if(pill)pill.textContent='📸 Moments · '+(rows?.length||0);
   const today=localDateISO();
-  const signature=JSON.stringify([today,(rows||[]).map(r=>[r.id,r.created_by,r.storage_path,r.caption||'',r.moment_date,r.created_at]),livedRows.map(r=>[r.id,r.title,r.completed_at]),keptRows.map(r=>[r.id,r.question_date]),eventRows.map(r=>[r.source_ref,r.occurrence_date,r.title,r.title_source,r.moment_id]),provenanceRows.map(r=>[r.source_kind,r.source_ref,r.target_moment_id])]);
+  const signature=JSON.stringify([today,(rows||[]).map(r=>[r.id,r.created_by,r.storage_path,r.thumbnail_path||'',r.caption||'',r.moment_date,r.created_at]),livedRows.map(r=>[r.id,r.title,r.completed_at]),keptRows.map(r=>[r.id,r.question_date]),eventRows.map(r=>[r.source_ref,r.occurrence_date,r.title,r.title_source,r.moment_id]),provenanceRows.map(r=>[r.source_kind,r.source_ref,r.target_moment_id])]);
   if(grid.dataset.loaded==='1'&&grid.dataset.signature===signature&&!forceMedia)return;
   if(!rows?.length&&!livedRows.length&&!keptRows.length&&!eventRows.length){
     grid.innerHTML='<div class="empty-state moment-loading ricordi-empty"><b>La vostra storia parte da qui</b></div>';
@@ -2796,7 +2886,7 @@ async function hydrateMomentsCore(){
     const author=names.get(row.created_by)||(own?profile.display_name:'Noi');
     // Every Moment returned here already belongs to the signed-in user's couple.
     // Deletion is a couple-level action; the Edge Function re-validates membership.
-    html.push(ricordiMomentCard(row,signedUrls.get(row.storage_path),author,true,opensPeriod,item.kind==='moment'?null:{kind:item.kind,sourceKey:item.sourceKey,title:ricordiRiviviTitle(item),date:item.date},visiblePhotoIndex++<2));
+    html.push(ricordiMomentCard(row,signedUrls,author,true,opensPeriod,item.kind==='moment'?null:{kind:item.kind,sourceKey:item.sourceKey,title:ricordiRiviviTitle(item),date:item.date},visiblePhotoIndex++<2));
     if(!opensPeriod)loneHalf=loneHalf>=0?-1:html.length-1;
   }
   closeRow();
@@ -2826,7 +2916,7 @@ async function hydrateHomeMemory(forceNext=false){
   const card=document.getElementById('homeMemoryCard');
   if(!section||!card)return;
   const [{data:rows,error},{data:profiles,error:profilesError}]=await Promise.all([
-    sb.from('moments').select('id,created_by,storage_path,caption,moment_date,created_at').order('created_at',{ascending:false}).limit(24),
+    sb.from('moments').select('id,created_by,storage_path,thumbnail_path,caption,moment_date,created_at').order('created_at',{ascending:false}).limit(24),
     sb.from('profiles').select('id,display_name').eq('couple_id',window.usProfile.couple_id)
   ]);
   if(error){console.warn(error);section.hidden=true;return;}
@@ -2836,11 +2926,14 @@ async function hydrateHomeMemory(forceNext=false){
   const daySeed=Number(localDateISO().replaceAll('-',''))||0;
   const row=rows[(daySeed+homeMemoryOffset)%rows.length];
   const names=new Map((profiles||[]).map(profile=>[profile.id,profile.display_name||'Noi']));
-  const signedUrl=await usGetSignedUrl(row.storage_path,21600);
-  if(!signedUrl){section.hidden=true;return;}
+  const paths=[row.storage_path,row.thumbnail_path].filter(Boolean);
+  const urls=await usGetSignedUrls(paths,21600);
+  const signedUrl=urls.get(row.storage_path);
+  const previewUrl=urls.get(row.thumbnail_path)||signedUrl;
+  if(!signedUrl||!previewUrl){section.hidden=true;return;}
   const dateLabel=new Date(row.moment_date+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'long',year:'numeric'});
   const author=names.get(row.created_by)||'Noi';
-  document.getElementById('homeMemoryImg').src=signedUrl;
+  document.getElementById('homeMemoryImg').src=previewUrl;
   document.getElementById('homeMemoryAuthor').textContent=author;
   document.getElementById('homeMemoryDate').textContent=dateLabel;
   const caption=document.getElementById('homeMemoryCaption');
