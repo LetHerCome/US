@@ -31,14 +31,12 @@ function entryLaneRoleFor(entry, ownerRole) {
   return ownerRole || 'other';
 }
 
-// M10.1C — Ownership must be readable without colour: F = Francesco, B =
-// Beatrice, F+B = shared. Derived ONLY from the existing lane authority
-// (entry_type + the owner's stable role) — there is no second ownership field.
-const OWNER_MARK_BY_LANE = { francesco: 'F', beatrice: 'B', shared: 'F+B' };
-const OWNER_MARK_ORDER = ['F', 'B', 'F+B'];
+// Ownership must be readable without colour. Personal markers come from the
+// real profile name; shared entries use the couple mark. Legacy role tokens
+// decide lanes only and never leak into the label shown to people.
 function ownerMarkFor(lane, displayName) {
-  if (OWNER_MARK_BY_LANE[lane]) return OWNER_MARK_BY_LANE[lane];
-  return String(displayName || '').trim().charAt(0).toUpperCase() || '·';
+  if (lane === 'shared') return '♡';
+  return String(displayName || '').trim().charAt(0).toLocaleUpperCase('it-IT') || '·';
 }
 function ownerNameFor(lane, displayName) {
   return lane === 'shared' ? 'Insieme' : (displayName || 'La tua persona');
@@ -47,17 +45,20 @@ function spokenTime(iso) {
   const d = new Date(iso);
   return d.getMinutes() === 0 ? String(d.getHours()) : `${d.getHours()}:${pad2(d.getMinutes())}`;
 }
-// "Università, Beatrice, ore 9" — ownership by name, never by colour or by the
-// bare initial.
+// Accessibility uses the real profile display name, never a legacy role token
+// or a colour-only distinction.
 function entryAriaLabel({ title, lane, displayName, entry }) {
   const when = entry.is_all_day ? 'tutto il giorno' : `ore ${spokenTime(entry.starts_at)}`;
   return `${title}, ${ownerNameFor(lane, displayName)}, ${when}`;
 }
-// Month cell: which markers to draw — never a transcript of the day. Distinct
-// owners in fixed order (F, B, F+B), the remainder as "+N".
+// Month cell: distinct owners only. Personal initials sort deterministically;
+// the shared-couple mark stays last.
 function monthCellMarks(marks, maxChips = 3) {
-  const rank = (m) => { const i = OWNER_MARK_ORDER.indexOf(m); return i < 0 ? OWNER_MARK_ORDER.length : i; };
-  const distinct = [...new Set(marks)].sort((a, b) => rank(a) - rank(b));
+  const distinct = [...new Set(marks)].sort((a, b) => {
+    if (a === '♡') return 1;
+    if (b === '♡') return -1;
+    return String(a).localeCompare(String(b), 'it');
+  });
   const chips = distinct.slice(0, maxChips);
   return { chips, more: Math.max(0, marks.length - chips.length) };
 }
@@ -890,7 +891,7 @@ function renderLegend() {
   const item = (mark, name) => `<span class="us-cal-legend-item">${ownerChip(mark)}${esc(name)}</span>`;
   legend.innerHTML = [
     ...ordered.map((p) => item(ownerMarkFor(p.role, p.display_name), p.display_name)),
-    item('F+B', 'Insieme')
+    item('♡', 'Insieme')
   ].join('');
 }
 
