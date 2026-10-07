@@ -15,7 +15,7 @@ let unlockBusy = false;
 
 // Rewards V2 — one independent slot per category. The server owns progression,
 // catalog and unlock eligibility. What each phone equips is intentionally local
-// to that installed PWA, so Francesco and Bea can personalize US independently.
+// to that installed app, so both partners can personalize US independently.
 const SLOTS = Object.freeze({
   frame: { pref: 'frame_reward_id', label: 'Cornici', place: 'sulla foto di Oggi', unlock: 'NUOVA CORNICE', where: 'Sulla foto di Oggi' },
   sticker: { pref: 'sticker_reward_id', label: 'Adesivi', place: 'su Oggi e sull’ultimo ricordo', unlock: 'NUOVO ADESIVO', where: 'Su Oggi e sull’ultimo ricordo' },
