@@ -1006,7 +1006,7 @@ function applyLocationRows(rows){
   const partner=(rows||[]).find(row=>row.user_id!==window.usProfile.id)||null;
   usLocationRuntime.rows=rows||[];
   usLocationRuntime.mineUpdatedAt=mine?.updated_at||null;
-  const partnerName=window.usProfile.role==='francesco'?'Beatrice':'Francesco';
+  const partnerName=window.UsCoupleContext?.partnerName?.()||'La tua persona';
   const model=distanceCapsuleModel({mine,partner,partnerName,permission:usLocationRuntime.permission,supported:Boolean(navigator.geolocation)});
   if(model.km!==undefined)window.usDistanceKm=model.km;
   usLocationRuntime.snapshot=model;
@@ -1199,8 +1199,11 @@ async function hydrateProfileAvatars(){
     const nameEl=document.querySelector(`[data-noi-couple-name="${profile.role}"]`);
     if(nameEl&&profile.display_name)nameEl.textContent=profile.display_name;
     const url=await signedAvatarUrl(profile.avatar_path);
-    if(profile.role==='francesco')setAvatarSlot('pairAvatarFrancesco',url);
-    if(profile.role==='beatrice')setAvatarSlot('pairAvatarBeatrice',url);
+    const couplePerson=nameEl?.closest?.('.noi-couple-person');
+    const coupleAvatar=couplePerson?.querySelector?.('.noi-couple-avatar');
+    const coupleFallback=coupleAvatar?.querySelector?.('.fallback');
+    if(coupleFallback)coupleFallback.textContent=(profile.display_name||'?').trim().slice(0,1).toLocaleUpperCase('it-IT')||'?';
+    if(coupleAvatar)setAvatarImage(coupleAvatar.querySelector('img'),coupleFallback,profile.avatar_path,url);
     if(profile.id===window.usProfile.id){
       const img=document.getElementById('profileAvatarImg');
       if(img){
@@ -1805,7 +1808,7 @@ function thinkTodayPriorityViewModel(){
 function dailyRitualPartnerName(){
   const partner=partnerFromProfiles(window.usBondProfiles||[]);
   if(partner?.display_name)return partner.display_name;
-  return window.usProfile?.role==='francesco'?'Beatrice':'Francesco';
+  return window.UsCoupleContext?.partnerName?.()||'La tua persona';
 }
 function dailyRitualViewModel(source){
   // M10.1A — la card su Oggi dice a CHI guarda "hai ancora qualcosa da fare":
@@ -2121,7 +2124,7 @@ document.getElementById('thinkArrival')?.addEventListener('click',event=>{
 
 function dailyQuestionOutcomeRuntime(){
   const ownRole=()=>window.usProfile?.role||'';
-  const partnerLabel=()=>ownRole()==='francesco'?'Bea':'Francesco';
+  const partnerLabel=()=>window.UsCoupleContext?.partnerName?.()||'La tua persona';
   const emptyState=(questionId='')=>({questionId,rows:[],draft:'',status:'idle'});
   const current=()=>window.todayOutcomeState||emptyState(window.todayQuestion?.id);
   const operationId=()=>globalThis.crypto?.randomUUID?.()||'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,char=>{
@@ -2304,7 +2307,7 @@ async function loadDailyRevealMeta(questionId){
     return data;
   }catch(error){console.warn('[US Today] Reveal meta',error);return null;}
 }
-function dailyRevealPartnerLabel(){return window.usProfile?.role==='francesco'?'Bea':'Francesco';}
+function dailyRevealPartnerLabel(){return window.UsCoupleContext?.partnerName?.()||'La tua persona';}
 function renderTodayReveal(){
   const reveal=document.getElementById('todayReveal'),state=window.todayState;
   if(!reveal||!state?.both_answered)return;
@@ -2445,7 +2448,7 @@ async function hydrateToday(){
     dailyQuestionOutcomes.hide();
     window.UsDailyKeepsake?.hide?.();
     if(state?.my_answer){
-      const partner=window.usProfile.role==='francesco'?'Bea':'Francesco';
+      const partner=window.UsCoupleContext?.partnerName?.()||'La tua persona';
       locked.innerHTML='✓ Hai risposto. <b>In attesa di '+partner+'…</b>';
     }else if(state?.partner_has_answer){
       locked.innerHTML='🔒 L’altra risposta è già arrivata. <b>Rispondi per sbloccarla.</b>';
@@ -2466,7 +2469,7 @@ async function updateHomeStatus(){
   if(!window.usProfile)return;
   const todayPill=document.getElementById('todayStatusPill');
   const st=window.todayState;
-  const partner=window.usProfile.role==='francesco'?'Bea':'Francesco';
+  const partner=window.UsCoupleContext?.partnerName?.()||'La tua persona';
   if(todayPill){
     if(st?.both_answered) todayPill.textContent='💬 Today · reveal sbloccato';
     else if(st?.my_answer) todayPill.textContent='💬 Today · in attesa di '+partner;
@@ -2792,7 +2795,9 @@ function ricordiDailyCard(row){
 }
 function ricordiDailyAnswers(row){
   const answer=(label,text)=>`<div class="ricordi-daily-answer"><b>${escapeHtml(label)}</b><p>${escapeHtml(text||'')}</p></div>`;
-  return `<div class="ricordi-daily-answers">${answer('Francesco',row.francesco_answer)}${answer('Bea',row.beatrice_answer)}</div>`;
+  const first=window.UsCoupleContext?.nameForRole?.('francesco','Persona 1')||'Persona 1';
+  const second=window.UsCoupleContext?.nameForRole?.('beatrice','Persona 2')||'Persona 2';
+  return `<div class="ricordi-daily-answers">${answer(first,row.francesco_answer)}${answer(second,row.beatrice_answer)}</div>`;
 }
 // M12B.5 — un Evento vissuto senza foto resta un record evento (D3=A): titolo
 // storico (snapshot al completamento, altrimenti il titolo attuale dichiarato
@@ -3774,7 +3779,7 @@ function noiIdeaLivedOnLabel(item){
   return d.toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'});
 }
 function noiIdeaPartnerName(){
-  return window.usProfile?.role==='francesco'?'Beatrice':'Francesco';
+  return window.UsCoupleContext?.partnerName?.()||'La tua persona';
 }
 // none: nessuno ha proposto · mine: ho proposto io, attendo · partner: ha
 // proposto l'altra persona, tocca a me · lived: confermata da entrambi.
