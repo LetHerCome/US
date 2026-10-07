@@ -10,8 +10,8 @@ function neutralizeLegacyCouplePlaceholders(){
   if(auth){
     auth.setAttribute('aria-label','Spazio privato della vostra coppia');
     const labels=auth.querySelectorAll('span:not([aria-hidden="true"])');
-    if(labels[0])labels[0].textContent='Tu';
-    if(labels[1])labels[1].textContent='La tua persona';
+    if(labels[0])labels[0].textContent='Persona 1';
+    if(labels[1])labels[1].textContent='Persona 2';
   }
   const card=document.getElementById('noiCoupleCard');
   if(card)card.setAttribute('aria-label','La vostra coppia, distanza e impostazioni');
@@ -19,8 +19,8 @@ function neutralizeLegacyCouplePlaceholders(){
   if(pair)pair.setAttribute('aria-label','La vostra coppia');
   const first=document.querySelector('[data-noi-couple-name="francesco"]');
   const second=document.querySelector('[data-noi-couple-name="beatrice"]');
-  if(first)first.textContent='Tu';
-  if(second)second.textContent='La tua persona';
+  if(first)first.textContent='Persona 1';
+  if(second)second.textContent='Persona 2';
   document.querySelectorAll('.noi-couple-avatar .fallback').forEach(node=>{node.textContent='•';});
   const names=document.getElementById('usCoupleNames');
   if(names)names.textContent='Il vostro US';
