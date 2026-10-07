@@ -345,8 +345,7 @@ function reminderRowsFor({ entryType, target, requesterId, partnerId, offsetMinu
     offset_minutes: offsetMinutes
   }));
 }
-// Copia della notifica: self → "Tra un'ora — Titolo"; partner →
-// "Francesco ti ricorda — Cena alle 20:30 ♡" (display name reale dal profilo).
+// Notification copy always uses the requester's real profile display name.
 function reminderCopy({ selfRecipient, requesterName, title, startsAt, allDay }) {
   if (selfRecipient) return '— ' + title;
   const hhmm = startsAt ? new Date(startsAt) : null;
