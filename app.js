@@ -76,15 +76,17 @@ function resetQuiz(){window.USGameV2?.showHub();}
 window.openQuizHub=openQuizHub;
 window.resetQuiz=resetQuiz;
 
-function updateTogetherDays(){
-  const start = new Date('2026-04-21T00:00:00');
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const diff = Math.max(0,Math.floor((today - start)/86400000));
+function renderTogetherDays(startedOn){
   const el=document.getElementById('daysTogether');
-  if(el)el.textContent = diff.toLocaleString('it-IT');
+  if(!el)return;
+  if(!startedOn){el.textContent='—';return;}
+  const [year,month,day]=String(startedOn).split('-').map(Number);
+  if(!year||!month||!day){el.textContent='—';return;}
+  const start=Date.UTC(year,month-1,day);
+  const now=new Date();
+  const today=Date.UTC(now.getFullYear(),now.getMonth(),now.getDate());
+  el.textContent=Math.max(0,Math.floor((today-start)/86400000)).toLocaleString('it-IT');
 }
-updateTogetherDays();
 
 
 const SB_URL = 'https://iiakdfsxpywdkxravqjh.supabase.co';
@@ -96,6 +98,68 @@ const sb = window.supabase.createClient(SB_URL, SB_KEY, {
     detectSessionInUrl: true,
     storage: window.usDurableAuthStorage
   }
+});
+
+
+const usCoupleContextState={couple:null,profiles:[],identityKey:''};
+function usCoupleProfileByRole(role){
+  return usCoupleContextState.profiles.find(profile=>profile.role===role)||null;
+}
+function usCouplePartnerProfile(){
+  const me=window.usProfile?.id;
+  return usCoupleContextState.profiles.find(profile=>profile.id!==me)||null;
+}
+function usCouplePartnerName(fallback='La tua persona'){
+  return usCouplePartnerProfile()?.display_name||fallback;
+}
+function usCoupleNameForRole(role,fallback='La tua persona'){
+  return usCoupleProfileByRole(role)?.display_name||fallback;
+}
+function usCoupleInitialForRole(role,fallback='•'){
+  const name=usCoupleNameForRole(role,'');
+  return name.trim().slice(0,1).toLocaleUpperCase('it-IT')||fallback;
+}
+function usCoupleContextSnapshot(){
+  return {
+    couple:usCoupleContextState.couple?{...usCoupleContextState.couple}:null,
+    profiles:usCoupleContextState.profiles.map(profile=>({...profile}))
+  };
+}
+function clearUsCoupleContext(){
+  usCoupleContextState.couple=null;
+  usCoupleContextState.profiles=[];
+  usCoupleContextState.identityKey='';
+  renderTogetherDays(null);
+}
+async function hydrateUsCoupleContext(){
+  const profile=window.usProfile;
+  const coupleId=profile?.couple_id;
+  if(!profile?.id||!coupleId){clearUsCoupleContext();return null;}
+  const identityKey=`${profile.id}:${coupleId}`;
+  const [coupleResult,profilesResult]=await Promise.all([
+    sb.from('couples').select('id,name,started_on').eq('id',coupleId).maybeSingle(),
+    sb.from('profiles').select('id,display_name,role,couple_id,avatar_path').eq('couple_id',coupleId).order('created_at',{ascending:true})
+  ]);
+  if(window.usProfile!==profile)return null;
+  if(coupleResult.error||profilesResult.error){
+    console.warn('[US Couple] context',coupleResult.error||profilesResult.error);
+    return usCoupleContextSnapshot();
+  }
+  usCoupleContextState.couple=coupleResult.data||null;
+  usCoupleContextState.profiles=(profilesResult.data||[]).filter(row=>row.couple_id===coupleId);
+  usCoupleContextState.identityKey=identityKey;
+  renderTogetherDays(usCoupleContextState.couple?.started_on);
+  window.dispatchEvent(new CustomEvent('us-couple-context-ready',{detail:usCoupleContextSnapshot()}));
+  return usCoupleContextSnapshot();
+}
+window.UsCoupleContext=Object.freeze({
+  hydrate:hydrateUsCoupleContext,
+  clear:clearUsCoupleContext,
+  snapshot:usCoupleContextSnapshot,
+  partner:usCouplePartnerProfile,
+  partnerName:usCouplePartnerName,
+  nameForRole:usCoupleNameForRole,
+  initialForRole:usCoupleInitialForRole
 });
 
 window.UsWidgetCredentialApi=Object.freeze({
@@ -689,6 +753,7 @@ async function initCloud(){
       const returningDevice=Boolean(cachedDeviceProfile);
       resetNoiIdeasForIdentityChange();
       window.usProfile = null;
+      window.UsCoupleContext?.clear?.();
       window.UsWidgets?.clear?.().catch(()=>{});
       document.documentElement.classList.remove('us-returning-device','us-auth-pending');
       setCloudBadge(false,navigator.onLine?'accesso richiesto':'offline');
@@ -736,6 +801,7 @@ async function initCloud(){
       resetNoiIdeasForIdentityChange();
       window.UsNotifications?.signedOut?.();
       window.usProfile = null;
+      window.UsCoupleContext?.clear?.();
       window.UsWidgets?.clear?.().catch(()=>{});
       document.documentElement.classList.remove('us-returning-device','us-auth-pending');
       setCloudBadge(false,'da collegare');
@@ -761,6 +827,7 @@ async function initCloud(){
     document.documentElement.classList.add('us-auth-ready','us-returning-device');
     window.dispatchEvent(new CustomEvent('us-auth-resolved',{detail:{paired:true}}));
     setCloudBadge(true, profile.display_name);
+    hydrateUsCoupleContext().catch(error=>console.warn('[US Couple] boot context',error));
     const syncBadge=document.getElementById('syncReadyBadge');
     if(syncBadge)syncBadge.textContent='SYNC ATTIVO';
 
