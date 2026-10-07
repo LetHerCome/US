@@ -21,6 +21,8 @@ const RUNTIME_FILES = [
   'ui-foundation.css',
   'ui-foundation.js',
   'platform.js',
+  'media-picker.js',
+  'media-picker.css',
   'app-lock.js',
   'app-lock.css',
   'notifications.js',
