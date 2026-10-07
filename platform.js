@@ -4,9 +4,9 @@
   const runtime = window.UsCapacitorRuntime || window.Capacitor || null;
   const isNative = Boolean(runtime?.isNativePlatform?.());
   const platformName = isNative && typeof runtime?.getPlatform === 'function' ? String(runtime.getPlatform() || '') : 'web';
-  if (isNative) {
-    document.documentElement.classList.add('us-native');
-    if (platformName === 'android' || platformName === 'ios') document.documentElement.classList.add(`us-native-${platformName}`);
+  if (isNative && typeof document !== 'undefined') {
+    document.documentElement?.classList?.add('us-native');
+    if (platformName === 'android' || platformName === 'ios') document.documentElement?.classList?.add(`us-native-${platformName}`);
   }
   const plugins = new Map();
   let nativeBackListener = null;
