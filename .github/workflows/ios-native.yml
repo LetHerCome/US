@@ -34,9 +34,6 @@ on:
       - 'native-plugins/us-push-support/**'
       - 'notifications.js'
       - 'tests/native-notifications-v1-native.test.js'
-      - 'tests/native-performance-ux-v1.test.js'
-      - 'tests/ricordi-thumbnails-v1.test.js'
-      - 'tests/settings-v2-consumer.test.js'
       - '.github/workflows/ios-native.yml'
   pull_request:
     paths:
@@ -60,6 +57,10 @@ on:
       - 'notifications.js'
       - 'tests/native-notifications-v1-native.test.js'
       - '.github/workflows/ios-native.yml'
+      - 'index.html'
+      - 'settings.js'
+      - 'settings2.css'
+      - 'tests/settings-v2-consumer.test.js'
 
 permissions:
   contents: read
