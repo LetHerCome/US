@@ -77,13 +77,10 @@ function readDevicePreferences(next) {
       return sanitizeDevicePreferences(saved.preferences, next);
     }
     if (saved?.version === 1 && saved?.preferences) {
-      // V1 was introduced with a compatibility seed that copied the old
-      // couple-level equipped look onto every phone. Bea's first login happened
-      // during that window, so reset that contaminated seed once. Francesco's
-      // already-local choices are migrated intact.
-      const migrated = window.usProfile?.role === 'beatrice'
-        ? fresh
-        : sanitizeDevicePreferences(saved.preferences, next);
+      // Legacy device state is migrated by validity only. A role token is a
+      // compatibility slot, never an identity signal and never a reason to
+      // treat one partner differently from the other.
+      const migrated = sanitizeDevicePreferences(saved.preferences, next);
       persistDevicePreferences(migrated);
       return migrated;
     }
