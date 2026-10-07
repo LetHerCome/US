@@ -11,7 +11,8 @@ test('N3.5 navigation paints before heavy page hydration', () => {
   const app = read('app.js');
   assert.match(app, /function schedulePageHydration\(id\)/);
   assert.match(app, /requestAnimationFrame\(\(\)=>setTimeout\(/);
-  assert.match(app, /schedulePageHydration\(id\);\n}/);
+  assert.match(app, /schedulePageHydration\(id,\{force:true\}\);\n    return;/);
+  assert.match(app, /scrollTo\([\s\S]*?schedulePageHydration\(id\);\n}/);
   assert.doesNotMatch(app, /if\(id==='moments' && window\.usProfile\) hydrateMoments\(\)/);
 });
 
@@ -44,7 +45,7 @@ test('N3.5 Android uses normal text IME hints and ships no in-app emoji substitu
   const platform = read('platform.js');
   const app = read('app.js');
   const css = read('styles.css');
-  assert.match(platform, /classList\.add\('us-native'\)/);
+  assert.match(platform, /classList\?\.add\('us-native'\)/);
   assert.match(platform, /us-native-\$\{platformName\}/);
   assert.match(app, /function normalizeAndroidNaturalTextInputs/);
   assert.match(app, /setAttribute\('inputmode','text'\)/);
