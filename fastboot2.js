@@ -4,6 +4,7 @@ if(window.__usFastBoot2Installed)return;
 window.__usFastBoot2Installed=true;
 
 function neutralizeLegacyCouplePlaceholders(){
+  if(typeof document==='undefined'||typeof document.querySelector!=='function')return;
   document.title='US — Solo voi';
   const auth=document.querySelector('.us-auth-context');
   if(auth){
