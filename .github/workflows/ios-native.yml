@@ -26,7 +26,8 @@ on:
       - 'tests/native-security-v1.test.js'
       - 'native-plugins/us-push-support/**'
       - 'notifications.js'
-      - 'tests/native-notifications-v1-native.test.js tests/native-performance-ux-v1.test.js'
+      - 'tests/native-notifications-v1-native.test.js'
+      - 'tests/native-performance-ux-v1.test.js'
       - '.github/workflows/ios-native.yml'
   pull_request:
     paths:
@@ -82,7 +83,7 @@ jobs:
         run: npm ci
 
       - name: Native contract tests
-        run: node --test tests/ios-native-baseline.test.js tests/native-web-staging.test.js tests/native-foundation.test.js tests/native-security-v1.test.js tests/native-notifications-v1-native.test.js
+        run: node --test tests/ios-native-baseline.test.js tests/native-web-staging.test.js tests/native-foundation.test.js tests/native-security-v1.test.js tests/native-notifications-v1-native.test.js tests/native-performance-ux-v1.test.js
 
       - name: App lock policy checks (host swiftc, no simulator)
         run: |
