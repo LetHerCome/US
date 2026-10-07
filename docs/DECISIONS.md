@@ -56,3 +56,16 @@ Only durable decisions belong here. New missions should not reopen them without 
 - Native registration is per app installation (random UUID, rotated at logout), only through authenticated RPCs; logout removes only this installation.
 - Payloads carry an allow-listed target and an optional UUID, never a URL; navigation waits for the session and the app lock. Notification actions never mutate data.
 - Native credentials live only in Supabase Edge secrets; unset = native transport off, Web Push unchanged.
+
+
+## 2026-10-07
+
+### Multi-couple product foundation
+
+- US is a **single-couple UX on a multi-couple architecture**: each signed-in person has one active couple in the current product model, while the backend must safely host many independent couples.
+- `couple_id` is the tenant boundary for shared state and authorization.
+- V1 keeps `profiles.id = auth.users.id` plus `profiles.couple_id` as membership authority. Do not introduce a separate membership table until users need multiple simultaneous or historical couple memberships.
+- Legacy role tokens `francesco` / `beatrice` are compatibility storage slots, not presentation identity and not gender. UI names must come from profiles.
+- Relationship dates must come from `couples.started_on`; no couple-specific date belongs in runtime logic.
+- Any future public onboarding/invite flow must create or join a couple without weakening the existing RLS/Storage tenant boundary.
+- Native/product merges that affect bootstrap/auth must pass a boot/session/login safety gate before they can be considered release candidates.
