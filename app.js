@@ -12,15 +12,29 @@ function animatePageEntry(page,direction){
   page.classList.add(entry);
   setTimeout(()=>page.classList.remove(entry),US_MOTION_FAST_MS);
 }
+let usPageHydrationTicket=0;
+function hydrateActivePage(id){
+  if(!window.usProfile||document.querySelector('.page.active')?.id!==id)return;
+  if(id==='moments'){hydrateMoments().catch(()=>{});return;}
+  if(id==='bond'){Promise.resolve(hydrateBond()).catch(()=>{});Promise.resolve(hydrateNoiIdeas()).catch(()=>{});return;}
+  if(id==='settings'){Promise.resolve(window.hydrateUsSettings?.()).catch(()=>{});return;}
+  if(id==='home')Promise.resolve(window.refreshOggiCalendarWidget?.()).catch(()=>{});
+}
+function schedulePageHydration(id){
+  const ticket=++usPageHydrationTicket;
+  // Let the tab become visible first. Heavy Supabase/DOM work starts after the
+  // browser has had one frame to commit the navigation.
+  requestAnimationFrame(()=>setTimeout(()=>{
+    if(ticket!==usPageHydrationTicket)return;
+    hydrateActivePage(id);
+  },0));
+}
 function go(id,options={}){
   const current=document.querySelector('.page.active')?.id;
   if(current===id){
     if(id==='bond'&&options.nav)window.closeNoiSection?.();
     scrollTo({top:0,behavior:options.motionCommit?'auto':'smooth'});
-    if(id==='moments' && window.usProfile)hydrateMoments();
-    if(id==='bond' && window.usProfile){hydrateBond();hydrateNoiIdeas();}
-    if(id==='settings' && window.usProfile)window.hydrateUsSettings?.();
-    if(id==='home' && window.usProfile)window.refreshOggiCalendarWidget?.();
+    schedulePageHydration(id);
     return;
   }
   if(current==='bond')window.closeNoiSection?.();
@@ -39,10 +53,7 @@ function go(id,options={}){
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
   if(options.swipe&&!options.motionCommit)setTimeout(()=>document.getElementById(id)?.classList.remove('swipe-next','swipe-prev'),190);
   scrollTo({top:0,behavior:(options.swipe||options.motionCommit)?'auto':'smooth'});
-  if(id==='moments' && window.usProfile) hydrateMoments();
-  if(id==='bond' && window.usProfile){hydrateBond();hydrateNoiIdeas();}
-  if(id==='settings' && window.usProfile) window.hydrateUsSettings?.();
-  if(id==='home' && window.usProfile) window.refreshOggiCalendarWidget?.();
+  schedulePageHydration(id);
 }
 // One timer for the one toast: a second message restarts the 1.7 s window
 // instead of being cut short by the first message's pending hide.
@@ -226,6 +237,35 @@ window.usGetSignedUrl=usGetSignedUrl;
 window.usGetSignedUrls=usGetSignedUrls;
 window.usInvalidateSignedUrl=usInvalidateSignedUrl;
 window.usRecoverPrivateImage=usRecoverPrivateImage;
+
+let usNativeMediaPrewarmedFor='';
+async function usPrewarmNativeMomentMedia(limit=4){
+  const profile=window.usProfile;
+  if(!window.UsPlatform?.isNative||!profile?.couple_id||usNativeMediaPrewarmedFor===profile.couple_id)return;
+  const connection=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
+  if(connection?.saveData||String(connection?.effectiveType||'').includes('2g'))return;
+  usNativeMediaPrewarmedFor=profile.couple_id;
+  try{
+    const {data:rows,error}=await sb.from('moments')
+      .select('storage_path')
+      .eq('couple_id',profile.couple_id)
+      .order('moment_date',{ascending:false})
+      .order('created_at',{ascending:false})
+      .limit(limit);
+    if(error||window.usProfile!==profile){if(error)throw error;return;}
+    const urls=await usGetSignedUrls((rows||[]).map(row=>row.storage_path),21600);
+    await Promise.allSettled([...urls.values()].slice(0,limit).map(url=>new Promise(resolve=>{
+      const img=new Image();
+      img.decoding='async';
+      try{img.fetchPriority='low';}catch(_e){}
+      img.onload=img.onerror=()=>resolve();
+      img.src=url;
+    })));
+  }catch(error){
+    usNativeMediaPrewarmedFor='';
+    console.warn('[US Media] native prewarm',error);
+  }
+}
 
 // ===== US v20 · Web Push Foundation =====
 const US_VAPID_PUBLIC_KEY='BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss';
@@ -724,6 +764,9 @@ async function initCloud(){
     usRunWhenIdle(()=>maybeAutoRefreshLocation('launch'),1400);
     usRunWhenIdle(()=>refreshWebPushUi(),1100);
     usRunWhenIdle(()=>hydrateThink(),900);
+    // Native has no service-worker image cache. Prewarm only the first few
+    // Ricordi after Home is usable so opening the archive feels immediate.
+    usRunWhenIdle(()=>usPrewarmNativeMomentMedia(),2200);
 
     // Push navigation itself is user intent, so keep it immediate.
     flushPendingPushTarget();
@@ -1139,7 +1182,7 @@ async function uploadProfilePhoto(file){
   try{
     const compressed=await compressImageFile(file,{maxDimension:512,quality:.82});
     const path=`${window.usProfile.couple_id}/${window.usProfile.id}/avatar-${Date.now()}-${crypto.randomUUID()}.webp`;
-    const {error:uploadError}=await sb.storage.from('us-media').upload(path,compressed,{contentType:'image/webp',upsert:false,cacheControl:'3600'});
+    const {error:uploadError}=await sb.storage.from('us-media').upload(path,compressed,{contentType:'image/webp',upsert:false,cacheControl:'31536000'});
     if(uploadError)throw uploadError;
     const {error:updateError}=await sb.from('profiles').update({avatar_path:path}).eq('id',window.usProfile.id);
     if(updateError){await sb.storage.from('us-media').remove([path]);throw updateError;}
@@ -2417,7 +2460,7 @@ async function uploadMoment(){
     const safeName=`${Date.now()}-${crypto.randomUUID()}.webp`;
     const path=`${window.usProfile.couple_id}/${window.usProfile.id}/${safeName}`;
     btn.textContent='Carico…';
-    const {error:uploadError}=await sb.storage.from('us-media').upload(path,compressed,{contentType:'image/webp',upsert:false,cacheControl:'3600'});
+    const {error:uploadError}=await sb.storage.from('us-media').upload(path,compressed,{contentType:'image/webp',upsert:false,cacheControl:'31536000'});
     if(uploadError)throw uploadError;
     const {data:created,error:rowError}=await sb.from('moments').insert({
       couple_id:window.usProfile.couple_id,
@@ -2556,7 +2599,7 @@ window.UsRicordiArchive=Object.freeze({timeline:ricordiTimeline,pickRivivi:ricor
 function ricordiMomentCard(row,signedUrl,author,canDelete,feature,source){
   const displayISO=/^\d{4}-\d{2}-\d{2}$/.test(String(source?.date||''))?String(source.date):row.moment_date;
   const dateLabel=new Date(displayISO+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
-  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(signedUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(row.caption||'')}" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(signedUrl)}" data-us-media-path="${escapeHtml(row.storage_path)}" onerror="usRecoverPrivateImage(this)" alt="Ricordo condiviso" loading="lazy">${canDelete?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}')">Elimina</button>`:''}<div class="moment-meta"><div class="moment-by">${escapeHtml(author||'Noi')}</div><b>${dateLabel}</b>${source?`<small class="ricordi-moment-source" data-source-key="${escapeHtml(source.sourceKey)}">${escapeHtml(RICORDI_SOURCE_LABEL[source.kind]||'')}${source.title?` · ${escapeHtml(source.title)}`:''}</small>`:''}${row.caption?`<p>${escapeHtml(row.caption)}</p>`:''}</div></article>`;
+  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(signedUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(row.caption||'')}" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(signedUrl)}" data-us-media-path="${escapeHtml(row.storage_path)}" onerror="usRecoverPrivateImage(this)" alt="Ricordo condiviso" loading="lazy" decoding="async">${canDelete?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}')">Elimina</button>`:''}<div class="moment-meta"><div class="moment-by">${escapeHtml(author||'Noi')}</div><b>${dateLabel}</b>${source?`<small class="ricordi-moment-source" data-source-key="${escapeHtml(source.sourceKey)}">${escapeHtml(RICORDI_SOURCE_LABEL[source.kind]||'')}${source.title?` · ${escapeHtml(source.title)}`:''}</small>`:''}${row.caption?`<p>${escapeHtml(row.caption)}</p>`:''}</div></article>`;
 }
 function ricordiExperienceCard(row,sourceDate){
   const date=/^\d{4}-\d{2}-\d{2}$/.test(String(sourceDate||''))?String(sourceDate):ricordiLocalISO(row.completed_at);
@@ -2605,7 +2648,7 @@ function renderRicordiRivivi(pick,signedUrls,names){
     const meta=entry.kind==='moment'?author:RICORDI_SOURCE_LABEL[entry.kind];
     const viewerISO=entry.kind==='moment'?m.moment_date:entry.date;
     const viewerDate=new Date(viewerISO+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
-    root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><button type="button" class="ricordi-rivivi-card" data-ricordi-open="${escapeHtml(m.id)}" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}" data-url="${escapeHtml(url)}" data-author="${escapeHtml(author)}" data-date="${escapeHtml(viewerDate)}" data-caption="${escapeHtml(m.caption||title)}" aria-label="Rivivi: ${escapeHtml(title||date)}"><img src="${escapeHtml(url)}" data-us-media-path="${escapeHtml(m.storage_path)}" onerror="usRecoverPrivateImage(this)" alt="" loading="lazy"><span class="ricordi-rivivi-copy"><small>${escapeHtml(pick.label)}</small><b>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(meta)}</span></span></button>`;
+    root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><button type="button" class="ricordi-rivivi-card" data-ricordi-open="${escapeHtml(m.id)}" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}" data-url="${escapeHtml(url)}" data-author="${escapeHtml(author)}" data-date="${escapeHtml(viewerDate)}" data-caption="${escapeHtml(m.caption||title)}" aria-label="Rivivi: ${escapeHtml(title||date)}"><img src="${escapeHtml(url)}" data-us-media-path="${escapeHtml(m.storage_path)}" onerror="usRecoverPrivateImage(this)" alt="" loading="lazy" decoding="async"><span class="ricordi-rivivi-copy"><small>${escapeHtml(pick.label)}</small><b>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(meta)}</span></span></button>`;
     root.hidden=false;
     return;
   }
@@ -2624,7 +2667,7 @@ function renderRicordiChapters(chapters,signedUrls){
   root.innerHTML=`<div class="ricordi-section-head"><div class="ricordi-kicker">CAPITOLI</div><h3>Per anno</h3></div><div class="ricordi-chapter-row">${chapters.map(ch=>{
     const url=ch.cover?signedUrls.get(ch.cover.storage_path):null;
     const parts=[ch.moments?`${ch.moments} ${ch.moments===1?'ricordo':'ricordi'}`:'',ch.experiences?`${ch.experiences} ${ch.experiences===1?'esperienza':'esperienze'}`:'',ch.dailies?`${ch.dailies} ${ch.dailies===1?'domanda':'domande'}`:''].filter(Boolean).join(' · ');
-    return `<button type="button" class="ricordi-chapter" data-ricordi-year="${escapeHtml(ch.year)}">${url?`<img src="${escapeHtml(url)}" data-us-media-path="${escapeHtml(ch.cover.storage_path)}" onerror="usRecoverPrivateImage(this)" alt="" loading="lazy">`:''}<span><b>${escapeHtml(ch.year)}</b><small>${escapeHtml(parts)}</small></span></button>`;
+    return `<button type="button" class="ricordi-chapter" data-ricordi-year="${escapeHtml(ch.year)}">${url?`<img src="${escapeHtml(url)}" data-us-media-path="${escapeHtml(ch.cover.storage_path)}" onerror="usRecoverPrivateImage(this)" alt="" loading="lazy" decoding="async">`:''}<span><b>${escapeHtml(ch.year)}</b><small>${escapeHtml(parts)}</small></span></button>`;
   }).join('')}</div>`;
   root.hidden=false;
 }
@@ -2654,16 +2697,30 @@ async function hydrateMomentsCore(){
   if(!grid)return;
   const profile=window.usProfile;
   if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></div><b>Carico…</b></div>';
-  const [{data:rows,error},{data:profiles,error:profilesError},{data:lived,error:livedError},{data:kept,error:keptError},{data:events,error:eventsError},{data:provenance,error:provenanceError}]=await Promise.all([
-    sb.from('moments').select('id,created_by,storage_path,caption,moment_date,created_at').order('moment_date',{ascending:false}).order('created_at',{ascending:false}),
-    sb.from('profiles').select('id,display_name').eq('couple_id',profile.couple_id),
-    sb.from('bucket_items').select('id,title,completed_at').eq('couple_id',profile.couple_id).eq('status','lived'),
-    sb.from('daily_question_keepsakes').select('id,source_key,question_text,question_date,francesco_answer,beatrice_answer,revealed_at').order('question_date',{ascending:false}),
-    sb.from('relationship_event_history').select('source_ref,occurrence_date,completed_at,title,title_source,moment_id'),
-    sb.from('living_provenance').select('source_kind,source_ref,source_title,source_date,target_moment_id')
-  ]);
+  // Start all archive reads together, but as soon as Moments arrive start
+  // resolving their signed media URLs too. Previously media resolution waited
+  // for every enrichment query, adding a full network round-trip to first paint.
+  const momentsPromise=sb.from('moments').select('id,created_by,storage_path,caption,moment_date,created_at').order('moment_date',{ascending:false}).order('created_at',{ascending:false});
+  const profilesPromise=sb.from('profiles').select('id,display_name').eq('couple_id',profile.couple_id);
+  const livedPromise=sb.from('bucket_items').select('id,title,completed_at').eq('couple_id',profile.couple_id).eq('status','lived');
+  const keptPromise=sb.from('daily_question_keepsakes').select('id,source_key,question_text,question_date,francesco_answer,beatrice_answer,revealed_at').order('question_date',{ascending:false});
+  const eventsPromise=sb.from('relationship_event_history').select('source_ref,occurrence_date,completed_at,title,title_source,moment_id');
+  const provenancePromise=sb.from('living_provenance').select('source_kind,source_ref,source_title,source_date,target_moment_id');
+  const {data:rows,error}=await momentsPromise;
   if(window.usProfile!==profile)return;
   if(error){console.warn(error);if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">!</div><b>Ricordi non disponibili</b><p>Riprova tra un momento.</p></div>';return;}
+  const mediaPaths=(rows||[]).map(row=>row.storage_path);
+  if(forceMedia)mediaPaths.forEach(usInvalidateSignedUrl);
+  const signedUrlsPromise=usGetSignedUrls(mediaPaths,21600);
+  const [
+    {data:profiles,error:profilesError},
+    {data:lived,error:livedError},
+    {data:kept,error:keptError},
+    {data:events,error:eventsError},
+    {data:provenance,error:provenanceError},
+    signedUrls
+  ]=await Promise.all([profilesPromise,livedPromise,keptPromise,eventsPromise,provenancePromise,signedUrlsPromise]);
+  if(window.usProfile!==profile)return;
   if(profilesError)console.warn(profilesError);
   // Le esperienze vissute sono un arricchimento: se non si leggono, la storia
   // resta quella dei Moments, mai un errore dell'intera pagina.
@@ -2689,10 +2746,6 @@ async function hydrateMomentsCore(){
     grid.dataset.loaded='1';grid.dataset.signature=signature;window.dispatchEvent(new CustomEvent('us:moments-updated'));return;
   }
   const names=new Map((profiles||[]).map(p=>[p.id,p.display_name||'Noi']));
-  const mediaPaths=(rows||[]).map(row=>row.storage_path);
-  if(forceMedia)mediaPaths.forEach(usInvalidateSignedUrl);
-  const signedUrls=await usGetSignedUrls((rows||[]).map(row=>row.storage_path),21600);
-  if(window.usProfile!==profile)return;
   const timeline=ricordiTimeline((rows||[]).filter(r=>signedUrls.get(r.storage_path)),livedRows,keptRows,eventRows,provenanceRows);
   const html=[];
   let period='';
@@ -4417,7 +4470,9 @@ async function refreshVisibleState(options={}){
     if(!options.foreground)hydrateDistance();
     return;
   }
-  if(active==='moments'){await hydrateMoments({forceMedia:Boolean(options.foreground)});return;}
+  // Foregrounding must not invalidate valid signed media URLs. A failed image
+  // already self-recovers through usRecoverPrivateImage().
+  if(active==='moments'){await hydrateMoments();return;}
   if(active==='quiz'){await window.USGameV2?.refresh();return;}
   if(active==='bond'){await hydrateBondSummary();return;}
   if(active==='settings'){await window.hydrateUsSettings?.();}
@@ -4445,5 +4500,67 @@ if (canUseUsServiceWorker()) {
   });
 }
 
+
+// Native Android IMEs do not all expose the emoji switch consistently inside
+// a WebView. US provides a small, device-local quick picker for free-text
+// fields instead of depending on OEM keyboard chrome.
+function installNativeEmojiAssist(){
+  if(!window.UsPlatform?.isNative||!document.documentElement.classList.contains('us-native-android')||document.getElementById('usNativeEmojiTrigger'))return;
+  const emojis=['❤️','🥰','😘','😂','🥹','😭','🫶','✨','🥺','😈','🔥','🤍'];
+  let target=null;
+  const trigger=document.createElement('button');
+  trigger.type='button';
+  trigger.id='usNativeEmojiTrigger';
+  trigger.className='us-native-emoji-trigger';
+  trigger.setAttribute('aria-label','Apri emoji');
+  trigger.textContent='☺';
+  trigger.hidden=true;
+  const panel=document.createElement('div');
+  panel.className='us-native-emoji-panel';
+  panel.hidden=true;
+  panel.setAttribute('role','toolbar');
+  panel.setAttribute('aria-label','Emoji rapide');
+  panel.innerHTML=emojis.map(emoji=>`<button type="button" data-us-emoji="${emoji}" aria-label="Inserisci ${emoji}">${emoji}</button>`).join('');
+  document.body.append(trigger,panel);
+
+  const eligible=el=>{
+    if(!el?.matches||el.disabled||el.readOnly||el.closest('.auth-overlay'))return false;
+    if(el.matches('textarea'))return true;
+    if(!el.matches('input'))return false;
+    const type=String(el.type||'text').toLowerCase();
+    const mode=String(el.inputMode||'').toLowerCase();
+    return type==='text'&&!['numeric','decimal','tel','email','url'].includes(mode);
+  };
+  const hide=()=>{target=null;trigger.hidden=true;panel.hidden=true;trigger.setAttribute('aria-expanded','false');};
+  const show=el=>{target=el;trigger.hidden=false;trigger.setAttribute('aria-expanded','false');};
+  document.addEventListener('focusin',event=>{if(eligible(event.target))show(event.target);else hide();});
+  document.addEventListener('focusout',()=>setTimeout(()=>{if(target&&document.activeElement!==target)hide();},0));
+  trigger.addEventListener('pointerdown',event=>event.preventDefault());
+  trigger.addEventListener('click',()=>{
+    if(!target)return;
+    panel.hidden=!panel.hidden;
+    trigger.setAttribute('aria-expanded',panel.hidden?'false':'true');
+  });
+  panel.addEventListener('pointerdown',event=>event.preventDefault());
+  panel.addEventListener('click',event=>{
+    const button=event.target.closest('[data-us-emoji]');
+    const emoji=button?.dataset?.usEmoji;
+    if(!emoji||!target)return;
+    const value=String(target.value||'');
+    const start=Number.isInteger(target.selectionStart)?target.selectionStart:value.length;
+    const end=Number.isInteger(target.selectionEnd)?target.selectionEnd:start;
+    target.value=value.slice(0,start)+emoji+value.slice(end);
+    const caret=start+emoji.length;
+    try{target.setSelectionRange(caret,caret);}catch(_e){}
+    try{target.dispatchEvent(new InputEvent('input',{bubbles:true,inputType:'insertText',data:emoji}));}
+    catch(_e){target.dispatchEvent(new Event('input',{bubbles:true}));}
+    target.focus({preventScroll:true});
+    panel.hidden=true;
+    trigger.setAttribute('aria-expanded','false');
+    window.UsFeedback?.selection?.();
+  });
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)hide();});
+}
+installNativeEmojiAssist();
 
 document.addEventListener('keydown',(event)=>{if(event.key==='Escape')closeToday();});

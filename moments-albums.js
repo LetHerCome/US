@@ -186,7 +186,7 @@ async function saveAlbumPhoto(){
     const compressed=await compressor(pendingFile,{maxDimension:1920,quality:.82});
     path=`${window.usProfile.couple_id}/${window.usProfile.id}/moment-albums/${currentAlbum.id}/${Date.now()}-${crypto.randomUUID()}.webp`;
     if(save)save.textContent='Carico…';
-    const {error:uploadError}=await sb.storage.from('us-media').upload(path,compressed,{contentType:'image/webp',upsert:false,cacheControl:'3600'});
+    const {error:uploadError}=await sb.storage.from('us-media').upload(path,compressed,{contentType:'image/webp',upsert:false,cacheControl:'31536000'});
     if(uploadError)throw uploadError;
     const maxPosition=albumRows.reduce((max,row)=>Math.max(max,Number(row.position)||0),0);
     const {error:rowError}=await sb.from('moment_photos').insert({
@@ -276,7 +276,7 @@ function renderAlbum(){
   }else{
     grid.innerHTML=albumRows.map((row,index)=>`
       <article class="us-album-photo-card" role="button" tabindex="0" data-album-index="${index+1}" aria-label="Apri foto aggiunta da ${esc(row.author)}">
-        <img src="${esc(row.url)}" data-us-media-path="${esc(row.storage_path)}" onerror="usRecoverPrivateImage(this)" alt="Foto aggiunta al Moment" loading="lazy">
+        <img src="${esc(row.url)}" data-us-media-path="${esc(row.storage_path)}" onerror="usRecoverPrivateImage(this)" alt="Foto aggiunta al Moment" loading="lazy" decoding="async">
         ${row.own?`<button type="button" class="us-album-photo-delete" data-album-delete="${esc(row.id)}" data-storage-path="${esc(row.storage_path)}" aria-label="Elimina questa foto"><span class="us-delete-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 9v8m4-8v8m4-8v8M5 6h14m-2 0-1 14H8L7 6m3-3h4l1 3H9z"/></svg></span></button>`:''}
         <div class="us-album-photo-copy">
           ${row.caption?`<p>${esc(row.caption)}</p>`:'<p> </p>'}
