@@ -106,6 +106,6 @@ test('multi-couple: shipped shell has no private-couple visible placeholders and
   const build = index.match(/<meta name="us-build" content="([^"]+)"\/>/)?.[1];
   assert.ok(build, 'index build id');
   assert.equal(version.version, build);
-  assert.match(worker, new RegExp(`const BUILD_ID = "${build.replace(/[.*+?^$\{\}()|[\]\\\\]/g, '\\\\$&')}";`));
+  assert.ok(worker.includes(`const BUILD_ID = "${build}";`), 'service worker uses the same build id');
   assert.ok(manifest.includes(`?v=${build}`), 'manifest uses the same build id');
 });
