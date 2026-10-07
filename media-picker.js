@@ -94,7 +94,7 @@
         <div class="us-media-source-panel">
           <div class="us-media-source-head"><b>${title}</b><small>Solo da questo telefono</small></div>
           <button type="button" class="us-media-source-action" data-us-media-source="camera">
-            <span class="us-icon" data-us-icon="camera" aria-hidden="true"></span><span>${cameraLabel}</span>
+            <span class="us-icon" data-us-icon="image" aria-hidden="true"></span><span>${cameraLabel}</span>
           </button>
           <button type="button" class="us-media-source-action" data-us-media-source="library">
             <span class="us-icon" data-us-icon="images" aria-hidden="true"></span><span>${libraryLabel}</span>
