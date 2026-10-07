@@ -26,7 +26,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  safety-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Multi-couple and auth safety gate
+        run: node --test tests/multicouple-foundation-v1.test.js tests/native-boot-auth-safety.test.js tests/beatrice-password-login.test.js tests/sec-rls-hardening.test.js tests/native-security-v1.test.js tests/native-foundation.test.js tests/native-notifications-v1-native.test.js
+
   signed-candidate:
+    needs: safety-gate
     runs-on: windows-latest
     timeout-minutes: 70
     env:
@@ -91,9 +106,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Multi-couple and auth safety gate
-        run: node --test tests/multicouple-foundation-v1.test.js tests/native-boot-auth-safety.test.js tests/beatrice-password-login.test.js tests/sec-rls-hardening.test.js tests/native-security-v1.test.js tests/native-foundation.test.js tests/native-notifications-v1-native.test.js
 
       - name: Stage Capacitor bundle
         run: npm run build:capacitor-web
