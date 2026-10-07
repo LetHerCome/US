@@ -20,10 +20,13 @@ const PER_VOI = { id: 'per_voi', name: 'Per voi', icon: 'sparkle' };
 const SWIPE = { id: 'swipe', name: 'Swipe', icon: 'cards-three' };
 const byId = (id) => document.getElementById(id);
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const label = (role) => (role === 'francesco' ? 'Francesco' : role === 'beatrice' ? 'Bea' : '');
 const myRole = () => window.usProfile?.role || null;
+const label = (role) => {
+  if (role && role === myRole()) return window.usProfile?.display_name || 'Tu';
+  return window.UsCoupleContext?.nameForRole?.(role, 'La tua persona') || 'La tua persona';
+};
 const partnerRole = () => (myRole() === 'francesco' ? 'beatrice' : 'francesco');
-const partnerName = () => label(partnerRole());
+const partnerName = () => window.UsCoupleContext?.partnerName?.() || label(partnerRole());
 const familyName = (id) => (id === 'per_voi' ? PER_VOI.name : id === 'swipe' ? SWIPE.name : FAMILY[id]?.name || 'Gioca');
 const icon = (name) => `<span class="us-gv2-icon" data-gv2-icon="${esc(name)}" aria-hidden="true"></span>`;
 const uuid = () => window.crypto.randomUUID();
@@ -701,13 +704,11 @@ function renderWaiting() {
   </article>`);
 }
 
-// Gendered past participles agree with the object pronoun (it. "l’hai capita").
-const agree = (role, stem) => `${stem}${role === 'beatrice' ? 'a' : 'o'}`;
 function outcome(item) {
   if (item.mechanic === 'prediction') {
     const matched = item.prediction_matched === true;
-    if (item.my_item_role === 'predictor') return matched ? `L’hai ${agree(item.subject_role, 'capit')} al volo ♡` : `Ti ha ${agree(myRole(), 'sorpres')}`;
-    return matched ? `Ti ha ${agree(myRole(), 'capit')} al volo ♡` : `L’hai ${agree(partnerRole(), 'sorpres')}`;
+    if (item.my_item_role === 'predictor') return matched ? 'Ci hai preso al volo ♡' : 'Non te l’aspettavi';
+    return matched ? `${partnerName()} ci ha preso al volo ♡` : 'Hai cambiato le carte in tavola';
   }
   if (item.answer_kind === 'choice') return item.my_answer_index === item.partner_answer_index ? 'Uguale ♡' : 'Una sorpresa';
   return '';
