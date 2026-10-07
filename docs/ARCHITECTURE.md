@@ -30,6 +30,7 @@
 | Notification domain (Web Push + FCM + APNs) | `supabase/functions/_shared/notification-core.mjs`, `native-push-transport.mjs`, `native-push-env.ts` |
 | Service worker / PWA caching | `service-worker.js` |
 | Supabase source | `supabase/` |
+| Membership / invites (MC2 review candidate) | `profiles.couple_id` authority; `couple_invites` SHA-256 bearer state; five authenticated MC2 RPCs in `20261007201842_mc2_couple_invites.sql`; review/rollout artifacts in `docs/mc2/` |
 | Tests | `tests/` |
 
 ## Sensitive authorities
