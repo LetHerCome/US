@@ -125,6 +125,8 @@
   let busy = false;
   let lastToken = '';
   let tokenWaiters = [];
+  let resumeInFlight = null;
+  let serverConfirmedFor = '';
 
   // ---- Native status ------------------------------------------------------
 
@@ -176,7 +178,11 @@
     const installation = installationId();
     const pendingRetired = retired().find((id) => id !== installation) || null;
     const signature = JSON.stringify([installation, normalized, status.environment, new Date().toISOString().slice(0, 10)]);
-    if (!pendingRetired && read(STORE.synced(session.userId)) === signature) return true;
+    // On every cold app process, confirm the row with the server at least once.
+    // This repairs a token row that may have been pruned remotely while the
+    // device still has a valid provider token. Later resumes in the same
+    // process stay cheap and use the local signature.
+    if (!pendingRetired && serverConfirmedFor === session.userId && read(STORE.synced(session.userId)) === signature) return true;
     const { error } = await withTimeout(db.rpc('register_native_push_device', {
       target_installation_id: installation,
       target_platform: status.platform,
@@ -188,6 +194,7 @@
     if (error) throw error;
     if (pendingRetired) setRetired(retired().filter((id) => id !== pendingRetired));
     write(STORE.synced(session.userId), signature);
+    serverConfirmedFor = session.userId;
     return true;
   }
 
@@ -376,29 +383,58 @@
     }
   }
 
-  /** app.js: a paired profile is ready (after the app lock gate). */
-  async function authReady(profile) {
-    if (!profile?.id) return;
-    session = { ready: true, userId: profile.id };
-    flush();
-    if (!push) return;
-    await retryRetired();
-    if (await lockOpen()) {
-      try { await support?.setBadge?.({ count: 0 }); } catch (_) {}
-    }
-    // Silent refresh only where the person already activated it on this installation.
-    if (!isEnabledFor(profile.id)) return;
+  async function clearSeenNotifications() {
+    if (!push || document.hidden) return;
+    const open = await lockOpen();
+    if (!open || document.hidden) return;
+    // Android launchers derive their dot/count from delivered notifications;
+    // iOS also has an explicit badge. Clearing both only after the private app
+    // is actually open keeps lock-screen privacy intact.
+    try { await withTimeout(push.removeAllDeliveredNotifications(), 2500); } catch (_) {}
+    try { await withTimeout(support?.setBadge?.({ count: 0 }), 2500); } catch (_) {}
+  }
+
+  async function syncEnabledInstallation() {
+    if (!push || !session.ready || !isEnabledFor(session.userId)) return;
     const status = await nativeStatus();
     if (!status.available || !status.configured || (await permission()) !== 'granted') return;
     try {
       const token = await requestToken();
       await registerToken(token, status);
-    } catch (_) { /* next start */ }
+    } catch (_) { /* retry on the next foreground/cold start */ }
+  }
+
+  /**
+   * Native foreground recovery. Safe to call repeatedly:
+   * - retries retired installation cleanup;
+   * - clears notifications/badge only once the app lock is open;
+   * - asks the provider for the current token without re-prompting permission;
+   * - re-confirms the server row once per cold process, then only on rotation/day change.
+   */
+  function resume() {
+    if (resumeInFlight) return resumeInFlight;
+    resumeInFlight = (async () => {
+      if (!push || !session.ready || document.hidden) return;
+      await retryRetired();
+      await clearSeenNotifications();
+      await syncEnabledInstallation();
+    })().finally(() => { resumeInFlight = null; });
+    return resumeInFlight;
+  }
+
+  /** app.js: a paired profile is ready (after the app lock gate). */
+  async function authReady(profile) {
+    if (!profile?.id) return;
+    if (session.userId && session.userId !== profile.id) serverConfirmedFor = '';
+    session = { ready: true, userId: profile.id };
+    flush();
+    await resume();
   }
 
   /** app.js: no session on this phone. */
   function signedOut() {
     session = { ready: false, userId: '' };
+    serverConfirmedFor = '';
     pending = null;
   }
 
@@ -420,6 +456,10 @@
     listen('pushNotificationActionPerformed', onAction);
   }
 
+  document.addEventListener?.('visibilitychange', () => {
+    if (!document.hidden) resume().catch(() => {});
+  });
+
   window.UsNotifications = Object.freeze({
     supported: () => Boolean(push),
     getState,
@@ -428,6 +468,7 @@
     revokeDevice,
     authReady,
     signedOut,
+    resume,
     onNavigate,
     openSettings,
     _test: Object.freeze({ parsePayload, intentFromAction, normalizeToken, pending: () => pending })
