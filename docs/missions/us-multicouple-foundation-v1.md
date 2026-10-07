@@ -51,3 +51,22 @@ The architecture becomes explicitly **multi-couple**: every runtime identity, la
 - full `npm test`;
 - `npm run build:cloudflare-pages`;
 - no production merge/deploy.
+
+
+## Production audit findings (read-only)
+
+The current production database is already multi-tenant at the couple boundary:
+
+- public tables have RLS enabled;
+- shared product state is generally scoped by `couple_id`;
+- `profiles.id` is the authenticated user id and `profiles.couple_id` selects the active tenant;
+- existing security work already exercises same-couple access and cross-couple denial.
+
+The remaining identity debt is mostly the historical **two-slot vocabulary**, not tenant isolation:
+
+- 2 production columns still contain personal slot names: `daily_question_keepsakes.francesco_answer` and `beatrice_answer`;
+- 12 CHECK constraints encode `francesco | beatrice`;
+- 17 production functions/procedures still reference those legacy role tokens;
+- Game V2 and Daily are the densest dependencies.
+
+Therefore V1 does not rename role tokens or columns. A later role-normalization migration must update constraints, RPCs, snapshots, tests and clients atomically while preserving cross-couple RLS.
