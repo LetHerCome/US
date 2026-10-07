@@ -186,7 +186,7 @@ async function saveAlbumPhoto(){
     const compressed=await compressor(pendingFile,{maxDimension:1920,quality:.82});
     path=`${window.usProfile.couple_id}/${window.usProfile.id}/moment-albums/${currentAlbum.id}/${Date.now()}-${crypto.randomUUID()}.webp`;
     if(save)save.textContent='Carico…';
-    const {error:uploadError}=await sb.storage.from('us-media').upload(path,compressed,{contentType:'image/webp',upsert:false,cacheControl:'3600'});
+    const {error:uploadError}=await sb.storage.from('us-media').upload(path,compressed,{contentType:'image/webp',upsert:false,cacheControl:'31536000'});
     if(uploadError)throw uploadError;
     const maxPosition=albumRows.reduce((max,row)=>Math.max(max,Number(row.position)||0),0);
     const {error:rowError}=await sb.from('moment_photos').insert({
