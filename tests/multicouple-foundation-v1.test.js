@@ -35,7 +35,8 @@ test('multi-couple: boot placeholders and local cosmetics do not infer a private
   const fastboot = read('fastboot2.js');
   const progression = read('progression.js');
   assert.match(fastboot, /document\.title='US — Solo voi'/);
-  assert.match(fastboot, /La tua persona/);
+  assert.match(fastboot, /Persona 1/);
+  assert.match(fastboot, /Persona 2/);
   assert.doesNotMatch(progression, /role\s*===\s*['"]beatrice['"]/);
   assert.doesNotMatch(progression, /Francesco|Beatrice/);
 });
