@@ -31,6 +31,15 @@ test('multi-couple: calendar presentation uses profile names rather than F/B ide
   assert.match(calendar, /toLocaleUpperCase\('it-IT'\)/);
 });
 
+test('multi-couple: boot placeholders and local cosmetics do not infer a private identity', () => {
+  const fastboot = read('fastboot2.js');
+  const progression = read('progression.js');
+  assert.match(fastboot, /document\.title='US — Solo voi'/);
+  assert.match(fastboot, /La tua persona/);
+  assert.doesNotMatch(progression, /role\s*===\s*['"]beatrice['"]/);
+  assert.doesNotMatch(progression, /Francesco|Beatrice/);
+});
+
 test('multi-couple: current membership authority stays one auth user -> one profile -> one couple', () => {
   const tables = read('supabase/baseline/20_tables.sql');
   const constraints = read('supabase/baseline/40_constraints.sql');
