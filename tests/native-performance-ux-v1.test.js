@@ -9,7 +9,7 @@ const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 
 test('N3.5 navigation paints before heavy page hydration', () => {
   const app = read('app.js');
-  assert.match(app, /function schedulePageHydration\(id\)/);
+  assert.match(app, /function schedulePageHydration\(id,\{force=false\}=\{\}\)/);
   assert.match(app, /requestAnimationFrame\(\(\)=>setTimeout\(/);
   assert.match(app, /schedulePageHydration\(id,\{force:true\}\);\n    return;/);
   assert.match(app, /scrollTo\([\s\S]*?schedulePageHydration\(id\);\n}/);
