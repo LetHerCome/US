@@ -416,6 +416,7 @@
     resumeInFlight = (async () => {
       if (!push || !session.ready || document.hidden) return;
       await retryRetired();
+      if (!isEnabledFor(session.userId)) return;
       await clearSeenNotifications();
       await syncEnabledInstallation();
     })().finally(() => { resumeInFlight = null; });
