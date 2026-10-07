@@ -2466,19 +2466,34 @@ async function uploadMoment(){
   btn.disabled=true;btn.textContent='Ottimizzo…';
   try{
     const compressed=await compressImageFile(file,{maxDimension:1920,quality:.82});
+    const thumbnail=await compressImageFile(file,{maxDimension:720,quality:.72});
     const safeName=`${Date.now()}-${crypto.randomUUID()}.webp`;
     const path=`${window.usProfile.couple_id}/${window.usProfile.id}/${safeName}`;
+    const thumbnailPath=`${window.usProfile.couple_id}/${window.usProfile.id}/derived-thumbnails/${crypto.randomUUID()}.webp`;
     btn.textContent='Carico…';
     const {error:uploadError}=await sb.storage.from('us-media').upload(path,compressed,{contentType:'image/webp',upsert:false,cacheControl:'31536000'});
     if(uploadError)throw uploadError;
+    let uploadedThumbnail=false;
+    try{
+      const {error:thumbnailError}=await sb.storage.from('us-media').upload(thumbnailPath,thumbnail,{contentType:'image/webp',upsert:false,cacheControl:'31536000'});
+      if(thumbnailError)throw thumbnailError;
+      uploadedThumbnail=true;
+    }catch(error){
+      console.warn('[US Media] thumbnail upload',error);
+    }
     const {data:created,error:rowError}=await sb.from('moments').insert({
       couple_id:window.usProfile.couple_id,
       created_by:window.usProfile.id,
       storage_path:path,
+      thumbnail_path:uploadedThumbnail?thumbnailPath:null,
       caption:caption||null,
       moment_date:momentDate
     }).select('id').single();
-    if(rowError){await sb.storage.from('us-media').remove([path]);throw rowError;}
+    if(rowError){
+      const cleanup=[path];if(uploadedThumbnail)cleanup.push(thumbnailPath);
+      await sb.storage.from('us-media').remove(cleanup);
+      throw rowError;
+    }
     // M12A — only THIS creation earns the one-shot light catch (see consumeFreshRicordo).
     if(created?.id)markFreshRicordo(created.id);
     window.UsFeedback?.success?.();
