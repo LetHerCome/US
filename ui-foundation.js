@@ -504,7 +504,7 @@
       attention: () => emit('attention'),
       reveal: () => emit('reveal'),
       landing: () => emit('landing'),
-      testHaptic: () => vibrate('action'),
+      testHaptic: () => { cancelPendingTap(); return vibrate('action'); },
       getPreferences: () => ({ ...preferences }),
       setSoundsEnabled(enabled) {
         preferences.sounds = Boolean(enabled);
