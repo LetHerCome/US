@@ -286,9 +286,19 @@ function feedbackToggle(key,label,detail,checked){
 function feedbackModal(){
   const prefs=window.UsFeedback?.getPreferences?.()||{sounds:true,haptics:true};
   openModal('Suoni e vibrazione',`<div class="us-settings2-toggle-list">
-    ${feedbackToggle('sounds','Suoni','Toni discreti mentre usi US',prefs.sounds)}
-    ${feedbackToggle('haptics','Vibrazione','Un lieve tocco sui gesti',prefs.haptics)}
-  </div>`,'QUESTO TELEFONO');
+    ${feedbackToggle('sounds','Suoni','Solo per conferme, Ti penso e momenti importanti',prefs.sounds)}
+    ${feedbackToggle('haptics','Feedback aptico','Tocchi brevi e delicati sui gesti',prefs.haptics)}
+  </div>
+  <section class="us-feedback-preview" aria-label="Prova i feedback">
+    <div class="us-feedback-preview-heading"><b>Prova i feedback</b><small>Ascolta e senti come risponde US</small></div>
+    <div class="us-feedback-preview-grid">
+      <button type="button" data-feedback-preview="action">Azione</button>
+      <button type="button" data-feedback-preview="success">Completato</button>
+      <button type="button" data-feedback-preview="attention">Ti penso</button>
+      <button type="button" data-feedback-preview="reveal">Sblocco</button>
+    </div>
+  </section>
+  <p class="us-feedback-preview-note">I tocchi ordinari sono silenziosi. Suoni e vibrazione seguono le preferenze di questo telefono.</p>`,'QUESTO TELEFONO');
   $('usSettingsModalBody').querySelectorAll('[data-feedback]').forEach(btn=>btn.addEventListener('click',()=>{
     const next=btn.getAttribute('aria-pressed')!=='true';
     if(btn.dataset.feedback==='sounds')window.UsFeedback?.setSoundsEnabled?.(next);
@@ -296,7 +306,11 @@ function feedbackModal(){
     btn.setAttribute('aria-pressed',next?'true':'false');
     btn.querySelector('i')?.classList.toggle('on',next);
     const value=$('usFeedbackValue');if(value)value.textContent=feedbackSummary();
-    if(next)window.UsFeedback?.[btn.dataset.feedback==='sounds'?'tap':'action']?.();
+    if(next)window.UsFeedback?.[btn.dataset.feedback==='sounds'?'action':'selection']?.();
+  }));
+  $('usSettingsModalBody').querySelectorAll('[data-feedback-preview]').forEach(btn=>btn.addEventListener('click',()=>{
+    const kind=btn.dataset.feedbackPreview;
+    if(['action','success','attention','reveal'].includes(kind)) window.UsFeedback?.[kind]?.();
   }));
 }
 
