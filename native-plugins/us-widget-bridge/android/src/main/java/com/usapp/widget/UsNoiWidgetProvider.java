@@ -40,24 +40,24 @@ public final class UsNoiWidgetProvider extends AppWidgetProvider {
     static RemoteViews render(Context context, UsWidgets.State state) {
         UsWidgetModels.Couple model = UsWidgetModels.couple(state.snapshot, state.now);
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.us_widget_noi);
+        // Existing widget root still opens Noi; the dedicated CTA opens Gioca.
         views.setOnClickPendingIntent(R.id.us_noi_root, UsWidgets.open(context, "noi", 4401));
         int accent = frameColor(model.frame);
         views.setInt(R.id.us_noi_accent, "setColorFilter", accent);
-        if (state.snapshot == null || model.days < 0) {
-            views.setViewVisibility(R.id.us_noi_days, View.GONE);
-            views.setViewVisibility(R.id.us_noi_unit, View.GONE);
-            views.setTextViewText(R.id.us_noi_names, state.snapshot == null ? context.getString(R.string.us_widget_connect) : model.names);
-            views.setContentDescription(R.id.us_noi_root, context.getString(R.string.us_widget_noi_name));
-            return views;
-        }
-        state.needsUpdateAt(model.nextChange);
-        views.setViewVisibility(R.id.us_noi_days, View.VISIBLE);
-        views.setViewVisibility(R.id.us_noi_unit, View.VISIBLE);
-        views.setTextViewText(R.id.us_noi_names, model.names.isEmpty() ? "Noi" : model.names);
-        views.setTextViewText(R.id.us_noi_days, Long.toString(model.days));
-        views.setTextViewText(R.id.us_noi_unit, model.days == 1 ? "giorno insieme" : "giorni insieme");
-        views.setTextColor(R.id.us_noi_unit, accent);
-        views.setContentDescription(R.id.us_noi_root, (model.names.isEmpty() ? "Noi" : model.names) + ", " + model.days + " giorni insieme");
+        boolean connected = state.snapshot != null && model.days >= 0;
+        views.setTextViewText(R.id.us_noi_title, connected ? model.todayInvitation : "Un momento per voi");
+        views.setTextViewText(R.id.us_noi_cta, connected ? "GIOCA  ›" : "APRI US  ›");
+        views.setTextColor(R.id.us_noi_days, accent);
+        views.setTextViewText(R.id.us_noi_days, connected
+            ? model.days + (model.days == 1 ? " giorno" : " giorni")
+            : "US · NOI");
+        if (connected) state.needsUpdateAt(model.nextChange);
+        views.setOnClickPendingIntent(R.id.us_noi_cta,
+            UsWidgets.open(context, connected ? "noi/play" : "noi", 4402));
+        views.setContentDescription(R.id.us_noi_root, connected
+            ? "Noi: " + model.todayInvitation + ". " + model.days + " giorni insieme. Apri Noi."
+            : "Apri US per collegare il widget Noi");
+        views.setContentDescription(R.id.us_noi_cta, connected ? "Apri Gioca in US" : "Apri US");
         return views;
     }
 }
