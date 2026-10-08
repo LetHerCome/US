@@ -16,7 +16,7 @@
     { kind: 'think', name: 'Ti penso', copy: 'Un pensiero con un tocco, anche con US chiusa.', shape: 'square' },
     { kind: 'countdown', name: 'Countdown', copy: 'Lo stesso Countdown che hai scelto su Oggi.', shape: 'square' },
     { kind: 'noi', name: 'Noi', copy: 'Voi due e i giorni insieme.', shape: 'wide' },
-    { kind: 'photo', name: 'Foto & Noi', copy: 'Il vostro ultimo ricordo, con i giorni insieme.', shape: 'square' }
+    { kind: 'photo', name: 'Foto & Noi', copy: 'La fotografia che vedi su Oggi, con i giorni insieme.', shape: 'square' }
   ]);
   window.UsWidgetCatalog = CATALOG;
 
@@ -78,7 +78,7 @@
     if (snapshot.photo?.state === 'ready' && previewUrl) {
       return `<div class="us-wp-photo has-photo"><img src="${esc(previewUrl)}" alt="">${line}</div>`;
     }
-    return `<div class="us-wp-photo"><p>${IMAGE}<span>Il vostro prossimo ricordo apparirà qui</span></p>${line}</div>`;
+    return `<div class="us-wp-photo"><p>${IMAGE}<span>La foto di Oggi apparirà qui</span></p>${line}</div>`;
   }
 
   function preview(kind, view) {
