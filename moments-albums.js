@@ -693,6 +693,7 @@ function installHooks(){
     },true);
     grid.addEventListener('keydown',event=>{
       if(event.key!=='Enter'&&event.key!==' ')return;
+      if(event.target.closest('[data-ricordi-inline-step]'))return;
       if(event.target.closest('.moment-delete'))return;
       const card=event.target.closest('.moment-card[data-moment-id]');
       if(!card)return;
