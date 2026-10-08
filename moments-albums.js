@@ -178,13 +178,17 @@ async function decorateMomentCards(){
   const cards=[...document.querySelectorAll('#momentsGrid .moment-card[data-moment-id]')];
   if(!cards.length)return;
   const ids=cards.map(card=>card.dataset.momentId).filter(Boolean);
-  const {data,error}=await sb.from('moment_photos').select('moment_id').in('moment_id',ids);
+  const {data,error}=await sb.from('moment_photos').select('id,moment_id,created_by,storage_path,caption,position,created_at').in('moment_id',ids);
   if(error){console.warn('[US Albums] counts',error);return;}
-  const counts=new Map();
-  for(const row of data||[])counts.set(row.moment_id,(counts.get(row.moment_id)||0)+1);
+  const photosByMoment=new Map();
+  for(const row of data||[]){
+    if(!photosByMoment.has(row.moment_id))photosByMoment.set(row.moment_id,[]);
+    photosByMoment.get(row.moment_id).push(row);
+  }
   for(const card of cards){
     card.querySelector('.moment-album-count')?.remove();
-    const secondary=counts.get(card.dataset.momentId)||0;
+    const secondaryRows=photosByMoment.get(card.dataset.momentId)||[];
+    const secondary=secondaryRows.length;
     const del=card.querySelector('.moment-delete');
     if(secondary>0){
       card.classList.add('has-album');
@@ -197,6 +201,10 @@ async function decorateMomentCards(){
       card.classList.remove('has-album');
       if(del)del.hidden=false;
     }
+    // Inline timeline carousel, distinct from the fullscreen Album viewer.
+    // Only metadata is read here; its secondary images are signed near
+    // viewport or on swipe (no eagerly loading every original at page boot).
+    window.UsRicordiInline?.decorate?.(card,secondaryRows);
   }
 }
 
@@ -668,6 +676,14 @@ function installHooks(){
   if(grid&&!grid.dataset.usAlbumCapture){
     grid.dataset.usAlbumCapture='1';
     grid.addEventListener('click',event=>{
+      // Arrow button clicks belong to the inline card carousel, never the
+      // fullscreen album. Suppress synthesized clicks after touch swipes.
+      if(event.target.closest('[data-ricordi-inline-step]'))return;
+      if(window.UsRicordiInline?.shouldSuppressOpen?.(event.target)){
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        return;
+      }
       if(event.target.closest('.moment-delete'))return;
       const card=event.target.closest('.moment-card[data-moment-id]');
       if(!card)return;
