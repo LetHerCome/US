@@ -1,0 +1,33 @@
+/* US Native Frameless V1 — Capacitor bundles only.
+   The system clock, notification icons and gesture indicator remain visible.
+   Android EdgeToEdge / iOS WKWebView paint behind them; --us-safe-* still
+   protect interactive content from cutouts and system gesture zones. */
+
+/* On Oggi the photo, not a solid top strip, continues under the status bar.
+   The native WebView starts at screen y=0; .app reserves the safe inset for
+   all other pages, so compensate only for the full-bleed photo page. */
+html.us-native #home {
+  margin-top: calc(-1 * var(--us-safe-top));
+}
+
+html.us-native #home .home-hero-only {
+  height: var(--us-viewport-height, 100dvh) !important;
+  min-height: 0 !important;
+}
+
+/* The Home chrome itself already uses --us-safe-top, and its actions must
+   not move into the status bar when the hero extends behind the clock. */
+html.us-native #home #homeHero:not([data-us-countdown]) .us-oggi-stack {
+  top: calc(var(--us-safe-top) + var(--us-top-chrome-height) + 20px);
+}
+
+/* Countdown uses the hero as a CSS grid. Keep its existing visual position
+   while allowing the background image to extend into the system area. */
+html.us-native #home #homeHero[data-us-countdown] {
+  padding-top: calc(var(--us-safe-top) + var(--us-top-chrome-height) + 22px);
+}
+
+/* Outside Oggi the app's existing --us-safe-top and --us-safe-bottom padding
+   are intentionally retained. The top bar stays entirely hidden on these
+   pages (top-chrome V2); content never sits behind Android status icons.
+   The floating bottom dock remains above the gesture navigation area. */
