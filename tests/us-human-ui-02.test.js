@@ -138,7 +138,7 @@ test('Gioca: chips are plain readings of open_rounds / recent, with real counts'
   const html = await gioca(state).hubHtml();
   const chips = [...html.matchAll(/data-gv2-filter="([a-z]+)" aria-pressed="false" aria-controls="usGv2FilterList"><span>([^<]+)<\/span><b>(\d+)<\/b>/g)].map((m) => [m[1], m[2], Number(m[3])]);
   assert.deepEqual(chips, [['turn', 'Tocca a te', 2], ['ready', 'Risposte pronte', 1], ['waiting', 'Aspetti Beatrice', 1], ['done', 'Completati', 1]]);
-  assert.ok(html.indexOf('us-gv2-filters') < html.indexOf('data-gv2-action="per-voi"'), 'status chips surface before Per voi when rounds exist');
+  assert.ok(html.indexOf('us-gv2-filters') > html.indexOf('us-gv2-deck'), 'status chips follow the primary game actions');
   assert.match(html, /id="usGv2FilterList" aria-live="polite" hidden><\/div>/, 'no list until a chip is chosen');
 });
 
@@ -293,7 +293,7 @@ const scope = (name) => settingsPage.match(new RegExp(`<section class="us-settin
 const settingsIn = (chunk) => [...chunk.matchAll(/data-us-setting="([a-z-]+)"/g)].map((m) => m[1]);
 
 test('Settings: TU holds what is the actor\'s or this phone\'s, VOI what the couple shares', () => {
-  assert.deepEqual(settingsIn(scope('tu')), ['profile-photo', 'notifications', 'location', 'app-lock', 'distance', 'feedback', 'maudit', 'widgets', 'home-photo', 'sync-status']);
+  assert.deepEqual(settingsIn(scope('tu')), ['profile-photo', 'notifications', 'location', 'app-lock', 'distance', 'feedback', 'maudit', 'widgets', 'optimize-ricordi', 'home-photo', 'sync-status']);
   assert.deepEqual(settingsIn(scope('voi')), ['relationship-date', 'story-archive']);
   assert.match(scope('voi'), /<article class="us-couple-id-card" id="usCoupleIdCard"/, 'the couple card is shared state');
   assert.match(scope('tu'), /<h3 id="usSettingsTuTitle">Tu<\/h3>/);
@@ -303,7 +303,7 @@ test('Settings: TU holds what is the actor\'s or this phone\'s, VOI what the cou
 test('Settings: every control exists exactly once and keeps its existing action', () => {
   const all = settingsIn(settingsPage);
   assert.equal(new Set(all).size, all.length, 'no duplicated control');
-  assert.deepEqual([...all].sort(), ['app-lock', 'distance', 'feedback', 'home-photo', 'location', 'logout', 'maudit', 'notifications', 'privacy', 'profile-photo', 'relationship-date', 'story-archive', 'sync-status', 'widgets']);
+  assert.deepEqual([...all].sort(), ['app-lock', 'distance', 'feedback', 'home-photo', 'location', 'logout', 'maudit', 'notifications', 'optimize-ricordi', 'privacy', 'profile-photo', 'relationship-date', 'story-archive', 'sync-status', 'widgets']);
   const settingsJs = read('settings.js');
   for (const name of all) assert.match(settingsJs, new RegExp(`if\\(name==='${name}'\\)`), `${name} is still handled`);
   for (const id of ['usRelationshipDateValue', 'usNotificationsValue', 'usDistanceUnitValue', 'usLocationState', 'usFeedbackValue', 'usSyncValue', 'usStoryArchiveValue', 'usSettingsBuild', 'usCoupleAvatars', 'usCoupleNames', 'usTogetherLine', 'usSettingsDeviceDot']) {
@@ -354,7 +354,8 @@ test('Gioca density: played Per voi, deck and weekly question use compact hub ge
   const css = read('games.css');
   assert.match(css, /US-GIOCA-DENSITY-01/);
   assert.match(css, /#quiz \.us-gv2-pervoi\[data-gv2-state="played"\]\{[\s\S]*?min-height:64px/);
-  assert.match(css, /#quiz \.us-gv2-mode\{[\s\S]*?width:116px;[\s\S]*?min-height:126px/);
+  assert.match(css, /US-GIOCA-HUB-AIR-01/);
+  assert.match(css, /#quiz \.us-gv2-mode\{width:148px;min-height:168px/);
   assert.match(css, /#quiz \.us-gv2-weekly\.is-open\{[\s\S]*?grid-template-columns:minmax\(0,1fr\) auto/);
   assert.match(css, /body:has\(#quiz\.page\.active\) #thinkButton\{display:none!important\}/);
 });
@@ -363,7 +364,8 @@ test('Gioca density: played Per voi, deck and weekly question use compact hub ge
 test('Settings density: utility rows, couple card and footer stay compact without changing controls', () => {
   const css = read('settings2.css');
   assert.match(css, /US-SETTINGS-DENSITY-01/);
-  assert.match(css, /#settings \.us-settings2-row\{[\s\S]*?min-height:48px!important;/);
+  assert.match(css, /US-SETTINGS-ORGANIZE-01/);
+  assert.match(css, /#settings \.us-settings2-row\{min-height:58px!important;/);
   assert.match(css, /#settings \.us-settings2-icon\{[\s\S]*?width:28px;[\s\S]*?height:28px;/);
   assert.match(css, /#settings \.us-couple-id-card\{[\s\S]*?padding:10px 11px;/);
   assert.match(css, /body:has\(#settings\.page\.active\) #thinkButton\{\s*display:none!important;/);
