@@ -1,4 +1,4 @@
-# US — Premium UX, Apple-like refinement & Maudit Rewards · Product Audit V1
+# US — Premium UX, Apple-like refinement & Mascot Rewards · Product Audit V1
 
 **Status:** DESIGN / PRODUCT AUDIT ONLY — NOT AN IMPLEMENTATION MISSION  
 **Owner:** Claude Opus 5.5 (single lead reviewer; cost-conscious, no extra agents unless explicitly approved)  
@@ -12,7 +12,7 @@
 
 Take US from a personal project to a **deliberate, commercially appealing, emotionally engaging couples product** with a design language informed by Apple's Human Interface Guidelines, not an Apple clone. Think premium iOS spatial hierarchy and native-feeling gestures, restrained translucent materials, legibility, meaningful transitions, generous spacing and calm visual rhythm. Preserve US's distinctive romantic identity and ensure excellent Android as well as iOS/PWA ergonomics.
 
-**Hard product decision:** Maudit, the existing white/gray blue-eyed kitten, is the ONLY pet/mascot. Do **not** invent other mascots, collectible pet species, gacha characters, pets to swap or extra companions. Turn the **existing Maudit** into a recognizable emotional feature and a major purpose of rewards: unlock the same cat's accessories, skins, animations, resting places and cosmetic interactions, never replacing its identity.
+**Corrected owner decision (2026-10-08):** US should have **multiple different mascots that can be unlocked in the Legame/Sintonia rewards collection**. Maudit is the existing recognizable mascot and **must be integrated into that same collection** rather than treated as an unrelated Settings toggle. Invent appealing new mascots/animals as meaningful collectible companions with their own art, personality and interactions, not simply recolors/accessories of Maudit. The owner does **not** want “Maudit as the only pet”. The same user should typically have one active companion in the shell at a time; investigate how to switch/equip from the existing rewards collection, preserve the already-approved Maudit and avoid arbitrary disruption to current users. Decide in the blueprint whether Maudit is initially available or an early Legame reward for new couples; existing users should not unexpectedly lose access. Use current Sintonia progression as the single unlock authority; no second pet currency, no gacha, no manipulative mechanics.
 
 Treat this as a critical product review, not a list of fashionable visual effects: challenge weak UX, shallow or redundant rewards, inconsistent sheets and unnecessary chrome. Tell the owner what to remove, not merely what to add. Do not sacrifice clarity, performance, readability or authenticity for glassmorphism.
 
@@ -59,22 +59,23 @@ For each: ASCII wireframe or a small isolated annotated prototype, estimated pix
 
 Recommend ONE default and clear fallbacks. Avoid pointless animation/sensors, JS loops and hide/show oscillation. Include behavioral truth table covering home/not-home/top/scroll down/up/focused/keyboard/modal/accessibility/reduced-motion.
 
-## Work package C — One Maudit, a rewards ecosystem
+## Work package C — Multiple collectible mascots within Legame/Sintonia
 
-We do **not** need more mascots. Review current Sintonia and its 7 cosmetic categories: which rewards visibly matter, which are effectively imperceptible and should be consolidated, which are useful in daily use.
+**Owner clarification:** The idea is to **create more mascots and make Maudit one of the mascots/rewards accessible from the Legame/Sintonia collection**. Maudit must not remain an isolated ambient cat controlled only from Settings. Do not give a “no other mascots” plan.
 
-Design a **coherent Maudit meta-progression** that uses the SAME server-authoritative Sintonia/unlocks, with proposed cosmetic families:
-- Maudit's collar/outfit/accessories;
-- same-cat coat/skin variations (never replace the approved Maudit identity);
-- unlockable poses/gestures and reactions to real couple milestones;
-- small restful spots/objects or ambient details that live *with* Maudit, if compatible with the existing safe-plane drag/snap design;
-- seasonal/relationship milestones with low-pressure discovery.
+Review the seven existing categories and the visible Sintonia/Legame collection: what has actual emotional value and which tiny cosmetics are hard to notice? Propose **Mascotte / Compagni** as a meaningful collection family. A couple should have understandable progress toward unlocking a new companion; when unlocked, users can see a large preview and equip one. Existing Maudit is the approved production baseline, including drag by scruff, gravity/snap, rest, petting, device-local position and on/off. New mascot concepts should be recognizably different characters/animals with equally thoughtful personalities and high-quality assets, not generic palette swaps.
 
-Specify example 10–15 unlocks with **name, emotional meaning, trigger/level or mapped existing reward, visual result, location, preview moment and progression authority**. These are *proposals*; do not fabricate existing database entitlements. Distinguish what can be achieved with current 7 categories/client settings versus what would require a later additive migration/constraint/category and explicit backend approval.
+Design and compare:
+- **Maudit in the catalog:** should new users receive Maudit as a default companion with a visible `owned` collection entry, unlock him at an early relationship level, or be offered a first free companion choice? Assess user value, current-user compatibility and exact entitlement mapping. Existing users must not suddenly lose Maudit.
+- **3–5 specific future mascots** with distinct emotional theme, silhouette, temperament, idle/walk/rest/interact behaviors and a natural relation to couple milestones. Concept names/art only; never assert that assets or database entries exist.
+- **12–15 sample unlocks** split between mascot characters and meaningful Maudit/other mascot accessories/poses/rest spots. For each: name, why couples care, proposed level/trigger, reward-preview card, equip location, whether visual assets are required, and whether entitlement requires SQL or can reuse an existing reward. No invented live entitlements.
+- **Collection UI:** an obvious “Mascotte” category/tile in Sintonia; locked and unlocked preview cards; elegant unlock sheet; equip/unequip/current-companion switch; “your current companion” visible state; honest empty and unavailable states; discoverability from the main app and Settings as secondary management.
+- **Companion behavior:** one active mascot at a time unless a multi-character layout is separately justified; shared catalog eligibility remains server authoritative, equip choice may remain device-local (scoped to profile/couple) as other cosmetics are. Specify preserving Maudit placement/on-off, avoiding stale skins or cross-account identity, 40px footprints and all safe-plane/hit interactions; renderer `registerRenderer` can abstract different companion characters while the existing `USPet` shell remains authority.
+- **Progression and quality:** one economy — current `get_progression_v1`, `ack_progression_unlock`, unlock records and existing catalog. Compare (A) **no new SQL**: cosmetic/mascot previews or mapped entitlements using existing catalog *only when genuinely enforceable*, with no client-side spoofing; (B) **additive rewards catalog extension**: dedicated mascot category/ownership + validated equip, explicit schema/constraint/migration and product approvals. Do not misrepresent A as supporting truly new server-owned mascot rewards when it does not.
+- **Reactions:** user-facing connection to “Ti penso”, Daily, little moments and milestones, without constant distractions, resource drain, XP grinding, pity mechanics or streak guilt. Respect users who turn the pet off.
+- **Safety/art gate:** new mascot source art requires separate creative approval; no unauthorized change to Maudit SVG. Safe switching must work through PWA/Android/iOS with lifecycle, accessibility, reduced motion, touch targets, performance and safe areas at 320px.
 
-Provide two incremental rollout paths: **(A) zero-SQL cosmetics using existing authority** and **(B) future catalog expansion with migration**, with benefit/risk comparisons. Do not introduce XP farming, multiple reward economies, pay-to-win, manipulative streak shame or new pets. Shared unlocks vs per-device equipped appearance must be explained and re-use existing identity namespace; no cross-couple cosmetics leakage.
-
-Create first-run discovery of Maudit, “your cat” identity, an understandable equip/unlock preview, coherent Sintonia placement, and a natural relationship with “Ti penso”, Daily, milestones and gifts. Note that Maudit can be disabled locally (no nudging or guilt). Recommend when he reacts and **when he stays quiet**. Review actual accessibility, performance, reduced motion and touch occlusion at 320px wide.
+Deliver a direct recommendation of **which mascots to create first, when Maudit appears as a reward and what to replace among the least visible legacy cosmetics**. Explicitly describe compatibility migration for existing users. This is a product blueprint only: NO new mascot production code, no SQL, no real rewards/catalog mutations in this mission.
 
 ## Work package D — Native-feeling sheets, windows and unlock moments
 
@@ -89,13 +90,13 @@ Design a unified sheet/popup behavior using existing `UsUiFoundation` authority 
 
 ## Work package E — Commercial appeal, positioning, prioritization
 
-Judge what would make US feel **valuable to an unfamiliar couple** with no context of Francesco/Beatrice. Propose product narrative, first-use “aha” moments, 3 screenshots worth featuring in an app-store listing, and retention rooted in emotional usefulness rather than noise. Do NOT implement subscriptions, ads, new monetization dependencies or invasive analytics. Identify what is immediately high-value vs cosmetic churn. Compare investment in Maudit/outfits versus core onboarding quality/photos/performance.
+Judge what would make US feel **valuable to an unfamiliar couple** with no context of Francesco/Beatrice. Propose product narrative, first-use “aha” moments, 3 screenshots worth featuring in an app-store listing, and retention rooted in emotional usefulness rather than noise. Do NOT implement subscriptions, ads, new monetization dependencies or invasive analytics. Identify what is immediately high-value vs cosmetic churn. Compare investment in unlockable mascots (including Maudit), mascot assets/behaviors and collection discoverability versus core onboarding quality/photos/performance.
 
 Give a phased, **dependency-aware and MC3-safe** roadmap:
 - P0 safety/accessibility/nonbreaking corrections,
 - P1 shell/topbar/modal foundation after MC3 stabilizes,
-- P2 Maudit reward UX + no-SQL cosmetic experiments,
-- P3 optional server catalog extension with separate design/approval,
+- P2 visible Maudit-in-Sintonia integration, catalog/companion previews and any truly no-SQL experiments,
+- P3 new collectible mascots with approved visual assets and a separately approved server catalog/entitlement expansion,
 - P4 screenshots/app-store presentation and device QA.
 
 For each increment: exact file likely affected, prerequisite, estimated effort in engineer-days or complexity bands, user-visible acceptance tests, regression and release gate, whether SQL / Edge / native build is involved.
@@ -104,7 +105,7 @@ For each increment: exact file likely affected, prerequisite, estimated effort i
 
 1. `docs/ux/US_PREMIUM_UX_AUDIT.md` — critical per-screen audit / evidence, recommendation shortlist and sellability notes.
 2. `docs/ux/US_TOPBAR_OPTIONS.md` — 3 alternatives, tradeoffs, detailed behavior truth table, one recommendation with real CSS measurements or clearly marked estimates.
-3. `docs/ux/MAUDIT_REWARDS_VISION.md` — one mascot only, 10–15 sample rewards, economics/entitlements reuse and zero-SQL vs additive migration.
+3. `docs/ux/MASCOTTE_SINTONIA_REWARDS_VISION.md` — Maudit in Legame rewards **plus new unlockable mascots**, 3–5 companion concepts, 12–15 example unlocks, UX, ownership/entitlements and no-SQL vs additive migration.
 4. `docs/ux/US_NATIVE_SHEETS_DESIGN_SYSTEM.md` — concrete unified sheet/modal inventory and tokens/interaction rules.
 5. `docs/ux/US_PREMIUM_UX_ROADMAP.md` — prioritized dependency-safe engineering plan, definition-of-done and risks.
 6. Optional **isolated** non-shipping wireframes/prototypes in `docs/ux-concepts/` (static HTML/CSS or screenshots) if locally easy; clearly distinguish concepts from UI implemented in production. Never modify actual runtime components.
