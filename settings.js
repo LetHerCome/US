@@ -286,9 +286,20 @@ function feedbackToggle(key,label,detail,checked){
 function feedbackModal(){
   const prefs=window.UsFeedback?.getPreferences?.()||{sounds:true,haptics:true};
   openModal('Suoni e vibrazione',`<div class="us-settings2-toggle-list">
-    ${feedbackToggle('sounds','Suoni','Toni discreti mentre usi US',prefs.sounds)}
-    ${feedbackToggle('haptics','Vibrazione','Un lieve tocco sui gesti',prefs.haptics)}
-  </div>`,'QUESTO TELEFONO');
+    ${feedbackToggle('sounds','Suoni','Solo per conferme, Ti penso e momenti importanti',prefs.sounds)}
+    ${feedbackToggle('haptics','Feedback aptico','Tocchi brevi e delicati sui gesti',prefs.haptics)}
+  </div>
+  <section class="us-feedback-preview" aria-label="Prova i feedback">
+    <div class="us-feedback-preview-heading"><b>Prova i feedback</b><small>Ascolta e senti come risponde US</small></div>
+    <div class="us-feedback-preview-grid">
+      <button type="button" data-us-feedback="off" data-feedback-preview="action">Azione</button>
+      <button type="button" data-us-feedback="off" data-feedback-preview="success">Completato</button>
+      <button type="button" data-us-feedback="off" data-feedback-preview="attention">Ti penso</button>
+      <button type="button" data-us-feedback="off" data-feedback-preview="reveal">Sblocco</button>
+      <button type="button" data-us-feedback="off" data-feedback-preview="haptic-test">Test vibrazione</button>
+    </div>
+  </section>
+  <p class="us-feedback-preview-note" id="usFeedbackPreviewStatus" role="status" aria-live="polite">${prefs.sounds || prefs.haptics ? "Ora anche i pulsanti hanno un piccolo suono. Controlla il volume multimediale." : "Attiva suoni o feedback aptico per provare."}</p>`,'QUESTO TELEFONO');
   $('usSettingsModalBody').querySelectorAll('[data-feedback]').forEach(btn=>btn.addEventListener('click',()=>{
     const next=btn.getAttribute('aria-pressed')!=='true';
     if(btn.dataset.feedback==='sounds')window.UsFeedback?.setSoundsEnabled?.(next);
@@ -296,7 +307,30 @@ function feedbackModal(){
     btn.setAttribute('aria-pressed',next?'true':'false');
     btn.querySelector('i')?.classList.toggle('on',next);
     const value=$('usFeedbackValue');if(value)value.textContent=feedbackSummary();
-    if(next)window.UsFeedback?.[btn.dataset.feedback==='sounds'?'tap':'action']?.();
+    const previewStatus=$('usFeedbackPreviewStatus');
+    const enabled=window.UsFeedback?.getPreferences?.();
+    if(previewStatus&&enabled)previewStatus.textContent=enabled.sounds||enabled.haptics?'Ora anche i pulsanti hanno un piccolo suono. Controlla il volume multimediale.':'Attiva suoni o feedback aptico per provare.';
+    if(next)window.UsFeedback?.[btn.dataset.feedback==='sounds'?'action':'selection']?.();
+  }));
+  $('usSettingsModalBody').querySelectorAll('[data-feedback-preview]').forEach(btn=>btn.addEventListener('click',()=>{
+    const kind=btn.dataset.feedbackPreview;
+    const enabled=window.UsFeedback?.getPreferences?.();
+    const status=$('usFeedbackPreviewStatus');
+    if(kind==='haptic-test'){
+      if(!enabled?.haptics){
+        if(status)status.textContent='Attiva Feedback aptico qui sopra per provare la vibrazione.';
+        return;
+      }
+      window.UsFeedback?.testHaptic?.();
+      if(status)status.textContent='Impulso richiesto. Se non lo senti, controlla le impostazioni di vibrazione del telefono.';
+      return;
+    }
+    if(!['action','success','attention','reveal'].includes(kind))return;
+    if(enabled && !enabled.sounds && !enabled.haptics){
+      if(status)status.textContent='Attiva suoni o feedback aptico per provare.';
+      return;
+    }
+    window.UsFeedback?.[kind]?.();
   }));
 }
 

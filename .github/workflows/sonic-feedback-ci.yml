@@ -1,0 +1,42 @@
+name: US Sonic feedback validation
+
+on:
+  pull_request:
+    paths:
+      - 'ui-foundation.js'
+      - 'platform.js'
+      - 'settings.js'
+      - 'settings2.css'
+      - 'index.html'
+      - 'tests/m12a-feedback.test.js'
+      - '.github/workflows/sonic-feedback-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'ui-foundation.js'
+      - 'platform.js'
+      - 'settings.js'
+      - 'settings2.css'
+      - 'index.html'
+      - 'tests/m12a-feedback.test.js'
+      - '.github/workflows/sonic-feedback-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  feedback-and-bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Audio, haptics, UI and release contracts
+        run: node --test tests/m12a-feedback.test.js tests/ui-foundation.test.js tests/native-back-platform.test.js tests/m12a-release-gate.test.js tests/us-human-ui-02.test.js
+      - name: Cloudflare web bundle
+        run: npm run build:cloudflare-pages
+      - name: Android and iOS web bundle
+        run: npm run build:capacitor-web
