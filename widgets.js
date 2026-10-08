@@ -14,7 +14,7 @@
   const platform = window.UsPlatform;
   const nativeEnabled = Boolean(platform?.isNative && platform?.hasWidgetBridge?.() !== false);
   const KINDS = Object.freeze(['think', 'countdown', 'noi', 'photo']);
-  const DESTINATIONS = Object.freeze({ think: 'home', countdown: 'home', noi: 'bond', photo: 'moments' });
+  const DESTINATIONS = Object.freeze({ think: 'home', countdown: 'home', noi: 'bond', photo: 'home' });
   const COUPLE_TTL_MS = 30 * 60 * 1000;
   const PHOTO_TTL_MS = 10 * 60 * 1000;
   const PHOTO_MAX_EDGE = 720;
@@ -31,6 +31,7 @@
   let coupleSyncedAt = 0;
   let photoSyncedAt = 0;
   let photoSync = null;
+  let photoResyncRequested = false;
   let photoPreviewUrl = '';
   let lastLink = { url: '', at: 0 };
   let pendingDestination = '';
@@ -170,8 +171,10 @@
     }
   }
 
-  // The latest photo Ricordo, downscaled in the WebView and handed to native
-  // as bytes. The signed URL never leaves this page; the widget never fetches.
+  // Oggi's currently visible hero photo, downscaled in the WebView and
+  // handed to native as bytes. The signed URL never leaves this page.
+  // Android refreshes the cached photo on launch and while US is active;
+  // RemoteViews cannot download a new private image while US is closed.
   async function encodePhoto(url) {
     const response = await fetch(url, { cache: 'no-store', credentials: 'omit' });
     if (!response.ok) throw new Error(`photo_http_${response.status}`);
@@ -200,7 +203,14 @@
 
   function syncPhoto({ force = false } = {}) {
     if (!ownerHash) return Promise.resolve(false);
-    if (photoSync) return photoSync;
+    if (photoSync) {
+      if (force) photoResyncRequested = true;
+      return photoSync.then(() => {
+        if (!photoResyncRequested) return false;
+        photoResyncRequested = false;
+        return syncPhoto({ force: true });
+      });
+    }
     if (!force && Date.now() - photoSyncedAt < PHOTO_TTL_MS) return Promise.resolve(false);
     const token = generation;
     const owner = ownerHash;
@@ -208,6 +218,9 @@
       try {
         const latest = await window.UsWidgetDataApi?.latestPhoto?.();
         if (token !== generation) return false;
+        // undefined = Oggi has not resolved its hero yet. Keep the last
+        // valid cached image rather than blanking the home-screen widget.
+        if (latest === undefined) return false;
         photoSyncedAt = Date.now();
         if (!latest) {
           if (photo.state === 'none') return false;
@@ -216,10 +229,13 @@
           return scheduleWrite();
         }
         const key = (await sha256Hex(`${owner}:${latest.id}:${latest.path}`)).slice(0, 32);
-        if (key === photo.key && photo.state === 'ready') return false;
+        if (key === photo.key && photo.state === 'ready' && photoPreviewUrl) return false;
         const encoded = await encodePhoto(latest.url);
         if (token !== generation) { URL.revokeObjectURL(encoded.preview); return false; }
-        await platform.writeWidgetPhoto(owner, key, encoded.base64);
+        // Native already holds the private bytes after a process restart.
+        if (key !== photo.key || photo.state !== 'ready') {
+          await platform.writeWidgetPhoto(owner, key, encoded.base64);
+        }
         if (token !== generation) { URL.revokeObjectURL(encoded.preview); return false; }
         setPreview(encoded.preview);
         photo = { state: 'ready', key, takenOn: civilDate(latest.takenOn) };
@@ -316,6 +332,7 @@
       photo = emptyPhoto();
       coupleSyncedAt = 0;
       photoSyncedAt = 0;
+      photoResyncRequested = false;
       setPreview('');
     }
     activeCoupleId=profile.couple_id || '';
@@ -341,6 +358,7 @@
     deviceIdHash = '';
     coupleSyncedAt = 0;
     photoSyncedAt = 0;
+    photoResyncRequested = false;
     think = emptyThink();couple = emptyCouple();countdown = emptyCountdown();photo = emptyPhoto();
     setPreview('');
     const provisioning = credentialProvisionInFlight;
@@ -438,7 +456,9 @@
     });
     window.addEventListener('us:countdown-updated', () => { syncCountdown().catch(() => {}); });
     window.addEventListener('us:progression-updated', () => { syncCountdown().catch(() => {}); syncCouple().catch(() => {}); });
-    window.addEventListener('us:moments-updated', () => { syncPhoto({ force: true }).catch(() => {}); });
+    // Ricordi changes may cause Oggi to select a new image. Only the
+    // painted Oggi event is authoritative for the widget photo.
+    window.addEventListener('us:home-photo-changed', () => { syncPhoto({ force: true }).catch(() => {}); });
     document.addEventListener('visibilitychange', () => {
       if (document.hidden || !ownerHash) return;
       ensureCredential().catch(() => {});
