@@ -89,7 +89,7 @@ test('N3.5 shell build id advances so PWA clients can receive shared performance
   const version = JSON.parse(read('version.json'));
   const index = read('index.html');
   const swBuild = sw.match(/const BUILD_ID = "([^"]+)";/);
-  const htmlBuild = index.match(/<meta name="us-build" content="([^"]+)"\\/>/);
+  const htmlBuild = index.match(/<meta name="us-build" content="([^"]+)"[^>]*>/);
   assert.ok(swBuild, 'service worker must declare BUILD_ID');
   assert.ok(htmlBuild, 'HTML must declare us-build');
   assert.equal(version.version, swBuild[1]);
