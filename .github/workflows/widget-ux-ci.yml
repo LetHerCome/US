@@ -1,0 +1,39 @@
+name: US Native Widget UX V2
+on:
+  pull_request:
+    paths:
+      - 'widgets.js'
+      - 'widget-hub.js'
+      - 'widget-hub.css'
+      - 'app.js'
+      - 'index.html'
+      - 'native-plugins/us-widget-bridge/**'
+      - 'tests/widget-system.test.js'
+      - '.github/workflows/widget-ux-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'widgets.js'
+      - 'widget-hub.js'
+      - 'widget-hub.css'
+      - 'app.js'
+      - 'index.html'
+      - 'native-plugins/us-widget-bridge/**'
+      - 'tests/widget-system.test.js'
+      - '.github/workflows/widget-ux-ci.yml'
+permissions:
+  contents: read
+jobs:
+  widget-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Widget privacy, routing, cache and UI contracts
+        run: node --test tests/widget-system.test.js tests/n2-native-experience.test.js
+      - name: Capacitor web build
+        run: npm run build:capacitor-web
