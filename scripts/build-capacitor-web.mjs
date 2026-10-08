@@ -48,6 +48,7 @@ const RUNTIME_FILES = [
   'settings.js',
   'identity.css',
   'top-chrome.css',
+  'modal-center.css',
   'native-frameless.css',
   'identity.js',
   'settings2.css',
