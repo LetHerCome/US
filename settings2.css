@@ -257,3 +257,4 @@ body:has(#settings.page.active) #thinkButton{
 .us-feedback-preview-grid button:active{background:var(--us-color-accent-soft)}
 .us-feedback-preview-grid button:focus-visible{outline:2px solid var(--us-color-accent-strong);outline-offset:2px}
 .us-feedback-preview-note{margin:13px 2px 0;color:var(--us-color-text-3);font-size:11px;line-height:1.45}
+.us-feedback-preview-grid button[data-feedback-preview="haptic-test"]{grid-column:1/-1;border-color:var(--us-color-accent-line)}
