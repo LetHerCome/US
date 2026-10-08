@@ -332,8 +332,9 @@ test('deep link widget aprono la destinazione giusta una volta sola e non invian
   await harness.emitUrl('us://widget/think');
   await harness.emitUrl('us://widget/countdown');
   await harness.emitUrl('us://widget/noi');
+  await harness.emitUrl('us://widget/noi/play');
   await harness.emitUrl('us://widget/photo');
-  assert.deepEqual(go(), ['home', 'home', 'bond', 'moments']);
+  assert.deepEqual(go(), ['home', 'home', 'bond', 'quiz', 'moments']);
   assert.equal(await harness.emitUrl('us://widget/stories'), false);
   assert.equal(await harness.emitUrl('https://evil.test/widget/think'), false);
   await harness.emitUrl('us://widget/think/send');
@@ -385,6 +386,24 @@ test('Widget Hub vive in Impostazioni, nascosto fuori dall’app native, niente 
   assert.match(hub, /Aggiungi alla Home/);
   const oggi = html.slice(html.indexOf('id="page-home"'), html.indexOf('id="page-bond"'));
   assert.doesNotMatch(oggi, /usWidgetHub|data-widget-add/);
+});
+
+test('Noi 2x1 has a separate functional Gioca action; no backend calls or fake game state', () => {
+  const provider = read(`${JAVA}/UsNoiWidgetProvider.java`);
+  const layout = read(`${PLUGIN}/res/layout/us_widget_noi.xml`);
+  const preview = read('widget-hub.js');
+  const routing = read('widgets.js');
+  assert.match(provider, /UsWidgets\.open\(context, "noi\/play", 4402\)/);
+  assert.match(provider, /R\.id\.us_noi_cta/);
+  assert.match(provider, /UsWidgets\.open\(context, "noi", 4401\)/);
+  assert.match(layout, /@\+id\/us_noi_cta/);
+  assert.match(layout, /@\+id\/us_noi_title/);
+  assert.match(layout, /android:layout_height="40dp"/);
+  assert.match(preview, /Un momento per voi/);
+  assert.match(preview, /GIOCA/);
+  assert.match(routing, /path === 'noi\/play'/);
+  assert.match(routing, /window\.openQuizHub\(\)/);
+  assert.doesNotMatch(provider, /HttpURLConnection|supabase|fetch\(/i);
 });
 
 // ---------- Android plugin (static: Gradle is not available in every CI) ----------
