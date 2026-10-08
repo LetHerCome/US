@@ -27,7 +27,7 @@ test('lo scaffold Android mantiene identità US e MainActivity priva di feature 
   assert.equal(config.android, undefined);
 });
 
-test('il manifest dichiara soltanto i permessi necessari alle capability web esistenti', () => {
+test('il manifest dichiara soltanto i permessi necessari alle capability web e ai feedback aptici Android', () => {
   const manifest = read('android/app/src/main/AndroidManifest.xml');
   const permissions = [...manifest.matchAll(/<uses-permission\s+android:name="([^"]+)"\s*\/>/g)]
     .map((match) => match[1])
@@ -37,6 +37,7 @@ test('il manifest dichiara soltanto i permessi necessari alle capability web esi
     'android.permission.ACCESS_COARSE_LOCATION',
     'android.permission.ACCESS_FINE_LOCATION',
     'android.permission.CAMERA',
-    'android.permission.INTERNET'
+    'android.permission.INTERNET',
+    'android.permission.VIBRATE'
   ]);
 });
