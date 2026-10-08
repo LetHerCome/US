@@ -462,7 +462,10 @@ test('plugin: niente Supabase client o session token, storage privato non-backup
   assert.match(appManifest, /android:allowBackup="false"/);
   assert.match(appManifest, /android:dataExtractionRules="@xml\/data_extraction_rules"/);
   assert.match(read('android/app/src/main/res/xml/data_extraction_rules.xml'), /<cloud-backup>[\s\S]*<exclude domain="root"/);
-  assert.equal(read('android/app/src/main/java/com/usapp/us/MainActivity.java').replace(/\r\n/g, '\n').trim(), 'package com.usapp.us;\n\nimport com.getcapacitor.BridgeActivity;\n\npublic class MainActivity extends BridgeActivity {}');
+  const activity = read('android/app/src/main/java/com/usapp/us/MainActivity.java');
+  assert.match(activity, /public class MainActivity extends BridgeActivity/);
+  assert.match(activity, /super\.onCreate\(savedInstanceState\)/);
+  assert.doesNotMatch(activity, /registerPlugin|addJavascriptInterface|loadUrl|Supabase|Push|Widget/);
 });
 
 test('nessun Stories o Scriptable risorge nel layer widget', () => {
