@@ -16,6 +16,6 @@
     <string name="us_widget_noi_description">Voi due e i giorni insieme</string>
 
     <string name="us_widget_photo_name">Foto &amp; Noi</string>
-    <string name="us_widget_photo_description">Il vostro ultimo ricordo e i giorni insieme</string>
-    <string name="us_widget_photo_empty">Il vostro prossimo ricordo apparirà qui</string>
+    <string name="us_widget_photo_description">La foto di Oggi e i giorni insieme</string>
+    <string name="us_widget_photo_empty">La foto di Oggi apparirà qui</string>
 </resources>
