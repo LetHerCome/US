@@ -1,4 +1,4 @@
-const BUILD_ID = "us-ricordi-thumbnails-v1-20261007-1";
+const BUILD_ID = "us-contextual-topbar-v1-20261008-2";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -51,6 +51,7 @@ const APP_SHELL = [
   versioned("/settings.css"),
   versioned("/settings.js"),
   versioned("/identity.css"),
+  versioned("/top-chrome.css"),
   versioned("/identity.js"),
   versioned("/settings2.css"),
   versioned("/polish4.css"),
