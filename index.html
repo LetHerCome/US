@@ -374,31 +374,29 @@ html.us-returning-device .auth-overlay{
       </section>
 
       <section class="us-progression-rewards-section" aria-labelledby="usProgressionRewardsTitle">
-        <div class="us-progression-rewards-head"><div><small>COLLEZIONE</small><h3 id="usProgressionRewardsTitle">I vostri sblocchi</h3></div><span class="us-progression-rewards-meta"><b id="usProgressionRewardsCount"></b>Tocca per usare · ritocca per togliere</span></div>
+        <div class="us-progression-rewards-head"><div><small>COLLEZIONE</small><h3 id="usProgressionRewardsTitle">I vostri sblocchi</h3></div><span class="us-progression-rewards-meta"><b id="usProgressionRewardsCount"></b>Tocca un premio per usarlo</span></div>
         <div class="us-progression-rewards" id="usProgressionRewards" aria-live="polite"></div>
       </section>
 
-      <section class="noi-resonance-history" aria-labelledby="noiResonanceHistoryTitle">
-        <div class="noi-resonance-history-head">
-          <div><div class="noi-section-kicker" id="noiResonanceHistoryTitle">ULTIME CRESCITE</div><p>XP realmente aggiunti da azioni completate insieme.</p></div>
-        </div>
+      <details class="noi-resonance-history" aria-labelledby="noiResonanceHistoryTitle">
+        <summary class="noi-resonance-history-head" id="noiResonanceHistoryTitle"><span><b>Ultime crescite</b><small>Le cose che avete fatto insieme</small></span></summary>
         <div id="noiResonanceHistory" class="noi-resonance-history-list" aria-live="polite" aria-busy="false">
           <div class="noi-resonance-history-empty"><b>La prossima crescita apparirà qui</b><span>Quest ed eventi completati aggiungono punti reali alla vostra Sintonia.</span></div>
         </div>
-      </section>
+      </details>
 
-      <section class="noi-resonance-guide" aria-labelledby="noiResonanceGuideTitle">
+      <details class="noi-resonance-guide" aria-labelledby="noiResonanceGuideTitle">
+        <summary class="noi-resonance-summary" id="noiResonanceGuideTitle">Come cresce la Sintonia</summary>
         <div class="noi-resonance-stats">
           <span><small>Punti Sintonia accumulati insieme</small><b id="noiResonanceTotal">0</b></span>
         </div>
-        <div class="noi-section-kicker" id="noiResonanceGuideTitle">COME CRESCE</div>
         <ul class="noi-resonance-sources">
           <li><b>Quest ed eventi</b><span>Le cose che completate insieme continuano ad alimentare la Sintonia.</span></li>
           <li><b>Domanda del giorno e Gioca</b><span>Una risposta condivisa o una sessione completata conta davvero.</span></li>
           <li><b>Ti penso e Ricordi</b><span>Il primo gesto significativo del giorno dà progresso, senza farming.</span></li>
           <li><b>Mesiversario e anniversario</b><span>I vostri traguardi restano parte della Sintonia.</span></li>
         </ul>
-      </section>
+      </details>
 
       <section class="noi-living-section" aria-labelledby="noiLivingTitle">
         <div class="noi-section-title-row"><div><h3 id="noiLivingTitle">Quest di coppia</h3></div><span class="noi-section-symbol" aria-hidden="true">↗</span></div>
@@ -484,16 +482,18 @@ html.us-returning-device .auth-overlay{
         <div class="us-settings2-device-dot" id="usSettingsDeviceDot" aria-label="Stato sincronizzazione">•</div>
       </div>
 
-      <!-- HUMAN-UI-02 — TU: what belongs to the current person and this phone.
-           VOI: what the couple shares. Same rows, same data-us-setting actions;
-           only their grouping changed. -->
+      <!-- US-SETTINGS-ORGANIZE-01: same action hooks, grouped by intent. -->
       <section class="us-settings2-section" data-us-settings-scope="tu" aria-labelledby="usSettingsTuTitle">
-        <div class="us-settings2-section-head"><h3 id="usSettingsTuTitle">Tu</h3><small>Solo per te</small></div>
+        <div class="us-settings2-section-head"><h3 id="usSettingsTuTitle">Tu</h3><small>Le tue preferenze</small></div>
+        <div class="us-settings2-label">PROFILO</div>
         <div class="us-settings2-group">
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="profile-photo">
           <span class="us-settings2-icon us-settings2-photo-icon" aria-hidden="true"><span class="us-icon" data-us-icon="user-circle"></span></span>
           <span class="us-setting-main"><b>Cambia foto profilo</b></span><span class="us-setting-value">Modifica</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
+        </div>
+        <div class="us-settings2-label">NOTIFICHE E PRIVACY</div>
+        <div class="us-settings2-group">
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="notifications">
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="bell"></span></span>
           <span class="us-setting-main"><b>Notifiche</b></span>
@@ -504,15 +504,14 @@ html.us-returning-device .auth-overlay{
           <span class="us-setting-main"><b>Posizione</b><small>Solo per la distanza tra voi</small></span>
           <span class="us-setting-state" id="usLocationState">…</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
-        </div>
-        <div class="us-settings2-label">SU QUESTO TELEFONO</div>
-        <div class="us-settings2-group">
-        <!-- Native app only (settings.js reveals it): device-local biometric app lock. -->
         <button type="button" class="us-setting-row us-settings2-row us-settings2-switch-row" data-us-setting="app-lock" id="usAppLockSetting" role="switch" aria-checked="false" hidden>
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="lock"></span></span>
           <span class="us-setting-main"><b id="usAppLockSettingLabel">Proteggi US</b><small id="usAppLockSettingDetail">Solo su questo telefono</small></span>
           <span class="us-settings2-switch" aria-hidden="true"><u></u></span>
         </button>
+        </div>
+        <div class="us-settings2-label">PERSONALIZZAZIONE</div>
+        <div class="us-settings2-group">
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="distance">
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="arrows-left-right"></span></span>
           <span class="us-setting-main"><b>Distanza</b></span>
@@ -528,7 +527,6 @@ html.us-returning-device .auth-overlay{
           <span class="us-setting-main"><b>Maudit</b></span>
           <span class="us-settings2-switch" aria-hidden="true"><u></u></span>
         </button>
-        <!-- Native app only (widget-hub.js reveals it): the US widgets for the Home screen. -->
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="widgets" hidden>
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="squares-four"></span></span>
           <span class="us-setting-main"><b>Widget</b></span>
@@ -544,6 +542,9 @@ html.us-returning-device .auth-overlay{
           <span class="us-setting-main"><b>Foto Home</b></span>
           <span class="us-setting-value">Gestisci</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
+        </div>
+        <div class="us-settings2-label">APP E SUPPORTO</div>
+        <div class="us-settings2-group">
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="sync-status">
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="arrows-clockwise"></span></span>
           <span class="us-setting-main"><b>Sincronizzazione</b></span>
