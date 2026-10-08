@@ -1,0 +1,93 @@
+/* US contextual top chrome V1
+   Home keeps its approved full shell. Noi, Ricordi, Gioca and Impostazioni
+   show only the centered US mark, and release the unused page clearance.
+   Driven by the existing .page.active state: nav taps, swipes and browser
+   history all take the same path, without a second navigation state. */
+
+.top.us-premium-top {
+  transition:
+    left 320ms var(--us-ease-standard, ease),
+    right 320ms var(--us-ease-standard, ease),
+    top 320ms var(--us-ease-standard, ease),
+    height 320ms var(--us-ease-standard, ease),
+    border-color 200ms ease,
+    box-shadow 260ms ease,
+    backdrop-filter 260ms ease,
+    -webkit-backdrop-filter 260ms ease;
+}
+
+.top.us-premium-top .us-top-left,
+.top.us-premium-top .top-actions {
+  transition:
+    opacity 140ms ease,
+    transform 220ms var(--us-ease-standard, ease),
+    visibility 0s linear 140ms;
+}
+
+.top.us-premium-top .us-top-brand {
+  transition:
+    width 320ms var(--us-ease-standard, ease),
+    height 320ms var(--us-ease-standard, ease);
+}
+
+.top.us-premium-top > .us-aurora,
+.top.us-premium-top::before {
+  transition: opacity 180ms ease;
+}
+
+body:has(.app > .page.active:not(#home)) {
+  --us-top-chrome-clearance: 34px;
+}
+
+body:has(.app > .page.active:not(#home)) .top.us-premium-top {
+  top: calc(var(--us-safe-top) + 4px);
+  left: calc(50% - 22px);
+  right: calc(50% - 22px);
+  height: 34px;
+  padding: 0 1px !important;
+  grid-template-columns: minmax(0, 0fr) auto minmax(0, 0fr);
+  column-gap: 0;
+  background: transparent !important;
+  border-color: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  overflow: visible;
+  pointer-events: none;
+}
+
+body:has(.app > .page.active:not(#home)) .top.us-premium-top::before,
+body:has(.app > .page.active:not(#home)) .top.us-premium-top > .us-aurora {
+  opacity: 0;
+}
+
+body:has(.app > .page.active:not(#home)) .top.us-premium-top .us-top-left,
+body:has(.app > .page.active:not(#home)) .top.us-premium-top .top-actions {
+  width: 0;
+  min-width: 0;
+  opacity: 0;
+  visibility: hidden;
+  overflow: hidden;
+  transform: scale(.75);
+  pointer-events: none;
+}
+
+body:has(.app > .page.active:not(#home)) .top.us-premium-top .us-top-brand {
+  width: 42px;
+  height: 32px;
+  pointer-events: none;
+}
+
+/* The existing page padding is computed using --us-top-chrome-clearance.
+   Switching it to 34px removes 22px of reserved top space on these pages.
+   No blank fixed-height spacer survives the collapsed shell. */
+@media (prefers-reduced-motion: reduce) {
+  .top.us-premium-top,
+  .top.us-premium-top .us-top-left,
+  .top.us-premium-top .top-actions,
+  .top.us-premium-top .us-top-brand,
+  .top.us-premium-top > .us-aurora,
+  .top.us-premium-top::before {
+    transition: none !important;
+  }
+}
