@@ -312,7 +312,8 @@ test('retry, manage e delete mantengono target touch da 44px', () => {
 });
 
 test('il controllo partner descrive esplicitamente lo stato Stories vuoto', () => {
-  const context = vm.createContext({});
+  const context = vm.createContext({window:{}});
+  require('./helpers/identity-fixture').install(context);
   vm.runInContext(functionSource('function storyPartnerLabel(', 'function renderStoryRings('), context);
 
   assert.equal(context.storyPartnerLabel({ display_name: 'Beatrice' }, 0), 'Beatrice non ha Stories attive');

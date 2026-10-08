@@ -22,6 +22,8 @@
   let ownerHash = '';
   let deviceIdHash = '';
   let generation = 0;
+  let authRequest = 0;
+  let activeCoupleId = '';
   let credentialProvisionInFlight = null;
   let writeChain = Promise.resolve(true);
   let writeTimer = null;
@@ -291,8 +293,8 @@
       const seed = await platform.readWidgetSnapshot?.();
       const native = seed?.snapshot;
       if (!native || native.ownerHash !== ownerHash) return false;
-      think = { ...emptyThink(), ...native.think };
-      couple = { ...emptyCouple(), ...native.couple, names: [...(native.couple?.names || [])] };
+      think = { ...emptyThink(), ...native.think, partnerName: '' };
+      couple = { ...emptyCouple(), ...native.couple, names: [] };
       countdown = { ...emptyCountdown(), ...native.countdown };
       photo = native.photo?.state === 'ready' && native.photo.key === seed.photoKey ? { ...native.photo } : emptyPhoto();
       return true;
@@ -303,8 +305,10 @@
 
   async function authReady(profile) {
     if (!nativeEnabled || !profile?.id) return false;
+    const request=++authRequest;
     const nextHash = await sha256Hex(profile.id);
-    if (nextHash !== ownerHash) {
+    if(request!==authRequest)return false;
+    if (nextHash !== ownerHash || activeCoupleId !== (profile.couple_id || '')) {
       generation += 1;
       think = emptyThink();
       couple = emptyCouple();
@@ -314,9 +318,12 @@
       photoSyncedAt = 0;
       setPreview('');
     }
+    activeCoupleId=profile.couple_id || '';
     ownerHash = nextHash;
     const status = await activate();
+    if(request!==authRequest)return false;
     await seedFromNative();
+    if(request!==authRequest)return false;
     countdown = countdownFromOggi() || countdown;
     await Promise.all([syncCouple({ force: true }), scheduleWrite(), ensureCredential(status)]);
     // The photo is the only heavy step: after the first paint, never before it.
@@ -325,24 +332,25 @@
   }
 
   async function clear() {
+    const request=++authRequest;
+    activeCoupleId='';
     generation += 1;
     flushPendingWrite(false);
+    const revokeHash = deviceIdHash;
+    ownerHash = '';
+    deviceIdHash = '';
+    coupleSyncedAt = 0;
+    photoSyncedAt = 0;
+    think = emptyThink();couple = emptyCouple();countdown = emptyCountdown();photo = emptyPhoto();
+    setPreview('');
     const provisioning = credentialProvisionInFlight;
     if (provisioning) try { await provisioning; } catch (_) {}
-    const revokeHash = deviceIdHash;
+    if(request!==authRequest)return false;
     if (nativeEnabled && revokeHash && window.UsWidgetCredentialApi?.revoke) {
       try { await window.UsWidgetCredentialApi.revoke(revokeHash); }
       catch (error) { console.warn('[US Widget] credential revoke', error); }
     }
-    ownerHash = '';
-    deviceIdHash = '';
-    think = emptyThink();
-    couple = emptyCouple();
-    countdown = emptyCountdown();
-    photo = emptyPhoto();
-    coupleSyncedAt = 0;
-    photoSyncedAt = 0;
-    setPreview('');
+    if(request!==authRequest)return false;
     if (!nativeEnabled) return false;
     try { return await platform.clearWidgets(); }
     catch (error) { console.warn('[US Widget] clear', error); return false; }

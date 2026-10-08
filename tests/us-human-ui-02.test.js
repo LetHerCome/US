@@ -101,6 +101,7 @@ function gioca(homeState, rpcLog = []) {
     toast() {}, FormData: class {}, console: { warn() {} }, setTimeout: () => 1, setInterval: () => 1,
   };
   node('quizHub'); node('usGameV2Panel'); node('usPerVoiTop');
+  require('./helpers/identity-fixture').install(sandbox);
   vm.runInNewContext(read('games.js'), sandbox);
   const click = async (dataset) => {
     for (const fn of listeners['quizHub:click'] || []) fn({ target: { closest: () => ({ dataset }) } });
@@ -136,7 +137,7 @@ test('Gioca: chips are plain readings of open_rounds / recent, with real counts'
   });
   const html = await gioca(state).hubHtml();
   const chips = [...html.matchAll(/data-gv2-filter="([a-z]+)" aria-pressed="false" aria-controls="usGv2FilterList"><span>([^<]+)<\/span><b>(\d+)<\/b>/g)].map((m) => [m[1], m[2], Number(m[3])]);
-  assert.deepEqual(chips, [['turn', 'Tocca a te', 2], ['ready', 'Risposte pronte', 1], ['waiting', 'Aspetti Bea', 1], ['done', 'Completati', 1]]);
+  assert.deepEqual(chips, [['turn', 'Tocca a te', 2], ['ready', 'Risposte pronte', 1], ['waiting', 'Aspetti Beatrice', 1], ['done', 'Completati', 1]]);
   assert.ok(html.indexOf('us-gv2-filters') < html.indexOf('data-gv2-action="per-voi"'), 'status chips surface before Per voi when rounds exist');
   assert.match(html, /id="usGv2FilterList" aria-live="polite" hidden><\/div>/, 'no list until a chip is chosen');
 });
@@ -191,6 +192,7 @@ function noi() {
     sb: {}, toast() {}, setInterval: () => 1, clearInterval() {}, console: { warn() {} },
     Date, Number, Math, Promise, JSON, Infinity, Object, Array, String, Boolean, isFinite: Number.isFinite, parseFloat,
   };
+  require('./helpers/identity-fixture').install(sandbox);
   vm.runInNewContext(`${locationBlock}\nthis.api={distanceCapsuleModel,noiDistanceLine,renderDistanceCapsule};`, sandbox);
   return { api: sandbox.api, els };
 }
@@ -236,7 +238,7 @@ test('Noi: the couple row stays centered, the weekly board owns Calendar, and ac
   const head = bond.match(/<header class="noi-canonical-head noi-couple-head">[\s\S]*?<\/header>/)?.[0] || '';
   assert.match(head, /id="pairAvatarFrancesco"><img alt="" hidden><span class="fallback"/);
   assert.match(head, /id="pairAvatarBeatrice"><img alt="" hidden><span class="fallback"/);
-  assert.match(head, /id="noiCoupleCard" role="group" aria-label="Francesco, Beatrice, distanza e impostazioni"/);
+  assert.match(head, /id="noiCoupleCard" role="group" aria-label="Voi due, distanza e impostazioni"/);
   assert.match(head, /id="noiCoupleLink" data-us-distance-state="unknown"/);
   assert.match(head, /id="usSettingsEntry" onclick="go\('settings',\{nav:true\}\)"/);
   assert.ok(head.indexOf('id="noiCoupleCard"') < head.indexOf('id="usSettingsEntry"'), 'Settings lives inside the couple card');

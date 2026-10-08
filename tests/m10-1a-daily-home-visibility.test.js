@@ -27,6 +27,7 @@ function installOggi() {
     escapeHtml: (v) => String(v),
     partnerFromProfiles: () => null,
   });
+  require('./helpers/identity-fixture').install(context);
   vm.runInContext(app.slice(app.indexOf('const US_TODAY_PRIORITY_ORDER='), app.indexOf('function localDateISO()')), context);
   return { window, card, region };
 }
@@ -105,6 +106,7 @@ function hydrateHarness() {
     dailyQuestionOutcomes: { hide() {}, async load() {} }, updateHomeStatus() {}, escapeHtml: String,
     dailyRitualPartnerName: () => 'Beatrice', localDateISO: () => 'x', toast() {}, sendWebPushEvent: () => Promise.resolve(),
   });
+  require('./helpers/identity-fixture').install(ctx);
   vm.runInContext(`${slice('// M9E — la domanda di oggi', 'async function updateHomeStatus')}\n${slice('saveAnswer = async function(){', 'window.saveAnswer=saveAnswer;')}\nwindow.hydrateToday=hydrateToday;window.saveAnswer=saveAnswer;`, ctx);
   return {
     window, nodes, refreshes,

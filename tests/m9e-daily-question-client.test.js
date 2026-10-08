@@ -39,7 +39,9 @@ function install({ rpc, upsert } = {}) {
     toast: (m) => toasts.push(m),
     sendWebPushEvent: (type, id) => { pushes.push([type, id]); return Promise.resolve(); },
   });
+  require('./helpers/identity-fixture').install(context);
   vm.runInContext(`${slice('// M9E — la domanda di oggi', 'async function updateHomeStatus')}\nwindow.hydrateToday=hydrateToday;window.usDailyQuestionDay=usDailyQuestionDay;`, context);
+  require('./helpers/identity-fixture').install(context);
   vm.runInContext(`${slice('saveAnswer = async function(){', 'window.saveAnswer=saveAnswer;')}\nwindow.saveAnswer=saveAnswer;`, context);
   return { nodes, calls, refreshes, pushes, toasts, upserts, window, context, hydrate: () => window.hydrateToday() };
 }
@@ -192,6 +194,7 @@ test('M9E client: una sola authority, niente fallback da seed scaduto, card M9B 
   const card = { hidden: true, innerHTML: '', dataset: {}, attrs: {}, setAttribute(k, v) { this.attrs[k] = v; }, removeAttribute(k) { delete this.attrs[k]; } };
   const window = { usProfile: { role: 'francesco' }, usBondProfiles: [] };
   const ctx = vm.createContext({ console, window, Promise, document: { getElementById: (id) => (id === 'usDailyRitual' ? card : null) }, escapeHtml: (v) => String(v), partnerFromProfiles: () => null });
+  require('./helpers/identity-fixture').install(ctx);
   vm.runInContext(source, ctx);
   const model = window.UsDailyRitual.viewModel({ status: 'error' });
   assert.equal(model.state, 'error');

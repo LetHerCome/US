@@ -7,6 +7,14 @@ const $=id=>document.getElementById(id);
 const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 let settingsSnapshot=null;
 let logoutInFlight=false;
+window.addEventListener('us-identity-change',event=>{
+  if(!event.detail?.identityKey){
+    settingsSnapshot=null;
+    const avatars=$('usCoupleAvatars');if(avatars)avatars.innerHTML='<span class="us-couple-avatar"><b>US</b></span>';
+    closeModal();
+    const body=$('usSettingsModalBody');if(body)body.innerHTML='';
+  }
+});
 
 function currentBuild(){return document.querySelector('meta[name="us-build"]')?.content||'';}
 
@@ -94,7 +102,8 @@ function avatarMarkup(profile,url){
 
 async function hydrateUsSettings(){
   if(!window.usProfile)return;
-  const cid=window.usProfile.couple_id;
+  const identityProfile=window.usProfile;
+  const cid=identityProfile.couple_id;
   const unit=localStorage.getItem('us:settings:distance-unit')||'km';
   const [coupleRes,profilesRes,momentsRes,eventsRes,archiveRes,loc,push,prefsRes]=await Promise.all([
     sb.from('couples').select('started_on,bond_xp').eq('id',cid).maybeSingle(),
@@ -108,12 +117,13 @@ async function hydrateUsSettings(){
     sb.rpc('get_notification_preferences')
   ]);
 
+  if(window.usProfile!==identityProfile||window.usProfile?.couple_id!==cid)return;
   const couple=coupleRes.data||{};
   const profiles=profilesRes.data||[];
   settingsSnapshot={couple,profiles,loc,push,prefs:prefsRes.data||{think:true,today:true,bond:true,relationship:true,left_for_you:true,games:true}};
 
   const names=profiles.map(p=>p.display_name).filter(Boolean);
-  $('usCoupleNames').textContent=names.length?names.join(' + '):'Il vostro US';
+  $('usCoupleNames').textContent=window.UsIdentity?.current().pairLabel || 'Voi due';
   const days=daysTogether(couple.started_on);
   $('usTogetherLine').textContent=couple.started_on?`insieme da ${days.toLocaleString('it-IT')} giorni · ${nextRelationshipLabel(couple.started_on)}`:'Imposta la data della relazione';
   $('usRelationshipDateValue').textContent=formatDate(couple.started_on);
@@ -144,6 +154,7 @@ async function hydrateUsSettings(){
   const avatarPaths=profiles.map(p=>p.avatar_path).filter(Boolean);
   let urls=new Map();
   if(avatarPaths.length&&window.usGetSignedUrls)urls=await window.usGetSignedUrls(avatarPaths,21600);
+  if(window.usProfile!==identityProfile||window.usProfile?.couple_id!==cid)return;
   $('usCoupleAvatars').innerHTML=profiles.map(p=>avatarMarkup(p,p.avatar_path?urls.get(p.avatar_path):null)).join('')||'<span class="us-couple-avatar"><b>US</b></span>';
 }
 window.hydrateUsSettings=hydrateUsSettings;

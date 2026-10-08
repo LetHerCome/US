@@ -42,7 +42,7 @@
 
   function thinkPreview(snapshot) {
     const think = snapshot.think || {};
-    const partner = think.partnerName || 'Beatrice';
+    const partner = window.UsIdentity?.current().partnerName || 'La tua persona';
     const received = Date.parse(think.lastReceivedAt || '') || 0;
     const answered = Math.max(Date.parse(think.lastSentAt || '') || 0, Date.parse(think.lastAnsweredAt || '') || 0);
     const ricambia = received && received > answered;
@@ -67,7 +67,7 @@
   }
 
   function noiPreview(snapshot) {
-    const names = (snapshot.couple?.names || []).join(' + ') || 'Francesco + Beatrice';
+    const names = window.UsIdentity?.current().pairLabel || 'Voi due';
     const days = daysLine(snapshot);
     return `<div class="us-wp-noi" data-frame="${esc(snapshot.couple?.frame || '')}"><span><i></i>${esc(names)}</span><b>${esc(days?.value || '—')}<small>${esc(days?.unit || 'giorni insieme')}</small></b></div>`;
   }
@@ -227,6 +227,7 @@
 
   window.UsWidgetHub = Object.freeze({ open, close, catalog: CATALOG });
   window.closeUsWidgetHub = close;
+  window.addEventListener('us-identity-change',()=>{if(isOpen())render();});
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
   else boot();

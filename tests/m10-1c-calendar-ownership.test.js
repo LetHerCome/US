@@ -1,4 +1,4 @@
-// M10.1C — Calendar readability: ownership is TEXT (F / B / F+B) derived from
+// M10.1C — Calendar readability: ownership is TEXT (F / B / Noi) derived from
 // the existing lane authority, the month grid stays compact, and the selected
 // day renders the real agenda under the grid. calendar.js runs in a vm with a
 // minimal DOM; the test hook is injected here, never shipped.
@@ -71,23 +71,23 @@ const dayCell = (h, dateISO, list) => { const d = new Date(2026, 8, Number(dateI
 
 // --- Ownership derivation ---------------------------------------------------
 
-test('M10.1C: ownership marks derive from the existing lane authority — F, B, F+B', () => {
-  assert.equal(cal.ownerMarkFor(cal.entryLaneRoleFor({ entry_type: 'personal' }, 'francesco')), 'F');
-  assert.equal(cal.ownerMarkFor(cal.entryLaneRoleFor({ entry_type: 'personal' }, 'beatrice')), 'B');
-  assert.equal(cal.ownerMarkFor(cal.entryLaneRoleFor({ entry_type: 'shared', owner_id: null }, '')), 'F+B');
+test('M10.1C: ownership marks derive from the existing lane authority — F, B, Noi', () => {
+  assert.equal(cal.ownerMarkFor(cal.entryLaneRoleFor({ entry_type: 'personal' }, 'francesco'), 'Francesco'), 'F');
+  assert.equal(cal.ownerMarkFor(cal.entryLaneRoleFor({ entry_type: 'personal' }, 'beatrice'), 'Beatrice'), 'B');
+  assert.equal(cal.ownerMarkFor(cal.entryLaneRoleFor({ entry_type: 'shared', owner_id: null }, '')), 'Noi');
   assert.equal(cal.ownerMarkFor('other', 'Marta'), 'M', 'an unknown lane falls back to the name initial, never a wrong F/B');
   assert.equal(cal.ownerMarkFor('other', ''), '·');
   assert.doesNotMatch(calSrc, /owner_mark|ownership_field|owner_initial/, 'no second ownership field');
 });
 
-test('M10.1C: a personal Francesco event renders F, a personal Beatrice event B, a shared event F+B', () => {
+test('M10.1C: a personal Francesco event renders F, a personal Beatrice event B, a shared event Noi', () => {
   const h = load({ entries: [timed(FR.id, 'personal', 15, 'Lavoro'), timed(BE.id, 'personal', 9, 'Università'), timed(FR.id, 'shared', 21, 'Cena')] });
   h.t.renderSelectedDay();
   const out = h.dom.get('usCalendarDaySections').innerHTML;
   const row = (title) => out.match(new RegExp(`<button[^>]*data-entry-id="[^"]+" data-owner="([^"]+)"[^>]*>(?:(?!</button>).)*${title}`))?.[1];
   assert.equal(row('Lavoro'), 'F');
   assert.equal(row('Università'), 'B');
-  assert.equal(row('Cena'), 'F+B');
+  assert.equal(row('Cena'), 'Noi');
 });
 
 test('M10.1C: ownership does not depend on colour, profile order or who is looking', () => {
@@ -126,17 +126,17 @@ test('M10.1C: the month cell stays compact — day number, owner markers, +N, ne
   const list = [timed(FR.id, 'personal', 8, 'Riunione molto lunga con titolo enorme'), timed(FR.id, 'personal', 10, 'Call'), timed(BE.id, 'personal', 9, 'Università'), timed(FR.id, 'shared', 21, 'Cena'), timed(BE.id, 'personal', 12, 'Studio')];
   const cell = dayCell(h, TODAY, list);
   assert.match(cell, /class="us-cal-day-num">30</);
-  assert.equal((cell.match(/class="us-cal-chip(?: us-cal-chip--shared)?" aria-hidden/g) || []).length, 3, 'F, B and F+B once each');
+  assert.equal((cell.match(/class="us-cal-chip(?: us-cal-chip--shared)?" aria-hidden/g) || []).length, 3, 'F, B and Noi once each');
   assert.match(cell, /aria-hidden="true">F<\/span>/);
   assert.match(cell, /aria-hidden="true">B<\/span>/);
-  assert.match(cell, /us-cal-chip--shared" aria-hidden="true">F\+B</);
+  assert.match(cell, /us-cal-chip--shared" aria-hidden="true">Noi</);
   assert.match(cell, /us-cal-chip-more" aria-hidden="true">\+2</, '5 events, 3 distinct owners → +2');
   assert.doesNotMatch(cell, /Riunione|Università|Cena|Studio|Call/, 'no titles inside a month cell');
   const only = dayCell(h, TODAY, [timed(FR.id, 'personal', 8, 'A'), timed(FR.id, 'personal', 9, 'B'), timed(FR.id, 'personal', 10, 'C')]);
   assert.equal((only.match(/us-cal-chip"/g) || []).length, 1, 'one owner, one chip');
   assert.match(only, /\+2</);
   assert.equal(cal.monthCellMarks([]).chips.length, 0);
-  assert.deepEqual(cal.monthCellMarks(['B', 'F+B', 'F']), { chips: ['F', 'B', 'F+B'], more: 0 }, 'fixed marker order');
+  assert.deepEqual(cal.monthCellMarks(['B', 'Noi', 'F']), { chips: ['B', 'F', 'Noi'], more: 0 }, 'fixed marker order');
 });
 
 test('M10.1C: the month cell label lists owners for assistive tech and marks the selected day', () => {
@@ -248,13 +248,13 @@ test('M10.1C: month mode always keeps a selected day inside the visible grid (to
 
 // --- Week view + Tempo insieme ----------------------------------------------
 
-test('M10.1C: the week view uses the same F / B / F+B rows and keeps Tempo insieme', () => {
+test('M10.1C: the week view uses the same F / B / Noi rows and keeps Tempo insieme', () => {
   const entries = [timed(FR.id, 'personal', 15, 'Lavoro'), timed(BE.id, 'personal', 9, 'Università'), timed(FR.id, 'shared', 21, 'Cena')];
   const h = load({ entries, mode: 'week' });
   const day = h.t.renderWeekDay(TODAY, entries, [BE, FR]);
   assert.match(day, /data-owner="F"/);
   assert.match(day, /data-owner="B"/);
-  assert.match(day, /data-owner="F\+B"/);
+  assert.match(day, /data-owner="Noi"/);
   assert.match(day, /aria-label="Cena, Insieme, ore 21"/);
   assert.match(day, /class="us-cal-tempo/);
   assert.match(day, /Tempo insieme/);
@@ -281,7 +281,7 @@ test('M10.1C: the legend explains the markers in text', () => {
   const legend = h.dom.get('usCalendarLegend').innerHTML;
   assert.match(legend, />B<\/span>Beatrice/);
   assert.match(legend, />F<\/span>Francesco/);
-  assert.match(legend, />F\+B<\/span>Insieme/);
+  assert.match(legend, />Noi<\/span>Insieme/);
 });
 
 test('M10.1C: no calendar backend change — same table, same read filter, no new migration', () => {
@@ -302,12 +302,12 @@ test('M10.1: one month grid — no per-partner months, no duplicated shared even
   assert.equal(monthCalls.length, 1, 'the month is rendered exactly once per refresh');
 });
 
-test('M10.1: F, B and F+B coexist in the single month and a shared event is one marker, not two', () => {
+test('M10.1: F, B and Noi coexist in the single month and a shared event is one marker, not two', () => {
   const h = load();
   const shared = timed(FR.id, 'shared', 21, 'Cena');
   const list = [timed(FR.id, 'personal', 15, 'Lavoro'), timed(BE.id, 'personal', 9, 'Università'), shared];
   const cell = dayCell(h, TODAY, list);
-  assert.deepEqual([...cell.matchAll(/us-cal-chip(?: us-cal-chip--shared)?" aria-hidden="true">([^<]+)</g)].map((m) => m[1]), ['F', 'B', 'F+B']);
+  assert.deepEqual([...cell.matchAll(/us-cal-chip(?: us-cal-chip--shared)?" aria-hidden="true">([^<]+)</g)].map((m) => m[1]), ['F', 'B', 'Noi']);
   // A shared event appears once in the day agenda, never in a "Francesco" copy plus a "Beatrice" copy.
   const h2 = load({ entries: list });
   h2.t.renderSelectedDay();

@@ -104,6 +104,17 @@ function loadWidgets({
 }
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 160));
+test('D5 old widget clear cannot wipe an account activated during revocation',async()=>{
+  const harness=loadWidgets({credential:'ready'});
+  await harness.widgets.authReady({id:'old',couple_id:'a'});
+  let release;const revoked=new Promise(r=>{release=r;});
+  harness.sandbox.UsWidgetCredentialApi.revoke=()=>revoked;
+  const clearing=harness.widgets.clear();
+  await harness.widgets.authReady({id:'new',couple_id:'b'});
+  release(true);await clearing;await settle();
+  assert.equal(harness.widgets.view().ready,true);
+  assert.equal(harness.events.some(event=>event[0]==='clear'),false);
+});
 
 // ---------- platform bridge ----------
 

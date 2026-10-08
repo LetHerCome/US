@@ -20,10 +20,10 @@ const PER_VOI = { id: 'per_voi', name: 'Per voi', icon: 'sparkle' };
 const SWIPE = { id: 'swipe', name: 'Swipe', icon: 'cards-three' };
 const byId = (id) => document.getElementById(id);
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const label = (role) => (role === 'francesco' ? 'Francesco' : role === 'beatrice' ? 'Bea' : '');
+const label = (role) => window.UsIdentity?.current().nameForRole(role) || 'La tua persona';
 const myRole = () => window.usProfile?.role || null;
 const partnerRole = () => (myRole() === 'francesco' ? 'beatrice' : 'francesco');
-const partnerName = () => label(partnerRole());
+const partnerName = () => window.UsIdentity?.current().partnerName || 'La tua persona';
 const familyName = (id) => (id === 'per_voi' ? PER_VOI.name : id === 'swipe' ? SWIPE.name : FAMILY[id]?.name || 'Gioca');
 const icon = (name) => `<span class="us-gv2-icon" data-gv2-icon="${esc(name)}" aria-hidden="true"></span>`;
 const uuid = () => window.crypto.randomUUID();
@@ -37,6 +37,11 @@ let index = 0;           // item being answered
 const drafts = new Map(); // item id -> unsaved local draft (memory only)
 let busy = false;
 let loadSeq = 0;
+let identityEpoch = 0;
+function gameIdentityGuard(){
+  const profile=window.usProfile,coupleId=profile?.couple_id,epoch=identityEpoch;
+  return ()=>epoch===identityEpoch&&window.usProfile===profile&&window.usProfile?.couple_id===coupleId;
+}
 let weeklyRequestId = null;
 const startRequestIds = new Map();
 
@@ -248,10 +253,12 @@ function renderHubError() {
 }
 
 async function load() {
+  const sameIdentity=gameIdentityGuard();
   if (!window.usProfile) return null;
   const seq = ++loadSeq;
   try {
     const { data, error } = await sb.rpc('get_game_v2_home');
+    if(!sameIdentity())return false;
     if (error) throw error;
     if (seq !== loadSeq) return home;
     home = data || null;
@@ -261,6 +268,7 @@ async function load() {
     return home;
   } catch (error) {
     console.warn('[US Gioca] home', error);
+    if(!sameIdentity())return false;
     weeklyJustCreated = false;
     renderTop();
     if (view === 'hub' && !home) renderHubError();
@@ -298,12 +306,14 @@ const backButton = () => `<button type="button" class="us-gv2-back" data-gv2-act
 // ---------------------------------------------------------------- rounds
 
 async function startRound(family) {
+  const sameIdentity=gameIdentityGuard();
   if (busy) return;
   busy = true;
   try {
     const requestId = startRequestIds.get(family) || uuid();
     startRequestIds.set(family, requestId);
     const { data, error } = await sb.rpc('start_game_round', { target_family: family, request_id: requestId });
+    if(!sameIdentity())return false;
     if (error) throw error;
     startRequestIds.delete(family);
     await present(data);
@@ -324,12 +334,14 @@ async function startRound(family) {
 // once before spending a second moment on it; nothing starts once the
 // week's free moments are spent (history stays one tap away).
 async function startSwipe() {
+  const sameIdentity=gameIdentityGuard();
   if (busy) return;
   busy = true;
   try {
     const requestId = startRequestIds.get('swipe') || uuid();
     startRequestIds.set('swipe', requestId);
     const { data, error } = await sb.rpc('start_swipe_round', { request_id: requestId });
+    if(!sameIdentity())return false;
     if (error) throw error;
     startRequestIds.delete('swipe');
     await present(data);
@@ -392,8 +404,10 @@ async function chooseMode(family) {
 }
 
 async function openSession(id) {
+  const sameIdentity=gameIdentityGuard();
   try {
     const { data, error } = await sb.rpc('get_game_session', { target_session_id: id });
+    if(!sameIdentity())return false;
     if (error) throw error;
     await present(data);
   } catch (error) { console.warn('[US Gioca] session', error); toast('Non riesco ad aprire la partita.'); }
@@ -408,6 +422,7 @@ async function openPerVoi() {
 }
 
 async function present(state) {
+  const sameIdentity=gameIdentityGuard();
   if (!state?.id || !Array.isArray(state.items)) throw new Error('invalid game session');
   current = state;
   drafts.clear();
@@ -421,6 +436,7 @@ async function present(state) {
     if (!state.my_reveal_seen_at) {
       try {
         const res = await sb.rpc('mark_game_session_reveal_seen', { target_session_id: state.id });
+        if(!sameIdentity())return false;
         if (res.error) throw res.error;
         if (res.data?.id === state.id) current = res.data;
       } catch (error) { console.warn('[US Gioca] reveal receipt', error); }
@@ -477,7 +493,7 @@ function renderSwipePlay() {
       <button type="button" data-gv2-swipe-choice="1" aria-label="${esc(right)}"><b>${esc(right)}</b><span aria-hidden="true">→</span></button>
     </div>
     <p id="usGv2Error" class="us-gv2-error" role="alert" hidden></p>
-    <p class="us-gv2-swipe-note">Trascina la carta oppure usa i due pulsanti. ${partnerName()} non vedrà le tue scelte finché non avrete finito entrambi.</p>
+    <p class="us-gv2-swipe-note">Trascina la carta oppure usa i due pulsanti. ${esc(partnerName())} non vedrà le tue scelte finché non avrete finito entrambi.</p>
   </article>`);
   bindSwipeGesture(root);
 }
@@ -543,6 +559,7 @@ function bindSwipeGesture(root) {
 }
 
 async function commitSwipeChoice(choice, direction = 'tap') {
+  const sameIdentity=gameIdentityGuard();
   if (busy || !current || current.game_family !== 'swipe') return;
   const item = current.items[index];
   if (!item || !Number.isInteger(choice) || choice < 0 || choice > 1) return;
@@ -559,12 +576,14 @@ async function commitSwipeChoice(choice, direction = 'tap') {
         await new Promise((resolve) => setTimeout(resolve, 150));
       }
     }
+    if(!sameIdentity())return false;
     const { data, error } = await sb.rpc('save_game_session_answer', {
       target_session_id: current.id,
       target_item_id: item.id,
       target_answer_text: null,
       target_answer_index: choice
     });
+    if(!sameIdentity())return false;
     if (error) throw error;
     current = data;
     window.UsFeedback?.tap?.();
@@ -576,11 +595,13 @@ async function commitSwipeChoice(choice, direction = 'tap') {
     }
 
     const { data: done, error: completeError } = await sb.rpc('complete_game_session_side', { target_session_id: current.id });
+    if(!sameIdentity())return false;
     if (completeError) throw completeError;
     window.sendWebPushEvent?.('game_session', done.id).catch?.(() => {});
     await present(done);
     load();
   } catch (error) {
+    if(!sameIdentity())return false;
     console.warn('[US Gioca] swipe answer', error, direction);
     renderSwipePlay();
     showError('Non riesco a salvare questa scelta. Riprova.');
@@ -629,6 +650,7 @@ function showError(message) {
 }
 
 async function saveCurrent() {
+  const sameIdentity=gameIdentityGuard();
   const item = current.items[index];
   const raw = readInput(item);
   drafts.set(item.id, raw);
@@ -640,6 +662,7 @@ async function saveCurrent() {
   }
   if (text === item.my_answer_text && choice === (item.my_answer_index ?? null) && (item.my_answer_text != null || item.my_answer_index != null)) return true;
   const { data, error } = await sb.rpc('save_game_session_answer', { target_session_id: current.id, target_item_id: item.id, target_answer_text: text, target_answer_index: choice });
+  if(!sameIdentity())return false;
   if (error) throw error;
   current = data;
   drafts.delete(item.id);
@@ -647,6 +670,7 @@ async function saveCurrent() {
 }
 
 async function submitAnswer() {
+  const sameIdentity=gameIdentityGuard();
   if (busy || !current) return;
   busy = true;
   const button = panel()?.querySelector('button[type="submit"]');
@@ -657,6 +681,7 @@ async function submitAnswer() {
     const missing = current.items.findIndex((i) => i.my_answer_text == null && i.my_answer_index == null);
     if (missing >= 0) { index = missing; renderPlay(); showError('Manca ancora questa risposta.'); return; }
     const { data, error } = await sb.rpc('complete_game_session_side', { target_session_id: current.id });
+    if(!sameIdentity())return false;
     if (error) throw error;
     window.sendWebPushEvent?.('game_session', data.id).catch?.(() => {});
     await present(data);
@@ -701,13 +726,12 @@ function renderWaiting() {
   </article>`);
 }
 
-// Gendered past participles agree with the object pronoun (it. "l’hai capita").
-const agree = (role, stem) => `${stem}${role === 'beatrice' ? 'a' : 'o'}`;
+// Prediction copy works independently of names and legacy slots.
 function outcome(item) {
   if (item.mechanic === 'prediction') {
     const matched = item.prediction_matched === true;
-    if (item.my_item_role === 'predictor') return matched ? `L’hai ${agree(item.subject_role, 'capit')} al volo ♡` : `Ti ha ${agree(myRole(), 'sorpres')}`;
-    return matched ? `Ti ha ${agree(myRole(), 'capit')} al volo ♡` : `L’hai ${agree(partnerRole(), 'sorpres')}`;
+    if (item.my_item_role === 'predictor') return matched ? 'Hai indovinato al volo ♡' : 'Una sorpresa per te';
+    return matched ? 'Ha indovinato al volo ♡' : 'Una sorpresa per la tua persona';
   }
   if (item.answer_kind === 'choice') return item.my_answer_index === item.partner_answer_index ? 'Uguale ♡' : 'Una sorpresa';
   return '';
@@ -830,6 +854,7 @@ async function morphWeeklySaved(button) {
 }
 
 async function submitWeekly(form) {
+  const sameIdentity=gameIdentityGuard();
   if (busy) return;
   const data = new FormData(form);
   const text = String(data.get('question_text') || '').trim();
@@ -847,6 +872,7 @@ async function submitWeekly(form) {
   try {
     weeklyRequestId ||= uuid();
     const { data: state, error } = await sb.rpc('create_weekly_question', { request_id: weeklyRequestId, question_text: text, answer_kind: kind, options, families });
+    if(!sameIdentity())return false;
     if (error) throw error;
     weeklyRequestId = null;
     if (home) home.weekly = state;
@@ -854,6 +880,7 @@ async function submitWeekly(form) {
     toast('Domanda salvata ♡');
     window.UsFeedback?.success?.();
     await morphWeeklySaved(button);
+    if(!sameIdentity())return false;
     weeklyJustCreated = 'pending';
     showHub();
   } catch (error) {
@@ -866,9 +893,11 @@ async function submitWeekly(form) {
 // ---------------------------------------------------------------- wiring
 
 async function refresh() {
+  const sameIdentity=gameIdentityGuard();
   if (view === 'hub') return load();
   if ((view === 'waiting' || view === 'play') && current?.id) {
     const { data, error } = await sb.rpc('get_game_session', { target_session_id: current.id });
+    if(!sameIdentity())return false;
     if (!error && data && (data.reveal_ready !== current.reveal_ready || data.partner_complete !== current.partner_complete)) {
       if (view === 'waiting' || data.reveal_ready) await present(data);
       else current = { ...current, partner_complete: data.partner_complete };
@@ -917,6 +946,26 @@ window.USGameV2 = {
   isOpen: () => view !== 'hub',
   close: showHub,
 };
+window.addEventListener('us-identity-change', (event) => {
+  if (!event.detail?.identityKey) {
+    identityEpoch++;loadSeq++;current=null;home=null;drafts.clear();view='hub';
+    startRequestIds.clear();weeklyRequestId=null;
+    panel()?.classList.add('hidden');if(panel())panel().innerHTML='';
+    byId('quizHub')?.classList.remove('hidden');
+  }
+  if(view==='hub')renderHub();
+  else if(view==='waiting')renderWaiting();
+  else if(view==='reveal')renderReveal();
+  else if(view==='play'){
+    const item=current?.items?.[index];
+    if(item)drafts.set(item.id,readInput(item));
+    renderPlay();
+  }
+  else if(view==='weekly'){
+    const label=panel()?.querySelector('.us-gv2-lead');
+    if(label)label.textContent=`${partnerName()} la scoprirà solo giocando.`;
+  }
+});
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
 else boot();
 document.addEventListener('visibilitychange', () => { if (!document.hidden && window.usProfile) refresh(); });

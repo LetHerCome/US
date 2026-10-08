@@ -56,6 +56,7 @@ function dailyModel(state, reveal = null) {
     todayRevealMeta: reveal
   };
   const context = vm.createContext({ window, String, Boolean });
+  require('./helpers/identity-fixture').install(context);
   vm.runInContext(`${source}\nthis.result=dailyModel();`, context);
   return JSON.parse(JSON.stringify(context.result));
 }

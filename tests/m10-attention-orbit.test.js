@@ -87,6 +87,7 @@ test('M10E.2: l’orbit si spegne dopo il salvataggio, dallo stato canonico rile
     dailyQuestionOutcomes: { hide() {}, async load() {} }, updateHomeStatus() {}, escapeHtml: String,
     dailyRitualPartnerName: () => 'Beatrice', localDateISO: () => 'x', toast() {}, sendWebPushEvent: () => Promise.resolve(),
   });
+  require('./helpers/identity-fixture').install(ctx);
   vm.runInContext(`${slice('// M9E — la domanda di oggi', 'async function updateHomeStatus')}\n${slice('saveAnswer = async function(){', 'window.saveAnswer=saveAnswer;')}\nwindow.hydrateToday=hydrateToday;window.saveAnswer=saveAnswer;`, ctx);
   const cardFor = (arg) => { const t = installOggi(); t.window.UsDailyRitual.render(t.window.UsDailyRitual.viewModel(arg.daily)); return t.card.dataset.usAttention; };
 

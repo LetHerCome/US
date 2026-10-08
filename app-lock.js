@@ -185,6 +185,7 @@
 
   function showLock(nextMode, nextMessage = '') {
     phase = 'locked';
+    window.dispatchEvent(new CustomEvent('us-app-lock-change', { detail: { locked: true } }));
     mode = nextMode;
     message = nextMessage;
     root.classList.add(LOCKED);

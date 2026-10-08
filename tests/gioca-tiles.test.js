@@ -24,6 +24,7 @@ function hub(homeState) {
     toast() {}, FormData: class {}, console: { warn() {} }, setTimeout: () => 1, setInterval: () => 1,
   };
   node('quizHub'); node('usGameV2Panel'); node('usPerVoiTop');
+  require('./helpers/identity-fixture').install(sandbox);
   vm.runInNewContext(read('games.js'), sandbox);
   return { nodes, html: async () => { await tick(); return nodes.quizHub.innerHTML; } };
 }
@@ -71,7 +72,7 @@ test('Gioca hub: a spent week stays compact and locks unplayed tiles with an ico
 });
 
 test('Gioca hub: Per voi is one line of state plus one action', async () => {
-  const expectations = { idle: ['5 domande scelte per voi', 'Inizia'], pending: ['Bea ha iniziato', 'Rispondi'], waiting: ['Aspettiamo Bea', 'Apri'], reveal_ready: ['Risposte pronte ♡', 'Scopri'], in_progress: ['A metà', 'Continua'] };
+  const expectations = { idle: ['5 domande scelte per voi', 'Inizia'], pending: ['Beatrice ha iniziato', 'Rispondi'], waiting: ['Aspettiamo Beatrice', 'Apri'], reveal_ready: ['Risposte pronte ♡', 'Scopri'], in_progress: ['A metà', 'Continua'] };
   for (const [state, [line, cta]] of Object.entries(expectations)) {
     const html = await hub(homeOf({ per_voi: { state, session_id: 's' } })).html();
     assert.match(html, new RegExp(`<b>Per voi</b><small>${line}</small></span><span class="us-gv2-pervoi-cta">${cta}</span>`), state);

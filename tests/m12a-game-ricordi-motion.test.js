@@ -63,6 +63,7 @@ function harness({ homeState = home(), handlers = {}, motion = false } = {}) {
     toast: (m) => notices.push(m), FormData, console: { warn() {} },
     setTimeout: (fn) => { if (typeof fn === 'function') fn(); return 1; }, setInterval: () => 1,
   };
+  require('./helpers/identity-fixture').install(sandbox);
   vm.runInNewContext(read('games.js'), sandbox);
   return { api: window.USGameV2, nodes, calls, notices, feedback, played };
 }
@@ -179,6 +180,7 @@ function ricordiHarness() {
   const cards = ['m1', 'm2', 'm3'].map((id) => ({ dataset: { momentId: id } }));
   const grid = { querySelectorAll: () => cards };
   const sandbox = { window: { UsUiFoundation: { playOnce: (card, cls, ms) => { played.push([card.dataset.momentId, cls, ms]); return true; } } }, Date, String, Array };
+  require('./helpers/identity-fixture').install(sandbox);
   vm.runInNewContext(`${src}\nthis.api={markFreshRicordo,consumeFreshRicordo};`, sandbox);
   return { api: sandbox.api, played, grid, cards, sandbox };
 }

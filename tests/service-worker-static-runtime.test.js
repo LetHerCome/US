@@ -399,6 +399,7 @@ test('pagina mista: il vecchio wrapper auth può caricare il nuovo runtime senza
     }
   });
 
+  context.window.addEventListener ||= ()=>{};
   vm.runInContext(clientBlock, context, { filename: 'app-client.js' });
   vm.runInContext(storiesSource, context, { filename: 'legacy-transformed-stories.js' });
   vm.runInContext(storiesSource, context, { filename: 'stories.js' });
@@ -475,6 +476,7 @@ test('app inizializza Supabase con il nuovo adapter e le opzioni auth precedenti
   };
   context.window.supabase = context.supabase;
 
+  context.window.addEventListener ||= ()=>{};
   vm.runInContext(clientBlock, context, { filename: 'app-client.js' });
 
   assert.equal(calls.length, 1);
