@@ -1,0 +1,46 @@
+name: US UI polish regression
+
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'games.js'
+      - 'games.css'
+      - 'progression.js'
+      - 'progression.css'
+      - 'settings2.css'
+      - 'tests/us-human-ui-02.test.js'
+      - 'tests/progression-rewards-v2.test.js'
+      - 'tests/us-progression-v1.test.js'
+      - '.github/workflows/ui-polish-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'games.js'
+      - 'games.css'
+      - 'progression.js'
+      - 'progression.css'
+      - 'settings2.css'
+      - 'tests/us-human-ui-02.test.js'
+      - 'tests/progression-rewards-v2.test.js'
+      - 'tests/us-progression-v1.test.js'
+      - '.github/workflows/ui-polish-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  ui-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Sintonia, Gioca and Settings regression
+        run: node --test tests/us-progression-v1.test.js tests/progression-rewards-v2.test.js tests/us-human-ui-02.test.js tests/m11b-game-v2-client.test.js tests/m12a-game-ricordi-motion.test.js
+      - name: Cloudflare web bundle
+        run: npm run build:cloudflare-pages
