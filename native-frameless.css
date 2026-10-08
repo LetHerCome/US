@@ -15,6 +15,18 @@ html.us-native #home .home-hero-only {
   min-height: 0 !important;
 }
 
+html.us-native #home .home-photo-shade {
+  /* Darken only the status-bar end of bright photos enough for white clock
+     and notification icons; keep the existing bottom text protection. */
+  background: linear-gradient(
+    180deg,
+    rgba(4, 5, 10, .52) 0px,
+    rgba(4, 5, 10, .15) calc(var(--us-safe-top) + 36px),
+    rgba(4, 6, 9, .01) 50%,
+    rgba(4, 6, 9, .46) 100%
+  ) !important;
+}
+
 /* The Home chrome itself already uses --us-safe-top, and its actions must
    not move into the status bar when the hero extends behind the clock. */
 html.us-native #home #homeHero:not([data-us-countdown]) .us-oggi-stack {
