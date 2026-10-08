@@ -741,12 +741,15 @@ html.us-returning-device .auth-overlay{
     <header><div><div class="tiny">QUESTO TELEFONO</div><h3 id="usWidgetHubTitle">Widget</h3></div><button type="button" class="us-settings-close us-modal-close" data-us-widget-hub-close data-us-modal-close aria-label="Chiudi"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
     <div class="us-widget-hub-list" id="usWidgetHubList"></div>
     <section class="us-widget-hub-manual" id="usWidgetHubManual" hidden aria-labelledby="usWidgetHubManualTitle">
-      <b id="usWidgetHubManualTitle">Aggiungilo a mano</b>
-      <p class="us-widget-hub-path">Home <span>→</span> pressione lunga <span>→</span> Widget <span>→</span> US <span>→</span> scegli il widget</p>
-      <div class="us-widget-hub-vendor" id="usWidgetHubVendor" hidden>
-        <p>Su Xiaomi, se non succede nulla, consenti a US <b>Scorciatoie nella schermata Home</b>.</p>
-        <button type="button" class="ghost" id="usWidgetHubPermissions">Apri autorizzazioni di US</button>
-      </div>
+      <details class="us-widget-hub-help" id="usWidgetHubGuide">
+        <summary id="usWidgetHubManualTitle">Come aggiungere un widget <span aria-hidden="true">⌄</span></summary>
+        <p class="us-widget-hub-path">Home <span>→</span> pressione lunga <span>→</span> Widget <span>→</span> US <span>→</span> scegli il widget</p>
+        <p class="us-widget-hub-help-note">Puoi spostarlo e ridimensionarlo dalla Home. Se il widget è già presente, non serve aggiungerlo di nuovo.</p>
+        <div class="us-widget-hub-vendor" id="usWidgetHubVendor" hidden>
+          <p>Su Xiaomi, se non succede nulla, consenti a US <b>Scorciatoie nella schermata Home</b>.</p>
+          <button type="button" class="ghost" id="usWidgetHubPermissions">Apri autorizzazioni di US</button>
+        </div>
+      </details>
     </section>
   </section>
 </div>
