@@ -53,6 +53,7 @@ const APP_SHELL = [
   versioned("/identity.css"),
   versioned("/top-chrome.css"),
   versioned("/modal-center.css"),
+  versioned("/ricordi-carousel.css"),
   versioned("/identity.js"),
   versioned("/settings2.css"),
   versioned("/polish4.css"),
