@@ -477,7 +477,7 @@
         lastAttentionAt = at;
       }
       const at = now();
-      if (kind === lastCueKind && at - lastCueAt < SAME_CUE_GAP_MS) return false;
+      if (kind !== 'tap' && kind !== 'selection' && kind === lastCueKind && at - lastCueAt < SAME_CUE_GAP_MS) return false;
       lastCueKind = kind;
       lastCueAt = at;
       const played = sound(kind); const vibrated = vibrate(kind); return played || vibrated;
