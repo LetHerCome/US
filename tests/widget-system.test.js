@@ -393,7 +393,7 @@ test('Noi 2x1 has a separate functional Gioca action; no backend calls or fake g
   const layout = read(`${PLUGIN}/res/layout/us_widget_noi.xml`);
   const preview = read('widget-hub.js');
   const routing = read('widgets.js');
-  assert.match(provider, /UsWidgets\.open\(context, "noi\/play", 4402\)/);
+  assert.match(provider, /connected \? "noi\/play" : "noi"/);
   assert.match(provider, /R\.id\.us_noi_cta/);
   assert.match(provider, /UsWidgets\.open\(context, "noi", 4401\)/);
   assert.match(layout, /@\+id\/us_noi_cta/);
