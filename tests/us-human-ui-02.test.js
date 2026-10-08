@@ -138,7 +138,7 @@ test('Gioca: chips are plain readings of open_rounds / recent, with real counts'
   const html = await gioca(state).hubHtml();
   const chips = [...html.matchAll(/data-gv2-filter="([a-z]+)" aria-pressed="false" aria-controls="usGv2FilterList"><span>([^<]+)<\/span><b>(\d+)<\/b>/g)].map((m) => [m[1], m[2], Number(m[3])]);
   assert.deepEqual(chips, [['turn', 'Tocca a te', 2], ['ready', 'Risposte pronte', 1], ['waiting', 'Aspetti Beatrice', 1], ['done', 'Completati', 1]]);
-  assert.ok(html.indexOf('us-gv2-filters') < html.indexOf('data-gv2-action="per-voi"'), 'status chips surface before Per voi when rounds exist');
+  assert.ok(html.indexOf('us-gv2-filters') > html.indexOf('us-gv2-deck'), 'status chips follow the primary game actions');
   assert.match(html, /id="usGv2FilterList" aria-live="polite" hidden><\/div>/, 'no list until a chip is chosen');
 });
 
