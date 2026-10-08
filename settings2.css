@@ -235,3 +235,14 @@ body:has(#settings.page.active) #thinkButton{
   #settings .us-settings2-label{margin-top:8px}
   #settings .us-couple-id-card{padding:9px 10px}
 }
+
+
+/* US-SETTINGS-ORGANIZE-01 — semantic groups, same action IDs and handlers. */
+#settings .us-settings2-section[data-us-settings-scope="tu"]{margin-top:9px}
+#settings .us-settings2-label{margin:18px 5px 7px;font-size:10px;letter-spacing:.13em;color:var(--us-color-text-3)}
+#settings .us-settings2-section-head{margin-bottom:3px}
+#settings .us-settings2-group{border-radius:19px}
+#settings .us-settings2-row{min-height:58px!important;gap:11px!important;padding:10px 12px!important}
+#settings .us-settings2-row .us-setting-main b{font-size:14px!important}
+#settings .us-settings2-section[data-us-settings-scope="voi"]{margin-top:25px}
+#settings .us-settings2-page{padding-bottom:30px!important}
