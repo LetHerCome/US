@@ -31,10 +31,10 @@ test('Progression V1: unlock authority stays server-side while cosmetic equip is
   assert.match(js,/In uso · tocca per togliere/);
 });
 
-test('Progression V1: reward collection scales as an internal scrollable grid (V2: grouped by slot, 3 columns)',()=>{
-  assert.match(css,/\.us-reward-grid\{display:grid;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
-  assert.match(css,/max-height:min\(440px,56dvh\)/);
-  assert.match(css,/overflow-y:auto/);
+test('Progression UI: collection uses two large columns, no inner scroll and collapsible categories',()=>{
+  assert.match(css, /#bond \.us-reward-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(css, /#bond \.us-progression-rewards\{max-height:none;overflow:visible;/);
+  assert.match(js, /<summary class="us-reward-group-head"/);
 });
 
 test('Progression V1: cosmetic preferences map only to explicit theme/frame/effect datasets',()=>{
