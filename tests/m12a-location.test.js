@@ -45,6 +45,7 @@ function harness({ permission = 'granted', rows = [], geo = 'ok', localDev = fal
     console: { warn() {} },
     Date, Number, Math, Promise, JSON, Infinity, Object, Array, String, Boolean, isFinite: Number.isFinite, parseFloat
   };
+  require('./helpers/identity-fixture').install(sandbox);
   vm.runInNewContext(`${block}\nthis.api={decideLocationRefresh,distanceCapsuleModel,maybeAutoRefreshLocation,refreshMyLocation,startLocationRefreshTimer,hydrateDistance,openDistanceDetail,usLocationRuntime};`, sandbox);
   return { api: sandbox.api, calls, capsule, value, state, store, sandbox };
 }

@@ -71,7 +71,7 @@ test('M6C (3): prev/next shift the week by ±7 days and Oggi resets to the curre
 
 // (4) partner/shared rendering reuses the day-sheet sections, both partners present.
 test('M6C (4): week days render both partner lanes plus Insieme from live profile order', () => {
-  assert.match(js(), /ordered\.map\(\(p\) => renderDaySection\(p\.display_name/);
+  assert.match(js(), /ordered\.map\(\(p\) => renderDaySection\(ownerNameFor\(p\.role,p\.display_name\)/);
   assert.match(js(), /renderDaySection\('Insieme', dayEntries\.filter\(\(e\) => entryLaneRole\(e\) === 'shared'\), 'shared'\)/);
   assert.match(js(), /function renderWeekList\(\)/);
   assert.match(js(), /sortedProfiles\(\)/);

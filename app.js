@@ -102,31 +102,90 @@ const sb = window.supabase.createClient(SB_URL, SB_KEY, {
 });
 
 
-const usCoupleContextState={couple:null,profiles:[],identityKey:''};
+// Presentation only: membership remains profiles.id / profiles.couple_id.
+function resolveUsIdentity({viewerId,coupleId,profiles=[]}={}){
+  const members=viewerId&&coupleId?profiles.filter(p=>p.couple_id===coupleId):[];
+  const own=members.find(p=>p.id===viewerId);
+  const partner=own?members.find(p=>p.id!==viewerId):null;
+  const name=p=>typeof p?.display_name==='string'?p.display_name.trim():'';
+  const nameForRole=role=>{const p=own?members.find(p=>p.role===role):null;return name(p)||(p?.id===viewerId?'Tu':'La tua persona');};
+  const initialForRole=role=>{
+    const p=own?members.find(p=>p.role===role):null;
+    const initial=Array.from(name(p))[0]?.toLocaleUpperCase('it')||'·';
+    const collision=p&&members.some(other=>other.id!==p.id&&Array.from(name(other))[0]?.toLocaleUpperCase('it')===initial);
+    return collision?`${initial}${role==='francesco'?'1':'2'}`:initial;
+  };
+  return {ownName:name(own)||'Tu',partnerName:name(partner)||'La tua persona',nameForRole,initialForRole,
+    pairLabel:own&&partner&&name(own)&&name(partner)?[...members].sort((a,b)=>String(a.role).localeCompare(String(b.role))).reverse().map(name).join(' + '):'Voi due'};
+}
+function usIdentity(){
+  const profile=window.usProfile;
+  const ready=profile?.id&&profile?.couple_id&&usCoupleContextState.identityKey===`${profile.id}:${profile.couple_id}`&&!window.UsAppLock?.isLocked?.();
+  return resolveUsIdentity(ready?{viewerId:profile.id,coupleId:profile.couple_id,profiles:usCoupleContextState.profiles}:{});
+}
+window.UsIdentity=Object.freeze({resolve:resolveUsIdentity,current:usIdentity});
+function refreshUsIdentityLabels(){
+  const identity=usIdentity();
+  for(const role of ['francesco','beatrice']){
+    const label=document.querySelector(`[data-noi-couple-name="${role}"]`);
+    if(label)label.textContent=identity.nameForRole(role);
+    const root=document.getElementById(role==='francesco'?'pairAvatarFrancesco':'pairAvatarBeatrice');
+    const fallback=root?.querySelector('.fallback');
+    if(fallback)fallback.textContent=identity.initialForRole(role);
+  }
+  for(const id of ['noiCoupleCard','noiCouple'])document.getElementById(id)?.setAttribute('aria-label',identity.pairLabel);
+  const pair=document.getElementById('usCoupleNames');if(pair)pair.textContent=identity.pairLabel;
+  const ownInitial=document.getElementById('profileAvatarFallback');if(ownInitial)ownInitial.textContent=identity.initialForRole(window.usProfile?.role);
+  const title=document.getElementById('thinkArrivalTitle');if(title)title.textContent=`${identity.partnerName} ti pensa`;
+  window.dispatchEvent(new CustomEvent('us-identity-change',{detail:{identityKey:usCoupleContextState.identityKey}}));
+}
+const usCoupleContextState={couple:null,profiles:[],identityKey:'',generation:0};
 function clearUsCoupleContext(){
+  usCoupleContextState.generation++;
   usCoupleContextState.couple=null;
   usCoupleContextState.profiles=[];
   usCoupleContextState.identityKey='';
   updateTogetherDays(null);
+  window.usBondProfiles=[];
+  for(const id of ['pairAvatarFrancesco','pairAvatarBeatrice']){
+    const root=document.getElementById(id),image=root?.querySelector('img');
+    if(image){image.hidden=true;image.removeAttribute('src');}
+    const fallback=root?.querySelector('.fallback');if(fallback)fallback.hidden=false;
+  }
+  const profileImage=document.getElementById('profileAvatarImg');
+  if(profileImage){profileImage.hidden=true;profileImage.removeAttribute('src');}
+  const profileInitial=document.getElementById('profileAvatarFallback');if(profileInitial)profileInitial.textContent='·';
+  refreshUsIdentityLabels();
 }
 async function hydrateUsCoupleContext(){
   const profile=window.usProfile;
   const coupleId=profile?.couple_id;
   if(!profile?.id||!coupleId){clearUsCoupleContext();return null;}
   const identityKey=`${profile.id}:${coupleId}`;
-  const [coupleResult,profilesResult]=await Promise.all([
-    sb.from('couples').select('id,name,started_on').eq('id',coupleId).maybeSingle(),
-    sb.from('profiles').select('id,display_name,role,couple_id').eq('couple_id',coupleId).order('created_at',{ascending:true})
-  ]);
-  if(window.usProfile!==profile)return null;
+  if(usCoupleContextState.identityKey!==identityKey)clearUsCoupleContext();
+  const generation=++usCoupleContextState.generation;
+  let coupleResult,profilesResult;
+  try{
+    [coupleResult,profilesResult]=await Promise.all([
+      sb.from('couples').select('id,name,started_on').eq('id',coupleId).maybeSingle(),
+      sb.from('profiles').select('id,display_name,role,couple_id').eq('couple_id',coupleId).order('created_at',{ascending:true})
+    ]);
+  }catch(error){
+    if(window.usProfile===profile&&window.usProfile?.couple_id===coupleId&&generation===usCoupleContextState.generation)clearUsCoupleContext();
+    console.warn('[US Couple] context unavailable',error);
+    return null;
+  }
+  if(window.usProfile!==profile||window.usProfile?.couple_id!==coupleId||generation!==usCoupleContextState.generation)return null;
   if(coupleResult.error||profilesResult.error){
     console.warn('[US Couple] context',coupleResult.error||profilesResult.error);
+    clearUsCoupleContext();
     return null;
   }
   usCoupleContextState.couple=coupleResult.data||null;
   usCoupleContextState.profiles=(profilesResult.data||[]).filter(row=>row.couple_id===coupleId);
   usCoupleContextState.identityKey=identityKey;
   updateTogetherDays(usCoupleContextState.couple?.started_on);
+  refreshUsIdentityLabels();
   return {
     couple:usCoupleContextState.couple?{...usCoupleContextState.couple}:null,
     profiles:usCoupleContextState.profiles.map(row=>({...row}))
@@ -139,6 +198,42 @@ window.UsCoupleContext=Object.freeze({
     couple:usCoupleContextState.couple?{...usCoupleContextState.couple}:null,
     profiles:usCoupleContextState.profiles.map(row=>({...row}))
   })
+});
+window.addEventListener('us-app-lock-change',()=>refreshUsIdentityLabels());
+window.addEventListener('us-identity-change',event=>{
+  if(!event.detail?.identityKey){
+    usTodayHydrateSeq++;
+    window.todayQuestion=null;window.todayState=null;window.todayRevealMeta=null;
+    usIncomingThink=null;usThinkReactionFinal=null;closeThinkArrival();
+    usLocationRuntime.rows=null;usLocationRuntime.snapshot=null;window.usDistanceKm=null;
+    renderDistanceCapsule({visible:false,text:''});
+    dailyQuestionOutcomes.hide();dailyKeepsake.hide();closeToday();
+    const reveal=document.getElementById('todayReveal');if(reveal)reveal.innerHTML='';
+    const answer=document.getElementById('todayAnswer');if(answer)answer.value='';
+    for(const id of ['thinkLastReceived','thinkLastSent','thinkLiveText']){
+      const label=document.getElementById(id);if(label)label.textContent='Ancora nessun segnale';
+    }
+    for(const id of ['momentsGrid','ricordiRivivi','ricordiChapters']){
+      const root=document.getElementById(id);if(root){root.innerHTML='';delete root.dataset.loaded;}
+    }
+    window.UsTodayPriority?.render?.([]);
+    return;
+  }
+  window.UsTodayPriority?.refresh?.();
+  if(window.usProfile&&usLocationRuntime.rows)applyLocationRows(usLocationRuntime.rows);
+  renderTodayReveal();
+  const draft=document.getElementById('todayOutcomeBody')?.value;
+  if(window.todayOutcomeState&&draft!==undefined)window.todayOutcomeState.draft=draft;
+  dailyQuestionOutcomes.render();
+  if(window.todayState?.my_answer!=null&&!window.todayState?.both_answered){
+    const locked=document.getElementById('locked');
+    if(locked)locked.innerHTML='✓ Hai risposto. <b>In attesa di '+escapeHtml(usIdentity().partnerName)+'…</b>';
+  }
+  document.querySelectorAll('[data-ricordi-daily]').forEach(root=>{
+    const labels=root.querySelectorAll('.ricordi-daily-answer b');
+    ['francesco','beatrice'].forEach((role,i)=>{if(labels[i])labels[i].textContent=usIdentity().nameForRole(role);});
+  });
+  if(noiIdeaState.selectedId)renderNoiIdeaDetailState(noiIdeaFindItem(noiIdeaState.selectedId));
 });
 
 window.UsWidgetCredentialApi=Object.freeze({
@@ -161,12 +256,13 @@ window.UsWidgetCredentialApi=Object.freeze({
 // downloads and downsizes the image, native only ever receives bytes).
 window.UsWidgetDataApi=Object.freeze({
   async couple(){
-    const cid=window.usProfile?.couple_id;
+    const profile=window.usProfile,cid=profile?.couple_id;
     if(!window.UsPlatform?.isNative||!cid)return null;
     const [coupleRes,profilesRes]=await Promise.all([
       sb.from('couples').select('started_on').eq('id',cid).maybeSingle(),
       sb.from('profiles').select('display_name').eq('couple_id',cid).order('created_at',{ascending:true})
     ]);
+    if(window.usProfile!==profile||window.usProfile?.couple_id!==cid)return null;
     if(coupleRes.error||profilesRes.error)throw coupleRes.error||profilesRes.error;
     return {startedOn:coupleRes.data?.started_on||'',names:(profilesRes.data||[]).map(p=>p.display_name).filter(Boolean)};
   },
@@ -574,6 +670,7 @@ if(canUseUsServiceWorker()){navigator.serviceWorker.addEventListener('message',e
 let selectedRole = null;
 
 async function clearPrivateDeviceState(profileId=window.usProfile?.id||''){
+  window.UsCoupleContext?.clear?.();
   window.USCountdown?.reset?.();
   try{US_SIGNED_URL_CACHE.clear();}catch(_e){}
   const storageKeys=[
@@ -762,10 +859,11 @@ async function initCloud(){
 
     if(cachedProfile){
       resetNoiIdeasForIdentityChange();
+      clearUsCoupleContext();
       window.usProfile=cachedProfile;
       selectedRole=cachedProfile.role;
       document.getElementById('authOverlay').classList.add('hidden');
-      setCloudBadge(true,cachedProfile.display_name||'sync');
+      setCloudBadge(true,'sync');
     }
 
     const {data:freshProfile,error}=await sb.from('profiles')
@@ -794,6 +892,7 @@ async function initCloud(){
     }
 
     resetNoiIdeasForIdentityChange();
+    clearUsCoupleContext();
     window.usProfile = profile;
     window.UsWidgets?.authReady?.(profile).catch(error=>console.warn('[US Widget] auth ready',error));
     // Native push: pending notification taps run now (after the lock gate above),
@@ -805,7 +904,7 @@ async function initCloud(){
     document.documentElement.classList.remove('us-auth-pending');
     document.documentElement.classList.add('us-auth-ready','us-returning-device');
     window.dispatchEvent(new CustomEvent('us-auth-resolved',{detail:{paired:true}}));
-    setCloudBadge(true, profile.display_name);
+    setCloudBadge(true, usIdentity().ownName);
     hydrateUsCoupleContext().catch(error=>console.warn('[US Couple] boot context',error));
     const syncBadge=document.getElementById('syncReadyBadge');
     if(syncBadge)syncBadge.textContent='SYNC ATTIVO';
@@ -985,7 +1084,7 @@ function applyLocationRows(rows){
   const partner=(rows||[]).find(row=>row.user_id!==window.usProfile.id)||null;
   usLocationRuntime.rows=rows||[];
   usLocationRuntime.mineUpdatedAt=mine?.updated_at||null;
-  const partnerName=window.usProfile.role==='francesco'?'Beatrice':'Francesco';
+  const partnerName=usIdentity().partnerName;
   const model=distanceCapsuleModel({mine,partner,partnerName,permission:usLocationRuntime.permission,supported:Boolean(navigator.geolocation)});
   if(model.km!==undefined)window.usDistanceKm=model.km;
   usLocationRuntime.snapshot=model;
@@ -994,10 +1093,12 @@ function applyLocationRows(rows){
 }
 
 async function hydrateDistance(){
-  if(!window.usProfile)return;
+  const viewer=window.usProfile,coupleId=viewer?.couple_id;
+  if(!viewer)return;
   const {data:rows,error}=await sb.from('couple_locations')
     .select('user_id,latitude,longitude,accuracy_m,updated_at')
-    .eq('couple_id',window.usProfile.couple_id);
+    .eq('couple_id',coupleId);
+  if(window.usProfile!==viewer||window.usProfile?.couple_id!==coupleId)return;
   // A failed read never replaces a valid last-known distance.
   if(error){console.warn(error);return;}
   return applyLocationRows(rows);
@@ -1169,15 +1270,16 @@ async function signedAvatarUrl(path){
 }
 
 async function hydrateProfileAvatars(){
-  if(!window.usProfile)return;
+  const viewer=window.usProfile, coupleId=viewer?.couple_id;
+  if(!viewer)return;
   const fallback=document.getElementById('profileAvatarFallback');
-  if(fallback)fallback.textContent=(window.usProfile.display_name||'?').slice(0,1).toUpperCase();
-  const {data:profiles,error}=await sb.from('profiles').select('id,display_name,role,avatar_path').eq('couple_id',window.usProfile.couple_id);
+  if(fallback)fallback.textContent=usIdentity().initialForRole(viewer.role);
+  const {data:profiles,error}=await sb.from('profiles').select('id,display_name,role,avatar_path,couple_id').eq('couple_id',coupleId);
+  if(window.usProfile!==viewer||window.usProfile?.couple_id!==coupleId)return;
   if(error){console.warn(error);return;}
-  for(const profile of profiles||[]){
-    const nameEl=document.querySelector(`[data-noi-couple-name="${profile.role}"]`);
-    if(nameEl&&profile.display_name)nameEl.textContent=profile.display_name;
+  for(const profile of (profiles||[]).filter(p=>p.couple_id===coupleId)){
     const url=await signedAvatarUrl(profile.avatar_path);
+    if(window.usProfile!==viewer||window.usProfile?.couple_id!==coupleId)return;
     if(profile.role==='francesco')setAvatarSlot('pairAvatarFrancesco',url);
     if(profile.role==='beatrice')setAvatarSlot('pairAvatarBeatrice',url);
     if(profile.id===window.usProfile.id){
@@ -1782,9 +1884,7 @@ function thinkTodayPriorityViewModel(){
 // hydrateToday): nessuna copia locale delle risposte, nessun reveal anticipato.
 // La card apre il foglio esistente (openToday), che resta l'unico flusso.
 function dailyRitualPartnerName(){
-  const partner=partnerFromProfiles(window.usBondProfiles||[]);
-  if(partner?.display_name)return partner.display_name;
-  return window.usProfile?.role==='francesco'?'Beatrice':'Francesco';
+  return usIdentity().partnerName;
 }
 function dailyRitualViewModel(source){
   // M10.1A — la card su Oggi dice a CHI guarda "hai ancora qualcosa da fare":
@@ -2100,7 +2200,7 @@ document.getElementById('thinkArrival')?.addEventListener('click',event=>{
 
 function dailyQuestionOutcomeRuntime(){
   const ownRole=()=>window.usProfile?.role||'';
-  const partnerLabel=()=>ownRole()==='francesco'?'Bea':'Francesco';
+  const partnerLabel=()=>usIdentity().partnerName;
   const emptyState=(questionId='')=>({questionId,rows:[],draft:'',status:'idle'});
   const current=()=>window.todayOutcomeState||emptyState(window.todayQuestion?.id);
   const operationId=()=>globalThis.crypto?.randomUUID?.()||'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,char=>{
@@ -2283,7 +2383,7 @@ async function loadDailyRevealMeta(questionId){
     return data;
   }catch(error){console.warn('[US Today] Reveal meta',error);return null;}
 }
-function dailyRevealPartnerLabel(){return window.usProfile?.role==='francesco'?'Bea':'Francesco';}
+function dailyRevealPartnerLabel(){return usIdentity().partnerName;}
 function renderTodayReveal(){
   const reveal=document.getElementById('todayReveal'),state=window.todayState;
   if(!reveal||!state?.both_answered)return;
@@ -2424,8 +2524,8 @@ async function hydrateToday(){
     dailyQuestionOutcomes.hide();
     window.UsDailyKeepsake?.hide?.();
     if(state?.my_answer){
-      const partner=window.usProfile.role==='francesco'?'Bea':'Francesco';
-      locked.innerHTML='✓ Hai risposto. <b>In attesa di '+partner+'…</b>';
+      const partner=usIdentity().partnerName;
+      locked.innerHTML='✓ Hai risposto. <b>In attesa di '+escapeHtml(partner)+'…</b>';
     }else if(state?.partner_has_answer){
       locked.innerHTML='🔒 L’altra risposta è già arrivata. <b>Rispondi per sbloccarla.</b>';
     }else{
@@ -2445,7 +2545,7 @@ async function updateHomeStatus(){
   if(!window.usProfile)return;
   const todayPill=document.getElementById('todayStatusPill');
   const st=window.todayState;
-  const partner=window.usProfile.role==='francesco'?'Bea':'Francesco';
+  const partner=usIdentity().partnerName;
   if(todayPill){
     if(st?.both_answered) todayPill.textContent='💬 Today · reveal sbloccato';
     else if(st?.my_answer) todayPill.textContent='💬 Today · in attesa di '+partner;
@@ -2771,7 +2871,7 @@ function ricordiDailyCard(row){
 }
 function ricordiDailyAnswers(row){
   const answer=(label,text)=>`<div class="ricordi-daily-answer"><b>${escapeHtml(label)}</b><p>${escapeHtml(text||'')}</p></div>`;
-  return `<div class="ricordi-daily-answers">${answer('Francesco',row.francesco_answer)}${answer('Bea',row.beatrice_answer)}</div>`;
+  return `<div class="ricordi-daily-answers">${answer(usIdentity().nameForRole('francesco'),row.francesco_answer)}${answer(usIdentity().nameForRole('beatrice'),row.beatrice_answer)}</div>`;
 }
 // M12B.5 — un Evento vissuto senza foto resta un record evento (D3=A): titolo
 // storico (snapshot al completamento, altrimenti il titolo attuale dichiarato
@@ -3446,7 +3546,7 @@ async function hydrateBond(){
   const [{data:state,error:stateError},{data:quests,error:questError},{data:profiles,error:profilesError},{data:couple,error:coupleError},{count:completedCount,error:countError},{data:recent,error:recentError}]=await Promise.all([
     sb.from('bond_weekly_state').select('rerolls_used').eq('couple_id',coupleId).eq('week_start',week).maybeSingle(),
     sb.from('bond_weekly_quests').select('id,slot,template_key,title,category,rarity,xp,confirmed_by,completed_at').eq('couple_id',coupleId).eq('week_start',week).order('slot'),
-    sb.from('profiles').select('id,display_name,role').eq('couple_id',coupleId),
+    sb.from('profiles').select('id,display_name,role,couple_id').eq('couple_id',coupleId),
     sb.from('couples').select('bond_xp').eq('id',coupleId).maybeSingle(),
     sb.from('bond_weekly_quests').select('id',{count:'exact',head:true}).eq('couple_id',coupleId).not('completed_at','is',null),
     sb.from('bond_weekly_quests').select('id,week_start,slot,title,completed_at').eq('couple_id',coupleId).lt('week_start',week).order('week_start',{ascending:false}).order('slot').limit(QUEST_SLOTS*QUEST_RECENT_WEEKS)
@@ -3753,7 +3853,7 @@ function noiIdeaLivedOnLabel(item){
   return d.toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'});
 }
 function noiIdeaPartnerName(){
-  return window.usProfile?.role==='francesco'?'Beatrice':'Francesco';
+  return usIdentity().partnerName;
 }
 // none: nessuno ha proposto · mine: ho proposto io, attendo · partner: ha
 // proposto l'altra persona, tocca a me · lived: confermata da entrambi.
@@ -4126,10 +4226,13 @@ document.getElementById('noiIdeaLivedList')?.addEventListener('click',(event)=>{
 
 // ===== Ti penso =====
 let usRealtimeChannel=null;
-function partnerFromProfiles(profiles){return (profiles||[]).find(p=>p.id!==window.usProfile?.id)||null;}
+function partnerFromProfiles(profiles){const me=window.usProfile;return me?.couple_id?(profiles||[]).find(p=>p.couple_id===me.couple_id&&p.id!==me.id)||null:null;}
 async function getCoupleProfiles(){
-  if(window.usBondProfiles?.length)return window.usBondProfiles;
-  const {data,error}=await sb.from('profiles').select('id,display_name,role').eq('couple_id',window.usProfile.couple_id);
+  const profile=window.usProfile,coupleId=profile?.couple_id;
+  if(!profile||!coupleId)return [];
+  if(window.usBondProfiles?.some(p=>p.id===profile.id&&p.couple_id===coupleId))return window.usBondProfiles.filter(p=>p.couple_id===coupleId);
+  const {data,error}=await sb.from('profiles').select('id,display_name,role,couple_id').eq('couple_id',coupleId);
+  if(window.usProfile!==profile||window.usProfile?.couple_id!==coupleId)return [];
   if(error){console.warn(error);return [];}
   window.usBondProfiles=data||[];return window.usBondProfiles;
 }
@@ -4143,12 +4246,14 @@ function relativeSignalAge(dateString){
   const d=Math.floor(h/24);return `${d} ${d===1?'giorno':'giorni'} fa`;
 }
 async function hydrateThink(){
-  if(!window.usProfile)return;
+  const identityProfile=window.usProfile,identityCouple=identityProfile?.couple_id;
+  if(!identityProfile)return;
   const [profiles,{data:rows,error},{count,error:countError}]=await Promise.all([
     getCoupleProfiles(),
     sb.from('shared_messages').select('id,sender_id,recipient_id,kind,created_at').eq('kind','think').order('created_at',{ascending:false}).limit(60),
     sb.from('shared_messages').select('id',{count:'exact',head:true}).eq('kind','think').gte('created_at',new Date(new Date().getFullYear(),new Date().getMonth(),1).toISOString())
   ]);
+  if(window.usProfile!==identityProfile||window.usProfile?.couple_id!==identityCouple)return;
   if(error){console.warn(error);return;}if(countError)console.warn(countError);
   const messageIds=(rows||[]).map(row=>row.id).filter(Boolean);
   let reactionRows=[];
@@ -4156,6 +4261,7 @@ async function hydrateThink(){
     const reactionResult=await sb.from('think_reactions').select('message_id,reaction,updated_at').in('message_id',messageIds);
     if(reactionResult.error)console.warn('[US Think] reactions',reactionResult.error);else reactionRows=reactionResult.data||[];
   }
+  if(window.usProfile!==identityProfile||window.usProfile?.couple_id!==identityCouple)return;
   const reactions=new Map(reactionRows.map(row=>[row.message_id,row]));
   const partner=partnerFromProfiles(profiles),partnerName=partner?.display_name||'L’altra persona';
   const received=(rows||[]).find(r=>r.sender_id!==window.usProfile.id);

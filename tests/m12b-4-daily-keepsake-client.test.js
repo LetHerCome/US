@@ -33,6 +33,7 @@ function install({ rows = [], loadError = null, rpc } = {}) {
     toast: (m) => toasts.push(m),
     document: { getElementById: (id) => (id === 'todayKeep' ? node : id === 'momentsGrid' ? { dataset: { loaded: '0' } } : null) },
   });
+  require('./helpers/identity-fixture').install(context);
   vm.runInContext(KEEP_BLOCK, context);
   const tap = () => clickHandler({ target: { closest: (sel) => (sel === '[data-us-daily-keep]' ? {} : null) } });
   return { api: window.UsDailyKeepsake, node, calls, toasts, window, tap };
@@ -139,6 +140,7 @@ const ARCHIVE = app.match(/\/\/ ===== M8A — Ricordi living archive =====[\s\S]
 function archive() {
   const window = {};
   const context = vm.createContext({ window, document: { getElementById: () => null, querySelectorAll: () => [], querySelector: () => null }, escapeHtml: (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`), go() {}, openMomentViewer() {}, console });
+  require('./helpers/identity-fixture').install(context);
   vm.runInContext(`${ARCHIVE}\nwindow.ricordiDailyCard=ricordiDailyCard;`, context);
   return window;
 }
@@ -162,7 +164,7 @@ test('M12B.4 archive: the card says "Domanda del giorno · <date>", keeps the so
   assert.match(html, /^<details class="ricordi-daily" data-ricordi-daily="d1" data-source-key="daily_question:d1">/);
   assert.match(html, /<small>Domanda del giorno · 12 ottobre<\/small>/);
   assert.match(html, /<b>Francesco<\/b><p>Il lago<\/p>/);
-  assert.match(html, /<b>Bea<\/b><p>La terrazza &#60;b&#62;<\/p>/, 'escaped');
+  assert.match(html, /<b>Beatrice<\/b><p>La terrazza &#60;b&#62;<\/p>/, 'escaped');
   assert.doesNotMatch(html, /<img|storage_path/, 'not a fake Moment');
 });
 

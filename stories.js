@@ -172,16 +172,19 @@
   }
 
   async function loadProfiles() {
-    if (!window.usProfile) return;
+    const viewer=window.usProfile,coupleId=viewer?.couple_id;
+    if (!viewer) return;
     const { data, error } = await sb.from('profiles')
-      .select('id,display_name,role,avatar_path')
-      .eq('couple_id', window.usProfile.couple_id);
+      .select('id,display_name,role,avatar_path,couple_id')
+      .eq('couple_id', coupleId);
+    if(window.usProfile!==viewer||window.usProfile?.couple_id!==coupleId)return;
     if (error) { console.warn('[US Stories] profiles', error); return; }
-    coupleProfiles = data || [];
+    coupleProfiles = (data || []).filter(p=>p.couple_id===coupleId);
     await renderStoryProfiles();
   }
 
   async function setStoryAvatar(imgId, fallbackId, profile) {
+    const viewer=window.usProfile,coupleId=viewer?.couple_id;
     const img = document.getElementById(imgId);
     const fallback = document.getElementById(fallbackId);
     if (!img || !fallback || !profile) return;
@@ -190,6 +193,7 @@
     try {
       if (typeof signedAvatarUrl === 'function') url = await signedAvatarUrl(profile.avatar_path);
     } catch (_) {}
+    if(window.usProfile!==viewer||window.usProfile?.couple_id!==coupleId)return;
     if (url) {
       img.src = url;
       img.hidden = false;
@@ -233,7 +237,7 @@
   }
 
   function storyPartnerLabel(partner, count) {
-    const name = partner?.display_name || 'Il partner';
+    const name = window.UsIdentity?.current().partnerName || 'La tua persona';
     if (!count) return name + ' non ha Stories attive';
     return count === 1 ? 'Apri la Story di ' + name : 'Apri le ' + count + ' Stories di ' + name;
   }
@@ -986,6 +990,16 @@
   }
 
   function boot() {
+    window.addEventListener('us-identity-change',event=>{
+      if(!event.detail?.identityKey){
+        storyLoadToken++;coupleProfiles=[];storyRows=[];storyViews.clear();
+        closeStoryViewer();closeProfilePreview();
+        const name=document.getElementById('usStoryAuthorName');if(name)name.textContent='US';
+        const button=document.getElementById('usStoryPartnerOpen');if(button)button.setAttribute('aria-label','Stories della tua persona');
+        const fallback=document.getElementById('usStoryPartnerFallback');if(fallback)fallback.textContent='·';
+        const image=document.getElementById('usStoryPartnerImg');if(image){image.hidden=true;image.removeAttribute('src');}
+      }else renderStoryRings();
+    });
     injectUi();
     const timer = setInterval(async () => {
       if (await startForCurrentProfile()) clearInterval(timer);

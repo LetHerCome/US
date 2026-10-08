@@ -85,7 +85,7 @@ test('M6B (7): a wide viewport enlarges the single month, it does not split it p
 
 // (8) both partner identities shown, from live profile data, deterministically ordered.
 test('M6B (8): both partner identities render from live profile data in a fixed, non-flipping order', () => {
-  assert.match(js(), /profiles\s*=\s*data\s*\|\|\s*\[\]/);
+  assert.match(js(), /profiles\s*=\s*\(data\s*\|\|\s*\[\]\)\.filter/);
   assert.doesNotMatch(js(), /['"]Francesco['"]|['"]Beatrice['"]/, 'display names must never be hardcoded, only the stable role enum');
   assert.deepEqual(cal.ROLE_ORDER, ['beatrice', 'francesco']);
   assert.equal(cal.roleRank('beatrice') < cal.roleRank('francesco'), true);
@@ -96,15 +96,15 @@ test('M6B (8): both partner identities render from live profile data in a fixed,
 test('M6B (9): personal entries resolve to their owner\'s lane and are marked F / B in text', () => {
   assert.equal(cal.entryLaneRoleFor({ entry_type: 'personal' }, 'francesco'), 'francesco');
   assert.equal(cal.entryLaneRoleFor({ entry_type: 'personal' }, 'beatrice'), 'beatrice');
-  assert.equal(cal.ownerMarkFor('francesco'), 'F');
-  assert.equal(cal.ownerMarkFor('beatrice'), 'B');
+  assert.equal(cal.ownerMarkFor('francesco', 'Francesco'), 'F');
+  assert.equal(cal.ownerMarkFor('beatrice', 'Beatrice'), 'B');
   assert.match(css(), /\.us-cal-chip\{[^}]*font-weight:800/, 'the month marker is a text chip');
 });
 
-// (10) M10.1C: a shared entry reads F+B (text), with a warm tint only as extra.
-test('M6B (10): shared entries render the F+B text marker', () => {
+// (10) M10.1C: a shared entry reads Noi (text), with a warm tint only as extra.
+test('M6B (10): shared entries render the Noi text marker', () => {
   assert.equal(cal.entryLaneRoleFor({ entry_type: 'shared', owner_id: null }, ''), 'shared');
-  assert.equal(cal.ownerMarkFor('shared'), 'F+B');
+  assert.equal(cal.ownerMarkFor('shared'), 'Noi');
   assert.match(css(), /\.us-cal-chip--shared\{/);
 });
 

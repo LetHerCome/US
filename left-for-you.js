@@ -294,7 +294,7 @@
     if (status) { status.textContent = message || ''; status.dataset.kind = kind; }
   }
   function setVisible(id, visible) { const el = document.getElementById(id); if (el) el.hidden = !visible; }
-  function partnerName() { return partner()?.display_name || 'La tua persona'; }
+  function partnerName() { return window.UsIdentity?.current().partnerName || 'La tua persona'; }
 
   function envelopeEl() { return document.getElementById('leftForYouPartnerEntry'); }
 
@@ -345,15 +345,17 @@
 
   async function loadProfiles() {
     const client = getClient();
-    if (!window.usProfile || !client) return;
-    const { data, error } = await client.from('profiles').select('id,display_name,role,avatar_path').eq('couple_id', window.usProfile.couple_id);
+    const viewer=window.usProfile,coupleId=viewer?.couple_id;
+    if (!viewer || !client) return;
+    const { data, error } = await client.from('profiles').select('id,display_name,role,avatar_path,couple_id').eq('couple_id', coupleId);
+    if(window.usProfile!==viewer||window.usProfile?.couple_id!==coupleId)return;
     if (error) throw error;
-    profiles = new Map((data || []).map((profile) => [profile.id, profile]));
+    profiles = new Map((data || []).filter(p=>p.couple_id===coupleId).map((profile) => [profile.id, profile]));
     const other = [...profiles.values()].find((profile) => profile.id !== window.usProfile.id);
     const name = document.getElementById('leftForYouPartnerName');
     const fromName = document.getElementById('leftForYouFromName');
-    if (name) name.textContent = other?.display_name || 'La tua persona';
-    if (fromName) fromName.textContent = other?.display_name || 'la tua persona';
+    if (name) name.textContent = partnerName();
+    if (fromName) fromName.textContent = partnerName();
     setPartnerAwareComposerLabels();
     applyEnvelopeState();
   }
@@ -540,7 +542,7 @@
   }
 
   function composerPartnerName() {
-    return partner()?.display_name || 'la tua persona';
+    return partnerName();
   }
 
   function setPartnerAwareComposerLabels() {
@@ -1443,6 +1445,13 @@
   }
 
   function boot() {
+    window.addEventListener('us-identity-change', event=>{
+      if(!event.detail?.identityKey){profiles.clear();items=[];activeItem=null;close();closeComposer();}
+      for(const id of ['leftForYouPartnerName','leftForYouFromName']){
+        const label=document.getElementById(id);if(label)label.textContent=partnerName();
+      }
+      setPartnerAwareComposerLabels();applyEnvelopeState();
+    });
     document.getElementById('leftForYouClose')?.addEventListener('click', close);
     document.getElementById('leftForYouBackdrop')?.addEventListener('click', close);
     document.getElementById('leftForYouRetry')?.addEventListener('click', retry);

@@ -26,7 +26,7 @@ test('multi-couple V1: relationship age is data-driven, never private-couple har
 test('multi-couple V1: auth loss clears tenant context and successful boot hydrates it',()=>{
   const app=read('app.js');
   assert.match(app,/window\.UsCoupleContext\?\.clear\?\.\(\)/);
-  assert.match(app,/setCloudBadge\(true, profile\.display_name\);\s*hydrateUsCoupleContext\(\)\.catch/);
+  assert.match(app,/setCloudBadge\(true, usIdentity\(\)\.ownName\);\s*hydrateUsCoupleContext\(\)\.catch/);
   assert.match(app,/window\.UsCoupleContext=Object\.freeze/);
 });
 

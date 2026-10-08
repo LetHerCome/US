@@ -7,9 +7,9 @@ const $ = (id) => document.getElementById(id);
 const esc = (value = '') => String(value).replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 
 function partnerName() {
-  const role = window.usProfile?.role;
-  return role === 'francesco' ? 'Bea' : role === 'beatrice' ? 'Francesco' : 'La tua persona';
+  return window.UsIdentity?.current().partnerName || 'La tua persona';
 }
+window.addEventListener('us-identity-change', () => paintDailyInGioca());
 
 function dailyModel() {
   const question = window.todayQuestion;

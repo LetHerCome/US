@@ -39,6 +39,7 @@ function installRuntime({ selectResult = { data: [], error: null }, rpcResult = 
     },
     window: { usProfile: { role: 'francesco' }, todayQuestion: { id: 'question-1' }, todayState: { both_answered: true } }
   });
+  require('./helpers/identity-fixture').install(context);
   vm.runInContext(`${outcomeRuntimeSource()}\nwindow.dailyQuestionOutcomeRuntime=dailyQuestionOutcomeRuntime();`, context);
   return { api: context.window.dailyQuestionOutcomeRuntime, calls, context, elements };
 }
@@ -105,7 +106,7 @@ test('M3 rende il partner read-only e hard-delete solo per l owner con already_a
   assert.match(view, /Mia/);
   assert.match(view, /Sua/);
   assert.match(view, /data-us-today-outcome-owner/);
-  assert.match(view, /data-us-today-outcome-partner><b>Bea<\/b><p>Sua<\/p><\/article>/);
+  assert.match(view, /data-us-today-outcome-partner><b>Beatrice<\/b><p>Sua<\/p><\/article>/);
 
   const result = await api.remove();
   assert.equal(result.status, 'already_absent');

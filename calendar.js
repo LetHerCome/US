@@ -31,17 +31,18 @@ function entryLaneRoleFor(entry, ownerRole) {
   return ownerRole || 'other';
 }
 
-// M10.1C — Ownership must be readable without colour: F = Francesco, B =
-// Beatrice, F+B = shared. Derived ONLY from the existing lane authority
+// Ownership stays readable without colour: actual initials, Noi = shared.
+// Derived ONLY from the existing lane authority
 // (entry_type + the owner's stable role) — there is no second ownership field.
-const OWNER_MARK_BY_LANE = { francesco: 'F', beatrice: 'B', shared: 'F+B' };
-const OWNER_MARK_ORDER = ['F', 'B', 'F+B'];
+const OWNER_MARK_BY_LANE = { shared: 'Noi' };
+const OWNER_MARK_ORDER = ['Noi'];
 function ownerMarkFor(lane, displayName) {
   if (OWNER_MARK_BY_LANE[lane]) return OWNER_MARK_BY_LANE[lane];
+  if (typeof window !== 'undefined' && window.UsIdentity && ROLE_ORDER.includes(lane)) return window.UsIdentity.current().initialForRole(lane);
   return String(displayName || '').trim().charAt(0).toUpperCase() || '·';
 }
 function ownerNameFor(lane, displayName) {
-  return lane === 'shared' ? 'Insieme' : (displayName || 'La tua persona');
+  return lane === 'shared' ? 'Insieme' : (typeof window !== 'undefined' && window.UsIdentity && ROLE_ORDER.includes(lane) ? window.UsIdentity.current().nameForRole(lane) : displayName || 'La tua persona');
 }
 function spokenTime(iso) {
   const d = new Date(iso);
@@ -54,9 +55,9 @@ function entryAriaLabel({ title, lane, displayName, entry }) {
   return `${title}, ${ownerNameFor(lane, displayName)}, ${when}`;
 }
 // Month cell: which markers to draw — never a transcript of the day. Distinct
-// owners in fixed order (F, B, F+B), the remainder as "+N".
+// owners in fixed order (F, B, Noi), the remainder as "+N".
 function monthCellMarks(marks, maxChips = 3) {
-  const rank = (m) => { const i = OWNER_MARK_ORDER.indexOf(m); return i < 0 ? OWNER_MARK_ORDER.length : i; };
+  const rank = (m) => { const i = OWNER_MARK_ORDER.indexOf(m); return i < 0 ? 0 : 1; };
   const distinct = [...new Set(marks)].sort((a, b) => rank(a) - rank(b));
   const chips = distinct.slice(0, maxChips);
   return { chips, more: Math.max(0, marks.length - chips.length) };
@@ -585,7 +586,7 @@ function visibleWindow() {
 }
 function sortedProfiles() { return [...profiles].sort((a, b) => roleRank(a.role) - roleRank(b.role)); }
 function profileById(id) { return profilesById.get(id) || null; }
-function profileName(id) { return profileById(id)?.display_name || 'La tua persona'; }
+function profileName(id) { const p=profileById(id);return ownerNameFor(p?.role,p?.display_name); }
 function profileRole(id) { return profileById(id)?.role || ''; }
 function entryLaneRole(entry) { return entryLaneRoleFor(entry, profileRole(entry.owner_id)); }
 function laneClass(role) { return role === 'shared' ? 'shared' : (role === ROLE_ORDER[0] ? 'a' : (role === ROLE_ORDER[1] ? 'b' : 'other')); }
@@ -602,10 +603,12 @@ function buildDateIndex() {
 }
 
 async function loadProfiles() {
-  if (!window.usProfile) return;
-  const { data, error } = await sb.from('profiles').select('id,display_name,role').eq('couple_id', window.usProfile.couple_id);
+  const viewer=window.usProfile,coupleId=viewer?.couple_id;
+  if (!viewer) return;
+  const { data, error } = await sb.from('profiles').select('id,display_name,role,couple_id').eq('couple_id', coupleId);
+  if(window.usProfile!==viewer||window.usProfile?.couple_id!==coupleId)return;
   if (error) { console.warn('[US Calendar] profiles', error); return; }
-  profiles = data || [];
+  profiles = (data || []).filter(p=>p.couple_id===coupleId);
   profilesById = new Map(profiles.map((p) => [p.id, p]));
 }
 
@@ -841,7 +844,7 @@ window.UsNoiWeekBoard = Object.freeze({ refresh: refreshNoiWeekBoard, render: re
 
 function ownerMarkOf(entry) { return ownerMarkFor(entryLaneRole(entry), profileById(entry.owner_id)?.display_name); }
 function ownerChip(mark) {
-  return `<span class="us-cal-chip${mark === 'F+B' ? ' us-cal-chip--shared' : ''}" aria-hidden="true">${esc(mark)}</span>`;
+  return `<span class="us-cal-chip${mark === 'Noi' ? ' us-cal-chip--shared' : ''}" aria-hidden="true">${esc(mark)}</span>`;
 }
 
 function renderDayCell(dateObj, dateISO, inMonth, dayEntries) {
@@ -862,7 +865,7 @@ function renderDayCell(dateObj, dateISO, inMonth, dayEntries) {
   </button>`;
 }
 
-// M10.1 — ONE shared month at every width. F / B / F+B markers say whose
+// M10.1 — ONE shared month at every width. F / B / Noi markers say whose
 // commitment it is; there is no per-partner month and no duplicated shared event.
 function renderMonthGrid(dateIndex) {
   const container = $('usCalendarGrid');
@@ -889,8 +892,8 @@ function renderLegend() {
   const ordered = sortedProfiles();
   const item = (mark, name) => `<span class="us-cal-legend-item">${ownerChip(mark)}${esc(name)}</span>`;
   legend.innerHTML = [
-    ...ordered.map((p) => item(ownerMarkFor(p.role, p.display_name), p.display_name)),
-    item('F+B', 'Insieme')
+    ...ordered.map((p) => item(ownerMarkFor(p.role, p.display_name), ownerNameFor(p.role,p.display_name))),
+    item('Noi', 'Insieme')
   ].join('');
 }
 
@@ -952,7 +955,7 @@ function renderWeekDay(dateISO, dayEntries, ordered) {
   const tempo = renderTempoBlock(dateISO);
   const body = dayEntries.length
     ? [
-        ...ordered.map((p) => renderDaySection(p.display_name, dayEntries.filter((e) => entryLaneRole(e) === p.role), laneClass(p.role))),
+        ...ordered.map((p) => renderDaySection(ownerNameFor(p.role,p.display_name), dayEntries.filter((e) => entryLaneRole(e) === p.role), laneClass(p.role))),
         renderDaySection('Insieme', dayEntries.filter((e) => entryLaneRole(e) === 'shared'), 'shared')
       ].join('')
     : '<p class="us-cal-day-empty">Niente in programma.</p>';
@@ -1030,7 +1033,7 @@ function renderEventRow(e) {
   const mark = ownerMarkFor(lane, ownerName);
   const label = entryAriaLabel({ title: e.title, lane, displayName: ownerName, entry: e });
   const place = e.location ? `<small class="us-cal-event-place">${esc(e.location)}</small>` : '';
-  return `<button type="button" class="us-cal-event" data-entry-id="${esc(e.id)}" data-owner="${esc(mark)}" aria-label="${esc(label)}"><span class="us-cal-owner${mark === 'F+B' ? ' us-cal-owner--shared' : ''}" aria-hidden="true">${esc(mark)}</span><span class="us-cal-event-copy"><span class="us-cal-event-time">${esc(entryTimeLabel(e))}</span><b class="us-cal-event-title">${esc(e.title)}</b>${place}</span></button>`;
+  return `<button type="button" class="us-cal-event" data-entry-id="${esc(e.id)}" data-owner="${esc(mark)}" aria-label="${esc(label)}"><span class="us-cal-owner${mark === 'Noi' ? ' us-cal-owner--shared' : ''}" aria-hidden="true">${esc(mark)}</span><span class="us-cal-event-copy"><span class="us-cal-event-time">${esc(entryTimeLabel(e))}</span><b class="us-cal-event-title">${esc(e.title)}</b>${place}</span></button>`;
 }
 
 function renderDaySection(label, list, cls) {
@@ -1605,5 +1608,9 @@ window.openCalendarSurface = openCalendarSurface;
 window.closeCalendarSurface = closeCalendarSurface;
 window.closeCalendarDetailSheet = closeCalendarDetailSheet;
 window.closeCalendarFormSheet = closeCalendarFormSheet;
+window.addEventListener?.('us-identity-change', event=>{
+  if(!event.detail?.identityKey){loadToken++;profiles=[];profilesById.clear();entries=[];closeCalendarSurface();}
+  else if($('usCalendarOverlay')?.classList.contains('open'))renderCalendar();
+});
 console.info('[US Calendar] calendario condiviso attivo');
 })();

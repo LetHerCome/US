@@ -20,11 +20,11 @@ test('M10.2 reazioni UI: tre bottoni SOLO sulla risposta del partner, aria-label
   assert.match(partner, /aria-label="Reagisci con faccina arrabbiata" aria-pressed="true"/);
   assert.match(partner, /aria-label="Reagisci con pianto" aria-pressed="false"/);
   for (const g of Object.values(glyphs)) assert.ok(partner.includes(g));
-  assert.match(partner, /role="group" aria-label="Reagisci alla risposta di Bea"/);
+  assert.match(partner, /role="group" aria-label="Reagisci alla risposta di Beatrice"/);
 });
 
-test('M10.2 reazioni UI: la reazione del partner compare passiva sulla MIA risposta ("Bea ha reagito ❤️")', async () => {
-  for (const [role, label] of [['francesco', 'Bea'], ['beatrice', 'Francesco']]) {
+test('M10.2 reazioni UI: la reazione del partner compare passiva sulla MIA risposta ("Beatrice ha reagito ❤️")', async () => {
+  for (const [role, label] of [['francesco', 'Beatrice'], ['beatrice', 'Francesco']]) {
     const t = installToday({ role, revealMeta: meta({ partner_reaction: 'heart' }) });
     await t.hydrate();
     const [mine, partner] = t.nodes.todayReveal.innerHTML.split('data-us-daily-answer="partner"');

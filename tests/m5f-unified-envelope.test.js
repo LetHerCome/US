@@ -189,6 +189,7 @@ function createHarness({ leftForYouRows = [], profilesRows = [{ id: 'beatrice-id
     MediaRecorder: FakeMediaRecorder,
     Blob,
   };
+  require('./helpers/identity-fixture').install(context);
   vm.runInNewContext(read('left-for-you.js'), context, { filename: 'left-for-you.js' });
 
   return {

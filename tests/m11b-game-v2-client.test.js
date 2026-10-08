@@ -80,6 +80,7 @@ function harness({ role = 'francesco', homeState = home(), handlers = {} } = {})
     },
     toast: (m) => notices.push(m), FormData, console: { warn() {} }, setTimeout: () => 1, setInterval: () => 1,
   };
+  require('./helpers/identity-fixture').install(sandbox);
   vm.runInNewContext(read('games.js'), sandbox);
   return { api: window.USGameV2, window, nodes, calls, notices, pushes, handlers: base };
 }
@@ -119,14 +120,14 @@ test('M11B client: the top Per voi control mirrors the server state with the sha
 test('M11B client: weekly card states — locked, created by me, sealed for the partner', async () => {
   const locked = harness({ homeState: home({ weekly: weekly({ assigned_role: 'beatrice', next_role: 'francesco' }) }) });
   await tick();
-  assert.match(locked.nodes.quizHub.innerHTML, /Questa settimana crea Bea/);
+  assert.match(locked.nodes.quizHub.innerHTML, /Questa settimana crea Beatrice/);
   assert.match(locked.nodes.quizHub.innerHTML, /Tocca a te da lunedì 5 ottobre/);
   assert.doesNotMatch(locked.nodes.quizHub.innerHTML, /data-gv2-action="weekly-create"/);
 
   const mine = harness({ homeState: home({ weekly: weekly({ my_turn: false, created: true, created_by_me: true, my_question: { question_text: 'Cosa <ti> manca?' } }) }) });
   await tick();
   assert.match(mine.nodes.quizHub.innerHTML, /Domanda creata/);
-  assert.match(mine.nodes.quizHub.innerHTML, /Poi tocca a Bea, lunedì 5 ottobre\./);
+  assert.match(mine.nodes.quizHub.innerHTML, /Poi tocca a Beatrice, lunedì 5 ottobre\./);
   assert.match(mine.nodes.quizHub.innerHTML, /Cosa &lt;ti&gt; manca\?/, 'author sees own text, escaped');
 
   const sealed = harness({ role: 'beatrice', homeState: home({ my_role: 'beatrice', partner_role: 'francesco', weekly: weekly({ created: true, partner_left_question: true }) }) });
@@ -142,13 +143,13 @@ test('M11B client: waiting view never renders a partner answer before the server
   await h.api.openSession('s1');
   const html = h.nodes.usGameV2Panel.innerHTML;
   assert.match(html, /Hai risposto\./);
-  assert.match(html, /Aspettiamo Bea/);
+  assert.match(html, /Aspettiamo Beatrice/);
   assert.match(html, /La montagna/);
   assert.doesNotMatch(html, /SERVER-MUST-HIDE/);
   assert.equal(h.calls.some(([n]) => n === 'mark_game_session_reveal_seen'), false);
 });
 
-test('M11B client: reveal copy — gendered prediction outcomes, Uguale / Una sorpresa, receipt stored', async () => {
+test('M11B client: reveal copy — neutral prediction outcomes, Uguale / Una sorpresa, receipt stored', async () => {
   const revealed = (role, items) => session({ my_role: role, my_complete: true, partner_complete: true, reveal_ready: true, completed_at: 'now', items });
   const predict = (over) => item({ mechanic: 'prediction', answer_kind: 'choice', options: ['Mare', 'Montagna'], family: 'quanto_mi_conosci', ...over });
   const f = harness({ handlers: { get_game_session: () => revealed('francesco', [
@@ -162,14 +163,14 @@ test('M11B client: reveal copy — gendered prediction outcomes, Uguale / Una so
   await tick();
   await h_open(f);
   const html = f.nodes.usGameV2Panel.innerHTML;
-  assert.match(html, /L’hai capita al volo ♡/);
-  assert.match(html, /Ti ha sorpreso/);
-  assert.match(html, /Ti ha capito al volo ♡/);
-  assert.match(html, /L’hai sorpresa/);
+  assert.match(html, /Hai indovinato al volo ♡/);
+  assert.match(html, /Una sorpresa per te/);
+  assert.match(html, /Ha indovinato al volo ♡/);
+  assert.match(html, /Una sorpresa per la tua persona/);
   assert.match(html, /Uguale ♡/);
   assert.match(html, /Una sorpresa/);
   assert.match(html, /Tu pensavi/);
-  assert.match(html, /Bea ha scelto/);
+  assert.match(html, /Beatrice ha scelto/);
   assert.doesNotMatch(html, /Facciamone un altro/, 'M11F: no immediate replay invitation after a reveal');
   assert.doesNotMatch(html, NO_SCORE);
   assert.ok(f.calls.some(([n, a]) => n === 'mark_game_session_reveal_seen' && a.target_session_id === 's1'));
@@ -183,7 +184,7 @@ test('M11B client: reveal copy — gendered prediction outcomes, Uguale / Una so
   await tick();
   await h_open(b);
   const bh = b.nodes.usGameV2Panel.innerHTML;
-  for (const line of ['L’hai capito al volo ♡', 'Ti ha sorpresa', 'Ti ha capita al volo ♡', 'L’hai sorpreso', 'Francesco pensava']) assert.match(bh, new RegExp(line));
+  for (const line of ['Hai indovinato al volo ♡', 'Una sorpresa per te', 'Ha indovinato al volo ♡', 'Una sorpresa per la tua persona', 'Francesco pensava']) assert.match(bh, new RegExp(line));
 });
 test('M11C client: context chip and longitudinal answers appear only as the server sends them', async () => {
   const withContext = item({ id: 'l', source_type: 'game_history', context: { kind: 'longitudinal', kind_label: 'L’avete già giocata a gennaio' } });
@@ -207,7 +208,7 @@ test('M11C client: context chip and longitudinal answers appear only as the serv
 async function h_open(h) { await h.api.openSession('s1'); await tick(); }
 
 test('M11B client: a round saves each own answer, finalizes once and sends only an id to push', async () => {
-  const two = session({ items: [item({ id: 'i1' }), item({ id: 'i2', my_prompt: 'Secondo te cosa ha scelto Bea?', question_text: 'Q2', answer_kind: 'choice', options: ['A', 'B'], mechanic: 'prediction', my_item_role: 'predictor', subject_role: 'beatrice' })] });
+  const two = session({ items: [item({ id: 'i1' }), item({ id: 'i2', my_prompt: 'Secondo te cosa ha scelto Beatrice?', question_text: 'Q2', answer_kind: 'choice', options: ['A', 'B'], mechanic: 'prediction', my_item_role: 'predictor', subject_role: 'beatrice' })] });
   let saved = two;
   const h = harness({ handlers: {
     get_game_session: () => two,
@@ -221,7 +222,7 @@ test('M11B client: a round saves each own answer, finalizes once and sends only 
   h.nodes.usGameV2Panel.fire('submit', { target: { id: 'usGv2AnswerForm' }, preventDefault() {} });
   await tick();
   assert.match(h.nodes.usGameV2Panel.innerHTML, /2 di 2/);
-  assert.match(h.nodes.usGameV2Panel.innerHTML, /Secondo te cosa ha scelto Bea\?/);
+  assert.match(h.nodes.usGameV2Panel.innerHTML, /Secondo te cosa ha scelto Beatrice\?/);
   assert.match(h.nodes.usGameV2Panel.innerHTML, /Conferma le risposte/);
   h.nodes.usGameV2Panel.query['input[name="gv2choice"]:checked'] = { value: '1' };
   h.nodes.usGameV2Panel.fire('submit', { target: { id: 'usGv2AnswerForm' }, preventDefault() {} });
@@ -329,7 +330,7 @@ test('M11B client: static contract — one Gioca surface, Phosphor icons, no leg
   assert.match(app, /function openQuizHub\(options=\{\}\)\{go\('quiz',options\);window\.USGameV2\?\.showHub\(\);\}/);
   assert.match(read('navigation.js'), /close:\(\)=>window\.USGameV2\?\.close\(\)/);
   assert.doesNotMatch(games, /localStorage|sessionStorage|indexedDB|fetch\(|openai|anthropic|bond_xp/i);
-  assert.doesNotMatch(games, /couple_id|user_id|auth\.uid/, 'never sends identity; the server derives it');
+  assert.doesNotMatch(games, /couple_id\s*:|user_id\s*:|auth\.uid/, 'never sends identity; the server derives it');
   const rpcs = [...new Set([...games.matchAll(/sb\.rpc\('([a-z_0-9]+)'/g)].map((m) => m[1]))].sort();
   assert.deepEqual(rpcs, ['complete_game_session_side', 'create_weekly_question', 'get_game_session', 'get_game_v2_home', 'mark_game_session_reveal_seen', 'save_game_session_answer', 'start_game_round', 'start_swipe_round']);
   const registry = JSON.parse(read('assets/ICON_REGISTRY.json')).icons;

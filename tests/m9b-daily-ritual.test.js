@@ -24,6 +24,7 @@ function installRitual({ profiles = [], role = 'francesco' } = {}) {
     Promise,
     window,
   });
+  require('./helpers/identity-fixture').install(context, profiles);
   vm.runInContext(source.slice(start, end), context);
   return { api: window.UsDailyRitual, card, region, window, context };
 }
@@ -64,11 +65,11 @@ test('M9B: la card non rivela mai la risposta del partner', () => {
   assert.equal(card.innerHTML, '');
 });
 
-test('M9B: il nome del partner arriva dal profilo reale, con fallback sul ruolo', () => {
+test('M9B: il nome del partner arriva dal profilo reale, con fallback neutro', () => {
   const withProfiles = installRitual({ profiles: [{ id: 'f', role: 'francesco', display_name: 'Francesco' }, { id: 'b', role: 'beatrice', display_name: 'Bea' }] });
   assert.equal(vm.runInContext('dailyRitualPartnerName()', withProfiles.context), 'Bea');
-  assert.equal(vm.runInContext('dailyRitualPartnerName()', installRitual({ role: 'francesco' }).context), 'Beatrice');
-  assert.equal(vm.runInContext('dailyRitualPartnerName()', installRitual({ role: 'beatrice' }).context), 'Francesco');
+  assert.equal(vm.runInContext('dailyRitualPartnerName()', installRitual({ role: 'francesco' }).context), 'La tua persona');
+  assert.equal(vm.runInContext('dailyRitualPartnerName()', installRitual({ role: 'beatrice' }).context), 'La tua persona');
 });
 
 test('M9B: il testo della domanda è escapato', () => {

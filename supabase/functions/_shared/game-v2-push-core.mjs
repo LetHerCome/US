@@ -32,7 +32,7 @@ export const GAME_PUSH_TIMEZONE = 'Europe/Rome';
 export const GAME_PUSH_SEND_START_HOUR = 9;
 export const GAME_PUSH_SEND_END_HOUR = 22;
 
-const ROLE_LABEL = { francesco: 'Francesco', beatrice: 'Bea' };
+const senderLabel = (name) => typeof name === 'string' ? name.replace(/[\u0000-\u001f\u007f<>]/g, '').trim().slice(0, 80) || null : null;
 const DEDUPE = {
   game_waiting: /^game-waiting:[0-9a-f-]{36}:(francesco|beatrice)$/,
   game_reveal: /^game-reveal:[0-9a-f-]{36}:(francesco|beatrice)$/,
@@ -68,8 +68,8 @@ export async function deliverGamePush(admin, event, { ensureVapid, sendNotificat
     .select('id,couple_id,role,display_name')
     .eq('couple_id', event.couple_id);
   if (membersError) throw membersError;
-  const recipient = (members || []).find((m) => m.role === event.recipient_role);
-  const sender = event.sender_role ? (members || []).find((m) => m.role === event.sender_role) : null;
+  const recipient = (members || []).find((m) => m.couple_id === event.couple_id && m.role === event.recipient_role);
+  const sender = event.sender_role ? (members || []).find((m) => m.couple_id === event.couple_id && m.role === event.sender_role) : null;
   if (!recipient?.id) return { outcome: 'no-recipient', delivered: 0, failed: 0 };
 
   const { data: preference, error: preferenceError } = await admin.from('notification_preferences')
@@ -79,7 +79,7 @@ export async function deliverGamePush(admin, event, { ensureVapid, sendNotificat
   if (!preferenceError && preference?.games === false) return { outcome: 'disabled-by-preference', delivered: 0, failed: 0 };
 
   const result = await deliverNotification(admin, {
-    notification: gameNotification(event, { senderName: sender ? (ROLE_LABEL[sender.role] || sender.display_name) : null }),
+    notification: gameNotification(event, { senderName: sender ? senderLabel(sender.display_name) : null }),
     recipientIds: [recipient.id],
     coupleId: event.couple_id,
     senderId: sender?.id || null,

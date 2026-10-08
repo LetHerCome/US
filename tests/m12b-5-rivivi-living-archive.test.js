@@ -35,6 +35,7 @@ function load() {
     openMomentViewer: (card) => opened.push(card),
     console,
   });
+  require('./helpers/identity-fixture').install(context);
   vm.runInContext(`${ARCHIVE}\nwindow.render=renderRicordiRivivi;window.eventCard=ricordiEventCard;window.momentCard=ricordiMomentCard;`, context);
   return { api: window.UsRicordiArchive, render: window.render, eventCard: window.eventCard, momentCard: window.momentCard, root: el('ricordiRivivi') };
 }
@@ -252,7 +253,7 @@ test('M12B.5 card: a kept Daily shows the question, its date and opens on the fr
   assert.match(root.innerHTML, /data-source-key="daily_question:q1" data-rivivi-kind="daily"/);
   assert.ok(root.innerHTML.includes(`<b>${long}</b><span>1 giugno 2026 · Domanda del giorno</span>`));
   assert.match(root.innerHTML, /<b>Francesco<\/b><p>Il lago<\/p>/);
-  assert.match(root.innerHTML, /<b>Bea<\/b><p>La terrazza &#60;b&#62;<\/p>/);
+  assert.match(root.innerHTML, /<b>Beatrice<\/b><p>La terrazza &#60;b&#62;<\/p>/);
 });
 
 test('M12B.5 story: a Moment that is the photo of a lived source says so; an Event without photo is a read-only record', () => {
