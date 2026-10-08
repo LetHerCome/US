@@ -266,16 +266,20 @@ window.UsWidgetDataApi=Object.freeze({
     if(coupleRes.error||profilesRes.error)throw coupleRes.error||profilesRes.error;
     return {startedOn:coupleRes.data?.started_on||'',names:(profilesRes.data||[]).map(p=>p.display_name).filter(Boolean)};
   },
+  // Same source of truth as Oggi's painted hero, NOT the latest Ricordo.
+  // undefined = Home is still loading; do not erase the native cached photo.
+  // null = Home resolved with no photo; clear the widget only then.
   async latestPhoto(){
-    if(!window.UsPlatform?.isNative||!window.usProfile)return null;
-    const {data,error}=await sb.from('moments').select('id,storage_path,thumbnail_path,moment_date,created_at').order('created_at',{ascending:false}).limit(1);
-    if(error)throw error;
-    const row=data?.[0];
-    if(!row?.storage_path)return null;
-    const mediaPath=row.thumbnail_path||row.storage_path;
-    const url=await usGetSignedUrl(mediaPath,3600);
+    if(!window.UsPlatform?.isNative||!window.usProfile)return undefined;
+    if(!homePhotoHasPainted||!homePhotoPath){
+      return homePhotoHourKey===homeRotationKey() ? null : undefined;
+    }
+    const viewer=window.usProfile,epoch=usAuthEpoch;
+    const path=homePhotoPath;
+    const url=await usGetSignedUrl(path,3600);
+    if(window.usProfile!==viewer||epoch!==usAuthEpoch)return undefined;
     if(!url)throw new Error('widget_photo_unavailable');
-    return {id:row.id,path:mediaPath,sourcePath:row.storage_path,takenOn:row.moment_date||'',url};
+    return {id:'oggi',path,sourcePath:path,takenOn:'',url};
   }
 });
 
@@ -1645,6 +1649,9 @@ function crossfadeHomePhoto(url,{path='',hourKey='',allowRetry=true}={}){
         homePhotoHasPainted=false;
         homePhotoPath='';
       }
+      // Native Foto & Noi follows the image actually displayed by Oggi.
+      // The event carries no private path or signed URL.
+      window.dispatchEvent(new Event('us:home-photo-changed'));
     };
     if(firstValid){
       hero.setAttribute('data-us-home-photo-instant','');
