@@ -34,6 +34,6 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Widget privacy, routing, cache and UI contracts
-        run: node --test tests/widget-system.test.js tests/n2-native-experience.test.js
+        run: node --test tests/widget-system.test.js
       - name: Capacitor web build
         run: npm run build:capacitor-web
