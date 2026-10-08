@@ -1,0 +1,201 @@
+/* US Ricordi feed V2 — the CARDS themselves are the photo albums.
+   Does not alter the separate fullscreen album/photo detail. */
+
+/* A photographic journal instead of alternating small masonry columns.
+   Chapters/Rivivi/Conservati remain intact; each month has an even rhythm. */
+#moments .moment-grid.ricordi-story{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  gap:13px!important;
+}
+#moments .ricordi-story .ricordi-period{
+  margin:12px 1px 2px;
+  padding:12px 3px 0;
+  border-top:1px solid rgba(248,196,221,.14);
+  align-items:baseline;
+  gap:9px;
+}
+#moments .ricordi-story .ricordi-period:first-child{
+  margin-top:0;padding-top:0;border-top:0;
+}
+#moments .ricordi-story .ricordi-period b{
+  font-size:21px;
+  font-weight:500;
+  letter-spacing:-.3px;
+}
+#moments .ricordi-story .moment-card.moment-postit{
+  grid-column:1/-1!important;
+  border-radius:23px!important;
+  overflow:hidden!important;
+  transform:none!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.014)),rgba(20,15,27,.91)!important;
+  border:1px solid rgba(255,255,255,.11)!important;
+  box-shadow:0 15px 36px rgba(0,0,0,.24)!important;
+}
+#moments .ricordi-story .moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide) {
+  grid-column:1/-1!important;
+}
+#moments .ricordi-story .moment-card.moment-postit > img{
+  width:100%!important;
+  aspect-ratio:4/3!important;
+  object-fit:cover!important;
+  height:auto!important;
+}
+#moments .ricordi-story .moment-card.moment-postit > .moment-meta{
+  padding:12px 16px 15px!important;
+}
+#moments .ricordi-story .moment-card.moment-postit .moment-by{
+  font-size:10px!important;
+  color:#eac7ee!important;
+  letter-spacing:.09em;
+}
+#moments .ricordi-story .moment-card.moment-postit .moment-meta b{
+  font-size:16px!important;
+  line-height:1.18;
+  font-weight:600;
+}
+#moments .ricordi-story .moment-card.moment-postit .moment-meta p{
+  display:block!important;
+  -webkit-line-clamp:unset!important;
+  -webkit-box-orient:initial!important;
+  overflow:visible!important;
+  margin-top:8px!important;
+  font-size:13px!important;
+  line-height:1.48!important;
+  color:rgba(249,242,248,.80)!important;
+  white-space:pre-wrap;
+}
+#moments .ricordi-story .moment-card.moment-postit .moment-meta p[hidden]{display:none!important}
+#moments .ricordi-story .moment-card.moment-postit .moment-meta .ricordi-moment-source{
+  margin-top:6px;
+  line-height:1.4;
+}
+#moments .ricordi-story .moment-card.has-album .moment-album-count{
+  display:none!important;
+}
+
+/* Visual photo stack: current photo in front, next photo just visible behind.
+   Swipes are horizontal; vertical scroll of the timeline stays native. */
+#moments .ricordi-story .moment-card.moment-postit > .ricordi-inline-stage{
+  display:block;
+  position:relative;
+  isolation:isolate;
+  aspect-ratio:4/3;
+  width:100%;
+  overflow:hidden;
+  background:#100c16;
+  touch-action:pan-y;
+  cursor:grab;
+  -webkit-user-select:none;
+  user-select:none;
+}
+#moments .ricordi-story .moment-card.moment-postit > .ricordi-inline-stage:focus-visible{
+  outline:2px solid #efc1df;
+  outline-offset:-3px;
+}
+#moments .ricordi-story .moment-card.moment-postit > .ricordi-inline-stage > img.ricordi-inline-peek{
+  position:absolute!important;
+  z-index:1;
+  display:block!important;
+  top:14px!important;
+  left:22px!important;
+  width:calc(100% - 27px)!important;
+  height:calc(100% - 23px)!important;
+  aspect-ratio:auto!important;
+  object-fit:cover!important;
+  object-position:center!important;
+  border-radius:15px!important;
+  transform:translateX(9px) rotate(1.25deg) scale(.98)!important;
+  box-shadow:0 8px 22px rgba(0,0,0,.24);
+  filter:brightness(.65) saturate(.88);
+  opacity:.92;
+  pointer-events:none;
+}
+#moments .ricordi-story .moment-card.moment-postit > .ricordi-inline-stage > img.ricordi-inline-current{
+  position:absolute!important;
+  z-index:2;
+  display:block!important;
+  top:6px!important;
+  left:6px!important;
+  width:calc(100% - 25px)!important;
+  height:calc(100% - 14px)!important;
+  aspect-ratio:auto!important;
+  object-fit:cover!important;
+  object-position:center!important;
+  border-radius:15px!important;
+  background:#100c16!important;
+  transform:rotate(-.28deg);
+  box-shadow:0 13px 30px rgba(0,0,0,.35);
+}
+#moments .ricordi-story .moment-card.moment-postit > .ricordi-inline-stage > img.ricordi-inline-current.ricordi-inline-enter-next{
+  animation:ricordiInlineShowNext 270ms cubic-bezier(.2,.8,.2,1);
+}
+#moments .ricordi-story .moment-card.moment-postit > .ricordi-inline-stage > img.ricordi-inline-current.ricordi-inline-enter-prev{
+  animation:ricordiInlineShowPrev 270ms cubic-bezier(.2,.8,.2,1);
+}
+@keyframes ricordiInlineShowNext{
+  from{opacity:.35;transform:translateX(32px) rotate(1.3deg) scale(.975)}
+  to{opacity:1;transform:translateX(0) rotate(-.28deg) scale(1)}
+}
+@keyframes ricordiInlineShowPrev{
+  from{opacity:.35;transform:translateX(-32px) rotate(-1deg) scale(.975)}
+  to{opacity:1;transform:translateX(0) rotate(-.28deg) scale(1)}
+}
+#moments .ricordi-inline-counter{
+  position:absolute;z-index:5;
+  top:15px;right:27px;
+  min-width:51px;min-height:28px;
+  padding:6px 10px;
+  display:grid;place-items:center;
+  border-radius:999px;
+  background:rgba(12,9,17,.72);
+  border:1px solid rgba(255,255,255,.16);
+  color:#fff;
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+  font:700 11px/1 var(--us-font-ui);
+  font-variant-numeric:tabular-nums;
+}
+#moments .ricordi-inline-control{
+  position:absolute;z-index:5;
+  top:50%;transform:translateY(-50%);
+  width:44px;height:44px;min-width:44px;min-height:44px;
+  display:grid;place-items:center;
+  padding:0;border:1px solid rgba(255,255,255,.18);
+  background:rgba(13,9,19,.58);
+  color:#fff;border-radius:50%;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  font-size:29px;font-weight:300;line-height:1;
+  cursor:pointer;
+}
+#moments .ricordi-inline-prev{left:8px}
+#moments .ricordi-inline-next{right:19px}
+#moments .ricordi-inline-stage[aria-busy="true"] .ricordi-inline-control{opacity:.7}
+#moments .ricordi-inline-control:focus-visible{outline:2px solid #ffc5df;outline-offset:2px}
+#moments .us-moments-head-copy p{
+  display:block!important;
+  margin:5px 0 0!important;
+  font-size:11px!important;
+  line-height:1.4;
+  color:var(--us-color-text-2);
+}
+#moments .us-moments-head{margin-bottom:15px}
+#moments .ricordi-story-head{margin-top:18px}
+#moments .ricordi-story-head h3{
+  letter-spacing:.1em!important;
+  color:#eac7ee!important;
+}
+#moments .ricordi-chapters .ricordi-section-head{margin-top:20px}
+
+/* Keep the layout readable on the smallest handsets and reduced-motion users. */
+@media(max-width:375px){
+  #moments .ricordi-story .moment-card.moment-postit > .ricordi-inline-stage{aspect-ratio:5/4}
+  #moments .ricordi-inline-counter{top:11px}
+}
+@media(prefers-reduced-motion:reduce){
+  #moments .ricordi-story .moment-card.moment-postit > .ricordi-inline-stage > img.ricordi-inline-current{
+    animation:none!important;
+  }
+}
+:root[data-us-motion="reduced"] #moments .ricordi-story .moment-card.moment-postit > .ricordi-inline-stage > img.ricordi-inline-current{
+  animation:none!important;
+}
