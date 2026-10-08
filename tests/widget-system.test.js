@@ -332,14 +332,54 @@ test('deep link widget aprono la destinazione giusta una volta sola e non invian
   await harness.emitUrl('us://widget/think');
   await harness.emitUrl('us://widget/countdown');
   await harness.emitUrl('us://widget/noi');
+  await harness.emitUrl('us://widget/noi/play');
   await harness.emitUrl('us://widget/photo');
-  assert.deepEqual(go(), ['home', 'home', 'bond', 'moments']);
+  assert.deepEqual(go(), ['home', 'home', 'bond', 'quiz', 'home']);
   assert.equal(await harness.emitUrl('us://widget/stories'), false);
   assert.equal(await harness.emitUrl('https://evil.test/widget/think'), false);
   await harness.emitUrl('us://widget/think/send');
   assert.equal(harness.counts.issue, 0);
   assert.equal(harness.events.some((event) => event[0] === 'snapshot' && /sent/i.test(JSON.stringify(event[1].think.lastSentAt))), false);
   assert.doesNotMatch(read('widgets.js'), /sendThinkSignal|widget-think-send/);
+});
+
+test('Foto & Noi follows the painted Oggi hero, not an independent latest-Ricordo query', () => {
+  const app = read('app.js');
+  const provider = app.slice(app.indexOf('  async latestPhoto(){'), app.indexOf('\n});', app.indexOf('  async latestPhoto(){')));
+  assert.match(provider, /homePhotoHasPainted/);
+  assert.match(provider, /homePhotoPath/);
+  assert.doesNotMatch(provider, /sb\.from\('moments'\)/);
+  assert.match(app, /window\.dispatchEvent\(new Event\('us:home-photo-changed'\)\)/);
+  assert.match(read('widgets.js'), /addEventListener\('us:home-photo-changed'/);
+  assert.doesNotMatch(read('widgets.js'), /addEventListener\('us:moments-updated'/);
+  assert.match(read('widget-hub.js'), /La fotografia che vedi su Oggi/);
+});
+
+test('Foto & Noi keeps a valid private cache until Oggi finishes painting', async () => {
+  const seed = {
+    photoKey: 'c'.repeat(32),
+    snapshot: {
+      schemaVersion: 2,
+      ownerHash: createHash('sha256').update('user-1').digest('hex'),
+      updatedAt: '2026-10-09T00:00:00Z',
+      think: {}, couple: { names: [], startedOn: '', frame: '' }, countdown: {},
+      photo: { state: 'ready', key: 'c'.repeat(32), takenOn: '' }
+    }
+  };
+  const h = loadWidgets({ nativeSnapshot: seed, credential: 'ready' });
+  await h.widgets.authReady({ id: 'user-1' });
+  h.sandbox.UsWidgetDataApi.latestPhoto = async () => undefined; // Oggi is still loading
+  await h.widgets.syncPhoto({ force: true });
+  assert.equal(h.widgets.view().snapshot.photo.key, 'c'.repeat(32));
+  assert.equal(h.widgets.view().snapshot.photo.state, 'ready');
+});
+
+test('Ti penso updates its own RemoteViews immediately before the network call', () => {
+  const widgets = read(`${JAVA}/UsWidgets.java`);
+  const action = read(`${JAVA}/UsThinkWidgetActionReceiver.java`);
+  assert.match(widgets, /static void refreshThink\(Context context\)/);
+  assert.match(action, /writeAction\("sending", actionId\);\s*\/\/[^\n]*\n\s*UsWidgets\.refreshThink\(app\);/);
+  assert.match(action, /UsWidgets\.refreshAll\(app\);\s*pending\.finish\(\)/);
 });
 
 test('Hub: pin scrive prima lo stato e passa solo kind validi', async () => {
@@ -385,6 +425,24 @@ test('Widget Hub vive in Impostazioni, nascosto fuori dall’app native, niente 
   assert.match(hub, /Aggiungi alla Home/);
   const oggi = html.slice(html.indexOf('id="page-home"'), html.indexOf('id="page-bond"'));
   assert.doesNotMatch(oggi, /usWidgetHub|data-widget-add/);
+});
+
+test('Noi 2x1 has a separate functional Gioca action; no backend calls or fake game state', () => {
+  const provider = read(`${JAVA}/UsNoiWidgetProvider.java`);
+  const layout = read(`${PLUGIN}/res/layout/us_widget_noi.xml`);
+  const preview = read('widget-hub.js');
+  const routing = read('widgets.js');
+  assert.match(provider, /connected \? "noi\/play" : "noi"/);
+  assert.match(provider, /R\.id\.us_noi_cta/);
+  assert.match(provider, /UsWidgets\.open\(context, "noi", 4401\)/);
+  assert.match(layout, /@\+id\/us_noi_cta/);
+  assert.match(layout, /@\+id\/us_noi_title/);
+  assert.match(layout, /android:layout_height="40dp"/);
+  assert.match(preview, /Un momento per voi/);
+  assert.match(preview, /GIOCA/);
+  assert.match(routing, /path === 'noi\/play'/);
+  assert.match(routing, /window\.openQuizHub\(\)/);
+  assert.doesNotMatch(provider, /HttpURLConnection|supabase|fetch\(/i);
 });
 
 // ---------- Android plugin (static: Gradle is not available in every CI) ----------
@@ -443,7 +501,10 @@ test('plugin: niente Supabase client o session token, storage privato non-backup
   assert.match(appManifest, /android:allowBackup="false"/);
   assert.match(appManifest, /android:dataExtractionRules="@xml\/data_extraction_rules"/);
   assert.match(read('android/app/src/main/res/xml/data_extraction_rules.xml'), /<cloud-backup>[\s\S]*<exclude domain="root"/);
-  assert.equal(read('android/app/src/main/java/com/usapp/us/MainActivity.java').replace(/\r\n/g, '\n').trim(), 'package com.usapp.us;\n\nimport com.getcapacitor.BridgeActivity;\n\npublic class MainActivity extends BridgeActivity {}');
+  const activity = read('android/app/src/main/java/com/usapp/us/MainActivity.java');
+  assert.match(activity, /public class MainActivity extends BridgeActivity/);
+  assert.match(activity, /super\.onCreate\(savedInstanceState\)/);
+  assert.doesNotMatch(activity, /registerPlugin|addJavascriptInterface|loadUrl|Supabase|Push|Widget/);
 });
 
 test('nessun Stories o Scriptable risorge nel layer widget', () => {

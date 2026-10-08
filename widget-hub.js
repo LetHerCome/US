@@ -15,8 +15,8 @@
   const CATALOG = Object.freeze([
     { kind: 'think', name: 'Ti penso', copy: 'Un pensiero con un tocco, anche con US chiusa.', shape: 'square' },
     { kind: 'countdown', name: 'Countdown', copy: 'Lo stesso Countdown che hai scelto su Oggi.', shape: 'square' },
-    { kind: 'noi', name: 'Noi', copy: 'Voi due e i giorni insieme.', shape: 'wide' },
-    { kind: 'photo', name: 'Foto & Noi', copy: 'Il vostro ultimo ricordo, con i giorni insieme.', shape: 'square' }
+    { kind: 'noi', name: 'Noi', copy: 'Un momento per voi: ogni giorno un invito a giocare insieme.', shape: 'wide' },
+    { kind: 'photo', name: 'Foto & Noi', copy: 'La fotografia che vedi su Oggi, con i giorni insieme.', shape: 'square' }
   ]);
   window.UsWidgetCatalog = CATALOG;
 
@@ -66,10 +66,24 @@
     return view ? { value: view.value, unit: Number(view.value) === 1 ? 'giorno insieme' : 'giorni insieme' } : null;
   }
 
+  const NOI_INVITATIONS = ['Un momento per voi', 'Una domanda per voi', "Giocate un po'", 'Scopritevi ancora'];
+  function noiDailyInvite() {
+    // Same Europe/Rome civil-day cycle as the Android widget model.
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).formatToParts(new Date());
+    const value = (type) => Number(parts.find((part) => part.type === type)?.value || 0);
+    const day = Math.floor(Date.UTC(value('year'), value('month') - 1, value('day')) / 86400000);
+    return NOI_INVITATIONS[((day % NOI_INVITATIONS.length) + NOI_INVITATIONS.length) % NOI_INVITATIONS.length];
+  }
   function noiPreview(snapshot) {
-    const names = window.UsIdentity?.current().pairLabel || 'Voi due';
     const days = daysLine(snapshot);
-    return `<div class="us-wp-noi" data-frame="${esc(snapshot.couple?.frame || '')}"><span><i></i>${esc(names)}</span><b>${esc(days?.value || '—')}<small>${esc(days?.unit || 'giorni insieme')}</small></b></div>`;
+    const linked = Boolean(days);
+    const detail = linked ? `${days.value} ${Number(days.value) === 1 ? 'giorno' : 'giorni'}` : 'US · NOI';
+    return `<div class="us-wp-noi" data-frame="${esc(snapshot.couple?.frame || '')}">
+      <span class="us-wp-noi-meta"><i></i>US · NOI<small>${esc(detail)}</small></span>
+      <div class="us-wp-noi-action"><b>${esc(linked ? noiDailyInvite() : 'Un momento per voi')}</b><em>${linked ? 'GIOCA' : 'APRI US'} ›</em></div>
+    </div>`;
   }
 
   function photoPreview(snapshot, previewUrl) {
@@ -78,7 +92,7 @@
     if (snapshot.photo?.state === 'ready' && previewUrl) {
       return `<div class="us-wp-photo has-photo"><img src="${esc(previewUrl)}" alt="">${line}</div>`;
     }
-    return `<div class="us-wp-photo"><p>${IMAGE}<span>Il vostro prossimo ricordo apparirà qui</span></p>${line}</div>`;
+    return `<div class="us-wp-photo"><p>${IMAGE}<span>La foto di Oggi apparirà qui</span></p>${line}</div>`;
   }
 
   function preview(kind, view) {
@@ -111,8 +125,13 @@
     }).join('');
     const manual = $('usWidgetHubManual');
     if (manual) {
-      manual.hidden = !(manualNeeded || device.pinSupported === false);
-      $('usWidgetHubVendor').hidden = device.vendor !== 'xiaomi';
+      // Instructions are always available, but collapsed unless Xiaomi or
+      // pinning explicitly needs a manual recovery path.
+      manual.hidden = false;
+      const guide = $('usWidgetHubGuide');
+      if (guide && (manualNeeded || device.pinSupported === false)) guide.open = true;
+      const vendor = $('usWidgetHubVendor');
+      if (vendor) vendor.hidden = device.vendor !== 'xiaomi';
     }
   }
 
@@ -184,7 +203,7 @@
     document.body.classList.add('us-settings-modal-open');
     render();
     refreshDevice().catch(() => {});
-    // The preview shows the real latest photo when it is cheap to have it.
+    // Preview uses Oggi's currently painted photo, not the latest Ricordo.
     widgets().syncPhoto?.().then(() => { if (isOpen()) render(); }).catch(() => {});
   }
 

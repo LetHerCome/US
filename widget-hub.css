@@ -21,6 +21,18 @@
 .us-widget-hub-vendor{display:flex;flex-direction:column;gap:8px}
 .us-widget-hub-vendor p{margin:0!important;color:var(--us-color-text-2)!important;font-size:var(--us-text-meta)!important;line-height:1.45}
 .us-widget-hub-vendor button{align-self:flex-start;min-height:38px;padding:0 14px;border-radius:999px;font-size:13px}
+/* Small, consistent native help disclosure; never a second bottom sheet. */
+.us-widget-hub-help{display:block}
+.us-widget-hub-help summary{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:34px;list-style:none;cursor:pointer;color:var(--us-color-text);font-size:13px;font-weight:700}
+.us-widget-hub-help summary::-webkit-details-marker{display:none}
+.us-widget-hub-help summary span{font-size:16px;color:var(--us-color-text-3);transition:transform var(--us-motion-fast) var(--us-ease-enter)}
+.us-widget-hub-help[open] summary span{transform:rotate(180deg)}
+.us-widget-hub-help summary:focus-visible{outline:2px solid var(--us-color-accent-strong);outline-offset:2px;border-radius:8px}
+.us-widget-hub-help[open] .us-widget-hub-path{padding-top:9px}
+.us-widget-hub-help-note{margin:8px 0 0!important;font-size:11px!important;line-height:1.5!important;color:var(--us-color-text-3)!important}
+.us-widget-hub-help .us-widget-hub-vendor{margin-top:10px}
+:root[data-us-motion="reduced"] .us-widget-hub-help summary span{transition:none}
+
 
 /* ---------- previews: the native widget surface ---------- */
 .us-widget-hub-preview>div{--wp-bg:linear-gradient(180deg,rgba(17,11,24,.95),rgba(10,7,16,.95));position:relative;overflow:hidden;width:112px;height:112px;border-radius:22px;background:var(--wp-bg);box-shadow:0 10px 24px rgba(0,0,0,.3),inset 0 0 0 1px rgba(255,255,255,.05);color:#fff8fd;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:10px;box-sizing:border-box}
@@ -64,6 +76,16 @@
 .us-wp-noi[data-frame="negative"]{--wp-accent:#f2f2f2}
 .us-wp-noi[data-frame="polaroid"]{--wp-accent:#fff8ee}
 .us-wp-noi[data-frame="scrapbook"]{--wp-accent:#e8c9a0}
+
+/* NOI V2: native 2x1 action-first composition. Keep within 128×64 preview. */
+.us-widget-hub-preview.is-wide>.us-wp-noi{justify-content:space-between;gap:3px;padding:8px 9px}
+.us-wp-noi .us-wp-noi-meta{width:100%;display:flex;align-items:center;gap:4px;white-space:nowrap;font-size:7.5px;letter-spacing:.02em}
+.us-wp-noi .us-wp-noi-meta i{width:9px;height:2px}
+.us-wp-noi .us-wp-noi-meta small{margin-left:auto;font-size:7px;color:var(--wp-accent,#ff8ead);letter-spacing:0}
+.us-wp-noi .us-wp-noi-action{display:flex;align-items:center;justify-content:space-between;gap:4px;min-width:0;width:100%}
+.us-wp-noi .us-wp-noi-action b{min-width:0;flex:1;display:block;margin:0;font:600 10px/1.15 var(--us-font-body,Inter,sans-serif);letter-spacing:-.01em}
+.us-wp-noi .us-wp-noi-action em{flex:none;padding:7px 5px;border:1px solid rgba(255,182,208,.35);border-radius:10px;background:rgba(255,142,173,.17);font:700 8px/1 var(--us-font-body,Inter,sans-serif);font-style:normal}
+
 
 .us-wp-photo{justify-content:flex-start!important;padding:0!important}
 .us-wp-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}

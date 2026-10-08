@@ -66,7 +66,7 @@ public final class UsPhotoWidgetProvider extends AppWidgetProvider {
             views.setViewVisibility(R.id.us_photo_image, View.VISIBLE);
             views.setViewVisibility(R.id.us_photo_scrim, View.VISIBLE);
             views.setViewVisibility(R.id.us_photo_placeholder, View.GONE);
-            views.setContentDescription(R.id.us_photo_root, "Il vostro ultimo ricordo" + (couple.days >= 0 ? ", " + couple.days + " giorni insieme" : ""));
+            views.setContentDescription(R.id.us_photo_root, "La vostra foto di Oggi" + (couple.days >= 0 ? ", " + couple.days + " giorni insieme" : ""));
         } else {
             views.setViewVisibility(R.id.us_photo_image, View.GONE);
             views.setViewVisibility(R.id.us_photo_scrim, View.GONE);

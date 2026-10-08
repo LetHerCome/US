@@ -1,16 +1,28 @@
 const pages=['home','bond','moments','quiz','settings'];
 const swipePages=['home','bond','moments','quiz'];
-const US_MOTION_FAST_MS=180;
+const US_MOTION_FAST_MS=250;
 const US_MOTION_BASE_MS=220;
 const US_MOTION_SURFACE_MS=260;
+const usEntryTimers = new WeakMap();
 function isReducedMotion(){return Boolean(window.UsUiFoundation?.isReducedMotion?.());}
-function clearPageEntry(page){page?.classList.remove('us-motion5-enter-next','us-motion5-enter-prev');}
+function clearPageEntry(page){
+  if(!page)return;
+  const old=usEntryTimers.get(page);
+  if(old!==undefined){clearTimeout(old);usEntryTimers.delete(page);}
+  page.classList.remove('us-motion5-enter-next','us-motion5-enter-prev');
+}
 function animatePageEntry(page,direction){
   if(!page||isReducedMotion())return;
   const entry=direction>0?'us-motion5-enter-next':'us-motion5-enter-prev';
   clearPageEntry(page);
   page.classList.add(entry);
-  setTimeout(()=>page.classList.remove(entry),US_MOTION_FAST_MS);
+  // Old navigation timers must never interrupt a new entrance.
+  const timer=setTimeout(()=>{
+    if(usEntryTimers.get(page)!==timer)return;
+    page.classList.remove(entry);
+    usEntryTimers.delete(page);
+  },US_MOTION_FAST_MS);
+  usEntryTimers.set(page,timer);
 }
 let usPageHydrationTicket=0;
 const US_HEAVY_PAGE_HYDRATION_FRESH_MS=15000;
@@ -266,16 +278,20 @@ window.UsWidgetDataApi=Object.freeze({
     if(coupleRes.error||profilesRes.error)throw coupleRes.error||profilesRes.error;
     return {startedOn:coupleRes.data?.started_on||'',names:(profilesRes.data||[]).map(p=>p.display_name).filter(Boolean)};
   },
+  // Same source of truth as Oggi's painted hero, NOT the latest Ricordo.
+  // undefined = Home is still loading; do not erase the native cached photo.
+  // null = Home resolved with no photo; clear the widget only then.
   async latestPhoto(){
-    if(!window.UsPlatform?.isNative||!window.usProfile)return null;
-    const {data,error}=await sb.from('moments').select('id,storage_path,thumbnail_path,moment_date,created_at').order('created_at',{ascending:false}).limit(1);
-    if(error)throw error;
-    const row=data?.[0];
-    if(!row?.storage_path)return null;
-    const mediaPath=row.thumbnail_path||row.storage_path;
-    const url=await usGetSignedUrl(mediaPath,3600);
+    if(!window.UsPlatform?.isNative||!window.usProfile)return undefined;
+    if(!homePhotoHasPainted||!homePhotoPath){
+      return homePhotoHourKey===homeRotationKey() ? null : undefined;
+    }
+    const viewer=window.usProfile,epoch=usAuthEpoch;
+    const path=homePhotoPath;
+    const url=await usGetSignedUrl(path,3600);
+    if(window.usProfile!==viewer||epoch!==usAuthEpoch)return undefined;
     if(!url)throw new Error('widget_photo_unavailable');
-    return {id:row.id,path:mediaPath,sourcePath:row.storage_path,takenOn:row.moment_date||'',url};
+    return {id:'oggi',path,sourcePath:path,takenOn:'',url};
   }
 });
 
@@ -1645,6 +1661,9 @@ function crossfadeHomePhoto(url,{path='',hourKey='',allowRetry=true}={}){
         homePhotoHasPainted=false;
         homePhotoPath='';
       }
+      // Native Foto & Noi follows the image actually displayed by Oggi.
+      // The event carries no private path or signed URL.
+      window.dispatchEvent(new Event('us:home-photo-changed'));
     };
     if(firstValid){
       hero.setAttribute('data-us-home-photo-instant','');

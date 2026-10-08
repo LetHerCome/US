@@ -239,4 +239,26 @@ public class UsWidgetModelsTest {
         assertEquals(168, couple.days);
         assertEquals("aurora", couple.frame);
     }
+    @Test
+    public void noiInvitationUsesRomeCivilDayAndIsStableUntilMidnight() throws Exception {
+        Instant before = Instant.parse("2026-10-06T21:59:00Z");
+        Instant after = Instant.parse("2026-10-06T22:00:00Z");
+        String text = UsWidgetModels.noiInvitation(before);
+        assertEquals(text, UsWidgetModels.noiInvitation(Instant.parse("2026-10-06T12:00:00Z")));
+        assertNotEquals(text, UsWidgetModels.noiInvitation(after));
+        assertTrue(text.equals("Un momento per voi") || text.equals("Una domanda per voi")
+            || text.equals("Giocate un po'") || text.equals("Scopritevi ancora"));
+        UsWidgetModels.Couple model = UsWidgetModels.couple(snapshot(null), before);
+        assertEquals(text, model.todayInvitation);
+        assertEquals(UsWidgetModels.nextRomeMidnight(before), model.nextChange);
+    }
+
+    @Test
+    public void noiEmptyCoupleOffersInvitationWithoutInventingPersonalData() {
+        UsWidgetModels.Couple empty = UsWidgetModels.couple(null, Instant.parse("2026-10-06T10:00:00Z"));
+        assertEquals(-1, empty.days);
+        assertNotNull(empty.todayInvitation);
+        assertEquals("", empty.names);
+    }
+
 }

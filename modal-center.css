@@ -116,7 +116,7 @@
   transform-origin: 50% 50%;
   transition:
     transform var(--us-motion-surface) var(--us-ease-enter),
-    opacity var(--us-motion-micro) var(--us-ease-standard);
+    opacity var(--us-motion-surface) var(--us-ease-standard);
   animation: none !important;
 }
 
