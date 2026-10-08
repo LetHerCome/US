@@ -738,6 +738,50 @@ async function usAppLockAccountLogin(){
 window.UsAppLock?.configure?.({verifySession:usVerifySessionForAppLock,accountLogin:usAppLockAccountLogin});
 
 let usInitCloudInFlight=null;
+let usAuthEpoch=0;
+let usAuthUserId='';
+let usInitCloudAgain=false;
+const usOnboarding=window.UsOnboarding.mount({
+  readProfile:id=>usWithDeadline(sb.from('profiles').select('id,display_name,role,couple_id,avatar_path').eq('id',id).maybeSingle(),5000),
+  // A mutation retains its guard until the real request settles: a local timer
+  // cannot cancel a database transaction or safely authorize another rotation.
+  rpc:(name,args)=>{
+    const request=args===undefined?sb.rpc(name):sb.rpc(name,args);
+    return name==='get_couple_membership'?usWithDeadline(request,5000):request;
+  },
+  resume:()=>{setTimeout(initCloud,0);},
+  signOut:async()=>{
+    usInvalidateAuth();
+    try{
+      await usWithDeadline(revokeCurrentDevice(),5000);
+      const result=await usWithDeadline(sb.auth.signOut(),5000);
+      if(result?.error)throw result.error;
+      window.UsAppLock?.reset?.();
+      await initCloud();
+    }catch(_error){await initCloud();}
+  }
+});
+function usInvalidateAuth(){
+  usAuthEpoch++;
+  const previousId=window.usProfile?.id||usAuthUserId;
+  homePhotoRequestId++;
+  homePhotoPath='';homePhotoHourKey='';homePhotoHasPainted=false;
+  document.body.classList.remove('us-fastboot-photo');
+  clearPrivateDeviceState(previousId).catch(()=>{});
+  for(const id of ['homePhotoLayerA','homePhotoLayerB']){
+    const layer=document.getElementById(id);if(layer)layer.style.backgroundImage='';
+  }
+  usOnboarding.reset();
+  resetNoiIdeasForIdentityChange();
+  window.usProfile=null;
+  window.UsCoupleContext?.clear?.();
+  window.UsWidgets?.clear?.().catch(()=>{});
+  window.UsNotifications?.signedOut?.();
+  if(usRealtimeChannel){sb.removeChannel(usRealtimeChannel);usRealtimeChannel=null;}
+  document.documentElement.classList.remove('us-auth-ready','us-returning-device');
+  document.documentElement.classList.add('us-auth-pending');
+}
+window.addEventListener('us-app-lock-change',event=>{if(event.detail?.locked)usAuthEpoch++;});
 
 function usRunWhenIdle(task,timeout=1000){
   const run=()=>Promise.resolve().then(task).catch(error=>console.warn('[US Boot] deferred task',error));
@@ -775,7 +819,8 @@ function usWithDeadline(promise,ms,label='operation timeout'){
 }
 
 async function initCloud(){
-  if(usInitCloudInFlight)return usInitCloudInFlight;
+  if(usInitCloudInFlight){usInitCloudAgain=true;return usInitCloudInFlight;}
+  const bootEpoch=usAuthEpoch;
 
   usInitCloudInFlight=(async()=>{
     let cachedDeviceProfile=null;
@@ -815,14 +860,17 @@ async function initCloud(){
       }catch(_e){}
     }
 
+    if(bootEpoch!==usAuthEpoch)return;
     // Native Security V1: with biometric protection on, nothing private is
     // painted or fetched until the person unlocks (or chooses the account login).
     if(session&&window.UsAppLock){
       const access=await window.UsAppLock.gate({userId:session.user.id});
-      if(access!=='open')return;
+      if(access!=='open'||bootEpoch!==usAuthEpoch)return;
     }
 
+    usAuthUserId=session?.user?.id||'';
     if(!session){
+      usOnboarding.reset();
       // No session on this phone: nothing left to protect, the login is the way in.
       try{await window.UsAppLock?.signedOut?.();}catch(_e){}
       window.UsNotifications?.signedOut?.();
@@ -831,7 +879,7 @@ async function initCloud(){
       window.usProfile = null;
       window.UsCoupleContext?.clear?.();
       window.UsWidgets?.clear?.().catch(()=>{});
-      document.documentElement.classList.remove('us-returning-device','us-auth-pending');
+      document.documentElement.classList.remove('us-returning-device','us-auth-pending','us-auth-ready');
       setCloudBadge(false,navigator.onLine?'accesso richiesto':'offline');
       document.getElementById('authOverlay').classList.remove('hidden');
       showAuthStep('authLogin');
@@ -850,46 +898,22 @@ async function initCloud(){
       return;
     }
 
-    // The device is already paired: show the shell immediately from the
-    // profile snapshot while Supabase validates/freshens it in background.
-    let cachedProfile=null;
-    try{
-      if(cachedDeviceProfile?.id===session.user.id)cachedProfile=cachedDeviceProfile;
-    }catch(_e){}
-
-    if(cachedProfile){
-      resetNoiIdeasForIdentityChange();
-      clearUsCoupleContext();
-      window.usProfile=cachedProfile;
-      selectedRole=cachedProfile.role;
-      document.getElementById('authOverlay').classList.add('hidden');
-      setCloudBadge(true,'sync');
-    }
-
-    const {data:freshProfile,error}=await sb.from('profiles')
-      .select('id,display_name,role,couple_id,avatar_path')
-      .eq('id',session.user.id)
-      .maybeSingle();
-
-    if(error)console.warn(error);
-    const profile=freshProfile||cachedProfile;
-
-    if(!profile){
+    // Cached profiles never authorize membership. These reads run in parallel,
+    // after the native lock, and must both succeed before revealing the shell.
+    const result=await usOnboarding.load(session);
+    if(bootEpoch!==usAuthEpoch||window.UsAppLock?.isLocked?.()||!result)return;
+    if(result.kind!=='PAIRED'){
       resetNoiIdeasForIdentityChange();
       window.UsNotifications?.signedOut?.();
       window.usProfile = null;
       window.UsCoupleContext?.clear?.();
       window.UsWidgets?.clear?.().catch(()=>{});
-      document.documentElement.classList.remove('us-returning-device','us-auth-pending');
+      if(usRealtimeChannel){sb.removeChannel(usRealtimeChannel);usRealtimeChannel=null;}
       setCloudBadge(false,'da collegare');
-      document.getElementById('authOverlay').classList.remove('hidden');
-      // A permanent authenticated account without a valid US profile must
-      // never fall back to anonymous pairing. The front door is password-only.
-      showAuthStep('authLogin');
-      setAuthStatus('loginStatus','Nessun profilo US valido associato a questo account.','error');
       window.dispatchEvent(new CustomEvent('us-auth-resolved',{detail:{paired:false}}));
       return;
     }
+    const profile=result.profile;
 
     resetNoiIdeasForIdentityChange();
     clearUsCoupleContext();
@@ -931,6 +955,7 @@ async function initCloud(){
     return await usInitCloudInFlight;
   }finally{
     usInitCloudInFlight=null;
+    if(usInitCloudAgain){usInitCloudAgain=false;setTimeout(initCloud,0);}
   }
 }
 
@@ -947,6 +972,7 @@ function showAuthStep(id){
   document.querySelectorAll('.auth-step').forEach(x=>x.classList.remove('active'));
   const next=document.getElementById(id);
   if(next)next.classList.add('active');
+  window.dispatchEvent(new CustomEvent('us-onboarding-view-change'));
 }
 
 function setCloudBadge(ok,text){
@@ -1479,12 +1505,14 @@ function homeStableIndex(seed,count){
 
 async function getHomeRotationPath(){
   if(!window.usProfile)return null;
+  const viewer=window.usProfile,epoch=usAuthEpoch;
   const {data:rows,error}=await sb.from('moments')
     .select('id,storage_path,moment_date,created_at')
     .eq('couple_id',window.usProfile.couple_id)
     .order('moment_date',{ascending:false})
     .order('created_at',{ascending:false})
     .limit(120);
+  if(window.usProfile!==viewer||epoch!==usAuthEpoch)return undefined;
   if(error){console.warn(error);return undefined;}
   if(rows?.length){
     const key=homeRotationKey();
@@ -1493,12 +1521,15 @@ async function getHomeRotationPath(){
     return rows[idx]?.storage_path||null;
   }
   const {data:couple,error:coupleError}=await sb.from('couples').select('home_photo_path').eq('id',window.usProfile.couple_id).maybeSingle();
+  if(window.usProfile!==viewer||epoch!==usAuthEpoch)return undefined;
   if(coupleError){console.warn(coupleError);return undefined;}
   return couple?.home_photo_path||null;
 }
 
 function crossfadeHomePhoto(url,{path='',hourKey='',allowRetry=true}={}){
   const requestId=++homePhotoRequestId;
+  const viewer=window.usProfile,epoch=usAuthEpoch;
+  const currentViewer=()=>requestId===homePhotoRequestId&&window.usProfile===viewer&&epoch===usAuthEpoch;
   const hero=document.getElementById('homeHero');
   const empty=document.getElementById('homeEmptyState');
   const nextKey=homePhotoActiveLayer==='A'?'B':'A';
@@ -1506,13 +1537,14 @@ function crossfadeHomePhoto(url,{path='',hourKey='',allowRetry=true}={}){
   const next=document.getElementById(`homePhotoLayer${nextKey}`);
   if(!hero||!current||!next)return;
   const apply=()=>{
-    if(requestId!==homePhotoRequestId)return;
+    if(!currentViewer())return;
     const firstValid=Boolean(url)&&!homePhotoHasPainted;
     hero.classList.toggle('is-empty',!url);
     if(empty)empty.hidden=Boolean(url);
     if(!url&&typeof layoutOggiEmptyState==='function')requestAnimationFrame(layoutOggiEmptyState);
     next.style.backgroundImage=url?`url("${url}")`:'';
     const paint=()=>{
+      if(!currentViewer())return;
       next.classList.add('active');
       current.classList.remove('active');
       homePhotoActiveLayer=nextKey;
@@ -1543,11 +1575,12 @@ function crossfadeHomePhoto(url,{path='',hourKey='',allowRetry=true}={}){
     apply();
   };
   preload.onerror=async()=>{
-    if(requestId!==homePhotoRequestId)return;
+    if(!currentViewer())return;
     console.warn('[US Home] preload foto fallito');
     if(path&&allowRetry){
       usInvalidateSignedUrl(path);
       const fresh=await usGetSignedUrl(path,21600,{force:true});
+      if(!currentViewer())return;
       if(fresh&&fresh!==url){
         crossfadeHomePhoto(fresh,{path,hourKey,allowRetry:false});
         return;
@@ -1565,6 +1598,7 @@ function crossfadeHomePhoto(url,{path='',hourKey='',allowRetry=true}={}){
 
 async function hydrateHomePhoto(force=false){
   if(!window.usProfile)return;
+  const viewer=window.usProfile,epoch=usAuthEpoch;
   const hourKey=homeRotationKey();
   if(!force && homePhotoHourKey===hourKey && homePhotoPath && homePhotoHasPainted)return;
 
@@ -1579,6 +1613,7 @@ async function hydrateHomePhoto(force=false){
   }
 
   const path=await getHomeRotationPath();
+  if(window.usProfile!==viewer||epoch!==usAuthEpoch)return;
   if(path===undefined)return;
   if(!path){
     homePhotoHourKey=hourKey;
@@ -1592,6 +1627,7 @@ async function hydrateHomePhoto(force=false){
     return;
   }
   const signedUrl=await usGetSignedUrl(path,21600,{force});
+  if(window.usProfile!==viewer||epoch!==usAuthEpoch)return;
   if(!signedUrl)return;
   crossfadeHomePhoto(signedUrl,{path,hourKey});
 }
@@ -4751,6 +4787,7 @@ setInterval(()=>refreshVisibleState(),60000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&window.usProfile)refreshVisibleState({foreground:true});});
 sb.auth.onAuthStateChange((event,_session)=>{
   if(event==='INITIAL_SESSION'||event==='TOKEN_REFRESHED')return;
+  if(event==='SIGNED_OUT'||(_session?.user?.id||'')!==usAuthUserId)usInvalidateAuth();
   setTimeout(initCloud,0);
 });
 const loginBtn=document.getElementById('loginBtn');

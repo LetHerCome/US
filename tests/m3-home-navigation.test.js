@@ -37,6 +37,8 @@ test('Home rende intenzionale il vuoto e lo rimuove quando arriva una foto', asy
   };
   const context = vm.createContext({
     console,
+    usAuthEpoch:0,
+    window:{usProfile:{id:'viewer',couple_id:'couple-1'}},
     document: { getElementById: (id) => ({ homeHero: hero, homeEmptyState: empty, ...layers })[id] || null },
     requestAnimationFrame: (callback) => callback()
   });
@@ -69,6 +71,7 @@ test('un errore di caricamento Home non viene confuso con un vuoto reale', async
   };
   const context = vm.createContext({
     console: { warn() {} },
+    usAuthEpoch:0,
     homePhotoPath: '',
     homeRotationKey: () => '2026-08-25T00',
     homeStableIndex: () => 0,
@@ -82,6 +85,7 @@ test('un errore di caricamento Home non viene confuso con un vuoto reale', async
   const painted = [];
   let cleared = 0;
   const hydrateContext = vm.createContext({
+    usAuthEpoch:0,
     crossfadeHomePhoto: (url) => painted.push(url),
     getHomeRotationPath: async () => undefined,
     homePhotoHourKey: '', homePhotoPath: '',

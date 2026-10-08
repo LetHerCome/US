@@ -33,6 +33,8 @@ function homeHarness() {
   };
   const context = vm.createContext({
     console: { warn() {} },
+    usAuthEpoch:0,
+    window:{usProfile:{id:'viewer',couple_id:'couple-1'}},
     document: { getElementById: (id) => ({ homeHero: hero, homeEmptyState: empty, ...layers })[id] || null },
     requestAnimationFrame: (callback) => callback(),
     Image: class {

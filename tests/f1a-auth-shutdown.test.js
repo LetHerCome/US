@@ -56,19 +56,22 @@ test('F1A: the login overlay is exactly email + password', () => {
   const html = read('index.html');
   const overlay = html.match(/<div class="auth-overlay" id="authOverlay">[\s\S]*?\n<\/div>\n/)[0];
   const steps = [...overlay.matchAll(/class="auth-step[^"]*" id="([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(steps, ['authLogin'], 'one auth step only');
-  const inputs = [...overlay.matchAll(/<input[^>]*>/g)].map((m) => m[0]);
+  assert.deepEqual(steps, ['authLogin','usOnboarding'], 'password login plus private MC3 onboarding');
+  const login = overlay.slice(overlay.indexOf('id="authLogin"'),overlay.indexOf('<section class="auth-step"'));
+  const inputs = [...login.matchAll(/<input[^>]*>/g)].map((m) => m[0]);
   assert.equal(inputs.length, 2);
   assert.match(inputs[0], /id="loginEmail"[^>]*type="email"/);
   assert.match(inputs[1], /id="loginPassword"[^>]*type="password"/);
-  assert.doesNotMatch(overlay, /registr|sign ?up|crea (un )?account|codice|invito|magic|\bsms\b|numero di telefono/i);
+  assert.doesNotMatch(login, /registr|sign ?up|crea (un )?account|codice|invito|magic|\bsms\b|numero di telefono/i);
+  assert.doesNotMatch(overlay, /registr|sign ?up|crea (un )?account|magic|\bsms\b|numero di telefono/i);
 
   const app = read('app.js');
   const signIns = [...app.matchAll(/sb\.auth\.(signIn\w*)\(/g)].map((m) => m[1]);
   assert.deepEqual(signIns, ['signInWithPassword'], 'signInWithPassword is the only sign-in call');
   assert.match(app, /sb\.auth\.signInWithPassword\(\{email,password\}\)/);
-  // A permanent account without a US profile stays on the login step.
-  assert.match(app, /never fall back to anonymous pairing\. The front door is password-only\.\s*\n\s*showAuthStep\('authLogin'\)/);
+  // MC3 preserves permanent sessions and uses the server-issued membership.
+  assert.match(app, /await usOnboarding\.load\(session\)/);
+  assert.match(app, /if\(result\.kind!=='PAIRED'\)/);
 });
 
 test('F1A: Settings no longer carries the anonymous account upgrade row', () => {

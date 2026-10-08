@@ -19,7 +19,9 @@ function getHomeCache(profile){
     return cached;
   }catch(_){return null;}
 }
-function applyHome(url){
+function applyHome(url,profile){
+  // MC3: a cached image may warm, but can only paint for the verified viewer.
+  if(window.usProfile?.id!==profile?.id||window.usProfile?.couple_id!==profile?.couple_id)return;
   const layer=document.getElementById('homePhotoLayerA');
   if(!layer||!url)return;
   layer.style.backgroundImage=`url("${url}")`;
@@ -48,7 +50,7 @@ async function restoreHome(){
     const localUrl=`/__us_media_cache__?path=${encodeURIComponent(cached.path)}`;
     try{
       const ok=await tryImage(localUrl);
-      applyHome(ok);
+      applyHome(ok,profile);
       return;
     }catch(_){}
   }
@@ -58,7 +60,7 @@ async function restoreHome(){
   if(cached.url && Number(cached.expiresAt||0)>Date.now()+15000){
     try{
       const ok=await tryImage(cached.url);
-      applyHome(ok);
+      applyHome(ok,profile);
     }catch(_){}
   }
 }

@@ -36,7 +36,7 @@
     const n = nodes();
     if (!n.root || !n.button || !n.title || !n.copy) return;
 
-    if (isStandalone()) {
+    if (isStandalone() || !document.getElementById('authLogin')?.classList.contains('active')) {
       hideInstall();
       return;
     }
@@ -101,4 +101,5 @@
     document.getElementById('usAuthInstallBtn')?.addEventListener('click', install);
     renderInstall();
   });
+  window.addEventListener('us-onboarding-view-change', renderInstall);
 })();

@@ -1,4 +1,4 @@
-const BUILD_ID = "us-ricordi-thumbnails-v1-20261007-1";
+const BUILD_ID = "us-mc3-onboarding-invites-v1-20261008-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -17,6 +17,8 @@ const APP_SHELL = [
   versioned("/widget-hub.js"),
   versioned("/widget-hub.css"),
   versioned("/app.js"),
+  versioned("/onboarding.js"),
+  versioned("/onboarding.css"),
   versioned("/stories.js"),
   versioned("/stories.css"),
   versioned("/left-for-you.js"),

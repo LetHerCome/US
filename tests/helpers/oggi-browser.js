@@ -78,7 +78,7 @@ const FAKE_SUPABASE = `(() => {
       signOut: async () => ({ error: null })
     },
     from: builder,
-    rpc: async (name, args) => { const fn = Q().rpc && Q().rpc[name]; return fn ? fn(args) : { data: null, error: null }; },
+    rpc: async (name, args) => { const fn = Q().rpc && Q().rpc[name]; if(fn)return fn(args); if(name==='get_couple_membership'){const p=Q().tables.profiles?.find(p=>p.id===Q().me);return {data:p?{member:true,couple_id:p.couple_id,partner_joined:Q().tables.profiles.some(other=>other.couple_id===p.couple_id&&other.id!==p.id),invite:{status:'none',expires_at:null}}:{member:false},error:null};} return { data: null, error: null }; },
     channel() { const c = { on() { return c; }, subscribe() { return c; }, unsubscribe() {}, send() {} }; return c; },
     removeChannel() {},
     storage: { from: () => ({
