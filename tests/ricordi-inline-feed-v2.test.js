@@ -15,6 +15,11 @@ class FakeNode{
     this.classList={add:(...a)=>a.forEach(v=>values.add(v)),
       remove:(...a)=>a.forEach(v=>values.delete(v)),
       contains:v=>values.has(v)};
+    // Real DOM synchronizes className and classList. This fake must too.
+    Object.defineProperty(this,'className',{
+      get:()=>[...values].join(' '),
+      set:v=>{values.clear();String(v).split(/\\s+/).filter(Boolean).forEach(t=>values.add(t));}
+    });
   }
   setAttribute(n,v){this.attrs.set(n,String(v));}
   getAttribute(n){return this.attrs.get(n)||null;}
