@@ -1,4 +1,4 @@
-const BUILD_ID = "us-ricordi-carousel-v1-20261008-1";
+const BUILD_ID = "us-ricordi-inline-v2-20261008-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
