@@ -353,24 +353,27 @@
   // copyrighted recordings. Short platform haptics, no long vibration motifs.
   // Web vibrate is only a graceful fallback; native uses Capacitor Haptics.
   const HAPTIC_PROFILES = Object.freeze({
-    tap: ['selection', [3]],
-    selection: ['selection', [3]],
-    action: ['light', [7]],
-    success: ['success', [10, 28, 11]],
-    error: ['error', [10, 26, 13]],
-    attention: ['light', [7, 25, 7]],
-    reveal: ['success', [9, 32, 13]],
-    landing: ['light', [7]]
+    // Android needs a perceptible impact, while the native bridge keeps iOS
+    // selection feedback subtle. No long buzz or repeated impacts.
+    tap: ['light', [16]],
+    selection: ['selection', [12]],
+    action: ['medium', [22]],
+    success: ['success', [16, 30, 20]],
+    error: ['error', [22, 30, 22]],
+    attention: ['medium', [14, 32, 16]],
+    reveal: ['success', [18, 34, 24]],
+    landing: ['light', [14]]
   });
-  // Original, deliberately soft bell partials [Hz, start s, decay s, peak, wave].
-  // Everyday taps, selection, errors and the pet landing are SOUNDLESS;
-  // only meaningful confirmations/arrivals get a quiet tonal signature.
-  // Peaks are kept below 0.017; no sharp 2kHz tap or triangle-wave chords.
+  // Original Apple-inspired UI cues [Hz, start s, duration s, peak, wave].
+  // Audible short clicks for ordinary controls; a slightly richer tone only
+  // for meaningful results. No proprietary Apple sound assets.
   const SOUND_PROFILES = Object.freeze({
-    action: [[659.26, 0, 0.10, 0.010, 'sine'], [1318.52, 0.004, 0.068, 0.002, 'sine']],
-    success: [[587.33, 0, 0.15, 0.012, 'sine'], [783.99, 0.070, 0.22, 0.015, 'sine'], [1174.66, 0.078, 0.12, 0.002, 'sine']],
-    attention: [[783.99, 0, 0.19, 0.010, 'sine'], [1046.50, 0.052, 0.26, 0.014, 'sine'], [1567.98, 0.059, 0.10, 0.002, 'sine']],
-    reveal: [[587.33, 0, 0.19, 0.010, 'sine'], [783.99, 0.100, 0.21, 0.011, 'sine'], [987.77, 0.205, 0.28, 0.014, 'sine']]
+    tap: [[930, 0, 0.035, 0.035, 'sine']],
+    selection: [[750, 0, 0.035, 0.028, 'sine']],
+    action: [[659.26, 0, 0.095, 0.048, 'sine'], [988, 0.015, 0.055, 0.012, 'sine']],
+    success: [[587.33, 0, 0.13, 0.035, 'sine'], [783.99, 0.065, 0.21, 0.050, 'sine'], [1174.66, 0.075, 0.12, 0.007, 'sine']],
+    attention: [[783.99, 0, 0.14, 0.039, 'sine'], [1046.50, 0.065, 0.21, 0.048, 'sine']],
+    reveal: [[587.33, 0, 0.16, 0.035, 'sine'], [783.99, 0.090, 0.20, 0.042, 'sine'], [987.77, 0.19, 0.24, 0.050, 'sine']]
   });
 
   // Ordinary user interactions get a tap by default; data-us-feedback is only
@@ -442,13 +445,19 @@
     function sound(kind) {
       if (!preferences.sounds || !visible() || !unlocked) return false;
       const tones = SOUND_PROFILES[kind];
-      if (!tones) return false; // tap / selection / error / landing intentionally have no sound
+      if (!tones) return false; // errors and Maudit landing stay haptic-only
       const ctx = audioContext();
       if (!ctx) return false;
       try {
         if (ctx.state === 'running') { playTones(ctx, tones); return true; }
-        // Suspended (autoplay policy): try to wake it, never queue the sound.
-        ctx.resume?.()?.catch?.(() => {});
+        // Android WebView can suspend its context until the first interaction,
+        // including when sound was enabled in Settings just now.
+        // Retry exactly this user cue after resume, never stale background audio.
+        const requestedAt = now();
+        Promise.resolve(ctx.resume?.()).then(() => {
+          if (ctx.state === 'running' && visible() && preferences.sounds &&
+            now() - requestedAt < 250) playTones(ctx, tones);
+        }).catch(() => {});
       } catch (_) { /* a failed tone is never an error */ }
       return false;
     }
@@ -495,8 +504,18 @@
       attention: () => emit('attention'),
       reveal: () => emit('reveal'),
       landing: () => emit('landing'),
+      testHaptic: () => vibrate('action'),
       getPreferences: () => ({ ...preferences }),
-      setSoundsEnabled(enabled) { preferences.sounds = Boolean(enabled); write(FEEDBACK_KEYS.sounds, preferences.sounds ? '1' : '0'); listeners.forEach((l) => l({ ...preferences })); },
+      setSoundsEnabled(enabled) {
+        preferences.sounds = Boolean(enabled);
+        write(FEEDBACK_KEYS.sounds, preferences.sounds ? '1' : '0');
+        // Called from an actual Settings button: resume inside that gesture
+        // instead of silently losing the first preview after enabling sounds.
+        if (preferences.sounds && unlocked) {
+          try { audioContext()?.resume?.()?.catch?.(() => {}); } catch (_) {}
+        }
+        listeners.forEach((l) => l({ ...preferences }));
+      },
       setHapticsEnabled(enabled) { preferences.haptics = Boolean(enabled); write(FEEDBACK_KEYS.haptics, preferences.haptics ? '1' : '0'); listeners.forEach((l) => l({ ...preferences })); },
       onPreferenceChange(listener) { if (typeof listener !== 'function') return () => {}; listeners.add(listener); return () => listeners.delete(listener); },
       unlock
