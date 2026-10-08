@@ -13,7 +13,11 @@
           if (!entry.isIntersecting) return;
           observer.unobserve(entry.target);
           const card = entry.target.closest('.moment-card[data-moment-id]');
-          if (card) prime(card);
+          if (card) {
+            const state=states.get(card);
+            if (state) state.visible=true;
+            prime(card);
+          }
         });
       }, {rootMargin:'220px 0px'}) : null;
 
@@ -82,7 +86,8 @@
       originalUrl:img.getAttribute('src')||card.dataset.url||'',
       originalPath:img.dataset.usMediaPath||card.dataset.storagePath||'',
       originalCaption:card.dataset.caption||'',
-      originalAuthor:authorNode?.textContent||card.dataset.author||'Noi'
+      originalAuthor:authorNode?.textContent||card.dataset.author||'Noi',
+      visible:!observer
     };
     states.set(card,state);
     stage.addEventListener('touchstart',event=>{
@@ -110,6 +115,10 @@
       void select(card,state.index+Number(control.dataset.ricordiInlineStep),Number(control.dataset.ricordiInlineStep));
     });
     stage.addEventListener('keydown',event=>{
+      if (event.target.closest('[data-ricordi-inline-step]')&&(event.key==='Enter'||event.key===' ')){
+        event.stopPropagation();
+        return;
+      }
       if (event.key!=='ArrowLeft'&&event.key!=='ArrowRight') return;
       event.preventDefault();
       event.stopPropagation();
@@ -141,7 +150,7 @@
       void state.img.offsetWidth;
       state.img.classList.add(direction>0?'ricordi-inline-enter-next':'ricordi-inline-enter-prev');
     }
-    void prime(state.card);
+    if (state.visible) void prime(state.card);
   }
 
   async function prime(card) {
