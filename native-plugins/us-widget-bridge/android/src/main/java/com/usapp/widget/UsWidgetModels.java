@@ -140,11 +140,26 @@ final class UsWidgetModels {
         String names = "";
         long days = -1;
         String frame = "";
+        String todayInvitation = "";
         Instant nextChange = null;
+    }
+
+    /** A tiny rotating invitation, not a fabricated question or fake game state.
+     * Every invitation opens the EXISTING Gioca hub; nothing is sent by the widget. */
+    static String noiInvitation(Instant now) {
+        String[] invitations = {
+            "Un momento per voi",
+            "Una domanda per voi",
+            "Giocate un po'",
+            "Scopritevi ancora"
+        };
+        int index = Math.floorMod(romeToday(now).toEpochDay(), invitations.length);
+        return invitations[index];
     }
 
     static Couple couple(JSONObject snapshot, Instant now) {
         Couple out = new Couple();
+        out.todayInvitation = noiInvitation(now);
         JSONObject c = UsWidgetContract.optObject(snapshot, "couple");
         JSONArray names = c.optJSONArray("names");
         if (names != null && names.length() == 2) out.names = names.optString(0) + " + " + names.optString(1);
