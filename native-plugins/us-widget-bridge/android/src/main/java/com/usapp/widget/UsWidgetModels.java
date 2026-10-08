@@ -153,7 +153,7 @@ final class UsWidgetModels {
             "Giocate un po'",
             "Scopritevi ancora"
         };
-        int index = Math.floorMod(romeToday(now).toEpochDay(), invitations.length);
+        int index = (int) Math.floorMod(romeToday(now).toEpochDay(), (long) invitations.length);
         return invitations[index];
     }
 
