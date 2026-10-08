@@ -1,0 +1,187 @@
+/* US — Modal Centering V1
+   All ordinary transient dialogs share the same centred glass shell and
+   soft scale/fade motion. Auth, immersive photos/album and native camera
+   intentionally keep their existing full-screen behaviours.
+   Visibility/open/close remain owned by the existing feature JS. */
+
+:root {
+  --us-popup-width: 468px;
+  --us-popup-gutter: 14px;
+  --us-popup-radius: var(--us-radius-sheet, 28px);
+  --us-popup-safe-height: max(260px, calc(var(--us-viewport-height, 100dvh) - var(--us-safe-top) - var(--us-safe-bottom) - 32px));
+}
+
+/* Shared centre positioning across the existing popup controllers, including
+   the two nested Calendar detail/form layers. Do not change their display
+   state; each feature still owns open/show/aria-hidden. */
+:is(
+  #today,
+  #thinkArrival,
+  #usCountdownSheet,
+  #usEventsOverlay,
+  #usSettingsOverlay,
+  #usWidgetHub,
+  #leftForYouOverlay,
+  #leftForYouComposerOverlay,
+  #conservatiOverlay,
+  #usCalendarOverlay,
+  #usCalendarDetailSheet,
+  #usCalendarFormSheet,
+  .us-moment-compose-overlay,
+  .us-confirm
+) {
+  align-items: center !important;
+  justify-content: center !important;
+  padding:
+    max(14px, calc(var(--us-safe-top) + 12px))
+    max(var(--us-popup-gutter), var(--us-safe-right))
+    max(14px, calc(var(--us-safe-bottom) + 12px))
+    max(var(--us-popup-gutter), var(--us-safe-left)) !important;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* One recognisable floating surface. More complex panels scroll internally
+   rather than sliding up from the bottom or escaping under system chrome. */
+:is(
+  #today,
+  #thinkArrival,
+  #usCountdownSheet,
+  #usEventsOverlay,
+  #usSettingsOverlay,
+  #usWidgetHub,
+  #leftForYouOverlay,
+  #leftForYouComposerOverlay,
+  #conservatiOverlay,
+  #usCalendarOverlay,
+  #usCalendarDetailSheet,
+  #usCalendarFormSheet,
+  .us-moment-compose-overlay,
+  .us-confirm
+) > [data-us-modal-panel] {
+  width: min(100%, var(--us-popup-width)) !important;
+  min-width: 0;
+  max-height: var(--us-popup-safe-height) !important;
+  margin: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--us-popup-radius) !important;
+  border: var(--us-glass-3-border) !important;
+  background: var(--us-glass-3-bg);
+  box-shadow: var(--us-glass-3-shadow) !important;
+  -webkit-backdrop-filter: var(--us-glass-3-blur);
+  backdrop-filter: var(--us-glass-3-blur);
+}
+
+/* Calendar month requires more horizontal space on tablet, not on phones. */
+@media (min-width: 680px) {
+  #usCalendarOverlay > .us-cal-surface {
+    width: min(100%, 700px) !important;
+  }
+}
+
+/* Large widget tutorials can scroll, but still open in the same floating shell. */
+#usWidgetHub > .us-widget-hub-sheet {
+  min-height: 0;
+}
+
+/* Existing bottom-sheet grabbers suggest a drag-to-dismiss gesture which
+   these centered dialogs do not have. The close button stays 44x44. */
+.us-settings-sheet-grabber,
+.us-moment-compose-grabber {
+  display: none !important;
+}
+
+/* Consistent entry and exit from the centre. Existing ui-foundation JS waits
+   for the transform transition before finalising dismissals. */
+[data-us-motion-surface]:is(
+  #today,
+  #thinkArrival,
+  #usCountdownSheet,
+  #usEventsOverlay,
+  #usSettingsOverlay,
+  #usWidgetHub,
+  #leftForYouOverlay,
+  #leftForYouComposerOverlay,
+  #conservatiOverlay,
+  #usCalendarOverlay,
+  #usCalendarDetailSheet,
+  #usCalendarFormSheet,
+  .us-moment-compose-overlay,
+  .us-confirm
+) [data-us-modal-panel] {
+  opacity: 0;
+  transform: translateY(8px) scale(.965);
+  transform-origin: 50% 50%;
+  transition:
+    transform var(--us-motion-surface) var(--us-ease-enter),
+    opacity var(--us-motion-micro) var(--us-ease-standard);
+  animation: none !important;
+}
+
+[data-us-motion-surface]:is(
+  #today,
+  #thinkArrival,
+  #usCountdownSheet,
+  #usEventsOverlay,
+  #usSettingsOverlay,
+  #usWidgetHub,
+  #leftForYouOverlay,
+  #leftForYouComposerOverlay,
+  #conservatiOverlay,
+  #usCalendarOverlay,
+  #usCalendarDetailSheet,
+  #usCalendarFormSheet,
+  .us-moment-compose-overlay,
+  .us-confirm
+):is(.open, .show, [aria-hidden="false"]) [data-us-modal-panel] {
+  opacity: 1;
+  transform: none;
+}
+
+[data-us-motion-surface]:is(
+  #today,
+  #thinkArrival,
+  #usCountdownSheet,
+  #usEventsOverlay,
+  #usSettingsOverlay,
+  #usWidgetHub,
+  #leftForYouOverlay,
+  #leftForYouComposerOverlay,
+  #conservatiOverlay,
+  #usCalendarOverlay,
+  #usCalendarDetailSheet,
+  #usCalendarFormSheet,
+  .us-moment-compose-overlay,
+  .us-confirm
+)[data-us-motion-exiting] [data-us-modal-panel] {
+  opacity: 0;
+  transform: translateY(8px) scale(.965);
+}
+
+/* Calendar's nested detail and form were not previously in the shared
+   motion system; allow them to fade with exactly the same rules. */
+#usCalendarDetailSheet:not(.open),
+#usCalendarFormSheet:not(.open) {
+  pointer-events: none;
+}
+
+/* When the viewport gets short (landscape / keyboard), use the available
+   visualViewport height. Dialog contents remain scrollable and reachable. */
+@media (max-height: 540px) {
+  :root { --us-popup-safe-height: max(180px, calc(var(--us-viewport-height, 100dvh) - var(--us-safe-top) - var(--us-safe-bottom) - 16px)); }
+  :is(#today,#thinkArrival,#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-confirm) {
+    padding-top: max(8px, var(--us-safe-top)) !important;
+    padding-bottom: max(8px, var(--us-safe-bottom)) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-us-motion-surface]:is(#today,#thinkArrival,#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-confirm) [data-us-modal-panel] {
+    transition: none !important;
+  }
+}
+:root[data-us-motion="reduced"] [data-us-motion-surface]:is(#today,#thinkArrival,#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-confirm) [data-us-modal-panel] {
+  transition: none !important;
+}
