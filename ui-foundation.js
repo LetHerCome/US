@@ -349,24 +349,28 @@
   // sound) or when the user switched that channel off. Web push sound on a
   // closed PWA is the OS/browser's, not ours.
   const FEEDBACK_KEYS = { sounds: 'us:feedback:sounds', haptics: 'us:feedback:haptics' };
-  // Haptic profiles: [native kind, vibrate pattern (ms)]. Never longer than ~160ms.
+  // US SONIC IDENTITY V1 — Apple-inspired interaction grammar, NOT Apple
+  // copyrighted recordings. Short platform haptics, no long vibration motifs.
+  // Web vibrate is only a graceful fallback; native uses Capacitor Haptics.
   const HAPTIC_PROFILES = Object.freeze({
-    tap: ['light', [8]],
-    selection: ['selection', [5]],
-    action: ['medium', [14]],
-    success: ['success', [14, 40, 22]],
-    error: ['error', [24, 40, 24]],
-    attention: ['light', [10, 50, 10]],
-    reveal: ['success', [12, 55, 18, 55, 26]],
-    landing: ['heavy', [18]]
+    tap: ['selection', [3]],
+    selection: ['selection', [3]],
+    action: ['light', [7]],
+    success: ['success', [10, 28, 11]],
+    error: ['error', [10, 26, 13]],
+    attention: ['light', [7, 25, 7]],
+    reveal: ['success', [9, 32, 13]],
+    landing: ['light', [7]]
   });
-  // Sound profiles: short locally generated tones [frequency Hz, start s, duration s, peak gain, wave].
+  // Original, deliberately soft bell partials [Hz, start s, decay s, peak, wave].
+  // Everyday taps, selection, errors and the pet landing are SOUNDLESS;
+  // only meaningful confirmations/arrivals get a quiet tonal signature.
+  // Peaks are kept below 0.017; no sharp 2kHz tap or triangle-wave chords.
   const SOUND_PROFILES = Object.freeze({
-    tap: [[2093, 0, 0.05, 0.03, 'sine'], [1397, 0.004, 0.06, 0.02, 'sine']],
-    action: [[523.25, 0, 0.09, 0.05, 'triangle'], [659.25, 0.07, 0.12, 0.05, 'triangle']],
-    success: [[523.25, 0, 0.08, 0.045, 'triangle'], [659.25, 0.06, 0.08, 0.045, 'triangle'], [783.99, 0.12, 0.16, 0.05, 'triangle']],
-    attention: [[880, 0, 0.36, 0.035, 'sine'], [1318.5, 0.04, 0.3, 0.018, 'sine']],
-    reveal: [[392, 0, 0.14, 0.04, 'sine'], [587.33, 0.1, 0.16, 0.045, 'sine'], [880, 0.22, 0.3, 0.05, 'sine'], [1760, 0.24, 0.26, 0.012, 'sine']]
+    action: [[659.26, 0, 0.10, 0.010, 'sine'], [1318.52, 0.004, 0.068, 0.002, 'sine']],
+    success: [[587.33, 0, 0.15, 0.012, 'sine'], [783.99, 0.070, 0.22, 0.015, 'sine'], [1174.66, 0.078, 0.12, 0.002, 'sine']],
+    attention: [[783.99, 0, 0.19, 0.010, 'sine'], [1046.50, 0.052, 0.26, 0.014, 'sine'], [1567.98, 0.059, 0.10, 0.002, 'sine']],
+    reveal: [[587.33, 0, 0.19, 0.010, 'sine'], [783.99, 0.100, 0.21, 0.011, 'sine'], [987.77, 0.205, 0.28, 0.014, 'sine']]
   });
 
   // Ordinary user interactions get a tap by default; data-us-feedback is only
@@ -415,6 +419,7 @@
     function unlock() {
       if (unlocked) return;
       unlocked = true;
+      if (!preferences.sounds) return; // avoid allocating an audio session when muted
       const ctx = audioContext();
       try { ctx?.resume?.()?.catch?.(() => {}); } catch (_) { /* stays suspended */ }
     }
@@ -426,7 +431,7 @@
         oscillator.type = wave;
         oscillator.frequency.value = frequency;
         gain.gain.setValueAtTime(0.0001, now + start);
-        gain.gain.exponentialRampToValueAtTime(peak, now + start + Math.min(0.012, duration / 3));
+        gain.gain.exponentialRampToValueAtTime(peak, now + start + Math.min(0.009, duration / 3));
         gain.gain.exponentialRampToValueAtTime(0.0001, now + start + duration);
         oscillator.connect(gain);
         gain.connect(ctx.destination);
@@ -437,7 +442,7 @@
     function sound(kind) {
       if (!preferences.sounds || !visible() || !unlocked) return false;
       const tones = SOUND_PROFILES[kind];
-      if (!tones) return false; // selection / error / landing are intentionally haptic-only
+      if (!tones) return false; // tap / selection / error / landing intentionally have no sound
       const ctx = audioContext();
       if (!ctx) return false;
       try {
@@ -457,8 +462,11 @@
     };
     const now = typeof environment.now === 'function' ? environment.now : () => Date.now();
     const ATTENTION_GAP_MS = 1500;
+    const SAME_CUE_GAP_MS = 95; // capture and click handlers must not double-fire
     let pendingTap = null;
     let lastAttentionAt = -Infinity;
+    let lastCueKind = null;
+    let lastCueAt = -Infinity;
     const cancelPendingTap = () => { if (pendingTap !== null) { timers.clear(pendingTap); pendingTap = null; } };
     const emit = (kind) => {
       if (kind !== 'tap') cancelPendingTap();
@@ -468,6 +476,10 @@
         if (at - lastAttentionAt < ATTENTION_GAP_MS) return false;
         lastAttentionAt = at;
       }
+      const at = now();
+      if (kind === lastCueKind && at - lastCueAt < SAME_CUE_GAP_MS) return false;
+      lastCueKind = kind;
+      lastCueAt = at;
       const played = sound(kind); const vibrated = vibrate(kind); return played || vibrated;
     };
     const deferTap = () => {
