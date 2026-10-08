@@ -28,7 +28,9 @@
     const request = Promise.resolve().then(async () => {
       if (typeof window.usGetSignedUrls !== 'function') return null;
       const urls = await window.usGetSignedUrls([storagePath],21600);
-      const url = urls instanceof Map ? urls.get(storagePath) : null;
+      // Allow Map-like URL caches from another JavaScript realm (native WebView
+      // bridges/tests) without requiring instanceof to match our realm.
+      const url = urls && typeof urls.get === 'function' ? urls.get(storagePath) : null;
       if (url) urlCache.set(storagePath,url);
       return url || null;
     }).catch(error => {
