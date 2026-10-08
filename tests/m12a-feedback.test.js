@@ -134,24 +134,25 @@ test('native haptics go through the platform bridge when present', () => {
   const { feedback } = setup({ platform: { haptic: (kind, pattern) => { calls.push([kind, pattern]); return Promise.resolve(true); } } });
   feedback.success();
   feedback.tap();
-  assert.deepEqual(calls.map(([kind]) => kind), ['success', 'selection']);
+  assert.deepEqual(calls.map(([kind]) => kind), ['success', 'light']);
 });
 
 
-test('Apple-inspired sound grammar: quiet taps, soft chimes, no sharp waveforms', () => {
+test('Apple-inspired sound grammar: audible taps, soft chimes, no piercing waveforms', () => {
   const h = setup();
   h.doc.fire('pointerdown');
   h.feedback.tap();
   h.feedback.selection();
+  assert.equal(h.audio.log.oscillators, 2, 'tap and selection have one short audible click each');
   h.feedback.error();
   h.feedback.landing();
-  assert.equal(h.audio.log.oscillators, 0, 'ordinary UI and failures are silent');
+  assert.equal(h.audio.log.oscillators, 2, 'errors and pet landing stay soundless');
   h.feedback.action();
   h.feedback.success();
   h.feedback.attention();
   h.feedback.reveal();
   assert.ok(h.audio.log.oscillators > 4, 'meaningful events have harmonized cues');
-  assert.ok(h.audio.log.peaks.every((gain) => gain <= 0.017), 'no loud layered oscillators');
+  assert.ok(h.audio.log.peaks.every((gain) => gain <= 0.055), 'short, bounded cue levels');
   assert.ok(h.audio.log.waves.every((wave) => wave === 'sine'), 'no harsh triangle/square UI tones');
   assert.ok(h.audio.log.pitches.every((hz) => hz < 2000), 'no piercing 2kHz tap feedback');
 });
@@ -172,6 +173,39 @@ test('the same action from capture and handler is deduplicated', () => {
   clock += 130;
   feedback.action();
   assert.equal(vibrations.length, 2);
+});
+
+
+test('an explicit haptic hardware test uses one medium pulse without playing a sound', () => {
+  const audio = fakeAudio();
+  const ok = setup({ audio });
+  ok.doc.fire('pointerdown');
+  ok.feedback.testHaptic();
+  assert.deepEqual(ok.vibrations, [[22]]);
+  assert.equal(audio.log.oscillators, 0, 'hardware probe does not add a sound');
+
+  ok.feedback.setHapticsEnabled(false);
+  ok.feedback.testHaptic();
+  assert.equal(ok.vibrations.length, 1, 'device preferences still own the haptic test');
+});
+
+test('re-enabling sound after a muted first gesture allows a first audible confirmation', async () => {
+  const storage = memoryStorage({ 'us:feedback:sounds': '0' });
+  const log = { started: 0, contexts: 0, resumes: 0 };
+  class ResumingAudio {
+    constructor() { this.state = 'suspended'; this.currentTime = 0; this.destination = {}; log.contexts++; }
+    resume() { this.state = 'running'; log.resumes++; return Promise.resolve(); }
+    createOscillator() { log.started++; return { frequency: {}, connect() {}, start() {}, stop() {} }; }
+    createGain() { return { gain: { setValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect() {} }; }
+  }
+  const { feedback, doc } = setup({ storage, audio: { AudioContext: ResumingAudio } });
+  doc.fire('pointerdown');
+  assert.equal(log.contexts, 0, 'muted launch does not allocate audio');
+  feedback.setSoundsEnabled(true);
+  feedback.action();
+  await new Promise((r) => setImmediate(r));
+  assert.ok(log.resumes >= 1);
+  assert.ok(log.started > 0, 'enabling sounds does not silently swallow first cue');
 });
 
 // ------------------------------------------------ default tap (M12A review fix)
@@ -203,7 +237,7 @@ test('default tap: an ordinary button needs no data-us-feedback attribute', asyn
   click(doc, node('button'));
   await settle();
   assert.equal(vibrations.length, 1);
-  assert.deepEqual(vibrations[0], [3], 'the subtle selection profile');
+  assert.deepEqual(vibrations[0], [16], 'audible tap pairs with a perceptible light haptic');
 });
 
 test('default tap: links, role=button and role=tab count; passive areas and plain text do not', async () => {
@@ -267,7 +301,7 @@ test('default tap: programmatic clicks (isTrusted false) are not user gestures',
 test('override: data-us-feedback="action" replaces the tap, "off" (also on a container) is silent', async () => {
   const { vibrations, doc } = setup();
   click(doc, node('button', { 'data-us-feedback': 'action' })); await settle();
-  assert.deepEqual(vibrations, [[7]], 'action only, no tap on top');
+  assert.deepEqual(vibrations, [[22]], 'action only, no tap on top');
   click(doc, node('button', { 'data-us-feedback': 'off' })); await settle();
   click(doc, node('button', {}, node('div', { 'data-us-feedback': 'off' }))); await settle();
   click(doc, node('button', { 'data-us-feedback': 'nonsense' })); await settle();
@@ -280,14 +314,14 @@ test('double feedback: an explicit action/success in the same gesture replaces t
   const { feedback, vibrations, doc } = setup();
   // Handler calls action() synchronously during the click.
   click(doc, node('button')); feedback.action(); await settle();
-  assert.deepEqual(vibrations, [[7]], 'one action, the tap was superseded');
+  assert.deepEqual(vibrations, [[22]], 'one action, the tap was superseded');
 
   // A tap now, and a confirmed success after the async work: two distinct moments.
   vibrations.length = 0;
   click(doc, node('button'));
   await settle();
   feedback.success();
-  assert.deepEqual(vibrations, [[3], [10, 28, 11]]);
+  assert.deepEqual(vibrations, [[16], [16, 30, 20]]);
 });
 
 test('default tap obeys preferences, hidden document and cold launch like every other feedback', async () => {
@@ -306,7 +340,7 @@ test('default tap obeys preferences, hidden document and cold launch like every 
   assert.equal(audio.log.oscillators, 0, 'no sound before the first gesture unlocked audio');
   cold.doc.fire('pointerdown');
   click(cold.doc, node('button')); await settle();
-  assert.equal(audio.log.oscillators, 0, 'routine button taps have no sound, even after unlock');
+  assert.ok(audio.log.oscillators >= 1, 'routine button taps are audible after unlock');
   cold.feedback.success();
   assert.ok(audio.log.oscillators >= 1, 'a meaningful confirmation has a sound');
 });
@@ -335,7 +369,7 @@ test('top-bar attention: off -> on emits ONE attention feedback; on -> on and on
   const h = attentionHarness();
   h.doc.fire('pointerdown');
   h.fire('on', 'off');
-  assert.deepEqual(h.vibrations, [[7, 25, 7]]);
+  assert.deepEqual(h.vibrations, [[14, 32, 16]]);
   h.fire('on', 'on');
   h.fire('off', 'on');
   assert.equal(h.vibrations.length, 1);
