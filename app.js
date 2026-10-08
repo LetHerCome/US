@@ -422,6 +422,31 @@ let usPushUiBusy=false;
 let usPushOperationInFlight=null;
 let usPushCleanup=Promise.resolve();
 const US_PUSH_RETIRED_KEY='us:push:retired:v1';
+const usPushWaiters=new Set();
+let usPushSubscriptionPending=0;
+function usPushWaitScope(){
+  const profile=window.usProfile,epoch=usAuthEpoch;
+  let cancelled=false,release;
+  const cancellation=new Promise(resolve=>{release=resolve;});
+  const current=()=>!cancelled&&window.usProfile===profile&&usAuthEpoch===epoch;
+  const cancel=()=>{cancelled=true;release();};
+  usPushWaiters.add(cancel);
+  return {current,finish:()=>usPushWaiters.delete(cancel),async wait(promise){
+    const result=await Promise.race([usWithDeadline(Promise.resolve(promise),15000),cancellation]);
+    if(!current())throw new Error('push_identity_changed');
+    return result;
+  },subscription(promise){
+    usPushSubscriptionPending++;
+    const request=Promise.resolve(promise).then(async subscription=>{
+      if(subscription&&!current()){
+        usSaveRetiredWebPush([...usRetiredWebPush().filter(x=>x.endpoint!==subscription.endpoint),{userId:profile.id,endpoint:subscription.endpoint}]);
+        try{await usWithDeadline(subscription.unsubscribe(),5000);}catch(_e){}
+      }
+      return subscription;
+    }).finally(()=>{usPushSubscriptionPending--;});
+    return this.wait(request);
+  }};
+}
 function usRetiredWebPush(){
   try{return JSON.parse(localStorage.getItem(US_PUSH_RETIRED_KEY)||'[]');}catch(_e){return [];}
 }
@@ -460,10 +485,11 @@ async function getUsServiceWorkerRegistration(){
 async function getCurrentPushSubscription(){
   try{const reg=await getUsServiceWorkerRegistration();return reg?await reg.pushManager.getSubscription():null;}catch(error){console.warn('[US Push] subscription check',error);return null;}
 }
-async function syncPushSubscriptionToSupabase(subscription){
+async function syncPushSubscriptionToSupabase(subscription,operation=null){
   if(!subscription||!window.usProfile)return false;
   const profile=window.usProfile,epoch=usAuthEpoch;
-  await usPushCleanup;
+  // An active operation must never join cleanup that may be waiting for it.
+  if(!operation)await usPushCleanup;
   if(window.usProfile!==profile||usAuthEpoch!==epoch)return false;
   await usRetryRetiredWebPush(profile.id);
   if(window.usProfile!==profile||usAuthEpoch!==epoch)return false;
@@ -591,6 +617,9 @@ async function enableWebPush(){
   if(usPushUiBusy||!window.usProfile)return;
   if(!isWebPushSupported())return toast('Notifiche non supportate su questo browser');
   if(isIosDevice()&&!isStandaloneUs())return refreshWebPushUi();
+  const operation=usPushWaitScope();
+  try{await operation.wait(usPushCleanup);}catch(_e){operation.finish();return;}
+  if(usPushUiBusy||usPushSubscriptionPending||!operation.current()){operation.finish();return;}
   const button=document.getElementById('pushEnableBtn');
   let finishOperation;
   const operationDone=new Promise(resolve=>{finishOperation=resolve;});
@@ -598,25 +627,25 @@ async function enableWebPush(){
   usPushUiBusy=true;if(button){button.disabled=true;button.textContent='Attivo…';}
   const profile=window.usProfile,epoch=usAuthEpoch;
   try{
-    await usPushCleanup;
     let permission=Notification.permission;
-    if(permission==='default')permission=await Notification.requestPermission();
+    if(permission==='default')permission=await operation.wait(Notification.requestPermission());
     if(permission!=='granted'){await refreshWebPushUi();return;}
-    const reg=await getUsServiceWorkerRegistration();
+    const reg=await operation.wait(getUsServiceWorkerRegistration());
     if(window.usProfile!==profile||usAuthEpoch!==epoch)return;
     if(!reg)throw new Error('Service worker unavailable');
-    let subscription=await reg.pushManager.getSubscription();
+    let subscription=await operation.subscription(reg.pushManager.getSubscription());
     if(!subscription){
-      subscription=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(US_VAPID_PUBLIC_KEY)});
+      subscription=await operation.subscription(reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(US_VAPID_PUBLIC_KEY)}));
     }
     if(window.usProfile!==profile||usAuthEpoch!==epoch){await subscription.unsubscribe();return;}
-    const synced=await syncPushSubscriptionToSupabase(subscription);
+    const synced=await operation.wait(syncPushSubscriptionToSupabase(subscription,operation));
     if(!synced)throw new Error('Subscription sync failed');
     toast('Notifiche attive ♡');
     await refreshWebPushUi();
     setTimeout(()=>sendWebPushEvent('test'),350);
-  }catch(error){console.warn('[US Push] enable failed',error);toast('Non riesco ad attivare le notifiche');await refreshWebPushUi();}
+  }catch(error){if(operation.current()){console.warn('[US Push] enable failed',error);toast('Non riesco ad attivare le notifiche');}}
   finally{
+    operation.finish();
     usPushUiBusy=false;if(button)button.disabled=false;
     if(usPushOperationInFlight===operationDone)usPushOperationInFlight=null;
     finishOperation();
@@ -627,7 +656,8 @@ window.enableWebPush=enableWebPush;
 
 async function disableWebPush(options={}){
   const silent=options?.silent===true;
-  if(silent&&usPushOperationInFlight)try{await usPushOperationInFlight;}catch(_e){}
+  const priorOperation=Object.hasOwn(options,'waitForOperation')?options.waitForOperation:usPushOperationInFlight;
+  if(silent&&priorOperation)try{await usWithDeadline(priorOperation,15000);}catch(_e){}
   if(usPushUiBusy)return false;
   let finishOperation;
   const operationDone=new Promise(resolve=>{finishOperation=resolve;});
@@ -638,7 +668,7 @@ async function disableWebPush(options={}){
   let subscription=null;
   let disableFailed=false;
   try{
-    subscription=await getCurrentPushSubscription();
+    subscription=await usWithDeadline(getCurrentPushSubscription(),5000);
     if(subscription){
       usSaveRetiredWebPush([...usRetiredWebPush().filter(x=>x.endpoint!==subscription.endpoint),{userId:profileId,endpoint:subscription.endpoint}]);
       try{
@@ -647,7 +677,7 @@ async function disableWebPush(options={}){
         else usSaveRetiredWebPush(usRetiredWebPush().filter(x=>x.endpoint!==subscription.endpoint));
       }catch(error){disableFailed=true;console.warn('[US Push] remove subscription',error);}
       let unsubscribed=false;
-      try{unsubscribed=await subscription.unsubscribe();}catch(error){console.warn('[US Push] unsubscribe',error);}
+      try{unsubscribed=await usWithDeadline(subscription.unsubscribe(),5000);}catch(error){console.warn('[US Push] unsubscribe',error);}
       if(!unsubscribed){
         disableFailed=true;
         usSaveRetiredWebPush([...usRetiredWebPush().filter(x=>x.endpoint!==subscription.endpoint),{userId:profileId,endpoint:subscription.endpoint}]);
@@ -813,10 +843,12 @@ const usOnboarding=window.UsOnboarding.mount({
 });
 function usInvalidateAuth({revokePush=true}={}){
   usAuthEpoch++;
+  for(const cancel of usPushWaiters)cancel();
   const previousId=window.usProfile?.id||usAuthUserId;
   if(revokePush&&previousId){
     // Auth already moved: never issue an A revocation with B's credentials.
-    usPushCleanup=usPushCleanup.then(()=>disableWebPush({silent:true,refreshUi:false,profileId:previousId,localOnly:true})).catch(()=>{});
+    const priorOperation=usPushOperationInFlight;
+    usPushCleanup=usPushCleanup.then(()=>disableWebPush({silent:true,refreshUi:false,profileId:previousId,localOnly:true,waitForOperation:priorOperation})).catch(()=>{});
   }
   homePhotoRequestId++;
   homePhotoPath='';homePhotoHourKey='';homePhotoHasPainted=false;
