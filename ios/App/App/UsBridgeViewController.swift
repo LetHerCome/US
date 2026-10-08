@@ -18,9 +18,19 @@ class UsBridgeViewController: CAPBridgeViewController, UIGestureRecognizerDelega
         return gesture
     }()
 
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        // The WKWebView fills the window, including behind the clock/Island;
+        // interactive web content still respects the CSS safe area insets.
+        edgesForExtendedLayout = [.all]
+        extendedLayoutIncludesOpaqueBars = true
+        view.backgroundColor = UsAppConfiguration.launchBackground
+    }
+
     override func capacitorDidLoad() {
         super.capacitorDidLoad()
         // `view` is the WKWebView itself (CAPBridgeViewController.loadView).
+        webView?.scrollView.contentInsetAdjustmentBehavior = .never
         webView?.isOpaque = false
         webView?.backgroundColor = UsAppConfiguration.launchBackground
         webView?.scrollView.backgroundColor = UsAppConfiguration.launchBackground
