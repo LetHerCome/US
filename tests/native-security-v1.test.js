@@ -576,7 +576,10 @@ test('N1 Android: BiometricPrompt forte + Keystore, nessuna API deprecata, ident
   const app = read('android/app/build.gradle');
   assert.match(app, /applicationId "com\.usapp\.us"/);
   assert.match(app, /namespace = "com\.usapp\.us"/);
-  assert.match(read('android/app/src/main/java/com/usapp/us/MainActivity.java'), /public class MainActivity extends BridgeActivity \{\}/);
+  const mainActivity = read('android/app/src/main/java/com/usapp/us/MainActivity.java');
+  assert.match(mainActivity, /public class MainActivity extends BridgeActivity \{/);
+  assert.match(mainActivity, /EdgeToEdge\.enable\(this\)/);
+  assert.doesNotMatch(mainActivity, /registerPlugin|UsAppLock|KeyStore|BiometricPrompt/);
   assert.match(read('android/capacitor.settings.gradle'), /include ':us-app-lock'\r?\nproject\(':us-app-lock'\)\.projectDir = new File\('\.\.\/native-plugins\/us-app-lock\/android'\)/);
   assert.match(read('android/app/capacitor.build.gradle'), /implementation project\(':us-app-lock'\)/);
   assert.match(read('android/app/src/main/AndroidManifest.xml'), /android:allowBackup="false"/);

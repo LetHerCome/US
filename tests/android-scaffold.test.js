@@ -18,8 +18,10 @@ test('lo scaffold Android mantiene identità US e MainActivity priva di feature 
   assert.match(appGradle, /namespace\s*=\s*["']com\.usapp\.us["']/);
   assert.match(appGradle, /applicationId\s+["']com\.usapp\.us["']/);
   assert.match(strings, /<string name="app_name">US<\/string>/);
-  assert.match(activity, /public class MainActivity extends BridgeActivity \{\}/);
-  assert.doesNotMatch(activity, /registerPlugin|onCreate|WebView|Supabase|Push|Widget/);
+  assert.match(activity, /public class MainActivity extends BridgeActivity \{/);
+  assert.match(activity, /super\.onCreate\(savedInstanceState\);/);
+  assert.match(activity, /EdgeToEdge\.enable\(this\)/);
+  assert.doesNotMatch(activity, /registerPlugin|addJavascriptInterface|loadUrl|Supabase|Push|Widget/);
   assert.equal(config.server, undefined);
   // M15: iOS is a sibling target (ios/); its options must not reach Android.
   assert.equal(config.android, undefined);

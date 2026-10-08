@@ -267,14 +267,14 @@ function countdownTile(style, next) {
       <span class="us-progression-reward-copy"><b>${esc(style.name)}</b><small>${esc(status)}</small></span>
     </button>`;
 }
-function countdownGroup(next) {
+function countdownGroup(next, expanded = false) {
   const styles = countdownStyles();
   if (!styles.length || !window.USCountdown?.previewMarkup) return '';
   const owned = styles.filter((style) => !style.reward || next?.rewards?.some((r) => r.id === style.reward && r.unlocked)).length;
-  return `<section class="us-reward-group" data-category="countdown" aria-label="Stili Countdown">
-      <header class="us-reward-group-head"><b>Stili Countdown</b><span>il vostro tempo sulla foto di Oggi</span><em>${owned}/${styles.length}</em></header>
+  return `<details class="us-reward-group" data-category="countdown" aria-label="Stili Countdown"${expanded ? " open" : ""}>
+      <summary class="us-reward-group-head"><b>Stili Countdown</b><span>Il vostro tempo su Oggi</span><em>${owned}/${styles.length}</em></summary>
       <div class="us-reward-grid">${styles.map((style) => countdownTile(style, next)).join('')}</div>
-    </section>`;
+    </details>`;
 }
 
 function renderRewards(next = state) {
@@ -282,15 +282,20 @@ function renderRewards(next = state) {
   if (!root) return;
   const rewards = Array.isArray(next?.rewards) ? next.rewards : [];
   const known = rewards.filter((reward) => SLOTS[reward.category]);
+  // Keep category sections open when a reward is equipped/unequipped.
+  const firstPaint = root.dataset.uiGroupsReady !== '1';
+  const expanded = new Set(Array.from(root.querySelectorAll('.us-reward-group[open]')).map((el) => el.dataset.category));
   root.innerHTML = SLOT_ORDER.map((category) => {
     const group = known.filter((reward) => reward.category === category);
     if (!group.length) return '';
     const owned = group.filter((reward) => reward.unlocked).length;
-    return `<section class="us-reward-group" data-category="${category}" aria-label="${esc(SLOTS[category].label)}">
-      <header class="us-reward-group-head"><b>${esc(SLOTS[category].label)}</b><span>${esc(SLOTS[category].place)}</span><em>${owned}/${group.length}</em></header>
+    const open = firstPaint ? owned > 0 || category === SLOT_ORDER[0] : expanded.has(category);
+    return `<details class="us-reward-group" data-category="${category}" aria-label="${esc(SLOTS[category].label)}"${open ? ' open' : ''}>
+      <summary class="us-reward-group-head"><b>${esc(SLOTS[category].label)}</b><span>${esc(SLOTS[category].place)}</span><em>${owned}/${group.length}</em></summary>
       <div class="us-reward-grid">${group.map(rewardTile).join('')}</div>
-    </section>`;
-  }).join('') + countdownGroup(next);
+    </details>`;
+  }).join('') + countdownGroup(next, expanded.has('countdown'));
+  root.dataset.uiGroupsReady = '1';
   const count = $('usProgressionRewardsCount');
   if (count) count.textContent = `${known.filter((reward) => reward.unlocked).length} di ${known.length}`;
 }

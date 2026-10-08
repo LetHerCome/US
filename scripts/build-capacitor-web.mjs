@@ -49,6 +49,12 @@ const RUNTIME_FILES = [
   'settings.css',
   'settings.js',
   'identity.css',
+  'top-chrome.css',
+  'modal-center.css',
+  'ricordi-carousel.css',
+  'ricordi-inline-carousel.css',
+  'ricordi-inline-carousel.js',
+  'native-frameless.css',
   'identity.js',
   'settings2.css',
   'polish4.css',
@@ -121,6 +127,12 @@ const sourceCdn = `https://cdn.jsdelivr.net/npm/@supabase/supabase-js@${supabase
 const stagedIndexPath = path.join(OUTPUT, 'index.html');
 let html = await readFile(stagedIndexPath, 'utf8');
 if (!html.includes(sourceCdn)) throw new Error(`index.html does not use Supabase JS ${supabaseVersion}`);
+const topChromeLink = /(<link rel="stylesheet" href="\/top-chrome\.css(?:\?v=[^"]+)?"\/>)/;
+if (!topChromeLink.test(html)) throw new Error('Native build missing top-chrome.css anchor');
+// Do NOT add this link to the shared PWA index. Only the Capacitor bundle
+// receives this stylesheet, and only the native platform gets the layout.
+html = html.replace(topChromeLink, '$1\n<link rel="stylesheet" href="/native-frameless.css"/>');
+
 html = html
   .replace(/<link\s+rel=["']manifest["'][^>]*>\s*/i, '')
   // Stories were retired from the product surface. Native must not resurrect
@@ -140,6 +152,7 @@ html = html
   .replace(/<html lang="it">/, '<html lang="it" class="us-app-lock-pending">');
 if (
   !html.includes('src="/native-entry.js"') ||
+  !html.includes('href="/native-frameless.css"') ||
   !html.includes('<html lang="it" class="us-app-lock-pending">') ||
   !html.includes('id="usAppLock"') ||
   html.includes('rel="manifest"') ||

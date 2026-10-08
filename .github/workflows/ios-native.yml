@@ -8,6 +8,14 @@ on:
   workflow_dispatch:
   push:
     paths:
+      - 'tests/native-frameless-v1.test.js'
+      - 'tests/centered-popups-v1.test.js'
+      - 'tests/ricordi-carousel-v1.test.js'
+      - 'tests/ricordi-inline-feed-v2.test.js'
+      - 'ricordi-inline-carousel.js'
+      - 'ricordi-inline-carousel.css'
+      - 'ricordi-carousel.css'
+      - 'modal-center.css'
       - 'ios/**'
       - 'capacitor.config.json'
       - 'package.json'
@@ -41,6 +49,14 @@ on:
       - '.github/workflows/ios-native.yml'
   pull_request:
     paths:
+      - 'tests/native-frameless-v1.test.js'
+      - 'tests/centered-popups-v1.test.js'
+      - 'tests/ricordi-carousel-v1.test.js'
+      - 'tests/ricordi-inline-feed-v2.test.js'
+      - 'ricordi-inline-carousel.js'
+      - 'ricordi-inline-carousel.css'
+      - 'ricordi-carousel.css'
+      - 'modal-center.css'
       - 'ios/**'
       - 'capacitor.config.json'
       - 'package.json'
@@ -97,7 +113,7 @@ jobs:
         run: npm ci
 
       - name: Native contract tests
-        run: node --test tests/ios-native-baseline.test.js tests/native-web-staging.test.js tests/native-foundation.test.js tests/native-security-v1.test.js tests/native-notifications-v1-native.test.js tests/native-performance-ux-v1.test.js tests/ricordi-thumbnails-v1.test.js tests/ricordi-delete-edge.test.js tests/multicouple-foundation-v1.test.js tests/native-boot-auth-safety.test.js tests/beatrice-password-login.test.js tests/sec-rls-hardening.test.js
+        run: node --test tests/ricordi-inline-feed-v2.test.js tests/ricordi-carousel-v1.test.js tests/centered-popups-v1.test.js tests/native-frameless-v1.test.js tests/ios-native-baseline.test.js tests/native-web-staging.test.js tests/native-foundation.test.js tests/native-security-v1.test.js tests/native-notifications-v1-native.test.js tests/native-performance-ux-v1.test.js tests/ricordi-thumbnails-v1.test.js tests/ricordi-delete-edge.test.js tests/multicouple-foundation-v1.test.js tests/native-boot-auth-safety.test.js tests/beatrice-password-login.test.js tests/sec-rls-hardening.test.js
 
       - name: App lock policy checks (host swiftc, no simulator)
         run: |

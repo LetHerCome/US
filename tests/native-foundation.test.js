@@ -193,7 +193,8 @@ test('config Capacitor resta bundled-only; iOS (M15) e Android condividono la st
   assert.deepEqual(config.plugins.SystemBars, {
     insetsHandling: 'css',
     style: 'DARK',
-    hidden: false
+    hidden: false,
+    initialViewportFitValueHint: 'cover'
   });
   assert.equal(fs.existsSync(path.join(ROOT, 'android')), true);
   assert.equal(fs.existsSync(path.join(ROOT, 'ios', 'App', 'App.xcodeproj')), true);

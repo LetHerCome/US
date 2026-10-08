@@ -13,7 +13,8 @@
     "SystemBars": {
       "insetsHandling": "css",
       "style": "DARK",
-      "hidden": false
+      "hidden": false,
+      "initialViewportFitValueHint": "cover"
     },
     "PushNotifications": {
       "presentationOptions": []

@@ -1,5 +1,13 @@
 # MC3 — controlled beta handoff
 
+## Native notification gate — 2026-10-09
+
+The latest MC3 client blocks B from registering/reactivating the native provider while an earlier account retirement is unresolved. This is **not proof that A notifications stopped arriving**. A valid server row plus a provider that did not complete unregister can still deliver A private alerts after local account change. Android PushNotifications 8.1.3 resolves unregister without awaiting Firebase deleteToken completion; cleared badges/tray and successful JS callbacks are insufficient evidence.
+
+Do not clear shared-device native beta for full notification isolation yet. Before clearing that gate, prove A's server registration is removed with A's authenticated RPC or prove provider invalidation, then verify no A alert/body/action reaches the device as B. Execute physical FCM and APNs checks with offline/failed server revoke, failed/late provider unregister, queued alerts, network restoration after sign-out, stable APNs tokens, foreground/background/terminated processes and cold restart. If A cannot authenticate again, B has no authority to remove A's row with the current RPCs. Provider pruning is not an immediate guarantee. Any stronger backend/provider protocol requires separate authorization; this implementation made no Supabase changes. Keep native shared-account testing on controlled devices/accounts until this gate is evidenced.
+
+See [current MC3 validation](MC3_VALIDATION.md) for the delivery-boundary counterexamples, integration results and remaining inherited test failures. The original provisioning handoff below is unchanged in scope.
+
 This is an administrative handoff, not an executed provisioning procedure. MC3 creates no Auth accounts, changes no Auth settings, and keeps public signup disabled.
 
 After separate authorization, the administrator must provision exactly two permanent beta accounts for the second couple. Obtain each person's email and desired display name through the controlled beta channel. Generate separate strong passwords in the administrator's password manager; deliver each credential only to its owner through the approved private channel. Do not put emails/passwords, invite tokens, privileged keys or provisioning responses in repository files, browser code, tickets, screenshots or logs.

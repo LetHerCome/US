@@ -1,4 +1,4 @@
-const BUILD_ID = "us-mc3-onboarding-invites-v1-20261008-1";
+const BUILD_ID = "us-mc3-integrated-20261009-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -53,6 +53,11 @@ const APP_SHELL = [
   versioned("/settings.css"),
   versioned("/settings.js"),
   versioned("/identity.css"),
+  versioned("/top-chrome.css"),
+  versioned("/modal-center.css"),
+  versioned("/ricordi-carousel.css"),
+  versioned("/ricordi-inline-carousel.css"),
+  versioned("/ricordi-inline-carousel.js"),
   versioned("/identity.js"),
   versioned("/settings2.css"),
   versioned("/polish4.css"),

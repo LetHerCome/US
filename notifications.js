@@ -178,6 +178,9 @@
   }
 
   async function requestToken() {
+    // Obtaining a token also reactivates provider delivery (notably APNs).
+    // Do not reactivate while a previous account still owns an unresolved row.
+    if (retired().some(entry => typeof entry === 'string' || entry.userId !== session.userId)) throw new Error('previous_account_retirement_pending');
     const waiting = new Promise((resolve, reject) => tokenWaiters.push({ resolve, reject }));
     waiting.catch(() => {}); // logout can reject while the plugin call is pending
     await push.register();

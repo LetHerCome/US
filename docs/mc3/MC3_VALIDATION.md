@@ -1,5 +1,81 @@
 # MC3 validation candidate
 
+## Final security and main integration — 2026-10-09
+
+This is the current delivery section; older reports below describe earlier candidates. Starting MC3 HEAD: `83c4b40346acb921e0fefcddae99378208fdd7a1`. `git fetch origin` completed. Integrated main: `28e4461` through a normal two-parent merge into the MC3 line, never a merge into main. Destination remains `mission/us-mc3-onboarding-invites-v1`; the implementation worktree uses `codex/mc3-push-security-fix` because the destination is checked out elsewhere. Delivery SHA is reported after commit/push.
+
+### Web Push concurrency
+
+Five deferred-Promise tests execute the actual enable/disable/sync/invalidation functions. The initial four failed on the starting runtime: B activation joined a queued cleanup that in turn joined B's newly published operation, and A activation did not terminate while permissions, getSubscription or registration RPC stayed pending. The added fifth case covers a pending subscribe call and B activation before its late result.
+
+Activation now joins prior cleanup before publishing its operation. Cleanup captures the preceding operation when it is queued instead of looking up a future operation at execution time. Each activation has an identity cancellation scope, invalidated synchronously on account change, with bounded waits. Active sync never joins cleanup that can depend on itself. Late subscription results are quarantined for the original owner and unsubscribed; B cannot start another activation while an older subscription request is physically unresolved. RPC requests cannot be cancelled by a local Promise race: their late results remain subject to existing identity/epoch guards, and remote owner-bound cleanup remains best effort. Permission prompts are browser-owned and cannot be forcibly dismissed; the app operation and busy state terminate independently.
+
+### Native reuse versus delivery — beta gate remains open
+
+The Android/iOS boundary tests model a valid A server registration independently of the client and fail both server revocation and provider unregister. They prove two different facts: B cannot register that token, yet the retained A row plus a still-valid provider can continue delivering A notifications. This is a counterexample to complete isolation, not live FCM/APNs evidence. The prior implementation also called native register before checking the retired token. The tests reproduced that extra provider activation; requestToken now refuses provider registration while another account (or an ownerless legacy entry) has an unresolved retirement. B therefore does not reactivate APNs/FCM merely to discover a blocked token.
+
+The installed official PushNotifications plugin is `8.1.3`. Its Android unregister calls `setAutoInitEnabled(false)` and `deleteToken()` then immediately resolves the bridge call, without awaiting the deleteToken task. iOS calls `UIApplication.shared.unregisterForRemoteNotifications()`. Our stopNativeDelivery catches plugin errors/timeouts. Neither a JS resolved call, a cleared badge/tray, a rotated installation nor a B registration refusal proves all A delivery stopped. Already queued/delivered notifications and a failed provider unregister remain relevant. See [FCM token management](https://firebase.google.com/docs/cloud-messaging/manage-tokens) and [Apple unregisterForRemoteNotifications](https://developer.apple.com/documentation/uikit/uiapplication/unregisterforremotenotifications()). Provider invalidation/pruning is not assumed immediate or sufficient without evidence.
+
+**Shared-device native beta is NOT cleared for complete notification isolation.** Before that beta gate can close, independently prove server removal under A's credentials or confirmed provider invalidation, then prove no A private alert/body or action reaches a device being used as B. Physical Android/FCM and iOS/APNs QA must include failed/offline remote revoke, failed/late local unregister, network restoration after logout, stable APNs token, foreground/background/terminated processes, queued alerts and cold restart. If A credentials are no longer available, the existing owner-only RPC cannot remove A using B. The current task makes no backend/SQL/RLS/credential change; any stronger server/provider revocation mechanism needs a separate authorized change. See the updated controlled-beta handoff.
+
+### Merge resolution and retained main work
+
+Five conflict files: `index.html`, `manifest.webmanifest`, `service-worker.js`, `version.json`, `tests/native-performance-ux-v1.test.js`. In HTML, kept main's current resource blocks and restored the MC3 onboarding stylesheet; the onboarding DOM and pre-app script survived the merge. Manifest and worker conflicts were build markers. Kept main's version-independent marker test. Ran the existing build-ID script to generate **`us-mc3-integrated-20261009-1`** across HTML resource URLs, manifest, version and worker/cache ID.
+
+Both build allowlists and atomic APP_SHELL contain onboarding plus top chrome, centered modal and both Ricordi carousel resources. Main's Sintonia/rewards, Gioca spacing, Settings organization, Ricordi inline feed, centered popups and native edge-to-edge files compare byte-identically with integrated origin/main; no old MC3 copy silently replaced them. Assets, Supabase source/config, package and lockfile are unchanged relative to main. Existing private media cache is preserved.
+
+Main/MC3 Chromium comparison: 320×568, 390×844, 844×390; Home, Noi, Gioca, Settings, Ricordi; **30 screenshots, identical measured page geometry, no browser errors**. Contact sheets were visually inspected. MC3 browser cases additionally cover onboarding keyboard, reduced motion, invite/account transitions and original Couple A bootstrap. Physical native safe areas/system bars remain device QA.
+
+### Final evidence
+
+Focused MC3/Auth/logout/native-boundary/worker/main-UI contracts: **127 passed, 0 failed, 0 skipped**. MC3/native Chromium: **13 passed, 1 failed, 0 skipped**; all seven MC3 cases pass. Remaining N3 cold-process registration timeout at native browser line 251 is the inherited failure documented below. It remains unresolved and is not counted as passing.
+
+Full updated-main and candidate suites were run in separate local checkouts with the same installed dependencies and concurrency of four. Updated main: **1676 total, 1544 passed, 38 failed, 94 skipped**, exit 1. Final candidate results and exact failure comparison follow below. The extra main-only P1 verification-artifact assertion is checkout/artifact dependent; no P1 product fix is claimed. No new candidate failed name is present versus updated main. PostgreSQL process/race tests without a local PostgreSQL server and unavailable default browser tests remain skips, not passes; selected browser gates were explicitly run in installed Chromium.
+
+Cloudflare: **PASS, 162 files**. Capacitor: **PASS, 159 files**. JavaScript syntax and staged/working `git diff --check`: **PASS**. Logs, main archive, comparison JSON and screenshots are retained in this chat's `mc3-final` visualization directory. No deployment, PR, merge into main or Supabase operation was performed; delivery is new commits plus an ordinary fast-forward push to MC3.
+
+### Final full-suite failure comparison
+
+Final MC3: **1710 total, 1572 passed, 37 failed, 101 skipped**, exit 1. All 37 failed names below also fail on updated main; no added failed name. The five deferred concurrency cases, native delivery-boundary cases and integration asset contract pass. Exact inherited failures:
+
+- F2A.1 cutoff: MIGRATION_CUTOFF.json is current and accounts for every file and ledger row
+- F2A.2 guard: supabase/migrations holds only the baseline and newer; history can never run
+- F2C migration: created by the CLI after the baseline, the only forward migration
+- Home cleanup runtime is present in Cloudflare/native builds and in the atomic PWA shell
+- M10.1D: Risonanza is progress accumulated inside US — never relationship quality
+- M12B.5 media and icons: signed URLs only, private media cache untouched, Phosphor icons already in the shell
+- M12B.5 story: a Moment that is the photo of a lived source says so; an Event without photo is a read-only record
+- M12C: UI explains XP history, never relationship quality or a second score
+- M7B runtime: hydrateNoiIdeas è collegato alla navigazione verso Noi senza toccare la logica del Calendario
+- M9D/Progression V1: Sintonia explains only server-backed meaningful actions
+- MainActivity resta vuota e nessuna credential entra nello snapshot
+- N2 Android: official plugin + local support plugin synced, channels match the server contract
+- N2 iOS: APNs forwarding, Push entitlement, Ricambia category, environment detection
+- N2 migration: forward-only, after every earlier migration, fails closed
+- N2 payload contract: only allow-listed targets, UUID refs, no URL ever navigates
+- Settings: one "Maudit" switch row, device-local, correct accessible state, no explanatory copy
+- Stories Left for You e album hanno recovery media esplicita
+- SystemBars Capacitor 8.5 usa inset CSS e contenuto chiaro sul shell scuro
+- contract: every catalogue entry builds a valid, URL-free, allow-listed notification
+- contract: the Web Push wire format keeps exactly the keys the service worker reads
+- dispatch: Web Push 404/410 prunes the subscription exactly as before
+- dispatch: a failed recipient query releases the claim
+- dispatch: a native-only recipient is reached; Web Push never consumes the event first
+- dispatch: a thrown transport error is transient, never deletes
+- dispatch: invalid tokens are removed, transient and config failures keep the token
+- dispatch: missing configuration fails safely without consuming the event
+- dispatch: one logical event reaches Web Push AND native devices under ONE claim
+- dispatch: rows of another couple are skipped
+- foreground ripara Home avatar e Ricordi senza richiedere un nuovo login
+- i controlli delete restano espliciti e hanno target 44px
+- perf 1.0: Settings pre-fills after Home settles, but hydrates at once when it is the launch page
+- plugin: niente Supabase client o session token, storage privato non-backup, MainActivity invariata
+- ricordi: creation wires the marker from the inserted id; CSS animates only .ricordi-new
+- transport APNs: ES256 provider token, sandbox vs production host, headers, category
+- transport FCM: signed RS256 assertion, HTTP v1 message, channel and data contract
+- transport config: missing or malformed secrets leave the provider not ready
+- transport: provider errors are classified (invalid token / transient / config / rejected)
+
 ## MC3 push security correction — 2026-10-08
 
 This section reports NEW implementation after `db8963d3a69a4e526ad1432916427617249b2148`; the original mission report below remains historical. Destination: `mission/us-mc3-onboarding-invites-v1`. Implementation checkout: `codex/mc3-push-security-fix` (the destination branch is checked out in another worktree). The new commit SHA is provided in the delivery message.

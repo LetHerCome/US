@@ -228,7 +228,6 @@ function renderHub() {
   root.innerHTML = `
     <header class="us-gv2-head"><h2 class="us-gv2-sr">Gioca</h2>${rhythmStrip()}</header>
     ${invite}
-    ${filterRow(filters)}
     <button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-pervoi us-attention-orbit" data-gv2-action="per-voi" data-gv2-state="${esc(pvState)}" data-us-attention="${pvState === 'pending' || pvState === 'reveal_ready' ? 'on' : 'off'}">
       ${glyph('sparkle').replace('class="us-gv2-glyph"', 'class="us-gv2-glyph" data-us-attention-icon')}<span class="us-gv2-pervoi-copy"><b>Per voi</b><small>${esc(pv.line)}</small></span><span class="us-gv2-pervoi-cta">${esc(pv.cta)}</span>
     </button>
@@ -238,7 +237,8 @@ function renderHub() {
       <span class="us-gv2-swipe-entry-cta">${esc(swipeCta)}</span>
     </button>
     <section class="us-gv2-modes" aria-label="Scegliete voi"><div class="us-gv2-mode-grid us-gv2-deck">${modeTiles}</div></section>
-    ${weeklyCard(home?.weekly)}`;
+    ${weeklyCard(home?.weekly)}
+    ${filterRow(filters)}`;
 }
 
 function toggleFilter(id) {

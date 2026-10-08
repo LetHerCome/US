@@ -88,8 +88,9 @@ test('Rewards V2 client: motion is opt-out with reduced motion and paused when h
   assert.match(reduced, /:root\[data-us-effect\] \.us-top-brand::before/);
   assert.match(reduced, /:root\[data-us-ring\] \.noi-couple-avatar::after/);
   assert.match(css, /:root\[data-us-visibility="hidden"\] \.us-top-brand::before/);
-  assert.match(css, /\.us-progression-rewards\{[^}]*max-height:min\(440px,56dvh\)[^}]*overflow-y:auto/);
-  assert.match(css, /\.us-reward-grid\{display:grid;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(css, /#bond \.us-progression-rewards\{max-height:none;overflow:visible;/);
+  assert.match(css, /#bond \.us-reward-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(js, /<details class="us-reward-group"/);
 });
 
 function fakeElement(id) {
