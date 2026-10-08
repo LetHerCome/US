@@ -58,9 +58,9 @@ button{border:0;border-radius:var(--us-radius-control);padding:13px 16px;font:in
 .open-card:nth-child(4){background:linear-gradient(90deg,#2f5a4c,#182922)}
 .nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(480px,100%);padding:10px 14px calc(10px + var(--us-safe-bottom));background:rgba(10,12,17,.88);backdrop-filter:blur(18px);border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(5,1fr);z-index:20}
 .nav button{background:none;color:var(--us-color-text-3);padding:7px 2px;font-size:11px}.nav button .nicon{display:block;font-size:20px;margin-bottom:4px}.nav button.active{color:var(--pink2)}
-.page{display:none}.page.active{display:block;animation:fade var(--us-motion-micro) var(--us-ease-standard)}
+.page{display:none}.page.active{display:block;animation:fade var(--us-motion-base) var(--us-ease-enter)}
 .page.active{touch-action:pan-y}
-@keyframes fade{from{opacity:.72}to{opacity:1}}
+@keyframes fade{from{opacity:.88}to{opacity:1}}
 .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);background:var(--us-color-text);color:var(--us-color-surface);padding:10px 14px;border-radius:999px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:.25s;z-index:30;white-space:nowrap}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.68);display:none;align-items:flex-end;z-index:40}.modal.show{display:flex}
 .sheet{width:min(480px,100%);margin:0 auto;background:var(--us-color-surface-2);border:1px solid var(--border);border-radius:28px 28px 0 0;padding:22px 18px calc(28px + var(--us-safe-bottom));box-shadow:0 -18px 60px rgba(0,0,0,.5)}
@@ -1367,10 +1367,9 @@ html.us-native{
 }
 
 
-/* Android WebView: keep tab changes perceptibly immediate. The shared motion
-   language stays intact, but the entry transition is shorter than the PWA
-   because WebView also has to composite native system-bar insets. */
+/* Android: the previous 100ms override made navigation feel abrupt. Use
+   the same ~220ms premium motion as web while keeping swipe tracking live. */
 html.us-native-android .page.active.us-motion5-enter-next,
 html.us-native-android .page.active.us-motion5-enter-prev{
-  animation-duration:100ms!important;
+  animation-duration:220ms!important;
 }
