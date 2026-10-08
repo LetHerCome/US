@@ -14,7 +14,7 @@
   const platform = window.UsPlatform;
   const nativeEnabled = Boolean(platform?.isNative && platform?.hasWidgetBridge?.() !== false);
   const KINDS = Object.freeze(['think', 'countdown', 'noi', 'photo']);
-  const DESTINATIONS = Object.freeze({ think: 'home', countdown: 'home', noi: 'bond', photo: 'moments' });
+  const DESTINATIONS = Object.freeze({ think: 'home', countdown: 'home', noi: 'bond', 'noi-play': 'quiz', photo: 'moments' });
   const COUPLE_TTL_MS = 30 * 60 * 1000;
   const PHOTO_TTL_MS = 10 * 60 * 1000;
   const PHOTO_MAX_EDGE = 720;
@@ -364,12 +364,18 @@
     try {
       const url = new URL(urlValue);
       if (url.protocol !== 'us:' || url.hostname !== 'widget') return null;
-      const kind = url.pathname.replace(/^\/+/, '').split('/')[0];
+      const path = url.pathname.replace(/^\/+/, '');
+      if (path === 'noi/play') return { kind: 'noi-play', url: urlValue };
+      const kind = path.split('/')[0];
       return KINDS.includes(kind) ? { kind, url: urlValue } : null;
     } catch (_) { return null; }
   }
 
   function openDestination(page) {
+    if (page === 'quiz' && typeof window.openQuizHub === 'function') {
+      window.openQuizHub();
+      return true;
+    }
     if (typeof window.go !== 'function') return false;
     window.go(page);
     return true;
