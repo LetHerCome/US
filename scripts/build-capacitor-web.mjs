@@ -50,6 +50,8 @@ const RUNTIME_FILES = [
   'top-chrome.css',
   'modal-center.css',
   'ricordi-carousel.css',
+  'ricordi-inline-carousel.css',
+  'ricordi-inline-carousel.js',
   'native-frameless.css',
   'identity.js',
   'settings2.css',
