@@ -8,7 +8,7 @@
   --us-popup-width: 468px;
   --us-popup-gutter: 14px;
   --us-popup-radius: var(--us-radius-sheet, 28px);
-  --us-popup-safe-height: max(260px, calc(var(--us-viewport-height, 100dvh) - var(--us-safe-top) - var(--us-safe-bottom) - 32px));
+  --us-popup-safe-height: max(100px, calc(var(--us-viewport-height, 100dvh) - var(--us-safe-top) - var(--us-safe-bottom) - 32px));
 }
 
 /* Shared centre positioning across the existing popup controllers, including
@@ -160,6 +160,13 @@
   transform: translateY(8px) scale(.965);
 }
 
+/* confirmSurface builds its root with aria-hidden=false before toggling
+   .open on the next animation frame. Keep that first frame hidden. */
+.us-confirm:not(.open) [data-us-modal-panel] {
+  opacity: 0 !important;
+  transform: translateY(8px) scale(.965) !important;
+}
+
 /* Calendar's nested detail and form were not previously in the shared
    motion system; allow them to fade with exactly the same rules. */
 #usCalendarDetailSheet:not(.open),
@@ -170,7 +177,7 @@
 /* When the viewport gets short (landscape / keyboard), use the available
    visualViewport height. Dialog contents remain scrollable and reachable. */
 @media (max-height: 540px) {
-  :root { --us-popup-safe-height: max(180px, calc(var(--us-viewport-height, 100dvh) - var(--us-safe-top) - var(--us-safe-bottom) - 16px)); }
+  :root { --us-popup-safe-height: max(100px, calc(var(--us-viewport-height, 100dvh) - var(--us-safe-top) - var(--us-safe-bottom) - 16px)); }
   :is(#today,#thinkArrival,#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-confirm) {
     padding-top: max(8px, var(--us-safe-top)) !important;
     padding-bottom: max(8px, var(--us-safe-bottom)) !important;
