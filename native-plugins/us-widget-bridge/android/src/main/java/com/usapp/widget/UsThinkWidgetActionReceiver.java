@@ -26,7 +26,7 @@ public final class UsThinkWidgetActionReceiver extends BroadcastReceiver {
         UsWidgets.State state = new UsWidgets.State(app);
         UsWidgetModels.Think model = UsWidgetModels.think(state.snapshot, state.action, state.hasCredential, state.now);
         if (!model.canSend || model.busy) {
-            UsWidgets.refreshAll(app);
+            UsWidgets.refreshThink(app);
             return;
         }
         if (!IN_FLIGHT.compareAndSet(false, true)) return;
@@ -34,7 +34,8 @@ public final class UsThinkWidgetActionReceiver extends BroadcastReceiver {
         UsWidgetStore store = state.store;
         String owner = store.owner();
         store.writeAction("sending", actionId);
-        UsWidgets.refreshAll(app);
+        // Immediately paint Invio... without re-encoding Foto & Noi.
+        UsWidgets.refreshThink(app);
         PendingResult pending = goAsync();
         EXECUTOR.execute(() -> {
             try {
