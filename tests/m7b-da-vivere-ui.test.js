@@ -189,7 +189,8 @@ test('M7B runtime: un cambio di identità (account/coppia) svuota le idee e chiu
 test('M7B runtime: initCloud azzera subito Da vivere prima di null, cached-profile o fresh-profile assignment', () => {
   const initCloud=app().match(/async function initCloud\(\)\{[\s\S]*?\n\}/)?.[0]||'';
   assert.notEqual(initCloud,'');
-  for(const assignment of ['window.usProfile = null;','window.usProfile=cachedProfile;','window.usProfile = profile;']){
+  assert.doesNotMatch(initCloud,/window\.usProfile\s*=\s*cachedProfile/,'MC3 forbids cached membership authority');
+  for(const assignment of ['window.usProfile = null;','window.usProfile = profile;']){
     const at=initCloud.indexOf(assignment);
     assert.ok(at>=0,`expected initCloud assignment ${assignment}`);
     assert.ok(initCloud.lastIndexOf('resetNoiIdeasForIdentityChange();',at)>=0,

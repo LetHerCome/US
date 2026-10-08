@@ -82,6 +82,8 @@ function createHarness(overrides = {}) {
       }
     },
     localStorage: {
+      getItem: key => stored.get(key) || null,
+      setItem: (key,value) => stored.set(key,value),
       removeItem(key) {
         events.push(`cleanup:storage:${key}`);
         if (overrides.storageError === key) throw new Error('storage failed');
@@ -102,11 +104,15 @@ function createHarness(overrides = {}) {
     US_SIGNED_URL_STORAGE_KEY: 'us:signed-url-cache:v2',
     US_HOME_BOOT_CACHE_KEY: 'us:boot:home-photo:v1',
     usPushUiBusy: false,
+    usAuthEpoch: 1,
+    usPushCleanup: Promise.resolve(),
+    usWithDeadline: promise => promise,
     usPushOperationInFlight: null,
     logoutInFlight: false
   });
 
   const appFunctions = [
+    appSource.slice(appSource.indexOf("const US_PUSH_RETIRED_KEY="),appSource.indexOf('let usPendingPushTarget=')),
     extractFunction(appSource, 'enableWebPush', 'window.enableWebPush='),
     extractFunction(appSource, 'disableWebPush', 'window.disableWebPush='),
     extractFunction(appSource, 'clearPrivateDeviceState', 'async function revokeCurrentDevice('),

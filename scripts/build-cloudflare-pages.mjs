@@ -15,6 +15,8 @@ const RUNTIME_FILES = [
   'index.html',
   'auth-storage.js',
   'app.js',
+  'onboarding.js',
+  'onboarding.css',
   'stories.js',
   'stories.css',
   'styles.css',

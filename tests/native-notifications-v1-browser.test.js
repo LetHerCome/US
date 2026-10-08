@@ -198,15 +198,16 @@ test('N2 browser: permission only after "Attiva"; registration per installation;
   assert.ok(after.calls.includes('unregister'), 'FCM token deleted on this phone');
   assert.ok(after.calls.includes('removeAll'));
   assert.equal(after.installation, null, 'a new identity for the next account');
-  assert.deepEqual(JSON.parse(after.retired), [first.installation]);
+  assert.deepEqual(JSON.parse(after.retired), [{id:first.installation,userId:'f1',token:TOKEN}]);
 
   // Next activation (back online): new installation, the retired one is removed with it.
   await page.evaluate(() => { window.__PUSH.rpcError = null; });
+  await page.evaluate(() => window.UsNotifications.authReady(window.usProfile));
   await page.evaluate(() => window.UsNotifications.enable());
   const next = await page.evaluate(() => ({ rpc: window.__PUSH.rpc.at(-1), retired: localStorage.getItem('us:notifications:v1:retired') }));
   assert.equal(next.rpc.name, 'register_native_push_device');
   assert.notEqual(next.rpc.args.target_installation_id, first.installation);
-  assert.equal(next.rpc.args.target_retired_installation_id, first.installation);
+  assert.equal(next.rpc.args.target_retired_installation_id, null, 'owner cleanup precedes fresh registration');
   assert.equal(next.retired, null);
   assert.deepEqual(errors, []);
   await ctx.close();

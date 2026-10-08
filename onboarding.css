@@ -1,0 +1,16 @@
+/* Auth primitives remain in auth-first-run.css and ui-foundation.css. */
+html:not(.us-auth-ready) body > :not(#authOverlay):not(#usAppLock):not(script):not(style),
+html.us-onboarding-active body > :not(#authOverlay):not(#usAppLock):not(script):not(style){visibility:hidden!important;pointer-events:none!important;}
+html.us-onboarding-active .auth-overlay{display:flex!important;}
+html.us-onboarding-active .us-auth-context{display:none;}
+#usOnboarding [hidden]{display:none!important;}
+#usOnboarding .mc3-actions{display:grid;gap:10px;}
+#usOnboarding button{min-height:44px;width:100%;}
+#usOnboarding form{display:grid;gap:10px;}
+#usOnboarding .mc3-help{font-size:13px;line-height:1.5;color:var(--muted,#b4abbf);margin:10px 0;}
+#usOnboarding .mc3-back{background:transparent;border:0;margin-top:10px;}
+#mc3Code{width:100%;resize:none;box-sizing:border-box;font:600 16px/1.6 monospace;letter-spacing:.04em;}
+#mc3Title:focus-visible{outline:2px solid currentColor;outline-offset:4px;}
+html.us-onboarding-active .auth-overlay{overflow-y:auto;align-items:flex-start;padding-top:max(20px,env(safe-area-inset-top));padding-bottom:max(20px,env(safe-area-inset-bottom));}
+html.us-onboarding-active .auth-card{margin:auto;width:min(100%,420px);min-width:0;max-height:none;overflow:visible;flex-shrink:0;}
+@media(max-height:600px){html.us-onboarding-active .auth-logo{width:48px;height:48px;margin-bottom:10px;}html.us-onboarding-active .auth-card{padding:20px;}}

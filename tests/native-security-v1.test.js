@@ -511,10 +511,11 @@ test('N1 app.js: gate dopo la sessione e prima di profilo/foto; login senza sess
   const app = read('app.js');
   const normalizedApp = app.replace(/\r\n/g, '\n');
   const gate = normalizedApp.indexOf('window.UsAppLock.gate({userId:session.user.id})');
-  const noSession = normalizedApp.indexOf('if(!session){\n      // No session on this phone');
-  const cachedPaint = normalizedApp.indexOf('if(cachedProfile){\n      resetNoiIdeasForIdentityChange();');
-  const profileFetch = normalizedApp.indexOf(".from('profiles')\n      .select('id,display_name,role,couple_id,avatar_path')");
-  assert.ok(gate > 0 && noSession > gate && cachedPaint > noSession && profileFetch > cachedPaint);
+  const noSession = normalizedApp.indexOf('if(!session){\n      usOnboarding.reset();');
+  const membershipRead = normalizedApp.indexOf('await usOnboarding.load(session)');
+  const profilePaint = normalizedApp.indexOf('window.usProfile = profile;');
+  assert.ok(gate > 0 && noSession > gate && membershipRead > noSession && profilePaint > membershipRead);
+  assert.doesNotMatch(app,/window\.usProfile\s*=\s*cachedProfile/);
   assert.match(app, /await window\.UsAppLock\?\.signedOut\?\.\(\)/);
   assert.match(app, /window\.UsAppLock\?\.configure\?\.\(\{verifySession:usVerifySessionForAppLock,accountLogin:usAppLockAccountLogin\}\)/);
   assert.match(app, /sb\.auth\.getUser\(\)/, 'la sessione viene verificata sul server quando online');

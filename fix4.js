@@ -113,14 +113,9 @@
 
   function rescueOfflineProfile() {
     if (navigator.onLine || window.usProfile) return;
-    try {
-      const cached = JSON.parse(localStorage.getItem(PROFILE_CACHE_KEY) || 'null');
-      if (!cached?.id || !cached?.couple_id) return;
-      window.usProfile = cached;
-      document.getElementById('authOverlay')?.classList.add('hidden');
-      if (typeof window.setCloudBadge === 'function') window.setCloudBadge(false, 'offline');
-      showStatus('Sei offline. Riprendo appena torni online.', 'offline');
-    } catch (_) {}
+    // MC3: offline snapshots are not membership authority. initCloud keeps the
+    // private shell covered until both server checks succeed.
+    showStatus('Sei offline. Riconnettiti per verificare il tuo spazio.', 'offline');
   }
 
   function updateBusyElement(el) {

@@ -420,6 +420,50 @@ async function usPrewarmNativeMomentMedia(limit=4){
 const US_VAPID_PUBLIC_KEY='BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss';
 let usPushUiBusy=false;
 let usPushOperationInFlight=null;
+let usPushCleanup=Promise.resolve();
+const US_PUSH_RETIRED_KEY='us:push:retired:v1';
+const usPushWaiters=new Set();
+let usPushSubscriptionPending=0;
+function usPushWaitScope(){
+  const profile=window.usProfile,epoch=usAuthEpoch;
+  let cancelled=false,release;
+  const cancellation=new Promise(resolve=>{release=resolve;});
+  const current=()=>!cancelled&&window.usProfile===profile&&usAuthEpoch===epoch;
+  const cancel=()=>{cancelled=true;release();};
+  usPushWaiters.add(cancel);
+  return {current,finish:()=>usPushWaiters.delete(cancel),async wait(promise){
+    const result=await Promise.race([usWithDeadline(Promise.resolve(promise),15000),cancellation]);
+    if(!current())throw new Error('push_identity_changed');
+    return result;
+  },subscription(promise){
+    usPushSubscriptionPending++;
+    const request=Promise.resolve(promise).then(async subscription=>{
+      if(subscription&&!current()){
+        usSaveRetiredWebPush([...usRetiredWebPush().filter(x=>x.endpoint!==subscription.endpoint),{userId:profile.id,endpoint:subscription.endpoint}]);
+        try{await usWithDeadline(subscription.unsubscribe(),5000);}catch(_e){}
+      }
+      return subscription;
+    }).finally(()=>{usPushSubscriptionPending--;});
+    return this.wait(request);
+  }};
+}
+function usRetiredWebPush(){
+  try{return JSON.parse(localStorage.getItem(US_PUSH_RETIRED_KEY)||'[]');}catch(_e){return [];}
+}
+function usSaveRetiredWebPush(list){
+  if(list.length)localStorage.setItem(US_PUSH_RETIRED_KEY,JSON.stringify(list));
+  else localStorage.removeItem(US_PUSH_RETIRED_KEY);
+}
+async function usRetryRetiredWebPush(profileId){
+  for(const entry of usRetiredWebPush()){
+    if(entry.userId!==profileId)continue;
+    try{
+      if(window.usProfile?.id!==profileId)return;
+      const {error}=await usWithDeadline(sb.rpc('remove_web_push_subscription',{target_endpoint:entry.endpoint}),5000);
+      if(!error&&window.usProfile?.id===profileId)usSaveRetiredWebPush(usRetiredWebPush().filter(x=>x.endpoint!==entry.endpoint));
+    }catch(_e){}
+  }
+}
 let usPendingPushTarget=null;
 
 function isIosDevice(){return /iphone|ipad|ipod/i.test(navigator.userAgent||'');}
@@ -441,9 +485,16 @@ async function getUsServiceWorkerRegistration(){
 async function getCurrentPushSubscription(){
   try{const reg=await getUsServiceWorkerRegistration();return reg?await reg.pushManager.getSubscription():null;}catch(error){console.warn('[US Push] subscription check',error);return null;}
 }
-async function syncPushSubscriptionToSupabase(subscription){
+async function syncPushSubscriptionToSupabase(subscription,operation=null){
   if(!subscription||!window.usProfile)return false;
+  const profile=window.usProfile,epoch=usAuthEpoch;
+  // An active operation must never join cleanup that may be waiting for it.
+  if(!operation)await usPushCleanup;
+  if(window.usProfile!==profile||usAuthEpoch!==epoch)return false;
+  await usRetryRetiredWebPush(profile.id);
+  if(window.usProfile!==profile||usAuthEpoch!==epoch)return false;
   const json=subscription.toJSON();
+  if(usRetiredWebPush().some(entry=>entry.endpoint===json.endpoint))return false;
   const signature=JSON.stringify([json.endpoint,json.keys?.p256dh||'',json.keys?.auth||'',json.expirationTime??null]);
   const cacheKey=`us:push:subscription:${window.usProfile.id}`;
   try{if(localStorage.getItem(cacheKey)===signature)return true;}catch(_e){}
@@ -455,6 +506,7 @@ async function syncPushSubscriptionToSupabase(subscription){
     target_user_agent:(navigator.userAgent||'').slice(0,500)
   });
   if(error){console.warn('[US Push] subscription sync failed',error);return false;}
+  if(window.usProfile!==profile||usAuthEpoch!==epoch)return false;
   try{localStorage.setItem(cacheKey,signature);}catch(_e){}
   return true;
 }
@@ -489,6 +541,15 @@ function setPushSettingsState(kind,title,detail,actionLabel=''){
   }
 }
 async function refreshWebPushUi(){
+  // Cleanup may be waiting for this operation: never join it from inside it.
+  if(usPushUiBusy)return;
+  const viewer=window.usProfile,epoch=usAuthEpoch;
+  if(viewer){
+    await usPushCleanup;
+    if(window.usProfile!==viewer||usAuthEpoch!==epoch)return;
+    await usRetryRetiredWebPush(viewer.id);
+    if(window.usProfile!==viewer||usAuthEpoch!==epoch)return;
+  }
   const card=document.getElementById('pushOptInCard'),title=document.getElementById('pushOptInTitle'),text=document.getElementById('pushOptInText'),button=document.getElementById('pushEnableBtn'),settings=document.getElementById('pushSettingsRow');
   if(!card||!window.usProfile){if(card)card.hidden=true;if(settings)settings.hidden=true;return;}
   card.classList.remove('install-only','denied');
@@ -556,38 +617,47 @@ async function enableWebPush(){
   if(usPushUiBusy||!window.usProfile)return;
   if(!isWebPushSupported())return toast('Notifiche non supportate su questo browser');
   if(isIosDevice()&&!isStandaloneUs())return refreshWebPushUi();
+  const operation=usPushWaitScope();
+  try{await operation.wait(usPushCleanup);}catch(_e){operation.finish();return;}
+  if(usPushUiBusy||usPushSubscriptionPending||!operation.current()){operation.finish();return;}
   const button=document.getElementById('pushEnableBtn');
   let finishOperation;
   const operationDone=new Promise(resolve=>{finishOperation=resolve;});
   usPushOperationInFlight=operationDone;
   usPushUiBusy=true;if(button){button.disabled=true;button.textContent='Attivo…';}
+  const profile=window.usProfile,epoch=usAuthEpoch;
   try{
     let permission=Notification.permission;
-    if(permission==='default')permission=await Notification.requestPermission();
+    if(permission==='default')permission=await operation.wait(Notification.requestPermission());
     if(permission!=='granted'){await refreshWebPushUi();return;}
-    const reg=await getUsServiceWorkerRegistration();
+    const reg=await operation.wait(getUsServiceWorkerRegistration());
+    if(window.usProfile!==profile||usAuthEpoch!==epoch)return;
     if(!reg)throw new Error('Service worker unavailable');
-    let subscription=await reg.pushManager.getSubscription();
+    let subscription=await operation.subscription(reg.pushManager.getSubscription());
     if(!subscription){
-      subscription=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(US_VAPID_PUBLIC_KEY)});
+      subscription=await operation.subscription(reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(US_VAPID_PUBLIC_KEY)}));
     }
-    const synced=await syncPushSubscriptionToSupabase(subscription);
+    if(window.usProfile!==profile||usAuthEpoch!==epoch){await subscription.unsubscribe();return;}
+    const synced=await operation.wait(syncPushSubscriptionToSupabase(subscription,operation));
     if(!synced)throw new Error('Subscription sync failed');
     toast('Notifiche attive ♡');
     await refreshWebPushUi();
     setTimeout(()=>sendWebPushEvent('test'),350);
-  }catch(error){console.warn('[US Push] enable failed',error);toast('Non riesco ad attivare le notifiche');await refreshWebPushUi();}
+  }catch(error){if(operation.current()){console.warn('[US Push] enable failed',error);toast('Non riesco ad attivare le notifiche');}}
   finally{
+    operation.finish();
     usPushUiBusy=false;if(button)button.disabled=false;
     if(usPushOperationInFlight===operationDone)usPushOperationInFlight=null;
     finishOperation();
+    refreshWebPushUi().catch(()=>{});
   }
 }
 window.enableWebPush=enableWebPush;
 
 async function disableWebPush(options={}){
   const silent=options?.silent===true;
-  if(silent&&usPushOperationInFlight)try{await usPushOperationInFlight;}catch(_e){}
+  const priorOperation=Object.hasOwn(options,'waitForOperation')?options.waitForOperation:usPushOperationInFlight;
+  if(silent&&priorOperation)try{await usWithDeadline(priorOperation,15000);}catch(_e){}
   if(usPushUiBusy)return false;
   let finishOperation;
   const operationDone=new Promise(resolve=>{finishOperation=resolve;});
@@ -598,13 +668,20 @@ async function disableWebPush(options={}){
   let subscription=null;
   let disableFailed=false;
   try{
-    subscription=await getCurrentPushSubscription();
+    subscription=await usWithDeadline(getCurrentPushSubscription(),5000);
     if(subscription){
+      usSaveRetiredWebPush([...usRetiredWebPush().filter(x=>x.endpoint!==subscription.endpoint),{userId:profileId,endpoint:subscription.endpoint}]);
       try{
-        const {error}=await sb.rpc('remove_web_push_subscription',{target_endpoint:subscription.endpoint});
-        if(error)console.warn('[US Push] remove subscription',error);
+        const {error}=options?.localOnly?{error:true}:await usWithDeadline(sb.rpc('remove_web_push_subscription',{target_endpoint:subscription.endpoint}),5000);
+        if(error)disableFailed=true;
+        else usSaveRetiredWebPush(usRetiredWebPush().filter(x=>x.endpoint!==subscription.endpoint));
       }catch(error){disableFailed=true;console.warn('[US Push] remove subscription',error);}
-      try{await subscription.unsubscribe();}catch(error){console.warn('[US Push] unsubscribe',error);}
+      let unsubscribed=false;
+      try{unsubscribed=await usWithDeadline(subscription.unsubscribe(),5000);}catch(error){console.warn('[US Push] unsubscribe',error);}
+      if(!unsubscribed){
+        disableFailed=true;
+        usSaveRetiredWebPush([...usRetiredWebPush().filter(x=>x.endpoint!==subscription.endpoint),{userId:profileId,endpoint:subscription.endpoint}]);
+      }
     }
     try{if(profileId)localStorage.removeItem(`us:push:subscription:${profileId}`);}catch(_e){}
     if(!silent)toast(disableFailed?'Non riesco a disattivare le notifiche':'Notifiche disattivate');
@@ -615,9 +692,9 @@ async function disableWebPush(options={}){
     return false;
   }finally{
     usPushUiBusy=false;
-    if(refreshUi)try{await refreshWebPushUi();}catch(error){console.warn('[US Push] refresh after disable',error);}
     if(usPushOperationInFlight===operationDone)usPushOperationInFlight=null;
     finishOperation();
+    if(refreshUi)try{await refreshWebPushUi();}catch(error){console.warn('[US Push] refresh after disable',error);}
   }
 }
 window.disableWebPush=disableWebPush;
@@ -688,9 +765,11 @@ async function clearPrivateDeviceState(profileId=window.usProfile?.id||''){
 
 async function revokeCurrentDevice(){
   const profileId=window.usProfile?.id||'';
+  // Capture native identity synchronously, before the Web Push await or invalidation.
+  const nativeRevocation=window.UsNotifications?.revokeDevice?.();
   try{await disableWebPush({silent:true,refreshUi:false,profileId});}catch(error){console.warn('[US Logout] push revoke',error);}
   // Native app: only this installation's push registration, with a retry if offline.
-  try{await window.UsNotifications?.revokeDevice?.();}catch(error){console.warn('[US Logout] native push revoke',error);}
+  try{await nativeRevocation;}catch(error){console.warn('[US Logout] native push revoke',error);}
   try{await clearPrivateDeviceState(profileId);}catch(error){console.warn('[US Logout] private cleanup',error);}
   try{await window.UsWidgets?.clear?.();}catch(error){console.warn('[US Logout] widget cleanup',error);}
 }
@@ -738,6 +817,57 @@ async function usAppLockAccountLogin(){
 window.UsAppLock?.configure?.({verifySession:usVerifySessionForAppLock,accountLogin:usAppLockAccountLogin});
 
 let usInitCloudInFlight=null;
+let usAuthEpoch=0;
+let usAuthUserId='';
+let usInitCloudAgain=false;
+const usOnboarding=window.UsOnboarding.mount({
+  readProfile:id=>usWithDeadline(sb.from('profiles').select('id,display_name,role,couple_id,avatar_path').eq('id',id).maybeSingle(),5000),
+  // A mutation retains its guard until the real request settles: a local timer
+  // cannot cancel a database transaction or safely authorize another rotation.
+  rpc:(name,args)=>{
+    const request=args===undefined?sb.rpc(name):sb.rpc(name,args);
+    return name==='get_couple_membership'?usWithDeadline(request,5000):request;
+  },
+  resume:()=>{setTimeout(initCloud,0);},
+  signOut:async()=>{
+    const revocation=revokeCurrentDevice();
+    usInvalidateAuth({revokePush:false});
+    try{
+      await revocation;
+      const result=await usWithDeadline(sb.auth.signOut(),5000);
+      if(result?.error)throw result.error;
+      window.UsAppLock?.reset?.();
+      await initCloud();
+    }catch(_error){await initCloud();}
+  }
+});
+function usInvalidateAuth({revokePush=true}={}){
+  usAuthEpoch++;
+  for(const cancel of usPushWaiters)cancel();
+  const previousId=window.usProfile?.id||usAuthUserId;
+  if(revokePush&&previousId){
+    // Auth already moved: never issue an A revocation with B's credentials.
+    const priorOperation=usPushOperationInFlight;
+    usPushCleanup=usPushCleanup.then(()=>disableWebPush({silent:true,refreshUi:false,profileId:previousId,localOnly:true,waitForOperation:priorOperation})).catch(()=>{});
+  }
+  homePhotoRequestId++;
+  homePhotoPath='';homePhotoHourKey='';homePhotoHasPainted=false;
+  document.body.classList.remove('us-fastboot-photo');
+  clearPrivateDeviceState(previousId).catch(()=>{});
+  for(const id of ['homePhotoLayerA','homePhotoLayerB']){
+    const layer=document.getElementById(id);if(layer)layer.style.backgroundImage='';
+  }
+  usOnboarding.reset();
+  resetNoiIdeasForIdentityChange();
+  window.usProfile=null;
+  window.UsCoupleContext?.clear?.();
+  window.UsWidgets?.clear?.().catch(()=>{});
+  window.UsNotifications?.signedOut?.();
+  if(usRealtimeChannel){sb.removeChannel(usRealtimeChannel);usRealtimeChannel=null;}
+  document.documentElement.classList.remove('us-auth-ready','us-returning-device');
+  document.documentElement.classList.add('us-auth-pending');
+}
+window.addEventListener('us-app-lock-change',event=>{if(event.detail?.locked)usAuthEpoch++;});
 
 function usRunWhenIdle(task,timeout=1000){
   const run=()=>Promise.resolve().then(task).catch(error=>console.warn('[US Boot] deferred task',error));
@@ -775,7 +905,8 @@ function usWithDeadline(promise,ms,label='operation timeout'){
 }
 
 async function initCloud(){
-  if(usInitCloudInFlight)return usInitCloudInFlight;
+  if(usInitCloudInFlight){usInitCloudAgain=true;return usInitCloudInFlight;}
+  const bootEpoch=usAuthEpoch;
 
   usInitCloudInFlight=(async()=>{
     let cachedDeviceProfile=null;
@@ -815,14 +946,17 @@ async function initCloud(){
       }catch(_e){}
     }
 
+    if(bootEpoch!==usAuthEpoch)return;
     // Native Security V1: with biometric protection on, nothing private is
     // painted or fetched until the person unlocks (or chooses the account login).
     if(session&&window.UsAppLock){
       const access=await window.UsAppLock.gate({userId:session.user.id});
-      if(access!=='open')return;
+      if(access!=='open'||bootEpoch!==usAuthEpoch)return;
     }
 
+    usAuthUserId=session?.user?.id||'';
     if(!session){
+      usOnboarding.reset();
       // No session on this phone: nothing left to protect, the login is the way in.
       try{await window.UsAppLock?.signedOut?.();}catch(_e){}
       window.UsNotifications?.signedOut?.();
@@ -831,7 +965,7 @@ async function initCloud(){
       window.usProfile = null;
       window.UsCoupleContext?.clear?.();
       window.UsWidgets?.clear?.().catch(()=>{});
-      document.documentElement.classList.remove('us-returning-device','us-auth-pending');
+      document.documentElement.classList.remove('us-returning-device','us-auth-pending','us-auth-ready');
       setCloudBadge(false,navigator.onLine?'accesso richiesto':'offline');
       document.getElementById('authOverlay').classList.remove('hidden');
       showAuthStep('authLogin');
@@ -850,46 +984,22 @@ async function initCloud(){
       return;
     }
 
-    // The device is already paired: show the shell immediately from the
-    // profile snapshot while Supabase validates/freshens it in background.
-    let cachedProfile=null;
-    try{
-      if(cachedDeviceProfile?.id===session.user.id)cachedProfile=cachedDeviceProfile;
-    }catch(_e){}
-
-    if(cachedProfile){
-      resetNoiIdeasForIdentityChange();
-      clearUsCoupleContext();
-      window.usProfile=cachedProfile;
-      selectedRole=cachedProfile.role;
-      document.getElementById('authOverlay').classList.add('hidden');
-      setCloudBadge(true,'sync');
-    }
-
-    const {data:freshProfile,error}=await sb.from('profiles')
-      .select('id,display_name,role,couple_id,avatar_path')
-      .eq('id',session.user.id)
-      .maybeSingle();
-
-    if(error)console.warn(error);
-    const profile=freshProfile||cachedProfile;
-
-    if(!profile){
+    // Cached profiles never authorize membership. These reads run in parallel,
+    // after the native lock, and must both succeed before revealing the shell.
+    const result=await usOnboarding.load(session);
+    if(bootEpoch!==usAuthEpoch||window.UsAppLock?.isLocked?.()||!result)return;
+    if(result.kind!=='PAIRED'){
       resetNoiIdeasForIdentityChange();
       window.UsNotifications?.signedOut?.();
       window.usProfile = null;
       window.UsCoupleContext?.clear?.();
       window.UsWidgets?.clear?.().catch(()=>{});
-      document.documentElement.classList.remove('us-returning-device','us-auth-pending');
+      if(usRealtimeChannel){sb.removeChannel(usRealtimeChannel);usRealtimeChannel=null;}
       setCloudBadge(false,'da collegare');
-      document.getElementById('authOverlay').classList.remove('hidden');
-      // A permanent authenticated account without a valid US profile must
-      // never fall back to anonymous pairing. The front door is password-only.
-      showAuthStep('authLogin');
-      setAuthStatus('loginStatus','Nessun profilo US valido associato a questo account.','error');
       window.dispatchEvent(new CustomEvent('us-auth-resolved',{detail:{paired:false}}));
       return;
     }
+    const profile=result.profile;
 
     resetNoiIdeasForIdentityChange();
     clearUsCoupleContext();
@@ -931,6 +1041,7 @@ async function initCloud(){
     return await usInitCloudInFlight;
   }finally{
     usInitCloudInFlight=null;
+    if(usInitCloudAgain){usInitCloudAgain=false;setTimeout(initCloud,0);}
   }
 }
 
@@ -947,6 +1058,7 @@ function showAuthStep(id){
   document.querySelectorAll('.auth-step').forEach(x=>x.classList.remove('active'));
   const next=document.getElementById(id);
   if(next)next.classList.add('active');
+  window.dispatchEvent(new CustomEvent('us-onboarding-view-change'));
 }
 
 function setCloudBadge(ok,text){
@@ -1479,12 +1591,14 @@ function homeStableIndex(seed,count){
 
 async function getHomeRotationPath(){
   if(!window.usProfile)return null;
+  const viewer=window.usProfile,epoch=usAuthEpoch;
   const {data:rows,error}=await sb.from('moments')
     .select('id,storage_path,moment_date,created_at')
     .eq('couple_id',window.usProfile.couple_id)
     .order('moment_date',{ascending:false})
     .order('created_at',{ascending:false})
     .limit(120);
+  if(window.usProfile!==viewer||epoch!==usAuthEpoch)return undefined;
   if(error){console.warn(error);return undefined;}
   if(rows?.length){
     const key=homeRotationKey();
@@ -1493,12 +1607,15 @@ async function getHomeRotationPath(){
     return rows[idx]?.storage_path||null;
   }
   const {data:couple,error:coupleError}=await sb.from('couples').select('home_photo_path').eq('id',window.usProfile.couple_id).maybeSingle();
+  if(window.usProfile!==viewer||epoch!==usAuthEpoch)return undefined;
   if(coupleError){console.warn(coupleError);return undefined;}
   return couple?.home_photo_path||null;
 }
 
 function crossfadeHomePhoto(url,{path='',hourKey='',allowRetry=true}={}){
   const requestId=++homePhotoRequestId;
+  const viewer=window.usProfile,epoch=usAuthEpoch;
+  const currentViewer=()=>requestId===homePhotoRequestId&&window.usProfile===viewer&&epoch===usAuthEpoch;
   const hero=document.getElementById('homeHero');
   const empty=document.getElementById('homeEmptyState');
   const nextKey=homePhotoActiveLayer==='A'?'B':'A';
@@ -1506,13 +1623,14 @@ function crossfadeHomePhoto(url,{path='',hourKey='',allowRetry=true}={}){
   const next=document.getElementById(`homePhotoLayer${nextKey}`);
   if(!hero||!current||!next)return;
   const apply=()=>{
-    if(requestId!==homePhotoRequestId)return;
+    if(!currentViewer())return;
     const firstValid=Boolean(url)&&!homePhotoHasPainted;
     hero.classList.toggle('is-empty',!url);
     if(empty)empty.hidden=Boolean(url);
     if(!url&&typeof layoutOggiEmptyState==='function')requestAnimationFrame(layoutOggiEmptyState);
     next.style.backgroundImage=url?`url("${url}")`:'';
     const paint=()=>{
+      if(!currentViewer())return;
       next.classList.add('active');
       current.classList.remove('active');
       homePhotoActiveLayer=nextKey;
@@ -1543,11 +1661,12 @@ function crossfadeHomePhoto(url,{path='',hourKey='',allowRetry=true}={}){
     apply();
   };
   preload.onerror=async()=>{
-    if(requestId!==homePhotoRequestId)return;
+    if(!currentViewer())return;
     console.warn('[US Home] preload foto fallito');
     if(path&&allowRetry){
       usInvalidateSignedUrl(path);
       const fresh=await usGetSignedUrl(path,21600,{force:true});
+      if(!currentViewer())return;
       if(fresh&&fresh!==url){
         crossfadeHomePhoto(fresh,{path,hourKey,allowRetry:false});
         return;
@@ -1565,6 +1684,7 @@ function crossfadeHomePhoto(url,{path='',hourKey='',allowRetry=true}={}){
 
 async function hydrateHomePhoto(force=false){
   if(!window.usProfile)return;
+  const viewer=window.usProfile,epoch=usAuthEpoch;
   const hourKey=homeRotationKey();
   if(!force && homePhotoHourKey===hourKey && homePhotoPath && homePhotoHasPainted)return;
 
@@ -1579,6 +1699,7 @@ async function hydrateHomePhoto(force=false){
   }
 
   const path=await getHomeRotationPath();
+  if(window.usProfile!==viewer||epoch!==usAuthEpoch)return;
   if(path===undefined)return;
   if(!path){
     homePhotoHourKey=hourKey;
@@ -1592,6 +1713,7 @@ async function hydrateHomePhoto(force=false){
     return;
   }
   const signedUrl=await usGetSignedUrl(path,21600,{force});
+  if(window.usProfile!==viewer||epoch!==usAuthEpoch)return;
   if(!signedUrl)return;
   crossfadeHomePhoto(signedUrl,{path,hourKey});
 }
@@ -4751,6 +4873,7 @@ setInterval(()=>refreshVisibleState(),60000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&window.usProfile)refreshVisibleState({foreground:true});});
 sb.auth.onAuthStateChange((event,_session)=>{
   if(event==='INITIAL_SESSION'||event==='TOKEN_REFRESHED')return;
+  if(event==='SIGNED_OUT'||(_session?.user?.id||'')!==usAuthUserId)usInvalidateAuth();
   setTimeout(initCloud,0);
 });
 const loginBtn=document.getElementById('loginBtn');

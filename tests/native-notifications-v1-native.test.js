@@ -128,7 +128,7 @@ test('N2 payload contract: only allow-listed targets, UUID refs, no URL ever nav
   assert.equal(normalizeToken('android', 'short'), '');
 });
 
-test('N2 client source: no permission at boot, no URL navigation, nothing persisted beyond ids and flags', () => {
+test('N2 client source: no permission at boot, no URL navigation, only push ownership metadata persisted', () => {
   const client = read('notifications.js');
   assert.doesNotMatch(client, /location\.(href|assign|replace)|window\.open\(|innerHTML|eval\(/);
   assert.doesNotMatch(client, /console\.(log|info)\(/, 'tokens are never logged');
@@ -137,7 +137,8 @@ test('N2 client source: no permission at boot, no URL navigation, nothing persis
   assert.match(enable, /push\.requestPermissions\(\)/);
   assert.equal(client.split('requestPermissions(').length - 1, 1);
   const stored = [...client.matchAll(/'us:notifications:v1:[^']*'|`us:notifications:v1:[^`]*`/g)].map((m) => m[0]);
-  assert.deepEqual(stored, ["'us:notifications:v1:installation'", "'us:notifications:v1:retired'", '`us:notifications:v1:enabled:${userId}`', '`us:notifications:v1:synced:${userId}`']);
+  assert.deepEqual(stored, ["'us:notifications:v1:installation'", "'us:notifications:v1:owner'", "'us:notifications:v1:token'", "'us:notifications:v1:retired'", '`us:notifications:v1:enabled:${userId}`', '`us:notifications:v1:synced:${userId}`']);
+  assert.doesNotMatch(client, /access_token|refresh_token|service_role/, 'push tokens never replace Auth credentials');
   // Android: FirebaseMessaging is never touched without a configuration.
   assert.match(client, /if \(status\?\.available && status\.configured\) \{\s*try \{ await withTimeout\(push\.unregister\(\)/);
   // Navigation waits for the session AND the app lock.
@@ -147,5 +148,5 @@ test('N2 client source: no permission at boot, no URL navigation, nothing persis
   assert.match(app, /if\(!US_PUSH_TARGETS\.includes\(target\)\)return;/);
   assert.match(app, /window\.UsNotifications\?\.revokeDevice\?\.\(\)/);
   const revoke = app.slice(app.indexOf('async function revokeCurrentDevice('), app.indexOf('window.revokeCurrentDevice='));
-  assert.ok(revoke.indexOf('disableWebPush') < revoke.indexOf('UsNotifications') && revoke.indexOf('UsNotifications') < revoke.indexOf('clearPrivateDeviceState'));
+  assert.ok(revoke.indexOf('UsNotifications') < revoke.indexOf('disableWebPush') && revoke.indexOf('disableWebPush') < revoke.indexOf('clearPrivateDeviceState'), 'capture native identity before awaiting Web Push cleanup');
 });
