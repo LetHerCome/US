@@ -29,6 +29,8 @@
   const APNS_TOKEN = /^[0-9a-f]+$/;
   const STORE = Object.freeze({
     installation: 'us:notifications:v1:installation',
+    owner: 'us:notifications:v1:owner',
+    token: 'us:notifications:v1:token',
     retired: 'us:notifications:v1:retired',
     enabled: (userId) => `us:notifications:v1:enabled:${userId}`,
     synced: (userId) => `us:notifications:v1:synced:${userId}`
@@ -36,7 +38,6 @@
   const PENDING_MAX_AGE_MS = 30 * 60 * 1000;
   const REGISTRATION_TIMEOUT_MS = 15000;
   const CALL_TIMEOUT_MS = 6000;
-  const RETIRED_MAX = 4;
 
   // ---- Pure helpers (also exercised by tests) -----------------------------
 
@@ -109,11 +110,11 @@
   function retired() {
     try {
       const list = JSON.parse(read(STORE.retired) || '[]');
-      return Array.isArray(list) ? list.filter((id) => typeof id === 'string' && UUID.test(id)).slice(0, RETIRED_MAX) : [];
+      return Array.isArray(list) ? list.filter((entry) => typeof entry === 'string' ? UUID.test(entry) : entry && UUID.test(entry.id)) : [];
     } catch (_) { return []; }
   }
   function setRetired(list) {
-    const unique = [...new Set(list)].slice(0, RETIRED_MAX);
+    const unique = list.filter((entry, index) => list.findIndex((other) => JSON.stringify(other) === JSON.stringify(entry)) === index);
     if (unique.length) write(STORE.retired, JSON.stringify(unique));
     else remove(STORE.retired);
   }
@@ -127,6 +128,18 @@
   let tokenWaiters = [];
   let resumeInFlight = null;
   let serverConfirmedFor = '';
+  let cleanup = Promise.resolve();
+  let authGeneration = 0;
+  let registrationInFlight = Promise.resolve();
+  const assertOwner = (owner) => { if (!session.ready || session !== owner) throw new Error('stale_session'); };
+  function retireInstallation() {
+    const id = installationId({ create: false });
+    const userId = read(STORE.owner) || session.userId;
+    if (id) setRetired([{ id, userId, token: read(STORE.token) || lastToken }, ...retired()]);
+    remove(STORE.installation); remove(STORE.owner); remove(STORE.token);
+    if (userId) { remove(STORE.enabled(userId)); remove(STORE.synced(userId)); }
+    lastToken = '';
+  }
 
   // ---- Native status ------------------------------------------------------
 
@@ -166,32 +179,40 @@
 
   async function requestToken() {
     const waiting = new Promise((resolve, reject) => tokenWaiters.push({ resolve, reject }));
+    waiting.catch(() => {}); // logout can reject while the plugin call is pending
     await push.register();
     return withTimeout(waiting, REGISTRATION_TIMEOUT_MS);
   }
 
-  async function registerToken(token, status) {
+  async function registerToken(token, status, owner = session) {
+    assertOwner(owner);
     const db = client();
     if (!db || !session.ready) throw new Error('no_session');
     const normalized = normalizeToken(status.platform, token);
     if (!normalized) throw new Error('token_invalid');
     const installation = installationId();
-    const pendingRetired = retired().find((id) => id !== installation) || null;
+    if (retired().some((entry) => typeof entry === 'string' || !entry.token || entry.token === normalized)) throw new Error('retired_token');
+    write(STORE.owner, owner.userId);
+    write(STORE.token, normalized);
+    const pendingRetired = null;
     const signature = JSON.stringify([installation, normalized, status.environment, new Date().toISOString().slice(0, 10)]);
     // On every cold app process, confirm the row with the server at least once.
     // This repairs a token row that may have been pruned remotely while the
     // device still has a valid provider token. Later resumes in the same
     // process stay cheap and use the local signature.
     if (!pendingRetired && serverConfirmedFor === session.userId && read(STORE.synced(session.userId)) === signature) return true;
-    const { error } = await withTimeout(db.rpc('register_native_push_device', {
+    const request = db.rpc('register_native_push_device', {
       target_installation_id: installation,
       target_platform: status.platform,
       target_provider: status.provider,
       target_token: normalized,
       target_environment: status.environment,
       target_retired_installation_id: pendingRetired
-    }), CALL_TIMEOUT_MS);
+    });
+    registrationInFlight = Promise.resolve(request).catch(() => {});
+    const { error } = await withTimeout(request, CALL_TIMEOUT_MS);
     if (error) throw error;
+    assertOwner(owner);
     if (pendingRetired) setRetired(retired().filter((id) => id !== pendingRetired));
     write(STORE.synced(session.userId), signature);
     serverConfirmedFor = session.userId;
@@ -203,9 +224,10 @@
     settleToken(null, lastToken);
     // Token rotation while signed in and enabled on this installation.
     if (!session.ready || !isEnabledFor(session.userId) || busy) return;
+    const owner = session;
     try {
       const status = await nativeStatus();
-      if (status.available && status.configured) await registerToken(lastToken, status);
+      if (status.available && status.configured) await registerToken(lastToken, status, owner);
     } catch (_) { /* retried at the next start */ }
   }
 
@@ -295,7 +317,9 @@
     if (!push || !session.ready) return { ok: false, kind: 'unavailable' };
     if (busy) return { ok: false, kind: 'busy' };
     busy = true;
+    const owner = session;
     try {
+      await cleanup; assertOwner(owner);
       const status = await nativeStatus();
       if (!status.available || !status.configured) return { ok: false, kind: 'unavailable' };
       let perm = await permission();
@@ -304,8 +328,10 @@
         perm = result?.receive || 'denied';
       }
       if (perm !== 'granted') return { ok: false, kind: 'denied' };
+      assertOwner(owner);
       const token = await requestToken();
-      await registerToken(token, status);
+      await registerToken(token, status, owner);
+      assertOwner(owner);
       write(STORE.enabled(session.userId), '1');
       return { ok: true, kind: 'active' };
     } catch (_) {
@@ -353,32 +379,35 @@
     pending = null;
     if (!push) return;
     const userId = session.userId;
-    const installation = installationId({ create: false });
-    const status = await nativeStatus();
-    if (installation) {
-      let removed = false;
-      try {
-        const db = client();
-        const { error } = db ? await withTimeout(db.rpc('unregister_native_push_device', { target_installation_id: installation }), CALL_TIMEOUT_MS) : { error: true };
-        removed = !error;
-      } catch (_) { removed = false; }
-      if (!removed) setRetired([installation, ...retired()]);
-    }
-    await stopNativeDelivery(status);
-    try { await withTimeout(push.removeAllDeliveredNotifications(), 2500); } catch (_) {}
-    try { await withTimeout(support?.setBadge?.({ count: 0 }), 2500); } catch (_) {}
-    // The next account on this phone gets a new installation identity.
-    remove(STORE.installation);
-    if (userId) { remove(STORE.enabled(userId)); remove(STORE.synced(userId)); }
+    retireInstallation();
+    session = { ready: false, userId };
+    cleanup = (async () => {
+      let settled = true;
+      try { await withTimeout(registrationInFlight, CALL_TIMEOUT_MS); } catch (_) { settled = false; }
+      // A timed-out registration may still commit later. Keep its token blocked.
+      if (settled) await retryRetired(userId);
+      await stopNativeDelivery(await nativeStatus());
+      try { await withTimeout(push.removeAllDeliveredNotifications(), 2500); } catch (_) {}
+      try { await withTimeout(support?.setBadge?.({ count: 0 }), 2500); } catch (_) {}
+    })();
+    await cleanup;
   }
 
-  async function retryRetired() {
+  async function retryRetired(userId = session.userId) {
     const db = client();
     if (!db) return;
-    for (const id of retired()) {
+    try { await withTimeout(registrationInFlight, CALL_TIMEOUT_MS); } catch (_) { return; }
+    const ownsSession = async () => {
+      if (!db.auth?.getSession) return true;
+      try { const result = await withTimeout(db.auth.getSession(), CALL_TIMEOUT_MS); return result?.data?.session?.user?.id === userId; } catch (_) { return false; }
+    };
+    for (const entry of retired()) {
+      // UUID-only legacy entries have no provable owner and stay quarantined.
+      if (typeof entry === 'string' || entry.userId !== userId) continue;
       try {
-        const { error } = await withTimeout(db.rpc('unregister_native_push_device', { target_installation_id: id }), CALL_TIMEOUT_MS);
-        if (!error) setRetired(retired().filter((x) => x !== id));
+        if (!await ownsSession()) return;
+        const { error } = await withTimeout(db.rpc('unregister_native_push_device', { target_installation_id: entry.id }), CALL_TIMEOUT_MS);
+        if (!error && await ownsSession()) setRetired(retired().filter((x) => typeof x === 'string' || x.id !== entry.id));
       } catch (_) { return; }
     }
   }
@@ -396,11 +425,13 @@
 
   async function syncEnabledInstallation() {
     if (!push || !session.ready || !isEnabledFor(session.userId)) return;
+    const owner = session;
     const status = await nativeStatus();
     if (!status.available || !status.configured || (await permission()) !== 'granted') return;
+    if (session !== owner) return;
     try {
       const token = await requestToken();
-      await registerToken(token, status);
+      await registerToken(token, status, owner);
     } catch (_) { /* retry on the next foreground/cold start */ }
   }
 
@@ -415,7 +446,9 @@
     if (resumeInFlight) return resumeInFlight;
     resumeInFlight = (async () => {
       if (!push || !session.ready || document.hidden) return;
+      const owner = session;
       await retryRetired();
+      if (session !== owner) return;
       if (!isEnabledFor(session.userId)) return;
       await clearSeenNotifications();
       await syncEnabledInstallation();
@@ -426,7 +459,10 @@
   /** app.js: a paired profile is ready (after the app lock gate). */
   async function authReady(profile) {
     if (!profile?.id) return;
-    if (session.userId && session.userId !== profile.id) serverConfirmedFor = '';
+    if ((session.userId && session.userId !== profile.id) || (read(STORE.owner) && read(STORE.owner) !== profile.id)) signedOut();
+    const generation = ++authGeneration;
+    await cleanup;
+    if (generation !== authGeneration) return;
     session = { ready: true, userId: profile.id };
     flush();
     await resume();
@@ -434,6 +470,16 @@
 
   /** app.js: no session on this phone. */
   function signedOut() {
+    authGeneration++;
+    if (push && installationId({ create: false })) {
+      retireInstallation();
+      cleanup = cleanup.then(async () => {
+        await stopNativeDelivery(await nativeStatus());
+        try { await withTimeout(push.removeAllDeliveredNotifications(), 2500); } catch (_) {}
+        try { await withTimeout(support?.setBadge?.({ count: 0 }), 2500); } catch (_) {}
+      });
+    }
+    settleToken(new Error('signed_out'));
     session = { ready: false, userId: '' };
     serverConfirmedFor = '';
     pending = null;

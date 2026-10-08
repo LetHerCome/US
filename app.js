@@ -420,6 +420,25 @@ async function usPrewarmNativeMomentMedia(limit=4){
 const US_VAPID_PUBLIC_KEY='BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss';
 let usPushUiBusy=false;
 let usPushOperationInFlight=null;
+let usPushCleanup=Promise.resolve();
+const US_PUSH_RETIRED_KEY='us:push:retired:v1';
+function usRetiredWebPush(){
+  try{return JSON.parse(localStorage.getItem(US_PUSH_RETIRED_KEY)||'[]');}catch(_e){return [];}
+}
+function usSaveRetiredWebPush(list){
+  if(list.length)localStorage.setItem(US_PUSH_RETIRED_KEY,JSON.stringify(list));
+  else localStorage.removeItem(US_PUSH_RETIRED_KEY);
+}
+async function usRetryRetiredWebPush(profileId){
+  for(const entry of usRetiredWebPush()){
+    if(entry.userId!==profileId)continue;
+    try{
+      if(window.usProfile?.id!==profileId)return;
+      const {error}=await usWithDeadline(sb.rpc('remove_web_push_subscription',{target_endpoint:entry.endpoint}),5000);
+      if(!error&&window.usProfile?.id===profileId)usSaveRetiredWebPush(usRetiredWebPush().filter(x=>x.endpoint!==entry.endpoint));
+    }catch(_e){}
+  }
+}
 let usPendingPushTarget=null;
 
 function isIosDevice(){return /iphone|ipad|ipod/i.test(navigator.userAgent||'');}
@@ -443,7 +462,13 @@ async function getCurrentPushSubscription(){
 }
 async function syncPushSubscriptionToSupabase(subscription){
   if(!subscription||!window.usProfile)return false;
+  const profile=window.usProfile,epoch=usAuthEpoch;
+  await usPushCleanup;
+  if(window.usProfile!==profile||usAuthEpoch!==epoch)return false;
+  await usRetryRetiredWebPush(profile.id);
+  if(window.usProfile!==profile||usAuthEpoch!==epoch)return false;
   const json=subscription.toJSON();
+  if(usRetiredWebPush().some(entry=>entry.endpoint===json.endpoint))return false;
   const signature=JSON.stringify([json.endpoint,json.keys?.p256dh||'',json.keys?.auth||'',json.expirationTime??null]);
   const cacheKey=`us:push:subscription:${window.usProfile.id}`;
   try{if(localStorage.getItem(cacheKey)===signature)return true;}catch(_e){}
@@ -455,6 +480,7 @@ async function syncPushSubscriptionToSupabase(subscription){
     target_user_agent:(navigator.userAgent||'').slice(0,500)
   });
   if(error){console.warn('[US Push] subscription sync failed',error);return false;}
+  if(window.usProfile!==profile||usAuthEpoch!==epoch)return false;
   try{localStorage.setItem(cacheKey,signature);}catch(_e){}
   return true;
 }
@@ -489,6 +515,15 @@ function setPushSettingsState(kind,title,detail,actionLabel=''){
   }
 }
 async function refreshWebPushUi(){
+  // Cleanup may be waiting for this operation: never join it from inside it.
+  if(usPushUiBusy)return;
+  const viewer=window.usProfile,epoch=usAuthEpoch;
+  if(viewer){
+    await usPushCleanup;
+    if(window.usProfile!==viewer||usAuthEpoch!==epoch)return;
+    await usRetryRetiredWebPush(viewer.id);
+    if(window.usProfile!==viewer||usAuthEpoch!==epoch)return;
+  }
   const card=document.getElementById('pushOptInCard'),title=document.getElementById('pushOptInTitle'),text=document.getElementById('pushOptInText'),button=document.getElementById('pushEnableBtn'),settings=document.getElementById('pushSettingsRow');
   if(!card||!window.usProfile){if(card)card.hidden=true;if(settings)settings.hidden=true;return;}
   card.classList.remove('install-only','denied');
@@ -561,16 +596,20 @@ async function enableWebPush(){
   const operationDone=new Promise(resolve=>{finishOperation=resolve;});
   usPushOperationInFlight=operationDone;
   usPushUiBusy=true;if(button){button.disabled=true;button.textContent='Attivo…';}
+  const profile=window.usProfile,epoch=usAuthEpoch;
   try{
+    await usPushCleanup;
     let permission=Notification.permission;
     if(permission==='default')permission=await Notification.requestPermission();
     if(permission!=='granted'){await refreshWebPushUi();return;}
     const reg=await getUsServiceWorkerRegistration();
+    if(window.usProfile!==profile||usAuthEpoch!==epoch)return;
     if(!reg)throw new Error('Service worker unavailable');
     let subscription=await reg.pushManager.getSubscription();
     if(!subscription){
       subscription=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(US_VAPID_PUBLIC_KEY)});
     }
+    if(window.usProfile!==profile||usAuthEpoch!==epoch){await subscription.unsubscribe();return;}
     const synced=await syncPushSubscriptionToSupabase(subscription);
     if(!synced)throw new Error('Subscription sync failed');
     toast('Notifiche attive ♡');
@@ -581,6 +620,7 @@ async function enableWebPush(){
     usPushUiBusy=false;if(button)button.disabled=false;
     if(usPushOperationInFlight===operationDone)usPushOperationInFlight=null;
     finishOperation();
+    refreshWebPushUi().catch(()=>{});
   }
 }
 window.enableWebPush=enableWebPush;
@@ -600,11 +640,18 @@ async function disableWebPush(options={}){
   try{
     subscription=await getCurrentPushSubscription();
     if(subscription){
+      usSaveRetiredWebPush([...usRetiredWebPush().filter(x=>x.endpoint!==subscription.endpoint),{userId:profileId,endpoint:subscription.endpoint}]);
       try{
-        const {error}=await sb.rpc('remove_web_push_subscription',{target_endpoint:subscription.endpoint});
-        if(error)console.warn('[US Push] remove subscription',error);
+        const {error}=options?.localOnly?{error:true}:await usWithDeadline(sb.rpc('remove_web_push_subscription',{target_endpoint:subscription.endpoint}),5000);
+        if(error)disableFailed=true;
+        else usSaveRetiredWebPush(usRetiredWebPush().filter(x=>x.endpoint!==subscription.endpoint));
       }catch(error){disableFailed=true;console.warn('[US Push] remove subscription',error);}
-      try{await subscription.unsubscribe();}catch(error){console.warn('[US Push] unsubscribe',error);}
+      let unsubscribed=false;
+      try{unsubscribed=await subscription.unsubscribe();}catch(error){console.warn('[US Push] unsubscribe',error);}
+      if(!unsubscribed){
+        disableFailed=true;
+        usSaveRetiredWebPush([...usRetiredWebPush().filter(x=>x.endpoint!==subscription.endpoint),{userId:profileId,endpoint:subscription.endpoint}]);
+      }
     }
     try{if(profileId)localStorage.removeItem(`us:push:subscription:${profileId}`);}catch(_e){}
     if(!silent)toast(disableFailed?'Non riesco a disattivare le notifiche':'Notifiche disattivate');
@@ -615,9 +662,9 @@ async function disableWebPush(options={}){
     return false;
   }finally{
     usPushUiBusy=false;
-    if(refreshUi)try{await refreshWebPushUi();}catch(error){console.warn('[US Push] refresh after disable',error);}
     if(usPushOperationInFlight===operationDone)usPushOperationInFlight=null;
     finishOperation();
+    if(refreshUi)try{await refreshWebPushUi();}catch(error){console.warn('[US Push] refresh after disable',error);}
   }
 }
 window.disableWebPush=disableWebPush;
@@ -688,9 +735,11 @@ async function clearPrivateDeviceState(profileId=window.usProfile?.id||''){
 
 async function revokeCurrentDevice(){
   const profileId=window.usProfile?.id||'';
+  // Capture native identity synchronously, before the Web Push await or invalidation.
+  const nativeRevocation=window.UsNotifications?.revokeDevice?.();
   try{await disableWebPush({silent:true,refreshUi:false,profileId});}catch(error){console.warn('[US Logout] push revoke',error);}
   // Native app: only this installation's push registration, with a retry if offline.
-  try{await window.UsNotifications?.revokeDevice?.();}catch(error){console.warn('[US Logout] native push revoke',error);}
+  try{await nativeRevocation;}catch(error){console.warn('[US Logout] native push revoke',error);}
   try{await clearPrivateDeviceState(profileId);}catch(error){console.warn('[US Logout] private cleanup',error);}
   try{await window.UsWidgets?.clear?.();}catch(error){console.warn('[US Logout] widget cleanup',error);}
 }
@@ -751,9 +800,10 @@ const usOnboarding=window.UsOnboarding.mount({
   },
   resume:()=>{setTimeout(initCloud,0);},
   signOut:async()=>{
-    usInvalidateAuth();
+    const revocation=revokeCurrentDevice();
+    usInvalidateAuth({revokePush:false});
     try{
-      await usWithDeadline(revokeCurrentDevice(),5000);
+      await revocation;
       const result=await usWithDeadline(sb.auth.signOut(),5000);
       if(result?.error)throw result.error;
       window.UsAppLock?.reset?.();
@@ -761,9 +811,13 @@ const usOnboarding=window.UsOnboarding.mount({
     }catch(_error){await initCloud();}
   }
 });
-function usInvalidateAuth(){
+function usInvalidateAuth({revokePush=true}={}){
   usAuthEpoch++;
   const previousId=window.usProfile?.id||usAuthUserId;
+  if(revokePush&&previousId){
+    // Auth already moved: never issue an A revocation with B's credentials.
+    usPushCleanup=usPushCleanup.then(()=>disableWebPush({silent:true,refreshUi:false,profileId:previousId,localOnly:true})).catch(()=>{});
+  }
   homePhotoRequestId++;
   homePhotoPath='';homePhotoHourKey='';homePhotoHasPainted=false;
   document.body.classList.remove('us-fastboot-photo');

@@ -1,5 +1,25 @@
 # MC3 validation candidate
 
+## MC3 push security correction — 2026-10-08
+
+This section reports NEW implementation after `db8963d3a69a4e526ad1432916427617249b2148`; the original mission report below remains historical. Destination: `mission/us-mc3-onboarding-invites-v1`. Implementation checkout: `codex/mc3-push-security-fix` (the destination branch is checked out in another worktree). The new commit SHA is provided in the delivery message.
+
+MC3 logout now starts device revocation before invalidating private state. Native revocation snapshots and retires its installation synchronously before awaiting Web Push, and logout waits for cleanup before Auth signOut. Account-change invalidation is a separate local cleanup path: it does not attempt to revoke A using B credentials or run Auth RPCs synchronously inside onAuthStateChange.
+
+Web Push persists unresolved endpoints with their owner, unsubscribes locally even when remote revocation fails, retries on the owner's next UI refresh/registration, and rejects quarantined endpoints for B. Native retirement now stores installation/owner/provider-token metadata without dropping older unresolved retirements. Cleanup retries only with the original authenticated owner, rotates installation IDs, clears per-account enable/sync state, and blocks any unresolved old token (including a stable APNs token) from registration. Legacy UUID-only retirements without provable ownership stay quarantined. No Auth credentials or administrative keys are persisted by these additions.
+
+Identity/generation checks reject obsolete enable, token, registration and authReady work. Cleanup waits for outstanding native registration; if that request is still unresolved after its deadline, its retirement remains blocked. UI refresh releases push operations before joining cleanup to avoid a logout/enable dependency cycle. Delivered native notifications and badges are cleared during local account cleanup.
+
+New regression file: `tests/mc3-push-lifecycle.test.js` (9 cases). First three reproductions failed on the untouched starting runtime before implementation. Coverage includes logout order, native A→B identity rotation, offline owner-only retry, cold-process retirement, obsolete authReady, late provider callbacks, Web Push remote failure, local-only account cleanup and unsubscribe failure. Existing logout/native test harnesses now exercise the new owner-bound retirement format.
+
+Final focused gate: **61 passed, 0 failed, 0 skipped** (new lifecycle, existing logout, MC3 controller, MC3 actual local SQL, boot/auth, Auth shutdown and Service Worker runtime). The worker gate includes push display and notificationclick. Full `npm test -- --test-concurrency=4`: **1682 total, 1551 passed, 30 failed, 101 skipped**, exit 1; the exact 30 failed names match the inherited list below. Full testing used existing local dependencies with an authorized execution outside the restricted sandbox; an earlier restricted run produced packaging access failures and is not the final result.
+
+Chromium MC3/native gate: **13 passed, 1 failed, 0 skipped**; all seven MC3 cases pass, including original Couple A bootstrap, four users/two couples, account switching, simultaneous login/Auth callback and late Home images. The remaining N3 cold-process registration timeout is the already documented inherited failure (now line 251); it is not claimed passing. Cloudflare Pages build: **PASS, 157 files**. `node --check app.js`, `node --check notifications.js`, `git diff --check`: **PASS**. Logs are retained outside the repository in this chat's visualization directory.
+
+Known limits: B cannot delete A's server row with the existing owner-authorized RPCs. Offline retired rows stay queued until A authenticates again (or provider pruning removes them); B cannot activate an unresolved matching native token. Legacy ownerless retirements conservatively block registration. Physical FCM/APNs/device verification remains a rollout gate. No database, RLS, Supabase configuration, approved assets or worker/build markers changed.
+
+Delivery scope: one NEW commit and ordinary fast-forward push to the MC3 destination branch. No PR, merge, deployment or production Supabase operations.
+
 Branch: `mission/us-mc3-onboarding-invites-v1`.
 Mission starting HEAD: `71363367796f8ab28a6ec24b0703fc87bae6b20a`.
 Runtime base: main `df7760b9b7519cfc148d064f2d01629ce8f763dc` (the starting branch differs only by its mission spec).
