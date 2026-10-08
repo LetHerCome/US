@@ -111,8 +111,13 @@
     }).join('');
     const manual = $('usWidgetHubManual');
     if (manual) {
-      manual.hidden = !(manualNeeded || device.pinSupported === false);
-      $('usWidgetHubVendor').hidden = device.vendor !== 'xiaomi';
+      // Instructions are always available, but collapsed unless Xiaomi or
+      // pinning explicitly needs a manual recovery path.
+      manual.hidden = false;
+      const guide = $('usWidgetHubGuide');
+      if (guide && (manualNeeded || device.pinSupported === false)) guide.open = true;
+      const vendor = $('usWidgetHubVendor');
+      if (vendor) vendor.hidden = device.vendor !== 'xiaomi';
     }
   }
 
@@ -184,7 +189,7 @@
     document.body.classList.add('us-settings-modal-open');
     render();
     refreshDevice().catch(() => {});
-    // The preview shows the real latest photo when it is cheap to have it.
+    // Preview uses Oggi's currently painted photo, not the latest Ricordo.
     widgets().syncPhoto?.().then(() => { if (isOpen()) render(); }).catch(() => {});
   }
 
