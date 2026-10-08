@@ -782,6 +782,7 @@ console.info('[US] Moments Albums attivo');
     head.innerHTML = `
       <div class="us-moments-head-copy">
         <h2>Ricordi</h2>
+        <p>La vostra storia, foto dopo foto.</p>
       </div>
       <div class="us-moments-head-actions">
         <span class="us-moments-total" id="usMomentsTotal"></span>
