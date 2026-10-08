@@ -43,7 +43,7 @@ test('Calendar nested details and form receive the shared centre-motion treatmen
   const html = read('index.html');
   const calendar = read('calendar.js');
   for(const id of ['usCalendarDetailSheet','usCalendarFormSheet']) {
-    assert.match(html,new RegExp('id="'+id+'" aria-hidden="true" data-us-motion-surface'));
+    assert.match(html,new RegExp('id="'+id+'" aria-hidden="true" data-us-modal data-us-motion-surface'));
     assert.match(calendar,new RegExp("'"+id+"'"));
   }
 });
