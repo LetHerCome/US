@@ -54,6 +54,8 @@ const APP_SHELL = [
   versioned("/top-chrome.css"),
   versioned("/modal-center.css"),
   versioned("/ricordi-carousel.css"),
+  versioned("/ricordi-inline-carousel.css"),
+  versioned("/ricordi-inline-carousel.js"),
   versioned("/identity.js"),
   versioned("/settings2.css"),
   versioned("/polish4.css"),
