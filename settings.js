@@ -298,7 +298,7 @@ function feedbackModal(){
       <button type="button" data-feedback-preview="reveal">Sblocco</button>
     </div>
   </section>
-  <p class="us-feedback-preview-note">I tocchi ordinari sono silenziosi. Suoni e vibrazione seguono le preferenze di questo telefono.</p>`,'QUESTO TELEFONO');
+  <p class="us-feedback-preview-note" id="usFeedbackPreviewStatus" role="status" aria-live="polite">${prefs.sounds || prefs.haptics ? "I tocchi ordinari sono silenziosi. Suoni e vibrazione seguono le preferenze di questo telefono." : "Attiva suoni o feedback aptico per provare."}</p>`,'QUESTO TELEFONO');
   $('usSettingsModalBody').querySelectorAll('[data-feedback]').forEach(btn=>btn.addEventListener('click',()=>{
     const next=btn.getAttribute('aria-pressed')!=='true';
     if(btn.dataset.feedback==='sounds')window.UsFeedback?.setSoundsEnabled?.(next);
@@ -306,11 +306,21 @@ function feedbackModal(){
     btn.setAttribute('aria-pressed',next?'true':'false');
     btn.querySelector('i')?.classList.toggle('on',next);
     const value=$('usFeedbackValue');if(value)value.textContent=feedbackSummary();
+    const previewStatus=$('usFeedbackPreviewStatus');
+    const enabled=window.UsFeedback?.getPreferences?.();
+    if(previewStatus&&enabled)previewStatus.textContent=enabled.sounds||enabled.haptics?'I tocchi ordinari sono silenziosi. Suoni e vibrazione seguono le preferenze di questo telefono.':'Attiva suoni o feedback aptico per provare.';
     if(next)window.UsFeedback?.[btn.dataset.feedback==='sounds'?'action':'selection']?.();
   }));
   $('usSettingsModalBody').querySelectorAll('[data-feedback-preview]').forEach(btn=>btn.addEventListener('click',()=>{
     const kind=btn.dataset.feedbackPreview;
-    if(['action','success','attention','reveal'].includes(kind)) window.UsFeedback?.[kind]?.();
+    if(!['action','success','attention','reveal'].includes(kind))return;
+    const enabled=window.UsFeedback?.getPreferences?.();
+    if(enabled && !enabled.sounds && !enabled.haptics){
+      const status=$('usFeedbackPreviewStatus');
+      if(status)status.textContent='Attiva suoni o feedback aptico per provare.';
+      return;
+    }
+    window.UsFeedback?.[kind]?.();
   }));
 }
 
