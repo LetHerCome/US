@@ -47,6 +47,7 @@ const RUNTIME_FILES = [
   'settings.css',
   'settings.js',
   'identity.css',
+  'top-chrome.css',
   'identity.js',
   'settings2.css',
   'polish4.css',
