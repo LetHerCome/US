@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>US Premium Concepts</title>
+<!--
+  CONCEPT ISOLATO — NON È UI DI PRODUZIONE.
+  Missione: docs/missions/us-premium-ux-maudit-product-review-v1.md
+  Non importa CSS/JS runtime, non è servito dalla build (docs/ è escluso da
+  scripts/build-cloudflare-pages.mjs). Usa in sola lettura il simbolo US e il
+  kitten v0 APPROVED; i nuovi compagni sono SILHOUETTE segnaposto, non arte.
+  Aprire dal repository: docs/ux-concepts/us-premium-concepts.html
+-->
+<style>
+:root{
+  --bg:#08040e;--surface:#120e17;--elev:#1d1824;--text:#f7f2f8;--text2:rgba(247,242,248,.70);--text3:rgba(247,242,248,.50);
+  --rose:#ff668e;--violet:#a985ff;--ink:#dcbfe8;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);
+  --locked:rgba(247,242,248,.30);--grad:linear-gradient(135deg,#ff668e 0%,#ff86a4 46%,#a985ff 130%);
+  --serif:Georgia,"Newsreader",serif;--sans:system-ui,-apple-system,"Segoe UI",Inter,sans-serif;
+  --safe:47px; /* iPhone con Dynamic Island, logico */
+}
+*{box-sizing:border-box}
+body{margin:0;background:#1b1622;color:var(--text);font-family:var(--sans)}
+header.doc{max-width:1700px;margin:0 auto;padding:28px 24px 8px}
+header.doc h1{font-family:var(--serif);font-weight:500;margin:0 0 6px;font-size:28px}
+header.doc p{margin:4px 0;color:var(--text2);font-size:14px;max-width:900px;line-height:1.45}
+.badge{display:inline-block;background:#ffd36b;color:#2a1a00;font-weight:700;font-size:12px;padding:4px 10px;border-radius:999px;margin-bottom:10px}
+.board{display:flex;flex-wrap:wrap;gap:28px;justify-content:center;padding:18px 16px 60px;max-width:1700px;margin:0 auto}
+figure{margin:0}
+figcaption{max-width:390px;font-size:13px;color:var(--text2);line-height:1.45;margin-top:10px}
+figcaption b{color:var(--text)}
+.phone{width:390px;height:844px;border-radius:46px;background:var(--bg);position:relative;overflow:hidden;box-shadow:0 0 0 10px #000,0 30px 80px rgba(0,0,0,.6)}
+.status{height:var(--safe);display:flex;align-items:center;justify-content:space-between;padding:0 30px;font-size:15px;font-weight:600}
+.island{position:absolute;top:11px;left:50%;width:124px;height:36px;margin-left:-62px;background:#000;border-radius:20px}
+.i{display:inline-block;width:22px;height:22px;background:currentColor;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat}
+/* Barra compatta: niente pillola, tre bersagli da 44 sulla linea della safe area */
+.bar{height:44px;display:grid;grid-template-columns:44px 1fr 44px;align-items:center;padding:0 8px}
+.bar .t{width:44px;height:44px;display:grid;place-items:center;border-radius:50%;color:var(--text)}
+.bar .t.think{color:var(--rose)}
+.bar .mark{justify-self:center;width:34px;height:34px;object-fit:contain}
+.bar .back{display:flex;align-items:center;gap:2px;color:var(--ink);font-size:16px;font-weight:600;width:auto;padding-right:8px}
+.bar .title{justify-self:center;font-family:var(--serif);font-size:18px}
+.page{padding:8px 16px 0}
+.nav{position:absolute;left:12px;right:12px;bottom:26px;height:56px;border-radius:28px;background:rgba(24,20,31,.86);border:1px solid var(--line2);display:grid;grid-template-columns:repeat(4,1fr);align-items:center;text-align:center;font-size:11px;color:var(--text3)}
+.nav span{display:grid;justify-items:center;gap:3px}.nav .on{color:#f2a6ff}
+.pet{position:absolute;width:40px;height:40px}
+h2{font-family:var(--serif);font-weight:500;font-size:28px;margin:6px 0 12px}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);font-weight:700}
+.row{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.group{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:2px 16px;margin-bottom:14px}
+.muted{color:var(--text2);font-size:13px}
+.couple{display:flex;align-items:center;gap:10px;margin:2px 0 14px}
+.av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-size:18px;background:#2a1f33;border:1.5px solid var(--rose)}
+.prog{height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin:10px 0 4px}.prog i{display:block;height:100%;width:62%;background:var(--grad)}
+.sintonia{background:linear-gradient(160deg,#2a1730,#140f1a);border:1px solid var(--line);border-radius:18px;padding:16px;display:grid;grid-template-columns:1fr 64px;gap:8px;margin-bottom:14px}
+.sintonia .who{width:64px;height:64px;display:grid;place-items:center;background:rgba(255,255,255,.04);border-radius:16px}
+/* Compagni */
+.strip{display:flex;gap:10px;overflow:hidden;margin:8px -16px 16px;padding:0 16px}
+.comp{flex:0 0 118px;height:150px;border-radius:18px;background:var(--surface);border:1px solid var(--line);display:grid;grid-template-rows:1fr auto auto;justify-items:center;padding:10px 8px;text-align:center}
+.comp.active{border-color:rgba(255,157,205,.55);box-shadow:inset 0 0 0 1px rgba(255,157,205,.25)}
+.comp b{font-size:14px}.comp small{font-size:11px;color:var(--text3)}
+.comp.active small{color:#f2a6ff}
+.sil{width:64px;height:64px;align-self:center}
+.next{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:12px;margin-bottom:14px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tile{aspect-ratio:1;border-radius:14px;background:linear-gradient(170deg,#e0a28a,#7a4b7e);position:relative}
+.tile.f2{box-shadow:inset 0 0 0 5px #efe7da}.tile.f3{box-shadow:inset 0 0 0 2px #b7e1ff}
+.tile.lock{background:#17121c;border:1px dashed var(--line2)}
+.tile.lock::after{content:"Livello 4+";position:absolute;bottom:6px;left:0;right:0;text-align:center;font-size:10px;color:var(--text3)}
+.scrim{position:absolute;inset:0;background:rgba(6,3,10,.40)}
+.scrim.dark{background:rgba(6,3,10,.62)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#16111cf0;border-top:1px solid var(--line2);border-radius:28px 28px 0 0;padding:8px 20px 34px}
+.grab{width:36px;height:5px;border-radius:3px;background:rgba(255,255,255,.28);margin:0 auto 14px}
+.btn{display:block;width:100%;height:50px;border:0;border-radius:15px;background:var(--grad);color:#fff;font-size:16px;font-weight:700;margin-top:16px}
+.btn.done{background:rgba(255,255,255,.07);color:var(--text2)}
+.txt{display:block;width:100%;text-align:center;margin-top:12px;color:var(--text2);font-size:15px;font-weight:600}
+.chips{display:flex;gap:8px;margin-top:12px}.chip{height:36px;padding:0 14px;border-radius:18px;background:rgba(255,255,255,.06);display:grid;place-items:center;font-size:13px}
+.chip.lock{color:var(--text3)}
+.card{position:absolute;left:18px;right:18px;top:170px;border-radius:28px;background:#18121e;border:1px solid var(--line2);padding:20px;text-align:center}
+.stage{height:220px;border-radius:20px;background:radial-gradient(70% 60% at 50% 60%,rgba(255,150,190,.18),transparent 70%),#100c15;display:grid;place-items:center;margin:12px 0 16px;position:relative}
+.ph{position:absolute;bottom:10px;left:0;right:0;font-size:11px;color:#ffd36b}
+.place{display:inline-flex;gap:6px;align-items:center;font-size:13px;color:var(--text2);margin-top:8px}
+.place::before{content:"";width:7px;height:7px;border-radius:50%;background:#f2a6ff}
+.note{position:absolute;left:12px;right:12px;top:calc(var(--safe) + 50px);font-size:11px;color:#ffd36b;text-align:center}
+</style>
+</head>
+<body>
+<header class="doc">
+  <span class="badge">CONCEPT ISOLATO · NON È UI DI PRODUZIONE</span>
+  <h1>US Premium: quattro concept</h1>
+  <p>Wireframe ad alta fedeltà per discutere le proposte dei documenti in <code>docs/ux/</code>. Usano i token di <code>ui-foundation.css</code> copiati come valori e, in sola lettura, il simbolo US e il kitten v0 APPROVED. <b>I nuovi compagni sono silhouette segnaposto, non arte</b>: l'arte di ogni animale richiede una specifica e un'approvazione separate.</p>
+  <p>Larghezza 390 pt, safe area iPhone con Dynamic Island (47 pt). Nessuna interazione: sono immagini statiche in HTML.</p>
+</header>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <!-- silhouette segnaposto: forme geometriche, deliberatamente non disegni finiti -->
+  <symbol id="s-penguin" viewBox="0 0 64 64"><ellipse cx="32" cy="38" rx="15" ry="20"/><circle cx="32" cy="18" r="10"/><path d="M17 36 L9 46 L18 44Z M47 36 L55 46 L46 44Z"/><ellipse cx="26" cy="58" rx="5" ry="2"/><ellipse cx="38" cy="58" rx="5" ry="2"/></symbol>
+  <symbol id="s-otter" viewBox="0 0 64 64"><ellipse cx="30" cy="42" rx="22" ry="9"/><circle cx="50" cy="34" r="8"/><path d="M8 42 Q0 30 6 24 Q8 34 14 40Z"/></symbol>
+  <symbol id="s-hedgehog" viewBox="0 0 64 64"><path d="M10 48 Q12 22 34 20 Q52 20 54 40 L60 44 L54 48Z"/></symbol>
+  <symbol id="s-firefly" viewBox="0 0 64 64"><ellipse cx="32" cy="36" rx="7" ry="10"/><circle cx="32" cy="24" r="5"/><ellipse cx="22" cy="30" rx="9" ry="5" opacity=".5"/><ellipse cx="42" cy="30" rx="9" ry="5" opacity=".5"/></symbol>
+</svg>
+
+<main class="board">
+
+<!-- 1 · Noi con barra compatta -->
+<figure>
+  <div class="phone">
+    <div class="island"></div>
+    <div class="status"><span>9:41</span><span>●●●</span></div>
+    <div class="bar">
+      <span class="t think"><i class="i" style="--m:url(../../assets/icons/phosphor/heart-straight-regular.svg)"></i></span>
+      <img class="mark" src="../../assets/derived/runtime/us-symbol-256-v1.png" alt="US">
+      <span class="t"><i class="i" style="--m:url(../../assets/icons/phosphor/envelope-simple-regular.svg)"></i></span>
+    </div>
+    <div class="page">
+      <div class="couple">
+        <span class="av">A</span><span class="av" style="border-color:var(--violet)">S</span>
+        <span style="flex:1"><b>Alex e Sam</b><br><span class="muted">Insieme da 2 anni e 5 mesi</span></span>
+        <span class="t" style="width:44px;height:44px;display:grid;place-items:center;color:var(--text2)"><i class="i" style="--m:url(../../assets/icons/phosphor/squares-four-regular.svg)"></i></span>
+      </div>
+      <div class="group">
+        <div class="eyebrow" style="padding-top:12px">La nostra settimana</div>
+        <div class="row"><span class="muted" style="width:46px">Oggi</span><b style="flex:1">A · Lavoro</b><span class="muted">09:00</span></div>
+        <div class="row"><span class="muted" style="width:46px">Oggi</span><b style="flex:1">A+S · Cena</b><span class="muted">21:00</span></div>
+        <div class="row"><span class="muted" style="width:46px">Sab</span><b style="flex:1">A+S · Cinema</b><span class="muted">20:00</span></div>
+      </div>
+      <div class="sintonia">
+        <div><div class="eyebrow">Sintonia · livello 2</div>
+          <div style="font-family:var(--serif);font-size:21px;margin-top:6px">Ciottolo arriva al livello 3</div>
+          <div class="prog"><i></i></div><div class="muted">Le ultime cose fatte insieme contano.</div></div>
+        <div class="who"><span data-maudit="56" role="img" aria-label="Maudit"></span></div>
+      </div>
+      <div class="group">
+        <div class="row"><b style="flex:1">Quest di coppia</b><span class="muted">1 di 3 ›</span></div>
+        <div class="row"><b style="flex:1">Eventi</b><span class="muted">›</span></div>
+      </div>
+    </div>
+    <span data-maudit="40" class="pet" style="left:40px;bottom:79px" role="img" aria-label="Maudit"></span>
+    <nav class="nav"><span>Oggi</span><span class="on">Noi</span><span>Ricordi</span><span>Gioca</span></nav>
+  </div>
+  <figcaption><b>1 · Barra compatta.</b> Niente pillola né aurora: tre bersagli da 44 pt sulla linea della safe area. Il contenuto parte 12 pt più in alto (misurato sull'app reale: 64 → 52). Riga coppia compatta, impostazioni a 44 pt nella riga, niente “distanza non nota”. La card Sintonia mostra il compagno, non un titolo da gioco.</figcaption>
+</figure>
+
+<!-- 2 · Sintonia con Compagni -->
+<figure>
+  <div class="phone">
+    <div class="island"></div>
+    <div class="status"><span>9:41</span><span>●●●</span></div>
+    <div class="bar">
+      <span class="t back"><i class="i" style="--m:url(../../assets/icons/phosphor/caret-left-regular.svg)"></i>Noi</span>
+      <span class="title">Sintonia</span>
+      <span class="t"><i class="i" style="--m:url(../../assets/icons/phosphor/envelope-simple-regular.svg)"></i></span>
+    </div>
+    <div class="page">
+      <div class="eyebrow" style="margin-top:6px">Livello 2</div>
+      <div class="prog"><i></i></div>
+      <div class="muted" style="margin-bottom:14px">Ritmo: 4 giorni · oggi ci siete stati</div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><b style="font-size:17px">Compagni</b><span class="muted">1 di 5</span></div>
+      <div class="strip">
+        <div class="comp active"><span data-maudit="64" class="sil" role="img" aria-label="Maudit"></span><b>Maudit</b><small>Con te ora</small></div>
+        <div class="comp"><svg class="sil" fill="var(--locked)"><use href="#s-penguin"/></svg><b>Ciottolo</b><small>Livello 3</small></div>
+        <div class="comp"><svg class="sil" fill="var(--locked)"><use href="#s-otter"/></svg><b>Nodo</b><small>Livello 6</small></div>
+      </div>
+      <div class="next"><svg width="52" height="52" fill="var(--locked)"><use href="#s-penguin"/></svg><div><div class="eyebrow">Prossimo · livello 3</div><b style="font-family:var(--serif);font-size:19px;font-weight:500">Ciottolo, il pinguino</b><div class="muted">Porta un sassolino quando vi lasciate qualcosa.</div></div></div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px"><b style="font-size:17px">Cornici</b><span class="muted">sulla foto di Oggi · 1 di 6</span></div>
+      <div class="tiles"><div class="tile"></div><div class="tile lock"></div><div class="tile lock"></div><div class="tile lock"></div><div class="tile lock"></div><div class="tile lock"></div></div>
+    </div>
+    <nav class="nav"><span>Oggi</span><span class="on">Noi</span><span>Ricordi</span><span>Gioca</span></nav>
+  </div>
+  <figcaption><b>2 · Sintonia con i Compagni in testa.</b> “‹ Noi” nello slot sinistro della barra: sparisce la riga in pagina (−50 pt misurati). Un solo numero (il livello) e nessun XP. I compagni bloccati sono silhouette con il livello.</figcaption>
+</figure>
+
+<!-- 3 · Scheda compagno -->
+<figure>
+  <div class="phone">
+    <div class="island"></div>
+    <div class="status"><span>9:41</span><span>●●●</span></div>
+    <div class="bar"><span></span><span></span><span></span></div>
+    <div class="scrim"></div>
+    <div class="sheet" style="top:180px">
+      <div class="grab"></div>
+      <div style="display:grid;place-items:center;height:190px;background:radial-gradient(60% 60% at 50% 60%,rgba(169,133,255,.16),transparent 70%)"><span data-maudit="160" role="img" aria-label="Maudit"></span></div>
+      <h2 style="margin-bottom:4px">Maudit</h2>
+      <div class="muted" style="font-size:15px">Il gattino che vive con voi dall'inizio.</div>
+      <div style="margin-top:16px;font-size:14px;line-height:1.6;color:var(--text2)">◦ Si sposta prendendolo per la collottola.<br>◦ Si accoccola sulla barra e sulle vostre card.<br>◦ Saluta quando arriva un Ti penso.</div>
+      <button class="btn done">Con te ora ✓</button>
+      <div class="chips"><span class="chip lock">Sciarpa · L4</span><span class="chip lock">Cappello · L10</span><span class="chip lock">Notte · L7</span></div>
+    </div>
+  </div>
+  <figcaption><b>3 · Scheda compagno (dettaglio).</b> Si apre dalla collezione o da Impostazioni → Compagno. Animale grande con lo stesso renderer, carattere in una riga, comportamenti reali e niente promesse. Maniglia con gesto vero. Gli accessori sono chip: solo quelli sbloccati sono attivi.</figcaption>
+</figure>
+
+<!-- 4 · Celebrazione -->
+<figure>
+  <div class="phone" style="background:linear-gradient(180deg,#c78b77,#5b3462 55%,#1c1022)">
+    <div class="island"></div>
+    <div class="status"><span>9:41</span><span>●●●</span></div>
+    <div class="scrim dark"></div>
+    <div class="card">
+      <div class="eyebrow">Nuovo compagno</div>
+      <div class="stage"><svg width="150" height="150" fill="rgba(247,242,248,.55)"><use href="#s-penguin"/></svg><span class="ph">segnaposto · arte di Ciottolo da approvare</span></div>
+      <div style="font-family:var(--serif);font-size:30px">Ciottolo</div>
+      <div class="muted" style="font-size:15px;margin-top:4px">Il pinguino che porta un sassolino a chi sceglie.</div>
+      <div class="place">Cammina sulla barra e sulle vostre card</div>
+      <button class="btn">Porta con te</button>
+      <span class="txt">Non ora</span>
+    </div>
+  </div>
+  <figcaption><b>4 · Celebrazione dello sblocco.</b> Dialog vero (focus trap, Back = Non ora), scrim scuro senza blur, anteprima grande. “Porta con te” cambia subito il compagno nella shell; “Non ora” lo lascia in collezione. Per una cornice l'anteprima è la vostra foto di Oggi con la cornice applicata.</figcaption>
+</figure>
+
+</main>
+<!-- Kitten v0 APPROVED: copia byte-for-byte di assets/source/pet/us-pet-kitten-base-v0.svg (come pet.js), solo per mostrarlo qui. -->
+<template id="maudit-v0"><svg class="us-pet-kitten" viewBox="0 0 40 40" width="40" height="40" aria-hidden="true" focusable="false"><defs><linearGradient id="usPetKWhite" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbf8f4"/><stop offset="1" stop-color="#e2dbd3"/></linearGradient><linearGradient id="usPetKGray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a7acb5"/><stop offset="1" stop-color="#7c818b"/></linearGradient><radialGradient id="usPetKIris" cx="45%" cy="38%" r="70%"><stop offset="0" stop-color="#b4dcff"/><stop offset=".55" stop-color="#5e9ce0"/><stop offset="1" stop-color="#3a6cab"/></radialGradient></defs><g class="k-tail"><path d="M9.2 29.2C4.6 28.4 2.6 23.6 4.2 18.6" fill="none" stroke="url(#usPetKGray)" stroke-width="3.2" stroke-linecap="round"/></g><g class="k-leg k-leg-hind-far"><rect x="10.4" y="31" width="3" height="7.2" rx="1.5" fill="#757a84"/></g><g class="k-leg k-leg-front-far"><rect x="21.4" y="31" width="3" height="7.2" rx="1.5" fill="#d6cfc7"/></g><g class="k-body"><ellipse cx="17" cy="29.6" rx="10" ry="6.2" fill="url(#usPetKWhite)"/><path d="M7.3 28.6C7.8 24 12.4 23.1 17 23.3C20.6 23.5 23.1 24.6 24.6 26.5C21 27.7 16 28.3 11.5 30.3C9.5 31.1 7.9 30.7 7.3 28.6Z" fill="url(#usPetKGray)"/></g><g class="k-leg k-leg-hind-near"><rect x="13.2" y="31.4" width="3.2" height="7.2" rx="1.6" fill="url(#usPetKGray)"/><ellipse cx="14.8" cy="38.1" rx="1.9" ry="1" fill="#f4efe9"/></g><g class="k-leg k-leg-front-near"><rect x="24.2" y="31.4" width="3.2" height="7.2" rx="1.6" fill="url(#usPetKWhite)"/><ellipse cx="25.8" cy="38.1" rx="1.9" ry="1" fill="#fbf8f4"/></g><g class="k-head"><g class="k-ear k-ear-far"><path d="M22.2 15.2L23.4 6.6L28.2 12Z" fill="#878c95"/><path d="M23.3 13.5L24 8.8L26.7 12Z" fill="#dea0aa"/></g><g class="k-ear k-ear-near"><path d="M29.6 11.6L34.8 5.8L35.8 14.6Z" fill="url(#usPetKGray)"/><path d="M31 11.7L34.2 8.3L34.8 13.1Z" fill="#e8a7b0"/></g><circle cx="29.2" cy="19.6" r="8.3" fill="url(#usPetKGray)"/><path class="k-face" d="M30 12.6C30.5 15.1 31.2 17.6 32.2 20.3C33.6 21.1 35.6 21.4 36.4 23.1C37 25.5 34.6 27.9 30.8 28.1C27 28.3 24 26.9 23.6 24.7C23.4 23.1 25.6 21.3 27.8 20.5C28.8 17.6 29.5 15.1 30 12.6Z" fill="url(#usPetKWhite)"/><ellipse class="k-blush" cx="34.7" cy="24.4" rx="1.3" ry=".8" fill="#f1b6bf" opacity=".45"/><g class="k-eyes-open"><g class="k-eye k-eye-far"><ellipse cx="26.2" cy="19.5" rx="1.35" ry="1.7" fill="url(#usPetKIris)"/><ellipse cx="26.35" cy="19.6" rx=".45" ry="1.15" fill="#1c2230"/><circle cx="25.85" cy="18.9" r=".4" fill="#fff"/></g><g class="k-eye k-eye-near"><ellipse cx="34" cy="19.4" rx="1.6" ry="1.95" fill="url(#usPetKIris)"/><ellipse cx="34.2" cy="19.5" rx=".52" ry="1.3" fill="#1c2230"/><circle cx="33.6" cy="18.7" r=".45" fill="#fff"/></g></g><g class="k-eyes-closed" fill="none" stroke="#4a505a" stroke-width=".7" stroke-linecap="round"><path d="M24.9 19.9q1.3.9 2.6 0"/><path d="M32.5 19.8q1.5 1 3 0"/></g><path class="k-nose" d="M30.4 22.6h1.9l-.95 1.15Z" fill="#e39aa6" stroke="#e39aa6" stroke-width=".3" stroke-linejoin="round"/><path class="k-mouth" d="M31.35 23.8v.6M31.35 24.4c-.35.55-1.1.55-1.4.1M31.35 24.4c.35.55 1.1.55 1.4.1" fill="none" stroke="#9c8a8d" stroke-width=".42" stroke-linecap="round"/><g class="k-collar"><path d="M23.8 25.6C26.6 28.5 32.4 28.9 35.5 26.4" fill="none" stroke="var(--us-color-accent-strong,#ef9bc1)" stroke-width="1.4" stroke-linecap="round"/><circle cx="29.6" cy="28.5" r="1" fill="#f3d28b"/></g></g></svg></template>
+<script>
+document.querySelectorAll('[data-maudit]').forEach(function(host){
+  var n=document.getElementById('maudit-v0').content.firstElementChild.cloneNode(true);
+  n.setAttribute('width',host.dataset.maudit);n.setAttribute('height',host.dataset.maudit);
+  host.style.display='inline-grid';host.appendChild(n);
+});
+</script>
+</body>
+</html>
