@@ -8,6 +8,10 @@ const legacyHydrateMoments=window.hydrateMoments;
 
 let currentAlbum=null;
 let albumRows=[];
+let albumCarouselIndex=0;
+let albumCarouselTouch=null;
+let albumCarouselSuppressClickUntil=0;
+let selectNewestAlbumPhoto=false;
 let pendingFile=null;
 let pendingPreviewUrl='';
 let albumLoadSeq=0;
@@ -34,10 +38,19 @@ function ensureUi(){
       <div class="us-album-shell" role="dialog" aria-modal="true" aria-label="Album del Moment" data-us-modal-panel>
         <button type="button" class="us-album-close us-modal-close is-on-media" id="usAlbumClose" aria-label="Chiudi album" data-us-modal-close><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span></button>
         <div class="us-album-scroll" id="usAlbumScroll">
-          <div class="us-album-cover-stage"><img id="usAlbumCover" alt="Foto principale del Moment"></div>
+          <div class="us-album-cover-stage" id="usAlbumCarousel" role="region" aria-label="Foto del ricordo" aria-roledescription="carosello" tabindex="0">
+            <img id="usAlbumPeek" class="us-album-peek" alt="" loading="lazy" decoding="async" aria-hidden="true" hidden>
+            <img id="usAlbumCover" alt="Foto principale del Moment" decoding="async" onerror="usRecoverPrivateImage(this)">
+            <span class="us-album-carousel-counter" id="usAlbumCarouselCounter" aria-live="polite" hidden></span>
+            <button type="button" class="us-album-carousel-arrow us-album-carousel-prev" id="usAlbumCarouselPrev" aria-label="Foto precedente" hidden><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span></button>
+            <button type="button" class="us-album-carousel-arrow us-album-carousel-next" id="usAlbumCarouselNext" aria-label="Foto successiva" hidden><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></button>
+            <span class="us-album-carousel-hint" id="usAlbumCarouselHint" aria-hidden="true" hidden>Scorri le foto</span>
+          </div>
           <div class="us-album-info">
             <div class="us-album-meta-line"><b id="usAlbumDate"></b><span id="usAlbumCount">1 foto</span></div>
             <div class="us-album-caption-postit" id="usAlbumCoverNote" hidden><p id="usAlbumCoverCaption"></p><small id="usAlbumCoverAuthor"></small></div>
+            <button type="button" class="us-album-current-delete" id="usAlbumCurrentDelete" hidden>Elimina questa foto</button>
+            <p class="us-album-carousel-status" id="usAlbumCarouselStatus" role="status" aria-live="polite" hidden></p>
           </div>
           <header class="us-album-story" id="usAlbumStory">
             <small class="us-album-provenance" id="usAlbumProvenance"></small>
@@ -98,6 +111,37 @@ function ensureUi(){
   document.getElementById('usAlbumSave')?.addEventListener('click',saveAlbumPhoto);
   document.getElementById('usAlbumFile')?.addEventListener('change',handleFileSelected);
   document.getElementById('usAlbumGrid')?.addEventListener('click',handleGridClick);
+  document.getElementById('usAlbumCarouselPrev')?.addEventListener('click',()=>showAlbumPhoto(albumCarouselIndex-1,-1));
+  document.getElementById('usAlbumCarouselNext')?.addEventListener('click',()=>showAlbumPhoto(albumCarouselIndex+1,1));
+  document.getElementById('usAlbumCurrentDelete')?.addEventListener('click',()=>{
+    const row=lightboxItems[albumCarouselIndex];
+    if(row?.id&&row?.own)deleteAlbumPhoto(row.id,row.storage_path);
+  });
+  const carousel=document.getElementById('usAlbumCarousel');
+  carousel?.addEventListener('touchstart',event=>{
+    if(lightboxItems.length<2||event.target.closest('button')){albumCarouselTouch=null;return;}
+    const touch=event.touches?.[0];
+    albumCarouselTouch=touch?{x:touch.clientX,y:touch.clientY}:null;
+  },{passive:true});
+  carousel?.addEventListener('touchend',event=>{
+    if(!albumCarouselTouch)return;
+    const touch=event.changedTouches?.[0],start=albumCarouselTouch;
+    albumCarouselTouch=null;
+    if(!touch)return;
+    const dx=touch.clientX-start.x,dy=touch.clientY-start.y;
+    if(Math.abs(dx)>=45&&Math.abs(dx)>Math.abs(dy)*1.3){
+      albumCarouselSuppressClickUntil=Date.now()+450;
+      showAlbumPhoto(albumCarouselIndex+(dx<0?1:-1),dx<0?1:-1);
+    }
+  },{passive:true});
+  carousel?.addEventListener('keydown',event=>{
+    if(lightboxItems.length<2)return;
+    if(event.key==='ArrowRight'||event.key==='ArrowLeft'){
+      event.preventDefault();
+      const step=event.key==='ArrowRight'?1:-1;
+      showAlbumPhoto(albumCarouselIndex+step,step);
+    }
+  });
   document.getElementById('usAlbumLightboxClose')?.addEventListener('click',closeLightbox);
   document.getElementById('usAlbumLightbox')?.addEventListener('click',e=>{if(e.target===e.currentTarget)closeLightbox()});
 
@@ -200,6 +244,7 @@ async function saveAlbumPhoto(){
     if(rowError){await sb.storage.from('us-media').remove([path]);throw rowError;}
     resetComposer();
     toast('Foto aggiunta al momento');
+    selectNewestAlbumPhoto=true;
     await loadAlbum(currentAlbum.id);
     await decorateMomentCards();
   }catch(error){
@@ -215,13 +260,20 @@ async function loadAlbum(momentId){
   albumLoaded=false;
   paintDeleteControl();
   const grid=document.getElementById('usAlbumGrid');
+  const status=document.getElementById('usAlbumCarouselStatus');
+  if(status)status.hidden=true;
   if(grid)grid.innerHTML='<div class="us-album-empty">Carico…</div>';
   const [{data:rows,error},{data:profiles,error:profilesError}]=await Promise.all([
     sb.from('moment_photos').select('id,moment_id,created_by,storage_path,caption,position,created_at').eq('moment_id',momentId).order('position',{ascending:true}).order('created_at',{ascending:true}),
     sb.from('profiles').select('id,display_name').eq('couple_id',window.usProfile.couple_id)
   ]);
   if(seq!==albumLoadSeq)return;
-  if(error){console.warn('[US Albums] load',error);if(grid)grid.innerHTML='<div class="us-album-empty">Non riesco a caricare le altre foto. Riprova tra poco.</div>';return;}
+  if(error){
+    console.warn('[US Albums] load',error);
+    if(grid)grid.innerHTML='<div class="us-album-empty">Non riesco a caricare le altre foto. Riprova tra poco.</div>';
+    if(status){status.textContent='Non riesco a caricare le altre foto. Riapri il ricordo per riprovare.';status.hidden=false;}
+    return;
+  }
   if(profilesError)console.warn(profilesError);
   const names=new Map((profiles||[]).map(p=>[p.id,p.display_name||'Noi']));
   const paths=(rows||[]).map(row=>row.storage_path);
@@ -268,28 +320,66 @@ function renderAlbum(){
   if(!currentAlbum)return;
   renderAlbumStory();
   const count=albumRows.length+1;
-  document.getElementById('usAlbumCount').textContent=`${count} ${count===1?'foto':'foto'}`;
+  document.getElementById('usAlbumCount').textContent=count===1?'1 foto':`${count} foto`;
   const grid=document.getElementById('usAlbumGrid');
-  if(!grid)return;
-  if(!albumRows.length){
-    grid.innerHTML='<div class="us-album-empty">Solo la foto principale.</div>';
-  }else{
-    grid.innerHTML=albumRows.map((row,index)=>`
-      <article class="us-album-photo-card" role="button" tabindex="0" data-album-index="${index+1}" aria-label="Apri foto aggiunta da ${esc(row.author)}">
-        <img src="${esc(row.url)}" data-us-media-path="${esc(row.storage_path)}" onerror="usRecoverPrivateImage(this)" alt="Foto aggiunta al Moment" loading="lazy" decoding="async">
-        ${row.own?`<button type="button" class="us-album-photo-delete" data-album-delete="${esc(row.id)}" data-storage-path="${esc(row.storage_path)}" aria-label="Elimina questa foto"><span class="us-delete-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 9v8m4-8v8m4-8v8M5 6h14m-2 0-1 14H8L7 6m3-3h4l1 3H9z"/></svg></span></button>`:''}
-        <div class="us-album-photo-copy">
-          ${row.caption?`<p>${esc(row.caption)}</p>`:'<p> </p>'}
-          <small>${esc(row.author)}</small>
-        </div>
-      </article>
-    `).join('');
-  }
+  // Keep the old mount for the composer and for existing hook compatibility.
+  // Photo cards are no longer duplicated in a second grid below the hero.
+  if(grid)grid.replaceChildren();
   lightboxItems=[
-    {url:currentAlbum.url,author:currentAlbum.author,caption:currentAlbum.caption||'',date:currentAlbum.date||'',cover:true},
+    {url:currentAlbum.url,author:currentAlbum.author,caption:currentAlbum.caption||'',date:currentAlbum.date||'',cover:true,storage_path:currentAlbum.path||''},
     ...albumRows
   ];
+  if(selectNewestAlbumPhoto){
+    albumCarouselIndex=lightboxItems.length-1;
+    selectNewestAlbumPhoto=false;
+  }
+  showAlbumPhoto(Math.min(albumCarouselIndex,lightboxItems.length-1));
   paintDeleteControl();
+}
+
+// Single-image viewer is unchanged; multi-photo Memories rotate inside the
+// existing album hero. Only this image and a lazy adjacent peek need decoding.
+function showAlbumPhoto(index,direction=0){
+  if(!lightboxItems.length)return;
+  albumCarouselIndex=(index+lightboxItems.length)%lightboxItems.length;
+  const item=lightboxItems[albumCarouselIndex];
+  const cover=document.getElementById('usAlbumCover');
+  const peek=document.getElementById('usAlbumPeek');
+  const stage=document.getElementById('usAlbumCarousel');
+  const multiple=lightboxItems.length>1;
+  if(stage)stage.dataset.multiple=String(multiple);
+  if(cover){
+    const changed=cover.getAttribute('src')!==item.url;
+    cover.src=item.url;
+    if(item.storage_path)cover.setAttribute('data-us-media-path',item.storage_path);
+    else cover.removeAttribute('data-us-media-path');
+    cover.alt=`Foto ${albumCarouselIndex+1} di ${lightboxItems.length} del ricordo`;
+    if(changed&&direction&&!window.UsUiFoundation?.isReducedMotion?.()){
+      cover.classList.remove('us-ricordi-next','us-ricordi-prev');
+      void cover.offsetWidth;
+      cover.classList.add(direction>0?'us-ricordi-next':'us-ricordi-prev');
+    }else cover.classList.remove('us-ricordi-next','us-ricordi-prev');
+  }
+  if(peek){
+    const next=multiple?lightboxItems[(albumCarouselIndex+1)%lightboxItems.length]:null;
+    peek.hidden=!next?.url;
+    if(next?.url)peek.src=next.url;
+    else peek.removeAttribute('src');
+  }
+  for(const id of ['usAlbumCarouselPrev','usAlbumCarouselNext','usAlbumCarouselCounter','usAlbumCarouselHint']){
+    const node=document.getElementById(id);
+    if(!node)continue;
+    node.hidden=!multiple;
+    if(id==='usAlbumCarouselCounter')node.textContent=`${albumCarouselIndex+1} / ${lightboxItems.length}`;
+  }
+  const note=document.getElementById('usAlbumCoverNote');
+  const caption=document.getElementById('usAlbumCoverCaption');
+  const author=document.getElementById('usAlbumCoverAuthor');
+  if(caption)caption.textContent=item.caption||'';
+  if(author)author.textContent=item.caption?`Aggiunto da ${item.author||'Noi'}`:'';
+  if(note)note.hidden=!item.caption;
+  const del=document.getElementById('usAlbumCurrentDelete');
+  if(del)del.hidden=!(albumCarouselIndex>0&&item.own&&item.id);
 }
 
 // ===== Ricordi · Elimina → Eliminato · Annulla (in place, no modal, no toast) =====
@@ -402,14 +492,17 @@ async function openAlbum(card,{focusDelete=false}={}){
     path:card.dataset.storagePath||'',
     caption:card.dataset.caption||''
   };
-  albumRows=[];albumLoaded=false;resetComposer();
+  albumRows=[];albumLoaded=false;albumCarouselIndex=0;selectNewestAlbumPhoto=false;albumCarouselTouch=null;resetComposer();
   const overlay=document.getElementById('usAlbumOverlay');
   const cover=document.getElementById('usAlbumCover');
   const addBtn=document.getElementById('usAlbumAddBtn');
   if(addBtn){addBtn.hidden=false;addBtn.disabled=false;}
   if(cover){
     cover.src=currentAlbum.url;
-    cover.onclick=()=>openLightbox(0);
+    cover.onclick=()=>{if(Date.now()>=albumCarouselSuppressClickUntil)openLightbox(albumCarouselIndex);};
+    cover.onkeydown=event=>{
+      if(event.key==='Enter'||event.key===' '){event.preventDefault();openLightbox(albumCarouselIndex);}
+    };
     cover.setAttribute('role','button');
     cover.setAttribute('tabindex','0');
   }
@@ -426,6 +519,7 @@ async function openAlbum(card,{focusDelete=false}={}){
   document.body.classList.add('us-album-open');
   const scroll=document.getElementById('usAlbumScroll');if(scroll)scroll.scrollTop=0;
   lightboxItems=[{url:currentAlbum.url,author:currentAlbum.author,caption:currentAlbum.caption,cover:true}];
+  showAlbumPhoto(0);
   await loadAlbum(id);
   if(focusDelete&&currentAlbum?.id===id){
     const control=document.getElementById('usAlbumDelete');
@@ -446,7 +540,7 @@ function closeAlbum(){
     ++albumLoadSeq;resetComposer();
     overlay.classList.remove('show');overlay.setAttribute('aria-hidden','true');
     document.body.classList.remove('us-album-open');
-    currentAlbum=null;albumRows=[];albumLoaded=false;
+    currentAlbum=null;albumRows=[];albumLoaded=false;albumCarouselTouch=null;
     paintDeleteControl();
   };
   closeLightbox();
