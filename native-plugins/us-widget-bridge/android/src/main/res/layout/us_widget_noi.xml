@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Noi: two names, the days together. The thin accent takes the frame equipped on Oggi. -->
+<!-- NOI V2: compact 2x1 invitation. Root opens Noi; action opens Gioca. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/us_noi_root"
     android:layout_width="match_parent"
@@ -8,72 +8,84 @@
     android:contentDescription="@string/us_widget_noi_name"
     android:gravity="center_vertical"
     android:orientation="vertical"
-    android:paddingStart="16dp"
-    android:paddingTop="10dp"
-    android:paddingEnd="16dp"
-    android:paddingBottom="10dp">
+    android:paddingStart="12dp"
+    android:paddingTop="9dp"
+    android:paddingEnd="10dp"
+    android:paddingBottom="9dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
         <ImageView
             android:id="@+id/us_noi_accent"
-            android:layout_width="14dp"
-            android:layout_height="2dp"
-            android:layout_marginEnd="8dp"
+            android:layout_width="12dp"
+            android:layout_height="3dp"
+            android:layout_marginEnd="5dp"
             android:importantForAccessibility="no"
-            android:scaleType="fitXY"
-            android:src="@drawable/us_widget_noi_ring" />
+            android:src="@drawable/us_widget_noi_ring"/>
 
         <TextView
-            android:id="@+id/us_noi_names"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:ellipsize="end"
             android:fontFamily="sans-serif-medium"
             android:includeFontPadding="false"
             android:maxLines="1"
-            android:text="@string/us_widget_noi_name"
-            android:textColor="@color/us_widget_text"
-            android:textSize="12sp" />
+            android:text="US · NOI"
+            android:textColor="@color/us_widget_muted"
+            android:textSize="9sp"/>
+
+        <TextView
+            android:id="@+id/us_noi_days"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:textColor="@color/us_widget_accent"
+            android:textSize="9sp"/>
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:baselineAligned="true"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
         <TextView
-            android:id="@+id/us_noi_days"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:autoSizeMaxTextSize="44sp"
-            android:autoSizeMinTextSize="18sp"
-            android:autoSizeTextType="uniform"
-            android:fontFamily="sans-serif-light"
-            android:gravity="center_vertical"
-            android:includeFontPadding="false"
-            android:maxLines="1"
-            android:minWidth="48dp"
-            android:textColor="@color/us_widget_text" />
-
-        <TextView
-            android:id="@+id/us_noi_unit"
-            android:layout_width="wrap_content"
+            android:id="@+id/us_noi_title"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:fontFamily="serif"
+            android:layout_weight="1"
+            android:layout_marginEnd="5dp"
+            android:ellipsize="end"
+            android:autoSizeTextType="uniform"
+            android:autoSizeMinTextSize="10sp"
+            android:autoSizeMaxTextSize="14sp"
+            android:fontFamily="sans-serif-medium"
             android:includeFontPadding="false"
             android:maxLines="2"
-            android:textColor="@color/us_widget_accent"
-            android:textSize="14sp"
-            android:textStyle="italic" />
+            android:textColor="@color/us_widget_text"
+            android:textSize="14sp"/>
+
+        <TextView
+            android:id="@+id/us_noi_cta"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_gravity="center_vertical"
+            android:minWidth="54dp"
+            android:background="@drawable/us_widget_noi_action"
+            android:gravity="center"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:fontFamily="sans-serif-medium"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:textColor="@color/us_widget_text"
+            android:textSize="10sp"/>
     </LinearLayout>
 </LinearLayout>
