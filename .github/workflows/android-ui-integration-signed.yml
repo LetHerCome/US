@@ -1,0 +1,141 @@
+# QA-only signed APK for isolated UI integration. Never runs on main.
+name: US UI signed QA APK
+
+on:
+  push:
+    branches: [ui/us-widget-motion-integration-v1-20261009]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-ui-integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  signed-apk:
+    if: github.ref == 'refs/heads/ui/us-widget-motion-integration-v1-20261009'
+    runs-on: windows-latest
+    timeout-minutes: 70
+    env:
+      SIGNING_BUNDLE_B64: ${{ secrets.ANDROID_SIGNING_BUNDLE_B64 }}
+      GOOGLE_SERVICES_JSON_B64: ${{ secrets.ANDROID_GOOGLE_SERVICES_JSON_B64 }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check signing material
+        id: signing
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:SIGNING_BUNDLE_B64)) {
+            "ready=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            Write-Host "Android internal signing secrets are not configured; signed build skipped."
+          } else {
+            "ready=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          }
+
+      - uses: actions/setup-node@v4
+        if: steps.signing.outputs.ready == 'true'
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        if: steps.signing.outputs.ready == 'true'
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Restore permanent keystore
+        if: steps.signing.outputs.ready == 'true'
+        shell: pwsh
+        run: |
+          $jsonBytes = [Convert]::FromBase64String($env:SIGNING_BUNDLE_B64)
+          $bundle = [Text.Encoding]::UTF8.GetString($jsonBytes) | ConvertFrom-Json
+          if (-not $bundle.keystoreBase64 -or -not $bundle.storePassword -or -not $bundle.keyAlias -or -not $bundle.keyPassword) {
+            throw "Signing bundle is incomplete"
+          }
+          $path = Join-Path $env:RUNNER_TEMP "us-internal-signing.jks"
+          [IO.File]::WriteAllBytes($path, [Convert]::FromBase64String($bundle.keystoreBase64))
+          "US_ANDROID_KEYSTORE_PATH=$path" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "US_ANDROID_KEYSTORE_PASSWORD=$($bundle.storePassword)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "US_ANDROID_KEY_ALIAS=$($bundle.keyAlias)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "US_ANDROID_KEY_PASSWORD=$($bundle.keyPassword)" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Restore Firebase Android config
+        if: steps.signing.outputs.ready == 'true'
+        shell: pwsh
+        run: |
+          $configured = -not [string]::IsNullOrWhiteSpace($env:GOOGLE_SERVICES_JSON_B64)
+          "US_FIREBASE_CONFIGURED=$($configured.ToString().ToLowerInvariant())" | Out-File -FilePath $env:GITHUB_ENV -Append
+          if (-not $configured) {
+            Write-Host "ANDROID_GOOGLE_SERVICES_JSON_B64 is not configured; building without native FCM."
+            exit 0
+          }
+          $bytes = [Convert]::FromBase64String($env:GOOGLE_SERVICES_JSON_B64)
+          $path = Join-Path $env:GITHUB_WORKSPACE "android/app/google-services.json"
+          [IO.File]::WriteAllBytes($path, $bytes)
+          $json = Get-Content $path -Raw | ConvertFrom-Json
+          $package = @($json.client | ForEach-Object { $_.client_info.android_client_info.package_name }) | Where-Object { $_ -eq "com.usapp.us" }
+          if (-not $package) { throw "google-services.json does not contain Android package com.usapp.us" }
+
+      - name: Assign monotonically increasing QA version
+        if: steps.signing.outputs.ready == 'true'
+        shell: pwsh
+        run: |
+          $code = [int][DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+          "US_ANDROID_VERSION_CODE=$code" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "US_ANDROID_VERSION_NAME=1.0-uiqa.$code" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Install dependencies
+        if: steps.signing.outputs.ready == 'true'
+        run: npm ci
+
+      - name: Stage Capacitor bundle
+        if: steps.signing.outputs.ready == 'true'
+        run: npm run build:capacitor-web
+
+      - name: Sync Android
+        if: steps.signing.outputs.ready == 'true'
+        run: npx cap sync android
+
+      - name: Test and assemble signed release
+        if: steps.signing.outputs.ready == 'true'
+        working-directory: android
+        run: .\gradlew.bat --no-daemon testDebugUnitTest assembleRelease
+
+      - name: Verify signature and package
+        if: steps.signing.outputs.ready == 'true'
+        shell: pwsh
+        run: |
+          $apk = "android/app/build/outputs/apk/release/app-release.apk"
+          if (-not (Test-Path $apk)) { throw "Signed release APK missing" }
+          $apksigner = Get-ChildItem "$env:ANDROID_HOME\build-tools" -Recurse -Filter apksigner.bat |
+            Sort-Object FullName | Select-Object -Last 1
+          if (-not $apksigner) { throw "apksigner.bat not found" }
+          & $apksigner.FullName verify --verbose --print-certs $apk | Tee-Object -FilePath signature.txt
+          if ($LASTEXITCODE -ne 0) { throw "APK signature verification failed" }
+          New-Item -ItemType Directory -Force -Path out | Out-Null
+          Copy-Item $apk out/US-Android-UI-QA.apk
+          $hash=(Get-FileHash out/US-Android-UI-QA.apk -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  US-Android-UI-QA.apk" | Set-Content out/US-Android-UI-QA.sha256.txt
+          @"
+          source_sha=${{ github.sha }}
+          application_id=com.usapp.us
+          version_code=$env:US_ANDROID_VERSION_CODE
+          version_name=$env:US_ANDROID_VERSION_NAME
+          signing=US-Android-Internal
+          firebase_configured=$env:US_FIREBASE_CONFIGURED
+          sha256=$hash
+          "@ | Set-Content out/US-Android-UI-QA-build-info.txt
+          Copy-Item signature.txt out/signature.txt
+
+      - uses: actions/upload-artifact@v4
+        if: steps.signing.outputs.ready == 'true'
+        with:
+          name: US-Android-UI-QA
+          path: out/
+          if-no-files-found: error
+          retention-days: 30
