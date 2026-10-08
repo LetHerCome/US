@@ -48,3 +48,35 @@ test('boundary browser non registra App Back e non espone un exit nativo', async
   assert.equal(await platform.listenForNativeBackButton(() => {}), null);
   assert.equal(await platform.exitNativeApp(), false);
 });
+
+test('Android haptic selection uses perceptible native LIGHT impact; iOS keeps selection tick', async () => {
+  const androidCalls = [];
+  const fakeHaptics = {
+    impact: ({ style }) => { androidCalls.push(['impact', style]); return Promise.resolve(); },
+    selectionChanged: () => { androidCalls.push(['selection']); return Promise.resolve(); }
+  };
+  const android = loadPlatform({
+    isNativePlatform: () => true,
+    getPlatform: () => 'android',
+    haptics: fakeHaptics
+  });
+  await android.haptic('selection', [12]);
+  await android.haptic('light', [16]);
+  assert.deepEqual(androidCalls, [['impact', 'LIGHT'], ['impact', 'LIGHT']]);
+
+  const iosCalls = [];
+  const ios = loadPlatform({
+    isNativePlatform: () => true,
+    getPlatform: () => 'ios',
+    haptics: {
+      selectionChanged: () => { iosCalls.push('selection'); return Promise.resolve(); }
+    }
+  });
+  await ios.haptic('selection', [12]);
+  assert.deepEqual(iosCalls, ['selection']);
+});
+
+test('Android explicitly requests VIBRATE permission for Capacitor haptics', () => {
+  const manifest = fs.readFileSync(path.join(ROOT, 'android/app/src/main/AndroidManifest.xml'), 'utf8');
+  assert.match(manifest, /<uses-permission android:name="android.permission.VIBRATE"/);
+});

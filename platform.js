@@ -56,6 +56,10 @@
     let call = null;
     if (profile?.[0] === 'notification' && typeof haptics?.notification === 'function') {
       call = () => haptics.notification({ type: profile[1] });
+    } else if (platformName === 'android' && profile?.[0] === 'selection' && typeof haptics?.impact === 'function') {
+      // Android's selectionChanged tick can be imperceptible on several
+      // devices. Prefer a lightweight native impact; keep iOS selection ticks.
+      call = () => haptics.impact({ style: 'LIGHT' });
     } else if (profile?.[0] === 'impact' && typeof haptics?.impact === 'function') {
       call = () => haptics.impact({ style: profile[1] });
     } else if (profile?.[0] === 'selection' && typeof haptics?.selectionChanged === 'function') {
