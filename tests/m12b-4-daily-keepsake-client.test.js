@@ -123,7 +123,7 @@ test('M12B.4 UI: the action exists only where the shared result is legitimately 
 test('M12B.4 wiring: hydrateToday loads Conserva only after the reveal, hides it otherwise; the sheet has one slot', () => {
   const hydrate = between('async function hydrateToday(){', 'async function updateHomeStatus');
   const revealed = hydrate.slice(hydrate.indexOf('if(state?.both_answered){'), hydrate.indexOf('}else{', hydrate.indexOf('if(state?.both_answered){')));
-  assert.match(revealed, /await dailyQuestionOutcomes\.load\(q,state\);[\s\S]*window\.UsDailyKeepsake\?\.load\?\.\(q\.id\)/);
+  assert.match(revealed, /dailyQuestionOutcomes\.hide\(\);[\s\S]*window\.UsDailyKeepsake\?\.load\?\.\(q\.id\)/, 'comments hidden, Conserva remains');
   const notRevealed = hydrate.slice(hydrate.indexOf('}else{', hydrate.indexOf('if(state?.both_answered){')));
   assert.match(notRevealed, /window\.UsDailyKeepsake\?\.hide\?\.\(\)/);
   assert.match(between('function renderTodayQuestionUnavailable', 'const US_DAILY_REACTIONS'), /window\.UsDailyKeepsake\?\.hide\?\.\(\)/);
