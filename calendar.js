@@ -1464,6 +1464,14 @@ async function openCalendarSurface() {
     weekStartISO = mondayOfISO(targetDateISO);
     selectedDate = targetDateISO;
   }
+  // US V3 — Noi opens Lavagna as the existing Week view (the couple's week),
+  // and its + as the existing Month view. No option keeps the last mode.
+  const requestedMode = arguments[1]?.mode;
+  if (requestedMode === 'week' || requestedMode === 'month') {
+    calendarMode = requestedMode;
+    if (requestedMode === 'week') weekStartISO = mondayOfISO(selectedDate || todayISO());
+    setViewSwitch(requestedMode);
+  }
   const overlay = $('usCalendarOverlay');
   if (!overlay) return;
   window.UsUiFoundation?.cancelSurfaceExit?.(overlay);
@@ -1617,6 +1625,15 @@ function calendarWhenLabel(entry) {
   return `${day}, ${pad2(s.getHours())}:${pad2(s.getMinutes())}`;
 }
 
+// US V3 — Noi's + opens the existing create form for the chosen day.
+async function createCalendarEntryForDate(dateISO) {
+  if (!dateISO || !window.usProfile) return;
+  const identity = window.usProfile;
+  await openCalendarSurface(dateISO, { mode: 'month' });
+  if (window.usProfile !== identity || !$('usCalendarOverlay')?.classList.contains('open')) return;
+  startCreateForDate(dateISO);
+}
+
 async function openCalendarEntry(entryId) {
   if (!entryId || !window.usProfile) return;
   const map = await getCalendarEntriesByIds([entryId]).catch((error) => { console.warn('[US Calendar] open entry', error); return new Map(); });
@@ -1627,7 +1644,7 @@ async function openCalendarEntry(entryId) {
   if ($('usCalendarOverlay')?.classList.contains('open')) openDetail(entryId);
 }
 
-window.UsCalendarLinks = Object.freeze({ openForIdea: openCalendarForIdea, openEntry: openCalendarEntry, getEntriesByIds: getCalendarEntriesByIds, whenLabel: calendarWhenLabel });
+window.UsCalendarLinks = Object.freeze({ openForIdea: openCalendarForIdea, openEntry: openCalendarEntry, createForDate: createCalendarEntryForDate, getEntriesByIds: getCalendarEntriesByIds, whenLabel: calendarWhenLabel });
 window.USNoiCalendarRead = Object.freeze({readMonth:readNoiMonth});
 window.openCalendarSurface = openCalendarSurface;
 window.closeCalendarSurface = closeCalendarSurface;

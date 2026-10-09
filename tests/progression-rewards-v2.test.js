@@ -26,16 +26,18 @@ const HOOKS = {
   effect: (v) => [`:root[data-us-effect="${v}"]`]
 };
 
-test('Rewards V2 client: every catalog reward has a real cosmetic and a preview hook in CSS', () => {
+// US V3 — frames, stickers, badges and rings are retired: only the slots
+// that still have a visible destination keep a real cosmetic in CSS.
+const RETIRED = ['frame', 'sticker', 'badge', 'ring'];
+test('Rewards V2 client: every still-offered catalog reward has a real cosmetic and a preview hook in CSS', () => {
   assert.equal(catalog.length, 27);
-  for (const reward of catalog) {
+  for (const reward of catalog.filter((r) => !RETIRED.includes(r.category))) {
     for (const hook of HOOKS[reward.category](value(reward))) {
       assert.ok(css.includes(hook), `${reward.id} is missing ${hook}`);
     }
   }
-  assert.match(js, /if \(value === 'ours'\)/);
-  assert.match(js, /if \(value === 'ticket'\)/);
-  assert.match(js, /if \(value === 'stamp'\)/);
+  assert.doesNotMatch(js, /us-sticker|us-badge|data-frame=/, 'retired cosmetics are never painted again');
+  assert.doesNotMatch(css, /#homeHero\[data-us-frame|\.us-sticker\[|\.us-badge\[|data-us-ring/, 'and their CSS is gone');
 });
 
 test('Rewards V2 client: progression stays server-authoritative while equipped cosmetics are device-local', () => {
@@ -86,10 +88,11 @@ test('Rewards V2 client: themes and accents keep text-on-accent contrast >= 3:1 
 test('Rewards V2 client: motion is opt-out with reduced motion and paused when hidden', () => {
   const reduced = css.slice(css.lastIndexOf('@media(prefers-reduced-motion:reduce)'));
   assert.match(reduced, /:root\[data-us-effect\] \.us-top-brand::before/);
-  assert.match(reduced, /:root\[data-us-ring\] \.noi-couple-avatar::after/);
   assert.match(css, /:root\[data-us-visibility="hidden"\] \.us-top-brand::before/);
-  assert.match(css, /#bond \.us-progression-rewards\{max-height:none;overflow:visible;/);
-  assert.match(css, /#bond \.us-reward-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  // US V3 — the collection lives in Gioca > Sintonia: never a nested scroller there.
+  const sintonia = read('noi-v2.css');
+  assert.match(sintonia, /#quiz \.us-gioca-sintonia \.us-progression-rewards\{max-height:none;overflow:visible;overscroll-behavior:auto;/);
+  assert.match(sintonia, /#quiz \.us-gioca-sintonia \.us-reward-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   assert.match(js, /<details class="us-reward-group"/);
 });
 
@@ -150,30 +153,28 @@ test('Rewards V2 client: equipped slots paint locally; re-tap unequips without a
   const localPrefs = JSON.stringify({ version: 2, couple_id: 'c', profile_id: 'f', preferences: serverPrefs });
   const { api, el, root, calls, storage } = runProgression(() => state(), { storageSeed: { 'us:cosmetics:v1:c:f': localPrefs } });
   await api.hydrate({ showUnlocks: false, force: true });
-  assert.deepEqual({ ...root.dataset }, { usTheme: 'film', usAccent: 'champagne', usEffect: 'constellation', usRing: 'orbit', usSticker: 'ticket' });
-  assert.equal(el('homeHero').dataset.usFrame, 'polaroid');
-  assert.equal(el('usCoupleBadge').hidden, false);
-  assert.match(el('usCoupleBadge').innerHTML, /data-badge="still_here"[\s\S]*Still Here/);
-  assert.match(el('usHeroSticker').innerHTML, /data-sticker="ticket"/);
+  // US V3 — only theme, accent and effect still paint; retired slots stay stored but unpainted.
+  assert.deepEqual({ ...root.dataset }, { usTheme: 'film', usAccent: 'champagne', usEffect: 'constellation' });
+  assert.equal(el('homeHero').dataset.usFrame, undefined);
+  assert.equal(el('usCoupleBadge').hidden, true);
+  assert.equal(el('usHeroSticker').hidden, true);
   const tiles = el('usProgressionRewards').innerHTML;
-  assert.equal((tiles.match(/data-progression-reward=/g) || []).length, 27);
-  assert.equal((tiles.match(/aria-pressed="true"/g) || []).length, 7);
-  assert.equal((tiles.match(/class="us-reward-group"/g) || []).length, 7);
-  assert.match(tiles, /data-progression-reward="frame_scrapbook"[^>]*disabled/, 'locked rewards are disabled tiles');
+  assert.equal((tiles.match(/data-progression-reward=/g) || []).length, 11, 'five atmospheres, three accents, three symbol effects');
+  assert.equal((tiles.match(/aria-pressed="true"/g) || []).length, 3);
+  assert.equal((tiles.match(/class="us-reward-group"/g) || []).length, 3);
+  assert.doesNotMatch(tiles, /data-progression-reward="(?:frame|sticker|badge|ring)_/, 'retired rewards have no tile');
+  assert.match(tiles, /data-progression-reward="theme_graphite"[^>]*disabled/, 'locked rewards are disabled tiles');
 
   const tap = (id) => el('usProgressionRewards').emit('click', { target: { closest: () => ({ disabled: false, dataset: { progressionReward: id } }) } });
   await tap('accent_champagne');
   assert.equal(root.dataset.usAccent, undefined, 'tapping the equipped accent clears only this phone accent');
   assert.equal(root.dataset.usTheme, 'film');
-  assert.equal(el('homeHero').dataset.usFrame, 'polaroid');
-  await tap('badge_still_here');
-  assert.equal(el('usCoupleBadge').hidden, true);
   await tap('badge_day_one');
-  assert.match(el('usCoupleBadge').innerHTML, /data-badge="day_one"/);
+  assert.equal(el('usCoupleBadge').hidden, true, 'a retired reward cannot be equipped any more');
 
   const stored = JSON.parse(storage.get('us:cosmetics:v1:c:f'));
   assert.equal(stored.preferences.accent_reward_id, null);
-  assert.equal(stored.preferences.badge_reward_id, 'badge_day_one');
+  assert.equal(stored.preferences.badge_reward_id, 'badge_still_here', 'the stored legacy choice is kept, not erased');
   assert.equal(calls.some((call) => call.name === 'equip_progression_reward'), false, 'partner-facing server preference is never touched');
 });
 
@@ -239,10 +240,11 @@ test('Rewards V2 client: two phones can equip different cosmetics from the same 
 test('Rewards V2 client: the unlock card previews the real cosmetic and "Usalo ora" stays device-local', async () => {
   const serverPrefs = { frame_reward_id: null, theme_reward_id: null, accent_reward_id: null, effect_reward_id: null, badge_reward_id: 'badge_day_one', sticker_reward_id: null, ring_reward_id: null };
   const seen = new Set();
-  const pending = ['badge_day_one', 'sticker_ours'];
+  // US V3 — the badge and the sticker are retired: only the atmosphere and the accent are announced.
+  const pending = ['badge_day_one', 'theme_rose', 'sticker_ours', 'accent_cherry'];
   const state = () => ({
-    total_xp: 300, level: 2, rhythm_days: 0, rhythm_today: false,
-    rewards: catalog.map((r) => ({ ...r, unlocked: r.level_required <= 2, equipped: serverPrefs[`${r.category}_reward_id`] === r.id })),
+    total_xp: 600, level: 3, rhythm_days: 0, rhythm_today: false,
+    rewards: catalog.map((r) => ({ ...r, unlocked: r.level_required <= 3, equipped: serverPrefs[`${r.category}_reward_id`] === r.id })),
     pending_unlocks: catalog.filter((r) => pending.includes(r.id) && !seen.has(r.id)), next_reward: null, preferences: { ...serverPrefs }
   });
   const { api, el, calls, storage } = runProgression((name, args) => {
@@ -250,15 +252,16 @@ test('Rewards V2 client: the unlock card previews the real cosmetic and "Usalo o
     return state();
   });
   await api.hydrate({ showUnlocks: true, force: true });
-  assert.equal(el('usProgressionUnlockKicker').textContent, 'NUOVA SPILLA');
+  assert.equal(el('usProgressionUnlockKicker').textContent, 'NUOVA ATMOSFERA');
   assert.equal(el('usProgressionUnlockCount').textContent, '1 di 2');
-  assert.match(el('usProgressionUnlockPreview').innerHTML, /us-badge[\s\S]*Day One/);
+  assert.match(el('usProgressionUnlockPreview').innerHTML, /us-cos-theme" data-theme="rose"/);
   await el('usProgressionUnlockUse').emit('click');
-  assert.equal(JSON.parse(storage.get('us:cosmetics:v1:c:f')).preferences.badge_reward_id, 'badge_day_one');
-  assert.equal(el('usProgressionUnlockKicker').textContent, 'NUOVO ADESIVO');
-  assert.match(el('usProgressionUnlockPreview').innerHTML, /data-sticker="ours"/);
+  assert.equal(JSON.parse(storage.get('us:cosmetics:v1:c:f')).preferences.theme_reward_id, 'theme_rose');
+  assert.equal(el('usProgressionUnlockKicker').textContent, 'NUOVO ACCENTO');
+  assert.match(el('usProgressionUnlockPreview').innerHTML, /us-cos-accent" data-accent="cherry"/);
   await el('usProgressionUnlockUse').emit('click');
-  assert.equal(JSON.parse(storage.get('us:cosmetics:v1:c:f')).preferences.sticker_reward_id, 'sticker_ours');
-  assert.ok(seen.has('sticker_ours') && seen.has('badge_day_one'));
+  assert.equal(JSON.parse(storage.get('us:cosmetics:v1:c:f')).preferences.accent_reward_id, 'accent_cherry');
+  assert.ok(seen.has('theme_rose') && seen.has('accent_cherry'));
+  assert.ok(!seen.has('badge_day_one') && !seen.has('sticker_ours'), 'retired pieces are neither shown nor acknowledged');
   assert.equal(calls.some((call) => call.name === 'equip_progression_reward'), false);
 });

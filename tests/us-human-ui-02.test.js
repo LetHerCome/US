@@ -115,51 +115,56 @@ const allowance = (over = {}) => ({ week_start: '2026-09-28', resets_on: '2026-1
 const homeOf = (over = {}) => ({ my_role: 'francesco', partner_role: 'beatrice', weekly, allowance: allowance(), per_voi: { state: 'idle' }, open_rounds: [], recent: [], ...over });
 const round = (id, family, over = {}) => ({ id, game_family: family, item_count: 5, my_answered_count: 0, my_complete: false, partner_complete: false, reveal_ready: false, my_reveal_seen_at: null, started_by_role: 'francesco', completed_at: null, ...over });
 
-test('Gioca: the same six game IDs, in order, as one deck after the Per voi hero', async () => {
+// US V3 — the six families (and Swipe) are one ordered grid after Per voi:
+// no sideways deck, no filter chips; rounds that wait for you are shown
+// directly in "Da continuare", completed ones in one disclosure at the end.
+test('Gioca: the same six game IDs, in order, as one grid after the Per voi hero', async () => {
   const html = await gioca(homeOf()).hubHtml();
   const ids = [...html.matchAll(/data-gv2-family="([a-z_]+)"/g)].map((m) => m[1]);
   assert.deepEqual(ids, ['scopritevi', 'confrontatevi', 'ridete', 'quanto_mi_conosci', 'rivivete', 'e_se']);
-  assert.ok(html.indexOf('data-gv2-action="per-voi"') < html.indexOf('us-gv2-deck'), 'Per voi remains before the game deck');
+  assert.ok(html.indexOf('data-gv2-action="per-voi"') < html.indexOf('us-gv2-game-grid'), 'Per voi remains before the game grid');
   assert.equal((html.match(/data-gv2-action="per-voi"/g) || []).length, 1);
-  assert.match(html, /<section class="us-gv2-modes" aria-label="Scegliete voi"><div class="us-gv2-mode-grid us-gv2-deck">/);
+  assert.equal((html.match(/data-gv2-action="swipe"/g) || []).length, 1, 'Swipe has exactly one entry');
+  assert.match(html, /<section class="us-gv2-choose" aria-labelledby="usGv2ChooseTitle">[\s\S]*?<h3 class="us-gv2-section-title" id="usGv2ChooseTitle">Scegli un gioco<\/h3>[\s\S]*?<div class="us-gv2-game-grid">/);
+  assert.doesNotMatch(html, /us-gv2-deck|us-gv2-filters|data-gv2-filter/);
+  assert.doesNotMatch(read('games.css'), /\.us-gv2-game-grid\{[^}]*overflow-x/, 'discovering games never needs a sideways scroll');
 });
 
-test('Gioca: a fresh week shows no status chips (nothing to filter is never invented)', async () => {
+test('Gioca: a fresh week shows no "Da continuare" and no completed list (nothing is invented)', async () => {
   const html = await gioca(homeOf()).hubHtml();
-  assert.doesNotMatch(html, /us-gv2-filters|data-gv2-filter/);
+  assert.doesNotMatch(html, /us-gv2-continue|us-gv2-done|data-gv2-session/);
 });
 
-test('Gioca: chips are plain readings of open_rounds / recent, with real counts', async () => {
+test('Gioca: "Da continuare" rows are plain readings of open_rounds / recent, what needs you first', async () => {
   const state = homeOf({
     open_rounds: [round('o1', 'ridete', { partner_complete: true }), round('o2', 'e_se', { my_answered_count: 2 }), round('o3', 'scopritevi', { my_complete: true })],
     recent: [round('r1', 'rivivete', { my_complete: true, partner_complete: true, reveal_ready: true, completed_at: '2026-09-30T10:00:00Z' }),
       round('r2', 'confrontatevi', { my_complete: true, partner_complete: true, reveal_ready: true, my_reveal_seen_at: '2026-09-29T10:00:00Z', completed_at: '2026-09-29T09:00:00Z' })],
   });
   const html = await gioca(state).hubHtml();
-  const chips = [...html.matchAll(/data-gv2-filter="([a-z]+)" aria-pressed="false" aria-controls="usGv2FilterList"><span>([^<]+)<\/span><b>(\d+)<\/b>/g)].map((m) => [m[1], m[2], Number(m[3])]);
-  assert.deepEqual(chips, [['turn', 'Tocca a te', 2], ['ready', 'Risposte pronte', 1], ['waiting', 'Aspetti Beatrice', 1], ['done', 'Completati', 1]]);
-  assert.ok(html.indexOf('us-gv2-filters') > html.indexOf('us-gv2-deck'), 'status chips follow the primary game actions');
-  assert.match(html, /id="usGv2FilterList" aria-live="polite" hidden><\/div>/, 'no list until a chip is chosen');
+  const section = html.match(/<section class="us-gv2-continue"[\s\S]*?<\/section>/)?.[0] || '';
+  const rows = [...section.matchAll(/data-gv2-session="([^"]+)" data-tone="([a-z]+)"/g)].map((m) => [m[1], m[2]]);
+  assert.deepEqual(rows, [['r1', 'ready'], ['o1', 'turn'], ['o2', 'progress'], ['o3', 'waiting']]);
+  assert.match(section, /<b>Ridete<\/b><\/span><small class="us-gv2-row-state" data-tone="turn">Tocca a te<\/small>/);
+  assert.match(section, /<small class="us-gv2-row-state" data-tone="waiting">Aspetti Beatrice<\/small>/);
+  assert.ok(html.indexOf('us-gv2-continue') < html.indexOf('us-gv2-choose'), 'what waits for you comes before choosing a new game');
+  const done = html.match(/<details class="us-gv2-done">[\s\S]*?<\/details>/)?.[0] || '';
+  assert.match(done, /<summary><span>Partite completate<\/span><b>1<\/b><\/summary>/);
+  assert.deepEqual([...done.matchAll(/data-gv2-session="([^"]+)"/g)].map((m) => m[1]), ['r2']);
+  assert.ok(html.indexOf('us-gv2-done') > html.indexOf('us-gv2-choose'), 'completed rounds stay at the end');
 });
 
-test('Gioca: choosing a chip lists exactly its rounds, each opening the existing session action', async () => {
+test('Gioca: a round row opens the existing session action and keeps no client state', async () => {
+  const log = [];
   const state = homeOf({ open_rounds: [round('o1', 'ridete', { partner_complete: true }), round('o3', 'scopritevi', { my_complete: true })] });
-  const g = gioca(state);
+  const g = gioca(state, log);
   await g.hubHtml();
-  await g.click({ gv2Filter: 'turn' });
-  let html = g.nodes.quizHub.innerHTML;
-  assert.match(html, /data-gv2-filter="turn" aria-pressed="true"/);
-  const sessions = [...html.matchAll(/data-gv2-session="([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(sessions, ['o1']);
-  assert.match(html, /<b>Ridete<\/b><\/span><small class="us-gv2-row-state" data-tone="turn">Tocca a te<\/small>/);
-  await g.click({ gv2Filter: 'turn' });
-  html = g.nodes.quizHub.innerHTML;
-  assert.match(html, /data-gv2-filter="turn" aria-pressed="false"/);
-  assert.doesNotMatch(html, /data-gv2-session=/, 'a second tap closes the list');
-  assert.deepEqual(g.store, { localStorage: [], sessionStorage: [] }, 'the filter is view state only');
+  await g.click({ gv2Session: 'o1' });
+  assert.deepEqual(log.filter(([n]) => n === 'get_game_session').map(([, a]) => a.target_session_id), ['o1']);
+  assert.deepEqual(g.store, { localStorage: [], sessionStorage: [] }, 'the hub is view state only');
 });
 
-test('Gioca: deck cards keep the existing mode action (start_game_round with the same family id)', async () => {
+test('Gioca: game cards keep the existing mode action (start_game_round with the same family id)', async () => {
   const log = [];
   const g = gioca(homeOf(), log);
   await g.hubHtml();
@@ -293,7 +298,8 @@ const scope = (name) => settingsPage.match(new RegExp(`<section class="us-settin
 const settingsIn = (chunk) => [...chunk.matchAll(/data-us-setting="([a-z-]+)"/g)].map((m) => m[1]);
 
 test('Settings: TU holds what is the actor\'s or this phone\'s, VOI what the couple shares', () => {
-  assert.deepEqual(settingsIn(scope('tu')), ['profile-photo', 'notifications', 'location', 'app-lock', 'distance', 'feedback', 'maudit', 'widgets', 'optimize-ricordi', 'home-photo', 'sync-status']);
+  // US V3 — Personalizza Oggi (Tema, Effetto) is this phone's own choice: TU.
+  assert.deepEqual(settingsIn(scope('tu')), ['profile-photo', 'oggi-theme', 'oggi-effect', 'notifications', 'location', 'app-lock', 'distance', 'feedback', 'maudit', 'widgets', 'optimize-ricordi', 'home-photo', 'sync-status']);
   assert.deepEqual(settingsIn(scope('voi')), ['relationship-date', 'story-archive']);
   assert.match(scope('voi'), /<article class="us-couple-id-card" id="usCoupleIdCard"/, 'the couple card is shared state');
   assert.match(scope('tu'), /<h3 id="usSettingsTuTitle">Tu<\/h3>/);
@@ -303,7 +309,7 @@ test('Settings: TU holds what is the actor\'s or this phone\'s, VOI what the cou
 test('Settings: every control exists exactly once and keeps its existing action', () => {
   const all = settingsIn(settingsPage);
   assert.equal(new Set(all).size, all.length, 'no duplicated control');
-  assert.deepEqual([...all].sort(), ['app-lock', 'distance', 'feedback', 'home-photo', 'location', 'logout', 'maudit', 'notifications', 'optimize-ricordi', 'privacy', 'profile-photo', 'relationship-date', 'story-archive', 'sync-status', 'widgets']);
+  assert.deepEqual([...all].sort(), ['app-lock', 'distance', 'feedback', 'home-photo', 'location', 'logout', 'maudit', 'notifications', 'oggi-effect', 'oggi-theme', 'optimize-ricordi', 'privacy', 'profile-photo', 'relationship-date', 'story-archive', 'sync-status', 'widgets']);
   const settingsJs = read('settings.js');
   for (const name of all) assert.match(settingsJs, new RegExp(`if\\(name==='${name}'\\)`), `${name} is still handled`);
   for (const id of ['usRelationshipDateValue', 'usNotificationsValue', 'usDistanceUnitValue', 'usLocationState', 'usFeedbackValue', 'usSyncValue', 'usStoryArchiveValue', 'usSettingsBuild', 'usCoupleAvatars', 'usCoupleNames', 'usTogetherLine', 'usSettingsDeviceDot']) {
@@ -350,12 +356,13 @@ test('no new dependencies', () => {
 });
 
 
-test('Gioca density: played Per voi, deck and weekly question use compact hub geometry', () => {
+test('Gioca density: played Per voi, game grid and weekly question use compact hub geometry', () => {
   const css = read('games.css');
   assert.match(css, /US-GIOCA-DENSITY-01/);
   assert.match(css, /#quiz \.us-gv2-pervoi\[data-gv2-state="played"\]\{[\s\S]*?min-height:64px/);
-  assert.match(css, /US-GIOCA-HUB-AIR-01/);
-  assert.match(css, /#quiz \.us-gv2-mode\{width:148px;min-height:168px/);
+  assert.match(css, /US-GIOCA-V3/);
+  assert.match(css, /#quiz \.us-gv2-game-grid\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(css, /#quiz \.us-gv2-game\.is-swipe\{[^}]*grid-column:1\/-1/, 'Swipe stands out without taking the page');
   assert.match(css, /#quiz \.us-gv2-weekly\.is-open\{[\s\S]*?grid-template-columns:minmax\(0,1fr\) auto/);
   assert.match(css, /body:has\(#quiz\.page\.active\) #thinkButton\{display:none!important\}/);
 });

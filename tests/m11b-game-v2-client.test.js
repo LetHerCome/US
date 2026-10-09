@@ -358,7 +358,7 @@ test('M11F client: the weekly strip reads the server allowance, restrained, neve
   assert.match(html, /1 rimasto da giocare/);
   assert.equal((html.match(/data-on="true"/g) || []).length, 2);
   assert.match(html, /data-gv2-family="ridete" data-gv2-mode-state="played"/);
-  assert.match(html, /Giocato<\/small>/);
+  assert.match(html, /Completato<\/em>/, 'US V3: the card names the real state');
   assert.doesNotMatch(html, /vite|energia|stamina|streak|serie/i, 'no game-energy language');
   const done = harness({ homeState: home({ per_voi: { state: 'played', session_id: 'p' }, allowance: allowance({ used: 3, per_voi_used: 1, free_used: 2, per_voi_available: false, free_available: false, families: { per_voi: { session_id: 'p', completed: true } } }) }) });
   await tick();

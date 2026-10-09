@@ -40,8 +40,8 @@
 .us-gv2-glyph{flex:0 0 auto;width:40px;height:40px;border-radius:14px;display:grid;place-items:center;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.10);color:var(--gv2-tint,var(--us-color-accent-ink))}
 .us-gv2-glyph .us-gv2-icon{width:22px;height:22px}
 
-.us-gv2-pervoi,.us-gv2-mode{position:relative;isolation:isolate;overflow:hidden;color:var(--us-ink);text-align:left;border-radius:var(--us-radius-card);background:linear-gradient(150deg,rgba(46,24,54,.80),rgba(20,15,28,.74) 62%,rgba(14,12,20,.78));border:1px solid rgba(255,255,255,.12);box-shadow:var(--us-glass-2-shadow);-webkit-backdrop-filter:var(--us-glass-2-blur);backdrop-filter:var(--us-glass-2-blur);transition:transform var(--us-motion-press) var(--us-ease-standard),border-color var(--us-motion-fast) var(--us-ease-standard)}
-.us-gv2-pervoi::after,.us-gv2-mode::after{content:"";position:absolute;z-index:-1;right:-34%;top:-34%;width:96%;height:96%;border-radius:50%;background:radial-gradient(circle,var(--gv2-glow,rgba(255,102,142,.30)),transparent 68%);opacity:.6;pointer-events:none}
+.us-gv2-pervoi{position:relative;isolation:isolate;overflow:hidden;color:var(--us-ink);text-align:left;border-radius:var(--us-radius-card);background:linear-gradient(150deg,rgba(46,24,54,.80),rgba(20,15,28,.74) 62%,rgba(14,12,20,.78));border:1px solid rgba(255,255,255,.12);box-shadow:var(--us-glass-2-shadow);-webkit-backdrop-filter:var(--us-glass-2-blur);backdrop-filter:var(--us-glass-2-blur);transition:transform var(--us-motion-press) var(--us-ease-standard),border-color var(--us-motion-fast) var(--us-ease-standard)}
+.us-gv2-pervoi::after{content:"";position:absolute;z-index:-1;right:-34%;top:-34%;width:96%;height:96%;border-radius:50%;background:radial-gradient(circle,var(--gv2-glow,rgba(255,102,142,.30)),transparent 68%);opacity:.6;pointer-events:none}
 
 .us-gv2-pervoi{--gv2-tint:var(--us-color-rose-2);--gv2-glow:rgba(255,102,142,.40);width:100%;min-height:128px;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto 1fr;align-items:end;gap:12px 14px;padding:16px;border-radius:24px;background:radial-gradient(120% 90% at 100% 0%,rgba(255,102,142,.20),transparent 58%),radial-gradient(90% 80% at 0% 100%,rgba(169,133,255,.16),transparent 60%),linear-gradient(150deg,rgba(54,26,60,.86),rgba(20,15,28,.80) 62%,rgba(14,12,20,.82));--us-attention-inset:-2px}
 /* HUMAN-UI-02 — Per voi is the one hero of Gioca: chip top-left, the title
@@ -57,36 +57,9 @@
 /* HUMAN-UI-02 — the six modes as a horizontal deck of small portrait cards.
    The page gutter is bled so the next card peeks from the right edge; each
    card sits at a slight, static tilt (no animation, nothing to reduce). */
-.us-gv2-modes{margin:0 calc(-1 * max(16px,var(--us-safe-right))) 0 calc(-1 * max(16px,var(--us-safe-left)))}
-.us-gv2-deck{display:flex;gap:12px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scroll-padding-inline:max(16px,var(--us-safe-left));padding:8px max(16px,var(--us-safe-right)) 10px max(16px,var(--us-safe-left));scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.us-gv2-deck::-webkit-scrollbar{display:none}
-.us-gv2-mode{flex:0 0 auto;width:132px;min-height:150px;scroll-snap-align:start;display:flex;flex-direction:column;align-items:stretch;padding:12px;border-radius:20px;transform:rotate(var(--gv2-tilt,0deg))}
-.us-gv2-mode:nth-child(6n+1){--gv2-tilt:-1.6deg}
-.us-gv2-mode:nth-child(6n+2){--gv2-tilt:1.2deg}
-.us-gv2-mode:nth-child(6n+3){--gv2-tilt:-.6deg}
-.us-gv2-mode:nth-child(6n+4){--gv2-tilt:1.6deg}
-.us-gv2-mode:nth-child(6n+5){--gv2-tilt:-1.2deg}
-.us-gv2-mode:nth-child(6n+6){--gv2-tilt:.8deg}
-.us-gv2-mode:active{transform:rotate(0deg) scale(.97)}
-.us-gv2-mode:focus-visible{transform:none}
-.us-gv2-mode-copy{margin-top:auto;display:flex;flex-direction:column;gap:5px;min-width:0}
-.us-gv2-mode-copy b{font-family:var(--us-font-editorial);font-size:17px;hyphens:auto;-webkit-hyphens:auto;font-weight:500;line-height:1.15;color:#fff;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-wrap:pretty}
-.us-gv2-mode-state{display:inline-flex;align-items:center;gap:5px;color:var(--us-color-text-2);font-size:var(--us-text-secondary);line-height:1.25}
-.us-gv2-mode-state .us-gv2-icon{width:13px;height:13px}
-.us-gv2-mode>.us-gv2-dot{position:absolute;top:14px;right:14px}
-.us-gv2-mode[data-gv2-mode-state="played"] .us-gv2-mode-state{color:var(--us-color-text-3)}
-.us-gv2-mode[data-gv2-mode-state="played"] .us-gv2-glyph{color:var(--us-color-text-3)}
-.us-gv2-mode[data-gv2-mode-state="played"]::after,.us-gv2-mode[aria-disabled="true"]::after{opacity:.22}
-.us-gv2-mode[aria-disabled="true"]{color:var(--us-color-locked)}
-.us-gv2-mode[aria-disabled="true"] .us-gv2-glyph,.us-gv2-mode[aria-disabled="true"] .us-gv2-mode-state{color:var(--us-color-locked)}
-.us-gv2-mode[aria-disabled="true"] .us-gv2-mode-copy b{color:var(--us-color-text-2)}
+
 /* A quiet tint per family, all from the canonical accent family. */
-.us-gv2-mode[data-gv2-family="scopritevi"]{--gv2-tint:var(--us-color-rose-2);--gv2-glow:rgba(255,102,142,.32)}
-.us-gv2-mode[data-gv2-family="confrontatevi"]{--gv2-tint:var(--us-color-violet);--gv2-glow:rgba(169,133,255,.34)}
-.us-gv2-mode[data-gv2-family="ridete"]{--gv2-tint:var(--us-color-warning);--gv2-glow:rgba(242,184,114,.26)}
-.us-gv2-mode[data-gv2-family="quanto_mi_conosci"]{--gv2-tint:var(--us-color-accent-ink);--gv2-glow:rgba(201,154,224,.30)}
-.us-gv2-mode[data-gv2-family="rivivete"]{--gv2-tint:var(--us-color-rose);--gv2-glow:rgba(255,102,142,.28)}
-.us-gv2-mode[data-gv2-family="e_se"]{--gv2-tint:var(--us-color-violet);--gv2-glow:rgba(139,114,248,.34)}
+
 .us-gv2-dot{width:8px;height:8px;border-radius:50%;background:#8a8196;flex:0 0 auto}
 .us-gv2-dot[data-tone="turn"],.us-gv2-dot[data-tone="ready"]{background:var(--us-color-rose-2);box-shadow:0 0 0 3px rgba(255,134,168,.16)}
 .us-gv2-dot[data-tone="waiting"]{background:var(--us-color-violet)}
@@ -115,14 +88,7 @@
 
 /* HUMAN-UI-02 — status filters: one compact row of chips derived from the
    server's round summaries; a chip opens its rounds as rows right below. */
-.us-gv2-filters{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -2px;padding:0 2px}
-.us-gv2-filters::-webkit-scrollbar{display:none}
-.us-gv2-filter{flex:0 0 auto;min-height:44px;display:inline-flex;align-items:center;gap:8px;padding:0 14px;border-radius:var(--us-radius-pill);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);color:var(--us-color-text-2);font-size:13px;font-weight:650;white-space:nowrap}
-.us-gv2-filter b{min-width:20px;height:20px;padding:0 6px;border-radius:var(--us-radius-pill);display:inline-grid;place-items:center;background:rgba(255,255,255,.08);color:var(--us-color-text);font-size:12px;font-variant-numeric:tabular-nums}
-.us-gv2-filter[data-gv2-filter="turn"] b,.us-gv2-filter[data-gv2-filter="ready"] b{background:rgba(255,102,142,.22);color:#ffd3e1}
-.us-gv2-filter[aria-pressed="true"]{background:var(--us-color-accent-soft);border-color:var(--us-color-accent-strong);color:var(--us-color-text)}
-.us-gv2-filter-list{display:flex;flex-direction:column;margin-top:-8px}
-.us-gv2-filter-list[hidden]{display:none}
+
 .us-gv2-row small{display:block;margin-top:3px;color:var(--us-color-text-2);font-size:var(--us-text-meta);line-height:1.35}
 .us-gv2-row.is-quiet{background:transparent}
 
@@ -192,11 +158,11 @@
 
 .us-gv2-hub button:focus-visible,.us-gv2-panel button:focus-visible,.us-gv2-panel textarea:focus-visible,.us-gv2-panel input:focus-visible{outline:2px solid var(--us-color-accent-ink);outline-offset:2px}
 
-@media(max-width:340px){.us-gv2-mode{width:124px;min-height:142px}.us-gv2-mode-copy b{font-size:15px}.us-gv2-actions{grid-template-columns:1fr}.us-gv2-actions>span{display:none}}
+@media(max-width:340px){.us-gv2-actions{grid-template-columns:1fr}.us-gv2-actions>span{display:none}}
 @media(max-width:360px){.us-gv2-pervoi-cta{padding:0 13px}}
-@media(max-height:700px){.us-gv2-pervoi{min-height:0;grid-template-rows:auto}.us-gv2-pervoi .us-gv2-glyph{display:none}.us-gv2-pervoi-copy,.us-gv2-pervoi-cta{grid-row:1}.us-gv2-mode{min-height:136px}}
-@media(min-width:650px){.us-gv2-mode{width:148px;min-height:168px}.us-gv2-mode:hover,.us-gv2-pervoi:hover{border-color:rgba(255,255,255,.22)}}
-@media(prefers-reduced-motion:reduce){.us-gv2-pervoi,.us-gv2-mode,.us-gv2-progress i{transition:none}.us-gv2-pervoi:active{transform:none}.us-gv2-mode:active{transform:rotate(var(--gv2-tilt,0deg))}}
+@media(max-height:700px){.us-gv2-pervoi{min-height:0;grid-template-rows:auto}.us-gv2-pervoi .us-gv2-glyph{display:none}.us-gv2-pervoi-copy,.us-gv2-pervoi-cta{grid-row:1}}
+@media(min-width:650px){.us-gv2-pervoi:hover{border-color:rgba(255,255,255,.22)}}
+@media(prefers-reduced-motion:reduce){.us-gv2-pervoi,.us-gv2-progress i{transition:none}.us-gv2-pervoi:active{transform:none}}
 
 /* M12A — First reveal: a thin light travels through the card, then the two
    perspectives open out of it (mine, a short beat, theirs, then the outcome).
@@ -228,7 +194,6 @@
 :root[data-us-motion="reduced"] :is(.us-gv2-submit.is-saved,.us-gv2-weekly.is-just-created,.us-gv2-weekly.is-just-created .us-gv2-glyph){animation:none}
 @media(prefers-reduced-motion:reduce){:is(.us-gv2-submit.is-saved,.us-gv2-weekly.is-just-created,.us-gv2-weekly.is-just-created .us-gv2-glyph){animation:none}}
 
-
 /* ===== US-GIOCA-DENSITY-01 · actions first, less navigation chrome =====
    Presentation + hub ordering only. Game authority/RPCs are unchanged. */
 #quiz .us-gv2-hub{gap:9px}
@@ -256,26 +221,6 @@
 #quiz .us-gv2-rhythm-dots{gap:4px}
 #quiz .us-gv2-rhythm-dots i{width:7px;height:7px}
 
-#quiz .us-gv2-filters{
-  gap:6px;
-  margin:0 -1px;
-  padding:0 1px 1px;
-}
-#quiz .us-gv2-filter{
-  min-height:44px;
-  gap:6px;
-  padding:0 10px;
-  font-size:12px;
-  border-color:rgba(255,255,255,.075);
-  background:rgba(255,255,255,.035);
-}
-#quiz .us-gv2-filter b{
-  min-width:18px;
-  height:18px;
-  padding:0 5px;
-  font-size:11px;
-}
-#quiz .us-gv2-filter-list{margin-top:-3px}
 #quiz .us-gv2-row{
   min-height:48px;
   margin-top:4px;
@@ -332,30 +277,6 @@
   padding:0 12px;
 }
 
-#quiz .us-gv2-modes{
-  margin-left:calc(-1 * max(16px,var(--us-safe-left)));
-  margin-right:calc(-1 * max(16px,var(--us-safe-right)));
-}
-#quiz .us-gv2-deck{
-  gap:9px;
-  padding-top:5px;
-  padding-bottom:6px;
-}
-#quiz .us-gv2-mode{
-  width:116px;
-  min-height:126px;
-  padding:10px;
-  border-radius:18px;
-}
-#quiz .us-gv2-mode .us-gv2-glyph{
-  width:32px;height:32px;border-radius:11px;
-}
-#quiz .us-gv2-mode .us-gv2-glyph .us-gv2-icon{width:18px;height:18px}
-#quiz .us-gv2-mode-copy{gap:3px}
-#quiz .us-gv2-mode-copy b{font-size:15px;line-height:1.12}
-#quiz .us-gv2-mode-state{gap:4px;font-size:10.5px}
-#quiz .us-gv2-mode>.us-gv2-dot{top:11px;right:11px}
-
 #quiz .us-gv2-weekly{
   padding:10px 11px;
   border-radius:18px;
@@ -392,82 +313,13 @@ body:has(#quiz.page.active) #thinkButton{display:none!important}
   #quiz .us-gv2-hub{gap:7px}
   #quiz .us-gv2-pervoi{min-height:96px;padding:11px}
   #quiz .us-gv2-pervoi[data-gv2-state="played"]{min-height:58px;padding-top:7px;padding-bottom:7px}
-  #quiz .us-gv2-mode{width:108px;min-height:116px;padding:9px}
+
   #quiz .us-gv2-weekly{padding-top:8px;padding-bottom:8px}
 }
 
-
 /* ===== US-1.0 GIOCA ENTRY · useful context when the hub is fresh ===== */
-.us-gv2-entry-note{margin:2px 4px -2px;color:var(--us-color-text-3);font-size:12px;line-height:1.35}
-
 
 /* ===== SWIPE V1 · tactile binary-choice ritual ===== */
-#quiz .us-gv2-swipe-entry{
-  position:relative;
-  display:grid;
-  grid-template-columns:auto minmax(0,1fr) auto;
-  align-items:center;
-  gap:12px;
-  width:100%;
-  min-height:88px;
-  padding:13px 14px;
-  overflow:hidden;
-  border:1px solid color-mix(in srgb,var(--us-color-accent) 28%,var(--us-color-border));
-  border-radius:22px;
-  background:
-    radial-gradient(120% 180% at 0% 0%,color-mix(in srgb,var(--us-color-accent) 16%,transparent),transparent 56%),
-    linear-gradient(145deg,color-mix(in srgb,var(--us-color-surface-2) 94%,transparent),color-mix(in srgb,var(--us-color-surface-1) 98%,transparent));
-  color:var(--us-color-text-1);
-  text-align:left;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 12px 28px rgba(0,0,0,.2);
-}
-#quiz .us-gv2-swipe-entry::after{
-  content:"";
-  position:absolute;
-  width:110px;height:110px;
-  right:-44px;top:-54px;
-  border:1px solid color-mix(in srgb,var(--us-color-accent) 30%,transparent);
-  border-radius:32px;
-  transform:rotate(18deg);
-  opacity:.55;
-  pointer-events:none;
-}
-#quiz .us-gv2-swipe-entry:active{transform:scale(.992)}
-#quiz .us-gv2-swipe-entry[aria-disabled="true"]{opacity:.58}
-#quiz .us-gv2-swipe-entry-icon{
-  display:grid;place-items:center;
-  width:46px;height:46px;
-  border-radius:15px;
-  background:color-mix(in srgb,var(--us-color-accent) 14%,var(--us-color-surface-2));
-  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--us-color-accent) 20%,transparent);
-}
-#quiz .us-gv2-swipe-entry-icon .us-gv2-icon{width:23px;height:23px}
-#quiz .us-gv2-swipe-entry-copy{display:grid;gap:2px;min-width:0}
-#quiz .us-gv2-swipe-entry-copy>b{
-  font-size:19px;
-  line-height:1.05;
-  letter-spacing:-.02em;
-}
-#quiz .us-gv2-swipe-entry-copy>small{
-  display:flex;align-items:center;gap:5px;
-  min-width:0;
-  color:var(--us-color-text-3);
-  font-size:11px;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-#quiz .us-gv2-swipe-entry-copy>small .us-gv2-icon{width:13px;height:13px}
-#quiz .us-gv2-swipe-entry-cta{
-  position:relative;
-  z-index:1;
-  padding:8px 10px;
-  border-radius:999px;
-  background:color-mix(in srgb,var(--us-color-accent) 13%,transparent);
-  color:var(--us-color-text-2);
-  font-size:11px;
-  font-weight:700;
-}
 
 /* Play surface */
 .us-gv2-swipe-play{
@@ -796,14 +648,12 @@ body:has(#quiz.page.active) #thinkButton{display:none!important}
   .us-gv2-swipe-note{display:none}
 }
 @media(min-width:560px){
-  #quiz .us-gv2-swipe-entry{min-height:94px}
+
   .us-gv2-swipe-stage{min-height:500px}
 }
 @media(prefers-reduced-motion:reduce){
-  .us-gv2-swipe-card,
-  #quiz .us-gv2-swipe-entry{transition:none!important}
+  .us-gv2-swipe-card{transition:none!important}
 }
-
 
 /* Daily Question belongs to Gioca: one compact ritual entry above Per voi. */
 .us-gv2-daily{width:100%;display:flex;align-items:center;gap:12px;margin:0 0 12px;padding:13px 14px;border:1px solid rgba(255,255,255,.10);border-radius:20px;background:linear-gradient(135deg,rgba(255,98,145,.12),rgba(169,133,255,.08)),rgba(255,255,255,.025);color:var(--us-color-text);text-align:left}
@@ -818,18 +668,80 @@ body:has(#quiz.page.active) #thinkButton{display:none!important}
 .us-gv2-daily[data-daily-state="waiting"]{background:rgba(255,255,255,.028)}
 .us-gv2-daily[data-daily-state="error"]{border-style:dashed}
 
-
 /* US-GIOCA-HUB-AIR-01 — keep the approved horizontal six-game deck.
    More breathable cards; status/history filters follow the primary actions. */
 #quiz .us-gv2-hub{gap:14px}
 #quiz .us-gv2-pervoi{min-height:122px;padding:16px;border-radius:24px;gap:11px 14px}
 #quiz .us-gv2-pervoi-copy b{font-size:26px}
 #quiz .us-gv2-pervoi-copy small{font-size:12.5px;line-height:1.35}
-#quiz .us-gv2-swipe-entry{min-height:94px}
-#quiz .us-gv2-deck{gap:14px;padding-block:11px 15px}
-#quiz .us-gv2-mode{width:148px;min-height:168px;padding:13px;border-radius:21px}
-#quiz .us-gv2-mode-copy b{font-size:19px}
-#quiz .us-gv2-mode-state{font-size:11.5px}
-#quiz .us-gv2-filters{margin-top:2px}
+
 #quiz .us-gv2-daily{margin-bottom:0;min-height:70px}
-@media(max-width:360px){#quiz .us-gv2-pervoi-copy b{font-size:23px}#quiz .us-gv2-mode{width:138px}}
+@media(max-width:360px){#quiz .us-gv2-pervoi-copy b{font-size:23px}}
+
+/* ===== US-GIOCA-V3 · Per voi, what is waiting, then one ordered grid =====
+   Per voi stays the hero; "Da continuare" appears only when a round exists;
+   every game is a compact card with icon, name, kind of moment and a real
+   state. Two columns, no sideways scrolling; Swipe spans the row. */
+#quiz .us-gv2-hub{display:flex;flex-direction:column;gap:16px}
+@media(max-height:700px){#quiz .us-gv2-hub{gap:11px}}
+#quiz .us-gv2-pervoi-copy .us-gv2-kicker{margin-bottom:5px;color:#ffc2d6}
+#quiz .us-gv2-section-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:2px 2px 10px}
+#quiz .us-gv2-section-head small{font-size:12px;color:var(--us-color-text-3)}
+#quiz .us-gv2-section-title{margin:0;font:500 21px/1.15 var(--us-font-editorial);letter-spacing:-.2px;color:var(--us-color-text)}
+#quiz .us-gv2-continue>.us-gv2-section-title{margin:2px 2px 8px}
+#quiz .us-gv2-rows{display:flex;flex-direction:column;gap:8px}
+#quiz .us-gv2-row{display:flex;align-items:center;gap:12px;min-height:60px;margin:0;padding:10px 12px;border-radius:var(--us-radius-control);background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);color:var(--us-color-text);text-align:left;transition:transform var(--us-motion-press) var(--us-ease-standard)}
+#quiz .us-gv2-row:active{transform:scale(.985)}
+#quiz .us-gv2-row .us-gv2-glyph{width:36px;height:36px;border-radius:12px}
+#quiz .us-gv2-row .us-gv2-glyph .us-gv2-icon{width:19px;height:19px}
+#quiz .us-gv2-row-copy{flex:1;min-width:0}
+#quiz .us-gv2-row-copy b{font-size:14.5px;font-weight:680}
+#quiz .us-gv2-row-state{flex:0 0 auto;padding:5px 10px;border-radius:var(--us-radius-pill);background:rgba(255,255,255,.06);font-size:11.5px;font-weight:700;color:var(--us-color-text-2)}
+#quiz .us-gv2-row-state[data-tone="turn"],#quiz .us-gv2-row-state[data-tone="ready"]{background:rgba(255,102,142,.16);color:#ffd3e1}
+#quiz .us-gv2-row[data-tone="waiting"],#quiz .us-gv2-row[data-tone="seen"]{background:transparent}
+
+#quiz .us-gv2-game-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#quiz .us-gv2-game{position:relative;isolation:isolate;overflow:hidden;display:grid;grid-template-rows:auto 1fr auto;align-items:start;gap:10px;min-height:150px;padding:14px;border-radius:var(--us-radius-card);text-align:left;color:var(--us-color-text);background:linear-gradient(155deg,rgba(46,24,54,.72),rgba(20,15,28,.70) 62%,rgba(14,12,20,.76));border:1px solid rgba(255,255,255,.10);box-shadow:var(--us-glass-2-shadow);transition:transform var(--us-motion-press) var(--us-ease-standard),border-color var(--us-motion-fast) var(--us-ease-standard)}
+#quiz .us-gv2-game::after{content:"";position:absolute;z-index:-1;right:-40%;top:-40%;width:100%;height:100%;border-radius:50%;background:radial-gradient(circle,var(--gv2-glow,rgba(255,102,142,.28)),transparent 68%);opacity:.55;pointer-events:none}
+#quiz .us-gv2-game:active{transform:scale(.97)}
+#quiz .us-gv2-game .us-gv2-glyph{width:38px;height:38px;border-radius:13px}
+#quiz .us-gv2-game-copy{display:flex;flex-direction:column;gap:4px;min-width:0;align-self:end}
+#quiz .us-gv2-game-copy b{font:500 18px/1.12 var(--us-font-editorial);overflow-wrap:anywhere}
+#quiz .us-gv2-game-copy small{font-size:11.5px;line-height:1.3;color:var(--us-color-text-2)}
+#quiz .us-gv2-game-state{display:inline-flex;align-items:center;gap:5px;justify-self:start;font:700 11px/1 var(--us-font-ui);font-style:normal;padding:5px 9px;border-radius:var(--us-radius-pill);background:rgba(255,255,255,.07);color:var(--us-color-text-2)}
+#quiz .us-gv2-game-state .us-gv2-icon{width:12px;height:12px}
+#quiz .us-gv2-game-state[data-state="ready"]{background:transparent;padding-left:0;color:var(--us-color-text-3)}
+#quiz .us-gv2-game-state[data-state="open"]{background:rgba(255,102,142,.16);color:#ffd3e1}
+#quiz .us-gv2-game-state[data-state="open"][data-tone="waiting"]{background:rgba(255,255,255,.07);color:var(--us-color-text-2)}
+#quiz .us-gv2-game[data-gv2-mode-state="played"] .us-gv2-glyph{color:var(--us-color-text-3)}
+#quiz .us-gv2-game[data-gv2-mode-state="played"]::after,#quiz .us-gv2-game[aria-disabled="true"]::after{opacity:.2}
+#quiz .us-gv2-game[aria-disabled="true"]{border-color:rgba(255,255,255,.06)}
+#quiz .us-gv2-game[aria-disabled="true"] .us-gv2-glyph,#quiz .us-gv2-game[aria-disabled="true"] .us-gv2-game-copy small,#quiz .us-gv2-game-state[data-state="locked"]{color:var(--us-color-locked)}
+#quiz .us-gv2-game[aria-disabled="true"] .us-gv2-game-copy b{color:var(--us-color-text-2)}
+#quiz .us-gv2-game[data-gv2-family="scopritevi"]{--gv2-tint:var(--us-color-rose-2);--gv2-glow:rgba(255,102,142,.30)}
+#quiz .us-gv2-game[data-gv2-family="confrontatevi"]{--gv2-tint:var(--us-color-violet);--gv2-glow:rgba(169,133,255,.32)}
+#quiz .us-gv2-game[data-gv2-family="ridete"]{--gv2-tint:var(--us-color-warning);--gv2-glow:rgba(242,184,114,.24)}
+#quiz .us-gv2-game[data-gv2-family="quanto_mi_conosci"]{--gv2-tint:var(--us-color-accent-ink);--gv2-glow:rgba(201,154,224,.28)}
+#quiz .us-gv2-game[data-gv2-family="rivivete"]{--gv2-tint:var(--us-color-rose);--gv2-glow:rgba(255,102,142,.26)}
+#quiz .us-gv2-game[data-gv2-family="e_se"]{--gv2-tint:var(--us-color-violet);--gv2-glow:rgba(139,114,248,.32)}
+/* Swipe: the quick one, a full-width card with the same vocabulary. */
+#quiz .us-gv2-game.is-swipe{--gv2-tint:#ffd3e1;--gv2-glow:rgba(255,102,142,.36);grid-column:1/-1;grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:auto;align-items:center;min-height:84px;gap:12px;background:radial-gradient(120% 140% at 100% 0%,rgba(255,102,142,.20),transparent 60%),linear-gradient(150deg,rgba(54,26,60,.80),rgba(20,15,28,.74) 62%)}
+#quiz .us-gv2-game.is-swipe .us-gv2-game-copy{align-self:center}
+#quiz .us-gv2-game.is-swipe .us-gv2-glyph{width:44px;height:44px;border-radius:15px;background:rgba(255,102,142,.16)}
+
+#quiz .us-gv2-done{border-radius:var(--us-radius-control);border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.025)}
+#quiz .us-gv2-done>summary{display:flex;align-items:center;gap:10px;min-height:50px;padding:0 14px;list-style:none;cursor:pointer;font-size:13.5px;font-weight:680;color:var(--us-color-text-2)}
+#quiz .us-gv2-done>summary::-webkit-details-marker{display:none}
+#quiz .us-gv2-done>summary span{flex:1}
+#quiz .us-gv2-done>summary b{min-width:22px;height:22px;padding:0 7px;border-radius:999px;display:inline-grid;place-items:center;background:rgba(255,255,255,.08);font-size:11.5px}
+#quiz .us-gv2-done>summary::after{content:"";width:15px;height:15px;background:var(--us-color-text-3);-webkit-mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;transition:transform var(--us-motion-fast) var(--us-ease-standard)}
+#quiz .us-gv2-done[open]>summary::after{transform:rotate(90deg)}
+#quiz .us-gv2-done>.us-gv2-rows{padding:0 10px 10px}
+#quiz .us-gv2-weekly-head small{color:var(--us-color-text-2)}
+#quiz .us-gv2-game:focus-visible,#quiz .us-gv2-row:focus-visible,#quiz .us-gv2-done>summary:focus-visible{outline:2px solid var(--us-color-accent-strong);outline-offset:2px}
+@media(max-width:350px){
+  #quiz .us-gv2-game{min-height:138px;padding:12px}
+  #quiz .us-gv2-game-copy b{font-size:16.5px}
+}
+@media(min-width:620px){#quiz .us-gv2-game-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){#quiz .us-gv2-game,#quiz .us-gv2-row{transition:none}#quiz .us-gv2-game:active,#quiz .us-gv2-row:active{transform:none}}

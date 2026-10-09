@@ -1,5 +1,6 @@
-// Gioca tile rework: a tile is icon, name and (only when there is one) a state;
-// the week is one strip; Per voi is one line of state plus one action.
+// Gioca tile rework: the week is one strip; Per voi is one line of state plus
+// one action. US V3: every game card is icon, name, the kind of moment and its
+// real state (available, to continue, completed, locked), in one grid.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -33,18 +34,17 @@ const weekly = { week_start: '2026-09-28', next_unlock: '2026-10-05', assigned_r
 const homeOf = (over = {}) => ({ my_role: 'francesco', partner_role: 'beatrice', weekly, per_voi: { state: 'idle' }, open_rounds: [], recent: [], ...over });
 const allowance = (over = {}) => ({ week_start: '2026-09-28', resets_on: '2026-10-05', per_voi_used: 0, per_voi_limit: 1, free_used: 0, free_limit: 2, used: 0, limit: 3, per_voi_available: true, free_available: true, open_count: 0, open_limit: 3, families: {}, ...over });
 
-test('Gioca tiles: a fresh week is six tiles of icon and name, with no taglines or state lines', async () => {
+test('Gioca tiles: a fresh week is six cards of icon, name, kind of moment and "Disponibile"', async () => {
   const html = await hub(homeOf({ allowance: allowance() })).html();
-  const tiles = html.match(/<button type="button" (?:data-us-[a-z-]+(?:="[a-z]+")? )*class="us-gv2-mode[^"]*" data-gv2-family="[a-z_]+"[\s\S]*?<\/button>/g) || [];
+  const tiles = html.match(/<button type="button" (?:data-us-[a-z-]+(?:="[a-z]+")? )*class="us-gv2-game[^"]*" data-gv2-family="[a-z_]+"[\s\S]*?<\/button>/g) || [];
   assert.equal(tiles.length, 6);
   for (const tile of tiles) {
-    assert.match(tile, /class="us-gv2-glyph"/, 'each tile leads with the icon chip');
-    assert.match(tile, /<b>[^<]+<\/b>/, 'and carries its name');
-    assert.doesNotMatch(tile, /<small/, 'a ready tile has no state line');
+    assert.match(tile, /class="us-gv2-glyph"/, 'each card leads with the icon chip');
+    assert.match(tile, /<b>[^<]+<\/b><small>[^<]+<\/small>/, 'then its name and the kind of moment');
+    assert.match(tile, /<em class="us-gv2-game-state" data-state="ready">Disponibile<\/em>/, 'a ready card says it is available');
   }
-  // HUMAN-UI-02 — the six tiles are one horizontal deck: no tile spans a row any more.
-  assert.doesNotMatch(html, /is-wide/);
-  assert.match(html, /<div class="us-gv2-mode-grid us-gv2-deck">/);
+  assert.doesNotMatch(html, /is-wide|us-gv2-deck/);
+  assert.match(html, /<div class="us-gv2-game-grid">/);
   for (const gone of ['Quello che forse non sapete ancora', 'Stessa situazione, due sguardi', 'Scenari assurdi', 'Uno risponde, l’altro indovina', 'Lo stesso momento, due memorie', 'Scelte, futuri, possibilità']) {
     assert.doesNotMatch(html, new RegExp(gone));
   }
@@ -57,7 +57,8 @@ test('Gioca hub: no page header prose, no separate in-progress list, one week st
   assert.match(html, /<h2 class="us-gv2-sr">Gioca<\/h2>/);
   assert.match(html, /QUESTA SETTIMANA/);
   assert.match(html, /<b>2 rimasti<\/b>/);
-  assert.match(html, /data-gv2-family="e_se" data-gv2-mode-state="open"[\s\S]*?<small class="us-gv2-mode-state">2 di 5<\/small>/, 'an open round shows on its own tile');
+  assert.match(html, /data-gv2-family="e_se" data-gv2-mode-state="open"[\s\S]*?<em class="us-gv2-game-state" data-state="open" data-tone="progress">2 di 5<\/em>/, 'an open round shows on its own card');
+  assert.match(html, /data-gv2-family="ridete" data-gv2-mode-state="played"[\s\S]*?data-state="played">[\s\S]*?Completato<\/em>/);
   assert.match(html, /data-gv2-family="ridete" data-gv2-mode-state="played"[\s\S]*?us-gv2-icon" data-gv2-icon="check"/);
   assert.equal((html.match(/us-gv2-rhythm"/g) || []).length, 1);
 });
@@ -68,7 +69,7 @@ test('Gioca hub: a spent week stays compact and locks unplayed tiles with an ico
   assert.doesNotMatch(html, /Nuovi giochi lunedì/, 'the hub does not duplicate exhaustion prose; tiles carry the state');
   assert.match(html, /<b>0 rimasti<\/b>/, 'the top-right strip says how many games are actually still available');
   assert.match(html, /data-gv2-family="scopritevi" data-gv2-mode-state="locked" aria-disabled="true"[\s\S]*?data-gv2-icon="lock-simple"/);
-  assert.match(html, /<small class="us-gv2-mode-state"><span class="us-gv2-icon" data-gv2-icon="lock-simple" aria-hidden="true"><\/span>Lunedì<\/small>/);
+  assert.match(html, /<em class="us-gv2-game-state" data-state="locked"><span class="us-gv2-icon" data-gv2-icon="lock-simple" aria-hidden="true"><\/span>Da lunedì<\/em>/);
 });
 
 test('Gioca hub: Per voi is one line of state plus one action', async () => {
@@ -82,10 +83,9 @@ test('Gioca hub: Per voi is one line of state plus one action', async () => {
 test('Gioca CSS: tiles use the canonical tokens and the Noi chip recipe, never a new palette', () => {
   const css = read('games.css');
   assert.match(css, /\.us-gv2-glyph\{[^}]*width:40px;height:40px;border-radius:14px/);
-  // HUMAN-UI-02 — the modes are a horizontal deck of small portrait cards.
-  assert.match(css, /\.us-gv2-deck\{display:flex;[^}]*overflow-x:auto/);
-  assert.match(css, /\.us-gv2-mode\{flex:0 0 auto;width:132px;/);
-  assert.doesNotMatch(css, /\.us-gv2-mode-grid\{display:grid/);
+  // US V3 — one two-column grid; nothing to discover by scrolling sideways.
+  assert.match(css, /#quiz \.us-gv2-game-grid\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.doesNotMatch(css, /\.us-gv2-deck|\.us-gv2-game-grid\{[^}]*overflow-x/);
   assert.doesNotMatch(css, /:root\s*\{/, 'no palette of its own');
   assert.match(css, /var\(--us-radius-card\)/);
   assert.match(css, /var\(--us-accent-gradient\)/);
@@ -94,5 +94,5 @@ test('Gioca CSS: tiles use the canonical tokens and the Noi chip recipe, never a
 
 test('Gioca hub: a fresh hub explains the low-friction entry without adding authority', async () => {
   const html = await hub(homeOf()).html();
-  assert.match(html, /class="us-gv2-entry-note">Scegliete un gioco\. Bastano pochi minuti\.<\/p>/);
+  assert.match(html, /<h3 class="us-gv2-section-title" id="usGv2ChooseTitle">Scegli un gioco<\/h3><small>Bastano pochi minuti\.<\/small>/);
 });

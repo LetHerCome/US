@@ -7,13 +7,14 @@
 'use strict';
 if (window.USGameV2) return;
 
+// V3 — each family says in a few words what kind of moment it is.
 const FAMILIES = [
-  { id: 'scopritevi', name: 'Scopritevi', icon: 'binoculars' },
-  { id: 'confrontatevi', name: 'Confrontatevi', icon: 'arrows-left-right' },
-  { id: 'ridete', name: 'Ridete', icon: 'smiley' },
-  { id: 'quanto_mi_conosci', name: 'Quanto mi conosci?', icon: 'eye' },
-  { id: 'rivivete', name: 'Rivivete', icon: 'clock-counter-clockwise' },
-  { id: 'e_se', name: 'E se…?', icon: 'signpost' },
+  { id: 'scopritevi', name: 'Scopritevi', icon: 'binoculars', kind: 'Domande nuove su di voi' },
+  { id: 'confrontatevi', name: 'Confrontatevi', icon: 'arrows-left-right', kind: 'Due punti di vista' },
+  { id: 'ridete', name: 'Ridete', icon: 'smiley', kind: 'Leggero e un po’ assurdo' },
+  { id: 'quanto_mi_conosci', name: 'Quanto mi conosci?', icon: 'eye', kind: 'Indovina le sue risposte' },
+  { id: 'rivivete', name: 'Rivivete', icon: 'clock-counter-clockwise', kind: 'I vostri ricordi, a due voci' },
+  { id: 'e_se', name: 'E se…?', icon: 'signpost', kind: 'Scenari, futuri, possibilità' },
 ];
 const FAMILY = Object.fromEntries(FAMILIES.map((f) => [f.id, f]));
 const PER_VOI = { id: 'per_voi', name: 'Per voi', icon: 'sparkle' };
@@ -153,7 +154,7 @@ function weeklyCard(w) {
   }
   if (w.my_turn) {
     return `<section class="us-gv2-weekly is-open" aria-label="La domanda della settimana">
-      ${head('feather', 'Tocca a te')}
+      ${head('feather', 'Tocca a te', `Scrivila, sigillala: ${partnerName()} la scopre giocando.`)}
       <button type="button" class="primary us-gv2-weekly-cta" data-gv2-action="weekly-create">Crea la domanda</button>
     </section>`;
   }
@@ -162,89 +163,79 @@ function weeklyCard(w) {
   </section>`;
 }
 
-// HUMAN-UI-02 — status filters. Every chip is a plain reading of the
-// server's round summaries (open_rounds / recent); nothing is decided here
-// and a chip exists only while it has at least one round behind it.
-const ROUND_FILTERS = [
-  { id: 'turn', label: () => 'Tocca a te', match: (h) => (h?.open_rounds || []).filter((r) => !r.my_complete) },
-  { id: 'ready', label: () => 'Risposte pronte', match: (h) => (h?.recent || []).filter((r) => r.reveal_ready && !r.my_reveal_seen_at) },
-  { id: 'waiting', label: () => `Aspetti ${partnerName()}`, match: (h) => (h?.open_rounds || []).filter((r) => r.my_complete) },
-  { id: 'done', label: () => 'Completati', match: (h) => (h?.recent || []).filter((r) => r.reveal_ready && r.my_reveal_seen_at) },
-];
-let hubFilter = null;   // view state only (memory), never persisted
-
-function roundFilters(h) {
-  return ROUND_FILTERS.map((f) => ({ id: f.id, label: f.label(), rounds: f.match(h) })).filter((f) => f.rounds.length > 0);
-}
+// V3 — rounds that need you (or are about to) are shown directly, only
+// when they exist; completed rounds stay one tap away at the end. Every row is
+// a plain reading of the server's open_rounds / recent summaries.
+const continueRounds = (h) => (h?.open_rounds || []).concat((h?.recent || []).filter((r) => r.reveal_ready && !r.my_reveal_seen_at));
+const doneRounds = (h) => (h?.recent || []).filter((r) => r.reveal_ready && r.my_reveal_seen_at);
+const ROUND_ICON = (family) => (family === 'per_voi' ? PER_VOI.icon : family === 'swipe' ? SWIPE.icon : FAMILY[family]?.icon || 'sparkle');
+const TONE_ORDER = { ready: 0, turn: 1, progress: 2, waiting: 3, seen: 4 };
 
 function roundRow(r) {
   const status = roundStatus(r);
   const when = r.completed_at ? romeDate(String(r.completed_at).slice(0, 10), { day: 'numeric', month: 'long' }) : '';
-  return `<button type="button" class="us-gv2-row" data-gv2-session="${esc(r.id)}"><span><b>${esc(familyName(r.game_family))}</b>${when ? `<small>${esc(when)}</small>` : ''}</span>${status ? `<small class="us-gv2-row-state" data-tone="${esc(status.tone)}">${esc(status.text)}</small>` : ''}</button>`;
+  return `<button type="button" class="us-gv2-row" data-gv2-session="${esc(r.id)}" data-tone="${esc(status?.tone || '')}">${glyph(ROUND_ICON(r.game_family))}<span class="us-gv2-row-copy"><b>${esc(familyName(r.game_family))}</b>${when ? `<small>${esc(when)}</small>` : ''}</span>${status ? `<small class="us-gv2-row-state" data-tone="${esc(status.tone)}">${esc(status.text)}</small>` : ''}</button>`;
+}
+function continueSection(h) {
+  const rounds = continueRounds(h)
+    .filter((r) => r.game_family !== 'per_voi' || r.id !== h?.per_voi?.session_id)
+    .sort((a, b) => (TONE_ORDER[roundStatus(a)?.tone] ?? 9) - (TONE_ORDER[roundStatus(b)?.tone] ?? 9));
+  if (!rounds.length) return '';
+  return `<section class="us-gv2-continue" aria-labelledby="usGv2ContinueTitle">
+    <h3 class="us-gv2-section-title" id="usGv2ContinueTitle">Da continuare</h3>
+    <div class="us-gv2-rows">${rounds.map(roundRow).join('')}</div>
+  </section>`;
+}
+function doneSection(h) {
+  const rounds = doneRounds(h);
+  if (!rounds.length) return '';
+  return `<details class="us-gv2-done"><summary><span>Partite completate</span><b>${rounds.length}</b></summary><div class="us-gv2-rows">${rounds.map(roundRow).join('')}</div></details>`;
 }
 
-function filterRow(filters) {
-  if (!filters.length) return '';
-  const chips = filters.map((f) => `<button type="button" class="us-gv2-filter" data-gv2-filter="${f.id}" aria-pressed="${hubFilter === f.id ? 'true' : 'false'}" aria-controls="usGv2FilterList"><span>${esc(f.label)}</span><b>${f.rounds.length}</b></button>`).join('');
-  const open = filters.find((f) => f.id === hubFilter);
-  return `<div class="us-gv2-filters" role="group" aria-label="Le vostre partite">${chips}</div>
-    <div class="us-gv2-filter-list" id="usGv2FilterList" aria-live="polite"${open ? '' : ' hidden'}>${open ? open.rounds.map(roundRow).join('') : ''}</div>`;
+// One status vocabulary for every game card: available, to continue,
+// completed this week, or locked until the weekly reset.
+function cardState(status) {
+  if (!status) return { state: 'ready', text: 'Disponibile', mark: '' };
+  if (status.state === 'open') return { state: 'open', text: status.text, mark: '', tone: status.tone };
+  if (status.state === 'played') return { state: 'played', text: 'Completato', mark: icon('check') };
+  return { state: 'locked', text: 'Da lunedì', mark: icon('lock-simple') };
+}
+function gameCard({ id, name, iconName, kind, action, extraClass = '', status }) {
+  const card = cardState(status);
+  const locked = card.state === 'locked';
+  const data = action === 'swipe' ? 'data-gv2-action="swipe"' : `data-gv2-family="${id}"`;
+  return `<button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-game${extraClass}" ${data} data-gv2-mode-state="${esc(card.state)}"${locked ? ' aria-disabled="true"' : ''} aria-label="${esc(name)}: ${esc(kind)}. ${esc(card.text)}">
+      ${glyph(iconName)}
+      <span class="us-gv2-game-copy"><b>${esc(name)}</b><small>${esc(kind)}</small></span>
+      <em class="us-gv2-game-state" data-state="${esc(card.state)}"${card.tone ? ` data-tone="${esc(card.tone)}"` : ''}>${card.mark}${esc(card.text)}</em>
+    </button>`;
 }
 
-// HUMAN-UI-02 — Per voi is the one hero; the six modes are a horizontal deck
-// of small physical cards (the next one peeks from the right); the status
-// chips sit between them. Mode IDs, states and actions are unchanged.
+// V3 hub: Per voi first; then what is waiting for you; then one ordered grid
+// to choose a game (Swipe a little larger, never the whole page; no sideways
+// scrolling); then the weekly question; completed rounds last.
 function renderHub() {
   const root = byId('quizHub');
   if (!root) return;
   const pv = perVoiCopy();
   const pvState = home?.per_voi?.state || 'idle';
   const openByFamily = new Map((home?.open_rounds || []).map((r) => [r.game_family, r]));
-  const filters = roundFilters(home);
-  if (hubFilter && !filters.some((f) => f.id === hubFilter)) hubFilter = null;
-  const modeTiles = FAMILIES.map((f) => {
-    const status = modeStatus(f, openByFamily.get(f.id));
-    const locked = status?.state === 'locked';
-    const mark = status?.state === 'played' ? icon('check') : locked ? icon('lock-simple') : '';
-    return `<button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-mode" data-gv2-family="${f.id}" data-gv2-mode-state="${esc(status?.state || 'ready')}"${locked ? ' aria-disabled="true"' : ''}>
-      ${glyph(f.icon)}
-      <span class="us-gv2-mode-copy"><b>${esc(f.name)}</b>${status ? `<small class="us-gv2-mode-state">${mark}${esc(status.text)}</small>` : ''}</span>
-      ${status && !locked && status.state === 'open' ? `<i class="us-gv2-dot" data-tone="${esc(status.tone)}" aria-hidden="true"></i>` : ''}
-    </button>`;
-  }).join('');
-  const swipeState = modeStatus(SWIPE, openByFamily.get('swipe'));
-  const swipeLocked = swipeState?.state === 'locked';
-  const swipeMark = swipeState?.state === 'played' ? icon('check') : swipeLocked ? icon('lock-simple') : '';
-  const swipeLine = swipeState?.state === 'open' ? swipeState.text
-    : swipeState?.state === 'played' ? 'Giocato questa settimana'
-    : swipeLocked ? 'Nuove carte lunedì'
-    : '8 carte · scegli senza pensarci troppo';
-  const swipeCta = swipeState?.state === 'open' ? 'Continua'
-    : swipeState?.state === 'played' ? 'Rivedi'
-    : swipeLocked ? 'Lunedì' : 'Swipe';
-  const invite = !filters.length && pvState === 'idle'
-    ? '<p class="us-gv2-entry-note">Scegliete un gioco. Bastano pochi minuti.</p>'
-    : '';
+  const swipe = gameCard({ id: 'swipe', name: SWIPE.name, iconName: SWIPE.icon, kind: '8 carte · veloce e privato', action: 'swipe', extraClass: ' is-swipe', status: modeStatus(SWIPE, openByFamily.get('swipe')) });
+  const families = FAMILIES.map((f) => gameCard({ id: f.id, name: f.name, iconName: f.icon, kind: f.kind, status: modeStatus(f, openByFamily.get(f.id)) })).join('');
+  const nothingYet = !continueRounds(home).length && !doneRounds(home).length && pvState === 'idle';
   root.innerHTML = `
     <header class="us-gv2-head"><h2 class="us-gv2-sr">Gioca</h2>${rhythmStrip()}</header>
-    ${invite}
     <button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-pervoi us-attention-orbit" data-gv2-action="per-voi" data-gv2-state="${esc(pvState)}" data-us-attention="${pvState === 'pending' || pvState === 'reveal_ready' ? 'on' : 'off'}">
-      ${glyph('sparkle').replace('class="us-gv2-glyph"', 'class="us-gv2-glyph" data-us-attention-icon')}<span class="us-gv2-pervoi-copy"><b>Per voi</b><small>${esc(pv.line)}</small></span><span class="us-gv2-pervoi-cta">${esc(pv.cta)}</span>
+      ${glyph('sparkle').replace('class="us-gv2-glyph"', 'class="us-gv2-glyph" data-us-attention-icon')}<span class="us-gv2-pervoi-copy"><span class="us-gv2-kicker">PROPOSTO PER VOI</span><b>Per voi</b><small>${esc(pv.line)}</small></span><span class="us-gv2-pervoi-cta">${esc(pv.cta)}</span>
     </button>
-    <button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-swipe-entry" data-gv2-action="swipe" data-gv2-mode-state="${esc(swipeState?.state || 'ready')}"${swipeLocked ? ' aria-disabled="true"' : ''}>
-      <span class="us-gv2-swipe-entry-icon">${icon('cards-three')}</span>
-      <span class="us-gv2-swipe-entry-copy"><span class="us-gv2-kicker">VELOCE · PRIVATO</span><b>Swipe</b><small>${swipeMark}${esc(swipeLine)}</small></span>
-      <span class="us-gv2-swipe-entry-cta">${esc(swipeCta)}</span>
-    </button>
-    <section class="us-gv2-modes" aria-label="Scegliete voi"><div class="us-gv2-mode-grid us-gv2-deck">${modeTiles}</div></section>
+    <span class="us-gv2-daily-slot" hidden></span>
+    ${continueSection(home)}
+    <section class="us-gv2-choose" aria-labelledby="usGv2ChooseTitle">
+      <div class="us-gv2-section-head"><h3 class="us-gv2-section-title" id="usGv2ChooseTitle">Scegli un gioco</h3>${nothingYet ? '<small>Bastano pochi minuti.</small>' : ''}</div>
+      <div class="us-gv2-game-grid">${swipe}${families}</div>
+    </section>
     ${weeklyCard(home?.weekly)}
-    ${filterRow(filters)}`;
-}
-
-function toggleFilter(id) {
-  hubFilter = hubFilter === id ? null : id;
-  renderHub();
-  byId('quizHub')?.querySelector?.(`[data-gv2-filter="${id}"]`)?.focus?.({ preventScroll: true });
+    ${doneSection(home)}`;
 }
 
 function renderHubError() {
@@ -918,7 +909,6 @@ function onClick(event) {
   else if (action === 'prev') { const item = current.items[index]; drafts.set(item.id, readInput(item)); index = Math.max(0, index - 1); renderPlay(); }
   else if (action === 'refresh') refresh();
   else if (action === 'retry') load();
-  else if (button.dataset.gv2Filter) toggleFilter(button.dataset.gv2Filter);
   else if (button.dataset.gv2Family) chooseMode(button.dataset.gv2Family);
   else if (button.dataset.gv2Session) openSession(button.dataset.gv2Session);
 }

@@ -71,5 +71,7 @@ test('perf 1.0 precache: no approved master is precached or loaded; the size bud
     if (size > largest[1]) largest = [pathname, size];
   }
   assert.ok(largest[1] <= 400 * 1024, `${largest[0]} is ${largest[1]} bytes: shell assets stay under 400 KB each`);
-  assert.ok(total <= 2.2 * 1024 * 1024, `precache is ${total} bytes: stays under 2.2 MB`);
+  // US V3 adds the Oggi themes + effects runtime (oggi-look.css/js, ~45 KB) after
+  // pruning ~33 KB of retired cosmetics; the shell budget moves from 2.2 to 2.3 MB.
+  assert.ok(total <= 2.3 * 1024 * 1024, `precache is ${total} bytes: stays under 2.3 MB`);
 });

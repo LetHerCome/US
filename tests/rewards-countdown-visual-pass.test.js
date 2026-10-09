@@ -121,21 +121,24 @@ function runProgression({ level, pending = [], withCountdown = true }) {
   return { api: window.USProgression, el: document.getElementById, reactions, applied };
 }
 
-test('Unlock moment: tells where the piece lives and which Countdown style comes with it', async () => {
-  const { api, el, reactions } = runProgression({ level: 4, pending: ['badge_day_one', 'frame_aurora'] });
+// US V3 — frames, stickers, badges and rings are no longer rewards: a pending
+// one is never announced. A legacy reward that entitles a Countdown style is
+// announced as that style, where it really lives.
+test('Unlock moment: tells where the piece lives; retired pieces are never announced', async () => {
+  const { api, el, reactions, applied } = runProgression({ level: 4, pending: ['badge_day_one', 'frame_aurora'] });
   await api.hydrate({ showUnlocks: true, force: true });
-  assert.equal(el('usProgressionUnlock').dataset.category, 'badge');
-  assert.equal(el('usProgressionUnlockPlace').textContent, 'In Noi, tra i vostri ritratti');
+  assert.equal(el('usProgressionUnlock').dataset.category, 'countdown', 'the badge is skipped, Aurora comes first');
+  assert.equal(el('usProgressionUnlockCount').textContent, '', 'a single real unlock, not "1 di 2"');
+  assert.equal(el('usProgressionUnlockKicker').textContent, 'NUOVO STILE COUNTDOWN');
+  assert.equal(el('usProgressionUnlockTitle').textContent, 'Countdown «Aurora»');
+  assert.equal(el('usProgressionUnlockPlace').textContent, 'Sul countdown di Oggi');
   assert.equal(el('usProgressionUnlockPlace').hidden, false);
-  assert.equal(el('usProgressionUnlockExtra').hidden, true, 'a badge opens no Countdown style');
-  await el('usProgressionUnlockLater').emit('click');
-  assert.equal(el('usProgressionUnlock').dataset.category, 'frame');
-  assert.equal(el('usProgressionUnlockPlace').textContent, 'Sulla foto di Oggi');
-  assert.equal(el('usProgressionUnlockExtra').hidden, false);
-  assert.match(el('usProgressionUnlockExtra').innerHTML, /Stile Countdown «Aurora»/);
-  assert.match(el('usProgressionUnlockExtra').innerHTML, /data-countdown-style="aurora"/);
+  assert.equal(el('usProgressionUnlockExtra').hidden, true, 'the style is the reward itself, not an extra');
+  assert.match(el('usProgressionUnlockPreview').innerHTML, /data-countdown-style="aurora"/);
+  assert.equal(el('usProgressionUnlockUse').textContent, 'Usalo nel countdown');
   assert.deepEqual(reactions, [], 'the PET waits until the moment is over');
-  await el('usProgressionUnlockLater').emit('click');
+  await el('usProgressionUnlockUse').emit('click');
+  assert.deepEqual(applied, ['aurora'], '"Usalo" applies the countdown style through USCountdown');
   assert.deepEqual(reactions, ['reward']);
 });
 
@@ -149,8 +152,9 @@ test('Collection: Countdown styles are a visible group whose locks follow the ex
   assert.match(markup, /Con Cromo · livello 12/);
   assert.doesNotMatch(markup, /data-countdown-style-select="orbit" disabled/);
   assert.match(markup, /class="[^"]*us-progression-countdown-style[^"]*is-equipped[^"]*"[^>]*data-countdown-style-select="editorial"[^>]*aria-pressed="true"/);
-  assert.equal((markup.match(/us-progression-reward-plus/g) || []).length, 3, 'Aurora, Orbita and Cromo say they also unlock a Countdown style');
-  assert.equal(el('usProgressionRewardsCount').textContent, '3 di 4', 'the catalog count is still the server catalog');
+  assert.equal((markup.match(/us-progression-reward-plus/g) || []).length, 0, 'US V3: Aurora, Orbita and Cromo are presented as the styles themselves, not as frames/rings');
+  assert.doesNotMatch(markup, /data-progression-reward="(?:badge|frame|ring)_/, 'retired categories have no tile');
+  assert.equal(el('usProgressionRewardsCount').textContent, '0 di 0', 'the count covers only rewards with a visible destination');
   await el('usProgressionRewards').emit('click', { target: { closest: () => ({ disabled: false, dataset: { countdownStyleSelect: 'orbit' } }) } });
   assert.deepEqual(applied, ['orbit']);
   markup = el('usProgressionRewards').innerHTML;
@@ -168,7 +172,7 @@ test('Unlock moment markup: staged, tinted per category and fully static under r
   assert.match(html, /<div class="us-progression-unlock-stage" aria-hidden="true">\s*<span class="us-progression-unlock-burst"><\/span>\s*<span class="us-progression-unlock-sparks"><\/span>\s*<div class="us-progression-unlock-preview" id="usProgressionUnlockPreview" aria-hidden="true"><\/div>/);
   assert.match(html, /id="usProgressionUnlockPlace" hidden/);
   assert.match(html, /id="usProgressionUnlockExtra" hidden/);
-  for (const category of ['frame', 'sticker', 'badge', 'ring', 'theme', 'accent', 'effect']) {
+  for (const category of ['oggi_theme', 'oggi_effect', 'countdown', 'theme', 'accent', 'effect']) {
     assert.match(progressionCss, new RegExp(`\\.us-progression-unlock\\[data-category="${category}"\\]`), category);
   }
   assert.match(progressionCss, /:root\[data-us-motion="reduced"\] \.us-progression-unlock \*,:root\[data-us-motion="reduced"\] \.us-progression-unlock \*::before\{animation:none!important\}/);

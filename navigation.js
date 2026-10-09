@@ -206,6 +206,19 @@ const layers=[
     find:()=>document.getElementById('usCalendarFormSheet'),
     open:el=>el?.classList.contains('open'),
     close:()=>window.closeCalendarFormSheet?.()
+  },
+  {
+    // US V3 — Personalizza Oggi: the gallery, then the full preview above it.
+    name:'oggi-look',
+    find:()=>document.getElementById('usLookSheet'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.USOggiLook?.closeGallery?.()
+  },
+  {
+    name:'oggi-look-detail',
+    find:()=>document.getElementById('usLookDetail'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.USOggiLook?.back?.()
   }
 ];
 
