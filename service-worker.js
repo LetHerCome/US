@@ -1,4 +1,4 @@
-const BUILD_ID = "us-noi-calendar-v4-20261009-1";
+const BUILD_ID = "us-gioca-v4-daily-bento-20261009-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;

@@ -28,27 +28,35 @@ function dailyModel() {
   return { questionId: question.id, question: question.question, state: 'answer', meta: 'Una domanda per voi oggi', cta: 'Rispondi', nudge: true };
 }
 
-function dailyMarkup(model) {
-  if (!model) return '';
-  return `<button type="button" class="us-gv2-daily" data-us-daily-entry data-daily-state="${esc(model.state)}" aria-label="Domanda del giorno: ${esc(model.question)}. ${esc(model.cta)}"><span class="us-gv2-daily-mark" aria-hidden="true"></span><span class="us-gv2-daily-copy"><small>DOMANDA DI OGGI</small><b>${esc(model.question)}</b><span class="us-gv2-daily-state">${esc(model.meta)}</span></span><span class="us-gv2-daily-cta">${esc(model.cta)}</span></button>`;
+function dailyMarkup(model){
+ if(!model)return '<div class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">Daily Challenge</span><small>La domanda di oggi non è ancora disponibile.</small></div>';
+ // The question and partner state are already authorized by the existing
+ // Daily Question engine. Never render hidden partner answers on the hub.
+ return `<button type="button" class="us-gv2-daily" data-us-daily-entry data-daily-state="${esc(model.state)}" aria-label="Daily Challenge, domanda del giorno: ${esc(model.question)}. ${esc(model.cta)}">
+   <span class="us-gv4-daily-art" aria-hidden="true"><span class="us-gv4-art-ring"></span><span class="us-gv4-art-heart"></span></span>
+   <span class="us-gv2-daily-copy">
+     <small>LA SFIDA DI OGGI</small>
+     <span class="us-gv4-daily-title">Daily<br>Challenge</span>
+     <b>${esc(model.question)}</b>
+     <span class="us-gv2-daily-state">${esc(model.meta)}</span>
+   </span>
+   <span class="us-gv4-daily-footer"><span>Una domanda, due risposte</span><span class="us-gv2-daily-cta">${esc(model.cta)} <span aria-hidden="true">›</span></span></span>
+ </button>`;
 }
 
-function dailySignature(model) {
-  return model ? `${model.questionId}:${model.state}:${model.cta}:${model.meta}` : '';
+function dailySignature(model){
+ return model ? `${model.questionId}:${model.state}:${model.cta}:${model.meta}` : 'unavailable';
 }
-function paintDailyInGioca() {
-  const hub = $('quizHub');
-  if (!hub) return;
-  const model = dailyModel();
-  const existing = hub.querySelector?.('[data-us-daily-entry]');
-  if (!model || hub.classList.contains('hidden')) { existing?.remove?.(); return; }
-  const signature = dailySignature(model);
-  if (existing?.dataset?.usDailySignature === signature) return;
-  existing?.remove?.();
-  // V3: the daily question sits right after Per voi (its slot), else after the head.
-  const head = hub.querySelector?.('.us-gv2-daily-slot') || hub.querySelector?.('.us-gv2-head');
-  if (!head) return;
-  head.insertAdjacentHTML('afterend', dailyMarkup(model).replace('data-us-daily-entry', `data-us-daily-entry data-us-daily-signature="${esc(signature)}"`));
+function paintDailyInGioca(){
+ const hub=$('quizHub');
+ if(!hub||hub.classList.contains('hidden'))return;
+ const slot=hub.querySelector?.('.us-gv2-daily-slot');
+ if(!slot)return;
+ const model=dailyModel(),signature=dailySignature(model);
+ if(slot.dataset.usDailySignature===signature)return;
+ slot.dataset.usDailySignature=signature;
+ // Own one stable slot instead of inserting a second card beside the games.
+ slot.innerHTML=dailyMarkup(model);
 }
 
 const nudgeSeen = new Set();
@@ -136,7 +144,7 @@ document.addEventListener('click', (event) => {
   if (event.target.closest?.('[data-noi-week-board-open]')) setTimeout(() => window.refreshNoiWeekBoard?.(), 250);
 });
 
-window.UsDailyQuestionHub = Object.freeze({ model: dailyModel, paint: syncDailySurfaces, open: openDailyInGioca });
+window.UsDailyQuestionHub = Object.freeze({ model: dailyModel, paint: syncDailySurfaces, paintCard: paintDailyInGioca, open: openDailyInGioca });
 syncDailySurfaces();
 if ($('bond')?.classList.contains('active')) window.refreshNoiWeekBoard?.();
 })();

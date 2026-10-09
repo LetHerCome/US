@@ -745,3 +745,140 @@ body:has(#quiz.page.active) #thinkButton{display:none!important}
 }
 @media(min-width:620px){#quiz .us-gv2-game-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce){#quiz .us-gv2-game,#quiz .us-gv2-row{transition:none}#quiz .us-gv2-game:active,#quiz .us-gv2-row:active{transform:none}}
+
+/* ===== GIOCA V4: DAILY CHALLENGE + BENTO =====
+   Single Gioca canvas. The Daily Question model belongs to home-cleanup.js;
+   the seven dates are passive orientation, never an invented streak. */
+#quiz .us-gv2-hub{gap:17px}
+#quiz .us-gv2-daily-slot{display:block;width:100%;min-height:188px}
+#quiz .us-gv2-daily-slot>.us-gv2-daily,
+#quiz .us-gv2-daily-slot>.us-gv4-daily-pending{width:100%;height:100%;min-height:188px;box-sizing:border-box}
+#quiz .us-gv2-daily{
+  position:relative;isolation:isolate;overflow:hidden;
+  display:flex;flex-direction:column;align-items:stretch;justify-content:space-between;
+  gap:12px;margin:0;padding:18px 20px 15px;
+  border:1px solid rgba(251,240,255,.27);border-radius:26px;
+  background:linear-gradient(128deg,#c4b0fa,#a391e8 70%,#9f83df);
+  color:#292044;text-align:left;box-shadow:0 16px 34px rgba(85,50,146,.17);
+  transition:transform var(--us-motion-press) var(--us-ease-standard)
+}
+#quiz .us-gv2-daily:active{transform:scale(.985)}
+#quiz .us-gv2-daily-mark{display:none}
+#quiz .us-gv4-daily-art{position:absolute;inset:0 0 auto auto;width:47%;height:86%;pointer-events:none;z-index:-1}
+#quiz .us-gv4-art-ring{
+ position:absolute;right:-11%;top:-21%;width:164px;height:164px;border:29px solid rgba(253,199,250,.46);
+ border-radius:49%;transform:rotate(32deg);box-shadow:0 12px 22px rgba(102,51,142,.12)
+}
+#quiz .us-gv4-art-heart{
+ position:absolute;right:22%;top:50%;width:55px;height:55px;
+ background:linear-gradient(130deg,#ffdbed,#ff91c6);
+ -webkit-mask:url("/assets/icons/phosphor/heart-straight-fill.svg") center/contain no-repeat;
+ mask:url("/assets/icons/phosphor/heart-straight-fill.svg") center/contain no-repeat;
+ transform:rotate(-14deg);filter:drop-shadow(0 9px 10px rgba(101,53,127,.12))
+}
+#quiz .us-gv2-daily-copy{display:flex;flex:1;flex-direction:column;align-items:flex-start;gap:5px;max-width:90%;position:relative;z-index:1}
+#quiz .us-gv2-daily-copy small{font-size:10px;font-weight:800;letter-spacing:.13em;color:#493277}
+#quiz .us-gv4-daily-title{display:block;font:700 clamp(26px,7.1vw,30px)/.94 var(--us-font-ui);letter-spacing:-.8px;margin:1px 0 5px;color:#272044}
+#quiz .us-gv2-daily-copy b{
+ font:650 12.5px/1.25 var(--us-font-ui);color:#332752;
+ max-width:94%;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden
+}
+#quiz .us-gv2-daily-state{font-size:11px;line-height:1.3;color:#51396f;margin-top:2px}
+#quiz .us-gv4-daily-footer{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:8px}
+#quiz .us-gv4-daily-footer>span:first-child{font-size:10.5px;color:#51396f;font-weight:550}
+#quiz .us-gv2-daily-cta{
+ display:inline-flex;align-items:center;justify-content:center;gap:5px;flex:0 0 auto;
+ border-radius:999px;padding:10px 14px;background:#32244f;color:#fff;font-size:12px;font-weight:760;
+ min-height:37px;box-shadow:0 4px 14px rgba(56,40,95,.17)
+}
+#quiz .us-gv2-daily[data-daily-state="waiting"]{background:linear-gradient(135deg,#b0a2d8,#9689c1)}
+#quiz .us-gv2-daily[data-daily-state="reveal"]{background:linear-gradient(135deg,#d0a5e4,#b890d7);border-color:rgba(255,227,246,.4)}
+#quiz .us-gv4-daily-pending{
+ display:flex;flex-direction:column;justify-content:center;gap:11px;padding:22px;
+ border:1px solid var(--us-color-line);border-radius:26px;background:linear-gradient(145deg,rgba(171,146,221,.21),rgba(68,39,102,.22))
+}
+#quiz .us-gv4-daily-pending-title{font:700 26px/1.08 var(--us-font-ui);letter-spacing:-.4px;color:var(--us-color-text)}
+#quiz .us-gv4-daily-pending small{color:var(--us-color-text-2);font-size:12px}
+
+/* A calendar ribbon, not a seven-day reward ledger. All days are static,
+   only Rome-today is highlighted. */
+#quiz .us-gv4-week{display:flex;flex-direction:column;gap:10px}
+#quiz .us-gv4-week-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:0 2px}
+#quiz .us-gv4-week-head h3{margin:0;font:500 19px/1.2 var(--us-font-editorial);color:var(--us-color-text)}
+#quiz .us-gv4-week-head span{font-size:10px;line-height:1.3;color:var(--us-color-text-3)}
+#quiz .us-gv4-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+#quiz .us-gv4-day{
+ position:relative;min-width:0;min-height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+ gap:4px;border-radius:17px;border:1px solid var(--us-color-line);background:rgba(255,255,255,.03);
+ color:var(--us-color-text-2);font-variant-numeric:tabular-nums
+}
+#quiz .us-gv4-day small{font-size:10px;font-weight:600;color:var(--us-color-text-3)}
+#quiz .us-gv4-day b{font-size:16px;font-weight:640}
+#quiz .us-gv4-day.is-today{background:rgba(255,239,250,.96);color:#2d233a;border-color:transparent;box-shadow:0 7px 17px rgba(0,0,0,.15)}
+#quiz .us-gv4-day.is-today small{color:#4f3b62}
+#quiz .us-gv4-day i{position:absolute;bottom:4px;width:3px;height:3px;border-radius:50%;background:var(--us-color-rose);pointer-events:none}
+#quiz .us-gv2-head{margin:-2px 0 0;justify-content:flex-end;min-height:22px}
+#quiz .us-gv2-rhythm{gap:7px}
+#quiz .us-gv2-rhythm>.us-gv2-kicker{display:block;font-size:10px;color:var(--us-color-text-3);font-weight:680;letter-spacing:.08em}
+#quiz .us-gv2-section-title{font-size:22px}
+
+/* Two-column bento: Per voi spans the first two rows, with two short cards
+   on its right. Other game cards stay in normal DOM/keyboard order. */
+#quiz .us-gv2-game-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;align-items:stretch}
+#quiz .us-gv2-pervoi,
+#quiz .us-gv2-pervoi[data-gv2-state="played"]{
+ grid-column:1;grid-row:span 2;min-height:236px;
+ display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;
+ gap:16px;margin:0;padding:15px;border-radius:24px;
+ background:linear-gradient(156deg,rgba(224,150,179,.25),rgba(77,35,75,.63) 57%,rgba(32,21,46,.91));
+ border:1px solid rgba(249,177,210,.2);box-shadow:var(--us-glass-2-shadow)
+}
+#quiz .us-gv2-pervoi .us-gv2-glyph,
+#quiz .us-gv2-pervoi[data-gv2-state="played"] .us-gv2-glyph{grid-column:auto;grid-row:auto;width:43px;height:43px;border-radius:14px}
+#quiz .us-gv2-pervoi-copy,
+#quiz .us-gv2-pervoi[data-gv2-state="played"] .us-gv2-pervoi-copy{grid-column:auto;grid-row:auto;align-self:stretch}
+#quiz .us-gv2-pervoi-copy b,
+#quiz .us-gv2-pervoi[data-gv2-state="played"] .us-gv2-pervoi-copy b{font:550 clamp(23px,6vw,27px)/1.08 var(--us-font-editorial)}
+#quiz .us-gv2-pervoi-copy small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:12px;line-height:1.33}
+#quiz .us-gv2-pervoi-cta,
+#quiz .us-gv2-pervoi[data-gv2-state="played"] .us-gv2-pervoi-cta{
+ grid-column:auto;grid-row:auto;align-self:flex-start;min-height:36px;padding:0 13px;font-size:12px
+}
+#quiz .us-gv2-game{min-height:132px;gap:8px;border-radius:23px;padding:14px;background:linear-gradient(155deg,rgba(59,33,75,.75),rgba(25,18,36,.85));box-shadow:var(--us-glass-2-shadow)}
+#quiz .us-gv2-game[data-gv2-family="scopritevi"]{grid-column:2;grid-row:2}
+#quiz .us-gv2-game.is-swipe{
+ grid-column:2;grid-row:1;min-height:112px;display:grid;grid-template-columns:1fr;grid-template-rows:auto 1fr auto;
+ justify-items:start;align-items:start;gap:5px;padding:12px 13px;
+ background:linear-gradient(145deg,rgba(133,155,220,.35),rgba(38,51,89,.73))
+}
+#quiz .us-gv2-game.is-swipe .us-gv2-glyph{width:30px;height:30px;border-radius:10px}
+#quiz .us-gv2-game.is-swipe .us-gv2-game-copy{align-self:end}
+#quiz .us-gv2-game.is-swipe .us-gv2-game-copy small{display:none}
+#quiz .us-gv2-game[data-gv2-family="scopritevi"]{min-height:112px;background:linear-gradient(145deg,rgba(168,136,222,.37),rgba(58,42,85,.78))}
+#quiz .us-gv2-game[data-gv2-family="scopritevi"] .us-gv2-glyph{width:30px;height:30px;border-radius:10px}
+#quiz .us-gv2-game[data-gv2-family="scopritevi"] .us-gv2-game-copy small{display:none}
+#quiz .us-gv2-game.is-swipe .us-gv2-game-copy b,
+#quiz .us-gv2-game[data-gv2-family="scopritevi"] .us-gv2-game-copy b{font-size:17px;line-height:1.1}
+#quiz .us-gv2-game.is-swipe .us-gv2-game-state,
+#quiz .us-gv2-game[data-gv2-family="scopritevi"] .us-gv2-game-state{font-size:10px;margin:0;padding:0;background:transparent}
+#quiz .us-gv2-game .us-gv2-game-state[data-state="ready"]{display:none}
+#quiz .us-gv2-game .us-gv2-glyph{display:grid;place-items:center}
+#quiz .us-gv2-game .us-gv2-glyph .us-gv2-icon{display:block;max-width:22px;max-height:22px}
+#quiz .us-gv2-game:focus-visible,#quiz .us-gv2-pervoi:focus-visible,#quiz .us-gv2-daily:focus-visible{outline:2px solid var(--us-color-accent-strong);outline-offset:3px}
+@media(max-width:360px){
+ #quiz .us-gv4-days{gap:3px}
+ #quiz .us-gv4-day{border-radius:13px;min-height:57px}
+ #quiz .us-gv4-week-head h3{font-size:17px}
+ #quiz .us-gv2-pervoi,#quiz .us-gv2-pervoi[data-gv2-state="played"]{min-height:221px;padding:12px}
+ #quiz .us-gv2-game{padding:12px}
+ #quiz .us-gv2-game-grid{gap:8px}
+ #quiz .us-gv2-daily{padding:16px}
+ #quiz .us-gv2-daily-copy{max-width:96%}
+}
+@media(min-width:620px){
+ #quiz .us-gv2-game-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(prefers-reduced-motion:reduce){
+ #quiz .us-gv2-daily{transition:none}
+ #quiz .us-gv2-daily:active{transform:none}
+}
