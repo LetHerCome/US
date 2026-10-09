@@ -3,6 +3,8 @@
 Data: 2026-10-09. Stato: Missione 1 implementata, candidato per review;
 Missione 2 progettata, nessuna implementazione SQL.
 Branch: `codex/us-v6-daily-reveal`. Base remota verificata: `1251e49` (PR #175).
+PR: [#176 — draft](https://github.com/LetHerCome/US/pull/176).
+Candidato codice verificato: `4d238b8257fd042fd0882b589aa13111f68ca6a9`.
 Checkout autorizzato: worktree Codex del repository `LetHerCome/US`; i metadati
 Git condivisi sono in `F:/AI/US`. Il checkout principale non è stato modificato.
 
@@ -236,9 +238,9 @@ Migrazione creata via Supabase CLI; nessuna applicazione produzione. Missione
   risolti. Non sostituire le prove browser con una dichiarazione device PASS.
 - Metadata Supabase letti: RPC e ledger. La migrazione dei reward Oggi
   `20261009100419` non compare nel ledger applicato (Missione 3 futura).
-- Nessuna scrittura su Supabase, nessun merge/deploy/APK/publish. PR dedicata
-  prevista in draft dopo i controlli. La base resta `1251e49`, ricontrollata
-  prima della PR; SHA candidato e link riportati nel risultato della missione.
+- Nessuna scrittura su Supabase, nessun merge/deploy/APK/publish produzione.
+  PR #176 aperta in draft dopo i controlli. La base resta `1251e49`, ricontrollata
+  prima della PR; il branch contiene solo Missione 1 e progetto Missione 2.
 
 Documentazione consultata: [Database functions](https://supabase.com/docs/guides/database/functions).
 Il fetch web di `https://supabase.com/changelog.md` è fallito per content-type;

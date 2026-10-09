@@ -1,6 +1,8 @@
 # US V6 — Verifica del candidato Daily Reveal
 
 Base: main `1251e49`, ricontrollata prima della PR. Branch: `codex/us-v6-daily-reveal`.
+PR [#176 — draft](https://github.com/LetHerCome/US/pull/176); candidato codice
+`4d238b8257fd042fd0882b589aa13111f68ca6a9` (il commit successivo aggiorna solo i documenti).
 Stato: candidato per review; **NOT READY per release**. Nessun nuovo fail rispetto alla base.
 Nessuna modifica dati, RPC, RLS, XP, budget settimanale, SW, marker o asset approvati.
 
