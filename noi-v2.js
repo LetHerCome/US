@@ -160,7 +160,7 @@ function setTab(tab){
   $('usGiocaTabGames')?.setAttribute('tabindex',active?'-1':'0');
   $('usGiocaTabSintonia')?.setAttribute('tabindex',active?'0':'-1');
   if(active){
-    window.renderBondProgress?.(window.usCouple?.bond_xp||0);
+    window.hydrateBond?.();
     window.hydrateResonanceHistory?.();
     window.USProgression?.hydrate?.({showUnlocks:true,force:true});
   }
