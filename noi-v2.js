@@ -177,6 +177,8 @@ function moveSintonia(){
 }
 function boot(){
   moveSintonia();setTab('giochi');render();
+  // Main-nav tap always returns to Giochi; explicit Sintonia deep links remain available.
+  document.querySelector('.nav button[data-page="quiz"]')?.addEventListener('click',()=>setTab('giochi'),true);
   $('usGiocaTabGames')?.addEventListener('click',()=>setTab('giochi'));
   $('usGiocaTabSintonia')?.addEventListener('click',()=>{window.USGameV2?.showHub?.();setTab('sintonia');});
   $('usNoiV2ModeCalendar')?.addEventListener('click',()=>{mode='calendar';render();});
