@@ -1,4 +1,4 @@
-const BUILD_ID = "us-mc3-main-feedback-20261009-1";
+const BUILD_ID = "us-noi-v2-20261009-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -29,6 +29,8 @@ const APP_SHELL = [
   versioned("/auth-first-run.css"),
   versioned("/auth-first-run.js"),
   versioned("/calendar.js"),
+  versioned("/noi-v2.css"),
+  versioned("/noi-v2.js"),
   "/assets/third-party/spotify/spotify-full-logo-white.svg",
   versioned("/styles.css"),
   versioned("/ui-foundation.css"),
