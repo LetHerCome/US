@@ -231,3 +231,7 @@
 #bond .us-noi-v2 .us-noi-v2-picker>button{padding:9px 10px;border-radius:var(--us-radius-control);border:1px solid var(--noi-line);background:var(--us-color-surface-2);color:var(--us-color-text);font-size:12px}
 #bond .us-noi-v2 .us-noi-v2-picker[hidden]{display:none!important}
 @media(max-width:360px){#bond .us-noi-v2 .us-noi-v2-links button{padding:8px 3px;min-height:70px}#bond .us-noi-v2 .us-noi-v2-link-copy b{font-size:12px}}
+
+/* Week caption must wrap beside the three month/add controls on narrow Android. */
+#bond .us-noi-v2[data-mode="week"] .us-noi-v2-monthbar h3{min-width:0;flex:1 1 auto;white-space:normal;font-size:clamp(18px,5.2vw,22px);line-height:1.12}
+#bond .us-noi-v2 .us-noi-v2-month-nav{flex:0 0 auto}
