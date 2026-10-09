@@ -76,7 +76,7 @@ test('Gioca hub: Per voi is one line of state plus one action', async () => {
   const expectations = { idle: ['5 domande scelte per voi', 'Inizia'], pending: ['Beatrice ha iniziato', 'Rispondi'], waiting: ['Aspettiamo Beatrice', 'Apri'], reveal_ready: ['Risposte pronte ♡', 'Scopri'], in_progress: ['A metà', 'Continua'] };
   for (const [state, [line, cta]] of Object.entries(expectations)) {
     const html = await hub(homeOf({ per_voi: { state, session_id: 's' } })).html();
-    assert.match(html, new RegExp(`<b>Per voi</b><small>${line}</small></span><span class="us-gv2-pervoi-cta">${cta}</span>`), state);
+    assert.match(html, new RegExp(`<b>Per voi</b><small>${line}</small></span>\\s*<span class="us-gv2-pervoi-cta">${cta}</span>`), state);
   }
 });
 
