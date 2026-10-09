@@ -1673,8 +1673,18 @@ async function prepareNoiEntryDate(dateISO){
 async function createCalendarEntryForDate(dateISO) {
   if (!dateISO || !window.usProfile) return;
   if(window.USNoiV2?.openCalendar){
+    // The plus is instant: render the existing editor first, then hydrate the
+    // day's already-saved commitments without ever blocking the user's tap.
+    const identity=window.usProfile;
     window.USNoiV2.openCalendar({date:dateISO,mode:'calendar'});
-    if(await prepareNoiEntryDate(dateISO))startCreateForDate(dateISO);
+    ensureNoiEditorSheets();
+    entries=[];
+    selectedDate=dateISO;
+    startCreateForDate(dateISO);
+    void prepareNoiEntryDate(dateISO).then(ready=>{
+      if(!ready||window.usProfile!==identity||formDateISO!==dateISO||editingFormEntry||!$('usCalendarFormSheet')?.classList.contains('open'))return;
+      renderFormDay(dateISO,'create');
+    });
     return;
   }
   const identity = window.usProfile;
@@ -1718,6 +1728,11 @@ window.closeCalendarSurface = closeCalendarSurface;
 window.closeCalendarDetailSheet = closeCalendarDetailSheet;
 window.closeCalendarFormSheet = closeCalendarFormSheet;
 window.addEventListener?.('us-identity-change', event=>{
+  // The editor sheets are no longer children of the calendar overlay. Close
+  // them explicitly on account/couple switch before any stale user can act.
+  closeCalendarDetailSheet();
+  closeCalendarFormSheet();
+  clearIdeaPick();
   if(!event.detail?.identityKey){loadToken++;profiles=[];profilesById.clear();entries=[];closeCalendarSurface();}
   else if($('usCalendarOverlay')?.classList.contains('open'))renderCalendar();
 });
