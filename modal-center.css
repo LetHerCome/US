@@ -74,6 +74,20 @@
   backdrop-filter: var(--us-glass-3-blur);
 }
 
+/* Daily owns one scroller. Insets belong to the overlay, not also its panel. */
+#today { overflow: hidden; }
+#today > .today-sheet {
+  flex-shrink: 1;
+  min-height: 0;
+  padding: 14px !important;
+}
+#today .qtext { overflow-wrap: anywhere; }
+#today .today-sheet-head > div { min-width: 0; }
+#today .today-close { flex-shrink: 0; }
+#today .today-sync-status { font-size: 13px; line-height: 1.4; }
+#todayRetryBtn { width: 100%; min-height: 44px; }
+#todaySyncStatus[hidden], #todayRetryBtn[hidden] { display: none !important; }
+
 /* Calendar month requires more horizontal space on tablet, not on phones. */
 @media (min-width: 680px) {
   #usCalendarOverlay > .us-cal-surface {

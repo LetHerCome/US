@@ -1,13 +1,12 @@
-// M10.2 — reazioni alla risposta del PARTNER nel foglio Today. Il vero app.js in vm.
+// Daily V6 — retired reaction UI, preserved server state and notification contract.
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
-const { ROOT, app, slice, flush, meta, installToday } = require('./helpers/m10-2-harness.js');
+const { ROOT, app, slice, meta, installToday } = require('./helpers/m10-2-harness.js');
 
 // ------------------------------------------------------------------ reactions
-const glyphs = { heart: '❤️', angry: '😡', cry: '😭' };
 
 test('Daily V5: both answers have labels but no reaction controls or prior reaction indicators', async () => {
   for (const role of ['francesco','beatrice']) {
@@ -22,52 +21,11 @@ test('Daily V5: both answers have labels but no reaction controls or prior react
   }
 });
 
-test('M10.2 reazioni: salva sul server, sostituisce, tap sulla selezionata la toglie; poi meta canonica riconciliata', async () => {
-  const t = installToday();
-  await t.hydrate();
-  t.calls.length = 0;
-  for (const [tap, expected] of [['heart', 'heart'], ['angry', 'angry'], ['cry', 'cry'], ['cry', null]]) {
-    const r = await t.window.setDailyAnswerReaction(tap);
-    assert.equal(r.status, 'saved');
-    assert.equal(t.window.todayRevealMeta.my_reaction, expected);
-    assert.doesNotMatch(t.nodes.todayReveal.innerHTML, /data-daily-reaction|aria-pressed/, 'legacy reaction authority no longer shown as UI');
-  }
-  assert.deepEqual(t.calls.map((c) => c[0]), Array(4).fill('set_daily_answer_reaction'));
-  assert.deepEqual(t.calls.map((c) => c[1].target_reaction), ['heart', 'angry', 'cry', null]);
-  assert.deepEqual(Object.keys(t.calls[0][1]), ['target_question_id', 'target_reaction'], 'no user id / couple id / target from the client');
-  assert.deepEqual(t.pushes, [], 'no push for reactions');
-});
-
-test('M10.2 reazioni: click delegato sul bottone; errore server → rollback allo stato canonico + toast', async () => {
-  const t = installToday({ revealMeta: meta({ my_reaction: 'heart' }), reactionResult: async () => ({ data: null, error: { message: 'offline' } }) });
-  await t.hydrate();
-  let seenDuring = null;
-  const promise = (async () => { t.listeners.get('click')({ target: { closest: () => ({ dataset: { dailyReaction: 'cry' } }) } }); })();
-  seenDuring = t.window.todayRevealMeta.my_reaction;
-  await promise; await flush(); await flush();
-  assert.equal(seenDuring, 'cry', 'brief optimistic pressed state');
-  assert.equal(t.window.todayRevealMeta.my_reaction, 'heart', 'rolled back to the server value');
-  assert.doesNotMatch(t.nodes.todayReveal.innerHTML, /data-daily-reaction|aria-pressed/, 'no user-visible reaction controls');
-  assert.equal(t.toasts.length, 1);
-  // Risposta con un'altra domanda non viene accettata come salvataggio.
-  const wrong = installToday({ reactionResult: async () => ({ data: meta({ question_id: 'altra', my_reaction: 'cry' }), error: null }) });
-  await wrong.hydrate();
-  assert.equal((await wrong.window.setDailyAnswerReaction('cry')).status, 'error');
-  assert.equal(wrong.window.todayRevealMeta.my_reaction, null);
-});
-
-test('M10.2 reazioni: nessuna prima del reveal, valori non validi ignorati, una alla volta', async () => {
-  const t = installToday();
-  await t.hydrate();
-  t.calls.length = 0;
-  assert.equal((await t.window.setDailyAnswerReaction('like')).status, 'noop');
-  assert.equal(t.calls.length, 0);
-  const locked = installToday();
-  locked.window.todayQuestion = null;
-  assert.equal((await locked.window.setDailyAnswerReaction('heart')).status, 'noop');
-  const src = slice('async function hydrateToday(){', 'async function updateHomeStatus');
-  // Prima del reveal il ramo "non sbloccato" azzera la meta e svuota il reveal.
-  assert.match(src, /window\.todayRevealMeta=null;\s*reveal\.classList\.add\('hidden'\);reveal\.innerHTML=''/);
+test('Daily V6: retired reaction actions cannot send frontend mutations', async () => {
+  const t = installToday();await t.hydrate();
+  assert.equal(t.window.setDailyAnswerReaction, undefined);
+  assert.equal(t.listeners.has('click'), false);
+  assert.ok(t.calls.every(([name]) => name !== 'set_daily_answer_reaction'));
 });
 
 test('M10.2 nessuna notifica per reazioni/receipt: send-web-push invariato, nessun push dai nuovi percorsi', () => {

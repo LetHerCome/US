@@ -19,10 +19,10 @@ const KEEP_BLOCK = between('// M12B.4 — Conserva: dopo il reveal', '// M9E —
 const QID = '11111111-1111-4111-8111-111111111111';
 const flush = () => new Promise((r) => setImmediate(r));
 
-function install({ rows = [], loadError = null, rpc } = {}) {
+function install({ rows = [], loadError = null, rpc, loadResult } = {}) {
   const calls = []; const toasts = []; let clickHandler = null;
   const node = { hidden: true, innerHTML: '', addEventListener: (type, fn) => { if (type === 'click') clickHandler = fn; } };
-  const query = { select() { return query; }, eq(col, v) { calls.push(['eq', col, v]); return query; }, limit() { return Promise.resolve(loadError ? { data: null, error: loadError } : { data: rows, error: null }); } };
+  const query = { select() { return query; }, eq(col, v) { calls.push(['eq', col, v]); return query; }, limit() { return loadResult?loadResult():Promise.resolve(loadError ? { data: null, error: loadError } : { data: rows, error: null }); } };
   const sb = {
     from(table) { calls.push(['from', table]); return query; },
     rpc(name, args) { calls.push(['rpc', name, args]); return rpc(name, args, calls); },
@@ -39,6 +39,32 @@ function install({ rows = [], loadError = null, rpc } = {}) {
   return { api: window.UsDailyKeepsake, node, calls, toasts, window, tap };
 }
 const ok = (status) => async () => ({ data: { status, question_id: QID, id: 'k', source_key: `daily_question:${QID}` }, error: null });
+
+test('Daily Conserva: late read from another identity cannot hide the current action',async()=>{
+  let resolve,read=0;const pending=new Promise(r=>{resolve=r;});
+  const h=install({rpc:ok('kept'),loadResult:()=>++read===1?pending:Promise.resolve({data:[],error:null})});
+  h.window.usProfile={id:'A',couple_id:'couple-A'};
+  const old=h.api.load(QID);h.api.hide();h.window.usProfile={id:'B',couple_id:'couple-B'};
+  await h.api.load(QID);resolve({data:[{id:'kept-A'}],error:null});await old;
+  assert.match(h.node.innerHTML,/data-us-daily-keep/);assert.equal(h.api.state().status,'idle');
+});
+
+test('Daily Conserva: late save after identity switch cannot celebrate in another couple',async()=>{
+  let resolve;const pending=new Promise(r=>{resolve=r;});
+  const h=install({rpc:()=>pending});h.window.usProfile={id:'A',couple_id:'couple-A'};
+  await h.api.load(QID);const old=h.api.keep();h.api.hide();h.window.usProfile={id:'B',couple_id:'couple-B'};
+  await h.api.load(QID);resolve({data:{status:'kept',question_id:QID},error:null});await old;
+  assert.equal(h.api.state().status,'idle');assert.equal(h.toasts.length,0);
+});
+
+test('Daily Conserva: refresh while keeping leaves the action locked until completion',async()=>{
+  let resolve;const pending=new Promise(r=>{resolve=r;});
+  const h=install({rpc:()=>pending});await h.api.load(QID);const saving=h.api.keep();
+  await h.api.load(QID);assert.equal(h.api.state().status,'saving');
+  assert.equal((await h.api.keep()).status,'noop');
+  resolve({data:{status:'kept',question_id:QID},error:null});await saving;
+  assert.equal(h.api.state().status,'kept');
+});
 
 test('M12B.4 UI: before keeping, the revealed Daily shows a single "Conserva" action', async () => {
   const h = install({ rpc: ok('kept') });
@@ -123,14 +149,16 @@ test('M12B.4 UI: the action exists only where the shared result is legitimately 
 test('M12B.4 wiring: hydrateToday loads Conserva only after the reveal, hides it otherwise; the sheet has one slot', () => {
   const hydrate = between('async function hydrateToday(){', 'async function updateHomeStatus');
   const revealed = hydrate.slice(hydrate.indexOf('if(state?.both_answered){'), hydrate.indexOf('}else{', hydrate.indexOf('if(state?.both_answered){')));
-  assert.match(revealed, /dailyQuestionOutcomes\.hide\(\);[\s\S]*window\.UsDailyKeepsake\?\.load\?\.\(q\.id\)/, 'comments hidden, Conserva remains');
+  assert.match(revealed, /window\.UsDailyKeepsake\?\.load\?\.\(q\.id\)/, 'Conserva remains');
+  assert.doesNotMatch(hydrate, /dailyQuestionOutcomes/);
   const notRevealed = hydrate.slice(hydrate.indexOf('}else{', hydrate.indexOf('if(state?.both_answered){')));
   assert.match(notRevealed, /window\.UsDailyKeepsake\?\.hide\?\.\(\)/);
-  assert.match(between('function renderTodayQuestionUnavailable', 'const US_DAILY_REACTIONS'), /window\.UsDailyKeepsake\?\.hide\?\.\(\)/);
+  assert.match(between('function renderTodayQuestionUnavailable', 'async function loadDailyRevealMeta'), /window\.UsDailyKeepsake\?\.hide\?\.\(\)/);
   const html = read('index.html');
   const sheet = html.match(/<main id="today"[\s\S]*?<\/main>/)[0];
   assert.equal((sheet.match(/id="todayKeep"/g) || []).length, 1);
-  assert.ok(sheet.indexOf('id="todayReveal"') < sheet.indexOf('id="todayKeep"') && sheet.indexOf('id="todayKeep"') < sheet.indexOf('id="todayOutcome"'));
+  assert.ok(sheet.indexOf('id="todayReveal"') < sheet.indexOf('id="todayKeep"'));
+  assert.doesNotMatch(sheet,/id="todayOutcome"/);
   assert.doesNotMatch(KEEP_BLOCK, /daily_answers|localStorage|sessionStorage/, 'never reads answers or keeps local state');
   assert.doesNotMatch(KEEP_BLOCK, /\.insert\(|\.upsert\(|\.update\(|\.delete\(/, 'writes only through keep_daily_question');
 });

@@ -154,7 +154,8 @@ test('M9E client: reveal e partner nascosto restano quelli di get_daily_state', 
   const reveal = install({ rpc: ok(Q(), { my_answer: 'Mia', partner_has_answer: true, both_answered: true, partner_answer: 'Sua' }) });
   await reveal.hydrate();
   assert.match(reveal.nodes.todayReveal.innerHTML, /Mia[\s\S]*Sua/);
-  assert.equal(reveal.nodes.todaySaveBtn.textContent, 'Risposte sbloccate');
+  assert.equal(reveal.nodes.todaySaveBtn.hidden, true);
+  assert.equal(reveal.nodes.answer.hidden, true);
 });
 
 test('M9E client: nessuna regressione nel flusso di notifica daily_answer', async () => {

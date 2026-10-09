@@ -30,7 +30,6 @@
   let pendingDeleteStoryId = null;
   let storyLoadToken = 0;
   let initializedForUserId = null;
-  let todayCloseTimer = null;
   let storySwipeStartY = null;
   let storySwipeStartX = null;
   let storySwipeEndY = null;
@@ -927,44 +926,6 @@
     }, PROFILE_REFRESH_MS);
   }
 
-  function wireTodayAutoClose() {
-    if (window.__usTodayAutoCloseV15 || typeof hydrateToday !== 'function') return;
-    window.__usTodayAutoCloseV15 = true;
-    const originalHydrateToday = hydrateToday;
-    const wrapped = async function() {
-      const result = await originalHydrateToday.apply(this, arguments);
-      scheduleTodayCloseIfNeeded();
-      return result;
-    };
-    try { hydrateToday = wrapped; } catch (_) {}
-    window.hydrateToday = wrapped;
-  }
-
-  function scheduleTodayCloseIfNeeded() {
-    if (!window.usProfile || !window.todayState?.both_answered) return;
-    if (!document.getElementById('today')?.classList.contains('active')) return;
-    const d = new Date();
-    const dateKey = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-    const key = 'us-today-reveal-autoclosed:' + window.usProfile.id + ':' + dateKey;
-    try { if (localStorage.getItem(key) === '1') return; } catch (_) {}
-    if (todayCloseTimer) return;
-    const reveal = document.getElementById('todayReveal');
-    if (reveal && !document.getElementById('usTodayAutoCloseHint')) {
-      const hint = document.createElement('div');
-      hint.id = 'usTodayAutoCloseHint';
-      hint.className = 'us-today-autoclose';
-      hint.textContent = 'Visto ♡ · torno alla Home';
-      reveal.appendChild(hint);
-    }
-    todayCloseTimer = setTimeout(() => {
-      todayCloseTimer = null;
-      if (!document.getElementById('today')?.classList.contains('active')) return;
-      try { localStorage.setItem(key, '1'); } catch (_) {}
-      if (typeof go === 'function') go('home');
-      if (typeof toast === 'function') toast('Today completato ♡');
-    }, 10000);
-  }
-
   function connectExistingProfileAvatars() {
     // Le Stories hanno un solo punto di ingresso: il pallino del partner in alto.
   }
@@ -979,7 +940,6 @@
     if (initializedForUserId === window.usProfile.id) return true;
     initializedForUserId = window.usProfile.id;
     injectUi();
-    wireTodayAutoClose();
     await loadProfiles();
     connectExistingProfileAvatars();
     await cleanupOwnExpiredStories();
@@ -1016,7 +976,6 @@
         if (storyPlaybackBackgroundPaused) { storyPlaybackBackgroundPaused = false;resumeStoryPlayback(); }
         startForCurrentProfile();
         refreshStories({ refreshProfiles: true });
-        scheduleTodayCloseIfNeeded();
       }
     });
     window.addEventListener('focus', () => refreshStories({ refreshProfiles: true }));
