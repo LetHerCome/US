@@ -64,6 +64,8 @@ const RUNTIME_FILES = [
   'calendar-domain.js',
   'calendar.css',
   'calendar.js',
+  'noi-v2.js',
+  'noi-v2.css',
   'state-system.css',
   'auth-first-run.css',
   'auth-first-run.js',

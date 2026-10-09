@@ -8,6 +8,10 @@ on:
       - 'games.css'
       - 'progression.js'
       - 'progression.css'
+      - 'noi-v2.js'
+      - 'noi-v2.css'
+      - 'calendar.js'
+      - 'tests/noi-v2-layout.test.js'
       - 'settings2.css'
       - 'tests/us-human-ui-02.test.js'
       - 'tests/progression-rewards-v2.test.js'
@@ -21,6 +25,10 @@ on:
       - 'games.css'
       - 'progression.js'
       - 'progression.css'
+      - 'noi-v2.js'
+      - 'noi-v2.css'
+      - 'calendar.js'
+      - 'tests/noi-v2-layout.test.js'
       - 'settings2.css'
       - 'tests/us-human-ui-02.test.js'
       - 'tests/progression-rewards-v2.test.js'
@@ -41,6 +49,6 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Sintonia, Gioca and Settings regression
-        run: node --test tests/us-progression-v1.test.js tests/progression-rewards-v2.test.js tests/us-human-ui-02.test.js tests/m11b-game-v2-client.test.js
+        run: node --test tests/us-progression-v1.test.js tests/progression-rewards-v2.test.js tests/us-human-ui-02.test.js tests/m11b-game-v2-client.test.js tests/noi-v2-layout.test.js
       - name: Cloudflare web bundle
         run: npm run build:cloudflare-pages

@@ -637,6 +637,30 @@ async function loadEntries() {
   }
 }
 
+// NOI V2: share the Calendar read authority without opening or mutating the
+// modal's state. The viewer/couple identity is captured before any async work;
+// no stale couple payload may be painted after account or pairing changes.
+async function readNoiMonth(year, month) {
+  const viewer=window.usProfile;
+  if(!viewer||!Number.isInteger(year)||!Number.isInteger(month)||month<0||month>11)return null;
+  const range=monthGridRange(year,month);
+  const start=isoDate(range.gridStart.getFullYear(),range.gridStart.getMonth(),range.gridStart.getDate());
+  const end=isoDate(range.gridEnd.getFullYear(),range.gridEnd.getMonth(),range.gridEnd.getDate());
+  const [appointments,eventResult,coupleResult]=await Promise.all([
+    fetchEntriesForRange(viewer.couple_id,start,end),
+    sb.from('shared_events').select('id,title,event_date,event_time,recurs_yearly').eq('couple_id',viewer.couple_id),
+    sb.from('couples').select('started_on').eq('id',viewer.couple_id).maybeSingle()
+  ]);
+  if(window.usProfile!==viewer||window.usProfile?.couple_id!==viewer.couple_id)return null;
+  if(eventResult.error)throw eventResult.error;
+  if(coupleResult.error)throw coupleResult.error;
+  return {
+    appointments:appointments.map(entry=>({...entry,dates:entryDatesTouched(entry)})),
+    events:eventResult.data||[],
+    startedOn:coupleResult.data?.started_on||null
+  };
+}
+
 // M6E — Oggi calendar widget data source. A read independent of the shared
 // `entries`/`profiles` module state above (so opening this widget can never
 // clobber an already-open calendar surface's own data), but built from the
@@ -1604,6 +1628,7 @@ async function openCalendarEntry(entryId) {
 }
 
 window.UsCalendarLinks = Object.freeze({ openForIdea: openCalendarForIdea, openEntry: openCalendarEntry, getEntriesByIds: getCalendarEntriesByIds, whenLabel: calendarWhenLabel });
+window.USNoiCalendarRead = Object.freeze({readMonth:readNoiMonth});
 window.openCalendarSurface = openCalendarSurface;
 window.closeCalendarSurface = closeCalendarSurface;
 window.closeCalendarDetailSheet = closeCalendarDetailSheet;
