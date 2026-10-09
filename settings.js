@@ -597,6 +597,8 @@ async function action(name){
   if(name==='maudit')return toggleMaudit();
   if(name==='app-lock')return toggleAppLock();
   if(name==='widgets')return window.UsWidgetHub?.open?.();
+  if(name==='oggi-theme')return window.USOggiLook?.openGallery?.({tab:'theme'});
+  if(name==='oggi-effect')return window.USOggiLook?.openGallery?.({tab:'effect'});
   if(name==='sync-status')return syncStatusModal();
   if(name==='privacy')return privacyModal();
   if(name==='logout')return logoutConfirmationModal();

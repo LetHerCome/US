@@ -534,6 +534,14 @@ h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
 .us-icon[data-us-icon="check"]{--us-icon-src:url("/assets/icons/phosphor/check-regular.svg")}
 .us-icon[data-us-icon="music-note"]{--us-icon-src:url("/assets/icons/phosphor/music-note-regular.svg")}
 .us-icon[data-us-icon="pencil"]{--us-icon-src:url("/assets/icons/phosphor/pencil-simple-regular.svg")}
+.us-icon[data-us-icon="calendar-dots"]{--us-icon-src:url("/assets/icons/phosphor/calendar-dots-regular.svg")}
+.us-icon[data-us-icon="flag-banner"]{--us-icon-src:url("/assets/icons/phosphor/flag-banner-regular.svg")}
+.us-icon[data-us-icon="list-bullets"]{--us-icon-src:url("/assets/icons/phosphor/list-bullets-regular.svg")}
+.us-icon[data-us-icon="chalkboard-simple"]{--us-icon-src:url("/assets/icons/phosphor/chalkboard-simple-regular.svg")}
+.us-icon[data-us-icon="palette"]{--us-icon-src:url("/assets/icons/phosphor/palette-regular.svg")}
+.us-icon[data-us-icon="sparkle-fill"]{--us-icon-src:url("/assets/icons/phosphor/sparkle-fill.svg")}
+.us-icon[data-us-icon="heart-fill"]{--us-icon-src:url("/assets/icons/phosphor/heart-straight-fill.svg")}
+.us-icon[data-us-icon="lock-simple"]{--us-icon-src:url("/assets/icons/phosphor/lock-simple-regular.svg")}
 
 /* Eyebrow: the small uppercase label above a title, one voice everywhere. */
 .tiny,

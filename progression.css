@@ -46,115 +46,53 @@
 @media(min-width:560px){.us-reward-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 
 /* ---------- preview primitives ---------- */
-.us-cos-photo,.us-cos-stage,.us-cos-theme,.us-cos-accent{position:absolute;inset:0;display:block}
-.us-cos-photo{--cos-u:.3px;overflow:hidden;background:
-  radial-gradient(42% 34% at 30% 34%,rgba(255,222,178,.88),transparent 70%),
-  radial-gradient(60% 46% at 82% 18%,rgba(255,146,170,.5),transparent 70%),
-  radial-gradient(130% 52% at 50% 118%,#120e1b 58%,transparent 59%),
-  linear-gradient(172deg,#cf9171 0%,#8a5866 46%,#2a2a48 100%)}
-.us-cos-photo.is-sticker{display:grid;place-items:center}
+.us-cos-stage,.us-cos-theme,.us-cos-accent{position:absolute;inset:0;display:block}
+
 .us-cos-stage{display:grid;place-items:center;background:radial-gradient(110% 80% at 50% 0%,rgba(255,255,255,.06),transparent 64%),#141018}
-.us-cos-stage:has(.us-cos-avatar){display:flex;align-items:center;justify-content:center;gap:3px}
 
 /* ---------- FRAMES · #homeHero (full-bleed photo) + preview photo ---------- */
 #homeHero{--cos-u:1px}
-#homeHero[data-us-frame]::after,.us-cos-photo[data-frame]::after{content:"";position:absolute;z-index:8;inset:calc(9 * var(--cos-u));border-radius:calc(22 * var(--cos-u));pointer-events:none}
 
 /* Controluce — warm hairline with a low sun bleeding in. */
-#homeHero[data-us-frame="glow"]::after,.us-cos-photo[data-frame="glow"]::after{border:1px solid rgba(255,228,200,.66);box-shadow:inset 0 0 calc(30 * var(--cos-u)) rgba(255,166,108,.26),inset 0 calc(-40 * var(--cos-u)) calc(60 * var(--cos-u)) calc(-30 * var(--cos-u)) rgba(255,140,90,.18),0 0 calc(22 * var(--cos-u)) rgba(255,150,100,.14)}
 
 /* Aurora — thin-film iridescence, never a thick gradient. */
-#homeHero[data-us-frame="aurora"]::after,.us-cos-photo[data-frame="aurora"]::after{padding:max(1px,calc(2 * var(--cos-u)));border:1px solid transparent;background:linear-gradient(130deg,#ffb5c9,#bdf0e2 34%,#cdb9ff 66%,#ffe2a8) border-box;mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0);mask-composite:exclude;-webkit-mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;box-shadow:0 0 30px rgba(135,151,255,.16)}
 
 /* Istantanea — the photo becomes a print: ivory matting, heavier chin. */
-#homeHero[data-us-frame="polaroid"]::after,.us-cos-photo[data-frame="polaroid"]::after{inset:0;border-radius:0;border-style:solid;border-width:calc(12 * var(--cos-u)) calc(12 * var(--cos-u)) calc(34 * var(--cos-u));border-image:linear-gradient(168deg,#f7f3eb,#ece5d7 60%,#e4dccb) 1;box-shadow:inset 0 0 0 1px rgba(70,48,22,.28),inset 0 calc(3 * var(--cos-u)) calc(12 * var(--cos-u)) rgba(0,0,0,.3)}
 
 /* Negativo — vertical 35mm strip: film base, sprocket holes, edge code. */
-#homeHero[data-us-frame="negative"]::after,.us-cos-photo[data-frame="negative"]::after{--hole:rgba(255,238,214,.64);--base:#170f09;inset:0;border-radius:0;
-  background:
-    repeating-linear-gradient(180deg,var(--hole) 0 calc(8 * var(--cos-u)),transparent calc(8 * var(--cos-u)) calc(18 * var(--cos-u))) left calc(5 * var(--cos-u)) top calc(6 * var(--cos-u))/calc(7 * var(--cos-u)) 100% no-repeat,
-    repeating-linear-gradient(180deg,var(--hole) 0 calc(8 * var(--cos-u)),transparent calc(8 * var(--cos-u)) calc(18 * var(--cos-u))) right calc(5 * var(--cos-u)) top calc(6 * var(--cos-u))/calc(7 * var(--cos-u)) 100% no-repeat,
-    linear-gradient(var(--base),var(--base)) left top/calc(24 * var(--cos-u)) 100% no-repeat,
-    linear-gradient(var(--base),var(--base)) right top/calc(24 * var(--cos-u)) 100% no-repeat;
-  box-shadow:inset calc(24 * var(--cos-u)) 0 calc(10 * var(--cos-u)) calc(-6 * var(--cos-u)) rgba(23,15,9,.75),inset calc(-24 * var(--cos-u)) 0 calc(10 * var(--cos-u)) calc(-6 * var(--cos-u)) rgba(23,15,9,.75)}
-#homeHero[data-us-frame="negative"]::before{content:"US 400  ▸ 12  ·  12A  ·  13";display:block;position:absolute;z-index:9;right:13px;top:22%;writing-mode:vertical-rl;font:600 7.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.32em;color:rgba(255,166,74,.72);pointer-events:none}
 
 /* Cromo — a polished bevel, one pixel of light. */
-#homeHero[data-us-frame="chrome"]::after,.us-cos-photo[data-frame="chrome"]::after{inset:calc(8 * var(--cos-u));border-radius:calc(20 * var(--cos-u));padding:max(1.5px,calc(2.5 * var(--cos-u)));background:conic-gradient(from 210deg,#fbfbfc,#8b8e97 12%,#ffffff 22%,#5c6068 37%,#e8e9ed 52%,#7b7e87 66%,#fdfdfd 80%,#999ca5 92%,#fbfbfc);mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;filter:drop-shadow(0 0 calc(5 * var(--cos-u)) rgba(255,255,255,.14))}
 
 /* Album di carta — two strips of paper tape over the top corners. */
-#homeHero[data-us-frame="scrapbook"]::before,#homeHero[data-us-frame="scrapbook"]::after,
-.us-cos-photo[data-frame="scrapbook"]::before,.us-cos-photo[data-frame="scrapbook"]::after{content:"";display:block;position:absolute;z-index:9;inset:auto;top:calc(30 * var(--cos-u));width:calc(104 * var(--cos-u));height:calc(30 * var(--cos-u));border-radius:0;pointer-events:none;
-  background:repeating-linear-gradient(90deg,rgba(255,255,255,.14) 0 calc(3 * var(--cos-u)),transparent calc(3 * var(--cos-u)) calc(10 * var(--cos-u))),linear-gradient(180deg,rgba(242,232,210,.86),rgba(229,214,186,.8));
-  box-shadow:0 calc(2 * var(--cos-u)) calc(6 * var(--cos-u)) rgba(0,0,0,.18);
-  --tooth:calc(6 * var(--cos-u));
-  mask:conic-gradient(from -45deg at left,#0000 25%,#000 0) left/51% var(--tooth) repeat-y,conic-gradient(from 135deg at right,#0000 25%,#000 0) right/51% var(--tooth) repeat-y;
-  -webkit-mask:conic-gradient(from -45deg at left,#0000 25%,#000 0) left/51% var(--tooth) repeat-y,conic-gradient(from 135deg at right,#0000 25%,#000 0) right/51% var(--tooth) repeat-y}
-#homeHero[data-us-frame="scrapbook"]::before,.us-cos-photo[data-frame="scrapbook"]::before{left:calc(-24 * var(--cos-u));transform:rotate(-34deg)}
+
 /* styles.css hides .home-hero-only:before with !important; equipped frames re-enable only their own layer. */
-#homeHero[data-us-frame="scrapbook"]::before,#homeHero[data-us-frame="negative"]::before{display:block!important}
-#homeHero[data-us-frame="scrapbook"]::after,.us-cos-photo[data-frame="scrapbook"]::after{right:calc(-24 * var(--cos-u));transform:rotate(36deg)}
-.us-cos-photo[data-frame="scrapbook"]::before,.us-cos-photo[data-frame="scrapbook"]::after{top:calc(22 * var(--cos-u));width:calc(150 * var(--cos-u));height:calc(40 * var(--cos-u))}
 
 /* ---------- STICKERS · Oggi + newest Ricordi card + preview ---------- */
-.us-sticker{position:relative;display:inline-flex;align-items:center;font-size:var(--sticker-em,14px);line-height:1;user-select:none;-webkit-user-select:none}
-.us-sticker img{display:block;width:100%;height:100%;object-fit:contain;-webkit-user-drag:none}
-/* ours — a die-cut vinyl word, lowercase, ink red on cream. */
-.us-sticker[data-sticker="ours"]{padding:.26em .52em .36em;border-radius:1em;background:linear-gradient(160deg,#fffdf8,#f3ece0);color:#c8264f;font:italic 600 1.6em/1 var(--us-font-editorial);letter-spacing:-.025em;transform:rotate(-8deg);box-shadow:0 0 0 .07em rgba(0,0,0,.06),0 .08em .22em rgba(0,0,0,.32)}
-.us-sticker[data-sticker="ours"] span{transform:translateY(.02em)}
-/* Ingresso per due — a torn manila ticket stub with a perforation. */
-.us-sticker[data-sticker="ticket"]{gap:.5em;padding:.48em .9em .48em .82em;background:linear-gradient(180deg,#f5dfae,#ebcd8f);color:#5b2a16;transform:rotate(6deg);
-  mask:radial-gradient(circle .42em at left center,#0000 97%,#000) left/51% 100% no-repeat,radial-gradient(circle .42em at right center,#0000 97%,#000) right/51% 100% no-repeat;
-  -webkit-mask:radial-gradient(circle .42em at left center,#0000 97%,#000) left/51% 100% no-repeat,radial-gradient(circle .42em at right center,#0000 97%,#000) right/51% 100% no-repeat}
-.us-sticker[data-sticker="ticket"] small{font:800 .62em/1 var(--us-font-ui);letter-spacing:.2em}
-.us-sticker[data-sticker="ticket"] b{padding-left:.42em;border-left:.09em dashed rgba(91,42,22,.5);font:600 1.75em/.9 var(--us-font-editorial)}
-/* Francobollo — perforated stamp carrying the approved US symbol. */
-.us-sticker[data-sticker="stamp"]{--r:.2em;flex-direction:column;gap:.28em;padding:calc(2 * var(--r) + .2em) calc(2 * var(--r) + .2em) calc(2 * var(--r) + .1em);background:#f6f0e4;color:#6e356f;transform:rotate(-5deg);
-  mask:radial-gradient(var(--r),#0000 97%,#000) round calc(-1.5 * var(--r)) calc(-1.5 * var(--r))/calc(3 * var(--r)) calc(3 * var(--r)),linear-gradient(#000 0 0) no-repeat 50%/calc(100% - 3 * var(--r)) calc(100% - 3 * var(--r));
-  -webkit-mask:radial-gradient(var(--r),#0000 97%,#000) round calc(-1.5 * var(--r)) calc(-1.5 * var(--r))/calc(3 * var(--r)) calc(3 * var(--r)),linear-gradient(#000 0 0) no-repeat 50%/calc(100% - 3 * var(--r)) calc(100% - 3 * var(--r))}
-.us-sticker-stamp-face{display:grid;place-items:center;width:3em;height:3em;background:radial-gradient(90% 90% at 30% 20%,#3a2041,#1c1022);box-shadow:inset 0 0 0 .08em rgba(246,240,228,.35)}
-.us-sticker-stamp-face img{width:2.3em;height:2.3em}
-.us-sticker[data-sticker="stamp"] small{font:800 .5em/1 var(--us-font-ui);letter-spacing:.22em}
-.us-sticker[data-sticker="stamp"]::after{content:"";position:absolute;right:-.3em;top:.15em;width:2.3em;height:2.3em;border-radius:50%;border:.07em solid rgba(110,53,111,.42);box-shadow:inset 0 0 0 .32em transparent,inset 0 0 0 .38em rgba(110,53,111,.2);pointer-events:none}
 
-.us-hero-sticker{position:absolute;z-index:9;right:30px;top:48%;--sticker-em:12.5px;pointer-events:none;filter:drop-shadow(0 8px 16px rgba(0,0,0,.32))}
-.us-hero-sticker[hidden]{display:none!important}
-.us-memory-sticker{position:absolute;z-index:4;top:10px;left:10px;--sticker-em:8.5px;pointer-events:none;filter:drop-shadow(0 4px 8px rgba(0,0,0,.3))}
-.us-cos-photo .us-sticker{--sticker-em:8px;filter:drop-shadow(0 3px 6px rgba(0,0,0,.3))}
+/* ours — a die-cut vinyl word, lowercase, ink red on cream. */
+
+/* Ingresso per due — a torn manila ticket stub with a perforation. */
+
+/* Francobollo — perforated stamp carrying the approved US symbol. */
 
 /* ---------- BADGES · between the two of you in Noi + preview ---------- */
 .noi-couple-link{position:relative}
-.us-couple-badge{position:absolute;z-index:2;left:50%;top:calc(100% + 2px);transform:translateX(-50%);font-size:9.5px;white-space:nowrap;pointer-events:none}
-.noi-couple-head:has(.us-couple-badge:not([hidden])){padding-bottom:12px}
-.us-couple-badge[hidden]{display:none!important}
-.us-badge{display:inline-flex;align-items:center;font-size:1em;line-height:1;white-space:nowrap}
-.us-badge-face{position:relative;display:inline-flex;align-items:center;gap:.45em}
-.us-cos-stage .us-badge{font-size:8.5px}
+
 /* Day One — enamel pin: glossy plum enamel, gold rim. */
-.us-badge[data-badge="day_one"] .us-badge-face{padding:.48em .9em .46em .78em;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 52%),linear-gradient(180deg,#34204a,#1b0f28);color:#f1dcab;font:750 .92em/1 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;box-shadow:0 0 0 .14em #d6b26a,0 0 0 .2em rgba(90,64,24,.7),0 .2em .5em rgba(0,0,0,.42)}
-.us-badge[data-badge="day_one"] .us-badge-face::before{content:"✦";font-size:.9em;color:#ff8eaa;letter-spacing:0}
+
 /* Still Here — embroidered felt patch with running stitch. */
-.us-badge[data-badge="still_here"] .us-badge-face{padding:.5em .95em .55em;border-radius:.55em;background:repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 1px,transparent 1px 3px),repeating-linear-gradient(-45deg,rgba(0,0,0,.08) 0 1px,transparent 1px 3px),#2f4238;color:#efe3c3;font:italic 600 1.18em/1 var(--us-font-editorial);letter-spacing:.01em;box-shadow:0 0 0 .16em #26352d,0 .2em .45em rgba(0,0,0,.4)}
-.us-badge[data-badge="still_here"] .us-badge-face::after{content:"";position:absolute;inset:.22em;border-radius:.4em;border:.09em dashed rgba(239,227,195,.62);pointer-events:none}
+
 /* Chaos Together — risograph print, pink and blue out of register. */
-.us-badge[data-badge="chaos"],.us-badge[data-badge="chaos"] .us-badge-face{white-space:normal}
-.us-badge[data-badge="chaos"] .us-badge-face{padding:.45em .7em;border-radius:.2em;background:radial-gradient(rgba(0,0,0,.07) .5px,transparent .9px) 0 0/3px 3px,#f3ecdc;width:min-content;text-align:center;color:#ff4f86;font:900 .92em/.98 var(--us-font-ui);letter-spacing:.07em;text-transform:uppercase;text-shadow:.13em .08em 0 rgba(0,118,190,.78);transform:rotate(-2.5deg);box-shadow:0 .2em .5em rgba(0,0,0,.35)}
+
 /* Us vs Monday — rubber stamp, uneven red ink. */
-.us-badge[data-badge="monday"] .us-badge-face{padding:.42em .7em;border:.16em solid currentColor;border-radius:.3em;outline:.08em solid currentColor;outline-offset:.16em;color:#ff7d8a;font:850 .9em/1 var(--us-font-ui);letter-spacing:.12em;text-transform:uppercase;transform:rotate(-6deg);
-  mask:linear-gradient(100deg,#000 0 38%,rgba(0,0,0,.72) 52%,#000 66%,rgba(0,0,0,.84) 86%);-webkit-mask:linear-gradient(100deg,#000 0 38%,rgba(0,0,0,.72) 52%,#000 66%,rgba(0,0,0,.84) 86%)}
 
 /* ---------- RINGS · Noi portraits + preview ---------- */
-.us-cos-avatar{position:relative;display:block;flex:0 0 auto;width:26px;height:26px;border-radius:50%;padding:1.5px;background:var(--us-accent-gradient)}
-.us-cos-avatar>span{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;border:1.5px solid #141018;background:#221c29;color:var(--us-color-text);font:500 11.5px/1 var(--us-font-editorial)}
-.us-cos-ring-link{flex:0 0 8px;height:0;border-top:1.5px dashed rgba(255,255,255,.22)}
+
 /* Alone — two hairlines with air between them. */
-:root[data-us-ring="halo"] .noi-couple-avatar,.us-cos-avatar[data-ring="halo"]{background:color-mix(in srgb,var(--us-color-accent-ink) 92%,white);box-shadow:0 0 0 3px var(--us-color-bg),0 0 0 4px color-mix(in srgb,var(--us-color-accent-ink) 46%,transparent),0 8px 22px rgba(0,0,0,.28)}
+
 /* Orbita — one point of light circling each of you, out of phase. */
-:root[data-us-ring="orbit"] .noi-couple-avatar::after,.us-cos-avatar[data-ring="orbit"]::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:1px solid rgba(255,255,255,.07);background:radial-gradient(circle at 50% 2.5px,#fff 0 1.6px,rgba(255,236,250,.55) 2.4px,transparent 4.5px);animation:us-cos-orbit 11s linear infinite;pointer-events:none}
-:root[data-us-ring="orbit"] [data-noi-couple-role="beatrice"] .noi-couple-avatar::after,.us-cos-avatar[data-ring="orbit"]:last-child::after{animation-delay:-5.5s}
+
 /* Filo d'oro — burnished gold rings, and a gold thread between you. */
-:root[data-us-ring="gold"] .noi-couple-avatar,.us-cos-avatar[data-ring="gold"]{background:conic-gradient(from 200deg,#f8e4ab,#b88a3f 22%,#fff2cc 46%,#a7772f 70%,#f8e4ab);box-shadow:0 0 0 1px rgba(248,228,171,.22),0 8px 22px rgba(0,0,0,.28)}
-:root[data-us-ring="gold"] .noi-couple-link>i,.us-cos-ring-link[data-ring="gold"]{border-top-color:rgba(234,198,122,.78)!important}
 
 /* ---------- THEMES · atmosphere (surfaces, glow, shell aurora, default ink) ---------- */
 :root[data-us-theme="rose"],.us-cos-theme[data-theme="rose"]{--us-color-bg:#0e050a;--us-color-surface:#1a0d14;--us-color-surface-2:#21111a;--us-color-elevated:#2a1621;--us-color-sheet:#1a0c13;--us-theme-glow-a:rgba(255,94,146,.2);--us-theme-glow-b:rgba(255,150,120,.1);--us-aurora-a:rgba(255,94,146,.8);--us-aurora-b:rgba(255,154,185,.7);--us-aurora-c:rgba(201,133,255,.6);
@@ -225,12 +163,7 @@
 .us-progression-unlock-kicker{font-size:10px;font-weight:850;letter-spacing:.14em;color:var(--us-color-accent-ink)}
 .us-progression-unlock-count{display:block;min-height:14px;margin-top:3px;font-size:10px;color:var(--us-color-text-3)}
 .us-progression-unlock-preview{position:relative;width:136px;height:136px;margin:14px auto 16px;border-radius:30px;overflow:hidden;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);box-shadow:0 18px 44px rgba(0,0,0,.36);isolation:isolate}
-.us-progression-unlock-preview .us-cos-photo{--cos-u:.5px}
-.us-progression-unlock-preview .us-cos-photo .us-sticker{--sticker-em:12px}
-.us-progression-unlock-preview .us-cos-stage .us-badge{font-size:12px}
-.us-progression-unlock-preview .us-cos-avatar{width:46px;height:46px;padding:2px}
-.us-progression-unlock-preview .us-cos-avatar>span{font-size:19px;border-width:2px}
-.us-progression-unlock-preview .us-cos-ring-link{flex-basis:18px}
+
 .us-progression-unlock-preview .us-cos-logo{width:84px;height:84px}
 .us-progression-unlock-preview .us-cos-logo[data-effect="pulse"] img{animation:us-cos-preview-pulse 3.2s ease-in-out infinite;transform:none}
 .us-progression-unlock-preview .us-cos-logo[data-effect="constellation"]::before,.us-progression-unlock-preview .us-cos-logo[data-effect="constellation"]::after{scale:1.35}
@@ -245,12 +178,15 @@
    the piece, the piece resolves out of blur, then the words arrive in order.
    One tint per category; everything is one-shot and vanishes under reduced motion. */
 .us-progression-unlock{--unlock-tint:255 150 190}
-.us-progression-unlock[data-category="frame"]{--unlock-tint:255 196 150}
-.us-progression-unlock[data-category="sticker"]{--unlock-tint:255 150 176}
-.us-progression-unlock[data-category="badge"],.us-progression-unlock[data-category="ring"]{--unlock-tint:241 214 160}
+
 .us-progression-unlock[data-category="theme"]{--unlock-tint:186 160 255}
 .us-progression-unlock[data-category="accent"]{--unlock-tint:255 170 190}
 .us-progression-unlock[data-category="effect"]{--unlock-tint:196 168 255}
+.us-progression-unlock[data-category="oggi_theme"]{--unlock-tint:255 150 190}
+.us-progression-unlock[data-category="oggi_effect"]{--unlock-tint:255 214 150}
+.us-progression-unlock[data-category="countdown"]{--unlock-tint:214 196 255}
+/* V3 — Oggi looks shown inside the unlock card and the next-unlock tile. */
+.us-progression-unlock-preview .us-look-phone,.us-progression-next-preview .us-look-phone{position:absolute;inset:0;width:100%;height:100%;aspect-ratio:auto;border-radius:inherit;box-shadow:none}
 .us-progression-unlock.open{background:radial-gradient(60% 46% at 50% 44%,rgb(var(--unlock-tint) / .14),transparent 72%),rgba(5,2,9,.74)}
 .us-progression-unlock-card{background:radial-gradient(100% 70% at 50% 0%,rgb(var(--unlock-tint) / .17),transparent 60%),radial-gradient(90% 80% at 100% 100%,rgba(169,133,255,.14),transparent 60%),rgba(18,13,24,.97)}
 .us-progression-unlock-stage{position:relative;display:grid;place-items:center;width:176px;height:168px;margin:6px auto 8px}
@@ -300,101 +236,22 @@
 @keyframes us-progression-pulse{0%,100%{filter:drop-shadow(0 0 0 rgba(190,155,255,0));transform:translate(-50%,-50%) scale(1)}50%{filter:drop-shadow(0 0 10px rgba(190,155,255,.35));transform:translate(-50%,-50%) scale(1.035)}}
 @keyframes us-cos-preview-pulse{0%,100%{filter:drop-shadow(0 0 0 rgba(190,155,255,0));transform:scale(1)}50%{filter:drop-shadow(0 0 10px rgba(190,155,255,.4));transform:scale(1.04)}}
 @keyframes us-cos-twinkle{0%,100%{opacity:.18}12%,46%{opacity:1}60%{opacity:.3}}
-@keyframes us-cos-orbit{to{transform:rotate(1turn)}}
 @keyframes us-cos-sheen{0%,70%{background-position:150% 0}100%{background-position:-50% 0}}
 :root[data-us-visibility="hidden"] .us-top-brand::before,:root[data-us-visibility="hidden"] .us-top-brand::after,:root[data-us-visibility="hidden"] .noi-couple-avatar::after{animation-play-state:paused}
 :root[data-us-motion="reduced"] .us-top-brand-art,:root[data-us-motion="reduced"] .us-top-brand::before,:root[data-us-motion="reduced"] .us-top-brand::after,:root[data-us-motion="reduced"] .noi-couple-avatar::after{animation:none!important}
 @media(prefers-reduced-motion:reduce){
   .us-progression-unlock.open .us-progression-unlock-card,.us-progression-unlock.open .us-progression-unlock-card::after,:root[data-us-effect="pulse"] .us-top-brand-art{animation:none!important}
   .us-progression-unlock-card{transform:none;opacity:1}
-  :root[data-us-effect] .us-top-brand::before,:root[data-us-effect] .us-top-brand::after,:root[data-us-ring] .noi-couple-avatar::after,
-  .us-cos-logo::before,.us-cos-logo::after,.us-cos-logo img,.us-cos-avatar::after{animation:none!important}
+  :root[data-us-effect] .us-top-brand::before,:root[data-us-effect] .us-top-brand::after,.us-cos-logo::before,.us-cos-logo::after,.us-cos-logo img{animation:none!important}
   :root[data-us-effect="shimmer"] .us-top-brand::after{opacity:0}
   .us-progression-reward{transition:none}
 }
 
-
 /* US-SINTONIA-FOCUS-01 — presentation only; the reward RPC and entitlement
    model are unchanged. A visible next milestone, two large preview columns,
    natural page scrolling and native, collapsible secondary categories. */
-#bond .noi-canonical-page[data-noi-view="resonance"] > .us-progression-next{
-  min-height:134px;gap:17px;padding:19px;border-radius:25px;
-  background:radial-gradient(90% 130% at 0% 0%,rgba(255,133,173,.16),transparent 76%),
-    radial-gradient(90% 140% at 100% 100%,rgba(169,133,255,.13),transparent 65%),
-    rgba(255,255,255,.035);
-  border-color:rgba(255,183,210,.20);
-}
-#bond .us-progression-next-preview{
-  flex-basis:92px;width:92px;height:92px;border-radius:20px;
-  filter:none;opacity:1;box-shadow:0 10px 26px rgba(0,0,0,.22);
-}
-#bond .us-progression-next-copy{gap:7px}
-#bond .us-progression-next-copy b{font-size:clamp(23px,5.5vw,29px);line-height:1.06}
-#bond .us-progression-next-copy span{font-size:12px;line-height:1.45}
-#bond .noi-canonical-page[data-noi-view="resonance"] > .us-progression-rewards-section{
-  padding:17px 15px 16px;overflow:visible;border-radius:24px;
-}
-#bond .us-progression-rewards-head{align-items:start;margin:0 2px 13px}
-#bond .us-progression-rewards-head h3{font-size:24px}
-#bond .us-progression-rewards-meta{font-size:10.5px;max-width:116px}
-#bond .us-progression-rewards{max-height:none;overflow:visible;mask-image:none;-webkit-mask-image:none;padding:0;gap:9px}
-#bond .us-reward-group{display:block;min-width:0;padding:0;border-bottom:1px solid rgba(255,255,255,.07)}
-#bond .us-reward-group:last-child{border-bottom:0}
-#bond .us-reward-group-head{
-  display:flex;align-items:center;min-height:48px;gap:10px;margin:0;
-  padding:10px 5px;cursor:pointer;list-style:none;
-}
-#bond .us-reward-group-head::-webkit-details-marker{display:none}
-#bond .us-reward-group-head::after{
-  content:"";display:block;flex:0 0 15px;width:15px;height:15px;
-  background:var(--us-color-text-3);
-  -webkit-mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;
-  mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;
-  transition:transform 160ms ease;
-}
-#bond .us-reward-group[open] > .us-reward-group-head::after{transform:rotate(90deg)}
-#bond .us-reward-group-head:focus-visible{outline:2px solid var(--us-color-accent-strong);outline-offset:2px;border-radius:12px}
-#bond .us-reward-group-head b{font-size:13px}
-#bond .us-reward-group-head span{font-size:10px}
-#bond .us-reward-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:1px 1px 14px}
-#bond .us-progression-reward{gap:8px;padding:7px 7px 10px;border-radius:19px}
-#bond .us-progression-reward-preview{border-radius:15px}
-#bond .us-progression-reward-copy{gap:3px}
-#bond .us-progression-reward-copy b{font-size:12.5px}
-#bond .us-progression-reward-copy small{font-size:10.5px}
-@media(min-width:560px){#bond .us-reward-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:360px){#bond .us-progression-next-preview{width:76px;height:76px;flex-basis:76px}#bond .us-progression-next{gap:12px;padding:13px}}
-
 
 /* Secondary Sintonia information is available on demand rather than taking
    the first screen away from the next milestone and the collection. */
-#bond .noi-canonical-page[data-noi-view="resonance"] > details.noi-resonance-history,
-#bond .noi-canonical-page[data-noi-view="resonance"] > details.noi-resonance-guide{
-  display:block;padding:0;border-radius:18px;background:rgba(255,255,255,.025);
-  border-color:rgba(255,255,255,.07);
-}
-#bond details.noi-resonance-history > summary,
-#bond details.noi-resonance-guide > summary{
-  display:flex;align-items:center;justify-content:space-between;min-height:51px;
-  padding:12px 15px;cursor:pointer;list-style:none;
-  color:var(--us-color-text);font-size:13px;font-weight:700;
-}
-#bond details.noi-resonance-history > summary::-webkit-details-marker,
-#bond details.noi-resonance-guide > summary::-webkit-details-marker{display:none}
-#bond details.noi-resonance-history > summary:after,
-#bond details.noi-resonance-guide > summary:after{
-  content:"";width:17px;height:17px;flex:0 0 17px;background:var(--us-color-text-3);
-  -webkit-mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;
-  mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;
-  transition:transform 160ms ease;
-}
-#bond details.noi-resonance-history[open] > summary:after,
-#bond details.noi-resonance-guide[open] > summary:after{transform:rotate(90deg)}
-#bond details.noi-resonance-history > summary span{display:flex;flex-direction:column;gap:3px}
-#bond details.noi-resonance-history > summary small{color:var(--us-color-text-3);font-size:10.5px;font-weight:450}
-#bond details.noi-resonance-history > .noi-resonance-history-list,
-#bond details.noi-resonance-guide > .noi-resonance-stats,
-#bond details.noi-resonance-guide > .noi-resonance-sources{margin:0 13px 13px}
+
 #bond details:not([open]) > :not(summary){display:none!important}
-#bond details.noi-resonance-history > summary:focus-visible,
-#bond details.noi-resonance-guide > summary:focus-visible{outline:2px solid var(--us-color-accent-strong);outline-offset:2px;border-radius:16px}

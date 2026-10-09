@@ -261,8 +261,8 @@ const PLANES=Object.freeze([
   {id:'ricordi-chapters-top',page:'moments',selector:'#ricordiChapters .ricordi-chapter-row'},
   {id:'gioca-daily-top',page:'quiz',selector:'#quizHub .us-gv2-daily'},
   {id:'gioca-pervoi-top',page:'quiz',selector:'#quizHub .us-gv2-pervoi'},
-  {id:'gioca-swipe-top',page:'quiz',selector:'#quizHub .us-gv2-swipe-entry'},
-  {id:'gioca-modes-top',page:'quiz',selector:'#quizHub .us-gv2-modes'}
+  {id:'gioca-swipe-top',page:'quiz',selector:'#quizHub .us-gv2-game.is-swipe'},
+  {id:'gioca-modes-top',page:'quiz',selector:'#quizHub .us-gv2-choose'}
 ]);
 const PLANE_BY_ID=new Map(PLANES.map(plane=>[plane.id,plane]));
 

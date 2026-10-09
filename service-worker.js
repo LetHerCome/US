@@ -1,4 +1,4 @@
-const BUILD_ID = "us-noi-v2-20261009-1";
+const BUILD_ID = "us-ui-v3-20261009-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -31,6 +31,8 @@ const APP_SHELL = [
   versioned("/calendar.js"),
   versioned("/noi-v2.css"),
   versioned("/noi-v2.js"),
+  versioned("/oggi-look.css"),
+  versioned("/oggi-look.js"),
   "/assets/third-party/spotify/spotify-full-logo-white.svg",
   versioned("/styles.css"),
   versioned("/ui-foundation.css"),
@@ -110,6 +112,9 @@ const APP_SHELL = [
   "/assets/icons/phosphor/check-regular.svg",
   "/assets/icons/phosphor/music-note-regular.svg",
   "/assets/icons/phosphor/pencil-simple-regular.svg",
+  "/assets/icons/phosphor/list-bullets-regular.svg",
+  "/assets/icons/phosphor/chalkboard-simple-regular.svg",
+  "/assets/icons/phosphor/palette-regular.svg",
   "/assets/icons/profile-off.svg",
   "/assets/icons/profile-on.svg",
   "/assets/icons/think-off.svg",

@@ -7,12 +7,14 @@ window.__usNoiV2Installed = true;
 const $ = id => document.getElementById(id);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const months = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
-const weekdays = ['L','M','M','G','V','S','D'];
+const weekdays = [['L','lunedì'],['M','martedì'],['M','mercoledì'],['G','giovedì'],['V','venerdì'],['S','sabato'],['D','domenica']];
 const pad = n => String(n).padStart(2,'0');
 const iso = (y,m,d) => `${y}-${pad(m+1)}-${pad(d)}`;
 const today = () => {const d=new Date();return iso(d.getFullYear(),d.getMonth(),d.getDate());};
 const dateOf = value => {const [y,m,d]=String(value).split('-').map(Number);return new Date(y,m-1,d,12);};
 const currentMonth = () => {const d=new Date();return [d.getFullYear(),d.getMonth()];};
+const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+const icon = name => `<span class="us-icon" data-us-icon="${name}" aria-hidden="true"></span>`;
 let [year,month] = currentMonth();
 let selected = today();
 let mode = 'calendar';
@@ -23,6 +25,7 @@ let error = '';
 let refreshedAt = 0;
 let identity = null;
 let giocaTab = 'giochi';
+let enterDirection = 0;
 
 function identityKey() {
   const p=window.usProfile;
@@ -37,7 +40,7 @@ function recurringDate(event) {
   if (!raw) return '';
   if (!event.recurs_yearly) return monthMatch(raw) ? raw : '';
   const parts=raw.split('-').map(Number);
-  if(parts.length!==3||parts[1]!==month+1) return '';
+  if(parts.length!==3||parts[1]!==month+1||parts[0]>year) return '';
   return iso(year,month,Math.min(parts[2],new Date(year,month+1,0).getDate()));
 }
 function relationshipDate() {
@@ -54,69 +57,112 @@ function itemsByDate() {
     if(!map.has(day))map.set(day,[]);
     map.get(day).push(item);
   };
-  for(const e of snapshot?.appointments||[]){
-    for(const date of e.dates||[])push(date,{kind:'calendar',id:e.id,title:e.title||'Impegno',time:e.is_all_day?'Tutto il giorno':new Date(e.starts_at).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})});
-  }
+  const special=relationshipDate();
+  if(special)push(special,{kind:'relationship',title:'Il nostro giorno',time:special===snapshot?.startedOn?'Dove è iniziato tutto':'Anniversario',sort:'00:00'});
   for(const e of snapshot?.events||[]){
     const day=recurringDate(e);
-    push(day,{kind:'event',id:e.id,title:e.title||'Evento',time:e.event_time?String(e.event_time).slice(0,5):'Una data speciale'});
+    const time=e.event_time?String(e.event_time).slice(0,5):'';
+    push(day,{kind:'event',id:e.id,title:e.title||'Evento',time:time||(e.recurs_yearly?'Ogni anno':'Una data speciale'),sort:time||'00:01'});
   }
-  const special=relationshipDate();
-  if(special)push(special,{kind:'relationship',title:'Il nostro giorno',time:'La vostra storia'});
+  for(const e of snapshot?.appointments||[]){
+    const time=e.is_all_day?'':new Date(e.starts_at).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+    for(const date of e.dates||[])push(date,{kind:'calendar',id:e.id,title:e.title||'Impegno',time:time||'Tutto il giorno',sort:time||'00:02'});
+  }
+  for(const list of map.values())list.sort((a,b)=>a.sort.localeCompare(b.sort));
   return map;
 }
 function dayLabel(day){return dateOf(day).toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'});}
+function relativeLabel(day){
+  const delta=Math.round((dateOf(day)-dateOf(today()))/86400000);
+  return delta===0?'OGGI':delta===1?'DOMANI':delta===-1?'IERI':'I VOSTRI MOMENTI';
+}
 function thumb(item) {
-  const icon=item.kind==='calendar'?'calendar-dots':'heart';
-  return `<span class="us-noi-v2-item-icon" data-type="${esc(item.kind)}" aria-hidden="true"><span class="us-icon" data-us-icon="${icon}"></span></span>`;
+  const name=item.kind==='calendar'?'calendar-dots':item.kind==='relationship'?'heart-fill':'calendar-heart';
+  return `<span class="us-noi-v2-item-icon" data-type="${esc(item.kind)}" aria-hidden="true">${icon(name)}</span>`;
 }
 function itemMarkup(day,item) {
   const action=item.kind==='calendar'?'entry':item.kind==='event'?'event':'anniversary';
   return `<button type="button" class="us-noi-v2-item" data-noi-item="${action}" data-day="${esc(day)}" data-id="${esc(item.id||'')}">
-    ${thumb(item)}<span class="us-noi-v2-item-copy"><b>${esc(item.title)}</b><small>${esc(item.time)}</small></span><span class="us-noi-v2-caret" aria-hidden="true">›</span>
+    ${thumb(item)}<span class="us-noi-v2-item-copy"><b>${esc(item.title)}</b><small>${esc(item.time)}</small></span><span class="us-noi-v2-caret" aria-hidden="true">${icon('caret-right')}</span>
   </button>`;
 }
+// Only the weeks this month actually spans: 4–6 rows, never an empty sixth row.
 function calendarMarkup(index) {
   const first=new Date(year,month,1,12);
   const offset=(first.getDay()+6)%7;
   const count=new Date(year,month+1,0).getDate();
-  const slots=42;
-  const header=weekdays.map(day=>`<span class="us-noi-v2-weekday">${day}</span>`).join('');
+  const slots=Math.ceil((offset+count)/7)*7;
+  const now=today();
+  const header=weekdays.map(([short,long])=>`<abbr class="us-noi-v2-weekday" title="${long}">${short}</abbr>`).join('');
   const days=Array.from({length:slots},(_,i)=>{
     const n=i-offset+1,valid=n>0&&n<=count;
     if(!valid)return '<span class="us-noi-v2-blank" aria-hidden="true"></span>';
-    const day=iso(year,month,n),todayFlag=day===today(),active=day===selected;
+    const day=iso(year,month,n),todayFlag=day===now,active=day===selected;
     const marks=index.get(day)||[];
-    const type=marks.some(x=>x.kind==='relationship')?'relationship':marks.some(x=>x.kind==='event')?'event':marks.length?'calendar':'none';
-    return `<button type="button" class="us-noi-v2-day${active?' is-selected':''}${todayFlag?' is-today':''}" data-noi-day="${day}" aria-pressed="${active}" ${todayFlag?'aria-current="date"':''} aria-label="${esc(dayLabel(day))}, ${marks.length} momenti">
-      <span class="us-noi-v2-day-number">${n}</span><span class="us-noi-v2-day-mark" data-kind="${type}" aria-hidden="true"></span>
+    const kinds=['relationship','event','calendar'].filter(kind=>marks.some(x=>x.kind===kind));
+    const dots=kinds.map(kind=>`<i data-kind="${kind}"></i>`).join('');
+    const moments=marks.length===1?'1 momento':marks.length?`${marks.length} momenti`:'nessun momento';
+    return `<button type="button" class="us-noi-v2-day${active?' is-selected':''}${todayFlag?' is-today':''}${day<now?' is-past':''}" data-noi-day="${day}" aria-pressed="${active}" ${todayFlag?'aria-current="date"':''} aria-label="${esc(dayLabel(day))}${todayFlag?', oggi':''}, ${moments}">
+      <span class="us-noi-v2-day-number">${n}</span><span class="us-noi-v2-day-marks" aria-hidden="true">${dots}</span>
     </button>`;
   }).join('');
-  return `<div class="us-noi-v2-calendar" role="group" aria-label="Calendario del mese"><div class="us-noi-v2-weekdays">${header}</div><div class="us-noi-v2-grid">${days}</div></div>`;
+  return `<div class="us-noi-v2-calendar" role="group" aria-label="Calendario di ${months[month]} ${year}"><div class="us-noi-v2-weekdays" aria-hidden="true">${header}</div><div class="us-noi-v2-grid" data-weeks="${slots/7}">${days}</div></div>`;
 }
 function listMarkup(index) {
   const days=[...index.keys()].filter(monthMatch).sort();
-  if(!days.length)return '<p class="us-noi-v2-empty">Nessun appuntamento o evento in questo mese. Potete aggiungerne uno quando volete.</p>';
-  return `<div class="us-noi-v2-month-list">${days.map(day=>`<div class="us-noi-v2-month-day"><button type="button" class="us-noi-v2-list-date" data-noi-day="${day}">${esc(dayLabel(day))}</button>${index.get(day).map(item=>itemMarkup(day,item)).join('')}</div>`).join('')}</div>`;
+  if(!days.length)return `<div class="us-noi-v2-empty-month">${icon('calendar-heart')}<b>Un mese ancora da scrivere</b><small>Nessun impegno o evento a ${months[month]}.</small><button type="button" class="us-noi-v2-text-action" data-noi-add>Aggiungi un impegno</button></div>`;
+  return `<div class="us-noi-v2-month-list">${days.map(day=>`<section class="us-noi-v2-month-day${day===today()?' is-today':''}" aria-label="${esc(dayLabel(day))}"><button type="button" class="us-noi-v2-list-date" data-noi-day="${day}" data-noi-focus-list><span>${esc(dayLabel(day))}</span>${day===today()?'<em>Oggi</em>':''}</button>${index.get(day).map(item=>itemMarkup(day,item)).join('')}</section>`).join('')}</div>`;
+}
+function detailMarkup(index) {
+  const active=index.get(selected)||[];
+  const head=`<div class="us-noi-v2-detail-head"><div><small>${relativeLabel(selected)}</small><h3>${esc(dayLabel(selected))}</h3></div><button type="button" class="us-noi-v2-add" data-noi-add aria-label="Aggiungi un impegno il ${esc(dayLabel(selected))}" title="Aggiungi">${icon('plus')}</button></div>`;
+  if(active.length)return `${head}<div class="us-noi-v2-day-items">${active.map(item=>itemMarkup(selected,item)).join('')}</div>`;
+  const copy=pending&&!snapshot?'Carico i vostri momenti…':'Nessun momento in questo giorno. Lo spazio è vostro.';
+  return `${head}<p class="us-noi-v2-empty-day">${copy}</p>`;
+}
+function syncStatus(){
+  const status=$('usNoiV2Sync');
+  if(!status)return;
+  const text=pending?'Aggiorno…':error&&snapshot?'Non aggiornato':'';
+  status.textContent=text;
+  status.dataset.state=pending?'loading':error?'error':'idle';
+}
+// One light slide+fade on month change; never while reduced motion is requested.
+function playEnter(container,direction){
+  if(!direction||reducedMotion())return;
+  const grid=container.querySelector('.us-noi-v2-grid,.us-noi-v2-month-list,.us-noi-v2-empty-month');
+  if(!grid)return;
+  grid.classList.add(direction>0?'is-entering-next':'is-entering-prev');
+  grid.addEventListener('animationend',()=>grid.classList.remove('is-entering-next','is-entering-prev'),{once:true});
 }
 function render(){
   const root=$('usNoiV2');
   if(!root)return;
+  root.dataset.mode=mode;
   const label=$('usNoiV2Month');
   if(label)label.textContent=`${months[month][0].toUpperCase()+months[month].slice(1)} ${year}`;
   for(const type of ['calendar','list']){
     const btn=$(`usNoiV2Mode${type==='calendar'?'Calendar':'List'}`);
     if(btn){btn.setAttribute('aria-pressed',String(mode===type));btn.classList.toggle('is-active',mode===type);}
   }
+  const [nowYear,nowMonth]=currentMonth();
+  const onToday=year===nowYear&&month===nowMonth&&selected===today();
+  const todayButton=$('usNoiV2Today');
+  if(todayButton)todayButton.hidden=onToday;
+  const first=$('usNoiV2First');
+  if(first)first.hidden=!snapshot?.startedOn;
+  syncStatus();
   const container=$('usNoiV2Content'),detail=$('usNoiV2Detail');
   if(!container||!detail)return;
-  if(pending&&!snapshot){container.innerHTML='<p class="us-noi-v2-empty" role="status">Carico il calendario…</p>';detail.innerHTML='';return;}
-  if(error&&!snapshot){container.innerHTML=`<p class="us-noi-v2-empty" role="status">Calendario non disponibile. <button type="button" data-noi-retry>Riprova</button></p>`;detail.innerHTML='';return;}
   const index=itemsByDate();
-  container.innerHTML=mode==='calendar'?calendarMarkup(index):listMarkup(index);
-  const active=index.get(selected)||[];
-  detail.innerHTML=`<div class="us-noi-v2-detail-head"><div><small>I VOSTRI MOMENTI</small><h3>${esc(dayLabel(selected))}</h3></div><button type="button" class="us-noi-v2-add" data-noi-add aria-label="Aggiungi un impegno" title="Aggiungi">+</button></div>
-    ${active.length?`<div class="us-noi-v2-day-items">${active.map(item=>itemMarkup(selected,item)).join('')}</div>`:'<p class="us-noi-v2-empty-day">Ancora nessun evento in questo giorno. Lo spazio è vostro.</p>'}`;
+  const direction=enterDirection;
+  enterDirection=0;
+  const notice=error&&!snapshot?`<p class="us-noi-v2-notice" role="alert">${icon('arrows-clockwise')}<span>Calendario non raggiungibile.</span><button type="button" data-noi-retry>Riprova</button></p>`:'';
+  container.dataset.state=pending&&!snapshot?'loading':error&&!snapshot?'error':'ready';
+  container.innerHTML=notice+(mode==='calendar'?calendarMarkup(index):listMarkup(index));
+  playEnter(container,direction);
+  detail.hidden=mode!=='calendar';
+  detail.innerHTML=mode==='calendar'?detailMarkup(index):'';
 }
 async function refresh({force=false}={}){
   const key=identityKey();
@@ -138,16 +184,26 @@ async function refresh({force=false}={}){
     if(token===requestSeq){pending=false;render();}
   }
 }
-function shiftMonth(delta){
-  const next=new Date(year,month+delta,1,12);year=next.getFullYear();month=next.getMonth();
-  const now=today();selected=monthMatch(now)?now:iso(year,month,1);
+function goToMonth(y,m,day,direction){
+  year=y;month=m;
+  selected=day||(monthMatch(today())?today():iso(year,month,1));
+  enterDirection=direction;
   snapshot=null;refreshedAt=0;requestSeq++;pending=false;refresh({force:true});
 }
-function chooseDay(day) {
+function shiftMonth(delta){
+  const next=new Date(year,month+delta,1,12);
+  goToMonth(next.getFullYear(),next.getMonth(),'',delta);
+  window.UsFeedback?.selection?.();
+}
+function chooseDay(day,{fromList=false}={}) {
   if(!/^\d{4}-\d{2}-\d{2}$/.test(day))return;
   const d=dateOf(day);
   if(d.getFullYear()!==year||d.getMonth()!==month)return;
-  selected=day;render();
+  selected=day;
+  if(fromList)mode='calendar';
+  render();
+  window.UsFeedback?.selection?.();
+  if(fromList)$('usNoiV2Detail')?.scrollIntoView?.({block:'nearest',behavior:reducedMotion()?'auto':'smooth'});
 }
 function setTab(tab){
   giocaTab=tab==='sintonia'?'sintonia':'giochi';
@@ -155,6 +211,7 @@ function setTab(tab){
   if(!game||!syn)return;
   const active=giocaTab==='sintonia';
   game.hidden=active;syn.hidden=!active;
+  $('usGiocaTabs')?.setAttribute('data-active',giocaTab);
   $('usGiocaTabGames')?.setAttribute('aria-selected',String(!active));
   $('usGiocaTabSintonia')?.setAttribute('aria-selected',String(active));
   $('usGiocaTabGames')?.setAttribute('tabindex',active?'-1':'0');
@@ -175,27 +232,50 @@ function moveSintonia(){
   }
   target.dataset.ready='1';
 }
+function openLink(link){
+  // Lavagna is "la nostra settimana": the existing Calendar in its Week view,
+  // both of you side by side. Quest and Eventi keep their existing Noi subviews.
+  if(link==='lavagna')window.openCalendarSurface?.(selected,{mode:'week'});
+  if(link==='quest'||link==='eventi')window.openNoiSection?.(link);
+}
 function boot(){
   moveSintonia();setTab('giochi');render();
   // Main-nav tap always returns to Giochi; explicit Sintonia deep links remain available.
   document.querySelector('.nav button[data-page="quiz"]')?.addEventListener('click',()=>setTab('giochi'),true);
   $('usGiocaTabGames')?.addEventListener('click',()=>setTab('giochi'));
   $('usGiocaTabSintonia')?.addEventListener('click',()=>{window.USGameV2?.showHub?.();setTab('sintonia');});
-  $('usNoiV2ModeCalendar')?.addEventListener('click',()=>{mode='calendar';render();});
-  $('usNoiV2ModeList')?.addEventListener('click',()=>{mode='list';render();});
+  $('usGiocaTabs')?.addEventListener('keydown',e=>{
+    if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight')return;
+    e.preventDefault();
+    const next=giocaTab==='giochi'?'sintonia':'giochi';
+    if(next==='sintonia')window.USGameV2?.showHub?.();
+    setTab(next);
+    $(next==='sintonia'?'usGiocaTabSintonia':'usGiocaTabGames')?.focus();
+  });
+  $('usNoiV2ModeCalendar')?.addEventListener('click',()=>{if(mode!=='calendar'){mode='calendar';render();}});
+  $('usNoiV2ModeList')?.addEventListener('click',()=>{if(mode!=='list'){mode='list';render();}});
   $('usNoiV2Prev')?.addEventListener('click',()=>shiftMonth(-1));
   $('usNoiV2Next')?.addEventListener('click',()=>shiftMonth(1));
-  $('usNoiV2Today')?.addEventListener('click',()=>{[year,month]=currentMonth();selected=today();snapshot=null;refreshedAt=0;requestSeq++;pending=false;refresh({force:true});});
-  $('usNoiV2First')?.addEventListener('click',async()=>{
+  $('usNoiV2Today')?.addEventListener('click',()=>{
+    const [y,m]=currentMonth();
+    const direction=y*12+m-(year*12+month);
+    if(direction===0){selected=today();render();return;}
+    goToMonth(y,m,today(),Math.sign(direction));
+  });
+  $('usNoiV2First')?.addEventListener('click',()=>{
     const start=snapshot?.startedOn;
     if(!start)return;
-    const d=dateOf(start);year=d.getFullYear();month=d.getMonth();selected=start;
-    snapshot=null;refreshedAt=0;requestSeq++;pending=false;refresh({force:true});
+    const d=dateOf(start);
+    goToMonth(d.getFullYear(),d.getMonth(),start,-1);
   });
   $('usNoiV2')?.addEventListener('click',e=>{
-    const day=e.target.closest('[data-noi-day]');if(day){chooseDay(day.dataset.noiDay);return;}
+    const day=e.target.closest('[data-noi-day]');if(day){chooseDay(day.dataset.noiDay,{fromList:day.hasAttribute('data-noi-focus-list')});return;}
     if(e.target.closest('[data-noi-retry]')){refresh({force:true});return;}
-    if(e.target.closest('[data-noi-add]')){window.openCalendarSurface?.(selected);return;}
+    if(e.target.closest('[data-noi-add]')){
+      if(window.UsCalendarLinks?.createForDate)window.UsCalendarLinks.createForDate(selected);
+      else window.openCalendarSurface?.(selected);
+      return;
+    }
     const item=e.target.closest('[data-noi-item]');
     if(item){
       const kind=item.dataset.noiItem;
@@ -204,11 +284,8 @@ function boot(){
       else window.openCalendarSurface?.(item.dataset.day);
       return;
     }
-    if(e.target.closest('[data-noi-open-link]')){
-      const link=e.target.closest('[data-noi-open-link]').dataset.noiOpenLink;
-      if(link==='lavagna')window.openCalendarSurface?.(selected);
-      if(link==='quest'||link==='eventi')window.openNoiSection?.(link);
-    }
+    const link=e.target.closest('[data-noi-open-link]');
+    if(link)openLink(link.dataset.noiOpenLink);
   });
   const bond=$('bond');
   if(bond){
@@ -221,6 +298,7 @@ function boot(){
   }
   window.addEventListener('us-identity-change',()=>{
     requestSeq++;pending=false;identity=null;snapshot=null;refreshedAt=0;error='';
+    [year,month]=currentMonth();selected=today();
     if($('bond')?.classList.contains('active'))refresh();else render();
   });
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&$('bond')?.classList.contains('active'))refresh();});

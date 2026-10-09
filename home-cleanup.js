@@ -45,7 +45,8 @@ function paintDailyInGioca() {
   const signature = dailySignature(model);
   if (existing?.dataset?.usDailySignature === signature) return;
   existing?.remove?.();
-  const head = hub.querySelector?.('.us-gv2-head');
+  // V3: the daily question sits right after Per voi (its slot), else after the head.
+  const head = hub.querySelector?.('.us-gv2-daily-slot') || hub.querySelector?.('.us-gv2-head');
   if (!head) return;
   head.insertAdjacentHTML('afterend', dailyMarkup(model).replace('data-us-daily-entry', `data-us-daily-entry data-us-daily-signature="${esc(signature)}"`));
 }
