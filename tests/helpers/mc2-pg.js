@@ -14,14 +14,22 @@ function startServer(){
   execFileSync('install',['-d','-o','postgres','-g','postgres',data,sock]);
   const env={...process.env,PGHOST:sock,PGPORT:'55439',PGUSER:'postgres',PGDATABASE:'postgres'};
   const args=['-X','-q','-At','-v','ON_ERROR_STOP=1'];
-  const sql=text=>execFileSync(path.join(bin,'psql'),args,{env,stdio:'pipe',input:text}).toString().trim();
+  const sql=text=>{
+    // Large baseline files can close psql's stdin on the first SQL error,
+    // masking stderr with EPIPE. A local file preserves the actual diagnostic.
+    const file=path.join(dir,'statement.sql');fs.writeFileSync(file,text);
+    try{return execFileSync(path.join(bin,'psql'),[...args,'-f',file],{env,stdio:'pipe',maxBuffer:4*1024*1024}).toString().trim();}
+    catch(error){error.message+=`\n${error.stderr?.toString()||''}`;throw error;}
+  };
   const stop=()=>{try{asPg('pg_ctl',['-D',data,'-m','immediate','stop']);}finally{if(!dir.startsWith(path.join(os.tmpdir(),'us-mc2-pg-')))throw Error('unexpected cleanup path');fs.rmSync(dir,{recursive:true,force:true});}};
   try{
     asPg('initdb',['-D',data,'-A','trust','-U','postgres']);
     asPg('pg_ctl',['-D',data,'-o',`-c listen_addresses= -c unix_socket_directories=${sock} -p 55439`,'-w','-l',path.join(data,'log'),'start']);
     sql(fs.readFileSync(path.join(h.ROOT,'supabase/baseline/platform/pglite-platform.sql'),'utf8'));
     sql(h.PLATFORM);
-    for(const f of fs.readdirSync(h.DIR).filter(f=>f.endsWith('.sql')).sort())sql(fs.readFileSync(path.join(h.DIR,f),'utf8'));
+    for(const f of fs.readdirSync(h.DIR).filter(f=>f.endsWith('.sql')).sort()){
+      try{sql(fs.readFileSync(path.join(h.DIR,f),'utf8'));}catch(error){error.message=`${f}: ${error.message}`;throw error;}
+    }
   }catch(e){stop();throw e;}
   const session=()=>{
     const p=spawn(path.join(bin,'psql'),['-X','-q','-At','-v','ON_ERROR_STOP=0'],{env});let out='',err='';
