@@ -54,8 +54,8 @@ test('Noi: selected day labels both individual owners and the shared couple',()=
  assert.doesNotMatch(noi.slice(a,b),/Francesco|Beatrice/);
 });
 test('calendar owner names come only from current couple-scoped profile rows',()=>{
- assert.match(cal,/\\.from\\('profiles'\\)\\.select\\('id,display_name,role,couple_id'\\)\\.eq\\('couple_id',viewer\\.couple_id\\)/);
- assert.match(cal,/\\.filter\\(p=>p\\.couple_id===viewer\\.couple_id\\)/);
- assert.match(cal,/if\\(window\\.usProfile!==viewer\\|\\|window\\.usProfile\\?\\.couple_id!==viewer\\.couple_id\\)return null/);
+ assert.match(cal,/\.from\('profiles'\)\.select\('id,display_name,role,couple_id'\)\.eq\('couple_id',viewer\.couple_id\)/);
+ assert.match(cal,/\.filter\(p=>p\.couple_id===viewer\.couple_id\)/);
+ assert.match(cal,/if\(window\.usProfile!==viewer\|\|window\.usProfile\?\.couple_id!==viewer\.couple_id\)return null/);
  assert.match(cal,/profiles:profileRows/);
 });
