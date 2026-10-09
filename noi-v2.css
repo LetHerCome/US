@@ -73,7 +73,9 @@
 #quiz .us-gioca-sintonia{display:flex;flex-direction:column;gap:18px;padding-bottom:calc(var(--us-nav-height) + 50px)}
 #quiz .us-gioca-sintonia .noi-resonance,#quiz .us-gioca-sintonia .noi-resonance-history,#quiz .us-gioca-sintonia .noi-resonance-guide{width:100%;box-sizing:border-box}
 #quiz .us-gioca-sintonia .noi-resonance-history[open],#quiz .us-gioca-sintonia .noi-resonance-guide[open]{display:flex}
-#quiz .us-gioca-sintonia .us-progression-next,#quiz .us-gioca-sintonia .us-progression-rewards-section{display:block!important}
+#quiz .us-gioca-sintonia .us-progression-next{display:flex}
+#quiz .us-gioca-sintonia .us-progression-rewards-section{display:block}
+#quiz .us-gioca-sintonia [hidden]{display:none!important}
 @media(max-width:360px){
   #bond .us-noi-v2{gap:17px}
   .us-noi-v2-top h2{font-size:31px}
