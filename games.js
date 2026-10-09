@@ -779,7 +779,7 @@ function previousAnswers(item) {
 // choice values and explicit prediction_matched are classed as equal/different.
 // Open-text answers cannot be judged equal by a string comparison.
 function revealKind(item){
-  if(item.mechanic==='prediction')return item.prediction_matched===true?'same':'different';
+  if(item.mechanic==='prediction')return item.prediction_matched===true?'same':item.prediction_matched===false?'different':'open';
   if(item.answer_kind==='choice'&&item.my_answer_index!=null&&item.partner_answer_index!=null)
     return item.my_answer_index===item.partner_answer_index?'same':'different';
   return 'open';
@@ -794,7 +794,7 @@ function revealCompactItem(item,number,kind){
   return `<li class="us-gv5-reveal-item" data-gv5-kind="${kind}">
     <details>
       <summary><span class="us-gv5-reveal-num">${number}</span><span class="us-gv5-reveal-title">${heading}</span>${short}<span class="us-gv5-reveal-chevron" aria-hidden="true">›</span></summary>
-      <div class="us-gv5-reveal-answers" aria-label="${detailLabel}"><dl>${answerRows}</dl>
+      <div class="us-gv5-reveal-answers" aria-label="${detailLabel}" data-gv2-mechanic="${esc(item.mechanic||'')}">${contextChip(item)}<dl>${answerRows}</dl>
         ${item.mechanic==='prediction'?'<small class="us-gv5-outcome">'+esc(outcome(item))+'</small>':''}
         ${previousAnswers(item)}
       </div>
@@ -811,7 +811,6 @@ function revealGroup(items,kind,title,description,open=false){
 function renderCompactReveal({first=false}={}){
   const groups={same:[],different:[],open:[]};
   for(const [i,item] of current.items.entries())groups[revealKind(item)].push({item,number:i+1});
-  const count=current.items.length;
   const header=current.game_family==='swipe'?'Swipe':familyName(current.game_family);
   const isSwipe=current.game_family==='swipe';
   showPanel(`<article class="us-gv2-reveal us-gv5-reveal${first?' is-first-reveal':''}" data-gv5-reveal>
