@@ -237,7 +237,7 @@ function gameCard({ id, name, iconName, kind, action, extraClass = '', status })
 }
 
 // Gioca V4: the Daily Challenge leads; the weekly games keep server authority.
-function renderHub(){
+function renderHub() {
  const root=byId('quizHub');if(!root)return;
  const pv=perVoiCopy(),pvState=home?.per_voi?.state||'idle';
  const openByFamily=new Map((home?.open_rounds||[]).map(r=>[r.game_family,r]));
