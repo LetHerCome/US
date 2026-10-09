@@ -9,32 +9,17 @@ const { ROOT, app, slice, flush, meta, installToday } = require('./helpers/m10-2
 // ------------------------------------------------------------------ reactions
 const glyphs = { heart: '❤️', angry: '😡', cry: '😭' };
 
-test('M10.2 reazioni UI: tre bottoni SOLO sulla risposta del partner, aria-label e aria-pressed corretti', async () => {
-  const t = installToday({ revealMeta: meta({ my_reaction: 'angry' }) });
-  await t.hydrate();
-  const html = t.nodes.todayReveal.innerHTML;
-  const [mine, partner] = html.split('data-us-daily-answer="partner"');
-  assert.doesNotMatch(mine, /data-daily-reaction/, 'no controls on my own answer');
-  assert.equal((partner.match(/data-daily-reaction="/g) || []).length, 3);
-  assert.match(partner, /aria-label="Reagisci con cuore" aria-pressed="false"/);
-  assert.match(partner, /aria-label="Reagisci con faccina arrabbiata" aria-pressed="true"/);
-  assert.match(partner, /aria-label="Reagisci con pianto" aria-pressed="false"/);
-  for (const g of Object.values(glyphs)) assert.ok(partner.includes(g));
-  assert.match(partner, /role="group" aria-label="Reagisci alla risposta di Beatrice"/);
-});
-
-test('M10.2 reazioni UI: la reazione del partner compare passiva sulla MIA risposta ("Beatrice ha reagito ❤️")', async () => {
-  for (const [role, label] of [['francesco', 'Beatrice'], ['beatrice', 'Francesco']]) {
-    const t = installToday({ role, revealMeta: meta({ partner_reaction: 'heart' }) });
+test('Daily V5: both answers have labels but no reaction controls or prior reaction indicators', async () => {
+  for (const role of ['francesco','beatrice']) {
+    const t=installToday({role,revealMeta:meta({my_reaction:'angry',partner_reaction:'heart'})});
     await t.hydrate();
-    const [mine, partner] = t.nodes.todayReveal.innerHTML.split('data-us-daily-answer="partner"');
-    assert.match(mine, new RegExp(`${label} ha reagito <span aria-hidden="true">❤️</span>`));
-    assert.doesNotMatch(mine, /<button/, 'non interactive on my own answer');
-    assert.doesNotMatch(partner, /ha reagito/);
+    const html=t.nodes.todayReveal.innerHTML;
+    assert.match(html,/data-us-daily-answer="mine"/);
+    assert.match(html,/data-us-daily-answer="partner"/);
+    assert.doesNotMatch(html,/data-daily-reaction|today-reaction|ha reagito|❤️|😡|😭/);
+    assert.match(html,/La tua risposta/);
+    assert.match(html,role==='francesco'?/Beatrice/:/Francesco/);
   }
-  const none = installToday();
-  await none.hydrate();
-  assert.doesNotMatch(none.nodes.todayReveal.innerHTML, /ha reagito/);
 });
 
 test('M10.2 reazioni: salva sul server, sostituisce, tap sulla selezionata la toglie; poi meta canonica riconciliata', async () => {
@@ -45,8 +30,7 @@ test('M10.2 reazioni: salva sul server, sostituisce, tap sulla selezionata la to
     const r = await t.window.setDailyAnswerReaction(tap);
     assert.equal(r.status, 'saved');
     assert.equal(t.window.todayRevealMeta.my_reaction, expected);
-    const pressed = t.nodes.todayReveal.innerHTML.match(/data-daily-reaction="(\w+)" aria-label="[^"]+" aria-pressed="true"/)?.[1] ?? null;
-    assert.equal(pressed, expected, 'exactly the server value is pressed');
+    assert.doesNotMatch(t.nodes.todayReveal.innerHTML, /data-daily-reaction|aria-pressed/, 'legacy reaction authority no longer shown as UI');
   }
   assert.deepEqual(t.calls.map((c) => c[0]), Array(4).fill('set_daily_answer_reaction'));
   assert.deepEqual(t.calls.map((c) => c[1].target_reaction), ['heart', 'angry', 'cry', null]);
@@ -63,7 +47,7 @@ test('M10.2 reazioni: click delegato sul bottone; errore server → rollback all
   await promise; await flush(); await flush();
   assert.equal(seenDuring, 'cry', 'brief optimistic pressed state');
   assert.equal(t.window.todayRevealMeta.my_reaction, 'heart', 'rolled back to the server value');
-  assert.match(t.nodes.todayReveal.innerHTML, /data-daily-reaction="heart" aria-label="[^"]+" aria-pressed="true"/);
+  assert.doesNotMatch(t.nodes.todayReveal.innerHTML, /data-daily-reaction|aria-pressed/, 'no user-visible reaction controls');
   assert.equal(t.toasts.length, 1);
   // Risposta con un'altra domanda non viene accettata come salvataggio.
   const wrong = installToday({ reactionResult: async () => ({ data: meta({ question_id: 'altra', my_reaction: 'cry' }), error: null }) });
