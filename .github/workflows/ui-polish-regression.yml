@@ -11,6 +11,18 @@ on:
       - 'noi-v2.js'
       - 'noi-v2.css'
       - 'calendar.js'
+      - 'oggi-look.js'
+      - 'oggi-look.css'
+      - 'navigation.js'
+      - 'settings.js'
+      - 'home-cleanup.js'
+      - 'ui-foundation.css'
+      - 'supabase/migrations/20261009100419_us_v3_oggi_looks_rewards.sql'
+      - 'tests/us-v3-oggi-look.test.js'
+      - 'tests/us-v3-noi-gioca.test.js'
+      - 'tests/us-v3-rewards-db.test.js'
+      - 'tests/gioca-tiles.test.js'
+      - 'tests/rewards-countdown-visual-pass.test.js'
       - 'tests/noi-v2-layout.test.js'
       - 'settings2.css'
       - 'tests/us-human-ui-02.test.js'
@@ -28,6 +40,18 @@ on:
       - 'noi-v2.js'
       - 'noi-v2.css'
       - 'calendar.js'
+      - 'oggi-look.js'
+      - 'oggi-look.css'
+      - 'navigation.js'
+      - 'settings.js'
+      - 'home-cleanup.js'
+      - 'ui-foundation.css'
+      - 'supabase/migrations/20261009100419_us_v3_oggi_looks_rewards.sql'
+      - 'tests/us-v3-oggi-look.test.js'
+      - 'tests/us-v3-noi-gioca.test.js'
+      - 'tests/us-v3-rewards-db.test.js'
+      - 'tests/gioca-tiles.test.js'
+      - 'tests/rewards-countdown-visual-pass.test.js'
       - 'tests/noi-v2-layout.test.js'
       - 'settings2.css'
       - 'tests/us-human-ui-02.test.js'
@@ -49,6 +73,10 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Sintonia, Gioca and Settings regression
-        run: node --test tests/us-progression-v1.test.js tests/progression-rewards-v2.test.js tests/us-human-ui-02.test.js tests/m11b-game-v2-client.test.js tests/noi-v2-layout.test.js
+        run: node --test tests/us-progression-v1.test.js tests/progression-rewards-v2.test.js tests/us-human-ui-02.test.js tests/m11b-game-v2-client.test.js tests/noi-v2-layout.test.js tests/gioca-tiles.test.js tests/swipe-v1.test.js tests/rewards-countdown-visual-pass.test.js tests/us-perf-1-0-precache.test.js
+      - name: US V3 — Oggi looks, Noi cleanup, Gioca hierarchy, rewards migration (PGlite)
+        run: node --test tests/us-v3-oggi-look.test.js tests/us-v3-noi-gioca.test.js tests/us-v3-rewards-db.test.js tests/countdown-oggi-v1-db.test.js tests/progression-rewards-v2-db.test.js
       - name: Cloudflare web bundle
         run: npm run build:cloudflare-pages
+      - name: Capacitor web bundle
+        run: npm run build:capacitor-web

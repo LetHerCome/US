@@ -232,7 +232,7 @@ test('tiles: Noi and Gioca destinations share one press + destination primitive'
   assert.match(board, /data-us-tile/);
   assert.match(board, /data-us-feedback="tap"/);
   const games = read('games.js');
-  assert.match(games, /data-us-tile data-us-feedback="tap" class="us-gv2-mode/);
+  assert.match(games, /data-us-tile data-us-feedback="tap" class="us-gv2-game/);
   assert.match(games, /data-us-tile data-us-feedback="tap" class="us-gv2-pervoi/);
   assert.match(foundationCss, /\[data-us-tile\]:active\{transform:scale\(\.975\)\}/);
   assert.match(foundationCss, /\.us-content-enter\{animation:us-content-enter var\(--us-motion-fast\)/);
