@@ -179,7 +179,7 @@ test('Gioca: game cards keep the existing mode action (start_game_round with the
 test('Gioca: RPC surface is explicit; Swipe adds only its start authority and no client storage', () => {
   const src = read('games.js');
   const rpcs = [...new Set([...src.matchAll(/sb\.rpc\('([a-z_0-9]+)'/g)].map((m) => m[1]))].sort();
-  assert.deepEqual(rpcs, ['complete_game_session_side', 'create_weekly_question', 'get_game_session', 'get_game_v2_home', 'mark_game_session_reveal_seen', 'save_game_session_answer', 'start_game_round', 'start_swipe_round']);
+  assert.deepEqual(rpcs, ['complete_game_session_side', 'create_weekly_question', 'get_couple_week_participation_v1', 'get_game_session', 'get_game_v2_home', 'mark_game_session_reveal_seen', 'save_game_session_answer', 'start_game_round', 'start_swipe_round']);
   assert.doesNotMatch(src, /localStorage|sessionStorage|indexedDB/);
 });
 

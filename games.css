@@ -817,6 +817,15 @@ body:has(#quiz.page.active) #thinkButton{display:none!important}
 #quiz .us-gv4-day.is-today{background:rgba(255,239,250,.96);color:#2d233a;border-color:transparent;box-shadow:0 7px 17px rgba(0,0,0,.15)}
 #quiz .us-gv4-day.is-today small{color:#4f3b62}
 #quiz .us-gv4-day i{position:absolute;bottom:4px;width:3px;height:3px;border-radius:50%;background:var(--us-color-rose);pointer-events:none}
+#quiz .us-gv4-day.is-complete{background:rgba(68,172,119,.14);border-color:rgba(91,198,143,.44);color:var(--us-color-text);padding-bottom:21px}
+#quiz .us-gv4-day.is-complete small{color:var(--us-color-text-2)}
+#quiz .us-gv4-day-check{position:absolute;bottom:3px;display:grid;place-items:center;width:16px;height:16px;border-radius:50%;background:#91ddb4;color:#11291c}
+#quiz .us-gv4-day-check .us-gv2-icon{width:12px;height:12px}
+#quiz .us-gv4-week-summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;padding:0 2px}
+#quiz .us-gv4-week-summary b{font-size:12px;font-weight:600;color:var(--us-color-text-2)}
+#quiz .us-gv4-week-summary span,#quiz .us-gv4-week-note{font-size:11px;line-height:1.45;color:var(--us-color-text-3)}
+#quiz .us-gv4-week-note{margin:0;padding:0 2px}
+#quiz .us-gv4-week-retry{align-self:flex-start;min-height:44px}
 #quiz .us-gv2-head{margin:-2px 0 0;justify-content:flex-end;min-height:22px}
 #quiz .us-gv2-rhythm{gap:7px}
 #quiz .us-gv2-rhythm>.us-gv2-kicker{display:block;font-size:10px;color:var(--us-color-text-3);font-weight:680;letter-spacing:.08em}
