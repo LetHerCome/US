@@ -395,7 +395,13 @@ html.us-returning-device .auth-overlay{
             <button type="button" id="usNoiV2Next" class="us-noi-v2-nav" aria-label="Mese successivo"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></button>
           </div>
         </div>
+        <div class="us-noi-v2-picker" id="usNoiV2IdeaPick" role="status" hidden>
+          <span class="us-icon" data-us-icon="calendar-heart" aria-hidden="true"></span>
+          <span class="us-noi-v2-picker-copy"><b>Metti in calendario</b><small id="usNoiV2IdeaTitle">La vostra idea</small><small>Scegli il giorno per aggiungere questo impegno</small></span>
+          <button type="button" id="usNoiV2IdeaCancel" aria-label="Annulla collegamento">Annulla</button>
+        </div>
         <div class="us-noi-v2-shortcuts">
+          <button type="button" id="usNoiV2WeekBack" hidden><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span><span>Torna al mese</span></button>
           <button type="button" id="usNoiV2First"><span class="us-icon" data-us-icon="heart" aria-hidden="true"></span><span>Il nostro giorno</span></button>
           <button type="button" class="us-noi-v2-today" id="usNoiV2Today"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span><span>Torna a oggi</span></button>
           <span class="us-noi-v2-sync" id="usNoiV2Sync" role="status" aria-live="polite"></span>
@@ -403,7 +409,7 @@ html.us-returning-device .auth-overlay{
         <div id="usNoiV2Content" class="us-noi-v2-content"><p class="us-noi-v2-empty">Carico il calendario…</p></div>
         <section id="usNoiV2Detail" class="us-noi-v2-detail" aria-label="Giorno selezionato" aria-live="polite"></section>
         <nav class="us-noi-v2-links" aria-label="Altre sezioni di Noi">
-          <button type="button" data-noi-open-link="lavagna"><span class="us-noi-v2-link-icon" aria-hidden="true"><span class="us-icon" data-us-icon="chalkboard-simple"></span></span><span class="us-noi-v2-link-copy"><b>Lavagna</b><small>La vostra settimana</small></span></button>
+          <button type="button" data-noi-open-link="lavagna"><span class="us-noi-v2-link-icon" aria-hidden="true"><span class="us-icon" data-us-icon="chalkboard-simple"></span></span><span class="us-noi-v2-link-copy"><b>Settimana</b><small>Gli impegni</small></span></button>
           <button type="button" data-noi-open-link="quest"><span class="us-noi-v2-link-icon" aria-hidden="true"><span class="us-icon" data-us-icon="flag-banner"></span></span><span class="us-noi-v2-link-copy"><b>Quest</b><small>Di coppia</small></span></button>
           <button type="button" data-noi-open-link="eventi"><span class="us-noi-v2-link-icon" aria-hidden="true"><span class="us-icon" data-us-icon="calendar-heart"></span></span><span class="us-noi-v2-link-copy"><b>Eventi</b><small>Date speciali</small></span></button>
         </nav>
