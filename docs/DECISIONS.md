@@ -88,3 +88,11 @@ Only durable decisions belong here. New missions should not reopen them without 
 - Server catalog changes go through a reviewed migration; until it is applied the client hides looks the server does not know (no fake rewards).
 - Gioca keeps two tabs; games are one grid (no sideways deck), rounds waiting for you are shown directly.
 - Noi "Lavagna" = the existing Calendar Week view.
+
+## 2026-10-09 — Noi canonical Calendar V4
+
+- **Noi's large month/list calendar is the only user-facing calendar**. All legacy Calendar launchers from Oggi, deep links and Da vivere navigate to this view rather than a second sheet.
+- Lavagna's former week modal is replaced by an in-page Week view in Noi (with return to month). Quest and Eventi retain their existing sections.
+- One persistent **+** creates an impegno for the selected date using the existing Calendar editor; keep title, all-day, start/end, date editing, authorization, reminders, edit/delete and Da vivere links. No new backend schema or duplicate write authority.
+- Legacy Calendar overlay markup/helpers remain inert temporarily for backward compatibility, while the form/detail sheets are reparented to the document root. Remove legacy scaffolding only after comprehensive browser/device QA; never delete calendar data.
+- Official Phosphor glyphs are centrally aligned in their control shapes. Distance continues to be hidden but preserved.

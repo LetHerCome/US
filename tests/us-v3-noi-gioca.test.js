@@ -46,7 +46,7 @@ test('Icons: every data-us-icon used by the shell is mapped to an official Phosp
 
 // ------------------------------------------------------------------ Lavagna, add, Quest, Eventi
 test('Noi links: Lavagna opens the existing Calendar in its Week view; + opens the existing create form', () => {
-  assert.match(noiJs, /if\(link==='lavagna'\)window\.openCalendarSurface\?\.\(selected,\{mode:'week'\}\)/);
+  assert.match(noiJs, /if\(link==='lavagna'\)\{mode='week';render\(\)/, 'La nostra settimana stays inside Noi');
   assert.match(noiJs, /if\(link==='quest'\|\|link==='eventi'\)window\.openNoiSection\?\.\(link\)/);
   assert.match(noiJs, /window\.UsCalendarLinks\.createForDate\(selected\)/);
   const cal = read('calendar.js');
