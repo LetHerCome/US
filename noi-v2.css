@@ -84,3 +84,7 @@
   .us-noi-v2-shortcuts button{padding:7px 11px}
 }
 @media(prefers-reduced-motion:reduce){.us-noi-v2-toggle button,#quiz .us-gioca-tab{transition:none}}
+
+.us-icon[data-us-icon="calendar-dots"]{--us-icon-src:url("/assets/icons/phosphor/calendar-dots-regular.svg")}
+.us-icon[data-us-icon="flag-banner"]{--us-icon-src:url("/assets/icons/phosphor/flag-banner-regular.svg")}
+.us-noi-v2-settings img{width:23px;height:23px;object-fit:contain}
