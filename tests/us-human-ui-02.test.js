@@ -77,7 +77,8 @@ test('page labels: Ricordi and Gioca stay accessible without a visible top-left 
   assert.match(moments, /<h2 class="noi-sr">Ricordi<\/h2>/);
   assert.doesNotMatch(moments, /<h2>Ricordi<\/h2>/);
   const games = read('games.js');
-  assert.match(games, /<header class="us-gv2-head"><h2 class="us-gv2-sr">Gioca<\/h2>\$\{rhythmStrip\(\)\}<\/header>/);
+  assert.match(games, /<h2 class="us-gv2-sr">Gioca<\/h2>/);
+  assert.match(games, /<header class="us-gv2-head" aria-label="Disponibilità giochi settimanali">\$\{rhythmStrip\(\)\}<\/header>/);
 });
 
 // ---------------------------------------------------------------- Gioca
@@ -118,14 +119,15 @@ const round = (id, family, over = {}) => ({ id, game_family: family, item_count:
 // US V3 — the six families (and Swipe) are one ordered grid after Per voi:
 // no sideways deck, no filter chips; rounds that wait for you are shown
 // directly in "Da continuare", completed ones in one disclosure at the end.
-test('Gioca: the same six game IDs, in order, as one grid after the Per voi hero', async () => {
+test('Gioca V4: six existing game IDs and hero are in one bento grid', async () => {
   const html = await gioca(homeOf()).hubHtml();
   const ids = [...html.matchAll(/data-gv2-family="([a-z_]+)"/g)].map((m) => m[1]);
   assert.deepEqual(ids, ['scopritevi', 'confrontatevi', 'ridete', 'quanto_mi_conosci', 'rivivete', 'e_se']);
-  assert.ok(html.indexOf('data-gv2-action="per-voi"') < html.indexOf('us-gv2-game-grid'), 'Per voi remains before the game grid');
+  assert.ok(html.indexOf('us-gv2-game-grid') < html.indexOf('data-gv2-action="per-voi"'), 'Per voi is the first bento tile inside the game grid');
+  assert.ok(html.indexOf('data-gv2-action="per-voi"') < html.indexOf('data-gv2-action="swipe"'), 'Per voi precedes Swipe in visual and keyboard order');
   assert.equal((html.match(/data-gv2-action="per-voi"/g) || []).length, 1);
   assert.equal((html.match(/data-gv2-action="swipe"/g) || []).length, 1, 'Swipe has exactly one entry');
-  assert.match(html, /<section class="us-gv2-choose" aria-labelledby="usGv2ChooseTitle">[\s\S]*?<h3 class="us-gv2-section-title" id="usGv2ChooseTitle">Scegli un gioco<\/h3>[\s\S]*?<div class="us-gv2-game-grid">/);
+  assert.match(html, /<section class="us-gv2-choose" aria-labelledby="usGv2ChooseTitle">[\s\S]*?<h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi<\/h3>[\s\S]*?<div class="us-gv2-game-grid">/);
   assert.doesNotMatch(html, /us-gv2-deck|us-gv2-filters|data-gv2-filter/);
   assert.doesNotMatch(read('games.css'), /\.us-gv2-game-grid\{[^}]*overflow-x/, 'discovering games never needs a sideways scroll');
 });
