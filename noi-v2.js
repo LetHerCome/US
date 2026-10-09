@@ -131,7 +131,7 @@ function weekMarkup(index) {
 }
 function detailMarkup(index) {
   const active=index.get(selected)||[];
-  const head=`<div class="us-noi-v2-detail-head"><div><small>${relativeLabel(selected)}</small><h3>${esc(dayLabel(selected))}</h3></div><button type="button" class="us-noi-v2-add" data-noi-add aria-label="Aggiungi un impegno il ${esc(dayLabel(selected))}" title="Aggiungi">${icon('plus')}</button></div>`;
+  const head=`<div class="us-noi-v2-detail-head"><div><small>${relativeLabel(selected)}</small><h3>${esc(dayLabel(selected))}</h3></div></div>`;
   if(active.length)return `${head}<div class="us-noi-v2-day-items">${active.map(item=>itemMarkup(selected,item)).join('')}</div>`;
   const copy=pending&&!snapshot?'Carico i vostri momenti…':'Nessun momento in questo giorno. Lo spazio è vostro.';
   return `${head}<p class="us-noi-v2-empty-day">${copy}</p>`;
@@ -163,6 +163,7 @@ function render(){
     }else label.textContent=`${months[month][0].toUpperCase()+months[month].slice(1)} ${year}`;
   }
   const weekBack=$('usNoiV2WeekBack');if(weekBack)weekBack.hidden=mode!=='week';
+  $('usNoiV2AddTop')?.setAttribute('aria-label',`Aggiungi un impegno il ${dayLabel(selected)}`);
   const pick=$('usNoiV2IdeaPick');
   if(pick){pick.hidden=!ideaPick;const name=$('usNoiV2IdeaTitle');if(name)name.textContent=ideaPick?.title||'La vostra idea';}
   for(const type of ['calendar','list']){
