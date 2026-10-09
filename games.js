@@ -246,7 +246,7 @@ function renderHub(){
  const nothingYet=!continueRounds(home).length&&!doneRounds(home).length&&pvState==='idle';
  root.innerHTML=`
   <h2 class="us-gv2-sr">Gioca</h2>
-  <span class="us-gv2-daily-slot" data-gv4-daily-slot aria-live="polite"><span class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">Daily Challenge</span><small>Preparo la sfida di oggi…</small></span></span>
+  <div class="us-gv2-daily-slot" data-gv4-daily-slot aria-live="polite"><div class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">Daily Challenge</span><small>Preparo la sfida di oggi…</small></div></div>
   ${dayRail()}
   <header class="us-gv2-head" aria-label="Disponibilità giochi settimanali">${rhythmStrip()}</header>
   ${continueSection(home)}
