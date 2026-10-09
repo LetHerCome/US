@@ -1120,6 +1120,14 @@ function selectDay(dateISO) {
   }
 }
 
+// The detail/editor sheets outlive the retired legacy calendar overlay.
+// Move them to the document root so they can open directly above Noi.
+function ensureNoiEditorSheets(){
+  for(const id of ['usCalendarDetailSheet','usCalendarFormSheet']){
+    const sheet=$(id);
+    if(sheet&&sheet.parentElement!==document.body)document.body.appendChild(sheet);
+  }
+}
 function openDetail(entryId) {
   const entry = entries.find((e) => e.id === entryId);
   if (!entry) return;
@@ -1140,6 +1148,7 @@ function openDetail(entryId) {
   const canEdit = window.usProfile ? canEditEntry(entry, window.usProfile.id) : false;
   const actions = $('usCalendarDetailActions');
   if (actions) actions.hidden = !canEdit;
+  ensureNoiEditorSheets();
   const sheet = $('usCalendarDetailSheet');
   if (!sheet) return;
   sheet.classList.add('open');
@@ -1172,6 +1181,8 @@ async function deleteEntry() {
     editingEntryReminders = editingEntryReminders.filter((r) => r.entry_id !== detailEntry.id);
     closeCalendarDetailSheet();
     renderCalendar();
+    window.USNoiV2?.refresh?.();
+    window.refreshOggiCalendarWidget?.();
     toast('Impegno eliminato');
     window.hydrateNoiIdeas?.();
   } catch (error) {
@@ -1274,6 +1285,7 @@ function openForm(mode, entry, dateISO) {
   toggleAllDayFields();
   renderFormDay(formDateISO, mode);
 
+  ensureNoiEditorSheets();
   const sheet = $('usCalendarFormSheet');
   if (!sheet) return;
   sheet.classList.add('open');
@@ -1363,7 +1375,9 @@ async function saveEntry(event) {
     // esattamente come sono (nessuna sync che li cancelli).
     if (linkedIdea) clearIdeaPick();
     closeCalendarFormSheet();
-    await loadEntries();
+    if($('usCalendarOverlay')?.classList.contains('open'))await loadEntries();
+    window.USNoiV2?.refresh?.();
+    window.refreshOggiCalendarWidget?.();
     toast(wasEditing ? 'Impegno aggiornato' : (linkedIdea ? 'In calendario' : 'Impegno aggiunto'));
   } catch (error) {
     console.warn('[US Calendar] save', error);
@@ -1456,6 +1470,12 @@ function goToToday() {
 // onclick, navigation.js) is unaffected.
 async function openCalendarSurface() {
   const targetDateISO = arguments[0];
+  // Noi is the only visible calendar. Keep this legacy entry point for
+  // notifications, Oggi widgets, reminders and external links.
+  if(window.USNoiV2?.openCalendar){
+    window.USNoiV2.openCalendar({date:targetDateISO,mode:arguments[1]?.mode});
+    return;
+  }
   ensureInitialMonth();
   if (targetDateISO) {
     const target = parseISODate(targetDateISO);
@@ -1572,6 +1592,11 @@ async function linkCreatedEntryToIdea(ideaLink, entryId) {
 async function openCalendarForIdea(idea) {
   if (!idea?.id || !window.usProfile) return;
   const identity = { userId: window.usProfile.id, coupleId: window.usProfile.couple_id };
+  if(window.USNoiV2?.beginIdeaPick){
+    pendingIdeaPick={bucketItemId:idea.id,title:idea.title||'',note:idea.note||null,...identity};
+    window.USNoiV2.beginIdeaPick({title:idea.title||''});
+    return;
+  }
   await openCalendarSurface();
   if (window.usProfile?.id !== identity.userId || !$('usCalendarOverlay')?.classList.contains('open')) return;
   // M9C — niente date picker: il giorno lo sceglie il calendario.
@@ -1583,6 +1608,7 @@ async function openCalendarForIdea(idea) {
 }
 function clearIdeaPick() {
   pendingIdeaPick = null;
+  window.USNoiV2?.clearIdeaPick?.();
   const banner = $('usCalendarPickBanner');
   if (banner) banner.hidden = true;
 }
@@ -1607,7 +1633,7 @@ async function getCalendarEntriesByIds(ids) {
   const unique = [...new Set((ids || []).filter(Boolean))];
   if (!unique.length || !window.usProfile) return new Map();
   const { data, error } = await sb.from('calendar_entries')
-    .select('id,title,entry_type,is_all_day,starts_at,ends_at,start_date,end_date')
+    .select('id,couple_id,entry_type,owner_id,created_by,title,description,location,visibility,is_all_day,starts_at,ends_at,start_date,end_date')
     .eq('couple_id', window.usProfile.couple_id)
     .in('id', unique);
   if (error) throw error;
@@ -1626,25 +1652,64 @@ function calendarWhenLabel(entry) {
 }
 
 // US V3 — Noi's + opens the existing create form for the chosen day.
+async function prepareNoiEntryDate(dateISO){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(dateISO||''))||!window.usProfile)return false;
+  const profile=window.usProfile,coupleId=profile.couple_id;
+  const same=()=>window.usProfile===profile&&window.usProfile?.couple_id===coupleId;
+  try{
+    const [dayEntries]=await Promise.all([
+      fetchEntriesForRange(coupleId,dateISO,shiftISODate(dateISO,1)),
+      loadProfiles(),
+      loadEntryReminders()
+    ]);
+    if(!same())return false;
+    entries=dayEntries;
+    selectedDate=dateISO;
+    ensureNoiEditorSheets();
+    return true;
+  }catch(error){console.warn('[US Calendar] prepare editor',error);window.toast?.('Calendario non disponibile. Riprova.');return false;}
+}
 async function createCalendarEntryForDate(dateISO) {
   if (!dateISO || !window.usProfile) return;
+  if(window.USNoiV2?.openCalendar){
+    window.USNoiV2.openCalendar({date:dateISO,mode:'calendar'});
+    if(await prepareNoiEntryDate(dateISO))startCreateForDate(dateISO);
+    return;
+  }
   const identity = window.usProfile;
   await openCalendarSurface(dateISO, { mode: 'month' });
   if (window.usProfile !== identity || !$('usCalendarOverlay')?.classList.contains('open')) return;
   startCreateForDate(dateISO);
 }
 
+async function createCalendarEntryForIdeaDate(dateISO){
+  const pick=pendingIdeaPick;
+  if(!pick||!dateISO||window.usProfile?.id!==pick.userId||window.usProfile?.couple_id!==pick.coupleId)return;
+  if(!await prepareNoiEntryDate(dateISO))return;
+  openIdeaForm(pick,dateISO);
+  clearIdeaPick();
+}
 async function openCalendarEntry(entryId) {
   if (!entryId || !window.usProfile) return;
   const map = await getCalendarEntriesByIds([entryId]).catch((error) => { console.warn('[US Calendar] open entry', error); return new Map(); });
   const entry = map.get(entryId);
   if (!entry) { toast('Non trovo più questo evento nel calendario.'); return; }
   const dateISO = entry.is_all_day ? entry.start_date : localDateFromInstant(entry.starts_at);
+  if(window.USNoiV2?.openCalendar){
+    const profile=window.usProfile;
+    window.USNoiV2.openCalendar({date:dateISO,mode:'calendar'});
+    await Promise.all([loadProfiles(),loadEntryReminders()]);
+    if(profile!==window.usProfile)return;
+    entries=[entry];
+    selectedDate=dateISO;
+    openDetail(entryId);
+    return;
+  }
   await openCalendarSurface(dateISO);
   if ($('usCalendarOverlay')?.classList.contains('open')) openDetail(entryId);
 }
 
-window.UsCalendarLinks = Object.freeze({ openForIdea: openCalendarForIdea, openEntry: openCalendarEntry, createForDate: createCalendarEntryForDate, getEntriesByIds: getCalendarEntriesByIds, whenLabel: calendarWhenLabel });
+window.UsCalendarLinks = Object.freeze({ openForIdea: openCalendarForIdea, createForIdeaDate: createCalendarEntryForIdeaDate, cancelIdeaPick: clearIdeaPick, openEntry: openCalendarEntry, createForDate: createCalendarEntryForDate, getEntriesByIds: getCalendarEntriesByIds, whenLabel: calendarWhenLabel });
 window.USNoiCalendarRead = Object.freeze({readMonth:readNoiMonth});
 window.openCalendarSurface = openCalendarSurface;
 window.closeCalendarSurface = closeCalendarSurface;
@@ -1654,5 +1719,6 @@ window.addEventListener?.('us-identity-change', event=>{
   if(!event.detail?.identityKey){loadToken++;profiles=[];profilesById.clear();entries=[];closeCalendarSurface();}
   else if($('usCalendarOverlay')?.classList.contains('open'))renderCalendar();
 });
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ensureNoiEditorSheets,{once:true});else ensureNoiEditorSheets();
 console.info('[US Calendar] calendario condiviso attivo');
 })();
