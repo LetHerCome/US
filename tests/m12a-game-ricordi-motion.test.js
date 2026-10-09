@@ -214,7 +214,11 @@ test('ricordi: a card that has not rendered yet keeps the marker until it appear
 
 test('ricordi: creation wires the marker from the inserted id; CSS animates only .ricordi-new', () => {
   const app = read('app.js');
-  assert.match(app, /\.select\('id'\)\.single\(\);\s*if\(rowError\)\{await sb\.storage\.from\('us-media'\)\.remove\(\[path\]\);throw rowError;\}\s*\/\/[^\n]*\n\s*if\(created\?\.id\)markFreshRicordo\(created\.id\);/);
+  const upload = app.slice(app.indexOf('async function uploadMoment(){'),app.indexOf('async function ',app.indexOf('async function uploadMoment(){')+1));
+  assert.match(upload, /\.select\('id'\)\.single\(\)/, 'moment creation must return inserted id');
+  assert.match(upload, /if\(rowError\)\{[\s\S]*?await sb\.storage\.from\('us-media'\)\.remove\(cleanup\);[\s\S]*?throw rowError;/, 'original and derived media are cleaned on failed insert');
+  assert.match(upload, /if\(created\?\.id\)markFreshRicordo\(created\.id\)/, 'one-shot animation uses actual inserted id');
+  assert.ok(upload.indexOf('throw rowError') < upload.indexOf('if(created?.id)markFreshRicordo(created.id)'), 'marker only after successful insert');
   assert.match(app, /grid\.dataset\.loaded='1';grid\.dataset\.signature=signature;\s*consumeFreshRicordo\(grid\);/);
   const css = read('moments-albums.css');
   assert.match(css, /#moments \.moment-card\.ricordi-new\{animation:ricordi-settle/);
