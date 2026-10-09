@@ -1,27 +1,31 @@
 # US V6 — Verifica del candidato Daily Reveal
 
 Base: main `1251e49`, ricontrollata prima della PR. Branch: `codex/us-v6-daily-reveal`.
-PR [#176 — draft](https://github.com/LetHerCome/US/pull/176); candidato codice
-`4d238b8257fd042fd0882b589aa13111f68ca6a9` (il commit successivo aggiorna solo i documenti).
+PR [#176 — draft](https://github.com/LetHerCome/US/pull/176); revisione dei blocchi
+di review dopo `97d4314`. Build candidata: `us-stabilization-v6-20261009-1`.
+Il commit finale della PR identifica questo snapshot verificato.
 Stato: candidato per review; **NOT READY per release**. Nessun nuovo fail rispetto alla base.
-Nessuna modifica dati, RPC, RLS, XP, budget settimanale, SW, marker o asset approvati.
+Nessuna modifica dati, RPC, RLS, XP, budget settimanale o asset approvati.
+SW, version, meta, riferimenti HTML e icone manifest aggiornati insieme a V6.
+Missione 2 resta solo progetto: Daily della data + stessa sessione conclusa da
+entrambi nella stessa giornata Europe/Rome; ricevute server protette, nessun XP nuovo.
 
 ## Risultati
 
 | Verifica | Esito |
 |---|---|
-| Focused Daily/controller/reveal/Conserva + SQL PGlite + popup | 80 test: 72 pass, 8 skipped |
+| Focused Daily/controller/reveal/Conserva + SQL PGlite + popup + PWA runtime | 113 test: 105 pass, 8 skipped |
 | Daily browser (Chrome locale, Playwright 1.62.1) | 6 pass, 0 skipped |
 | PWA/static runtime/precache/logout/popup | 38 pass, 0 skipped |
-| Browser PWA install/relaunch/offline/upgrade | 5 pass, 0 skipped |
-| npm test | 1769 test: 1625 pass, 40 fail, 104 skipped |
-| main isolato, stesso lockfile | 1757 test: 1614 pass, 42 fail, 101 skipped |
+| Browser PWA install/relaunch/offline/upgrade/precache interrotto | 7 pass, 0 skipped |
+| npm test | 1771 test: 1625 pass, 40 fail, 106 skipped |
+| main isolato, stesso lockfile e indice Git temporaneo della base | 1757 test: 1615 pass, 41 fail, 101 skipped |
 | Cloudflare Pages | PASS, 169 file |
-| Capacitor web | PASS, 166 file, SHA256 bundle 8b790415d73f8fbc71eaa08baa392e74c8177349e32df9da48b557961f1abe97 |
+| Capacitor web | PASS, 166 file, SHA256 bundle 1b89758ac125d1f053dbb06a7adeb67c5f6553471fe4035ca8d006fbf21f114d |
 | cap sync android | PASS, nessun diff Android |
-| Gradle testDebugUnitTest + assembleDebug offline | BLOCKED ambiente, prima della compilazione |
+| Gradle testDebugUnitTest + assembleDebug offline | BLOCKED ambiente, prima della compilazione; stesso errore su main |
 | Build iOS | Non eseguibile su host Windows |
-| node --check app.js / stories.js; git diff --check | PASS |
+| node --check app.js / stories.js / service-worker.js / test PWA; YAML CI; git diff --check | PASS |
 
 Gli 8 skipped focused sono gli harness multi-processo PostgreSQL, che richiedono
 binari Linux, utente OS postgres e root. Nessuna connessione a produzione usata
@@ -31,7 +35,45 @@ permessi e isolamento; i test JS verificano concorrenza del client.
 `npm test` non è verde. Confronto per nome dei fallimenti: **zero nuovi**.
 Il test M9E obsoleto pretendeva testo nel pulsante ormai nascosto: aggiornato al
 contratto V5 con editor/CTA nascosti e risposte autorizzate. Il timeout P1 recovery
-della base non si è riprodotto nell'ultima esecuzione (non è una correzione P1).
+della base è intermittente: riprodotto nella prima suite della revisione,
+passa nel test isolato (5/5) e nelle ultime suite di candidato e base. Non è
+una correzione P1. La baseline usa i file archiviati di `1251e49`, dipendenze del
+lockfile e un indice Git temporaneo con `git read-tree 1251e49`: i test che
+eseguono `git ls-files` vedono i file di main senza cambiare index/HEAD reali.
+La prima prova baseline senza quell'indice aveva tre errori di discovery Git;
+non è usata per il confronto finale.
+
+## Upgrade PWA V5 → V6
+
+Il problema bloccante era verificato: HTML/runtime Daily V6 mantenevano il
+BUILD_ID V5. Il worker precedente poteva continuare a servire JS/CSS cache-first
+della stessa identità, impedendo un upgrade coerente. Correzione tramite
+`npm run build:id -- us-stabilization-v6-20261009-1`, senza cambiare lifecycle,
+APP_SHELL o cache privata. Il test statico verifica anche worker, tutti i
+riferimenti HTML versionati e tutte le icone manifest contro lo stesso marker.
+
+Il test browser nuovo è fallito prima del bump sulla stessa identità V5 (RED).
+Poi serve **i file reali del commit main V5 `1251e49`**, non il codice candidato
+con un marker rinominato; installa worker/cache V5 e controlla il SHA256 di
+app.js storico. Nello stesso browser/origin pubblica la V6, lascia che il
+successivo avvio aggiorni il worker e verifica ogni asset APP_SHELL mediante
+SHA256 del file candidato, sia precache sia risposta effettiva online/offline.
+Controlla entrambi i documenti, tutte le referenze JS/CSS, rimozione della shell
+V5 e conservazione del sentinel nella cache privata. La seconda regressione
+restituisce 503 su modal-center.css V6: installazione redundant, worker V5
+ancora attivo e successivo avvio offline con HTML/JS V5 reali.
+
+Il test registra anche le risposte JS/CSS della pagina nel passaggio normale
+di navigazione/attivazione: ogni URL V5 deve contenere byte del commit V5,
+ogni URL V6 byte del candidato. Entrambe le versioni sono effettivamente
+osservate e i confronti passano. Non è un'esplorazione esaustiva di tutti i
+timing possibili o una certificazione di un dispositivo fisico.
+
+I sette test browser includono anche relaunch ripetuto, recovery rete,
+redirect Cloudflare e shell assente. Push/notificationclick e logout passano
+nei 38 test runtime. Nessun server, push reale o dato personale coinvolto.
+CI installa il browser e usa fetch-depth 0 per il commit storico; non salta
+l'upgrade perché manca la storia. Android standalone fisico resta da verificare.
 
 ## Comandi riproducibili
 
@@ -100,10 +142,24 @@ non autorizza installazione/aggiornamento APK, release o deploy. Non segnate PAS
 nella copia isolata di main: nessuna regressione Daily. Il Back del popup Daily
 è invece esercitato dal nuovo test browser.
 
-PR #170 OPEN, head `b58fb08`: sovrappone app.js, index.html, styles.css e
-modal-center.css. Le modifiche qui sono Daily; la PR widget/motion non viene
-incorporata. Chi integra la seconda PR deve ricontrollare anche shell, motion e
-cache marker; niente merge automatico.
+PR #170 OPEN, head `b58fb08af50d4246de91375d15f84aa175c46831`; base comune
+`0e23e703dd6c6fff75cf5b68180b740044677456`, precedente a main V5 `1251e49`.
+Fetch finale conferma entrambi gli SHA; GitHub segnala #170 CONFLICTING.
+Analisi dei suoi cambi rispetto alla base comune, senza applicarli:
+
+| File condiviso | Collisione o rischio da riesaminare all'integrazione |
+|---|---|
+| service-worker.js, version.json, manifest.webmanifest | Valori diversi del marker: #170 usa us-ui-feedback-v2-20261009-2, #176 V6. Risolvere insieme tutti i marker, non scegliendo un intero file di una delle PR. |
+| index.html | Marker e tutti i riferimenti versionati si sovrappongono; struttura Daily V6 e rimozione del manuale widget di #170 riguardano sezioni diverse. Conservare le due modifiche deliberate e il precache degli asset correnti. |
+| app.js | #170 modifica timer di ingresso/navigazione, callback widget/foto/ritratti/distanza e rimuove swipe globale subito dopo saveAnswer. #176 cambia il ciclo Daily e rimuove helper legacy prima di quel confine: riesaminare i confini e mantenere lock, token, retry e Conserva. Non copiare il file storico di #170 sopra il Daily corrente. |
+| styles.css | #170 cambia fade e durata Android; #176 rimuove CSS Daily legacy. Hunks distinti, ma ricontrollare cascade mobile, reduced motion, chiusura e scroll con entrambi i cambi. |
+| modal-center.css | #170 porta opacity del pannello generico alla durata surface; #176 aggiunge regole scoped per scroll/safe area Daily. Non cancellare le regole scoped; rifare apertura/chiusura/Back dopo l'integrazione. |
+
+Il confronto diretto #170 contro main mostra anche asset/runtime V3 assenti
+nel suo snapshot, aggiunti successivamente su main. Non sono rimozioni deliberate
+del diff #170 rispetto alla base comune: evitare un ripristino dell'intero
+APP_SHELL/HTML storico. Conservare il nuovo job CI Daily/upgrade. Nessun commit
+di #170 incorporato, nessun merge, nessuna risoluzione applicata in questa PR.
 
 ## Review
 

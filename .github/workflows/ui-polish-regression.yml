@@ -7,6 +7,10 @@ on:
       - 'modal-center.css'
       - 'stories.js'
       - 'tests/us-v6-daily-reveal*.test.js'
+      - 'tests/pwa-startup-browser.test.js'
+      - 'service-worker.js'
+      - 'version.json'
+      - 'manifest.webmanifest'
       - 'index.html'
       - 'games.js'
       - 'games.css'
@@ -45,6 +49,10 @@ on:
       - 'modal-center.css'
       - 'stories.js'
       - 'tests/us-v6-daily-reveal*.test.js'
+      - 'tests/pwa-startup-browser.test.js'
+      - 'service-worker.js'
+      - 'version.json'
+      - 'manifest.webmanifest'
       - 'index.html'
       - 'games.js'
       - 'games.css'
@@ -105,6 +113,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # The upgrade fixture serves the immutable production V5 commit.
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -117,6 +127,8 @@ jobs:
         env:
           US_V6_QA_SHOTS: /tmp/us-v6-daily-shots
         run: node --test tests/us-v6-daily-reveal-browser.test.js
+      - name: Installed production V5 to V6 upgrade and offline startup
+        run: node --test tests/pwa-startup-browser.test.js
       - uses: actions/upload-artifact@v4
         if: always()
         with:

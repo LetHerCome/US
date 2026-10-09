@@ -4,7 +4,9 @@ Data: 2026-10-09. Stato: Missione 1 implementata, candidato per review;
 Missione 2 progettata, nessuna implementazione SQL.
 Branch: `codex/us-v6-daily-reveal`. Base remota verificata: `1251e49` (PR #175).
 PR: [#176 — draft](https://github.com/LetHerCome/US/pull/176).
-Candidato codice verificato: `4d238b8257fd042fd0882b589aa13111f68ca6a9`.
+Snapshot iniziale Daily: `4d238b8257fd042fd0882b589aa13111f68ca6a9`.
+Revisione dei blocchi di review dopo `97d4314`; candidato finale identificato
+dal commit della PR. Build: `us-stabilization-v6-20261009-1`.
 Checkout autorizzato: worktree Codex del repository `LetHerCome/US`; i metadati
 Git condivisi sono in `F:/AI/US`. Il checkout principale non è stato modificato.
 
@@ -55,8 +57,10 @@ Git condivisi sono in `F:/AI/US`. Il checkout principale non è stato modificato
    reduced motion, risposte lunghe e stringhe senza spazi, safe area simulate.
 
 File: `app.js`, `index.html`, CSS Daily nei file esistenti, `stories.js`,
-`stories.css`, test Daily e job CI. Nessun file SW, cache ID, build marker,
-manifest o database modificato. Nessun asset approvato modificato.
+`stories.css`, test Daily e job CI. La revisione della PR aggiorna inoltre SW,
+cache ID, build marker, riferimenti HTML e manifest insieme a
+`us-stabilization-v6-20261009-1`, con upgrade dalla V5 reale nello stesso browser.
+Nessun database o asset approvato modificato.
 
 La review indipendente ha riprodotto anche due corse corrette con test RED →
 GREEN: refresh durante l'invio riabilitava il bottone (ora lock di operazione
@@ -72,17 +76,18 @@ La spunta è esclusivamente la congiunzione di:
 
 - entrambi i membri correnti hanno risposto alla stessa Daily di quella data
   durante quella giornata;
-- ciascun membro ha completato almeno una sessione di gioco durante quella
-  giornata, usando una completion server persistita, non avvio o reveal visto.
+- la coppia ha completato almeno una **stessa sessione** di gioco durante
+  quella giornata, con completamento effettivo di entrambe le parti.
 
-Il requisito non impone che le due sessioni siano identiche. La proposta conta
-la completion personale in `game_session_sides.completed_at`, collegata a una
-sessione della coppia. Se A finisce lunedì e B martedì, quella sola sessione
-non rende verde né lunedì né martedì. Una completion personale valida può
-essere in attesa del partner: la distinzione dal completamento condiviso deve
-restare esplicita. Se si vuole contare solo sessioni già concluse da entrambi,
-aggiungere anche `game_sessions.completed_at IS NOT NULL`: è una scelta di
-prodotto da confermare prima dell'implementazione della Missione 2.
+Regola definitiva: deve esistere un singolo `game_sessions.id` della coppia
+con `game_sessions.completed_at IS NOT NULL` e due side dei membri correnti,
+entrambe con `game_session_sides.completed_at IS NOT NULL`. Tutti e tre i
+timestamp di completamento, persistiti dal server, devono ricadere nella data
+Europe/Rome della riga. Non combinare completion personali di sessioni diverse.
+Un avvio, un reveal visto o una sessione in attesa del partner non qualificano.
+Se A finisce lunedì e B martedì, quella sola sessione non rende verde né lunedì
+né martedì. Una sessione iniziata ieri e completata da entrambi oggi può
+qualificare oggi, se anche entrambe le risposte alla Daily di oggi sono valide.
 
 ### Autorità esistenti verificate
 
@@ -166,9 +171,11 @@ SECURITY DEFINER per le due risposte protette da RLS, motivarlo, usare
 revocare EXECUTE a PUBLIC/anon, grant ristretto ad authenticated. Il ruolo
 authenticated da solo non autorizza una coppia. Niente user_metadata.
 
-La query unisce sette date generate, ricevute Daily server e completion personali con
-filtri obbligatori sulla stessa coppia. Join dei due membri attuali, nessun
-count generico di due righe. Date e limiti UTC derivati dalle mezzanotti Rome,
+La query unisce sette date generate, ricevute Daily server e sessioni condivise
+con filtri obbligatori sulla stessa coppia. Il predicato Game verifica le due
+side dei membri attuali sullo **stesso session_id**, e il completamento della
+sessione stessa nella medesima giornata; nessun count generico di due righe
+o aggregazione di side appartenenti a sessioni differenti. Date e limiti UTC derivati dalle mezzanotti Rome,
 non da blocchi di 24 ore: coprire i cambi d'ora. Gli XP settimanali sono la somma
 dei valori realmente registrati secondo `progression_events.action_day`;
 il totale della Sintonia continua a provenire da `get_progression_v1`.
@@ -197,24 +204,29 @@ PGlite con SQL reale: coppia A/B, anon, senza profilo, senza coppia, una sola
 persona, cambio appartenenza, sessione altrui, role spoofing e timestamp
 retrodatato. Prove di lettura senza effetti collaterali/XP/unlock nuovi.
 Completion a cavallo di mezzanotte, giornata domanda diversa dalla risposta,
-sessione iniziata ieri ma finita oggi, retry idempotente e due completamenti
-concorrenti. Tutte le combinazioni Daily/Game incomplete e complete.
+sessione iniziata ieri ma finita da entrambi oggi, retry idempotente e due
+completamenti concorrenti. Negative obbligatorie: A completa solo sessione X
+e B solo sessione Y nello stesso giorno; una sola side completa; sessione in
+attesa; sessione conclusa ma una side completata il giorno precedente. Positive:
+stessa sessione e due side complete nella stessa data Rome, più entrambe le
+Daily di quella data. Tutte le combinazioni Daily/Game incomplete e complete.
 
 Migrazione creata via Supabase CLI; nessuna applicazione produzione. Missione
 2 in branch/PR separata dopo Missione 1; questo documento non la implementa.
 
 ## Verifiche eseguite e limiti
 
-- Fetch remoto: `main = 1251e49`; PR #170 OPEN, tocca `app.js`, `index.html`,
-  `styles.css`, `modal-center.css` oltre a widget/motion. Ricontrollare diff e
-  conflitti prima della PR. Non incorporare il lavoro widget.
-- Test focused finali: 80 test, 72 pass, 8 skipped (harness di concorrenza
+- Fetch remoto finale: `main = 1251e49`; PR #170 OPEN, head `b58fb08`, antenato
+  comune `0e23e70`. Analisi dei diff condivisi in [QA](us-stabilization-v6/QA.md).
+  Nessun contenuto widget incorporato e nessun merge.
+- Test focused Daily + PWA runtime finali: 113 test, 105 pass, 8 skipped (harness di concorrenza
   richiede binari PostgreSQL/Linux, utente postgres e root non presenti qui;
   le prove PGlite pertinenti sono eseguite).
-- `npm test`: 1769 test, 1625 pass, 40 fail, 104 skipped. Nessun nuovo
-  fallimento contro main: base isolata 1757 test, 1614 pass, 42 fail,
-  101 skipped. Il contratto legacy del pulsante Daily è aggiornato; il test
-  P1 recovery non ha riprodotto il timeout ambientale della base. Non è una
+- `npm test`: 1771 test, 1625 pass, 40 fail, 106 skipped. Nessun nuovo
+  fallimento contro main: base isolata 1757 test, 1615 pass, 41 fail,
+  101 skipped. Il contratto legacy del pulsante Daily è aggiornato. Il timeout
+  P1 è intermittente, già riprodotto sulla base e passa nella verifica isolata
+  e nelle ultime suite di candidato/base; nessuna correzione P1. Non è una
   dichiarazione di suite verde. Elenco completo in [QA](us-stabilization-v6/QA.md).
 - Playwright 1.62.1 del runtime Codex con Chrome locale: 6 test Daily pass,
   0 skipped; 320×568, 390×844, 844×390, safe area simulate, testo lungo,
@@ -226,13 +238,17 @@ Migrazione creata via Supabase CLI; nessuna applicazione produzione. Missione
   la navigazione generale in questa Missione Daily.
 - Cloudflare Pages e Capacitor web build pass; `cap sync android` pass e nessun
   diff sui sorgenti Android. Gradle test/build debug non eseguiti fino in fondo:
-  errore ambientale `Unable to establish loopback connection`, riprodotto anche
+  errore ambientale `Unable to establish loopback connection`, riprodotto su main e anche
   con IPv4, con causa `UnixDomainSockets: Invalid argument: connect`.
   Nessun APK prodotto/installato; build iOS non eseguibile su Windows.
-- Gate PWA: 38 test static/runtime/logout pass e 5 browser startup pass,
-  inclusi update simulato, offline, fallimento precache/vecchia shell e cache
-  media conservata. Sintassi JS e diff-check pass. Marker V5 ancora coerenti:
-  nessun rilascio/cache bump è parte della Missione 1.
+- Gate PWA: 38 test static/runtime/logout pass e 7 browser startup pass.
+  Test RED sul marker V5 ancora presente, poi GREEN con V6: installazione di
+  main V5 reale `1251e49`, upgrade sullo stesso origin/profilo, confronto SHA256
+  di tutti gli asset della shell V6 online/offline, HTML e riferimenti coerenti,
+  vecchia shell rimossa e cache media conservata. Anche un precache V6 interrotto
+  lascia la V5 reale utilizzabile offline. CI scarica la storia per la fixture.
+  Marker/worker/version/manifest allineati a `us-stabilization-v6-20261009-1`.
+  Sintassi JS, parsing YAML e diff-check pass; nessun deploy.
 - Check su Android fisico/iOS e tastiera nativa restano da fare, elencati in QA.
   Candidato per review, **NOT READY per release** finché i gate aperti non sono
   risolti. Non sostituire le prove browser con una dichiarazione device PASS.

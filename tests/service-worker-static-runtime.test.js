@@ -343,13 +343,19 @@ test('index carica Supabase, auth storage, app e Stories in questo ordine', () =
   );
 });
 
-test('build marker HTML e version.json restano allineati', () => {
+test('build marker, worker, tutti i riferimenti HTML e icone manifest restano allineati', () => {
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   const version = JSON.parse(fs.readFileSync(path.join(ROOT, 'version.json'), 'utf8'));
   const build = html.match(/<meta\s+name=["']us-build["']\s+content=["']([^"']+)["']/i)?.[1];
 
   assert.ok(build, 'build marker HTML non trovato');
   assert.equal(build, version.version);
+  assert.equal(build, CURRENT_BUILD, 'the worker uses the same build and shell cache identity');
+  const references = [...html.matchAll(/(?:src|href)=["'](\/[^"']+\?v=[^"']+)["']/g)].map((match) => match[1]);
+  assert.ok(references.length > 40);
+  for (const ref of references) assert.equal(new URL(ref, ORIGIN).searchParams.get('v'), build, ref);
+  const manifest = JSON.parse(readRequiredRuntimeFile('manifest.webmanifest'));
+  for (const icon of manifest.icons) assert.equal(new URL(icon.src, ORIGIN).searchParams.get('v'), build, icon.src);
 });
 
 test('Stories si inizializza una sola volta anche se lo script viene eseguito due volte', () => {
