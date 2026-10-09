@@ -2486,7 +2486,7 @@ function renderTodayQuestionUnavailable(status){
   dailyQuestionOutcomes.hide();
   window.UsDailyKeepsake?.hide?.();
   if(qel)qel.textContent=failed?'Non riesco a caricare la domanda di oggi.':'Un attimo…';
-  if(locked)locked.textContent=failed?'Controlla la connessione e riprova.':'Un attimo, arriva subito.';
+  if(locked){locked.hidden=false;locked.textContent=failed?'Controlla la connessione e riprova.':'Un attimo, arriva subito.';}
   if(reveal){reveal.classList.add('hidden');reveal.innerHTML='';}
   if(answerEl){answerEl.value='';answerEl.disabled=true;answerEl.hidden=true;}
   if(btn){
@@ -2506,18 +2506,17 @@ async function loadDailyRevealMeta(questionId){
   }catch(error){console.warn('[US Today] Reveal meta',error);return null;}
 }
 function dailyRevealPartnerLabel(){return usIdentity().partnerName;}
+// Reveal V5: the two real answers, without reactions or comments.
+// Keep receipt/notice and keepsake authorities untouched.
 function renderTodayReveal(){
   const reveal=document.getElementById('todayReveal'),state=window.todayState;
   if(!reveal||!state?.both_answered)return;
-  const meta=window.todayRevealMeta,partner=dailyRevealPartnerLabel();
-  const mine=meta?.my_reaction,theirs=meta?.partner_reaction;
-  // Sulla MIA risposta: solo la reazione del partner, passiva. Sulla risposta
-  // del PARTNER: i miei controlli (mai reagire alla propria).
-  const partnerNote=theirs&&US_DAILY_REACTIONS[theirs]?`<div class="today-reaction-note" data-us-daily-partner-reaction="${escapeHtml(theirs)}">${escapeHtml(partner)} ha reagito <span aria-hidden="true">${US_DAILY_REACTIONS[theirs].glyph}</span><span class="sr-only">${escapeHtml(US_DAILY_REACTIONS[theirs].label.replace('Reagisci con','con'))}</span></div>`:'';
-  const controls=meta?`<div class="today-reactions" role="group" aria-label="Reagisci alla risposta di ${escapeHtml(partner)}">${Object.entries(US_DAILY_REACTIONS).map(([key,item])=>`<button type="button" class="today-reaction" data-daily-reaction="${key}" aria-label="${escapeHtml(item.label)}" aria-pressed="${mine===key}"><span aria-hidden="true">${item.glyph}</span></button>`).join('')}</div>`:'';
-  reveal.className='today-reveal';
-  reveal.innerHTML='<div class="today-answer" data-us-daily-answer="mine"><b>La tua risposta</b><p>'+escapeHtml(state.my_answer||'')+'</p>'+partnerNote+'</div><div class="today-answer" data-us-daily-answer="partner"><b>'+escapeHtml(partner)+'</b><p>'+escapeHtml(state.partner_answer||'')+'</p>'+controls+'</div>';
+  const partner=dailyRevealPartnerLabel();
+  reveal.className='today-reveal today-reveal--simple';
+  reveal.innerHTML='<div class="today-answer" data-us-daily-answer="mine"><b>La tua risposta</b><p>'+escapeHtml(state.my_answer||'')+'</p></div>'+
+    '<div class="today-answer" data-us-daily-answer="partner"><b>'+escapeHtml(partner)+'</b><p>'+escapeHtml(state.partner_answer||'')+'</p></div>';
 }
+
 // "Visto" = il reveal è davvero mostrato in un foglio Today aperto: non il push,
 // non l'hydrate della Home, non il solo both_answered.
 let usDailyRevealSeenInFlight=null;
@@ -2625,8 +2624,11 @@ async function hydrateToday(){
     btn.textContent='Rispondi';
   }
   if(state?.both_answered){
-    locked.innerHTML='♡ <b>Risposte sbloccate</b>';
-    answerEl.disabled=true; btn.disabled=true; btn.textContent='Risposte sbloccate';
+    // Reveal is strictly question + two answers. Do not leave a duplicate,
+    // disabled composer or "Risposte sbloccate" banner above the real answers.
+    locked.hidden=true;locked.textContent='';
+    answerEl.hidden=true;answerEl.disabled=true;
+    btn.hidden=true;btn.disabled=true;
     // M10.2 — stato personale (ricevuta, avviso, reazioni) dal server; mai testo qui.
     renderTodayReveal();
     const meta=await loadDailyRevealMeta(q.id);
@@ -2635,12 +2637,16 @@ async function hydrateToday(){
     renderTodayReveal();
     await markDailyRevealSeenIfVisible(q.id,seq);
     if(seq!==usTodayHydrateSeq)return;
-    await dailyQuestionOutcomes.load(q,state);
+    // Reflections/comments have been removed from the daily reveal UI.
+    // Existing stored outcomes are preserved; no deletion or migration.
+    dailyQuestionOutcomes.hide();
     if(seq!==usTodayHydrateSeq)return;
     // M12B.4 — Conserva solo qui, dove lo scambio è legittimamente visibile.
     await window.UsDailyKeepsake?.load?.(q.id);
     if(seq!==usTodayHydrateSeq)return;
   }else{
+    locked.hidden=false;
+    answerEl.hidden=false;btn.hidden=false;
     window.todayRevealMeta=null;
     reveal.classList.add('hidden');reveal.innerHTML='';
     dailyQuestionOutcomes.hide();
