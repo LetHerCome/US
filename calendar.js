@@ -559,6 +559,7 @@ let editingFormEntry = null;
 // M6D — righe calendar_reminders della coppia: lette per il dettaglio. M9C: il
 // form rapido non le configura più e non le tocca mai (restano come sono).
 let editingEntryReminders = [];
+let noiEditorReadSeq = 0;
 let formDateISO = null; // M9C — il giorno scelto toccando il calendario
 let detailEntry = null;
 let busy = false;
@@ -1392,12 +1393,15 @@ async function saveEntry(event) {
 // M6D — reminder dell'entry in editing: caricate una volta per superficie
 // aperta, senza limiti di finestra (righe couple-scoped, quantità minuscola).
 async function loadEntryReminders() {
-  if (!window.usProfile) { editingEntryReminders = []; return; }
+  const viewer=window.usProfile;
+  if (!viewer) { editingEntryReminders = []; return; }
   try {
     const { data, error } = await sb.from('calendar_reminders').select('id,entry_id,recipient_id,offset_minutes,requested_by,sent_at');
+    if(window.usProfile!==viewer||window.usProfile?.couple_id!==viewer.couple_id)return;
     if (error) throw error;
     editingEntryReminders = data || [];
   } catch (error) {
+    if(window.usProfile!==viewer)return;
     console.warn('[US Calendar] reminders load', error);
     editingEntryReminders = [];
   }
@@ -1655,8 +1659,8 @@ function calendarWhenLabel(entry) {
 // US V3 — Noi's + opens the existing create form for the chosen day.
 async function prepareNoiEntryDate(dateISO){
   if(!/^\d{4}-\d{2}-\d{2}$/.test(String(dateISO||''))||!window.usProfile)return false;
-  const profile=window.usProfile,coupleId=profile.couple_id;
-  const same=()=>window.usProfile===profile&&window.usProfile?.couple_id===coupleId;
+  const profile=window.usProfile,coupleId=profile.couple_id,token=++noiEditorReadSeq;
+  const same=()=>token===noiEditorReadSeq&&window.usProfile===profile&&window.usProfile?.couple_id===coupleId;
   try{
     const [dayEntries]=await Promise.all([
       fetchEntriesForRange(coupleId,dateISO,shiftISODate(dateISO,1)),
@@ -1703,6 +1707,7 @@ async function createCalendarEntryForIdeaDate(dateISO){
 }
 async function openCalendarEntry(entryId) {
   if (!entryId || !window.usProfile) return;
+  ++noiEditorReadSeq;
   const map = await getCalendarEntriesByIds([entryId]).catch((error) => { console.warn('[US Calendar] open entry', error); return new Map(); });
   const entry = map.get(entryId);
   if (!entry) { toast('Non trovo più questo evento nel calendario.'); return; }
@@ -1728,6 +1733,7 @@ window.closeCalendarSurface = closeCalendarSurface;
 window.closeCalendarDetailSheet = closeCalendarDetailSheet;
 window.closeCalendarFormSheet = closeCalendarFormSheet;
 window.addEventListener?.('us-identity-change', event=>{
+  ++noiEditorReadSeq;
   // The editor sheets are no longer children of the calendar overlay. Close
   // them explicitly on account/couple switch before any stale user can act.
   closeCalendarDetailSheet();
