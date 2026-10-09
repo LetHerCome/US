@@ -167,8 +167,9 @@ test('M11B client: reveal copy — neutral prediction outcomes, Uguale / Una sor
   assert.match(html, /Una sorpresa per te/);
   assert.match(html, /Ha indovinato al volo ♡/);
   assert.match(html, /Una sorpresa per la tua persona/);
-  assert.match(html, /Uguale ♡/);
-  assert.match(html, /Una sorpresa/);
+  assert.match(html, /data-gv5-group="same"/, 'matching choice/prediction answers are grouped');
+  assert.match(html, /data-gv5-group="different"/, 'different choice/prediction answers are grouped');
+  assert.match(html, /<strong>3<\/strong>/, 'three matches and three differences, without tall cards');
   assert.match(html, /Tu pensavi/);
   assert.match(html, /Beatrice ha scelto/);
   assert.doesNotMatch(html, /Facciamone un altro/, 'M11F: no immediate replay invitation after a reveal');
