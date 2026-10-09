@@ -41,6 +41,7 @@
 <link rel="stylesheet" href="/modal-center.css?v=us-mc3-main-feedback-20261009-1"/>
 <link rel="stylesheet" href="/ricordi-carousel.css?v=us-mc3-main-feedback-20261009-1"/>
 <link rel="stylesheet" href="/ricordi-inline-carousel.css?v=us-mc3-main-feedback-20261009-1"/>
+<link rel="stylesheet" href="/noi-v2.css?v=us-noi-v2-20261009-1"/>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://iiakdfsxpywdkxravqjh.supabase.co" crossorigin>
 <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
@@ -373,6 +374,39 @@ html.us-returning-device .auth-overlay{
         <button type="button" class="noi-section-back" id="noiSectionBack" aria-label="Torna a Noi"><span class="noi-section-back-icon" aria-hidden="true"></span><span>Noi</span></button>
       </div>
 
+
+      <!-- NOI V2: calendar-first overview. Existing editor and older section hooks remain mounted. -->
+      <section class="us-noi-v2" id="usNoiV2" aria-label="Il nostro calendario">
+        <header class="us-noi-v2-top">
+          <h2>Noi</h2>
+          <div class="us-noi-v2-tools">
+            <div class="us-noi-v2-toggle" role="group" aria-label="Visualizzazione del calendario">
+              <button type="button" id="usNoiV2ModeCalendar" class="is-active" aria-label="Calendario" aria-pressed="true"><span class="us-icon" data-us-icon="calendar-dots" aria-hidden="true"></span></button>
+              <button type="button" id="usNoiV2ModeList" aria-label="Elenco" aria-pressed="false"><span class="us-icon" data-us-icon="list" aria-hidden="true"></span></button>
+            </div>
+            <button type="button" class="us-noi-v2-settings" onclick="go('settings',{nav:true})" aria-label="Impostazioni"><span class="us-icon" data-us-icon="gear-six" aria-hidden="true"></span></button>
+          </div>
+        </header>
+        <div class="us-noi-v2-monthbar">
+          <h3 id="usNoiV2Month">—</h3>
+          <div class="us-noi-v2-month-nav">
+            <button type="button" id="usNoiV2Prev" class="us-noi-v2-nav" aria-label="Mese precedente"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span></button>
+            <button type="button" id="usNoiV2Next" class="us-noi-v2-nav" aria-label="Mese successivo"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></button>
+          </div>
+        </div>
+        <div class="us-noi-v2-shortcuts">
+          <button type="button" id="usNoiV2First">Il nostro giorno</button>
+          <button type="button" class="us-noi-v2-today" id="usNoiV2Today">Oggi</button>
+        </div>
+        <div id="usNoiV2Content" aria-live="polite"><p class="us-noi-v2-empty">Carico il calendario…</p></div>
+        <section id="usNoiV2Detail" class="us-noi-v2-detail" aria-label="Giorno selezionato"></section>
+        <div class="us-noi-v2-links" aria-label="Altre sezioni">
+          <button type="button" data-noi-open-link="lavagna"><span>Lavagna</span><span class="us-icon" data-us-icon="note-pencil" aria-hidden="true"></span></button>
+          <button type="button" data-noi-open-link="quest"><span>Quest di coppia</span><span class="us-icon" data-us-icon="flag-banner" aria-hidden="true"></span></button>
+          <button type="button" data-noi-open-link="eventi"><span>Eventi</span><span class="us-icon" data-us-icon="calendar-heart" aria-hidden="true"></span></button>
+        </div>
+      </section>
+
       <section class="noi-week-board" id="noiWeekBoard" aria-label="La nostra settimana" aria-live="polite">
         <button type="button" data-us-tile data-us-feedback="tap" class="noi-week-board-shell" id="noiWeekBoardOpen" data-noi-week-board-open>
           <span class="noi-week-board-head"><span><small>LA NOSTRA SETTIMANA</small><b>Lavagna</b></span><span class="noi-week-board-open">Apri calendario ›</span></span>
@@ -646,8 +680,15 @@ html.us-returning-device .auth-overlay{
 
   <main id="quiz" class="page">
     <section class="section us-gv2-page">
-      <div id="quizHub" class="us-gv2-hub" aria-live="polite"><div class="us-gv2-empty" aria-busy="true">Carico…</div></div>
-      <div id="usGameV2Panel" class="us-gv2-panel hidden" aria-live="polite"></div>
+      <div class="us-gioca-tabs" role="tablist" aria-label="Gioca e Sintonia">
+        <button type="button" id="usGiocaTabGames" class="us-gioca-tab" role="tab" aria-controls="usGiocaGames" aria-selected="true" tabindex="0">Giochi</button>
+        <button type="button" id="usGiocaTabSintonia" class="us-gioca-tab" role="tab" aria-controls="usGiocaSintonia" aria-selected="false" tabindex="-1">Sintonia</button>
+      </div>
+      <div id="usGiocaGames" class="us-gioca-games" role="tabpanel" aria-labelledby="usGiocaTabGames">
+        <div id="quizHub" class="us-gv2-hub" aria-live="polite"><div class="us-gv2-empty" aria-busy="true">Carico…</div></div>
+        <div id="usGameV2Panel" class="us-gv2-panel hidden" aria-live="polite"></div>
+      </div>
+      <section id="usGiocaSintonia" class="us-gioca-sintonia" role="tabpanel" aria-labelledby="usGiocaTabSintonia" hidden></section>
     </section>
   </main>
 </div>
@@ -1011,6 +1052,7 @@ html.us-returning-device .auth-overlay{
 <script defer src="/ricordi-inline-carousel.js?v=us-mc3-main-feedback-20261009-1"></script>
 <script defer src="/calendar-domain.js?v=us-mc3-main-feedback-20261009-1"></script>
 <script defer src="/calendar.js?v=us-mc3-main-feedback-20261009-1"></script>
+<script defer src="/noi-v2.js?v=us-noi-v2-20261009-1"></script>
 <script defer src="/navigation.js?v=us-mc3-main-feedback-20261009-1"></script>
 <script defer src="/ui-foundation.js?v=us-mc3-main-feedback-20261009-1"></script>
 <script defer src="/countdown.js?v=us-mc3-main-feedback-20261009-1"></script>
