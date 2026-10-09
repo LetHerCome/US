@@ -26,6 +26,8 @@ La suite client copre richieste fuori ordine, cambio A→B→A, payload malforma
 
 La suite PostgreSQL usa due connessioni e le RPC Game reali: upsert concorrenti preservano la prima ricevuta; nessun verde prima del commit di entrambi; retry non duplicano XP e la sessione consuma una sola unità del budget tre. Su Windows questi due casi sono saltati esplicitamente; il job `week-concurrency` richiede PostgreSQL e fallisce se non può eseguirli.
 
+Il primo job CI si è fermato prima dei test perché Ubuntu forniva PG16, incompatibile con i grant MAINTAIN della baseline PG17. L'harness ora espone il diagnostico SQL originale e il job installa PG17 dal [repository ufficiale PGDG](https://www.postgresql.org/download/linux/ubuntu/). La baseline viene eseguita senza trasformazioni.
+
 Browser Chromium: prima/dopo a 320×568, 390×844 e 844×390, classi Android native, safe area 24/20, movimento ridotto, errori/retry e Back del Daily. Screenshots prodotti dal runtime e revisionati visivamente in `visual/before/` e `visual/after/`. La cattura attende la chiusura naturale del nudge Daily; conteggio e XP devono essere visibili e non coperti dalla navigazione. Upgrade PWA: vecchi HTML/JS/CSS realmente installati, activation, hash di tutti gli asset precached/serviti, reload offline, precache interrotto e cache privata preservata. Daily Reveal conserva le regressioni mobile della PR #176.
 
 Baseline `npm test` su main prima delle modifiche: **1771 test, 1625 pass, 40 fail, 106 skip**. I fallimenti preesistenti vanno confrontati per nome, non soltanto per numero. Esiti finali e CI vengono riportati nella PR.

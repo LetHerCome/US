@@ -157,6 +157,13 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Install isolated PostgreSQL test server
-        run: sudo apt-get update && sudo apt-get install -y postgresql postgresql-contrib
+        # The captured production baseline is PG17, including MAINTAIN grants.
+        # Use the official PGDG package repository; PG16 cannot rebuild it.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-common ca-certificates
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get update
+          sudo apt-get install -y postgresql-17
       - name: Mandatory real two-connection receipts and game completions
         run: sudo env PATH="$PATH" US_WEEK_RACE_REQUIRED=1 node --test tests/us-week-participation-concurrency.test.js

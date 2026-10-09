@@ -4,9 +4,9 @@ const os=require('node:os');
 const path=require('node:path');
 const {execFileSync,spawn}=require('node:child_process');
 const h=require('./mc2-db');
-const bin=[18,17,16,15].map(v=>`/usr/lib/postgresql/${v}/bin`).find(d=>fs.existsSync(path.join(d,'postgres')));
+const bin=[17,18].map(v=>`/usr/lib/postgresql/${v}/bin`).find(d=>fs.existsSync(path.join(d,'postgres')));
 const CAN_RUN=Boolean(bin && process.getuid?.()===0 && fs.existsSync('/usr/sbin/runuser'));
-const SKIP=CAN_RUN?false:'MC2 real PostgreSQL requires Linux root, postgres OS user and server binaries; run in WSL/Linux with MC2_RACE_REQUIRED=1';
+const SKIP=CAN_RUN?false:'MC2 real PostgreSQL requires Linux root, postgres OS user and PG17+ server binaries (captured baseline has MAINTAIN); run in WSL/Linux with MC2_RACE_REQUIRED=1';
 function startServer(){
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),'us-mc2-pg-'));fs.chmodSync(dir,0o755);
   const data=path.join(dir,'data'),sock=path.join(dir,'sock');
