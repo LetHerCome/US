@@ -1217,7 +1217,9 @@ function renderDistanceCapsule(model){
   root.dataset.usDistanceState=model.state;
   value.textContent=model.text||'';
   root.setAttribute('aria-label',model.visible?`Distanza tra voi: ${model.text}`:'Distanza tra voi');
-  window.dispatchEvent(new Event('us:distance-changed'));
+  if (typeof Event === 'function' && typeof window.dispatchEvent === 'function') {
+    window.dispatchEvent(new Event('us:distance-changed'));
+  }
 }
 
 // Last good reading (shown again on any temporary failure) + current model.

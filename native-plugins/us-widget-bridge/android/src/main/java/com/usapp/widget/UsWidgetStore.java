@@ -33,6 +33,7 @@ final class UsWidgetStore {
     private final AtomicFile photoFile;
     private final AtomicFile photoMetaFile;
     private final AtomicFile noiPortraitFile;
+    private final AtomicFile noiPortraitMetaFile;
 
     UsWidgetStore(Context context) {
         directory = new File(context.getNoBackupFilesDir(), "us-widget");
@@ -45,6 +46,7 @@ final class UsWidgetStore {
         photoFile = new AtomicFile(new File(mediaDirectory, "photo.jpg"));
         photoMetaFile = new AtomicFile(new File(mediaDirectory, "photo-meta.json"));
         noiPortraitFile = new AtomicFile(new File(mediaDirectory, "noi-portrait.jpg"));
+        noiPortraitMetaFile = new AtomicFile(new File(mediaDirectory, "noi-portrait-meta.json"));
         // V1 kept the action status inside the shared snapshot. It is superseded.
         new File(directory, "snapshot-v1.json").delete();
     }
@@ -75,6 +77,7 @@ final class UsWidgetStore {
         photoFile.delete();
         photoMetaFile.delete();
         noiPortraitFile.delete();
+        noiPortraitMetaFile.delete();
     }
 
     // ---------- semantic snapshot ----------
@@ -204,7 +207,8 @@ final class UsWidgetStore {
             output.write(bytes);
             output.flush();
             noiPortraitFile.finishWrite(output);
-            return true;
+            return writeAtomic(noiPortraitMetaFile,
+                new JSONObject().put("ownerHash", ownerHash).toString());
         } catch (Exception ignored) {
             if (output != null) noiPortraitFile.failWrite(output);
             return false;
@@ -212,9 +216,13 @@ final class UsWidgetStore {
     }
 
     synchronized byte[] readNoiPortrait() {
-        if (owner().isEmpty()) return null;
-        try { return noiPortraitFile.readFully(); }
-        catch (Exception ignored) { return null; }
+        String activeOwner = owner();
+        if (activeOwner.isEmpty()) return null;
+        try {
+            JSONObject meta = new JSONObject(readAtomic(noiPortraitMetaFile));
+            if (!activeOwner.equals(meta.optString("ownerHash", ""))) return null;
+            return noiPortraitFile.readFully();
+        } catch (Exception ignored) { return null; }
     }
 
     // ---------- cached private photo ----------
