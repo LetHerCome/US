@@ -882,3 +882,42 @@ body:has(#quiz.page.active) #thinkButton{display:none!important}
  #quiz .us-gv2-daily{transition:none}
  #quiz .us-gv2-daily:active{transform:none}
 }
+
+/* REVEAL V5: summary-first, no endless card stack. Existing Game V2 authority unchanged. */
+#quiz .us-gv5-reveal{display:flex;flex-direction:column;gap:15px;padding:19px 16px 22px;min-height:0}
+#quiz .us-gv5-reveal>h2{font:550 clamp(26px,7vw,31px)/1.12 var(--us-font-editorial);margin:0;color:var(--us-color-text)}
+#quiz .us-gv5-summary{display:flex;justify-content:space-around;gap:10px;border:1px solid var(--us-color-line);border-radius:20px;padding:18px 14px;background:rgba(255,255,255,.035)}
+#quiz .us-gv5-summary>span{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0}
+#quiz .us-gv5-summary>span+span{border-left:1px solid var(--us-color-line)}
+#quiz .us-gv5-summary strong{font:600 32px/1 var(--us-font-editorial);font-variant-numeric:tabular-nums;color:var(--us-color-text)}
+#quiz .us-gv5-summary small{font-size:12px;color:var(--us-color-text-2)}
+#quiz .us-gv5-reveal-hint{font-size:12px;line-height:1.4;color:var(--us-color-text-3);margin:0 2px}
+#quiz .us-gv5-reveal-groups{display:flex;flex-direction:column;gap:10px}
+#quiz .us-gv5-reveal-group{border:1px solid var(--us-color-line);border-radius:19px;background:rgba(255,255,255,.035);overflow:hidden}
+#quiz .us-gv5-reveal-group>summary{display:flex;align-items:center;gap:13px;padding:16px 15px;cursor:pointer;list-style:none;min-height:65px}
+#quiz .us-gv5-reveal-group>summary::-webkit-details-marker,
+#quiz .us-gv5-reveal-item summary::-webkit-details-marker{display:none}
+#quiz .us-gv5-reveal-group>summary>span:first-child{min-width:0;flex:1;display:flex;flex-direction:column;gap:5px}
+#quiz .us-gv5-reveal-group>summary b{font-size:16px;font-weight:650;color:var(--us-color-text)}
+#quiz .us-gv5-reveal-group>summary small{font-size:11px;line-height:1.3;color:var(--us-color-text-3)}
+#quiz .us-gv5-reveal-group>summary strong{min-width:35px;height:35px;display:grid;place-items:center;border-radius:50%;background:rgba(255,255,255,.08);font-size:17px;color:var(--us-color-text)}
+#quiz .us-gv5-reveal-group[data-gv5-group="same"]>summary strong{background:rgba(253,123,173,.14);color:var(--us-color-rose)}
+#quiz .us-gv5-reveal-group ol{list-style:none;display:grid;gap:0;padding:0 13px 13px;margin:0}
+#quiz .us-gv5-reveal-item{margin:0;border-top:1px solid var(--us-color-line)}
+#quiz .us-gv5-reveal-item summary{display:flex;align-items:center;gap:11px;list-style:none;cursor:pointer;padding:13px 3px;min-height:55px}
+#quiz .us-gv5-reveal-num{width:25px;flex:0 0 25px;font-variant-numeric:tabular-nums;color:var(--us-color-text-3);font-size:12px}
+#quiz .us-gv5-reveal-title{flex:1;min-width:0;font-size:13.5px;font-weight:560;line-height:1.35;color:var(--us-color-text)}
+#quiz .us-gv5-equal-choice{font-size:11px;color:var(--us-color-text-3);max-width:28%;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+#quiz .us-gv5-reveal-chevron{font-size:23px;line-height:1;flex:0 0 16px;color:var(--us-color-text-3);transition:transform .2s ease}
+#quiz details[open]>summary>.us-gv5-reveal-chevron{transform:rotate(90deg)}
+#quiz .us-gv5-reveal-answers{padding:0 3px 13px 36px}
+#quiz .us-gv5-reveal-answers dl{margin:0;display:grid;gap:8px}
+#quiz .us-gv5-reveal-answers dl>div{display:flex;flex-direction:column;gap:4px}
+#quiz .us-gv5-reveal-answers dt{font-size:10.5px;color:var(--us-color-text-3)}
+#quiz .us-gv5-reveal-answers dd{font-size:13px;line-height:1.45;color:var(--us-color-text);margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+#quiz .us-gv5-reveal-answers .us-gv5-outcome{font-size:11px;color:var(--us-color-text-2)}
+#quiz .us-gv5-reveal-answers .us-gv2-then{padding:8px;font-size:11px}
+#quiz .us-gv5-reveal details:focus-within>summary:focus-visible{outline:2px solid var(--us-color-accent-strong);outline-offset:-2px;border-radius:10px}
+#quiz .us-gv5-reveal .us-gv2-actions{margin-top:4px}
+@media(max-width:360px){#quiz .us-gv5-reveal{padding:15px 12px 20px}#quiz .us-gv5-reveal-item summary{gap:8px}#quiz .us-gv5-reveal-title{font-size:12.5px}}
+@media(prefers-reduced-motion:reduce){#quiz .us-gv5-reveal-chevron{transition:none}}
