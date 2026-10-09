@@ -830,6 +830,9 @@ function renderCompactReveal({first=false}={}){
     </div>
     <div class="us-gv2-actions is-single"><button type="button" class="primary" data-gv2-action="back">Torna a Gioca</button></div>
   </article>`);
+  // Results must open at the top, never behind Android's status bar after
+  // the final swipe/scroll of a long round.
+  window.scrollTo?.(0,0);
 }
 function renderSwipeReveal({first=false}={}){return renderCompactReveal({first});}
 function renderReveal({first=false}={}){return renderCompactReveal({first});}
