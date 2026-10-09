@@ -647,10 +647,20 @@ async function readNoiMonth(year, month) {
   const range=monthGridRange(year,month);
   const start=isoDate(range.gridStart.getFullYear(),range.gridStart.getMonth(),range.gridStart.getDate());
   const end=isoDate(range.gridEnd.getFullYear(),range.gridEnd.getMonth(),range.gridEnd.getDate());
-  const [appointments,eventResult,coupleResult]=await Promise.all([
+  // Profile labels come only from this couple. Missing profile metadata must
+  // never hide calendar entries; use a neutral fallback instead of a fake name.
+  const profileRead=async()=>{
+    try {
+      const {data,error}=await sb.from('profiles').select('id,display_name,role,couple_id').eq('couple_id',viewer.couple_id);
+      if(error){console.warn('[US Noi] profile names',error);return [];}
+      return (data||[]).filter(p=>p.couple_id===viewer.couple_id);
+    }catch(error){console.warn('[US Noi] profile names',error);return [];}
+  };
+  const [appointments,eventResult,coupleResult,profileRows]=await Promise.all([
     fetchEntriesForRange(viewer.couple_id,start,end),
     sb.from('shared_events').select('id,title,event_date,event_time,recurs_yearly').eq('couple_id',viewer.couple_id),
-    sb.from('couples').select('started_on').eq('id',viewer.couple_id).maybeSingle()
+    sb.from('couples').select('started_on').eq('id',viewer.couple_id).maybeSingle(),
+    profileRead()
   ]);
   if(window.usProfile!==viewer||window.usProfile?.couple_id!==viewer.couple_id)return null;
   if(eventResult.error)throw eventResult.error;
@@ -658,6 +668,7 @@ async function readNoiMonth(year, month) {
   return {
     appointments:appointments.map(entry=>({...entry,dates:entryDatesTouched(entry)})),
     events:eventResult.data||[],
+    profiles:profileRows,
     startedOn:coupleResult.data?.started_on||null
   };
 }

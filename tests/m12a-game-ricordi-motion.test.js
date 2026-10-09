@@ -74,8 +74,9 @@ test('reveal: the FIRST reveal is staged, yet every answer is already in the DOM
   await h.api.openSession('s1');
   await tick();
   const panel = h.nodes.usGameV2Panel.innerHTML;
-  assert.match(panel, /class="us-gv2-reveal is-first-reveal"/);
-  assert.match(panel, /<i class="us-gv2-lightsplit" aria-hidden="true"><\/i>/);
+  assert.match(panel, /class="us-gv2-reveal us-gv5-reveal is-first-reveal"/);
+  assert.match(panel, /class="us-gv5-summary"/);
+  assert.doesNotMatch(panel, /class="us-gv2-reveal-card"/, 'no long per-question cards');
   assert.match(panel, /<dd>Il mare<\/dd>/);
   assert.match(panel, /<dd>La montagna<\/dd>/);
   assert.deepEqual(h.feedback, ['reveal']);
@@ -105,7 +106,7 @@ test('reveal: prediction keeps prediction → actual answer → outcome order an
   assert.match(panel, /data-gv2-mechanic="prediction"/);
   assert.ok(panel.indexOf('Tu pensavi') < panel.indexOf('ha scelto'));
   const css = read('games.css');
-  assert.match(css, /\[data-gv2-mechanic="prediction"\]>dl>div:nth-child\(2\)\{animation-delay:520ms\}/);
+  assert.match(css, /#quiz \.us-gv5-reveal-answers dl>div\{display:flex;flex-direction:column/, 'prediction answers have a compact layout');
   // Whole staged sequence stays under a second: latest delay + duration.
   const delays = [...css.matchAll(/(\d+)ms var\(--us-ease-enter\) (\d+)ms both/g)].map((m) => Number(m[1]) + Number(m[2]));
   assert.ok(Math.max(...delays, 420) <= 1000, `staging ends by ${Math.max(...delays)}ms`);
@@ -113,8 +114,7 @@ test('reveal: prediction keeps prediction → actual answer → outcome order an
 
 test('reveal: reduced motion removes the staging (instant reveal)', () => {
   const css = read('games.css');
-  assert.match(css, /:root\[data-us-motion="reduced"\] \.us-gv2-reveal\.is-first-reveal \.us-gv2-lightsplit\{display:none\}/);
-  assert.match(css, /@media\(prefers-reduced-motion:reduce\)\{\.us-gv2-reveal\.is-first-reveal \.us-gv2-lightsplit\{display:none\}/);
+  assert.match(css, /@media\(prefers-reduced-motion:reduce\)\{#quiz \.us-gv5-reveal-chevron\{transition:none\}\}/, 'collapsible comparison respects reduced motion');
 });
 
 async function submitWeekly(h, fields) {
@@ -214,7 +214,11 @@ test('ricordi: a card that has not rendered yet keeps the marker until it appear
 
 test('ricordi: creation wires the marker from the inserted id; CSS animates only .ricordi-new', () => {
   const app = read('app.js');
-  assert.match(app, /\.select\('id'\)\.single\(\);\s*if\(rowError\)\{await sb\.storage\.from\('us-media'\)\.remove\(\[path\]\);throw rowError;\}\s*\/\/[^\n]*\n\s*if\(created\?\.id\)markFreshRicordo\(created\.id\);/);
+  const upload = app.slice(app.indexOf('async function uploadMoment(){'),app.indexOf('async function ',app.indexOf('async function uploadMoment(){')+1));
+  assert.match(upload, /\.select\('id'\)\.single\(\)/, 'moment creation must return inserted id');
+  assert.match(upload, /if\(rowError\)\{[\s\S]*?await sb\.storage\.from\('us-media'\)\.remove\(cleanup\);[\s\S]*?throw rowError;/, 'original and derived media are cleaned on failed insert');
+  assert.match(upload, /if\(created\?\.id\)markFreshRicordo\(created\.id\)/, 'one-shot animation uses actual inserted id');
+  assert.ok(upload.indexOf('throw rowError') < upload.indexOf('if(created?.id)markFreshRicordo(created.id)'), 'marker only after successful insert');
   assert.match(app, /grid\.dataset\.loaded='1';grid\.dataset\.signature=signature;\s*consumeFreshRicordo\(grid\);/);
   const css = read('moments-albums.css');
   assert.match(css, /#moments \.moment-card\.ricordi-new\{animation:ricordi-settle/);

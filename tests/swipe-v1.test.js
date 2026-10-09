@@ -24,7 +24,9 @@ test('Swipe V1 client: Gioca exposes a dedicated sealed 8-card swipe flow', () =
   assert.match(js, /data-gv2-swipe-choice="1"/);
   assert.match(js, /renderSwipeWaiting/);
   assert.match(js, /renderSwipeReveal/);
-  assert.match(js, /Non è un punteggio/);
+  assert.match(js, /renderCompactReveal/, 'Swipe reuses concise equal/different results');
+  assert.match(js, /data-gv5-group/, 'revealed choices are grouped instead of eight tall cards');
+  assert.doesNotMatch(js, /Non è un punteggio/, 'old explanatory noise removed');
 
   assert.match(css, /#quiz \.us-gv2-game\.is-swipe\{/, 'US V3: Swipe is the full-width card of the game grid');
   assert.match(css, /data-gv2-icon="cards-three"[^\n]*cards-three-regular\.svg/);

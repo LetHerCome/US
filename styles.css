@@ -1374,3 +1374,13 @@ html.us-native-android .page.active.us-motion5-enter-next,
 html.us-native-android .page.active.us-motion5-enter-prev{
   animation-duration:100ms!important;
 }
+
+/* Daily V5: no duplicated answer editor or reaction/comment section after reveal. */
+#today .question #answer[hidden],#today .question #todaySaveBtn[hidden],#today .question #locked[hidden],#today #todayOutcome[hidden]{display:none!important}
+#today .question:has(> #todayReveal.today-reveal--simple) > .row{display:none!important}
+#today .today-reveal--simple{display:flex;flex-direction:column;gap:10px;margin-top:19px}
+#today .today-reveal--simple .today-answer{margin:0;border-radius:18px;padding:16px;box-shadow:none}
+#today .today-reveal--simple .today-answer b{font-size:12px;font-weight:710}
+#today .today-reveal--simple .today-answer p{font-size:15px;line-height:1.52;white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0 0}
+#today .today-reveal--simple .today-reactions,#today .today-reveal--simple .today-reaction-note{display:none!important}
+@media(max-width:360px){#today .today-reveal--simple .today-answer{padding:14px}#today .today-reveal--simple .today-answer p{font-size:14px}}

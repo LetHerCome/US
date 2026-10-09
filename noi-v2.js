@@ -51,6 +51,18 @@ function relationshipDate() {
   if(parts.length!==3||parts.some(n=>!Number.isInteger(n))||parts[0]>year||parts[1]!==month+1)return '';
   return iso(year,month,Math.min(parts[2],new Date(year,month+1,0).getDate()));
 }
+// User/couple names are never hardcoded; no other couple's profiles are read.
+function ownerLabel(entry){
+  if(entry.kind==='relationship')return 'Il vostro anniversario';
+  const profiles=Array.isArray(snapshot?.profiles)?snapshot.profiles:[];
+  const names=profiles.map(p=>String(p.display_name||'').trim()).filter(Boolean);
+  const together=names.length>=2?names.slice(0,2).join(' e '):'Entrambi';
+  if(entry.kind==='event')return together;
+  if(entry.entryType==='shared')return together;
+  if(!entry.ownerId)return 'Impegno personale';
+  const owner=profiles.find(p=>p.id===entry.ownerId);
+  return owner?.display_name?.trim()||'Impegno personale';
+}
 function itemsByDate() {
   const map=new Map();
   const push=(day,item)=>{
@@ -67,7 +79,7 @@ function itemsByDate() {
   }
   for(const e of snapshot?.appointments||[]){
     const time=e.is_all_day?'':new Date(e.starts_at).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
-    for(const date of e.dates||[])push(date,{kind:'calendar',id:e.id,title:e.title||'Impegno',time:time||'Tutto il giorno',sort:time||'00:02'});
+    for(const date of e.dates||[])push(date,{kind:'calendar',id:e.id,title:e.title||'Impegno',entryType:e.entry_type,ownerId:e.owner_id,time:time||'Tutto il giorno',sort:time||'00:02'});
   }
   for(const list of map.values())list.sort((a,b)=>a.sort.localeCompare(b.sort));
   return map;
@@ -84,7 +96,7 @@ function thumb(item) {
 function itemMarkup(day,item) {
   const action=item.kind==='calendar'?'entry':item.kind==='event'?'event':'anniversary';
   return `<button type="button" class="us-noi-v2-item" data-noi-item="${action}" data-day="${esc(day)}" data-id="${esc(item.id||'')}">
-    ${thumb(item)}<span class="us-noi-v2-item-copy"><b>${esc(item.title)}</b><small>${esc(item.time)}</small></span><span class="us-noi-v2-caret" aria-hidden="true">${icon('caret-right')}</span>
+    ${thumb(item)}<span class="us-noi-v2-item-copy"><b>${esc(item.title)}</b><small class="us-noi-v2-item-meta"><span>${esc(item.time)}</span><span class="us-noi-v2-owner" data-owner-type="${esc(item.entryType||item.kind)}">${esc(ownerLabel(item))}</span></small></span><span class="us-noi-v2-caret" aria-hidden="true">${icon('caret-right')}</span>
   </button>`;
 }
 // Only the weeks this month actually spans: 4–6 rows, never an empty sixth row.

@@ -235,3 +235,11 @@
 /* Week caption must wrap beside the three month/add controls on narrow Android. */
 #bond .us-noi-v2[data-mode="week"] .us-noi-v2-monthbar h3{min-width:0;flex:1 1 auto;white-space:normal;font-size:clamp(18px,5.2vw,22px);line-height:1.12}
 #bond .us-noi-v2 .us-noi-v2-month-nav{flex:0 0 auto}
+
+/* Noi V5: actual owner beneath each commitment, including list/week views. */
+#bond .us-noi-v2-item-copy .us-noi-v2-item-meta{display:flex;align-items:center;flex-wrap:wrap;gap:5px 8px;line-height:1.4;white-space:normal}
+#bond .us-noi-v2-owner{display:inline-flex;align-items:center;max-width:100%;min-height:22px;padding:2px 8px;border-radius:999px;border:1px solid var(--us-color-line);background:rgba(255,255,255,.06);color:var(--us-color-text-2);font-size:11px;font-weight:650;white-space:normal;overflow-wrap:anywhere}
+#bond .us-noi-v2-owner[data-owner-type="personal"]{background:rgba(164,142,229,.11);border-color:rgba(164,142,229,.2)}
+#bond .us-noi-v2-owner[data-owner-type="shared"]{background:rgba(250,144,181,.10);border-color:rgba(250,144,181,.18)}
+#bond .us-noi-v2-item{min-height:66px}
+#bond .us-noi-v2-item-copy{overflow:visible}
