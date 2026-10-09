@@ -58,7 +58,8 @@ function ownerLabel(entry){
   const names=profiles.map(p=>String(p.display_name||'').trim()).filter(Boolean);
   const together=names.length>=2?names.slice(0,2).join(' e '):'Entrambi';
   if(entry.kind==='event')return together;
-  if(entry.entryType==='shared'||!entry.ownerId)return together;
+  if(entry.entryType==='shared')return together;
+  if(!entry.ownerId)return 'Impegno personale';
   const owner=profiles.find(p=>p.id===entry.ownerId);
   return owner?.display_name?.trim()||'Impegno personale';
 }
