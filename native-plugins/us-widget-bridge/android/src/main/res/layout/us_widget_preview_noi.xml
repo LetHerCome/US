@@ -1,72 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Launcher preview of the compact NOI action widget. Placeholder content only. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/us_widget_background"
-    android:gravity="center_vertical"
-    android:orientation="vertical"
-    android:paddingStart="12dp"
-    android:paddingTop="9dp"
-    android:paddingEnd="10dp"
-    android:paddingBottom="9dp">
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
-        <ImageView
-            android:layout_width="12dp"
-            android:layout_height="3dp"
-            android:layout_marginEnd="5dp"
-            android:importantForAccessibility="no"
-            android:src="@drawable/us_widget_noi_ring"/>
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:fontFamily="sans-serif-medium"
-            android:includeFontPadding="false"
-            android:text="US · NOI"
-            android:textColor="@color/us_widget_muted"
-            android:textSize="9sp"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:includeFontPadding="false"
-            android:text="168 giorni"
-            android:textColor="@color/us_widget_accent"
-            android:textSize="9sp"/>
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginEnd="5dp"
-            android:fontFamily="sans-serif-medium"
-            android:includeFontPadding="false"
-            android:maxLines="2"
-            android:text="Un momento per voi"
-            android:textColor="@color/us_widget_text"
-            android:textSize="12sp"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:minWidth="54dp"
-            android:background="@drawable/us_widget_noi_action"
-            android:gravity="center"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:fontFamily="sans-serif-medium"
-            android:includeFontPadding="false"
-            android:text="GIOCA  ›"
-            android:textColor="@color/us_widget_text"
-            android:textSize="10sp"/>
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@drawable/us_widget_noi_light_background"
+    android:gravity="center_vertical" android:orientation="horizontal"
+    android:paddingStart="9dp" android:paddingEnd="10dp" android:paddingTop="7dp" android:paddingBottom="7dp">
+    <FrameLayout android:layout_width="77dp" android:layout_height="match_parent" android:layout_marginEnd="9dp">
+        <ImageView android:id="@+id/us_noi_portrait"
+            android:layout_width="match_parent" android:layout_height="match_parent"
+            android:scaleType="fitCenter" android:adjustViewBounds="true"
+            android:contentDescription="@null" android:visibility="gone"/>
+        <TextView android:id="@+id/us_noi_fallback"
+            android:layout_width="match_parent" android:layout_height="match_parent"
+            android:gravity="center" android:text="♡  ♡" android:textColor="#AE657D" android:textSize="24sp"/>
+    </FrameLayout>
+    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_weight="1" android:orientation="vertical" android:gravity="center_vertical">
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium" android:text="US · NOI"
+            android:textColor="#9D607A" android:textSize="10sp" android:includeFontPadding="false" android:maxLines="1"/>
+        <TextView android:id="@+id/us_noi_distance"
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp"
+            android:fontFamily="sans-serif-medium" android:text="Distanza"
+            android:textColor="#43303D" android:textSize="15sp"
+            android:autoSizeTextType="uniform" android:autoSizeMinTextSize="11sp"
+            android:autoSizeMaxTextSize="15sp" android:maxLines="1"
+            android:ellipsize="end" android:includeFontPadding="false"/>
+        <TextView android:id="@+id/us_noi_caption"
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2dp"
+            android:text="APRI NOI" android:letterSpacing="0.06"
+            android:textColor="#A16E82" android:textSize="8sp" android:maxLines="1" android:includeFontPadding="false"/>
     </LinearLayout>
 </LinearLayout>

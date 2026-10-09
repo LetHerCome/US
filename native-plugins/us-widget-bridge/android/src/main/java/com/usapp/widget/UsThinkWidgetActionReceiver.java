@@ -3,6 +3,7 @@ package com.usapp.widget;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import java.time.Instant;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -25,7 +26,13 @@ public final class UsThinkWidgetActionReceiver extends BroadcastReceiver {
         Context app = context.getApplicationContext();
         UsWidgets.State state = new UsWidgets.State(app);
         UsWidgetModels.Think model = UsWidgetModels.think(state.snapshot, state.action, state.hasCredential, state.now);
-        if (!model.canSend || model.busy) {
+        // A very short native gate prevents accidental double taps without
+        // keeping the confirmation on-screen or depending on inexact alarms.
+        Instant previousSuccess = state.action == null ? null :
+            UsWidgetContract.instant(state.action.optString("sentAt", ""));
+        boolean cooldown = previousSuccess != null && !previousSuccess.isAfter(state.now)
+            && state.now.toEpochMilli() - previousSuccess.toEpochMilli() < UsWidgetModels.SEND_COOLDOWN_MS;
+        if (!model.canSend || model.busy || cooldown) {
             UsWidgets.refreshThink(app);
             return;
         }
@@ -46,6 +53,12 @@ public final class UsThinkWidgetActionReceiver extends BroadcastReceiver {
                 if (!owner.equals(store.owner())) return;
                 if (UsWidgetActionClient.UNAUTHORIZED.equals(result)) credentials.clear();
                 store.writeAction(result, actionId);
+                if (UsWidgetActionClient.SENT.equals(result)) {
+                    store.recordThinkSent(actionId, Instant.now());
+                    // The new rolling counter is the success feedback. Return the
+                    // heart to "Ti penso" immediately, not after a launcher alarm.
+                    store.writeAction("idle", actionId);
+                }
             } finally {
                 IN_FLIGHT.set(false);
                 UsWidgets.refreshAll(app);

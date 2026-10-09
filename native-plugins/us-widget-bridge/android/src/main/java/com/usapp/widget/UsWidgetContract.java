@@ -20,6 +20,7 @@ final class UsWidgetContract {
     static final Pattern MEDIA_KEY = Pattern.compile("^[a-f0-9]{32}$");
     private static final Pattern STYLE = Pattern.compile("^(editorial|signal|glass|aurora|orbit|chrome)$");
     private static final Pattern FRAME = Pattern.compile("^[a-z0-9_]{1,24}$");
+    private static final Pattern DISTANCE = Pattern.compile("^[0-9., ]{1,16} ?(km|m|mi|ft)$");
     private static final Pattern CIVIL_DATE = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
 
     private UsWidgetContract() {}
@@ -59,7 +60,11 @@ final class UsWidgetContract {
             JSONObject couple = new JSONObject()
                 .put("names", names)
                 .put("startedOn", civilDate(coupleIn.optString("startedOn", "")))
-                .put("frame", FRAME.matcher(frame).matches() ? frame : "");
+                .put("frame", FRAME.matcher(frame).matches() ? frame : "")
+                .put("distanceText", DISTANCE.matcher(coupleIn.optString("distanceText", "")).matches()
+                    ? coupleIn.optString("distanceText", "") : "")
+                .put("distanceState", "stale".equals(coupleIn.optString("distanceState", ""))
+                    ? "stale" : "ready");
 
             JSONObject countdownIn = optObject(input, "countdown");
             String kind = countdownIn.optString("kind", "");

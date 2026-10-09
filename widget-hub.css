@@ -13,27 +13,6 @@
 .us-widget-hub-add:disabled{opacity:.55}
 .us-widget-hub-status{min-height:0;color:var(--us-color-text-3);font-size:var(--us-text-meta);line-height:1.35}
 .us-widget-hub-status:empty{display:none}
-.us-widget-hub-manual{margin-top:12px;padding:14px;border-radius:20px;border:1px dashed var(--us-color-line-strong);display:flex;flex-direction:column;gap:8px}
-.us-widget-hub-manual[hidden],.us-widget-hub-vendor[hidden]{display:none}
-.us-widget-hub-manual>b{font-size:14px;color:var(--us-color-text)}
-.us-widget-hub-path{margin:0!important;color:var(--us-color-text)!important;font-size:var(--us-text-secondary)!important;line-height:1.55}
-.us-widget-hub-path span{color:var(--us-color-accent-ink)}
-.us-widget-hub-vendor{display:flex;flex-direction:column;gap:8px}
-.us-widget-hub-vendor p{margin:0!important;color:var(--us-color-text-2)!important;font-size:var(--us-text-meta)!important;line-height:1.45}
-.us-widget-hub-vendor button{align-self:flex-start;min-height:38px;padding:0 14px;border-radius:999px;font-size:13px}
-/* Small, consistent native help disclosure; never a second bottom sheet. */
-.us-widget-hub-help{display:block}
-.us-widget-hub-help summary{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:34px;list-style:none;cursor:pointer;color:var(--us-color-text);font-size:13px;font-weight:700}
-.us-widget-hub-help summary::-webkit-details-marker{display:none}
-.us-widget-hub-help summary span{font-size:16px;color:var(--us-color-text-3);transition:transform var(--us-motion-fast) var(--us-ease-enter)}
-.us-widget-hub-help[open] summary span{transform:rotate(180deg)}
-.us-widget-hub-help summary:focus-visible{outline:2px solid var(--us-color-accent-strong);outline-offset:2px;border-radius:8px}
-.us-widget-hub-help[open] .us-widget-hub-path{padding-top:9px}
-.us-widget-hub-help-note{margin:8px 0 0!important;font-size:11px!important;line-height:1.5!important;color:var(--us-color-text-3)!important}
-.us-widget-hub-help .us-widget-hub-vendor{margin-top:10px}
-:root[data-us-motion="reduced"] .us-widget-hub-help summary span{transition:none}
-
-
 /* ---------- previews: the native widget surface ---------- */
 .us-widget-hub-preview>div{--wp-bg:linear-gradient(180deg,rgba(17,11,24,.95),rgba(10,7,16,.95));position:relative;overflow:hidden;width:112px;height:112px;border-radius:22px;background:var(--wp-bg);box-shadow:0 10px 24px rgba(0,0,0,.3),inset 0 0 0 1px rgba(255,255,255,.05);color:#fff8fd;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:10px;box-sizing:border-box}
 .us-widget-hub-preview.is-wide>div{width:128px;height:64px;align-items:flex-start;text-align:left;padding:9px 12px}
@@ -99,3 +78,22 @@
 @media (max-width:360px){
   .us-widget-hub-card{grid-template-columns:1fr;justify-items:start}
 }
+
+/* Noi 2x1 is a light editorial card; preview matches native RemoteViews. */
+.us-widget-hub-preview.is-wide>.us-wp-noi-light{
+  --wp-bg:#f9eaf1;
+  background:#f9eaf1!important;color:#43303d!important;
+  width:128px;height:64px;display:flex;flex-direction:row;
+  align-items:center!important;justify-content:flex-start!important;
+  padding:6px!important;gap:5px;border:1px solid #edd5e2;
+}
+.us-wp-noi-light .us-wp-noi-portrait{
+  width:56px;height:48px;flex:none;display:flex;align-items:center;justify-content:center;
+  border-radius:12px;overflow:hidden;background:#f1d4e2;color:#aa6782;font-size:18px!important;
+}
+.us-wp-noi-light .us-wp-noi-portrait img{width:100%;height:100%;object-fit:contain}
+.us-wp-noi-light .us-wp-noi-info{display:flex;min-width:0;flex:1;flex-direction:column;
+  align-items:flex-start!important;gap:2px;white-space:normal!important}
+.us-wp-noi-light .us-wp-noi-info small{color:#a16e82;font-size:6px;font-weight:700;letter-spacing:.04em}
+.us-wp-noi-light .us-wp-noi-info b{color:#43303d;font-size:10px;font-weight:700;
+  line-height:1.15;margin:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

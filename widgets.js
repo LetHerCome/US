@@ -33,11 +33,14 @@
   let photoSync = null;
   let photoResyncRequested = false;
   let photoPreviewUrl = '';
+  let noiPortraitPreviewUrl = '';
+  let noiPortraitSignature = '';
+  let noiPortraitSync = null;
   let lastLink = { url: '', at: 0 };
   let pendingDestination = '';
 
   const emptyThink = () => ({ partnerName: '', lastReceivedAt: '', lastSentAt: '', lastAnsweredAt: '' });
-  const emptyCouple = () => ({ names: [], startedOn: '', frame: '' });
+  const emptyCouple = () => ({ names: [], startedOn: '', frame: '', distanceText: '', distanceState: 'ready' });
   const emptyCountdown = () => ({ active: false, kind: '', title: '', target: '', style: 'editorial' });
   const emptyPhoto = () => ({ state: 'none', key: '', takenOn: '' });
   let think = emptyThink();
@@ -161,7 +164,9 @@
       couple = {
         names: (data.names || []).map((name) => cleanText(name, 40)).filter(Boolean).slice(0, 2),
         startedOn: civilDate(data.startedOn),
-        frame
+        frame,
+        distanceText: couple.distanceText,
+        distanceState: couple.distanceState
       };
       coupleSyncedAt = Date.now();
       return scheduleWrite();
@@ -169,6 +174,88 @@
       console.warn('[US Widget] couple', error);
       return false;
     }
+  }
+
+  // Presentation-only distance, already calculated for Noi in the WebView.
+  // Never store coordinates or initiate location requests from a widget.
+  function syncNoiDistance() {
+    if (!ownerHash) return Promise.resolve(false);
+    const next = window.UsWidgetDataApi?.noiDistance?.();
+    const distanceText = cleanText(next?.distanceText || '', 24);
+    const distanceState = next?.distanceState === 'stale' ? 'stale' : 'ready';
+    if (couple.distanceText === distanceText && couple.distanceState === distanceState) return Promise.resolve(false);
+    couple = { ...couple, distanceText, distanceState };
+    return scheduleWrite();
+  }
+
+  async function composeNoiPortrait(urls) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 320; canvas.height = 160;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('noi_portrait_canvas');
+    ctx.fillStyle = '#f9eaf1'; ctx.fillRect(0, 0, 320, 160);
+    for (let i = 0; i < 2; i++) {
+      const cx = i === 0 ? 85 : 235, cy = 80, radius = 66;
+      ctx.save();
+      ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.clip();
+      ctx.fillStyle = i === 0 ? '#f5cddd' : '#e9c3d6';
+      ctx.fillRect(cx-radius,cy-radius,radius*2,radius*2);
+      if (urls[i]) {
+        let bitmap;
+        try {
+          const response = await fetch(urls[i], { cache: 'no-store', credentials: 'omit' });
+          if (!response.ok) throw new Error('avatar_download');
+          const blob = await response.blob();
+          if (!/^image\//.test(blob.type || 'image/')) throw new Error('avatar_type');
+          bitmap = await createImageBitmap(blob, { imageOrientation: 'from-image' });
+          const scale = Math.max(radius * 2 / bitmap.width, radius * 2 / bitmap.height);
+          const w = bitmap.width * scale, h = bitmap.height * scale;
+          ctx.drawImage(bitmap, cx-w/2,cy-h/2,w,h);
+        } catch (error) { console.warn('[US Widget] avatar paint', error); }
+        finally { bitmap?.close?.(); }
+      }
+      ctx.restore();
+      ctx.beginPath(); ctx.arc(cx,cy,radius,0,Math.PI*2);
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 6; ctx.stroke();
+    }
+    const jpeg = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+    if (!jpeg) throw new Error('noi_portrait_encode');
+    const base64 = await new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onload=()=>resolve(String(reader.result||'').split(',')[1]||'');
+      reader.onerror=reject;
+      reader.readAsDataURL(jpeg);
+    });
+    return {base64, preview: URL.createObjectURL(jpeg)};
+  }
+
+  function syncNoiPortrait({ force = false } = {}) {
+    if (!nativeEnabled || !ownerHash || !platform?.writeWidgetNoiPortrait) return Promise.resolve(false);
+    if (noiPortraitSync) return noiPortraitSync;
+    const urls = window.UsWidgetDataApi?.noiAvatarSources?.();
+    if (!Array.isArray(urls) || !urls.some(Boolean)) return Promise.resolve(false);
+    const signature = urls.join('|');
+    if (!force && signature === noiPortraitSignature && noiPortraitPreviewUrl) return Promise.resolve(false);
+    const token=generation, owner=ownerHash;
+    noiPortraitSync=(async()=>{
+      let image=null;
+      try {
+        image=await composeNoiPortrait(urls);
+        if(token!==generation){URL.revokeObjectURL(image.preview);return false;}
+        const ok=await platform.writeWidgetNoiPortrait(owner,image.base64);
+        if(token!==generation || !ok){URL.revokeObjectURL(image.preview);return false;}
+        if(noiPortraitPreviewUrl) URL.revokeObjectURL(noiPortraitPreviewUrl);
+        noiPortraitPreviewUrl=image.preview;
+        noiPortraitSignature=signature;
+        window.dispatchEvent(new Event('us:noi-widget-photo-updated'));
+        return true;
+      }catch(error){
+        if(image?.preview)URL.revokeObjectURL(image.preview);
+        console.warn('[US Widget] Noi portrait',error);
+        return false;
+      }finally{noiPortraitSync=null;}
+    })();
+    return noiPortraitSync;
   }
 
   // Oggi's currently visible hero photo, downscaled in the WebView and
@@ -333,6 +420,9 @@
       coupleSyncedAt = 0;
       photoSyncedAt = 0;
       photoResyncRequested = false;
+      noiPortraitSignature = '';
+      if (noiPortraitPreviewUrl) URL.revokeObjectURL(noiPortraitPreviewUrl);
+      noiPortraitPreviewUrl = '';
       setPreview('');
     }
     activeCoupleId=profile.couple_id || '';
@@ -343,8 +433,12 @@
     if(request!==authRequest)return false;
     countdown = countdownFromOggi() || countdown;
     await Promise.all([syncCouple({ force: true }), scheduleWrite(), ensureCredential(status)]);
-    // The photo is the only heavy step: after the first paint, never before it.
-    setTimeout(() => { syncPhoto({ force: true }); }, 2500);
+    await syncNoiDistance();
+    // The portrait and Oggi photo only sync after first UI paint.
+    setTimeout(() => {
+      syncPhoto({ force: true }).catch(() => {});
+      syncNoiPortrait({ force: true }).catch(() => {});
+    }, 2500);
     return true;
   }
 
@@ -359,6 +453,9 @@
     coupleSyncedAt = 0;
     photoSyncedAt = 0;
     photoResyncRequested = false;
+    noiPortraitSignature = '';
+    if (noiPortraitPreviewUrl) URL.revokeObjectURL(noiPortraitPreviewUrl);
+    noiPortraitPreviewUrl = '';
     think = emptyThink();couple = emptyCouple();countdown = emptyCountdown();photo = emptyPhoto();
     setPreview('');
     const provisioning = credentialProvisionInFlight;
@@ -415,7 +512,7 @@
   // ---------- Widget Hub support ----------
 
   function view() {
-    return { snapshot: snapshot(), photoPreviewUrl, ready: Boolean(ownerHash) };
+    return { snapshot: snapshot(), photoPreviewUrl, noiPortraitPreviewUrl, ready: Boolean(ownerHash) };
   }
 
   async function installed() {
@@ -431,6 +528,7 @@
     flushPendingWrite(write);
     await write;
     if (kind === 'photo') await syncPhoto({ force: true });
+    if (kind === 'noi') await syncNoiPortrait({ force: true });
     return platform.requestWidgetPin(kind);
   }
 
@@ -440,6 +538,8 @@
     publishThink,
     syncCountdown,
     syncCouple,
+    syncNoiDistance,
+    syncNoiPortrait,
     syncPhoto,
     clear,
     view,
@@ -465,11 +565,15 @@
     // Ricordi changes may cause Oggi to select a new image. Only the
     // painted Oggi event is authoritative for the widget photo.
     window.addEventListener('us:home-photo-changed', () => { syncPhoto({ force: true }).catch(() => {}); });
+    window.addEventListener('us:distance-changed', () => { syncNoiDistance().catch(() => {}); });
+    window.addEventListener('us:noi-portraits-ready', () => { syncNoiPortrait().catch(() => {}); });
     document.addEventListener('visibilitychange', () => {
       if (document.hidden || !ownerHash) return;
       ensureCredential().catch(() => {});
       syncCountdown().catch(() => {});
       syncCouple().catch(() => {});
+      syncNoiDistance().catch(() => {});
+      syncNoiPortrait().catch(() => {});
       syncPhoto().catch(() => {});
     });
   }

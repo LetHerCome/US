@@ -1,4 +1,4 @@
-const BUILD_ID = "us-widget-motion-integration-v1-20261009-1";
+const BUILD_ID = "us-ui-feedback-v2-20261009-2";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;

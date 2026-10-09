@@ -417,8 +417,7 @@ test('Widget Hub vive in Impostazioni, nascosto fuori dall’app native, niente 
   const hub = read('widget-hub.js');
   assert.match(html, /<button[^>]*data-us-setting="widgets"[^>]*hidden/);
   assert.match(html, /id="usWidgetHub"/);
-  assert.match(html, /Home <span>→<\/span> pressione lunga <span>→<\/span> Widget <span>→<\/span> US <span>→<\/span> scegli il widget/);
-  assert.match(html, /id="usWidgetHubManual" hidden/);
+  assert.doesNotMatch(html, /id="usWidgetHubManual"|id="usWidgetHubGuide"/);
   assert.match(read('settings.js'), /name==='widgets'[\s\S]{0,80}UsWidgetHub/);
   assert.match(read('navigation.js'), /'widget-hub'/);
   for (const kind of ['think', 'countdown', 'noi', 'photo']) assert.match(hub, new RegExp(`kind: '${kind}'`));
@@ -427,22 +426,42 @@ test('Widget Hub vive in Impostazioni, nascosto fuori dall’app native, niente 
   assert.doesNotMatch(oggi, /usWidgetHub|data-widget-add/);
 });
 
-test('Noi 2x1 has a separate functional Gioca action; no backend calls or fake game state', () => {
+test('Noi 2x1 is a light photo-distance widget with one action only', () => {
   const provider = read(`${JAVA}/UsNoiWidgetProvider.java`);
   const layout = read(`${PLUGIN}/res/layout/us_widget_noi.xml`);
-  const preview = read('widget-hub.js');
-  const routing = read('widgets.js');
-  assert.match(provider, /connected \? "noi\/play" : "noi"/);
-  assert.match(provider, /R\.id\.us_noi_cta/);
+  const store = read(`${JAVA}/UsWidgetStore.java`);
+  const bridge = read(`${JAVA}/UsWidgetBridgePlugin.java`);
+  const app = read('app.js');
   assert.match(provider, /UsWidgets\.open\(context, "noi", 4401\)/);
-  assert.match(layout, /@\+id\/us_noi_cta/);
-  assert.match(layout, /@\+id\/us_noi_title/);
-  assert.match(layout, /android:layout_height="40dp"/);
-  assert.match(preview, /Un momento per voi/);
-  assert.match(preview, /GIOCA/);
-  assert.match(routing, /path === 'noi\/play'/);
-  assert.match(routing, /window\.openQuizHub\(\)/);
+  assert.doesNotMatch(provider, /"noi\/play"|us_noi_cta/);
+  assert.match(layout, /@\+id\/us_noi_portrait/);
+  assert.match(layout, /@\+id\/us_noi_distance/);
+  assert.doesNotMatch(layout, /us_noi_cta|GIOCA/);
+  assert.match(store, /writeNoiPortrait/);
+  assert.match(store, /readNoiPortrait/);
+  assert.match(bridge, /writeNoiPortrait/);
+  assert.match(app, /noiAvatarSources/);
+  assert.match(app, /noiDistance\(\)/);
+  assert.match(read('widget-hub.js'), /us-wp-noi-light/);
+  assert.match(read('widgets.js'), /composeNoiPortrait/);
   assert.doesNotMatch(provider, /HttpURLConnection|supabase|fetch\(/i);
+});
+
+test('Ti penso clears sent display promptly and counts confirmed local sends in last 24h', () => {
+  const model = read(`${JAVA}/UsWidgetModels.java`);
+  const store = read(`${JAVA}/UsWidgetStore.java`);
+  const receiver = read(`${JAVA}/UsThinkWidgetActionReceiver.java`);
+  const provider = read(`${JAVA}/UsThinkWidgetProvider.java`);
+  assert.match(model, /SENT_VISIBLE_MS = 1_800L/);
+  assert.match(model, /SEND_COOLDOWN_MS = 1_800L/);
+  assert.match(store, /recentThinkEvents/);
+  assert.match(store, /now\.minusSeconds\(86400\)/);
+  assert.match(store, /actionId\.equals\(/);
+  assert.match(store, /thinkHistoryFile\.delete\(\)/);
+  assert.match(receiver, /UsWidgetActionClient\.SENT\.equals\(result\)/);
+  assert.match(provider, /countThinkSent24h/);
+  assert.match(provider, /nextThinkExpiry/);
+  assert.match(read(`${PLUGIN}/res/layout/us_widget_think.xml`), /us_widget_count_24h/);
 });
 
 // ---------- Android plugin (static: Gradle is not available in every CI) ----------

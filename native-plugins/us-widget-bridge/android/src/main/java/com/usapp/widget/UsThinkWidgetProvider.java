@@ -32,6 +32,9 @@ public class UsThinkWidgetProvider extends AppWidgetProvider {
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.us_widget_think);
         views.setTextViewText(R.id.us_widget_message, model.message);
         views.setTextViewText(R.id.us_widget_cta, model.cta);
+        int sent24h = state.store.countThinkSent24h(state.now);
+        views.setTextViewText(R.id.us_widget_count_24h, sent24h + " inviati · 24h");
+        state.needsUpdateAt(state.store.nextThinkExpiry(state.now));
         views.setViewVisibility(R.id.us_widget_heart, model.pulse ? View.GONE : View.VISIBLE);
         views.setViewVisibility(R.id.us_widget_heart_pulse, model.pulse ? View.VISIBLE : View.GONE);
         views.setInt(R.id.us_widget_heart, "setImageAlpha", model.busy && !model.pulse ? 140 : 255);

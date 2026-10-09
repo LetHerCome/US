@@ -34,12 +34,13 @@ test('tab entry: a stale timeout cannot kill a newer entry', () => {
   assert.ok(!classes.has('us-motion5-enter-prev'));
 });
 
-test('premium navigation keeps swipe tracking compositor-only and respects reduced motion', () => {
+test('premium navigation uses tab animations but not global page-swipe tracking', () => {
   const polish = read('polish4.css');
   const styles = read('styles.css');
   assert.match(polish, /animation:usMotion5PageEnter 240ms/);
   assert.match(styles, /html\.us-native-android \.page\.active\.us-motion5-enter-next,[\s\S]*animation-duration:220ms!important/);
-  assert.match(polish, /\.page\.us-motion31-current\{[\s\S]*transform:translate3d/);
+  assert.doesNotMatch(read('app.js'), /let swipeGesture=null/);
+  assert.match(read('app.js'), /Global tab-swipe removed/);
   assert.match(polish, /@media\(prefers-reduced-motion:reduce\)\{/);
   assert.match(read('modal-center.css'), /opacity var\(--us-motion-surface\) var\(--us-ease-standard\)/);
   assert.match(read('ui-foundation.css'), /:root\[data-us-motion="reduced"\]/);

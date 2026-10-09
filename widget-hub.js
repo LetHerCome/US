@@ -15,7 +15,7 @@
   const CATALOG = Object.freeze([
     { kind: 'think', name: 'Ti penso', copy: 'Un pensiero con un tocco, anche con US chiusa.', shape: 'square' },
     { kind: 'countdown', name: 'Countdown', copy: 'Lo stesso Countdown che hai scelto su Oggi.', shape: 'square' },
-    { kind: 'noi', name: 'Noi', copy: 'Un momento per voi: ogni giorno un invito a giocare insieme.', shape: 'wide' },
+    { kind: 'noi', name: 'Noi', copy: 'Le vostre foto profilo e la distanza tra voi.', shape: 'wide' },
     { kind: 'photo', name: 'Foto & Noi', copy: 'La fotografia che vedi su Oggi, con i giorni insieme.', shape: 'square' }
   ]);
   window.UsWidgetCatalog = CATALOG;
@@ -27,10 +27,10 @@
 
   let device = { installed: {}, pinSupported: false, vendor: 'android' };
   const status = {};
-  let manualNeeded = false;
   let pending = null;
   let pollTimer = null;
 
+  window.addEventListener('us:noi-widget-photo-updated', () => { if (isOpen()) render(); });
   const widgets = () => window.UsWidgets;
   const isOpen = () => $('usWidgetHub')?.classList.contains('open');
 
@@ -66,23 +66,14 @@
     return view ? { value: view.value, unit: Number(view.value) === 1 ? 'giorno insieme' : 'giorni insieme' } : null;
   }
 
-  const NOI_INVITATIONS = ['Un momento per voi', 'Una domanda per voi', "Giocate un po'", 'Scopritevi ancora'];
-  function noiDailyInvite() {
-    // Same Europe/Rome civil-day cycle as the Android widget model.
-    const parts = new Intl.DateTimeFormat('en-GB', {
-      timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit'
-    }).formatToParts(new Date());
-    const value = (type) => Number(parts.find((part) => part.type === type)?.value || 0);
-    const day = Math.floor(Date.UTC(value('year'), value('month') - 1, value('day')) / 86400000);
-    return NOI_INVITATIONS[((day % NOI_INVITATIONS.length) + NOI_INVITATIONS.length) % NOI_INVITATIONS.length];
-  }
-  function noiPreview(snapshot) {
-    const days = daysLine(snapshot);
-    const linked = Boolean(days);
-    const detail = linked ? `${days.value} ${Number(days.value) === 1 ? 'giorno' : 'giorni'}` : 'US · NOI';
-    return `<div class="us-wp-noi" data-frame="${esc(snapshot.couple?.frame || '')}">
-      <span class="us-wp-noi-meta"><i></i>US · NOI<small>${esc(detail)}</small></span>
-      <div class="us-wp-noi-action"><b>${esc(linked ? noiDailyInvite() : 'Un momento per voi')}</b><em>${linked ? 'GIOCA' : 'APRI US'} ›</em></div>
+  function noiPreview(snapshot, portraitUrl) {
+    const distance=snapshot.couple?.distanceText || 'Distanza non nota';
+    const sub=snapshot.couple?.distanceText
+      ? (snapshot.couple?.distanceState === 'stale' ? 'ULTIMA DISTANZA' : 'TRA VOI')
+      : 'APRI NOI';
+    return `<div class="us-wp-noi us-wp-noi-light">
+      <span class="us-wp-noi-portrait">${portraitUrl ? `<img src="${esc(portraitUrl)}" alt="">` : '♡ ♡'}</span>
+      <span class="us-wp-noi-info"><small>US · NOI</small><b>${esc(distance)}</b><small>${esc(sub)}</small></span>
     </div>`;
   }
 
@@ -99,7 +90,7 @@
     const snapshot = view.snapshot || {};
     if (kind === 'think') return thinkPreview(snapshot);
     if (kind === 'countdown') return countdownPreview(snapshot);
-    if (kind === 'noi') return noiPreview(snapshot);
+    if (kind === 'noi') return noiPreview(snapshot, view.noiPortraitPreviewUrl);
     return photoPreview(snapshot, view.photoPreviewUrl);
   }
 
@@ -123,16 +114,7 @@
         </div>
       </article>`;
     }).join('');
-    const manual = $('usWidgetHubManual');
-    if (manual) {
-      // Instructions are always available, but collapsed unless Xiaomi or
-      // pinning explicitly needs a manual recovery path.
-      manual.hidden = false;
-      const guide = $('usWidgetHubGuide');
-      if (guide && (manualNeeded || device.pinSupported === false)) guide.open = true;
-      const vendor = $('usWidgetHubVendor');
-      if (vendor) vendor.hidden = device.vendor !== 'xiaomi';
-    }
+
   }
 
   async function refreshDevice() {
@@ -156,8 +138,7 @@
       status[kind] = 'Aggiunto alla Home';
       window.UsFeedback?.success?.();
     } else {
-      status[kind] = 'Non è comparso? Aggiungilo a mano qui sotto.';
-      manualNeeded = true;
+      status[kind] = 'Non aggiunto. Riprova oppure usa la sezione Widget della Home Android.';
     }
     render();
   }
@@ -181,8 +162,7 @@
     try { result = await widgets().requestPin(kind); } catch (_) {}
     if (!result.requested) {
       pending = null;
-      manualNeeded = true;
-      status[kind] = result.supported ? 'Il telefono non ha aperto la richiesta. Aggiungilo a mano qui sotto.' : 'Su questo telefono si aggiunge a mano: guarda qui sotto.';
+      status[kind] = result.supported ? 'Il telefono non ha aperto la richiesta. Riprova.' : 'Il launcher non supporta aggiunta automatica. Usa i widget della Home.';
       render();
       return;
     }
@@ -205,6 +185,7 @@
     refreshDevice().catch(() => {});
     // Preview uses Oggi's currently painted photo, not the latest Ricordo.
     widgets().syncPhoto?.().then(() => { if (isOpen()) render(); }).catch(() => {});
+    widgets().syncNoiPortrait?.().then(() => { if (isOpen()) render(); }).catch(() => {});
   }
 
   function close() {

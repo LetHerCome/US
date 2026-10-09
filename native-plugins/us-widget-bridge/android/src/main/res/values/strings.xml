@@ -13,7 +13,7 @@
     <string name="us_widget_countdown_empty">Scegli un Countdown su Oggi</string>
 
     <string name="us_widget_noi_name">Noi</string>
-    <string name="us_widget_noi_description">Un invito quotidiano a fare qualcosa insieme. Gioca direttamente dalla Home.</string>
+    <string name="us_widget_noi_description">Le vostre foto profilo e la distanza mostrata in Noi.</string>
 
     <string name="us_widget_photo_name">Foto &amp; Noi</string>
     <string name="us_widget_photo_description">La foto di Oggi e i giorni insieme</string>
