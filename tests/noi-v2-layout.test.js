@@ -29,7 +29,7 @@ test('Gioca: Sintonia gets a real second tab using the original progression node
   for(const selector of ['.noi-resonance','.us-progression-next','.us-progression-rewards-section','.noi-resonance-history','.noi-resonance-guide'])assert.ok(js.includes(selector),selector);
   assert.match(js,/target\.appendChild\(element\)/,'original DOM nodes move; no duplicated progression state');
   assert.match(js,/window\.USProgression\?\.hydrate\?\./);
-  assert.ok(js.includes("document.querySelector('.nav button[data-page=\\\"quiz\\\"]')?.addEventListener('click'"), 'Gioca nav returns to Giochi');
+  assert.ok(js.includes("document.querySelector('.nav button[data-page=") && js.includes("setTab('giochi'),true"), 'Gioca nav returns to Giochi');
   const nav=html.match(/<nav class="nav us-nav[\s\S]*?<\/nav>/)?.[0]||'';
   assert.equal((nav.match(/data-page=/g)||[]).length,4,'four primary pages remain');
 });
