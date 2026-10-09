@@ -774,50 +774,66 @@ function previousAnswers(item) {
     <dl><div><dt>Tu</dt><dd>${esc(then.my_answer_text ?? '—')}</dd></div><div><dt>${esc(partnerName())}</dt><dd>${esc(then.partner_answer_text ?? '—')}</dd></div></dl></div>`;
 }
 
-function renderSwipeReveal({ first = false } = {}) {
-  const sameCount = current.items.filter((item) => item.my_answer_index === item.partner_answer_index).length;
-  const differentCount = current.items.length - sameCount;
-  const cards = current.items.map((item, i) => {
-    const same = item.my_answer_index === item.partner_answer_index;
-    return `<article class="us-gv2-swipe-reveal-card" data-same="${same ? 'true' : 'false'}">
-      <div class="us-gv2-swipe-reveal-head"><span>${i + 1}</span><b>${same ? 'Uguale ♡' : 'Diversi qui'}</b></div>
-      <h3>${esc(item.question_text)}</h3>
-      <dl><div><dt>Tu</dt><dd>${esc(myAnswerText(item))}</dd></div><div><dt>${esc(partnerName())}</dt><dd>${esc(partnerAnswerText(item))}</dd></div></dl>
-    </article>`;
-  }).join('');
-  showPanel(`<article class="us-gv2-reveal us-gv2-swipe-reveal${first ? ' is-first-reveal' : ''}">
+// Reveal V5: a short, deliberate comparison instead of one tall card per
+// answer. The server remains the only reveal authority. Only exact, revealed
+// choice values and explicit prediction_matched are classed as equal/different.
+// Open-text answers cannot be judged equal by a string comparison.
+function revealKind(item){
+  if(item.mechanic==='prediction')return item.prediction_matched===true?'same':'different';
+  if(item.answer_kind==='choice'&&item.my_answer_index!=null&&item.partner_answer_index!=null)
+    return item.my_answer_index===item.partner_answer_index?'same':'different';
+  return 'open';
+}
+function revealCompactItem(item,number,kind){
+  const [mine,theirs]=revealRows(item);
+  const heading=esc(item.my_prompt||item.question_text||'Una domanda');
+  const answerRows=[mine,theirs].map(([label,value])=>`<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join('');
+  const equal=kind==='same'&&item.mechanic!=='prediction'&&myAnswerText(item)===partnerAnswerText(item);
+  const short=equal?`<span class="us-gv5-equal-choice">${esc(myAnswerText(item))}</span>`:'';
+  const detailLabel=kind==='same'?'Scelte uguali':kind==='different'?'Scelte diverse':'Le risposte';
+  return `<li class="us-gv5-reveal-item" data-gv5-kind="${kind}">
+    <details>
+      <summary><span class="us-gv5-reveal-num">${number}</span><span class="us-gv5-reveal-title">${heading}</span>${short}<span class="us-gv5-reveal-chevron" aria-hidden="true">›</span></summary>
+      <div class="us-gv5-reveal-answers" aria-label="${detailLabel}"><dl>${answerRows}</dl>
+        ${item.mechanic==='prediction'?'<small class="us-gv5-outcome">'+esc(outcome(item))+'</small>':''}
+        ${previousAnswers(item)}
+      </div>
+    </details>
+  </li>`;
+}
+function revealGroup(items,kind,title,description,open=false){
+  if(!items.length)return '';
+  return `<details class="us-gv5-reveal-group" data-gv5-group="${kind}" ${open?'open':''}>
+    <summary><span><b>${esc(title)}</b><small>${esc(description)}</small></span><strong>${items.length}</strong><span class="us-gv5-reveal-chevron" aria-hidden="true">›</span></summary>
+    <ol>${items.map(({item,number})=>revealCompactItem(item,number,kind)).join('')}</ol>
+  </details>`;
+}
+function renderCompactReveal({first=false}={}){
+  const groups={same:[],different:[],open:[]};
+  for(const [i,item] of current.items.entries())groups[revealKind(item)].push({item,number:i+1});
+  const count=current.items.length;
+  const header=current.game_family==='swipe'?'Swipe':familyName(current.game_family);
+  const isSwipe=current.game_family==='swipe';
+  showPanel(`<article class="us-gv2-reveal us-gv5-reveal${first?' is-first-reveal':''}" data-gv5-reveal>
     <div class="us-gv2-play-top">${backButton()}</div>
-    <span class="us-gv2-kicker">SWIPE · REVEAL</span>
-    <div class="us-gv2-swipe-score"><strong>${sameCount}<small>/${current.items.length}</small></strong><span>scelte uguali</span><i aria-hidden="true"></i><b>${differentCount} diverse</b></div>
-    <p class="us-gv2-swipe-reveal-copy">Non è un punteggio: è solo la mappa di dove avete scelto la stessa cosa e dove no.</p>
-    <div class="us-gv2-swipe-reveal-list">${cards}</div>
+    <span class="us-gv2-kicker">LE VOSTRE SCELTE</span>
+    <h2>${esc(header)}</h2>
+    <div class="us-gv5-summary" aria-label="${groups.same.length} uguali, ${groups.different.length} diverse${groups.open.length?', '+groups.open.length+' risposte libere':''}">
+      <span><strong>${groups.same.length}</strong><small>Uguali</small></span>
+      <span><strong>${groups.different.length}</strong><small>Diverse</small></span>
+      ${groups.open.length?`<span><strong>${groups.open.length}</strong><small>Da leggere</small></span>`:''}
+    </div>
+    <p class="us-gv5-reveal-hint">Tocca un gruppo per vedere le domande. Apri una domanda solo se vuoi confrontare le risposte.</p>
+    <div class="us-gv5-reveal-groups">
+      ${revealGroup(groups.different,'different','Diverse','Dove avete scelto diversamente')}
+      ${revealGroup(groups.same,'same','Uguali','Le vostre scelte in comune')}
+      ${revealGroup(groups.open,'open','Risposte','Domande senza confronto automatico')}
+    </div>
     <div class="us-gv2-actions is-single"><button type="button" class="primary" data-gv2-action="back">Torna a Gioca</button></div>
   </article>`);
 }
-
-function renderReveal({ first = false } = {}) {
-  if (current?.game_family === 'swipe') return renderSwipeReveal({ first });
-  const cards = current.items.map((item) => {
-    const out = outcome(item);
-    const same = item.mechanic === 'prediction' ? item.prediction_matched === true : item.answer_kind === 'choice' && item.my_answer_index === item.partner_answer_index;
-    return `<article class="us-gv2-reveal-card" data-gv2-family="${esc(item.family || current.game_family)}" data-gv2-mechanic="${esc(item.mechanic || '')}">
-      <i class="us-gv2-lightsplit" aria-hidden="true"></i>
-      <span class="us-gv2-kicker">${esc(familyName(item.family || current.game_family).toUpperCase())}</span>
-      ${contextChip(item)}
-      <h3>${esc(item.my_prompt || item.question_text)}</h3>
-      ${out ? `<span class="us-gv2-outcome" data-same="${same ? 'true' : 'false'}">${esc(out)}</span>` : ''}
-      <dl>${revealRows(item).map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>
-      ${previousAnswers(item)}
-    </article>`;
-  }).join('');
-  showPanel(`<article class="us-gv2-reveal${first ? ' is-first-reveal' : ''}">
-    <div class="us-gv2-play-top">${backButton()}</div>
-    <span class="us-gv2-kicker">LE VOSTRE RISPOSTE</span>
-    <h2>${esc(familyName(current.game_family))}</h2>
-    <div class="us-gv2-reveal-list">${cards}</div>
-    <div class="us-gv2-actions is-single"><button type="button" class="primary" data-gv2-action="back">Torna a Gioca</button></div>
-  </article>`);
-}
+function renderSwipeReveal({first=false}={}){return renderCompactReveal({first});}
+function renderReveal({first=false}={}){return renderCompactReveal({first});}
 
 const WEEKLY_MORPH_MS = 480;
 
