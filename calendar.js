@@ -1123,6 +1123,7 @@ function selectDay(dateISO) {
 // The detail/editor sheets outlive the retired legacy calendar overlay.
 // Move them to the document root so they can open directly above Noi.
 function ensureNoiEditorSheets(){
+  if(!document.body?.appendChild)return;
   for(const id of ['usCalendarDetailSheet','usCalendarFormSheet']){
     const sheet=$(id);
     if(sheet&&sheet.parentElement!==document.body)document.body.appendChild(sheet);
@@ -1685,9 +1686,10 @@ async function createCalendarEntryForDate(dateISO) {
 async function createCalendarEntryForIdeaDate(dateISO){
   const pick=pendingIdeaPick;
   if(!pick||!dateISO||window.usProfile?.id!==pick.userId||window.usProfile?.couple_id!==pick.coupleId)return;
-  if(!await prepareNoiEntryDate(dateISO))return;
+  if(!await prepareNoiEntryDate(dateISO))return false;
   openIdeaForm(pick,dateISO);
   clearIdeaPick();
+  return true;
 }
 async function openCalendarEntry(entryId) {
   if (!entryId || !window.usProfile) return;
