@@ -71,7 +71,7 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 // The one US confirmation sheet (ui-foundation); the platform dialog only as a fallback.
 function usConfirm(options){const ui=window.UsUiFoundation;return ui&&typeof ui.confirm==='function'?ui.confirm(options):Promise.resolve(window.confirm(options.title));}
 // Game V2 — Gioca is owned by games.js (window.USGameV2); the legacy weekly quiz UI is retired.
-function openQuizHub(options={}){go('quiz',options);window.USNoiV2?.openGames?.();window.USGameV2?.showHub();}
+function openQuizHub(options={}){go('quiz',options);window.USGameV2?.showHub();}
 function resetQuiz(){window.USGameV2?.showHub();}
 window.openQuizHub=openQuizHub;
 window.resetQuiz=resetQuiz;
