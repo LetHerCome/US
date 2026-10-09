@@ -21,12 +21,13 @@ test('Noi add uses existing date-aware editor directly, preserving all-day, star
   assert.match(html,/id="usNoiV2AddTop" data-noi-add/);
   assert.equal((html.match(/class="us-noi-v2-add"[^>]*data-noi-add/g)||[]).length,1);
   assert.match(noi,/window\.UsCalendarLinks\.createForDate\(selected\)/);
-  assert.match(calendar,/if\(await prepareNoiEntryDate\(dateISO\)\)startCreateForDate\(dateISO\)/);
+  assert.match(calendar,/startCreateForDate\(dateISO\);\s*void prepareNoiEntryDate\(dateISO\)\.then/,'editor opens before waiting on reads');
   assert.match(calendar,/ensureNoiEditorSheets\(\)/);
   for(const id of ['usCalendarTitleInput','usCalendarAllDayInput','usCalendarStartTimeInput','usCalendarEndTimeInput','usCalendarFormSave','usCalendarDateInput'])assert.match(html,new RegExp('id="'+id+'"'));
   assert.match(calendar,/await Promise\.all\(\[\s*fetchEntriesForRange\(coupleId,dateISO,shiftISODate\(dateISO,1\)\),\s*loadProfiles\(\),\s*loadEntryReminders\(\)/);
   assert.match(calendar,/window\.USNoiV2\?\.refresh\?\.\(\)/);
   assert.match(calendar,/function closeCalendarFormSheet\(\)/);
+  assert.match(calendar,/closeCalendarDetailSheet\(\);\s*closeCalendarFormSheet\(\);\s*clearIdeaPick\(\)/,'identity changes close independent editor sheets');
   assert.match(calendar,/async function openCalendarEntry\(entryId\)/);
 });
 test('Lavagna week is in Noi and restores month, linked-idea picker remains date-authoritative',()=>{
