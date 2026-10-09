@@ -37,7 +37,7 @@ test('copy: text kept on purpose (destructive, reveal, privacy, irreversible) is
     'Eliminare questo impegno?', 'Sparirà dal calendario di entrambi.', 'Elimina questo ricordo per entrambi', '>Eliminato<', '>Annulla<',
     'Sparirà per entrambi.', 'Dopo la conferma le risposte non si cambiano più.', 'Le risposte si sbloccano quando avete risposto entrambi.',
     'Scollega questo telefono', 'Dovrai inserire di nuovo il codice privato per rientrare in US.',
-    'Sei offline.', 'Facoltativa e privata.', 'Su di te · ',
+    'Sei offline.', 'Su di te · ',
   ]) assert.ok(text.includes(phrase), `"${phrase}" kept`);
   assert.match(text, /scoprirà giocando/);
 });

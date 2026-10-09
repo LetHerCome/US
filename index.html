@@ -287,7 +287,7 @@ html.us-returning-device .auth-overlay{
 
   <main id="today" class="today-overlay" aria-hidden="true" data-us-modal data-us-motion-surface>
     <div class="today-backdrop us-modal-backdrop" onclick="closeToday()"></div>
-    <section class="today-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-label="Domanda del giorno" data-us-modal-panel>
+    <section class="today-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-label="Domanda del giorno" data-us-modal-panel>
       <div class="today-sheet-head"><div><div class="tiny">OGGI</div><h2>La domanda di oggi</h2></div><button type="button" class="today-close us-modal-close" onclick="closeToday()" aria-label="Chiudi domanda del giorno" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></div>
       <div class="card question">
         <div class="qtext">Un attimo…</div>
@@ -296,8 +296,9 @@ html.us-returning-device .auth-overlay{
         <div class="locked" id="locked" role="status" aria-live="polite"></div>
         <div id="todayReveal" class="hidden"></div>
         <div id="todayKeep" class="today-keep" data-us-daily-keepsake aria-live="polite" hidden></div>
-        <section id="todayOutcome" class="today-outcome hidden" data-us-today-outcome hidden aria-hidden="true"></section>
       </div>
+      <p id="todaySyncStatus" class="today-sync-status" role="status" hidden></p>
+      <button type="button" id="todayRetryBtn" onclick="hydrateToday()" hidden>Riprova</button>
       <div class="push-settings-row" id="pushSettingsRow" hidden>
         <span><b id="pushSettingsStatus">Notifiche</b><small id="pushSettingsDetail">Stato notifiche US</small></span>
         <button type="button" id="pushDisableBtn" onclick="disableWebPush()">Disattiva</button>

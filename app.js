@@ -207,9 +207,9 @@ window.addEventListener('us-identity-change',event=>{
     usIncomingThink=null;usThinkReactionFinal=null;closeThinkArrival();
     usLocationRuntime.rows=null;usLocationRuntime.snapshot=null;window.usDistanceKm=null;
     renderDistanceCapsule({visible:false,text:''});
-    dailyQuestionOutcomes.hide();dailyKeepsake.hide();closeToday();
+    dailyKeepsake.hide();closeToday();
     const reveal=document.getElementById('todayReveal');if(reveal)reveal.innerHTML='';
-    const answer=document.getElementById('todayAnswer');if(answer)answer.value='';
+    const answer=document.getElementById('answer');if(answer)answer.value='';
     for(const id of ['thinkLastReceived','thinkLastSent','thinkLiveText']){
       const label=document.getElementById(id);if(label)label.textContent='Ancora nessun segnale';
     }
@@ -222,9 +222,6 @@ window.addEventListener('us-identity-change',event=>{
   window.UsTodayPriority?.refresh?.();
   if(window.usProfile&&usLocationRuntime.rows)applyLocationRows(usLocationRuntime.rows);
   renderTodayReveal();
-  const draft=document.getElementById('todayOutcomeBody')?.value;
-  if(window.todayOutcomeState&&draft!==undefined)window.todayOutcomeState.draft=draft;
-  dailyQuestionOutcomes.render();
   if(window.todayState?.my_answer!=null&&!window.todayState?.both_answered){
     const locked=document.getElementById('locked');
     if(locked)locked.innerHTML='✓ Hai risposto. <b>In attesa di '+escapeHtml(usIdentity().partnerName)+'…</b>';
@@ -2220,11 +2217,15 @@ function localDateISO(){
   const d=new Date(), y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
   return `${y}-${m}-${day}`;
 }
+let usTodayPreviousOverflow=null;
 function openToday(){
   const root=document.getElementById('today');
   if(!root)return;
   window.UsUiFoundation?.cancelSurfaceExit?.(root);
+  if(usTodayPreviousOverflow===null)usTodayPreviousOverflow=document.body.style.overflow;
   root.classList.add('open');
+  root.scrollTop=0;
+  const panel=root.querySelector('[data-us-modal-panel]');if(panel)panel.scrollTop=0;
   root.setAttribute('aria-hidden','false');
   document.body.style.overflow='hidden';
   hydrateToday();
@@ -2236,7 +2237,8 @@ function closeToday(){
   const finalize=()=>{
     root.classList.remove('open');
     root.setAttribute('aria-hidden','true');
-    document.body.style.overflow='';
+    document.body.style.overflow=usTodayPreviousOverflow??'';
+    usTodayPreviousOverflow=null;
   };
   if(window.UsUiFoundation?.exitSurface)window.UsUiFoundation.exitSurface(root,finalize);else finalize();
 }
@@ -2320,84 +2322,6 @@ document.getElementById('thinkArrival')?.addEventListener('click',event=>{
   if(reaction)sendThinkReaction(reaction);
 });
 
-function dailyQuestionOutcomeRuntime(){
-  const ownRole=()=>window.usProfile?.role||'';
-  const partnerLabel=()=>usIdentity().partnerName;
-  const emptyState=(questionId='')=>({questionId,rows:[],draft:'',status:'idle'});
-  const current=()=>window.todayOutcomeState||emptyState(window.todayQuestion?.id);
-  const operationId=()=>globalThis.crypto?.randomUUID?.()||'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,char=>{
-    const value=Math.floor(Math.random()*16);return (char==='x'?value:(value&3|8)).toString(16);
-  });
-  const ownOutcome=(state=current())=>state.rows.find(row=>row.author_role===ownRole())||null;
-  const outcomeLabel=(row)=>row.author_role===ownRole()?'La tua riflessione':partnerLabel();
-  const statusCopy=(status)=>({
-    loading:'Carico…', saved:'Riflessione salvata.', duplicate:'Riflessione già salvata.',
-    stale:'È arrivata una versione più recente: ho ricaricato il confronto.', already_absent:'La riflessione era già stata eliminata.',
-    deleted:'Riflessione eliminata.', error:'Non riesco a sincronizzare ora. Il reveal resta disponibile.'
-  })[status]||'';
-  const view=()=>{
-    const state=current(),mine=ownOutcome(state),partner=state.rows.filter(row=>row.author_role!==ownRole());
-    const rows=[...partner,...(mine?[mine]:[])].map(row=>`<article class="today-outcome-entry" data-us-today-outcome-${row.author_role===ownRole()?'owner':'partner'}><b>${escapeHtml(outcomeLabel(row))}</b><p>${escapeHtml(row.body||'')}</p></article>`).join('');
-    const status=statusCopy(state.status);
-    return `<div class="today-outcome-head"><div><h3>Parlatene insieme</h3></div></div><p class="today-outcome-copy">Facoltativa e privata.</p>${rows?`<div class="today-outcome-list">${rows}</div>`:''}<div class="today-outcome-compose" data-us-today-outcome-owner><label class="tiny" for="todayOutcomeBody">La tua riflessione</label><textarea id="todayOutcomeBody" rows="3" maxlength="1000" placeholder="Un pensiero…">${escapeHtml(state.draft||mine?.body||'')}</textarea><div class="today-outcome-actions"><button type="button" class="primary" onclick="saveDailyQuestionOutcome()">Salva riflessione</button>${mine?'<button type="button" class="today-outcome-delete" onclick="deleteDailyQuestionOutcome()">Elimina</button>':''}</div></div>${status?`<p class="today-outcome-status ${state.status==='error'?'error':''}" role="status">${status}</p>`:''}`;
-  };
-  const render=()=>{
-    const root=document.getElementById('todayOutcome');
-    if(!root)return;
-    const active=Boolean(current().questionId&&window.todayState?.both_answered);
-    root.hidden=!active;root.classList.toggle('hidden',!active);
-    if(active)root.innerHTML=view();
-  };
-  const hide=()=>{window.todayOutcomeState=emptyState();render();};
-  const load=async(question,state)=>{
-    if(!question?.id||!state?.both_answered){hide();return {status:'not_ready'};}
-    const previous=current();
-    window.todayOutcomeState={...emptyState(question.id),draft:previous.questionId===question.id?previous.draft:'',status:'loading'};
-    render();
-    const {data,error}=await sb.from('daily_question_outcomes').select('id,author_role,body,revision').eq('question_id',question.id).order('created_at');
-    if(window.todayQuestion?.id!==question.id)return {status:'stale_question'};
-    if(error){console.warn(error);window.todayOutcomeState.status='error';render();return {status:'error',error};}
-    window.todayOutcomeState.rows=Array.isArray(data)?data:[];
-    window.todayOutcomeState.status='idle';render();return {status:'loaded'};
-  };
-  const save=async(value)=>{
-    const state=current(),questionId=state.questionId||window.todayQuestion?.id,body=String(value??'').trim();
-    if(!questionId||!window.todayState?.both_answered)return {status:'not_ready'};
-    state.draft=body;
-    if(!body||body.length>1000){state.status='error';render();return {status:'error'};}
-    const mine=ownOutcome(state);
-    const {data,error}=await sb.rpc('save_daily_question_outcome',{target_question_id:questionId,target_body:body,operation_id:operationId(),expected_revision:mine?.revision??null});
-    if(error){console.warn(error);state.status='error';render();return {status:'error',error};}
-    if(data?.status==='saved'||data?.status==='duplicate'){
-      const row={id:data.id,author_role:ownRole(),body:data.body||body,revision:data.revision};
-      state.rows=[...state.rows.filter(item=>item.author_role!==ownRole()),row];state.draft=row.body;state.status=data.status;render();return data;
-    }
-    if(data?.status==='stale'){state.status='stale';render();await load({id:questionId},{both_answered:true});return data;}
-    state.status='error';render();return {status:'error'};
-  };
-  const remove=async()=>{
-    const state=current(),questionId=state.questionId||window.todayQuestion?.id,mine=ownOutcome(state);
-    if(!questionId||!mine)return {status:'already_absent'};
-    const {data,error}=await sb.rpc('delete_daily_question_outcome',{target_question_id:questionId,expected_revision:mine.revision});
-    if(error){console.warn(error);state.status='error';render();return {status:'error',error};}
-    if(data?.status==='deleted'||data?.status==='already_absent'){
-      state.rows=state.rows.filter(row=>row.author_role!==ownRole());state.draft='';state.status=data.status;render();return data;
-    }
-    if(data?.status==='stale'){state.status='stale';render();await load({id:questionId},{both_answered:true});return data;}
-    state.status='error';render();return {status:'error'};
-  };
-  return {hide,load,remove,render,save,view};
-}
-const dailyQuestionOutcomes=dailyQuestionOutcomeRuntime();
-window.saveDailyQuestionOutcome=async()=>{
-  const result=await dailyQuestionOutcomes.save(document.getElementById('todayOutcomeBody')?.value||'');
-  if(result.status==='error')toast('Riflessione non salvata: riprova quando torni online');
-};
-window.deleteDailyQuestionOutcome=async()=>{
-  const result=await dailyQuestionOutcomes.remove();
-  if(result.status==='error')toast('Riflessione non eliminata: riprova quando torni online');
-};
-
 // M12B.4 — Conserva: dopo il reveal, uno dei due può conservare lo scambio
 // della domanda nei Ricordi. Il server decide (keep_daily_question: reveal di
 // get_daily_state, una sola copia per coppia e domanda, snapshot lato server);
@@ -2405,8 +2329,10 @@ window.deleteDailyQuestionOutcome=async()=>{
 // tabella (RLS: stessa coppia) a ogni apertura, mai da una copia locale.
 function dailyKeepsakeRuntime(){
   let state={questionId:null,status:'hidden'};
+  let generation=0;
+  const identity=()=>`${window.usProfile?.id}:${window.usProfile?.couple_id}`;
   const unavailable=(error)=>['42P01','PGRST205','PGRST202','42883'].includes(error?.code)||/daily_question_keepsake|keep_daily_question/.test(String(error?.message||''))&&/does not exist|could not find|schema cache/i.test(String(error?.message||''));
-  const active=()=>Boolean(state.questionId&&state.questionId===window.todayQuestion?.id&&window.todayState?.both_answered);
+  const active=()=>Boolean(state.owner===identity()&&state.questionId&&state.questionId===window.todayQuestion?.id&&window.todayState?.both_answered);
   const view=()=>{
     if(state.status==='kept')return '<p class="today-keep-done" role="status"><span class="us-icon" data-us-icon="check" aria-hidden="true"></span>Conservato nei Ricordi</p>';
     const saving=state.status==='saving',failed=state.status==='error';
@@ -2419,40 +2345,45 @@ function dailyKeepsakeRuntime(){
     root.hidden=!show;
     root.innerHTML=show?view():'';
   };
-  const hide=()=>{state={questionId:null,status:'hidden'};render();};
+  const hide=()=>{generation++;state={questionId:null,status:'hidden'};render();};
   const load=async(questionId)=>{
-    state={questionId,status:'loading'};render();
+    if(active()&&state.questionId===questionId&&state.status==='saving')return state;
+    const owner=identity(),seq=++generation;
+    const current=()=>seq===generation&&owner===identity()&&state.questionId===questionId;
+    state={questionId,owner,status:'loading'};render();
     try{
       const {data,error}=await sb.from('daily_question_keepsakes').select('id,kept_at,kept_by_role').eq('question_id',questionId).limit(1);
-      if(state.questionId!==questionId)return state;
+      if(!current())return state;
       if(error)throw error;
-      state={questionId,status:Array.isArray(data)&&data.length?'kept':'idle'};
+      state={questionId,owner,status:Array.isArray(data)&&data.length?'kept':'idle'};
     }catch(error){
-      if(state.questionId!==questionId)return state;
+      if(!current())return state;
       console.warn('[US Today] Conserva stato',error);
       // Senza backend Conserva (migration non applicata) niente bottone; un
       // errore di rete lascia Conserva: la RPC è idempotente e risponde 'existing'.
-      state={questionId,status:unavailable(error)?'hidden':'idle'};
+      state={questionId,owner,status:unavailable(error)?'hidden':'idle'};
     }
     render();return state;
   };
   const keep=async()=>{
     const questionId=state.questionId;
     if(!active()||state.status==='saving'||state.status==='kept')return {status:'noop'};
-    state={questionId,status:'saving'};render();
+    const owner=identity(),seq=++generation;
+    const current=()=>seq===generation&&owner===identity()&&state.questionId===questionId;
+    state={questionId,owner,status:'saving'};render();
     try{
       const {data,error}=await sb.rpc('keep_daily_question',{target_question_id:questionId});
       if(error)throw error;
       if(!['kept','existing'].includes(data?.status)||data.question_id!==questionId)throw new Error('daily_keepsake_invalid');
-      if(state.questionId!==questionId)return {status:'stale'};
-      state={questionId,status:'kept'};render();
+      if(!current())return {status:'stale'};
+      state={questionId,owner,status:'kept'};render();
       if(data.status==='kept')toast('Conservato nei Ricordi ♡');
       if(document.getElementById('momentsGrid')?.dataset.loaded==='1')Promise.resolve(window.hydrateMoments?.()).catch(()=>{});
       return data;
     }catch(error){
       console.warn('[US Today] Conserva',error);
-      if(state.questionId!==questionId)return {status:'stale'};
-      state={questionId,status:/daily_question_reveal_not_ready/.test(String(error?.message||''))||unavailable(error)?'hidden':'error'};render();
+      if(!current())return {status:'stale'};
+      state={questionId,owner,status:/daily_question_reveal_not_ready/.test(String(error?.message||''))||unavailable(error)?'hidden':'error'};render();
       return {status:'error',error};
     }
   };
@@ -2475,6 +2406,11 @@ function usDailyQuestionDay(at=new Date()){
 function validDailyQuestion(q){
   return q&&typeof q==='object'&&typeof q.id==='string'&&q.id&&typeof q.question==='string'&&q.question.trim()?q:null;
 }
+function renderTodaySyncError(failed){
+  const status=document.getElementById('todaySyncStatus'),retry=document.getElementById('todayRetryBtn');
+  if(status){status.hidden=!failed;status.textContent=failed?'Non riesco ad aggiornare ora. Riprova quando torni online.':'';}
+  if(retry)retry.hidden=!failed;
+}
 // Stati senza domanda valida: 'loading' (in arrivo) o 'error' (backend/rete).
 // In entrambi niente textarea né invio: solo, in errore, un Riprova onesto.
 function renderTodayQuestionUnavailable(status){
@@ -2483,12 +2419,12 @@ function renderTodayQuestionUnavailable(status){
   const answerEl=document.getElementById('answer');
   const failed=status==='error';
   window.todayQuestion=null; window.todayState=null; window.todayRevealMeta=null;
-  dailyQuestionOutcomes.hide();
+  renderTodaySyncError(false);
   window.UsDailyKeepsake?.hide?.();
   if(qel)qel.textContent=failed?'Non riesco a caricare la domanda di oggi.':'Un attimo…';
   if(locked){locked.hidden=false;locked.textContent=failed?'Controlla la connessione e riprova.':'Un attimo, arriva subito.';}
   if(reveal){reveal.classList.add('hidden');reveal.innerHTML='';}
-  if(answerEl){answerEl.value='';answerEl.disabled=true;answerEl.hidden=true;}
+  if(answerEl){if(!failed)answerEl.value='';answerEl.disabled=true;answerEl.hidden=true;}
   if(btn){
     btn.dataset.usTodayMode=failed?'retry':'loading';
     btn.hidden=!failed; btn.disabled=!failed; btn.textContent=failed?'Riprova':'Un attimo…';
@@ -2497,7 +2433,6 @@ function renderTodayQuestionUnavailable(status){
 // M10.2 — reveal Daily: risposte da get_daily_state (invariata), stato PERSONALE
 // (ricevuta, avviso nascosto, reazione) da get_daily_reveal_meta. Il server è
 // l'unica autorità: nessuna copia locale, nessuno stato ottimistico che resti.
-const US_DAILY_REACTIONS=Object.freeze({heart:{glyph:'❤️',label:'Reagisci con cuore'},angry:{glyph:'😡',label:'Reagisci con faccina arrabbiata'},cry:{glyph:'😭',label:'Reagisci con pianto'}});
 async function loadDailyRevealMeta(questionId){
   try{
     const {data,error}=await sb.rpc('get_daily_reveal_meta',{target_question_id:questionId});
@@ -2521,6 +2456,7 @@ function renderTodayReveal(){
 // non l'hydrate della Home, non il solo both_answered.
 let usDailyRevealSeenInFlight=null;
 async function markDailyRevealSeenIfVisible(questionId,seq){
+  const viewerId=window.usProfile?.id,coupleId=window.usProfile?.couple_id;
   const meta=window.todayRevealMeta;
   const open=document.getElementById('today')?.classList.contains('open');
   if(!open||!meta||meta.question_id!==questionId||meta.my_reveal_seen_at||usDailyRevealSeenInFlight===questionId)return;
@@ -2528,42 +2464,13 @@ async function markDailyRevealSeenIfVisible(questionId,seq){
   try{
     const {data,error}=await sb.rpc('mark_daily_reveal_seen',{target_question_id:questionId});
     if(error||!data||data.question_id!==questionId)throw error||new Error('daily_reveal_seen_invalid');
-    if(window.todayQuestion?.id===questionId)window.todayRevealMeta=data;
+    if(seq===usTodayHydrateSeq&&window.usProfile?.id===viewerId&&window.usProfile?.couple_id===coupleId&&window.todayQuestion?.id===questionId)window.todayRevealMeta=data;
   }catch(error){
     // Il reveal resta leggibile e la meta canonica resta invariata: l'avviso
     // rimane su Oggi, quindi basta riaprirlo per riprovare.
     console.warn('[US Today] Reveal seen non salvato',error);
   }finally{usDailyRevealSeenInFlight=null;}
 }
-let usDailyReactionInFlight=false;
-async function setDailyAnswerReaction(reaction){
-  const questionId=window.todayQuestion?.id,meta=window.todayRevealMeta;
-  if(!questionId||!meta||!window.todayState?.both_answered||usDailyReactionInFlight)return {status:'noop'};
-  if(!US_DAILY_REACTIONS[reaction])return {status:'noop'};
-  const previous=meta;
-  const next=meta.my_reaction===reaction?null:reaction;
-  usDailyReactionInFlight=true;
-  // Pressed provvisorio, con rollback: il server decide.
-  window.todayRevealMeta={...meta,my_reaction:next};renderTodayReveal();
-  try{
-    const {data,error}=await sb.rpc('set_daily_answer_reaction',{target_question_id:questionId,target_reaction:next});
-    if(error||!data||data.question_id!==questionId)throw error||new Error('daily_reaction_invalid');
-    if(window.todayQuestion?.id===questionId)window.todayRevealMeta=data;
-    renderTodayReveal();
-    return {status:'saved'};
-  }catch(error){
-    console.warn('[US Today] Reazione non salvata',error);
-    if(window.todayQuestion?.id===questionId)window.todayRevealMeta=previous;
-    renderTodayReveal();
-    toast('Reazione non salvata. Riprova.');
-    return {status:'error'};
-  }finally{usDailyReactionInFlight=false;}
-}
-window.setDailyAnswerReaction=setDailyAnswerReaction;
-document.getElementById('todayReveal')?.addEventListener?.('click',event=>{
-  const button=event.target.closest?.('[data-daily-reaction]');
-  if(button)setDailyAnswerReaction(button.dataset.dailyReaction);
-});
 let usDailyRevealDismissInFlight=false;
 async function dismissDailyRevealNotice(questionId){
   if(!questionId||usDailyRevealDismissInFlight)return {status:'busy'};
@@ -2582,9 +2489,15 @@ async function dismissDailyRevealNotice(questionId){
 }
 window.dismissDailyRevealNotice=dismissDailyRevealNotice;
 let usTodayHydrateSeq=0;
+let usTodayAnswerSave=null;
+function todayAnswerIsSaving(){
+  return Boolean(usTodayAnswerSave&&usTodayAnswerSave.viewerId===window.usProfile?.id&&usTodayAnswerSave.coupleId===window.usProfile?.couple_id&&usTodayAnswerSave.questionId===window.todayQuestion?.id);
+}
 async function hydrateToday(){
   if(!window.usProfile){window.UsTodayPriority?.render?.([]);return;}
+  const viewer=window.usProfile;
   const seq=++usTodayHydrateSeq;
+  const current=()=>seq===usTodayHydrateSeq&&window.usProfile?.id===viewer.id&&window.usProfile?.couple_id===viewer.couple_id;
   const previous=window.todayQuestion;
   const keepPrevious=Boolean(previous?.id&&previous.question_date===usDailyQuestionDay());
   if(!keepPrevious)renderTodayQuestionUnavailable('loading');
@@ -2595,11 +2508,11 @@ async function hydrateToday(){
     q=validDailyQuestion(result.data);
     if(!qError&&!q)qError=new Error('daily_question_invalid_payload');
   }catch(error){qError=error;}
-  if(seq!==usTodayHydrateSeq)return;
+  if(!current())return;
   if(qError){
     console.warn('[US Today] Daily question',qError);
     // Un errore transitorio non cancella la domanda già valida di oggi.
-    if(keepPrevious)return;
+    if(keepPrevious){renderTodaySyncError(true);return;}
     renderTodayQuestionUnavailable('error');
     updateHomeStatus();
     window.UsTodayPriority?.refresh?.({daily:{status:'error'}});
@@ -2608,16 +2521,29 @@ async function hydrateToday(){
   const qel=document.querySelector('#today .qtext');
   const locked=document.getElementById('locked'), reveal=document.getElementById('todayReveal'), btn=document.getElementById('todaySaveBtn');
   const answerEl=document.getElementById('answer');
-  if(previous?.id!==q.id){window.todayState=null;window.todayRevealMeta=null;if(previous?.id)answerEl.value='';}
-  answerEl.hidden=false; answerEl.disabled=false;
-  btn.hidden=false; btn.disabled=false; delete btn.dataset.usTodayMode;
-  if(!keepPrevious)btn.textContent='Rispondi';
+  const sameQuestion=previous?.id===q.id&&keepPrevious;
+  if(!sameQuestion){renderTodayQuestionUnavailable('loading');if(previous?.id)answerEl.value='';}
   window.todayQuestion=q;if(qel)qel.textContent=q.question;
-  const {data:state,error}=await sb.rpc('get_daily_state',{target_question_id:q.id});
-  if(seq!==usTodayHydrateSeq)return;
-  if(error){console.warn(error);window.UsTodayPriority?.refresh?.({daily:null});return;}
+  let state,error;
+  try{
+    const result=await sb.rpc('get_daily_state',{target_question_id:q.id});
+    state=result.data;error=result.error;
+    if(!error&&(!state||typeof state.both_answered!=='boolean'||typeof state.partner_has_answer!=='boolean'||
+      (state.both_answered&&(typeof state.my_answer!=='string'||typeof state.partner_answer!=='string'))))error=new Error('daily_state_invalid');
+  }catch(cause){error=cause;}
+  if(!current())return;
+  if(error){
+    console.warn('[US Today] Daily state',error);
+    if(sameQuestion&&window.todayState){renderTodaySyncError(true);return;}
+    renderTodayQuestionUnavailable('error');
+    window.UsTodayPriority?.refresh?.({daily:{status:'error'}});return;
+  }
+  renderTodaySyncError(false);
+  const previousAnswer=window.todayState?.my_answer||'';
+  const hasDraft=sameQuestion&&answerEl.value!==previousAnswer;
   window.todayState=state;
-  if(state?.my_answer){
+  delete btn.dataset.usTodayMode;
+  if(state?.my_answer&&!hasDraft){
     document.getElementById('answer').value=state.my_answer;
     btn.textContent='Aggiorna risposta';
   }else{
@@ -2632,24 +2558,20 @@ async function hydrateToday(){
     // M10.2 — stato personale (ricevuta, avviso, reazioni) dal server; mai testo qui.
     renderTodayReveal();
     const meta=await loadDailyRevealMeta(q.id);
-    if(seq!==usTodayHydrateSeq)return;
+    if(!current())return;
     if(meta)window.todayRevealMeta=meta;
     renderTodayReveal();
     await markDailyRevealSeenIfVisible(q.id,seq);
-    if(seq!==usTodayHydrateSeq)return;
-    // Reflections/comments have been removed from the daily reveal UI.
-    // Existing stored outcomes are preserved; no deletion or migration.
-    dailyQuestionOutcomes.hide();
-    if(seq!==usTodayHydrateSeq)return;
+    if(!current())return;
     // M12B.4 — Conserva solo qui, dove lo scambio è legittimamente visibile.
     await window.UsDailyKeepsake?.load?.(q.id);
-    if(seq!==usTodayHydrateSeq)return;
+    if(!current())return;
   }else{
     locked.hidden=false;
-    answerEl.hidden=false;btn.hidden=false;
+    answerEl.hidden=false;answerEl.disabled=false;btn.hidden=false;btn.disabled=todayAnswerIsSaving();
+    btn.textContent=todayAnswerIsSaving()?'Salvo…':state.my_answer?'Aggiorna risposta':'Rispondi';
     window.todayRevealMeta=null;
     reveal.classList.add('hidden');reveal.innerHTML='';
-    dailyQuestionOutcomes.hide();
     window.UsDailyKeepsake?.hide?.();
     if(state?.my_answer){
       const partner=usIdentity().partnerName;
@@ -4525,17 +4447,24 @@ function escapeHtml(s){
 saveAnswer = async function(){
   if(!window.usProfile){toast('Riprova tra un attimo');return;}
   // M9E: senza una domanda valida il bottone è solo "Riprova", mai un invio.
-  if(!window.todayQuestion)return hydrateToday();
+  if(!window.todayQuestion||document.getElementById('todaySaveBtn')?.dataset.usTodayMode==='retry')return hydrateToday();
+  if(!window.todayState||window.todayState.both_answered||todayAnswerIsSaving()||document.getElementById('todaySaveBtn')?.disabled)return;
   const v=document.getElementById('answer').value.trim();
   if(!v)return toast('Scrivi qualcosa prima');
+  const viewerId=window.usProfile.id,coupleId=window.usProfile.couple_id,questionId=window.todayQuestion.id;
+  const saving={viewerId,coupleId,questionId};usTodayAnswerSave=saving;
   const btn=document.getElementById('todaySaveBtn');btn.disabled=true;btn.textContent='Salvo…';
-  const {error}=await sb.from('daily_answers').upsert({
-    question_id:window.todayQuestion.id,
-    user_id:window.usProfile.id,
-    couple_id:window.usProfile.couple_id,
-    answer:v,
-    updated_at:new Date().toISOString()
-  },{onConflict:'question_id,user_id'});
+  let error;
+  try{
+    const result=await sb.from('daily_answers').upsert({
+      question_id:questionId,user_id:viewerId,couple_id:coupleId,
+      answer:v,updated_at:new Date().toISOString()
+    },{onConflict:'question_id,user_id'});
+    error=result.error;
+  }catch(cause){error=cause;}
+  if(usTodayAnswerSave!==saving)return;
+  usTodayAnswerSave=null;
+  if(window.usProfile?.id!==viewerId||window.usProfile?.couple_id!==coupleId||window.todayQuestion?.id!==questionId)return;
   btn.disabled=false;
   if(error){console.warn(error);btn.textContent='Riprova';return toast('Errore sync Today');}
   toast('Salvato online ♡');

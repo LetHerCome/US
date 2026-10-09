@@ -105,6 +105,8 @@ const MATRIX = [
 const CLASSES = new Set(['CLIENT_REQUIRED', 'SERVER_REQUIRED', 'INTERNAL_HELPER', 'COMPATIBILITY', 'LEGACY_CANDIDATE', 'UNKNOWN']);
 const ROLES = [['a', 'anon'], ['A', 'authenticated'], ['S', 'service_role'], ['P', 'f1b_public_probe']];
 const byName = new Map(MATRIX.map((row) => [row.name, row]));
+// V6 removes the unused frontend actions, not their historical server ACLs.
+const RETIRED_DAILY_UI = new Set(['save_daily_question_outcome', 'delete_daily_question_outcome', 'set_daily_answer_reaction']);
 
 function rpcNames(files) {
   const names = new Set();
@@ -179,7 +181,10 @@ test('F1B parity: every RPC the shipped client calls is CLIENT_REQUIRED or a ver
     assert.equal(row.after[1], 'A', `${name} must stay executable by authenticated`);
   }
   const declared = MATRIX.filter((r) => r.cls === 'CLIENT_REQUIRED').map((r) => r.name);
-  for (const name of declared) assert.ok(called.has(name), `${name} is CLIENT_REQUIRED but the client no longer calls it`);
+  for (const name of declared) {
+    if (RETIRED_DAILY_UI.has(name)) assert.ok(!called.has(name), `${name}: retired Daily UI must not call it`);
+    else assert.ok(called.has(name), `${name} is CLIENT_REQUIRED but the client no longer calls it`);
+  }
   // Preserve F1B's historical matrix. Like later Edge RPCs below, new client
   // RPCs must exist in the real forward migrations and prove their ACLs.
   if (added.length) {

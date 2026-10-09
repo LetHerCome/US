@@ -34,7 +34,7 @@ test('daily reveal: question and two answers only; no comments/reactions or dupl
  assert.equal(t.nodes.answer.hidden,true);
  assert.equal(t.nodes.todaySaveBtn.hidden,true);
  assert.equal(t.nodes.locked.hidden,true);
- assert.match(app,/dailyQuestionOutcomes.hide\(\)/);
+ assert.doesNotMatch(app,/dailyQuestionOutcomes/);
  assert.match(app,/UsDailyKeepsake\?\.load\?\./);
 });
 test('Noi: selected day labels both individual owners and the shared couple',()=>{
