@@ -79,3 +79,12 @@ Only durable decisions belong here. New missions should not reopen them without 
 - The migration accepts exact legacy, verifies/no-ops exact target, and refuses partial/unknown states without repair. Lock order is user advisory → actor → invite → membership checks/locks.
 - `list_couple_questions()` stays retired with client `42501`; MC2 does not restore its grant. Native Notifications ledger drift remains outside scope.
 - Repository validation and review do not authorize production rollout or a real Couple B launch; onboarding and legacy UI copy are separate work.
+
+## 2026-10-09 — UI Refinement & Personalization V3 (review candidate)
+
+- Oggi personalisation is two device-local slots of the existing cosmetics system: **Tema di Oggi** and **Effetto di Oggi**. `data-us-theme` stays the global atmosphere; Oggi themes only define `--oggi-*` tokens scoped to Oggi.
+- Frames and stickers are no longer rewards. Badges and rings are retired with them (no visible place since Noi V2). Unlock history and stored choices are kept; nothing is deleted.
+- Rewards that entitle Countdown styles stay active and are presented as Countdown styles.
+- Server catalog changes go through a reviewed migration; until it is applied the client hides looks the server does not know (no fake rewards).
+- Gioca keeps two tabs; games are one grid (no sideways deck), rounds waiting for you are shown directly.
+- Noi "Lavagna" = the existing Calendar Week view.
