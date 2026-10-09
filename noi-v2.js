@@ -229,13 +229,15 @@ function shiftMonth(delta){
 function chooseDay(day,{fromList=false}={}) {
   if(!/^\d{4}-\d{2}-\d{2}$/.test(day))return;
   const d=dateOf(day);
-  if(d.getFullYear()!==year||d.getMonth()!==month)return;
+  const differentMonth=d.getFullYear()!==year||d.getMonth()!==month;
+  if(differentMonth&&mode!=='week')return;
   selected=day;
   if(ideaPick){
     const picker=window.UsCalendarLinks?.createForIdeaDate;
-    if(picker){picker(day);ideaPick=null;render();}
+    if(picker)Promise.resolve(picker(day)).then(ok=>{if(ok){ideaPick=null;render();}});
     return;
   }
+  if(differentMonth){goToMonth(d.getFullYear(),d.getMonth(),day,Math.sign(d.getFullYear()*12+d.getMonth()-(year*12+month)));return;}
   if(fromList)mode='calendar';
   render();
   window.UsFeedback?.selection?.();
@@ -311,8 +313,8 @@ function boot(){
     if(e.target.closest('[data-noi-retry]')){refresh({force:true});return;}
     if(e.target.closest('[data-noi-add]')){
       if(ideaPick){
-        window.UsCalendarLinks?.createForIdeaDate?.(selected);
-        ideaPick=null;render();return;
+        Promise.resolve(window.UsCalendarLinks?.createForIdeaDate?.(selected)).then(ok=>{if(ok){ideaPick=null;render();}});
+        return;
       }
       if(window.UsCalendarLinks?.createForDate)window.UsCalendarLinks.createForDate(selected);
       else window.openCalendarSurface?.(selected);
