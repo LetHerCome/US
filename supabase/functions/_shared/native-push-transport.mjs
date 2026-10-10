@@ -100,35 +100,31 @@ async function timedFetch(fetchImpl, url, init) {
   }
 }
 
-// S3 interim privacy mitigation: FCM notification messages are rendered by
-// Android itself in background/terminated states, without a WebView callback.
-// A stale A token after account B signs in MUST NOT carry A's private copy.
-// This is CONTENT minimization, NOT proof that a stale A alert cannot arrive.
+// S3: data-only FCM. Android must verify the account-bound installation
+// before displaying a local generic notification. FCM carries no private copy,
+// content id, account id, event type or action. The installation UUID is a
+// random routing value, not an authorization secret or hardware identifier.
 export const ANDROID_SAFE_COPY = Object.freeze({
   title: 'US.',
   body: 'Apri US per vedere le novità.',
 });
 const ANDROID_SAFE_TAG = 'us-private-notice';
+const INSTALLATION_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** Generic FCM OS banner, no per-couple data or stale-account deep link. */
-export function fcmMessage(notification, token) {
+/** Strict data-only FCM v2; device is the authenticated dispatcher DB row. */
+export function fcmMessage(notification, device) {
+  const installation = String(device?.installation_id || '').toLowerCase();
+  if (!INSTALLATION_ID.test(installation)) throw new Error('native_installation_missing');
   return {
     message: {
-      token,
-      notification: { ...ANDROID_SAFE_COPY },
-      // Deliberately NO data: native notification taps open the app launcher.
-      // Keep private type/target/ref/tag and sender/calendar text server-side.
+      token: device.token,
+      data: { v: '2', installation },
       android: {
         priority: notification.urgency === 'high' ? 'HIGH' : 'NORMAL',
         ttl: `${notification.ttl}s`,
         collapse_key: ANDROID_SAFE_TAG,
-        notification: {
-          channel_id: ANDROID_CHANNELS.partner,
-          tag: ANDROID_SAFE_TAG,
-          default_sound: true,
-          default_vibrate_timings: true,
-          notification_count: Number.isInteger(notification.badge) && notification.badge >= 0 ? notification.badge : undefined,
-        },
+        // Do not add message.notification or android.notification: Firebase
+        // auto-renders those in background before native ownership checks.
       },
     },
   };
@@ -240,6 +236,8 @@ export function createNativeTransport({ config, fetch: fetchImpl = globalThis.fe
 
   async function sendFcm(device, notification) {
     if (!FCM_TOKEN.test(String(device.token || ''))) return { ok: false, outcome: 'invalid-token' };
+    // Old rows without a valid installation UUID cannot be routed safely.
+    if (!INSTALLATION_ID.test(String(device.installation_id || ''))) return { ok: false, outcome: 'rejected' };
     let accessToken;
     try { accessToken = await fcmAccessToken(); }
     catch (error) { return { ok: false, outcome: error?.outcome || 'transient' }; }
@@ -248,7 +246,7 @@ export function createNativeTransport({ config, fetch: fetchImpl = globalThis.fe
       response = await timedFetch(fetchImpl, `https://fcm.googleapis.com/v1/projects/${encodeURIComponent(fcm.projectId)}/messages:send`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(fcmMessage(notification, device.token)),
+        body: JSON.stringify(fcmMessage(notification, device)),
       });
     } catch (_) {
       return { ok: false, outcome: 'transient' };
