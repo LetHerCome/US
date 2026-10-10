@@ -15,6 +15,7 @@ import com.capacitorjs.plugins.pushnotifications.MessagingService;
 import com.capacitorjs.plugins.pushnotifications.PushNotificationsPlugin;
 import com.google.firebase.messaging.RemoteMessage;
 import com.usapp.pushsupport.UsPushOwnerGate;
+import com.usapp.pushsupport.UsPushSupportPlugin;
 import java.util.Map;
 
 /**
@@ -38,7 +39,7 @@ public final class UsGuardedMessagingService extends MessagingService {
         if (!UsPushOwnerGate.accepts(this, data.get("installation"))) return;
         // Preserve presentationOptions=[]: no OS banner while US is visible.
         // The v2 event has no private target/ref and no JS navigation action.
-        if (!MainActivity.isResumedForPush()) {
+        if (!UsPushSupportPlugin.isActivityResumed()) {
             postPrivateSafeNotice(data.get("installation"));
         }
         PushNotificationsPlugin.sendRemoteMessage(message);
