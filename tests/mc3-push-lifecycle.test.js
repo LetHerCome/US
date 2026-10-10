@@ -9,11 +9,29 @@ function native() {
   let owner = 'A', fail = false;
   const token = 'fcm:' + 'x'.repeat(80);
   const push = { addListener(name, fn) { listeners[name] = fn; }, checkPermissions: async () => ({ receive: 'granted' }), register: async () => { listeners.registration({ value: token }); }, unregister: async () => {}, removeAllDeliveredNotifications: async () => {} };
-  const support = { getStatus: async () => ({ platform: 'android', configured: true }), setBadge: async () => {} };
+  let epoch = 'd78f8134-0b1d-4e70-a912-a5443be39b71';
+  let rejected = false;
+  let boundInstallation = '';
+  const bindings = [];
+  const support = {
+    getStatus: async () => ({ platform: 'android', configured: true, bindingEpoch: epoch }),
+    setBadge: async () => {},
+    bindPushOwner: async ({ ownerId, installationId, expectedEpoch }) => {
+      const bound = !rejected && expectedEpoch === epoch;
+      if (bound) boundInstallation = installationId;
+      bindings.push({ ownerId, installationId, expectedEpoch, bound });
+      return { bound };
+    },
+    clearPushOwner: async () => {
+      epoch = crypto.randomUUID();
+      boundInstallation = '';
+      return { cleared: true };
+    }
+  };
   const sb = { auth: { getSession: async () => ({data:{session:{user:{id:owner}}}}) }, rpc: async (name, args) => { calls.push({ owner, name, args }); return { data: { removed: true }, error: fail ? new Error('offline') : null }; } };
   const window = { sb, UsPlatform: { isNative: true, isPluginAvailable: () => true, getNativePlugin: name => name === 'PushNotifications' ? push : support } };
   vm.runInNewContext(fs.readFileSync('notifications.js', 'utf8'), { window, sb, document: { hidden: false, addEventListener() {} }, localStorage: { getItem: k => store.get(k) || null, setItem: (k,v) => store.set(k,v), removeItem: k => store.delete(k) }, crypto, setTimeout, clearTimeout });
-  return { api: window.UsNotifications, store, calls, push, listeners, switch: id => { owner = id; }, fail: value => { fail = value; } };
+  return { api: window.UsNotifications, store, calls, push, listeners, bindings, native: { bound: () => boundInstallation, reject: value => { rejected = value; } }, switch: id => { owner = id; }, fail: value => { fail = value; } };
 }
 test('MC3 logout starts revocation before invalidating identity', () => {
   const body = app.slice(app.indexOf('signOut:async()=>{'), app.indexOf('function usInvalidateAuth'));
@@ -27,6 +45,24 @@ test('native A→B rotates installation and never reuses unresolved A token', as
   assert.equal((await h.api.enable()).ok, false);
   assert.equal(h.calls.filter(c => c.owner === 'B').length, 0);
 });
+test('native gate is bound only after RPC success and cleared on signedOut',async()=>{
+  const h=native(); await h.api.authReady({id:'A'});
+  assert.equal((await h.api.enable()).ok,true);
+  assert.equal(h.bindings.length,1);
+  assert.equal(h.native.bound(),h.store.get('us:notifications:v1:installation'));
+  h.api.signedOut();
+  await h.api.authReady({id:'B'});
+  assert.equal(h.native.bound(),'');
+});
+
+test('native binding refusal fails closed despite server registration success',async()=>{
+  const h=native(); await h.api.authReady({id:'A'});
+  h.native.reject(true);
+  assert.equal((await h.api.enable()).ok,false);
+  assert.equal(h.native.bound(),'');
+  assert.equal(h.bindings.length,1);
+});
+
 test('offline native revoke survives B and retries only when A returns', async () => {
   const h = native(); await h.api.authReady({ id: 'A' }); await h.api.enable(); h.fail(true);
   await h.api.revokeDevice(); h.api.signedOut(); h.switch('B'); h.fail(false); await h.api.authReady({ id: 'B' });
