@@ -13,6 +13,8 @@ on:
       - 'tests/native-notifications-v1-native.test.js'
       - 'tests/mc3-push-lifecycle.test.js'
       - 'tests/s3-staging-build-isolation.test.js'
+      - 'tests/s3-staging-edge-sender.test.js'
+      - 'supabase/functions/s3-staging-send-web-push/**'
       - 'scripts/configure-s3-staging-qa.mjs'
       - '.github/workflows/s3-staging-android-qa.yml'
       - '.github/workflows/s3-native-push-privacy.yml'
@@ -41,6 +43,6 @@ jobs:
           node --check notifications.js
           node --check scripts/configure-s3-staging-qa.mjs
       - name: Android privacy, native FCM and APNs transport, client logout and static contracts
-        run: node --test tests/s3-android-native-push-privacy.test.js tests/native-notifications-v1-dispatch.test.js tests/native-notifications-v1-native.test.js tests/mc3-push-lifecycle.test.js tests/s3-staging-build-isolation.test.js
+        run: node --test tests/s3-android-native-push-privacy.test.js tests/native-notifications-v1-dispatch.test.js tests/native-notifications-v1-native.test.js tests/mc3-push-lifecycle.test.js tests/s3-staging-build-isolation.test.js tests/s3-staging-edge-sender.test.js
       - name: Check bundle continues to build
         run: npm run build:capacitor-web
