@@ -19,6 +19,7 @@ const C2 = '22222222-2222-4222-8222-222222222222';
 const F = 'aaaaaaaa-0000-4000-8000-00000000000f';
 const B = 'aaaaaaaa-0000-4000-8000-00000000000b';
 const MSG = '33333333-3333-4333-8333-333333333333';
+const INSTALLATION = '8f248b96-e0af-475b-8b87-0f22236ed062';
 const FCM_TOKEN = `fcm:${'a'.repeat(60)}`;
 const APNS_TOKEN = 'ab'.repeat(32);
 
@@ -59,7 +60,7 @@ function fakeAdmin({ subscriptions = [], devices = [], claimed = new Set(), fail
 
 const subscription = (id, userId) => ({ id, user_id: userId, endpoint: `https://push.example/${id}`, p256dh: 'p', auth_key: 'a' });
 const device = (id, userId, provider = 'fcm', coupleId = C1) => ({
-  id, user_id: userId, couple_id: coupleId, token: provider === 'fcm' ? FCM_TOKEN : APNS_TOKEN,
+  id, user_id: userId, couple_id: coupleId, installation_id: INSTALLATION, token: provider === 'fcm' ? FCM_TOKEN : APNS_TOKEN,
   platform: provider === 'fcm' ? 'android' : 'ios', provider, apns_environment: provider === 'apns' ? 'production' : null,
 });
 function fakeWeb({ fail = {} } = {}) {
@@ -304,13 +305,11 @@ test('transport FCM: signed RS256 assertion, HTTP v1 message, channel and data c
   assert.equal(send.url, 'https://fcm.googleapis.com/v1/projects/us-test-project/messages:send');
   assert.equal(send.init.headers.Authorization, 'Bearer ya29.test');
   const message = JSON.parse(send.init.body).message;
-  assert.deepEqual(message.notification, t.ANDROID_SAFE_COPY);
-  assert.equal(Object.hasOwn(message, 'data'), false, 'stale-account private actions never reach Android');
-  assert.equal(message.android.notification.channel_id, 'us_partner');
-  assert.equal(message.android.notification.tag, 'us-private-notice');
+  assert.equal(Object.hasOwn(message, 'notification'), false, 'FCM must not auto-render before owner validation');
+  assert.equal(Object.hasOwn(message.android, 'notification'), false);
+  assert.deepEqual(message.data, { v: '2', installation: INSTALLATION });
   assert.equal(message.android.collapse_key, 'us-private-notice');
   assert.doesNotMatch(send.init.body, /Cena alle 20|calendar_reminder|calendar-reminder-r1|33333333-3333-4333-8333-333333333333/);
-  assert.equal(message.android.notification.notification_count, 1);
   assert.equal(message.android.priority, 'HIGH');
   assert.doesNotMatch(send.init.body, /private_key|BEGIN|https?:\/\/(?!)/);
 });
