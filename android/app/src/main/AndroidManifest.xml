@@ -43,6 +43,11 @@
         <service
             android:name="com.capacitorjs.plugins.pushnotifications.MessagingService"
             tools:node="remove" />
+        <!-- Firebase SDK also contributes a base FirebaseMessagingService.
+             Remove it too: the guarded subclass must be the ONLY receiver. -->
+        <service
+            android:name="com.google.firebase.messaging.FirebaseMessagingService"
+            tools:node="remove" />
         <service
             android:name=".UsGuardedMessagingService"
             android:exported="false">
