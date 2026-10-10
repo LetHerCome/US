@@ -31,6 +31,12 @@ android {
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "com.usapp.us"
+        // Staging-only Android QA lives in a separate Android sandbox, without
+        // shared storage, notifications or Google Play identity with real US.
+        // The normal production/internal applicationId is NEVER changed.
+        if (System.getenv('US_STAGING_QA') == 'true') {
+            applicationId "com.usapp.us.staging"
+        }
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode Integer.parseInt(configuredVersionCode.toString())
