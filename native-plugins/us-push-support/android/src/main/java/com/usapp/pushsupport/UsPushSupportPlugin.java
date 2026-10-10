@@ -26,6 +26,19 @@ import org.json.JSONObject;
  */
 @CapacitorPlugin(name = "UsPushSupport")
 public class UsPushSupportPlugin extends Plugin {
+    private static volatile boolean activityResumed = false;
+
+    public static boolean isActivityResumed() { return activityResumed; }
+
+    @Override
+    protected void handleOnResume() {
+        activityResumed = true;
+    }
+
+    @Override
+    protected void handleOnPause() {
+        activityResumed = false;
+    }
 
     @Override
     public void load() {
