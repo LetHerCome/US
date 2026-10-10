@@ -4,7 +4,9 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const load = name => import(path.join(__dirname, '../supabase/functions/_shared', name));
+const { pathToFileURL } = require('node:url');
+// Windows drive paths are not valid ESM import specifiers unless file: URLs.
+const load = name => import(pathToFileURL(path.join(__dirname, '../supabase/functions/_shared', name)).href);
 const TOKEN = 'fcm:' + 'Z'.repeat(80);
 const INSTALL_A = '1f5bcf2d-2cf9-48d6-b018-9ac99be5a1b8';
 const INSTALL_B = '6b2ef2a0-65be-41c1-a1c8-64a5d8e2a174';
