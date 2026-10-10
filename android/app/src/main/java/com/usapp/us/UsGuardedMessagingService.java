@@ -69,8 +69,15 @@ public final class UsGuardedMessagingService extends MessagingService {
             .setOnlyAlertOnce(true)
             .setContentIntent(action)
             .build();
-        // Single tag/id, never per-person or per-event metadata on the tray.
-        manager.notify("us-private-notice", NOTICE_ID, notification);
+        // Under the SAME lock used for native logout/clear; never release the
+        // owner check before the OS displays a notification for that owner.
+        // If the account changed, nothing is posted.
+        try {
+            UsPushOwnerGate.postIfCurrent(this, installation,
+                () -> manager.notify("us-private-notice", NOTICE_ID, notification));
+        } catch (RuntimeException ignored) {
+            // Permission was revoked or NotificationManager failed: fail closed.
+        }
     }
 
     // onNewToken() intentionally inherited from Capacitor's MessagingService:
