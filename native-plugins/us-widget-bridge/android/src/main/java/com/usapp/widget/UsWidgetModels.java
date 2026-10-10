@@ -21,8 +21,8 @@ final class UsWidgetModels {
     static final ZoneId ROME = ZoneId.of("Europe/Rome");
     static final long DAY_MS = 86_400_000L;
     /** "Sent" stays visible this long; taps inside the first part are ignored. */
-    static final long SENT_VISIBLE_MS = 2 * 60_000L;
-    static final long SEND_COOLDOWN_MS = 8_000L;
+    static final long SENT_VISIBLE_MS = 1_800L;
+    static final long SEND_COOLDOWN_MS = 1_800L;
     static final long FAILED_VISIBLE_MS = 10 * 60_000L;
     /** A "sending" older than this was interrupted (process killed). */
     static final long SENDING_STALE_MS = 45_000L;
@@ -140,17 +140,36 @@ final class UsWidgetModels {
         String names = "";
         long days = -1;
         String frame = "";
+        String todayInvitation = "";
+        String distanceText = "";
+        boolean distanceStale = false;
         Instant nextChange = null;
+    }
+
+    /** A tiny rotating invitation, not a fabricated question or fake game state.
+     * Every invitation opens the EXISTING Gioca hub; nothing is sent by the widget. */
+    static String noiInvitation(Instant now) {
+        String[] invitations = {
+            "Un momento per voi",
+            "Una domanda per voi",
+            "Giocate un po'",
+            "Scopritevi ancora"
+        };
+        int index = (int) Math.floorMod(romeToday(now).toEpochDay(), (long) invitations.length);
+        return invitations[index];
     }
 
     static Couple couple(JSONObject snapshot, Instant now) {
         Couple out = new Couple();
+        out.todayInvitation = noiInvitation(now);
         JSONObject c = UsWidgetContract.optObject(snapshot, "couple");
         JSONArray names = c.optJSONArray("names");
         if (names != null && names.length() == 2) out.names = names.optString(0) + " + " + names.optString(1);
         else if (names != null && names.length() == 1) out.names = names.optString(0);
         out.days = daysTogether(c.optString("startedOn", ""), now);
         out.frame = c.optString("frame", "");
+        out.distanceText = c.optString("distanceText", "");
+        out.distanceStale = "stale".equals(c.optString("distanceState", ""));
         out.nextChange = nextRomeMidnight(now);
         return out;
     }
@@ -236,13 +255,6 @@ final class UsWidgetModels {
             out.message = minutes < 60 ? who + " ti sta pensando" : who + " ti ha pensato\n" + ago(minutes);
             out.cta = "Ricambia";
             out.nextChange = nextAgoChange(received, now);
-            return out;
-        }
-        if (sent != null && (received == null || !received.isAfter(sent))) {
-            long minutes = Math.max(0, Duration.between(sent, now).toMinutes());
-            out.message = partner.isEmpty() ? "Pensiero inviato\n" + ago(minutes) : "Hai pensato a " + partner + "\n" + ago(minutes);
-            out.cta = "Ti penso";
-            out.nextChange = nextAgoChange(sent, now);
             return out;
         }
         out.message = partner.isEmpty() ? "Manda un pensiero" : "Pensa a " + partner;

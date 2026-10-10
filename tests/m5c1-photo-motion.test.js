@@ -25,6 +25,7 @@ class FakeClassList {
 
 function homeHarness() {
   const images = [];
+  const photoEvents = [];
   const hero = { classList: new FakeClassList(), attributes: new Map(), setAttribute(name, value = '') { this.attributes.set(name, value); }, removeAttribute(name) { this.attributes.delete(name); } };
   const empty = { hidden: true };
   const layers = {
@@ -34,7 +35,8 @@ function homeHarness() {
   const context = vm.createContext({
     console: { warn() {} },
     usAuthEpoch:0,
-    window:{usProfile:{id:'viewer',couple_id:'couple-1'}},
+    window:{usProfile:{id:'viewer',couple_id:'couple-1'},dispatchEvent(event){photoEvents.push(event.type);}},
+    Event: class {constructor(type){this.type=type;}},
     document: { getElementById: (id) => ({ homeHero: hero, homeEmptyState: empty, ...layers })[id] || null },
     requestAnimationFrame: (callback) => callback(),
     Image: class {
@@ -50,7 +52,7 @@ function homeHarness() {
     let homePhotoHasPainted = false;
     ${functionSource(source, 'function crossfadeHomePhoto(', 'async function hydrateHomePhoto(')}
   `, context);
-  return { context, hero, empty, layers, images };
+  return { context, hero, empty, layers, images, photoEvents };
 }
 
 test('Home attende load e decode, dipinge la prima foto senza transizione e ignora un decode stale', async () => {
@@ -70,6 +72,7 @@ test('Home attende load e decode, dipinge la prima foto senza transizione e igno
   assert.equal(harness.layers.homePhotoLayerB.style.backgroundImage, 'url("https://media.test/second.webp")');
   assert.equal(harness.layers.homePhotoLayerB.classList.contains('active'), true);
   assert.equal(harness.hero.attributes.has('data-us-home-photo-instant'), false, 'la prima foto non deve lasciare uno stato motion persistente');
+  assert.deepEqual(harness.photoEvents, ['us:home-photo-changed'], 'only the winning Oggi photo updates native widgets');
 
   first.resolveDecode();
   await new Promise((resolve) => setImmediate(resolve));

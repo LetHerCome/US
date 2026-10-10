@@ -1,0 +1,37 @@
+name: US Premium Motion V1
+on:
+  pull_request:
+    paths:
+      - 'app.js'
+      - 'styles.css'
+      - 'polish4.css'
+      - 'modal-center.css'
+      - 'tests/premium-motion-v1.test.js'
+      - '.github/workflows/premium-motion-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'app.js'
+      - 'styles.css'
+      - 'polish4.css'
+      - 'modal-center.css'
+      - 'tests/premium-motion-v1.test.js'
+      - '.github/workflows/premium-motion-ci.yml'
+permissions:
+  contents: read
+jobs:
+  motion:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Premium motion and popup contracts
+        run: node --test tests/premium-motion-v1.test.js tests/m12a-shell-motion.test.js tests/ui-foundation.test.js tests/centered-popups-v1.test.js
+      - name: PWA build
+        run: npm run build:cloudflare-pages
+      - name: Native web build
+        run: npm run build:capacitor-web

@@ -8,6 +8,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.HashSet;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
@@ -27,8 +29,11 @@ final class UsWidgetStore {
     private final AtomicFile ownerFile;
     private final AtomicFile snapshotFile;
     private final AtomicFile actionFile;
+    private final AtomicFile thinkHistoryFile;
     private final AtomicFile photoFile;
     private final AtomicFile photoMetaFile;
+    private final AtomicFile noiPortraitFile;
+    private final AtomicFile noiPortraitMetaFile;
 
     UsWidgetStore(Context context) {
         directory = new File(context.getNoBackupFilesDir(), "us-widget");
@@ -37,8 +42,11 @@ final class UsWidgetStore {
         ownerFile = new AtomicFile(new File(directory, "owner-v1.txt"));
         snapshotFile = new AtomicFile(new File(directory, "snapshot-v2.json"));
         actionFile = new AtomicFile(new File(directory, "think-action-v1.json"));
+        thinkHistoryFile = new AtomicFile(new File(directory, "think-history-v1.json"));
         photoFile = new AtomicFile(new File(mediaDirectory, "photo.jpg"));
         photoMetaFile = new AtomicFile(new File(mediaDirectory, "photo-meta.json"));
+        noiPortraitFile = new AtomicFile(new File(mediaDirectory, "noi-portrait.jpg"));
+        noiPortraitMetaFile = new AtomicFile(new File(mediaDirectory, "noi-portrait-meta.json"));
         // V1 kept the action status inside the shared snapshot. It is superseded.
         new File(directory, "snapshot-v1.json").delete();
     }
@@ -65,8 +73,11 @@ final class UsWidgetStore {
     private void wipeAccountData() {
         snapshotFile.delete();
         actionFile.delete();
+        thinkHistoryFile.delete();
         photoFile.delete();
         photoMetaFile.delete();
+        noiPortraitFile.delete();
+        noiPortraitMetaFile.delete();
     }
 
     // ---------- semantic snapshot ----------
@@ -129,6 +140,89 @@ final class UsWidgetStore {
         } catch (Exception ignored) {
             return false;
         }
+    }
+
+    // Confirmed native-widget sends are kept on the device, scoped to the active account.
+    // A rolling 24-hour interval is used; no additional backend endpoint is called.
+    private JSONArray recentThinkEvents(Instant now) {
+        JSONArray events = new JSONArray();
+        String ownerHash = owner();
+        if (ownerHash.isEmpty()) return events;
+        try {
+            JSONObject stored = new JSONObject(readAtomic(thinkHistoryFile));
+            if (!ownerHash.equals(stored.optString("ownerHash", ""))) return events;
+            JSONArray previous = stored.optJSONArray("events");
+            if (previous == null) return events;
+            HashSet<String> seen = new HashSet<>();
+            long cutoff = now.minusSeconds(86400).toEpochMilli();
+            for (int i = 0; i < previous.length(); i++) {
+                JSONObject entry = previous.optJSONObject(i);
+                if (entry == null) continue;
+                String id = entry.optString("id", "");
+                Instant timestamp = UsWidgetContract.instant(entry.optString("at", ""));
+                if (id.isEmpty() || timestamp == null || timestamp.toEpochMilli() <= cutoff
+                    || timestamp.isAfter(now) || !seen.add(id)) continue;
+                events.put(entry);
+            }
+        } catch (Exception ignored) {}
+        return events;
+    }
+
+    synchronized boolean recordThinkSent(String actionId, Instant now) {
+        if (actionId == null || actionId.isEmpty() || owner().isEmpty()) return false;
+        JSONArray events = recentThinkEvents(now);
+        for (int i = 0; i < events.length(); i++) {
+            if (actionId.equals(events.optJSONObject(i).optString("id"))) return true;
+        }
+        try {
+            events.put(new JSONObject().put("id", actionId).put("at", now.toString()));
+            return writeAtomic(thinkHistoryFile, new JSONObject()
+                .put("ownerHash", owner()).put("events", events).toString());
+        } catch (Exception ignored) { return false; }
+    }
+
+    synchronized int countThinkSent24h(Instant now) {
+        return recentThinkEvents(now).length();
+    }
+
+    synchronized Instant nextThinkExpiry(Instant now) {
+        JSONArray events = recentThinkEvents(now);
+        Instant next = null;
+        for (int i = 0; i < events.length(); i++) {
+            Instant at = UsWidgetContract.instant(events.optJSONObject(i).optString("at", ""));
+            if (at == null) continue;
+            Instant expiry = at.plusSeconds(86400).plusMillis(1000);
+            if (next == null || expiry.isBefore(next)) next = expiry;
+        }
+        return next;
+    }
+
+    // WebView-prepared two-person portrait, never a signed URL.
+    synchronized boolean writeNoiPortrait(String ownerHash, byte[] bytes) {
+        if (!owner().equals(ownerHash) || ownerHash.isEmpty() || bytes == null ||
+            bytes.length < 64 || bytes.length > MAX_PHOTO_BYTES || !isImage(bytes)) return false;
+        FileOutputStream output = null;
+        try {
+            output = noiPortraitFile.startWrite();
+            output.write(bytes);
+            output.flush();
+            noiPortraitFile.finishWrite(output);
+            return writeAtomic(noiPortraitMetaFile,
+                new JSONObject().put("ownerHash", ownerHash).toString());
+        } catch (Exception ignored) {
+            if (output != null) noiPortraitFile.failWrite(output);
+            return false;
+        }
+    }
+
+    synchronized byte[] readNoiPortrait() {
+        String activeOwner = owner();
+        if (activeOwner.isEmpty()) return null;
+        try {
+            JSONObject meta = new JSONObject(readAtomic(noiPortraitMetaFile));
+            if (!activeOwner.equals(meta.optString("ownerHash", ""))) return null;
+            return noiPortraitFile.readFully();
+        } catch (Exception ignored) { return null; }
     }
 
     // ---------- cached private photo ----------

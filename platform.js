@@ -141,7 +141,9 @@
       couple: {
         names: (Array.isArray(couple.names) ? couple.names : []).map((name) => safeText(name, 40)).filter(Boolean).slice(0, 2),
         startedOn: safeCivilDate(couple.startedOn),
-        frame: typeof couple.frame === 'string' && /^[a-z0-9_]{1,24}$/.test(couple.frame) ? couple.frame : ''
+        frame: typeof couple.frame === 'string' && /^[a-z0-9_]{1,24}$/.test(couple.frame) ? couple.frame : '',
+        distanceText: typeof couple.distanceText === 'string' && /^[0-9., ]{1,16} ?(km|m|mi|ft)$/.test(couple.distanceText) ? couple.distanceText : '',
+        distanceState: couple.distanceState === 'stale' ? 'stale' : 'ready'
       },
       countdown: {
         active,
@@ -194,6 +196,16 @@
     const data = typeof base64 === 'string' && /^[A-Za-z0-9+/=]+$/.test(base64) && base64.length <= 2_800_000 ? base64 : '';
     if (!plugin || !safeHash || !safeKey || !data || typeof plugin.writePhoto !== 'function') return false;
     await plugin.writePhoto({ ownerHash: safeHash, key: safeKey, data });
+    return true;
+  }
+
+  // A private JPEG composite of the two avatars, never remote URLs.
+  async function writeWidgetNoiPortrait(ownerHash, base64) {
+    const plugin = widgetBridge();
+    const safeHash = validOwnerHash(ownerHash);
+    const data = typeof base64 === 'string' && /^[A-Za-z0-9+/=]+$/.test(base64) && base64.length <= 2_800_000 ? base64 : '';
+    if (!plugin || !safeHash || !data || typeof plugin.writeNoiPortrait !== 'function') return false;
+    await plugin.writeNoiPortrait({ ownerHash: safeHash, data });
     return true;
   }
 
@@ -305,6 +317,7 @@
     writeWidgetSnapshot,
     readWidgetSnapshot,
     writeWidgetPhoto,
+    writeWidgetNoiPortrait,
     clearWidgets,
     getWidgetDeviceIdentity,
     storeWidgetActionCredential,

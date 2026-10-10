@@ -180,12 +180,13 @@ public class UsWidgetModelsTest {
         UsWidgetModels.Think sending = UsWidgetModels.think(snapshot(null), action("sending", "2026-10-06T10:00:00Z"), true, now);
         assertTrue(sending.busy);
         assertEquals("Invio…", sending.cta);
-        UsWidgetModels.Think sent = UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:00Z"), true, now);
+        UsWidgetModels.Think sent = UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:04Z"), true, now);
         assertTrue(sent.busy);
         assertEquals("Inviato a Beatrice", sent.message);
-        UsWidgetModels.Think later = UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:00Z"), true, Instant.parse("2026-10-06T10:00:30Z"));
+        UsWidgetModels.Think later = UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:04Z"), true, Instant.parse("2026-10-06T10:00:07Z"));
         assertFalse(later.busy);
-        assertEquals("Inviato", later.cta);
+        assertEquals("Ti penso", later.cta);
+        assertEquals("Pensa a Beatrice", later.message);
     }
 
     @Test
@@ -207,7 +208,7 @@ public class UsWidgetModelsTest {
         s.getJSONObject("think").put("lastSentAt", "2026-10-06T11:45:00Z");
         UsWidgetModels.Think answered = UsWidgetModels.think(s, null, true, now);
         assertEquals("Ti penso", answered.cta);
-        assertTrue(answered.message.startsWith("Hai pensato a Beatrice"));
+        assertEquals("Pensa a Beatrice", answered.message);
 
         // A send made from the widget answers too, before the app has synced.
         s.getJSONObject("think").put("lastSentAt", "2026-10-06T08:00:00Z");
@@ -239,4 +240,41 @@ public class UsWidgetModelsTest {
         assertEquals(168, couple.days);
         assertEquals("aurora", couple.frame);
     }
+    @Test
+    public void noiInvitationUsesRomeCivilDayAndIsStableUntilMidnight() throws Exception {
+        Instant before = Instant.parse("2026-10-06T21:59:00Z");
+        Instant after = Instant.parse("2026-10-06T22:00:00Z");
+        String text = UsWidgetModels.noiInvitation(before);
+        assertEquals(text, UsWidgetModels.noiInvitation(Instant.parse("2026-10-06T12:00:00Z")));
+        assertNotEquals(text, UsWidgetModels.noiInvitation(after));
+        assertTrue(text.equals("Un momento per voi") || text.equals("Una domanda per voi")
+            || text.equals("Giocate un po'") || text.equals("Scopritevi ancora"));
+        UsWidgetModels.Couple model = UsWidgetModels.couple(snapshot(null), before);
+        assertEquals(text, model.todayInvitation);
+        assertEquals(UsWidgetModels.nextRomeMidnight(before), model.nextChange);
+    }
+
+    @Test
+    public void noiEmptyCoupleOffersInvitationWithoutInventingPersonalData() {
+        UsWidgetModels.Couple empty = UsWidgetModels.couple(null, Instant.parse("2026-10-06T10:00:00Z"));
+        assertEquals(-1, empty.days);
+        assertNotNull(empty.todayInvitation);
+        assertEquals("", empty.names);
+    }
+
+    @Test
+    public void noiDistanceIsPresentationOnlyAndSanitized() throws Exception {
+        JSONObject snap = snapshot(null);
+        snap.getJSONObject("couple").put("distanceText", "12,5 km").put("distanceState", "stale")
+            .put("latitude", "42.4").put("longitude", "14.2").put("signedUrl", "https://x");
+        JSONObject clean = UsWidgetContract.normalize(snap);
+        assertEquals("12,5 km", clean.getJSONObject("couple").getString("distanceText"));
+        assertEquals("stale", clean.getJSONObject("couple").getString("distanceState"));
+        assertFalse(clean.toString().contains("latitude"));
+        assertFalse(clean.toString().contains("longitude"));
+        assertEquals("12,5 km", UsWidgetModels.couple(clean, Instant.parse("2026-10-06T10:00:00Z")).distanceText);
+        snap.getJSONObject("couple").put("distanceText", "42.4,14.2");
+        assertEquals("", UsWidgetContract.normalize(snap).getJSONObject("couple").getString("distanceText"));
+    }
+
 }

@@ -51,11 +51,11 @@
 
 .page.us-motion31-animating,
 .page.us-motion31-returning{
-  transition:transform var(--us-motion-surface) var(--us-ease-standard)!important;
+  transition:transform var(--us-motion-surface) cubic-bezier(.22,.82,.18,1)!important;
 }
 
 .page.us-motion31-returning{
-  transition:transform var(--us-motion-base) var(--us-ease-standard)!important;
+  transition:transform var(--us-motion-base) cubic-bezier(.22,.82,.18,1)!important;
 }
 
 html.us-motion31-promoting .page.active,
@@ -72,14 +72,14 @@ html.us-motion31-promoting .page.active.swipe-prev{
 
 .page.active.us-motion5-enter-next,
 .page.active.us-motion5-enter-prev{
-  animation:usMotion5PageEnter var(--us-motion-fast) var(--us-ease-enter) both!important;
+  animation:usMotion5PageEnter 240ms var(--us-ease-enter) both!important;
 }
 
-.page.active.us-motion5-enter-next{--us-motion5-enter-x:10px}
-.page.active.us-motion5-enter-prev{--us-motion5-enter-x:-10px}
+.page.active.us-motion5-enter-next{--us-motion5-enter-x:14px}
+.page.active.us-motion5-enter-prev{--us-motion5-enter-x:-14px}
 
 @keyframes usMotion5PageEnter{
-  from{opacity:.94;transform:translate3d(var(--us-motion5-enter-x),0,0)}
+  from{opacity:.78;transform:translate3d(var(--us-motion5-enter-x),4px,0)}
   to{opacity:1;transform:none}
 }
 

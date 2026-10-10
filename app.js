@@ -1,16 +1,27 @@
 const pages=['home','bond','moments','quiz','settings'];
-const swipePages=['home','bond','moments','quiz'];
-const US_MOTION_FAST_MS=180;
+const US_MOTION_FAST_MS=250;
 const US_MOTION_BASE_MS=220;
 const US_MOTION_SURFACE_MS=260;
+const usEntryTimers = new WeakMap();
 function isReducedMotion(){return Boolean(window.UsUiFoundation?.isReducedMotion?.());}
-function clearPageEntry(page){page?.classList.remove('us-motion5-enter-next','us-motion5-enter-prev');}
+function clearPageEntry(page){
+  if(!page)return;
+  const old=usEntryTimers.get(page);
+  if(old!==undefined){clearTimeout(old);usEntryTimers.delete(page);}
+  page.classList.remove('us-motion5-enter-next','us-motion5-enter-prev');
+}
 function animatePageEntry(page,direction){
   if(!page||isReducedMotion())return;
   const entry=direction>0?'us-motion5-enter-next':'us-motion5-enter-prev';
   clearPageEntry(page);
   page.classList.add(entry);
-  setTimeout(()=>page.classList.remove(entry),US_MOTION_FAST_MS);
+  // Old navigation timers must never interrupt a new entrance.
+  const timer=setTimeout(()=>{
+    if(usEntryTimers.get(page)!==timer)return;
+    page.classList.remove(entry);
+    usEntryTimers.delete(page);
+  },US_MOTION_FAST_MS);
+  usEntryTimers.set(page,timer);
 }
 let usPageHydrationTicket=0;
 const US_HEAVY_PAGE_HYDRATION_FRESH_MS=15000;
@@ -263,16 +274,34 @@ window.UsWidgetDataApi=Object.freeze({
     if(coupleRes.error||profilesRes.error)throw coupleRes.error||profilesRes.error;
     return {startedOn:coupleRes.data?.started_on||'',names:(profilesRes.data||[]).map(p=>p.display_name).filter(Boolean)};
   },
+  // A last-known, already-rendered distance label, never coordinates.
+  noiDistance(){
+    const line=noiDistanceLine(usLocationRuntime.snapshot);
+    return {distanceText:line.state==='unknown'?'':line.text,
+      distanceState:line.state==='stale'?'stale':'ready'};
+  },
+  // The exact two profile portraits displayed in Noi; signed URLs stay inside the WebView.
+  noiAvatarSources(){
+    return ['pairAvatarFrancesco','pairAvatarBeatrice'].map(id=>{
+      const img=document.getElementById(id)?.querySelector('img');
+      const src=img&&!img.hidden?(img.currentSrc||img.src):'';
+      return /^https:\/\//.test(src)?src:'';
+    });
+  },
+  // Same source of truth as Oggi's painted hero, NOT the latest Ricordo.
+  // undefined = Home is still loading; do not erase the native cached photo.
+  // null = Home resolved with no photo; clear the widget only then.
   async latestPhoto(){
-    if(!window.UsPlatform?.isNative||!window.usProfile)return null;
-    const {data,error}=await sb.from('moments').select('id,storage_path,thumbnail_path,moment_date,created_at').order('created_at',{ascending:false}).limit(1);
-    if(error)throw error;
-    const row=data?.[0];
-    if(!row?.storage_path)return null;
-    const mediaPath=row.thumbnail_path||row.storage_path;
-    const url=await usGetSignedUrl(mediaPath,3600);
+    if(!window.UsPlatform?.isNative||!window.usProfile)return undefined;
+    if(!homePhotoHasPainted||!homePhotoPath){
+      return homePhotoHourKey===homeRotationKey() ? null : undefined;
+    }
+    const viewer=window.usProfile,epoch=usAuthEpoch;
+    const path=homePhotoPath;
+    const url=await usGetSignedUrl(path,3600);
+    if(window.usProfile!==viewer||epoch!==usAuthEpoch)return undefined;
     if(!url)throw new Error('widget_photo_unavailable');
-    return {id:row.id,path:mediaPath,sourcePath:row.storage_path,takenOn:row.moment_date||'',url};
+    return {id:'oggi',path,sourcePath:path,takenOn:'',url};
   }
 });
 
@@ -1185,6 +1214,9 @@ function renderDistanceCapsule(model){
   root.dataset.usDistanceState=model.state;
   value.textContent=model.text||'';
   root.setAttribute('aria-label',model.visible?`Distanza tra voi: ${model.text}`:'Distanza tra voi');
+  if (typeof Event === 'function' && typeof window.dispatchEvent === 'function') {
+    window.dispatchEvent(new Event('us:distance-changed'));
+  }
 }
 
 // Last good reading (shown again on any temporary failure) + current model.
@@ -1399,6 +1431,8 @@ async function hydrateProfileAvatars(){
       window.usProfile.avatar_path=profile.avatar_path||null;
     }
   }
+
+  window.dispatchEvent(new Event('us:noi-portraits-ready'));
 }
 window.hydrateProfileAvatars=hydrateProfileAvatars;
 
@@ -1642,6 +1676,9 @@ function crossfadeHomePhoto(url,{path='',hourKey='',allowRetry=true}={}){
         homePhotoHasPainted=false;
         homePhotoPath='';
       }
+      // Native Foto & Noi follows the image actually displayed by Oggi.
+      // The event carries no private path or signed URL.
+      window.dispatchEvent(new Event('us:home-photo-changed'));
     };
     if(firstValid){
       hero.setAttribute('data-us-home-photo-instant','');
@@ -4475,313 +4512,8 @@ window.saveAnswer=saveAnswer;
 
 
 
-let swipeGesture=null;
-let swipeRaf=0;
-let swipePreviewPage=null;
-
-const US_SWIPE_COMMIT_RATIO=.34;
-const US_SWIPE_FLICK_VELOCITY=.86;
-const US_SWIPE_MIN_FLICK_DISTANCE=58;
-const US_SWIPE_TRACKING=.94;
-
-function swipeBlockedTarget(target){
-  if(!target?.closest)return false;
-  if(target.closest(
-    'input,textarea,select,[contenteditable="true"],' +
-    '.modal,.moment-viewer,.auth-overlay,.today-overlay,' +
-    '.us-story-viewer,.us-camera-viewer,.us-events-overlay.open,' +
-    '.us-settings-overlay.open,.us-album-overlay.show,' +
-    '.us-album-lightbox.show,.us-moment-compose-overlay.show,' +
-    '.us-gv2-panel'
-  ))return true;
-  const button=target.closest('button');
-  if(button&&!button.classList.contains('us-setting-row'))return true;
-  return false;
-}
-
-function appViewportBounds(){
-  const app=document.querySelector('.app');
-  const rect=app?.getBoundingClientRect();
-  const width=Math.min(window.innerWidth,rect?.width||window.innerWidth);
-  const left=rect?Math.max(0,rect.left):Math.max(0,(window.innerWidth-width)/2);
-  const navTop=document.querySelector('.nav')?.getBoundingClientRect()?.top||window.innerHeight;
-  const topRect=document.querySelector('.top')?.getBoundingClientRect();
-  const top=Math.max(0,topRect?.bottom||0);
-  return {left,width,top,bottom:Math.min(window.innerHeight,navTop)};
-}
-
-function recordSwipeSample(g,x,time){
-  g.samples.push({x,time});
-  while(g.samples.length>6||g.samples[0]?.time<time-95)g.samples.shift();
-}
-function swipeVelocity(g){
-  if(g.samples.length<2)return 0;
-  const first=g.samples[0],last=g.samples[g.samples.length-1];
-  return (last.x-first.x)/Math.max(1,last.time-first.time);
-}
-
-function clearMotionPage(page){
-  if(!page)return;
-  clearPageEntry(page);
-  page.classList.remove(
-    'us-motion31-current',
-    'us-motion31-preview',
-    'us-motion31-animating',
-    'us-motion31-returning',
-    'us-motion31-promote'
-  );
-  page.style.removeProperty('--us-motion31-x');
-  page.style.removeProperty('--us-motion31-left');
-  page.style.removeProperty('--us-motion31-width');
-  page.style.removeProperty('--us-motion31-top');
-  page.style.removeProperty('--us-motion31-bottom');
-  page.style.removeProperty('pointer-events');
-  page.removeAttribute('aria-hidden');
-}
-
-function destroySwipePreview(){
-  if(swipePreviewPage)clearMotionPage(swipePreviewPage);
-  swipePreviewPage=null;
-}
-
-function prepareSwipePreview(g,direction){
-  if(g.previewDirection===direction&&swipePreviewPage)return swipePreviewPage;
-
-  destroySwipePreview();
-
-  const index=swipePages.indexOf(g.page.id);
-  const targetIndex=index+direction;
-  if(targetIndex<0||targetIndex>=swipePages.length){
-    g.previewDirection=direction;
-    g.targetIndex=-1;
-    return null;
-  }
-
-  const target=document.getElementById(swipePages[targetIndex]);
-  if(!target)return null;
-
-  const bounds=appViewportBounds();
-  g.previewDirection=direction;
-  g.targetIndex=targetIndex;
-  swipePreviewPage=target;
-
-  // Important: preview is NOT .active.
-  // .us-motion31-preview alone overrides display:none, so the normal
-  // .page.active fade never starts during the gesture.
-  target.classList.add('us-motion31-preview');
-  target.setAttribute('aria-hidden','true');
-  target.style.pointerEvents='none';
-  target.style.setProperty('--us-motion31-left',`${bounds.left}px`);
-  target.style.setProperty('--us-motion31-width',`${bounds.width}px`);
-  target.style.setProperty('--us-motion31-top',`${bounds.top}px`);
-  target.style.setProperty('--us-motion31-bottom',`${Math.max(0,window.innerHeight-bounds.bottom)}px`);
-
-  return target;
-}
-
-function applySwipeVisual(){
-  swipeRaf=0;
-  const g=swipeGesture;
-  if(!g||g.axis!=='x')return;
-
-  const rawDx=g.currentX-g.startX;
-  const direction=rawDx<0?1:-1;
-  const index=swipePages.indexOf(g.page.id);
-  const targetIndex=index+direction;
-  const atEdge=targetIndex<0||targetIndex>=swipePages.length;
-  const width=Math.max(1,appViewportBounds().width);
-
-  // Nearly 1:1 tracking is perceived as smoother. Accidental navigation is
-  // prevented by the much stronger commit thresholds, not by artificial lag.
-  const resistance=atEdge?.20:US_SWIPE_TRACKING;
-  const currentX=Math.max(-width*.92,Math.min(width*.92,rawDx*resistance));
-
-  g.page.classList.add('us-motion31-current');
-  g.page.style.setProperty('--us-motion31-x',`${currentX}px`);
-
-  if(atEdge){
-    destroySwipePreview();
-    return;
-  }
-
-  const preview=prepareSwipePreview(g,direction);
-  if(!preview)return;
-
-  // Exact edge-to-edge continuity. No opacity crossfade: it was one of the
-  // things making Motion 3 look like a web transition instead of native motion.
-  const previewX=(direction>0?width:-width)+currentX;
-  preview.style.setProperty('--us-motion31-x',`${previewX}px`);
-}
-
-function resetSwipeVisual(g){
-  if(!g?.page)return;
-  const current=g.page;
-  const preview=swipePreviewPage;
-  const width=Math.max(1,appViewportBounds().width);
-  const direction=g.previewDirection||1;
-
-  current.classList.remove('us-motion31-current');
-  current.classList.add('us-motion31-returning');
-  current.style.setProperty('--us-motion31-x','0px');
-
-  if(preview){
-    preview.classList.add('us-motion31-returning');
-    preview.style.setProperty('--us-motion31-x',`${direction>0?width:-width}px`);
-  }
-
-  setTimeout(()=>{
-    clearMotionPage(current);
-    destroySwipePreview();
-  },isReducedMotion()?0:US_MOTION_BASE_MS);
-}
-
-function completeSwipe(g,direction){
-  const target=swipePreviewPage;
-  if(!target||g.targetIndex<0){
-    resetSwipeVisual(g);
-    return;
-  }
-
-  const width=Math.max(1,appViewportBounds().width);
-  const current=g.page;
-  const targetId=swipePages[g.targetIndex];
-
-  current.classList.remove('us-motion31-current');
-  current.classList.add('us-motion31-animating');
-  target.classList.add('us-motion31-animating');
-
-  current.style.setProperty('--us-motion31-x',`${direction>0?-width:width}px`);
-  target.style.setProperty('--us-motion31-x','0px');
-
-  setTimeout(()=>{
-    // Seamless promotion:
-    // 1. target is already visually at x=0 as preview
-    // 2. go() marks the SAME DOM node active, with page-entry animation disabled
-    // 3. only on the following frames do we remove fixed-preview positioning
-    document.documentElement.classList.add('us-motion31-promoting');
-    target.classList.add('us-motion31-promote');
-
-    go(targetId,{motionCommit:true});
-
-    requestAnimationFrame(()=>{
-      requestAnimationFrame(()=>{
-        clearMotionPage(current);
-        clearMotionPage(target);
-        swipePreviewPage=null;
-        document.documentElement.classList.remove('us-motion31-promoting');
-      });
-    });
-  },isReducedMotion()?0:US_MOTION_SURFACE_MS);
-}
-
-document.addEventListener('touchstart',event=>{
-  if(event.touches.length!==1||swipeBlockedTarget(event.target))return;
-  const activePage=document.querySelector('.page.active');
-  if(!activePage||!swipePages.includes(activePage.id))return;
-  clearPageEntry(activePage);
-
-  const touch=event.touches[0];
-  if(touch.clientX<20||touch.clientX>window.innerWidth-20)return;
-
-  const now=performance.now();
-  swipeGesture={
-    page:activePage,
-    startX:touch.clientX,
-    startY:touch.clientY,
-    currentX:touch.clientX,
-    currentY:touch.clientY,
-    axis:null,
-    previewDirection:0,
-    targetIndex:-1,
-    samples:[{x:touch.clientX,time:now}]
-  };
-},{passive:true});
-
-document.addEventListener('touchmove',event=>{
-  const g=swipeGesture;
-  if(!g||event.touches.length!==1)return;
-
-  const touch=event.touches[0];
-  const dx=touch.clientX-g.startX;
-  const dy=touch.clientY-g.startY;
-
-  if(!g.axis&&(Math.abs(dx)>7||Math.abs(dy)>7)){
-    g.axis=Math.abs(dx)>Math.abs(dy)*1.32?'x':'y';
-    if(g.axis==='y'){
-      swipeGesture=null;
-      destroySwipePreview();
-      return;
-    }
-  }
-
-  if(g.axis!=='x')return;
-
-  event.preventDefault();
-  g.currentX=touch.clientX;
-  g.currentY=touch.clientY;
-  recordSwipeSample(g,touch.clientX,performance.now());
-
-  if(!swipeRaf)swipeRaf=requestAnimationFrame(applySwipeVisual);
-},{passive:false});
-
-document.addEventListener('touchend',event=>{
-  const g=swipeGesture;
-  swipeGesture=null;
-
-  if(swipeRaf){
-    cancelAnimationFrame(swipeRaf);
-    swipeRaf=0;
-  }
-  if(!g)return;
-
-  const touch=event.changedTouches?.[0];
-  if(touch){
-    g.currentX=touch.clientX;
-    g.currentY=touch.clientY;
-    recordSwipeSample(g,touch.clientX,performance.now());
-  }
-
-  const dx=g.currentX-g.startX;
-  const dy=g.currentY-g.startY;
-
-  if(g.axis!=='x'||Math.abs(dx)<Math.abs(dy)*1.16){
-    resetSwipeVisual(g);
-    return;
-  }
-
-  const direction=dx<0?1:-1;
-  const index=swipePages.indexOf(g.page.id);
-  const targetIndex=index+direction;
-
-  if(targetIndex<0||targetIndex>=swipePages.length){
-    resetSwipeVisual(g);
-    return;
-  }
-
-  const width=Math.max(1,appViewportBounds().width);
-  const distanceEnough=Math.abs(dx)>=width*US_SWIPE_COMMIT_RATIO;
-  const velocity=Math.abs(swipeVelocity(g));
-  const flickEnough=velocity>=US_SWIPE_FLICK_VELOCITY&&Math.abs(dx)>=US_SWIPE_MIN_FLICK_DISTANCE;
-
-  if(!distanceEnough&&!flickEnough){
-    resetSwipeVisual(g);
-    return;
-  }
-
-  prepareSwipePreview(g,direction);
-  completeSwipe(g,direction);
-},{passive:true});
-
-document.addEventListener('touchcancel',()=>{
-  if(swipeRaf){
-    cancelAnimationFrame(swipeRaf);
-    swipeRaf=0;
-  }
-  const g=swipeGesture;
-  swipeGesture=null;
-  if(g)resetSwipeVisual(g);
-  else destroySwipePreview();
-},{passive:true});
+// Global tab-swipe removed: Android edge-back and tab navigation remain native.
+// Internal Ricordi carousel, dismiss and game swipe handlers are untouched.
 
 async function refreshVisibleState(options={}){
   if(!window.usProfile||document.hidden)return;
