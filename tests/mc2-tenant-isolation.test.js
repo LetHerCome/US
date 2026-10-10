@@ -72,7 +72,7 @@ test('ISO-03: Storage own-folder positive controls and foreign CRUD denials for 
 });
 const smoke=async(d,u,forbidden)=>{
   const q=(await d.query("select id from public.daily_questions where question_date='2026-01-01'")).rows[0]?.id;
-  for(const sql of ['select public.get_daily_state($1::uuid) r','select public.get_progression_v1() r','select public.get_game_v2_home() r','select public.ensure_bond_week() r','select public.get_or_create_daily_question() r']){
+  for(const sql of ['select public.get_daily_state($1::uuid) r','select public.get_progression_v1() r','select public.get_game_v2_home() r','select public.get_couple_week_participation_v1() r','select public.ensure_bond_week() r','select public.get_or_create_daily_question() r']){
     const value=await h.as(d,u,sql,sql.includes('$1')?[q]:[]);assert.ok(!JSON.stringify(value).includes(forbidden),sql);
   }
   await assert.rejects(h.as(d,u,'select public.list_couple_questions() r'),e=>e.code==='42501' && !e.message.includes(forbidden));

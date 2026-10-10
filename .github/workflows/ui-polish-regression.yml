@@ -8,6 +8,9 @@ on:
       - 'stories.js'
       - 'tests/us-v6-daily-reveal*.test.js'
       - 'tests/pwa-startup-browser.test.js'
+      - 'tests/us-week-participation*.test.js'
+      - 'tests/helpers/week-participation-db.js'
+      - 'supabase/migrations/*_us_v6_week_participation.sql'
       - 'service-worker.js'
       - 'version.json'
       - 'manifest.webmanifest'
@@ -50,6 +53,9 @@ on:
       - 'stories.js'
       - 'tests/us-v6-daily-reveal*.test.js'
       - 'tests/pwa-startup-browser.test.js'
+      - 'tests/us-week-participation*.test.js'
+      - 'tests/helpers/week-participation-db.js'
+      - 'supabase/migrations/*_us_v6_week_participation.sql'
       - 'service-worker.js'
       - 'version.json'
       - 'manifest.webmanifest'
@@ -102,6 +108,8 @@ jobs:
         run: node --test tests/us-reveal-calendar-clarity-v5.test.js tests/m10-2-daily-reactions.test.js tests/m12a-game-ricordi-motion.test.js tests/us-gioca-v4-bento.test.js tests/us-progression-v1.test.js tests/progression-rewards-v2.test.js tests/us-human-ui-02.test.js tests/m11b-game-v2-client.test.js tests/noi-v2-layout.test.js tests/gioca-tiles.test.js tests/swipe-v1.test.js tests/rewards-countdown-visual-pass.test.js tests/us-perf-1-0-precache.test.js
       - name: Daily V6 states, retries, concurrency and preserved server contracts
         run: node --test tests/us-v6-daily-reveal.test.js tests/m9e-daily-question-client.test.js tests/m12b-4-daily-keepsake-client.test.js tests/m10-2-daily-reveal-states.test.js tests/m12b-4-daily-question-keepsakes.test.js tests/m12b-4-daily-question-keepsakes-race.test.js
+      - name: Week participation SQL security and client state
+        run: node --test tests/us-week-participation-db.test.js tests/us-week-participation-client.test.js
       - name: US V3 — Oggi looks, Noi cleanup, Gioca hierarchy, rewards migration (PGlite)
         run: node --test tests/us-noi-single-calendar-v4.test.js tests/us-v3-oggi-look.test.js tests/us-v3-noi-gioca.test.js tests/us-v3-rewards-db.test.js tests/countdown-oggi-v1-db.test.js tests/progression-rewards-v2-db.test.js
       - name: Cloudflare web bundle
@@ -129,8 +137,33 @@ jobs:
         run: node --test tests/us-v6-daily-reveal-browser.test.js
       - name: Installed production V5 to V6 upgrade and offline startup
         run: node --test tests/pwa-startup-browser.test.js
+      - name: Week rail mobile comparison, offline and Android Back
+        env:
+          US_WEEK_QA_SHOTS: /tmp/us-v6-daily-shots/week
+        run: node --test tests/us-week-participation-browser.test.js
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: daily-v6-mobile
           path: /tmp/us-v6-daily-shots
+
+  week-concurrency:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Install isolated PostgreSQL test server
+        # The captured production baseline is PG17, including MAINTAIN grants.
+        # Use the official PGDG package repository; PG16 cannot rebuild it.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-common ca-certificates
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get update
+          sudo apt-get install -y postgresql-17
+      - name: Mandatory real two-connection receipts and game completions
+        run: sudo env PATH="$PATH" US_WEEK_RACE_REQUIRED=1 node --test tests/us-week-participation-concurrency.test.js

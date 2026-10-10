@@ -1,4 +1,4 @@
-const BUILD_ID = "us-store-s1-widget-motion-20261010-1";
+const BUILD_ID = "us-store-s2-week-participation-20261010-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;

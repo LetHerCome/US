@@ -25,9 +25,13 @@ async function database({mc2=true, seed=true}={}) {
   const db = await newDb();
   try {
     await db.exec(PLATFORM);
-    for (const f of fs.readdirSync(DIR).filter(f=>f.endsWith('.sql') && f!==FILE).sort()) await db.exec(fs.readFileSync(path.join(DIR,f),'utf8'));
+    const files=fs.readdirSync(DIR).filter(f=>f.endsWith('.sql')).sort();
+    // MC2 upgrade fixtures deliberately delay MC2 itself. Its dependent read model
+    // must wait too; a pre-MC2 substrate has unprotected membership parents.
+    const week=files.filter(f=>f.endsWith('_us_v6_week_participation.sql'));
+    for (const f of files.filter(f=>f!==FILE&&!week.includes(f))) await db.exec(fs.readFileSync(path.join(DIR,f),'utf8'));
     if(seed) await db.exec(SEED);
-    if(mc2) await db.exec(MC2());
+    if(mc2){await db.exec(MC2());for(const f of week)await db.exec(fs.readFileSync(path.join(DIR,f),'utf8'));}
     return db;
   } catch(e) { await db.close(); throw e; }
 }
