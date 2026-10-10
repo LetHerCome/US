@@ -3,12 +3,15 @@ name: Store S3 native push privacy
 on:
   pull_request:
     paths:
+      - 'android/**'
+      - 'native-plugins/us-push-support/**'
       - 'supabase/functions/_shared/native-push-transport.mjs'
       - 'supabase/functions/_shared/notification-core.mjs'
       - 'notifications.js'
       - 'tests/s3-android-native-push-privacy.test.js'
       - 'tests/native-notifications-v1-dispatch.test.js'
       - 'tests/native-notifications-v1-native.test.js'
+      - 'tests/mc3-push-lifecycle.test.js'
       - '.github/workflows/s3-native-push-privacy.yml'
   push:
     branches:
@@ -32,6 +35,7 @@ jobs:
         run: |
           node --check supabase/functions/_shared/native-push-transport.mjs
           node --check tests/s3-android-native-push-privacy.test.js
+          node --check notifications.js
       - name: Android privacy, native FCM and APNs transport, client logout and static contracts
         run: node --test tests/s3-android-native-push-privacy.test.js tests/native-notifications-v1-dispatch.test.js tests/native-notifications-v1-native.test.js tests/mc3-push-lifecycle.test.js
       - name: Check bundle continues to build
