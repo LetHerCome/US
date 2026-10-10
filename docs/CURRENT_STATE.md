@@ -2,7 +2,7 @@
 
 **Status:** OPERATIONAL STATUS AUTHORITY
 **Verified snapshot:** 2026-10-10
-**Verified main SHA:** b0c9f82d7830f13a0310016067e36da961855d23
+**Verified main SHA:** 0682a9b4db45c44914cbcfba9d29c09356d82353 (Store S1-A #179 merged)
 
 ## US Store 1.0 — current authority
 
@@ -10,9 +10,9 @@
 - Product V1: Oggi, Noi, Ricordi, Gioca. Sintonia remains in Gioca; Noi is the single calendar; full topbar only on Oggi.
 - No new Arcade, extra mascots, full Diary/Scrapbook or broad redesign before V1. Signup, data privacy, security, reliability and compliance remain necessary release work.
 - Main includes Daily Reveal V6 and MC3 onboarding code. Public self-signup and complete native shared-account notification isolation are NOT launch-ready.
-- PR #170 widget V2 + motion is draft, not merged. Last code includes Ti Penso ready and 24h count, Noi portrait+distance, no GIOCA CTA, no global tab swipe. Its PR description is stale.
-- PR #177 server-backed weekly participation is draft, not merged and SQL not applied to production.
-- Main Android signed CI and iOS simulator CI were green on 9 October. Real Android signed-upgrade QA, privacy/account deletion and Play listing remain open.
+- **Store S1-A widget V2 + Premium Motion is MERGED in main** via PR #179 on 2026-10-10. Includes Ti Penso ready/24h count, Noi portrait+distance without GIOCA CTA, Foto & Noi follows Oggi, no global tab swipe and static guide removed. **PRs #167–#170 were closed as superseded**, not merged separately. Main CI signed Android and iOS simulator are green; this does not certify physical Xiaomi QA.
+- **Store S2 week participation is OPEN DRAFT PR #180** (latest candidate HEAD 850675bce710ffd98cece1f5505d9c8edb4f4e37), rebased/reconciled on Store S1-A. Source PR #177 remains unmerged. Proposed PostgreSQL migration `20261009185803_us_v6_week_participation.sql` is **not applied** to Supabase; server RPC is absent. Git V3 cosmetics SQL is also not applied to production. Full independent/security + hosted staging gate remains before production SQL approval.
+- Main S1-A post-merge Android signed APK, iOS simulator, widget, motion and Daily/mobile CI are green on 10 October; physical Android signed-upgrade QA, native cross-account push security, privacy/account deletion and Play listing remain open. S3/P0 native notification isolation is tracked as GitHub issue #181.
 - Full suite has about 40 baseline failures reported; triage required. N3.7 global sizing remains frozen.
 - Never conflate designed / committed / merged / deployed / physically tested states. Merge, production SQL and store submission each need separate authorization.
 
