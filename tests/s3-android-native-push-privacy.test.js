@@ -58,7 +58,8 @@ test('Android manifest has exactly one guarded receiver; plain Capacitor service
  const service=fs.readFileSync(path.join(__dirname,'../android/app/src/main/java/com/usapp/us/UsGuardedMessagingService.java'),'utf8');
  const gate=fs.readFileSync(path.join(__dirname,'../native-plugins/us-push-support/android/src/main/java/com/usapp/pushsupport/UsPushOwnerGate.java'),'utf8');
  const plugin=fs.readFileSync(path.join(__dirname,'../native-plugins/us-push-support/android/src/main/java/com/usapp/pushsupport/UsPushSupportPlugin.java'),'utf8');
- assert.match(manifest,/MessagingService"\s+tools:node="remove"/);
+ assert.match(manifest,/com\.capacitorjs\.plugins\.pushnotifications\.MessagingService"\s+tools:node="remove"/);
+ assert.match(manifest,/com\.google\.firebase\.messaging\.FirebaseMessagingService"\s+tools:node="remove"/);
  assert.match(manifest,/android:name="\.UsGuardedMessagingService"/);
  assert.equal((manifest.match(/com\.google\.firebase\.MESSAGING_EVENT/g)||[]).length,1);
  assert.match(service,/extends MessagingService/);
