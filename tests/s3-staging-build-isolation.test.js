@@ -70,5 +70,8 @@ test('staging QA CI has NO fallback to production Firebase or Android app identi
   assert.match(workflow, /com\.usapp\.us\.staging/);
   assert.doesNotMatch(workflow, /secrets\.ANDROID_GOOGLE_SERVICES_JSON_B64/);
   assert.doesNotMatch(workflow, /application_id=com\.usapp\.us\s*\n/);
-  assert.doesNotMatch(workflow, /iiakdfsxpywdkxravqjh/);
+  // The only allowed mention of production is a REJECTION GUARD in CI.
+  assert.match(workflow, /s\.includes\('iiakdfsxpywdkxravqjh'\)/);
+  assert.equal((workflow.match(/iiakdfsxpywdkxravqjh/g) || []).length, 1);
+  assert.doesNotMatch(workflow, /https:\/\/iiakdfsxpywdkxravqjh/);
 });
