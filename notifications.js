@@ -388,14 +388,25 @@
     busy = true;
     try {
       const installation = installationId({ create: false });
-      if (installation) {
-        const { error } = await withTimeout(client().rpc('unregister_native_push_device', { target_installation_id: installation }), CALL_TIMEOUT_MS);
-        if (error) return { ok: false };
-      }
-      await retireNativeOwner();
-      await stopNativeDelivery(await nativeStatus());
+      // The owner gate must be retired BEFORE any potentially offline RPC.
+      // Disable locally even if the network fails, so onRegistration/resume
+      // cannot accidentally rebind A while an unregister is unresolved.
       remove(STORE.enabled(session.userId));
       remove(STORE.synced(session.userId));
+      await retireNativeOwner();
+      if (installation) {
+        let revoked = false;
+        try {
+          const { error } = await withTimeout(client().rpc('unregister_native_push_device', { target_installation_id: installation }), CALL_TIMEOUT_MS);
+          revoked = !error;
+        } catch (_) { /* offline: keep the server row quarantined */ }
+        if (!revoked) {
+          retireInstallation(); // persist A's ID/token for owner-only retry
+          await stopNativeDelivery(await nativeStatus());
+          return { ok: false, kind: 'pending' };
+        }
+      }
+      await stopNativeDelivery(await nativeStatus());
       return { ok: true };
     } catch (_) {
       return { ok: false };
