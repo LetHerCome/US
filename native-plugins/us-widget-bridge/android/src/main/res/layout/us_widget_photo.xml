@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Foto & Noi: the latest photo Ricordo (private on-device copy) and the days together. -->
+<!-- Foto & Noi: the same Oggi hero image (private on-device cache) and days together. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/us_photo_root"
     android:layout_width="match_parent"

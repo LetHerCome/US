@@ -122,6 +122,21 @@ public class UsWidgetBridgePlugin extends Plugin {
         call.resolve();
     }
 
+    @PluginMethod
+    public void writeNoiPortrait(PluginCall call) {
+        String ownerHash = call.getString("ownerHash", "");
+        String data = call.getString("data", "");
+        byte[] bytes;
+        try { bytes = data.length() > UsWidgetStore.MAX_PHOTO_BYTES * 2 ? null : Base64.decode(data, Base64.DEFAULT); }
+        catch (IllegalArgumentException ignored) { bytes = null; }
+        if (!store.writeNoiPortrait(ownerHash, bytes)) {
+            call.reject("Invalid Noi portrait");
+            return;
+        }
+        UsWidgets.refreshAll(getContext());
+        call.resolve();
+    }
+
     /** Logout: semantic state, action state, cached photo and credential all go. */
     @PluginMethod
     public void clearAll(PluginCall call) {

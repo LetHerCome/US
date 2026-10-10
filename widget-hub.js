@@ -15,8 +15,8 @@
   const CATALOG = Object.freeze([
     { kind: 'think', name: 'Ti penso', copy: 'Un pensiero con un tocco, anche con US chiusa.', shape: 'square' },
     { kind: 'countdown', name: 'Countdown', copy: 'Lo stesso Countdown che hai scelto su Oggi.', shape: 'square' },
-    { kind: 'noi', name: 'Noi', copy: 'Voi due e i giorni insieme.', shape: 'wide' },
-    { kind: 'photo', name: 'Foto & Noi', copy: 'Il vostro ultimo ricordo, con i giorni insieme.', shape: 'square' }
+    { kind: 'noi', name: 'Noi', copy: 'Le vostre foto profilo e la distanza tra voi.', shape: 'wide' },
+    { kind: 'photo', name: 'Foto & Noi', copy: 'La fotografia che vedi su Oggi, con i giorni insieme.', shape: 'square' }
   ]);
   window.UsWidgetCatalog = CATALOG;
 
@@ -27,10 +27,10 @@
 
   let device = { installed: {}, pinSupported: false, vendor: 'android' };
   const status = {};
-  let manualNeeded = false;
   let pending = null;
   let pollTimer = null;
 
+  window.addEventListener('us:noi-widget-photo-updated', () => { if (isOpen()) render(); });
   const widgets = () => window.UsWidgets;
   const isOpen = () => $('usWidgetHub')?.classList.contains('open');
 
@@ -66,10 +66,15 @@
     return view ? { value: view.value, unit: Number(view.value) === 1 ? 'giorno insieme' : 'giorni insieme' } : null;
   }
 
-  function noiPreview(snapshot) {
-    const names = window.UsIdentity?.current().pairLabel || 'Voi due';
-    const days = daysLine(snapshot);
-    return `<div class="us-wp-noi" data-frame="${esc(snapshot.couple?.frame || '')}"><span><i></i>${esc(names)}</span><b>${esc(days?.value || '—')}<small>${esc(days?.unit || 'giorni insieme')}</small></b></div>`;
+  function noiPreview(snapshot, portraitUrl) {
+    const distance=snapshot.couple?.distanceText || 'Distanza non nota';
+    const sub=snapshot.couple?.distanceText
+      ? (snapshot.couple?.distanceState === 'stale' ? 'ULTIMA DISTANZA' : 'TRA VOI')
+      : 'APRI NOI';
+    return `<div class="us-wp-noi us-wp-noi-light">
+      <span class="us-wp-noi-portrait">${portraitUrl ? `<img src="${esc(portraitUrl)}" alt="">` : '♡ ♡'}</span>
+      <span class="us-wp-noi-info"><small>US · NOI</small><b>${esc(distance)}</b><small>${esc(sub)}</small></span>
+    </div>`;
   }
 
   function photoPreview(snapshot, previewUrl) {
@@ -78,14 +83,14 @@
     if (snapshot.photo?.state === 'ready' && previewUrl) {
       return `<div class="us-wp-photo has-photo"><img src="${esc(previewUrl)}" alt="">${line}</div>`;
     }
-    return `<div class="us-wp-photo"><p>${IMAGE}<span>Il vostro prossimo ricordo apparirà qui</span></p>${line}</div>`;
+    return `<div class="us-wp-photo"><p>${IMAGE}<span>La foto di Oggi apparirà qui</span></p>${line}</div>`;
   }
 
   function preview(kind, view) {
     const snapshot = view.snapshot || {};
     if (kind === 'think') return thinkPreview(snapshot);
     if (kind === 'countdown') return countdownPreview(snapshot);
-    if (kind === 'noi') return noiPreview(snapshot);
+    if (kind === 'noi') return noiPreview(snapshot, view.noiPortraitPreviewUrl);
     return photoPreview(snapshot, view.photoPreviewUrl);
   }
 
@@ -109,11 +114,7 @@
         </div>
       </article>`;
     }).join('');
-    const manual = $('usWidgetHubManual');
-    if (manual) {
-      manual.hidden = !(manualNeeded || device.pinSupported === false);
-      $('usWidgetHubVendor').hidden = device.vendor !== 'xiaomi';
-    }
+
   }
 
   async function refreshDevice() {
@@ -137,8 +138,7 @@
       status[kind] = 'Aggiunto alla Home';
       window.UsFeedback?.success?.();
     } else {
-      status[kind] = 'Non è comparso? Aggiungilo a mano qui sotto.';
-      manualNeeded = true;
+      status[kind] = 'Non aggiunto. Riprova oppure usa la sezione Widget della Home Android.';
     }
     render();
   }
@@ -162,8 +162,7 @@
     try { result = await widgets().requestPin(kind); } catch (_) {}
     if (!result.requested) {
       pending = null;
-      manualNeeded = true;
-      status[kind] = result.supported ? 'Il telefono non ha aperto la richiesta. Aggiungilo a mano qui sotto.' : 'Su questo telefono si aggiunge a mano: guarda qui sotto.';
+      status[kind] = result.supported ? 'Il telefono non ha aperto la richiesta. Riprova.' : 'Il launcher non supporta aggiunta automatica. Usa i widget della Home.';
       render();
       return;
     }
@@ -184,8 +183,9 @@
     document.body.classList.add('us-settings-modal-open');
     render();
     refreshDevice().catch(() => {});
-    // The preview shows the real latest photo when it is cheap to have it.
+    // Preview uses Oggi's currently painted photo, not the latest Ricordo.
     widgets().syncPhoto?.().then(() => { if (isOpen()) render(); }).catch(() => {});
+    widgets().syncNoiPortrait?.().then(() => { if (isOpen()) render(); }).catch(() => {});
   }
 
   function close() {

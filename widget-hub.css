@@ -13,15 +13,6 @@
 .us-widget-hub-add:disabled{opacity:.55}
 .us-widget-hub-status{min-height:0;color:var(--us-color-text-3);font-size:var(--us-text-meta);line-height:1.35}
 .us-widget-hub-status:empty{display:none}
-.us-widget-hub-manual{margin-top:12px;padding:14px;border-radius:20px;border:1px dashed var(--us-color-line-strong);display:flex;flex-direction:column;gap:8px}
-.us-widget-hub-manual[hidden],.us-widget-hub-vendor[hidden]{display:none}
-.us-widget-hub-manual>b{font-size:14px;color:var(--us-color-text)}
-.us-widget-hub-path{margin:0!important;color:var(--us-color-text)!important;font-size:var(--us-text-secondary)!important;line-height:1.55}
-.us-widget-hub-path span{color:var(--us-color-accent-ink)}
-.us-widget-hub-vendor{display:flex;flex-direction:column;gap:8px}
-.us-widget-hub-vendor p{margin:0!important;color:var(--us-color-text-2)!important;font-size:var(--us-text-meta)!important;line-height:1.45}
-.us-widget-hub-vendor button{align-self:flex-start;min-height:38px;padding:0 14px;border-radius:999px;font-size:13px}
-
 /* ---------- previews: the native widget surface ---------- */
 .us-widget-hub-preview>div{--wp-bg:linear-gradient(180deg,rgba(17,11,24,.95),rgba(10,7,16,.95));position:relative;overflow:hidden;width:112px;height:112px;border-radius:22px;background:var(--wp-bg);box-shadow:0 10px 24px rgba(0,0,0,.3),inset 0 0 0 1px rgba(255,255,255,.05);color:#fff8fd;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:10px;box-sizing:border-box}
 .us-widget-hub-preview.is-wide>div{width:128px;height:64px;align-items:flex-start;text-align:left;padding:9px 12px}
@@ -65,6 +56,16 @@
 .us-wp-noi[data-frame="polaroid"]{--wp-accent:#fff8ee}
 .us-wp-noi[data-frame="scrapbook"]{--wp-accent:#e8c9a0}
 
+/* NOI V2: native 2x1 action-first composition. Keep within 128×64 preview. */
+.us-widget-hub-preview.is-wide>.us-wp-noi{justify-content:space-between;gap:3px;padding:8px 9px}
+.us-wp-noi .us-wp-noi-meta{width:100%;display:flex;align-items:center;gap:4px;white-space:nowrap;font-size:7.5px;letter-spacing:.02em}
+.us-wp-noi .us-wp-noi-meta i{width:9px;height:2px}
+.us-wp-noi .us-wp-noi-meta small{margin-left:auto;font-size:7px;color:var(--wp-accent,#ff8ead);letter-spacing:0}
+.us-wp-noi .us-wp-noi-action{display:flex;align-items:center;justify-content:space-between;gap:4px;min-width:0;width:100%}
+.us-wp-noi .us-wp-noi-action b{min-width:0;flex:1;display:block;margin:0;font:600 10px/1.15 var(--us-font-body,Inter,sans-serif);letter-spacing:-.01em}
+.us-wp-noi .us-wp-noi-action em{flex:none;padding:7px 5px;border:1px solid rgba(255,182,208,.35);border-radius:10px;background:rgba(255,142,173,.17);font:700 8px/1 var(--us-font-body,Inter,sans-serif);font-style:normal}
+
+
 .us-wp-photo{justify-content:flex-start!important;padding:0!important}
 .us-wp-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .us-wp-photo.has-photo::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(10,7,16,.85),rgba(10,7,16,.2) 50%,transparent)}
@@ -77,3 +78,22 @@
 @media (max-width:360px){
   .us-widget-hub-card{grid-template-columns:1fr;justify-items:start}
 }
+
+/* Noi 2x1 is a light editorial card; preview matches native RemoteViews. */
+.us-widget-hub-preview.is-wide>.us-wp-noi-light{
+  --wp-bg:#f9eaf1;
+  background:#f9eaf1!important;color:#43303d!important;
+  width:128px;height:64px;display:flex;flex-direction:row;
+  align-items:center!important;justify-content:flex-start!important;
+  padding:6px!important;gap:5px;border:1px solid #edd5e2;
+}
+.us-wp-noi-light .us-wp-noi-portrait{
+  width:56px;height:48px;flex:none;display:flex;align-items:center;justify-content:center;
+  border-radius:12px;overflow:hidden;background:#f1d4e2;color:#aa6782;font-size:18px!important;
+}
+.us-wp-noi-light .us-wp-noi-portrait img{width:100%;height:100%;object-fit:contain}
+.us-wp-noi-light .us-wp-noi-info{display:flex;min-width:0;flex:1;flex-direction:column;
+  align-items:flex-start!important;gap:2px;white-space:normal!important}
+.us-wp-noi-light .us-wp-noi-info small{color:#a16e82;font-size:6px;font-weight:700;letter-spacing:.04em}
+.us-wp-noi-light .us-wp-noi-info b{color:#43303d;font-size:10px;font-weight:700;
+  line-height:1.15;margin:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

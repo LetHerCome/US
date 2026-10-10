@@ -1,0 +1,35 @@
+name: US Noi action widget CI
+on:
+  pull_request:
+    paths:
+      - 'native-plugins/us-widget-bridge/**'
+      - 'widgets.js'
+      - 'widget-hub.js'
+      - 'widget-hub.css'
+      - 'tests/widget-system.test.js'
+      - '.github/workflows/noi-action-widget-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'native-plugins/us-widget-bridge/**'
+      - 'widgets.js'
+      - 'widget-hub.js'
+      - 'widget-hub.css'
+      - 'tests/widget-system.test.js'
+      - '.github/workflows/noi-action-widget-ci.yml'
+permissions:
+  contents: read
+jobs:
+  noi-widget:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Native widget contracts, routing, privacy
+        run: node --test tests/widget-system.test.js
+      - name: Capacitor web bundle
+        run: npm run build:capacitor-web

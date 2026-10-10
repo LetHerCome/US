@@ -91,6 +91,22 @@ final class UsWidgets {
         schedule(app, any ? state.nextChange : null);
     }
 
+    /** Quick local response for the Ti penso tap: do not decode/refresh the
+     * private Photo widget before showing Invio.... The final async result
+     * uses refreshAll to keep global scheduling unchanged. */
+    static void refreshThink(Context context) {
+        Context app = context.getApplicationContext();
+        AppWidgetManager manager = AppWidgetManager.getInstance(app);
+        int[] placed = manager.getAppWidgetIds(new ComponentName(app, UsThinkWidgetProvider.class));
+        if (placed.length == 0) return;
+        State state = new State(app);
+        RemoteViews views = UsThinkWidgetProvider.render(app, state);
+        for (int id : placed) {
+            try { manager.updateAppWidget(id, views); }
+            catch (RuntimeException ignored) { /* launcher cannot block widget send */ }
+        }
+    }
+
     static void refresh(Context context, String kind, int appWidgetId) {
         Context app = context.getApplicationContext();
         AppWidgetManager manager = AppWidgetManager.getInstance(app);
