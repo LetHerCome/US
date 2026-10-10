@@ -7,9 +7,10 @@ const ROOT=path.resolve(__dirname,'../..');
 const DIR=path.join(ROOT,'supabase/migrations');
 const FILE=fs.readdirSync(DIR).find(f=>f.endsWith('_us_v6_week_participation.sql'));
 const sql=()=>fs.readFileSync(path.join(DIR,FILE),'utf8');
-async function base(){
+async function base({exclude=[]}={}){
  const db=await newDb();
- try{for(const f of fs.readdirSync(DIR).filter(f=>f.endsWith('.sql')&&f!==FILE).sort())await db.exec(fs.readFileSync(path.join(DIR,f),'utf8'));return db;}
+ const excluded=new Set(exclude);
+ try{for(const f of fs.readdirSync(DIR).filter(f=>f.endsWith('.sql')&&f!==FILE&&!excluded.has(f)).sort())await db.exec(fs.readFileSync(path.join(DIR,f),'utf8'));return db;}
  catch(e){await db.close();throw e;}
 }
 async function pair(db){

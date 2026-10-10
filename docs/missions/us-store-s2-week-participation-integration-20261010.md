@@ -34,3 +34,10 @@
 - Verified the live database already has unique partial index `profiles_one_role_per_couple (couple_id, role) WHERE couple_id IS NOT NULL`; no duplicate partner roles possible through ordinary writes. Added a test guarding this existing foundation, **no schema DDL** added for roles.
 - Found `MAINTAIN` privilege on both `daily_answers` and `daily_questions` for `anon` and `authenticated`, even after the original migration revocations. The SQL candidate now revokes `MAINTAIN` too, completing least-privilege for provenance and avoiding client-initiated maintenance. Added test checking all 4 privilege outcomes.
 - This migration change exists **only in this Git branch**. No production or staging SQL applied. Requires PostgreSQL 17+ and CI rerun on the amended commit; historical 11/11 checks from previous SHA are not transferable.
+
+## Production-equivalent schema validation — 2026-10-10
+
+- The production migration ledger has **9 entries**; `20261009100419_us_v3_oggi_looks_rewards.sql` exists in Git but is **not deployed**. The original PGlite/PG17 suite iterates all migration files and therefore included this extra V3 migration.
+- Added an additional isolated PGlite test that reconstructs the base **without** that pending V3 cosmetics migration, applies only the Store S2 week SQL, and asserts the RPC/receipt and corrected client MAINTAIN revokes.
+- Two migration filenames in Git have different version stamps from the live ledger (native notifications, MC2 invites); content/authority requires separate drift assessment before any hosted staging/production deployment. A broad `db push` remains forbidden.
+- This is a guard against false-positive CI on a future schema, not certification of live Supabase runtime nor a deployment.

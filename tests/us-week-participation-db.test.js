@@ -114,6 +114,21 @@ test('single member cannot claim both sides; membership move immediately changes
  await db.query('update public.profiles set couple_id=null where id=$1',[p.a]);
  await assert.rejects(h.read(db,p.a),code('42501'));
 });
+test('candidate SQL applies on the nine deployed migrations without unreleased V3 rewards SQL',async()=>{
+ // The production ledger does NOT contain 20261009100419_us_v3_oggi_looks_rewards.
+ // Do not accidentally prove the week rollout only against a future schema.
+ const isolated=await h.base({exclude:['20261009100419_us_v3_oggi_looks_rewards.sql']});
+ try{
+  await isolated.exec(h.sql());
+  const row=(await isolated.query("select to_regprocedure('public.get_couple_week_participation_v1()') is not null as rpc, exists(select 1 from information_schema.columns where table_schema='public' and table_name='daily_answers' and column_name='server_answered_at') as receipt")).rows[0];
+  assert.equal(row.rpc,true);
+  assert.equal(row.receipt,true);
+  for(const table of ['daily_answers','daily_questions'])for(const role of ['anon','authenticated']){
+   const acl=(await isolated.query('select pg_catalog.has_table_privilege($1,$2,$3) privilege',[role,'public.'+table,'MAINTAIN'])).rows[0];
+   assert.equal(acl.privilege,false);
+  }
+ }finally{await isolated.close();}
+});
 test('Day tables never expose MAINTAIN to anonymous or authenticated clients',async()=>{
  for(const table of ['daily_answers','daily_questions']){
   for(const role of ['anon','authenticated']){
