@@ -36,10 +36,11 @@ public final class UsGuardedMessagingService extends MessagingService {
         // packets must be addressed by safe coordinated rollout and QA.
         if (message.getNotification() != null || !"2".equals(data.get("v"))) return;
         if (!UsPushOwnerGate.accepts(this, data.get("installation"))) return;
-        // Recheck the owner once at actual notification posting time as well.
-        postPrivateSafeNotice(data.get("installation"));
-        // Keep Capacitor listeners working on a running WebView, but the v2
-        // envelope has no private target/ref and is not navigable by JS.
+        // Preserve presentationOptions=[]: no OS banner while US is visible.
+        // The v2 event has no private target/ref and no JS navigation action.
+        if (!MainActivity.isResumedForPush()) {
+            postPrivateSafeNotice(data.get("installation"));
+        }
         PushNotificationsPlugin.sendRemoteMessage(message);
     }
 
