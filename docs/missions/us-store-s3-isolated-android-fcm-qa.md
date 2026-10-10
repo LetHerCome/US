@@ -1,6 +1,26 @@
 # Store S3/P0 — isolated Android FCM hardware QA handoff
 **Updated:** 2026-10-10  
-**State:** CODE PREPARED / Firebase STAGING NOT CONNECTED / NO STAGING APK GENERATED / DEVICE QA PENDING
+**State:** STAGING APP SIGNED / STAGING EDGE SENDER TEST-ONLY ACTIVE / FCM SERVER CREDENTIAL PENDING / SYNTHETIC AUTH + DEVICE QA PENDING
+
+## 2026-10-11 — Verified current live staging state
+
+- Android staging QA APK signed and independently installed: [GitHub Actions run 38089884527](https://github.com/LetHerCome/US/actions/runs/38089884527); package `com.usapp.us.staging` connected to `dugmhngrfkuieeletatb`, separate from real US.
+- On **US-STAGING ONLY**, Supabase Edge function slug **`send-web-push` v2** is **ACTIVE**, with `verify_jwt=true`. Its source is the staging-only [`s3-staging-send-web-push/index.ts`](../../supabase/functions/s3-staging-send-web-push/index.ts) from PR #187. Do not deploy that source to production.
+- This QA sender has a hard-coded Supabase project gate `dugmhngrfkuieeletatb`, accepts exactly `{"type":"test"}`, authenticates its caller again through Auth, and sends exclusively to the authenticated user's own registered FCM device(s) in the user's current couple; no arbitrary recipient, token, calendar copy or action. Rate-limited by a once-per-minute per-user logical event claim. The transport carries data-only v2 installation routing.
+- It also refuses a Firebase service account unless `project_id` is exactly **`us-staging-45e0f`**, so a production/private Firebase service account is rejected; iOS APNs explicitly disabled for this test sender.
+- Post-deploy database check: **0 Auth users, 0 profiles, 0 couples, 0 push tokens, 0 active / 9 inactive cron jobs**.
+- The server **cannot yet send FCM** because no staging Firebase FCM service account secret has been supplied. The Android `google-services.json` is a public client configuration and DOES NOT authorize server FCM. Hosted signed-JWT and real device delivery are also not yet demonstrated.
+
+### One manual credential boundary: Firebase STAGING → Supabase STAGING
+
+1. In [Google Cloud Console → Service Accounts](https://console.cloud.google.com/iam-admin/serviceaccounts?project=us-staging-45e0f), ensure project **US-STAGING-PUSH** / project ID **`us-staging-45e0f`** is selected, and create an isolated service account, e.g. `us-staging-fcm-qa`.
+2. Assign the **Firebase Cloud Messaging API Admin** role (`roles/firebasecloudmessaging.admin`) on that staging project only; verify the [FCM HTTP v1 API](https://console.cloud.google.com/apis/library/fcm.googleapis.com?project=us-staging-45e0f) is enabled. Do not grant Owner, Editor, Production project access or billing roles.
+3. From the service account's **Keys → Add key → Create new key → JSON**, download the PRIVATE JSON key. Some Google organizations restrict JSON key creation; do not bypass an organization policy to create it.
+4. Open the **US-STAGING** [Supabase Edge Function Secrets](https://supabase.com/dashboard/project/dugmhngrfkuieeletatb/settings/functions). Add a secret named **`FCM_SERVICE_ACCOUNT_JSON`**, with the entire raw JSON file text as its value. **NOT** Base64; not the Android `google-services.json`; never paste into GitHub source, a public URL or this chat.
+5. Confirm the private JSON has `"project_id": "us-staging-45e0f"` (no need to share other fields). Remove the downloaded local private-key file after the secret is stored securely. Tell the assistant only **"Secret Firebase STAGING aggiunto"**.
+6. The assistant can then prepare two separate *synthetic* couples, install/run the isolated staging APK, exercise real signed Auth and verify actual FCM delivery on the QA device. Real usernames/passwords, session JWTs and raw FCM tokens should never be shared in chat; keep them confined to staging.
+
+**Safety:** US production Firebase and Supabase credentials are never used. Never install or deploy the staging sender on production. Edge JWT verification does not by itself prove signed-in session correctness: the sender calls `admin.auth.getUser` and checks the sender's profile/couple. The function and live FCM delivery are separate QA gates.
 
 ## What is ready
 
