@@ -63,6 +63,8 @@ test('Android manifest has exactly one guarded receiver; plain Capacitor service
  assert.equal((manifest.match(/com\.google\.firebase\.MESSAGING_EVENT/g)||[]).length,1);
  assert.match(service,/extends MessagingService/);
  assert.match(service,/UsPushOwnerGate\.accepts\(this, data\.get\("installation"\)\)/);
+ assert.match(service,/UsPushOwnerGate\.postIfCurrent\(this, installation,/);
+ assert.match(gate,/synchronized \(LOCK\)[\s\S]*?post\.run\(\)/);
  assert.match(service,/message\.getNotification\(\) != null/);
  assert.match(gate,/getSharedPreferences\(STORE, Context\.MODE_PRIVATE\)/);
  assert.match(gate,/remove\(OWNER\)\.remove\(INSTALLATION\)/);
