@@ -31,6 +31,12 @@ android {
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "com.usapp.us"
+        // Staging-only Android QA lives in a separate Android sandbox, without
+        // shared storage, notifications or Google Play identity with real US.
+        // The normal production/internal applicationId is NEVER changed.
+        if (System.getenv('US_STAGING_QA') == 'true') {
+            applicationId "com.usapp.us.staging"
+        }
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode Integer.parseInt(configuredVersionCode.toString())
@@ -75,6 +81,10 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
+    // Our guarded FirebaseMessagingService compiles in the app module;
+    // Capacitor's own dependency is not exported to app compileClassPath.
+    // Pin the same Firebase Messaging version as the Capacitor 8 plugin.
+    implementation "com.google.firebase:firebase-messaging:25.0.1"
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"

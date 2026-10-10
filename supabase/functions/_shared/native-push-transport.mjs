@@ -100,33 +100,31 @@ async function timedFetch(fetchImpl, url, init) {
   }
 }
 
-/** FCM HTTP v1 message for one Android device. Data values are strings (FCM rule). */
-export function fcmMessage(notification, token) {
+// S3: data-only FCM. Android must verify the account-bound installation
+// before displaying a local generic notification. FCM carries no private copy,
+// content id, account id, event type or action. The installation UUID is a
+// random routing value, not an authorization secret or hardware identifier.
+export const ANDROID_SAFE_COPY = Object.freeze({
+  title: 'US.',
+  body: 'Apri US per vedere le novità.',
+});
+const ANDROID_SAFE_TAG = 'us-private-notice';
+const INSTALLATION_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Strict data-only FCM v2; device is the authenticated dispatcher DB row. */
+export function fcmMessage(notification, device) {
+  const installation = String(device?.installation_id || '').toLowerCase();
+  if (!INSTALLATION_ID.test(installation)) throw new Error('native_installation_missing');
   return {
     message: {
-      token,
-      notification: { title: notification.title, body: notification.body },
-      data: {
-        v: String(notification.v),
-        type: notification.type,
-        target: notification.target,
-        ref: notification.ref || '',
-        tag: notification.tag,
-      },
+      token: device.token,
+      data: { v: '2', installation },
       android: {
         priority: notification.urgency === 'high' ? 'HIGH' : 'NORMAL',
         ttl: `${notification.ttl}s`,
-        collapse_key: notification.tag.slice(0, 64),
-        notification: {
-          channel_id: ANDROID_CHANNELS[notification.channel] || ANDROID_CHANNELS.partner,
-          tag: notification.tag,
-          default_sound: true,
-          default_vibrate_timings: true,
-          // Android launcher badges are implementation-dependent, but FCM's
-          // notification_count gives supporting launchers the same binary
-          // "something new" signal used by APNs.
-          notification_count: Number.isInteger(notification.badge) && notification.badge >= 0 ? notification.badge : undefined,
-        },
+        collapse_key: ANDROID_SAFE_TAG,
+        // Do not add message.notification or android.notification: Firebase
+        // auto-renders those in background before native ownership checks.
       },
     },
   };
@@ -238,6 +236,8 @@ export function createNativeTransport({ config, fetch: fetchImpl = globalThis.fe
 
   async function sendFcm(device, notification) {
     if (!FCM_TOKEN.test(String(device.token || ''))) return { ok: false, outcome: 'invalid-token' };
+    // Old rows without a valid installation UUID cannot be routed safely.
+    if (!INSTALLATION_ID.test(String(device.installation_id || ''))) return { ok: false, outcome: 'rejected' };
     let accessToken;
     try { accessToken = await fcmAccessToken(); }
     catch (error) { return { ok: false, outcome: error?.outcome || 'transient' }; }
@@ -246,7 +246,7 @@ export function createNativeTransport({ config, fetch: fetchImpl = globalThis.fe
       response = await timedFetch(fetchImpl, `https://fcm.googleapis.com/v1/projects/${encodeURIComponent(fcm.projectId)}/messages:send`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(fcmMessage(notification, device.token)),
+        body: JSON.stringify(fcmMessage(notification, device)),
       });
     } catch (_) {
       return { ok: false, outcome: 'transient' };

@@ -119,6 +119,42 @@ jobs:
         working-directory: android
         run: bash ./gradlew --no-daemon testDebugUnitTest assembleDebug assembleRelease
 
+      - name: Assert one effective guarded FCM receiver in Gradle merged manifest
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+          source = Path('android/app/src/main/java/com/usapp/us/UsGuardedMessagingService.java')
+          if not source.exists():
+              print('Legacy branch without S3 receiver: no owner-gate requirement')
+              raise SystemExit(0)
+          build = Path('android/app/build/intermediates')
+          manifests = sorted(set(build.rglob('AndroidManifest.xml')))
+          parsed = []
+          ns = '{http://schemas.android.com/apk/res/android}'
+          for file in manifests:
+              if 'manifest' not in str(file).lower():
+                  continue
+              try:
+                  root = ET.parse(file).getroot()
+              except ET.ParseError:
+                  continue
+              matches = []
+              for service in root.findall('./application/service'):
+                  for intent in service.findall('./intent-filter'):
+                      if any(action.get(ns+'name')=='com.google.firebase.MESSAGING_EVENT' for action in intent.findall('action')):
+                          matches.append(service.get(ns+'name'))
+              if matches:
+                  parsed.append((str(file), matches))
+          if not parsed:
+              raise SystemExit('FAIL: no merged manifest contains MESSAGING_EVENT')
+          for file, services in parsed:
+              print(file, services)
+              if services != ['com.usapp.us.UsGuardedMessagingService']:
+                  raise SystemExit('FAIL: FCM manifest is not exclusively owner-gated: '+str(services))
+          print('PASS: every discovered merged FCM manifest uses exactly one guarded service')
+          PY
+
       - name: Inspect built APKs
         run: |
           META=android/app/build/outputs/apk/debug/output-metadata.json

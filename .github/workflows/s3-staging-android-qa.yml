@@ -1,28 +1,30 @@
-# S1 UI QA only. S3 security must use an isolated staging-app/Firebase build.
-# Do not use production-bound QA APKs to test old A -> B notifications.
+# S3 only: separately installed test app. NEVER production Supabase/Firebase/Android package.
 # Does NOT send FCM, change Edge, run SQL or install on any phone.
-name: US UI signed QA APK
+name: US S3 isolated staging signed QA APK
 
 on:
   push:
-    branches: [mission/us-store-s1-android-integration-20261010]
+    branches: [mission/us-store-s3-native-push-owner-gate-20261010]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: android-ui-integration-${{ github.ref }}
+  group: s3-staging-signed-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   signed-apk:
-    if: github.ref == 'refs/heads/mission/us-store-s1-android-integration-20261010'
+    if: github.ref == 'refs/heads/mission/us-store-s3-native-push-owner-gate-20261010'
     runs-on: windows-latest
     timeout-minutes: 70
     env:
       SIGNING_BUNDLE_B64: ${{ secrets.ANDROID_SIGNING_BUNDLE_B64 }}
-      GOOGLE_SERVICES_JSON_B64: ${{ secrets.ANDROID_GOOGLE_SERVICES_JSON_B64 }}
+      GOOGLE_SERVICES_JSON_B64: ${{ secrets.US_STAGING_GOOGLE_SERVICES_JSON_B64 }}
+      US_STAGING_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.US_STAGING_SUPABASE_PUBLISHABLE_KEY }}
+      US_STAGING_FIREBASE_PROJECT_ID: ${{ vars.US_STAGING_FIREBASE_PROJECT_ID }}
+      US_STAGING_QA: 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -30,9 +32,12 @@ jobs:
         id: signing
         shell: pwsh
         run: |
-          if ([string]::IsNullOrWhiteSpace($env:SIGNING_BUNDLE_B64)) {
+          if ([string]::IsNullOrWhiteSpace($env:SIGNING_BUNDLE_B64) -or
+              [string]::IsNullOrWhiteSpace($env:GOOGLE_SERVICES_JSON_B64) -or
+              [string]::IsNullOrWhiteSpace($env:US_STAGING_SUPABASE_PUBLISHABLE_KEY) -or
+              [string]::IsNullOrWhiteSpace($env:US_STAGING_FIREBASE_PROJECT_ID)) {
             "ready=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            Write-Host "Android internal signing secrets are not configured; signed build skipped."
+            Write-Warning "Isolated staging Firebase, staging Supabase key or signature not configured: NO APK generated."
           } else {
             "ready=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           }
@@ -61,6 +66,10 @@ jobs:
           }
           $path = Join-Path $env:RUNNER_TEMP "us-internal-signing.jks"
           [IO.File]::WriteAllBytes($path, [Convert]::FromBase64String($bundle.keystoreBase64))
+          # The password strings are reconstructed from an encrypted bundle;
+          # GitHub does not automatically know to mask these derived values.
+          Write-Host "::add-mask::$($bundle.storePassword)"
+          Write-Host "::add-mask::$($bundle.keyPassword)"
           "US_ANDROID_KEYSTORE_PATH=$path" | Out-File -FilePath $env:GITHUB_ENV -Append
           "US_ANDROID_KEYSTORE_PASSWORD=$($bundle.storePassword)" | Out-File -FilePath $env:GITHUB_ENV -Append
           "US_ANDROID_KEY_ALIAS=$($bundle.keyAlias)" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -73,15 +82,15 @@ jobs:
           $configured = -not [string]::IsNullOrWhiteSpace($env:GOOGLE_SERVICES_JSON_B64)
           "US_FIREBASE_CONFIGURED=$($configured.ToString().ToLowerInvariant())" | Out-File -FilePath $env:GITHUB_ENV -Append
           if (-not $configured) {
-            Write-Host "ANDROID_GOOGLE_SERVICES_JSON_B64 is not configured; building without native FCM."
-            exit 0
+            throw "Staging Firebase config required, cannot build FCM QA without it"
           }
           $bytes = [Convert]::FromBase64String($env:GOOGLE_SERVICES_JSON_B64)
           $path = Join-Path $env:GITHUB_WORKSPACE "android/app/google-services.json"
           [IO.File]::WriteAllBytes($path, $bytes)
           $json = Get-Content $path -Raw | ConvertFrom-Json
-          $package = @($json.client | ForEach-Object { $_.client_info.android_client_info.package_name }) | Where-Object { $_ -eq "com.usapp.us" }
-          if (-not $package) { throw "google-services.json does not contain Android package com.usapp.us" }
+          $package = @($json.client | ForEach-Object { $_.client_info.android_client_info.package_name }) | Where-Object { $_ -eq "com.usapp.us.staging" }
+          if (-not $package) { throw "Staging google-services.json must contain com.usapp.us.staging" }
+          if (-not $json.project_info.project_id -or $json.project_info.project_id -ne $env:US_STAGING_FIREBASE_PROJECT_ID) { throw "Firebase project ID mismatch for staging" }
 
       - name: Assign monotonically increasing QA version
         if: steps.signing.outputs.ready == 'true'
@@ -89,15 +98,25 @@ jobs:
         run: |
           $code = [int][DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
           "US_ANDROID_VERSION_CODE=$code" | Out-File -FilePath $env:GITHUB_ENV -Append
-          "US_ANDROID_VERSION_NAME=1.0-uiqa.$code" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "US_ANDROID_VERSION_NAME=1.0-s3staging.$code" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Install dependencies
         if: steps.signing.outputs.ready == 'true'
         run: npm ci
 
+      - name: Verify staging-only build guards (no secrets exposed)
+        if: steps.signing.outputs.ready == 'true'
+        run: node --test tests/s3-staging-build-isolation.test.js tests/s3-android-native-push-privacy.test.js tests/mc3-push-lifecycle.test.js
+
+      - name: Rewrite app inputs for isolated US-STAGING
+        if: steps.signing.outputs.ready == 'true'
+        run: node scripts/configure-s3-staging-qa.mjs
+
       - name: Stage Capacitor bundle
         if: steps.signing.outputs.ready == 'true'
-        run: npm run build:capacitor-web
+        run: |
+          npm run build:capacitor-web
+          node -e "const f=require('fs');for(const name of ['app.js','dist/capacitor/app.js']){const s=f.readFileSync(name,'utf8');const prod=s.includes('iiakdfsxpywdkxravqjh');const staging=s.includes('dugmhngrfkuieeletatb');console.log('S3 hosting isolation',name,'production=',prod,'staging=',staging,'bytes=',s.length);if(prod||!staging)throw Error('QA app bundle uses incorrect Supabase host in '+name)};"
 
       - name: Sync Android
         if: steps.signing.outputs.ready == 'true'
@@ -113,31 +132,38 @@ jobs:
         shell: pwsh
         run: |
           $apk = "android/app/build/outputs/apk/release/app-release.apk"
-          if (-not (Test-Path $apk)) { throw "Signed release APK missing" }
+          if (-not (Test-Path $apk)) { throw "Staging signed APK missing" }
+          $aapt = Get-ChildItem "$env:ANDROID_HOME\build-tools" -Recurse -Filter aapt.exe | Sort-Object FullName | Select-Object -Last 1
+          if (-not $aapt) { throw "Android aapt missing" }
+          $badging = & $aapt.FullName dump badging $apk
+          if ($LASTEXITCODE -ne 0 -or -not ($badging -match "package: name='com.usapp.us.staging'")) { throw "Refusing non-staging applicationId" }
           $apksigner = Get-ChildItem "$env:ANDROID_HOME\build-tools" -Recurse -Filter apksigner.bat |
             Sort-Object FullName | Select-Object -Last 1
           if (-not $apksigner) { throw "apksigner.bat not found" }
           & $apksigner.FullName verify --verbose --print-certs $apk | Tee-Object -FilePath signature.txt
           if ($LASTEXITCODE -ne 0) { throw "APK signature verification failed" }
           New-Item -ItemType Directory -Force -Path out | Out-Null
-          Copy-Item $apk out/US-Android-UI-QA.apk
-          $hash=(Get-FileHash out/US-Android-UI-QA.apk -Algorithm SHA256).Hash.ToLowerInvariant()
-          "$hash  US-Android-UI-QA.apk" | Set-Content out/US-Android-UI-QA.sha256.txt
+          Copy-Item $apk out/US-Android-S3-STAGING-QA.apk
+          $hash=(Get-FileHash out/US-Android-S3-STAGING-QA.apk -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  US-Android-S3-STAGING-QA.apk" | Set-Content out/US-Android-S3-STAGING-QA.sha256.txt
           @"
           source_sha=${{ github.sha }}
-          application_id=com.usapp.us
+          application_id=com.usapp.us.staging
+          supabase_project=dugmhngrfkuieeletatb
+          firebase_project=$env:US_STAGING_FIREBASE_PROJECT_ID
+          environment=isolated-staging-only
           version_code=$env:US_ANDROID_VERSION_CODE
           version_name=$env:US_ANDROID_VERSION_NAME
           signing=US-Android-Internal
           firebase_configured=$env:US_FIREBASE_CONFIGURED
           sha256=$hash
-          "@ | Set-Content out/US-Android-UI-QA-build-info.txt
+          "@ | Set-Content out/US-Android-S3-STAGING-QA-build-info.txt
           Copy-Item signature.txt out/signature.txt
 
       - uses: actions/upload-artifact@v4
         if: steps.signing.outputs.ready == 'true'
         with:
-          name: US-Android-UI-QA
+          name: US-Android-S3-STAGING-QA
           path: out/
           if-no-files-found: error
           retention-days: 30

@@ -1,0 +1,48 @@
+name: Store S3 native push privacy
+
+on:
+  pull_request:
+    paths:
+      - 'android/**'
+      - 'native-plugins/us-push-support/**'
+      - 'supabase/functions/_shared/native-push-transport.mjs'
+      - 'supabase/functions/_shared/notification-core.mjs'
+      - 'notifications.js'
+      - 'tests/s3-android-native-push-privacy.test.js'
+      - 'tests/native-notifications-v1-dispatch.test.js'
+      - 'tests/native-notifications-v1-native.test.js'
+      - 'tests/mc3-push-lifecycle.test.js'
+      - 'tests/s3-staging-build-isolation.test.js'
+      - 'tests/s3-staging-edge-sender.test.js'
+      - 'supabase/functions/s3-staging-send-web-push/**'
+      - 'scripts/configure-s3-staging-qa.mjs'
+      - '.github/workflows/s3-staging-android-qa.yml'
+      - '.github/workflows/s3-native-push-privacy.yml'
+  push:
+    branches:
+      - 'mission/us-store-s3-native-push-owner-gate-20261010'
+
+permissions:
+  contents: read
+
+jobs:
+  transport-and-account-isolation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Strict syntax checks
+        run: |
+          node --check supabase/functions/_shared/native-push-transport.mjs
+          node --check tests/s3-android-native-push-privacy.test.js
+          node --check notifications.js
+          node --check scripts/configure-s3-staging-qa.mjs
+      - name: Android privacy, native FCM and APNs transport, client logout and static contracts
+        run: node --test tests/s3-android-native-push-privacy.test.js tests/native-notifications-v1-dispatch.test.js tests/native-notifications-v1-native.test.js tests/mc3-push-lifecycle.test.js tests/s3-staging-build-isolation.test.js tests/s3-staging-edge-sender.test.js
+      - name: Check bundle continues to build
+        run: npm run build:capacitor-web

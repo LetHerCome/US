@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
 
     <application
         android:allowBackup="false"
@@ -26,15 +26,35 @@
 
         </activity>
 
-        <!-- Native Notifications V1: FCM notification messages shown by the OS while US
-             is in the background or closed. Small icon = the approved US mark's alpha
-             (no new asset); the default channel is created by @us/push-support. -->
+        <!-- S3: new data-only FCM messages are NEVER system-auto-rendered.
+             A native service verifies owner before creating the generic OS banner.
+             Legacy notification-type packets must be retired safely. -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/us_adaptive_foreground_v1" />
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="us_partner" />
+
+        <!-- Exactly one FirebaseMessagingService must receive MESSAGING_EVENT:
+             remove Capacitor's auto-registered handler and install our
+             subclass, which preserves onNewToken() but gates data-only
+             notifications by current native installation owner. -->
+        <service
+            android:name="com.capacitorjs.plugins.pushnotifications.MessagingService"
+            tools:node="remove" />
+        <!-- Firebase SDK also contributes a base FirebaseMessagingService.
+             Remove it too: the guarded subclass must be the ONLY receiver. -->
+        <service
+            android:name="com.google.firebase.messaging.FirebaseMessagingService"
+            tools:node="remove" />
+        <service
+            android:name=".UsGuardedMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
         <provider
             android:name="androidx.core.content.FileProvider"

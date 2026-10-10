@@ -26,6 +26,19 @@ import org.json.JSONObject;
  */
 @CapacitorPlugin(name = "UsPushSupport")
 public class UsPushSupportPlugin extends Plugin {
+    private static volatile boolean activityResumed = false;
+
+    public static boolean isActivityResumed() { return activityResumed; }
+
+    @Override
+    protected void handleOnResume() {
+        activityResumed = true;
+    }
+
+    @Override
+    protected void handleOnPause() {
+        activityResumed = false;
+    }
 
     @Override
     public void load() {
@@ -68,6 +81,7 @@ public class UsPushSupportPlugin extends Plugin {
         JSObject result = new JSObject();
         result.put("platform", "android");
         result.put("provider", "fcm");
+        result.put("bindingEpoch", UsPushOwnerGate.epoch(getContext()));
         result.put("configured", firebaseConfigured());
         result.put("environment", JSONObject.NULL);
         result.put("notificationsEnabled", manager != null && manager.areNotificationsEnabled());
@@ -87,6 +101,36 @@ public class UsPushSupportPlugin extends Plugin {
         } catch (RuntimeException error) {
             call.resolve(new JSObject().put("opened", false));
         }
+    }
+
+    /**
+     * Called only after authenticated registration RPC succeeds, with the
+     * epoch observed before registration. Logout invalidates this epoch, so
+     * a late completion from A cannot re-activate A under B.
+     */
+    @PluginMethod
+    public void bindPushOwner(PluginCall call) {
+        final boolean bound = UsPushOwnerGate.bind(
+            getContext(),
+            call.getString("ownerId"),
+            call.getString("installationId"),
+            call.getString("expectedEpoch")
+        );
+        call.resolve(new JSObject().put("bound", bound));
+    }
+
+    /**
+     * Synchronous SharedPreferences commit before resolving to JS.
+     * All app notifications are canceled as defense in depth.
+     */
+    @PluginMethod
+    public void clearPushOwner(PluginCall call) {
+        final boolean cleared = UsPushOwnerGate.clear(getContext());
+        if (cleared) {
+            NotificationManager manager = manager();
+            if (manager != null) manager.cancelAll();
+        }
+        call.resolve(new JSObject().put("cleared", cleared));
     }
 
     /** Android shows badges from delivered notifications; the web layer clears those. */
