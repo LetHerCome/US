@@ -4,8 +4,10 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const PRODUCTION_HOST = 'iiakdfsxpywdkxravqjh.supabase.co';
-export const STAGING_HOST = 'dugmhngrfkuieeletatb.supabase.co';
+export const PRODUCTION_PROJECT_REF = 'iiakdfsxpywdkxravqjh';
+export const STAGING_PROJECT_REF = 'dugmhngrfkuieeletatb';
+export const PRODUCTION_HOST = PRODUCTION_PROJECT_REF + '.supabase.co';
+export const STAGING_HOST = STAGING_PROJECT_REF + '.supabase.co';
 export const PRODUCTION_APP_ID = 'com.usapp.us';
 export const STAGING_APP_ID = 'com.usapp.us.staging';
 
@@ -30,6 +32,13 @@ export function isolateStagingBuild({ appJs, indexHtml, capacitorJson, publishab
     throw new Error('S3 staging QA: unknown publishable key declaration');
   }
   stagedApp = stagedApp.replace(keyDeclaration, "const SB_KEY = '" + publishableKey + "';");
+  // Native auth-storage fallback must never use production's storage key.
+  // Failure to rewrite this silently retained the production project ref.
+  stagedApp = replaceExactlyOnce(
+    stagedApp,
+    "'sb-" + PRODUCTION_PROJECT_REF + "-auth-token'",
+    "'sb-" + STAGING_PROJECT_REF + "-auth-token'",
+    'production Auth storage fallback');
   const stagedIndex = replaceExactlyOnce(
     indexHtml,
     'https://' + PRODUCTION_HOST, 'https://' + STAGING_HOST,
@@ -43,8 +52,8 @@ export function isolateStagingBuild({ appJs, indexHtml, capacitorJson, publishab
   config.appId = STAGING_APP_ID;
   config.appName = 'US STAGING';
   const stagedConfig = JSON.stringify(config, null, 2) + '\n';
-  if ([stagedApp, stagedIndex2, stagedConfig].some(text => text.includes(PRODUCTION_HOST))) {
-    throw new Error('S3 staging QA: production Supabase host leaked into native build inputs');
+  if ([stagedApp, stagedIndex2, stagedConfig].some(text => text.includes(PRODUCTION_PROJECT_REF))) {
+    throw new Error('S3 staging QA: production Supabase project reference leaked into native build inputs');
   }
   return { appJs: stagedApp, indexHtml: stagedIndex2, capacitorJson: stagedConfig };
 }
