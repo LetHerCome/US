@@ -100,31 +100,33 @@ async function timedFetch(fetchImpl, url, init) {
   }
 }
 
-/** FCM HTTP v1 message for one Android device. Data values are strings (FCM rule). */
+// S3 interim privacy mitigation: FCM notification messages are rendered by
+// Android itself in background/terminated states, without a WebView callback.
+// A stale A token after account B signs in MUST NOT carry A's private copy.
+// This is CONTENT minimization, NOT proof that a stale A alert cannot arrive.
+export const ANDROID_SAFE_COPY = Object.freeze({
+  title: 'US.',
+  body: 'Apri US per vedere le novità.',
+});
+const ANDROID_SAFE_TAG = 'us-private-notice';
+
+/** Generic FCM OS banner, no per-couple data or stale-account deep link. */
 export function fcmMessage(notification, token) {
   return {
     message: {
       token,
-      notification: { title: notification.title, body: notification.body },
-      data: {
-        v: String(notification.v),
-        type: notification.type,
-        target: notification.target,
-        ref: notification.ref || '',
-        tag: notification.tag,
-      },
+      notification: { ...ANDROID_SAFE_COPY },
+      // Deliberately NO data: native notification taps open the app launcher.
+      // Keep private type/target/ref/tag and sender/calendar text server-side.
       android: {
         priority: notification.urgency === 'high' ? 'HIGH' : 'NORMAL',
         ttl: `${notification.ttl}s`,
-        collapse_key: notification.tag.slice(0, 64),
+        collapse_key: ANDROID_SAFE_TAG,
         notification: {
-          channel_id: ANDROID_CHANNELS[notification.channel] || ANDROID_CHANNELS.partner,
-          tag: notification.tag,
+          channel_id: ANDROID_CHANNELS.partner,
+          tag: ANDROID_SAFE_TAG,
           default_sound: true,
           default_vibrate_timings: true,
-          // Android launcher badges are implementation-dependent, but FCM's
-          // notification_count gives supporting launchers the same binary
-          // "something new" signal used by APNs.
           notification_count: Number.isInteger(notification.badge) && notification.badge >= 0 ? notification.badge : undefined,
         },
       },
