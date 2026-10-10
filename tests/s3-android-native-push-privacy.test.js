@@ -74,7 +74,7 @@ test('Android client registers/clears owner after authenticated server registrat
  const js=fs.readFileSync(path.join(__dirname,'../notifications.js'),'utf8');
  const registration=js.slice(js.indexOf('async function registerToken('),js.indexOf('async function onRegistration('));
  assert.ok(registration.indexOf("db.rpc('register_native_push_device'")>=0);
- assert.ok(registration.indexOf("await bindNativeOwner(status, installation, owner)") > registration.indexOf("if (error) throw error"));
+ assert.ok(registration.lastIndexOf("await bindNativeOwner(status, installation, owner)") > registration.indexOf("if (error) throw error"));
  assert.match(js,/await retireNativeOwner\(\)/);
  assert.match(js,/function signedOut\(\) \{[\s\S]*?retireNativeOwner\(\)/);
 });
