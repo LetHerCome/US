@@ -12,10 +12,13 @@ on:
       - 'tests/native-notifications-v1-dispatch.test.js'
       - 'tests/native-notifications-v1-native.test.js'
       - 'tests/mc3-push-lifecycle.test.js'
+      - 'tests/s3-staging-build-isolation.test.js'
+      - 'scripts/configure-s3-staging-qa.mjs'
+      - '.github/workflows/s3-staging-android-qa.yml'
       - '.github/workflows/s3-native-push-privacy.yml'
   push:
     branches:
-      - 'mission/us-store-s3-native-push-privacy-phase1-20261010'
+      - 'mission/us-store-s3-native-push-owner-gate-20261010'
 
 permissions:
   contents: read
@@ -36,7 +39,8 @@ jobs:
           node --check supabase/functions/_shared/native-push-transport.mjs
           node --check tests/s3-android-native-push-privacy.test.js
           node --check notifications.js
+          node --check scripts/configure-s3-staging-qa.mjs
       - name: Android privacy, native FCM and APNs transport, client logout and static contracts
-        run: node --test tests/s3-android-native-push-privacy.test.js tests/native-notifications-v1-dispatch.test.js tests/native-notifications-v1-native.test.js tests/mc3-push-lifecycle.test.js
+        run: node --test tests/s3-android-native-push-privacy.test.js tests/native-notifications-v1-dispatch.test.js tests/native-notifications-v1-native.test.js tests/mc3-push-lifecycle.test.js tests/s3-staging-build-isolation.test.js
       - name: Check bundle continues to build
         run: npm run build:capacitor-web
