@@ -304,8 +304,12 @@ test('transport FCM: signed RS256 assertion, HTTP v1 message, channel and data c
   assert.equal(send.url, 'https://fcm.googleapis.com/v1/projects/us-test-project/messages:send');
   assert.equal(send.init.headers.Authorization, 'Bearer ya29.test');
   const message = JSON.parse(send.init.body).message;
-  assert.deepEqual(message.data, { v: '1', type: 'calendar_reminder', target: 'calendar', ref: MSG, tag: 'calendar-reminder-r1' });
-  assert.equal(message.android.notification.channel_id, 'us_reminders');
+  assert.deepEqual(message.notification, t.ANDROID_SAFE_COPY);
+  assert.equal(Object.hasOwn(message, 'data'), false, 'stale-account private actions never reach Android');
+  assert.equal(message.android.notification.channel_id, 'us_partner');
+  assert.equal(message.android.notification.tag, 'us-private-notice');
+  assert.equal(message.android.collapse_key, 'us-private-notice');
+  assert.doesNotMatch(send.init.body, /Cena alle 20|calendar_reminder|calendar-reminder-r1|33333333-3333-4333-8333-333333333333/);
   assert.equal(message.android.notification.notification_count, 1);
   assert.equal(message.android.priority, 'HIGH');
   assert.doesNotMatch(send.init.body, /private_key|BEGIN|https?:\/\/(?!)/);
