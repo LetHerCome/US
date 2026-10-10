@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const crypto = require('node:crypto').webcrypto;
 const app = fs.readFileSync('app.js', 'utf8');
 function native() {
-  const store = new Map(), calls = [], listeners = {};
+  const store = new Map(), calls = [], listeners = {}, order = [];
   let owner = 'A', fail = false;
   const token = 'fcm:' + 'x'.repeat(80);
   const push = { addListener(name, fn) { listeners[name] = fn; }, checkPermissions: async () => ({ receive: 'granted' }), register: async () => { listeners.registration({ value: token }); }, unregister: async () => {}, removeAllDeliveredNotifications: async () => {} };
@@ -23,15 +23,16 @@ function native() {
       return { bound };
     },
     clearPushOwner: async () => {
+      order.push('native-owner-clear');
       epoch = crypto.randomUUID();
       boundInstallation = '';
       return { cleared: true };
     }
   };
-  const sb = { auth: { getSession: async () => ({data:{session:{user:{id:owner}}}}) }, rpc: async (name, args) => { calls.push({ owner, name, args }); return { data: { removed: true }, error: fail ? new Error('offline') : null }; } };
+  const sb = { auth: { getSession: async () => ({data:{session:{user:{id:owner}}}}) }, rpc: async (name, args) => { calls.push({ owner, name, args }); order.push('rpc:'+name); return { data: { removed: true }, error: fail ? new Error('offline') : null }; } };
   const window = { sb, UsPlatform: { isNative: true, isPluginAvailable: () => true, getNativePlugin: name => name === 'PushNotifications' ? push : support } };
   vm.runInNewContext(fs.readFileSync('notifications.js', 'utf8'), { window, sb, document: { hidden: false, addEventListener() {} }, localStorage: { getItem: k => store.get(k) || null, setItem: (k,v) => store.set(k,v), removeItem: k => store.delete(k) }, crypto, setTimeout, clearTimeout });
-  return { api: window.UsNotifications, store, calls, push, listeners, bindings, native: { bound: () => boundInstallation, reject: value => { rejected = value; } }, switch: id => { owner = id; }, fail: value => { fail = value; } };
+  return { api: window.UsNotifications, store, calls, order, push, listeners, bindings, native: { bound: () => boundInstallation, reject: value => { rejected = value; } }, switch: id => { owner = id; }, fail: value => { fail = value; } };
 }
 test('MC3 logout starts revocation before invalidating identity', () => {
   const body = app.slice(app.indexOf('signOut:async()=>{'), app.indexOf('function usInvalidateAuth'));
@@ -61,6 +62,34 @@ test('native binding refusal fails closed despite server registration success',a
   assert.equal((await h.api.enable()).ok,false);
   assert.equal(h.native.bound(),'');
   assert.equal(h.bindings.length,1);
+});
+
+test('disable while offline clears native owner BEFORE RPC and persists A token for retry',async()=>{
+  const h=native(); await h.api.authReady({id:'A'});
+  assert.equal((await h.api.enable()).ok,true);
+  const old=h.store.get('us:notifications:v1:installation');
+  h.order.length=0;
+  h.fail(true);
+  const disabled=await h.api.disable();
+  assert.equal(disabled.ok,false,'server offline is not a completed revocation');
+  assert.equal(disabled.kind,'pending');
+  assert.equal(h.native.bound(),'','native must reject A before returning from disable');
+  assert.ok(h.order.indexOf('native-owner-clear')>=0);
+  assert.ok(h.order.indexOf('native-owner-clear')<h.order.indexOf('rpc:unregister_native_push_device'));
+  assert.equal(h.store.get('us:notifications:v1:enabled:A'),undefined);
+  assert.equal(h.store.get('us:notifications:v1:installation'),undefined);
+  assert.match(h.store.get('us:notifications:v1:retired'),new RegExp(old));
+  await h.api.resume();
+  assert.equal(h.native.bound(),'','resume cannot silently rebind A after failed disable');
+});
+
+test('successful disable retires native owner before server confirms revocation',async()=>{
+  const h=native(); await h.api.authReady({id:'A'});
+  assert.equal((await h.api.enable()).ok,true);
+  h.order.length=0;
+  assert.equal((await h.api.disable()).ok,true);
+  assert.equal(h.native.bound(),'');
+  assert.ok(h.order.indexOf('native-owner-clear')<h.order.indexOf('rpc:unregister_native_push_device'));
 });
 
 test('offline native revoke survives B and retries only when A returns', async () => {
