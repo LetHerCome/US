@@ -1,5 +1,19 @@
 # US — Architecture
 
+
+## 2026-10-10 Store 1.0 architecture update
+
+**Source:** main @ b0c9f82d; the original 2026-10-04 technical map below remains useful but its status flags are historical. For live implementation/release readiness prefer [CURRENT_STATE.md](CURRENT_STATE.md) and [Store Baseline](store/US_STORE_1_0_BASELINE.md).
+
+- Primary navigation stays four surfaces Oggi/Noi/Ricordi/Gioca. Main feature modules added since the map: noi-v2.js/css (canonical calendar), oggi-look.js/css (Oggi themes), ricordi-inline-carousel.js/css, modal-center.css, top-chrome.css, native-frameless.css.
+- MC2 SQL has been registered on the live Supabase migration ledger; MC3 onboarding source is merged in main. This **does not** certify public signup and shared-device push isolation.
+- Widget Bridge and Premium Motion V2 are in draft #170, not main. The server-authoritative weekly participation SQL and client are in draft #177, not live.
+- Android: target/compile API 36, Capacitor 8; iOS Capacitor 8 builds simulators but has no device QA.
+- Preserve auth, push, media-cache, progression, calendar and Service Worker authorities; no parallel framework/tenant systems during Store V1 freeze.
+- Keep monetization D4 undecided. No subscription/payment runtime exists by decision.
+
+---
+
 **Status:** CURRENT TECHNICAL MAP  
 **Updated:** 2026-10-04
 

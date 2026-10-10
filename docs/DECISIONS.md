@@ -96,3 +96,19 @@ Only durable decisions belong here. New missions should not reopen them without 
 - One persistent **+** creates an impegno for the selected date using the existing Calendar editor; keep title, all-day, start/end, date editing, authorization, reminders, edit/delete and Da vivere links. No new backend schema or duplicate write authority.
 - Legacy Calendar overlay markup/helpers remain inert temporarily for backward compatibility, while the form/detail sheets are reparented to the document root. Remove legacy scaffolding only after comprehensive browser/device QA; never delete calendar data.
 - Official Phosphor glyphs are centrally aligned in their control shapes. Distance continues to be hidden but preserved.
+
+## 2026-10-10 — Delibera Presidenza US Store 1.0 (D1–D5)
+
+**Fonte:** decisione esplicita della Presidenza del 10 ottobre 2026. Questa sezione prevale su proposte roadmap incompatibili, lasciandole come storia.
+
+1. **D1 APPROVATO — Identità:** US è lo spazio privato e reciproco di una coppia. Il core loop è lasciare → ricevere → rispondere → esito condiviso → eventuale Ricordo. Niente piattaforma social generalista.
+2. **D2 APPROVATO — Contenuto V1:** la release commerciale mantiene quattro tab Oggi / Noi / Ricordi / Gioca. Il focus è consolidare, non inventare un nuovo prodotto. Sintonia resta una scheda dentro Gioca; Calendario unico in Noi; top bar completa solo su Oggi; Maudit esistente preservato.
+3. **D3 APPROVATO — Ordine Store:** Google Play Android prima, Apple App Store successivamente. La base iOS continua a compilare, ma la mancanza di QA iPhone non blocca la V1 Android.
+4. **D4 DA RIVEDERE — Modello economico:** **nessun** prezzo, US Plus, abbonamento, paywall, billing, freemium o promozione commerciale sono approvati. La monetizzazione richiede successiva analisi e nuova delibera. Non implementare sistema commerciale sulla base di una proposta passata.
+5. **D5 APPROVATO — Freeze di nuove feature:** stop fino alla V1 per nuovi Arcade (Pulse, Stack Together, Relay, Duo Maze), Diario/Scrapbook esteso, Compagni oltre Maudit, nuovi moduli e redesign generali. Restano **necessari e permessi come release scope**: registrazione/onboarding, account recovery, deletion/export, policy di separazione, privacy, sicurezza, bugfix, performance, accessibilità, compliance e release packaging.
+
+**N.B.:** Il piano del 4 ottobre che prospettava aumento da 3 a 5 sessioni settimanali Game V2 è una proposta futura sospesa; nessun cambio quota V1 autorizzato. Eventuali reward DB o feature branch in sospeso richiedono SQL/client rollout separato e approvato.
+
+**Fonte unica per lo Store 1.0:** [Carta](store/US_STORE_1_0_CHARTER.md) · [Baseline](store/US_STORE_1_0_BASELINE.md) · [Piano](store/US_STORE_1_0_EXECUTION.md) · [Release gates](store/US_STORE_1_0_QUALITY_GATES.md).
+
+**Governance:** la delibera approva la direzione di prodotto e la preparazione documentale; non autorizza per implicazione merge, produzione, modifica Supabase, acquisto account, pubblicazione o marketing a pagamento.
