@@ -20,6 +20,8 @@ test('S3 native staging asset rewrite changes ALL Supabase origins and uses a se
   const v = await inputs();
   const staged = v.isolateStagingBuild({ ...v, publishableKey: syntheticPublicKey });
   assert.ok(staged.appJs.includes("const SB_URL = 'https://" + v.STAGING_HOST + "';"));
+  assert.ok(staged.appJs.includes("'sb-dugmhngrfkuieeletatb-auth-token'"), 'staging Auth fallback key');
+  assert.equal(staged.appJs.includes('iiakdfsxpywdkxravqjh'), false, 'NO production project ref anywhere in staged app');
   assert.ok(staged.appJs.includes("const SB_KEY = '" + syntheticPublicKey + "';"));
   assert.equal(staged.indexHtml.includes('https://' + v.STAGING_HOST), true);
   assert.equal(staged.indexHtml.includes('//' + v.STAGING_HOST), true);
@@ -44,6 +46,10 @@ test('fail closed for absent service_role/unknown keys and unexpected product ID
     ...v, capacitorJson: JSON.stringify({ appId: 'com.attacker.other', appName: 'US' }),
     publishableKey: syntheticPublicKey
   }), /unexpected Capacitor app identifier/);
+  assert.throws(() => v.isolateStagingBuild({
+    ...v, appJs: v.appJs.replace("'sb-iiakdfsxpywdkxravqjh-auth-token'", "'sb-other-project-auth-token'"),
+    publishableKey: syntheticPublicKey
+  }), /expected exactly one production Auth storage fallback/);
 });
 
 test('staging configuration CLI refuses to mutate sources without explicit QA opt-in', () => {
