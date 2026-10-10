@@ -167,3 +167,5 @@ jobs:
           sudo apt-get install -y postgresql-17
       - name: Mandatory real two-connection receipts and game completions
         run: sudo env PATH="$PATH" US_WEEK_RACE_REQUIRED=1 node --test tests/us-week-participation-concurrency.test.js
+      - name: Production ledger schema — mandatory PG17 concurrency without pending V3 cosmetics
+        run: sudo env PATH="$PATH" US_WEEK_RACE_REQUIRED=1 US_WEEK_PROD_SCHEMA=1 node --test tests/us-week-participation-concurrency.test.js

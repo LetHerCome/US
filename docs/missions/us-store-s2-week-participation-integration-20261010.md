@@ -41,3 +41,9 @@
 - Added an additional isolated PGlite test that reconstructs the base **without** that pending V3 cosmetics migration, applies only the Store S2 week SQL, and asserts the RPC/receipt and corrected client MAINTAIN revokes.
 - Two migration filenames in Git have different version stamps from the live ledger (native notifications, MC2 invites); content/authority requires separate drift assessment before any hosted staging/production deployment. A broad `db push` remains forbidden.
 - This is a guard against false-positive CI on a future schema, not certification of live Supabase runtime nor a deployment.
+
+## PostgreSQL 17 production-ledger gate — 2026-10-10
+
+- The mandatory `week-concurrency` GitHub Actions job now runs the same two real PostgreSQL 17 concurrency cases twice, each against a disposable local server and authentic baseline migrations: first with the complete repository sequence, second with `US_WEEK_PROD_SCHEMA=1` excluding only `*_us_v3_oggi_looks_rewards.sql` (not in the live ledger).
+- The altered helper defaults to the original full chain and changes no other consumers. Each test server is isolated and never connects to Supabase.
+- Remote staging remains required for live grants/PostgREST/Auth integration; this PG17 test does not authorize production SQL.

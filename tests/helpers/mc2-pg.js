@@ -7,7 +7,7 @@ const h=require('./mc2-db');
 const bin=[17,18].map(v=>`/usr/lib/postgresql/${v}/bin`).find(d=>fs.existsSync(path.join(d,'postgres')));
 const CAN_RUN=Boolean(bin && process.getuid?.()===0 && fs.existsSync('/usr/sbin/runuser'));
 const SKIP=CAN_RUN?false:'MC2 real PostgreSQL requires Linux root, postgres OS user and PG17+ server binaries (captured baseline has MAINTAIN); run in WSL/Linux with MC2_RACE_REQUIRED=1';
-function startServer(){
+function startServer({excludeUndeployedV3=false}={}){
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),'us-mc2-pg-'));fs.chmodSync(dir,0o755);
   const data=path.join(dir,'data'),sock=path.join(dir,'sock');
   const asPg=(cmd,args)=>execFileSync('runuser',['-u','postgres','--',path.join(bin,cmd),...args],{stdio:'pipe'});
@@ -27,7 +27,7 @@ function startServer(){
     asPg('pg_ctl',['-D',data,'-o',`-c listen_addresses= -c unix_socket_directories=${sock} -p 55439`,'-w','-l',path.join(data,'log'),'start']);
     sql(fs.readFileSync(path.join(h.ROOT,'supabase/baseline/platform/pglite-platform.sql'),'utf8'));
     sql(h.PLATFORM);
-    for(const f of fs.readdirSync(h.DIR).filter(f=>f.endsWith('.sql')).sort()){
+    for(const f of fs.readdirSync(h.DIR).filter(f=>f.endsWith('.sql') && (!excludeUndeployedV3 || !f.endsWith('_us_v3_oggi_looks_rewards.sql'))).sort()){
       try{sql(fs.readFileSync(path.join(h.DIR,f),'utf8'));}catch(error){error.message=`${f}: ${error.message}`;throw error;}
     }
   }catch(e){stop();throw e;}

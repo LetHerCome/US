@@ -5,7 +5,7 @@ const {randomUUID:id}=require('node:crypto');
 const pg=require('./helpers/mc2-pg'),h=require('./helpers/mc2-db');
 if(process.env.US_WEEK_RACE_REQUIRED==='1'&&!pg.CAN_RUN)throw Error(pg.SKIP);
 let server;
-test.before(()=>{if(pg.CAN_RUN)server=pg.startServer();});
+test.before(()=>{if(pg.CAN_RUN)server=pg.startServer({excludeUndeployedV3:process.env.US_WEEK_PROD_SCHEMA==='1'});});
 test.after(()=>server?.stop());
 const actor=u=>pg.asUser(u);
 function statementAs(u,sql){return server.sql(`begin; ${actor(u)} ${sql}; commit;`);}
