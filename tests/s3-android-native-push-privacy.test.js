@@ -64,9 +64,10 @@ test('Android manifest has exactly one guarded receiver; plain Capacitor service
  assert.match(service,/extends MessagingService/);
  assert.match(service,/UsPushOwnerGate\.accepts\(this, data\.get\("installation"\)\)/);
  assert.match(service,/UsPushOwnerGate\.postIfCurrent\(this, installation,/);
- const activity=fs.readFileSync(path.join(__dirname,'../android/app/src/main/java/com/usapp/us/MainActivity.java'),'utf8');
- assert.match(activity,/isResumedForPush\(\)/);
- assert.match(service,/if \(!MainActivity\.isResumedForPush\(\)\)/);
+ assert.match(plugin,/protected void handleOnResume\(\)/);
+ assert.match(plugin,/protected void handleOnPause\(\)/);
+ assert.match(plugin,/isActivityResumed\(\)/);
+ assert.match(service,/if \(!UsPushSupportPlugin\.isActivityResumed\(\)\)/);
  assert.match(gate,/synchronized \(LOCK\)[\s\S]*?post\.run\(\)/);
  assert.match(service,/message\.getNotification\(\) != null/);
  assert.match(gate,/getSharedPreferences\(STORE, Context\.MODE_PRIVATE\)/);
