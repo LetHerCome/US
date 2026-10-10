@@ -1,10 +1,11 @@
-# QA-only signed APK for isolated S1 UI and S3 security integration. Never on main.
+# S1 UI QA only. S3 security must use an isolated staging-app/Firebase build.
+# Do not use production-bound QA APKs to test old A -> B notifications.
 # Does NOT send FCM, change Edge, run SQL or install on any phone.
 name: US UI signed QA APK
 
 on:
   push:
-    branches: [mission/us-store-s1-android-integration-20261010, mission/us-store-s3-native-push-owner-gate-20261010]
+    branches: [mission/us-store-s1-android-integration-20261010]
   workflow_dispatch:
 
 permissions:
@@ -16,7 +17,7 @@ concurrency:
 
 jobs:
   signed-apk:
-    if: github.ref == 'refs/heads/mission/us-store-s1-android-integration-20261010' || github.ref == 'refs/heads/mission/us-store-s3-native-push-owner-gate-20261010'
+    if: github.ref == 'refs/heads/mission/us-store-s1-android-integration-20261010'
     runs-on: windows-latest
     timeout-minutes: 70
     env:
