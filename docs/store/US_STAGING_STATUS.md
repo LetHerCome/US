@@ -35,6 +35,27 @@ Because this is a purpose-created staging project, the local migration ledger us
 - **Verified after failure:** S2 receipt column/RPC absent, migration ledger unchanged, jobs all inactive, no private profiles or couples.
 - This is a meaningful fail-closed check, **not** remote staging QA success. In particular the 9/9 GitHub checks on S2 commit `c5602b6a097fdaed66dc3b5b6b61f79bcfce726d` cover isolated PG17, PGlite, Android, iOS Simulator and browser tests, not a full hosted-schema migration.
 
+## Read-only parity gate — executed 2026-10-10
+
+The source-controlled query [`US_STAGING_S2_GATE.sql`](US_STAGING_S2_GATE.sql) was **executed successfully** against both Supabase projects (SELECT only, no writes):
+
+| Criterion | Production | US-STAGING |
+|---|---|---|
+| Required 7 source tables RLS-enabled | **7/7 PASS** | **7/7 PASS** |
+| Countdown table | Present | **Missing** |
+| Native device installation field | Present | **Missing** |
+| Ricordi thumbnail field | Present | **Missing** |
+| MC2 couple membership RPC | Present | **Missing** |
+| Unique couple roles index | Present | Present |
+| No anon INSERT on `profiles` | PASS | **FAIL** |
+| No authenticated TRUNCATE on `profiles` | PASS | **FAIL** |
+| No authenticated MAINTAIN on `profiles` | PASS | **FAIL** |
+| US cron jobs enabled | 9 (normal production) | **0/9**, all disabled (required in staging) |
+| S2 week RPC and receipt field | Missing (not released) | Missing (not released) |
+| `source_parity_for_s2` | **true** | **false** |
+
+The stage has all seven relevant RLS-enabled tables, but that is **not equivalent to the completed MC2 authorization model**. In particular the S2 migration's fail-closed precondition is correct. The only safe next action is completing missing forward migrations via a supported, reviewed deployment method, in order, before hosted S2 SQL or synthetic couples smoke testing. No substitute grants, permissive test bypass or out-of-order S2 application may count as parity.
+
 ## Next safe execution
 
 1. Audit the blocked forward migration through the established approved deployment route, without disabling or evading safety gates.
