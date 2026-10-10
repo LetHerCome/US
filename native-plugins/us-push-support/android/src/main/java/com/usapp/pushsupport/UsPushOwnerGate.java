@@ -62,13 +62,28 @@ public final class UsPushOwnerGate {
         }
     }
 
-    /** Never accepts a message for the prior account after a local owner change. */
+    private static boolean isCurrent(Context context, String installation) {
+        if (!validUuid(installation)) return false;
+        final SharedPreferences store = prefs(context);
+        return validUuid(store.getString(OWNER, null))
+            && installation.equalsIgnoreCase(store.getString(INSTALLATION, ""));
+    }
+
+    /** Read-only early rejection; never use as the only pre-notify check. */
     public static boolean accepts(Context context, String installation) {
+        synchronized (LOCK) { return isCurrent(context, installation); }
+    }
+
+    /**
+     * Critical section: owner check and NotificationManager.notify() run
+     * under the SAME lock as clear() and bind(). No A notify can interleave
+     * between B account's retirement commit and the subsequent cancelAll().
+     */
+    public static boolean postIfCurrent(Context context, String installation, Runnable post) {
         synchronized (LOCK) {
-            if (!validUuid(installation)) return false;
-            final SharedPreferences store = prefs(context);
-            return validUuid(store.getString(OWNER, null))
-                && installation.equalsIgnoreCase(store.getString(INSTALLATION, ""));
+            if (!isCurrent(context, installation) || post == null) return false;
+            post.run();
+            return true;
         }
     }
 }
