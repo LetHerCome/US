@@ -20,17 +20,22 @@ const BUILD_B = 'qa-startup-soak-build-b';
 // The installed production V5, not the candidate with its marker renamed.
 const V5_SHA = '1251e495aea03282b284d2f4177120a7bd5eea03';
 const V5_BUILD = 'us-reveal-calendar-v5-20261009-1';
+const HISTORICAL_BUILDS = [
+  {name:'production V5',sha:V5_SHA,build:V5_BUILD},
+  {name:'Mission 1 V6',sha:'b0c9f82d7830f13a0310016067e36da961855d23',build:'us-stabilization-v6-20261009-1'}
+];
 const digest = (body) => createHash('sha256').update(body).digest('hex');
 const historicalFiles = new Map();
-function v5File(file) {
+function v5File(file, ref = V5_SHA) {
   const relative = path.relative(ROOT, file).split(path.sep).join('/');
-  if (!historicalFiles.has(relative)) historicalFiles.set(relative,
-    execFileSync('git', ['show', `${V5_SHA}:${relative}`], { cwd: ROOT, maxBuffer: 16 * 1024 * 1024 }));
-  return historicalFiles.get(relative);
+  const key = `${ref}:${relative}`;
+  if (!historicalFiles.has(key)) historicalFiles.set(key,
+    execFileSync('git', ['show', key], { cwd: ROOT, maxBuffer: 16 * 1024 * 1024 }));
+  return historicalFiles.get(key);
 }
 
-function cloudflareLikeServer({ installedV5 = false } = {}) {
-  const state = { offline: false, build: installedV5 ? V5_BUILD : BUILD_A, v5: installedV5, documents: 0 };
+function cloudflareLikeServer({ installedV5 = false, historicalRef = V5_SHA, historicalBuild = V5_BUILD } = {}) {
+  const state = { offline: false, build: installedV5 ? historicalBuild : BUILD_A, v5: installedV5, documents: 0 };
   const server = http.createServer((req, res) => {
     if (state.offline) { req.socket.destroy(); return; }
     const url = new URL(req.url, 'http://127.0.0.1');
@@ -57,7 +62,7 @@ function cloudflareLikeServer({ installedV5 = false } = {}) {
       res.end(body);
     };
     if (state.v5) {
-      try { send(null, v5File(file)); } catch (error) { send(error); }
+      try { send(null, v5File(file, historicalRef)); } catch (error) { send(error); }
     } else fs.readFile(file, send);
   });
   return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve({ server, state })));
@@ -160,8 +165,9 @@ test('installed PWA: launch right after an update and offline after it keep one 
   assert.deepEqual(h.errors, []);
 });
 
-test('installed production V5 upgrades to V6: every shell asset has candidate bytes online and offline', async (t) => {
-  const h = await setup(t, { installedV5: true }); if (!h) return;
+for (const {name,sha:V5_SHA,build:V5_BUILD} of HISTORICAL_BUILDS) {
+test(`installed ${name} upgrades to candidate: every shell asset has candidate bytes online and offline`, async (t) => {
+  const h = await setup(t, { installedV5: true, historicalRef:V5_SHA, historicalBuild:V5_BUILD }); if (!h) return;
   assert.notEqual(BUILD_A, V5_BUILD, 'V6 must have its own build/cache identity');
   assert.equal((await launch(h.page, `${h.base}/`)).build, V5_BUILD);
   await waitForShell(h.page, V5_BUILD);
@@ -170,7 +176,7 @@ test('installed production V5 upgrades to V6: every shell asset has candidate by
     await (await caches.open('us-private-media-v1')).put('/qa-private-media', new Response('keep-private-media'));
     return await (await cache.match(`/app.js?v=${build}`)).text();
   }, V5_BUILD);
-  assert.equal(digest(oldApp), digest(v5File(path.join(ROOT, 'app.js'))), 'the installed JS really is production V5');
+  assert.equal(digest(oldApp), digest(v5File(path.join(ROOT, 'app.js'),V5_SHA)), 'the installed JS really is the previous build');
   assert.notEqual(digest(oldApp), digest(fs.readFileSync(path.join(ROOT, 'app.js'))), 'the candidate has different Daily code');
 
   const delivered = [];
@@ -223,14 +229,14 @@ test('installed production V5 upgrades to V6: every shell asset has candidate by
     const file = path.join(ROOT, url.pathname);
     const build = url.searchParams.get('v');
     assert.ok([V5_BUILD, BUILD_A].includes(build), `unexpected build during activation: ${url}`);
-    assert.equal(hash, digest(build === V5_BUILD ? v5File(file) : fs.readFileSync(file)),
+    assert.equal(hash, digest(build === V5_BUILD ? v5File(file,V5_SHA) : fs.readFileSync(file)),
       `no mixed JS/CSS bytes during navigation/activation: ${url}`);
   }
   assert.deepEqual(h.errors, []);
 });
 
-test('installed production V5 remains usable offline when the V6 precache fails', async (t) => {
-  const h = await setup(t, { installedV5: true }); if (!h) return;
+test(`installed ${name} remains usable offline when the candidate precache fails`, async (t) => {
+  const h = await setup(t, { installedV5: true, historicalRef:V5_SHA, historicalBuild:V5_BUILD }); if (!h) return;
   assert.notEqual(BUILD_A, V5_BUILD);
   await launch(h.page, `${h.base}/`);
   await waitForShell(h.page, V5_BUILD);
@@ -254,9 +260,10 @@ test('installed production V5 remains usable offline when the V6 precache fails'
     { failure: null, nav: true, build: V5_BUILD });
   await waitForShell(h.page, V5_BUILD);
   const app = await h.page.evaluate(async (build) => (await fetch(`/app.js?v=${build}`)).text(), V5_BUILD);
-  assert.equal(digest(app), digest(v5File(path.join(ROOT, 'app.js'))), 'the previous installed worker still serves real V5 JS');
+  assert.equal(digest(app), digest(v5File(path.join(ROOT, 'app.js'),V5_SHA)), 'the previous installed worker still serves historical JS');
   assert.deepEqual(h.errors, []);
 });
+}
 
 test('installed PWA: a redirected document left by an older build is never replayed raw', async (t) => {
   const h = await setup(t); if (!h) return;

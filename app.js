@@ -4416,7 +4416,7 @@ function scheduleUsRealtimeRefresh(kind){
     usRealtimeRefreshTimers.delete(kind);
     if(!window.usProfile||document.hidden)return;
     const active=document.querySelector('.page.active')?.id;
-    if(kind==='daily'){hydrateToday();return;}
+    if(kind==='daily'){hydrateToday();window.USGameV2?.refreshParticipation?.();return;}
     if(kind==='quiz'){window.USGameV2?.refresh();return;}
     if(kind==='location'){if(active==='home')hydrateDistance();return;}
     if(kind==='moments'){
@@ -4507,6 +4507,7 @@ saveAnswer = async function(){
   toast('Salvato online ♡');
   sendWebPushEvent('daily_answer',window.todayQuestion.id).catch(()=>{});
   await hydrateToday();
+  window.USGameV2?.refreshParticipation?.();
 }
 window.saveAnswer=saveAnswer;
 

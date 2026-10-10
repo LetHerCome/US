@@ -126,29 +126,68 @@ function modeStatus(f, open) {
   return null;
 }
 
-// Gioca V4: visual day rail, without a fabricated streak.
-function romeDayISO(){
- const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
- const p=name=>parts.find(x=>x.type===name)?.value;
- return `${p('year')}-${p('month')}-${p('day')}`;
+// Week participation is a read of Daily/Game/ledger facts, independent of the
+// three-game allowance. No local clock, cache, streak or optimistic completion.
+let participation=null,participationStatus='idle',participationSeq=0,participationOwner='';
+const participationIdentity=()=>`${window.usProfile?.id||''}|${window.usProfile?.couple_id||''}`;
+function validParticipation(value){
+ if(!value||value.timezone!=='Europe/Rome'||!Array.isArray(value.days)||value.days.length!==7)return false;
+ const iso=/^\d{4}-\d{2}-\d{2}$/;
+ if(!iso.test(value.week_start)||!iso.test(value.week_end)||!iso.test(value.today))return false;
+ const monday=new Date(`${value.week_start}T12:00:00Z`);
+ if(!Number.isFinite(monday.getTime())||monday.toISOString().slice(0,10)!==value.week_start||monday.getUTCDay()!==1)return false;
+ if(!Number.isSafeInteger(value.completed_days)||!Number.isSafeInteger(value.weekly_xp_awarded)||value.weekly_xp_awarded<0)return false;
+ for(let i=0;i<7;i++){
+  const day=value.days[i],date=new Date(monday);date.setUTCDate(date.getUTCDate()+i);
+  if(day?.date!==date.toISOString().slice(0,10)||![day.daily_complete,day.game_complete,day.complete].every(v=>typeof v==='boolean'))return false;
+  if(day.complete!==(day.daily_complete&&day.game_complete)||!['complete','incomplete','unverifiable'].includes(day.status)||(day.status==='complete')!==day.complete)return false;
+ }
+ return value.week_end===value.days[6].date&&value.today>=value.week_start&&value.today<=value.week_end&&
+  value.completed_days===value.days.filter(d=>d.complete).length;
 }
 function dayRail(){
- const currentISO=romeDayISO(),[y,m,d]=currentISO.split('-').map(Number);
- const today=new Date(Date.UTC(y,m-1,d,12));
- const monday=new Date(today);
- monday.setUTCDate(today.getUTCDate()-((today.getUTCDay()+6)%7));
+ const header='<div class="us-gv4-week-head"><h3>La vostra settimana</h3>';
+ if(participationStatus!=='ready'||!participation){
+  const error=participationStatus==='error';
+  const copy=error?'Settimana non disponibile.':participationStatus==='loading'?'Sincronizzo la vostra settimana…':'Accedi per vedere la vostra settimana.';
+  return `<section class="us-gv4-week" data-gv2-week data-state="${participationStatus}" aria-label="La vostra settimana">${header}</div><p class="us-gv4-week-note" role="status">${copy}</p>${error?'<button type="button" class="ghost us-gv4-week-retry" data-gv2-action="week-retry">Riprova</button>':''}</section>`;
+ }
+ const w=participation;
  const labels=['L','M','M','G','V','S','D'];
- const days=labels.map((label,i)=>{
-  const date=new Date(monday);date.setUTCDate(monday.getUTCDate()+i);
-  const stamp=`${date.getUTCFullYear()}-${String(date.getUTCMonth()+1).padStart(2,'0')}-${String(date.getUTCDate()).padStart(2,'0')}`;
-  const active=stamp===currentISO;
-  const full=date.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'});
-  return `<span class="us-gv4-day${active?' is-today':''}" ${active?'aria-current="date"':''} aria-label="${esc(full)}${active?', oggi':''}"><small>${label}</small><b>${date.getUTCDate()}</b>${active?'<i aria-hidden="true"></i>':''}</span>`;
+ const days=w.days.map((day,i)=>{
+  const active=day.date===w.today;
+  const full=romeDate(day.date,{weekday:'long',day:'numeric',month:'long'});
+  const state=day.complete?'Domanda e gioco completati insieme':day.status==='unverifiable'?'Risposte precedenti non verificabili':
+   day.daily_complete?'Domanda completata, gioco da completare insieme':day.game_complete?'Gioco completato, domanda da completare insieme':'Da completare insieme';
+  return `<span class="us-gv4-day${active?' is-today':''}${day.complete?' is-complete':''}" data-date="${day.date}" data-state="${day.status}" role="group" ${active?'aria-current="date"':''} aria-label="${esc(full)}${active?', oggi':''}. ${state}"><small>${labels[i]}</small><b>${Number(day.date.slice(-2))}</b>${day.complete?`<span class="us-gv4-day-check">${icon('check')}</span>`:active?'<i aria-hidden="true"></i>':''}</span>`;
  }).join('');
- return `<section class="us-gv4-week" aria-label="Giorni della settimana">
-   <div class="us-gv4-week-head"><h3>La vostra settimana</h3><span>Una sfida ogni giorno</span></div>
-   <div class="us-gv4-days" role="group" aria-label="Sette giorni, solo oggi evidenziato">${days}</div>
+ return `<section class="us-gv4-week" data-gv2-week data-state="ready" aria-label="La vostra settimana">
+   ${header}<span>${w.completed_days} di 7 giornate complete</span></div>
+   <div class="us-gv4-days" role="group" aria-label="Da lunedì a domenica">${days}</div>
+   <div class="us-gv4-week-summary"><b>${w.weekly_xp_awarded} XP questa settimana</b><span>Domanda e una partita concluse da entrambi.</span></div>
+   ${w.days.some(d=>d.status==='unverifiable')?'<p class="us-gv4-week-note">Alcune risposte precedenti non sono verificabili.</p>':''}
  </section>`;
+}
+function paintParticipation(){
+ if(view!=='hub')return;
+ const node=byId('quizHub')?.querySelector('[data-gv2-week]');
+ if(node)node.outerHTML=dayRail();else if(home)renderHub();
+}
+async function refreshParticipation(){
+ const profile=window.usProfile,owner=participationIdentity(),seq=++participationSeq;
+ participationOwner=owner;participation=null;
+ participationStatus=profile?.couple_id?'loading':'idle';paintParticipation();
+ if(!profile?.couple_id)return null;
+ try{
+  const {data,error}=await sb.rpc('get_couple_week_participation_v1');
+  if(seq!==participationSeq||profile!==window.usProfile||owner!==participationIdentity())return null;
+  if(error||!validParticipation(data))throw error||new Error('invalid week participation');
+  participation=data;participationStatus='ready';paintParticipation();return data;
+ }catch(error){
+  if(seq!==participationSeq||profile!==window.usProfile||owner!==participationIdentity())return null;
+  console.warn('[US Gioca] week participation',error);
+  participation=null;participationStatus='error';paintParticipation();return null;
+ }
 }
 
 // ---------------------------------------------------------------- hub
@@ -275,6 +314,7 @@ async function load() {
   const sameIdentity=gameIdentityGuard();
   if (!window.usProfile) return null;
   const seq = ++loadSeq;
+  void refreshParticipation();
   try {
     const { data, error } = await sb.rpc('get_game_v2_home');
     if(!sameIdentity())return false;
@@ -954,6 +994,7 @@ function onClick(event) {
   else if (action === 'back') showHub();
   else if (action === 'prev') { const item = current.items[index]; drafts.set(item.id, readInput(item)); index = Math.max(0, index - 1); renderPlay(); }
   else if (action === 'refresh') refresh();
+  else if (action === 'week-retry') refreshParticipation();
   else if (action === 'retry') load();
   else if (button.dataset.gv2Family) chooseMode(button.dataset.gv2Family);
   else if (button.dataset.gv2Session) openSession(button.dataset.gv2Session);
@@ -978,12 +1019,16 @@ function boot() {
 }
 
 window.USGameV2 = {
-  load, refresh, showHub, openPerVoi, startRound, startSwipe, openSession, chooseMode, chooseSwipe,
+  load, refresh, refreshParticipation, showHub, openPerVoi, startRound, startSwipe, openSession, chooseMode, chooseSwipe,
   isOpen: () => view !== 'hub',
   close: showHub,
 };
 window.addEventListener('us-identity-change', (event) => {
-  if (!event.detail?.identityKey) {
+  const changedIdentity=participationOwner!==participationIdentity();
+  if(changedIdentity||!event.detail?.identityKey){
+    participationSeq++;participation=null;participationStatus='idle';participationOwner=participationIdentity();
+  }
+  if (changedIdentity||!event.detail?.identityKey) {
     identityEpoch++;loadSeq++;current=null;home=null;drafts.clear();view='hub';
     startRequestIds.clear();weeklyRequestId=null;
     panel()?.classList.add('hidden');if(panel())panel().innerHTML='';
@@ -1005,5 +1050,6 @@ window.addEventListener('us-identity-change', (event) => {
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
 else boot();
 document.addEventListener('visibilitychange', () => { if (!document.hidden && window.usProfile) refresh(); });
+window.addEventListener('online',()=>{if(window.usProfile&&!document.hidden)void refreshParticipation();});
 setInterval(() => { if (!document.hidden && window.usProfile) refresh(); }, 45000);
 })();

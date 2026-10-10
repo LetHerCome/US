@@ -2,6 +2,12 @@
 
 Data: 2026-10-09. Stato: Missione 1 implementata, candidato per review;
 Missione 2 progettata, nessuna implementazione SQL.
+
+Aggiornamento Missione 2: la candidata separata su `codex/us-v6-week-participation`,
+basata su `main` dopo l'integrazione della #176, è documentata in
+[QA](us-week-participation/QA.md) e [rollout](us-week-participation/ROLLOUT.md).
+La migrazione è preparata, non applicata a produzione. Il report qui sotto
+conserva le evidenze della Missione 1 e il contratto tecnico approvato.
 Branch: `codex/us-v6-daily-reveal`. Base remota verificata: `1251e49` (PR #175).
 PR: [#176 — draft](https://github.com/LetHerCome/US/pull/176).
 Snapshot iniziale Daily: `4d238b8257fd042fd0882b589aa13111f68ca6a9`.

@@ -96,7 +96,7 @@ test('M11B client: hub shows Per voi, the six modes and the weekly turn, with no
   assert.match(html, /<b>Tocca a te<\/b>/);
   assert.match(html, /Crea la domanda/);
   assert.doesNotMatch(html, NO_SCORE);
-  assert.deepEqual(h.calls.map(([n]) => n), ['get_game_v2_home']);
+  assert.deepEqual(h.calls.map(([n]) => n), ['get_couple_week_participation_v1','get_game_v2_home']);
   assert.deepEqual(h.calls[0][1], undefined, 'no client-supplied couple, user or role');
 });
 
@@ -269,7 +269,7 @@ test('M11B client: Per voi resumes the server session or starts a round', async 
   const resume = harness({ homeState: home({ per_voi: { state: 'pending', session_id: 's9' } }) });
   await tick();
   await resume.api.openPerVoi();
-  assert.deepEqual(resume.calls.filter(([n]) => n !== 'get_game_v2_home').map(([n, a]) => [n, a.target_session_id]), [['get_game_session', 's9']]);
+  assert.deepEqual(resume.calls.filter(([n]) => !['get_game_v2_home','get_couple_week_participation_v1'].includes(n)).map(([n, a]) => [n, a.target_session_id]), [['get_game_session', 's9']]);
   const fresh = harness();
   await tick();
   await fresh.api.openPerVoi();
@@ -333,7 +333,7 @@ test('M11B client: static contract — one Gioca surface, Phosphor icons, no leg
   assert.doesNotMatch(games, /localStorage|sessionStorage|indexedDB|fetch\(|openai|anthropic|bond_xp/i);
   assert.doesNotMatch(games, /couple_id\s*:|user_id\s*:|auth\.uid/, 'never sends identity; the server derives it');
   const rpcs = [...new Set([...games.matchAll(/sb\.rpc\('([a-z_0-9]+)'/g)].map((m) => m[1]))].sort();
-  assert.deepEqual(rpcs, ['complete_game_session_side', 'create_weekly_question', 'get_game_session', 'get_game_v2_home', 'mark_game_session_reveal_seen', 'save_game_session_answer', 'start_game_round', 'start_swipe_round']);
+  assert.deepEqual(rpcs, ['complete_game_session_side', 'create_weekly_question', 'get_couple_week_participation_v1', 'get_game_session', 'get_game_v2_home', 'mark_game_session_reveal_seen', 'save_game_session_answer', 'start_game_round', 'start_swipe_round']);
   const registry = JSON.parse(read('assets/ICON_REGISTRY.json')).icons;
   for (const [file, phosphor] of [['sparkle-regular', 'Sparkle'], ['sparkle-fill', 'Sparkle'], ['feather-regular', 'Feather'], ['lock-simple-regular', 'LockSimple'], ['binoculars-regular', 'Binoculars'], ['arrows-left-right-regular', 'ArrowsLeftRight'], ['smiley-regular', 'Smiley'], ['eye-regular', 'Eye'], ['clock-counter-clockwise-regular', 'ClockCounterClockwise'], ['signpost-regular', 'Signpost']]) {
     assert.ok(fs.existsSync(path.join(ROOT, 'assets/icons/phosphor', `${file}.svg`)), file);

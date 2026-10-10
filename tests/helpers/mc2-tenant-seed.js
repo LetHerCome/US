@@ -6,6 +6,9 @@ async function seedTenant(db,cid,u,v,n){
     insert into public.quiz_sets(id,slug,title,category) values('${setid}','mc2_test','Quiz','test') on conflict do nothing;
     insert into public.quiz_questions(id,set_id,position,question,options) values('${quizid}','${setid}',1,'Question?','["a","b"]') on conflict do nothing;`);
   const id=k=>h.uid(n*1000+k);
+  // Receipt writes exercise the authenticated path, not an owner bypass.
+  for(const [user,answer] of [[u,`PRIVATE-${n}-one`],[v,`PRIVATE-${n}-two`]])
+    await h.as(db,user,'insert into public.daily_answers(question_id,user_id,couple_id,answer) values($1,$2,$3,$4)',[qid,user,cid,answer]);
   await db.exec(`
     insert into public.activity(couple_id,actor_id,type) values('${cid}','${u}','mc2_test');
     insert into public.bucket_items(id,couple_id,created_by,title) values('${id(1)}','${cid}','${u}','Private idea ${n}');
@@ -13,7 +16,6 @@ async function seedTenant(db,cid,u,v,n){
       values('${id(2)}','${cid}','shared','${u}','Private calendar ${n}',true,'2026-01-01','2026-01-01');
     insert into public.calendar_reminders(couple_id,entry_id,recipient_id,offset_minutes,requested_by) values('${cid}','${id(2)}','${v}',1440,'${u}');
     insert into public.couple_locations(user_id,couple_id,latitude,longitude) values('${u}','${cid}',41,12),('${v}','${cid}',42,13);
-    insert into public.daily_answers(question_id,user_id,couple_id,answer) values('${qid}','${u}','${cid}','PRIVATE-${n}-one'),('${qid}','${v}','${cid}','PRIVATE-${n}-two');
     insert into public.daily_question_keepsakes(couple_id,question_id,question_text,question_date,francesco_answer,beatrice_answer,revealed_at,kept_by_role)
       values('${cid}','${qid}','Private kept ${n}','2026-01-01','Private one','Private two',now(),'francesco');
     insert into public.daily_question_outcomes(couple_id,question_id,author_role,body,last_operation_id) values('${cid}','${qid}','francesco','Private outcome ${n}','${id(3)}');

@@ -9,10 +9,12 @@ const tick = async () => {for(let i=0;i<7;i++)await new Promise(resolve=>setImme
 function gameHub(instant='2026-10-09T22:30:00Z'){
   const nodes={};
   const node=id=>(nodes[id] ||= {id,innerHTML:'',dataset:{},classList:{add(){},remove(){},contains:()=>false},setAttribute(){},removeAttribute(){},addEventListener(){},querySelector:()=>null});
-  const window={usProfile:{role:'francesco'},crypto:{randomUUID:()=> 'req'},go(){}};
+  const window={usProfile:{id:'f',couple_id:'fixture',role:'francesco'},crypto:{randomUUID:()=> 'req'},go(){}};
   class FrozenDate extends Date {constructor(...args){super(...(args.length?args:[instant]));}}
   const state={per_voi:{state:'idle'},open_rounds:[],recent:[],weekly:null,allowance:{used:0,limit:3,per_voi_available:true,free_available:true,free_limit:2,free_used:0,families:{}}};
-  const sandbox={window,Date:FrozenDate,Intl,document:{readyState:'complete',hidden:false,getElementById:node,addEventListener(){},querySelector:()=>({id:'quiz'})},sb:{rpc:async()=>({data:state,error:null})},toast(){},FormData:class{},console:{warn(){}},setTimeout:()=>1,setInterval:()=>1};
+  const week={week_start:'2026-10-05',week_end:'2026-10-11',today:'2026-10-10',timezone:'Europe/Rome',completed_days:0,weekly_xp_awarded:0,
+    days:Array.from({length:7},(_,i)=>({date:`2026-10-${String(5+i).padStart(2,'0')}`,daily_complete:false,game_complete:false,complete:false,status:'incomplete'}))};
+  const sandbox={window,Date:FrozenDate,Intl,document:{readyState:'complete',hidden:false,getElementById:node,addEventListener(){},querySelector:()=>({id:'quiz'})},sb:{rpc:async name=>({data:name==='get_couple_week_participation_v1'?week:state,error:null})},toast(){},FormData:class{},console:{warn(){}},setTimeout:()=>1,setInterval:()=>1};
   node('quizHub');node('usGameV2Panel');node('usPerVoiTop');
   require('./helpers/identity-fixture').install(sandbox);
   vm.runInNewContext(read('games.js'),sandbox);
@@ -31,10 +33,10 @@ test('V4: daily slot leads Gioca; day rail precedes weekly budget and existing g
   assert.equal((html.match(/aria-current="date"/g)||[]).length,1);
   assert.doesNotMatch(html,/data-streak|data-completed-days|day-played/,'no fictitious past-day progress');
 });
-test('V4: Europe/Rome day rail respects October clock boundary',async()=>{
-  const html=await gameHub('2026-10-09T22:30:00Z').html();
-  assert.match(html,/aria-label="sabato 10 ottobre, oggi"/,'Rome is already Saturday although UTC is Friday');
-  assert.match(html,/class="us-gv4-day is-today" aria-current="date" aria-label="sabato 10 ottobre, oggi"/);
+test('V4: day rail uses the server Rome date even with a wrong device clock',async()=>{
+  const html=await gameHub('2080-01-01T22:30:00Z').html();
+  assert.match(html,/aria-label="sabato 10 ottobre, oggi\./,'server Rome date wins over device clock');
+  assert.match(html,/class="us-gv4-day is-today"[^>]*aria-current="date"[^>]*aria-label="sabato 10 ottobre, oggi\./);
 });
 test('V4: Daily Challenge is one stable slot; only existing Daily engine supplies question/response state',()=>{
   const source=read('home-cleanup.js');
