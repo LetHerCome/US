@@ -12,13 +12,13 @@ public class MainActivity extends BridgeActivity {
     public static boolean isResumedForPush() { return resumedForPush; }
 
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
         resumedForPush = true;
     }
 
     @Override
-    protected void onPause() {
+    public void onPause() {
         resumedForPush = false;
         super.onPause();
     }
