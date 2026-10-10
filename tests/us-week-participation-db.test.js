@@ -114,6 +114,19 @@ test('single member cannot claim both sides; membership move immediately changes
  await db.query('update public.profiles set couple_id=null where id=$1',[p.a]);
  await assert.rejects(h.read(db,p.a),code('42501'));
 });
+test('Day tables never expose MAINTAIN to anonymous or authenticated clients',async()=>{
+ for(const table of ['daily_answers','daily_questions']){
+  for(const role of ['anon','authenticated']){
+   const row=(await db.query('select pg_catalog.has_table_privilege($1,$2,$3) granted',[role,'public.'+table,'MAINTAIN'])).rows[0];
+   assert.equal(row.granted,false,role+' must not have MAINTAIN on '+table);
+  }
+ }
+});
+test('partner roles are already unique per couple through the existing partial index',async()=>{
+ const index=(await db.query("select indexdef from pg_indexes where schemaname='public' and indexname='profiles_one_role_per_couple'")).rows[0];
+ assert.ok(index&&/UNIQUE INDEX/i.test(index.indexdef));
+ await assert.rejects(db.query('update public.profiles set role=$1 where id=$2',['francesco',p.b]),/duplicate key|unique constraint/i);
+});
 test('migration refuses unexpected client Game grants before changing the substrate',async()=>{
  const isolated=await h.base();
  try{

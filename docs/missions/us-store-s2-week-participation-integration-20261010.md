@@ -28,3 +28,9 @@
 - Until RPC is present, preview UI must show unavailable state, no fake completions or XP.
 
 **No production SQL, merge or store launch performed by this S2 candidate.**
+
+## Independent security preflight hardening — 2026-10-10
+
+- Verified the live database already has unique partial index `profiles_one_role_per_couple (couple_id, role) WHERE couple_id IS NOT NULL`; no duplicate partner roles possible through ordinary writes. Added a test guarding this existing foundation, **no schema DDL** added for roles.
+- Found `MAINTAIN` privilege on both `daily_answers` and `daily_questions` for `anon` and `authenticated`, even after the original migration revocations. The SQL candidate now revokes `MAINTAIN` too, completing least-privilege for provenance and avoiding client-initiated maintenance. Added test checking all 4 privilege outcomes.
+- This migration change exists **only in this Git branch**. No production or staging SQL applied. Requires PostgreSQL 17+ and CI rerun on the amended commit; historical 11/11 checks from previous SHA are not transferable.

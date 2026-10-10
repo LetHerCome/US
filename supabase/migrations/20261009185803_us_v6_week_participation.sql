@@ -61,9 +61,9 @@ create trigger us_v6_daily_answer_receipt before insert or update on public.dail
 
 -- TRUNCATE ignores RLS. Parent DELETE/TRUNCATE could also erase receipts via CASCADE.
 -- SELECT and the existing authorized answer INSERT/UPDATE remain compatible with upsert.
-revoke delete,truncate,references,trigger on public.daily_answers from anon,authenticated;
+revoke delete,truncate,references,trigger,maintain on public.daily_answers from anon,authenticated;
 revoke insert,update on public.daily_answers from anon;
-revoke insert,update,delete,truncate,references,trigger on public.daily_questions from anon,authenticated;
+revoke insert,update,delete,truncate,references,trigger,maintain on public.daily_questions from anon,authenticated;
 
 create index us_week_game_completed_idx on public.game_sessions(couple_id,completed_at)
   where completed_at is not null;
