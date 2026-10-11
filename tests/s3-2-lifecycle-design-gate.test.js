@@ -8,13 +8,16 @@ const read = p => fs.readFileSync(path.join(root,p),'utf8');
 const spec = JSON.parse(read('docs/missions/us-store-s3-2-lifecycle-contract-20261012.json'));
 const design = read('docs/missions/us-store-s3-2-lifecycle-risk-gates-20261012.md');
 
-test('S3.2 begins blocked and never treats unlink as deletion',()=>{
-  assert.equal(spec.status,'BLOCKED_POLICY_AND_SECURITY_REVIEW');
+test('S3.2 policy A is approved but destructive actions remain blocked',()=>{
+  assert.equal(spec.status,'BLOCKED_RETENTION_MEDIA_AND_SECURITY_REVIEW');
   assert.equal(spec.destructiveActionsEnabled,false);
   assert.equal(spec.automatedDeletionAllowed,false);
-  assert.equal(spec.ownerChoice,null);
-  for(const k of ['sharedContentAfterOneMemberLeaves','retention','physicalMediaDisposition']){
-    assert.equal(spec.decisions[k],'REQUIRES_OWNER_APPROVAL');
+  assert.equal(spec.ownerChoice,'A');
+  assert.equal(spec.decisions.sharedContentAfterOneMemberLeaves,'PRESERVE_ELIGIBLE_SHARED_FOR_REMAINING_MEMBER');
+  assert.equal(spec.preservingPartnerPrinciples.neverDeleteEntireCoupleOnSingleAccountRequest,true);
+  assert.equal(spec.preservingPartnerPrinciples.deletionDifferentFromSeparation,true);
+  for(const k of ['retention','physicalMediaDisposition']){
+    assert.equal(spec.decisions[k],'REQUIRES_PRIVACY_REVIEW');
   }
   assert.match(design,/Account deletion != unpair != device logout != couple deletion/);
   assert.match(design,/fail closed/i);
@@ -53,7 +56,7 @@ test('no authorization bypass, service key or live account deletion is introduce
   assert.equal(spec.auth.clientServiceRoleAllowed,false);
   assert.equal(spec.auth.serverOwnerCheckRequired,true);
   assert.equal(spec.auth.freshReauthenticationRequired,true);
-  for(const key of ['P0-S3-FCM-isolation','shared-content-policy','privacy-data-retention-policy',
+  for(const key of ['P0-S3-FCM-isolation','shared-content-policy-A-scoped-preservation-review','privacy-data-retention-policy',
     'storage-byte-cleanup','real-cross-tenant-auth-and-media-test','account-deletion-test']){
     assert.ok(spec.releaseGates.includes(key),key);
   }
