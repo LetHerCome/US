@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.provider.Settings;
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.android.gms.tasks.Task;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -28,6 +29,8 @@ import org.json.JSONObject;
 @CapacitorPlugin(name = "UsPushSupport")
 public class UsPushSupportPlugin extends Plugin {
     private static volatile boolean activityResumed = false;
+    private static final Object transportLock = new Object();
+    private static Task<Void> shutdownTask;
 
     public static boolean isActivityResumed() { return activityResumed; }
 
@@ -147,10 +150,19 @@ public class UsPushSupportPlugin extends Plugin {
             return;
         }
         try {
-            FirebaseMessaging messaging = FirebaseMessaging.getInstance();
-            messaging.setAutoInitEnabled(false);
-            messaging.deleteToken().addOnCompleteListener(task ->
-                call.resolve(new JSObject().put("stopped", task.isSuccessful()))
+            final Task<Void> task;
+            synchronized (transportLock) {
+                // A JS timeout must not launch a second deleteToken while the
+                // first provider operation is still running.
+                if (shutdownTask == null || shutdownTask.isComplete()) {
+                    FirebaseMessaging messaging = FirebaseMessaging.getInstance();
+                    messaging.setAutoInitEnabled(false);
+                    shutdownTask = messaging.deleteToken();
+                }
+                task = shutdownTask;
+            }
+            task.addOnCompleteListener(result ->
+                call.resolve(new JSObject().put("stopped", result.isSuccessful()))
             );
         } catch (RuntimeException error) {
             call.resolve(new JSObject().put("stopped", false));
