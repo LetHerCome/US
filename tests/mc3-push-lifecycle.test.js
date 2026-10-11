@@ -22,6 +22,10 @@ function native() {
       bindings.push({ ownerId, installationId, expectedEpoch, bound });
       return { bound };
     },
+    stopPushTransport: async () => {
+      order.push('native-transport-stop');
+      return { stopped: true };
+    },
     clearPushOwner: async () => {
       order.push('native-owner-clear');
       epoch = crypto.randomUUID();
@@ -32,7 +36,7 @@ function native() {
   const sb = { auth: { getSession: async () => ({data:{session:{user:{id:owner}}}}) }, rpc: async (name, args) => { calls.push({ owner, name, args }); order.push('rpc:'+name); return { data: { removed: true }, error: fail ? new Error('offline') : null }; } };
   const window = { sb, UsPlatform: { isNative: true, isPluginAvailable: () => true, getNativePlugin: name => name === 'PushNotifications' ? push : support } };
   vm.runInNewContext(fs.readFileSync('notifications.js', 'utf8'), { window, sb, document: { hidden: false, addEventListener() {} }, localStorage: { getItem: k => store.get(k) || null, setItem: (k,v) => store.set(k,v), removeItem: k => store.delete(k) }, crypto, setTimeout, clearTimeout });
-  return { api: window.UsNotifications, store, calls, order, push, listeners, bindings, native: { bound: () => boundInstallation, reject: value => { rejected = value; } }, switch: id => { owner = id; }, fail: value => { fail = value; } };
+  return { api: window.UsNotifications, store, calls, order, push, listeners, bindings, setTransportStop: fn => { support.stopPushTransport = fn; }, native: { bound: () => boundInstallation, reject: value => { rejected = value; } }, switch: id => { owner = id; }, fail: value => { fail = value; } };
 }
 test('MC3 logout starts revocation before invalidating identity', () => {
   const body = app.slice(app.indexOf('signOut:async()=>{'), app.indexOf('function usInvalidateAuth'));
@@ -141,6 +145,53 @@ test('Web Push unsubscribe failure blocks the old endpoint for B even after remo
   h.owner('B'); assert.equal(await h.context.syncPushSubscriptionToSupabase(h.subscription),false);
   assert.equal(h.calls.filter(c=>c.owner==='B').length,0);
 });
+
+test('Android logout waits for native Firebase deleteToken completion before a new owner can register', async () => {
+  const h = native();
+  await h.api.authReady({ id: 'A' });
+  assert.equal((await h.api.enable()).ok, true);
+  let finishShutdown, enteredShutdown;
+  const shutdownEntered = new Promise(resolve => { enteredShutdown = resolve; });
+  h.push.unregister = async () => { throw Error('must not use unawaited Capacitor unregister on Android'); };
+  const support = h.native; // Native gate remains cleared before the asynchronous transport step.
+  const originalStop = h.push.unregister;
+  // The test fixture's support plugin is selected by window.UsPlatform:
+  // override it through a captured method exposed by the fixture.
+  h.setTransportStop(() => new Promise(resolve => {
+    enteredShutdown();
+    finishShutdown = resolve;
+  }));
+  const revoking = h.api.revokeDevice();
+  await shutdownEntered;
+  assert.equal(support.bound(), '', 'old account owner must already be removed');
+  let completed = false;
+  revoking.then(() => { completed = true; });
+  await Promise.resolve();
+  assert.equal(completed, false, 'logout cannot complete while Firebase deleteToken is in flight');
+  finishShutdown({ stopped: true });
+  await revoking;
+  assert.equal(completed, true);
+  assert.ok(h.order.indexOf('native-owner-clear') < h.order.indexOf('native-transport-stop'));
+  assert.equal(h.store.get('us:notifications:v1:transport-pending'), undefined);
+  assert.ok(originalStop, 'official API exists but is not used by Android');
+});
+
+test('failed Firebase token deletion keeps Android transport pending until a confirmed retry', async () => {
+  const h = native();
+  await h.api.authReady({ id: 'A' });
+  assert.equal((await h.api.enable()).ok, true);
+  h.setTransportStop(async () => ({ stopped: false }));
+  await h.api.revokeDevice();
+  assert.equal(h.native.bound(), '');
+  assert.equal(h.store.get('us:notifications:v1:transport-pending'), '1');
+  h.api.signedOut(); h.switch('B'); await h.api.authReady({ id: 'B' });
+  h.setTransportStop(async () => ({ stopped: false }));
+  const before=h.calls.length;
+  const attempt=await h.api.enable();
+  assert.equal(attempt.ok, false);
+  assert.equal(h.calls.length, before, 'no B registration while Android shutdown unconfirmed');
+});
+
 test('native registration arriving after A logout cannot register for B', async () => {
   const h=native(); await h.api.authReady({id:'A'});
   let started, release; const start=new Promise(resolve=>started=resolve);
