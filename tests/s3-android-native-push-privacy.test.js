@@ -78,7 +78,9 @@ test('Android manifest has exactly one guarded receiver; plain Capacitor service
  assert.match(plugin,/@PluginMethod\s+public void bindPushOwner/);
  assert.match(plugin,/@PluginMethod\s+public void clearPushOwner/);
  assert.match(plugin, /@PluginMethod\s+public void stopPushTransport/);
- assert.match(plugin, /messaging\.deleteToken\(\)\.addOnCompleteListener/);
+ assert.match(plugin, /shutdownTask = messaging\.deleteToken\(\)/);
+ assert.match(plugin, /shutdownTask\.isComplete\(\)/);
+ assert.match(plugin, /synchronized \(transportLock\)/);
  assert.match(gate, /public static boolean hasOwner/);
  const js=fs.readFileSync(path.join(__dirname,'../notifications.js'),'utf8');
  const androidStop=js.slice(js.indexOf('if (status.platform === \'android\') {', js.indexOf('async function stopNativeDelivery(')),js.indexOf('// iOS APNs behavior unchanged.'));
