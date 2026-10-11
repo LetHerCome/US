@@ -43,7 +43,7 @@ test('N2 Android: official plugin + local support plugin synced, channels match 
   assert.match(plugin, /@CapacitorPlugin\(name = "UsPushSupport"\)/);
   assert.match(plugin, /getIdentifier\("google_app_id", "string"/, 'Firebase configured = generated google_app_id');
   assert.match(plugin, /@PluginMethod\s+public void stopPushTransport/, 'Android only exposes bounded token shutdown');
-  assert.match(plugin, /messaging\.deleteToken\(\)\.addOnCompleteListener/, 'do not resolve before deleteToken task completes');
+  assert.match(plugin, /shutdownTask = messaging\.deleteToken\(\)/, 'do not resolve before deleteToken task completes');
   assert.match(plugin, /UsPushOwnerGate\.hasOwner\(getContext\(\)\)/, 'never stop with an active private owner');
   assert.doesNotMatch(plugin, /getToken\(/, 'the support plugin may stop FCM but must never fetch tokens');
   const transport = await import(path.join(ROOT, 'supabase/functions/_shared/native-push-transport.mjs'));
