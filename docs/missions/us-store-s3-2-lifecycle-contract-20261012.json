@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "project": "US-STAGING",
   "snapshotDate": "2026-10-12",
-  "status": "BLOCKED_POLICY_AND_SECURITY_REVIEW",
+  "status": "BLOCKED_RETENTION_MEDIA_AND_SECURITY_REVIEW",
   "destructiveActionsEnabled": false,
   "automatedDeletionAllowed": false,
   "auth": {
@@ -11,9 +11,9 @@
     "freshReauthenticationRequired": true
   },
   "decisions": {
-    "sharedContentAfterOneMemberLeaves": "REQUIRES_OWNER_APPROVAL",
-    "retention": "REQUIRES_OWNER_APPROVAL",
-    "physicalMediaDisposition": "REQUIRES_OWNER_APPROVAL"
+    "sharedContentAfterOneMemberLeaves": "PRESERVE_ELIGIBLE_SHARED_FOR_REMAINING_MEMBER",
+    "retention": "REQUIRES_PRIVACY_REVIEW",
+    "physicalMediaDisposition": "REQUIRES_PRIVACY_REVIEW"
   },
   "foreignKeys": {
     "auth.users": {
@@ -97,14 +97,25 @@
     }
   ],
   "releaseGates": [
+    "shared-content-policy-A-scoped-preservation-review",
     "P0-S3-FCM-isolation",
     "P0-S3.1-auth-review",
-    "shared-content-policy",
     "privacy-data-retention-policy",
     "storage-byte-cleanup",
     "real-cross-tenant-auth-and-media-test",
     "account-deletion-test",
     "legal-review"
   ],
-  "ownerChoice": null
+  "ownerChoice": "A",
+  "decisionRecordedAt": "2026-10-12",
+  "preservingPartnerPrinciples": {
+    "personalData": "DELETE_OR_RESTRICT_AS_LEGALLY_REQUIRED",
+    "otherPartnersOwnContent": "PRESERVE_WITH_AUTHORIZATION",
+    "sharedEligibleWithRightsReview": "PRESERVE_FOR_REMAINING_MEMBER_AFTER_REVIEW",
+    "sensitiveOrDisputedSharedContent": "BLOCK_PENDING_REVIEW",
+    "rawTokensCredentialsLocation": "NEVER_RETAIN_IN_PARTNER_EXPORT",
+    "neverDeleteEntireCoupleOnSingleAccountRequest": true,
+    "deletionDifferentFromSeparation": true,
+    "accessOfDepartingMemberAfterSeparation": "REVOKE_WITH_VALIDATED_SERVER_TRANSITION"
+  }
 }
