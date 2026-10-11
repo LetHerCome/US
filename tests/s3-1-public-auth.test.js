@@ -75,6 +75,19 @@ test('duplicate-email provider response is not echoed as an account existence di
   await ctrl.register({email:USER_EMAIL,password:SAMPLE_PASSWORD,confirm:SAMPLE_PASSWORD});
   assert.equal(ctrl.state.message.includes('User already registered'),false);
   assert.equal(ctrl.state.message.includes(USER_EMAIL),false);
+  assert.equal(ctrl.state.mode,'verify','duplicate email must not be distinguishable from signup success');
+  assert.equal(ctrl.state.kind,'success');
+});
+
+test('password recovery missing account receives same neutral message as an existing account',async()=>{
+  const auth=fakeAuth();
+  auth.resetPasswordForEmail=async()=>({error:{code:'user_not_found',message:'email not found'}});
+  const ctrl=S31.createController({auth});
+  ctrl.navigate('forgot');
+  const result=await ctrl.forgot(USER_EMAIL);
+  assert.equal(result.ok,true);
+  assert.equal(ctrl.state.kind,'success');
+  assert.equal(ctrl.state.message.includes('not found'),false);
 });
 
 test('provider disabled email confirmations: explicitly reject immediately authenticated signup',async()=>{
