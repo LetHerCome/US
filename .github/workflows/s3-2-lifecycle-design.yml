@@ -1,0 +1,37 @@
+name: US Store S3.2 safe lifecycle design gate
+
+on:
+  push:
+    branches:
+      - mission/us-store-s3-2-lifecycle-design-20261012
+  pull_request:
+    paths:
+      - 'docs/missions/us-store-s3-2-*'
+      - 'tests/s3-2-lifecycle-design-gate.test.js'
+      - '.github/workflows/s3-2-lifecycle-design.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  no-destructive-account-lifecycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify S3.2 contract and syntax
+        run: |
+          node --check tests/s3-2-lifecycle-design-gate.test.js
+          node --test tests/s3-2-lifecycle-design-gate.test.js tests/mc3-onboarding.test.js
+      - name: Ensure no unapproved deletion or deployment scripts
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const contract=JSON.parse(fs.readFileSync('docs/missions/us-store-s3-2-lifecycle-contract-20261012.json','utf8'));
+          if(contract.automatedDeletionAllowed!==false || contract.destructiveActionsEnabled!==false || contract.ownerChoice!==null) process.exit(1);
+          const files=['supabase/functions/account-delete/index.ts','supabase/functions/couple-unpair/index.ts'];
+          if(files.some(file=>fs.existsSync(file))) process.exit(1);
+          NODE
