@@ -33,6 +33,12 @@ export function isolateStagingPreview(app, index, publishableKey) {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   if (process.env.US_S31_STAGING_PREVIEW !== 'true') throw Error('S3.1 staging preview disabled by default');
+  // Dedicated Cloudflare Pages project must target this specific STAGING branch.
+  // Fail the build if someone accidentally selects main or a different branch.
+  if (process.env.CF_PAGES === '1'
+    && process.env.CF_PAGES_BRANCH !== 'mission/us-store-s3-1-public-auth-staging-20261011') {
+    throw Error('S3.1 Cloudflare deploy rejected: not the approved staging branch');
+  }
   const key = process.env.US_STAGING_SUPABASE_PUBLISHABLE_KEY;
   const files = await Promise.all(['app.js','index.html'].map(f=>readFile(path.join(SOURCE,f),'utf8')));
   const isolated = isolateStagingPreview(files[0],files[1],key);
