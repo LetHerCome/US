@@ -56,9 +56,7 @@ jobs:
           profile: pixel_6
           disable-animations: true
           emulator-options: -no-snapshot -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
-          script: |
-            cd android
-            bash ./gradlew --no-daemon :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.usapp.us.UsPushOwnerGateInstrumentedTest
+          script: cd android && bash ./gradlew --no-daemon :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.usapp.us.UsPushOwnerGateInstrumentedTest
 
       - name: Archive emulator evidence
         if: always()
