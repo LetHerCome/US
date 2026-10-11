@@ -13,6 +13,7 @@ on:
       - 'scripts/build-capacitor-web.mjs'
       - 'scripts/build-cloudflare-pages.mjs'
       - '.github/workflows/s3-1-public-auth.yml'
+      - 'scripts/build-s31-staging-preview.mjs'
 
 permissions:
   contents: read
@@ -53,3 +54,41 @@ jobs:
             }
           }
           NODE
+
+  staged-browser-only-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Reuses the already-configured STAGING publishable key; never a secret-role key.
+    # No Android APK, Cloudflare deployment or production Auth setting changes.
+    env:
+      US_S31_STAGING_PREVIEW: 'true'
+      US_STAGING_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.US_STAGING_SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build:cloudflare-pages
+      - name: Generate isolated US-STAGING browser preview
+        run: node scripts/build-s31-staging-preview.mjs
+      - name: Verify staged URL and local auth script
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const dir='dist/s31-staging-preview';
+          const app=fs.readFileSync(dir+'/app.js','utf8');
+          const html=fs.readFileSync(dir+'/index.html','utf8');
+          if (app.includes('iiakdfsxpywdkxravqjh') || html.includes('iiakdfsxpywdkxravqjh')) process.exit(1);
+          if (!app.includes('https://dugmhngrfkuieeletatb.supabase.co')) process.exit(1);
+          if (!fs.existsSync(dir+'/public-auth.js')) process.exit(1);
+          if (!fs.existsSync(dir+'/public-auth.css')) process.exit(1);
+          NODE
+      - name: Archive staging-only PWA preview (never deploy)
+        uses: actions/upload-artifact@v4
+        with:
+          name: US-S31-STAGING-BROWSER-PREVIEW
+          path: dist/s31-staging-preview/
+          if-no-files-found: error
+          retention-days: 7
