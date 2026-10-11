@@ -35,6 +35,7 @@
 <link rel="stylesheet" href="/calendar.css?v=us-store-s1-widget-motion-20261010-1"/>
 <link rel="stylesheet" href="/state-system.css?v=us-store-s1-widget-motion-20261010-1"/>
 <link rel="stylesheet" href="/auth-first-run.css?v=us-store-s1-widget-motion-20261010-1"/>
+<link rel="stylesheet" href="/public-auth.css?v=us-store-s3-1-public-auth-20261011-1"/>
 <link rel="stylesheet" href="/onboarding.css?v=us-store-s1-widget-motion-20261010-1"/>
 <link rel="stylesheet" href="/app-lock.css?v=us-store-s1-widget-motion-20261010-1"/>
 <link rel="stylesheet" href="/top-chrome.css?v=us-store-s1-widget-motion-20261010-1"/>
@@ -170,8 +171,48 @@ html.us-returning-device .auth-overlay{
       <label class="us-auth-field" for="loginPassword"><span>Password</span><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Password"></label>
       <button id="loginBtn" type="button" class="primary us-auth-primary">Accedi</button>
       <div class="auth-status" id="loginStatus" role="status" aria-live="polite"></div>
-
+      <nav class="us-auth-links" id="usPublicAuthActions" aria-label="Accesso e registrazione" hidden>
+        <button type="button" class="us-auth-link" id="usShowSignup">Crea un account</button>
+        <button type="button" class="us-auth-link" id="usShowForgot">Password dimenticata?</button>
+      </nav>
     </div>
+    <form class="auth-step us-public-auth-form" id="usSignup" aria-labelledby="usSignupHeading">
+      <div class="tiny">US · INIZIATE DA QUI</div>
+      <h2 id="usSignupHeading">Crea il tuo account</h2>
+      <p class="us-auth-lede">Un'email per te. Dopo la verifica potrai creare il vostro spazio o accettare un invito.</p>
+      <label class="us-auth-field" for="usSignupEmail"><span>Email</span><input id="usSignupEmail" type="email" inputmode="email" autocomplete="email" maxlength="254" required></label>
+      <label class="us-auth-field" for="usSignupPassword"><span>Password (almeno 10 caratteri)</span><input id="usSignupPassword" type="password" autocomplete="new-password" minlength="10" maxlength="72" required></label>
+      <label class="us-auth-field" for="usSignupConfirm"><span>Conferma password</span><input id="usSignupConfirm" type="password" autocomplete="new-password" minlength="10" maxlength="72" required></label>
+      <button class="primary us-auth-primary" id="usSignupSubmit" type="submit">Registrati</button>
+      <p class="auth-status" id="usSignupStatus" role="status" aria-live="polite"></p>
+      <button class="us-auth-link us-public-auth-back" id="usSignupBack" type="button">Ho già un account</button>
+    </form>
+    <section class="auth-step us-public-auth-form" id="usVerifyEmail" aria-labelledby="usVerifyHeading">
+      <div class="tiny">US · UN ULTIMO PASSO</div>
+      <h2 id="usVerifyHeading">Verifica la tua email</h2>
+      <p class="us-auth-lede">Apri il messaggio ricevuto, verifica il tuo indirizzo e torna qui per accedere. Controlla anche lo spam.</p>
+      <p class="auth-status" id="usVerifyStatus" role="status" aria-live="polite"></p>
+      <button type="button" class="primary us-auth-primary" id="usVerifyResend">Invia di nuovo l'email</button>
+      <button type="button" class="us-auth-link us-public-auth-back" id="usVerifyBack">Torna all'accesso</button>
+    </section>
+    <form class="auth-step us-public-auth-form" id="usForgotPassword" aria-labelledby="usForgotHeading">
+      <div class="tiny">US · RECUPERO</div>
+      <h2 id="usForgotHeading">Recupera l'accesso</h2>
+      <p class="us-auth-lede">Ti invieremo un collegamento se l'indirizzo è associato a un account.</p>
+      <label class="us-auth-field" for="usForgotEmail"><span>Email</span><input type="email" id="usForgotEmail" autocomplete="email" inputmode="email" maxlength="254" required></label>
+      <button type="submit" id="usForgotSubmit" class="primary us-auth-primary">Invia istruzioni</button>
+      <p class="auth-status" id="usForgotStatus" role="status" aria-live="polite"></p>
+      <button type="button" class="us-auth-link us-public-auth-back" id="usForgotBack">Torna all'accesso</button>
+    </form>
+    <form class="auth-step us-public-auth-form" id="usRecovery" aria-labelledby="usRecoveryHeading">
+      <div class="tiny">US · NUOVA PASSWORD</div>
+      <h2 id="usRecoveryHeading">Scegli la nuova password</h2>
+      <p class="us-auth-lede">Questa schermata è disponibile soltanto dopo aver aperto un link di recupero valido.</p>
+      <label class="us-auth-field" for="usRecoveryPassword"><span>Nuova password</span><input type="password" id="usRecoveryPassword" autocomplete="new-password" minlength="10" maxlength="72" required></label>
+      <label class="us-auth-field" for="usRecoveryConfirm"><span>Conferma password</span><input type="password" id="usRecoveryConfirm" autocomplete="new-password" minlength="10" maxlength="72" required></label>
+      <button type="submit" class="primary us-auth-primary" id="usRecoverySubmit">Aggiorna password</button>
+      <p class="auth-status" id="usRecoveryStatus" role="status" aria-live="polite"></p>
+    </form>
 
     <section class="auth-step" id="usOnboarding" aria-labelledby="mc3Title">
       <div class="tiny">US · SPAZIO PRIVATO</div>
@@ -1052,6 +1093,7 @@ html.us-returning-device .auth-overlay{
 
 <script defer src="/auth-storage.js?v=us-store-s1-widget-motion-20261010-1"></script>
 <script defer src="/onboarding.js?v=us-store-s1-widget-motion-20261010-1"></script>
+<script defer src="/public-auth.js?v=us-store-s3-1-public-auth-20261011-1"></script>
 <script defer src="/app.js?v=us-store-s1-widget-motion-20261010-1"></script>
 <script defer src="/progression.js?v=us-store-s1-widget-motion-20261010-1"></script>
 <script defer src="/stories.js?v=us-store-s1-widget-motion-20261010-1"></script>
