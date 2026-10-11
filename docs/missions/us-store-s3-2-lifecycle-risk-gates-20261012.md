@@ -39,6 +39,17 @@ US-STAGING Supabase project `dugmhngrfkuieeletatb`: 3 synthetic completed couple
 
 **No retention duration has been approved.** Placeholder `TBD` must never silently become infinite retention or a hard-delete promise. External platforms/backups and support records need a separate bounded policy reviewed before release.
 
+## Live STAGING RLS proof — moments and private messages (2026-10-12)
+
+Two real but **synthetic QA principals**, belonging to different STAGING couples, were impersonated only for read checks via `BEGIN; INSERT synthetic rows; SET LOCAL ROLE authenticated; set_config('request.jwt.claim.sub', ...); SELECT; ROLLBACK;`. Synthetic fixtures deliberately had no real image object in Supabase Storage and contained no personal conversation text.
+
+| Principal | Own moment | Other couple's moment | Own private message | Other couple's message |
+|---|---:|---:|---:|---:|
+| Couple A | 1 visible | **0 visible** | 1 visible | **0 visible** |
+| Couple B | 1 visible | **0 visible** | 1 visible | **0 visible** |
+
+A subsequent independent read-only SQL verification found **0 test moments, 0 test messages, 0 test objects**. Tests prove current table RLS under authenticated role for these two surfaces, not Storage object GET/PUT, app-browser behaviour, every RPC or a third-party security review. No real user data was modified; any progression effects of the moment insert were within the rolled-back transaction.
+
 ## Mandatory product-policy decision (Presidency)
 
 **When one member leaves or requests account deletion, what happens to content created/shared during the relationship?** Do not write destructive code without the decision.
