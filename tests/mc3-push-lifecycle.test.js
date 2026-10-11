@@ -36,7 +36,7 @@ function native() {
   const sb = { auth: { getSession: async () => ({data:{session:{user:{id:owner}}}}) }, rpc: async (name, args) => { calls.push({ owner, name, args }); order.push('rpc:'+name); return { data: { removed: true }, error: fail ? new Error('offline') : null }; } };
   const window = { sb, UsPlatform: { isNative: true, isPluginAvailable: () => true, getNativePlugin: name => name === 'PushNotifications' ? push : support } };
   vm.runInNewContext(fs.readFileSync('notifications.js', 'utf8'), { window, sb, document: { hidden: false, addEventListener() {} }, localStorage: { getItem: k => store.get(k) || null, setItem: (k,v) => store.set(k,v), removeItem: k => store.delete(k) }, crypto, setTimeout, clearTimeout });
-  return { api: window.UsNotifications, store, calls, order, push, listeners, bindings, setTransportStop: fn => { support.stopPushTransport = fn; }, native: { bound: () => boundInstallation, reject: value => { rejected = value; } }, switch: id => { owner = id; }, fail: value => { fail = value; } };
+  return { api: window.UsNotifications, store, calls, order, push, listeners, bindings, setTransportStop: fn => { support.stopPushTransport = (...args) => { order.push('native-transport-stop'); return fn(...args); }; }, native: { bound: () => boundInstallation, reject: value => { rejected = value; } }, switch: id => { owner = id; }, fail: value => { fail = value; } };
 }
 test('MC3 logout starts revocation before invalidating identity', () => {
   const body = app.slice(app.indexOf('signOut:async()=>{'), app.indexOf('function usInvalidateAuth'));
