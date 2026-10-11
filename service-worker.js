@@ -1,4 +1,4 @@
-const BUILD_ID = "us-store-s1-widget-motion-20261010-1";
+const BUILD_ID = "us-store-s3-1-public-auth-20261011-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -9,6 +9,8 @@ const APP_SHELL = [
   "/",
   "/index.html",
   versioned("/auth-storage.js"),
+  versioned("/public-auth.js"),
+  versioned("/public-auth.css"),
   versioned("/platform.js"),
   versioned("/app-lock.js"),
   versioned("/app-lock.css"),
