@@ -27,7 +27,7 @@ if (mode === 'bundle') {
   await replaceFile('dist/capacitor/index.html', [
     ['</body>', '<script defer src="/s3-staging-push-qa.js"></script>\n</body>']
   ]);
-  const panel = String.raw\`(() => {
+  const panel = String.raw`(() => {
     'use strict';
     function init() {
       if (!document.body || document.getElementById('s3-qa-button')) return;
@@ -74,7 +74,7 @@ if (mode === 'bundle') {
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
-  })();\`;
+  })();`;
   await writeFile('dist/capacitor/s3-staging-push-qa.js', panel);
   process.stdout.write('STAGING QA panel injected into isolated web bundle\n');
 } else {
@@ -111,7 +111,7 @@ if (mode === 'bundle') {
     ['import android.content.Context;',
       'import android.content.Context;\nimport android.content.SharedPreferences;'],
     ['public static boolean isActivityResumed() { return activityResumed; }',
-      \`public static boolean isActivityResumed() { return activityResumed; }
+      `public static boolean isActivityResumed() { return activityResumed; }
     // Stage-only bounded diagnostic history. NEVER save tokens, account ids,
     // payload contents, installation UUID or Firebase identifiers.
     public static void qaTrace(Context context, String event) {
@@ -142,7 +142,7 @@ if (mode === 'bundle') {
         result.put("notificationsEnabled", nm != null && nm.areNotificationsEnabled());
         result.put("channelImportance", ch == null ? -1 : ch.getImportance());
         call.resolve(result);
-    }\`],
+    }`],
     ['createChannels();',
       'createChannels();\n        qaTrace(getContext(), "qa_plugin_initialized");']
   ];
@@ -151,7 +151,9 @@ if (mode === 'bundle') {
   const nodeCopy = 'node_modules/@us/push-support/android/src/main/java/com/usapp/pushsupport/UsPushSupportPlugin.java';
   try {
     await access(nodeCopy);
-    await replaceFile(nodeCopy, patch);
+    if (!(await readFile(nodeCopy, 'utf8')).includes('void getQaPushDiagnostics')) {
+      await replaceFile(nodeCopy, patch);
+    }
   } catch (error) {
     if (error?.code !== 'ENOENT') throw error;
   }
