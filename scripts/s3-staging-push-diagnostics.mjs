@@ -8,7 +8,8 @@ const mode = process.argv[2];
 if (!['bundle', 'android'].includes(mode)) throw new Error('Usage: node scripts/s3-staging-push-diagnostics.mjs bundle|android');
 
 async function replaceFile(file, edits) {
-  let content = await readFile(file, 'utf8');
+  // GitHub Windows runners can checkout Java sources with CRLF.
+  let content = (await readFile(file, 'utf8')).replace(/\r\n/g, '\n');
   for (const [before, after] of edits) {
     if (content.split(before).length !== 2) throw new Error('S3 diagnostics guard failed: ' + basename(file) + ': ' + before.slice(0, 65));
     content = content.replace(before, after);
