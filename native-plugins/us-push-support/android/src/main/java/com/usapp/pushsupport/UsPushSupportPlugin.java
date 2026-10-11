@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.provider.Settings;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -131,6 +132,29 @@ public class UsPushSupportPlugin extends Plugin {
             if (manager != null) manager.cancelAll();
         }
         call.resolve(new JSObject().put("cleared", cleared));
+    }
+
+    /**
+     * Unlike Capacitor PushNotifications.unregister(), resolve only once
+     * FirebaseMessaging.deleteToken() has completed. The native owner gate
+     * MUST be retired before this is called, so an old packet never renders
+     * during an in-flight provider delete. Do not return raw provider errors.
+     */
+    @PluginMethod
+    public void stopPushTransport(PluginCall call) {
+        if (UsPushOwnerGate.hasOwner(getContext())) {
+            call.resolve(new JSObject().put("stopped", false));
+            return;
+        }
+        try {
+            FirebaseMessaging messaging = FirebaseMessaging.getInstance();
+            messaging.setAutoInitEnabled(false);
+            messaging.deleteToken().addOnCompleteListener(task ->
+                call.resolve(new JSObject().put("stopped", task.isSuccessful()))
+            );
+        } catch (RuntimeException error) {
+            call.resolve(new JSObject().put("stopped", false));
+        }
     }
 
     /** Android shows badges from delivered notifications; the web layer clears those. */
