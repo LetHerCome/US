@@ -1,3 +1,4 @@
+'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const {previewPreservationA, ACTION}=require('../s3-2-preservation-a-preview.cjs');
