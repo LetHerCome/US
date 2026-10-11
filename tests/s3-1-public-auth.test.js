@@ -137,6 +137,21 @@ test('recovery token must be represented by Supabase PASSWORD_RECOVERY event, th
   assert.equal(ctrl.state.mode,'login');
 });
 
+test('S3.1 isolated preview switches only browser backend and Auth storage, never production source',async()=>{
+  const {isolateStagingPreview} = await import('../scripts/build-s31-staging-preview.mjs');
+  const fakeKey='sb_publishable_'+'A'.repeat(36);
+  const prodApp=read('app.js'),prodIndex=read('index.html');
+  const out=isolateStagingPreview(prodApp,prodIndex,fakeKey);
+  assert.equal(out.app.includes("const SB_URL = 'https://dugmhngrfkuieeletatb.supabase.co';"),true);
+  assert.equal(out.app.includes("'sb-dugmhngrfkuieeletatb-auth-token'"),true);
+  assert.equal(out.app.includes('iiakdfsxpywdkxravqjh'),false);
+  assert.equal(out.index.includes('iiakdfsxpywdkxravqjh'),false);
+  assert.ok(out.index.includes('dugmhngrfkuieeletatb.supabase.co'));
+  assert.ok(prodApp.includes('iiakdfsxpywdkxravqjh'), 'production source is unchanged');
+  assert.throws(()=>isolateStagingPreview(prodApp,prodIndex,'service_role_abc'));
+  assert.throws(()=>isolateStagingPreview(out.app,out.index,fakeKey),'never apply stage rewrite twice');
+});
+
 test('both target build bundles include every new source asset and staged inputs stay isolated',()=>{
   const index=read('index.html'),capacitor=read('scripts/build-capacitor-web.mjs'),web=read('scripts/build-cloudflare-pages.mjs');
   for(const name of ['public-auth.js','public-auth.css']) {
