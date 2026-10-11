@@ -51,7 +51,13 @@ if (mode === 'bundle') {
       refresh.style.cssText = 'background:#90aaff;color:#081329;padding:10px;border-radius:10px;border:0;margin:7px 0';
       const details = document.createElement('pre');
       details.style.cssText = 'white-space:pre-wrap;overflow-wrap:anywhere;font:12px ui-monospace,monospace';
-      panel.append(heading, description, refresh, details);
+      const repair = document.createElement('button');
+      repair.type = 'button';
+      repair.textContent = 'Ricollega notifiche su questo dispositivo';
+      repair.style.cssText = 'display:block;background:#314a80;color:#fff;padding:10px;border-radius:10px;border:1px solid #8da7ff;margin:7px 0';
+      const repairResult = document.createElement('p');
+      repairResult.style.cssText = 'font-weight:600;white-space:pre-wrap';
+      panel.append(heading, description, refresh, repair, repairResult, details);
       document.body.append(button, panel);
       async function readDiagnostics() {
         details.textContent = 'Lettura stato nativo…';
@@ -60,23 +66,74 @@ if (mode === 'bundle') {
             window.Capacitor?.Plugins?.UsPushSupport;
           if (!plugin?.getQaPushDiagnostics) throw Error('Bridge diagnostico non disponibile: verifica versione APK');
           const d = await plugin.getQaPushDiagnostics();
-          details.textContent = 'Permesso app: ' + d.notificationsEnabled +
-            '\\nCanale US: ' + d.channelImportance +
-            '\\nApp in primo piano: ' + d.activityResumed +
-            '\\n\\nCronologia (orari telefono):\\n' +
-            (d.history || 'Nessun evento FCM registrato');
+          const state = await window.UsNotifications?.getState?.();
+          let events = [];
+          try { events = JSON.parse(localStorage.getItem('us:s3qa:events') || '[]'); } catch (_) {}
+          details.textContent = 'Stato interno notifiche: ' + (state?.kind || 'non disponibile') +
+            '\nAssociazione nativa attiva: ' + d.ownerBound +
+            '\nPermesso app: ' + d.notificationsEnabled +
+            '\nCanale US: ' + d.channelImportance +
+            '\nApp in primo piano: ' + d.activityResumed +
+            '\n\nCronologia (orari telefono):\n' +
+            (d.history || 'Nessun evento FCM registrato') +
+            '\nCronologia registrazione US:\n' + (events.length ? events.slice(-20).join('\n') : 'Nessun evento locale');
         } catch (error) {
           details.textContent = 'Errore QA: ' + (error?.message || String(error));
         }
       }
       button.onclick = () => { panel.hidden = !panel.hidden; if (!panel.hidden) readDiagnostics(); };
       refresh.onclick = readDiagnostics;
+      repair.onclick = async () => {
+        repair.disabled = true;
+        repairResult.textContent = 'Ricollegamento in corso...';
+        try {
+          const result = await window.UsNotifications?.enable?.();
+          repairResult.textContent = result?.ok
+            ? 'Registrazione nell’app confermata. Ora il server dovrebbe riconoscere il dispositivo.'
+            : 'Registrazione non riuscita: ' + (result?.kind || 'non disponibile');
+        } catch (_) {
+          repairResult.textContent = 'Registrazione non riuscita: errore del collegamento nativo.';
+        } finally {
+          repair.disabled = false;
+          await readDiagnostics();
+        }
+      };
       document.addEventListener('visibilitychange', () => { if (!document.hidden && !panel.hidden) readDiagnostics(); });
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
   })();`;
   await writeFile('dist/capacitor/s3-staging-push-qa.js', panel);
+
+  // Capture only categorical lifecycle outcomes. No raw token, account, JWT,
+  // installation identifier, provider payload or server error text is logged.
+  const pushJs = 'dist/capacitor/notifications.js';
+  await replaceFile(pushJs, [
+    ["  const isNative = Boolean(platform?.isNative);",
+     `  const isNative = Boolean(platform?.isNative);
+  const stageQaTrace = (event) => {
+    try {
+      const key = 'us:s3qa:events';
+      const prev = JSON.parse(localStorage.getItem(key) || '[]');
+      const entries = Array.isArray(prev) ? prev : [];
+      entries.push(new Date().toLocaleTimeString('it-IT', { hour12: false }) + ' ' + event);
+      localStorage.setItem(key, JSON.stringify(entries.slice(-32)));
+    } catch (_) {}
+  };`],
+    ["    const request = db.rpc('register_native_push_device', {",
+     "    stageQaTrace('register_rpc_start');\n    const request = db.rpc('register_native_push_device', {"],
+    ["    if (error) throw error;\n    assertOwner(owner);\n    await bindNativeOwner(status, installation, owner);",
+     "    if (error) { stageQaTrace(error.code === '23505' ? 'rpc_token_conflict' : 'rpc_registration_error'); throw error; }\n    assertOwner(owner);\n    await bindNativeOwner(status, installation, owner);\n    stageQaTrace('register_and_owner_bind_success');"],
+    ["    } catch (_) {\n      return { ok: false, kind: 'error' };\n    } finally {\n      busy = false;\n    }\n  }",
+     "    } catch (error) {\n      stageQaTrace(error?.message === 'previous_account_retirement_pending' ? 'previous_owner_cleanup_pending' : 'enable_failed');\n      return { ok: false, kind: 'error' };\n    } finally {\n      busy = false;\n    }\n  }"],
+    ["  async function revokeDevice() {\n    pending = null;",
+     "  async function revokeDevice() {\n    stageQaTrace('logout_device_revoke');\n    pending = null;"],
+    ["  function signedOut() {\n    authGeneration++;",
+     "  function signedOut() {\n    stageQaTrace('auth_signed_out');\n    authGeneration++;"],
+    ["  async function authReady(profile) {\n    if (!profile?.id) return;",
+     "  async function authReady(profile) {\n    if (!profile?.id) return;\n    stageQaTrace('auth_ready');"]
+  ]);
+
   process.stdout.write('STAGING QA panel injected into isolated web bundle\n');
 } else {
   const cfg = JSON.parse(await readFile('capacitor.config.json', 'utf8'));
@@ -139,13 +196,19 @@ if (mode === 'bundle') {
             .getString("events", "");
         JSObject result = new JSObject();
         result.put("history", history);
+        SharedPreferences gate = getContext().getSharedPreferences("us_private_push_owner_v2", Context.MODE_PRIVATE);
+        result.put("ownerBound", gate.contains("owner") && gate.contains("installation"));
         result.put("activityResumed", activityResumed);
         result.put("notificationsEnabled", nm != null && nm.areNotificationsEnabled());
         result.put("channelImportance", ch == null ? -1 : ch.getImportance());
         call.resolve(result);
     }`],
     ['createChannels();',
-      'createChannels();\n        qaTrace(getContext(), "qa_plugin_initialized");']
+      'createChannels();\n        qaTrace(getContext(), "qa_plugin_initialized");'],
+    ['call.resolve(new JSObject().put("bound", bound));',
+      'qaTrace(getContext(), bound ? "owner_bound" : "owner_bind_rejected");\n        call.resolve(new JSObject().put("bound", bound));'],
+    ['call.resolve(new JSObject().put("cleared", cleared));',
+      'qaTrace(getContext(), cleared ? "owner_cleared" : "owner_clear_failed");\n        call.resolve(new JSObject().put("cleared", cleared));']
   ];
   await replaceFile(pluginSrc, patch);
   // npm file: dependency can be a copy rather than a symlink on CI.
