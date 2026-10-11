@@ -32,6 +32,10 @@ The `US_S31_STAGING_PREVIEW=true` build guard is set automatically by the packag
 6. **Do not deploy S3.1 Android APK independently of draft S3 FCM security PR #187**. This branch is browser-only staging preview and does not include the newer owner-gated native push patches.
 7. Never merge PR #189 or close issue #183 based solely on static-build test green.
 
+## Manual Cloudflare environment variable provided — redeploy trigger
+
+On 2026-10-11 the project owner confirmed saving the STAGING publishable API key in the new Cloudflare Pages project. This source-only documentation change triggers the existing Git-connected Cloudflare Pages automatic build on the approved STAGING branch; it is **not** evidence the hosting build has succeeded. The environment variable value is not committed. Verify the Cloudflare build log and live HTTPS origin after Git push, never promote to production based solely on GitHub CI.
+
 ## Recovery
 
 A failed stage deploy does not affect the public Pages project. To roll back, use the new project deployment history only; do not change the production branch or roll back `us-a33`. Do not paste `service_role` or Auth session tokens anywhere into Cloudflare build variables.
