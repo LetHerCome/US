@@ -15,7 +15,9 @@ const ACTION = Object.freeze({
 });
 const ERROR = Object.freeze({ status: 'INVALID_OR_UNAUTHORIZED_PREVIEW', items: Object.freeze([]), executable: false });
 
-function previewPreservationA({ actorId, partnerId, coupleId, memberIds, items } = {}) {
+function previewPreservationA(input = {}) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return ERROR;
+  const { actorId, partnerId, coupleId, memberIds, items } = input;
   // Client data/metadata is NEVER an authority. Membership arguments
   // are shape-checked solely to reject malformed previews; the real
   // future server operation must re-fetch identity + membership itself.
