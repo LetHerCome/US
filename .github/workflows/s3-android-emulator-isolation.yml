@@ -1,0 +1,71 @@
+name: S3 Android stale-push owner isolation on emulator
+
+# Only the isolated S3 branch. No Firebase secrets, signing keys, database
+# access, production app installation or real FCM transport.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - mission/us-store-s3-native-push-owner-gate-20261010
+    paths:
+      - 'android/app/src/androidTest/java/com/usapp/us/UsPushOwnerGateInstrumentedTest.java'
+      - 'native-plugins/us-push-support/android/src/main/java/com/usapp/pushsupport/UsPushOwnerGate.java'
+      - '.github/workflows/s3-android-emulator-isolation.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: s3-android-emulator-isolation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native-gate-emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Enable KVM acceleration (if available)
+        run: |
+          if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
+
+      - name: Install dependencies and build native bundle (without secrets)
+        run: |
+          npm ci
+          npm run build:capacitor-web
+          npx cap sync android
+
+      - name: Execute actual Android SharedPreferences owner gate under emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-snapshot -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
+          script: |
+            cd android
+            bash ./gradlew --no-daemon :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.usapp.us.UsPushOwnerGateInstrumentedTest
+
+      - name: Archive emulator evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s3-android-owner-gate-emulator-reports
+          path: |
+            android/app/build/outputs/androidTest-results/
+            android/app/build/reports/androidTests/
+          if-no-files-found: ignore
