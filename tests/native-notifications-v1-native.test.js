@@ -140,10 +140,13 @@ test('N2 client source: no permission at boot, no URL navigation, only push owne
   assert.match(enable, /push\.requestPermissions\(\)/);
   assert.equal(client.split('requestPermissions(').length - 1, 1);
   const stored = [...client.matchAll(/'us:notifications:v1:[^']*'|`us:notifications:v1:[^`]*`/g)].map((m) => m[0]);
-  assert.deepEqual(stored, ["'us:notifications:v1:installation'", "'us:notifications:v1:owner'", "'us:notifications:v1:token'", "'us:notifications:v1:retired'", '`us:notifications:v1:enabled:${userId}`', '`us:notifications:v1:synced:${userId}`']);
+  assert.deepEqual(stored, ["'us:notifications:v1:installation'", "'us:notifications:v1:owner'", "'us:notifications:v1:token'", "'us:notifications:v1:transport-pending'", "'us:notifications:v1:retired'", '`us:notifications:v1:enabled:${userId}`', '`us:notifications:v1:synced:${userId}`']);
   assert.doesNotMatch(client, /access_token|refresh_token|service_role/, 'push tokens never replace Auth credentials');
-  // Android: FirebaseMessaging is never touched without a configuration.
-  assert.match(client, /if \(status\?\.available && status\.configured\) \{\s*try \{ await withTimeout\(push\.unregister\(\)/);
+  // Android: gate retirement precedes a completion-aware Firebase stop.
+  assert.match(client, /if \(!status\?\.available \|\| !status\.configured\) return false/);
+  assert.match(client, /support\.stopPushTransport\(\)/);
+  assert.match(client, /if \(status\.platform === 'android'\)/);
+  assert.match(client, /push\.unregister\(\)/, 'iOS APNs logic is not rewritten');
   // Navigation waits for the session AND the app lock.
   assert.match(client, /lock\.whenOpen\(\)/);
   const app = read('app.js');
