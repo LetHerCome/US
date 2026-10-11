@@ -50,16 +50,23 @@ Two real but **synthetic QA principals**, belonging to different STAGING couples
 
 A subsequent independent read-only SQL verification found **0 test moments, 0 test messages, 0 test objects**. Tests prove current table RLS under authenticated role for these two surfaces, not Storage object GET/PUT, app-browser behaviour, every RPC or a third-party security review. No real user data was modified; any progression effects of the moment insert were within the rolled-back transaction.
 
-## Mandatory product-policy decision (Presidency)
+## Presidency decision — A APPROVED (2026-10-12)
 
-**When one member leaves or requests account deletion, what happens to content created/shared during the relationship?** Do not write destructive code without the decision.
+**Approved product principle:** If one US member deletes their account, the other partner may retain **eligible shared** memories, photos, calendar events and other history **only under explicit, applicable privacy/ownership conditions**. The departing member's credentials, device tokens, exact location and data to which only they are entitled must be deleted or restricted per the approved erasure procedure. Do not turn a partner's ability to retain memories into a blanket right to keep every personal or sensitive datum.
 
-Options for deliberation:
-- **A — Preservation for remaining member, with explicit boundaries (recommended direction):** keep eligible shared photos/events/keepsakes where permitted, remove leaver's personal profile/location/credentials/device access, scrub/restrict attribution according to agreed rules, let leaver download permitted export first. Requires FK redesign, media ownership and privacy review.
-- **B — Suspend shared space pending both partners' decision:** freeze shared content from leaver's access, prevent creation of new entries, retain only for a clearly bounded, approved window before mutually authorized export/delete. No indefinite retention and no pretending the data is deleted.
-- **C — Delete the entire shared space when either partner deletes:** **not recommended**; unilateral request would destroy non-requesting person's content.
+**Four distinct operations:** device logout, separation/unpair, individual account erasure, and whole-space erasure must remain separate. No single-user account request may trigger whole-space erasure. An explicit, separately authorized policy and independent rights checks are mandatory for any whole-space deletion.
 
-Until policy is approved: **fail closed.** Do not delete profile/couple or unpair. A request can be recorded for manual review only after support/legal policy is specified; never mark it as erased prematurely.
+**Mechanically safe classification (preview ONLY):**
+- `actor-personal` → erasure review for the requesting member, never a partner export.
+- `partner-personal` → preserve untouched; one member cannot authorize its deletion.
+- `shared` → **eligible for scoped preservation only after a rights/privacy review**. If sensitive, disputed, or not reviewed, fail closed pending review. Do not assume consent because both partners once participated.
+- `actor-device` → token/session/widget retirement review; never export a secret or retain it for partner.
+
+The policy preview in `s3-2-preservation-a-preview.cjs` is a pure, offline, non-executable classifier; it has **no database, Firebase, Storage or Auth permissions**. Every output remains review-only even when rights flags are true. This is not the deletion backend.
+
+**Still OPEN, and not silently authorized by decision A:** limits of each party's personal data rights and copyright, sensitive media, rights to object/restrict, export scope, time limits for retention and backup cleanup, exact Storage ownership transitions, GDPR/privacy counsel review, error handling and migration of cascade FKs. No implementation can claim complete data erasure until physical Storage bytes, sessions, push and caches are accounted for. Individual erasure requests must have a real, supported path and must not be blocked indefinitely by an unreviewed product policy.
+
+**Result:** product principle A approved; **destructive execution remains blocked** until these specific safeguards, server implementation and tests are completed.
 
 ## Proposed implementation order, gated
 
