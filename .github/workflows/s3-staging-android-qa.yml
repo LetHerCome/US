@@ -118,9 +118,19 @@ jobs:
           npm run build:capacitor-web
           node -e "const f=require('fs');for(const name of ['app.js','dist/capacitor/app.js']){const s=f.readFileSync(name,'utf8');const prod=s.includes('iiakdfsxpywdkxravqjh');const staging=s.includes('dugmhngrfkuieeletatb');console.log('S3 hosting isolation',name,'production=',prod,'staging=',staging,'bytes=',s.length);if(prod||!staging)throw Error('QA app bundle uses incorrect Supabase host in '+name)};"
 
+      - name: Install isolated QA diagnostic panel
+        if: steps.signing.outputs.ready == 'true'
+        run: |
+          node --check scripts/s3-staging-push-diagnostics.mjs
+          node scripts/s3-staging-push-diagnostics.mjs bundle
+
       - name: Sync Android
         if: steps.signing.outputs.ready == 'true'
         run: npx cap sync android
+
+      - name: Instrument FCM receiver in staging build ONLY
+        if: steps.signing.outputs.ready == 'true'
+        run: node scripts/s3-staging-push-diagnostics.mjs android
 
       - name: Test and assemble signed release
         if: steps.signing.outputs.ready == 'true'
