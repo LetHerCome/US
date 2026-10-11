@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "project": "US-STAGING",
+  "snapshotDate": "2026-10-12",
+  "status": "BLOCKED_POLICY_AND_SECURITY_REVIEW",
+  "destructiveActionsEnabled": false,
+  "automatedDeletionAllowed": false,
+  "auth": {
+    "clientServiceRoleAllowed": false,
+    "serverOwnerCheckRequired": true,
+    "freshReauthenticationRequired": true
+  },
+  "decisions": {
+    "sharedContentAfterOneMemberLeaves": "REQUIRES_OWNER_APPROVAL",
+    "retention": "REQUIRES_OWNER_APPROVAL",
+    "physicalMediaDisposition": "REQUIRES_OWNER_APPROVAL"
+  },
+  "foreignKeys": {
+    "auth.users": {
+      "cascade": 7,
+      "setNull": 2,
+      "noAction": 0
+    },
+    "public.profiles": {
+      "cascade": 24,
+      "setNull": 3,
+      "noAction": 1
+    },
+    "public.couples": {
+      "cascade": 41,
+      "setNull": 0,
+      "noAction": 0
+    }
+  },
+  "evidence": {
+    "dangerousAccountCascade": [
+      "profiles",
+      "shared_messages.sender_id",
+      "shared_messages.recipient_id"
+    ],
+    "dangerousProfileCascade": [
+      "moments.created_by",
+      "moment_photos.created_by",
+      "calendar_entries.created_by",
+      "calendar_entries.owner_id",
+      "shared_events.created_by",
+      "stories.author_id"
+    ],
+    "unhandledConstraint": "shared_event_completions_completed_by_fkey NO ACTION",
+    "storageBucket": "us-media",
+    "storagePrivate": true,
+    "storagePolicyCoupleScoped": true,
+    "storageApiCleanupRequired": true,
+    "nativeTokenCleanupRequired": true,
+    "localCacheCleanupRequired": true
+  },
+  "domains": [
+    {
+      "name": "identity",
+      "requiresReview": true
+    },
+    {
+      "name": "membership-invites",
+      "requiresReview": true
+    },
+    {
+      "name": "private-media",
+      "requiresReview": true
+    },
+    {
+      "name": "messages",
+      "requiresReview": true
+    },
+    {
+      "name": "calendar",
+      "requiresReview": true
+    },
+    {
+      "name": "daily-keepsakes",
+      "requiresReview": true
+    },
+    {
+      "name": "games-progression",
+      "requiresReview": true
+    },
+    {
+      "name": "devices-push-widgets",
+      "requiresReview": true
+    },
+    {
+      "name": "location",
+      "requiresReview": true
+    },
+    {
+      "name": "operational-logs",
+      "requiresReview": true
+    }
+  ],
+  "releaseGates": [
+    "P0-S3-FCM-isolation",
+    "P0-S3.1-auth-review",
+    "shared-content-policy",
+    "privacy-data-retention-policy",
+    "storage-byte-cleanup",
+    "real-cross-tenant-auth-and-media-test",
+    "account-deletion-test",
+    "legal-review"
+  ],
+  "ownerChoice": null
+}
