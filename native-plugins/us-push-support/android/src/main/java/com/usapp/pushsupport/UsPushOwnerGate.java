@@ -69,6 +69,14 @@ public final class UsPushOwnerGate {
             && installation.equalsIgnoreCase(store.getString(INSTALLATION, ""));
     }
 
+    /** Atomic read for safe shutdown; do not delete a provider token with an active local owner. */
+    public static boolean hasOwner(Context context) {
+        synchronized (LOCK) {
+            final SharedPreferences store = prefs(context);
+            return validUuid(store.getString(OWNER, null));
+        }
+    }
+
     /** Read-only early rejection; never use as the only pre-notify check. */
     public static boolean accepts(Context context, String installation) {
         synchronized (LOCK) { return isCurrent(context, installation); }
