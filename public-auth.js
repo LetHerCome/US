@@ -61,7 +61,7 @@
             if (alive(ticket)) publish('Verifica email non configurata su STAGING. Registrazione sospesa.', 'error');
             return { ok: false, kind: 'confirmation_required' };
           }
-          if (error && !/already.registered|already.exists|user.already/i.test(String(error.code || ''))) {
+          if (error && !/user[_-]?already[_-]?(?:exists|registered)|email[_-]?exists|already[_-]?registered/i.test(String(error.code || ''))) {
             publish(TRY_AGAIN, 'error');
             return { ok: false, kind: 'provider' };
           }
@@ -99,8 +99,10 @@
           // checklist MUST validate this before any live email QA.
           const { error } = await auth.resetPasswordForEmail(e);
           if (!alive(ticket)) return { ok: false, kind: 'stale' };
-          publish(error ? TRY_AGAIN : GENERIC_MAIL, error ? 'error' : 'success');
-          return { ok: !error };
+          const unseen = /user[_-]?not[_-]?found|email[_-]?not[_-]?found/i.test(String(error?.code || ''));
+          const accepted = !error || unseen;
+          publish(accepted ? GENERIC_MAIL : TRY_AGAIN, accepted ? 'success' : 'error');
+          return { ok: accepted };
         } catch (_) {
           if (alive(ticket)) publish(TRY_AGAIN, 'error');
           return { ok: false, kind: 'transport' };
