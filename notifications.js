@@ -31,6 +31,7 @@
     installation: 'us:notifications:v1:installation',
     owner: 'us:notifications:v1:owner',
     token: 'us:notifications:v1:token',
+    transportPending: 'us:notifications:v1:transport-pending',
     retired: 'us:notifications:v1:retired',
     enabled: (userId) => `us:notifications:v1:enabled:${userId}`,
     synced: (userId) => `us:notifications:v1:synced:${userId}`
@@ -207,6 +208,12 @@
     // Obtaining a token also reactivates provider delivery (notably APNs).
     // Do not reactivate while a previous account still owns an unresolved row.
     if (retired().some(entry => typeof entry === 'string' || entry.userId !== session.userId)) throw new Error('previous_account_retirement_pending');
+    // If Android deleteToken failed or timed out on a previous logout, do not
+    // race a new getToken() against that unfinished provider shutdown.
+    if (read(STORE.transportPending) === '1') {
+      const status = await nativeStatus();
+      if (!await stopNativeDelivery(status)) throw new Error('previous_transport_cleanup_pending');
+    }
     const waiting = new Promise((resolve, reject) => tokenWaiters.push({ resolve, reject }));
     waiting.catch(() => {}); // logout can reject while the plugin call is pending
     await push.register();
@@ -375,10 +382,26 @@
   }
 
   async function stopNativeDelivery(status) {
-    // Android: never touch FirebaseMessaging without a Firebase configuration.
-    if (status?.available && status.configured) {
-      try { await withTimeout(push.unregister(), CALL_TIMEOUT_MS); } catch (_) {}
+    if (!status?.available || !status.configured) return false;
+    if (status.platform === 'android') {
+      // The official Capacitor unregister() immediately resolves while its
+      // Firebase deleteToken() task is still running. Use our owner-gated
+      // native method instead, which resolves ONLY after Firebase completes.
+      // Missing bridge / provider failures must never silently count as success.
+      write(STORE.transportPending, '1');
+      if (!support?.stopPushTransport) return false;
+      try {
+        const result = await withTimeout(support.stopPushTransport(), 12000);
+        if (result?.stopped !== true) return false;
+        remove(STORE.transportPending);
+        return true;
+      } catch (_) {
+        return false;
+      }
     }
+    // iOS APNs behavior unchanged.
+    try { await withTimeout(push.unregister(), CALL_TIMEOUT_MS); return true; }
+    catch (_) { return false; }
   }
 
   /** Settings "Disattiva su questo dispositivo": only this installation, account untouched. */
