@@ -70,9 +70,11 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run build:cloudflare-pages
-      - name: Generate isolated US-STAGING browser preview
-        run: node scripts/build-s31-staging-preview.mjs
+      - name: Build with exact Cloudflare Pages staging command
+        env:
+          CF_PAGES: '1'
+          CF_PAGES_BRANCH: mission/us-store-s3-1-public-auth-staging-20261011
+        run: npm run build:us-staging-pages
       - name: Verify staged URL and local auth script
         run: |
           node - <<'NODE'
