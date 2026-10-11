@@ -1,0 +1,55 @@
+name: US Store S3.1 staging account entry
+
+on:
+  push:
+    branches: [mission/us-store-s3-1-public-auth-staging-20261011]
+  pull_request:
+    paths:
+      - 'public-auth.js'
+      - 'public-auth.css'
+      - 'tests/s3-1-public-auth.test.js'
+      - 'app.js'
+      - 'index.html'
+      - 'scripts/build-capacitor-web.mjs'
+      - 'scripts/build-cloudflare-pages.mjs'
+      - '.github/workflows/s3-1-public-auth.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  staged-auth-contract-and-bundles:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: JS syntax
+        run: |
+          node --check public-auth.js
+          node --check app.js
+          node --check tests/s3-1-public-auth.test.js
+      - name: S3.1 public account and inherited MC3 gates
+        run: node --test tests/s3-1-public-auth.test.js tests/mc3-onboarding.test.js tests/native-boot-auth-safety.test.js tests/beatrice-password-login.test.js
+      - name: Build PWA
+        run: npm run build:cloudflare-pages
+      - name: Build Android web runtime
+        run: npm run build:capacitor-web
+      - name: Assert production signup is stage-gated
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          for(const dest of ['dist/cloudflare-pages','dist/capacitor']) {
+            const js=fs.readFileSync(dest+'/app.js','utf8');
+            const mod=require('./public-auth.js');
+            if(mod.isStagingEndpoint('https://iiakdfsxpywdkxravqjh.supabase.co')) process.exit(1);
+            if(!js.includes("const SB_URL = 'https://iiakdfsxpywdkxravqjh.supabase.co';")) process.exit(1);
+            for (const name of ['public-auth.js','public-auth.css']) {
+              if (!fs.existsSync(dest+'/'+name)) process.exit(1);
+            }
+          }
+          NODE
