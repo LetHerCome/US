@@ -11,8 +11,8 @@ Implementation: `scripts/s3-3-storage-jwt-readonly.cjs`. Unit tests: `tests/s3-3
 ## Prerequisites (do NOT create implicitly)
 
 - Four **existing, explicitly authorized synthetic** US-STAGING Auth users A1/A2 (couple A) and B1/B2 (couple B), all with separate valid JWTs. No actual user accounts.
-- Four existing, **known synthetic, nonsensitive**, nonempty private Storage files, uploaded by the corresponding identity under `<couple_uuid>/<uploader_uuid>/moment-albums/<moment_uuid>/<file>`. The harness neither creates nor mutates them.
-- A **publishable** US-STAGING API key. **Never** use a secret/service-role key.
+- Four existing, **known synthetic, nonsensitive**, nonempty private Storage files, uploaded by the corresponding identity under `<couple_uuid>/<uploader_uuid>/moment-albums/<moment_uuid>/s33-qa-<fixture>.webp` (also `.png`/`.jpg` accepted). The filename prefix and exact five-segment path are mandatory to avoid accidentally reading actual user media. The harness neither creates nor mutates files.
+- A **modern** US-STAGING publishable API key beginning with `sb_publishable_`. The project has an enabled modern publishable key. The harness **rejects both modern secret keys and legacy JWT-shaped anon/service_role keys**, so no privileged or ambiguous key can bypass RLS during the test.
 - Configure secrets in a protected isolated test environment, not source, pull-request comments, command arguments, CI logs or untrusted PR jobs.
 
 ## Live opt-in
@@ -23,7 +23,7 @@ In a **controlled environment only**, set `US_S33_READONLY_CONFIRM=US_S33_READ_O
 node scripts/s3-3-storage-jwt-readonly.cjs
 ```
 
-The endpoint is hardcoded to `https://dugmhngrfkuieeletatb.supabase.co` and `us-media`: production endpoint cannot be selected. The script uses **GET only**, never signs in, creates users, lists directories, requests signed URLs, uploads, copies, updates or deletes. It does not read private object bodies into memory or print IDs, paths, tokens or object contents. Network interruptions fail.
+The endpoint is hardcoded to `https://dugmhngrfkuieeletatb.supabase.co` and `us-media`: production endpoint cannot be selected. The script makes **four GET requests** to US-STAGING `/auth/v1/user` first to verify each token signature/session and assert the actual returned user ID matches the declared uploader, then **24 GET-only Storage requests**. It checks the expected JWT issuer and audience locally but does not treat parsing alone as trusted verification. It never signs in, creates users, lists directories, requests signed URLs, uploads, copies, updates or deletes. It does not read private object bodies into memory or print IDs, paths, tokens or object contents. Network interruptions fail.
 
 ## Strict request matrix (24 total)
 
@@ -36,7 +36,7 @@ The endpoint is hardcoded to `https://dugmhngrfkuieeletatb.supabase.co` and `us-
 | No JWT / publishable key only | DENY | DENY | DENY | DENY |
 | Public-object URL | DENY | DENY | DENY | DENY |
 
-DENY means HTTP 400, 401, 403 or 404. A 200 on any forbidden request fails the **entire** run. A 404 for an intended allowed file also fails, so denial results cannot all be explained by nonexistent files. Redirects, HTTP 3xx and 5xx also fail. A result must explicitly be `S33_READONLY_JWT_MATRIX_PASS`, with **8 allowed + 16 denied**. Merely passing CI unit tests is not a Storage authorization success.
+DENY means HTTP 400, 401, 403 or 404. A 200 on any forbidden request fails the **entire** run. A 404 for an intended allowed file also fails, so denial results cannot all be explained by nonexistent files. Redirects, HTTP 3xx and 5xx also fail. A result must explicitly be `S33_READONLY_JWT_MATRIX_PASS`, with **4 Auth identity checks + 8 allowed + 16 denied**. Merely passing CI unit tests is not a Storage authorization success.
 
 The baseline repository snapshot defines a private bucket and Storage policies `us_media_select_same_couple`, `us_media_insert_own_folder`, `us_media_update_own`, `us_media_delete_own`. Actual live STAGING policy equivalence remains to be independently verified; source SQL is **not** proof of live configuration.
 
