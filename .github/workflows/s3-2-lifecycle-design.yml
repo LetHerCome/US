@@ -12,6 +12,7 @@ on:
       - 'tests/s3-2-export-core.test.mjs'
       - 'tests/s3-2-export-paging.test.mjs'
       - 'tests/s3-2-fk-coverage.test.mjs'
+      - 'tests/s3-2-account-exit-real-schema.test.js'
       - 'supabase/functions/_shared/s3-2-export-core.mjs'
       - 'supabase/functions/_shared/s3-2-export-paging.mjs'
       - 'supabase/functions/export-my-data/index.ts'
@@ -63,3 +64,19 @@ jobs:
           const noComments=preflight.replace(/--[^\n]*/g,' ');
           if(!/BEGIN\s+READ\s+ONLY/i.test(noComments)||/\b(?:INSERT|DELETE|UPDATE|ALTER|DROP|TRUNCATE|GRANT|REVOKE|CREATE)\b/i.test(noComments)) process.exit(1);
           NODE
+
+  full-schema-disposable-cascade-rehearsal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install pinned PGlite test dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Rehearse on disposable local database only
+        run: |
+          node --check tests/s3-2-account-exit-real-schema.test.js
+          node --test tests/s3-2-account-exit-real-schema.test.js
