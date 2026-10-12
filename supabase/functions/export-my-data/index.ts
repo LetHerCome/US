@@ -70,7 +70,7 @@ Deno.serve(async (request: Request) => {
   if(profileError||profile?.id!==ownerId||!uuid(coupleId))
     return response(403,"MEMBERSHIP_UNAVAILABLE",headers);
 
-  const rowsByDomain: Record<string, Record<string, unknown>[]> = {};
+  const rowsByDomain: Record<string, unknown[]> = {};
   for(const spec of EXPORT_DOMAINS as ReadonlyArray<{table: string; owner: string; select: string; tenant: boolean}>){
    let q=client.from(spec.table).select(spec.select).eq(spec.owner,ownerId);
    if(spec.tenant)q=q.eq("couple_id",coupleId);
