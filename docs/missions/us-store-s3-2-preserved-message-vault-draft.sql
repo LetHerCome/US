@@ -15,6 +15,23 @@ BEGIN
 END
 $s32$;
 
+-- Audit-gated decisions live in a PRIVATE schema, not REST-exposed.
+-- This draft does not define or grant an API to manufacture approvals.
+CREATE TABLE private.s32_message_preservation_approvals (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  source_message_id uuid NOT NULL REFERENCES public.shared_messages(id) ON DELETE CASCADE,
+  couple_id uuid NOT NULL REFERENCES public.couples(id) ON DELETE CASCADE,
+  retaining_user_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  rights_basis text NOT NULL CHECK (rights_basis = 'ELIGIBLE_SHARED_REVIEWED'),
+  reviewed_at timestamptz NOT NULL,
+  retention_expires_at timestamptz NOT NULL,
+  CONSTRAINT s32_approval_positive_lifetime CHECK (retention_expires_at > reviewed_at),
+  CONSTRAINT s32_approval_per_recipient UNIQUE (source_message_id, retaining_user_id)
+);
+ALTER TABLE private.s32_message_preservation_approvals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE private.s32_message_preservation_approvals FORCE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE private.s32_message_preservation_approvals FROM PUBLIC, anon, authenticated;
+
 CREATE TABLE public.s32_preserved_messages (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   source_message_id uuid NOT NULL,
@@ -61,6 +78,16 @@ BEGIN
     OR NOT EXISTS (
       SELECT 1 FROM public.profiles p
         WHERE p.id=NEW.retaining_user_id AND p.couple_id=NEW.couple_id
+    )
+    OR NOT EXISTS (
+      SELECT 1 FROM private.s32_message_preservation_approvals a
+      WHERE a.id=NEW.rights_review_receipt
+        AND a.source_message_id=NEW.source_message_id
+        AND a.couple_id=NEW.couple_id
+        AND a.retaining_user_id=NEW.retaining_user_id
+        AND a.rights_basis='ELIGIBLE_SHARED_REVIEWED'
+        AND a.reviewed_at=NEW.rights_reviewed_at
+        AND a.retention_expires_at=NEW.retention_expires_at
     ) THEN
     RAISE EXCEPTION USING ERRCODE='23514', MESSAGE='s32_retention_source_invalid';
   END IF;
@@ -94,6 +121,8 @@ REVOKE ALL ON TABLE public.s32_preserved_messages FROM PUBLIC, anon, authenticat
 GRANT SELECT ON TABLE public.s32_preserved_messages TO authenticated;
 REVOKE ALL ON FUNCTION private.s32_validate_preserved_message() FROM PUBLIC, anon, authenticated;
 
+-- Approvals are not a substitute for a complete external rights/consent review;
+-- the trusted reviewer workflow and expiration cleanup do NOT yet exist.
 -- No approved write API, no automatic copying, no permission for users to
 -- nominate "reviewed" records and no deletion/unpair capability is added.
 COMMIT;
