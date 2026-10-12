@@ -170,7 +170,7 @@ test('no path, real user id, raw content, signed URL or secret is returned from 
  const {store,reviews}=seed();
  const out=rehearsePrivateMediaCopy({request:payload,store,reviews,now:FIXED_NOW});
  const text=JSON.stringify(out);
- for(const secret of [couple,actor,survivor,momentId,'source.webp','synthetic SOURCE secret A','signedUrl'])
+ for(const secret of [couple,actor,survivor,momentId,'source.webp','synthetic SOURCE secret A','https://','/storage/v1/object/sign/'])
   assert.equal(text.includes(secret),false,secret);
  assert.ok(!Object.keys(out).includes('paths'));
  const copySource=fs.readFileSync(path.join(__dirname,'../s3-2-media-copy-rehearsal.cjs'),'utf8');
