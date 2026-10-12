@@ -8,6 +8,26 @@ const expected = Object.freeze({
  us_media_update_own:'UPDATE',
  us_media_delete_own:'DELETE'
 });
+// Exact SQL text is intentionally pinned: adding an OR TRUE clause must fail.
+// Updating this allowlist requires explicit RLS security review, not just editing the JSON snapshot.
+const expectedSql = Object.freeze({
+  "us_media_delete_own": {
+    "qual": "((bucket_id = 'us-media'::text) AND (owner_id = ( SELECT (auth.uid())::text AS uid)) AND ((storage.foldername(name))[1] = ( SELECT (private.current_couple_id())::text AS current_couple_id)))",
+    "with_check": ""
+  },
+  "us_media_insert_own_folder": {
+    "qual": "",
+    "with_check": "((bucket_id = 'us-media'::text) AND ((storage.foldername(name))[1] = ( SELECT (private.current_couple_id())::text AS current_couple_id)) AND ((storage.foldername(name))[2] = ( SELECT (auth.uid())::text AS uid)))"
+  },
+  "us_media_select_same_couple": {
+    "qual": "((bucket_id = 'us-media'::text) AND ((storage.foldername(name))[1] = ( SELECT (private.current_couple_id())::text AS current_couple_id)))",
+    "with_check": ""
+  },
+  "us_media_update_own": {
+    "qual": "((bucket_id = 'us-media'::text) AND (owner_id = ( SELECT (auth.uid())::text AS uid)) AND ((storage.foldername(name))[1] = ( SELECT (private.current_couple_id())::text AS current_couple_id)))",
+    "with_check": "((bucket_id = 'us-media'::text) AND (owner_id = ( SELECT (auth.uid())::text AS uid)) AND ((storage.foldername(name))[1] = ( SELECT (private.current_couple_id())::text AS current_couple_id)) AND ((storage.foldername(name))[2] = ( SELECT (auth.uid())::text AS uid)))"
+  }
+});
 const blocked = reason => Object.freeze({status:'S33_STORAGE_POLICY_DRIFT_BLOCKED',reason,releaseReady:false,actualJwtProof:false});
 const accepted = () => Object.freeze({status:'S33_STORAGE_POLICY_BASELINE_STABLE_NOT_LIVE_PROOF',policyCount:4,releaseReady:false,actualJwtProof:false});
 const normalized = val => typeof val==='string'?val.replace(/\s+/g,' ').trim():'';
@@ -23,6 +43,9 @@ function checkStoragePolicies(policies){
   if(p.cmd!==expected[p.policyname]||p.roles!=='{authenticated}'||p.permissive!=='PERMISSIVE')
    return blocked('COMMAND_ROLE_OR_MODE_DRIFT');
   const check=normalized(p.with_check),using=normalized(p.qual);
+  if(using!==normalized(expectedSql[p.policyname].qual)
+   ||check!==normalized(expectedSql[p.policyname].with_check))
+   return blocked('POLICY_SQL_TEXT_CHANGED');
   const scope=p.cmd==='INSERT'?check:using;
   if(!scope.includes("bucket_id = 'us-media'::text")
     ||!scope.includes('private.current_couple_id()')
