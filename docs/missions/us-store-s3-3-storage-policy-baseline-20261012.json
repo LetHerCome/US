@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "environment": "US-STAGING",
+  "project": "dugmhngrfkuieeletatb",
+  "inspectedOn": "2026-10-12",
+  "readonly": true,
+  "source": "pg_policies storage.objects (not production)",
+  "note": "Schema policy baseline only; does not prove HTTP Storage access. Recheck immediately before real JWT tests.",
+  "policies": [
+    {
+      "policyname": "us_media_delete_own",
+      "cmd": "DELETE",
+      "roles": "{authenticated}",
+      "permissive": "PERMISSIVE",
+      "qual": "((bucket_id = 'us-media'::text) AND (owner_id = ( SELECT (auth.uid())::text AS uid)) AND ((storage.foldername(name))[1] = ( SELECT (private.current_couple_id())::text AS current_couple_id)))",
+      "with_check": null
+    },
+    {
+      "policyname": "us_media_insert_own_folder",
+      "cmd": "INSERT",
+      "roles": "{authenticated}",
+      "permissive": "PERMISSIVE",
+      "qual": null,
+      "with_check": "((bucket_id = 'us-media'::text) AND ((storage.foldername(name))[1] = ( SELECT (private.current_couple_id())::text AS current_couple_id)) AND ((storage.foldername(name))[2] = ( SELECT (auth.uid())::text AS uid)))"
+    },
+    {
+      "policyname": "us_media_select_same_couple",
+      "cmd": "SELECT",
+      "roles": "{authenticated}",
+      "permissive": "PERMISSIVE",
+      "qual": "((bucket_id = 'us-media'::text) AND ((storage.foldername(name))[1] = ( SELECT (private.current_couple_id())::text AS current_couple_id)))",
+      "with_check": null
+    },
+    {
+      "policyname": "us_media_update_own",
+      "cmd": "UPDATE",
+      "roles": "{authenticated}",
+      "permissive": "PERMISSIVE",
+      "qual": "((bucket_id = 'us-media'::text) AND (owner_id = ( SELECT (auth.uid())::text AS uid)) AND ((storage.foldername(name))[1] = ( SELECT (private.current_couple_id())::text AS current_couple_id)))",
+      "with_check": "((bucket_id = 'us-media'::text) AND (owner_id = ( SELECT (auth.uid())::text AS uid)) AND ((storage.foldername(name))[1] = ( SELECT (private.current_couple_id())::text AS current_couple_id)) AND ((storage.foldername(name))[2] = ( SELECT (auth.uid())::text AS uid)))"
+    }
+  ]
+}
