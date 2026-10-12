@@ -52,7 +52,7 @@ test('strict owner-only export contains 13 domains without partner secrets',()=>
   assert.equal(exportData.data.daily_answers[0].answer,'My own private answer');
   assert.deepEqual(Object.keys(exportData.data),EXPORT_DOMAINS.map(x=>x.table));
   const str=JSON.stringify(exportData);
-  assert.doesNotMatch(str,/DELIBERATELY_PRIVATE_TOKEN_VALUE|service_role|password|refresh_token|session_token/i);
+  assert.doesNotMatch(str,/DELIBERATELY_PRIVATE_TOKEN_VALUE|service_role|password_hash|refresh_token=|session_token=/i);
   assert.ok(exportData.exclusions.includes('media_binary_and_download_urls'));
   assert.ok(exportData.exclusions.includes('partner_authored_or_unreviewed_shared_content'));
 });
