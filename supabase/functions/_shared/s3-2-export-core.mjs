@@ -1,3 +1,4 @@
+import {EXPORT_PAGE_LIMIT} from './s3-2-export-paging.mjs';
 // US Store S3.2 — non-destructive first-stage personal export contract.
 //
 // PURE module, suitable for Node tests and Deno Edge. No client/DB/Storage
@@ -9,7 +10,7 @@
 // binary files, and additional feature domains pending legal/data review.
 
 export const EXPORT_VERSION = 1;
-export const MAX_ROWS_PER_DOMAIN = 100;
+export const MAX_ROWS_PER_DOMAIN = EXPORT_PAGE_LIMIT;
 export const MAX_RESPONSE_BYTES = 1024 * 1024;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const IDENTIFIER = /^(?:[a-z][a-z0-9_]{0,64})$/;
