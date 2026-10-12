@@ -26,6 +26,7 @@ on:
       - 'tests/s3-3-seed-and-verify-stage.test.cjs'
       - 'scripts/s3-3-storage-jwt-readonly.cjs'
       - 'scripts/s3-3-seed-and-verify-stage.cjs'
+      - 'scripts/s3-3-stage-qa-run.ps1'
       - 's3-2-media-copy-rehearsal.cjs'
       - 's3-2-media-inventory.cjs'
       - 'supabase/functions/_shared/s3-2-export-core.mjs'
