@@ -29,7 +29,8 @@ function cfg(){
  }
  return env;
 }
-function fakeSetup({wrongCouple=false,wrongIdentity=false,tamperFreshUpload=false}={}){
+function fakeSetup({wrongCouple=false,wrongIdentity=false,tamperFreshUpload=false,
+  tamperPartnerReadback=false,denyPartnerReadback=false}={}){
  const store=new Map(),events=[],clients=[];
  function createClient(url,key,opts){
   events.push('client');
@@ -86,9 +87,19 @@ function fakeSetup({wrongCouple=false,wrongIdentity=false,tamperFreshUpload=fals
      },
      download:async(path)=>{
       events.push('download:'+actor);
+      const uploader=actors.find(a=>path.includes('/'+ids[a]+'/'));
+      assert.ok(uploader,'only known synthetic QA paths are inspected');
+      assert.equal(couples[uploader[0]],couples[actor[0]],
+       'only own-couple download proofs may be attempted');
+      const asPartner=uploader!==actor;
+      if(asPartner)events.push('partner-read:'+actor+':'+uploader);
+      if(asPartner&&actor==='A2'&&uploader==='A1'&&denyPartnerReadback)
+       return {data:null,error:{statusCode:'403',message:'RLS denied'}};
       const v=store.get(path);
       if(!v)return {data:null,error:{message:'not found'}};
-      return {data:{arrayBuffer:async()=>Uint8Array.from(v).buffer},error:null};
+      const bytes=asPartner&&actor==='A2'&&uploader==='A1'&&tamperPartnerReadback
+       ?Buffer.from('tampered-for-partner'):v;
+      return {data:{arrayBuffer:async()=>Uint8Array.from(bytes).buffer},error:null};
      }
     };
    }}
@@ -128,15 +139,17 @@ test('four login + memberships before first write; then 4 non-upsert synthetic u
  assert.equal(result.status,'S33_STAGE_FIXTURES_AND_READONLY_MATRIX_PASS');
  assert.equal(result.created,4);assert.equal(result.reused,0);
  assert.equal(result.remoteFixtureBytesVerified,4);
+ assert.equal(result.partnerFixtureBytesVerified,4);
  assert.equal(result.checked,24);assert.equal(result.filesDeleted,0);
  assert.equal(result.overwrites,0);assert.equal(result.accountDeletionEnabled,false);
  assert.equal(result.productionChanged,false);
  assert.equal(fixture.store.size,4);
  assert.equal(fixture.events.filter(x=>x.startsWith('login:')).length,4);
  assert.equal(fixture.events.filter(x=>x.startsWith('upload:')).length,4);
- assert.equal(fixture.events.filter(x=>x.startsWith('download:')).length,4);
- assert.ok(fixture.events.indexOf('download:B2')<fixture.events.indexOf('verify'),
-  'all four remote SHA-256 checks must finish before the JWT matrix');
+ assert.equal(fixture.events.filter(x=>x.startsWith('download:')).length,8);
+ assert.equal(fixture.events.filter(x=>x.startsWith('partner-read:')).length,4);
+ assert.ok(fixture.events.indexOf('partner-read:B1:B2')<fixture.events.indexOf('verify'),
+  'partner SHA-256 proofs must complete before the JWT matrix');
  assert.ok(fixture.events.indexOf('profile:B2')<fixture.events.indexOf('upload:A1'));
  assert.equal(fixture.events.at(-1),'verify');
  assert.doesNotMatch(JSON.stringify(result),/email|password|token|jwt|path|couple_id/i);
@@ -150,7 +163,9 @@ test('safe rerun only reuses four byte-identical QA objects, never upserts',asyn
   {createClientImpl:fixture.createClient,runPlanImpl:fixture.verify});
  assert.deepEqual([result.created,result.reused,fixture.store.size],[0,4,4]);
  assert.equal(result.remoteFixtureBytesVerified,4);
- assert.equal(fixture.events.filter(x=>x.startsWith('download:')).length,8);
+ assert.equal(result.partnerFixtureBytesVerified,4);
+ assert.equal(fixture.events.filter(x=>x.startsWith('download:')).length,16);
+ assert.equal(fixture.events.filter(x=>x.startsWith('partner-read:')).length,8);
 });
 test('mismatched couple or claimed Auth identity cannot create any Storage file',async()=>{
  for(const flags of [{wrongCouple:true},{wrongIdentity:true}]){
@@ -184,6 +199,24 @@ test('fresh-upload remote byte corruption blocks the JWT access matrix',async()=
  assert.equal(fixture.events.filter(x=>x==='verify').length,0);
  assert.equal(fixture.events.filter(x=>x.startsWith('upload:')).length,1);
  assert.equal(fixture.events.filter(x=>x.startsWith('download:')).length,1);
+});
+test('partner access rejection blocks the JWT access matrix even when uploader can read',async()=>{
+ const fixture=fakeSetup({denyPartnerReadback:true});
+ await assert.rejects(prepareAndVerify(validateConfig(cfg()),
+  {createClientImpl:fixture.createClient,runPlanImpl:fixture.verify}),
+  /S33_SEED_BLOCKED_QA_PARTNER_OBJECT_UNREADABLE/);
+ assert.equal(fixture.events.filter(x=>x.startsWith('upload:')).length,4);
+ assert.equal(fixture.events.filter(x=>x==='verify').length,0);
+ assert.equal(fixture.events.filter(x=>x.startsWith('partner-read:')).length,1);
+});
+test('partner receiving different remote bytes blocks despite HTTP download success',async()=>{
+ const fixture=fakeSetup({tamperPartnerReadback:true});
+ await assert.rejects(prepareAndVerify(validateConfig(cfg()),
+  {createClientImpl:fixture.createClient,runPlanImpl:fixture.verify}),
+  /S33_SEED_BLOCKED_QA_PARTNER_OBJECT_NOT_IDENTICAL/);
+ assert.equal(fixture.events.filter(x=>x.startsWith('upload:')).length,4);
+ assert.equal(fixture.events.filter(x=>x==='verify').length,0);
+ assert.equal(fixture.events.filter(x=>x.startsWith('partner-read:')).length,1);
 });
 test('an incomplete or falsely reported GET gate is never considered successful',async()=>{
  const fixture=fakeSetup();
