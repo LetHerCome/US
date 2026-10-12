@@ -134,9 +134,9 @@ CREATE POLICY s32_preserved_partner_photos_survivor_only
   AND retention_expires_at>now()
   AND EXISTS (
    SELECT 1 FROM public.s32_preserved_moments kept
-   WHERE kept.source_moment_id=source_moment_id
-     AND kept.couple_id=couple_id
-     AND kept.retaining_user_id=retaining_user_id
+   WHERE kept.source_moment_id=public.s32_preserved_partner_photos.source_moment_id
+     AND kept.couple_id=public.s32_preserved_partner_photos.couple_id
+     AND kept.retaining_user_id=public.s32_preserved_partner_photos.retaining_user_id
      AND kept.retention_expires_at>now()
   )
  );
