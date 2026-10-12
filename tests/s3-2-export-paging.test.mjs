@@ -76,7 +76,7 @@ test('paged rows still pass through serializer tenant/owner privacy checks',asyn
   const row={};for(const key of s.fields)row[key]=null;
   row[s.owner]=owner;
   if(s.tenant)row.couple_id=couple;
-  if(s.fields.includes('id'))row.id=id(99);
+  if(s.fields.includes('id')&&s.owner!=='id')row.id=id(99);
   return [s.table,[row]];
  }));
  byDomain.moments=one;
