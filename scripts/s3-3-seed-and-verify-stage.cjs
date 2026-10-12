@@ -7,6 +7,7 @@ const {STAGING,BUCKET,ACTORS,makePlan,runPlan}=require('./s3-3-storage-jwt-reado
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const PUB=/^sb_publishable_[A-Za-z0-9_-]{12,}$/;
 const FIXTURE_MOMENT='33333333-3333-4333-8333-333333333333';
+const PARTNERS=Object.freeze({A1:'A2',A2:'A1',B1:'B2',B2:'B1'});
 const PIXEL=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jxyQAAAAASUVORK5CYII=','base64');
 function block(reason){throw Error('S33_SEED_BLOCKED_'+reason);}
 function validateConfig(env){
@@ -37,9 +38,11 @@ function isCollision(error){
  const message=String(error?.message||'');
  return (status==='400'||status==='409') && /already exists|duplicate|resource exists/i.test(message);
 }
-async function verifyFixtureReadback(bucket,path,isReuse){
- // This compares actual Storage-returned bytes; upload success alone is not a hash proof.
- const prefix=isReuse?'QA_EXISTING_OBJECT':'QA_UPLOADED_OBJECT';
+async function verifyFixtureReadback(bucket,path,readbackKind){
+ // Both the uploader and their confirmed partner must receive the canonical QA bytes.
+ // A successful PUT or HTTP 200 on its own is NOT a byte-integrity proof.
+ const prefix=readbackKind==='partner'?'QA_PARTNER_OBJECT':
+   readbackKind==='reuse'?'QA_EXISTING_OBJECT':'QA_UPLOADED_OBJECT';
  const existing=await bucket.download(path);
  if(existing?.error||!existing?.data||typeof existing.data.arrayBuffer!=='function')
    block(prefix+'_UNREADABLE');
@@ -88,7 +91,7 @@ async function prepareAndVerify(config,{createClientImpl,runPlanImpl=runPlan}={}
   accounts[actor]={jwt,path:file.slice(BUCKET.length+1)};
  }
  const plan=makePlan({confirm:'US_S33_READ_ONLY_STAGE',apikey:config.apikey,accounts});
- let created=0,reused=0,remoteFixtureBytesVerified=0;
+ let created=0,reused=0,remoteFixtureBytesVerified=0,partnerFixtureBytesVerified=0;
  for(const actor of ACTORS){
   const bucket=clients[actor].storage.from(BUCKET);
   const path=plan.accounts[actor].path;
@@ -96,18 +99,30 @@ async function prepareAndVerify(config,{createClientImpl,runPlanImpl=runPlan}={}
    {contentType:'image/png',upsert:false,cacheControl:'0'});
   if(!error){
    // A successful PUT is not proof that the object can be read back intact.
-   await verifyFixtureReadback(bucket,path,false);
+   await verifyFixtureReadback(bucket,path,'fresh');
    remoteFixtureBytesVerified++;
    created++;
    continue;
   }
   // Never use upsert. Only an exact synthetic byte-for-byte collision may be reused.
   if(!isCollision(error))block('QA_UPLOAD_DENIED_OR_FAILED');
-  await verifyFixtureReadback(bucket,path,true);
+  await verifyFixtureReadback(bucket,path,'reuse');
   remoteFixtureBytesVerified++;
   reused++;
  }
  if(remoteFixtureBytesVerified!==4)block('REMOTE_SHA256_READBACK_INCOMPLETE');
+ // Verify all four files a SECOND time using the actual other member's independent JWT.
+ // This proves couple-member GET returns identical bytes, not merely a success code.
+ // It is not a copy/transfer test and cannot replace the 24-case isolation matrix.
+ for(const actor of ACTORS){
+  const partner=PARTNERS[actor];
+  if(!partner||plan.accounts[actor].couple!==plan.accounts[partner].couple)
+   block('PARTNER_COUPLE_MAPPING_MISMATCH');
+  await verifyFixtureReadback(clients[partner].storage.from(BUCKET),
+    plan.accounts[actor].path,'partner');
+  partnerFixtureBytesVerified++;
+ }
+ if(partnerFixtureBytesVerified!==4)block('PARTNER_SHA256_READBACK_INCOMPLETE');
  // This uses the original independent 4 Auth / 24 GET-only matrix, not mocked in production.
  const verified=await runPlanImpl(plan);
  if(verified?.status!=='S33_READONLY_JWT_MATRIX_PASS'
@@ -116,7 +131,8 @@ async function prepareAndVerify(config,{createClientImpl,runPlanImpl=runPlan}={}
    block('LIVE_GET_MATRIX_NOT_VERIFIED');
  return Object.freeze({
   status:'S33_STAGE_FIXTURES_AND_READONLY_MATRIX_PASS',
-  stage:'US-STAGING',created,reused,remoteFixtureBytesVerified,authVerified:4,checked:24,
+  stage:'US-STAGING',created,reused,remoteFixtureBytesVerified,partnerFixtureBytesVerified,
+  authVerified:4,checked:24,
   expectedAllow:8,expectedDeny:16,filesDeleted:0,overwrites:0,
   accountDeletionEnabled:false,productionChanged:false,
   storageOwnerSqlAuditStillRequired:true
