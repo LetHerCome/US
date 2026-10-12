@@ -15,6 +15,16 @@ export function sortKeyForExportDomain(table){
  return SORT_KEYS[table] || 'id';
 }
 
+/**
+ * @param {{
+ *   spec?: {table:string, owner:string, fields:readonly string[]},
+ *   fetchPage?: (request:{
+ *     spec:{table:string, owner:string, fields:readonly string[]},
+ *     sortKey:string, cursor:string|null, limit:number
+ *   })=>Promise<unknown[]>,
+ *   maxRows?:number, pageSize?:number
+ * }} [options]
+ */
 export async function collectDomainRows({spec,fetchPage,maxRows=EXPORT_PAGE_LIMIT,pageSize=EXPORT_PAGE_SIZE}={}){
  if(!spec||typeof spec!=='object'||typeof spec.table!=='string'||typeof fetchPage!=='function'
  || !Number.isInteger(pageSize)||pageSize<1||pageSize>100
