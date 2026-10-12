@@ -73,7 +73,7 @@ test('only reviewed shared metadata copied canonically; no media paths or calend
  assert.ok(!('location' in c) && !('owner_id' in c) && !('created_by' in c));
  assert.doesNotMatch(JSON.stringify([m,c]),/sensitive-original|thumb\.jpg|EXACT PERSONAL LOCATION|FORGED/);
 });
-test('approved metadata survives author's account cascade in ROLLBACK; photo bytes remain unresolved',async()=>{
+test('approved metadata survives account cascade in ROLLBACK; photo bytes remain unresolved',async()=>{
  const [a,b]=await seed();
  await review(a,'moment');await review(a,'calendar_shared');
  assert.equal((await as(a.retaining,'select count(*)::int n from public.s32_preserved_moments'))[0].n,1);
