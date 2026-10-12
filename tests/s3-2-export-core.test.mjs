@@ -123,5 +123,7 @@ test('endpoint is STAGING locked, caller-JWT RLS only and has no mutation capabi
   assert.doesNotMatch(src,/supabaseSecretKey|SERVICE_ROLE_KEY|admin\.from/);
   assert.doesNotMatch(src,/\.delete\(|\.insert\(|\.update\(|\.upsert\(|\.remove\(/);
   assert.doesNotMatch(src,/console\.(log|error)\(/);
-  assert.match(src,/limit\(MAX_ROWS_PER_DOMAIN\+1\)/);
+  assert.match(src,/collectDomainRows\(\{spec,fetchPage\}\)/);
+  assert.match(src,/\.gt\(sortKey,cursor\)/);
+  assert.match(src,/\.order\(sortKey,\{ascending:true\}\)\.limit\(limit\)/);
 });
