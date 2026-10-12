@@ -1,9 +1,9 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.112.4";
 import {
-  EXPORT_DOMAINS, MAX_ROWS_PER_DOMAIN,
-  buildPersonalExport, classifyExportError
+  EXPORT_DOMAINS, buildPersonalExport, classifyExportError
 } from "../_shared/s3-2-export-core.mjs";
+import { collectDomainRows } from "../_shared/s3-2-export-paging.mjs";
 
 // EARLY S3.2 PROTOTYPE — NEVER DEPLOYED, NO PUBLIC/PRODUCTION GATE.
 // This route is deliberately hard-locked to US-STAGING. A later reviewed
@@ -71,15 +71,22 @@ Deno.serve(async (request: Request) => {
     return response(403,"MEMBERSHIP_UNAVAILABLE",headers);
 
   const rowsByDomain: Record<string, unknown[]> = {};
-  for(const spec of EXPORT_DOMAINS as ReadonlyArray<{table: string; owner: string; select: string; tenant: boolean}>){
-   let q=client.from(spec.table).select(spec.select).eq(spec.owner,ownerId);
-   if(spec.tenant)q=q.eq("couple_id",coupleId);
-   const {data, error}=await q.limit(MAX_ROWS_PER_DOMAIN+1);
-   if(error || !Array.isArray(data))throw new Error("export_query_unavailable");
-   if(data.length>MAX_ROWS_PER_DOMAIN){
-     throw Object.assign(new Error("export_too_large"),{code:"export_too_large"});
-   }
-   rowsByDomain[spec.table]=data;
+  type ExportSpec = {table:string;owner:string;select:string;tenant:boolean;fields:readonly string[]};
+  // Traversal uses unique UUID primary key for stable ordering, not offset.
+  // Client JWT/RLS and explicit owner/couple predicates apply on EVERY page.
+  const fetchPage = async (
+    {spec,sortKey,cursor,limit}:
+    {spec:ExportSpec;sortKey:string;cursor:string|null;limit:number}
+  ) => {
+    let q=client.from(spec.table).select(spec.select).eq(spec.owner,ownerId);
+    if(spec.tenant)q=q.eq("couple_id",coupleId);
+    if(cursor!==null)q=q.gt(sortKey,cursor);
+    const {data,error}=await q.order(sortKey,{ascending:true}).limit(limit);
+    if(error || !Array.isArray(data))throw new Error("export_query_unavailable");
+    return data;
+  };
+  for(const spec of EXPORT_DOMAINS as ReadonlyArray<ExportSpec>){
+    rowsByDomain[spec.table]=await collectDomainRows({spec,fetchPage});
   }
 
   // Membership may change while the export executes. Refuse to return rows
