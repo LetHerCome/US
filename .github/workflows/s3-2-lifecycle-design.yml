@@ -40,7 +40,7 @@ jobs:
           deno-version: v2.x
       - name: Check Supabase Edge draft in Deno
         run: |
-          deno check supabase/functions/export-my-data/index.ts
+          deno check --node-modules-dir=auto supabase/functions/export-my-data/index.ts
       - name: Ensure no unapproved deletion or deployment scripts
         run: |
           node - <<'NODE'
