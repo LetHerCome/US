@@ -73,6 +73,6 @@ test('individual deletion and whole-couple deletion cannot be conflated',()=>{
 
 test('schema snapshot contains no individual user records or private content',()=>{
  const content=JSON.stringify(manifest);
- assert.doesNotMatch(content,/@|Bearer |sb_secret_|service_role|password_hash|refresh_token|access_token|\\/?home\\//i);
+ assert.doesNotMatch(content,/(?:@|Bearer |sb_secret_|service_role|password_hash|refresh_token|access_token|\/home\/)/i);
  assert.ok(rows.every(x=>!Object.keys(x).some(k=>/email|user_id|body|content|storage_path/i.test(k))));
 });
