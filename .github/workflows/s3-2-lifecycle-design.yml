@@ -17,6 +17,7 @@ on:
       - 'tests/s3-2-preserved-message-vault-db.test.js'
       - 'tests/s3-2-preserved-moments-calendar-db.test.js'
       - 'tests/s3-2-partner-photo-reference-db.test.js'
+      - 'tests/s3-2-partner-photo-storage-ref-db.test.js'
       - 'tests/s3-2-media-inventory.test.js'
       - 'tests/s3-2-media-copy-rehearsal.test.js'
       - 'tests/s3-3-storage-jwt-readonly.test.cjs'
@@ -72,6 +73,12 @@ jobs:
           if(contract.automatedDeletionAllowed!==false || contract.destructiveActionsEnabled!==false || contract.ownerChoice!=='A' || contract.decisions.retention!=='REQUIRES_PRIVACY_REVIEW') process.exit(1);
           const files=['supabase/functions/account-delete/index.ts','supabase/functions/couple-unpair/index.ts'];
           if(files.some(file=>fs.existsSync(file))) process.exit(1);
+          const partnerRef=fs.readFileSync('docs/missions/us-store-s3-2-partner-photo-storage-ref-draft.sql','utf8');
+          const partnerRefSql=partnerRef.replace(/--[^\n]*/g,' ');
+          if(!partnerRef.includes('BLOCKED_PENDING_REAL_STORAGE_AUTH_AND_BYTES')
+             || !partnerRef.includes('FORCE ROW LEVEL SECURITY')
+             || !partnerRef.includes('REVOKE ALL ON TABLE private.s32_partner_photo_storage_refs')
+             || /\b(?:DELETE\s+FROM\s+auth\.users|ALTER\s+TABLE\s+public\.moment_photos|CREATE\s+POLICY[^;]+TO\s+authenticated)\b/i.test(partnerRefSql))process.exit(1);
           const photoArchive=fs.readFileSync('docs/missions/us-store-s3-2-partner-photo-reference-vault-draft.sql','utf8');
           const photoNoComments=photoArchive.replace(/--[^\n]*/g,' ');
           if(!photoArchive.includes('BLOCKED_PENDING_RIGHTS_STORAGE_AND_PARENT_REBIND')
@@ -118,5 +125,6 @@ jobs:
           node --check tests/s3-2-account-exit-real-schema.test.js
           node --check tests/s3-2-preserved-message-vault-db.test.js
           node --check tests/s3-2-preserved-moments-calendar-db.test.js
+          node --check tests/s3-2-partner-photo-storage-ref-db.test.js
           node --check tests/s3-2-partner-photo-reference-db.test.js
-          node --test tests/s3-2-account-exit-real-schema.test.js tests/s3-2-exit-impact-db.test.js tests/s3-2-preserved-message-vault-db.test.js tests/s3-2-preserved-moments-calendar-db.test.js tests/s3-2-partner-photo-reference-db.test.js
+          node --test tests/s3-2-account-exit-real-schema.test.js tests/s3-2-exit-impact-db.test.js tests/s3-2-preserved-message-vault-db.test.js tests/s3-2-preserved-moments-calendar-db.test.js tests/s3-2-partner-photo-reference-db.test.js tests/s3-2-partner-photo-storage-ref-db.test.js
