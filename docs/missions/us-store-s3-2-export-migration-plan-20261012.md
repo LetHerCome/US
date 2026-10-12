@@ -128,3 +128,21 @@ A separate **UNDEPLOYED** proposed SQL artifact `docs/missions/us-store-s3-2-par
 - Test harness `tests/s3-2-partner-photo-storage-ref-db.test.js` uses two synthetic independent couples and a **disposable PostgreSQL clone**, explicit `ROLLBACK` for every author-deletion and invalid-path attempt, per-user permission checks, forged tenant/owner/path attacks, immutable canonical refs and private archive cleanup. No live objects or database rows were modified.
 
 **Still blocked:** 0 media objects existed in actual US-STAGING `us-media` at inspection, and independent live JWT sessions/real synthetic objects are not provided. Real object access denial, verified remote byte transfer, original file lifetime, signed URL invalidation, rights/TTL physical removal, UI restoration and the entire approved deletion state machine remain future gates. Do NOT deploy this standalone draft or claim full media continuity: it only retains a private pointer pending real verification.
+
+
+## 9. Integrated four-domain exit rehearsal — combined synthetic 2-couple PostgreSQL (2026-10-12)
+
+**New test:** `tests/s3-2-integrated-account-exit-db.test.js`. It reconstructs the complete US database schema into disposable PGlite and **installs all four un-deployed draft preservation vaults together** (messages, Moments and shared Calendar, reviewed survivor-uploaded album-photo metadata, private original Storage locator). It creates two fictional complete couples and synthetic content for each.
+
+**Measured invariants:**
+- Nothing is retained by default. No archived metadata, private path or review exists without an explicit test fixture decision.
+- In one simulated reviewed couple, independent per-item approvals authorize canonical message, Moment, Calendar and partner-photo metadata. Private locator is derived from the original partner-owned path and never returned via public metadata.
+- While the departing author's Auth row is deleted **inside a transaction that is always ROLLED BACK**, source messages, Moment, Calendar and partner-photo database rows cascade away. Every reviewed preservation vault retains exactly its expected item, and the private locator remains intact. The second couple's original rows are unchanged. Authenticated survivor-only RLS permits access to metadata; nonmember/departing/foreign principals cannot read it.
+- On a deliberately invalid foreign photo at the *last* step of a multi-domain review, **ROLLBACK discards all prior staged message, Moment, Calendar, photo and review entries**. No mixed state is left behind.
+- All original accounts, rows and archives are restored following the rollback. This test **does not use real users, external Storage bytes, Supabase credentials, HTTP, Edge functions or database DDL on STAGING**.
+
+**Evidence:** [GitHub Actions run #38288218616](https://github.com/LetHerCome/US/actions/runs/38288218616) **PASS**: **45/45 disposable full-schema integration tests + 71/71 Node/policy tests = 116/116**, including Deno Edge type-check. This is confirmation that the current *synthetic drafts can coexist*; it is **not proof of real account deletion, complete rights approval, a correct migration of all 78 FKs, media byte availability or Storage authorization**.
+
+**Immediate next authorized engineering work:** design full preserved media-file references/checksum-ledger and an **isolated** state-machine rehearsal with partial failure compensation. **STAGING S3.3 remains blocked:** read-only inventory rechecked at this step shows 3 complete verified couples and **zero** objects in private `us-media`, therefore real independent-JWT Storage GET matrix is not run and must not be marked PASS. Its scripts require four explicitly designated disposable synthetic QA accounts and protected sign-in; never request JWTs or passwords in chat/GitHub.
+
+**Release safeguards unchanged:** policy A allows preservation only within reviewed privacy and content rights. No irreversible user deletion, no migration to live Supabase, no plaintext secrets, no automatic token/file cleanup or public export/UI deployment from this branch.
