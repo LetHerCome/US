@@ -40,6 +40,26 @@ DENY means HTTP **401, 403 or 404**. HTTP **400 is rejected**, because a malform
 
 The baseline repository snapshot defines a private bucket and Storage policies `us_media_select_same_couple`, `us_media_insert_own_folder`, `us_media_update_own`, `us_media_delete_own`. Actual live STAGING policy equivalence remains to be independently verified; source SQL is **not** proof of live configuration.
 
+## Independent US-STAGING read-only inventory (2026-10-12)
+
+Verified using a **read-only aggregate SQL** query against US-STAGING `dugmhngrfkuieeletatb`, saved as `docs/missions/us-store-s3-3-staging-readonly-preflight-20261012.sql` (CI contract test: `tests/s3-3-staging-readonly-preflight.test.cjs`). The query returns no user IDs, e-mails, Storage paths, image data or credentials.
+
+| Aggregate gate | Read-only observation |
+| --- | --- |
+| Auth accounts | 6 |
+| Verified complete couples | 3 (each with two email-verified profiles) |
+| `us-media` | Exists and is private |
+| Storage objects in `us-media` | **0** |
+| Well-shaped `s33-qa-*` candidate objects | **0** |
+| Distinct candidate uploaders / couples | **0 / 0** |
+| Expected Storage policy names | **4 of 4** found (`SELECT`, `INSERT`, `UPDATE`, `DELETE`) |
+| Live independent-JWT / 24 GET matrix | **NOT RUN** |
+| Permission to erase an account | **FALSE** |
+
+**Interpretation:** The account/pair count is numerically sufficient for a 4-principal, 2-couple test, but does **not** establish that these are authorized synthetic QA identities or that four independent bearer sessions are available. Zero files make the live Storage GET matrix impossible right now. The presence of policy names is not proof of correct authorization: only a controlled live JWT test can demonstrate that.
+
+**Preparation boundary:** Do not generate JWTs from SQL, collect passwords in chat or GitHub, or silently create Storage objects under existing users. The required four harmless file fixtures must be created only after separately approving an isolated synthetic test setup; currently no fixture upload is authorized here. Until then, report `BLOCKED_MISSING_AUTHENTICATED_FIXTURES`. The SQL script is safely repeatable and must not become a proxy for a PASS.
+
 ## Still blocked after this gate
 
 1. **Write-denial proofs**: INSERT, COPY, UPDATE and DELETE negative scenarios must use disposable isolated fixtures and require a separate, explicitly authorized test. This read-only harness cannot certify those operations.
