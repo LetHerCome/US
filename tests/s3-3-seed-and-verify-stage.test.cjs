@@ -29,7 +29,7 @@ function cfg(){
  }
  return env;
 }
-function fakeSetup({wrongCouple=false,wrongIdentity=false}={}){
+function fakeSetup({wrongCouple=false,wrongIdentity=false,tamperFreshUpload=false}={}){
  const store=new Map(),events=[],clients=[];
  function createClient(url,key,opts){
   events.push('client');
@@ -80,7 +80,8 @@ function fakeSetup({wrongCouple=false,wrongIdentity=false}={}){
       assert.ok(Buffer.isBuffer(buffer));
       assert.ok(buffer.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])));
       if(store.has(path))return {error:{statusCode:'400',message:'Asset Already Exists'}};
-      store.set(path,Buffer.from(buffer));
+      store.set(path,tamperFreshUpload&&actor==='A1'
+        ?Buffer.from('corrupted-after-upload'):Buffer.from(buffer));
       return {data:{path},error:null};
      },
      download:async(path)=>{
@@ -126,12 +127,16 @@ test('four login + memberships before first write; then 4 non-upsert synthetic u
   {createClientImpl:fixture.createClient,runPlanImpl:fixture.verify});
  assert.equal(result.status,'S33_STAGE_FIXTURES_AND_READONLY_MATRIX_PASS');
  assert.equal(result.created,4);assert.equal(result.reused,0);
+ assert.equal(result.remoteFixtureBytesVerified,4);
  assert.equal(result.checked,24);assert.equal(result.filesDeleted,0);
  assert.equal(result.overwrites,0);assert.equal(result.accountDeletionEnabled,false);
  assert.equal(result.productionChanged,false);
  assert.equal(fixture.store.size,4);
  assert.equal(fixture.events.filter(x=>x.startsWith('login:')).length,4);
  assert.equal(fixture.events.filter(x=>x.startsWith('upload:')).length,4);
+ assert.equal(fixture.events.filter(x=>x.startsWith('download:')).length,4);
+ assert.ok(fixture.events.indexOf('download:B2')<fixture.events.indexOf('verify'),
+  'all four remote SHA-256 checks must finish before the JWT matrix');
  assert.ok(fixture.events.indexOf('profile:B2')<fixture.events.indexOf('upload:A1'));
  assert.equal(fixture.events.at(-1),'verify');
  assert.doesNotMatch(JSON.stringify(result),/email|password|token|jwt|path|couple_id/i);
@@ -144,7 +149,8 @@ test('safe rerun only reuses four byte-identical QA objects, never upserts',asyn
  const result=await prepareAndVerify(env,
   {createClientImpl:fixture.createClient,runPlanImpl:fixture.verify});
  assert.deepEqual([result.created,result.reused,fixture.store.size],[0,4,4]);
- assert.equal(fixture.events.filter(x=>x.startsWith('download:')).length,4);
+ assert.equal(result.remoteFixtureBytesVerified,4);
+ assert.equal(fixture.events.filter(x=>x.startsWith('download:')).length,8);
 });
 test('mismatched couple or claimed Auth identity cannot create any Storage file',async()=>{
  for(const flags of [{wrongCouple:true},{wrongIdentity:true}]){
@@ -169,6 +175,15 @@ test('existing conflicting image is rejected, no overwrite or false verification
   /S33_SEED_BLOCKED_QA_EXISTING_OBJECT_NOT_IDENTICAL/);
  assert.equal(fixture.events.filter(x=>x==='verify').length,before);
  assert.equal(fixture.store.size,4);
+});
+test('fresh-upload remote byte corruption blocks the JWT access matrix',async()=>{
+ const fixture=fakeSetup({tamperFreshUpload:true});
+ await assert.rejects(prepareAndVerify(validateConfig(cfg()),
+  {createClientImpl:fixture.createClient,runPlanImpl:fixture.verify}),
+  /S33_SEED_BLOCKED_QA_UPLOADED_OBJECT_NOT_IDENTICAL/);
+ assert.equal(fixture.events.filter(x=>x==='verify').length,0);
+ assert.equal(fixture.events.filter(x=>x.startsWith('upload:')).length,1);
+ assert.equal(fixture.events.filter(x=>x.startsWith('download:')).length,1);
 });
 test('an incomplete or falsely reported GET gate is never considered successful',async()=>{
  const fixture=fakeSetup();
