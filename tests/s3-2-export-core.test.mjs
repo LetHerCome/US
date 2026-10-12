@@ -77,6 +77,7 @@ test('missing or corrupt fields reject rather than export a truncated dataset',(
   expectBlocked(()=>generate(data),'export_unexpected_field_type');
   data.moods=[null];
   expectBlocked(()=>generate(data),'export_record_invalid');
+  data.moods=[fakeRow(EXPORT_DOMAINS.find(x=>x.table==='moods'))];
   delete data.calendar_entries;
   expectBlocked(()=>generate(data),'export_domain_missing');
 });
