@@ -10,7 +10,7 @@
   - Same-origin browser only: https://us-staging-s31.pages.dev; nonbrowser clients must still present bearer token.
   - SUPABASE_ANON_KEY or publishable key with request JWT, never service_role or secret fallback. Auth getUser validates session and must match queried own profile and couple. All domain reads use actual RLS plus explicit owner and couple filters; mismatches reject entire export.
   - Revalidate identity and membership before response to stop account/couple changes mid-export.
-  - One megabyte and at most 100 rows/domain; returns 413 on overflow, never truncated success.
+  - Maximum response **1 MiB** and **500 rows/domain**. Keyset pagination in batches of 50, sorted by each domain's unique UUID key, with an additional probe after the 500th record; returns 413 rather than a truncated success. Duplicate/out-of-order cursor rows fail closed. The current partial export is not a consistent cross-table transaction snapshot; edits made concurrently may change the contents, so full-release export still needs an audited snapshot/async job.
   - No-store/private caching; generic error responses without secrets or private logs.
 - Explicitly PARTIAL, not a full GDPR/portability fulfillment and not downloadable in the app yet: only actor-authored records across 13 domains. Partner-authored shared content, sensitive media binaries, precise location, token credentials, and other feature domains are excluded pending review.
 - Filename explicitly identifies the export as partial. Never present this as complete export until media and other domains are audited.
@@ -36,6 +36,8 @@ STAGING schema evidence: auth.users has **7 CASCADE** FKs; profiles **24 CASCADE
 ## 3. Read-only preflight
 
 docs/missions/us-store-s3-2-foreign-key-preflight-20261012.sql enumerates FK dependencies, Storage bucket/row policies and RLS flags within a READ ONLY transaction. No DDL/DML, credentials or individual user data.
+
+A separate read-only STAGING inspection captured **all 78 foreign keys** directly referencing auth.users (9), profiles (28) and couples (41), including dependent column nullability and ON DELETE behavior, in docs/missions/us-store-s3-2-fk-coverage-20261012.json. Every row has a fail-closed migration gate; **zero resolutions are approved or implemented**. Tests require complete coverage of recipient/sender message FKs, Moments, calendar and the blocking completion FK. This manifest is schema evidence, not a runnable migration, and MUST be rechecked against the exact target schema immediately before any DDL.
 
 ## 4. Exit gates
 
