@@ -99,3 +99,41 @@ test('no secret/env fixtures silently defaults to a fake passed live test',()=>{
  assert.equal(vars.confirm,undefined);
  assert.throws(()=>makePlan(vars),/S33_BLOCKED_/);
 });
+
+
+test('forged 24-case access matrix is rejected before any Auth or Storage network request',async()=>{
+ const make=()=>makePlan(fixture());
+ const tamper=[
+  p=>{p.checks[0].allow=false;},
+  p=>{p.checks[0].object='B1';},
+  p=>{p.checks[11].viewer='ANON';},
+  p=>{p.checks[21].type='jwt';},
+  p=>{p.checks.reverse();},
+  p=>{p.accounts.A1.couple=couples.B;},
+  p=>{p.accounts.A1.path=p.accounts.A1.path.replace('/s33-qa-','/private-');},
+  p=>{p.accounts.A1.sub=ids.B1;},
+  p=>{delete p.confirm;},
+ ];
+ for(const mutate of tamper){
+  const p=make();
+  mutate(p);
+  let calls=0;
+  await assert.rejects(runPlan(p,{fetchImpl:async()=>{calls++;throw Error('MUST_NOT_FETCH');}}),
+    /S33_BLOCKED_INVALID_PLAN/);
+  assert.equal(calls,0,'invalid matrix must not send authenticated network calls');
+ }
+});
+test('400 BAD REQUEST is not accepted as proof of access denial',async()=>{
+ const p=makePlan(fixture());
+ const fake=async(url,opts)=>{
+   if(url===STAGING+'/auth/v1/user'){
+     const who=Object.keys(ids).find(id=>opts.headers.authorization==='Bearer '+p.accounts[id].jwt);
+     return {status:200,json:async()=>({id:ids[who]})};
+   }
+   const object=Object.keys(ids).find(id=>url.endsWith('/'+p.accounts[id].path));
+   const viewer=Object.keys(ids).find(id=>opts.headers.authorization==='Bearer '+p.accounts[id].jwt);
+   const allowed=viewer && p.accounts[viewer].couple===p.accounts[object].couple &&url.includes('/authenticated/');
+   return {status:allowed?200:400,body:{cancel:async()=>{}}};
+ };
+ await assert.rejects(runPlan(p,{fetchImpl:fake}),/S33_BLOCKED_ACCESS_MATRIX_MISMATCH/);
+});
