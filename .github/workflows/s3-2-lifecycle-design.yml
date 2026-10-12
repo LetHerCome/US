@@ -9,6 +9,9 @@ on:
       - 'docs/missions/us-store-s3-2-*'
       - 'tests/s3-2-lifecycle-design-gate.test.js'
       - 'tests/s3-2-preservation-a-preview.test.js'
+      - 'tests/s3-2-export-core.test.mjs'
+      - 'supabase/functions/_shared/s3-2-export-core.mjs'
+      - 'supabase/functions/export-my-data/index.ts'
       - 's3-2-preservation-a-preview.cjs'
       - '.github/workflows/s3-2-lifecycle-design.yml'
 
@@ -29,7 +32,9 @@ jobs:
           node --check tests/s3-2-lifecycle-design-gate.test.js
           node --check tests/s3-2-preservation-a-preview.test.js
           node --check s3-2-preservation-a-preview.cjs
-          node --test tests/s3-2-lifecycle-design-gate.test.js tests/s3-2-preservation-a-preview.test.js tests/mc3-onboarding.test.js
+          node --check supabase/functions/_shared/s3-2-export-core.mjs
+          node --check tests/s3-2-export-core.test.mjs
+          node --test tests/s3-2-lifecycle-design-gate.test.js tests/s3-2-preservation-a-preview.test.js tests/s3-2-export-core.test.mjs tests/mc3-onboarding.test.js
       - name: Ensure no unapproved deletion or deployment scripts
         run: |
           node - <<'NODE'
@@ -38,4 +43,9 @@ jobs:
           if(contract.automatedDeletionAllowed!==false || contract.destructiveActionsEnabled!==false || contract.ownerChoice!=='A' || contract.decisions.retention!=='REQUIRES_PRIVACY_REVIEW') process.exit(1);
           const files=['supabase/functions/account-delete/index.ts','supabase/functions/couple-unpair/index.ts'];
           if(files.some(file=>fs.existsSync(file))) process.exit(1);
+          const src=fs.readFileSync('supabase/functions/export-my-data/index.ts','utf8');
+          if(!src.includes('US_S32_EXPORT_ENABLED') || !src.includes('https://dugmhngrfkuieeletatb.supabase.co') || /supabaseSecretKey|SERVICE_ROLE_KEY/.test(src))process.exit(1);
+          const preflight=fs.readFileSync('docs/missions/us-store-s3-2-foreign-key-preflight-20261012.sql','utf8');
+          const noComments=preflight.replace(/--[^\n]*/g,' ');
+          if(!/BEGIN\s+READ\s+ONLY/i.test(noComments)||/\b(?:INSERT|DELETE|UPDATE|ALTER|DROP|TRUNCATE|GRANT|REVOKE|CREATE)\b/i.test(noComments)) process.exit(1);
           NODE
