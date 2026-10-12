@@ -62,13 +62,13 @@ test('only reviewed shared metadata copied canonically; no media paths or calend
  const m=await one('select * from public.s32_preserved_moments');
  const c=await one('select * from public.s32_preserved_calendar');
  assert.equal(m.caption,'Original moment A');
- assert.equal(m.moment_date,'2026-10-01');
+ assert.equal(new Date(m.moment_date).toISOString().slice(0,10),'2026-10-01');
  assert.equal(m.media_state,'BLOCKED_PENDING_STORAGE_TRANSFER');
  assert.equal(c.title,'Shared calendar A');
  assert.equal(c.description,'Private plan A');
  assert.equal(c.entry_type,'shared');
  assert.equal(c.is_all_day,true);
- assert.equal(c.start_date,'2026-11-01');
+ assert.equal(new Date(c.start_date).toISOString().slice(0,10),'2026-11-01');
  assert.ok(!('storage_path' in m) && !('thumbnail_path' in m));
  assert.ok(!('location' in c) && !('owner_id' in c) && !('created_by' in c));
  assert.doesNotMatch(JSON.stringify([m,c]),/sensitive-original|thumb\.jpg|EXACT PERSONAL LOCATION|FORGED/);
