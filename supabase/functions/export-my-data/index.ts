@@ -3,7 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.112.4";
 import {
   EXPORT_DOMAINS, MAX_ROWS_PER_DOMAIN,
   buildPersonalExport, classifyExportError
-} from "../../../s3-2-export-core.mjs";
+} from "../_shared/s3-2-export-core.mjs";
 
 // EARLY S3.2 PROTOTYPE — NEVER DEPLOYED, NO PUBLIC/PRODUCTION GATE.
 // This route is deliberately hard-locked to US-STAGING. A later reviewed
