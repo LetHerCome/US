@@ -65,3 +65,19 @@ A separate read-only STAGING inspection captured **all 78 foreign keys** directl
 **CI** https://github.com/LetHerCome/US/actions/runs/38243644809 verified **9/9 independent full-schema integration tests** (4 rollback-only data-loss rehearsals + 5 preview-RPC policy/authorization/tenant tests) and **37/37 contract/Node tests and Deno check**. These results are scoped to reconstructed local PostgreSQL; no real JWT HTTP/RPC or Storage GET/PUT test yet.
 
 **Next real implementation stage:** approved retention/rights classification per content domain (including shared Messages/Moments/calendar), then one narrow FK remediation on isolated synthetic pairs with untouched partner content + physical media lifecycle. Do not expose a working delete button, mark an account deleted, or merge/deploy either RPC or migrations without the explicit security/privacy release gates.
+
+
+## 6. Phase-2 message preservation vault — narrow experimental prototype (2026-10-12)
+
+This **uninstalled** SQL DDL proposal lives at docs/missions/us-store-s3-2-preserved-message-vault-draft.sql. It covers ONE category: eligible, explicitly reviewed shared messages retained by a surviving member. Nothing is copied automatically. It does not modify the old messages sender/recipient FKs, delete an Auth user, alter Moments or Calendar, or render retained messages in the app UI.
+
+- **Canonical archive:** public.s32_preserved_messages stores the content, message timestamp and review metadata without a FK to the departed user's Auth/profile identity; it references only the surviving profile and couple. The retained copy survives removal of its source row on disposable rollback-only tests.
+- **Private authorization ledger:** private.s32_message_preservation_approvals stores an item-specific review bound to source message, survivor, couple, review timestamp and expiry. An arbitrary receipt UUID is insufficient: an INSERT trigger requires a matching private ledger record. The future trusted rights reviewer workflow DOES NOT YET EXIST. Test-created ledger records are hypothetical fixtures, NOT proof of user consent.
+- **Provenance protection:** a SECURITY DEFINER trigger checks the canonical source message and couple and that the survivor was a sender or recipient. It overrides supplied body/title/kind/timestamp with the source values; cross-tenant spoofing cannot copy arbitrary content. The vault is immutable; source-linked authorization ledger records disappear when original messages are deleted.
+- **No ordinary writes:** private approval records are not available to REST clients. Authenticated/anonymous roles have no INSERT, UPDATE, DELETE or TRUNCATE privileges on the vault, and no INSERT/SELECT privileges on the private ledger.
+- **Visible only to remaining member:** forced RLS reads require exact retaining_user_id=auth.uid(), current couple membership and retention expiry still in the future. No partner identities, secrets or file paths are exported by this prototype.
+- **Bounded retention:** expiry and review are mandatory. Expired copies are hidden by RLS but STILL physically present until an independently authorized cleanup job exists. Maximum retention period, dispute/restriction rules and legal basis remain unapproved.
+- **Atomic operations required:** eventual trusted server must insert approval + archive in one transaction with rights checks before any source deletion; on invalid tenant, approval or source, rollback the entire attempt. The isolated tests enforce rollback for invalid cross-couple attempts.
+
+**Not complete:** no automatic archive, real consent review, working account deletion, unpairing, physical-media lifecycle, restored client UI, original-media download, complete exports, or 78-FK remediation. The existing auth.users cascade remains DANGEROUS if invoked outside a reviewed state machine. Do NOT deploy any of these drafts or present the preservation vault as an account deletion feature.
+
