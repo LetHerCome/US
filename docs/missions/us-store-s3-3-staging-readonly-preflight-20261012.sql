@@ -23,7 +23,14 @@ synthetic_object_candidates AS (
     AND o.name ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/moment-albums/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/s33-qa-[a-z0-9][a-z0-9_.-]*\.(webp|png|jpg)$'
 ),
 policy_inventory AS (
-  SELECT count(*) FILTER (
+  SELECT count(*) AS total_policies,
+         count(*) FILTER (WHERE policyname NOT IN (
+           'us_media_select_same_couple','us_media_insert_own_folder',
+           'us_media_update_own','us_media_delete_own'
+         )) AS unexpected_policies,
+         count(*) FILTER (WHERE roles::text <> '{authenticated}'
+                              OR permissive <> 'PERMISSIVE') AS unexpected_roles_or_modes,
+         count(*) FILTER (
     WHERE policyname = 'us_media_select_same_couple' AND cmd = 'SELECT'
   ) AS select_policies,
   count(*) FILTER (
@@ -48,5 +55,10 @@ SELECT
   (SELECT count(DISTINCT couple_folder) FROM synthetic_object_candidates) AS candidate_fixture_couples,
   (SELECT count(*) FROM storage.buckets WHERE id = 'us-media' AND public = false) = 1 AS us_media_private,
   (SELECT select_policies + insert_policies + update_policies + delete_policies FROM policy_inventory) AS required_policy_names_present,
+  (SELECT total_policies FROM policy_inventory) AS all_storage_object_policies,
+  (SELECT unexpected_policies FROM policy_inventory) AS extra_storage_object_policies,
+  (SELECT unexpected_roles_or_modes FROM policy_inventory) AS storage_policy_role_mode_drift,
+  (SELECT total_policies = 4 AND unexpected_policies = 0
+     AND unexpected_roles_or_modes = 0 FROM policy_inventory) AS policy_metadata_matches_expected_shape,
   'NOT_RUN_REQUIRES_4_INDEPENDENT_JWTS_AND_24_GET_PROOFS' AS live_jwt_access_gate,
   false AS deletion_authorized;
