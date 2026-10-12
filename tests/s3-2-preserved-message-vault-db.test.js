@@ -22,9 +22,12 @@ const seed=async()=>{
   [pair.couple_id,h.U1,h.U2])).rows[0].id;
  return {a,b,cidB:pair.couple_id};
 };
-const grantReview=async(source,retaining,couple,expires="now() + interval '2 hours'")=>
- db.query("insert into public.s32_preserved_messages(source_message_id,couple_id,retaining_user_id,kind,title,body,message_created_at,rights_review_receipt,rights_reviewed_at,retention_expires_at) values ($1,$2,$3,'forged','FORGED','FORGED','2021-01-01', $4,now(), "+expires+") returning id",
- [source,couple,retaining,REVIEW]);
+const grantReview=async(source,retaining,couple,expires="now() + interval '2 hours'")=>{
+ const a=(await db.query("insert into private.s32_message_preservation_approvals(source_message_id,couple_id,retaining_user_id,rights_basis,reviewed_at,retention_expires_at) values ($1,$2,$3,'ELIGIBLE_SHARED_REVIEWED',now(),"+expires+") returning id,reviewed_at,retention_expires_at",
+ [source,couple,retaining])).rows[0];
+ return db.query("insert into public.s32_preserved_messages(source_message_id,couple_id,retaining_user_id,kind,title,body,message_created_at,rights_review_receipt,rights_reviewed_at,retention_expires_at) values ($1,$2,$3,'forged','FORGED','FORGED','2021-01-01',$4,$5,$6) returning id",
+ [source,couple,retaining,a.id,a.reviewed_at,a.retention_expires_at]);
+};
 test('default is zero preserved rows; vault does not automatically copy content',async()=>{
  const f=await seed();
  assert.equal((await one('select count(*)::int n from public.s32_preserved_messages')).n,0);
@@ -51,6 +54,8 @@ test('only explicit review archive survives source account cascade and ROLLBACK 
    assert.equal((await one('select count(*)::int n from auth.users')).n,before-1);
    assert.equal((await one('select count(*)::int n from public.shared_messages where id=$1',[f.a])).n,0);
    assert.equal((await one('select count(*)::int n from public.s32_preserved_messages where id=$1',[inserted.id])).n,1);
+   assert.equal((await one('select count(*)::int n from private.s32_message_preservation_approvals where source_message_id=$1',[f.a])).n,0,
+     'source-linked approval receipt must not outlive the erased source');
    // Simulate an authenticated SELECT in the same uncommitted DB transaction.
    await db.exec('SET LOCAL ROLE authenticated');
    await db.query("select set_config('request.jwt.claim.sub',$1,true)",[h.B]);
@@ -78,6 +83,13 @@ test('review receipt, finite retention and source timestamp cannot be omitted or
  await assert.rejects(db.query("insert into public.s32_preserved_messages(source_message_id,couple_id,retaining_user_id,rights_review_receipt,rights_reviewed_at,retention_expires_at) values ($1,$2,$3,null,now(),now()+interval '2 hours')",[f.a,h.A,h.B]),e=>e.code==='23514');
  assert.equal((await one('select count(*)::int n from public.s32_preserved_messages')).n,0);
 });
+test('forged or mismatched receipt cannot authorize preservation',async()=>{
+ const f=await seed();
+ await assert.rejects(db.query("insert into public.s32_preserved_messages(source_message_id,couple_id,retaining_user_id,kind,title,body,message_created_at,rights_review_receipt,rights_reviewed_at,retention_expires_at) values ($1,$2,$3,'forged','FORGED','FORGED',now(),$4,now(),now()+interval '2 hours')",[f.a,h.A,h.B,REVIEW]),e=>e.code==='23514');
+ const a=(await db.query("insert into private.s32_message_preservation_approvals(source_message_id,couple_id,retaining_user_id,rights_basis,reviewed_at,retention_expires_at) values ($1,$2,$3,'ELIGIBLE_SHARED_REVIEWED',now(),now()+interval '2 hours') returning id,reviewed_at,retention_expires_at",[f.a,h.A,h.B])).rows[0];
+ await assert.rejects(db.query("insert into public.s32_preserved_messages(source_message_id,couple_id,retaining_user_id,kind,title,body,message_created_at,rights_review_receipt,rights_reviewed_at,retention_expires_at) values ($1,$2,$3,'forged','FORGED','FORGED',now(),$4,$5,$6)",[f.a,h.A,h.B,a.id,a.reviewed_at,new Date(Date.parse(a.retention_expires_at)+60_000).toISOString()]),e=>e.code==='23514');
+ assert.equal((await one('select count(*)::int n from public.s32_preserved_messages')).n,0);
+});
 test('anonymous cannot read; authenticated cannot insert/update/delete or nominate rights review',async()=>{
  const f=await seed();
  await grantReview(f.a,h.B,h.A);
@@ -85,6 +97,8 @@ test('anonymous cannot read; authenticated cannot insert/update/delete or nomina
   const check=(await db.query("select has_table_privilege($1,'public.s32_preserved_messages','INSERT') i,has_table_privilege($1,'public.s32_preserved_messages','UPDATE') u,has_table_privilege($1,'public.s32_preserved_messages','DELETE') d,has_table_privilege($1,'public.s32_preserved_messages','TRUNCATE') t",[role])).rows[0];
   assert.deepEqual(check,{i:false,u:false,d:false,t:false});
  }
+ const approvalAcl=(await db.query("select has_table_privilege('authenticated','private.s32_message_preservation_approvals','INSERT') i,has_table_privilege('authenticated','private.s32_message_preservation_approvals','SELECT') s")).rows[0];
+ assert.deepEqual(approvalAcl,{i:false,s:false});
  const readGrant=(await db.query("select has_table_privilege('authenticated','public.s32_preserved_messages','SELECT') ok")).rows[0];
  assert.equal(readGrant.ok,true);
  assert.equal((await db.query("select has_table_privilege('anon','public.s32_preserved_messages','SELECT') ok")).rows[0].ok,false);
