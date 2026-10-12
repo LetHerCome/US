@@ -60,7 +60,7 @@ test('separate couple has no access or count contamination from first couple',as
 test('anon lacks grants and unlinked or unauthenticated users have no preview',async()=>{
  assert.equal((await db.query("select has_function_privilege('anon','public.s32_preview_account_exit()','EXECUTE') ok")).rows[0].ok,false);
  assert.equal((await db.query("select has_function_privilege('authenticated','public.s32_preview_account_exit()','EXECUTE') ok")).rows[0].ok,true);
- assert.equal((await db.query("select has_function_privilege('PUBLIC','public.s32_preview_account_exit()','EXECUTE') ok")).rows[0].ok,false);
+ assert.equal((await db.query("select count(*)::int n from pg_proc p, lateral aclexplode(p.proacl) acl where p.oid='public.s32_preview_account_exit()'::regprocedure and acl.grantee=0")).rows[0].n,0);
  await assert.rejects(h.as(db,h.F,'select public.s32_preview_account_exit() r',[],'anon'),e=>e.code==='42501');
  await assert.rejects(preview(h.U3),e=>e.code==='42501');
  await assert.rejects(preview(h.ANON),e=>e.code==='42501');
@@ -79,7 +79,7 @@ test('RPC remains read-only, SECURITY DEFINER with empty search_path, never retu
  assert.doesNotMatch(sql,/SERVICE_ROLE_KEY|supabaseSecretKey|Authorization: Bearer/);
 });
 test('draft migration intentionally refuses second execution instead of overwriting a function',async()=>{
- await assert.rejects(db.exec(sql),e=>e.code==='P0001');
+ try{await assert.rejects(db.exec(sql),e=>e.code==='P0001');}finally{await db.exec('ROLLBACK');}
  const p=await preview(h.F);
  assert.equal(p.individual_account_deletion_enabled,false);
 });
