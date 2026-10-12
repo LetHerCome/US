@@ -18,7 +18,7 @@ const DEFAULT_HEADERS = {
   "Referrer-Policy": "no-referrer",
   "Vary": "Origin",
 };
-const makeHeaders = origin => ({
+const makeHeaders = (origin: string | null) => ({
   ...DEFAULT_HEADERS,
   ...(origin === STAGING_ORIGIN ? {
     "Access-Control-Allow-Origin": STAGING_ORIGIN,
@@ -26,18 +26,18 @@ const makeHeaders = origin => ({
     "Access-Control-Allow-Methods": "GET,OPTIONS"
   }:{}),
 });
-const response = (status,code,headers) => new Response(JSON.stringify({error:code}),{
+const response = (status: number,code: string,headers: ReturnType<typeof makeHeaders>) => new Response(JSON.stringify({error:code}),{
   status,headers:{...headers,"Content-Type":"application/json;charset=utf-8"}
 });
-const uuid = value=>typeof value==="string" &&
+const uuid = (value: unknown): value is string => typeof value==="string" &&
  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
-const getBearer = request => {
+const getBearer = (request: Request): string => {
  const value=request.headers.get("authorization") || "";
  const m=value.match(/^Bearer ([A-Za-z0-9._~+/-]+)$/);
  return m?.[1] || "";
 };
 
-Deno.serve(async request => {
+Deno.serve(async (request: Request) => {
  const origin=request.headers.get("origin");
  const headers=makeHeaders(origin);
  if(origin !== null && origin !== STAGING_ORIGIN)return response(403,"ORIGIN_DENIED",headers);
@@ -70,14 +70,14 @@ Deno.serve(async request => {
   if(profileError||profile?.id!==ownerId||!uuid(coupleId))
     return response(403,"MEMBERSHIP_UNAVAILABLE",headers);
 
-  const rowsByDomain={};
-  for(const spec of EXPORT_DOMAINS){
+  const rowsByDomain: Record<string, Record<string, unknown>[]> = {};
+  for(const spec of EXPORT_DOMAINS as ReadonlyArray<{table: string; owner: string; select: string; tenant: boolean}>){
    let q=client.from(spec.table).select(spec.select).eq(spec.owner,ownerId);
    if(spec.tenant)q=q.eq("couple_id",coupleId);
    const {data, error}=await q.limit(MAX_ROWS_PER_DOMAIN+1);
    if(error || !Array.isArray(data))throw new Error("export_query_unavailable");
    if(data.length>MAX_ROWS_PER_DOMAIN){
-     const e=new Error("export_too_large");e.code="export_too_large";throw e;
+     throw Object.assign(new Error("export_too_large"),{code:"export_too_large"});
    }
    rowsByDomain[spec.table]=data;
   }
@@ -105,7 +105,8 @@ Deno.serve(async request => {
  } catch(error){
   // Never print auth tokens, raw table rows, private strings or full exception
   // objects (Supabase exceptions may contain personal metadata).
-  return response(error?.code==="export_too_large"?413:503,
+  const code = typeof error === "object" && error !== null && "code" in error ? error.code : null;
+  return response(code==="export_too_large"?413:503,
     classifyExportError(error),headers);
  }
 });
