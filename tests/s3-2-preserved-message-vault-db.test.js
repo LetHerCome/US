@@ -75,7 +75,7 @@ test('cross-tenant reviewed copy is rejected even for table owner; no mixed-coup
 test('review receipt, finite retention and source timestamp cannot be omitted or falsified',async()=>{
  const f=await seed();
  await assert.rejects(grantReview(f.a,h.B,h.A,"now() - interval '1 minute'"),e=>e.code==='23514');
- await assert.rejects(db.query("insert into public.s32_preserved_messages(source_message_id,couple_id,retaining_user_id,rights_review_receipt,rights_reviewed_at,retention_expires_at) values ($1,$2,$3,null,now(),now()+interval '2 hours')",[f.a,h.A,h.B]),e=>e.code==='23502');
+ await assert.rejects(db.query("insert into public.s32_preserved_messages(source_message_id,couple_id,retaining_user_id,rights_review_receipt,rights_reviewed_at,retention_expires_at) values ($1,$2,$3,null,now(),now()+interval '2 hours')",[f.a,h.A,h.B]),e=>e.code==='23514');
  assert.equal((await one('select count(*)::int n from public.s32_preserved_messages')).n,0);
 });
 test('anonymous cannot read; authenticated cannot insert/update/delete or nominate rights review',async()=>{
