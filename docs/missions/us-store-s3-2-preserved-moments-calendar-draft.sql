@@ -82,7 +82,7 @@ DECLARE
  a private.s32_content_preservation_approvals%ROWTYPE;
  m public.moments%ROWTYPE;
  c public.calendar_entries%ROWTYPE;
- source_id uuid;
+ v_source_id uuid;
  kind text;
  cid uuid;
  retained uuid;
@@ -91,9 +91,9 @@ BEGIN
    RAISE EXCEPTION USING ERRCODE='42501',MESSAGE='s32_content_archive_immutable';
  END IF;
  IF TG_TABLE_NAME='s32_preserved_moments' THEN
-  source_id:=NEW.source_moment_id; kind:='moment';
+  v_source_id:=NEW.source_moment_id; kind:='moment';
  ELSE
-  source_id:=NEW.source_entry_id; kind:='calendar_shared';
+  v_source_id:=NEW.source_entry_id; kind:='calendar_shared';
  END IF;
  cid:=NEW.couple_id; retained:=NEW.retaining_user_id;
  IF NEW.reviewed_at>now() OR NEW.retention_expires_at<=now()
@@ -103,7 +103,7 @@ BEGIN
  SELECT * INTO a FROM private.s32_content_preservation_approvals approval
  WHERE approval.id=NEW.review_receipt
    AND approval.content_type=kind
-   AND approval.source_id=source_id
+   AND approval.source_id=v_source_id
    AND approval.couple_id=cid
    AND approval.retaining_user_id=retained
    AND approval.review_basis='ELIGIBLE_SHARED_REVIEWED'
@@ -113,7 +113,7 @@ BEGIN
    RAISE EXCEPTION USING ERRCODE='23514',MESSAGE='s32_content_review_missing';
  END IF;
  IF kind='moment' THEN
-  SELECT * INTO m FROM public.moments orig WHERE orig.id=source_id AND orig.couple_id=cid FOR KEY SHARE;
+  SELECT * INTO m FROM public.moments orig WHERE orig.id=v_source_id AND orig.couple_id=cid FOR KEY SHARE;
   IF NOT FOUND OR m.created_by=retained THEN
    RAISE EXCEPTION USING ERRCODE='23514',MESSAGE='s32_content_source_invalid';
   END IF;
@@ -123,7 +123,7 @@ BEGIN
   NEW.original_created_at:=m.created_at;
   NEW.media_state:='BLOCKED_PENDING_STORAGE_TRANSFER';
  ELSE
-  SELECT * INTO c FROM public.calendar_entries orig WHERE orig.id=source_id AND orig.couple_id=cid FOR KEY SHARE;
+  SELECT * INTO c FROM public.calendar_entries orig WHERE orig.id=v_source_id AND orig.couple_id=cid FOR KEY SHARE;
   IF NOT FOUND OR c.entry_type<>'shared' OR c.owner_id IS NOT NULL OR c.created_by=retained THEN
    RAISE EXCEPTION USING ERRCODE='23514',MESSAGE='s32_content_source_invalid';
   END IF;
