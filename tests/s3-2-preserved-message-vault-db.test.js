@@ -74,7 +74,7 @@ test('cross-tenant reviewed copy is rejected even for table owner; no mixed-coup
    [bogus,h.A,h.B]
  ]){
   await db.exec('BEGIN');
-  try{await assert.rejects(grantReview(id,user,cid),e=>e.code==='23514');}
+  try{await assert.rejects(grantReview(id,user,cid),e=>e.code===(id===bogus?'23503':'23514'));}
   finally{await db.exec('ROLLBACK');}
  }
  assert.equal((await one('select count(*)::int n from public.s32_preserved_messages')).n,0);
