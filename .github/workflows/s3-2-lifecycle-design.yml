@@ -18,6 +18,8 @@ on:
       - 'tests/s3-2-preserved-moments-calendar-db.test.js'
       - 'tests/s3-2-media-inventory.test.js'
       - 'tests/s3-2-media-copy-rehearsal.test.js'
+      - 'tests/s3-3-storage-jwt-readonly.test.cjs'
+      - 'scripts/s3-3-storage-jwt-readonly.cjs'
       - 's3-2-media-copy-rehearsal.cjs'
       - 's3-2-media-inventory.cjs'
       - 'supabase/functions/_shared/s3-2-export-core.mjs'
@@ -49,10 +51,12 @@ jobs:
           node --check tests/s3-2-fk-coverage.test.mjs
           node --check tests/s3-2-media-inventory.test.js
           node --check tests/s3-2-media-copy-rehearsal.test.js
+          node --check scripts/s3-3-storage-jwt-readonly.cjs
+          node --check tests/s3-3-storage-jwt-readonly.test.cjs
           node --check s3-2-media-copy-rehearsal.cjs
           node --check s3-2-media-inventory.cjs
           node --check supabase/functions/_shared/s3-2-export-paging.mjs
-          node --test tests/s3-2-lifecycle-design-gate.test.js tests/s3-2-preservation-a-preview.test.js tests/s3-2-export-core.test.mjs tests/s3-2-export-paging.test.mjs tests/s3-2-fk-coverage.test.mjs tests/s3-2-media-inventory.test.js tests/s3-2-media-copy-rehearsal.test.js tests/mc3-onboarding.test.js
+          node --test tests/s3-2-lifecycle-design-gate.test.js tests/s3-2-preservation-a-preview.test.js tests/s3-2-export-core.test.mjs tests/s3-2-export-paging.test.mjs tests/s3-2-fk-coverage.test.mjs tests/s3-2-media-inventory.test.js tests/s3-2-media-copy-rehearsal.test.js tests/s3-3-storage-jwt-readonly.test.cjs tests/mc3-onboarding.test.js
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
