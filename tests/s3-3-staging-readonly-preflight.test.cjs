@@ -22,5 +22,10 @@ test('STAGING SQL read-only preflight has one aggregate SELECT and never authori
  assert.match(source,/o\.owner_id/);
  assert.match(source,/p\.couple_id::text = split_part/);
  assert.match(source,/storage\.buckets WHERE id = 'us-media' AND public = false/);
+ assert.match(source,/unexpected_policies/);
+ assert.match(source,/unexpected_roles_or_modes/);
+ assert.match(source,/all_storage_object_policies/);
+ assert.match(source,/extra_storage_object_policies/);
+ assert.match(source,/policy_metadata_matches_expected_shape/);
  assert.doesNotMatch(source,/eyJ[A-Za-z0-9_-]{32,}|sb_secret_[A-Za-z0-9_-]{12,}/);
 });
