@@ -81,3 +81,21 @@ This **uninstalled** SQL DDL proposal lives at docs/missions/us-store-s3-2-prese
 
 **Not complete:** no automatic archive, real consent review, working account deletion, unpairing, physical-media lifecycle, restored client UI, original-media download, complete exports, or 78-FK remediation. The existing auth.users cascade remains DANGEROUS if invoked outside a reviewed state machine. Do NOT deploy any of these drafts or present the preservation vault as an account deletion feature.
 
+
+
+## 7. Phase-2 reviewed Memories, shared Calendar and private media inventory (2026-10-12)
+
+**Drafts only; no live deployment.**
+
+- `docs/missions/us-store-s3-2-preserved-moments-calendar-draft.sql` proposes separate **metadata-only** review vaults `s32_preserved_moments` and `s32_preserved_calendar`, plus a PRIVATE per-item review ledger `private.s32_content_preservation_approvals`. Approval rows are test fixtures only: no real consent or trusted legal reviewer has been implemented.
+- Archive inserts fail unless approval binds **type + exact original row + couple + current retaining member + review timestamp + expiry**. The trusted trigger reads and locks the real source row, refuses self/foreign-content capture, overrides spoofed fields with canonical metadata, and refuses later edits.
+- The calendar vault accepts **shared** entries only. It rejects personal appointments and excludes `location` outright, pending separate precise-location privacy review.
+- The Moment vault carries **caption and date**, but **no Storage path, thumbnail or original photo bytes**. Its status remains `BLOCKED_PENDING_STORAGE_TRANSFER`, including when database metadata preservation tests pass.
+- Both tables use forced RLS: only an authenticated, still-linked retaining member of the same couple with non-expired retention can read. Ordinary authenticated/anonymous clients cannot create or alter approvals or archive rows. Expiry makes rows unreadable; **physical removal of expired bytes is NOT implemented**.
+- `s3-2-media-inventory.cjs` is a PURE, local/no-IO private path auditor for each Moment, its thumbnail and any carousel photos. It checks couple/uploader-owned nested Storage paths including actual `moment-albums/<moment-id>/<file>.webp` format, duplicated objects, traversal/encoded filenames, cross-couple assets and bounded batches. Every result is **non-executable** and contains counts/categories only, never paths, signed URLs or user identifiers.
+- A departing member's source Moment deletion currently **cascades the album photos**, including uploads owned by the surviving member. Even if a partner-owned photo's bytes still exist, its database reference could disappear; the archive metadata alone does not solve it. Any real erasure MUST first establish individual rights, validated Storage object transfers/references and checksum verification, retention cleanup, signed-link/cache retirement, and a partner-safe FK migration.
+
+**Evidence:** [GitHub Actions #38248175335](https://github.com/LetHerCome/US/actions/runs/38248175335) **PASS**: 25 disposable full-schema database tests plus 44 Node/policy tests = **69/69**, including cross-couple RLS, personal calendar denial, immutable canonical archives, actor deletion rehearsals with mandatory ROLLBACK, path traversal rejection, malformed inputs, and Deno Edge type-check.
+
+**Still blocked:** complete real exporter including bytes, approval issuer/legal process, partner's rights to retain sensitive material, real Storage GET/PUT and file checksums, photo reference migration, time-bounded cleanup jobs, 78 foreign keys, native/PWA cache/push revoke, separation and account-erasure state machine. Neither migration draft is in `supabase/migrations`; nothing was deployed to US-STAGING or production, no actual user was deleted, and the full deletion button remains disabled.
+
