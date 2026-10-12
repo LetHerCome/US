@@ -10,7 +10,9 @@ on:
       - 'tests/s3-2-lifecycle-design-gate.test.js'
       - 'tests/s3-2-preservation-a-preview.test.js'
       - 'tests/s3-2-export-core.test.mjs'
+      - 'tests/s3-2-export-paging.test.mjs'
       - 'supabase/functions/_shared/s3-2-export-core.mjs'
+      - 'supabase/functions/_shared/s3-2-export-paging.mjs'
       - 'supabase/functions/export-my-data/index.ts'
       - 's3-2-preservation-a-preview.cjs'
       - '.github/workflows/s3-2-lifecycle-design.yml'
@@ -34,7 +36,9 @@ jobs:
           node --check s3-2-preservation-a-preview.cjs
           node --check supabase/functions/_shared/s3-2-export-core.mjs
           node --check tests/s3-2-export-core.test.mjs
-          node --test tests/s3-2-lifecycle-design-gate.test.js tests/s3-2-preservation-a-preview.test.js tests/s3-2-export-core.test.mjs tests/mc3-onboarding.test.js
+          node --check tests/s3-2-export-paging.test.mjs
+          node --check supabase/functions/_shared/s3-2-export-paging.mjs
+          node --test tests/s3-2-lifecycle-design-gate.test.js tests/s3-2-preservation-a-preview.test.js tests/s3-2-export-core.test.mjs tests/s3-2-export-paging.test.mjs tests/mc3-onboarding.test.js
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
