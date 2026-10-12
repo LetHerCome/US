@@ -14,6 +14,7 @@ on:
       - 'tests/s3-2-fk-coverage.test.mjs'
       - 'tests/s3-2-account-exit-real-schema.test.js'
       - 'tests/s3-2-exit-impact-db.test.js'
+      - 'tests/s3-2-preserved-message-vault-db.test.js'
       - 'supabase/functions/_shared/s3-2-export-core.mjs'
       - 'supabase/functions/_shared/s3-2-export-paging.mjs'
       - 'supabase/functions/export-my-data/index.ts'
@@ -80,4 +81,5 @@ jobs:
       - name: Rehearse on disposable local database only
         run: |
           node --check tests/s3-2-account-exit-real-schema.test.js
-          node --test tests/s3-2-account-exit-real-schema.test.js tests/s3-2-exit-impact-db.test.js
+          node --check tests/s3-2-preserved-message-vault-db.test.js
+          node --test tests/s3-2-account-exit-real-schema.test.js tests/s3-2-exit-impact-db.test.js tests/s3-2-preserved-message-vault-db.test.js
