@@ -55,7 +55,7 @@ test('reviewed survivor photo preserves exact source locator PRIVATE, never mark
  assert.equal(row.bucket_id,'us-media');
  assert.equal(row.verification_state,'BLOCKED_PENDING_REAL_STORAGE_AUTH_AND_BYTES');
  assert.notEqual(row.storage_path,'attacker/path.webp');
- assert.deepEqual((await q("select column_name from information_schema.columns where table_schema='public' and table_name='s32_preserved_partner_photos' and column_name='storage_path')).rows,[]);
+ assert.deepEqual((await q("select column_name from information_schema.columns where table_schema='public' and table_name='s32_preserved_partner_photos' and column_name='storage_path'")).rows,[]);
  assert.equal((await one("select has_table_privilege('authenticated','private.s32_partner_photo_storage_refs','SELECT') ok")).ok,false);
  assert.equal((await one("select has_table_privilege('anon','private.s32_partner_photo_storage_refs','SELECT') ok")).ok,false);
  await assert.rejects(h.as(db,h.B,'select storage_path from private.s32_partner_photo_storage_refs'),e=>e.code==='42501');
