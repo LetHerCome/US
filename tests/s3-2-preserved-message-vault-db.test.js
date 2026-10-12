@@ -73,9 +73,13 @@ test('cross-tenant reviewed copy is rejected even for table owner; no mixed-coup
    [f.a,f.cidB,h.U2],[f.b,h.A,h.B],[f.a,h.A,h.U2],
    [bogus,h.A,h.B]
  ]){
-  await assert.rejects(grantReview(id,user,cid),e=>e.code==='23514');
+  await db.exec('BEGIN');
+  try{await assert.rejects(grantReview(id,user,cid),e=>e.code==='23514');}
+  finally{await db.exec('ROLLBACK');}
  }
  assert.equal((await one('select count(*)::int n from public.s32_preserved_messages')).n,0);
+ assert.equal((await one('select count(*)::int n from private.s32_message_preservation_approvals')).n,0,
+   'invalid approvals must not survive a failed atomic archive');
 });
 test('review receipt, finite retention and source timestamp cannot be omitted or falsified',async()=>{
  const f=await seed();
