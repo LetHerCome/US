@@ -7,7 +7,7 @@ const BUCKET='us-media';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SEG=/^[A-Za-z0-9][A-Za-z0-9_.-]{0,179}$/;
 const ACTORS=['A1','A2','B1','B2'];
-const denyStatus=status=>[400,401,403,404].includes(status);
+const denyStatus=status=>[401,403,404].includes(status);
 const PUBLISHABLE=/^sb_publishable_[A-Za-z0-9_-]{12,}$/;
 const QA_FILENAME=/^s33-qa-[A-Za-z0-9][A-Za-z0-9_.-]{0,100}\.(?:webp|png|jpg)$/;
 function stop(reason){throw Error('S33_BLOCKED_'+reason);}
@@ -53,11 +53,26 @@ function makePlan(input){
   checks.push({viewer:'ANON',object,allow:false,type:'anonymous'});
   checks.push({viewer:'PUBLIC',object,allow:false,type:'public'});
  }
- return {apikey:input.apikey,accounts,checks};
+ return {confirm:input.confirm,apikey:input.apikey,accounts,checks};
 }
 async function runPlan(plan,{fetchImpl=globalThis.fetch,timeoutMs=7000}={}){
  if(typeof fetchImpl!=='function')stop('FETCH_UNAVAILABLE');
- if(!plan||!Array.isArray(plan.checks)||plan.checks.length!==24)stop('INVALID_PLAN');
+ // Derive and verify the exact 24-case matrix before sending any request.
+ // Otherwise a caller could supply 24 fake denials and claim a test PASS.
+ let canonical;
+ try {
+  if(!plan||!Array.isArray(plan.checks)||plan.checks.length!==24
+     ||plan.confirm!=='US_S33_READ_ONLY_STAGE')stop('INVALID_PLAN');
+  canonical=makePlan({confirm:plan.confirm,apikey:plan.apikey,accounts:plan.accounts});
+  for(const id of ACTORS){
+   const original=plan.accounts[id],expected=canonical.accounts[id];
+   if(!original||original.id!==expected.id||original.sub!==expected.sub
+      ||original.couple!==expected.couple||original.jwt!==expected.jwt
+      ||original.path!==expected.path)stop('INVALID_PLAN');
+  }
+  if(JSON.stringify(plan.checks)!==JSON.stringify(canonical.checks))stop('INVALID_PLAN');
+ }catch{stop('INVALID_PLAN');}
+ plan=canonical;
  let allowCount=0,denyCount=0;
  // Verify every supplied user session against the *actual* US-STAGING Auth server.
  // Local JWT decoding is not signature verification and must never certify identity.
@@ -91,6 +106,7 @@ async function runPlan(plan,{fetchImpl=globalThis.fetch,timeoutMs=7000}={}){
    denyCount++;
   }
  }
+ if(authCount!==4||allowCount!==8||denyCount!==16)stop('INVALID_MATRIX_COVERAGE');
  return Object.freeze({
   status:'S33_READONLY_JWT_MATRIX_PASS',stage:'US-STAGING',
   checked:allowCount+denyCount,authVerified:authCount,expectedAllow:allowCount,expectedDeny:denyCount,
