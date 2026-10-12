@@ -48,3 +48,20 @@ A separate read-only STAGING inspection captured **all 78 foreign keys** directl
 - No indefinite hold preventing a lawful personal erasure request.
 - In-app and external HTTPS deletion request flow for Google Play.
 - Reconciliation with S3.1 PR #189, S3 native push PR #187 and independent privacy review.
+
+## 5. Full-schema disposable PostgreSQL rehearsal and Phase-1 account-exit preview — 2026-10-12
+
+**Only local isolated test databases** were used, recreated from the repository's actual baseline/migrations with `tests/helpers/mc2-db.js`. No STAGING SQL DDL/DML, no real user delete and no production writes.
+
+**Observed in disposable PostgreSQL:** given two distinct two-member couples and synthetic shared messages, Moments and calendar entries, deleting an Auth user cascaded and removed a message, a Moment and a shared event authored by that person. Deleting the author in a case containing `shared_event_completions.completed_by` instead raised PostgreSQL `23503` (`NO ACTION`). Every destructive trial executed in an explicit transaction with `ROLLBACK`; tests independently proved complete restoration. This is evidence against performing any direct Auth `deleteUser` before the FK/retention policy migration, not evidence of a safe deletion solution.
+
+**New STAGING-only draft:** `docs/missions/us-store-s3-2-stage1-exit-preview-draft.sql` introduces a **read-only impact preview RPC**, not an account-deletion API. It is intentionally **outside** the automatic `supabase/migrations` directory, un-deployed, and refuses reinstallation/overwrite. No user-facing UI is connected.
+
+- `public.s32_preview_account_exit()` computes aggregate **own** sent/received message counts, self-created Moments/photos/calendar events, own Daily answers and push-device counts; no actual content, partner identity, email, token, or path leaves the DB. Response explicitly sets `individual_account_deletion_enabled=false` and `couple_deletion_enabled=false`.
+- No client-supplied user ID or couple ID. Identity is taken from `auth.uid()`; membership is verified against a confirmed Auth user and its profile. All aggregate queries filter the requesting user's ID AND their current couple ID.
+- `SECURITY DEFINER`, empty `search_path`, stable read-only routine, `EXECUTE` revoked from PUBLIC/anon and granted only to authenticated; missing profile or unconfirmed account fails with SQLSTATE 42501.
+- The proposal itself does not create a retention ledger, change existing FKs, delete or export files, or grant support users access. Privacy, subject access, rate limiting, and independent security review remain mandatory before any real deployment.
+
+**CI** https://github.com/LetHerCome/US/actions/runs/38243644809 verified **9/9 independent full-schema integration tests** (4 rollback-only data-loss rehearsals + 5 preview-RPC policy/authorization/tenant tests) and **37/37 contract/Node tests and Deno check**. These results are scoped to reconstructed local PostgreSQL; no real JWT HTTP/RPC or Storage GET/PUT test yet.
+
+**Next real implementation stage:** approved retention/rights classification per content domain (including shared Messages/Moments/calendar), then one narrow FK remediation on isolated synthetic pairs with untouched partner content + physical media lifecycle. Do not expose a working delete button, mark an account deleted, or merge/deploy either RPC or migrations without the explicit security/privacy release gates.
