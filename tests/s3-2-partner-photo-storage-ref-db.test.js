@@ -93,23 +93,26 @@ test('mismatched couple or identity cannot redirect a preserved file to another 
  assert.equal((await one('select count(*)::int n from private.s32_partner_photo_storage_refs')).n,0);
 });
 
-test('invalid or foreign uploader original file path cannot be retained, even with a review receipt',async()=>{
- for(const invalid of [
+test('all invalid or foreign uploader paths fail and rollback without leaving a locator',async()=>{
+ const f=await fixtures();
+ const invalids=[
   [h.A,h.F,'moment-albums','bad.webp'].join('/'),
   ['22222222-2222-4222-8222-222222222222',h.B,'moment-albums','bad.webp'].join('/'),
   [h.A,h.B,'moment-albums','..','secret.webp'].join('/'),
   [h.A,h.B,'moment-albums','bad%2fpath.webp'].join('/'),
-  [h.A,h.B,'moment-albums','','bad.webp'].join('/')
- ]){
-  const f=await fixtures(invalid);
-  await assert.rejects(insertRef(f),e=>e.code==='23514');
+  [h.A,h.B,'moment-albums','','bad.webp'].join('/'),
+  [h.A,h.B,'folder','.','secret.webp'].join('/'),
+  [h.A,h.B,'folder','bad.webp?token=secret'].join('/')
+ ];
+ for(const invalid of invalids){
+  await db.exec('BEGIN');
+  try{
+   await q('update public.moment_photos set storage_path=$1 where id=$2',[invalid,f.sourcePhoto]);
+   await assert.rejects(insertRef(f),e=>e.code==='23514','must reject '+invalid);
+  }finally{await db.exec('ROLLBACK');}
   assert.equal((await one('select count(*)::int n from private.s32_partner_photo_storage_refs')).n,0);
-  break; // each fixture database contains unique staged parent; more cases tested separately below
  }
-});
-test('malformed nested photo path is denied by exact source checks',async()=>{
- const f=await fixtures([h.A,h.B,'folder','..','secret.jpg'].join('/'));
- await assert.rejects(insertRef(f),e=>e.code==='23514');
+ assert.equal((await one('select storage_path from public.moment_photos where id=$1',[f.sourcePhoto])).storage_path,f.canonicalPath);
 });
 test('private locator is immutable and cleaned up when its archived parent is removed',async()=>{
  const f=await fixtures();await insertRef(f);
