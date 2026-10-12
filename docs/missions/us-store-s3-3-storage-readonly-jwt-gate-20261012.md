@@ -23,7 +23,7 @@ In a **controlled environment only**, set `US_S33_READONLY_CONFIRM=US_S33_READ_O
 node scripts/s3-3-storage-jwt-readonly.cjs
 ```
 
-The endpoint is hardcoded to `https://dugmhngrfkuieeletatb.supabase.co` and `us-media`: production endpoint cannot be selected. The script makes **four GET requests** to US-STAGING `/auth/v1/user` first to verify each token signature/session and assert the actual returned user ID matches the declared uploader, then **24 GET-only Storage requests**. It checks the expected JWT issuer and audience locally but does not treat parsing alone as trusted verification. It never signs in, creates users, lists directories, requests signed URLs, uploads, copies, updates or deletes. It does not read private object bodies into memory or print IDs, paths, tokens or object contents. Network interruptions fail.
+The endpoint is hardcoded to `https://dugmhngrfkuieeletatb.supabase.co` and `us-media`: production endpoint cannot be selected. The script makes **four GET requests** to US-STAGING `/auth/v1/user` first to verify each token signature/session and assert the actual returned user ID matches the declared uploader, then **24 GET-only Storage requests**. It checks the expected JWT issuer and audience locally but does not treat parsing alone as trusted verification. Before any network request, it reconstructs the complete canonical **24-case matrix** from the four validated principals and compares the supplied plan byte-for-byte at the case level; missing, forged, reordered or inconsistent checks fail closed. It also verifies exact final counts of 4 Auth/8 allowed/16 denied. It never signs in, creates users, lists directories, requests signed URLs, uploads, copies, updates or deletes. It does not read private object bodies into memory or print IDs, paths, tokens or object contents. Network interruptions fail.
 
 ## Strict request matrix (24 total)
 
@@ -36,7 +36,7 @@ The endpoint is hardcoded to `https://dugmhngrfkuieeletatb.supabase.co` and `us-
 | No JWT / publishable key only | DENY | DENY | DENY | DENY |
 | Public-object URL | DENY | DENY | DENY | DENY |
 
-DENY means HTTP 400, 401, 403 or 404. A 200 on any forbidden request fails the **entire** run. A 404 for an intended allowed file also fails, so denial results cannot all be explained by nonexistent files. Redirects, HTTP 3xx and 5xx also fail. A result must explicitly be `S33_READONLY_JWT_MATRIX_PASS`, with **4 Auth identity checks + 8 allowed + 16 denied**. Merely passing CI unit tests is not a Storage authorization success.
+DENY means HTTP **401, 403 or 404**. HTTP **400 is rejected**, because a malformed request is not proof of access authorization being denied. A 200 on any forbidden request fails the **entire** run. A 404 for an intended allowed file also fails, so denial results cannot all be explained by nonexistent files. Redirects, HTTP 3xx and 5xx also fail. A result must explicitly be `S33_READONLY_JWT_MATRIX_PASS`, with **4 Auth identity checks + 8 allowed + 16 denied**. Merely passing CI unit tests is not a Storage authorization success.
 
 The baseline repository snapshot defines a private bucket and Storage policies `us_media_select_same_couple`, `us_media_insert_own_folder`, `us_media_update_own`, `us_media_delete_own`. Actual live STAGING policy equivalence remains to be independently verified; source SQL is **not** proof of live configuration.
 
