@@ -69,3 +69,14 @@ Verified using a **read-only aggregate SQL** query against US-STAGING `dugmhngrf
 5. Independent privacy/security review, full export, real Android tests and release approval.
 
 **No deployment, SQL mutation, real JWT or real user data use, account deletion, or change to US-STAGING/production was performed by adding this test gate.** If required fixtures or credentials are missing, report **NOT RUN**; do not claim a pass.
+
+
+## Read-only live Storage policy drift preflight (2026-10-12)
+
+A separate independent, no-write SQL check was executed on **US-STAGING** `dugmhngrfkuieeletatb` immediately before the S3.3 live JWT gate. The snapshot `docs/missions/us-store-s3-3-storage-policy-baseline-20261012.json` contains the complete `pg_policies` definitions for `storage.objects` and nothing from users, Auth secrets, filenames, objects or tokens. `scripts/s3-3-storage-policy-audit.cjs` verifies **every policy**, not just the four required names, against pinned full SQL expressions. This is important because a fifth permissive RLS policy can broaden access through PostgreSQL's permissive-policy **OR** behavior.
+
+**Observed in read-only STAGING:** private `us-media` bucket; **4 Storage policies exactly**, all with `{authenticated}` role, no other policies, no role/mode drift. The SELECT policy scopes to the current couple, INSERT requires current couple and uploader folder, UPDATE additionally checks object owner and both folder conditions, and DELETE checks object owner and current couple. The entire predicate SQL is pinned in the security gate, so injecting `OR true` into an existing policy fails the CI snapshot regression tests.
+
+The updated `docs/missions/us-store-s3-3-staging-readonly-preflight-20261012.sql` was executed on STAGING and returned **0 Storage objects / 0 QA fixture candidates / 0 QA uploaders / 0 QA couples**, **3 verified complete couples / 6 Auth accounts**, `required_policy_names_present=4`, `all_storage_object_policies=4`, `extra_storage_object_policies=0`, `storage_policy_role_mode_drift=0`, `policy_metadata_matches_expected_shape=true`. This is an SQL policy assessment only. **The four-user real signed JWT + 24 Storage GET matrix remains NOT RUN.** Existing logins have not been certified as synthetic QA accounts, and no object creation was authorized.
+
+Before actually running the optional seeding script, an authorized operator MUST repeat the full policy-query inventory and verify it still matches the pinned baseline; the source snapshot is not guaranteed fresh after schema changes. CI tests are not live proof. Do not create or use real user files, request bearer tokens in chat, or claim Storage tenant isolation complete until a real authorized S3.3 JWT matrix returns `S33_READONLY_JWT_MATRIX_PASS`.
