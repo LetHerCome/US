@@ -35,6 +35,12 @@ jobs:
           node --check supabase/functions/_shared/s3-2-export-core.mjs
           node --check tests/s3-2-export-core.test.mjs
           node --test tests/s3-2-lifecycle-design-gate.test.js tests/s3-2-preservation-a-preview.test.js tests/s3-2-export-core.test.mjs tests/mc3-onboarding.test.js
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Check Supabase Edge draft in Deno
+        run: |
+          deno check supabase/functions/export-my-data/index.ts
       - name: Ensure no unapproved deletion or deployment scripts
         run: |
           node - <<'NODE'
