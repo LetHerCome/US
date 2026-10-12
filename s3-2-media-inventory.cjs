@@ -12,7 +12,9 @@ function safePath(path,coupleId,ownerId){
  if(parts.length<3||parts.length>10||parts[0]!==coupleId||parts[1]!==ownerId)return false;
  return parts.slice(2).every(part=>part!=='.'&&part!=='..'&&segment.test(part));
 }
-function planPrivateMomentMedia({actorId,partnerId,coupleId,moment,photos}={}){
+function planPrivateMomentMedia(input={}){
+ if(!input||typeof input!=='object'||Array.isArray(input))return failure('BAD_OR_UNAUTHORIZED_INPUT');
+ const {actorId,partnerId,coupleId,moment,photos}=input;
  if(![actorId,partnerId,coupleId].every(valid)||actorId===partnerId
  || !moment||typeof moment!=='object'||moment.coupleId!==coupleId
  || !valid(moment.id)||!valid(moment.createdBy)
