@@ -135,7 +135,7 @@ test('authenticated reads only own reviewed nonexpired archive; no insert/update
 test('archive has no FK to departing user/photo/Moment and draft is never auto-migrated',async()=>{
  await seed();
  const constraints=(await q("select confrelid::regclass::text target from pg_constraint where conrelid='public.s32_preserved_partner_photos'::regclass and contype='f'")).rows.map(x=>x.target).sort();
- assert.deepEqual(constraints,['public.couples','public.profiles']);
+ assert.deepEqual(constraints,['couples','profiles']);
  const security=await one("select relrowsecurity,relforcerowsecurity from pg_class where oid='public.s32_preserved_partner_photos'::regclass");
  assert.deepEqual(security,{relrowsecurity:true,relforcerowsecurity:true});
  assert.equal(fs.readdirSync(h.DIR).some(n=>n.includes('partner_photo_reference')),false);
