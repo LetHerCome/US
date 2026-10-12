@@ -63,6 +63,16 @@ jobs:
           if(contract.automatedDeletionAllowed!==false || contract.destructiveActionsEnabled!==false || contract.ownerChoice!=='A' || contract.decisions.retention!=='REQUIRES_PRIVACY_REVIEW') process.exit(1);
           const files=['supabase/functions/account-delete/index.ts','supabase/functions/couple-unpair/index.ts'];
           if(files.some(file=>fs.existsSync(file))) process.exit(1);
+          const archive=fs.readFileSync('docs/missions/us-store-s3-2-preserved-moments-calendar-draft.sql','utf8');
+          const withoutComments=archive.replace(/--[^\n]*/g,' ');
+          if(!archive.includes('BLOCKED_PENDING_STORAGE_TRANSFER')
+             || !archive.includes('FORCE ROW LEVEL SECURITY')
+             || /\bDELETE\s+FROM\s+auth\.users\b/i.test(withoutComments)
+             || /\bALTER\s+TABLE\s+public\.(?:moments|moment_photos|calendar_entries)\b/i.test(withoutComments))process.exit(1);
+          const media=fs.readFileSync('s3-2-media-inventory.cjs','utf8');
+          if(!media.includes('executable:false')
+             || /\b(?:createSignedUrl|download|upload)\s*\(/.test(media)
+             || /\.remove\s*\(/.test(media))process.exit(1);
           const fk=JSON.parse(fs.readFileSync('docs/missions/us-store-s3-2-fk-coverage-20261012.json','utf8'));
           if(fk.destructiveChangesAuthorized!==false || fk.allConstraints.length!==78 || fk.allConstraints.some(x=>x.approvedResolution!==null||x.implemented!==false))process.exit(1);
           const src=fs.readFileSync('supabase/functions/export-my-data/index.ts','utf8');
