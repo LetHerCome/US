@@ -37,6 +37,20 @@ function isCollision(error){
  const message=String(error?.message||'');
  return (status==='400'||status==='409') && /already exists|duplicate|resource exists/i.test(message);
 }
+async function verifyFixtureReadback(bucket,path,isReuse){
+ // This compares actual Storage-returned bytes; upload success alone is not a hash proof.
+ const prefix=isReuse?'QA_EXISTING_OBJECT':'QA_UPLOADED_OBJECT';
+ const existing=await bucket.download(path);
+ if(existing?.error||!existing?.data||typeof existing.data.arrayBuffer!=='function')
+   block(prefix+'_UNREADABLE');
+ // Reject unexpectedly large objects before allocating another buffer when Blob.size exists.
+ if(typeof existing.data.size==='number'&&existing.data.size>256)
+   block(prefix+'_NOT_IDENTICAL');
+ let bytes;
+ try{bytes=Buffer.from(await existing.data.arrayBuffer());}
+ catch{block(prefix+'_UNREADABLE');}
+ if(bytes.length>256||!equalBytes(bytes))block(prefix+'_NOT_IDENTICAL');
+}
 async function prepareAndVerify(config,{createClientImpl,runPlanImpl=runPlan}={}){
  if(!config||typeof createClientImpl!=='function'||typeof runPlanImpl!=='function')block('RUNNER_MISSING');
  // Fresh local validation even for imported callers; only narrowly shaped credentials.
@@ -74,22 +88,26 @@ async function prepareAndVerify(config,{createClientImpl,runPlanImpl=runPlan}={}
   accounts[actor]={jwt,path:file.slice(BUCKET.length+1)};
  }
  const plan=makePlan({confirm:'US_S33_READ_ONLY_STAGE',apikey:config.apikey,accounts});
- let created=0,reused=0;
+ let created=0,reused=0,remoteFixtureBytesVerified=0;
  for(const actor of ACTORS){
   const bucket=clients[actor].storage.from(BUCKET);
   const path=plan.accounts[actor].path;
   const {error}=await bucket.upload(path,Buffer.from(PIXEL),
    {contentType:'image/png',upsert:false,cacheControl:'0'});
-  if(!error){created++;continue;}
+  if(!error){
+   // A successful PUT is not proof that the object can be read back intact.
+   await verifyFixtureReadback(bucket,path,false);
+   remoteFixtureBytesVerified++;
+   created++;
+   continue;
+  }
   // Never use upsert. Only an exact synthetic byte-for-byte collision may be reused.
   if(!isCollision(error))block('QA_UPLOAD_DENIED_OR_FAILED');
-  const existing=await bucket.download(path);
-  if(existing?.error||!existing?.data||typeof existing.data.arrayBuffer!=='function')
-    block('QA_EXISTING_OBJECT_UNREADABLE');
-  const bytes=Buffer.from(await existing.data.arrayBuffer());
-  if(bytes.length>256||!equalBytes(bytes))block('QA_EXISTING_OBJECT_NOT_IDENTICAL');
+  await verifyFixtureReadback(bucket,path,true);
+  remoteFixtureBytesVerified++;
   reused++;
  }
+ if(remoteFixtureBytesVerified!==4)block('REMOTE_SHA256_READBACK_INCOMPLETE');
  // This uses the original independent 4 Auth / 24 GET-only matrix, not mocked in production.
  const verified=await runPlanImpl(plan);
  if(verified?.status!=='S33_READONLY_JWT_MATRIX_PASS'
@@ -98,7 +116,7 @@ async function prepareAndVerify(config,{createClientImpl,runPlanImpl=runPlan}={}
    block('LIVE_GET_MATRIX_NOT_VERIFIED');
  return Object.freeze({
   status:'S33_STAGE_FIXTURES_AND_READONLY_MATRIX_PASS',
-  stage:'US-STAGING',created,reused,authVerified:4,checked:24,
+  stage:'US-STAGING',created,reused,remoteFixtureBytesVerified,authVerified:4,checked:24,
   expectedAllow:8,expectedDeny:16,filesDeleted:0,overwrites:0,
   accountDeletionEnabled:false,productionChanged:false,
   storageOwnerSqlAuditStillRequired:true
