@@ -19,6 +19,7 @@ on:
       - 'tests/s3-2-preserved-moments-calendar-db.test.js'
       - 'tests/s3-2-partner-photo-reference-db.test.js'
       - 'tests/s3-2-partner-photo-storage-ref-db.test.js'
+      - 'tests/s3-2-integrated-account-exit-db.test.js'
       - 'tests/s3-2-media-inventory.test.js'
       - 'tests/s3-2-media-copy-rehearsal.test.js'
       - 'tests/s3-3-storage-jwt-readonly.test.cjs'
@@ -134,5 +135,6 @@ jobs:
           node --check tests/s3-2-preserved-message-vault-db.test.js
           node --check tests/s3-2-preserved-moments-calendar-db.test.js
           node --check tests/s3-2-partner-photo-storage-ref-db.test.js
+          node --check tests/s3-2-integrated-account-exit-db.test.js
           node --check tests/s3-2-partner-photo-reference-db.test.js
-          node --test tests/s3-2-account-exit-real-schema.test.js tests/s3-2-exit-impact-db.test.js tests/s3-2-preserved-message-vault-db.test.js tests/s3-2-preserved-moments-calendar-db.test.js tests/s3-2-partner-photo-reference-db.test.js tests/s3-2-partner-photo-storage-ref-db.test.js
+          node --test tests/s3-2-account-exit-real-schema.test.js tests/s3-2-exit-impact-db.test.js tests/s3-2-preserved-message-vault-db.test.js tests/s3-2-preserved-moments-calendar-db.test.js tests/s3-2-partner-photo-reference-db.test.js tests/s3-2-partner-photo-storage-ref-db.test.js tests/s3-2-integrated-account-exit-db.test.js
