@@ -8,6 +8,8 @@ const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]
 const SEG=/^[A-Za-z0-9][A-Za-z0-9_.-]{0,179}$/;
 const ACTORS=['A1','A2','B1','B2'];
 const denyStatus=status=>[400,401,403,404].includes(status);
+const PUBLISHABLE=/^sb_publishable_[A-Za-z0-9_-]{12,}$/;
+const QA_FILENAME=/^s33-qa-[A-Za-z0-9][A-Za-z0-9_.-]{0,100}\.(?:webp|png|jpg)$/;
 function stop(reason){throw Error('S33_BLOCKED_'+reason);}
 function parseJwt(token){
  if(typeof token!=='string'||token.length>8192||!/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(token))stop('INVALID_JWT');
@@ -15,6 +17,8 @@ function parseJwt(token){
  try{claims=JSON.parse(Buffer.from(token.split('.')[1],'base64url').toString('utf8'));}
  catch{stop('INVALID_JWT');}
  if(!claims||claims.role!=='authenticated'||!UUID.test(claims.sub||'')
+   ||claims.iss!==STAGING+'/auth/v1'
+   ||!(claims.aud==='authenticated'||(Array.isArray(claims.aud)&&claims.aud.includes('authenticated')))
    ||typeof claims.exp!=='number'||claims.exp<=Math.floor(Date.now()/1000)+120)stop('INVALID_JWT_CLAIMS');
  // Parsed claims are only fixture guards. Supabase itself must verify JWT signatures.
  return claims.sub;
@@ -22,14 +26,15 @@ function parseJwt(token){
 function validatePath(path,userId){
  if(typeof path!=='string'||path.length>640||/[\\?#%&\x00-\x1F\x7F]/.test(path))stop('UNSAFE_FIXTURE_PATH');
  const parts=path.split('/');
- if(parts.length<4||parts.length>10||!UUID.test(parts[0])||parts[1]!==userId
+ if(parts.length!==5||!UUID.test(parts[0])||parts[1]!==userId
+   ||parts[2]!=='moment-albums'||!UUID.test(parts[3])||!QA_FILENAME.test(parts[4])
    ||parts.slice(2).some(s=>s==='.'||s==='..'||!SEG.test(s)))stop('UNSAFE_FIXTURE_PATH');
  return parts[0];
 }
 function makePlan(input){
  if(!input||input.confirm!=='US_S33_READ_ONLY_STAGE'
-   ||typeof input.apikey!=='string'||input.apikey.length<12
-   ||input.apikey.startsWith('sb_secret_'))stop('STAGING_CONFIRMATION_OR_KEY_MISSING');
+   ||typeof input.apikey!=='string'||!PUBLISHABLE.test(input.apikey))
+   stop('STAGING_CONFIRMATION_OR_PUBLISHABLE_KEY_MISSING');
  const accounts={};
  for(const id of ACTORS){
   const conf=input.accounts?.[id];
@@ -54,6 +59,22 @@ async function runPlan(plan,{fetchImpl=globalThis.fetch,timeoutMs=7000}={}){
  if(typeof fetchImpl!=='function')stop('FETCH_UNAVAILABLE');
  if(!plan||!Array.isArray(plan.checks)||plan.checks.length!==24)stop('INVALID_PLAN');
  let allowCount=0,denyCount=0;
+ // Verify every supplied user session against the *actual* US-STAGING Auth server.
+ // Local JWT decoding is not signature verification and must never certify identity.
+ let authCount=0;
+ for(const actor of ACTORS){
+  const {jwt,sub}=plan.accounts[actor];
+  const response=await fetchImpl(STAGING+'/auth/v1/user',{
+   method:'GET',headers:{apikey:plan.apikey,authorization:'Bearer '+jwt,'cache-control':'no-store'},
+   redirect:'manual',signal:AbortSignal.timeout(timeoutMs)
+  });
+  if(response.status!==200){await response.body?.cancel();stop('AUTH_SESSION_NOT_VERIFIED');}
+  let user;
+  try{user=await response.json();}
+  catch{stop('AUTH_SESSION_NOT_VERIFIED');}
+  if(!user||user.id!==sub)stop('AUTH_IDENTITY_MISMATCH');
+  authCount++;
+ }
  for(const check of plan.checks){
   const root=check.type==='public'?'public':'authenticated';
   const url=STAGING+'/storage/v1/object/'+root+'/'+BUCKET+'/'+plan.accounts[check.object].path;
@@ -72,7 +93,7 @@ async function runPlan(plan,{fetchImpl=globalThis.fetch,timeoutMs=7000}={}){
  }
  return Object.freeze({
   status:'S33_READONLY_JWT_MATRIX_PASS',stage:'US-STAGING',
-  checked:allowCount+denyCount,expectedAllow:allowCount,expectedDeny:denyCount,
+  checked:allowCount+denyCount,authVerified:authCount,expectedAllow:allowCount,expectedDeny:denyCount,
   filesWritten:0,filesDeleted:0,bytesDownloadedToDisk:0,
   deletionEnabled:false,referenceMigrationComplete:false
  });
