@@ -17,9 +17,9 @@ export function sortKeyForExportDomain(table){
 
 /**
  * @param {{
- *   spec?: {table:string, owner:string, fields:readonly string[]},
+ *   spec?: {table:string, owner:string, select:string, tenant:boolean, fields:readonly string[]},
  *   fetchPage?: (request:{
- *     spec:{table:string, owner:string, fields:readonly string[]},
+ *     spec:{table:string, owner:string, select:string, tenant:boolean, fields:readonly string[]},
  *     sortKey:string, cursor:string|null, limit:number
  *   })=>Promise<unknown[]>,
  *   maxRows?:number, pageSize?:number
