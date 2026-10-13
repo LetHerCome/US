@@ -10,6 +10,9 @@ const SOURCE = path.join(ROOT, 'dist', 'cloudflare-pages');
 const OUT = path.join(ROOT, 'dist', 's31-staging-preview');
 const PROD = 'iiakdfsxpywdkxravqjh';
 const STAGE = 'dugmhngrfkuieeletatb';
+export const APPROVED_BRANCH = 'mission/us-store-s3-1-public-auth-staging-20261011';
+export const PLACEHOLDER_HTML = '<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex">'
+  + '<title>US staging: no preview</title><p>This branch is not a US-STAGING preview.</p>\n';
 
 export function isolateStagingPreview(app, index, publishableKey) {
   if (!/^sb_publishable_[A-Za-z0-9_-]{20,}$/.test(publishableKey||'')) {
@@ -34,10 +37,15 @@ export function isolateStagingPreview(app, index, publishableKey) {
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   if (process.env.US_S31_STAGING_PREVIEW !== 'true') throw Error('S3.1 staging preview disabled by default');
   // Dedicated Cloudflare Pages project must target this specific STAGING branch.
-  // Fail the build if someone accidentally selects main or a different branch.
-  if (process.env.CF_PAGES === '1'
-    && process.env.CF_PAGES_BRANCH !== 'mission/us-store-s3-1-public-auth-staging-20261011') {
-    throw Error('S3.1 Cloudflare deploy rejected: not the approved staging branch');
+  // The project also builds a preview for EVERY other branch: those get a
+  // static "not a staging preview" page (no app, no Supabase key, no backend
+  // URL) instead of a failed build, so the check stops blocking unrelated PRs.
+  if (process.env.CF_PAGES === '1' && process.env.CF_PAGES_BRANCH !== APPROVED_BRANCH) {
+    await rm(OUT, { recursive: true, force: true });
+    await mkdir(OUT, { recursive: true });
+    await writeFile(path.join(OUT, 'index.html'), PLACEHOLDER_HTML, 'utf8');
+    process.stdout.write('US-STAGING preview skipped: branch is not the approved staging branch\n');
+    process.exit(0);
   }
   const key = process.env.US_STAGING_SUPABASE_PUBLISHABLE_KEY;
   const files = await Promise.all(['app.js','index.html'].map(f=>readFile(path.join(SOURCE,f),'utf8')));

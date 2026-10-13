@@ -165,3 +165,40 @@ test('both target build bundles include every new source asset and staged inputs
   assert.match(read('app.js'), /const SB_URL = 'https:\/\/iiakdfsxpywdkxravqjh\.supabase\.co'/);
   assert.doesNotMatch(read('public-auth.js'), /service.role|secret.key|localStorage|sessionStorage/i);
 });
+
+test('production signup is a single explicit release switch, OFF in committed source',()=>{
+  // Flipping PRODUCTION_SIGNUP_RELEASED is a founder release decision: it must
+  // change this assertion together with docs/store/US_S3_1_PRODUCTION_AUTH_RELEASE.md.
+  assert.equal(S31.PRODUCTION_SIGNUP_RELEASED,false);
+  const prod='https://iiakdfsxpywdkxravqjh.supabase.co',stage='https://dugmhngrfkuieeletatb.supabase.co';
+  assert.equal(S31.publicAuthEnabled(prod),false);
+  assert.equal(S31.publicAuthEnabled(stage),true);
+  assert.equal(S31.publicAuthEnabled(prod,true),true,'released build shows signup on production');
+  for(const host of ['https://iiakdfsxpywdkxravqjh.supabase.co.evil.tld','http://iiakdfsxpywdkxravqjh.supabase.co','https://evil.tld',''])
+    assert.equal(S31.publicAuthEnabled(host,true),false);
+  assert.equal(S31.publicAuthEnabled(prod,'true'),false,'only a real boolean releases');
+  const doc=read('docs/store/US_S3_1_PRODUCTION_AUTH_RELEASE.md');
+  assert.match(doc,/PRODUCTION_SIGNUP_RELEASED/);
+  assert.match(doc,/enable_signup/);
+});
+
+test('password policy is identical in the controller, the forms and the release checklist',()=>{
+  assert.equal(S31.PASSWORD_MIN,10);
+  assert.equal(S31.PASSWORD_MAX,72);
+  assert.equal(S31.passwordValid('a'.repeat(9)),false);
+  assert.equal(S31.passwordValid(' '+'a'.repeat(10)),false);
+  const index=read('index.html');
+  for(const id of ['usSignupPassword','usSignupConfirm','usRecoveryPassword','usRecoveryConfirm']) {
+    const tag=index.match(new RegExp('<input[^>]*id="'+id+'"[^>]*>'))?.[0]||'';
+    assert.match(tag,/minlength="10"/,id);
+    assert.match(tag,/maxlength="72"/,id);
+  }
+  assert.match(read('docs/store/US_S3_1_PRODUCTION_AUTH_RELEASE.md'),/Minimum password length[^\n]*10/i);
+});
+
+test('us-staging-s31 Cloudflare builds of other branches publish only a static placeholder',async()=>{
+  const {APPROVED_BRANCH,PLACEHOLDER_HTML}=await import('../scripts/build-s31-staging-preview.mjs');
+  assert.equal(APPROVED_BRANCH,'mission/us-store-s3-1-public-auth-staging-20261011');
+  assert.doesNotMatch(PLACEHOLDER_HTML,/supabase|sb_publishable|<script/i);
+  assert.match(read('scripts/build-s31-staging-preview.mjs'),/CF_PAGES_BRANCH !== APPROVED_BRANCH/);
+});

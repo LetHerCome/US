@@ -1,5 +1,8 @@
 // US Store S3.1 — staged public account journey, no alternate identity authority.
-// Production UI remains login-only until an explicitly approved release.
+// Production UI remains login-only until an explicitly approved release:
+// PRODUCTION_SIGNUP_RELEASED below is the only switch, and the release
+// checklist (docs/store/US_S3_1_PRODUCTION_AUTH_RELEASE.md) must be complete
+// before it is flipped. Supabase `enable_signup` stays the server kill switch.
 // This module never stores email, passwords or recovery tokens in web storage.
 (function (root, factory) {
   const value = factory();
@@ -8,15 +11,27 @@
 })(typeof window !== 'undefined' ? window : null, function () {
   'use strict';
   const STAGING_ORIGIN = 'https://dugmhngrfkuieeletatb.supabase.co';
+  const PRODUCTION_ORIGIN = 'https://iiakdfsxpywdkxravqjh.supabase.co';
+  // Founder-approved release decision only. Flipping it also requires the
+  // matching assertion in tests/s3-1-public-auth.test.js to change.
+  const PRODUCTION_SIGNUP_RELEASED = false;
+  const PASSWORD_MIN = 10, PASSWORD_MAX = 72;
   const emailValid = value => typeof value === 'string'
     && value.length <= 254 && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value);
   const cleanEmail = value => typeof value === 'string' ? value.trim().toLowerCase() : '';
   const passwordValid = value => typeof value === 'string'
-    && value.length >= 10 && value.length <= 72 && !/^\s|\s$/.test(value);
+    && value.length >= PASSWORD_MIN && value.length <= PASSWORD_MAX && !/^\s|\s$/.test(value);
   const GENERIC_MAIL = 'Se l’indirizzo può ricevere il messaggio, troverai le istruzioni nella tua email.';
   const TRY_AGAIN = 'Operazione non disponibile adesso. Attendi qualche minuto e riprova.';
   function isStagingEndpoint(url) {
     try { return new URL(url).origin === STAGING_ORIGIN; } catch (_) { return false; }
+  }
+  function isProductionEndpoint(url) {
+    try { return new URL(url).origin === PRODUCTION_ORIGIN; } catch (_) { return false; }
+  }
+  // Signup/recovery UI: always on US-STAGING; on production only once released.
+  function publicAuthEnabled(url, released = PRODUCTION_SIGNUP_RELEASED) {
+    return isStagingEndpoint(url) || (released === true && isProductionEndpoint(url));
   }
   function createController({ auth, onChange = () => {} }) {
     if (!auth || !['signUp','resend','resetPasswordForEmail','updateUser','signOut']
@@ -58,7 +73,7 @@
             // A signup that immediately produces a session means email confirmation
             // is OFF server-side. Never treat that as a verified S3.1 signup.
             await auth.signOut({ scope: 'local' });
-            if (alive(ticket)) publish('Verifica email non configurata su STAGING. Registrazione sospesa.', 'error');
+            if (alive(ticket)) publish('Verifica email non attiva. Registrazione sospesa.', 'error');
             return { ok: false, kind: 'confirmation_required' };
           }
           if (error && !/user[_-]?already[_-]?(?:exists|registered)|email[_-]?exists|already[_-]?registered/i.test(String(error.code || ''))) {
@@ -148,7 +163,7 @@
       onRecoverySession, completeRecovery, reset });
   }
   function mount({ auth, endpoint, openStep, document: doc = globalThis.document }) {
-    if (!isStagingEndpoint(endpoint) || !doc || typeof openStep !== 'function') return null;
+    if (!publicAuthEnabled(endpoint) || !doc || typeof openStep !== 'function') return null;
     const node = id => doc.getElementById(id);
     const actions = node('usPublicAuthActions');
     if (!actions || !node('usSignup') || !node('usRecovery')) return null;
@@ -214,5 +229,7 @@
       go
     });
   }
-  return Object.freeze({ isStagingEndpoint, cleanEmail, emailValid, passwordValid, createController, mount });
+  return Object.freeze({ isStagingEndpoint, isProductionEndpoint, publicAuthEnabled,
+    PRODUCTION_SIGNUP_RELEASED, PASSWORD_MIN, PASSWORD_MAX,
+    cleanEmail, emailValid, passwordValid, createController, mount });
 });
