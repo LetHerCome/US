@@ -1,4 +1,6 @@
-# QA-only signed APK for isolated UI integration. Never runs on main.
+# S1 UI QA only. S3 security must use an isolated staging-app/Firebase build.
+# Do not use production-bound QA APKs to test old A -> B notifications.
+# Does NOT send FCM, change Edge, run SQL or install on any phone.
 name: US UI signed QA APK
 
 on:

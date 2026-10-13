@@ -31,6 +31,7 @@
     installation: 'us:notifications:v1:installation',
     owner: 'us:notifications:v1:owner',
     token: 'us:notifications:v1:token',
+    transportPending: 'us:notifications:v1:transport-pending',
     retired: 'us:notifications:v1:retired',
     enabled: (userId) => `us:notifications:v1:enabled:${userId}`,
     synced: (userId) => `us:notifications:v1:synced:${userId}`
@@ -113,8 +114,15 @@
       return Array.isArray(list) ? list.filter((entry) => typeof entry === 'string' ? UUID.test(entry) : entry && UUID.test(entry.id)) : [];
     } catch (_) { return []; }
   }
+  const RETIRED_MAX = 16;
   function setRetired(list) {
-    const unique = list.filter((entry, index) => list.findIndex((other) => JSON.stringify(other) === JSON.stringify(entry)) === index);
+    // Newest first; the oldest entries are dropped beyond the cap. Only an
+    // entry whose FCM token was confirmed deleted can be dropped safely, so
+    // unconfirmed ones are always kept.
+    const all = list.filter((entry, index) => list.findIndex((other) => JSON.stringify(other) === JSON.stringify(entry)) === index);
+    const open = all.filter((entry) => typeof entry === 'string' || entry.transportStopped !== true);
+    const stopped = all.filter((entry) => typeof entry !== 'string' && entry.transportStopped === true);
+    const unique = [...open, ...stopped.slice(0, Math.max(0, RETIRED_MAX - open.length))];
     if (unique.length) write(STORE.retired, JSON.stringify(unique));
     else remove(STORE.retired);
   }
@@ -131,6 +139,37 @@
   let cleanup = Promise.resolve();
   let authGeneration = 0;
   let registrationInFlight = Promise.resolve();
+  // Serialize native owner retirement. A delayed A registration cannot
+  // reactivate A after B logs in and the native epoch rotates.
+  let nativeOwnerClear = Promise.resolve();
+  // A failed clear leaves the previous owner bound in the native gate: the
+  // next sign-in and every resume retry it before anything else.
+  let nativeClearFailed = false;
+  function retireNativeOwner() {
+    if (!support?.clearPushOwner) return Promise.resolve();
+    const work = nativeOwnerClear.catch(() => {}).then(async () => {
+      let result = null;
+      try { result = await withTimeout(support.clearPushOwner(), CALL_TIMEOUT_MS); }
+      catch (_) { result = null; }
+      nativeClearFailed = result?.cleared !== true;
+      if (nativeClearFailed) throw new Error('native_owner_clear_failed');
+    });
+    nativeOwnerClear = work;
+    return work;
+  }
+  async function bindNativeOwner(status, installation, owner) {
+    if (status.platform !== 'android') return;
+    await nativeOwnerClear;
+    assertOwner(owner);
+    if (!UUID.test(status.bindingEpoch || '') || !support?.bindPushOwner) throw new Error('native_owner_gate_unavailable');
+    const result = await withTimeout(support.bindPushOwner({
+      ownerId: owner.userId,
+      installationId: installation,
+      expectedEpoch: status.bindingEpoch
+    }), CALL_TIMEOUT_MS);
+    assertOwner(owner);
+    if (result?.bound !== true) throw new Error('native_owner_gate_stale');
+  }
   const assertOwner = (owner) => { if (!session.ready || session !== owner) throw new Error('stale_session'); };
   function retireInstallation() {
     const id = installationId({ create: false });
@@ -152,6 +191,7 @@
         available: true,
         platform: platformName,
         provider: platformName === 'ios' ? 'apns' : 'fcm',
+        bindingEpoch: platformName === 'android' ? raw?.bindingEpoch : null,
         configured: raw?.configured === true,
         environment: platformName === 'ios' ? (raw?.environment === 'development' ? 'development' : 'production') : null,
         notificationsEnabled: raw?.notificationsEnabled !== false,
@@ -178,13 +218,29 @@
   }
 
   async function requestToken() {
+    // If Android deleteToken failed or timed out on a previous logout, do not
+    // race a new getToken() against that unfinished provider shutdown.
+    if (read(STORE.transportPending) === '1') {
+      const status = await nativeStatus();
+      if (!await stopNativeDelivery(status)) throw new Error('previous_transport_cleanup_pending');
+    }
     // Obtaining a token also reactivates provider delivery (notably APNs).
-    // Do not reactivate while a previous account still owns an unresolved row.
-    if (retired().some(entry => typeof entry === 'string' || entry.userId !== session.userId)) throw new Error('previous_account_retirement_pending');
-    const waiting = new Promise((resolve, reject) => tokenWaiters.push({ resolve, reject }));
+    // Do not reactivate while a previous account still owns an unresolved row,
+    // unless Android confirmed that row's FCM token was deleted afterwards:
+    // that row can no longer deliver (FCM answers UNREGISTERED and the server
+    // prunes it), and a new token is a different UNIQUE key.
+    if (retired().some(entry => typeof entry === 'string' || (entry.userId !== session.userId && entry.transportStopped !== true))) throw new Error('previous_account_retirement_pending');
+    const waiter = {};
+    const waiting = new Promise((resolve, reject) => { waiter.resolve = resolve; waiter.reject = reject; });
     waiting.catch(() => {}); // logout can reject while the plugin call is pending
-    await push.register();
-    return withTimeout(waiting, REGISTRATION_TIMEOUT_MS);
+    tokenWaiters.push(waiter);
+    try {
+      await push.register();
+      return await withTimeout(waiting, REGISTRATION_TIMEOUT_MS);
+    } finally {
+      // A timed-out request must not swallow a later, unrelated rotation event.
+      tokenWaiters = tokenWaiters.filter((entry) => entry !== waiter);
+    }
   }
 
   async function registerToken(token, status, owner = session) {
@@ -194,7 +250,7 @@
     const normalized = normalizeToken(status.platform, token);
     if (!normalized) throw new Error('token_invalid');
     const installation = installationId();
-    if (retired().some((entry) => typeof entry === 'string' || !entry.token || entry.token === normalized)) throw new Error('retired_token');
+    if (retired().some((entry) => typeof entry === 'string' || (!entry.token && entry.transportStopped !== true) || entry.token === normalized)) throw new Error('retired_token');
     write(STORE.owner, owner.userId);
     write(STORE.token, normalized);
     const pendingRetired = null;
@@ -203,7 +259,10 @@
     // This repairs a token row that may have been pruned remotely while the
     // device still has a valid provider token. Later resumes in the same
     // process stay cheap and use the local signature.
-    if (!pendingRetired && serverConfirmedFor === session.userId && read(STORE.synced(session.userId)) === signature) return true;
+    if (!pendingRetired && serverConfirmedFor === session.userId && read(STORE.synced(session.userId)) === signature) {
+      await bindNativeOwner(status, installation, owner);
+      return true;
+    }
     const request = db.rpc('register_native_push_device', {
       target_installation_id: installation,
       target_platform: status.platform,
@@ -216,6 +275,7 @@
     const { error } = await withTimeout(request, CALL_TIMEOUT_MS);
     if (error) throw error;
     assertOwner(owner);
+    await bindNativeOwner(status, installation, owner);
     if (pendingRetired) setRetired(retired().filter((id) => id !== pendingRetired));
     write(STORE.synced(session.userId), signature);
     serverConfirmedFor = session.userId;
@@ -224,7 +284,12 @@
 
   async function onRegistration(event) {
     lastToken = typeof event?.value === 'string' ? event.value : '';
+    // The answer to our own requestToken(): that caller registers it. Only an
+    // unsolicited event (provider rotation) registers from here, so a resume
+    // or cold start sends one RPC and one owner bind, not two racing ones.
+    const requested = tokenWaiters.length > 0;
     settleToken(null, lastToken);
+    if (requested) return;
     // Token rotation while signed in and enabled on this installation.
     if (!session.ready || !isEnabledFor(session.userId) || busy) return;
     const owner = session;
@@ -288,8 +353,23 @@
     queue(intentFromAction(event));
   }
 
+  /**
+   * Android FCM v2 (data-only, S3): { v:'2', installation }. No type, target
+   * or ref ever reaches FCM, so it can only signal "something new" for THIS
+   * installation. The native service already dropped other installations;
+   * the web layer checks again before reacting.
+   */
+  function isCurrentNotice(data) {
+    if (!data || typeof data !== 'object' || String(data.v ?? '') !== '2') return false;
+    const target = typeof data.installation === 'string' ? data.installation.toLowerCase() : '';
+    const current = installationId({ create: false }).toLowerCase();
+    return Boolean(current) && UUID.test(target) && target === current;
+  }
+
   function onForeground(notification) {
-    const payload = parsePayload(notification?.data);
+    const data = notification?.data;
+    const payload = parsePayload(data)
+      || (isCurrentNotice(data) && isEnabledFor(session.userId) ? Object.freeze({ type: 'notice', target: null, ref: null }) : null);
     if (!payload || !session.ready) return;
     // Nothing is shown on top of the lock screen.
     if (window.UsAppLock?.isLocked?.()) return;
@@ -345,10 +425,29 @@
   }
 
   async function stopNativeDelivery(status) {
-    // Android: never touch FirebaseMessaging without a Firebase configuration.
-    if (status?.available && status.configured) {
-      try { await withTimeout(push.unregister(), CALL_TIMEOUT_MS); } catch (_) {}
+    if (!status?.available || !status.configured) return false;
+    if (status.platform === 'android') {
+      // The official Capacitor unregister() immediately resolves while its
+      // Firebase deleteToken() task is still running. Use our owner-gated
+      // native method instead, which resolves ONLY after Firebase completes.
+      // Missing bridge / provider failures must never silently count as success.
+      write(STORE.transportPending, '1');
+      if (!support?.stopPushTransport) return false;
+      try {
+        const result = await withTimeout(support.stopPushTransport(), 12000);
+        if (result?.stopped !== true) return false;
+        remove(STORE.transportPending);
+        // deleteToken() completed: every token retired before now is dead.
+        const list = retired();
+        if (list.length) setRetired(list.map((entry) => typeof entry === 'string' ? entry : { ...entry, transportStopped: true }));
+        return true;
+      } catch (_) {
+        return false;
+      }
     }
+    // iOS APNs behavior unchanged.
+    try { await withTimeout(push.unregister(), CALL_TIMEOUT_MS); return true; }
+    catch (_) { return false; }
   }
 
   /** Settings "Disattiva su questo dispositivo": only this installation, account untouched. */
@@ -358,13 +457,25 @@
     busy = true;
     try {
       const installation = installationId({ create: false });
-      if (installation) {
-        const { error } = await withTimeout(client().rpc('unregister_native_push_device', { target_installation_id: installation }), CALL_TIMEOUT_MS);
-        if (error) return { ok: false };
-      }
-      await stopNativeDelivery(await nativeStatus());
+      // The owner gate must be retired BEFORE any potentially offline RPC.
+      // Disable locally even if the network fails, so onRegistration/resume
+      // cannot accidentally rebind A while an unregister is unresolved.
       remove(STORE.enabled(session.userId));
       remove(STORE.synced(session.userId));
+      await retireNativeOwner();
+      if (installation) {
+        let revoked = false;
+        try {
+          const { error } = await withTimeout(client().rpc('unregister_native_push_device', { target_installation_id: installation }), CALL_TIMEOUT_MS);
+          revoked = !error;
+        } catch (_) { /* offline: keep the server row quarantined */ }
+        if (!revoked) {
+          retireInstallation(); // persist A's ID/token for owner-only retry
+          await stopNativeDelivery(await nativeStatus());
+          return { ok: false, kind: 'pending' };
+        }
+      }
+      await stopNativeDelivery(await nativeStatus());
       return { ok: true };
     } catch (_) {
       return { ok: false };
@@ -382,6 +493,8 @@
     pending = null;
     if (!push) return;
     const userId = session.userId;
+    // Native OS gate is retired before slow or offline server revoke.
+    try { await retireNativeOwner(); } catch (_) { /* logout still proceeds */ }
     retireInstallation();
     session = { ready: false, userId };
     cleanup = (async () => {
@@ -450,6 +563,8 @@
     resumeInFlight = (async () => {
       if (!push || !session.ready || document.hidden) return;
       const owner = session;
+      if (nativeClearFailed) { try { await retireNativeOwner(); } catch (_) { return; } }
+      if (session !== owner) return;
       await retryRetired();
       if (session !== owner) return;
       if (!isEnabledFor(session.userId)) return;
@@ -465,6 +580,8 @@
     if ((session.userId && session.userId !== profile.id) || (read(STORE.owner) && read(STORE.owner) !== profile.id)) signedOut();
     const generation = ++authGeneration;
     await cleanup;
+    try { await nativeOwnerClear; } catch (_) { /* registration fails closed */ }
+    if (nativeClearFailed) { try { await retireNativeOwner(); } catch (_) { /* retried at resume */ } }
     if (generation !== authGeneration) return;
     session = { ready: true, userId: profile.id };
     flush();
@@ -474,6 +591,8 @@
   /** app.js: no session on this phone. */
   function signedOut() {
     authGeneration++;
+    // Forced account recovery must also invalidate the private OS gate.
+    if (push) retireNativeOwner().catch(() => {});
     if (push && installationId({ create: false })) {
       retireInstallation();
       cleanup = cleanup.then(async () => {
@@ -521,6 +640,6 @@
     resume,
     onNavigate,
     openSettings,
-    _test: Object.freeze({ parsePayload, intentFromAction, normalizeToken, pending: () => pending })
+    _test: Object.freeze({ parsePayload, intentFromAction, normalizeToken, isCurrentNotice, pending: () => pending })
   });
 })();
