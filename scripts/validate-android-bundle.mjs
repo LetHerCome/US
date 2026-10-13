@@ -294,6 +294,34 @@ export function checkBundleConfig(config, entries) {
     : [{ id: 'page-alignment-16k', level: 'fail', detail: `serve PAGE_ALIGNMENT_16K con librerie non compresse: ${detail}` }];
 }
 
+// A Play bundle must talk to production Supabase and must never carry the
+// staging QA tooling (panel, native traces, staging project or package id).
+export const PRODUCTION_SUPABASE_REF = 'iiakdfsxpywdkxravqjh';
+export const STAGING_QA_MARKERS = [
+  { name: 'staging Supabase project', re: /dugmhngrfkuieeletatb/ },
+  { name: 'staging package id', re: /com\.usapp\.us\.staging/ },
+  { name: 'staging app name', re: /US STAGING/ },
+  { name: 'FCM QA panel', re: /s3-staging-push-qa|s3-qa-button|s3-qa-panel/ },
+  { name: 'native QA trace', re: /qaTrace/ }
+];
+
+export function checkProductionOnly(files) {
+  const hits = [];
+  for (const { name, text } of files) {
+    for (const marker of STAGING_QA_MARKERS) {
+      if (marker.re.test(text)) hits.push(`${name}: ${marker.name}`);
+    }
+  }
+  const results = [hits.length
+    ? { id: 'no-staging-qa', level: 'fail', detail: hits.join('; ') }
+    : { id: 'no-staging-qa', level: 'pass', detail: 'nessun pannello QA, traccia QA o riferimento a US-STAGING' }];
+  const prod = files.some(({ name, text }) => /^base\/assets\//.test(name.replace(/\\/g, '/')) && text.includes(PRODUCTION_SUPABASE_REF));
+  results.push(prod
+    ? { id: 'production-backend', level: 'pass', detail: `web app collegata a Supabase produzione (${PRODUCTION_SUPABASE_REF})` }
+    : { id: 'production-backend', level: 'fail', detail: 'la web app nel bundle non punta a Supabase produzione' });
+  return results;
+}
+
 // Smallest p_align among PT_LOAD program headers of an ELF shared library.
 export function elfMinLoadAlignment(buf) {
   if (buf.length < 52 || buf.readUInt32BE(0) !== 0x7f454c46) throw new Error('non è un file ELF');
@@ -400,6 +428,7 @@ export function main(argv) {
     if (!args[key]) throw new Error(`--${key} è obbligatorio`);
   }
   const summary = summarizeManifest(parseManifestXml(readFileSync(args.manifest, 'utf8')));
+  const textFiles = readTextFiles(args.extracted);
   const entries = readFileSync(args.entries, 'utf8').split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   const results = [
     ...checkManifest(summary, {
@@ -416,7 +445,8 @@ export function main(argv) {
     ...(args['bundle-config']
       ? checkBundleConfig(JSON.parse(readFileSync(args['bundle-config'], 'utf8')), entries)
       : [{ id: 'page-alignment-16k', level: 'fail', detail: '--bundle-config mancante' }]),
-    ...scanForSecrets(readTextFiles(args.extracted))
+    ...scanForSecrets(textFiles),
+    ...checkProductionOnly(textFiles)
   ];
   let aab;
   if (args.aab) {
