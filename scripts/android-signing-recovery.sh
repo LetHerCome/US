@@ -19,7 +19,9 @@ umask 077
 
 fail() { echo "::error::$1"; exit 1; }
 mask() { if [ "${GITHUB_ACTIONS:-}" = "true" ]; then echo "::add-mask::$1"; fi; }
-hex() { printf '%s' "$1" | tr -d ': \n' | tr 'A-F' 'a-f'; }
+hex() { printf '%s' "$1" | tr -d ': \r\n' | tr 'A-F' 'a-f'; }
+# jq on Windows prints CRLF; strip it so values are byte-exact everywhere.
+field() { jq -r "$1 // empty" "$WORK_DIR/bundle.json" | tr -d '\r'; }
 
 : "${WORK_DIR:?WORK_DIR is required}"
 [ -n "${SIGNING_BUNDLE_B64:-}" ] || fail "ANDROID_SIGNING_BUNDLE_B64 is not set"
@@ -49,13 +51,13 @@ echo "Recipient certificate SHA-256: $recipient_fp ($bits bit RSA)"
 
 # 2. Current keystore from the secret: must be the pinned certificate.
 printf '%s' "$SIGNING_BUNDLE_B64" | base64 -d > "$WORK_DIR/bundle.json" 2>/dev/null || fail "signing bundle is not valid base64"
-OLD_STORE="$(jq -r '.storePassword // empty' "$WORK_DIR/bundle.json")"
-OLD_KEY="$(jq -r '.keyPassword // empty' "$WORK_DIR/bundle.json")"
-ALIAS="$(jq -r '.keyAlias // empty' "$WORK_DIR/bundle.json")"
+OLD_STORE="$(field .storePassword)"
+OLD_KEY="$(field .keyPassword)"
+ALIAS="$(field .keyAlias)"
 mask "$OLD_STORE"; mask "$OLD_KEY"
 [ -n "$OLD_STORE" ] && [ -n "$OLD_KEY" ] && [ -n "$ALIAS" ] || fail "signing bundle is incomplete"
 export OLD_STORE OLD_KEY
-jq -r '.keystoreBase64 // empty' "$WORK_DIR/bundle.json" | base64 -d > "$WORK_DIR/original.keystore" 2>/dev/null || fail "keystore is not valid base64"
+field .keystoreBase64 | base64 -d > "$WORK_DIR/original.keystore" 2>/dev/null || fail "keystore is not valid base64"
 [ -s "$WORK_DIR/original.keystore" ] || fail "keystore is empty"
 
 fingerprint() { keytool -exportcert -alias "$ALIAS" -keystore "$1" -storepass:env "$2" 2>/dev/null | sha256sum | awk '{print $1}'; }
@@ -80,7 +82,7 @@ echo "Re-wrapped keystore: PKCS12, certificate SHA-256: $rotated"
 # 4. Minimal payload: new keystore, ready secret value, short notes. The old
 #    keystore with its publicly exposed passwords is NOT included.
 jq -n --arg ks "$(base64 -w0 "$WORK_DIR/payload/us-internal-signing.p12")" --arg p "$NEW_PASS" --arg a "$ALIAS" \
-  '{keystoreBase64:$ks, storePassword:$p, keyAlias:$a, keyPassword:$p}' | base64 -w0 \
+  '{keystoreBase64:$ks, storePassword:$p, keyAlias:$a, keyPassword:$p}' | tr -d '\r' | base64 -w0 \
   > "$WORK_DIR/payload/NUOVO-VALORE-ANDROID_SIGNING_BUNDLE_B64.txt"
 cat > "$WORK_DIR/payload/LEGGIMI.txt" <<NOTE
 US - keystore interno recuperato ($(date -u +%Y-%m-%dT%H:%MZ))
@@ -90,10 +92,17 @@ Alias: $ALIAS
 Formato: PKCS12, password unica per archivio e chiave: $NEW_PASS
 
 NUOVO-VALORE-ANDROID_SIGNING_BUNDLE_B64.txt e' il valore da incollare nel
-segreto GitHub ANDROID_SIGNING_BUNDLE_B64. Conserva questa cartella offline
-in due copie e la password nel gestore password.
+segreto GitHub ANDROID_SIGNING_BUNDLE_B64.
+Copia us-internal-signing.p12 su due supporti offline e salva la password nel
+gestore password, separata dalle copie. La password precedente e' compromessa:
+non usarla piu'.
 NOTE
-(cd "$WORK_DIR/payload" && python3 -m zipfile -c "$WORK_DIR/payload.zip" us-internal-signing.p12 NUOVO-VALORE-ANDROID_SIGNING_BUNDLE_B64.txt LEGGIMI.txt) || fail "payload packaging failed"
+PYTHON=""
+for candidate in python3 python; do
+  if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c 'import zipfile' >/dev/null 2>&1; then PYTHON="$candidate"; break; fi
+done
+[ -n "$PYTHON" ] || fail "python is required"
+(cd "$WORK_DIR/payload" && "$PYTHON" -m zipfile -c "$WORK_DIR/payload.zip" us-internal-signing.p12 NUOVO-VALORE-ANDROID_SIGNING_BUNDLE_B64.txt LEGGIMI.txt) || fail "payload packaging failed"
 
 # 5. Seal for the recipient only, then prove the output is not readable.
 openssl cms -encrypt -binary -aes-256-cbc -in "$WORK_DIR/payload.zip" -outform DER \
