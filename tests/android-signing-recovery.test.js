@@ -139,7 +139,9 @@ test('the Windows tool keeps the private key non-exportable and needs no passwor
   assert.match(tool, /-Type DocumentEncryptionCert/);
   assert.match(tool, /-KeyAlgorithm RSA -KeyLength 4096 -KeyExportPolicy NonExportable/);
   assert.match(tool, /-CertStoreLocation Cert:\\CurrentUser\\My/);
-  assert.match(tool, /Set-Clipboard -Value \(\[Convert\]::ToBase64String\(\$cert\.RawData\)\)/);
+  assert.match(tool, /\$encoded = \[Convert\]::ToBase64String\(\$cert\.RawData\)/);
+  assert.match(tool, /Set-Clipboard -Value \$encoded/);
+  assert.match(tool, /\$answer -cne 'BACKUP FATTO'/);
   assert.ok(!/Export-PfxCertificate|\.Export\(|PrivateKey\.Export|Read-Host -AsSecureString/.test(tool));
   assert.match(tool, /Remove-Item -Path "Cert:\\CurrentUser\\My\\\$\(\$_\.Thumbprint\)" -DeleteKey/);
 });
@@ -157,6 +159,33 @@ test('end to end: the Windows tool opens the sealed artifact', { skip: !toolsAva
   const opened = spawnSync(pwsh, ['-NoProfile', '-Command', command], { encoding: 'utf8', env: { ...process.env, US_RECOVERY_NONINTERACTIVE: '1', US_RECOVERY_DOWNLOADS: downloads, US_RECOVERY_DESTINATION: destination, US_RECOVERY_TEST_PFX: path.join(fx.dir, 'r4096.pfx') } });
   assert.equal(opened.status, 0, opened.stdout + opened.stderr);
   assert.deepEqual(fs.readdirSync(destination).sort(), ['LEGGIMI.txt', 'NUOVO-VALORE-ANDROID_SIGNING_BUNDLE_B64.txt', 'us-internal-signing.p12']);
-  assert.deepEqual(fs.readdirSync(downloads), [], 'the downloaded sealed file is removed');
+  assert.deepEqual(fs.readdirSync(downloads), ['US-signing-recovery-sealed.zip'], 'nothing is deleted before the backups');
+  const cleanup = (confirm) => spawnSync(pwsh, ['-NoProfile', '-Command', command], { encoding: 'utf8', env: { ...process.env, US_RECOVERY_NONINTERACTIVE: '1', US_RECOVERY_DOWNLOADS: downloads, US_RECOVERY_DESTINATION: destination, US_RECOVERY_TEST_PFX: path.join(fx.dir, 'r4096.pfx'), US_RECOVERY_CONFIRM: confirm } });
+  assert.equal(cleanup('si').status, 0);
+  assert.ok(fs.existsSync(destination), 'clean-up needs the exact confirmation');
+  assert.equal(cleanup('BACKUP FATTO').status, 0);
+  assert.ok(!fs.existsSync(destination));
+  assert.deepEqual(fs.readdirSync(downloads), []);
   fs.rmSync(fx.dir, { recursive: true, force: true });
+});
+
+test('a secret-free Windows smoke test covers the real certificate store and the double-click path', () => {
+  const smoke = fs.readFileSync(path.join(ROOT, '.github/workflows/android-signing-recovery-windows-smoke.yml'), 'utf8');
+  assert.ok(!/secrets\./.test(smoke), 'the smoke test never references a secret');
+  assert.ok(!/upload-artifact/.test(smoke), 'the smoke test uploads nothing');
+  assert.match(smoke, /runs-on: windows-latest/);
+  assert.match(smoke, /branches-ignore: \[main\]/);
+  assert.equal((smoke.match(/cmd \/c scripts\\windows\\US-recupero-keystore\.cmd/g) || []).length, 4);
+  assert.match(smoke, /ExportParameters\(\$true\)/);
+  assert.match(smoke, /1\.3\.6\.1\.4\.1\.311\.80\.1/);
+  assert.match(smoke, /keystore bytes differ from the secret value/);
+  assert.match(smoke, /sealed file deleted before the backups/);
+  assert.match(smoke, /if: always\(\)/);
+});
+
+test('the documented SHA-256 of the Windows tool matches the file', async () => {
+  const { createHash } = await import('node:crypto');
+  const hash = createHash('sha256').update(fs.readFileSync(TOOL)).digest('hex');
+  const doc = fs.readFileSync(path.join(ROOT, 'docs/native/ANDROID_SIGNING_RECOVERY.md'), 'utf8');
+  assert.ok(doc.includes(hash), `update the hash in ANDROID_SIGNING_RECOVERY.md to ${hash}`);
 });

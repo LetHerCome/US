@@ -1,0 +1,129 @@
+name: Android signing recovery Windows smoke test
+
+# Proves the founder-side tool on a real Windows machine before anyone uses it
+# with the real signing key. Uses ONLY a throwaway keystore created here: no
+# secret is referenced, nothing is uploaded.
+# 1. scripts/windows/US-recupero-keystore.cmd (run through cmd.exe and Windows
+#    PowerShell, as with a double click) creates the recovery certificate in
+#    Cert:\CurrentUser\My: RSA 4096, document encryption, private key not exportable.
+# 2. scripts/android-signing-recovery.sh seals a throwaway keystore for it.
+# 3. The same tool opens it from the Windows certificate store; the bytes and the
+#    certificate fingerprint must match, and nothing is deleted yet.
+# 4. The tool's clean-up step refuses without "BACKUP FATTO", then removes the
+#    folder, the downloaded file and the certificate.
+on:
+  workflow_dispatch:
+  push:
+    branches-ignore: [main]
+    paths:
+      - 'scripts/windows/**'
+      - 'scripts/android-signing-recovery.sh'
+      - '.github/workflows/android-signing-recovery-windows-smoke.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    env:
+      US_RECOVERY_NONINTERACTIVE: '1'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Paths
+        shell: pwsh
+        run: |
+          $base = Join-Path $env:RUNNER_TEMP 'smoke'
+          New-Item -ItemType Directory -Force -Path (Join-Path $base 'Downloads'), (Join-Path $base 'Desktop') | Out-Null
+          "SMOKE_BASE=$base" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "US_RECOVERY_DOWNLOADS=$(Join-Path $base 'Downloads')" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "US_RECOVERY_DESTINATION=$(Join-Path $base 'Desktop\US-keystore-recuperato')" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: 1. Tool creates the recovery certificate
+        shell: pwsh
+        run: |
+          $env:US_RECOVERY_CERT_OUT = Join-Path $env:SMOKE_BASE 'recipient.b64'
+          cmd /c scripts\windows\US-recupero-keystore.cmd
+          if ($LASTEXITCODE -ne 0) { throw "tool failed in certificate mode" }
+          $certs = @(Get-ChildItem Cert:\CurrentUser\My | Where-Object { $_.Subject -eq 'CN=US signing recovery' })
+          if ($certs.Count -ne 1) { throw "expected exactly one recovery certificate, found $($certs.Count)" }
+          $cert = $certs[0]
+          if (-not $cert.HasPrivateKey) { throw "certificate has no private key" }
+          $rsa = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($cert)
+          if ($rsa.KeySize -ne 4096) { throw "expected RSA 4096, got $($rsa.KeySize)" }
+          $exported = $true
+          try { $null = $rsa.ExportParameters($true) } catch { $exported = $false }
+          if ($exported) { throw "the private key is exportable" }
+          if (-not ($cert.EnhancedKeyUsageList.ObjectId -contains '1.3.6.1.4.1.311.80.1')) { throw "not a document encryption certificate" }
+          $written = [Convert]::FromBase64String((Get-Content -LiteralPath $env:US_RECOVERY_CERT_OUT -Raw))
+          if ([Convert]::ToBase64String($written) -ne [Convert]::ToBase64String($cert.RawData)) { throw "copied certificate differs from the store" }
+          Write-Host "Recovery certificate OK: RSA 4096, non-exportable, document encryption"
+
+      - name: 2. Seal a throwaway keystore for that certificate
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="$(cygpath -u "$SMOKE_BASE")"
+          cd "$base"
+          keytool -genkeypair -keystore smoke.jks -storetype JKS -storepass smokestore1 -keypass smokekey22 \
+            -alias us-internal -keyalg RSA -keysize 2048 -dname CN=smoke -validity 1 >/dev/null 2>&1
+          keytool -exportcert -alias us-internal -keystore smoke.jks -storepass smokestore1 -file smoke.der >/dev/null 2>&1
+          pinned="$(sha256sum smoke.der | cut -d' ' -f1)"
+          bundle="$(jq -n --arg ks "$(base64 -w0 smoke.jks)" '{keystoreBase64:$ks, storePassword:"smokestore1", keyAlias:"us-internal", keyPassword:"smokekey22"}' | base64 -w0)"
+          SIGNING_BUNDLE_B64="$bundle" RECIPIENT_CERT_B64="$(cat recipient.b64)" PINNED_CERT_SHA256="$pinned" \
+            REFERENCE_CERT_SHA256="$pinned" WORK_DIR="$base/work" \
+            bash "$(cygpath -u "$GITHUB_WORKSPACE")/scripts/android-signing-recovery.sh"
+          python -m zipfile -c Downloads/US-signing-recovery-sealed.zip work/out/US-signing-recovery.p7m
+          echo "SMOKE_PINNED=$pinned" >> "$GITHUB_ENV"
+
+      - name: 3. Tool opens it from the Windows certificate store
+        shell: pwsh
+        run: |
+          cmd /c scripts\windows\US-recupero-keystore.cmd
+          if ($LASTEXITCODE -ne 0) { throw "tool failed in open mode" }
+          $dest = $env:US_RECOVERY_DESTINATION
+          $names = @(Get-ChildItem $dest | ForEach-Object Name | Sort-Object)
+          if (($names -join ',') -ne 'LEGGIMI.txt,NUOVO-VALORE-ANDROID_SIGNING_BUNDLE_B64.txt,us-internal-signing.p12') { throw "unexpected files: $($names -join ',')" }
+          $secretJson = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String((Get-Content (Join-Path $dest 'NUOVO-VALORE-ANDROID_SIGNING_BUNDLE_B64.txt') -Raw)))
+          $secret = $secretJson | ConvertFrom-Json
+          $p12 = Join-Path $dest 'us-internal-signing.p12'
+          if ([Convert]::ToBase64String([IO.File]::ReadAllBytes($p12)) -ne $secret.keystoreBase64) { throw "keystore bytes differ from the secret value" }
+          if ($secret.storePassword.Length -ne 32 -or $secret.storePassword -eq 'smokestore1') { throw "password was not rotated" }
+          $env:P = $secret.storePassword
+          $der = Join-Path $env:SMOKE_BASE 'rotated.der'
+          keytool -exportcert -alias us-internal -keystore $p12 -storepass:env P -file $der | Out-Null
+          if ($LASTEXITCODE -ne 0) { throw "the new password does not open the keystore" }
+          $fingerprint = (Get-FileHash -LiteralPath $der -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($fingerprint -ne $env:SMOKE_PINNED) { throw "certificate changed: $fingerprint" }
+          if (-not (Test-Path (Join-Path $env:US_RECOVERY_DOWNLOADS 'US-signing-recovery-sealed.zip'))) { throw "sealed file deleted before the backups" }
+          if (@(Get-ChildItem Cert:\CurrentUser\My | Where-Object { $_.Subject -eq 'CN=US signing recovery' }).Count -ne 1) { throw "certificate removed before the backups" }
+          Write-Host "Opened from the certificate store: same bytes, same certificate, nothing deleted yet"
+
+      - name: 4. Tool clean-up needs the confirmation, then removes everything
+        shell: pwsh
+        run: |
+          $env:US_RECOVERY_CONFIRM = 'no'
+          cmd /c scripts\windows\US-recupero-keystore.cmd
+          if (-not (Test-Path $env:US_RECOVERY_DESTINATION)) { throw "clean-up ran without confirmation" }
+          $env:US_RECOVERY_CONFIRM = 'BACKUP FATTO'
+          cmd /c scripts\windows\US-recupero-keystore.cmd
+          if ($LASTEXITCODE -ne 0) { throw "tool failed in clean-up mode" }
+          if (Test-Path $env:US_RECOVERY_DESTINATION) { throw "recovered folder still present" }
+          if (Get-ChildItem $env:US_RECOVERY_DOWNLOADS) { throw "downloaded file still present" }
+          if (Get-ChildItem Cert:\CurrentUser\My | Where-Object { $_.Subject -eq 'CN=US signing recovery' }) { throw "recovery certificate still present" }
+          Write-Host "Clean-up OK"
+
+      - name: Remove leftovers
+        if: always()
+        shell: pwsh
+        run: |
+          Get-ChildItem Cert:\CurrentUser\My | Where-Object { $_.Subject -eq 'CN=US signing recovery' } |
+            ForEach-Object { Remove-Item -Path "Cert:\CurrentUser\My\$($_.Thumbprint)" -DeleteKey }
+          Remove-Item -Recurse -Force $env:SMOKE_BASE -ErrorAction SilentlyContinue

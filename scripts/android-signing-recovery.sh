@@ -90,10 +90,17 @@ Alias: $ALIAS
 Formato: PKCS12, password unica per archivio e chiave: $NEW_PASS
 
 NUOVO-VALORE-ANDROID_SIGNING_BUNDLE_B64.txt e' il valore da incollare nel
-segreto GitHub ANDROID_SIGNING_BUNDLE_B64. Conserva questa cartella offline
-in due copie e la password nel gestore password.
+segreto GitHub ANDROID_SIGNING_BUNDLE_B64.
+Copia us-internal-signing.p12 su due supporti offline e salva la password nel
+gestore password, separata dalle copie. La password precedente e' compromessa:
+non usarla piu'.
 NOTE
-(cd "$WORK_DIR/payload" && python3 -m zipfile -c "$WORK_DIR/payload.zip" us-internal-signing.p12 NUOVO-VALORE-ANDROID_SIGNING_BUNDLE_B64.txt LEGGIMI.txt) || fail "payload packaging failed"
+PYTHON=""
+for candidate in python3 python; do
+  if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c 'import zipfile' >/dev/null 2>&1; then PYTHON="$candidate"; break; fi
+done
+[ -n "$PYTHON" ] || fail "python is required"
+(cd "$WORK_DIR/payload" && "$PYTHON" -m zipfile -c "$WORK_DIR/payload.zip" us-internal-signing.p12 NUOVO-VALORE-ANDROID_SIGNING_BUNDLE_B64.txt LEGGIMI.txt) || fail "payload packaging failed"
 
 # 5. Seal for the recipient only, then prove the output is not readable.
 openssl cms -encrypt -binary -aes-256-cbc -in "$WORK_DIR/payload.zip" -outform DER \
