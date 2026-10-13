@@ -14,7 +14,8 @@
     "prebuild:capacitor-web": "npm run assets:widget && npm run assets:web-brand",
     "build:capacitor-web": "node scripts/build-capacitor-web.mjs",
     "visual-lab": "node scripts/visual-lab-server.mjs",
-    "build:cloudflare-pages": "node scripts/build-cloudflare-pages.mjs"
+    "build:cloudflare-pages": "node scripts/build-cloudflare-pages.mjs",
+    "build:us-staging-pages": "npm run build:cloudflare-pages && US_S3_STAGING_WEB=true node scripts/build-s3-staging-web.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.5.0",
