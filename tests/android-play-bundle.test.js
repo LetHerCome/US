@@ -302,3 +302,11 @@ test('a Play bundle targets production and carries no staging QA tooling', async
   const staging = { name: 'base/assets/public/app.js', text: 'https://dugmhngrfkuieeletatb.supabase.co' };
   assert.equal(gate.checkProductionOnly([staging])[1].level, 'fail');
 });
+
+test('the upload-secret helper never prints or stores the keystore or its passwords', () => {
+  const script = read('scripts/make-play-upload-secret.ps1');
+  assert.match(script, /Read-Host -Prompt \$prompt -AsSecureString/);
+  assert.match(script, /Set-Clipboard/);
+  assert.match(script, /keystoreBase64[\s\S]*storePassword[\s\S]*keyAlias[\s\S]*keyPassword/);
+  assert.doesNotMatch(script, /Out-File|Set-Content|Add-Content|Write-Output|Write-Host \$/);
+});

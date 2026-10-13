@@ -45,13 +45,31 @@ Nessuno di questi valori va scritto in chat, nel repository o in un documento co
 
 1. **Account Google Play Console** attivo e verificato, app `com.usapp.us` creata (l'ID non si cambia più).
 2. **Firma (decisa il 13/10/2026):** Google Play App Signing con chiave di firma generata da Google e chiave di upload dedicata. Chi ha già l'APK interno sideload lo disinstalla una volta prima di installare da Play; i dati sul server restano.
-3. **Chiave di upload**: generarla sul proprio computer (Android Studio › Generate Signed Bundle, oppure `keytool`), conservarne una copia offline con le password, registrarla in Play Console.
+3. **Chiave di upload**: generarla sul proprio computer (passo 6 della sequenza sotto) e conservarne una copia offline con le password. Con la firma generata da Google, Play registra come chiave di upload quella del primo AAB caricato.
 4. **Tre segreti e una variabile GitHub** (Settings › Secrets and variables › Actions):
    - `ANDROID_PLAY_UPLOAD_BUNDLE_B64`: base64 di un JSON `{"keystoreBase64","storePassword","keyAlias","keyPassword"}`, stesso formato del segreto interno esistente;
    - `ANDROID_PLAY_ARTIFACT_PASSWORD`: una password di almeno 24 caratteri per aprire l'archivio cifrato con l'AAB;
    - `ANDROID_GOOGLE_SERVICES_JSON_B64`: già esistente, va solo confermato per `com.usapp.us`;
    - variabile (non segreta) `ANDROID_INTERNAL_CERT_SHA256`: l'impronta SHA-256 del certificato interno, che compare in `signature.txt` di ogni artifact `US-Android-Internal` (riga "certificate SHA-256 digest").
 5. **Avvio**: dopo il merge della PR #187, Actions › "Android Play bundle (AAB)" › Run workflow su `main` con `signing = upload`. Scaricare `US-Play-candidate-encrypted`, aprirlo con 7-Zip e la password, caricare l'AAB a mano sulla traccia di **test interno** di Play Console.
+
+## Sequenza: dal merge al primo test interno
+
+| # | Passo | Chi | Prerequisito |
+|---|---|---|---|
+| 1 | Collaudo fisico T0–T7 e T9 della #187 superato | Francesco | — |
+| 2 | Revert del pulsante QA temporaneo sulla #187, CI verde | Claude | 1 |
+| 3 | Autorizzazione e merge della #187 su `main` | Francesco (autorizza) | 2 |
+| 4 | Aggiornamento della #191 su `main`, CI verde con il controllo FCM obbligatorio, autorizzazione e merge | Claude prepara, Francesco autorizza | 3 |
+| 5 | Creare l'app `com.usapp.us` in Play Console (account verificato, app gratuita) | Francesco | — |
+| 6 | Generare la chiave di upload sul proprio computer, con copia offline: `keytool -genkeypair -v -keystore us-upload.jks -alias us-upload -keyalg RSA -keysize 4096 -validity 10000` | Francesco | — |
+| 7 | Creare i segreti `ANDROID_PLAY_UPLOAD_BUNDLE_B64` (valore generato da `scripts/make-play-upload-secret.ps1`, che lo copia negli appunti senza mostrarlo) e `ANDROID_PLAY_ARTIFACT_PASSWORD`, e la variabile `ANDROID_INTERNAL_CERT_SHA256` | Francesco | 6 |
+| 8 | Actions › "Android Play bundle (AAB)" › Run workflow su `main`, `signing = upload`, `version_name = 1.0.0` | Francesco (o Claude su richiesta) | 4, 7 |
+| 9 | Controllare il report del run: deve essere tutto OK, incluso Firebase | Claude | 8 |
+| 10 | Scaricare `US-Play-candidate-encrypted`, aprirlo con 7-Zip; in Play Console › Test interno › Crea release: accettare la chiave di firma generata da Google e caricare l'AAB. La chiave con cui è firmato il primo caricamento diventa la chiave di upload | Francesco | 5, 9 |
+| 11 | Disinstallare l'APK interno dai telefoni di test, installare da Play, ripetere il controllo notifiche sul build Play | Francesco con istruzioni di Claude | 10 |
+
+Play Console può chiedere di completare alcune dichiarazioni (privacy, accesso app, Data safety) prima di pubblicare anche sulla traccia interna: le risposte vengono preparate a parte, su richiesta.
 
 ## Limiti noti
 
