@@ -153,6 +153,13 @@ jobs:
               if services != ['com.usapp.us.UsGuardedMessagingService']:
                   raise SystemExit('FAIL: FCM manifest is not exclusively owner-gated: '+str(services))
           print('PASS: every discovered merged FCM manifest uses exactly one guarded service')
+          required = {'android.permission.POST_NOTIFICATIONS', 'android.permission.RECORD_AUDIO', 'android.permission.MODIFY_AUDIO_SETTINGS'}
+          for file, _ in parsed:
+              declared = {p.get(ns+'name') for p in ET.parse(file).getroot().findall('./uses-permission')}
+              missing = sorted(required - declared)
+              if missing:
+                  raise SystemExit('FAIL: merged manifest '+file+' lacks '+str(missing))
+          print('PASS: merged manifest declares notification and voice-note permissions')
           PY
 
       - name: Inspect built APKs

@@ -75,4 +75,14 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Required by Capacitor Haptics; also keep explicit for upgrade builds. -->
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Android 13+ runtime notification permission, asked only from the
+         explicit "Attiva" (notifications.js enable()). Declared here so the
+         app does not depend on what the Firebase library merges in. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- "Lasciato per te" voice notes: WebView getUserMedia({audio:true}).
+         Capacitor's BridgeWebChromeClient requests both at runtime, only when
+         the user starts a recording; an undeclared permission is denied with
+         no prompt and the recording fails. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 </manifest>
