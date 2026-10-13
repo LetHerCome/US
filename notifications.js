@@ -337,8 +337,23 @@
     queue(intentFromAction(event));
   }
 
+  /**
+   * Android FCM v2 (data-only, S3): { v:'2', installation }. No type, target
+   * or ref ever reaches FCM, so it can only signal "something new" for THIS
+   * installation. The native service already dropped other installations;
+   * the web layer checks again before reacting.
+   */
+  function isCurrentNotice(data) {
+    if (!data || typeof data !== 'object' || String(data.v ?? '') !== '2') return false;
+    const target = typeof data.installation === 'string' ? data.installation.toLowerCase() : '';
+    const current = installationId({ create: false }).toLowerCase();
+    return Boolean(current) && UUID.test(target) && target === current;
+  }
+
   function onForeground(notification) {
-    const payload = parsePayload(notification?.data);
+    const data = notification?.data;
+    const payload = parsePayload(data)
+      || (isCurrentNotice(data) && isEnabledFor(session.userId) ? Object.freeze({ type: 'notice', target: null, ref: null }) : null);
     if (!payload || !session.ready) return;
     // Nothing is shown on top of the lock screen.
     if (window.UsAppLock?.isLocked?.()) return;
@@ -603,6 +618,6 @@
     resume,
     onNavigate,
     openSettings,
-    _test: Object.freeze({ parsePayload, intentFromAction, normalizeToken, pending: () => pending })
+    _test: Object.freeze({ parsePayload, intentFromAction, normalizeToken, isCurrentNotice, pending: () => pending })
   });
 })();

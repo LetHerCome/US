@@ -14,6 +14,7 @@ import androidx.core.app.NotificationCompat;
 import com.capacitorjs.plugins.pushnotifications.MessagingService;
 import com.capacitorjs.plugins.pushnotifications.PushNotificationsPlugin;
 import com.google.firebase.messaging.RemoteMessage;
+import com.usapp.pushsupport.UsPushChannels;
 import com.usapp.pushsupport.UsPushOwnerGate;
 import com.usapp.pushsupport.UsPushSupportPlugin;
 import java.util.Map;
@@ -24,9 +25,12 @@ import java.util.Map;
  * No private sender, calendar text, content ref or account id reaches FCM.
  */
 public final class UsGuardedMessagingService extends MessagingService {
-    private static final String CHANNEL = "us_partner";
+    // Contract with native-push-transport.mjs (ANDROID_SAFE_COPY, collapse
+    // key, data v='2'): tests/s3-fcm-android-contract.test.js keeps them equal.
+    private static final String CHANNEL = UsPushChannels.PARTNER;
     private static final String TITLE = "US.";
     private static final String BODY = "Apri US per vedere le novità.";
+    private static final String NOTICE_TAG = "us-private-notice";
     private static final int NOTICE_ID = 1701;
 
     @Override
@@ -50,11 +54,8 @@ public final class UsGuardedMessagingService extends MessagingService {
             && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return;
         final NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (manager == null || !manager.areNotificationsEnabled()) return;
-        final NotificationChannel channel = new NotificationChannel(
-            CHANNEL, "US · La vostra attività", NotificationManager.IMPORTANCE_DEFAULT);
-        channel.setDescription("Notifiche private di US");
-        manager.createNotificationChannel(channel);
-        if (manager.getNotificationChannel(CHANNEL).getImportance() == NotificationManager.IMPORTANCE_NONE) return;
+        final NotificationChannel channel = ensureChannel(manager);
+        if (channel == null || channel.getImportance() == NotificationManager.IMPORTANCE_NONE) return;
         if (!UsPushOwnerGate.accepts(this, installation)) return;
         final Intent intent = getPackageManager().getLaunchIntentForPackage(getPackageName());
         if (intent == null) return;
@@ -76,10 +77,29 @@ public final class UsGuardedMessagingService extends MessagingService {
         // If the account changed, nothing is posted.
         try {
             UsPushOwnerGate.postIfCurrent(this, installation,
-                () -> manager.notify("us-private-notice", NOTICE_ID, notification));
+                () -> manager.notify(NOTICE_TAG, NOTICE_ID, notification));
         } catch (RuntimeException ignored) {
             // Permission was revoked or NotificationManager failed: fail closed.
         }
+    }
+
+    /**
+     * The channel normally exists (UsPushSupportPlugin.load() creates both US
+     * channels at app start). Create it only when missing, from the same
+     * UsPushChannels spec: re-creating an existing channel would rename it
+     * and could lower its importance, and the user's own choices must stay.
+     */
+    private static NotificationChannel ensureChannel(NotificationManager manager) {
+        final NotificationChannel existing = manager.getNotificationChannel(CHANNEL);
+        if (existing != null) return existing;
+        for (UsPushChannels.Channel spec : UsPushChannels.ALL) {
+            if (!CHANNEL.equals(spec.id)) continue;
+            final NotificationChannel channel = new NotificationChannel(spec.id, spec.name, spec.importance);
+            channel.setDescription(spec.description);
+            channel.setShowBadge(true);
+            manager.createNotificationChannel(channel);
+        }
+        return manager.getNotificationChannel(CHANNEL);
     }
 
     // onNewToken() intentionally inherited from Capacitor's MessagingService:
