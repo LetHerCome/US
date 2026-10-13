@@ -47,7 +47,7 @@ export class DeletionError extends Error {
   }
 }
 
-const noop = () => {};
+const noop = (_entry) => {};
 const safeCode = (error) => {
   if (!error || typeof error !== 'object') return 'unknown';
   if (typeof error.code === 'string' && SAFE_CODE.test(error.code)) return error.code;
