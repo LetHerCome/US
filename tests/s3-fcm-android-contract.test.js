@@ -27,7 +27,7 @@ function walk(dir) {
   for (const entry of fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true })) {
     const rel = path.posix.join(dir, entry.name);
     if (entry.isDirectory()) out.push(...walk(rel));
-    else if (/\.(?:ts|mjs|js)$/.test(entry.name)) out.push(rel);
+    else if (/\.(?:ts|mjs|js|sql|ps1|sh)$/.test(entry.name)) out.push(rel);
   }
   return out;
 }
@@ -47,6 +47,10 @@ const NATIVE_SENDERS = Object.freeze([
 
 test('only the shared transport talks to FCM; native senders are an explicit inventory', () => {
   const files = walk('supabase/functions');
+  // pg_net or a script could also call FCM directly: scan them too.
+  const elsewhere = [...walk('supabase/migrations'), ...walk('scripts')]
+    .filter((file) => /fcm\.googleapis\.com|\/messages:send|firebase-admin|googleapis\.com\/fcm/i.test(read(file)));
+  assert.deepEqual(elsewhere, [], 'FCM must only be reached through the shared Edge transport');
   const direct = files.filter((file) => /fcm\.googleapis\.com|\/messages:send|firebase-admin|npm:firebase|googleapis\.com\/fcm/i.test(read(file)));
   assert.deepEqual(direct, [TRANSPORT], 'a second FCM sender could bypass the data-only v2 payload');
   const wiring = files.filter((file) => file !== TRANSPORT && /createNativeTransport|fcmMessage\b/.test(read(file))).sort();
@@ -77,7 +81,10 @@ test('every notification type becomes the same opaque v2 packet; nothing private
       seen.add(JSON.stringify({ ...message.data, collapse: message.android.collapse_key }));
     }
   }
-  assert.equal(seen.size, 1, 'the event class must not be inferable from the packet');
+  // data and collapse key never reveal the event class. android.priority
+  // and ttl still vary by urgency (HIGH/NORMAL, 12-24 h): coarse metadata
+  // accepted for delivery; changing it is a product decision.
+  assert.equal(seen.size, 1, 'the event class must not be readable from data or collapse key');
   assert.deepEqual(ANDROID_SAFE_COPY, { title: 'US.', body: 'Apri US per vedere le novità.' });
 });
 

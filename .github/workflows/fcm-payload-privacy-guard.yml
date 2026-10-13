@@ -32,4 +32,4 @@ jobs:
         with:
           node-version: '22'
       - name: Data-only v2 payload, single FCM sender, Android contract
-        run: node --test tests/s3-fcm-android-contract.test.js tests/s3-android-native-push-privacy.test.js tests/s3-fcm-legacy-senders-cutover.test.js
+        run: node --test tests/s3-fcm-android-contract.test.js tests/s3-android-native-push-privacy.test.js tests/s3-fcm-legacy-senders-cutover.test.js tests/native-notifications-v1-dispatch.test.js

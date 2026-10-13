@@ -76,6 +76,7 @@ function nativeShell({ lockEnabled, ownerHash, configured, permission, retainedA
     },
     clearPushOwner: async () => {
       push.calls.push('clearPushOwner');
+      if (push.clearFails) return { cleared: false };
       saveGate({ epoch: crypto.randomUUID() });
       return { cleared: true };
     },
@@ -339,6 +340,32 @@ test('S3 browser: after A logs out offline, B on the same phone gets its own ins
   assert.deepEqual(b.retired.map((entry) => entry.id), [a], 'A\'s row stays queued for A\'s own cleanup, never B\'s');
   assert.equal(b.retired[0].userId, 'f1');
   assert.equal(await page.evaluate(() => window.__PUSH.rpc.filter((entry) => entry.name === 'unregister_native_push_device' && entry.args.target_installation_id !== null).length), 1, 'B never unregisters A\'s row');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('S3 browser: a failed native owner clear at logout is retried before the next account starts', async (t) => {
+  const h = await harness(t);
+  if (!h) return;
+  const { page, ctx, errors } = await h.page({});
+  await page.waitForFunction(() => window.usProfile);
+  await page.waitForTimeout(600);
+  assert.equal((await page.evaluate(() => window.enableWebPush())).ok, true);
+  await page.evaluate(() => { window.__PUSH.clearFails = true; });
+  await page.evaluate(() => window.revokeCurrentDevice());
+  assert.equal(await page.evaluate(() => window.__PUSH.gate().owner), 'f1', 'simulated SharedPreferences commit failure');
+  await page.evaluate(() => { window.__PUSH.clearFails = false; });
+  await page.evaluate(() => window.UsNotifications.authReady({ id: 'f2' }));
+  assert.equal(await page.evaluate(() => window.__PUSH.gate().owner ?? null), null, 'A\'s binding is gone before B\'s session starts');
+  // A tokenless retired entry of A, confirmed stopped, no longer blocks B forever.
+  await page.evaluate(() => {
+    const list = JSON.parse(localStorage.getItem('us:notifications:v1:retired') || '[]');
+    list.push({ id: crypto.randomUUID(), userId: 'f0', transportStopped: true });
+    localStorage.setItem('us:notifications:v1:retired', JSON.stringify(list));
+    window.__PUSH.token = `fcmQA:${'c'.repeat(80)}`;
+  });
+  assert.deepEqual(await page.evaluate(async () => ({ ...(await window.UsNotifications.enable()) })), { ok: true, kind: 'active' });
+  assert.equal(await page.evaluate(() => window.__PUSH.gate().owner), 'f2');
   assert.deepEqual(errors, []);
   await ctx.close();
 });

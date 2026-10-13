@@ -114,8 +114,15 @@
       return Array.isArray(list) ? list.filter((entry) => typeof entry === 'string' ? UUID.test(entry) : entry && UUID.test(entry.id)) : [];
     } catch (_) { return []; }
   }
+  const RETIRED_MAX = 16;
   function setRetired(list) {
-    const unique = list.filter((entry, index) => list.findIndex((other) => JSON.stringify(other) === JSON.stringify(entry)) === index);
+    // Newest first; the oldest entries are dropped beyond the cap. Only an
+    // entry whose FCM token was confirmed deleted can be dropped safely, so
+    // unconfirmed ones are always kept.
+    const all = list.filter((entry, index) => list.findIndex((other) => JSON.stringify(other) === JSON.stringify(entry)) === index);
+    const open = all.filter((entry) => typeof entry === 'string' || entry.transportStopped !== true);
+    const stopped = all.filter((entry) => typeof entry !== 'string' && entry.transportStopped === true);
+    const unique = [...open, ...stopped.slice(0, Math.max(0, RETIRED_MAX - open.length))];
     if (unique.length) write(STORE.retired, JSON.stringify(unique));
     else remove(STORE.retired);
   }
@@ -135,11 +142,17 @@
   // Serialize native owner retirement. A delayed A registration cannot
   // reactivate A after B logs in and the native epoch rotates.
   let nativeOwnerClear = Promise.resolve();
+  // A failed clear leaves the previous owner bound in the native gate: the
+  // next sign-in and every resume retry it before anything else.
+  let nativeClearFailed = false;
   function retireNativeOwner() {
     if (!support?.clearPushOwner) return Promise.resolve();
     const work = nativeOwnerClear.catch(() => {}).then(async () => {
-      const result = await withTimeout(support.clearPushOwner(), CALL_TIMEOUT_MS);
-      if (result?.cleared !== true) throw new Error('native_owner_clear_failed');
+      let result = null;
+      try { result = await withTimeout(support.clearPushOwner(), CALL_TIMEOUT_MS); }
+      catch (_) { result = null; }
+      nativeClearFailed = result?.cleared !== true;
+      if (nativeClearFailed) throw new Error('native_owner_clear_failed');
     });
     nativeOwnerClear = work;
     return work;
@@ -237,7 +250,7 @@
     const normalized = normalizeToken(status.platform, token);
     if (!normalized) throw new Error('token_invalid');
     const installation = installationId();
-    if (retired().some((entry) => typeof entry === 'string' || !entry.token || entry.token === normalized)) throw new Error('retired_token');
+    if (retired().some((entry) => typeof entry === 'string' || (!entry.token && entry.transportStopped !== true) || entry.token === normalized)) throw new Error('retired_token');
     write(STORE.owner, owner.userId);
     write(STORE.token, normalized);
     const pendingRetired = null;
@@ -550,6 +563,8 @@
     resumeInFlight = (async () => {
       if (!push || !session.ready || document.hidden) return;
       const owner = session;
+      if (nativeClearFailed) { try { await retireNativeOwner(); } catch (_) { return; } }
+      if (session !== owner) return;
       await retryRetired();
       if (session !== owner) return;
       if (!isEnabledFor(session.userId)) return;
@@ -566,6 +581,7 @@
     const generation = ++authGeneration;
     await cleanup;
     try { await nativeOwnerClear; } catch (_) { /* registration fails closed */ }
+    if (nativeClearFailed) { try { await retireNativeOwner(); } catch (_) { /* retried at resume */ } }
     if (generation !== authGeneration) return;
     session = { ready: true, userId: profile.id };
     flush();
