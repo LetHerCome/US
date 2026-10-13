@@ -1,0 +1,93 @@
+name: Android signing recovery (manual, owner only)
+
+# Recovers the permanent internal Android keystore from the
+# ANDROID_SIGNING_BUNDLE_B64 secret and re-wraps it with a new password while
+# keeping the same certificate (scripts/android-signing-recovery.sh).
+# The repository is public, so:
+# - it only runs by hand (workflow_dispatch), from main, for the repository
+#   owner, with a typed confirmation;
+# - the only artifact is sealed with CMS (AES-256) for the founder's own
+#   document-encryption certificate, created on his PC with a non-exportable
+#   private key (scripts/windows/US-recupero-keystore.cmd); no shared password, no
+#   fallback;
+# - nothing is produced unless the keystore certificate equals the pinned
+#   fingerprint below AND the certificate reported by the newest and the oldest
+#   available signed internal APK runs on main;
+# - it never changes a secret and never generates a signing key.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type RECUPERA-KEYSTORE-US to confirm'
+        required: true
+        type: string
+      recipient_certificate:
+        description: 'Recipient certificate (base64), copied by scripts/windows/US-recupero-keystore.cmd'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: android-signing-recovery
+  cancel-in-progress: false
+
+env:
+  # Certificate of the permanent internal key: apksigner "certificate SHA-256
+  # digest" of the internal APKs (CN=US Internal, OU=US, O=US, L=Pescara,
+  # ST=Abruzzo, C=IT, RSA 3072), e.g. run 38429362065 on 2026-10-13.
+  PINNED_CERT_SHA256: f5e17f8e0bd82f2aca64e352e87e312f036c3436c4227461c4cc1336ba7eb782
+
+jobs:
+  recover:
+    if: github.ref == 'refs/heads/main' && github.actor == github.repository_owner && inputs.confirm == 'RECUPERA-KEYSTORE-US'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Certificate reported by signed internal APK runs
+        id: reference
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          runs="$(gh run list -R "$GITHUB_REPOSITORY" --workflow android-internal-release.yml --branch main --status success --limit 100 --json databaseId -q '.[].databaseId')"
+          newest="$(printf '%s\n' "$runs" | head -1)"
+          oldest="$(printf '%s\n' "$runs" | tail -1)"
+          [ -n "$newest" ] || { echo "::error::No successful internal APK run on main"; exit 1; }
+          refs=""
+          for run_id in $(printf '%s\n%s\n' "$newest" "$oldest" | sort -u); do
+            dir="$RUNNER_TEMP/reference-$run_id"
+            if gh run download "$run_id" -R "$GITHUB_REPOSITORY" -n US-Android-Internal -D "$dir" >/dev/null 2>&1 && [ -f "$dir/signature.txt" ]; then
+              digest="$(grep -m1 -E 'certificate SHA-256 digest:' "$dir/signature.txt" | awk '{print $NF}')"
+              echo "Run $run_id: certificate SHA-256 $digest"
+              refs="$refs $digest"
+            else
+              echo "Run $run_id: signature report no longer available"
+            fi
+            rm -rf "$dir"
+          done
+          [ -n "$refs" ] || { echo "::error::No signature report available to compare with"; exit 1; }
+          echo "sha256=$refs" >> "$GITHUB_OUTPUT"
+
+      - name: Recover, verify, re-wrap and seal
+        env:
+          SIGNING_BUNDLE_B64: ${{ secrets.ANDROID_SIGNING_BUNDLE_B64 }}
+          RECIPIENT_CERT_B64: ${{ inputs.recipient_certificate }}
+          REFERENCE_CERT_SHA256: ${{ steps.reference.outputs.sha256 }}
+          WORK_DIR: ${{ runner.temp }}/recovery
+        run: bash scripts/android-signing-recovery.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: US-signing-recovery-sealed
+          path: ${{ runner.temp }}/recovery/out/US-signing-recovery.p7m
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Remove recovery material from the runner
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/recovery" "$RUNNER_TEMP"/reference-*
