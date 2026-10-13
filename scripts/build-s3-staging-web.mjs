@@ -14,6 +14,10 @@ const OUT = path.join(ROOT, 'dist', 's31-staging-preview');
 const PROD = 'iiakdfsxpywdkxravqjh';
 const STAGE = 'dugmhngrfkuieeletatb';
 export const APPROVED_BRANCH = 'claude/pr187-notifications-bcyiy6';
+// US-STAGING *publishable* client key, already public in the live staging app
+// (https://us-staging-s31.pages.dev/app.js). Used when the Cloudflare project
+// only exposes US_STAGING_SUPABASE_PUBLISHABLE_KEY to its production branch.
+export const STAGING_PUBLISHABLE_KEY = 'sb_publishable_16JPig-tA08Poz3I_3gwow_7cBI4ycx';
 
 function replaceOne(source, search, next, label) {
   if (source.split(search).length !== 2) throw Error('S3 staging web: expected exactly one ' + label);
@@ -51,7 +55,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   if (process.env.CF_PAGES === '1' && process.env.CF_PAGES_BRANCH !== APPROVED_BRANCH) {
     throw Error('S3 staging web: Cloudflare build rejected, not the approved PR #187 QA branch');
   }
-  const key = process.env.US_STAGING_SUPABASE_PUBLISHABLE_KEY;
+  const key = process.env.US_STAGING_SUPABASE_PUBLISHABLE_KEY || STAGING_PUBLISHABLE_KEY;
   const names = ['app.js', 'index.html', 'service-worker.js'];
   const [app, index, worker] = await Promise.all(names.map((f) => readFile(path.join(SOURCE, f), 'utf8')));
   const out = isolateStagingWeb({ app, index, worker }, key);

@@ -32,3 +32,8 @@ test('staging web build is pinned to the PR #187 QA branch', async () => {
   assert.equal(APPROVED_BRANCH, 'claude/pr187-notifications-bcyiy6');
   assert.match(read('scripts/build-s3-staging-web.mjs'), /CF_PAGES_BRANCH !== APPROVED_BRANCH/);
 });
+
+test('built-in fallback is a publishable client key, never a secret', async () => {
+  const { STAGING_PUBLISHABLE_KEY } = await import('../scripts/build-s3-staging-web.mjs');
+  assert.match(STAGING_PUBLISHABLE_KEY, /^sb_publishable_[A-Za-z0-9_-]{20,}$/);
+});
