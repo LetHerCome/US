@@ -1,0 +1,35 @@
+name: FCM payload privacy guard
+
+# Release guard for US 1.0 (#181, #187). Fails when any change would let a
+# private name, event title, content id or event type reach Firebase Cloud
+# Messaging, add a second FCM sender, or desynchronise the Android guarded
+# service from the server's data-only v2 transport.
+#
+# Runs on EVERY pull request and every push to main, with no path filter, so
+# a new Edge function anywhere is checked too. Source checks only: it never
+# deploys, never reads Supabase and needs no secrets.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fcm-payload-privacy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fcm-payload-privacy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Data-only v2 payload, single FCM sender, Android contract
+        run: node --test tests/s3-fcm-android-contract.test.js tests/s3-android-native-push-privacy.test.js tests/s3-fcm-legacy-senders-cutover.test.js
