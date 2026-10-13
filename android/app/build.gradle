@@ -23,8 +23,38 @@ def internalKeyPassword = signingValue('US_ANDROID_KEY_PASSWORD', 'keyPassword')
 def internalSigningReady = [internalStorePath, internalStorePassword, internalKeyAlias, internalKeyPassword]
         .every { it != null && !it.toString().isEmpty() }
 
+// Google Play upload signing. Play builds are signed ONLY with the dedicated
+// upload key (never the permanent internal key, never a debug key). When
+// US_ANDROID_PLAY_UPLOAD=true and the upload key is incomplete, the build fails
+// instead of silently producing an unsigned or wrongly signed bundle.
+def playUploadRequested = (System.getenv('US_ANDROID_PLAY_UPLOAD') ?: '').trim() == 'true'
+def uploadStorePath = signingValue('US_ANDROID_UPLOAD_KEYSTORE_PATH', 'uploadStoreFile')
+if (uploadStorePath && !new File(uploadStorePath).isAbsolute()) {
+    uploadStorePath = rootProject.file(uploadStorePath).absolutePath
+}
+def uploadStorePassword = signingValue('US_ANDROID_UPLOAD_KEYSTORE_PASSWORD', 'uploadStorePassword')
+def uploadKeyAlias = signingValue('US_ANDROID_UPLOAD_KEY_ALIAS', 'uploadKeyAlias')
+def uploadKeyPassword = signingValue('US_ANDROID_UPLOAD_KEY_PASSWORD', 'uploadKeyPassword')
+def uploadSigningReady = [uploadStorePath, uploadStorePassword, uploadKeyAlias, uploadKeyPassword]
+        .every { it != null && !it.toString().isEmpty() }
+if (playUploadRequested && !uploadSigningReady) {
+    throw new GradleException('US_ANDROID_PLAY_UPLOAD=true but the Play upload key is incomplete (US_ANDROID_UPLOAD_*).')
+}
+if (playUploadRequested && !new File(uploadStorePath).isFile()) {
+    throw new GradleException('US_ANDROID_PLAY_UPLOAD=true but the upload keystore file does not exist.')
+}
+
 def configuredVersionCode = System.getenv('US_ANDROID_VERSION_CODE') ?: project.findProperty('US_ANDROID_VERSION_CODE') ?: '1'
 def configuredVersionName = System.getenv('US_ANDROID_VERSION_NAME') ?: project.findProperty('US_ANDROID_VERSION_NAME') ?: '1.0'
+// Google Play rejects versionCode values outside 1..2,100,000,000.
+def parsedVersionCode = configuredVersionCode.toString().trim()
+if (!(parsedVersionCode ==~ /[1-9][0-9]{0,9}/) || parsedVersionCode.toLong() > 2100000000L) {
+    throw new GradleException("US_ANDROID_VERSION_CODE must be an integer in 1..2100000000, got '${parsedVersionCode}'")
+}
+configuredVersionCode = parsedVersionCode
+if (playUploadRequested && !(configuredVersionName.toString() ==~ /[0-9]+\.[0-9]+\.[0-9]+/)) {
+    throw new GradleException("Play builds need a versionName like 1.0.0, got '${configuredVersionName}'")
+}
 
 android {
     namespace = "com.usapp.us"
@@ -49,6 +79,14 @@ android {
         }
     }
     signingConfigs {
+        if (uploadSigningReady) {
+            playUpload {
+                storeFile file(uploadStorePath)
+                storePassword uploadStorePassword
+                keyAlias uploadKeyAlias
+                keyPassword uploadKeyPassword
+            }
+        }
         if (internalSigningReady) {
             internal {
                 storeFile file(internalStorePath)
@@ -62,7 +100,9 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            if (internalSigningReady) {
+            if (playUploadRequested) {
+                signingConfig signingConfigs.playUpload
+            } else if (internalSigningReady) {
                 signingConfig signingConfigs.internal
             }
         }
