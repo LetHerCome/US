@@ -14,6 +14,8 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCRIPT = path.join(ROOT, 'scripts/android-signing-recovery.sh');
 const workflow = fs.readFileSync(path.join(ROOT, '.github/workflows/android-signing-recovery.yml'), 'utf8');
 const script = fs.readFileSync(SCRIPT, 'utf8');
+const TOOL = path.join(ROOT, 'scripts/windows/US-recupero-keystore.cmd');
+const pwsh = ['pwsh', process.env.US_TEST_PWSH].filter(Boolean).find((bin) => spawnSync(bin, ['-NoProfile', '-Command', '1'], { stdio: 'ignore' }).status === 0);
 const toolsAvailable = ['keytool', 'openssl', 'jq', 'python3'].every((tool) => spawnSync('sh', ['-c', `command -v ${tool}`]).status === 0);
 const javaEnv = { ...process.env, JAVA_TOOL_OPTIONS: '' };
 
@@ -127,5 +129,34 @@ test('every failure leaves nothing to upload', { skip: !toolsAvailable }, () => 
       assert.ok(!fs.readdirSync(result.work).some((f) => /keystore|bundle|payload/.test(f)), `${name}: no plaintext left`);
     }
   }
+  fs.rmSync(fx.dir, { recursive: true, force: true });
+});
+
+test('the Windows tool keeps the private key non-exportable and needs no password', () => {
+  const tool = fs.readFileSync(TOOL, 'utf8');
+  assert.ok(tool.includes('\r\n'), 'CRLF line endings for cmd.exe');
+  assert.match(tool, /^<# : /);
+  assert.match(tool, /-Type DocumentEncryptionCert/);
+  assert.match(tool, /-KeyAlgorithm RSA -KeyLength 4096 -KeyExportPolicy NonExportable/);
+  assert.match(tool, /-CertStoreLocation Cert:\\CurrentUser\\My/);
+  assert.match(tool, /Set-Clipboard -Value \(\[Convert\]::ToBase64String\(\$cert\.RawData\)\)/);
+  assert.ok(!/Export-PfxCertificate|\.Export\(|PrivateKey\.Export|Read-Host -AsSecureString/.test(tool));
+  assert.match(tool, /Remove-Item -Path "Cert:\\CurrentUser\\My\\\$\(\$_\.Thumbprint\)" -DeleteKey/);
+});
+
+test('end to end: the Windows tool opens the sealed artifact', { skip: !toolsAvailable || !pwsh }, () => {
+  const fx = fixture();
+  const result = recover(fx);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  const downloads = path.join(fx.dir, 'Downloads');
+  fs.mkdirSync(downloads);
+  execFileSync('python3', ['-m', 'zipfile', '-c', path.join(downloads, 'US-signing-recovery-sealed.zip'), path.join(result.work, 'out/US-signing-recovery.p7m')]);
+  execFileSync('openssl', ['pkcs12', '-export', '-inkey', path.join(fx.dir, 'r4096.key'), '-in', path.join(fx.dir, 'r4096.pem'), '-out', path.join(fx.dir, 'r4096.pfx'), '-passout', 'pass:']);
+  const destination = path.join(fx.dir, 'Desktop-recovered');
+  const command = `$f='${TOOL}'; Invoke-Expression ((Get-Content -LiteralPath $f -Raw) -replace '(?s)^.*?#>\\r?\\n', '')`;
+  const opened = spawnSync(pwsh, ['-NoProfile', '-Command', command], { encoding: 'utf8', env: { ...process.env, US_RECOVERY_NONINTERACTIVE: '1', US_RECOVERY_DOWNLOADS: downloads, US_RECOVERY_DESTINATION: destination, US_RECOVERY_TEST_PFX: path.join(fx.dir, 'r4096.pfx') } });
+  assert.equal(opened.status, 0, opened.stdout + opened.stderr);
+  assert.deepEqual(fs.readdirSync(destination).sort(), ['LEGGIMI.txt', 'NUOVO-VALORE-ANDROID_SIGNING_BUNDLE_B64.txt', 'us-internal-signing.p12']);
+  assert.deepEqual(fs.readdirSync(downloads), [], 'the downloaded sealed file is removed');
   fs.rmSync(fx.dir, { recursive: true, force: true });
 });

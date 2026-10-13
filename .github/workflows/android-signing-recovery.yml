@@ -8,7 +8,7 @@ name: Android signing recovery (manual, owner only)
 #   owner, with a typed confirmation;
 # - the only artifact is sealed with CMS (AES-256) for the founder's own
 #   document-encryption certificate, created on his PC with a non-exportable
-#   private key (scripts/signing-recovery-key.ps1); no shared password, no
+#   private key (scripts/windows/US-recupero-keystore.cmd); no shared password, no
 #   fallback;
 # - nothing is produced unless the keystore certificate equals the pinned
 #   fingerprint below AND the certificate reported by the newest and the oldest
@@ -22,7 +22,7 @@ on:
         required: true
         type: string
       recipient_certificate:
-        description: 'Recipient certificate (base64), copied by scripts/signing-recovery-key.ps1'
+        description: 'Recipient certificate (base64), copied by scripts/windows/US-recupero-keystore.cmd'
         required: true
         type: string
 
