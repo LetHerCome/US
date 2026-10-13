@@ -205,15 +205,18 @@
   }
 
   async function requestToken() {
-    // Obtaining a token also reactivates provider delivery (notably APNs).
-    // Do not reactivate while a previous account still owns an unresolved row.
-    if (retired().some(entry => typeof entry === 'string' || entry.userId !== session.userId)) throw new Error('previous_account_retirement_pending');
     // If Android deleteToken failed or timed out on a previous logout, do not
     // race a new getToken() against that unfinished provider shutdown.
     if (read(STORE.transportPending) === '1') {
       const status = await nativeStatus();
       if (!await stopNativeDelivery(status)) throw new Error('previous_transport_cleanup_pending');
     }
+    // Obtaining a token also reactivates provider delivery (notably APNs).
+    // Do not reactivate while a previous account still owns an unresolved row,
+    // unless Android confirmed that row's FCM token was deleted afterwards:
+    // that row can no longer deliver (FCM answers UNREGISTERED and the server
+    // prunes it), and a new token is a different UNIQUE key.
+    if (retired().some(entry => typeof entry === 'string' || (entry.userId !== session.userId && entry.transportStopped !== true))) throw new Error('previous_account_retirement_pending');
     const waiter = {};
     const waiting = new Promise((resolve, reject) => { waiter.resolve = resolve; waiter.reject = reject; });
     waiting.catch(() => {}); // logout can reject while the plugin call is pending
@@ -421,6 +424,9 @@
         const result = await withTimeout(support.stopPushTransport(), 12000);
         if (result?.stopped !== true) return false;
         remove(STORE.transportPending);
+        // deleteToken() completed: every token retired before now is dead.
+        const list = retired();
+        if (list.length) setRetired(list.map((entry) => typeof entry === 'string' ? entry : { ...entry, transportStopped: true }));
         return true;
       } catch (_) {
         return false;

@@ -46,7 +46,7 @@ function nativeShell({ lockEnabled, ownerHash, configured, permission, retainedA
     },
     checkPermissions: async () => ({ receive: push.permission }),
     requestPermissions: async () => { push.calls.push('requestPermissions'); push.permission = 'granted'; return { receive: 'granted' }; },
-    register: async () => { push.calls.push('register'); setTimeout(() => push.emit('registration', { value: token }), 10); },
+    register: async () => { push.calls.push('register'); setTimeout(() => push.emit('registration', { value: push.token || token }), 10); },
     unregister: async () => { push.calls.push('unregister'); },
     removeAllDeliveredNotifications: async () => { push.calls.push('removeAll'); }
   };
@@ -81,7 +81,7 @@ function nativeShell({ lockEnabled, ownerHash, configured, permission, retainedA
     },
     stopPushTransport: async () => {
       push.calls.push('stopPushTransport');
-      return { stopped: !gate().owner };
+      return { stopped: !gate().owner && !push.stopFails };
     },
     openSettings: async () => { push.calls.push('openSettings'); return { opened: true }; },
     setBadge: async () => ({ supported: false })
@@ -233,7 +233,7 @@ test('N2 browser: permission only after "Attiva"; registration per installation;
   assert.equal(await page.evaluate(() => window.__PUSH.gate().owner ?? null), null, 'no owner left on this phone');
   assert.ok(after.calls.includes('removeAll'));
   assert.equal(after.installation, null, 'a new identity for the next account');
-  assert.deepEqual(JSON.parse(after.retired), [{id:first.installation,userId:'f1',token:TOKEN}]);
+  assert.deepEqual(JSON.parse(after.retired), [{id:first.installation,userId:'f1',token:TOKEN,transportStopped:true}], 'FCM confirmed the old token deleted');
 
   // Next activation (back online): new installation, the retired one is removed with it.
   await page.evaluate(() => { window.__PUSH.rpcError = null; });
@@ -305,6 +305,40 @@ test('N3 browser: foreground resume clears seen notifications, revalidates the i
   assert.equal(cold.rpc.args.target_installation_id, first.installation);
   assert.equal(cold.gate.installation, first.installation, 'native gate still bound to this installation after the restart');
   assert.equal(cold.gate.owner, 'f1');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('S3 browser: after A logs out offline, B on the same phone gets its own installation only once A\'s FCM token is gone', async (t) => {
+  const h = await harness(t);
+  if (!h) return;
+  const { page, ctx, errors } = await h.page({});
+  await page.waitForFunction(() => window.usProfile);
+  await page.waitForTimeout(600);
+  assert.equal((await page.evaluate(() => window.enableWebPush())).ok, true);
+  const a = await page.evaluate(() => localStorage.getItem('us:notifications:v1:installation'));
+
+  // Offline logout AND the provider cannot delete the token: B must stay blocked.
+  await page.evaluate(() => { window.__PUSH.rpcError = 'offline'; window.__PUSH.stopFails = true; });
+  await page.evaluate(() => window.revokeCurrentDevice());
+  assert.equal(await page.evaluate(() => window.__PUSH.gate().owner ?? null), null, 'A no longer owns the native gate');
+  await page.evaluate(() => { window.__PUSH.rpcError = null; });
+  await page.evaluate(() => window.UsNotifications.authReady({ id: 'f2' }));
+  assert.deepEqual(await page.evaluate(async () => ({ ...(await window.UsNotifications.enable()) })), { ok: false, kind: 'error' }, 'fail closed while A\'s token may still be live');
+  assert.equal(await page.evaluate(() => window.__PUSH.rpc.filter((entry) => entry.name === 'register_native_push_device').length), 1, 'no registration for B yet');
+
+  // The provider now confirms deleteToken(): A's row can no longer deliver.
+  await page.evaluate(() => { window.__PUSH.stopFails = false; window.__PUSH.token = `fcmQA:${'b'.repeat(80)}`; });
+  const enabled = await page.evaluate(async () => ({ ...(await window.UsNotifications.enable()) }));
+  assert.deepEqual(enabled, { ok: true, kind: 'active' });
+  const b = await page.evaluate(() => ({ rpc: window.__PUSH.rpc.at(-1), gate: window.__PUSH.gate(), retired: JSON.parse(localStorage.getItem('us:notifications:v1:retired')) }));
+  assert.equal(b.rpc.name, 'register_native_push_device');
+  assert.notEqual(b.rpc.args.target_installation_id, a, 'B never reuses A\'s installation');
+  assert.notEqual(b.rpc.args.target_token, TOKEN, 'B never registers A\'s token');
+  assert.deepEqual({ owner: b.gate.owner, installation: b.gate.installation }, { owner: 'f2', installation: b.rpc.args.target_installation_id });
+  assert.deepEqual(b.retired.map((entry) => entry.id), [a], 'A\'s row stays queued for A\'s own cleanup, never B\'s');
+  assert.equal(b.retired[0].userId, 'f1');
+  assert.equal(await page.evaluate(() => window.__PUSH.rpc.filter((entry) => entry.name === 'unregister_native_push_device' && entry.args.target_installation_id !== null).length), 1, 'B never unregisters A\'s row');
   assert.deepEqual(errors, []);
   await ctx.close();
 });
