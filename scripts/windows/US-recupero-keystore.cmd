@@ -1,4 +1,5 @@
 <# : US - recupero keystore interno. Doppio clic: Windows lo esegue con PowerShell.
+@set "PSModulePath="
 @powershell -NoProfile -ExecutionPolicy Bypass -Command "$f='%~f0'; Invoke-Expression ((Get-Content -LiteralPath $f -Raw) -replace '(?s)^.*?#>\r?\n', '')"
 @exit /b %errorlevel%
 #>
