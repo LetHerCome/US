@@ -50,8 +50,39 @@ function nativeShell({ lockEnabled, ownerHash, configured, permission, retainedA
     unregister: async () => { push.calls.push('unregister'); },
     removeAllDeliveredNotifications: async () => { push.calls.push('removeAll'); }
   };
+  // S3 native owner gate (UsPushOwnerGate): SharedPreferences survive a
+  // WebView/process restart, so the mock keeps them in a storage key that the
+  // cold-start test carries over like the rest of the WebView storage.
+  const GATE = '__qa_native_push_gate';
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const gate = () => { try { return JSON.parse(localStorage.getItem(GATE)) || {}; } catch (_) { return {}; } };
+  const saveGate = (value) => localStorage.setItem(GATE, JSON.stringify(value));
+  const epoch = () => {
+    const current = gate();
+    if (UUID.test(current.epoch || '')) return current.epoch;
+    const fresh = { epoch: crypto.randomUUID() };
+    saveGate(fresh);
+    return fresh.epoch;
+  };
+  push.gate = gate;
   const support = {
-    getStatus: async () => ({ platform: 'android', provider: 'fcm', configured: push.configured, environment: null, notificationsEnabled: true, partnerBlocked: false, remindersBlocked: false }),
+    getStatus: async () => ({ platform: 'android', provider: 'fcm', bindingEpoch: epoch(), configured: push.configured, environment: null, notificationsEnabled: true, partnerBlocked: false, remindersBlocked: false }),
+    bindPushOwner: async ({ ownerId, installationId, expectedEpoch }) => {
+      push.calls.push('bindPushOwner');
+      const current = gate();
+      if (!ownerId || !UUID.test(installationId || '') || expectedEpoch !== current.epoch) return { bound: false };
+      saveGate({ ...current, owner: ownerId, installation: installationId.toLowerCase() });
+      return { bound: true };
+    },
+    clearPushOwner: async () => {
+      push.calls.push('clearPushOwner');
+      saveGate({ epoch: crypto.randomUUID() });
+      return { cleared: true };
+    },
+    stopPushTransport: async () => {
+      push.calls.push('stopPushTransport');
+      return { stopped: !gate().owner };
+    },
     openSettings: async () => { push.calls.push('openSettings'); return { opened: true }; },
     setBadge: async () => ({ supported: false })
   };
@@ -180,7 +211,8 @@ test('N2 browser: permission only after "Attiva"; registration per installation;
   const result = await page.evaluate(() => window.enableWebPush());
   assert.equal(result.ok, true);
   const first = await page.evaluate(() => ({ calls: window.__PUSH.calls, rpc: window.__PUSH.rpc, installation: localStorage.getItem('us:notifications:v1:installation') }));
-  assert.deepEqual(first.calls, ['requestPermissions', 'register']);
+  assert.deepEqual(first.calls, ['requestPermissions', 'register', 'bindPushOwner'], 'the native gate is bound only after the server accepted the row');
+  assert.equal(await page.evaluate(() => window.__PUSH.gate().installation), first.installation);
   assert.equal(first.rpc.length, 1);
   assert.deepEqual(first.rpc[0], { name: 'register_native_push_device', args: {
     target_installation_id: first.installation, target_platform: 'android', target_provider: 'fcm',
@@ -195,7 +227,10 @@ test('N2 browser: permission only after "Attiva"; registration per installation;
   await page.evaluate(() => window.revokeCurrentDevice());
   const after = await page.evaluate(() => ({ calls: window.__PUSH.calls, rpc: window.__PUSH.rpc.at(-1), installation: localStorage.getItem('us:notifications:v1:installation'), retired: localStorage.getItem('us:notifications:v1:retired') }));
   assert.deepEqual(after.rpc, { name: 'unregister_native_push_device', args: { target_installation_id: first.installation } });
-  assert.ok(after.calls.includes('unregister'), 'FCM token deleted on this phone');
+  assert.ok(after.calls.includes('clearPushOwner'), 'native owner gate retired');
+  assert.ok(after.calls.indexOf('clearPushOwner') < after.calls.indexOf('stopPushTransport'), 'gate retired before the FCM token is deleted');
+  assert.ok(!after.calls.includes('unregister'), 'Android never uses the early-resolving Capacitor unregister()');
+  assert.equal(await page.evaluate(() => window.__PUSH.gate().owner ?? null), null, 'no owner left on this phone');
   assert.ok(after.calls.includes('removeAll'));
   assert.equal(after.installation, null, 'a new identity for the next account');
   assert.deepEqual(JSON.parse(after.retired), [{id:first.installation,userId:'f1',token:TOKEN}]);
@@ -233,7 +268,7 @@ test('N3 browser: foreground resume clears seen notifications, revalidates the i
   await page.evaluate(() => { window.__PUSH.calls.length = 0; window.__PUSH.rpc.length = 0; });
   await page.evaluate(() => window.UsNotifications.resume());
   const resumed = await page.evaluate(() => ({ calls: window.__PUSH.calls, rpc: window.__PUSH.rpc }));
-  assert.deepEqual(resumed.calls, ['removeAll', 'register']);
+  assert.deepEqual(resumed.calls, ['removeAll', 'register', 'bindPushOwner'], 'one owner re-bind, no duplicate from the registration event');
   assert.equal(resumed.rpc.length, 0);
 
   // Provider rotation is authoritative even without an app restart.
@@ -246,13 +281,30 @@ test('N3 browser: foreground resume clears seen notifications, revalidates the i
 
   // A cold WebView process confirms the server row once even when the local
   // daily signature is still valid (repairs remote pruning).
+  // A real app restart keeps the WebView localStorage and the native
+  // SharedPreferences. The QA fixture wipes storage on every navigation, so
+  // carry this installation's state over explicitly; without this the
+  // "cold start" was a fresh install with notifications never enabled and
+  // the re-registration below could not happen (audit H-03).
+  const persisted = await page.evaluate(() => Object.fromEntries(Object.keys(localStorage)
+    .filter((key) => key.startsWith('us:notifications:') || key === '__qa_native_push_gate')
+    .map((key) => [key, localStorage.getItem(key)])));
+  assert.equal(persisted['us:notifications:v1:installation'], first.installation);
+  assert.equal(persisted['us:notifications:v1:enabled:f1'], '1');
+  await page.addInitScript((entries) => {
+    for (const [key, value] of Object.entries(entries)) localStorage.setItem(key, value);
+  }, persisted);
   await page.reload({ waitUntil: 'load' });
   await page.waitForFunction(() => window.usProfile);
+  assert.equal(await page.evaluate(() => localStorage.getItem('us:notifications:v1:installation')), first.installation, 'storage survived the restart');
   await page.waitForFunction(() => window.__PUSH.rpc.some((entry) => entry.name === 'register_native_push_device'), null, { timeout: 5000 });
-  const cold = await page.evaluate(() => ({ calls: window.__PUSH.calls, rpc: window.__PUSH.rpc.at(-1) }));
+  await page.waitForFunction(() => window.__PUSH.calls.includes('bindPushOwner'), null, { timeout: 5000 });
+  const cold = await page.evaluate(() => ({ calls: window.__PUSH.calls, rpc: window.__PUSH.rpc.at(-1), gate: window.__PUSH.gate() }));
   assert.ok(cold.calls.includes('removeAll'));
   assert.ok(cold.calls.includes('register'));
   assert.equal(cold.rpc.args.target_installation_id, first.installation);
+  assert.equal(cold.gate.installation, first.installation, 'native gate still bound to this installation after the restart');
+  assert.equal(cold.gate.owner, 'f1');
   assert.deepEqual(errors, []);
   await ctx.close();
 });
@@ -267,7 +319,9 @@ test('N2 browser: without a Firebase configuration nothing native is touched and
   assert.equal(await page.evaluate(async () => (await window.UsNotifications.getState()).kind), 'unavailable');
   assert.deepEqual(await page.evaluate(async () => ({ ...(await window.UsNotifications.enable()) })), { ok: false, kind: 'unavailable' });
   await page.evaluate(() => window.revokeCurrentDevice());
-  assert.deepEqual(await page.evaluate(() => window.__PUSH.calls), ['removeAll'], 'never register/unregister (FirebaseMessaging) without configuration');
+  const unconfigured = await page.evaluate(() => window.__PUSH.calls);
+  assert.deepEqual(unconfigured.filter((call) => !['clearPushOwner', 'removeAll'].includes(call)), [], 'never register/unregister (FirebaseMessaging) without configuration');
+  assert.ok(unconfigured.includes('removeAll'));
   assert.deepEqual(errors, []);
   await ctx.close();
 });

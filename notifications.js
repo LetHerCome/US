@@ -214,10 +214,17 @@
       const status = await nativeStatus();
       if (!await stopNativeDelivery(status)) throw new Error('previous_transport_cleanup_pending');
     }
-    const waiting = new Promise((resolve, reject) => tokenWaiters.push({ resolve, reject }));
+    const waiter = {};
+    const waiting = new Promise((resolve, reject) => { waiter.resolve = resolve; waiter.reject = reject; });
     waiting.catch(() => {}); // logout can reject while the plugin call is pending
-    await push.register();
-    return withTimeout(waiting, REGISTRATION_TIMEOUT_MS);
+    tokenWaiters.push(waiter);
+    try {
+      await push.register();
+      return await withTimeout(waiting, REGISTRATION_TIMEOUT_MS);
+    } finally {
+      // A timed-out request must not swallow a later, unrelated rotation event.
+      tokenWaiters = tokenWaiters.filter((entry) => entry !== waiter);
+    }
   }
 
   async function registerToken(token, status, owner = session) {
@@ -261,7 +268,12 @@
 
   async function onRegistration(event) {
     lastToken = typeof event?.value === 'string' ? event.value : '';
+    // The answer to our own requestToken(): that caller registers it. Only an
+    // unsolicited event (provider rotation) registers from here, so a resume
+    // or cold start sends one RPC and one owner bind, not two racing ones.
+    const requested = tokenWaiters.length > 0;
     settleToken(null, lastToken);
+    if (requested) return;
     // Token rotation while signed in and enabled on this installation.
     if (!session.ready || !isEnabledFor(session.userId) || busy) return;
     const owner = session;
