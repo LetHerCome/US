@@ -79,6 +79,10 @@ jobs:
           }
           $path = Join-Path $env:RUNNER_TEMP "us-candidate-signing.jks"
           [IO.File]::WriteAllBytes($path, [Convert]::FromBase64String($bundle.keystoreBase64))
+          # Never let the keystore passwords reach the public job log: values
+          # written to GITHUB_ENV are echoed in every later step's env block.
+          Write-Output "::add-mask::$($bundle.storePassword)"
+          Write-Output "::add-mask::$($bundle.keyPassword)"
           "US_ANDROID_KEYSTORE_PATH=$path" | Out-File -FilePath $env:GITHUB_ENV -Append
           "US_ANDROID_KEYSTORE_PASSWORD=$($bundle.storePassword)" | Out-File -FilePath $env:GITHUB_ENV -Append
           "US_ANDROID_KEY_ALIAS=$($bundle.keyAlias)" | Out-File -FilePath $env:GITHUB_ENV -Append

@@ -286,6 +286,19 @@ test('signed internal APK workflows never upload an installable APK in clear fro
   }
 });
 
+test('signing workflows mask keystore passwords before exporting them to later steps', () => {
+  for (const file of ['android-internal-release.yml', 'android-candidate-signed.yml', 'android-ui-integration-signed.yml']) {
+    const workflow = read(`.github/workflows/${file}`);
+    for (const field of ['storePassword', 'keyPassword']) {
+      const mask = workflow.indexOf(`::add-mask::$($bundle.${field})`);
+      const exported = workflow.indexOf(`=$($bundle.${field})" | Out-File -FilePath $env:GITHUB_ENV`);
+      assert.ok(mask > 0 && exported > mask, `${file}: ${field} must be masked before it reaches GITHUB_ENV`);
+    }
+  }
+  const play = read('.github/workflows/android-play-bundle.yml');
+  assert.ok(play.indexOf('::add-mask::$store_pass') < play.indexOf('US_ANDROID_UPLOAD_KEYSTORE_PASSWORD=$store_pass'));
+});
+
 test('a Play bundle targets production and carries no staging QA tooling', async () => {
   const gate = await loadGate();
   const prod = { name: 'base/assets/public/app.js', text: 'createClient("https://iiakdfsxpywdkxravqjh.supabase.co")' };
