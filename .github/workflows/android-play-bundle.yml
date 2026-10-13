@@ -249,13 +249,20 @@ jobs:
           aab="android/app/build/outputs/bundle/release/app-release.aab"
           java -jar "$BUNDLETOOL_JAR" validate --bundle="$aab" > out/bundletool-validate.txt
           java -jar "$BUNDLETOOL_JAR" dump manifest --bundle="$aab" > out/AndroidManifest.bundle.xml
+          java -jar "$BUNDLETOOL_JAR" dump config --bundle="$aab" > out/BundleConfig.json
           unzip -Z1 "$aab" > out/bundle-entries.txt
           mkdir -p "$RUNNER_TEMP/aab-extracted"
           unzip -q "$aab" -d "$RUNNER_TEMP/aab-extracted"
 
       - name: US Play gate
         run: |
+          # Once the source declares the guarded FCM service (PR #187), every
+          # bundle, test builds included, must ship it as the only receiver.
+          require_guarded=false
+          if grep -q 'UsGuardedMessagingService' android/app/src/main/AndroidManifest.xml; then require_guarded=true; fi
           node scripts/validate-android-bundle.mjs \
+            --require-guarded-fcm "$require_guarded" \
+            --bundle-config out/BundleConfig.json \
             --mode "$US_BUILD_MODE" \
             --manifest out/AndroidManifest.bundle.xml \
             --entries out/bundle-entries.txt \

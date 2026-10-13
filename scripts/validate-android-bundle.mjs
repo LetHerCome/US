@@ -11,7 +11,8 @@
 //     --manifest <AndroidManifest.xml> --entries <entries.txt> \
 //     --extracted <dir> --aab <app-release.aab> \
 //     --expect-version-code <n> --expect-version-name <x.y.z> \
-//     --mode test|upload --firebase-configured true|false --out <dir>
+//     --mode test|upload --firebase-configured true|false --out <dir> \
+//     --bundle-config <BundleConfig.json> [--require-guarded-fcm true]
 //
 // Exit code 1 when any check fails. Warnings never fail the build; they are
 // listed in the report for a human to decide.
@@ -156,7 +157,7 @@ export function summarizeManifest(manifest) {
 }
 
 // ---------------------------------------------------------------- checks
-export function checkManifest(summary, { expectVersionCode, expectVersionName, mode }) {
+export function checkManifest(summary, { expectVersionCode, expectVersionName, mode, requireGuardedFcm = false }) {
   const results = [];
   const pass = (id, detail) => results.push({ id, level: 'pass', detail });
   const fail = (id, detail) => results.push({ id, level: 'fail', detail });
@@ -217,7 +218,7 @@ export function checkManifest(summary, { expectVersionCode, expectVersionName, m
   const guardedOnly = fcmReceivers.length === 1 && fcmReceivers[0].name === GUARDED_FCM_SERVICE && fcmReceivers[0].exported !== 'true';
   const fcmDetail = fcmReceivers.map((c) => c.name).join(', ') || 'nessuno';
   if (guardedOnly) pass('fcm-guarded-receiver', fcmDetail);
-  else if (mode === 'upload') fail('fcm-guarded-receiver', `serve solo ${GUARDED_FCM_SERVICE} (PR #187), trovati: ${fcmDetail}`);
+  else if (mode === 'upload' || requireGuardedFcm) fail('fcm-guarded-receiver', `serve solo ${GUARDED_FCM_SERVICE} (PR #187), trovati: ${fcmDetail}`);
   else warn('fcm-guarded-receiver', `build di prova senza servizio protetto (PR #187 non mergiata), trovati: ${fcmDetail}`);
 
   return results;
@@ -269,6 +270,28 @@ export function checkEntries(entries, { mode, firebaseConfigured, readLib }) {
   else if (mode === 'upload') results.push({ id: 'firebase-config', level: 'fail', detail: 'ANDROID_GOOGLE_SERVICES_JSON_B64 mancante: notifiche native non funzionerebbero' });
   else results.push({ id: 'firebase-config', level: 'warn', detail: 'build di prova senza Firebase: notifiche native non attive' });
   return results;
+}
+
+// BundleConfig (from `bundletool dump config`): uncompressed native libraries
+// must be stored with 16 KB zip alignment so 16 KB page devices can map them.
+function findKey(node, key) {
+  if (!node || typeof node !== 'object') return undefined;
+  if (Object.prototype.hasOwnProperty.call(node, key)) return node[key];
+  for (const value of Object.values(node)) {
+    const found = findKey(value, key);
+    if (found !== undefined) return found;
+  }
+  return undefined;
+}
+
+export function checkBundleConfig(config, entries) {
+  const has64BitLibs = entries.some((e) => /\/lib\/(?:arm64-v8a|x86_64)\/[^/]+\.so$/.test(e));
+  const uncompress = findKey(config, 'uncompressNativeLibraries') || {};
+  const detail = `uncompressNativeLibraries.enabled=${uncompress.enabled ?? 'assente'}, alignment=${uncompress.alignment ?? 'assente'}`;
+  if (!has64BitLibs) return [{ id: 'page-alignment-16k', level: 'pass', detail: `nessuna libreria nativa a 64 bit (${detail})` }];
+  return uncompress.enabled === true && uncompress.alignment === 'PAGE_ALIGNMENT_16K'
+    ? [{ id: 'page-alignment-16k', level: 'pass', detail }]
+    : [{ id: 'page-alignment-16k', level: 'fail', detail: `serve PAGE_ALIGNMENT_16K con librerie non compresse: ${detail}` }];
 }
 
 // Smallest p_align among PT_LOAD program headers of an ELF shared library.
@@ -382,13 +405,17 @@ export function main(argv) {
     ...checkManifest(summary, {
       expectVersionCode: args['expect-version-code'],
       expectVersionName: args['expect-version-name'],
-      mode
+      mode,
+      requireGuardedFcm: args['require-guarded-fcm'] === 'true'
     }),
     ...checkEntries(entries, {
       mode,
       firebaseConfigured: args['firebase-configured'] === 'true',
       readLib: (entry) => readFileSync(path.join(args.extracted, entry))
     }),
+    ...(args['bundle-config']
+      ? checkBundleConfig(JSON.parse(readFileSync(args['bundle-config'], 'utf8')), entries)
+      : [{ id: 'page-alignment-16k', level: 'fail', detail: '--bundle-config mancante' }]),
     ...scanForSecrets(readTextFiles(args.extracted))
   ];
   let aab;

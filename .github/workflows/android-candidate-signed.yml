@@ -141,6 +141,30 @@ jobs:
           "@ | Set-Content out/build-info.txt
           Copy-Item signature.txt out/signature.txt
 
+      - name: Keep signed APK out of public artifacts
+        shell: pwsh
+        env:
+          REPO_PRIVATE: ${{ github.event.repository.private }}
+          ARTIFACT_PASSWORD: ${{ secrets.ANDROID_INTERNAL_ARTIFACT_PASSWORD }}
+        run: |
+          # This repository is public: an artifact is downloadable by any GitHub
+          # user. A signed, installable APK is therefore only uploaded when the
+          # repository is private, or inside an AES-256 7z (file names
+          # included) when ANDROID_INTERNAL_ARTIFACT_PASSWORD (>= 24 chars) is
+          # set. Otherwise only hashes, signature and build info are kept.
+          if ($env:REPO_PRIVATE -eq 'true') { exit 0 }
+          $apks = @(Get-ChildItem out -Filter *.apk)
+          if ($env:ARTIFACT_PASSWORD -and $env:ARTIFACT_PASSWORD.Length -ge 24) {
+            foreach ($apk in $apks) {
+              & 7z a -t7z -mhe=on "-p$env:ARTIFACT_PASSWORD" (Join-Path out "$($apk.BaseName).7z") $apk.FullName | Out-Null
+              if ($LASTEXITCODE -ne 0) { throw "7z encryption failed" }
+            }
+          } else {
+            Write-Host "::warning::Public repository: signed APK not uploaded (set ANDROID_INTERNAL_ARTIFACT_PASSWORD to receive it encrypted)."
+          }
+          $apks | Remove-Item -Force
+          if (Get-ChildItem out -Filter *.apk) { throw "Signed APK still present in artifact folder" }
+
       - uses: actions/upload-artifact@v4
         with:
           name: US-Android-Multicouple-Candidate

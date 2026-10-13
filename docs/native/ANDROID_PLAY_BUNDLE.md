@@ -10,7 +10,7 @@ Workflow: `.github/workflows/android-play-bundle.yml`. Validatore: `scripts/vali
 2. Esegue `bundleRelease` e produce `app-release.aab`.
 3. Verifica la firma (`jarsigner`), rifiuta la chiave di debug e, in modalità upload, rifiuta una chiave di upload uguale alla chiave interna permanente (confronto con l'impronta pubblica `ANDROID_INTERNAL_CERT_SHA256`: la chiave privata interna non viene mai aperta da questo workflow).
 4. Esegue `bundletool validate` ed estrae il manifest finale del bundle.
-5. Applica il gate US: pacchetto `com.usapp.us`, versionCode 1..2.100.000.000 e uguale a quello assegnato, versionName `x.y.z`, targetSdk ≥ 36, minSdk 26, niente `debuggable`/`testOnly`/cleartext, `allowBackup=false`, nessun permesso vietato (posizione in background, media, SMS, contatti, allarmi esatti, …), nessun componente esportato senza permesso oltre a `MainActivity`, un solo ricevitore FCM e cioè `UsGuardedMessagingService` (PR #187), web app presente, nessun keystore o `google-services.json` dentro il bundle, nessun segreto server (anche JWT `service_role` codificati) nei file di testo e nel codice dex, librerie native a 64 bit con segmenti allineati a 16 KB (oggi solo `libdatastore_shared_counter.so` di AndroidX DataStore).
+5. Applica il gate US: pacchetto `com.usapp.us`, versionCode 1..2.100.000.000 e uguale a quello assegnato, versionName `x.y.z`, targetSdk ≥ 36, minSdk 26, niente `debuggable`/`testOnly`/cleartext, `allowBackup=false`, nessun permesso vietato (posizione in background, media, SMS, contatti, allarmi esatti, …), nessun componente esportato senza permesso oltre a `MainActivity`, un solo ricevitore FCM e cioè `UsGuardedMessagingService` (PR #187), web app presente, nessun keystore o `google-services.json` dentro il bundle, nessun segreto server (anche JWT `service_role` codificati) nei file di testo e nel codice dex, librerie native a 64 bit con segmenti ELF allineati a 16 KB (oggi solo `libdatastore_shared_counter.so` di AndroidX DataStore) e `BundleConfig` con `uncompressNativeLibraries.alignment = PAGE_ALIGNMENT_16K` (da `bundletool dump config`). Se il manifest sorgente dichiara `UsGuardedMessagingService`, anche le build di prova devono avere solo quel ricevitore FCM.
 6. Pubblica come artifact solo i report: `aab-validation.md/json`, `permissions.txt` (base per il modulo Data safety), manifest del bundle, certificato del firmatario, info di build.
 
 ## Modalità
@@ -44,9 +44,7 @@ Gradle usa la chiave di upload solo con `US_ANDROID_PLAY_UPLOAD=true` e in quel 
 Nessuno di questi valori va scritto in chat, nel repository o in un documento condiviso.
 
 1. **Account Google Play Console** attivo e verificato, app `com.usapp.us` creata (l'ID non si cambia più).
-2. **Decisione sulla firma** (una delle due):
-   - (consigliata) lasciare che Google generi la chiave di firma app: chi ha già l'APK sideload deve disinstallarlo una volta; i dati sul server restano;
-   - riusare la chiave interna come chiave di firma app (esportazione PEPK da Play Console): gli APK installati si aggiornano da Play, ma la chiave interna deve restare segreta per sempre.
+2. **Firma (decisa il 13/10/2026):** Google Play App Signing con chiave di firma generata da Google e chiave di upload dedicata. Chi ha già l'APK interno sideload lo disinstalla una volta prima di installare da Play; i dati sul server restano.
 3. **Chiave di upload**: generarla sul proprio computer (Android Studio › Generate Signed Bundle, oppure `keytool`), conservarne una copia offline con le password, registrarla in Play Console.
 4. **Tre segreti e una variabile GitHub** (Settings › Secrets and variables › Actions):
    - `ANDROID_PLAY_UPLOAD_BUNDLE_B64`: base64 di un JSON `{"keystoreBase64","storePassword","keyAlias","keyPassword"}`, stesso formato del segreto interno esistente;
@@ -58,7 +56,7 @@ Nessuno di questi valori va scritto in chat, nel repository o in un documento co
 ## Limiti noti
 
 - `RECORD_AUDIO` assente dal manifest: il gate lo segnala come avviso (roadmap B2, manifest di competenza delle notifiche).
-- Il workflow interno esistente (`android-internal-release.yml`) carica l'APK firmato in chiaro come artifact di un repository pubblico. Va deciso se renderlo privato, cifrarlo o fermarlo dopo il lancio su Play.
+- APK interni firmati (`android-internal-release.yml`, `android-candidate-signed.yml`, `android-ui-integration-signed.yml`): finché il repository è pubblico l'APK non viene più caricato in chiaro. Viene caricato solo cifrato (7z AES-256) se esiste il segreto facoltativo `ANDROID_INTERNAL_ARTIFACT_PASSWORD` (≥ 24 caratteri), altrimenti restano solo hash, firma e info di build. Gli artifact già pubblicati prima di questa modifica restano scaricabili fino alla loro scadenza (30 giorni). Il workflow di staging della PR #187 (`s3-staging-android-qa.yml`) va protetto allo stesso modo.
 - Gli asset sorgente (`assets/source`) restano nel bundle (roadmap B3).
 
 ## Prima prova reale (13/10/2026, commit `adace8c`, modo test)

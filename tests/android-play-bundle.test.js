@@ -195,7 +195,8 @@ test('the CLI writes JSON, Markdown and permission reports and fails on errors',
   fs.writeFileSync(path.join(dir, 'manifest.xml'), manifestXml());
   fs.writeFileSync(path.join(dir, 'entries.txt'), GOOD_ENTRIES.join('\n'));
   fs.writeFileSync(path.join(dir, 'app.aab'), 'not really a bundle');
-  const args = ['--mode', 'upload', '--manifest', path.join(dir, 'manifest.xml'), '--entries', path.join(dir, 'entries.txt'),
+  fs.writeFileSync(path.join(dir, 'config.json'), JSON.stringify({ optimizations: { uncompressNativeLibraries: { enabled: true, alignment: 'PAGE_ALIGNMENT_16K' } } }));
+  const args = ['--bundle-config', path.join(dir, 'config.json'), '--mode', 'upload', '--manifest', path.join(dir, 'manifest.xml'), '--entries', path.join(dir, 'entries.txt'),
     '--extracted', path.join(dir, 'extracted'), '--aab', path.join(dir, 'app.aab'), '--expect-version-code', '1791739949',
     '--expect-version-name', '1.0.0', '--firebase-configured', 'true', '--out', path.join(dir, 'out')];
   const report = gate.main(args);
@@ -248,4 +249,38 @@ test('the AAB workflow never publishes a downloadable bundle from a public repos
   assert.doesNotMatch(workflow, /ANDROID_SIGNING_BUNDLE_B64/);
   assert.match(workflow, /BUNDLETOOL_SHA256: '[0-9a-f]{64}'/);
   assert.match(workflow, /-lt 24/);
+});
+
+test('PAGE_ALIGNMENT_16K is required in BundleConfig when 64-bit native libraries ship', async () => {
+  const gate = await loadGate();
+  const libs = [...GOOD_ENTRIES, 'base/lib/arm64-v8a/libdatastore_shared_counter.so'];
+  const aligned = { bundletool: { version: '8.13.0' }, optimizations: { uncompressNativeLibraries: { enabled: true, alignment: 'PAGE_ALIGNMENT_16K' } } };
+  assert.equal(gate.checkBundleConfig(aligned, libs)[0].level, 'pass');
+  assert.equal(gate.checkBundleConfig({ optimizations: { uncompressNativeLibraries: { enabled: true, alignment: 'PAGE_ALIGNMENT_4K' } } }, libs)[0].level, 'fail');
+  assert.equal(gate.checkBundleConfig({ optimizations: { uncompressNativeLibraries: { enabled: true } } }, libs)[0].level, 'fail');
+  assert.equal(gate.checkBundleConfig({}, libs)[0].level, 'fail');
+  assert.equal(gate.checkBundleConfig({}, GOOD_ENTRIES)[0].level, 'pass');
+  assert.match(read('.github/workflows/android-play-bundle.yml'), /dump config --bundle=/);
+});
+
+test('once the source declares the guarded FCM service, test builds must ship it alone', async () => {
+  const gate = await loadGate();
+  const stock = gate.summarizeManifest(gate.parseManifestXml(manifestXml({ fcmServices: ['com.capacitorjs.plugins.pushnotifications.MessagingService'] })));
+  const results = gate.checkManifest(stock, { expectVersionCode: '1791739949', expectVersionName: '1.0.0', mode: 'test', requireGuardedFcm: true });
+  assert.equal(levelOf(results, 'fcm-guarded-receiver'), 'fail');
+  assert.match(read('.github/workflows/android-play-bundle.yml'), /grep -q 'UsGuardedMessagingService' android\/app\/src\/main\/AndroidManifest\.xml/);
+});
+
+test('signed internal APK workflows never upload an installable APK in clear from a public repo', () => {
+  for (const file of ['android-internal-release.yml', 'android-candidate-signed.yml', 'android-ui-integration-signed.yml']) {
+    const workflow = read(`.github/workflows/${file}`);
+    const guard = workflow.indexOf('Keep signed APK out of public artifacts');
+    const upload = workflow.indexOf('actions/upload-artifact');
+    assert.ok(guard > 0 && guard < upload, `${file}: guard step must precede the upload`);
+    assert.match(workflow, /REPO_PRIVATE: \$\{\{ github\.event\.repository\.private \}\}/);
+    assert.match(workflow, /if \(\$env:REPO_PRIVATE -eq 'true'\) \{ exit 0 \}/);
+    assert.match(workflow, /7z a -t7z -mhe=on/);
+    assert.match(workflow, /Length -ge 24/);
+    assert.match(workflow, /\$apks \| Remove-Item -Force/);
+  }
 });
