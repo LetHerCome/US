@@ -10,6 +10,31 @@ Legenda stati: **Prog** = progettato · **Branch** = implementato su branch · *
 
 ---
 
+## 0. Avanzamento — Missione 002 (aggiornato 2026-10-13)
+
+Stati: **Completato** = fatto e verificato con evidenza · **Parziale** = fatto su branch, mancano verifiche o autorizzazioni · **Bloccato** = non può proseguire senza un'azione esterna · **Da iniziare**. Niente di quanto sotto è mergiato, distribuito o provato su telefono, salvo dove indicato.
+
+| ID | Attività | Stato | Evidenza | Cosa manca |
+|---|---|---|---|---|
+| A1 | Congelare i deploy Edge da `main` | Parziale | Regola in questa roadmap e nel piano S3.2 §10 | Scriverla in `CURRENT_STATE.md`/`AGENTS.md` al merge di #187 |
+| A4 | Test di ri-registrazione push all'avvio a freddo | Completato (su branch) | PR #187: era un difetto del test; ora passa. Unica differenza della suite rispetto a `main` | Merge |
+| A2 | #187 pronta al merge | Parziale | HEAD `6cdac6f`: BUILD_ID `us-store-s3-native-push-owner-gate-20261013-1`; contratto Android/server FCM con test; canale `us_partner` non più declassato; account B abilitato solo dopo la cancellazione confermata del token di A; nuovo workflow CI che blocca payload FCM con dati privati; revisione indipendente senza leak tra coppie (3 rilievi minori corretti). CI verde tranne `us-staging-s31`, che dipende da uno script presente solo in #189 | Verifica A3, protocollo fisico E5, autorizzazione al merge |
+| A3 | Verifica in sola lettura degli 8 bundle Edge live | Bloccato | — | Autorizzazione del fondatore alla lettura della produzione |
+| A5 | Prerequisiti nativi in produzione (Firebase, segreto FCM, colonna `installation_id`) | Da iniziare | — | Fondatore, dopo A3 |
+| B1 | Pipeline AAB | Parziale | Branch `claude/play-aab-pipeline-x4kv81` (`bf8c747`): CI verde (run 38327974170 su `a1e62c4`), `bundletool validate` OK, targetSdk 36 / minSdk 26, versionName `1.0.0`, pagine 16 KB conformi; la modalità Play resta bloccata finché #187 non è mergiata; niente più APK firmati in chiaro come artifact. Il fondatore ha autorizzato una PR draft | AAB costruito sopra #187; chiave di upload e segreti GitHub (fondatore); prova su telefono |
+| B2 | Permesso microfono | Parziale | `RECORD_AUDIO` e `MODIFY_AUDIO_SETTINGS` nel manifest di #187 | Prova della nota vocale su telefono |
+| F-02 | Strategia di firma | Completato (decisione) | Il fondatore ha scelto Play App Signing con chiave generata da Google e chiave di upload dedicata | Creazione della chiave e dei segreti (fondatore) |
+| C1 | Decisioni lifecycle (D-1…D-19) | Bloccato | Elencate nel piano S3.2 §11 con valori consigliati | Risposta del fondatore |
+| C3–C4 | Cancellazione account | Parziale (solo piano) | [Piano S3.2](US_S3_2_ACCOUNT_DELETION_PLAN_2026-10-13.md): riusa inventari e test di #190, revisione indipendente "approvato con modifiche", 7 modifiche obbligatorie integrate. Stima rivista 16–20 giorni | C1, merge #187, poi preflight P-1 su staging (autorizzazione) |
+| E5 | Protocollo fisico notifiche T0–T7 | Da iniziare | — | Telefono e fondatore, sull'APK di staging dal commit finale di #187 |
+| C2, C5, C6, D1, D2, E1–E4, E6, E7 | Altre attività P0/P1 | Da iniziare | — | Vedi §6 |
+
+**Nuovo rischio (ALTA):** il repository è pubblico e il workflow dell'APK interno su `main` pubblica un APK firmato con l'app ID di produzione, scaricabile da chiunque come artifact. La PR AAB lo corregge; finché non è mergiata il rischio resta. Si aggiunge a H-10.
+
+**Cambiamento rispetto all'audit:** il fondatore ha chiesto di **non chiudere** la PR #190. Il piano S3.2 ne riusa l'inventario delle FK, l'harness PGlite, il serializzatore di export e l'inventario media; le bozze "vault" restano parcheggiate sul branch.
+
+---
+
 ## 1. Executive summary
 
 US ha un prodotto core maturo (quattro tab, backend con RLS su tutte le tabelle, build Android firmata, API 36), ma **oggi non è pubblicabile su Google Play**. I motivi non sono di interfaccia: sono di conformità, privacy e allineamento del codice.
@@ -123,7 +148,7 @@ RLS attiva su tutte le tabelle pubbliche; tutte le 112 funzioni SECURITY DEFINER
 |---|---|---|---|
 | **PR #187** — FCM data-only con controllo proprietario | Draft, HEAD `8b0a0ec`, 83 commit, CI 6/6 verde. Server già in **produzione** dall'11/10. Merge pulito con `main`. Emulatore 5/5; consegna positiva su telefono B1. | È il pezzo più importante e più vicino al traguardo. Mancano: revisione di sicurezza, nuovo BUILD_ID, correzione canale (M-02), triage di H-03, test fisici (6.3). Non contiene la migrazione per H-02. | **P0.** Completare, revisionare e mergiare per primo. CURRENT_STATE riporta ancora la HEAD vecchia `c8ab600`. |
 | **PR #189** — registrazione, verifica email, recupero (solo staging) | Draft, HEAD `96ea10d`, CI 13/13 verde, 38/38 test mirati verdi in questa sessione. Nessun file in comune con #187. | Buona base. Per la produzione mancano: flag di produzione al posto della costante staging, SMTP personalizzato, modelli email in italiano, policy password, decisione CAPTCHA, accettazione termini e dichiarazione 18+, test del link email su Android (apre il browser). | **P0 per il test chiuso con tester esterni, P0 assoluto per la produzione.** Mergiare dopo #187, con BUILD_ID riconciliato. |
-| **PR #190** — lifecycle, export, "vault" di conservazione | Draft, HEAD `c4568b0`, 123 commit, +5538 righe, nessun file applicativo, nessuna migrazione installata. Unico check rosso: Cloudflare `us-staging-s31` (script presente solo su #189). | Ricerca sproporzionata per la 1.0: approvazioni per singolo elemento, ledger di revisione, copia media in memoria, matrice JWT mai eseguita (0 oggetti su staging). Utili: inventario delle 78 FK, harness PGlite a due coppie, serializzatore export. Semplificazione mancata: lo Storage è già leggibile da entrambi i partner, quindi basta che le righe sopravvivano con autore NULL per conservare i ricordi senza copiare file. | **Chiudere senza merge** dopo aver estratto i tre pezzi utili in una PR snella "S3.2-min" (attività C3–C4). |
+| **PR #190** — lifecycle, export, "vault" di conservazione | Draft, HEAD `c4568b0`, 123 commit, +5538 righe, nessun file applicativo, nessuna migrazione installata. Unico check rosso: Cloudflare `us-staging-s31` (script presente solo su #189). | Ricerca sproporzionata per la 1.0: approvazioni per singolo elemento, ledger di revisione, copia media in memoria, matrice JWT mai eseguita (0 oggetti su staging). Utili: inventario delle 78 FK, harness PGlite a due coppie, serializzatore export. Semplificazione mancata: lo Storage è già leggibile da entrambi i partner, quindi basta che le righe sopravvivano con autore NULL per conservare i ricordi senza copiare file. | ~~Chiudere senza merge~~ [Aggiornato 2026-10-13: il fondatore ha chiesto di tenerla aperta.] Resta aperta come riferimento; il piano S3.2 ne riusa i pezzi utili nelle PR snelle C3–C4. |
 | **PR #180** — settimana condivisa reale (S2) | Draft, HEAD `c5602b6` su `main` vecchio (`0682a9b`), CI 9/9 verde. SQL installato **solo su staging**. | Migliora l'onestà della UI settimanale ma non è un requisito di pubblicazione. Richiede SQL di produzione e un rebase. Il suo trigger blocca scritture service-role su `daily_answers`: conflitto con il job di cancellazione. | **P2: parcheggiare fino a dopo la 1.0**, salvo decisione contraria. Se ripresa, adattare il trigger (S2 non deve bloccare il lavoro di cancellazione). |
 | **Issue #181** (P0 notifiche) | Aperta. Lato server in produzione; lato app solo su branch. | Chiudibile solo dopo merge #187, verifica dei bundle live, protocollo fisico 6.3. | Mantenere aperta; usarla come registro delle evidenze. |
 | **Issue #183** (P0 lifecycle) | Aperta, 26 commenti, quasi tutti su #190. | Va riorientata sul percorso snello. | Aggiornare con la decisione del fondatore su Policy A semplificata. |
@@ -145,8 +170,8 @@ Valutazione qualitativa, senza percentuali. **Rosso** = blocca · **Ambra** = la
 | Ciclo di vita account | Rosso | Nessuna cancellazione, cascata pericolosa, Policy A non ratificata | C1, C3, C4 |
 | Sicurezza backend | Ambra | RLS e funzioni solide; `UNIQUE(token)`, privilegi larghi, auth da irrobustire | C3, D1, P1-sicurezza |
 | Privacy e conformità | Rosso | Nessuna informativa, posizione precisa esposta, Data safety non compilabile | C2, C5, C6 |
-| Notifiche | Rosso | Codice app non mergiato, test fisici critici mancanti | A2, A4, E5 |
-| Android e pipeline Play | Rosso | Nessun AAB, microfono, firma non decisa | B1, B2, F-02 |
+| Notifiche | Rosso (in miglioramento) | #187 completa su branch con revisione; non mergiata, bundle live non verificati, test fisici mancanti | A2, A3, E5 |
+| Android e pipeline Play | Ambra | AAB e microfono pronti su branch, firma decisa; mancano merge, chiave di upload e prova su telefono | B1, B2 |
 | UX e accessibilità | Ambra | Contrasto, righe nascoste, zoom, font; nessun blocco visivo | E3, E6 |
 | Qualità e CI | Ambra | Suite rossa fuori CI, `main` non protetto | E1, E2 |
 | Operazioni (backup, supporto, monitoraggio) | Rosso | Piano Free, nessun runbook, nessun contatto di supporto | F-05, C5, E4 |
@@ -265,7 +290,7 @@ Ordine dei merge: corsia 1 → 7 (CSS e CI) → 2 → 4 → 3 → 6. Ogni migraz
 
 1. **Decisioni da scrivere in `DECISIONS.md`:** Policy A semplificata, tempi di cancellazione e conservazione, export e separazione su richiesta, testo generico delle notifiche Android (M-03), posizione approssimata.
 2. **Google Play Console:** creare o confermare l'account (personale o organizzazione), verifica identità, dichiarazione DSA, creazione dell'app `com.usapp.us` (non modificabile dopo).
-3. **Firma:** scelta raccomandata = chiave generata da Play + nuova chiave di upload; i fondatori reinstallano una volta l'app sideloaded (i dati sul server restano). Creare e custodire la chiave di upload; aggiungere il segreto GitHub (nessun agente tocca i valori).
+3. **Firma:** [Decisa il 2026-10-13: Play App Signing con chiave generata da Google + chiave di upload dedicata.] Scelta raccomandata = chiave generata da Play + nuova chiave di upload; i fondatori reinstallano una volta l'app sideloaded (i dati sul server restano). Creare e custodire la chiave di upload; aggiungere il segreto GitHub (nessun agente tocca i valori).
 4. **Supabase:** decidere il passaggio a un piano con backup per la produzione e firmare il DPA; scegliere il provider SMTP e il dominio mittente.
 5. **Pagine legali:** approvare i testi di privacy, termini e cancellazione; scegliere un'email di supporto; eventuale revisione legale.
 6. **Autorizzazioni puntuali:** merge di ogni PR; SQL su staging e poi produzione (C2, C3, C4); modifica Auth di produzione (D1); lettura dei bundle Edge (A3).
