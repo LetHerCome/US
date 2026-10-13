@@ -8,6 +8,8 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const h=require('./helpers/mc2-db');
+// Pre-v1 schema on purpose: this file documents the risk that account
+// deletion v1 (tests/s32-account-deletion-db.test.js) now closes.
 
 const docs=name=>fs.readFileSync(path.join(__dirname,'../docs/missions/',name),'utf8');
 const drafts=[
@@ -19,7 +21,7 @@ const drafts=[
 const A={couple:h.A,departing:h.F,survivor:h.B,tag:'A'};
 let db;
 test.beforeEach(async()=>{
- db=await h.database();
+ db=await h.database({s32:false});
  for(const name of drafts)await db.exec(docs(name));
 });
 test.afterEach(async()=>{await db?.close();db=null;});

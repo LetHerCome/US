@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="color-scheme" content="dark"/>
+<meta name="theme-color" content="#0a0a0e"/>
+<meta name="robots" content="noindex"/>
+<title>US · Elimina account</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png"/>
+<style>
+:root{
+  --bg:#0a0a0e;--surface:#15141b;--line:rgba(255,255,255,.09);
+  --text:#f1efeb;--text-2:#b9b5c0;--text-3:#8d8996;
+  --rose:#ff8fab;--rose-soft:rgba(232,138,162,.10);--ok:#9fe0b4;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:640px;margin:0 auto;padding:max(24px,env(safe-area-inset-top)) 16px max(40px,env(safe-area-inset-bottom))}
+h1{font-size:28px;line-height:1.2;margin:8px 0 4px}
+h2{font-size:19px;margin:0 0 10px}
+p,li{color:var(--text-2)}
+a{color:var(--rose)}
+.kicker{color:var(--text-3);font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin:0}
+section{margin-top:18px;padding:18px 16px;border:1px solid var(--line);border-radius:18px;background:var(--surface)}
+ol,ul{padding-left:20px;margin:0}
+li+li{margin-top:6px}
+.notice{border-color:rgba(232,138,162,.35);background:var(--rose-soft);color:var(--text)}
+label{display:block;margin-top:14px;font-weight:650;color:var(--text)}
+input{display:block;width:100%;margin-top:6px;min-height:48px;padding:10px 14px;border-radius:14px;border:1px solid var(--line);background:#0f0e14;color:var(--text);font:inherit}
+input:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--rose);outline-offset:2px}
+button{margin-top:18px;width:100%;min-height:50px;border-radius:16px;border:1px solid rgba(232,138,162,.45);background:rgba(232,138,162,.14);color:var(--rose);font:inherit;font-weight:700;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+fieldset:disabled{opacity:.6}
+#deleteStatus{margin:14px 0 0;min-height:1.5em;color:var(--text)}
+#deleteStatus[data-tone="ok"]{color:var(--ok)}
+#deleteStatus[data-tone="error"]{color:var(--rose)}
+.small{font-size:14px;color:var(--text-3)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.js" integrity="sha384-ysv13JVP3fufiEXfjML9OdCa/rRbMJvUBOWyor82wfuK8INNZAvmbxHgKIHi+oqz" crossorigin="anonymous"></script>
+<script defer src="/account-deletion.js"></script>
+<script defer src="/elimina-account.js"></script>
+</head>
+<body>
+<main>
+  <p class="kicker">US · Privacy</p>
+  <h1>Elimina il tuo account US</h1>
+  <p>App: <b>US</b> · Sviluppatore: <b data-us-developer-name>—</b></p>
+  <p>Da questa pagina puoi chiedere l’eliminazione del tuo account US e dei dati collegati, anche se non hai più l’app installata.</p>
+
+  <section aria-labelledby="stepsTitle">
+    <h2 id="stepsTitle">Come eliminare l’account dall’app</h2>
+    <ol>
+      <li>Apri US e accedi.</li>
+      <li>Tocca <b>Noi</b> nella barra in basso, poi l’icona <b>Impostazioni</b> in alto a destra.</li>
+      <li>In fondo alla pagina tocca <b>Privacy e dati</b>, poi <b>Elimina account</b>.</li>
+      <li>Inserisci la password, scrivi <b>ELIMINA</b> e conferma.</li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="formTitle">
+    <h2 id="formTitle">Accedi ed elimina</h2>
+    <p>L’eliminazione è <b>immediata e definitiva</b>: dopo la conferma non si può annullare.</p>
+    <p class="notice" id="hostNotice" role="alert" hidden>Configurazione non disponibile su questo dominio. Usa l’app US oppure scrivi a <span data-us-support-email>—</span>.</p>
+    <form id="deleteForm" novalidate>
+      <fieldset id="deleteFieldset" disabled>
+        <label for="deleteEmail">Email del tuo account</label>
+        <input id="deleteEmail" name="email" type="email" autocomplete="username" inputmode="email" required>
+        <label for="deletePassword">Password</label>
+        <input id="deletePassword" name="password" type="password" autocomplete="current-password" required>
+        <label for="deleteConfirm">Scrivi ELIMINA per confermare</label>
+        <input id="deleteConfirm" name="confirm" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" required>
+        <button type="submit" id="deleteSubmit" disabled>Elimina definitivamente</button>
+      </fieldset>
+      <p id="deleteStatus" role="status" aria-live="polite" tabindex="-1"></p>
+    </form>
+  </section>
+
+  <section aria-labelledby="deletedTitle">
+    <h2 id="deletedTitle">Cosa viene eliminato</h2>
+    <ul>
+      <li>Il tuo account, il profilo e la foto profilo.</li>
+      <li>I tuoi dati personali: risposte quotidiane, umore, risposte ai giochi, posizione, preferenze di notifica.</li>
+      <li>I dispositivi collegati e i token di notifica e dei widget.</li>
+      <li>Le tue Stories e i tuoi impegni personali nel calendario.</li>
+      <li>I “Lasciato per te” che la tua persona non ha conservato e i messaggi programmati non ancora consegnati.</li>
+      <li>Se sei l’ultima persona rimasta nella coppia: tutto lo spazio di coppia, foto comprese.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="keptTitle">
+    <h2 id="keptTitle">Cosa resta alla tua persona</h2>
+    <p>I ricordi condivisi che hai creato restano alla tua persona, <b>senza il tuo nome</b>: Momenti e relative foto, messaggi già consegnati, impegni ed eventi condivisi, desideri, ricordi delle risposte create insieme e ciò che ha scelto di conservare.</p>
+    <p>La tua persona non riceve una notifica. Lo spazio di coppia viene chiuso: nessun altro potrà entrarci.</p>
+  </section>
+
+  <section aria-labelledby="retentionTitle">
+    <h2 id="retentionTitle">Tempi e conservazione</h2>
+    <ul>
+      <li>L’account viene eliminato subito dopo la conferma; la rimozione completa dei dati e dei file si conclude entro 30 giorni.</li>
+      <li>Conserviamo per 12 mesi solo una ricevuta minima dell’eliminazione: identificativo dell’account, date, canale della richiesta (app o web) ed esito. Non contiene i tuoi contenuti.</li>
+      <li>Con il piano attuale US non usa copie di backup dei dati. Se questo cambierà, aggiorneremo questa pagina.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="emailTitle">
+    <h2 id="emailTitle">Copia dei dati o eliminazione via email</h2>
+    <p>Per ricevere una copia dei tuoi dati, oppure per eliminare l’account se non riesci più ad accedere, scrivi a <a data-us-support-email data-us-support-link href="#">—</a> dall’indirizzo email collegato al tuo account. Rispondiamo entro 30 giorni.</p>
+    <p class="small">Chiedi la copia dei dati prima di eliminare l’account: dopo l’eliminazione i tuoi dati personali non sono più disponibili.</p>
+  </section>
+</main>
+</body>
+</html>

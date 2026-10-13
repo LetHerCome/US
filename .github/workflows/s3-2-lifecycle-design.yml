@@ -38,6 +38,13 @@ on:
       - 'supabase/functions/export-my-data/index.ts'
       - 's3-2-preservation-a-preview.cjs'
       - '.github/workflows/s3-2-lifecycle-design.yml'
+      - 'supabase/migrations/*_s32_*.sql'
+      - 'supabase/functions/delete-account/**'
+      - 'supabase/functions/_shared/s32-account-deletion-core.mjs'
+      - 'tests/s32-*'
+      - 'tests/helpers/mc2-db.js'
+      - 'settings.js'
+      - 'elimina-account.*'
 
 permissions:
   contents: read
@@ -72,13 +79,15 @@ jobs:
           node --check s3-2-media-copy-rehearsal.cjs
           node --check s3-2-media-inventory.cjs
           node --check supabase/functions/_shared/s3-2-export-paging.mjs
-          node --test tests/s3-2-lifecycle-design-gate.test.js tests/s3-2-preservation-a-preview.test.js tests/s3-2-export-core.test.mjs tests/s3-2-export-paging.test.mjs tests/s3-2-fk-coverage.test.mjs tests/s3-2-media-inventory.test.js tests/s3-2-media-copy-rehearsal.test.js tests/s3-3-storage-jwt-readonly.test.cjs tests/s3-3-staging-readonly-preflight.test.cjs tests/s3-3-seed-and-verify-stage.test.cjs tests/s3-3-storage-policy-audit.test.cjs tests/mc3-onboarding.test.js
+          node --check supabase/functions/_shared/s32-account-deletion-core.mjs
+          node --test tests/s3-2-lifecycle-design-gate.test.js tests/s3-2-preservation-a-preview.test.js tests/s3-2-export-core.test.mjs tests/s3-2-export-paging.test.mjs tests/s3-2-fk-coverage.test.mjs tests/s3-2-media-inventory.test.js tests/s3-2-media-copy-rehearsal.test.js tests/s3-3-storage-jwt-readonly.test.cjs tests/s3-3-staging-readonly-preflight.test.cjs tests/s3-3-seed-and-verify-stage.test.cjs tests/s3-3-storage-policy-audit.test.cjs tests/mc3-onboarding.test.js tests/s32-account-deletion-core.test.mjs
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
       - name: Check Supabase Edge draft in Deno
         run: |
           deno check --node-modules-dir=auto supabase/functions/export-my-data/index.ts
+          deno check --node-modules-dir=auto supabase/functions/delete-account/index.ts
       - name: Ensure no unapproved deletion or deployment scripts
         run: |
           node - <<'NODE'
@@ -87,6 +96,12 @@ jobs:
           if(contract.automatedDeletionAllowed!==false || contract.destructiveActionsEnabled!==false || contract.ownerChoice!=='A' || contract.decisions.retention!=='REQUIRES_PRIVACY_REVIEW') process.exit(1);
           const files=['supabase/functions/account-delete/index.ts','supabase/functions/couple-unpair/index.ts'];
           if(files.some(file=>fs.existsSync(file))) process.exit(1);
+          // S3.2 v1 deletion: inert unless explicitly enabled, password re-auth, service-role RPCs only.
+          const edge=fs.readFileSync('supabase/functions/_shared/s32-account-deletion-core.mjs','utf8');
+          if(!edge.includes("US_ACCOUNT_DELETION_ENABLED")||!edge.includes("assertRecentPasswordAuth")||!/method\s*===\s*'password'/.test(edge))process.exit(1);
+          const migration=fs.readdirSync('supabase/migrations').find(f=>/_s32_account_deletion_v1\.sql$/.test(f));
+          const m=fs.readFileSync('supabase/migrations/'+migration,'utf8');
+          if(/grant[^;]+to\s+(anon|authenticated)/i.test(m)||/delete\s+from\s+auth\.users/i.test(m))process.exit(1);
           const partnerRef=fs.readFileSync('docs/missions/us-store-s3-2-partner-photo-storage-ref-draft.sql','utf8');
           const partnerRefSql=partnerRef.replace(/--[^\n]*/g,' ');
           if(!partnerRef.includes('BLOCKED_PENDING_REAL_STORAGE_AUTH_AND_BYTES')
@@ -142,4 +157,5 @@ jobs:
           node --check tests/s3-2-partner-photo-storage-ref-db.test.js
           node --check tests/s3-2-integrated-account-exit-db.test.js
           node --check tests/s3-2-partner-photo-reference-db.test.js
+          node --test tests/s32-account-deletion-db.test.js tests/s32-fk-resolution.test.js
           node --test tests/s3-2-account-exit-real-schema.test.js tests/s3-2-exit-impact-db.test.js tests/s3-2-preserved-message-vault-db.test.js tests/s3-2-preserved-moments-calendar-db.test.js tests/s3-2-partner-photo-reference-db.test.js tests/s3-2-partner-photo-storage-ref-db.test.js tests/s3-2-integrated-account-exit-db.test.js

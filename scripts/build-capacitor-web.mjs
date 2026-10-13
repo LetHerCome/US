@@ -48,6 +48,7 @@ const RUNTIME_FILES = [
   'home-cleanup.js',
   'settings.css',
   'settings.js',
+  'account-deletion.js',
   'identity.css',
   'top-chrome.css',
   'modal-center.css',

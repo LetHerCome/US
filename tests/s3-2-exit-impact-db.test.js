@@ -4,10 +4,12 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const h=require('./helpers/mc2-db');
+// Pre-v1 schema on purpose: this file documents the risk that account
+// deletion v1 (tests/s32-account-deletion-db.test.js) now closes.
 const file=path.join(__dirname,'../docs/missions/us-store-s3-2-stage1-exit-preview-draft.sql');
 const sql=fs.readFileSync(file,'utf8');
 let db;
-test.beforeEach(async()=>{ db=await h.database(); await db.exec(sql); });
+test.beforeEach(async()=>{ db=await h.database({s32:false}); await db.exec(sql); });
 test.afterEach(async()=>{await db?.close();db=null;});
 const preview=async(actor)=>h.as(db,actor,'select public.s32_preview_account_exit() r');
 const seed=async()=>{

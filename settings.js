@@ -7,10 +7,13 @@ const $=id=>document.getElementById(id);
 const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 let settingsSnapshot=null;
 let logoutInFlight=false;
+let accountDeletionDone=false;
 window.addEventListener('us-identity-change',event=>{
   if(!event.detail?.identityKey){
     settingsSnapshot=null;
     const avatars=$('usCoupleAvatars');if(avatars)avatars.innerHTML='<span class="us-couple-avatar"><b>US</b></span>';
+    // After an account deletion the "Account eliminato" screen stays until reload.
+    if(accountDeletionDone)return;
     closeModal();
     const body=$('usSettingsModalBody');if(body)body.innerHTML='';
   }
@@ -554,7 +557,149 @@ function privacyModal(){
       <p><b>Notifiche</b> · scegli tu quali ricevere.</p>
       <p><b>Questo telefono</b> · resta collegato finché non lo scolleghi.</p>
     </div>
+    <button type="button" class="us-settings2-disconnect" id="usOpenAccountDeletion">Elimina account</button>
   `,'DATI');
+  $('usOpenAccountDeletion')?.addEventListener('click',accountDeletionModal);
+}
+
+// S3.2 — account deletion (Policy A v1). Immediate and irreversible after
+// confirmation; the Edge `delete-account` decides what is deleted and what
+// stays for the partner. The password is never logged or stored: it only goes
+// to the fresh Supabase Auth password check and the field is cleared right after.
+// Shared logic + support placeholder live in account-deletion.js (loaded on demand).
+let accountDeletionLoader=null;
+let accountDeletionInFlight=false;
+function loadAccountDeletion(){
+  if(window.UsAccountDeletion)return Promise.resolve(window.UsAccountDeletion);
+  if(!accountDeletionLoader)accountDeletionLoader=new Promise((resolve,reject)=>{
+    const script=document.createElement('script');
+    script.src=`/account-deletion.js?v=${encodeURIComponent(currentBuild())}`;
+    script.async=true;
+    script.onload=()=>window.UsAccountDeletion?resolve(window.UsAccountDeletion):reject(new Error('account deletion module missing'));
+    script.onerror=()=>{accountDeletionLoader=null;reject(new Error('account deletion module unavailable'));};
+    document.head.appendChild(script);
+  });
+  return accountDeletionLoader;
+}
+
+async function accountDeletionModal(){
+  let api=null;
+  try{api=await loadAccountDeletion();}catch(_){}
+  if(!api){
+    openModal('Elimina account','<div class="us-settings2-modal-copy">Non riesco ad aprire l’eliminazione adesso. Controlla la connessione e riprova.</div>','ACCOUNT');
+    return;
+  }
+  const support=esc(api.US_SUPPORT_EMAIL);
+  openModal('Elimina account',`
+    <div class="us-settings-copy us-account-delete-copy">
+      <p><b>È immediato e definitivo.</b> Dopo la conferma non si può annullare.</p>
+      <p><b>Cosa viene eliminato</b> · il tuo account e il profilo, la foto profilo, le tue risposte di Oggi, l’umore e le risposte ai giochi, la posizione, le preferenze di notifica e i dispositivi collegati, le Stories, i tuoi impegni personali, i Lasciato per te che la tua persona non ha conservato e i messaggi programmati non ancora consegnati.</p>
+      <p><b>Cosa resta alla tua persona</b> · i ricordi condivisi che hai creato: Momenti e foto, messaggi già consegnati, impegni ed eventi condivisi, desideri, ricordi delle risposte create insieme e ciò che ha scelto di conservare. Restano senza il tuo nome. Non riceverà una notifica e lo spazio di coppia viene chiuso: nessun altro potrà entrarci.</p>
+      <p>Se nella coppia ci sei solo tu, viene eliminato tutto lo spazio di coppia, foto comprese.</p>
+      <p><b>Vuoi una copia dei tuoi dati?</b> Prima di eliminare scrivi a <b>${support}</b>: la ricevi entro 30 giorni.</p>
+    </div>
+    <form id="usAccountDeleteForm" novalidate>
+      <label class="us-settings2-field"><span>Password del tuo account</span><input id="usAccountDeletePassword" type="password" autocomplete="current-password" required></label>
+      <label class="us-settings2-field"><span>Scrivi ${esc(api.CONFIRM_WORD)} per confermare</span><input id="usAccountDeleteConfirm" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" required></label>
+      <p class="us-settings2-modal-copy us-account-delete-status" id="usAccountDeleteStatus" role="status" aria-live="polite" hidden></p>
+      <div class="us-settings2-action-stack">
+        <button type="button" class="ghost" id="usAccountDeleteCancel">Annulla</button>
+        <button type="submit" class="us-settings2-disconnect" id="usAccountDeleteSubmit" disabled>Elimina definitivamente</button>
+      </div>
+    </form>
+  `,'ACCOUNT');
+  const password=$('usAccountDeletePassword');
+  const confirm=$('usAccountDeleteConfirm');
+  const submit=$('usAccountDeleteSubmit');
+  const sync=()=>{if(submit&&!accountDeletionInFlight)submit.disabled=!api.canSubmit({password:password?.value,confirm:confirm?.value});};
+  password?.addEventListener('input',sync);
+  confirm?.addEventListener('input',sync);
+  $('usAccountDeleteCancel')?.addEventListener('click',()=>{if(password)password.value='';closeModal();});
+  $('usAccountDeleteForm')?.addEventListener('submit',event=>{event.preventDefault();submitAccountDeletion(api);});
+  password?.focus({preventScroll:true});
+}
+
+function accountDeletionStatus(text){
+  const status=$('usAccountDeleteStatus');
+  if(!status)return;
+  status.hidden=!text;
+  status.textContent=text||'';
+}
+
+async function submitAccountDeletion(api){
+  if(accountDeletionInFlight)return;
+  const passwordInput=$('usAccountDeletePassword');
+  const confirmInput=$('usAccountDeleteConfirm');
+  const submit=$('usAccountDeleteSubmit');
+  const cancel=$('usAccountDeleteCancel');
+  const password=passwordInput?.value||'';
+  if(!api.canSubmit({password,confirm:confirmInput?.value}))return;
+  accountDeletionInFlight=true;
+  if(passwordInput)passwordInput.value='';
+  if(submit){submit.disabled=true;submit.textContent='Elimino…';}
+  if(cancel)cancel.disabled=true;
+  accountDeletionStatus('Elimino il tuo account…');
+  let result;
+  try{
+    let email='';
+    try{const {data}=await sb.auth.getSession();email=data?.session?.user?.email||'';}catch(_){}
+    // Fresh password sign-in first (the Edge requires it), then delete-account.
+    result=await api.reauthenticateAndDelete({
+      client:sb,
+      email,
+      password,
+      channel:'app',
+      supabaseUrl:typeof SB_URL==='string'?SB_URL:'',
+      apiKey:typeof SB_KEY==='string'?SB_KEY:''
+    });
+  }catch(_){
+    result={kind:'deletion_failed',done:false};
+  }
+  if(result.done){
+    accountDeletionDone=true;
+    accountDeletedScreen(api,result.kind,clearDeviceAfterAccountDeletion());
+    return;
+  }
+  accountDeletionInFlight=false;
+  if(submit){submit.textContent='Elimina definitivamente';submit.disabled=true;}
+  if(cancel)cancel.disabled=false;
+  accountDeletionStatus(api.message(result.kind,api.US_SUPPORT_EMAIL));
+  passwordInput?.focus({preventScroll:true});
+}
+
+// The server already removed sessions, devices and push/widget tokens: this is
+// only the local mirror of logout (logout()), and no failure here may block
+// the outcome. Every step is best-effort and time-bounded.
+const usBounded=(work,ms)=>Promise.race([Promise.resolve(work),new Promise(resolve=>setTimeout(resolve,ms))]);
+async function clearDeviceAfterAccountDeletion(){
+  try{await usBounded(window.revokeCurrentDevice?.(),6000);}catch(_){}
+}
+// Local sign-out last, right before the reload, so the signed-out screen does
+// not cover the "Account eliminato" confirmation.
+async function signOutLocallyAfterAccountDeletion(){
+  try{await usBounded(sb.auth.signOut({scope:'local'}),4000);}catch(_){}
+  try{await window.usDurableAuthStorage?.removeItem?.(sb.auth.storageKey);}catch(_){}
+  // Session gone: drop this phone's biometric protection record too (as logout()).
+  try{await usBounded(window.UsAppLock?.reset?.(),3000);}catch(_){}
+}
+
+function accountDeletedScreen(api,kind,cleanup){
+  openModal('Account eliminato',`
+    <div class="us-settings2-modal-copy" role="status" aria-live="polite">${esc(api.message(kind,api.US_SUPPORT_EMAIL))} Grazie per aver usato US.</div>
+    <div class="us-settings2-action-stack">
+      <button type="button" class="primary" id="usAccountDeletedDone">Chiudi</button>
+    </div>
+  `,'ACCOUNT');
+  let finishing=null;
+  const finish=()=>finishing||(finishing=(async()=>{
+    const btn=$('usAccountDeletedDone');if(btn)btn.disabled=true;
+    try{await cleanup;}catch(_){}
+    await signOutLocallyAfterAccountDeletion();
+    location.reload();
+  })());
+  $('usAccountDeletedDone')?.addEventListener('click',finish);
+  $('usAccountDeletedDone')?.focus({preventScroll:true});
+  setTimeout(finish,8000);
 }
 
 function logoutConfirmationModal(){

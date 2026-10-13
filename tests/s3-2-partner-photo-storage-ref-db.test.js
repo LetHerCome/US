@@ -7,12 +7,14 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const h=require('./helpers/mc2-db');
+// Pre-v1 schema on purpose: this file documents the risk that account
+// deletion v1 (tests/s32-account-deletion-db.test.js) now closes.
 const read=name=>fs.readFileSync(path.join(__dirname,'../docs/missions/'+name),'utf8');
 const parentSql=read('us-store-s3-2-preserved-moments-calendar-draft.sql');
 const photoSql=read('us-store-s3-2-partner-photo-reference-vault-draft.sql');
 const refSql=read('us-store-s3-2-partner-photo-storage-ref-draft.sql');
 let db;
-test.beforeEach(async()=>{db=await h.database();await db.exec(parentSql);await db.exec(photoSql);await db.exec(refSql);});
+test.beforeEach(async()=>{db=await h.database({s32:false});await db.exec(parentSql);await db.exec(photoSql);await db.exec(refSql);});
 test.afterEach(async()=>{await db?.close();db=null;});
 const q=async(statement,params=[])=>db.query(statement,params);
 const one=async(statement,params=[])=> (await q(statement,params)).rows[0];

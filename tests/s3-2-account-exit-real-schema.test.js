@@ -4,9 +4,11 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const h=require('./helpers/mc2-db');
+// Pre-v1 schema on purpose: this file documents the risk that account
+// deletion v1 (tests/s32-account-deletion-db.test.js) now closes.
 
 let db;
-test.beforeEach(async()=>{db=await h.database();});
+test.beforeEach(async()=>{db=await h.database({s32:false});});
 test.afterEach(async()=>{await db?.close();db=null;});
 const one=async(sql,params=[])=> (await db.query(sql,params)).rows[0];
 const count=async(table,condition='true')=> Number((await one(

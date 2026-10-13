@@ -258,3 +258,7 @@ body:has(#settings.page.active) #thinkButton{
 .us-feedback-preview-grid button:focus-visible{outline:2px solid var(--us-color-accent-strong);outline-offset:2px}
 .us-feedback-preview-note{margin:13px 2px 0;color:var(--us-color-text-3);font-size:11px;line-height:1.45}
 .us-feedback-preview-grid button[data-feedback-preview="haptic-test"]{grid-column:1/-1;border-color:var(--us-color-accent-line)}
+
+/* S3.2 account deletion: reuses settings sheet primitives; only status + spacing. */
+.us-account-delete-status{margin:12px 0 0;color:var(--us-color-rose-2)}
+.us-account-delete-copy+form .us-settings2-field input{width:100%}

@@ -5,11 +5,13 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const h=require('./helpers/mc2-db');
+// Pre-v1 schema on purpose: this file documents the risk that account
+// deletion v1 (tests/s32-account-deletion-db.test.js) now closes.
 const sql=fs.readFileSync(path.join(__dirname,'../docs/missions/us-store-s3-2-preserved-message-vault-draft.sql'),'utf8');
 const REVIEW='c0b1cc2f-a3f7-4fd4-9b13-80bd3c0fea31';
 const bogus='99999999-9999-4999-8999-999999999999';
 let db;
-test.beforeEach(async()=>{db=await h.database();await db.exec(sql);});
+test.beforeEach(async()=>{db=await h.database({s32:false});await db.exec(sql);});
 test.afterEach(async()=>{await db?.close();db=null;});
 const one=async(sql,params=[])=> (await db.query(sql,params)).rows[0];
 const as=async(id,statement,params=[])=>h.as(db,id,statement,params);
