@@ -1,0 +1,161 @@
+name: Android signing recovery (manual, owner only)
+
+# Recovers the permanent internal Android keystore from the
+# ANDROID_SIGNING_BUNDLE_B64 secret and prepares a password rotation that keeps
+# the same certificate. The repository is public, so:
+# - it only runs by hand (workflow_dispatch), from main, for the repository
+#   owner, with a typed confirmation;
+# - no key material or password is ever printed, committed or uploaded in clear:
+#   the single artifact is a 7z AES-256 archive (file names encrypted too) opened
+#   with ANDROID_INTERNAL_ARTIFACT_PASSWORD, kept for 1 day;
+# - the run fails before any upload unless the keystore certificate matches the
+#   one that signs the current internal APKs, and the rotated keystore carries
+#   the very same certificate.
+# It never changes a secret: the founder pastes the new value himself.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type RECUPERA-KEYSTORE-US to confirm'
+        required: true
+        type: string
+      expected_sha256:
+        description: 'Optional: expected certificate SHA-256 (hex). Empty = read it from the latest internal APK on main'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: android-signing-recovery
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    if: github.ref == 'refs/heads/main' && github.actor == github.repository_owner && inputs.confirm == 'RECUPERA-KEYSTORE-US'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check prerequisites
+        env:
+          SIGNING_BUNDLE_B64: ${{ secrets.ANDROID_SIGNING_BUNDLE_B64 }}
+          ARCHIVE_PASSWORD: ${{ secrets.ANDROID_INTERNAL_ARTIFACT_PASSWORD }}
+        run: |
+          set -euo pipefail
+          [ -n "$SIGNING_BUNDLE_B64" ] || { echo "::error::ANDROID_SIGNING_BUNDLE_B64 is not set"; exit 1; }
+          if [ "${#ARCHIVE_PASSWORD}" -lt 24 ]; then
+            echo "::error::ANDROID_INTERNAL_ARTIFACT_PASSWORD must be set and at least 24 characters"
+            exit 1
+          fi
+          command -v keytool >/dev/null && command -v 7z >/dev/null && command -v jq >/dev/null
+
+      - name: Reference certificate of the current internal APKs
+        id: reference
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHA256: ${{ inputs.expected_sha256 }}
+        run: |
+          set -euo pipefail
+          expected="$(printf '%s' "$EXPECTED_SHA256" | tr -d ': ' | tr 'A-F' 'a-f')"
+          if [ -z "$expected" ]; then
+            run_id="$(gh run list -R "$GITHUB_REPOSITORY" --workflow android-internal-release.yml --branch main --status success --limit 1 --json databaseId -q '.[0].databaseId')"
+            [ -n "$run_id" ] || { echo "::error::No successful internal APK run on main to compare with"; exit 1; }
+            gh run download "$run_id" -R "$GITHUB_REPOSITORY" -n US-Android-Internal -D "$RUNNER_TEMP/reference"
+            expected="$(grep -m1 'Signer #1 certificate SHA-256 digest' "$RUNNER_TEMP/reference/signature.txt" | awk '{print $NF}' | tr 'A-F' 'a-f')"
+            rm -rf "$RUNNER_TEMP/reference"
+            echo "Reference: internal APK run $run_id"
+          fi
+          if ! printf '%s' "$expected" | grep -Eq '^[0-9a-f]{64}$'; then
+            echo "::error::No valid reference certificate SHA-256"
+            exit 1
+          fi
+          echo "Reference certificate SHA-256: $expected"
+          echo "sha256=$expected" >> "$GITHUB_OUTPUT"
+
+      - name: Recover, verify and re-wrap the keystore
+        env:
+          SIGNING_BUNDLE_B64: ${{ secrets.ANDROID_SIGNING_BUNDLE_B64 }}
+          ARCHIVE_PASSWORD: ${{ secrets.ANDROID_INTERNAL_ARTIFACT_PASSWORD }}
+          EXPECTED: ${{ steps.reference.outputs.sha256 }}
+        run: |
+          set -euo pipefail
+          umask 077
+          work="$RUNNER_TEMP/recovery"
+          mkdir -p "$work/payload/1-backup-originale" "$work/payload/2-nuovo-keystore" "$work/out"
+          printf '%s' "$SIGNING_BUNDLE_B64" | base64 -d > "$work/bundle.json"
+          OLD_STORE="$(jq -r '.storePassword // empty' "$work/bundle.json")"
+          OLD_KEY="$(jq -r '.keyPassword // empty' "$work/bundle.json")"
+          ALIAS="$(jq -r '.keyAlias // empty' "$work/bundle.json")"
+          echo "::add-mask::$OLD_STORE"
+          echo "::add-mask::$OLD_KEY"
+          [ -n "$OLD_STORE" ] && [ -n "$OLD_KEY" ] && [ -n "$ALIAS" ] || { echo "::error::Signing bundle is incomplete"; exit 1; }
+          export OLD_STORE OLD_KEY
+          jq -r '.keystoreBase64' "$work/bundle.json" | base64 -d > "$work/original.keystore"
+
+          type="$(keytool -list -keystore "$work/original.keystore" -storepass:env OLD_STORE | sed -n 's/^Keystore type: *//Ip' | head -1)"
+          fingerprint() { keytool -exportcert -alias "$ALIAS" -keystore "$1" -storepass:env "$2" | sha256sum | awk '{print $1}'; }
+          original="$(fingerprint "$work/original.keystore" OLD_STORE)"
+          echo "Original keystore type: $type, alias: $ALIAS, certificate SHA-256: $original"
+          if [ "$original" != "$EXPECTED" ]; then
+            echo "::error::The keystore in ANDROID_SIGNING_BUNDLE_B64 does not match the certificate of the current internal APKs. Nothing is uploaded."
+            exit 1
+          fi
+
+          NEW_PASS="$(openssl rand -base64 48 | tr -dc 'A-Za-z0-9' | cut -c1-32)"
+          echo "::add-mask::$NEW_PASS"
+          [ "${#NEW_PASS}" -eq 32 ] || { echo "::error::Password generation failed"; exit 1; }
+          export NEW_PASS
+          keytool -importkeystore -noprompt \
+            -srckeystore "$work/original.keystore" -srcstorepass:env OLD_STORE -srckeypass:env OLD_KEY -srcalias "$ALIAS" \
+            -destkeystore "$work/payload/2-nuovo-keystore/us-internal-signing.p12" -deststoretype PKCS12 \
+            -deststorepass:env NEW_PASS -destkeypass:env NEW_PASS -destalias "$ALIAS" >/dev/null
+          rotated="$(fingerprint "$work/payload/2-nuovo-keystore/us-internal-signing.p12" NEW_PASS)"
+          if [ "$rotated" != "$original" ]; then
+            echo "::error::The re-wrapped keystore does not carry the same certificate"
+            exit 1
+          fi
+          echo "Re-wrapped keystore: PKCS12, same certificate SHA-256: $rotated"
+
+          ext="jks"; [ "$(printf '%s' "$type" | tr 'A-Z' 'a-z')" = "pkcs12" ] && ext="p12"
+          cp "$work/original.keystore" "$work/payload/1-backup-originale/us-internal-signing-originale.$ext"
+          cp "$work/bundle.json" "$work/payload/1-backup-originale/ANDROID_SIGNING_BUNDLE-originale.json"
+          jq -n --arg ks "$(base64 -w0 "$work/payload/2-nuovo-keystore/us-internal-signing.p12")" --arg p "$NEW_PASS" --arg a "$ALIAS" \
+            '{keystoreBase64:$ks, storePassword:$p, keyAlias:$a, keyPassword:$p}' | base64 -w0 \
+            > "$work/payload/2-nuovo-keystore/NUOVO-VALORE-ANDROID_SIGNING_BUNDLE_B64.txt"
+          {
+            echo "US - recupero keystore interno ($(date -u +%Y-%m-%dT%H:%MZ), commit $GITHUB_SHA)"
+            echo
+            echo "Certificato SHA-256 (identico in entrambi i keystore): $original"
+            echo "Alias: $ALIAS"
+            echo
+            echo "1-backup-originale: keystore attuale ($type) e il JSON del segreto attuale,"
+            echo "  con le password vecchie (esposte nei log pubblici: non riusarle)."
+            echo "2-nuovo-keystore: stesso certificato, formato PKCS12, nuova password unica"
+            echo "  per archivio e chiave: $NEW_PASS"
+            echo "  NUOVO-VALORE-ANDROID_SIGNING_BUNDLE_B64.txt e' il valore da incollare nel"
+            echo "  segreto GitHub ANDROID_SIGNING_BUNDLE_B64."
+            echo
+            echo "Conserva questa cartella offline (due copie) e la nuova password nel gestore password."
+          } > "$work/payload/LEGGIMI.txt"
+
+          (cd "$work/payload" && 7z a -t7z -mhe=on "-p$ARCHIVE_PASSWORD" "$work/out/US-signing-recovery.7z" . >/dev/null)
+          7z t "-p$ARCHIVE_PASSWORD" "$work/out/US-signing-recovery.7z" >/dev/null
+          if 7z l -p"wrong-password-check" "$work/out/US-signing-recovery.7z" >/dev/null 2>&1; then
+            echo "::error::The archive opens without the right password"
+            exit 1
+          fi
+          rm -rf "$work/payload" "$work/bundle.json" "$work/original.keystore"
+          ls "$work/out"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: US-signing-recovery-encrypted
+          path: ${{ runner.temp }}/recovery/out/US-signing-recovery.7z
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Remove recovery material from the runner
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/recovery" "$RUNNER_TEMP/reference"
