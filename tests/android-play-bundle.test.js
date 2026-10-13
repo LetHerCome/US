@@ -192,6 +192,7 @@ test('the CLI writes JSON, Markdown and permission reports and fails on errors',
   const extracted = path.join(dir, 'extracted', 'base', 'assets', 'public');
   fs.mkdirSync(extracted, { recursive: true });
   fs.writeFileSync(path.join(extracted, 'index.html'), '<!doctype html><title>US</title>');
+  fs.writeFileSync(path.join(extracted, 'app.js'), 'const URL = "https://iiakdfsxpywdkxravqjh.supabase.co";');
   fs.writeFileSync(path.join(dir, 'manifest.xml'), manifestXml());
   fs.writeFileSync(path.join(dir, 'entries.txt'), GOOD_ENTRIES.join('\n'));
   fs.writeFileSync(path.join(dir, 'app.aab'), 'not really a bundle');
@@ -283,4 +284,21 @@ test('signed internal APK workflows never upload an installable APK in clear fro
     assert.match(workflow, /Length -ge 24/);
     assert.match(workflow, /\$apks \| Remove-Item -Force/);
   }
+});
+
+test('a Play bundle targets production and carries no staging QA tooling', async () => {
+  const gate = await loadGate();
+  const prod = { name: 'base/assets/public/app.js', text: 'createClient("https://iiakdfsxpywdkxravqjh.supabase.co")' };
+  assert.deepEqual(gate.checkProductionOnly([prod]).map((r) => r.level), ['pass', 'pass']);
+  for (const text of [
+    '<script defer src="/s3-staging-push-qa.js"></script>',
+    "button.id = 's3-qa-button';",
+    'https://dugmhngrfkuieeletatb.supabase.co',
+    'appId com.usapp.us.staging'
+  ]) {
+    assert.equal(gate.checkProductionOnly([prod, { name: 'base/assets/public/index.html', text }])[0].level, 'fail', text);
+  }
+  assert.equal(gate.checkProductionOnly([prod, { name: 'base/dex/classes.dex', text: 'UsPushSupportPlugin.qaTrace' }])[0].level, 'fail');
+  const staging = { name: 'base/assets/public/app.js', text: 'https://dugmhngrfkuieeletatb.supabase.co' };
+  assert.equal(gate.checkProductionOnly([staging])[1].level, 'fail');
 });
