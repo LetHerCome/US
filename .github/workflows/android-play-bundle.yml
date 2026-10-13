@@ -1,0 +1,318 @@
+name: Android Play bundle (AAB)
+
+# Builds the Google Play Android App Bundle and validates it.
+#
+# Two modes:
+# - test (default, every branch): signs with a throw-away key generated on the
+#   runner, validates the bundle and uploads ONLY the reports. The .aab itself
+#   is never uploaded: this repository is public and artifacts are visible to
+#   any GitHub user.
+# - upload (manual, main only): signs with the Play upload key from
+#   ANDROID_PLAY_UPLOAD_BUNDLE_B64, requires Firebase and the guarded FCM
+#   service, and uploads the .aab only inside an AES-256 encrypted archive.
+#   It never talks to Google Play: the founder uploads the file by hand.
+
+on:
+  workflow_dispatch:
+    inputs:
+      signing:
+        description: 'test = chiave usa e getta, nessun AAB scaricabile; upload = chiave di upload Play (solo main)'
+        type: choice
+        options: [test, upload]
+        default: test
+      version_name:
+        description: 'versionName visibile nello Store (formato x.y.z)'
+        type: string
+        default: '1.0.0'
+  push:
+    branches-ignore: [main]
+    paths:
+      - 'android/**'
+      - 'native-plugins/**'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'scripts/build-capacitor-web.mjs'
+      - 'scripts/validate-android-bundle.mjs'
+      - 'tests/android-play-bundle.test.js'
+      - '.github/workflows/android-play-bundle.yml'
+  pull_request:
+    paths:
+      - 'android/**'
+      - 'native-plugins/**'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'scripts/build-capacitor-web.mjs'
+      - 'scripts/validate-android-bundle.mjs'
+      - 'tests/android-play-bundle.test.js'
+      - '.github/workflows/android-play-bundle.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-play-bundle-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BUNDLETOOL_VERSION: '1.18.1'
+  # Pinned after the first download; the job fails if the jar ever changes.
+  BUNDLETOOL_SHA256: ''
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve build mode
+        env:
+          REQUESTED_SIGNING: ${{ github.event_name == 'workflow_dispatch' && inputs.signing || 'test' }}
+          REQUESTED_VERSION_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.version_name || '1.0.0' }}
+        run: |
+          set -euo pipefail
+          mode="$REQUESTED_SIGNING"
+          if [ "$mode" = "upload" ] && [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::La firma di upload Play è permessa solo da main (ref attuale: $GITHUB_REF)."
+            exit 1
+          fi
+          if ! [[ "$REQUESTED_VERSION_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::version_name deve essere nel formato x.y.z"
+            exit 1
+          fi
+          # Epoch seconds: always above every internal APK already installed
+          # (same scheme), Play limit 2,100,000,000 reached only in July 2036.
+          code="$(date -u +%s)"
+          {
+            echo "US_BUILD_MODE=$mode"
+            echo "US_ANDROID_PLAY_UPLOAD=true"
+            echo "US_ANDROID_VERSION_CODE=$code"
+            echo "US_ANDROID_VERSION_NAME=$REQUESTED_VERSION_NAME"
+          } >> "$GITHUB_ENV"
+          echo "Modo $mode · versionCode $code · versionName $REQUESTED_VERSION_NAME"
+
+      - name: Require Play upload secrets
+        if: env.US_BUILD_MODE == 'upload'
+        env:
+          UPLOAD_BUNDLE_B64: ${{ secrets.ANDROID_PLAY_UPLOAD_BUNDLE_B64 }}
+          GOOGLE_SERVICES_JSON_B64: ${{ secrets.ANDROID_GOOGLE_SERVICES_JSON_B64 }}
+          ARTIFACT_PASSWORD: ${{ secrets.ANDROID_PLAY_ARTIFACT_PASSWORD }}
+        run: |
+          missing=""
+          [ -n "$UPLOAD_BUNDLE_B64" ] || missing="$missing ANDROID_PLAY_UPLOAD_BUNDLE_B64"
+          [ -n "$GOOGLE_SERVICES_JSON_B64" ] || missing="$missing ANDROID_GOOGLE_SERVICES_JSON_B64"
+          [ -n "$ARTIFACT_PASSWORD" ] || missing="$missing ANDROID_PLAY_ARTIFACT_PASSWORD"
+          if [ -n "$missing" ]; then
+            echo "::error::Segreti mancanti:$missing"
+            exit 1
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: npm ci
+        run: npm ci
+
+      - name: Bundle gate tests
+        run: node --test tests/android-play-bundle.test.js tests/android-stable-signing.test.js
+
+      - name: Stage Capacitor bundle
+        run: npm run build:capacitor-web
+
+      - name: Sync Android
+        run: npx cap sync android
+
+      - name: Sync leaves committed Android project unchanged
+        run: git diff --exit-code -- android
+
+      - name: Generate throw-away test signing key
+        if: env.US_BUILD_MODE == 'test'
+        run: |
+          set -euo pipefail
+          pass="$(openssl rand -hex 24)"
+          echo "::add-mask::$pass"
+          ks="$RUNNER_TEMP/us-ci-throwaway-upload.jks"
+          keytool -genkeypair -noprompt -keystore "$ks" -storetype PKCS12 \
+            -alias us-ci-throwaway -keyalg RSA -keysize 4096 -validity 3650 \
+            -dname "CN=US CI throw-away key (not for Google Play)" \
+            -storepass "$pass" -keypass "$pass"
+          {
+            echo "US_ANDROID_UPLOAD_KEYSTORE_PATH=$ks"
+            echo "US_ANDROID_UPLOAD_KEYSTORE_PASSWORD=$pass"
+            echo "US_ANDROID_UPLOAD_KEY_ALIAS=us-ci-throwaway"
+            echo "US_ANDROID_UPLOAD_KEY_PASSWORD=$pass"
+            echo "US_FIREBASE_CONFIGURED=false"
+          } >> "$GITHUB_ENV"
+
+      - name: Restore Play upload key
+        if: env.US_BUILD_MODE == 'upload'
+        env:
+          UPLOAD_BUNDLE_B64: ${{ secrets.ANDROID_PLAY_UPLOAD_BUNDLE_B64 }}
+        run: |
+          set -euo pipefail
+          json="$(printf '%s' "$UPLOAD_BUNDLE_B64" | base64 -d)"
+          for key in keystoreBase64 storePassword keyAlias keyPassword; do
+            value="$(printf '%s' "$json" | jq -r --arg k "$key" '.[$k] // empty')"
+            if [ -z "$value" ]; then echo "::error::Bundle di upload incompleto: manca $key"; exit 1; fi
+          done
+          store_pass="$(printf '%s' "$json" | jq -r .storePassword)"
+          key_pass="$(printf '%s' "$json" | jq -r .keyPassword)"
+          echo "::add-mask::$store_pass"
+          echo "::add-mask::$key_pass"
+          ks="$RUNNER_TEMP/us-play-upload.jks"
+          printf '%s' "$json" | jq -r .keystoreBase64 | base64 -d > "$ks"
+          {
+            echo "US_ANDROID_UPLOAD_KEYSTORE_PATH=$ks"
+            echo "US_ANDROID_UPLOAD_KEYSTORE_PASSWORD=$store_pass"
+            echo "US_ANDROID_UPLOAD_KEY_ALIAS=$(printf '%s' "$json" | jq -r .keyAlias)"
+            echo "US_ANDROID_UPLOAD_KEY_PASSWORD=$key_pass"
+          } >> "$GITHUB_ENV"
+
+      - name: Restore Firebase Android config
+        if: env.US_BUILD_MODE == 'upload'
+        env:
+          GOOGLE_SERVICES_JSON_B64: ${{ secrets.ANDROID_GOOGLE_SERVICES_JSON_B64 }}
+        run: |
+          set -euo pipefail
+          path="android/app/google-services.json"
+          printf '%s' "$GOOGLE_SERVICES_JSON_B64" | base64 -d > "$path"
+          if ! jq -e '[.client[].client_info.android_client_info.package_name] | index("com.usapp.us")' "$path" > /dev/null; then
+            echo "::error::google-services.json non contiene il pacchetto com.usapp.us"
+            exit 1
+          fi
+          echo "US_FIREBASE_CONFIGURED=true" >> "$GITHUB_ENV"
+
+      - name: Build release bundle
+        working-directory: android
+        run: bash ./gradlew --no-daemon bundleRelease
+
+      - name: Download bundletool
+        run: |
+          set -euo pipefail
+          jar="$RUNNER_TEMP/bundletool.jar"
+          curl -fsSL -o "$jar" "https://github.com/google/bundletool/releases/download/${BUNDLETOOL_VERSION}/bundletool-all-${BUNDLETOOL_VERSION}.jar"
+          actual="$(sha256sum "$jar" | cut -d' ' -f1)"
+          echo "bundletool ${BUNDLETOOL_VERSION} sha256=$actual"
+          if [ -n "$BUNDLETOOL_SHA256" ] && [ "$actual" != "$BUNDLETOOL_SHA256" ]; then
+            echo "::error::bundletool sha256 inatteso"
+            exit 1
+          fi
+          echo "BUNDLETOOL_JAR=$jar" >> "$GITHUB_ENV"
+
+      - name: Verify signature
+        env:
+          INTERNAL_SIGNING_BUNDLE_B64: ${{ env.US_BUILD_MODE == 'upload' && secrets.ANDROID_SIGNING_BUNDLE_B64 || '' }}
+        run: |
+          set -euo pipefail
+          aab="android/app/build/outputs/bundle/release/app-release.aab"
+          test -f "$aab" || { echo "::error::app-release.aab mancante"; exit 1; }
+          mkdir -p out
+          jarsigner -verify -verbose -certs "$aab" > out/jarsigner.txt 2>&1 || { tail -40 out/jarsigner.txt; exit 1; }
+          grep -q "jar verified." out/jarsigner.txt || { echo "::error::AAB non firmato"; tail -40 out/jarsigner.txt; exit 1; }
+          keytool -printcert -jarfile "$aab" > out/signer-certificate.txt
+          cat out/signer-certificate.txt
+          if grep -q "CN=Android Debug" out/signer-certificate.txt; then
+            echo "::error::AAB firmato con la chiave di debug"
+            exit 1
+          fi
+          signer_sha="$(grep -m1 'SHA256:' out/signer-certificate.txt | sed 's/.*SHA256: *//')"
+          echo "upload_certificate_sha256=$signer_sha" > out/signing.txt
+          if [ -n "$INTERNAL_SIGNING_BUNDLE_B64" ]; then
+            # The upload key must never be the permanent internal key: that key
+            # signs every sideloaded APK and may become the Play app signing key.
+            json="$(printf '%s' "$INTERNAL_SIGNING_BUNDLE_B64" | base64 -d)"
+            pass="$(printf '%s' "$json" | jq -r .storePassword)"
+            echo "::add-mask::$pass"
+            ks="$RUNNER_TEMP/us-internal-compare.jks"
+            printf '%s' "$json" | jq -r .keystoreBase64 | base64 -d > "$ks"
+            internal_sha="$(keytool -list -v -keystore "$ks" -storepass "$pass" -alias "$(printf '%s' "$json" | jq -r .keyAlias)" | grep -m1 'SHA256:' | sed 's/.*SHA256: *//')"
+            rm -f "$ks"
+            if [ -n "$internal_sha" ] && [ "$internal_sha" = "$signer_sha" ]; then
+              echo "::error::La chiave di upload coincide con la chiave interna permanente"
+              exit 1
+            fi
+            echo "differs_from_internal_key=true" >> out/signing.txt
+          fi
+
+      - name: Validate bundle with bundletool
+        run: |
+          set -euo pipefail
+          aab="android/app/build/outputs/bundle/release/app-release.aab"
+          java -jar "$BUNDLETOOL_JAR" validate --bundle="$aab" > out/bundletool-validate.txt
+          java -jar "$BUNDLETOOL_JAR" dump manifest --bundle="$aab" > out/AndroidManifest.bundle.xml
+          unzip -Z1 "$aab" > out/bundle-entries.txt
+          mkdir -p "$RUNNER_TEMP/aab-extracted"
+          unzip -q "$aab" -d "$RUNNER_TEMP/aab-extracted"
+
+      - name: US Play gate
+        run: |
+          node scripts/validate-android-bundle.mjs \
+            --mode "$US_BUILD_MODE" \
+            --manifest out/AndroidManifest.bundle.xml \
+            --entries out/bundle-entries.txt \
+            --extracted "$RUNNER_TEMP/aab-extracted" \
+            --aab android/app/build/outputs/bundle/release/app-release.aab \
+            --expect-version-code "$US_ANDROID_VERSION_CODE" \
+            --expect-version-name "$US_ANDROID_VERSION_NAME" \
+            --firebase-configured "$US_FIREBASE_CONFIGURED" \
+            --out out
+
+      - name: Build info
+        if: always()
+        run: |
+          mkdir -p out
+          {
+            echo "source_sha=$GITHUB_SHA"
+            echo "ref=$GITHUB_REF"
+            echo "mode=${US_BUILD_MODE:-unknown}"
+            echo "application_id=com.usapp.us"
+            echo "version_code=${US_ANDROID_VERSION_CODE:-}"
+            echo "version_name=${US_ANDROID_VERSION_NAME:-}"
+            echo "firebase_configured=${US_FIREBASE_CONFIGURED:-}"
+            echo "bundletool=${BUNDLETOOL_VERSION}"
+          } > out/build-info.txt
+          [ -f out/aab-validation.md ] && cat out/aab-validation.md >> "$GITHUB_STEP_SUMMARY" || true
+
+      - name: Encrypt upload candidate
+        if: env.US_BUILD_MODE == 'upload'
+        env:
+          ARTIFACT_PASSWORD: ${{ secrets.ANDROID_PLAY_ARTIFACT_PASSWORD }}
+        run: |
+          set -euo pipefail
+          cp android/app/build/outputs/bundle/release/app-release.aab "US-Play-${US_ANDROID_VERSION_NAME}-${US_ANDROID_VERSION_CODE}.aab"
+          7z a -t7z -mhe=on -p"$ARTIFACT_PASSWORD" out/US-Play-candidate.7z "US-Play-${US_ANDROID_VERSION_NAME}-${US_ANDROID_VERSION_CODE}.aab" > /dev/null
+          rm -f "US-Play-${US_ANDROID_VERSION_NAME}-${US_ANDROID_VERSION_CODE}.aab"
+
+      - name: Remove signing material
+        if: always()
+        run: rm -f "$RUNNER_TEMP"/*.jks android/app/google-services.json
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: US-Play-bundle-${{ env.US_BUILD_MODE }}-reports
+          path: |
+            out/*.txt
+            out/*.xml
+            out/*.json
+            out/*.md
+          if-no-files-found: warn
+          retention-days: 14
+
+      - uses: actions/upload-artifact@v4
+        if: env.US_BUILD_MODE == 'upload'
+        with:
+          name: US-Play-candidate-encrypted
+          path: out/US-Play-candidate.7z
+          if-no-files-found: error
+          retention-days: 7
