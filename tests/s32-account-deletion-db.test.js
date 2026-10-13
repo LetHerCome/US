@@ -281,3 +281,28 @@ test('D-5: the survivor deleting their account also erases the old archive, the 
   await q('delete from auth.users where id=$1',[S]);
   assert.deepEqual((await svc('select public.s32_account_deletion_storage_plan($1) r',[S])).archive_prefixes,[`${h.A}/`]);
 });
+
+test('Storage policies keep each relationship\'s media apart before and after D-5',async()=>{
+  await q('grant select, insert on storage.objects to authenticated');
+  const put=(name,owner)=>q("insert into storage.objects(bucket_id,name,owner_id) values('us-media',$1,$2)",[name,owner]);
+  const sees=(u,prefix)=>h.as(db,u,"select count(*)::int r from storage.objects where bucket_id='us-media' and name like $1",[prefix+'%']);
+  const upload=(u,name)=>h.as(db,u,"insert into storage.objects(bucket_id,name,owner_id) values('us-media',$1,auth.uid()::text) returning 1 r",[name]);
+  await put(`${h.A}/${L}/m1.webp`,L);await put(`${h.A}/${S}/m2.webp`,S);await put(`${C2}/${h.U1}/x.webp`,h.U1);
+  assert.equal(await sees(S,h.A+'/'),2);assert.equal(await sees(S,C2+'/'),0);assert.equal(await sees(h.U1,h.A+'/'),0);
+
+  await del(L);
+  assert.equal(await sees(S,`${h.A}/${S}/`),1,'the survivor keeps the archive media in the app');
+  assert.equal(await sees(L,h.A+'/'),0,'the deleted account reads nothing');
+  await assert.rejects(upload(L,`${h.A}/${L}/again.webp`),/row-level security/);
+
+  const C3=(await startNew(S)).couple_id;
+  const code=(await h.invite(db,S)).code;await h.accept(db,h.U3,code,'Nuova persona');
+  for(const u of [S,h.U3]){
+    assert.equal(await sees(u,h.A+'/'),0,'old relationship media are not reachable from the new space');
+    assert.equal(await sees(u,C2+'/'),0);
+    await assert.rejects(upload(u,`${h.A}/${u}/x.webp`),/row-level security/,'nothing can be added to the old archive');
+  }
+  await upload(h.U3,`${C3}/${h.U3}/n.webp`);
+  assert.equal(await sees(S,C3+'/'),1,'the new couple shares only its own media');
+  assert.equal(await sees(h.U1,C3+'/'),0);
+});

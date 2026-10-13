@@ -42,7 +42,7 @@ Risposte: 200 `deleted`; 202 `pending_cleanup` (dati già separati, pulizia da c
 
 | Test | Cosa prova |
 |---|---|
-| `tests/s32-account-deletion-db.test.js` | Schema reale in PGlite, due coppie sintetiche: Policy A riga per riga; nessuna riga pubblica cita più l'utente (eccetto i path dei media conservati); righe del partner invariate; altra coppia identica bit per bit; ogni altro percorso di cancellazione fallisce; partner nell'app e coppia chiusa; account cancellato senza accesso; ultimo membro; idempotenza e macchina a stati; permessi |
+| `tests/s32-account-deletion-db.test.js` | Schema reale in PGlite, due coppie sintetiche: Policy A riga per riga; nessuna riga pubblica cita più l'utente (eccetto i path dei media conservati); righe del partner invariate; altra coppia identica bit per bit; ogni altro percorso di cancellazione fallisce; partner nell'app e coppia chiusa; account cancellato senza accesso; ultimo membro; idempotenza e macchina a stati; permessi; policy Storage: chi resta vede i media dell'archivio, l'account cancellato nulla; dopo D-5 né chi resta né il nuovo partner leggono o caricano file nel vecchio prefisso o in quello di un'altra coppia |
 | `tests/s32-fk-resolution.test.js` | Ognuna delle 37 FK verso `auth.users`/`profiles` ha un esito dichiarato; una FK nuova non classificata fa fallire la CI |
 | `tests/s32-account-deletion-core.test.mjs` | Orchestrazione Edge con client finti: flag, origine, corpo, `amr`, ordine dei passi, `keep_paths` mai rimossi, path fuori prefisso rifiutati, ripresa da ogni stato, log senza dati personali |
 | `tests/s32-account-deletion-client.test.js` | Flusso in app e pagina pubblica |
@@ -71,6 +71,7 @@ Il fondatore ha approvato Policy A. Le altre voci del piano (D-1…D-19) non han
 4. **Pulizia cache altrui:** URL firmate già emesse (6 h; 24 h per il widget) e cache media del service worker restano valide fino alla scadenza (residuo dichiarato).
 5. Etichetta "Account eliminato" e banner per il partner.
 6. Registrare il cron del worker e la chiave in Vault, dopo il collaudo su staging.
+7. Allineare informativa, termini e scheda Play ai testi del §8.
 
 ## 7. Nuovo legame dopo l'uscita del partner (D-5)
 
@@ -90,3 +91,19 @@ Il vecchio `couple_id` non viene riciclato e il contenuto non viene spostato. Po
   - pulsante "Inizia un nuovo spazio" con conferma;
   - test di isolamento su staging con account usa-e-getta.
 - Fino ad allora, chi resta mantiene l'app normale con l'archivio e non vede alcun blocco permanente annunciato.
+
+## 8. Testi per Play Console e informativa
+
+Le bozze su `main` (`docs/store/play/PRIVACY_POLICY_DRAFT.md`, `PLAY_DECLARATIONS_DRAFT.md`, `TERMS_DRAFT.md`) sono state scritte sul piano, prima di questa implementazione, e dicono ancora "7 giorni per annullare". Il comportamento reale della #190 è questo; i testi vanno allineati prima di compilare la scheda.
+
+**Informativa §5 (conservazione).** "Quando chiedi l'eliminazione, dopo aver confermato la password, il tuo account viene eliminato subito e non può essere recuperato. La rimozione dei file si completa entro 30 giorni. Conserviamo per 12 mesi solo una ricevuta tecnica dell'eliminazione (identificativo dell'account e della coppia, date, esito), senza contenuti. I backup del fornitore vengono sovrascritti entro [DURATA BACKUP, D-8]."
+
+**Informativa §6 (eliminare l'account).** "Puoi chiedere l'eliminazione dall'app (Impostazioni › Privacy e dati › Elimina account), dalla pagina https://[DOMINIO]/elimina-account o scrivendo a [EMAIL DI SUPPORTO]. Eliminiamo il tuo profilo e i tuoi dati personali: risposte, umore, quiz, posizione, dispositivi e notifiche, storie, appuntamenti personali, messaggi programmati non ancora consegnati. Quello che avete condiviso nello spazio di coppia (Momenti e foto, messaggi già consegnati, appuntamenti ed eventi condivisi, desideri, i 'lasciati per te' che il tuo partner ha conservato, la storia della coppia) resta al tuo partner, senza il tuo nome; il partner può cancellarlo. Se eri l'ultimo membro della coppia, viene cancellato tutto lo spazio. Puoi chiedere una copia dei tuoi dati prima dell'eliminazione: te la inviamo via email entro 30 giorni."
+
+**Termini §3 e §9.** Basta togliere "[DIPENDE #190]".
+
+**Play Console › Sicurezza dei dati › Eliminazione.**
+- Gli utenti possono chiedere l'eliminazione: Sì, in app e via web (`https://[DOMINIO]/elimina-account`, raggiungibile senza login; il percorso `.html` funziona uguale).
+- Nessun periodo per annullare: eliminazione immediata, completamento entro 30 giorni.
+- Dati che restano e perché: i contenuti condivisi con il partner restano a lui, anonimi, perché fanno parte della sua storia; una ricevuta tecnica senza contenuti per 12 mesi, per dimostrare l'avvenuta eliminazione.
+- Non scrivere "tutti i dati vengono eliminati".
