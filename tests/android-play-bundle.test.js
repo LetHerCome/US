@@ -57,6 +57,24 @@ ${extraComponents}
 `;
 }
 
+// Minimal little-endian ELF64 with one PT_LOAD program header per alignment.
+function elf64(alignments) {
+  const phoff = 64;
+  const buf = Buffer.alloc(phoff + 56 * (alignments.length + 1));
+  buf.writeUInt32BE(0x7f454c46, 0);
+  buf[4] = 2; buf[5] = 1;
+  buf.writeBigUInt64LE(BigInt(phoff), 0x20);
+  buf.writeUInt16LE(56, 0x36);
+  buf.writeUInt16LE(alignments.length + 1, 0x38);
+  buf.writeUInt32LE(6, phoff); // PT_PHDR, ignored
+  alignments.forEach((align, i) => {
+    const base = phoff + 56 * (i + 1);
+    buf.writeUInt32LE(1, base);
+    buf.writeBigUInt64LE(BigInt(align), base + 0x30);
+  });
+  return buf;
+}
+
 const GOOD_ENTRIES = [
   'BundleConfig.pb',
   'base/manifest/AndroidManifest.xml',
@@ -139,7 +157,14 @@ test('bundle structure, native libraries, signing leftovers and Firebase are che
   assert.equal(levelOf(noWeb, 'firebase-config'), 'warn');
 
   assert.equal(levelOf(gate.checkEntries(GOOD_ENTRIES, { mode: 'upload', firebaseConfigured: false }), 'firebase-config'), 'fail');
-  assert.equal(levelOf(gate.checkEntries([...GOOD_ENTRIES, 'base/lib/arm64-v8a/libfoo.so'], { mode: 'test' }), 'page-size-16kb'), 'warn');
+  const lib = 'base/lib/arm64-v8a/libdatastore_shared_counter.so';
+  assert.equal(levelOf(gate.checkEntries([...GOOD_ENTRIES, lib], { mode: 'test' }), 'page-size-16kb'), 'warn');
+  assert.equal(levelOf(gate.checkEntries([...GOOD_ENTRIES, lib], { mode: 'test', readLib: () => elf64([0x4000, 0x4000]) }), 'page-size-16kb'), 'pass');
+  assert.equal(levelOf(gate.checkEntries([...GOOD_ENTRIES, lib], { mode: 'test', readLib: () => elf64([0x4000, 0x1000]) }), 'page-size-16kb'), 'fail');
+  assert.equal(levelOf(gate.checkEntries([...GOOD_ENTRIES, lib], { mode: 'test', readLib: () => Buffer.from('nope') }), 'page-size-16kb'), 'fail');
+  // 32-bit ABIs are outside the 16 KB requirement.
+  assert.equal(levelOf(gate.checkEntries([...GOOD_ENTRIES, 'base/lib/armeabi-v7a/libx.so'], { mode: 'test', readLib: () => Buffer.from('nope') }), 'page-size-16kb'), 'pass');
+  assert.equal(gate.elfMinLoadAlignment(elf64([0x10000, 0x4000])), 0x4000);
   assert.equal(levelOf(gate.checkEntries([...GOOD_ENTRIES, 'base/assets/public/google-services.json'], { mode: 'test' }), 'no-signing-material'), 'fail');
   assert.equal(levelOf(gate.checkEntries([...GOOD_ENTRIES, 'base/root/upload.jks'], { mode: 'test' }), 'no-signing-material'), 'fail');
 });
@@ -148,6 +173,9 @@ test('embedded server secrets fail the gate while the public anon config passes'
   const gate = await loadGate();
   const clean = gate.scanForSecrets([{ name: 'public/app.js', text: 'const SUPABASE_ANON_KEY = "eyJhbGciOi.anon";' }]);
   assert.equal(clean[0].level, 'pass');
+  const jwt = (claims) => `eyJhbGciOiJIUzI1NiJ9.${Buffer.from(JSON.stringify(claims)).toString('base64url')}.c2lnbmF0dXJlLXZhbHVl`;
+  assert.equal(gate.scanForSecrets([{ name: 'public/app.js', text: `const k = "${jwt({ role: 'anon', iss: 'supabase' })}";` }])[0].level, 'pass');
+  assert.equal(gate.scanForSecrets([{ name: 'classes.dex', text: `x${jwt({ role: 'service_role', iss: 'supabase' })}x` }])[0].level, 'fail');
   for (const text of [
     '-----BEGIN PRIVATE KEY-----\nabc',
     '{"type": "service_account", "project_id": "x"}',
@@ -215,4 +243,9 @@ test('the AAB workflow never publishes a downloadable bundle from a public repos
   assert.match(workflow, /::add-mask::/);
   // The upload key must differ from the permanent internal key.
   assert.match(workflow, /La chiave di upload coincide con la chiave interna permanente/);
+  // ...compared by public fingerprint only: the internal private key is never decoded here.
+  assert.match(workflow, /vars\.ANDROID_INTERNAL_CERT_SHA256/);
+  assert.doesNotMatch(workflow, /ANDROID_SIGNING_BUNDLE_B64/);
+  assert.match(workflow, /BUNDLETOOL_SHA256: '[0-9a-f]{64}'/);
+  assert.match(workflow, /-lt 24/);
 });

@@ -8,9 +8,9 @@ Workflow: `.github/workflows/android-play-bundle.yml`. Validatore: `scripts/vali
 
 1. Costruisce la web app Capacitor e sincronizza Android, verificando che il progetto committato non cambi.
 2. Esegue `bundleRelease` e produce `app-release.aab`.
-3. Verifica la firma (`jarsigner`), rifiuta la chiave di debug e, in modalità upload, rifiuta una chiave di upload uguale alla chiave interna permanente.
+3. Verifica la firma (`jarsigner`), rifiuta la chiave di debug e, in modalità upload, rifiuta una chiave di upload uguale alla chiave interna permanente (confronto con l'impronta pubblica `ANDROID_INTERNAL_CERT_SHA256`: la chiave privata interna non viene mai aperta da questo workflow).
 4. Esegue `bundletool validate` ed estrae il manifest finale del bundle.
-5. Applica il gate US: pacchetto `com.usapp.us`, versionCode 1..2.100.000.000 e uguale a quello assegnato, versionName `x.y.z`, targetSdk ≥ 36, minSdk 26, niente `debuggable`/`testOnly`/cleartext, `allowBackup=false`, nessun permesso vietato (posizione in background, media, SMS, contatti, allarmi esatti, …), nessun componente esportato senza permesso oltre a `MainActivity`, un solo ricevitore FCM e cioè `UsGuardedMessagingService` (PR #187), web app presente, nessun keystore o `google-services.json` dentro il bundle, nessun segreto server nei file di testo, nessuna libreria nativa (pagine da 16 KB).
+5. Applica il gate US: pacchetto `com.usapp.us`, versionCode 1..2.100.000.000 e uguale a quello assegnato, versionName `x.y.z`, targetSdk ≥ 36, minSdk 26, niente `debuggable`/`testOnly`/cleartext, `allowBackup=false`, nessun permesso vietato (posizione in background, media, SMS, contatti, allarmi esatti, …), nessun componente esportato senza permesso oltre a `MainActivity`, un solo ricevitore FCM e cioè `UsGuardedMessagingService` (PR #187), web app presente, nessun keystore o `google-services.json` dentro il bundle, nessun segreto server (anche JWT `service_role` codificati) nei file di testo e nel codice dex, librerie native a 64 bit con segmenti allineati a 16 KB (oggi solo `libdatastore_shared_counter.so` di AndroidX DataStore).
 6. Pubblica come artifact solo i report: `aab-validation.md/json`, `permissions.txt` (base per il modulo Data safety), manifest del bundle, certificato del firmatario, info di build.
 
 ## Modalità
@@ -48,10 +48,11 @@ Nessuno di questi valori va scritto in chat, nel repository o in un documento co
    - (consigliata) lasciare che Google generi la chiave di firma app: chi ha già l'APK sideload deve disinstallarlo una volta; i dati sul server restano;
    - riusare la chiave interna come chiave di firma app (esportazione PEPK da Play Console): gli APK installati si aggiornano da Play, ma la chiave interna deve restare segreta per sempre.
 3. **Chiave di upload**: generarla sul proprio computer (Android Studio › Generate Signed Bundle, oppure `keytool`), conservarne una copia offline con le password, registrarla in Play Console.
-4. **Tre segreti GitHub** (Settings › Secrets and variables › Actions):
+4. **Tre segreti e una variabile GitHub** (Settings › Secrets and variables › Actions):
    - `ANDROID_PLAY_UPLOAD_BUNDLE_B64`: base64 di un JSON `{"keystoreBase64","storePassword","keyAlias","keyPassword"}`, stesso formato del segreto interno esistente;
-   - `ANDROID_PLAY_ARTIFACT_PASSWORD`: una password lunga per aprire l'archivio cifrato con l'AAB;
-   - `ANDROID_GOOGLE_SERVICES_JSON_B64`: già esistente, va solo confermato per `com.usapp.us`.
+   - `ANDROID_PLAY_ARTIFACT_PASSWORD`: una password di almeno 24 caratteri per aprire l'archivio cifrato con l'AAB;
+   - `ANDROID_GOOGLE_SERVICES_JSON_B64`: già esistente, va solo confermato per `com.usapp.us`;
+   - variabile (non segreta) `ANDROID_INTERNAL_CERT_SHA256`: l'impronta SHA-256 del certificato interno, che compare in `signature.txt` di ogni artifact `US-Android-Internal` (riga "certificate SHA-256 digest").
 5. **Avvio**: dopo il merge della PR #187, Actions › "Android Play bundle (AAB)" › Run workflow su `main` con `signing = upload`. Scaricare `US-Play-candidate-encrypted`, aprirlo con 7-Zip e la password, caricare l'AAB a mano sulla traccia di **test interno** di Play Console.
 
 ## Limiti noti
@@ -59,4 +60,7 @@ Nessuno di questi valori va scritto in chat, nel repository o in un documento co
 - `RECORD_AUDIO` assente dal manifest: il gate lo segnala come avviso (roadmap B2, manifest di competenza delle notifiche).
 - Il workflow interno esistente (`android-internal-release.yml`) carica l'APK firmato in chiaro come artifact di un repository pubblico. Va deciso se renderlo privato, cifrarlo o fermarlo dopo il lancio su Play.
 - Gli asset sorgente (`assets/source`) restano nel bundle (roadmap B3).
-- L'hash di bundletool è da fissare in `BUNDLETOOL_SHA256` dopo la prima esecuzione.
+
+## Prima prova reale (13/10/2026, commit `adace8c`, modo test)
+
+Run CI 38327664779 verde: AAB di 24,8 MB, `bundletool validate` OK, firma verificata, pacchetto `com.usapp.us`, versionCode 1791851492, versionName 1.0.0, minSdk 26, targetSdk 36, niente AD_ID. Permessi del bundle: CAMERA, ACCESS_FINE/COARSE_LOCATION, POST_NOTIFICATIONS, INTERNET, ACCESS_NETWORK_STATE, VIBRATE, WAKE_LOCK, USE_BIOMETRIC, USE_FINGERPRINT, INSTALL_SHORTCUT, c2dm RECEIVE. Avvisi attesi: due ricevitori FCM standard (main senza #187), Firebase assente (build di prova), RECORD_AUDIO assente.

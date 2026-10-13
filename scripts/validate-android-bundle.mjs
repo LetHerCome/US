@@ -223,7 +223,7 @@ export function checkManifest(summary, { expectVersionCode, expectVersionName, m
   return results;
 }
 
-export function checkEntries(entries, { mode, firebaseConfigured }) {
+export function checkEntries(entries, { mode, firebaseConfigured, readLib }) {
   const results = [];
   const has = (re) => entries.some((e) => re.test(e));
   has(/^BundleConfig\.pb$/) && has(/^base\/manifest\/AndroidManifest\.xml$/)
@@ -240,9 +240,25 @@ export function checkEntries(entries, { mode, firebaseConfigured }) {
     : results.push({ id: 'capacitor-config-present', level: 'fail', detail: 'capacitor.config.json assente' });
 
   const nativeLibs = entries.filter((e) => /\/lib\/[^/]+\/[^/]+\.so$/.test(e));
-  nativeLibs.length
-    ? results.push({ id: 'page-size-16kb', level: 'warn', detail: `librerie native presenti, verificare allineamento 16 KB: ${nativeLibs.join(', ')}` })
-    : results.push({ id: 'page-size-16kb', level: 'pass', detail: 'nessuna libreria nativa: conforme alle pagine da 16 KB' });
+  if (!nativeLibs.length) {
+    results.push({ id: 'page-size-16kb', level: 'pass', detail: 'nessuna libreria nativa: conforme alle pagine da 16 KB' });
+  } else if (!readLib) {
+    results.push({ id: 'page-size-16kb', level: 'warn', detail: `librerie native non ispezionate: ${nativeLibs.join(', ')}` });
+  } else {
+    // Play requires 16 KB aligned LOAD segments for 64-bit ABIs.
+    const bad = [];
+    const checked = [];
+    for (const lib of nativeLibs) {
+      const abi = lib.split('/').slice(-2)[0];
+      if (abi !== 'arm64-v8a' && abi !== 'x86_64') continue;
+      let align;
+      try { align = elfMinLoadAlignment(readLib(lib)); } catch (error) { bad.push(`${lib} (${error.message})`); continue; }
+      (align >= 16384 ? checked : bad).push(`${lib} (align ${align})`);
+    }
+    bad.length
+      ? results.push({ id: 'page-size-16kb', level: 'fail', detail: `segmenti LOAD non allineati a 16 KB: ${bad.join(', ')}` })
+      : results.push({ id: 'page-size-16kb', level: 'pass', detail: `librerie 64 bit allineate a 16 KB: ${checked.join(', ')}` });
+  }
 
   const debugLeftovers = entries.filter((e) => /\.(?:jks|keystore|p12|pem)$|keystore\.properties$|google-services\.json$/i.test(e));
   debugLeftovers.length
@@ -255,12 +271,47 @@ export function checkEntries(entries, { mode, firebaseConfigured }) {
   return results;
 }
 
+// Smallest p_align among PT_LOAD program headers of an ELF shared library.
+export function elfMinLoadAlignment(buf) {
+  if (buf.length < 52 || buf.readUInt32BE(0) !== 0x7f454c46) throw new Error('non è un file ELF');
+  const is64 = buf[4] === 2;
+  const le = buf[5] === 1;
+  const u16 = (o) => (le ? buf.readUInt16LE(o) : buf.readUInt16BE(o));
+  const u32 = (o) => (le ? buf.readUInt32LE(o) : buf.readUInt32BE(o));
+  const u64 = (o) => Number(le ? buf.readBigUInt64LE(o) : buf.readBigUInt64BE(o));
+  const phoff = is64 ? u64(0x20) : u32(0x1c);
+  const phentsize = u16(is64 ? 0x36 : 0x2a);
+  const phnum = u16(is64 ? 0x38 : 0x2c);
+  let min = Infinity;
+  for (let i = 0; i < phnum; i += 1) {
+    const base = phoff + i * phentsize;
+    if (u32(base) !== 1) continue; // PT_LOAD
+    min = Math.min(min, is64 ? u64(base + 0x30) : u32(base + 0x1c));
+  }
+  if (min === Infinity) throw new Error('nessun segmento LOAD');
+  return min;
+}
+
+// A Supabase service_role key appears as a base64url JWT, so the role claim is
+// only visible after decoding the payload.
+export function findServiceRoleJwts(text) {
+  const found = [];
+  for (const [token, payload] of text.matchAll(/eyJ[\w-]{8,}\.(eyJ[\w-]{8,})\.[\w-]{8,}/g)) {
+    try {
+      const claims = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+      if (claims && claims.role === 'service_role') found.push(token.slice(0, 12));
+    } catch { /* not a JWT */ }
+  }
+  return found;
+}
+
 export function scanForSecrets(files) {
   const hits = [];
   for (const { name, text } of files) {
     for (const pattern of SECRET_PATTERNS) {
       if (pattern.re.test(text)) hits.push(`${name}: ${pattern.name}`);
     }
+    if (findServiceRoleJwts(text).length) hits.push(`${name}: Supabase service_role JWT`);
   }
   return hits.length
     ? [{ id: 'no-embedded-secrets', level: 'fail', detail: hits.join('; ') }]
@@ -278,9 +329,11 @@ function* walk(dir) {
 export function readTextFiles(dir) {
   const files = [];
   for (const full of walk(dir)) {
-    if (!TEXT_EXTENSIONS.has(path.extname(full).toLowerCase())) continue;
-    if (statSync(full).size > 8 * 1024 * 1024) continue;
-    files.push({ name: path.relative(dir, full), text: readFileSync(full, 'utf8') });
+    const ext = path.extname(full).toLowerCase();
+    // .dex is scanned as latin1 so constants compiled into BuildConfig count too.
+    if (!TEXT_EXTENSIONS.has(ext) && ext !== '.dex') continue;
+    if (statSync(full).size > 32 * 1024 * 1024) continue;
+    files.push({ name: path.relative(dir, full), text: readFileSync(full, ext === '.dex' ? 'latin1' : 'utf8') });
   }
   return files;
 }
@@ -331,7 +384,11 @@ export function main(argv) {
       expectVersionName: args['expect-version-name'],
       mode
     }),
-    ...checkEntries(entries, { mode, firebaseConfigured: args['firebase-configured'] === 'true' }),
+    ...checkEntries(entries, {
+      mode,
+      firebaseConfigured: args['firebase-configured'] === 'true',
+      readLib: (entry) => readFileSync(path.join(args.extracted, entry))
+    }),
     ...scanForSecrets(readTextFiles(args.extracted))
   ];
   let aab;
