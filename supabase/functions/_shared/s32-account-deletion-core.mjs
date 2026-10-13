@@ -359,3 +359,61 @@ export async function handleDeleteAccount({ method, origin, authorization, readB
   if (finish.status === 'deleted') return { status: 200, body: { status: 'deleted' } };
   return { status: 202, body: { status: 'pending_cleanup' } };
 }
+
+// ------------------------------------------------------------ retry worker ---
+
+export const WORKER_DEFAULT_BATCH = 20;
+export const WORKER_MAX_BATCH = 50;
+
+// Cron/operator retry for requests left in pending_cleanup. Authenticated by a
+// dedicated Vault key (same pattern as the other workers), inert while the
+// feature flag is off. Works only on user ids read from the private receipts,
+// never on ids from the request. Also purges receipts past their retention.
+export async function runDeletionWorker({ method, cronKey, readBody, env, createClient, log = noop }) {
+  if (!isDeletionEnabled(env)) return { status: 503, body: { error: 'deletion_disabled' } };
+  if (method !== 'POST') return { status: 405, body: { error: 'method_not_allowed' } };
+  const presented = String(cronKey || '').trim();
+  if (!presented) return { status: 401, body: { error: 'unauthorized' } };
+
+  const client = createClient();
+  if (!client) return { status: 500, body: { error: 'server_config' } };
+  const rpc = (fn, args) => client.rpc(fn, args);
+
+  const key = await callRpc(rpc, 'get_internal_account_deletion_cron_key', undefined);
+  if (key.error || typeof key.data !== 'string' || !key.data || key.data !== presented) {
+    log({ step: 'worker_auth', outcome: 'denied' });
+    return { status: 401, body: { error: 'unauthorized' } };
+  }
+
+  let body = null;
+  try { body = await readBody(); } catch { body = null; }
+  const requested = Number.isInteger(body?.batch_size) ? body.batch_size : WORKER_DEFAULT_BATCH;
+  const limit = Math.max(1, Math.min(requested, WORKER_MAX_BATCH));
+
+  const claimed = await callRpc(rpc, 's32_claim_pending_account_deletions', { p_limit: limit });
+  if (claimed.error || !Array.isArray(claimed.data)) {
+    log({ step: 'worker_claim', outcome: 'error', code: claimed.error });
+    return { status: 500, body: { error: 'claim_failed' } };
+  }
+  const storage = client.storage.from(STORAGE_BUCKET);
+  const counts = { claimed: 0, deleted: 0, pending: 0, skipped: 0 };
+  for (const uid of claimed.data) {
+    if (!UUID.test(String(uid || ''))) { counts.skipped++; continue; }
+    counts.claimed++;
+    let res;
+    try {
+      res = await finishAccountDeletion({ uid, admin: client.auth.admin, storage, rpc, log });
+    } catch {
+      res = { status: 'pending_cleanup' };
+    }
+    if (res.status === 'deleted') counts.deleted++;
+    else if (res.status === 'no_receipt') counts.skipped++;
+    else counts.pending++;
+  }
+
+  const purge = await callRpc(rpc, 's32_purge_account_deletion_receipts', undefined);
+  log({ step: 'worker_purge', outcome: purge.error ? 'error' : 'ok', code: purge.error });
+  const purged = Number.isInteger(purge.data) ? purge.data : 0;
+  log({ step: 'worker_done', outcome: 'ok' });
+  return { status: 200, body: { ...counts, purged_receipts: purged } };
+}

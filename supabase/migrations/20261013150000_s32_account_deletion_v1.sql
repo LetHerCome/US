@@ -327,3 +327,46 @@ end;
 $fn$;
 revoke all on function public.s32_mark_account_deletion(uuid, text, text) from public, anon, authenticated;
 grant execute on function public.s32_mark_account_deletion(uuid, text, text) to service_role;
+
+-- 9. Retry worker and receipt retention -------------------------------------
+-- Requests left in pending_cleanup (Storage or Auth failed after the DB
+-- transaction) are resumed by the account-deletion-worker Edge function.
+-- Oldest first; after 10 failed attempts a request waits for an operator.
+create or replace function public.s32_claim_pending_account_deletions(p_limit integer default 20) returns uuid[]
+language sql stable security definer set search_path = ''
+as $fn$
+  select coalesce(pg_catalog.array_agg(user_id order by db_done_at), '{}'::uuid[]) from (
+    select d.user_id, d.db_done_at from private.account_deletions d
+    where d.state in ('db_done','storage_done') and d.attempts < 10
+    order by d.db_done_at limit greatest(1, least(coalesce(p_limit, 20), 50))
+  ) x
+$fn$;
+revoke all on function public.s32_claim_pending_account_deletions(integer) from public, anon, authenticated;
+grant execute on function public.s32_claim_pending_account_deletions(integer) to service_role;
+
+-- Minimal receipt (D-17 default, to be ratified): 12 months after completion.
+create or replace function public.s32_purge_account_deletion_receipts() returns integer
+language plpgsql volatile security definer set search_path = ''
+as $fn$
+declare purged integer;
+begin
+  delete from private.account_deletions
+    where state = 'completed' and completed_at < pg_catalog.now() - interval '12 months';
+  get diagnostics purged = row_count;
+  return purged;
+end;
+$fn$;
+revoke all on function public.s32_purge_account_deletion_receipts() from public, anon, authenticated;
+grant execute on function public.s32_purge_account_deletion_receipts() to service_role;
+
+-- Same service-only dedicated cron-auth pattern as the existing workers.
+create or replace function public.get_internal_account_deletion_cron_key() returns text
+language sql stable security definer set search_path = ''
+as $fn$
+  select nullif(pg_catalog.btrim(decrypted_secret), '')
+  from vault.decrypted_secrets
+  where name = 'us_account_deletion_cron_key'
+  limit 1
+$fn$;
+revoke all on function public.get_internal_account_deletion_cron_key() from public, anon, authenticated;
+grant execute on function public.get_internal_account_deletion_cron_key() to service_role;

@@ -27,6 +27,8 @@ Questa è la prima implementazione eseguibile del piano consolidato `docs/store/
 6. **Auth:** `auth.admin.deleteUser`. In caso di errore: ban permanente e stato registrato per l'operatore.
 7. **Ricevuta:** `completed`. La ricevuta contiene solo uid, coppia, modalità, canale, stato, date e codice d'errore.
 
+**Ripresa:** l'Edge `account-deletion-worker` (`verify_jwt=false`, chiave cron in Vault `us_account_deletion_cron_key`, inerte senza il flag) riprende le richieste rimaste in `db_done`/`storage_done`, dalla più vecchia; dopo 10 tentativi falliti la richiesta resta all'operatore. Nella stessa esecuzione cancella le ricevute completate da più di 12 mesi. La pianificazione cron va registrata solo dopo il collaudo su staging.
+
 Risposte: 200 `deleted`; 202 `pending_cleanup` (dati già separati, pulizia da completare); 401 `reauth_required`; 503 `deletion_disabled`; 500 `deletion_failed` (nessuna modifica).
 
 ## 3. Sicurezza e isolamento
@@ -54,12 +56,12 @@ Il fondatore ha approvato Policy A. Le altre voci del piano (D-1…D-19) non han
 | D-1/D-6 | Policy A senza scelta per chi esce: il contenuto condiviso resta sempre al partner. Più semplice e coerente con "l'eliminazione unilaterale non cancella la storia del partner" |
 | D-3 | **Nessun periodo di grazia**: cancellazione immediata dopo password + `ELIMINA`. Elimina la necessità di bloccare ~40 funzioni durante la grazia. Completamento dichiarato "entro 30 giorni" per i casi `pending_cleanup` |
 | D-4 | Nessuna push al partner; il client mostra già "La tua persona" quando manca il profilo. Etichetta "Account eliminato" nelle schede: rinviata |
-| D-5 | Coppia chiusa per sempre; il partner rimasto non può invitare nessuno. Per un nuovo partner deve eliminare il proprio account |
-| D-7 | Export su richiesta via email entro 30 giorni |
+| D-5 | Coppia chiusa per sempre; il partner rimasto non può invitare nessuno. Per un nuovo partner deve eliminare il proprio account. **Chiesta al fondatore come decisione separata** (13/10) |
+| D-7 | Copia dei dati su richiesta via email entro 30 giorni, preparata dall'operatore. L'export in app (`export-my-data`) resta parziale e disattivato: non va presentato come export completo |
 | D-13 | I Conservati del partner restano |
 | D-15 | Messaggi programmati non consegnati cancellati |
 | D-16 | Nessuna mappatura conservata: dopo la cancellazione non si può più risalire a cosa aveva creato chi è uscito |
-| D-17 | Ricevuta minima senza scadenza automatica (pulizia a 12 mesi da aggiungere) |
+| D-17 | Ricevuta minima cancellata 12 mesi dopo il completamento dal worker (valore da ratificare) |
 
 ## 6. Cosa manca prima della produzione
 
@@ -67,4 +69,5 @@ Il fondatore ha approvato Policy A. Le altre voci del piano (D-1…D-19) non han
 2. **Indirizzo email di supporto/privacy e nome dello sviluppatore** come nella scheda Play (segnaposto nel codice).
 3. **Revisione legale** di Policy A, informativa e pagina (D-10).
 4. **Pulizia cache altrui:** URL firmate già emesse (6 h; 24 h per il widget) e cache media del service worker restano valide fino alla scadenza (residuo dichiarato).
-5. Etichetta "Account eliminato" e banner per il partner; pulizia ricevute a 12 mesi.
+5. Etichetta "Account eliminato" e banner per il partner.
+6. Registrare il cron del worker e la chiave in Vault, dopo il collaudo su staging.

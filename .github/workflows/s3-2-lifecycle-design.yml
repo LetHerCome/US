@@ -40,6 +40,7 @@ on:
       - '.github/workflows/s3-2-lifecycle-design.yml'
       - 'supabase/migrations/*_s32_*.sql'
       - 'supabase/functions/delete-account/**'
+      - 'supabase/functions/account-deletion-worker/**'
       - 'supabase/functions/_shared/s32-account-deletion-core.mjs'
       - 'tests/s32-*'
       - 'tests/helpers/mc2-db.js'
@@ -88,6 +89,7 @@ jobs:
         run: |
           deno check --node-modules-dir=auto supabase/functions/export-my-data/index.ts
           deno check --node-modules-dir=auto supabase/functions/delete-account/index.ts
+          deno check --node-modules-dir=auto supabase/functions/account-deletion-worker/index.ts
       - name: Ensure no unapproved deletion or deployment scripts
         run: |
           node - <<'NODE'

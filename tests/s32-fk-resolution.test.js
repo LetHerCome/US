@@ -56,7 +56,8 @@ test('every user reference is classified, and shared content fails closed',async
 test('the deletion entry points stay service-role only in the migration source',()=>{
   const dir=path.join(__dirname,'../supabase/migrations');
   const sql=fs.readFileSync(path.join(dir,fs.readdirSync(dir).find(f=>/_s32_account_deletion_v1\.sql$/.test(f))),'utf8');
-  for(const sig of ['public.s32_delete_account_data(uuid, text)','public.s32_account_deletion_storage_plan(uuid)','public.s32_mark_account_deletion(uuid, text, text)']){
+  for(const sig of ['public.s32_delete_account_data(uuid, text)','public.s32_account_deletion_storage_plan(uuid)','public.s32_mark_account_deletion(uuid, text, text)',
+    'public.s32_claim_pending_account_deletions(integer)','public.s32_purge_account_deletion_receipts()','public.get_internal_account_deletion_cron_key()']){
     assert.ok(sql.includes(`revoke all on function ${sig} from public, anon, authenticated;`),sig);
     assert.ok(sql.includes(`grant execute on function ${sig} to service_role;`),sig);
   }

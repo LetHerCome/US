@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   assertRecentPasswordAuth, cleanupStoragePrefix, decodeJwtPayload, finishAccountDeletion,
-  handleDeleteAccount, isOriginAllowed, isSafeObjectName, parseDeletionBody,
+  handleDeleteAccount, isOriginAllowed, isSafeObjectName, parseDeletionBody, runDeletionWorker,
   DeletionError, REMOVE_BATCH_SIZE, STORAGE_BUCKET,
 } from '../supabase/functions/_shared/s32-account-deletion-core.mjs';
 
@@ -373,4 +373,59 @@ test('listing pages past 1000 entries per folder', async () => {
   const res = await cleanupStoragePrefix({ storage, prefix: ownPrefix, keepPaths: [many[1234]] });
   assert.equal(res.removed, 1499);
   assert.deepEqual([...storage.objects], [many[1234]]);
+});
+
+// ------------------------------------------------------------ retry worker ---
+function makeWorkerClient({ key = 'cron-secret', claimed = [], plans = {}, storage = makeStorage([]) } = {}) {
+  const calls = { rpc: [], deleteUser: [] };
+  return {
+    calls,
+    auth: { admin: {
+      async deleteUser(id) { calls.deleteUser.push(id); return { error: null }; },
+      async updateUserById() { return { error: null }; },
+    } },
+    async rpc(fn, args) {
+      calls.rpc.push([fn, args]);
+      if (fn === 'get_internal_account_deletion_cron_key') return { data: key, error: null };
+      if (fn === 's32_claim_pending_account_deletions') return { data: claimed, error: null };
+      if (fn === 's32_account_deletion_storage_plan') return { data: plans[args.p_user] ?? null, error: null };
+      if (fn === 's32_mark_account_deletion') return { data: {}, error: null };
+      if (fn === 's32_purge_account_deletion_receipts') return { data: 2, error: null };
+      throw new Error(`unexpected rpc ${fn}`);
+    },
+    storage: { from() { return storage; } },
+  };
+}
+const work = (client, overrides = {}) => runDeletionWorker({
+  method: 'POST', cronKey: 'cron-secret', readBody: async () => ({}), env: ENV,
+  createClient: () => client, ...overrides,
+});
+
+test('worker: flag off, wrong method, missing or wrong cron key do nothing', async () => {
+  const client = makeWorkerClient({ claimed: [UID] });
+  assert.equal((await work(client, { env: {} })).status, 503);
+  assert.equal((await work(client, { method: 'GET' })).status, 405);
+  assert.equal((await work(client, { cronKey: '' })).status, 401);
+  assert.equal((await work(client, { cronKey: 'guess' })).status, 401);
+  assert.equal((await work(makeWorkerClient({ key: null }), {})).status, 401, 'no Vault key configured → denied');
+  assert.ok(!client.calls.rpc.some(([fn]) => fn === 's32_claim_pending_account_deletions'));
+  assert.deepEqual(client.calls.deleteUser, []);
+});
+
+test('worker: resumes claimed requests from their receipt and purges expired receipts', async () => {
+  const storage = makeStorage([`${ownPrefix}left.jpg`, `${ownPrefix}keep.jpg`, `${COUPLE}/${PARTNER}/p.jpg`]);
+  const client = makeWorkerClient({
+    claimed: [UID, PARTNER, 'not-a-uuid'], storage,
+    plans: {
+      [UID]: { state: 'db_done', storage_prefix: ownPrefix, keep_paths: [`${ownPrefix}keep.jpg`] },
+      [PARTNER]: { state: 'storage_done', storage_prefix: `${COUPLE}/${PARTNER}/`, keep_paths: [] },
+    },
+  });
+  const res = await work(client, { readBody: async () => ({ batch_size: 500 }) });
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.body, { claimed: 2, deleted: 2, pending: 0, skipped: 1, purged_receipts: 2 });
+  assert.deepEqual([...storage.objects].sort(), [`${COUPLE}/${PARTNER}/p.jpg`, `${ownPrefix}keep.jpg`].sort());
+  assert.deepEqual(client.calls.deleteUser.sort(), [UID, PARTNER].sort());
+  const claim = client.calls.rpc.find(([fn]) => fn === 's32_claim_pending_account_deletions');
+  assert.deepEqual(claim[1], { p_limit: 50 }, 'batch size is capped');
 });

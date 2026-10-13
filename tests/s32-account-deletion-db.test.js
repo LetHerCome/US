@@ -208,3 +208,19 @@ test('a user without a couple is deleted without touching anyone',async()=>{
   await q('delete from auth.users where id=$1',[h.U3]);
   assert.deepEqual(await coupleFingerprint(h.A),before);
 });
+
+test('retry worker claims only unfinished requests; receipts expire 12 months after completion',async()=>{
+  await del(L);await del(h.U3);
+  await svc("select public.s32_mark_account_deletion($1,'storage_done') r",[h.U3]);
+  assert.deepEqual([...(await svc('select public.s32_claim_pending_account_deletions(20) r'))].sort(),[L,h.U3].sort());
+  for(let i=0;i<10;i++)await svc("select public.s32_mark_account_deletion($1,'failed','storage_incomplete') r",[L]);
+  assert.deepEqual([...(await svc('select public.s32_claim_pending_account_deletions(20) r'))],[h.U3],'after 10 failures an operator takes over');
+  await svc("select public.s32_mark_account_deletion($1,'completed') r",[h.U3]);
+  assert.deepEqual([...(await svc('select public.s32_claim_pending_account_deletions(20) r'))],[]);
+  assert.equal(Number(await svc('select public.s32_purge_account_deletion_receipts() r')),0,'recent receipts are kept');
+  await q("update private.account_deletions set completed_at=now()-interval '13 months' where user_id=$1",[h.U3]);
+  assert.equal(Number(await svc('select public.s32_purge_account_deletion_receipts() r')),1);
+  assert.equal(await n('select count(*)::int n from private.account_deletions'),1,'unfinished request is never purged');
+  for(const role of ['anon','authenticated'])for(const fn of ['public.s32_claim_pending_account_deletions(integer)','public.s32_purge_account_deletion_receipts()','public.get_internal_account_deletion_cron_key()'])
+    assert.equal((await one("select has_function_privilege($1,$2,'execute') r",[role,fn])).r,false,role+' '+fn);
+});

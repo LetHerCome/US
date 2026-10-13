@@ -592,7 +592,7 @@ async function accountDeletionModal(){
   const support=esc(api.US_SUPPORT_EMAIL);
   openModal('Elimina account',`
     <div class="us-settings-copy us-account-delete-copy">
-      <p><b>È immediato e definitivo.</b> Dopo la conferma non si può annullare.</p>
+      <p><b>È definitivo.</b> Dopo la conferma non si può annullare: l’eliminazione parte subito e si completa entro 30 giorni.</p>
       <p><b>Cosa viene eliminato</b> · il tuo account e il profilo, la foto profilo, le tue risposte di Oggi, l’umore e le risposte ai giochi, la posizione, le preferenze di notifica e i dispositivi collegati, le Stories, i tuoi impegni personali, i Lasciato per te che la tua persona non ha conservato e i messaggi programmati non ancora consegnati.</p>
       <p><b>Cosa resta alla tua persona</b> · i ricordi condivisi che hai creato: Momenti e foto, messaggi già consegnati, impegni ed eventi condivisi, desideri, ricordi delle risposte create insieme e ciò che ha scelto di conservare. Restano senza il tuo nome. Non riceverà una notifica e lo spazio di coppia viene chiuso: nessun altro potrà entrarci.</p>
       <p>Se nella coppia ci sei solo tu, viene eliminato tutto lo spazio di coppia, foto comprese.</p>
