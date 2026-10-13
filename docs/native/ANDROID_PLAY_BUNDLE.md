@@ -69,7 +69,7 @@ Nessuno di questi valori va scritto in chat, nel repository o in un documento co
 | 10 | Scaricare `US-Play-candidate-encrypted`, aprirlo con 7-Zip; in Play Console › Test interno › Crea release: accettare la chiave di firma generata da Google e caricare l'AAB. La chiave con cui è firmato il primo caricamento diventa la chiave di upload | Francesco | 5, 9 |
 | 11 | Disinstallare l'APK interno dai telefoni di test, installare da Play, ripetere il controllo notifiche sul build Play | Francesco con istruzioni di Claude | 10 |
 
-Play Console può chiedere di completare alcune dichiarazioni (privacy, accesso app, Data safety) prima di pubblicare anche sulla traccia interna: le risposte vengono preparate a parte, su richiesta.
+Play Console può chiedere di completare alcune dichiarazioni (privacy, accesso app, Data safety) prima di pubblicare anche sulla traccia interna: le bozze sono in `docs/store/play/`.
 
 ## Limiti noti
 
