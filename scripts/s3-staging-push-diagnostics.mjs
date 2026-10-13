@@ -57,14 +57,7 @@ if (mode === 'bundle') {
       repair.style.cssText = 'display:block;background:#314a80;color:#fff;padding:10px;border-radius:10px;border:1px solid #8da7ff;margin:7px 0';
       const repairResult = document.createElement('p');
       repairResult.style.cssText = 'font-weight:600;white-space:pre-wrap';
-      const selfTest = document.createElement('button');
-      selfTest.type = 'button';
-      selfTest.id = 's3-qa-self-test';
-      selfTest.textContent = 'Invia notifica di prova';
-      selfTest.style.cssText = 'display:block;background:#2f7d4f;color:#fff;padding:10px;border-radius:10px;border:1px solid #8fe0b0;margin:7px 0';
-      const selfTestResult = document.createElement('p');
-      selfTestResult.style.cssText = 'font-weight:600;white-space:pre-wrap';
-      panel.append(heading, description, refresh, repair, repairResult, selfTest, selfTestResult, details);
+      panel.append(heading, description, refresh, repair, repairResult, details);
       document.body.append(button, panel);
       async function readDiagnostics() {
         details.textContent = 'Lettura stato nativo…';
@@ -103,65 +96,6 @@ if (mode === 'bundle') {
         } finally {
           repair.disabled = false;
           await readDiagnostics();
-        }
-      };
-      // Calls ONLY the test endpoint already on US-STAGING ({"type":"test"},
-      // self-addressed), with the signed-in session. Shows categorical
-      // results only: never the token, the JWT or any identifier.
-      const SELF_TEST_DELAY_S = 10;
-      function qaEvent(event) {
-        try {
-          const prev = JSON.parse(localStorage.getItem('us:s3qa:events') || '[]');
-          const entries = Array.isArray(prev) ? prev : [];
-          entries.push(new Date().toLocaleTimeString('it-IT', { hour12: false }) + ' ' + event);
-          localStorage.setItem('us:s3qa:events', JSON.stringify(entries.slice(-32)));
-        } catch (_) {}
-      }
-      async function sendSelfTest() {
-        if (typeof SB_URL !== 'string' || !SB_URL.includes('dugmhngrfkuieeletatb') || typeof sb === 'undefined') {
-          throw Error('not_staging');
-        }
-        const { data } = await sb.auth.getSession();
-        const accessToken = data?.session?.access_token;
-        if (!accessToken) throw Error('no_session');
-        const response = await fetch(SB_URL + '/functions/v1/send-web-push', {
-          method: 'POST',
-          keepalive: true,
-          headers: { 'Content-Type': 'application/json', apikey: SB_KEY, Authorization: 'Bearer ' + accessToken },
-          body: JSON.stringify({ type: 'test' })
-        });
-        const body = await response.json().catch(() => ({}));
-        return { status: response.status, body };
-      }
-      function describeSelfTest(result) {
-        const body = result.body || {};
-        const safe = (value) => /^[a-z0-9_-]{1,64}$/i.test(String(value)) ? String(value) : 'altro';
-        if (result.status === 200 && body.deduplicated) return { short: 'test_dedup', text: 'Già inviata in questo minuto: riprova tra 1 minuto.' };
-        if (result.status === 200 && Number(body.delivered) > 0) return { short: 'test_sent_' + Number(body.delivered), text: 'Inviata dal server a ' + Number(body.delivered) + ' dispositivo/i. Controlla la tendina notifiche.' };
-        if (result.status === 200) return { short: 'test_not_delivered_' + safe(body.reason || 'none'), text: 'Il server non ha trovato un dispositivo attivo (' + safe(body.reason || 'nessun motivo') + ', falliti: ' + Number(body.failed || 0) + '). Tocca prima "Ricollega notifiche".' };
-        return { short: 'test_http_' + result.status + '_' + safe(body.error || 'none'), text: 'Errore del server ' + result.status + ': ' + safe(body.error || 'nessun dettaglio') + '.' };
-      }
-      selfTest.onclick = async () => {
-        selfTest.disabled = true;
-        qaEvent('self_test_scheduled');
-        for (let left = SELF_TEST_DELAY_S; left > 0; left--) {
-          selfTestResult.textContent = 'Invio tra ' + left + ' s. Esci ORA alla schermata Home: con l’app aperta il banner non compare (è voluto).';
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-        }
-        try {
-          qaEvent('self_test_request');
-          const outcome = describeSelfTest(await sendSelfTest());
-          qaEvent(outcome.short);
-          selfTestResult.textContent = outcome.text;
-        } catch (error) {
-          const kind = error?.message === 'no_session' ? 'no_session' : error?.message === 'not_staging' ? 'not_staging' : 'network';
-          qaEvent('test_error_' + kind);
-          selfTestResult.textContent = kind === 'no_session' ? 'Nessun accesso attivo: entra come a1 e riprova.'
-            : kind === 'not_staging' ? 'Bloccato: questa build non punta a US-STAGING.'
-            : 'Rete non disponibile: riprova.';
-        } finally {
-          selfTest.disabled = false;
-          if (!panel.hidden) await readDiagnostics();
         }
       };
       document.addEventListener('visibilitychange', () => { if (!document.hidden && !panel.hidden) readDiagnostics(); });
