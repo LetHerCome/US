@@ -429,3 +429,21 @@ test('worker: resumes claimed requests from their receipt and purges expired rec
   const claim = client.calls.rpc.find(([fn]) => fn === 's32_claim_pending_account_deletions');
   assert.deepEqual(claim[1], { p_limit: 50 }, 'batch size is capped');
 });
+
+test('D-5 archives: every archived couple prefix is erased whole; malformed archive list fails closed', async () => {
+  const archive = `${OTHER_COUPLE}/`;
+  const storage = makeStorage([`${ownPrefix}x.jpg`, `${archive}${UID}/old.jpg`, `${archive}${PARTNER}/old-partner.jpg`, `${COUPLE}/${PARTNER}/p.jpg`]);
+  const client = makeClient({ storage, plan: { state: 'db_done', storage_prefix: ownPrefix, keep_paths: [], archive_prefixes: [archive] } });
+  const res = await finishAccountDeletion({ uid: UID, admin: client.auth.admin, storage, rpc: client.rpc });
+  assert.equal(res.status, 'deleted');
+  assert.deepEqual([...storage.objects], [`${COUPLE}/${PARTNER}/p.jpg`]);
+
+  for (const bad of ['not-a-list', [`${COUPLE}/${UID}/`], ['../'], [42]]) {
+    const st = makeStorage([`${ownPrefix}x.jpg`]);
+    const c = makeClient({ storage: st, plan: { state: 'db_done', storage_prefix: ownPrefix, keep_paths: [], archive_prefixes: bad } });
+    const r = await finishAccountDeletion({ uid: UID, admin: c.auth.admin, storage: st, rpc: c.rpc });
+    assert.equal(r.status, 'pending_cleanup', JSON.stringify(bad));
+    assert.equal(st.calls.remove.length, 0);
+    assert.equal(c.calls.deleteUser, 0);
+  }
+});

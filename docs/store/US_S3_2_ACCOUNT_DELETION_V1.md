@@ -56,7 +56,7 @@ Il fondatore ha approvato Policy A. Le altre voci del piano (D-1…D-19) non han
 | D-1/D-6 | Policy A senza scelta per chi esce: il contenuto condiviso resta sempre al partner. Più semplice e coerente con "l'eliminazione unilaterale non cancella la storia del partner" |
 | D-3 | **Nessun periodo di grazia**: cancellazione immediata dopo password + `ELIMINA`. Elimina la necessità di bloccare ~40 funzioni durante la grazia. Completamento dichiarato "entro 30 giorni" per i casi `pending_cleanup` |
 | D-4 | Nessuna push al partner; il client mostra già "La tua persona" quando manca il profilo. Etichetta "Account eliminato" nelle schede: rinviata |
-| D-5 | Coppia chiusa per sempre; il partner rimasto non può invitare nessuno. Per un nuovo partner deve eliminare il proprio account. **Chiesta al fondatore come decisione separata** (13/10) |
+| D-5 | **APPROVATA dal fondatore (13/10):** chi resta può creare una nuova coppia senza eliminare l'account; archivio e nuovo spazio separati. Implementato lato server (§7); non ancora esposto in app |
 | D-7 | Copia dei dati su richiesta via email entro 30 giorni, preparata dall'operatore. L'export in app (`export-my-data`) resta parziale e disattivato: non va presentato come export completo |
 | D-13 | I Conservati del partner restano |
 | D-15 | Messaggi programmati non consegnati cancellati |
@@ -71,3 +71,22 @@ Il fondatore ha approvato Policy A. Le altre voci del piano (D-1…D-19) non han
 4. **Pulizia cache altrui:** URL firmate già emesse (6 h; 24 h per il widget) e cache media del service worker restano valide fino alla scadenza (residuo dichiarato).
 5. Etichetta "Account eliminato" e banner per il partner.
 6. Registrare il cron del worker e la chiave in Vault, dopo il collaudo su staging.
+
+## 7. Nuovo legame dopo l'uscita del partner (D-5)
+
+**Implementato (server, branch):** `public.start_new_couple_after_departure(started_on, couple_name)`. Funziona solo per l'unico membro rimasto di una coppia chiusa. In una transazione:
+- registra l'accesso all'archivio in `private.couple_archive_access`;
+- cancella i token di dispositivo, push e widget e la posizione, che portano l'id della vecchia coppia;
+- crea una nuova coppia e vi sposta il profilo.
+
+Il vecchio `couple_id` non viene riciclato e il contenuto non viene spostato. Poiché RLS, Storage ed Edge ricavano la coppia dal profilo, il nuovo partner non vede nulla della coppia precedente (test: 10 tabelle, profili, tabella privata). Se il superstite elimina il proprio account, anche gli archivi che detiene vengono cancellati, Storage compreso (`archive_prefixes`).
+
+**Non ancora disponibile in app (gate di fase):**
+- La RPC è eseguibile solo da `service_role`. Senza una vista "Archivio", chi creasse una nuova coppia non potrebbe più aprire i vecchi ricordi dall'app, quindi la funzione non va annunciata.
+- Fase successiva, isolata:
+  - RPC di sola lettura dell'archivio, autorizzate da `couple_archive_access`;
+  - Edge che firma URL brevi per i media dell'archivio;
+  - schermata "Archivio" in sola lettura;
+  - pulsante "Inizia un nuovo spazio" con conferma;
+  - test di isolamento su staging con account usa-e-getta.
+- Fino ad allora, chi resta mantiene l'app normale con l'archivio e non vede alcun blocco permanente annunciato.

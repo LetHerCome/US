@@ -190,7 +190,8 @@ begin
       where pg_catalog.starts_with(p, d.storage_prefix);
   end if;
   return pg_catalog.jsonb_build_object('state', d.state, 'mode', d.mode,
-    'storage_prefix', d.storage_prefix, 'keep_paths', pg_catalog.to_jsonb(keep));
+    'storage_prefix', d.storage_prefix, 'keep_paths', pg_catalog.to_jsonb(keep),
+    'archive_prefixes', pg_catalog.to_jsonb(d.archive_prefixes));
 end;
 $fn$;
 revoke all on function private.s32_storage_plan(uuid) from public, anon, authenticated;
@@ -199,7 +200,7 @@ revoke all on function private.s32_storage_plan(uuid) from public, anon, authent
 create or replace function public.s32_delete_account_data(p_user uuid, p_channel text) returns jsonb
 language plpgsql volatile security definer set search_path = ''
 as $fn$
-declare cid uuid; other uuid; v_mode text; prefix text; plan jsonb;
+declare cid uuid; other uuid; v_mode text; prefix text; plan jsonb; arch uuid; archives text[] := '{}';
 begin
   if p_user is null then raise exception using errcode = '22023', message = 'user_required'; end if;
   if p_channel is null or p_channel not in ('app','web','operator') then
@@ -210,6 +211,19 @@ begin
     return private.s32_storage_plan(p_user) || pg_catalog.jsonb_build_object('status','already_done');
   end if;
 
+  -- Archives of earlier couples the user still holds (D-5) go with them:
+  -- the user is their only remaining member.
+  for arch in select a.couple_id from private.couple_archive_access a where a.user_id = p_user order by a.couple_id loop
+    perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('s32-couple:' || arch::text, 0));
+    delete from private.couple_archive_access where couple_id = arch and user_id = p_user;
+    if exists (select 1 from private.couple_archive_access a where a.couple_id = arch)
+       or exists (select 1 from public.profiles p where p.couple_id = arch) then
+      raise exception using errcode = 'P0001', message = 'archive_shared_unsupported';
+    end if;
+    delete from public.couples where id = arch;
+    archives := archives || (arch::text || '/');
+  end loop;
+
   select p.couple_id into cid from public.profiles p where p.id = p_user;
   if cid is null then
     -- No couple: only auth-level personal rows can exist. Shared rows that
@@ -218,8 +232,8 @@ begin
     delete from public.daily_answers where user_id = p_user;
     delete from public.moods where user_id = p_user;
     delete from public.quiz_responses where user_id = p_user;
-    insert into private.account_deletions(user_id, couple_id, mode, state, channel, storage_prefix)
-      values (p_user, null, 'no_couple', 'db_done', p_channel, null);
+    insert into private.account_deletions(user_id, couple_id, mode, state, channel, storage_prefix, archive_prefixes)
+      values (p_user, null, 'no_couple', 'db_done', p_channel, null, archives);
     return private.s32_storage_plan(p_user) || pg_catalog.jsonb_build_object('status','db_done');
   end if;
 
@@ -286,8 +300,8 @@ begin
     delete from public.profiles where id = p_user;
   end if;
 
-  insert into private.account_deletions(user_id, couple_id, mode, state, channel, storage_prefix)
-    values (p_user, cid, v_mode, 'db_done', p_channel, prefix);
+  insert into private.account_deletions(user_id, couple_id, mode, state, channel, storage_prefix, archive_prefixes)
+    values (p_user, cid, v_mode, 'db_done', p_channel, prefix, archives);
   plan := private.s32_storage_plan(p_user);
   return plan || pg_catalog.jsonb_build_object('status','db_done');
 end;
@@ -370,3 +384,69 @@ as $fn$
 $fn$;
 revoke all on function public.get_internal_account_deletion_cron_key() from public, anon, authenticated;
 grant execute on function public.get_internal_account_deletion_cron_key() to service_role;
+
+-- 10. New bond after the partner's deletion (D-5, approved 2026-10-13) -------
+-- The survivor of a closed couple may start a new couple space without
+-- deleting their account. The old couple keeps its id and its content; the
+-- survivor's active couple (profiles.couple_id) becomes the new one, so every
+-- existing RLS policy, Storage policy and Edge function that derives the
+-- couple from the profile isolates the old archive from the new partner by
+-- construction. Access to the old archive is recorded here and is granted
+-- only through dedicated archive endpoints (not built yet: phase gate).
+create table if not exists private.couple_archive_access (
+  couple_id uuid not null references public.couples(id) on delete cascade,
+  user_id uuid not null,
+  archived_at timestamptz not null default now(),
+  primary key (couple_id, user_id)
+);
+create index if not exists couple_archive_access_user on private.couple_archive_access(user_id);
+alter table private.couple_archive_access enable row level security;
+alter table private.couple_archive_access force row level security;
+revoke all on table private.couple_archive_access from public, anon, authenticated;
+
+alter table private.account_deletions add column if not exists archive_prefixes text[] not null default '{}';
+
+create or replace function public.start_new_couple_after_departure(p_started_on date, p_couple_name text default null) returns jsonb
+language plpgsql volatile security definer set search_path = ''
+as $fn$
+declare uid uuid; old_cid uuid; departed timestamptz; cname text; new_cid uuid;
+begin
+  uid := private.mc2_require_account();
+  if p_started_on is null or p_started_on < date '1900-01-01'
+    or p_started_on > (pg_catalog.clock_timestamp() at time zone 'Europe/Rome')::date then
+    raise exception using errcode='22023', message='started_on_invalid';
+  end if;
+  cname := pg_catalog.btrim(coalesce(p_couple_name,'US.'));
+  if pg_catalog.char_length(cname) not between 1 and 40 or cname ~ '[[:cntrl:]]' then
+    raise exception using errcode='22023', message='couple_name_invalid';
+  end if;
+  perform private.mc2_lock_user();
+  select p.couple_id into old_cid from public.profiles p where p.id = uid for update;
+  if old_cid is null then raise exception using errcode='42501', message='profile_state_unsupported'; end if;
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('s32-couple:' || old_cid::text, 0));
+  select c.member_departed_at into departed from public.couples c where c.id = old_cid for update;
+  if departed is null or exists (select 1 from public.profiles p where p.couple_id = old_cid and p.id <> uid) then
+    raise exception using errcode='P0001', message='couple_not_closed';
+  end if;
+
+  -- Device-bound rows carry the old couple id: drop them, the devices
+  -- register again in the new space. Archive content stays untouched.
+  delete from public.device_push_tokens where user_id = uid;
+  delete from public.push_subscriptions where user_id = uid;
+  delete from public.widget_scriptable_installations where profile_id = uid;
+  delete from public.widget_scriptable_setup_codes where profile_id = uid;
+  delete from public.widget_action_tokens where profile_id = uid;
+  delete from public.widget_tokens where profile_id = uid;
+  delete from public.couple_locations where user_id = uid;
+
+  insert into private.couple_archive_access(couple_id, user_id) values (old_cid, uid);
+  new_cid := pg_catalog.gen_random_uuid();
+  insert into public.couples(id,name,started_on,created_at,bond_xp) values(new_cid,cname,p_started_on,pg_catalog.now(),0);
+  update public.profiles set couple_id = new_cid, role = 'francesco' where id = uid;
+  return pg_catalog.jsonb_build_object('status','created','couple_id',new_cid);
+end;
+$fn$;
+-- Opened to app clients only together with the archive view (phase gate):
+-- without it the survivor could not reach the old archive from the app.
+revoke all on function public.start_new_couple_after_departure(date, text) from public, anon, authenticated;
+grant execute on function public.start_new_couple_after_departure(date, text) to service_role;

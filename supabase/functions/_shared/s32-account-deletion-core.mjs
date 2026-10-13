@@ -240,17 +240,23 @@ export async function finishAccountDeletion({ uid, admin, storage, rpc, log = no
   }
 
   if (state === 'db_done') {
-    if (current.storage_prefix === null || current.storage_prefix === undefined) {
-      log({ step: 'storage_cleanup', outcome: 'skipped' });
-    } else {
-      try {
-        await cleanupStoragePrefix({ storage, prefix: current.storage_prefix, keepPaths: current.keep_paths, log });
-      } catch (error) {
-        const code = error instanceof DeletionError ? error.code : 'storage_failed';
-        log({ step: 'storage_cleanup', outcome: 'error', code });
-        await markState(rpc, uid, 'failed', code, log);
-        return { status: 'pending_cleanup', error: code, resumedFrom: state };
+    // Archives of earlier couples erased with the user (D-5): whole prefix.
+    const archives = current.archive_prefixes ?? [];
+    try {
+      if (!Array.isArray(archives) || !archives.every((p) => typeof p === 'string' && /^[0-9a-f-]{36}\/$/i.test(p) && isValidPrefix(p))) {
+        throw new DeletionError('storage_plan_invalid', 500);
       }
+      if (current.storage_prefix === null || current.storage_prefix === undefined) {
+        log({ step: 'storage_cleanup', outcome: 'skipped' });
+      } else {
+        await cleanupStoragePrefix({ storage, prefix: current.storage_prefix, keepPaths: current.keep_paths, log });
+      }
+      for (const prefix of archives) await cleanupStoragePrefix({ storage, prefix, keepPaths: [], log });
+    } catch (error) {
+      const code = error instanceof DeletionError ? error.code : 'storage_failed';
+      log({ step: 'storage_cleanup', outcome: 'error', code });
+      await markState(rpc, uid, 'failed', code, log);
+      return { status: 'pending_cleanup', error: code, resumedFrom: state };
     }
     // A failed mark is tolerated: a retry re-runs the idempotent cleanup.
     await markState(rpc, uid, 'storage_done', null, log);
@@ -351,7 +357,7 @@ export async function handleDeleteAccount({ method, origin, authorization, readB
   let plan = null;
   if (result?.status === 'db_done' && MODES.has(result.mode)) {
     // keep_paths is passed through untouched: a malformed list fails closed.
-    plan = { state: 'db_done', storage_prefix: result.storage_prefix ?? null, keep_paths: result.keep_paths };
+    plan = { state: 'db_done', storage_prefix: result.storage_prefix ?? null, keep_paths: result.keep_paths, archive_prefixes: result.archive_prefixes ?? [] };
   }
 
   const storage = client.storage.from(STORAGE_BUCKET);

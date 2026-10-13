@@ -224,3 +224,60 @@ test('retry worker claims only unfinished requests; receipts expire 12 months af
   for(const role of ['anon','authenticated'])for(const fn of ['public.s32_claim_pending_account_deletions(integer)','public.s32_purge_account_deletion_receipts()','public.get_internal_account_deletion_cron_key()'])
     assert.equal((await one("select has_function_privilege($1,$2,'execute') r",[role,fn])).r,false,role+' '+fn);
 });
+
+// D-5 (approved 2026-10-13): the survivor can bond again; the old archive is
+// isolated from the new partner and goes with the survivor's own deletion.
+const startNew=(u)=>h.as(db,u,"select public.start_new_couple_after_departure('2026-10-13'::date,'Nuovo') r",[],'service_role');
+async function contentOf(c){
+  return {moments:await n('select count(*)::int n from public.moments where couple_id=$1',[c]),
+    messages:await n('select count(*)::int n from public.shared_messages where couple_id=$1',[c]),
+    calendar:await n('select count(*)::int n from public.calendar_entries where couple_id=$1',[c])};
+}
+
+test('D-5: survivor starts a new couple; the new partner cannot reach the old archive',async()=>{
+  await assert.rejects(startNew(h.U1),/couple_not_closed/,'only the survivor of a closed couple');
+  assert.equal((await one("select has_function_privilege('authenticated','public.start_new_couple_after_departure(date,text)','execute') r")).r,false,'not exposed to the app until the archive view exists');
+  await del(L);
+  const archived=await contentOf(h.A);
+  const r=await startNew(S);
+  assert.equal(r.status,'created');const C3=r.couple_id;assert.notEqual(C3,h.A);
+  assert.equal(await n('select count(*)::int n from private.couple_archive_access where couple_id=$1 and user_id=$2',[h.A,S]),1);
+  for(const t of ['device_push_tokens','couple_locations'])assert.equal(await n(`select count(*)::int n from public.${t} where user_id=$1`,[S]),0,t);
+  assert.equal(await n('select count(*)::int n from public.widget_tokens where profile_id=$1',[S]),0);
+  // the archive is intact and nobody can join the old couple
+  assert.deepEqual(await contentOf(h.A),archived);
+  assert.equal((await one('select member_departed_at is not null r from public.couples where id=$1',[h.A])).r,true);
+
+  const code=(await h.invite(db,S)).code;
+  assert.equal((await h.accept(db,h.U3,code,'Nuova persona')).status,'joined');
+  const m=await h.membership(db,h.U3);assert.equal(m.couple_id,C3);assert.equal(m.partner_joined,true);
+  for(const u of [h.U3,S]){
+    for(const t of ['moments','moment_photos','shared_messages','calendar_entries','shared_events','bucket_items','left_for_you','daily_answers','stories','conserva_contributions'])
+    {
+      // The survivor still reads their own daily answers (own personal data,
+      // policy user_id = auth.uid()); never anything written by someone else.
+      const own=u===S&&t==='daily_answers'?' and user_id<>auth.uid()':'';
+      assert.equal(Number(await h.as(db,u,`select count(*)::int r from public.${t} where couple_id=$1${own}`,[h.A])),0,`${u===S?'survivor':'new partner'} sees no ${t} of the old couple through the app API`);
+    }
+    assert.equal(Number(await h.as(db,u,'select count(*)::int r from public.profiles where couple_id=$1',[h.A])),0);
+  }
+  await assert.rejects(h.as(db,h.U3,'select count(*) r from private.couple_archive_access'),/permission denied/);
+});
+
+test('D-5: the survivor deleting their account also erases the old archive, the new partner keeps theirs',async()=>{
+  await del(L);
+  const C3=(await startNew(S)).couple_id;
+  const code=(await h.invite(db,S)).code;await h.accept(db,h.U3,code,'Nuova persona');
+  await q("insert into public.moments(couple_id,created_by,storage_path) values($1,$2,$3)",[C3,h.U3,`${C3}/${h.U3}/n.webp`]);
+  const otherBefore=await coupleFingerprint(C2);
+  const r=await del(S);
+  assert.equal(r.mode,'departed');assert.equal(r.storage_prefix,`${C3}/${S}/`);
+  assert.deepEqual(r.archive_prefixes,[`${h.A}/`]);
+  assert.equal(await n('select count(*)::int n from public.couples where id=$1',[h.A]),0,'old archive erased with its last member');
+  assert.deepEqual(await rowsMentioning(h.A),[]);
+  assert.equal(await n('select count(*)::int n from private.couple_archive_access'),0);
+  assert.equal(await n('select count(*)::int n from public.moments where couple_id=$1',[C3]),1,'new partner content kept');
+  assert.deepEqual(await coupleFingerprint(C2),otherBefore);
+  await q('delete from auth.users where id=$1',[S]);
+  assert.deepEqual((await svc('select public.s32_account_deletion_storage_plan($1) r',[S])).archive_prefixes,[`${h.A}/`]);
+});
