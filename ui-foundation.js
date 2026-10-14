@@ -546,8 +546,11 @@
     return api;
   }
 
-  // The one US confirmation: a small floating sheet on the shared scrim and
-  // material, focus on the safe choice, Escape / backdrop / Annulla cancel.
+  // The one US confirmation (the Conferma form): a small sheet docked at the
+  // bottom on the shared scrim and material, the choice first and the safe
+  // choice under it, focus on the safe choice, Escape / backdrop / Annulla
+  // cancel. tone:'danger' is only for what cannot be undone (red). An
+  // optional `icon` names one of the shared Phosphor icons (data-us-icon).
   // Resolves true only for the explicit confirm button. Without a DOM (or if
   // building it fails) it degrades to the platform confirm.
   let openConfirm = null;
@@ -560,16 +563,22 @@
     return new Promise((resolve) => {
       const id = `usConfirm${Date.now().toString(36)}`;
       const root = documentRef.createElement('div');
-      root.className = 'us-confirm';
+      const danger = options.tone === 'danger';
+      root.className = danger ? 'us-confirm is-danger' : 'us-confirm';
       root.setAttribute('data-us-modal', '');
       root.setAttribute('data-us-motion-surface', '');
       root.setAttribute('aria-hidden', 'false');
-      const tone = options.tone === 'danger' ? 'us-btn-danger' : options.single ? 'ghost' : 'primary';
+      const tone = danger ? 'us-btn-danger' : 'primary';
       root.innerHTML = `<div class="us-modal-backdrop" data-us-confirm="cancel"></div>
         <section class="us-sheet us-confirm-sheet" role="alertdialog" aria-modal="true" aria-labelledby="${id}T" aria-describedby="${id}B" data-us-modal-panel>
-          <span class="us-eyebrow"></span><h3 id="${id}T"></h3><p id="${id}B"></p>
-          <div class="us-confirm-actions"><button type="button" class="ghost" data-us-confirm="cancel" data-us-modal-close></button><button type="button" class="${tone}" data-us-confirm="ok"></button></div>
+          <span class="us-confirm-icon" aria-hidden="true" hidden><span class="us-icon"></span></span><span class="us-eyebrow"></span><h3 id="${id}T"></h3><p id="${id}B"></p>
+          <div class="us-confirm-actions"><button type="button" class="${tone}" data-us-confirm="ok"></button><button type="button" class="ghost" data-us-confirm="cancel" data-us-modal-close></button></div>
         </section>`;
+      if (options.icon) {
+        const icon = root.querySelector('.us-confirm-icon');
+        icon.firstElementChild.setAttribute('data-us-icon', text(options.icon));
+        icon.hidden = false;
+      }
       root.querySelector('.us-eyebrow').textContent = text(options.kicker || 'US');
       root.querySelector('h3').textContent = text(options.title);
       const body = root.querySelector('p');
