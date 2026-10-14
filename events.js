@@ -31,7 +31,7 @@ function eventXpToday(){const today=localTodayISO();return completions.some(c=>N
 function previewXp(row,occurrenceDate){const lead=daysBetween(createdDate(row),occurrenceDate);if(lead<=0||eventXpToday())return 0;if(row.recurs_yearly)return 60;return lead>=7?50:lead>=2?35:25;}
 function xpSuffix(xp){return xp>0?` · +${xp} XP`:'';}
 // Why a lived event brought no points (xp_reason of complete_shared_event).
-const NO_XP_COPY={same_day:'Evento vissuto ♡ La Sintonia cresce con gli eventi programmati prima',before_creation:'Evento vissuto ♡ La Sintonia cresce con gli eventi programmati prima',daily_limit:'Evento vissuto ♡ Oggi un evento ha già fatto crescere la Sintonia'};
+const NO_XP_COPY={same_day:'Evento vissuto ♡ La Sintonia cresce con gli eventi programmati in anticipo',before_creation:'Evento vissuto ♡ La Sintonia cresce con gli eventi programmati in anticipo',daily_limit:'Evento vissuto ♡ Oggi un evento ha già fatto crescere la Sintonia'};
 
 function occurrence(row){
   const today=localTodayISO(),raw=row.event_date;if(!raw)return null;

@@ -64,8 +64,8 @@ async function completeWith(answer, options = {}) {
 
 test('a completion without points is never celebrated: a quiet line says why', async () => {
   const cases = [
-    ['same_day', 'Evento vissuto ♡ La Sintonia cresce con gli eventi programmati prima'],
-    ['before_creation', 'Evento vissuto ♡ La Sintonia cresce con gli eventi programmati prima'],
+    ['same_day', 'Evento vissuto ♡ La Sintonia cresce con gli eventi programmati in anticipo'],
+    ['before_creation', 'Evento vissuto ♡ La Sintonia cresce con gli eventi programmati in anticipo'],
     ['daily_limit', 'Evento vissuto ♡ Oggi un evento ha già fatto crescere la Sintonia'],
     [undefined, 'Evento vissuto ♡'],
   ];
@@ -77,7 +77,7 @@ test('a completion without points is never celebrated: a quiet line says why', a
   }
   // Without the Polish layer the fallback toast never says "+0 XP" either.
   const bare = await completeWith({ completed: true, already_completed: false, xp_awarded: 0, xp_reason: 'same_day' }, { celebrate: false });
-  assert.deepEqual(bare.toasts, ['Evento vissuto ♡ La Sintonia cresce con gli eventi programmati prima']);
+  assert.deepEqual(bare.toasts, ['Evento vissuto ♡ La Sintonia cresce con gli eventi programmati in anticipo']);
 });
 
 test('already completed without points says so without "+0 XP"; with points it is unchanged', async () => {

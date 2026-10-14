@@ -227,7 +227,8 @@ function previewMarkup(reward) {
     return found ? window.USOggiLook.previewMarkup(found.slot, found.look.id) : '<span class="us-cos-stage"></span>';
   }
   const style = countdownStyleFor(reward);
-  if (style && SLOTS[category]?.retired) return `<span class="us-cos-stage us-cos-countdown">${countdownPreview(style.id)}</span>`;
+  // A countdown style reward: category 'countdown' after V3, a retired slot before it.
+  if (style && (!SLOTS[category] || SLOTS[category].retired)) return `<span class="us-cos-stage us-cos-countdown">${countdownPreview(style.id)}</span>`;
   const value = slotValue(category, reward?.token);
   if (category === 'theme') return `<span class="us-cos-theme" data-theme="${esc(value)}"><i class="us-cos-theme-bar"></i><i class="us-cos-theme-card"></i><i class="us-cos-theme-pill"></i></span>`;
   if (category === 'accent') return `<span class="us-cos-accent" data-accent="${esc(value)}"><i class="us-cos-accent-track"><i></i></i><i class="us-cos-accent-pill"></i><i class="us-cos-accent-nav"><i></i><i></i><i></i></i></span>`;
