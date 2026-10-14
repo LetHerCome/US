@@ -4,6 +4,7 @@ Stato: **bozza** del 13/10/2026, aggiornata il 14/10 con le decisioni di Frances
 
 Marcatori:
 - **[DIPENDE #190]**: vale solo dopo il merge dell'eliminazione account (PR #190). Prima di allora Play Console non accetta la scheda, perché un'app con account deve offrire l'eliminazione in app e via web.
+- **[DIPENDE #196]**: vale solo dopo il merge di Esci dalla coppia, Segnala e copia dei dati (PR #196, sopra la #190).
 - **[DIPENDE POSIZIONE]**: vale solo dopo il merge della PR della posizione approssimativa (variante A, decisa da Francesco il 14/10; sezione 2.3).
 - **[DA DECIDERE: Francesco]**: dato che solo il fondatore può fornire.
 
@@ -36,7 +37,7 @@ Nessun SDK di analisi, pubblicità o crash reporting. Nessun permesso AD_ID (ver
 | Foto e video › Video | video di "Lasciato per te", fino a 30 secondi o 20 MB (i Momenti accettano solo foto) | Sì | No | No |
 | File audio › Registrazioni vocali | note vocali | Sì | No | No |
 | Messaggi › Altri messaggi in-app | messaggi "Lasciato per te", pensieri | Sì | No | No |
-| Contenuti generati dall'utente | risposte alle domande, umori, calendario, liste, giochi, quest; segnalazioni inviate dall'app **[DIPENDE #190]** | Sì | No | No |
+| Contenuti generati dall'utente | risposte alle domande, umori, calendario, liste, giochi, quest; segnalazioni inviate dall'app: motivo e testo, lette solo dal team, cancellate 12 mesi dopo l'invio **[DIPENDE #196]** | Sì | No | No |
 | Attività nelle app › Interazioni | progressi, giochi giocati, streak | Sì | No | Sì |
 | Attività nelle app › Cronologia ricerche in-app | testo cercato nel pannello musica | Sì | **Vedi nota Spotify** | No |
 | ID dispositivo o altri ID | token FCM, ID installazione, sottoscrizione Web Push | Sì | No | No (solo se si attivano le notifiche) |
@@ -55,7 +56,8 @@ Testi allineati all'implementazione della #190 (`docs/store/US_S3_2_ACCOUNT_DELE
 - Gli utenti possono chiedere l'eliminazione: Sì, in app (Impostazioni › Privacy e dati › Elimina account), via web (`https://[DOMINIO]/elimina-account`, raggiungibile senza login) e via email.
 - Nessun periodo per annullare: eliminazione immediata dopo password e conferma, completamento entro 30 giorni.
 - Dati che restano e perché: con la Policy A i contenuti condivisi con il partner restano a lui, senza nome dell'autore, perché fanno parte della sua storia; una ricevuta tecnica senza contenuti resta per 12 mesi, per dimostrare l'avvenuta eliminazione.
-- Copia dei propri dati: su richiesta via email, entro 30 giorni (decisione 8 del 14/10; il tasto in app arriva dopo la 1.0).
+- Copia dei propri dati: su richiesta al supporto, entro 30 giorni, inviata per email: un file JSON con i propri dati e i link alle proprie foto, validi 7 giorni (decisione 8 del 14/10, PR #196; il tasto in app arriva dopo la 1.0).
+- Uscire dalla coppia (PR #196) non elimina l'account: chiude lo spazio con le stesse regole dell'eliminazione. Non va indicato come metodo di eliminazione.
 - Non scrivere "tutti i dati vengono eliminati".
 
 URL per Play Console (campo "Link per eliminare l'account"): `https://[DOMINIO]/elimina-account` **[DA DECIDERE: Francesco, dominio pubblico]**.
@@ -141,8 +143,8 @@ Esito atteso: classificazione bassa con descrittore "Gli utenti interagiscono". 
 ### 5.1 Contenuti generati dagli utenti
 Per prudenza Play tratta come contenuti degli utenti anche uno spazio a due. Le regole chiedono, e la 1.0 prevede:
 - accettazione dei termini prima di pubblicare (spunta alla registrazione);
-- "Segnala un problema o un contenuto" in Impostazioni, con una procedura scritta per rimuovere un contenuto o sospendere un account **[DIPENDE #190]**;
-- "Esci dalla coppia", che ferma subito ogni condivisione: è il blocco richiesto nelle conversazioni a due **[DIPENDE #190]**;
+- "Segnala un problema o un contenuto" in Impostazioni › App e supporto, con quattro motivi e un testo libero, e una procedura scritta per il team (`docs/store/US_MODERATION_PROCEDURE.md` nella #196) per rimuovere un contenuto o sospendere un account **[DIPENDE #196]**;
+- "Esci dalla coppia" in Impostazioni › Voi, che chiude subito lo spazio a due e ferma ogni condivisione tenendo l'account: è il blocco richiesto nelle conversazioni a due **[DIPENDE #196]**;
 - nei termini, l'elenco di cosa è vietato (contenuti illegali, con minori, intimi condivisi senza consenso).
 
 ## 6. Cosa deve fare Francesco
