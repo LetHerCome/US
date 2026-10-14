@@ -14,7 +14,7 @@ US è un'app per coppie. Titolare del trattamento: [NOME O DITTA], [INDIRIZZO], 
 | Email e password (la password non viene mai conservata in chiaro: il fornitore di autenticazione ne salva solo un hash) | creare e proteggere il tuo account | esecuzione del contratto |
 | Nome, nome della coppia, data di inizio della relazione | far funzionare lo spazio di coppia | esecuzione del contratto |
 | Foto, video, note vocali, messaggi, risposte, umori, eventi del calendario, liste, partite | mostrarli al tuo partner, che è lo scopo dell'app | esecuzione del contratto |
-| Posizione, solo se attivi la funzione [DIPENDE POSIZIONE: "approssimativa, per mostrare la distanza tra voi" oppure "precisa, visibile al tuo partner"] | mostrare la distanza tra voi | consenso, revocabile dalle impostazioni del telefono [e dall'app] |
+| Posizione, solo se attivi la funzione [DIPENDE POSIZIONE: "approssimativa, per mostrare la distanza tra voi" oppure "precisa, visibile al tuo partner"] | mostrare la distanza tra voi, nell'app e nel widget Noi sulla schermata Home | consenso, revocabile dalle impostazioni del telefono [DIPENDE POSIZIONE: "e dall'app" solo se l'app aggiunge un comando per smettere di condividere e cancellare la posizione; oggi non c'è] |
 | Token di notifica del dispositivo e identificativo di installazione | inviarti le notifiche che hai attivato | esecuzione del contratto |
 | Progressi e attività nell'app (ad esempio giochi completati) | far funzionare le funzioni dell'app | esecuzione del contratto |
 | Testo cercato nella ricerca musicale | trovare il brano su Spotify | esecuzione del contratto |
@@ -22,7 +22,7 @@ US è un'app per coppie. Titolare del trattamento: [NOME O DITTA], [INDIRIZZO], 
 Non usiamo i tuoi dati per pubblicità, non li vendiamo e non usiamo strumenti di analisi o di tracciamento. Lo sblocco con impronta o volto avviene sul telefono: il dato biometrico non ci arriva mai.
 
 ## 3. Chi vede i tuoi dati
-- **Il tuo partner** vede ciò che pubblichi nello spazio di coppia.
+- **Il tuo partner** vede ciò che pubblichi nello spazio di coppia e, se attivi la posizione, la distanza tra voi [DIPENDE POSIZIONE: con la variante B anche la tua posizione esatta], anche nel widget Noi sulla schermata Home del suo telefono.
 - **Fornitori** che trattano dati per nostro conto:
   - Supabase (database, autenticazione, archiviazione file), regione [REGIONE SUPABASE];
   - Google Firebase Cloud Messaging (notifiche);
@@ -36,7 +36,7 @@ Alcuni fornitori possono trattare dati fuori dallo Spazio economico europeo, con
 Le comunicazioni sono cifrate (HTTPS). L'accesso ai dati è limitato alla tua coppia con regole lato database. I file sono serviti con link temporanei.
 
 ## 5. Quanto conserviamo i dati
-Finché il tuo account è attivo. [DIPENDE #190] Quando chiedi l'eliminazione, dopo aver confermato la password, il tuo account viene eliminato subito e non può essere recuperato. La rimozione dei file si completa entro 30 giorni. Conserviamo per 12 mesi solo una ricevuta tecnica dell'eliminazione (identificativo dell'account e della coppia, date, esito), senza contenuti. I backup del fornitore vengono sovrascritti entro [DURATA BACKUP, D-8].
+Finché il tuo account è attivo, con un'eccezione: i contenuti "Lasciato per te" già aperti vengono cancellati 30 giorni dopo l'apertura, salvo quelli conservati nei Ricordi. [DIPENDE #190] Quando chiedi l'eliminazione, dopo aver confermato la password, il tuo account viene eliminato subito e non può essere recuperato. La rimozione dei file si completa entro 30 giorni. Conserviamo per 12 mesi solo una ricevuta tecnica dell'eliminazione (identificativo dell'account e della coppia, date, esito), senza contenuti. I backup del fornitore vengono sovrascritti entro [DURATA BACKUP, D-8].
 
 ## 6. Eliminare l'account [DIPENDE #190]
 Puoi chiedere l'eliminazione dall'app (Impostazioni › Privacy e dati › Elimina account), dalla pagina https://[DOMINIO]/elimina-account o scrivendo a [EMAIL DI SUPPORTO].

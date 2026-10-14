@@ -33,7 +33,7 @@ Nessun SDK di analisi, pubblicità o crash reporting. Nessun permesso AD_ID (ver
 | Posizione › Posizione precisa | coordinate dal GPS del telefono | Sì | **[DIPENDE POSIZIONE]** | No |
 | Posizione › Posizione approssimativa | stessa funzione (permesso COARSE) | Sì | **[DIPENDE POSIZIONE]** | No |
 | Foto e video › Foto | foto dei momenti, foto profilo, miniature | Sì | No | No |
-| Foto e video › Video | video dei momenti | Sì | No | No |
+| Foto e video › Video | video di "Lasciato per te" (i Momenti accettano solo foto) | Sì | No | No |
 | File audio › Registrazioni vocali | note vocali | Sì | No | No |
 | Messaggi › Altri messaggi in-app | messaggi "Lasciato per te", pensieri | Sì | No | No |
 | Contenuti generati dall'utente | risposte alle domande, umori, calendario, liste, giochi | Sì | No | No |
@@ -77,10 +77,15 @@ Comportamento attuale, verificato nel codice:
 Con il codice attuale la dichiarazione onesta è "posizione precisa raccolta e visibile al partner". Il testo in app va corretto in ogni caso, altrimenti la divulgazione in app non coincide con la scheda.
 
 Due varianti, scelta di Francesco:
-- **A (consigliata): minimizzare.** Salvare con 2 decimali (circa 1 km), mostrare al partner solo la distanza, aggiungere "Smetti di condividere e cancella la posizione". Dichiarazione: posizione approssimativa, facoltativa, solo funzionalità. Richiede una modifica al codice e una migrazione (staging prima, produzione con autorizzazione).
+- **A (consigliata): minimizzare.** Solo permesso `ACCESS_COARSE_LOCATION`, distanza calcolata dal server, il partner non riceve mai coordinate, spiegazione in app prima della richiesta del permesso, comando "Smetti di condividere e cancella la posizione". Richiede una modifica al codice e una migrazione (staging prima, produzione con autorizzazione). Per Play la posizione è approssimativa solo se indica un'area di almeno 3 km² (Play Help 10787469): arrotondare a 2 decimali (circa 1 km, cioè meno di 1 km²) resta posizione precisa. Si dichiara "approssimativa" solo se ciò che si raccoglie rispetta quella soglia; altrimenti si dichiara "precisa" anche con la variante A.
 - **B: lasciare com'è.** Dichiarare posizione precisa, correggere il testo in Impostazioni in "La tua posizione esatta è visibile al partner", aggiungere la cancellazione. Rischio di revisione più alto.
 
 In entrambi i casi l'app usa solo la posizione in primo piano: il gate AAB vieta `ACCESS_BACKGROUND_LOCATION`, quindi non serve il modulo per la posizione in background.
+
+Dal 27/01/2027 (anteprima delle norme Play, Play Help 16909972): la posizione precisa è ammessa solo se quella approssimativa (o il pulsante di posizione di Android) non basta, e ogni app che chiede permessi di posizione deve compilare una dichiarazione in Play Console. Per una distanza tra partner la posizione approssimativa basta, quindi la variante B diventa difficile da difendere da quella data.
+
+### 2.4 Permesso `INSTALL_SHORTCUT`
+Lo dichiara il plugin dei widget (`native-plugins/us-widget-bridge/android/src/main/AndroidManifest.xml`) e finisce nel bundle. Resta: su HyperOS/MIUI, il sistema dell'owner, il pulsante "Aggiungi alla Home" dei widget (`requestPinAppWidget`) funziona solo se l'app ha il permesso "Scorciatoie nella schermata Home", che compare solo per le app che dichiarano `INSTALL_SHORTCUT`. È un permesso normale: non richiede dichiarazioni in Play Console e non raccoglie dati.
 
 ## 3. Altre dichiarazioni di Play Console
 
