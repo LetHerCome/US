@@ -1,1 +1,475 @@
-/* Due colori, un Noi — popup. Area layer on top of due-colori.css (approved design, 2026-10-14). */
+/* Due colori, un Noi — popup. Area layer on top of due-colori.css (approved design, 2026-10-14).
+   The shared chrome of every popup, in the approved forms:
+   - Foglio: a bottom sheet that rises with a spring, with a handle and a
+     header (eyebrow, Fraunces title, close). Settings, forms and lists.
+   - Conferma: small, two choices, docked at the bottom. Red only when the
+     action cannot be undone (UsUiFoundation.confirm tone:'danger').
+   - Avviso: a pill at the top for about two seconds (#toast), and the
+     system pills (offline, update available) in the same slot.
+   Momento and Galleria belong to the areas. Feature JS still owns
+   open/close, aria-hidden and focus; ui-foundation.js still finishes an exit
+   on the panel's own `transform` transition (exitSurface). Feature content
+   inside a sheet is restyled by the area layers, not here. */
+
+:root{
+  --us-pop-sheet-in:520ms;
+  --us-pop-sheet-out:280ms;
+  --us-pop-confirm-in:460ms;
+  --us-pop-confirm-out:200ms;
+  --us-pop-scrim-in:260ms;
+  --us-pop-scrim-out:240ms;
+  --us-pop-fade:160ms;
+  /* The Avviso slot: just under the top bar, never on the bottom actions. */
+  --us-avviso-top:calc(var(--us-safe-top) + 62px);
+  --us-avviso-step:52px;
+}
+
+/* ---------- Every sheet: flat night material, hairline, no blur ---------- */
+.us-sheet{
+  background:var(--us-color-surface);
+  border:1px solid var(--us-color-line-strong);
+  box-shadow:none;
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+  color:var(--us-color-text);
+}
+.us-sheet::before{background:transparent}
+.us-sheet.is-bottom{border-bottom:0;box-shadow:none}
+
+/* The scrim: one flat dark veil behind every popup, no blur. */
+.us-modal-backdrop{
+  background:var(--us-scrim);
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+}
+
+/* ==========================================================================
+   1 · Foglio — every ordinary sheet rises from the bottom on phones.
+   Supersedes the centred shell of modal-center.css for this list. A new
+   sheet opts in with the class .us-foglio on its overlay.
+   ========================================================================== */
+:is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio){
+  align-items:flex-end!important;
+  justify-content:center!important;
+  padding:max(12px,calc(var(--us-safe-top) + 8px)) 0 0!important;
+  overflow:hidden!important;
+  background:transparent;
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+}
+:is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)>[data-us-modal-panel]{
+  position:relative;
+  width:100%!important;
+  max-width:560px;
+  max-height:min(calc(var(--us-viewport-height,100dvh) * .92),calc(var(--us-viewport-height,100dvh) - var(--us-safe-top) - 8px))!important;
+  margin:auto auto 0;
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-width:none;
+  border:0!important;
+  border-top:1px solid var(--us-color-line-strong)!important;
+  border-radius:var(--us-radius-sheet) var(--us-radius-sheet) 0 0!important;
+  background:var(--us-color-surface);
+  box-shadow:none!important;
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+  color:var(--us-color-text);
+}
+:is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)>[data-us-modal-panel]::-webkit-scrollbar{display:none}
+
+/* The handle: drawn by the sheet itself, above a sticky header. */
+:is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)>[data-us-modal-panel]::before{
+  content:"";
+  position:absolute;
+  top:9px;
+  left:50%;
+  right:auto;
+  width:40px;
+  height:5px;
+  margin-left:-20px;
+  border-radius:9px;
+  background:var(--us-color-line-strong);
+  pointer-events:none;
+  z-index:5;
+}
+
+/* Room for the handle: the header starts ~26px below the sheet's top edge
+   (handle 9–14px, then the mockup's 12px gap). Sheets padded on the panel… */
+:is(#usCountdownSheet,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,.us-moment-compose-overlay)>[data-us-modal-panel]{padding-top:26px!important}
+#today>.today-sheet{padding:26px 20px calc(24px + var(--us-safe-bottom))!important}
+/* …and sheets whose (sticky) header carries its own padding. */
+:is(#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet)>[data-us-modal-panel]>header:first-of-type{padding-top:26px!important}
+/* The Lasciato per te sheets had no bottom inset of their own. */
+:is(#leftForYouOverlay,#leftForYouComposerOverlay)>[data-us-modal-panel]{padding-bottom:var(--us-safe-bottom)}
+
+/* Tablet: the calendar month keeps its wider sheet. */
+@media (min-width:680px){
+  #usCalendarOverlay>.us-cal-surface{width:100%!important;max-width:760px}
+}
+
+/* Keyboard open: the overlay ends where the visible area ends, so the
+   sheet's bottom (and its button) stays above the keyboard. */
+body.us-keyboard-open :is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio){
+  bottom:auto!important;
+  height:var(--us-viewport-height,100dvh)!important;
+}
+
+/* ---------- Sheet header: eyebrow, Fraunces title, close ---------- */
+/* The eyebrow speaks in the colour of the area the sheet belongs to, not of
+   the tab it was opened from. An area may set --us-sheet-k on its panel. */
+:is(#usCountdownSheet,#today){--us-sheet-k:var(--us-corallo)}
+:is(#leftForYouOverlay,#leftForYouComposerOverlay,#usSettingsOverlay,#usWidgetHub){--us-sheet-k:var(--us-tu)}
+:is(#usEventsOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet){--us-sheet-k:var(--us-noi)}
+:is(#conservatiOverlay,.us-moment-compose-overlay){--us-sheet-k:var(--us-ambra)}
+:is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)>[data-us-modal-panel]>:is(header,.today-sheet-head,.us-moment-compose-title) :is(.tiny,.us-eyebrow){
+  display:block;
+  margin:0 0 2px;
+  font-family:var(--us-font-ui);
+  font-size:11px;
+  font-weight:700;
+  line-height:1.3;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--us-sheet-k,var(--us-tab));
+  opacity:1;
+}
+:is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)>[data-us-modal-panel]>:is(header,.today-sheet-head,.us-moment-compose-title) :is(h2,h3,.us-sheet-title,.us-moment-compose-title b){
+  margin:0;
+  font-family:var(--us-font-display);
+  font-size:26px;
+  font-weight:400;
+  font-style:normal;
+  line-height:1.12;
+  letter-spacing:-.01em;
+  color:var(--us-color-text);
+  text-wrap:balance;
+}
+:is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)>[data-us-modal-panel] .us-modal-close:not(.is-on-media){
+  width:44px;
+  height:44px;
+  min-width:44px;
+  min-height:44px;
+  flex:none;
+  padding:0;
+  display:inline-grid;
+  place-items:center;
+  border:0;
+  border-radius:50%;
+  background:var(--us-color-surface-2);
+  box-shadow:none;
+  color:var(--us-color-text-2);
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+}
+:is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)>[data-us-modal-panel] .us-modal-close:not(.is-on-media) .us-icon{width:18px;height:18px}
+
+/* ---------- Foglio motion: up from the bottom with the soft spring ----------
+   Transitions only, so a close in the middle of the rise simply turns back
+   and exitSurface() still gets its `transform` transitionend. @starting-style
+   gives the rise when the overlay comes out of display:none (engines without
+   it show the sheet in place, as before). */
+[data-us-motion-surface]:is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio) [data-us-modal-panel]{
+  opacity:1;
+  transform:translate3d(0,100%,0);
+  transform-origin:50% 100%;
+  transition:transform var(--us-pop-sheet-out) var(--us-ease-exit);
+  will-change:transform;
+}
+[data-us-motion-surface]:is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show,[aria-hidden="false"]) [data-us-modal-panel]{
+  opacity:1;
+  transform:none;
+  transition:transform var(--us-pop-sheet-in) var(--us-ease-enter);
+}
+[data-us-motion-surface]:is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show,[aria-hidden="false"]) .us-modal-backdrop{
+  transition:opacity var(--us-pop-scrim-in) var(--us-ease-standard);
+}
+@starting-style{
+  [data-us-motion-surface]:is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show,[aria-hidden="false"]) [data-us-modal-panel]{transform:translate3d(0,100%,0)}
+  [data-us-motion-surface]:is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show) .us-modal-backdrop{opacity:0}
+}
+[data-us-motion-surface]:is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)[data-us-motion-exiting] [data-us-modal-panel]{
+  opacity:1;
+  transform:translate3d(0,100%,0);
+  transition:transform var(--us-pop-sheet-out) var(--us-ease-exit);
+}
+[data-us-motion-surface]:is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)[data-us-motion-exiting] .us-modal-backdrop{
+  opacity:0;
+  transition:opacity var(--us-pop-scrim-out) var(--us-ease-standard);
+}
+
+/* ==========================================================================
+   2 · Conferma — UsUiFoundation.confirm / notice, and the Story delete.
+   Docked at the bottom, centred content, the choice first and Annulla under.
+   ========================================================================== */
+/* `:not(#_)` only lifts these rules to the ID weight modal-center.css gives
+   .us-confirm through its :is() list; it matches every confirmation. */
+.us-confirm:not(#_){
+  align-items:flex-end!important;
+  justify-content:center!important;
+  padding:max(12px,calc(var(--us-safe-top) + 8px)) 0 0!important;
+  overflow:hidden!important;
+}
+.us-confirm:not(#_)>[data-us-modal-panel],
+.us-confirm-sheet{
+  width:100%!important;
+  max-width:480px;
+  max-height:calc(var(--us-viewport-height,100dvh) - var(--us-safe-top) - 8px)!important;
+  margin:auto auto 0;
+  overflow-y:auto;
+  display:grid;
+  justify-items:center;
+  gap:10px;
+  padding:24px 20px calc(22px + var(--us-safe-bottom));
+  border:0!important;
+  border-top:1px solid var(--us-color-line-strong)!important;
+  border-radius:var(--us-radius-sheet) var(--us-radius-sheet) 0 0!important;
+  background:var(--us-color-surface);
+  box-shadow:none!important;
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+  text-align:center;
+}
+/* The mockup Conferma has no eyebrow: the icon and the title say it. */
+.us-confirm-sheet>.us-eyebrow{display:none}
+.us-confirm-icon{
+  width:56px;
+  height:56px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:var(--us-color-surface-2);
+  color:var(--us-color-text);
+}
+.us-confirm-icon[hidden]{display:none}
+.us-confirm-icon .us-icon{width:26px;height:26px}
+.us-confirm.is-danger .us-confirm-icon{
+  background:color-mix(in srgb,var(--us-rosso) 16%,transparent);
+  color:var(--us-rosso);
+}
+.us-confirm-sheet :is(h2,h3){
+  margin:0;
+  font-family:var(--us-font-display);
+  font-size:26px;
+  font-weight:400;
+  line-height:1.12;
+  letter-spacing:-.01em;
+  color:var(--us-color-text);
+  text-wrap:balance;
+  overflow-wrap:anywhere;
+}
+.us-confirm-sheet p{
+  margin:0;
+  max-width:32ch;
+  color:var(--us-color-text-2);
+  font-size:15px;
+  line-height:1.45;
+}
+.us-confirm-actions{
+  width:100%;
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:8px;
+  margin-top:6px;
+}
+.us-confirm-actions button{
+  width:100%;
+  min-height:48px;
+  padding:0 18px;
+  border-radius:var(--us-radius-pill);
+  font-size:15px;
+  line-height:1.15;
+}
+.us-confirm-actions :is(.primary,.us-btn-danger){min-height:52px;font-size:16px;font-weight:700}
+.us-confirm-actions .ghost{font-weight:600}
+/* The Story confirmation keeps its old order in the DOM: the choice goes first. */
+.us-story-delete-actions .us-btn-danger{order:-1}
+.us-story-delete-confirm{
+  align-items:flex-end!important;
+  padding:0!important;
+}
+
+/* Conferma motion: rises 40px and settles from .96 while it fades in. */
+.us-confirm [data-us-modal-panel]{
+  transform-origin:50% 100%;
+}
+.us-confirm:not(.open) [data-us-modal-panel]{
+  opacity:0!important;
+  transform:translate3d(0,40px,0) scale(.96)!important;
+}
+.us-confirm.open [data-us-modal-panel]{
+  opacity:1;
+  transform:none;
+  transition:transform var(--us-pop-confirm-in) var(--us-ease-enter),opacity calc(var(--us-pop-confirm-in) * .5) var(--us-ease-standard)!important;
+}
+.us-confirm.open .us-modal-backdrop{
+  transition:opacity var(--us-pop-scrim-in) var(--us-ease-standard);
+}
+.us-confirm[data-us-motion-exiting] [data-us-modal-panel]{
+  opacity:0!important;
+  transform:scale(.96)!important;
+  transition:transform var(--us-pop-confirm-out) var(--us-ease-exit),opacity var(--us-pop-confirm-out) var(--us-ease-exit)!important;
+}
+.us-confirm[data-us-motion-exiting] .us-modal-backdrop{
+  opacity:0;
+  transition:opacity var(--us-pop-confirm-out) var(--us-ease-standard);
+}
+
+/* ==========================================================================
+   5 · Avviso — the top pill. Warm (latte, Fraunces italic) for a good
+   moment, quiet (night, Figtree) for everything else. Never at the bottom.
+   ========================================================================== */
+.toast{
+  top:var(--us-avviso-top);
+  bottom:auto!important;
+  left:50%;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  width:max-content;
+  max-width:min(calc(100% - 32px),420px);
+  min-height:40px;
+  padding:9px 18px;
+  border-radius:var(--us-radius-pill);
+  background:var(--us-latte)!important;
+  color:var(--us-inchiostro)!important;
+  box-shadow:0 12px 30px rgba(0,0,0,.35)!important;
+  font-family:var(--us-font-display);
+  font-size:16px;
+  font-style:italic;
+  font-weight:400;
+  line-height:1.25;
+  letter-spacing:0;
+  white-space:normal!important;
+  text-align:center;
+  opacity:0;
+  transform:translateX(-50%) translateY(-14px);
+  transition:opacity var(--us-pop-scrim-out) var(--us-ease-standard),transform var(--us-pop-confirm-in) var(--us-ease-enter);
+  pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.is-quiet{
+  background:var(--us-color-elevated)!important;
+  color:var(--us-color-text)!important;
+  box-shadow:0 12px 30px rgba(0,0,0,.35),inset 0 0 0 1px var(--us-color-line)!important;
+  font-family:var(--us-font-ui);
+  font-size:14px;
+  font-style:normal;
+  font-weight:600;
+}
+.toast .us-icon{width:16px;height:16px;flex:none}
+.toast .us-toast-text{min-width:0}
+/* Under an offline or update pill, the toast takes the next slot. */
+body:is(.us-status-visible,.us-update-visible) .toast{top:calc(var(--us-avviso-top) + var(--us-avviso-step))}
+body.us-status-visible.us-update-visible .toast{top:calc(var(--us-avviso-top) + var(--us-avviso-step) * 2)}
+
+/* ---------- System pills: offline / online / error, update available ---------- */
+.app-status-bar,
+.app-update-bar{
+  top:var(--us-avviso-top);
+  bottom:auto!important;
+  left:50%;
+  width:max-content!important;
+  max-width:min(calc(100% - 32px),420px);
+  transform:translateX(-50%)!important;
+  border-radius:var(--us-radius-pill)!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+  box-shadow:0 12px 30px rgba(0,0,0,.35)!important;
+  transition:top var(--us-motion-base) var(--us-ease-standard);
+}
+.app-status-bar{
+  min-height:40px;
+  padding:9px 16px 9px 14px!important;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  border:0!important;
+  background:var(--us-color-elevated)!important;
+  box-shadow:0 12px 30px rgba(0,0,0,.35),inset 0 0 0 1px var(--us-color-line)!important;
+  color:var(--us-color-text)!important;
+  font-family:var(--us-font-ui);
+  font-size:14px!important;
+  font-weight:600;
+  line-height:1.3!important;
+}
+.app-status-bar::before{
+  content:"";
+  width:8px!important;
+  height:8px!important;
+  border-radius:50%;
+  flex:none;
+  background:var(--us-ambra)!important;
+}
+.app-status-bar[data-kind="error"]{background:var(--us-color-elevated)!important;border:0!important}
+.app-status-bar[data-kind="error"]::before{background:var(--us-corallo)!important}
+.app-status-bar[data-kind="online"]{background:var(--us-color-elevated)!important;border:0!important}
+.app-status-bar[data-kind="online"]::before{background:var(--us-verde)!important}
+.app-update-bar{
+  min-height:46px;
+  padding:6px 6px 6px 18px!important;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  border:0!important;
+  background:var(--us-latte)!important;
+  color:var(--us-inchiostro)!important;
+}
+.app-update-bar span{display:block;min-width:0}
+.app-update-bar b{
+  font-family:var(--us-font-display);
+  font-size:16px!important;
+  font-style:italic;
+  font-weight:400;
+  line-height:1.2;
+  color:var(--us-inchiostro);
+}
+.app-update-bar small{display:none}
+.app-update-bar button{
+  flex:none;
+  min-height:44px!important;
+  padding:0 16px!important;
+  border:0;
+  border-radius:var(--us-radius-pill)!important;
+  background:var(--us-inchiostro)!important;
+  color:var(--us-latte)!important;
+  box-shadow:none!important;
+  font-family:var(--us-font-ui);
+  font-size:14px!important;
+  font-style:normal;
+  font-weight:700;
+}
+.app-update-bar button:disabled{opacity:.7}
+body.us-status-visible .app-update-bar{top:calc(var(--us-avviso-top) + var(--us-avviso-step))}
+body.us-keyboard-open :is(.toast,.app-status-bar,.app-update-bar),
+body.us-keyboard-open.us-update-visible.us-status-visible .app-status-bar{bottom:auto!important}
+
+/* ==========================================================================
+   Reduced motion: no travel. Sheets and confirmations simply fade in and
+   disappear (exitSurface finishes at once); the Avviso fades in place.
+   ========================================================================== */
+:root[data-us-motion="reduced"] [data-us-motion-surface]:is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio) [data-us-modal-panel]{
+  transform:none!important;
+}
+:root[data-us-motion="reduced"] [data-us-motion-surface]:is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show,[aria-hidden="false"]) [data-us-modal-panel]{
+  transition:opacity var(--us-pop-fade) var(--us-ease-standard)!important;
+}
+@starting-style{
+  :root[data-us-motion="reduced"] [data-us-motion-surface]:is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show,[aria-hidden="false"]) [data-us-modal-panel]{opacity:0}
+}
+:root[data-us-motion="reduced"] .us-confirm:not(.open) [data-us-modal-panel]{transform:none!important}
+:root[data-us-motion="reduced"] .toast{transform:translateX(-50%);transition:opacity var(--us-pop-fade) var(--us-ease-standard)}
+:root[data-us-motion="reduced"] :is(.app-status-bar,.app-update-bar){transition:none}
+@media (prefers-reduced-motion:reduce){
+  [data-us-motion-surface]:is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio) [data-us-modal-panel]{transform:none!important}
+  [data-us-motion-surface]:is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show,[aria-hidden="false"]) [data-us-modal-panel]{
+    transition:opacity var(--us-pop-fade) var(--us-ease-standard)!important;
+  }
+  @starting-style{
+    [data-us-motion-surface]:is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show,[aria-hidden="false"]) [data-us-modal-panel]{opacity:0}
+  }
+  .us-confirm:not(.open) [data-us-modal-panel]{transform:none!important}
+  .toast{transform:translateX(-50%);transition:opacity var(--us-pop-fade) var(--us-ease-standard)}
+  :is(.app-status-bar,.app-update-bar){transition:none}
+}

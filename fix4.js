@@ -177,9 +177,11 @@
   function wrapToast() {
     const original = window.toast;
     if (typeof original !== 'function' || original.__fix4Wrapped) return;
-    const wrapped = function(message) {
-      original(message);
-      if (isImportantError(String(message || ''))) showStatus(String(message), 'error', 6500);
+    // An important error becomes the status pill at the top; it is not also
+    // shown as a toast under it (one Avviso, one message). Options pass through.
+    const wrapped = function(message, options) {
+      if (statusBar && isImportantError(String(message || ''))) showStatus(String(message), 'error', 6500);
+      else original(message, options);
     };
     wrapped.__fix4Wrapped = true;
     window.toast = wrapped;
