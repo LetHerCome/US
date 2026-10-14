@@ -35,6 +35,8 @@ export const FCM_ACTION = 'com.google.firebase.MESSAGING_EVENT';
 // or contradicts what US tells users it does.
 export const FORBIDDEN_PERMISSIONS = [
   'android.permission.ACCESS_BACKGROUND_LOCATION',
+  // US 1.0 location A: approximate only (Play Data safety and the 2027 policy).
+  'android.permission.ACCESS_FINE_LOCATION',
   'android.permission.QUERY_ALL_PACKAGES',
   'android.permission.READ_MEDIA_IMAGES',
   'android.permission.READ_MEDIA_VIDEO',
@@ -58,7 +60,6 @@ export const FORBIDDEN_PERMISSIONS = [
 // Permissions that must be reflected in the Play Data safety form.
 export const DATA_SAFETY_PERMISSIONS = {
   'android.permission.CAMERA': 'Foto e video (fotocamera)',
-  'android.permission.ACCESS_FINE_LOCATION': 'Posizione precisa',
   'android.permission.ACCESS_COARSE_LOCATION': 'Posizione approssimativa',
   'android.permission.RECORD_AUDIO': 'Audio (note vocali)',
   'android.permission.POST_NOTIFICATIONS': 'Notifiche',

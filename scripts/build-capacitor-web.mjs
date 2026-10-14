@@ -16,6 +16,8 @@ if (OUTPUT !== EXPECTED_OUTPUT || !OUTPUT.startsWith(`${ROOT}${path.sep}`)) {
 const RUNTIME_FILES = [
   'index.html',
   'auth-storage.js',
+  'public-auth.js',
+  'public-auth.css',
   'app.js',
   'onboarding.js',
   'onboarding.css',

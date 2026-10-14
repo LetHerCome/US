@@ -140,7 +140,8 @@ async function hydrateUsSettings(){
 
   const locEl=$('usLocationState');
   locEl.className='us-setting-state';
-  if(loc==='granted'){locEl.textContent='✓';locEl.classList.add('ok');}
+  const sharing=Boolean(window.UsLocation?.isSharing?.());
+  if(sharing&&loc!=='denied'){locEl.textContent='✓';locEl.classList.add('ok');}
   else if(loc==='denied'){locEl.textContent='×';locEl.classList.add('bad');}
   else locEl.textContent='○';
 
@@ -254,15 +255,15 @@ function distanceModal(){
   }));
 }
 
+// Location A: explanation before the permission, "Smetti e cancella" when shared.
 async function locationAction(){
   const state=await locationState();
-  if(state==='denied'){
+  if(state==='denied'&&!window.UsLocation?.isSharing?.()){
     openModal('Posizione','<div class="us-settings-copy"><p>La posizione è bloccata dalle impostazioni del telefono.</p></div>','PERMESSO');
     return;
   }
-  await window.refreshMyLocation?.();
+  await window.UsLocation?.openSettings?.();
   setTimeout(hydrateUsSettings,450);
-  toast('Posizione aggiornata');
 }
 
 function preferenceToggle(key,label,checked){
@@ -539,7 +540,7 @@ async function syncStatusModal(){
     ['Rete',navigator.onLine?'Online':'Offline',navigator.onLine],
     ['Coppia',profiles.length>=2?`${profiles.length}/2 profili collegati`:`${profiles.length}/2 profili`,profiles.length>=2],
     ['Push',push.native?(US_NATIVE_PUSH_COPY[push.kind]||US_NATIVE_PUSH_COPY.unavailable).title:push.active?'Attive':push.permission==='denied'?'Bloccate':'Non attive',push.active],
-    ['Posizione',loc==='granted'?'Consentita':loc==='denied'?'Bloccata':'Da chiedere',loc==='granted']
+    ['Posizione',loc==='denied'?'Bloccata':window.UsLocation?.isSharing?.()?'Condivisa, solo la distanza':'Non condivisa',loc!=='denied'&&Boolean(window.UsLocation?.isSharing?.())]
   ];
   $('usSettingsModalBody').innerHTML=`<div class="us-settings2-status-list">${rows.map(([label,value,ok])=>`
     <div><span><b>${label}</b><small>${value}</small></span><i class="${ok?'ok':''}">${ok?'✓':'○'}</i></div>
@@ -549,7 +550,7 @@ async function syncStatusModal(){
 function privacyModal(){
   openModal('Privacy e dati',`
     <div class="us-settings-copy">
-      <p><b>Posizione</b> · salvata solo per la distanza tra voi.</p>
+      <p><b>Posizione</b> · solo approssimativa e solo se la attivi: la tua persona vede la distanza, mai dove sei. Puoi smettere e cancellarla da Posizione.</p>
       <p><b>Foto</b> · restano nello spazio della coppia.</p>
       <p><b>Notifiche</b> · scegli tu quali ricevere.</p>
       <p><b>Questo telefono</b> · resta collegato finché non lo scolleghi.</p>
