@@ -5,6 +5,8 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.provider.Settings;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.android.gms.tasks.Task;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -26,6 +28,21 @@ import org.json.JSONObject;
  */
 @CapacitorPlugin(name = "UsPushSupport")
 public class UsPushSupportPlugin extends Plugin {
+    private static volatile boolean activityResumed = false;
+    private static final Object transportLock = new Object();
+    private static Task<Void> shutdownTask;
+
+    public static boolean isActivityResumed() { return activityResumed; }
+
+    @Override
+    protected void handleOnResume() {
+        activityResumed = true;
+    }
+
+    @Override
+    protected void handleOnPause() {
+        activityResumed = false;
+    }
 
     @Override
     public void load() {
@@ -68,6 +85,7 @@ public class UsPushSupportPlugin extends Plugin {
         JSObject result = new JSObject();
         result.put("platform", "android");
         result.put("provider", "fcm");
+        result.put("bindingEpoch", UsPushOwnerGate.epoch(getContext()));
         result.put("configured", firebaseConfigured());
         result.put("environment", JSONObject.NULL);
         result.put("notificationsEnabled", manager != null && manager.areNotificationsEnabled());
@@ -86,6 +104,68 @@ public class UsPushSupportPlugin extends Plugin {
             call.resolve(new JSObject().put("opened", true));
         } catch (RuntimeException error) {
             call.resolve(new JSObject().put("opened", false));
+        }
+    }
+
+    /**
+     * Called only after authenticated registration RPC succeeds, with the
+     * epoch observed before registration. Logout invalidates this epoch, so
+     * a late completion from A cannot re-activate A under B.
+     */
+    @PluginMethod
+    public void bindPushOwner(PluginCall call) {
+        final boolean bound = UsPushOwnerGate.bind(
+            getContext(),
+            call.getString("ownerId"),
+            call.getString("installationId"),
+            call.getString("expectedEpoch")
+        );
+        call.resolve(new JSObject().put("bound", bound));
+    }
+
+    /**
+     * Synchronous SharedPreferences commit before resolving to JS.
+     * All app notifications are canceled as defense in depth.
+     */
+    @PluginMethod
+    public void clearPushOwner(PluginCall call) {
+        final boolean cleared = UsPushOwnerGate.clear(getContext());
+        if (cleared) {
+            NotificationManager manager = manager();
+            if (manager != null) manager.cancelAll();
+        }
+        call.resolve(new JSObject().put("cleared", cleared));
+    }
+
+    /**
+     * Unlike Capacitor PushNotifications.unregister(), resolve only once
+     * FirebaseMessaging.deleteToken() has completed. The native owner gate
+     * MUST be retired before this is called, so an old packet never renders
+     * during an in-flight provider delete. Do not return raw provider errors.
+     */
+    @PluginMethod
+    public void stopPushTransport(PluginCall call) {
+        if (UsPushOwnerGate.hasOwner(getContext())) {
+            call.resolve(new JSObject().put("stopped", false));
+            return;
+        }
+        try {
+            final Task<Void> task;
+            synchronized (transportLock) {
+                // A JS timeout must not launch a second deleteToken while the
+                // first provider operation is still running.
+                if (shutdownTask == null || shutdownTask.isComplete()) {
+                    FirebaseMessaging messaging = FirebaseMessaging.getInstance();
+                    messaging.setAutoInitEnabled(false);
+                    shutdownTask = messaging.deleteToken();
+                }
+                task = shutdownTask;
+            }
+            task.addOnCompleteListener(result ->
+                call.resolve(new JSObject().put("stopped", result.isSuccessful()))
+            );
+        } catch (RuntimeException error) {
+            call.resolve(new JSObject().put("stopped", false));
         }
     }
 
