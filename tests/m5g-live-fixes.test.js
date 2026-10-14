@@ -82,8 +82,12 @@ test('M5G local Visual Lab cannot save or even request a production location', a
   assert.equal(calls.intervals, 0);
 });
 
-test('M5G production runtime still requests geolocation and upserts the real couple row', async () => {
+test('M5G production runtime still requests geolocation and upserts the real couple row (after consent)', async () => {
   const { context, calls } = locationHarness(false);
+  context.refreshMyLocation({ silent: true });
+  await sleep(5);
+  assert.equal(calls.geolocation, 0, 'location A: nothing is read before the explanation is accepted');
+  context.localStorage.setItem('us:location:consent', 'approximate-v1');
   context.refreshMyLocation({ silent: true });
   await sleep(5);
   assert.equal(calls.geolocation, 1);
