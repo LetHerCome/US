@@ -64,14 +64,24 @@ test('Rewards V2 client: no fake currencies, no coin language', () => {
   assert.equal(new Set(titles).size, titles.length, 'every reward has its own name');
 });
 
-test('Rewards V2 client: themes and accents keep text-on-accent contrast >= 3:1 (default US is 2.3:1)', () => {
+test('Rewards V2 client: themes keep text-on-accent contrast >= 3:1 (default US is 2.3:1); Due colori accents keep dark ink readable', () => {
   const lum = (hex) => {
     const c = [0, 2, 4].map((i) => parseInt(hex.slice(1 + i, 3 + i), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
     return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
   };
   const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
-  const blocks = [...css.matchAll(/:root\[data-us-(theme|accent)="([a-z_]+)"\],[^{]*\{([^}]*)\}/g)];
-  assert.equal(blocks.length, 8);
+  // Due colori (2026-10-14): an accent only recolours "Noi" (--us-noi); buttons
+  // are flat with dark ink (--us-inchiostro #1a1020), so the check is that ink.
+  const accents = [...css.matchAll(/:root\[data-us-accent="([a-z_]+)"\],[^{]*\{([^}]*)\}/g)];
+  assert.equal(accents.length, 3);
+  for (const [, name, body] of accents) {
+    const noi = body.match(/--us-noi:(#[0-9a-f]{6})/i)?.[1];
+    assert.ok(noi, `accent ${name} sets --us-noi`);
+    assert.ok(ratio(noi, '#1a1020') >= 4.5, `accent ${name}: dark ink on Noi ${ratio(noi, '#1a1020').toFixed(2)}`);
+    assert.ok(ratio(noi, '#0f0b13') >= 4.5, `accent ${name}: Noi on the night ${ratio(noi, '#0f0b13').toFixed(2)}`);
+  }
+  const blocks = [...css.matchAll(/:root\[data-us-(theme)="([a-z_]+)"\],[^{]*\{([^}]*)\}/g)];
+  assert.equal(blocks.length, 5);
   for (const [, kind, name, body] of blocks) {
     const stops = [...body.match(/--us-accent-gradient:linear-gradient\(([^;]*)\)/)[1].matchAll(/#[0-9a-f]{6}/gi)].map((m) => m[0]);
     const onAccent = body.match(/--us-color-text-on-accent:(#[0-9a-f]{6})/i)?.[1] || '#ffffff';

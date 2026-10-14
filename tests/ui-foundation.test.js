@@ -323,7 +323,8 @@ test('il foglio fondazionale espone token conservativi e target comuni da 44px',
   assert.match(css, /--us-motion-immersive:300ms/);
   assert.match(css, /--us-motion-photo:360ms/);
   assert.match(css, /--us-motion-photo-slow:420ms/);
-  assert.match(css, /--us-ease-enter:cubic-bezier\(\.16,1,\.3,1\)/);
+  // Due colori (2026-10-14): sheets and cards enter on a soft spring.
+  assert.match(css, /--us-ease-enter:cubic-bezier\(\.22,1\.15,\.36,1\)/);
   assert.match(css, /--us-ease-exit:cubic-bezier\(\.4,0,1,1\)/);
   assert.match(css, /:where\(button:not\(:disabled\):not\(\[data-us-motion-tap="off"\]\)\):active\s*\{\s*transform:scale\(\.985\)/);
   assert.match(css, /:root\[data-us-motion="reduced"\]/);
