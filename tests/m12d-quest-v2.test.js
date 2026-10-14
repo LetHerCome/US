@@ -178,7 +178,7 @@ test('M12D: confirm calls only the existing RPC with the quest id, renders the s
   assert.equal(confirmCalls[0].args.target_quest_id, 'q2');
   assert.deepEqual(h.db.log.writes, [], 'no client write: Quest state and XP are RPC-only');
   assert.equal(h.rows.couples[0].bond_xp, 340, 'bond_xp is only the server’s to change');
-  assert.ok(h.toasts.includes('Quest completata · +50 XP ♡'), 'XP shown is the server-returned award');
+  assert.ok(h.toasts.includes('Missione completata · +50 XP ♡'), 'XP shown is the server-returned award');
   assert.deepEqual(h.pushes, [['quest_confirmed', 'q2']]);
   assert.equal(h.cards()[1].state, 'completed', 'rerendered from the persisted row');
 });

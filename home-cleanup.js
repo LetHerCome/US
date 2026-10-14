@@ -29,14 +29,13 @@ function dailyModel() {
 }
 
 function dailyMarkup(model){
- if(!model)return '<div class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">Daily Challenge</span><small>La domanda di oggi non è ancora disponibile.</small></div>';
+ if(!model)return '<div class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">Sfida di oggi</span><small>La domanda di oggi non è ancora disponibile.</small></div>';
  // The question and partner state are already authorized by the existing
  // Daily Question engine. Never render hidden partner answers on the hub.
- return `<button type="button" class="us-gv2-daily" data-us-daily-entry data-daily-state="${esc(model.state)}" aria-label="Daily Challenge, domanda del giorno: ${esc(model.question)}. ${esc(model.cta)}">
+ return `<button type="button" class="us-gv2-daily" data-us-daily-entry data-daily-state="${esc(model.state)}" aria-label="Sfida di oggi, domanda del giorno: ${esc(model.question)}. ${esc(model.cta)}">
    <span class="us-gv4-daily-art" aria-hidden="true"><span class="us-gv4-art-ring"></span><span class="us-gv4-art-heart"></span></span>
    <span class="us-gv2-daily-copy">
-     <small>LA SFIDA DI OGGI</small>
-     <span class="us-gv4-daily-title">Daily<br>Challenge</span>
+     <small>SFIDA DI OGGI</small>
      <b>${esc(model.question)}</b>
      <span class="us-gv2-daily-state">${esc(model.meta)}</span>
    </span>

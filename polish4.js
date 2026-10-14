@@ -17,14 +17,14 @@ function ensureXp(){
   return root;
 }
 
-window.usCelebrateXp=function(amount,label='Bond'){
+window.usCelebrateXp=function(amount,label=''){
   const value=Math.max(0,Number(amount)||0);
   if(!value)return false;
   const root=ensureXp();
   clearTimeout(xpTimer);
   root.classList.remove('leave','show');
-  root.querySelector('b').textContent=`+${value} XP Bond`;
-  root.querySelector('small').textContent=label;
+  root.querySelector('b').textContent=`+${value} XP`;
+  root.querySelector('small').textContent=label?`${label} · Sintonia`:'Sintonia';
   requestAnimationFrame(()=>root.classList.add('show'));
   window.UsFeedback?.success?.();
   xpTimer=setTimeout(()=>{

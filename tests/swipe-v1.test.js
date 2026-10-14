@@ -10,7 +10,7 @@ test('Swipe V1 client: Gioca exposes a dedicated sealed 8-card swipe flow', () =
   const js = read('games.js');
   const css = read('games.css');
 
-  assert.match(js, /const SWIPE = \{ id: 'swipe', name: 'Swipe'/);
+  assert.match(js, /const SWIPE = \{ id: 'swipe', name: 'Questo o quello'/);
   assert.match(js, /sb\.rpc\('start_swipe_round'/);
   assert.match(js, /data-gv2-action="swipe"/);
   assert.match(js, /Array\.from\(\{ length: total \}/);

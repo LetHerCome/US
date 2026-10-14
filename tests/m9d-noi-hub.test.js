@@ -65,7 +65,7 @@ test('M9D: the back path is the shared navigation history (system Back included)
 test('M9D/Progression V1: Sintonia explains only server-backed meaningful actions', () => {
   const guide = bond().match(/<section class="noi-resonance-guide"[\s\S]*?<\/section>/)?.[0] || '';
   const sources = [...guide.matchAll(/<li><b>([^<]+)<\/b>/g)].map((m) => m[1]);
-  assert.deepEqual(sources, ['Quest ed eventi', 'Domanda del giorno e Gioca', 'Ti penso e Ricordi', 'Mesiversario e anniversario']);
+  assert.deepEqual(sources, ['Missioni ed eventi', 'Domanda del giorno e Gioca', 'Ti penso e Ricordi', 'Mesiversario e anniversario']);
   const migration = read('supabase/migrations_history/20261002181500_us_progression_v1.sql');
   for (const kind of ['quest','event','daily','game','think','moment','milestone']) assert.match(migration, new RegExp(`'${kind}'`), kind);
   assert.match(migration, /progression_award/);
