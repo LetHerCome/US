@@ -288,7 +288,8 @@ test('M12D: near / far / any selection is unchanged (initial board and reroll po
     assert.ok(p.mode === 'any' || p.mode === mode); assert.notEqual(p.key, 'c');
   }
   assert.equal(h.api.pickReroll(TEMPLATES, 'any', new Set(['c', 'd', 'e']), 'x'), null);
-  assert.match(QUEST_BLOCK, /if\(!rows\|\|rows\.length<2\)return 'any';/, 'location unavailable keeps the any fallback');
+  assert.match(QUEST_BLOCK, /if\(!Number\.isFinite\(window\.usDistanceKm\)\)return 'any';/, 'location unavailable keeps the any fallback');
+  assert.doesNotMatch(QUEST_BLOCK, /from\('couple_locations'\)/, 'quests never read coordinates');
 });
 
 test('M12D: Quest week is the Europe/Rome Monday, stable through the week, regardless of device time zone', () => {

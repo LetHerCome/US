@@ -1,4 +1,4 @@
-const BUILD_ID = "us-store-s3-native-push-owner-gate-20261013-1";
+const BUILD_ID = "us-location-approximate-20261014-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
