@@ -19,7 +19,7 @@ const PERSONAL_CASCADE=new Set([
   'profiles>widget_scriptable_setup_codes.profile_id','profiles>widget_tokens.profile_id',
 ]);
 const OPERATIONAL_SET_NULL=new Set([
-  'auth.users>activity.actor_id','auth.users>couple_invites.used_by','profiles>couple_invites.created_by',
+  'auth.users>activity.actor_id','auth.users>couple_invites.used_by','auth.users>user_reports.reporter_id','profiles>couple_invites.created_by',
   'profiles>couple_progression_preferences.updated_by','profiles>progression_events.actor_id',
 ]);
 const SHARED_FAIL_CLOSED=new Set([
@@ -35,7 +35,9 @@ test('every user reference is classified, and shared content fails closed',async
     const rows=(await db.query(`select c.confrelid::regclass::text ref, c.conrelid::regclass::text tbl, a.attname col, a.attnotnull nn, c.confdeltype d
       from pg_constraint c join pg_attribute a on a.attrelid=c.conrelid and a.attnum=c.conkey[1]
       where c.contype='f' and c.connamespace='public'::regnamespace and c.confrelid in ('auth.users'::regclass,'public.profiles'::regclass)`)).rows;
-    const fn=(await db.query("select prosrc from pg_proc where proname='s32_delete_account_data'")).rows[0].prosrc;
+    // Shared content is detached by the membership closing used by both
+    // account deletion and leaving the couple.
+    const fn=(await db.query("select prosrc from pg_proc where proname='s32_close_membership'")).rows[0].prosrc;
     const seen=new Set();
     for(const r of rows){
       const key=`${r.ref}>${r.tbl}.${r.col}`;seen.add(key);
@@ -49,7 +51,7 @@ test('every user reference is classified, and shared content fails closed',async
       else assert.fail('unclassified user reference: '+key+' — decide what account deletion does with it');
     }
     for(const key of [...PERSONAL_CASCADE,...OPERATIONAL_SET_NULL,...SHARED_FAIL_CLOSED])assert.ok(seen.has(key),'stale classification '+key);
-    assert.equal(seen.size,37);
+    assert.equal(seen.size,38);
   }finally{await db.close();}
 });
 
@@ -63,4 +65,19 @@ test('the deletion entry points stay service-role only in the migration source',
   }
   assert.doesNotMatch(sql,/grant[^;]+to (anon|authenticated)/i);
   assert.doesNotMatch(sql,/delete from auth\.users/i,'Auth users are deleted only by the Admin API');
+});
+
+test('leave, report and export entry points: service_role only, reports the single client entry',()=>{
+  const dir=path.join(__dirname,'../supabase/migrations');
+  const sql=fs.readFileSync(path.join(dir,fs.readdirSync(dir).find(f=>/_s32_leave_couple_reports_export\.sql$/.test(f))),'utf8');
+  for(const sig of ['public.s32_delete_account_data(uuid, text)','public.s32_leave_couple(uuid, text)','public.s32_couple_departure_plan(uuid, uuid)',
+    'public.s32_mark_couple_departure(uuid, uuid, text, text)','public.s32_claim_pending_couple_departures(integer)','public.s32_purge_account_deletion_receipts()',
+    'public.s32_export_user_data(uuid)','public.s32_user_id_by_email(text)','public.get_internal_operator_key()']){
+    assert.ok(sql.includes(`revoke all on function ${sig} from public, anon, authenticated;`),sig);
+    assert.ok(sql.includes(`grant execute on function ${sig} to service_role;`),sig);
+  }
+  const clientGrants=sql.match(/grant[^;]+to (anon|authenticated)[^;]*;/gi)||[];
+  assert.deepEqual(clientGrants,['grant execute on function public.submit_user_report(text, text) to authenticated;']);
+  assert.doesNotMatch(sql,/delete from auth\.users/i);
+  assert.doesNotMatch(sql,/create policy/i,'no client policy on reports, departures or exports');
 });

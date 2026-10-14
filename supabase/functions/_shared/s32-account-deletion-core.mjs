@@ -20,6 +20,7 @@
 // emails, JWTs, object paths or raw exception messages.
 
 export const STORAGE_BUCKET = 'us-media';
+export const EXPORTS_BUCKET = 'us-exports';
 export const CONFIRM_WORD = 'ELIMINA';
 export const REQUEST_CHANNELS = Object.freeze(['app', 'web']);
 export const REAUTH_MAX_AGE_SECONDS = 600;
@@ -214,7 +215,7 @@ function isUserNotFound(error) {
 //   state db_done      -> storage cleanup, auth delete, completed
 //   state storage_done -> auth delete, completed
 //   state completed    -> no-op
-export async function finishAccountDeletion({ uid, admin, storage, rpc, log = noop, plan = null }) {
+export async function finishAccountDeletion({ uid, admin, storage, rpc, log = noop, plan = null, exportsStorage = null }) {
   if (!UUID.test(String(uid || ''))) throw new DeletionError('uid_invalid', 400);
   let current = plan;
   if (!current) {
@@ -252,6 +253,8 @@ export async function finishAccountDeletion({ uid, admin, storage, rpc, log = no
         await cleanupStoragePrefix({ storage, prefix: current.storage_prefix, keepPaths: current.keep_paths, log });
       }
       for (const prefix of archives) await cleanupStoragePrefix({ storage, prefix, keepPaths: [], log });
+      // Data exports prepared for the user (bucket us-exports, <uid>/).
+      if (exportsStorage) await cleanupStoragePrefix({ storage: exportsStorage, prefix: `${uid}/`, keepPaths: [], log });
     } catch (error) {
       const code = error instanceof DeletionError ? error.code : 'storage_failed';
       log({ step: 'storage_cleanup', outcome: 'error', code });
@@ -361,7 +364,8 @@ export async function handleDeleteAccount({ method, origin, authorization, readB
   }
 
   const storage = client.storage.from(STORAGE_BUCKET);
-  const finish = await finishAccountDeletion({ uid, admin: adminApi, storage, rpc, log, plan });
+  const exportsStorage = client.storage.from(EXPORTS_BUCKET);
+  const finish = await finishAccountDeletion({ uid, admin: adminApi, storage, rpc, log, plan, exportsStorage });
   if (finish.status === 'deleted') return { status: 200, body: { status: 'deleted' } };
   return { status: 202, body: { status: 'pending_cleanup' } };
 }
@@ -375,7 +379,10 @@ export const WORKER_MAX_BATCH = 50;
 // dedicated Vault key (same pattern as the other workers), inert while the
 // feature flag is off. Works only on user ids read from the private receipts,
 // never on ids from the request. Also purges receipts past their retention.
-export async function runDeletionWorker({ method, cronKey, readBody, env, createClient, log = noop }) {
+// afterPurge (optional): further lifecycle steps run with the same
+// authenticated client (leave-the-couple retries, expired exports); its
+// result is merged into the response body.
+export async function runDeletionWorker({ method, cronKey, readBody, env, createClient, log = noop, afterPurge = /** @type {any} */ (null) }) {
   if (!isDeletionEnabled(env)) return { status: 503, body: { error: 'deletion_disabled' } };
   if (method !== 'POST') return { status: 405, body: { error: 'method_not_allowed' } };
   const presented = String(cronKey || '').trim();
@@ -402,13 +409,14 @@ export async function runDeletionWorker({ method, cronKey, readBody, env, create
     return { status: 500, body: { error: 'claim_failed' } };
   }
   const storage = client.storage.from(STORAGE_BUCKET);
+  const exportsStorage = afterPurge ? client.storage.from(EXPORTS_BUCKET) : null;
   const counts = { claimed: 0, deleted: 0, pending: 0, skipped: 0 };
   for (const uid of claimed.data) {
     if (!UUID.test(String(uid || ''))) { counts.skipped++; continue; }
     counts.claimed++;
     let res;
     try {
-      res = await finishAccountDeletion({ uid, admin: client.auth.admin, storage, rpc, log });
+      res = await finishAccountDeletion({ uid, admin: client.auth.admin, storage, rpc, log, exportsStorage });
     } catch {
       res = { status: 'pending_cleanup' };
     }
@@ -420,6 +428,15 @@ export async function runDeletionWorker({ method, cronKey, readBody, env, create
   const purge = await callRpc(rpc, 's32_purge_account_deletion_receipts', undefined);
   log({ step: 'worker_purge', outcome: purge.error ? 'error' : 'ok', code: purge.error });
   const purged = Number.isInteger(purge.data) ? purge.data : 0;
+  let extra = {};
+  if (typeof afterPurge === 'function') {
+    try {
+      extra = (await afterPurge({ client, rpc, limit, log })) || {};
+    } catch {
+      log({ step: 'worker_extra', outcome: 'error' });
+      extra = { extra_failed: true };
+    }
+  }
   log({ step: 'worker_done', outcome: 'ok' });
-  return { status: 200, body: { ...counts, purged_receipts: purged } };
+  return { status: 200, body: { ...counts, purged_receipts: purged, ...extra } };
 }
