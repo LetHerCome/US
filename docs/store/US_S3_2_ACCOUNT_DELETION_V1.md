@@ -66,7 +66,7 @@ Il fondatore ha approvato Policy A. Le altre voci del piano (D-1…D-19) non han
 ## 6. Cosa manca prima della produzione
 
 1. **Staging:** applicare la migrazione, distribuire `delete-account` con `US_ACCOUNT_DELETION_ENABLED=true` e `US_ALLOWED_ORIGINS` dell'anteprima, poi provare con **4 account sintetici dichiarati usa-e-getta** (mai gli account del collaudo push): uscita di un membro, ultimo membro, partner che vede l'archivio, Storage ripulito. Verifica P-1: `deleteUser` riesce anche se restano oggetti posseduti dall'utente (in caso contrario: azzerare `owner`/`owner_id` degli oggetti conservati prima di `deleteUser`). Nessun agente in questa sessione ha credenziali di staging.
-2. **Indirizzo email di supporto/privacy e nome dello sviluppatore** come nella scheda Play (segnaposto nel codice).
+2. **Email di supporto/privacy:** `moonee.team@gmail.com` (fondatore, 14/10; da sostituire quando c'è il dominio). **Nome dello sviluppatore** come nella scheda Play: ancora segnaposto nel codice.
 3. **Revisione legale** di Policy A, informativa e pagina (D-10).
 4. **Pulizia cache altrui:** URL firmate già emesse (6 h; 24 h per il widget) e cache media del service worker restano valide fino alla scadenza (residuo dichiarato).
 5. Etichetta "Account eliminato" e banner per il partner.

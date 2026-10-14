@@ -103,12 +103,12 @@ test('every server response maps to one outcome and message', async () => {
   assert.deepEqual(network, { kind: 'network', done: false });
 });
 
-test('support email and developer name are TODO placeholders defined once', () => {
-  assert.equal(deletion.US_SUPPORT_EMAIL, 'privacy@us-app.invalid');
+test('support email is the founder address, developer name a TODO, both defined once', () => {
+  assert.equal(deletion.US_SUPPORT_EMAIL, 'moonee.team@gmail.com');
   const shared = read('account-deletion.js');
   assert.match(shared, /TODO founder/);
   for (const file of ['settings.js', 'elimina-account.html', 'elimina-account.js', 'app.js', 'index.html']) {
-    assert.doesNotMatch(read(file), /privacy@us-app\.invalid|@us-app/, file);
+    assert.doesNotMatch(read(file), /moonee\.team@gmail\.com|@us-app/, file);
   }
 });
 

@@ -1,0 +1,23 @@
+/* US Store S3.1 — progressive account entry, same auth-card design system. */
+#usPublicAuthActions[hidden]{display:none!important}
+.us-public-auth-form .us-auth-lede{max-width:315px}
+.us-public-auth-form .us-public-auth-back{
+  display:block;
+  width:100%;
+  text-align:center;
+  margin-top:6px;
+  color:var(--us-color-text-2);
+}
+.us-public-auth-form .auth-status{min-height:25px}
+.us-public-auth-form input:focus-visible,
+.us-public-auth-form button:focus-visible,
+#usPublicAuthActions button:focus-visible{
+  outline:2px solid var(--us-color-rose-2,#ffa9cb);
+  outline-offset:2px;
+}
+@media (max-height:580px){
+  .auth-card{max-height:calc(100dvh - max(20px,var(--us-safe-top) + var(--us-safe-bottom)))}
+}
+@media (prefers-reduced-motion:reduce){
+  .us-public-auth-form,.us-public-auth-form *{transition:none!important;animation:none!important}
+}
