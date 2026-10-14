@@ -166,12 +166,46 @@ html.us-returning-device .auth-overlay{
 
 <div class="auth-overlay" id="authOverlay">
   <div class="auth-card" role="region" aria-label="Accesso a US">
+    <div class="us-auth-brand" aria-hidden="true"><svg class="us-duo-mark" viewBox="0 0 58 36" focusable="false"><circle class="us-duo-a" cx="20" cy="18" r="15"/><circle class="us-duo-b" cx="38" cy="18" r="15"/><path class="us-duo-n" d="M29 6a15 15 0 0 1 0 24 15 15 0 0 1 0-24z"/></svg></div>
     <div class="auth-logo us-brand-symbol" aria-label="US"><img class="us-brand-symbol-art" src="/assets/derived/runtime/us-symbol-256-v1.png" alt="" aria-hidden="true"></div>
     <div class="us-auth-context" aria-label="Il vostro spazio privato"><span>Voi</span><span aria-hidden="true">♡</span><span>due</span></div>
 
+    <!-- First run (dc-primo): three cards before the account, only on a phone where nobody has signed in yet. Static, no network. -->
+    <section class="us-tour" id="usTour" hidden aria-label="Come funziona US">
+      <button type="button" class="us-tour-skip" id="usTourSkip">Salta</button>
+      <div class="us-tour-view" role="region" aria-roledescription="carosello" aria-label="Come funziona US">
+        <div class="us-tour-track" id="usTourTrack" tabindex="0">
+          <section class="us-tour-slide" role="group" aria-roledescription="scheda" aria-label="1 di 3">
+            <div class="us-tour-vis" aria-hidden="true"><svg viewBox="0 0 240 180" focusable="false"><circle class="t1-w" cx="120" cy="90" r="60"/><circle class="t1-a" cx="92" cy="90" r="54"/><circle class="t1-b" cx="148" cy="90" r="54"/><path class="t1-n" d="M120 43.83A54 54 0 0 1 120 136.17A54 54 0 0 1 120 43.83Z"/></svg></div>
+            <h2>Uno spazio <em>solo vostro</em></h2>
+            <p class="us-auth-lede">US è per due persone e basta. Niente pubblico e niente feed: quello che condividete resta tra voi.</p>
+          </section>
+          <section class="us-tour-slide" role="group" aria-roledescription="scheda" aria-label="2 di 3">
+            <div class="us-tour-vis" aria-hidden="true"><svg viewBox="0 0 240 170" focusable="false"><path class="t2-arc" d="M70 46Q120 2 170 46"/><circle class="t2-a" cx="46" cy="54" r="22"/><circle class="t2-b" cx="194" cy="54" r="22"/><path class="t2-h" transform="translate(108.4 14.3) scale(1.35)" d="M8.6 14.4S0 9.8 0 4.6C0 1.9 2 0 4.4 0c1.8 0 3.4 1 4.2 2.6C9.4 1 11 0 12.8 0c2.4 0 4.4 1.9 4.4 4.6 0 5.2-8.6 9.8-8.6 9.8z"/><rect class="t2-bl" x="8" y="100" width="108" height="62" rx="18"/><rect class="t2-br" x="124" y="100" width="108" height="62" rx="18"/><rect class="t2-l" x="22" y="117" width="74" height="8" rx="4"/><rect class="t2-l" x="22" y="133" width="50" height="8" rx="4"/><rect class="t2-l" x="138" y="117" width="78" height="8" rx="4"/><rect class="t2-l" x="138" y="133" width="56" height="8" rx="4"/><circle class="t2-d" cx="50" cy="131" r="3.5"/><circle class="t2-d" cx="62" cy="131" r="3.5"/><circle class="t2-d" cx="74" cy="131" r="3.5"/><circle class="t2-d" cx="166" cy="131" r="3.5"/><circle class="t2-d" cx="178" cy="131" r="3.5"/><circle class="t2-d" cx="190" cy="131" r="3.5"/></svg></div>
+            <h2>Un gesto <em>al giorno</em></h2>
+            <p class="us-auth-lede">Una domanda ogni giorno: le risposte si svelano quando avete risposto entrambi. E un Ti penso quando vuoi, con un tocco.</p>
+          </section>
+          <section class="us-tour-slide" role="group" aria-roledescription="scheda" aria-label="3 di 3">
+            <div class="us-tour-vis" aria-hidden="true"><div class="t3-ring"><svg viewBox="0 0 150 150" focusable="false"><circle class="t3-tr" cx="75" cy="75" r="64"/><circle class="t3-r" cx="75" cy="75" r="64" pathLength="100"/><circle class="us-duo-a" cx="64" cy="75" r="19"/><circle class="us-duo-b" cx="86" cy="75" r="19"/><path class="us-duo-n" d="M75 59.51A19 19 0 0 1 75 90.49A19 19 0 0 1 75 59.51Z"/></svg></div><span class="t3-x">+35 XP</span><span class="t3-c"><i></i>Livello 5 · Intesa rara</span></div>
+            <h2>Crescete <em>insieme</em></h2>
+            <p class="us-auth-lede">Ricordi, calendario e giochi. Più vivete insieme, più cresce la vostra Sintonia e si sbloccano sorprese.</p>
+          </section>
+        </div>
+      </div>
+      <div class="us-tour-dots" id="usTourDots">
+        <button type="button" data-us-tour-dot="0" aria-label="Scheda 1"></button>
+        <button type="button" data-us-tour-dot="1" aria-label="Scheda 2"></button>
+        <button type="button" data-us-tour-dot="2" aria-label="Scheda 3"></button>
+      </div>
+      <div class="us-tour-actions">
+        <button type="button" class="primary us-auth-primary" id="usTourNext">Avanti</button>
+        <button type="button" class="us-auth-link" id="usTourLogin">Ho già un account</button>
+      </div>
+    </section>
+
     <div class="auth-step active" id="authLogin">
       <div class="tiny">US · SPAZIO PRIVATO</div>
-      <h2>Bentornato</h2>
+      <h2>Eccoti <em>di nuovo</em></h2>
       <p class="us-auth-lede">Accedi con la tua email e password.</p>
 
       <label class="us-auth-field" for="loginEmail"><span>Email</span><input id="loginEmail" type="email" inputmode="email" autocomplete="email" placeholder="tua@email.com"></label>
@@ -185,10 +219,10 @@ html.us-returning-device .auth-overlay{
     </div>
     <form class="auth-step us-public-auth-form" id="usSignup" aria-labelledby="usSignupHeading">
       <div class="tiny">US · INIZIATE DA QUI</div>
-      <h2 id="usSignupHeading">Crea il tuo account</h2>
+      <h2 id="usSignupHeading">Crea il tuo <em>account</em></h2>
       <p class="us-auth-lede">Un'email per te. Dopo la verifica potrai creare il vostro spazio o accettare un invito.</p>
-      <label class="us-auth-field" for="usSignupEmail"><span>Email</span><input id="usSignupEmail" type="email" inputmode="email" autocomplete="email" maxlength="254" required></label>
-      <label class="us-auth-field" for="usSignupPassword"><span>Password (almeno 10 caratteri)</span><input id="usSignupPassword" type="password" autocomplete="new-password" minlength="10" maxlength="72" required></label>
+      <label class="us-auth-field" for="usSignupEmail"><span>Email</span><input id="usSignupEmail" type="email" inputmode="email" autocomplete="email" maxlength="254" placeholder="tua@email.com" required></label>
+      <label class="us-auth-field" for="usSignupPassword"><span>Password · almeno 10 caratteri</span><input id="usSignupPassword" type="password" autocomplete="new-password" minlength="10" maxlength="72" required></label>
       <label class="us-auth-field" for="usSignupConfirm"><span>Conferma password</span><input id="usSignupConfirm" type="password" autocomplete="new-password" minlength="10" maxlength="72" required></label>
       <button class="primary us-auth-primary" id="usSignupSubmit" type="submit">Registrati</button>
       <p class="auth-status" id="usSignupStatus" role="status" aria-live="polite"></p>
@@ -196,24 +230,25 @@ html.us-returning-device .auth-overlay{
     </form>
     <section class="auth-step us-public-auth-form" id="usVerifyEmail" aria-labelledby="usVerifyHeading">
       <div class="tiny">US · UN ULTIMO PASSO</div>
-      <h2 id="usVerifyHeading">Verifica la tua email</h2>
+      <h2 id="usVerifyHeading">Verifica la tua <em>email</em></h2>
+      <span class="us-auth-icon us-auth-icon--mail" aria-hidden="true"></span>
       <p class="us-auth-lede">Apri il messaggio ricevuto, verifica il tuo indirizzo e torna qui per accedere. Controlla anche lo spam.</p>
       <p class="auth-status" id="usVerifyStatus" role="status" aria-live="polite"></p>
-      <button type="button" class="primary us-auth-primary" id="usVerifyResend">Invia di nuovo l'email</button>
       <button type="button" class="us-auth-link us-public-auth-back" id="usVerifyBack">Torna all'accesso</button>
+      <button type="button" class="primary us-auth-primary" id="usVerifyResend">Invia di nuovo l'email</button>
     </section>
     <form class="auth-step us-public-auth-form" id="usForgotPassword" aria-labelledby="usForgotHeading">
       <div class="tiny">US · RECUPERO</div>
-      <h2 id="usForgotHeading">Recupera l'accesso</h2>
+      <h2 id="usForgotHeading">Recupera <em>l'accesso</em></h2>
       <p class="us-auth-lede">Ti invieremo un collegamento se l'indirizzo è associato a un account.</p>
-      <label class="us-auth-field" for="usForgotEmail"><span>Email</span><input type="email" id="usForgotEmail" autocomplete="email" inputmode="email" maxlength="254" required></label>
+      <label class="us-auth-field" for="usForgotEmail"><span>Email</span><input type="email" id="usForgotEmail" autocomplete="email" inputmode="email" maxlength="254" placeholder="tua@email.com" required></label>
       <button type="submit" id="usForgotSubmit" class="primary us-auth-primary">Invia istruzioni</button>
       <p class="auth-status" id="usForgotStatus" role="status" aria-live="polite"></p>
       <button type="button" class="us-auth-link us-public-auth-back" id="usForgotBack">Torna all'accesso</button>
     </form>
     <form class="auth-step us-public-auth-form" id="usRecovery" aria-labelledby="usRecoveryHeading">
       <div class="tiny">US · NUOVA PASSWORD</div>
-      <h2 id="usRecoveryHeading">Scegli la nuova password</h2>
+      <h2 id="usRecoveryHeading">Scegli la <em>nuova password</em></h2>
       <p class="us-auth-lede">Questa schermata è disponibile soltanto dopo aver aperto un link di recupero valido.</p>
       <label class="us-auth-field" for="usRecoveryPassword"><span>Nuova password</span><input type="password" id="usRecoveryPassword" autocomplete="new-password" minlength="10" maxlength="72" required></label>
       <label class="us-auth-field" for="usRecoveryConfirm"><span>Conferma password</span><input type="password" id="usRecoveryConfirm" autocomplete="new-password" minlength="10" maxlength="72" required></label>
@@ -222,40 +257,60 @@ html.us-returning-device .auth-overlay{
     </form>
 
     <section class="auth-step" id="usOnboarding" aria-labelledby="mc3Title">
-      <div class="tiny">US · SPAZIO PRIVATO</div>
+      <div class="tiny" id="mc3Kicker">US · SPAZIO PRIVATO</div>
+      <div class="us-ob-progress" id="mc3Progress" aria-hidden="true" hidden><i></i></div>
       <h2 id="mc3Title" tabindex="-1">Il vostro US, da qui</h2>
       <p class="us-auth-lede" id="mc3Copy"></p>
-      <div id="mc3Choice" class="mc3-actions">
-        <button type="button" id="mc3ChooseCreate" class="primary us-auth-primary">Crea il nostro US</button>
-        <button type="button" id="mc3ChooseJoin">Ho un codice d’invito</button>
+      <form id="mc3Me" hidden novalidate>
+        <label class="us-auth-field" for="mc3Name"><span>Il tuo nome</span><input id="mc3Name" autocomplete="given-name" autocapitalize="words" required></label>
+        <fieldset class="us-ob-bday" aria-describedby="mc3BirthHelp">
+          <legend>Il tuo compleanno · facoltativo</legend>
+          <div class="us-ob-bday-row">
+            <span class="us-ob-select"><select id="mc3BirthDay" aria-label="Giorno del compleanno"><option value="">Giorno</option></select></span>
+            <span class="us-ob-select"><select id="mc3BirthMonth" aria-label="Mese del compleanno"><option value="">Mese</option></select></span>
+          </div>
+          <p class="mc3-help" id="mc3BirthHelp">Solo giorno e mese. Lo aggiungiamo al vostro calendario, ogni anno.</p>
+        </fieldset>
+        <button type="submit" class="primary us-auth-primary" id="mc3MeNext">Continua</button>
+      </form>
+      <div id="mc3Choice" class="mc3-actions us-ob-pick">
+        <button type="button" id="mc3ChooseCreate" class="us-ob-pick-card"><svg class="us-duo-mark" viewBox="0 0 58 36" aria-hidden="true" focusable="false"><circle class="us-duo-a" cx="20" cy="18" r="15"/><circle class="us-duo-b" cx="38" cy="18" r="15"/><path class="us-duo-n" d="M29 6a15 15 0 0 1 0 24 15 15 0 0 1 0-24z"/></svg><span class="us-ob-pick-copy"><b>Crea il nostro US</b><small>Inizi tu, poi inviti la tua persona</small></span></button>
+        <button type="button" id="mc3ChooseJoin" class="us-ob-pick-card"><span class="us-ob-pick-icon" aria-hidden="true"></span><span class="us-ob-pick-copy"><b>Ho un codice d’invito</b><small>La tua persona ha già creato lo spazio</small></span></button>
+        <button type="button" id="mc3BackMe" class="mc3-back us-auth-link">Indietro</button>
       </div>
       <form id="mc3Create" hidden>
-        <label class="us-auth-field" for="mc3CreateName"><span>Come ti chiami?</span><input id="mc3CreateName" autocomplete="given-name" required></label>
-        <label class="us-auth-field" for="mc3Date"><span>Da quando siete insieme?</span><input id="mc3Date" type="date" min="1900-01-01" required aria-describedby="mc3DateHelp"></label>
+        <label class="us-auth-field" for="mc3CreateName" hidden><span>Come ti chiami?</span><input id="mc3CreateName" autocomplete="off" tabindex="-1"></label>
+        <label class="us-auth-field" for="mc3Date"><span>Insieme dal</span><input id="mc3Date" type="date" min="1900-01-01" required aria-describedby="mc3DateHelp"></label>
         <p class="mc3-help" id="mc3DateHelp">La vostra data, per contare i giorni insieme. Scegli una data dal 1900 a oggi.</p>
-        <label class="us-auth-field" for="mc3CoupleName"><span>Nome del vostro spazio (facoltativo)</span><input id="mc3CoupleName" placeholder="US." autocomplete="off"></label>
+        <label class="us-auth-field" for="mc3CoupleName"><span>Nome del vostro spazio · facoltativo</span><input id="mc3CoupleName" placeholder="US." autocomplete="off"></label>
         <button type="submit" class="primary us-auth-primary">Crea il nostro spazio</button>
         <button type="button" id="mc3BackCreate" class="mc3-back">Indietro</button>
       </form>
       <form id="mc3Join" hidden>
-        <label class="us-auth-field" for="mc3JoinName"><span>Come ti chiami?</span><input id="mc3JoinName" autocomplete="given-name" required></label>
-        <label class="us-auth-field" for="mc3JoinCode"><span>Codice d’invito</span><input id="mc3JoinCode" autocomplete="off" autocapitalize="characters" spellcheck="false" required aria-describedby="mc3CodeHelp"></label>
+        <label class="us-auth-field" for="mc3JoinName" hidden><span>Come ti chiami?</span><input id="mc3JoinName" autocomplete="off" tabindex="-1"></label>
+        <label class="us-auth-field" for="mc3JoinCode"><span>Codice d’invito</span><input id="mc3JoinCode" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="26 caratteri" required aria-describedby="mc3CodeHelp"></label>
         <p class="mc3-help" id="mc3CodeHelp">Puoi incollare il codice con spazi o trattini.</p>
         <button type="submit" class="primary us-auth-primary">Entra nel nostro US</button>
         <button type="button" id="mc3BackJoin" class="mc3-back">Indietro</button>
       </form>
+      <div id="mc3Color" class="us-ob-color" hidden>
+        <div class="us-ob-venn" id="mc3Venn" aria-hidden="true"></div>
+        <p class="us-auth-lede" id="mc3ColorCopy"></p>
+        <button type="button" id="mc3ColorNext" class="primary us-auth-primary">Invita la tua persona</button>
+      </div>
       <div id="mc3Waiting" hidden>
         <p id="mc3InviteStatus" class="mc3-help"></p>
         <div id="mc3CodeArea" hidden>
           <label class="us-auth-field" for="mc3Code"><span>Il nuovo codice</span><textarea id="mc3Code" readonly autocomplete="off" spellcheck="false" rows="2"></textarea></label>
           <button type="button" id="mc3CopyCode">Copia codice</button>
         </div>
-        <p class="mc3-help">Il codice compare solo quando lo crei. Generarne uno nuovo invalida il precedente. Condividilo soltanto con la tua persona.</p>
+        <p class="mc3-help us-ob-invite-help">Il codice compare solo quando lo crei. Generarne uno nuovo invalida il precedente. Condividilo soltanto con la tua persona.</p>
         <div class="mc3-actions">
           <button type="button" id="mc3Generate" class="primary us-auth-primary">Crea invito</button>
           <button type="button" id="mc3Revoke" hidden>Revoca codice</button>
           <button type="button" id="mc3Refresh">Verifica accesso partner</button>
         </div>
+        <p class="mc3-help us-ob-note">Puoi chiudere US: quando la riapri, riprendi da qui.</p>
       </div>
       <p id="mc3Status" class="auth-status" role="status" aria-live="polite"></p>
       <button type="button" id="mc3Retry" hidden>Riprova</button>
@@ -268,6 +323,38 @@ html.us-returning-device .auth-overlay{
       </div>
       <p class="us-auth-install-help" id="usAuthInstallHelp" hidden>Su Safari tocca Condividi, poi “Aggiungi alla schermata Home”.</p>
     </section>
+  </div>
+</div>
+
+<!-- First run (dc-primo): set up this phone once, after pairing (after onboarding here, or after
+     an email and password sign-in on a new phone). Opens only once US is unlocked and paired. -->
+<div class="us-setup" id="usDeviceSetup" role="dialog" aria-modal="true" aria-labelledby="usSetupTitle" hidden>
+  <div class="us-setup-card">
+    <div class="us-auth-brand" aria-hidden="true"><svg class="us-duo-mark" viewBox="0 0 58 36" focusable="false"><circle class="us-duo-a" cx="20" cy="18" r="15"/><circle class="us-duo-b" cx="38" cy="18" r="15"/><path class="us-duo-n" d="M29 6a15 15 0 0 1 0 24 15 15 0 0 1 0-24z"/></svg></div>
+    <p class="tiny" id="usSetupKicker"></p>
+    <div class="us-ob-progress" id="usSetupProgress" aria-hidden="true"><i></i></div>
+    <div class="us-setup-body" id="usSetupBody">
+      <h2 id="usSetupTitle" tabindex="-1"></h2>
+      <div class="us-ob-venn" id="usSetupVenn" aria-hidden="true" hidden></div>
+      <div class="us-setup-push" id="usSetupPushVis" aria-hidden="true" hidden>
+        <div class="us-setup-note"><span class="us-setup-note-icon"></span><span><small>US · adesso</small><b id="usSetupPushPartner">La tua persona ti pensa ♡</b>Tocca per rispondere.</span></div>
+        <div class="us-setup-note"><span class="us-setup-note-icon"></span><span><small>US · 2 min fa</small><b>Le vostre risposte sono pronte</b>Si svelano insieme.</span></div>
+      </div>
+      <div class="us-setup-place" id="usSetupPlaceVis" aria-hidden="true" hidden><svg viewBox="0 14 280 92" focusable="false"><circle class="pl-h pl-hr" cx="40" cy="60" r="30"/><circle class="pl-h pl-hl" cx="240" cy="60" r="30"/><g class="pl-ln"><path class="pl-line" d="M62 60H218"/></g><circle class="pl-d us-duo-a" cx="40" cy="60" r="9"/><circle class="pl-d us-duo-b" cx="240" cy="60" r="9"/></svg><span class="pl-chip"><i class="pl-chip-icon"></i></span></div>
+      <p class="us-auth-lede" id="usSetupCopy"></p>
+      <ul class="us-setup-points" id="usSetupPoints" hidden>
+        <li><span class="us-setup-point-icon us-setup-point-icon--distance" aria-hidden="true"></span><span><b>Solo la distanza</b><span id="usSetupPointPartner">La tua persona vede solo la distanza, mai dove sei.</span></span></li>
+        <li><span class="us-setup-point-icon us-setup-point-icon--pin" aria-hidden="true"></span><span><b>Approssimata</b>Solo mentre US è aperta. Sotto i 3 km vedete solo «vicini».</span></li>
+        <li><span class="us-setup-point-icon us-setup-point-icon--lock" aria-hidden="true"></span><span><b>Decidi tu</b>La spegni e la cancelli quando vuoi.</span></li>
+      </ul>
+      <ul class="us-setup-ready" id="usSetupReady" hidden></ul>
+      <p class="auth-status" id="usSetupStatus" role="status" aria-live="polite"></p>
+      <div class="us-setup-actions">
+        <button type="button" class="primary us-auth-primary" id="usSetupPrimary">Continua</button>
+        <button type="button" class="us-setup-secondary" id="usSetupSecondary" hidden>Non ora</button>
+      </div>
+    </div>
+    <div class="us-setup-intro" id="usSetupIntro" aria-hidden="true" hidden><span class="c a"></span><span class="c b"></span><span class="logo"></span><span class="word">il vostro spazio</span></div>
   </div>
 </div>
 

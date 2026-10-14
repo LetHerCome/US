@@ -863,6 +863,10 @@ const usOnboarding=window.UsOnboarding.mount({
     return name==='get_couple_membership'?usWithDeadline(request,5000):request;
   },
   resume:()=>{setTimeout(initCloud,0);},
+  // First run: the tour hands over to these steps; the optional birthday from
+  // the "Tu" step is one yearly event, through the same insert as events.js.
+  openStep:id=>showAuthStep(id),
+  insertEvent:row=>sb.from('shared_events').insert(row),
   signOut:async()=>{
     const revocation=revokeCurrentDevice();
     usInvalidateAuth({revokePush:false});
@@ -892,6 +896,7 @@ function usInvalidateAuth({revokePush=true}={}){
     const layer=document.getElementById(id);if(layer)layer.style.backgroundImage='';
   }
   usOnboarding.reset();
+  usOnboarding.setup?.close?.();
   resetNoiIdeasForIdentityChange();
   window.usProfile=null;
   usApplyPersonColor(null);
@@ -1002,6 +1007,7 @@ async function initCloud(){
     }
 
     usAuthUserId=session?.user?.id||'';
+    if(session)usOnboarding.tour?.markSeen?.();
     if(!session){
       usOnboarding.reset();
       // No session on this phone: nothing left to protect, the login is the way in.
@@ -1027,6 +1033,7 @@ async function initCloud(){
           : 'Sei offline. Riconnettiti per accedere.',
         navigator.onLine?'neutral':'error'
       );
+      usOnboarding.tour?.maybeOpen?.({returningDevice});
       window.dispatchEvent(new CustomEvent('us-auth-resolved',{detail:{paired:false,returningDevice}}));
       return;
     }
@@ -1058,6 +1065,9 @@ async function initCloud(){
     window.UsNotifications?.authReady?.(profile)?.catch?.(error=>console.warn('[US Notifications] auth ready',error));
     selectedRole = profile.role;
     try{localStorage.setItem('us:fix4:last-profile',JSON.stringify(profile));}catch(_e){}
+    // First run: once per user on this phone, after onboarding here or a
+    // password sign-in in this tab. Never for a session restored at launch.
+    usOnboarding.setup?.maybeOpen?.(profile)?.catch?.(error=>console.warn('[US Setup] open',error));
     document.getElementById('authOverlay').classList.add('hidden');
     document.documentElement.classList.remove('us-auth-pending');
     document.documentElement.classList.add('us-auth-ready','us-returning-device');
@@ -1103,6 +1113,7 @@ function setAuthStatus(id,message='',kind='neutral'){
 window.setAuthStatus=setAuthStatus;
 
 function showAuthStep(id){
+  if(id!=='authLogin')usOnboarding.tour?.close?.();
   document.querySelectorAll('.auth-step').forEach(x=>x.classList.remove('active'));
   const next=document.getElementById(id);
   if(next)next.classList.add('active');
@@ -1424,12 +1435,17 @@ async function openLocationDisclosure(){
     cancelLabel:'Non ora'
   });
   if(!ok)return false;
+  return startLocationSharing();
+}
+window.openLocationDisclosure=openLocationDisclosure;
+// What "Attiva" does once the person has read the explanation (here, or in
+// the first-run Posizione step, which shows the same facts).
+function startLocationSharing(){
   setLocationConsent(true);
   usLocationRuntime.lastFailureAt=0;
   refreshMyLocation({});
   return true;
 }
-window.openLocationDisclosure=openLocationDisclosure;
 
 // "Smetti e cancella": consent off on this phone, saved reading deleted.
 async function stopSharingLocation(){
@@ -1475,6 +1491,7 @@ async function openLocationSettings(){
 window.UsLocation=Object.freeze({
   openSettings:openLocationSettings,
   isSharing:locationSharingActive,
+  start:startLocationSharing,
   stop:stopSharingLocation
 });
 
@@ -1997,8 +2014,9 @@ async function loginAccount(){
   btn.disabled=true;
   setAuthStatus('loginStatus','Accesso…');
   try{
-    const {error}=await sb.auth.signInWithPassword({email,password});
+    const {data,error}=await sb.auth.signInWithPassword({email,password});
     if(error) throw error;
+    usOnboarding.setup?.markPasswordSignIn?.(data?.user?.id||data?.session?.user?.id||'');
     document.getElementById('loginPassword').value='';
     await initCloud();
   }catch(err){

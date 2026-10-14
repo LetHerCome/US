@@ -1,1 +1,855 @@
 /* Due colori, un Noi — primo avvio e accesso. Area layer on top of due-colori.css (approved design, 2026-10-14). */
+/* Screens before the app (login, account, onboarding, the tour), the one-time
+   phone setup after pairing (#usDeviceSetup) and the lock screen. Night canvas,
+   the two circles as brand mark, Fraunces titles with one italic word in my
+   colour, pill buttons with dark ink. Legacy layers (auth-first-run.css,
+   identity.css, fix4.css, onboarding.css) are overridden here, never edited. */
+
+/* ---------- Shared pieces ---------- */
+.us-duo-a{fill:var(--us-rosa)}
+.us-duo-b{fill:var(--us-lilla)}
+.us-duo-n{fill:var(--us-noi)}
+.us-duo-mark{display:block;width:54px;height:34px;flex:none;overflow:visible}
+
+/* While onboarding, before the couple exists, the creator is rosa. */
+html.us-onboarding-active .auth-overlay{--us-tu:var(--us-rosa);--us-partner:var(--us-lilla)}
+html.us-onboarding-active .auth-overlay[data-us-tone="beatrice"]{--us-tu:var(--us-lilla);--us-partner:var(--us-rosa)}
+
+/* ---------- The front door: full screen night, one column ---------- */
+.auth-overlay,
+html.us-onboarding-active .auth-overlay{
+  display:block;
+  padding:0;
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  background:var(--us-color-bg);
+  color:var(--us-color-text);
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+}
+html.us-onboarding-active .auth-overlay{display:block!important}
+.auth-overlay.hidden{display:none}
+
+html .auth-overlay .auth-card,
+.us-setup-card{
+  --us-auth-top:calc(max(14px,var(--us-safe-top,0px)) + 14px);
+  --us-auth-side-l:max(22px,var(--us-safe-left,0px));
+  --us-auth-side-r:max(22px,var(--us-safe-right,0px));
+  position:relative;
+  isolation:auto;
+  display:flex;
+  flex-direction:column;
+  width:min(100%,460px);
+  min-width:0;
+  min-height:100%;
+  max-height:none;
+  margin:0 auto;
+  padding:var(--us-auth-top) var(--us-auth-side-r) calc(max(12px,var(--us-safe-bottom,0px)) + 14px) var(--us-auth-side-l);
+  overflow:visible;
+  border:0!important;
+  border-radius:0;
+  background:transparent!important;
+  box-shadow:none;
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+}
+html .auth-overlay .auth-card::before{display:none}
+.auth-overlay .auth-logo,
+.auth-overlay .us-auth-context{display:none!important}
+
+.us-auth-brand{display:flex;align-items:center;height:36px;flex:none}
+
+/* Eyebrow: top right, in line with the two circles. */
+html .auth-overlay .auth-step>.tiny,
+.us-setup-card>.tiny{
+  position:absolute;
+  top:var(--us-auth-top);
+  right:var(--us-auth-side-r);
+  max-width:calc(100% - 120px);
+  height:36px;
+  margin:0;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  text-align:right;
+  color:var(--us-color-text);
+  font:700 11px/1.2 var(--us-font-ui);
+  letter-spacing:.14em;
+  text-transform:uppercase;
+}
+
+/* The numbered first-run steps: Tu · Voi · Notifiche · Posizione. */
+.us-ob-progress{
+  position:absolute;
+  left:var(--us-auth-side-l);
+  right:var(--us-auth-side-r);
+  top:calc(var(--us-auth-top) + 50px);
+  height:3px;
+  border-radius:3px;
+  background:var(--us-color-line);
+  overflow:hidden;
+}
+#usOnboarding .us-ob-progress[hidden]{display:none!important}
+.us-ob-progress i{
+  display:block;
+  height:100%;
+  width:calc(var(--us-progress,0) * 100%);
+  border-radius:inherit;
+  background:var(--us-tu);
+  transition:width .6s var(--us-ease-standard),background-color .4s var(--us-ease-standard);
+}
+
+/* Steps: the content sits in the middle, a "go back" link at the bottom. */
+html .auth-overlay .auth-step{display:none}
+html .auth-overlay .auth-step.active{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  flex:1 0 auto;
+  gap:14px;
+  padding:26px 0 14px;
+  min-width:0;
+}
+html .auth-overlay #usOnboarding.active{padding-top:44px}
+#usSignup>h2,#usForgotPassword>h2,#usOnboarding>h2{margin-top:auto}
+html .auth-overlay #usSignupBack,
+html .auth-overlay #usForgotBack,
+html .auth-overlay #mc3Exit{margin-top:auto}
+
+/* Type. */
+html .auth-overlay .auth-card h2,
+.us-setup h2{
+  margin:0;
+  max-width:100%;
+  color:var(--us-color-text);
+  font:400 44px/1 var(--us-font-display);
+  letter-spacing:-.02em;
+  text-align:left;
+  text-wrap:balance;
+  overflow-wrap:break-word;
+}
+html .auth-overlay #usOnboarding h2,
+.us-setup h2{font-size:40px}
+html .auth-overlay .auth-card h2 em,
+.us-setup h2 em{font-style:italic;color:var(--us-tu)}
+html .auth-overlay .auth-card h2:focus{outline:none}
+html .auth-overlay .auth-card h2:focus-visible,
+.us-setup h2:focus-visible{outline:2px solid var(--us-noi);outline-offset:4px;border-radius:6px}
+html .auth-overlay .auth-card .us-auth-lede,
+.us-setup .us-auth-lede{
+  max-width:none;
+  margin:0;
+  text-align:left;
+  color:var(--us-color-text-2);
+  font:400 16px/1.5 var(--us-font-ui);
+}
+.us-setup .us-auth-lede:empty{display:none}
+
+/* Fields. */
+html .auth-overlay .us-auth-field{display:grid;gap:6px;margin:0;min-width:0}
+html .auth-overlay .us-auth-field>span,
+html .auth-overlay .us-ob-bday legend{
+  display:block;
+  margin:0;
+  padding:0;
+  color:var(--us-color-text-3);
+  font:700 12px/1.25 var(--us-font-ui);
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+html .auth-overlay .auth-card input,
+html .auth-overlay .auth-card textarea,
+html .auth-overlay .auth-card select{
+  width:100%;
+  min-height:52px;
+  margin:0;
+  padding:0 14px;
+  border-radius:16px;
+  background:var(--us-color-bg)!important;
+  border:1px solid var(--us-color-line-strong)!important;
+  color:var(--us-color-text);
+  font:400 16px/1.3 var(--us-font-ui);
+  box-shadow:none;
+  color-scheme:dark;
+}
+html .auth-overlay .auth-card textarea{padding:13px 14px;line-height:1.5}
+html .auth-overlay .auth-card input::placeholder,
+html .auth-overlay .auth-card textarea::placeholder{color:var(--us-color-text-3)}
+html .auth-overlay .auth-card input:focus,
+html .auth-overlay .auth-card textarea:focus,
+html .auth-overlay .auth-card select:focus{
+  outline:none;
+  border-color:color-mix(in srgb,var(--us-tu) 60%,transparent)!important;
+  box-shadow:var(--us-field-focus);
+}
+html .auth-overlay .auth-card input:disabled,
+html .auth-overlay .auth-card select:disabled{opacity:.6}
+html .auth-overlay .mc3-help,
+#usOnboarding .mc3-help{margin:0;color:var(--us-color-text-3);font:400 12.5px/1.45 var(--us-font-ui)}
+
+/* Buttons: pill, my colour, dark ink. */
+html .auth-overlay .us-auth-primary,
+html .auth-overlay #mc3CopyCode,
+html .auth-overlay #mc3Retry,
+.us-setup .us-auth-primary{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  min-height:52px;
+  margin:0;
+  padding:0 18px;
+  border:0;
+  border-radius:999px;
+  background:var(--us-tu)!important;
+  color:var(--us-inchiostro)!important;
+  font:700 16px/1.2 var(--us-font-ui);
+  box-shadow:none;
+}
+html .auth-overlay .us-auth-primary:disabled,
+html .auth-overlay #mc3CopyCode:disabled,
+html .auth-overlay #mc3Retry:disabled,
+.us-setup .us-auth-primary:disabled{opacity:.6}
+html .auth-overlay #mc3BackCreate,
+html .auth-overlay #mc3BackJoin,
+html .auth-overlay #mc3Waiting.has-code #mc3Generate,
+.us-setup .us-setup-secondary{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  min-height:48px;
+  margin:0;
+  padding:0 18px;
+  border-radius:999px;
+  border:1px solid var(--us-color-line-strong);
+  background:transparent!important;
+  color:var(--us-color-text)!important;
+  font:600 15px/1.2 var(--us-font-ui);
+  box-shadow:none;
+}
+html .auth-overlay #mc3BackCreate,
+html .auth-overlay #mc3BackJoin{margin-top:-6px}
+.us-setup .us-setup-secondary[hidden]{display:none}
+
+/* Links: underlined, centred, 44px tall. */
+html .auth-overlay .us-auth-link,
+html .auth-overlay #usOnboarding .mc3-back:not(#mc3BackCreate):not(#mc3BackJoin),
+html .auth-overlay #mc3Revoke,
+html .auth-overlay #mc3Refresh{
+  position:relative;
+  align-self:center;
+  width:auto;
+  min-height:44px;
+  margin:0;
+  padding:0 8px;
+  border:0;
+  background:none!important;
+  color:var(--us-color-text)!important;
+  font:600 14px/1.2 var(--us-font-ui);
+  text-decoration:underline;
+  text-underline-offset:3px;
+  box-shadow:none;
+}
+html .auth-overlay .us-public-auth-form .us-public-auth-back{display:block;width:auto;margin-top:auto}
+/* Verify: back to the login leads, sending the email again follows (as in the mockup). */
+html .auth-overlay #usVerifyBack{
+  display:inline-flex;
+  align-self:stretch;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  min-height:52px;
+  margin:4px 0 0;
+  padding:0 18px;
+  border-radius:999px;
+  background:var(--us-tu)!important;
+  color:var(--us-inchiostro)!important;
+  font:700 16px/1.2 var(--us-font-ui);
+  text-decoration:none;
+}
+html .auth-overlay #usVerifyResend{
+  min-height:48px;
+  border:1px solid var(--us-color-line-strong);
+  background:transparent!important;
+  color:var(--us-color-text)!important;
+  font:600 15px/1.2 var(--us-font-ui);
+}
+html .auth-overlay .us-auth-links{flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:center;gap:0 16px;margin:0}
+html .auth-overlay .us-auth-links[hidden]{display:none!important}
+html .auth-overlay .us-auth-links .us-auth-link+.us-auth-link::before,
+html .auth-overlay #mc3Revoke:not([hidden])+#mc3Refresh::before{
+  content:"·";
+  position:absolute;
+  left:-12px;
+  top:50%;
+  transform:translateY(-50%);
+  color:var(--us-color-text-3);
+  text-decoration:none;
+}
+
+/* Status line: quiet when neutral, a tinted box for errors and success.
+   Empty, it leaves the flow but stays in the page for screen readers. */
+html .auth-overlay .auth-status,
+.us-setup .auth-status{
+  min-height:0;
+  margin:0;
+  padding:0;
+  text-align:left;
+  color:var(--us-color-text-3);
+  font:500 14px/1.4 var(--us-font-ui);
+}
+html .auth-overlay .auth-status:empty,
+.us-setup .auth-status:empty{
+  position:absolute;
+  width:1px;
+  height:1px;
+  overflow:hidden;
+  clip-path:inset(50%);
+  white-space:nowrap;
+}
+html .auth-overlay .auth-status[data-kind="error"],
+html .auth-overlay .auth-status[data-kind="success"],
+.us-setup .auth-status[data-kind="error"],
+.us-setup .auth-status[data-kind="success"]{
+  padding:10px 14px;
+  border-radius:14px;
+  font-weight:600;
+}
+html .auth-overlay .auth-status[data-kind="error"],
+.us-setup .auth-status[data-kind="error"]{color:var(--us-rosso);background:color-mix(in srgb,var(--us-rosso) 10%,var(--us-color-surface))}
+html .auth-overlay .auth-status[data-kind="success"],
+.us-setup .auth-status[data-kind="success"]{color:var(--us-verde);background:color-mix(in srgb,var(--us-verde) 10%,var(--us-color-surface))}
+
+/* Verify: the envelope in my colour. */
+.us-auth-icon{
+  display:grid;
+  place-items:center;
+  width:64px;
+  height:64px;
+  border-radius:20px;
+  background:color-mix(in srgb,var(--us-tu) 16%,transparent);
+}
+.us-auth-icon::before{
+  content:"";
+  width:30px;
+  height:30px;
+  background:var(--us-tu);
+  -webkit-mask:url("/assets/icons/phosphor/envelope-simple-regular.svg") center/contain no-repeat;
+  mask:url("/assets/icons/phosphor/envelope-simple-regular.svg") center/contain no-repeat;
+}
+
+/* "Tieni US sul telefono", at the bottom of the login. */
+html .auth-overlay .us-auth-install{
+  margin:0;
+  padding:12px 12px 12px 16px;
+  border:1px solid var(--us-color-line);
+  border-radius:20px;
+  background:var(--us-color-surface);
+}
+html .auth-overlay .us-auth-install[hidden],
+html .auth-overlay.us-tour-active .us-auth-install{display:none!important}
+html .auth-overlay .us-auth-install-row{gap:12px}
+html .auth-overlay .us-auth-install-copy b{color:var(--us-color-text);font:600 14px/1.3 var(--us-font-ui)}
+html .auth-overlay .us-auth-install-copy small{color:var(--us-color-text-3);font:400 12px/1.35 var(--us-font-ui)}
+html .auth-overlay .us-auth-install-btn{
+  min-height:44px;
+  padding:0 16px;
+  border-radius:999px;
+  border:1px solid var(--us-color-line-strong);
+  background:transparent;
+  color:var(--us-color-text);
+  font:700 14px/1 var(--us-font-ui);
+}
+html .auth-overlay .us-auth-install-help{
+  margin:10px 0 0;
+  border:0;
+  border-radius:14px;
+  background:var(--us-color-surface-2);
+  color:var(--us-color-text-2);
+  font:400 13px/1.45 var(--us-font-ui);
+}
+
+/* Focus rings for every control on these screens. */
+html .auth-overlay button:focus-visible,
+.us-setup button:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
+
+/* ---------- The tour: three cards, swipe or tap ---------- */
+html .auth-overlay.us-tour-active .auth-step{display:none!important}
+.us-tour{display:flex;flex-direction:column;flex:1 0 auto;gap:10px;padding:10px 0 0;min-width:0}
+.us-tour[hidden]{display:none}
+.us-tour-skip{
+  position:absolute;
+  top:calc(var(--us-auth-top) - 4px);
+  right:calc(var(--us-auth-side-r) - 2px);
+  min-height:44px;
+  min-width:44px;
+  padding:0 2px 0 12px;
+  border:0;
+  background:none;
+  color:var(--us-color-text-2);
+  font:700 11px/1 var(--us-font-ui);
+  letter-spacing:.14em;
+  text-transform:uppercase;
+}
+.us-tour-view{display:flex;align-items:center;flex:1 0 auto;min-width:0;margin:0 calc(var(--us-auth-side-r) * -1) 0 calc(var(--us-auth-side-l) * -1)}
+.us-tour-track{
+  display:flex;
+  width:100%;
+  overflow-x:auto;
+  overflow-y:hidden;
+  scroll-snap-type:x mandatory;
+  scrollbar-width:none;
+  overscroll-behavior-x:contain;
+  touch-action:pan-x pan-y;
+}
+.us-tour-track::-webkit-scrollbar{display:none}
+.us-tour-track:focus-visible{outline:2px solid var(--us-noi);outline-offset:-4px;border-radius:24px}
+.us-tour-slide{
+  flex:0 0 100%;
+  min-width:0;
+  scroll-snap-align:center;
+  scroll-snap-stop:always;
+  display:grid;
+  justify-items:center;
+  align-content:center;
+  gap:12px;
+  padding:0 26px;
+  text-align:center;
+}
+html .auth-overlay .us-tour-slide h2{font-size:40px;text-align:center}
+html .auth-overlay .us-tour-slide .us-auth-lede{max-width:31ch;text-align:center}
+.us-tour-vis{position:relative;width:240px;height:180px;display:grid;place-items:center;margin-bottom:6px}
+.us-tour-vis svg{width:240px;height:180px;overflow:visible}
+.us-tour-dots{display:flex;justify-content:center}
+.us-tour-dots button{display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;background:none}
+.us-tour-dots button::before{
+  content:"";
+  width:7px;
+  height:7px;
+  border-radius:9px;
+  background:var(--us-color-text-3);
+  transition:width .35s var(--us-ease-standard),background-color .35s var(--us-ease-standard);
+}
+.us-tour-dots button[aria-current="true"]::before{width:22px;background:var(--us-tu)}
+.us-tour-actions{display:grid;gap:10px;justify-items:center}
+.t1-a{fill:var(--us-rosa)}
+.t1-b{fill:var(--us-lilla)}
+.t1-n{fill:var(--us-noi)}
+.t1-a,.t1-b,.t1-n,.t1-w,.t2-a,.t2-b,.t2-l{transform-box:fill-box;transform-origin:center}
+.t1-w{fill:none;stroke:var(--us-noi);stroke-width:2;opacity:0}
+.t2-a{fill:var(--us-rosa)}
+.t2-b{fill:var(--us-lilla)}
+.t2-arc{fill:none;stroke:var(--us-color-text-3);stroke-width:1.6;stroke-dasharray:2 6;stroke-linecap:round}
+.t2-h{fill:var(--us-rosa)}
+.t2-bl{fill:color-mix(in srgb,var(--us-rosa) 14%,var(--us-color-surface));stroke:color-mix(in srgb,var(--us-rosa) 40%,transparent)}
+.t2-br{fill:color-mix(in srgb,var(--us-lilla) 14%,var(--us-color-surface));stroke:color-mix(in srgb,var(--us-lilla) 40%,transparent)}
+.t2-l{fill:var(--us-color-text-2)}
+.t2-d{fill:var(--us-color-text-3);opacity:0}
+.t3-ring{position:relative;width:150px;height:150px}
+.t3-ring svg{width:150px;height:150px}
+.t3-tr{fill:var(--us-color-surface);stroke:var(--us-color-line-strong);stroke-width:7}
+.t3-r{fill:none;stroke:var(--us-noi);stroke-width:7;stroke-linecap:round;stroke-dasharray:100 100;stroke-dashoffset:22;transform:rotate(-90deg);transform-origin:75px 75px}
+.t3-x{position:absolute;right:30px;top:12px;color:var(--us-noi);font:800 13px/1 var(--us-font-ui);opacity:0}
+.t3-c{
+  position:absolute;
+  left:50%;
+  bottom:-4px;
+  transform:translateX(-50%);
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 12px;
+  border-radius:999px;
+  background:var(--us-color-surface-2);
+  border:1px solid var(--us-color-line-strong);
+  color:var(--us-color-text);
+  font:700 12px/1.2 var(--us-font-ui);
+  white-space:nowrap;
+}
+.t3-c i{width:7px;height:7px;border-radius:50%;background:var(--us-noi)}
+
+/* ---------- Onboarding (MC3): Tu, Voi, your colour, the invite ---------- */
+html .auth-overlay #usOnboarding form{display:flex;flex-direction:column;gap:14px;min-width:0}
+html .auth-overlay #usOnboarding .mc3-actions{display:flex;flex-direction:column;gap:10px}
+#usOnboarding .us-ob-bday{display:grid;gap:6px;min-width:0;margin:0;padding:0;border:0}
+.us-ob-bday-row{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr);gap:8px}
+.us-ob-select{position:relative;display:block;min-width:0}
+.us-ob-select::after{
+  content:"";
+  position:absolute;
+  right:14px;
+  top:50%;
+  width:16px;
+  height:16px;
+  margin-top:-8px;
+  background:var(--us-color-text-3);
+  pointer-events:none;
+  -webkit-mask:url("/assets/icons/phosphor/caret-down-regular.svg") center/contain no-repeat;
+  mask:url("/assets/icons/phosphor/caret-down-regular.svg") center/contain no-repeat;
+}
+html .auth-overlay .auth-card .us-ob-select select{padding-right:38px;-webkit-appearance:none;appearance:none}
+.us-ob-select select option{background:var(--us-color-surface);color:var(--us-color-text)}
+#usOnboarding .us-ob-bday .mc3-help{margin-top:2px}
+
+/* Voi: two cards. */
+html .auth-overlay #usOnboarding .us-ob-pick-card{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  width:100%;
+  min-height:76px;
+  margin:0;
+  padding:16px;
+  border-radius:22px;
+  border:1px solid var(--us-color-line);
+  background:var(--us-color-surface)!important;
+  color:var(--us-color-text)!important;
+  text-align:left;
+  box-shadow:none;
+}
+.us-ob-pick-card .us-duo-mark{width:58px;height:36px}
+.us-ob-pick-icon{display:grid;place-items:center;width:58px;height:36px;flex:none}
+.us-ob-pick-icon::before{
+  content:"";
+  width:28px;
+  height:28px;
+  background:var(--us-partner);
+  -webkit-mask:url("/assets/icons/phosphor/envelope-simple-regular.svg") center/contain no-repeat;
+  mask:url("/assets/icons/phosphor/envelope-simple-regular.svg") center/contain no-repeat;
+}
+.us-ob-pick-copy{display:grid;gap:3px;min-width:0}
+.us-ob-pick-copy b{font:400 21px/1.15 var(--us-font-display);letter-spacing:-.01em}
+.us-ob-pick-copy small{color:var(--us-color-text-3);font:400 13px/1.35 var(--us-font-ui)}
+html .auth-overlay #mc3BackMe{margin-top:6px}
+
+/* Your colour: the two circles. */
+.us-ob-color{display:flex;flex-direction:column;gap:18px}
+.us-ob-venn{display:grid;justify-items:center;gap:8px;justify-self:center;align-self:center;margin:2px 0 4px}
+.us-ob-venn[hidden]{display:none}
+.us-ob-venn svg{width:200px;height:120px;overflow:visible}
+.ov-a{fill:var(--us-rosa)}
+.ov-b{fill:var(--us-lilla)}
+.ov-n{fill:var(--us-noi)}
+.ov-a,.ov-b,.ov-n,.ov-wait,.ov-halo{transform-box:fill-box;transform-origin:center}
+.ov-wait{fill:none;stroke-width:2;stroke-dasharray:3 7;stroke-linecap:round}
+.ov-wait-a{stroke:var(--us-rosa)}
+.ov-wait-b{stroke:var(--us-lilla)}
+.ov-wait.is-gone{opacity:0}
+.ov-halo{fill:none;stroke:var(--us-noi);stroke-width:2;opacity:0}
+.ov-l{display:flex;justify-content:center;flex-wrap:wrap;gap:6px 18px;color:var(--us-color-text-2);font:600 13px/1.3 var(--us-font-ui)}
+.ov-l>span{display:inline-flex;align-items:center;gap:6px}
+.ov-dot{width:9px;height:9px;border-radius:50%;flex:none}
+.ov-dot-a{background:var(--us-rosa)}
+.ov-dot-b{background:var(--us-lilla)}
+.us-ob-flood{position:fixed;inset:0;z-index:5;pointer-events:none}
+
+/* The invite: the code in a card, then copy, then the quieter actions. */
+html .auth-overlay #mc3Waiting:not([hidden]){display:flex;flex-direction:column;gap:14px}
+#usOnboarding #mc3InviteStatus{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:0;
+  padding:16px;
+  border-radius:22px;
+  border:1px solid var(--us-color-line);
+  background:var(--us-color-surface);
+  color:var(--us-color-text-2);
+  font:600 13px/1.4 var(--us-font-ui);
+}
+#usOnboarding #mc3InviteStatus:empty{display:none}
+#mc3InviteStatus::before{
+  content:"";
+  flex:none;
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--us-ambra);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--us-ambra) 22%,transparent);
+}
+#mc3InviteStatus[data-status="revoked"]::before,
+#mc3InviteStatus[data-status="expired"]::before{background:var(--us-rosso);box-shadow:0 0 0 3px color-mix(in srgb,var(--us-rosso) 22%,transparent)}
+#mc3InviteStatus[data-status="none"]::before,
+#mc3InviteStatus[data-status="used"]::before{background:var(--us-color-text-3);box-shadow:none}
+#usOnboarding #mc3Waiting.has-code #mc3InviteStatus{border-bottom:0;border-radius:22px 22px 0 0;padding-bottom:4px}
+html .auth-overlay #mc3CodeArea:not([hidden]){display:grid;gap:14px}
+#mc3Waiting.has-code #mc3CodeArea{margin-top:-14px}
+#mc3CodeArea .us-auth-field{
+  padding:8px 16px 16px;
+  border:1px solid var(--us-color-line);
+  border-top:0;
+  border-radius:0 0 22px 22px;
+  background:var(--us-color-surface);
+}
+html .auth-overlay .auth-card #mc3CodeArea #mc3Code{
+  min-height:0;
+  padding:0;
+  border:0!important;
+  border-radius:0;
+  background:transparent!important;
+  box-shadow:none;
+  color:var(--us-color-text);
+  font:600 19px/1.5 ui-monospace,"SF Mono","Roboto Mono",Menlo,monospace;
+  letter-spacing:.06em;
+  word-spacing:.3em;
+  resize:none;
+}
+html .auth-overlay #mc3Waiting .mc3-actions{flex-direction:row;flex-wrap:wrap;justify-content:center;gap:4px 16px}
+html .auth-overlay #mc3Waiting #mc3Generate{flex:1 0 100%}
+html .auth-overlay #mc3Waiting .us-ob-note{text-align:center}
+
+/* ---------- The phone setup after pairing (#usDeviceSetup) ---------- */
+.us-setup{
+  position:fixed;
+  inset:0;
+  z-index:var(--us-layer-auth);
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  background:var(--us-color-bg);
+  color:var(--us-color-text);
+}
+/* It appears at once: a visibility transition (the reduced-motion "all .01ms"
+   included) would keep the heading unfocusable for a frame. */
+.us-setup,.us-setup-card,.us-setup-body,#usSetupTitle{transition:none}
+.us-setup[hidden]{display:none}
+.us-setup.is-pending .us-setup-body,
+.us-setup.is-pending .us-setup-card>.tiny,
+.us-setup.is-pending .us-ob-progress{visibility:hidden}
+.us-setup-body{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  flex:1 0 auto;
+  gap:14px;
+  min-width:0;
+  padding:44px 0 14px;
+}
+.us-setup-body>[hidden]{display:none!important}
+.us-setup-actions{display:grid;gap:8px;margin-top:4px}
+
+/* Notifiche: what arrives. */
+.us-setup-push{display:grid;gap:8px;margin:2px 0}
+.us-setup-note{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:11px 13px;
+  border-radius:20px;
+  border:1px solid var(--us-color-line-strong);
+  background:var(--us-color-surface);
+}
+.us-setup-note+.us-setup-note{opacity:.82}
+.us-setup-note-icon{
+  width:34px;
+  height:34px;
+  flex:none;
+  border-radius:9px;
+  background:var(--us-color-surface-2) url("/assets/derived/runtime/us-symbol-256-v1.png") center/26px no-repeat;
+}
+.us-setup-note>span:last-child{flex:1;min-width:0;color:var(--us-color-text-2);font:400 13px/1.35 var(--us-font-ui)}
+.us-setup-note small{display:block;color:var(--us-color-text-3);font-size:11px}
+.us-setup-note b{display:block;color:var(--us-color-text);font:600 14px/1.35 var(--us-font-ui)}
+
+/* Posizione: two dots and the distance between them. */
+.us-setup-place{position:relative;height:84px;display:grid;place-items:center}
+.us-setup-place svg{width:100%;max-width:290px;height:84px;overflow:visible}
+.pl-h,.pl-d,.pl-ln{transform-box:fill-box;transform-origin:center}
+.pl-hr{fill:color-mix(in srgb,var(--us-rosa) 20%,transparent)}
+.pl-hl{fill:color-mix(in srgb,var(--us-lilla) 20%,transparent)}
+.pl-line{fill:none;stroke:var(--us-color-text-3);stroke-width:2.4;stroke-dasharray:1 7;stroke-linecap:round}
+.pl-chip{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  display:grid;
+  place-items:center;
+  width:56px;
+  height:40px;
+  border-radius:999px;
+  border:1px solid var(--us-color-line-strong);
+  background:var(--us-color-surface-2);
+}
+.pl-chip-icon{
+  width:20px;
+  height:20px;
+  background:var(--us-color-text);
+  -webkit-mask:url("/assets/icons/phosphor/arrows-left-right-regular.svg") center/contain no-repeat;
+  mask:url("/assets/icons/phosphor/arrows-left-right-regular.svg") center/contain no-repeat;
+}
+.us-setup-points{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.us-setup-points li{display:flex;align-items:flex-start;gap:12px;color:var(--us-color-text-2);font:400 14px/1.4 var(--us-font-ui)}
+.us-setup-points b{display:block;color:var(--us-color-text);font-weight:600}
+.us-setup-point-icon{
+  width:20px;
+  height:20px;
+  flex:none;
+  margin-top:1px;
+  background:var(--us-tu);
+  -webkit-mask:var(--us-setup-icon) center/contain no-repeat;
+  mask:var(--us-setup-icon) center/contain no-repeat;
+}
+.us-setup-point-icon--distance{--us-setup-icon:url("/assets/icons/phosphor/arrows-left-right-regular.svg")}
+.us-setup-point-icon--pin{--us-setup-icon:url("/assets/icons/phosphor/map-pin-regular.svg")}
+.us-setup-point-icon--lock{--us-setup-icon:url("/assets/icons/phosphor/lock-simple-regular.svg")}
+
+/* Tutto pronto: what is set, with a tick. */
+.us-setup-ready{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.us-setup-ready li{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 14px;
+  border-radius:20px;
+  border:1px solid var(--us-color-line);
+  background:var(--us-color-surface);
+}
+.us-setup-ready li>span:nth-child(2){flex:1;min-width:0}
+.us-setup-ready b{display:block;color:var(--us-color-text);font:600 15px/1.3 var(--us-font-ui);overflow-wrap:anywhere}
+.us-setup-ready small{display:block;color:var(--us-color-text-3);font:400 12.5px/1.35 var(--us-font-ui)}
+.us-setup-ready-icon{
+  position:relative;
+  width:36px;
+  height:36px;
+  flex:none;
+  border-radius:12px;
+  background:var(--us-color-surface-2);
+}
+.us-setup-ready-icon::before{
+  content:"";
+  position:absolute;
+  inset:8px;
+  background:var(--us-color-text-2);
+  -webkit-mask:var(--us-setup-icon) center/contain no-repeat;
+  mask:var(--us-setup-icon) center/contain no-repeat;
+}
+.us-setup-ready-icon--user{--us-setup-icon:url("/assets/icons/phosphor/user-circle-regular.svg")}
+.us-setup-ready-icon--heart{--us-setup-icon:url("/assets/icons/phosphor/heart-straight-regular.svg")}
+.us-setup-ready-icon--bell{--us-setup-icon:url("/assets/icons/phosphor/bell-regular.svg")}
+.us-setup-ready-icon--pin{--us-setup-icon:url("/assets/icons/phosphor/map-pin-regular.svg")}
+.us-setup-ready li.is-ok .us-setup-ready-icon{background:color-mix(in srgb,var(--us-tu) 14%,var(--us-color-surface-2))}
+.us-setup-ready li.is-ok .us-setup-ready-icon::before{background:var(--us-tu)}
+.us-setup-ready li>i{
+  position:relative;
+  width:26px;
+  height:26px;
+  flex:none;
+  border-radius:50%;
+  border:1.5px dashed var(--us-color-line-strong);
+}
+.us-setup-ready li.is-ok>i{border:0;background:var(--us-tu)}
+.us-setup-ready li.is-ok>i::before{
+  content:"";
+  position:absolute;
+  inset:5px;
+  background:var(--us-inchiostro);
+  -webkit-mask:url("/assets/icons/phosphor/check-regular.svg") center/contain no-repeat;
+  mask:url("/assets/icons/phosphor/check-regular.svg") center/contain no-repeat;
+}
+
+/* "Entra in US": the two circles become the logo, then the app. */
+.us-setup-intro{position:fixed;inset:0;z-index:7;background:var(--us-color-bg);isolation:isolate;pointer-events:none}
+.us-setup-intro[hidden]{display:none}
+.us-setup-intro .c{position:absolute;left:50%;top:46%;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;mix-blend-mode:screen;opacity:0}
+.us-setup-intro .c.a{background:var(--us-rosa)}
+.us-setup-intro .c.b{background:var(--us-lilla)}
+.us-setup-intro .logo{
+  position:absolute;
+  left:50%;
+  top:46%;
+  width:96px;
+  height:96px;
+  margin:-48px 0 0 -48px;
+  background:url("/assets/derived/runtime/us-symbol-256-v1.png") center/contain no-repeat;
+  opacity:0;
+}
+.us-setup-intro .word{
+  position:absolute;
+  left:0;
+  right:0;
+  top:calc(46% + 70px);
+  text-align:center;
+  color:var(--us-color-text-2);
+  font:italic 400 22px/1.2 var(--us-font-display);
+  opacity:0;
+}
+
+/* ---------- Small and short screens ---------- */
+@media (max-width:360px){
+  html .auth-overlay .auth-card h2{font-size:38px}
+  html .auth-overlay #usOnboarding h2,
+  .us-setup h2,
+  html .auth-overlay .us-tour-slide h2{font-size:35px}
+  .us-tour-vis{transform:scale(.88);margin:-10px 0 -6px}
+}
+@media (max-height:640px){
+  html .auth-overlay .auth-step.active,
+  .us-setup-body{padding-top:18px}
+  html .auth-overlay #usOnboarding.active,
+  .us-setup-body{padding-top:36px}
+  html .auth-overlay .auth-card h2{font-size:36px}
+  html .auth-overlay #usOnboarding h2,
+  .us-setup h2,
+  html .auth-overlay .us-tour-slide h2{font-size:32px}
+  .us-tour-vis{width:200px;height:150px}
+  .us-tour-vis svg{width:200px;height:150px}
+}
+
+/* ---------- Reduced motion: nothing slides, nothing grows ---------- */
+:root[data-us-motion="reduced"] .us-ob-progress i,
+:root[data-us-motion="reduced"] .us-tour-dots button::before{transition:none}
+@media (prefers-reduced-motion:reduce){
+  .us-ob-progress i,.us-tour-dots button::before{transition:none}
+}
+
+/* ---------- Lock screen (#usAppLock, app-lock.js): restyle only ---------- */
+html.us-app-lock-pending .us-app-lock,
+html.us-app-locked .us-app-lock{background:var(--us-color-bg)}
+.us-app-lock-card{width:min(300px,100%);gap:12px}
+/* identity.css forces .us-brand-symbol{width:auto!important}: keep the circle round. */
+.us-app-lock .us-app-lock-logo.us-brand-symbol{
+  width:84px!important;
+  height:84px;
+  flex:0 0 auto;
+  justify-content:center;
+  margin:0 0 4px;
+  border-radius:50%;
+  border:1px solid color-mix(in srgb,var(--us-tu) 35%,transparent);
+  background:color-mix(in srgb,var(--us-tu) 14%,var(--us-color-surface));
+}
+.us-app-lock .us-app-lock-logo .us-brand-symbol-art{width:48px;height:48px}
+.us-app-lock .us-app-lock-title{
+  margin:0;
+  color:var(--us-color-text);
+  font:400 34px/1.1 var(--us-font-display);
+  letter-spacing:-.01em;
+}
+.us-app-lock .us-app-lock-copy{margin:0;color:var(--us-color-text-2);font:400 15px/1.45 var(--us-font-ui)}
+.us-app-lock .us-app-lock-actions{margin-top:8px;gap:4px}
+.us-app-lock .us-app-lock-primary{
+  min-height:52px;
+  border:0;
+  border-radius:999px;
+  background:var(--us-tu)!important;
+  color:var(--us-inchiostro)!important;
+  font:700 16px/1.2 var(--us-font-ui);
+  box-shadow:none;
+}
+.us-app-lock .us-app-lock-primary:disabled{opacity:.6}
+.us-app-lock .us-app-lock-secondary{
+  min-height:44px;
+  color:var(--us-color-text-2);
+  font:600 14px/1.2 var(--us-font-ui);
+  text-decoration:underline;
+  text-underline-offset:3px;
+}
+.us-app-lock .us-app-lock-secondary:focus-visible,
+.us-app-lock .us-app-lock-primary:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
+.us-app-lock .us-app-lock-status{
+  margin:4px 0 0;
+  color:var(--us-rosso);
+  font:600 14px/1.4 var(--us-font-ui);
+}

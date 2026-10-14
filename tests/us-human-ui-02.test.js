@@ -470,7 +470,7 @@ test('Auth first-run: private entry is compact, device-aware and keeps backend o
 
   assert.match(css, /US-AUTH-FIRST-RUN-01/);
   assert.match(auth, /US · SPAZIO PRIVATO/);
-  assert.match(auth, /Bentornato/);
+  assert.match(auth, /Eccoti <em>di nuovo<\/em>/);
   assert.match(auth, /Accedi con la tua email e password\./);
   assert.match(auth, /id="usAuthInstall"/);
   assert.doesNotMatch(auth, /authPair|pairBtn|pairCode|Magic Link/);
