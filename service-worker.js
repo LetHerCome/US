@@ -74,6 +74,7 @@ const APP_SHELL = [
   versioned("/dc-ricordi.css"),
   versioned("/dc-gioca.css"),
   versioned("/dc-popup.css"),
+  versioned("/dc-primo.css"),
   versioned("/due-colori.js"),
   "/assets/derived/runtime/us-symbol-256-v1.png",
   "/assets/derived/runtime/us-icon-settings-128-v1.png",
