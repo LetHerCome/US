@@ -75,6 +75,14 @@ function go(id,options={}){
   scrollTo({top:0,behavior:(options.swipe||options.motionCommit)?'auto':'smooth'});
   schedulePageHydration(id);
 }
+// Due colori: my colour follows my place in the couple, the same on both
+// phones. Whoever created the couple (role francesco) is rosa, whoever joined
+// with the code (role beatrice) is lilla. Presentation only, never authorization.
+function usApplyPersonColor(profile){
+  const root=document.documentElement,role=profile?.role;
+  if(role==='francesco'||role==='beatrice')root.dataset.usMe=role;
+  else delete root.dataset.usMe;
+}
 // One timer for the one toast: a second message restarts the 1.7 s window
 // instead of being cut short by the first message's pending hide.
 let usToastTimer=null;
@@ -886,6 +894,7 @@ function usInvalidateAuth({revokePush=true}={}){
   usOnboarding.reset();
   resetNoiIdeasForIdentityChange();
   window.usProfile=null;
+  usApplyPersonColor(null);
   window.UsCoupleContext?.clear?.();
   window.UsWidgets?.clear?.().catch(()=>{});
   window.UsNotifications?.signedOut?.();
@@ -945,7 +954,7 @@ async function initCloud(){
     let cachedDeviceProfile=null;
     try{
       const cached=JSON.parse(localStorage.getItem('us:fix4:last-profile')||'null');
-      if(cached?.id&&cached?.couple_id)cachedDeviceProfile=cached;
+      if(cached?.id&&cached?.couple_id){cachedDeviceProfile=cached;usApplyPersonColor(cached);}
     }catch(_e){}
 
     let session=null;
@@ -1042,6 +1051,7 @@ async function initCloud(){
     resetNoiIdeasForIdentityChange();
     clearUsCoupleContext();
     window.usProfile = profile;
+    usApplyPersonColor(profile);
     window.UsWidgets?.authReady?.(profile).catch(error=>console.warn('[US Widget] auth ready',error));
     // Native push: pending notification taps run now (after the lock gate above),
     // then this installation's registration is refreshed if it was activated here.

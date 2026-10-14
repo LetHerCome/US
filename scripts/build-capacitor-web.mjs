@@ -61,6 +61,8 @@ const RUNTIME_FILES = [
   'settings2.css',
   'polish4.css',
   'polish4.js',
+  'due-colori.css',
+  'due-colori.js',
   'left-for-you.css',
   'left-for-you.js',
   'calendar-domain.js',

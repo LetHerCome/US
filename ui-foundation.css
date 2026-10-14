@@ -1,5 +1,8 @@
-@font-face{font-family:"Newsreader";src:url("/assets/fonts/Newsreader-Variable.woff2") format("woff2");font-style:normal;font-weight:200 800;font-display:swap}
-@font-face{font-family:"Inter";src:url("/assets/fonts/Inter-Variable.woff2") format("woff2");font-style:normal;font-weight:100 900;font-display:swap}
+/* Due colori (2026-10-14): Fraunces for titles, Figtree for text and controls. See assets/fonts/PROVENANCE.md. */
+@font-face{font-family:"Fraunces";src:url("/assets/fonts/Fraunces-Soft-Roman.woff2") format("woff2");font-style:normal;font-weight:100 900;font-display:swap}
+@font-face{font-family:"Fraunces";src:url("/assets/fonts/Fraunces-Soft-Italic.woff2") format("woff2");font-style:italic;font-weight:100 900;font-display:swap}
+@font-face{font-family:"Figtree";src:url("/assets/fonts/Figtree-Latin.woff2") format("woff2");font-style:normal;font-weight:300 900;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Figtree";src:url("/assets/fonts/Figtree-LatinExt.woff2") format("woff2");font-style:normal;font-weight:300 900;font-display:swap;unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 
 :root {
   /* ==========================================================================
@@ -29,60 +32,85 @@
   --us-layer-auth:10250;
   --us-layer-app-lock:2147483000;     /* Native Security V1: above everything, incl. auth */
 
-  /* Colour — near-black plum canvas, warm light text, rose + violet accent. */
-  --us-color-bg:#08040e;                 /* brand canvas (manifest theme) */
-  --us-color-surface:#120e17;            /* raised content */
-  --us-color-surface-2:#17131d;
-  --us-color-elevated:#1d1824;           /* controls on a surface */
-  --us-color-sheet:#141019;              /* opaque fallback for sheets */
-  --us-color-text:#f7f2f8;
-  --us-color-text-2:rgba(247,242,248,.70);
-  --us-color-text-3:rgba(247,242,248,.50);
-  --us-color-text-on-accent:#fff;
-  --us-color-rose:#ff668e;
-  --us-color-rose-2:#ff8eaa;
-  --us-color-violet:#a985ff;
+  /* Due colori, un Noi (approved 2026-10-14). Each person has a colour,
+     the same on both phones: whoever created the couple (role francesco) is
+     rosa, whoever joined with the code (role beatrice) is lilla. Where they
+     overlap is Noi. --us-tu is "my" colour (my actions: buttons, toggles, my
+     answer), --us-partner is what comes from the other person, --us-noi is
+     what belongs to both (Sintonia, shared days). Rewards never touch the two
+     person colours: Atmosfere change the night, Accenti change --us-noi.
+     ui-foundation.js sets data-us-me on <html> from the signed-in profile. */
+  --us-rosa:#ff7c96;
+  --us-lilla:#a98bff;
+  --us-orchidea:#d98be0;
+  --us-ambra:#f3b76e;                    /* Ricordi */
+  --us-menta:#7fd8c4;                    /* Gioca */
+  --us-corallo:#ff8b7b;                  /* Oggi */
+  --us-rosso:#ff6b6b;                    /* actions that cannot be undone */
+  --us-verde:#7fd8a4;
+  --us-inchiostro:#1a1020;               /* dark ink on a coloured button */
+  --us-latte:#f7efe9;
+  --us-tu:var(--us-rosa);
+  --us-partner:var(--us-lilla);
+  --us-noi:var(--us-orchidea);
+  --us-tab:var(--us-corallo);            /* tint of the current tab, set per page */
+  --us-glow:rgba(217,139,224,.16);
+
+  /* Colour — the night canvas (Atmosfere rewards replace these five). */
+  --us-color-bg:#0f0b13;                 /* notte: brand canvas (manifest theme) */
+  --us-color-surface:#17111c;            /* notte 2: raised content */
+  --us-color-surface-2:#211a28;          /* notte 3 */
+  --us-color-elevated:#2a2232;           /* notte 4: controls on a surface */
+  --us-color-sheet:#17111c;              /* opaque sheets */
+  --us-color-text:var(--us-latte);
+  --us-color-text-2:rgba(247,239,233,.72);
+  --us-color-text-3:rgba(247,239,233,.50);
+  --us-color-text-on-accent:var(--us-inchiostro);
+  --us-color-rose:var(--us-rosa);
+  --us-color-rose-2:#ff9db0;
+  --us-color-violet:var(--us-lilla);
   --us-color-plum:#28142f;
   --us-color-paper:#e9e2d5;             /* photo-journal post-it signature */
-  --us-color-accent-ink:#dcbfe8;         /* eyebrows, accent text, icons */
-  --us-color-accent-soft:rgba(169,133,255,.13);
-  --us-color-accent-line:rgba(214,176,232,.26);
-  --us-color-accent-strong:#c99ae0;      /* selected borders, focus */
-  --us-color-line:rgba(255,255,255,.08);
-  --us-color-line-strong:rgba(255,255,255,.14);
-  --us-color-positive:#72c998;
-  --us-color-warning:#f2b872;
-  --us-color-danger:#e45a68;
-  --us-color-danger-ink:#ffadb6;
-  --us-color-locked:rgba(247,242,248,.42);
-  --us-accent-gradient:linear-gradient(135deg,#ff668e 0%,#ff86a4 46%,#a985ff 130%);
-  --us-accent-shadow:0 8px 22px rgba(255,102,142,.14);
+  --us-color-accent-ink:color-mix(in srgb,var(--us-noi) 62%,var(--us-latte));  /* eyebrows, accent text, icons */
+  --us-color-accent-soft:color-mix(in srgb,var(--us-noi) 14%,transparent);
+  --us-color-accent-line:color-mix(in srgb,var(--us-noi) 30%,transparent);
+  --us-color-accent-strong:var(--us-noi);      /* selected borders, focus */
+  --us-color-line:rgba(247,239,233,.09);
+  --us-color-line-strong:rgba(247,239,233,.17);
+  --us-color-positive:var(--us-verde);
+  --us-color-warning:var(--us-ambra);
+  --us-color-danger:var(--us-rosso);
+  --us-color-danger-ink:#ffb0ad;
+  --us-color-locked:rgba(247,239,233,.42);
+  /* No gradient on buttons: the primary action is flat, in my colour, with dark ink. */
+  --us-accent-gradient:linear-gradient(var(--us-tu),var(--us-tu));
+  --us-accent-shadow:none;
 
-  /* Surfaces — three glass levels. Glass is identity, not decoration:
-     L1 groups content, L2 is an interactive card, L3 floats (sheet/popup). */
-  --us-glass-1-bg:rgba(255,255,255,.035);
-  --us-glass-1-border:1px solid rgba(255,255,255,.07);
-  --us-glass-2-bg:linear-gradient(150deg,rgba(255,255,255,.055),rgba(255,255,255,.022));
-  --us-glass-2-border:1px solid rgba(255,255,255,.09);
-  --us-glass-2-shadow:0 10px 28px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.05);
-  --us-glass-2-blur:blur(14px) saturate(1.15);
-  --us-glass-3-bg:linear-gradient(165deg,rgba(255,255,255,.055),rgba(255,255,255,0) 34%),radial-gradient(120% 80% at 88% -6%,rgba(155,124,255,.12),transparent 52%),radial-gradient(130% 90% at 0% 106%,rgba(246,111,158,.11),transparent 52%),linear-gradient(150deg,rgba(40,31,46,.58),rgba(17,14,24,.66));
-  --us-glass-3-border:1px solid rgba(255,255,255,.13);
-  --us-glass-3-blur:blur(28px) saturate(1.35);
-  --us-glass-3-shadow:0 34px 90px rgba(0,0,0,.55),0 8px 26px rgba(18,9,28,.38),inset 0 1px 0 rgba(255,255,255,.11),inset 0 -1px 0 rgba(155,124,255,.07);
-  --us-glass-3-shadow-up:0 -26px 80px rgba(0,0,0,.55),0 -6px 22px rgba(18,9,28,.38),inset 0 1px 0 rgba(255,255,255,.11),inset 0 -1px 0 rgba(155,124,255,.07);
-  --us-glass-3-edge:linear-gradient(90deg,transparent,rgba(255,255,255,.34) 30%,rgba(228,200,255,.30) 70%,transparent);
-  /* Sticky sheet header: occludes scrolled content, keeps the glass tint. */
-  --us-sheet-head-bg:linear-gradient(180deg,rgba(28,22,34,.92),rgba(20,16,26,.86));
-  --us-sheet-head-blur:blur(20px) saturate(1.2);
+  /* Surfaces — flat night layers with a hairline, no blur. L1 groups
+     content, L2 is an interactive card, L3 floats (sheet/popup). */
+  --us-glass-1-bg:rgba(247,239,233,.035);
+  --us-glass-1-border:1px solid var(--us-color-line);
+  --us-glass-2-bg:var(--us-color-surface);
+  --us-glass-2-border:1px solid var(--us-color-line);
+  --us-glass-2-shadow:none;
+  --us-glass-2-blur:none;
+  --us-glass-3-bg:var(--us-color-surface);
+  --us-glass-3-border:1px solid var(--us-color-line-strong);
+  --us-glass-3-blur:none;
+  --us-glass-3-shadow:0 30px 80px rgba(0,0,0,.55);
+  --us-glass-3-shadow-up:0 -20px 70px rgba(0,0,0,.5);
+  --us-glass-3-edge:transparent;
+  /* Sticky sheet header: occludes scrolled content. */
+  --us-sheet-head-bg:var(--us-color-surface);
+  --us-sheet-head-blur:none;
   /* One scrim for every overlay: the page stays perceptible underneath. */
-  --us-scrim:rgba(6,3,10,.44);
-  --us-scrim-blur:blur(6px);
+  --us-scrim:rgba(8,5,11,.62);
+  --us-scrim-blur:none;
 
   /* Fields — one recipe for inputs and textareas. */
-  --us-field-bg:rgba(255,255,255,.045);
-  --us-field-border:1px solid rgba(255,255,255,.10);
-  --us-field-focus:0 0 0 3px rgba(201,154,224,.22);
+  --us-field-bg:var(--us-color-surface-2);
+  --us-field-border:1px solid var(--us-color-line);
+  --us-field-focus:0 0 0 3px color-mix(in srgb,var(--us-tu) 26%,transparent);
 
   /* M1 shell authority: Midnight Correspondence typography and palette. */
   --us-ink:var(--us-color-text);
@@ -96,8 +124,9 @@
   --us-blue:#5b8def;
   --us-text:var(--us-color-text);
   --us-muted:var(--us-color-text-2);
-  --us-font-editorial:"Newsreader",Georgia,serif;
-  --us-font-ui:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --us-font-editorial:"Fraunces",Georgia,"Times New Roman",serif;
+  --us-font-ui:"Figtree",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --us-font-display:var(--us-font-editorial);
   /* HUMAN-UI-02 — compact shell: a slim top pill (44px controls, no extra
      padding) and a ~56px bottom nav before the device safe area. */
   --us-top-chrome-height:46px;
@@ -138,9 +167,11 @@
   --us-motion-photo:360ms;
   --us-motion-photo-slow:420ms;
   --us-motion-sheet:var(--us-motion-surface);
-  --us-ease-standard:cubic-bezier(.22,.78,.24,1);
-  --us-ease-enter:cubic-bezier(.16,1,.3,1);
+  --us-ease-standard:cubic-bezier(.2,.8,.2,1);
+  --us-ease-enter:cubic-bezier(.22,1.15,.36,1);   /* soft spring: sheets, cards */
   --us-ease-exit:cubic-bezier(.4,0,1,1);
+  --us-ease-spring:cubic-bezier(.34,1.56,.64,1);  /* press release */
+  --us-ease-io:cubic-bezier(.7,0,.2,1);           /* colour flood between tabs */
   /* Type: page title · section title · card title · body · secondary · meta · eyebrow.
      HUMAN-UI-02 hierarchy: one page title (~26px), section ~20px, object
      ~17–19px, body 15px, state/meta 12–13px. Only one object per page may be
@@ -160,15 +191,15 @@
   --us-safe-left:var(--safe-area-inset-left,env(safe-area-inset-left,0px));
   --us-nav-height:56px;
   --us-viewport-height:100dvh;
-  --us-focus:0 0 0 3px rgba(169,133,255,.28);
-  --us-premium-glass:rgba(24,20,31,.68);
-  --us-premium-glass-strong:rgba(31,25,39,.82);
-  --us-premium-border:rgba(255,234,247,.11);
-  --us-premium-border-active:rgba(255,157,205,.38);
-  --us-premium-blur:22px;
+  --us-focus:0 0 0 3px color-mix(in srgb,var(--us-noi) 30%,transparent);
+  --us-premium-glass:color-mix(in srgb,var(--us-color-surface) 94%,transparent);
+  --us-premium-glass-strong:var(--us-color-surface-2);
+  --us-premium-border:var(--us-color-line);
+  --us-premium-border-active:color-mix(in srgb,var(--us-tu) 45%,transparent);
+  --us-premium-blur:0px;
   --us-premium-shadow:0 18px 50px rgba(0,0,0,.34);
-  --us-premium-inner-highlight:inset 0 1px 0 rgba(255,255,255,.055);
-  --us-premium-active-glow:0 0 16px rgba(255,116,184,.30),0 0 32px rgba(176,116,255,.13);
+  --us-premium-inner-highlight:inset 0 0 0 0 transparent;
+  --us-premium-active-glow:none;
 
   /* Popup material names used by feature sheets (L3 aliases). */
   --us-glass-dim:var(--us-scrim);
