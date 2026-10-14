@@ -32,7 +32,7 @@ function backend(){
  }};
 }
 async function pageFor(h,b,{user='u1',width=390,height=844,reduced=false,signedOut=false}={}){
- const ctx=await h.browser.newContext({viewport:{width,height},timezoneId:'Europe/Rome',serviceWorkers:'block',reducedMotion:reduced?'reduce':'no-preference'});
+ const ctx=await h.browser.newContext({locale:'it-IT',viewport:{width,height},timezoneId:'Europe/Rome',serviceWorkers:'block',reducedMotion:reduced?'reduce':'no-preference'});
  await ctx.grantPermissions(['clipboard-read','clipboard-write']);
  const page=await ctx.newPage(),errors=[],logs=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>logs.push(m.text()));
  await page.exposeFunction('__mc3Rpc',(name,args,uid)=>b.rpc(name,args,uid));

@@ -113,7 +113,7 @@ test('M12B.1 geometry: Oggi fits every supported viewport without clipping', asy
       for (const vp of VIEWPORTS) {
         const label = `${name} @ ${vp.join('x')}`;
         const mobile = vp[0] < 800;
-        const ctx = await browser.newContext({ serviceWorkers: 'block', viewport: { width: vp[0], height: vp[1] }, isMobile: mobile, hasTouch: mobile });
+        const ctx = await browser.newContext({ locale: 'it-IT', serviceWorkers: 'block', viewport: { width: vp[0], height: vp[1] }, isMobile: mobile, hasTouch: mobile });
         const page = await ctx.newPage();
         await page.route('**/*', (route) => {
           const url = route.request().url();
