@@ -216,7 +216,7 @@ window.addEventListener('us-identity-change',event=>{
     usTodayHydrateSeq++;
     window.todayQuestion=null;window.todayState=null;window.todayRevealMeta=null;
     usIncomingThink=null;usThinkReactionFinal=null;closeThinkArrival();
-    usLocationRuntime.rows=null;usLocationRuntime.snapshot=null;window.usDistanceKm=null;
+    usLocationRuntime.server=null;usLocationRuntime.snapshot=null;window.usDistanceKm=null;
     renderDistanceCapsule({visible:false,text:''});
     dailyKeepsake.hide();closeToday();
     const reveal=document.getElementById('todayReveal');if(reveal)reveal.innerHTML='';
@@ -231,7 +231,7 @@ window.addEventListener('us-identity-change',event=>{
     return;
   }
   window.UsTodayPriority?.refresh?.();
-  if(window.usProfile&&usLocationRuntime.rows)applyLocationRows(usLocationRuntime.rows);
+  if(window.usProfile&&usLocationRuntime.server)applyServerDistance(usLocationRuntime.server);
   renderTodayReveal();
   if(window.todayState?.my_answer!=null&&!window.todayState?.both_answered){
     const locked=document.getElementById('locked');
@@ -1107,16 +1107,25 @@ function setCloudBadge(ok,text){
 
 
 // ===== M12A — Location V2: ambient, automatic distance =====
-// The distance refreshes itself; nobody is asked to press "Aggiorna".
+// US 1.0 Location A (founder decision 14/10): approximate location only.
+//  - Nothing is read before the person has seen the explanation and tapped
+//    "Attiva" (consent stored on this phone). "Smetti e cancella" removes the
+//    consent and deletes the saved reading on the server.
+//  - The phone snaps every reading to a grid cell of about 4.9 km2 before
+//    sending it (Play: approximate = an area of at least 3 km2); the database
+//    snaps again (migration location_approximate_v1).
+//  - The partner never receives coordinates: `couple_distance()` returns only
+//    a rounded distance, or "near" under 3 km.
+// Refresh policy (unchanged):
 //  - Triggers (event driven, no polling loop): US ready after launch, return to
 //    the foreground, and a slow visible-only check while the session stays open.
 //  - A reading is FRESH for 10 min (no geolocation call at all), becomes
 //    eligible for an automatic refresh after that, and is shown as STALE (quiet
 //    capsule, value kept) after 60 min.
-//  - Geolocation is only asked automatically when the browser already says
-//    "granted" (or cannot tell and the user enabled it before). "prompt" never
-//    triggers a dialog by itself; "denied" stops everything until the browser
-//    permission changes. Failures keep the last good distance and back off.
+//  - Geolocation is only asked automatically after consent, when the browser
+//    says "granted" (or cannot tell). "prompt" never triggers a dialog by
+//    itself; "denied" stops everything until the browser permission changes.
+//    Failures keep the last good distance and back off.
 let locationRefreshInFlight=false;
 let locationTimer=null;
 const US_LOCATION_FRESH_MS=10*60*1000;
@@ -1124,14 +1133,34 @@ const US_LOCATION_STALE_DISPLAY_MS=60*60*1000;
 const US_LOCATION_MIN_GAP_MS=45*1000;
 const US_LOCATION_FAILURE_BACKOFF_MS=5*60*1000;
 const US_LOCATION_CHECK_INTERVAL_MS=5*60*1000;
-const usLocationRuntime={permission:'unknown',lastAttemptAt:0,lastFailureAt:0,mineUpdatedAt:null,watching:false,snapshot:null,rows:null};
+const US_LOCATION_CELL_DEG=0.02;
+const US_LOCATION_CONSENT_KEY='us:location:consent';
+const US_LOCATION_CONSENT_VERSION='approximate-v1';
+const usLocationRuntime={permission:'unknown',lastAttemptAt:0,lastFailureAt:0,mineUpdatedAt:null,watching:false,snapshot:null,server:null};
 
-function distanceKm(aLat,aLon,bLat,bLon){
-  const rad=value=>value*Math.PI/180;
-  const earthKm=6371;
-  const dLat=rad(bLat-aLat),dLon=rad(bLon-aLon);
-  const x=Math.sin(dLat/2)**2+Math.cos(rad(aLat))*Math.cos(rad(bLat))*Math.sin(dLon/2)**2;
-  return earthKm*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+// Same grid as private.location_cell(): 0.02 degrees of latitude, and as many
+// equal longitude cells per latitude band as keep each cell about 2.2 km wide.
+function usLocationCell(latitude,longitude){
+  const lat=Number(latitude),lon=Number(longitude);
+  if(!validCoordinate(lat,-90,90)||!validCoordinate(lon,-180,180))return null;
+  const latIndex=Math.min(Math.floor((lat+90)/US_LOCATION_CELL_DEG),8999);
+  const centreLat=-90+(latIndex+0.5)*US_LOCATION_CELL_DEG;
+  const lonCells=Math.max(1,Math.floor(360*Math.cos(centreLat*Math.PI/180)/US_LOCATION_CELL_DEG));
+  const lonStep=360/lonCells;
+  const lonIndex=Math.min(Math.floor((lon+180)/lonStep),lonCells-1);
+  return {latitude:Number(centreLat.toFixed(6)),longitude:Number((-180+(lonIndex+0.5)*lonStep).toFixed(6))};
+}
+
+function locationConsentGiven(){
+  try{return localStorage.getItem(US_LOCATION_CONSENT_KEY)===US_LOCATION_CONSENT_VERSION;}catch(_e){return false;}
+}
+function setLocationConsent(given){
+  try{
+    if(given)localStorage.setItem(US_LOCATION_CONSENT_KEY,US_LOCATION_CONSENT_VERSION);
+    else localStorage.removeItem(US_LOCATION_CONSENT_KEY);
+    // Pre-1.0 flag: it allowed automatic reads without the explanation.
+    localStorage.removeItem('usLocationEnabled');
+  }catch(_e){}
 }
 
 function relativeLocationAge(dateString){
@@ -1153,26 +1182,20 @@ function validCoordinate(value,min,max){
   return Number.isFinite(number)&&number>=min&&number<=max;
 }
 
+// The server already rounds to whole kilometres (3 km or more).
 function formatDistance(km){
   const unit=localStorage.getItem('us:settings:distance-unit')||'km';
-  if(unit==='mi'){
-    const miles=km*0.621371;
-    if(miles<0.1)return `${Math.max(1,Math.round(km*3280.84))} ft`;
-    if(miles<10)return `${miles.toFixed(1).replace('.',',')} mi`;
-    return `${Math.round(miles).toLocaleString('it-IT')} mi`;
-  }
-  if(km<1)return `${Math.max(1,Math.round(km*1000))} m`;
-  if(km<10)return `${km.toFixed(1).replace('.',',')} km`;
-  return `${Math.round(km).toLocaleString('it-IT')} km`;
+  if(unit==='mi')return `${Math.max(2,Math.round(km*0.621371)).toLocaleString('it-IT')} mi`;
+  return `${Math.max(3,Math.round(km)).toLocaleString('it-IT')} km`;
 }
 
 // Pure: should an automatic geolocation read happen right now?
-function decideLocationRefresh({now=Date.now(),mineUpdatedAt=null,lastAttemptAt=0,lastFailureAt=0,permission='unknown',enabledBefore=false,hidden=false,inFlight=false}={}){
+function decideLocationRefresh({now=Date.now(),mineUpdatedAt=null,lastAttemptAt=0,lastFailureAt=0,permission='unknown',consent=false,hidden=false,inFlight=false}={}){
   if(inFlight)return {refresh:false,why:'in-flight'};
   if(hidden)return {refresh:false,why:'hidden'};
+  if(!consent)return {refresh:false,why:'no-consent'};
   if(permission==='denied')return {refresh:false,why:'denied'};
   if(permission==='prompt')return {refresh:false,why:'needs-user-permission'};
-  if(permission!=='granted'&&!enabledBefore)return {refresh:false,why:'not-enabled'};
   if(lastAttemptAt&&now-lastAttemptAt<US_LOCATION_MIN_GAP_MS)return {refresh:false,why:'too-soon'};
   if(lastFailureAt&&now-lastFailureAt<US_LOCATION_FAILURE_BACKOFF_MS)return {refresh:false,why:'failure-backoff'};
   const updated=Date.parse(mineUpdatedAt||'');
@@ -1180,31 +1203,32 @@ function decideLocationRefresh({now=Date.now(),mineUpdatedAt=null,lastAttemptAt=
   return {refresh:true,why:Number.isFinite(updated)?'stale':'no-reading'};
 }
 
-// Pure: what the capsule says. `snapshot` is the last known couple reading.
-function distanceCapsuleModel({mine=null,partner=null,partnerName='',permission='unknown',supported=true,now=Date.now()}={}){
+// Pure: what the capsule says. `server` is the last couple_distance() result.
+function distanceCapsuleModel({server=null,partnerName='',permission='unknown',supported=true,consent=false}={}){
   if(!supported)return {state:'unsupported',visible:false,text:'',detail:'Posizione non disponibile'};
-  const coords=row=>row&&validCoordinate(row.latitude,-90,90)&&validCoordinate(row.longitude,-180,180);
-  if(!mine){
-    if(permission==='denied')return {state:'denied',visible:true,text:'Posizione non disponibile',detail:'Riattivala dalle impostazioni del telefono.'};
-    if(permission==='granted')return {state:'pending',visible:false,text:'',detail:''};
-    return {state:'needs-permission',visible:true,text:'Attiva posizione',detail:'Serve solo per la distanza tra voi.'};
+  if(!server?.sharing){
+    if(consent&&permission==='denied')return {state:'denied',visible:true,text:'Posizione non disponibile',detail:'Riattivala dalle impostazioni del telefono.'};
+    if(consent&&permission!=='prompt')return {state:'pending',visible:false,text:'',detail:''};
+    return {state:'needs-permission',visible:true,text:'Attiva posizione',detail:'Mostra la distanza tra voi.'};
   }
-  if(!partner)return {state:'waiting',visible:true,text:'In attesa',detail:`In attesa di ${partnerName||'chi ami'}`,age:mine.updated_at};
-  if(!coords(mine)||!coords(partner))return {state:'unavailable',visible:true,text:'Posizione non disponibile',detail:'Coordinate non valide.'};
-  const km=distanceKm(Number(mine.latitude),Number(mine.longitude),Number(partner.latitude),Number(partner.longitude));
-  const oldest=Math.max(locationAgeMs(mine.updated_at),locationAgeMs(partner.updated_at));
+  if(!server.partner_sharing)return {state:'waiting',visible:true,text:'In attesa',detail:`In attesa di ${partnerName||'chi ami'}`,age:server.my_updated_at};
+  const near=server.near===true;
+  const km=Number(server.distance_km);
+  if(!near&&!Number.isFinite(km))return {state:'unavailable',visible:true,text:'Posizione non disponibile',detail:'Distanza non disponibile.'};
+  const oldest=Math.max(locationAgeMs(server.my_updated_at),locationAgeMs(server.partner_updated_at));
   const stale=oldest>US_LOCATION_STALE_DISPLAY_MS;
-  const older=locationAgeMs(mine.updated_at)>=locationAgeMs(partner.updated_at)?mine.updated_at:partner.updated_at;
-  return {state:stale?'stale':'ready',visible:true,km,text:formatDistance(km),detail:`${formatDistance(km)} tra voi`,age:older,stale};
+  const older=locationAgeMs(server.my_updated_at)>=locationAgeMs(server.partner_updated_at)?server.my_updated_at:server.partner_updated_at;
+  const text=near?'vicini':formatDistance(km);
+  return {state:stale?'stale':'ready',visible:true,near,km:near?0:km,text,detail:near?'Siete vicini':`${text} tra voi`,age:older,stale};
 }
 
 // HUMAN-UI-02 — the Noi couple row reads the same model. Only a real reading
-// (ready, or stale = last known) carries a number; every other state is shown
-// as unknown. There is no "together" state in the domain, so none is shown.
+// (ready, or stale = last known) carries a value; every other state is shown
+// as unknown.
 function noiDistanceLine(model){
   const state=model?.state||'unknown';
-  if(state==='ready'&&model.text)return {state,text:model.text,label:`${model.text} tra voi`};
-  if(state==='stale'&&model.text)return {state,text:model.text,label:`Ultima distanza nota: ${model.text}`};
+  if(state==='ready'&&model.text)return {state,text:model.text,label:model.near?'Siete vicini':`${model.text} tra voi`};
+  if(state==='stale'&&model.text)return {state,text:model.text,label:model.near?'Ultima distanza nota: vicini':`Ultima distanza nota: ${model.text}`};
   return {state:'unknown',text:'distanza non nota',label:'Distanza tra voi non nota'};
 }
 function renderNoiDistance(model){
@@ -1225,21 +1249,19 @@ function renderDistanceCapsule(model){
   root.hidden=!model.visible;
   root.dataset.usDistanceState=model.state;
   value.textContent=model.text||'';
-  root.setAttribute('aria-label',model.visible?`Distanza tra voi: ${model.text}`:'Distanza tra voi');
+  root.setAttribute('aria-label',model.visible?(model.near?'Siete vicini':`Distanza tra voi: ${model.text}`):'Distanza tra voi');
   if (typeof Event === 'function' && typeof window.dispatchEvent === 'function') {
     window.dispatchEvent(new Event('us:distance-changed'));
   }
 }
 
-// Last good reading (shown again on any temporary failure) + current model.
-function applyLocationRows(rows){
-  const mine=(rows||[]).find(row=>row.user_id===window.usProfile.id)||null;
-  const partner=(rows||[]).find(row=>row.user_id!==window.usProfile.id)||null;
-  usLocationRuntime.rows=rows||[];
-  usLocationRuntime.mineUpdatedAt=mine?.updated_at||null;
+// Last good server answer (shown again on any temporary failure) + current model.
+function applyServerDistance(server){
+  usLocationRuntime.server=server||null;
+  usLocationRuntime.mineUpdatedAt=server?.my_updated_at||null;
   const partnerName=usIdentity().partnerName;
-  const model=distanceCapsuleModel({mine,partner,partnerName,permission:usLocationRuntime.permission,supported:Boolean(navigator.geolocation)});
-  if(model.km!==undefined)window.usDistanceKm=model.km;
+  const model=distanceCapsuleModel({server,partnerName,permission:usLocationRuntime.permission,supported:Boolean(navigator.geolocation),consent:locationConsentGiven()});
+  window.usDistanceKm=model.km!==undefined?model.km:null;
   usLocationRuntime.snapshot=model;
   renderDistanceCapsule(model);
   return model;
@@ -1248,30 +1270,29 @@ function applyLocationRows(rows){
 async function hydrateDistance(){
   const viewer=window.usProfile,coupleId=viewer?.couple_id;
   if(!viewer)return;
-  const {data:rows,error}=await sb.from('couple_locations')
-    .select('user_id,latitude,longitude,accuracy_m,updated_at')
-    .eq('couple_id',coupleId);
+  const {data,error}=await sb.rpc('couple_distance');
   if(window.usProfile!==viewer||window.usProfile?.couple_id!==coupleId)return;
   // A failed read never replaces a valid last-known distance.
   if(error){console.warn(error);return;}
-  return applyLocationRows(rows);
+  return applyServerDistance(data);
 }
 window.hydrateDistance=hydrateDistance;
 
 async function saveMyLocation(position){
   if(window.__US_LOCAL_DEV__)return false;
   if(!window.usProfile)return;
+  const cell=usLocationCell(position.coords.latitude,position.coords.longitude);
+  if(!cell)throw new Error('invalid coordinates');
   const payload={
     user_id:window.usProfile.id,
     couple_id:window.usProfile.couple_id,
-    latitude:Number(position.coords.latitude.toFixed(6)),
-    longitude:Number(position.coords.longitude.toFixed(6)),
-    accuracy_m:Number.isFinite(position.coords.accuracy)?position.coords.accuracy:null,
+    latitude:cell.latitude,
+    longitude:cell.longitude,
+    accuracy_m:null,
     updated_at:new Date(position.timestamp||Date.now()).toISOString()
   };
   const {error}=await sb.from('couple_locations').upsert(payload,{onConflict:'user_id'});
   if(error)throw error;
-  localStorage.setItem('usLocationEnabled','1');
 }
 
 function geolocationError(error,silent=false){
@@ -1279,19 +1300,19 @@ function geolocationError(error,silent=false){
   if(error?.code===1){
     // Permission refused: stop trying until the browser permission changes.
     usLocationRuntime.permission='denied';
-    localStorage.removeItem('usLocationEnabled');
     if(!silent)toast('Permesso posizione non attivo');
   }else if(!silent)toast('Non riesco ad aggiornare la posizione');
   // The last good distance (if any) stays on screen.
   return hydrateDistance();
 }
 
-// Manual entry point: only the genuine "Attiva posizione" / Settings paths use
-// it without `silent`. Automatic refreshes always pass {silent:true}.
+// Reads the position only after consent. Only the explanation's "Attiva" uses
+// it without `silent`; automatic refreshes always pass {silent:true}.
 function refreshMyLocation(options={}){
   if(window.__US_LOCAL_DEV__)return;
   const silent=Boolean(options?.silent);
   if(!window.usProfile)return toast('Connessione non pronta');
+  if(!locationConsentGiven())return;
   if(!navigator.geolocation){
     renderDistanceCapsule(distanceCapsuleModel({supported:false}));
     return;
@@ -1317,8 +1338,8 @@ function refreshMyLocation(options={}){
     locationRefreshInFlight=false;
     geolocationError(error,silent);
   },{
-    // A city-to-city distance does not need GPS: cheap reads for automatic refreshes.
-    enableHighAccuracy:!silent,
+    // Approximate is all US uses: never ask the device for GPS precision.
+    enableHighAccuracy:false,
     timeout:silent?15000:20000,
     maximumAge:silent?120000:0
   });
@@ -1339,7 +1360,7 @@ function watchLocationPermission(){
     permission.onchange=()=>{
       usLocationRuntime.permission=permission.state||'unknown';
       usLocationRuntime.lastFailureAt=0;
-      if(permission.state==='granted')refreshMyLocation({silent:true});
+      if(permission.state==='granted'&&locationConsentGiven())refreshMyLocation({silent:true});
       else hydrateDistance();
     };
   }).catch(()=>{usLocationRuntime.watching=false;});
@@ -1353,13 +1374,13 @@ async function maybeAutoRefreshLocation(reason='resume'){
   await hydrateDistance();
   usLocationRuntime.permission=await locationPermissionState();
   watchLocationPermission();
-  if(usLocationRuntime.rows)applyLocationRows(usLocationRuntime.rows);
+  if(usLocationRuntime.server)applyServerDistance(usLocationRuntime.server);
   const decision=decideLocationRefresh({
     mineUpdatedAt:usLocationRuntime.mineUpdatedAt,
     lastAttemptAt:usLocationRuntime.lastAttemptAt,
     lastFailureAt:usLocationRuntime.lastFailureAt,
     permission:usLocationRuntime.permission,
-    enabledBefore:localStorage.getItem('usLocationEnabled')==='1',
+    consent:locationConsentGiven(),
     hidden:document.hidden,
     inFlight:locationRefreshInFlight
   });
@@ -1369,6 +1390,8 @@ async function maybeAutoRefreshLocation(reason='resume'){
 
 // Slow, visible-only safety net for a session that simply stays open. It asks
 // the same policy as every other trigger, so a fresh reading never reads GPS.
+// It also brings in the partner's newer reading (their row is not readable,
+// so there is no Realtime event for it).
 function startLocationRefreshTimer(){
   if(window.__US_LOCAL_DEV__)return;
   if(locationTimer)clearInterval(locationTimer);
@@ -1379,19 +1402,84 @@ function startLocationRefreshTimer(){
   },US_LOCATION_CHECK_INTERVAL_MS);
 }
 
-// The capsule's only interaction: a tiny sheet (same canonical surface as every
-// confirmation). "Attiva posizione" exists only where the permission is
-// genuinely still needed; there is never a manual refresh.
-async function openDistanceDetail(){
-  const model=usLocationRuntime.snapshot||distanceCapsuleModel({permission:usLocationRuntime.permission,supported:Boolean(navigator.geolocation)});
+// The explanation shown before the system permission dialog (Play prominent
+// disclosure). Nothing is read unless the person taps "Attiva".
+async function openLocationDisclosure(){
+  const partner=usIdentity().partnerName||'La tua persona';
+  const ok=await window.UsUiFoundation?.confirm?.({
+    kicker:'POSIZIONE',
+    title:'Distanza tra voi',
+    body:`US usa la posizione approssimativa di questo telefono, solo ad app aperta, per calcolare la distanza tra voi. ${partner} vede solo la distanza, mai dove sei. Puoi smettere quando vuoi.`,
+    confirmLabel:'Attiva',
+    cancelLabel:'Non ora'
+  });
+  if(!ok)return false;
+  setLocationConsent(true);
+  usLocationRuntime.lastFailureAt=0;
+  refreshMyLocation({});
+  return true;
+}
+window.openLocationDisclosure=openLocationDisclosure;
+
+// "Smetti e cancella": consent off on this phone, saved reading deleted.
+async function stopSharingLocation(){
+  if(window.__US_LOCAL_DEV__)return false;
+  const {error}=await sb.rpc('stop_sharing_location');
+  if(error){console.warn(error);toast('Non riesco a cancellare la posizione. Riprova.');return false;}
+  setLocationConsent(false);
+  usLocationRuntime.lastAttemptAt=0;
+  usLocationRuntime.lastFailureAt=0;
+  usLocationRuntime.mineUpdatedAt=null;
+  await hydrateDistance();
+  toast('Posizione cancellata');
+  return true;
+}
+window.stopSharingLocation=stopSharingLocation;
+
+function locationSharingActive(){
+  return Boolean(usLocationRuntime.server?.sharing)||locationConsentGiven();
+}
+
+// Settings › Posizione.
+async function openLocationSettings(){
   const ui=window.UsUiFoundation;
-  if(model.state==='needs-permission'){
-    const ok=await ui?.confirm?.({kicker:'POSIZIONE',title:'Attiva la posizione',body:model.detail,confirmLabel:'Attiva',cancelLabel:'Non ora'});
-    if(ok)refreshMyLocation({});
+  if(locationSharingActive()){
+    const partner=usIdentity().partnerName||'La tua persona';
+    const stop=await ui?.confirm?.({
+      kicker:'POSIZIONE',
+      title:'Posizione condivisa',
+      body:`US usa la posizione approssimativa di questo telefono, solo ad app aperta. ${partner} vede solo la distanza tra voi, mai dove sei. Se smetti, la posizione salvata viene cancellata subito.`,
+      confirmLabel:'Smetti e cancella',
+      cancelLabel:'Chiudi',
+      tone:'danger'
+    });
+    if(stop)await stopSharingLocation();
     return;
   }
-  const age=model.age?`Aggiornata ${relativeLocationAge(model.age)}`:'';
-  await ui?.notice?.({kicker:'DISTANZA',title:model.detail||'Posizione non disponibile',body:age});
+  if(!navigator.geolocation){
+    await ui?.notice?.({kicker:'POSIZIONE',title:'Posizione non disponibile',body:'Questo telefono non può condividere la posizione.'});
+    return;
+  }
+  return openLocationDisclosure();
+}
+window.UsLocation=Object.freeze({
+  openSettings:openLocationSettings,
+  isSharing:locationSharingActive,
+  stop:stopSharingLocation
+});
+
+// The capsule's only interaction: a tiny sheet (same canonical surface as every
+// confirmation). "Attiva posizione" exists only where sharing is still off;
+// there is never a manual refresh.
+async function openDistanceDetail(){
+  const model=usLocationRuntime.snapshot||distanceCapsuleModel({permission:usLocationRuntime.permission,supported:Boolean(navigator.geolocation),consent:locationConsentGiven()});
+  const ui=window.UsUiFoundation;
+  if(model.state==='needs-permission'){
+    await openLocationDisclosure();
+    return;
+  }
+  const age=model.age?`Aggiornata ${relativeLocationAge(model.age)}. `:'';
+  await ui?.notice?.({kicker:'DISTANZA',title:model.detail||'Posizione non disponibile',body:`${age}Puoi smettere di condividerla da Impostazioni › Posizione.`});
 }
 window.openDistanceDetail=openDistanceDetail;
 
@@ -3480,12 +3568,10 @@ function hashSeed(text){
   return h>>>0;
 }
 async function currentQuestMode(){
-  if(Number.isFinite(window.usDistanceKm))return window.usDistanceKm>50?'far':'near';
-  const {data:rows}=await sb.from('couple_locations').select('user_id,latitude,longitude').eq('couple_id',window.usProfile.couple_id);
-  if(!rows||rows.length<2)return 'any';
-  const km=distanceKm(rows[0].latitude,rows[0].longitude,rows[1].latitude,rows[1].longitude);
-  window.usDistanceKm=km;
-  return km>50?'far':'near';
+  // Distance comes from couple_distance(); the partner's coordinates are not readable.
+  if(!Number.isFinite(window.usDistanceKm)){try{await window.hydrateDistance?.();}catch(_e){}}
+  if(!Number.isFinite(window.usDistanceKm))return 'any';
+  return window.usDistanceKm>50?'far':'near';
 }
 function selectInitialQuestTemplates(templates,mode,week,coupleId){
   const eligible=templates.filter(t=>t.mode==='any'||t.mode===mode).sort((a,b)=>a.key.localeCompare(b.key));

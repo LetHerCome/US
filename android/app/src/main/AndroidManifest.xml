@@ -70,8 +70,9 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Approximate location only (US 1.0 location A): the distance between
+         partners never needs GPS precision. FINE is forbidden by the Play gate. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Required by Capacitor Haptics; also keep explicit for upgrade builds. -->
     <uses-permission android:name="android.permission.VIBRATE" />
