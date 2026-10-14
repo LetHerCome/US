@@ -32,11 +32,12 @@ function outcome(status,body){
   return {kind:'deletion_failed',done:false};
 }
 
-function message(kind,supportEmail=US_SUPPORT_EMAIL){
+// In the app the email is already known and only the password is asked.
+function message(kind,supportEmail=US_SUPPORT_EMAIL,channel='web'){
   switch(kind){
     case 'deleted':return 'Account eliminato.';
     case 'pending_cleanup':return 'Account eliminato. Stiamo completando la rimozione degli ultimi file.';
-    case 'wrong_password':return 'Email o password non corrette. Riprova.';
+    case 'wrong_password':return channel==='app'?'Password non corretta. Riprova.':'Email o password non corrette. Riprova.';
     case 'reauth_required':return 'Per sicurezza inserisci di nuovo la password e riprova.';
     case 'confirm_required':return `Scrivi ${CONFIRM_WORD} per confermare.`;
     case 'deletion_disabled':return `Eliminazione non ancora disponibile, scrivi a ${supportEmail}.`;

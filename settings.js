@@ -663,7 +663,7 @@ async function submitAccountDeletion(api){
   accountDeletionInFlight=false;
   if(submit){submit.textContent='Elimina definitivamente';submit.disabled=true;}
   if(cancel)cancel.disabled=false;
-  accountDeletionStatus(api.message(result.kind,api.US_SUPPORT_EMAIL));
+  accountDeletionStatus(api.message(result.kind,api.US_SUPPORT_EMAIL,'app'));
   passwordInput?.focus({preventScroll:true});
 }
 

@@ -96,6 +96,9 @@ test('every server response maps to one outcome and message', async () => {
   }
   assert.equal(deletion.message('deletion_disabled', 'x@y.invalid'), 'Eliminazione non ancora disponibile, scrivi a x@y.invalid.');
   assert.match(deletion.message('deletion_failed'), /non è stato eliminato nulla/);
+  // The app asks only for the password; the public page asks for email and password.
+  assert.equal(deletion.message('wrong_password', 'x@y.invalid', 'app'), 'Password non corretta. Riprova.');
+  assert.equal(deletion.message('wrong_password', 'x@y.invalid'), 'Email o password non corrette. Riprova.');
   const network = await deletion.requestDeletion({ supabaseUrl: 'u', apiKey: 'k', accessToken: 't', channel: 'web', fetchImpl: async () => { throw new TypeError('offline'); } });
   assert.deepEqual(network, { kind: 'network', done: false });
 });
