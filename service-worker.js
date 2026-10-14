@@ -200,14 +200,20 @@ const US_PUSH_TARGETS = ["home", "today", "think", "left_for_you", "quiz", "bond
 const usPushTarget = (value) => (US_PUSH_TARGETS.includes(value) ? value : "home");
 const usPushUrl = (target) => `/?open=${encodeURIComponent(usPushTarget(target))}&from=push`;
 
+// Only for a push that arrives without its own text; the worker cannot read
+// the app's saved language, so it follows the phone like the app does.
+const usPushFallback = String(self.navigator?.language || "it").toLowerCase().startsWith("it")
+  ? "Hai qualcosa di nuovo su US. ♡"
+  : "There's something new for you on US. ♡";
+
 self.addEventListener("push", (event) => {
   let data = {};
   try { data = event.data ? event.data.json() : {}; } catch (_) {
-    try { data = { body: event.data?.text?.() || "Hai qualcosa di nuovo su US. ♡" }; } catch (_e) {}
+    try { data = { body: event.data?.text?.() || usPushFallback }; } catch (_e) {}
   }
   const title = data.title || "US.";
   const options = {
-    body: data.body || "Hai qualcosa di nuovo su US. ♡",
+    body: data.body || usPushFallback,
     icon: data.icon || "/icon-192.png",
     badge: data.badge || "/icon-192.png",
     tag: data.tag || "us-notification",
@@ -384,7 +390,7 @@ function usNavigationUnavailableResponse() {
   // real US page: it retries by itself when the connection comes back and
   // offers one explicit retry, instead of leaving the browser error page.
   return new Response(
-    '<!doctype html><html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>US</title><body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#08040e;color:#fff;font:16px system-ui"><main style="padding:24px;text-align:center"><strong>US non è raggiungibile in questo momento.</strong><p style="opacity:.72">Controlla la connessione: riapro US appena torna.</p><button type="button" id="usRetry" style="min-height:44px;padding:0 22px;border-radius:22px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font:inherit">Riprova</button></main><script>(function(){var go=function(){location.reload();};document.getElementById("usRetry").addEventListener("click",go);addEventListener("online",go,{once:true});})();</script></body></html>',
+    '<!doctype html><html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>US</title><body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#08040e;color:#fff;font:16px system-ui"><main style="padding:24px;text-align:center"><strong>US non è raggiungibile in questo momento.</strong><p style="opacity:.72">Controlla la connessione: riapro US appena torna.</p><button type="button" id="usRetry" style="min-height:44px;padding:0 22px;border-radius:22px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font:inherit">Riprova</button></main><script>(function(){var go=function(){location.reload();};try{var l=localStorage.getItem("us:lang:v1")||((navigator.languages||[])[0]||navigator.language||"it").slice(0,2).toLowerCase();if(l!=="it"){document.documentElement.lang="en";document.querySelector("strong").textContent="US can\u2019t be reached right now.";document.querySelector("p").textContent="Check your connection: US will reopen as soon as it\u2019s back.";document.getElementById("usRetry").textContent="Try again";}}catch(_){}document.getElementById("usRetry").addEventListener("click",go);addEventListener("online",go,{once:true});})();</script></body></html>',
     {
       status: 503,
       headers: {

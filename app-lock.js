@@ -278,8 +278,10 @@
 
   // ---- Actions ------------------------------------------------------------
 
+  // The system sheet is not page text: it gets the app's language here.
   function promptOptions(title) {
-    return { title, cancel: 'Annulla', fallback: "Usa l’account" };
+    const t = (text) => (typeof window.usT === 'function' ? window.usT(text) : text);
+    return { title: t(title), cancel: t('Annulla'), fallback: t("Usa l’account") };
   }
 
   function handleUnlockError(code) {

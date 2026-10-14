@@ -894,7 +894,7 @@ function usInvalidateAuth({revokePush=true}={}){
   usOnboarding.reset();
   resetNoiIdeasForIdentityChange();
   window.usProfile=null;
-  usApplyPersonColor(null);
+  if(typeof usApplyPersonColor==='function')usApplyPersonColor(null);
   window.UsCoupleContext?.clear?.();
   window.UsWidgets?.clear?.().catch(()=>{});
   window.UsNotifications?.signedOut?.();
