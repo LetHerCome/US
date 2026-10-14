@@ -58,7 +58,7 @@
     else view = window.USCountdown?.display?.({ mode: c.kind, target: c.target });
     if (!view) view = { value: '12', unit: 'giorni', label: '' };
     const clock = view.value.includes(':');
-    return `<div class="us-wp-countdown" data-style="${esc(c.style || 'editorial')}"><span class="us-wp-cd-title">${esc(c.title)}</span><b${clock ? ' class="is-clock"' : ''}>${esc(view.value)}</b>${view.unit ? `<span class="us-wp-cd-unit">${esc(view.unit)}</span>` : ''}${view.label && !clock ? `<span class="us-wp-cd-sub">${esc(view.label)}</span>` : ''}</div>`;
+    return `<div class="us-wp-countdown" data-style="${esc(c.style || 'editorial')}"><span class="us-wp-cd-title"${c.kind === 'together' ? '' : ' translate="no"'}>${esc(c.title)}</span><b${clock ? ' class="is-clock"' : ''}>${esc(view.value)}</b>${view.unit ? `<span class="us-wp-cd-unit">${esc(view.unit)}</span>` : ''}${view.label && !clock ? `<span class="us-wp-cd-sub">${esc(view.label)}</span>` : ''}</div>`;
   }
 
   function daysLine(snapshot) {

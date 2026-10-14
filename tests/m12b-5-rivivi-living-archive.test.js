@@ -197,7 +197,7 @@ test('M12B.5 card: a plain Moment keeps the photo card and opens the existing Mo
   render(api.pickRivivi(t, TODAY), new Map([['p/m1', 'https://signed/m1']]), new Map([['u1', 'Bea']]));
   assert.equal(root.hidden, false);
   assert.match(root.innerHTML, /<button type="button" class="ricordi-rivivi-card" data-ricordi-open="m1" data-source-key="moment:m1" data-rivivi-kind="moment" data-url="https:\/\/signed\/m1" data-author="Bea"/);
-  assert.match(root.innerHTML, /<b>Al mare<\/b><span>1 marzo 2026 · Bea<\/span>/);
+  assert.match(root.innerHTML, /<b translate="no">Al mare<\/b><span>1 marzo 2026 · Bea<\/span>/);
 });
 
 test('M12B.5 card: missing media — a plain Moment without a signed URL hides Rivivi; a linked source falls back to its record', () => {
@@ -221,13 +221,13 @@ test('M12B.5 card: a lived source with its photo shows source snapshot date/titl
   assert.match(root.innerHTML, /data-ricordi-open="m1" data-source-key="da_vivere:b1" data-rivivi-kind="experience"/);
   assert.match(root.innerHTML, /data-date="10 mag 2026"/);
   assert.match(root.innerHTML, /data-caption="Concerto al Circo Massimo"/);
-  assert.match(root.innerHTML, /<b>Concerto al Circo Massimo<\/b><span>10 maggio 2026 · Da vivere<\/span>/);
+  assert.match(root.innerHTML, /<b translate="no">Concerto al Circo Massimo<\/b><span>10 maggio 2026 · Da vivere<\/span>/);
 });
 
 test('M12B.5 card: Event without photo uses the historical snapshot title, says "Evento vissuto" and never opens the mutable event', () => {
   const { api, render, root } = load();
   render(api.pickRivivi(api.timeline([], [], [], [ev('c1', '2026-03-07', { title: 'Cena a Roma', current_title: 'Rinominato' })], []), TODAY), new Map(), new Map());
-  assert.match(root.innerHTML, /<b>Cena a Roma<\/b><span>7 marzo 2026 · Evento vissuto<\/span>/);
+  assert.match(root.innerHTML, /<b translate="no">Cena a Roma<\/b><span>7 marzo 2026 · Evento vissuto<\/span>/);
   assert.match(root.innerHTML, /Vissuto insieme il 7 marzo 2026\.<\/p>/);
   assert.doesNotMatch(root.innerHTML, /Rinominato|editEvent|openEventEditor|data-ricordi-experience/);
 });
@@ -235,14 +235,14 @@ test('M12B.5 card: Event without photo uses the historical snapshot title, says 
 test('M12B.5 card: a legacy completion (title_source live) is shown with the declared live fallback, nothing backfilled', () => {
   const { api, render, root } = load();
   render(api.pickRivivi(api.timeline([], [], [], [ev('c1', '2026-03-07', { title: 'Anniversario', title_source: 'live' })], []), TODAY), new Map(), new Map());
-  assert.match(root.innerHTML, /<b>Anniversario<\/b>/);
+  assert.match(root.innerHTML, /<b translate="no">Anniversario<\/b>/);
   assert.match(root.innerHTML, /Il titolo è quello di oggi: quello di allora non era registrato\./);
 });
 
 test('M12B.5 card: a lived Da vivere without photo opens the existing Da vivere detail', () => {
   const { api, render, root } = load();
   render(api.pickRivivi(api.timeline([], [lived('b1', 'Mostra di Frida', '2026-04-10T18:00:00Z')], [], [], []), TODAY), new Map(), new Map());
-  assert.match(root.innerHTML, /<b>Mostra di Frida<\/b><span>10 aprile 2026 · Da vivere<\/span>/);
+  assert.match(root.innerHTML, /<b translate="no">Mostra di Frida<\/b><span>10 aprile 2026 · Da vivere<\/span>/);
   assert.match(root.innerHTML, /<button type="button" class="ricordi-rivivi-link" data-ricordi-experience="b1">Apri in Da vivere<\/button>/);
 });
 
@@ -252,8 +252,8 @@ test('M12B.5 card: a kept Daily shows the question, its date and opens on the fr
   render(api.pickRivivi(api.timeline([], [], [kept('q1', '2026-06-01', { question_text: long })], [], []), TODAY), new Map(), new Map());
   assert.match(root.innerHTML, /data-source-key="daily_question:q1" data-rivivi-kind="daily"/);
   assert.ok(root.innerHTML.includes(`<b>${long}</b><span>1 giugno 2026 · Domanda del giorno</span>`));
-  assert.match(root.innerHTML, /<b>Francesco<\/b><p>Il lago<\/p>/);
-  assert.match(root.innerHTML, /<b>Beatrice<\/b><p>La terrazza &#60;b&#62;<\/p>/);
+  assert.match(root.innerHTML, /<b translate="no">Francesco<\/b><p translate="no">Il lago<\/p>/);
+  assert.match(root.innerHTML, /<b translate="no">Beatrice<\/b><p translate="no">La terrazza &#60;b&#62;<\/p>/);
 });
 
 test('M12B.5 story: a Moment that is the photo of a lived source says so; an Event without photo is a read-only record', () => {
@@ -261,11 +261,11 @@ test('M12B.5 story: a Moment that is the photo of a lived source says so; an Eve
   const html = momentCard(m('m1', '2026-02-15'), 'https://signed/m1', 'Bea', false, false, { kind: 'event', sourceKey: 'shared_event_completion:c1', title: 'Cena a Roma', date: '2026-02-14' });
   assert.match(html, /data-moment-iso="2026-02-14"/);
   assert.match(html, /data-date="14 feb 2026"/);
-  assert.match(html, /<small class="ricordi-moment-source" data-source-key="shared_event_completion:c1">Evento vissuto · Cena a Roma<\/small>/);
+  assert.match(html, /<small class="ricordi-moment-source" data-source-key="shared_event_completion:c1">Evento vissuto<span translate="no"> · Cena a Roma<\/span><\/small>/);
   assert.match(html, /^<article class="moment-card moment-postit"/, 'editorial rhythm hook unchanged');
   const card = eventCard(ev('c1', '2026-02-14'));
   assert.match(card, /^<article class="ricordi-experience ricordi-event" data-source-key="shared_event_completion:c1" data-title-source="snapshot">/);
-  assert.match(card, /<small>Vissuto insieme · 14 febbraio<\/small><b>Cena a Roma<\/b>/);
+  assert.match(card, /<small>Vissuto insieme · 14 febbraio<\/small><b translate="no">Cena a Roma<\/b>/);
   assert.doesNotMatch(card, /<img|onclick|data-ricordi-experience/);
 });
 

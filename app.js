@@ -148,15 +148,16 @@ function usIdentity(){
 window.UsIdentity=Object.freeze({resolve:resolveUsIdentity,current:usIdentity});
 function refreshUsIdentityLabels(){
   const identity=usIdentity();
+  // A real name stays as written (translate="no"); only the Tu / La tua persona / Voi due placeholders follow the language.
   for(const role of ['francesco','beatrice']){
     const label=document.querySelector(`[data-noi-couple-name="${role}"]`);
-    if(label)label.textContent=identity.nameForRole(role);
+    if(label){const name=identity.nameForRole(role);label.textContent=name;label.translate=name==='Tu'||name==='La tua persona';}
     const root=document.getElementById(role==='francesco'?'pairAvatarFrancesco':'pairAvatarBeatrice');
     const fallback=root?.querySelector('.fallback');
     if(fallback)fallback.textContent=identity.initialForRole(role);
   }
   for(const id of ['noiCoupleCard','noiCouple'])document.getElementById(id)?.setAttribute('aria-label',identity.pairLabel);
-  const pair=document.getElementById('usCoupleNames');if(pair)pair.textContent=identity.pairLabel;
+  const pair=document.getElementById('usCoupleNames');if(pair){pair.textContent=identity.pairLabel;pair.translate=identity.pairLabel==='Voi due';}
   const ownInitial=document.getElementById('profileAvatarFallback');if(ownInitial)ownInitial.textContent=identity.initialForRole(window.usProfile?.role);
   const title=document.getElementById('thinkArrivalTitle');if(title)title.textContent=`${identity.partnerName} ti pensa`;
   window.dispatchEvent(new CustomEvent('us-identity-change',{detail:{identityKey:usCoupleContextState.identityKey}}));
@@ -1912,7 +1913,7 @@ function renderOggiCalendarWidget(fact){
   container.hidden=false;
   const rows=Array.isArray(fact.rows)?fact.rows.filter(row=>row&&row.label&&row.value):[];
   const rowsHtml=rows.length
-    ? `<span class="us-oggi-card-lines">${rows.map(row=>`<span class="us-oggi-card-line" data-kind="${escapeHtml(row.kind||'person')}"><span class="us-oggi-card-line-label">${escapeHtml(row.label)}</span><span class="us-oggi-card-line-value">${escapeHtml(row.value)}</span></span>`).join('')}</span>`
+    ? `<span class="us-oggi-card-lines">${rows.map(row=>`<span class="us-oggi-card-line" data-kind="${escapeHtml(row.kind||'person')}"><span class="us-oggi-card-line-label"${row.kind==='person'?' translate="no"':''}>${escapeHtml(row.label)}</span><span class="us-oggi-card-line-value"${row.kind==='person'&&row.value!=='Nessun impegno'?' translate="no"':''}>${escapeHtml(row.value)}</span></span>`).join('')}</span>`
     : `<small>${escapeHtml(fact.detail)}</small>`;
   const ariaDetail=rows.length?rows.map(row=>`${row.label} ${row.value}`).join('. '):fact.detail;
   container.innerHTML=`<button type="button" class="us-oggi-card" data-us-oggi-date="${escapeHtml(fact.dateISO)}" aria-label="${escapeHtml(fact.title)}: ${escapeHtml(ariaDetail)}"><span class="us-oggi-card-mark" aria-hidden="true">♡</span><span class="us-oggi-card-copy"><b>${escapeHtml(fact.title)}</b>${rowsHtml}</span></button>`;
@@ -2427,7 +2428,7 @@ function renderThinkReactionUi(){
   const buttons=root.querySelectorAll('[data-think-reaction]');
   const partner=partnerFromProfiles(window.usBondProfiles||[]);
   // Momento: the name on one line, "ti pensa" in italic in their colour (same words).
-  if(title)title.innerHTML=`<span class="think-arrival-name">${escapeHtml(partner?.display_name||'La tua persona')}</span> <em>ti pensa</em>`;
+  if(title)title.innerHTML=`<span class="think-arrival-name"${partner?.display_name?' translate="no"':''}>${escapeHtml(partner?.display_name||'La tua persona')}</span> <em>ti pensa</em>`;
   if(copy)copy.hidden=true;
   buttons.forEach(button=>{
     const reaction=button.dataset.thinkReaction;
@@ -2622,8 +2623,8 @@ function renderTodayReveal(){
   if(!reveal||!state?.both_answered)return;
   const partner=dailyRevealPartnerLabel();
   reveal.className='today-reveal today-reveal--simple';
-  reveal.innerHTML='<div class="today-answer" data-us-daily-answer="mine"><b>La tua risposta</b><p>'+escapeHtml(state.my_answer||'')+'</p></div>'+
-    '<div class="today-answer" data-us-daily-answer="partner"><b>'+escapeHtml(partner)+'</b><p>'+escapeHtml(state.partner_answer||'')+'</p></div>';
+  reveal.innerHTML='<div class="today-answer" data-us-daily-answer="mine"><b>La tua risposta</b><p translate="no">'+escapeHtml(state.my_answer||'')+'</p></div>'+
+    '<div class="today-answer" data-us-daily-answer="partner"><b translate="no">'+escapeHtml(partner)+'</b><p translate="no">'+escapeHtml(state.partner_answer||'')+'</p></div>';
 }
 
 // "Visto" = il reveal è davvero mostrato in un foglio Today aperto: non il push,
@@ -3082,12 +3083,12 @@ function ricordiMomentCard(row,signedUrls,author,canDelete,feature,source,priori
   const previewPath=ricordiPreviewPath(row);
   const previewUrl=ricordiPreviewUrl(row,signedUrls);
   if(!fullUrl||!previewUrl)return '';
-  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(fullUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(row.caption||'')}" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(previewUrl)}" data-us-media-path="${escapeHtml(previewPath)}" onerror="usRecoverPrivateImage(this)" alt="Ricordo condiviso" loading="${priority?'eager':'lazy'}" decoding="async"${priority?' fetchpriority="high"':''}>${canDelete?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}')">Elimina</button>`:''}<div class="moment-meta">${row.caption?`<p>${escapeHtml(row.caption)}</p>`:''}${source?`<small class="ricordi-moment-source" data-source-key="${escapeHtml(source.sourceKey)}">${escapeHtml(RICORDI_SOURCE_LABEL[source.kind]||'')}${source.title?` · ${escapeHtml(source.title)}`:''}</small>`:''}<span class="moment-line"><i class="moment-dot" data-owner="${row.created_by===window.usProfile?.id?'tu':'partner'}" aria-hidden="true"></i><b>${escapeHtml(shortLabel)}</b><span aria-hidden="true">·</span><span class="moment-by">${escapeHtml(author||'Noi')}</span></span></div></article>`;
+  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(fullUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(row.caption||'')}" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(previewUrl)}" data-us-media-path="${escapeHtml(previewPath)}" onerror="usRecoverPrivateImage(this)" alt="Ricordo condiviso" loading="${priority?'eager':'lazy'}" decoding="async"${priority?' fetchpriority="high"':''}>${canDelete?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}')">Elimina</button>`:''}<div class="moment-meta">${row.caption?`<p translate="no">${escapeHtml(row.caption)}</p>`:''}${source?`<small class="ricordi-moment-source" data-source-key="${escapeHtml(source.sourceKey)}">${escapeHtml(RICORDI_SOURCE_LABEL[source.kind]||'')}${source.title?`<span translate="no"> · ${escapeHtml(source.title)}</span>`:''}</small>`:''}<span class="moment-line"><i class="moment-dot" data-owner="${row.created_by===window.usProfile?.id?'tu':'partner'}" aria-hidden="true"></i><b>${escapeHtml(shortLabel)}</b><span aria-hidden="true">·</span><span class="moment-by" translate="no">${escapeHtml(author||'Noi')}</span></span></div></article>`;
 }
 function ricordiExperienceCard(row,sourceDate){
   const date=/^\d{4}-\d{2}-\d{2}$/.test(String(sourceDate||''))?String(sourceDate):ricordiLocalISO(row.completed_at);
   const day=new Date(date+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'long'});
-  return `<button type="button" class="ricordi-experience" data-ricordi-experience="${escapeHtml(row.id)}"><span class="ricordi-experience-mark" aria-hidden="true"></span><span class="ricordi-experience-copy"><small>Vissuta insieme · ${escapeHtml(day)}</small><b>${escapeHtml(row.title)}</b></span><span class="ricordi-experience-source">Da vivere</span></button>`;
+  return `<button type="button" class="ricordi-experience" data-ricordi-experience="${escapeHtml(row.id)}"><span class="ricordi-experience-mark" aria-hidden="true"></span><span class="ricordi-experience-copy"><small>Vissuta insieme · ${escapeHtml(day)}</small><b translate="no">${escapeHtml(row.title)}</b></span><span class="ricordi-experience-source">Da vivere</span></button>`;
 }
 // M12B.4 — una Domanda del giorno conservata: provenienza esplicita e le due
 // risposte come erano al reveal (snapshot del server), apribile sul posto.
@@ -3096,7 +3097,7 @@ function ricordiDailyCard(row){
   return `<details class="ricordi-daily" data-ricordi-daily="${escapeHtml(row.id)}" data-source-key="${escapeHtml(row.source_key||'')}"><summary><span class="ricordi-experience-mark ricordi-daily-mark" aria-hidden="true"></span><span class="ricordi-experience-copy"><small>Domanda del giorno · ${escapeHtml(day)}</small><b>${escapeHtml(row.question_text)}</b></span><span class="ricordi-experience-source">Conservata</span></summary>${ricordiDailyAnswers(row)}</details>`;
 }
 function ricordiDailyAnswers(row){
-  const answer=(label,text)=>`<div class="ricordi-daily-answer"><b>${escapeHtml(label)}</b><p>${escapeHtml(text||'')}</p></div>`;
+  const answer=(label,text)=>`<div class="ricordi-daily-answer"><b translate="no">${escapeHtml(label)}</b><p translate="no">${escapeHtml(text||'')}</p></div>`;
   return `<div class="ricordi-daily-answers">${answer(usIdentity().nameForRole('francesco'),row.francesco_answer)}${answer(usIdentity().nameForRole('beatrice'),row.beatrice_answer)}</div>`;
 }
 // M12B.5 — un Evento vissuto senza foto resta un record evento (D3=A): titolo
@@ -3105,7 +3106,7 @@ function ricordiDailyAnswers(row){
 function ricordiEventTitle(row){return row?.title||'Evento';}
 function ricordiEventCard(row){
   const day=new Date(String(row.occurrence_date)+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'long'});
-  return `<article class="ricordi-experience ricordi-event" data-source-key="shared_event_completion:${escapeHtml(row.source_ref)}" data-title-source="${escapeHtml(row.title_source||'')}"><span class="ricordi-experience-mark ricordi-event-mark" aria-hidden="true"></span><span class="ricordi-experience-copy"><small>Vissuto insieme · ${escapeHtml(day)}</small><b>${escapeHtml(ricordiEventTitle(row))}</b></span><span class="ricordi-experience-source">Evento</span></article>`;
+  return `<article class="ricordi-experience ricordi-event" data-source-key="shared_event_completion:${escapeHtml(row.source_ref)}" data-title-source="${escapeHtml(row.title_source||'')}"><span class="ricordi-experience-mark ricordi-event-mark" aria-hidden="true"></span><span class="ricordi-experience-copy"><small>Vissuto insieme · ${escapeHtml(day)}</small><b${row?.title?' translate="no"':''}>${escapeHtml(ricordiEventTitle(row))}</b></span><span class="ricordi-experience-source">Evento</span></article>`;
 }
 // M12B.5 — Rivivi parla la lingua della fonte, in un solo linguaggio visivo:
 // con foto apre il Moment viewer esistente (anche quando la foto è l'immagine
@@ -3133,7 +3134,7 @@ function renderRicordiRivivi(pick,signedUrls,names){
     const meta=entry.kind==='moment'?author:RICORDI_SOURCE_LABEL[entry.kind];
     const viewerISO=entry.kind==='moment'?m.moment_date:entry.date;
     const viewerDate=new Date(viewerISO+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'2-digit',month:'short',year:'numeric'});
-    root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><button type="button" class="ricordi-rivivi-card" data-ricordi-open="${escapeHtml(m.id)}" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}" data-url="${escapeHtml(fullUrl)}" data-author="${escapeHtml(author)}" data-date="${escapeHtml(viewerDate)}" data-caption="${escapeHtml(m.caption||title)}" aria-label="Rivivi: ${escapeHtml(title||date)}"><img src="${escapeHtml(previewUrl)}" data-us-media-path="${escapeHtml(previewPath)}" onerror="usRecoverPrivateImage(this)" alt="" loading="eager" decoding="async" fetchpriority="high"><span class="ricordi-rivivi-copy"><small>${escapeHtml(pick.label)}</small><b>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(meta)}</span></span></button>`;
+    root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><button type="button" class="ricordi-rivivi-card" data-ricordi-open="${escapeHtml(m.id)}" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}" data-url="${escapeHtml(fullUrl)}" data-author="${escapeHtml(author)}" data-date="${escapeHtml(viewerDate)}" data-caption="${escapeHtml(m.caption||title)}" aria-label="Rivivi: ${escapeHtml(title||date)}"><img src="${escapeHtml(previewUrl)}" data-us-media-path="${escapeHtml(previewPath)}" onerror="usRecoverPrivateImage(this)" alt="" loading="eager" decoding="async" fetchpriority="high"><span class="ricordi-rivivi-copy"><small>${escapeHtml(pick.label)}</small><b${entry.kind==='daily'?'':' translate="no"'}>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(meta)}</span></span></button>`;
     root.hidden=false;
     return;
   }
@@ -3142,7 +3143,7 @@ function renderRicordiRivivi(pick,signedUrls,names){
   if(entry.kind==='daily')body=ricordiDailyAnswers(entry.row);
   else if(entry.kind==='event')body=`<p class="ricordi-rivivi-detail">Vissuto insieme il ${escapeHtml(date)}.${entry.row.title_source==='live'?' Il titolo è quello di oggi: quello di allora non era registrato.':''}</p>`;
   else body=`<p class="ricordi-rivivi-detail">Vissuta insieme il ${escapeHtml(date)}.</p>${entry.orphan?'':`<button type="button" class="ricordi-rivivi-link" data-ricordi-experience="${escapeHtml(entry.row.id)}">Apri in Da vivere</button>`}`;
-  root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><details class="ricordi-rivivi-card ricordi-rivivi-note" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}"><summary aria-label="Rivivi: ${escapeHtml(title||date)}"><span class="ricordi-rivivi-mark ricordi-rivivi-mark-${escapeHtml(entry.kind)}" aria-hidden="true"></span><span class="ricordi-rivivi-text"><small>${escapeHtml(pick.label)}</small><b>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(RICORDI_SOURCE_LABEL[entry.kind])}</span></span></summary><div class="ricordi-rivivi-body">${body}</div></details>`;
+  root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><details class="ricordi-rivivi-card ricordi-rivivi-note" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}"><summary aria-label="Rivivi: ${escapeHtml(title||date)}"><span class="ricordi-rivivi-mark ricordi-rivivi-mark-${escapeHtml(entry.kind)}" aria-hidden="true"></span><span class="ricordi-rivivi-text"><small>${escapeHtml(pick.label)}</small><b${entry.kind==='daily'?'':' translate="no"'}>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(RICORDI_SOURCE_LABEL[entry.kind])}</span></span></summary><div class="ricordi-rivivi-body">${body}</div></details>`;
   root.hidden=false;
 }
 function renderRicordiChapters(chapters,signedUrls){
@@ -3568,7 +3569,7 @@ function renderResonanceHistory(entries){
     const kindLabel=entry.kind==='quest'?'Missione di coppia':'Evento vissuto';
     const liveNote=entry.kind==='event'&&entry.titleSource==='live'?' · titolo attuale':'';
     const date=resonanceHistoryDate(entry.at);
-    return `<article class="noi-resonance-history-row" data-resonance-source="${escapeHtml(entry.sourceKey)}" data-resonance-kind="${escapeHtml(entry.kind)}"><span class="noi-resonance-history-mark" aria-hidden="true"></span><span class="noi-resonance-history-copy"><small>${escapeHtml(kindLabel)}${date?` · ${escapeHtml(date)}`:''}${liveNote}</small><b>${escapeHtml(entry.title)}</b></span><strong>+${entry.xp.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} XP</strong></article>`;
+    return `<article class="noi-resonance-history-row" data-resonance-source="${escapeHtml(entry.sourceKey)}" data-resonance-kind="${escapeHtml(entry.kind)}"><span class="noi-resonance-history-mark" aria-hidden="true"></span><span class="noi-resonance-history-copy"><small>${escapeHtml(kindLabel)}${date?` · ${escapeHtml(date)}`:''}${liveNote}</small><b${entry.kind==='event'&&entry.titleSource!=='missing'?' translate="no"':''}>${escapeHtml(entry.title)}</b></span><strong>+${entry.xp.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} XP</strong></article>`;
   }).join('');
 }
 async function hydrateResonanceHistory(){
@@ -3706,7 +3707,7 @@ function renderBondQuest(q,ctx){
   const rerollBusy=questActionsInFlight.has(`reroll:${q.id}`);
   const confirmText=confirmBusy?'Confermo…':view.completed?`Completata · +${xp} XP`:view.mine?'Confermata da te':view.partner?'Conferma anche tu':'Ho completato questa missione';
   const confirmDisabled=view.completed||view.mine||confirmBusy;
-  const person=(name,done,label)=>`<li class="quest-person ${done?'checked':''}"><span class="quest-person-initial" aria-hidden="true">${escapeHtml((name||'?').slice(0,1).toUpperCase())}</span><span class="quest-person-name">${escapeHtml(label)}</span><span class="quest-person-state">${done?`${questIcon('check')}<span class="sr-only">confermato</span>`:'in attesa'}</span></li>`;
+  const person=(name,done,label,own=false)=>`<li class="quest-person ${done?'checked':''}"><span class="quest-person-initial" aria-hidden="true">${escapeHtml((name||'?').slice(0,1).toUpperCase())}</span><span class="quest-person-name"${own?' translate="no"':''}>${escapeHtml(label)}</span><span class="quest-person-state">${done?`${questIcon('check')}<span class="sr-only">confermato</span>`:'in attesa'}</span></li>`;
   const lockText=view.lockReason==='confirmed'?'Già confermata: non si può più cambiare':'Cambi finiti per questa settimana';
   const reroll=view.completed?'':view.rerollable
     ?`<button type="button" class="quest-reroll" data-quest-action="reroll" ${rerollBusy?'disabled aria-busy="true"':''} onclick="rerollBondQuest('${escapeHtml(q.id)}')" aria-label="Cambia questa missione (${questCountLabel(ctx.rerollsLeft,'cambio rimasto','cambi rimasti')})">${questIcon('arrows-clockwise')}<span class="quest-reroll-label" aria-hidden="true">Cambia</span></button>`
@@ -3715,7 +3716,7 @@ function renderBondQuest(q,ctx){
     <div class="quest-top"><span class="quest-category">${escapeHtml(questCategoryLabel(q.category))}${questRarityLabel(q.rarity)?` · ${escapeHtml(questRarityLabel(q.rarity))}`:''}</span><span class="quest-rarity quest-xp">+${xp} XP</span></div>
     <h4>${escapeHtml(q.title)}</h4>
     <p class="quest-status">${questStatusLine(view,partnerName,xp)}</p>
-    <ul class="quest-confirmers" aria-label="Conferme">${person(ctx.myName,view.mine,'Tu')}${person(partnerName,view.partner,partnerName)}</ul>
+    <ul class="quest-confirmers" aria-label="Conferme">${person(ctx.myName,view.mine,'Tu')}${person(partnerName,view.partner,partnerName,Boolean(partner?.display_name))}</ul>
     <div class="quest-actions">
       <button type="button" class="quest-confirm ${confirmDisabled?'confirmed':''}" data-quest-action="confirm" ${confirmDisabled?'disabled':''} ${confirmBusy?'aria-busy="true"':''} onclick="confirmBondQuest('${escapeHtml(q.id)}')">${confirmText}</button>
       ${reroll}
@@ -3906,8 +3907,8 @@ function noiIdeaSnippet(note){
 }
 function noiIdeaCardHtml(item){
   const label=noiIdeaStateLabel(item);
-  const noteHtml=item.note?`<small>${escapeHtml(noiIdeaSnippet(item.note))}</small>`:'';
-  return `<button type="button" class="noi-idea-card" data-id="${escapeHtml(item.id)}"><span class="noi-idea-card-copy"><b>${escapeHtml(item.title)}</b>${noteHtml}</span>${label?`<span class="noi-idea-state">${escapeHtml(label)}</span>`:''}</button>`;
+  const noteHtml=item.note?`<small translate="no">${escapeHtml(noiIdeaSnippet(item.note))}</small>`:'';
+  return `<button type="button" class="noi-idea-card" data-id="${escapeHtml(item.id)}"><span class="noi-idea-card-copy"><b translate="no">${escapeHtml(item.title)}</b>${noteHtml}</span>${label?`<span class="noi-idea-state">${escapeHtml(label)}</span>`:''}</button>`;
 }
 function renderNoiIdeaActiveList(){
   const root=document.getElementById('noiIdeaList');

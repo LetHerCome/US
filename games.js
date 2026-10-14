@@ -22,6 +22,9 @@ const SWIPE = { id: 'swipe', name: 'Questo o quello', icon: 'cards-three' };
 const byId = (id) => document.getElementById(id);
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const label = (role) => window.UsIdentity?.current().nameForRole(role) || 'La tua persona';
+// What the couple wrote (their own questions and options, free answers) is kept as written.
+const asWritten = (yes) => (yes ? ' translate="no"' : '');
+const coupleWritten = (item) => item?.source_type === 'couple_custom';
 const myRole = () => window.usProfile?.role || null;
 const partnerRole = () => (myRole() === 'francesco' ? 'beatrice' : 'francesco');
 const partnerName = () => window.UsIdentity?.current().partnerName || 'La tua persona';
@@ -169,7 +172,7 @@ function weeklyCard(w) {
     if (weeklyJustCreated === true) weeklyJustCreated = false;
     return `<section class="us-gv2-weekly is-locked${settle}" aria-label="La domanda della settimana">
       ${head('lock-simple', 'Domanda creata', `Poi tocca a ${partnerName()}, ${unlock}.`)}
-      ${q ? `<blockquote>${esc(q.question_text)}</blockquote><small class="us-gv2-note">${esc(partnerName())} la scoprirà giocando.</small>` : ''}
+      ${q ? `<blockquote translate="no">${esc(q.question_text)}</blockquote><small class="us-gv2-note">${esc(partnerName())} la scoprirà giocando.</small>` : ''}
     </section>`;
   }
   if (w.partner_left_question) {
@@ -645,14 +648,14 @@ function renderPlay() {
   const hint = itemHint(item);
   const input = item.answer_kind === 'open'
     ? `<label class="us-gv2-sr" for="usGv2Answer">La tua risposta</label><textarea id="usGv2Answer" maxlength="1000" rows="5" placeholder="Scrivi…">${esc(value ?? '')}</textarea>`
-    : `<fieldset class="us-gv2-choices"><legend class="us-gv2-sr">${item.my_item_role === 'predictor' ? 'La tua previsione' : 'La tua scelta'}</legend>${(item.options || []).map((o, i) => `<label class="us-gv2-choice"><input type="radio" name="gv2choice" value="${i}" ${Number(value) === i && value !== null && value !== undefined ? 'checked' : ''}><i class="us-gv2-choice-key" aria-hidden="true">${key(i)}</i><span>${esc(o)}</span></label>`).join('')}</fieldset>`;
+    : `<fieldset class="us-gv2-choices"><legend class="us-gv2-sr">${item.my_item_role === 'predictor' ? 'La tua previsione' : 'La tua scelta'}</legend>${(item.options || []).map((o, i) => `<label class="us-gv2-choice"><input type="radio" name="gv2choice" value="${i}" ${Number(value) === i && value !== null && value !== undefined ? 'checked' : ''}><i class="us-gv2-choice-key" aria-hidden="true">${key(i)}</i><span${asWritten(coupleWritten(item))}>${esc(o)}</span></label>`).join('')}</fieldset>`;
   const last = index === total - 1;
   showPanel(`<article class="us-gv2-play" data-gv2-family="${esc(item.family || current.game_family)}">
     ${sheetTop(kicker, `${index + 1} di ${total}`)}
     <div class="us-gv2-progress" role="progressbar" aria-valuemin="1" aria-valuemax="${total}" aria-valuenow="${index + 1}" aria-label="Domanda ${index + 1} di ${total}">${Array.from({ length: total }, (_, i) => `<i data-on="${i <= index ? 'true' : 'false'}"></i>`).join('')}</div>
     ${contextChip(item)}
     ${hint ? `<p class="us-gv2-hint">${esc(hint)}</p>` : ''}
-    <h2 class="us-gv2-question">${esc(item.my_prompt || item.question_text)}</h2>
+    <h2 class="us-gv2-question"${asWritten(coupleWritten(item))}>${esc(item.my_prompt || item.question_text)}</h2>
     <form id="usGv2AnswerForm" novalidate>${input}
       <p id="usGv2Error" class="us-gv2-error" role="alert" hidden></p>
       <div class="us-gv2-actions">${index > 0 ? '<button type="button" class="ghost" data-gv2-action="prev">Indietro</button>' : '<span></span>'}<button type="submit" class="primary">${last ? 'Conferma le risposte' : 'Avanti'}</button></div>
@@ -744,7 +747,7 @@ function renderWaiting() {
     <h2>Hai risposto.</h2>
     <div class="us-gv2-wait-art">${VENN}</div>
     <p class="us-gv2-lead">Aspettiamo ${esc(partnerName())}. Le risposte si scoprono insieme.</p>
-    <ol class="us-gv2-mine">${current.items.map((i) => `<li><small>${esc(i.my_prompt || i.question_text)}</small><b>${esc(myAnswerText(i))}</b></li>`).join('')}</ol>
+    <ol class="us-gv2-mine">${current.items.map((i) => `<li><small${asWritten(coupleWritten(i))}>${esc(i.my_prompt || i.question_text)}</small><b${asWritten(i.answer_kind === 'open' || coupleWritten(i))}>${esc(myAnswerText(i))}</b></li>`).join('')}</ol>
     <div class="us-gv2-actions"><button type="button" class="ghost" data-gv2-action="back">Torna a Gioca</button><button type="button" class="primary" data-gv2-action="refresh">${icon('arrows-clockwise')}<span>Aggiorna</span></button></div>
   </article>`);
 }
@@ -774,8 +777,9 @@ function revealRows(item) {
 function previousAnswers(item) {
   const then = item.previous;
   if (!then) return '';
+  const written = asWritten(item.answer_kind === 'open' || coupleWritten(item));
   return `<div class="us-gv2-then"><span class="us-gv2-kicker">COSA AVEVATE RISPOSTO</span>
-    <dl><div><dt>Tu</dt><dd>${esc(then.my_answer_text ?? '—')}</dd></div><div><dt>${esc(partnerName())}</dt><dd>${esc(then.partner_answer_text ?? '—')}</dd></div></dl></div>`;
+    <dl><div><dt>Tu</dt><dd${written}>${esc(then.my_answer_text ?? '—')}</dd></div><div><dt translate="no">${esc(partnerName())}</dt><dd${written}>${esc(then.partner_answer_text ?? '—')}</dd></div></dl></div>`;
 }
 
 // Reveal V5: a short, deliberate comparison instead of one tall card per
@@ -791,13 +795,15 @@ function revealKind(item){
 function revealCompactItem(item,number,kind){
   const [mine,theirs]=revealRows(item);
   const heading=esc(item.my_prompt||item.question_text||'Una domanda');
-  const answerRows=[mine,theirs].map(([label,value])=>`<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join('');
+  const written=asWritten(item.answer_kind==='open'||coupleWritten(item));
+  // Outside "Quanto mi conosci?" the second label is the partner's bare name.
+  const answerRows=[mine,theirs].map(([label,value],i)=>`<div><dt${asWritten(i===1&&item.mechanic!=='prediction')}>${esc(label)}</dt><dd${written}>${esc(value)}</dd></div>`).join('');
   const equal=kind==='same'&&item.mechanic!=='prediction'&&myAnswerText(item)===partnerAnswerText(item);
-  const short=equal?`<span class="us-gv5-equal-choice">${esc(myAnswerText(item))}</span>`:'';
+  const short=equal?`<span class="us-gv5-equal-choice"${asWritten(coupleWritten(item))}>${esc(myAnswerText(item))}</span>`:'';
   const detailLabel=kind==='same'?'Scelte uguali':kind==='different'?'Scelte diverse':'Le risposte';
   return `<li class="us-gv5-reveal-item" data-gv5-kind="${kind}">
     <details>
-      <summary><span class="us-gv5-reveal-num">${number}</span><span class="us-gv5-reveal-title">${heading}</span>${short}<span class="us-gv5-reveal-chevron" aria-hidden="true">›</span></summary>
+      <summary><span class="us-gv5-reveal-num">${number}</span><span class="us-gv5-reveal-title"${asWritten(coupleWritten(item))}>${heading}</span>${short}<span class="us-gv5-reveal-chevron" aria-hidden="true">›</span></summary>
       <div class="us-gv5-reveal-answers" aria-label="${detailLabel}" data-gv2-mechanic="${esc(item.mechanic||'')}">${contextChip(item)}<dl>${answerRows}</dl>
         ${item.mechanic==='prediction'?'<small class="us-gv5-outcome">'+esc(outcome(item))+'</small>':''}
         ${previousAnswers(item)}
