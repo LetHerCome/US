@@ -19,7 +19,7 @@ export const EXPORT_BUCKET = 'us-exports';
 export const LINK_TTL_SECONDS = 7 * 24 * 3600;
 export const SIGN_BATCH_SIZE = 100;
 export const MAX_MEDIA = 20000;
-export const SUPPORT_EMAIL_FALLBACK = 'privacy@us-app.invalid';
+export const SUPPORT_EMAIL_FALLBACK = 'moonee.team@gmail.com'; // founder, 14/10; US_SUPPORT_EMAIL overrides
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MEDIA_PATH = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\/[A-Za-z0-9._\/-]{1,300}$/i;

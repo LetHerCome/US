@@ -52,7 +52,7 @@ L'utente scrive al supporto dall'email del suo account (testo in Privacy e dati,
 ## 5. Cosa manca prima della produzione
 
 1. **Staging:** applicare la migrazione `20261014120000_s32_leave_couple_reports_export.sql` (dopo quella della #190), distribuire `leave-couple` ed `export-user-data`, attivare i flag, provare con account sintetici usa-e-getta (mai gli account del collaudo push): uscita, ultimo membro, segnalazione, copia dei dati.
-2. **Email di supporto e dominio** (stesso segnaposto della #190), poi il provider email per l'invio automatico.
+2. **Email di supporto:** `moonee.team@gmail.com` (fondatore, 14/10). Quando ci sarà il dominio: il provider email per l’invio automatico.
 3. Segreto Vault `us_operator_key` (staging e produzione separati).
 4. **BUILD_ID:** va alzato al riallineamento dopo la #189, insieme alla #190, così le app installate ricevono le nuove schermate.
 5. Testi in inglese: li prepara il thread del design dai testi elencati nella PR.

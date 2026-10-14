@@ -2,7 +2,7 @@
 
 **Data:** 2026-10-14 · **Per:** chi gestisce il supporto di US · **Stato:** bozza da rivedere con il legale prima della pubblicazione.
 
-Le segnalazioni arrivano da Impostazioni → Segnala un problema o un contenuto, oppure per email al supporto. Il partner della persona che segnala non le vede mai.
+Le segnalazioni arrivano da Impostazioni → Segnala un problema o un contenuto, oppure per email al supporto (`moonee.team@gmail.com`, finché non c'è il dominio di US). Il partner della persona che segnala non le vede mai.
 
 ## 1. Controllare le segnalazioni
 

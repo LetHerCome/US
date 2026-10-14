@@ -68,7 +68,7 @@ test('leave: every server answer maps to one outcome and one message', () => {
     [409, { error: 'not_in_couple' }, 'not_in_couple', true, /Non fai più parte/],
     [401, { error: 'reauth_required' }, 'reauth_required', false, /di nuovo la password/],
     [400, { error: 'confirm_required' }, 'leave_confirm_required', false, 'Scrivi ESCI per confermare.'],
-    [503, { error: 'leave_disabled' }, 'leave_disabled', false, /non ancora disponibile, scrivi a privacy@us-app\.invalid/],
+    [503, { error: 'leave_disabled' }, 'leave_disabled', false, /non ancora disponibile, scrivi a moonee\.team@gmail\.com/],
     [500, { error: 'leave_failed' }, 'leave_failed', false, 'Uscita non riuscita: non è cambiato nulla. Riprova tra poco.'],
   ];
   for (const [status, body, kind, done, text] of cases) {
@@ -99,7 +99,7 @@ test('report: server errors map to messages', async () => {
   assert.equal((await run({ data: null, error: { message: 'permission denied', status: 403 } })).kind, 'failed');
   assert.match(api.reportMessage('received'), /team di US/);
   assert.match(api.reportMessage('received'), /112/);
-  assert.match(api.reportMessage('rate_limited'), /privacy@us-app\.invalid/);
+  assert.match(api.reportMessage('rate_limited'), /moonee\.team@gmail\.com/);
   assert.match(api.reportMessage('failed'), /Segnalazione non inviata/);
 });
 
