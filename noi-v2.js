@@ -89,15 +89,45 @@ function relativeLabel(day){
   const delta=Math.round((dateOf(day)-dateOf(today()))/86400000);
   return delta===0?'OGGI':delta===1?'DOMANI':delta===-1?'IERI':'I VOSTRI MOMENTI';
 }
-function thumb(item) {
-  const name=item.kind==='calendar'?'calendar-dots':item.kind==='relationship'?'heart-fill':'calendar-heart';
-  return `<span class="us-noi-v2-item-icon" data-type="${esc(item.kind)}" aria-hidden="true">${icon(name)}</span>`;
+// Due colori: whose it is, as a colour. Mine --us-tu, theirs --us-partner,
+// shared entries, couple Events and Il nostro giorno --us-noi. Presentation
+// only: derived from the same entry_type/owner_id the calendar already reads.
+function ownerOf(item){
+  if(item.kind!=='calendar'||item.entryType==='shared'||!item.ownerId)return 'noi';
+  const viewer=typeof window==='undefined'?null:window.usProfile;
+  return item.ownerId===viewer?.id?'tu':'partner';
 }
+// Two people, one overlap: the couple mark from the design, not an icon.
+const VENN='<svg class="us-noi-v2-venn" viewBox="0 0 58 36" width="58" height="36" aria-hidden="true" focusable="false"><circle cx="20" cy="18" r="15" style="fill:var(--us-rosa)"/><circle cx="38" cy="18" r="15" style="fill:var(--us-lilla)"/><path d="M29 6a15 15 0 0 1 0 24 15 15 0 0 1 0-24z" style="fill:var(--us-noi)"/></svg>';
+const clockOf=value=>/^\d{2}:\d{2}$/.test(String(value||''))?String(value):'';
+function itemAction(item){return item.kind==='calendar'?'entry':item.kind==='event'?'event':'anniversary';}
 function itemMarkup(day,item) {
-  const action=item.kind==='calendar'?'entry':item.kind==='event'?'event':'anniversary';
-  return `<button type="button" class="us-noi-v2-item" data-noi-item="${action}" data-day="${esc(day)}" data-id="${esc(item.id||'')}">
-    ${thumb(item)}<span class="us-noi-v2-item-copy"><b>${esc(item.title)}</b><small class="us-noi-v2-item-meta"><span>${esc(item.time)}</span><span class="us-noi-v2-owner" data-owner-type="${esc(item.entryType||item.kind)}">${esc(ownerLabel(item))}</span></small></span><span class="us-noi-v2-caret" aria-hidden="true">${icon('caret-right')}</span>
+  const action=itemAction(item);
+  if(item.kind==='relationship')return `<button type="button" class="us-noi-v2-item us-noi-v2-ourday" data-noi-item="${action}" data-day="${esc(day)}" data-id="" data-owner="noi">
+    ${VENN}<span class="us-noi-v2-item-copy"><b>${esc(item.title)}</b><small class="us-noi-v2-item-meta"><span>${esc(item.time)}</span><span class="us-noi-v2-owner" data-owner-type="relationship">${esc(ownerLabel(item))}</span></small></span>
   </button>`;
+  const clock=clockOf(item.time);
+  return `<button type="button" class="us-noi-v2-item" data-noi-item="${action}" data-day="${esc(day)}" data-id="${esc(item.id||'')}" data-owner="${ownerOf(item)}">
+    <span class="us-noi-v2-item-time"${clock?'':' aria-hidden="true"'}>${clock||'—'}</span><span class="us-noi-v2-item-copy"><b>${esc(item.title)}</b><small class="us-noi-v2-item-meta">${clock?'':`<span>${esc(item.time)}</span>`}<span class="us-noi-v2-owner" data-owner-type="${esc(item.entryType||item.kind)}">${esc(ownerLabel(item))}</span></small></span><i class="us-noi-v2-item-dot" aria-hidden="true"></i>
+  </button>`;
+}
+// Lavagna: one chip per commitment, in the colour of whose it is.
+function chipMarkup(day,item){
+  const label=item.kind==='relationship'?item.title:`${item.title} · ${item.time}`;
+  return `<button type="button" class="us-noi-v2-chip" data-noi-item="${itemAction(item)}" data-day="${esc(day)}" data-id="${esc(item.id||'')}" data-owner="${ownerOf(item)}" aria-label="${esc(item.title)}, ${esc(ownerLabel(item))}, ${esc(item.time)}">${esc(label)}</button>`;
+}
+// The small key under the month: the real names, never hardcoded.
+function legendMarkup(){
+  const profiles=Array.isArray(snapshot?.profiles)?snapshot.profiles:[];
+  const me=window.usProfile?.id;
+  const name=p=>String(p?.display_name||'').trim();
+  const known=window.UsIdentity?.current?.();
+  const own=name(profiles.find(p=>p.id===me))||known?.ownName||'Tu';
+  const partner=name(profiles.find(p=>p.id&&p.id!==me))||known?.partnerName||'La tua persona';
+  const people=[['tu',own],['partner',partner]];
+  if(window.usProfile?.role==='beatrice')people.reverse();
+  people.push(['noi','Insieme']);
+  return `<p class="us-noi-v2-legend" aria-hidden="true">${people.map(([owner,label])=>`<span><i data-owner="${owner}"></i>${esc(label)}</span>`).join('')}</p>`;
 }
 // Only the weeks this month actually spans: 4–6 rows, never an empty sixth row.
 function calendarMarkup(index) {
@@ -112,14 +142,14 @@ function calendarMarkup(index) {
     if(!valid)return '<span class="us-noi-v2-blank" aria-hidden="true"></span>';
     const day=iso(year,month,n),todayFlag=day===now,active=day===selected;
     const marks=index.get(day)||[];
-    const kinds=['relationship','event','calendar'].filter(kind=>marks.some(x=>x.kind===kind));
-    const dots=kinds.map(kind=>`<i data-kind="${kind}"></i>`).join('');
+    const owners=['tu','partner','noi'].filter(owner=>marks.some(x=>ownerOf(x)===owner));
+    const dots=owners.map(owner=>`<i data-owner="${owner}"></i>`).join('');
     const moments=marks.length===1?'1 momento':marks.length?`${marks.length} momenti`:'nessun momento';
     return `<button type="button" class="us-noi-v2-day${active?' is-selected':''}${todayFlag?' is-today':''}${day<now?' is-past':''}" data-noi-day="${day}" aria-pressed="${active}" ${todayFlag?'aria-current="date"':''} aria-label="${esc(dayLabel(day))}${todayFlag?', oggi':''}, ${moments}">
       <span class="us-noi-v2-day-number">${n}</span><span class="us-noi-v2-day-marks" aria-hidden="true">${dots}</span>
     </button>`;
   }).join('');
-  return `<div class="us-noi-v2-calendar" role="group" aria-label="Calendario di ${months[month]} ${year}"><div class="us-noi-v2-weekdays" aria-hidden="true">${header}</div><div class="us-noi-v2-grid" data-weeks="${slots/7}">${days}</div></div>`;
+  return `<div class="us-noi-v2-calendar" role="group" aria-label="Calendario di ${months[month]} ${year}"><div class="us-noi-v2-weekdays" aria-hidden="true">${header}</div><div class="us-noi-v2-grid" data-weeks="${slots/7}">${days}</div>${legendMarkup()}</div>`;
 }
 function listMarkup(index) {
   const days=[...index.keys()].filter(monthMatch).sort();
@@ -133,10 +163,10 @@ function weekMarkup(index) {
     const when=new Date(monday.getFullYear(),monday.getMonth(),monday.getDate()+i,12);
     const day=iso(when.getFullYear(),when.getMonth(),when.getDate());
     const items=index.get(day)||[];
-    const active=day===selected;
-    return `<section class="us-noi-v2-week-row${active?' is-selected':''}">
-      <button type="button" class="us-noi-v2-list-date" data-noi-day="${day}" aria-pressed="${active}">${esc(dayLabel(day))}${day===today()?'<em>Oggi</em>':''}</button>
-      ${items.length?items.map(item=>itemMarkup(day,item)).join(''):'<small class="us-noi-v2-week-empty">Nessun impegno</small>'}
+    const active=day===selected,isToday=day===today();
+    return `<section class="us-noi-v2-week-row${active?' is-selected':''}${isToday?' is-today':''}">
+      <button type="button" class="us-noi-v2-list-date" data-noi-day="${day}" aria-pressed="${active}" aria-label="${esc(dayLabel(day))}${isToday?', oggi':''}"><b>${when.getDate()}</b><small>${esc(weekdays[(when.getDay()+6)%7][1].slice(0,3))}</small></button>
+      <div class="us-noi-v2-week-lane">${items.length?items.map(item=>chipMarkup(day,item)).join(''):'<small class="us-noi-v2-week-empty">Nessun impegno</small>'}</div>
     </section>`;
   }).join('');
   return `<div class="us-noi-v2-week-list" role="group" aria-label="La vostra settimana">${days}</div>`;
@@ -172,7 +202,7 @@ function render(){
     if(mode==='week'){
       const d=dateOf(selected);const monday=new Date(d.getFullYear(),d.getMonth(),d.getDate()-((d.getDay()+6)%7),12);
       label.textContent=`Settimana del ${monday.getDate()} ${months[monday.getMonth()]}`;
-    }else label.textContent=`${months[month][0].toUpperCase()+months[month].slice(1)} ${year}`;
+    }else label.innerHTML=`${months[month][0].toUpperCase()+months[month].slice(1)} <span class="us-noi-v2-year">${year}</span>`;
   }
   const weekBack=$('usNoiV2WeekBack');if(weekBack)weekBack.hidden=mode!=='week';
   $('usNoiV2AddTop')?.setAttribute('aria-label',`Aggiungi un impegno il ${dayLabel(selected)}`);

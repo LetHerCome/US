@@ -1,1 +1,305 @@
-/* Due colori, un Noi — ricordi. Area layer on top of due-colori.css (approved design, 2026-10-14). */
+/* US · Due colori — Ricordi (#moments) and everything that opens from it.
+   Presentation only: the timeline, album, Conservati and composer keep their
+   markup hooks, data and flows. Area colour: --us-ambra. People: --us-tu /
+   --us-partner by author. Sheet chrome (surface, handle, scrim) is dc-popup. */
+
+/* ---------- Owner colour: one variable per author dot ---------- */
+#moments [data-owner],.conservati-sheet [data-owner],#usAlbumOverlay [data-owner]{--dc-who:var(--us-noi)}
+#moments [data-owner="tu"],.conservati-sheet [data-owner="tu"],#usAlbumOverlay [data-owner="tu"]{--dc-who:var(--us-tu)}
+#moments [data-owner="partner"],.conservati-sheet [data-owner="partner"],#usAlbumOverlay [data-owner="partner"]{--dc-who:var(--us-partner)}
+
+/* ==========================================================================
+   Header: italic Fraunces "Ricordi", a quiet count, the amber "+"
+   ========================================================================== */
+#moments .us-moments-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:2px 0 18px}
+#moments .us-moments-head h2{margin:0!important;font-family:var(--us-font-display)!important;font-style:italic;font-weight:400;font-size:46px!important;line-height:1!important;letter-spacing:-.015em;color:var(--us-color-text)}
+#moments .us-moments-head-copy p{margin:8px 0 0!important;font-size:14px!important;line-height:1.4;color:var(--us-color-text-2)}
+#moments .us-moments-head-actions{display:flex;align-items:center;gap:12px;padding-bottom:2px}
+#moments .us-moments-total{font-size:13px;font-weight:600;letter-spacing:0;color:var(--us-color-text-3);white-space:nowrap}
+#moments .us-moments-add{width:48px;height:48px;padding:0;border:0;border-radius:50%;display:grid;place-items:center;background:var(--us-ambra);color:var(--us-inchiostro);box-shadow:none;transition:transform .3s var(--us-ease-spring)}
+#moments .us-moments-add .us-icon{--us-icon-size:24px}
+#moments .us-moments-add:active{transform:scale(.95)}
+#moments .us-moments-add:focus-visible{outline:2px solid var(--us-ambra);outline-offset:3px}
+
+/* ==========================================================================
+   Rivivi: one memory from this time of year, framed in amber
+   ========================================================================== */
+#moments .ricordi-rivivi{position:relative;margin:0 0 12px}
+#moments .ricordi-kicker{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--us-ambra)}
+#moments .ricordi-rivivi .ricordi-kicker{margin:0 2px 8px;font-size:11px}
+#moments .ricordi-rivivi-card{border-radius:22px;border:1px solid color-mix(in srgb,var(--us-ambra) 35%,transparent);background:radial-gradient(100% 120% at 0% 0%,color-mix(in srgb,var(--us-ambra) 18%,transparent),transparent 70%),var(--us-color-surface);box-shadow:none;color:var(--us-color-text)}
+#moments .ricordi-rivivi-card:not(.ricordi-rivivi-note){display:grid;grid-template-columns:84px minmax(0,1fr);align-items:start;gap:14px;min-height:0;padding:12px;background:radial-gradient(100% 120% at 0% 0%,color-mix(in srgb,var(--us-ambra) 18%,transparent),transparent 70%),var(--us-color-surface)}
+#moments .ricordi-rivivi-card:not(.ricordi-rivivi-note) img{width:84px;height:104px;min-height:0;max-height:none;aspect-ratio:auto;border-radius:16px;object-fit:cover}
+#moments .ricordi-rivivi-card:not(.ricordi-rivivi-note) .ricordi-rivivi-copy{position:static;align-self:start;padding:24px 0 2px;gap:4px;color:var(--us-color-text)}
+/* The eyebrow sits inside the card, above the words, as in the design. */
+#moments .ricordi-rivivi:has(>.ricordi-rivivi-card:not(.ricordi-rivivi-note)) .ricordi-kicker{position:absolute;z-index:1;top:15px;left:111px;margin:0;pointer-events:none}
+#moments .ricordi-rivivi-card:not(.ricordi-rivivi-note) .ricordi-rivivi-copy small{order:0;font-family:var(--us-font-display);font-size:20px;font-weight:400;line-height:1.15;letter-spacing:0;color:var(--us-color-text)}
+#moments .ricordi-rivivi-card:not(.ricordi-rivivi-note) .ricordi-rivivi-copy b{font-family:var(--us-font-ui);font-size:13px;font-weight:600;line-height:1.35;letter-spacing:0;color:var(--us-color-text-2);-webkit-line-clamp:2}
+#moments .ricordi-rivivi-card:not(.ricordi-rivivi-note) .ricordi-rivivi-copy span{font-size:12px;font-weight:400;line-height:1.35;color:var(--us-color-text-3)}
+#moments .ricordi-rivivi-card:active{transform:scale(.98)}
+#moments .ricordi-rivivi-card:focus-visible{outline:2px solid var(--us-ambra);outline-offset:3px}
+#moments .ricordi-rivivi-note summary{padding:14px;gap:12px}
+#moments .ricordi-rivivi-mark{width:38px;height:38px;flex:0 0 38px;border-radius:12px;border:0;background:color-mix(in srgb,var(--us-ambra) 14%,transparent);color:var(--us-ambra)}
+#moments .ricordi-rivivi-mark-daily{color:var(--us-ambra)}
+#moments .ricordi-rivivi-text small{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--us-ambra)}
+#moments .ricordi-rivivi-text b{font-family:var(--us-font-display);font-weight:400;font-size:20px;line-height:1.15;letter-spacing:0}
+#moments .ricordi-rivivi-text span{font-size:12px;color:var(--us-color-text-3)}
+#moments .ricordi-rivivi-detail{font-size:14px;color:var(--us-color-text-2)}
+#moments .ricordi-rivivi-link{min-height:44px;padding:0;border:0;border-radius:0;background:none;color:var(--us-color-text);font-size:13px;font-weight:600;text-decoration:underline;text-underline-offset:4px;text-decoration-color:var(--us-color-line-strong)}
+
+/* ==========================================================================
+   Conservati: a destination row
+   ========================================================================== */
+#moments .us-conservati-entry{display:flex;align-items:center;gap:12px;width:100%;min-height:60px;margin:0 0 22px;padding:12px 14px;border-radius:20px;border:1px solid var(--us-color-line);background:var(--us-color-surface);box-shadow:none;color:var(--us-color-text);transition:transform .3s var(--us-ease-spring)}
+#moments .us-conservati-entry:active{transform:scale(.98);background:var(--us-color-surface-2)}
+#moments .us-conservati-entry-mark{width:38px;height:38px;border-radius:12px;background:color-mix(in srgb,var(--us-ambra) 14%,transparent);color:var(--us-ambra);font-size:0}
+#moments .us-conservati-entry-mark .us-icon{--us-icon-size:22px}
+#moments .us-conservati-entry-copy b{font:600 16px/1.2 var(--us-font-ui);color:var(--us-color-text)}
+#moments .us-conservati-entry-chevron{color:var(--us-color-text-3);--us-icon-size:18px}
+
+/* ==========================================================================
+   Mese per mese: month titles and a two-column mosaic of photos
+   ========================================================================== */
+#moments .ricordi-section-head{margin:0 0 6px}
+#moments .ricordi-story-head{margin:0 0 4px}
+#moments .ricordi-story-head h3{margin:0;font-family:var(--us-font-ui)!important;font-size:11px!important;font-weight:700!important;letter-spacing:.14em!important;text-transform:uppercase;color:var(--us-ambra)!important}
+
+#moments #momentsGrid.moment-grid.ricordi-story{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;align-items:start!important;padding:0}
+#moments #momentsGrid.ricordi-story .ricordi-period{grid-column:1/-1;display:flex;align-items:baseline;gap:10px;margin:18px 0 4px;padding:0;border:0}
+#moments #momentsGrid.ricordi-story .ricordi-period:first-child{margin-top:0}
+#moments #momentsGrid.ricordi-story .ricordi-period b{font-family:var(--us-font-display);font-style:italic;font-weight:400;font-size:30px;line-height:1.1;letter-spacing:-.01em;color:var(--us-color-text)}
+#moments #momentsGrid.ricordi-story .ricordi-period span{font-family:var(--us-font-ui);font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--us-color-text-3)}
+
+/* A photo card: the image is the card, words sit on a soft shade at its foot. */
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit{position:relative;display:block!important;grid-column:auto!important;height:auto!important;margin:0;padding:0!important;border:0!important;border-radius:20px!important;overflow:hidden!important;background:var(--us-color-surface-2)!important;box-shadow:none!important;transform:none!important;transition:transform .3s var(--us-ease-spring)!important;text-align:left}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide){grid-column:1/-1!important}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit:active{transform:scale(.98)!important}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit:focus-visible{outline:2px solid var(--us-ambra);outline-offset:3px}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit>img{display:block;width:100%!important;height:auto!important;aspect-ratio:3/4!important;margin:0!important;border-radius:0!important;object-fit:cover!important;background:var(--us-color-surface-2)!important}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide)>img{aspect-ratio:4/3.4!important}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit>.moment-meta{position:absolute!important;z-index:3;left:0;right:0;bottom:0;display:grid!important;gap:3px;min-height:0!important;padding:32px 12px 11px!important;background:linear-gradient(180deg,transparent,rgba(15,11,19,.86))!important;pointer-events:none}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide)>.moment-meta{padding:44px 14px 13px!important}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit .moment-meta p{display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;margin:0!important;font-family:var(--us-font-display)!important;font-weight:400;font-size:18px!important;line-height:1.15!important;letter-spacing:0;color:var(--us-latte)!important;white-space:normal}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide) .moment-meta p{font-size:24px!important;line-height:1.1!important}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit .moment-meta p[hidden]{display:none!important}
+/* The carousel may append the caption late: it still reads first. */
+#moments #momentsGrid.ricordi-story .moment-card .moment-meta>p{order:-2}
+#moments #momentsGrid.ricordi-story .moment-card .moment-meta>.ricordi-moment-source{order:-1}
+#moments #momentsGrid.ricordi-story .moment-card .moment-line{display:flex;align-items:center;flex-wrap:wrap;gap:0 5px;font-size:12px;line-height:1.35;color:color-mix(in srgb,var(--us-latte) 78%,transparent)}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit .moment-line b{margin:0;font-family:var(--us-font-ui)!important;font-size:12px!important;font-weight:500!important;letter-spacing:0;color:inherit!important}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit .moment-line .moment-by{font-size:12px!important;font-weight:500!important;letter-spacing:0!important;text-transform:none;color:inherit!important}
+#moments #momentsGrid.ricordi-story .moment-dot{display:block;flex:none;width:7px;height:7px;margin-right:1px;border-radius:50%;background:var(--dc-who)}
+#moments #momentsGrid.ricordi-story .moment-card .ricordi-moment-source{margin:0;font-size:11px;font-weight:600;color:color-mix(in srgb,var(--us-latte) 70%,transparent)}
+#moments #momentsGrid.ricordi-story .moment-card .moment-album-count{top:10px!important;right:10px!important;min-height:28px!important;padding:5px 10px!important;border:0!important;border-radius:999px;background:rgba(15,11,19,.62)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:none;color:var(--us-latte)!important;font-size:12px!important;font-weight:700;letter-spacing:0!important}
+
+/* A card that holds several photos: the photo fills the card, a small index and two quiet arrows. */
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit>.ricordi-inline-stage{aspect-ratio:3/4;background:var(--us-color-surface-2)}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide)>.ricordi-inline-stage{aspect-ratio:4/3.4}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit>.ricordi-inline-stage>img.ricordi-inline-peek{display:none!important}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit>.ricordi-inline-stage>img.ricordi-inline-current{top:0!important;left:0!important;width:100%!important;height:100%!important;border-radius:0!important;transform:none;box-shadow:none;background:var(--us-color-surface-2)!important}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit>.ricordi-inline-stage>img.ricordi-inline-current.ricordi-inline-enter-next{animation:dcRicordiNext .28s var(--us-ease-standard)}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit>.ricordi-inline-stage>img.ricordi-inline-current.ricordi-inline-enter-prev{animation:dcRicordiPrev .28s var(--us-ease-standard)}
+@keyframes dcRicordiNext{from{opacity:.4;transform:translateX(24px)}to{opacity:1;transform:none}}
+@keyframes dcRicordiPrev{from{opacity:.4;transform:translateX(-24px)}to{opacity:1;transform:none}}
+#moments .ricordi-inline-counter{top:10px;right:10px;min-width:0;min-height:28px;padding:5px 10px;border:0;background:rgba(15,11,19,.62);-webkit-backdrop-filter:none;backdrop-filter:none;color:var(--us-latte);font:700 12px/1 var(--us-font-ui)}
+#moments .ricordi-inline-control{width:44px;height:44px;border:0;background:rgba(15,11,19,.5);-webkit-backdrop-filter:none;backdrop-filter:none;color:var(--us-latte);font-size:24px}
+#moments .ricordi-inline-prev{left:8px}
+#moments .ricordi-inline-next{right:8px}
+#moments .ricordi-inline-control:focus-visible{outline:2px solid var(--us-ambra)}
+
+/* Things lived together, kept answers and events: quiet rows in the timeline. */
+#moments #momentsGrid.ricordi-story .ricordi-experience,#moments #momentsGrid.ricordi-story .ricordi-daily{grid-column:1/-1;border-radius:20px;border:1px solid var(--us-color-line);background:var(--us-color-surface);box-shadow:none;color:var(--us-color-text)}
+#moments #momentsGrid.ricordi-story .ricordi-experience{min-height:60px;padding:12px 14px;gap:12px}
+#moments #momentsGrid.ricordi-story .ricordi-experience:active{background:var(--us-color-surface-2)}
+#moments #momentsGrid.ricordi-story .ricordi-daily summary{min-height:60px;padding:12px 14px;gap:12px}
+#moments .ricordi-experience-mark{flex:0 0 38px;width:38px;height:38px;border-radius:12px;border:0;background:color-mix(in srgb,var(--us-ambra) 14%,transparent);color:var(--us-ambra)}
+#moments .ricordi-experience-mark::before{width:18px;height:18px}
+#moments .ricordi-daily-mark{color:var(--us-ambra)}
+#moments .ricordi-experience-copy{gap:2px}
+#moments .ricordi-experience-copy small{font-size:12px;color:var(--us-color-text-3)}
+#moments .ricordi-experience-copy b{font-family:var(--us-font-ui);font-weight:600;font-size:16px;line-height:1.3}
+#moments .ricordi-experience-source{font-size:11px;font-style:normal;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--us-color-text-3)}
+#moments .ricordi-daily-answers{padding:0 14px 14px}
+#moments .ricordi-daily-answer{border:0;border-radius:14px;background:var(--us-color-surface-2)}
+#moments .ricordi-daily-answer b{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--us-color-text-3)}
+#moments .ricordi-daily-answer p{font-size:15px;color:var(--us-color-text)}
+#moments .ricordi-empty b{font-family:var(--us-font-display);font-weight:400;font-size:22px}
+
+/* ==========================================================================
+   Capitoli: one tile per year
+   ========================================================================== */
+#moments .ricordi-chapters .ricordi-section-head{margin:30px 0 12px}
+#moments .ricordi-chapters .ricordi-section-head h3{margin:4px 0 0;font-family:var(--us-font-display);font-weight:400;font-size:26px;line-height:1.15;color:var(--us-color-text)}
+#moments .ricordi-chapter-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;overflow:visible;padding:0}
+#moments .ricordi-chapter{flex:none;width:100%;height:auto;aspect-ratio:1/1.1;border:0;border-radius:20px;background:var(--us-color-surface-2);transition:transform .3s var(--us-ease-spring)}
+#moments .ricordi-chapter:active{transform:scale(.97)}
+#moments .ricordi-chapter:focus-visible{outline:2px solid var(--us-ambra);outline-offset:3px}
+#moments .ricordi-chapter img{opacity:1;filter:saturate(.75) brightness(.7)}
+#moments .ricordi-chapter::after{background:linear-gradient(180deg,transparent 50%,rgba(15,11,19,.55))}
+#moments .ricordi-chapter span{left:12px;right:12px;bottom:10px;gap:4px}
+#moments .ricordi-chapter b{font-family:var(--us-font-display);font-weight:400;font-size:34px;line-height:1;color:var(--us-latte)}
+#moments .ricordi-chapter small{font-size:12px;font-weight:600;color:color-mix(in srgb,var(--us-latte) 78%,transparent)}
+
+/* ==========================================================================
+   Galleria: the album opens as one full photo, from where it was tapped.
+   moments-albums.js flies a copy of the thumbnail in and out (WAAPI);
+   these rules give it the full-bleed stage to land on.
+   ========================================================================== */
+#usAlbumOverlay[data-us-galleria]{background:var(--us-color-bg)!important;transition:none!important}
+#usAlbumOverlay[data-us-galleria] .us-album-shell{width:100%;max-width:none;background:var(--us-color-bg)!important;transform:none!important;opacity:1!important;transition:none!important;animation:none!important}
+#usAlbumOverlay[data-us-galleria] .us-album-scroll{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) repeat(5,auto) calc(var(--us-safe-bottom,0px) + 18px) auto;padding-bottom:calc(24px + var(--us-safe-bottom,0px))}
+#usAlbumOverlay[data-us-galleria] .us-album-story{display:contents}
+
+/* The stage: the photo edge to edge, a shade top and bottom for the words. */
+#usAlbumOverlay[data-us-galleria] #usAlbumCarousel.us-album-cover-stage{grid-column:1;grid-row:1/8;height:var(--us-viewport-height,100dvh)!important;min-height:0!important;max-height:none!important;padding:0!important;background:var(--us-color-surface-2)!important}
+#usAlbumOverlay[data-us-galleria] .us-album-cover-stage .us-album-cover-blur,#usAlbumOverlay[data-us-galleria] #usAlbumCarousel img.us-album-peek{display:none!important}
+#usAlbumOverlay[data-us-galleria] #usAlbumCarousel img#usAlbumCover,#usAlbumOverlay[data-us-galleria] #usAlbumCarousel[data-multiple] img#usAlbumCover{position:absolute!important;inset:0;z-index:1!important;width:100%!important;height:100%!important;padding:0;border-radius:0!important;object-fit:cover!important;transform:none;box-shadow:none;background:var(--us-color-surface-2)!important}
+#usAlbumOverlay[data-us-galleria] #usAlbumCarousel img#usAlbumCover.us-ricordi-next{animation:dcRicordiNext .28s var(--us-ease-standard) both}
+#usAlbumOverlay[data-us-galleria] #usAlbumCarousel img#usAlbumCover.us-ricordi-prev{animation:dcRicordiPrev .28s var(--us-ease-standard) both}
+#usAlbumOverlay[data-us-galleria] .us-album-cover-stage::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(180deg,rgba(8,5,10,.55),rgba(8,5,10,0) 20%,rgba(8,5,10,0) 48%,rgba(8,5,10,.9))}
+
+/* Top: the index on the left, close on the right. */
+#usAlbumOverlay[data-us-galleria] .us-album-carousel-counter{left:16px;right:auto;top:calc(var(--us-safe-top,0px) + 18px);z-index:4;min-width:0;min-height:32px;padding:0 12px;display:inline-flex;align-items:center;border:0;border-radius:999px;background:rgba(15,11,19,.55);-webkit-backdrop-filter:none;backdrop-filter:none;color:var(--us-latte);font-size:13px;font-weight:700;letter-spacing:0}
+#usAlbumOverlay[data-us-galleria] .us-album-close{left:auto;right:16px;top:calc(var(--us-safe-top,0px) + 12px);width:44px;height:44px;border-radius:50%;border:1px solid color-mix(in srgb,var(--us-latte) 18%,transparent);background:rgba(15,11,19,.55);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;color:var(--us-latte)}
+#usAlbumOverlay[data-us-galleria] .us-album-close .us-icon{--us-icon-size:20px}
+#usAlbumOverlay[data-us-galleria] .us-album-carousel-hint{top:calc(var(--us-safe-top,0px) + 22px);bottom:auto;z-index:4;padding:6px 11px;background:rgba(15,11,19,.55);color:var(--us-latte);font-size:12px}
+#usAlbumOverlay[data-us-galleria] .us-album-carousel-arrow{z-index:4;width:46px;height:46px;border:1px solid color-mix(in srgb,var(--us-latte) 18%,transparent);background:rgba(15,11,19,.5);-webkit-backdrop-filter:none;backdrop-filter:none;color:var(--us-latte)}
+#usAlbumOverlay[data-us-galleria] .us-album-carousel-prev{left:12px}
+#usAlbumOverlay[data-us-galleria] .us-album-carousel-next{right:12px}
+#usAlbumOverlay[data-us-galleria] .us-album-carousel-arrow .us-icon{--us-icon-size:20px}
+
+/* Bottom: whose and when, the title, then the quiet actions. */
+#usAlbumOverlay[data-us-galleria] :is(.us-album-provenance,.us-album-title,.us-album-info,.us-album-byline,.us-undo-delete){grid-column:1;position:relative;z-index:4;margin-left:20px;margin-right:20px}
+#usAlbumOverlay[data-us-galleria] .us-album-provenance{grid-row:2;font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--us-ambra)}
+#usAlbumOverlay[data-us-galleria] .us-album-title{grid-row:3;margin-top:6px;margin-bottom:0;font-family:var(--us-font-display);font-weight:400;font-size:36px;line-height:1.05;letter-spacing:-.01em;color:var(--us-latte);overflow-wrap:anywhere}
+#usAlbumOverlay[data-us-galleria] .us-album-info{grid-row:4;margin-top:8px!important;padding:0!important}
+#usAlbumOverlay[data-us-galleria] .us-album-meta-line{width:auto;min-height:0;margin:0!important;padding:0!important;display:flex!important;flex-wrap:wrap;align-items:center;justify-content:flex-start!important;text-transform:none!important;letter-spacing:0!important;gap:0 6px!important;border:0;border-radius:0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;opacity:1;color:color-mix(in srgb,var(--us-latte) 78%,transparent)!important;font-size:13px!important}
+#usAlbumOverlay[data-us-galleria] .us-album-meta-line :is(b,span){text-transform:none!important;letter-spacing:0!important}
+#usAlbumOverlay[data-us-galleria] .us-album-meta-line b{font-size:13px!important;font-weight:500;color:color-mix(in srgb,var(--us-latte) 78%,transparent)!important}
+#usAlbumOverlay[data-us-galleria] .us-album-meta-line>span::before{content:"·";margin-right:6px}
+#usAlbumOverlay[data-us-galleria] .us-album-current-delete{min-height:44px;margin:10px 0 0;padding:0 16px;border-radius:999px;border:1px solid color-mix(in srgb,var(--us-rosso) 45%,transparent);background:rgba(15,11,19,.55);color:var(--us-rosso);font-size:14px;font-weight:700}
+#usAlbumOverlay[data-us-galleria] .us-album-carousel-status{margin:8px 0 0;font-size:13px;color:color-mix(in srgb,var(--us-latte) 78%,transparent)}
+#usAlbumOverlay[data-us-galleria] .us-album-byline{grid-row:5;margin-top:6px;margin-bottom:0;font-size:12px;line-height:1.4;color:color-mix(in srgb,var(--us-latte) 62%,transparent)}
+#usAlbumOverlay[data-us-galleria] .us-undo-delete{grid-row:6;justify-self:start;margin-top:14px;margin-bottom:0;border-color:color-mix(in srgb,var(--us-rosso) 45%,transparent);background:rgba(15,11,19,.55)}
+#usAlbumOverlay[data-us-galleria] .us-undo-delete-go{color:var(--us-rosso);font-weight:700;font-size:14px}
+#usAlbumOverlay[data-us-galleria] .us-undo-delete-undo{background:var(--us-latte);color:var(--us-inchiostro)}
+#usAlbumOverlay[data-us-galleria] .us-undo-delete-fuse{background:var(--us-rosso)}
+/* Without a delete pill, leave the add button its own corner. */
+#usAlbumOverlay[data-us-galleria] .us-album-story:has(.us-undo-delete[hidden]) .us-album-byline{margin-bottom:58px}
+
+/* Add a photo: one quiet pill in the bottom corner. */
+#usAlbumOverlay[data-us-galleria] .us-album-floating-add{right:16px;bottom:calc(var(--us-safe-bottom,0px) + 18px);min-height:46px;padding:0 16px 0 12px;gap:6px;border-radius:999px;border:1px solid color-mix(in srgb,var(--us-latte) 18%,transparent);background:rgba(15,11,19,.62);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;color:var(--us-latte)}
+#usAlbumOverlay[data-us-galleria] .us-album-floating-add>span{width:22px;height:22px;background:none;color:var(--us-latte)}
+#usAlbumOverlay[data-us-galleria] .us-album-floating-add>span .us-icon{--us-icon-size:20px}
+#usAlbumOverlay[data-us-galleria] .us-album-floating-add b{font-size:14px;font-weight:600}
+#usAlbumOverlay[data-us-galleria] .us-album-floating-add:active{transform:scale(.95)}
+
+/* Below the photo: the in-place composer when adding a piece of that day. */
+#usAlbumOverlay[data-us-galleria] .us-album-section{grid-column:1;grid-row:8}
+#usAlbumOverlay[data-us-galleria] .us-album-section:not(:has(#usAlbumComposer[hidden])){padding:18px 20px 8px!important}
+#usAlbumOverlay[data-us-galleria] .us-album-composer{padding:0;border:0;background:none;box-shadow:none}
+#usAlbumOverlay[data-us-galleria] .us-album-composer-preview{height:220px!important;border-radius:22px!important;object-fit:cover}
+#usAlbumOverlay[data-us-galleria] .us-album-composer input{min-height:52px;margin-top:10px;padding:0 14px;border-radius:16px!important;font-size:16px!important}
+#usAlbumOverlay[data-us-galleria] .us-album-composer-actions{gap:8px;margin-top:10px}
+#usAlbumOverlay[data-us-galleria] .us-album-composer-actions button{min-height:48px;border-radius:999px;font-size:15px;font-weight:700}
+#usAlbumOverlay[data-us-galleria] .us-album-cancel{border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text)}
+#usAlbumOverlay[data-us-galleria] .us-album-save{border:0;background:var(--us-tu)!important;color:var(--us-inchiostro)}
+
+/* The flying copy of the tapped photo. */
+.us-galleria-ghost{position:fixed;z-index:10085;margin:0;padding:0;max-width:none;object-fit:cover;pointer-events:none;box-shadow:none}
+
+/* Full-screen photo (tap on the photo): same night, same quiet controls. */
+.us-album-lightbox .us-album-lightbox-count{border:0;background:rgba(15,11,19,.55);-webkit-backdrop-filter:none;backdrop-filter:none;color:var(--us-latte);font-weight:700}
+.us-album-lightbox .us-album-lightbox-close{width:44px;height:44px;border-radius:50%;background:rgba(15,11,19,.55);-webkit-backdrop-filter:none;backdrop-filter:none;color:var(--us-latte)}
+
+/* Rivivi opens the single-photo viewer: the same night and the same words. */
+#momentViewer.moment-viewer{background:rgba(15,11,19,.94);-webkit-backdrop-filter:none;backdrop-filter:none}
+#momentViewer .moment-viewer-card{border:0;border-radius:24px;background:var(--us-color-surface);box-shadow:none}
+#momentViewer .moment-viewer-card>img{background:var(--us-color-surface-2)}
+#momentViewer .moment-viewer-info{padding:18px 20px 20px}
+#momentViewer .moment-viewer-kicker{font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--us-ambra)}
+#momentViewer .moment-viewer-date{margin-top:6px;font-family:var(--us-font-display);font-weight:400;font-size:26px;line-height:1.15;color:var(--us-color-text)}
+#momentViewer .moment-viewer-info p{font-size:15px;color:var(--us-color-text-2)}
+#momentViewer .moment-viewer-close{width:44px;height:44px;border:1px solid color-mix(in srgb,var(--us-latte) 18%,transparent);background:rgba(15,11,19,.55);-webkit-backdrop-filter:none;backdrop-filter:none;color:var(--us-latte)}
+
+/* ==========================================================================
+   Aggiungi un ricordo (sheet content)
+   ========================================================================== */
+.us-moment-compose-sheet .us-moment-compose-title{align-items:flex-start}
+.us-moment-compose-sheet .us-moment-compose-kicker{display:block;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--us-ambra);opacity:1}
+.us-moment-compose-sheet .us-moment-compose-title b{margin-top:4px;font-family:var(--us-font-display);font-weight:400;font-size:26px;line-height:1.15;letter-spacing:-.01em;color:var(--us-color-text)}
+.us-moment-compose-sheet .moment-picker{border-radius:22px;border:0;background:var(--us-color-surface-2);box-shadow:none!important}
+.us-moment-compose-sheet .moment-picker-empty{min-height:220px!important;flex-direction:column;justify-content:center;gap:12px;padding:20px;border:1.5px dashed var(--us-color-line-strong);border-radius:22px;text-align:center}
+.us-moment-compose-sheet .moment-add-icon{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:var(--us-ambra);color:var(--us-inchiostro);box-shadow:none}
+.us-moment-compose-sheet .moment-add-icon .us-icon{--us-icon-size:26px}
+.us-moment-compose-sheet .moment-picker-copy b{font-family:var(--us-font-display);font-weight:400;font-size:20px;color:var(--us-color-text)}
+.us-moment-compose-sheet .moment-preview{aspect-ratio:auto!important;height:220px;border-radius:22px}
+.us-moment-compose-sheet .moment-change-chip{right:12px;bottom:12px;min-height:44px;padding:0 14px;display:inline-flex;align-items:center;border:0;border-radius:999px;background:rgba(15,11,19,.62);-webkit-backdrop-filter:none;backdrop-filter:none;color:var(--us-latte);font-size:14px;font-weight:600}
+.us-moment-compose-sheet .moment-details{padding:14px 0 0!important}
+.us-moment-compose-sheet #momentCaption{width:100%;min-height:52px;padding:0 14px;border-radius:16px;font-size:16px;color:var(--us-color-text)}
+.us-moment-compose-sheet .moment-auto-date{margin-top:12px;padding:0 2px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--us-color-text-3)}
+.us-moment-compose-sheet .moment-compose-footer{margin-top:16px}
+.us-moment-compose-sheet .moment-save{width:100%;min-height:52px;border:0;border-radius:999px;background:var(--us-tu);color:var(--us-inchiostro);font-size:16px;font-weight:700;box-shadow:none}
+
+/* ==========================================================================
+   Conservati (sheet content): sender, when, what, and what kind
+   ========================================================================== */
+.conservati-sheet .conservati-head .tiny{font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--us-ambra);opacity:1}
+.conservati-sheet .conservati-head h2{margin:4px 0 0;font-family:var(--us-font-display);font-weight:400;font-size:26px;line-height:1.15;letter-spacing:-.01em}
+.conservati-sheet .conservati-head small{max-width:none;margin-top:8px;font-size:15px;line-height:1.45;color:var(--us-color-text-2)}
+.conservati-sheet .conservati-list{gap:8px}
+.conservati-sheet .conservati-card{display:grid;grid-template-columns:56px minmax(0,1fr);grid-template-rows:auto auto;column-gap:12px;row-gap:2px;align-items:center;min-height:76px;padding:10px;border:0;border-radius:18px;background:var(--us-color-surface-2);color:var(--us-color-text);transition:transform .3s var(--us-ease-spring)}
+.conservati-sheet .conservati-card:active{transform:scale(.98)}
+.conservati-sheet .conservati-card-mark{grid-row:1/3;width:56px;height:56px;border-radius:14px;background:var(--us-color-elevated);color:var(--us-ambra);--us-icon-size:22px}
+.conservati-sheet .conservati-card-copy{grid-column:2;grid-row:1;display:flex;flex-wrap:wrap;align-items:center;gap:2px 0;min-width:0;align-self:end}
+.conservati-sheet .conservati-card-copy b{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--us-color-text-3)}
+.conservati-sheet .conservati-card-copy b::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--dc-who,var(--us-noi))}
+.conservati-sheet .conservati-card-copy small{font-size:12px;font-weight:400;color:var(--us-color-text-3)}
+.conservati-sheet .conservati-card-copy small::before{content:"·";margin:0 5px}
+.conservati-sheet .conservati-card-copy>span{flex-basis:100%;min-width:0;font-size:15px;font-weight:600;color:var(--us-color-text)}
+.conservati-sheet .conservati-card-kind{grid-column:2;grid-row:2;align-self:start;max-width:none;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--us-ambra)}
+.conservati-sheet .conservati-empty{display:grid;justify-items:center;gap:12px;padding:20px 12px 34px!important;border:0!important;background:none!important}
+.conservati-sheet .conservati-venn{display:block}
+.conservati-sheet .conservati-empty p{max-width:30ch;font-size:14px;line-height:1.5;color:var(--us-color-text-3)!important}
+.conservati-sheet .conservati-error h3{font-family:var(--us-font-display);font-weight:400}
+.conservati-sheet .conservati-error button{border-radius:999px;border:1px solid var(--us-color-line-strong);background:transparent}
+.conservati-sheet .conservati-back{min-height:44px;color:var(--us-color-text-2);font-size:15px;font-weight:600}
+.conservati-sheet .conservati-provenance{font-size:13px;color:var(--us-color-text-2)}
+.conservati-sheet .conservati-provenance time{font-size:12px;color:var(--us-color-text-3)}
+
+/* ==========================================================================
+   Reduced motion: fades only, nothing travels
+   ========================================================================== */
+:root[data-us-motion="reduced"] #moments :is(.us-moments-add,.us-conservati-entry,.ricordi-chapter,.ricordi-rivivi-card),
+:root[data-us-motion="reduced"] #moments #momentsGrid.ricordi-story .moment-card.moment-postit,
+:root[data-us-motion="reduced"] .conservati-sheet .conservati-card{transition:none!important}
+:root[data-us-motion="reduced"] #moments :is(.us-moments-add,.us-conservati-entry,.ricordi-chapter,.ricordi-rivivi-card):active,
+:root[data-us-motion="reduced"] #moments #momentsGrid.ricordi-story .moment-card.moment-postit:active,
+:root[data-us-motion="reduced"] .conservati-sheet .conservati-card:active,
+:root[data-us-motion="reduced"] #usAlbumOverlay .us-album-floating-add:active{transform:none!important}
+:root[data-us-motion="reduced"] #moments #momentsGrid.ricordi-story .ricordi-inline-current,
+:root[data-us-motion="reduced"] #usAlbumOverlay[data-us-galleria] #usAlbumCarousel img#usAlbumCover{animation:none!important}
+@media (prefers-reduced-motion:reduce){
+  #moments :is(.us-moments-add,.us-conservati-entry,.ricordi-chapter,.ricordi-rivivi-card),
+  #moments #momentsGrid.ricordi-story .moment-card.moment-postit,
+  .conservati-sheet .conservati-card{transition:none!important}
+  #moments :is(.us-moments-add,.us-conservati-entry,.ricordi-chapter,.ricordi-rivivi-card):active,
+  #moments #momentsGrid.ricordi-story .moment-card.moment-postit:active,
+  .conservati-sheet .conservati-card:active,
+  #usAlbumOverlay .us-album-floating-add:active{transform:none!important}
+  #moments #momentsGrid.ricordi-story .ricordi-inline-current,
+  #usAlbumOverlay[data-us-galleria] #usAlbumCarousel img#usAlbumCover{animation:none!important}
+}
+
+/* ==========================================================================
+   Small phones (360px)
+   ========================================================================== */
+@media (max-width:370px){
+  #moments .us-moments-head h2{font-size:40px!important}
+  #moments .us-moments-head-actions{gap:8px}
+  #moments #momentsGrid.ricordi-story .moment-card.moment-postit .moment-meta p{font-size:16px!important}
+  #moments #momentsGrid.ricordi-story .moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide) .moment-meta p{font-size:22px!important}
+  #moments .ricordi-chapter b{font-size:30px}
+  #usAlbumOverlay[data-us-galleria] .us-album-title{font-size:32px}
+  #usAlbumOverlay[data-us-galleria] .us-album-floating-add b{display:inline}
+}

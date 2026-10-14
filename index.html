@@ -372,7 +372,7 @@ html.us-returning-device .auth-overlay{
       <h2 class="noi-sr">Ricordi</h2>
       <section class="ricordi-rivivi" id="ricordiRivivi" aria-label="Rivivi" hidden></section>
       <button type="button" class="us-conservati-entry" id="conservatiEntry" onclick="openConservati()" aria-label="Apri Conservati">
-        <span class="us-conservati-entry-mark" aria-hidden="true">✦</span>
+        <span class="us-conservati-entry-mark" aria-hidden="true"><span class="us-icon" data-us-icon="sparkle-fill" aria-hidden="true"></span></span>
         <span class="us-conservati-entry-copy"><b>Conservati</b></span>
         <span class="us-conservati-entry-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></span>
       </button>
@@ -452,14 +452,14 @@ html.us-returning-device .auth-overlay{
         <div class="us-noi-v2-shortcuts">
           <button type="button" id="usNoiV2WeekBack" hidden><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span><span>Torna al mese</span></button>
           <button type="button" id="usNoiV2First"><span class="us-icon" data-us-icon="heart" aria-hidden="true"></span><span>Il nostro giorno</span></button>
-          <button type="button" class="us-noi-v2-today" id="usNoiV2Today"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span><span>Torna a oggi</span></button>
+          <button type="button" class="us-noi-v2-today" id="usNoiV2Today"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span><span>Torna a oggi</span></button>
           <span class="us-noi-v2-sync" id="usNoiV2Sync" role="status" aria-live="polite"></span>
         </div>
         <div id="usNoiV2Content" class="us-noi-v2-content"><p class="us-noi-v2-empty">Carico il calendario…</p></div>
         <section id="usNoiV2Detail" class="us-noi-v2-detail" aria-label="Giorno selezionato" aria-live="polite"></section>
         <nav class="us-noi-v2-links" aria-label="Altre sezioni di Noi">
           <button type="button" data-noi-open-link="lavagna"><span class="us-noi-v2-link-icon" aria-hidden="true"><span class="us-icon" data-us-icon="chalkboard-simple"></span></span><span class="us-noi-v2-link-copy"><b>Lavagna</b><small>Settimana</small></span></button>
-          <button type="button" data-noi-open-link="quest"><span class="us-noi-v2-link-icon" aria-hidden="true"><span class="us-icon" data-us-icon="flag-banner"></span></span><span class="us-noi-v2-link-copy"><b>Quest</b><small>Di coppia</small></span></button>
+          <button type="button" data-noi-open-link="quest"><span class="us-noi-v2-link-icon" aria-hidden="true"><span class="us-icon" data-us-icon="flag-banner"></span></span><span class="us-noi-v2-link-copy"><b>Missioni</b><small>Di coppia</small></span></button>
           <button type="button" data-noi-open-link="eventi"><span class="us-noi-v2-link-icon" aria-hidden="true"><span class="us-icon" data-us-icon="calendar-heart"></span></span><span class="us-noi-v2-link-copy"><b>Eventi</b><small>Date speciali</small></span></button>
         </nav>
       </section>
@@ -531,9 +531,9 @@ html.us-returning-device .auth-overlay{
       </details>
 
       <section class="noi-living-section" aria-labelledby="noiLivingTitle">
-        <div class="noi-section-title-row"><div><h3 id="noiLivingTitle">Quest di coppia</h3></div><span class="noi-section-symbol" aria-hidden="true">↗</span></div>
+        <div class="noi-section-title-row"><div><h3 id="noiLivingTitle">Missioni di coppia</h3></div><span class="noi-section-symbol" aria-hidden="true">↗</span></div>
         <div id="questWeekBoard" class="quest-week" hidden></div>
-        <div id="bondQuestList" class="bond-quest-list noi-living-list" aria-live="polite"><div class="noi-quiet-state"><b>La prossima quest</b></div></div>
+        <div id="bondQuestList" class="bond-quest-list noi-living-list" aria-live="polite"><div class="noi-quiet-state"><b>La prossima missione</b></div></div>
         <div class="bond-week-note" aria-hidden="true"><span id="bondWeekReset"></span><span></span></div>
         <section class="quest-recent" id="questRecent" aria-labelledby="questRecentTitle" hidden>
           <div class="noi-section-kicker" id="questRecentTitle">Settimane passate</div>
@@ -996,7 +996,7 @@ html.us-returning-device .auth-overlay{
     </header>
     <div class="conservati-body">
       <div class="conservati-loading" id="conservatiLoading" hidden aria-busy="true"><p>Carico…</p></div>
-      <div class="conservati-empty" id="conservatiEmpty" hidden><p>Quello che conservate da Lasciato per te arriva qui.</p></div>
+      <div class="conservati-empty" id="conservatiEmpty" hidden><svg class="conservati-venn" viewBox="0 0 58 36" width="76" height="47" aria-hidden="true" focusable="false"><circle cx="20" cy="18" r="15" style="fill:var(--us-rosa)"/><circle cx="38" cy="18" r="15" style="fill:var(--us-lilla)"/><path d="M29 6a15 15 0 0 1 0 24 15 15 0 0 1 0-24z" style="fill:var(--us-noi)"/></svg><p>Quello che conservate da Lasciato per te arriva qui.</p></div>
       <div class="conservati-error" id="conservatiError" hidden><h3>Non riesco ad aprirlo</h3><button type="button" data-action id="conservatiRetry">Riprova</button></div>
       <div class="conservati-list" id="conservatiList" hidden aria-live="polite"></div>
       <div class="conservati-detail" id="conservatiDetail" hidden></div>
@@ -1054,7 +1054,7 @@ html.us-returning-device .auth-overlay{
     <div class="us-cal-sheet-backdrop us-modal-backdrop" id="usCalendarDetailBackdrop"></div>
     <section class="us-cal-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="usCalendarDetailTitle" data-us-modal-panel>
       <header class="us-cal-sheet-head">
-        <h3 id="usCalendarDetailTitle">—</h3>
+        <div class="us-cal-sheet-titles"><small class="tiny us-cal-sheet-kicker">Impegno</small><h3 id="usCalendarDetailTitle">—</h3></div>
         <button type="button" class="us-cal-sheet-close us-modal-close us-icon-center" id="usCalendarDetailClose" aria-label="Chiudi impegno"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
       </header>
       <div class="us-cal-detail-body" id="usCalendarDetailBody"></div>
@@ -1070,7 +1070,7 @@ html.us-returning-device .auth-overlay{
     <div class="us-cal-sheet-backdrop us-modal-backdrop" id="usCalendarFormBackdrop"></div>
     <section class="us-cal-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="usCalendarFormTitle" data-us-modal-panel>
       <header class="us-cal-sheet-head">
-        <h3 id="usCalendarFormTitle">Nuovo impegno</h3>
+        <div class="us-cal-sheet-titles"><small class="tiny us-cal-sheet-kicker">Calendario</small><h3 id="usCalendarFormTitle">Nuovo impegno</h3></div>
         <button type="button" class="us-cal-sheet-close us-modal-close us-icon-center" id="usCalendarFormClose" aria-label="Chiudi modulo"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
       </header>
       <form class="us-cal-form" id="usCalendarForm">

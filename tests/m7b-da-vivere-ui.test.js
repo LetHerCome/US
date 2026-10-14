@@ -257,7 +257,7 @@ test('M7B fix: la Quest settimanale non si presenta più come una seconda "Da vi
   const living = livingSection();
   assert.notEqual(living, '');
   assert.doesNotMatch(living, /da vivere/i, 'the weekly Quest section must never carry the "Da vivere" label — that is bucket_items\' exclusive surface');
-  assert.match(living, /quest di coppia|spunto della settimana/i, 'the Quest section must be relabeled as a distinct "Quest di coppia / spunto della settimana" companion');
+  assert.match(living, /missioni di coppia|quest di coppia|spunto della settimana/i, 'the Quest section must be relabeled as a distinct "Missioni di coppia" (formerly "Quest di coppia") companion');
   // Runtime/IDs/confirm/reroll logic for Quest must be fully preserved.
   assert.match(living, /id="bondQuestList"/);
   assert.match(app(), /function confirmBondQuest\(id\)\{/);
