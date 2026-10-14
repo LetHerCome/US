@@ -64,7 +64,7 @@ test('Noi: external date opens selected month and plus calls create on that exac
   const document={readyState:'complete',hidden:false,getElementById:node,querySelector:()=>null,addEventListener(){}};
   vm.runInNewContext(noi,{window,document,console:{warn(){}},MutationObserver:class{observe(){}},Promise,Date,setTimeout,Set,Map});
   window.USNoiV2.openCalendar({date:'2026-12-24'});
-  assert.equal(node('usNoiV2Month').textContent,'Dicembre 2026');
+  assert.match(node('usNoiV2Month').innerHTML,/^Dicembre <span class="us-noi-v2-year">2026<\/span>$/,'Due colori: the year is set smaller beside the month');
   assert.equal(node('usNoiV2AddTop').getAttribute?.('aria-label'),undefined); // fake attribute intentionally ignored
   node('usNoiV2').emit('click',{target:{closest:selector=>selector==='[data-noi-add]'?{}:null}});
   assert.deepEqual(opened,['2026-12-24']);

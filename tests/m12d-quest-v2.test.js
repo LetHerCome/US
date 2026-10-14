@@ -124,7 +124,7 @@ test('M12D: available state and the same rows seen from the partner phone swap a
   await f.t.hydrateBond();
   assert.deepEqual(f.cards().map((x) => x.state), ['you-confirmed', 'available', 'available']);
   assert.match(f.cards()[1].body, /Si completa quando confermate entrambi/);
-  assert.match(f.cards()[1].confirm, /Ho completato questa quest/);
+  assert.match(f.cards()[1].confirm, /Ho completato questa missione/);
   const b = harness({ me: B, quests });
   await b.t.hydrateBond();
   assert.deepEqual(b.cards().map((x) => x.state), ['partner-confirmed', 'available', 'available']);
@@ -150,7 +150,7 @@ test('M12D: weekly header shows week identity, N / 3, rerolls left and a stable 
   assert.match(head, /<b>1<\/b><span>\/ 3<\/span><small>completate<\/small>/);
   assert.match(head, /aria-valuenow="1"[^>]*aria-valuetext="1 di 3 completate"|aria-valuemax="3" aria-valuenow="1"/);
   assert.match(head, /data-quest-rerolls="2">[\s\S]*?2 cambi rimasti/);
-  assert.match(head, /Nuove quest lunedì 5 ott/);
+  assert.match(head, /Nuove missioni lunedì 5 ott/);
   assert.doesNotMatch(head, /setInterval|countdown/i);
 });
 
@@ -254,7 +254,7 @@ test('M12D: reroll is deterministic, mode-aware, one at a time, and rerenders fr
     assert.equal(calls.length, 1, 'a second reroll tap waits for the first');
     assert.deepEqual(Object.keys(calls[0].args), ['target_quest_id', 'target_template_key']);
     assert.ok(['e', 'f'].includes(calls[0].args.target_template_key), 'near couple: any/near templates not already on the board');
-    assert.ok(h.toasts.includes('Nuova quest · 1 cambio rimasto'));
+    assert.ok(h.toasts.includes('Nuova missione · 1 cambio rimasto'));
     assert.match(h.els.questWeekBoard.innerHTML, /1 cambio rimasto/);
     return calls[0].args.target_template_key;
   };
@@ -362,7 +362,7 @@ test('M12D: confirmation answered after an identity switch is not rendered for t
 test('M12D: network error before first load shows a retry state; after a load it keeps cards and marks them stale', async () => {
   const cold = harness({ quests: three(), fail: ['bond_weekly_quests'], failOnly: (filters) => filters.some((f) => f[1] === 'week_start' && f[0] === 'eq') });
   await cold.t.hydrateBond();
-  assert.match(cold.els.bondQuestList.innerHTML, /Quest non disponibili/);
+  assert.match(cold.els.bondQuestList.innerHTML, /Missioni non disponibili/);
   assert.match(cold.els.bondQuestList.innerHTML, /data-quest-retry/);
 
   const warm = harness({ quests: three({ 1: { confirmed_by: [B] } }) });
@@ -388,7 +388,7 @@ test('M12D: empty week shows a calm empty state with retry, no fake slots', asyn
   h.rows.bond_quest_templates = [];
   await h.t.hydrateBond();
   assert.equal(h.cards().length, 0);
-  assert.match(h.els.bondQuestList.innerHTML, /Le quest della settimana stanno arrivando[\s\S]*?data-quest-retry/);
+  assert.match(h.els.bondQuestList.innerHTML, /Le missioni della settimana stanno arrivando[\s\S]*?data-quest-retry/);
   assert.match(h.els.questWeekBoard.innerHTML, /0<\/b><span>\/ 3/);
 });
 

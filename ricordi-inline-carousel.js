@@ -82,8 +82,11 @@
     if (!captionNode.isConnected) meta.appendChild(captionNode);
     captionNode.classList.add('ricordi-inline-caption');
     const authorNode = meta.querySelector('.moment-by');
+    // The author dot follows the photo on screen: my colour or theirs.
+    const dotNode = meta.querySelector('.moment-dot');
     const state = {
-      card,stage,img,peek,counter,prev,next,captionNode,authorNode,
+      card,stage,img,peek,counter,prev,next,captionNode,authorNode,dotNode,
+      originalOwner:dotNode?.getAttribute('data-owner')||'',
       photos:[],index:0,token:0,touch:null,suppressUntil:0,
       originalUrl:img.getAttribute('src')||card.dataset.url||'',
       originalPath:img.dataset.usMediaPath||card.dataset.storagePath||'',
@@ -143,6 +146,7 @@
     state.captionNode.textContent=photo.caption||'';
     state.captionNode.hidden=!photo.caption;
     if (state.authorNode) state.authorNode.textContent=photo.author;
+    if (state.dotNode && photo.owner) state.dotNode.setAttribute('data-owner',photo.owner);
     const next=state.photos[(state.index+1)%state.photos.length];
     // The already-decoded current image doubles as the rear photo until the
     // next signed photo is available; never request whole albums up front.
@@ -201,6 +205,7 @@
     state.stage.before(state.img);
     state.stage.remove();
     state.authorNode && (state.authorNode.textContent=state.originalAuthor);
+    if (state.dotNode && state.originalOwner) state.dotNode.setAttribute('data-owner',state.originalOwner);
     state.captionNode.textContent=state.originalCaption;
     state.captionNode.hidden=!state.originalCaption;
     state.captionNode.classList.remove('ricordi-inline-caption');
@@ -221,11 +226,12 @@
     state.ids=ids;
     state.index=0;
     state.photos=[
-      {cover:true,url:state.originalUrl,path:state.originalPath,caption:state.originalCaption,author:state.originalAuthor},
+      {cover:true,url:state.originalUrl,path:state.originalPath,caption:state.originalCaption,author:state.originalAuthor,owner:state.originalOwner},
       ...sorted.map(row=>({
         cover:false,id:row.id,path:row.storage_path,url:urlCache.get(row.storage_path)||'',
         caption:row.caption||'',
-        author:row.created_by===window.usProfile?.id?'Da te':'Dalla tua persona'
+        author:row.created_by===window.usProfile?.id?'Da te':'Dalla tua persona',
+        owner:row.created_by===window.usProfile?.id?'tu':'partner'
       }))
     ];
     paint(state);

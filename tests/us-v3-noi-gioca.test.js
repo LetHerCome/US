@@ -92,14 +92,14 @@ const now = new Date();
 const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const todayIso = ymd(now);
 
-test('Noi calendar: only the weeks the month spans, today selected, one dot per kind, items in time order', async () => {
+test('Noi calendar: only the weeks the month spans, today selected, one dot per owner colour, items in time order', async () => {
   const later = new Date(now.getFullYear(), now.getMonth(), Math.min(now.getDate() + 1, 28), 12);
   const snapshot = {
     startedOn: `2022-${pad(now.getMonth() + 1)}-${pad(Math.min(now.getDate(), 28))}`,
     events: [{ id: 'e1', title: 'Cena', event_date: todayIso, event_time: '20:30:00' }],
     appointments: [
-      { id: 'a2', title: 'Palestra', is_all_day: false, starts_at: `${todayIso}T18:00:00`, dates: [todayIso] },
-      { id: 'a3', title: 'Lago', is_all_day: true, dates: [ymd(later)] }
+      { id: 'a2', title: 'Palestra', entry_type: 'personal', owner_id: 'f', is_all_day: false, starts_at: `${todayIso}T18:00:00`, dates: [todayIso] },
+      { id: 'a3', title: 'Lago', entry_type: 'personal', owner_id: 'b', is_all_day: true, dates: [ymd(later)] }
     ]
   };
   const { node } = await noiRender({ snapshot });
@@ -111,7 +111,13 @@ test('Noi calendar: only the weeks the month spans, today selected, one dot per 
   const today = grid.match(new RegExp(`<button[^>]*data-noi-day="${todayIso}"[\\s\\S]*?<\\/button>`))?.[0] || '';
   assert.match(today, /is-selected/);
   assert.match(today, /aria-current="date"/);
-  assert.match(today, /<i data-kind="relationship"><\/i><i data-kind="event"><\/i><i data-kind="calendar"><\/i>/, 'one mark per kind, in a stable order');
+  // Due colori: dots say whose it is (mine, theirs, ours), in a stable order.
+  assert.match(today, /<span class="us-noi-v2-day-marks" aria-hidden="true"><i data-owner="tu"><\/i><i data-owner="noi"><\/i><\/span>/, 'one mark per owner colour');
+  if (ymd(later) !== todayIso) {
+    const next = grid.match(new RegExp(`<button[^>]*data-noi-day="${ymd(later)}"[\\s\\S]*?<\\/button>`))?.[0] || '';
+    assert.match(next, /<i data-owner="partner"><\/i>/, 'the other person\'s commitment takes their colour');
+  }
+  assert.match(grid, /class="us-noi-v2-legend"/, 'a small legend names who is who');
   const detail = node('usNoiV2Detail').innerHTML;
   assert.match(detail, /<small>OGGI<\/small>/);
   const titles = [...detail.matchAll(/<b>([^<]+)<\/b>/g)].map((m) => m[1]);

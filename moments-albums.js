@@ -34,9 +34,9 @@ function esc(value){
 function ensureUi(){
   if(document.getElementById('usAlbumOverlay'))return;
   document.body.insertAdjacentHTML('beforeend',`
-    <div class="us-album-overlay" id="usAlbumOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
+    <div class="us-album-overlay" id="usAlbumOverlay" aria-hidden="true" data-us-modal data-us-motion-surface data-us-galleria>
       <div class="us-album-shell" role="dialog" aria-modal="true" aria-label="Album del Moment" data-us-modal-panel>
-        <button type="button" class="us-album-close us-modal-close is-on-media" id="usAlbumClose" aria-label="Chiudi album" data-us-modal-close><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span></button>
+        <button type="button" class="us-album-close us-modal-close is-on-media" id="usAlbumClose" aria-label="Chiudi album" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
         <div class="us-album-scroll" id="usAlbumScroll">
           <div class="us-album-cover-stage" id="usAlbumCarousel" role="region" aria-label="Foto del ricordo" aria-roledescription="carosello" tabindex="0">
             <img id="usAlbumPeek" class="us-album-peek" alt="" loading="lazy" decoding="async" aria-hidden="true" hidden>
@@ -486,8 +486,109 @@ async function deleteAlbumPhoto(id,path){
   await decorateMomentCards();
 }
 
+// ===== Galleria: the photo opens from where you tapped it and returns there =====
+// Presentation only (Web Animations). A copy of the tapped thumbnail grows to
+// the album hero while the night fades in; closing flies it back to the card.
+// Reduced motion, or a card that is no longer on screen: a plain fade.
+const GALLERIA_EASE='cubic-bezier(.7,0,.2,1)',GALLERIA_OUT='cubic-bezier(.2,.8,.2,1)';
+let galleriaSource=null;
+let galleriaLeaving=null;
+function galleriaReduced(){
+  return Boolean(window.UsUiFoundation?.isReducedMotion?.()||window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
+}
+function galleriaThumb(card){
+  return card?.querySelector?.('.ricordi-inline-current')||card?.querySelector?.('img')||card||null;
+}
+function galleriaRect(el){
+  if(!el?.isConnected||typeof el.getBoundingClientRect!=='function')return null;
+  const r=el.getBoundingClientRect();
+  const vw=window.innerWidth||document.documentElement.clientWidth||0;
+  const vh=window.innerHeight||document.documentElement.clientHeight||0;
+  if(!r.width||!r.height||r.bottom<=0||r.top>=vh||r.right<=0||r.left>=vw)return null;
+  return r;
+}
+const galleriaFrame=(r,radius)=>({left:`${r.left}px`,top:`${r.top}px`,width:`${r.width}px`,height:`${r.height}px`,borderRadius:radius});
+function galleriaGhost(src,rect,radius){
+  if(!src)return null;
+  const ghost=document.createElement('img');
+  ghost.className='us-galleria-ghost';
+  ghost.alt='';
+  ghost.setAttribute('aria-hidden','true');
+  ghost.src=src;
+  Object.assign(ghost.style,galleriaFrame(rect,radius));
+  document.body.appendChild(ghost);
+  return ghost;
+}
+function galleriaChrome(overlay){
+  return [...overlay.querySelectorAll('.us-album-close,.us-album-story>*,.us-album-info,.us-album-carousel-counter,.us-album-carousel-arrow,.us-album-carousel-hint,.us-album-floating-add')];
+}
+function galleriaEnter(overlay,card){
+  galleriaSource=card||null;
+  if(!overlay||typeof overlay.animate!=='function')return;
+  const from=galleriaReduced()?null:galleriaRect(galleriaThumb(card));
+  const stage=document.getElementById('usAlbumCarousel');
+  const cover=document.getElementById('usAlbumCover');
+  const to=stage?.getBoundingClientRect?.();
+  const thumb=galleriaThumb(card);
+  const src=thumb?.currentSrc||thumb?.src||cover?.getAttribute('src')||'';
+  if(!from||!to?.width||!to?.height||!src){
+    overlay.animate([{opacity:0},{opacity:1}],{duration:galleriaReduced()?180:260,easing:'linear'});
+    return;
+  }
+  const ghost=galleriaGhost(src,from,'20px');
+  if(cover)cover.style.visibility='hidden';
+  overlay.animate([{opacity:0},{opacity:1}],{duration:420,easing:'linear'});
+  for(const el of galleriaChrome(overlay))el.animate([{opacity:0,transform:'translateY(18px)'},{opacity:1,transform:'none'}],{duration:320,delay:480,easing:GALLERIA_OUT,fill:'backwards'});
+  const grow=ghost?.animate([galleriaFrame(from,'20px'),galleriaFrame(to,'0px')],{duration:560,easing:GALLERIA_EASE,fill:'forwards'});
+  const land=()=>{if(cover)cover.style.visibility='';ghost?.remove();};
+  if(grow?.finished)grow.finished.then(land,land);else land();
+}
+// Returns true once it owns the close: finalize runs when the photo is back.
+function galleriaLeave(overlay,finalize){
+  if(galleriaLeaving)return true;
+  if(!overlay.classList.contains('show')||typeof overlay.animate!=='function'){finalize();return true;}
+  const reduced=galleriaReduced();
+  const cover=document.getElementById('usAlbumCover');
+  const stage=document.getElementById('usAlbumCarousel');
+  const target=reduced?null:galleriaRect(galleriaThumb(galleriaSource));
+  const from=stage?.getBoundingClientRect?.();
+  const src=cover?.currentSrc||cover?.getAttribute('src')||'';
+  const anims=[];
+  let ghost=null,timer=null;
+  const job={finish:()=>{
+    if(galleriaLeaving!==job)return;
+    galleriaLeaving=null;
+    clearTimeout(timer);
+    ghost?.remove();
+    if(cover)cover.style.visibility='';
+    overlay.style.pointerEvents='';
+    finalize();
+    anims.forEach(a=>{try{a.cancel();}catch(_e){}});
+    galleriaSource=null;
+  }};
+  galleriaLeaving=job;
+  overlay.style.pointerEvents='none';
+  if(target&&from?.width&&src){
+    ghost=galleriaGhost(src,from,'0px');
+    if(cover)cover.style.visibility='hidden';
+    for(const el of galleriaChrome(overlay))anims.push(el.animate([{opacity:1},{opacity:0}],{duration:150,fill:'forwards'}));
+    anims.push(overlay.animate([{opacity:1},{opacity:0}],{duration:420,easing:'linear',fill:'forwards'}));
+    const back=ghost?.animate([galleriaFrame(from,'0px'),galleriaFrame(target,'20px')],{duration:480,easing:GALLERIA_EASE,fill:'forwards'});
+    if(back){anims.push(back);back.finished.then(job.finish,job.finish);}
+    timer=setTimeout(job.finish,700);
+  }else{
+    const fade=overlay.animate([{opacity:1},{opacity:0}],{duration:reduced?180:240,easing:'linear',fill:'forwards'});
+    anims.push(fade);
+    fade.finished.then(job.finish,job.finish);
+    timer=setTimeout(job.finish,500);
+  }
+  return true;
+}
+
 async function openAlbum(card,{focusDelete=false}={}){
   ensureUi();
+  // A tap during the way back lands the previous close at once.
+  galleriaLeaving?.finish();
   const id=card?.dataset?.momentId;
   if(!id){legacyOpenMomentViewer?.(card);return;}
   currentAlbum={
@@ -526,6 +627,7 @@ async function openAlbum(card,{focusDelete=false}={}){
   overlay?.classList.add('show');overlay?.setAttribute('aria-hidden','false');
   document.body.classList.add('us-album-open');
   const scroll=document.getElementById('usAlbumScroll');if(scroll)scroll.scrollTop=0;
+  galleriaEnter(overlay,card);
   lightboxItems=[{url:currentAlbum.url,author:currentAlbum.author,caption:currentAlbum.caption,cover:true}];
   showAlbumPhoto(0);
   await loadAlbum(id);
@@ -552,6 +654,7 @@ function closeAlbum(){
     paintDeleteControl();
   };
   closeLightbox();
+  if(overlay.hasAttribute?.('data-us-galleria')&&galleriaLeave(overlay,finalize))return;
   if(window.UsUiFoundation?.exitSurface)window.UsUiFoundation.exitSurface(overlay,finalize);else finalize();
 }
 function openLightbox(index=0){
@@ -802,7 +905,7 @@ console.info('[US] Moments Albums attivo');
       <section class="us-moment-compose-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-label="Aggiungi un ricordo" data-us-modal-panel>
         <div class="us-moment-compose-grabber"></div>
         <div class="us-moment-compose-title">
-          <div><b>Aggiungi un ricordo</b></div>
+          <div><small class="tiny us-moment-compose-kicker">Ricordi</small><b>Aggiungi un ricordo</b></div>
           <button type="button" class="us-moment-compose-close us-modal-close" id="usMomentComposeClose" aria-label="Chiudi" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
         </div>
         <div id="usMomentComposeMount"></div>
@@ -1005,7 +1108,8 @@ console.info('[US] Moments Albums attivo');
       const preview = entry.source.kind === 'text'
         ? (entry.source.body || 'Un pensiero per voi.')
         : kindLabel(entry.source.kind);
-      return `<button type="button" class="conservati-card" data-conservati-open="${escapeConservati(entry.contribution.id)}" aria-label="Apri ${escapeConservati(kindLabel(entry.source.kind))} lasciato da ${escapeConservati(entry.senderName)}">
+      const owner = (entry.source.sender_id || entry.contribution.source_sender_id) === window.usProfile?.id ? 'tu' : 'partner';
+      return `<button type="button" class="conservati-card" data-conservati-open="${escapeConservati(entry.contribution.id)}" data-owner="${owner}" aria-label="Apri ${escapeConservati(kindLabel(entry.source.kind))} lasciato da ${escapeConservati(entry.senderName)}">
         <span class="conservati-card-mark" aria-hidden="true">${entry.source.kind === 'text' ? '<span class="us-icon" data-us-icon="pencil" aria-hidden="true"></span>' : entry.source.kind === 'music' ? '<span class="us-icon" data-us-icon="music-note" aria-hidden="true"></span>' : '<span class="us-icon" data-us-icon="heart" aria-hidden="true"></span>'}</span>
         <span class="conservati-card-copy"><b>${escapeConservati(entry.senderName)}</b><small>${escapeConservati(formatConservatiDate(entry.source.created_at))}</small><span>${escapeConservati(preview)}</span></span>
         <span class="conservati-card-kind">${escapeConservati(kindLabel(entry.source.kind))}</span>

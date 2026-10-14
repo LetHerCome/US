@@ -1157,6 +1157,8 @@ function openDetail(entryId) {
   if (entry.description) rows.push(`<p class="us-cal-detail-note">${esc(entry.description)}</p>`);
   const body = $('usCalendarDetailBody');
   if (body) body.innerHTML = rows.join('');
+  // Due colori: the detail card carries whose it is (mine, theirs, ours).
+  if (body?.dataset) body.dataset.owner = isShared ? 'noi' : entry.owner_id === window.usProfile?.id ? 'tu' : 'partner';
   renderDetailReminders(entry);
   const canEdit = window.usProfile ? canEditEntry(entry, window.usProfile.id) : false;
   const actions = $('usCalendarDetailActions');
