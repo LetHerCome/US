@@ -7,9 +7,10 @@
 (function(root){
 'use strict';
 
-// TODO founder: replace BOTH placeholders before the Google Play release.
+// Support/privacy contact (founder, 14/10: Gmail until the US domain exists).
+// TODO founder: developer name as in the Play listing.
 // This is the only place where they are defined (app + public page read them here).
-const US_SUPPORT_EMAIL='privacy@us-app.invalid';
+const US_SUPPORT_EMAIL='moonee.team@gmail.com';
 const US_DEVELOPER_NAME='[TODO founder: nome sviluppatore]';
 
 const CONFIRM_WORD='ELIMINA';
