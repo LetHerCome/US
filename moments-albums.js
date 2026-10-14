@@ -48,13 +48,13 @@ function ensureUi(){
           </div>
           <div class="us-album-info">
             <div class="us-album-meta-line"><b id="usAlbumDate"></b><span id="usAlbumCount">1 foto</span></div>
-            <div class="us-album-caption-postit" id="usAlbumCoverNote" hidden><p id="usAlbumCoverCaption"></p><small id="usAlbumCoverAuthor"></small></div>
+            <div class="us-album-caption-postit" id="usAlbumCoverNote" hidden><p id="usAlbumCoverCaption" translate="no"></p><small id="usAlbumCoverAuthor"></small></div>
             <button type="button" class="us-album-current-delete" id="usAlbumCurrentDelete" hidden>Elimina questa foto</button>
             <p class="us-album-carousel-status" id="usAlbumCarouselStatus" role="status" aria-live="polite" hidden></p>
           </div>
           <header class="us-album-story" id="usAlbumStory">
             <small class="us-album-provenance" id="usAlbumProvenance"></small>
-            <h2 class="us-album-title" id="usAlbumTitle"></h2>
+            <h2 class="us-album-title" id="usAlbumTitle" translate="no"></h2>
             <p class="us-album-byline" id="usAlbumByline"></p>
             <div class="us-undo-delete" id="usAlbumDelete" data-state="idle" style="--us-undo-grace:${DELETE_GRACE_MS}ms" hidden>
               <button type="button" class="us-undo-delete-go" id="usAlbumDeleteGo" aria-label="Elimina questo ricordo per entrambi">Elimina</button>
@@ -87,7 +87,7 @@ function ensureUi(){
         <div class="us-album-lightbox-count" id="usAlbumLightboxCount"></div>
         <img class="us-album-lightbox-photo active" id="usAlbumLightboxImgA" alt="Foto del Moment">
         <img class="us-album-lightbox-photo" id="usAlbumLightboxImgB" alt="">
-        <div class="us-album-lightbox-info"><b id="usAlbumLightboxAuthor"></b><p id="usAlbumLightboxCaption"></p></div>
+        <div class="us-album-lightbox-info"><b id="usAlbumLightboxAuthor" translate="no"></b><p id="usAlbumLightboxCaption" translate="no"></p></div>
       </div>
     </div>
   `);
@@ -1111,7 +1111,7 @@ console.info('[US] Moments Albums attivo');
       const owner = (entry.source.sender_id || entry.contribution.source_sender_id) === window.usProfile?.id ? 'tu' : 'partner';
       return `<button type="button" class="conservati-card" data-conservati-open="${escapeConservati(entry.contribution.id)}" data-owner="${owner}" aria-label="Apri ${escapeConservati(kindLabel(entry.source.kind))} lasciato da ${escapeConservati(entry.senderName)}">
         <span class="conservati-card-mark" aria-hidden="true">${entry.source.kind === 'text' ? '<span class="us-icon" data-us-icon="pencil" aria-hidden="true"></span>' : entry.source.kind === 'music' ? '<span class="us-icon" data-us-icon="music-note" aria-hidden="true"></span>' : '<span class="us-icon" data-us-icon="heart" aria-hidden="true"></span>'}</span>
-        <span class="conservati-card-copy"><b>${escapeConservati(entry.senderName)}</b><small>${escapeConservati(formatConservatiDate(entry.source.created_at))}</small><span>${escapeConservati(preview)}</span></span>
+        <span class="conservati-card-copy"><b translate="no">${escapeConservati(entry.senderName)}</b><small>${escapeConservati(formatConservatiDate(entry.source.created_at))}</small><span${entry.source.kind === 'text' && entry.source.body ? ' translate="no"' : ''}>${escapeConservati(preview)}</span></span>
         <span class="conservati-card-kind">${escapeConservati(kindLabel(entry.source.kind))}</span>
       </button>`;
     }).join('');
@@ -1128,7 +1128,7 @@ console.info('[US] Moments Albums attivo');
       ? '<p class="conservati-media-unavailable" role="status">Questo contenuto privato non è disponibile in questo momento.</p>'
       : renderer(source, entry.mediaUrl || '');
     detail.innerHTML = `<button type="button" class="conservati-back" data-conservati-back aria-label="Torna ai Conservati"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span> <span>Conservati</span></button>
-      <div class="conservati-provenance"><b>${escapeConservati(entry.senderName)}</b><time datetime="${escapeConservati(source.created_at)}">${escapeConservati(formatConservatiDate(source.created_at))}</time></div>
+      <div class="conservati-provenance"><b translate="no">${escapeConservati(entry.senderName)}</b><time datetime="${escapeConservati(source.created_at)}">${escapeConservati(formatConservatiDate(source.created_at))}</time></div>
       <div class="conservati-item-content">${content}</div>`;
     showConservatiState('detail');
   }

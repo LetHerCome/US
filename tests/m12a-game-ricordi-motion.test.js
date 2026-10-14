@@ -77,8 +77,8 @@ test('reveal: the FIRST reveal is staged, yet every answer is already in the DOM
   assert.match(panel, /class="us-gv2-reveal us-gv5-reveal is-first-reveal"/);
   assert.match(panel, /class="us-gv5-summary"/);
   assert.doesNotMatch(panel, /class="us-gv2-reveal-card"/, 'no long per-question cards');
-  assert.match(panel, /<dd>Il mare<\/dd>/);
-  assert.match(panel, /<dd>La montagna<\/dd>/);
+  assert.match(panel, /<dd translate="no">Il mare<\/dd>/, 'a free answer is kept as written');
+  assert.match(panel, /<dd translate="no">La montagna<\/dd>/);
   assert.deepEqual(h.feedback, ['reveal']);
   // Domain unchanged: the receipt is still recorded exactly once.
   assert.equal(h.calls.filter(([n]) => n === 'mark_game_session_reveal_seen').length, 1);
@@ -91,7 +91,7 @@ test('reveal: an already-seen reveal is not delayed, decorated or announced agai
   await tick();
   const panel = h.nodes.usGameV2Panel.innerHTML;
   assert.doesNotMatch(panel, /is-first-reveal/);
-  assert.match(panel, /<dd>Il mare<\/dd>[\s\S]*<dd>La montagna<\/dd>/);
+  assert.match(panel, /<dd translate="no">Il mare<\/dd>[\s\S]*<dd translate="no">La montagna<\/dd>/);
   assert.deepEqual(h.feedback, []);
   assert.equal(h.calls.filter(([n]) => n === 'mark_game_session_reveal_seen').length, 0);
 });

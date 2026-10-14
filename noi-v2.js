@@ -113,13 +113,13 @@ function itemMarkup(day,item) {
   </button>`;
   const clock=clockOf(item.time);
   return `<button type="button" class="us-noi-v2-item" data-noi-item="${action}" data-day="${esc(day)}" data-id="${esc(item.id||'')}" data-owner="${ownerOf(item)}">
-    <span class="us-noi-v2-item-time"${clock?'':' aria-hidden="true"'}>${clock||'—'}</span><span class="us-noi-v2-item-copy"><b>${esc(item.title)}</b><small class="us-noi-v2-item-meta">${clock?'':`<span>${esc(item.time)}</span>`}<span class="us-noi-v2-owner" data-owner-type="${esc(item.entryType||item.kind)}">${esc(ownerLabel(item))}</span></small></span><i class="us-noi-v2-item-dot" aria-hidden="true"></i>
+    <span class="us-noi-v2-item-time"${clock?'':' aria-hidden="true"'}>${clock||'—'}</span><span class="us-noi-v2-item-copy"><b translate="no">${esc(item.title)}</b><small class="us-noi-v2-item-meta">${clock?'':`<span>${esc(item.time)}</span>`}<span class="us-noi-v2-owner" data-owner-type="${esc(item.entryType||item.kind)}">${esc(ownerLabel(item))}</span></small></span><i class="us-noi-v2-item-dot" aria-hidden="true"></i>
   </button>`;
 }
 // Lavagna: one chip per commitment, in the colour of whose it is.
 function chipMarkup(day,item){
-  const label=item.kind==='relationship'?item.title:`${item.title} · ${item.time}`;
-  return `<button type="button" class="us-noi-v2-chip" data-noi-item="${itemAction(item)}" data-day="${esc(day)}" data-id="${esc(item.id||'')}" data-owner="${ownerOf(item)}" aria-label="${esc(item.title)}, ${esc(ownerLabel(item))}, ${esc(item.time)}">${esc(label)}</button>`;
+  const label=item.kind==='relationship'?esc(item.title):`<span translate="no">${esc(item.title)} · </span>${esc(item.time)}`;
+  return `<button type="button" class="us-noi-v2-chip" data-noi-item="${itemAction(item)}" data-day="${esc(day)}" data-id="${esc(item.id||'')}" data-owner="${ownerOf(item)}" aria-label="${esc(item.title)}, ${esc(ownerLabel(item))}, ${esc(item.time)}">${label}</button>`;
 }
 // The small key under the month: the real names, never hardcoded.
 function legendMarkup(){
@@ -132,7 +132,7 @@ function legendMarkup(){
   const people=[['tu',own],['partner',partner]];
   if(window.usProfile?.role==='beatrice')people.reverse();
   people.push(['noi','Insieme']);
-  return `<p class="us-noi-v2-legend" aria-hidden="true">${people.map(([owner,label])=>`<span><i data-owner="${owner}"></i>${esc(label)}</span>`).join('')}</p>`;
+  return `<p class="us-noi-v2-legend" aria-hidden="true">${people.map(([owner,label])=>`<span${owner==='noi'?'':' translate="no"'}><i data-owner="${owner}"></i>${esc(label)}</span>`).join('')}</p>`;
 }
 // Only the weeks this month actually spans: 4–6 rows, never an empty sixth row.
 function calendarMarkup(index) {

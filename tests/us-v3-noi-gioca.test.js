@@ -120,7 +120,7 @@ test('Noi calendar: only the weeks the month spans, today selected, one dot per 
   assert.match(grid, /class="us-noi-v2-legend"/, 'a small legend names who is who');
   const detail = node('usNoiV2Detail').innerHTML;
   assert.match(detail, /<small>OGGI<\/small>/);
-  const titles = [...detail.matchAll(/<b>([^<]+)<\/b>/g)].map((m) => m[1]);
+  const titles = [...detail.matchAll(/<b(?: translate="no")?>([^<]+)<\/b>/g)].map((m) => m[1]);
   assert.deepEqual(titles, ['Il nostro giorno', 'Palestra', 'Cena'], 'anniversary first, then by time');
   assert.equal(node('usNoiV2Today').hidden, true, '"Torna a oggi" only when you are elsewhere');
 });

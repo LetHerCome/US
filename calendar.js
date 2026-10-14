@@ -836,7 +836,7 @@ function renderNoiWeekBoard(model) {
     return;
   }
   const visibleRows = window.innerHeight <= 700 ? model.rows.slice(0, 2) : model.rows;
-  body.innerHTML = visibleRows.map((row) => `<span class="noi-week-board-row" data-shared="${row.shared ? 'true' : 'false'}"><span class="noi-week-board-day">${esc(row.day)}</span><span class="noi-week-board-copy"><b>${esc(row.owner)} · ${esc(row.title)}</b><small>${esc(row.time)}</small></span></span>`).join('')
+  body.innerHTML = visibleRows.map((row) => `<span class="noi-week-board-row" data-shared="${row.shared ? 'true' : 'false'}"><span class="noi-week-board-day">${esc(row.day)}</span><span class="noi-week-board-copy"><b>${esc(row.owner)}<span translate="no"> · ${esc(row.title)}</span></b><small>${esc(row.time)}</small></span></span>`).join('')
     + (model.total > visibleRows.length ? `<span class="noi-week-board-more">+${model.total - visibleRows.length} altri impegni</span>` : '');
 }
 let noiWeekBoardRefreshId = 0;
@@ -1068,13 +1068,13 @@ function renderEventRow(e) {
   const ownerName = profileById(e.owner_id)?.display_name;
   const mark = ownerMarkFor(lane, ownerName);
   const label = entryAriaLabel({ title: e.title, lane, displayName: ownerName, entry: e });
-  const place = e.location ? `<small class="us-cal-event-place">${esc(e.location)}</small>` : '';
-  return `<button type="button" class="us-cal-event" data-entry-id="${esc(e.id)}" data-owner="${esc(mark)}" aria-label="${esc(label)}"><span class="us-cal-owner${mark === 'Noi' ? ' us-cal-owner--shared' : ''}" aria-hidden="true">${esc(mark)}</span><span class="us-cal-event-copy"><span class="us-cal-event-time">${esc(entryTimeLabel(e))}</span><b class="us-cal-event-title">${esc(e.title)}</b>${place}</span></button>`;
+  const place = e.location ? `<small class="us-cal-event-place" translate="no">${esc(e.location)}</small>` : '';
+  return `<button type="button" class="us-cal-event" data-entry-id="${esc(e.id)}" data-owner="${esc(mark)}" aria-label="${esc(label)}"><span class="us-cal-owner${mark === 'Noi' ? ' us-cal-owner--shared' : ''}" aria-hidden="true">${esc(mark)}</span><span class="us-cal-event-copy"><span class="us-cal-event-time">${esc(entryTimeLabel(e))}</span><b translate="no" class="us-cal-event-title">${esc(e.title)}</b>${place}</span></button>`;
 }
 
 function renderDaySection(label, list, cls) {
   const items = list.length ? sortDayEntries(list).map(renderEventRow).join('') : '<p class="us-cal-day-empty">Niente qui.</p>';
-  return `<section class="us-cal-day-section" data-lane="${esc(cls)}"><h4>${esc(label)}</h4>${items}</section>`;
+  return `<section class="us-cal-day-section" data-lane="${esc(cls)}"><h4${cls === 'shared' ? '' : ' translate="no"'}>${esc(label)}</h4>${items}</section>`;
 }
 
 // Selected-day detail, under the month grid: only lanes that really have
@@ -1153,8 +1153,8 @@ function openDetail(entryId) {
     ? formatDateRangeLabel(entry.start_date, entry.end_date)
     : `${formatDateRangeLabel(localDateFromInstant(entry.starts_at), localDateFromInstant(entry.ends_at))} · ${entryTimeLabel(entry)}`;
   const rows = [`<p class="us-cal-detail-kind">${esc(identityLabel)}</p>`, `<p class="us-cal-detail-date">${esc(dateLabel)}</p>`];
-  if (entry.location) rows.push(`<p class="us-cal-detail-location">${esc(entry.location)}</p>`);
-  if (entry.description) rows.push(`<p class="us-cal-detail-note">${esc(entry.description)}</p>`);
+  if (entry.location) rows.push(`<p class="us-cal-detail-location" translate="no">${esc(entry.location)}</p>`);
+  if (entry.description) rows.push(`<p class="us-cal-detail-note" translate="no">${esc(entry.description)}</p>`);
   const body = $('usCalendarDetailBody');
   if (body) body.innerHTML = rows.join('');
   // Due colori: the detail card carries whose it is (mine, theirs, ours).
@@ -1227,7 +1227,7 @@ function renderFormDay(dateISO, mode) {
   const list = mode === 'edit' || !dateISO ? [] : (buildDateIndex().get(dateISO) || []);
   box.hidden = !list.length;
   box.innerHTML = list.length
-    ? `<span class="us-cal-form-day-kicker">Già quel giorno</span>${list.map((e) => `<button type="button" class="us-cal-form-day-entry" data-entry-id="${esc(e.id)}" aria-label="${esc(entryAriaLabel({ title: e.title, lane: entryLaneRole(e), displayName: profileById(e.owner_id)?.display_name, entry: e }))}">${ownerChip(ownerMarkOf(e))}<b>${esc(e.title)}</b><small>${esc(entryTimeLabel(e))}</small></button>`).join('')}`
+    ? `<span class="us-cal-form-day-kicker">Già quel giorno</span>${list.map((e) => `<button type="button" class="us-cal-form-day-entry" data-entry-id="${esc(e.id)}" aria-label="${esc(entryAriaLabel({ title: e.title, lane: entryLaneRole(e), displayName: profileById(e.owner_id)?.display_name, entry: e }))}">${ownerChip(ownerMarkOf(e))}<b translate="no">${esc(e.title)}</b><small>${esc(entryTimeLabel(e))}</small></button>`).join('')}`
     : '';
   box.querySelectorAll('[data-entry-id]').forEach((btn) => btn.addEventListener('click', () => { closeCalendarFormSheet(); openDetail(btn.dataset.entryId); }));
 }

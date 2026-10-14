@@ -536,7 +536,7 @@ html.us-returning-device .auth-overlay{
         </div>
         <div class="us-noi-v2-picker" id="usNoiV2IdeaPick" role="status" hidden>
           <span class="us-icon" data-us-icon="calendar-heart" aria-hidden="true"></span>
-          <span class="us-noi-v2-picker-copy"><b>Metti in calendario</b><small id="usNoiV2IdeaTitle">La vostra idea</small><small>Scegli il giorno per aggiungere questo impegno</small></span>
+          <span class="us-noi-v2-picker-copy"><b>Metti in calendario</b><small id="usNoiV2IdeaTitle" translate="no">La vostra idea</small><small>Scegli il giorno per aggiungere questo impegno</small></span>
           <button type="button" id="usNoiV2IdeaCancel" aria-label="Annulla collegamento">Annulla</button>
         </div>
         <div class="us-noi-v2-shortcuts">
@@ -948,7 +948,7 @@ html.us-returning-device .auth-overlay{
   <div class="left-for-you-backdrop us-modal-backdrop" id="leftForYouBackdrop"></div>
   <section class="left-for-you-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-labelledby="leftForYouTitle" data-us-modal-panel>
     <header class="left-for-you-head">
-      <div><div class="tiny">PER VOI DUE</div><h2 id="leftForYouTitle">Lasciato per te</h2><small id="leftForYouPartnerName">La tua persona</small></div>
+      <div><div class="tiny">PER VOI DUE</div><h2 id="leftForYouTitle">Lasciato per te</h2><small id="leftForYouPartnerName" translate="no">La tua persona</small></div>
       <button type="button" class="left-for-you-close us-modal-close" id="leftForYouClose" aria-label="Chiudi Lasciato per te" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
     </header>
     <div class="left-for-you-body">
@@ -956,7 +956,7 @@ html.us-returning-device .auth-overlay{
       <div class="left-for-you-empty" id="leftForYouEmpty" hidden><h3>Lasciato per te</h3><p>Niente per ora.</p></div>
       <div class="left-for-you-error" id="leftForYouError" hidden><h3>Non riesco ad aprirlo</h3><button type="button" data-action id="leftForYouRetry">Riprova</button></div>
       <div class="left-for-you-card" id="leftForYouCard" hidden>
-        <div class="left-for-you-meta"><span class="left-for-you-from"><span class="left-for-you-from-avatar" id="leftForYouFromFallback">♡</span><span>Da <b id="leftForYouFromName">la tua persona</b></span></span><span id="leftForYouCounter"></span></div>
+        <div class="left-for-you-meta"><span class="left-for-you-from"><span class="left-for-you-from-avatar" id="leftForYouFromFallback">♡</span><span>Da <b id="leftForYouFromName" translate="no">la tua persona</b></span></span><span id="leftForYouCounter"></span></div>
         <div id="leftForYouContent"></div>
         <div class="left-for-you-actions"><button type="button" id="leftForYouConserve">Conserva</button><button type="button" id="leftForYouNext">Apri il prossimo</button></div>
         <div class="left-for-you-status" id="leftForYouStatus" role="status" aria-live="polite"></div>
@@ -1023,7 +1023,7 @@ html.us-returning-device .auth-overlay{
         <p class="left-for-you-music-search-status" id="leftForYouMusicSearchStatus" role="status" aria-live="polite"></p>
         <ul class="left-for-you-music-results" id="leftForYouMusicResults" aria-label="Risultati Spotify" hidden></ul>
         <div class="left-for-you-music-selected" id="leftForYouMusicSelected" hidden>
-          <span class="left-for-you-music-selected-label" id="leftForYouMusicSelectedLabel"></span>
+          <span class="left-for-you-music-selected-label" id="leftForYouMusicSelectedLabel" translate="no"></span>
           <button type="button" class="left-for-you-music-clear" id="leftForYouMusicClear" aria-label="Rimuovi il brano scelto"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
         </div>
         <details class="left-for-you-music-manual">
@@ -1075,7 +1075,7 @@ html.us-returning-device .auth-overlay{
 <div class="app-update-bar" id="appUpdateBar" role="status" aria-live="polite" hidden><span><b>Aggiornamento disponibile</b></span><button type="button" id="appUpdateBtn">Aggiorna</button></div>
 
 <div class="moment-viewer" id="momentViewer" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Foto del ricordo" data-us-modal data-us-motion-surface onclick="if(event.target===this)closeMomentViewer()">
-  <div class="moment-viewer-card" data-us-modal-panel><button class="moment-viewer-close us-modal-close is-on-media" type="button" aria-label="Chiudi foto" data-us-modal-close onclick="closeMomentViewer()"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button><img id="momentViewerImg" alt="Ricordo a schermo intero"><div class="moment-viewer-info"><div class="moment-viewer-kicker" id="momentViewerAuthor">Noi</div><div class="moment-viewer-date" id="momentViewerDate"></div><p id="momentViewerCaption" hidden></p></div></div>
+  <div class="moment-viewer-card" data-us-modal-panel><button class="moment-viewer-close us-modal-close is-on-media" type="button" aria-label="Chiudi foto" data-us-modal-close onclick="closeMomentViewer()"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button><img id="momentViewerImg" alt="Ricordo a schermo intero"><div class="moment-viewer-info"><div class="moment-viewer-kicker" id="momentViewerAuthor" translate="no">Noi</div><div class="moment-viewer-date" id="momentViewerDate"></div><p id="momentViewerCaption" translate="no" hidden></p></div></div>
 </div>
 
 <div class="conservati-overlay" id="conservatiOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
@@ -1118,7 +1118,7 @@ html.us-returning-device .auth-overlay{
       <button type="button" id="usCalendarViewWeek" class="" aria-pressed="false">Settimana</button>
     </div>
     <div class="us-cal-legend" id="usCalendarLegend" aria-hidden="true"></div>
-    <div class="us-cal-pick-banner" id="usCalendarPickBanner" role="status" hidden><span><small>Da vivere · tocca il giorno</small><b id="usCalendarPickTitle"></b></span><button type="button" id="usCalendarPickCancel">Annulla</button></div>
+    <div class="us-cal-pick-banner" id="usCalendarPickBanner" role="status" hidden><span><small>Da vivere · tocca il giorno</small><b id="usCalendarPickTitle" translate="no"></b></span><button type="button" id="usCalendarPickCancel">Annulla</button></div>
     <div class="us-cal-status" id="usCalendarStatus" role="status" aria-live="polite" hidden></div>
     <div class="us-cal-body" id="usCalendarBody">
       <div class="us-cal-pane-month" id="usCalendarPaneMonth">
@@ -1145,7 +1145,7 @@ html.us-returning-device .auth-overlay{
     <div class="us-cal-sheet-backdrop us-modal-backdrop" id="usCalendarDetailBackdrop"></div>
     <section class="us-cal-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="usCalendarDetailTitle" data-us-modal-panel>
       <header class="us-cal-sheet-head">
-        <div class="us-cal-sheet-titles"><small class="tiny us-cal-sheet-kicker">Impegno</small><h3 id="usCalendarDetailTitle">—</h3></div>
+        <div class="us-cal-sheet-titles"><small class="tiny us-cal-sheet-kicker">Impegno</small><h3 id="usCalendarDetailTitle" translate="no">—</h3></div>
         <button type="button" class="us-cal-sheet-close us-modal-close us-icon-center" id="usCalendarDetailClose" aria-label="Chiudi impegno"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
       </header>
       <div class="us-cal-detail-body" id="usCalendarDetailBody"></div>

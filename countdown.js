@@ -61,9 +61,10 @@ function install(w){
     const e=state.items?.find(e=>e.id===state.active_id);return e?{...e,view:display(e)}:null;
   }
   // Insieme da reads "430 giorni insieme" in the Oggi type (the tail only shows where the style asks for it).
-  function markup(view,title,style,together=false){
+  // own: the title is the one you wrote (not "Insieme da" or the editor's placeholder), kept as written.
+  function markup(view,title,style,together=false,own=!together&&Boolean(title)){
     if(!view)return '';
-    return `<span class="us-countdown-art" data-countdown-style="${esc(style)}" data-countdown-clock="${view.value.includes(':')}"${together?' data-countdown-kind="together"':''}><span class="us-countdown-deco" aria-hidden="true"><i></i></span><span class="us-countdown-title">${esc(title)}</span><span class="us-countdown-number" aria-hidden="true">${[...view.value].map(c=>`<span class="us-countdown-digit${/\d/.test(c)?'':' is-sep'}">${esc(c)}</span>`).join('')}</span><span class="us-countdown-unit">${esc(view.unit)}</span>${together?'<span class="us-countdown-tail" aria-hidden="true">insieme</span>':''}<span class="us-countdown-sub">${esc(view.label)}</span></span>`;
+    return `<span class="us-countdown-art" data-countdown-style="${esc(style)}" data-countdown-clock="${view.value.includes(':')}"${together?' data-countdown-kind="together"':''}><span class="us-countdown-deco" aria-hidden="true"><i></i></span><span class="us-countdown-title"${own?' translate="no"':''}>${esc(title)}</span><span class="us-countdown-number" aria-hidden="true">${[...view.value].map(c=>`<span class="us-countdown-digit${/\d/.test(c)?'':' is-sep'}">${esc(c)}</span>`).join('')}</span><span class="us-countdown-unit">${esc(view.unit)}</span>${together?'<span class="us-countdown-tail" aria-hidden="true">insieme</span>':''}<span class="us-countdown-sub">${esc(view.label)}</span></span>`;
   }
   function tick(){
     if(key()!==owner){clear();if(key())hydrate();return;}
@@ -89,7 +90,7 @@ function install(w){
     const together=relationship(state?.started_on);
     const entries=[{id:'together',title:'Insieme da',value:together?.value||'',unit:together?.unit||'',detail:together?`${together.value} ${together.unit}`:'Imposta la data in Noi → Impostazioni',disabled:!together},...(state?.items||[]).map(e=>({id:e.id,title:e.title,value:display(e)?.value||'',unit:display(e)?.unit||'',detail:[display(e)?.value,display(e)?.unit].filter(Boolean).join(' ')}))];
     // The number leads the row (as on Oggi); the accessible name keeps the original reading order.
-    $('usCountdownList').innerHTML=entries.map(e=>`<div class="us-countdown-row"><button type="button" data-countdown-select="${esc(e.id)}" aria-pressed="${state?.active_id===e.id}" aria-label="${esc(e.title)}, ${esc(e.detail)}" ${busy||e.disabled||!state?'disabled':''}><span class="us-countdown-check" aria-hidden="true">${state?.active_id===e.id?'●':'○'}</span>${e.value?`<strong class="us-countdown-value">${esc(e.value)}</strong>`:''}<span class="us-countdown-copy"><b>${esc(e.title)}</b><small>${esc(e.value?e.unit:e.detail)}</small></span></button><button type="button" class="us-countdown-edit" data-countdown-edit="${esc(e.id)}" aria-label="Modifica ${esc(e.title)}" ${busy||e.disabled||!state?'disabled':''}><span class="us-icon" data-us-icon="pencil" aria-hidden="true"></span></button></div>`).join('');
+    $('usCountdownList').innerHTML=entries.map(e=>`<div class="us-countdown-row"><button type="button" data-countdown-select="${esc(e.id)}" aria-pressed="${state?.active_id===e.id}" aria-label="${esc(e.title)}, ${esc(e.detail)}" ${busy||e.disabled||!state?'disabled':''}><span class="us-countdown-check" aria-hidden="true">${state?.active_id===e.id?'●':'○'}</span>${e.value?`<strong class="us-countdown-value">${esc(e.value)}</strong>`:''}<span class="us-countdown-copy"><b${e.id==='together'?'':' translate="no"'}>${esc(e.title)}</b><small>${esc(e.value?e.unit:e.detail)}</small></span></button><button type="button" class="us-countdown-edit" data-countdown-edit="${esc(e.id)}" aria-label="Modifica ${esc(e.title)}" ${busy||e.disabled||!state?'disabled':''}><span class="us-icon" data-us-icon="pencil" aria-hidden="true"></span></button></div>`).join('');
     $('usCountdownHide').setAttribute('aria-pressed',String(state?.active_id===null));
     $('usCountdownNew').disabled=busy||!state||state.items.length>=12;
     $('usCountdownHide').disabled=busy||!state;
@@ -112,7 +113,7 @@ function install(w){
     const view=draft.id==='together'?relationship(state?.started_on):display({...draft,target});
     const actualTitle=draft.id==='together'?'Insieme da':$('usCountdownTitle').value.trim();
     const title=actualTitle||'Il nostro momento';
-    $('usCountdownPreview').innerHTML=markup(view||{value:'12',unit:'giorni',label:''},title,draft.style,draft.id==='together');
+    $('usCountdownPreview').innerHTML=markup(view||{value:'12',unit:'giorni',label:''},title,draft.style,draft.id==='together',draft.id!=='together'&&Boolean(actualTitle));
     $('usCountdownSave').disabled=busy||!view||!actualTitle||!available(draft.style,progression());
   }
   function paint(){tick();if(opened())paintList();}

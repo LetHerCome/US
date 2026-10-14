@@ -299,6 +299,8 @@
       dot.className=`ov-dot ov-dot-${side}`;
       label.className=side===mine?'ov-l-me':'ov-l-partner';
       label.textContent=side===mine?'Tu':(partner||'La tua persona');
+      // Their real name stays as written; "Tu" and "La tua persona" follow the language.
+      if(side!==mine&&partner&&partner!=='La tua persona')label.translate=false;
       item.append(dot,label);legend.append(item);
     }
     host.append(legend);
@@ -470,7 +472,7 @@
       $('usSetupCopy').textContent=copyFor(step);
       $('usSetupPushPartner').textContent=`${partner} ti pensa ♡`;
       $('usSetupPointPartner').textContent=`${partner} vede solo la distanza, mai dove sei.`;
-      const label=$('usSetupVenn').querySelector('.ov-l-partner');if(label)label.textContent=partner;
+      const label=$('usSetupVenn').querySelector('.ov-l-partner');if(label){label.textContent=partner;label.translate=partner==='La tua persona';}
       if(step==='ready'&&redrawReady)drawReady(false);
     }
     function readyRows(){
@@ -496,7 +498,7 @@
       for(const row of readyRows()){
         const li=document.createElement('li'),icon=document.createElement('span'),text=document.createElement('span'),title=document.createElement('b'),detail=document.createElement('small'),mark=document.createElement('i');
         li.className=row.ok?'is-ok':'';icon.className=`us-setup-ready-icon us-setup-ready-icon--${row.icon}`;icon.setAttribute('aria-hidden','true');
-        title.textContent=row.title;detail.textContent=row.detail;text.append(title,detail);mark.setAttribute('aria-hidden','true');
+        title.textContent=row.title;if(row.icon==='user'&&profile?.display_name)title.translate=false;detail.textContent=row.detail;text.append(title,detail);mark.setAttribute('aria-hidden','true');
         li.append(icon,text,mark);list.append(li);
       }
       if(play&&!reducedMotion())[...list.children].forEach((li,i)=>{if(li.classList.contains('is-ok'))animate(li.lastElementChild,[{transform:'scale(0)'},{transform:'scale(1.25)',offset:.6},{transform:'none'}],{duration:420,delay:520+i*150,easing:EASE.out});});

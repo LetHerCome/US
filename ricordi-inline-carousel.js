@@ -81,6 +81,7 @@
     const captionNode = meta.querySelector(':scope > p') || document.createElement('p');
     if (!captionNode.isConnected) meta.appendChild(captionNode);
     captionNode.classList.add('ricordi-inline-caption');
+    captionNode.setAttribute('translate', 'no');
     const authorNode = meta.querySelector('.moment-by');
     // The author dot follows the photo on screen: my colour or theirs.
     const dotNode = meta.querySelector('.moment-dot');

@@ -277,9 +277,9 @@
 
   function renderItemMarkup(item, mediaUrl = '') {
     const kind = kinds.has(item?.kind) ? item.kind : 'text';
-    const body = item?.body ? `<p class="left-for-you-note">${escapeHtml(item.body)}</p>` : '';
+    const body = item?.body ? `<p class="left-for-you-note" translate="no">${escapeHtml(item.body)}</p>` : '';
     let content = '';
-    if (kind === 'text') content = `<div class="left-for-you-text">${escapeHtml(item?.body || 'Un pensiero per te.')}</div>`;
+    if (kind === 'text') content = `<div class="left-for-you-text"${item?.body ? ' translate="no"' : ''}>${escapeHtml(item?.body || 'Un pensiero per te.')}</div>`;
     if (kind === 'photo') content = `<img class="left-for-you-photo" src="${escapeHtml(mediaUrl)}" data-us-media-path="${escapeHtml(item?.media_path||'')}" onerror="usRecoverPrivateImage(this)" alt="Foto lasciata per te" loading="eager">${body}`;
     if (kind === 'audio') content = `${renderAudioStepPlayerMarkup(mediaUrl)}${body}`;
     if (kind === 'video') content = `<video class="left-for-you-video" controls preload="metadata" playsinline src="${escapeHtml(mediaUrl)}"></video>${body}`;
@@ -680,7 +680,7 @@
         : '<span class="left-for-you-music-result-fallback" aria-hidden="true">♪</span>';
       const title = escapeHtml(track.title || '');
       const url = escapeHtml(track.spotifyUrl || '');
-      return `<li class="left-for-you-music-result"><button type="button" class="left-for-you-music-result-select" data-spotify-id="${escapeHtml(track.id || '')}" data-spotify-title="${title}" data-spotify-artist="${escapeHtml(track.artist || '')}" data-spotify-url="${url}">${cover}<span class="left-for-you-music-result-info"><b>${title}</b><small>${escapeHtml(secondary)}</small></span></button><a class="left-for-you-music-result-link" href="${url}" target="_blank" rel="noreferrer noopener" aria-label="Apri ${title} su Spotify">↗</a></li>`;
+      return `<li class="left-for-you-music-result"><button type="button" class="left-for-you-music-result-select" data-spotify-id="${escapeHtml(track.id || '')}" data-spotify-title="${title}" data-spotify-artist="${escapeHtml(track.artist || '')}" data-spotify-url="${url}">${cover}<span class="left-for-you-music-result-info" translate="no"><b>${title}</b><small>${escapeHtml(secondary)}</small></span></button><a class="left-for-you-music-result-link" href="${url}" target="_blank" rel="noreferrer noopener" aria-label="Apri ${title} su Spotify">↗</a></li>`;
     }).join('');
     list.hidden = false;
   }

@@ -191,8 +191,8 @@ test('M12B.4 archive: the card says "Domanda del giorno · <date>", keeps the so
   const html = w.ricordiDailyCard(kept('d1', '2026-10-12'));
   assert.match(html, /^<details class="ricordi-daily" data-ricordi-daily="d1" data-source-key="daily_question:d1">/);
   assert.match(html, /<small>Domanda del giorno · 12 ottobre<\/small>/);
-  assert.match(html, /<b>Francesco<\/b><p>Il lago<\/p>/);
-  assert.match(html, /<b>Beatrice<\/b><p>La terrazza &#60;b&#62;<\/p>/, 'escaped');
+  assert.match(html, /<b translate="no">Francesco<\/b><p translate="no">Il lago<\/p>/, 'names and answers are kept as written');
+  assert.match(html, /<b translate="no">Beatrice<\/b><p translate="no">La terrazza &#60;b&#62;<\/p>/, 'escaped');
   assert.doesNotMatch(html, /<img|storage_path/, 'not a fake Moment');
 });
 
