@@ -154,14 +154,15 @@
   function localizeRuntimeLabels() {
     if (typeof window.bondRankTitle === 'function') {
       window.bondRankTitle = (level) => {
+        // Same names as app.js bondRankTitle (founder decision, 2026-10-14).
         if (level <= 1) return 'Primo legame';
-        if (level === 2) return 'Squadra formata';
-        if (level === 3) return 'Risonanza';
-        if (level === 4) return 'Anime sincronizzate';
-        if (level <= 7) return 'Legame profondo';
-        if (level <= 12) return 'Duo leggendario';
-        if (level <= 20) return 'Legame mitico';
-        return 'Legame eterno';
+        if (level === 2) return 'Complici';
+        if (level === 3) return 'In sintonia';
+        if (level === 4) return 'Stessa frequenza';
+        if (level <= 7) return 'Intesa rara';
+        if (level <= 12) return 'Indivisibili';
+        if (level <= 20) return 'Legame leggendario';
+        return 'Noi, senza limite';
       };
     }
     if (typeof window.questCategoryLabel === 'function') {
