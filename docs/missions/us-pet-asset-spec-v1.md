@@ -1,10 +1,22 @@
 # US PET — Asset requirement V1
 
-**Status:** PRODUCTION V0 APPROVATO · direzione artistica futura ancora iterabile
+**Status:** PRODUCTION 1.0 APPROVATO (Maudit, design "Due colori, un Noi") · il kitten v0 resta solo come anteprima QA
 **Concept approvato:** un piccolo gattino, pelo bianco e grigio, occhi azzurri.
 **Owner decision:** Francesco ha approvato il kitten v0 per l'uso live; eventuali sostituzioni future richiedono una nuova approvazione.
 
 Il personaggio è deciso e il **kitten v0** è approvato come asset production corrente. Il sorgente canonico è `assets/source/pet/us-pet-kitten-base-v0.svg`, registrato `APPROVED` nel manifest; `pet.js` incorpora byte-for-byte lo stesso SVG per mantenere le animazioni CSS sulle parti. Il renderer `sprite` è quello production; `placeholder` resta disponibile solo con `?us-pet=preview` per QA. Il v0 è sostituibile in futuro, ma non va modificato in-place: una nuova arte deve avere un nuovo asset/versione e nuova approvazione.
+
+## Maudit 1.0 (produzione dal design "Due colori, un Noi")
+
+Il 2026-10-14 Francesco ha approvato il mockup del nuovo design («ok per il mockup»), che ridisegna Maudit: un gatto grigio a pagnotta visto di fronte, muso e zampe color latte, guance rosa, occhi scuri. Il comportamento non cambia (cammina, si siede, dorme, reagisce, si accarezza, si prende in braccio); cambiano il disegno e le pose.
+
+- Sorgente canonico: `assets/source/pet/us-pet-maudit-v1.svg`, registrato `APPROVED` nel manifest; `pet.js` lo incorpora byte-for-byte (`MAUDIT_V1_SVG`) e il renderer `sprite` lo monta con `data-pet-production="maudit-v1"`.
+- Parti animabili: `m-tail`, `m-body` (con `m-paw-l`, `m-paw-r`), `m-head` (con `m-ear-l`, `m-ear-r`, `m-eyes-open`, `m-eyes-happy`, `m-eyes-closed`, `m-nose`, `m-mouth`, `m-collar`), `m-zz`, `m-purr`, `m-heart`. Le pose sono in `pet.css`, sezione Maudit 1.0.
+- Stati: `idle` batte le palpebre e muove la coda; `walk` ondeggia da una zampa all'altra; `rest` dorme (occhi chiusi, due piccole z); `react` (un premio) fa un saltello con occhi felici e un cuore; `pet` chiude gli occhi felici, abbassa le orecchie e fa le fusa, senza cuore; `held`, `fall`, `snap` restano la presa per la collottola, la caduta e l'atterraggio.
+- Il collare resta l'unico accessorio e prende il colore Noi (`--us-noi`), quindi segue gli Accenti della coppia.
+- La coda segue la camminata: il disegno è specchiato quando Maudit guarda a destra.
+
+Le sezioni qui sotto descrivono il kitten v0, che resta disponibile solo con `?us-pet=preview`.
 
 ## Direzione
 
@@ -104,5 +116,5 @@ Il kitten preview v0 in `pet.js` / `pet.css` usa già queste classi e questo ord
   | `destroy()` | quando il renderer viene sostituito | — |
 
   La posizione orizzontale resta del runtime (transform sul contenitore): il renderer disegna solo la figura e non dipende dalle classi CSS del placeholder. Il runtime chiama i metodi solo se presenti.
-- Selezione fail-closed e atomica: un id sconosciuto o un `mount` che fallisce (anche dopo aver modificato il proprio host) lascia intatti renderer, host e nodi vivi correnti; il `destroy()` del precedente avviene solo dopo un mount riuscito; il `placeholder` si monta solo in preview esplicita, mentre `sprite` usa il kitten v0 approvato in produzione.
-- Stato corrente: `PET_ASSET_STATUS = 'APPROVED'`; il sorgente v0 è nel manifest e il renderer production è `sprite`. `?us-pet=off` resta un kill switch per il singolo caricamento.
+- Selezione fail-closed e atomica: un id sconosciuto o un `mount` che fallisce (anche dopo aver modificato il proprio host) lascia intatti renderer, host e nodi vivi correnti; il `destroy()` del precedente avviene solo dopo un mount riuscito; il `placeholder` (kitten v0) si monta solo in preview esplicita, mentre `sprite` usa Maudit 1.0 approvato in produzione.
+- Stato corrente: `PET_ASSET_STATUS = 'APPROVED'`; i sorgenti v0 e 1.0 sono nel manifest e il renderer production è `sprite` (Maudit 1.0). `?us-pet=off` resta un kill switch per il singolo caricamento.

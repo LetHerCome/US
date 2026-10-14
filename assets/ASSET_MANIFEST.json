@@ -176,7 +176,17 @@
       "status": "APPROVED",
       "sha256": "a86b0cf1e8d7e30e3655c218e0bd288d65c43c1694767b72b317f330001705d9",
       "immutable": true,
-      "purpose": "Owner-approved temporary production PET v0: white/gray kitten with blue eyes",
+      "purpose": "Owner-approved PET v0: white/gray kitten with blue eyes. Production until the 1.0 design; now the explicit QA preview renderer only",
+      "usedBy": [
+        "pet-preview"
+      ]
+    },
+    {
+      "path": "assets/source/pet/us-pet-maudit-v1.svg",
+      "status": "APPROVED",
+      "sha256": "ff01e42489a96d4d258b85e96966daf390925c0e05f07b69b98989f0ad96b6cb",
+      "immutable": true,
+      "purpose": "Owner-approved production PET 1.0: Maudit, grey loaf seen from the front (design \"Due colori, un Noi\", founder OK on the mockup 2026-10-14)",
       "usedBy": [
         "pet-production"
       ]

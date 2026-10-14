@@ -179,14 +179,14 @@ function fakeWindow(href, storage = new Map()) {
   return { w, layer, actor, attrs, listeners, storage, body, nudge, toast, hero, auth, observed, mutate, tick, timers: () => scheduled, active: () => pending.size };
 }
 
-test('PET production gate: approved kitten v0 mounts by default', () => {
+test('PET production gate: approved Maudit 1.0 mounts by default', () => {
   assert.equal(Pet.PET_ASSET_STATUS, 'APPROVED');
   const f = fakeWindow('https://us.example/');
   Pet.install(f.w);
   assert.equal(f.w.USPet.enabled, true);
   assert.equal(f.layer.hidden, false);
   assert.equal(f.layer.dataset.petRenderer, 'sprite');
-  assert.match(f.actor.innerHTML, /data-pet-production="kitten-v0"/);
+  assert.match(f.actor.innerHTML, /data-pet-production="maudit-v1"/);
   assert.equal(f.active(), 1, 'one scheduler timer while the production PET is alive');
   assert.ok(f.listeners['d:visibilitychange'] && f.listeners['w:pagehide'] && f.listeners['w:us:pet']);
 });
@@ -498,10 +498,10 @@ test('F5 reactions honour blockers synchronously, before the MutationObserver de
   }
 });
 
-test('Kitten production v0 matches its approved source and keeps preview isolated', () => {
+test('Kitten v0 matches its approved source and stays the isolated QA preview', () => {
   const spec = read('docs/missions/us-pet-asset-spec-v1.md');
   assert.match(spec, /\*\*Concept approvato:\*\* un piccolo gattino, pelo bianco e grigio, occhi azzurri\./);
-  assert.match(spec, /PRODUCTION V0 APPROVATO/);
+  assert.match(spec, /PRODUCTION 1\.0 APPROVATO/);
   // Same part names as the final asset contract, in the documented draw order.
   const parts = ['k-tail', 'k-leg-hind-far', 'k-leg-front-far', 'k-body', 'k-leg-hind-near', 'k-leg-front-near', 'k-head', 'k-ear-far', 'k-ear-near', 'k-face', 'k-eyes-open', 'k-eyes-closed', 'k-nose', 'k-mouth', 'k-collar'];
   let last = -1;
@@ -515,7 +515,7 @@ test('Kitten production v0 matches its approved source and keeps preview isolate
   for (const hex of ['#fbf8f4', '#a7acb5', '#7c818b', '#b4dcff', '#5e9ce0', '#3a6cab']) assert.ok(petJs.includes(hex), hex);
   assert.equal((petJs.match(/var\(--us-color-accent-strong/g) || []).length, 1, 'only the collar accessory takes the theme accent');
   assert.match(petJs, /data-pet-placeholder data-pet-preview="kitten-v0"/);
-  assert.match(petJs, /data-pet-production="kitten-v0"/);
+  assert.doesNotMatch(petJs, /data-pet-production="kitten-v0"/, 'kitten v0 is no longer the production drawing');
   assert.match(petJs, /id:'sprite'/);
   assert.equal(Pet.canMount('placeholder'), false, 'placeholder still requires explicit preview');
   assert.equal(Pet.canMount('sprite'), true, 'approved production renderer is mountable');
@@ -534,4 +534,47 @@ test('Kitten production v0 matches its approved source and keeps preview isolate
   assert.match(petCss, /\.us-pet-layer\[data-pet-accessory="collar"\] \.us-pet-kitten \.k-collar\{display:inline\}/);
   assert.doesNotMatch(petCss, /data-pet-placeholder\]\{outline/, 'no dashed debug slot around the kitten');
   assert.doesNotMatch(petJs + petCss, /[\u{1F300}-\u{1FAFF}❤♥]/u, 'no emoji or heart glyphs');
+});
+
+test('Maudit 1.0 production drawing matches its approved source and has a pose for every state', () => {
+  const spec = read('docs/missions/us-pet-asset-spec-v1.md');
+  assert.match(spec, /## Maudit 1\.0 \(produzione dal design "Due colori, un Noi"\)/);
+  const sourcePath = 'assets/source/pet/us-pet-maudit-v1.svg';
+  const source = read(sourcePath);
+  const inline = petJs.match(/const MAUDIT_V1_SVG='([^']+)'/)?.[1];
+  assert.equal(inline, source.trimEnd(), 'runtime drawing is identical to the approved source asset');
+  const manifest = JSON.parse(read('assets/ASSET_MANIFEST.json'));
+  const asset = manifest.assets.find((row) => row.path === sourcePath);
+  assert.equal(asset?.status, 'APPROVED');
+  assert.deepEqual(asset?.usedBy, ['pet-production']);
+  assert.equal(asset?.sha256, crypto.createHash('sha256').update(source).digest('hex'));
+  assert.deepEqual(manifest.assets.find((row) => row.path === 'assets/source/pet/us-pet-kitten-base-v0.svg')?.usedBy, ['pet-preview']);
+  assert.match(petJs, /id:'sprite',\s*mount\(host\)\{return mountMauditV1\(host\);\}/);
+  assert.match(petJs, /data-pet-production="maudit-v1"/);
+  // Every part the poses drive exists in the drawing, in draw order.
+  const parts = ['m-tail', 'm-body', 'm-paw-l', 'm-paw-r', 'm-head', 'm-ear-l', 'm-ear-r', 'm-eyes-open', 'm-eyes-happy', 'm-eyes-closed', 'm-nose', 'm-collar', 'm-zz', 'm-purr', 'm-heart'];
+  let last = -1;
+  for (const part of parts) {
+    const at = source.search(new RegExp(`class="(?:[a-z-]+ )*${part}[ "]`));
+    assert.ok(at > last, `${part} drawn in order`);
+    last = at;
+  }
+  // Fur grey, latte muzzle, rosa cheeks; only the collar takes a theme colour (the couple's Noi).
+  for (const hex of ['#A7A2B2', '#F7F0EA', '#FFB3C2', '#FF7C96', '#1A1020']) assert.ok(source.includes(hex), hex);
+  assert.equal((source.match(/var\(--/g) || []).length, 1, 'only the collar follows a theme token');
+  assert.match(source, /class="m-collar"><path[^>]+stroke="var\(--us-noi,#d98be0\)"/);
+  // A static pose per state, so reduced motion still reads.
+  for (const rule of [
+    /\[data-pet-state="idle"\] \.m-eyes-open\{animation:us-maudit-blink/,
+    /\[data-pet-state="walk"\] \.m-tail\{transform:rotate\(-14deg\)\}/,
+    /\[data-pet-state="rest"\] \.m-eyes-closed\{opacity:1\}/,
+    /\[data-pet-state="react"\] \.m-eyes-happy\{opacity:1\}/,
+    /\[data-pet-state="pet"\] \.m-eyes-happy\{opacity:1\}/,
+    /\[data-pet-state="held"\] \.us-pet-maudit\{transform-origin:50% 22%;transform:rotate\(-5deg\)/,
+    /\[data-pet-state="fall"\] \.us-pet-maudit\{transform-origin:50% 55%;transform:scale\(\.97,1\.05\)\}/,
+    /\[data-pet-state="snap"\] \.us-pet-maudit\{animation:us-pet-land/
+  ]) assert.match(petCss, rule);
+  assert.match(petCss, /\.us-pet-layer\[data-pet-accessory="collar"\] \.us-pet-maudit \.m-collar\{display:inline\}/);
+  assert.doesNotMatch(petCss.match(/\[data-pet-state="pet"\][^\n]*m-heart[^\n]*/)?.[0] || '', /animation/, 'a stroke never pops a heart');
+  assert.doesNotMatch(source, /[\u{1F300}-\u{1FAFF}❤♥]/u, 'no emoji or heart glyphs');
 });

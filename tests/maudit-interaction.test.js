@@ -277,9 +277,14 @@ test('poses: pet / held / fall / snap are CSS transforms of the approved articul
   assert.match(petCss, /\[data-pet-state="held"\] \.k-leg-hind-near,[^{]+\{transform:rotate\(30deg\) scaleY\(1\.12\)\}/, 'legs dangle');
   assert.match(petCss, /\[data-pet-state="fall"\] \.us-pet-kitten\{[^}]*scale\(\.98,1\.04\)/, 'airborne pose');
   assert.match(petCss, /:root\[data-us-motion="reduced"\] \.us-pet-layer \*\{animation:none!important;transition:none!important\}/);
-  // Same approved drawing: no new production asset was introduced.
+  // The 1.0 drawing (Maudit) has the same four interaction poses.
+  assert.match(petCss, /\[data-pet-state="pet"\] \.m-eyes-happy\{opacity:1\}/, 'Maudit: happy eyes under the hand');
+  assert.match(petCss, /\[data-pet-state="pet"\] \.m-head\{transform:rotate\(5deg\)\}/, 'Maudit: head leans into the hand');
+  assert.match(petCss, /\[data-pet-state="held"\] \.us-pet-maudit\{transform-origin:50% 22%/, 'Maudit: hangs from the scruff');
+  assert.match(petCss, /\[data-pet-state="held"\] \.m-paw\{transform:translateY\(3px\) scaleY\(1\.1\)\}/, 'Maudit: paws dangle');
+  // Two approved drawings: kitten v0 (QA preview) and Maudit 1.0 (production).
   const manifest = JSON.parse(read('assets/ASSET_MANIFEST.json'));
-  assert.equal(manifest.assets.filter((a) => /\/pet\//.test(a.path)).length, 1);
+  assert.deepEqual(manifest.assets.filter((a) => /\/pet\//.test(a.path)).map((a) => a.usedBy[0]).sort(), ['pet-preview', 'pet-production']);
   assert.doesNotMatch(petJs + petCss, /[\u{1F300}-\u{1FAFF}❤♥]/u, 'no emoji, no heart glyph');
 });
 
