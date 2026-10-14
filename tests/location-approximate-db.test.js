@@ -157,3 +157,34 @@ test('stop_sharing_location deletes only your own reading and is safe to repeat'
     await assert.rejects(as(db, null, 'select public.stop_sharing_location() r', [], 'anon'), /permission denied/);
   } finally { await db.close(); }
 });
+
+test('the SQL Editor script runs the migration verbatim, records it once and refuses a second run', async () => {
+  const { newDb } = require('../scripts/supabase-baseline/rebuild.cjs');
+  const { DIR, FILE, PLATFORM, SEED, MC2 } = require('./helpers/mc2-db');
+  const script = fs.readFileSync(path.join(ROOT, 'docs/store/US_1_0_LOCATION_A_SQL_EDITOR.sql'), 'utf8');
+  assert.equal(script.split(MIGRATION).length - 1, 2, 'the migration appears verbatim twice: executed and recorded');
+
+  const db = await newDb();
+  try {
+    // Production as it is before this PR: every other migration, no ledger row for this one.
+    await db.exec(PLATFORM);
+    for (const f of fs.readdirSync(DIR).filter((f) => f.endsWith('.sql') && f !== FILE && !f.startsWith('20261014180000')).sort()) {
+      await db.exec(fs.readFileSync(path.join(DIR, f), 'utf8'));
+    }
+    await db.exec(SEED);
+    await db.exec(MC2());
+    await db.exec('create schema if not exists supabase_migrations; create table if not exists supabase_migrations.schema_migrations (version text primary key, statements text[], name text)');
+    await db.query('insert into public.couple_locations(user_id,couple_id,latitude,longitude,accuracy_m,updated_at) values ($1,$2,41.902783,12.496366,7,now())', [F, A]);
+
+    const results = await db.exec(script);
+    const check = results[results.length - 1].rows[0];
+    assert.deepEqual({ ...check }, { precise: 0, vecchia_regola: 0, funzioni: 2, registrata: 1 });
+    const [ledger] = (await db.query("select name, statements from supabase_migrations.schema_migrations where version='20261014180000'")).rows;
+    assert.equal(ledger.name, 'location_approximate_v1');
+    assert.deepEqual(ledger.statements, [MIGRATION]);
+
+    await assert.rejects(db.exec(script), /già applicata/);
+    await db.exec('rollback');
+    assert.equal((await db.query('select count(*)::int n from supabase_migrations.schema_migrations')).rows[0].n, 1);
+  } finally { await db.close(); }
+});
