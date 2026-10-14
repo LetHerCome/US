@@ -471,6 +471,16 @@ test('advisors: the production security lints are exactly the classified ones', 
   // WARN leaked password protection: auth config, accepted (SEC-16). No client flow sets a password.
   assert.equal(lints.auth_leaked_password_protection.count, 1);
   for (const file of fs.readdirSync(ROOT).filter((f) => f.endsWith('.js'))) {
-    assert.doesNotMatch(read(path.join(ROOT, file)), /\.(updateUser|signUp|resetPasswordForEmail)\(/, `${file} sets a password`);
+    if (file === 'public-auth.js') {
+      const staged = read(path.join(ROOT, file));
+      assert.match(staged, /function isStagingEndpoint\(url\)/, 'Auth signup must be staging-gated');
+      // Committed source names no staging origin: signup is off everywhere
+      // until the US-STAGING preview builder or the production release switch.
+      assert.match(staged, /const STAGING_ORIGIN = '';/);
+      assert.match(staged, /const PRODUCTION_SIGNUP_RELEASED = false;/);
+      assert.match(read(path.join(ROOT,'app.js')), /endpoint: SB_URL, openStep: showAuthStep/);
+    } else {
+      assert.doesNotMatch(read(path.join(ROOT, file)), /\.(updateUser|signUp|resetPasswordForEmail)\(/, `${file} sets a password`);
+    }
   }
 });

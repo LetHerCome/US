@@ -1,8 +1,11 @@
 // US 2.0 F1A — Legacy auth shutdown regression tests.
 //
 // 1. Frontend: the shipped runtime exposes email + password login only; no
-//    anonymous sign-in, OTP/Magic Link, SMS, signup, pairing or
-//    anonymous -> email upgrade path remains.
+//    anonymous sign-in, OTP/Magic Link, SMS, pairing or anonymous -> email
+//    upgrade path remains. S3.1 (PR #189) adds one gated exception: email
+//    signup, verification and password recovery live only in public-auth.js,
+//    behind PRODUCTION_SIGNUP_RELEASED (false until the founder releases it),
+//    and their screens stay hidden unless that module mounts them.
 // 2. Auth config (supabase/config.toml, applied with `supabase config push`):
 //    signup, anonymous sign-ins, manual linking and phone/SMS sign-in are declared
 //    off, and site_url/redirects point at the canonical Cloudflare Pages
@@ -44,26 +47,43 @@ test('F1A: the shipped runtime never invokes a legacy auth entry point', () => {
     [/updateUser\(\{\s*email/, 'anonymous -> email upgrade'],
     [/us:account-upgrade|requestAccountEmailUpgrade/, 'anonymous -> email upgrade state'],
   ];
+  // S3.1: the only signup call site, released on production by one switch.
+  const SIGNUP_MODULE = 'public-auth.js';
   for (const file of files) {
     const src = read(file);
     for (const [pattern, label] of forbidden) {
+      if (file === SIGNUP_MODULE && label === 'self signup') continue;
       assert.doesNotMatch(src, pattern, `${file}: ${label}`);
     }
   }
+  const signup = read(SIGNUP_MODULE);
+  assert.match(signup, /const PRODUCTION_SIGNUP_RELEASED = false;/, 'production signup stays unreleased');
+  assert.match(signup, /if \(!publicAuthEnabled\(endpoint\)[^)]*\) return null;/, 'signup UI mounts only where enabled');
 });
 
 test('F1A: the login overlay is exactly email + password', () => {
   const html = read('index.html');
   const overlay = html.match(/<div class="auth-overlay" id="authOverlay">[\s\S]*?\n<\/div>\n/)[0];
   const steps = [...overlay.matchAll(/class="auth-step[^"]*" id="([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(steps, ['authLogin','usOnboarding'], 'password login plus private MC3 onboarding');
-  const login = overlay.slice(overlay.indexOf('id="authLogin"'),overlay.indexOf('<section class="auth-step"'));
+  const S31_STEPS = ['usSignup','usVerifyEmail','usForgotPassword','usRecovery'];
+  assert.deepEqual(steps, ['authLogin', ...S31_STEPS, 'usOnboarding'],
+    'password login, the gated S3.1 steps, then private MC3 onboarding');
+  // The S3.1 steps are the public-auth forms only, and the links that open them
+  // ship hidden: public-auth.js unhides them only where signup is enabled.
+  const s31Forms = [...overlay.matchAll(/<(form|section) class="auth-step us-public-auth-form" id="([^"]+)"[\s\S]*?<\/\1>/g)];
+  assert.deepEqual(s31Forms.map((m) => m[2]), S31_STEPS);
+  const links = overlay.match(/<nav class="us-auth-links" id="usPublicAuthActions"[^>]*>[\s\S]*?<\/nav>/);
+  assert.ok(links, 'S3.1 links present');
+  assert.match(links[0].slice(0, links[0].indexOf('>')), /\shidden\b/, 'S3.1 links ship hidden');
+  const loginOnly = s31Forms.reduce((html, m) => html.replace(m[0], ''), overlay).replace(links[0], '');
+  const loginStart = loginOnly.indexOf('id="authLogin"');
+  const login = loginOnly.slice(loginStart, loginOnly.indexOf('class="auth-step', loginStart));
   const inputs = [...login.matchAll(/<input[^>]*>/g)].map((m) => m[0]);
   assert.equal(inputs.length, 2);
   assert.match(inputs[0], /id="loginEmail"[^>]*type="email"/);
   assert.match(inputs[1], /id="loginPassword"[^>]*type="password"/);
   assert.doesNotMatch(login, /registr|sign ?up|crea (un )?account|codice|invito|magic|\bsms\b|numero di telefono/i);
-  assert.doesNotMatch(overlay, /registr|sign ?up|crea (un )?account|magic|\bsms\b|numero di telefono/i);
+  assert.doesNotMatch(loginOnly, /registr|sign ?up|crea (un )?account|magic|\bsms\b|numero di telefono/i);
 
   const app = read('app.js');
   const signIns = [...app.matchAll(/sb\.auth\.(signIn\w*)\(/g)].map((m) => m[1]);

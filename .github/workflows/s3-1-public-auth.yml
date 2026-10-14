@@ -1,0 +1,101 @@
+name: US Store S3.1 staging account entry
+
+on:
+  push:
+    branches: [mission/us-store-s3-1-public-auth-staging-20261011]
+  pull_request:
+    paths:
+      - 'public-auth.js'
+      - 'public-auth.css'
+      - 'tests/s3-1-public-auth.test.js'
+      - 'app.js'
+      - 'index.html'
+      - 'scripts/build-capacitor-web.mjs'
+      - 'scripts/build-cloudflare-pages.mjs'
+      - '.github/workflows/s3-1-public-auth.yml'
+      - 'scripts/build-s31-staging-preview.mjs'
+
+permissions:
+  contents: read
+
+jobs:
+  staged-auth-contract-and-bundles:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: JS syntax
+        run: |
+          node --check public-auth.js
+          node --check app.js
+          node --check tests/s3-1-public-auth.test.js
+      - name: S3.1 public account and inherited MC3 gates
+        run: node --test tests/s3-1-public-auth.test.js tests/mc3-onboarding.test.js tests/native-boot-auth-safety.test.js tests/beatrice-password-login.test.js
+      - name: Build PWA
+        run: npm run build:cloudflare-pages
+      - name: Build Android web runtime
+        run: npm run build:capacitor-web
+      - name: Assert production signup is stage-gated
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          for(const dest of ['dist/cloudflare-pages','dist/capacitor']) {
+            const js=fs.readFileSync(dest+'/app.js','utf8');
+            const mod=require('./public-auth.js');
+            if(mod.isStagingEndpoint('https://iiakdfsxpywdkxravqjh.supabase.co')) process.exit(1);
+            if(mod.PRODUCTION_SIGNUP_RELEASED!==false || mod.publicAuthEnabled('https://iiakdfsxpywdkxravqjh.supabase.co')) process.exit(1);
+            if(!js.includes("const SB_URL = 'https://iiakdfsxpywdkxravqjh.supabase.co';")) process.exit(1);
+            for (const name of ['public-auth.js','public-auth.css']) {
+              if (!fs.existsSync(dest+'/'+name)) process.exit(1);
+            }
+            // Production bundles carry no US-STAGING reference (Play gate rule).
+            if (fs.readFileSync(dest+'/public-auth.js','utf8').includes('dugmhngrfkuieeletatb')) process.exit(1);
+          }
+          NODE
+
+  staged-browser-only-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Reuses the already-configured STAGING publishable key; never a secret-role key.
+    # No Android APK, Cloudflare deployment or production Auth setting changes.
+    env:
+      US_S31_STAGING_PREVIEW: 'true'
+      US_STAGING_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.US_STAGING_SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build with exact Cloudflare Pages staging command
+        env:
+          CF_PAGES: '1'
+          CF_PAGES_BRANCH: mission/us-store-s3-1-public-auth-staging-20261011
+        run: npm run build:us-staging-pages
+      - name: Verify staged URL and local auth script
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const dir='dist/s31-staging-preview';
+          const app=fs.readFileSync(dir+'/app.js','utf8');
+          const html=fs.readFileSync(dir+'/index.html','utf8');
+          if (app.includes('iiakdfsxpywdkxravqjh') || html.includes('iiakdfsxpywdkxravqjh')) process.exit(1);
+          if (!app.includes('https://dugmhngrfkuieeletatb.supabase.co')) process.exit(1);
+          if (!fs.existsSync(dir+'/public-auth.js')) process.exit(1);
+          if (!fs.existsSync(dir+'/public-auth.css')) process.exit(1);
+          const auth=fs.readFileSync(dir+'/public-auth.js','utf8');
+          if (!auth.includes("const STAGING_ORIGIN = 'https://dugmhngrfkuieeletatb.supabase.co';")) process.exit(1);
+          NODE
+      - name: Archive staging-only PWA preview (never deploy)
+        uses: actions/upload-artifact@v4
+        with:
+          name: US-S31-STAGING-BROWSER-PREVIEW
+          path: dist/s31-staging-preview/
+          if-no-files-found: error
+          retention-days: 7
