@@ -34,6 +34,14 @@ export function isolateStagingPreview(app, index, publishableKey) {
   return { app, index };
 }
 
+// public-auth.js ships with an empty STAGING_ORIGIN; only this preview turns
+// the signup and recovery screens on, by naming US-STAGING exactly once.
+export function isolateStagingPublicAuth(src) {
+  const search = "const STAGING_ORIGIN = '';";
+  if (src.split(search).length !== 2) throw Error('S3.1 public-auth input mismatch');
+  return src.replace(search, "const STAGING_ORIGIN = 'https://"+STAGE+".supabase.co';");
+}
+
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   if (process.env.US_S31_STAGING_PREVIEW !== 'true') throw Error('S3.1 staging preview disabled by default');
   // Dedicated Cloudflare Pages project must target this specific STAGING branch.
@@ -48,14 +56,16 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     process.exit(0);
   }
   const key = process.env.US_STAGING_SUPABASE_PUBLISHABLE_KEY;
-  const files = await Promise.all(['app.js','index.html'].map(f=>readFile(path.join(SOURCE,f),'utf8')));
+  const files = await Promise.all(['app.js','index.html','public-auth.js'].map(f=>readFile(path.join(SOURCE,f),'utf8')));
   const isolated = isolateStagingPreview(files[0],files[1],key);
+  const publicAuth = isolateStagingPublicAuth(files[2]);
   await rm(OUT,{recursive:true,force:true});
   await mkdir(OUT,{recursive:true});
   await cp(SOURCE,OUT,{recursive:true});
   await Promise.all([
     writeFile(path.join(OUT,'app.js'),isolated.app,'utf8'),
-    writeFile(path.join(OUT,'index.html'),isolated.index,'utf8')
+    writeFile(path.join(OUT,'index.html'),isolated.index,'utf8'),
+    writeFile(path.join(OUT,'public-auth.js'),publicAuth,'utf8')
   ]);
   const output=await readdir(OUT);
   if (!output.includes('public-auth.js')||!output.includes('public-auth.css'))throw Error('S3.1 Auth runtime missing');

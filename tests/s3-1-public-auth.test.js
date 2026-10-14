@@ -8,6 +8,15 @@ const read = p => fs.readFileSync(path.resolve(__dirname,'..',p), 'utf8');
 const USER_EMAIL = 'someone+test@example.invalid';
 const SAMPLE_PASSWORD = 'A-safe-passphrase-17';
 
+const STAGE_URL='https://dugmhngrfkuieeletatb.supabase.co';
+// The module exactly as the US-STAGING preview ships it.
+async function stagedModule() {
+  const {isolateStagingPublicAuth}=await import('../scripts/build-s31-staging-preview.mjs');
+  const mod={exports:{}};
+  new Function('module','window',isolateStagingPublicAuth(read('public-auth.js')))(mod,undefined);
+  return mod.exports;
+}
+
 function fakeAuth() {
   const calls=[];
   const auth={
@@ -21,14 +30,20 @@ function fakeAuth() {
   return auth;
 }
 
-test('stage gate rejects production, lookalike origins and non-Supabase URL',()=>{
-  assert.equal(S31.isStagingEndpoint('https://dugmhngrfkuieeletatb.supabase.co'),true);
+test('stage gate rejects production, lookalike origins and non-Supabase URL',async()=>{
+  // Committed source (production web and Android): no US-STAGING reference at all.
+  assert.doesNotMatch(read('public-auth.js'),/dugmhngrfkuieeletatb/);
+  assert.equal(S31.isStagingEndpoint(STAGE_URL),false);
+  const staged=await stagedModule();
+  assert.equal(staged.isStagingEndpoint(STAGE_URL),true);
   for(const host of [
     'https://iiakdfsxpywdkxravqjh.supabase.co',
     'https://dugmhngrfkuieeletatb.supabase.co.evil.tld',
     'http://dugmhngrfkuieeletatb.supabase.co',
     'https://evil.tld/dugmhngrfkuieeletatb.supabase.co', ''
-  ])assert.equal(S31.isStagingEndpoint(host),false);
+  ])assert.equal(staged.isStagingEndpoint(host),false);
+  const {isolateStagingPublicAuth}=await import('../scripts/build-s31-staging-preview.mjs');
+  assert.throws(()=>isolateStagingPublicAuth(isolateStagingPublicAuth(read('public-auth.js'))),'never apply stage rewrite twice');
   const mounted=S31.mount({auth:fakeAuth(),endpoint:'https://iiakdfsxpywdkxravqjh.supabase.co',
     openStep:()=>{throw Error('production must never mount signup UI');},document:{}});
   assert.equal(mounted,null);
@@ -166,13 +181,14 @@ test('both target build bundles include every new source asset and staged inputs
   assert.doesNotMatch(read('public-auth.js'), /service.role|secret.key|localStorage|sessionStorage/i);
 });
 
-test('production signup is a single explicit release switch, OFF in committed source',()=>{
+test('production signup is a single explicit release switch, OFF in committed source',async()=>{
   // Flipping PRODUCTION_SIGNUP_RELEASED is a founder release decision: it must
   // change this assertion together with docs/store/US_S3_1_PRODUCTION_AUTH_RELEASE.md.
   assert.equal(S31.PRODUCTION_SIGNUP_RELEASED,false);
   const prod='https://iiakdfsxpywdkxravqjh.supabase.co',stage='https://dugmhngrfkuieeletatb.supabase.co';
   assert.equal(S31.publicAuthEnabled(prod),false);
-  assert.equal(S31.publicAuthEnabled(stage),true);
+  assert.equal(S31.publicAuthEnabled(stage),false,'committed source shows signup nowhere');
+  assert.equal((await stagedModule()).publicAuthEnabled(stage),true,'the US-STAGING preview shows it');
   assert.equal(S31.publicAuthEnabled(prod,true),true,'released build shows signup on production');
   for(const host of ['https://iiakdfsxpywdkxravqjh.supabase.co.evil.tld','http://iiakdfsxpywdkxravqjh.supabase.co','https://evil.tld',''])
     assert.equal(S31.publicAuthEnabled(host,true),false);

@@ -53,6 +53,8 @@ jobs:
             for (const name of ['public-auth.js','public-auth.css']) {
               if (!fs.existsSync(dest+'/'+name)) process.exit(1);
             }
+            // Production bundles carry no US-STAGING reference (Play gate rule).
+            if (fs.readFileSync(dest+'/public-auth.js','utf8').includes('dugmhngrfkuieeletatb')) process.exit(1);
           }
           NODE
 
@@ -87,6 +89,8 @@ jobs:
           if (!app.includes('https://dugmhngrfkuieeletatb.supabase.co')) process.exit(1);
           if (!fs.existsSync(dir+'/public-auth.js')) process.exit(1);
           if (!fs.existsSync(dir+'/public-auth.css')) process.exit(1);
+          const auth=fs.readFileSync(dir+'/public-auth.js','utf8');
+          if (!auth.includes("const STAGING_ORIGIN = 'https://dugmhngrfkuieeletatb.supabase.co';")) process.exit(1);
           NODE
       - name: Archive staging-only PWA preview (never deploy)
         uses: actions/upload-artifact@v4

@@ -10,7 +10,10 @@
   if (root) root.UsPublicAuthS31 = value;
 })(typeof window !== 'undefined' ? window : null, function () {
   'use strict';
-  const STAGING_ORIGIN = 'https://dugmhngrfkuieeletatb.supabase.co';
+  // Empty in committed source, so the production web and Android bundles carry
+  // no reference to US-STAGING (the Play gate rejects one). Only the staging
+  // builder fills it in: scripts/build-s31-staging-preview.mjs.
+  const STAGING_ORIGIN = '';
   const PRODUCTION_ORIGIN = 'https://iiakdfsxpywdkxravqjh.supabase.co';
   // Founder-approved release decision only. Flipping it also requires the
   // matching assertion in tests/s3-1-public-auth.test.js to change.
@@ -24,6 +27,7 @@
   const GENERIC_MAIL = 'Se l’indirizzo può ricevere il messaggio, troverai le istruzioni nella tua email.';
   const TRY_AGAIN = 'Operazione non disponibile adesso. Attendi qualche minuto e riprova.';
   function isStagingEndpoint(url) {
+    if (!STAGING_ORIGIN) return false;
     try { return new URL(url).origin === STAGING_ORIGIN; } catch (_) { return false; }
   }
   function isProductionEndpoint(url) {
