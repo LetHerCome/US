@@ -109,7 +109,7 @@ Lo dichiara il plugin dei widget (`native-plugins/us-widget-bridge/android/src/m
 | Salute | Nessuna funzione sanitaria | |
 | Permessi sensibili | Nessun modulo richiesto oggi: niente posizione in background, SMS, chiamate, accesso a tutti i file, allarmi esatti. Posizione solo approssimativa **[DIPENDE POSIZIONE]**; dal 27/01/2027 dichiarazione della posizione (sezione 2.3) | verificato dal gate AAB |
 | ID pubblicità | L'app non usa l'ID pubblicità | niente AD_ID nel bundle |
-| Contatto sviluppatore | email di supporto **[DA DECIDERE: Francesco, D-11]**, sito web facoltativo | l'email è pubblica sulla scheda dello store |
+| Contatto sviluppatore | moonee.team@gmail.com (deciso da Francesco il 14/10; quando ci sarà il dominio si può passare a un indirizzo sul dominio), sito web facoltativo | l'email è pubblica sulla scheda dello store |
 | Prezzo | Gratuita, nessun acquisto in app (1.0). Nella scheda non si promette "nessun abbonamento": Francesco valuterà piani mensili e annuali dopo la beta (decisione 10) | |
 | Categoria | Lifestyle. Non Social né Incontri: farebbero scattare gli standard sulla sicurezza dei minori | |
 
@@ -151,7 +151,7 @@ Per prudenza Play tratta come contenuti degli utenti anche uno spazio a due. Le 
 
 | # | Decisione o azione | Blocca |
 |---|---|---|
-| 1 | Titolare del trattamento (nome o ditta, indirizzo) e email di supporto (D-11) | privacy, termini, Play Console |
+| 1 | Titolare del trattamento (nome o ditta, indirizzo); email di supporto decisa il 14/10: moonee.team@gmail.com (D-11) | privacy, termini, Play Console |
 | 2 | Dominio pubblico per privacy, termini e `/elimina-account` | privacy, eliminazione |
 | 3 | ~~Posizione: variante A o B~~ Decisa il 14/10: A (sezione 2.3) | — |
 | 4 | Regione Supabase (D-8). Piano: per ora gratuito e senza backup, Pro qualche settimana prima del lancio (decisione 6); allora si aggiorna la privacy sui backup | privacy (trasferimenti e conservazione) |

@@ -5,7 +5,7 @@
 Ultimo aggiornamento: [DATA]
 
 ## 1. Chi siamo
-US è un'app per coppie. Titolare del trattamento: [NOME O DITTA], [INDIRIZZO], email [EMAIL DI SUPPORTO].
+US è un'app per coppie. Titolare del trattamento: [NOME O DITTA], [INDIRIZZO], email moonee.team@gmail.com.
 
 ## 2. Quali dati trattiamo e perché
 
@@ -50,7 +50,7 @@ Finché il tuo account è attivo, con queste eccezioni:
 [DIPENDE PIANO SUPABASE, D-8] Oggi non teniamo copie di backup del database. Se le attiveremo, questo paragrafo indicherà per quanto tempo vengono conservate prima di essere sovrascritte.
 
 ## 6. Eliminare l'account [DIPENDE #190]
-Puoi chiedere l'eliminazione dall'app (Impostazioni › Privacy e dati › Elimina account), dalla pagina https://[DOMINIO]/elimina-account o scrivendo a [EMAIL DI SUPPORTO].
+Puoi chiedere l'eliminazione dall'app (Impostazioni › Privacy e dati › Elimina account), dalla pagina https://[DOMINIO]/elimina-account o scrivendo a moonee.team@gmail.com.
 
 Eliminiamo il tuo profilo e i tuoi dati personali: risposte, umore, quiz, posizione, dispositivi e notifiche, storie, appuntamenti personali, messaggi programmati non ancora consegnati. Quello che avete condiviso nello spazio di coppia (Momenti e foto, messaggi già consegnati, appuntamenti ed eventi condivisi, desideri, i 'lasciati per te' che il tuo partner ha conservato, la storia della coppia) resta al tuo partner, senza il tuo nome; il partner può cancellarlo. Se eri l'ultimo membro della coppia, viene cancellato tutto lo spazio. Puoi chiedere una copia dei tuoi dati prima dell'eliminazione (vedi il punto 9).
 
@@ -58,10 +58,10 @@ Eliminiamo il tuo profilo e i tuoi dati personali: risposte, umore, quiz, posizi
 Puoi uscire dalla coppia senza eliminare il tuo account (Impostazioni › Voi › Esci dalla coppia), confermando con la password. Lo spazio di coppia si chiude subito e nessuno dei due può più entrarci. Valgono le stesse regole dell'eliminazione: cancelliamo i tuoi dati personali di quella coppia, mentre quello che hai condiviso nello spazio di coppia resta al tuo partner, senza il tuo nome. Il tuo account resta: puoi creare un nuovo spazio o accettare un nuovo invito. Se eri l'ultimo membro della coppia, viene cancellato tutto lo spazio.
 
 ## 8. Segnalazioni [DIPENDE #196]
-Puoi segnalare un problema o un contenuto da Impostazioni › App e supporto › Segnala un problema o un contenuto, scegliendo un motivo e scrivendo cosa è successo, oppure scrivendo a [EMAIL DI SUPPORTO]. La segnalazione la legge solo il team di US, mai il tuo partner. Leggiamo ogni segnalazione e, se un contenuto o un account viola i termini, possiamo rimuovere il contenuto o sospendere l'account. Conserviamo la segnalazione per 12 mesi dall'invio; se nel frattempo elimini l'account, resta senza il tuo nome.
+Puoi segnalare un problema o un contenuto da Impostazioni › App e supporto › Segnala un problema o un contenuto, scegliendo un motivo e scrivendo cosa è successo, oppure scrivendo a moonee.team@gmail.com. La segnalazione la legge solo il team di US, mai il tuo partner. Leggiamo ogni segnalazione e, se un contenuto o un account viola i termini, possiamo rimuovere il contenuto o sospendere l'account. Conserviamo la segnalazione per 12 mesi dall'invio; se nel frattempo elimini l'account, resta senza il tuo nome.
 
 ## 9. I tuoi diritti
-Hai diritto di accesso, rettifica, cancellazione, limitazione, portabilità e opposizione, e puoi revocare il consenso alla posizione in qualsiasi momento. Per avere una copia dei tuoi dati, o per esercitare un altro diritto, scrivi a [EMAIL DI SUPPORTO]: rispondiamo entro 30 giorni. La copia ti arriva via email: è un file con i tuoi dati e i link alle tue foto, valido 7 giorni, e non contiene quello che ha scritto il tuo partner [DIPENDE #196]. Puoi presentare reclamo al Garante per la protezione dei dati personali (garanteprivacy.it) o all'autorità del Paese in cui vivi.
+Hai diritto di accesso, rettifica, cancellazione, limitazione, portabilità e opposizione, e puoi revocare il consenso alla posizione in qualsiasi momento. Per avere una copia dei tuoi dati, o per esercitare un altro diritto, scrivi a moonee.team@gmail.com: rispondiamo entro 30 giorni. La copia ti arriva via email: è un file con i tuoi dati e i link alle tue foto, valido 7 giorni, e non contiene quello che ha scritto il tuo partner [DIPENDE #196]. Puoi presentare reclamo al Garante per la protezione dei dati personali (garanteprivacy.it) o all'autorità del Paese in cui vivi.
 
 ## 10. Minori
 US è riservata a persone maggiorenni: alla registrazione confermi di avere almeno 18 anni. Non raccogliamo consapevolmente dati di minori di 18 anni; se scopriamo che un account appartiene a un minore, lo chiudiamo.

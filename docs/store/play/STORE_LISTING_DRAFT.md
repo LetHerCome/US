@@ -6,6 +6,7 @@ Vincoli decisi da Francesco il 14/10:
 - **Prezzo (decisione 10).** Nessuna promessa su abbonamenti futuri: dopo la beta potrebbero arrivare piani mensili e annuali. Si parla solo di questa prima versione, che è gratuita.
 - **Lingue.** La 1.0 è completa in italiano e in inglese. La scheda ha la versione italiana (predefinita) e una traduzione inglese (en-US, en-GB), con screenshot in entrambe le lingue.
 - **Immagini.** Icona, immagine in evidenza e screenshot si fanno sul nuovo design, quindi dopo il suo merge. Niente gattino in primo piano nella grafica.
+- **Contatto sviluppatore.** moonee.team@gmail.com (deciso il 14/10), finché non c'è il dominio.
 
 ## Italiano (predefinita, it-IT)
 
@@ -68,6 +69,8 @@ Vincoli decisi da Francesco il 14/10:
 Gli screenshot inglesi vanno fatti con l'app in inglese. I nomi delle sezioni (Today, Left for you, Memories, Play, Us) vanno allineati alle etichette che userà l'app inglese, scelte dal thread del design.
 
 ## Traccia di pubblicazione
+
+**In pausa (Francesco, 14/10):** per ora non si pubblica e non si carica niente su Google Play; l'app gira come APK interno e PWA. Quello che segue serve quando si riparte.
 
 Francesco considera la 1.0 "una sorta di beta". Con un account personale creato dopo il 13/11/2023 il test chiuso (almeno 12 tester per 14 giorni) è comunque obbligatorio prima della produzione. Dopo il test chiuso ci sono due strade:
 - **Produzione (consigliata).** L'app è pubblica e si trova nelle ricerche. La dicitura "In questa prima versione" della scheda basta a dire che è una prima versione, senza promesse sul prezzo futuro.

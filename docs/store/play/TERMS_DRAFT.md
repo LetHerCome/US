@@ -17,11 +17,11 @@ Ultimo aggiornamento: [DATA]
    - minacce, molestie o contenuti che incitano alla violenza.
 
    Non puoi nemmeno tentare di accedere a dati di altre coppie, aggirare le protezioni dell'app o usarla per controllare o perseguitare qualcuno.
-7. **Segnalazioni e rimozione.** Puoi segnalarci un problema o un contenuto da Impostazioni › App e supporto › Segnala un problema o un contenuto o scrivendo a [EMAIL DI SUPPORTO] [DIPENDE #196]. Esaminiamo ogni segnalazione. Se un contenuto o un account viola questi termini, possiamo rimuovere il contenuto, sospendere o chiudere l'account e, quando la legge lo richiede, informare le autorità.
+7. **Segnalazioni e rimozione.** Puoi segnalarci un problema o un contenuto da Impostazioni › App e supporto › Segnala un problema o un contenuto o scrivendo a moonee.team@gmail.com [DIPENDE #196]. Esaminiamo ogni segnalazione. Se un contenuto o un account viola questi termini, possiamo rimuovere il contenuto, sospendere o chiudere l'account e, quando la legge lo richiede, informare le autorità.
 8. **Servizi di terzi.** La ricerca e il player musicali sono forniti da Spotify, con i suoi termini.
 9. **Disponibilità.** Facciamo il possibile perché US funzioni, ma il servizio è fornito "così com'è" e può avere interruzioni. Nei limiti consentiti dalla legge non rispondiamo di perdite di dati o danni indiretti. Restano salvi i diritti inderogabili del consumatore.
 10. **Sospensione.** Possiamo sospendere un account che viola questi termini, dopo averlo comunicato quando possibile. In caso di contenuti illegali o di rischio per qualcuno possiamo intervenire subito.
 11. **Fine del rapporto.** Puoi eliminare il tuo account in qualsiasi momento [DIPENDE #190]. Il trattamento dei dati è descritto nell'informativa sulla privacy.
 12. **Modifiche.** Ti avviseremo nell'app delle modifiche importanti a questi termini.
 13. **Legge applicabile.** Legge italiana. Per i consumatori è competente il foro di residenza del consumatore.
-14. **Contatti.** [EMAIL DI SUPPORTO]
+14. **Contatti.** moonee.team@gmail.com
