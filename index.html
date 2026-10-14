@@ -958,7 +958,8 @@ html.us-returning-device .auth-overlay{
       <div class="left-for-you-card" id="leftForYouCard" hidden>
         <div class="left-for-you-meta"><span class="left-for-you-from"><span class="left-for-you-from-avatar" id="leftForYouFromFallback">♡</span><span>Da <b id="leftForYouFromName" translate="no">la tua persona</b></span></span><span id="leftForYouCounter"></span></div>
         <div id="leftForYouContent"></div>
-        <div class="left-for-you-actions"><button type="button" id="leftForYouConserve">Conserva</button><button type="button" id="leftForYouNext">Apri il prossimo</button></div>
+        <p class="left-for-you-once" id="leftForYouOnce">Si apre una volta: conservalo se vuoi tenerlo.</p>
+        <div class="left-for-you-actions" id="leftForYouActions"><button type="button" id="leftForYouConserve">Conserva</button><button type="button" id="leftForYouReply">Rispondi</button><button type="button" id="leftForYouNext" hidden>Apri il prossimo</button></div>
         <div class="left-for-you-status" id="leftForYouStatus" role="status" aria-live="polite"></div>
       </div>
     </div>
@@ -973,10 +974,11 @@ html.us-returning-device .auth-overlay{
       <button type="button" class="left-for-you-close us-modal-close" id="leftForYouComposerClose" aria-label="Chiudi il compositore" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
     </header>
     <div class="left-for-you-body left-for-you-composer-body">
+      <p class="left-for-you-last" id="leftForYouComposerLast" hidden></p>
       <div class="left-for-you-composer-kinds" role="tablist" aria-label="Tipo di messaggio">
         <button type="button" role="tab" aria-selected="true" class="is-active" data-us-composer-kind="text">Testo</button>
         <button type="button" role="tab" aria-selected="false" data-us-composer-kind="photo">Foto</button>
-        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="audio">Voce</button>
+        <button type="button" role="tab" aria-selected="false" data-us-composer-kind="audio">Vocale</button>
         <button type="button" role="tab" aria-selected="false" data-us-composer-kind="video">Video</button>
         <button type="button" role="tab" aria-selected="false" data-us-composer-kind="music">Musica</button>
       </div>
@@ -984,13 +986,15 @@ html.us-returning-device .auth-overlay{
         <textarea id="leftForYouComposerText" class="left-for-you-composer-text" maxlength="1000" rows="4" placeholder="Un pensiero…"></textarea>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="photo" hidden>
-        <div class="left-for-you-photo-actions"><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerPhotoPick">Scegli una foto</button><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerPhotoCamera">Scatta una foto</button></div>
+        <div class="left-for-you-photo-preview" id="leftForYouComposerPhotoPreview" hidden><img id="leftForYouComposerPhotoPreviewImage" alt="Anteprima della foto scelta"><button type="button" class="left-for-you-photo-change" id="leftForYouComposerPhotoChange">Cambia foto</button></div>
+        <div class="left-for-you-photo-actions" id="leftForYouComposerPhotoActions"><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerPhotoPick">Scegli una foto</button><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerPhotoCamera">Scatta una foto</button></div>
         <input type="file" id="leftForYouComposerPhotoFile" accept="image/jpeg,image/png,image/webp" hidden>
         <span class="left-for-you-composer-file" id="leftForYouComposerPhotoName"></span>
+        <input type="text" class="left-for-you-composer-url left-for-you-composer-caption" id="leftForYouComposerPhotoCaption" maxlength="280" placeholder="Didascalia (facoltativa)" aria-label="Didascalia della foto" autocomplete="off">
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="audio" hidden>
         <div class="left-for-you-vn-frame">
-          <div class="left-for-you-vn" id="leftForYouComposerAudioRecord" data-phase="idle" role="button" tabindex="0" aria-label="Tocca per registrare una voce" aria-pressed="false">
+          <div class="left-for-you-vn" id="leftForYouComposerAudioRecord" data-phase="idle" role="button" tabindex="0" aria-label="Tocca per registrare un vocale" aria-pressed="false">
             <span class="left-for-you-vn-in left-for-you-vn-idle" id="leftForYouComposerAudioIdle">
               <span class="left-for-you-vn-mic" aria-hidden="true"><i></i></span>
             </span>
@@ -1011,6 +1015,7 @@ html.us-returning-device .auth-overlay{
           </div>
           <span class="left-for-you-vn-hint" id="leftForYouComposerAudioHint" data-phase="idle" aria-live="polite">Tocca per registrare</span>
         </div>
+        <input type="text" class="left-for-you-composer-url left-for-you-composer-caption" id="leftForYouComposerAudioCaption" maxlength="280" placeholder="Didascalia (facoltativa)" aria-label="Didascalia del vocale" autocomplete="off">
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="video" hidden>
         <button type="button" class="left-for-you-composer-pick" id="leftForYouComposerVideoPick">Scegli un video</button><input type="file" id="leftForYouComposerVideoFile" accept="video/mp4,video/webm,video/quicktime" hidden>

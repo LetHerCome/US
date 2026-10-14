@@ -21,7 +21,8 @@ test('Bencho voice note replaces the native Left for You recorder surface (tap t
   const css = read('left-for-you.css');
 
   assert.match(html, /id="leftForYouComposerAudioRecord"[^>]*data-phase="idle"/);
-  assert.match(html, /id="leftForYouComposerAudioRecord"[^>]*aria-label="Tocca per registrare una voce"/);
+  // US 1.0 (L5): voice is called "un vocale".
+  assert.match(html, /id="leftForYouComposerAudioRecord"[^>]*aria-label="Tocca per registrare un vocale"/);
   assert.doesNotMatch(html, /Tieni premuto|Scorri per annullare/);
   assert.match(html, /id="leftForYouComposerAudioHint"[^>]*>Tocca per registrare</);
   assert.match(html, /id="leftForYouComposerAudioWave"/);
