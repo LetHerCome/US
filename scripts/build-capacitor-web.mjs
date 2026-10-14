@@ -69,6 +69,8 @@ const RUNTIME_FILES = [
   'dc-popup.css',
   'dc-primo.css',
   'due-colori.js',
+  'i18n.js',
+  'i18n-en.js',
   'left-for-you.css',
   'left-for-you.js',
   'calendar-domain.js',
