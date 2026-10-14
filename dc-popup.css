@@ -24,6 +24,13 @@
   --us-avviso-step:52px;
 }
 
+/* ---------- Popup icons (Phosphor regular), on the shared .us-icon mask ---------- */
+.us-icon[data-us-icon="trash"]{--us-icon-src:url("/assets/icons/phosphor/trash-regular.svg")}
+.us-icon[data-us-icon="info"]{--us-icon-src:url("/assets/icons/phosphor/info-regular.svg")}
+.us-icon[data-us-icon="sign-out"]{--us-icon-src:url("/assets/icons/phosphor/sign-out-regular.svg")}
+.us-icon[data-us-icon="wifi-slash"]{--us-icon-src:url("/assets/icons/phosphor/wifi-slash-regular.svg")}
+.us-icon[data-us-icon="download-simple"]{--us-icon-src:url("/assets/icons/phosphor/download-simple-regular.svg")}
+
 /* ---------- Every sheet: flat night material, hairline, no blur ---------- */
 .us-sheet{
   background:var(--us-color-surface);
@@ -402,6 +409,15 @@ body.us-status-visible.us-update-visible .toast{top:calc(var(--us-avviso-top) + 
   flex:none;
   background:var(--us-ambra)!important;
 }
+/* Offline: the wifi-slash icon in place of the dot, as in the mockup. */
+.app-status-bar[data-kind="offline"]::before{
+  width:16px!important;
+  height:16px!important;
+  border-radius:0;
+  background:currentColor!important;
+  -webkit-mask:url("/assets/icons/phosphor/wifi-slash-regular.svg") center/contain no-repeat;
+  mask:url("/assets/icons/phosphor/wifi-slash-regular.svg") center/contain no-repeat;
+}
 .app-status-bar[data-kind="error"]{background:var(--us-color-elevated)!important;border:0!important}
 .app-status-bar[data-kind="error"]::before{background:var(--us-corallo)!important}
 .app-status-bar[data-kind="online"]{background:var(--us-color-elevated)!important;border:0!important}
@@ -415,6 +431,16 @@ body.us-status-visible.us-update-visible .toast{top:calc(var(--us-avviso-top) + 
   border:0!important;
   background:var(--us-latte)!important;
   color:var(--us-inchiostro)!important;
+}
+.app-update-bar::before{
+  content:"";
+  flex:none;
+  width:16px;
+  height:16px;
+  margin-right:-4px;
+  background:currentColor;
+  -webkit-mask:url("/assets/icons/phosphor/download-simple-regular.svg") center/contain no-repeat;
+  mask:url("/assets/icons/phosphor/download-simple-regular.svg") center/contain no-repeat;
 }
 .app-update-bar span{display:block;min-width:0}
 .app-update-bar b{
