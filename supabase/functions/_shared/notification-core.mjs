@@ -158,7 +158,7 @@ export async function deliverNotification(admin, options) {
     }
     if (nativeEnabled) {
       const { data, error } = await admin.from('device_push_tokens')
-        .select('id,user_id,couple_id,token,platform,provider,apns_environment')
+        .select('id,user_id,couple_id,installation_id,token,platform,provider,apns_environment')
         .in('user_id', recipients);
       if (error) throw error;
       // A row registered under another couple (re-pair, stale row) never receives this couple's events.

@@ -56,8 +56,9 @@ functions before the migration is also safe for the same reason, but the order a
 ## 5. Verify
 
 - Android QA build with `google-services.json`: Settings → Notifiche → "Attiva su questo dispositivo" →
-  OS permission → state "Attive". Partner sends a Ti penso → notification on the `Dalla tua persona` channel;
-  tap → Ti penso opens after the biometric unlock (if enabled).
+  OS permission → state "Attive". Partner sends a Ti penso → one generic "US." / "Apri US per vedere le novità."
+  banner on the `Dalla tua persona` channel (S3 data-only v2: no name, no event text, no deep link);
+  tap → US opens on its normal start page after the biometric unlock (if enabled). Physical protocol: #181.
 - Web Push on the PWA still delivers (same event, same dedupe key, one notification per device).
 - Logout on the phone → no further notifications to that phone.
 

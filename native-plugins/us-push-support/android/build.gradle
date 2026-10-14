@@ -26,6 +26,8 @@ repositories {
 
 dependencies {
     implementation project(':capacitor-android')
+    // Match the app's Firebase Messaging dependency for awaited deleteToken().
+    implementation "com.google.firebase:firebase-messaging:25.0.1"
     // Pure Java policy (channel table, configuration check) tested on the JVM.
     testImplementation "junit:junit:${project.hasProperty('junitVersion') ? rootProject.ext.junitVersion : '4.13.2'}"
 }
