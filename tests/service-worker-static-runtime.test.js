@@ -324,7 +324,7 @@ test('/app.js viene servito dal service worker senza trasformazioni', async () =
   assert.equal(await response.text(), harness.rawApp);
 });
 
-test('index carica Supabase, auth storage, app e Stories in questo ordine', () => {
+test('index carica Supabase, auth storage, public auth, app e Stories in questo ordine', () => {
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   const sources = [...html.matchAll(/<script\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi)]
     .map((match) => match[1]);
@@ -332,14 +332,16 @@ test('index carica Supabase, auth storage, app e Stories in questo ordine', () =
   const authIndex = sources.findIndex((src) => src.startsWith('/auth-storage.js'));
   const appIndex = sources.findIndex((src) => src.startsWith('/app.js'));
   const onboardingIndex = sources.findIndex((src) => src.startsWith('/onboarding.js'));
+  // S3.1: app.js mounts window.UsPublicAuthS31 at load, so it comes first.
+  const publicAuthIndex = sources.findIndex((src) => src.startsWith('/public-auth.js'));
   const progressionIndex = sources.findIndex((src) => src.startsWith('/progression.js'));
   const storiesIndex = sources.findIndex((src) => src.startsWith('/stories.js'));
   const firstExistingScriptIndex = sources.findIndex((src) => src.startsWith('/fix4.js'));
 
   assert.ok(supabaseIndex >= 0, 'script Supabase non trovato');
   assert.deepEqual(
-    [authIndex, onboardingIndex, appIndex, progressionIndex, storiesIndex, firstExistingScriptIndex],
-    [supabaseIndex + 1, supabaseIndex + 2, supabaseIndex + 3, supabaseIndex + 4, supabaseIndex + 5, supabaseIndex + 6]
+    [authIndex, onboardingIndex, publicAuthIndex, appIndex, progressionIndex, storiesIndex, firstExistingScriptIndex],
+    [supabaseIndex + 1, supabaseIndex + 2, supabaseIndex + 3, supabaseIndex + 4, supabaseIndex + 5, supabaseIndex + 6, supabaseIndex + 7]
   );
 });
 
