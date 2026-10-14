@@ -38,6 +38,9 @@ test('il manifest dichiara soltanto i permessi necessari alle capability web e a
     'android.permission.ACCESS_FINE_LOCATION',
     'android.permission.CAMERA',
     'android.permission.INTERNET',
+    'android.permission.MODIFY_AUDIO_SETTINGS',
+    'android.permission.POST_NOTIFICATIONS',
+    'android.permission.RECORD_AUDIO',
     'android.permission.VIBRATE'
   ]);
 });

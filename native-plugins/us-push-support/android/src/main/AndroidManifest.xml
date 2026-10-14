@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- POST_NOTIFICATIONS is declared by @capacitor/push-notifications. -->
+    <!-- POST_NOTIFICATIONS is declared explicitly by the app manifest
+         (android/app/src/main/AndroidManifest.xml). -->
 </manifest>
