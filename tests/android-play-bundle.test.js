@@ -22,7 +22,6 @@ function manifestXml({
   const permissions = [
     'android.permission.CAMERA',
     'android.permission.ACCESS_COARSE_LOCATION',
-    'android.permission.ACCESS_FINE_LOCATION',
     'android.permission.INTERNET',
     'android.permission.VIBRATE',
     'android.permission.POST_NOTIFICATIONS',
@@ -140,7 +139,8 @@ test('missing RECORD_AUDIO and Data safety permissions are surfaced as warnings,
   const { results } = await check({});
   assert.equal(levelOf(results, 'record-audio-missing'), 'warn');
   const dataSafety = results.find((r) => r.id === 'data-safety-permissions');
-  assert.match(dataSafety.detail, /ACCESS_FINE_LOCATION -> Posizione precisa/);
+  assert.match(dataSafety.detail, /ACCESS_COARSE_LOCATION -> Posizione approssimativa/);
+  assert.doesNotMatch(dataSafety.detail, /ACCESS_FINE_LOCATION/);
   assert.match(dataSafety.detail, /CAMERA/);
   const withAudio = await check({ extraPermissions: ['android.permission.RECORD_AUDIO'] });
   assert.equal(levelOf(withAudio.results, 'record-audio-missing'), undefined);
@@ -322,4 +322,12 @@ test('the upload-secret helper never prints or stores the keystore or its passwo
   assert.match(script, /Set-Clipboard/);
   assert.match(script, /keystoreBase64[\s\S]*storePassword[\s\S]*keyAlias[\s\S]*keyPassword/);
   assert.doesNotMatch(script, /Out-File|Set-Content|Add-Content|Write-Output|Write-Host \$/);
+});
+
+test('precise location is forbidden: US 1.0 ships approximate location only', async () => {
+  const { results } = await check({ extraPermissions: ['android.permission.ACCESS_FINE_LOCATION'] });
+  const forbidden = results.filter((r) => r.level === 'fail').map((r) => `${r.id} ${r.detail || ''}`).join('\n');
+  assert.match(forbidden, /ACCESS_FINE_LOCATION/);
+  const clean = await check({});
+  assert.doesNotMatch(clean.results.filter((r) => r.level === 'fail').map((r) => r.detail || '').join('\n'), /ACCESS_FINE_LOCATION/);
 });
