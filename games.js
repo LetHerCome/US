@@ -137,7 +137,8 @@ function dayRail(){
  const today=new Date(Date.UTC(y,m-1,d,12));
  const monday=new Date(today);
  monday.setUTCDate(today.getUTCDate()-((today.getUTCDay()+6)%7));
- const labels=['L','M','M','G','V','S','D'];
+ const tag=globalThis.UsI18n?.tag||'it-IT';
+ const labels=tag==='it-IT'?['L','M','M','G','V','S','D']:Array.from({length:7},(_,i)=>new Date(Date.UTC(2024,0,1+i,12)).toLocaleDateString(tag,{weekday:'narrow',timeZone:'UTC'}));
  const days=labels.map((label,i)=>{
   const date=new Date(monday);date.setUTCDate(monday.getUTCDate()+i);
   const stamp=`${date.getUTCFullYear()}-${String(date.getUTCMonth()+1).padStart(2,'0')}-${String(date.getUTCDate()).padStart(2,'0')}`;

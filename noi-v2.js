@@ -6,8 +6,13 @@ if (window.__usNoiV2Installed) return;
 window.__usNoiV2Installed = true;
 const $ = id => document.getElementById(id);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const months = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
-const weekdays = [['L','lunedì'],['M','martedì'],['M','mercoledì'],['G','giovedì'],['V','venerdì'],['S','sabato'],['D','domenica']];
+// Italian is written out; another language (i18n.js) gets its own names from Intl.
+const tag = globalThis.UsI18n?.tag || 'it-IT';
+const named = (count, date, options) => Array.from({length:count}, (_, i) => date(i).toLocaleDateString(tag, {timeZone:'UTC', ...options}));
+const months = tag === 'it-IT' ? ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre']
+  : named(12, i => new Date(Date.UTC(2024, i, 1, 12)), {month:'long'});
+const weekdays = tag === 'it-IT' ? [['L','lunedì'],['M','martedì'],['M','mercoledì'],['G','giovedì'],['V','venerdì'],['S','sabato'],['D','domenica']]
+  : named(7, i => new Date(Date.UTC(2024, 0, 1 + i, 12)), {weekday:'narrow'}).map((short, i) => [short, new Date(Date.UTC(2024, 0, 1 + i, 12)).toLocaleDateString(tag, {weekday:'long', timeZone:'UTC'})]);
 const pad = n => String(n).padStart(2,'0');
 const iso = (y,m,d) => `${y}-${pad(m+1)}-${pad(d)}`;
 const today = () => {const d=new Date();return iso(d.getFullYear(),d.getMonth(),d.getDate());};
