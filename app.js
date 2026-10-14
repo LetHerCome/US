@@ -931,6 +931,13 @@ function usWithDeadline(promise,ms,label='operation timeout'){
 }
 
 async function initCloud(){
+  // A Supabase PASSWORD_RECOVERY session is a credential-changing grant, not
+  // permission to open couple-private US content. Stay inside the auth overlay.
+  if(window.usS31Auth?.recoveryActive){
+    document.getElementById('authOverlay').classList.remove('hidden');
+    showAuthStep('usRecovery');
+    return;
+  }
   if(usInitCloudInFlight){usInitCloudAgain=true;return usInitCloudInFlight;}
   const bootEpoch=usAuthEpoch;
 
@@ -950,6 +957,11 @@ async function initCloud(){
         'auth session restore timed out'
       );
       session=authState?.data?.session||null;
+      if(window.usS31Auth?.recoveryActive){
+        document.getElementById('authOverlay').classList.remove('hidden');
+        showAuthStep('usRecovery');
+        return;
+      }
     }catch(error){
       authBootstrapIssue=true;
       console.warn('[US Auth] session restore unavailable',error);
@@ -1899,6 +1911,11 @@ async function loginAccount(){
   }
 }
 window.loginAccount=loginAccount;
+// The extra Auth UI is compiled but only mounted when the Supabase backend
+// is exactly US-STAGING. Production remains login-only, without a signup path.
+window.usS31Auth = window.UsPublicAuthS31?.mount({
+  auth: sb.auth, endpoint: SB_URL, openStep: showAuthStep
+}) || null;
 
 let usIncomingThink=null;
 let usThinkOperationId=null;
@@ -4539,6 +4556,12 @@ async function refreshVisibleState(options={}){
 setInterval(()=>refreshVisibleState(),60000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&window.usProfile)refreshVisibleState({foreground:true});});
 sb.auth.onAuthStateChange((event,_session)=>{
+  if(event==='PASSWORD_RECOVERY' && window.usS31Auth?.onRecoverySession?.()){
+    usInvalidateAuth();
+    document.getElementById('authOverlay').classList.remove('hidden');
+    return;
+  }
+  if(event==='SIGNED_OUT')window.usS31Auth?.reset?.();
   if(event==='INITIAL_SESSION'||event==='TOKEN_REFRESHED')return;
   if(event==='SIGNED_OUT'||(_session?.user?.id||'')!==usAuthUserId)usInvalidateAuth();
   setTimeout(initCloud,0);
