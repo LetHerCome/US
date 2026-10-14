@@ -18,7 +18,7 @@ const FAMILIES = [
 ];
 const FAMILY = Object.fromEntries(FAMILIES.map((f) => [f.id, f]));
 const PER_VOI = { id: 'per_voi', name: 'Per voi', icon: 'sparkle' };
-const SWIPE = { id: 'swipe', name: 'Swipe', icon: 'cards-three' };
+const SWIPE = { id: 'swipe', name: 'Questo o quello', icon: 'cards-three' };
 const byId = (id) => document.getElementById(id);
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const label = (role) => window.UsIdentity?.current().nameForRole(role) || 'La tua persona';
@@ -236,7 +236,7 @@ function gameCard({ id, name, iconName, kind, action, extraClass = '', status })
     </button>`;
 }
 
-// Gioca V4: the Daily Challenge leads; the weekly games keep server authority.
+// Gioca V4: the Sfida di oggi leads; the weekly games keep server authority.
 function renderHub() {
  const root=byId('quizHub');if(!root)return;
  const pv=perVoiCopy(),pvState=home?.per_voi?.state||'idle';
@@ -246,7 +246,7 @@ function renderHub() {
  const nothingYet=!continueRounds(home).length&&!doneRounds(home).length&&pvState==='idle';
  root.innerHTML=`
   <h2 class="us-gv2-sr">Gioca</h2>
-  <div class="us-gv2-daily-slot" data-gv4-daily-slot aria-live="polite"><div class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">Daily Challenge</span><small>Preparo la sfida di oggi…</small></div></div>
+  <div class="us-gv2-daily-slot" data-gv4-daily-slot aria-live="polite"><div class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">Sfida di oggi</span><small>Preparo la sfida di oggi…</small></div></div>
   ${dayRail()}
   <header class="us-gv2-head" aria-label="Disponibilità giochi settimanali">${rhythmStrip()}</header>
   ${continueSection(home)}
@@ -320,7 +320,12 @@ function showHub() {
   if (home) renderHub();
   load();
 }
-const backButton = () => `<button type="button" class="us-gv2-back" data-gv2-action="back">${icon('caret-left')}<span>Gioca</span></button>`;
+// Due colori: every round reads as a sheet — its eyebrow on the left, the
+// close on the right (still the same "back to the hub" action).
+const backButton = () => `<button type="button" class="us-gv2-back" data-gv2-action="back" aria-label="Torna a Gioca">${icon('x')}<span>Gioca</span></button>`;
+const sheetTop = (kicker, count = '') => `<div class="us-gv2-play-top"><span class="us-gv2-kicker">${esc(kicker)}${count ? `<span class="us-gv2-count"> · ${esc(count)}</span>` : ''}</span>${backButton()}</div>`;
+// The two of you and what you share: rosa, lilla and the Noi lens between.
+const VENN = '<span class="us-gv2-venn" aria-hidden="true"><i class="is-a"></i><i class="is-b"></i><i class="is-noi"></i></span>';
 
 // ---------------------------------------------------------------- rounds
 
@@ -370,8 +375,8 @@ async function startSwipe() {
     if (/weekly allowance exhausted|too many open rounds|not enough swipe content/.test(msg)) startRequestIds.delete('swipe');
     toast(/weekly allowance exhausted/.test(msg) ? EXHAUSTED
       : /too many open rounds/.test(msg) ? 'Prima finite una delle partite in corso.'
-      : /not enough swipe content/.test(msg) ? 'Le nuove carte Swipe non sono ancora pronte.'
-      : 'Non riesco ad aprire Swipe. Riprova.');
+      : /not enough swipe content/.test(msg) ? 'Le nuove carte di Questo o quello non sono ancora pronte.'
+      : 'Non riesco ad aprire Questo o quello. Riprova.');
     if (/weekly|too many open rounds/.test(msg)) load();
   } finally { busy = false; }
 }
@@ -388,8 +393,8 @@ async function chooseSwipe() {
   if (played) {
     const ask = window.UsUiFoundation?.confirm;
     const ok = typeof ask === 'function' ? await ask({
-      kicker: 'SWIPE',
-      title: 'Avete già fatto Swipe questa settimana',
+      kicker: 'QUESTO O QUELLO',
+      title: 'Avete già fatto Questo o quello questa settimana',
       body: `Vi resta ${freeLeft() === 1 ? 'un momento' : `${freeLeft()} momenti`} fino a lunedì. Usarlo per altre 8 carte?`,
       confirmLabel: 'Altre 8',
       cancelLabel: 'Non ora',
@@ -494,13 +499,12 @@ function renderSwipePlay() {
   const left = item.options[0];
   const right = item.options[1];
   const root = showPanel(`<article class="us-gv2-swipe-play">
-    <div class="us-gv2-play-top">${backButton()}<span class="us-gv2-count">${index + 1} di ${total}</span></div>
+    ${sheetTop(`${SWIPE.name.toUpperCase()} · SCELTA ${index + 1} DI ${total}`)}
     <div class="us-gv2-swipe-progress" role="progressbar" aria-valuemin="1" aria-valuemax="${total}" aria-valuenow="${index + 1}" aria-label="Carta ${index + 1} di ${total}">
       ${Array.from({ length: total }, (_, i) => `<i data-state="${i < index ? 'done' : i === index ? 'now' : 'next'}"></i>`).join('')}
     </div>
-    <section class="us-gv2-swipe-stage" aria-label="Carta Swipe">
+    <section class="us-gv2-swipe-stage" aria-label="Carta di ${esc(SWIPE.name)}">
       <article class="us-gv2-swipe-card" id="usGv2SwipeCard" tabindex="0" aria-label="${esc(item.question_text)}. Freccia sinistra: ${esc(left)}. Freccia destra: ${esc(right)}.">
-        <span class="us-gv2-kicker">SWIPE · SCELTA ${index + 1}</span>
         <h2>${esc(item.question_text)}</h2>
         <span class="us-gv2-swipe-stamp is-left" aria-hidden="true">${esc(left)}</span>
         <span class="us-gv2-swipe-stamp is-right" aria-hidden="true">${esc(right)}</span>
@@ -508,8 +512,8 @@ function renderSwipePlay() {
       </article>
     </section>
     <div class="us-gv2-swipe-actions" role="group" aria-label="Scegli una risposta">
-      <button type="button" data-gv2-swipe-choice="0" aria-label="${esc(left)}"><span aria-hidden="true">←</span><b>${esc(left)}</b></button>
-      <button type="button" data-gv2-swipe-choice="1" aria-label="${esc(right)}"><b>${esc(right)}</b><span aria-hidden="true">→</span></button>
+      <button type="button" class="ghost" data-gv2-swipe-choice="0" aria-label="${esc(left)}">${icon('caret-left')}<b>${esc(left)}</b></button>
+      <button type="button" class="primary" data-gv2-swipe-choice="1" aria-label="${esc(right)}"><b>${esc(right)}</b>${icon('caret-right')}</button>
     </div>
     <p id="usGv2Error" class="us-gv2-error" role="alert" hidden></p>
     <p class="us-gv2-swipe-note">Trascina la carta oppure usa i due pulsanti. ${esc(partnerName())} non vedrà le tue scelte finché non avrete finito entrambi.</p>
@@ -637,15 +641,15 @@ function renderPlay() {
   const total = current.items.length;
   const value = answerValue(item);
   const kicker = current.game_family === 'per_voi' ? `PER VOI · ${familyName(item.family).toUpperCase()}` : familyName(current.game_family).toUpperCase();
+  const key = (i) => 'ABCDEFGH'[i] || String(i + 1);
   const hint = itemHint(item);
   const input = item.answer_kind === 'open'
     ? `<label class="us-gv2-sr" for="usGv2Answer">La tua risposta</label><textarea id="usGv2Answer" maxlength="1000" rows="5" placeholder="Scrivi…">${esc(value ?? '')}</textarea>`
-    : `<fieldset class="us-gv2-choices"><legend class="us-gv2-sr">${item.my_item_role === 'predictor' ? 'La tua previsione' : 'La tua scelta'}</legend>${(item.options || []).map((o, i) => `<label class="us-gv2-choice"><input type="radio" name="gv2choice" value="${i}" ${Number(value) === i && value !== null && value !== undefined ? 'checked' : ''}><span>${esc(o)}</span></label>`).join('')}</fieldset>`;
+    : `<fieldset class="us-gv2-choices"><legend class="us-gv2-sr">${item.my_item_role === 'predictor' ? 'La tua previsione' : 'La tua scelta'}</legend>${(item.options || []).map((o, i) => `<label class="us-gv2-choice"><input type="radio" name="gv2choice" value="${i}" ${Number(value) === i && value !== null && value !== undefined ? 'checked' : ''}><i class="us-gv2-choice-key" aria-hidden="true">${key(i)}</i><span>${esc(o)}</span></label>`).join('')}</fieldset>`;
   const last = index === total - 1;
   showPanel(`<article class="us-gv2-play" data-gv2-family="${esc(item.family || current.game_family)}">
-    <div class="us-gv2-play-top">${backButton()}<span class="us-gv2-count">${index + 1} di ${total}</span></div>
-    <div class="us-gv2-progress" role="progressbar" aria-valuemin="1" aria-valuemax="${total}" aria-valuenow="${index + 1}" aria-label="Domanda ${index + 1} di ${total}"><i style="width:${((index + 1) / total) * 100}%"></i></div>
-    <span class="us-gv2-kicker">${esc(kicker)}</span>
+    ${sheetTop(kicker, `${index + 1} di ${total}`)}
+    <div class="us-gv2-progress" role="progressbar" aria-valuemin="1" aria-valuemax="${total}" aria-valuenow="${index + 1}" aria-label="Domanda ${index + 1} di ${total}">${Array.from({ length: total }, (_, i) => `<i data-on="${i <= index ? 'true' : 'false'}"></i>`).join('')}</div>
     ${contextChip(item)}
     ${hint ? `<p class="us-gv2-hint">${esc(hint)}</p>` : ''}
     <h2 class="us-gv2-question">${esc(item.my_prompt || item.question_text)}</h2>
@@ -724,24 +728,24 @@ function partnerAnswerText(item) {
 
 function renderSwipeWaiting() {
   showPanel(`<article class="us-gv2-waiting us-gv2-swipe-waiting">
-    <div class="us-gv2-play-top">${backButton()}</div>
-    <span class="us-gv2-kicker">SWIPE · SCELTE SIGILLATE</span>
+    ${sheetTop(`${SWIPE.name.toUpperCase()} · SCELTE SIGILLATE`)}
     <h2>Le tue 8 scelte sono dentro.</h2>
+    <div class="us-gv2-wait-art">${VENN}</div>
     <p class="us-gv2-lead">Aspettiamo ${esc(partnerName())}. Finché non finisce, le vostre risposte restano separate.</p>
     <ol class="us-gv2-swipe-mine">${current.items.map((item, i) => `<li><span>${i + 1}</span><small>${esc(item.question_text)}</small><b>${esc(myAnswerText(item))}</b></li>`).join('')}</ol>
-    <div class="us-gv2-actions"><button type="button" class="ghost" data-gv2-action="back">Torna a Gioca</button><button type="button" class="primary" data-gv2-action="refresh">Controlla</button></div>
+    <div class="us-gv2-actions"><button type="button" class="ghost" data-gv2-action="back">Torna a Gioca</button><button type="button" class="primary" data-gv2-action="refresh">${icon('arrows-clockwise')}<span>Controlla</span></button></div>
   </article>`);
 }
 
 function renderWaiting() {
   if (current?.game_family === 'swipe') return renderSwipeWaiting();
   showPanel(`<article class="us-gv2-waiting">
-    <div class="us-gv2-play-top">${backButton()}</div>
-    <span class="us-gv2-kicker">${esc(familyName(current.game_family).toUpperCase())}</span>
+    ${sheetTop(familyName(current.game_family).toUpperCase())}
     <h2>Hai risposto.</h2>
+    <div class="us-gv2-wait-art">${VENN}</div>
     <p class="us-gv2-lead">Aspettiamo ${esc(partnerName())}. Le risposte si scoprono insieme.</p>
     <ol class="us-gv2-mine">${current.items.map((i) => `<li><small>${esc(i.my_prompt || i.question_text)}</small><b>${esc(myAnswerText(i))}</b></li>`).join('')}</ol>
-    <div class="us-gv2-actions"><button type="button" class="ghost" data-gv2-action="back">Torna a Gioca</button><button type="button" class="primary" data-gv2-action="refresh">Aggiorna</button></div>
+    <div class="us-gv2-actions"><button type="button" class="ghost" data-gv2-action="back">Torna a Gioca</button><button type="button" class="primary" data-gv2-action="refresh">${icon('arrows-clockwise')}<span>Aggiorna</span></button></div>
   </article>`);
 }
 
@@ -811,11 +815,10 @@ function revealGroup(items,kind,title,description,open=false){
 function renderCompactReveal({first=false}={}){
   const groups={same:[],different:[],open:[]};
   for(const [i,item] of current.items.entries())groups[revealKind(item)].push({item,number:i+1});
-  const header=current.game_family==='swipe'?'Swipe':familyName(current.game_family);
+  const header=familyName(current.game_family);
   const isSwipe=current.game_family==='swipe';
   showPanel(`<article class="us-gv2-reveal us-gv5-reveal${first?' is-first-reveal':''}" data-gv5-reveal>
-    <div class="us-gv2-play-top">${backButton()}</div>
-    <span class="us-gv2-kicker">LE VOSTRE SCELTE</span>
+    ${sheetTop('LE VOSTRE SCELTE')}
     <h2>${esc(header)}</h2>
     <div class="us-gv5-summary" aria-label="${groups.same.length} uguali, ${groups.different.length} diverse${groups.open.length?', '+groups.open.length+' risposte libere':''}">
       <span><strong>${groups.same.length}</strong><small>Uguali</small></span>
@@ -845,8 +848,7 @@ function renderWeeklyForm(error = '') {
   const w = home?.weekly;
   view = 'weekly';
   const root = showPanel(`<article class="us-gv2-weekly-form">
-    <div class="us-gv2-play-top">${backButton()}</div>
-    <span class="us-gv2-kicker">LA DOMANDA DELLA SETTIMANA</span>
+    ${sheetTop('LA DOMANDA DELLA SETTIMANA')}
     <h2>Crea la domanda</h2>
     <p class="us-gv2-lead">${esc(partnerName())} la scoprirà solo giocando.</p>
     <form id="usGv2WeeklyForm" novalidate>

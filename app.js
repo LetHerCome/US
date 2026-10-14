@@ -3540,11 +3540,11 @@ function renderResonanceHistory(entries){
   if(!root)return;
   root.setAttribute('aria-busy','false');
   if(!entries?.length){
-    root.innerHTML='<div class="noi-resonance-history-empty"><b>La prossima crescita apparirà qui</b><span>Quest ed eventi completati aggiungono punti reali alla vostra Sintonia.</span></div>';
+    root.innerHTML='<div class="noi-resonance-history-empty"><b>La prossima crescita apparirà qui</b><span>Missioni ed eventi completati aggiungono punti reali alla vostra Sintonia.</span></div>';
     return;
   }
   root.innerHTML=entries.map(entry=>{
-    const kindLabel=entry.kind==='quest'?'Quest di coppia':'Evento vissuto';
+    const kindLabel=entry.kind==='quest'?'Missione di coppia':'Evento vissuto';
     const liveNote=entry.kind==='event'&&entry.titleSource==='live'?' · titolo attuale':'';
     const date=resonanceHistoryDate(entry.at);
     return `<article class="noi-resonance-history-row" data-resonance-source="${escapeHtml(entry.sourceKey)}" data-resonance-kind="${escapeHtml(entry.kind)}"><span class="noi-resonance-history-mark" aria-hidden="true"></span><span class="noi-resonance-history-copy"><small>${escapeHtml(kindLabel)}${date?` · ${escapeHtml(date)}`:''}${liveNote}</small><b>${escapeHtml(entry.title)}</b></span><strong>+${entry.xp.toLocaleString('it-IT')} XP</strong></article>`;
@@ -3800,7 +3800,7 @@ async function confirmBondQuest(id){
   else{
     sendWebPushEvent('quest_confirmed',id).catch(()=>{});
     const awarded=Number(result.data?.xp_awarded)||0;
-    if(awarded>0){toast(`Quest completata · +${awarded} XP ♡`);window.UsFeedback?.success?.();}
+    if(awarded>0){toast(`Missione completata · +${awarded} XP ♡`);window.UsFeedback?.success?.();}
     else toast('Confermata. Ora tocca all’altra persona ♡');
   }
   setQuestAction(key,false);

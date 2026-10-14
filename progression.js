@@ -262,6 +262,173 @@ function applyPreferences(next = state) {
   applyLook(prefs);
 }
 
+// ---------- Due colori · the Sintonia card: two circles, one Noi ----------
+// Presentation only. The two person colours never change; the closer the
+// couple is to the next level, the more the circles overlap into the Noi lens.
+// Numbers come from the existing XP formula (app.js bondLevelInfo).
+const reducedMotion = () => document.documentElement?.dataset?.usMotion === 'reduced'
+  || Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
+const levelInfo = (xp) => (typeof window.bondLevelInfo === 'function' ? window.bondLevelInfo(xp) : null);
+const rankTitle = (level) => (typeof window.bondRankTitle === 'function' ? window.bondRankTitle(level) : '');
+let vennProgress = null;
+let vennFrame = 0;
+function sintoniaVenn() {
+  const card = document.querySelector?.('.noi-resonance');
+  if (!card) return null;
+  let svg = card.querySelector('.us-sintonia-venn');
+  if (!svg) {
+    const anchor = card.querySelector('.noi-resonance-top .tiny');
+    if (!anchor) return null;
+    anchor.insertAdjacentHTML('afterend', '<svg class="us-sintonia-venn" viewBox="0 0 210 120" aria-hidden="true" focusable="false"><circle class="is-a" cy="60" r="50"/><circle class="is-b" cy="60" r="50"/><path class="is-noi"/></svg>');
+    svg = card.querySelector('.us-sintonia-venn');
+  }
+  return svg;
+}
+function paintLens(svg, p) {
+  const R = 50;
+  const d = Math.max(0, 86 - 46 * Math.max(0, Math.min(86 / 46, p)));
+  const h = Math.sqrt(Math.max(0, R * R - (d / 2) ** 2));
+  svg.querySelector('.is-a')?.setAttribute('cx', String(105 - d / 2));
+  svg.querySelector('.is-b')?.setAttribute('cx', String(105 + d / 2));
+  svg.querySelector('.is-noi')?.setAttribute('d', `M105 ${60 - h}A${R} ${R} 0 0 1 105 ${60 + h}A${R} ${R} 0 0 1 105 ${60 - h}Z`);
+}
+function renderSintoniaArt(next = state) {
+  const svg = sintoniaVenn();
+  const info = levelInfo(Number(next?.total_xp) || 0);
+  if (!svg || !info) return;
+  const to = Math.max(0, Math.min(1, info.current / info.needed));
+  const from = vennProgress;
+  vennProgress = to;
+  window.cancelAnimationFrame?.(vennFrame);
+  if (from === null || from === to || reducedMotion() || typeof requestAnimationFrame !== 'function') { paintLens(svg, to); return; }
+  const start = performance.now();
+  const step = (now) => {
+    const t = Math.min(1, (now - start) / 700);
+    paintLens(svg, from + (to - from) * (1 - (1 - t) ** 3));
+    if (t < 1) vennFrame = requestAnimationFrame(step);
+  };
+  vennFrame = requestAnimationFrame(step);
+}
+
+// ---------- Due colori · the level-up Momento "Orbita" ----------
+// The server already returns the couple level; this phone remembers the last
+// level it celebrated (a per-device convenience, never progression state).
+// A higher level on a later hydrate is the level-up signal: the ring closes,
+// the two colours orbit and merge into Noi, the number rolls. Then the
+// existing unlock queue takes over. No extra server call.
+const LEVEL_SEEN_PREFIX = 'us:sintonia:level-seen:v1:';
+let levelMomentOpen = false;
+function levelSeenKey() {
+  const profile = window.usProfile;
+  return profile?.id && profile?.couple_id ? `${LEVEL_SEEN_PREFIX}${profile.couple_id}:${profile.id}` : '';
+}
+function readSeenLevel() {
+  const key = levelSeenKey();
+  if (!key) return 0;
+  try { return Math.max(0, Number(window.localStorage.getItem(key)) || 0); } catch (_) { return 0; }
+}
+function writeSeenLevel(level) {
+  const key = levelSeenKey();
+  if (!key) return false;
+  try { window.localStorage.setItem(key, String(level)); return true; } catch (_) { return false; }
+}
+// true when the celebration took the stage (it hands over to the unlocks).
+function celebrateLevelUp(next, pending) {
+  const level = Math.floor(Number(next?.level) || 0);
+  if (!level || !document.body) return false;
+  const seen = readSeenLevel();
+  if (!seen || level < seen) { writeSeenLevel(level); return false; }
+  if (level === seen || levelMomentOpen || document.hidden || unlockRoot()?.classList?.contains('open')) return false;
+  if (!writeSeenLevel(level)) return false;
+  showLevelMoment({ from: seen, level, totalXp: Number(next?.total_xp) || 0, unlocks: pending.filter(presented) });
+  return true;
+}
+function showLevelMoment({ from, level, totalXp, unlocks }) {
+  const info = levelInfo(totalXp);
+  const left = info ? info.needed - info.current : 0;
+  const rank = rankTitle(level);
+  const fmt = (n) => Number(n).toLocaleString('it-IT');
+  const dots = Array.from({ length: 12 }, (_, i) => `<circle class="lvx-dot ${i % 2 ? 'is-b' : 'is-a'}" cx="110" cy="110" r="${i % 3 ? 2.6 : 3.6}"/>`).join('');
+  const prize = unlocks.length === 1 ? 'Un premio sbloccato' : unlocks.length > 1 ? `${unlocks.length} premi sbloccati` : '';
+  const action = unlocks.length === 1 ? 'Scoprilo' : unlocks.length > 1 ? 'Scoprili' : 'Chiudi';
+  const root = document.createElement('div');
+  root.className = 'us-level-moment';
+  root.setAttribute('role', 'dialog');
+  root.setAttribute('aria-modal', 'true');
+  root.setAttribute('aria-labelledby', 'usLevelMomentTitle');
+  root.innerHTML = `<div class="us-level-moment-body">
+    <div class="lvx" aria-hidden="true"><span class="lvx-wash"></span><svg viewBox="0 0 220 220" focusable="false"><circle class="lvx-track" cx="110" cy="110" r="100"/><circle class="lvx-ring" cx="110" cy="110" r="100" pathLength="100"/><circle class="lvx-wave" cx="110" cy="110" r="64"/><g class="lvx-orbit"><circle class="lvx-a" cx="72" cy="110" r="34"/><circle class="lvx-b" cx="148" cy="110" r="34"/></g><circle class="lvx-noi" cx="110" cy="110" r="64"/>${dots}</svg><span class="lvx-num"><span class="lvx-odo"><i>${Math.max(1, from)}</i><i>${level}</i></span></span></div>
+    <span class="us-level-moment-kicker">Nuovo livello di Sintonia</span>
+    <h2 id="usLevelMomentTitle">Livello <em>${level}</em></h2>
+    <p>${esc(rank ? `${rank}. ` : '')}${info ? `${fmt(left)} XP al prossimo livello.` : ''}</p>
+    ${prize ? `<span class="us-level-moment-chip">${prize}</span>` : ''}
+    <div class="us-level-moment-actions"><button type="button" class="primary" data-us-level-go>${action}</button></div>
+  </div>`;
+  document.body.appendChild(root);
+  levelMomentOpen = true;
+  const reduced = reducedMotion();
+  const visual = root.querySelector('.lvx');
+  const close = () => {
+    if (!root.isConnected) return;
+    root.removeEventListener('keydown', onKey);
+    const done = () => {
+      root.remove();
+      levelMomentOpen = false;
+      if (unlocks.length) startUnlockQueue(unlocks);
+      else window.USPet?.react?.('reward');
+    };
+    if (reduced || typeof root.animate !== 'function') return done();
+    root.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 280, easing: 'ease-out', fill: 'forwards' }).finished.then(done, done);
+  };
+  const onKey = (event) => { if (event.key === 'Escape') close(); };
+  root.addEventListener('keydown', onKey);
+  root.querySelector('[data-us-level-go]').addEventListener('click', close);
+  const focusLater = (ms) => setTimeout(() => root.querySelector('[data-us-level-go]')?.focus?.({ preventScroll: true }), ms);
+  if (reduced || typeof root.animate !== 'function') {
+    visual.classList.add('is-done');
+    if (!reduced) root.classList.add('is-static');
+    window.UsFeedback?.success?.();
+    focusLater(0);
+    return;
+  }
+  // The same beats as the approved mockup: 1 the Sintonia ring closes,
+  // 2 the two colours orbit closer, 3 they merge into Noi, 4 the number rolls.
+  const R1 = 780;
+  const M0 = R1 + 640;
+  const HOLD = M0 + 480;
+  const fromPct = 0.86;
+  const fill = { fill: 'both' };
+  const io = 'cubic-bezier(.7,0,.2,1)';
+  const out = 'cubic-bezier(.2,.8,.2,1)';
+  const spring = 'cubic-bezier(.34,1.56,.64,1)';
+  const inEase = 'cubic-bezier(.5,0,.9,.45)';
+  const q = (selector) => visual.querySelector(selector);
+  root.animate([{ clipPath: 'circle(0% at 50% 0%)' }, { clipPath: 'circle(150% at 50% 0%)' }], { duration: 700, easing: io });
+  Array.from(root.querySelectorAll('.us-level-moment-body > :not(.lvx)')).forEach((el, i) => {
+    el.animate([{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 500, delay: HOLD + i * 80, easing: out, fill: 'backwards' });
+  });
+  q('.lvx-ring').animate([{ strokeDashoffset: 100 - fromPct * 100 }, { strokeDashoffset: 0 }], { duration: R1 - 260, delay: 260, easing: io, ...fill });
+  q('.lvx-orbit').animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(540deg)' }], { duration: 640, delay: R1, easing: inEase, ...fill });
+  q('.lvx-a').animate([{ transform: 'translate(0px,0px) scale(1)', opacity: 1 }, { transform: 'translate(38px,0px) scale(.72)', opacity: 1, offset: 0.92 }, { transform: 'translate(38px,0px) scale(.72)', opacity: 0 }], { duration: 780, delay: R1, easing: inEase, ...fill });
+  q('.lvx-b').animate([{ transform: 'translate(0px,0px) scale(1)', opacity: 1 }, { transform: 'translate(-38px,0px) scale(.72)', opacity: 1, offset: 0.92 }, { transform: 'translate(-38px,0px) scale(.72)', opacity: 0 }], { duration: 780, delay: R1, easing: inEase, ...fill });
+  q('.lvx-ring').animate([{ opacity: 1, strokeWidth: 4 }, { opacity: 0, strokeWidth: 16 }], { duration: 420, delay: M0, easing: out, ...fill });
+  q('.lvx-track').animate([{ opacity: 1 }, { opacity: 0 }], { duration: 420, delay: M0, ...fill });
+  q('.lvx-noi').animate([{ opacity: 0, transform: 'scale(.4)' }, { opacity: 1, transform: 'scale(1.12)', offset: 0.55 }, { opacity: 1, transform: 'scale(1)' }], { duration: 640, delay: M0, easing: out, ...fill });
+  q('.lvx-wave').animate([{ opacity: 0.85, transform: 'scale(.9)', strokeWidth: 8 }, { opacity: 0, transform: 'scale(2.5)', strokeWidth: 1 }], { duration: 820, delay: M0, easing: out, fill: 'forwards' });
+  q('.lvx-wash').animate([{ opacity: 0.55, transform: 'scale(0)' }, { opacity: 0, transform: 'scale(24)' }], { duration: 900, delay: M0, easing: out, fill: 'backwards' });
+  Array.from(visual.querySelectorAll('.lvx-dot')).forEach((dot, i) => {
+    const a = (i / 12) * Math.PI * 2 + 0.25;
+    const r = 80 + ((i * 37) % 28);
+    dot.animate([{ opacity: 1, transform: 'translate(0px,0px) scale(1)' }, { opacity: 0, transform: `translate(${(Math.cos(a) * r).toFixed(1)}px,${(Math.sin(a) * r).toFixed(1)}px) scale(.4)` }], { duration: 820, delay: M0 + 40, easing: out, fill: 'forwards' });
+  });
+  q('.lvx-num').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, delay: M0 + 120, ...fill });
+  Array.from(visual.querySelectorAll('.lvx-odo i')).forEach((el) => {
+    el.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-100%)' }], { duration: 420, delay: M0 + 260, easing: spring, ...fill });
+  });
+  setTimeout(() => { if (root.isConnected) window.UsFeedback?.success?.(); }, M0);
+  focusLater(HOLD + 300);
+}
+
 function renderRhythm(next = state) {
   if (!next) return;
   const days = Math.max(0, Number(next.rhythm_days) || 0);
@@ -345,14 +512,21 @@ function countdownTile(style, next) {
 }
 function countdownGroup(next, expanded = false) {
   const styles = countdownStyles();
-  if (!styles.length || !window.USCountdown?.previewMarkup) return '';
+  if (!styles.length || !window.USCountdown?.previewMarkup) return null;
   const owned = styles.filter((style) => !style.reward || next?.rewards?.some((r) => r.id === style.reward && r.unlocked)).length;
-  return `<details class="us-reward-group" data-category="countdown" aria-label="Stili Countdown"${expanded ? " open" : ""}>
+  return {
+    category: 'countdown', label: 'Stili Countdown', owned, total: styles.length,
+    markup: (open) => `<details class="us-reward-group" data-category="countdown" aria-label="Stili Countdown"${open ? " open" : ""}>
       <summary class="us-reward-group-head"><b>Stili Countdown</b><span>Il vostro tempo su Oggi</span><em>${owned}/${styles.length}</em></summary>
       <div class="us-reward-grid">${styles.map((style) => countdownTile(style, next)).join('')}</div>
-    </details>`;
+    </details>`
+  };
 }
 
+// Due colori — the collection reads one category at a time: a row of chips
+// (name and owned/total) chooses which group is open. The groups stay the
+// same native <details>, so nothing is lost without the chips.
+let rewardCategory = null;
 function renderRewards(next = state) {
   const root = $('usProgressionRewards');
   if (!root) return;
@@ -360,18 +534,13 @@ function renderRewards(next = state) {
   // Only rewards with a real, visible destination; countdown-entitling rewards
   // live in the Stili Countdown group, Oggi looks in their own groups.
   const known = rewards.filter((reward) => SLOTS[reward.category] && presented(reward) && presentation(reward).kind === reward.category && !SLOTS[reward.category].look);
-  // Keep category sections open when a reward is equipped/unequipped.
-  const firstPaint = root.dataset.uiGroupsReady !== '1';
-  const expanded = new Set(Array.from(root.querySelectorAll('.us-reward-group[open]')).map((el) => el.dataset.category));
-  let owned = 0;
-  let total = 0;
-  root.innerHTML = VISIBLE_SLOTS.map((category) => {
+  const groups = VISIBLE_SLOTS.map((category) => {
     const slot = SLOTS[category];
     let tiles = '';
     let groupOwned = 0;
     let groupTotal = 0;
     if (slot.look) {
-      if (!window.USOggiLook) return '';
+      if (!window.USOggiLook) return null;
       const looks = (slot.look === 'theme' ? window.USOggiLook.THEMES : window.USOggiLook.EFFECTS)
         .filter((look) => window.USOggiLook.status(slot.look, look.id).state !== 'unavailable');
       groupTotal = looks.length;
@@ -383,15 +552,22 @@ function renderRewards(next = state) {
       groupOwned = group.filter((reward) => reward.unlocked).length;
       tiles = group.map(rewardTile).join('');
     }
-    if (!groupTotal) return '';
-    owned += groupOwned;
-    total += groupTotal;
-    const open = firstPaint ? Boolean(slot.look) : expanded.has(category);
-    return `<details class="us-reward-group" data-category="${category}" aria-label="${esc(slot.label)}"${open ? ' open' : ''}>
+    if (!groupTotal) return null;
+    return {
+      category, label: slot.label, owned: groupOwned, total: groupTotal,
+      markup: (open) => `<details class="us-reward-group" data-category="${category}" aria-label="${esc(slot.label)}"${open ? ' open' : ''}>
       <summary class="us-reward-group-head"><b>${esc(slot.label)}</b><span>${esc(slot.place)}</span><em>${groupOwned}/${groupTotal}</em></summary>
       <div class="us-reward-grid">${tiles}</div>
-    </details>`;
-  }).join('') + countdownGroup(next, expanded.has('countdown'));
+    </details>`
+    };
+  }).filter(Boolean);
+  const owned = groups.reduce((sum, group) => sum + group.owned, 0);
+  const total = groups.reduce((sum, group) => sum + group.total, 0);
+  const countdown = countdownGroup(next);
+  if (countdown) groups.push(countdown);
+  if (!groups.some((group) => group.category === rewardCategory)) rewardCategory = groups[0]?.category || null;
+  const chips = groups.length > 1 ? `<div class="us-reward-cats" role="group" aria-label="Categorie della collezione">${groups.map((group) => `<button type="button" class="us-reward-cat" data-reward-cat="${group.category}" ${group.category === rewardCategory ? 'aria-current="true"' : ''}>${esc(group.label)}<em>${group.owned}/${group.total}</em></button>`).join('')}</div>` : '';
+  root.innerHTML = chips + groups.map((group) => group.markup(group.category === rewardCategory)).join('');
   root.dataset.uiGroupsReady = '1';
   const count = $('usProgressionRewardsCount');
   if (count) count.textContent = `${owned} di ${total}`;
@@ -400,6 +576,7 @@ function renderRewards(next = state) {
 function render(next = state) {
   if (!next) return;
   window.renderBondProgress?.(Number(next.total_xp) || 0);
+  renderSintoniaArt(next);
   renderRhythm(next);
   renderNext(next);
   renderRewards(next);
@@ -425,6 +602,7 @@ function paintUnlock() {
   const kicker = $('usProgressionUnlockKicker');
   if (kicker) kicker.textContent = shown?.unlock || 'HAI SBLOCCATO';
   root.dataset.category = shown?.kind || reward.category || '';
+  root.dataset.rewardToken = reward.token || '';
   const place = $('usProgressionUnlockPlace');
   if (place) {
     place.textContent = shown?.where || '';
@@ -555,7 +733,10 @@ async function hydrate({ showUnlocks = true, force = false } = {}) {
     }
     state = applyDevicePreferences(data || null);
     render(state);
-    if (showUnlocks) startUnlockQueue(state?.pending_unlocks || []);
+    if (showUnlocks) {
+      const pending = Array.isArray(state?.pending_unlocks) ? state.pending_unlocks : [];
+      if (!celebrateLevelUp(state, pending)) startUnlockQueue(pending);
+    }
     return state;
   })().finally(() => { loading = null; });
   return loading;
@@ -569,6 +750,15 @@ function refreshAfterAction() {
 }
 
 $('usProgressionRewards')?.addEventListener('click', async (event) => {
+  const chip = event.target.closest?.('[data-reward-cat]');
+  if (chip?.dataset?.rewardCat) {
+    if (chip.dataset.rewardCat === rewardCategory) return;
+    rewardCategory = chip.dataset.rewardCat;
+    renderRewards(state);
+    $('usProgressionRewards')?.querySelector?.('.us-reward-group[open]')?.classList?.add('is-entering');
+    window.UsFeedback?.selection?.();
+    return;
+  }
   const look = event.target.closest?.('[data-look-slot]');
   if (look?.dataset?.lookSlot) {
     window.USOggiLook?.openGallery?.({ tab: look.dataset.lookSlot, look: look.dataset.lookId });
