@@ -82,7 +82,7 @@ Il fondatore ha approvato Policy A. Le altre voci del piano (D-1…D-19) non han
 
 Il vecchio `couple_id` non viene riciclato e il contenuto non viene spostato. Poiché RLS, Storage ed Edge ricavano la coppia dal profilo, il nuovo partner non vede nulla della coppia precedente (test: 10 tabelle, profili, tabella privata). Se il superstite elimina il proprio account, anche gli archivi che detiene vengono cancellati, Storage compreso (`archive_prefixes`).
 
-**Non ancora disponibile in app (gate di fase):**
+**Non disponibile in app nella 1.0 (decisione del fondatore del 14/10: dopo la 1.0, con la schermata Archivio):**
 - La RPC è eseguibile solo da `service_role`. Senza una vista "Archivio", chi creasse una nuova coppia non potrebbe più aprire i vecchi ricordi dall'app, quindi la funzione non va annunciata.
 - Fase successiva, isolata:
   - RPC di sola lettura dell'archivio, autorizzate da `couple_archive_access`;

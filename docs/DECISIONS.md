@@ -119,5 +119,6 @@ Only durable decisions belong here. New missions should not reopen them without 
 
 1. **Policy A APPROVATA:** quando un membro esce, il partner può conservare i ricordi condivisi idonei; i dati strettamente personali, la posizione, le credenziali e i token del membro che esce vengono cancellati. L'eliminazione unilaterale di un account non cancella la storia del partner. Restano necessarie la revisione dei diritti sui contenuti e l'informativa sulla conservazione.
 2. **D-5 APPROVATA:** «Se A elimina il proprio account, B conserva il diritto ad accedere ai ricordi condivisi legittimamente preservati della coppia precedente **e può creare un nuovo legame con un'altra persona senza dover eliminare il proprio account**. L'archivio precedente e il nuovo spazio di coppia sono rigorosamente separati.» La chiusura del legame precedente può restare irreversibile, ma non deve bloccare il riabbinamento futuro di B.
+3. **Tempi di D-5 (fondatore, 14/10):** il nuovo legame arriva **dopo la 1.0**, insieme alla schermata Archivio. Nella 1.0 chi resta tiene tutti i ricordi nell'app; la parte server è già sulla #190, eseguibile solo da `service_role`.
 
 **Governance:** approvazioni di prodotto. Non autorizzano merge, migrazioni su staging o produzione, cancellazione di utenti né deploy.
