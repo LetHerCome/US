@@ -16,7 +16,7 @@
 
   const STORE_KEY = 'us:lang:v1';
   const SUPPORTED = ['it', 'en'];
-  const TAGS = Object.freeze({ it: 'it-IT', en: 'en-GB' });
+  const TAGS = Object.freeze({ it: 'it-IT', en: 'en-US' });
   const ATTRS = ['placeholder', 'aria-label', 'title', 'alt'];
   const SKIP = new Set(['SCRIPT', 'STYLE', 'TEXTAREA', 'NOSCRIPT', 'CODE', 'PRE', 'svg', 'SVG']);
   const PLACEHOLDER = /\{([a-z][a-z0-9_]*)\}/gi;
