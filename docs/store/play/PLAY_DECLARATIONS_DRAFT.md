@@ -50,13 +50,12 @@ Note:
 
 ### 1.3 Eliminazione **[DIPENDE #190]**
 
-Da compilare con il comportamento effettivamente mergiato della #190. Secondo il piano `US_S3_2_ACCOUNT_DELETION_PLAN_2026-10-13.md`:
-- richiesta in app, dalla pagina web pubblica `/elimina-account` e via email;
-- 7 giorni per annullare, completamento entro 30 giorni;
-- Policy A "keep_shared": i contenuti condivisi dalla coppia restano al partner, i dati personali dell'account vengono eliminati;
-- export dei propri dati via email entro 30 giorni.
-
-Se la #190 cambia uno di questi punti, la scheda segue la #190, non questo documento. Play chiede anche di indicare quali dati restano dopo l'eliminazione e perché: con la Policy A, i contenuti condivisi restano visibili al partner. Va scritto così, senza dire "tutti i dati vengono eliminati".
+Testi allineati all'implementazione della #190 (`docs/store/US_S3_2_ACCOUNT_DELETION_V1.md` §8 sul suo branch). Se la #190 cambia prima del merge, la scheda segue la #190, non questo documento.
+- Gli utenti possono chiedere l'eliminazione: Sì, in app (Impostazioni › Privacy e dati › Elimina account), via web (`https://[DOMINIO]/elimina-account`, raggiungibile senza login) e via email.
+- Nessun periodo per annullare: eliminazione immediata dopo password e conferma, completamento entro 30 giorni.
+- Dati che restano e perché: con la Policy A i contenuti condivisi con il partner restano a lui, senza nome dell'autore, perché fanno parte della sua storia; una ricevuta tecnica senza contenuti resta per 12 mesi, per dimostrare l'avvenuta eliminazione.
+- Copia dei propri dati: su richiesta via email, entro 30 giorni.
+- Non scrivere "tutti i dati vengono eliminati".
 
 URL per Play Console (campo "Link per eliminare l'account"): `https://[DOMINIO]/elimina-account` **[DA DECIDERE: Francesco, dominio pubblico]**.
 

@@ -36,15 +36,12 @@ Alcuni fornitori possono trattare dati fuori dallo Spazio economico europeo, con
 Le comunicazioni sono cifrate (HTTPS). L'accesso ai dati è limitato alla tua coppia con regole lato database. I file sono serviti con link temporanei.
 
 ## 5. Quanto conserviamo i dati
-Finché il tuo account è attivo. [DIPENDE #190: dopo la richiesta di eliminazione hai 7 giorni per annullarla; l'eliminazione si completa entro 30 giorni. I backup del fornitore vengono sovrascritti entro [DURATA BACKUP, D-8].]
+Finché il tuo account è attivo. [DIPENDE #190] Quando chiedi l'eliminazione, dopo aver confermato la password, il tuo account viene eliminato subito e non può essere recuperato. La rimozione dei file si completa entro 30 giorni. Conserviamo per 12 mesi solo una ricevuta tecnica dell'eliminazione (identificativo dell'account e della coppia, date, esito), senza contenuti. I backup del fornitore vengono sovrascritti entro [DURATA BACKUP, D-8].
 
 ## 6. Eliminare l'account [DIPENDE #190]
-Puoi chiedere l'eliminazione:
-- dall'app (Impostazioni › Elimina account);
-- dalla pagina [https://DOMINIO/elimina-account];
-- scrivendo a [EMAIL DI SUPPORTO].
+Puoi chiedere l'eliminazione dall'app (Impostazioni › Privacy e dati › Elimina account), dalla pagina https://[DOMINIO]/elimina-account o scrivendo a [EMAIL DI SUPPORTO].
 
-Eliminiamo il tuo account e i tuoi dati personali. I contenuti che avete condiviso nello spazio di coppia restano visibili al tuo partner, salvo [comportamento effettivo della #190]. Puoi chiedere una copia dei tuoi dati, che ti inviamo via email entro 30 giorni.
+Eliminiamo il tuo profilo e i tuoi dati personali: risposte, umore, quiz, posizione, dispositivi e notifiche, storie, appuntamenti personali, messaggi programmati non ancora consegnati. Quello che avete condiviso nello spazio di coppia (Momenti e foto, messaggi già consegnati, appuntamenti ed eventi condivisi, desideri, i 'lasciati per te' che il tuo partner ha conservato, la storia della coppia) resta al tuo partner, senza il tuo nome; il partner può cancellarlo. Se eri l'ultimo membro della coppia, viene cancellato tutto lo spazio. Puoi chiedere una copia dei tuoi dati prima dell'eliminazione: te la inviamo via email entro 30 giorni.
 
 ## 7. I tuoi diritti
 Hai diritto di accesso, rettifica, cancellazione, limitazione, portabilità e opposizione, e puoi revocare il consenso alla posizione in qualsiasi momento. Scrivi a [EMAIL DI SUPPORTO]. Puoi presentare reclamo al Garante per la protezione dei dati personali (garanteprivacy.it).
