@@ -10,7 +10,7 @@ const { database, as, create, invite, accept, A, F, B, U1, U2, U3 } = require('.
 
 const ROOT = path.resolve(__dirname, '..');
 const app = fs.readFileSync(path.join(ROOT, 'app.js'), 'utf8');
-const MIGRATION = fs.readFileSync(path.join(ROOT, 'supabase/migrations/20261014120000_location_approximate_v1.sql'), 'utf8');
+const MIGRATION = fs.readFileSync(path.join(ROOT, 'supabase/migrations/20261014180000_location_approximate_v1.sql'), 'utf8');
 
 function clientCell() {
   const slice = (from, to) => app.slice(app.indexOf(from), app.indexOf(to));
