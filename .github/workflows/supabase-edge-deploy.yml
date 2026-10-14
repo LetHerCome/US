@@ -2,10 +2,13 @@ name: Supabase Edge deploy (manual)
 
 # Deploys reviewed Edge functions from the GitHub website, without a terminal:
 # Actions -> "Supabase Edge deploy (manual)" -> Run workflow.
-# Only runs when someone presses the button. Production needs the word
-# PRODUZIONE in the confirm field. Feature flags and secrets are NOT touched:
-# they stay as set in the Supabase dashboard.
-# Needs the repository secret SUPABASE_ACCESS_TOKEN (Supabase account token).
+# Only runs when someone presses the button (never on push or pull request),
+# and every run waits for approval in the GitHub environment
+# `supabase-deploy` (required reviewer: the founder). Production also needs
+# the word PRODUZIONE. Feature flags and secrets are NOT touched: they stay
+# as set in the Supabase dashboard. The Supabase account token lives only in
+# that environment as SUPABASE_ACCESS_TOKEN; revoke it on supabase.com after
+# the release. Third-party actions and the CLI are pinned.
 
 on:
   workflow_dispatch:
@@ -37,20 +40,23 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    environment: supabase-deploy
     env:
       TARGET: ${{ inputs.target }}
       FUNCTIONS: ${{ inputs.functions }}
       CONFIRM: ${{ inputs.confirm }}
-      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ inputs.ref }}
           persist-credentials: false
       - name: Check request
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
           set -euo pipefail
-          if [ -z "${SUPABASE_ACCESS_TOKEN}" ]; then echo "::error::Manca il secret SUPABASE_ACCESS_TOKEN"; exit 1; fi
+          if [ -z "${SUPABASE_ACCESS_TOKEN}" ]; then echo "::error::Manca il secret SUPABASE_ACCESS_TOKEN nell'environment supabase-deploy"; exit 1; fi
+          echo "::add-mask::${SUPABASE_ACCESS_TOKEN}"
           case "$TARGET" in
             staging) echo "PROJECT_REF=dugmhngrfkuieeletatb" >> "$GITHUB_ENV" ;;
             production)
@@ -67,10 +73,12 @@ jobs:
           done
           if [ "$count" -eq 0 ] || [ "$count" -gt 10 ]; then echo "::error::Indica da 1 a 10 funzioni"; exit 1; fi
           echo "Commit: $(git rev-parse HEAD) -> $TARGET ($count funzioni)"
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb # v1.7.3
         with:
-          version: latest
+          version: 2.118.0
       - name: Deploy
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
           set -euo pipefail
           for fn in $FUNCTIONS; do
