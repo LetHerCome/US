@@ -347,7 +347,7 @@ function showLevelMoment({ from, level, totalXp, unlocks }) {
   const info = levelInfo(totalXp);
   const left = info ? info.needed - info.current : 0;
   const rank = rankTitle(level);
-  const fmt = (n) => Number(n).toLocaleString('it-IT');
+  const fmt = (n) => Number(n).toLocaleString((globalThis.UsI18n?.tag||'it-IT'));
   const dots = Array.from({ length: 12 }, (_, i) => `<circle class="lvx-dot ${i % 2 ? 'is-b' : 'is-a'}" cx="110" cy="110" r="${i % 3 ? 2.6 : 3.6}"/>`).join('');
   const prize = unlocks.length === 1 ? 'Un premio sbloccato' : unlocks.length > 1 ? `${unlocks.length} premi sbloccati` : '';
   const action = unlocks.length === 1 ? 'Scoprilo' : unlocks.length > 1 ? 'Scoprili' : 'Chiudi';

@@ -311,7 +311,7 @@ async function loadAlbum(momentId){
 function albumLongDate(){
   const iso=currentAlbum?.iso;
   const d=iso?new Date(iso+'T12:00:00'):null;
-  return d&&!Number.isNaN(d.getTime())?d.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):(currentAlbum?.date||'');
+  return d&&!Number.isNaN(d.getTime())?d.toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{weekday:'long',day:'numeric',month:'long',year:'numeric'}):(currentAlbum?.date||'');
 }
 function renderAlbumStory(){
   if(!currentAlbum)return;
@@ -1094,7 +1094,7 @@ console.info('[US] Moments Albums attivo');
   function formatConservatiDate(value) {
     const date = new Date(value);
     if (!Number.isFinite(date.getTime())) return 'Data non disponibile';
-    return date.toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
+    return date.toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'), { day: 'numeric', month: 'long', year: 'numeric' });
   }
 
   function kindLabel(kind) {

@@ -30,7 +30,7 @@ function backend(){
   }};
 }
 async function pageFor(h,b,{user='u1',signedOut=false,deviceProfile=null,reduced=true,width=390,height=844}={}){
-  const ctx=await h.browser.newContext({viewport:{width,height},timezoneId:'Europe/Rome',serviceWorkers:'block',reducedMotion:reduced?'reduce':'no-preference'});
+  const ctx=await h.browser.newContext({viewport:{width,height},locale:'it-IT',timezoneId:'Europe/Rome',serviceWorkers:'block',reducedMotion:reduced?'reduce':'no-preference'});
   await ctx.grantPermissions(['clipboard-read','clipboard-write']);
   const page=await ctx.newPage(),errors=[],outside=[];
   page.on('pageerror',e=>errors.push(e.message));

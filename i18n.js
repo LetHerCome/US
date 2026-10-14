@@ -21,6 +21,12 @@
   const SKIP = new Set(['SCRIPT', 'STYLE', 'TEXTAREA', 'NOSCRIPT', 'CODE', 'PRE', 'svg', 'SVG']);
   const PLACEHOLDER = /\{([a-z][a-z0-9_]*)\}/gi;
   const HAS_PLACEHOLDER = /\{[a-z][a-z0-9_]*\}/i;
+  // {n}, {m}, {total}, {count}, {done}, {failed} and {xp} hold numbers only,
+  // so "{n} giorni" can never swallow a sentence that merely ends in "giorni".
+  const NUMERIC = /^(n|m|total|count|done|failed|xp)$/;
+  // A {date} always has a number in it ("3 marzo", "lunedì 20 ottobre"),
+  // so "il {date}" never turns "il vostro spazio" into "on vostro spazio".
+  const CAPTURE = (name) => (NUMERIC.test(name) ? '([0-9][0-9.,]*)' : name === 'date' ? '((?=[^0-9]*[0-9]).+?)' : '(.+?)');
   const dictionaries = new Map();
 
   const collapse = (text) => String(text).replace(/\s+/g, ' ').trim();
@@ -32,7 +38,7 @@
     let at = 0;
     let re = '';
     source.replace(PLACEHOLDER, (match, name, offset) => {
-      re += escapeRe(source.slice(at, offset)) + '(.+?)';
+      re += escapeRe(source.slice(at, offset)) + CAPTURE(name);
       names.push(name);
       at = offset + match.length;
       return match;

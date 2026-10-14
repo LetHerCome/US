@@ -15,7 +15,7 @@ test('M9D: Noi opens on Lavagna plus three active destinations, with no new bott
   const hub = page.match(/<nav class="noi-hub" id="noiHub"[\s\S]*?<\/nav>/)?.[0] || '';
   assert.notEqual(hub, '');
   const kickers = [...hub.matchAll(/<span class="noi-hub-kicker">([^<]+)<\/span>/g)].map((m) => m[1]);
-  assert.deepEqual(kickers, ['Sintonia', 'Quest di coppia', 'Eventi']);
+  assert.deepEqual(kickers, ['Sintonia', 'Missioni di coppia', 'Eventi']);
   assert.match(page, /id="noiWeekBoard"/);
   assert.match(page, /id="noiWeekBoardOpen" data-noi-week-board-open/);
   assert.ok(page.indexOf('id="noiWeekBoard"') < page.indexOf('id="noiHub"'));

@@ -86,7 +86,7 @@ let rows = [...seen.values()];
 if (process.argv.includes('--missing')) {
   const I18n = require(path.join(ROOT, 'i18n.js'));
   const dict = I18n.compile(require(path.join(ROOT, 'i18n-en.js')));
-  rows = rows.filter((row) => !/\{x\d+\}/.test(row.text) && I18n.lookup(dict, row.text) === null || /\{x\d+\}/.test(row.text) && !dict.patterns.some((p) => p.re.test(row.text.replace(/\{x\d+\}/g, 'X'))));
+  rows = rows.filter((row) => !/\{x\d+\}/.test(row.text) && I18n.lookup(dict, row.text) === null || /\{x\d+\}/.test(row.text) && !dict.patterns.some((p) => p.re.test(row.text.replace(/\{x\d+\}/g, '1'))));
 }
 if (process.argv.includes('--json')) process.stdout.write(JSON.stringify(rows, null, 2) + '\n');
 else {

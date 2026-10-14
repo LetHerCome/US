@@ -108,7 +108,7 @@ function updateTogetherDays(startedOn){
   const now=new Date();
   const today=Date.UTC(now.getFullYear(),now.getMonth(),now.getDate());
   const diff=Math.max(0,Math.floor((today-start)/86400000));
-  el.textContent=diff.toLocaleString('it-IT');
+  el.textContent=diff.toLocaleString((globalThis.UsI18n?.tag||'it-IT'));
 }
 
 
@@ -1209,8 +1209,8 @@ function validCoordinate(value,min,max){
 // The server already rounds to whole kilometres (3 km or more).
 function formatDistance(km){
   const unit=localStorage.getItem('us:settings:distance-unit')||'km';
-  if(unit==='mi')return `${Math.max(2,Math.round(km*0.621371)).toLocaleString('it-IT')} mi`;
-  return `${Math.max(3,Math.round(km)).toLocaleString('it-IT')} km`;
+  if(unit==='mi')return `${Math.max(2,Math.round(km*0.621371)).toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} mi`;
+  return `${Math.max(3,Math.round(km)).toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} km`;
 }
 
 // Pure: should an automatic geolocation read happen right now?
@@ -2783,7 +2783,7 @@ let pendingMomentPreviewUrl=null;
 let pendingMomentDate=localDateISO();
 
 function formatMomentDetectedDate(value){
-  try{return new Date(value+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'});}catch(_){return value;}
+  try{return new Date(value+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'long',year:'numeric'});}catch(_){return value;}
 }
 
 function parseExifDateString(value){
@@ -3075,9 +3075,9 @@ function ricordiPreviewPath(row){return row?.thumbnail_path||row?.storage_path||
 function ricordiPreviewUrl(row,signedUrls){return signedUrls.get(ricordiPreviewPath(row))||signedUrls.get(row?.storage_path)||null;}
 function ricordiMomentCard(row,signedUrls,author,canDelete,feature,source,priority=false){
   const displayISO=/^\d{4}-\d{2}-\d{2}$/.test(String(source?.date||''))?String(source.date):row.moment_date;
-  const dateLabel=new Date(displayISO+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
+  const dateLabel=new Date(displayISO+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'2-digit',month:'short',year:'numeric'});
   // The month and year already head the group: the card says only the day.
-  const shortLabel=new Date(displayISO+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'short'});
+  const shortLabel=new Date(displayISO+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'short'});
   const fullUrl=signedUrls.get(row.storage_path);
   const previewPath=ricordiPreviewPath(row);
   const previewUrl=ricordiPreviewUrl(row,signedUrls);
@@ -3086,13 +3086,13 @@ function ricordiMomentCard(row,signedUrls,author,canDelete,feature,source,priori
 }
 function ricordiExperienceCard(row,sourceDate){
   const date=/^\d{4}-\d{2}-\d{2}$/.test(String(sourceDate||''))?String(sourceDate):ricordiLocalISO(row.completed_at);
-  const day=new Date(date+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long'});
+  const day=new Date(date+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'long'});
   return `<button type="button" class="ricordi-experience" data-ricordi-experience="${escapeHtml(row.id)}"><span class="ricordi-experience-mark" aria-hidden="true"></span><span class="ricordi-experience-copy"><small>Vissuta insieme · ${escapeHtml(day)}</small><b>${escapeHtml(row.title)}</b></span><span class="ricordi-experience-source">Da vivere</span></button>`;
 }
 // M12B.4 — una Domanda del giorno conservata: provenienza esplicita e le due
 // risposte come erano al reveal (snapshot del server), apribile sul posto.
 function ricordiDailyCard(row){
-  const day=new Date(String(row.question_date)+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long'});
+  const day=new Date(String(row.question_date)+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'long'});
   return `<details class="ricordi-daily" data-ricordi-daily="${escapeHtml(row.id)}" data-source-key="${escapeHtml(row.source_key||'')}"><summary><span class="ricordi-experience-mark ricordi-daily-mark" aria-hidden="true"></span><span class="ricordi-experience-copy"><small>Domanda del giorno · ${escapeHtml(day)}</small><b>${escapeHtml(row.question_text)}</b></span><span class="ricordi-experience-source">Conservata</span></summary>${ricordiDailyAnswers(row)}</details>`;
 }
 function ricordiDailyAnswers(row){
@@ -3104,14 +3104,14 @@ function ricordiDailyAnswers(row){
 // come tale), data dell'occorrenza, nessuna azione sull'evento mutabile.
 function ricordiEventTitle(row){return row?.title||'Evento';}
 function ricordiEventCard(row){
-  const day=new Date(String(row.occurrence_date)+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long'});
+  const day=new Date(String(row.occurrence_date)+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'long'});
   return `<article class="ricordi-experience ricordi-event" data-source-key="shared_event_completion:${escapeHtml(row.source_ref)}" data-title-source="${escapeHtml(row.title_source||'')}"><span class="ricordi-experience-mark ricordi-event-mark" aria-hidden="true"></span><span class="ricordi-experience-copy"><small>Vissuto insieme · ${escapeHtml(day)}</small><b>${escapeHtml(ricordiEventTitle(row))}</b></span><span class="ricordi-experience-source">Evento</span></article>`;
 }
 // M12B.5 — Rivivi parla la lingua della fonte, in un solo linguaggio visivo:
 // con foto apre il Moment viewer esistente (anche quando la foto è l'immagine
 // di un'esperienza o di un Evento vissuto); senza foto si apre sul posto in
 // sola lettura con i valori storici (risposte conservate, data vissuta).
-function ricordiRiviviDate(iso){return new Date(String(iso)+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'});}
+function ricordiRiviviDate(iso){return new Date(String(iso)+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'long',year:'numeric'});}
 function ricordiRiviviTitle(entry){
   if(entry.kind==='moment')return entry.row.caption||'';
   if(entry.kind==='event')return entry.orphan?(entry.title||'Evento'):ricordiEventTitle(entry.row);
@@ -3132,7 +3132,7 @@ function renderRicordiRivivi(pick,signedUrls,names){
     const author=names.get(m.created_by)||'Noi';
     const meta=entry.kind==='moment'?author:RICORDI_SOURCE_LABEL[entry.kind];
     const viewerISO=entry.kind==='moment'?m.moment_date:entry.date;
-    const viewerDate=new Date(viewerISO+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
+    const viewerDate=new Date(viewerISO+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'2-digit',month:'short',year:'numeric'});
     root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><button type="button" class="ricordi-rivivi-card" data-ricordi-open="${escapeHtml(m.id)}" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}" data-url="${escapeHtml(fullUrl)}" data-author="${escapeHtml(author)}" data-date="${escapeHtml(viewerDate)}" data-caption="${escapeHtml(m.caption||title)}" aria-label="Rivivi: ${escapeHtml(title||date)}"><img src="${escapeHtml(previewUrl)}" data-us-media-path="${escapeHtml(previewPath)}" onerror="usRecoverPrivateImage(this)" alt="" loading="eager" decoding="async" fetchpriority="high"><span class="ricordi-rivivi-copy"><small>${escapeHtml(pick.label)}</small><b>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(meta)}</span></span></button>`;
     root.hidden=false;
     return;
@@ -3303,7 +3303,7 @@ async function hydrateHomeMemory(forceNext=false){
   const signedUrl=urls.get(row.storage_path);
   const previewUrl=urls.get(row.thumbnail_path)||signedUrl;
   if(!signedUrl||!previewUrl){section.hidden=true;return;}
-  const dateLabel=new Date(row.moment_date+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'long',year:'numeric'});
+  const dateLabel=new Date(row.moment_date+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'2-digit',month:'long',year:'numeric'});
   const author=names.get(row.created_by)||'Noi';
   document.getElementById('homeMemoryImg').src=previewUrl;
   document.getElementById('homeMemoryAuthor').textContent=author;
@@ -3440,7 +3440,7 @@ function questWeekDate(week,days=0){
   const [y,m,d]=String(week).split('-').map(Number);
   return new Date(Date.UTC(y,m-1,d+days));
 }
-function questDayLabel(date,options){return date.toLocaleDateString('it-IT',{timeZone:'UTC',...options});}
+function questDayLabel(date,options){return date.toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{timeZone:'UTC',...options});}
 function nextWeekLabel(week=weekStartISO()){
   return questDayLabel(questWeekDate(week,7),{weekday:'long',day:'numeric',month:'short'});
 }
@@ -3494,12 +3494,12 @@ function renderBondProgress(totalXp){
   const heroXp=document.getElementById('heroBondXp');
   const heroFill=document.getElementById('bondFill');
   if(heroLevel)heroLevel.textContent=`BOND LV. ${info.level}`;
-  if(heroXp)heroXp.textContent=`${info.current.toLocaleString('it-IT')} / ${info.needed.toLocaleString('it-IT')} XP`;
+  if(heroXp)heroXp.textContent=`${info.current.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} / ${info.needed.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} XP`;
   if(heroFill)heroFill.style.width=`${info.progress}%`;
   const levelEl=document.getElementById('bondLevelValue');if(levelEl)levelEl.textContent=info.level;
-  const totalEl=document.getElementById('bondTotalXp');if(totalEl)totalEl.textContent=`${info.total.toLocaleString('it-IT')} XP totali`;
+  const totalEl=document.getElementById('bondTotalXp');if(totalEl)totalEl.textContent=`${info.total.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} XP totali`;
   const rankEl=document.getElementById('bondRankTitle');if(rankEl)rankEl.textContent=bondRankTitle(info.level);
-  const nextEl=document.getElementById('bondNextXp');if(nextEl)nextEl.textContent=`${(info.needed-info.current).toLocaleString('it-IT')} XP al prossimo livello`;
+  const nextEl=document.getElementById('bondNextXp');if(nextEl)nextEl.textContent=`${(info.needed-info.current).toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} XP al prossimo livello`;
   const pageFill=document.getElementById('bondPageFill');if(pageFill)pageFill.style.width=`${info.progress}%`;
   // M10.1D — la barra è il progresso REALE dentro il livello corrente (bondLevelInfo:
   // (XP totali - soglia del livello) / XP del livello), mai un valore decorativo.
@@ -3508,14 +3508,14 @@ function renderBondProgress(totalXp){
   if(track){
     track.setAttribute('aria-valuemax',String(info.needed));
     track.setAttribute('aria-valuenow',String(info.current));
-    track.setAttribute('aria-valuetext',`${info.current.toLocaleString('it-IT')} di ${info.needed.toLocaleString('it-IT')} XP nel livello ${info.level}`);
+    track.setAttribute('aria-valuetext',`${info.current.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} di ${info.needed.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} XP nel livello ${info.level}`);
   }
-  const line=document.getElementById('bondLevelXp');if(line)line.textContent=`${info.current.toLocaleString('it-IT')} / ${info.needed.toLocaleString('it-IT')} XP`;
+  const line=document.getElementById('bondLevelXp');if(line)line.textContent=`${info.current.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} / ${info.needed.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} XP`;
   // M9D — hub Noi e superficie Risonanza: stessi numeri di couples.bond_xp.
   const hubTitle=document.getElementById('noiHubResonanceTitle');if(hubTitle)hubTitle.textContent=bondRankTitle(info.level);
   const hubMeta=document.getElementById('noiHubResonanceMeta');if(hubMeta)hubMeta.textContent=`Livello ${info.level}`;
   const hubFill=document.getElementById('noiHubResonanceFill');if(hubFill)hubFill.style.width=`${info.progress}%`;
-  const resTotal=document.getElementById('noiResonanceTotal');if(resTotal)resTotal.textContent=info.total.toLocaleString('it-IT');
+  const resTotal=document.getElementById('noiResonanceTotal');if(resTotal)resTotal.textContent=info.total.toLocaleString((globalThis.UsI18n?.tag||'it-IT'));
   window.usBondXp=info.total;
   renderBondBadges(info.level);
 }
@@ -3538,7 +3538,7 @@ function resonanceHistoryEntries(quests,eventCompletions,eventHistory){
     const xp=Math.max(0,Number(row?.xp)||0);
     if(!row?.id||!row.completed_at||xp<=0)continue;
     const sourceKey=`quest:${row.id}`;
-    if(!byKey.has(sourceKey))byKey.set(sourceKey,{kind:'quest',sourceKey,title:row.title||'Quest di coppia',xp,at:row.completed_at,titleSource:'snapshot'});
+    if(!byKey.has(sourceKey))byKey.set(sourceKey,{kind:'quest',sourceKey,title:row.title||'Missione di coppia',xp,at:row.completed_at,titleSource:'snapshot'});
   }
   for(const row of eventCompletions||[]){
     const xp=Math.max(0,Number(row?.xp_awarded)||0);
@@ -3554,7 +3554,7 @@ function resonanceHistoryEntries(quests,eventCompletions,eventHistory){
 }
 function resonanceHistoryDate(at){
   const d=new Date(at);
-  return Number.isNaN(d.getTime())?'':d.toLocaleDateString('it-IT',{day:'numeric',month:'short'});
+  return Number.isNaN(d.getTime())?'':d.toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'short'});
 }
 function renderResonanceHistory(entries){
   const root=document.getElementById('noiResonanceHistory');
@@ -3568,7 +3568,7 @@ function renderResonanceHistory(entries){
     const kindLabel=entry.kind==='quest'?'Missione di coppia':'Evento vissuto';
     const liveNote=entry.kind==='event'&&entry.titleSource==='live'?' · titolo attuale':'';
     const date=resonanceHistoryDate(entry.at);
-    return `<article class="noi-resonance-history-row" data-resonance-source="${escapeHtml(entry.sourceKey)}" data-resonance-kind="${escapeHtml(entry.kind)}"><span class="noi-resonance-history-mark" aria-hidden="true"></span><span class="noi-resonance-history-copy"><small>${escapeHtml(kindLabel)}${date?` · ${escapeHtml(date)}`:''}${liveNote}</small><b>${escapeHtml(entry.title)}</b></span><strong>+${entry.xp.toLocaleString('it-IT')} XP</strong></article>`;
+    return `<article class="noi-resonance-history-row" data-resonance-source="${escapeHtml(entry.sourceKey)}" data-resonance-kind="${escapeHtml(entry.kind)}"><span class="noi-resonance-history-mark" aria-hidden="true"></span><span class="noi-resonance-history-copy"><small>${escapeHtml(kindLabel)}${date?` · ${escapeHtml(date)}`:''}${liveNote}</small><b>${escapeHtml(entry.title)}</b></span><strong>+${entry.xp.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} XP</strong></article>`;
   }).join('');
 }
 async function hydrateResonanceHistory(){
@@ -3786,9 +3786,9 @@ async function hydrateBond(){
   window.usBondQuests=quests||[];
   renderNoiHubSummary();
   renderBondProgress(couple?.bond_xp||0);
-  const countEl=document.getElementById('bondCompletedCount');if(countEl)countEl.textContent=`${Number(completedCount||0)} quest completate`;
+  const countEl=document.getElementById('bondCompletedCount');if(countEl)countEl.textContent=`${Number(completedCount||0)} missioni completate`;
   const rerollEl=document.getElementById('bondRerollsLeft');if(rerollEl)rerollEl.textContent=questRerollsLeft(state);
-  const resetEl=document.getElementById('bondWeekReset');if(resetEl)resetEl.textContent=`Nuove quest ${nextWeekLabel(week)}`;
+  const resetEl=document.getElementById('bondWeekReset');if(resetEl)resetEl.textContent=`Nuove missioni ${nextWeekLabel(week)}`;
   const me=profile.id;
   questBoardView={owner,week,me,myName:profile.display_name||'Tu',profiles:profiles||[],state:state||{rerolls_used:0},quests:quests||[],stale:false};
   paintQuestBoard();
@@ -4071,7 +4071,7 @@ function noiIdeaDetailHint(_item){
 function noiIdeaLivedOnLabel(item){
   const d=item?.completed_at?new Date(item.completed_at):null;
   if(!d||Number.isNaN(d.getTime()))return '';
-  return d.toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'});
+  return d.toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'long',year:'numeric'});
 }
 function noiIdeaPartnerName(){
   return usIdentity().partnerName;
@@ -4493,7 +4493,7 @@ async function hydrateThink(){
   else if(!received||receivedReaction){usIncomingThink=null;usThinkReactionFinal=receivedReaction?.reaction||null;}
   const receivedEl=document.getElementById('thinkLastReceived');if(receivedEl)receivedEl.textContent=received?(receivedReaction?`${partnerName} ha reagito al tuo Ti penso`:`${partnerName} ti ha pensato ${relativeSignalAge(received.created_at)}`):'Ancora nessun segnale';
   const sentEl=document.getElementById('thinkLastSent');if(sentEl)sentEl.textContent=sent?(sentReaction?`${partnerName} ha reagito ${thinkReactionLabel(sentReaction.reaction)}`:`Hai pensato a ${partnerName} ${relativeSignalAge(sent.created_at)}`):'Non ne hai ancora inviati';
-  const monthEl=document.getElementById('thinkMonthCount');if(monthEl)monthEl.textContent=Number(count||0).toLocaleString('it-IT');
+  const monthEl=document.getElementById('thinkMonthCount');if(monthEl)monthEl.textContent=Number(count||0).toLocaleString((globalThis.UsI18n?.tag||'it-IT'));
   const live=document.getElementById('thinkLiveText');if(live&&received)live.textContent=`Ultimo segnale da ${partnerName} · ${relativeSignalAge(received.created_at)}`;
   if(sentReaction){
     const signature=`${sent.id}:${sentReaction.reaction}:${sentReaction.updated_at||''}`;

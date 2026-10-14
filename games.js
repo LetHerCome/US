@@ -28,7 +28,7 @@ const partnerName = () => window.UsIdentity?.current().partnerName || 'La tua pe
 const familyName = (id) => (id === 'per_voi' ? PER_VOI.name : id === 'swipe' ? SWIPE.name : FAMILY[id]?.name || 'Gioca');
 const icon = (name) => `<span class="us-gv2-icon" data-gv2-icon="${esc(name)}" aria-hidden="true"></span>`;
 const uuid = () => window.crypto.randomUUID();
-const romeDate = (iso, opts) => (iso ? new Date(`${iso}T12:00:00Z`).toLocaleDateString('it-IT', { timeZone: 'UTC', ...opts }) : '');
+const romeDate = (iso, opts) => (iso ? new Date(`${iso}T12:00:00Z`).toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'), { timeZone: 'UTC', ...opts }) : '');
 const mondayLabel = (iso) => romeDate(iso, { weekday: 'long', day: 'numeric', month: 'long' });
 
 let home = null;
@@ -142,7 +142,7 @@ function dayRail(){
   const date=new Date(monday);date.setUTCDate(monday.getUTCDate()+i);
   const stamp=`${date.getUTCFullYear()}-${String(date.getUTCMonth()+1).padStart(2,'0')}-${String(date.getUTCDate()).padStart(2,'0')}`;
   const active=stamp===currentISO;
-  const full=date.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'});
+  const full=date.toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'});
   return `<span class="us-gv4-day${active?' is-today':''}" ${active?'aria-current="date"':''} aria-label="${esc(full)}${active?', oggi':''}"><small>${label}</small><b>${date.getUTCDate()}</b>${active?'<i aria-hidden="true"></i>':''}</span>`;
  }).join('');
  return `<section class="us-gv4-week" aria-label="Giorni della settimana">

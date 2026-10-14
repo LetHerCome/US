@@ -78,13 +78,13 @@ function itemsByDate() {
     push(day,{kind:'event',id:e.id,title:e.title||'Evento',time:time||(e.recurs_yearly?'Ogni anno':'Una data speciale'),sort:time||'00:01'});
   }
   for(const e of snapshot?.appointments||[]){
-    const time=e.is_all_day?'':new Date(e.starts_at).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+    const time=e.is_all_day?'':new Date(e.starts_at).toLocaleTimeString((globalThis.UsI18n?.tag||'it-IT'),{hour:'2-digit',minute:'2-digit'});
     for(const date of e.dates||[])push(date,{kind:'calendar',id:e.id,title:e.title||'Impegno',entryType:e.entry_type,ownerId:e.owner_id,time:time||'Tutto il giorno',sort:time||'00:02'});
   }
   for(const list of map.values())list.sort((a,b)=>a.sort.localeCompare(b.sort));
   return map;
 }
-function dayLabel(day){return dateOf(day).toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'});}
+function dayLabel(day){return dateOf(day).toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{weekday:'long',day:'numeric',month:'long'});}
 function relativeLabel(day){
   const delta=Math.round((dateOf(day)-dateOf(today()))/86400000);
   return delta===0?'OGGI':delta===1?'DOMANI':delta===-1?'IERI':'I VOSTRI MOMENTI';

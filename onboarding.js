@@ -251,11 +251,11 @@
     const today=Date.UTC(now.getFullYear(),now.getMonth(),now.getDate());
     return Math.max(0,Math.floor((today-Date.UTC(y,m-1,d))/86400000));
   }
-  const italianDate=iso=>{const [y,m,d]=String(iso||'').split('-').map(Number);return y&&m&&d?`${d} ${MONTHS[m-1]} ${y}`:'';};
+  const italianDate=iso=>{const [y,m,d]=String(iso||'').split('-').map(Number);if(!(y&&m&&d))return '';const tag=globalThis.UsI18n?.tag||'it-IT';return tag==='it-IT'?`${d} ${MONTHS[m-1]} ${y}`:new Date(Date.UTC(y,m-1,d)).toLocaleDateString(tag,{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});};
   function inviteExpiry(iso){
     const date=new Date(iso);if(!Number.isFinite(+date))return '';
     try{
-      const parts=new Intl.DateTimeFormat('it-IT',{timeZone:'Europe/Rome',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(date);
+      const parts=new Intl.DateTimeFormat((globalThis.UsI18n?.tag||'it-IT'),{timeZone:'Europe/Rome',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(date);
       const part=type=>parts.find(p=>p.type===type)?.value||'';
       return `scade il ${part('day')} ${part('month')} alle ${part('hour')}:${part('minute')}`;
     }catch(_e){return '';}
@@ -481,7 +481,7 @@
         rows.push({icon:'user',title:profile?.display_name||'Tu',detail:typed?`Compleanno il ${typed.day} ${MONTHS[typed.month-1]}`:saved?'Compleanno nel vostro calendario':'Compleanno da aggiungere in Noi',ok:true});
         let started='';try{started=window.UsCoupleContext?.snapshot?.()?.couple?.started_on||'';}catch(_e){}
         const days=daysTogether(started);
-        rows.push({icon:'heart',title:days===null?'I vostri giorni insieme':`Insieme da ${days.toLocaleString('it-IT')} ${days===1?'giorno':'giorni'}`,detail:days===null?'Li contate in Oggi':`Dal ${italianDate(started)}`,ok:true});
+        rows.push({icon:'heart',title:days===null?'I vostri giorni insieme':`Insieme da ${days.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} ${days===1?'giorno':'giorni'}`,detail:days===null?'Li contate in Oggi':`Dal ${italianDate(started)}`,ok:true});
       }
       if(window.UsNotifications?.supported?.()){
         const on=results.push===true||pushKind==='active';
