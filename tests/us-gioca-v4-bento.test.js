@@ -51,7 +51,7 @@ test('V4: Daily Challenge is one stable slot; only existing Daily engine supplie
   model={questionId:'q-1',question:'Un ricordo speciale?',state:'answer',meta:'Tocca a te',cta:'Rispondi',nudge:true};
   vm.runInContext('paintDailyInGioca()',vmContext);
   assert.equal((slot.innerHTML.match(/data-us-daily-entry/g)||[]).length,1);
-  assert.match(slot.innerHTML,/Daily<br>Challenge/);
+  assert.match(slot.innerHTML,/Sfida<br>di oggi/);
   assert.match(slot.innerHTML,/Un ricordo speciale/);
   model={...model,state:'waiting',meta:'Aspettiamo Bea',cta:'Apri'};
   vm.runInContext('paintDailyInGioca()',vmContext);
