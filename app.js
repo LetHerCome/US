@@ -2408,7 +2408,8 @@ function renderThinkReactionUi(){
   const status=document.getElementById('thinkArrivalStatus');
   const buttons=root.querySelectorAll('[data-think-reaction]');
   const partner=partnerFromProfiles(window.usBondProfiles||[]);
-  if(title)title.textContent=`${partner?.display_name||'La tua persona'} ti pensa`;
+  // Momento: the name on one line, "ti pensa" in italic in their colour (same words).
+  if(title)title.innerHTML=`<span class="think-arrival-name">${escapeHtml(partner?.display_name||'La tua persona')}</span> <em>ti pensa</em>`;
   if(copy)copy.hidden=true;
   buttons.forEach(button=>{
     const reaction=button.dataset.thinkReaction;

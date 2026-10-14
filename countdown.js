@@ -60,9 +60,10 @@ function install(w){
     if(state.active_id==='together')return relationship(state.started_on)?{title:'Insieme da',style:state.together_style,view:relationship(state.started_on)}:null;
     const e=state.items?.find(e=>e.id===state.active_id);return e?{...e,view:display(e)}:null;
   }
-  function markup(view,title,style){
+  // Insieme da reads "430 giorni insieme" in the Oggi type (the tail only shows where the style asks for it).
+  function markup(view,title,style,together=false){
     if(!view)return '';
-    return `<span class="us-countdown-art" data-countdown-style="${esc(style)}" data-countdown-clock="${view.value.includes(':')}"><span class="us-countdown-deco" aria-hidden="true"><i></i></span><span class="us-countdown-title">${esc(title)}</span><span class="us-countdown-number" aria-hidden="true">${[...view.value].map(c=>`<span class="us-countdown-digit${/\d/.test(c)?'':' is-sep'}">${esc(c)}</span>`).join('')}</span><span class="us-countdown-unit">${esc(view.unit)}</span><span class="us-countdown-sub">${esc(view.label)}</span></span>`;
+    return `<span class="us-countdown-art" data-countdown-style="${esc(style)}" data-countdown-clock="${view.value.includes(':')}"${together?' data-countdown-kind="together"':''}><span class="us-countdown-deco" aria-hidden="true"><i></i></span><span class="us-countdown-title">${esc(title)}</span><span class="us-countdown-number" aria-hidden="true">${[...view.value].map(c=>`<span class="us-countdown-digit${/\d/.test(c)?'':' is-sep'}">${esc(c)}</span>`).join('')}</span><span class="us-countdown-unit">${esc(view.unit)}</span>${together?'<span class="us-countdown-tail" aria-hidden="true">insieme</span>':''}<span class="us-countdown-sub">${esc(view.label)}</span></span>`;
   }
   function tick(){
     if(key()!==owner){clear();if(key())hydrate();return;}
@@ -72,7 +73,7 @@ function install(w){
     if(!shown)return;
     surface.setAttribute('aria-label',`${e.title}, ${view.value} ${view.unit} ${view.label}. Modifica countdown`);
     const signature=`${state.active_id}:${e.style}:${view.value.length}:${e.title}`;
-    if(surface.dataset.signature!==signature){surface.innerHTML=markup(view,e.title,e.style);surface.dataset.signature=signature;}
+    if(surface.dataset.signature!==signature){surface.innerHTML=markup(view,e.title,e.style,state.active_id==='together');surface.dataset.signature=signature;}
     else{
       const digits=surface.querySelectorAll('.us-countdown-digit');
       [...view.value].forEach((c,i)=>{if(digits[i].textContent!==c){digits[i].textContent=c;w.UsUiFoundation?.playOnce?.(digits[i],'is-changing',380);}});
@@ -86,8 +87,9 @@ function install(w){
   function sweep(art){const s=Math.floor(Date.now()/1000)%3600,prev=Number(art.dataset.sweep);art.toggleAttribute('data-sweep-jump',s!==prev+1);art.dataset.sweep=String(s);art.style.setProperty('--us-cd-sweep',`${s*6}deg`);}
   function paintList(){
     const together=relationship(state?.started_on);
-    const entries=[{id:'together',title:'Insieme da',detail:together?`${together.value} ${together.unit}`:'Imposta la data in Noi → Impostazioni',disabled:!together},...(state?.items||[]).map(e=>({id:e.id,title:e.title,detail:[display(e)?.value,display(e)?.unit].filter(Boolean).join(' ')}))];
-    $('usCountdownList').innerHTML=entries.map(e=>`<div class="us-countdown-row"><button type="button" data-countdown-select="${esc(e.id)}" aria-pressed="${state?.active_id===e.id}" ${busy||e.disabled||!state?'disabled':''}><span><b>${esc(e.title)}</b><small>${esc(e.detail)}</small></span><span class="us-countdown-check" aria-hidden="true">${state?.active_id===e.id?'●':'○'}</span></button><button type="button" class="us-countdown-edit" data-countdown-edit="${esc(e.id)}" aria-label="Modifica ${esc(e.title)}" ${busy||e.disabled||!state?'disabled':''}><span class="us-icon" data-us-icon="pencil" aria-hidden="true"></span></button></div>`).join('');
+    const entries=[{id:'together',title:'Insieme da',value:together?.value||'',unit:together?.unit||'',detail:together?`${together.value} ${together.unit}`:'Imposta la data in Noi → Impostazioni',disabled:!together},...(state?.items||[]).map(e=>({id:e.id,title:e.title,value:display(e)?.value||'',unit:display(e)?.unit||'',detail:[display(e)?.value,display(e)?.unit].filter(Boolean).join(' ')}))];
+    // The number leads the row (as on Oggi); the accessible name keeps the original reading order.
+    $('usCountdownList').innerHTML=entries.map(e=>`<div class="us-countdown-row"><button type="button" data-countdown-select="${esc(e.id)}" aria-pressed="${state?.active_id===e.id}" aria-label="${esc(e.title)}, ${esc(e.detail)}" ${busy||e.disabled||!state?'disabled':''}><span class="us-countdown-check" aria-hidden="true">${state?.active_id===e.id?'●':'○'}</span>${e.value?`<strong class="us-countdown-value">${esc(e.value)}</strong>`:''}<span class="us-countdown-copy"><b>${esc(e.title)}</b><small>${esc(e.value?e.unit:e.detail)}</small></span></button><button type="button" class="us-countdown-edit" data-countdown-edit="${esc(e.id)}" aria-label="Modifica ${esc(e.title)}" ${busy||e.disabled||!state?'disabled':''}><span class="us-icon" data-us-icon="pencil" aria-hidden="true"></span></button></div>`).join('');
     $('usCountdownHide').setAttribute('aria-pressed',String(state?.active_id===null));
     $('usCountdownNew').disabled=busy||!state||state.items.length>=12;
     $('usCountdownHide').disabled=busy||!state;
@@ -110,7 +112,7 @@ function install(w){
     const view=draft.id==='together'?relationship(state?.started_on):display({...draft,target});
     const actualTitle=draft.id==='together'?'Insieme da':$('usCountdownTitle').value.trim();
     const title=actualTitle||'Il nostro momento';
-    $('usCountdownPreview').innerHTML=markup(view||{value:'12',unit:'giorni',label:''},title,draft.style);
+    $('usCountdownPreview').innerHTML=markup(view||{value:'12',unit:'giorni',label:''},title,draft.style,draft.id==='together');
     $('usCountdownSave').disabled=busy||!view||!actualTitle||!available(draft.style,progression());
   }
   function paint(){tick();if(opened())paintList();}

@@ -229,15 +229,15 @@ function build() {
   sheet.setAttribute('aria-hidden', 'true');
   sheet.innerHTML = `<section class="us-look-sheet" role="dialog" aria-modal="true" aria-labelledby="usLookTitle">
       <header class="us-look-head">
-        <button type="button" class="us-look-icon-btn" data-look-close aria-label="Chiudi">${icon('x')}</button>
         <h2 id="usLookTitle">Personalizza Oggi</h2>
-        <button type="button" class="us-look-reset" data-look-reset>Ripristina</button>
+        <button type="button" class="us-look-icon-btn" data-look-close aria-label="Chiudi">${icon('x')}</button>
       </header>
       <div class="us-look-tabs" role="tablist" aria-label="Temi ed effetti" data-active="theme">
         <button type="button" role="tab" id="usLookTabTheme" data-look-tab="theme" aria-selected="true">Temi</button>
         <button type="button" role="tab" id="usLookTabEffect" data-look-tab="effect" aria-selected="false">Effetti</button>
       </div>
       <div class="us-look-body" id="usLookBody" role="tabpanel" aria-labelledby="usLookTabTheme"></div>
+      <div class="us-look-actions"><button type="button" class="us-look-reset" data-look-reset>Ripristina</button></div>
       <p class="us-look-status" id="usLookStatus" role="status" aria-live="polite"></p>
     </section>
     <section class="us-look-detail" id="usLookDetail" role="dialog" aria-modal="true" aria-labelledby="usLookDetailTitle" aria-hidden="true">
