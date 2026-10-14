@@ -5,7 +5,7 @@ Stato: **bozza** del 13/10/2026, aggiornata il 14/10 con le decisioni di Frances
 Marcatori:
 - **[DIPENDE #190]**: vale solo dopo il merge dell'eliminazione account (PR #190). Prima di allora Play Console non accetta la scheda, perché un'app con account deve offrire l'eliminazione in app e via web.
 - **[DIPENDE #196]**: vale solo dopo il merge di Esci dalla coppia, Segnala e copia dei dati (PR #196, sopra la #190).
-- **[DIPENDE POSIZIONE]**: vale solo dopo il merge della PR della posizione approssimativa (variante A, decisa da Francesco il 14/10; sezione 2.3).
+- La posizione approssimativa (variante A, sezione 2.3) è su `main` dal 14/10 con la PR #195; la migrazione è applicata in produzione.
 - **[DA DECIDERE: Francesco]**: dato che solo il fondatore può fornire.
 
 Documenti collegati: `PRIVACY_POLICY_DRAFT.md` e `TERMS_DRAFT.md` con le versioni inglesi `.en.md`, `STORE_LISTING_DRAFT.md` (scheda in italiano e inglese) in questa cartella; pipeline AAB in `docs/native/ANDROID_PLAY_BUNDLE.md`.
@@ -31,8 +31,8 @@ Nessun SDK di analisi, pubblicità o crash reporting. Nessun permesso AD_ID (ver
 |---|---|---|---|---|
 | Info personali › Indirizzo email | email di accesso (Supabase Auth) | Sì | No | Sì |
 | Info personali › Nome | nome, nome della coppia, data di inizio | Sì | No | Sì |
-| Posizione › Posizione precisa | non raccolta: solo permesso COARSE, coordinate arrotondate a una cella di almeno 3 km² prima dell'invio **[DIPENDE POSIZIONE]** | No | No | — |
-| Posizione › Posizione approssimativa | cella arrotondata, usata dal server per calcolare la distanza; il partner vede solo la distanza **[DIPENDE POSIZIONE]** | Sì | No | No |
+| Posizione › Posizione precisa | non raccolta: solo permesso COARSE, coordinate arrotondate a una cella di almeno 3 km² prima dell'invio | No | No | — |
+| Posizione › Posizione approssimativa | cella arrotondata, usata dal server per calcolare la distanza; il partner vede solo la distanza | Sì | No | No |
 | Foto e video › Foto | foto dei momenti, foto profilo, miniature | Sì | No | No |
 | Foto e video › Video | video di "Lasciato per te", fino a 30 secondi o 20 MB (i Momenti accettano solo foto) | Sì | No | No |
 | File audio › Registrazioni vocali | note vocali | Sì | No | No |
@@ -70,7 +70,7 @@ Bloccante: senza la #190 su `main` e nell'AAB, la risposta "Sì" alla domanda su
 ### 2.2 Dominio pubblico
 Nel repository non c'è un dominio di produzione. Privacy policy, termini e pagina di eliminazione devono stare su un URL pubblico raggiungibile senza login. **[DA DECIDERE: Francesco]**
 
-### 2.3 Posizione **[DIPENDE POSIZIONE]**
+### 2.3 Posizione
 Decisione di Francesco (14/10): **variante A fatta bene**. Comportamento di `main` fino al merge della PR della posizione:
 - `app.js` salva latitudine e longitudine con 6 decimali (circa 10 cm) a ogni aggiornamento;
 - il partner legge le coordinate grezze, non solo la distanza;
@@ -107,7 +107,7 @@ Lo dichiara il plugin dei widget (`native-plugins/us-widget-bridge/android/src/m
 | App governativa | No | |
 | Funzionalità finanziarie | Nessuna | |
 | Salute | Nessuna funzione sanitaria | |
-| Permessi sensibili | Nessun modulo richiesto oggi: niente posizione in background, SMS, chiamate, accesso a tutti i file, allarmi esatti. Posizione solo approssimativa **[DIPENDE POSIZIONE]**; dal 27/01/2027 dichiarazione della posizione (sezione 2.3) | verificato dal gate AAB |
+| Permessi sensibili | Nessun modulo richiesto oggi: niente posizione in background, SMS, chiamate, accesso a tutti i file, allarmi esatti. Posizione solo approssimativa; dal 27/01/2027 dichiarazione della posizione (sezione 2.3) | verificato dal gate AAB |
 | ID pubblicità | L'app non usa l'ID pubblicità | niente AD_ID nel bundle |
 | Contatto sviluppatore | moonee.team@gmail.com (deciso da Francesco il 14/10; quando ci sarà il dominio si può passare a un indirizzo sul dominio), sito web facoltativo | l'email è pubblica sulla scheda dello store |
 | Prezzo | Gratuita, nessun acquisto in app (1.0). Nella scheda non si promette "nessun abbonamento": Francesco valuterà piani mensili e annuali dopo la beta (decisione 10) | |
@@ -125,7 +125,7 @@ Categoria del questionario: **Social o comunicazione** (l'app serve a comunicare
 | Sostanze controllate, alcol, tabacco | No |
 | Gioco d'azzardo simulato o reale | No |
 | Gli utenti possono interagire o scambiarsi contenuti | **Sì** (solo con il partner della coppia, non con estranei) |
-| Condivide la posizione dell'utente con altri utenti | **No** con la variante A: il partner vede solo una distanza arrotondata, mai la posizione **[DIPENDE POSIZIONE]**. Se il consulente (D-10) preferisce la lettura prudente, Sì |
+| Condivide la posizione dell'utente con altri utenti | **No** con la variante A: il partner vede solo una distanza arrotondata, mai la posizione. Se il consulente (D-10) preferisce la lettura prudente, Sì |
 | Acquisti digitali | No |
 | Contenuti non moderati generati dagli utenti visibili a estranei | No: i contenuti sono visibili solo alla coppia |
 | L'app è un browser o un motore di ricerca | No |

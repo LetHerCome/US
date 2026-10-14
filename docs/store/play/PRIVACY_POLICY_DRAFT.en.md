@@ -1,6 +1,6 @@
 # US Privacy Policy — DRAFT
 
-> English version of `PRIVACY_POLICY_DRAFT.md`, updated on 14/10/2026. The Italian draft is the reference: change both together. To be reviewed by a legal adviser (D-10) and proofread by a native English speaker before publication. Fields in square brackets are filled in by Francesco. Parts marked [DEPENDS …] apply only once the named PR is on `main`: [DEPENDS #190] account deletion; [DEPENDS #196] leaving the couple, reports and data copy; [DEPENDS LOCATION] approximate location (option A, decided on 14/10).
+> English version of `PRIVACY_POLICY_DRAFT.md`, updated on 14/10/2026. The Italian draft is the reference: change both together. To be reviewed by a legal adviser (D-10) and proofread by a native English speaker before publication. Fields in square brackets are filled in by Francesco. Parts marked [DEPENDS …] apply only once the named PR is on `main`: [DEPENDS #190] account deletion; [DEPENDS #196] leaving the couple, reports and data copy. Approximate location (option A) is on `main` since 14/10 (PR #195).
 
 Last updated: [DATE]
 
@@ -14,7 +14,7 @@ US is an app for couples. Data controller: [NAME OR BUSINESS NAME], [ADDRESS], e
 | Email and password (the password is never stored in plain text: the authentication provider only stores a hash) | creating and protecting your account | performance of a contract |
 | Name, couple name, date your relationship started | running your shared space | performance of a contract |
 | Photos, voice notes, messages, answers, moods, calendar events, lists, games; videos only in "Left for you", up to 30 seconds or 20 MB | showing them to your partner, which is what the app is for | performance of a contract |
-| Approximate location of this phone, only if you turn the feature on and only while the app is open [DEPENDS LOCATION] | working out the distance between you | consent, which you can withdraw at any time in the app (Settings › Location › Stop and delete) or in your phone settings |
+| Approximate location of this phone, only if you turn the feature on and only while the app is open | working out the distance between you | consent, which you can withdraw at any time in the app (Settings › Location › Stop and delete) or in your phone settings |
 | Device notification token and installation identifier | sending you the notifications you turned on | performance of a contract |
 | Progress and activity in the app (for example games completed) | making the app's features work | performance of a contract |
 | Text you type in the music search | finding the song on Spotify | performance of a contract |
@@ -22,7 +22,7 @@ US is an app for couples. Data controller: [NAME OR BUSINESS NAME], [ADDRESS], e
 
 We do not use your data for advertising, we do not sell it, and we do not use analytics or tracking tools. Fingerprint or face unlock happens on your phone: we never receive biometric data.
 
-**Location** [DEPENDS LOCATION]. Before asking for permission, the app explains what location is for. We only use approximate location: your phone rounds it before sending it, and our server only stores it at that precision. The distance between you is worked out by the server. Your partner only sees the distance, in the app and in the Us widget on the home screen (under 3 km just "close by"), never where you are. "Stop and delete" stops sharing and deletes your saved location straight away.
+**Location**. Before asking for permission, the app explains what location is for. We only use approximate location: your phone rounds it before sending it, and our server only stores it at that precision. The distance between you is worked out by the server. Your partner only sees the distance, in the app and in the Us widget on the home screen (under 3 km just "close by"), never where you are. "Stop and delete" stops sharing and deletes your saved location straight away.
 
 ## 3. Who sees your data
 - **Your partner** sees what you post in your shared space and, if you turn on location, only the distance between you.
@@ -41,7 +41,7 @@ Connections are encrypted (HTTPS). Database rules limit access to your data to y
 ## 5. How long we keep data
 For as long as your account is active, with these exceptions:
 - "Left for you" items that have been opened are deleted 30 days after opening, unless they were kept in Memories;
-- your location is only stored while you share it: "Stop and delete" deletes it straight away [DEPENDS LOCATION];
+- your location is only stored while you share it: "Stop and delete" deletes it straight away;
 - reports are deleted 12 months after they are sent [DEPENDS #196];
 - the copy of your data we send you on request is deleted after 7 days [DEPENDS #196].
 

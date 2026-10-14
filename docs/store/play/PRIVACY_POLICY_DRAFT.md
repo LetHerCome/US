@@ -1,6 +1,6 @@
 # Informativa sulla privacy di US — BOZZA
 
-> Bozza aggiornata il 14/10/2026, da far rivedere a un consulente legale (D-10) prima della pubblicazione. I campi tra parentesi quadre vanno compilati da Francesco. Le parti marcate [DIPENDE …] valgono solo quando la PR indicata è su `main`: [DIPENDE #190] eliminazione account; [DIPENDE #196] uscita dalla coppia, segnalazioni e copia dei dati; [DIPENDE POSIZIONE] la posizione approssimativa (variante A, decisa il 14/10). Versione inglese: `PRIVACY_POLICY_DRAFT.en.md`, da tenere allineata.
+> Bozza aggiornata il 14/10/2026, da far rivedere a un consulente legale (D-10) prima della pubblicazione. I campi tra parentesi quadre vanno compilati da Francesco. Le parti marcate [DIPENDE …] valgono solo quando la PR indicata è su `main`: [DIPENDE #190] eliminazione account; [DIPENDE #196] uscita dalla coppia, segnalazioni e copia dei dati. La posizione approssimativa (variante A) è su `main` dal 14/10 (PR #195). Versione inglese: `PRIVACY_POLICY_DRAFT.en.md`, da tenere allineata.
 
 Ultimo aggiornamento: [DATA]
 
@@ -14,7 +14,7 @@ US è un'app per coppie. Titolare del trattamento: [NOME O DITTA], [INDIRIZZO], 
 | Email e password (la password non viene mai conservata in chiaro: il fornitore di autenticazione ne salva solo un hash) | creare e proteggere il tuo account | esecuzione del contratto |
 | Nome, nome della coppia, data di inizio della relazione | far funzionare lo spazio di coppia | esecuzione del contratto |
 | Foto, note vocali, messaggi, risposte, umori, eventi del calendario, liste, partite; video solo in "Lasciato per te", fino a 30 secondi o 20 MB | mostrarli al tuo partner, che è lo scopo dell'app | esecuzione del contratto |
-| Posizione approssimativa di questo telefono, solo se attivi la funzione e solo mentre l'app è aperta [DIPENDE POSIZIONE] | calcolare la distanza tra voi | consenso, revocabile in qualsiasi momento dall'app (Impostazioni › Posizione › Smetti e cancella) o dalle impostazioni del telefono |
+| Posizione approssimativa di questo telefono, solo se attivi la funzione e solo mentre l'app è aperta | calcolare la distanza tra voi | consenso, revocabile in qualsiasi momento dall'app (Impostazioni › Posizione › Smetti e cancella) o dalle impostazioni del telefono |
 | Token di notifica del dispositivo e identificativo di installazione | inviarti le notifiche che hai attivato | esecuzione del contratto |
 | Progressi e attività nell'app (ad esempio giochi completati) | far funzionare le funzioni dell'app | esecuzione del contratto |
 | Testo cercato nella ricerca musicale | trovare il brano su Spotify | esecuzione del contratto |
@@ -22,7 +22,7 @@ US è un'app per coppie. Titolare del trattamento: [NOME O DITTA], [INDIRIZZO], 
 
 Non usiamo i tuoi dati per pubblicità, non li vendiamo e non usiamo strumenti di analisi o di tracciamento. Lo sblocco con impronta o volto avviene sul telefono: il dato biometrico non ci arriva mai.
 
-**Posizione** [DIPENDE POSIZIONE]. Prima di chiederti il permesso, l'app ti spiega a cosa serve. Usiamo solo la posizione approssimativa: il telefono la arrotonda prima di inviarla e il nostro server la conserva solo con questa precisione. La distanza tra voi viene calcolata dal server. Il tuo partner vede solo la distanza, nell'app e nel widget Noi sulla schermata Home (sotto i 3 km soltanto "vicini"), mai dove sei. Con "Smetti e cancella" la condivisione si ferma e la posizione salvata viene cancellata subito.
+**Posizione**. Prima di chiederti il permesso, l'app ti spiega a cosa serve. Usiamo solo la posizione approssimativa: il telefono la arrotonda prima di inviarla e il nostro server la conserva solo con questa precisione. La distanza tra voi viene calcolata dal server. Il tuo partner vede solo la distanza, nell'app e nel widget Noi sulla schermata Home (sotto i 3 km soltanto "vicini"), mai dove sei. Con "Smetti e cancella" la condivisione si ferma e la posizione salvata viene cancellata subito.
 
 ## 3. Chi vede i tuoi dati
 - **Il tuo partner** vede ciò che pubblichi nello spazio di coppia e, se attivi la posizione, solo la distanza tra voi.
@@ -41,7 +41,7 @@ Le comunicazioni sono cifrate (HTTPS). L'accesso ai dati è limitato alla tua co
 ## 5. Quanto conserviamo i dati
 Finché il tuo account è attivo, con queste eccezioni:
 - i contenuti "Lasciato per te" già aperti vengono cancellati 30 giorni dopo l'apertura, salvo quelli conservati nei Ricordi;
-- la posizione resta salvata solo finché la condividi: con "Smetti e cancella" viene cancellata subito [DIPENDE POSIZIONE];
+- la posizione resta salvata solo finché la condividi: con "Smetti e cancella" viene cancellata subito;
 - le segnalazioni vengono cancellate 12 mesi dopo l'invio [DIPENDE #196];
 - la copia dei tuoi dati che ti mandiamo su richiesta viene cancellata dopo 7 giorni [DIPENDE #196].
 
