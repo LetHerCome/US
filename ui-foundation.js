@@ -549,8 +549,9 @@
   // The one US confirmation (the Conferma form): a small sheet docked at the
   // bottom on the shared scrim and material, the choice first and the safe
   // choice under it, focus on the safe choice, Escape / backdrop / Annulla
-  // cancel. tone:'danger' is only for what cannot be undone (red). An
-  // optional `icon` names one of the shared Phosphor icons (data-us-icon).
+  // cancel. tone:'danger' is only for what cannot be undone (red). `icon`
+  // names one of the shared Phosphor icons (data-us-icon); the default is
+  // trash for tone:'danger' and info otherwise.
   // Resolves true only for the explicit confirm button. Without a DOM (or if
   // building it fails) it degrades to the platform confirm.
   let openConfirm = null;
@@ -574,9 +575,12 @@
           <span class="us-confirm-icon" aria-hidden="true" hidden><span class="us-icon"></span></span><span class="us-eyebrow"></span><h3 id="${id}T"></h3><p id="${id}B"></p>
           <div class="us-confirm-actions"><button type="button" class="${tone}" data-us-confirm="ok"></button><button type="button" class="ghost" data-us-confirm="cancel" data-us-modal-close></button></div>
         </section>`;
-      if (options.icon) {
+      // As in the mockup every Conferma carries an icon: trash when it cannot
+      // be undone, info otherwise, unless the caller names one (icon:'' = none).
+      const iconName = options.icon === undefined ? (danger ? 'trash' : 'info') : text(options.icon);
+      if (iconName) {
         const icon = root.querySelector('.us-confirm-icon');
-        icon.firstElementChild.setAttribute('data-us-icon', text(options.icon));
+        icon.firstElementChild.setAttribute('data-us-icon', iconName);
         icon.hidden = false;
       }
       root.querySelector('.us-eyebrow').textContent = text(options.kicker || 'US');
