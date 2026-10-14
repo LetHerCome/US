@@ -12,6 +12,10 @@
   const VOICE_SAMPLE_MS = 70;
   const VOICE_MIN_MS = 500;
   const VOICE_MAX_MS = 30000;
+  // Video in 1.0: up to 30 seconds and 20 MB, checked before anything is uploaded.
+  const VIDEO_MAX_BYTES = 20 * 1024 * 1024;
+  const VIDEO_MAX_SECONDS = 30;
+  const VIDEO_TYPES = new Set(['video/mp4', 'video/webm', 'video/quicktime']);
   const RECEIVER_AUDIO_STEPS = 5;
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   let activeAudioPlayer = null;
@@ -594,6 +598,60 @@
     if (kind === 'photo' && composer.cameraCapture?.selected && composer.cameraCapture.file) return composer.cameraCapture.file;
     const id = { photo: 'leftForYouComposerPhotoFile', video: 'leftForYouComposerVideoFile' }[kind];
     return id ? document.getElementById(id)?.files?.[0] || null : null;
+  }
+
+  // Reads only the video's metadata. Unknown (a format the browser cannot
+  // read, or no answer in time) is not a refusal: the 20 MB limit still holds.
+  function readVideoSeconds(file) {
+    return new Promise((resolve) => {
+      if (typeof Blob === 'undefined' || !(file instanceof Blob) || typeof URL?.createObjectURL !== 'function') { resolve(null); return; }
+      let url = '';
+      let probe = null;
+      let done = false;
+      let timer = null;
+      const finish = (value) => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        try { probe?.removeAttribute('src'); probe?.load?.(); } catch (_) { /* nothing to release */ }
+        if (url) URL.revokeObjectURL(url);
+        resolve(Number.isFinite(value) && value > 0 ? value : null);
+      };
+      try {
+        probe = document.createElement('video');
+        probe.preload = 'metadata';
+        probe.muted = true;
+        probe.addEventListener('loadedmetadata', () => finish(probe.duration), { once: true });
+        probe.addEventListener('error', () => finish(null), { once: true });
+        timer = setTimeout(() => finish(null), 8000);
+        url = URL.createObjectURL(file);
+        probe.src = url;
+      } catch (_) {
+        finish(null);
+      }
+    });
+  }
+
+  async function videoProblem(file) {
+    if (!file) return '';
+    if (file.type && !VIDEO_TYPES.has(file.type)) return 'Questo video non si può inviare. Scegli un video MP4 o MOV.';
+    if (file.size > VIDEO_MAX_BYTES) return 'Il video è troppo grande (massimo 20 MB).';
+    const seconds = await readVideoSeconds(file);
+    if (seconds !== null && seconds > VIDEO_MAX_SECONDS + 0.5) return 'Il video è troppo lungo (massimo 30 secondi).';
+    return '';
+  }
+
+  // Checked as soon as a video is chosen, so a long one is refused before Send.
+  async function checkChosenVideo(input) {
+    const file = input?.files?.[0];
+    if (!file) return;
+    const problem = await videoProblem(file);
+    if (!problem || input.files?.[0] !== file) return;
+    try { input.value = ''; } catch (_) { /* some test shims keep files read-only */ }
+    const slot = document.getElementById('leftForYouComposerVideoName');
+    if (slot) slot.textContent = '';
+    setComposerStatus(problem, 'error');
+    updateComposerValidity();
   }
 
   function validMusicLink() {
@@ -1305,9 +1363,10 @@
     } else {
       file = selectedComposerFile(kind);
       if (!file) { setComposerStatus('Scegli qualcosa da lasciare.', 'error'); return; }
-      const maxBytes = kind === 'video' ? 40 * 1024 * 1024 : 25 * 1024 * 1024;
-      const maxLabel = kind === 'video' ? '40 MB' : '25 MB';
-      if (file.size > maxBytes) { setComposerStatus(`Il file è troppo grande (massimo ${maxLabel}).`, 'error'); return; }
+      if (kind === 'video') {
+        const problem = await videoProblem(file);
+        if (problem) { setComposerStatus(problem, 'error'); return; }
+      } else if (file.size > 25 * 1024 * 1024) { setComposerStatus('Il file è troppo grande (massimo 25 MB).', 'error'); return; }
     }
     if (!composerCanSend()) {
       setComposerStatus('Completa il contenuto prima di lasciarlo.', 'error');
@@ -1364,7 +1423,9 @@
         if (fileId === 'leftForYouComposerPhotoFile' && file.files?.[0]) discardCameraCapture();
         const slot = document.getElementById(nameId);
         if (slot) slot.textContent = file.files?.[0]?.name || '';
+        if (fileId === 'leftForYouComposerVideoFile') setComposerStatus('');
         updateComposerValidity();
+        if (fileId === 'leftForYouComposerVideoFile') checkChosenVideo(file);
       });
     }
     document.getElementById('leftForYouComposerText')?.addEventListener('input', updateComposerValidity);
