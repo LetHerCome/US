@@ -110,7 +110,7 @@
         if(session?.user?.id===userId)publish({...state,busy:false});
       }
     }
-    return {get state(){return state;},get epoch(){return epoch;},load,reset,suspend,refresh,purge,
+    return {get state(){return state;},get epoch(){return epoch;},get userId(){return session?.user?.id||'';},load,reset,suspend,refresh,purge,
       create(fields){
         if(state.kind!=='AUTHENTICATED_NO_PROFILE')return Promise.resolve(null);
         if(!validName(fields.name)||!validDate(fields.date)||!validName(fields.coupleName?.trim()||'US.'))return Promise.resolve(publish({...state,message:'Inserisci un nome da 1 a 40 caratteri e una data valida, dal 1900 a oggi.'}));
@@ -126,10 +126,523 @@
     };
   }
 
-  function mount({readProfile,rpc,resume,signOut}){
+
+  // ---------- First run (Due colori, dc-primo) ----------
+  // The tour before the account, the "Tu" step with an optional birthday, the
+  // person colour and the one-time phone setup after pairing. Pure helpers
+  // first (tested in Node), then the DOM wiring used by mount().
+  const MONTHS=['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+  const MONTH_DAYS=[31,29,31,30,31,30,31,31,30,31,30,31];
+  const FIRST_RUN_KEYS=Object.freeze({
+    tourSeen:'us:tour:v1:seen',
+    deviceProfile:'us:fix4:last-profile',
+    passwordSignIn:'us:setup:v1:password-sign-in',
+    birthdayPending:id=>`us:onboarding:v1:birthday:${id}`,
+    birthdaySaved:id=>`us:onboarding:v1:birthday-saved:${id}`,
+    setupPending:id=>`us:setup:v1:pending:${id}`,
+    setupDone:id=>`us:setup:v1:done:${id}`
+  });
+  const storeGet=(store,key)=>{try{return store?.getItem?.(key)??null;}catch(_e){return null;}};
+  const storeSet=(store,key,value)=>{try{store.setItem(key,value);return true;}catch(_e){return false;}};
+  const storeRemove=(store,key)=>{try{store?.removeItem?.(key);}catch(_e){}};
+  const pad2=n=>String(n).padStart(2,'0');
+  const leapYear=year=>year%4===0&&(year%100!==0||year%400===0);
+  const colourName=role=>role==='beatrice'?'il lilla':'il rosa';
+  const partnerColourName=role=>role==='beatrice'?'il rosa':'il lilla';
+
+  // The tour is for a phone where nobody has signed in yet.
+  function tourWanted(storage){
+    if(storeGet(storage,FIRST_RUN_KEYS.tourSeen))return false;
+    try{if(JSON.parse(storeGet(storage,FIRST_RUN_KEYS.deviceProfile)||'null')?.id)return false;}catch(_e){}
+    return true;
+  }
+  function birthdayCheck(day,month){
+    const d=Number(day)||0,m=Number(month)||0;
+    if(!d&&!m)return {ok:true,value:null};
+    if(!d||!m)return {ok:false,message:'Scegli giorno e mese, oppure lasciali vuoti.'};
+    if(!Number.isInteger(d)||!Number.isInteger(m)||m<1||m>12||d<1||d>MONTH_DAYS[m-1])return {ok:false,message:'Questo giorno non esiste in quel mese.'};
+    return {ok:true,value:{day:d,month:m}};
+  }
+  // The next time this day and month come round in Rome, today included.
+  // 29 February waits for the next leap year.
+  function nextBirthday(day,month,today=romeToday()){
+    const check=birthdayCheck(day,month);
+    if(!check.ok||!check.value||!/^\d{4}-\d{2}-\d{2}$/.test(String(today)))return null;
+    const year=Number(today.slice(0,4));
+    for(let y=year;y<=year+8;y++){
+      if(check.value.month===2&&check.value.day===29&&!leapYear(y))continue;
+      const date=`${y}-${pad2(check.value.month)}-${pad2(check.value.day)}`;
+      if(date>=today)return date;
+    }
+    return null;
+  }
+  // Exactly the eight columns events.js writes.
+  function birthdayEvent({name,day,month,profile,today=romeToday()}){
+    const clean=typeof name==='string'?name.trim():'';
+    const date=nextBirthday(day,month,today);
+    if(!validName(clean)||!date||!profile?.id||!profile?.couple_id)return null;
+    return {title:`Compleanno di ${clean}`,event_date:date,event_time:null,location:null,note:null,recurs_yearly:true,couple_id:profile.couple_id,created_by:profile.id};
+  }
+  // Between the "Tu" step and the moment the couple exists, per user, this tab only.
+  function rememberBirthday(session,userId,value){
+    if(!userId)return false;
+    const key=FIRST_RUN_KEYS.birthdayPending(userId);
+    if(!value){storeRemove(session,key);return true;}
+    return storeSet(session,key,JSON.stringify({day:value.day,month:value.month}));
+  }
+  function pendingBirthday(session,userId){
+    if(!userId)return null;
+    try{
+      const value=JSON.parse(storeGet(session,FIRST_RUN_KEYS.birthdayPending(userId))||'null');
+      const check=birthdayCheck(value?.day,value?.month);
+      return check.ok?check.value:null;
+    }catch(_e){return null;}
+  }
+  // Best effort, at most once per user: the marker is written before the
+  // request, so a lost answer can never turn into a second birthday.
+  async function saveBirthday({profile,local,session,insertEvent,today=romeToday()}){
+    const id=profile?.id;
+    if(!id||!profile.couple_id||typeof insertEvent!=='function')return {ok:false,kind:'skipped'};
+    const value=pendingBirthday(session,id);
+    if(!value)return {ok:false,kind:'none'};
+    storeRemove(session,FIRST_RUN_KEYS.birthdayPending(id));
+    if(storeGet(local,FIRST_RUN_KEYS.birthdaySaved(id)))return {ok:false,kind:'already'};
+    const row=birthdayEvent({name:profile.display_name,day:value.day,month:value.month,profile,today});
+    if(!row)return {ok:false,kind:'invalid'};
+    if(!storeSet(local,FIRST_RUN_KEYS.birthdaySaved(id),'1'))return {ok:false,kind:'storage'};
+    try{const result=await insertEvent(row);return result?.error?{ok:false,kind:'error'}:{ok:true,row};}
+    catch(_e){return {ok:false,kind:'error'};}
+  }
+  // The phone setup after pairing: once per user on this phone, only after
+  // onboarding here or after an email and password sign-in in this tab.
+  function setupMode({userId,local,session}){
+    if(!userId||storeGet(local,FIRST_RUN_KEYS.setupDone(userId)))return null;
+    const pending=storeGet(local,FIRST_RUN_KEYS.setupPending(userId));
+    if(pending==='created'||pending==='joined')return pending;
+    if(storeGet(session,FIRST_RUN_KEYS.passwordSignIn)===userId)return 'device';
+    return null;
+  }
+  function setupSteps({mode,push,place}){
+    if(!mode)return [];
+    if(mode==='device'&&!push&&!place)return [];
+    const steps=[];
+    if(mode==='created')steps.push('noi');
+    if(mode==='joined')steps.push('color');
+    if(push)steps.push('push');
+    if(place)steps.push('place');
+    steps.push('ready');
+    return steps;
+  }
+  async function pushStepState(notifications){
+    if(!notifications?.supported?.())return {wanted:false,kind:'unsupported'};
+    try{
+      const state=await notifications.getState();
+      const kind=state?.supported===false?'unsupported':state?.kind||'unknown';
+      return {wanted:!['active','unavailable','unsupported'].includes(kind),kind};
+    }catch(_e){return {wanted:false,kind:'unknown'};}
+  }
+  function placeStepWanted(location,hasGeolocation){
+    if(!hasGeolocation||typeof location?.start!=='function')return false;
+    try{return !location.isSharing?.();}catch(_e){return false;}
+  }
+  function daysTogether(startedOn,now=new Date()){
+    const [y,m,d]=String(startedOn||'').split('-').map(Number);
+    if(!y||!m||!d)return null;
+    const today=Date.UTC(now.getFullYear(),now.getMonth(),now.getDate());
+    return Math.max(0,Math.floor((today-Date.UTC(y,m-1,d))/86400000));
+  }
+  const italianDate=iso=>{const [y,m,d]=String(iso||'').split('-').map(Number);return y&&m&&d?`${d} ${MONTHS[m-1]} ${y}`:'';};
+  function inviteExpiry(iso){
+    const date=new Date(iso);if(!Number.isFinite(+date))return '';
+    try{
+      const parts=new Intl.DateTimeFormat('it-IT',{timeZone:'Europe/Rome',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(date);
+      const part=type=>parts.find(p=>p.type===type)?.value||'';
+      return `scade il ${part('day')} ${part('month')} alle ${part('hour')}:${part('minute')}`;
+    }catch(_e){return '';}
+  }
+
+  // ---------- DOM: motion helpers ----------
+  const EASE={out:'cubic-bezier(.2,.8,.2,1)',io:'cubic-bezier(.7,0,.2,1)',spring:'cubic-bezier(.34,1.56,.64,1)',soft:'cubic-bezier(.22,1.15,.36,1)'};
+  function reducedMotion(){
+    if(document.documentElement.dataset.usMotion==='reduced')return true;
+    try{if(window.UsUiFoundation?.isReducedMotion?.())return true;}catch(_e){}
+    return typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+  function animate(el,frames,options){
+    if(!el||typeof el.animate!=='function')return null;
+    try{return el.animate(frames,{fill:'both',...options});}catch(_e){return null;}
+  }
+  function setTitle(el,plain,accent){
+    el.textContent=plain;
+    if(accent){const em=document.createElement('em');em.textContent=accent;el.append(em);}
+  }
+  // New content slides in, one block after the other. Reduced motion: nothing moves.
+  function enter(container){
+    if(!container||reducedMotion())return;
+    [...container.children]
+      .filter(el=>!el.hidden&&!el.classList.contains('us-no-enter')&&el.getClientRects().length)
+      .forEach((el,i)=>animate(el,[{opacity:0,transform:'translateX(24px)'},{opacity:1,transform:'none'}],{duration:380,delay:i*30,easing:EASE.out,fill:'backwards'}));
+  }
+
+  // The two circles: my colour, the other person's, and the Noi where they meet.
+  // Rosa (role francesco, who created the couple) on the left, lilla on the right.
+  const LENS='M100 25.36A40 40 0 0 1 100 94.64A40 40 0 0 1 100 25.36Z';
+  function drawVenn(host,{kind,role,partner}){
+    const mine=role==='beatrice'?'b':'a',other=mine==='a'?'b':'a',x=side=>side==='a'?80:120;
+    host.dataset.kind=kind;
+    host.innerHTML=kind==='wait'
+      ?`<svg viewBox="0 0 200 120" focusable="false"><circle class="ov-${mine} ov-me" cx="${x(mine)}" cy="60" r="40"/><circle class="ov-wait ov-wait-${other}" cx="${x(other)}" cy="60" r="39"/></svg>`
+      :`<svg viewBox="0 0 200 120" focusable="false"><circle class="ov-a ${mine==='a'?'ov-me':'ov-partner'}" cx="80" cy="60" r="40"/><circle class="ov-b ${mine==='b'?'ov-me':'ov-partner'}" cx="120" cy="60" r="40"/>${kind==='joined'?`<circle class="ov-wait ov-wait-${other} is-gone" cx="${x(other)}" cy="60" r="39"/>`:''}<path class="ov-n" d="${LENS}"/><circle class="ov-halo" cx="100" cy="60" r="40"/></svg>`;
+    const legend=document.createElement('div');legend.className='ov-l';
+    for(const side of ['a','b']){
+      const item=document.createElement('span'),dot=document.createElement('i'),label=document.createElement('span');
+      dot.className=`ov-dot ov-dot-${side}`;
+      label.className=side===mine?'ov-l-me':'ov-l-partner';
+      label.textContent=side===mine?'Tu':(partner||'La tua persona');
+      item.append(dot,label);legend.append(item);
+    }
+    host.append(legend);
+  }
+  // The colour fills the screen, then shrinks into your circle (or theirs, when they arrive).
+  function playColour(overlay,host){
+    if(!overlay||!host||reducedMotion())return;
+    const kind=host.dataset.kind,q=selector=>host.querySelector(selector);
+    const target=q(kind==='joined'?'.ov-partner':'.ov-me');
+    const rect=target?.getBoundingClientRect();
+    if(!rect?.width)return;
+    const cx=Math.round(rect.left+rect.width/2),cy=Math.round(rect.top+rect.height/2),at=`at ${cx}px ${cy}px`;
+    const big=Math.ceil(Math.hypot(Math.max(cx,window.innerWidth-cx),Math.max(cy,window.innerHeight-cy)));
+    const flood=document.createElement('span');
+    flood.className='us-ob-flood';flood.setAttribute('aria-hidden','true');
+    flood.style.background=kind==='joined'?'var(--us-partner)':'var(--us-tu)';
+    overlay.append(flood);
+    const drop=()=>flood.remove();
+    const wave=animate(flood,[{clipPath:`circle(0px ${at})`},{clipPath:`circle(${big}px ${at})`,offset:.45},{clipPath:`circle(${Math.round(rect.width/2)}px ${at})`}],{duration:1150,easing:EASE.io,fill:'forwards'});
+    if(wave)wave.finished.then(drop,drop);else drop();
+    if(kind==='wait')animate(q('.ov-wait'),[{opacity:0,transform:'scale(.85)'},{opacity:1,transform:'none'}],{duration:520,delay:1050,easing:EASE.out});
+    if(kind==='join'){const partner=q('.ov-partner');animate(partner,[{opacity:0,transform:`translateX(${partner?.classList.contains('ov-a')?-36:36}px)`},{opacity:1,transform:'none'}],{duration:620,delay:950,easing:EASE.io});}
+    if(kind==='joined'){
+      animate(q('.ov-partner'),[{opacity:0},{opacity:0,offset:.99},{opacity:1}],{duration:520});
+      animate(q('.ov-wait'),[{opacity:1},{opacity:1,offset:.99},{opacity:0}],{duration:520});
+    }
+    if(kind!=='wait'){
+      animate(q('.ov-n'),[{opacity:0,transform:'scale(.4)'},{opacity:1,transform:'scale(1.1)',offset:.6},{opacity:1,transform:'none'}],{duration:560,delay:kind==='join'?1500:1250,easing:EASE.out});
+      animate(q('.ov-halo'),[{opacity:.8,transform:'scale(.9)'},{opacity:0,transform:'scale(1.7)'}],{duration:820,delay:kind==='join'?1560:1310,easing:EASE.out,fill:'forwards'});
+    }
+  }
+
+  // ---------- DOM: the tour (three cards, before the account; no network) ----------
+  function tourAnimations(i,slide){
+    const q=selector=>slide.querySelector(selector),list=[];
+    const an=(el,frames,options)=>{const run=animate(el,frames,options);if(run)list.push(run);};
+    if(i===0){
+      an(q('.t1-a'),[{transform:'translate(-44px,0) scale(.7)',opacity:0},{transform:'none',opacity:1}],{duration:900,delay:250,easing:EASE.io});
+      an(q('.t1-b'),[{transform:'translate(44px,0) scale(.7)',opacity:0},{transform:'none',opacity:1}],{duration:900,delay:250,easing:EASE.io});
+      an(q('.t1-n'),[{opacity:0,transform:'scale(.5)'},{opacity:1,transform:'scale(1.08)',offset:.6},{opacity:1,transform:'none'}],{duration:600,delay:1000,easing:EASE.out});
+      an(q('.t1-w'),[{opacity:.8,transform:'scale(.9)'},{opacity:0,transform:'scale(1.6)'}],{duration:900,delay:1150,easing:EASE.out,fill:'forwards'});
+    }
+    if(i===1){
+      const P=[[70,46],[120,2],[170,46]],frames=[];
+      for(let j=0;j<=8;j++){
+        const t=j/8,u=1-t;
+        frames.push({transform:`translate(${(u*u*P[0][0]+2*u*t*P[1][0]+t*t*P[2][0]-11.6).toFixed(1)}px,${(u*u*P[0][1]+2*u*t*P[1][1]+t*t*P[2][1]-9.7).toFixed(1)}px) scale(1.35)`,opacity:j===0||j===8?0:1});
+      }
+      an(q('.t2-h'),frames,{duration:1000,delay:400,easing:'ease-in-out'});
+      an(q('.t2-b'),[{transform:'scale(1)'},{transform:'scale(1.2)'},{transform:'scale(1)'}],{duration:420,delay:1350,easing:EASE.out});
+      slide.querySelectorAll('.t2-d').forEach(dot=>an(dot,[{opacity:1},{opacity:0}],{duration:240,delay:1650}));
+      slide.querySelectorAll('.t2-l').forEach(line=>an(line,[{opacity:0,transform:'translateY(4px)'},{opacity:1,transform:'none'}],{duration:380,delay:1760,easing:EASE.out}));
+    }
+    if(i===2){
+      an(q('.t3-r'),[{strokeDashoffset:72},{strokeDashoffset:22}],{duration:1100,delay:500,easing:EASE.io});
+      an(q('.t3-x'),[{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'translateY(-4px)',offset:.3},{opacity:1,transform:'translateY(-8px)',offset:.7},{opacity:0,transform:'translateY(-14px)'}],{duration:1300,delay:700,easing:EASE.out});
+      an(q('.t3-c'),[{opacity:0,transform:'translate(-50%,8px) scale(.9)'},{opacity:1,transform:'translate(-50%,0)'}],{duration:460,delay:1450,easing:EASE.spring});
+    }
+    return list;
+  }
+  function mountTour({openStep}){
+    const root=document.getElementById('usTour'),overlay=document.getElementById('authOverlay');
+    const track=document.getElementById('usTourTrack'),next=document.getElementById('usTourNext');
+    if(!root||!overlay||!track||!next)return Object.freeze({maybeOpen:()=>false,close(){},markSeen(){},get open(){return false;}});
+    const slides=[...track.children],dots=[...root.querySelectorAll('[data-us-tour-dot]')];
+    let current=-1,runs=[],isOpen=false;
+    const markSeen=()=>storeSet(localStorage,FIRST_RUN_KEYS.tourSeen,'1');
+    function select(i){
+      if(i===current||i<0||i>=slides.length)return;
+      current=i;
+      dots.forEach((dot,j)=>{if(j===i)dot.setAttribute('aria-current','true');else dot.removeAttribute('aria-current');});
+      next.textContent=i===slides.length-1?'Iniziamo':'Avanti';
+      // Each card plays once, when it arrives.
+      (runs[i]||[]).forEach(run=>{if(run.playState==='paused'&&run.currentTime===0)run.play();});
+    }
+    const indexNow=()=>Math.round(track.scrollLeft/Math.max(1,track.clientWidth));
+    function go(i){
+      const left=Math.max(0,Math.min(slides.length-1,i))*track.clientWidth;
+      try{track.scrollTo({left,behavior:reducedMotion()?'auto':'smooth'});}catch(_e){track.scrollLeft=left;}
+      if(reducedMotion())select(indexNow());
+    }
+    track.addEventListener('scroll',()=>{if(isOpen)select(indexNow());},{passive:true});
+    dots.forEach((dot,i)=>dot.addEventListener('click',()=>go(i)));
+    function close(){
+      if(!isOpen)return;
+      isOpen=false;markSeen();
+      root.hidden=true;overlay.classList.remove('us-tour-active');
+      runs.flat().forEach(run=>{try{run.cancel();}catch(_e){}});runs=[];
+      window.dispatchEvent(new CustomEvent('us-onboarding-view-change'));
+    }
+    function focusHeading(id){
+      const heading=document.querySelector(`#${id} h2`);if(!heading)return;
+      if(!heading.hasAttribute('tabindex'))heading.setAttribute('tabindex','-1');
+      heading.focus({preventScroll:true});
+    }
+    function leave(target){
+      close();
+      if(target==='signup'&&window.usS31Auth?.go){window.usS31Auth.go('signup');focusHeading('usSignup');return;}
+      openStep?.('authLogin');focusHeading('authLogin');
+    }
+    next.addEventListener('click',()=>{const i=current<0?0:current;if(i<slides.length-1)go(i+1);else leave('signup');});
+    document.getElementById('usTourSkip')?.addEventListener('click',()=>leave('login'));
+    document.getElementById('usTourLogin')?.addEventListener('click',()=>leave('login'));
+    function maybeOpen({returningDevice=false}={}){
+      if(isOpen)return true;
+      if(returningDevice||!tourWanted(localStorage))return false;
+      isOpen=true;current=-1;
+      overlay.classList.add('us-tour-active');root.hidden=false;track.scrollLeft=0;
+      runs=reducedMotion()?[]:slides.map((slide,i)=>{const list=tourAnimations(i,slide);list.forEach(run=>run.pause());return list;});
+      select(0);
+      window.dispatchEvent(new CustomEvent('us-onboarding-view-change'));
+      return true;
+    }
+    return Object.freeze({maybeOpen,close,markSeen,get open(){return isOpen;}});
+  }
+
+  // ---------- DOM: the phone setup after pairing ----------
+  // What was typed in the "Tu" step in this tab, for the summary only.
+  let typedBirthday={userId:'',value:null};
+  function mountSetup(){
+    const overlay=document.getElementById('usDeviceSetup');
+    const $=id=>document.getElementById(id);
+    if(!overlay)return Object.freeze({maybeOpen:async()=>false,close(){},markPasswordSignIn(){},get open(){return false;}});
+    const primary=$('usSetupPrimary'),secondary=$('usSetupSecondary'),body=$('usSetupBody');
+    let isOpen=false,userId='',mode=null,profile=null,steps=[],index=0,busy=false,run=0,pushKind='unknown',results={push:null,place:null},isolated=[];
+    const partnerName=()=>{try{return window.UsIdentity?.current?.()?.partnerName||'La tua persona';}catch(_e){return 'La tua persona';}};
+    // Modal: the app behind cannot be reached while this is open.
+    function isolate(on){
+      if(on&&!isolated.length){
+        for(const el of document.body.children){
+          if(el===overlay||el.id==='usAppLock'||['SCRIPT','STYLE','TEMPLATE'].includes(el.tagName))continue;
+          // An inert set by the app lock belongs to the lock, which lifts it itself.
+          isolated.push([el,el.dataset?.usAppLockInert?false:el.inert,el.getAttribute('aria-hidden')]);el.inert=true;el.setAttribute('aria-hidden','true');
+        }
+      }else if(!on){
+        for(const [el,inert,aria] of isolated){
+          if(!el.dataset?.usAppLockInert)el.inert=inert;
+          if(aria===null)el.removeAttribute('aria-hidden');else el.setAttribute('aria-hidden',aria);
+        }
+        isolated=[];
+      }
+    }
+    function status(text,kind){
+      const node=$('usSetupStatus');node.textContent=text||'';
+      if(text&&kind)node.dataset.kind=kind;else node.removeAttribute('data-kind');
+    }
+    function setBusy(on){busy=on;primary.disabled=on;secondary.disabled=on;}
+    function sharingNow(){try{return Boolean(window.UsLocation?.isSharing?.());}catch(_e){return false;}}
+    function kickerFor(step){
+      if(step==='noi'||step==='color')return {text:'Voi · 2 di 4',progress:.5};
+      if(step==='push'||step==='place'){
+        const label=step==='push'?'Notifiche':'Posizione';
+        if(mode==='device'){const own=steps.filter(s=>s==='push'||s==='place'),n=own.indexOf(step)+1;return {text:`${label} · ${n} di ${own.length}`,progress:n/own.length};}
+        return {text:step==='push'?'Notifiche · 3 di 4':'Posizione · 4 di 4',progress:step==='push'?.75:1};
+      }
+      return {text:mode==='device'?'US · Questo telefono':'US · Tutto pronto',progress:1};
+    }
+    function copyFor(step){
+      const partner=partnerName(),role=profile?.role;
+      if(step==='noi')return `${partner} ha accettato l’invito ed è ${partnerColourName(role)}, tu ${colourName(role)}. Dove vi incontrate nasce il vostro colore.`;
+      if(step==='color')return `${partner} è ${partnerColourName(role)}. Ognuno ha il suo colore, uguale su entrambi i telefoni: dove vi incontrate nasce il Noi.`;
+      if(step==='push')return 'Solo per le cose vostre, anche a US chiusa. Cosa ricevere lo scegli tu.';
+      if(step==='place')return 'Se la attivi, in Oggi vedete la distanza tra voi.';
+      return mode==='device'?'Su questo telefono è tutto a posto.':'';
+    }
+    function refreshPartner(redrawReady=true){
+      if(!isOpen)return;
+      const partner=partnerName(),step=steps[index];
+      $('usSetupCopy').textContent=copyFor(step);
+      $('usSetupPushPartner').textContent=`${partner} ti pensa ♡`;
+      $('usSetupPointPartner').textContent=`${partner} vede solo la distanza, mai dove sei.`;
+      const label=$('usSetupVenn').querySelector('.ov-l-partner');if(label)label.textContent=partner;
+      if(step==='ready'&&redrawReady)drawReady(false);
+    }
+    function readyRows(){
+      const rows=[];
+      if(mode!=='device'){
+        const typed=typedBirthday.userId===userId?typedBirthday.value:null;
+        const saved=storeGet(localStorage,FIRST_RUN_KEYS.birthdaySaved(userId));
+        rows.push({icon:'user',title:profile?.display_name||'Tu',detail:typed?`Compleanno il ${typed.day} ${MONTHS[typed.month-1]}`:saved?'Compleanno nel vostro calendario':'Compleanno da aggiungere in Noi',ok:true});
+        let started='';try{started=window.UsCoupleContext?.snapshot?.()?.couple?.started_on||'';}catch(_e){}
+        const days=daysTogether(started);
+        rows.push({icon:'heart',title:days===null?'I vostri giorni insieme':`Insieme da ${days.toLocaleString('it-IT')} ${days===1?'giorno':'giorni'}`,detail:days===null?'Li contate in Oggi':`Dal ${italianDate(started)}`,ok:true});
+      }
+      if(window.UsNotifications?.supported?.()){
+        const on=results.push===true||pushKind==='active';
+        rows.push({icon:'bell',title:on?'Notifiche attive':'Notifiche non attive',detail:on?'Le scegli dalle Impostazioni':'Le attivi quando vuoi',ok:on});
+      }
+      const place=results.place===true||sharingNow();
+      rows.push({icon:'pin',title:place?'Distanza attiva':'Distanza non attiva',detail:place?'Solo la distanza, mai dove sei':'La attivi quando vuoi da Oggi',ok:place});
+      return rows;
+    }
+    function drawReady(play){
+      const list=$('usSetupReady');list.replaceChildren();
+      for(const row of readyRows()){
+        const li=document.createElement('li'),icon=document.createElement('span'),text=document.createElement('span'),title=document.createElement('b'),detail=document.createElement('small'),mark=document.createElement('i');
+        li.className=row.ok?'is-ok':'';icon.className=`us-setup-ready-icon us-setup-ready-icon--${row.icon}`;icon.setAttribute('aria-hidden','true');
+        title.textContent=row.title;detail.textContent=row.detail;text.append(title,detail);mark.setAttribute('aria-hidden','true');
+        li.append(icon,text,mark);list.append(li);
+      }
+      if(play&&!reducedMotion())[...list.children].forEach((li,i)=>{if(li.classList.contains('is-ok'))animate(li.lastElementChild,[{transform:'scale(0)'},{transform:'scale(1.25)',offset:.6},{transform:'none'}],{duration:420,delay:520+i*150,easing:EASE.out});});
+    }
+    function playVisual(step){
+      if(reducedMotion())return;
+      if(step==='push')$('usSetupPushVis').querySelectorAll('.us-setup-note').forEach((note,i)=>animate(note,[{opacity:0,transform:'translateY(-20px)'},{opacity:1,transform:'none'}],{duration:520,delay:320+i*170,easing:EASE.soft,fill:'backwards'}));
+      if(step==='place'){
+        const vis=$('usSetupPlaceVis');
+        vis.querySelectorAll('.pl-d').forEach((dot,i)=>animate(dot,[{transform:'scale(0)'},{transform:'none'}],{duration:460,delay:260+i*120,easing:EASE.spring}));
+        vis.querySelectorAll('.pl-h').forEach((halo,i)=>animate(halo,[{transform:'scale(.3)',opacity:0},{transform:'none',opacity:1}],{duration:700,delay:420+i*120,easing:EASE.out}));
+        animate(vis.querySelector('.pl-ln'),[{transform:'scaleX(0)'},{transform:'none'}],{duration:640,delay:640,easing:EASE.io});
+        animate(vis.querySelector('.pl-chip'),[{opacity:0,transform:'translate(-50%,-50%) scale(.85)'},{opacity:1,transform:'translate(-50%,-50%)'}],{duration:420,delay:1000,easing:EASE.spring});
+      }
+    }
+    function show(i){
+      index=i;setBusy(false);status('');
+      const step=steps[i],role=profile?.role,kicker=kickerFor(step);
+      overlay.classList.remove('is-pending');
+      overlay.dataset.step=step;
+      $('usSetupKicker').textContent=kicker.text;
+      $('usSetupProgress').style.setProperty('--us-progress',String(kicker.progress));
+      const venn=$('usSetupVenn');
+      venn.hidden=!(step==='noi'||step==='color');
+      $('usSetupPushVis').hidden=step!=='push';
+      $('usSetupPlaceVis').hidden=step!=='place';
+      $('usSetupPoints').hidden=step!=='place';
+      $('usSetupReady').hidden=step!=='ready';
+      secondary.hidden=!(step==='push'||step==='place');
+      const title=$('usSetupTitle');
+      if(step==='noi'){setTitle(title,'Ora siete ','un Noi');drawVenn(venn,{kind:'joined',role,partner:partnerName()});primary.textContent='Continua';}
+      if(step==='color'){setTitle(title,'Il tuo colore è ',colourName(role));drawVenn(venn,{kind:'join',role,partner:partnerName()});primary.textContent='Continua';}
+      if(step==='push'){setTitle(title,'Non perderti ','un Ti penso');primary.textContent='Attiva le notifiche';}
+      if(step==='place'){setTitle(title,'Anche da ','lontano');primary.textContent='Attiva la posizione';}
+      if(step==='ready'){if(mode==='device')setTitle(title,'Eccoti ','di nuovo');else setTitle(title,'Il vostro US ','è pronto');primary.textContent='Entra in US';drawReady(true);}
+      refreshPartner(false);
+      overlay.scrollTop=0;
+      title.focus({preventScroll:true});
+      // While the shell reveals itself the overlay can be one frame from visible.
+      if(document.activeElement!==title)requestAnimationFrame(()=>{if(isOpen&&steps[index]===step&&!overlay.contains(document.activeElement))title.focus({preventScroll:true});});
+      enter(body);
+      if(step==='noi'||step==='color')requestAnimationFrame(()=>{if(isOpen&&steps[index]===step)playColour(overlay,venn);});
+      playVisual(step);
+    }
+    function advance(){if(!isOpen)return;if(index<steps.length-1)show(index+1);else finish();}
+    function later(fn,ms){const ticket=run;setTimeout(()=>{if(ticket===run&&isOpen)fn();},reducedMotion()?Math.min(ms,600):ms);}
+    async function activatePush(){
+      setBusy(true);status('Attivo…');
+      const ticket=run;let result={ok:false,kind:'error'};
+      try{result=await window.UsNotifications.enable();}catch(_e){}
+      if(ticket!==run||!isOpen)return;
+      Promise.resolve().then(()=>window.refreshWebPushUi?.()).catch(()=>{});
+      if(result?.ok){results.push=true;status('Notifiche attive ♡','success');later(advance,900);return;}
+      setBusy(false);
+      if(result?.kind==='busy'){status('');return;}
+      status(result?.kind==='denied'?'Permesso negato: puoi consentirle dalle impostazioni del telefono'
+        :result?.kind==='unavailable'?'Notifiche non disponibili in questa versione di US':'Non riesco ad attivare le notifiche','error');
+    }
+    function activatePlace(){
+      setBusy(true);
+      let ok=false;try{ok=window.UsLocation?.start?.()===true;}catch(_e){ok=false;}
+      results.place=ok;
+      if(ok){status('Distanza attiva ♡','success');later(advance,900);return;}
+      setBusy(false);status('Non riesco ad attivare la posizione','error');
+    }
+    async function playIntro(){
+      const intro=$('usSetupIntro');intro.hidden=false;
+      const [a,b]=intro.querySelectorAll('.c'),logo=intro.querySelector('.logo'),word=intro.querySelector('.word');
+      animate(intro,[{opacity:0},{opacity:1}],{duration:200});
+      const meet=animate(a,[{transform:'translateX(-110px) scale(.6)',opacity:0},{transform:'translateX(-34px) scale(1)',opacity:1,offset:.5},{transform:'translateX(0) scale(1.05)',opacity:1}],{duration:760,easing:EASE.io});
+      animate(b,[{transform:'translateX(110px) scale(.6)',opacity:0},{transform:'translateX(34px) scale(1)',opacity:1,offset:.5},{transform:'translateX(0) scale(1.05)',opacity:1}],{duration:760,easing:EASE.io});
+      try{await meet?.finished;}catch(_e){return;}
+      [a,b].forEach(circle=>animate(circle,[{transform:'scale(1.05)',opacity:1},{transform:'scale(.2)',opacity:0}],{duration:360,easing:EASE.io}));
+      animate(logo,[{opacity:0,transform:'scale(.6)'},{opacity:1,transform:'scale(1.06)',offset:.7},{opacity:1,transform:'none'}],{duration:440,delay:100,easing:'ease-out'});
+      const words=animate(word,[{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:360,delay:300,easing:EASE.out});
+      try{await words?.finished;}catch(_e){return;}
+      await new Promise(resolve=>setTimeout(resolve,260));
+      const out=animate(overlay,[{clipPath:'circle(150% at 50% 46%)'},{clipPath:'circle(0% at 50% 46%)'}],{duration:520,easing:EASE.io,fill:'forwards'});
+      try{await out?.finished;}catch(_e){}
+    }
+    async function finish({silent=false}={}){
+      if(!isOpen)return;
+      const id=userId,ticket=++run;
+      storeSet(localStorage,FIRST_RUN_KEYS.setupDone(id),'1');
+      storeRemove(localStorage,FIRST_RUN_KEYS.setupPending(id));
+      if(storeGet(sessionStorage,FIRST_RUN_KEYS.passwordSignIn)===id)storeRemove(sessionStorage,FIRST_RUN_KEYS.passwordSignIn);
+      if(!silent&&!reducedMotion()){setBusy(true);await playIntro();if(ticket!==run)return;}
+      close();
+    }
+    function close(){
+      run++;
+      const hadFocus=overlay.contains(document.activeElement);
+      isOpen=false;busy=false;userId='';mode=null;profile=null;steps=[];index=0;
+      overlay.hidden=true;overlay.classList.remove('is-pending');delete overlay.dataset.step;delete overlay.dataset.mode;
+      $('usSetupIntro').hidden=true;
+      overlay.querySelectorAll('.us-ob-flood').forEach(el=>el.remove());
+      try{overlay.getAnimations({subtree:true}).forEach(a=>a.cancel());}catch(_e){}
+      isolate(false);
+      if(hadFocus)document.activeElement?.blur?.();
+    }
+    primary.addEventListener('click',()=>{
+      if(busy||!isOpen)return;
+      const step=steps[index];
+      if(step==='push')return activatePush();
+      if(step==='place')return activatePlace();
+      if(step==='ready')return finish();
+      advance();
+    });
+    secondary.addEventListener('click',()=>{
+      if(busy||!isOpen)return;
+      const step=steps[index];
+      if(step==='push')results.push=false;
+      if(step==='place')results.place=false;
+      advance();
+    });
+    window.addEventListener('us-identity-change',()=>refreshPartner(true));
+    async function maybeOpen(nextProfile){
+      const id=nextProfile?.id||'';
+      const nextMode=setupMode({userId:id,local:localStorage,session:sessionStorage});
+      if(!nextMode){
+        // A password sign-in that has nothing left to set up is spent.
+        if(id&&storeGet(sessionStorage,FIRST_RUN_KEYS.passwordSignIn)===id)storeRemove(sessionStorage,FIRST_RUN_KEYS.passwordSignIn);
+        return false;
+      }
+      if(isOpen&&userId===id)return true;
+      if(isOpen)close();
+      const ticket=++run;
+      isOpen=true;userId=id;mode=nextMode;profile=nextProfile;steps=[];index=0;results={push:null,place:null};pushKind='unknown';
+      overlay.dataset.mode=nextMode;overlay.classList.add('is-pending');overlay.hidden=false;
+      overlay.scrollTop=0;isolate(true);
+      const push=await pushStepState(window.UsNotifications);
+      if(ticket!==run||!isOpen)return false;
+      pushKind=push.kind;
+      steps=setupSteps({mode:nextMode,push:push.wanted,place:placeStepWanted(window.UsLocation,typeof navigator!=='undefined'&&Boolean(navigator.geolocation))});
+      if(!steps.length){await finish({silent:true});return false;}
+      show(0);
+      return true;
+    }
+    function markPasswordSignIn(id){if(id)storeSet(sessionStorage,FIRST_RUN_KEYS.passwordSignIn,String(id));}
+    return Object.freeze({maybeOpen,close,markPasswordSignIn,get open(){return isOpen;}});
+  }
+
+  function mount({readProfile,rpc,resume,signOut,openStep,insertEvent}){
     const root=document.getElementById('usOnboarding');
     const node=id=>document.getElementById(id);
-    let mode='choice',lastKind='',hiddenPrivate=[];
+    let mode='me',lastKind='',lastView='',hiddenPrivate=[],me={name:'',birthday:null},meFor='',justCreated=false,note={text:'',kind:''},dismissed='';
     const clearForms=()=>root.querySelectorAll('input,textarea').forEach(el=>{el.value='';});
     function protect(active){
       document.documentElement.classList.toggle('us-onboarding-active',active);
@@ -143,54 +656,135 @@
         hiddenPrivate=[];
       }
     }
+    const daySelect=node('mc3BirthDay'),monthSelect=node('mc3BirthMonth');
+    for(let day=1;day<=31;day++)daySelect.add(new Option(String(day),String(day)));
+    MONTHS.forEach((month,i)=>monthSelect.add(new Option(month,String(i+1))));
+    const tour=mountTour({openStep});
+    const setup=mountSetup();
+    function fillMe(){
+      node('mc3Name').value=me.name;
+      daySelect.value=me.birthday?String(me.birthday.day):'';
+      monthSelect.value=me.birthday?String(me.birthday.month):'';
+    }
+    function viewFor(state){
+      if(state.kind==='AUTHENTICATED_NO_PROFILE')return ['me','choice','create','join'].includes(mode)?mode:'me';
+      if(state.kind==='MEMBER_WAITING_PARTNER')return mode==='color'?'color':'waiting';
+      return 'error';
+    }
     function render(state){
+      // What was typed in "Tu" belongs to one account: never carry it across a switch.
+      const uid=controller.userId;
+      if(uid&&uid!==meFor){me={name:'',birthday:null};justCreated=false;meFor=uid;}
       const active=!['SIGNED_OUT','PAIRED'].includes(state.kind);
       protect(active);
       root.classList.toggle('active',active);
       if(active){
         node('authLogin').classList.remove('active');node('authOverlay').classList.remove('hidden');
         document.documentElement.classList.remove('us-auth-pending','us-returning-device','us-auth-ready');
+        tour.close();
       }
-      if(state.kind!==lastKind){clearForms();mode='choice';}
-      const waiting=state.kind==='MEMBER_WAITING_PARTNER',choice=state.kind==='AUTHENTICATED_NO_PROFILE';
-      node('mc3Title').textContent=waiting?'Il tuo spazio è pronto':choice?'Il vostro US, da qui':'Verifichiamo il tuo accesso';
-      node('mc3Copy').textContent=waiting?`${state.profile.display_name.trim()}, invita la tua persona. Quando entrerà, troverete qui il vostro spazio.`:choice?'Hai già un account privato. Ora crea il vostro spazio o raggiungi la tua persona.':'La sessione è conservata. Puoi riprovare o uscire.';
-      node('mc3Choice').hidden=!choice||mode!=='choice';node('mc3Create').hidden=!choice||mode!=='create';node('mc3Join').hidden=!choice||mode!=='join';
-      node('mc3Waiting').hidden=!waiting;node('mc3Retry').hidden=state.kind!==ERROR;
-      node('mc3Status').textContent=state.message||(state.busy?'Verifica in corso…':'');
+      const changed=state.kind!==lastKind;
+      if(changed){
+        clearForms();note={text:'',kind:''};dismissed='';
+        if(state.kind==='SIGNED_OUT'){me={name:'',birthday:null};justCreated=false;}
+        mode=state.kind==='MEMBER_WAITING_PARTNER'&&justCreated?'color':me.name?'choice':'me';
+        if(state.kind==='AUTHENTICATED_NO_PROFILE')fillMe();else{daySelect.value='';monthSelect.value='';}
+      }
+      const view=viewFor(state),waiting=state.kind==='MEMBER_WAITING_PARTNER',role=state.profile?.role;
+      if(waiting&&role==='beatrice')node('authOverlay').dataset.usTone='beatrice';else delete node('authOverlay').dataset.usTone;
+      node('mc3Kicker').textContent=view==='me'?'Tu · 1 di 4':view==='error'?'US · Spazio privato':'Voi · 2 di 4';
+      node('mc3Progress').hidden=view==='error';
+      node('mc3Progress').style.setProperty('--us-progress',view==='me'?'.25':'.5');
+      const titles={me:['Iniziamo da ','te'],choice:['Il vostro US, ','da qui'],create:['Crea il ','vostro spazio'],join:['Entra nel ','vostro US'],color:['Il tuo colore è ',colourName(role)],waiting:['Il tuo spazio ','è pronto'],error:['Verifichiamo il tuo accesso','']};
+      setTitle(node('mc3Title'),...titles[view]);
+      const ownName=waiting?state.profile.display_name.trim():me.name;
+      const copy={
+        me:'Il tuo nome lo vede la tua persona, accanto a quello che fai in US.',
+        choice:me.name?`${me.name}, ora crea il vostro spazio o raggiungi la tua persona.`:'Ora crea il vostro spazio o raggiungi la tua persona.',
+        create:'Da questa data partono i giorni insieme, il mesiversario e l’anniversario.',
+        join:'Scrivi il codice che ti ha mandato la tua persona.',
+        color:`Ognuno ha il suo colore, uguale su entrambi i telefoni. La tua persona sarà ${partnerColourName(role)}: dove vi incontrate nasce il Noi.`,
+        waiting:state.code?`${ownName}, invita la tua persona: mandale questo codice.`:`${ownName}, invita la tua persona. Quando entrerà, troverete qui il vostro spazio.`,
+        error:'La sessione è conservata. Puoi riprovare o uscire.'
+      }[view];
+      // In the colour step the words follow the two circles.
+      node('mc3Copy').textContent=view==='color'?'':copy;node('mc3Copy').hidden=view==='color';
+      node('mc3ColorCopy').textContent=view==='color'?copy:'';
+      node('mc3Me').hidden=view!=='me';node('mc3Choice').hidden=view!=='choice';node('mc3Create').hidden=view!=='create';node('mc3Join').hidden=view!=='join';
+      node('mc3Color').hidden=view!=='color';node('mc3Waiting').hidden=view!=='waiting';node('mc3Retry').hidden=state.kind!==ERROR;
+      const status=node('mc3Status');
+      // An error stays with the screen it belongs to: moving to another step dismisses it.
+      if(!state.message)dismissed='';
+      const message=state.message&&state.message!==dismissed?state.message:'';
+      status.textContent=message||note.text||(state.busy?'Verifica in corso…':'');
+      if(message)status.dataset.kind='error';else if(note.text)status.dataset.kind=note.kind||'neutral';else status.removeAttribute('data-kind');
       const labels={none:'Nessun invito attivo',pending:'Invito in attesa',expired:'Invito scaduto',revoked:'Invito revocato',used:'Invito utilizzato'};
       const invite=state.membership?.invite;
-      node('mc3InviteStatus').textContent=waiting?(labels[invite.status]||'')+(invite.expires_at?' · Scadenza: '+new Date(invite.expires_at).toLocaleString('it-IT'):''):'';
+      node('mc3InviteStatus').textContent=waiting?(labels[invite.status]||'')+(invite.status==='pending'&&invite.expires_at&&inviteExpiry(invite.expires_at)?' · '+inviteExpiry(invite.expires_at):''):'';
+      node('mc3InviteStatus').dataset.status=waiting?invite.status:'';
       node('mc3Code').value=waiting?state.code:'';node('mc3CodeArea').hidden=!waiting||!state.code;
+      node('mc3Waiting').classList.toggle('has-code',Boolean(waiting&&state.code));
       node('mc3Generate').textContent=invite?.status==='none'?'Crea invito':'Genera nuovo codice';
       node('mc3Revoke').hidden=!waiting||invite?.status!=='pending';
-      root.querySelectorAll('button,input').forEach(el=>{el.disabled=state.busy&&el.id!=='mc3Exit';});
-      if(active&&state.kind!==lastKind){node('mc3Title').focus({preventScroll:true});node('authOverlay').scrollTop=0;}
-      lastKind=state.kind;
+      root.querySelectorAll('button,input,select').forEach(el=>{el.disabled=state.busy&&el.id!=='mc3Exit';});
+      if(view==='color'&&lastView!=='color')drawVenn(node('mc3Venn'),{kind:'wait',role,partner:''});
+      if(active&&changed){node('mc3Title').focus({preventScroll:true});node('authOverlay').scrollTop=0;}
+      if(active&&view!==lastView){
+        enter(root);
+        if(view==='color')requestAnimationFrame(()=>{if(lastView==='color')playColour(node('authOverlay'),node('mc3Venn'));});
+      }
+      lastKind=state.kind;lastView=active?view:'';
+      if(state.profile?.couple_id)saveBirthday({profile:state.profile,local:localStorage,session:sessionStorage,insertEvent}).catch(()=>{});
       window.dispatchEvent(new CustomEvent('us-onboarding-view-change'));
     }
     const controller=createController({readProfile,rpc,onChange:render});
-    const run=async action=>{const result=await action();if(result?.kind==='PAIRED')resume();};
-    for(const [id,next] of [['mc3ChooseCreate','create'],['mc3ChooseJoin','join'],['mc3BackCreate','choice'],['mc3BackJoin','choice']])node(id).addEventListener('click',()=>{clearForms();mode=next;render(controller.state);(next==='choice'?node('mc3Title'):node(next==='create'?'mc3CreateName':'mc3JoinName')).focus();});
+    const run=async(action,kind)=>{
+      const result=await action();
+      const joined=result?.profile?.couple_id&&(result.kind==='PAIRED'||result.kind==='MEMBER_WAITING_PARTNER');
+      if(kind&&joined)storeSet(localStorage,FIRST_RUN_KEYS.setupPending(result.profile.id),kind==='create'?'created':'joined');
+      if(kind==='create'&&result?.kind!=='MEMBER_WAITING_PARTNER')justCreated=false;
+      if(result?.kind==='PAIRED')resume();
+    };
+    const goTo=(next,focusId)=>{
+      clearForms();mode=next;note={text:'',kind:''};
+      if(controller.state.kind==='AUTHENTICATED_NO_PROFILE')dismissed=controller.state.message||'';
+      if(next==='me')fillMe();
+      if(next==='create')node('mc3CreateName').value=me.name;
+      if(next==='join')node('mc3JoinName').value=me.name;
+      render(controller.state);node(focusId).focus();
+    };
+    node('mc3Me').addEventListener('submit',event=>{
+      event.preventDefault();
+      const name=node('mc3Name').value,check=birthdayCheck(daySelect.value,monthSelect.value);
+      if(!validName(name)){note={text:'Scrivi il tuo nome (1–40 caratteri).',kind:'error'};render(controller.state);node('mc3Name').focus();return;}
+      if(!check.ok){note={text:check.message,kind:'error'};render(controller.state);(daySelect.value?monthSelect:daySelect).focus();return;}
+      me={name:name.trim(),birthday:check.value};note={text:'',kind:''};
+      const id=controller.userId;rememberBirthday(sessionStorage,id,check.value);typedBirthday={userId:id,value:check.value};
+      goTo('choice','mc3Title');
+    });
+    for(const [id,next,focusId] of [['mc3ChooseCreate','create','mc3Date'],['mc3ChooseJoin','join','mc3JoinCode'],['mc3BackCreate','choice','mc3Title'],['mc3BackJoin','choice','mc3Title'],['mc3BackMe','me','mc3Title']])node(id).addEventListener('click',()=>goTo(next,focusId));
+    node('mc3ColorNext').addEventListener('click',()=>{justCreated=false;goTo('waiting','mc3Title');});
     node('mc3Date').max=romeToday();
-    node('mc3Create').addEventListener('submit',event=>{event.preventDefault();run(()=>controller.create({name:node('mc3CreateName').value,date:node('mc3Date').value,coupleName:node('mc3CoupleName').value}));});
-    node('mc3Join').addEventListener('submit',event=>{event.preventDefault();const fields={name:node('mc3JoinName').value,code:node('mc3JoinCode').value};node('mc3JoinCode').value='';run(()=>controller.join(fields));});
+    node('mc3Create').addEventListener('submit',event=>{event.preventDefault();justCreated=true;run(()=>controller.create({name:node('mc3CreateName').value,date:node('mc3Date').value,coupleName:node('mc3CoupleName').value}),'create');});
+    node('mc3Join').addEventListener('submit',event=>{event.preventDefault();const fields={name:node('mc3JoinName').value,code:node('mc3JoinCode').value};node('mc3JoinCode').value='';run(()=>controller.join(fields),'join');});
     node('mc3Generate').addEventListener('click',()=>run(()=>controller.generate()));
     node('mc3Revoke').addEventListener('click',()=>run(()=>controller.revoke()));
     for(const id of ['mc3Refresh','mc3Retry'])node(id).addEventListener('click',()=>run(()=>controller.refresh()));
     node('mc3CopyCode').addEventListener('click',async()=>{
-      const code=controller.state.code,ticket=controller.epoch;if(!code)return;
-      try{await navigator.clipboard.writeText(code);if(controller.epoch===ticket&&controller.state.code===code)node('mc3Status').textContent='Codice copiato. Condividilo soltanto con la tua persona.';}
-      catch(_error){if(controller.epoch===ticket&&controller.state.code===code){node('mc3Code').focus();node('mc3Code').select();node('mc3Status').textContent='Seleziona e copia il codice.';}}
+      const code=controller.state.code,ticket=controller.epoch,status=node('mc3Status');if(!code)return;
+      try{await navigator.clipboard.writeText(code);if(controller.epoch===ticket&&controller.state.code===code){status.textContent='Codice copiato. Condividilo soltanto con la tua persona.';status.dataset.kind='success';}}
+      catch(_error){if(controller.epoch===ticket&&controller.state.code===code){node('mc3Code').focus();node('mc3Code').select();status.textContent='Seleziona e copia il codice.';status.removeAttribute('data-kind');}}
     });
-    node('mc3Exit').addEventListener('click',async()=>{controller.suspend();clearForms();await signOut();});
+    node('mc3Exit').addEventListener('click',async()=>{const id=controller.userId;controller.suspend();clearForms();rememberBirthday(sessionStorage,id,null);me={name:'',birthday:null};justCreated=false;await signOut();});
     document.addEventListener('visibilitychange',()=>{
       if(document.hidden){controller.suspend();clearForms();}
       else if(controller.state.kind!== 'SIGNED_OUT'&&controller.state.kind!=='PAIRED')resume();
     });
     window.addEventListener('us-app-lock-change',event=>{if(event.detail?.locked){controller.suspend();clearForms();}else resume();});
     window.addEventListener('pagehide',()=>{controller.suspend();clearForms();});
+    controller.tour=tour;controller.setup=setup;
     return controller;
   }
-  return Object.freeze({route,validName,validDate,normalizeCode,validCode,romeToday,errorMessage,createController,mount});
+  return Object.freeze({route,validName,validDate,normalizeCode,validCode,romeToday,errorMessage,createController,mount,
+    FIRST_RUN_KEYS,tourWanted,birthdayCheck,nextBirthday,birthdayEvent,rememberBirthday,saveBirthday,setupMode,setupSteps,pushStepState,placeStepWanted,daysTogether,inviteExpiry});
 });
