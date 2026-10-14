@@ -61,7 +61,12 @@
     cameraCapture: null,
     cameraOpen: false,
     cameraRequestId: 0,
+    photoPreview: null,
   };
+  // Captions are optional and only for a photo or a vocale (the server keeps
+  // up to 280 characters for media kinds).
+  const CAPTION_MAX = 280;
+  const CAPTION_FIELDS = { photo: 'leftForYouComposerPhotoCaption', audio: 'leftForYouComposerAudioCaption' };
 
   function getClient() {
     try { return sb; } catch (_) { return window.sb || null; }
@@ -272,8 +277,10 @@
   }
 
   const isUnseen = (item) => !item?.seen_at;
+  const createdTime = (item) => { const time = Date.parse(item?.created_at || ''); return Number.isFinite(time) ? time : 0; };
+  const oldestFirst = (list) => list.slice().sort((a, b) => createdTime(a) - createdTime(b));
   const partner = () => profiles.get(items[0]?.sender_id) || [...profiles.values()].find((p) => p.id !== window.usProfile?.id) || null;
-  const labelForKind = (kind) => ({ text: 'Un pensiero', photo: 'Una foto', audio: 'Una voce', video: 'Un momento', music: 'Musica' }[kind] || 'Lasciato per te');
+  const labelForKind = (kind) => ({ text: 'Un pensiero', photo: 'Una foto', audio: 'Un vocale', video: 'Un momento', music: 'Musica' }[kind] || 'Lasciato per te');
 
   function renderItemMarkup(item, mediaUrl = '') {
     const kind = kinds.has(item?.kind) ? item.kind : 'text';
@@ -298,7 +305,14 @@
     if (status) { status.textContent = message || ''; status.dataset.kind = kind; }
   }
   function setVisible(id, visible) { const el = document.getElementById(id); if (el) el.hidden = !visible; }
-  function partnerName() { return window.UsIdentity?.current().partnerName || 'La tua persona'; }
+  const PARTNER_FALLBACK = 'La tua persona';
+  function partnerName() { return window.UsIdentity?.current().partnerName || PARTNER_FALLBACK; }
+  // The real name when the app has it, otherwise '' so sentences can say
+  // "la tua persona" in lower case and with the right article.
+  function knownPartnerName() {
+    const name = partnerName();
+    return name && name !== PARTNER_FALLBACK ? name : '';
+  }
 
   function envelopeEl() { return document.getElementById('leftForYouPartnerEntry'); }
 
@@ -367,16 +381,23 @@
   async function fetchItems({ preserveActive = false } = {}) {
     const client = getClient();
     if (!window.usProfile || !client) throw new Error('sync_unavailable');
+    // Oldest first: things left one after the other are read in the order
+    // they were left.
     const { data, error } = await client.from('left_for_you')
       .select('id,sender_id,recipient_id,kind,body,media_path,created_at,seen_at')
       .eq('recipient_id', window.usProfile.id)
       .is('seen_at', null)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: true });
     if (error) throw error;
-    const pending = (data || []).filter((item) => kinds.has(item.kind));
+    const pending = oldestFirst((data || []).filter((item) => kinds.has(item.kind)));
     if (preserveActive && activeItem) {
-      items = [activeItem, ...pending.filter((item) => item.id !== activeItem.id)];
-      currentIndex = 0;
+      // While the viewer is open its order and counter stay put: what is
+      // already in this opening keeps its place, new arrivals join the end.
+      const opened = items.some((item) => item.id === activeItem.id) ? items : [activeItem];
+      const known = new Set(opened.map((item) => item.id));
+      items = [...opened, ...pending.filter((item) => !known.has(item.id))];
+      currentIndex = Math.max(0, items.findIndex((item) => item.id === activeItem.id));
+      updateViewerControls();
     } else {
       items = pending;
       currentIndex = 0;
@@ -402,10 +423,46 @@
     return window.usGetSignedUrl(item.media_path);
   }
 
+  // A photo, a vocale or a video counts as opened only once its media has
+  // really loaded here. Text and music are on screen as soon as they are drawn.
+  const SEEN_WHEN_LOADED = {
+    photo: { selector: 'img', events: ['load'], ready: (media) => media.complete && media.naturalWidth > 0 },
+    audio: { selector: 'audio', events: ['loadedmetadata', 'loadeddata', 'canplay', 'play'], ready: (media) => media.readyState >= 1 },
+    video: { selector: 'video', events: ['loadeddata', 'canplay', 'play'], ready: (media) => media.readyState >= 2 },
+  };
+
+  function markSeenWhenShown(item, content) {
+    const rule = SEEN_WHEN_LOADED[item?.kind];
+    if (!rule) return markSeen(item);
+    const media = content?.querySelector?.(rule.selector);
+    if (!media || typeof media.addEventListener !== 'function') return undefined;
+    let done = false;
+    const onLoaded = () => {
+      if (done) return;
+      done = true;
+      rule.events.forEach((name) => media.removeEventListener?.(name, onLoaded));
+      // Skipped, replaced or closed before it loaded: it stays waiting.
+      if (lastRenderedItemId !== item.id || media.isConnected === false || !root()?.classList.contains('open')) return;
+      markSeen(item).catch((error) => console.warn('[US Left for You] seen', error));
+    };
+    rule.events.forEach((name) => media.addEventListener(name, onLoaded));
+    if (rule.ready(media)) onLoaded();
+    return undefined;
+  }
+
+  function updateViewerControls() {
+    const item = items[currentIndex];
+    const counter = document.getElementById('leftForYouCounter');
+    const next = document.getElementById('leftForYouNext');
+    const once = document.getElementById('leftForYouOnce');
+    if (counter) counter.textContent = items.length > 1 ? `${currentIndex + 1} di ${items.length}` : '';
+    if (next) next.hidden = currentIndex >= items.length - 1;
+    if (once) once.hidden = !item || Boolean(item.conserved);
+  }
+
   async function renderCurrent() {
     const item = items[currentIndex];
     const content = document.getElementById('leftForYouContent');
-    const counter = document.getElementById('leftForYouCounter');
     const conserve = document.getElementById('leftForYouConserve');
     if (!item || !content) return;
     activeItem = item;
@@ -415,13 +472,13 @@
     content.innerHTML = renderItemMarkup(item, url);
     if (item.kind === 'audio') bindAudioStepPlayer(content);
     lastRenderedItemId = item.id;
-    if (counter) counter.textContent = items.length > 1 ? `${currentIndex + 1} di ${items.length}` : '';
+    updateViewerControls();
     if (conserve) {
       conserve.disabled = false;
       conserve.classList.toggle('is-conserved', Boolean(item.conserved));
       conserve.innerHTML = item.conserved ? '✓ Conservato' : 'Conserva';
     }
-    await markSeen(item);
+    await markSeenWhenShown(item, content);
   }
 
   function showState(state) {
@@ -479,6 +536,7 @@
       if (error) throw error;
       item.conserved = true;
       if (button) { button.classList.add('is-conserved'); button.textContent = data?.status === 'existing' ? '✓ Già conservato' : '✓ Conservato'; }
+      if (items[currentIndex] === item) updateViewerControls();
       setStatus('Conservato nei Ricordi.', 'success');
     } catch (error) {
       console.warn('[US Left for You] conserve', error);
@@ -488,6 +546,13 @@
   }
 
   async function retry() { await load(); }
+
+  // Rispondi: the viewer gives way to the composer, already addressed to the
+  // partner who left this (the only person the composer ever writes to).
+  function reply() {
+    close();
+    openComposer({ kind: 'text' });
+  }
 
   // M5F — ONE tap dispatcher: loading → inert; closed → next unseen item; open → sender composer.
   function tap() {
@@ -545,19 +610,105 @@
     if (status) { status.textContent = message || ''; status.dataset.kind = kind; }
   }
 
+  // "per Bea" / "per la tua persona".
   function composerPartnerName() {
-    return partnerName();
+    return knownPartnerName() || 'la tua persona';
+  }
+
+  // "a Bea" / "alla tua persona".
+  function toPartner() {
+    const name = knownPartnerName();
+    return name ? `a ${name}` : 'alla tua persona';
   }
 
   function setPartnerAwareComposerLabels() {
-    const name = composerPartnerName();
     const title = document.getElementById('leftForYouComposerTitle');
     const send = document.getElementById('leftForYouComposerSend');
     const audioRecord = document.getElementById('leftForYouComposerAudioRecord');
-    if (title) title.textContent = `Lascia qualcosa a ${name}`;
-    if (send && !composer.sending) send.textContent = `Lascia per ${name}`;
-    if (audioRecord) audioRecord.setAttribute('aria-label', composer.recordingState === 'recording' ? 'Ferma la registrazione' : 'Registra la voce');
+    if (title) title.textContent = `Lascia qualcosa ${toPartner()}`;
+    if (send && !composer.sending) send.textContent = `Lascia per ${composerPartnerName()}`;
+    if (audioRecord) audioRecord.setAttribute('aria-label', composer.recordingState === 'recording' ? 'Ferma la registrazione' : 'Registra un vocale');
     updateComposerValidity();
+  }
+
+  // ---- L3: what happened to the last thing I left ----
+  // The sender may read their own rows (RLS) and the couple's Conserva rows.
+  // Opened, not kept items are deleted 30 days after opening, so a row older
+  // than 30 days may no longer be the last one: then the line stays hidden.
+  const LAST_OUTCOME_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+  let lastOutcomeRequest = 0;
+
+  function localeTag() {
+    return globalThis.UsI18n?.tag || 'it-IT';
+  }
+
+  function dayStart(date) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  }
+
+  // "oggi alle 21:40", "ieri alle 21:40", "lunedì alle 21:40", "il 3 ottobre alle 21:40".
+  function openedWhen(value, now = new Date()) {
+    const date = new Date(value);
+    if (!Number.isFinite(date.getTime())) return '';
+    const tag = localeTag();
+    const time = date.toLocaleTimeString(tag, { hour: 'numeric', minute: '2-digit' });
+    const days = Math.round((dayStart(now) - dayStart(date)) / 86400000);
+    if (days <= 0) return `oggi alle ${time}`;
+    if (days === 1) return `ieri alle ${time}`;
+    if (days < 7) return `${date.toLocaleDateString(tag, { weekday: 'long' })} alle ${time}`;
+    return `il ${date.toLocaleDateString(tag, { day: 'numeric', month: 'long' })} alle ${time}`;
+  }
+
+  function lastOutcomeText(last, { conserved = false, now = new Date() } = {}) {
+    if (!last?.created_at) return '';
+    const created = Date.parse(last.created_at);
+    if (!Number.isFinite(created) || now.getTime() - created > LAST_OUTCOME_MAX_AGE_MS) return '';
+    let outcome = 'ancora da aprire';
+    if (conserved) outcome = 'conservata';
+    else if (last.seen_at) {
+      const when = openedWhen(last.seen_at, now);
+      outcome = when ? `aperta ${when}` : 'aperta';
+    }
+    return `L'ultima cosa che hai lasciato ${toPartner()}: ${outcome}.`;
+  }
+
+  async function refreshLastOutcome() {
+    const line = document.getElementById('leftForYouComposerLast');
+    if (!line) return;
+    const client = getClient();
+    const me = window.usProfile;
+    const request = ++lastOutcomeRequest;
+    const show = (text) => {
+      if (request !== lastOutcomeRequest) return;
+      line.textContent = text || '';
+      line.hidden = !text;
+    };
+    if (!client || !me?.id || !me.couple_id) { show(''); return; }
+    try {
+      const { data, error } = await client.from('left_for_you')
+        .select('id,created_at,seen_at')
+        .eq('sender_id', me.id)
+        .eq('couple_id', me.couple_id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      if (error) throw error;
+      const rows = oldestFirst(Array.isArray(data) ? data : data ? [data] : []);
+      const last = rows[rows.length - 1] || null;
+      let conserved = false;
+      if (last?.seen_at) {
+        const { data: kept, error: keptError } = await client.from('conserva_contributions')
+          .select('id')
+          .eq('source_item_id', last.id)
+          .limit(1);
+        if (keptError) throw keptError;
+        conserved = Array.isArray(kept) ? kept.length > 0 : Boolean(kept);
+      }
+      if (window.usProfile !== me) { show(''); return; }
+      show(lastOutcomeText(last, { conserved }));
+    } catch (_) {
+      // Only a courtesy line: when it cannot be read it simply is not shown.
+      show('');
+    }
   }
 
   function setComposerKind(kind) {
@@ -574,10 +725,30 @@
     updateComposerValidity();
   }
 
-  function openComposer() {
+  // Public: window.UsLeftForYou.openComposer(options).
+  // options (optional): { kind?: 'text'|'photo'|'voice'|'video'|'music', text?: string }.
+  // With text, the text composer opens with it already written (it replaces
+  // what was in the box). With only kind, that tab opens. With no argument
+  // the composer opens exactly as it was left.
+  const COMPOSER_KIND_NAMES = { text: 'text', photo: 'photo', voice: 'audio', audio: 'audio', video: 'video', music: 'music' };
+  function applyComposerOptions(options) {
+    if (!options || typeof options !== 'object') return;
+    if (typeof options.text === 'string') {
+      setComposerKind('text');
+      const text = document.getElementById('leftForYouComposerText');
+      if (text) text.value = options.text.slice(0, 1000);
+      return;
+    }
+    const kind = COMPOSER_KIND_NAMES[options.kind];
+    if (kind) setComposerKind(kind);
+  }
+
+  function openComposer(options) {
     const overlay = document.getElementById('leftForYouComposerOverlay');
     if (!overlay) return;
+    applyComposerOptions(options);
     overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false');
+    refreshLastOutcome();
     setComposerStatus('');
     setPartnerAwareComposerLabels();
     updateComposerValidity();
@@ -598,6 +769,68 @@
     if (kind === 'photo' && composer.cameraCapture?.selected && composer.cameraCapture.file) return composer.cameraCapture.file;
     const id = { photo: 'leftForYouComposerPhotoFile', video: 'leftForYouComposerVideoFile' }[kind];
     return id ? document.getElementById(id)?.files?.[0] || null : null;
+  }
+
+  function composerCaption(kind = composer.kind) {
+    const id = CAPTION_FIELDS[kind];
+    const value = id ? String(document.getElementById(id)?.value || '').trim() : '';
+    return value || null;
+  }
+
+  // ---- L6: the chosen photo is shown, not just its file name ----
+  function releasePhotoPreview() {
+    const preview = composer.photoPreview;
+    composer.photoPreview = null;
+    if (preview?.owned && preview.url && typeof window.URL?.revokeObjectURL === 'function') window.URL.revokeObjectURL(preview.url);
+  }
+
+  function updatePhotoPreview() {
+    const file = selectedComposerFile('photo');
+    if (composer.photoPreview?.file !== file) {
+      releasePhotoPreview();
+      if (file) {
+        const fromCamera = Boolean(composer.cameraCapture?.selected && composer.cameraCapture.file === file);
+        let url = fromCamera ? composer.cameraCapture.url || '' : '';
+        let owned = false;
+        if (!url && typeof Blob !== 'undefined' && file instanceof Blob && typeof window.URL?.createObjectURL === 'function') {
+          try { url = window.URL.createObjectURL(file); owned = Boolean(url); } catch (_) { url = ''; }
+        }
+        composer.photoPreview = { file, url, owned };
+      }
+    }
+    const url = composer.photoPreview?.url || '';
+    const wrap = document.getElementById('leftForYouComposerPhotoPreview');
+    const image = document.getElementById('leftForYouComposerPhotoPreviewImage');
+    const actions = document.getElementById('leftForYouComposerPhotoActions');
+    const name = document.getElementById('leftForYouComposerPhotoName');
+    if (image) { if (url) { if (image.getAttribute?.('src') !== url) image.src = url; } else image.removeAttribute?.('src'); }
+    if (wrap) wrap.hidden = !url;
+    if (actions) actions.hidden = Boolean(url);
+    // Without a preview (a browser that cannot show it) the name still says what was chosen.
+    if (name) name.textContent = file && !url ? (file.name || '') : '';
+  }
+
+  function clearPhotoChoice() {
+    const input = document.getElementById('leftForYouComposerPhotoFile');
+    if (input) { try { input.value = ''; } catch (_) { /* read-only in some test shims */ } }
+    discardCameraCapture();
+    updateComposerValidity();
+  }
+
+  // ---- L8: a refused camera or microphone says where to turn it back on ----
+  function isPermissionDenied(error) {
+    return error?.name === 'NotAllowedError' || error?.name === 'PermissionDeniedError';
+  }
+
+  function permissionPlace() {
+    if (!window.UsPlatform?.isNative) return 'dalle impostazioni del browser per questo sito';
+    if (document.documentElement?.classList?.contains('us-native-ios')) return 'da Impostazioni del telefono › US';
+    return 'da Impostazioni del telefono › App › US › Autorizzazioni';
+  }
+
+  function permissionDeniedText(device) {
+    const what = device === 'camera' ? 'la fotocamera' : 'il microfono';
+    return `Manca il permesso per ${what}. Attivalo ${permissionPlace()}.`;
   }
 
   // Reads only the video's metadata. Unknown (a format the browser cannot
@@ -785,6 +1018,7 @@
     const button = document.getElementById('leftForYouComposerSend');
     if (button) button.disabled = !composerCanSend();
     updateRecorderUi();
+    updatePhotoPreview();
     return composerCanSend();
   }
 
@@ -857,7 +1091,7 @@
       composer.cameraOpen = false;
       releaseCameraStream();
       updateCameraUi();
-      setComposerStatus(error?.name === 'NotAllowedError' ? 'La fotocamera non è disponibile. Controlla i permessi e riprova.' : 'Non riesco ad aprire la fotocamera su questo dispositivo.', 'error');
+      setComposerStatus(isPermissionDenied(error) ? permissionDeniedText('camera') : 'Non riesco ad aprire la fotocamera su questo dispositivo.', 'error');
     }
   }
 
@@ -1113,7 +1347,7 @@
     } else {
       record.setAttribute('role', 'button');
       record.tabIndex = 0;
-      record.setAttribute('aria-label', recording ? 'Registrazione in corso. Tocca per fermare.' : 'Tocca per registrare una voce');
+      record.setAttribute('aria-label', recording ? 'Registrazione in corso. Tocca per fermare.' : 'Tocca per registrare un vocale');
     }
     record.setAttribute('aria-pressed', recording ? 'true' : 'false');
     if (idle) idle.hidden = state !== 'idle';
@@ -1173,7 +1407,7 @@
     const mediaDevices = window.navigator?.mediaDevices;
     const MediaRecorderCtor = window.MediaRecorder;
     if (!mediaDevices?.getUserMedia || !MediaRecorderCtor) {
-      setComposerStatus('La registrazione vocale non è disponibile in questo browser.', 'error');
+      setComposerStatus('I vocali non si possono registrare su questo dispositivo.', 'error');
       return;
     }
     discardRecording();
@@ -1198,7 +1432,7 @@
       startRecordingVisualizer(stream);
       recorder.ondataavailable = (event) => { if (event.data?.size) composer.recordingChunks.push(event.data); };
       recorder.onerror = () => {
-        setComposerStatus('Non riesco a registrare la voce. Riprova.', 'error');
+        setComposerStatus('Non riesco a registrare il vocale. Riprova.', 'error');
         discardRecording();
       };
       recorder.onstop = () => {
@@ -1243,7 +1477,7 @@
       composer.mediaRecorder = null;
       composer.recordingState = 'idle';
       updateRecorderUi();
-      setComposerStatus(error?.name === 'NotAllowedError' ? 'Il microfono non è disponibile. Controlla i permessi e riprova.' : 'Non riesco ad avviare la registrazione. Riprova.', 'error');
+      setComposerStatus(isPermissionDenied(error) ? permissionDeniedText('microphone') : 'Non riesco ad avviare la registrazione. Riprova.', 'error');
       updateComposerValidity();
     }
   }
@@ -1317,6 +1551,10 @@
     const text = document.getElementById('leftForYouComposerText');
     if (text) text.value = '';
     document.querySelectorAll('[data-us-composer-panel] input[type="file"]').forEach((input) => { input.value = ''; });
+    Object.values(CAPTION_FIELDS).forEach((id) => {
+      const caption = document.getElementById(id);
+      if (caption) caption.value = '';
+    });
     const music = document.getElementById('leftForYouComposerMusic');
     if (music) music.value = '';
     const musicSearchInput = document.getElementById('leftForYouMusicSearch');
@@ -1327,6 +1565,7 @@
       const slot = document.getElementById(`leftForYouComposer${kind}Name`);
       if (slot) slot.textContent = '';
     });
+    releasePhotoPreview();
     updateComposerValidity();
   }
 
@@ -1358,7 +1597,7 @@
       mediaPath = canonicalSpotifyTrackUrl(trackId);
     } else if (kind === 'audio') {
       file = composer.recording?.file;
-      if (!file) { setComposerStatus('Registra una voce prima di lasciarla.', 'error'); return; }
+      if (!file) { setComposerStatus('Registra un vocale prima di lasciarlo.', 'error'); return; }
       if (file.size > 25 * 1024 * 1024) { setComposerStatus('Il file è troppo grande (massimo 25 MB).', 'error'); return; }
     } else {
       file = selectedComposerFile(kind);
@@ -1367,6 +1606,10 @@
         const problem = await videoProblem(file);
         if (problem) { setComposerStatus(problem, 'error'); return; }
       } else if (file.size > 25 * 1024 * 1024) { setComposerStatus('Il file è troppo grande (massimo 25 MB).', 'error'); return; }
+    }
+    if (CAPTION_FIELDS[kind]) {
+      body = composerCaption(kind);
+      if (body && body.length > CAPTION_MAX) { setComposerStatus('La didascalia è troppo lunga (massimo 280 caratteri).', 'error'); return; }
     }
     if (!composerCanSend()) {
       setComposerStatus('Completa il contenuto prima di lasciarlo.', 'error');
@@ -1390,10 +1633,11 @@
       if (inserted?.id) window.sendWebPushEvent?.('left_for_you', inserted.id).catch?.(() => {});
       setComposerStatus(`Lasciato per ${personName} ♡`, 'success');
       resetComposerInputs();
+      refreshLastOutcome();
       setTimeout(() => { if (!composer.sending) closeComposer(); }, 900);
     } catch (error) {
       console.warn('[US Left for You] send', error);
-      setComposerStatus(`Non riesco a lasciarlo a ${personName} ora. Riprova, è ancora qui.`, 'error');
+      setComposerStatus(`Non riesco a lasciarlo ${toPartner()} ora. Riprova, è ancora qui.`, 'error');
     } finally {
       setComposerBusy(false);
     }
@@ -1421,13 +1665,15 @@
       pick?.addEventListener('click', () => file?.click());
       file?.addEventListener('change', () => {
         if (fileId === 'leftForYouComposerPhotoFile' && file.files?.[0]) discardCameraCapture();
+        // The photo shows itself (preview); the video keeps its file name.
         const slot = document.getElementById(nameId);
-        if (slot) slot.textContent = file.files?.[0]?.name || '';
+        if (slot && fileId !== 'leftForYouComposerPhotoFile') slot.textContent = file.files?.[0]?.name || '';
         if (fileId === 'leftForYouComposerVideoFile') setComposerStatus('');
         updateComposerValidity();
         if (fileId === 'leftForYouComposerVideoFile') checkChosenVideo(file);
       });
     }
+    document.getElementById('leftForYouComposerPhotoChange')?.addEventListener('click', clearPhotoChoice);
     document.getElementById('leftForYouComposerText')?.addEventListener('input', updateComposerValidity);
     document.getElementById('leftForYouComposerText')?.addEventListener('change', updateComposerValidity);
     document.getElementById('leftForYouComposerMusic')?.addEventListener('input', updateComposerValidity);
@@ -1507,7 +1753,7 @@
 
   function boot() {
     window.addEventListener('us-identity-change', event=>{
-      if(!event.detail?.identityKey){profiles.clear();items=[];activeItem=null;close();closeComposer();}
+      if(!event.detail?.identityKey){profiles.clear();items=[];activeItem=null;close();closeComposer();refreshLastOutcome();}
       for(const id of ['leftForYouPartnerName','leftForYouFromName']){
         const label=document.getElementById(id);if(label)label.textContent=partnerName();
       }
@@ -1517,6 +1763,7 @@
     document.getElementById('leftForYouBackdrop')?.addEventListener('click', close);
     document.getElementById('leftForYouRetry')?.addEventListener('click', retry);
     document.getElementById('leftForYouConserve')?.addEventListener('click', conserve);
+    document.getElementById('leftForYouReply')?.addEventListener('click', reply);
     document.getElementById('leftForYouNext')?.addEventListener('click', async () => {
       if (currentIndex >= items.length - 1) return;
       currentIndex += 1; await renderCurrent();
@@ -1536,7 +1783,8 @@
   }
 
   const api = {
-    isUnseen, renderItemMarkup, labelForKind, open, close, load, conserve, retry, boot,
+    isUnseen, renderItemMarkup, labelForKind, open, close, load, conserve, retry, reply, boot,
+    refreshLastOutcome, lastOutcomeText, openedWhen,
     tap, applyEnvelopeState, updateEntry, envelopeStateFor, envelopeIsResolved, subscribeRealtime, handleIncoming, alignCurrentToRenderedItem,
     setComposerKind, openComposer, closeComposer, send, updateComposerValidity, composerCanSend,
     startRecording, stopRecording, discardRecording, toggleVoiceRecording,
