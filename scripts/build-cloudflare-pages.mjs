@@ -58,8 +58,6 @@ const RUNTIME_FILES = [
   'ricordi-inline-carousel.js',
   'identity.js',
   'settings2.css',
-  'polish4.css',
-  'polish4.js',
   'due-colori.css',
   'dc-oggi.css',
   'dc-noi.css',

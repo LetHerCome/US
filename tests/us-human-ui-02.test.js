@@ -122,7 +122,8 @@ const round = (id, family, over = {}) => ({ id, game_family: family, item_count:
 test('Gioca V4: six existing game IDs and hero are in one bento grid', async () => {
   const html = await gioca(homeOf()).hubHtml();
   const ids = [...html.matchAll(/data-gv2-family="([a-z_]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(ids, ['scopritevi', 'confrontatevi', 'ridete', 'quanto_mi_conosci', 'rivivete', 'e_se']);
+  // G7 1.0 — "E se…?" is no longer offered (old rounds still open by id).
+  assert.deepEqual(ids, ['scopritevi', 'confrontatevi', 'ridete', 'quanto_mi_conosci', 'rivivete']);
   assert.ok(html.indexOf('us-gv2-game-grid') < html.indexOf('data-gv2-action="per-voi"'), 'Per voi is the first bento tile inside the game grid');
   assert.ok(html.indexOf('data-gv2-action="per-voi"') < html.indexOf('data-gv2-action="swipe"'), 'Per voi precedes Swipe in visual and keyboard order');
   assert.equal((html.match(/data-gv2-action="per-voi"/g) || []).length, 1);
@@ -405,7 +406,8 @@ test('shell: Ti penso lives in top chrome and Per voi stays inside Gioca', () =>
   assert.doesNotMatch(top, /usPerVoiTop/);
   assert.equal((html.match(/id="thinkButton"/g) || []).length, 1);
   assert.match(read('identity.css'), /US-SHELL-THINK-01/);
-  assert.match(read('polish4.css'), /Ti penso is global top chrome/);
+  // T1 1.0 — polish4.css is gone; the top-chrome rule lives in identity.css.
+  assert.equal(fs.existsSync(path.join(ROOT, 'polish4.css')), false);
   assert.match(read('games.js'), /data-gv2-action="per-voi"/);
 });
 

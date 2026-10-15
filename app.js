@@ -3494,13 +3494,14 @@ function renderBondProgress(totalXp){
   const heroLevel=document.getElementById('heroBondLevel');
   const heroXp=document.getElementById('heroBondXp');
   const heroFill=document.getElementById('bondFill');
-  if(heroLevel)heroLevel.textContent=`BOND LV. ${info.level}`;
-  if(heroXp)heroXp.textContent=`${info.current.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} / ${info.needed.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} XP`;
+  if(heroLevel)heroLevel.textContent=`Livello ${info.level}`;
+  if(heroXp)heroXp.textContent=`${info.current.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} / ${info.needed.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))}`;
   if(heroFill)heroFill.style.width=`${info.progress}%`;
   const levelEl=document.getElementById('bondLevelValue');if(levelEl)levelEl.textContent=info.level;
-  const totalEl=document.getElementById('bondTotalXp');if(totalEl)totalEl.textContent=`${info.total.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} XP totali`;
+  const totalEl=document.getElementById('bondTotalXp');if(totalEl)totalEl.textContent=`${info.total.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} punti`;
   const rankEl=document.getElementById('bondRankTitle');if(rankEl)rankEl.textContent=bondRankTitle(info.level);
-  const nextEl=document.getElementById('bondNextXp');if(nextEl)nextEl.textContent=`${(info.needed-info.current).toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} XP al prossimo livello`;
+  // 1.0 — the bar says where you are going, never a points count.
+  const nextEl=document.getElementById('bondNextXp');if(nextEl)nextEl.textContent=info.progress>=80?`Manca poco al livello ${info.level+1}`:`Verso il livello ${info.level+1}`;
   const pageFill=document.getElementById('bondPageFill');if(pageFill)pageFill.style.width=`${info.progress}%`;
   // M10.1D — la barra è il progresso REALE dentro il livello corrente (bondLevelInfo:
   // (XP totali - soglia del livello) / XP del livello), mai un valore decorativo.
@@ -3509,9 +3510,9 @@ function renderBondProgress(totalXp){
   if(track){
     track.setAttribute('aria-valuemax',String(info.needed));
     track.setAttribute('aria-valuenow',String(info.current));
-    track.setAttribute('aria-valuetext',`${info.current.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} di ${info.needed.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} XP nel livello ${info.level}`);
+    track.setAttribute('aria-valuetext',`${info.current.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} di ${info.needed.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} punti nel livello ${info.level}`);
   }
-  const line=document.getElementById('bondLevelXp');if(line)line.textContent=`${info.current.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} / ${info.needed.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} XP`;
+  const line=document.getElementById('bondLevelXp');if(line)line.textContent=`${info.current.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} / ${info.needed.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))}`;
   // M9D — hub Noi e superficie Risonanza: stessi numeri di couples.bond_xp.
   const hubTitle=document.getElementById('noiHubResonanceTitle');if(hubTitle)hubTitle.textContent=bondRankTitle(info.level);
   const hubMeta=document.getElementById('noiHubResonanceMeta');if(hubMeta)hubMeta.textContent=`Livello ${info.level}`;
@@ -3531,8 +3532,11 @@ async function hydrateBondSummary(){
 window.hydrateBondSummary=hydrateBondSummary;
 
 // ===== M12C · Risonanza V2 — recent real growth, read-only =====
+// 1.0 — "Ultime crescite" is a short diary ("12 ott · Mesiversario, 16 mesi"):
+// missions, lived events and mesiversari, newest first, without points.
 const RESONANCE_HISTORY_LIMIT=6;
-function resonanceHistoryEntries(quests,eventCompletions,eventHistory){
+const resonanceTime=at=>{const t=Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(String(at||''))?`${at}T12:00:00`:at);return Number.isFinite(t)?t:0;};
+function resonanceHistoryEntries(quests,eventCompletions,eventHistory,milestones=[]){
   const historyByRef=new Map((eventHistory||[]).filter(row=>row?.source_ref).map(row=>[String(row.source_ref),row]));
   const byKey=new Map();
   for(const row of quests||[]){
@@ -3549,50 +3553,74 @@ function resonanceHistoryEntries(quests,eventCompletions,eventHistory){
     const title=history?.title||row.event_title_snapshot||'Evento vissuto';
     if(!byKey.has(sourceKey))byKey.set(sourceKey,{kind:'event',sourceKey,title,xp,at:row.completed_at,titleSource:history?.title_source||(row.event_title_snapshot?'snapshot':'missing')});
   }
+  for(const row of milestones||[]){
+    const months=Math.max(0,Math.floor(Number(row?.months_together)||0));
+    if(!row?.milestone_date||!months)continue;
+    const kind=row.kind==='anniversary'?'anniversary':'monthiversary';
+    const sourceKey=`milestone:${row.milestone_date}:${kind}`;
+    if(!byKey.has(sourceKey))byKey.set(sourceKey,{kind:'milestone',milestone:kind,months,sourceKey,title:'',xp:Math.max(0,Number(row.xp_awarded)||0),at:row.milestone_date});
+  }
   return [...byKey.values()]
-    .sort((a,b)=>a.at<b.at?1:a.at>b.at?-1:(a.sourceKey<b.sourceKey?-1:a.sourceKey>b.sourceKey?1:0))
+    .sort((a,b)=>resonanceTime(b.at)-resonanceTime(a.at)||(a.sourceKey<b.sourceKey?-1:a.sourceKey>b.sourceKey?1:0))
     .slice(0,RESONANCE_HISTORY_LIMIT);
 }
 function resonanceHistoryDate(at){
-  const d=new Date(at);
-  return Number.isNaN(d.getTime())?'':d.toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'short'});
+  const t=resonanceTime(at);
+  return t?new Date(t).toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'short'}):'';
+}
+function resonanceHistoryWhat(entry){
+  if(entry.kind==='milestone'){
+    if(entry.milestone==='anniversary'){const years=Math.max(1,Math.round(entry.months/12));return `<span>${years===1?'Anniversario, 1 anno':`Anniversario, ${years} anni`}</span>`;}
+    return `<span>${entry.months===1?'Mesiversario, 1 mese':`Mesiversario, ${entry.months} mesi`}</span>`;
+  }
+  const label=entry.kind==='quest'?'Missione:':'Evento:';
+  const liveNote=entry.kind==='event'&&entry.titleSource==='live'?' <small>(titolo attuale)</small>':'';
+  return `<span>${label}</span> <b${entry.kind==='event'&&entry.titleSource!=='missing'?' translate="no"':''}>${escapeHtml(entry.title)}</b>${liveNote}`;
 }
 function renderResonanceHistory(entries){
   const root=document.getElementById('noiResonanceHistory');
   if(!root)return;
   root.setAttribute('aria-busy','false');
+  placeResonanceHistory(root);
   if(!entries?.length){
-    root.innerHTML='<div class="noi-resonance-history-empty"><b>La prossima crescita apparirà qui</b><span>Missioni ed eventi completati aggiungono punti reali alla vostra Sintonia.</span></div>';
+    root.innerHTML='<div class="noi-resonance-history-empty"><b>La prossima crescita apparirà qui</b><span>Missioni, eventi vissuti e mesiversari: le cose che fate insieme.</span></div>';
     return;
   }
   root.innerHTML=entries.map(entry=>{
-    const kindLabel=entry.kind==='quest'?'Missione di coppia':'Evento vissuto';
-    const liveNote=entry.kind==='event'&&entry.titleSource==='live'?' · titolo attuale':'';
     const date=resonanceHistoryDate(entry.at);
-    return `<article class="noi-resonance-history-row" data-resonance-source="${escapeHtml(entry.sourceKey)}" data-resonance-kind="${escapeHtml(entry.kind)}"><span class="noi-resonance-history-mark" aria-hidden="true"></span><span class="noi-resonance-history-copy"><small>${escapeHtml(kindLabel)}${date?` · ${escapeHtml(date)}`:''}${liveNote}</small><b${entry.kind==='event'&&entry.titleSource!=='missing'?' translate="no"':''}>${escapeHtml(entry.title)}</b></span><strong>+${entry.xp.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} XP</strong></article>`;
+    return `<article class="noi-resonance-history-row" data-resonance-source="${escapeHtml(entry.sourceKey)}" data-resonance-kind="${escapeHtml(entry.kind)}"><span class="noi-resonance-history-mark" aria-hidden="true"></span><p class="noi-resonance-history-copy">${date?`<time>${escapeHtml(date)}</time><span class="noi-resonance-history-sep" aria-hidden="true"> · </span>`:''}${resonanceHistoryWhat(entry)}</p></article>`;
   }).join('');
+}
+// The diary sits right under the Sintonia card, above the rewards.
+function placeResonanceHistory(root){
+  const section=root?.closest?.('.noi-resonance-history');
+  const card=section?.parentElement?.querySelector?.(':scope > .noi-resonance');
+  if(card&&card.nextElementSibling!==section)card.after(section);
 }
 async function hydrateResonanceHistory(){
   const profile=window.usProfile;
   const root=document.getElementById('noiResonanceHistory');
   if(!profile||!root)return;
+  placeResonanceHistory(root);
   root.setAttribute('aria-busy','true');
   const coupleId=profile.couple_id;
-  const [{data:quests,error:questError},{data:events,error:eventError},{data:history,error:historyError}]=await Promise.all([
+  const [{data:quests,error:questError},{data:events,error:eventError},{data:history,error:historyError},{data:milestones,error:milestoneError}]=await Promise.all([
     sb.from('bond_weekly_quests').select('id,title,xp,completed_at').eq('couple_id',coupleId).not('completed_at','is',null).order('completed_at',{ascending:false}).limit(8),
     sb.from('shared_event_completions').select('id,xp_awarded,completed_at,event_title_snapshot').eq('couple_id',coupleId).order('completed_at',{ascending:false}).limit(8),
-    sb.from('relationship_event_history').select('source_ref,title,title_source,completed_at').order('completed_at',{ascending:false}).limit(8)
+    sb.from('relationship_event_history').select('source_ref,title,title_source,completed_at').order('completed_at',{ascending:false}).limit(8),
+    sb.from('relationship_milestones').select('milestone_date,kind,months_together,xp_awarded').eq('couple_id',coupleId).order('milestone_date',{ascending:false}).limit(6)
   ]);
   if(window.usProfile!==profile)return;
   if(questError)console.warn(questError);
   if(eventError)console.warn(eventError);
   if(historyError)console.warn(historyError);
-  if(questError&&eventError){
+  if(milestoneError)console.warn(milestoneError);
+  if(questError&&eventError&&milestoneError){
     root.setAttribute('aria-busy','false');
     root.innerHTML='<div class="noi-resonance-history-empty"><b>Crescita non disponibile</b><span>Riprova tra un momento.</span></div>';
     return;
   }
-  renderResonanceHistory(resonanceHistoryEntries(questError?[]:(quests||[]),eventError?[]:(events||[]),historyError?[]:(history||[])));
+  renderResonanceHistory(resonanceHistoryEntries(questError?[]:(quests||[]),eventError?[]:(events||[]),historyError?[]:(history||[]),milestoneError?[]:(milestones||[])));
 }
 window.hydrateResonanceHistory=hydrateResonanceHistory;
 window.UsResonance=Object.freeze({historyEntries:resonanceHistoryEntries,renderHistory:renderResonanceHistory});

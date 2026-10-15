@@ -16,7 +16,7 @@ const path = require('node:path');
 const { ROOT, loadChromium, startServer, FAKE_SUPABASE } = require('./helpers/oggi-browser');
 
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
-const css = () => ['styles.css', 'ui-foundation.css', 'identity.css', 'fix4.css', 'polish4.css', 'settings2.css', 'calendar.css', 'events.css', 'games.css', 'moments-albums.css', 'left-for-you.css', 'stories.css']
+const css = () => ['styles.css', 'ui-foundation.css', 'identity.css', 'fix4.css', 'settings2.css', 'calendar.css', 'events.css', 'games.css', 'moments-albums.css', 'left-for-you.css', 'stories.css']
   .map(read).join('\n');
 
 test('M12B.1 static: Oggi keeps no overflow clip on body, html or #home', () => {

@@ -92,7 +92,8 @@ test('M11B client: hub shows Per voi, the six modes and the weekly turn, with no
   await tick();
   const html = h.nodes.quizHub.innerHTML;
   assert.match(html, /<b>Per voi<\/b><small>5 domande scelte per voi<\/small>/);
-  for (const name of ['Scopritevi', 'Confrontatevi', 'Ridete', 'Quanto mi conosci\\?', 'Rivivete', 'E se…\\?']) assert.match(html, new RegExp(name));
+  for (const name of ['Scopritevi', 'Confrontatevi', 'Ridete', 'Quanto mi conosci\\?', 'Rivivete']) assert.match(html, new RegExp(name));
+  assert.doesNotMatch(html, /E se…\?|data-gv2-family="e_se"/, 'G7 1.0: E se…? is no longer offered');
   assert.match(html, /<b>Tocca a te<\/b>/);
   assert.match(html, /Crea la domanda/);
   assert.doesNotMatch(html, NO_SCORE);
@@ -287,7 +288,8 @@ test('M11B client: weekly question form sends only content, retries idempotently
   h.nodes.usGameV2Panel.query['#usGv2WeeklyForm'] = form;
   h.nodes.quizHub.fire('click', { target: { closest: () => ({ dataset: { gv2Action: 'weekly-create' } }) } });
   assert.match(h.nodes.usGameV2Panel.innerHTML, /Crea la domanda/);
-  assert.match(h.nodes.usGameV2Panel.innerHTML, /value="quanto_mi_conosci"  disabled/, 'Quanto mi conosci? needs choices');
+  // G9 1.0 — no technical "Nei giochi" choice: the question always goes to Scopritevi (and so Per voi).
+  assert.doesNotMatch(h.nodes.usGameV2Panel.innerHTML, /Nei giochi|name="families"/);
   form.fields = { question_text: '', answer_kind: 'open', families: ['scopritevi'] };
   form.query['button[type="submit"]'] = { disabled: false };
   h.nodes.usGameV2Panel.fire('submit', { target: form, preventDefault() {} });
@@ -307,6 +309,7 @@ test('M11B client: weekly question form sends only content, retries idempotently
   assert.equal(sends[0].request_id, sends[1].request_id, 'the retry replays the same request id');
   assert.deepEqual(Object.keys(sends[1]).sort(), ['answer_kind', 'families', 'options', 'question_text', 'request_id']);
   assert.deepEqual(sends[1].options, ['Io', 'Tu']);
+  assert.deepEqual(sends[1].families, ['scopritevi']);
   assert.equal(sends[1].question_text, 'Cosa ti ha fatto ridere?');
   assert.deepEqual(h.pushes, [['game_weekly', 'q7']], 'push carries an id, never the sealed text');
   assert.deepEqual(h.notices, ['Domanda salvata ♡']);
@@ -352,11 +355,12 @@ test('M11F client: the weekly strip reads the server allowance, restrained, neve
   const fresh = harness({ homeState: home({ allowance: allowance() }) });
   await tick();
   assert.match(fresh.nodes.quizHub.innerHTML, /QUESTA SETTIMANA/);
-  assert.match(fresh.nodes.quizHub.innerHTML, /data-gv2-rhythm="open"[\s\S]*<b>3 rimasti<\/b>/);
+  // G10 1.0 — one word for the weekly unit: giochi.
+  assert.match(fresh.nodes.quizHub.innerHTML, /data-gv2-rhythm="open"[\s\S]*<b>Ancora 3 giochi<\/b>/);
   const mid = harness({ homeState: home({ allowance: allowance({ used: 2, per_voi_used: 1, free_used: 1, per_voi_available: false, families: { per_voi: { session_id: 'p', completed: true }, ridete: { session_id: 'r', completed: true } } }) }) });
   await tick();
   const html = mid.nodes.quizHub.innerHTML;
-  assert.match(html, /1 rimasto da giocare/);
+  assert.match(html, /Questa settimana: ancora 1 gioco/);
   assert.equal((html.match(/data-on="true"/g) || []).length, 2);
   assert.match(html, /data-gv2-family="ridete" data-gv2-mode-state="played"/);
   assert.match(html, /Completato<\/em>/, 'US V3: the card names the real state');
@@ -364,7 +368,7 @@ test('M11F client: the weekly strip reads the server allowance, restrained, neve
   const done = harness({ homeState: home({ per_voi: { state: 'played', session_id: 'p' }, allowance: allowance({ used: 3, per_voi_used: 1, free_used: 2, per_voi_available: false, free_available: false, families: { per_voi: { session_id: 'p', completed: true } } }) }) });
   await tick();
   const dh = done.nodes.quizHub.innerHTML;
-  assert.match(dh, /<b>0 rimasti<\/b>/);
+  assert.match(dh, /<b>Tutti giocati<\/b>/);
   assert.match(dh, /Giocato questa settimana/, 'Per voi shows its played state without repeating the unlock day');
   assert.match(dh, /data-gv2-family="scopritevi" data-gv2-mode-state="locked" aria-disabled="true"/, 'modes stay visible, locked');
   assert.equal(done.nodes.usPerVoiTop.dataset.gv2State, 'played');
@@ -388,7 +392,27 @@ test('M11F client: an exhausted week starts nothing; played modes open their rev
   const pile = harness({ handlers: { start_game_round: () => { throw new Error('too many open rounds'); } } });
   await tick();
   await pile.api.startRound('e_se');
-  assert.match(pile.notices.join('|'), /Prima finite una delle partite in corso/);
+  assert.match(pile.notices.join('|'), /Prima finite uno dei giochi in corso/);
+});
+
+test('G10 1.0: a first round of a mode also asks, with the real number of games left', async () => {
+  const asked = [];
+  const h = harness({ homeState: home({ allowance: allowance() }) });
+  h.window.UsUiFoundation = { confirm: async (opts) => { asked.push(opts); return false; } };
+  await tick();
+  await h.api.chooseMode('scopritevi');
+  await h.api.chooseSwipe();
+  assert.equal(h.calls.some(([n]) => n === 'start_game_round' || n === 'start_swipe_round'), false, 'declined: nothing started');
+  assert.equal(asked.length, 2);
+  assert.equal(asked[0].title, 'Scopritevi');
+  assert.equal(asked[0].body, 'Userete 1 dei 3 giochi di questa settimana.');
+  assert.equal(asked[0].confirmLabel, 'Inizia');
+  assert.equal(asked[1].title, 'Questo o quello');
+  const last = harness({ homeState: home({ allowance: allowance({ used: 2, per_voi_used: 1, free_used: 1, per_voi_available: false }) }) });
+  last.window.UsUiFoundation = { confirm: async (opts) => { asked.push(opts); return false; } };
+  await tick();
+  await last.api.chooseMode('rivivete');
+  assert.equal(asked[2].body, 'Userete l’ultimo gioco di questa settimana.');
 });
 
 test('M11F client: repeating a played mode asks once through the shared US confirm; an open round just resumes', async () => {
@@ -402,8 +426,9 @@ test('M11F client: repeating a played mode asks once through the shared US confi
   await h.api.chooseMode('ridete');
   assert.ok(h.calls.some(([n, a]) => n === 'start_game_round' && a.target_family === 'ridete'));
   assert.match(asked[0].title, /Avete già giocato a Ridete questa settimana/);
-  assert.match(asked[0].body, /un momento/);
+  // G10 1.0 — the confirm names the real number of games left this week.
+  assert.equal(asked[0].body, 'Userete 1 dei 2 giochi di questa settimana.', 'the same count as the strip');
   await h.api.chooseMode('e_se');
-  assert.ok(h.calls.some(([n, a]) => n === 'get_game_session' && a.target_session_id === 'open-1'));
+  assert.ok(h.calls.some(([n, a]) => n === 'get_game_session' && a.target_session_id === 'open-1'), 'an old E se…? round still opens');
   assert.equal(asked.length, 2, 'resuming never asks');
 });

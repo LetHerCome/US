@@ -137,18 +137,8 @@ test('the preview follows the server rule: nothing for an event made the same da
   assert.equal(rewarded.node('usEventCompleteBtn').textContent, '✓ Segna come fatto', 'one event with points a day');
 });
 
-test('Polish: the shared celebration refuses 0 and draws nothing', () => {
-  let created = 0;
-  const window = {};
-  const document = {
-    readyState: 'complete', getElementById: () => null, querySelectorAll: () => [],
-    createElement: () => { created += 1; return { classList: { add() {}, remove() {} }, querySelector: () => ({}), setAttribute() {} }; },
-    body: { appendChild() {}, querySelectorAll: () => [] }
-  };
-  vm.runInNewContext(read('polish4.js'), {
-    window, document, console: { info() {} }, requestAnimationFrame() {}, setTimeout: () => 1, clearTimeout() {},
-    MutationObserver: class { observe() {} }, Number, Math
-  }, { filename: 'polish4.js' });
-  assert.equal(window.usCelebrateXp(0, 'Evento vissuto'), false);
-  assert.equal(created, 0);
+test('T1 1.0: the old "+XP" party is gone; a silent shim answers callers', () => {
+  assert.equal(fs.existsSync(path.join(ROOT, 'polish4.js')), false);
+  const progression = read('progression.js');
+  assert.match(progression, /window\.usCelebrateXp = window\.usCelebrateXp \|\| function \(\) \{\};/);
 });

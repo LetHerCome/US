@@ -73,19 +73,20 @@ test('M10.1D: the rendered bar, labels and progressbar semantics all come from t
   assert.equal(els.bondPageFill.style.width, '12%');
   assert.equal(els.noiHubResonanceFill.style.width, '12%', 'hub and Risonanza never disagree');
   assert.equal(els.bondResonanceLevel.textContent, 'Livello 3');
-  assert.equal(els.bondNextXp.textContent, '440 XP al prossimo livello');
-  assert.deepEqual(['aria-valuenow', 'aria-valuemax', 'aria-valuetext'].map((a) => els.bondProgressTrack.getAttribute(a)), ['60', '500', '60 di 500 XP nel livello 3']);
+  // S5/S7 1.0 — the line under the bar says where you are going, without points.
+  assert.equal(els.bondNextXp.textContent, 'Verso il livello 4');
+  assert.deepEqual(['aria-valuenow', 'aria-valuemax', 'aria-valuetext'].map((a) => els.bondProgressTrack.getAttribute(a)), ['60', '500', '60 di 500 punti nel livello 3']);
   assert.equal(els.noiResonanceTotal.textContent, '610');
   // XP grows → the bar advances; crossing the threshold → new level range.
   window.render(800);
   assert.equal(els.bondPageFill.style.width, `${(800 - 550) / 500 * 100}%`);
   assert.ok(parseFloat(els.bondPageFill.style.width) > 12);
   window.render(1049);
-  assert.equal(els.bondNextXp.textContent, '1 XP al prossimo livello');
+  assert.equal(els.bondNextXp.textContent, 'Manca poco al livello 4');
   window.render(1050);
   assert.equal(els.bondResonanceLevel.textContent, 'Livello 4');
   assert.equal(els.bondPageFill.style.width, '0%');
-  assert.equal(els.bondNextXp.textContent, '650 XP al prossimo livello');
+  assert.equal(els.bondNextXp.textContent, 'Verso il livello 5');
   assert.equal(els.bondProgressTrack.getAttribute('aria-valuemax'), '650');
   assert.equal(window.usBondXp, 1050);
 });
@@ -112,7 +113,9 @@ test('M10.1D: the Risonanza card is level, bar and XP to the next level — no r
 });
 
 test('M10.1D: Risonanza is progress accumulated inside US — never relationship quality', () => {
-  const card = html.match(/<article class="noi-resonance"[\s\S]*?<\/article>/)[0] + html.match(/<section class="noi-resonance-guide"[\s\S]*?<\/section>/)[0];
+  // S5 1.0 — the old "Come cresce" guide is gone; the card's own line says how it grows.
+  const card = html.match(/<article class="noi-resonance"[\s\S]*?<\/article>/)[0];
+  assert.doesNotMatch(html, /noi-resonance-guide/);
   const ui = card + slice('function renderBondProgress(totalXp){', 'async function hydrateBondSummary(){') + read('fix4.js').match(/window\.bondRankTitle = [\s\S]*?\};/)[0];
   assert.doesNotMatch(ui, /qualit[àa]|compatibilit|salute della|health|punteggio|score|valut|affiatamento|percentuale di/i);
 });

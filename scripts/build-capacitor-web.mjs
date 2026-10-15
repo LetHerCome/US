@@ -59,8 +59,6 @@ const RUNTIME_FILES = [
   'native-frameless.css',
   'identity.js',
   'settings2.css',
-  'polish4.css',
-  'polish4.js',
   'due-colori.css',
   'dc-oggi.css',
   'dc-noi.css',

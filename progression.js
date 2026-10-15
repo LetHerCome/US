@@ -2,6 +2,9 @@
 'use strict';
 if (window.__usProgressionV1Installed) return;
 window.__usProgressionV1Installed = true;
+// T1 — the old "+XP" party (polish4.js) is gone. Callers that still announce
+// points find a silent no-op; the level moment below is the only celebration.
+window.usCelebrateXp = window.usCelebrateXp || function () {};
 
 const $ = (id) => document.getElementById(id);
 const esc = (value = '') => String(value).replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
@@ -319,6 +322,7 @@ function renderSintoniaArt(next = state) {
 // existing unlock queue takes over. No extra server call.
 const LEVEL_SEEN_PREFIX = 'us:sintonia:level-seen:v1:';
 let levelMomentOpen = false;
+let levelMomentClose = null;
 function levelSeenKey() {
   const profile = window.usProfile;
   return profile?.id && profile?.couple_id ? `${LEVEL_SEEN_PREFIX}${profile.couple_id}:${profile.id}` : '';
@@ -341,16 +345,14 @@ function celebrateLevelUp(next, pending) {
   if (!seen || level < seen) { writeSeenLevel(level); return false; }
   if (level === seen || levelMomentOpen || document.hidden || unlockRoot()?.classList?.contains('open')) return false;
   if (!writeSeenLevel(level)) return false;
-  showLevelMoment({ from: seen, level, totalXp: Number(next?.total_xp) || 0, unlocks: pending.filter(presented) });
+  showLevelMoment({ from: seen, level, unlocks: pending.filter(presented) });
   return true;
 }
-function showLevelMoment({ from, level, totalXp, unlocks }) {
-  const info = levelInfo(totalXp);
-  const left = info ? info.needed - info.current : 0;
+function showLevelMoment({ from, level, unlocks }) {
   const rank = rankTitle(level);
-  const fmt = (n) => Number(n).toLocaleString((globalThis.UsI18n?.tag||'it-IT'));
   const dots = Array.from({ length: 12 }, (_, i) => `<circle class="lvx-dot ${i % 2 ? 'is-b' : 'is-a'}" cx="110" cy="110" r="${i % 3 ? 2.6 : 3.6}"/>`).join('');
-  const prize = unlocks.length === 1 ? 'Un premio sbloccato' : unlocks.length > 1 ? `${unlocks.length} premi sbloccati` : '';
+  // S2 — the level and its name, one shared line, then what it brought.
+  const gifts = unlocks.map((reward) => `<li><b>${esc(presentedTitle(reward))}</b><span>${esc(presentation(reward)?.label || '')}</span></li>`).join('');
   const action = unlocks.length === 1 ? 'Scoprilo' : unlocks.length > 1 ? 'Scoprili' : 'Chiudi';
   const root = document.createElement('div');
   root.className = 'us-level-moment';
@@ -360,22 +362,26 @@ function showLevelMoment({ from, level, totalXp, unlocks }) {
   root.innerHTML = `<div class="us-level-moment-body">
     <div class="lvx" aria-hidden="true"><span class="lvx-wash"></span><svg viewBox="0 0 220 220" focusable="false"><circle class="lvx-track" cx="110" cy="110" r="100"/><circle class="lvx-ring" cx="110" cy="110" r="100" pathLength="100"/><circle class="lvx-wave" cx="110" cy="110" r="64"/><g class="lvx-orbit"><circle class="lvx-a" cx="72" cy="110" r="34"/><circle class="lvx-b" cx="148" cy="110" r="34"/></g><circle class="lvx-noi" cx="110" cy="110" r="64"/>${dots}</svg><span class="lvx-num"><span class="lvx-odo"><i>${Math.max(1, from)}</i><i>${level}</i></span></span></div>
     <span class="us-level-moment-kicker">Nuovo livello di Sintonia</span>
-    <h2 id="usLevelMomentTitle">Livello <em>${level}</em></h2>
-    <p>${esc(rank ? `${rank}. ` : '')}${info ? `${fmt(left)} XP al prossimo livello.` : ''}</p>
-    ${prize ? `<span class="us-level-moment-chip">${prize}</span>` : ''}
+    <h2 id="usLevelMomentTitle">${esc(rank ? `Livello ${level} · ${rank}` : `Livello ${level}`)}</h2>
+    <p>Ci siete arrivati insieme.</p>
+    ${gifts ? `<ul class="us-level-moment-gifts" aria-label="${unlocks.length === 1 ? 'Il premio nuovo' : 'I premi nuovi'}">${gifts}</ul>` : ''}
     <div class="us-level-moment-actions"><button type="button" class="primary" data-us-level-go>${action}</button></div>
   </div>`;
   document.body.appendChild(root);
   levelMomentOpen = true;
   const reduced = reducedMotion();
   const visual = root.querySelector('.lvx');
-  const close = () => {
+  // From system Back the rewards come a moment later, once navigation.js has
+  // finished unwinding history, so that same Back cannot also close them.
+  const close = ({ fromBack = false } = {}) => {
     if (!root.isConnected) return;
     root.removeEventListener('keydown', onKey);
     const done = () => {
       root.remove();
       levelMomentOpen = false;
-      if (unlocks.length) startUnlockQueue(unlocks);
+      levelMomentClose = null;
+      if (unlocks.length && fromBack) setTimeout(() => startUnlockQueue(unlocks), 120);
+      else if (unlocks.length) startUnlockQueue(unlocks);
       else window.USPet?.react?.('reward');
     };
     if (reduced || typeof root.animate !== 'function') return done();
@@ -383,7 +389,9 @@ function showLevelMoment({ from, level, totalXp, unlocks }) {
   };
   const onKey = (event) => { if (event.key === 'Escape') close(); };
   root.addEventListener('keydown', onKey);
-  root.querySelector('[data-us-level-go]').addEventListener('click', close);
+  root.querySelector('[data-us-level-go]').addEventListener('click', () => close());
+  // S10 — system Back (navigation.js) does what the button does.
+  levelMomentClose = close;
   const focusLater = (ms) => setTimeout(() => root.querySelector('[data-us-level-go]')?.focus?.({ preventScroll: true }), ms);
   if (reduced || typeof root.animate !== 'function') {
     visual.classList.add('is-done');
@@ -464,6 +472,43 @@ function presentedDescription(reward) {
   if (SLOTS[reward?.category]?.look) return lookForReward(reward)?.look.note || reward.description;
   return reward?.description || '';
 }
+// S8 — who sees a reward. Looks, accents and the symbol are chosen on each
+// phone (device preferences above); the countdown style is saved for the
+// couple (save_countdown_oggi_v1), so both phones show the same one.
+const SCOPE = Object.freeze({
+  device: Object.freeze({ label: 'Solo sul tuo telefono', short: 'solo sul tuo telefono', note: 'Ognuno sceglie il suo.' }),
+  couple: Object.freeze({ label: 'Per tutti e due', short: 'per tutti e due', note: 'Il countdown è lo stesso sui vostri telefoni.' })
+});
+const scopeFor = (kind) => (kind === 'countdown' ? SCOPE.couple : SCOPE.device);
+function scopeLine(kind) {
+  const scope = scopeFor(kind);
+  return `<p class="us-reward-scope"><b>${esc(scope.label)}</b><span>${esc(scope.note)}</span></p>`;
+}
+// What the next level brings, said plainly: "Al livello 3 tutta US diventa rosa".
+const PROMISES = Object.freeze({
+  theme_rose: 'tutta US diventa rosa',
+  theme_midnight: 'tutta US diventa blu notte',
+  theme_film: 'tutta US prende i colori della pellicola',
+  theme_blue_hour: 'tutta US diventa blu, come dopo il tramonto',
+  theme_graphite: 'tutta US diventa nero e argento',
+  accent_cherry: 'i controlli diventano rosso ciliegia',
+  accent_champagne: 'i controlli diventano oro chiaro',
+  accent_ice: 'i controlli diventano azzurro ghiaccio',
+  effect_pulse: 'il simbolo US inizia a respirare',
+  effect_constellation: 'tre stelle si accendono attorno al simbolo US',
+  effect_shimmer: 'un riflesso attraversa il simbolo US'
+});
+function promiseLine(reward) {
+  const level = Number(reward?.level_required) || 0;
+  const shown = presentation(reward);
+  const name = presentedTitle(reward);
+  const what = PROMISES[reward?.id]
+    || (shown?.kind === 'countdown' ? `arriva lo stile countdown «${shown.style.name}»` : '')
+    || (shown?.kind === 'oggi_theme' ? `Oggi si veste di «${name}»` : '')
+    || (shown?.kind === 'oggi_effect' ? `arriva l’effetto «${name}» su Oggi` : '')
+    || `arriva «${name}»`;
+  return `Al livello ${level} ${what}`;
+}
 function renderNext(next = state) {
   const root = $('usProgressionNext');
   if (!root) return;
@@ -473,7 +518,7 @@ function renderNext(next = state) {
     return;
   }
   const shown = presentation(reward);
-  root.innerHTML = `<span class="us-progression-next-preview" aria-hidden="true">${previewMarkup(reward)}</span><span class="us-progression-next-copy"><small>PROSSIMO SBLOCCO · LIVELLO ${Number(reward.level_required) || 0}</small><b>${esc(presentedTitle(reward))}</b><span>${esc(shown?.where ? `${shown.label} · ${presentedDescription(reward)}` : presentedDescription(reward))}</span></span>`;
+  root.innerHTML = `<span class="us-progression-next-preview" aria-hidden="true">${previewMarkup(reward)}</span><span class="us-progression-next-copy"><small>PROSSIMO SBLOCCO</small><b>${esc(promiseLine(reward))}</b><span class="us-progression-next-meta"><span>${esc(presentedTitle(reward))}</span><span>${esc(scopeFor(shown?.kind).short)}</span></span></span>`;
 }
 
 function rewardTile(reward) {
@@ -519,6 +564,7 @@ function countdownGroup(next, expanded = false) {
     category: 'countdown', label: 'Stili Countdown', owned, total: styles.length,
     markup: (open) => `<details class="us-reward-group" data-category="countdown" aria-label="Stili Countdown"${open ? " open" : ""}>
       <summary class="us-reward-group-head"><b>Stili Countdown</b><span>Il vostro tempo su Oggi</span><em>${owned}/${styles.length}</em></summary>
+      ${scopeLine('countdown')}
       <div class="us-reward-grid">${styles.map((style) => countdownTile(style, next)).join('')}</div>
     </details>`
   };
@@ -558,6 +604,7 @@ function renderRewards(next = state) {
       category, label: slot.label, owned: groupOwned, total: groupTotal,
       markup: (open) => `<details class="us-reward-group" data-category="${category}" aria-label="${esc(slot.label)}"${open ? ' open' : ''}>
       <summary class="us-reward-group-head"><b>${esc(slot.label)}</b><span>${esc(slot.place)}</span><em>${groupOwned}/${groupTotal}</em></summary>
+      ${scopeLine(category)}
       <div class="us-reward-grid">${tiles}</div>
     </details>`
     };
@@ -608,6 +655,11 @@ function paintUnlock() {
   if (place) {
     place.textContent = shown?.where || '';
     place.hidden = !place.textContent;
+  }
+  const scope = $('usProgressionUnlockScope');
+  if (scope) {
+    scope.textContent = shown ? scopeFor(shown.kind).label : '';
+    scope.hidden = !scope.textContent;
   }
   const extra = $('usProgressionUnlockExtra');
   if (extra) {
@@ -792,12 +844,45 @@ window.addEventListener?.('us:countdown-updated', () => renderRewards(state));
 $('usProgressionUnlockUse')?.addEventListener('click', useUnlock);
 $('usProgressionUnlockLater')?.addEventListener('click', dismissUnlock);
 
+// S5 — the line under the bar names what makes Sintonia grow; each part
+// opens its own place.
+$('usSintoniaGrow')?.addEventListener('click', (event) => {
+  const target = event.target.closest?.('[data-sintonia-go]')?.dataset?.sintoniaGo;
+  if (!target) return;
+  if (target === 'daily') window.openToday?.();
+  else if (target === 'games') {
+    $('usGiocaTabGames')?.click?.();
+    window.scrollTo?.({ top: 0, behavior: 'auto' });
+  } else if (target === 'quest') {
+    window.go?.('bond', { nav: true });
+    setTimeout(() => window.openNoiSection?.('quest'), 60);
+  } else if (target === 'memory') {
+    window.go?.('moments', { nav: true });
+    setTimeout(() => window.UsMomentComposer?.open?.(), 60);
+  }
+});
+
+// S10 — system Back closes the reward window and the level moment exactly
+// like their own buttons (navigation.js layers).
+function closeUnlock() {
+  if (unlockRoot()?.getAttribute('aria-hidden') !== 'false') return false;
+  dismissUnlock();
+  return true;
+}
+function closeLevelMoment() {
+  if (!levelMomentClose) return false;
+  levelMomentClose({ fromBack: true });
+  return true;
+}
+
 window.USProgression = Object.freeze({
   hydrate,
   refreshAfterAction,
   equip: (rewardId) => equipReward(rewardId),
   setLook: async (slot, id) => setDeviceLook(slot, id),
   getState: () => state,
+  closeUnlock,
+  closeLevelMoment,
   previewMarkup
 });
 

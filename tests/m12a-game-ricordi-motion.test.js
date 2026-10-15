@@ -114,7 +114,9 @@ test('reveal: prediction keeps prediction → actual answer → outcome order an
 
 test('reveal: reduced motion removes the staging (instant reveal)', () => {
   const css = read('games.css');
-  assert.match(css, /@media\(prefers-reduced-motion:reduce\)\{#quiz \.us-gv5-reveal-chevron\{transition:none\}\}/, 'collapsible comparison respects reduced motion');
+  // G2 1.0 — answers are visible at once: no collapsible comparison, so no chevron to animate.
+  assert.doesNotMatch(css, /us-gv5-reveal-chevron|\.us-gv5-reveal details/);
+  assert.match(css, /@media\(prefers-reduced-motion:reduce\)\{\.us-gv2-reveal\.is-first-reveal \.us-gv2-lightsplit\{display:none\}/);
 });
 
 async function submitWeekly(h, fields) {

@@ -1359,6 +1359,19 @@ html.us-native{
 }
 
 
+/* Page entry after a tab change (app.js animatePageEntry): a short slide
+   towards the new page. Moved here from polish4.css when that file went. */
+.page.active.us-motion5-enter-next,
+.page.active.us-motion5-enter-prev{
+  animation:usMotion5PageEnter 240ms var(--us-ease-enter) both!important;
+}
+.page.active.us-motion5-enter-next{--us-motion5-enter-x:14px}
+.page.active.us-motion5-enter-prev{--us-motion5-enter-x:-14px}
+@keyframes usMotion5PageEnter{
+  from{opacity:.78;transform:translate3d(var(--us-motion5-enter-x),4px,0)}
+  to{opacity:1;transform:none}
+}
+
 /* Android: the previous 100ms override made navigation feel abrupt. Use
    the same ~220ms premium motion as web while keeping swipe tracking live. */
 html.us-native-android .page.active.us-motion5-enter-next,

@@ -219,6 +219,20 @@ const layers=[
     find:()=>document.getElementById('usLookDetail'),
     open:el=>el?.classList.contains('open'),
     close:()=>window.USOggiLook?.back?.()
+  },
+  {
+    // Sintonia: the reward window and the level moment sit above everything.
+    // Back does what their own button does (Chiudi keeps the reward).
+    name:'progression-unlock',
+    find:()=>document.getElementById('usProgressionUnlock'),
+    open:el=>el?.getAttribute('aria-hidden')==='false',
+    close:()=>window.USProgression?.closeUnlock?.()
+  },
+  {
+    name:'level-moment',
+    find:()=>document.querySelector('.us-level-moment'),
+    open:el=>Boolean(el?.isConnected),
+    close:()=>window.USProgression?.closeLevelMoment?.()
   }
 ];
 
