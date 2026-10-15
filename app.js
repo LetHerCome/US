@@ -4666,6 +4666,10 @@ let questBoardSeq=0,questBoardView=null;
 function questCategoryLabel(category){
   return ({connection:'Connessione',fun:'Divertimento',adventure:'Avventura',discover:'Scoperta',memory:'Ricordo',surprise:'Sorpresa',chill:'Relax'})[category]||category||'Missione';
 }
+// The mockup's card says how rare a mission is ("Scoperta · Non comune").
+function questRarityLabel(rarity){
+  return ({common:'Comune',uncommon:'Non comune',rare:'Rara',epic:'Epica'})[rarity]||'';
+}
 // Missions that ask for a photo open "add a memory" (the Ricordi composer).
 const QUEST_PHOTO_KEYS=new Set(['any-week-photo','any-intentional-memory','any-old-photo','far-thought-photo','near-recreate-photo']);
 function questAsksPhoto(q){return QUEST_PHOTO_KEYS.has(String(q?.template_key||''));}
@@ -4722,21 +4726,25 @@ function renderBondQuest(q,ctx){
   const partnerName=partner?.display_name||'la tua persona';
   const confirmBusy=questActionsInFlight.has(`confirm:${q.id}`);
   const rerollBusy=questActionsInFlight.has(`reroll:${q.id}`);
-  const confirmText=confirmBusy?'Confermo…':view.completed?'Completata':view.mine?'Confermata da te':view.partner?'Conferma anche tu':'Ho completato questa missione';
+  const xp=Math.max(0,Math.round(Number(q.xp)||0));
+  // noi.js questHTML: "✓ Completata · +40 XP", "✓ Confermata da te".
+  const confirmText=confirmBusy?'Confermo…':view.completed?`${questIcon('check')}${xp?`Completata · +${xp} XP`:'Completata'}`:view.mine?`${questIcon('check')}Confermata da te`:view.partner?'Conferma anche tu':'Ho completato questa missione';
   const confirmDisabled=view.completed||view.mine||confirmBusy;
+  const rarity=questRarityLabel(q.rarity);
   const person=(name,done,label,own=false)=>`<li class="quest-person ${done?'checked':''}"><span class="quest-person-initial" aria-hidden="true">${escapeHtml((name||'?').slice(0,1).toUpperCase())}</span><span class="quest-person-name"${own?' translate="no"':''}>${escapeHtml(label)}</span><span class="quest-person-state">${done?`${questIcon('check')}<span class="sr-only">confermato</span>`:'in attesa'}</span></li>`;
   const lockText=view.lockReason==='confirmed'?'Già confermata: non si può più cambiare':'Cambi finiti per questa settimana';
   const reroll=view.completed?'':view.rerollable
     ?`<button type="button" class="quest-reroll" data-quest-action="reroll" ${rerollBusy?'disabled aria-busy="true"':''} onclick="rerollBondQuest('${escapeHtml(q.id)}')" aria-label="Cambia questa missione (${questCountLabel(ctx.rerollsLeft,'cambio rimasto','cambi rimasti')})">${questIcon('arrows-clockwise')}<span class="quest-reroll-label" aria-hidden="true">Cambia</span></button>`
     :`<button type="button" class="quest-reroll is-locked" data-quest-action="reroll" disabled aria-label="${lockText}" title="${lockText}">${questIcon('lock')}</button>`;
-  // Done together: offer to keep it as a memory. A photo mission opens the
-  // same door before, so the photo can be added right away.
+  // Done together: keep it as a memory. The mockup's own door for this
+  // (noi.js, an idea lived together: mini-btn p "Aggiungi un ricordo"),
+  // set in the row where its cards keep their small action ("Cambia").
+  // A photo mission opens the same door before, so the photo can be added.
   const memory=view.completed
-    ?`<button type="button" class="quest-memory" data-quest-action="memory" onclick="addQuestMemory('${escapeHtml(q.id)}')">${questIcon('image')}<span>Salvatelo come ricordo</span></button>`
+    ?`<button type="button" class="quest-memory is-mini" data-quest-action="memory" onclick="addQuestMemory('${escapeHtml(q.id)}')">Aggiungi un ricordo</button>`
     :questAsksPhoto(q)?`<button type="button" class="quest-memory" data-quest-action="photo" onclick="addQuestMemory('${escapeHtml(q.id)}')">${questIcon('image')}<span>Aggiungi la foto</span></button>`:'';
   return `<article class="bond-quest quest-v2 ${view.completed?'completed':''}" data-quest-id="${escapeHtml(q.id)}" data-quest-slot="${escapeHtml(q.slot)}" data-quest-state="${view.status}" data-quest-reroll="${view.rerollable?'rerollable':'locked'}">
-    <div class="quest-top"><span class="quest-category">${escapeHtml(questCategoryLabel(q.category))}</span></div>
-    <h4>${escapeHtml(q.title)}</h4>
+    <div class="quest-top"><div class="quest-head"><span class="quest-category"><span>${escapeHtml(questCategoryLabel(q.category))}</span>${rarity?` · <span>${rarity}</span>`:''}</span><h4>${escapeHtml(q.title)}</h4></div>${xp?`<span class="quest-xp">+${xp} XP</span>`:''}</div>
     <p class="quest-status">${questStatusLine(view,partnerName)}</p>
     <ul class="quest-confirmers" aria-label="Conferme">${person(ctx.myName,view.mine,'Tu')}${person(partnerName,view.partner,partnerName,Boolean(partner?.display_name))}</ul>
     <div class="quest-actions">
@@ -4772,7 +4780,7 @@ function paintQuestBoard(){
   const kicker=document.getElementById('noiQuestKicker');
   if(kicker)kicker.textContent=`Questa settimana · ${questWeekRangeLabel(v.week)}`;
   const ctx={me:v.me,partner:questPartner(v.profiles,v.me),rerollsLeft:summary.rerollsLeft,myName:v.myName};
-  const signature=JSON.stringify([v.week,summary.rerollsLeft,[...questActionsInFlight].sort(),v.quests.map(q=>[q.id,q.slot,q.template_key,q.title,q.category,q.rarity,q.xp,q.confirmed_by,q.completed_at]),(v.profiles||[]).map(p=>[p.id,p.display_name])]);
+  const signature=JSON.stringify([v.week,summary.rerollsLeft,[...questActionsInFlight].sort(),v.quests.map(q=>[q.id,q.slot,q.template_key,q.title,q.category,q.rarity,q.xp,q.confirmed_by,Boolean(q.completed_at)]),(v.profiles||[]).map(p=>[p.id,p.display_name])]);
   if(list.dataset.loaded==='1'&&list.dataset.signature===signature)return;
   list.innerHTML=v.quests.map(q=>renderBondQuest(q,ctx)).join('')||'<div class="empty-state quest-empty"><b>Le missioni della settimana stanno arrivando</b><p>Riprova tra un momento.</p><button type="button" class="ghost quest-week-retry" data-quest-retry>Riprova</button></div>';
   list.dataset.loaded='1';list.dataset.signature=signature;
@@ -4828,6 +4836,37 @@ async function hydrateBond(){
   renderQuestRecent(recentError?[]:questRecentWeeks(recent,week));
 }
 window.hydrateBond=hydrateBond;
+// The answer of confirm_bond_quest (its own confirmed_by and completed) is
+// shown at once; the board reads the persisted rows again right after.
+function applyQuestConfirm(id,data){
+  const row=(window.usBondQuests||[]).find(q=>q.id===id);
+  if(!row||!data)return;
+  if(Array.isArray(data.confirmed_by))row.confirmed_by=data.confirmed_by.map(String);
+  if(data.completed===true&&!row.completed_at)row.completed_at=new Date().toISOString();
+}
+const QUEST_EASE={out:'cubic-bezier(.2,.8,.2,1)',in:'cubic-bezier(.4,0,1,1)'};
+function questReducedMotion(){
+  try{return Boolean(window.UsUiFoundation?.isReducedMotion?.())||Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);}catch(_){return false;}
+}
+// noi.js reroll: the card turns away (200ms, E.in) and the new one turns in (320ms, E.out).
+function flipQuestCard(id,dir){
+  const card=document.querySelector?.(`#bondQuestList [data-quest-id="${String(id).replace(/["\\]/g,'')}"]`);
+  if(!card||typeof card.animate!=='function'||questReducedMotion())return null;
+  return dir<0
+    ?card.animate([{transform:'rotateX(0)',opacity:1},{transform:'rotateX(90deg)',opacity:.3}],{duration:200,easing:QUEST_EASE.in,fill:'forwards'})
+    :card.animate([{transform:'rotateX(-90deg)',opacity:.3},{transform:'rotateX(0)',opacity:1}],{duration:320,easing:QUEST_EASE.out});
+}
+// noi.js F.show('m',0): the sheet is drawn again from its top and fades in (340ms).
+function redrawQuestSheet(){
+  const list=document.getElementById('bondQuestList');if(list)list.dataset.signature='';
+  paintQuestBoard();
+  const panel=document.querySelector?.('#noiQuestSheet [data-us-modal-panel]');if(panel)panel.scrollTop=0;
+  if(questReducedMotion())return;
+  for(const name of ['questWeekBoard','bondQuestList','questRecent']){
+    const el=document.getElementById(name);
+    if(el&&!el.hidden&&typeof el.animate==='function')el.animate([{opacity:0},{opacity:1}],{duration:340,easing:QUEST_EASE.out});
+  }
+}
 function setQuestAction(key,busy){
   if(busy)questActionsInFlight.add(key);else questActionsInFlight.delete(key);
   const list=document.getElementById('bondQuestList');if(list)list.dataset.signature='';
@@ -4847,16 +4886,24 @@ async function confirmBondQuest(id){
   catch(error){result={data:null,error};}
   finally{questActionsInFlight.delete(key);}
   if(questOwnerKey(window.usProfile)!==owner)return;
+  let redrawn=false;
   if(result.error){console.warn(result.error);toast('Conferma non riuscita. Riprova.');}
   else{
     sendWebPushEvent('quest_confirmed',id).catch(()=>{});
     const awarded=Number(result.data?.xp_awarded)||0;
     const partnerName=questPartner(window.usBondProfiles,profile.id)?.display_name||'';
-    // As the mockup: the card sparkles, the sheet closes and Sintonia shows the points growing.
+    // As the mockup (noi.js F.on): the server's answer is drawn at once, the
+    // sheet fades in again from the top, the card sparkles; a completed
+    // mission then closes the sheet and Sintonia shows the points growing.
+    applyQuestConfirm(id,result.data);
+    redrawQuestSheet();redrawn=true;
     if(awarded>0){if(!window.USProgression?.missionCompleted?.({xp:awarded,questId:id})){toast('Missione completata insieme ♡');window.UsFeedback?.success?.();}}
-    else toast(partnerName?`Confermata. Ora tocca a ${partnerName} ♡`:'Confermata. Ora tocca alla tua persona ♡');
+    else{
+      window.USProgression?.burst?.(document.querySelector?.(`#bondQuestList [data-quest-id="${String(id).replace(/["\\]/g,'')}"]`),5);
+      toast(partnerName?`Confermata. Ora tocca a ${partnerName} ♡`:'Confermata. Ora tocca alla tua persona ♡',{icon:'check'});
+    }
   }
-  setQuestAction(key,false);
+  if(!redrawn)setQuestAction(key,false);
   await hydrateBond();
   await hydrateBondSummary();
 }
@@ -4876,6 +4923,7 @@ async function rerollBondQuest(id){
   if(!view.rerollable)return toast(view.completed?'Questa missione è già completata':'Questa missione è già stata confermata');
   const owner=questOwnerKey(profile);
   setQuestAction(key,true);
+  const away=flipQuestCard(id,-1);
   let result=null;
   try{
     const week=weekStartISO();
@@ -4892,14 +4940,21 @@ async function rerollBondQuest(id){
   }catch(error){result={error};}
   finally{questActionsInFlight.delete(key);}
   if(questOwnerKey(window.usProfile)!==owner)return;
-  if(result?.skip)toast(result.skip);
-  else if(result?.error){console.warn(result.error);toast(String(result.error.message||'').includes('No rerolls')?'Avete finito i cambi di questa settimana':'Cambio non riuscito. Riprova.');}
-  else{
-    const used=Number(result?.data?.rerolls_used);
-    toast(Number.isFinite(used)?`Nuova missione · ${questCountLabel(Math.max(0,QUEST_WEEKLY_REROLLS-used),'cambio rimasto','cambi rimasti')}`:'Nuova missione');
+  if(result?.skip||result?.error){
+    if(result.skip)toast(result.skip);
+    else{console.warn(result.error);toast(String(result.error.message||'').includes('No rerolls')?'Avete finito i cambi di questa settimana':'Cambio non riuscito. Riprova.');}
+    away?.cancel?.();
+    setQuestAction(key,false);
+    await hydrateBond();
+    return;
   }
-  setQuestAction(key,false);
+  // noi.js reroll: the new mission is drawn (the sheet fades in again, from
+  // its top) and turns in; the stats say how many changes are left.
+  await away?.finished?.catch?.(()=>{});
   await hydrateBond();
+  if(questOwnerKey(window.usProfile)!==owner)return;
+  redrawQuestSheet();
+  flipQuestCard(id,1);
 }
 window.rerollBondQuest=rerollBondQuest;
 document.addEventListener('click',event=>{
