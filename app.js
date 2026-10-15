@@ -2780,8 +2780,20 @@ async function updateHomeStatus(){
 }
 
 let pendingMomentFile=null;
+// R1 — several photos at once: the first is the cover, the others go into the
+// memory's album (moment_photos, the same path as the album's "Aggiungi foto").
+let pendingMomentExtras=[];
+let pendingMomentExtraUrls=[];
 let pendingMomentPreviewUrl=null;
 let pendingMomentDate=localDateISO();
+// R6 — "Aggiungi la foto" on something lived: the new memory becomes its photo.
+let pendingMomentSource=null;
+// The source asked for by the tap that opened the gallery; it applies only once
+// photos are actually picked (undefined: keep the current one, e.g. "Cambia foto").
+let pendingMomentSourceNext;
+let pendingMomentPickToken=0;
+const US_MOMENT_MAX_PHOTOS=10;
+const US_MOMENT_TYPES=['image/jpeg','image/png','image/webp'];
 
 function formatMomentDetectedDate(value){
   try{return new Date(value+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'long',year:'numeric'});}catch(_){return value;}
@@ -2848,47 +2860,98 @@ async function detectMomentDate(file){
   return localDateISO();
 }
 
-function updateDetectedMomentDate(){
-  const el=document.getElementById('momentDetectedDate');
-  if(el)el.textContent=`Data foto · ${formatMomentDetectedDate(pendingMomentDate)}`;
+// R1 — the date is read from the photo (EXIF, then the file) and stays editable.
+function validMomentDate(value){
+  const iso=String(value||'');
+  return /^\d{4}-\d{2}-\d{2}$/.test(iso)&&iso<=localDateISO()?iso:'';
 }
+function updateDetectedMomentDate(){
+  const input=document.getElementById('momentDate');
+  if(!input)return;
+  input.max=localDateISO();
+  input.value=validMomentDate(pendingMomentDate)||localDateISO();
+}
+document.getElementById('momentDate')?.addEventListener('change',event=>{
+  const iso=validMomentDate(event.target.value);
+  if(iso)pendingMomentDate=iso;
+  else event.target.value=validMomentDate(pendingMomentDate)||localDateISO();
+});
 
 function pickMomentPhoto(){
   document.getElementById('momentFile').click();
 }
 window.pickMomentPhoto=pickMomentPhoto;
 
+// The source of "Aggiungi la foto" (a lived Da vivere or Event): its day is the
+// memory's day, and once saved the photo is linked to it (link_moment_to_source).
+function setMomentComposerSource(source){
+  const kind=source?.kind==='da_vivere'||source?.kind==='shared_event_completion'?source.kind:'';
+  pendingMomentSourceNext=kind&&source?.ref?{kind,ref:String(source.ref),date:validMomentDate(source.date)}:null;
+}
+window.UsRicordiCompose=Object.freeze({setSource:setMomentComposerSource});
+
+function renderMomentExtras(){
+  const box=document.getElementById('momentExtra');
+  const row=document.getElementById('momentExtraRow');
+  const count=document.getElementById('momentExtraCount');
+  pendingMomentExtraUrls.forEach(url=>URL.revokeObjectURL(url));
+  pendingMomentExtraUrls=[];
+  if(!box||!row)return;
+  if(!pendingMomentExtras.length){box.hidden=true;row.replaceChildren();if(count)count.textContent='';return;}
+  // Only a few small previews are decoded; the count says the rest.
+  pendingMomentExtraUrls=pendingMomentExtras.slice(0,3).map(file=>URL.createObjectURL(file));
+  const more=pendingMomentExtras.length-pendingMomentExtraUrls.length;
+  row.innerHTML=pendingMomentExtraUrls.map(url=>`<img src="${escapeHtml(url)}" alt="" decoding="async">`).join('')+(more>0?`<span class="moment-extra-more">+${more}</span>`:'');
+  if(count)count.textContent=pendingMomentExtras.length===1?'La prima è la copertina, l’altra va nell’album.':`La prima è la copertina, le altre ${pendingMomentExtras.length} vanno nell’album.`;
+  box.hidden=false;
+}
+
 function resetMomentComposer(){
   pendingMomentFile=null;
+  pendingMomentExtras=[];
+  pendingMomentSource=null;
+  pendingMomentSourceNext=undefined;
+  pendingMomentPickToken++;
   pendingMomentDate=localDateISO();
   if(pendingMomentPreviewUrl){URL.revokeObjectURL(pendingMomentPreviewUrl);pendingMomentPreviewUrl=null;}
+  renderMomentExtras();
   const fileInput=document.getElementById('momentFile');if(fileInput)fileInput.value='';
   const caption=document.getElementById('momentCaption');if(caption)caption.value='';
   const img=document.getElementById('momentPreviewImg');if(img)img.removeAttribute('src');
   document.getElementById('momentCompose')?.classList.remove('has-photo');
-  const detected=document.getElementById('momentDetectedDate');if(detected)detected.textContent='';
+  const date=document.getElementById('momentDate');if(date)date.value='';
 }
 
 document.getElementById('momentFile')?.addEventListener('change',async(event)=>{
-  const file=event.target.files?.[0]||null;
+  const picked=[...(event.target.files||[])];
   const compose=document.getElementById('momentCompose');
   const img=document.getElementById('momentPreviewImg');
-  if(!file)return;
-  if(!['image/jpeg','image/png','image/webp'].includes(file.type)){
-    event.target.value='';
-    return toast('Per ora usa JPG, PNG o WebP');
-  }
-  if(file.size>20*1024*1024){
-    event.target.value='';
-    return toast('Foto troppo grande: massimo 20 MB');
-  }
-  pendingMomentFile=file;
-  pendingMomentDate=await detectMomentDate(file);
-  updateDetectedMomentDate();
+  event.target.value='';
+  if(!picked.length)return;
+  const valid=picked.filter(file=>US_MOMENT_TYPES.includes(file.type)&&file.size<=20*1024*1024);
+  if(!valid.length)return toast(picked.some(file=>US_MOMENT_TYPES.includes(file.type))?'Foto troppo grande: massimo 20 MB':'Per ora usa JPG, PNG o WebP');
+  const skipped=picked.length-valid.length;
+  if(valid.length>US_MOMENT_MAX_PHOTOS)toast('Al massimo 10 foto alla volta: tengo le prime 10');
+  else if(skipped)toast(skipped===1?'Una foto saltata: usa JPG, PNG o WebP fino a 20 MB':`${skipped} foto saltate: usa JPG, PNG o WebP fino a 20 MB`);
+  const files=valid.slice(0,US_MOMENT_MAX_PHOTOS);
+  const token=++pendingMomentPickToken;
+  if(pendingMomentSourceNext!==undefined){pendingMomentSource=pendingMomentSourceNext;pendingMomentSourceNext=undefined;}
+  if(pendingMomentSource?.date)pendingMomentDate=pendingMomentSource.date;
+  pendingMomentFile=files[0];
+  pendingMomentExtras=files.slice(1);
   if(pendingMomentPreviewUrl)URL.revokeObjectURL(pendingMomentPreviewUrl);
-  pendingMomentPreviewUrl=URL.createObjectURL(file);
+  pendingMomentPreviewUrl=URL.createObjectURL(files[0]);
   img.src=pendingMomentPreviewUrl;
   compose?.classList.add('has-photo');
+  renderMomentExtras();
+  updateDetectedMomentDate();
+  window.UsMomentComposer?.show?.();
+  // A lived source already knows its day; otherwise the first photo says it.
+  if(pendingMomentSource?.date)return;
+  const detected=await detectMomentDate(files[0]);
+  if(token!==pendingMomentPickToken)return;
+  pendingMomentDate=detected;
+  updateDetectedMomentDate();
 });
 
 // M12A — a newly created Ricordo settles in and catches the light ONCE. The id
@@ -2912,9 +2975,13 @@ async function uploadMoment(){
   if(!window.usProfile)return toast('Connessione non pronta');
   if(!pendingMomentFile)return toast('Scegli prima una foto');
   const btn=document.getElementById('momentUploadBtn');
+  if(btn.disabled)return;
   const caption=document.getElementById('momentCaption').value.trim();
-  const momentDate=pendingMomentDate||localDateISO();
+  const momentDate=validMomentDate(document.getElementById('momentDate')?.value)||validMomentDate(pendingMomentDate)||localDateISO();
   const file=pendingMomentFile;
+  const extras=[...pendingMomentExtras];
+  const source=pendingMomentSource;
+  const total=1+extras.length;
   btn.disabled=true;btn.textContent='Ottimizzo…';
   try{
     const compressed=await compressImageFile(file,{maxDimension:1920,quality:.82});
@@ -2922,7 +2989,7 @@ async function uploadMoment(){
     const safeName=`${Date.now()}-${crypto.randomUUID()}.webp`;
     const path=`${window.usProfile.couple_id}/${window.usProfile.id}/${safeName}`;
     const thumbnailPath=`${window.usProfile.couple_id}/${window.usProfile.id}/derived-thumbnails/${crypto.randomUUID()}.webp`;
-    btn.textContent='Carico…';
+    btn.textContent=total>1?`Carico 1 di ${total}…`:'Carico…';
     const {error:uploadError}=await sb.storage.from('us-media').upload(path,compressed,{contentType:'image/webp',upsert:false,cacheControl:'31536000'});
     if(uploadError)throw uploadError;
     let uploadedThumbnail=false;
@@ -2948,16 +3015,179 @@ async function uploadMoment(){
     }
     // M12A — only THIS creation earns the one-shot light catch (see consumeFreshRicordo).
     if(created?.id)markFreshRicordo(created.id);
+    // R6 — the photo of something lived: one card "L'avete fatto". If the link
+    // is refused the memory still exists, as a memory of its own.
+    if(created?.id&&source){
+      try{
+        const {error:linkError}=await sb.rpc('link_moment_to_source',{target_moment_id:created.id,source_kind:source.kind,source_ref:source.ref});
+        if(linkError)throw linkError;
+      }catch(error){console.warn('[US Ricordi] link source',error);}
+    }
+    // R1 — the other photos join the memory's album, in the order they were picked.
+    let failed=0;
+    for(let i=0;i<extras.length;i++){
+      btn.textContent=`Carico ${i+2} di ${total}…`;
+      let ok=false;
+      try{ok=Boolean(created?.id)&&await window.UsMomentAlbums?.uploadPhoto?.(created.id,extras[i],{position:i+1})===true;}
+      catch(error){console.warn('[US Ricordi] album photo',error);}
+      if(!ok)failed++;
+    }
     window.UsFeedback?.success?.();
     resetMomentComposer();
-    toast('Ricordo aggiunto ♡');
+    toast(failed?`Ricordo aggiunto. ${failed} foto non sono entrate: riprova dall’album`:total>1?`Ricordo aggiunto con ${total} foto ♡`:'Ricordo aggiunto ♡');
     await hydrateMoments();
     await hydrateHomeMemory();
     if(!homePhotoPath)await hydrateHomePhoto(true);
-  }catch(err){console.warn(err);window.UsFeedback?.error?.();toast(err?.message==='SOURCE_TOO_LARGE'?'Foto troppo grande: massimo 20 MB':'Upload non riuscito');}
+  }catch(err){console.warn(err);window.UsFeedback?.error?.();toast(err?.message==='SOURCE_TOO_LARGE'?'Foto troppo grande: massimo 20 MB':'Caricamento non riuscito');}
   finally{btn.disabled=false;btn.textContent='Salva ricordo';}
 }
 window.uploadMoment=uploadMoment;
+
+// R11 — Android: on the web the service worker keeps private photos in the
+// "us-private-media-v1" cache, keyed by storage path. The app has no service
+// worker, so Ricordi keeps its thumbnails in that same cache with the same key
+// (logout already clears it): a thumbnail is downloaded once, not again every
+// time its signed link changes. Web and iOS are unchanged.
+const US_RICORDI_MEDIA_CACHE='us-private-media-v1';
+const US_RICORDI_MEDIA_CACHE_MAX=240;
+const usRicordiMediaBlobs=new Map();
+function usRicordiMediaCacheOn(){
+  const runtime=window.UsCapacitorRuntime||window.Capacitor;
+  return Boolean(window.UsPlatform?.isNative&&runtime?.getPlatform?.()==='android'&&typeof caches!=='undefined'&&window.isSecureContext);
+}
+function usRicordiMediaKey(path){return new Request(`${location.origin}/__us_media_cache__?path=${encodeURIComponent(path)}`);}
+// The paths already on this phone, as local URLs; the others keep their signed URL.
+async function usRicordiCachedMedia(paths){
+  const found=new Map();
+  if(!usRicordiMediaCacheOn())return found;
+  try{
+    const cache=await caches.open(US_RICORDI_MEDIA_CACHE);
+    await Promise.all([...new Set((paths||[]).filter(Boolean))].map(async path=>{
+      if(usRicordiMediaBlobs.has(path)){found.set(path,usRicordiMediaBlobs.get(path));return;}
+      const hit=await cache.match(usRicordiMediaKey(path));
+      if(!hit)return;
+      const blob=await hit.blob();
+      if(!String(blob.type||'').startsWith('image/'))return;
+      const url=URL.createObjectURL(blob);
+      usRicordiMediaBlobs.set(path,url);
+      found.set(path,url);
+    }));
+  }catch(error){console.warn('[US Ricordi] media cache',error);}
+  return found;
+}
+// Once the page is painted, keep the thumbnails it just showed (the WebView
+// normally still has them, so this is not a second download).
+function usRicordiKeepMedia(entries){
+  if(!usRicordiMediaCacheOn()||!entries?.length)return;
+  usRunWhenIdle(async()=>{
+    try{
+      const cache=await caches.open(US_RICORDI_MEDIA_CACHE);
+      for(const [path,url] of entries){
+        if(!path||!url||usRicordiMediaBlobs.has(path)||await cache.match(usRicordiMediaKey(path)))continue;
+        const response=await fetch(url,{credentials:'omit'});
+        if(!response.ok||!String(response.headers.get('content-type')||'').startsWith('image/'))continue;
+        await cache.put(usRicordiMediaKey(path),response);
+      }
+      const keys=await cache.keys();
+      if(keys.length>US_RICORDI_MEDIA_CACHE_MAX)await Promise.all(keys.slice(0,keys.length-US_RICORDI_MEDIA_CACHE_MAX).map(key=>cache.delete(key)));
+    }catch(error){console.warn('[US Ricordi] media cache keep',error);}
+  },2400);
+}
+
+// R5 — "Nuovo da <Nome>": worked out on this phone only, per person. It keeps
+// when this phone started counting, when Ricordi was last looked at and which
+// memories were opened. Nothing is written to the server.
+const US_RICORDI_NEW_DAYS=30;
+function ricordiNewKey(){return window.usProfile?.id?`us:ricordi:new:v1:${window.usProfile.id}`:'';}
+function ricordiNewWrite(state){
+  const key=ricordiNewKey();
+  if(!key||!state)return;
+  try{localStorage.setItem(key,JSON.stringify({since:state.since,tab:state.tab||state.since,opened:(state.opened||[]).slice(-200)}));}catch(_e){}
+}
+function ricordiNewRead(){
+  const key=ricordiNewKey();
+  if(!key)return null;
+  let state=null;
+  try{state=JSON.parse(localStorage.getItem(key)||'null');}catch(_e){}
+  if(!state||typeof state!=='object'||!Date.parse(state.since)){
+    // First time on this phone: what is already there is not "new".
+    const now=new Date().toISOString();
+    state={since:now,tab:now,opened:[]};
+    ricordiNewWrite(state);
+  }
+  if(!Array.isArray(state.opened))state.opened=[];
+  return state;
+}
+function ricordiNewRows(rows,state){
+  const me=window.usProfile?.id;
+  const since=Date.parse(state.since)||Date.now();
+  const cutoff=Date.now()-US_RICORDI_NEW_DAYS*86400000;
+  const opened=new Set(state.opened.map(String));
+  return (rows||[]).filter(row=>{
+    const at=Date.parse(row?.created_at);
+    return row?.id&&row.created_by&&row.created_by!==me&&!opened.has(String(row.id))&&at>since&&at>cutoff;
+  });
+}
+function ricordiPaintTabDot(on){
+  const tab=document.querySelector('.nav button[data-page="moments"]');
+  if(!tab)return;
+  tab.toggleAttribute('data-ricordi-new',Boolean(on));
+  tab.setAttribute('aria-label',on?'Ricordi, c’è qualcosa di nuovo':'Ricordi');
+}
+function ricordiOnPage(){return Boolean(document.getElementById('moments')?.classList.contains('active'))&&!document.hidden;}
+function ricordiNewSeen(){
+  const state=ricordiNewRead();
+  if(!state)return;
+  state.tab=new Date().toISOString();
+  ricordiNewWrite(state);
+  ricordiPaintTabDot(false);
+}
+// rows: moments with id, created_by, created_at. Returns the ids still new.
+function ricordiNewSync(rows){
+  const state=ricordiNewRead();
+  if(!state)return new Set();
+  const fresh=ricordiNewRows(rows,state);
+  if(ricordiOnPage())ricordiNewSeen();
+  else{
+    const tabSince=Date.parse(state.tab)||0;
+    ricordiPaintTabDot(fresh.some(row=>Date.parse(row.created_at)>tabSince));
+  }
+  return new Set(fresh.map(row=>String(row.id)));
+}
+// Away from Ricordi: one light read, only to light the dot on the tab.
+async function ricordiCheckNew(){
+  const profile=window.usProfile;
+  if(!profile?.couple_id||document.hidden||ricordiOnPage())return;
+  const {data,error}=await sb.from('moments').select('id,created_by,created_at').eq('couple_id',profile.couple_id).neq('created_by',profile.id).order('created_at',{ascending:false}).limit(30);
+  if(error){console.warn('[US Ricordi] new',error);return;}
+  if(window.usProfile!==profile||ricordiOnPage())return;
+  ricordiNewSync(data||[]);
+}
+function ricordiMarkOpened(id){
+  const key=String(id||'');
+  const state=ricordiNewRead();
+  if(!state||!key)return;
+  if(!state.opened.map(String).includes(key)){state.opened.push(key);ricordiNewWrite(state);}
+  for(const card of document.querySelectorAll('#momentsGrid .moment-card[data-ricordi-new]')){
+    if(card.dataset.momentId!==key)continue;
+    card.removeAttribute('data-ricordi-new');
+    card.querySelector('.ricordi-new-label')?.remove();
+  }
+}
+window.UsRicordiNew=Object.freeze({markOpened:ricordiMarkOpened,check:()=>ricordiCheckNew().catch(()=>{})});
+window.addEventListener('us-auth-resolved',()=>usRunWhenIdle(()=>ricordiCheckNew().catch(()=>{}),1800));
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&window.usProfile)ricordiCheckNew().catch(()=>{});});
+// Opening Ricordi clears the dot at once, even when the page does not reload.
+(()=>{
+  const page=document.getElementById('moments');
+  if(!page||typeof MutationObserver!=='function')return;
+  let shown=page.classList.contains('active');
+  new MutationObserver(()=>{
+    const now=page.classList.contains('active');
+    if(now&&!shown&&window.usProfile){ricordiNewSeen();window.dispatchEvent(new CustomEvent('us:ricordi-shown'));}
+    shown=now;
+  }).observe(page,{attributes:true,attributeFilter:['class']});
+})();
 
 // ===== M8A — Ricordi living archive =====
 // Ricordi da album a storia viva, SOLO da dati reali e dalle loro fonti:
@@ -3062,9 +3292,10 @@ function ricordiChapters(timeline){
   const byYear=new Map();
   for(const item of timeline){
     const year=item.date.slice(0,4);
-    if(!byYear.has(year))byYear.set(year,{year,count:0,moments:0,experiences:0,dailies:0,cover:null});
+    if(!byYear.has(year))byYear.set(year,{year,count:0,moments:0,experiences:0,dailies:0,cover:null,first:item.date});
     const ch=byYear.get(year);
     ch.count++;
+    if(item.date<ch.first)ch.first=item.date;
     if(item.kind==='moment')ch.moments++;else if(item.kind==='daily')ch.dailies++;else ch.experiences++;
     if(!ch.cover&&item.moment)ch.cover=item.moment;
   }
@@ -3074,7 +3305,14 @@ window.UsRicordiArchive=Object.freeze({timeline:ricordiTimeline,pickRivivi:ricor
 
 function ricordiPreviewPath(row){return row?.thumbnail_path||row?.storage_path||'';}
 function ricordiPreviewUrl(row,signedUrls){return signedUrls.get(ricordiPreviewPath(row))||signedUrls.get(row?.storage_path)||null;}
-function ricordiMomentCard(row,signedUrls,author,canDelete,feature,source,priority=false){
+// R6 — a memory that is the photo of something lived (a Da vivere or an Event)
+// is one card, "L'avete fatto", with the photo. R5 — a memory the partner added
+// and this phone has not opened yet says "Nuovo da <Nome>".
+function ricordiNewLabel(name){
+  const who=String(name||'').trim();
+  return who&&who!=='La tua persona'&&who!=='Noi'?`Nuovo da ${who}`:'Nuovo dalla tua persona';
+}
+function ricordiMomentCard(row,signedUrls,author,canDelete,feature,source,priority=false,fresh=false){
   const displayISO=/^\d{4}-\d{2}-\d{2}$/.test(String(source?.date||''))?String(source.date):row.moment_date;
   const dateLabel=new Date(displayISO+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'2-digit',month:'short',year:'numeric'});
   // The month and year already head the group: the card says only the day.
@@ -3083,7 +3321,12 @@ function ricordiMomentCard(row,signedUrls,author,canDelete,feature,source,priori
   const previewPath=ricordiPreviewPath(row);
   const previewUrl=ricordiPreviewUrl(row,signedUrls);
   if(!fullUrl||!previewUrl)return '';
-  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(fullUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(row.caption||'')}" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(previewUrl)}" data-us-media-path="${escapeHtml(previewPath)}" onerror="usRecoverPrivateImage(this)" alt="Ricordo condiviso" loading="${priority?'eager':'lazy'}" decoding="async"${priority?' fetchpriority="high"':''}>${canDelete?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}')">Elimina</button>`:''}<div class="moment-meta">${row.caption?`<p translate="no">${escapeHtml(row.caption)}</p>`:''}${source?`<small class="ricordi-moment-source" data-source-key="${escapeHtml(source.sourceKey)}">${escapeHtml(RICORDI_SOURCE_LABEL[source.kind]||'')}${source.title?`<span translate="no"> · ${escapeHtml(source.title)}</span>`:''}</small>`:''}<span class="moment-line"><i class="moment-dot" data-owner="${row.created_by===window.usProfile?.id?'tu':'partner'}" aria-hidden="true"></i><b>${escapeHtml(shortLabel)}</b><span aria-hidden="true">·</span><span class="moment-by" translate="no">${escapeHtml(author||'Noi')}</span></span></div></article>`;
+  const done=Boolean(source);
+  const sourceTitle=source?.title||'';
+  const title=row.caption||sourceTitle;
+  const kicker=done?`<small class="ricordi-moment-source ricordi-done-kicker" data-source-key="${escapeHtml(source.sourceKey)}">L’avete fatto${row.caption&&sourceTitle&&sourceTitle!==row.caption?`<span translate="no"> · ${escapeHtml(sourceTitle)}</span>`:''}</small>`:'';
+  const freshLabel=fresh?`<span class="ricordi-new-label">${escapeHtml(ricordiNewLabel(author))}</span>`:'';
+  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}${done?' ricordi-done ricordi-wide':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(fullUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(title)}"${fresh?' data-ricordi-new':''} onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(previewUrl)}" data-us-media-path="${escapeHtml(previewPath)}" onerror="usRecoverPrivateImage(this)" alt="Ricordo condiviso" loading="${priority?'eager':'lazy'}" decoding="async"${priority?' fetchpriority="high"':''}>${freshLabel}${canDelete?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}')">Elimina</button>`:''}<div class="moment-meta">${kicker}${title?`<p translate="no">${escapeHtml(title)}</p>`:''}<span class="moment-line"><i class="moment-dot" data-owner="${row.created_by===window.usProfile?.id?'tu':'partner'}" aria-hidden="true"></i><b>${escapeHtml(shortLabel)}</b><span aria-hidden="true">·</span><span class="moment-by" translate="no">${escapeHtml(author||'Noi')}</span></span></div></article>`;
 }
 function ricordiExperienceCard(row,sourceDate){
   const date=/^\d{4}-\d{2}-\d{2}$/.test(String(sourceDate||''))?String(sourceDate):ricordiLocalISO(row.completed_at);
@@ -3108,6 +3351,19 @@ function ricordiEventCard(row){
   const day=new Date(String(row.occurrence_date)+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'long'});
   return `<article class="ricordi-experience ricordi-event" data-source-key="shared_event_completion:${escapeHtml(row.source_ref)}" data-title-source="${escapeHtml(row.title_source||'')}"><span class="ricordi-experience-mark ricordi-event-mark" aria-hidden="true"></span><span class="ricordi-experience-copy"><small>Vissuto insieme · ${escapeHtml(day)}</small><b${row?.title?' translate="no"':''}>${escapeHtml(ricordiEventTitle(row))}</b></span><span class="ricordi-experience-source">Evento</span></article>`;
 }
+// R6 — something lived without its photo yet: "Aggiungi la foto" picks it from
+// the gallery; once saved, the photo is linked to it and the two become one card.
+function ricordiAddPhotoAction(item){
+  const kind=item?.kind==='experience'?'da_vivere':item?.kind==='event'?'shared_event_completion':'';
+  const ref=item?.kind==='experience'?item.row?.id:item?.row?.source_ref;
+  if(!kind||!ref||item.orphan||item.moment)return '';
+  const label=item.title?`Aggiungi la foto di «${item.title}»`:'Aggiungi la foto';
+  return `<button type="button" class="ricordi-add-photo" data-ricordi-add-photo="${escapeHtml(kind)}" data-source-ref="${escapeHtml(ref)}" data-source-date="${escapeHtml(item.date||'')}" aria-label="${escapeHtml(label)}"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span><span>Aggiungi la foto</span></button>`;
+}
+function ricordiLivedCard(cardHtml,item){
+  const action=ricordiAddPhotoAction(item);
+  return action?`<div class="ricordi-lived" data-source-key="${escapeHtml(item.sourceKey)}">${cardHtml}${action}</div>`:cardHtml;
+}
 // M12B.5 — Rivivi parla la lingua della fonte, in un solo linguaggio visivo:
 // con foto apre il Moment viewer esistente (anche quando la foto è l'immagine
 // di un'esperienza o di un Evento vissuto); senza foto si apre sul posto in
@@ -3117,6 +3373,25 @@ function ricordiRiviviTitle(entry){
   if(entry.kind==='moment')return entry.row.caption||'';
   if(entry.kind==='event')return entry.orphan?(entry.title||'Evento'):ricordiEventTitle(entry.row);
   return entry.title||'';
+}
+// R7 — "Mandalo a <Nome>": the memory becomes a thought in Lasciato per te,
+// "Ti ricordi? …", written by the sender before it leaves.
+function ricordiPartnerName(){
+  const name=typeof usIdentity==='function'?usIdentity().partnerName:'';
+  return name&&name!=='La tua persona'?name:'';
+}
+function ricordiSendButton(title,date){
+  const name=ricordiPartnerName();
+  if(!name||typeof window.UsLeftForYou?.openComposer!=='function')return '';
+  return `<button type="button" class="ricordi-rivivi-send" data-ricordi-send data-send-title="${escapeHtml(title||'')}" data-send-date="${escapeHtml(date)}"><span class="us-icon" data-us-icon="envelope" aria-hidden="true"></span><span>Mandalo a ${escapeHtml(name)}</span></button>`;
+}
+function ricordiT(text,vars){
+  if(typeof window.usT==='function')return window.usT(text,vars);
+  return String(text).replace(/\{([a-z]+)\}/gi,(all,key)=>vars?.[key]??all);
+}
+function ricordiSendToPartner(title,date){
+  const what=title?`${title} · ${date}`:date;
+  window.UsLeftForYou?.openComposer?.({kind:'text',text:ricordiT('Ti ricordi? {what} ♡',{what})});
 }
 function renderRicordiRivivi(pick,signedUrls,names){
   const root=document.getElementById('ricordiRivivi');
@@ -3134,7 +3409,7 @@ function renderRicordiRivivi(pick,signedUrls,names){
     const meta=entry.kind==='moment'?author:RICORDI_SOURCE_LABEL[entry.kind];
     const viewerISO=entry.kind==='moment'?m.moment_date:entry.date;
     const viewerDate=new Date(viewerISO+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'2-digit',month:'short',year:'numeric'});
-    root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><button type="button" class="ricordi-rivivi-card" data-ricordi-open="${escapeHtml(m.id)}" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}" data-url="${escapeHtml(fullUrl)}" data-author="${escapeHtml(author)}" data-date="${escapeHtml(viewerDate)}" data-caption="${escapeHtml(m.caption||title)}" aria-label="Rivivi: ${escapeHtml(title||date)}"><img src="${escapeHtml(previewUrl)}" data-us-media-path="${escapeHtml(previewPath)}" onerror="usRecoverPrivateImage(this)" alt="" loading="eager" decoding="async" fetchpriority="high"><span class="ricordi-rivivi-copy"><small>${escapeHtml(pick.label)}</small><b${entry.kind==='daily'?'':' translate="no"'}>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(meta)}</span></span></button>`;
+    root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><button type="button" class="ricordi-rivivi-card" data-ricordi-open="${escapeHtml(m.id)}" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}" data-url="${escapeHtml(fullUrl)}" data-author="${escapeHtml(author)}" data-date="${escapeHtml(viewerDate)}" data-caption="${escapeHtml(m.caption||title)}" data-moment-id="${escapeHtml(m.id)}" data-moment-owner="${escapeHtml(m.created_by||'')}" data-storage-path="${escapeHtml(m.storage_path)}" data-moment-iso="${escapeHtml(viewerISO)}" aria-label="Rivivi: ${escapeHtml(title||date)}"><img src="${escapeHtml(previewUrl)}" data-us-media-path="${escapeHtml(previewPath)}" onerror="usRecoverPrivateImage(this)" alt="" loading="eager" decoding="async" fetchpriority="high"><span class="ricordi-rivivi-copy"><small>${escapeHtml(pick.label)}</small><b${entry.kind==='daily'?'':' translate="no"'}>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(meta)}</span></span></button>${ricordiSendButton(title,date)}`;
     root.hidden=false;
     return;
   }
@@ -3143,13 +3418,20 @@ function renderRicordiRivivi(pick,signedUrls,names){
   if(entry.kind==='daily')body=ricordiDailyAnswers(entry.row);
   else if(entry.kind==='event')body=`<p class="ricordi-rivivi-detail">Vissuto insieme il ${escapeHtml(date)}.${entry.row.title_source==='live'?' Il titolo è quello di oggi: quello di allora non era registrato.':''}</p>`;
   else body=`<p class="ricordi-rivivi-detail">Vissuta insieme il ${escapeHtml(date)}.</p>${entry.orphan?'':`<button type="button" class="ricordi-rivivi-link" data-ricordi-experience="${escapeHtml(entry.row.id)}">Apri in Da vivere</button>`}`;
-  root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><details class="ricordi-rivivi-card ricordi-rivivi-note" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}"><summary aria-label="Rivivi: ${escapeHtml(title||date)}"><span class="ricordi-rivivi-mark ricordi-rivivi-mark-${escapeHtml(entry.kind)}" aria-hidden="true"></span><span class="ricordi-rivivi-text"><small>${escapeHtml(pick.label)}</small><b${entry.kind==='daily'?'':' translate="no"'}>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(RICORDI_SOURCE_LABEL[entry.kind])}</span></span></summary><div class="ricordi-rivivi-body">${body}</div></details>`;
+  root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><details class="ricordi-rivivi-card ricordi-rivivi-note" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}"><summary aria-label="Rivivi: ${escapeHtml(title||date)}"><span class="ricordi-rivivi-mark ricordi-rivivi-mark-${escapeHtml(entry.kind)}" aria-hidden="true"></span><span class="ricordi-rivivi-text"><small>${escapeHtml(pick.label)}</small><b${entry.kind==='daily'?'':' translate="no"'}>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(RICORDI_SOURCE_LABEL[entry.kind])}</span></span></summary><div class="ricordi-rivivi-body">${body}</div></details>${ricordiSendButton(title,date)}`;
   root.hidden=false;
 }
-function renderRicordiChapters(chapters,signedUrls){
+// R9 — Capitoli wait for two years of history: before that the story is short
+// enough to read month by month.
+const RICORDI_CHAPTERS_MIN_DAYS=730;
+function ricordiChaptersReady(chapters,todayISO){
+  const oldest=chapters.map(ch=>ch.first).filter(Boolean).sort()[0];
+  return Boolean(oldest&&todayISO)&&ricordiDayDiff(todayISO,oldest)>=RICORDI_CHAPTERS_MIN_DAYS;
+}
+function renderRicordiChapters(chapters,signedUrls,todayISO){
   const root=document.getElementById('ricordiChapters');
   if(!root)return;
-  if(!chapters.length){root.hidden=true;root.innerHTML='';return;}
+  if(!chapters.length||!ricordiChaptersReady(chapters,todayISO)){root.hidden=true;root.innerHTML='';return;}
   root.innerHTML=`<div class="ricordi-section-head"><div class="ricordi-kicker">CAPITOLI</div><h3>Per anno</h3></div><div class="ricordi-chapter-row">${chapters.map(ch=>{
     const previewPath=ch.cover?ricordiPreviewPath(ch.cover):'';
     const url=ch.cover?ricordiPreviewUrl(ch.cover,signedUrls):null;
@@ -3163,6 +3445,10 @@ function openRicordiExperience(id){
   Promise.resolve(window.hydrateNoiIdeas?.()).then(()=>window.openNoiIdeaDetail?.(id)).catch(()=>{});
 }
 document.getElementById('moments')?.addEventListener('click',event=>{
+  const send=event.target.closest('[data-ricordi-send]');
+  if(send){ricordiSendToPartner(send.dataset.sendTitle,send.dataset.sendDate);return;}
+  const addPhoto=event.target.closest('[data-ricordi-add-photo]');
+  if(addPhoto){window.UsMomentComposer?.pick?.({source:{kind:addPhoto.dataset.ricordiAddPhoto,ref:addPhoto.dataset.sourceRef,date:addPhoto.dataset.sourceDate}});return;}
   const rivivi=event.target.closest('[data-ricordi-open]');
   if(rivivi){openMomentViewer(rivivi);return;}
   const experience=event.target.closest('[data-ricordi-experience]');
@@ -3222,18 +3508,25 @@ async function hydrateMomentsCore(){
   const eventRows=eventsError?[]:(events||[]);
   if(provenanceError)console.warn(provenanceError);
   const provenanceRows=provenanceError?[]:(provenance||[]);
-  if(pill)pill.textContent='📸 Moments · '+(rows?.length||0);
+  if(pill)pill.textContent=`Ricordi · ${rows?.length||0}`;
   const today=localDateISO();
+  // R5 — before the "nothing changed" shortcut: the dot follows the visit.
+  const freshIds=ricordiNewSync(rows||[]);
   const signature=JSON.stringify([today,(rows||[]).map(r=>[r.id,r.created_by,r.storage_path,r.thumbnail_path||'',r.caption||'',r.moment_date,r.created_at]),livedRows.map(r=>[r.id,r.title,r.completed_at]),keptRows.map(r=>[r.id,r.question_date]),eventRows.map(r=>[r.source_ref,r.occurrence_date,r.title,r.title_source,r.moment_id]),provenanceRows.map(r=>[r.source_kind,r.source_ref,r.target_moment_id])]);
   if(grid.dataset.loaded==='1'&&grid.dataset.signature===signature&&!forceMedia)return;
   if(!rows?.length&&!livedRows.length&&!keptRows.length&&!eventRows.length){
     grid.innerHTML='<div class="empty-state moment-loading ricordi-empty"><b>La vostra storia parte da qui</b></div>';
     renderRicordiRivivi(null,new Map(),new Map());
-    renderRicordiChapters([],new Map());
+    renderRicordiChapters([],new Map(),today);
     grid.dataset.loaded='1';grid.dataset.signature=signature;window.dispatchEvent(new CustomEvent('us:moments-updated'));return;
   }
   const names=new Map((profiles||[]).map(p=>[p.id,p.display_name||'Noi']));
   const timeline=ricordiTimeline((rows||[]).filter(r=>signedUrls.get(r.storage_path)),livedRows,keptRows,eventRows,provenanceRows);
+  // R11 — on Android the small images already kept on the phone are shown from there.
+  const thumbPaths=(rows||[]).map(r=>r.thumbnail_path).filter(Boolean);
+  const localMedia=await usRicordiCachedMedia(thumbPaths);
+  if(window.usProfile!==profile)return;
+  const displayUrls=localMedia.size?new Map([...signedUrls,...localMedia]):signedUrls;
   const html=[];
   let period='';
   // Ritmo editoriale: la prima foto del mese è a tutta larghezza, le altre in
@@ -3250,26 +3543,30 @@ async function hydrateMomentsCore(){
       const {month,year}=ricordiPeriodLabel(item.date);
       html.push(`<div class="ricordi-period" data-period="${key}" data-year="${year}"><b>${month}</b><span>${year}</span></div>`);
     }
-    if(item.kind==='experience'&&!item.moment){closeRow();html.push(ricordiExperienceCard(item.row,item.date));continue;}
-    if(item.kind==='event'&&!item.moment){closeRow();html.push(ricordiEventCard(item.row));continue;}
+    if(item.kind==='experience'&&!item.moment){closeRow();html.push(ricordiLivedCard(ricordiExperienceCard(item.row,item.date),item));continue;}
+    if(item.kind==='event'&&!item.moment){closeRow();html.push(ricordiLivedCard(ricordiEventCard(item.row),item));continue;}
     if(item.kind==='daily'){closeRow();html.push(ricordiDailyCard(item.row));continue;}
     // Un Moment, o la foto di un'esperienza/Evento vissuto: una sola voce.
     const row=item.moment;
     const own=row.created_by===profile.id;
     const author=names.get(row.created_by)||(own?profile.display_name:'Noi');
-    // Every Moment returned here already belongs to the signed-in user's couple.
-    // Deletion is a couple-level action; the Edge Function re-validates membership.
-    html.push(ricordiMomentCard(row,signedUrls,author,true,opensPeriod,item.kind==='moment'?null:{kind:item.kind,sourceKey:item.sourceKey,title:ricordiRiviviTitle(item),date:item.date},visiblePhotoIndex++<2));
-    if(!opensPeriod)loneHalf=loneHalf>=0?-1:html.length-1;
+    // R2 — only who created a memory can delete it (the album asks first,
+    // "per tutti e due"); the partner never sees Elimina on it.
+    const source=item.kind==='moment'?null:{kind:item.kind,sourceKey:item.sourceKey,title:ricordiRiviviTitle(item),date:item.date};
+    // R6 — "L'avete fatto" always takes the whole row.
+    if(source)closeRow();
+    html.push(ricordiMomentCard(row,displayUrls,author,own,opensPeriod,source,visiblePhotoIndex++<2,freshIds.has(String(row.id))));
+    if(!opensPeriod&&!source)loneHalf=loneHalf>=0?-1:html.length-1;
   }
   closeRow();
   if(timeline.length){
     grid.innerHTML=html.join('');grid.dataset.loaded='1';grid.dataset.signature=signature;
     consumeFreshRicordo(grid);
     window.dispatchEvent(new CustomEvent('us:moments-updated'));
-    const riviviPick=ricordiPickRivivi(timeline,today);
-    renderRicordiRivivi(riviviPick?.reason==='anniversary'?riviviPick:null,signedUrls,names);
-    renderRicordiChapters(ricordiChapters(timeline),signedUrls);
+    // R7 — Rivivi also brings back "X mesi fa", not only anniversaries.
+    renderRicordiRivivi(ricordiPickRivivi(timeline,today),displayUrls,names);
+    renderRicordiChapters(ricordiChapters(timeline),displayUrls,today);
+    usRicordiKeepMedia(thumbPaths.filter(path=>!localMedia.has(path)).map(path=>[path,signedUrls.get(path)]));
   }
   else if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">!</div><b>Foto non disponibili</b><p>Riprova tra un momento.</p></div>';
 }
@@ -4556,6 +4853,7 @@ function scheduleUsRealtimeRefresh(kind){
     if(kind==='location'){if(active==='home')hydrateDistance();return;}
     if(kind==='moments'){
       if(active==='moments')hydrateMoments();
+      else ricordiCheckNew().catch(()=>{});
       window.refreshOpenMomentAlbum?.();
       return;
     }

@@ -38,7 +38,13 @@ async function clean(view) {
   await view.ctx.close();
 }
 const settle = (page, ms = 450) => page.waitForTimeout(ms);
-const tab = async (page, name) => { await page.click(`.nav button[data-page="${name}"]`); await settle(page, 750); };
+// US 1.0 R8: the Conservati entry shows only once the couple has kept something;
+// the Ricordi planes below need it, so the couple keeps one thing first.
+const keepOne = (page) => page.evaluate(() => {
+  const tables = window.__QA?.tables;
+  if (tables && !tables.conserva_contributions?.length) tables.conserva_contributions = [{ id: 'k1', couple_id: 'c1', source_item_id: 'l1', source_sender_id: 'b1', conserved_by: 'f1', created_at: new Date().toISOString() }];
+});
+const tab = async (page, name) => { if (name === 'moments') await keepOne(page); await page.click(`.nav button[data-page="${name}"]`); await settle(page, 750); };
 const hitCenter = (page) => page.evaluate(() => { const r = document.querySelector('#usPetLayer .us-pet-hit').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 - 2 }; });
 const state = (page) => page.evaluate(() => ({ snap: window.USPet.snapshot(), placement: window.USPet.placement(), inspect: window.USPet.inspect(),
   saved: JSON.parse(localStorage.getItem('us:maudit:v1:placement') || 'null'), dx: document.getElementById('usPetLayer').style.getPropertyValue('--us-pet-dx') }));

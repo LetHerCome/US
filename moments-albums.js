@@ -35,12 +35,12 @@ function ensureUi(){
   if(document.getElementById('usAlbumOverlay'))return;
   document.body.insertAdjacentHTML('beforeend',`
     <div class="us-album-overlay" id="usAlbumOverlay" aria-hidden="true" data-us-modal data-us-motion-surface data-us-galleria>
-      <div class="us-album-shell" role="dialog" aria-modal="true" aria-label="Album del Moment" data-us-modal-panel>
+      <div class="us-album-shell" role="dialog" aria-modal="true" aria-label="Album del ricordo" data-us-modal-panel>
         <button type="button" class="us-album-close us-modal-close is-on-media" id="usAlbumClose" aria-label="Chiudi album" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
         <div class="us-album-scroll" id="usAlbumScroll">
           <div class="us-album-cover-stage" id="usAlbumCarousel" role="region" aria-label="Foto del ricordo" aria-roledescription="carosello" tabindex="0">
             <img id="usAlbumPeek" class="us-album-peek" alt="" loading="lazy" decoding="async" aria-hidden="true" hidden>
-            <img id="usAlbumCover" alt="Foto principale del Moment" decoding="async" onerror="usRecoverPrivateImage(this)">
+            <img id="usAlbumCover" alt="Foto principale del ricordo" decoding="async" onerror="usRecoverPrivateImage(this)">
             <span class="us-album-carousel-counter" id="usAlbumCarouselCounter" aria-live="polite" hidden></span>
             <button type="button" class="us-album-carousel-arrow us-album-carousel-prev" id="usAlbumCarouselPrev" aria-label="Foto precedente" hidden><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span></button>
             <button type="button" class="us-album-carousel-arrow us-album-carousel-next" id="usAlbumCarouselNext" aria-label="Foto successiva" hidden><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></button>
@@ -49,13 +49,17 @@ function ensureUi(){
           <div class="us-album-info">
             <div class="us-album-meta-line"><b id="usAlbumDate"></b><span id="usAlbumCount">1 foto</span></div>
             <div class="us-album-caption-postit" id="usAlbumCoverNote" hidden><p id="usAlbumCoverCaption" translate="no"></p><small id="usAlbumCoverAuthor"></small></div>
-            <button type="button" class="us-album-current-delete" id="usAlbumCurrentDelete" hidden>Elimina questa foto</button>
+            <div class="us-album-photo-actions">
+              <button type="button" class="us-album-save-photo" id="usAlbumSavePhoto"><span class="us-icon" data-us-icon="download-simple" aria-hidden="true"></span><span>Salva sul telefono</span></button>
+              <button type="button" class="us-album-current-delete" id="usAlbumCurrentDelete" hidden>Elimina questa foto</button>
+            </div>
             <p class="us-album-carousel-status" id="usAlbumCarouselStatus" role="status" aria-live="polite" hidden></p>
           </div>
           <header class="us-album-story" id="usAlbumStory">
             <small class="us-album-provenance" id="usAlbumProvenance"></small>
             <h2 class="us-album-title" id="usAlbumTitle" translate="no"></h2>
             <p class="us-album-byline" id="usAlbumByline"></p>
+            <button type="button" class="us-album-ask" id="usAlbumAsk" hidden><span class="us-icon" data-us-icon="envelope" aria-hidden="true"></span><span id="usAlbumAskLabel"></span></button>
             <div class="us-undo-delete" id="usAlbumDelete" data-state="idle" style="--us-undo-grace:${DELETE_GRACE_MS}ms" hidden>
               <button type="button" class="us-undo-delete-go" id="usAlbumDeleteGo" aria-label="Elimina questo ricordo per entrambi">Elimina</button>
               <span class="us-undo-delete-done" role="status" aria-live="polite"><span class="us-undo-delete-label">Eliminato</span><button type="button" class="us-undo-delete-undo" id="usAlbumDeleteUndo" tabindex="-1">Annulla</button></span>
@@ -64,7 +68,7 @@ function ensureUi(){
           </header>
           <section class="us-album-section">
             <div class="us-album-section-head">
-              <div><div class="tiny">DENTRO QUESTO MOMENTO</div><h3>Le vostre foto</h3></div>
+              <div><div class="tiny">DENTRO QUESTO RICORDO</div><h3>Le vostre foto</h3></div>
               <button type="button" class="us-album-add" id="usAlbumAddBtn"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span> Aggiungi</button>
             </div>
             <input type="file" id="usAlbumFile" accept="image/jpeg,image/png,image/webp" hidden>
@@ -73,7 +77,7 @@ function ensureUi(){
               <input type="text" maxlength="180" id="usAlbumCaption" placeholder="Descrizione (opzionale)">
               <div class="us-album-composer-actions">
                 <button type="button" class="us-album-cancel" id="usAlbumCancel">Annulla</button>
-                <button type="button" class="us-album-save" id="usAlbumSave">Aggiungi al momento</button>
+                <button type="button" class="us-album-save" id="usAlbumSave">Aggiungi al ricordo</button>
               </div>
             </div>
             <div class="us-album-grid" id="usAlbumGrid"></div>
@@ -81,11 +85,12 @@ function ensureUi(){
         </div>
       </div>
     </div>
-    <div class="us-album-lightbox" id="usAlbumLightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Foto del Moment" data-us-modal data-us-motion-surface>
+    <div class="us-album-lightbox" id="usAlbumLightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Foto del ricordo" data-us-modal data-us-motion-surface>
       <div class="us-album-lightbox-stage" data-us-modal-panel>
         <button type="button" class="us-album-lightbox-close us-modal-close is-on-media" id="usAlbumLightboxClose" aria-label="Chiudi foto" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
         <div class="us-album-lightbox-count" id="usAlbumLightboxCount"></div>
-        <img class="us-album-lightbox-photo active" id="usAlbumLightboxImgA" alt="Foto del Moment">
+        <button type="button" class="us-album-lightbox-save us-modal-close is-on-media" id="usAlbumLightboxSave" aria-label="Salva sul telefono"><span class="us-icon" data-us-icon="download-simple" aria-hidden="true"></span></button>
+        <img class="us-album-lightbox-photo active" id="usAlbumLightboxImgA" alt="Foto del ricordo">
         <img class="us-album-lightbox-photo" id="usAlbumLightboxImgB" alt="">
         <div class="us-album-lightbox-info"><b id="usAlbumLightboxAuthor" translate="no"></b><p id="usAlbumLightboxCaption" translate="no"></p></div>
       </div>
@@ -102,7 +107,7 @@ function ensureUi(){
     floating.type='button';
     floating.id='usAlbumFloatingAdd';
     floating.className='us-album-floating-add';
-    floating.setAttribute('aria-label','Aggiungi una foto a questo Moment');
+    floating.setAttribute('aria-label','Aggiungi una foto a questo ricordo');
     floating.innerHTML='<span><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></span><b>Aggiungi foto</b>';
     floating.addEventListener('click',()=>document.getElementById('usAlbumFile')?.click());
     document.getElementById('usAlbumOverlay')?.appendChild(floating);
@@ -117,6 +122,9 @@ function ensureUi(){
     const row=lightboxItems[albumCarouselIndex];
     if(row?.id&&row?.own)deleteAlbumPhoto(row.id,row.storage_path);
   });
+  document.getElementById('usAlbumSavePhoto')?.addEventListener('click',()=>savePhotoToPhone(albumCarouselIndex));
+  document.getElementById('usAlbumLightboxSave')?.addEventListener('click',event=>{event.stopPropagation();savePhotoToPhone(lightboxIndex);});
+  document.getElementById('usAlbumAsk')?.addEventListener('click',askPartnerPhotos);
   const carousel=document.getElementById('usAlbumCarousel');
   carousel?.addEventListener('touchstart',event=>{
     if(lightboxItems.length<2||event.target.closest('button')){albumCarouselTouch=null;return;}
@@ -226,32 +234,46 @@ function handleFileSelected(event){
   setTimeout(()=>composer?.scrollIntoView({behavior:'smooth',block:'nearest'}),60);
 }
 
+// One path for every album photo: compressed like the cover, stored under the
+// memory's album folder, then its moment_photos row (the file is removed again
+// if the row is refused). R1 uses it for the photos picked after the cover.
+async function uploadAlbumPhoto(momentId,file,{caption='',position=1,onStage}={}){
+  if(!momentId||!file||!window.usProfile)throw new Error('ALBUM_NOT_READY');
+  const compressor=window.compressImageFile;
+  if(typeof compressor!=='function')throw new Error('COMPRESSION_UNAVAILABLE');
+  const compressed=await compressor(file,{maxDimension:1920,quality:.82});
+  const path=`${window.usProfile.couple_id}/${window.usProfile.id}/moment-albums/${momentId}/${Date.now()}-${crypto.randomUUID()}.webp`;
+  onStage?.('upload');
+  const {error:uploadError}=await sb.storage.from('us-media').upload(path,compressed,{contentType:'image/webp',upsert:false,cacheControl:'31536000'});
+  if(uploadError)throw uploadError;
+  const {error:rowError}=await sb.from('moment_photos').insert({
+    moment_id:momentId,
+    couple_id:window.usProfile.couple_id,
+    created_by:window.usProfile.id,
+    storage_path:path,
+    caption:caption||null,
+    position:Math.max(1,Number(position)||1)
+  });
+  if(rowError){await sb.storage.from('us-media').remove([path]);throw rowError;}
+  return true;
+}
+window.UsMomentAlbums=Object.freeze({
+  uploadPhoto:async(momentId,file,options)=>{
+    try{return await uploadAlbumPhoto(momentId,file,options);}
+    catch(error){console.warn('[US Albums] upload',error);return false;}
+  }
+});
+
 async function saveAlbumPhoto(){
   if(albumUploadBusy||!pendingFile||!currentAlbum||!window.usProfile)return;
   const save=document.getElementById('usAlbumSave');
   const caption=document.getElementById('usAlbumCaption')?.value.trim()||'';
   albumUploadBusy=true;if(save){save.disabled=true;save.textContent='Ottimizzo…';}
-  let path='';
   try{
-    const compressor=window.compressImageFile;
-    if(typeof compressor!=='function')throw new Error('COMPRESSION_UNAVAILABLE');
-    const compressed=await compressor(pendingFile,{maxDimension:1920,quality:.82});
-    path=`${window.usProfile.couple_id}/${window.usProfile.id}/moment-albums/${currentAlbum.id}/${Date.now()}-${crypto.randomUUID()}.webp`;
-    if(save)save.textContent='Carico…';
-    const {error:uploadError}=await sb.storage.from('us-media').upload(path,compressed,{contentType:'image/webp',upsert:false,cacheControl:'31536000'});
-    if(uploadError)throw uploadError;
     const maxPosition=albumRows.reduce((max,row)=>Math.max(max,Number(row.position)||0),0);
-    const {error:rowError}=await sb.from('moment_photos').insert({
-      moment_id:currentAlbum.id,
-      couple_id:window.usProfile.couple_id,
-      created_by:window.usProfile.id,
-      storage_path:path,
-      caption:caption||null,
-      position:maxPosition+1
-    });
-    if(rowError){await sb.storage.from('us-media').remove([path]);throw rowError;}
+    await uploadAlbumPhoto(currentAlbum.id,pendingFile,{caption,position:maxPosition+1,onStage:()=>{if(save)save.textContent='Carico…';}});
     resetComposer();
-    toast('Foto aggiunta al momento');
+    toast('Foto aggiunta al ricordo');
     selectNewestAlbumPhoto=true;
     await loadAlbum(currentAlbum.id);
     await decorateMomentCards();
@@ -259,7 +281,7 @@ async function saveAlbumPhoto(){
     console.warn('[US Albums] upload',error);
     toast(error?.message==='SOURCE_TOO_LARGE'?'Foto troppo grande: massimo 20 MB':'Non riesco ad aggiungere la foto');
   }finally{
-    albumUploadBusy=false;if(save){save.disabled=false;save.textContent='Aggiungi al momento';}
+    albumUploadBusy=false;if(save){save.disabled=false;save.textContent='Aggiungi al ricordo';}
   }
 }
 
@@ -319,10 +341,100 @@ function renderAlbumStory(){
   const provenance=document.getElementById('usAlbumProvenance');
   const title=document.getElementById('usAlbumTitle');
   const byline=document.getElementById('usAlbumByline');
-  if(provenance)provenance.textContent=`Moment · ${longDate}`;
+  if(provenance)provenance.textContent=`Ricordo · ${longDate}`;
   if(title)title.textContent=currentAlbum.caption||longDate;
   const others=[...new Set(albumRows.map(row=>row.author).filter(name=>name&&name!==currentAlbum.author))];
   if(byline)byline.textContent=`Aggiunto da ${currentAlbum.author}${others.length?` · con foto di ${others.join(' e ')}`:''}`;
+  // R4 — the album is for two: ask the other one for their photos of that day.
+  const ask=document.getElementById('usAlbumAsk');
+  const label=document.getElementById('usAlbumAskLabel');
+  const name=partnerName();
+  const canAsk=Boolean(name&&typeof window.UsLeftForYou?.openComposer==='function');
+  if(label)label.textContent=canAsk?`Chiedi a ${name} le sue foto di quel giorno`:'';
+  if(ask)ask.hidden=!canAsk;
+}
+function partnerName(){
+  const name=window.UsIdentity?.current?.()?.partnerName||'';
+  return name&&name!=='La tua persona'?name:'';
+}
+function uiText(text,vars){
+  if(typeof window.usT==='function')return window.usT(text,vars);
+  return String(text).replace(/\{([a-z]+)\}/gi,(all,key)=>vars?.[key]??all);
+}
+// The request leaves through Lasciato per te, written and sent by the person.
+function askPartnerPhotos(){
+  if(!currentAlbum||typeof window.UsLeftForYou?.openComposer!=='function')return;
+  const when=albumLongDate();
+  const text=currentAlbum.caption
+    ?uiText('Hai delle foto di {when}? Aggiungile al nostro ricordo «{title}» in Ricordi ♡',{when,title:currentAlbum.caption})
+    :uiText('Hai delle foto di {when}? Aggiungile al nostro ricordo in Ricordi ♡',{when});
+  closeAlbum();
+  window.UsLeftForYou.openComposer({kind:'text',text});
+}
+
+// R3 — "Salva sul telefono", one photo at a time, always the full photo.
+// Android app: the WebView cannot save files and US has no file plugin, so the
+// photo opens in the phone's browser as a download (Download folder).
+// iPhone (app or Safari): the share sheet, where "Salva immagine" puts it in
+// Foto. Web elsewhere: a normal download of the file.
+let savingPhoto=false;
+function photoFileName(index){
+  const iso=/^\d{4}-\d{2}-\d{2}$/.test(currentAlbum?.iso||'')?currentAlbum.iso:new Date().toISOString().slice(0,10);
+  return `US-ricordo-${iso}${index>0?`-${index+1}`:''}.webp`;
+}
+function nativePlatform(){
+  const runtime=window.UsCapacitorRuntime||window.Capacitor;
+  return window.UsPlatform?.isNative?String(runtime?.getPlatform?.()||''):'';
+}
+function isApplePhone(){
+  const ua=String(navigator.userAgent||'');
+  return nativePlatform()==='ios'||/iP(hone|ad|od)/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+}
+function openOutside(url){
+  const link=document.createElement('a');
+  link.href=url;link.target='_blank';link.rel='noopener noreferrer';
+  document.body.appendChild(link);link.click();link.remove();
+}
+async function savePhotoToPhone(index){
+  const item=lightboxItems[index];
+  const path=item?.storage_path||'';
+  if(!path||savingPhoto)return;
+  savingPhoto=true;
+  const name=photoFileName(index);
+  try{
+    const native=nativePlatform();
+    if(native==='android'){
+      const {data,error}=await sb.storage.from('us-media').createSignedUrl(path,300,{download:name});
+      if(error||!data?.signedUrl)throw error||new Error('download_url_unavailable');
+      openOutside(data.signedUrl);
+      toast('La foto si scarica nei Download del telefono');
+      return;
+    }
+    const response=await fetch(item.url,{credentials:'omit'});
+    if(!response.ok)throw new Error('photo_download_failed');
+    const blob=await response.blob();
+    const file=new File([blob],name,{type:blob.type||'image/webp'});
+    if(isApplePhone()&&navigator.canShare?.({files:[file]})){
+      try{await navigator.share({files:[file]});}
+      catch(error){if(error?.name!=='AbortError')throw error;}
+      return;
+    }
+    if(native){
+      const {data,error}=await sb.storage.from('us-media').createSignedUrl(path,300,{download:name});
+      if(error||!data?.signedUrl)throw error||new Error('download_url_unavailable');
+      openOutside(data.signedUrl);
+      return;
+    }
+    const href=URL.createObjectURL(blob);
+    const link=document.createElement('a');
+    link.href=href;link.download=name;link.rel='noopener';
+    document.body.appendChild(link);link.click();link.remove();
+    setTimeout(()=>URL.revokeObjectURL(href),60000);
+    toast('Foto salvata');
+  }catch(error){
+    console.warn('[US Albums] save photo',error);
+    toast('Non riesco a salvare la foto. Riprova.');
+  }finally{savingPhoto=false;}
 }
 function renderAlbum(){
   if(!currentAlbum)return;
@@ -368,12 +480,8 @@ function showAlbumPhoto(index,direction=0){
       cover.classList.add(direction>0?'us-ricordi-next':'us-ricordi-prev');
     }else cover.classList.remove('us-ricordi-next','us-ricordi-prev');
   }
-  if(peek){
-    const next=multiple?lightboxItems[(albumCarouselIndex+1)%lightboxItems.length]:null;
-    peek.hidden=!next?.url;
-    if(next?.url)peek.src=next.url;
-    else peek.removeAttribute('src');
-  }
+  // R11 — the peek stays empty: the next full photo is fetched only when shown.
+  if(peek){peek.hidden=true;peek.removeAttribute('src');}
   for(const id of ['usAlbumCarouselPrev','usAlbumCarouselNext','usAlbumCarouselCounter','usAlbumCarouselHint']){
     const node=document.getElementById(id);
     if(!node)continue;
@@ -383,19 +491,26 @@ function showAlbumPhoto(index,direction=0){
   const note=document.getElementById('usAlbumCoverNote');
   const caption=document.getElementById('usAlbumCoverCaption');
   const author=document.getElementById('usAlbumCoverAuthor');
-  if(caption)caption.textContent=item.caption||'';
-  if(author)author.textContent=item.caption?`Aggiunto da ${item.author||'Noi'}`:'';
-  if(note)note.hidden=!item.caption;
+  // R4 — every photo of an album says who added it, with its note when there is
+  // one (the cover's note is already the title above; a single photo is already
+  // signed by the byline).
+  const ownNote=item.cover?'':(item.caption||'');
+  if(caption){caption.textContent=ownNote;caption.hidden=!ownNote;}
+  if(author)author.textContent=`Aggiunto da ${item.author||'Noi'}`;
+  if(note)note.hidden=!(multiple||ownNote);
   const del=document.getElementById('usAlbumCurrentDelete');
   if(del)del.hidden=!(albumCarouselIndex>0&&item.own&&item.id);
+  const save=document.getElementById('usAlbumSavePhoto');
+  if(save)save.hidden=!item.storage_path;
 }
 
-// ===== Ricordi · Elimina → Eliminato · Annulla (in place, no modal, no toast) =====
-// Both partners can delete a shared Moment. Whole-Moment deletion is handled
-// by the authenticated delete-moment Edge Function, which re-validates that
-// the caller belongs to the same couple and also cleans album media.
+// ===== Ricordi · Elimina → conferma → Eliminato · Annulla =====
+// R2 — only who created a memory can delete it, and only after a confirm that
+// says it disappears for both of you, with every photo in its album. Then the
+// in-place grace period (Annulla) still applies. Whole-memory deletion is done
+// by the authenticated delete-moment Edge Function, which also cleans the media.
 function canDeleteCurrentAlbum(){
-  return Boolean(currentAlbum&&window.usProfile?.couple_id&&albumLoaded);
+  return Boolean(currentAlbum&&window.usProfile?.couple_id&&albumLoaded&&currentAlbum.owner&&currentAlbum.owner===window.usProfile.id);
 }
 function momentCardById(id){
   return [...document.querySelectorAll('#momentsGrid .moment-card[data-moment-id]')].find(card=>card.dataset.momentId===id)||null;
@@ -435,8 +550,16 @@ async function commitPendingDelete(){
   paintDeleteControl();
   toast('Non riesco a eliminare il ricordo. Riprova.');
 }
-function startMomentDelete(){
-  if(!canDeleteCurrentAlbum()||pendingDelete?.id===currentAlbum.id)return;
+let confirmingDelete=false;
+async function startMomentDelete(){
+  if(!canDeleteCurrentAlbum()||pendingDelete?.id===currentAlbum.id||confirmingDelete)return;
+  const id=currentAlbum.id;
+  confirmingDelete=true;
+  let confirmed=false;
+  try{
+    confirmed=await usConfirm({kicker:'Ricordo',title:'Eliminare questo ricordo?',body:'Sparisce per tutti e due, con tutte le foto del suo album.',confirmLabel:'Elimina',tone:'danger'});
+  }finally{confirmingDelete=false;}
+  if(!confirmed||currentAlbum?.id!==id||!canDeleteCurrentAlbum()||pendingDelete?.id===id)return;
   // A second Moment deleted inside another's grace commits the first now.
   if(pendingDelete&&!pendingDelete.committing)commitPendingDelete();
   const job={id:currentAlbum.id,committing:false,timer:0};
@@ -476,7 +599,7 @@ async function handleGridClick(event){
 }
 async function deleteAlbumPhoto(id,path){
   if(!id||!window.usProfile)return;
-  if(!(await usConfirm({kicker:'MOMENT',title:'Eliminare questa foto dal momento?',confirmLabel:'Elimina',tone:'danger'})))return;
+  if(!(await usConfirm({kicker:'Ricordo',title:'Eliminare questa foto dal ricordo?',body:'Sparisce per tutti e due.',confirmLabel:'Elimina',tone:'danger'})))return;
   const {error:rowError}=await sb.from('moment_photos').delete().eq('id',id).eq('created_by',window.usProfile.id);
   if(rowError){console.warn('[US Albums] delete row',rowError);toast('Non riesco a eliminare la foto');return;}
   const {error:storageError}=await sb.storage.from('us-media').remove([path]);
@@ -628,8 +751,9 @@ async function openAlbum(card,{focusDelete=false}={}){
   document.body.classList.add('us-album-open');
   const scroll=document.getElementById('usAlbumScroll');if(scroll)scroll.scrollTop=0;
   galleriaEnter(overlay,card);
-  lightboxItems=[{url:currentAlbum.url,author:currentAlbum.author,caption:currentAlbum.caption,cover:true}];
+  lightboxItems=[{url:currentAlbum.url,author:currentAlbum.author,caption:currentAlbum.caption,cover:true,storage_path:currentAlbum.path}];
   showAlbumPhoto(0);
+  window.UsRicordiNew?.markOpened?.(id);
   await loadAlbum(id);
   if(focusDelete&&currentAlbum?.id===id){
     const control=document.getElementById('usAlbumDelete');
@@ -914,7 +1038,17 @@ console.info('[US] Moments Albums attivo');
     document.body.appendChild(overlay);
     overlay.querySelector('#usMomentComposeMount')?.appendChild(compose);
 
-    document.getElementById('usMomentsAdd')?.addEventListener('click', openComposer);
+    // R1 — "+" opens the phone's gallery right away (several photos at once);
+    // the sheet appears once photos are picked. With photos already waiting,
+    // it reopens the sheet instead.
+    const pick = ({ caption, source } = {}) => {
+      if (compose.classList.contains('has-photo') && !source) { openComposer(); return; }
+      const input = document.getElementById('momentCaption');
+      if (input && caption && !input.value.trim()) input.value = String(caption).slice(0, 180);
+      window.UsRicordiCompose?.setSource?.(source || null);
+      window.pickMomentPhoto?.();
+    };
+    document.getElementById('usMomentsAdd')?.addEventListener('click', () => pick());
     // M7D — entry point for the Da vivere "Aggiungi un ricordo" bridge: the
     // same composer, a suggested note only if the field is still empty. The
     // couple still picks the photo; nothing is created automatically.
@@ -924,6 +1058,11 @@ console.info('[US] Moments Albums attivo');
         if (input && caption && !input.value.trim()) input.value = String(caption).slice(0, 180);
         openComposer();
       },
+      // Straight to the gallery (call it from a tap). source: { kind:
+      // 'da_vivere'|'shared_event_completion', ref, date } links the new
+      // memory to that lived thing (R6).
+      pick,
+      show: openComposer,
     });
     document.getElementById('usMomentComposeClose')?.addEventListener('click', closeComposer);
     document.getElementById('usMomentComposeBackdrop')?.addEventListener('click', closeComposer);
@@ -998,7 +1137,7 @@ console.info('[US] Moments Albums attivo');
     const title = overlay.querySelector('.us-album-section-head h3');
     const kicker = overlay.querySelector('.us-album-section-head .tiny');
     if (title) title.textContent = 'Altri pezzi di quel giorno';
-    if (kicker) kicker.textContent = 'DENTRO QUESTO MOMENT';
+    if (kicker) kicker.textContent = 'DENTRO QUESTO RICORDO';
 
     addAlbumTile();
     syncCoverBlur();
@@ -1109,8 +1248,13 @@ console.info('[US] Moments Albums attivo');
         ? (entry.source.body || 'Un pensiero per voi.')
         : kindLabel(entry.source.kind);
       const owner = (entry.source.sender_id || entry.contribution.source_sender_id) === window.usProfile?.id ? 'tu' : 'partner';
+      // R8/L9: a kept photo shows its own thumbnail right away; other kinds keep their mark.
+      const thumb = entry.source.kind === 'photo' && entry.mediaUrl;
+      const mark = thumb
+        ? `<span class="conservati-card-mark conservati-card-thumb" aria-hidden="true"><img src="${escapeConservati(entry.mediaUrl)}" alt="" loading="lazy" decoding="async"></span>`
+        : `<span class="conservati-card-mark" aria-hidden="true">${entry.source.kind === 'text' ? '<span class="us-icon" data-us-icon="pencil" aria-hidden="true"></span>' : entry.source.kind === 'music' ? '<span class="us-icon" data-us-icon="music-note" aria-hidden="true"></span>' : '<span class="us-icon" data-us-icon="heart" aria-hidden="true"></span>'}</span>`;
       return `<button type="button" class="conservati-card" data-conservati-open="${escapeConservati(entry.contribution.id)}" data-owner="${owner}" aria-label="Apri ${escapeConservati(kindLabel(entry.source.kind))} lasciato da ${escapeConservati(entry.senderName)}">
-        <span class="conservati-card-mark" aria-hidden="true">${entry.source.kind === 'text' ? '<span class="us-icon" data-us-icon="pencil" aria-hidden="true"></span>' : entry.source.kind === 'music' ? '<span class="us-icon" data-us-icon="music-note" aria-hidden="true"></span>' : '<span class="us-icon" data-us-icon="heart" aria-hidden="true"></span>'}</span>
+        ${mark}
         <span class="conservati-card-copy"><b translate="no">${escapeConservati(entry.senderName)}</b><small>${escapeConservati(formatConservatiDate(entry.source.created_at))}</small><span${entry.source.kind === 'text' && entry.source.body ? ' translate="no"' : ''}>${escapeConservati(preview)}</span></span>
         <span class="conservati-card-kind">${escapeConservati(kindLabel(entry.source.kind))}</span>
       </button>`;
@@ -1253,6 +1397,34 @@ console.info('[US] Moments Albums attivo');
     if (event.key === 'Escape' && root()?.classList.contains('show')) closeConservati();
   });
 
+  // R8: the Conservati door stays hidden until the couple has kept something.
+  let entryRequestId = 0;
+  async function refreshConservatiEntry() {
+    const entry = document.getElementById('conservatiEntry');
+    const coupleId = window.usProfile?.couple_id;
+    if (!entry || !coupleId) return;
+    let client;
+    try { client = sb; } catch (_) { client = window.sb || null; }
+    if (!client) return;
+    const requestId = ++entryRequestId;
+    try {
+      const { count, error } = await client.from('conserva_contributions')
+        .select('id', { count: 'exact', head: true })
+        .eq('couple_id', coupleId);
+      if (error) throw error;
+      if (requestId !== entryRequestId) return;
+      const total = Number(count) || 0;
+      entry.hidden = total < 1;
+      const label = document.getElementById('conservatiCount');
+      if (label) label.textContent = total > 0 ? String(total) : '';
+    } catch (error) {
+      console.warn('[US Conservati] entry', error);
+    }
+  }
+  window.addEventListener?.('us:moments-updated', () => { refreshConservatiEntry(); });
+  window.addEventListener?.('us:ricordi-shown', () => { refreshConservatiEntry(); });
+
   window.openConservati = openConservati;
   window.closeConservati = closeConservati;
+  window.UsConservati = Object.freeze({ refreshEntry: refreshConservatiEntry });
 })();

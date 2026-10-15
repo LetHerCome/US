@@ -461,20 +461,22 @@ html.us-returning-device .auth-overlay{
     <section class="section" style="margin-top:6px">
       <h2 class="noi-sr">Ricordi</h2>
       <section class="ricordi-rivivi" id="ricordiRivivi" aria-label="Rivivi" hidden></section>
-      <button type="button" class="us-conservati-entry" id="conservatiEntry" onclick="openConservati()" aria-label="Apri Conservati">
+      <button type="button" class="us-conservati-entry" id="conservatiEntry" onclick="openConservati()" aria-label="Apri Conservati" hidden>
         <span class="us-conservati-entry-mark" aria-hidden="true"><span class="us-icon" data-us-icon="sparkle-fill" aria-hidden="true"></span></span>
         <span class="us-conservati-entry-copy"><b>Conservati</b></span>
+        <small class="us-conservati-entry-count" id="conservatiCount"></small>
         <span class="us-conservati-entry-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></span>
       </button>
       <div class="moment-compose" id="momentCompose">
-        <input id="momentFile" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+        <input id="momentFile" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
         <button type="button" class="moment-picker" onclick="pickMomentPhoto()" aria-label="Scegli una foto per il ricordo">
           <span class="moment-picker-empty"><span class="moment-add-icon"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></span><span class="moment-picker-copy"><b>Aggiungi un ricordo</b></span></span>
           <span id="momentPreview" class="moment-preview"><img id="momentPreviewImg" alt="Anteprima ricordo"><span class="moment-change-chip">Cambia foto</span></span>
         </button>
+        <div class="moment-extra" id="momentExtra" hidden><div class="moment-extra-row" id="momentExtraRow"></div><p class="moment-extra-count" id="momentExtraCount"></p></div>
         <div class="moment-details">
           <input id="momentCaption" type="text" maxlength="180" placeholder="Nota (opzionale)">
-          <div class="moment-auto-date" id="momentDetectedDate"></div>
+          <label class="moment-auto-date moment-date-field" id="momentDetectedDate" for="momentDate"><span>Data foto</span><input id="momentDate" type="date" required></label>
           <div class="moment-compose-footer"><button id="momentUploadBtn" type="button" class="primary moment-save" onclick="uploadMoment()">Salva ricordo</button></div>
         </div>
       </div>
@@ -1087,7 +1089,7 @@ html.us-returning-device .auth-overlay{
   <div class="conservati-backdrop us-modal-backdrop" id="conservatiBackdrop"></div>
   <section class="conservati-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="conservatiTitle" data-us-modal-panel>
     <header class="conservati-head">
-      <div><div class="tiny">RICORDI</div><h2 id="conservatiTitle">Conservati</h2><small id="conservatiTagline">Piccole cose che avete deciso di non perdere.</small></div>
+      <div><div class="tiny">RICORDI</div><h2 id="conservatiTitle">Conservati</h2><small id="conservatiTagline">Piccole cose che avete deciso di non perdere.</small><p class="conservati-rule" id="conservatiRule">Quello che non conservate in Lasciato per te sparisce dopo 30 giorni.</p></div>
       <button type="button" class="conservati-close us-modal-close" id="conservatiClose" aria-label="Chiudi Conservati" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
     </header>
     <div class="conservati-body">

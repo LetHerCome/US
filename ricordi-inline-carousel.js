@@ -1,6 +1,7 @@
 /* US Ricordi inline carousel V2 — only the main Ricordi timeline.
-   Album/lightbox are untouched. Metadata is read by moments-albums.js; signed
-   media is requested only for cards as they approach the viewport or on swipe. */
+   Album/lightbox are untouched. Metadata is read by moments-albums.js; a full
+   album photo is signed and downloaded only when it is actually shown (swipe
+   or arrow), never ahead of time (R11: phones on mobile data). */
 (() => {
   'use strict';
   if (window.UsRicordiInline) return;
@@ -13,11 +14,8 @@
           if (!entry.isIntersecting) return;
           observer.unobserve(entry.target);
           const card = entry.target.closest('.moment-card[data-moment-id]');
-          if (card) {
-            const state=states.get(card);
-            if (state) state.visible=true;
-            prime(card);
-          }
+          const state = card && states.get(card);
+          if (state) state.visible=true;
         });
       }, {rootMargin:'220px 0px'}) : null;
 
@@ -148,32 +146,14 @@
     state.captionNode.hidden=!photo.caption;
     if (state.authorNode) state.authorNode.textContent=photo.author;
     if (state.dotNode && photo.owner) state.dotNode.setAttribute('data-owner',photo.owner);
-    const next=state.photos[(state.index+1)%state.photos.length];
-    // The already-decoded current image doubles as the rear photo until the
-    // next signed photo is available; never request whole albums up front.
-    state.peek.src=next?.url||src;
+    // The rear photo is the current one: the next full photo is not
+    // downloaded until it is shown.
+    state.peek.src=src;
     if (direction && !window.UsUiFoundation?.isReducedMotion?.()) {
       state.img.classList.remove('ricordi-inline-enter-next','ricordi-inline-enter-prev');
       void state.img.offsetWidth;
       state.img.classList.add(direction>0?'ricordi-inline-enter-next':'ricordi-inline-enter-prev');
     }
-    if (state.visible) void prime(state.card);
-  }
-
-  async function prime(card) {
-    const state=states.get(card);
-    if (!state||!card.isConnected||state.photos.length<2) return;
-    const active=state.index;
-    const nextIndex=(active+1)%state.photos.length;
-    const next=state.photos[nextIndex];
-    if (next.url||next.cover) {
-      if (state.index===active&&next.url) state.peek.src=next.url;
-      return;
-    }
-    const url=await requestedPhotoUrl(next.path);
-    if (!url||!card.isConnected||states.get(card)!==state) return;
-    next.url=url;
-    if (state.index===active) state.peek.src=url;
   }
 
   async function select(card,index,direction=0) {
@@ -226,18 +206,21 @@
     if (state.ids===ids) return;
     state.ids=ids;
     state.index=0;
+    // R4 — each photo carries its note and its author's real name, as in the album.
+    const identity=window.UsIdentity?.current?.();
+    const ownName=identity?.ownName&&identity.ownName!=='Tu'?identity.ownName:'Da te';
+    const partnerName=identity?.partnerName&&identity.partnerName!=='La tua persona'?identity.partnerName:'Dalla tua persona';
     state.photos=[
       {cover:true,url:state.originalUrl,path:state.originalPath,caption:state.originalCaption,author:state.originalAuthor,owner:state.originalOwner},
       ...sorted.map(row=>({
         cover:false,id:row.id,path:row.storage_path,url:urlCache.get(row.storage_path)||'',
         caption:row.caption||'',
-        author:row.created_by===window.usProfile?.id?'Da te':'Dalla tua persona',
+        author:row.created_by===window.usProfile?.id?ownName:partnerName,
         owner:row.created_by===window.usProfile?.id?'tu':'partner'
       }))
     ];
     paint(state);
     if (observer) observer.observe(state.stage);
-    else void prime(card);
   }
 
   function shouldSuppressOpen(target) {
