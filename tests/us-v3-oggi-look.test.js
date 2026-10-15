@@ -236,3 +236,14 @@ test('Oggi looks: the photo pipeline is untouched — no new photo fetch, only a
   assert.match(lookCss, /html\[data-us-oggi-theme\] #homeHero \.home-photo-layer,\.us-look-phone \.us-look-photo\{filter:var\(--oggi-photo-filter\)\}/);
   assert.doesNotMatch(lookCss, /\.home-photo-layer[^{]*\{[^}]*(?:opacity|transform|transition|background-image)/, 'rotation and cross-fade stay app.js territory');
 });
+
+test('V3 countdown rewards: the Aurora, Orbita and Cromo previews still show after V3 moves them to the countdown category', () => {
+  const { window, progression } = boot();
+  window.USCountdown = { STYLES: [{ id: 'aurora', reward: 'frame_aurora' }], previewMarkup: (id) => `<i data-countdown-style="${id}"></i>` };
+  for (const category of ['countdown', 'frame']) {
+    const html = progression.previewMarkup({ id: 'frame_aurora', token: 'frame_aurora', category, level_required: 4 });
+    assert.match(html, /us-cos-countdown/, category);
+    assert.match(html, /data-countdown-style="aurora"/, category);
+  }
+  assert.doesNotMatch(progression.previewMarkup({ id: 'frame_other', token: 'frame_other', category: 'frame', level_required: 3 }), /us-cos-countdown/, 'a retired reward with no countdown style gets no preview');
+});
