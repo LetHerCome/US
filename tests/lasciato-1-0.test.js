@@ -331,8 +331,8 @@ test('L8 a refused camera or microphone says where to turn it back on', async ()
   assert.equal(await deny(createHarness(), 'microphone'), 'Manca il permesso per il microfono. Attivalo dalle impostazioni del browser per questo sito.');
 });
 
-test('every new Italian text has its English in i18n-new-lasciato.json', () => {
-  const entries = JSON.parse(read('i18n-new-lasciato.json'));
+test('every new Italian text has its English in i18n-en.js', () => {
+  const entries = require(path.join(ROOT, 'i18n-en.js'));
   const i18n = require(path.join(ROOT, 'i18n.js'));
   const dict = i18n.compile(entries);
   const samples = [
