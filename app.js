@@ -2962,6 +2962,8 @@ async function setDailyAnswerReaction(reaction){
     if(error||!data||data.question_id!==questionId)throw error||new Error('daily_reaction_invalid');
     if(window.todayQuestion?.id===questionId)window.todayRevealMeta=data;
     renderTodayReveal();
+    // O2: the other phone hears about a ♥ or "mi hai commosso" (the server reads it back).
+    if(next)window.sendWebPushEvent?.('daily_reaction',questionId);
     return {status:'saved'};
   }catch(error){
     console.warn('[US Today] Reazione',error);
@@ -5039,6 +5041,7 @@ function openMemoryComposer(caption,source=null){
   if(typeof composer?.pick==='function'){composer.pick(source?{caption,source}:{caption});return;}
   if(typeof composer?.open==='function')setTimeout(()=>composer.open({caption}),60);
 }
+window.openMemoryComposer=openMemoryComposer;
 document.getElementById('noiIdeaDetailLived')?.addEventListener('click',markNoiIdeaLived);
 document.getElementById('noiIdeaDetailMemoryAdd')?.addEventListener('click',addNoiIdeaMemory);
 document.getElementById('noiIdeaDetailSchedule')?.addEventListener('click',scheduleNoiIdea);
