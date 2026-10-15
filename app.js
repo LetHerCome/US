@@ -928,7 +928,7 @@ function usInvalidateAuth({revokePush=true}={}){
     usPushCleanup=usPushCleanup.then(()=>disableWebPush({silent:true,refreshUi:false,profileId:previousId,localOnly:true,waitForOperation:priorOperation})).catch(()=>{});
   }
   homePhotoRequestId++;
-  homePhotoPath='';homePhotoHourKey='';homePhotoHasPainted=false;
+  homePhotoPath='';homePhotoHourKey='';homePhotoHasPainted=false;if(typeof usHomePhotoMeta!=='undefined')usHomePhotoMeta=null;if(typeof renderOggiCaption==='function')renderOggiCaption(null);if(typeof renderOggiNext==='function')renderOggiNext(null);
   document.body.classList.remove('us-fastboot-photo');
   clearPrivateDeviceState(previousId).catch(()=>{});
   for(const id of ['homePhotoLayerA','homePhotoLayerB']){
@@ -1311,6 +1311,7 @@ function renderDistanceCapsule(model){
   root.dataset.usDistanceState=model.state;
   value.textContent=model.text||'';
   root.setAttribute('aria-label',model.visible?(model.near?'Siete vicini':`Distanza tra voi: ${model.text}`):'Distanza tra voi');
+  if(typeof syncOggiRow==='function')syncOggiRow();
   if (typeof Event === 'function' && typeof window.dispatchEvent === 'function') {
     window.dispatchEvent(new Event('us:distance-changed'));
   }
@@ -1469,7 +1470,8 @@ async function openLocationDisclosure(){
   const partner=usIdentity().partnerName||'La tua persona';
   const ok=await window.UsUiFoundation?.confirm?.({
     kicker:'POSIZIONE',
-    title:'Distanza tra voi',
+    icon:'map-pin',
+    title:'Attiva la posizione',
     body:`US usa la posizione approssimativa di questo telefono, solo ad app aperta, per calcolare la distanza tra voi. ${partner} vede solo la distanza, mai dove sei. Puoi smettere quando vuoi.`,
     confirmLabel:'Attiva',
     cancelLabel:'Non ora'
@@ -1546,7 +1548,7 @@ async function openDistanceDetail(){
     return;
   }
   const age=model.age?`Aggiornata ${relativeLocationAge(model.age)}. `:'';
-  await ui?.notice?.({kicker:'DISTANZA',title:model.detail||'Posizione non disponibile',body:`${age}Puoi smettere di condividerla da Impostazioni › Posizione.`});
+  await ui?.notice?.({kicker:'DISTANZA',icon:'map-pin',title:model.detail||'Posizione non disponibile',body:`${age}Puoi smettere di condividerla da Impostazioni › Posizione.`});
 }
 window.openDistanceDetail=openDistanceDetail;
 
@@ -1791,7 +1793,7 @@ async function getHomeRotationPath(){
   if(!window.usProfile)return null;
   const viewer=window.usProfile,epoch=usAuthEpoch;
   const {data:rows,error}=await sb.from('moments')
-    .select('id,storage_path,moment_date,created_at')
+    .select('id,storage_path,moment_date,created_at,caption,created_by')
     .eq('couple_id',window.usProfile.couple_id)
     .order('moment_date',{ascending:false})
     .order('created_at',{ascending:false})
@@ -1802,6 +1804,7 @@ async function getHomeRotationPath(){
     const key=homeRotationKey();
     let idx=homeStableIndex(`${window.usProfile.couple_id}|${key}|home`,rows.length);
     if(rows.length>1&&rows[idx]?.storage_path===homePhotoPath)idx=(idx+1)%rows.length;
+    usHomePhotoMeta=rows[idx]?.storage_path?{path:rows[idx].storage_path,caption:rows[idx].caption||'',date:rows[idx].moment_date||'',author:rows[idx].created_by||''}:null;
     return rows[idx]?.storage_path||null;
   }
   const {data:couple,error:coupleError}=await sb.from('couples').select('home_photo_path').eq('id',window.usProfile.couple_id).maybeSingle();
@@ -1843,6 +1846,7 @@ function crossfadeHomePhoto(url,{path='',hourKey='',allowRetry=true}={}){
         homePhotoHasPainted=false;
         homePhotoPath='';
       }
+      if(typeof renderOggiCaption==='function')renderOggiCaption(url&&path&&typeof usHomePhotoMeta!=='undefined'&&usHomePhotoMeta?.path===path?usHomePhotoMeta:null);
       // Native Foto & Noi follows the image actually displayed by Oggi.
       // The event carries no private path or signed URL.
       window.dispatchEvent(new Event('us:home-photo-changed'));
@@ -1930,6 +1934,73 @@ function startHomePhotoRotation(){
 }
 startHomePhotoRotation();
 
+// Parity with the approved mockup: under the time, the photo speaks — its
+// caption in Fraunces italic, then the day and who took it, with that
+// person's colour. Then one row: the next thing you'll do together and the
+// distance (they step aside while a card waits for me).
+let usHomePhotoMeta=null;
+function oggiLocaleTag(){return globalThis.UsI18n?.tag||'it-IT';}
+function oggiCaptionViewModel(meta,{viewerId=window.usProfile?.id,identity=usIdentity(),today=oggiTodayISO()}={}){
+  if(!meta?.path)return null;
+  const text=String(meta.caption||'').trim();
+  const day=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(meta.date||''));
+  let date='';
+  if(day){
+    const at=new Date(Date.UTC(+day[1],+day[2]-1,+day[3],12));
+    const sameYear=String(today||'').slice(0,4)===day[1];
+    try{date=at.toLocaleDateString(oggiLocaleTag(),{day:'numeric',month:'long',...(sameYear?{}:{year:'numeric'}),timeZone:'UTC'});}catch(_){date='';}
+  }
+  const mine=Boolean(meta.author&&meta.author===viewerId);
+  const name=meta.author?(mine?identity.ownName:identity.partnerName):'';
+  if(!text&&!date)return null;
+  return {text,date,name,who:meta.author?(mine?'tu':'partner'):'noi',meta:date&&name?`${date} · di ${name}`:date};
+}
+function renderOggiCaption(meta){
+  const root=document.getElementById('usOggiCaption');
+  if(!root)return;
+  const model=oggiCaptionViewModel(meta);
+  if(!model){root.hidden=true;return;}
+  const em=document.getElementById('usOggiCaptionText'),dot=document.getElementById('usOggiCaptionDot'),line=document.getElementById('usOggiCaptionMeta');
+  if(em){em.textContent=model.text;em.hidden=!model.text;}
+  if(dot)dot.dataset.who=model.who;
+  // One text: "3 settembre · di Francesco" (English through its {date}/{name} pattern).
+  if(line)line.textContent=model.meta;
+  root.hidden=false;
+}
+window.UsOggiCaption=Object.freeze({viewModel:oggiCaptionViewModel,render:renderOggiCaption});
+function oggiNextEventViewModel(source){
+  if(!source?.id||!source?.title||source.days_left===null||source.days_left===undefined||!source.effective_date)return null;
+  const days=Number(source.days_left);
+  if(!Number.isFinite(days)||days<0||days>2)return null;
+  const time=source.event_time?String(source.event_time).slice(0,5):'';
+  let day=days===0?'Oggi':days===1?'Domani':'';
+  if(!day){
+    const d=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(source.effective_date));
+    try{day=d?new Date(Date.UTC(+d[1],+d[2]-1,+d[3],12)).toLocaleDateString(oggiLocaleTag(),{weekday:'long',timeZone:'UTC'}):'';}catch(_){day='';}
+    day=day?day.charAt(0).toLocaleUpperCase(oggiLocaleTag())+day.slice(1):'';
+  }
+  if(!day)return null;
+  return {id:String(source.id),when:time?`${day}, ${time}`:day,title:String(source.title)};
+}
+function syncOggiRow(){
+  const row=document.getElementById('usOggiRow');
+  if(!row)return;
+  const next=document.getElementById('usOggiNext'),pill=document.getElementById('distanceWidget');
+  row.hidden=Boolean((!next||next.hidden)&&(!pill||pill.hidden));
+}
+function renderOggiNext(model){
+  const button=document.getElementById('usOggiNext');
+  if(!button)return;
+  if(!model){button.hidden=true;button.removeAttribute('aria-label');syncOggiRow();return;}
+  document.getElementById('usOggiNextWhen').textContent=model.when;
+  document.getElementById('usOggiNextTitle').textContent=model.title;
+  button.dataset.usEventId=model.id;
+  button.hidden=false;
+  syncOggiRow();
+}
+document.getElementById('usOggiNext')?.addEventListener('click',()=>{window.go?.('bond',{nav:true});});
+window.UsOggiNext=Object.freeze({viewModel:oggiNextEventViewModel,render:renderOggiNext});
+
 // M6E — Oggi calendar widget + Focus Photo. A single small glass card, fed by
 // calendar.js's window.getOggiCalendarInsightSource() (which itself reuses
 // UsCalendarDomain.computeFreeTogether — no algorithm is duplicated here).
@@ -2001,15 +2072,22 @@ function setOggiFocusPhoto(active){
   const hero=document.getElementById('homeHero');
   hero?.classList.toggle('us-oggi-focus',active);
   document.getElementById('usOggiFocusToggle')?.setAttribute('aria-pressed',String(active));
-  const fadeTargets=[document.getElementById('usTodayPriorityRegion'),document.getElementById('usOggiCalendarWidget'),document.getElementById('usDailyRitual'),document.getElementById('distanceWidget'),document.getElementById('pushOptInCard'),document.getElementById('usCountdownDisplay'),document.getElementById('usCountdownEntry')];
+  const fadeTargets=[document.getElementById('usTodayPriorityRegion'),document.getElementById('usOggiCalendarWidget'),document.getElementById('usDailyRitual'),document.getElementById('distanceWidget'),document.getElementById('pushOptInCard'),document.getElementById('usCountdownDisplay'),document.getElementById('usCountdownEntry'),document.getElementById('usOggiNext')];
   for(const el of fadeTargets){
     if(!el)continue;
     if(active)el.setAttribute('inert','');else el.removeAttribute('inert');
   }
 }
-function toggleOggiFocusPhoto(){setOggiFocusPhoto(!usOggiFocusPhotoActive);}
+// The first time the photo takes the screen, a quiet line says how to come back (mockup).
+let usOggiFocusTipShown=false;
+function toggleOggiFocusPhoto(){
+  setOggiFocusPhoto(!usOggiFocusPhotoActive);
+  if(usOggiFocusPhotoActive&&!usOggiFocusTipShown){usOggiFocusTipShown=true;setTimeout(()=>{if(usOggiFocusPhotoActive)toast('Tocca di nuovo per tornare',{quiet:true});},300);}
+}
 window.toggleOggiFocusPhoto=toggleOggiFocusPhoto;
 document.getElementById('homeHero')?.addEventListener('click',event=>{
+  // A card that re-rendered under the tap (e.g. a notice that opened its sheet) is no photo tap.
+  if(event.target&&event.target.isConnected===false)return;
   if(oggiIsWidgetTarget(event.target))return;
   toggleOggiFocusPhoto();
 });
@@ -2335,7 +2413,8 @@ function dailyRitualViewModel(source){
   // O1 (1.0) — the card stays on Oggi until BOTH answered: "Aspetta te" when
   // the other already answered, a quiet waiting state after my answer. Its
   // attention is personal: on only while MY answer is missing. Never the
-  // answer text: that lives in the sheet, after the reveal.
+  // answer text: that lives in the sheet, after the reveal. (Mockup look:
+  // the two circles tell each state.)
   const kicker='La domanda di oggi';
   // M9E: errore reale del backend → stato onesto con Riprova (apre il foglio,
   // che ritenta get_or_create_daily_question). Mai una domanda inventata.
@@ -2357,16 +2436,72 @@ function dailyRitualViewModel(source){
   const felt=typeof dailyPartnerReactionLine==='function'?dailyPartnerReactionLine(source.reveal,partner):'';
   return {...base,state:'revealed',meta:felt||'Svelate · domani una nuova domanda',glyph:'noi',cta:'Rivedi',attention:false};
 }
+// The two circles of the mockup (Oggi card): theirs on the right, mine on the
+// left, dashed until I answer and filled from below when I do; together they
+// become one circle of Noi with a heart (Phosphor heart-straight-fill, its own path).
+const US_DAILY_RING_STATE=Object.freeze({answer:'vuoto',invited:'tocca',waiting:'attesa',ready:'pronte',revealed:'svelate',error:'vuoto'});
+function dailyRitualRingMarkup(model){
+  const st=US_DAILY_RING_STATE[model.state]||'vuoto';
+  return `<svg class="ring us-daily-ritual-ring" viewBox="0 0 48 30" data-st="${st}" data-glyph="${escapeHtml(model.glyph||'none')}" data-us-attention-icon aria-hidden="true" focusable="false"><defs><clipPath id="usDailyRingMe"><circle cx="17" cy="15" r="11"/></clipPath></defs><circle class="r-bloom" cx="24" cy="15" r="13" fill="none" stroke-width="1.5"/><g class="r-you"><circle class="r-you-full" cx="31" cy="15" r="11"/><circle class="r-you-wait" cx="31" cy="15" r="10.2" stroke-width="1.6" stroke-dasharray="3 2.6"/></g><g class="r-me"><circle class="r-me-ring" cx="17" cy="15" r="10.2" stroke-width="1.6" stroke-dasharray="3 2.6"/><g clip-path="url(#usDailyRingMe)"><rect class="r-fill" x="4" y="2" width="26" height="26"/></g></g><g class="r-noi"><circle cx="24" cy="15" r="13"/><path transform="translate(18.4 10.3) scale(.044)" d="M240,98a57.63,57.63,0,0,1-17,41L133.7,229.62a8,8,0,0,1-11.4,0L33,139a58,58,0,0,1,82-82.1L128,69.05l13.09-12.19A58,58,0,0,1,240,98Z"/></g></svg>`;
+}
+// Mockup motion (oggi.js setDQ after "Invia"): my circle fills from below,
+// the two circles meet, one circle of Noi blooms and the card breathes once.
+// Only when I just answered, on Oggi, with motion allowed.
+const US_DAILY_EASE={out:'cubic-bezier(.2,.8,.2,1)',io:'cubic-bezier(.7,0,.2,1)'};
+function dailyRitualReducedMotion(){
+  try{return Boolean(window.UsUiFoundation?.isReducedMotion?.())||Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);}catch(_){return false;}
+}
+async function playDailyRitualAnswered(card,merge){
+  const ring=card?.querySelector?.('.ring');
+  if(!ring||typeof ring.animate!=='function')return false;
+  const me=ring.querySelector('.r-me'),you=ring.querySelector('.r-you'),fill=ring.querySelector('.r-fill'),noi=ring.querySelector('.r-noi'),bloom=ring.querySelector('.r-bloom');
+  const final=ring.dataset.st;
+  // Start from "tocca": my circle still empty, the two apart.
+  ring.dataset.st=merge?'tocca':'vuoto';
+  // The sheet goes away first, then the circles move (one thing at a time).
+  const sheet=document.getElementById('today');
+  for(let waited=0;sheet?.classList.contains('open')&&waited<900;waited+=50)await new Promise(r=>setTimeout(r,50));
+  if(!card.isConnected||card.querySelector('.ring')!==ring)return false;
+  try{
+    await fill.animate([{transform:'translateY(26px)'},{transform:'translateY(0)'}],{duration:560,easing:US_DAILY_EASE.out,fill:'forwards'}).finished;
+    if(merge){
+      await Promise.all([
+        me.animate([{transform:'translateX(0)'},{transform:'translateX(7px)'}],{duration:420,easing:US_DAILY_EASE.io,fill:'forwards'}).finished,
+        you.animate([{transform:'translateX(0)'},{transform:'translateX(-7px)'}],{duration:420,easing:US_DAILY_EASE.io,fill:'forwards'}).finished
+      ]);
+    }
+  }catch(_){/* cancelled by a newer render */}
+  if(!card.isConnected||card.querySelector('.ring')!==ring){return false;}
+  ring.dataset.st=final;
+  if(merge){
+    noi.animate([{opacity:0,transform:'scale(.7)'},{opacity:1,transform:'scale(1.12)',offset:.6},{opacity:1,transform:'scale(1)'}],{duration:520,easing:'ease-out'});
+    bloom.animate([{opacity:.9,transform:'scale(1)'},{opacity:0,transform:'scale(2.2)'}],{duration:800,easing:US_DAILY_EASE.out});
+    card.animate([{scale:1},{scale:1.02,offset:.4},{scale:1}],{duration:500,easing:'ease-out'});
+  }
+  [me,you,fill].forEach(el=>el.getAnimations?.().forEach(a=>a.cancel()));
+  return true;
+}
+let usDailyRitualAnswerPending=false;
 function renderDailyRitual(model){
   const card=document.getElementById('usDailyRitual');
   if(!card)return;
-  if(!model){card.hidden=true;card.innerHTML='';card.removeAttribute('data-state');card.dataset.usAttention='off';return;}
+  const before=card.dataset.state||'';
+  if(!model){card.hidden=true;card.innerHTML='';card.usDailyHtml='';card.removeAttribute('data-state');card.dataset.usAttention='off';return;}
   card.dataset.state=model.state;
   card.dataset.usAttention=model.attention?'on':'off';
   // The visible words are the accessible name (and the English translation).
   card.removeAttribute('aria-label');
-  card.innerHTML=`<span class="us-daily-ritual-ring" data-glyph="${escapeHtml(model.glyph||'none')}" data-us-attention-icon aria-hidden="true"><i class="us-daily-ritual-me"></i><i class="us-daily-ritual-you"></i><i class="us-daily-ritual-noi"></i></span><span class="us-daily-ritual-kicker">${escapeHtml(model.kicker)}</span><span class="us-daily-ritual-question">${escapeHtml(model.question)}</span>${model.meta?`<span class="us-daily-ritual-meta">${escapeHtml(model.meta)}</span>`:''}<span class="us-daily-ritual-cta">${escapeHtml(model.cta)}<span class="us-daily-ritual-arrow" aria-hidden="true"></span></span>`;
+  const html=`${dailyRitualRingMarkup(model)}<span class="eyebrow us-daily-ritual-kicker">${escapeHtml(model.kicker)}</span><span class="dq-q us-daily-ritual-question">${escapeHtml(model.question)}</span><span class="dq-foot">${model.meta?`<span class="dq-sub us-daily-ritual-meta">${escapeHtml(model.meta)}</span>`:''}<span class="btn-primary us-daily-ritual-cta">${escapeHtml(model.cta)}<span class="us-daily-ritual-arrow" aria-hidden="true"></span></span></span>`;
+  // Same words, same circles: leave the card (and a running animation) alone.
+  if(card.hidden||card.usDailyHtml!==html){card.innerHTML=html;card.usDailyHtml=html;}
   card.hidden=false;
+  // I just sent my answer: the circles tell it (mockup), once.
+  const answered=usDailyRitualAnswerPending&&before==='answer'&&model.state==='waiting';
+  if(answered){
+    usDailyRitualAnswerPending=false;
+    const onOggi=document.getElementById('home')?.classList?.contains?.('active');
+    if(onOggi&&!dailyRitualReducedMotion())playDailyRitualAnswered(card,false);
+  }
 }
 window.UsDailyRitual=Object.freeze({viewModel:dailyRitualViewModel,render:renderDailyRitual});
 async function refreshTodayPriorities({daily,freshEvents=false}={}){
@@ -2397,6 +2532,8 @@ async function refreshTodayPriorities({daily,freshEvents=false}={}){
     const eventSource=await window.getTodayEventPrioritySource?.({fresh:freshEvents});
     const eventPriority=eventTodayPriorityViewModel(eventSource);
     if(eventPriority)candidates.push(eventPriority);
+    // The next event's row above the Daily card (mockup og-next).
+    if(refreshId===usTodayPriorityRefreshId&&typeof renderOggiNext==='function')renderOggiNext(oggiNextEventViewModel(eventSource));
   }catch(error){console.warn('[US Oggi] Events priority',error);}
   try{mission=missionTodayPriorityViewModel(await window.oggiMissionToConfirm?.());}catch(_){mission=null;}
   if(mission)candidates.push(mission);
@@ -2729,7 +2866,7 @@ function openOggiMission(){
 }
 window.openOggiMission=openOggiMission;
 
-function thinkReactionLabel(reaction){return ({heart:'❤️',hug:'🫂',miss_you:'miss_you'})[reaction]||reaction||'';}
+function thinkReactionLabel(reaction){return ({heart:'con un cuore',hug:'con un abbraccio',miss_you:'con un pensiero'})[reaction]||reaction||'';}
 function renderThinkReactionUi(){
   const root=document.getElementById('thinkArrival');
   if(!root)return;
@@ -2740,7 +2877,8 @@ function renderThinkReactionUi(){
   const partner=partnerFromProfiles(window.usBondProfiles||[]);
   // Momento: the name on one line, "ti pensa" in italic in their colour (same words).
   if(title)title.innerHTML=`<span class="think-arrival-name"${partner?.display_name?' translate="no"':''}>${escapeHtml(partner?.display_name||'La tua persona')}</span> <em>ti pensa</em>`;
-  if(copy)copy.hidden=true;
+  // Mockup: when it arrived, in plain words ("adesso", "5 min fa").
+  if(copy){const at=usIncomingThink?.created_at;const fresh=at&&Date.now()-Date.parse(at)<60000;copy.textContent=at?(fresh?'adesso':relativeSignalAge(at)):'';copy.hidden=!copy.textContent;}
   buttons.forEach(button=>{
     const reaction=button.dataset.thinkReaction;
     button.classList.toggle('selected',reaction===usThinkReactionFinal);
@@ -2796,8 +2934,8 @@ async function sendThinkReaction(reaction){
     renderThinkReactionUi();
     sendWebPushEvent('think_reaction',usIncomingThink.id,{reaction:usThinkReactionFinal}).catch(()=>{});
     window.UsTodayPriority?.refresh?.();
-    toast('Reazione inviata');
-    setTimeout(()=>closeThinkArrival(),620);
+    toast('Reazione inviata',{icon:'check',quiet:false});
+    setTimeout(()=>closeThinkArrival(),1300);
     return true;
   }
   usThinkReactionInFlight=false;renderThinkReactionUi();return false;
@@ -2819,10 +2957,14 @@ function dailyKeepsakeRuntime(){
   const identity=()=>`${window.usProfile?.id}:${window.usProfile?.couple_id}`;
   const unavailable=(error)=>['42P01','PGRST205','PGRST202','42883'].includes(error?.code)||/daily_question_keepsake|keep_daily_question/.test(String(error?.message||''))&&/does not exist|could not find|schema cache/i.test(String(error?.message||''));
   const active=()=>Boolean(state.owner===identity()&&state.questionId&&state.questionId===window.todayQuestion?.id&&window.todayState?.both_answered);
+  // Mockup #sheetReveal: Conserva (sparkle) → Conservo… → ✓ Conservato nei
+  // Ricordi, with one line under it that says where it goes.
+  const note='<p class="today-keep-note">Conservata, la domanda di oggi resta nei vostri Ricordi.</p>';
+  let fresh=false;
   const view=()=>{
-    if(state.status==='kept')return '<p class="today-keep-done" role="status"><span class="us-icon" data-us-icon="check" aria-hidden="true"></span>Conservato nei Ricordi</p>';
+    if(state.status==='kept'){const html=`<p class="today-keep-done${fresh?' is-fresh':''}" role="status"><span class="us-icon" data-us-icon="check" aria-hidden="true"></span>Conservato nei Ricordi</p>${note}`;fresh=false;return html;}
     const saving=state.status==='saving',failed=state.status==='error';
-    return `<button type="button" class="today-keep-button" data-us-daily-keep ${saving?'disabled aria-busy="true"':''}>${saving?'Conservo…':failed?'Riprova':'Conserva'}</button>${failed?'<p class="today-keep-status" role="status">Non conservata. Riprova quando torni online.</p>':''}`;
+    return `<button type="button" class="today-keep-button" data-us-daily-keep ${saving?'disabled aria-busy="true"':''}>${saving?'Conservo…':failed?'Riprova':'Conserva'}</button>${failed?'<p class="today-keep-status" role="status">Non conservata. Riprova quando torni online.</p>':note}`;
   };
   const render=()=>{
     const root=document.getElementById('todayKeep');
@@ -2862,8 +3004,8 @@ function dailyKeepsakeRuntime(){
       if(error)throw error;
       if(!['kept','existing'].includes(data?.status)||data.question_id!==questionId)throw new Error('daily_keepsake_invalid');
       if(!current())return {status:'stale'};
-      state={questionId,owner,status:'kept'};render();
-      if(data.status==='kept')toast('Conservato nei Ricordi ♡');
+      fresh=true;state={questionId,owner,status:'kept'};render();
+      if(data.status==='kept')toast('Conservato nei Ricordi',{icon:'sparkle',quiet:false});
       if(document.getElementById('momentsGrid')?.dataset.loaded==='1')Promise.resolve(window.hydrateMoments?.()).catch(()=>{});
       return data;
     }catch(error){
@@ -2950,7 +3092,7 @@ function renderTodayReveal(){
   // Without the personal meta (offline) there is nothing to react on.
   const controls=meta?`<div class="today-reactions" role="group" aria-label="La tua reazione"><button type="button" class="today-reaction" data-daily-reaction="heart" aria-label="${escapeHtml(US_DAILY_REACTIONS.heart.label)}" aria-pressed="${mine==='heart'}"><span class="us-icon" data-us-icon="${mine==='heart'?'heart-fill':'heart'}" aria-hidden="true"></span></button><button type="button" class="today-reaction today-reaction--words" data-daily-reaction="cry" aria-pressed="${mine==='cry'}">${escapeHtml(US_DAILY_REACTIONS.cry.label)}</button></div>`:'';
   reveal.className='today-reveal today-reveal--simple';
-  reveal.innerHTML='<div class="today-answer" data-us-daily-answer="mine"><b>La tua risposta</b><p translate="no">'+escapeHtml(state.my_answer||'')+'</p>'+note+'</div>'+
+  reveal.innerHTML='<div class="today-answer" data-us-daily-answer="mine"><b>Tu</b><p translate="no">'+escapeHtml(state.my_answer||'')+'</p>'+note+'</div>'+
     '<div class="today-answer" data-us-daily-answer="partner"><b translate="no">'+escapeHtml(partner)+'</b><p translate="no">'+escapeHtml(state.partner_answer||'')+'</p>'+controls+'</div>';
 }
 // One tap = my reaction; the same tap again takes it back. The server
@@ -3080,8 +3222,11 @@ async function hydrateToday(){
     document.getElementById('answer').value=state.my_answer;
     btn.textContent='Aggiorna risposta';
   }else{
-    btn.textContent='Rispondi';
+    btn.textContent='Invia la mia risposta';
   }
+  // The sheet's eyebrow names what it shows (mockup): the question, then the two answers.
+  const head=document.querySelector('#today .today-sheet-head h2');
+  if(head)head.textContent=state?.both_answered?'Le vostre risposte':'La domanda di oggi';
   if(state?.both_answered){
     // Reveal is strictly question + two answers. Do not leave a duplicate,
     // disabled composer or "Risposte sbloccate" banner above the real answers.
@@ -3102,17 +3247,18 @@ async function hydrateToday(){
   }else{
     locked.hidden=false;
     answerEl.hidden=false;answerEl.disabled=false;btn.hidden=false;btn.disabled=todayAnswerIsSaving();
-    btn.textContent=todayAnswerIsSaving()?'Salvo…':state.my_answer?'Aggiorna risposta':'Rispondi';
+    btn.textContent=todayAnswerIsSaving()?'Salvo…':state.my_answer?'Aggiorna risposta':'Invia la mia risposta';
     window.todayRevealMeta=null;
     reveal.classList.add('hidden');reveal.innerHTML='';
     window.UsDailyKeepsake?.hide?.();
+    // Mockup: a dot in the colour of whoever the line is about, then plain words.
+    const partner=usIdentity().partnerName;
     if(state?.my_answer){
-      const partner=usIdentity().partnerName;
-      locked.innerHTML='✓ Hai risposto. <b>In attesa di '+escapeHtml(partner)+'…</b>';
+      locked.innerHTML='<span class="dot" data-who="tu" aria-hidden="true"></span><span>'+escapeHtml(`Hai risposto. In attesa di ${partner}…`)+'</span>';
     }else if(state?.partner_has_answer){
-      locked.innerHTML='🔒 L’altra risposta è già arrivata. <b>Rispondi per sbloccarla.</b>';
+      locked.innerHTML='<span class="dot" data-who="partner" aria-hidden="true"></span><span>'+escapeHtml(`${partner} ha già risposto. Vedrete le risposte insieme appena invii la tua.`)+'</span>';
     }else{
-      locked.innerHTML='🔒 Le risposte si sbloccano quando avete risposto entrambi.';
+      locked.innerHTML='<span class="dot" data-who="noi" aria-hidden="true"></span><span>Le risposte si sbloccano quando avete risposto entrambi.</span>';
     }
   }
   updateHomeStatus();
@@ -5191,14 +5337,30 @@ async function sendThinkSignal(){
   const messageId=result?.message_id;
   usThinkOperationId=null;
   if(messageId)sendWebPushEvent('think',messageId).catch(()=>{});
-  btn?.classList.add('sent');setTimeout(()=>btn?.classList.remove('sent'),700);
+  // Mockup: the heart takes my colour for a moment and two sparks, mine and
+  // theirs, fly out of it; then "Ti penso inviato a …".
+  btn?.classList.add('sent');setTimeout(()=>btn?.classList.remove('sent'),2400);
+  if(btn&&!result?.duplicate)thinkSparks(btn);
   window.UsFeedback?.action?.();
-  toast(result?.duplicate?'Già inviato':'Inviato');
+  if(result?.duplicate)toast('Già inviato',{quiet:true});
+  else toast(`Ti penso inviato a ${partner.display_name||usIdentity().partnerName}`,{icon:'heart',quiet:false});
   await hydrateThink();
   setTimeout(()=>{if(btn)btn.disabled=false;},1800);
   return true;
 }
 window.sendThinkSignal=sendThinkSignal;
+function thinkSparks(btn){
+  if(dailyRitualReducedMotion()||typeof document.createElement!=='function')return;
+  const r=btn.getBoundingClientRect?.();if(!r)return;
+  const root=getComputedStyle(document.documentElement);
+  [[root.getPropertyValue('--us-tu').trim()||'#ff7c96',-1],[root.getPropertyValue('--us-partner').trim()||'#a98bff',1]].forEach(([color,side],i)=>{
+    const d=document.createElement('span');d.className='dc-oggi-spark';d.setAttribute('aria-hidden','true');
+    d.style.background=color;d.style.left=`${r.left+r.width/2-6}px`;d.style.top=`${r.top+r.height/2-6}px`;
+    document.body.appendChild(d);
+    const a=d.animate?.([{translate:'0 0',opacity:1,scale:1},{translate:`${side*18}px 26px`,opacity:1,scale:1.1,offset:.35},{translate:`${130+side*8}px 8px`,opacity:0,scale:.5}],{duration:950,delay:i*70,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'});
+    if(a)a.onfinish=()=>d.remove();else d.remove();
+  });
+}
 function handleIncomingThink(row){
   if(!row||row.kind!=='think'||row.recipient_id!==window.usProfile?.id)return;
   usIncomingThink={...row};usThinkReactionFinal=null;usThinkReactionInFlight=false;
@@ -5313,8 +5475,17 @@ saveAnswer = async function(){
   if(window.usProfile?.id!==viewerId||window.usProfile?.couple_id!==coupleId||window.todayQuestion?.id!==questionId)return;
   btn.disabled=false;
   if(error){console.warn(error);btn.textContent='Riprova';return toast('Errore sync Today');}
-  toast('Salvato online ♡');
   sendWebPushEvent('daily_answer',window.todayQuestion.id).catch(()=>{});
+  // As in the approved mockup: while the other has not answered yet, the sheet
+  // closes and, on Oggi, my circle of the card fills; elsewhere, or with
+  // reduced motion, a short notice says it. If the other already answered,
+  // the sheet stays and the two answers appear in it.
+  const firstAnswer=!window.todayState?.my_answer;
+  const theyAnswered=Boolean(window.todayState?.partner_has_answer);
+  const onOggi=Boolean(document.getElementById('home')?.classList.contains('active'));
+  usDailyRitualAnswerPending=firstAnswer&&!theyAnswered&&onOggi&&typeof dailyRitualReducedMotion==='function'&&!dailyRitualReducedMotion();
+  if(!theyAnswered&&typeof closeToday==='function')closeToday();
+  if(!usDailyRitualAnswerPending&&!(firstAnswer&&theyAnswered))toast('Risposta inviata',{icon:'check',quiet:false});
   await hydrateToday();
 }
 window.saveAnswer=saveAnswer;

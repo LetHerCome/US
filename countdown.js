@@ -105,11 +105,25 @@ function install(w){
   // Orbita: the light advances one tick per real second. Any jump (first paint,
   // return from background, hour wrap) is applied without a transition.
   function sweep(art){const s=Math.floor(Date.now()/1000)%3600,prev=Number(art.dataset.sweep);art.toggleAttribute('data-sweep-jump',s!==prev+1);art.dataset.sweep=String(s);art.style.setProperty('--us-cd-sweep',`${s*6}deg`);}
+  // The day each row counts to, as the list reads it: "Sabato 31 ottobre, 7:40".
+  const tag=()=>w.UsI18n?.tag||'it-IT';
+  const cap=v=>v?v.charAt(0).toLocaleUpperCase(tag())+v.slice(1):'';
+  function when(e){
+    try{
+      if(e?.mode==='days'){const n=dayNumber(e.target);return Number.isFinite(n)?cap(new Date(n*86400000+43200000).toLocaleDateString(tag(),{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'})):'';}
+      if(e?.mode==='clock'){const at=new Date(e.target);return Number.isFinite(+at)?`${cap(at.toLocaleDateString(tag(),{weekday:'long',day:'numeric',month:'long'}))}, ${at.toLocaleTimeString(tag(),{hour:'numeric',minute:'2-digit'})}`:'';}
+    }catch(_){}
+    return '';
+  }
+  function since(started){
+    const n=dayNumber(started);if(!Number.isFinite(n))return '';
+    try{return `Dal ${new Date(n*86400000+43200000).toLocaleDateString(tag(),{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'})}`;}catch(_){return '';}
+  }
   function paintList(){
     const together=relationship(state?.started_on);
-    const entries=[{id:'together',title:'Insieme da',value:together?.value||'',unit:together?.unit||'',detail:together?`${together.value} ${together.unit}`:'Imposta la data in Noi → Impostazioni',disabled:!together},...(state?.items||[]).map(e=>({id:e.id,title:e.title,value:display(e)?.value||'',unit:display(e)?.unit||'',detail:[display(e)?.value,display(e)?.unit].filter(Boolean).join(' ')}))];
+    const entries=[{id:'together',title:'Insieme da',value:together?.value||'',unit:together?.unit||'',date:since(state?.started_on),detail:together?`${together.value} ${together.unit}`:'Imposta la data in Noi → Impostazioni',disabled:!together},...(state?.items||[]).map(e=>({id:e.id,title:e.title,value:display(e)?.value||'',unit:display(e)?.unit||'',date:when(e),detail:[display(e)?.value,display(e)?.unit].filter(Boolean).join(' ')}))];
     // The number leads the row (as on Oggi); the accessible name keeps the original reading order.
-    $('usCountdownList').innerHTML=entries.map(e=>`<div class="us-countdown-row"><button type="button" data-countdown-select="${esc(e.id)}" aria-pressed="${state?.active_id===e.id}" aria-label="${esc(e.title)}, ${esc(e.detail)}" ${busy||e.disabled||!state?'disabled':''}><span class="us-countdown-check" aria-hidden="true">${state?.active_id===e.id?'●':'○'}</span>${e.value?`<strong class="us-countdown-value">${esc(e.value)}</strong>`:''}<span class="us-countdown-copy"><b${e.id==='together'?'':' translate="no"'}>${esc(e.title)}</b><small>${esc(e.value?e.unit:e.detail)}</small></span></button><button type="button" class="us-countdown-edit" data-countdown-edit="${esc(e.id)}" aria-label="Modifica ${esc(e.title)}" ${busy||e.disabled||!state?'disabled':''}><span class="us-icon" data-us-icon="pencil" aria-hidden="true"></span></button></div>`).join('');
+    $('usCountdownList').innerHTML=entries.map(e=>`<div class="us-countdown-row"><button type="button" data-countdown-select="${esc(e.id)}" aria-pressed="${state?.active_id===e.id}" aria-label="${esc(e.title)}, ${esc(e.detail)}" ${busy||e.disabled||!state?'disabled':''}><span class="us-countdown-check" aria-hidden="true">${state?.active_id===e.id?'●':'○'}</span>${e.value?`<strong class="us-countdown-value">${esc(e.value)}</strong>`:''}<span class="us-countdown-copy"><b${e.id==='together'?'':' translate="no"'}>${esc(e.title)}</b><small>${esc(e.value?(e.date||e.unit):e.detail)}</small>${state?.active_id===e.id?'<em>In Oggi</em>':''}</span></button><button type="button" class="us-countdown-edit" data-countdown-edit="${esc(e.id)}" aria-label="Modifica ${esc(e.title)}" ${busy||e.disabled||!state?'disabled':''}><span class="us-icon" data-us-icon="pencil" aria-hidden="true"></span></button></div>`).join('');
     $('usCountdownHide').setAttribute('aria-pressed',String(state?.active_id===null));
     $('usCountdownNew').disabled=busy||!state||state.items.length>=12;
     $('usCountdownHide').disabled=busy||!state;
@@ -132,6 +146,9 @@ function install(w){
     const view=draft.id==='together'?relationship(state?.started_on):display({...draft,target});
     const actualTitle=draft.id==='together'?'Insieme da':$('usCountdownTitle').value.trim();
     const title=actualTitle||'Il nostro momento';
+    // The preview sits on your Oggi photo, as the countdown will (mockup .cd-prev).
+    const layer=d.querySelector('#homeHero .home-photo-layer.active'),photo=layer?w.getComputedStyle(layer).backgroundImage:'';
+    if(photo&&photo!=='none')$('usCountdownPreview').style.setProperty('--us-cd-photo',photo);else $('usCountdownPreview').style.removeProperty('--us-cd-photo');
     $('usCountdownPreview').innerHTML=markup(view||{value:'12',unit:'giorni',label:''},title,draft.style,draft.id==='together',draft.id!=='together'&&Boolean(actualTitle));
     $('usCountdownSave').disabled=busy||!view||!actualTitle||!available(draft.style,progression());
   }
@@ -181,9 +198,10 @@ function install(w){
     const automatic=id==='together';
     $('usCountdownEditor').hidden=false;$('usCountdownCollection').hidden=true;
     $('usCountdownEditorHeading').textContent=automatic?'Il vostro tempo':e?'Modifica countdown':'Un momento da aspettare';
+    $('usCountdownHeading').textContent=$('usCountdownEditorHeading').textContent;
     $('usCountdownFields').hidden=automatic;
     $('usCountdownTitle').value=draft.title||'';
-    $('usCountdownMode').value=draft.mode;
+    $('usCountdownMode').value=draft.mode;modeSeg();
     dateField(draft.target);
     $('usCountdownDelete').hidden=!e;
     touched=false;
@@ -197,7 +215,9 @@ function install(w){
     originalInput=input.value;originalTarget=target||null;originalMode=draft.mode;
     $('usCountdownDateLabel').textContent=clock?'Data e ora · sul tuo telefono':'Data';
   }
-  function collection(){draft=null;$('usCountdownEditor').hidden=true;$('usCountdownCollection').hidden=false;paintList();status('');}
+  // Tempo: the two choices as a segmented control (mockup .seg2); the select stays the source.
+  function modeSeg(){root.querySelectorAll('[data-countdown-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.countdownMode===$('usCountdownMode').value)));}
+  function collection(){draft=null;$('usCountdownHeading').textContent='Countdown';$('usCountdownEditor').hidden=true;$('usCountdownCollection').hidden=false;paintList();status('');}
   async function open(mode='collection'){
     if(!key())return;
     if(key()!==owner)clear();
@@ -262,7 +282,8 @@ function install(w){
   // "change": both events keep the preview and the Save state in step.
   const edited=()=>{if(!draft)return;touched=true;preview();};
   for(const id of ['usCountdownTitle','usCountdownDate'])['input','change'].forEach(type=>$(id).addEventListener(type,edited));
-  $('usCountdownMode').addEventListener('change',()=>{if(!draft)return;draft.mode=$('usCountdownMode').value;touched=true;dateField('');preview();});
+  $('usCountdownMode').addEventListener('change',()=>{modeSeg();if(!draft)return;draft.mode=$('usCountdownMode').value;touched=true;dateField('');preview();});
+  root.querySelectorAll('[data-countdown-mode]').forEach(b=>b.addEventListener('click',()=>{const select=$('usCountdownMode');if(select.disabled||select.value===b.dataset.countdownMode)return;select.value=b.dataset.countdownMode;select.dispatchEvent(new Event('change'));}));
   $('usCountdownForm').addEventListener('submit',async event=>{
     event.preventDefault();if(!draft||busy||!state||$('usCountdownSave').disabled)return;
     let next=copy();
@@ -277,7 +298,7 @@ function install(w){
   $('usCountdownDelete').addEventListener('click',async()=>{
     if(!draft||busy)return;
     const token=generation,id=draft.id;
-    const confirmed=await w.UsUiFoundation.confirm({title:'Eliminare questo countdown?',body:draft.title,confirmLabel:'Elimina',tone:'danger'});
+    const confirmed=await w.UsUiFoundation.confirm({title:'Eliminare questo countdown?',body:'Sparirà per entrambi.',confirmLabel:'Elimina',tone:'danger'});
     if(!confirmed||token!==generation||key()!==owner||!state)return;
     const next=copy();next.items=next.items.filter(e=>e.id!==id);if(next.active_id===id)next.active_id=null;
     if(await persist(next))collection();

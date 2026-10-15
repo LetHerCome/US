@@ -32,11 +32,12 @@ test('Countdown visual pass: every style owns typography, composition and its ow
   // One motion signature each (orbit is driven by real seconds, not a keyframe).
   assert.match(block('editorial'), /us-countdown-rise/);
   assert.match(block('signal'), /us-countdown-flap/);
-  assert.match(block('glass'), /us-countdown-glint/);
+  // Parity 2026-10: in the mockup Vetro and Cromo are still (no glint, no sheen loop).
+  assert.doesNotMatch(block('glass'), /animation:/);
   assert.match(block('aurora'), /us-countdown-aurora/);
   assert.match(block('orbit'), /transform:rotate\(var\(--us-cd-sweep,0deg\)\);transition:transform 1s linear/);
   assert.match(block('orbit'), /\[data-sweep-jump\]::after\{transition:none;\}/);
-  assert.match(block('chrome'), /us-countdown-chrome/);
+  assert.doesNotMatch(block('chrome'), /animation:/);
   assert.match(countdownCss, /\.us-countdown-art \.us-countdown-title:empty\{display:none!important\}/);
 });
 
@@ -47,7 +48,7 @@ test('Countdown visual pass: reduced motion freezes everything, background and i
   assert.match(countdownCss, /html\[data-us-visibility="hidden"\] \.us-countdown-art \*/);
   assert.match(countdownCss, /#home:not\(\.active\) \.us-countdown-art \*/);
   // Only compositor-friendly properties are animated by the new keyframes.
-  for (const name of ['rise', 'flap', 'glint', 'chrome']) {
+  for (const name of ['rise', 'flap']) {
     const frames = countdownCss.match(new RegExp(`@keyframes us-countdown-${name}\\{(.*)\\}`))[1];
     assert.doesNotMatch(frames, /\b(width|height|top|left|margin|padding|font-size)\s*:/, name);
   }
