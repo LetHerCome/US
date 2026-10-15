@@ -3223,17 +3223,38 @@ function validMomentDate(value){
   const iso=String(value||'');
   return /^\d{4}-\d{2}-\d{2}$/.test(iso)&&iso<=localDateISO()?iso:'';
 }
+// 1.0 parity: the label says the day, as in the design ("Data foto · 12 ottobre").
+function updateMomentDateWhen(){
+  const out=document.getElementById('momentDateWhen');
+  const iso=validMomentDate(document.getElementById('momentDate')?.value);
+  if(out)out.textContent=iso?` · ${new Date(iso+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'long'})}`:'';
+}
 function updateDetectedMomentDate(){
   const input=document.getElementById('momentDate');
   if(!input)return;
   input.max=localDateISO();
   input.value=validMomentDate(pendingMomentDate)||localDateISO();
+  updateMomentDateWhen();
 }
 document.getElementById('momentDate')?.addEventListener('change',event=>{
   const iso=validMomentDate(event.target.value);
   if(iso)pendingMomentDate=iso;
   else event.target.value=validMomentDate(pendingMomentDate)||localDateISO();
+  updateMomentDateWhen();
 });
+// The note is one line of meaning: Enter does not start a new line.
+document.getElementById('momentCaption')?.addEventListener('keydown',event=>{if(event.key==='Enter')event.preventDefault();});
+// 1.0 parity: the design's amber upload bar (to 45% while optimising, then to the end).
+function momentUpBar(stage){
+  const bar=document.getElementById('momentUpBar');
+  const fill=bar?.firstElementChild;
+  if(!bar||!fill)return;
+  if(stage==='done'){bar.hidden=true;fill.getAnimations?.().forEach(a=>a.cancel());fill.style.width='0%';return;}
+  bar.hidden=false;
+  const [from,to,duration]=stage==='optimize'?['0%','45%',700]:['45%','100%',800];
+  fill.style.width=to;
+  if(typeof fill.animate==='function'&&!window.UsUiFoundation?.isReducedMotion?.())fill.animate([{width:from},{width:to}],{duration,easing:'cubic-bezier(.2,.8,.2,1)'});
+}
 
 function pickMomentPhoto(){
   document.getElementById('momentFile').click();
@@ -3278,6 +3299,7 @@ function resetMomentComposer(){
   const img=document.getElementById('momentPreviewImg');if(img)img.removeAttribute('src');
   document.getElementById('momentCompose')?.classList.remove('has-photo');
   const date=document.getElementById('momentDate');if(date)date.value='';
+  updateMomentDateWhen();
 }
 
 document.getElementById('momentFile')?.addEventListener('change',async(event)=>{
@@ -3340,14 +3362,14 @@ async function uploadMoment(){
   const extras=[...pendingMomentExtras];
   const source=pendingMomentSource;
   const total=1+extras.length;
-  btn.disabled=true;btn.textContent='Ottimizzo…';
+  btn.disabled=true;btn.textContent='Ottimizzo…';momentUpBar('optimize');
   try{
     const compressed=await compressImageFile(file,{maxDimension:1920,quality:.82});
     const thumbnail=await compressImageFile(file,{maxDimension:720,quality:.72});
     const safeName=`${Date.now()}-${crypto.randomUUID()}.webp`;
     const path=`${window.usProfile.couple_id}/${window.usProfile.id}/${safeName}`;
     const thumbnailPath=`${window.usProfile.couple_id}/${window.usProfile.id}/derived-thumbnails/${crypto.randomUUID()}.webp`;
-    btn.textContent=total>1?`Carico 1 di ${total}…`:'Carico…';
+    btn.textContent=total>1?`Carico 1 di ${total}…`:'Carico…';momentUpBar('upload');
     const {error:uploadError}=await sb.storage.from('us-media').upload(path,compressed,{contentType:'image/webp',upsert:false,cacheControl:'31536000'});
     if(uploadError)throw uploadError;
     let uploadedThumbnail=false;
@@ -3397,7 +3419,7 @@ async function uploadMoment(){
     await hydrateHomeMemory();
     if(!homePhotoPath)await hydrateHomePhoto(true);
   }catch(err){console.warn(err);window.UsFeedback?.error?.();toast(err?.message==='SOURCE_TOO_LARGE'?'Foto troppo grande: massimo 20 MB':'Caricamento non riuscito');}
-  finally{btn.disabled=false;btn.textContent='Salva ricordo';}
+  finally{btn.disabled=false;btn.textContent='Salva ricordo';momentUpBar('done');}
 }
 window.uploadMoment=uploadMoment;
 
@@ -3798,6 +3820,66 @@ function renderRicordiChapters(chapters,signedUrls,todayISO){
   }).join('')}</div>`;
   root.hidden=false;
 }
+// Capitoli (1.0 parity): a year opens as a sheet of its photos, as in the
+// design; each photo opens its own album (Galleria) from where it was tapped.
+let ricordiArchiveState=null;
+function ricordiChapterRange(items,year){
+  const dates=items.map(item=>item.date).filter(Boolean).sort();
+  if(!dates.length)return '';
+  const tag=globalThis.UsI18n?.tag||'it-IT';
+  const at=iso=>new Date(iso+'T12:00:00');
+  const firstDay=at(dates[0]).getDate();
+  const first=at(dates[0]).toLocaleDateString(tag,{day:'numeric',month:'long'});
+  const from=firstDay===8||firstDay===11?`dall’${first}`:`dal ${first}`;
+  if(dates.length===1)return `, il ${first}.`;
+  if(String(year)===localDateISO().slice(0,4))return `, ${from} a oggi.`;
+  const month=at(dates[dates.length-1]).toLocaleDateString(tag,{month:'long'});
+  const lastMonth=Number(dates[dates.length-1].slice(5,7));
+  return `, ${from} ${[4,8,10].includes(lastMonth)?'ad':'a'} ${month}.`;
+}
+function openRicordiChapter(year){
+  const overlay=document.getElementById('ricordiChapterOverlay');
+  const state=ricordiArchiveState;
+  if(!overlay||!state)return;
+  const items=state.timeline.filter(item=>item.date.slice(0,4)===String(year));
+  const chapter=ricordiChapters(items)[0];
+  if(!chapter)return;
+  const parts=[chapter.moments?`${chapter.moments} ${chapter.moments===1?'ricordo':'ricordi'}`:'',chapter.experiences?`${chapter.experiences} ${chapter.experiences===1?'esperienza':'esperienze'}`:'',chapter.dailies?`${chapter.dailies} ${chapter.dailies===1?'domanda':'domande'}`:''].filter(Boolean).join(' · ');
+  document.getElementById('ricordiChapterTitle').textContent=String(year);
+  document.getElementById('ricordiChapterLead').innerHTML=`<span>${escapeHtml(parts)}</span><span>${escapeHtml(ricordiChapterRange(items,year))}</span>`;
+  const tag=globalThis.UsI18n?.tag||'it-IT';
+  document.getElementById('ricordiChapterThumbs').innerHTML=items.filter(item=>item.moment).map(item=>{
+    const row=item.moment;
+    const fullUrl=state.urls.get(row.storage_path);
+    const previewUrl=ricordiPreviewUrl(row,state.urls)||fullUrl;
+    if(!fullUrl)return '';
+    const author=state.names.get(row.created_by)||'Noi';
+    const iso=item.kind==='moment'?row.moment_date:item.date;
+    const date=new Date(iso+'T12:00:00').toLocaleDateString(tag,{day:'2-digit',month:'short',year:'numeric'});
+    const caption=row.caption||(item.kind==='moment'?'':ricordiRiviviTitle(item));
+    return `<button type="button" class="ricordi-chapter-thumb" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by||'')}" data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(iso)}" data-url="${escapeHtml(fullUrl)}" data-author="${escapeHtml(author)}" data-date="${escapeHtml(date)}" data-caption="${escapeHtml(caption)}" aria-label="Apri il ricordo"><img src="${escapeHtml(previewUrl)}" data-us-media-path="${escapeHtml(ricordiPreviewPath(row))}" onerror="usRecoverPrivateImage(this)" alt="" loading="lazy" decoding="async"></button>`;
+  }).join('');
+  window.UsUiFoundation?.cancelSurfaceExit?.(overlay);
+  overlay.classList.add('show');
+  overlay.setAttribute('aria-hidden','false');
+  overlay.querySelector('[data-us-modal-panel]')?.scrollTo?.(0,0);
+}
+function closeRicordiChapter(){
+  const overlay=document.getElementById('ricordiChapterOverlay');
+  if(!overlay?.classList.contains('show'))return;
+  const finalize=()=>{overlay.classList.remove('show');overlay.setAttribute('aria-hidden','true');};
+  if(window.UsUiFoundation?.exitSurface)window.UsUiFoundation.exitSurface(overlay,finalize);else finalize();
+}
+window.openRicordiChapter=openRicordiChapter;
+window.closeRicordiChapter=closeRicordiChapter;
+document.getElementById('ricordiChapterOverlay')?.addEventListener('click',event=>{
+  if(event.target.closest('#ricordiChapterClose,#ricordiChapterBackdrop')){closeRicordiChapter();return;}
+  const thumb=event.target.closest('.ricordi-chapter-thumb[data-moment-id]');
+  if(thumb)openMomentViewer(thumb);
+});
+document.addEventListener?.('keydown',event=>{
+  if(event.key==='Escape'&&document.getElementById('ricordiChapterOverlay')?.classList.contains('show')&&!document.getElementById('usAlbumOverlay')?.classList.contains('show'))closeRicordiChapter();
+});
 function openRicordiExperience(id){
   go('bond',{nav:true});
   Promise.resolve(window.hydrateNoiIdeas?.()).then(()=>window.openNoiIdeaDetail?.(id)).catch(()=>{});
@@ -3812,10 +3894,7 @@ document.getElementById('moments')?.addEventListener('click',event=>{
   const experience=event.target.closest('[data-ricordi-experience]');
   if(experience){openRicordiExperience(experience.dataset.ricordiExperience);return;}
   const chapter=event.target.closest('[data-ricordi-year]');
-  if(chapter){
-    const target=document.querySelector(`#momentsGrid .ricordi-period[data-year="${chapter.dataset.ricordiYear}"]`);
-    target?.scrollIntoView({behavior:window.UsUiFoundation?.isReducedMotion?.()?'auto':'smooth',block:'start'});
-  }
+  if(chapter)openRicordiChapter(chapter.dataset.ricordiYear);
 });
 
 let usForceMomentsMediaRefresh=false;
@@ -3923,6 +4002,7 @@ async function hydrateMomentsCore(){
     window.dispatchEvent(new CustomEvent('us:moments-updated'));
     // R7 — Rivivi also brings back "X mesi fa", not only anniversaries.
     renderRicordiRivivi(ricordiPickRivivi(timeline,today),displayUrls,names);
+    ricordiArchiveState={timeline,urls:displayUrls,names};
     renderRicordiChapters(ricordiChapters(timeline),displayUrls,today);
     usRicordiKeepMedia(thumbPaths.filter(path=>!localMedia.has(path)).map(path=>[path,signedUrls.get(path)]));
   }
