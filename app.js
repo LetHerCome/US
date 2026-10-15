@@ -567,6 +567,27 @@ async function sendWebPushEvent(type,referenceId=null,extra={}){
   }catch(error){console.warn('[US Push] send unavailable',error);return null;}
 }
 window.sendWebPushEvent=sendWebPushEvent;
+// US 1.0: questions, games and pushes come in this person's language. The
+// server keeps it on the profile (set_my_locale); this phone sends it once per
+// person and language. A database without the function yet just stays Italian.
+async function usSyncContentLocale(profile){
+  const locale=window.UsI18n?.locale;
+  if(!profile?.id||!['it','en'].includes(locale))return;
+  const key=`us:lang:v1:synced:${profile.id}`;
+  try{if(localStorage.getItem(key)===locale)return;}catch(_e){}
+  try{
+    const {error}=await sb.rpc('set_my_locale',{p_locale:locale});
+    if(error)return;
+    if(window.usProfile?.id===profile.id){try{localStorage.setItem(key,locale);}catch(_e){}}
+  }catch(_e){}
+}
+// English readers also ask for the computed English column (question or
+// mission title); a database without it answers the plain Italian read.
+async function usReadLocalized(query,columns,localized){
+  if(window.UsI18n?.locale!=='en')return query(columns);
+  const result=await query(`${columns},${localized}`);
+  return result?.error?query(columns):result;
+}
 
 function setPushSettingsState(kind,title,detail,actionLabel=''){
   const row=document.getElementById('pushSettingsRow'),status=document.getElementById('pushSettingsStatus'),info=document.getElementById('pushSettingsDetail'),button=document.getElementById('pushDisableBtn');
@@ -1094,6 +1115,7 @@ async function initCloud(){
     // Native has no service-worker image cache. Prewarm only the first few
     // Ricordi after Home is usable so opening the archive feels immediate.
     usRunWhenIdle(()=>usPrewarmNativeMomentMedia(),2200);
+    usRunWhenIdle(()=>usSyncContentLocale(profile),1600);
 
     // Push navigation itself is user intent, so keep it immediate.
     flushPendingPushTarget();
@@ -3476,7 +3498,7 @@ async function hydrateMomentsCore(){
   const momentsPromise=sb.from('moments').select('id,created_by,storage_path,thumbnail_path,caption,moment_date,created_at').order('moment_date',{ascending:false}).order('created_at',{ascending:false});
   const profilesPromise=sb.from('profiles').select('id,display_name').eq('couple_id',profile.couple_id);
   const livedPromise=sb.from('bucket_items').select('id,title,completed_at').eq('couple_id',profile.couple_id).eq('status','lived');
-  const keptPromise=sb.from('daily_question_keepsakes').select('id,source_key,question_text,question_date,francesco_answer,beatrice_answer,revealed_at').order('question_date',{ascending:false});
+  const keptPromise=usReadLocalized(columns=>sb.from('daily_question_keepsakes').select(columns).order('question_date',{ascending:false}),'id,source_key,question_text,question_date,francesco_answer,beatrice_answer,revealed_at','question_text_localized');
   const eventsPromise=sb.from('relationship_event_history').select('source_ref,occurrence_date,completed_at,title,title_source,moment_id');
   const provenancePromise=sb.from('living_provenance').select('source_kind,source_ref,source_title,source_date,target_moment_id');
   const {data:rows,error}=await momentsPromise;
@@ -3500,7 +3522,7 @@ async function hydrateMomentsCore(){
   if(livedError)console.warn(livedError);
   const livedRows=livedError?[]:(lived||[]);
   if(keptError)console.warn(keptError);
-  const keptRows=keptError?[]:(kept||[]);
+  const keptRows=keptError?[]:(kept||[]).map(row=>row.question_text_localized?{...row,question_text:row.question_text_localized}:row);
   // M12B.5: Eventi vissuti e provenienza sono arricchimenti come i precedenti.
   // Senza provenienza un Moment collegato e la sua fonte restano due voci
   // finché la lettura non torna: mai inventate, mai unite per titolo.

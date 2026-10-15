@@ -198,8 +198,9 @@ test('M12B.4 archive: the card says "Domanda del giorno · <date>", keeps the so
 
 test('M12B.4 archive wiring: Ricordi reads the keepsakes as an optional enrichment and renders them in the story', () => {
   const core = between('async function hydrateMomentsCore(){', 'let momentsHydrateInFlight');
-  assert.match(core, /sb\.from\('daily_question_keepsakes'\)\.select\('id,source_key,question_text,question_date,francesco_answer,beatrice_answer,revealed_at'\)/);
-  assert.match(core, /const keptRows=keptError\?\[\]:\(kept\|\|\[\]\);/, 'an unreadable keepsake table never breaks Ricordi');
+  // US 1.0: English readers also get question_text_localized; without it the plain read stays.
+  assert.match(core, /usReadLocalized\(columns=>sb\.from\('daily_question_keepsakes'\)\.select\(columns\)\.order\('question_date',\{ascending:false\}\),'id,source_key,question_text,question_date,francesco_answer,beatrice_answer,revealed_at','question_text_localized'\)/);
+  assert.match(core, /const keptRows=keptError\?\[\]:\(kept\|\|\[\]\)\.map\(row=>row\.question_text_localized\?\{\.\.\.row,question_text:row\.question_text_localized\}:row\);/, 'an unreadable keepsake table never breaks Ricordi');
   assert.match(core, /ricordiTimeline\([^;]*livedRows,keptRows,eventRows,provenanceRows\)/);
   assert.match(core, /if\(item\.kind==='daily'\)\{closeRow\(\);html\.push\(ricordiDailyCard\(item\.row\)\);continue;\}/);
   assert.match(core, /keptRows\.map\(r=>\[r\.id,r\.question_date\]\)/, 'a new keepsake re-renders the story');
