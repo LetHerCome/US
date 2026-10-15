@@ -230,7 +230,7 @@ function build() {
   sheet.setAttribute('aria-hidden', 'true');
   sheet.innerHTML = `<section class="us-look-sheet" role="dialog" aria-modal="true" aria-labelledby="usLookTitle">
       <header class="us-look-head">
-        <h2 id="usLookTitle">Personalizza Oggi</h2>
+        <div class="us-look-head-copy"><span class="us-look-kicker">Solo su questo telefono</span><h2 id="usLookTitle">Personalizza Oggi</h2></div>
         <button type="button" class="us-look-icon-btn" data-look-close aria-label="Chiudi">${icon('x')}</button>
       </header>
       <div class="us-look-tabs" role="tablist" aria-label="Temi ed effetti" data-active="theme">

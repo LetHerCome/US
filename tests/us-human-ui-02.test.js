@@ -378,9 +378,12 @@ test('Settings density: utility rows, couple card and footer stay compact withou
 // arbitration stays authoritative, the cards keep the mockup geometry (dc-oggi.css).
 test('Oggi density: arbitration stays authoritative; the dock holds one evidence card and the daily card', () => {
   const dcOggi = read('dc-oggi.css');
-  assert.match(dcOggi, /#home \.us-oggi-dock\{[\s\S]*?flex-direction:column;/);
-  assert.match(dcOggi, /#home #usDailyRitual\{[\s\S]*?grid-template-areas:"ring kicker kicker" "q q q" "meta meta cta";/);
-  assert.match(dcOggi, /@media\(max-height:600px\)\{\n  #home #usDailyRitual\{grid-template-areas:"ring kicker cta" "meta meta cta";/);
+  // Parity 2026-10 (mockup .og-bottom / .dq): a 12px column; the card is ring + kicker,
+  // the question across, then the status line and the button; short screens drop the question.
+  assert.match(dcOggi, /#home \.us-oggi-dock\{[\s\S]*?display:grid;\s*gap:12px;/);
+  assert.match(dcOggi, /#home #usDailyRitual\{[\s\S]*?grid-template-columns:auto minmax\(0,1fr\);[\s\S]*?padding:16px;[\s\S]*?border-radius:26px;/);
+  assert.match(dcOggi, /#home #usDailyRitual \.dq-foot\{grid-column:1\/-1;display:flex;/);
+  assert.match(dcOggi, /@media\(max-height:600px\)\{\n  #home #usDailyRitual \.us-daily-ritual-question\{display:none\}/);
   const app = read('app.js');
   assert.match(app, /US_OGGI_SURFACES=Object\.freeze\(\['usTodayPriorityRegion','usDailyRitual','pushOptInCard','usOggiCalendarWidget','usDailyRevealLink'\]\)/);
   assert.match(app, /winner\.evidence===id\?'evidence':winner\.daily===id\?'daily':'suppressed'/);

@@ -17,7 +17,7 @@ test('1.0 O2: reaction controls only on the partner answer, ♥ and "Mi hai comm
     const html=t.nodes.todayReveal.innerHTML;
     const mine=html.slice(html.indexOf('data-us-daily-answer="mine"'),html.indexOf('data-us-daily-answer="partner"'));
     const theirs=html.slice(html.indexOf('data-us-daily-answer="partner"'));
-    assert.match(html,/La tua risposta/);
+    assert.match(mine,/<b>Tu<\/b>/); // parity 2026-10: the mockup labels my bubble "Tu"
     assert.match(html,role==='francesco'?/Beatrice/:/Francesco/);
     assert.doesNotMatch(mine,/data-daily-reaction/,'never a reaction on my own answer');
     assert.deepEqual([...theirs.matchAll(/data-daily-reaction="([a-z]+)"/g)].map((m)=>m[1]),['heart','cry']);

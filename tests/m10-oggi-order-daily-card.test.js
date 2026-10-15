@@ -42,12 +42,13 @@ test('M10A follow-up: Oggi keeps only the actionable notice outside the retired 
   }
   assert.match(css, /#home #usOggiStack\{height:0!important;[^}]*visibility:hidden!important;[^}]*pointer-events:none!important\}/);
   // 1.0: one dock above the nav — what waits for me (or the notifications invite), then the Domanda di oggi.
-  const dock = hero.match(/<div class="us-oggi-dock" id="usOggiDock">[\s\S]*?\n {6}<\/div>/)?.[0] || '';
+  const dock = hero.match(/<div class="us-oggi-dock[^"]*" id="usOggiDock">[\s\S]*?\n {6}<\/div>/)?.[0] || '';
   const order = ['id="usTodayPriorityRegion"', 'id="pushOptInCard"', 'id="usDailyRitual"'].map((id) => dock.indexOf(id));
   assert.ok(order.every((at, i) => at >= 0 && (i === 0 || at > order[i - 1])), `dock order ${order}`);
   assert.ok(hero.indexOf('id="usOggiDock"') < hero.indexOf('id="usOggiStack"'));
   const dcOggi = read('dc-oggi.css');
-  assert.match(dcOggi, /#home \.us-oggi-dock\{[\s\S]*?position:fixed;[\s\S]*?bottom:calc\(10px \+ var\(--us-safe-bottom\) \+ var\(--us-nav-height\) \+ 46px\);/, 'a band above the nav stays free for Maudit');
+  // Parity 2026-10: the mockup's .og-bottom sits 130px from the bottom edge (nav + Maudit's band).
+  assert.match(dcOggi, /#home \.us-oggi-dock\{[\s\S]*?position:fixed;[\s\S]*?bottom:calc\(var\(--us-safe-bottom\) \+ 130px\);/, 'a band above the nav stays free for Maudit');
   assert.match(dcOggi, /#home #usOggiDock #usTodayPriorityRegion\{[\s\S]*?position:static!important;/);
   assert.equal((html.match(/id="usOggiCalendarWidget"/g) || []).length, 1);
   assert.match(app, /const fact=await window\.getOggiCalendarInsightSource\?\.\(\);/);

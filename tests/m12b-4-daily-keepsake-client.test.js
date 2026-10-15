@@ -93,7 +93,7 @@ test('M12B.4 UI: loading, then a double tap sends ONE request; success shows the
   assert.equal(JSON.stringify(h.calls.find((c) => c[0] === 'rpc')), JSON.stringify(['rpc', 'keep_daily_question', { target_question_id: QID }]));
   release(); await flush();
   assert.match(h.node.innerHTML, /Conservato nei Ricordi/);
-  assert.deepEqual(h.toasts, ['Conservato nei Ricordi ♡']);
+  assert.deepEqual(h.toasts, ['Conservato nei Ricordi']); // parity 2026-10: mockup toast, sparkle icon instead of ♡
 });
 
 test('M12B.4 UI: the partner kept it first ("existing") — same kept state, no duplicate celebration', async () => {

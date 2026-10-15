@@ -14,8 +14,11 @@ test('countdown and daily question never overlap at base viewports, all styles a
    return {count:box(document.getElementById('usCountdownDisplay')),number:box(document.querySelector('#usCountdownDisplay .us-countdown-number')),stack:box(document.getElementById('usOggiStack')),top:box(document.querySelector('.top')),nav:box(document.querySelector('.nav')),surfaces:[...document.querySelectorAll('#usOggiStack > *')].filter(visible).map(box),sw:document.scrollingElement.scrollWidth,sh:document.scrollingElement.scrollHeight,w:innerWidth,h:innerHeight};
   });
   const overlap=(a,b)=>a.x<b.right-.5&&b.x<a.right-.5&&a.y<b.bottom-.5&&b.y<a.bottom-.5;
-  assert.ok(m.count.y-m.top.bottom>=8&&m.count.y-m.top.bottom<=32,`${width}×${height} ${style} must sit immediately below top bar: ${JSON.stringify(m)}`);
-  assert.equal(overlap(m.count,m.stack),false,`${width}×${height} ${style} collision ${JSON.stringify(m)}`);
+  // Parity 2026-10: the mockup puts the time at 15% of the screen (.cd top:15%), clear of the top bar;
+  // short phones keep it right under the bar. Never under the bar, never in the lower half.
+  assert.ok(m.count.y-m.top.bottom>=8&&(width>height?true:m.count.y<=Math.max(m.top.bottom+32,height*0.2)),`${width}×${height} ${style} must sit below the top bar, in the mockup band: ${JSON.stringify(m)}`);
+  // The legacy stack is retired (height 0, hidden): it only counts while it shows something.
+  if(m.stack.height>0)assert.equal(overlap(m.count,m.stack),false,`${width}×${height} ${style} collision ${JSON.stringify(m)}`);
   for(const b of [m.count,...m.surfaces]){assert.ok(b.y>=m.top.bottom-.5&&b.bottom<=m.nav.y+.5,`${style} outside chrome ${JSON.stringify(m)}`);assert.ok(b.x>=0&&b.right<=width+.5,`${style} horizontal overflow`);}
   assert.ok(m.number.x>=0&&m.number.right<=width+.5);assert.ok(m.sh<=m.h);assert.ok(m.sw<=m.w);assert.deepEqual(errors,[]);
   if(output){fs.mkdirSync(output,{recursive:true});await page.screenshot({path:path.join(output,`${style}-${width}x${height}.png`)});if(style==='editorial'&&width===390){await page.evaluate(()=>{document.getElementById('usCountdownDisplay').hidden=true;document.getElementById('homeHero').removeAttribute('data-us-countdown');});await page.screenshot({path:path.join(output,'before-390x844.png')});}}
