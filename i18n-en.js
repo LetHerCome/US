@@ -1966,6 +1966,7 @@
     'LA DOMANDA DI OGGI': 'QUESTION OF THE DAY',
     'Chiudi la domanda di oggi': 'Close the question of the day',
     'Svelate · domani una nuova domanda': 'Revealed · a new question tomorrow',
+    'Scorri di lato per toglierla': 'Swipe sideways to dismiss it',
     'Preparo la domanda di oggi…': 'Getting today’s question ready…',
     '{name} ha messo ♥ alla tua risposta': '{name} gave your answer a ♥',
     '{name}: mi hai commosso': '{name}: you moved me',
