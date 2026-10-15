@@ -128,7 +128,7 @@ test('perf 1.0: Settings pre-fills after Home settles, but hydrates at once when
   const fn = settings.match(/function hydrateWhenHomeSettles\(\)\{[\s\S]*?\n\}/)?.[0] || '';
   assert.match(fn, /getElementById\('settings'\)\?\.classList\.contains\('active'\)\)return hydrateUsSettings\(\)/);
   assert.match(fn, /requestIdleCallback\(run/);
-  assert.match(read('app.js'), /if\(id==='settings' && window\.usProfile\) window\.hydrateUsSettings\?\.\(\);/, 'opening Settings still hydrates on demand');
+  assert.match(read('app.js'), /if\(id==='settings'\)work\.push\(Promise\.resolve\(window\.hydrateUsSettings\?\.\(\)\)\);/, 'opening Settings still hydrates on demand (hydrateActivePage)');
 });
 
 test('perf 1.0: concurrent Oggi refreshes share one Events read; a realtime change forces a fresh one', async () => {

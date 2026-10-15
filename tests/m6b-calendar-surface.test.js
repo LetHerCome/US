@@ -314,9 +314,12 @@ test('M6B (34): Left for You is untouched by the calendar feature', () => {
 });
 
 // (35) Eventi / shared_events unaffected — calendar_entries only, no cross-authority.
-test('M6B (35): Eventi/shared_events keeps rendering exactly as before; the calendar reads only calendar_entries', () => {
+test('M6B (35): Eventi/shared_events keeps rendering exactly as before; the calendar writes only calendar_entries', () => {
   assert.match(read('events.js'), /shared_events/);
-  assert.doesNotMatch(js(), /shared_events/);
+  // Noi Calendar V4 (2026-10-09) shows Events in the month: a read, never a write.
+  const mentions = [...js().matchAll(/shared_events/g)].length;
+  const reads = [...js().matchAll(/sb\.from\('shared_events'\)\.select\(/g)].length;
+  assert.equal(mentions, reads, 'shared_events appears in calendar.js only as a select');
   assert.match(js(), /sb\.from\('calendar_entries'\)/);
 });
 

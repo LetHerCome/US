@@ -38,7 +38,8 @@ test('Home rende intenzionale il vuoto e lo rimuove quando arriva una foto', asy
   const context = vm.createContext({
     console,
     usAuthEpoch:0,
-    window:{usProfile:{id:'viewer',couple_id:'couple-1'}},
+    Event,
+    window:{usProfile:{id:'viewer',couple_id:'couple-1'},dispatchEvent(){}},
     document: { getElementById: (id) => ({ homeHero: hero, homeEmptyState: empty, ...layers })[id] || null },
     requestAnimationFrame: (callback) => callback()
   });

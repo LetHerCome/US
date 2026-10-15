@@ -24,7 +24,8 @@ test('SystemBars Capacitor 8.5 usa inset CSS e contenuto chiaro sul shell scuro'
   assert.deepEqual(config.plugins.SystemBars, {
     insetsHandling: 'css',
     style: 'DARK',
-    hidden: false
+    hidden: false,
+    initialViewportFitValueHint: 'cover'
   });
 
   const css = read('ui-foundation.css');

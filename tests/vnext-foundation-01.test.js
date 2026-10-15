@@ -26,7 +26,8 @@ test('Foundation 01 mantiene il contratto completo di navigation e Oggi', () => 
     ['home', 'Oggi'], ['bond', 'Noi'], ['moments', 'Ricordi'], ['quiz', 'Gioca'],
   ]);
   assert.match(app, /const pages=\['home','bond','moments','quiz','settings'\]/);
-  assert.match(app, /const swipePages=\['home','bond','moments','quiz'\]/);
+  // Store S1-A (#179): no global swipe between tabs.
+  assert.doesNotMatch(app, /const swipePages=/);
   assert.doesNotMatch(html, /data-page="settings"/);
   assert.match(html, /id="usTodayPriorityRegion" hidden aria-live="polite"><\/div>/);
   assert.doesNotMatch(html, /usTodayPriorityRegion[^>]*>[\s\S]*?(received|reveal ready|waiting for me|priority card)/i);

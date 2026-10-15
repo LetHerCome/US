@@ -40,12 +40,14 @@ test('i18n: the phone language decides unless this device chose one', () => {
 });
 
 async function withPage(t, lang, html, check) {
-  let chromium;
-  try { chromium = loadChromium(); } catch (_) { return t.skip('Playwright unavailable'); }
+  // loadChromium() answers null without Playwright: skip before the server
+  // starts, or its open socket keeps `node --test` alive forever.
+  const chromium = loadChromium();
+  if (!chromium) return t.skip('Playwright unavailable');
+  const browser = await chromium.launch(process.env.US_CHROMIUM ? { executablePath: process.env.US_CHROMIUM } : {}).catch(() => null);
+  if (!browser) return t.skip('Chromium unavailable');
   const server = await startServer();
   const base = `http://127.0.0.1:${server.address().port}`;
-  const browser = await chromium.launch({ executablePath: process.env.US_CHROMIUM || '/opt/pw-browsers/chromium' }).catch(() => null);
-  if (!browser) { server.close(); return t.skip('Chromium unavailable'); }
   try {
     const page = await browser.newPage({ locale: lang === 'en' ? 'en-US' : 'it-IT' });
     const errors = [];
