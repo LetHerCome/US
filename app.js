@@ -2567,16 +2567,91 @@ async function playDailyRitualAnswered(card,merge){
   return true;
 }
 let usDailyRitualAnswerPending=false;
+// What stood above the card falls into its place, bounces on the bar and settles (FLIP, transform only).
+function dailyRitualDropAbove(card){
+  const dock=card?.parentElement;
+  const items=dock?[...dock.children].filter(el=>el!==card&&!el.hidden&&el.offsetParent!==null):[];
+  const before=new Map(items.map(el=>[el,el.getBoundingClientRect().top]));
+  card.hidden=true;
+  if(dailyRitualReducedMotion())return;
+  items.forEach((el,i)=>{
+    const dy=before.get(el)-el.getBoundingClientRect().top;
+    if(Math.abs(dy)<1||typeof el.animate!=='function')return;
+    el.animate([
+      {transform:`translateY(${dy}px)`,easing:'cubic-bezier(.55,0,1,.45)'},
+      {transform:'translateY(0)',offset:.55,easing:'cubic-bezier(0,.55,.45,1)'},
+      {transform:'translateY(-14px)',offset:.74,easing:'cubic-bezier(.55,0,1,.45)'},
+      {transform:'translateY(0)',offset:.88,easing:'cubic-bezier(0,.55,.45,1)'},
+      {transform:'translateY(-4px)',offset:.94,easing:'cubic-bezier(.55,0,1,.45)'},
+      {transform:'translateY(0)'}
+    ],{duration:820,delay:(items.length-1-i)*40});
+  });
+}
+function bindDailyRitualSwipe(card){
+  if(!card||card.usDailySwipeBound||typeof card.addEventListener!=='function')return;
+  card.usDailySwipeBound=true;
+  let start=null,dx=0,moved=false;
+  const reset=()=>{start=null;dx=0;};
+  card.addEventListener('pointerdown',event=>{
+    if(card.dataset.state!=='revealed'||event.button>0)return;
+    start={x:event.clientX,y:event.clientY,t:performance.now(),id:event.pointerId};dx=0;moved=false;
+  });
+  card.addEventListener('pointermove',event=>{
+    if(!start||event.pointerId!==start.id)return;
+    const x=event.clientX-start.x,y=event.clientY-start.y;
+    if(!moved){
+      if(Math.abs(x)<8)return;
+      if(Math.abs(y)>Math.abs(x)){reset();return;}
+      moved=true;
+      try{card.setPointerCapture(event.pointerId);}catch(_){}
+    }
+    dx=x;
+    card.style.transition='none';
+    card.style.transform=`translateX(${dx}px) rotate(${dx/40}deg)`;
+    card.style.opacity=String(Math.max(.25,1-Math.abs(dx)/(card.offsetWidth||320)));
+  });
+  const end=event=>{
+    if(!start||event.pointerId!==start.id)return;
+    const width=card.offsetWidth||320,speed=Math.abs(dx)/Math.max(1,performance.now()-start.t);
+    const questionId=card.dataset.questionId||'';
+    const gone=moved&&questionId&&(Math.abs(dx)>width*.33||speed>.6);
+    const dir=dx<0?-1:1;
+    reset();
+    card.style.transition='';
+    if(!moved)return;
+    if(!gone){
+      card.animate?.([{transform:card.style.transform,opacity:card.style.opacity},{transform:'none',opacity:1}],{duration:320,easing:'cubic-bezier(.2,.8,.2,1)'});
+      card.style.transform='';card.style.opacity='';
+      return;
+    }
+    if(typeof dailyRitualDismiss==='function')dailyRitualDismiss(questionId);
+    const out=card.animate?.([{transform:card.style.transform,opacity:card.style.opacity},{transform:`translateX(${dir*(width+40)}px) rotate(${dir*8}deg)`,opacity:0}],{duration:240,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'});
+    const finish=()=>{
+      out?.cancel?.();
+      card.style.transform='';card.style.opacity='';
+      dailyRitualDropAbove(card);
+      card.innerHTML='';card.usDailyHtml='';card.removeAttribute('data-state');card.dataset.usAttention='off';
+    };
+    if(out?.finished)out.finished.then(finish,finish);else finish();
+  };
+  card.addEventListener('pointerup',end);
+  card.addEventListener('pointercancel',event=>{if(start&&event.pointerId===start.id){dx=0;end(event);}});
+  // A swipe is not a tap: the sheet opens only on a real tap.
+  card.addEventListener('click',event=>{if(moved){event.preventDefault();event.stopImmediatePropagation();moved=false;}},true);
+}
 function renderDailyRitual(model){
   const card=document.getElementById('usDailyRitual');
   if(!card)return;
   const before=card.dataset.state||'';
+  if(model?.state==='revealed'&&model.questionId&&typeof dailyRitualDismissedId==='function'&&dailyRitualDismissedId()===String(model.questionId))model=null;
   if(!model){card.hidden=true;card.innerHTML='';card.usDailyHtml='';card.removeAttribute('data-state');card.dataset.usAttention='off';return;}
   card.dataset.state=model.state;
+  if(model.questionId)card.dataset.questionId=String(model.questionId);else delete card.dataset.questionId;
+  bindDailyRitualSwipe(card);
   card.dataset.usAttention=model.attention?'on':'off';
   // The visible words are the accessible name (and the English translation).
   card.removeAttribute('aria-label');
-  const html=`${dailyRitualRingMarkup(model)}<span class="eyebrow us-daily-ritual-kicker">${escapeHtml(model.kicker)}</span><span class="dq-q us-daily-ritual-question">${escapeHtml(model.question)}</span><span class="dq-foot">${model.meta?`<span class="dq-sub us-daily-ritual-meta">${escapeHtml(model.meta)}</span>`:''}<span class="btn-primary us-daily-ritual-cta">${escapeHtml(model.cta)}<span class="us-daily-ritual-arrow" aria-hidden="true"></span></span></span>`;
+  const html=`${dailyRitualRingMarkup(model)}<span class="eyebrow us-daily-ritual-kicker">${escapeHtml(model.kicker)}</span><span class="dq-q us-daily-ritual-question">${escapeHtml(model.question)}</span><span class="dq-foot">${model.meta?`<span class="dq-sub us-daily-ritual-meta">${escapeHtml(model.meta)}</span>`:''}<span class="btn-primary us-daily-ritual-cta">${escapeHtml(model.cta)}<span class="us-daily-ritual-arrow" aria-hidden="true"></span></span></span>${model.state==='revealed'?`<span class="us-daily-ritual-swipe">${escapeHtml('Scorri di lato per toglierla')}</span>`:''}`;
   // Same words, same circles: leave the card (and a running animation) alone.
   if(card.hidden||card.usDailyHtml!==html){card.innerHTML=html;card.usDailyHtml=html;}
   card.hidden=false;
@@ -2804,6 +2879,16 @@ window.UsOggi=Object.freeze({arbitrate:arbitrateOggi,apply:applyOggiArbitration,
 function localDateISO(){
   const d=new Date(), y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
   return `${y}-${m}-${day}`;
+}
+// Founder 15/10: once both answered (and the answers were read), the card can
+// be swiped away and stays away for that question on this phone. The new
+// question tomorrow has a new id, so it comes back by itself.
+const US_DAILY_DISMISS_KEY='us-daily-dismissed';
+function dailyRitualDismissedId(){
+  try{return localStorage.getItem(US_DAILY_DISMISS_KEY)||'';}catch(_){return '';}
+}
+function dailyRitualDismiss(questionId){
+  try{localStorage.setItem(US_DAILY_DISMISS_KEY,String(questionId));}catch(_){}
 }
 let usTodayPreviousOverflow=null;
 function openToday(){

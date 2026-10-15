@@ -252,6 +252,8 @@ body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-sa
 }
 #home #usDailyRitual[data-state="error"] .us-daily-ritual-question{font-size:17px;color:var(--us-color-text-2)}
 #home #usDailyRitual .dq-foot{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
+#home #usDailyRitual[data-state="revealed"]{touch-action:pan-y;user-select:none;-webkit-user-select:none}
+#home #usDailyRitual .us-daily-ritual-swipe{display:block;grid-column:1/-1;margin-top:-2px;font:400 11px/1.4 var(--us-font-ui);letter-spacing:.02em;color:var(--us-color-text-3,var(--us-color-text-2));opacity:.8}
 #home #usDailyRitual .us-daily-ritual-meta{margin:0;min-width:0;font:400 13px/1.5 var(--us-font-ui);color:var(--us-color-text-2)}
 #home #usDailyRitual .us-daily-ritual-cta{
   flex:none;

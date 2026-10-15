@@ -266,7 +266,12 @@ test('M10.2 markup: dismiss accessibile, swipe verticale libero, nessuna icona i
   const stack = html.match(/<div class="us-oggi-stack" id="usOggiStack">[\s\S]*?\n {6}<\/div>/)?.[0] || '';
   assert.ok(stack.indexOf('id="usDailyRevealLink"') > stack.indexOf('id="usDailyRitual"'), 'secondary link sits after the Daily card slot inside the same stack');
   assert.doesNotMatch(html, /id="todayOrb"/, 'the old top-left todayOrb stays removed');
-  assert.doesNotMatch(read('styles.css') + app, /localStorage[^;]*(dismiss|reveal)/i, 'no local authority for dismiss/seen');
+  // Founder 15/10: the Oggi card can be swiped away once both answered and read.
+  // That hide is a visual, per-phone choice (dailyRitualDismissedId/dailyRitualDismiss);
+  // reveal seen/notice state stays on the server, so only those two helpers may touch storage.
+  const cardHide = /function dailyRitualDismissedId\(\)\{[\s\S]*?\n\}\nfunction dailyRitualDismiss\(questionId\)\{[\s\S]*?\n\}\n/;
+  assert.match(app, cardHide, 'the card-hide helpers exist as one block');
+  assert.doesNotMatch(read('styles.css') + app.replace(cardHide, ''), /localStorage[^;]*(dismiss|reveal)/i, 'no local authority for dismiss/seen');
 });
 
 // ------------------------------------------------- Today sheet: seen + dismiss
