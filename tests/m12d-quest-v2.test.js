@@ -19,6 +19,8 @@ const WEEK_BLOCK = slice("const QUEST_WEEK_TIMEZONE='Europe/Rome';", 'function b
 const QUEST_BLOCK = slice('async function currentQuestMode(){', '\n// ===== M7B');
 const SEED_BLOCK = slice('function hashSeed(text){', 'async function currentQuestMode(){');
 const BOARD_BLOCK = slice('// ===== M12D · Quest V2', '\n// ===== M7B');
+// US 1.0: mission titles come in the reader's language through these helpers.
+const LOCALIZED_BLOCK = slice('async function usReadLocalized(', ':row)}:result;') + ':row)}:result;';
 
 const C = 'c-1', F = 'f-1', B = 'b-1', C2 = 'c-2', F2 = 'f-2';
 const PROFILES = { [C]: [{ id: F, display_name: 'Francesco', role: 'francesco' }, { id: B, display_name: 'Beatrice', role: 'beatrice' }], [C2]: [{ id: F2, display_name: 'Altro', role: 'francesco' }] };
@@ -91,7 +93,7 @@ function harness({ me = F, couple = C, quests = [], rerolls = 0, history = [], f
     renderNoiHubSummary() {}, renderBondProgress() {}, hydrateBondSummary: async () => {}, distanceKm: () => 10,
     escapeHtml: (s) => String(s).replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])),
   });
-  vm.runInContext(`${WEEK_BLOCK}\n${SEED_BLOCK}\n${QUEST_BLOCK}\nwindow.__t={weekStartISO,hydrateBond,confirmBondQuest,rerollBondQuest,selectInitialQuestTemplates,ensureBondWeek,renderBondQuest};`, context);
+  vm.runInContext(`${LOCALIZED_BLOCK}\n${WEEK_BLOCK}\n${SEED_BLOCK}\n${QUEST_BLOCK}\nwindow.__t={weekStartISO,hydrateBond,confirmBondQuest,rerollBondQuest,selectInitialQuestTemplates,ensureBondWeek,renderBondQuest};`, context);
   // Pin "today" to Thursday 1 Oct 2026 (week of Mon 28 Sep) for deterministic labels.
   const fixedNow = new Date('2026-10-01T10:00:00Z');
   const realWeek = window.__t.weekStartISO;

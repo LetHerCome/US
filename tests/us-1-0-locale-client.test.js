@@ -15,14 +15,14 @@ const between = (start, end) => {
   assert.notEqual(to, -1, end);
   return app.slice(from, to);
 };
-const END = 'return result?.error?query(columns):result;\n}';
+const END = ':row)}:result;';
 const fnSource = between('async function usSyncContentLocale(profile){', END) + END;
 
 function load({ locale, rpc, store = new Map(), current }) {
   const window = { UsI18n: locale ? { locale } : undefined, usProfile: current };
   const localStorage = { getItem: (k) => (store.has(k) ? store.get(k) : null), setItem: (k, v) => store.set(k, String(v)) };
   const sb = { rpc };
-  return new Function('window', 'localStorage', 'sb', `${fnSource}; return {usSyncContentLocale, usReadLocalized};`)(window, localStorage, sb);
+  return new Function('window', 'localStorage', 'sb', `${fnSource}; return {usSyncContentLocale, usReadLocalized, usLocalizedTitles};`)(window, localStorage, sb);
 }
 
 test('set_my_locale is sent once per person and language, never cached on failure', async () => {
@@ -56,4 +56,13 @@ test('English readers get the localized column, with the Italian read as fallbac
   assert.deepEqual((await en.usReadLocalized(query(true), 'id,title', 'title_localized')).data, ['id,title']);
   assert.deepEqual(asked, ['id,title', 'id,title,title_localized', 'id,title,title_localized', 'id,title']);
   assert.match(app, /usRunWhenIdle\(\(\)=>usSyncContentLocale\(profile\),1600\);/);
+});
+
+test('mission titles use the English title when the server sends one', () => {
+  const { usLocalizedTitles } = load({ locale: 'en', rpc: async () => ({}) });
+  assert.deepEqual(usLocalizedTitles({ data: [{ id: 1, title: 'Cena', title_localized: 'Dinner' }, { id: 2, title: 'Gita' }], error: null }).data,
+    [{ id: 1, title: 'Dinner', title_localized: 'Dinner' }, { id: 2, title: 'Gita' }]);
+  const failed = { data: null, error: { code: 'x' } };
+  assert.equal(usLocalizedTitles(failed), failed);
+  assert.equal((app.match(/\.then\(usLocalizedTitles\)/g) || []).length, 3, 'the board, the recent weeks and Sintonia history');
 });

@@ -223,7 +223,7 @@ test('M12B.5 card: a lived source with its photo shows source snapshot date/titl
   assert.match(root.innerHTML, /data-ricordi-open="m1" data-source-key="da_vivere:b1" data-rivivi-kind="experience"/);
   assert.match(root.innerHTML, /data-date="10 mag 2026"/);
   assert.match(root.innerHTML, /data-caption="Concerto al Circo Massimo"/);
-  assert.match(root.innerHTML, /<b translate="no">Concerto al Circo Massimo<\/b><span>10 maggio 2026 · Da vivere<\/span>/);
+  assert.match(root.innerHTML, /<b translate="no">Concerto al Circo Massimo<\/b><span>10 maggio 2026 · Le vostre idee<\/span>/);
 });
 
 test('M12B.5 card: Event without photo uses the historical snapshot title, says "Evento vissuto" and never opens the mutable event', () => {
@@ -244,8 +244,8 @@ test('M12B.5 card: a legacy completion (title_source live) is shown with the dec
 test('M12B.5 card: a lived Da vivere without photo opens the existing Da vivere detail', () => {
   const { api, render, root } = load();
   render(api.pickRivivi(api.timeline([], [lived('b1', 'Mostra di Frida', '2026-04-10T18:00:00Z')], [], [], []), TODAY), new Map(), new Map());
-  assert.match(root.innerHTML, /<b translate="no">Mostra di Frida<\/b><span>10 aprile 2026 · Da vivere<\/span>/);
-  assert.match(root.innerHTML, /<button type="button" class="ricordi-rivivi-link" data-ricordi-experience="b1">Apri in Da vivere<\/button>/);
+  assert.match(root.innerHTML, /<b translate="no">Mostra di Frida<\/b><span>10 aprile 2026 · Le vostre idee<\/span>/);
+  assert.match(root.innerHTML, /<button type="button" class="ricordi-rivivi-link" data-ricordi-experience="b1">Apri nelle vostre idee<\/button>/);
 });
 
 test('M12B.5 card: a kept Daily shows the question, its date and opens on the frozen answer pair (escaped)', () => {

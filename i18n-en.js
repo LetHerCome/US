@@ -688,7 +688,7 @@
     'Vissuto insieme il {date}.': 'Done together on {date}.',
     'Vissuto insieme il {date}. Il titolo è quello di oggi: quello di allora non era registrato.': 'Done together on {date}. This is today’s title: the original one wasn’t saved.',
     'Vissuta insieme il {date}.': 'Done together on {date}.',
-    'Apri in Da vivere': 'Open in To do together',
+    'Apri nelle vostre idee': 'Open in your ideas',
     'La vostra storia parte da qui': 'Your story starts here',
     'Foto non disponibili': 'Photos unavailable',
     'Ricordi non disponibili': 'Memories unavailable',
@@ -1210,7 +1210,6 @@
     'Personale di {name}': '{name}’s personal plan',
     'Eliminare questo impegno?': 'Delete this plan?',
     'Sparirà dal calendario di entrambi.': 'It’ll disappear from both your calendars.',
-    'È collegato a Da vivere: resta nel calendario.': 'It’s linked to To do together: it stays in the calendar.',
     'Impegno eliminato': 'Plan deleted',
     'Non riesco a eliminarlo. Riprova.': 'Couldn’t delete it. Try again.',
     'Già quel giorno': 'Already that day',
@@ -1958,7 +1957,10 @@
     'Salvatelo come ricordo': 'Keep it as a memory',
     'Missione completata insieme ♡': 'Mission done together ♡',
     'Confermata. Ora tocca a {name} ♡': 'Confirmed. Now it’s {name}’s turn ♡',
-    'Confermata. Ora tocca alla tua persona ♡': 'Confirmed. Now it’s your person’s turn ♡'
+    'Confermata. Ora tocca alla tua persona ♡': 'Confirmed. Now it’s your person’s turn ♡',
+
+    // ------------------------------------------------------------ Lead glue 1.0
+    '{date} · {what}': '{date} · {what}'
   };
   if (typeof module === 'object' && module.exports) module.exports = EN;
   else window.UsI18n?.register('en', EN);

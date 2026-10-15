@@ -588,6 +588,8 @@ async function usReadLocalized(query,columns,localized){
   const result=await query(`${columns},${localized}`);
   return result?.error?query(columns):result;
 }
+// Missions: show the English title where the server gave one.
+const usLocalizedTitles=result=>Array.isArray(result?.data)?{...result,data:result.data.map(row=>row?.title_localized?{...row,title:row.title_localized}:row)}:result;
 
 function setPushSettingsState(kind,title,detail,actionLabel=''){
   const row=document.getElementById('pushSettingsRow'),status=document.getElementById('pushSettingsStatus'),info=document.getElementById('pushSettingsDetail'),button=document.getElementById('pushDisableBtn');
@@ -3245,7 +3247,7 @@ function ricordiLocalISO(instant){
 // Un Moment collegato da living_provenance (M12B.3) NON è una seconda
 // esperienza: prende la chiave della sua fonte e ne diventa la foto. La
 // deduplica è solo per chiave canonica, mai per titolo.
-const RICORDI_SOURCE_LABEL=Object.freeze({experience:'Da vivere',event:'Evento vissuto',daily:'Domanda del giorno'});
+const RICORDI_SOURCE_LABEL=Object.freeze({experience:'Le vostre idee',event:'Evento vissuto',daily:'Domanda del giorno'});
 function ricordiTimeline(moments,lived,kept,events,provenance){
   const byKey=new Map();
   const add=entry=>{if(!byKey.has(entry.sourceKey))byKey.set(entry.sourceKey,entry);return byKey.get(entry.sourceKey);};
@@ -3359,7 +3361,7 @@ function ricordiMomentCard(row,signedUrls,author,canDelete,feature,source,priori
 function ricordiExperienceCard(row,sourceDate){
   const date=/^\d{4}-\d{2}-\d{2}$/.test(String(sourceDate||''))?String(sourceDate):ricordiLocalISO(row.completed_at);
   const day=new Date(date+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'long'});
-  return `<button type="button" class="ricordi-experience" data-ricordi-experience="${escapeHtml(row.id)}"><span class="ricordi-experience-mark" aria-hidden="true"></span><span class="ricordi-experience-copy"><small>Vissuta insieme · ${escapeHtml(day)}</small><b translate="no">${escapeHtml(row.title)}</b></span><span class="ricordi-experience-source">Da vivere</span></button>`;
+  return `<button type="button" class="ricordi-experience" data-ricordi-experience="${escapeHtml(row.id)}"><span class="ricordi-experience-mark" aria-hidden="true"></span><span class="ricordi-experience-copy"><small>Vissuta insieme · ${escapeHtml(day)}</small><b translate="no">${escapeHtml(row.title)}</b></span><span class="ricordi-experience-source">Le vostre idee</span></button>`;
 }
 // M12B.4 — una Domanda del giorno conservata: provenienza esplicita e le due
 // risposte come erano al reveal (snapshot del server), apribile sul posto.
@@ -3445,7 +3447,7 @@ function renderRicordiRivivi(pick,signedUrls,names){
   let body='';
   if(entry.kind==='daily')body=ricordiDailyAnswers(entry.row);
   else if(entry.kind==='event')body=`<p class="ricordi-rivivi-detail">Vissuto insieme il ${escapeHtml(date)}.${entry.row.title_source==='live'?' Il titolo è quello di oggi: quello di allora non era registrato.':''}</p>`;
-  else body=`<p class="ricordi-rivivi-detail">Vissuta insieme il ${escapeHtml(date)}.</p>${entry.orphan?'':`<button type="button" class="ricordi-rivivi-link" data-ricordi-experience="${escapeHtml(entry.row.id)}">Apri in Da vivere</button>`}`;
+  else body=`<p class="ricordi-rivivi-detail">Vissuta insieme il ${escapeHtml(date)}.</p>${entry.orphan?'':`<button type="button" class="ricordi-rivivi-link" data-ricordi-experience="${escapeHtml(entry.row.id)}">Apri nelle vostre idee</button>`}`;
   root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><details class="ricordi-rivivi-card ricordi-rivivi-note" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}"><summary aria-label="Rivivi: ${escapeHtml(title||date)}"><span class="ricordi-rivivi-mark ricordi-rivivi-mark-${escapeHtml(entry.kind)}" aria-hidden="true"></span><span class="ricordi-rivivi-text"><small>${escapeHtml(pick.label)}</small><b${entry.kind==='daily'?'':' translate="no"'}>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(RICORDI_SOURCE_LABEL[entry.kind])}</span></span></summary><div class="ricordi-rivivi-body">${body}</div></details>${ricordiSendButton(title,date)}`;
   root.hidden=false;
 }
@@ -3930,7 +3932,7 @@ async function hydrateResonanceHistory(){
   root.setAttribute('aria-busy','true');
   const coupleId=profile.couple_id;
   const [{data:quests,error:questError},{data:events,error:eventError},{data:history,error:historyError},{data:milestones,error:milestoneError}]=await Promise.all([
-    sb.from('bond_weekly_quests').select('id,title,xp,completed_at').eq('couple_id',coupleId).not('completed_at','is',null).order('completed_at',{ascending:false}).limit(8),
+    usReadLocalized(columns=>sb.from('bond_weekly_quests').select(columns).eq('couple_id',coupleId).not('completed_at','is',null).order('completed_at',{ascending:false}).limit(8),'id,title,xp,completed_at','title_localized').then(usLocalizedTitles),
     sb.from('shared_event_completions').select('id,xp_awarded,completed_at,event_title_snapshot').eq('couple_id',coupleId).order('completed_at',{ascending:false}).limit(8),
     sb.from('relationship_event_history').select('source_ref,title,title_source,completed_at').order('completed_at',{ascending:false}).limit(8),
     sb.from('relationship_milestones').select('milestone_date,kind,months_together,xp_awarded').eq('couple_id',coupleId).order('milestone_date',{ascending:false}).limit(6)
@@ -4132,11 +4134,11 @@ async function hydrateBond(){
   if(!current())return;
   const [{data:state,error:stateError},{data:quests,error:questError},{data:profiles,error:profilesError},{data:couple,error:coupleError},{count:completedCount,error:countError},{data:recent,error:recentError}]=await Promise.all([
     sb.from('bond_weekly_state').select('rerolls_used').eq('couple_id',coupleId).eq('week_start',week).maybeSingle(),
-    sb.from('bond_weekly_quests').select('id,slot,template_key,title,category,rarity,xp,confirmed_by,completed_at').eq('couple_id',coupleId).eq('week_start',week).order('slot'),
+    usReadLocalized(columns=>sb.from('bond_weekly_quests').select(columns).eq('couple_id',coupleId).eq('week_start',week).order('slot'),'id,slot,template_key,title,category,rarity,xp,confirmed_by,completed_at','title_localized').then(usLocalizedTitles),
     sb.from('profiles').select('id,display_name,role,couple_id').eq('couple_id',coupleId),
     sb.from('couples').select('bond_xp').eq('id',coupleId).maybeSingle(),
     sb.from('bond_weekly_quests').select('id',{count:'exact',head:true}).eq('couple_id',coupleId).not('completed_at','is',null),
-    sb.from('bond_weekly_quests').select('id,week_start,slot,title,completed_at').eq('couple_id',coupleId).lt('week_start',week).order('week_start',{ascending:false}).order('slot').limit(QUEST_SLOTS*QUEST_RECENT_WEEKS)
+    usReadLocalized(columns=>sb.from('bond_weekly_quests').select(columns).eq('couple_id',coupleId).lt('week_start',week).order('week_start',{ascending:false}).order('slot').limit(QUEST_SLOTS*QUEST_RECENT_WEEKS),'id,week_start,slot,title,completed_at','title_localized').then(usLocalizedTitles)
   ]);
   if(!current())return;
   if(stateError||questError||profilesError||coupleError){
