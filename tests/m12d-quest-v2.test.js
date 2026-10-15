@@ -175,7 +175,7 @@ test('1.0 (N4): a mission that asks for a photo opens "add a memory" with its ti
   await h.t.hydrateBond();
   assert.match(h.cards()[0].body, /data-quest-action="photo" onclick="addQuestMemory\('q1'\)"[\s\S]*?Aggiungi la foto/);
   assert.match(QUEST_BLOCK, /function addQuestMemory\(id\)\{[\s\S]*?openMemoryComposer\(quest\.title\|\|''\)/);
-  assert.match(app, /function openMemoryComposer\(caption\)\{\s*const composer=window\.UsMomentComposer\?\.open;\s*go\('moments',\{nav:true\}\);/, 'the existing add-memory door');
+  assert.match(app, /function openMemoryComposer\(caption,source=null\)\{\s*const composer=window\.UsMomentComposer;\s*go\('moments',\{nav:true\}\);\s*if\(typeof composer\?\.pick==='function'\)\{composer\.pick\(/, 'the existing add-memory door, straight to the gallery (R1)');
 });
 
 test('M12D: confirm calls only the existing RPC with the quest id, renders the server result and never writes XP', async () => {

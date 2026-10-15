@@ -4702,20 +4702,22 @@ async function markNoiIdeaLived(){
     if(btn)btn.disabled=false;
   }
 }
-// Il ponte verso Ricordi: apre il composer esistente dei Moments con il
-// titolo come nota suggerita. Nessun Moment nasce senza una foto scelta.
+// Il ponte verso Ricordi: the gallery opens right away (R1) with the title as
+// a suggested note, and the photo becomes this idea's memory (R6). Nothing is
+// created until a photo is chosen.
 function addNoiIdeaMemory(){
   const item=noiIdeaState.selectedId?noiIdeaFindItem(noiIdeaState.selectedId):null;
   if(!item||item.status!=='lived')return;
-  const composer=window.UsMomentComposer?.open;
-  go('moments',{nav:true});
-  if(typeof composer==='function')setTimeout(()=>composer({caption:item.title}),60);
+  const date=ricordiLocalISO(item.completed_at)||undefined;
+  openMemoryComposer(item.title,{kind:'da_vivere',ref:item.id,date});
 }
-// The Ricordi composer opened over Ricordi with a suggested note (missions).
-function openMemoryComposer(caption){
-  const composer=window.UsMomentComposer?.open;
+// The Ricordi composer over Ricordi with a suggested note (ideas, missions).
+// pick() runs inside the tap so the phone lets it open the gallery.
+function openMemoryComposer(caption,source=null){
+  const composer=window.UsMomentComposer;
   go('moments',{nav:true});
-  if(typeof composer==='function')setTimeout(()=>composer({caption}),60);
+  if(typeof composer?.pick==='function'){composer.pick(source?{caption,source}:{caption});return;}
+  if(typeof composer?.open==='function')setTimeout(()=>composer.open({caption}),60);
 }
 document.getElementById('noiIdeaDetailLived')?.addEventListener('click',markNoiIdeaLived);
 document.getElementById('noiIdeaDetailMemoryAdd')?.addEventListener('click',addNoiIdeaMemory);
