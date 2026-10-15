@@ -1224,7 +1224,9 @@ function bindTabMotion() {
     if (!canAnimate(show)) return;
     show.animate([{ opacity: 0, transform: `translateX(${now === 'sintonia' ? 24 : -24}px)` }, { opacity: 1, transform: 'none' }], { duration: 380, easing: EASE.out });
     if (now !== 'sintonia') return;
-    Array.from(show.children).filter((el) => !el.hidden && el.offsetParent !== null).forEach((el, i) => {
+    // Only the [hidden] attribute decides (no layout read here: this runs in
+    // the tap, right after the panel swap, and a read would force a layout).
+    Array.from(show.children).filter((el) => !el.hidden).forEach((el, i) => {
       el.animate([{ opacity: 0, transform: 'translateY(16px)' }, { opacity: 1, transform: 'none' }], { duration: 460, delay: i * 50, easing: EASE.out, fill: 'backwards' });
     });
   }).observe(tabs, { attributes: true, attributeFilter: ['data-active'] });

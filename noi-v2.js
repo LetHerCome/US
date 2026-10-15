@@ -430,17 +430,26 @@ function chooseDay(day,{fromList=false,fromWeek=false}={}) {
   window.UsFeedback?.selection?.();
   if(fromList)$('usNoiV2Detail')?.scrollIntoView?.({block:'nearest',behavior:reducedMotion()?'auto':'smooth'});
 }
+let tabOrder=0;
 function setTab(tab){
   giocaTab=tab==='sintonia'?'sintonia':'giochi';
   const game=$('usGiocaGames'),syn=$('usGiocaSintonia');
   if(!game||!syn)return;
   const active=giocaTab==='sintonia';
-  game.hidden=active;syn.hidden=!active;
-  $('usGiocaTabs')?.setAttribute('data-active',giocaTab);
   $('usGiocaTabGames')?.setAttribute('aria-selected',String(!active));
   $('usGiocaTabSintonia')?.setAttribute('aria-selected',String(active));
-  $('usGiocaTabGames')?.setAttribute('tabindex',active?'-1':'0');
-  $('usGiocaTabSintonia')?.setAttribute('tabindex',active?'0':'-1');
+  game.hidden=active;syn.hidden=!active;
+  $('usGiocaTabs')?.setAttribute('data-active',giocaTab);
+  // The roving tabindex once the panel is on screen: the tapped tab has
+  // focus, and a tabindex change on it makes the browser check focusability
+  // at once, a whole style pass in the middle of the tap.
+  const roving=()=>{
+    $('usGiocaTabGames')?.setAttribute('tabindex',active?'-1':'0');
+    $('usGiocaTabSintonia')?.setAttribute('tabindex',active?'0':'-1');
+  };
+  const order=++tabOrder;
+  if(typeof requestAnimationFrame==='function')requestAnimationFrame(()=>setTimeout(()=>{if(order===tabOrder)roving();},0));
+  else roving();
   if(active){
     window.hydrateBond?.();
     window.hydrateResonanceHistory?.();

@@ -214,17 +214,17 @@
 #bond .quest-week-retry{border-radius:999px;border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text)}
 
 #bond .noi-living-list{gap:8px;margin-top:10px}
-#bond .noi-living-list .bond-quest.quest-v2{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"top top" "title title" "who reroll" "confirm confirm" "memory memory";align-items:center;gap:10px;padding:16px;border-radius:22px;border:0;background:var(--us-color-surface-2);box-shadow:none;overflow:visible}
+#bond .noi-living-list .bond-quest.quest-v2{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"top top" "who reroll" "confirm confirm";align-items:center;gap:10px;padding:16px;border-radius:22px;border:0;background:var(--us-color-surface-2);box-shadow:none;overflow:visible}
 #bond .noi-living-list .bond-quest.quest-v2::before,#bond .noi-living-list .bond-quest.quest-v2::after{content:none}
 #bond .noi-living-list .bond-quest.quest-v2.completed{background:color-mix(in srgb,var(--us-verde) 7%,var(--us-color-surface-2))}
 #bond .bond-quest.quest-v2 .quest-top{grid-area:top;align-items:flex-start;margin:0}
 #bond .bond-quest.quest-v2 .quest-category{display:block;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--us-noi)}
-#bond .noi-living-list .bond-quest.quest-v2 h4{grid-area:title;margin:0;font-family:var(--us-font-display);font-weight:400;font-size:20px;line-height:1.2;letter-spacing:0;color:var(--us-color-text);-webkit-line-clamp:unset;display:block;overflow:visible}
+#bond .noi-living-list .bond-quest.quest-v2 h4{margin:0;font-family:var(--us-font-display);font-weight:400;font-size:20px;line-height:1.2;letter-spacing:0;color:var(--us-color-text);-webkit-line-clamp:unset;display:block;overflow:visible}
 /* The mockup says the state with the dots and the button; the sentence stays for screen readers. */
 #bond .bond-quest.quest-v2 .quest-status{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 #bond .bond-quest.quest-v2[data-quest-state="completed"] .quest-status{color:var(--us-verde)}
 #bond .bond-quest.quest-v2 .quest-status .us-icon{--us-icon-size:16px}
-#bond .noi-living-list .bond-quest.quest-v2 .quest-confirmers{grid-area:who;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:0}
+#bond .noi-living-list .bond-quest.quest-v2 .quest-confirmers{grid-area:who;display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0}
 #bond .bond-quest.quest-v2 .quest-person{gap:6px;min-height:0;padding:0;border:0;background:none;font-size:12px;font-weight:600;color:var(--us-color-text-3)}
 #bond .bond-quest.quest-v2 .quest-person-initial{width:14px;height:14px;font-size:0;color:transparent;background:transparent;border:1.5px solid var(--dc-who,var(--us-tu))}
 #bond .bond-quest.quest-v2 .quest-person:first-child{--dc-who:var(--us-tu)}
@@ -232,7 +232,8 @@
 #bond .bond-quest.quest-v2 .quest-person.checked{border:0;background:none}
 #bond .bond-quest.quest-v2 .quest-person.checked .quest-person-initial{background:var(--dc-who);border-color:transparent}
 #bond .bond-quest.quest-v2 .quest-person-name{font-weight:600;color:var(--us-color-text-3)}
-#bond .bond-quest.quest-v2 .quest-person-state{font-size:0;--us-icon-size:13px;color:var(--us-color-text-3)}
+/* noi.js .who: dot, name, dot, name, 6px apart; the state words stay for screen readers. */
+#bond .bond-quest.quest-v2 .quest-person-state{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 #bond .bond-quest.quest-v2 .quest-person.checked .quest-person-state{color:var(--us-color-text-2)}
 #bond .bond-quest.quest-v2 .quest-actions{display:contents}
 #bond .bond-quest.quest-v2 .quest-confirm{grid-area:confirm;width:100%;min-height:48px;border-radius:999px;border:0;background:var(--us-tu);color:var(--us-inchiostro);font-size:15px;font-weight:700;box-shadow:none}
@@ -245,7 +246,7 @@
 #bond .bond-quest.quest-v2 .quest-reroll .us-icon{--us-icon-size:16px}
 #bond .bond-quest.quest-v2 .quest-reroll.is-locked{padding:0;width:44px;color:var(--us-color-text-3);background:transparent;border-color:transparent;opacity:1}
 /* A mission done together (or one that asks for a photo) can become a memory. */
-#bond .bond-quest.quest-v2 .quest-memory{grid-area:memory;display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text);font-size:14px;font-weight:700}
+#bond .bond-quest.quest-v2 .quest-memory{grid-column:1/-1;display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text);font-size:14px;font-weight:700}
 #bond .bond-quest.quest-v2 .quest-memory .us-icon{--us-icon-size:18px;color:var(--us-noi)}
 /* The board, as the mockup's two stat boxes: the week sits in the sheet kicker. */
 #noiQuestSheet .quest-week-id,#noiQuestSheet .quest-week-track,#noiQuestSheet .quest-week-reset,#noiQuestSheet .bond-week-note{display:none!important}
@@ -257,17 +258,24 @@
 #bond .quest-week-count b,#bond .quest-week-count span{line-height:26.4px;vertical-align:top}
 #bond .quest-week-rerolls{line-height:18px;gap:0!important}
 #bond .quest-week-rerolls b{line-height:26.4px}
-#bond .bond-quest.quest-v2 .quest-category{line-height:16.5px}
-#bond .noi-living-list .bond-quest.quest-v2 h4{line-height:24px!important;margin-top:-8.5px}
+#bond .bond-quest.quest-v2 .quest-category{line-height:15px;padding-bottom:1.5px}
+#bond .noi-living-list .bond-quest.quest-v2 h4{line-height:24px!important;margin-top:2px}
 #bond .bond-quest.quest-v2 .quest-person{line-height:18px}
-#bond .bond-quest.quest-v2 .quest-reroll{position:relative;height:40px;min-height:40px}
+#bond .bond-quest.quest-v2 .quest-reroll{position:relative;height:40px;min-height:40px!important}
 #bond .bond-quest.quest-v2 .quest-reroll::after{content:"";position:absolute;inset:-2px}
 #bond .noi-idea-section .noi-idea-quick-form>input{height:48px;box-sizing:border-box}
 #bond .noi-idea-section .noi-idea-quick-more{margin-top:12px}
 #bond .noi-idea-browse .noi-idea-list{margin-top:12px}
 #bond .bond-quest.quest-v2 .quest-person-state .us-icon{display:none}
 #bond .bond-quest.quest-v2:not([data-quest-state="available"]) .quest-reroll.is-locked{display:none}
-#bond .bond-quest.quest-v2 .quest-top{display:block}
+/* noi.js .qt: "Scoperta · Non comune" and the title, "+40 XP" on the right. */
+#bond .bond-quest.quest-v2 .quest-top{display:flex;justify-content:space-between;gap:10px}
+#bond .bond-quest.quest-v2 .quest-head{min-width:0}
+#bond .bond-quest.quest-v2 .quest-xp{flex:none;font-size:13px;font-weight:700;line-height:19.5px;color:var(--us-noi);white-space:nowrap}
+#bond .bond-quest.quest-v2 .quest-confirm{display:inline-flex;align-items:center;justify-content:center;gap:6px}
+#bond .bond-quest.quest-v2 .quest-confirm .us-icon{--us-icon-size:18px}
+/* Done together: the mockup's mini-btn p "Aggiungi un ricordo", beside the dots. */
+#bond .bond-quest.quest-v2 .quest-memory.is-mini{grid-area:reroll;width:auto;min-height:40px;height:40px;padding:0 14px;border:0;background:var(--us-tu);color:var(--us-inchiostro);font-size:14px;font-weight:700;white-space:nowrap}
 /* Settimane passate: the mockup's .fold with .hist rows. */
 #bond .quest-recent{display:block;margin-top:10px;border-radius:22px;background:var(--us-color-surface);border:1px solid var(--us-color-line);padding:0}
 #bond .quest-recent[hidden]{display:none}

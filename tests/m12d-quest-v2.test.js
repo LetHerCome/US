@@ -100,7 +100,7 @@ function harness({ me = F, couple = C, quests = [], rerolls = 0, history = [], f
   vm.runInContext('weekStartISO=(now)=>window.__weekStart(now);', context);
   window.__weekStart = (now) => realWeek(now || fixedNow);
   const cards = () => [...els.bondQuestList.innerHTML.matchAll(/<article class="bond-quest quest-v2[^"]*" data-quest-id="([^"]+)" data-quest-slot="(\d+)" data-quest-state="([^"]+)" data-quest-reroll="([^"]+)">([\s\S]*?)<\/article>/g)]
-    .map((m) => ({ id: m[1], slot: Number(m[2]), state: m[3], reroll: m[4], body: m[5], confirm: (m[5].match(/<button[^>]*class="quest-confirm[^"]*"[^>]*>([^<]*)<\/button>/) || [])[0] || '' }));
+    .map((m) => ({ id: m[1], slot: Number(m[2]), state: m[3], reroll: m[4], body: m[5], confirm: (m[5].match(/<button[^>]*class="quest-confirm[^"]*"[^>]*>(?:<span class="us-icon"[^>]*><\/span>)?([^<]*)<\/button>/) || [])[0] || '' }));
   return { window, els, db, toasts, pushes, listeners, rows, cards, api: window.UsQuest, t: window.__t };
 }
 const q = (slot, extra = {}) => ({ id: `q${slot}`, slot, template_key: ['a', 'c', 'd'][slot - 1], title: `Quest ${slot}`, category: 'fun', rarity: ['common', 'rare', 'epic'][slot - 1], xp: [20, 50, 80][slot - 1], ...extra });
@@ -116,10 +116,14 @@ test('M12D: three Quest slots render with explicit states derived from persisted
   assert.doesNotMatch(c[1].confirm, /disabled/); assert.match(c[1].confirm, /Conferma anche tu/);
   assert.match(c[1].body, /Beatrice ha confermato · manca la tua conferma/);
   assert.match(c[0].body, /Hai confermato · aspettiamo Beatrice/);
-  // 1.0 (N4): no rarity and no "+XP" on the cards, neutral words.
-  assert.match(c[2].confirm, /disabled/); assert.match(c[2].confirm, />Completata<\/button>/);
+  // Round 3 (mockup 077, noi.js questHTML): "Scoperta · Non comune", "+40 XP" on the card,
+  // "✓ Completata · +40 XP" and "✓ Confermata da te" (supersedes 1.0 N4).
+  assert.match(c[2].confirm, /disabled/); assert.match(c[2].confirm, /data-us-icon="check"[^>]*><\/span>Completata · \+80 XP<\/button>/);
+  assert.match(c[0].confirm, /data-us-icon="check"[^>]*><\/span>Confermata da te<\/button>/);
   assert.match(c[2].body, /<span>Completata insieme<\/span>/);
-  for (const card of c) assert.doesNotMatch(card.body, /XP|Comune|Non comune|Rara|Epica|rarity-/);
+  assert.match(c[0].body, /<span class="quest-category"><span>Divertimento<\/span> · <span>Comune<\/span><\/span><h4>Quest 1<\/h4><\/div><span class="quest-xp">\+20 XP<\/span>/);
+  assert.match(c[1].body, /<span>Rara<\/span>[\s\S]*?<span class="quest-xp">\+50 XP<\/span>/);
+  assert.match(c[2].body, /<span>Epica<\/span>[\s\S]*?<span class="quest-xp">\+80 XP<\/span>/);
 });
 
 test('M12D: available state and the same rows seen from the partner phone swap actor and partner', async () => {
@@ -163,8 +167,10 @@ test('M12D: completed Quest stays visible on the board and offers to keep it as 
   await h.t.hydrateBond();
   const done = h.cards().find((x) => x.slot === 2);
   assert.equal(done.state, 'completed');
-  assert.doesNotMatch(done.body, /XP/);
-  assert.match(done.body, /class="quest-memory" data-quest-action="memory" onclick="addQuestMemory\('q2'\)"[\s\S]*?Salvatelo come ricordo/);
+  // Round 3 (mockup 077): the done card says its points; the memory door is the mockup's
+  // mini-btn "Aggiungi un ricordo" beside the dots.
+  assert.match(done.confirm, /Completata · \+55 XP/);
+  assert.match(done.body, /class="quest-memory is-mini" data-quest-action="memory" onclick="addQuestMemory\('q2'\)">Aggiungi un ricordo<\/button>/);
   assert.doesNotMatch(h.cards()[0].body, /quest-memory/, 'an open mission without a photo has no memory door yet');
   assert.equal(done.reroll, 'locked');
   assert.doesNotMatch(done.body, /class="quest-reroll/, 'a completed Quest offers no reroll at all');
@@ -268,7 +274,8 @@ test('M12D: reroll is deterministic, mode-aware, one at a time, and rerenders fr
     assert.equal(calls.length, 1, 'a second reroll tap waits for the first');
     assert.deepEqual(Object.keys(calls[0].args), ['target_quest_id', 'target_template_key']);
     assert.ok(['e', 'f'].includes(calls[0].args.target_template_key), 'near couple: any/near templates not already on the board');
-    assert.ok(h.toasts.includes('Nuova missione · 1 cambio rimasto'));
+    // Round 3 (mockup noi.js reroll): no toast, the card turns and the stats say what is left.
+    assert.ok(!h.toasts.some((t) => /Nuova missione/.test(t)));
     assert.match(h.els.questWeekBoard.innerHTML, /<b>1<\/b> cambio rimasto/);
     return calls[0].args.target_template_key;
   };

@@ -1435,7 +1435,8 @@ window.USProgression = Object.freeze({
   previewMarkup,
   holdsCard,
   missionCompleted,
-  celebrateXp: xpPop
+  celebrateXp: xpPop,
+  burst
 });
 
 // A new identity on this phone (login, logout, account switch) starts from its

@@ -155,6 +155,7 @@ const APP_SHELL = [
   "/assets/icons/phosphor/arrows-horizontal-regular.svg",
   "/assets/icons/phosphor/arrow-clockwise-regular.svg",
   "/assets/icons/phosphor/star-four-regular.svg",
+  "/assets/icons/phosphor/star-regular.svg",
   "/assets/icons/profile-off.svg",
   "/assets/icons/profile-on.svg",
   "/assets/icons/think-off.svg",
