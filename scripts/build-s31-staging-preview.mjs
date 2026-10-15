@@ -11,6 +11,10 @@ const OUT = path.join(ROOT, 'dist', 's31-staging-preview');
 const PROD = 'iiakdfsxpywdkxravqjh';
 const STAGE = 'dugmhngrfkuieeletatb';
 export const APPROVED_BRANCH = 'mission/us-store-s3-1-public-auth-staging-20261011';
+// TEMPORARY (founder OK 2026-10-16, staging QA of #190 + #196): this QA branch
+// also builds the US-STAGING preview. The publishable key comes only from the
+// Cloudflare preview env. Never merged into main.
+export const QA_BRANCH = 'claude/qa-store-lifecycle';
 export const PLACEHOLDER_HTML = '<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex">'
   + '<title>US staging: no preview</title><p>This branch is not a US-STAGING preview.</p>\n';
 
@@ -48,7 +52,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   // The project also builds a preview for EVERY other branch: those get a
   // static "not a staging preview" page (no app, no Supabase key, no backend
   // URL) instead of a failed build, so the check stops blocking unrelated PRs.
-  if (process.env.CF_PAGES === '1' && process.env.CF_PAGES_BRANCH !== APPROVED_BRANCH) {
+  if (process.env.CF_PAGES === '1' && process.env.CF_PAGES_BRANCH !== APPROVED_BRANCH && process.env.CF_PAGES_BRANCH !== QA_BRANCH) {
     await rm(OUT, { recursive: true, force: true });
     await mkdir(OUT, { recursive: true });
     await writeFile(path.join(OUT, 'index.html'), PLACEHOLDER_HTML, 'utf8');
