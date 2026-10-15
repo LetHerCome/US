@@ -1,4 +1,4 @@
-const BUILD_ID = "us-premium-redesign-20261015-6";
+const BUILD_ID = "us-ricordi-parity-20261015-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
