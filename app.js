@@ -622,7 +622,7 @@ async function refreshWebPushUi(){
     if(state.kind!=='inactive'){card.hidden=true;return;}
     card.hidden=false;
     if(title)title.textContent='Attiva le notifiche';
-    if(text)text.textContent='Ti penso, risposte e promemoria, anche a US chiusa.';
+    if(text)text.textContent='Ti penso, risposte e missioni, anche a US chiusa.';
     if(button){button.hidden=false;button.disabled=false;button.textContent='Attiva';}
     return;
   }
@@ -654,7 +654,7 @@ async function refreshWebPushUi(){
   }
   card.hidden=false;
   if(title)title.textContent='Attiva le notifiche';
-  if(text)text.textContent='Ti penso, risposte e quest, anche a US chiusa.';
+  if(text)text.textContent='Ti penso, risposte e missioni, anche a US chiusa.';
   if(button){button.hidden=false;button.disabled=false;button.textContent=Notification.permission==='granted'?'Completa attivazione':'Attiva';}
   setPushSettingsState('inactive','Notifiche non attive','','Attiva');
 }
@@ -1987,7 +1987,7 @@ window.UsOggiCalendarWidget=Object.freeze({render:renderOggiCalendarWidget,refre
 // widget itself, the distance pill, the push card or the empty-state CTA
 // never does (they keep their own taps).
 function oggiIsWidgetTarget(target){
-  return Boolean(target&&typeof target.closest==='function'&&target.closest('#usTodayPriorityRegion,.us-oggi-stack,.us-oggi-widgets,.home-distance-pill,.push-optin-card,.home-empty-state,.us-countdown-display,.us-countdown-entry'));
+  return Boolean(target&&typeof target.closest==='function'&&target.closest('#usTodayPriorityRegion,.us-oggi-dock,.us-oggi-stack,.us-oggi-widgets,.home-distance-pill,.push-optin-card,.home-empty-state,.us-countdown-display,.us-countdown-entry'));
 }
 let usOggiFocusPhotoActive=false;
 function setOggiFocusPhoto(active){
@@ -2009,17 +2009,26 @@ document.getElementById('homeHero')?.addEventListener('click',event=>{
 });
 
 // M10A — the empty-state invitation is a passive widget: it sits in the free
-// band between the Oggi stack and the bottom row, and drops its secondary lines
-// when that band is short, so it never slides under the stack.
+// band between the countdown (1.0: visible without a photo too) and the dock
+// above the nav, and drops its secondary lines when that band is short, so it
+// never slides under either.
 function layoutOggiEmptyState(){
   const hero=document.getElementById('homeHero'),empty=document.getElementById('homeEmptyState'),stack=document.getElementById('usOggiStack');
   if(!hero||!empty||!stack||empty.hidden)return;
   const box=hero.getBoundingClientRect();
   if(!box.height)return;
   const gap=12;
-  const top=stack.getBoundingClientRect().bottom-box.top+gap;
+  // The legacy stack is retired (height 0): it bounds the band only if it shows.
+  const stackBox=stack.getBoundingClientRect();
+  const chrome=document.querySelector('.app>.top')?.getBoundingClientRect();
+  let top=stackBox.height?stackBox.bottom-box.top+gap:Math.max(gap,(chrome?.bottom||0)-box.top+gap);
+  for(const id of ['usCountdownDisplay','usCountdownEntry']){
+    const el=document.getElementById(id);
+    const rect=el&&!el.hidden?el.getBoundingClientRect():null;
+    if(rect?.height)top=Math.max(top,rect.bottom-box.top+gap);
+  }
   let bottom=box.height-gap;
-  for(const id of ['distanceWidget','pushOptInCard']){
+  for(const id of ['distanceWidget','usOggiDock']){
     const el=document.getElementById(id);
     const rect=el&&!el.hidden?el.getBoundingClientRect():null;
     if(rect?.height)bottom=Math.min(bottom,rect.top-box.top-gap);
@@ -2032,7 +2041,7 @@ function layoutOggiEmptyState(){
 }
 if(typeof ResizeObserver==='function'){
   const oggiLayoutObserver=new ResizeObserver(()=>layoutOggiEmptyState());
-  for(const id of ['homeHero','usOggiStack','distanceWidget','pushOptInCard']){
+  for(const id of ['homeHero','usOggiStack','distanceWidget','usOggiDock','usCountdownDisplay']){
     const el=document.getElementById(id);
     if(el)oggiLayoutObserver.observe(el);
   }
@@ -2073,13 +2082,20 @@ let usThinkReactionFinal=null;
 let usThinkReactionInFlight=false;
 let usThinkKnownReactionSignature='';
 
-const US_TODAY_PRIORITY_ORDER=Object.freeze({received_ready:1,answers_ready:2,waiting_for_me:3,couple_context:4});
+// 1.0 — what Oggi may put in its one priority card, in this order: something
+// that arrived for me (Ti penso, Lasciato per te), the answers ready, where
+// the other is waiting for me ("Tocca a te": a game round, a mission to
+// confirm), today's mesiversario, and (never shown on Oggi) passive events.
+const US_TODAY_PRIORITY_ORDER=Object.freeze({received_ready:1,left_ready:2,answers_ready:3,waiting_for_me:4,celebration:5,couple_context:6});
 const US_TODAY_PRIORITY_LABELS=Object.freeze({
-  received_ready:'Pronto per voi',
+  received_ready:'Aspetta te',
+  left_ready:'Lasciato per te',
   answers_ready:'Risposte pronte',
-  waiting_for_me:'Aspetta te',
+  waiting_for_me:'Tocca a te',
+  celebration:'Tra voi oggi',
   couple_context:'Tra voi oggi'
 });
+const US_TODAY_PRIORITY_LIMIT=5;
 let usTodayPriorityRefreshId=0;
 let usTodayPriorityQueue=[];
 const usTodayConsumedFacts=new Set();
@@ -2102,7 +2118,7 @@ function composeTodayPriorities(candidates=[]){
     const factKey=String(item.factKey||item.id);
     if(categories.has(item.category)||facts.has(factKey))continue;
     categories.add(item.category);facts.add(factKey);result.push(item);
-    if(result.length===3)break;
+    if(result.length===US_TODAY_PRIORITY_LIMIT)break;
   }
   return result;
 }
@@ -2183,10 +2199,22 @@ function renderTodayPriorities(priorities=[]){
   usTodayPriorityQueue=(Array.isArray(priorities)?priorities:[]).filter(item=>item?.attention).slice();
   renderTodayPriorityItem(usTodayPriorityQueue[0],usTodayPriorityQueue.length);
 }
-function thinkTodayPriorityViewModel(){
+// The partner's name for Oggi copy. Defensive: the Oggi runtime is also
+// exercised on its own, without the identity resolver.
+function oggiPartnerName(){
+  try{return (typeof usIdentity==='function'?usIdentity().partnerName:'')||'La tua persona';}catch(_){return 'La tua persona';}
+}
+// O6 — a Ti penso is a moment: the card says when it arrived ("2 ore fa") and
+// leaves Oggi 24 hours later (the heart keeps its history).
+const US_THINK_CARD_TTL_MS=24*60*60*1000;
+function thinkTodayPriorityViewModel(now=Date.now()){
   const signal=typeof usIncomingThink!=='undefined'?usIncomingThink:null;
   const finalReaction=typeof usThinkReactionFinal!=='undefined'?usThinkReactionFinal:null;
   if(!signal?.id||finalReaction)return null;
+  const at=Date.parse(signal.created_at||'');
+  if(Number.isFinite(at)&&now-at>US_THINK_CARD_TTL_MS)return null;
+  const ago=Number.isFinite(at)&&typeof relativeSignalAge==='function'?relativeSignalAge(signal.created_at):'';
+  const age=ago?ago.charAt(0).toUpperCase()+ago.slice(1):'';
   const partner=partnerFromProfiles(window.usBondProfiles||[]);
   return {
     id:`think-received:${signal.id}`,
@@ -2197,31 +2225,131 @@ function thinkTodayPriorityViewModel(){
     // finale) è un'azione reale per CHI lo riceve.
     attention:true,
     title:`${partner?.display_name||'La tua persona'} ti pensa`,
-    detail:'Ha lasciato un segnale per te.',
+    detail:age||'Ha lasciato un segnale per te.',
+    recency:Number.isFinite(at)?at:0,
     action:'think',
     actionLabel:'Apri'
   };
 }
-// ===== M9B — Domanda del giorno: il rituale quotidiano su Oggi =====
+// L4 — something new in Lasciato per te. The envelope (left-for-you.js) is the
+// authority on "is there anything unseen"; Oggi only names who and what, from
+// the same unseen rows (oldest first, the one that opens first).
+const US_LEFT_KIND_COPY=Object.freeze({text:'un messaggio',photo:'una foto',audio:'un vocale',video:'un video',music:'una canzone'});
+const usOggiLeft={items:[]};
+function leftTodayPriorityViewModel(items=usOggiLeft.items){
+  const list=(Array.isArray(items)?items:[]).filter(item=>item?.id);
+  if(!list.length)return null;
+  const first=list[0],name=oggiPartnerName();
+  const title=list.length>1?`${name} ti ha lasciato ${list.length} cose`:`${name} ti ha lasciato ${US_LEFT_KIND_COPY[first.kind]||'qualcosa'}`;
+  const at=Date.parse(first.created_at||'');
+  return {
+    id:`left:${first.id}`,factKey:`left:${list.map(item=>item.id).join(',')}`,
+    arrivalType:'left-for-you',category:'left_ready',attention:true,
+    title,detail:'',recency:Number.isFinite(at)?at:0,action:'left',actionLabel:'Apri'
+  };
+}
+// F2 — "Tocca a te": a game round where the other is waiting for me (read
+// from the Gioca hub that games.js renders) and, from Friday, a mission the
+// other already confirmed.
+let usOggiGameTurn=null;
+function gameTurnTodayPriorityViewModel(turn=usOggiGameTurn){
+  if(!turn?.game)return null;
+  const key=turn.session||turn.game;
+  return {
+    id:`game-turn:${key}`,factKey:`game:${key}`,arrivalType:'game-turn',category:'waiting_for_me',attention:true,
+    title:`${oggiPartnerName()} ti aspetta`,detail:turn.game,action:'game',actionLabel:'Gioca',
+    session:turn.session||'',perVoi:Boolean(turn.perVoi)
+  };
+}
+function missionTodayPriorityViewModel(mission){
+  if(!mission?.id)return null;
+  return {
+    id:`mission:${mission.id}`,factKey:`mission:${mission.id}`,arrivalType:'mission-confirm',category:'waiting_for_me',attention:true,
+    title:'Manca solo la tua conferma',detail:String(mission.title||''),action:'mission',actionLabel:'Apri'
+  };
+}
+// O10 — the mesiversario, on the day. A start on the 29th, 30th or 31st counts
+// on the last day of shorter months (same rule as Eventi).
+function oggiMonthiversary(startedOn,todayISO){
+  const s=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(startedOn||'')),t=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(todayISO||''));
+  if(!s||!t)return null;
+  const [sy,sm,sd]=s.slice(1).map(Number),[ty,tm,td]=t.slice(1).map(Number);
+  const months=(ty-sy)*12+(tm-sm);
+  if(months<=0)return null;
+  const last=new Date(Date.UTC(ty,tm,0)).getUTCDate();
+  if(Math.min(sd,last)!==td)return null;
+  return {months,years:months%12===0?months/12:0};
+}
+function celebrationTodayPriorityViewModel(startedOn,todayISO){
+  const day=oggiMonthiversary(startedOn,todayISO);
+  if(!day)return null;
+  const title=day.years
+    ?(day.years===1?'Oggi è un anno ♡':`Oggi sono ${day.years} anni ♡`)
+    :(day.months===1?'Oggi è un mese ♡':`Oggi sono ${day.months} mesi ♡`);
+  return {
+    id:`celebration:${todayISO}`,factKey:`celebration:${todayISO}`,arrivalType:'monthiversary',category:'celebration',attention:true,
+    title,detail:day.years?'Il vostro anniversario':'Il vostro mesiversario',action:'events',actionLabel:'Apri'
+  };
+}
+function oggiStartedOn(){
+  try{return window.UsCoupleContext?.snapshot?.()?.couple?.started_on||null;}catch(_){return null;}
+}
+function oggiTodayISO(){
+  return typeof usDailyQuestionDay==='function'?usDailyQuestionDay():new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome'}).format(new Date());
+}
+// F2 — a dot on the Oggi tab while the other is waiting for me: the Domanda di
+// oggi they already answered, a game round, a mission to confirm (from Friday).
+function renderToccaATe({daily=false,game=false,mission=false}={}){
+  const tab=document.querySelector?.('.nav button[data-page="home"]');
+  if(!tab)return false;
+  const on=Boolean(daily||game||mission);
+  if(on)tab.setAttribute('data-us-tocca','on');else tab.removeAttribute('data-us-tocca');
+  tab.setAttribute('aria-label',on?'Oggi, tocca a te':'Oggi');
+  return on;
+}
+// S12 — Maudit hops once when something arrives for me (Ti penso, Lasciato
+// per te) and when the answers of the day are revealed. A blocked or switched
+// off Maudit does not hop, and the hop is tried again at the next refresh.
+const usOggiPetHops=new Set();
+function oggiPetHop(reason,key){
+  if(!key||usOggiPetHops.has(key))return false;
+  let hopped=false;
+  try{hopped=Boolean(window.USPet?.react?.(reason));}catch(_){hopped=false;}
+  if(hopped)usOggiPetHops.add(key);
+  return hopped;
+}
+// ===== M9B — Domanda di oggi: il rituale quotidiano su Oggi =====
 // Legge SOLO lo stato canonico di get_daily_state (window.todayState via
 // hydrateToday): nessuna copia locale delle risposte, nessun reveal anticipato.
-// La card apre il foglio esistente (openToday), che resta l'unico flusso.
+// La card apre il foglio esistente (openToday) dove sei, senza cambiare tab.
 function dailyRitualPartnerName(){
   return usIdentity().partnerName;
 }
 function dailyRitualViewModel(source){
-  // M10.1A — la card su Oggi dice a CHI guarda "hai ancora qualcosa da fare":
-  // esiste SOLO finché manca la MIA risposta (get_daily_state().my_answer ==
-  // null). Dopo la mia risposta sparisce del tutto (niente "Risposto", attesa,
-  // reveal): il foglio Today resta il flusso completo. Mai both_answered.
-  const kicker='Domanda del giorno';
+  // O1 (1.0) — the card stays on Oggi until BOTH answered: "Aspetta te" when
+  // the other already answered, a quiet waiting state after my answer. Its
+  // attention is personal: on only while MY answer is missing. Never the
+  // answer text: that lives in the sheet, after the reveal.
+  const kicker='La domanda di oggi';
   // M9E: errore reale del backend → stato onesto con Riprova (apre il foglio,
   // che ritenta get_or_create_daily_question). Mai una domanda inventata.
-  if(source?.status==='error')return {questionId:null,question:'La domanda di oggi non è arrivata.',state:'error',kicker,status:'',cta:'Riprova',attention:false};
+  if(source?.status==='error')return {questionId:null,question:'La domanda di oggi non è arrivata.',state:'error',kicker,meta:'',glyph:'none',cta:'Riprova',attention:false};
   const question=source?.question,state=source?.state;
   if(!question?.id||!question.question||!state)return null;
-  if(state.my_answer!=null)return null;
-  return {questionId:question.id,question:String(question.question),kicker,state:state.partner_has_answer?'invited':'answer',status:'',cta:'Rispondi',attention:true};
+  const partner=source.partnerName||oggiPartnerName();
+  const base={questionId:question.id,question:String(question.question),kicker};
+  if(state.my_answer==null){
+    if(state.partner_has_answer)return {...base,kicker:'Aspetta te',state:'invited',meta:`${partner} ha già risposto · tocca a te`,glyph:'partner',cta:'Rispondi',attention:true};
+    return {...base,state:'answer',meta:'Una domanda, due risposte',glyph:'none',cta:'Rispondi',attention:true};
+  }
+  if(!state.both_answered)return {...base,state:'waiting',meta:`Hai risposto · aspettiamo ${partner}`,glyph:'mine',cta:'Apri',attention:false};
+  // Both answered: while "Risposte pronte" waits in the priority card, that
+  // card speaks for the day (never two cards for one fact). Once seen or
+  // hidden, the card offers to read them again until tomorrow.
+  const access=dailyRevealAccess(source);
+  if(!access||access.unread)return null;
+  const felt=typeof dailyPartnerReactionLine==='function'?dailyPartnerReactionLine(source.reveal,partner):'';
+  return {...base,state:'revealed',meta:felt||'Svelate · domani una nuova domanda',glyph:'noi',cta:'Rivedi',attention:false};
 }
 function renderDailyRitual(model){
   const card=document.getElementById('usDailyRitual');
@@ -2229,8 +2357,9 @@ function renderDailyRitual(model){
   if(!model){card.hidden=true;card.innerHTML='';card.removeAttribute('data-state');card.dataset.usAttention='off';return;}
   card.dataset.state=model.state;
   card.dataset.usAttention=model.attention?'on':'off';
-  card.setAttribute('aria-label',`${model.kicker}: ${model.question}. ${model.cta}`);
-  card.innerHTML=`<span class="us-daily-ritual-head"><span class="us-daily-ritual-mark us-phosphor-question" data-us-attention-icon aria-hidden="true"></span><span class="us-daily-ritual-kicker">${escapeHtml(model.kicker)}</span></span><span class="us-daily-ritual-question">${escapeHtml(model.question)}</span><span class="us-daily-ritual-cta">${escapeHtml(model.cta)}</span>`;
+  // The visible words are the accessible name (and the English translation).
+  card.removeAttribute('aria-label');
+  card.innerHTML=`<span class="us-daily-ritual-ring" data-glyph="${escapeHtml(model.glyph||'none')}" data-us-attention-icon aria-hidden="true"><i class="us-daily-ritual-me"></i><i class="us-daily-ritual-you"></i><i class="us-daily-ritual-noi"></i></span><span class="us-daily-ritual-kicker">${escapeHtml(model.kicker)}</span><span class="us-daily-ritual-question">${escapeHtml(model.question)}</span>${model.meta?`<span class="us-daily-ritual-meta">${escapeHtml(model.meta)}</span>`:''}<span class="us-daily-ritual-cta">${escapeHtml(model.cta)}<span class="us-daily-ritual-arrow" aria-hidden="true"></span></span>`;
   card.hidden=false;
 }
 window.UsDailyRitual=Object.freeze({viewModel:dailyRitualViewModel,render:renderDailyRitual});
@@ -2240,27 +2369,42 @@ async function refreshTodayPriorities({daily,freshEvents=false}={}){
     question:window.todayQuestion,
     state:window.todayState,
     reveal:window.todayRevealMeta,
-    partnerName:dailyRitualPartnerName()
+    partnerName:oggiPartnerName()
   }:daily;
   const candidates=[];
   const thinkPriority=thinkTodayPriorityViewModel();
   if(thinkPriority)candidates.push(thinkPriority);
-  // M9B: la Domanda del giorno ha la sua card su Oggi (renderDailyRitual):
-  // non entra più nella coda priority, così non compare due volte.
+  const leftPriority=leftTodayPriorityViewModel();
+  if(leftPriority)candidates.push(leftPriority);
+  // M9B: la Domanda di oggi ha la sua card su Oggi (renderDailyRitual):
+  // non entra nella coda priority, così non compare due volte.
   renderDailyRitual(dailyRitualViewModel(dailySource));
   // M10.2 — "Risposte pronte": piccolo avviso personale, mai la card Daily.
   const revealNotice=dailyTodayPriorityViewModel(dailySource);
   if(revealNotice)candidates.push(revealNotice);
+  const gameTurn=gameTurnTodayPriorityViewModel();
+  if(gameTurn)candidates.push(gameTurn);
+  const celebration=celebrationTodayPriorityViewModel(oggiStartedOn(),oggiTodayISO());
+  if(celebration)candidates.push(celebration);
+  let mission=null;
   try{
     const eventSource=await window.getTodayEventPrioritySource?.({fresh:freshEvents});
     const eventPriority=eventTodayPriorityViewModel(eventSource);
     if(eventPriority)candidates.push(eventPriority);
   }catch(error){console.warn('[US Oggi] Events priority',error);}
+  try{mission=missionTodayPriorityViewModel(await window.oggiMissionToConfirm?.());}catch(_){mission=null;}
+  if(mission)candidates.push(mission);
   if(refreshId!==usTodayPriorityRefreshId)return [];
   const priorities=composeTodayPriorities(candidates);
   renderTodayPriorities(priorities);
+  if(thinkPriority)oggiPetHop('think',thinkPriority.factKey);
+  if(leftPriority)oggiPetHop('left-for-you',leftPriority.factKey);
+  if(revealNotice)oggiPetHop('daily-question',revealNotice.factKey);
   // Un solo ingresso: il link passivo compare solo quando l'avviso non è in coda.
   renderDailyRevealLink(priorities.some(item=>item.category==='answers_ready')?null:dailyRevealLinkViewModel(dailySource));
+  const dailyState=dailySource?.state;
+  renderToccaATe({daily:Boolean(dailyState&&dailyState.my_answer==null&&dailyState.partner_has_answer),game:Boolean(gameTurn),mission:Boolean(mission)});
+  window.UsDailyQuestionHub?.paint?.();
   return priorities;
 }
 document.getElementById('usTodayPriorityRegion')?.addEventListener('click',event=>{
@@ -2285,6 +2429,14 @@ document.getElementById('usTodayPriorityRegion')?.addEventListener('click',event
   if(action==='today')window.openToday?.();
   if(action==='events')window.openEvents?.();
   if(action==='think')window.openThinkArrival?.();
+  if(action==='left')window.openLeftForYou?.();
+  if(action==='game'){
+    // The round itself lives in Gioca: open the hub, then that round.
+    window.openQuizHub?.({nav:true});
+    if(current?.session)window.USGameV2?.openSession?.(current.session);
+    else if(current?.perVoi)window.USGameV2?.openPerVoi?.();
+  }
+  if(action==='mission')window.openOggiMission?.();
 });
 // M10.2 — nascondere l'avviso "Risposte pronte" = "non lo voglio più su Oggi",
 // MAI "ho visto le risposte". L'autorità è window.dismissDailyRevealNotice
@@ -2354,24 +2506,27 @@ window.UsTodayPriority=Object.freeze({
   refresh:refreshTodayPriorities
 });
 
-// ===== M12A — Oggi arbitration =====
-// The photo stays the dominant surface: at any moment Oggi shows AT MOST ONE
-// primary attention item and AT MOST ONE quiet informational item. The
-// choice is deterministic (slot, then rank, then id); surfaces that lose are
-// only suppressed (display), never destroyed, so they return the moment the
+// ===== M12A → 1.0 — Oggi arbitration =====
+// The photo stays the dominant surface. Above the nav (#usOggiDock) Oggi shows
+// AT MOST ONE evidence card and the Domanda di oggi card. The choice is
+// deterministic (slot, then rank, then id); surfaces that lose are only
+// suppressed (display), never destroyed, so they return the moment the
 // winner is resolved. Distance is a tiny ambient capsule and does not count.
 //
-//   PRIMARY (something for ME to do / see)        QUIET (information)
-//   10 Ti penso received                          10 today's / tomorrow's event
-//   20 "Risposte pronte" (reveal ready)           20 calendar insight
-//   30 waiting for me (priority queue)            30 "Rivedi le risposte di oggi"
-//   40 Daily Question, partner already answered   40 push opt-in / install hint
-//   50 Daily Question available
-//   60 Daily Question error (Riprova)
-const US_OGGI_PRIMARY_RANK=Object.freeze({received_ready:10,answers_ready:20,waiting_for_me:30});
-const US_OGGI_DAILY_RANK=Object.freeze({invited:40,answer:50,error:60});
+//   EVIDENCE (one at a time)                       DAILY
+//   10 Ti penso received                           the Domanda di oggi, until
+//   15 Lasciato per te                             both answered (O1), then
+//   20 "Risposte pronte" (reveal ready)            "Rivedi" until tomorrow
+//   30 Tocca a te (game round, mission)
+//   35 Mesiversario / anniversario
+//   90 notifications invite, until enabled (O5)
+//
+// The legacy calendar widget and reveal link stay mounted in the hidden
+// stack: they never take a slot.
+const US_OGGI_PRIMARY_RANK=Object.freeze({received_ready:10,left_ready:15,answers_ready:20,waiting_for_me:30,celebration:35});
+const US_OGGI_PUSH_RANK=90;
 function arbitrateOggi(candidates=[]){
-  const best={primary:null,quiet:null};
+  const best={evidence:null,daily:null};
   for(const item of Array.isArray(candidates)?candidates:[]){
     if(!item||!item.id||!(item.slot in best))continue;
     const current=best[item.slot];
@@ -2379,22 +2534,18 @@ function arbitrateOggi(candidates=[]){
     if(!Number.isFinite(rank))continue;
     if(!current||rank<current.rank||(rank===current.rank&&String(item.id)<String(current.id)))best[item.slot]={id:String(item.id),rank};
   }
-  return {primary:best.primary?.id||null,quiet:best.quiet?.id||null};
+  return {evidence:best.evidence?.id||null,daily:best.daily?.id||null};
 }
-const US_OGGI_SURFACES=Object.freeze(['usTodayPriorityRegion','usOggiCalendarWidget','usDailyRitual','usDailyRevealLink','pushOptInCard']);
+const US_OGGI_SURFACES=Object.freeze(['usTodayPriorityRegion','usDailyRitual','pushOptInCard','usOggiCalendarWidget','usDailyRevealLink']);
 function collectOggiCandidates(){
   const live=id=>{const el=document.getElementById(id);return el&&!el.hidden?el:null;};
   const candidates=[];
   if(live('usTodayPriorityRegion')){
     const head=usTodayPriorityQueue[0];
-    if(US_OGGI_PRIMARY_RANK[head?.category])candidates.push({id:'usTodayPriorityRegion',slot:'primary',rank:US_OGGI_PRIMARY_RANK[head.category]});
-    else candidates.push({id:'usTodayPriorityRegion',slot:'quiet',rank:10});
+    candidates.push({id:'usTodayPriorityRegion',slot:'evidence',rank:US_OGGI_PRIMARY_RANK[head?.category]||US_OGGI_PUSH_RANK-1});
   }
-  const daily=live('usDailyRitual');
-  if(daily)candidates.push({id:'usDailyRitual',slot:'primary',rank:US_OGGI_DAILY_RANK[daily.dataset.state]||US_OGGI_DAILY_RANK.answer});
-  if(live('usOggiCalendarWidget'))candidates.push({id:'usOggiCalendarWidget',slot:'quiet',rank:20});
-  if(live('usDailyRevealLink'))candidates.push({id:'usDailyRevealLink',slot:'quiet',rank:30});
-  if(live('pushOptInCard'))candidates.push({id:'pushOptInCard',slot:'quiet',rank:40});
+  if(live('pushOptInCard'))candidates.push({id:'pushOptInCard',slot:'evidence',rank:US_OGGI_PUSH_RANK});
+  if(live('usDailyRitual'))candidates.push({id:'usDailyRitual',slot:'daily',rank:0});
   return candidates;
 }
 function applyOggiArbitration(){
@@ -2403,7 +2554,7 @@ function applyOggiArbitration(){
     const el=document.getElementById(id);
     if(!el)continue;
     if(el.hidden){el.removeAttribute('data-us-oggi-slot');continue;}
-    el.setAttribute('data-us-oggi-slot',winner.primary===id?'primary':winner.quiet===id?'quiet':'suppressed');
+    el.setAttribute('data-us-oggi-slot',winner.evidence===id?'evidence':winner.daily===id?'daily':'suppressed');
   }
   return winner;
 }
@@ -2447,6 +2598,130 @@ function closeToday(){
   if(window.UsUiFoundation?.exitSurface)window.UsUiFoundation.exitSurface(root,finalize);else finalize();
 }
 window.closeToday=closeToday;
+
+// ===== 1.0 — La domanda di oggi in Gioca (was home-cleanup.js) =====
+// Same question, same sheet: the Gioca card opens it where you are, like the
+// Oggi card. It only reads the canonical state hydrateToday already loaded.
+function dailyHubModel(){
+  const question=window.todayQuestion,state=window.todayState;
+  if(!question?.id||!question.question||!state)return null;
+  const partner=oggiPartnerName(),base={questionId:question.id,question:String(question.question)};
+  if(state.both_answered){
+    const seen=Boolean(window.todayRevealMeta?.my_reveal_seen_at);
+    return {...base,state:'reveal',meta:seen?'Risposte viste · puoi rileggerle':'Le vostre risposte sono pronte',cta:seen?'Rivedi':'Scopri'};
+  }
+  if(state.my_answer!=null)return {...base,state:'waiting',meta:`Hai risposto · aspettiamo ${partner}`,cta:'Apri'};
+  if(state.partner_has_answer)return {...base,state:'answer',meta:`${partner} ha già risposto · tocca a te`,cta:'Rispondi'};
+  return {...base,state:'answer',meta:'Una domanda per voi oggi',cta:'Rispondi'};
+}
+function dailyHubMarkup(model){
+  if(!model)return '<div class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">La domanda di oggi</span><small>La domanda di oggi non è ancora disponibile.</small></div>';
+  // Never the hidden answers here: question, state and the way in.
+  return `<button type="button" class="us-gv2-daily" data-us-daily-entry data-daily-state="${escapeHtml(model.state)}">
+   <span class="us-gv4-daily-art" aria-hidden="true"><span class="us-gv4-art-ring"></span><span class="us-gv4-art-heart"></span></span>
+   <span class="us-gv2-daily-copy"><small>LA DOMANDA DI OGGI</small><b>${escapeHtml(model.question)}</b><span class="us-gv2-daily-state">${escapeHtml(model.meta)}</span></span>
+   <span class="us-gv4-daily-footer"><span>Una domanda, due risposte</span><span class="us-gv2-daily-cta">${escapeHtml(model.cta)} <span aria-hidden="true">›</span></span></span>
+  </button>`;
+}
+function paintDailyInGioca(){
+  const hub=document.getElementById('quizHub');
+  if(!hub||hub.classList.contains('hidden'))return;
+  const slot=hub.querySelector('.us-gv2-daily-slot');
+  if(!slot)return;
+  const model=dailyHubModel();
+  const signature=model?`${model.questionId}:${model.state}:${model.cta}:${model.meta}`:'unavailable';
+  if(slot.dataset.usDailySignature===signature)return;
+  slot.dataset.usDailySignature=signature;
+  slot.innerHTML=dailyHubMarkup(model);
+}
+// F2 — Gioca has no turn API: Oggi reads "Tocca a te" from the hub games.js
+// just rendered (a round where the other is waiting, or Per voi pending).
+let usOggiGameTurnTimer=0;
+function readGameTurnFromHub(){
+  const hub=document.getElementById('quizHub');
+  if(!hub||hub.classList.contains('hidden'))return;
+  const row=hub.querySelector('.us-gv2-continue .us-gv2-row[data-tone="turn"][data-gv2-session]');
+  const perVoi=hub.querySelector('[data-gv2-action="per-voi"][data-gv2-state="pending"]');
+  const next=row?{game:row.querySelector('b')?.textContent?.trim()||'Gioca',session:row.dataset.gv2Session}:perVoi?{game:'Per voi',perVoi:true}:null;
+  const key=turn=>turn?`${turn.session||''}:${turn.game}:${turn.perVoi?1:0}`:'';
+  if(key(next)===key(usOggiGameTurn))return;
+  usOggiGameTurn=next;
+  clearTimeout(usOggiGameTurnTimer);
+  usOggiGameTurnTimer=setTimeout(()=>{if(window.usProfile)refreshTodayPriorities();},120);
+}
+function paintDailyCardAndTurn(){paintDailyInGioca();readGameTurnFromHub();}
+document.getElementById('quizHub')?.addEventListener('click',event=>{
+  if(!event.target.closest?.('[data-us-daily-entry]'))return;
+  event.preventDefault();
+  openToday();
+});
+window.addEventListener('us-identity-change',()=>paintDailyInGioca());
+window.UsDailyQuestionHub=Object.freeze({model:dailyHubModel,paint:paintDailyInGioca,paintCard:paintDailyCardAndTurn,open:openToday});
+
+// L4 — who left what in Lasciato per te. left-for-you.js owns the envelope and
+// its unseen count; Oggi follows the envelope and reads only the unseen rows
+// (oldest first: the one that opens first) to name the kind.
+let usOggiLeftTimer=0,usOggiLeftSeq=0;
+async function loadOggiLeftItems(){
+  const seq=++usOggiLeftSeq,me=window.usProfile;
+  const envelope=document.getElementById('leftForYouPartnerEntry');
+  const before=usOggiLeft.items.map(item=>item.id).join(',');
+  if(!me?.id||!envelope?.classList.contains('is-closed')){usOggiLeft.items=[];}
+  else{
+    try{
+      const {data,error}=await sb.from('left_for_you').select('id,kind,created_at').eq('recipient_id',me.id).is('seen_at',null).order('created_at',{ascending:true}).limit(20);
+      if(error)throw error;
+      if(seq!==usOggiLeftSeq||window.usProfile?.id!==me.id)return;
+      usOggiLeft.items=(data||[]).filter(item=>item?.id);
+    }catch(error){console.warn('[US Oggi] Lasciato per te',error);return;}
+  }
+  if(before!==usOggiLeft.items.map(item=>item.id).join(','))refreshTodayPriorities();
+}
+(()=>{
+  const envelope=document.getElementById('leftForYouPartnerEntry');
+  if(!envelope||typeof MutationObserver!=='function')return;
+  new MutationObserver(()=>{
+    clearTimeout(usOggiLeftTimer);
+    usOggiLeftTimer=setTimeout(()=>{loadOggiLeftItems();},250);
+  }).observe(envelope,{attributes:true,attributeFilter:['class','aria-label','data-us-attention']});
+})();
+
+// F2/N5 — from Friday (Rome), a mission the other already confirmed and I did
+// not: "Manca solo la tua conferma" on Oggi. Read-only, cached for a minute.
+function oggiRomeWeekday(at=new Date()){
+  try{return new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Rome',weekday:'short'}).format(at);}catch(_){return '';}
+}
+const usOggiMission={key:'',at:0,item:null,loading:null};
+async function oggiMissionToConfirm(){
+  const me=window.usProfile;
+  if(!me?.id||!me.couple_id||typeof sb==='undefined'||typeof weekStartISO!=='function')return null;
+  if(!['Fri','Sat','Sun'].includes(oggiRomeWeekday()))return null;
+  const week=weekStartISO(),key=`${me.id}:${me.couple_id}:${week}`;
+  if(usOggiMission.key===key&&Date.now()-usOggiMission.at<60000)return usOggiMission.item;
+  if(usOggiMission.key===key&&usOggiMission.loading)return usOggiMission.loading;
+  if(usOggiMission.key!==key){usOggiMission.key=key;usOggiMission.item=null;usOggiMission.at=0;}
+  const task=(async()=>{
+    try{
+      const {data,error}=await sb.from('bond_weekly_quests').select('id,title,confirmed_by,completed_at').eq('couple_id',me.couple_id).eq('week_start',week).order('slot');
+      if(error)throw error;
+      const item=(data||[]).find(row=>{
+        const confirmed=(Array.isArray(row?.confirmed_by)?row.confirmed_by:[]).map(String);
+        return !row.completed_at&&confirmed.length>0&&!confirmed.includes(String(me.id));
+      })||null;
+      if(usOggiMission.key===key){usOggiMission.item=item?{id:item.id,title:item.title}:null;usOggiMission.at=Date.now();}
+    }catch(error){console.warn('[US Oggi] Missioni',error);}
+    return usOggiMission.key===key?usOggiMission.item:null;
+  })();
+  usOggiMission.loading=task;
+  try{return await task;}finally{if(usOggiMission.loading===task)usOggiMission.loading=null;}
+}
+window.oggiMissionToConfirm=oggiMissionToConfirm;
+// The Oggi card opens Missioni in Noi.
+function openOggiMission(){
+  go('bond',{nav:true});
+  openNoiSection('quest');
+}
+window.openOggiMission=openOggiMission;
 
 function thinkReactionLabel(reaction){return ({heart:'❤️',hug:'🫂',miss_you:'miss_you'})[reaction]||reaction||'';}
 function renderThinkReactionUi(){
@@ -2646,16 +2921,61 @@ async function loadDailyRevealMeta(questionId){
   }catch(error){console.warn('[US Today] Reveal meta',error);return null;}
 }
 function dailyRevealPartnerLabel(){return usIdentity().partnerName;}
-// Reveal V5: the two real answers, without reactions or comments.
-// Keep receipt/notice and keepsake authorities untouched.
+// Reveal: the two real answers. O2 (1.0) — one tap on the other's answer,
+// only ♥ or "mi hai commosso" (never "arrabbiato"); under my answer, what the
+// other felt. Receipt/notice and keepsake authorities stay untouched.
+const US_DAILY_REACTIONS=Object.freeze({
+  heart:{label:'Metti un cuore alla risposta'},
+  cry:{label:'Mi hai commosso'}
+});
+// What the other felt about my answer (also the Oggi card's line). Never "angry".
+function dailyPartnerReactionLine(meta,partner){
+  if(meta?.partner_reaction==='heart')return `${partner} ha messo ♥ alla tua risposta`;
+  if(meta?.partner_reaction==='cry')return `${partner}: mi hai commosso`;
+  return '';
+}
 function renderTodayReveal(){
   const reveal=document.getElementById('todayReveal'),state=window.todayState;
   if(!reveal||!state?.both_answered)return;
-  const partner=dailyRevealPartnerLabel();
+  const partner=dailyRevealPartnerLabel(),meta=window.todayRevealMeta;
+  const mine=US_DAILY_REACTIONS[meta?.my_reaction]?meta.my_reaction:null;
+  const felt=dailyPartnerReactionLine(meta,partner);
+  const note=felt?`<p class="today-reaction-note" data-us-daily-partner-reaction="${escapeHtml(meta.partner_reaction)}">${escapeHtml(felt)}</p>`:'';
+  // Without the personal meta (offline) there is nothing to react on.
+  const controls=meta?`<div class="today-reactions" role="group" aria-label="La tua reazione"><button type="button" class="today-reaction" data-daily-reaction="heart" aria-label="${escapeHtml(US_DAILY_REACTIONS.heart.label)}" aria-pressed="${mine==='heart'}"><span class="us-icon" data-us-icon="${mine==='heart'?'heart-fill':'heart'}" aria-hidden="true"></span></button><button type="button" class="today-reaction today-reaction--words" data-daily-reaction="cry" aria-pressed="${mine==='cry'}">${escapeHtml(US_DAILY_REACTIONS.cry.label)}</button></div>`:'';
   reveal.className='today-reveal today-reveal--simple';
-  reveal.innerHTML='<div class="today-answer" data-us-daily-answer="mine"><b>La tua risposta</b><p translate="no">'+escapeHtml(state.my_answer||'')+'</p></div>'+
-    '<div class="today-answer" data-us-daily-answer="partner"><b translate="no">'+escapeHtml(partner)+'</b><p translate="no">'+escapeHtml(state.partner_answer||'')+'</p></div>';
+  reveal.innerHTML='<div class="today-answer" data-us-daily-answer="mine"><b>La tua risposta</b><p translate="no">'+escapeHtml(state.my_answer||'')+'</p>'+note+'</div>'+
+    '<div class="today-answer" data-us-daily-answer="partner"><b translate="no">'+escapeHtml(partner)+'</b><p translate="no">'+escapeHtml(state.partner_answer||'')+'</p>'+controls+'</div>';
 }
+// One tap = my reaction; the same tap again takes it back. The server
+// (set_daily_answer_reaction) decides; on error everything goes back.
+let usDailyReactionInFlight=false;
+async function setDailyAnswerReaction(reaction){
+  const questionId=window.todayQuestion?.id,meta=window.todayRevealMeta;
+  if(!questionId||!meta||meta.question_id!==questionId||!window.todayState?.both_answered||usDailyReactionInFlight)return {status:'noop'};
+  if(!US_DAILY_REACTIONS[reaction])return {status:'noop'};
+  const previous=meta,next=meta.my_reaction===reaction?null:reaction;
+  usDailyReactionInFlight=true;
+  window.todayRevealMeta={...meta,my_reaction:next};renderTodayReveal();
+  try{
+    const {data,error}=await sb.rpc('set_daily_answer_reaction',{target_question_id:questionId,target_reaction:next});
+    if(error||!data||data.question_id!==questionId)throw error||new Error('daily_reaction_invalid');
+    if(window.todayQuestion?.id===questionId)window.todayRevealMeta=data;
+    renderTodayReveal();
+    return {status:'saved'};
+  }catch(error){
+    console.warn('[US Today] Reazione',error);
+    if(window.todayQuestion?.id===questionId)window.todayRevealMeta=previous;
+    renderTodayReveal();
+    toast('Reazione non salvata. Riprova.');
+    return {status:'error'};
+  }finally{usDailyReactionInFlight=false;}
+}
+window.setDailyAnswerReaction=setDailyAnswerReaction;
+document.getElementById('todayReveal')?.addEventListener?.('click',event=>{
+  const button=event.target.closest?.('[data-daily-reaction]');
+  if(button)setDailyAnswerReaction(button.dataset.dailyReaction);
+});
 
 // "Visto" = il reveal è davvero mostrato in un foglio Today aperto: non il push,
 // non l'hydrate della Home, non il solo both_answered.

@@ -1,6 +1,6 @@
-// M10.1A/B — la Domanda del giorno su Oggi dice a CHI guarda "hai ancora
-// qualcosa da fare": esiste SOLO finché get_daily_state().my_answer == null.
-// Dopo la MIA risposta sparisce del tutto (card e orbit). Il vecchio controllo
+// M10.1A/B → 1.0 (O1) — la Domanda di oggi su Oggi resta finché non avete
+// risposto entrambi; dice a CHI guarda "hai ancora qualcosa da fare" (attenzione)
+// solo finché get_daily_state().my_answer == null. Il vecchio controllo
 // top-left "Oggi / Domanda" (todayOrb) è rimosso; openToday() resta.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -48,11 +48,15 @@ test('M10.1A: il partner ha risposto, io no → card visibile con orbit ON', () 
   assert.equal(card.dataset.state, 'invited');
 });
 
-test('M10.1A: ho risposto io, il partner no → card nascosta', () => {
+// 1.0 (O1): the card stays on Oggi until BOTH answered. After my answer it
+// waits, quiet: no attention, never my answer text.
+test('1.0 O1: ho risposto io, il partner no → la card resta, in attesa e senza attenzione', () => {
   const card = show({ question, state: stateFor('Mia', null) });
-  assert.equal(card.hidden, true);
-  assert.equal(card.innerHTML, '');
+  assert.equal(card.hidden, false);
+  assert.equal(card.dataset.state, 'waiting');
   assert.equal(card.dataset.usAttention, 'off');
+  assert.match(card.innerHTML, /Hai risposto · aspettiamo Beatrice/);
+  assert.doesNotMatch(card.innerHTML, /Mia/);
 });
 
 test('M10.1A: entrambi hanno risposto → card nascosta (niente reveal/“Scopri” su Oggi)', () => {
@@ -69,14 +73,18 @@ test('M10.1A: nessuna copia di risposta/attesa/reveal su Oggi in nessuno stato',
   }
 });
 
-test('M10.1A: la visibilità dipende SOLO da my_answer — mai da both_answered', () => {
+test('1.0 O1: l’attenzione dipende SOLO da my_answer; la card resta finché non avete risposto entrambi', () => {
   const vmSource = slice('function dailyRitualViewModel(source){', 'function renderDailyRitual(model){');
-  assert.match(vmSource, /state\.my_answer!=null\)return null/);
-  assert.doesNotMatch(vmSource.replace(/\/\/.*$/gm, ''), /both_answered/, 'nessun both_answered nel codice del view-model');
-  // Stati contraddittori: solo my_answer decide.
-  assert.equal(show({ question, state: { my_answer: null, partner_has_answer: false, both_answered: true } }).hidden, false);
-  assert.equal(show({ question, state: { my_answer: 'Mia', partner_has_answer: false, both_answered: false } }).hidden, true);
-  assert.equal(show({ question, state: { my_answer: '', partner_has_answer: true, both_answered: false } }).hidden, true, 'una risposta esistente (anche stringa vuota) non è null');
+  assert.match(vmSource, /if\(state\.my_answer==null\)\{/);
+  // Stati contraddittori: my_answer decide l'attenzione.
+  const unanswered = show({ question, state: { my_answer: null, partner_has_answer: false, both_answered: true } });
+  assert.equal(unanswered.hidden, false);
+  assert.equal(unanswered.dataset.usAttention, 'on');
+  const waiting = show({ question, state: { my_answer: 'Mia', partner_has_answer: false, both_answered: false } });
+  assert.equal(waiting.hidden, false);
+  assert.equal(waiting.dataset.usAttention, 'off');
+  const empty = show({ question, state: { my_answer: '', partner_has_answer: true, both_answered: false } });
+  assert.equal(empty.dataset.usAttention, 'off', 'una risposta esistente (anche stringa vuota) non è null');
 });
 
 test('M10.1A: errore backend → nessuno stato "completato" finto, solo Riprova', () => {

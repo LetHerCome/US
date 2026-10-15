@@ -375,13 +375,23 @@ html.us-returning-device .auth-overlay{
       <div class="home-photo-layer" id="homePhotoLayerB"></div>
       <div class="home-photo-shade"></div>
       <span class="us-hero-sticker" id="usHeroSticker" aria-hidden="true" hidden></span>
-      <button type="button" id="usCountdownEntry" class="us-countdown-entry" aria-label="Gestisci countdown" aria-haspopup="dialog" hidden tabindex="-1" aria-hidden="true"><span class="us-icon" data-us-icon="clock-counter-clockwise" aria-hidden="true"></span></button>
+      <button type="button" id="usCountdownEntry" class="us-countdown-entry" aria-label="Gestisci countdown" aria-haspopup="dialog" hidden><span class="us-icon" data-us-icon="clock-counter-clockwise" aria-hidden="true"></span><span class="us-countdown-entry-label">Countdown</span></button>
       <button type="button" id="usCountdownDisplay" class="us-countdown-display" aria-haspopup="dialog" hidden></button>
-      <div id="usTodayPriorityRegion" hidden aria-live="polite"></div>
-      <!-- Oggi: photo + countdown. Legacy Calendar/Daily anchors stay mounted but visually retired. -->
+      <!-- Oggi 1.0: one dock above the nav, top to bottom: what is waiting for me
+           (or the notifications invite), then the Domanda di oggi. A band above
+           the nav stays free for Maudit. -->
+      <div class="us-oggi-dock" id="usOggiDock">
+        <div id="usTodayPriorityRegion" hidden aria-live="polite"></div>
+        <aside class="push-optin-card" id="pushOptInCard" hidden aria-live="polite">
+          <span class="push-optin-icon" aria-hidden="true">♡</span>
+          <span class="push-optin-copy"><b id="pushOptInTitle">Attiva le notifiche</b><small id="pushOptInText">Ti penso, risposte e missioni, anche a US chiusa.</small></span>
+          <button type="button" class="push-optin-action" id="pushEnableBtn" onclick="enableWebPush()">Attiva</button>
+        </aside>
+        <button type="button" class="us-daily-ritual us-attention-orbit" id="usDailyRitual" hidden onclick="openToday()" data-us-attention="off"></button>
+      </div>
+      <!-- Legacy Calendar/reveal anchors stay mounted but visually retired. -->
       <div class="us-oggi-stack" id="usOggiStack">
         <div class="us-oggi-widgets" id="usOggiCalendarWidget" hidden aria-live="polite"></div>
-        <button type="button" class="us-daily-ritual us-attention-orbit" id="usDailyRitual" hidden onclick="openToday()" data-us-attention="off"></button>
         <button type="button" class="us-daily-reveal-link" id="usDailyRevealLink" hidden onclick="openToday()"></button>
       </div>
       <button type="button" id="usOggiFocusToggle" class="us-oggi-focus-toggle" aria-pressed="false" aria-label="Attiva la foto a schermo intero"></button>
@@ -393,11 +403,6 @@ html.us-returning-device .auth-overlay{
       <button type="button" class="home-distance-pill us-distance-capsule" id="distanceWidget" onclick="openDistanceDetail()" aria-haspopup="dialog" aria-label="Distanza tra voi" data-us-distance-state="unknown" hidden>
         <span class="us-icon" data-us-icon="heart" aria-hidden="true"></span><b id="distanceValue"></b>
       </button>
-      <aside class="push-optin-card" id="pushOptInCard" hidden aria-live="polite">
-        <span class="push-optin-icon" aria-hidden="true">♡</span>
-        <span class="push-optin-copy"><b id="pushOptInTitle">Attiva le notifiche</b><small id="pushOptInText">Ti penso, risposte e quest, anche a US chiusa.</small></span>
-        <button type="button" class="push-optin-action" id="pushEnableBtn" onclick="enableWebPush()">Attiva</button>
-      </aside>
     </section>
   </main>
 
@@ -429,8 +434,8 @@ html.us-returning-device .auth-overlay{
 
   <main id="today" class="today-overlay" aria-hidden="true" data-us-modal data-us-motion-surface>
     <div class="today-backdrop us-modal-backdrop" onclick="closeToday()"></div>
-    <section class="today-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-label="Domanda del giorno" data-us-modal-panel>
-      <div class="today-sheet-head"><div><div class="tiny">OGGI</div><h2>La domanda di oggi</h2></div><button type="button" class="today-close us-modal-close" onclick="closeToday()" aria-label="Chiudi domanda del giorno" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></div>
+    <section class="today-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-label="La domanda di oggi" data-us-modal-panel>
+      <div class="today-sheet-head"><div><div class="tiny">OGGI</div><h2>La domanda di oggi</h2></div><button type="button" class="today-close us-modal-close" onclick="closeToday()" aria-label="Chiudi la domanda di oggi" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></div>
       <div class="card question">
         <div class="qtext">Un attimo…</div>
         <textarea id="answer" rows="4" placeholder="Scrivi…" hidden disabled></textarea>
@@ -822,8 +827,6 @@ html.us-returning-device .auth-overlay{
   </main>
 </div>
 
-<button type="button" id="usDailyNudge" class="us-daily-nudge" hidden aria-live="polite"></button>
-
 <nav class="nav us-nav us-nav-premium" aria-label="Navigazione principale">
 <span class="us-nav-track" aria-hidden="true"><span class="us-nav-indicator"></span></span>
 <button data-us-feedback="tap" class="active" data-page="home" onclick="go('home',{nav:true})" aria-label="Oggi" aria-current="page"><span class="nicon"><span class="us-nav-icon us-nav-icon--home" aria-hidden="true"><span class="us-nav-icon-off" data-icon="/assets/icons/phosphor/house-regular.svg"></span><span class="us-nav-icon-on" data-icon="/assets/icons/phosphor/house-fill.svg"></span></span></span><span class="nlabel">Oggi</span></button>
@@ -1146,6 +1149,5 @@ html.us-returning-device .auth-overlay{
 <script defer src="/ui-foundation.js?v=us-location-approximate-20261014-2"></script>
 <script defer src="/countdown.js?v=us-location-approximate-20261014-2"></script>
 <script defer src="/pet.js?v=us-location-approximate-20261014-2"></script>
-<script defer src="/home-cleanup.js?v=us-location-approximate-20261014-2"></script>
 <script defer src="/due-colori.js?v=us-location-approximate-20261014-2"></script>
 </body></html>

@@ -79,6 +79,8 @@ test('page labels: Ricordi and Gioca stay accessible without a visible top-left 
   const games = read('games.js');
   assert.match(games, /<h2 class="us-gv2-sr">Gioca<\/h2>/);
   assert.match(games, /<header class="us-gv2-head" aria-label="Disponibilità giochi settimanali">\$\{rhythmStrip\(\)\}<\/header>/);
+  // 1.0 (G1): one name, La domanda di oggi leads the hub.
+  assert.match(games, /<span class="us-gv4-daily-pending-title">La domanda di oggi<\/span>/);
 });
 
 // ---------------------------------------------------------------- Gioca
@@ -372,15 +374,16 @@ test('Settings density: utility rows, couple card and footer stay compact withou
 });
 
 
-test('Oggi density: arbitration stays authoritative while primary and quiet surfaces use compact geometry', () => {
-  const css = read('styles.css');
-  assert.match(css, /US-OGGI-DENSITY-01/);
-  assert.match(css, /#home \.us-daily-ritual\[data-us-oggi-slot="primary"\]\{[\s\S]*?min-height:70px/);
-  assert.match(css, /#home #usOggiCalendarWidget\[data-us-oggi-slot="quiet"\] \.us-oggi-card\{[\s\S]*?min-height:46px/);
-  assert.match(css, /#home #usTodayPriorityRegion\[data-us-oggi-slot="primary"\] \.us-today-priority-card\{[\s\S]*?min-height:58px/);
+// 1.0: the dock above the nav holds one evidence card and the Domanda di oggi;
+// arbitration stays authoritative, the cards keep the mockup geometry (dc-oggi.css).
+test('Oggi density: arbitration stays authoritative; the dock holds one evidence card and the daily card', () => {
+  const dcOggi = read('dc-oggi.css');
+  assert.match(dcOggi, /#home \.us-oggi-dock\{[\s\S]*?flex-direction:column;/);
+  assert.match(dcOggi, /#home #usDailyRitual\{[\s\S]*?grid-template-areas:"ring kicker kicker" "q q q" "meta meta cta";/);
+  assert.match(dcOggi, /@media\(max-height:600px\)\{\n  #home #usDailyRitual\{grid-template-areas:"ring kicker cta" "meta meta cta";/);
   const app = read('app.js');
-  assert.match(app, /US_OGGI_SURFACES=Object\.freeze\(\['usTodayPriorityRegion','usOggiCalendarWidget','usDailyRitual','usDailyRevealLink','pushOptInCard'\]\)/);
-  assert.match(app, /winner\.primary===id\?'primary':winner\.quiet===id\?'quiet':'suppressed'/);
+  assert.match(app, /US_OGGI_SURFACES=Object\.freeze\(\['usTodayPriorityRegion','usDailyRitual','pushOptInCard','usOggiCalendarWidget','usDailyRevealLink'\]\)/);
+  assert.match(app, /winner\.evidence===id\?'evidence':winner\.daily===id\?'daily':'suppressed'/);
 });
 
 

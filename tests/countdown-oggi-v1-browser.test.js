@@ -100,14 +100,15 @@ test('unselected, automatic relationship, empty photo, long titles and safe area
   await page.evaluate(()=>window.hydrateDistance?.());await page.waitForTimeout(120);
   const clear=()=>page.evaluate(()=>{
    const visible=e=>e&&!e.hidden&&getComputedStyle(e).display!=='none'&&getComputedStyle(e).visibility!=='hidden';
-   const ids=['usCountdownDisplay','distanceWidget','usDailyRitual','usOggiCalendarWidget','homeEmptyState'];
+   const ids=['usCountdownDisplay','usCountdownEntry','distanceWidget','usDailyRitual','usOggiCalendarWidget','homeEmptyState'];
    const list=ids.map(id=>document.getElementById(id)).filter(visible).map(e=>({id:e.id,r:e.getBoundingClientRect().toJSON()}));
    const collisions=[];for(let i=0;i<list.length;i++)for(let j=i+1;j<list.length;j++){const a=list[i],b=list[j];if(a.r.left<b.r.right-.5&&b.r.left<a.r.right-.5&&a.r.top<b.r.bottom-.5&&b.r.top<a.r.bottom-.5)collisions.push(`${a.id}/${b.id}`);}return {collisions,width:document.scrollingElement.scrollWidth,height:document.scrollingElement.scrollHeight,w:innerWidth,h:innerHeight};
   });
   let m=await clear();assert.deepEqual(m.collisions,[],`${width} together ${JSON.stringify(m)}`);assert.ok(m.width<=m.w&&m.height<=m.h);
   await page.evaluate(()=>{window.__QA.countdown.active_id=null;return window.USCountdown.refresh();});m=await clear();assert.deepEqual(m.collisions,[],`${width} none`);
   await page.evaluate(()=>{const s=window.__QA.countdown;s.active_id=s.items[0].id;s.items[0].title='x'.repeat(32);return window.USCountdown.refresh();});m=await clear();assert.deepEqual(m.collisions,[],`${width} title`);assert.ok(m.width<=m.w);
-  await page.evaluate(()=>{document.getElementById('homeHero').classList.add('is-empty');document.getElementById('homeEmptyState').hidden=false;});await page.waitForTimeout(1100);assert.equal(await page.locator('#usCountdownDisplay').isHidden(),true);
+  // 1.0 (O9): the time stays on Oggi without a photo; the invitation takes the band below it (as crossfadeHomePhoto does).
+  await page.evaluate(()=>{document.getElementById('homeHero').classList.add('is-empty');document.getElementById('homeEmptyState').hidden=false;requestAnimationFrame(layoutOggiEmptyState);});await page.waitForTimeout(1100);assert.equal(await page.locator('#usCountdownDisplay').isHidden(),false);
   m=await clear();assert.deepEqual(m.collisions,[],`${width} empty photo`);
   await ctx.close();
  }}finally{await h.close();}

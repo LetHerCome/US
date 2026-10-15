@@ -149,14 +149,16 @@ test('Noi calendar: month change animates once and only without reduced motion',
 });
 
 // ------------------------------------------------------------------ Gioca + Sintonia
-test('Gioca V4: daily first, week rail, pending actions, bento games and weekly question', () => {
+// 1.0 (G1): no 7-day strip; the weekly budget stays; the daily slot is painted by app.js.
+test('Gioca V4 → 1.0: daily first, weekly budget, pending actions, bento games and weekly question', () => {
   const games = read('games.js');
   const hub = games.slice(games.indexOf('function renderHub() {'), games.indexOf('function renderHubError() {'));
-  const order = ['us-gv2-daily-slot', 'dayRail()', 'us-gv2-head', 'continueSection(home)', 'us-gv2-choose', 'data-gv2-action="per-voi"', 'weeklyCard(home?.weekly)', 'doneSection(home)'];
+  const order = ['us-gv2-daily-slot', 'us-gv2-head', 'continueSection(home)', 'us-gv2-choose', 'data-gv2-action="per-voi"', 'weeklyCard(home?.weekly)', 'doneSection(home)'];
   const positions = order.map((needle) => hub.indexOf(needle));
   assert.ok(positions.every((p) => p >= 0), JSON.stringify(positions));
   assert.deepEqual([...positions].sort((a, b) => a - b), positions);
-  assert.match(read('home-cleanup.js'), /hub\.querySelector\?\.\('\.us-gv2-daily-slot'\)/);
+  assert.doesNotMatch(hub, /dayRail\(\)/);
+  assert.match(read('app.js'), /const slot=hub\.querySelector\('\.us-gv2-daily-slot'\);/);
   assert.match(games, /Scrivila, sigillala: \$\{partnerName\(\)\} la scopre giocando\./, 'write → seal → discover, in one line');
   const pet = read('pet.js');
   assert.match(pet, /selector:'#quizHub \.us-gv2-game\.is-swipe'/, 'the PET still finds its Gioca anchors');

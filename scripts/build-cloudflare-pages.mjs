@@ -47,7 +47,6 @@ const RUNTIME_FILES = [
   'countdown.js',
   'pet.css',
   'pet.js',
-  'home-cleanup.js',
   'settings.css',
   'settings.js',
   'identity.css',

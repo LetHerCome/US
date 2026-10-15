@@ -35,7 +35,8 @@ test('Daily mobile: Foglio docked in the safe area, two distinct answers, long t
       reactions:document.querySelectorAll('#today [data-daily-reaction]').length,answers:document.querySelectorAll('[data-us-daily-answer]').length,
       safeHeight:s.maxHeight,padBottom:parseFloat(s.paddingBottom)};
     });
-    assert.equal(g.answers,2);assert.equal(g.inputs,0);assert.equal(g.reactions,0);
+    // 1.0 (O2): one tap on the other's answer, ♥ or "Mi hai commosso".
+    assert.equal(g.answers,2);assert.equal(g.inputs,0);assert.equal(g.reactions,2);
     assert.ok(g.left>=0&&g.right<=width+.5);// Popup system 1.0: the Daily sheet is a Foglio, docked to the bottom edge;
     // the top stays under the safe area and the home-indicator inset is inside the panel.
     assert.ok(g.top>=24&&Math.abs(g.bottom-height)<=1&&g.padBottom>=20,JSON.stringify(g));

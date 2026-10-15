@@ -106,7 +106,9 @@ const CLASSES = new Set(['CLIENT_REQUIRED', 'SERVER_REQUIRED', 'INTERNAL_HELPER'
 const ROLES = [['a', 'anon'], ['A', 'authenticated'], ['S', 'service_role'], ['P', 'f1b_public_probe']];
 const byName = new Map(MATRIX.map((row) => [row.name, row]));
 // V6 removes the unused frontend actions, not their historical server ACLs.
-const RETIRED_DAILY_UI = new Set(['save_daily_question_outcome', 'delete_daily_question_outcome', 'set_daily_answer_reaction']);
+// 1.0 O2 brings the one-tap reaction back, so set_daily_answer_reaction is
+// called again by the client (it never lost its authenticated grant).
+const RETIRED_DAILY_UI = new Set(['save_daily_question_outcome', 'delete_daily_question_outcome']);
 
 function rpcNames(files) {
   const names = new Set();
