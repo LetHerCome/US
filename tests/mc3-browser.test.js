@@ -84,11 +84,15 @@ for(const [width,height] of [[320,568],[390,844],[844,390]])test(`MC3 create/inv
   await page.locator('#mc3Refresh').scrollIntoViewIfNeeded();await capture(page,'waiting-actions',width);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   const secrets=await page.evaluate(()=>JSON.stringify({local:{...localStorage},session:{...sessionStorage},url:location.href,html:[...document.querySelectorAll('[value]')].map(el=>el.getAttribute('value'))}));assert.ok(!secrets.includes(token));assert.ok(!logs.join('\n').includes(token));
-  await page.click('#mc3Refresh');await page.waitForFunction(()=>!document.getElementById('mc3Refresh').disabled);assert.equal(await page.inputValue('#mc3Code'),'');
+  // 1.0 (A2): the code stays on screen while that invite is pending, through refreshes.
+  await page.click('#mc3Refresh');await page.waitForFunction(()=>!document.getElementById('mc3Refresh').disabled);assert.equal(await page.inputValue('#mc3Code'),token);
   await page.click('#mc3Revoke');await page.waitForFunction(()=>document.getElementById('mc3InviteStatus').textContent.includes('revocato'));
   await page.click('#mc3Generate');await page.waitForFunction(()=>document.getElementById('mc3Code').value.length>0);assert.notEqual(await page.inputValue('#mc3Code'),token);
+  const second=await page.inputValue('#mc3Code');
   await page.evaluate(()=>window.dispatchEvent(new CustomEvent('us-app-lock-change',{detail:{locked:true}})));assert.equal(await page.inputValue('#mc3Code'),'');
+  // Locked: off the screen; unlocked: back from memory (never from storage).
   await page.evaluate(()=>window.dispatchEvent(new CustomEvent('us-app-lock-change',{detail:{locked:false}})));await page.waitForFunction(()=>!document.getElementById('mc3Waiting').hidden);
+  await page.waitForFunction(code=>document.getElementById('mc3Code').value===code,second);
   await page.click('#mc3Exit');await page.waitForFunction(()=>document.getElementById('authLogin').classList.contains('active'));assert.equal(await page.inputValue('#mc3Code'),'');
   assert.deepEqual(errors,[]);await ctx.close();
  }finally{await h.close();}
@@ -102,7 +106,8 @@ test('MC3 four users / two couples: partner join and creator soft transition pre
   await creator.page.click('#mc3Generate');await creator.page.waitForFunction(()=>document.getElementById('mc3Code').value);const token=await creator.page.inputValue('#mc3Code');
   const partner=await pageFor(h,b,{user:'u2'});await tuStep(partner.page,'Nico');await partner.page.click('#mc3ChooseJoin');await partner.page.fill('#mc3JoinCode',token.match(/.{1,4}/g).join(' - '));await partner.page.locator('#mc3Join button[type=submit]').click();
   await partner.page.waitForFunction(()=>window.usProfile?.id==='u2'&&window.UsIdentity?.current().partnerName==='Mira');
-  await creator.page.click('#mc3Refresh');await creator.page.waitForFunction(()=>window.usProfile?.id==='u1'&&window.UsIdentity?.current().partnerName==='Nico');
+  // 1.0 (A2): the waiting screen checks by itself every 10 s; tap only if it has not got there yet.
+  await creator.page.evaluate(()=>{const b=document.getElementById('mc3Refresh');if(b&&b.getClientRects().length&&!b.disabled)b.click();});await creator.page.waitForFunction(()=>window.usProfile?.id==='u1'&&window.UsIdentity?.current().partnerName==='Nico');
   assert.equal(await creator.page.evaluate(()=>window.usProfile.role),'beatrice');assert.equal(await partner.page.evaluate(()=>window.usProfile.role),'francesco');
   assert.equal(await creator.page.inputValue('#mc3Code'),'');assert.equal(b.profiles.length,4);assert.equal(b.couples.length,2);
   assert.deepEqual(b.calls.find(c=>c.name==='create_couple').args,{p_display_name:'Mira',p_started_on:'2024-01-01',p_couple_name:'US.'});

@@ -5,6 +5,7 @@
 })(typeof window==='object'?window:globalThis,function(){
   'use strict';
   const ERROR='ERROR_OR_INELIGIBLE';
+  const CHECK_MS=10000;
   const unavailable='Non riesco a verificare il tuo spazio. Riprova quando la connessione è disponibile.';
   const validName=value=>typeof value==='string'&&!/[\u0000-\u001f\u007f-\u009f]/u.test(value)&&Array.from(value.trim()).length>=1&&Array.from(value.trim()).length<=40;
   const normalizeCode=value=>String(value||'').toUpperCase().replace(/[\s-]/g,'').replace(/O/g,'0').replace(/[IL]/g,'1');
@@ -35,41 +36,66 @@
     return unavailable;
   }
   function createController({readProfile,rpc,onChange=()=>{}}){
-    let state={kind:'SIGNED_OUT',code:'',busy:false},session=null,epoch=0,flight=null;
+    let state={kind:'SIGNED_OUT',code:'',busy:false},session=null,epoch=0,flight=null,quiet=0;
     // Suspension invalidates results, not the transaction already sent. Keep a
     // per-account mutation guard until the actual transport promise settles.
     const mutations=new Map();
+    // The code this phone created last, in memory only: never in storage, and
+    // off the screen while US is hidden or locked. It comes back as long as the
+    // server still has that same invite pending (same expiry); anything else
+    // the server says about the invite forgets it. A reload forgets it too.
+    let kept=null;
+    function withKept(next){
+      if(!kept||next?.kind===ERROR)return next;
+      const invite=next?.membership?.invite;
+      if(next?.kind==='MEMBER_WAITING_PARTNER'&&kept.userId===session?.user?.id&&invite?.status==='pending'&&Date.parse(invite.expires_at)===kept.expires)return {...next,code:kept.code};
+      kept=null;return next;
+    }
     const publish=next=>{state={code:'',busy:false,...next};if(mutations.has(session?.user?.id))state.busy=true;onChange(state);return state;};
     const current=ticket=>ticket===epoch&&Boolean(session?.user?.id);
     const purge=()=>{state={...state,code:''};onChange(state);};
-    const reset=()=>{epoch++;session=null;flight=null;publish({kind:'SIGNED_OUT'});};
+    const reset=()=>{epoch++;session=null;flight=null;kept=null;publish({kind:'SIGNED_OUT'});};
     const suspend=()=>{epoch++;flight=null;publish(state.kind==='PAIRED'?{...state,code:''}:{kind:session?ERROR:'SIGNED_OUT',message:unavailable});};
     async function read(ticket){
-      const id=session.user.id;
+      const id=session.user.id;quiet++;
       try{
         const [p,m]=await Promise.all([readProfile(id),rpc('get_couple_membership')]);
         if(!current(ticket)||session.user.id!==id)return null;
         if(p?.error||m?.error)return publish({kind:ERROR,message:unavailable});
-        return publish(route(session,p?.data,m?.data));
+        return publish(withKept(route(session,p?.data,m?.data)));
       }catch(_error){if(current(ticket))return publish({kind:ERROR,message:unavailable});return null;}
     }
     async function load(nextSession){
       if(!nextSession?.user?.id){reset();return state;}
+      if(kept&&kept.userId!==nextSession.user.id)kept=null;
       // Every boot/foreground verification invalidates previously suspended work.
       epoch++;flight=null;session=nextSession;purge();
       return read(epoch);
     }
     async function refresh(){
       if(!session||flight||mutations.has(session.user.id))return null;
-      purge();const ticket=epoch;publish({...state,busy:true});
+      const ticket=epoch;publish({...state,busy:true});
       const work=read(ticket);flight=work;
       try{return await work;}finally{if(current(ticket))flight=null;}
+    }
+    // The automatic check while waiting: the same reads, without the busy
+    // screen and without ever blocking a tap. Anything the person starts in the
+    // meantime wins, and a failed check stays silent (the next one retries).
+    async function check(){
+      if(!session||flight||state.busy||mutations.has(session.user.id)||state.kind!=='MEMBER_WAITING_PARTNER')return null;
+      const ticket=epoch,id=session.user.id,mine=++quiet;
+      try{
+        const [p,m]=await Promise.all([readProfile(id),rpc('get_couple_membership')]);
+        if(!current(ticket)||session.user.id!==id||mine!==quiet||flight||mutations.has(id))return null;
+        if(p?.error||m?.error)return null;
+        return publish(withKept(route(session,p?.data,m?.data)));
+      }catch(_error){return null;}
     }
     async function mutate(name,args,{membership=false}={}){
       if(!session||flight)return null;
       const ticket=epoch,prior={...state,code:''},userId=session.user.id;
       if(mutations.has(userId))return null;
-      const marker={};mutations.set(userId,marker);
+      const marker={};mutations.set(userId,marker);quiet++;
       publish({...prior,code:'',busy:true,message:''});
       // Set the guard before invoking the RPC (including synchronous test adapters).
       flight=Promise.resolve();
@@ -91,6 +117,7 @@
         }
         if(name==='create_partner_invite'){
           if(!validCode(result?.data?.code)||!Number.isFinite(Date.parse(result?.data?.expires_at)))return publish({...prior,code:'',message:unavailable});
+          kept={userId,code:result.data.code,expires:Date.parse(result.data.expires_at)};
           return publish({...prior,code:result.data.code,membership:{...prior.membership,invite:{status:'pending',expires_at:result.data.expires_at}}});
         }
         if(name==='revoke_partner_invite'&&typeof result?.data?.revoked!=='boolean')return publish({...prior,code:'',message:unavailable});
@@ -110,7 +137,7 @@
         if(session?.user?.id===userId)publish({...state,busy:false});
       }
     }
-    return {get state(){return state;},get epoch(){return epoch;},get userId(){return session?.user?.id||'';},load,reset,suspend,refresh,purge,
+    return {get state(){return state;},get epoch(){return epoch;},get userId(){return session?.user?.id||'';},load,reset,suspend,refresh,check,purge,
       create(fields){
         if(state.kind!=='AUTHENTICATED_NO_PROFILE')return Promise.resolve(null);
         if(!validName(fields.name)||!validDate(fields.date)||!validName(fields.coupleName?.trim()||'US.'))return Promise.resolve(publish({...state,message:'Inserisci un nome da 1 a 40 caratteri e una data valida, dal 1900 a oggi.'}));
@@ -241,6 +268,16 @@
       return {wanted:!['active','unavailable','unsupported'].includes(kind),kind};
     }catch(_e){return {wanted:false,kind:'unknown'};}
   }
+  // "Tutto pronto" on Android: offer the Ti penso widget when the launcher can
+  // pin it and none is on the Home screen yet. Never on the web or on iOS.
+  async function widgetOfferWanted(widgets){
+    if(typeof widgets?.isAvailable!=='function'||typeof widgets.installed!=='function'||typeof widgets.requestPin!=='function')return false;
+    try{
+      if(!widgets.isAvailable())return false;
+      const device=await widgets.installed();
+      return device?.pinSupported===true&&!(Number(device?.installed?.think)>0);
+    }catch(_e){return false;}
+  }
   function placeStepWanted(location,hasGeolocation){
     if(!hasGeolocation||typeof location?.start!=='function')return false;
     try{return !location.isSharing?.();}catch(_e){return false;}
@@ -259,6 +296,24 @@
       const part=type=>parts.find(p=>p.type===type)?.value||'';
       return `scade il ${part('day')} ${part('month')} alle ${part('hour')}:${part('minute')}`;
     }catch(_e){return '';}
+  }
+  // What "Condividi" sends: in the sender's language, the code on its own line, never translated.
+  function inviteMessage(code,expiresAt,t){
+    const say=typeof t==='function'?t:(text=>text);
+    const expiry=inviteExpiry(expiresAt);
+    return [say('Ti aspetto su US ♡'),say('Scegli «Ho un codice d’invito» e incolla questo codice:'),String(code||''),expiry?say(`S${expiry.slice(1)}.`):''].filter(Boolean).join('\n');
+  }
+  // The share sheet where the phone has one (web, iOS); otherwise the message
+  // goes to the clipboard. The Android app has no share sheet without a plugin.
+  async function shareInvite(text,nav=globalThis.navigator){
+    if(typeof nav?.share==='function'){
+      let can=true;try{if(typeof nav.canShare==='function')can=nav.canShare({text});}catch(_e){can=false;}
+      if(can){
+        try{await nav.share({text});return 'shared';}
+        catch(error){if(error?.name==='AbortError')return 'cancelled';}
+      }
+    }
+    try{await nav.clipboard.writeText(text);return 'copied';}catch(_e){return 'failed';}
   }
 
   // ---------- DOM: motion helpers ----------
@@ -366,6 +421,9 @@
     const track=document.getElementById('usTourTrack'),next=document.getElementById('usTourNext');
     if(!root||!overlay||!track||!next)return Object.freeze({maybeOpen:()=>false,close(){},markSeen(){},get open(){return false;}});
     const slides=[...track.children],dots=[...root.querySelectorAll('[data-us-tour-dot]')];
+    // aria-roledescription is not one of the attributes i18n.js follows.
+    const t=window.UsI18n?.t;
+    if(typeof t==='function')root.querySelectorAll('[aria-roledescription]').forEach(el=>el.setAttribute('aria-roledescription',t(el.getAttribute('aria-roledescription'))));
     let current=-1,runs=[],isOpen=false;
     const markSeen=()=>storeSet(localStorage,FIRST_RUN_KEYS.tourSeen,'1');
     function select(i){
@@ -426,6 +484,8 @@
     if(!overlay)return Object.freeze({maybeOpen:async()=>false,close(){},markPasswordSignIn(){},get open(){return false;}});
     const primary=$('usSetupPrimary'),secondary=$('usSetupSecondary'),body=$('usSetupBody');
     let isOpen=false,userId='',mode=null,profile=null,steps=[],index=0,busy=false,run=0,pushKind='unknown',results={push:null,place:null},isolated=[];
+    // The widget row of "Tutto pronto": idle → pending → asked → placed (or retry / missed / unsupported).
+    let widget={offer:false,state:'idle',at:0},widgetTimer=0;
     const partnerName=()=>{try{return window.UsIdentity?.current?.()?.partnerName||'La tua persona';}catch(_e){return 'La tua persona';}};
     // Modal: the app behind cannot be reached while this is open.
     function isolate(on){
@@ -491,18 +551,86 @@
       }
       const place=results.place===true||sharingNow();
       rows.push({icon:'pin',title:place?'Distanza attiva':'Distanza non attiva',detail:place?'Solo la distanza, mai dove sei':'La attivi quando vuoi da Oggi',ok:place});
+      if(widget.offer)rows.push(widgetRow());
       return rows;
+    }
+    const WIDGET_DETAIL={
+      idle:'Un pensiero con un tocco, anche con US chiusa.',
+      pending:'Preparo il widget…',
+      asked:'Conferma sulla schermata che si è aperta.',
+      placed:'Aggiunto alla Home',
+      retry:'Il telefono non ha aperto la richiesta. Riprova.',
+      missed:'Non aggiunto. Riprova oppure usa la sezione Widget della Home Android.',
+      unsupported:'Il launcher non supporta aggiunta automatica. Usa i widget della Home.'
+    };
+    function widgetRow(){
+      const state=widget.state,placed=state==='placed';
+      const action=placed||state==='unsupported'?'':state==='retry'||state==='missed'?'Riprova':'Aggiungi il widget';
+      return {key:'widget',icon:'widget',title:placed?'Widget sulla Home':'Widget Ti penso',detail:WIDGET_DETAIL[state]||WIDGET_DETAIL.idle,ok:placed,action,waiting:state==='pending'||state==='asked'};
+    }
+    // Rows are drawn once; the widget row then changes in place, so its
+    // status line is read out and the button keeps its focus.
+    function paintRow(li,row){
+      li.className=row.ok?'is-ok':'';
+      li.querySelector('b').textContent=row.title;
+      li.querySelector('small').textContent=row.detail;
+      const mark=li.querySelector('i');mark.hidden=Boolean(row.action);
+      let button=li.querySelector('.us-setup-ready-action');
+      if(row.action){
+        if(!button){button=document.createElement('button');button.type='button';button.className='us-setup-ready-action';button.dataset.usSetupWidget='';li.insertBefore(button,mark);}
+        // aria-disabled, not disabled: the button keeps its focus while the phone asks.
+        button.textContent=row.action;if(row.waiting)button.setAttribute('aria-disabled','true');else button.removeAttribute('aria-disabled');
+      }else if(button){
+        const had=button===document.activeElement;button.remove();
+        if(had)primary.focus({preventScroll:true});
+      }
     }
     function drawReady(play){
       const list=$('usSetupReady');list.replaceChildren();
       for(const row of readyRows()){
         const li=document.createElement('li'),icon=document.createElement('span'),text=document.createElement('span'),title=document.createElement('b'),detail=document.createElement('small'),mark=document.createElement('i');
-        li.className=row.ok?'is-ok':'';icon.className=`us-setup-ready-icon us-setup-ready-icon--${row.icon}`;icon.setAttribute('aria-hidden','true');
-        title.textContent=row.title;if(row.icon==='user'&&profile?.display_name)title.translate=false;detail.textContent=row.detail;text.append(title,detail);mark.setAttribute('aria-hidden','true');
-        li.append(icon,text,mark);list.append(li);
+        icon.className=`us-setup-ready-icon us-setup-ready-icon--${row.icon}`;icon.setAttribute('aria-hidden','true');
+        if(row.icon==='user'&&profile?.display_name)title.translate=false;text.append(title,detail);mark.setAttribute('aria-hidden','true');
+        if(row.key){li.dataset.row=row.key;detail.setAttribute('aria-live','polite');}
+        li.append(icon,text,mark);paintRow(li,row);list.append(li);
       }
       if(play&&!reducedMotion())[...list.children].forEach((li,i)=>{if(li.classList.contains('is-ok'))animate(li.lastElementChild,[{transform:'scale(0)'},{transform:'scale(1.25)',offset:.6},{transform:'none'}],{duration:420,delay:520+i*150,easing:EASE.out});});
     }
+    function paintWidget(){
+      const li=$('usSetupReady').querySelector('[data-row="widget"]');
+      if(li)paintRow(li,widgetRow());else if(steps[index]==='ready')drawReady(false);
+    }
+    function placedWidget(){
+      clearTimeout(widgetTimer);widget.state='placed';paintWidget();
+      const mark=$('usSetupReady').querySelector('[data-row="widget"]>i');
+      if(mark&&!reducedMotion())animate(mark,[{transform:'scale(0)'},{transform:'scale(1.25)',offset:.6},{transform:'none'}],{duration:420,easing:EASE.out});
+    }
+    // Same route as Impostazioni › Widget: the launcher's own request, then a
+    // look at the Home screen every 1.5 s for 20 s.
+    function watchWidget(){
+      clearTimeout(widgetTimer);
+      const ticket=run;
+      widgetTimer=setTimeout(async()=>{
+        if(ticket!==run||!isOpen||widget.state!=='asked')return;
+        let count=0;try{count=Number((await window.UsWidgets.installed())?.installed?.think)||0;}catch(_e){}
+        if(ticket!==run||!isOpen||widget.state!=='asked')return;
+        if(count>0)return placedWidget();
+        if(Date.now()-widget.at>20000){widget.state='missed';paintWidget();return;}
+        watchWidget();
+      },1500);
+    }
+    async function addWidget(){
+      if(!isOpen||!widget.offer||['pending','asked','placed','unsupported'].includes(widget.state))return;
+      const ticket=run;
+      widget.state='pending';paintWidget();
+      let result=null;
+      try{result=await window.UsWidgets.requestPin('think');}catch(_e){}
+      if(ticket!==run||!isOpen||widget.state!=='pending')return;
+      if(!result?.requested){widget.state=result?.supported?'retry':'unsupported';paintWidget();return;}
+      widget.state='asked';widget.at=Date.now();paintWidget();watchWidget();
+    }
+    $('usSetupReady').addEventListener('click',event=>{if(event.target.closest('[data-us-setup-widget]'))addWidget();});
+    window.addEventListener('us:widget-pinned',event=>{if(isOpen&&widget.offer&&event.detail?.kind==='think'&&widget.state!=='placed')placedWidget();});
     function playVisual(step){
       if(reducedMotion())return;
       if(step==='push')$('usSetupPushVis').querySelectorAll('.us-setup-note').forEach((note,i)=>animate(note,[{opacity:0,transform:'translateY(-20px)'},{opacity:1,transform:'none'}],{duration:520,delay:320+i*170,easing:EASE.soft,fill:'backwards'}));
@@ -592,6 +720,7 @@
       run++;
       const hadFocus=overlay.contains(document.activeElement);
       isOpen=false;busy=false;userId='';mode=null;profile=null;steps=[];index=0;
+      clearTimeout(widgetTimer);widget={offer:false,state:'idle',at:0};
       overlay.hidden=true;overlay.classList.remove('is-pending');delete overlay.dataset.step;delete overlay.dataset.mode;
       $('usSetupIntro').hidden=true;
       overlay.querySelectorAll('.us-ob-flood').forEach(el=>el.remove());
@@ -629,8 +758,9 @@
       isOpen=true;userId=id;mode=nextMode;profile=nextProfile;steps=[];index=0;results={push:null,place:null};pushKind='unknown';
       overlay.dataset.mode=nextMode;overlay.classList.add('is-pending');overlay.hidden=false;
       overlay.scrollTop=0;isolate(true);
-      const push=await pushStepState(window.UsNotifications);
+      const [push,offer]=await Promise.all([pushStepState(window.UsNotifications),widgetOfferWanted(window.UsWidgets)]);
       if(ticket!==run||!isOpen)return false;
+      widget={offer,state:'idle',at:0};
       pushKind=push.kind;
       steps=setupSteps({mode:nextMode,push:push.wanted,place:placeStepWanted(window.UsLocation,typeof navigator!=='undefined'&&Boolean(navigator.geolocation))});
       if(!steps.length){await finish({silent:true});return false;}
@@ -737,7 +867,25 @@
       }
       lastKind=state.kind;lastView=active?view:'';
       if(state.profile?.couple_id)saveBirthday({profile:state.profile,local:localStorage,session:sessionStorage,insertEvent}).catch(()=>{});
+      scheduleCheck(state);
       window.dispatchEvent(new CustomEvent('us-onboarding-view-change'));
+    }
+    // While the invite screen is on and its code can still be used, look for
+    // the partner every 10 s. Hidden or locked: suspend() stops it, the return
+    // to the foreground reloads and starts it again. Paired: it stops.
+    let checkTimer=0;
+    const checkWanted=state=>state.kind==='MEMBER_WAITING_PARTNER'&&lastView==='waiting'&&state.membership?.invite?.status==='pending'&&!document.hidden&&!window.UsAppLock?.isLocked?.();
+    function scheduleCheck(state){
+      clearTimeout(checkTimer);checkTimer=0;
+      if(!checkWanted(state))return;
+      checkTimer=setTimeout(async()=>{
+        checkTimer=0;
+        if(!checkWanted(controller.state))return;
+        const result=await controller.check();
+        if(result?.kind==='PAIRED')return resume();
+        // Nothing published (skipped, failed or overtaken): try again later.
+        if(!result&&!checkTimer)scheduleCheck(controller.state);
+      },CHECK_MS);
     }
     const controller=createController({readProfile,rpc,onChange:render});
     const run=async(action,kind)=>{
@@ -772,10 +920,23 @@
     node('mc3Generate').addEventListener('click',()=>run(()=>controller.generate()));
     node('mc3Revoke').addEventListener('click',()=>run(()=>controller.revoke()));
     for(const id of ['mc3Refresh','mc3Retry'])node(id).addEventListener('click',()=>run(()=>controller.refresh()));
+    // A line under the invite that stays through the automatic checks.
+    const say=(text,kind)=>{note={text,kind};render(controller.state);};
+    const selectCode=()=>{node('mc3Code').focus();node('mc3Code').select();say('Seleziona e copia il codice.','neutral');};
     node('mc3CopyCode').addEventListener('click',async()=>{
-      const code=controller.state.code,ticket=controller.epoch,status=node('mc3Status');if(!code)return;
-      try{await navigator.clipboard.writeText(code);if(controller.epoch===ticket&&controller.state.code===code){status.textContent='Codice copiato. Condividilo soltanto con la tua persona.';status.dataset.kind='success';}}
-      catch(_error){if(controller.epoch===ticket&&controller.state.code===code){node('mc3Code').focus();node('mc3Code').select();status.textContent='Seleziona e copia il codice.';status.removeAttribute('data-kind');}}
+      const code=controller.state.code,ticket=controller.epoch;if(!code)return;
+      const still=()=>controller.epoch===ticket&&controller.state.code===code;
+      try{await navigator.clipboard.writeText(code);if(still())say('Codice copiato. Condividilo soltanto con la tua persona.','success');}
+      catch(_error){if(still())selectCode();}
+    });
+    node('mc3ShareCode').addEventListener('click',async()=>{
+      const code=controller.state.code,ticket=controller.epoch;if(!code)return;
+      const still=()=>controller.epoch===ticket&&controller.state.code===code;
+      const how=await shareInvite(inviteMessage(code,controller.state.membership?.invite?.expires_at,window.UsI18n?.t));
+      if(!still())return;
+      if(how==='shared')say('Fatto. Appena la tua persona entra, lo vedi qui.','success');
+      else if(how==='copied')say('Messaggio copiato: incollalo nella chat con la tua persona.','success');
+      else if(how==='failed')selectCode();
     });
     node('mc3Exit').addEventListener('click',async()=>{const id=controller.userId;controller.suspend();clearForms();rememberBirthday(sessionStorage,id,null);me={name:'',birthday:null};justCreated=false;await signOut();});
     document.addEventListener('visibilitychange',()=>{
@@ -788,5 +949,6 @@
     return controller;
   }
   return Object.freeze({route,validName,validDate,normalizeCode,validCode,romeToday,errorMessage,createController,mount,
-    FIRST_RUN_KEYS,tourWanted,birthdayCheck,nextBirthday,birthdayEvent,rememberBirthday,saveBirthday,setupMode,setupSteps,pushStepState,placeStepWanted,daysTogether,inviteExpiry});
+    FIRST_RUN_KEYS,tourWanted,birthdayCheck,nextBirthday,birthdayEvent,rememberBirthday,saveBirthday,setupMode,setupSteps,pushStepState,placeStepWanted,daysTogether,inviteExpiry,
+    inviteMessage,shareInvite,widgetOfferWanted,CHECK_MS});
 });

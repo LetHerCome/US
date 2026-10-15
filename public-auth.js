@@ -19,6 +19,15 @@
   // matching assertion in tests/s3-1-public-auth.test.js to change.
   const PRODUCTION_SIGNUP_RELEASED = false;
   const PASSWORD_MIN = 10, PASSWORD_MAX = 72;
+  // The published Terms and Privacy pages (https). Empty until the public
+  // pages exist (docs/store/play/PLAY_DECLARATIONS_DRAFT.md §2.2): the sign-up
+  // sentence then names them without a link. A release needs both.
+  const LEGAL_URLS = Object.freeze({ terms: '', privacy: '' });
+  const legalUrl = value => {
+    try { const url = new URL(value); return url.protocol === 'https:' ? url.href : ''; } catch (_) { return ''; }
+  };
+  const LOCALES = ['it', 'en'];
+  const TERMS_REQUIRED = 'Per creare l’account conferma di avere almeno 18 anni e accetta i Termini e la Privacy.';
   const emailValid = value => typeof value === 'string'
     && value.length <= 254 && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value);
   const cleanEmail = value => typeof value === 'string' ? value.trim().toLowerCase() : '';
@@ -63,15 +72,18 @@
       finally { pending = false; if (ticket === epoch) notify(); }
     }
     const alive = ticket => ticket === epoch;
-    async function register({ email, password, confirm }) {
+    async function register({ email, password, confirm, terms, locale }) {
       if (mode !== 'signup') return { ok: false, kind: 'mode' };
       const e = cleanEmail(email);
       if (!emailValid(e)) { publish('Inserisci un indirizzo email valido.', 'error'); return { ok: false }; }
       if (!passwordValid(password)) { publish('Usa una password di almeno 10 caratteri (massimo 72).', 'error'); return { ok: false }; }
       if (password !== confirm) { publish('Le password non coincidono.', 'error'); return { ok: false }; }
+      // 18+ and the Terms: the ticked box, recorded with the account.
+      if (terms !== true) { publish(TERMS_REQUIRED, 'error'); return { ok: false, kind: 'terms' }; }
+      const accepted = { terms_accepted_at: new Date().toISOString(), locale: LOCALES.includes(locale) ? locale : 'it' };
       return run(async ticket => {
         try {
-          const { data, error } = await auth.signUp({ email: e, password });
+          const { data, error } = await auth.signUp({ email: e, password, options: { data: accepted } });
           if (!alive(ticket)) return { ok: false, kind: 'stale' };
           if (data?.session) {
             // A signup that immediately produces a session means email confirmation
@@ -175,6 +187,13 @@
     const ids = { signup: 'usSignup', verify: 'usVerifyEmail', forgot: 'usForgotPassword', 'new-password': 'usRecovery' };
     const statuses = { signup: 'usSignupStatus', verify: 'usVerifyStatus',
       forgot: 'usForgotStatus', 'new-password': 'usRecoveryStatus' };
+    // "Crea account" waits for the 18+ and Terms box.
+    const terms = node('usSignupTerms');
+    const accepted = () => terms?.checked === true;
+    for (const link of doc.querySelectorAll?.('[data-us-legal]') || []) {
+      const url = legalUrl(LEGAL_URLS[link.dataset.usLegal]);
+      if (url) { link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; }
+    }
     const ctrl = createController({ auth, onChange(s) {
       if (s.mode !== 'login') openStep(ids[s.mode]);
       const status = node(statuses[s.mode]);
@@ -183,9 +202,12 @@
         status.dataset.kind = s.kind;
       }
       for (const id of ['usSignupSubmit','usVerifyResend','usForgotSubmit','usRecoverySubmit']) {
-        if (node(id)) node(id).disabled = s.pending;
+        if (node(id)) node(id).disabled = s.pending || (id === 'usSignupSubmit' && !accepted());
       }
     } });
+    const syncSignup = () => { if (node('usSignupSubmit')) node('usSignupSubmit').disabled = ctrl.state.pending || !accepted(); };
+    terms?.addEventListener('change', syncSignup);
+    syncSignup();
     function go(mode) {
       ctrl.navigate(mode);
       openStep(mode === 'login' ? 'authLogin' : ids[mode]);
@@ -204,7 +226,10 @@
       const confirm = node('usSignupConfirm').value;
       node('usSignupPassword').value = '';
       node('usSignupConfirm').value = '';
-      await ctrl.register({ email, password, confirm });
+      const result = await ctrl.register({ email, password, confirm, terms: accepted(),
+        locale: globalThis.UsI18n?.locale });
+      // A new account asks again.
+      if (result?.ok && terms) { terms.checked = false; syncSignup(); }
     });
     node('usVerifyResend')?.addEventListener('click', () => ctrl.resend());
     node('usForgotPassword')?.addEventListener('submit', ev => {
@@ -234,6 +259,6 @@
     });
   }
   return Object.freeze({ isStagingEndpoint, isProductionEndpoint, publicAuthEnabled,
-    PRODUCTION_SIGNUP_RELEASED, PASSWORD_MIN, PASSWORD_MAX,
+    PRODUCTION_SIGNUP_RELEASED, PASSWORD_MIN, PASSWORD_MAX, LEGAL_URLS, legalUrl,
     cleanEmail, emailValid, passwordValid, createController, mount });
 });

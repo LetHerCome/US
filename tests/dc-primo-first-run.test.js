@@ -165,3 +165,100 @@ test('first run: the step split keeps the controller fields and the only new wri
   assert.match(app,/function startLocationSharing\(\)\{\s*setLocationConsent\(true\);/);
   assert.match(app,/if\(!ok\)return false;\s*return startLocationSharing\(\);/);
 });
+
+// ---------- 1.0 (A2): the invite while waiting ----------
+const SID=id=>({user:{id}});
+function inviteServer(){
+  const server={profile:{id:'u1',couple_id:'c1',display_name:'Mira',role:'francesco'},partner:false,invite:{status:'none',expires_at:null},fail:false,calls:[],gate:null,seq:0};
+  const readProfile=async id=>{server.calls.push('profile');if(server.gate)await server.gate;return server.fail?{data:null,error:{message:'offline'}}:{data:id==='u1'?server.profile:null,error:null};};
+  const rpc=async name=>{
+    server.calls.push(name);
+    if(name==='get_couple_membership'){if(server.gate)await server.gate;return server.fail?{data:null,error:{message:'offline'}}:{data:{member:true,couple_id:'c1',partner_joined:server.partner,invite:{...server.invite}},error:null};}
+    if(name==='create_partner_invite'){const n=++server.seq;server.invite={status:'pending',expires_at:new Date(Date.UTC(2026,9,16,12,0,n)).toISOString()};return {data:{code:String(n).padStart(26,'A'),expires_at:server.invite.expires_at},error:null};}
+    if(name==='revoke_partner_invite'){server.invite={...server.invite,status:'revoked'};return {data:{revoked:true},error:null};}
+    return {data:null,error:{code:'X'}};
+  };
+  const states=[];
+  const c=OB.createController({readProfile,rpc,onChange:s=>states.push(s)});
+  return {server,c,states};
+}
+
+test('invite (1.0 A2): the code stays on screen while that invite is pending, in memory only',async()=>{
+  const {server,c}=inviteServer();
+  await c.load(SID('u1'));assert.equal(c.state.kind,'MEMBER_WAITING_PARTNER');
+  await c.generate();const code=c.state.code;assert.match(code,/^A+1$/);
+  await c.refresh();assert.equal(c.state.code,code,'a refresh keeps it');
+  c.suspend();assert.equal(c.state.code,'','hidden or locked: off the screen');
+  await c.load(SID('u1'));assert.equal(c.state.code,code,'back in the foreground: it comes back');
+  // A failed read never forgets it; a server that says otherwise does.
+  server.fail=true;await c.load(SID('u1'));assert.equal(c.state.kind,'ERROR_OR_INELIGIBLE');
+  server.fail=false;await c.refresh();assert.equal(c.state.code,code);
+  const pending=server.invite;server.invite={...pending,status:'expired'};await c.refresh();assert.equal(c.state.code,'');
+  server.invite=pending;await c.refresh();assert.equal(c.state.code,'','once forgotten, never recovered');
+});
+
+test('invite (1.0 A2): a new code elsewhere, a revoke, the partner, another account or sign-out forget the code',async()=>{
+  const {server,c}=inviteServer();
+  await c.load(SID('u1'));await c.generate();
+  server.invite={status:'pending',expires_at:'2026-10-17T09:00:00.000Z'};await c.refresh();assert.equal(c.state.code,'','another phone made a newer code');
+  await c.generate();assert.ok(c.state.code);await c.revoke();assert.equal(c.state.code,'');
+  await c.generate();const code=c.state.code;server.partner=true;await c.refresh();assert.equal(c.state.kind,'PAIRED');assert.equal(c.state.code,'');
+  server.partner=false;await c.refresh();assert.equal(c.state.code,'');
+  await c.generate();await c.load(SID('u2'));await c.load(SID('u1'));assert.notEqual(c.state.code,code);assert.equal(c.state.code,'','account switch');
+  await c.generate();c.reset();await c.load(SID('u1'));assert.equal(c.state.code,'','sign-out');
+});
+
+test('invite (1.0 A2): the automatic check is quiet, never blocks a tap and never publishes a stale answer',async()=>{
+  const {server,c,states}=inviteServer();
+  await c.load(SID('u1'));await c.generate();const code=c.state.code;
+  states.length=0;const result=await c.check();
+  assert.equal(result.kind,'MEMBER_WAITING_PARTNER');assert.equal(result.code,code);
+  assert.equal(states.some(s=>s.busy),false,'no busy screen');
+  // Offline: nothing is published, the screen stays as it is.
+  server.fail=true;states.length=0;assert.equal(await c.check(),null);assert.deepEqual(states,[]);assert.equal(c.state.code,code);server.fail=false;
+  // A tap during a check wins: the check answer is dropped.
+  let open;server.gate=new Promise(r=>{open=r;});
+  const slow=c.check();
+  const revoke=c.revoke();assert.notEqual(revoke,null);
+  open();server.gate=null;await revoke;
+  assert.equal(await slow,null);assert.equal(c.state.membership.invite.status,'revoked');assert.equal(c.state.code,'');
+  // Busy or in flight: no check at all.
+  let release;server.gate=new Promise(r=>{release=r;});const refresh=c.refresh();
+  const calls=server.calls.length;assert.equal(await c.check(),null);assert.equal(server.calls.length,calls);
+  release();server.gate=null;await refresh;
+  // The partner arrives: the check reports it.
+  server.partner=true;assert.equal((await c.check()).kind,'PAIRED');
+  assert.equal(await c.check(),null,'paired: nothing left to check');
+  assert.equal(OB.CHECK_MS,10000);
+});
+
+test('invite (1.0 A2): the message to share and the share sheet with its fallback',async()=>{
+  const text=OB.inviteMessage('ABCD-EFGH','2026-10-16T12:03:00Z');
+  assert.equal(text,'Ti aspetto su US ♡\nScegli «Ho un codice d’invito» e incolla questo codice:\nABCD-EFGH\nScade il 16 ottobre alle 14:03.');
+  const english=OB.inviteMessage('ABCD-EFGH','2026-10-16T12:03:00Z',t=>`<${t}>`);
+  assert.equal(english.split('\n')[2],'ABCD-EFGH','the code is never translated');
+  assert.equal(english.split('\n')[0],'<Ti aspetto su US ♡>');
+  assert.equal(OB.inviteMessage('X','nope').split('\n').length,3);
+  const sent=[],copied=[];
+  const clipboard={writeText:async value=>{copied.push(value);}};
+  assert.equal(await OB.shareInvite('m',{share:async x=>{sent.push(x);},clipboard}),'shared');assert.deepEqual(sent,[{text:'m'}]);
+  assert.equal(await OB.shareInvite('m',{share:async()=>{throw Object.assign(Error('x'),{name:'AbortError'});},clipboard}),'cancelled');
+  assert.equal(copied.length,0);
+  assert.equal(await OB.shareInvite('m',{share:async()=>{throw Object.assign(Error('x'),{name:'NotAllowedError'});},clipboard}),'copied');
+  assert.equal(await OB.shareInvite('m',{share:async()=>{sent.push('no');},canShare:()=>false,clipboard}),'copied');
+  assert.equal(await OB.shareInvite('m',{clipboard}),'copied','no share sheet (Android app): the message is copied');
+  assert.deepEqual(copied,['m','m','m']);
+  assert.equal(await OB.shareInvite('m',{clipboard:{writeText:async()=>{throw Error('denied');}}}),'failed');
+  assert.equal(await OB.shareInvite('m',undefined),'failed');
+});
+
+test('first run (1.0 F5): the widget is offered only where the launcher can pin it and none is there',async()=>{
+  const widgets=(device,available=true)=>({isAvailable:()=>available,installed:async()=>{if(device instanceof Error)throw device;return device;},requestPin:async()=>({supported:true,requested:true})});
+  assert.equal(await OB.widgetOfferWanted(undefined),false);
+  assert.equal(await OB.widgetOfferWanted(widgets({installed:{},pinSupported:true},false)),false,'web, iOS');
+  assert.equal(await OB.widgetOfferWanted(widgets({installed:{},pinSupported:false})),false,'launcher cannot pin');
+  assert.equal(await OB.widgetOfferWanted(widgets({installed:{think:1},pinSupported:true})),false,'already on the Home screen');
+  assert.equal(await OB.widgetOfferWanted(widgets(Error('bridge'))),false);
+  assert.equal(await OB.widgetOfferWanted({isAvailable:()=>true,installed:async()=>({pinSupported:true})}),false,'no pin request available');
+  assert.equal(await OB.widgetOfferWanted(widgets({installed:{think:0,photo:2},pinSupported:true})),true);
+});
