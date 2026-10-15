@@ -86,7 +86,7 @@ test('M8A Moment detail: long date, title, real authors and provenance; existing
   for (const id of ['usAlbumProvenance', 'usAlbumTitle', 'usAlbumByline', 'usAlbumAddBtn', 'usAlbumLightbox']) assert.match(albums, new RegExp(`id="${id}"`));
   // US 1.0 R12: no English in the Italian UI — "Moment" became "Ricordo".
   assert.match(albums, /provenance\.textContent=`Ricordo · \$\{longDate\}`/);
-  assert.match(albums, /Aggiunto da \$\{currentAlbum\.author\}\$\{others\.length\?` · con foto di/);
+  assert.match(albums, /· di \$\{currentAlbum\.author\}\$\{others\.length\?` · con foto di/);
 });
 
 test('M8A icon authority: the lived experience mark is the approved Phosphor heart, never a text glyph', () => {

@@ -42,8 +42,6 @@ function ensureUi(){
             <img id="usAlbumPeek" class="us-album-peek" alt="" loading="lazy" decoding="async" aria-hidden="true" hidden>
             <img id="usAlbumCover" alt="Foto principale del ricordo" decoding="async" onerror="usRecoverPrivateImage(this)">
             <span class="us-album-carousel-counter" id="usAlbumCarouselCounter" aria-live="polite" hidden></span>
-            <button type="button" class="us-album-carousel-arrow us-album-carousel-prev" id="usAlbumCarouselPrev" aria-label="Foto precedente" hidden><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span></button>
-            <button type="button" class="us-album-carousel-arrow us-album-carousel-next" id="usAlbumCarouselNext" aria-label="Foto successiva" hidden><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></button>
             <span class="us-album-carousel-hint" id="usAlbumCarouselHint" aria-hidden="true" hidden>Scorri le foto</span>
           </div>
           <div class="us-album-info">
@@ -51,7 +49,6 @@ function ensureUi(){
             <div class="us-album-caption-postit" id="usAlbumCoverNote" hidden><p id="usAlbumCoverCaption" translate="no"></p><small id="usAlbumCoverAuthor"></small></div>
             <div class="us-album-photo-actions">
               <button type="button" class="us-album-save-photo" id="usAlbumSavePhoto"><span class="us-icon" data-us-icon="download-simple" aria-hidden="true"></span><span>Salva sul telefono</span></button>
-              <button type="button" class="us-album-current-delete" id="usAlbumCurrentDelete" hidden>Elimina questa foto</button>
             </div>
             <p class="us-album-carousel-status" id="usAlbumCarouselStatus" role="status" aria-live="polite" hidden></p>
           </div>
@@ -60,12 +57,18 @@ function ensureUi(){
             <h2 class="us-album-title" id="usAlbumTitle" translate="no"></h2>
             <p class="us-album-byline" id="usAlbumByline"></p>
             <button type="button" class="us-album-ask" id="usAlbumAsk" hidden><span class="us-icon" data-us-icon="envelope" aria-hidden="true"></span><span id="usAlbumAskLabel"></span></button>
+          </header>
+          <div class="us-album-acts" id="usAlbumActs">
+            <button type="button" class="us-album-carousel-arrow us-album-carousel-prev" id="usAlbumCarouselPrev" aria-label="Foto precedente" hidden><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span></button>
+            <button type="button" class="us-album-carousel-arrow us-album-carousel-next" id="usAlbumCarouselNext" aria-label="Foto successiva" hidden><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></button>
+            <span class="us-album-acts-space" aria-hidden="true"></span>
+            <button type="button" class="us-album-current-delete" id="usAlbumCurrentDelete" aria-label="Elimina questa foto" hidden><span class="us-icon" data-us-icon="trash" aria-hidden="true"></span></button>
             <div class="us-undo-delete" id="usAlbumDelete" data-state="idle" style="--us-undo-grace:${DELETE_GRACE_MS}ms" hidden>
-              <button type="button" class="us-undo-delete-go" id="usAlbumDeleteGo" aria-label="Elimina questo ricordo per entrambi">Elimina</button>
+              <button type="button" class="us-undo-delete-go" id="usAlbumDeleteGo" aria-label="Elimina questo ricordo per entrambi"><span class="us-icon" data-us-icon="trash" aria-hidden="true"></span><span class="us-undo-delete-go-label">Elimina</span></button>
               <span class="us-undo-delete-done" role="status" aria-live="polite"><span class="us-undo-delete-label">Eliminato</span><button type="button" class="us-undo-delete-undo" id="usAlbumDeleteUndo" tabindex="-1">Annulla</button></span>
               <i class="us-undo-delete-fuse" aria-hidden="true"></i>
             </div>
-          </header>
+          </div>
           <section class="us-album-section">
             <div class="us-album-section-head">
               <div><div class="tiny">DENTRO QUESTO RICORDO</div><h3>Le vostre foto</h3></div>
@@ -108,9 +111,12 @@ function ensureUi(){
     floating.id='usAlbumFloatingAdd';
     floating.className='us-album-floating-add';
     floating.setAttribute('aria-label','Aggiungi una foto a questo ricordo');
-    floating.innerHTML='<span><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></span><b>Aggiungi foto</b>';
+    floating.innerHTML='<span><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span></span><b>Aggiungi</b>';
     floating.addEventListener('click',()=>document.getElementById('usAlbumFile')?.click());
-    document.getElementById('usAlbumOverlay')?.appendChild(floating);
+    // 1.0 parity: the add pill sits in the design's action row, before the bin.
+    const acts=document.getElementById('usAlbumActs');
+    if(acts)acts.insertBefore(floating,document.getElementById('usAlbumCurrentDelete'));
+    else document.getElementById('usAlbumOverlay')?.appendChild(floating);
   }
   document.getElementById('usAlbumCancel')?.addEventListener('click',resetComposer);
   document.getElementById('usAlbumSave')?.addEventListener('click',saveAlbumPhoto);
@@ -335,6 +341,13 @@ function albumLongDate(){
   const d=iso?new Date(iso+'T12:00:00'):null;
   return d&&!Number.isNaN(d.getTime())?d.toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{weekday:'long',day:'numeric',month:'long',year:'numeric'}):(currentAlbum?.date||'');
 }
+function albumDayMonth(){
+  const iso=currentAlbum?.iso;
+  const d=iso?new Date(iso+'T12:00:00'):null;
+  if(!d||Number.isNaN(d.getTime()))return currentAlbum?.date||'';
+  const sameYear=d.getFullYear()===new Date().getFullYear();
+  return d.toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),sameYear?{day:'numeric',month:'long'}:{day:'numeric',month:'long',year:'numeric'});
+}
 function renderAlbumStory(){
   if(!currentAlbum)return;
   const longDate=albumLongDate();
@@ -344,7 +357,11 @@ function renderAlbumStory(){
   if(provenance)provenance.textContent=`Ricordo · ${longDate}`;
   if(title)title.textContent=currentAlbum.caption||longDate;
   const others=[...new Set(albumRows.map(row=>row.author).filter(name=>name&&name!==currentAlbum.author))];
-  if(byline)byline.textContent=`Aggiunto da ${currentAlbum.author}${others.length?` · con foto di ${others.join(' e ')}`:''}`;
+  // 1.0 parity: under the title, as in the design, "3 settembre · di Francesco".
+  if(byline){
+    byline.textContent=`${albumDayMonth()} · di ${currentAlbum.author}${others.length?` · con foto di ${others.join(' e ')}`:''}`;
+    byline.dataset.owner=currentAlbum.owner&&currentAlbum.owner===window.usProfile?.id?'tu':'partner';
+  }
   // R4 — the album is for two: ask the other one for their photos of that day.
   const ask=document.getElementById('usAlbumAsk');
   const label=document.getElementById('usAlbumAskLabel');
@@ -457,6 +474,21 @@ function renderAlbum(){
   paintDeleteControl();
 }
 
+// 1.0 parity (the design's Galleria): the photo on screen fades out in 160ms,
+// the next one fades in over 260ms. A still copy of the old photo fades on top
+// while the album already shows the new one, so state stays synchronous.
+function albumPhotoFade(cover,previousSrc){
+  if(typeof cover.animate!=='function')return;
+  cover.getAnimations?.().forEach(a=>a.cancel());
+  document.querySelectorAll('.us-album-fade-ghost').forEach(n=>n.remove());
+  if(previousSrc&&cover.parentNode){
+    const ghost=document.createElement('img');
+    ghost.className='us-album-fade-ghost';ghost.alt='';ghost.setAttribute('aria-hidden','true');ghost.src=previousSrc;
+    cover.parentNode.insertBefore(ghost,cover.nextSibling);
+    ghost.animate([{opacity:1},{opacity:0}],{duration:160,fill:'forwards'}).finished.then(()=>ghost.remove(),()=>ghost.remove());
+  }
+  cover.animate([{opacity:0},{opacity:0,offset:.38},{opacity:1}],{duration:420});
+}
 // Single-image viewer is unchanged; multi-photo Memories rotate inside the
 // existing album hero. Only this image and a lazy adjacent peek need decoding.
 function showAlbumPhoto(index,direction=0){
@@ -469,16 +501,14 @@ function showAlbumPhoto(index,direction=0){
   const multiple=lightboxItems.length>1;
   if(stage)stage.dataset.multiple=String(multiple);
   if(cover){
+    const previousSrc=cover.currentSrc||cover.getAttribute('src')||'';
     const changed=cover.getAttribute('src')!==item.url;
     cover.src=item.url;
     if(item.storage_path)cover.setAttribute('data-us-media-path',item.storage_path);
     else cover.removeAttribute('data-us-media-path');
     cover.alt=`Foto ${albumCarouselIndex+1} di ${lightboxItems.length} del ricordo`;
-    if(changed&&direction&&!window.UsUiFoundation?.isReducedMotion?.()){
-      cover.classList.remove('us-ricordi-next','us-ricordi-prev');
-      void cover.offsetWidth;
-      cover.classList.add(direction>0?'us-ricordi-next':'us-ricordi-prev');
-    }else cover.classList.remove('us-ricordi-next','us-ricordi-prev');
+    cover.classList.remove('us-ricordi-next','us-ricordi-prev');
+    if(changed&&direction&&!window.UsUiFoundation?.isReducedMotion?.())albumPhotoFade(cover,previousSrc);
   }
   // R11 — the peek stays empty: the next full photo is fetched only when shown.
   if(peek){peek.hidden=true;peek.removeAttribute('src');}
@@ -486,7 +516,7 @@ function showAlbumPhoto(index,direction=0){
     const node=document.getElementById(id);
     if(!node)continue;
     node.hidden=!multiple;
-    if(id==='usAlbumCarouselCounter')node.textContent=`${albumCarouselIndex+1} / ${lightboxItems.length}`;
+    if(id==='usAlbumCarouselCounter')node.textContent=`${albumCarouselIndex+1} di ${lightboxItems.length}`;
   }
   const note=document.getElementById('usAlbumCoverNote');
   const caption=document.getElementById('usAlbumCoverCaption');
@@ -557,7 +587,7 @@ async function startMomentDelete(){
   confirmingDelete=true;
   let confirmed=false;
   try{
-    confirmed=await usConfirm({kicker:'Ricordo',title:'Eliminare questo ricordo?',body:'Sparisce per tutti e due, con tutte le foto del suo album.',confirmLabel:'Elimina',tone:'danger'});
+    confirmed=await usConfirm({title:'Eliminare questo ricordo?',body:'Sparisce per tutti e due, con tutte le foto del suo album.',confirmLabel:'Elimina',tone:'danger',icon:'trash'});
   }finally{confirmingDelete=false;}
   if(!confirmed||currentAlbum?.id!==id||!canDeleteCurrentAlbum()||pendingDelete?.id===id)return;
   // A second Moment deleted inside another's grace commits the first now.
@@ -599,7 +629,7 @@ async function handleGridClick(event){
 }
 async function deleteAlbumPhoto(id,path){
   if(!id||!window.usProfile)return;
-  if(!(await usConfirm({kicker:'Ricordo',title:'Eliminare questa foto dal ricordo?',body:'Sparisce per tutti e due.',confirmLabel:'Elimina',tone:'danger'})))return;
+  if(!(await usConfirm({title:'Eliminare questa foto dal ricordo?',body:'Sparirà per entrambi.',confirmLabel:'Elimina',tone:'danger',icon:'trash'})))return;
   const {error:rowError}=await sb.from('moment_photos').delete().eq('id',id).eq('created_by',window.usProfile.id);
   if(rowError){console.warn('[US Albums] delete row',rowError);toast('Non riesco a eliminare la foto');return;}
   const {error:storageError}=await sb.storage.from('us-media').remove([path]);
@@ -631,7 +661,7 @@ function galleriaRect(el){
   return r;
 }
 const galleriaFrame=(r,radius)=>({left:`${r.left}px`,top:`${r.top}px`,width:`${r.width}px`,height:`${r.height}px`,borderRadius:radius});
-function galleriaGhost(src,rect,radius){
+function galleriaGhost(src,rect,radius,parent=document.body){
   if(!src)return null;
   const ghost=document.createElement('img');
   ghost.className='us-galleria-ghost';
@@ -639,11 +669,11 @@ function galleriaGhost(src,rect,radius){
   ghost.setAttribute('aria-hidden','true');
   ghost.src=src;
   Object.assign(ghost.style,galleriaFrame(rect,radius));
-  document.body.appendChild(ghost);
+  parent.appendChild(ghost);
   return ghost;
 }
 function galleriaChrome(overlay){
-  return [...overlay.querySelectorAll('.us-album-close,.us-album-story>*,.us-album-info,.us-album-carousel-counter,.us-album-carousel-arrow,.us-album-carousel-hint,.us-album-floating-add')];
+  return [...overlay.querySelectorAll('.us-album-close,.us-album-story>*,.us-album-info,.us-album-carousel-counter,.us-album-carousel-hint,.us-album-acts')];
 }
 function galleriaEnter(overlay,card){
   galleriaSource=card||null;
@@ -658,13 +688,17 @@ function galleriaEnter(overlay,card){
     overlay.animate([{opacity:0},{opacity:1}],{duration:galleriaReduced()?180:260,easing:'linear'});
     return;
   }
-  const ghost=galleriaGhost(src,from,'20px');
+  // As in the design: the photo flies inside the Galleria, under its shade and
+  // caption; only the night fades in (420ms), and the shade, caption and
+  // controls rise 18px over 420ms after 380ms while the photo is still landing.
+  const ghost=galleriaGhost(src,from,'20px',overlay);
   if(cover)cover.style.visibility='hidden';
-  overlay.animate([{opacity:0},{opacity:1}],{duration:420,easing:'linear'});
-  // Mockup galleria(): the caption and the controls rise in 420 ms, 380 ms after the tap.
-  for(const el of galleriaChrome(overlay))el.animate([{opacity:0,translate:'0 18px'},{opacity:1,translate:'0 0'}],{duration:420,delay:380,easing:GALLERIA_OUT,fill:'backwards'});
+  overlay.classList.add('is-galleria-flying');
+  const rise=[{opacity:0,transform:'translateY(18px)'},{opacity:1,transform:'none'}];
+  for(const el of galleriaChrome(overlay))el.animate(rise,{duration:420,delay:380,easing:GALLERIA_OUT,fill:'backwards'});
+  try{stage?.animate([{opacity:0},{opacity:1}],{duration:420,delay:380,easing:GALLERIA_OUT,fill:'backwards',pseudoElement:'::after'});}catch(_e){}
   const grow=ghost?.animate([galleriaFrame(from,'20px'),galleriaFrame(to,'0px')],{duration:560,easing:GALLERIA_EASE,fill:'forwards'});
-  const land=()=>{if(cover)cover.style.visibility='';ghost?.remove();};
+  const land=()=>{if(cover)cover.style.visibility='';overlay.classList.remove('is-galleria-flying');ghost?.remove();};
   if(grow?.finished)grow.finished.then(land,land);else land();
 }
 // Returns true once it owns the close: finalize runs when the photo is back.
@@ -1231,10 +1265,19 @@ console.info('[US] Moments Albums attivo');
     }
   }
 
+  // 1.0 parity: short, as in the design ("12 ott"); the year only when it is another one.
   function formatConservatiDate(value) {
     const date = new Date(value);
     if (!Number.isFinite(date.getTime())) return 'Data non disponibile';
-    return date.toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'), { day: 'numeric', month: 'long', year: 'numeric' });
+    const sameYear = date.getFullYear() === new Date().getFullYear();
+    return date.toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'), sameYear ? { day: 'numeric', month: 'short' } : { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+  const CONSERVATI_ICON = { text: 'list-bullets', photo: 'image', music: 'music-note', video: 'sparkle', audio: 'heart' };
+  function setConservatiHead(kicker, title) {
+    const k = document.getElementById('conservatiKicker');
+    const t = document.getElementById('conservatiTitle');
+    if (k) k.textContent = kicker;
+    if (t) t.textContent = title;
   }
 
   function kindLabel(kind) {
@@ -1245,21 +1288,21 @@ console.info('[US] Moments Albums attivo');
     const list = document.getElementById('conservatiList');
     if (!list) return;
     list.innerHTML = entries.map(entry => {
-      const preview = entry.source.kind === 'text'
-        ? (entry.source.body || 'Un pensiero per voi.')
-        : kindLabel(entry.source.kind);
+      const preview = entry.source.body
+        || (entry.source.kind === 'text' ? 'Un pensiero per voi.' : kindLabel(entry.source.kind));
       const owner = (entry.source.sender_id || entry.contribution.source_sender_id) === window.usProfile?.id ? 'tu' : 'partner';
       // R8/L9: a kept photo shows its own thumbnail right away; other kinds keep their mark.
       const thumb = entry.source.kind === 'photo' && entry.mediaUrl;
       const mark = thumb
         ? `<span class="conservati-card-mark conservati-card-thumb" aria-hidden="true"><img src="${escapeConservati(entry.mediaUrl)}" alt="" loading="lazy" decoding="async"></span>`
-        : `<span class="conservati-card-mark" aria-hidden="true">${entry.source.kind === 'text' ? '<span class="us-icon" data-us-icon="pencil" aria-hidden="true"></span>' : entry.source.kind === 'music' ? '<span class="us-icon" data-us-icon="music-note" aria-hidden="true"></span>' : '<span class="us-icon" data-us-icon="heart" aria-hidden="true"></span>'}</span>`;
+        : `<span class="conservati-card-mark" aria-hidden="true"><span class="us-icon" data-us-icon="${CONSERVATI_ICON[entry.source.kind] || 'heart'}" aria-hidden="true"></span></span>`;
       return `<button type="button" class="conservati-card" data-conservati-open="${escapeConservati(entry.contribution.id)}" data-owner="${owner}" aria-label="Apri ${escapeConservati(kindLabel(entry.source.kind))} lasciato da ${escapeConservati(entry.senderName)}">
         ${mark}
-        <span class="conservati-card-copy"><b translate="no">${escapeConservati(entry.senderName)}</b><small>${escapeConservati(formatConservatiDate(entry.source.created_at))}</small><span${entry.source.kind === 'text' && entry.source.body ? ' translate="no"' : ''}>${escapeConservati(preview)}</span></span>
+        <span class="conservati-card-copy"><b translate="no">${escapeConservati(entry.senderName)}</b><small>${escapeConservati(formatConservatiDate(entry.source.created_at))}</small><span${entry.source.body ? ' translate="no"' : ''}>${escapeConservati(preview)}</span></span>
         <span class="conservati-card-kind">${escapeConservati(kindLabel(entry.source.kind))}</span>
       </button>`;
     }).join('');
+    setConservatiHead('RICORDI', 'Conservati');
     showConservatiState('list');
   }
 
@@ -1272,9 +1315,12 @@ console.info('[US] Moments Albums attivo');
     const content = mediaUnavailable
       ? '<p class="conservati-media-unavailable" role="status">Questo contenuto privato non è disponibile in questo momento.</p>'
       : renderer(source, entry.mediaUrl || '');
+    // 1.0 parity: as in the design the sheet says what and from whom
+    // ("Un pensiero · Da Beatrice"); the day closes the page.
     detail.innerHTML = `<button type="button" class="conservati-back" data-conservati-back aria-label="Torna ai Conservati"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span> <span>Conservati</span></button>
-      <div class="conservati-provenance"><b translate="no">${escapeConservati(entry.senderName)}</b><time datetime="${escapeConservati(source.created_at)}">${escapeConservati(formatConservatiDate(source.created_at))}</time></div>
-      <div class="conservati-item-content">${content}</div>`;
+      <div class="conservati-item-content" data-kind="${escapeConservati(source.kind)}">${content}</div>
+      <p class="conservati-provenance"><b class="conservati-provenance-from" translate="no">${escapeConservati(entry.senderName)}</b><time datetime="${escapeConservati(source.created_at)}">${escapeConservati(formatConservatiDate(source.created_at))}</time><span> · conservato nei Ricordi</span></p>`;
+    setConservatiHead(kindLabel(source.kind), `Da ${entry.senderName}`);
     showConservatiState('detail');
   }
 
@@ -1372,6 +1418,7 @@ console.info('[US] Moments Albums attivo');
       const detail = document.getElementById('conservatiDetail');
       if (list) list.replaceChildren();
       if (detail) detail.replaceChildren();
+      setConservatiHead('RICORDI', 'Conservati');
       showConservatiState('loading');
     };
     if (window.UsUiFoundation?.exitSurface) window.UsUiFoundation.exitSurface(modal, finalize); else finalize();
@@ -1391,6 +1438,7 @@ console.info('[US] Moments Albums attivo');
   document.getElementById('conservatiDetail')?.addEventListener('click', event => {
     if (event.target.closest('[data-conservati-back]')) {
       releaseConservatiDetailMedia();
+      setConservatiHead('RICORDI', 'Conservati');
       showConservatiState('list');
     }
   });

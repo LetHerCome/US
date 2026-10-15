@@ -66,7 +66,7 @@ test('swipe navigation reveals the adjacent image and its OWN caption below',()=
   // US 1.0 R11: the next full photo is fetched only when it is shown (no peek prefetch).
   assert.equal(el('usAlbumPeek').src,'');
   assert.equal(el('usAlbumPeek').hidden,true);
-  assert.equal(el('usAlbumCarouselCounter').textContent,'1 / 3');
+  assert.equal(el('usAlbumCarouselCounter').textContent,'1 di 3');
   // US 1.0 R4: in an album even the cover says who added it.
   assert.equal(el('usAlbumCoverAuthor').textContent,'Aggiunto da Beatrice');
   assert.equal(el('usAlbumCoverNote').hidden,false);
@@ -86,7 +86,7 @@ test('swipe navigation reveals the adjacent image and its OWN caption below',()=
   assert.equal(el('usAlbumCurrentDelete').hidden,true);
   ctx.showAlbumPhoto(3,1);
   assert.equal(el('usAlbumCover').src,'https://photos.example/cover');
-  assert.equal(el('usAlbumCarouselCounter').textContent,'1 / 3');
+  assert.equal(el('usAlbumCarouselCounter').textContent,'1 di 3');
 });
 
 test('after adding a photo the latest one is selected without duplicate grid images',()=>{

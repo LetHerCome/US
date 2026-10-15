@@ -478,7 +478,7 @@ html.us-returning-device .auth-overlay{
       <h2 class="noi-sr">Ricordi</h2>
       <section class="ricordi-rivivi" id="ricordiRivivi" aria-label="Rivivi" hidden></section>
       <button type="button" class="us-conservati-entry" id="conservatiEntry" onclick="openConservati()" aria-label="Apri Conservati" hidden>
-        <span class="us-conservati-entry-mark" aria-hidden="true"><span class="us-icon" data-us-icon="sparkle-fill" aria-hidden="true"></span></span>
+        <span class="us-conservati-entry-mark" aria-hidden="true"><span class="us-icon" data-us-icon="sparkle" aria-hidden="true"></span></span>
         <span class="us-conservati-entry-copy"><b>Conservati</b></span>
         <small class="us-conservati-entry-count" id="conservatiCount"></small>
         <span class="us-conservati-entry-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></span>
@@ -491,8 +491,10 @@ html.us-returning-device .auth-overlay{
         </button>
         <div class="moment-extra" id="momentExtra" hidden><div class="moment-extra-row" id="momentExtraRow"></div><p class="moment-extra-count" id="momentExtraCount"></p></div>
         <div class="moment-details">
-          <input id="momentCaption" type="text" maxlength="180" placeholder="Nota (opzionale)">
-          <label class="moment-auto-date moment-date-field" id="momentDetectedDate" for="momentDate"><span>Data foto</span><input id="momentDate" type="date" required></label>
+          <label class="moment-field-label" for="momentCaption">Nota · facoltativa</label>
+          <textarea id="momentCaption" maxlength="180" rows="3" placeholder="Che cosa volete ricordare?"></textarea>
+          <label class="moment-auto-date moment-date-field" id="momentDetectedDate" for="momentDate"><span>Data foto<span id="momentDateWhen"></span></span><input id="momentDate" type="date" required></label>
+          <div class="moment-up-bar" id="momentUpBar" hidden><i></i></div>
           <div class="moment-compose-footer"><button id="momentUploadBtn" type="button" class="primary moment-save" onclick="uploadMoment()">Salva ricordo</button></div>
         </div>
       </div>
@@ -937,7 +939,7 @@ html.us-returning-device .auth-overlay{
   <div class="left-for-you-backdrop us-modal-backdrop" id="leftForYouBackdrop"></div>
   <section class="left-for-you-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-labelledby="leftForYouTitle" data-us-modal-panel>
     <header class="left-for-you-head">
-      <div><div class="tiny">PER VOI DUE</div><h2 id="leftForYouTitle">Lasciato per te</h2><small id="leftForYouPartnerName" translate="no">La tua persona</small></div>
+      <div><div class="tiny" id="leftForYouKind">Lasciato per te</div><h2 id="leftForYouTitle">Lasciato per te</h2><small id="leftForYouPartnerName" translate="no">La tua persona</small></div>
       <button type="button" class="left-for-you-close us-modal-close" id="leftForYouClose" aria-label="Chiudi Lasciato per te" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
     </header>
     <div class="left-for-you-body">
@@ -972,11 +974,11 @@ html.us-returning-device .auth-overlay{
         <button type="button" role="tab" aria-selected="false" data-us-composer-kind="music">Musica</button>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="text">
-        <textarea id="leftForYouComposerText" class="left-for-you-composer-text" maxlength="1000" rows="4" placeholder="Un pensiero…"></textarea>
+        <label class="left-for-you-composer-label" for="leftForYouComposerText">Il tuo messaggio</label><textarea id="leftForYouComposerText" class="left-for-you-composer-text" maxlength="1000" rows="4" placeholder="Scrivi qualcosa per la tua persona…"></textarea><span class="left-for-you-composer-count" id="leftForYouComposerCount">0 / 1000</span>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="photo" hidden>
         <div class="left-for-you-photo-preview" id="leftForYouComposerPhotoPreview" hidden><img id="leftForYouComposerPhotoPreviewImage" alt="Anteprima della foto scelta"><button type="button" class="left-for-you-photo-change" id="leftForYouComposerPhotoChange">Cambia foto</button></div>
-        <div class="left-for-you-photo-actions" id="leftForYouComposerPhotoActions"><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerPhotoPick">Scegli una foto</button><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerPhotoCamera">Scatta una foto</button></div>
+        <div class="left-for-you-photo-actions" id="leftForYouComposerPhotoActions"><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerPhotoCamera" data-pick="camera"><b>Scatta una foto</b><small>Resta privata, solo tra voi due</small></button><button type="button" class="left-for-you-composer-pick" id="leftForYouComposerPhotoPick" data-pick="gallery"><b>Scegli dalla galleria</b><small>Fino a 25 MB</small></button></div>
         <input type="file" id="leftForYouComposerPhotoFile" accept="image/jpeg,image/png,image/webp" hidden>
         <span class="left-for-you-composer-file" id="leftForYouComposerPhotoName"></span>
         <input type="text" class="left-for-you-composer-url left-for-you-composer-caption" id="leftForYouComposerPhotoCaption" maxlength="280" placeholder="Didascalia (facoltativa)" aria-label="Didascalia della foto" autocomplete="off">
@@ -1002,18 +1004,18 @@ html.us-returning-device .auth-overlay{
               <audio id="leftForYouComposerAudioPreview" preload="metadata" hidden></audio>
             </span>
           </div>
+          <span class="left-for-you-vn-still-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
           <span class="left-for-you-vn-hint" id="leftForYouComposerAudioHint" data-phase="idle" aria-live="polite">Tocca per registrare</span>
         </div>
         <input type="text" class="left-for-you-composer-url left-for-you-composer-caption" id="leftForYouComposerAudioCaption" maxlength="280" placeholder="Didascalia (facoltativa)" aria-label="Didascalia del vocale" autocomplete="off">
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="video" hidden>
-        <button type="button" class="left-for-you-composer-pick" id="leftForYouComposerVideoPick">Scegli un video</button><input type="file" id="leftForYouComposerVideoFile" accept="video/mp4,video/webm,video/quicktime" hidden>
+        <button type="button" class="left-for-you-composer-pick" id="leftForYouComposerVideoPick" data-pick="video"><b>Scegli un video</b><small class="left-for-you-composer-hint" id="leftForYouComposerVideoHint">Fino a 30 secondi e 20 MB.</small></button><input type="file" id="leftForYouComposerVideoFile" accept="video/mp4,video/webm,video/quicktime" hidden>
         <span class="left-for-you-composer-file" id="leftForYouComposerVideoName"></span>
-        <span class="left-for-you-composer-hint" id="leftForYouComposerVideoHint">Fino a 30 secondi e 20 MB.</span>
       </div>
       <div class="left-for-you-composer-panel" data-us-composer-panel="music" hidden>
         <div class="left-for-you-music-attribution"><img class="left-for-you-spotify-attribution" src="/assets/third-party/spotify/spotify-full-logo-white.svg" alt="Spotify" width="80" height="22"></div>
-        <input type="search" id="leftForYouMusicSearch" class="left-for-you-composer-url" placeholder="Cerca su Spotify…" autocomplete="off" spellcheck="false">
+        <label class="left-for-you-composer-label" for="leftForYouMusicSearch">Brano</label><input type="search" id="leftForYouMusicSearch" class="left-for-you-composer-url" placeholder="Cerca su Spotify…" autocomplete="off" spellcheck="false">
         <p class="left-for-you-music-search-status" id="leftForYouMusicSearchStatus" role="status" aria-live="polite"></p>
         <ul class="left-for-you-music-results" id="leftForYouMusicResults" aria-label="Risultati Spotify" hidden></ul>
         <div class="left-for-you-music-selected" id="leftForYouMusicSelected" hidden>
@@ -1036,7 +1038,7 @@ html.us-returning-device .auth-overlay{
   <section class="left-for-you-sheet left-for-you-camera-sheet us-sheet is-floating" role="dialog" aria-modal="true" aria-labelledby="leftForYouCameraTitle" data-us-modal-panel>
     <header class="left-for-you-head"><div><div class="tiny">FOTO PRIVATA</div><h2 id="leftForYouCameraTitle">Scatta una foto</h2></div><button type="button" class="left-for-you-close us-modal-close" id="leftForYouCameraClose" aria-label="Chiudi fotocamera" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
     <div class="left-for-you-body left-for-you-camera-body">
-      <div class="left-for-you-camera-preview-wrap"><video id="leftForYouCameraPreview" autoplay playsinline muted></video><img id="leftForYouCameraCaptured" alt="Anteprima della foto" hidden></div>
+      <div class="left-for-you-camera-preview-wrap"><video id="leftForYouCameraPreview" autoplay playsinline muted></video><img id="leftForYouCameraCaptured" alt="Anteprima della foto" hidden><span class="left-for-you-camera-flash" id="leftForYouCameraFlash" aria-hidden="true"></span></div>
       <div class="left-for-you-camera-status" id="leftForYouCameraStatus" role="status" aria-live="polite"></div>
       <div class="left-for-you-camera-actions"><button type="button" class="left-for-you-composer-pick" id="leftForYouCameraSwitch">Cambia fotocamera</button><button type="button" class="left-for-you-camera-shutter" id="leftForYouCameraCapture" aria-label="Scatta foto"><span aria-hidden="true"></span></button><button type="button" class="left-for-you-composer-pick" id="leftForYouCameraUse" hidden>Usa foto</button><button type="button" class="left-for-you-composer-pick" id="leftForYouCameraRetake" hidden>Rifai</button></div>
     </div>
@@ -1078,16 +1080,28 @@ html.us-returning-device .auth-overlay{
   <div class="conservati-backdrop us-modal-backdrop" id="conservatiBackdrop"></div>
   <section class="conservati-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="conservatiTitle" data-us-modal-panel>
     <header class="conservati-head">
-      <div><div class="tiny">RICORDI</div><h2 id="conservatiTitle">Conservati</h2><small id="conservatiTagline">Piccole cose che avete deciso di non perdere.</small><p class="conservati-rule" id="conservatiRule">Quello che non conservate in Lasciato per te sparisce dopo 30 giorni.</p></div>
+      <div><div class="tiny" id="conservatiKicker">RICORDI</div><h2 id="conservatiTitle">Conservati</h2><small id="conservatiTagline">Piccole cose che avete deciso di non perdere.</small></div>
       <button type="button" class="conservati-close us-modal-close" id="conservatiClose" aria-label="Chiudi Conservati" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
     </header>
     <div class="conservati-body">
       <div class="conservati-loading" id="conservatiLoading" hidden aria-busy="true"><p>Carico…</p></div>
-      <div class="conservati-empty" id="conservatiEmpty" hidden><svg class="conservati-venn" viewBox="0 0 58 36" width="76" height="47" aria-hidden="true" focusable="false"><circle cx="20" cy="18" r="15" style="fill:var(--us-rosa)"/><circle cx="38" cy="18" r="15" style="fill:var(--us-lilla)"/><path d="M29 6a15 15 0 0 1 0 24 15 15 0 0 1 0-24z" style="fill:var(--us-noi)"/></svg><p>Quello che conservate da Lasciato per te arriva qui.</p></div>
+      <div class="conservati-empty" id="conservatiEmpty" hidden><svg class="conservati-venn" viewBox="0 0 58 36" width="92" height="56" aria-hidden="true" focusable="false"><circle cx="20" cy="18" r="15" style="fill:var(--us-rosa)"/><circle cx="38" cy="18" r="15" style="fill:var(--us-lilla)"/><path d="M29 6a15 15 0 0 1 0 24 15 15 0 0 1 0-24z" style="fill:var(--us-noi)"/></svg><h3>Ancora niente qui</h3><p>Quello che conservate da Lasciato per te arriva qui.</p></div>
       <div class="conservati-error" id="conservatiError" hidden><h3>Non riesco ad aprirlo</h3><button type="button" data-action id="conservatiRetry">Riprova</button></div>
       <div class="conservati-list" id="conservatiList" hidden aria-live="polite"></div>
+      <p class="conservati-rule" id="conservatiRule">Quello che non conservate in Lasciato per te sparisce dopo 30 giorni.</p>
       <div class="conservati-detail" id="conservatiDetail" hidden></div>
     </div>
+  </section>
+</div>
+<div class="ricordi-chapter-overlay us-foglio" id="ricordiChapterOverlay" aria-hidden="true" data-us-modal data-us-motion-surface>
+  <div class="ricordi-chapter-backdrop us-modal-backdrop" id="ricordiChapterBackdrop"></div>
+  <section class="ricordi-chapter-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="ricordiChapterTitle" data-us-modal-panel>
+    <header class="ricordi-chapter-head">
+      <div><div class="tiny">Capitoli</div><h2 id="ricordiChapterTitle"></h2></div>
+      <button type="button" class="ricordi-chapter-close us-modal-close" id="ricordiChapterClose" aria-label="Chiudi" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
+    </header>
+    <p class="ricordi-chapter-lead" id="ricordiChapterLead"></p>
+    <div class="ricordi-chapter-thumbs" id="ricordiChapterThumbs"></div>
   </section>
 </div>
 
