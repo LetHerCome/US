@@ -480,9 +480,9 @@
 /* Photo and video: the design's dashed pick cards (icon, what, the limit). */
 #leftForYouComposerOverlay .left-for-you-composer-pick[data-pick]{display:grid;grid-template-columns:auto 1fr;gap:2px 14px;align-items:center;width:100%;min-height:0;padding:18px 16px;border:1.5px dashed var(--us-color-line-strong);border-radius:20px;background:var(--us-color-surface-2);text-align:left;font:inherit;color:var(--us-color-text)}
 #leftForYouComposerOverlay .left-for-you-composer-pick[data-pick]::before{content:"";grid-row:span 2;width:28px;height:28px;background:var(--us-tu);-webkit-mask:var(--pick-icon) center/contain no-repeat;mask:var(--pick-icon) center/contain no-repeat}
-#leftForYouComposerOverlay .left-for-you-composer-pick[data-pick="camera"]{--pick-icon:url("/assets/icons/phosphor/lock-simple-regular.svg")}
+#leftForYouComposerOverlay .left-for-you-composer-pick[data-pick="camera"]{--pick-icon:url("/assets/icons/phosphor/camera-regular.svg")}
 #leftForYouComposerOverlay .left-for-you-composer-pick[data-pick="gallery"]{--pick-icon:url("/assets/icons/phosphor/image-regular.svg")}
-#leftForYouComposerOverlay .left-for-you-composer-pick[data-pick="video"]{--pick-icon:url("/assets/icons/phosphor/sparkle-regular.svg")}
+#leftForYouComposerOverlay .left-for-you-composer-pick[data-pick="video"]{--pick-icon:url("/assets/icons/phosphor/video-camera-regular.svg")}
 #leftForYouComposerOverlay .left-for-you-composer-pick[data-pick] b{font-size:16px;font-weight:600;line-height:1.3}
 #leftForYouComposerOverlay .left-for-you-composer-pick[data-pick] small{font-size:12px;font-weight:400;line-height:1.3;color:var(--us-color-text-3)}
 #leftForYouComposerOverlay .left-for-you-composer-file:empty{display:none}

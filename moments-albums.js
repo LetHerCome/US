@@ -1272,7 +1272,7 @@ console.info('[US] Moments Albums attivo');
     const sameYear = date.getFullYear() === new Date().getFullYear();
     return date.toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'), sameYear ? { day: 'numeric', month: 'short' } : { day: 'numeric', month: 'short', year: 'numeric' });
   }
-  const CONSERVATI_ICON = { text: 'list-bullets', photo: 'image', music: 'music-note', video: 'sparkle', audio: 'heart' };
+  const CONSERVATI_ICON = { text: 'list-bullets', photo: 'image', music: 'music-note', video: 'video-camera', audio: 'microphone' };
   function setConservatiHead(kicker, title) {
     const k = document.getElementById('conservatiKicker');
     const t = document.getElementById('conservatiTitle');

@@ -67,7 +67,7 @@ const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
 // US 1.0 (N10): the old hidden hub is gone; Eventi is one of the three Noi links under the calendar.
 test('Noi: Eventi is a real tile of Noi, using the existing link row and Phosphor icon', () => {
   const links = bond.match(/<nav class="us-noi-v2-links"[\s\S]*?<\/nav>/)?.[0] || '';
-  assert.match(links, /<button type="button" data-noi-open-link="eventi"><span class="us-noi-v2-link-icon" aria-hidden="true"><span class="us-icon" data-us-icon="calendar-heart"><\/span><\/span><span class="us-noi-v2-link-copy"><b>Eventi<\/b>/);
+  assert.match(links, /<button type="button" data-noi-open-link="eventi"><span class="us-noi-v2-link-icon" aria-hidden="true"><span class="us-icon" data-us-icon="calendar-blank"><\/span><\/span><span class="us-noi-v2-link-copy"><b>Eventi<\/b>/);
   assert.doesNotMatch(bond, /id="noiHub"|noi-hub-card--events/);
   assert.ok(fs.existsSync(path.join(ROOT, 'assets/icons/phosphor/calendar-heart-regular.svg')));
 });

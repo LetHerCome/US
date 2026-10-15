@@ -545,6 +545,15 @@ h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
   pointer-events:none;
 }
 .us-icon[data-us-icon="x"]{--us-icon-src:url("/assets/icons/phosphor/x-regular.svg")}
+.us-icon[data-us-icon="camera"]{--us-icon-src:url("/assets/icons/phosphor/camera-regular.svg")}
+.us-icon[data-us-icon="video-camera"]{--us-icon-src:url("/assets/icons/phosphor/video-camera-regular.svg")}
+.us-icon[data-us-icon="microphone"]{--us-icon-src:url("/assets/icons/phosphor/microphone-regular.svg")}
+.us-icon[data-us-icon="camera-rotate"]{--us-icon-src:url("/assets/icons/phosphor/camera-rotate-regular.svg")}
+.us-icon[data-us-icon="monitor"]{--us-icon-src:url("/assets/icons/phosphor/monitor-regular.svg")}
+.us-icon[data-us-icon="flag"]{--us-icon-src:url("/assets/icons/phosphor/flag-regular.svg")}
+.us-icon[data-us-icon="calendar-blank"]{--us-icon-src:url("/assets/icons/phosphor/calendar-blank-regular.svg")}
+.us-icon[data-us-icon="play"]{--us-icon-src:url("/assets/icons/phosphor/play-regular.svg")}
+.us-icon[data-us-icon="stop"]{--us-icon-src:url("/assets/icons/phosphor/stop-regular.svg")}
 .us-icon[data-us-icon="caret-left"]{--us-icon-src:url("/assets/icons/phosphor/caret-left-regular.svg")}
 .us-icon[data-us-icon="caret-right"]{--us-icon-src:url("/assets/icons/phosphor/caret-right-regular.svg")}
 .us-icon[data-us-icon="caret-down"]{--us-icon-src:url("/assets/icons/phosphor/caret-down-regular.svg")}

@@ -22,7 +22,7 @@ test('Noi icons: well-formed markup, the approved settings icon, a real list ico
   assert.doesNotMatch(html, /<span class="us-icon"\s+<img/, 'no half-open icon tag (the old grey square)');
   assert.match(noi, /class="us-noi-v2-settings"[^>]*><img class="us-approved-custom-icon" src="\/assets\/derived\/runtime\/us-icon-settings-128-v1\.png"/);
   assert.match(noi, /id="usNoiV2ModeList"[^>]*><span class="us-icon" data-us-icon="list-bullets"/, 'Elenco is a list, not a grid');
-  assert.match(noi, /data-noi-open-link="lavagna"[\s\S]*?data-us-icon="chalkboard-simple"/);
+  assert.match(noi, /data-noi-open-link="lavagna"[\s\S]*?data-us-icon="monitor"/);
 });
 
 test('Icons: every data-us-icon used by the shell is mapped to an official Phosphor SVG that is precached', () => {
