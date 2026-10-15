@@ -25,18 +25,22 @@ test('delete-moment accepts only a moment id and derives couple membership and m
   assert.match(source, /\.from\("moments"\)[\s\S]*\.eq\("id", momentId\)/);
   assert.match(source, /moment\.couple_id !== profile\.couple_id/);
   // US 1.0 (R2): the partner can no longer delete the other's memory.
-  assert.match(source, /if \(moment\.created_by !== profile\.id\) \{\n\s+return json\(\{ error: "Only the creator can delete this memory" \}, 403\);/);
+  // S3.2 Policy A: what a departed author left (created_by null) can be.
+  assert.match(source, /const mayDelete = \(createdBy: string \| null, profileId: string\) => createdBy === profileId \|\| createdBy === null;/);
+  assert.match(source, /if \(!mayDelete\(moment\.created_by, profile\.id\)\) \{\n\s+return json\(\{ error: "Only the creator can delete this memory" \}, 403\);/);
+  assert.match(source, /const photoId = typeof body\?\.photo_id/);
   assert.match(source, /\.from\("moment_photos"\)[\s\S]*\.eq\("moment_id", momentId\)/);
   assert.match(source, /path\.startsWith\(prefix\)/);
 });
 
 test('delete-moment removes the authorized row then cleans cover, thumbnail and album objects through Storage API', () => {
   const rowDelete = source.indexOf('.from("moments")\n      .delete()');
-  const storageDelete = source.indexOf('admin.storage.from("us-media").remove(paths)');
+  // The last remove(paths) is the whole-memory one (the single departed photo comes first).
+  const storageDelete = source.lastIndexOf('admin.storage.from("us-media").remove(paths)');
   assert.ok(rowDelete >= 0, 'authorized Moment delete is present');
   assert.ok(storageDelete > rowDelete, 'Storage cleanup happens after the row deletion is proven');
   assert.match(source, /\.eq\("couple_id", profile\.couple_id\)[\s\S]*\.select\("id"\)/);
-  assert.match(source, /\.eq\("couple_id", profile\.couple_id\)\n\s+\.eq\("created_by", profile\.id\)\n\s+\.select\("id"\)/);
+  assert.match(source, /\? owned\.is\("created_by", null\)\n\s+: owned\.eq\("created_by", profile\.id\)\n\s+\)\.select\("id"\)/);
   assert.match(source, /moment\.thumbnail_path/);
   assert.match(source, /return json\(\{ deleted: true, storage_cleanup: storageCleanup/);
 });
@@ -45,10 +49,12 @@ test('whole-Moment privileged cleanup never exposes server credentials to the PW
   assert.doesNotMatch(app, /SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET_KEYS|supabaseSecretKey/);
   assert.match(app, /sb\.functions\.invoke\('delete-moment'/);
 });
-// US 1.0 R2 replaces "Elimina on every shared card": only who created a memory sees it.
-test('Ricordi grid exposes Elimina only on the memories this person created', () => {
+// US 1.0 R2 replaces "Elimina on every shared card": only who created a memory sees it
+// (S3.2: plus the memories whose author left, for the member still here).
+test('Ricordi grid exposes Elimina only on the memories this person created or whose author left', () => {
   assert.match(app, /const own=row\.created_by===profile\.id;/);
-  assert.match(app, /ricordiMomentCard\(row,displayUrls,author,own,/);
+  assert.match(app, /const canDelete=own\|\|row\.created_by==null;/);
+  assert.match(app, /ricordiMomentCard\(row,displayUrls,author,canDelete,/);
   assert.match(app, /aria-label="Elimina ricordo"/);
 });
 
