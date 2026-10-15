@@ -204,20 +204,21 @@ function noi() {
   return { api: sandbox.api, els };
 }
 const ago = (minutes) => new Date(Date.now() - minutes * 60000).toISOString();
-const me = (age) => ({ user_id: 'me', latitude: 41.9028, longitude: 12.4964, updated_at: ago(age) });
-const her = (age) => ({ user_id: 'her', latitude: 45.4642, longitude: 9.19, updated_at: ago(age) });
+// couple_distance() answers: never coordinates, only a rounded distance or "near".
+const server = (mineAge, partnerAge, extra = {}) => ({ sharing: true, my_updated_at: ago(mineAge), partner_sharing: true, partner_updated_at: ago(partnerAge), near: false, distance_km: 477, ...extra });
 
 test('Noi distance: only a real reading carries a number; every other state stays unknown', () => {
   const { api } = noi();
-  const ready = api.noiDistanceLine(api.distanceCapsuleModel({ mine: me(2), partner: her(2) }));
+  const ready = api.noiDistanceLine(api.distanceCapsuleModel({ server: server(2, 2) }));
   assert.equal(ready.state, 'ready');
   assert.match(ready.text, /^\d{3} km$/);
-  const stale = api.noiDistanceLine(api.distanceCapsuleModel({ mine: me(180), partner: her(2) }));
+  const stale = api.noiDistanceLine(api.distanceCapsuleModel({ server: server(180, 2) }));
   assert.equal(stale.state, 'stale');
   assert.match(stale.label, /^Ultima distanza nota: \d{3} km$/);
   const unknownInputs = [
     { supported: false }, { permission: 'denied' }, { permission: 'granted' }, { permission: 'prompt' },
-    { mine: me(2), partner: null }, { mine: { ...me(2), latitude: 'x' }, partner: her(2) },
+    { server: { ...server(2, 2), partner_sharing: false, partner_updated_at: null, distance_km: null } },
+    { server: server(2, 2, { distance_km: 'x' }) }, { server: { ...server(2, 2), sharing: false }, consent: true, permission: 'denied' },
   ];
   for (const input of unknownInputs) {
     const line = api.noiDistanceLine(api.distanceCapsuleModel(input));
@@ -229,7 +230,7 @@ test('Noi distance: only a real reading carries a number; every other state stay
 
 test('Noi distance: the existing capsule render also fills the couple row, and only reads', () => {
   const { api, els } = noi();
-  api.renderDistanceCapsule(api.distanceCapsuleModel({ mine: me(2), partner: her(2) }));
+  api.renderDistanceCapsule(api.distanceCapsuleModel({ server: server(2, 2) }));
   assert.equal(els.noiCoupleLink.dataset.usDistanceState, 'ready');
   assert.match(els.noiCoupleDistance.textContent, /^\d{3} km$/);
   assert.equal(els.distanceValue.textContent, els.noiCoupleDistance.textContent, 'one source for both surfaces');

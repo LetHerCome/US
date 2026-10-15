@@ -35,7 +35,6 @@ test('il manifest dichiara soltanto i permessi necessari alle capability web e a
 
   assert.deepEqual(permissions, [
     'android.permission.ACCESS_COARSE_LOCATION',
-    'android.permission.ACCESS_FINE_LOCATION',
     'android.permission.CAMERA',
     'android.permission.INTERNET',
     'android.permission.MODIFY_AUDIO_SETTINGS',
