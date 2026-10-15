@@ -183,13 +183,13 @@ test('poses: curious / pet / sleep / happy are CSS poses of the approved drawing
   assert.doesNotMatch(petJs + petCss, /[\u{1F300}-\u{1FAFF}❤♥]/u, 'no emoji, no heart glyph');
 });
 
-test('Settings: one "Maudit" switch row, device-local, correct accessible state, no explanatory copy', () => {
+test('Settings: one "Maudit" switch row, device-local, correct accessible state, one short line of copy', () => {
   const row = html.match(/<button[^>]*data-us-setting="maudit"[^>]*>[\s\S]*?<\/button>/)?.[0];
   assert.ok(row, 'row exists');
   assert.match(row, /role="switch" aria-checked="true"/);
-  assert.match(row, /<b>Maudit<\/b><\/span>/);
-  assert.doesNotMatch(row, /<small>/, 'no explanatory paragraph');
-  const deviceGroup = html.slice(html.indexOf('SU QUESTO TELEFONO'), html.indexOf('data-us-settings-scope="voi"'));
+  // US 1.0 Settings mockup (#200): the label plus one short line, never a paragraph.
+  assert.match(row, /<b>Maudit<\/b>(<small>[^<]{1,40}<\/small>)?<\/span>/);
+  const deviceGroup = html.slice(html.indexOf('data-us-settings-scope="tu"'), html.indexOf('data-us-settings-scope="voi"'));
   assert.ok(deviceGroup.includes('data-us-setting="maudit"'), 'lives with the other on-this-phone settings');
   assert.match(settingsJs, /if\(name==='maudit'\)return toggleMaudit\(\);/);
   assert.match(settingsJs, /window\.USPet\?\.setEnabled\?\.\(next\)/);

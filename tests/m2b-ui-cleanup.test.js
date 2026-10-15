@@ -114,10 +114,13 @@ test('i controlli delete restano espliciti e hanno target 44px', () => {
 
   assert.match(app, /class="moment-delete"[^>]*aria-label="Elimina ricordo"[^>]*>Elimina<\/button>/);
   assert.doesNotMatch(app, /class="us-overflow-icon"/, 'Ricordi usa un’azione Elimina esplicita, non un overflow ambiguo');
-  assert.match(albums, /class="us-delete-icon"/);
+  // Ricordi carousel (e732065): the album deletes the photo on screen through one labelled
+  // trash button (with undo), 46px in the gallery.
+  assert.match(albums, /class="us-album-current-delete"[^>]*aria-label="Elimina questa foto"[^>]*><span class="us-icon" data-us-icon="trash"/);
   assert.doesNotMatch(albums, /class="us-album-photo-delete"[^>]*>×<\/button>/);
   assert.match(styles, /\.moment-delete\{[^}]*height:44px/s);
   assert.match(albumCss, /\.us-album-photo-delete\{[^}]*width:44px[^}]*height:44px/s);
+  assert.match(read('dc-ricordi.css'), /\.us-album-current-delete,\.us-undo-delete-go\)\{width:46px;/);
 });
 
 test('Settings riusa il proprio modal al posto dei confirm browser', () => {

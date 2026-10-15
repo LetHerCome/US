@@ -2,11 +2,12 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 const test = require('node:test');
 
 const ROOT = path.resolve(__dirname, '..');
 const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
-const loadGate = () => import(path.join(ROOT, 'scripts/validate-android-bundle.mjs'));
+const loadGate = () => import(pathToFileURL(path.join(ROOT, 'scripts/validate-android-bundle.mjs')).href);
 
 // Shape of `bundletool dump manifest` for a US release bundle built from the
 // PR #187 manifest (guarded FCM service, Capacitor + Firebase handlers removed).

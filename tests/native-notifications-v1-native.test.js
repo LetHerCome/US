@@ -5,6 +5,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 const vm = require('node:vm');
 const { execFileSync } = require('node:child_process');
 
@@ -46,7 +47,7 @@ test('N2 Android: official plugin + local support plugin synced, channels match 
   assert.match(plugin, /shutdownTask = messaging\.deleteToken\(\)/, 'do not resolve before deleteToken task completes');
   assert.match(plugin, /UsPushOwnerGate\.hasOwner\(getContext\(\)\)/, 'never stop with an active private owner');
   assert.doesNotMatch(plugin, /getToken\(/, 'the support plugin may stop FCM but must never fetch tokens');
-  const transport = await import(path.join(ROOT, 'supabase/functions/_shared/native-push-transport.mjs'));
+  const transport = await import(pathToFileURL(path.join(ROOT, 'supabase/functions/_shared/native-push-transport.mjs')).href);
   assert.match(channels, new RegExp(`PARTNER = "${transport.ANDROID_CHANNELS.partner}"`));
   assert.match(channels, new RegExp(`REMINDERS = "${transport.ANDROID_CHANNELS.reminders}"`));
   const manifest = read('android/app/src/main/AndroidManifest.xml');
@@ -66,7 +67,7 @@ test('N2 iOS: APNs forwarding, Push entitlement, Ricambia category, environment 
   assert.match(swiftPackage, /\.product\(name: "CapacitorPushNotifications", package: "CapacitorPushNotifications"\)/);
   assert.match(swiftPackage, /\.package\(name: "UsPushSupport", path: "\.\.\/\.\.\/\.\.\/native-plugins\/us-push-support"\)/);
   const plugin = read(`${PLUGIN}/ios/Sources/UsPushSupportPlugin/UsPushSupportPlugin.swift`);
-  const transport = await import(path.join(ROOT, 'supabase/functions/_shared/native-push-transport.mjs'));
+  const transport = await import(pathToFileURL(path.join(ROOT, 'supabase/functions/_shared/native-push-transport.mjs')).href);
   assert.match(plugin, new RegExp(`thinkCategory = "${transport.APNS_CATEGORIES.think}"`));
   assert.match(plugin, /ricambiaAction = "ricambia"/);
   assert.match(plugin, /title: "Ricambia",\s*options: \[\.foreground\]/, 'Ricambia opens US; nothing runs in the background');
@@ -106,7 +107,7 @@ test('N2 payload contract: only allow-listed targets, UUID refs, no URL ever nav
   const api = loadClient();
   assert.equal(api.supported(), false, 'the PWA never uses the native client');
   const { parsePayload, intentFromAction, normalizeToken } = api._test;
-  const core = await import(path.join(ROOT, 'supabase/functions/_shared/notification-core.mjs'));
+  const core = await import(pathToFileURL(path.join(ROOT, 'supabase/functions/_shared/notification-core.mjs')).href);
   const REF = '33333333-3333-4333-8333-333333333333';
   for (const target of core.NOTIFICATION_TARGETS) assert.equal(parsePayload({ v: '1', type: 'x', target, ref: '', tag: 't' }).target, target);
   assert.deepEqual({ ...parsePayload({ v: '1', type: 'think', target: 'think', ref: REF.toUpperCase(), tag: 't' }) }, { type: 'think', target: 'think', ref: REF });

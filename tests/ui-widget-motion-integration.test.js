@@ -24,8 +24,9 @@ test('widget and premium-motion features are preserved in integration', () => {
 });
 
 test('single build version across all web entry points', () => {
-  const ver = 'us-ui-feedback-v2-20261009-2';
-  assert.equal(JSON.parse(read('version.json')).version, ver);
+  // The id changes every release; what must hold is that every entry point carries the same one.
+  const ver = JSON.parse(read('version.json')).version;
+  assert.match(ver, /^us-[a-z0-9-]+-\d{8}-\d+$/);
   assert.ok(read('index.html').includes('content="' + ver + '"'));
   assert.ok(read('index.html').includes('/app.js?v=' + ver));
   assert.ok(read('manifest.webmanifest').includes('?v=' + ver));
