@@ -73,7 +73,12 @@ test('perf 1.0 precache: no approved master is precached or loaded; the size bud
   assert.ok(largest[1] <= 400 * 1024, `${largest[0]} is ${largest[1]} bytes: shell assets stay under 400 KB each`);
   // US V3 adds the Oggi themes + effects runtime (oggi-look.css/js, ~45 KB) after
   // pruning ~33 KB of retired cosmetics; the shell budget moves from 2.2 to 2.3 MB.
-  // US 1.0 Play requirements (account deletion, leave the couple, reports:
-  // ~20 KB of Settings UI; the logic stays lazy in account-deletion.js) take it to 2.35 MB.
-  assert.ok(total <= 2.35 * 1024 * 1024, `precache is ${total} bytes: stays under 2.35 MB`);
+  // US 1.0 adds English (i18n-en.js, ~100 KB, needed offline too) and the
+  // "Due colori" screens, after retiring the old fonts: 2.3 -> 2.4 MB.
+  // The founder-approved 1.0 audit fixes (first run, Lasciato per te, Ricordi,
+  // Gioca families) and their English add ~40 KB: 2.4 -> 2.5 MB. Next trim: the
+  // retired Noi hub / week board rules still in styles.css (~16 KB).
+  // The founder asked for every screen and animation to match the approved
+  // mockup exactly (2026-10-15): ~125 KB of area CSS/JS, 2.5 -> 2.75 MB.
+  assert.ok(total <= 2.75 * 1024 * 1024, `precache is ${total} bytes: stays under 2.75 MB`);
 });

@@ -10,7 +10,8 @@ const read = (name) => fs.readFileSync(path.join(root,name),'utf8');
 const popups = [
   'today','thinkArrival','usCountdownSheet','usEventsOverlay',
   'usSettingsOverlay','usWidgetHub','leftForYouOverlay',
-  'leftForYouComposerOverlay','conservatiOverlay','usCalendarOverlay',
+  'leftForYouComposerOverlay','conservatiOverlay',
+  // 1.0 (N10): the old full-screen calendar overlay is gone; its two sheets stay.
   'usCalendarDetailSheet','usCalendarFormSheet'
 ];
 

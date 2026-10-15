@@ -50,6 +50,11 @@ const FAKE_SUPABASE = `(() => {
     const rows = () => (Q().tables[table] || []).filter((r) => filters.every(([k, c, v]) =>
       k === 'eq' ? r[c] === v : k === 'neq' ? r[c] !== v : k === 'in' ? v.includes(r[c]) : k === 'is' ? (v === null ? r[c] == null : r[c] === v) : true));
     const finish = () => {
+      // Opt-in (window.__QA.persistWrites): writes land in the tables, so a later read sees them.
+      const keep = Q().persistWrites && Array.isArray(Q().tables[table]);
+      if (keep && (op === 'insert' || op === 'upsert')) { const list = (Array.isArray(payload) ? payload : [payload]).map((r) => ({ id: crypto.randomUUID(), ...r })); Q().tables[table].push(...list.map((r) => ({ ...r }))); return { data: list, error: null }; }
+      if (keep && op === 'update') { const hit = rows(); hit.forEach((r) => Object.assign(r, payload)); return { data: hit.map((r) => ({ ...r })), error: null }; }
+      if (keep && op === 'delete') { const hit = rows(); Q().tables[table] = Q().tables[table].filter((r) => !hit.includes(r)); return { data: hit.map((r) => ({ ...r })), error: null }; }
       if (op === 'insert' || op === 'upsert') return { data: [{ id: 'new', ...(Array.isArray(payload) ? payload[0] : payload) }], error: null };
       if (op === 'update' || op === 'delete') return { data: [{ id: 'x' }], error: null };
       const data = rows(); return head ? { data: null, count: data.length, error: null } : { data, count: data.length, error: null };

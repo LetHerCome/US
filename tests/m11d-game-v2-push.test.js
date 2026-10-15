@@ -248,7 +248,7 @@ test('M11D migration: dedicated vault key, idempotent cron, service-role grants 
   assert.doesNotMatch(read('supabase/functions/send-web-push/index.ts'), /game/, 'send-web-push untouched');
   const settings = read('settings.js');
   assert.match(settings, /preferenceToggle\('games','Gioca',p\.games!==false\)/, 'the preference is reachable in Impostazioni > Notifiche');
-  assert.match(settings, /key==='games'\?'Tocca a te, risposte pronte, domanda della settimana'/);
+  assert.match(settings, /key==='games'\?'Quando tocca a te'/);
 });
 
 test('M11D game-v2-push: game events carry only the reference; actor comes from the JWT', async () => {

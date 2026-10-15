@@ -121,7 +121,7 @@ async function harness(t) {
     .replace('<html lang="it">', '<html lang="it" class="us-app-lock-pending">');
   return {
     async page(options) {
-      const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, timezoneId: 'Europe/Rome', serviceWorkers: 'block' });
+      const ctx = await browser.newContext({ locale: 'it-IT', viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, timezoneId: 'Europe/Rome', serviceWorkers: 'block' });
       const page = await ctx.newPage();
       const errors = [];
       page.on('pageerror', (error) => errors.push(error.message));
@@ -394,7 +394,7 @@ test('N2 browser: the PWA keeps Web Push and never loads native notification cod
   const browser = await chromium.launch();
   t.after(async () => { await browser.close(); await new Promise((resolve) => server.close(resolve)); });
   const base = `http://127.0.0.1:${server.address().port}`;
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block' });
+  const ctx = await browser.newContext({ locale: 'it-IT', viewport: { width: 390, height: 844 }, serviceWorkers: 'block' });
   const page = await ctx.newPage();
   await page.route('**/*', (route) => {
     const url = new URL(route.request().url());

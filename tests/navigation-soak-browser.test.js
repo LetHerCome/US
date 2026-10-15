@@ -28,7 +28,8 @@ function shellState() {
     bodyClasses: [...document.body.classList].sort(),
     bodySurface: document.body.getAttribute('data-us-surface'),
     bodyOverflow: document.body.style.overflow,
-    noiSection: document.getElementById('noiHub')?.hidden === true,
+    // US 1.0: a Noi section (Missioni, Eventi) shows its bar; the old hub is gone.
+    noiSection: document.getElementById('noiSectionBar')?.hidden === false,
     pet: { visibility: getComputedStyle(pet).visibility, blockers: window.USPet.blockers(), running: window.USPet.snapshot().running },
     overflowX: document.scrollingElement.scrollWidth > innerWidth,
     history: history.state && { kind: history.state.kind, page: history.state.page, layer: history.state.layer || null }
@@ -50,7 +51,8 @@ test('navigation soak: repeated cycles through every primary surface leave one c
     const { page, ctx, errors } = await pageFor(h, {});
     const consoleErrors = [];
     page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
-    const tab = async (name) => { await page.click(`.nav button[data-page="${name}"]`); await settle(page); };
+    // A tab tap plays the mockup's colour flood (~1 s, a second tap meanwhile is ignored): wait for it to land.
+    const tab = async (name) => { await page.click(`.nav button[data-page="${name}"]`); await page.waitForFunction(() => !window.UsDueColori?.isFlooding?.()); await settle(page); };
     const back = async () => { await page.goBack(); await settle(page, 600); };
     const expectPage = async (label, id) => {
       const state = await page.evaluate(shellState);
@@ -77,9 +79,9 @@ test('navigation soak: repeated cycles through every primary surface leave one c
       assert.deepEqual((await page.evaluate(shellState)).openModals, ['leftForYouComposerOverlay'], `${cycle} Lasciato per te`);
       await back(); await expectPage(`${cycle} Lasciato per te → Back`, 'home');
 
-      // A Noi section, then Back to the Noi hub.
+      // A Noi section (Missioni), then Back to the Noi calendar.
       await tab('bond');
-      await page.click('[data-noi-open="resonance"]'); await settle(page);
+      await page.click('[data-noi-open-link="quest"]'); await settle(page);
       assert.equal((await page.evaluate(shellState)).noiSection, true, `${cycle} Noi section open`);
       await back();
       const hub = await page.evaluate(shellState);
@@ -112,26 +114,31 @@ test('navigation soak: repeated cycles through every primary surface leave one c
   } finally { await h.close(); }
 });
 
-test('navigation: Back unwinds a three-deep stack one level at a time (Noi section → Calendar → form)', async (t) => {
+// US 1.0 (N3/N10): the old calendar overlay is gone. The stack is now Noi →
+// "La nostra settimana" → the "+" form: Back closes the form, then returns
+// from the week to the month, then leaves Noi.
+test('navigation: Back unwinds a three-deep stack one level at a time (Noi → La nostra settimana → form)', async (t) => {
   const h = await start(); if (!h) return t.skip('Playwright unavailable');
   try {
     const { page, ctx, errors } = await pageFor(h, {});
     const state = () => page.evaluate(() => ({
-      noiSection: document.getElementById('noiHub').hidden === true,
-      calendar: document.getElementById('usCalendarOverlay').classList.contains('open'),
+      page: document.querySelector('.page.active')?.id,
+      week: document.getElementById('usNoiV2')?.dataset.mode === 'week',
       form: Boolean(document.getElementById('usCalendarFormSheet')?.classList.contains('open'))
     }));
-    await page.click('.nav button[data-page="bond"]');
-    await page.click('[data-noi-open="eventi"]'); await settle(page);
-    await page.evaluate(() => window.openCalendarSurface()); await settle(page);
-    await page.click('#usCalendarAddEntry'); await settle(page);
-    assert.deepEqual(await state(), { noiSection: true, calendar: true, form: true });
+    await page.click('.nav button[data-page="bond"]'); await page.waitForFunction(() => !window.UsDueColori?.isFlooding?.()); await settle(page);
+    // Parity: the Lavagna is a Foglio over the month (the "+" sits under it), so
+    // the stack is Noi → Lavagna, then Noi → form; Back unwinds each one level.
+    await page.click('[data-noi-open-link="lavagna"]'); await settle(page);
+    assert.deepEqual(await state(), { page: 'bond', week: true, form: false });
     await page.goBack(); await settle(page, 600);
-    assert.deepEqual(await state(), { noiSection: true, calendar: true, form: false }, 'Back closes only the form');
+    assert.deepEqual(await state(), { page: 'bond', week: false, form: false }, 'Back closes only the Lavagna');
+    await page.click('#usNoiV2AddTop'); await settle(page);
+    assert.deepEqual(await state(), { page: 'bond', week: false, form: true });
     await page.goBack(); await settle(page, 600);
-    assert.deepEqual(await state(), { noiSection: true, calendar: false, form: false }, 'then only the calendar');
+    assert.deepEqual(await state(), { page: 'bond', week: false, form: false }, 'Back closes only the form');
     await page.goBack(); await settle(page, 600);
-    assert.deepEqual(await state(), { noiSection: false, calendar: false, form: false }, 'then the section');
+    assert.deepEqual(await state(), { page: 'home', week: false, form: false }, 'then Noi is left');
     assert.deepEqual(errors, []);
     await ctx.close();
   } finally { await h.close(); }

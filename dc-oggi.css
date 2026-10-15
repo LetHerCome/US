@@ -1,0 +1,1039 @@
+/* Due colori, un Noi — oggi. Area layer on top of due-colori.css.
+   Parity pass (2026-10-15): the approved mockup (design-2026-10/v2, oggi.js,
+   style.css, style2.css) is the authority for look AND motion. Values below
+   are copied from it: same sizes, radii, colours, type, keyframes, easings.
+   Generic sheet chrome (surface, radius, handle, scrim, enter, close) lives in
+   dc-popup.css: here only what is inside Oggi and its sheets and moments.
+   Reduced motion keeps a fade or nothing. */
+
+:root{
+  --dc-oggi-scrim:rgba(15,11,19,.42);
+  --dc-oggi-glass:rgba(247,239,233,.1);
+  --dc-oggi-card:color-mix(in srgb,var(--us-color-surface) 88%,transparent);
+  --dc-e-out:cubic-bezier(.2,.8,.2,1);
+  --dc-e-io:cubic-bezier(.7,0,.2,1);
+  --dc-e-soft:cubic-bezier(.22,1.15,.36,1);
+}
+
+/* ---------- 1 · Photo: full screen, night at the top and at the bottom (.og-scrim) ---------- */
+/* The photo starts at the very top of the screen (no -2px pull from the legacy layer). */
+#home.page{margin-top:0}
+#home .home-photo-shade{
+  background:linear-gradient(180deg,rgba(15,11,19,.55) 0%,rgba(15,11,19,0) 22%,rgba(15,11,19,0) 42%,rgba(15,11,19,.86) 76%,var(--us-color-bg) 100%)!important;
+  transition:opacity .45s var(--dc-e-out);
+}
+/* Focus (mockup .is-focus): only the photo; everything else fades in .45s. */
+#home #homeHero :is(.us-oggi-dock,.us-countdown-display,.us-countdown-entry){transition:opacity .45s var(--dc-e-out)}
+#home #homeHero.us-oggi-focus .home-photo-shade{opacity:.25}
+#home #homeHero.us-oggi-focus :is(.us-oggi-dock,.us-countdown-display,.us-countdown-entry){opacity:0!important;pointer-events:none!important}
+body:has(#homeHero.us-oggi-focus) .app>.top.us-premium-top{opacity:0;pointer-events:none}
+/* The bar steps down out of the photo (mockup .screen.is-focus .nav, 450 ms io). */
+body:has(#home.active):not(.us-keyboard-open) .nav.us-nav{transition:translate .45s var(--dc-e-io,cubic-bezier(.7,0,.2,1))}
+body:has(#home.active #homeHero.us-oggi-focus) .nav.us-nav{translate:0 120px}
+.app>.top.us-premium-top{transition:opacity .45s var(--dc-e-out)}
+
+/* ---------- 2 · Top: heart, logo, envelope (mockup .og-top, .ic-btn, .logo-wrap) ---------- */
+.app>.top.us-premium-top{
+  left:max(16px,var(--us-safe-left,0px))!important;
+  right:max(16px,var(--us-safe-right,0px))!important;
+  top:calc(var(--us-safe-top) + 16px)!important;
+  height:46px;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:none!important;
+  box-shadow:none!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+.app>.top.us-premium-top::before{display:none}
+.app>.top.us-premium-top .us-top-left,.app>.top.us-premium-top .top-actions{min-width:46px}
+#thinkButton.us-top-think,
+#leftForYouPartnerEntry.us-envelope-control{
+  position:relative;
+  flex:0 0 46px;
+  width:46px;
+  height:46px;
+  min-width:46px;
+  min-height:46px;
+  padding:0;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--us-color-line-strong);
+  border-radius:50%;
+  background:var(--dc-oggi-scrim);
+  -webkit-backdrop-filter:blur(10px);
+  backdrop-filter:blur(10px);
+  color:var(--us-color-text);
+  box-shadow:none;
+}
+#thinkButton.us-top-think:focus-visible,
+#leftForYouPartnerEntry.us-envelope-control:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
+.app>.top.us-premium-top .us-top-brand{width:46px;height:46px}
+.app>.top.us-premium-top .us-top-brand-art{width:46px;height:46px}
+
+/* Heart: drawn in the text colour; when I send it fills with my colour for
+   2.4 s (mockup), when one arrives with theirs. */
+#thinkButton .us-shell-icon--think{position:relative;width:22px;height:22px}
+#thinkButton .us-shell-icon--think img{opacity:0}
+#thinkButton .us-shell-icon--think::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:currentColor;
+  -webkit-mask:url("/assets/icons/think-off.svg") center/contain no-repeat;
+  mask:url("/assets/icons/think-off.svg") center/contain no-repeat;
+}
+#thinkButton.sent .us-shell-icon--think::before,
+#thinkButton.received .us-shell-icon--think::before{-webkit-mask-image:url("/assets/icons/think-on.svg");mask-image:url("/assets/icons/think-on.svg")}
+#thinkButton.sent .us-shell-icon--think::before{background:var(--us-tu)}
+#thinkButton.received .us-shell-icon--think::before{background:var(--us-partner)}
+#thinkButton.us-top-think.sent,#thinkButton.us-top-think.received{animation:none}
+/* While the send cools down the button is disabled, but the heart stays lit (mockup: full colour for 2.4 s). */
+#thinkButton.us-top-think.sent:disabled{opacity:1!important;filter:none!important}
+#thinkButton.sent .us-shell-icon--think{animation:dc-oggi-heart .7s ease-out}
+@keyframes dc-oggi-heart{0%{scale:1}25%{scale:1.3}50%{scale:.92}70%{scale:1.12}100%{scale:1}}
+/* The two sparks that fly from the heart (mockup .spark). */
+.dc-oggi-spark{position:fixed;z-index:65;width:12px;height:12px;border-radius:50%;pointer-events:none}
+
+/* Envelope: the icon stays still; "there is something for you" is two small
+   dots, rosa and lilla, that beat (mockup .beat). Same hook (data-us-attention). */
+#leftForYouPartnerEntry .us-envelope-mark{display:grid;place-items:center;width:100%;height:100%}
+#leftForYouPartnerEntry .us-envelope-icon{width:22px;height:22px}
+/* One envelope, always closed (mockup): the dots say there is something inside. */
+#leftForYouPartnerEntry .us-envelope-face--closed{opacity:1!important;transform:none!important}
+#leftForYouPartnerEntry .us-envelope-face--open{opacity:0!important}
+#leftForYouPartnerEntry [data-us-attention-icon]{animation:none!important;filter:none!important;scale:1;rotate:0deg}
+#leftForYouPartnerEntry.us-attention-orbit::after{display:none!important;animation:none!important}
+#leftForYouPartnerEntry .beat{position:absolute;top:6px;right:5px;display:none}
+#leftForYouPartnerEntry .beat i{display:block;width:8px;height:8px;border-radius:50%;box-shadow:0 0 0 2px #2a1a2a}
+#leftForYouPartnerEntry .beat i:first-child{background:var(--us-rosa)}
+#leftForYouPartnerEntry .beat i:last-child{margin-left:-3px;background:var(--us-lilla)}
+#leftForYouPartnerEntry[data-us-attention="on"] .beat{display:flex;animation:dc-oggi-beat 2.6s var(--dc-e-out) infinite}
+@keyframes dc-oggi-beat{0%,70%,100%{scale:1}78%{scale:1.25}86%{scale:1}92%{scale:1.15}}
+:root[data-us-motion="reduced"] #leftForYouPartnerEntry[data-us-attention="on"] .beat{animation:none}
+:root[data-us-visibility="hidden"] #leftForYouPartnerEntry[data-us-attention="on"] .beat{animation-play-state:paused}
+#leftForYouPartnerEntry.is-loading .us-envelope-icon{animation:none}
+
+/* ---------- 3 · The column above the nav (mockup .og-bottom) ----------
+   Caption, next event + distance (hidden while a card waits), the card that
+   waits for me or the notifications invite, the Domanda di oggi. The band
+   right above the nav stays free: Maudit stands there, never over the cards. */
+#home .us-oggi-dock{
+  position:fixed;
+  z-index:19;
+  left:50%;
+  /* Mockup .og-bottom: 130px from the bottom of the screen (above the safe area). */
+  bottom:calc(var(--us-safe-bottom) + 130px);
+  width:min(420px,calc(100% - 28px));
+  transform:translateX(-50%);
+  display:grid;
+  gap:12px;
+  pointer-events:none;
+}
+body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-safe-bottom) + var(--us-nav-height) + 14px)}
+#home .us-oggi-dock>*{pointer-events:auto}
+#home .us-oggi-dock>[hidden]{display:none!important}
+#home #usOggiDock #usTodayPriorityRegion{
+  position:static!important;
+  left:auto!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:auto!important;
+  width:auto!important;
+  transform:none!important;
+}
+#home #usOggiDock .push-optin-card{
+  position:relative!important;
+  left:auto!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:auto!important;
+  width:auto;
+  max-width:none;
+  margin:0;
+}
+/* A card that waits for me takes the row's place (mockup card()). */
+#home #usOggiDock:has(#usTodayPriorityRegion:not([hidden])) #usOggiRow,
+#home #usOggiDock:has(#pushOptInCard:not([hidden])) #usOggiRow{display:none!important}
+#home #usOggiDock>:is(#usTodayPriorityRegion,#pushOptInCard):not([hidden]){animation:dc-oggi-card-in .42s var(--dc-e-out) both}
+@keyframes dc-oggi-card-in{from{opacity:0;translate:0 12px}to{opacity:1;translate:0 0}}
+
+/* Caption: Fraunces italic 30px, then the day and who, with their colour. */
+#home #usOggiCaption.og-cap{margin:0 4px;font:400 30px/1.05 var(--us-font-display);letter-spacing:-.01em;color:var(--us-color-text);pointer-events:none}
+#home #usOggiCaption em{font-style:italic;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#home #usOggiCaption small{display:flex;align-items:center;gap:8px;margin-top:6px;font:400 13px/1.1 var(--us-font-ui);letter-spacing:0;color:var(--us-color-text-2)}
+#home #usOggiCaption .dot,#today .question .locked .dot{display:inline-block;flex:none;width:9px;height:9px;border-radius:50%;background:var(--us-noi)}
+#home #usOggiCaption .dot[data-who="tu"],#today .question .locked .dot[data-who="tu"]{background:var(--us-tu)}
+#home #usOggiCaption .dot[data-who="partner"],#today .question .locked .dot[data-who="partner"]{background:var(--us-partner)}
+
+/* Next event and distance: two glass pills (mockup .og-next, .og-pill). */
+#home #usOggiRow.og-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#home #usOggiNext.og-next{
+  justify-self:start;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-height:40px;
+  min-width:0;
+  max-width:100%;
+  padding:8px 14px 8px 10px;
+  border:1px solid var(--us-color-line-strong);
+  border-radius:999px;
+  background:var(--dc-oggi-glass);
+  -webkit-backdrop-filter:blur(10px);
+  backdrop-filter:blur(10px);
+  box-shadow:none;
+  color:var(--us-color-text-2);
+  font:400 13px/1.2 var(--us-font-ui);
+  text-align:left;
+}
+#home #usOggiNext[hidden]{display:none}
+#home #usOggiNext b{flex:none;color:var(--us-color-text);font-weight:600}
+#home #usOggiNext #usOggiNextTitle{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#home #usOggiNext .us-icon{--us-icon-size:18px;flex:none;color:var(--us-ambra)}
+#home #homeHero .og-row .home-distance-pill:not([hidden]){
+  position:static!important;
+  inset:auto!important;
+  transform:none!important;
+  display:inline-flex!important;
+  align-items:center;
+  gap:6px;
+  min-height:40px;
+  height:auto;
+  padding:0 13px 0 10px;
+  border:1px solid var(--us-color-line-strong);
+  border-radius:999px;
+  background:var(--dc-oggi-glass);
+  -webkit-backdrop-filter:blur(10px);
+  backdrop-filter:blur(10px);
+  box-shadow:none;
+  color:var(--us-color-text);
+  font:600 13px/1 var(--us-font-ui);
+  white-space:nowrap;
+  opacity:1;
+}
+#home #homeHero .og-row .home-distance-pill .us-icon{--us-icon-size:17px;color:var(--us-noi)}
+#home #homeHero .og-row .home-distance-pill b{font-weight:600}
+#home :is(#usOggiNext,.og-row .home-distance-pill):focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
+
+/* ---------- 4 · Domanda di oggi on Oggi (mockup .dq + .ring) ---------- */
+#home #usDailyRitual{
+  width:100%;
+  min-height:0;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  align-items:center;
+  gap:10px 12px;
+  padding:16px;
+  border:1px solid var(--us-color-line-strong);
+  border-radius:26px;
+  background:var(--dc-oggi-card);
+  -webkit-backdrop-filter:blur(18px);
+  backdrop-filter:blur(18px);
+  box-shadow:none;
+  color:var(--us-color-text);
+  font:inherit;
+  text-align:left;
+}
+#home #usDailyRitual:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
+#home #usDailyRitual.us-attention-orbit::after{display:none}
+#home #usDailyRitual .us-daily-ritual-kicker{font:700 11px/1.5 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-tu)}
+#home #usDailyRitual .us-daily-ritual-question{
+  grid-column:1/-1;
+  margin:0;
+  font:400 21px/1.2 var(--us-font-display);
+  color:var(--us-color-text);
+  text-wrap:balance;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+}
+#home #usDailyRitual[data-state="error"] .us-daily-ritual-question{font-size:17px;color:var(--us-color-text-2)}
+#home #usDailyRitual .dq-foot{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
+#home #usDailyRitual .us-daily-ritual-meta{margin:0;min-width:0;font:400 13px/1.5 var(--us-font-ui);color:var(--us-color-text-2)}
+#home #usDailyRitual .us-daily-ritual-cta{
+  flex:none;
+  margin-left:auto;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  min-height:44px;
+  padding:0 18px;
+  border-radius:999px;
+  background:var(--us-tu);
+  box-shadow:none;
+  color:var(--us-inchiostro);
+  font:700 15px/1 var(--us-font-ui);
+  white-space:nowrap;
+}
+#home #usDailyRitual .us-daily-ritual-arrow{display:inline-block;width:18px;height:18px;background:currentColor;-webkit-mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;transition:translate .25s var(--dc-e-out)}
+/* Two circles that become one (mockup .ring, data-st tocca/pronte/svelate). */
+#home #usDailyRitual .ring{width:48px;height:30px;overflow:visible;flex:none}
+#home #usDailyRitual .ring .r-bloom{stroke:var(--us-noi)}
+#home #usDailyRitual .ring .r-you-full{fill:var(--us-partner)}
+#home #usDailyRitual .ring .r-you-wait{fill:rgba(23,17,28,.6);stroke:var(--us-partner);opacity:0}
+#home #usDailyRitual .ring .r-me-ring{fill:rgba(23,17,28,.6);stroke:var(--us-tu)}
+#home #usDailyRitual .ring .r-fill{fill:var(--us-tu);transform:translateY(26px)}
+#home #usDailyRitual .ring .r-noi circle{fill:var(--us-noi)}
+#home #usDailyRitual .ring .r-noi path{fill:var(--us-inchiostro)}
+#home #usDailyRitual .ring :is(.r-noi,.r-bloom){opacity:0;transform-box:view-box;transform-origin:24px 15px}
+#home #usDailyRitual .ring:is([data-st="vuoto"],[data-st="attesa"]) .r-you-full{opacity:0}
+#home #usDailyRitual .ring:is([data-st="vuoto"],[data-st="attesa"]) .r-you-wait{opacity:1}
+#home #usDailyRitual .ring[data-st="attesa"] .r-fill{transform:translateY(0)}
+#home #usDailyRitual .ring:is([data-st="pronte"],[data-st="svelate"]) :is(.r-me,.r-you){opacity:0}
+#home #usDailyRitual .ring:is([data-st="pronte"],[data-st="svelate"]) .r-noi{opacity:1}
+/* Short screens: the photo keeps its room; the question takes one line, then steps aside. */
+@media(max-height:700px){
+  #home #usDailyRitual{gap:8px 12px;padding:13px 14px}
+  #home #usDailyRitual .us-daily-ritual-question{font-size:18px;-webkit-line-clamp:1}
+  #home .us-oggi-dock{gap:8px}
+  #home #usOggiCaption.og-cap{font-size:24px}
+}
+@media(max-height:600px){
+  #home #usDailyRitual .us-daily-ritual-question{display:none}
+  #home .us-oggi-dock{bottom:calc(var(--us-safe-bottom) + 112px)}
+  /* No photo yet on a tiny phone: the invitation needs the band; the distance stays in Noi. */
+  #home #homeHero.is-empty #usOggiRow{display:none!important}
+  #home #usOggiCaption{display:none!important}
+}
+/* Landscape phone: the time keeps the left half, the column takes the right one. */
+@media(orientation:landscape) and (max-height:560px){
+  #home .us-oggi-dock{left:auto;right:max(16px,var(--us-safe-right,0px));transform:none;width:min(400px,46%)}
+  #home #usOggiCaption{display:none!important}
+  body #home #homeHero .us-countdown-entry:not([hidden]){top:50%;left:25%;transform:translate(-50%,-50%)}
+  /* No room for a third thing: without a photo the time and the dock stay, the invitation waits for portrait. */
+  #home #homeHero[data-us-countdown].is-empty .home-empty-state{display:none!important}
+}
+@keyframes dc-oggi-rise{from{opacity:0;translate:0 12px}to{opacity:1;translate:0 0}}
+
+/* ---------- 4c · "Tocca a te": a dot on the Oggi tab while the other waits for me ---------- */
+.nav button[data-page="home"][data-us-tocca="on"]:not(.active) .nicon{position:relative}
+.nav button[data-page="home"][data-us-tocca="on"]:not(.active) .nicon::after{
+  content:"";
+  position:absolute;
+  top:2px;
+  right:2px;
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--us-partner);
+  box-shadow:0 0 0 2px var(--us-color-bg,#0f0b13);
+}
+
+/* ---------- 4d · Countdown: one quiet way back when Oggi shows none (O9) ---------- */
+#home #homeHero .us-countdown-entry:not([hidden]){
+  position:absolute;
+  z-index:5;
+  top:15%;
+  left:50%;
+  right:auto;
+  transform:translateX(-50%);
+  display:inline-flex!important;
+  align-items:center;
+  gap:6px;
+  min-height:44px;
+  padding:0 16px 0 14px;
+  border:1px solid var(--us-color-line-strong);
+  border-radius:999px;
+  background:var(--dc-oggi-glass);
+  -webkit-backdrop-filter:blur(10px);
+  backdrop-filter:blur(10px);
+  box-shadow:none;
+  color:var(--us-color-text-2);
+  font:600 14px/1 var(--us-font-ui);
+}
+#home #homeHero .us-countdown-entry .us-icon{--us-icon-size:18px}
+#home #homeHero .us-countdown-entry:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
+
+/* ---------- 5 · Priority card: what waits for me, in their colour (mockup .prio) ---------- */
+#home #usTodayPriorityRegion .us-today-priority-card{
+  position:relative;
+  width:100%;
+  min-height:0;
+  display:grid;
+  grid-template-columns:9px minmax(0,1fr) auto;
+  grid-template-areas:"dot kind action" "dot copy action";
+  align-items:center;
+  gap:0 12px;
+  padding:12px 12px 12px 14px;
+  border:1px solid color-mix(in srgb,var(--us-partner) 40%,transparent);
+  border-radius:22px;
+  background:color-mix(in srgb,var(--us-partner) 18%,color-mix(in srgb,var(--us-color-surface) 88%,transparent));
+  -webkit-backdrop-filter:blur(12px);
+  backdrop-filter:blur(12px);
+  box-shadow:none;
+  color:var(--us-color-text);
+  font:inherit;
+  text-align:left;
+}
+#home #usTodayPriorityRegion .us-today-priority-card::before{content:"";grid-area:dot;width:9px;height:9px;border-radius:50%;background:var(--us-partner)}
+#home #usTodayPriorityRegion .us-today-priority-card.us-attention-orbit::after{display:none}
+#home #usTodayPriorityRegion .us-today-priority-kind{grid-area:kind;align-self:end;font:700 10px/1.5 var(--us-font-ui)!important;letter-spacing:.12em;text-transform:uppercase;color:var(--us-partner)}
+#home #usTodayPriorityRegion .us-today-priority-copy{grid-area:copy;align-self:start;display:block;min-width:0;font-size:13px;color:var(--us-color-text-2)}
+#home #usTodayPriorityRegion .us-today-priority-copy b{display:block;font:600 15px/1.5 var(--us-font-ui)!important;color:var(--us-color-text)}
+#home #usTodayPriorityRegion .us-today-priority-copy small{display:block;font:400 13px/1.5 var(--us-font-ui)!important;color:var(--us-color-text-2)}
+#home #usTodayPriorityRegion .us-today-priority-copy small:empty{display:none}
+#home #usTodayPriorityRegion .us-today-priority-action{
+  grid-area:action;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:40px;
+  padding:0 14px;
+  border-radius:999px;
+  background:var(--us-tu);
+  color:var(--us-inchiostro);
+  font:700 14px/1 var(--us-font-ui)!important;
+  white-space:nowrap;
+}
+#home #usTodayPriorityRegion .us-today-priority-swipe.has-dismiss{position:relative}
+#home #usTodayPriorityRegion .us-today-priority-swipe.has-dismiss .us-today-priority-card{padding-right:58px}
+#home #usTodayPriorityRegion .us-today-priority-dismiss{
+  position:absolute;
+  top:50%;
+  right:12px;
+  width:34px;
+  height:34px;
+  margin-top:-17px;
+  display:grid;
+  place-items:center;
+  border:0;
+  border-radius:50%;
+  background:none;
+  color:var(--us-color-text-3);
+  box-shadow:none;
+}
+#home #usTodayPriorityRegion .us-today-priority-dismiss .us-icon{--us-icon-size:16px}
+
+/* ---------- 6 · Push opt-in: a quiet card, the bell in amber (mockup .push-card) ---------- */
+#home .push-optin-card{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 12px 12px 14px;
+  border:1px solid var(--us-color-line);
+  border-radius:22px;
+  background:color-mix(in srgb,var(--us-color-surface) 80%,transparent);
+  -webkit-backdrop-filter:blur(12px);
+  backdrop-filter:blur(12px);
+  box-shadow:none;
+}
+#home .push-optin-icon,#home .push-optin-card.install-only .push-optin-icon,#home .push-optin-card.denied .push-optin-icon{
+  flex:none;
+  width:22px;
+  height:22px;
+  border-radius:0;
+  font-size:0;
+  color:transparent;
+  background:var(--us-ambra);
+  box-shadow:none;
+  -webkit-mask:url("/assets/icons/phosphor/bell-regular.svg") center/contain no-repeat;
+  mask:url("/assets/icons/phosphor/bell-regular.svg") center/contain no-repeat;
+}
+#home .push-optin-copy{display:block;flex:1;min-width:0;font-size:13px;color:var(--us-color-text-2)}
+#home .push-optin-card .push-optin-copy b{display:block;font:600 14px/1.5 var(--us-font-ui)!important;color:var(--us-color-text)}
+#home .push-optin-card .push-optin-copy small{display:block!important;font:400 13px/1.5 var(--us-font-ui)!important;color:var(--us-color-text-2)}
+#home .push-optin-card .push-optin-action{
+  flex:none;
+  width:auto;
+  min-height:40px!important;
+  padding:0 14px!important;
+  border:0;
+  border-radius:999px;
+  background:var(--us-tu);
+  color:var(--us-inchiostro);
+  font:700 14px/1 var(--us-font-ui)!important;
+  box-shadow:none;
+}
+#home .push-optin-card.denied{border-color:color-mix(in srgb,var(--us-rosso) 30%,transparent)}
+
+/* ---------- 7 · Legacy calendar widget (kept mounted, hidden by the Home decisions) ---------- */
+#home .us-oggi-card{border:1px solid var(--us-color-line-strong);border-radius:999px;background:var(--dc-oggi-scrim);box-shadow:none;color:var(--us-color-text-2);font-size:13px}
+
+/* ---------- 8 · Today sheet: write (mockup #sheetAnswer), then the two answers (#sheetReveal) ---------- */
+#today .today-sheet-head{display:block;margin:0}
+#today .today-sheet-head .tiny{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#today>.today-sheet.us-sheet[data-us-modal-panel]>.today-sheet-head h2{margin:0;font:700 11px/1.5 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;text-wrap:nowrap;color:var(--us-tu)}
+#today:has(#todayReveal:not(.hidden))>.today-sheet.us-sheet[data-us-modal-panel]>.today-sheet-head h2{color:var(--us-noi)}
+/* No cross on these two sheets (mockup): the handle, the scrim and Esc close it;
+   the button stays for screen readers and shows itself on keyboard focus. */
+#today .today-sheet-head .today-close:not(:focus-visible){position:absolute!important;width:1px!important;height:1px!important;min-width:0!important;min-height:0!important;padding:0!important;overflow:hidden;clip:rect(0 0 0 0);border:0!important;opacity:0}
+#today .today-sheet-head .today-close:focus-visible{position:absolute;top:14px;right:16px}
+#today .today-sheet .card.question{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  margin:12px 0 0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:none!important;
+  box-shadow:none!important;
+}
+#today .qtext{margin:0;font:400 26px/1.12 var(--us-font-display);letter-spacing:0;color:var(--us-color-text);text-wrap:balance}
+#today textarea#answer{
+  width:100%;
+  height:96px;
+  min-height:96px;
+  padding:14px;
+  border:1px solid var(--us-color-line-strong);
+  border-radius:16px;
+  background:var(--us-color-bg)!important;
+  color:var(--us-color-text);
+  font:400 16px/1.5 var(--us-font-ui);
+  box-shadow:none;
+  resize:none;
+}
+#today textarea#answer::placeholder{color:var(--us-color-text-3)}
+#today textarea#answer:focus{outline:2px solid var(--us-noi);outline-offset:2px;border-color:var(--us-color-line-strong);box-shadow:none}
+#today .question .locked{order:2;display:flex;gap:8px;margin:0;padding:0;border:0;border-radius:0;background:none;font:400 12px/1.5 var(--us-font-ui);color:var(--us-color-text-3);text-align:left}
+#today .question .locked .dot{margin-top:4px}
+#today .question .locked b{font-weight:600;color:var(--us-color-text-2)}
+#today .question>.row{order:3;margin:4px 0 0}
+#today .question>#todayReveal{order:4}
+#today .question>#todayKeep{order:5}
+#today #todaySaveBtn{width:100%;min-height:52px;border:0;border-radius:999px;background:var(--us-tu);color:var(--us-inchiostro);font:700 16px/1 var(--us-font-ui);box-shadow:none}
+#today .today-reveal--simple{display:grid;gap:10px;margin:4px 0}
+#today .today-reveal--simple .today-answer{padding:14px 16px;border:0;border-radius:20px;color:var(--us-inchiostro);box-shadow:none}
+#today .today-reveal--simple .today-answer[data-us-daily-answer="partner"]{order:-1;margin-right:28px;background:var(--us-partner)}
+#today .today-reveal--simple .today-answer[data-us-daily-answer="mine"]{margin-left:28px;background:var(--us-tu)}
+#today .today-reveal--simple .today-answer b{display:block;margin-bottom:4px;font:700 11px/1.5 var(--us-font-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--us-inchiostro);opacity:.7}
+#today .today-reveal--simple .today-answer p{margin:0;font:400 19px/1.25 var(--us-font-display);color:var(--us-inchiostro);overflow-wrap:anywhere}
+/* The bubbles come in from the sides (mockup revealOpen); the panel never scrolls sideways. */
+#today .today-reveal--simple{overflow-x:clip}
+#today.open .today-reveal--simple .today-answer[data-us-daily-answer="partner"]{animation:dc-oggi-from-left .62s var(--dc-e-soft) .18s backwards}
+#today.open .today-reveal--simple .today-answer[data-us-daily-answer="mine"]{animation:dc-oggi-from-right .62s var(--dc-e-soft) .32s backwards}
+@keyframes dc-oggi-from-left{from{opacity:0;translate:-70% 0;rotate:-5deg}to{opacity:1;translate:0 0;rotate:0deg}}
+@keyframes dc-oggi-from-right{from{opacity:0;translate:70% 0;rotate:5deg}to{opacity:1;translate:0 0;rotate:0deg}}
+/* O2 — one tap on their answer (♥ or "Mi hai commosso"); under mine, what they felt. */
+#today .today-reveal--simple .today-reactions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+#today .today-reveal--simple .today-reaction{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  min-width:40px;
+  min-height:40px;
+  padding:0 14px;
+  border:0;
+  border-radius:999px;
+  background:none;
+  box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--us-inchiostro) 45%,transparent);
+  color:var(--us-inchiostro);
+  font:600 14px/1 var(--us-font-ui);
+}
+#today .today-reveal--simple .today-reaction .us-icon{--us-icon-size:20px}
+#today .today-reveal--simple .today-reaction[aria-pressed="true"]{background:var(--us-inchiostro);box-shadow:none;color:var(--us-partner)}
+#today .today-reveal--simple .today-reaction:focus-visible{outline:2px solid var(--us-inchiostro);outline-offset:2px}
+#today .today-reveal--simple .today-reaction:disabled{opacity:.6}
+#today .today-reveal--simple .today-answer p.today-reaction-note{margin:8px 0 0;font:600 13px/1.35 var(--us-font-ui);color:var(--us-inchiostro);opacity:.8}
+#today .today-keep{display:grid;gap:12px;margin:0}
+#today .today-keep-button,#today .today-keep-done{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  width:100%;
+  min-height:52px;
+  margin:0;
+  border:0;
+  border-radius:999px;
+  background:var(--us-tu);
+  color:var(--us-inchiostro);
+  font:700 16px/1 var(--us-font-ui);
+  box-shadow:none;
+}
+#today .today-keep-button::before{content:"";width:18px;height:18px;background:currentColor;-webkit-mask:url("/assets/icons/phosphor/sparkle-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/sparkle-regular.svg") center/contain no-repeat}
+#today .today-keep-button[aria-busy="true"]::before{display:none}
+#today .today-keep-button:disabled,#today .today-keep-done{opacity:.45}
+#today .today-keep-done .us-icon{--us-icon-size:18px;color:inherit}
+#today .today-keep-done.is-fresh{animation:dc-oggi-kept .38s var(--us-ease-spring,cubic-bezier(.34,1.56,.64,1))}
+@keyframes dc-oggi-kept{0%{scale:1}40%{scale:1.04}100%{scale:1}}
+#today .today-keep-note{margin:0;font:400 12px/1.5 var(--us-font-ui);color:var(--us-color-text-3);text-align:center}
+#today .today-keep-status,#today .today-sync-status{font-size:12px;color:var(--us-color-text-3);text-align:center}
+
+/* ---------- 9 · Ti penso ricevuto: a Momento (mockup UP.momento + arrive()) ----------
+   Their colour floods from the top (700 ms), the two circles slide together,
+   the words arrive one after the other (500 ms each, 80 ms apart). */
+#thinkArrival.think-arrival-overlay{padding:0;align-items:stretch;justify-content:stretch}
+#thinkArrival .think-arrival-backdrop{background:none}
+#thinkArrival .think-arrival-sheet{
+  position:fixed!important;
+  inset:0!important;
+  width:auto!important;
+  max-width:none!important;
+  max-height:none!important;
+  margin:0!important;
+  display:grid;
+  align-content:center;
+  justify-items:center;
+  gap:8px;
+  padding:calc(var(--us-safe-top) + 24px) 24px calc(var(--us-safe-bottom) + 24px)!important;
+  border:0!important;
+  border-radius:0!important;
+  background:radial-gradient(120% 70% at 50% 0%,color-mix(in srgb,var(--us-partner) 52%,var(--us-color-bg)),var(--us-color-bg) 64%)!important;
+  box-shadow:none!important;
+  text-align:center;
+  overflow:auto;
+  transform:none!important;
+}
+#thinkArrival .think-arrival-sheet::before,#thinkArrival .think-arrival-sheet::after{display:none}
+#thinkArrival .think-arrival-head{display:contents}
+#thinkArrival .think-arrival-head>div{display:contents}
+#thinkArrival .think-arrival-visual{position:relative;display:block;width:120px;height:80px;margin:6px 0 10px}
+#thinkArrival .think-arrival-visual i{position:absolute;top:14px;width:52px;height:52px;border-radius:50%}
+#thinkArrival .think-arrival-visual i:first-child{left:22px;background:var(--us-partner)}
+#thinkArrival .think-arrival-visual i:last-child{left:46px;background:var(--us-tu);mix-blend-mode:screen}
+#thinkArrival .think-arrival-head .tiny{font:700 11px/1.5 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-partner)}
+#thinkArrival #thinkArrivalTitle{max-width:320px;margin:0;font:400 40px/1.02 var(--us-font-display);letter-spacing:0;color:var(--us-color-text);text-wrap:balance}
+#thinkArrival #thinkArrivalTitle .think-arrival-name{display:block}
+#thinkArrival #thinkArrivalTitle em{font-style:italic;color:var(--us-partner)}
+#thinkArrival .think-arrival-copy{margin:0;font:400 15px/1.5 var(--us-font-ui);color:var(--us-color-text-2)}
+#thinkArrival .think-reaction-grid{display:flex;justify-content:center;gap:10px;margin-top:8px}
+#thinkArrival .think-reaction-button{
+  width:56px;
+  min-width:56px;
+  height:56px;
+  min-height:56px;
+  padding:0;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--us-color-line);
+  border-radius:50%;
+  background:var(--us-color-surface-2);
+  box-shadow:none;
+}
+#thinkArrival .think-reaction-button[aria-pressed="true"],#thinkArrival .think-reaction-button.selected{border-color:var(--us-noi);background:color-mix(in srgb,var(--us-noi) 22%,var(--us-color-surface-2))}
+#thinkArrival .think-reaction-button.selected .think-reaction-glyph{animation:dc-oggi-react .42s var(--us-ease-spring,cubic-bezier(.34,1.56,.64,1))}
+@keyframes dc-oggi-react{0%{scale:1}35%{scale:1.35}100%{scale:1}}
+#thinkArrival .think-reaction-button:disabled:not(.selected){opacity:1}
+#thinkArrival .think-reaction-glyph{position:relative;display:block;width:26px;height:26px;font-size:0;line-height:26px;text-align:center;color:transparent}
+#thinkArrival .think-reaction-heart{background:var(--us-rosa);-webkit-mask:url("/assets/icons/phosphor/heart-straight-fill.svg") center/66% no-repeat;mask:url("/assets/icons/phosphor/heart-straight-fill.svg") center/66% no-repeat}
+#thinkArrival .think-reaction-hug::before,#thinkArrival .think-reaction-hug::after{content:"";position:absolute;top:6.5px;width:13px;height:13px;border-radius:50%}
+#thinkArrival .think-reaction-hug::before{left:3.25px;background:var(--us-rosa)}
+#thinkArrival .think-reaction-hug::after{left:9.75px;background:var(--us-lilla);mix-blend-mode:screen}
+/* A thought in amber (mockup "pensiero"): a soft bubble and two small dots. */
+#thinkArrival .think-reaction-miss::before{content:"";position:absolute;left:6.5px;top:4.3px;width:15.2px;height:11.7px;border-radius:50% 50% 50% 50%/55% 55% 45% 45%;background:var(--us-ambra)}
+#thinkArrival .think-reaction-miss::after{content:"";position:absolute;left:4.6px;top:18.3px;width:3.5px;height:3.5px;border-radius:50%;background:var(--us-ambra);box-shadow:-2.2px 2.7px 0 -.5px var(--us-ambra)}
+#thinkArrival .think-arrival-status{min-height:1.5em;margin:0;font:400 14px/1.5 var(--us-font-ui);color:var(--us-color-text-2)}
+#thinkArrival .think-arrival-actions{display:grid;width:188px;margin-top:14px}
+#thinkArrival .think-arrival-close{width:100%;min-height:48px;padding:0 18px;border:1px solid var(--us-color-line-strong);border-radius:999px;background:none;box-shadow:none;color:var(--us-color-text);font:600 15px/1 var(--us-font-ui)}
+#thinkArrival .think-arrival-close:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
+/* The shared modal chrome turns panel animations off (modal-center.css): the Momento keeps its flood. */
+#thinkArrival.open>.think-arrival-sheet[data-us-modal-panel]{animation:dc-oggi-flood .7s var(--dc-e-io) both!important}
+#thinkArrival.open :is(.think-arrival-visual,.think-arrival-head .tiny,#thinkArrivalTitle,.think-arrival-copy,.think-reaction-grid,.think-arrival-status,.think-arrival-actions){animation:dc-oggi-rise-14 .5s var(--dc-e-out) backwards}
+#thinkArrival.open .think-arrival-visual{animation-delay:.38s}
+#thinkArrival.open .think-arrival-head .tiny{animation-delay:.46s}
+#thinkArrival.open #thinkArrivalTitle{animation-delay:.54s}
+#thinkArrival.open .think-arrival-copy{animation-delay:.62s}
+#thinkArrival.open .think-reaction-grid{animation-delay:.7s}
+#thinkArrival.open:has(.think-arrival-copy[hidden]) .think-reaction-grid{animation-delay:.62s}
+#thinkArrival.open .think-arrival-status{animation-delay:.78s}
+#thinkArrival.open .think-arrival-actions{animation-delay:.86s}
+#thinkArrival.open .think-arrival-visual i:first-child{animation:dc-oggi-from-l .7s var(--dc-e-soft) .25s backwards}
+#thinkArrival.open .think-arrival-visual i:last-child{animation:dc-oggi-from-r .7s var(--dc-e-soft) .25s backwards}
+/* Closing: the Momento fades away in 280 ms (mockup closeMoment); the tiny shift
+   lets the shared surface exit hear its transform transition end. */
+#thinkArrival[data-us-motion-exiting] .think-arrival-sheet{opacity:0;transform:translateY(.01px)!important;transition:opacity .28s linear,transform .28s linear!important;pointer-events:none}
+@keyframes dc-oggi-flood{from{clip-path:circle(0% at 50% 0%)}to{clip-path:circle(150% at 50% 0%)}}
+@keyframes dc-oggi-rise-14{from{opacity:0;translate:0 14px}to{opacity:1;translate:0 0}}
+@keyframes dc-oggi-from-l{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:translateX(0)}}
+@keyframes dc-oggi-from-r{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+
+/* ---------- 10 · Countdown sheet and editor ---------- */
+#usCountdownSheet .us-countdown-head .tiny{font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--us-corallo)}
+/* Tall sheet (mockup flow tall): at least 86% of the screen, content from the top. */
+/* 86% of the screen as in the mockup (.sheet 726 px of 844), not of the overlay's padded box. */
+#usCountdownSheet>.us-countdown-sheet{min-height:calc(var(--us-viewport-height,100dvh) * .86);align-content:start}
+/* Mockup type: 15/1.5 copy, 12/1.5 small lines, 11/1.5 tags (.lead, .cd-item, .note-s). */
+#usCountdownSheet .us-countdown-hint{margin:12px 0;font-size:15px;line-height:1.5;color:var(--us-color-text-2)}
+#usCountdownSheet .us-countdown-list{gap:8px}
+#usCountdownSheet .us-countdown-row,#usCountdownSheet .us-countdown-row:has([aria-pressed="true"]){gap:8px;align-items:center;border:0;border-radius:0;background:none;overflow:visible}
+#usCountdownSheet .us-countdown-row [data-countdown-select]{
+  flex:1;
+  min-width:0;
+  justify-content:flex-start;
+  gap:12px;
+  min-height:64px;
+  padding:12px 14px;
+  border-radius:18px;
+  background:var(--us-color-surface-2);
+  box-shadow:none;
+}
+#usCountdownSheet .us-countdown-row [data-countdown-select][aria-pressed="true"]{box-shadow:inset 0 0 0 1.5px var(--us-tu)}
+#usCountdownSheet .us-countdown-check{order:-1;flex:none;width:12px;height:12px;border:2px solid var(--us-color-line-strong);border-radius:50%;font-size:0;color:transparent}
+#usCountdownSheet [aria-pressed="true"] .us-countdown-check{border-color:var(--us-tu);background:var(--us-tu)}
+#usCountdownSheet .us-countdown-value{flex:none;min-width:58px;font:400 28px/1.5 var(--us-font-display);font-variant-numeric:lining-nums tabular-nums;color:var(--us-color-text)}
+#usCountdownSheet .us-countdown-copy{flex:1;min-width:0}
+#usCountdownSheet .us-countdown-row b{font-size:15px;font-weight:600;line-height:1.5}
+#usCountdownSheet .us-countdown-row small{margin-top:0;font-size:12px;line-height:1.5;color:var(--us-color-text-3)}
+#usCountdownSheet .us-countdown-row em{display:block;margin-top:3px;font:700 11px/1.5 var(--us-font-ui);font-style:normal;letter-spacing:.08em;text-transform:uppercase;color:var(--us-tu)}
+#usCountdownSheet .us-countdown-note{margin:12px 0 0;font-size:12px;line-height:1.5;color:var(--us-color-text-3);text-align:center}
+#usCountdownSheet .us-countdown-edit{
+  flex:none;
+  width:44px;
+  min-width:44px;
+  height:44px;
+  border:1px solid var(--us-color-line)!important;
+  border-radius:50%;
+  background:var(--us-color-surface)!important;
+  color:var(--us-color-text);
+}
+#usCountdownSheet .us-countdown-list-actions,#usCountdownSheet .us-countdown-editor-actions{display:grid;gap:8px;margin-top:16px}
+#usCountdownSheet .us-countdown-list-actions button,#usCountdownSheet .us-countdown-editor-actions button{width:100%;min-height:52px;border-radius:999px;font-size:16px}
+#usCountdownSheet #usCountdownNew::before{content:"";display:inline-block;width:18px;height:18px;margin:0 6px -3px 0;background:currentColor;-webkit-mask:url("/assets/icons/phosphor/plus-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/plus-regular.svg") center/contain no-repeat}
+/* The quiet buttons are 48 px, 15 px type (mockup .btn-ghost); the primary 52 px, 16 px. */
+#usCountdownSheet :is(#usCountdownHide,#usCountdownDelete){min-height:48px;font-size:15px}
+#usCountdownSheet #usCountdownHide[aria-pressed="true"]{box-shadow:inset 0 0 0 1.5px var(--us-tu)}
+#usCountdownSheet #usCountdownDelete{color:var(--us-rosso);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--us-rosso) 45%,transparent)}
+#usCountdownSheet .us-countdown-back{gap:4px;min-height:44px;margin:12px 0 0 -6px;padding:0 14px 0 6px;border-radius:999px;font-size:15px;font-weight:600;color:var(--us-color-text-2)}
+#usCountdownSheet .us-countdown-back .us-icon{--us-icon-size:20px}
+/* The editor's title lives in the sheet header (mockup); this heading stays for the code that names it. */
+#usCountdownSheet #usCountdownEditorHeading{display:none}
+#usCountdownSheet .us-countdown-preview{
+  height:200px;
+  border:0;
+  border-radius:24px;
+  margin-top:12px;
+  background:linear-gradient(180deg,rgba(15,11,19,.1),rgba(15,11,19,.5)),var(--us-cd-photo,linear-gradient(180deg,#3a1f45 0%,#7a3d63 38%,#e2876d 62%,#3b2340 63%,#1a1020 100%)) center/cover no-repeat;
+}
+#usCountdownSheet .us-countdown-preview .us-countdown-art{transform:scale(.62)}
+#usCountdownSheet .us-countdown-preview [data-countdown-style="editorial"] .us-countdown-title{display:none}
+#usCountdownSheet .us-countdown-preview [data-countdown-style="editorial"] .us-countdown-number{font-family:var(--us-font-display);font-weight:300;letter-spacing:-.03em}
+#usCountdownSheet .us-countdown-preview [data-countdown-style="editorial"] .us-countdown-unit::before,
+#usCountdownSheet .us-countdown-preview [data-countdown-style="editorial"] .us-countdown-unit::after{display:none}
+#usCountdownSheet .us-countdown-fields{gap:12px;margin:12px 0}
+#usCountdownSheet .us-countdown-field{display:grid;gap:6px}
+#usCountdownSheet .us-countdown-mode-select{display:none!important}
+#usCountdownSheet .us-countdown-seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;padding:4px;border-radius:999px;background:var(--us-color-surface-2)}
+#usCountdownSheet .us-countdown-seg button{min-height:40px;padding:0 8px;border:0;border-radius:999px;background:none;box-shadow:none;font:600 14px/1.1 var(--us-font-ui);letter-spacing:0;text-transform:none;color:var(--us-color-text-3)}
+#usCountdownSheet .us-countdown-seg button[aria-pressed="true"]{background:var(--us-color-text);color:var(--us-inchiostro)}
+#usCountdownSheet .us-countdown-seg button:focus-visible{outline:2px solid var(--us-noi);outline-offset:2px}
+#usCountdownSheet .us-countdown-fields label{gap:6px;font-size:12px;font-weight:700;line-height:1.5;letter-spacing:.1em;text-transform:uppercase;color:var(--us-color-text-3)}
+#usCountdownSheet .us-countdown-fields label>span{font:inherit;letter-spacing:inherit;text-transform:inherit}
+#usCountdownSheet .us-countdown-fields :is(input,select){
+  min-height:52px;
+  padding:0 14px;
+  border:1px solid var(--us-color-line-strong);
+  border-radius:16px;
+  background:var(--us-color-bg)!important;
+  color:var(--us-color-text);
+  font:400 16px/1.2 var(--us-font-ui);
+  letter-spacing:0;
+  text-transform:none;
+}
+#usCountdownSheet .us-countdown-fields :is(input,select):focus{outline:none;border-color:var(--us-tu);box-shadow:0 0 0 3px color-mix(in srgb,var(--us-tu) 28%,transparent)}
+#usCountdownSheet .us-countdown-status{font-size:13px;color:var(--us-color-text-2)}
+/* Together: the title follows the relationship date (mockup .lead). */
+#usCountdownSheet .us-countdown-lead{margin:12px 0 0;font-size:15px;line-height:1.5;color:var(--us-color-text-2)}
+#usCountdownSheet .us-countdown-lead:not([hidden])+.us-countdown-fields[hidden]+.us-countdown-style-field{margin-top:12px}
+/* Stile (mockup 033 .cd-styles): six tiles in a row that scrolls sideways, edge to edge. */
+#usCountdownSheet .us-countdown-style-field{display:grid;gap:12px;min-width:0}
+#usCountdownSheet .us-countdown-style-label{font-size:12px;font-weight:700;line-height:1.5;letter-spacing:.1em;text-transform:uppercase;color:var(--us-color-text-3)}
+#usCountdownSheet .us-countdown-styles{display:flex;gap:8px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;margin:0 -20px;padding:0 20px;scroll-padding-inline:20px}
+#usCountdownSheet .us-countdown-styles::-webkit-scrollbar{display:none}
+#usCountdownSheet .us-countdown-style{flex:none;width:92px;min-width:0;min-height:0;display:grid;gap:6px;justify-items:stretch;align-content:start;padding:0;border:0;border-radius:0;background:none;box-shadow:none;color:var(--us-color-text);font:inherit;text-align:left;letter-spacing:0;text-transform:none}
+#usCountdownSheet .us-countdown-style-pv{position:relative;display:block;height:92px;border:2px solid transparent;border-radius:16px;overflow:hidden;background:linear-gradient(180deg,#2a1838,#6a3a58)}
+#usCountdownSheet .us-countdown-style[aria-pressed="true"] .us-countdown-style-pv{border-color:var(--us-tu)}
+#usCountdownSheet .us-countdown-style.is-locked .us-countdown-style-pv{filter:grayscale(.8) brightness(.55)}
+#usCountdownSheet .us-countdown-style:focus-visible{outline:none}
+#usCountdownSheet .us-countdown-style:focus-visible .us-countdown-style-pv{outline:2px solid var(--us-noi);outline-offset:2px}
+#usCountdownSheet .us-countdown-style b{font-size:13px;font-weight:600;line-height:1.5}
+#usCountdownSheet .us-countdown-style small{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;line-height:1.5;color:var(--us-color-text-3)}
+#usCountdownSheet .us-countdown-style small .us-icon{--us-icon-size:11px;flex:none}
+/* The sample at the mockup scale (--cds:.36), still: no light runs in the tiles. */
+#usCountdownSheet .us-countdown-style-pv .us-countdown-art{position:absolute;left:50%;top:50%;min-width:170px;transform:translate(-50%,-50%) scale(.36);pointer-events:none}
+#usCountdownSheet .us-countdown-style-pv [data-countdown-style="orbit"]{width:180px;height:180px}
+#usCountdownSheet .us-countdown-style-pv .us-countdown-art *,#usCountdownSheet .us-countdown-style-pv .us-countdown-art::before,#usCountdownSheet .us-countdown-style-pv .us-countdown-art::after{animation:none!important}
+#usCountdownSheet .us-countdown-style-pv :is(.us-countdown-title,.us-countdown-sub){display:none}
+#usCountdownSheet .us-countdown-style-pv [data-countdown-style="editorial"] .us-countdown-number{font-family:var(--us-font-display);font-weight:300;letter-spacing:-.03em}
+#usCountdownSheet .us-countdown-style-pv [data-countdown-style="editorial"] .us-countdown-unit::before,
+#usCountdownSheet .us-countdown-style-pv [data-countdown-style="editorial"] .us-countdown-unit::after{display:none}
+/* The sheet's own answers ("In Oggi", "Si sblocca al livello…") show above it, as in the
+   mockup (.toast z 60 over .layer z 20); the shared toast otherwise sits under every sheet. */
+body:has(#usCountdownSheet.open) .toast{z-index:calc(var(--us-layer-sheet) + 2)}
+/* What is missing, above Save (mockup .form-err). */
+#usCountdownSheet .us-countdown-error{margin:12px 0 0;font-size:13px;font-weight:600;line-height:1.5;color:var(--us-rosso)}
+#usCountdownSheet .us-countdown-error:empty{display:none}
+
+/* ---------- 11 · Personalizza Oggi: themes and effects, a tall sheet ---------- */
+.us-look-overlay{background:rgba(8,5,10,.62)}
+.us-look-overlay .us-look-sheet,.us-look-overlay .us-look-detail{
+  top:auto;
+  height:auto;
+  min-height:86%;
+  max-height:min(92%,calc(100% - var(--us-safe-top) - 24px));
+  padding:10px 20px 0;
+  border-top:1px solid var(--us-color-line-strong);
+  border-radius:30px 30px 0 0;
+  background:var(--us-color-surface);
+}
+.us-look-overlay .us-look-sheet::before,.us-look-overlay .us-look-detail::before{content:"";flex:none;align-self:center;width:40px;height:5px;margin:0 0 6px;border-radius:9px;background:var(--us-color-line-strong)}
+.us-look-overlay.open .us-look-sheet{animation:dc-oggi-sheet .48s var(--us-ease-enter) both}
+@keyframes dc-oggi-sheet{from{opacity:.6;translate:0 40px}to{opacity:1;translate:0 0}}
+.us-look-sheet>.us-look-head{grid-template-columns:minmax(0,1fr) 44px;align-items:center;min-height:56px}
+.us-look-sheet>.us-look-head h2{text-align:left;font:400 26px/1.12 var(--us-font-display);letter-spacing:0}
+.us-look-overlay .us-look-icon-btn{border:0;background:var(--us-color-surface-2);color:var(--us-color-text-2)}
+.us-look-overlay .us-look-tabs{margin:6px 0 14px;padding:4px;border:0;background:var(--us-color-surface-2)}
+.us-look-overlay .us-look-tabs::before{background:var(--us-color-text)}
+.us-look-overlay .us-look-tabs button{font:600 14px/1 var(--us-font-ui);color:var(--us-color-text-3)}
+.us-look-overlay .us-look-tabs button[aria-selected="true"]{color:var(--us-inchiostro)}
+/* The mockup shows no lead: it stays for screen readers only. */
+.us-look-overlay .us-look-lead{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.us-look-sheet>.us-look-head .us-look-head-copy{display:grid;gap:2px;min-width:0}
+.us-look-sheet>.us-look-head .us-look-kicker{font:700 11px/1.3 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-corallo)}
+.us-look-overlay .us-look-grid{gap:16px 8px}
+.us-look-overlay .us-look-tile{gap:6px}
+.us-look-overlay .us-look-tile .us-look-phone{aspect-ratio:3/5;border-radius:16px;box-shadow:0 0 0 1px var(--us-color-line)}
+.us-look-overlay .us-look-tile.is-current .us-look-phone{box-shadow:0 0 0 2px var(--us-tu)}
+.us-look-overlay .us-look-tile.is-locked .us-look-phone{filter:grayscale(.8) brightness(.55)}
+.us-look-overlay .us-look-tile-copy b{font-size:13px;font-weight:600}
+.us-look-overlay .us-look-chip{font-size:11px;font-weight:600;color:var(--us-color-text-3)}
+.us-look-overlay .us-look-chip.is-current{color:var(--us-color-text-2)}
+.us-look-overlay .us-look-foot{font-size:12px;color:var(--us-color-text-3)}
+.us-look-actions{flex:none;padding:10px 0 calc(var(--us-safe-bottom,0px) + 18px)}
+.us-look-overlay .us-look-reset{width:100%;min-height:52px;border:0;border-radius:999px;background:transparent;box-shadow:inset 0 0 0 1px var(--us-color-line-strong);color:var(--us-color-text);font:600 16px/1 var(--us-font-ui)}
+.us-look-overlay .us-look-reset:disabled{opacity:.4}
+.us-look-overlay .us-look-status{position:static;margin:0;padding:0 0 6px;font-size:13px}
+.us-look-detail>.us-look-head h2{font:400 22px/1.1 var(--us-font-display)}
+.us-look-overlay .us-look-detail-copy small{font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--us-corallo)}
+.us-look-overlay .us-look-detail-copy h3{font:400 26px/1.1 var(--us-font-display)}
+.us-look-overlay .us-look-detail-copy p{font-size:14px;color:var(--us-color-text-2)}
+.us-look-overlay .us-look-apply{min-height:52px;border:0;box-shadow:inset 0 0 0 1px var(--us-color-line-strong);background:transparent;font:700 16px/1 var(--us-font-ui);color:var(--us-color-text-2)}
+.us-look-overlay .us-look-apply.primary{box-shadow:none;background:var(--us-tu);color:var(--us-inchiostro)}
+.us-look-overlay .us-look-apply.is-current{color:var(--us-color-text)}
+.us-look-overlay button:focus-visible{outline:2px solid var(--us-noi);outline-offset:2px}
+/* The little Oggi inside every tile follows the new Oggi: circles, count, card. */
+.us-look-chrome{background:none;box-shadow:none;padding:0}
+.us-look-chrome i{width:9cqw;height:9cqw;background:rgba(15,11,19,.42);box-shadow:inset 0 0 0 1px rgba(247,239,233,.17)}
+.us-look-chrome b{width:8cqw;height:8cqw;background:linear-gradient(90deg,var(--us-rosa) 50%,var(--us-lilla) 50%);border-radius:2.4cqw}
+.us-look-count small{display:none}
+.us-look-count b{font-family:var(--us-font-display);letter-spacing:-.03em}
+.us-look-count em::before,.us-look-count em::after{display:none}
+/* Gallery tiles: only the time on the look (mockup .mini), no miniature chrome. */
+.us-look-overlay .us-look-tile .us-look-phone :is(.us-look-chrome,.us-look-card,.us-look-nav){display:none}
+.us-look-overlay .us-look-tile .us-look-count{top:16%}
+.us-look-overlay .us-look-tile .us-look-count::after{display:none}
+.us-look-overlay .us-look-tile .us-look-count b{margin:0;font:300 22px/1 var(--us-font-display);letter-spacing:0;color:#fff;text-shadow:none}
+.us-look-overlay .us-look-tile .us-look-count em{font:400 7px/1.4 var(--us-font-ui);font-style:normal;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.7)}
+.us-look-card{background:var(--us-color-surface)!important;border-color:var(--us-color-line-strong)!important}
+.us-look-card small{color:var(--us-tu)}
+
+/* ---------- 12 · Lasciato per te: the envelope opens, the letter rises ---------- */
+#leftForYouOverlay .left-for-you-head .tiny{font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--us-partner)}
+#leftForYouComposerOverlay .left-for-you-head .tiny,#leftForYouCameraOverlay .left-for-you-head .tiny{font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--us-tu)}
+:is(#leftForYouOverlay,#leftForYouComposerOverlay) .left-for-you-head h2{font:400 26px/1.12 var(--us-font-display);letter-spacing:-.01em;text-wrap:balance}
+#leftForYouOverlay .left-for-you-head small{font-size:13px;color:var(--us-color-text-3);letter-spacing:0}
+#leftForYouOverlay .left-for-you-card{display:flex;flex-direction:column;gap:12px}
+#leftForYouOverlay .left-for-you-card>#leftForYouContent{order:1}
+#leftForYouOverlay .left-for-you-meta{order:2;margin:0 4px;font-size:13px;font-weight:600;color:var(--us-color-text-3)}
+#leftForYouOverlay .left-for-you-meta b{color:var(--us-color-text-2);font-weight:600}
+#leftForYouOverlay .left-for-you-from-avatar{display:none}
+#leftForYouOverlay .left-for-you-card>.left-for-you-actions{order:3}
+#leftForYouOverlay .left-for-you-card>.left-for-you-status{order:4}
+/* Every kind: a flat card with its kind in their colour. */
+#leftForYouOverlay .left-for-you-item{
+  min-height:0;
+  padding:18px;
+  border:1px solid var(--us-color-line);
+  border-radius:22px;
+  background:var(--us-color-surface-2);
+  box-shadow:none;
+}
+#leftForYouOverlay .left-for-you-kind{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--us-partner)}
+#leftForYouOverlay .left-for-you-note{font:italic 400 17px/1.35 var(--us-font-display);color:var(--us-color-text)}
+/* A thought: a letter coming out of an open envelope. */
+#leftForYouOverlay .left-for-you-item[data-left-kind="text"]{
+  position:relative;
+  display:grid;
+  justify-items:center;
+  width:min(100%,272px);
+  margin:8px auto 0;
+  padding:0 0 74px;
+  border:0;
+  border-radius:0;
+  background:none;
+  isolation:isolate;
+}
+#leftForYouOverlay .left-for-you-item[data-left-kind="text"]::before,
+#leftForYouOverlay .left-for-you-item[data-left-kind="text"]::after{content:"";position:absolute;left:0;right:0;bottom:0;height:132px;border-radius:12px}
+#leftForYouOverlay .left-for-you-item[data-left-kind="text"]::before{z-index:-1;background:#3a2a44}
+#leftForYouOverlay .left-for-you-item[data-left-kind="text"]::after{z-index:2;background:linear-gradient(160deg,#4b3557,#36263f);clip-path:polygon(0 30%,50% 64%,100% 30%,100% 100%,0 100%)}
+#leftForYouOverlay .left-for-you-item[data-left-kind="text"] .left-for-you-kind{
+  position:absolute;
+  z-index:1;
+  top:16px;
+  left:30px;
+  color:#8a5a7a;
+}
+#leftForYouOverlay .left-for-you-item[data-left-kind="text"] .left-for-you-text{
+  position:relative;
+  z-index:1;
+  width:calc(100% - 28px);
+  min-height:150px;
+  padding:38px 16px 64px;
+  border-radius:10px;
+  background:var(--us-latte);
+  color:var(--us-inchiostro);
+  font:400 18px/1.3 var(--us-font-display);
+  text-align:left;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  box-shadow:0 10px 24px rgba(0,0,0,.25);
+}
+#leftForYouOverlay.open .left-for-you-item[data-left-kind="text"] .left-for-you-text,
+#leftForYouOverlay.open .left-for-you-item[data-left-kind="text"] .left-for-you-kind{animation:dc-oggi-letter .62s var(--us-ease-enter) .35s both}
+@keyframes dc-oggi-letter{from{translate:0 64px}to{translate:0 0}}
+#leftForYouOverlay .left-for-you-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0}
+#leftForYouOverlay .left-for-you-actions:has(#leftForYouNext[hidden]){grid-template-columns:1fr}
+#leftForYouOverlay .left-for-you-actions button{min-height:52px;border-radius:999px;font-size:16px;font-weight:700;box-shadow:none}
+#leftForYouOverlay #leftForYouConserve{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;background:var(--us-tu);color:var(--us-inchiostro)}
+#leftForYouOverlay #leftForYouConserve:not(.is-conserved)::before{content:"";width:18px;height:18px;background:currentColor;-webkit-mask:url("/assets/icons/phosphor/sparkle-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/sparkle-regular.svg") center/contain no-repeat}
+#leftForYouOverlay #leftForYouConserve.is-conserved{background:transparent;box-shadow:inset 0 0 0 1px var(--us-color-line-strong);color:var(--us-color-text)}
+#leftForYouOverlay #leftForYouNext{border:0;background:transparent;box-shadow:inset 0 0 0 1px var(--us-color-line-strong);color:var(--us-color-text);font-weight:600}
+#leftForYouOverlay .left-for-you-status{font-size:13px;text-align:center;color:var(--us-color-text-2)}
+#leftForYouOverlay :is(.left-for-you-empty,.left-for-you-error) h3{font:400 26px/1.1 var(--us-font-display)}
+
+/* Composer: five kinds in one segmented control, a night field, my colour to send. */
+#leftForYouComposerOverlay .left-for-you-composer-kinds{
+  display:grid;
+  grid-auto-flow:column;
+  grid-auto-columns:1fr;
+  gap:0;
+  padding:4px;
+  border:0;
+  border-radius:999px;
+  background:var(--us-color-surface-2);
+}
+#leftForYouComposerOverlay .left-for-you-composer-kinds button{
+  min-height:40px;
+  padding:0 2px;
+  border:0;
+  border-radius:999px;
+  background:transparent;
+  box-shadow:none;
+  font:600 13px/1 var(--us-font-ui);
+  color:var(--us-color-text-3);
+}
+#leftForYouComposerOverlay .left-for-you-composer-kinds button:is(.is-active,[aria-selected="true"]){background:var(--us-color-text);color:var(--us-inchiostro)}
+#leftForYouComposerOverlay :is(.left-for-you-composer-text,.left-for-you-composer-url){
+  width:100%;
+  min-height:96px;
+  padding:14px;
+  border:1px solid var(--us-color-line-strong);
+  border-radius:16px;
+  background:var(--us-color-bg);
+  color:var(--us-color-text);
+  font:400 16px/1.45 var(--us-font-ui);
+  box-shadow:none;
+}
+#leftForYouComposerOverlay .left-for-you-composer-url{min-height:52px;padding:0 14px}
+#leftForYouComposerOverlay :is(.left-for-you-composer-text,.left-for-you-composer-url):focus{outline:none;border-color:var(--us-tu);box-shadow:0 0 0 3px color-mix(in srgb,var(--us-tu) 28%,transparent)}
+#leftForYouComposerOverlay .left-for-you-composer-pick{
+  min-height:56px;
+  padding:0 16px;
+  border:1.5px dashed var(--us-color-line-strong);
+  border-radius:20px;
+  background:var(--us-color-surface-2);
+  box-shadow:none;
+  color:var(--us-color-text);
+  font:600 15px/1.2 var(--us-font-ui);
+}
+#leftForYouComposerOverlay .left-for-you-photo-actions{display:grid;gap:8px}
+/* The chosen file and the panel's limit line sit quietly under the pick. */
+#leftForYouComposerOverlay .left-for-you-composer-file{font-size:12px;color:var(--us-color-text-2)}
+#leftForYouComposerOverlay .left-for-you-composer-hint{font-size:12px;line-height:1.35;color:var(--us-color-text-3)}
+#leftForYouComposerOverlay .left-for-you-composer-actions{margin-top:14px}
+#leftForYouComposerOverlay #leftForYouComposerSend{
+  width:100%;
+  min-height:52px;
+  border:0;
+  border-radius:999px;
+  background:var(--us-tu);
+  color:var(--us-inchiostro);
+  font:700 16px/1 var(--us-font-ui);
+  box-shadow:none;
+}
+#leftForYouComposerOverlay #leftForYouComposerSend:disabled{background:var(--us-color-elevated);color:var(--us-color-text-3)}
+#leftForYouComposerOverlay .left-for-you-vn-mic,#leftForYouComposerOverlay .left-for-you-vn-play{background:var(--us-tu);color:var(--us-inchiostro);box-shadow:none}
+#leftForYouComposerOverlay .left-for-you-status{font-size:13px;color:var(--us-color-text-2)}
+
+/* Private camera: the whole screen is the viewfinder. */
+#leftForYouCameraOverlay{padding:0}
+#leftForYouCameraOverlay .left-for-you-camera-sheet{
+  position:fixed!important;
+  inset:0!important;
+  width:auto!important;
+  max-width:none!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:#000!important;
+  box-shadow:none!important;
+  overflow:hidden;
+  transform:none;
+}
+#leftForYouCameraOverlay .left-for-you-camera-sheet::before,#leftForYouCameraOverlay .left-for-you-camera-sheet::after{display:none}
+#leftForYouCameraOverlay .left-for-you-camera-body{position:absolute;inset:0;display:block;padding:0}
+#leftForYouCameraOverlay .left-for-you-camera-preview-wrap{position:absolute;inset:0;max-height:none;aspect-ratio:auto;border-radius:0;background:#000}
+#leftForYouCameraOverlay .left-for-you-head{position:absolute;z-index:2;top:calc(var(--us-safe-top) + 16px);left:16px;right:16px;padding:0;align-items:center}
+#leftForYouCameraOverlay .left-for-you-head>div{display:grid;padding:8px 14px;border-radius:18px;background:rgba(15,11,19,.55)}
+#leftForYouCameraOverlay .left-for-you-head .tiny{font-size:10px}
+#leftForYouCameraOverlay .left-for-you-head h2{margin:0;font:600 15px/1.3 var(--us-font-ui);letter-spacing:0}
+#leftForYouCameraOverlay .left-for-you-close{width:46px;height:46px;border:1px solid var(--us-color-line-strong);background:rgba(15,11,19,.55);box-shadow:none}
+#leftForYouCameraOverlay .left-for-you-camera-status{position:absolute;z-index:2;left:20px;right:20px;bottom:calc(var(--us-safe-bottom) + 128px);color:var(--us-color-text)}
+#leftForYouCameraOverlay .left-for-you-camera-actions{
+  position:absolute;
+  z-index:2;
+  left:20px;
+  right:20px;
+  bottom:calc(var(--us-safe-bottom) + 30px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+}
+#leftForYouCameraOverlay #leftForYouCameraSwitch{
+  position:absolute;
+  left:0;
+  top:50%;
+  width:46px;
+  min-width:46px;
+  height:46px;
+  min-height:46px;
+  margin-top:-23px;
+  padding:0;
+  border:1px solid var(--us-color-line-strong);
+  border-radius:50%;
+  background:rgba(15,11,19,.55);
+  font-size:0;
+  color:var(--us-color-text);
+}
+#leftForYouCameraOverlay #leftForYouCameraSwitch::before{content:"";display:block;width:20px;height:20px;margin:auto;background:currentColor;-webkit-mask:url("/assets/icons/phosphor/arrows-clockwise-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/arrows-clockwise-regular.svg") center/contain no-repeat}
+#leftForYouCameraOverlay .left-for-you-camera-shutter{width:78px;height:78px;border:0;background:#fff;box-shadow:0 0 0 5px rgba(0,0,0,.25),0 0 0 9px rgba(255,255,255,.55)}
+#leftForYouCameraOverlay .left-for-you-camera-shutter span{display:none}
+#leftForYouCameraOverlay :is(#leftForYouCameraUse,#leftForYouCameraRetake){flex:1;min-height:52px;border:0;border-radius:999px;font:700 16px/1 var(--us-font-ui)}
+#leftForYouCameraOverlay #leftForYouCameraUse{order:2;background:var(--us-tu);color:var(--us-inchiostro)}
+#leftForYouCameraOverlay #leftForYouCameraRetake{order:1;background:rgba(15,11,19,.55);box-shadow:inset 0 0 0 1px var(--us-color-line-strong);color:var(--us-color-text);font-weight:600}
+
+/* ---------- 13 · Reduced motion: movement becomes a fade or nothing ---------- */
+:root[data-us-motion="reduced"] :is(#thinkButton .us-shell-icon--think,#leftForYouPartnerEntry .beat,#home #usDailyRitual,#home .us-daily-ritual-ring *,#today .today-answer,#today .today-keep-done,#thinkArrival .think-arrival-sheet,#thinkArrival .think-arrival-sheet>*,#thinkArrival .think-arrival-head>div>*,#thinkArrival .think-reaction-grid,#thinkArrival .think-reaction-glyph,#thinkArrival .think-arrival-visual i,.us-look-overlay .us-look-sheet,#leftForYouOverlay .left-for-you-text,#leftForYouOverlay .left-for-you-kind){animation:none!important}
+:root[data-us-motion="reduced"] #home .us-daily-ritual-ring *{transition:none!important}
+:root[data-us-motion="reduced"] .dc-oggi-spark{display:none!important}
+:root[data-us-motion="reduced"] #thinkArrival.open>.think-arrival-sheet[data-us-modal-panel]{animation:dc-oggi-fade .2s linear both!important}
+:root[data-us-motion="reduced"] #home #usOggiDock>:is(#usTodayPriorityRegion,#pushOptInCard):not([hidden]){animation:dc-oggi-fade .2s linear both!important}
+@media (prefers-reduced-motion:reduce){
+  #thinkButton .us-shell-icon--think,#leftForYouPartnerEntry .beat,#home #usDailyRitual,#home .us-daily-ritual-ring *,#today .today-answer,#today .today-keep-done,#thinkArrival .think-arrival-sheet,#thinkArrival .think-arrival-sheet>*,#thinkArrival .think-arrival-head>div>*,#thinkArrival .think-reaction-grid,#thinkArrival .think-reaction-glyph,#thinkArrival .think-arrival-visual i,.us-look-overlay .us-look-sheet,#leftForYouOverlay .left-for-you-text,#leftForYouOverlay .left-for-you-kind{animation:none!important}
+  #home .us-daily-ritual-ring *{transition:none!important}
+  .dc-oggi-spark{display:none!important}
+  #thinkArrival.open>.think-arrival-sheet[data-us-modal-panel]{animation:dc-oggi-fade .2s linear both!important}
+  #home #usOggiDock>:is(#usTodayPriorityRegion,#pushOptInCard):not([hidden]){animation:dc-oggi-fade .2s linear both!important}
+  #leftForYouPartnerEntry.us-attention-orbit[data-us-attention="on"]::after{animation:none;transition:none}
+  #home .home-photo-shade{transition:none}
+}
+@keyframes dc-oggi-fade{from{opacity:0}to{opacity:1}}

@@ -21,14 +21,15 @@ const PHOSPHOR_NAV_ASSETS = [
   'game-controller-fill.svg',
 ];
 
-test('M1 usa Inter e Newsreader self-hosted con fallback locale', () => {
+test('Due colori usa Fraunces e Figtree self-hosted con fallback locale', () => {
   const css = foundation();
-  assert.match(css, /@font-face\{font-family:"Newsreader"/);
-  assert.match(css, /url\("\/assets\/fonts\/Newsreader-Variable\.woff2"\)/);
-  assert.match(css, /@font-face\{font-family:"Inter"/);
-  assert.match(css, /url\("\/assets\/fonts\/Inter-Variable\.woff2"\)/);
-  assert.match(css, /--us-font-editorial:"Newsreader",Georgia,serif/);
-  assert.match(css, /--us-font-ui:"Inter",system-ui/);
+  assert.match(css, /@font-face\{font-family:"Fraunces";src:url\("\/assets\/fonts\/Fraunces-Soft-Roman\.woff2"\)/);
+  assert.match(css, /@font-face\{font-family:"Fraunces";src:url\("\/assets\/fonts\/Fraunces-Soft-Italic\.woff2"\)[^}]*font-style:italic/);
+  assert.match(css, /@font-face\{font-family:"Figtree";src:url\("\/assets\/fonts\/Figtree-Latin\.woff2"\)/);
+  assert.match(css, /@font-face\{font-family:"Figtree";src:url\("\/assets\/fonts\/Figtree-LatinExt\.woff2"\)/);
+  assert.match(css, /--us-font-editorial:"Fraunces",Georgia,"Times New Roman",serif/);
+  assert.match(css, /--us-font-ui:"Figtree",system-ui/);
+  assert.doesNotMatch(css, /fonts\.googleapis|fonts\.gstatic/);
 });
 
 test('M1 bottom navigation usa Phosphor regular/fill senza cambiare le quattro root tab', () => {
@@ -84,7 +85,8 @@ test('M1.3 (M12A) il centro della top chrome è il marchio US; I nostri eventi v
   const html = read('index.html');
   const css = read('identity.css');
   assert.doesNotMatch(html, /id="usEventsTopEntry"/);
-  assert.match(html, /id="usCalendarEventsLink"[^>]*aria-label="Apri i nostri eventi"/);
+  // US 1.0: the old calendar overlay (and its Eventi link) is gone; Eventi is a Noi link.
+  assert.match(html, /<button type="button" data-noi-open-link="eventi">/);
   assert.doesNotMatch(html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '', /class="us-event-add"/);
   assert.match(css, /\.us-top-brand\{[^}]*grid-column:2[^}]*pointer-events:none/);
   assert.doesNotMatch(css, /us-events-top/);
@@ -137,8 +139,12 @@ test('M1 topbar refinement bilancia tre zone senza ridurre i touch target', () =
 
 test('M1 shell assets sono presenti nel Web source e non dipendono dal bundle APK', () => {
   const required = [
-    'assets/fonts/Inter-Variable.woff2',
-    'assets/fonts/Newsreader-Variable.woff2',
+    'assets/fonts/Fraunces-Soft-Roman.woff2',
+    'assets/fonts/Fraunces-Soft-Italic.woff2',
+    'assets/fonts/Figtree-Latin.woff2',
+    'assets/fonts/Figtree-LatinExt.woff2',
+    'assets/fonts/Fraunces-OFL.txt',
+    'assets/fonts/Figtree-OFL.txt',
     ...PHOSPHOR_NAV_ASSETS.map((asset) => `assets/icons/phosphor/${asset}`),
   ];
   for (const file of required) assert.equal(fs.existsSync(path.join(ROOT, file)), true, file);

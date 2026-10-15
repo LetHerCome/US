@@ -56,17 +56,52 @@
   function showStatus(message, kind = 'offline', timeout = 0) {
     if (!statusBar) return;
     if (statusTimer) clearTimeout(statusTimer);
+    const replaced = !statusBar.hidden && statusBar.textContent !== message;
     statusBar.dataset.kind = kind;
     statusBar.textContent = message;
     statusBar.hidden = false;
+    // A new line comes in again from above, as a new pill does in the design.
+    if (replaced && statusBar.style && typeof statusBar.getBoundingClientRect === 'function') {
+      statusBar.style.animation = 'none';
+      statusBar.getBoundingClientRect();
+      statusBar.style.animation = '';
+    }
     syncRuntimeLayout();
     if (timeout > 0) statusTimer = setTimeout(() => hideStatus(), timeout);
+  }
+
+  // The pill leaves as in the design: a 220 ms fade in place. The bar itself
+  // hides at once (state, layout, screen readers); a still copy fades.
+  function fadeAway(bar) {
+    try {
+      if (!bar || bar.hidden || typeof bar.cloneNode !== 'function' || typeof bar.animate !== 'function') return;
+      const root = document.documentElement;
+      if (root?.dataset?.usMotion === 'reduced' || window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) return;
+      const r = bar.getBoundingClientRect();
+      if (!r.width) return;
+      const copy = bar.cloneNode(true);
+      copy.removeAttribute('id');
+      copy.removeAttribute('role');
+      copy.removeAttribute('aria-live');
+      copy.setAttribute('aria-hidden', 'true');
+      copy.classList.add('us-pill-ghost');
+      const set = (k, v) => copy.style.setProperty(k, v, 'important');
+      set('position', 'fixed'); set('left', `${r.left}px`); set('top', `${r.top}px`);
+      set('right', 'auto'); set('bottom', 'auto'); set('width', `${r.width}px`); set('margin', '0');
+      set('transform', 'none'); set('pointer-events', 'none'); set('animation', 'none');
+      bar.after(copy);
+      const out = copy.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 220, fill: 'forwards' });
+      const drop = () => copy.remove();
+      out.finished.then(drop, drop);
+      setTimeout(drop, 400);
+    } catch (_) {}
   }
 
   function hideStatus() {
     if (!statusBar) return;
     if (statusTimer) clearTimeout(statusTimer);
     statusTimer = null;
+    fadeAway(statusBar);
     statusBar.hidden = true;
     syncRuntimeLayout();
   }
@@ -154,14 +189,15 @@
   function localizeRuntimeLabels() {
     if (typeof window.bondRankTitle === 'function') {
       window.bondRankTitle = (level) => {
+        // Same names as app.js bondRankTitle (founder decision, 2026-10-14).
         if (level <= 1) return 'Primo legame';
-        if (level === 2) return 'Squadra formata';
-        if (level === 3) return 'Risonanza';
-        if (level === 4) return 'Anime sincronizzate';
-        if (level <= 7) return 'Legame profondo';
-        if (level <= 12) return 'Duo leggendario';
-        if (level <= 20) return 'Legame mitico';
-        return 'Legame eterno';
+        if (level === 2) return 'Complici';
+        if (level === 3) return 'In sintonia';
+        if (level === 4) return 'Stessa frequenza';
+        if (level <= 7) return 'Intesa rara';
+        if (level <= 12) return 'Indivisibili';
+        if (level <= 20) return 'Legame leggendario';
+        return 'Noi, senza limite';
       };
     }
     if (typeof window.questCategoryLabel === 'function') {
@@ -177,9 +213,11 @@
   function wrapToast() {
     const original = window.toast;
     if (typeof original !== 'function' || original.__fix4Wrapped) return;
-    const wrapped = function(message) {
-      original(message);
-      if (isImportantError(String(message || ''))) showStatus(String(message), 'error', 6500);
+    // An important error becomes the status pill at the top; it is not also
+    // shown as a toast under it (one Avviso, one message). Options pass through.
+    const wrapped = function(message, options) {
+      if (statusBar && isImportantError(String(message || ''))) showStatus(String(message), 'error', 6500);
+      else original(message, options);
     };
     wrapped.__fix4Wrapped = true;
     window.toast = wrapped;

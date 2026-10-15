@@ -203,6 +203,33 @@ function partitionDayBusy(entries, dateISO, roleOf) {
   return { personABusy, personBBusy, sharedEvents, dayStartISO: win.windowStartDate, dayEndISO: win.windowEndDate };
 }
 
+// "La nostra settimana": an evening is free for you two when you have at
+// least three hours free together between 19:00 and 23:00. The busy rules are
+// the ones of "Liberi insieme" (partitionDayBusy + computeFreeTogether); a
+// couple Event with a time (Eventi) counts as a shared plan of three hours.
+const US_FREE_EVENING = Object.freeze({ startHour: 19, endHour: 23, minMinutes: 180, eventMinutes: 180 });
+function freeEveningFor(entries, dateISO, roleOf, eventTimes = [], domain = (typeof UsCalendarDomain !== 'undefined' ? UsCalendarDomain : null)) {
+  if (!domain || typeof domain.computeFreeTogether !== 'function') return false;
+  const d = parseISODate(dateISO);
+  const at = (h, m = 0) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, m, 0).getTime();
+  const partition = partitionDayBusy(entries, dateISO, roleOf);
+  const plans = [];
+  for (const time of eventTimes || []) {
+    const match = /^(\d{1,2}):(\d{2})/.exec(String(time || ''));
+    if (!match) continue;
+    const start = at(Number(match[1]), Number(match[2]));
+    plans.push({ start, end: start + US_FREE_EVENING.eventMinutes * 60000 });
+  }
+  return domain.computeFreeTogether({
+    windowStart: at(US_FREE_EVENING.startHour),
+    windowEnd: at(US_FREE_EVENING.endHour),
+    personABusy: partition.personABusy,
+    personBBusy: partition.personBBusy,
+    sharedEvents: [...partition.sharedEvents, ...plans],
+    minDurationMinutes: US_FREE_EVENING.minMinutes
+  }).length > 0;
+}
+
 // Human phrasing for one free-together window, in Italian, hour-based:
 //   entire day -> "Tutta la giornata"; ends at midnight -> "dopo le H:MM";
 //   starts at midnight -> "fino alle H:MM"; otherwise "13:00 – 16:00".
@@ -523,15 +550,58 @@ function composeOggiCalendarFact({ dayStartISO, dayEndISO, personA, personB, fre
   };
 }
 
+// Oggi's "Prossimo impegno" (mockup .og-next): the Noi calendar commitment,
+// shared or either person's, nearest from now within today, tomorrow and the
+// day after, on the device's calendar days (as the Noi calendar shows them).
+// One already over is skipped; one in progress is only a fallback (started).
+// The time shows on the day the commitment starts, never on a later day.
+function oggiNextCommitment(list, nowISO = new Date().toISOString(), today = null) {
+  const nowDate = new Date(nowISO);
+  const now = nowDate.getTime();
+  if (!Number.isFinite(now)) return null;
+  const first = today || isoDate(nowDate.getFullYear(), nowDate.getMonth(), nowDate.getDate());
+  const last = shiftISODate(first, 2);
+  const day = /^\d{4}-\d{2}-\d{2}$/;
+  const rows = [];
+  for (const entry of Array.isArray(list) ? list : []) {
+    const title = String(entry?.title || '').trim();
+    if (!entry?.id || !title) continue;
+    let span;
+    if (entry.is_all_day) {
+      if (!day.test(String(entry.start_date)) || !day.test(String(entry.end_date))) continue;
+      span = { start: entry.start_date, end: entry.end_date };
+      if (span.end < first) continue;
+    } else {
+      const start = new Date(entry.starts_at).getTime(), end = new Date(entry.ends_at).getTime();
+      if (!Number.isFinite(start) || !Number.isFinite(end) || end <= now) continue;
+      span = entryDateSpan(entry);
+    }
+    const date = span.start > first ? span.start : first;
+    if (date > last) continue;
+    const at = !entry.is_all_day && span.start === date ? new Date(entry.starts_at) : null;
+    rows.push({
+      kind: 'calendar', id: String(entry.id), title, effective_date: date,
+      days_left: Math.round((parseISODate(date) - parseISODate(first)) / 86400000),
+      event_time: at ? `${pad2(at.getHours())}:${pad2(at.getMinutes())}` : null,
+      started: !entry.is_all_day && new Date(entry.starts_at).getTime() <= now
+    });
+  }
+  rows.sort((a, b) => Number(a.started) - Number(b.started)
+    || a.effective_date.localeCompare(b.effective_date)
+    || String(a.event_time || '23:59:59').localeCompare(String(b.event_time || '23:59:59'))
+    || a.title.localeCompare(b.title) || a.id.localeCompare(b.id));
+  return rows[0] || null;
+}
+
 const pureApi = {
   ROLE_ORDER, US_CALENDAR_DEFAULT_DURATION_MINUTES, roleRank, entryLaneRoleFor, entryDateSpan, entryDatesTouched,
   formatDateRangeLabel, localDateFromInstant, localDateTimeToISO, addMinutesToISO, originalDurationMinutes,
   shiftISODate, originalAllDaySpanDays,
-  monthGridRange, windowForGrid, weekRangeFor, weekWindowFor, mondayOfISO, partitionDayBusy, tempoWindowLabel,
+  monthGridRange, windowForGrid, weekRangeFor, weekWindowFor, mondayOfISO, partitionDayBusy, US_FREE_EVENING, freeEveningFor, tempoWindowLabel,
   normalizeQuickTime, addClockMinutes, durationMinutesFromTimes, REMINDER_OPTIONS, REMINDER_TARGETS, reminderTargetAllowed, reminderOffsetAllowed, reminderOptionsFor, reminderRowsFor, reminderCopy,
   buildEntryPayload, withCreateAuthority, canEditEntry,
   quickEntryError, quickEntryHiddenFields, classifyMutationResult,
-  oggiEventLabel, composeOggiCalendarFact, oggiRemainingWindows,
+  oggiEventLabel, composeOggiCalendarFact, oggiRemainingWindows, oggiNextCommitment,
   ownerMarkFor, ownerNameFor, entryAriaLabel, monthCellMarks, sortDayEntries, groupDayEntries
 };
 if (typeof module === 'object' && module.exports) Object.assign(module.exports, pureApi);
@@ -543,22 +613,16 @@ const $ = (id) => document.getElementById(id);
 const esc = (v = '') => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
-let viewYear = null;
-let viewMonth = null;
+// Noi is the only calendar on screen (noi-v2.js). This module keeps the read
+// authority and the two editor sheets: the day detail and the "+" form.
 let selectedDate = null;
 let entries = [];
 let profiles = [];
 let profilesById = new Map();
-let loadToken = 0;
-let loading = false;
-let lastError = false;
+// The "+" form: "Solo mio" is a personal entry, "Nostro" a shared one (the
+// entry_type the table already has). "Data speciale" hands over to Eventi.
 let calendarKind = 'personal';
-let calendarMode = 'month'; // 'month' | 'week'
-let weekStartISO = null;    // Monday of the visible week
 let editingFormEntry = null;
-// M6D — righe calendar_reminders della coppia: lette per il dettaglio. M9C: il
-// form rapido non le configura più e non le tocca mai (restano come sono).
-let editingEntryReminders = [];
 let noiEditorReadSeq = 0;
 let formDateISO = null; // M9C — il giorno scelto toccando il calendario
 let detailEntry = null;
@@ -571,27 +635,10 @@ let pendingIdeaLink = null;
 // è attivo, toccare un giorno apre il form già shared e collegato all'idea.
 let pendingIdeaPick = null;
 
-function ensureInitialMonth() {
-  if (viewYear != null) return;
-  const n = new Date();
-  viewYear = n.getFullYear();
-  viewMonth = n.getMonth();
-  weekStartISO = mondayOfISO(todayISO());
-}
-// The window the current view needs — one shared contract for month and week.
-function visibleWindow() {
-  ensureInitialMonth();
-  if (calendarMode === 'week') return weekWindowFor(weekStartISO);
-  const { gridStart, gridEnd } = monthGridRange(viewYear, viewMonth);
-  return windowForGrid(gridStart, gridEnd);
-}
-function sortedProfiles() { return [...profiles].sort((a, b) => roleRank(a.role) - roleRank(b.role)); }
 function profileById(id) { return profilesById.get(id) || null; }
 function profileName(id) { const p=profileById(id);return ownerNameFor(p?.role,p?.display_name); }
 function profileRole(id) { return profileById(id)?.role || ''; }
 function entryLaneRole(entry) { return entryLaneRoleFor(entry, profileRole(entry.owner_id)); }
-function laneClass(role) { return role === 'shared' ? 'shared' : (role === ROLE_ORDER[0] ? 'a' : (role === ROLE_ORDER[1] ? 'b' : 'other')); }
-
 function buildDateIndex() {
   const map = new Map();
   for (const entry of entries) {
@@ -611,31 +658,6 @@ async function loadProfiles() {
   if (error) { console.warn('[US Calendar] profiles', error); return; }
   profiles = (data || []).filter(p=>p.couple_id===coupleId);
   profilesById = new Map(profiles.map((p) => [p.id, p]));
-}
-
-async function loadEntries() {
-  if (!window.usProfile) return;
-  const win = visibleWindow();
-  const token = ++loadToken;
-  loading = true;
-  renderLoadingState();
-  try {
-    const filter = UsCalendarDomain.buildRangeOverlapFilter(win);
-    const { data, error } = await sb.from('calendar_entries')
-      .select('id,couple_id,entry_type,owner_id,created_by,title,description,location,is_all_day,starts_at,ends_at,start_date,end_date,visibility')
-      .eq('couple_id', window.usProfile.couple_id)
-      .or(filter);
-    if (error) throw error;
-    if (token !== loadToken) return;
-    entries = UsCalendarDomain.filterEntriesInWindow(data || [], win);
-    lastError = false;
-  } catch (error) {
-    console.warn('[US Calendar] load', error);
-    if (token !== loadToken) return;
-    lastError = true;
-  } finally {
-    if (token === loadToken) { loading = false; renderCalendar(); }
-  }
 }
 
 // NOI V2: share the Calendar read authority without opening or mutating the
@@ -671,6 +693,15 @@ async function readNoiMonth(year, month) {
     profiles:profileRows,
     startedOn:coupleResult.data?.started_on||null
   };
+}
+
+// "La nostra settimana": which of these days still have a free evening for
+// both of you. Reads nothing: it works on the month readNoiMonth returned.
+function noiFreeEvenings({ appointments = [], profiles: people = [], dates = [], eventTimesByDate = {} } = {}) {
+  const roleById = new Map((people || []).map((p) => [p.id, p.role]));
+  const roleOf = (entry) => entryLaneRoleFor(entry, roleById.get(entry.owner_id));
+  return (dates || []).filter((dateISO) => /^\d{4}-\d{2}-\d{2}$/.test(String(dateISO || ''))
+    && freeEveningFor(appointments, dateISO, roleOf, eventTimesByDate[dateISO] || []));
 }
 
 // M6E — Oggi calendar widget data source. A read independent of the shared
@@ -775,282 +806,32 @@ async function getOggiCalendarInsightSource() {
 }
 window.getOggiCalendarInsightSource = getOggiCalendarInsightSource;
 
-// Weekly board for Noi. This is a compact read-only projection of the existing
-// Calendar authority: same RLS-scoped calendar_entries source, no new storage.
-const US_NOI_WEEK_BOARD_LIMIT = 3;
-function noiBoardClock(entry) {
-  if (entry.is_all_day) return 'Tutto il giorno';
-  const fmt = (iso) => { const d = new Date(iso); return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
-  return `${fmt(entry.starts_at)}–${fmt(entry.ends_at)}`;
-}
-function noiBoardDayLabel(dateISO, today) {
-  if (dateISO === today) return 'OGGI';
-  if (dateISO === shiftISODate(today, 1)) return 'DOMANI';
-  const d = parseISODate(dateISO);
-  return `${WEEKDAYS_IT[(d.getDay() + 6) % 7]} ${d.getDate()}`;
-}
-async function getNoiWeekBoardSource() {
+// The commitment Oggi's pill shows (oggiNextCommitment), from the same read the
+// Noi calendar uses, over today and the next two days. Refreshes that land
+// together share one read; identity is captured once and checked at the end.
+let oggiNextLoad = null;
+async function getOggiNextCommitmentSource({ fresh = false } = {}) {
   const profile = window.usProfile;
-  if (!profile) return null;
+  if (!profile?.couple_id) return null;
   const coupleId = profile.couple_id;
-  const sameIdentity = () => window.usProfile === profile && window.usProfile?.couple_id === coupleId;
   const today = todayISO();
-  const end = shiftISODate(today, 7);
-  const [{ data: profileRows, error: profilesError }, weekEntries] = await Promise.all([
-    sb.from('profiles').select('id,display_name').eq('couple_id', coupleId),
-    fetchEntriesForRange(coupleId, today, end)
-  ]);
-  if (profilesError) throw profilesError;
-  if (!sameIdentity()) return null;
-  const names = new Map((profileRows || []).map((p) => [p.id, p.display_name]));
-  const rows = [];
-  for (const entry of weekEntries || []) {
-    const dateISO = entryDatesTouched(entry).find((date) => date >= today && date < end);
-    if (!dateISO) continue;
-    rows.push({
-      id: entry.id,
-      dateISO,
-      day: noiBoardDayLabel(dateISO, today),
-      owner: entry.entry_type === 'shared' ? 'Insieme' : (names.get(entry.owner_id) || 'Impegno'),
-      title: entry.title || 'Impegno',
-      time: noiBoardClock(entry),
-      shared: entry.entry_type === 'shared'
-    });
+  const key = `${profile.id}:${coupleId}:${today}`;
+  let slot = !fresh && oggiNextLoad?.key === key ? oggiNextLoad : null;
+  if (!slot) {
+    slot = { key, promise: fetchEntriesForRange(coupleId, today, shiftISODate(today, 3)) };
+    oggiNextLoad = slot;
+    const release = () => { if (oggiNextLoad === slot) oggiNextLoad = null; };
+    slot.promise.then(release, release);
   }
-  rows.sort((a, b) => a.dateISO.localeCompare(b.dateISO)
-    || String((weekEntries || []).find((e) => e.id === a.id)?.starts_at || '').localeCompare(String((weekEntries || []).find((e) => e.id === b.id)?.starts_at || ''))
-    || String(a.id).localeCompare(String(b.id)));
-  return { today, rows: rows.slice(0, US_NOI_WEEK_BOARD_LIMIT), total: rows.length };
+  const list = await slot.promise;
+  if (window.usProfile !== profile || window.usProfile?.couple_id !== coupleId) return null;
+  return oggiNextCommitment(list, new Date().toISOString(), today);
 }
-function renderNoiWeekBoard(model) {
-  const body = $('noiWeekBoardBody');
-  const shell = $('noiWeekBoardOpen');
-  if (!body || !shell) return;
-  if (!model) {
-    body.innerHTML = '<span class="noi-week-board-empty"><b>Calendario non disponibile</b><small>Aprilo per riprovare.</small></span>';
-    return;
-  }
-  shell.dataset.noiWeekDate = model.rows[0]?.dateISO || model.today;
-  if (!model.rows.length) {
-    body.innerHTML = '<span class="noi-week-board-empty"><b>Settimana libera</b><small>Nessun impegno nei prossimi 7 giorni.</small></span>';
-    return;
-  }
-  const visibleRows = window.innerHeight <= 700 ? model.rows.slice(0, 2) : model.rows;
-  body.innerHTML = visibleRows.map((row) => `<span class="noi-week-board-row" data-shared="${row.shared ? 'true' : 'false'}"><span class="noi-week-board-day">${esc(row.day)}</span><span class="noi-week-board-copy"><b>${esc(row.owner)} · ${esc(row.title)}</b><small>${esc(row.time)}</small></span></span>`).join('')
-    + (model.total > visibleRows.length ? `<span class="noi-week-board-more">+${model.total - visibleRows.length} altri impegni</span>` : '');
-}
-let noiWeekBoardRefreshId = 0;
-let noiWeekBoardIdentityKey = '';
-async function refreshNoiWeekBoard() {
-  const refreshId = ++noiWeekBoardRefreshId;
-  const body = $('noiWeekBoardBody');
-  const shell = $('noiWeekBoardOpen');
-  if (!window.usProfile) {
-    noiWeekBoardIdentityKey = '';
-    if (body) body.innerHTML = '';
-    shell?.removeAttribute('data-noi-week-date');
-    return;
-  }
-  const identityKey = `${window.usProfile.id}:${window.usProfile.couple_id}`;
-  const identityChanged = Boolean(noiWeekBoardIdentityKey && noiWeekBoardIdentityKey !== identityKey);
-  noiWeekBoardIdentityKey = identityKey;
-  // Re-entering Noi must not collapse Lavagna back to a loading placeholder:
-  // keep the last resolved board visible while the canonical calendar refreshes.
-  // Only a real identity change clears stale couple data.
-  if (identityChanged && body) {
-    body.innerHTML = '<span class="noi-week-board-loading">Carico gli impegni…</span>';
-    shell?.removeAttribute('data-noi-week-date');
-  }
-  try {
-    const model = await getNoiWeekBoardSource();
-    if (refreshId !== noiWeekBoardRefreshId) return;
-    renderNoiWeekBoard(model);
-  } catch (error) {
-    console.warn('[US Noi] week board', error);
-    if (refreshId === noiWeekBoardRefreshId && identityChanged) renderNoiWeekBoard(null);
-  }
-}
-$('noiWeekBoardOpen')?.addEventListener('click', () => {
-  const date = $('noiWeekBoardOpen')?.dataset.noiWeekDate || todayISO();
-  window.openCalendarSurface?.(date);
-});
-window.getNoiWeekBoardSource = getNoiWeekBoardSource;
-window.refreshNoiWeekBoard = refreshNoiWeekBoard;
-window.UsNoiWeekBoard = Object.freeze({ refresh: refreshNoiWeekBoard, render: renderNoiWeekBoard });
+window.getOggiNextCommitmentSource = getOggiNextCommitmentSource;
 
 function ownerMarkOf(entry) { return ownerMarkFor(entryLaneRole(entry), profileById(entry.owner_id)?.display_name); }
 function ownerChip(mark) {
   return `<span class="us-cal-chip${mark === 'Noi' ? ' us-cal-chip--shared' : ''}" aria-hidden="true">${esc(mark)}</span>`;
-}
-
-function renderDayCell(dateObj, dateISO, inMonth, dayEntries) {
-  const isToday = dateISO === todayISO();
-  const isSelected = dateISO === selectedDate;
-  const { chips, more } = monthCellMarks(dayEntries.map(ownerMarkOf));
-  const markers = chips.map(ownerChip).join('') + (more > 0 ? `<span class="us-cal-chip-more" aria-hidden="true">+${more}</span>` : '');
-  const classes = ['us-cal-day'];
-  if (!inMonth) classes.push('is-outside');
-  if (isToday) classes.push('is-today');
-  if (isSelected) classes.push('is-selected');
-  const count = dayEntries.length;
-  const owners = [...new Set(dayEntries.map((e) => ownerNameFor(entryLaneRole(e), profileById(e.owner_id)?.display_name)))];
-  const label = `${longDayLabel(dateISO)}${count ? ` · ${count === 1 ? '1 impegno' : `${count} impegni`}: ${owners.join(', ')}` : ' · nessun impegno'}`;
-  return `<button type="button" class="${classes.join(' ')}" data-date="${dateISO}" aria-label="${esc(label)}" aria-pressed="${isSelected}"${isToday ? ' aria-current="date"' : ''}>
-    <span class="us-cal-day-num">${dateObj.getDate()}</span>
-    <span class="us-cal-day-markers">${markers}</span>
-  </button>`;
-}
-
-// M10.1 — ONE shared month at every width. F / B / Noi markers say whose
-// commitment it is; there is no per-partner month and no duplicated shared event.
-function renderMonthGrid(dateIndex) {
-  const container = $('usCalendarGrid');
-  if (!container) return;
-  const { gridStart } = monthGridRange(viewYear, viewMonth);
-  const cells = [];
-  for (let i = 0; i < 42; i++) {
-    const d = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + i);
-    const dateISO = isoDate(d.getFullYear(), d.getMonth(), d.getDate());
-    const inMonth = d.getMonth() === viewMonth && d.getFullYear() === viewYear;
-    cells.push(renderDayCell(d, dateISO, inMonth, dateIndex.get(dateISO) || []));
-  }
-  const weekdayRow = WEEKDAYS_IT.map((w) => `<div class="us-cal-weekday">${w}</div>`).join('');
-  container.innerHTML = `<div class="us-cal-weekday-row">${weekdayRow}</div><div class="us-cal-day-grid">${cells.join('')}</div>`;
-  // M10.1C — toccare un giorno lo SELEZIONA: il dettaglio sotto la griglia
-  // mostra gli impegni reali; creare è "Aggiungi impegno" (o, scegliendo il
-  // giorno per un'idea Da vivere, il form collegato).
-  container.querySelectorAll('.us-cal-day[data-date]').forEach((btn) => btn.addEventListener('click', () => selectDay(btn.dataset.date)));
-}
-
-function renderLegend() {
-  const legend = $('usCalendarLegend');
-  if (!legend) return;
-  const ordered = sortedProfiles();
-  const item = (mark, name) => `<span class="us-cal-legend-item">${ownerChip(mark)}${esc(name)}</span>`;
-  legend.innerHTML = [
-    ...ordered.map((p) => item(ownerMarkFor(p.role, p.display_name), ownerNameFor(p.role,p.display_name))),
-    item('Noi', 'Insieme')
-  ].join('');
-}
-
-function renderLoadingState() { $('usCalendarBody')?.classList.toggle('is-loading', loading); }
-function renderEmptyState() {
-  const empty = $('usCalendarEmpty');
-  if (!empty) return;
-  // In week mode every day card carries its own state, so the global empty
-  // panel belongs to the month view only.
-  empty.hidden = !(calendarMode === 'month' && entries.length === 0 && !loading && !lastError);
-}
-function renderErrorState() {
-  const status = $('usCalendarStatus');
-  if (!status) return;
-  if (lastError) {
-    status.hidden = false;
-    status.innerHTML = 'Calendario non disponibile <button type="button" id="usCalendarRetry">Riprova</button>';
-    $('usCalendarRetry')?.addEventListener('click', loadEntries);
-  } else {
-    status.hidden = true;
-    status.innerHTML = '';
-  }
-}
-
-// Free-together windows for one day, straight through the existing M6A
-// algorithm (computeFreeTogether) — merge, complement and the 30-minute
-// threshold all live in calendar-domain.js and are never duplicated here.
-function tempoWindowsForDay(dateISO) {
-  const win = windowForGrid(parseISODate(dateISO), parseISODate(shiftISODate(dateISO, 1)));
-  const partition = partitionDayBusy(entries, dateISO, entryLaneRole);
-  const windows = UsCalendarDomain.computeFreeTogether({
-    windowStart: win.windowStartAt,
-    windowEnd: win.windowEndAt,
-    personABusy: partition.personABusy,
-    personBBusy: partition.personBBusy,
-    sharedEvents: partition.sharedEvents,
-    minDurationMinutes: 30
-  });
-  return { windows, dayStartISO: win.windowStartDate, dayEndISO: win.windowEndDate };
-}
-
-// "Tempo insieme" for one day — the same block in the week list and under the
-// selected day (the free windows always come from computeFreeTogether).
-function renderTempoBlock(dateISO) {
-  const { windows, dayStartISO, dayEndISO } = tempoWindowsForDay(dateISO);
-  const tempoBody = windows.length
-    ? `<ul>${windows.map((w) => `<li>${esc(tempoWindowLabel(w.start, w.end, dayStartISO, dayEndISO))}</li>`).join('')}</ul>`
-    : '<p>Nessun momento libero insieme, oggi.</p>';
-  return `<div class="us-cal-tempo${windows.length ? '' : ' is-empty'}">
-      <span class="us-cal-tempo-heart" aria-hidden="true">♡</span>
-      <div class="us-cal-tempo-copy"><b>Tempo insieme</b>${tempoBody}</div>
-    </div>`;
-}
-
-function renderWeekDay(dateISO, dayEntries, ordered) {
-  const d = parseISODate(dateISO);
-  const weekday = capitalize(WEEKDAY_LONG_IT[(d.getDay() + 6) % 7]);
-  const isToday = dateISO === todayISO();
-  const tempo = renderTempoBlock(dateISO);
-  const body = dayEntries.length
-    ? [
-        ...ordered.map((p) => renderDaySection(ownerNameFor(p.role,p.display_name), dayEntries.filter((e) => entryLaneRole(e) === p.role), laneClass(p.role))),
-        renderDaySection('Insieme', dayEntries.filter((e) => entryLaneRole(e) === 'shared'), 'shared')
-      ].join('')
-    : '<p class="us-cal-day-empty">Niente in programma.</p>';
-  return `<article class="us-cal-week-day${isToday ? ' is-today' : ''}" data-date="${dateISO}">
-    <button type="button" class="us-cal-week-day-head" data-date="${dateISO}" aria-label="${esc(`${weekday} ${d.getDate()} ${MONTHS_IT[d.getMonth()].toLowerCase()} · aggiungi`)}">
-      <span class="us-cal-week-day-name">${esc(weekday)}</span><span class="us-cal-week-day-num">${d.getDate()}</span>
-    </button>
-    <div class="us-cal-week-day-body">${body}</div>
-    ${tempo}
-  </article>`;
-}
-
-// One vertical day-list for every width — no tiny side-by-side timelines.
-// Partner lanes reuse the exact day-sheet sections, so the week view reads
-// like seven day-sheets stacked.
-function renderWeekList() {
-  const container = $('usCalendarWeekList');
-  if (!container) return;
-  const dateIndex = buildDateIndex();
-  const ordered = sortedProfiles();
-  const days = [];
-  for (let i = 0; i < 7; i++) {
-    const dateISO = shiftISODate(weekStartISO, i);
-    days.push(renderWeekDay(dateISO, dateIndex.get(dateISO) || [], ordered));
-  }
-  container.innerHTML = days.join('');
-  container.querySelectorAll('[data-entry-id]').forEach((btn) => btn.addEventListener('click', () => openDetail(btn.dataset.entryId)));
-  // M9C — un impegno apre il suo dettaglio; il resto del giorno crea per quella data.
-  container.querySelectorAll('.us-cal-week-day[data-date]').forEach((day) => day.addEventListener('click', (event) => {
-    if (event.target.closest?.('[data-entry-id]')) return;
-    startCreateForDate(day.dataset.date);
-  }));
-}
-
-function renderCalendar() {
-  if (!$('usCalendarOverlay')?.classList.contains('open')) return;
-  ensureInitialMonth();
-  const isWeek = calendarMode === 'week';
-  $('usCalendarBody')?.classList.toggle('is-week-mode', isWeek);
-  const label = $('usCalendarMonthLabel');
-  if (label) {
-    label.textContent = isWeek
-      ? formatDateRangeLabel(weekStartISO, shiftISODate(weekStartISO, 6))
-      : `${MONTHS_IT[viewMonth]} ${viewYear}`;
-  }
-  $('usCalendarPrev')?.setAttribute('aria-label', isWeek ? 'Settimana precedente' : 'Mese precedente');
-  $('usCalendarNext')?.setAttribute('aria-label', isWeek ? 'Settimana successiva' : 'Mese successivo');
-  if (isWeek) {
-    renderWeekList();
-  } else {
-    ensureSelectedDate();
-    const dateIndex = buildDateIndex();
-    renderMonthGrid(dateIndex);
-  }
-  renderSelectedDay();
-  renderLegend();
-  renderEmptyState();
-  renderErrorState();
-  renderLoadingState();
 }
 
 function entryTimeLabel(entry) {
@@ -1061,79 +842,8 @@ function entryTimeLabel(entry) {
   return `${fmt(s)} → ${fmt(e)}`;
 }
 
-// One event row for every surface (selected day, week list): ownership marker,
-// time, title and place. The whole row opens the existing detail/edit flow.
-function renderEventRow(e) {
-  const lane = entryLaneRole(e);
-  const ownerName = profileById(e.owner_id)?.display_name;
-  const mark = ownerMarkFor(lane, ownerName);
-  const label = entryAriaLabel({ title: e.title, lane, displayName: ownerName, entry: e });
-  const place = e.location ? `<small class="us-cal-event-place">${esc(e.location)}</small>` : '';
-  return `<button type="button" class="us-cal-event" data-entry-id="${esc(e.id)}" data-owner="${esc(mark)}" aria-label="${esc(label)}"><span class="us-cal-owner${mark === 'Noi' ? ' us-cal-owner--shared' : ''}" aria-hidden="true">${esc(mark)}</span><span class="us-cal-event-copy"><span class="us-cal-event-time">${esc(entryTimeLabel(e))}</span><b class="us-cal-event-title">${esc(e.title)}</b>${place}</span></button>`;
-}
-
-function renderDaySection(label, list, cls) {
-  const items = list.length ? sortDayEntries(list).map(renderEventRow).join('') : '<p class="us-cal-day-empty">Niente qui.</p>';
-  return `<section class="us-cal-day-section" data-lane="${esc(cls)}"><h4>${esc(label)}</h4>${items}</section>`;
-}
-
-// Selected-day detail, under the month grid: only lanes that really have
-// something, grouped by person (F / B / Insieme), then "Tempo insieme".
-function renderSelectedDay() {
-  const panel = $('usCalendarDayDetail');
-  if (!panel) return;
-  const show = calendarMode === 'month' && Boolean(selectedDate);
-  panel.hidden = !show;
-  if (!show) return;
-  const dayEntries = buildDateIndex().get(selectedDate) || [];
-  const title = $('usCalendarDayDetailTitle');
-  if (title) title.textContent = longDayLabel(selectedDate);
-  const count = $('usCalendarDayDetailCount');
-  if (count) count.textContent = dayEntries.length ? (dayEntries.length === 1 ? '1 impegno' : `${dayEntries.length} impegni`) : '';
-  const groups = groupDayEntries(dayEntries, entryLaneRole);
-  const sections = groups.map(({ lane, list }) => {
-    const name = ownerNameFor(lane, profileById(list[0].owner_id)?.display_name);
-    const head = `<h4><span class="us-cal-owner us-cal-owner--sm${lane === 'shared' ? ' us-cal-owner--shared' : ''}" aria-hidden="true">${esc(ownerMarkFor(lane, name))}</span>${esc(name)}</h4>`;
-    return `<section class="us-cal-day-section" data-lane="${esc(laneClass(lane))}">${head}${list.map(renderEventRow).join('')}</section>`;
-  });
-  const container = $('usCalendarDaySections');
-  if (container) {
-    container.innerHTML = sections.length ? sections.join('') : '<p class="us-cal-day-empty">Niente in programma.</p>';
-    container.querySelectorAll('[data-entry-id]').forEach((btn) => btn.addEventListener('click', () => openDetail(btn.dataset.entryId)));
-  }
-  const tempo = $('usCalendarDayTempo');
-  if (tempo) tempo.innerHTML = renderTempoBlock(selectedDate);
-}
-
-// Month mode always has a selected day inside the visible grid: today when it
-// is visible, otherwise the first of the viewed month.
-function ensureSelectedDate() {
-  ensureInitialMonth();
-  const { gridStart, gridEnd } = monthGridRange(viewYear, viewMonth);
-  const lo = isoDate(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate());
-  const hi = isoDate(gridEnd.getFullYear(), gridEnd.getMonth(), gridEnd.getDate());
-  if (selectedDate && selectedDate >= lo && selectedDate < hi) return;
-  const today = todayISO();
-  selectedDate = today >= lo && today < hi && today.slice(0, 7) === isoDate(viewYear, viewMonth, 1).slice(0, 7) ? today : isoDate(viewYear, viewMonth, 1);
-}
-
-// Tocco su un giorno: lo seleziona e porta il dettaglio in vista. Solo quando
-// si sta scegliendo il giorno per un'idea Da vivere apre subito il form
-// collegato (evento Insieme).
-function selectDay(dateISO) {
-  if (!dateISO) return;
-  selectedDate = dateISO;
-  renderCalendar();
-  if (pendingIdeaPick) { openIdeaForm(pendingIdeaPick, dateISO); return; }
-  const panel = $('usCalendarDayDetail');
-  if (panel && typeof panel.scrollIntoView === 'function') {
-    const calm = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-    panel.scrollIntoView({ block: 'nearest', behavior: calm ? 'auto' : 'smooth' });
-  }
-}
-
-// The detail/editor sheets outlive the retired legacy calendar overlay.
-// Move them to the document root so they can open directly above Noi.
+// The detail/editor sheets live at the document root and open directly above
+// Noi. Kept as a guard for markup that still nests them somewhere else.
 function ensureNoiEditorSheets(){
   if(!document.body?.appendChild)return;
   for(const id of ['usCalendarDetailSheet','usCalendarFormSheet']){
@@ -1148,16 +858,28 @@ function openDetail(entryId) {
   const title = $('usCalendarDetailTitle');
   if (title) title.textContent = entry.title;
   const isShared = entry.entry_type === 'shared';
+  const owner = isShared ? 'noi' : entry.owner_id === window.usProfile?.id ? 'tu' : 'partner';
   const identityLabel = isShared ? `Insieme · creato da ${profileName(entry.created_by)}` : `Personale di ${profileName(entry.owner_id)}`;
+  // The mockup's .ev-meta: "Mercoledì 14 ottobre · 21:00–23:30", then place and whose.
+  const startDay = entry.is_all_day ? entry.start_date : localDateFromInstant(entry.starts_at);
+  const endDay = entry.is_all_day ? entry.end_date : localDateFromInstant(entry.ends_at);
+  const oneDay = startDay === endDay;
+  const hhmm = (value) => { const d = new Date(value); return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
   const dateLabel = entry.is_all_day
-    ? formatDateRangeLabel(entry.start_date, entry.end_date)
-    : `${formatDateRangeLabel(localDateFromInstant(entry.starts_at), localDateFromInstant(entry.ends_at))} · ${entryTimeLabel(entry)}`;
-  const rows = [`<p class="us-cal-detail-kind">${esc(identityLabel)}</p>`, `<p class="us-cal-detail-date">${esc(dateLabel)}</p>`];
-  if (entry.location) rows.push(`<p class="us-cal-detail-location">${esc(entry.location)}</p>`);
-  if (entry.description) rows.push(`<p class="us-cal-detail-note">${esc(entry.description)}</p>`);
+    ? (oneDay ? `${longDayLabel(startDay)} · Tutto il giorno` : formatDateRangeLabel(startDay, endDay))
+    : oneDay ? `${longDayLabel(startDay)} · ${hhmm(entry.starts_at)}–${hhmm(entry.ends_at)}`
+      : `${formatDateRangeLabel(startDay, endDay)} · ${entryTimeLabel(entry)}`;
+  const place = entry.location ? `<span class="us-cal-detail-location" translate="no">${esc(entry.location)}</span> · ` : '';
+  const rows = [`<div class="us-cal-detail-meta"><span class="us-cal-detail-dot" aria-hidden="true"></span><span><b class="us-cal-detail-date">${esc(dateLabel)}</b><small class="us-cal-detail-kind">${place}${esc(identityLabel)}</small></span></div>`];
+  if (entry.description) rows.push(`<p class="us-cal-detail-note" translate="no">${esc(entry.description)}</p>`);
   const body = $('usCalendarDetailBody');
   if (body) body.innerHTML = rows.join('');
-  renderDetailReminders(entry);
+  // Due colori: the detail card carries whose it is (mine, theirs, ours).
+  if (body?.dataset) body.dataset.owner = owner;
+  const sheetEl = $('usCalendarDetailSheet');
+  if (sheetEl?.dataset) sheetEl.dataset.owner = owner;
+  const kicker = sheetEl?.querySelector?.('.us-cal-sheet-kicker');
+  if (kicker) kicker.textContent = isShared ? 'Insieme' : 'Impegno';
   const canEdit = window.usProfile ? canEditEntry(entry, window.usProfile.id) : false;
   const actions = $('usCalendarDetailActions');
   if (actions) actions.hidden = !canEdit;
@@ -1187,15 +909,14 @@ async function deleteEntry() {
     // M7C — un evento che spiega ancora un'esperienza Da vivere è protetto
     // dalla FK (ON DELETE RESTRICT -> 23001; 23503 se la FK fosse NO ACTION):
     // lo diciamo, invece di un errore generico.
-    if (outcome === 'error' && (error?.code === '23001' || error?.code === '23503')) { toast('È collegato a Da vivere: resta nel calendario.'); return; }
+    if (outcome === 'error' && (error?.code === '23001' || error?.code === '23503')) { toast('È collegato a una vostra idea: resta nel calendario.'); return; }
     if (outcome === 'error') throw error;
     if (outcome === 'not_authorized') throw new Error('delete matched 0 rows');
     entries = entries.filter((e) => e.id !== detailEntry.id);
-    editingEntryReminders = editingEntryReminders.filter((r) => r.entry_id !== detailEntry.id);
     closeCalendarDetailSheet();
-    renderCalendar();
     window.USNoiV2?.refresh?.();
     window.refreshOggiCalendarWidget?.();
+    window.UsOggiNext?.refresh?.({ calendar: 'fresh' });
     toast('Impegno eliminato');
     window.hydrateNoiIdeas?.();
   } catch (error) {
@@ -1225,7 +946,7 @@ function renderFormDay(dateISO, mode) {
   const list = mode === 'edit' || !dateISO ? [] : (buildDateIndex().get(dateISO) || []);
   box.hidden = !list.length;
   box.innerHTML = list.length
-    ? `<span class="us-cal-form-day-kicker">Già quel giorno</span>${list.map((e) => `<button type="button" class="us-cal-form-day-entry" data-entry-id="${esc(e.id)}" aria-label="${esc(entryAriaLabel({ title: e.title, lane: entryLaneRole(e), displayName: profileById(e.owner_id)?.display_name, entry: e }))}">${ownerChip(ownerMarkOf(e))}<b>${esc(e.title)}</b><small>${esc(entryTimeLabel(e))}</small></button>`).join('')}`
+    ? `<span class="us-cal-form-day-kicker">Già quel giorno</span>${list.map((e) => `<button type="button" class="us-cal-form-day-entry" data-entry-id="${esc(e.id)}" aria-label="${esc(entryAriaLabel({ title: e.title, lane: entryLaneRole(e), displayName: profileById(e.owner_id)?.display_name, entry: e }))}">${ownerChip(ownerMarkOf(e))}<b translate="no">${esc(e.title)}</b><small>${esc(entryTimeLabel(e))}</small></button>`).join('')}`
     : '';
   box.querySelectorAll('[data-entry-id]').forEach((btn) => btn.addEventListener('click', () => { closeCalendarFormSheet(); openDetail(btn.dataset.entryId); }));
 }
@@ -1256,6 +977,27 @@ function fillDefaultEndFromStart() {
   if (start && end && !String(end.value || '').trim()) end.value = addClockMinutes(start);
 }
 
+function setFormKind(kind) {
+  calendarKind = kind === 'shared' ? 'shared' : 'personal';
+  document.querySelectorAll?.('[data-us-calendar-kind]').forEach((btn) => btn.setAttribute('aria-pressed', String(btn.dataset.usCalendarKind === calendarKind)));
+  const sheet = $('usCalendarFormSheet');
+  if (sheet?.dataset) sheet.dataset.kind = calendarKind;
+}
+// "Data speciale" is an Eventi date: the form hands the day (and what was
+// already typed) to Noi, which opens the Eventi editor in its place.
+function chooseFormKind(kind) {
+  if (editingFormEntry || pendingIdeaLink || busy) return;
+  if (kind !== 'event') { setFormKind(kind); return; }
+  const open = window.USNoiV2?.addSpecialDate;
+  if (typeof open !== 'function') return;
+  const date = formDateISO || selectedDate || todayISO();
+  const title = $('usCalendarTitleInput')?.value.trim() || '';
+  const allDay = Boolean($('usCalendarAllDayInput')?.checked);
+  const time = allDay ? '' : normalizeQuickTime($('usCalendarStartTimeInput')?.value);
+  closeCalendarFormSheet();
+  open({ date, title, time });
+}
+
 function openForm(mode, entry, dateISO) {
   pendingIdeaLink = null;
   const context = $('usCalendarFormContext');
@@ -1266,9 +1008,11 @@ function openForm(mode, entry, dateISO) {
   const saveBtn = $('usCalendarFormSave');
   if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = mode === 'edit' ? 'Salva modifiche' : 'Salva impegno'; }
   editingFormEntry = mode === 'edit' ? entry : null;
-  // M9C — il form rapido crea sempre un impegno personale; gli eventi Insieme
-  // nascono da Da vivere e restano modificabili col loro tipo.
-  calendarKind = mode === 'edit' ? entry.entry_type : 'personal';
+  // N1 — one "+" with three choices. A new entry starts as "Solo mio"; an
+  // edited one keeps its own type (entry_type never changes on update).
+  setFormKind(mode === 'edit' ? entry.entry_type : 'personal');
+  const kindGroup = $('usCalendarKind');
+  if (kindGroup) kindGroup.hidden = mode === 'edit';
 
   $('usCalendarTitleInput').value = entry?.title || '';
   syncCalendarPresetState();
@@ -1305,13 +1049,11 @@ function openForm(mode, entry, dateISO) {
   sheet.setAttribute('aria-hidden', 'false');
   setTimeout(() => $('usCalendarTitleInput')?.focus({ preventScroll: true }), 80);
 }
-// M9C — nuova voce per una data (M10.1C: da "Aggiungi impegno" sul giorno
-// selezionato o dal giorno della settimana; se si sta scegliendo il giorno per
-// un'idea Da vivere, l'evento Insieme collegato).
+// M9C — nuova voce per una data (il "+" di Noi sul giorno selezionato; se si
+// sta scegliendo il giorno per un'idea, l'impegno Nostro collegato).
 function startCreateForDate(dateISO) {
   if (!dateISO) return;
   selectedDate = dateISO;
-  renderCalendar();
   if (pendingIdeaPick) { openIdeaForm(pendingIdeaPick, dateISO); return; }
   openForm('create', null, dateISO);
 }
@@ -1388,9 +1130,9 @@ async function saveEntry(event) {
     // esattamente come sono (nessuna sync che li cancelli).
     if (linkedIdea) clearIdeaPick();
     closeCalendarFormSheet();
-    if($('usCalendarOverlay')?.classList.contains('open'))await loadEntries();
     window.USNoiV2?.refresh?.();
     window.refreshOggiCalendarWidget?.();
+    window.UsOggiNext?.refresh?.({ calendar: 'fresh' });
     toast(wasEditing ? 'Impegno aggiornato' : (linkedIdea ? 'In calendario' : 'Impegno aggiunto'));
   } catch (error) {
     console.warn('[US Calendar] save', error);
@@ -1401,162 +1143,12 @@ async function saveEntry(event) {
   }
 }
 
-// M6D — reminder dell'entry in editing: caricate una volta per superficie
-// aperta, senza limiti di finestra (righe couple-scoped, quantità minuscola).
-async function loadEntryReminders() {
-  const viewer=window.usProfile;
-  if (!viewer) { editingEntryReminders = []; return; }
-  try {
-    const { data, error } = await sb.from('calendar_reminders').select('id,entry_id,recipient_id,offset_minutes,requested_by,sent_at');
-    if(window.usProfile!==viewer||window.usProfile?.couple_id!==viewer.couple_id)return;
-    if (error) throw error;
-    editingEntryReminders = data || [];
-  } catch (error) {
-    if(window.usProfile!==viewer)return;
-    console.warn('[US Calendar] reminders load', error);
-    editingEntryReminders = [];
-  }
+// Noi is the only visible calendar. This entry point stays for notifications,
+// the Oggi calendar widget and external links: it opens Noi on that day.
+function openCalendarSurface(targetDateISO, options = {}) {
+  window.USNoiV2?.openCalendar?.({ date: targetDateISO, mode: options?.mode === 'week' ? 'week' : 'calendar' });
 }
 
-// Dettaglio: i reminder dell'entry sono SEMPRE visibili, con il richiedente
-// ("il destinatario deve sapere chi lo ha creato") e lo stato.
-function renderDetailReminders(entry) {
-  const container = $('usCalendarDetailReminders');
-  if (!container) return;
-  const rows = editingEntryReminders.filter((r) => r.entry_id === entry.id);
-  if (!rows.length) { container.innerHTML = ''; return; }
-  const offsetLabel = (m) => (m === 1440 ? '1 giorno prima' : m === 60 ? '1 ora prima' : m + ' min prima');
-  const items = rows.map((r) => {
-    const selfRecipient = r.recipient_id === r.requested_by;
-    const who = selfRecipient ? 'Te' : profileName(r.recipient_id);
-    const by = selfRecipient ? '' : ' · da ' + profileName(r.requested_by);
-    const state = r.sent_at ? 'inviato' : 'programmato';
-    return '<p class="us-cal-detail-reminder">' + esc(offsetLabel(r.offset_minutes)) + ' → ' + esc(who) + esc(by) + ' <small>' + state + '</small></p>';
-  });
-  container.innerHTML = '<h4>Ricordamelo</h4>' + items.join('');
-}
-
-function shiftMonth(delta) {
-  ensureInitialMonth();
-  viewMonth += delta;
-  if (viewMonth < 0) { viewMonth = 11; viewYear -= 1; }
-  if (viewMonth > 11) { viewMonth = 0; viewYear += 1; }
-  renderCalendar();
-  loadEntries();
-}
-function setViewSwitch(mode) {
-  const month = $('usCalendarViewMonth');
-  const week = $('usCalendarViewWeek');
-  month?.classList.toggle('is-active', mode === 'month');
-  week?.classList.toggle('is-active', mode === 'week');
-  month?.setAttribute('aria-pressed', String(mode === 'month'));
-  week?.setAttribute('aria-pressed', String(mode === 'week'));
-}
-function setMode(mode) {
-  if (calendarMode === mode) { setViewSwitch(mode); return; }
-  calendarMode = mode;
-  if (mode === 'week') weekStartISO = mondayOfISO(selectedDate || todayISO());
-  setViewSwitch(mode);
-  renderCalendar();
-  loadEntries();
-}
-function shiftWeek(delta) {
-  weekStartISO = shiftISODate(weekStartISO, delta * 7);
-  renderCalendar();
-  loadEntries();
-}
-function stepView(delta) {
-  if (calendarMode === 'week') shiftWeek(delta);
-  else shiftMonth(delta);
-}
-function goToToday() {
-  const n = new Date();
-  viewYear = n.getFullYear();
-  viewMonth = n.getMonth();
-  selectedDate = todayISO();
-  weekStartISO = mondayOfISO(selectedDate);
-  renderCalendar();
-  loadEntries();
-}
-
-// M6E — an optional target date (e.g. from the Oggi calendar widget) lands
-// the surface straight on that day/week instead of the current month, with
-// that day already selected (M10.1C: the detail sits under the grid, so there
-// is no separate day sheet to open); every existing zero-arg caller (HTML
-// onclick, navigation.js) is unaffected.
-async function openCalendarSurface() {
-  const targetDateISO = arguments[0];
-  // Noi is the only visible calendar. Keep this legacy entry point for
-  // notifications, Oggi widgets, reminders and external links.
-  if(window.USNoiV2?.openCalendar){
-    window.USNoiV2.openCalendar({date:targetDateISO,mode:arguments[1]?.mode});
-    return;
-  }
-  ensureInitialMonth();
-  if (targetDateISO) {
-    const target = parseISODate(targetDateISO);
-    viewYear = target.getFullYear();
-    viewMonth = target.getMonth();
-    weekStartISO = mondayOfISO(targetDateISO);
-    selectedDate = targetDateISO;
-  }
-  // US V3 — Noi opens Lavagna as the existing Week view (the couple's week),
-  // and its + as the existing Month view. No option keeps the last mode.
-  const requestedMode = arguments[1]?.mode;
-  if (requestedMode === 'week' || requestedMode === 'month') {
-    calendarMode = requestedMode;
-    if (requestedMode === 'week') weekStartISO = mondayOfISO(selectedDate || todayISO());
-    setViewSwitch(requestedMode);
-  }
-  const overlay = $('usCalendarOverlay');
-  if (!overlay) return;
-  window.UsUiFoundation?.cancelSurfaceExit?.(overlay);
-  overlay.classList.add('open');
-  overlay.setAttribute('aria-hidden', 'false');
-  document.body.classList.add('us-cal-open');
-  renderCalendar();
-  if (!window.usProfile) return;
-  await loadProfiles();
-  await loadEntryReminders();
-  await loadEntries();
-}
-function closeCalendarSurface() {
-  const overlay = $('usCalendarOverlay');
-  if (!overlay || busy) return;
-  const finalize = () => {
-    overlay.classList.remove('open');
-    overlay.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('us-cal-open');
-    closeCalendarDetailSheet();
-    closeCalendarFormSheet();
-    clearIdeaPick();
-    selectedDate = null;
-    if ($('bond')?.classList.contains('active')) window.refreshNoiWeekBoard?.();
-  };
-  if (window.UsUiFoundation?.exitSurface) window.UsUiFoundation.exitSurface(overlay, finalize);
-  else finalize();
-}
-
-$('usCalendarPrev')?.addEventListener('click', () => stepView(-1));
-$('usCalendarNext')?.addEventListener('click', () => stepView(1));
-$('usCalendarTodayBtn')?.addEventListener('click', goToToday);
-$('usCalendarViewMonth')?.addEventListener('click', () => setMode('month'));
-$('usCalendarViewWeek')?.addEventListener('click', () => setMode('week'));
-$('usCalendarClose')?.addEventListener('click', closeCalendarSurface);
-// M12A — "I nostri eventi" lives here, in its product context, instead of owning the shell.
-$('usCalendarEventsLink')?.addEventListener('click', () => {
-  if (busy) return;
-  closeCalendarSurface();
-  // navigation.js consumes the calendar's history entry once it is closed, and
-  // that would also close a layer opened in the same tick: open Eventi after.
-  const openWhenClosed = (tries = 0) => {
-    if ($('usCalendarOverlay')?.classList.contains('open') && tries < 40) { setTimeout(() => openWhenClosed(tries + 1), 40); return; }
-    setTimeout(() => window.openEvents?.(), 120);
-  };
-  openWhenClosed();
-});
-$('usCalendarBackdrop')?.addEventListener('click', closeCalendarSurface);
-$('usCalendarAddEntry')?.addEventListener('click', () => startCreateForDate(selectedDate || todayISO()));
 $('usCalendarDetailClose')?.addEventListener('click', closeCalendarDetailSheet);
 $('usCalendarDetailBackdrop')?.addEventListener('click', closeCalendarDetailSheet);
 $('usCalendarDetailEdit')?.addEventListener('click', () => { if (detailEntry) openForm('edit', detailEntry); });
@@ -1576,9 +1168,8 @@ for (const preset of CALENDAR_TITLE_PRESETS) {
 $('usCalendarTitleInput')?.addEventListener('input', syncCalendarPresetState);
 $('usCalendarStartTimeInput')?.addEventListener('blur', fillDefaultEndFromStart);
 $('usCalendarEndTimeInput')?.addEventListener('blur', () => normalizeTimeField('usCalendarEndTimeInput'));
-$('usCalendarPickCancel')?.addEventListener('click', clearIdeaPick);
+document.querySelectorAll?.('[data-us-calendar-kind]').forEach((btn) => btn.addEventListener('click', () => chooseFormKind(btn.dataset.usCalendarKind)));
 $('usCalendarForm')?.addEventListener('submit', saveEntry);
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('usCalendarOverlay')?.classList.contains('open')) closeCalendarSurface(); });
 
 // ===== M7C — Da vivere -> Calendar =====
 // Il Calendario resta l'unica autorità di data/ora/durata/reminder: Da vivere
@@ -1608,31 +1199,22 @@ async function linkCreatedEntryToIdea(ideaLink, entryId) {
 async function openCalendarForIdea(idea) {
   if (!idea?.id || !window.usProfile) return;
   const identity = { userId: window.usProfile.id, coupleId: window.usProfile.couple_id };
-  if(window.USNoiV2?.beginIdeaPick){
-    pendingIdeaPick={bucketItemId:idea.id,title:idea.title||'',note:idea.note||null,...identity};
-    window.USNoiV2.beginIdeaPick({title:idea.title||''});
-    return;
-  }
-  await openCalendarSurface();
-  if (window.usProfile?.id !== identity.userId || !$('usCalendarOverlay')?.classList.contains('open')) return;
-  // M9C — niente date picker: il giorno lo sceglie il calendario.
+  // M9C — niente date picker: il giorno lo sceglie il calendario di Noi.
+  if (!window.USNoiV2?.beginIdeaPick) return;
   pendingIdeaPick = { bucketItemId: idea.id, title: idea.title || '', note: idea.note || null, ...identity };
-  const banner = $('usCalendarPickBanner');
-  const bannerTitle = $('usCalendarPickTitle');
-  if (bannerTitle) bannerTitle.textContent = idea.title || 'la vostra idea';
-  if (banner) banner.hidden = false;
+  window.USNoiV2.beginIdeaPick({ title: idea.title || '' });
 }
 function clearIdeaPick() {
   pendingIdeaPick = null;
   window.USNoiV2?.clearIdeaPick?.();
-  const banner = $('usCalendarPickBanner');
-  if (banner) banner.hidden = true;
 }
 function openIdeaForm(pick, dateISO) {
   if (window.usProfile?.id !== pick.userId || window.usProfile?.couple_id !== pick.coupleId) { clearIdeaPick(); return; }
   openForm('create', null, dateISO);
   pendingIdeaLink = { bucketItemId: pick.bucketItemId, userId: pick.userId, coupleId: pick.coupleId, note: pick.note };
-  calendarKind = 'shared';
+  setFormKind('shared');
+  const kindGroup = $('usCalendarKind');
+  if (kindGroup) kindGroup.hidden = true;
   const title = $('usCalendarFormTitle');
   if (title) title.textContent = 'Metti in calendario';
   const context = $('usCalendarFormContext');
@@ -1675,8 +1257,7 @@ async function prepareNoiEntryDate(dateISO){
   try{
     const [dayEntries]=await Promise.all([
       fetchEntriesForRange(coupleId,dateISO,shiftISODate(dateISO,1)),
-      loadProfiles(),
-      loadEntryReminders()
+      loadProfiles()
     ]);
     if(!same())return false;
     entries=dayEntries;
@@ -1687,25 +1268,18 @@ async function prepareNoiEntryDate(dateISO){
 }
 async function createCalendarEntryForDate(dateISO) {
   if (!dateISO || !window.usProfile) return;
-  if(window.USNoiV2?.openCalendar){
-    // The plus is instant: render the existing editor first, then hydrate the
-    // day's already-saved commitments without ever blocking the user's tap.
-    const identity=window.usProfile;
-    window.USNoiV2.openCalendar({date:dateISO,mode:'calendar'});
-    ensureNoiEditorSheets();
-    entries=[];
-    selectedDate=dateISO;
-    startCreateForDate(dateISO);
-    void prepareNoiEntryDate(dateISO).then(ready=>{
-      if(!ready||window.usProfile!==identity||formDateISO!==dateISO||editingFormEntry||!$('usCalendarFormSheet')?.classList.contains('open'))return;
-      renderFormDay(dateISO,'create');
-    });
-    return;
-  }
-  const identity = window.usProfile;
-  await openCalendarSurface(dateISO, { mode: 'month' });
-  if (window.usProfile !== identity || !$('usCalendarOverlay')?.classList.contains('open')) return;
+  // The plus is instant: render the existing editor first, then hydrate the
+  // day's already-saved commitments without ever blocking the user's tap.
+  // Noi stays as it is (month or "La nostra settimana") under the form.
+  const identity=window.usProfile;
+  ensureNoiEditorSheets();
+  entries=[];
+  selectedDate=dateISO;
   startCreateForDate(dateISO);
+  void prepareNoiEntryDate(dateISO).then(ready=>{
+    if(!ready||window.usProfile!==identity||formDateISO!==dateISO||editingFormEntry||!$('usCalendarFormSheet')?.classList.contains('open'))return;
+    renderFormDay(dateISO,'create');
+  });
 }
 
 async function createCalendarEntryForIdeaDate(dateISO){
@@ -1716,42 +1290,37 @@ async function createCalendarEntryForIdeaDate(dateISO){
   clearIdeaPick();
   return true;
 }
-async function openCalendarEntry(entryId) {
+// From Noi's own calendar the detail opens in place (month or week stays);
+// from anywhere else Noi first lands on that day.
+async function openCalendarEntry(entryId, { inPlace = false } = {}) {
   if (!entryId || !window.usProfile) return;
   ++noiEditorReadSeq;
   const map = await getCalendarEntriesByIds([entryId]).catch((error) => { console.warn('[US Calendar] open entry', error); return new Map(); });
   const entry = map.get(entryId);
   if (!entry) { toast('Non trovo più questo evento nel calendario.'); return; }
   const dateISO = entry.is_all_day ? entry.start_date : localDateFromInstant(entry.starts_at);
-  if(window.USNoiV2?.openCalendar){
-    const profile=window.usProfile;
-    window.USNoiV2.openCalendar({date:dateISO,mode:'calendar'});
-    await Promise.all([loadProfiles(),loadEntryReminders()]);
-    if(profile!==window.usProfile)return;
-    entries=[entry];
-    selectedDate=dateISO;
-    openDetail(entryId);
-    return;
-  }
-  await openCalendarSurface(dateISO);
-  if ($('usCalendarOverlay')?.classList.contains('open')) openDetail(entryId);
+  const profile=window.usProfile;
+  if(!inPlace)window.USNoiV2?.openCalendar?.({date:dateISO,mode:'calendar'});
+  await loadProfiles();
+  if(profile!==window.usProfile)return;
+  entries=[entry];
+  selectedDate=dateISO;
+  openDetail(entryId);
 }
 
 window.UsCalendarLinks = Object.freeze({ openForIdea: openCalendarForIdea, createForIdeaDate: createCalendarEntryForIdeaDate, cancelIdeaPick: clearIdeaPick, openEntry: openCalendarEntry, createForDate: createCalendarEntryForDate, getEntriesByIds: getCalendarEntriesByIds, whenLabel: calendarWhenLabel });
-window.USNoiCalendarRead = Object.freeze({readMonth:readNoiMonth});
+window.USNoiCalendarRead = Object.freeze({readMonth:readNoiMonth,freeEvenings:noiFreeEvenings});
 window.openCalendarSurface = openCalendarSurface;
-window.closeCalendarSurface = closeCalendarSurface;
 window.closeCalendarDetailSheet = closeCalendarDetailSheet;
 window.closeCalendarFormSheet = closeCalendarFormSheet;
 window.addEventListener?.('us-identity-change', event=>{
   ++noiEditorReadSeq;
-  // The editor sheets are no longer children of the calendar overlay. Close
-  // them explicitly on account/couple switch before any stale user can act.
+  // Close the editor sheets on account/couple switch before any stale user
+  // can act, and forget the previous couple's people and entries.
   closeCalendarDetailSheet();
   closeCalendarFormSheet();
   clearIdeaPick();
-  if(!event.detail?.identityKey){loadToken++;profiles=[];profilesById.clear();entries=[];closeCalendarSurface();}
-  else if($('usCalendarOverlay')?.classList.contains('open'))renderCalendar();
+  if(!event.detail?.identityKey){profiles=[];profilesById.clear();entries=[];selectedDate=null;}
 });
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ensureNoiEditorSheets,{once:true});else ensureNoiEditorSheets();
 console.info('[US Calendar] calendario condiviso attivo');

@@ -31,19 +31,22 @@ function installRitual({ profiles = [], role = 'francesco' } = {}) {
 
 const question = { id: 'q-1', question: 'Cosa vorresti rifare con me?', question_date: '2026-09-29' };
 
-test('M9B/M10.1A: stati reali — la card esiste solo finché manca la MIA risposta', () => {
+// 1.0 (O1): the card stays until BOTH answered; after my answer it waits.
+test('1.0 O1: stati reali — la card resta finché non avete risposto entrambi', () => {
   const { api } = installRitual();
   const vm0 = (state) => api.viewModel({ question, state, partnerName: 'Beatrice' });
   const none = vm0({ my_answer: null, partner_has_answer: false, both_answered: false });
   assert.equal(none.state, 'answer');
   assert.equal(none.cta, 'Rispondi');
-  assert.equal(vm0({ my_answer: 'La mia', partner_has_answer: false, both_answered: false }), null, 'ho risposto io → nessuna card');
+  const waiting = vm0({ my_answer: 'La mia', partner_has_answer: false, both_answered: false });
+  assert.equal(waiting.state, 'waiting', 'ho risposto io → la card aspetta');
+  assert.equal(waiting.cta, 'Apri');
+  assert.equal(waiting.attention, false);
   const invited = vm0({ my_answer: null, partner_has_answer: true, both_answered: false });
   assert.equal(invited.state, 'invited');
-  assert.equal(invited.status, '');
+  assert.equal(invited.kicker, 'Aspetta te');
   assert.equal(invited.cta, 'Rispondi');
-  assert.equal(vm0({ my_answer: 'La mia', partner_answer: 'La sua', partner_has_answer: true, both_answered: true }), null, 'entrambi → nessuna card su Oggi');
-  assert.equal(none.status, '', 'M10B: nessun testo esplicativo nello stato normale');
+  assert.equal(vm0({ my_answer: 'La mia', partner_answer: 'La sua', partner_has_answer: true, both_answered: true }), null, 'entrambi, reveal non ancora letto → parla l’avviso Risposte pronte');
   assert.equal(api.viewModel({ question: null, state: {}, partnerName: 'X' }), null);
   assert.equal(api.viewModel({ question, state: null, partnerName: 'X' }), null);
 });

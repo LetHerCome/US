@@ -69,7 +69,7 @@ test('registration validates credentials locally before any provider call',async
 test('successful register remains unpaired until verified login and never records a password',async()=>{
   const auth=fakeAuth(),states=[],ctrl=S31.createController({auth,onChange:s=>states.push(s)});
   ctrl.navigate('signup');
-  const result=await ctrl.register({email:'  SOMEONE+test@example.invalid ',password:SAMPLE_PASSWORD,confirm:SAMPLE_PASSWORD});
+  const result=await ctrl.register({email:'  SOMEONE+test@example.invalid ',password:SAMPLE_PASSWORD,confirm:SAMPLE_PASSWORD,terms:true});
   assert.equal(result.ok,true);
   assert.equal(ctrl.state.mode,'verify');
   assert.equal(ctrl.state.kind,'success');
@@ -83,11 +83,42 @@ test('successful register remains unpaired until verified login and never record
   assert.equal((await ctrl.resend()).ok,false);
 });
 
+test('1.0 A1: sign-up needs the 18+ and Terms box and records it, with the language, on the account',async()=>{
+  const auth=fakeAuth(),ctrl=S31.createController({auth});ctrl.navigate('signup');
+  for(const terms of [undefined,false,'true',1]){
+    const refused=await ctrl.register({email:USER_EMAIL,password:SAMPLE_PASSWORD,confirm:SAMPLE_PASSWORD,terms});
+    assert.equal(refused.ok,false);assert.equal(refused.kind,'terms');
+  }
+  assert.equal(auth.calls.length,0,'no provider call without the box');
+  assert.equal(ctrl.state.kind,'error');assert.match(ctrl.state.message,/almeno 18 anni/);
+  const before=Date.now();
+  assert.equal((await ctrl.register({email:USER_EMAIL,password:SAMPLE_PASSWORD,confirm:SAMPLE_PASSWORD,terms:true,locale:'en'})).ok,true);
+  const [name,args]=auth.calls[0];
+  assert.equal(name,'signUp');assert.equal(args.email,USER_EMAIL);assert.equal(args.password,SAMPLE_PASSWORD);
+  assert.deepEqual(Object.keys(args.options.data).sort(),['locale','terms_accepted_at']);
+  assert.equal(args.options.data.locale,'en');
+  assert.match(args.options.data.terms_accepted_at,/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+  assert.ok(Date.parse(args.options.data.terms_accepted_at)>=before);
+  const other=fakeAuth(),c2=S31.createController({auth:other});c2.navigate('signup');
+  await c2.register({email:USER_EMAIL,password:SAMPLE_PASSWORD,confirm:SAMPLE_PASSWORD,terms:true,locale:'<script>'});
+  assert.equal(other.calls[0][1].options.data.locale,'it','only a known language is recorded');
+  // The box sits in the form, before "Registrati"; its two links are named by data-us-legal.
+  const form=read('index.html').match(/<form[^>]*id="usSignup"[\s\S]*?<\/form>/)?.[0]||'';
+  assert.match(form,/<input id="usSignupTerms" type="checkbox" required>/);
+  assert.ok(form.indexOf('usSignupTerms')<form.indexOf('id="usSignupSubmit"'));
+  assert.match(form,/Ho almeno 18 anni e accetto i <a data-us-legal="terms">Termini<\/a> e la <a data-us-legal="privacy">Privacy<\/a>/);
+  // Links only to published https pages; a release needs both.
+  assert.equal(S31.legalUrl('http://example.invalid/termini'),'');assert.equal(S31.legalUrl('javascript:alert(1)'),'');
+  assert.equal(S31.legalUrl('https://example.invalid/termini'),'https://example.invalid/termini');
+  assert.deepEqual(Object.keys(S31.LEGAL_URLS).sort(),['privacy','terms']);
+  if(S31.PRODUCTION_SIGNUP_RELEASED)for(const url of Object.values(S31.LEGAL_URLS))assert.notEqual(S31.legalUrl(url),'','published Terms and Privacy before release');
+});
+
 test('duplicate-email provider response is not echoed as an account existence disclosure',async()=>{
   const auth=fakeAuth();
   auth.signUp=async x=>{auth.calls.push(['signUp',x]);return {data:{},error:{code:'user_already_exists',message:'User already registered'}};};
   const ctrl=S31.createController({auth});ctrl.navigate('signup');
-  await ctrl.register({email:USER_EMAIL,password:SAMPLE_PASSWORD,confirm:SAMPLE_PASSWORD});
+  await ctrl.register({email:USER_EMAIL,password:SAMPLE_PASSWORD,confirm:SAMPLE_PASSWORD,terms:true});
   assert.equal(ctrl.state.message.includes('User already registered'),false);
   assert.equal(ctrl.state.message.includes(USER_EMAIL),false);
   assert.equal(ctrl.state.mode,'verify','duplicate email must not be distinguishable from signup success');
@@ -108,7 +139,7 @@ test('password recovery missing account receives same neutral message as an exis
 test('provider disabled email confirmations: explicitly reject immediately authenticated signup',async()=>{
   const auth=fakeAuth();auth.signUp=async()=>({data:{session:{access_token:'synthetic'}},error:null});
   const ctrl=S31.createController({auth});ctrl.navigate('signup');
-  const result=await ctrl.register({email:USER_EMAIL,password:SAMPLE_PASSWORD,confirm:SAMPLE_PASSWORD});
+  const result=await ctrl.register({email:USER_EMAIL,password:SAMPLE_PASSWORD,confirm:SAMPLE_PASSWORD,terms:true});
   assert.equal(result.ok,false);
   assert.equal(result.kind,'confirmation_required');
   assert.equal(auth.calls[0][0],'signOut');
@@ -119,8 +150,8 @@ test('a pending registration is single-flight and cannot commit after account re
   const auth=fakeAuth();let resolve;
   auth.signUp=()=>new Promise(r=>{resolve=r;});
   const ctrl=S31.createController({auth});ctrl.navigate('signup');
-  const attempt=ctrl.register({email:USER_EMAIL,password:SAMPLE_PASSWORD,confirm:SAMPLE_PASSWORD});
-  assert.equal((await ctrl.register({email:USER_EMAIL,password:SAMPLE_PASSWORD,confirm:SAMPLE_PASSWORD})).kind,'busy');
+  const attempt=ctrl.register({email:USER_EMAIL,password:SAMPLE_PASSWORD,confirm:SAMPLE_PASSWORD,terms:true});
+  assert.equal((await ctrl.register({email:USER_EMAIL,password:SAMPLE_PASSWORD,confirm:SAMPLE_PASSWORD,terms:true})).kind,'busy');
   ctrl.reset();
   resolve({data:{session:null,user:{id:'synthetic'}},error:null});
   assert.equal((await attempt).kind,'stale');

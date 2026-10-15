@@ -73,19 +73,21 @@ test('M10.1D: the rendered bar, labels and progressbar semantics all come from t
   assert.equal(els.bondPageFill.style.width, '12%');
   assert.equal(els.noiHubResonanceFill.style.width, '12%', 'hub and Risonanza never disagree');
   assert.equal(els.bondResonanceLevel.textContent, 'Livello 3');
-  assert.equal(els.bondNextXp.textContent, '440 XP al prossimo livello');
-  assert.deepEqual(['aria-valuenow', 'aria-valuemax', 'aria-valuetext'].map((a) => els.bondProgressTrack.getAttribute(a)), ['60', '500', '60 di 500 XP nel livello 3']);
+  // Round 3 (mockup parity): under the bar, the points inside the level and the points to the next one.
+  assert.equal(els.bondLevelXp.textContent, '60 / 500 XP');
+  assert.equal(els.bondNextXp.textContent, '440 XP al livello 4');
+  assert.deepEqual(['aria-valuenow', 'aria-valuemax', 'aria-valuetext'].map((a) => els.bondProgressTrack.getAttribute(a)), ['60', '500', '60 di 500 punti nel livello 3']);
   assert.equal(els.noiResonanceTotal.textContent, '610');
   // XP grows → the bar advances; crossing the threshold → new level range.
   window.render(800);
   assert.equal(els.bondPageFill.style.width, `${(800 - 550) / 500 * 100}%`);
   assert.ok(parseFloat(els.bondPageFill.style.width) > 12);
   window.render(1049);
-  assert.equal(els.bondNextXp.textContent, '1 XP al prossimo livello');
+  assert.equal(els.bondNextXp.textContent, '1 XP al livello 4');
   window.render(1050);
   assert.equal(els.bondResonanceLevel.textContent, 'Livello 4');
   assert.equal(els.bondPageFill.style.width, '0%');
-  assert.equal(els.bondNextXp.textContent, '650 XP al prossimo livello');
+  assert.equal(els.bondNextXp.textContent, '650 XP al livello 5');
   assert.equal(els.bondProgressTrack.getAttribute('aria-valuemax'), '650');
   assert.equal(window.usBondXp, 1050);
 });
@@ -107,12 +109,16 @@ test('M10.1D: the Risonanza card is level, bar and XP to the next level — no r
   assert.match(visible, /id="bondProgressTrack" role="progressbar"/);
   assert.match(visible, /<span id="bondNextXp">/);
   assert.equal((html.match(/id="bondNextXp"/g) || []).length, 1, 'one element per id');
-  assert.doesNotMatch(visible, /id="bondTotalXp"|id="bondLevelXp"/, 'the legacy counters are not shown');
+  // Round 3 (mockup parity): "760 / 800 XP" is shown under the bar; the total stays a legacy counter.
+  assert.match(visible, /<span id="bondLevelXp">/);
+  assert.doesNotMatch(visible, /id="bondTotalXp"/, 'the legacy total is not shown');
   assert.doesNotMatch(html, /id="noiResonanceLevel"|id="noiResonanceNext"/, 'the guide no longer repeats level and next-level numbers');
 });
 
 test('M10.1D: Risonanza is progress accumulated inside US — never relationship quality', () => {
-  const card = html.match(/<article class="noi-resonance"[\s\S]*?<\/article>/)[0] + html.match(/<section class="noi-resonance-guide"[\s\S]*?<\/section>/)[0];
-  const ui = card + slice('function renderBondProgress(totalXp){', 'async function hydrateBondSummary(){') + read('fix4.js').match(/window\.bondRankTitle = [\s\S]*?\};/)[0];
+  // Round 3 (mockup parity): "Come cresce la Sintonia" is the mockup's fold under the collection.
+  const card = html.match(/<article class="noi-resonance"[\s\S]*?<\/article>/)[0];
+  const guide = html.match(/<section class="noi-resonance-guide"[\s\S]*?<\/section>/)[0];
+  const ui = card + guide + slice('function renderBondProgress(totalXp){', 'async function hydrateBondSummary(){') + read('fix4.js').match(/window\.bondRankTitle = [\s\S]*?\};/)[0];
   assert.doesNotMatch(ui, /qualit[àa]|compatibilit|salute della|health|punteggio|score|valut|affiatamento|percentuale di/i);
 });

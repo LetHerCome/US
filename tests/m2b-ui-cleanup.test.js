@@ -101,8 +101,9 @@ test('Motion 3 legacy e Motion Pass inutilizzato non restano nel runtime', () =>
     const source = read(file);
     assert.doesNotMatch(source, /motion3\.css|us-motion3-|us-swipe-tracking|us-swipe-return/);
   }
-  assert.match(read('polish4.css'), /us-motion31-current/);
-  assert.match(read('app.js'), /us-motion31-current/);
+  // T1 1.0 — polish4 (and the unused Motion 3.1 rules in it) is gone.
+  assert.equal(fs.existsSync(path.join(ROOT, 'polish4.css')), false);
+  assert.equal(fs.existsSync(path.join(ROOT, 'polish4.js')), false);
 });
 
 test('i controlli delete restano espliciti e hanno target 44px', () => {
