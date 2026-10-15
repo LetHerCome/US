@@ -190,7 +190,7 @@ html .auth-overlay .mc3-help,
 
 /* Buttons: pill, my colour, dark ink. */
 html .auth-overlay .us-auth-primary,
-html .auth-overlay #mc3CopyCode,
+html .auth-overlay #mc3ShareCode,
 html .auth-overlay #mc3Retry,
 .us-setup .us-auth-primary{
   display:inline-flex;
@@ -208,11 +208,13 @@ html .auth-overlay #mc3Retry,
   box-shadow:none;
 }
 html .auth-overlay .us-auth-primary:disabled,
+html .auth-overlay #mc3ShareCode:disabled,
 html .auth-overlay #mc3CopyCode:disabled,
 html .auth-overlay #mc3Retry:disabled,
 .us-setup .us-auth-primary:disabled{opacity:.6}
 html .auth-overlay #mc3BackCreate,
 html .auth-overlay #mc3BackJoin,
+html .auth-overlay #mc3CopyCode,
 html .auth-overlay #mc3Waiting.has-code #mc3Generate,
 .us-setup .us-setup-secondary{
   display:inline-flex;
@@ -232,6 +234,34 @@ html .auth-overlay #mc3Waiting.has-code #mc3Generate,
 html .auth-overlay #mc3BackCreate,
 html .auth-overlay #mc3BackJoin{margin-top:-6px}
 .us-setup .us-setup-secondary[hidden]{display:none}
+
+/* 18+ and the Terms: a real checkbox in my colour, 44px tall, the links underlined. */
+html .auth-overlay .us-auth-consent{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  min-height:44px;
+  margin:2px 0 0;
+  padding:10px 0;
+  color:var(--us-color-text-2);
+  font:400 14.5px/1.45 var(--us-font-ui);
+  cursor:pointer;
+}
+html .auth-overlay .auth-card .us-auth-consent input{
+  flex:none;
+  width:22px;
+  min-height:0;
+  height:22px;
+  margin:0;
+  padding:0;
+  border-radius:6px;
+  accent-color:var(--us-tu);
+  color-scheme:dark;
+  cursor:pointer;
+}
+html .auth-overlay .us-auth-consent input:focus-visible{outline:2px solid var(--us-noi);outline-offset:2px}
+html .auth-overlay .us-auth-consent a{color:var(--us-color-text);text-decoration:none}
+html .auth-overlay .us-auth-consent a[href]{text-decoration:underline;text-underline-offset:3px}
 
 /* Links: underlined, centred, 44px tall. */
 html .auth-overlay .us-auth-link,
@@ -451,7 +481,8 @@ html .auth-overlay .us-tour-slide .us-auth-lede{max-width:31ch;text-align:center
 .t3-ring svg{width:150px;height:150px}
 .t3-tr{fill:var(--us-color-surface);stroke:var(--us-color-line-strong);stroke-width:7}
 .t3-r{fill:none;stroke:var(--us-noi);stroke-width:7;stroke-linecap:round;stroke-dasharray:100 100;stroke-dashoffset:22;transform:rotate(-90deg);transform-origin:75px 75px}
-.t3-x{position:absolute;right:30px;top:12px;color:var(--us-noi);font:800 13px/1 var(--us-font-ui);opacity:0}
+/* Something done together: a heart rises (no points outside the Sintonia bar). */
+.t3-x{position:absolute;right:30px;top:12px;color:var(--us-noi);font:800 18px/1 var(--us-font-ui);opacity:0}
 .t3-c{
   position:absolute;
   left:50%;
@@ -596,6 +627,9 @@ html .auth-overlay .auth-card #mc3CodeArea #mc3Code{
   word-spacing:.3em;
   resize:none;
 }
+/* Condividi leads, Copia codice beside it. */
+html .auth-overlay #mc3CodeArea .mc3-code-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+html .auth-overlay #mc3CodeArea .mc3-code-actions button{min-height:52px;padding:0 12px}
 html .auth-overlay #mc3Waiting .mc3-actions{flex-direction:row;flex-wrap:wrap;justify-content:center;gap:4px 16px}
 html .auth-overlay #mc3Waiting #mc3Generate{flex:1 0 100%}
 html .auth-overlay #mc3Waiting .us-ob-note{text-align:center}
@@ -730,6 +764,24 @@ html .auth-overlay #mc3Waiting .us-ob-note{text-align:center}
 .us-setup-ready-icon--heart{--us-setup-icon:url("/assets/icons/phosphor/heart-straight-regular.svg")}
 .us-setup-ready-icon--bell{--us-setup-icon:url("/assets/icons/phosphor/bell-regular.svg")}
 .us-setup-ready-icon--pin{--us-setup-icon:url("/assets/icons/phosphor/map-pin-regular.svg")}
+.us-setup-ready-icon--widget{--us-setup-icon:url("/assets/icons/phosphor/squares-four-regular.svg")}
+/* The widget offer (Android): one small pill in the row. */
+.us-setup-ready .us-setup-ready-action{
+  flex:none;
+  min-height:44px;
+  margin:0;
+  padding:0 14px;
+  border:0;
+  border-radius:999px;
+  background:var(--us-tu);
+  color:var(--us-inchiostro);
+  font:700 13.5px/1.15 var(--us-font-ui);
+  box-shadow:none;
+  max-width:46%;
+}
+.us-setup-ready .us-setup-ready-action[aria-disabled="true"]{opacity:.6}
+.us-setup-ready .us-setup-ready-action:focus-visible{outline:2px solid var(--us-noi);outline-offset:2px}
+.us-setup-ready li>i[hidden]{display:none}
 .us-setup-ready li.is-ok .us-setup-ready-icon{background:color-mix(in srgb,var(--us-tu) 14%,var(--us-color-surface-2))}
 .us-setup-ready li.is-ok .us-setup-ready-icon::before{background:var(--us-tu)}
 .us-setup-ready li>i{

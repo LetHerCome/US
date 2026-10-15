@@ -188,7 +188,7 @@ html.us-returning-device .auth-overlay{
             <p class="us-auth-lede">Una domanda ogni giorno: le risposte si svelano quando avete risposto entrambi. E un Ti penso quando vuoi, con un tocco.</p>
           </section>
           <section class="us-tour-slide" role="group" aria-roledescription="scheda" aria-label="3 di 3">
-            <div class="us-tour-vis" aria-hidden="true"><div class="t3-ring"><svg viewBox="0 0 150 150" focusable="false"><circle class="t3-tr" cx="75" cy="75" r="64"/><circle class="t3-r" cx="75" cy="75" r="64" pathLength="100"/><circle class="us-duo-a" cx="64" cy="75" r="19"/><circle class="us-duo-b" cx="86" cy="75" r="19"/><path class="us-duo-n" d="M75 59.51A19 19 0 0 1 75 90.49A19 19 0 0 1 75 59.51Z"/></svg></div><span class="t3-x">+35 XP</span><span class="t3-c"><i></i>Livello 5 · Intesa rara</span></div>
+            <div class="us-tour-vis" aria-hidden="true"><div class="t3-ring"><svg viewBox="0 0 150 150" focusable="false"><circle class="t3-tr" cx="75" cy="75" r="64"/><circle class="t3-r" cx="75" cy="75" r="64" pathLength="100"/><circle class="us-duo-a" cx="64" cy="75" r="19"/><circle class="us-duo-b" cx="86" cy="75" r="19"/><path class="us-duo-n" d="M75 59.51A19 19 0 0 1 75 90.49A19 19 0 0 1 75 59.51Z"/></svg></div><span class="t3-x">♡</span><span class="t3-c"><i></i>Livello 5 · Intesa rara</span></div>
             <h2>Crescete <em>insieme</em></h2>
             <p class="us-auth-lede">Ricordi, calendario e giochi. Più vivete insieme, più cresce la vostra Sintonia e si sbloccano sorprese.</p>
           </section>
@@ -226,6 +226,9 @@ html.us-returning-device .auth-overlay{
       <label class="us-auth-field" for="usSignupEmail"><span>Email</span><input id="usSignupEmail" type="email" inputmode="email" autocomplete="email" maxlength="254" placeholder="tua@email.com" required></label>
       <label class="us-auth-field" for="usSignupPassword"><span>Password · almeno 10 caratteri</span><input id="usSignupPassword" type="password" autocomplete="new-password" minlength="10" maxlength="72" required></label>
       <label class="us-auth-field" for="usSignupConfirm"><span>Conferma password</span><input id="usSignupConfirm" type="password" autocomplete="new-password" minlength="10" maxlength="72" required></label>
+      <!-- 18+ and the Terms: "Registrati" stays off until ticked (public-auth.js). The links get their
+           href from LEGAL_URLS once the public pages exist; until then the words carry no link. -->
+      <label class="us-auth-consent" for="usSignupTerms"><input id="usSignupTerms" type="checkbox" required><span>Ho almeno 18 anni e accetto i <a data-us-legal="terms">Termini</a> e la <a data-us-legal="privacy">Privacy</a></span></label>
       <button class="primary us-auth-primary" id="usSignupSubmit" type="submit">Registrati</button>
       <p class="auth-status" id="usSignupStatus" role="status" aria-live="polite"></p>
       <button class="us-auth-link us-public-auth-back" id="usSignupBack" type="button">Ho già un account</button>
@@ -304,9 +307,12 @@ html.us-returning-device .auth-overlay{
         <p id="mc3InviteStatus" class="mc3-help"></p>
         <div id="mc3CodeArea" hidden>
           <label class="us-auth-field" for="mc3Code"><span>Il nuovo codice</span><textarea id="mc3Code" readonly autocomplete="off" spellcheck="false" rows="2"></textarea></label>
-          <button type="button" id="mc3CopyCode">Copia codice</button>
+          <div class="mc3-code-actions">
+            <button type="button" id="mc3ShareCode">Condividi</button>
+            <button type="button" id="mc3CopyCode">Copia codice</button>
+          </div>
         </div>
-        <p class="mc3-help us-ob-invite-help">Il codice compare solo quando lo crei. Generarne uno nuovo invalida il precedente. Condividilo soltanto con la tua persona.</p>
+        <p class="mc3-help us-ob-invite-help">Il codice resta qui fino alla scadenza, finché non chiudi US. Un codice nuovo annulla il precedente. Condividilo soltanto con la tua persona.</p>
         <div class="mc3-actions">
           <button type="button" id="mc3Generate" class="primary us-auth-primary">Crea invito</button>
           <button type="button" id="mc3Revoke" hidden>Revoca codice</button>
