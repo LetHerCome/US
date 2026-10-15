@@ -39,7 +39,7 @@ test('partner apre solo Lasciato per te e il profilo resta un controllo foto', (
   assert.match(html, /id="leftForYouPartnerEntry"[\s\S]{0,180}onclick="usEnvelopeTap\(\)"/);
   assert.doesNotMatch(html, /id="profileAvatarBtn"/, 'nessun avatar/foto legacy nel top chrome');
   assert.match(html, /id="profileAvatarFile"/, 'il flusso foto profilo resta vivo tramite Impostazioni');
-  assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,220}Cambia foto profilo/);
+  assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,220}<b>Foto profilo<\/b>/);
   assert.doesNotMatch(html, /onclick="openOwnStories\(\)"/);
   assert.match(stories, /__US_LEFT_FOR_YOU_ACTIVE__/);
   assert.match(html, /id="usSettingsEntry"[\s\S]{0,160}onclick="go\('settings',\{nav:true\}\)"/);
@@ -50,6 +50,6 @@ test('partner apre solo Lasciato per te e il profilo resta un controllo foto', (
   assert.doesNotMatch(html, /id="usEventsTopEntry"/);
   assert.match(html, /class="us-top-brand"[^>]*role="img" aria-label="US"/);
   assert.match(html, /data-noi-open-link="eventi"[\s\S]{0,200}Eventi/);
-  assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,220}Cambia foto profilo/);
+  assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,220}<b>Foto profilo<\/b>/);
   assert.match(read('settings.js'), /window\.pickProfilePhoto\?\.\(\)/);
 });
