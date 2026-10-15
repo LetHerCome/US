@@ -158,6 +158,25 @@ test('O7 think_reaction: the push names the reaction the server stored', async (
     [['https://push.example/s-bea', 'US. · Ti penso', 'Francesco ti manda un abbraccio']]);
 });
 
+test('O6 Ti penso: one push every 2 minutes per person, the next one counts the ones in between', async () => {
+  const MSG = UUID(61);
+  const ago = (ms) => new Date(Date.now() - ms).toISOString();
+  const think = (id, ms) => ({ id, couple_id: COUPLE, sender_id: B, recipient_id: F, kind: 'think', created_at: ago(ms) });
+  const lastPush = (ms) => ({ dedupe_key: `think:${UUID(66)}`, couple_id: COUPLE, sender_id: B, event_type: 'think', created_at: ago(ms) });
+  // A push 30 s ago: this one stays in the app only.
+  const soon = sendWorld({ tables: { shared_messages: [think(MSG, 0)], push_event_log: [lastPush(30_000)] } });
+  assert.deepEqual((await (await sender(soon))('jwt-b', { type: 'think', reference_id: MSG })).body, { delivered: 0, failed: 0, reason: 'throttled' });
+  assert.equal(soon.webpush.sent.length, 0);
+  // Last push 5 minutes ago, two more since then plus this one: "3 volte".
+  const later = sendWorld({ tables: { shared_messages: [think(UUID(62), 240_000), think(UUID(63), 200_000), think(MSG, 0)], push_event_log: [lastPush(300_000)] } });
+  assert.deepEqual((await (await sender(later))('jwt-b', { type: 'think', reference_id: MSG })).body, { delivered: 1, failed: 0 });
+  assert.deepEqual(later.webpush.sent.map((s) => [s.endpoint, s.payload.body]), [['https://push.example/s-fra', 'Bea ti ha pensato 3 volte ♡']]);
+  // First Ti penso in a while: the usual line, in the recipient's language.
+  const first = sendWorld({ locales: { [F]: 'en' }, tables: { shared_messages: [think(UUID(64), 3_600_000), think(MSG, 0)] } });
+  await (await sender(first))('jwt-b', { type: 'think', reference_id: MSG });
+  assert.deepEqual(first.webpush.sent.map((s) => s.payload.body), ['Bea is thinking of you ♡']);
+});
+
 test('N5 quest_confirmed: "ha fatto «titolo». Ora tocca a te", English title from the template, nothing once both confirmed', async () => {
   const QUEST = UUID(70);
   const quest = (confirmed) => ({ id: QUEST, couple_id: COUPLE, title: 'Cena senza telefoni', template_key: 'dinner_no_phones', confirmed_by: confirmed });

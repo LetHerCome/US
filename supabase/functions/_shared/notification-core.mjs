@@ -73,7 +73,9 @@ function relationshipCopy(a, en) {
 // Each entry receives (args, en): en is true when the recipient reads English.
 const CATALOGUE = Object.freeze({
   test: (a, en) => ({ title: 'US.', body: pick(en, 'Notifiche attive. US può raggiungerti anche quando è chiusa ♡', 'Notifications are on. US can reach you even when it is closed ♡'), target: 'home', tag: 'us-push-test', channel: 'reminders', urgency: 'normal' }),
-  think: (a, en) => ({ title: 'US.', body: pick(en, `${name(a.senderName)} ti sta pensando ♡`, `${name(a.senderName, true)} is thinking of you ♡`), target: 'think', ref: a.messageId, tag: `think-${a.messageId}`, channel: 'partner', urgency: 'high', category: 'think' }),
+  think: (a, en) => ({ title: 'US.', body: Number(a.count) > 1
+    ? pick(en, `${name(a.senderName)} ti ha pensato ${Number(a.count)} volte ♡`, `${name(a.senderName, true)} thought of you ${Number(a.count)} times ♡`)
+    : pick(en, `${name(a.senderName)} ti sta pensando ♡`, `${name(a.senderName, true)} is thinking of you ♡`), target: 'think', ref: a.messageId, tag: `think-${a.messageId}`, channel: 'partner', urgency: 'high', category: 'think' }),
   // O7: the reaction itself, with the name ("Bea ti manda un abbraccio").
   think_reaction: (a, en) => ({ title: pick(en, 'US. · Ti penso', 'US. · Thinking of you'), body: own(THINK_REACTION_COPY, a.reaction)?.(name(a.senderName, en), en) || pick(en, `${name(a.senderName)} ha reagito al tuo Ti penso`, `${name(a.senderName, true)} reacted to your Thinking of you`), target: 'home', ref: a.messageId, tag: `think-reaction-${a.messageId}`, channel: 'partner', urgency: 'normal' }),
   daily_answer: (a, en) => ({ title: DAILY_TITLE(en), body: pick(en, `${name(a.senderName)} ha risposto. Ora tocca a te.`, `${name(a.senderName, true)} answered. Your turn now.`), target: 'today', ref: a.questionId, tag: `daily-answer-${a.questionId}`, channel: 'partner', urgency: 'normal' }),
