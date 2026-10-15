@@ -90,10 +90,12 @@ test('already completed says so, never with points', async () => {
   assert.deepEqual([...none.celebrations, ...some.celebrations], []);
 });
 
-test('a completion with points gets the same quiet toast, never an XP celebration', async () => {
+// Round 3 (mockup parity, 078): a completion that earned points shows the mockup's
+// "+35 XP · Evento vissuto · Sintonia" (progression.js usCelebrateXp) instead of the toast.
+test('a completion with points gets the mockup\'s +XP, and the quiet toast without it', async () => {
   const h = await completeWith({ completed: true, already_completed: false, xp_awarded: 35, occurrence_date: TODAY, xp_reason: 'planned' });
-  assert.deepEqual(h.celebrations, []);
-  assert.deepEqual(h.toasts, ['Evento vissuto ♡']);
+  assert.deepEqual(h.celebrations, [[35, 'Evento vissuto']]);
+  assert.deepEqual(h.toasts, []);
   const bare = await completeWith({ completed: true, already_completed: false, xp_awarded: 60 }, { celebrate: false });
   assert.deepEqual(bare.toasts, ['Evento vissuto ♡'], 'old server answers (no xp_reason) keep working');
   assert.doesNotMatch([...h.toasts, ...bare.toasts].join(' '), /XP|Bond/);
@@ -136,8 +138,9 @@ test('the complete button and the due list never promise points', async () => {
   assert.doesNotMatch(list, /XP/);
 });
 
-test('T1 1.0: the old "+XP" party is gone; a silent shim answers callers', () => {
+test('T1 1.0 + round 3: the old polish4 party is gone; usCelebrateXp is the mockup\'s +XP', () => {
   assert.equal(fs.existsSync(path.join(ROOT, 'polish4.js')), false);
   const progression = read('progression.js');
-  assert.match(progression, /window\.usCelebrateXp = window\.usCelebrateXp \|\| function \(\) \{\};/);
+  assert.match(progression, /window\.usCelebrateXp = \(n, label\) => xpPop\(n, label\);/);
+  assert.match(progression, /\{ duration: 1550, easing: EASE\.out \}/);
 });

@@ -38,11 +38,12 @@ test('M12C: canonical identity prevents duplicate rows',()=>{
 });
 
 test('M12C: UI explains XP history, never relationship quality or a second score',()=>{
-  // S6/S7 1.0 — an open diary with mesiversari, never points.
+  // Round 3 (mockup parity): the mockup's fold under the collection; each row shows its "+N XP" (app.js), the markup has no points.
   const section=html.match(/<section class="noi-resonance-history"[\s\S]*?<\/section>/)?.[0]||'';
-  assert.match(section,/<h3 id="noiResonanceHistoryTitle">Ultime crescite<\/h3>/);
+  assert.match(section,/<b id="noiResonanceHistoryTitle">Ultime crescite<small>Le cose che avete fatto insieme<\/small><\/b>/);
   assert.match(section,/mesiversari/);
   assert.doesNotMatch(section,/XP|<details/);
+  assert.match(app,/<b class="noi-resonance-history-xp">\+\$\{entry\.xp\} XP<\/b>/);
   assert.doesNotMatch(section,/qualit[àa]|compatibilit|salute|score|punteggio|valutazione/i);
   assert.match(app,/sb\.from\('couples'\)\.select\('bond_xp'\)/);
   assert.doesNotMatch(slice('const RESONANCE_HISTORY_LIMIT=6;','function hashSeed(text){'),/\.insert\(|\.update\(|\.upsert\(|\.delete\(|\.rpc\(/);

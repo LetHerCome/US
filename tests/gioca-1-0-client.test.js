@@ -162,7 +162,7 @@ test('G9: La vostra domanda closes the Giochi panel, as in the mockup, and is si
   assert.equal((panel.match(/us-gv2-author"/g) || []).length, 2, 'library questions are not signed');
 });
 
-test('S6: Ultime crescite is a diary — date · what — with mesiversari and no points', () => {
+test('S6: Ultime crescite (the mockup fold) — what, detail · date and its points, mesiversari included', () => {
   const app = read('app.js');
   const from = app.indexOf('const RESONANCE_HISTORY_LIMIT=6;');
   const block = app.slice(from, app.indexOf('function hashSeed(text){', from));
@@ -175,30 +175,28 @@ test('S6: Ultime crescite is a diary — date · what — with mesiversari and n
     [{ milestone_date: '2026-10-12', kind: 'monthiversary', months_together: 16, xp_awarded: 60 }, { milestone_date: '2026-06-12', kind: 'anniversary', months_together: 12, xp_awarded: 0 }]);
   assert.deepEqual(Array.from(entries, (e) => e.kind), ['milestone', 'quest', 'milestone'], 'newest first, mesiversari included');
   window.api.renderHistory(entries);
-  assert.match(root.innerHTML, /<time>12 ott<\/time><span class="noi-resonance-history-sep" aria-hidden="true"> · <\/span><span>Mesiversario, 16 mesi<\/span>/);
-  assert.match(root.innerHTML, /<span>Missione:<\/span> <b>Cena senza telefoni<\/b>/);
-  assert.match(root.innerHTML, /Anniversario, 1 anno/);
-  assert.doesNotMatch(root.innerHTML, /XP|\+\d/);
+  // Round 3 (mockup parity): "Mesiversario / 16 mesi insieme · 12 ott / +60 XP", as the mockup's .hist rows.
+  assert.match(root.innerHTML, /<p class="noi-resonance-history-copy">Mesiversario<small><span>16 mesi insieme<\/span> · <time>12 ott<\/time><\/small><\/p><b class="noi-resonance-history-xp">\+60 XP<\/b>/);
+  assert.match(root.innerHTML, /Missione di coppia<small><span>Cena senza telefoni<\/span> · <time>9 ott<\/time><\/small><\/p><b class="noi-resonance-history-xp">\+80 XP<\/b>/);
+  assert.match(root.innerHTML, /Anniversario<small><span>1 anno insieme<\/span>/);
+  assert.equal((root.innerHTML.match(/noi-resonance-history-xp/g) || []).length, 2, 'a milestone that gave no points shows none');
 });
 
 test('S2/S8/S10/T1: level moment, reward scope, Back and the old party (sources)', () => {
   const progression = read('progression.js');
   const html = read('index.html');
   const nav = read('navigation.js');
-  // S2 — "Livello 2 · Complici. Ci siete arrivati insieme." plus the new rewards, no points.
-  assert.match(progression, /`Livello \$\{level\} · \$\{rank\}`/);
-  assert.match(progression, /<p>Ci siete arrivati insieme\.<\/p>/);
-  assert.match(progression, /us-level-moment-gifts/);
+  // Round 3 (mockup parity) — the level Momento: "Livello 6", "Intesa rara. Il prossimo arriva a 950 XP.", the chip.
+  assert.match(progression, /Livello <em>\$\{level\}<\/em>/);
+  assert.match(progression, /`\$\{rank\}\. Il prossimo arriva a \$\{fmt\(need\)\} XP\.`/);
+  assert.match(progression, /'Un premio sbloccato'/);
   assert.doesNotMatch(progression, /XP al prossimo livello|PROSSIMO SBLOCCO · LIVELLO/);
-  // S8 — scope said per reward; next unlock is a sentence.
-  assert.match(progression, /'Solo sul tuo telefono'/);
-  assert.match(progression, /'Per tutti e due'/);
-  assert.match(progression, /theme_rose: 'tutta US diventa rosa'/);
-  assert.match(progression, /`Al livello \$\{level\} \$\{what\}`/);
-  // S10 — Chiudi, the reward stays, Back closes both windows.
-  assert.match(html, /id="usProgressionUnlockLater">Chiudi<\/button>/);
-  assert.match(html, /Resta nella vostra collezione, in Sintonia\./);
-  assert.doesNotMatch(html, />Più tardi</);
+  // S8 — the scope is said under "I vostri sblocchi"; the next unlock is the mockup's card.
+  assert.match(progression, /'Tocca un premio per usarlo\. Vale solo su questo telefono\.'/);
+  assert.match(progression, /'Tocca uno stile per usarlo\. Vale per tutti e due\.'/);
+  assert.match(progression, /Prossimo sblocco · Livello \$\{level\}/);
+  // S10 — the mockup's "Più tardi"; the reward stays in the collection; Back closes both windows.
+  assert.match(html, /id="usProgressionUnlockLater">Più tardi<\/button>/);
   assert.match(nav, /name:'progression-unlock'[\s\S]*?closeUnlock/);
   assert.match(nav, /name:'level-moment'[\s\S]*?closeLevelMoment/);
   // S5 — each part of the line under the bar opens its own place.

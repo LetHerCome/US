@@ -450,7 +450,7 @@ function setTab(tab){
 function moveSintonia(){
   const target=$('usGiocaSintonia');
   if(!target||target.dataset.ready)return;
-  const selectors=['.noi-resonance','.us-progression-next','.us-progression-rewards-section','.noi-resonance-history','.noi-resonance-guide'];
+  const selectors=['.noi-resonance','.us-progression-rhythm','.us-progression-next','.us-progression-rewards-section','.noi-resonance-history','.noi-resonance-guide'];
   for(const selector of selectors){
     const element=document.querySelector(`#bond .noi-canonical-page > ${selector}`);
     if(element)target.appendChild(element);

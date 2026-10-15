@@ -578,32 +578,46 @@ html.us-returning-device .auth-overlay{
         </nav>
       </section>
 
-      <article class="noi-resonance" aria-label="Sintonia attuale">
-        <div class="noi-resonance-top"><div><div class="tiny">SINTONIA</div><b><span id="bondResonanceLevel" class="noi-resonance-level">Livello 1</span><span class="noi-resonance-dot" aria-hidden="true"> · </span><span id="bondRankTitle">Primo legame</span></b></div><span class="noi-resonance-mark" aria-hidden="true">∞</span></div>
+      <article class="noi-resonance" aria-label="Sintonia attuale" data-s>
+        <!-- Sintonia (moved into Gioca > Sintonia by noi-v2.js): the mockup's blocks, in its order. -->
+        <div class="noi-resonance-top"><div><div class="tiny">SINTONIA</div><svg class="us-sintonia-venn" viewBox="0 0 210 120" aria-hidden="true" focusable="false"><circle class="is-a" cx="62" cy="60" r="50"/><circle class="is-b" cx="148" cy="60" r="50"/><path class="is-noi"/><circle class="is-bloom" cx="105" cy="60" r="50"/></svg><b><span id="bondResonanceLevel" class="noi-resonance-level">Livello 1</span><span class="noi-resonance-dot" aria-hidden="true"> · </span><span id="bondRankTitle">Primo legame</span></b></div><span class="noi-resonance-mark" aria-hidden="true">∞</span></div>
         <div class="bond-xp-track" id="bondProgressTrack" role="progressbar" aria-label="Progresso Sintonia verso il prossimo livello" aria-valuemin="0" aria-valuemax="200" aria-valuenow="0" aria-valuetext="0 di 200 punti nel livello 1"><div id="bondPageFill"></div></div>
-        <div class="noi-resonance-foot"><span id="bondNextXp">Verso il livello 2</span><span id="bondCompletedCount" aria-hidden="true">0 esperienze</span></div>
-        <p class="noi-resonance-grow" id="usSintoniaGrow">Cresce con le cose che fate insieme: <span><button type="button" data-sintonia-go="daily">la domanda di oggi</button>,</span> <span><button type="button" data-sintonia-go="games">una partita</button>,</span> <span><button type="button" data-sintonia-go="quest">una missione</button>,</span> <span><button type="button" data-sintonia-go="memory">un ricordo</button>.</span></p>
-        <div class="us-progression-rhythm" aria-label="Ritmo">
-          <span class="us-progression-rhythm-copy"><small>RITMO</small><span id="usProgressionRhythmCopy">Fate una piccola cosa insieme per iniziare.</span></span>
-          <strong id="usProgressionRhythmValue">0 giorni</strong>
-        </div>
-        <div class="noi-resonance-legacy" aria-hidden="true"><span id="bondLevelValue">1</span><span id="bondTotalXp">0 punti</span><span id="bondLevelXp">0 / 200</span><span id="bondRerollsLeft">3</span><span id="bondWeekReset">Nuove esperienze ogni lunedì</span><span id="bondBadges"></span></div>
+        <div class="noi-resonance-foot"><span id="bondLevelXp">0 / 200 XP</span><span id="bondNextXp">200 XP al livello 2</span><span id="bondCompletedCount" aria-hidden="true">0 esperienze</span></div>
+        <div class="noi-resonance-legacy" aria-hidden="true"><span id="bondLevelValue">1</span><span id="bondTotalXp">0 punti</span><span id="bondRerollsLeft">3</span><span id="bondWeekReset">Nuove esperienze ogni lunedì</span><span id="bondBadges"></span></div>
       </article>
 
-      <section class="noi-resonance-history" aria-labelledby="noiResonanceHistoryTitle">
-        <div class="noi-resonance-history-head"><h3 id="noiResonanceHistoryTitle">Ultime crescite</h3><small>Le cose che avete fatto insieme</small></div>
-        <div id="noiResonanceHistory" class="noi-resonance-history-list" aria-live="polite" aria-busy="false">
+      <section class="us-progression-rhythm" id="usProgressionRhythm" aria-labelledby="usProgressionRhythmTitle" data-s>
+        <span class="us-progression-rhythm-kicker" id="usProgressionRhythmTitle">Ritmo</span>
+        <p id="usProgressionRhythmCopy">Fate una piccola cosa insieme per iniziare.</p>
+        <strong id="usProgressionRhythmValue">0 giorni</strong>
+        <span class="us-progression-rhythm-days" id="usProgressionRhythmDays" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+      </section>
+
+      <button type="button" class="us-progression-next" id="usProgressionNext" data-s>
+        <span class="us-progression-next-copy"><small>Prossimo sblocco</small><b>Carico…</b></span>
+      </button>
+
+      <section class="us-progression-rewards-section" aria-labelledby="usProgressionRewardsTitle" data-s>
+        <div class="us-progression-rewards-head"><h3 id="usProgressionRewardsTitle">I vostri sblocchi</h3><b id="usProgressionRewardsCount"></b></div>
+        <p class="us-progression-rewards-sub" id="usProgressionRewardsSub">Tocca un premio per usarlo. Vale solo su questo telefono.</p>
+        <div class="us-progression-rewards" id="usProgressionRewards" aria-live="polite"></div>
+      </section>
+
+      <section class="noi-resonance-history" data-open="false" aria-labelledby="noiResonanceHistoryTitle" data-s>
+        <button type="button" class="us-sintonia-fold" data-sintonia-fold aria-expanded="false" aria-controls="noiResonanceHistory"><span class="us-sintonia-fold-icon is-star" aria-hidden="true"></span><b id="noiResonanceHistoryTitle">Ultime crescite<small>Le cose che avete fatto insieme</small></b><span class="us-sintonia-fold-caret" aria-hidden="true"></span></button>
+        <div id="noiResonanceHistory" class="noi-resonance-history-list" aria-live="polite" aria-busy="false" hidden>
           <div class="noi-resonance-history-empty"><b>La prossima crescita apparirà qui</b><span>Missioni, eventi vissuti e mesiversari: le cose che fate insieme.</span></div>
         </div>
       </section>
 
-      <section class="us-progression-next" id="usProgressionNext" aria-live="polite">
-        <small>Prossimo sblocco</small><b>Carico…</b>
-      </section>
-
-      <section class="us-progression-rewards-section" aria-labelledby="usProgressionRewardsTitle">
-        <div class="us-progression-rewards-head"><div><small>COLLEZIONE</small><h3 id="usProgressionRewardsTitle">I vostri sblocchi</h3></div><span class="us-progression-rewards-meta"><b id="usProgressionRewardsCount"></b>Tocca un premio per usarlo</span></div>
-        <div class="us-progression-rewards" id="usProgressionRewards" aria-live="polite"></div>
+      <section class="noi-resonance-guide" data-open="false" aria-labelledby="noiResonanceGuideTitle" data-s>
+        <button type="button" class="us-sintonia-fold" data-sintonia-fold aria-expanded="false" aria-controls="usSintoniaGrow"><span class="us-sintonia-fold-icon is-help" aria-hidden="true"></span><b id="noiResonanceGuideTitle">Come cresce la Sintonia<small><span id="noiResonanceTotal">0</span> punti accumulati insieme</small></b><span class="us-sintonia-fold-caret" aria-hidden="true"></span></button>
+        <ul class="us-sintonia-guide" id="usSintoniaGrow" hidden>
+          <li><b><button type="button" data-sintonia-go="quest">Missioni</button> ed eventi</b>Le cose che completate insieme continuano ad alimentare la Sintonia.</li>
+          <li><b><button type="button" data-sintonia-go="daily">Domanda di oggi</button> e <button type="button" data-sintonia-go="games">Gioca</button></b>Una risposta condivisa o una partita completata conta davvero.</li>
+          <li><b>Ti penso e <button type="button" data-sintonia-go="memory">Ricordi</button></b>Il primo gesto significativo del giorno dà progresso, uno al giorno.</li>
+          <li><b>Mesiversario e anniversario</b>I vostri traguardi restano parte della Sintonia.</li>
+        </ul>
       </section>
 
       <!-- Missioni (with Le vostre idee) opens as a Foglio over the Noi calendar. -->
@@ -1053,24 +1067,23 @@ html.us-returning-device .auth-overlay{
 </div>
 
 <div class="us-progression-unlock" id="usProgressionUnlock" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="usProgressionUnlockTitle">
+  <!-- The mockup's unlock Momento: the card, what it is, where it lives, "1 di 2", Usalo ora / Più tardi. -->
   <article class="us-progression-unlock-card">
-    <span class="us-progression-unlock-kicker" id="usProgressionUnlockKicker">Hai sbloccato</span>
-    <small class="us-progression-unlock-count" id="usProgressionUnlockCount"></small>
     <div class="us-progression-unlock-stage" aria-hidden="true">
       <span class="us-progression-unlock-burst"></span>
       <span class="us-progression-unlock-sparks"></span>
       <div class="us-progression-unlock-preview" id="usProgressionUnlockPreview" aria-hidden="true"></div>
     </div>
+    <span class="us-progression-unlock-kicker" id="usProgressionUnlockKicker">Hai sbloccato</span>
     <h2 id="usProgressionUnlockTitle">Nuovo sblocco</h2>
     <p id="usProgressionUnlockDescription"></p>
     <p class="us-progression-unlock-place" id="usProgressionUnlockPlace" hidden></p>
-    <p class="us-progression-unlock-scope" id="usProgressionUnlockScope" hidden></p>
     <div class="us-progression-unlock-extra" id="usProgressionUnlockExtra" hidden></div>
+    <small class="us-progression-unlock-count" id="usProgressionUnlockCount"></small>
     <div class="us-progression-unlock-actions">
       <button type="button" class="primary" id="usProgressionUnlockUse">Usalo ora</button>
-      <button type="button" class="us-progression-unlock-later" id="usProgressionUnlockLater">Chiudi</button>
+      <button type="button" class="us-progression-unlock-later" id="usProgressionUnlockLater">Più tardi</button>
     </div>
-    <p class="us-progression-unlock-keep">Resta nella vostra collezione, in Sintonia.</p>
     <div class="us-progression-unlock-status" id="usProgressionUnlockStatus" role="status" aria-live="polite"></div>
   </article>
 </div>

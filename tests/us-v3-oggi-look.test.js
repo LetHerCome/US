@@ -218,7 +218,9 @@ test('Oggi looks: reachable from Settings and Sintonia, Back-aware, shipped to P
   const settings = read('settings.js');
   assert.match(settings, /if\(name==='oggi-theme'\)return window\.USOggiLook\?\.openGallery\?\.\(\{tab:'theme'\}\)/);
   assert.match(settings, /if\(name==='oggi-effect'\)return window\.USOggiLook\?\.openGallery\?\.\(\{tab:'effect'\}\)/);
-  assert.match(progressionJs, /window\.USOggiLook\?\.openGallery\?\.\(\{ tab: look\.dataset\.lookSlot, look: look\.dataset\.lookId \}\)/);
+  // Round 3 (mockup 076): a look tile in the Sintonia collection applies the look directly, like
+  // every other tile; the full gallery stays reachable from Settings (above).
+  assert.match(progressionJs, /ok = setDeviceLook\(data\.lookSlot, data\.lookId\)/);
   const nav = read('navigation.js');
   assert.match(nav, /name:'oggi-look',\s*find:\(\)=>document\.getElementById\('usLookSheet'\)/);
   assert.match(nav, /name:'oggi-look-detail',\s*find:\(\)=>document\.getElementById\('usLookDetail'\)/);
