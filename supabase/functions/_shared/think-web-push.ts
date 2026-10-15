@@ -43,10 +43,31 @@ async function thinkPreferenceEnabled(admin: any, recipientId: string) {
   return !(preferences && !preferences.think);
 }
 
+// US 1.0 (O6): at most one Ti penso push every 2 minutes from the same person.
+// The ones in between still reach the app; the next push counts them
+// ("Bea ti ha pensato 3 volte"), looking back at most 10 minutes.
+export const THINK_PUSH_GAP_MS = 2 * 60 * 1000;
+const THINK_COUNT_WINDOW_MS = 10 * 60 * 1000;
+
+export async function thinkPushWindow(admin: any, args: ThinkPushArgs, now = Date.now()) {
+  const { data: last, error } = await admin.from("push_event_log").select("created_at")
+    .eq("event_type", "think").eq("sender_id", args.senderId).eq("couple_id", args.coupleId)
+    .order("created_at", { ascending: false }).limit(1).maybeSingle();
+  if (error) throw error;
+  const lastAt = last?.created_at ? Date.parse(last.created_at) : 0;
+  if (lastAt && now - lastAt < THINK_PUSH_GAP_MS) return { throttled: true, count: 0 };
+  const since = new Date(Math.max(lastAt, now - THINK_COUNT_WINDOW_MS)).toISOString();
+  const { count, error: countError } = await admin.from("shared_messages").select("id", { count: "exact", head: true })
+    .eq("kind", "think").eq("sender_id", args.senderId).eq("recipient_id", args.recipientId).gt("created_at", since);
+  return { throttled: false, count: countError ? 1 : Math.max(1, Number(count) || 1) };
+}
+
 export async function dispatchThinkWebPush(admin: any, args: ThinkPushArgs) {
   if (!(await thinkPreferenceEnabled(admin, args.recipientId))) return { delivered: 0, failed: 0, reason: "disabled-by-preference" };
+  const window = await thinkPushWindow(admin, args);
+  if (window.throttled) return { delivered: 0, failed: 0, reason: "throttled" };
   return deliverNotification(admin, {
-    notification: buildNotification("think", { senderName: args.senderName, messageId: args.messageId, locale: await recipientLocale(admin, args.recipientId) }),
+    notification: buildNotification("think", { senderName: args.senderName, messageId: args.messageId, count: window.count, locale: await recipientLocale(admin, args.recipientId) }),
     recipientIds: [args.recipientId],
     coupleId: args.coupleId,
     senderId: args.senderId,
