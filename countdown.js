@@ -52,7 +52,7 @@ function install(w){
   const d=w.document,$=id=>d.getElementById(id),hero=$('homeHero'),root=$('usCountdownSheet'),surface=$('usCountdownDisplay');
   if(!hero||!root||!surface)return;
   let state=null,owner='',generation=0,loading=null,busy=false,draft=null,timer=null,lastAttempt=0,suspendedOwner='';
-  let originalInput='',originalTarget=null,originalMode='';
+  let originalInput='',originalTarget=null,originalMode='',lastClock='';
   let pendingControls=null;
   // True once the user changed anything in the open editor. A late server
   // answer may refresh an untouched editor, never replace the user's edits.
@@ -150,7 +150,40 @@ function install(w){
     const layer=d.querySelector('#homeHero .home-photo-layer.active'),photo=layer?w.getComputedStyle(layer).backgroundImage:'';
     if(photo&&photo!=='none')$('usCountdownPreview').style.setProperty('--us-cd-photo',photo);else $('usCountdownPreview').style.removeProperty('--us-cd-photo');
     $('usCountdownPreview').innerHTML=markup(view||{value:'12',unit:'giorni',label:''},title,draft.style,draft.id==='together',draft.id!=='together'&&Boolean(actualTitle));
-    $('usCountdownSave').disabled=busy||!view||!actualTitle||!available(draft.style,progression());
+    // Save waits only for a save in flight (mockup): what is missing is said on
+    // submit. A Save greyed out until name AND date were both valid looked like
+    // a stuck spinner (fix4 marks a disabled "Salva…" button busy) and said nothing.
+    $('usCountdownSave').disabled=busy;
+  }
+  // Stile (mockup 033 .cd-styles): every style with its sample; one not yet
+  // unlocked says from which Sintonia level. The choice travels in draft.style.
+  function styleTiles(){
+    const box=$('usCountdownStyles');if(!box||!draft)return;
+    const p=progression();
+    const note=(s,lock,on)=>lock?`<span class="us-icon" data-us-icon="lock-simple" aria-hidden="true"></span>Livello ${s.level}`:on?'Scelto':s.reward?'Sbloccato':'Incluso';
+    const tiles=box.querySelectorAll('[data-countdown-style-pick]');
+    // Built once; later only the state changes, so focus stays on the tile just tapped.
+    if(tiles.length===STYLES.length){
+      tiles.forEach((b,i)=>{const s=STYLES[i],lock=!available(s.id,p),on=draft.style===s.id;b.classList.toggle('is-locked',lock);b.setAttribute('aria-pressed',String(on));const small=b.querySelector('small'),html=note(s,lock,on);if(small.innerHTML!==html)small.innerHTML=html;});
+      return;
+    }
+    box.innerHTML=STYLES.map(s=>{
+      const lock=!available(s.id,p),on=draft.style===s.id;
+      return `<button type="button" class="us-countdown-style${lock?' is-locked':''}" data-countdown-style-pick="${esc(s.id)}" aria-pressed="${on}"><span class="us-countdown-style-pv" aria-hidden="true">${markup({value:'430',unit:'giorni',label:''},'',s.id)}</span><b>${esc(s.name)}</b><small>${note(s,lock,on)}</small></button>`;
+    }).join('');
+  }
+  // What is missing, said where the mockup says it (.form-err above Save).
+  // Said, not forced: no focus jump (on a phone the keyboard would cover it), the line stays in view.
+  function fieldError(message){
+    const box=$('usCountdownError');if(!box)return;box.textContent=message||'';
+    if(message)try{box.scrollIntoView?.({block:'nearest',behavior:reduced()?'auto':'smooth'});}catch(_){}
+  }
+  const reduced=()=>d.documentElement?.dataset?.usMotion==='reduced'||Boolean(w.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
+  // A step of the sheet (mockup UP.flow show): 28 px sideways and a fade, 340 ms.
+  function step(el,dir){
+    const panel=root.querySelector('[data-us-modal-panel]');if(panel)panel.scrollTop=0;
+    if(!dir||!el||reduced()||typeof el.animate!=='function')return;
+    el.animate([{opacity:0,translate:`${dir*28}px 0`},{opacity:1,translate:'0 0'}],{duration:340,easing:'cubic-bezier(.2,.8,.2,1)'});
   }
   function paint(){tick();if(opened())paintList();}
   async function hydrate(){
@@ -191,38 +224,47 @@ function install(w){
       if(token===generation){busy=false;root.removeAttribute('aria-busy');restoreControls();paintList();if(draft)preview();}
     }
   }
-  function editor(id){
+  function editor(id,dir=1){
     if(busy||!state)return;
     const e=state.items.find(e=>e.id===id);
-    draft=id==='together'?{id,style:state.together_style,mode:'days'}:e?{...e}:{id:w.crypto.randomUUID(),title:'',mode:'days',target:'',style:selected()?.style||'editorial'};
+    // A new one starts in the style Oggi shows (mockup), never in one still locked.
+    const current=selected()?.style;
+    draft=id==='together'?{id,style:state.together_style,mode:'days'}:e?{...e}:{id:w.crypto.randomUUID(),title:'',mode:'days',target:'',style:current&&available(current,progression())?current:'editorial'};
     const automatic=id==='together';
     $('usCountdownEditor').hidden=false;$('usCountdownCollection').hidden=true;
-    $('usCountdownEditorHeading').textContent=automatic?'Il vostro tempo':e?'Modifica countdown':'Un momento da aspettare';
+    $('usCountdownEditorHeading').textContent=automatic||e?'Modifica countdown':'Un momento da aspettare';
     $('usCountdownHeading').textContent=$('usCountdownEditorHeading').textContent;
     $('usCountdownFields').hidden=automatic;
+    const lead=$('usCountdownTogetherNote');if(lead)lead.hidden=!automatic;
     $('usCountdownTitle').value=draft.title||'';
     $('usCountdownMode').value=draft.mode;modeSeg();
     dateField(draft.target);
     $('usCountdownDelete').hidden=!e;
     touched=false;
+    styleTiles();fieldError('');const row=$('usCountdownStyles');if(row)row.scrollLeft=0;
     preview();status('');
+    step($('usCountdownEditor'),dir);
   }
-  function dateField(target){
+  function dateKind(){
     const input=$('usCountdownDate'),clock=draft?.mode==='clock';
     input.type=clock?'datetime-local':'date';input.min=clock?'2000-01-01T00:00':'2000-01-01';input.max=clock?'2100-12-31T23:59':'2100-12-31';
+    $('usCountdownDateLabel').textContent=clock?'Data e ora · sul tuo telefono':'Data';
+    return input;
+  }
+  function dateField(target){
+    const input=dateKind(),clock=draft?.mode==='clock';
     if(clock&&target){const value=new Date(target);input.value=Number.isFinite(+value)?new Date(+value-value.getTimezoneOffset()*60000).toISOString().slice(0,16):'';}
     else input.value=target||'';
-    originalInput=input.value;originalTarget=target||null;originalMode=draft.mode;
-    $('usCountdownDateLabel').textContent=clock?'Data e ora · sul tuo telefono':'Data';
+    originalInput=input.value;originalTarget=target||null;originalMode=draft.mode;lastClock=clock?input.value:'';
   }
   // Tempo: the two choices as a segmented control (mockup .seg2); the select stays the source.
   function modeSeg(){root.querySelectorAll('[data-countdown-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.countdownMode===$('usCountdownMode').value)));}
-  function collection(){draft=null;$('usCountdownHeading').textContent='Countdown';$('usCountdownEditor').hidden=true;$('usCountdownCollection').hidden=false;paintList();status('');}
+  function collection(dir=0){draft=null;$('usCountdownHeading').textContent='Countdown';$('usCountdownEditor').hidden=true;$('usCountdownCollection').hidden=false;paintList();status('');fieldError('');step($('usCountdownCollection'),dir);}
   async function open(mode='collection'){
     if(!key())return;
     if(key()!==owner)clear();
     w.UsUiFoundation?.cancelSurfaceExit?.(root);root.setAttribute('aria-hidden','false');root.classList.add('open');if(busy)return;
-    if(mode==='active'&&state?.active_id)editor(state.active_id);else collection();
+    if(mode==='active'&&state?.active_id)editor(state.active_id,0);else collection();
     const shown=draft;
     await Promise.all([hydrate(),w.USProgression?.hydrate?.({showUnlocks:false})]);
     if(opened()){
@@ -230,8 +272,8 @@ function install(w){
       // Only the surface this open() showed, still untouched, follows the
       // fresh state. If the user went back, started a new countdown or typed
       // meanwhile, the slow answer must not swap their draft for the stored one.
-      if(mode==='active'&&state?.active_id&&draft===shown&&!touched)editor(state.active_id);
-      else if(draft)preview();
+      if(mode==='active'&&state?.active_id&&draft===shown&&!touched)editor(state.active_id,0);
+      else if(draft){styleTiles();preview();}
     }
   }
   // Native widgets: the same selection Oggi shows, as semantic data (never markup).
@@ -268,32 +310,69 @@ function install(w){
     if(!opened())return;root.classList.remove('open');
     if(!w.UsUiFoundation?.exitSurface?.(root,finish))finish();
   }
-  $('usCountdownEntry')?.addEventListener('click',()=>open());surface.addEventListener('click',()=>open('active'));
+  // Oggi's countdown opens the list, as in the mockup (#cdBtn): "Crea countdown"
+  // is one tap away. It used to open the active editor, often "Insieme da" with
+  // no fields at all, and a new countdown seemed impossible to add.
+  $('usCountdownEntry')?.addEventListener('click',()=>open());surface.addEventListener('click',()=>open());
   root.querySelectorAll('[data-countdown-close]').forEach(e=>e.addEventListener('click',close));
-  $('usCountdownBack').addEventListener('click',collection);
+  $('usCountdownBack').addEventListener('click',()=>collection(-1));
   $('usCountdownNew').addEventListener('click',()=>editor());
-  $('usCountdownHide').addEventListener('click',()=>persist({...copy(),active_id:null}));
+  $('usCountdownHide').addEventListener('click',async()=>{if(await persist({...copy(),active_id:null}))w.toast?.('Nessun countdown in Oggi',{quiet:true});});
   $('usCountdownRetry').addEventListener('click',()=>hydrate());
   $('usCountdownList').addEventListener('click',async event=>{
     const edit=event.target.closest('[data-countdown-edit]');if(edit)return editor(edit.dataset.countdownEdit);
-    const select=event.target.closest('[data-countdown-select]');if(select&&!select.disabled)await persist({...copy(),active_id:select.dataset.countdownSelect});
+    const select=event.target.closest('[data-countdown-select]');if(select&&!select.disabled&&await persist({...copy(),active_id:select.dataset.countdownSelect}))w.toast?.('In Oggi',{quiet:true,icon:'check'});
+  });
+  // Stile (mockup 033): a locked style says from which level; any other is the draft's.
+  $('usCountdownStyles')?.addEventListener('click',event=>{
+    const pick=event.target.closest('[data-countdown-style-pick]');if(!pick||!draft||busy)return;
+    const s=STYLES.find(s=>s.id===pick.dataset.countdownStylePick);if(!s)return;
+    if(!available(s.id,progression())){w.toast?.(`Si sblocca al livello ${s.level} di Sintonia`,{quiet:true,icon:'lock-simple'});return;}
+    draft.style=s.id;touched=true;styleTiles();
+    // Only the style changes: the sample keeps its markup (no rebuild, no style read) and pops (mockup).
+    const art=$('usCountdownPreview').querySelector('.us-countdown-art');
+    if(art)art.dataset.countdownStyle=s.id;else preview();
+    if(art&&!reduced()&&typeof art.animate==='function')art.animate([{opacity:0,scale:.92},{opacity:1,scale:1}],{duration:320,easing:'cubic-bezier(.22,1.15,.36,1)'});
   });
   // Native date/time pickers (iOS wheels, Android dialogs) may report only
   // "change": both events keep the preview and the Save state in step.
-  const edited=()=>{if(!draft)return;touched=true;preview();};
+  const edited=()=>{if(!draft)return;touched=true;fieldError('');preview();};
   for(const id of ['usCountdownTitle','usCountdownDate'])['input','change'].forEach(type=>$(id).addEventListener(type,edited));
-  $('usCountdownMode').addEventListener('change',()=>{modeSeg();if(!draft)return;draft.mode=$('usCountdownMode').value;touched=true;dateField('');preview();});
+  // Giorni <-> Ore, minuti, secondi keeps the day already chosen (it used to be
+  // wiped, and Save went dead again with nothing said).
+  $('usCountdownMode').addEventListener('change',()=>{
+    modeSeg();if(!draft)return;
+    const before=$('usCountdownDate').value,day=/^\d{4}-\d{2}-\d{2}/.test(before)?before.slice(0,10):'';
+    if(draft.mode==='clock'&&before)lastClock=before;
+    draft.mode=$('usCountdownMode').value;touched=true;
+    const input=dateKind();
+    input.value=!day?'':draft.mode==='clock'?(lastClock.startsWith(day)?lastClock:`${day}T00:00`):day;
+    fieldError('');preview();
+  });
   root.querySelectorAll('[data-countdown-mode]').forEach(b=>b.addEventListener('click',()=>{const select=$('usCountdownMode');if(select.disabled||select.value===b.dataset.countdownMode)return;select.value=b.dataset.countdownMode;select.dispatchEvent(new Event('change'));}));
   $('usCountdownForm').addEventListener('submit',async event=>{
-    event.preventDefault();if(!draft||busy||!state||$('usCountdownSave').disabled)return;
+    event.preventDefault();if(!draft||busy||!state)return;
+    // A style not (or no longer) unlocked would be refused by the server: said here instead.
+    const style=STYLES.find(s=>s.id===draft.style);
+    if(style?.reward&&!available(style.id,progression()))return fieldError(`Si sblocca al livello ${style.level} di Sintonia`);
     let next=copy();
     if(draft.id==='together')next={...next,together_style:draft.style,active_id:'together'};
     else{
-      const target=editorTarget();if(!target)return;
-      const e={id:draft.id,mode:draft.mode,style:draft.style,title:$('usCountdownTitle').value.trim(),target};
+      // What is missing is said above Save (mockup .form-err), on the field to fix.
+      const name=$('usCountdownTitle'),title=name.value.trim();
+      if(!title)return fieldError('Dai un nome al countdown.');
+      const target=editorTarget();
+      if(!target)return fieldError(draft.mode==='clock'?'Scegli data e ora.':'Scegli la data.');
+      const e={id:draft.id,mode:draft.mode,style:draft.style,title,target};
       const i=next.items.findIndex(e=>e.id===draft.id);if(i>=0)next.items[i]=e;else next.items.push(e);next.active_id=e.id;
     }
-    if(await persist(next))collection();
+    fieldError('');
+    if(!(await persist(next)))return;
+    // Mockup: the sheet closes on the editor, "Salvato e in Oggi", and the time arrives on Oggi.
+    // The next open() starts from the list again.
+    draft=null;close();
+    w.toast?.('Salvato e in Oggi',{quiet:false,icon:'check'});
+    if(!surface.hidden&&!reduced()&&typeof surface.animate==='function')surface.animate([{opacity:0,scale:.9},{opacity:1,scale:1}],{duration:480,easing:'cubic-bezier(.22,1.15,.36,1)'});
   });
   $('usCountdownDelete').addEventListener('click',async()=>{
     if(!draft||busy)return;
@@ -301,10 +380,10 @@ function install(w){
     const confirmed=await w.UsUiFoundation.confirm({title:'Eliminare questo countdown?',body:'Sparirà per entrambi.',confirmLabel:'Elimina',tone:'danger'});
     if(!confirmed||token!==generation||key()!==owner||!state)return;
     const next=copy();next.items=next.items.filter(e=>e.id!==id);if(next.active_id===id)next.active_id=null;
-    if(await persist(next))collection();
+    if(await persist(next)){collection(-1);w.toast?.('Countdown eliminato',{quiet:true});}
   });
   d.addEventListener('visibilitychange',()=>{w.clearInterval(timer);timer=null;if(!d.hidden){tick();if(key())hydrate();startTimer();}});
-  w.addEventListener('us:progression-updated',()=>{paint();if(draft&&opened())preview();});
+  w.addEventListener('us:progression-updated',()=>{paint();if(draft&&opened()){styleTiles();preview();}});
   // Reconcile partner changes at most once per minute, only while Oggi is visible.
   // Identity changes clear immediately on the next lifecycle tick. No private local storage.
   function startTimer(){if(timer||d.hidden)return;timer=w.setInterval(()=>{

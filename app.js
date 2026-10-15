@@ -35,7 +35,7 @@ async function hydrateActivePage(id,{force=false}={}){
   if(id==='moments')work.push(Promise.resolve(hydrateMoments()));
   if(id==='bond'){work.push(Promise.resolve(hydrateBond()));work.push(Promise.resolve(hydrateNoiIdeas()));}
   if(id==='settings')work.push(Promise.resolve(window.hydrateUsSettings?.()));
-  if(id==='home')work.push(Promise.resolve(window.refreshOggiCalendarWidget?.()));
+  if(id==='home'){work.push(Promise.resolve(window.refreshOggiCalendarWidget?.()));work.push(Promise.resolve(window.UsOggiNext?.refresh?.({event:'read',calendar:'read'})));}
   if(!work.length)return;
   await Promise.allSettled(work);
   if(heavy&&document.querySelector('.page.active')?.id===id)usPageHydratedAt.set(id,Date.now());
@@ -1986,7 +1986,22 @@ function oggiNextEventViewModel(source){
     day=day?day.charAt(0).toLocaleUpperCase(oggiLocaleTag())+day.slice(1):'';
   }
   if(!day)return null;
-  return {id:String(source.id),when:time?`${day}, ${time}`:day,title:String(source.title)};
+  const kind=source.kind==='calendar'?'calendar':source.system?'relationship':'event';
+  return {id:String(source.id),kind,date:String(source.effective_date),day,time,when:time?`${day}, ${time}`:day,title:String(source.title)};
+}
+// The nearest of the candidates (a shared event, a Noi calendar commitment):
+// what has not started yet comes first, by day and time; one already started
+// today (an event at 9:00 seen at 15:00, a commitment in progress) only when
+// nothing else is coming. Same rule as the Events list: no time = end of day.
+function oggiNearestNext(...sources){
+  const d=new Date(),now=`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  const started=s=>s.kind==='calendar'?Boolean(s.started):Number(s.days_left)===0&&Boolean(s.event_time)&&String(s.event_time).slice(0,5)<=now;
+  const list=sources.filter(s=>s&&oggiNextEventViewModel(s));
+  list.sort((a,b)=>Number(started(a))-Number(started(b))
+    ||String(a.effective_date).localeCompare(String(b.effective_date))
+    ||String(a.event_time||'23:59:59').slice(0,8).padEnd(8,':00').localeCompare(String(b.event_time||'23:59:59').slice(0,8).padEnd(8,':00'))
+    ||String(a.title).localeCompare(String(b.title)));
+  return list[0]||null;
 }
 function syncOggiRow(){
   const row=document.getElementById('usOggiRow');
@@ -2001,11 +2016,56 @@ function renderOggiNext(model){
   document.getElementById('usOggiNextWhen').textContent=model.when;
   document.getElementById('usOggiNextTitle').textContent=model.title;
   button.dataset.usEventId=model.id;
+  button.dataset.usNextKind=model.kind||'event';
+  button.dataset.usNextDate=model.date||'';
+  // Mockup aria-label: "Prossimo impegno: domani alle 21, cena da Marco. Apri Noi".
+  button.setAttribute('aria-label',model.time?`Prossimo impegno: ${model.day} alle ${model.time}, ${model.title}. Apri Noi`:`Prossimo impegno: ${model.day}, ${model.title}. Apri Noi`);
   button.hidden=false;
   syncOggiRow();
 }
-document.getElementById('usOggiNext')?.addEventListener('click',()=>{window.go?.('bond',{nav:true});});
-window.UsOggiNext=Object.freeze({viewModel:oggiNextEventViewModel,render:renderOggiNext});
+// Each source is kept per identity and day, so a calendar save re-reads only
+// the calendar and an event save only passes its rows. Every value carries the
+// order it was asked in: a slow older read never replaces a newer one, and the
+// pill always shows the newest of both. A source that fails keeps what the pill
+// shows rather than hiding a real commitment.
+const US_OGGI_NEXT_FAILED=Object.freeze({failed:true});
+const usOggiNextCache={key:'',event:undefined,eventSeq:0,calendar:undefined,calendarSeq:0,calendarAt:0};
+let usOggiNextSeq=0;
+function oggiNextKey(){const p=window.usProfile;return p?`${p.id}:${p.couple_id}:${localDateISO()}`:'';}
+// event: a row already read (or null), 'read', 'failed' (the caller's read failed), or omitted (reuse).
+// calendar: 'fresh' (after a save), 'read', or omitted (reuse for 30 s).
+async function refreshOggiNext({event,calendar}={}){
+  const c=usOggiNextCache,key=oggiNextKey();
+  if(!key){Object.assign(c,{key:'',event:undefined,calendar:undefined,calendarAt:0});renderOggiNext(null);return null;}
+  if(c.key!==key)Object.assign(c,{key,event:undefined,eventSeq:0,calendar:undefined,calendarSeq:0,calendarAt:0});
+  let failed=event==='failed';
+  const take=(slot,seq,value)=>{
+    if(value===US_OGGI_NEXT_FAILED){failed=true;return;}
+    if(c.key!==key||oggiNextKey()!==key||seq<c[`${slot}Seq`])return;
+    c[slot]=value??null;c[`${slot}Seq`]=seq;if(slot==='calendar')c.calendarAt=Date.now();
+  };
+  const read=(slot,fn,opts)=>{const seq=++usOggiNextSeq;return Promise.resolve().then(()=>typeof fn==='function'?fn(opts):null).catch(error=>{console.warn('[US Oggi] next',error);return US_OGGI_NEXT_FAILED;}).then(value=>take(slot,seq,value));};
+  const work=[];
+  if(event==='read'||(event===undefined&&c.event===undefined))work.push(read('event',window.getTodayEventPrioritySource));
+  else if(event!==undefined&&event!=='failed')take('event',++usOggiNextSeq,event);
+  if(calendar==='fresh'||calendar==='read'||c.calendar===undefined||Date.now()-c.calendarAt>30000)work.push(read('calendar',window.getOggiNextCommitmentSource,{fresh:calendar==='fresh'}));
+  await Promise.all(work);
+  if(oggiNextKey()!==key)return null;
+  const next=oggiNearestNext(c.event,c.calendar);
+  if(!next&&failed)return null;
+  renderOggiNext(oggiNextEventViewModel(next));
+  return next;
+}
+// Tapping opens the place it comes from: the commitment in the Noi calendar,
+// the event, or the Noi calendar on the mesiversario's day.
+document.getElementById('usOggiNext')?.addEventListener('click',event=>{
+  const data=event.currentTarget?.dataset||{};
+  if(data.usNextKind==='calendar'&&data.usEventId&&window.UsCalendarLinks?.openEntry){window.UsCalendarLinks.openEntry(data.usEventId);return;}
+  if(data.usNextKind==='event'&&data.usEventId&&typeof window.openEventEditor==='function'){window.go?.('bond',{nav:true});window.openEventEditor(data.usEventId,data.usNextDate||null);return;}
+  if(data.usNextKind==='relationship'&&data.usNextDate&&window.openCalendarSurface){window.openCalendarSurface(data.usNextDate);return;}
+  window.go?.('bond',{nav:true});
+});
+window.UsOggiNext=Object.freeze({viewModel:oggiNextEventViewModel,render:renderOggiNext,nearest:oggiNearestNext,refresh:refreshOggiNext});
 
 // M6E — Oggi calendar widget + Focus Photo. A single small glass card, fed by
 // calendar.js's window.getOggiCalendarInsightSource() (which itself reuses
@@ -2547,9 +2607,14 @@ async function refreshTodayPriorities({daily,freshEvents=false}={}){
     const eventSource=await window.getTodayEventPrioritySource?.({fresh:freshEvents});
     const eventPriority=eventTodayPriorityViewModel(eventSource);
     if(eventPriority)candidates.push(eventPriority);
-    // The next event's row above the Daily card (mockup og-next).
-    if(refreshId===usTodayPriorityRefreshId&&typeof renderOggiNext==='function')renderOggiNext(oggiNextEventViewModel(eventSource));
-  }catch(error){console.warn('[US Oggi] Events priority',error);}
+    // The pill above the Daily card (mockup og-next): this event and the Noi calendar's next
+    // commitment (re-read at most every 30 s here; a calendar save or the way back to Oggi reads at once).
+    if(refreshId===usTodayPriorityRefreshId&&typeof refreshOggiNext==='function')refreshOggiNext({event:eventSource??null});
+  }catch(error){
+    console.warn('[US Oggi] Events priority',error);
+    // The calendar's next commitment still reaches the pill when Events fails.
+    if(refreshId===usTodayPriorityRefreshId&&typeof refreshOggiNext==='function')refreshOggiNext({event:'failed'});
+  }
   try{mission=missionTodayPriorityViewModel(await window.oggiMissionToConfirm?.());}catch(_){mission=null;}
   if(mission)candidates.push(mission);
   if(refreshId!==usTodayPriorityRefreshId)return [];

@@ -386,7 +386,7 @@ html.us-returning-device .auth-overlay{
       <div class="us-oggi-dock og-bottom" id="usOggiDock">
         <p class="og-cap" id="usOggiCaption" hidden><em id="usOggiCaptionText" translate="no"></em><small><span class="dot" id="usOggiCaptionDot" aria-hidden="true"></span><span id="usOggiCaptionMeta"></span></small></p>
         <div class="og-row" id="usOggiRow" hidden>
-          <button type="button" class="og-next" id="usOggiNext" hidden><span class="us-icon" data-us-icon="calendar-dots" aria-hidden="true"></span><b id="usOggiNextWhen"></b><span id="usOggiNextTitle" translate="no"></span></button>
+          <button type="button" class="og-next" id="usOggiNext" hidden><span class="us-icon" data-us-icon="calendar-blank" aria-hidden="true"></span><b id="usOggiNextWhen"></b><span id="usOggiNextTitle" translate="no"></span></button>
           <button type="button" class="home-distance-pill us-distance-capsule og-pill" id="distanceWidget" onclick="openDistanceDetail()" aria-haspopup="dialog" aria-label="Distanza tra voi" data-us-distance-state="unknown" hidden><span class="us-icon" data-us-icon="map-pin" aria-hidden="true"></span><b id="distanceValue"></b></button>
         </div>
         <div id="usTodayPriorityRegion" hidden aria-live="polite"></div>
@@ -425,12 +425,15 @@ html.us-returning-device .auth-overlay{
         <button type="button" id="usCountdownBack" class="us-countdown-back"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span>I vostri countdown</button>
         <h3 id="usCountdownEditorHeading">Un momento da aspettare</h3>
         <div id="usCountdownPreview" class="us-countdown-preview" aria-label="Anteprima countdown"></div>
-        <form id="usCountdownForm">
+        <form id="usCountdownForm" novalidate>
+          <p id="usCountdownTogetherNote" class="us-countdown-lead" hidden>Il titolo segue la data della relazione. Qui scegli solo lo stile.</p>
           <div id="usCountdownFields" class="us-countdown-fields">
             <label for="usCountdownTitle">Nome<input id="usCountdownTitle" maxlength="32" placeholder="Il nostro viaggio" autocomplete="off"></label>
             <div class="us-countdown-field"><label for="usCountdownMode" id="usCountdownModeLabel">Tempo</label><div class="us-countdown-seg" role="group" aria-labelledby="usCountdownModeLabel"><button type="button" data-countdown-mode="days" aria-pressed="true">Giorni</button><button type="button" data-countdown-mode="clock" aria-pressed="false">Ore, minuti, secondi</button></div><select id="usCountdownMode" class="us-countdown-mode-select" tabindex="-1" aria-hidden="true"><option value="days">Giorni</option><option value="clock">Ore, minuti, secondi</option></select></div>
             <label for="usCountdownDate"><span id="usCountdownDateLabel">Data</span><input id="usCountdownDate" type="date" min="2000-01-01" max="2100-12-31"></label>
           </div>
+          <div class="us-countdown-style-field"><span class="us-countdown-style-label" id="usCountdownStylesLabel">Stile</span><div id="usCountdownStyles" class="us-countdown-styles" role="group" aria-labelledby="usCountdownStylesLabel"></div></div>
+          <p id="usCountdownError" class="us-countdown-error" aria-live="polite"></p>
           <div class="us-countdown-editor-actions"><button id="usCountdownSave" type="submit" class="primary">Salva e mostra</button><button id="usCountdownDelete" type="button" class="ghost" hidden>Elimina</button></div>
         </form>
       </div>

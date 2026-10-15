@@ -550,6 +550,49 @@ function composeOggiCalendarFact({ dayStartISO, dayEndISO, personA, personB, fre
   };
 }
 
+// Oggi's "Prossimo impegno" (mockup .og-next): the Noi calendar commitment,
+// shared or either person's, nearest from now within today, tomorrow and the
+// day after, on the device's calendar days (as the Noi calendar shows them).
+// One already over is skipped; one in progress is only a fallback (started).
+// The time shows on the day the commitment starts, never on a later day.
+function oggiNextCommitment(list, nowISO = new Date().toISOString(), today = null) {
+  const nowDate = new Date(nowISO);
+  const now = nowDate.getTime();
+  if (!Number.isFinite(now)) return null;
+  const first = today || isoDate(nowDate.getFullYear(), nowDate.getMonth(), nowDate.getDate());
+  const last = shiftISODate(first, 2);
+  const day = /^\d{4}-\d{2}-\d{2}$/;
+  const rows = [];
+  for (const entry of Array.isArray(list) ? list : []) {
+    const title = String(entry?.title || '').trim();
+    if (!entry?.id || !title) continue;
+    let span;
+    if (entry.is_all_day) {
+      if (!day.test(String(entry.start_date)) || !day.test(String(entry.end_date))) continue;
+      span = { start: entry.start_date, end: entry.end_date };
+      if (span.end < first) continue;
+    } else {
+      const start = new Date(entry.starts_at).getTime(), end = new Date(entry.ends_at).getTime();
+      if (!Number.isFinite(start) || !Number.isFinite(end) || end <= now) continue;
+      span = entryDateSpan(entry);
+    }
+    const date = span.start > first ? span.start : first;
+    if (date > last) continue;
+    const at = !entry.is_all_day && span.start === date ? new Date(entry.starts_at) : null;
+    rows.push({
+      kind: 'calendar', id: String(entry.id), title, effective_date: date,
+      days_left: Math.round((parseISODate(date) - parseISODate(first)) / 86400000),
+      event_time: at ? `${pad2(at.getHours())}:${pad2(at.getMinutes())}` : null,
+      started: !entry.is_all_day && new Date(entry.starts_at).getTime() <= now
+    });
+  }
+  rows.sort((a, b) => Number(a.started) - Number(b.started)
+    || a.effective_date.localeCompare(b.effective_date)
+    || String(a.event_time || '23:59:59').localeCompare(String(b.event_time || '23:59:59'))
+    || a.title.localeCompare(b.title) || a.id.localeCompare(b.id));
+  return rows[0] || null;
+}
+
 const pureApi = {
   ROLE_ORDER, US_CALENDAR_DEFAULT_DURATION_MINUTES, roleRank, entryLaneRoleFor, entryDateSpan, entryDatesTouched,
   formatDateRangeLabel, localDateFromInstant, localDateTimeToISO, addMinutesToISO, originalDurationMinutes,
@@ -558,7 +601,7 @@ const pureApi = {
   normalizeQuickTime, addClockMinutes, durationMinutesFromTimes, REMINDER_OPTIONS, REMINDER_TARGETS, reminderTargetAllowed, reminderOffsetAllowed, reminderOptionsFor, reminderRowsFor, reminderCopy,
   buildEntryPayload, withCreateAuthority, canEditEntry,
   quickEntryError, quickEntryHiddenFields, classifyMutationResult,
-  oggiEventLabel, composeOggiCalendarFact, oggiRemainingWindows,
+  oggiEventLabel, composeOggiCalendarFact, oggiRemainingWindows, oggiNextCommitment,
   ownerMarkFor, ownerNameFor, entryAriaLabel, monthCellMarks, sortDayEntries, groupDayEntries
 };
 if (typeof module === 'object' && module.exports) Object.assign(module.exports, pureApi);
@@ -763,6 +806,29 @@ async function getOggiCalendarInsightSource() {
 }
 window.getOggiCalendarInsightSource = getOggiCalendarInsightSource;
 
+// The commitment Oggi's pill shows (oggiNextCommitment), from the same read the
+// Noi calendar uses, over today and the next two days. Refreshes that land
+// together share one read; identity is captured once and checked at the end.
+let oggiNextLoad = null;
+async function getOggiNextCommitmentSource({ fresh = false } = {}) {
+  const profile = window.usProfile;
+  if (!profile?.couple_id) return null;
+  const coupleId = profile.couple_id;
+  const today = todayISO();
+  const key = `${profile.id}:${coupleId}:${today}`;
+  let slot = !fresh && oggiNextLoad?.key === key ? oggiNextLoad : null;
+  if (!slot) {
+    slot = { key, promise: fetchEntriesForRange(coupleId, today, shiftISODate(today, 3)) };
+    oggiNextLoad = slot;
+    const release = () => { if (oggiNextLoad === slot) oggiNextLoad = null; };
+    slot.promise.then(release, release);
+  }
+  const list = await slot.promise;
+  if (window.usProfile !== profile || window.usProfile?.couple_id !== coupleId) return null;
+  return oggiNextCommitment(list, new Date().toISOString(), today);
+}
+window.getOggiNextCommitmentSource = getOggiNextCommitmentSource;
+
 function ownerMarkOf(entry) { return ownerMarkFor(entryLaneRole(entry), profileById(entry.owner_id)?.display_name); }
 function ownerChip(mark) {
   return `<span class="us-cal-chip${mark === 'Noi' ? ' us-cal-chip--shared' : ''}" aria-hidden="true">${esc(mark)}</span>`;
@@ -850,6 +916,7 @@ async function deleteEntry() {
     closeCalendarDetailSheet();
     window.USNoiV2?.refresh?.();
     window.refreshOggiCalendarWidget?.();
+    window.UsOggiNext?.refresh?.({ calendar: 'fresh' });
     toast('Impegno eliminato');
     window.hydrateNoiIdeas?.();
   } catch (error) {
@@ -1065,6 +1132,7 @@ async function saveEntry(event) {
     closeCalendarFormSheet();
     window.USNoiV2?.refresh?.();
     window.refreshOggiCalendarWidget?.();
+    window.UsOggiNext?.refresh?.({ calendar: 'fresh' });
     toast(wasEditing ? 'Impegno aggiornato' : (linkedIdea ? 'In calendario' : 'Impegno aggiunto'));
   } catch (error) {
     console.warn('[US Calendar] save', error);
