@@ -97,5 +97,5 @@ test('Gioca CSS: tiles use the canonical tokens and the Noi chip recipe, never a
 
 test('Gioca V4 hub: bento title keeps the low-friction hint', async () => {
   const html = await hub(homeOf()).html();
-  assert.match(html, /<h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi<\/h3><small>Bastano pochi minuti\.<\/small>/);
+  assert.match(html, /<h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi<\/h3><small>Bastano pochi minuti<\/small>/);
 });

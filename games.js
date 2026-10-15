@@ -9,11 +9,11 @@ if (window.USGameV2) return;
 
 // V3 — each family says in a few words what kind of moment it is.
 const FAMILIES = [
-  { id: 'scopritevi', name: 'Scopritevi', icon: 'binoculars', kind: 'Domande nuove su di voi' },
+  { id: 'scopritevi', name: 'Scopritevi', icon: 'binoculars', kind: 'Quanto vi conoscete' },
   { id: 'confrontatevi', name: 'Confrontatevi', icon: 'arrows-left-right', kind: 'Due punti di vista' },
   { id: 'ridete', name: 'Ridete', icon: 'smiley', kind: 'Leggero e un po’ assurdo' },
-  { id: 'quanto_mi_conosci', name: 'Quanto mi conosci?', icon: 'eye', kind: 'Indovina le sue risposte' },
-  { id: 'rivivete', name: 'Rivivete', icon: 'clock-counter-clockwise', kind: 'I vostri ricordi, a due voci' },
+  { id: 'quanto_mi_conosci', name: 'Quanto mi conosci?', icon: 'question', kind: 'Chi conosce meglio chi' },
+  { id: 'rivivete', name: 'Rivivete', icon: 'images', kind: 'I vostri momenti' },
   // 1.0: E se…? is no longer offered (its questions live in Confrontatevi);
   // the entry stays so old rounds still open with their name and icon.
   { id: 'e_se', name: 'E se…?', icon: 'signpost', kind: 'Scenari, futuri, possibilità', retired: true },
@@ -186,7 +186,7 @@ let weeklyJustCreated = false;
 function weeklyCard(w) {
   if (!w) return '';
   const unlock = mondayLabel(w.next_unlock);
-  const head = (name, title, line) => `<div class="us-gv2-weekly-head">${glyph(name)}<div><span class="us-gv2-kicker">LA VOSTRA DOMANDA</span><b>${esc(title)}</b>${line ? `<small>${esc(line)}</small>` : ''}</div></div>`;
+  const head = (name, title, line) => `<div class="us-gv2-weekly-head" data-gv2-weekly-icon="${esc(name)}"><div><span class="us-gv2-kicker">LA VOSTRA DOMANDA</span><b>${esc(title)}</b>${line ? `<small>${esc(line)}</small>` : ''}</div></div>`;
   if (w.created_by_me) {
     const q = w.my_question;
     const settle = weeklyJustCreated === true ? ' is-just-created' : '';
@@ -203,7 +203,7 @@ function weeklyCard(w) {
   }
   if (w.my_turn) {
     return `<section class="us-gv2-weekly is-open" aria-label="La domanda della settimana">
-      ${head('feather', 'Tocca a te', `Scrivila, sigillala: ${partnerName()} la scopre giocando.`)}
+      ${head('feather', 'Tocca a te', 'Una domanda scritta da voi, per questa settimana.')}
       <button type="button" class="primary us-gv2-weekly-cta" data-gv2-action="weekly-create">Crea la domanda</button>
     </section>`;
   }
@@ -277,11 +277,11 @@ function renderHub() {
   ${continueSection(home)}
   ${weeklyFirst?weeklyCard(home.weekly):''}
   <section class="us-gv2-choose" aria-labelledby="usGv2ChooseTitle">
-   <div class="us-gv2-section-head"><h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi</h3>${nothingYet?'<small>Bastano pochi minuti.</small>':''}</div>
+   <div class="us-gv2-section-head"><h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi</h3><small>Bastano pochi minuti</small></div>
    <div class="us-gv2-game-grid">
     <button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-pervoi us-attention-orbit" data-gv2-action="per-voi" data-gv2-state="${esc(pvState)}" data-us-attention="${pvState==='pending'||pvState==='reveal_ready'?'on':'off'}">
      ${glyph('sparkle').replace('class="us-gv2-glyph"','class="us-gv2-glyph" data-us-attention-icon')}
-     <span class="us-gv2-pervoi-copy"><span class="us-gv2-kicker">PROPOSTO PER VOI</span><b>Per voi</b><small>${esc(pv.line)}</small>${pv.note?`<small class="us-gv2-pervoi-note">${esc(pv.note)}</small>`:''}</span>
+     <span class="us-gv2-pervoi-copy"><b>Per voi</b><small>${esc(pv.line)}</small>${pv.note?`<small class="us-gv2-pervoi-note">${esc(pv.note)}</small>`:''}</span>
      <span class="us-gv2-pervoi-cta">${esc(pv.cta)}</span>
     </button>
     ${swipe}${families}
@@ -325,24 +325,70 @@ async function load() {
 // ---------------------------------------------------------------- panel shell
 
 function panel() { return byId('usGameV2Panel'); }
-function showPanel(html) {
-  const fromHub = !byId('quizHub')?.classList.contains('hidden');
-  byId('quizHub')?.classList.add('hidden');
+// Parity with the approved mockup: a round is a Foglio over Gioca. The hub
+// stays where it is under a scrim; the sheet rises (520 ms, soft spring),
+// each step slides its content in from the side (340 ms) while the head
+// keeps its place, and closing drops the sheet (280 ms). Reduced motion: no
+// movement. Without a real DOM (tests) the panel is rebuilt as one string.
+const EASE = Object.freeze({ out: 'cubic-bezier(.2,.8,.2,1)', soft: 'cubic-bezier(.22,1.15,.36,1)', in: 'cubic-bezier(.4,0,1,1)', spring: 'cubic-bezier(.34,1.56,.64,1)' });
+const reduced = () => window.UsUiFoundation?.isReducedMotion?.() !== false;
+const canAnimate = (el) => Boolean(el && typeof el.animate === 'function' && !reduced());
+let closing = null;
+const headMarkup = ({ kicker = '', count = '', title = '' } = {}) => `<div class="us-gv2-play-top us-gv2-sh-head"><div class="us-gv2-sh-copy"><span class="us-gv2-kicker">${esc(kicker)}${count ? `<span class="us-gv2-count"> · ${esc(count)}</span>` : ''}</span><h3 class="us-gv2-sh-title"${title ? '' : ' hidden'}>${title}</h3></div>${backButton()}</div>`;
+function showPanel(html, head = {}, { dir = 1 } = {}) {
   const root = panel();
   if (!root) return null;
+  const tone = head.tone || 'menta';
+  const sheet = root.querySelector?.('.us-gv2-sheet');
+  const flow = sheet?.querySelector?.('.us-gv2-flow');
+  const open = !root.classList.contains('hidden') && flow && !closing;
+  if (open) {
+    const top = sheet.querySelector('.us-gv2-sh-head');
+    if (top) top.outerHTML = headMarkup(head);
+    sheet.dataset.gv2Tone = tone;
+    sheet.setAttribute('aria-label', head.label || head.kicker || 'Gioca');
+    flow.innerHTML = html;
+    sheet.scrollTop = 0;
+    if (canAnimate(flow)) flow.animate([{ opacity: 0, transform: `translateX(${dir * 28}px)` }, { opacity: 1, transform: 'none' }], { duration: 340, easing: EASE.out });
+    return root;
+  }
+  if (closing) { closing.cancel?.(); closing = null; }
   root.classList.remove('hidden');
-  root.innerHTML = html;
-  // M12A — entering a mode from the hub eases the destination in once.
-  if (fromHub) window.UsUiFoundation?.playOnce?.(root, 'us-content-enter', 260);
+  root.innerHTML = `<div class="us-gv2-scrim" data-gv2-scrim aria-hidden="true"></div><section class="us-gv2-sheet" role="dialog" aria-modal="true" tabindex="-1" aria-label="${esc(head.label || head.kicker || 'Gioca')}" data-gv2-tone="${esc(tone)}"><span class="us-gv2-handle" aria-hidden="true"></span>${headMarkup(head)}<div class="us-gv2-flow">${html}</div></section>`;
+  document.body?.classList?.add('us-gv2-sheet-open');
+  const opened = root.querySelector?.('.us-gv2-sheet');
+  if (canAnimate(opened)) {
+    root.querySelector('.us-gv2-scrim')?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260 });
+    opened.animate([{ transform: 'translateY(100%)' }, { transform: 'none' }], { duration: 520, easing: EASE.soft });
+  }
+  setTimeout(() => {
+    const target = root.querySelector?.('.us-gv2-flow textarea, .us-gv2-flow input:not([type="radio"])') || root.querySelector?.('.us-gv2-sheet');
+    try { target?.focus?.({ preventScroll: true }); } catch (_) {}
+  }, reduced() ? 0 : 300);
   return root;
+}
+function clearPanel() {
+  const root = panel();
+  root?.classList.add('hidden');
+  if (root) root.innerHTML = '';
+  document.body?.classList?.remove('us-gv2-sheet-open');
+}
+function closePanel() {
+  const root = panel();
+  const sheet = root?.querySelector?.('.us-gv2-sheet');
+  if (!root || root.classList.contains('hidden')) return clearPanel();
+  if (!canAnimate(sheet) || closing) { if (!closing) clearPanel(); return; }
+  root.querySelector('.us-gv2-scrim')?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 240, fill: 'forwards' });
+  const run = sheet.animate([{ transform: 'none' }, { transform: 'translateY(100%)' }], { duration: 280, easing: EASE.in, fill: 'forwards' });
+  closing = run;
+  run.finished.then(() => { if (closing === run) { closing = null; clearPanel(); } }, () => {});
 }
 function showHub() {
   view = 'hub';
   current = null;
   index = 0;
   drafts.clear();
-  panel()?.classList.add('hidden');
-  if (panel()) panel().innerHTML = '';
+  closePanel();
   byId('quizHub')?.classList.remove('hidden');
   if (home) renderHub();
   load();
@@ -350,7 +396,6 @@ function showHub() {
 // Due colori: every round reads as a sheet — its eyebrow on the left, the
 // close on the right (still the same "back to the hub" action).
 const backButton = () => `<button type="button" class="us-gv2-back" data-gv2-action="back" aria-label="Torna a Gioca">${icon('x')}<span>Gioca</span></button>`;
-const sheetTop = (kicker, count = '') => `<div class="us-gv2-play-top"><span class="us-gv2-kicker">${esc(kicker)}${count ? `<span class="us-gv2-count"> · ${esc(count)}</span>` : ''}</span>${backButton()}</div>`;
 // The two of you and what you share: rosa, lilla and the Noi lens between.
 const VENN = '<span class="us-gv2-venn" aria-hidden="true"><i class="is-a"></i><i class="is-b"></i><i class="is-noi"></i></span>';
 
@@ -424,6 +469,7 @@ async function confirmSpend({ family, played, title, confirmLabel }) {
     body: left === 1 ? 'Userete l’ultimo gioco di questa settimana.' : `Userete 1 dei ${left} giochi di questa settimana.`,
     confirmLabel: played ? confirmLabel : 'Inizia',
     cancelLabel: 'Non ora',
+    icon: played ? 'arrows-clockwise' : 'info',
   });
 }
 
@@ -531,23 +577,22 @@ function answerValue(item) {
   return item.answer_kind === 'choice' ? item.my_answer_index : item.my_answer_text;
 }
 
-function renderSwipePlay() {
+function renderSwipePlay({ dir = 1 } = {}) {
   const item = current?.items?.[index];
   if (!item || item.answer_kind !== 'choice' || (item.options || []).length !== 2) return;
   const total = current.items.length;
   const left = item.options[0];
   const right = item.options[1];
   const root = showPanel(`<article class="us-gv2-swipe-play">
-    ${sheetTop(`${SWIPE.name.toUpperCase()} · SCELTA ${index + 1} DI ${total}`)}
     <div class="us-gv2-swipe-progress" role="progressbar" aria-valuemin="1" aria-valuemax="${total}" aria-valuenow="${index + 1}" aria-label="Carta ${index + 1} di ${total}">
       ${Array.from({ length: total }, (_, i) => `<i data-state="${i < index ? 'done' : i === index ? 'now' : 'next'}"></i>`).join('')}
     </div>
     <section class="us-gv2-swipe-stage" aria-label="Carta di ${esc(SWIPE.name)}">
+      ${index < total - 1 ? `<div class="us-gv2-swipe-card is-back" aria-hidden="true"><h2>${esc(current.items[index + 1]?.question_text || '')}</h2></div>` : ''}
       <article class="us-gv2-swipe-card" id="usGv2SwipeCard" tabindex="0" aria-label="${esc(item.question_text)}. Freccia sinistra: ${esc(left)}. Freccia destra: ${esc(right)}.">
         <h2>${esc(item.question_text)}</h2>
         <span class="us-gv2-swipe-stamp is-left" aria-hidden="true">${esc(left)}</span>
         <span class="us-gv2-swipe-stamp is-right" aria-hidden="true">${esc(right)}</span>
-        <div class="us-gv2-swipe-card-foot" aria-hidden="true"><span>← ${esc(left)}</span><span>${esc(right)} →</span></div>
       </article>
     </section>
     <div class="us-gv2-swipe-actions" role="group" aria-label="Scegli una risposta">
@@ -555,36 +600,36 @@ function renderSwipePlay() {
       <button type="button" class="primary" data-gv2-swipe-choice="1" aria-label="${esc(right)}"><b>${esc(right)}</b>${icon('caret-right')}</button>
     </div>
     <p id="usGv2Error" class="us-gv2-error" role="alert" hidden></p>
-    <p class="us-gv2-swipe-note">Trascina la carta oppure usa i due pulsanti. ${esc(partnerName())} non vedrà le tue scelte finché non avrete finito entrambi.</p>
-  </article>`);
+    <p class="us-gv2-swipe-note">Trascina la carta o tocca una scelta. ${esc(partnerName())} non vedrà le tue scelte finché non avrete finito entrambi.</p>
+  </article>`, { kicker: `${SWIPE.name} · scelta ${index + 1} di ${total}`, tone: 'ambra', label: SWIPE.name }, { dir });
   bindSwipeGesture(root);
 }
 
+// The mockup's card: it follows the finger and tilts (1° every 14 px), a
+// stamp shows the side from 40 px, past 90 px it is a choice, otherwise it
+// springs back.
 function bindSwipeGesture(root) {
   const card = root?.querySelector('#usGv2SwipeCard');
   if (!card) return;
   let pointerId = null;
   let startX = 0;
   let deltaX = 0;
-  const reduced = window.UsUiFoundation?.isReducedMotion?.() !== false;
 
   const paint = (value) => {
-    const width = Math.max(1, card.getBoundingClientRect().width);
-    deltaX = Math.max(-width * 0.7, Math.min(width * 0.7, value));
-    card.dataset.swipeSide = deltaX < -8 ? 'left' : deltaX > 8 ? 'right' : 'none';
-    const rotate = reduced ? 0 : deltaX / 22;
-    card.style.transform = `translate3d(${deltaX}px,0,0) rotate(${rotate}deg)`;
+    deltaX = value;
+    card.dataset.swipeSide = deltaX < -40 ? 'left' : deltaX > 40 ? 'right' : 'none';
+    card.style.transform = `translateX(${deltaX}px) rotate(${reduced() ? 0 : deltaX / 14}deg)`;
   };
   const reset = () => {
     deltaX = 0;
     card.dataset.swipeSide = 'none';
+    card.style.transition = 'transform .4s var(--us-ease-spring, cubic-bezier(.34,1.56,.64,1))';
     card.style.transform = '';
   };
   const finish = () => {
-    const threshold = Math.min(92, Math.max(64, card.getBoundingClientRect().width * 0.22));
-    if (Math.abs(deltaX) >= threshold) {
+    if (Math.abs(deltaX) > 90) {
       const choice = deltaX < 0 ? 0 : 1;
-      commitSwipeChoice(choice, deltaX < 0 ? 'left' : 'right');
+      commitSwipeChoice(choice, 'drag');
     } else {
       reset();
     }
@@ -597,6 +642,7 @@ function bindSwipeGesture(root) {
     startX = event.clientX;
     deltaX = 0;
     card.setPointerCapture?.(pointerId);
+    card.style.transition = 'none';
     card.classList.add('is-dragging');
   });
   card.addEventListener('pointermove', (event) => {
@@ -630,12 +676,17 @@ async function commitSwipeChoice(choice, direction = 'tap') {
   const card = root?.querySelector('#usGv2SwipeCard');
   root?.querySelectorAll('[data-gv2-swipe-choice]').forEach((button) => { button.disabled = true; });
   try {
+    // As in the mockup the buttons keep their look while the card flies, and
+    // only a dragged card shows its stamp.
+    root?.querySelector('.us-gv2-swipe-play')?.classList.add('is-committing');
     if (card) {
-      card.dataset.swipeSide = choice === 0 ? 'left' : 'right';
+      if (direction === 'drag') card.dataset.swipeSide = choice === 0 ? 'left' : 'right';
       card.classList.add('is-committing');
-      if (window.UsUiFoundation?.isReducedMotion?.() === false) {
-        card.style.transform = `translate3d(${choice === 0 ? '-115%' : '115%'},0,0) rotate(${choice === 0 ? -9 : 9}deg)`;
-        await new Promise((resolve) => setTimeout(resolve, 150));
+      if (canAnimate(card)) {
+        const dx = choice === 0 ? -1 : 1;
+        const from = card.style.transform || 'none';
+        card.style.transition = 'none';
+        await card.animate([{ transform: from }, { transform: `translateX(${dx * 140}%) rotate(${dx * 18}deg)`, opacity: 0 }], { duration: 300, easing: EASE.in, fill: 'forwards' }).finished.catch(() => {});
       }
     }
     if(!sameIdentity())return false;
@@ -652,7 +703,7 @@ async function commitSwipeChoice(choice, direction = 'tap') {
 
     if (index < current.items.length - 1) {
       index += 1;
-      renderSwipePlay();
+      renderSwipePlay({ dir: 0 });
       return;
     }
 
@@ -665,7 +716,7 @@ async function commitSwipeChoice(choice, direction = 'tap') {
   } catch (error) {
     if(!sameIdentity())return false;
     console.warn('[US Gioca] swipe answer', error, direction);
-    renderSwipePlay();
+    renderSwipePlay({ dir: 0 });
     showError('Non riesco a salvare questa scelta. Riprova.');
   } finally {
     busy = false;
@@ -673,31 +724,31 @@ async function commitSwipeChoice(choice, direction = 'tap') {
   }
 }
 
-function renderPlay() {
-  if (current?.game_family === 'swipe') return renderSwipePlay();
+function renderPlay({ dir = 1 } = {}) {
+  if (current?.game_family === 'swipe') return renderSwipePlay({ dir });
   const item = current?.items?.[index];
   if (!item) return;
   const total = current.items.length;
   const value = answerValue(item);
-  const kicker = current.game_family === 'per_voi' ? `PER VOI · ${familyName(item.family).toUpperCase()}` : familyName(current.game_family).toUpperCase();
+  const kicker = familyName(current.game_family);
   const key = (i) => 'ABCDEFGH'[i] || String(i + 1);
   const hint = itemHint(item);
+  const chosen = item.answer_kind !== 'open' && value !== null && value !== undefined && value !== '' && Number.isInteger(Number(value));
   const input = item.answer_kind === 'open'
-    ? `<label class="us-gv2-sr" for="usGv2Answer">La tua risposta</label><textarea id="usGv2Answer" maxlength="1000" rows="5" placeholder="Scrivi…">${esc(value ?? '')}</textarea>`
+    ? `<label class="us-gv2-sr" for="usGv2Answer">La tua risposta</label><textarea id="usGv2Answer" maxlength="1000" rows="3" placeholder="Scrivi…">${esc(value ?? '')}</textarea>`
     : `<fieldset class="us-gv2-choices"><legend class="us-gv2-sr">${item.my_item_role === 'predictor' ? 'La tua previsione' : 'La tua scelta'}</legend>${(item.options || []).map((o, i) => `<label class="us-gv2-choice"><input type="radio" name="gv2choice" value="${i}" ${Number(value) === i && value !== null && value !== undefined ? 'checked' : ''}><i class="us-gv2-choice-key" aria-hidden="true">${key(i)}</i><span${asWritten(coupleWritten(item))}>${esc(o)}</span></label>`).join('')}</fieldset>`;
   const last = index === total - 1;
   showPanel(`<article class="us-gv2-play" data-gv2-family="${esc(item.family || current.game_family)}">
-    ${sheetTop(kicker, `${index + 1} di ${total}`)}
     <div class="us-gv2-progress" role="progressbar" aria-valuemin="1" aria-valuemax="${total}" aria-valuenow="${index + 1}" aria-label="Domanda ${index + 1} di ${total}">${Array.from({ length: total }, (_, i) => `<i data-on="${i <= index ? 'true' : 'false'}"></i>`).join('')}</div>
     ${contextChip(item)}${authorChip(item)}
     ${hint ? `<p class="us-gv2-hint">${esc(hint)}</p>` : ''}
     <h2 class="us-gv2-question"${asWritten(coupleWritten(item))}>${esc(item.my_prompt || item.question_text)}</h2>
     <form id="usGv2AnswerForm" novalidate>${input}
       <p id="usGv2Error" class="us-gv2-error" role="alert" hidden></p>
-      <div class="us-gv2-actions">${index > 0 ? '<button type="button" class="ghost" data-gv2-action="prev">Indietro</button>' : '<span></span>'}<button type="submit" class="primary">${last ? 'Conferma le risposte' : 'Avanti'}</button></div>
+      ${last ? '<p class="us-gv2-note">Dopo la conferma le risposte non si cambiano più.</p>' : ''}
+      <div class="us-gv2-actions"><button type="button" class="ghost" data-gv2-action="prev"${index > 0 ? '' : ' disabled'}>Indietro</button><button type="submit" class="primary"${item.answer_kind === 'open' || chosen ? '' : ' disabled'}>${last ? 'Conferma le risposte' : 'Avanti'}</button></div>
     </form>
-    ${last ? '<p class="us-gv2-note">Dopo la conferma le risposte non si cambiano più.</p>' : ''}
-  </article>`);
+  </article>`, { kicker, count: `${index + 1} di ${total}`, label: familyName(current.game_family) }, { dir });
 }
 
 function readInput(item) {
@@ -765,27 +816,28 @@ function partnerAnswerText(item) {
   return item.answer_kind === 'choice' ? (item.options || [])[Number(item.partner_answer_index)] ?? '—' : item.partner_answer_text ?? '—';
 }
 
-function renderSwipeWaiting() {
+// The mockup's waiting step: the two circles still apart, who we wait for,
+// then the two buttons. Your own sealed answers stay readable below them.
+const waitingName = () => knownPartner() || 'la tua persona';
+function waitArt(line) {
+  return `<div class="us-gv2-wait">${VENN}<b>Aspettiamo ${esc(waitingName())}…</b><small>${esc(line)}</small></div>`;
+}
+const waitActions = () => `<div class="us-gv2-actions"><button type="button" class="ghost" data-gv2-action="back">Torna a Gioca</button><button type="button" class="primary" data-gv2-action="refresh">${icon('arrows-clockwise')}<span>Aggiorna</span></button></div>`;
+function renderSwipeWaiting({ dir = 1 } = {}) {
   showPanel(`<article class="us-gv2-waiting us-gv2-swipe-waiting">
-    ${sheetTop(`${SWIPE.name.toUpperCase()} · SCELTE SIGILLATE`)}
-    <h2>Le tue 8 scelte sono dentro.</h2>
-    <div class="us-gv2-wait-art">${VENN}</div>
-    <p class="us-gv2-lead">Aspettiamo ${esc(partnerName())}. Finché non finisce, le vostre risposte restano separate.</p>
+    ${waitArt('Vedrete insieme dove la pensate allo stesso modo.')}
+    ${waitActions()}
     <ol class="us-gv2-swipe-mine">${current.items.map((item, i) => `<li><span>${i + 1}</span><small>${esc(item.question_text)}</small><b>${esc(myAnswerText(item))}</b></li>`).join('')}</ol>
-    <div class="us-gv2-actions"><button type="button" class="ghost" data-gv2-action="back">Torna a Gioca</button><button type="button" class="primary" data-gv2-action="refresh">${icon('arrows-clockwise')}<span>Controlla</span></button></div>
-  </article>`);
+  </article>`, { kicker: SWIPE.name, title: 'Le tue 8 scelte sono dentro.', tone: 'ambra', label: SWIPE.name }, { dir });
 }
 
-function renderWaiting() {
-  if (current?.game_family === 'swipe') return renderSwipeWaiting();
+function renderWaiting({ dir = 1 } = {}) {
+  if (current?.game_family === 'swipe') return renderSwipeWaiting({ dir });
   showPanel(`<article class="us-gv2-waiting">
-    ${sheetTop(familyName(current.game_family).toUpperCase())}
-    <h2>Hai risposto.</h2>
-    <div class="us-gv2-wait-art">${VENN}</div>
-    <p class="us-gv2-lead">Aspettiamo ${esc(partnerName())}. Le risposte si scoprono insieme.</p>
+    ${waitArt('Le risposte si scoprono quando avete risposto entrambi.')}
+    ${waitActions()}
     <ol class="us-gv2-mine">${current.items.map((i) => `<li><small${asWritten(coupleWritten(i))}>${esc(i.my_prompt || i.question_text)}</small><b${asWritten(i.answer_kind === 'open' || coupleWritten(i))}>${esc(myAnswerText(i))}</b></li>`).join('')}</ol>
-    <div class="us-gv2-actions"><button type="button" class="ghost" data-gv2-action="back">Torna a Gioca</button><button type="button" class="primary" data-gv2-action="refresh">${icon('arrows-clockwise')}<span>Aggiorna</span></button></div>
-  </article>`);
+  </article>`, { kicker: familyName(current.game_family), title: 'Hai risposto.', label: familyName(current.game_family) }, { dir });
 }
 
 // Prediction copy works independently of names and legacy slots.
@@ -835,24 +887,26 @@ function revealAnswerRows(item){
   return [mine,theirs].map(([label,value],i)=>`<div><dt${asWritten(i===1&&item.mechanic!=='prediction')}>${esc(label)}</dt><dd${written}>${esc(value)}</dd></div>`).join('');
 }
 // 1.0 — every answer is visible as soon as the result opens: no group or
-// question to unfold first.
+// question to unfold first. Parity: the mockup's list, in question order,
+// each question tagged Uguali / Diverse / Da leggere.
+const REVEAL_TAG = Object.freeze({ same: 'Uguali', different: 'Diverse', open: 'Da leggere' });
 function revealCompactItem(item,number,kind){
   const heading=esc(item.my_prompt||item.question_text||'Una domanda');
   const detailLabel=kind==='same'?'Scelte uguali':kind==='different'?'Scelte diverse':'Le risposte';
-  return `<li class="us-gv5-reveal-item" data-gv5-kind="${kind}">
-    <div class="us-gv5-reveal-q"><span class="us-gv5-reveal-num">${number}</span><span class="us-gv5-reveal-title"${asWritten(coupleWritten(item))}>${heading}</span></div>
+  return `<li class="us-gv5-reveal-item" data-gv5-kind="${kind}" data-gv5-group="${kind}">
+    <span class="us-gv5-reveal-tag" data-gv5-tag="${kind}">${REVEAL_TAG[kind]}</span>
+    <p class="us-gv5-reveal-title"${asWritten(coupleWritten(item))}><span class="us-gv2-sr">${number}. </span>${heading}</p>
     <div class="us-gv5-reveal-answers" aria-label="${detailLabel}" data-gv2-mechanic="${esc(item.mechanic||'')}">${contextChip(item)}${authorChip(item)}<dl>${revealAnswerRows(item)}</dl>
       ${item.mechanic==='prediction'?'<small class="us-gv5-outcome">'+esc(outcome(item))+'</small>':''}
       ${previousAnswers(item)}
     </div>
   </li>`;
 }
-function revealGroup(items,kind,title,description){
-  if(!items.length)return '';
-  return `<section class="us-gv5-reveal-group" data-gv5-group="${kind}">
-    <h3 class="us-gv5-reveal-group-head"><span><b>${esc(title)}</b><small>${esc(description)}</small></span><strong>${items.length}</strong></h3>
-    <ol>${items.map(({item,number})=>revealCompactItem(item,number,kind)).join('')}</ol>
-  </section>`;
+// Questo o quello: eight short rows, "Tutti e due" when you chose the same.
+function revealSwipeItem(item,number,kind){
+  const mine=myAnswerText(item),theirs=partnerAnswerText(item);
+  const line=kind==='same'?`Tutti e due: ${esc(mine)}`:`Tu: ${esc(mine)} · <span translate="no">${esc(partnerName())}</span>: ${esc(theirs)}`;
+  return `<li class="us-gv5-reveal-item us-gv5-swipe-row" data-gv5-kind="${kind}" data-gv5-group="${kind}"><span class="us-gv5-reveal-title"><span class="us-gv2-sr">${number}. </span>${esc(item.question_text||'Una carta')}</span><small>${line}</small></li>`;
 }
 // 1.0 — the result is where the conversation starts: one of the different
 // answers (when there is one) with "Ne parlate stasera?", then two gestures
@@ -885,34 +939,32 @@ function readingLine(items){
   if(mine.length)return `Hai letto ${partner||'la tua persona'} ${times(hits(mine))} su ${mine.length}`;
   return '';
 }
-function renderCompactReveal({first=false}={}){
+function revealHead(groups){
+  const compared=groups.same.length+groups.different.length;
+  return compared?`${groups.same.length} su ${compared} <em>uguali</em>`:'Da leggere insieme';
+}
+function renderCompactReveal({first=false,swipe=false}={}){
   const groups={same:[],different:[],open:[]};
-  for(const [i,item] of current.items.entries())groups[revealKind(item)].push({item,number:i+1});
-  const header=familyName(current.game_family);
+  const ordered=[];
+  for(const [i,item] of current.items.entries()){const kind=revealKind(item);groups[kind].push({item,number:i+1});ordered.push({item,number:i+1,kind});}
   const reading=readingLine(current.items);
-  showPanel(`<article class="us-gv2-reveal us-gv5-reveal${first?' is-first-reveal':''}" data-gv5-reveal>
-    ${sheetTop('LE VOSTRE SCELTE')}
-    <h2>${esc(header)}</h2>
-    <div class="us-gv5-summary" aria-label="${groups.same.length} uguali, ${groups.different.length} diverse${groups.open.length?', '+groups.open.length+' risposte libere':''}">
-      <span><strong>${groups.same.length}</strong><small>Uguali</small></span>
-      <span><strong>${groups.different.length}</strong><small>Diverse</small></span>
-      ${groups.open.length?`<span><strong>${groups.open.length}</strong><small>Da leggere</small></span>`:''}
-    </div>
+  const row=swipe?revealSwipeItem:revealCompactItem;
+  const root=showPanel(`<article class="us-gv2-reveal us-gv5-reveal${swipe?' is-swipe':''}${first?' is-first-reveal':''}" data-gv5-reveal>
     ${revealMove(groups)}
     <div class="us-gv5-reveal-groups">
-      ${revealGroup(groups.different,'different','Diverse','Dove avete scelto diversamente')}
-      ${revealGroup(groups.same,'same','Uguali','Le vostre scelte in comune')}
-      ${revealGroup(groups.open,'open','Risposte','Domande senza confronto automatico')}
+      <p class="us-gv5-reveal-label">Cosa avevate risposto</p>
+      <ol class="us-gv5-reveal-list">${ordered.map(({item,number,kind})=>row(item,number,kind)).join('')}</ol>
     </div>
     ${reading?`<p class="us-gv5-reading">${esc(reading)}</p>`:''}
-    <div class="us-gv2-actions is-single"><button type="button" class="ghost" data-gv2-action="back">Torna a Gioca</button></div>
-  </article>`);
-  // Results must open at the top, never behind Android's status bar after
-  // the final swipe/scroll of a long round.
-  window.scrollTo?.(0,0);
+    <div class="us-gv2-actions is-single"><button type="button" class="primary" data-gv2-action="back">Torna a Gioca</button></div>
+  </article>`,{kicker:'LE VOSTRE SCELTE',title:revealHead(groups),label:familyName(current.game_family),tone:swipe?'ambra':'menta'});
+  // The mockup's reveal: each answer rises in turn (first reveal only).
+  if(first&&root)Array.from(root.querySelectorAll?.('.us-gv5-reveal-item')||[]).forEach((el,j)=>{
+    if(canAnimate(el))el.animate([{opacity:0,transform:`translateY(${swipe?12:16}px)`},{opacity:1,transform:'none'}],swipe?{duration:360,delay:j*60,easing:EASE.out,fill:'backwards'}:{duration:420,delay:120+j*90,easing:EASE.out,fill:'backwards'});
+  });
 }
-function renderSwipeReveal({first=false}={}){return renderCompactReveal({first});}
-function renderReveal({first=false}={}){return renderCompactReveal({first});}
+function renderSwipeReveal({first=false}={}){return renderCompactReveal({first,swipe:true});}
+function renderReveal({first=false}={}){return current?.game_family==='swipe'?renderSwipeReveal({first}):renderCompactReveal({first});}
 
 const WEEKLY_MORPH_MS = 480;
 const WEEKLY_FAMILIES = Object.freeze(['scopritevi']);
@@ -923,23 +975,21 @@ function renderWeeklyForm(error = '') {
   const w = home?.weekly;
   view = 'weekly';
   const root = showPanel(`<article class="us-gv2-weekly-form">
-    ${sheetTop('LA DOMANDA DELLA SETTIMANA')}
-    <h2>Crea la domanda</h2>
-    <p class="us-gv2-lead">${esc(partnerName())} la scoprirà solo giocando.</p>
+    <p class="us-gv2-lead">${esc(knownPartner() || 'La tua persona')} la troverà in Gioca: risponderete tutti e due.</p>
     <form id="usGv2WeeklyForm" novalidate>
       <label class="us-gv2-sr" for="usGv2WeeklyText">La domanda</label>
-      <textarea id="usGv2WeeklyText" name="question_text" maxlength="300" rows="3" required placeholder="Scrivi la domanda"></textarea>
+      <textarea id="usGv2WeeklyText" name="question_text" maxlength="300" rows="3" required placeholder="Che cosa vuoi chiedere?"></textarea>
       <fieldset class="us-gv2-segment"><legend>Come si risponde?</legend>
         <label><input type="radio" name="answer_kind" value="open" checked><span>Risposta libera</span></label>
         <label><input type="radio" name="answer_kind" value="choice"><span>Scelta</span></label>
       </fieldset>
       <div id="usGv2WeeklyOptions" class="us-gv2-options" hidden>
-        ${[0, 1, 2, 3].map((i) => `<label class="us-gv2-sr" for="usGv2Option${i}">Opzione ${i + 1}</label><input id="usGv2Option${i}" name="option_${i}" maxlength="120" placeholder="Opzione ${i + 1}${i > 1 ? ' (facoltativa)' : ''}">`).join('')}
+        ${[0, 1, 2, 3].map((i) => `<label class="us-gv2-sr" for="usGv2Option${i}">Scelta ${i + 1}</label><input id="usGv2Option${i}" name="option_${i}" maxlength="120" placeholder="Scelta ${i + 1}${i > 1 ? ' · facoltativa' : ''}">`).join('')}
       </div>
       <p id="usGv2Error" class="us-gv2-error" role="alert" ${error ? '' : 'hidden'}>${esc(error)}</p>
       <button type="submit" class="primary us-gv2-submit">Salva la domanda</button>
     </form>
-  </article>`);
+  </article>`, { kicker: 'LA VOSTRA DOMANDA', title: 'Crea la domanda', label: 'Crea la domanda' });
   if (!root || !w) return;
   const form = root.querySelector('#usGv2WeeklyForm');
   form.addEventListener('input', () => { weeklyRequestId = null; });
@@ -1027,6 +1077,8 @@ async function sendThink(button) {
 }
 
 function onClick(event) {
+  // A tap on the scrim closes the round, as the mockup's sheet.
+  if (event.target?.hasAttribute?.('data-gv2-scrim')) { showHub(); return; }
   const button = event.target.closest('button');
   if (!button) return;
   const action = button.dataset.gv2Action;
@@ -1037,8 +1089,15 @@ function onClick(event) {
   else if (action === 'leave-something') window.UsLeftForYou?.openComposer?.();
   else if (action === 'think') sendThink(button);
   else if (action === 'back') showHub();
-  else if (action === 'prev') { const item = current.items[index]; drafts.set(item.id, readInput(item)); index = Math.max(0, index - 1); renderPlay(); }
-  else if (action === 'refresh') refresh();
+  else if (action === 'prev') { const item = current.items[index]; drafts.set(item.id, readInput(item)); index = Math.max(0, index - 1); renderPlay({ dir: -1 }); }
+  else if (action === 'refresh') {
+    // The mockup's button says it is working while the round is read again.
+    const text = button.querySelector?.('span:last-child');
+    const before = text?.textContent;
+    button.disabled = true;
+    if (text) text.textContent = 'Aggiorno…';
+    Promise.resolve(refresh()).catch(() => {}).finally(() => { if (button.isConnected) { button.disabled = false; if (text) text.textContent = before; } });
+  }
   else if (action === 'retry') load();
   else if (button.dataset.gv2Family) chooseMode(button.dataset.gv2Family);
   else if (button.dataset.gv2Session) openSession(button.dataset.gv2Session);
@@ -1049,7 +1108,33 @@ function onSubmit(event) {
   else if (event.target.id === 'usGv2WeeklyForm') { event.preventDefault(); submitWeekly(event.target); }
 }
 
+// Giochi / Sintonia, as the mockup's setG: the pill springs across (CSS),
+// the panel arrives from its side (24px, 380ms) and Sintonia's blocks rise
+// one after the other (16px, 460ms, 50ms apart). noi-v2.js owns the switch;
+// this only watches its data-active and draws the motion.
+function bindTabMotion() {
+  const tabs = byId('usGiocaTabs');
+  if (!tabs || tabs.dataset.gv2Motion || typeof MutationObserver !== 'function') return;
+  tabs.dataset.gv2Motion = '1';
+  let last = tabs.getAttribute('data-active');
+  new MutationObserver(() => {
+    const now = tabs.getAttribute('data-active');
+    if (!now || now === last) return;
+    const had = last;
+    last = now;
+    if (!had) return;
+    const show = byId(now === 'sintonia' ? 'usGiocaSintonia' : 'usGiocaGames');
+    if (!canAnimate(show)) return;
+    show.animate([{ opacity: 0, transform: `translateX(${now === 'sintonia' ? 24 : -24}px)` }, { opacity: 1, transform: 'none' }], { duration: 380, easing: EASE.out });
+    if (now !== 'sintonia') return;
+    Array.from(show.children).filter((el) => !el.hidden && el.offsetParent !== null).forEach((el, i) => {
+      el.animate([{ opacity: 0, transform: 'translateY(16px)' }, { opacity: 1, transform: 'none' }], { duration: 460, delay: i * 50, easing: EASE.out, fill: 'backwards' });
+    });
+  }).observe(tabs, { attributes: true, attributeFilter: ['data-active'] });
+}
+
 function boot() {
+  bindTabMotion();
   const hub = byId('quizHub');
   const root = panel();
   if (!hub || !root) return;
@@ -1058,6 +1143,13 @@ function boot() {
     hub.addEventListener('click', onClick);
     root.addEventListener('click', onClick);
     root.addEventListener('submit', onSubmit);
+    // A choice enables "Avanti", as in the mockup.
+    root.addEventListener('change', (event) => {
+      if (event.target?.name !== 'gv2choice') return;
+      const submit = root.querySelector('#usGv2AnswerForm button[type="submit"]');
+      if (submit && !busy) submit.disabled = false;
+      window.UsFeedback?.selection?.();
+    });
   }
   if (window.usProfile) load(); else setTimeout(boot, 250);
 }
@@ -1071,7 +1163,7 @@ window.addEventListener('us-identity-change', (event) => {
   if (!event.detail?.identityKey) {
     identityEpoch++;loadSeq++;current=null;home=null;drafts.clear();view='hub';
     startRequestIds.clear();weeklyRequestId=null;
-    panel()?.classList.add('hidden');if(panel())panel().innerHTML='';
+    clearPanel();
     byId('quizHub')?.classList.remove('hidden');
   }
   if(view==='hub')renderHub();
@@ -1084,7 +1176,7 @@ window.addEventListener('us-identity-change', (event) => {
   }
   else if(view==='weekly'){
     const label=panel()?.querySelector('.us-gv2-lead');
-    if(label)label.textContent=`${partnerName()} la scoprirà solo giocando.`;
+    if(label)label.textContent=`${knownPartner() || 'La tua persona'} la troverà in Gioca: risponderete tutti e due.`;
   }
 });
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });

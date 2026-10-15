@@ -132,7 +132,7 @@ test('G7: E se…? is not offered, yet an old E se…? round still opens with it
   assert.doesNotMatch(h.nodes.quizHub.innerHTML, /data-gv2-family="e_se"/);
   await h.api.openSession('old');
   await tick();
-  assert.match(h.nodes.usGameV2Panel.innerHTML, /<h2>E se…\?<\/h2>/);
+  assert.match(h.nodes.usGameV2Panel.innerHTML, /aria-label="E se…\?"/, "the round keeps its name as the sheet label");
 });
 
 test('G9: La vostra domanda comes first when it is your turn, and is signed where it appears', async () => {
