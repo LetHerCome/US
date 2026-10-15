@@ -28,10 +28,11 @@ test('shell: Ti penso left, the US mark at the centre, Left for You right', () =
 test('shell: Events no longer owns the global centre slot but stays reachable', () => {
   assert.doesNotMatch(topBar, /usEventsTopEntry|us-events-top-control|I nostri eventi/);
   assert.doesNotMatch(identityCss, /us-events-top/);
-  // Contextual homes: the Calendar head (Noi) and the Oggi event priority card.
-  assert.match(html, /id="usCalendarEventsLink"[^>]*aria-label="Apri i nostri eventi"/);
-  const calendar = read('calendar.js');
-  assert.match(calendar, /usCalendarEventsLink'\)\?\.addEventListener\('click',[\s\S]{0,160}closeCalendarSurface\(\);[\s\S]{0,500}classList\.contains\('open'\)[\s\S]{0,200}window\.openEvents\?\.\(\)/);
+  // Contextual homes: the Eventi link under the Noi calendar (US 1.0: the old
+  // calendar overlay and its head link are gone) and the Oggi event priority card.
+  assert.match(html, /<button type="button" data-noi-open-link="eventi">/);
+  assert.match(read('noi-v2.js'), /if\(link==='quest'\|\|link==='eventi'\)window\.openNoiSection\?\.\(link\);/);
+  assert.doesNotMatch(html, /id="usCalendarEventsLink"/);
   assert.match(read('app.js'), /if\(action==='events'\)window\.openEvents\?\.\(\)/);
 });
 
@@ -225,12 +226,10 @@ test('nav: navigation logic is untouched (go() still only toggles the active cla
 
 // ---------------------------------------------------------------- TILES
 
-test('tiles: Noi and Gioca destinations share one press + destination primitive', () => {
-  assert.equal((html.match(/<button[^>]*class="noi-hub-card[^>]*>/g) || []).length, 3);
-  for (const card of html.match(/<button[^>]*class="noi-hub-card[^>]*>/g)) assert.match(card, /data-us-tile/);
-  const board = html.match(/<button[^>]*id="noiWeekBoardOpen"[^>]*>/)?.[0] || '';
-  assert.match(board, /data-us-tile/);
-  assert.match(board, /data-us-feedback="tap"/);
+// US 1.0 (N10): the hidden Noi hub cards and the old board button (the Noi users
+// of data-us-tile) are gone; the visible Noi links are unchanged.
+test('tiles: Gioca destinations share one press + destination primitive', () => {
+  assert.doesNotMatch(html, /class="noi-hub-card|id="noiWeekBoardOpen"/);
   const games = read('games.js');
   assert.match(games, /data-us-tile data-us-feedback="tap" class="us-gv2-game/);
   assert.match(games, /data-us-tile data-us-feedback="tap" class="us-gv2-pervoi/);

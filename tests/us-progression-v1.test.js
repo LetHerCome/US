@@ -8,7 +8,8 @@ const html=read('index.html'), js=read('progression.js'), css=read('progression.
 
 test('Progression V1: user-facing Risonanza becomes Sintonia and exposes Ritmo + full unlock catalog',()=>{
   const bond=html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0]||'';
-  assert.match(bond,/>Sintonia</);
+  // US 1.0: the hidden old hub tile (kicker "Sintonia") is gone; the visible label is the resonance title.
+  assert.match(bond,/>Sintonia</i);
   assert.match(bond,/aria-label="Sintonia attuale"/);
   assert.match(bond,/id="usProgressionRhythmValue"/);
   assert.match(bond,/id="usProgressionNext"/);

@@ -64,14 +64,11 @@ test('aurora: reduced motion and hidden document behaviour is intact', () => {
 
 const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
 
-test('Noi: Eventi is a real tile of the hub, using the existing tile system and Phosphor icon', () => {
-  const hub = bond.match(/<nav class="noi-hub" id="noiHub"[\s\S]*?<\/nav>/)?.[0] || '';
-  assert.match(hub, /<button type="button" data-us-tile data-us-feedback="tap" class="noi-hub-card noi-hub-card--events" data-noi-open="eventi">/);
-  assert.match(hub, /<span class="noi-hub-kicker">Eventi<\/span>/);
-  const styles = read('styles.css');
-  assert.match(styles, /\.noi-hub-card--events\{--noi-hub-icon:url\("\/assets\/icons\/phosphor\/calendar-heart-regular\.svg"\)/);
-  // HUMAN-UI-02 — Eventi is one of the compact rows under the Risonanza hero.
-  assert.match(styles, /\.noi-hub-card:not\(\.noi-hub-card--resonance\)\{flex-direction:row;/);
+// US 1.0 (N10): the old hidden hub is gone; Eventi is one of the three Noi links under the calendar.
+test('Noi: Eventi is a real tile of Noi, using the existing link row and Phosphor icon', () => {
+  const links = bond.match(/<nav class="us-noi-v2-links"[\s\S]*?<\/nav>/)?.[0] || '';
+  assert.match(links, /<button type="button" data-noi-open-link="eventi"><span class="us-noi-v2-link-icon" aria-hidden="true"><span class="us-icon" data-us-icon="calendar-heart"><\/span><\/span><span class="us-noi-v2-link-copy"><b>Eventi<\/b>/);
+  assert.doesNotMatch(bond, /id="noiHub"|noi-hub-card--events/);
   assert.ok(fs.existsSync(path.join(ROOT, 'assets/icons/phosphor/calendar-heart-regular.svg')));
 });
 
@@ -80,15 +77,15 @@ test('Noi: Eventi opens inside the Noi page through the shared section + history
   assert.match(app, /const NOI_SECTIONS=\['resonance','da-vivere','quest','eventi'\]/);
   assert.match(app, /if\(view==='eventi'\)window\.hydrateEvents\?\.\(\);/);
   assert.match(read('styles.css'), /#bond \.noi-canonical-page:not\(\[data-noi-view="eventi"\]\)>\.noi-events-section\{display:none!important\}/);
-  assert.match(read('navigation.js'), /name:'noi-section',\s*find:\(\)=>document\.getElementById\('noiHub'\),\s*open:el=>Boolean\(el&&el\.hidden\),\s*close:\(\)=>window\.closeNoiSection\?\.\(\)/, 'Back works with no navigation change');
+  assert.match(read('navigation.js'), /name:'noi-section',\s*find:\(\)=>document\.getElementById\('noiSectionBar'\),\s*open:el=>Boolean\(el&&!el\.hidden\),\s*close:\(\)=>window\.closeNoiSection\?\.\(\)/, 'Back closes the section');
   assert.match(bond, /<section class="noi-events-section" id="noiEventsSection"/);
   assert.match(bond, /<h3 id="noiEventsTitle">Eventi<\/h3>/);
-  assert.match(bond, /Le cose che scegliete di vivere insieme\./);
+  assert.match(bond, /Le vostre date speciali\./);
   assert.match(bond, /id="noiEventsAdd" aria-label="Aggiungi un evento"/);
 });
 
-test('Calendar stays the planning authority and keeps its Eventi shortcut; the shell has no events control', () => {
-  assert.match(html, /id="usCalendarEventsLink"[^>]*aria-label="Apri i nostri eventi"/);
+test('Calendar stays the planning authority; Noi keeps its Eventi shortcut; the shell has no events control', () => {
+  assert.match(read('noi-v2.js'), /if\(link==='quest'\|\|link==='eventi'\)window\.openNoiSection\?\.\(link\);/);
   for (const file of ['calendar.js', 'calendar-domain.js', 'calendar.css']) {
     assert.doesNotMatch(read(file), /noiEvents|hydrateNoiEvents|openEventEditor/, `${file} does not know about the events surface`);
   }
@@ -171,18 +168,13 @@ test('Eventi surface: existing event data renders as PROSSIMI, QUESTO PERIODO an
   assert.doesNotMatch(vissuti, /Gita al lago/);
 });
 
-test('Eventi surface: the Noi hub tile shows the next event; an empty couple gets a quiet state', async () => {
+// US 1.0 (N10): the old hub tile with the next event is gone with the hidden hub.
+test('Eventi surface: an empty couple gets a quiet state', async () => {
   const h = harness();
   await h.window.hydrateEvents();
-  assert.equal(h.node('noiHubEventsTitle').textContent, 'Concerto di Elisa');
-  assert.equal(h.node('noiHubEventsMeta').textContent, 'Tra 12 giorni');
-
-  const empty = harness();
-  // No events at all.
+  assert.doesNotMatch(read('events.js'), /noiHubEventsTitle|renderHubTile/);
   const src = read('events.js');
   assert.match(src, /<div class="us-events-empty"><b>Niente in programma<\/b><\/div>/);
-  assert.match(src, /title\.textContent='Niente in programma'/);
-  assert.ok(empty);
 });
 
 test('Eventi surface: identical data does not rewrite the DOM, so the soft entrance never replays', async () => {
@@ -198,7 +190,8 @@ test('Eventi surface: tapping an event opens the existing editor, and closing it
   await h.window.hydrateEvents();
   const body = h.node('noiEventsBody');
   const card = { dataset: { id: 'e2', occurrence: isoDay(25) } };
-  body.listeners.click({ target: { closest: () => card } });
+  // US 1.0 (N6): relationship rows are tappable too, so the target answers per selector.
+  body.listeners.click({ target: { closest: (sel) => (sel === '[data-id]' ? card : null) } });
   assert.ok(h.node('usEventsOverlay').open.has('open'), 'the existing editor sheet opens');
   assert.equal(h.node('usEventTitleInput').value, 'Weekend a Matera', 'it is the existing event editor, filled from the same data');
   assert.equal(h.node('usEventForm').hidden, false);

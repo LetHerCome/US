@@ -104,7 +104,7 @@
 #bond .us-noi-v2-empty-month b{font-family:var(--us-font-display);font-weight:400;font-size:21px}
 #bond .us-noi-v2-empty-month small{font-size:13px;color:var(--us-color-text-3)}
 
-/* ---------- Lavagna: the week as a board, one lane of chips per day ---------- */
+/* ---------- La nostra settimana: one lane of chips per day, free evenings ---------- */
 #bond .us-noi-v2 .us-noi-v2-week-list{display:grid;gap:6px}
 #bond .us-noi-v2 .us-noi-v2-week-row{display:grid;grid-template-columns:48px minmax(0,1fr);align-items:center;gap:10px;min-height:54px;padding:8px 12px;border:0;border-radius:16px;background:var(--us-color-surface-2)}
 #bond .us-noi-v2 .us-noi-v2-week-row.is-today{box-shadow:inset 0 0 0 1.5px var(--us-tu)}
@@ -117,8 +117,13 @@
 #bond .us-noi-v2-chip::after{content:"";position:absolute;inset:-6px -2px}
 #bond .us-noi-v2-chip:focus-visible{outline:2px solid var(--us-color-text);outline-offset:2px}
 #bond .us-noi-v2 .us-noi-v2-week-empty{padding:0;font-size:12px;color:var(--us-color-text-3)}
+/* A free evening for both of you: an outlined "ours" chip, not a commitment. */
+#bond .us-noi-v2 .us-noi-v2-free{display:inline-flex;align-items:center;background:transparent;box-shadow:inset 0 0 0 1.5px var(--us-noi);color:var(--us-color-text);cursor:default}
+#bond .us-noi-v2 .us-noi-v2-free::after{content:none}
+#bond .us-noi-v2 .us-noi-v2-week-summary{display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:14px;font-weight:600;color:var(--us-color-text-2)}
+#bond .us-noi-v2 .us-noi-v2-week-summary .us-icon{--us-icon-size:16px;color:var(--us-noi)}
 
-/* ---------- Lavagna · Missioni · Eventi tiles ---------- */
+/* ---------- La nostra settimana · Missioni · Eventi tiles ---------- */
 #bond .us-noi-v2 .us-noi-v2-links{gap:8px;padding:0 0 8px}
 #bond .us-noi-v2 .us-noi-v2-links button{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;justify-content:stretch;justify-items:start;gap:10px;min-height:92px;padding:14px 12px;border-radius:20px;background:var(--us-color-surface);border:1px solid var(--us-color-line);color:var(--us-color-text);text-align:left}
 #bond .us-noi-v2 .us-noi-v2-links button:active{background:var(--us-color-surface-2)}
@@ -162,12 +167,11 @@
 #bond .quest-week-retry{border-radius:999px;border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text)}
 
 #bond .noi-living-list{gap:8px;margin-top:10px}
-#bond .noi-living-list .bond-quest.quest-v2{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"top top" "title title" "status status" "who reroll" "confirm confirm";align-items:center;gap:10px;padding:16px;border-radius:22px;border:0;background:var(--us-color-surface-2);box-shadow:none;overflow:visible}
+#bond .noi-living-list .bond-quest.quest-v2{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"top top" "title title" "status status" "who reroll" "confirm confirm" "memory memory";align-items:center;gap:10px;padding:16px;border-radius:22px;border:0;background:var(--us-color-surface-2);box-shadow:none;overflow:visible}
 #bond .noi-living-list .bond-quest.quest-v2::before,#bond .noi-living-list .bond-quest.quest-v2::after{content:none}
 #bond .noi-living-list .bond-quest.quest-v2.completed{background:color-mix(in srgb,var(--us-verde) 7%,var(--us-color-surface-2))}
 #bond .bond-quest.quest-v2 .quest-top{grid-area:top;align-items:flex-start;margin:0}
 #bond .bond-quest.quest-v2 .quest-category{display:block;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--us-noi)}
-#bond .noi-living-list .bond-quest.quest-v2 .quest-rarity{display:inline;font-size:13px;font-weight:700;letter-spacing:0;color:var(--us-noi);white-space:nowrap}
 #bond .noi-living-list .bond-quest.quest-v2 h4{grid-area:title;margin:0;font-family:var(--us-font-display);font-weight:400;font-size:20px;line-height:1.2;letter-spacing:0;color:var(--us-color-text);-webkit-line-clamp:unset;display:block;overflow:visible}
 #bond .bond-quest.quest-v2 .quest-status{grid-area:status;margin:0;font-size:13px;line-height:1.4;color:var(--us-color-text-2)}
 #bond .bond-quest.quest-v2[data-quest-state="completed"] .quest-status{color:var(--us-verde)}
@@ -192,6 +196,9 @@
 #bond .bond-quest.quest-v2 .quest-reroll{grid-area:reroll;width:auto;min-width:44px;height:44px;padding:0 14px;gap:6px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text-2);font-size:14px;font-weight:700}
 #bond .bond-quest.quest-v2 .quest-reroll .us-icon{--us-icon-size:16px}
 #bond .bond-quest.quest-v2 .quest-reroll.is-locked{padding:0;width:44px;color:var(--us-color-text-3);background:transparent;border-color:transparent;opacity:1}
+/* A mission done together (or one that asks for a photo) can become a memory. */
+#bond .bond-quest.quest-v2 .quest-memory{grid-area:memory;display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text);font-size:14px;font-weight:700}
+#bond .bond-quest.quest-v2 .quest-memory .us-icon{--us-icon-size:18px;color:var(--us-noi)}
 #bond .quest-recent-week{border-radius:16px;border:0;background:var(--us-color-surface)}
 #bond .noi-section-kicker{font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--us-color-text-3)}
 
@@ -220,10 +227,22 @@
 #bond .noi-ev-row.is-lived>.us-icon{--us-icon-size:14px;width:24px;height:24px;padding:5px;border-radius:50%;box-sizing:border-box;background:color-mix(in srgb,var(--us-verde) 20%,transparent);color:var(--us-verde);-webkit-mask:none;mask:none}
 #bond .noi-ev-row.is-lived>.us-icon::before{content:"";display:block;width:100%;height:100%;background:currentColor;-webkit-mask:url("/assets/icons/phosphor/check-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/check-regular.svg") center/contain no-repeat}
 #bond .noi-ev-row.is-lived>.us-icon{background-color:color-mix(in srgb,var(--us-verde) 20%,transparent)}
+#bond :is(.noi-ev-card,.noi-ev-row).is-system{font:inherit;text-align:left;color:inherit;cursor:pointer}
 #bond .us-events-empty{padding:28px 16px;border-radius:22px;border:1px dashed var(--us-color-line-strong);text-align:center;color:var(--us-color-text-2)}
 #bond .us-events-empty b{font-family:var(--us-font-display);font-weight:400;font-size:21px;color:var(--us-color-text)}
 
-/* ---------- Da vivere ---------- */
+/* ---------- Le vostre idee, inside Missioni ---------- */
+#bond .noi-living-section>.noi-idea-section{display:flex;order:0;flex:0 0 auto;min-height:0;overflow:visible;margin-top:26px}
+#bond .noi-living-section>.noi-idea-section[hidden]{display:none}
+/* Now that the ideas are on screen, the hidden attribute must win over the
+   display rules below (quick form, lived ideas, detail rows). */
+#bond .noi-idea-section [hidden]{display:none!important}
+#bond .noi-living-section>.noi-idea-section .noi-idea-browse{overflow:visible}
+#bond .noi-living-section>.noi-idea-section .noi-idea-list{overflow:visible;max-height:none}
+#bond .noi-living-section .noi-idea-section .noi-section-title-row h3{font-size:24px}
+/* An open idea is the whole Missioni screen until Back. */
+#bond .noi-living-section[data-idea-detail="open"]>:not(.noi-idea-section){display:none!important}
+#bond .noi-living-section[data-idea-detail="open"]>.noi-idea-section{margin-top:0}
 #bond .noi-idea-quick-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:8px;padding:0;border:0;background:none}
 #bond .noi-idea-quick-form>input,#bond .noi-idea-quick-extra input,#bond .noi-idea-quick-extra textarea,#bond .noi-idea-detail input,#bond .noi-idea-detail textarea{width:100%;min-height:48px;padding:0 14px;border-radius:16px;background:var(--us-color-bg);border:1px solid var(--us-color-line-strong);color:var(--us-color-text);font:inherit;font-size:16px}
 #bond .noi-idea-quick-extra textarea,#bond .noi-idea-detail textarea{min-height:96px;padding:14px;resize:none}
@@ -279,10 +298,6 @@
 .us-cal-sheet .us-cal-detail-body .us-cal-detail-date{order:-1;font-size:15px;font-weight:600;color:var(--us-color-text)}
 .us-cal-sheet .us-cal-detail-body .us-cal-detail-kind{color:var(--us-color-text-3)!important;font-weight:500}
 .us-cal-sheet .us-cal-detail-body .us-cal-detail-note{margin-top:6px;color:var(--us-color-text-2)}
-.us-cal-sheet .us-cal-detail-reminders{padding:14px 20px 0;gap:8px}
-.us-cal-sheet .us-cal-detail-reminders h4{margin:0;font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--us-color-text-3)}
-.us-cal-sheet .us-cal-detail-reminder{padding:12px 14px;border-radius:16px;border:0;background:var(--us-color-surface-2);font-size:14px;color:var(--us-color-text)}
-.us-cal-sheet .us-cal-detail-reminder small{color:var(--us-color-text-3);font-size:11px}
 .us-cal-sheet .us-cal-detail-actions{display:grid;gap:8px;padding:16px 20px 4px}
 .us-cal-sheet .us-cal-detail-actions button{min-height:52px;border-radius:999px;font-size:16px;font-weight:700}
 .us-cal-sheet .us-cal-detail-edit{background:var(--us-tu);border:0;color:var(--us-inchiostro)}
@@ -290,6 +305,14 @@
 
 /* Nuovo impegno: quick titles, fields with small caps labels, a real switch. */
 .us-cal-sheet .us-cal-form{display:grid;gap:12px;padding:4px 20px 6px}
+/* One "+", three choices: Solo mio · Nostro · Data speciale, each in its colour. */
+.us-cal-sheet .us-cal-kind{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0}
+.us-cal-sheet .us-cal-kind[hidden]{display:none}
+.us-cal-sheet .us-cal-kind button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:64px;padding:8px 4px;border-radius:16px;border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text-2);font-size:13px;font-weight:600;line-height:1.2;text-align:center;overflow-wrap:anywhere}
+.us-cal-sheet .us-cal-kind button .us-icon{--us-icon-size:20px;color:var(--dc-who)}
+.us-cal-sheet .us-cal-kind button[aria-pressed="true"]{border-color:var(--dc-who);background:color-mix(in srgb,var(--dc-who) 14%,transparent);color:var(--us-color-text)}
+.us-cal-sheet .us-cal-kind button:focus-visible{outline:2px solid var(--us-color-text);outline-offset:2px}
+#usCalendarFormSheet[data-kind="shared"] .us-cal-form-save{background:var(--us-noi)}
 .us-cal-sheet .us-cal-form-context{margin:0;font-size:13px;color:var(--us-color-text-2)}
 .us-cal-sheet .us-cal-form-day{margin:0;font-family:var(--us-font-display);font-weight:400;font-size:20px;color:var(--us-color-text)}
 .us-cal-sheet .us-cal-form-day-entries{margin:0;gap:6px}

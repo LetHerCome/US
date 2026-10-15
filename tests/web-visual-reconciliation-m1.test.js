@@ -85,7 +85,8 @@ test('M1.3 (M12A) il centro della top chrome è il marchio US; I nostri eventi v
   const html = read('index.html');
   const css = read('identity.css');
   assert.doesNotMatch(html, /id="usEventsTopEntry"/);
-  assert.match(html, /id="usCalendarEventsLink"[^>]*aria-label="Apri i nostri eventi"/);
+  // US 1.0: the old calendar overlay (and its Eventi link) is gone; Eventi is a Noi link.
+  assert.match(html, /<button type="button" data-noi-open-link="eventi">/);
   assert.doesNotMatch(html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '', /class="us-event-add"/);
   assert.match(css, /\.us-top-brand\{[^}]*grid-column:2[^}]*pointer-events:none/);
   assert.doesNotMatch(css, /us-events-top/);

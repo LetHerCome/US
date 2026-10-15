@@ -789,6 +789,12 @@ async function performPushNavigation(target,intent={}){
     else window.openCalendarSurface?.();
     return;
   }
+  // A mission push opens Missioni itself, not only the Noi page.
+  if(target==='bond'){
+    if(document.querySelector('.page.active')?.id!=='bond')go('bond',{motionCommit:true});
+    setTimeout(()=>window.openNoiSection?.('quest'),120);
+    return;
+  }
   if(pages.includes(target))go(target);
 }
 window.UsNotifications?.onNavigate?.(intent=>performPushNavigation(intent.target,intent));
@@ -3996,9 +4002,9 @@ let questBoardSeq=0,questBoardView=null;
 function questCategoryLabel(category){
   return ({connection:'Connessione',fun:'Divertimento',adventure:'Avventura',discover:'Scoperta',memory:'Ricordo',surprise:'Sorpresa',chill:'Relax'})[category]||category||'Missione';
 }
-function questRarityLabel(rarity){
-  return ({common:'Comune',uncommon:'Non comune',rare:'Rara',epic:'Epica'})[rarity]||rarity||'';
-}
+// Missions that ask for a photo open "add a memory" (the Ricordi composer).
+const QUEST_PHOTO_KEYS=new Set(['any-week-photo','any-intentional-memory','any-old-photo','far-thought-photo','near-recreate-photo']);
+function questAsksPhoto(q){return QUEST_PHOTO_KEYS.has(String(q?.template_key||''));}
 function questRerollsLeft(state){
   return Math.max(0,QUEST_WEEKLY_REROLLS-Math.max(0,Number(state?.rerolls_used)||0));
 }
@@ -4039,37 +4045,49 @@ function renderQuestWeekHeader(summary,week,{stale=false}={}){
     <div class="quest-week-meta"><span class="quest-week-rerolls" data-quest-rerolls="${summary.rerollsLeft}">${questIcon('arrows-clockwise')}${rerollText}</span><span class="quest-week-reset">${questIcon('calendar-heart')}Nuove missioni ${escapeHtml(nextWeekLabel(week))}</span></div>
     ${stale?`<div class="quest-week-stale" role="status"><span>Non aggiornato: controlla la connessione.</span><button type="button" class="quest-week-retry" data-quest-retry>Riprova</button></div>`:''}`;
 }
-function questStatusLine(view,partnerName,xp){
-  if(view.status==='completed')return `${questIcon('check')}<span>Completata insieme · +${xp} XP assegnati</span>`;
+function questStatusLine(view,partnerName){
+  if(view.status==='completed')return `${questIcon('check')}<span>Completata insieme</span>`;
   if(view.status==='you-confirmed')return `<span>Hai confermato · aspettiamo ${escapeHtml(partnerName)}</span>`;
   if(view.status==='partner-confirmed')return `<span>${escapeHtml(partnerName)} ha confermato · manca la tua conferma</span>`;
-  return '<span>Si completa quando confermate entrambi</span>';
+  return '<span>Si completa quando confermate tutti e due</span>';
 }
 function renderBondQuest(q,ctx){
   const me=ctx.me,partner=ctx.partner;
   const view=questViewState(q,{me,partnerId:partner?.id,rerollsLeft:ctx.rerollsLeft});
-  const xp=Math.max(0,Number(q.xp)||0);
-  const partnerName=partner?.display_name||'l’altra persona';
+  const partnerName=partner?.display_name||'la tua persona';
   const confirmBusy=questActionsInFlight.has(`confirm:${q.id}`);
   const rerollBusy=questActionsInFlight.has(`reroll:${q.id}`);
-  const confirmText=confirmBusy?'Confermo…':view.completed?`Completata · +${xp} XP`:view.mine?'Confermata da te':view.partner?'Conferma anche tu':'Ho completato questa missione';
+  const confirmText=confirmBusy?'Confermo…':view.completed?'Completata':view.mine?'Confermata da te':view.partner?'Conferma anche tu':'Ho completato questa missione';
   const confirmDisabled=view.completed||view.mine||confirmBusy;
   const person=(name,done,label,own=false)=>`<li class="quest-person ${done?'checked':''}"><span class="quest-person-initial" aria-hidden="true">${escapeHtml((name||'?').slice(0,1).toUpperCase())}</span><span class="quest-person-name"${own?' translate="no"':''}>${escapeHtml(label)}</span><span class="quest-person-state">${done?`${questIcon('check')}<span class="sr-only">confermato</span>`:'in attesa'}</span></li>`;
   const lockText=view.lockReason==='confirmed'?'Già confermata: non si può più cambiare':'Cambi finiti per questa settimana';
   const reroll=view.completed?'':view.rerollable
     ?`<button type="button" class="quest-reroll" data-quest-action="reroll" ${rerollBusy?'disabled aria-busy="true"':''} onclick="rerollBondQuest('${escapeHtml(q.id)}')" aria-label="Cambia questa missione (${questCountLabel(ctx.rerollsLeft,'cambio rimasto','cambi rimasti')})">${questIcon('arrows-clockwise')}<span class="quest-reroll-label" aria-hidden="true">Cambia</span></button>`
     :`<button type="button" class="quest-reroll is-locked" data-quest-action="reroll" disabled aria-label="${lockText}" title="${lockText}">${questIcon('lock')}</button>`;
-  return `<article class="bond-quest quest-v2 rarity-${escapeHtml(q.rarity)} ${view.completed?'completed':''}" data-quest-id="${escapeHtml(q.id)}" data-quest-slot="${escapeHtml(q.slot)}" data-quest-state="${view.status}" data-quest-reroll="${view.rerollable?'rerollable':'locked'}">
-    <div class="quest-top"><span class="quest-category">${escapeHtml(questCategoryLabel(q.category))}${questRarityLabel(q.rarity)?` · ${escapeHtml(questRarityLabel(q.rarity))}`:''}</span><span class="quest-rarity quest-xp">+${xp} XP</span></div>
+  // Done together: offer to keep it as a memory. A photo mission opens the
+  // same door before, so the photo can be added right away.
+  const memory=view.completed
+    ?`<button type="button" class="quest-memory" data-quest-action="memory" onclick="addQuestMemory('${escapeHtml(q.id)}')">${questIcon('image')}<span>Salvatelo come ricordo</span></button>`
+    :questAsksPhoto(q)?`<button type="button" class="quest-memory" data-quest-action="photo" onclick="addQuestMemory('${escapeHtml(q.id)}')">${questIcon('image')}<span>Aggiungi la foto</span></button>`:'';
+  return `<article class="bond-quest quest-v2 ${view.completed?'completed':''}" data-quest-id="${escapeHtml(q.id)}" data-quest-slot="${escapeHtml(q.slot)}" data-quest-state="${view.status}" data-quest-reroll="${view.rerollable?'rerollable':'locked'}">
+    <div class="quest-top"><span class="quest-category">${escapeHtml(questCategoryLabel(q.category))}</span></div>
     <h4>${escapeHtml(q.title)}</h4>
-    <p class="quest-status">${questStatusLine(view,partnerName,xp)}</p>
+    <p class="quest-status">${questStatusLine(view,partnerName)}</p>
     <ul class="quest-confirmers" aria-label="Conferme">${person(ctx.myName,view.mine,'Tu')}${person(partnerName,view.partner,partnerName,Boolean(partner?.display_name))}</ul>
     <div class="quest-actions">
       <button type="button" class="quest-confirm ${confirmDisabled?'confirmed':''}" data-quest-action="confirm" ${confirmDisabled?'disabled':''} ${confirmBusy?'aria-busy="true"':''} onclick="confirmBondQuest('${escapeHtml(q.id)}')">${confirmText}</button>
       ${reroll}
     </div>
+    ${memory}
   </article>`;
 }
+// The existing "add a memory" door, with the mission as its suggested note.
+// The couple still picks the photo; nothing is created on their behalf.
+function addQuestMemory(id){
+  const quest=(window.usBondQuests||[]).find(q=>q.id===id);
+  if(quest)openMemoryComposer(quest.title||'');
+}
+window.addQuestMemory=addQuestMemory;
 function renderQuestRecent(weeks){
   const root=document.getElementById('questRecent');
   const list=document.getElementById('questRecentList');
@@ -4132,7 +4150,6 @@ async function hydrateBond(){
   window.usBondProfiles=profiles||[];
   window.usBondState=state||{rerolls_used:0};
   window.usBondQuests=quests||[];
-  renderNoiHubSummary();
   renderBondProgress(couple?.bond_xp||0);
   const countEl=document.getElementById('bondCompletedCount');if(countEl)countEl.textContent=`${Number(completedCount||0)} missioni completate`;
   const rerollEl=document.getElementById('bondRerollsLeft');if(rerollEl)rerollEl.textContent=questRerollsLeft(state);
@@ -4166,8 +4183,9 @@ async function confirmBondQuest(id){
   else{
     sendWebPushEvent('quest_confirmed',id).catch(()=>{});
     const awarded=Number(result.data?.xp_awarded)||0;
-    if(awarded>0){toast(`Missione completata · +${awarded} XP ♡`);window.UsFeedback?.success?.();}
-    else toast('Confermata. Ora tocca all’altra persona ♡');
+    const partnerName=questPartner(window.usBondProfiles,profile.id)?.display_name||'';
+    if(awarded>0){toast('Missione completata insieme ♡');window.UsFeedback?.success?.();}
+    else toast(partnerName?`Confermata. Ora tocca a ${partnerName} ♡`:'Confermata. Ora tocca alla tua persona ♡');
   }
   setQuestAction(key,false);
   await hydrateBond();
@@ -4265,41 +4283,11 @@ function renderNoiIdeaActiveList(){
     root.innerHTML='<div class="empty-state noi-idea-error"><div class="emoji">!</div><b>Non riesco a caricare le idee.</b><p>Riprova tra un momento.</p><button type="button" onclick="hydrateNoiIdeas()">Riprova</button></div>';
     return;
   }
-  renderNoiHubSummary();
   if(!noiIdeaState.activeItems.length){
     root.innerHTML='<div class="noi-quiet-state"><b>Niente in lista</b><span>Aggiungete la prima.</span></div>';
     return;
   }
   root.innerHTML=noiIdeaState.activeItems.map(noiIdeaCardHtml).join('');
-}
-// M9D — riepilogo delle card del hub Noi, solo da dati già caricati.
-function renderNoiHubSummary(){
-  const ideasTitle=document.getElementById('noiHubIdeasTitle');
-  const ideasMeta=document.getElementById('noiHubIdeasMeta');
-  if(ideasTitle&&ideasMeta){
-    if(noiIdeaState.loaded&&!noiIdeaState.error){
-      const count=noiIdeaState.activeItems.length;
-      const scheduled=noiIdeaState.activeItems.filter(i=>i.status==='scheduled').length;
-      ideasTitle.textContent=count?`${count} ${count===1?'idea':'idee'} da vivere`:'Nessuna idea';
-      ideasMeta.textContent=scheduled?`${scheduled} in calendario`:'';
-    }else{
-      ideasTitle.textContent='Le vostre idee';
-      ideasMeta.textContent='';
-    }
-  }
-  const questTitle=document.getElementById('noiHubQuestTitle');
-  const questMeta=document.getElementById('noiHubQuestMeta');
-  const quests=Array.isArray(window.usBondQuests)?window.usBondQuests:[];
-  if(questTitle&&questMeta){
-    if(quests.length){
-      const done=quests.filter(q=>q.completed_at).length;
-      questTitle.textContent=done===quests.length?'Tutte completate':`${done} di ${quests.length} completate`;
-      questMeta.textContent='';
-    }else{
-      questTitle.textContent='Questa settimana';
-      questMeta.textContent='';
-    }
-  }
 }
 function renderNoiIdeaLivedList(){
   const toggle=document.getElementById('noiIdeaLivedToggle');
@@ -4377,7 +4365,6 @@ function resetNoiIdeasForIdentityChange(){
   const section=document.querySelector('.noi-idea-section');
   if(section)section.hidden=true;
   closeNoiSection();
-  renderNoiHubSummary();
   closeNoiIdeaDetail();
   toggleNoiIdeaQuickForm(false);
   const save=document.getElementById('noiIdeaQuickSave');if(save)save.disabled=false;
@@ -4469,7 +4456,7 @@ function renderNoiIdeaDetailState(item){
 function openNoiIdeaDetail(id){
   const item=noiIdeaFindItem(id);
   if(!item)return;
-  openNoiSection('da-vivere');
+  openNoiSection('quest');
   noiIdeaState.selectedId=id;
   const titleEl=document.getElementById('noiIdeaDetailTitle');
   const noteEl=document.getElementById('noiIdeaDetailNote');
@@ -4487,7 +4474,11 @@ function openNoiIdeaDetail(id){
   const detail=document.getElementById('noiIdeaDetail');
   if(browse)browse.hidden=true;
   if(detail)detail.hidden=false;
-  titleEl?.focus();
+  // Inside Missioni, an open idea is the whole screen until Back.
+  const living=document.querySelector('#bond .noi-living-section');
+  if(living?.dataset)living.dataset.ideaDetail='open';
+  window.scrollTo?.({top:0,behavior:'auto'});
+  titleEl?.focus({preventScroll:true});
 }
 function closeNoiIdeaDetail(){
   noiIdeaState.selectedId=null;
@@ -4495,6 +4486,8 @@ function closeNoiIdeaDetail(){
   const detail=document.getElementById('noiIdeaDetail');
   if(detail)detail.hidden=true;
   if(browse)browse.hidden=false;
+  const living=document.querySelector('#bond .noi-living-section');
+  if(living?.dataset)delete living.dataset.ideaDetail;
 }
 async function submitNoiIdeaQuickAdd(event){
   event.preventDefault();
@@ -4716,6 +4709,12 @@ function addNoiIdeaMemory(){
   go('moments',{nav:true});
   if(typeof composer==='function')setTimeout(()=>composer({caption:item.title}),60);
 }
+// The Ricordi composer opened over Ricordi with a suggested note (missions).
+function openMemoryComposer(caption){
+  const composer=window.UsMomentComposer?.open;
+  go('moments',{nav:true});
+  if(typeof composer==='function')setTimeout(()=>composer({caption}),60);
+}
 document.getElementById('noiIdeaDetailLived')?.addEventListener('click',markNoiIdeaLived);
 document.getElementById('noiIdeaDetailMemoryAdd')?.addEventListener('click',addNoiIdeaMemory);
 document.getElementById('noiIdeaDetailSchedule')?.addEventListener('click',scheduleNoiIdea);
@@ -4723,25 +4722,24 @@ document.getElementById('noiIdeaDetailOpenCalendar')?.addEventListener('click',o
 window.openNoiIdeaDetail=openNoiIdeaDetail;
 window.closeNoiIdeaDetail=closeNoiIdeaDetail;
 
-// ===== M9D · Noi hub =====
-// Noi è un hub: quattro card aprono superfici interne della stessa pagina
-// (nessun nuovo tab). Risonanza, Da vivere e Quest riusano i blocchi M3/M7
-// già presenti; Calendario apre l'overlay esistente. Il ritorno al hub passa
-// dal layer di navigation.js ('noi-section'), quindi anche il Back di sistema.
+// ===== M9D · Noi sections =====
+// Missioni (with "Le vostre idee" inside) and Eventi open in place over the
+// Noi calendar (no new tab). The way back is navigation.js's 'noi-section'
+// layer (the section bar is visible), so the system Back works too.
 const NOI_SECTIONS=['resonance','da-vivere','quest','eventi'];
 function noiCanonicalPage(){return document.querySelector('#bond .noi-canonical-page');}
 function openNoiSection(view){
   const page=noiCanonicalPage();
   if(!page||!NOI_SECTIONS.includes(view))return;
+  // Le vostre idee (once "Da vivere") is a part of Missioni.
+  if(view==='da-vivere')view='quest';
   if(page.dataset.noiView===view)return;
   page.dataset.noiView=view;
   const bar=document.getElementById('noiSectionBar');if(bar)bar.hidden=false;
-  const hub=document.getElementById('noiHub');if(hub)hub.hidden=true;
   scrollTo({top:0,behavior:'auto'});
   if(view==='resonance'){window.hydrateResonanceHistory?.();window.USProgression?.hydrate?.({showUnlocks:true,force:true});}
-  if(view==='da-vivere'&&window.usProfile&&!noiIdeaState.loaded)hydrateNoiIdeas();
   if(view==='eventi')window.hydrateEvents?.();
-  if(view==='quest'&&window.usProfile)hydrateBond();
+  if(view==='quest'&&window.usProfile){hydrateBond();if(!noiIdeaState.loaded)hydrateNoiIdeas();}
   document.getElementById('noiSectionBack')?.focus({preventScroll:true});
 }
 function closeNoiSection(){
@@ -4749,20 +4747,15 @@ function closeNoiSection(){
   if(!page||!page.dataset.noiView||page.dataset.noiView==='hub')return;
   const from=page.dataset.noiView;
   page.dataset.noiView='hub';
-  if(from==='da-vivere'){closeNoiIdeaDetail();toggleNoiIdeaQuickForm(false);}
+  if(from==='quest'){closeNoiIdeaDetail();toggleNoiIdeaQuickForm(false);}
   const bar=document.getElementById('noiSectionBar');if(bar)bar.hidden=true;
-  const hub=document.getElementById('noiHub');if(hub)hub.hidden=false;
   if(document.getElementById('bond')?.classList.contains('active')){
     scrollTo({top:0,behavior:'auto'});
-    hub?.querySelector(`[data-noi-open="${from}"]`)?.focus({preventScroll:true});
+    document.querySelector(`#usNoiV2 [data-noi-open-link="${from}"]`)?.focus({preventScroll:true});
   }
 }
 window.openNoiSection=openNoiSection;
 window.closeNoiSection=closeNoiSection;
-document.getElementById('noiHub')?.addEventListener('click',(event)=>{
-  const card=event.target.closest('[data-noi-open]');
-  if(card)openNoiSection(card.dataset.noiOpen);
-});
 document.getElementById('noiSectionBack')?.addEventListener('click',closeNoiSection);
 document.getElementById('noiIdeaAddToggle')?.addEventListener('click',()=>{
   toggleNoiIdeaQuickForm(Boolean(document.getElementById('noiIdeaQuickForm')?.hidden));

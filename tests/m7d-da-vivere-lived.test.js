@@ -54,7 +54,9 @@ test('M7D runtime: A proposes and waits, B confirms, only then lived with the Ca
   window.window = window;
   const toasts = [];
   const sb = { from: () => builder(), rpc: (name, args) => { calls.push([name, args]); return Promise.resolve(responses.shift()); } };
-  const context = { window, document: { getElementById: el, querySelector: () => ({ hidden: false, dataset: {} }) }, sb, toast: (m) => toasts.push(m), escapeHtml: (s) => String(s), console, setTimeout: () => 0, scrollTo() {}, go() {} };
+  const context = { window, document: { getElementById: el, querySelector: () => ({ hidden: false, dataset: {} }) }, sb, toast: (m) => toasts.push(m), escapeHtml: (s) => String(s), console, setTimeout: () => 0, scrollTo() {}, go() {},
+    // US 1.0 (N9): an idea opens inside Missioni, which also loads the weekly missions.
+    hydrateBond() {} };
   vm.createContext(context);
   require('./helpers/identity-fixture').install(context);
   vm.runInContext(block(), context);

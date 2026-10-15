@@ -72,11 +72,11 @@ test('M6D (5): triple no-duplicate guard — unique constraint, event-log dedupe
 });
 
 // (6) delete cascades; M9C: saving through the quick form never deletes or rewrites reminders.
+// US 1.0 (N8): reminders are hidden until 1.1, so the Calendar UI does not even read them.
 test('M6D (6): entry delete cascades to reminders; the quick form never deletes or re-syncs them', () => {
   assert.match(migration(), /entry_id uuid not null references public\.calendar_entries\(id\) on delete cascade/);
   assert.doesNotMatch(js(), /syncEntryReminders/);
-  assert.doesNotMatch(js(), /\.from\('calendar_reminders'\)\.(delete|insert|update|upsert)\(/, 'the Calendar UI only reads reminders now');
-  assert.match(js(), /\.from\('calendar_reminders'\)\.select\('id,entry_id,recipient_id,offset_minutes,requested_by,sent_at'\)/, 'existing reminders are still read for the detail sheet');
+  assert.doesNotMatch(js(), /\.from\('calendar_reminders'\)/, 'the Calendar UI does not touch reminders in 1.0');
   // M7C: a create from Da vivere is forced shared; every other create keeps calendarKind.
   assert.match(js(), /const kind = ideaLink \? 'shared' : calendarKind;/);
   assert.match(js(), /const result = await sb\.from\('calendar_entries'\)\.insert\(withCreateAuthority\(payload, kind, window\.usProfile\)\)\.select\('id'\);/);
@@ -103,13 +103,10 @@ test('M6D (8): all-day reminders derive from start_date (the M6A all-day rule)',
   assert.doesNotMatch(allDayBranch, /starts_at/);
 });
 
-// (9) regressione Calendar: il resto non è toccato.
-test('M6D (9): Calendar regression — detail shows existing reminders always', () => {
-  assert.match(html(), /id="usCalendarDetailReminders"/);
-  assert.match(js(), /renderDetailReminders\(entry\);/);
-  assert.match(js(), /if \(!rows\.length\) \{ container\.innerHTML = ''; return; \}/, 'empty is fine, hidden is not');
-  assert.match(js(), /profileName\(r\.requested_by\)/, 'the recipient always sees who set the reminder');
-  assert.match(css(), /\.us-cal-detail-reminder\{/);
+// (9) US 1.0 (N8): "Ricordamelo" is hidden until 1.1; the server side is untouched.
+test('M6D (9): Calendar regression — the entry detail has no reminders in 1.0; the worker config stays', () => {
+  assert.doesNotMatch(html(), /id="usCalendarDetailReminders"|Ricordamelo/);
+  assert.doesNotMatch(js(), /renderDetailReminders|Ricordamelo/);
   assert.match(config(), /\[functions\.calendar-reminders-worker\]/);
   assert.match(config(), /verify_jwt = false/);
 });
