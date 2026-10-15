@@ -1,0 +1,14 @@
+{
+  "Stile": "Style",
+  "Scelto": "Chosen",
+  "Incluso": "Included",
+  "Dai un nome al countdown.": "Give the countdown a name.",
+  "Scegli la data.": "Choose the date.",
+  "Scegli data e ora.": "Choose the date and time.",
+  "Salvato e in Oggi": "Saved and on Today",
+  "Countdown eliminato": "Countdown deleted",
+  "Nessun countdown in Oggi": "No countdown on Today",
+  "Il titolo segue la data della relazione. Qui scegli solo lo stile.": "The title follows your relationship date. Here you only choose the style.",
+  "Prossimo impegno: {day} alle {time}, {title}. Apri Noi": "Next plan: {day} at {time}, {title}. Open Us",
+  "Prossimo impegno: {day}, {title}. Apri Noi": "Next plan: {day}, {title}. Open Us"
+}

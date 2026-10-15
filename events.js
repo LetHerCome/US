@@ -219,6 +219,9 @@ async function getTodayEventPrioritySource({fresh=false}={}){
   await load;
   return upcomingRows().find(row=>row.days_left>=0&&row.days_left<=2)||null;
 }
+// Oggi's "Prossimo impegno" pill follows a save, a delete or a "Fatto" at once,
+// from the rows just read (no second read).
+function refreshOggiNextFromEvents(){if(loadedAt)window.UsOggiNext?.refresh?.({event:upcomingRows().find(row=>row.days_left>=0&&row.days_left<=2)||null});}
 function showBrowse(){const back=$('usEventForm')&&!$('usEventForm').hidden;$('usEventsBrowse').hidden=false;$('usEventForm').hidden=true;editingId=null;editingOccurrenceDate=null;setHead('Noi due','I nostri eventi');if(back){scrollSheetTop();stepIn($('usEventsBrowse'),-1);}}
 // The form shows one event's detail (mode "detail") or its fields (mode "edit").
 function setFormMode(mode){const form=$('usEventForm');if(form?.dataset)form.dataset.mode=mode;const edit=$('usEventEditBtn');if(edit)edit.hidden=mode!=='detail';}
@@ -266,18 +269,18 @@ function cancelEventEdit(){resetForm();showBrowse();if(editorReturn)closeEditorT
 async function completeEvent(){
   if(!editingId||!editingOccurrenceDate||busy||!window.usProfile)return;if(!navigator.onLine)return toast('Sei offline. Riprova quando torni online.');
   busy=true;const btn=$('usEventCompleteBtn');btn.disabled=true;btn.textContent='Segno…';
-  try{const {data,error}=await sb.rpc('complete_shared_event',{target_event_id:editingId,target_occurrence_date:editingOccurrenceDate});if(error)throw error;await hydrateEvents();await window.hydrateBondSummary?.();cancelEventEdit();const xp=Math.max(0,Number(data?.xp_awarded)||0);if(data?.already_completed)toast('Già completato');
+  try{const {data,error}=await sb.rpc('complete_shared_event',{target_event_id:editingId,target_occurrence_date:editingOccurrenceDate});if(error)throw error;await hydrateEvents();refreshOggiNextFromEvents();await window.hydrateBondSummary?.();cancelEventEdit();const xp=Math.max(0,Number(data?.xp_awarded)||0);if(data?.already_completed)toast('Già completato');
 else if(!xp)toast(NO_XP_COPY[data?.xp_reason]||'Evento vissuto ♡');
 else toast('Evento vissuto ♡');}catch(error){console.warn('[US Events] complete',error);$('usEventStatus').textContent='Non riesco a completarlo. Controlla la data e riprova.';}finally{busy=false;btn.disabled=false;}
 }
 async function saveEvent(event){
   event.preventDefault();if(busy||!window.usProfile)return;if(!navigator.onLine)return toast('Sei offline. Riprova quando torni online.');const title=$('usEventTitleInput').value.trim(),date=$('usEventDateInput').value;if(!title||!date)return;
   const payload={title,event_date:date,event_time:$('usEventTimeInput').value||null,location:$('usEventLocationInput').value.trim()||null,note:$('usEventNoteInput').value.trim()||null,recurs_yearly:$('usEventRecurringInput').checked};busy=true;const saveBtn=$('usEventSaveBtn');saveBtn.disabled=true;$('usEventStatus').textContent='Salvo…';
-  try{let result;if(editingId)result=await sb.from('shared_events').update(payload).eq('id',editingId);else result=await sb.from('shared_events').insert({...payload,couple_id:window.usProfile.couple_id,created_by:window.usProfile.id});if(result.error)throw result.error;const wasEditing=Boolean(editingId);await hydrateEvents();cancelEventEdit();toast(wasEditing?'Evento aggiornato':'Evento aggiunto');}catch(error){console.warn('[US Events] save',error);$('usEventStatus').textContent='Non riesco a salvarlo. Riprova.';}finally{busy=false;saveBtn.disabled=false;}
+  try{let result;if(editingId)result=await sb.from('shared_events').update(payload).eq('id',editingId);else result=await sb.from('shared_events').insert({...payload,couple_id:window.usProfile.couple_id,created_by:window.usProfile.id});if(result.error)throw result.error;const wasEditing=Boolean(editingId);await hydrateEvents();refreshOggiNextFromEvents();cancelEventEdit();toast(wasEditing?'Evento aggiornato':'Evento aggiunto');}catch(error){console.warn('[US Events] save',error);$('usEventStatus').textContent='Non riesco a salvarlo. Riprova.';}finally{busy=false;saveBtn.disabled=false;}
 }
 async function deleteEvent(){
   if(!editingId||busy||!window.usProfile)return;if(completions.some(c=>c.event_id===editingId))return toast('Un evento completato resta nello storico');if(!(await usConfirm({kicker:'I NOSTRI EVENTI',title:'Eliminare questo evento?',body:'Sparirà per entrambi.',confirmLabel:'Elimina',tone:'danger'})))return;if(!navigator.onLine)return toast('Sei offline. Riprova quando torni online.');busy=true;const btn=$('usEventDeleteBtn');btn.disabled=true;$('usEventStatus').textContent='Elimino…';
-  try{const {error}=await sb.from('shared_events').delete().eq('id',editingId);if(error)throw error;await hydrateEvents();cancelEventEdit();toast('Evento eliminato');}catch(error){console.warn('[US Events] delete',error);$('usEventStatus').textContent='Non riesco a eliminarlo. Riprova.';}finally{busy=false;btn.disabled=false;}
+  try{const {error}=await sb.from('shared_events').delete().eq('id',editingId);if(error)throw error;await hydrateEvents();refreshOggiNextFromEvents();cancelEventEdit();toast('Evento eliminato');}catch(error){console.warn('[US Events] delete',error);$('usEventStatus').textContent='Non riesco a eliminarlo. Riprova.';}finally{busy=false;btn.disabled=false;}
 }
 async function openEvents(){const overlay=$('usEventsOverlay');if(!overlay)return;window.UsUiFoundation?.cancelSurfaceExit?.(overlay);overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');document.body.classList.add('us-events-open');showBrowse();if(!window.usProfile){$('usEventsList').innerHTML='<div class="us-events-empty">Un attimo…</div>';return;}await hydrateEvents();}
 function closeEvents(){if(busy)return;const overlay=$('usEventsOverlay');if(!overlay)return;const finalize=()=>{const fromSurface=editorReturn==='surface';editorReturn=null;if(fromSurface)afterHistorySettles(restoreSurface);overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');document.body.classList.remove('us-events-open');resetForm();showBrowse();};if(window.UsUiFoundation?.exitSurface)window.UsUiFoundation.exitSurface(overlay,finalize);else finalize();}
