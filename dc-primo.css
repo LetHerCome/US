@@ -34,6 +34,11 @@ html.us-onboarding-active .auth-overlay{
 }
 html.us-onboarding-active .auth-overlay{display:block!important}
 .auth-overlay.hidden{display:none}
+/* A password sign-in in progress (app.js loginAccount): the sign-in stays on
+   screen while the account is checked, then the next step takes its place as
+   in the design, never an empty screen in between. */
+html.us-auth-pending.us-auth-signing-in .auth-overlay:not(.hidden),
+html.us-returning-device.us-auth-signing-in .auth-overlay:not(.hidden){display:block!important}
 
 /* .auth{padding:28px 22px 26px}: brand, body in the middle, foot at the bottom. */
 html .auth-overlay .auth-card,
@@ -107,8 +112,9 @@ html .auth-overlay .auth-step>.tiny,
   width:calc(var(--us-progress,0) * 100%);
   border-radius:inherit;
   background:var(--us-tu);
-  /* It moves once the old step has left (180 ms), .6s e-out as in the design. */
-  transition:width .6s cubic-bezier(.2,.8,.2,1) .18s,background-color .4s .18s;
+  /* .6s e-out as in the design, once the old step has gone (onboarding.js
+     sets the wait: 0 when the step is drawn after it, 180 ms under a copy). */
+  transition:width .6s cubic-bezier(.2,.8,.2,1) var(--us-ob-delay,0ms),background-color .4s var(--us-ob-delay,0ms);
 }
 
 /* .a-body: gap 14, padding 20 (14 on the numbered steps), centred between the
@@ -237,9 +243,17 @@ html .auth-overlay #usVerifyBack,
 }
 /* onboarding.css gives every #usOnboarding button 44px: the design's primary is 52. */
 html .auth-overlay #usOnboarding :is(.us-auth-primary,#mc3Retry){min-height:52px}
+/* The design's disabled button: .45, no other change (fix4.css dims every
+   disabled button to .58 and desaturates it, both !important). */
 html .auth-overlay :is(.us-auth-primary,#mc3ShareCode,#mc3CopyCode,#mc3Retry,#usVerifyResend):disabled,
 .us-setup .us-auth-primary:disabled,
-.us-setup .us-setup-secondary:disabled{opacity:.45}
+.us-setup .us-setup-secondary:disabled{opacity:.45!important;filter:none}
+/* A link never dims (the design's .link): while something works it is only out of reach. */
+html .auth-overlay :is(.us-auth-link,.mc3-back,.us-ob-link):disabled,
+.us-setup .us-auth-link:disabled{opacity:1!important;filter:none}
+/* busy(): only the pressed button dims and says what is happening; the rest
+   waits without changing (it is disabled all the same). */
+html .auth-overlay #usOnboarding[data-us-busy] :is(button,input,select,textarea):disabled:not([data-us-busy]){opacity:1!important;filter:none}
 html .auth-overlay #mc3BackCreate,
 html .auth-overlay #mc3BackJoin,
 html .auth-overlay #mc3CopyCode,
@@ -433,9 +447,15 @@ html .auth-overlay .us-auth-install-help{
   font:400 13px/1.45 var(--us-font-ui);
 }
 
-/* Focus rings: 2px orchidea, 3px out (the mockup's). */
+/* Focus rings: 2px orchidea, 3px out (the mockup's). The legacy rings
+   (identity.css pink outline, fix4.css halo, both !important) stay out. */
 html .auth-overlay button:focus-visible,
 .us-setup button:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
+html .auth-overlay :is(button,input,textarea,select):focus-visible,
+.us-setup :is(button,input,textarea,select):focus-visible,
+.us-app-lock button:focus-visible{outline:2px solid var(--us-noi)!important;outline-offset:3px;box-shadow:none!important}
+/* A tap shows only the press, never the phone's own highlight (the mockup's button rule). */
+.auth-overlay,.us-setup,.us-app-lock{-webkit-tap-highlight-color:transparent}
 
 /* ---------- The tour: three cards (.auth.is-tour) ---------- */
 html .auth-overlay.us-tour-active .auth-step{display:none!important}
@@ -623,10 +643,14 @@ html .auth-overlay #usOnboarding .us-ob-pick-card+.us-ob-pick-card{margin-top:-4
 html .auth-overlay #usOnboarding #mc3ChooseCreate{margin-top:0}
 .us-ob-pick-card .us-duo-mark{width:58px;height:36px}
 .us-ob-pick-icon{display:grid;place-items:center;width:58px;height:36px;flex:none}
+/* The mockup's key is its own stroke drawing (ring low left, stem up to the
+   right), not a Phosphor glyph: the Phosphor key, file unchanged, is mirrored
+   across its diagonal so it lies the same way (ring low left, teeth below). */
 .us-ob-pick-icon::before{
   content:"";
   width:28px;
   height:28px;
+  transform:matrix(0,1,1,0,0,0);
   background:var(--us-partner);
   -webkit-mask:url("/assets/icons/phosphor/key-regular.svg") center/contain no-repeat;
   mask:url("/assets/icons/phosphor/key-regular.svg") center/contain no-repeat;
@@ -1006,7 +1030,7 @@ html.us-app-lock-leaving .us-app-lock{background:var(--us-color-bg)}
   -webkit-mask:url("/assets/icons/phosphor/fingerprint-regular.svg") center/contain no-repeat;
   mask:url("/assets/icons/phosphor/fingerprint-regular.svg") center/contain no-repeat;
 }
-.us-app-lock .us-app-lock-primary:disabled{opacity:.45}
+.us-app-lock .us-app-lock-primary:disabled{opacity:.45!important;filter:none}
 .us-app-lock .us-app-lock-secondary{
   justify-self:center;
   min-height:44px;

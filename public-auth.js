@@ -194,18 +194,40 @@
       const url = legalUrl(LEGAL_URLS[link.dataset.usLegal]);
       if (url) { link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer'; }
     }
+    // While it works the button says what is happening (the design's busy()):
+    // its own words come back after.
+    const BUSY = { usSignupSubmit: 'Registrazione…', usVerifyResend: 'Invio…', usForgotSubmit: 'Invio…', usRecoverySubmit: 'Aggiorno…' };
+    const SUBMIT = { signup: 'usSignupSubmit', verify: 'usVerifyResend', forgot: 'usForgotSubmit', 'new-password': 'usRecoverySubmit' };
+    const labels = {};
+    for (const id of Object.keys(BUSY)) labels[id] = node(id)?.textContent || '';
+    let busyId = '', saying = false;
     const ctrl = createController({ auth, onChange(s) {
+      // The button of the step where the work started says it while on screen;
+      // when the work opens another step it has its words back first (busy()
+      // ends before show() in the design), so the step leaves as it was.
+      busyId = s.pending ? busyId || SUBMIT[s.mode] || '' : '';
+      const here = busyId && SUBMIT[s.mode] === busyId ? busyId : '';
+      for (const id of Object.keys(BUSY)) {
+        const button = node(id);
+        if (!button) continue;
+        button.disabled = (s.pending && !(busyId === id && here !== id)) || (id === 'usSignupSubmit' && !accepted());
+        const label = here === id ? BUSY[id] : labels[id];
+        if (label && button.textContent !== label) button.textContent = label;
+      }
+      const say = here === 'usSignupSubmit' && !s.message;
       if (s.mode !== 'login') openStep(ids[s.mode]);
+      // Signing up says it on the status line as well (design), until the next step.
+      const signupStatus = node(statuses.signup);
+      if (signupStatus && saying && !say && s.mode !== 'signup') signupStatus.textContent = '';
+      saying = say;
       const status = node(statuses[s.mode]);
       if (status) {
-        const again = status.textContent !== s.message || status.dataset.kind !== s.kind;
-        status.textContent = s.message;
+        const text = s.message || (say ? 'Registrazione…' : '');
+        const again = status.textContent !== text || status.dataset.kind !== s.kind;
+        status.textContent = text;
         status.dataset.kind = s.kind;
         // A wrong answer shakes the line, as in the design (260 ms).
         if (again && s.message && s.kind === 'error') globalThis.UsOnboarding?.shake?.(status);
-      }
-      for (const id of ['usSignupSubmit','usVerifyResend','usForgotSubmit','usRecoverySubmit']) {
-        if (node(id)) node(id).disabled = s.pending || (id === 'usSignupSubmit' && !accepted());
       }
     } });
     const syncSignup = () => { if (node('usSignupSubmit')) node('usSignupSubmit').disabled = ctrl.state.pending || !accepted(); };

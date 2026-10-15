@@ -355,23 +355,28 @@
   const isShown=el=>Boolean(el&&el.isConnected&&el.getClientRects().length);
   // A still copy of what is on screen: computed styles written in, ids moved
   // to data-us-gid (nothing can find it), inert and hidden from screen readers.
+  // Only what is painted is copied: a hidden part is dropped and the inside of
+  // a select or an svg keeps its classes, so the copy costs a few ms on a
+  // phone instead of a frame or more (the step holds every hidden form too).
   function stillCopy(src,{root=false}={}){
     const copy=src.cloneNode(true);
-    const from=[src,...src.querySelectorAll('*')],to=[copy,...copy.querySelectorAll('*')];
-    from.forEach((el,i)=>{
-      const out=to[i];
-      if(out.id){out.dataset.usGid=out.id;out.removeAttribute('id');}
-      if(out.hasAttribute?.('for'))out.removeAttribute('for');
-      if(out.hasAttribute?.('name'))out.removeAttribute('name');
-      if(!(el instanceof HTMLElement))return;
+    const freeze=(el,out,top)=>{
       const cs=getComputedStyle(el);
+      if(!top&&cs.display==='none'){out.remove();return;}
       for(const prop of FREEZE){
-        if(i===0&&root&&['opacity','transform','translate','position','top','left','right','bottom'].includes(prop))continue;
+        if(top&&root&&['opacity','transform','translate','position','top','left','right','bottom'].includes(prop))continue;
         const value=cs.getPropertyValue(prop);if(value)out.style.setProperty(prop,value,'important');
       }
       // Fields keep what was typed (cloneNode keeps values; selects need help).
-      if(el instanceof HTMLSelectElement)out.selectedIndex=el.selectedIndex;
-    });
+      if(el instanceof HTMLSelectElement){out.selectedIndex=el.selectedIndex;return;}
+      const kids=[...el.children],copies=[...out.children];
+      kids.forEach((kid,i)=>{if(kid instanceof HTMLElement)freeze(kid,copies[i],false);});
+    };
+    freeze(src,copy,true);
+    for(const out of [copy,...copy.querySelectorAll('[id],[for],[name]')]){
+      if(out.id){out.dataset.usGid=out.id;out.removeAttribute('id');}
+      out.removeAttribute('for');out.removeAttribute('name');
+    }
     copy.inert=true;copy.setAttribute('aria-hidden','true');
     return copy;
   }
@@ -385,18 +390,23 @@
     s.setProperty('margin','0','important');s.setProperty('pointer-events','none','important');
     host.append(copy);
     // Scrolled things (the tour track) stay where they were.
-    const from=[src,...src.querySelectorAll('*')],to=[copy,...copy.querySelectorAll('*')];
-    from.forEach((el,i)=>{if(el.scrollLeft||el.scrollTop){to[i].scrollLeft=el.scrollLeft;to[i].scrollTop=el.scrollTop;}});
+    const track=src.querySelector('.us-tour-track');
+    if(track?.scrollLeft){const still=copy.querySelector('.us-tour-track');if(still)still.scrollLeft=track.scrollLeft;}
     return copy;
   }
   let swapPending=null,revealedAt=-1e9;
+  // Set by the onboarding while a paired step is kept on screen (mount: keeping).
+  let releaseKept=null;
   // Starts a change of screen: the copy of `from` leaves, the header holds.
-  function beginSwap({from,host,dir=1,header=[]}={}){
+  // `hold`: the copy stays still until swap.go() (the next screen is not ready yet).
+  function beginSwap({from,host,dir=1,header=[],hold=false}={}){
     if(swapPending)return swapPending;
     const swap={dir,after:0,first:false,gone:[]};
     if(reducedMotion()||!from||!isShown(from)||performance.now()-revealedAt<120){
       // Nothing on screen yet (or the door is just opening): the new screen arrives as the first one.
-      if(!reducedMotion()&&from&&performance.now()-revealedAt<120){swap.first=true;stopEnter(from);}
+      // As in the design, the first screen comes from the right, timed from the door
+      // (a screen drawn a few ms after the door starts that far into its entrance).
+      if(!reducedMotion()&&from&&performance.now()-revealedAt<120){swap.first=true;swap.dir=1;swap.door=revealedAt;stopEnter(from);}
       swapPending=swap;return swap;
     }
     host=host||from.parentElement;
@@ -406,24 +416,45 @@
     copy.classList.remove('active');copy.classList.add('us-step-ghost');
     placeCopy(from,host,copy);swap.gone.push(copy);
     held.forEach(el=>{const still=stillCopy(el);placeCopy(el,host,still);still.style.setProperty('z-index','4','important');swap.gone.push(still);});
-    const out=animate(copy,[{opacity:1,translate:'0 0'},{opacity:0,translate:`${-dir*24}px 0`}],{duration:LEAVE_MS,easing:EASE_IN,fill:'forwards'});
     const drop=()=>swap.gone.forEach(el=>el.remove());
-    if(out)out.finished.then(drop,drop);else drop();
-    setTimeout(drop,LEAVE_MS+120);
+    swap.drop=drop;
+    swap.go=()=>{
+      swap.go=null;
+      const out=animate(copy,[{opacity:1,translate:'0 0'},{opacity:0,translate:`${-dir*24}px 0`}],{duration:LEAVE_MS,easing:EASE_IN,fill:'forwards'});
+      if(out)out.finished.then(drop,drop);else drop();
+      setTimeout(drop,LEAVE_MS+120);
+    };
     swap.after=LEAVE_MS;
+    if(hold)return swap;
+    swap.go();
     swapPending=swap;setTimeout(()=>{if(swapPending===swap)swapPending=null;},LEAVE_MS);
     return swap;
   }
   function stopEnter(el){try{el.getAnimations({subtree:true}).forEach(a=>{if(a.effect?.getTiming?.().fill==='backwards')a.cancel();});}catch(_e){}}
   // What arrives, in the order it is seen: forms join the column, a pair of
   // buttons or a split card moves as one block (data-us-enter="with-prev").
+  // The children of a display:contents wrapper are items of the column itself:
+  // they take their place by their own `order` (the cards of "Il vostro US"
+  // come after the title, "Indietro" last). A "flat" block is entered at its
+  // own place, its children in turn. An empty status line counts as a block,
+  // as in the design (data-us-enter="skip" where the design has none).
   function enterItems(container){
     const out=[];
     const walk=parent=>{
-      const kids=[...parent.children].filter(el=>!el.hidden&&!el.matches(HEADER)&&!el.classList.contains('us-sr-only')&&!el.classList.contains('us-step-ghost'));
-      kids.map((el,i)=>({el,i,order:Number(getComputedStyle(el).order)||0})).sort((a,b)=>a.order-b.order||a.i-b.i).forEach(({el})=>{
-        const cs=getComputedStyle(el);
-        if(cs.display==='contents'||el.dataset.usEnter==='flat'){walk(el);return;}
+      const items=[];
+      const lift=box=>{
+        for(const el of box.children){
+          if(el.hidden||el.matches(HEADER)||el.classList.contains('us-sr-only')||el.classList.contains('us-step-ghost')||el.dataset.usEnter==='skip')continue;
+          const cs=getComputedStyle(el);
+          if(cs.display==='contents'){lift(el);continue;}
+          items.push({el,cs,i:items.length,order:Number(cs.order)||0});
+        }
+      };
+      lift(parent);
+      // `order` moves things only in a flex or grid box.
+      if(/flex|grid/.test(getComputedStyle(parent).display))items.sort((a,b)=>a.order-b.order||a.i-b.i);
+      items.forEach(({el,cs})=>{
+        if(el.dataset.usEnter==='flat'){walk(el);return;}
         if(cs.position==='absolute'&&!el.classList.contains('auth-status'))return;
         if(cs.display==='none'&&!el.classList.contains('auth-status'))return;
         out.push(el);
@@ -436,19 +467,25 @@
   function arriveSwap(container,{extra=[],header=[],swap=swapPending}={}){
     swapPending=null;
     if(!container||!swap||reducedMotion())return swap?.after||0;
+    // A first screen drawn some ms after its door starts that far into its entrance.
+    if(swap.first&&swap.door!=null){swap.late=Math.max(0,Math.round(performance.now()-swap.door));swap.after=-swap.late;}
     const items=[...enterItems(container),...extra.filter(isShown)];
     let n=-1;
     items.forEach(el=>{
-      if(!(el.dataset.usEnter==='with-prev'&&n>=0))n++;
+      // What does not slide takes no turn either (the design leaves .no-st out of the count).
       if(el.classList.contains('us-ob-venn')||el.dataset.usEnter==='still'){
-        if(swap.after)animate(el,[{opacity:0},{opacity:0}],{duration:swap.after,fill:'none'});
+        if(swap.after>0)animate(el,[{opacity:0},{opacity:0}],{duration:swap.after,fill:'none'});
         return;
       }
+      if(!(el.dataset.usEnter==='with-prev'&&n>=0))n++;
       const delay=swap.after+(swap.first?260+n*40:n*30);
-      animate(el,[{opacity:0,translate:`${swap.dir*24}px 0`},{opacity:1,translate:'0 0'}],{duration:380,delay,easing:EASE.out,fill:'backwards'});
+      const run=animate(el,[{opacity:0,translate:`${swap.dir*24}px 0`},{opacity:1,translate:'0 0'}],{duration:380,delay:Math.max(0,delay),easing:EASE.out,fill:'backwards'});
+      // Late (the door opened before the screen was ready): start where the design already is.
+      if(run&&delay<0)run.currentTime=-delay;
     });
     const heads=[...header,...container.querySelectorAll(':scope>'+HEADER.split(',').join(',:scope>'))].filter(isShown);
-    if(swap.after)heads.forEach(el=>animate(el,[{opacity:0},{opacity:0}],{duration:swap.after,fill:'none'}));
+    if(swap.after>0)heads.forEach(el=>animate(el,[{opacity:0},{opacity:0}],{duration:swap.after,fill:'none'}));
+    // (Negative for a late first screen: what follows it is timed from the door as well.)
     return swap.after;
   }
   // The door opens: a circle from the middle, 620 ms.
@@ -473,7 +510,7 @@
     const target=document.getElementById(id);
     if(!target)return null;
     const firstTime=overlay.dataset.usShown!=='1';
-    if(firstTime){overlay.dataset.usShown='1';revealDoor(overlay);swapPending=null;const swap={dir:1,after:0,first:true,gone:[]};swapPending=swap;return swap;}
+    if(firstTime){overlay.dataset.usShown='1';revealDoor(overlay);swapPending=null;const swap={dir:1,after:0,first:true,gone:[],door:revealedAt};swapPending=swap;return swap;}
     if(from===target&&!swapPending)return null;
     const dir=(SCREEN_ORDER[id]??1)<(SCREEN_ORDER[fromKey]??0)?-1:1;
     return beginSwap({from,host:overlay.querySelector('.auth-card'),dir});
@@ -514,30 +551,38 @@
     host.append(legend);
   }
   // The colour fills the screen, then shrinks into your circle (or theirs, when they arrive).
-  function playColour(overlay,host){
+  // `wait`: it starts with the new step (after the old one has gone), as colorOn() in the design.
+  function playColour(overlay,host,wait=0){
     if(!overlay||!host||reducedMotion())return;
     const kind=host.dataset.kind,q=selector=>host.querySelector(selector);
     const target=q(kind==='joined'?'.ov-partner':'.ov-me');
     const rect=target?.getBoundingClientRect();
     if(!rect?.width)return;
-    const cx=Math.round(rect.left+rect.width/2),cy=Math.round(rect.top+rect.height/2),at=`at ${cx}px ${cy}px`;
-    const big=Math.ceil(Math.hypot(Math.max(cx,window.innerWidth-cx),Math.max(cy,window.innerHeight-cy)));
     const flood=document.createElement('span');
     flood.className='us-ob-flood';flood.setAttribute('aria-hidden','true');
     flood.style.background=kind==='joined'?'var(--us-partner)':'var(--us-tu)';
     overlay.append(flood);
+    // The circle is drawn in the flood's own box (the phone screen, also when
+    // the app sits in a phone-sized stage on a computer), as the design measures
+    // from its .auth.
+    const box=flood.getBoundingClientRect();
+    const W=box.width||window.innerWidth,H=box.height||window.innerHeight;
+    const cx=Math.round(rect.left+rect.width/2-box.left),cy=Math.round(rect.top+rect.height/2-box.top),at=`at ${cx}px ${cy}px`;
+    const big=Math.ceil(Math.hypot(W,H));
     const drop=()=>flood.remove();
-    const wave=animate(flood,[{clipPath:`circle(0px ${at})`},{clipPath:`circle(${big}px ${at})`,offset:.45},{clipPath:`circle(${Math.round(rect.width/2)}px ${at})`}],{duration:1150,easing:EASE.io,fill:'forwards'});
+    const wave=animate(flood,[{clipPath:`circle(0px ${at})`},{clipPath:`circle(${big}px ${at})`,offset:.45},{clipPath:`circle(${Math.round(rect.width/2)}px ${at})`}],{duration:1150,delay:wait,easing:EASE.io,fill:'both'});
     if(wave)wave.finished.then(drop,drop);else drop();
-    if(kind==='wait')animate(q('.ov-wait'),[{opacity:0,transform:'scale(.85)'},{opacity:1,transform:'none'}],{duration:520,delay:1050,easing:EASE.out});
-    if(kind==='join'){const partner=q('.ov-partner');animate(partner,[{opacity:0,transform:`translateX(${partner?.classList.contains('ov-a')?-36:36}px)`},{opacity:1,transform:'none'}],{duration:620,delay:950,easing:EASE.io});}
+    // The design's light tap (14 ms) when the colour has filled the screen.
+    setTimeout(()=>{if(flood.isConnected)window.UsFeedback?.landing?.();},wait+500);
+    if(kind==='wait')animate(q('.ov-wait'),[{opacity:0,transform:'scale(.85)'},{opacity:1,transform:'none'}],{duration:520,delay:wait+1050,easing:EASE.out});
+    if(kind==='join'){const partner=q('.ov-partner');animate(partner,[{opacity:0,transform:`translateX(${partner?.classList.contains('ov-a')?-36:36}px)`},{opacity:1,transform:'none'}],{duration:620,delay:wait+950,easing:EASE.io});}
     if(kind==='joined'){
-      animate(q('.ov-partner'),[{opacity:0},{opacity:0,offset:.99},{opacity:1}],{duration:520});
-      animate(q('.ov-wait'),[{opacity:1},{opacity:1,offset:.99},{opacity:0}],{duration:520});
+      animate(q('.ov-partner'),[{opacity:0},{opacity:0,offset:.99},{opacity:1}],{duration:520,delay:wait});
+      animate(q('.ov-wait'),[{opacity:1},{opacity:1,offset:.99},{opacity:0}],{duration:520,delay:wait});
     }
     if(kind!=='wait'){
-      animate(q('.ov-n'),[{opacity:0,transform:'scale(.4)'},{opacity:1,transform:'scale(1.1)',offset:.6},{opacity:1,transform:'none'}],{duration:560,delay:kind==='join'?1500:1250,easing:EASE.out});
-      animate(q('.ov-halo'),[{opacity:.8,transform:'scale(.9)'},{opacity:0,transform:'scale(1.7)'}],{duration:820,delay:kind==='join'?1560:1310,easing:EASE.out,fill:'forwards'});
+      animate(q('.ov-n'),[{opacity:0,transform:'scale(.4)'},{opacity:1,transform:'scale(1.1)',offset:.6},{opacity:1,transform:'none'}],{duration:560,delay:wait+(kind==='join'?1500:1250),easing:EASE.out});
+      animate(q('.ov-halo'),[{opacity:.8,transform:'scale(.9)'},{opacity:0,transform:'scale(1.7)'}],{duration:820,delay:wait+(kind==='join'?1560:1310),easing:EASE.out,fill:'forwards'});
     }
   }
 
@@ -663,6 +708,8 @@
       runs=reducedMotion()?[]:slides.map((slide,i)=>{const list=tourAnimations(i,slide);list.forEach(run=>run.pause());return list;});
       select(0);
       arriveSwap(root,{swap});
+      // The first card's drawing is timed from the door too.
+      if(swap?.late)(runs[0]||[]).forEach(run=>{try{run.currentTime=swap.late;}catch(_e){}});
       window.dispatchEvent(new CustomEvent('us-onboarding-view-change'));
       return true;
     }
@@ -848,15 +895,30 @@
       // Same screen engine as the sign-in: the old step leaves, the new one comes in.
       let swap;
       if(prevStep&&prevStep!==step&&!overlay.classList.contains('is-pending'))swap=beginSwap({from:body,host:card,dir:(SCREEN_ORDER[step]??12)<(SCREEN_ORDER[prevStep]??12)?-1:1,header:head()});
-      else if(openSwap){swap={dir:1,first:false,gone:[],after:Math.max(0,Math.round(LEAVE_MS-(performance.now()-openSwap.t0)))};swapPending=swap;}
-      else{revealDoor(overlay);swap={dir:1,first:true,gone:[],after:0};swapPending=swap;}
+      else if(openSwap){openSwap.swap.go?.();swap={dir:1,first:false,gone:[],after:LEAVE_MS};swapPending=swap;}
+      else{revealDoor(overlay);swap={dir:1,first:true,gone:[],after:0,door:revealedAt};swapPending=swap;}
+      if(!prevStep){
+        // The first step: the bar is there already (where the step that left had
+        // it, or at its place when there was none), as the design's .a-prog.
+        const bar=$('usSetupProgress'),fill=bar.firstElementChild,was=openSwap?.bar;
+        if(fill){
+          fill.style.transition='none';
+          bar.style.setProperty('--us-progress',was?was.progress:String(kickerFor(step).progress));
+          if(was?.color)fill.style.backgroundColor=was.color;
+          fill.getBoundingClientRect();
+          fill.style.removeProperty('transition');fill.style.removeProperty('background-color');
+        }
+      }
       openSwap=null;shownStep=step;
       index=i;setBusy(false);status('');
       const role=profile?.role,kicker=kickerFor(step);
       overlay.classList.remove('is-pending');
       overlay.dataset.step=step;
       $('usSetupKicker').textContent=kicker.text;
+      $('usSetupProgress').style.setProperty('--us-ob-delay',`${Math.max(0,swap?.after||0)}ms`);
       $('usSetupProgress').style.setProperty('--us-progress',String(kicker.progress));
+      // Your colour and "Tutto pronto" have no status line in the design.
+      if(['noi','color','ready'].includes(step))$('usSetupStatus').dataset.usEnter='skip';else delete $('usSetupStatus').dataset.usEnter;
       const venn=$('usSetupVenn');
       venn.hidden=!(step==='noi'||step==='color');
       $('usSetupPushVis').hidden=step!=='push';
@@ -876,7 +938,7 @@
       // While the shell reveals itself the overlay can be one frame from visible.
       if(document.activeElement!==title)requestAnimationFrame(()=>{if(isOpen&&steps[index]===step&&!overlay.contains(document.activeElement))title.focus({preventScroll:true});});
       const after=arriveSwap(body,{swap,header:head()});
-      if(step==='noi'||step==='color'){const ticket=run;setTimeout(()=>requestAnimationFrame(()=>{if(ticket===run&&isOpen&&steps[index]===step)playColour(overlay,venn);}),after);}
+      if(step==='noi'||step==='color')playColour(overlay,venn,after);
       if(step==='ready')drawReady(true,after);
       playVisual(step,after);
     }
@@ -942,7 +1004,8 @@
     function close(){
       run++;
       const hadFocus=overlay.contains(document.activeElement);
-      isOpen=false;busy=false;userId='';mode=null;profile=null;steps=[];index=0;shownStep='';openSwap=null;
+      isOpen=false;busy=false;userId='';mode=null;profile=null;steps=[];index=0;shownStep='';
+      openSwap?.swap.drop();openSwap=null;
       overlay.classList.remove('is-intro');
       clearTimeout(widgetTimer);widget={offer:false,state:'idle',at:0};
       overlay.hidden=true;overlay.classList.remove('is-pending');delete overlay.dataset.step;delete overlay.dataset.mode;
@@ -985,11 +1048,17 @@
       const from=auth&&!auth.classList.contains('hidden')?(onb?.classList.contains('active')?onb:auth.querySelector('.auth-step.active')):null;
       overlay.dataset.mode=nextMode;overlay.classList.add('is-pending');overlay.hidden=false;
       overlay.scrollTop=0;isolate(true);
-      openSwap=null;
+      openSwap?.swap.drop();openSwap=null;
       if(from&&isShown(from)&&!reducedMotion()){
+        // The step kept on screen has its words back before it is copied (busy() ends before show()).
+        if(from===onb)releaseKept?.();
         swapPending=null;
-        const swap=beginSwap({from,host:card,dir:1});
-        if(swap?.gone.length){openSwap={t0:performance.now()};swapPending=null;}
+        // The bar of the step that leaves goes on in the setup (same place, same colour, then on).
+        const fromBar=from.querySelector(':scope>.us-ob-progress:not([hidden])>i');
+        const bar=fromBar&&isShown(fromBar)?{progress:fromBar.parentElement.style.getPropertyValue('--us-progress')||'0',color:getComputedStyle(fromBar).backgroundColor}:null;
+        // It stays, still, until the first step is ready, then leaves as in show().
+        const swap=beginSwap({from,host:card,dir:1,hold:true});
+        if(swap?.gone.length)openSwap={swap,bar};
       }
       const [push,offer]=await Promise.all([pushStepState(window.UsNotifications),widgetOfferWanted(window.UsWidgets)]);
       if(ticket!==run||!isOpen)return false;
@@ -1008,6 +1077,21 @@
     const root=document.getElementById('usOnboarding');
     const node=id=>document.getElementById(id);
     let mode='me',lastKind='',lastView='',lastInvite='',hiddenPrivate=[],me={name:'',birthday:null},meFor='',justCreated=false,note={text:'',kind:''},dismissed='';
+    // The button you pressed says what is happening while it works (the design's busy()).
+    let pressed=null;
+    // Paired from a step on screen: that step stays, still, until the setup takes its place.
+    let keeping=false;
+    function letGo(){
+      if(!keeping)return;
+      keeping=false;
+      releaseKept?.();
+      const overlay=node('authOverlay');
+      overlay.style.removeProperty('--us-tu');overlay.style.removeProperty('--us-partner');
+      delete root.dataset.usBusy;
+      node('mc3CodeShown').textContent='';
+      if(!['SIGNED_OUT','PAIRED'].includes(controller.state.kind))return;
+      root.classList.remove('active');root.dataset.view='';
+    }
     const clearForms=()=>root.querySelectorAll('input,textarea').forEach(el=>{el.value='';});
     function protect(active){
       document.documentElement.classList.toggle('us-onboarding-active',active);
@@ -1047,17 +1131,45 @@
         if(state.kind==='SIGNED_OUT'){me={name:'',birthday:null};justCreated=false;}
         mode=state.kind==='MEMBER_WAITING_PARTNER'&&justCreated?'color':me.name?'choice':'me';
       }
+      // Paired from a step on screen (the join, or the invite that found its
+      // partner): as in the design the step stays until the next one takes its
+      // place (the setup, with the usual change of screen), never an empty screen
+      // while the app checks the couple. Nothing on it can be used meanwhile.
+      if(state.kind==='PAIRED'&&(keeping||(lastView&&root.classList.contains('active')&&isShown(root)))){
+        if(!keeping){
+          keeping=true;
+          const overlay=node('authOverlay'),cs=getComputedStyle(overlay);
+          // Its colours are the onboarding's (they follow html.us-onboarding-active).
+          for(const name of ['--us-tu','--us-partner']){const value=cs.getPropertyValue(name).trim();if(value)overlay.style.setProperty(name,value);}
+          // The pressed button keeps saying what is happening until the step leaves.
+          releaseKept=()=>{releaseKept=null;if(pressed){if(pressed.text)pressed.button.textContent=pressed.text;delete pressed.button.dataset.usBusy;pressed=null;}};
+          root.dataset.usBusy='';
+          root.querySelectorAll('button,input,select,textarea').forEach(el=>{el.disabled=true;});
+          // Nothing typed or copyable stays behind (the code shown is a picture until it leaves).
+          clearForms();
+          protect(false);
+        }
+        lastKind=state.kind;lastView='';
+        if(state.profile?.couple_id)saveBirthday({profile:state.profile,local:localStorage,session:sessionStorage,insertEvent}).catch(()=>{});
+        scheduleCheck(state);
+        window.dispatchEvent(new CustomEvent('us-onboarding-view-change'));
+        return;
+      }
+      letGo();
       const view=viewFor(state),waiting=state.kind==='MEMBER_WAITING_PARTNER',role=state.profile?.role;
       // A new screen (or, on the invite, a new code): what is on screen leaves first.
       const inviteKey=waiting?`${state.membership?.invite?.status}|${state.code}`:'';
       let swap=null;
-      if(active&&(view!==lastView||(view==='waiting'&&inviteKey!==lastInvite))){
+      // A new code replaces the old one in one change, once it has arrived (the old one stays while "Genero…").
+      if(active&&(view!==lastView||(view==='waiting'&&!state.busy&&inviteKey!==lastInvite))){
         const overlay=node('authOverlay'),tourRoot=node('usTour');
         const from=lastView?root:tourRoot&&!tourRoot.hidden?tourRoot:overlay.querySelector('.auth-step.active');
         const dir=view===lastView?0:(SCREEN_ORDER[view]??6)<(SCREEN_ORDER[lastView||from?.id]??1)?-1:1;
         swap=beginSwap({from,host:overlay.querySelector('.auth-card'),dir});
+        // A new code is a new screen: what was said about the old one goes with it.
+        if(view===lastView)note={text:'',kind:''};
       }
-      lastInvite=inviteKey;
+      if(!state.busy)lastInvite=inviteKey;
       protect(active);
       root.classList.toggle('active',active);
       if(active){
@@ -1073,6 +1185,8 @@
       if(waiting&&role==='beatrice')node('authOverlay').dataset.usTone='beatrice';else delete node('authOverlay').dataset.usTone;
       node('mc3Kicker').textContent=view==='me'?'Tu · 1 di 4':view==='error'?'US · Spazio privato':'Voi · 2 di 4';
       node('mc3Progress').hidden=view==='error';
+      // The bar moves once the old step has gone (a copied step leaves for 180 ms).
+      node('mc3Progress').style.setProperty('--us-ob-delay',`${Math.max(0,swap?.after||0)}ms`);
       node('mc3Progress').style.setProperty('--us-progress',view==='me'?'.25':'.5');
       const titles={me:['Iniziamo da ','te'],choice:['Il vostro US, ','da qui'],create:['Crea il ','vostro spazio'],join:['Entra nel ','vostro US'],color:['Il tuo colore è ',colourName(role)],waiting:['Il tuo spazio ','è pronto'],error:['Verifichiamo il tuo accesso','']};
       setTitle(node('mc3Title'),...titles[view]);
@@ -1096,24 +1210,37 @@
       if(!state.message)dismissed='';
       const message=state.message&&state.message!==dismissed?state.message:'';
       const said=`${status.textContent}|${status.dataset.kind||''}`;
-      status.textContent=message||note.text||(state.busy?'Verifica in corso…':'');
+      // Busy: the pressed button carries the words, the status line stays as it was (design).
+      status.textContent=message||note.text||(state.busy&&!pressed?'Verifica in corso…':'');
       if(message)status.dataset.kind='error';else if(note.text)status.dataset.kind=note.kind||'neutral';else status.removeAttribute('data-kind');
       if(status.dataset.kind==='error'&&status.textContent&&said!==`${status.textContent}|error`)shake(status);
+      // "Il vostro US" and the colour have no status line in the design: an empty one is not a step of the entrance.
+      if(!message&&!note.text&&(view==='choice'||view==='color'))status.dataset.usEnter='skip';else delete status.dataset.usEnter;
       const labels={none:'Nessun invito attivo',pending:'Invito in attesa',expired:'Invito scaduto',revoked:'Invito revocato',used:'Invito utilizzato'};
       const invite=state.membership?.invite;
       node('mc3InviteStatus').textContent=waiting?(labels[invite.status]||'')+(invite.status==='pending'&&invite.expires_at&&inviteExpiry(invite.expires_at)?' · '+inviteExpiry(invite.expires_at):''):'';
       node('mc3InviteStatus').dataset.status=waiting?invite.status:'';
-      node('mc3Code').value=waiting?state.code:'';node('mc3CodeArea').hidden=!waiting||!state.code;
-      node('mc3CodeShown').textContent=waiting&&state.code?state.code.replace(/(.{5})/g,'$1 ').trim():'';
-      node('mc3Waiting').classList.toggle('has-code',Boolean(waiting&&state.code));
+      node('mc3Code').value=waiting?state.code:'';
+      // While a new code is made the old one stays on screen (not copyable: everything waits).
+      const holdCode=waiting&&state.busy&&!state.code&&lastView==='waiting'&&!node('mc3CodeArea').hidden;
+      if(!holdCode){
+        node('mc3CodeArea').hidden=!waiting||!state.code;
+        node('mc3CodeShown').textContent=waiting&&state.code?state.code.replace(/(.{5})/g,'$1 ').trim():'';
+        node('mc3Waiting').classList.toggle('has-code',Boolean(waiting&&state.code));
+      }
       node('mc3Generate').textContent=invite?.status==='none'?'Crea invito':'Genera nuovo codice';
       node('mc3Revoke').hidden=!waiting||invite?.status!=='pending';
       root.querySelectorAll('button,input,select').forEach(el=>{el.disabled=state.busy&&el.id!=='mc3Exit';});
+      if(pressed&&state.busy&&active){if(pressed.label)pressed.button.textContent=pressed.label;pressed.button.dataset.usBusy='';root.dataset.usBusy='';}
+      else{
+        if(pressed){delete pressed.button.dataset.usBusy;if(pressed.text)pressed.button.textContent=pressed.text;pressed=null;}
+        delete root.dataset.usBusy;
+      }
       if(view==='color'&&lastView!=='color')drawVenn(node('mc3Venn'),{kind:'wait',role,partner:''});
       if(active&&changed){node('mc3Title').focus({preventScroll:true});node('authOverlay').scrollTop=0;}
       if(swap){
         const after=arriveSwap(root,{swap});
-        if(view==='color')setTimeout(()=>requestAnimationFrame(()=>{if(lastView==='color')playColour(node('authOverlay'),node('mc3Venn'));}),after);
+        if(view==='color')playColour(node('authOverlay'),node('mc3Venn'),after);
       }
       lastKind=state.kind;lastView=active?view:'';
       if(state.profile?.couple_id)saveBirthday({profile:state.profile,local:localStorage,session:sessionStorage,insertEvent}).catch(()=>{});
@@ -1145,15 +1272,37 @@
       if(kind==='create'&&result?.kind!=='MEMBER_WAITING_PARTNER')justCreated=false;
       if(result?.kind==='PAIRED')resume();
     };
-    const goTo=(next,focusId)=>{
-      // What is on screen leaves with what was typed in it.
-      if(next!==lastView&&lastView)beginSwap({from:root,host:node('authOverlay').querySelector('.auth-card'),dir:(SCREEN_ORDER[next]??6)<(SCREEN_ORDER[lastView]??6)?-1:1});
+    const switchTo=(next,focusId)=>{
       clearForms();mode=next;note={text:'',kind:''};
       if(controller.state.kind==='AUTHENTICATED_NO_PROFILE')dismissed=controller.state.message||'';
       if(next==='me')fillMe();
       if(next==='create')node('mc3CreateName').value=me.name;
       if(next==='join')node('mc3JoinName').value=me.name;
       render(controller.state);node(focusId).focus();
+    };
+    // A step of this phone only (Tu, Voi, create, join, the colour to the
+    // invite) changes as in the design (show()): what is on screen leaves
+    // first, 180 ms towards where you came from, with what was typed in it,
+    // and the next step is drawn once it has gone. The tap answers at once:
+    // nothing is copied. Without motion the step changes at once.
+    let leaving=null;
+    const goTo=(next,focusId)=>{
+      if(leaving)return;
+      const dir=(SCREEN_ORDER[next]??6)<(SCREEN_ORDER[lastView]??6)?-1:1;
+      const items=next!==lastView&&lastView&&!reducedMotion()&&isShown(root)?enterItems(root).filter(isShown):[];
+      if(!items.length){switchTo(next,focusId);return;}
+      const kind=controller.state.kind,ticket={};leaving=ticket;
+      const runs=items.map(el=>animate(el,[{opacity:1,translate:'0 0'},{opacity:0,translate:`${-dir*24}px 0`}],{duration:LEAVE_MS,easing:EASE_IN,fill:'forwards'})).filter(Boolean);
+      const done=()=>{
+        if(leaving!==ticket)return;
+        leaving=null;
+        runs.forEach(run=>{try{run.cancel();}catch(_e){}});
+        // Something else took the screen meanwhile (a new state, signed out): it stays.
+        if(controller.state.kind!==kind||!root.classList.contains('active'))return;
+        swapPending={dir,after:0,first:false,gone:[]};
+        switchTo(next,focusId);
+      };
+      Promise.all(runs.map(run=>run.finished)).then(done,done);
     };
     node('mc3Me').addEventListener('submit',event=>{
       event.preventDefault();
@@ -1167,13 +1316,15 @@
     for(const [id,next,focusId] of [['mc3ChooseCreate','create','mc3Date'],['mc3ChooseJoin','join','mc3JoinCode'],['mc3BackCreate','choice','mc3Title'],['mc3BackJoin','choice','mc3Title'],['mc3BackMe','me','mc3Title']])node(id).addEventListener('click',()=>goTo(next,focusId));
     node('mc3ColorNext').addEventListener('click',()=>{justCreated=false;goTo('waiting','mc3Title');});
     node('mc3Date').max=romeToday();
-    node('mc3Create').addEventListener('submit',event=>{event.preventDefault();justCreated=true;run(()=>controller.create({name:node('mc3CreateName').value,date:node('mc3Date').value,coupleName:node('mc3CoupleName').value}),'create');});
+    const press=(button,label,text='')=>{if(button&&!controller.state.busy)pressed={button,label,text};};
+    node('mc3Create').addEventListener('submit',event=>{event.preventDefault();justCreated=true;press(event.submitter||node('mc3Create').querySelector('[type=submit]'),'Creo…','Crea il nostro spazio');run(()=>controller.create({name:node('mc3CreateName').value,date:node('mc3Date').value,coupleName:node('mc3CoupleName').value}),'create');});
     // The code box is a textarea (two lines, as in the design): Enter still sends.
     node('mc3JoinCode').addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();node('mc3Join').requestSubmit?.();}});
-    node('mc3Join').addEventListener('submit',event=>{event.preventDefault();const fields={name:node('mc3JoinName').value,code:node('mc3JoinCode').value};node('mc3JoinCode').value='';run(()=>controller.join(fields),'join');});
-    node('mc3Generate').addEventListener('click',()=>run(()=>controller.generate()));
-    node('mc3Revoke').addEventListener('click',()=>run(()=>controller.revoke()));
-    for(const id of ['mc3Refresh','mc3Retry'])node(id).addEventListener('click',()=>run(()=>controller.refresh()));
+    node('mc3Join').addEventListener('submit',event=>{event.preventDefault();press(event.submitter||node('mc3Join').querySelector('[type=submit]'),'Entro…','Entra nel nostro US');const fields={name:node('mc3JoinName').value,code:node('mc3JoinCode').value};node('mc3JoinCode').value='';run(()=>controller.join(fields),'join');});
+    node('mc3Generate').addEventListener('click',()=>{press(node('mc3Generate'),'Genero…');run(()=>controller.generate());});
+    node('mc3Revoke').addEventListener('click',()=>{press(node('mc3Revoke'),'');run(()=>controller.revoke());});
+    node('mc3Refresh').addEventListener('click',()=>{press(node('mc3Refresh'),'Verifico…','Verifica accesso partner');run(()=>controller.refresh());});
+    node('mc3Retry').addEventListener('click',()=>run(()=>controller.refresh()));
     // A line under the invite that stays through the automatic checks.
     const say=(text,kind)=>{note={text,kind};render(controller.state);};
     const selectCode=()=>{node('mc3Code').focus();node('mc3Code').select();say('Seleziona e copia il codice.','neutral');};
@@ -1199,6 +1350,8 @@
     });
     window.addEventListener('us-app-lock-change',event=>{if(event.detail?.locked){controller.suspend();clearForms();}else resume();});
     window.addEventListener('pagehide',()=>{controller.suspend();clearForms();});
+    // Once the sign-in closes (the setup or the app took the screen), the kept step goes.
+    if(typeof MutationObserver==='function'&&node('authOverlay'))new MutationObserver(()=>{if(keeping&&node('authOverlay').classList.contains('hidden'))letGo();}).observe(node('authOverlay'),{attributes:true,attributeFilter:['class']});
     controller.tour=tour;controller.setup=setup;
     return controller;
   }
