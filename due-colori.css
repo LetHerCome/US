@@ -12,7 +12,13 @@
 /* ---------- Person colours: rosa for the creator, lilla for who joined ---------- */
 :root[data-us-me="beatrice"]{--us-tu:var(--us-lilla);--us-partner:var(--us-rosa)}
 
-/* ---------- Tab colour: Oggi corallo, Noi orchidea, Ricordi ambra, Gioca menta ---------- */
+/* ---------- Tab colour: Oggi corallo, Noi orchidea, Ricordi ambra, Gioca menta ----------
+   Not inherited: only the canvas (html, body) and the bar read it. An
+   inherited custom property that changes on :root restyles all ~2000
+   elements, and it changes exactly when a tab opens (measured: a page
+   switch costs half as much without it). */
+@property --us-tab{syntax:'*';inherits:false}
+body{--us-tab:inherit}
 :root:has(#home.page.active){--us-tab:var(--us-corallo)}
 :root:has(#bond.page.active){--us-tab:var(--us-noi)}
 :root:has(#moments.page.active){--us-tab:var(--us-ambra)}
@@ -46,7 +52,8 @@ input,textarea,select,button{font-family:inherit}
   font-weight:700;
   box-shadow:none;
 }
-.primary:disabled{background:var(--us-color-elevated);color:var(--us-color-text-3)}
+/* Disabled: the same colour at .45 (mockup .btn-primary:disabled). */
+.primary:disabled{opacity:.45;cursor:default}
 .ghost,.us-btn-secondary{
   background:transparent;
   color:var(--us-color-text);
@@ -185,6 +192,22 @@ body:has(#homeHero.us-oggi-focus) .us-nav.us-nav-premium{translate:0 120px}
 /* ---------- Colour flood between tabs (due-colori.js) ---------- */
 .us-flood{position:fixed;inset:0;z-index:19;pointer-events:none;background:var(--us-flood,var(--us-tab));clip-path:circle(0 at 50% 100%)}
 .us-flood[hidden]{display:none}
+/* Under the colour the new page opens fully opaque, as the mockup's view
+   (its own short fade would show it translucent in the growing circle). */
+.page.us-marea-in{animation:none!important}
+
+/* ---------- Settings over Noi (due-colori.js slide, mockup UP.push/pop) ----------
+   The page that leaves stays painted where it was, out of the flow; the one
+   that slides on top is opaque (a mockup view has the night behind it) and
+   casts the mockup's shadow to the left. The veil is brightness .6 as a
+   composited 40 % black layer between the two. */
+.page.us-slide-ghost{display:block!important;position:fixed!important;left:var(--us-ghost-left)!important;top:var(--us-ghost-top)!important;width:var(--us-ghost-width)!important;margin:0!important;pointer-events:none!important;animation:none!important}
+.page.us-slide-ghost.is-under{z-index:1}
+.page.us-slide-live.is-under{position:relative;z-index:1;animation:none!important}
+.page.us-slide-live.is-over{position:relative;z-index:3;isolation:isolate;animation:none!important}
+.page.us-slide-ghost.is-over{z-index:3;isolation:isolate}
+.page.us-slide-live.is-over::before,.page.us-slide-ghost.is-over::before{content:"";position:absolute;z-index:-1;inset:-100vh -32px;background:var(--us-color-bg);box-shadow:-30px 0 60px rgba(0,0,0,.45);pointer-events:none}
+.us-slide-veil{position:fixed;inset:0;z-index:2;background:#000;opacity:0;pointer-events:none}
 
 /* ---------- Focus Photo (mockup .screen.is-focus): the top bar fades away ---------- */
 .app>.top.us-premium-top{transition:opacity .45s var(--us-ease-standard)}

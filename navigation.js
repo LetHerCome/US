@@ -349,7 +349,10 @@ function applyHistoryState(state){
   closeLayersAbove(entryIndex(state),targetLayer);
 
   if(originalGo&&targetPage&&activePage()!==targetPage){
-    originalGo(targetPage,{history:false});
+    // Back from a sub-page (Settings over Noi) slides it away as the mockup's
+    // pop(); the history is not touched because applyingHistory is still on.
+    if(window.UsDueColori?.isSubPage?.(activePage(),targetPage)&&typeof window.go==='function')window.go(targetPage,{history:false});
+    else originalGo(targetPage,{history:false});
   }
 
   // If a state refers to an already-open underlying layer, leave it untouched.

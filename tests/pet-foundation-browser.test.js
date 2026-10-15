@@ -31,7 +31,8 @@ async function preview(h,options){
  // Parity (mockup .moment z 30 over .maudit-home z 11): the Ti penso Momento covers
  // Maudit, which keeps living underneath (not a blocker, reactions still run).
  assert.equal(overlay.visibility,'hidden');
- assert.ok(overlay.petZ>overlay.nudgeZ&&overlay.petZ>overlay.toastZ&&overlay.petZ>overlay.thinkZ,JSON.stringify(overlay));
+ // The Avviso is above everything (mockup .toast z 60), Maudit too.
+ assert.ok(overlay.petZ>overlay.nudgeZ&&overlay.toastZ>overlay.petZ&&overlay.petZ>overlay.thinkZ,JSON.stringify(overlay));
  assert.deepEqual({blockers:overlay.blockers,running:overlay.running,react:overlay.react},{blockers:[],running:true,react:true});
  await view.page.evaluate(()=>{
    document.getElementById('usDailyRitual').hidden=true;
@@ -224,7 +225,7 @@ test('PET stays through notices, the Ti penso arrival and sheets (their scrim co
 });
 
 // US 1.0 (N10): the old calendar overlay is gone; its detail and form sheets are the calendar's sheets now.
-test('layer ladder: content < nav < notices < Ti penso < PET < every sheet < confirm, auth above sheets',async t=>{
+test('layer ladder: content < nav < Ti penso < PET < every sheet < confirm, auth above sheets, notices above every popup',async t=>{
  const h=await start();if(!h)return t.skip('Playwright unavailable');
  try{
   const {page,ctx,errors}=await pageFor(h,{});
@@ -233,12 +234,14 @@ test('layer ladder: content < nav < notices < Ti penso < PET < every sheet < con
      sheets:['#today','#usCountdownSheet','#usEventsOverlay','#leftForYouOverlay','#leftForYouComposerOverlay','#leftForYouCameraOverlay','#momentViewer','#usMomentComposeOverlay','#usSettingsOverlay','#usCalendarDetailSheet','#usCalendarFormSheet','#conservatiOverlay','#usAlbumOverlay'].map(q=>[q,v(q)]),
     unlock:v('#usProgressionUnlock'),auth:v('#authOverlay')};});
   // 1.0: the Oggi dock (what waits for me + the Domanda di oggi) is content, under the nav; the transient nudge is gone.
-  assert.ok(z.dock<z.nav&&z.nav<z.toast&&z.toast<=z.status&&z.status===z.update&&z.update<z.think&&z.think<z.pet,JSON.stringify(z));
+  assert.ok(z.dock<z.nav&&z.nav<z.think&&z.think<z.pet&&z.toast===z.status&&z.status===z.update,JSON.stringify(z));
+  // Mockup .toast z 60 over sheets (20), Galleria (25), Momento (30) and auth (40).
+  assert.ok(z.sheets.every(([,value])=>z.toast>value)&&z.toast>z.auth&&z.toast>z.pet,`notices ${z.toast} above every popup`);
   for(const [q,value] of z.sheets)assert.ok(value>z.pet,`${q} (${value}) sits above the PET (${z.pet})`);
   assert.ok(z.unlock>z.pet);
   assert.ok(z.sheets.every(([,value])=>z.auth>value),'auth covers any sheet it interrupts');
   const confirmZ=await page.evaluate(()=>{const answer=window.UsUiFoundation.confirm({title:'QA',confirmLabel:'Ok'});const value=Number(getComputedStyle(document.querySelector('.us-confirm')).zIndex);document.querySelector('[data-us-confirm="cancel"]')?.click();return answer.then(()=>value);});
-  assert.ok(z.sheets.every(([,value])=>confirmZ>value)&&confirmZ>z.pet,`confirm ${confirmZ}`);
+  assert.ok(z.sheets.every(([,value])=>confirmZ>value)&&confirmZ>z.pet&&z.toast>confirmZ,`confirm ${confirmZ}`);
   // No accidental stacking context traps a fixed surface below its rung.
   const trapped=await page.evaluate(()=>['#thinkArrival','#usPetLayer','#today','#usCountdownSheet','#authOverlay','#toast'].filter(q=>{
    for(let p=document.querySelector(q).parentElement;p&&p!==document.body;p=p.parentElement){const s=getComputedStyle(p);if(s.transform!=='none'||s.filter!=='none'||s.isolation==='isolate'||(s.position!=='static'&&s.zIndex!=='auto')||Number(s.opacity)<1)return true;}return false;}));

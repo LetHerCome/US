@@ -245,9 +245,9 @@
   transition-timing-function:var(--us-ease-standard);
 }
 
-:where(button:not(:disabled):not([data-us-motion-tap="off"])):active {
-  transform:scale(.985);
-}
+/* No CSS :active scale here: the press is the mockup's JS press only
+   (ui-foundation.js, `scale` .95 in 110 ms, spring back in 420 ms). A CSS
+   scale on top of it pressed twice and left a gap before the release. */
 
 [data-us-motion-surface] .us-modal-backdrop {
   opacity:0;
@@ -337,11 +337,15 @@
   -webkit-tap-highlight-color:transparent;
 }
 
-/* One focus ring for the whole product (zero specificity: a component may
-   only move it, e.g. inset inside the nav pill). */
+/* One focus ring for the whole product, the mockup's (2px --noi, 3px away;
+   zero specificity: a component may only move it, e.g. inset inside the
+   nav pill). No grey tap flash on a button (mockup). */
+:where(button) {
+  -webkit-tap-highlight-color:transparent;
+}
 :where(button,a[href],summary,[role="button"],[role="tab"],[tabindex]:not([tabindex="-1"])):focus-visible {
   outline:2px solid var(--us-color-accent-strong);
-  outline-offset:2px;
+  outline-offset:3px;
 }
 
 .nav button:focus-visible {
@@ -636,7 +640,7 @@ h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
   cursor:not-allowed;
 }
 :where(.primary,.ghost,.us-btn-secondary,.us-btn-quiet,.us-btn-danger,.us-icon-button):disabled {
-  opacity:.46;
+  opacity:.45;
   box-shadow:none;
 }
 
@@ -653,9 +657,8 @@ h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
   color:var(--us-color-text-3);
 }
 :where(textarea,input:not([type="checkbox"]):not([type="radio"])):focus-visible {
-  outline:none;
-  border-color:var(--us-color-accent-strong);
-  box-shadow:var(--us-field-focus);
+  outline:2px solid var(--us-color-accent-strong);
+  outline-offset:3px;
 }
 :where(input[type="checkbox"],input[type="radio"]) {
   accent-color:var(--us-color-accent-strong);

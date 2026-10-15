@@ -42,12 +42,16 @@ async function hydrateActivePage(id,{force=false}={}){
 }
 function schedulePageHydration(id,{force=false}={}){
   const ticket=++usPageHydrationTicket;
-  // Let the tab become visible first. Heavy Supabase/DOM work starts after the
-  // browser has had one frame to commit the navigation.
-  requestAnimationFrame(()=>setTimeout(()=>{
+  const run=()=>{
     if(ticket!==usPageHydrationTicket)return;
     hydrateActivePage(id,{force}).catch(()=>{});
-  },0));
+  };
+  // Under the colour between tabs (due-colori.js) the page is out of sight:
+  // it is filled now, so it opens complete and the reveal stays smooth.
+  if(window.UsDueColori?.switching?.()){run();return;}
+  // Otherwise let the tab become visible first. Heavy Supabase/DOM work
+  // starts after the browser has had one frame to commit the navigation.
+  requestAnimationFrame(()=>setTimeout(run,0));
 }
 function go(id,options={}){
   const current=document.querySelector('.page.active')?.id;
@@ -89,7 +93,7 @@ function usApplyPersonColor(profile){
 // quiet (night) look. Without quiet, a message that ends with ♡ ✦ ✓ is a
 // good moment (warm latte pill); anything else is quiet.
 let usToastTimer=null;
-function toast(msg,options){const t=document.getElementById('toast');if(!t)return;const opts=options&&typeof options==='object'?options:{};const text=String(msg??'');const quiet=typeof opts.quiet==='boolean'?opts.quiet:!/[♡✦✓]\s*$/.test(text);t.classList.toggle('is-quiet',quiet);t.textContent='';if(opts.icon){const icon=document.createElement('span');icon.className='us-icon';icon.setAttribute('data-us-icon',String(opts.icon));icon.setAttribute('aria-hidden','true');t.appendChild(icon);}const label=document.createElement('span');label.className='us-toast-text';label.textContent=text;t.appendChild(label);t.classList.add('show');clearTimeout(usToastTimer);usToastTimer=setTimeout(()=>t.classList.remove('show'),2300)}
+function toast(msg,options){const t=document.getElementById('toast');if(!t)return;const opts=options&&typeof options==='object'?options:{};const text=String(msg??'');const quiet=typeof opts.quiet==='boolean'?opts.quiet:!/[♡✦✓]\s*$/.test(text);t.classList.toggle('is-quiet',quiet);t.textContent='';if(opts.icon){const icon=document.createElement('span');icon.className='us-icon';icon.setAttribute('data-us-icon',String(opts.icon));icon.setAttribute('aria-hidden','true');t.appendChild(icon);}const label=document.createElement('span');label.className='us-toast-text';label.textContent=text;t.appendChild(label);const action=opts.action&&typeof opts.action==='object'&&opts.action.label?opts.action:null;t.classList.toggle('has-act',Boolean(action));if(action){const act=document.createElement('button');act.type='button';act.className='us-toast-act';act.textContent=String(action.label);act.addEventListener('click',()=>{clearTimeout(usToastTimer);t.classList.remove('show');if(typeof action.onClick==='function')action.onClick();});t.appendChild(act);}t.classList.add('show');clearTimeout(usToastTimer);usToastTimer=setTimeout(()=>t.classList.remove('show'),action?4200:2300)}
 // The one US confirmation sheet (ui-foundation); the platform dialog only as a fallback.
 function usConfirm(options){const ui=window.UsUiFoundation;return ui&&typeof ui.confirm==='function'?ui.confirm(options):Promise.resolve(window.confirm(options.title));}
 // Game V2 — Gioca is owned by games.js (window.USGameV2); the legacy weekly quiz UI is retired.
