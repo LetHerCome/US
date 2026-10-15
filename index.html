@@ -31,7 +31,6 @@
 <link rel="stylesheet" href="/identity.css?v=us-location-approximate-20261014-2"/>
 <link rel="stylesheet" href="/settings2.css?v=us-location-approximate-20261014-2" media="print" onload="this.media='all'"/>
 <link rel="stylesheet" href="/widget-hub.css?v=us-location-approximate-20261014-2" media="print" onload="this.media='all'"/>
-<link rel="stylesheet" href="/polish4.css?v=us-location-approximate-20261014-2"/>
 <link rel="stylesheet" href="/stories.css?v=us-location-approximate-20261014-2"/>
 <link rel="stylesheet" href="/left-for-you.css?v=us-location-approximate-20261014-2"/>
 <link rel="stylesheet" href="/calendar.css?v=us-location-approximate-20261014-2"/>
@@ -590,14 +589,22 @@ html.us-returning-device .auth-overlay{
 
       <article class="noi-resonance" aria-label="Sintonia attuale">
         <div class="noi-resonance-top"><div><div class="tiny">SINTONIA</div><b><span id="bondResonanceLevel" class="noi-resonance-level">Livello 1</span><span class="noi-resonance-dot" aria-hidden="true"> · </span><span id="bondRankTitle">Primo legame</span></b></div><span class="noi-resonance-mark" aria-hidden="true">∞</span></div>
-        <div class="bond-xp-track" id="bondProgressTrack" role="progressbar" aria-label="Progresso Sintonia verso il prossimo livello" aria-valuemin="0" aria-valuemax="200" aria-valuenow="0" aria-valuetext="0 di 200 XP"><div id="bondPageFill"></div></div>
-        <div class="noi-resonance-foot"><span id="bondNextXp">200 XP al prossimo livello</span><span id="bondCompletedCount" aria-hidden="true">0 esperienze</span></div>
+        <div class="bond-xp-track" id="bondProgressTrack" role="progressbar" aria-label="Progresso Sintonia verso il prossimo livello" aria-valuemin="0" aria-valuemax="200" aria-valuenow="0" aria-valuetext="0 di 200 punti nel livello 1"><div id="bondPageFill"></div></div>
+        <div class="noi-resonance-foot"><span id="bondNextXp">Verso il livello 2</span><span id="bondCompletedCount" aria-hidden="true">0 esperienze</span></div>
+        <p class="noi-resonance-grow" id="usSintoniaGrow">Cresce con le cose che fate insieme: <span><button type="button" data-sintonia-go="daily">la domanda di oggi</button>,</span> <span><button type="button" data-sintonia-go="games">una partita</button>,</span> <span><button type="button" data-sintonia-go="quest">una missione</button>,</span> <span><button type="button" data-sintonia-go="memory">un ricordo</button>.</span></p>
         <div class="us-progression-rhythm" aria-label="Ritmo">
           <span class="us-progression-rhythm-copy"><small>RITMO</small><span id="usProgressionRhythmCopy">Fate una piccola cosa insieme per iniziare.</span></span>
           <strong id="usProgressionRhythmValue">0 giorni</strong>
         </div>
-        <div class="noi-resonance-legacy" aria-hidden="true"><span id="bondLevelValue">1</span><span id="bondTotalXp">0 XP totali</span><span id="bondLevelXp">0 / 200 XP</span><span id="bondRerollsLeft">3</span><span id="bondWeekReset">Nuove esperienze ogni lunedì</span><span id="bondBadges"></span></div>
+        <div class="noi-resonance-legacy" aria-hidden="true"><span id="bondLevelValue">1</span><span id="bondTotalXp">0 punti</span><span id="bondLevelXp">0 / 200</span><span id="bondRerollsLeft">3</span><span id="bondWeekReset">Nuove esperienze ogni lunedì</span><span id="bondBadges"></span></div>
       </article>
+
+      <section class="noi-resonance-history" aria-labelledby="noiResonanceHistoryTitle">
+        <div class="noi-resonance-history-head"><h3 id="noiResonanceHistoryTitle">Ultime crescite</h3><small>Le cose che avete fatto insieme</small></div>
+        <div id="noiResonanceHistory" class="noi-resonance-history-list" aria-live="polite" aria-busy="false">
+          <div class="noi-resonance-history-empty"><b>La prossima crescita apparirà qui</b><span>Missioni, eventi vissuti e mesiversari: le cose che fate insieme.</span></div>
+        </div>
+      </section>
 
       <section class="us-progression-next" id="usProgressionNext" aria-live="polite">
         <small>PROSSIMO SBLOCCO</small><b>Carico…</b>
@@ -607,26 +614,6 @@ html.us-returning-device .auth-overlay{
         <div class="us-progression-rewards-head"><div><small>COLLEZIONE</small><h3 id="usProgressionRewardsTitle">I vostri sblocchi</h3></div><span class="us-progression-rewards-meta"><b id="usProgressionRewardsCount"></b>Tocca un premio per usarlo</span></div>
         <div class="us-progression-rewards" id="usProgressionRewards" aria-live="polite"></div>
       </section>
-
-      <details class="noi-resonance-history" aria-labelledby="noiResonanceHistoryTitle">
-        <summary class="noi-resonance-history-head" id="noiResonanceHistoryTitle"><span><b>Ultime crescite</b><small>Le cose che avete fatto insieme</small></span></summary>
-        <div id="noiResonanceHistory" class="noi-resonance-history-list" aria-live="polite" aria-busy="false">
-          <div class="noi-resonance-history-empty"><b>La prossima crescita apparirà qui</b><span>Missioni ed eventi completati aggiungono punti reali alla vostra Sintonia.</span></div>
-        </div>
-      </details>
-
-      <details class="noi-resonance-guide" aria-labelledby="noiResonanceGuideTitle">
-        <summary class="noi-resonance-summary" id="noiResonanceGuideTitle">Come cresce la Sintonia</summary>
-        <div class="noi-resonance-stats">
-          <span><small>Punti Sintonia accumulati insieme</small><b id="noiResonanceTotal">0</b></span>
-        </div>
-        <ul class="noi-resonance-sources">
-          <li><b>Missioni ed eventi</b><span>Le cose che completate insieme continuano ad alimentare la Sintonia.</span></li>
-          <li><b>Domanda del giorno e Gioca</b><span>Una risposta condivisa o una sessione completata conta davvero.</span></li>
-          <li><b>Ti penso e Ricordi</b><span>Il primo gesto significativo del giorno dà progresso, senza farming.</span></li>
-          <li><b>Mesiversario e anniversario</b><span>I vostri traguardi restano parte della Sintonia.</span></li>
-        </ul>
-      </details>
 
       <section class="noi-living-section" aria-labelledby="noiLivingTitle">
         <div class="noi-section-title-row"><div><h3 id="noiLivingTitle">Missioni di coppia</h3></div><span class="noi-section-symbol" aria-hidden="true">↗</span></div>
@@ -1074,11 +1061,13 @@ html.us-returning-device .auth-overlay{
     <h2 id="usProgressionUnlockTitle">Nuovo sblocco</h2>
     <p id="usProgressionUnlockDescription"></p>
     <p class="us-progression-unlock-place" id="usProgressionUnlockPlace" hidden></p>
+    <p class="us-progression-unlock-scope" id="usProgressionUnlockScope" hidden></p>
     <div class="us-progression-unlock-extra" id="usProgressionUnlockExtra" hidden></div>
     <div class="us-progression-unlock-actions">
       <button type="button" class="primary" id="usProgressionUnlockUse">Usalo ora</button>
-      <button type="button" class="us-progression-unlock-later" id="usProgressionUnlockLater">Più tardi</button>
+      <button type="button" class="us-progression-unlock-later" id="usProgressionUnlockLater">Chiudi</button>
     </div>
+    <p class="us-progression-unlock-keep">Resta nella vostra collezione, in Sintonia.</p>
     <div class="us-progression-unlock-status" id="usProgressionUnlockStatus" role="status" aria-live="polite"></div>
   </article>
 </div>
@@ -1214,7 +1203,6 @@ html.us-returning-device .auth-overlay{
 <script defer src="/settings.js?v=us-location-approximate-20261014-2"></script>
 <script defer src="/widget-hub.js?v=us-location-approximate-20261014-2"></script>
 <script defer src="/identity.js?v=us-location-approximate-20261014-2"></script>
-<script defer src="/polish4.js?v=us-location-approximate-20261014-2"></script>
 <script defer src="/moments-albums.js?v=us-location-approximate-20261014-2"></script>
 <script defer src="/ricordi-inline-carousel.js?v=us-location-approximate-20261014-2"></script>
 <script defer src="/calendar-domain.js?v=us-location-approximate-20261014-2"></script>

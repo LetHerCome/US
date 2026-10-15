@@ -26,7 +26,8 @@ test('V4: daily slot leads Gioca; day rail precedes weekly budget and existing g
   assert.deepEqual([...positions].sort((a,b)=>a-b),positions);
   assert.equal((html.match(/data-gv2-action="per-voi"/g)||[]).length,1);
   assert.equal((html.match(/data-gv2-action="swipe"/g)||[]).length,1);
-  assert.equal((html.match(/data-gv2-family="/g)||[]).length,6);
+  // G7 1.0 — "E se…?" is no longer offered as a tile.
+  assert.equal((html.match(/data-gv2-family="/g)||[]).length,5);
   assert.equal((html.match(/us-gv4-day(?: is-today)?"/g)||[]).length,7);
   assert.equal((html.match(/aria-current="date"/g)||[]).length,1);
   assert.doesNotMatch(html,/data-streak|data-completed-days|day-played/,'no fictitious past-day progress');

@@ -37,7 +37,9 @@ const allowance = (over = {}) => ({ week_start: '2026-09-28', resets_on: '2026-1
 test('Gioca tiles: a fresh week is six cards of icon, name, kind of moment and "Disponibile"', async () => {
   const html = await hub(homeOf({ allowance: allowance() })).html();
   const tiles = html.match(/<button type="button" (?:data-us-[a-z-]+(?:="[a-z]+")? )*class="us-gv2-game[^"]*" data-gv2-family="[a-z_]+"[\s\S]*?<\/button>/g) || [];
-  assert.equal(tiles.length, 6);
+  // G7 1.0 — "E se…?" is no longer offered: Swipe plus five families.
+  assert.equal(tiles.length, 5);
+  assert.doesNotMatch(html, /data-gv2-family="e_se"/);
   for (const tile of tiles) {
     assert.match(tile, /class="us-gv2-glyph"/, 'each card leads with the icon chip');
     assert.match(tile, /<b>[^<]+<\/b><small>[^<]+<\/small>/, 'then its name and the kind of moment');
@@ -52,12 +54,13 @@ test('Gioca tiles: a fresh week is six cards of icon, name, kind of moment and "
 
 test('Gioca hub: no page header prose, no separate in-progress list, one week strip', async () => {
   const html = await hub(homeOf({ allowance: allowance({ used: 1, free_used: 1, families: { ridete: { session_id: 'r', completed: true } } }),
-    open_rounds: [{ id: 'o1', game_family: 'e_se', item_count: 5, my_answered_count: 2 }] })).html();
+    open_rounds: [{ id: 'o1', game_family: 'confrontatevi', item_count: 5, my_answered_count: 2 }] })).html();
   for (const gone of ['Scopritevi, giocando', 'Cinque domande alla volta', 'Un Per voi e due giochi a scelta', 'IN CORSO', 'SCEGLIETE VOI', 'Non scegliete. US ha preparato']) assert.doesNotMatch(html, new RegExp(gone));
   assert.match(html, /<h2 class="us-gv2-sr">Gioca<\/h2>/);
   assert.match(html, /QUESTA SETTIMANA/);
-  assert.match(html, /<b>2 rimasti<\/b>/);
-  assert.match(html, /data-gv2-family="e_se" data-gv2-mode-state="open"[\s\S]*?<em class="us-gv2-game-state" data-state="open" data-tone="progress">2 di 5<\/em>/, 'an open round shows on its own card');
+  // G10 1.0 — one word for the weekly unit: giochi.
+  assert.match(html, /<b>Ancora 2 giochi<\/b>/);
+  assert.match(html, /data-gv2-family="confrontatevi" data-gv2-mode-state="open"[\s\S]*?<em class="us-gv2-game-state" data-state="open" data-tone="progress">2 di 5<\/em>/, 'an open round shows on its own card');
   assert.match(html, /data-gv2-family="ridete" data-gv2-mode-state="played"[\s\S]*?data-state="played">[\s\S]*?Completato<\/em>/);
   assert.match(html, /data-gv2-family="ridete" data-gv2-mode-state="played"[\s\S]*?us-gv2-icon" data-gv2-icon="check"/);
   assert.equal((html.match(/us-gv2-rhythm"/g) || []).length, 1);
@@ -67,7 +70,7 @@ test('Gioca hub: a spent week stays compact and locks unplayed tiles with an ico
   const html = await hub(homeOf({ per_voi: { state: 'played', session_id: 'p' },
     allowance: allowance({ used: 3, per_voi_used: 1, free_used: 2, per_voi_available: false, free_available: false, families: { per_voi: { session_id: 'p', completed: true } } }) })).html();
   assert.doesNotMatch(html, /Nuovi giochi lunedì/, 'the hub does not duplicate exhaustion prose; tiles carry the state');
-  assert.match(html, /<b>0 rimasti<\/b>/, 'the top-right strip says how many games are actually still available');
+  assert.match(html, /<b>Tutti giocati<\/b>/, 'the top-right strip says how many games are actually still available');
   assert.match(html, /data-gv2-family="scopritevi" data-gv2-mode-state="locked" aria-disabled="true"[\s\S]*?data-gv2-icon="lock-simple"/);
   assert.match(html, /<em class="us-gv2-game-state" data-state="locked"><span class="us-gv2-icon" data-gv2-icon="lock-simple" aria-hidden="true"><\/span>Da lunedì<\/em>/);
 });

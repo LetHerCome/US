@@ -66,8 +66,6 @@ const APP_SHELL = [
   versioned("/ricordi-inline-carousel.js"),
   versioned("/identity.js"),
   versioned("/settings2.css"),
-  versioned("/polish4.css"),
-  versioned("/polish4.js"),
   versioned("/due-colori.css"),
   versioned("/dc-oggi.css"),
   versioned("/dc-noi.css"),

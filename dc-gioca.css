@@ -123,6 +123,7 @@
 #quiz .us-gv2-pervoi-copy b,
 #quiz .us-gv2-pervoi[data-gv2-state="played"] .us-gv2-pervoi-copy b{font:500 21px/1.1 var(--us-font-display);letter-spacing:-.01em;color:var(--us-color-text)}
 #quiz .us-gv2-pervoi-copy small{-webkit-line-clamp:4;font-size:13px;line-height:1.3;color:var(--us-color-text-3)}
+#quiz .us-gv2-pervoi-copy small.us-gv2-pervoi-note{margin-top:2px;font-weight:600;color:var(--us-partner)}
 #quiz .us-gv2-pervoi-cta,
 #quiz .us-gv2-pervoi[data-gv2-state="played"] .us-gv2-pervoi-cta{min-height:44px;padding:0 18px;border-radius:999px;background:var(--us-tu);color:var(--us-inchiostro);font:700 15px/1 var(--us-font-ui);box-shadow:none;border:0}
 #quiz .us-gv2-pervoi[data-gv2-state="waiting"] .us-gv2-pervoi-cta,
@@ -259,24 +260,21 @@
 #quiz .us-gv5-summary>span:first-child{background:var(--us-noi);border-color:var(--us-noi);color:var(--us-inchiostro)}
 #quiz .us-gv5-summary strong{font:400 20px/1 var(--us-font-display);font-variant-numeric:tabular-nums;color:inherit}
 #quiz .us-gv5-summary small{font:700 11px/1 var(--us-font-ui);letter-spacing:.1em;text-transform:uppercase;color:inherit}
-#quiz .us-gv5-reveal-hint{margin:0;font-size:13px;color:var(--us-color-text-3)}
 #quiz .us-gv5-reveal-groups{gap:10px}
 #quiz .us-gv5-reveal-group{border-radius:20px;background:var(--us-color-surface-2);border:0;box-shadow:none;overflow:hidden}
-#quiz .us-gv5-reveal-group>summary{min-height:60px;padding:12px 14px}
-#quiz .us-gv5-reveal-group>summary b{font:400 19px/1.15 var(--us-font-display);color:var(--us-color-text)}
-#quiz .us-gv5-reveal-group>summary small{font-size:12px;color:var(--us-color-text-3)}
-#quiz .us-gv5-reveal-group>summary strong{display:grid;place-items:center;min-width:30px;height:30px;padding:0 6px;border-radius:999px;background:var(--us-color-elevated);color:var(--us-color-text);font:700 13px/1 var(--us-font-ui)}
-#quiz .us-gv5-reveal-group[data-gv5-group="same"]>summary strong{background:var(--us-noi);color:var(--us-inchiostro)}
+#quiz .us-gv5-reveal-group-head{min-height:60px;padding:12px 14px}
+#quiz .us-gv5-reveal-group-head b{font:400 19px/1.15 var(--us-font-display);color:var(--us-color-text)}
+#quiz .us-gv5-reveal-group-head small{font-size:12px;color:var(--us-color-text-3)}
+#quiz .us-gv5-reveal-group-head strong{display:grid;place-items:center;min-width:30px;height:30px;padding:0 6px;border-radius:999px;background:var(--us-color-elevated);color:var(--us-color-text);font:700 13px/1 var(--us-font-ui)}
+#quiz .us-gv5-reveal-group[data-gv5-group="same"] .us-gv5-reveal-group-head strong{background:var(--us-noi);color:var(--us-inchiostro)}
 #quiz .us-gv5-reveal-group ol{grid-template-columns:minmax(0,1fr);gap:6px;padding:0 10px 10px}
-#quiz .us-gv5-reveal-groups>*,#quiz .us-gv5-reveal-item,#quiz .us-gv5-reveal-item>details{min-width:0}
+#quiz .us-gv5-reveal-groups>*,#quiz .us-gv5-reveal-item{min-width:0}
 #quiz .us-gv5-reveal-item{border-radius:16px;background:var(--us-color-surface);border:0}
-#quiz .us-gv5-reveal-item summary{min-height:52px;padding:10px 12px}
+#quiz .us-gv5-reveal-q{min-height:52px;padding:10px 12px}
 #quiz .us-gv5-reveal-num{display:grid;place-items:center;width:24px;height:24px;flex:0 0 24px;border-radius:50%;background:var(--us-color-elevated);color:var(--us-color-text-2);font:700 12px/1 var(--us-font-ui)}
 #quiz .us-gv5-reveal-title{font-size:15px;font-weight:600;line-height:1.35;color:var(--us-color-text)}
-#quiz .us-gv5-reveal-chevron{color:var(--us-color-text-3)}
-#quiz .us-gv5-equal-choice{padding:4px 10px;border-radius:999px;background:var(--us-noi);color:var(--us-inchiostro);font:700 12px/1.2 var(--us-font-ui);border:0}
 #quiz .us-gv5-reveal-answers{padding:0 12px 12px}
-#quiz .us-gv5-equal-choice{flex:none;max-width:34%}
+#quiz .us-gv5-reveal-answers>.us-gv2-context{margin:0 0 8px}
 #quiz .us-gv5-reveal-answers dl,#quiz .us-gv2-then dl{display:grid;gap:6px;margin:0}
 #quiz .us-gv5-reveal-answers dl>div,#quiz .us-gv2-then dl>div{padding:10px 12px;border-radius:16px;border:0;color:var(--us-inchiostro)}
 #quiz .us-gv5-reveal-answers dl>div:nth-child(1),#quiz .us-gv2-then dl>div:nth-child(1){margin-left:18px;background:var(--us-tu)}
@@ -286,6 +284,29 @@
 #quiz .us-gv5-reveal-answers .us-gv5-outcome{display:block;margin-top:8px;color:var(--us-noi);font-size:13px;font-weight:600}
 #quiz .us-gv2-then{margin-top:10px}
 #quiz .us-gv2-then .us-gv2-kicker{margin-bottom:6px;color:var(--us-color-text-3)}
+/* the move after a result: one different answer, then Lasciato per te and Ti penso */
+#quiz .us-gv5-move{display:grid;gap:12px;padding:16px;border-radius:22px;background:radial-gradient(90% 80% at 50% 0%,color-mix(in srgb,var(--us-noi) 16%,transparent),transparent 72%),var(--us-color-surface);border:1px solid var(--us-color-line)}
+#quiz .us-gv5-move h3{margin:0;font:400 24px/1.15 var(--us-font-display);letter-spacing:-.01em;color:var(--us-color-text)}
+#quiz .us-gv5-move-pick{display:grid;gap:8px;min-width:0}
+#quiz .us-gv5-move-q{margin:0;font-size:15px;font-weight:600;line-height:1.35;color:var(--us-color-text-2);overflow-wrap:anywhere}
+#quiz .us-gv5-move-pick dl{display:grid;gap:6px;margin:0}
+#quiz .us-gv5-move-pick dl>div{padding:10px 12px;border-radius:16px;color:var(--us-inchiostro)}
+#quiz .us-gv5-move-pick dl>div:nth-child(1){margin-left:18px;background:var(--us-tu)}
+#quiz .us-gv5-move-pick dl>div:nth-child(2){margin-right:18px;background:var(--us-partner)}
+#quiz .us-gv5-move-pick dt{margin:0 0 4px;font:700 11px/1.2 var(--us-font-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--us-inchiostro);opacity:.7}
+#quiz .us-gv5-move-pick dd{margin:0;font:400 16px/1.25 var(--us-font-display);color:var(--us-inchiostro);white-space:pre-wrap;overflow-wrap:anywhere}
+#quiz .us-gv5-move-actions{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:8px}
+#quiz .us-gv5-move-actions button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:0 14px;border-radius:999px;font-size:15px;line-height:1.15;text-align:center}
+#quiz .us-gv5-move-actions button.primary{background:var(--us-tu);color:var(--us-inchiostro);box-shadow:none}
+#quiz .us-gv5-move-actions button.ghost{background:transparent;color:var(--us-color-text);box-shadow:inset 0 0 0 1px var(--us-color-line-strong)}
+#quiz .us-gv5-move-actions button[data-gv2-sent="true"]{opacity:.7}
+#quiz .us-gv5-move-actions .us-gv2-icon{flex:none;width:18px;height:18px}
+#quiz .us-gv5-move-actions button:focus-visible{outline:2px solid var(--us-noi);outline-offset:2px}
+@media (max-width:360px){#quiz .us-gv5-move-actions{grid-template-columns:1fr}}
+#quiz .us-gv5-reading{margin:0;padding:14px 16px;border-radius:18px;background:color-mix(in srgb,var(--us-noi) 14%,var(--us-color-surface));font:400 20px/1.2 var(--us-font-display);color:var(--us-color-text);text-align:center;text-wrap:balance}
+/* a question one of you wrote, signed */
+#quiz .us-gv2-author{gap:6px}
+#quiz .us-gv2-author .us-gv2-icon{width:14px;height:14px;flex:none}
 
 /* ---------- La vostra domanda: create ---------- */
 #quiz .us-gv2-weekly-form .us-gv2-play-top .us-gv2-kicker{color:var(--us-menta)}
@@ -324,6 +345,11 @@
 #quiz .us-gioca-sintonia .bond-xp-track>div{border-radius:9px;background:var(--us-noi)!important;box-shadow:none;transition:width 700ms var(--us-ease-standard)}
 #quiz .us-gioca-sintonia .noi-resonance-foot{width:100%;justify-content:flex-end;margin-top:6px;font-size:12px;font-weight:600;color:var(--us-color-text-3)}
 #quiz .us-gioca-sintonia #bondCompletedCount{display:none}
+/* how it grows: one sentence, each thing opens its place */
+#quiz .us-gioca-sintonia .noi-resonance-grow{max-width:32ch;margin:10px auto 0;font-size:14px;line-height:1.5;color:var(--us-color-text-2);text-wrap:pretty}
+#quiz .us-gioca-sintonia .noi-resonance-grow button{display:inline;min-height:0;margin:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none;font:inherit;font-weight:600;color:var(--us-color-text);text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--us-noi) 70%,transparent);text-decoration-thickness:1.5px;text-underline-offset:3px;cursor:pointer}
+#quiz .us-gioca-sintonia .noi-resonance-grow>span{white-space:nowrap}
+#quiz .us-gioca-sintonia .noi-resonance-grow button:focus-visible{outline:2px solid var(--us-noi);outline-offset:2px;border-radius:4px}
 /* Ritmo stays in the data, not on this screen */
 #quiz .us-gioca-sintonia .us-progression-rhythm{display:none!important}
 
@@ -334,6 +360,11 @@
 #quiz .us-gioca-sintonia .us-progression-next small{font:700 11px/1.3 var(--us-font-ui);letter-spacing:.12em;color:var(--us-noi)}
 #quiz .us-gioca-sintonia .us-progression-next b,#quiz .us-gioca-sintonia .us-progression-next-copy b{font:400 22px/1.1 var(--us-font-display);color:var(--us-color-text)}
 #quiz .us-gioca-sintonia .us-progression-next-copy>span{font-size:13px;line-height:1.35;color:var(--us-color-text-3)}
+#quiz .us-gioca-sintonia .us-progression-next-copy b{font-size:20px;line-height:1.15;text-wrap:balance}
+#quiz .us-gioca-sintonia .us-progression-next-meta span{font-size:inherit;line-height:inherit;color:inherit}
+#quiz .us-gioca-sintonia .us-progression-next-meta span+span::before{content:"·";margin:0 6px}
+#quiz .us-gioca-sintonia .us-reward-scope{display:flex;flex-wrap:wrap;gap:2px 6px;margin:0 0 10px;font-size:13px;line-height:1.35;color:var(--us-color-text-3)}
+#quiz .us-gioca-sintonia .us-reward-scope b{font-weight:650;color:var(--us-color-text-2)}
 
 /* I vostri sblocchi: one category at a time */
 #quiz .us-gioca-sintonia .us-progression-rewards-section{margin-top:16px;padding:0;border:0;border-radius:0;background:none;box-shadow:none;overflow:visible}
@@ -371,38 +402,26 @@
 #quiz .us-gioca-sintonia .us-progression-reward.is-locked .us-progression-reward-copy b{color:var(--us-color-text-3)}
 #quiz .us-gioca-sintonia .us-progression-reward:focus-visible{outline:2px solid var(--us-noi);outline-offset:2px}
 
-/* folds: Ultime crescite, Come cresce la Sintonia */
-#quiz .us-gioca-sintonia details.noi-resonance-history,
-#quiz .us-gioca-sintonia details.noi-resonance-guide{border-radius:22px;background:var(--us-color-surface);border:1px solid var(--us-color-line)}
-#quiz .us-gioca-sintonia details.noi-resonance-history>summary,
-#quiz .us-gioca-sintonia details.noi-resonance-guide>summary{justify-content:flex-start;gap:12px;min-height:60px;padding:8px 16px;font-size:15px;font-weight:600}
-#quiz .us-gioca-sintonia details.noi-resonance-history>summary::before,
-#quiz .us-gioca-sintonia details.noi-resonance-guide>summary::before{content:"";flex:none;width:30px;height:30px;border-radius:10px;background:color-mix(in srgb,var(--us-noi) 16%,transparent)}
-#quiz .us-gioca-sintonia details.noi-resonance-history>summary>span,#quiz .us-gioca-sintonia details.noi-resonance-guide>summary{position:relative}
-#quiz .us-gioca-sintonia details.noi-resonance-history>summary>span{flex:1;min-width:0}
-#quiz .us-gioca-sintonia details.noi-resonance-guide>summary{padding-right:16px}
-#quiz .us-gioca-sintonia details.noi-resonance-history>summary::after,#quiz .us-gioca-sintonia details.noi-resonance-guide>summary::after{margin-left:auto;width:20px;height:20px;flex-basis:20px}
-#quiz .us-gioca-sintonia details.noi-resonance-history>summary b{font-weight:600;font-size:15px}
-#quiz .us-gioca-sintonia details.noi-resonance-history>summary small{font-size:12px;font-weight:500;color:var(--us-color-text-3)}
-/* the fold marks, drawn with Phosphor masks over the Noi chip */
-#quiz .us-gioca-sintonia details.noi-resonance-history>summary,#quiz .us-gioca-sintonia details.noi-resonance-guide>summary{--dcg-fold-icon:url("/assets/icons/phosphor/sparkle-regular.svg")}
-#quiz .us-gioca-sintonia details.noi-resonance-guide>summary{--dcg-fold-icon:url("/assets/icons/phosphor/question-regular.svg")}
-#quiz .us-gioca-sintonia details.noi-resonance-history>summary::before,
-#quiz .us-gioca-sintonia details.noi-resonance-guide>summary::before{background:var(--us-noi);-webkit-mask:var(--dcg-fold-icon) center/16px 16px no-repeat,linear-gradient(rgba(0,0,0,.16),rgba(0,0,0,.16));mask:var(--dcg-fold-icon) center/16px 16px no-repeat,linear-gradient(rgba(0,0,0,.16),rgba(0,0,0,.16))}
-#quiz .us-gioca-sintonia .noi-resonance-history-list{gap:8px}
-#quiz .us-gioca-sintonia .noi-resonance-history-row{grid-template-columns:30px minmax(0,1fr) auto;gap:10px;min-height:0;padding:4px 0;border:0;border-radius:0;background:none;box-shadow:none}
+/* Ultime crescite: an open diary under the Sintonia card */
+#quiz .us-gioca-sintonia .noi-resonance-history{display:grid;gap:10px;padding:14px 16px 12px;border-radius:22px;background:var(--us-color-surface);border:1px solid var(--us-color-line);box-shadow:none}
+#quiz .us-gioca-sintonia .noi-resonance-history-head{display:grid;gap:2px}
+#quiz .us-gioca-sintonia .noi-resonance-history-head h3{margin:0;font:400 22px/1.15 var(--us-font-display);color:var(--us-color-text)}
+#quiz .us-gioca-sintonia .noi-resonance-history-head small{font-size:12px;font-weight:500;color:var(--us-color-text-3)}
+#quiz .us-gioca-sintonia .noi-resonance-history-list{display:grid;gap:4px}
+#quiz .us-gioca-sintonia .noi-resonance-history-row{display:grid;grid-template-columns:30px minmax(0,1fr);align-items:center;gap:10px;min-height:0;padding:4px 0;border:0;border-radius:0;background:none;box-shadow:none}
 #quiz .us-gioca-sintonia .noi-resonance-history-mark{width:30px;height:30px;border-radius:10px;background:color-mix(in srgb,var(--us-noi) 16%,transparent);color:var(--us-noi);box-shadow:none}
-#quiz .us-gioca-sintonia .noi-resonance-history-mark::before{background:var(--us-noi)}
+#quiz .us-gioca-sintonia .noi-resonance-history-mark::before{width:16px;height:16px;background:var(--us-noi)}
+#quiz .us-gioca-sintonia [data-resonance-kind="quest"] .noi-resonance-history-mark::before{-webkit-mask-image:url("/assets/icons/phosphor/flag-banner-regular.svg");mask-image:url("/assets/icons/phosphor/flag-banner-regular.svg")}
+#quiz .us-gioca-sintonia [data-resonance-kind="event"] .noi-resonance-history-mark::before{-webkit-mask-image:url("/assets/icons/phosphor/calendar-heart-regular.svg");mask-image:url("/assets/icons/phosphor/calendar-heart-regular.svg")}
+#quiz .us-gioca-sintonia [data-resonance-kind="milestone"] .noi-resonance-history-mark::before{-webkit-mask-image:url("/assets/icons/phosphor/heart-straight-regular.svg");mask-image:url("/assets/icons/phosphor/heart-straight-regular.svg")}
+#quiz .us-gioca-sintonia .noi-resonance-history-copy{display:block;margin:0;min-width:0;font-size:14px;line-height:1.35;color:var(--us-color-text);overflow-wrap:anywhere}
+#quiz .us-gioca-sintonia .noi-resonance-history-copy time{font-weight:600;color:var(--us-color-text-2);font-variant-numeric:tabular-nums}
+#quiz .us-gioca-sintonia .noi-resonance-history-sep{color:var(--us-color-text-3)}
+#quiz .us-gioca-sintonia .noi-resonance-history-copy b{font-size:inherit;line-height:inherit;font-weight:600}
 #quiz .us-gioca-sintonia .noi-resonance-history-copy small{font-size:12px;color:var(--us-color-text-3)}
-#quiz .us-gioca-sintonia .noi-resonance-history-copy b{font-size:14px;font-weight:600;color:var(--us-color-text)}
-#quiz .us-gioca-sintonia .noi-resonance-history-row strong{font-size:14px;font-weight:700;color:var(--us-noi)}
+#quiz .us-gioca-sintonia .noi-resonance-history-empty{display:grid;gap:2px;padding:2px 0 4px;border:0;background:none}
 #quiz .us-gioca-sintonia .noi-resonance-history-empty b{font-weight:600}
 #quiz .us-gioca-sintonia .noi-resonance-history-empty span{color:var(--us-color-text-3)}
-#quiz .us-gioca-sintonia .noi-resonance-stats span{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-size:14px;color:var(--us-color-text-2)}
-#quiz .us-gioca-sintonia .noi-resonance-stats b{font:400 22px/1 var(--us-font-display);color:var(--us-noi)}
-#quiz .us-gioca-sintonia .noi-resonance-sources{display:grid;gap:10px;margin:0 16px 14px;padding:0;list-style:none}
-#quiz .us-gioca-sintonia .noi-resonance-sources li{display:grid;gap:2px;font-size:14px;color:var(--us-color-text-2)}
-#quiz .us-gioca-sintonia .noi-resonance-sources b{font-weight:600;color:var(--us-color-text)}
 
 /* ---------- Reward previews: Atmosfere change the night, Accenti change Noi, the two people never change ---------- */
 .us-cos-theme{background:radial-gradient(110% 70% at 50% 0%,var(--us-theme-glow-a,color-mix(in srgb,var(--us-noi) 22%,transparent)),transparent 72%),var(--us-color-bg)}
@@ -449,6 +468,9 @@
 #usProgressionUnlock p{max-width:300px;font-size:15px;line-height:1.45;color:var(--us-color-text-2)}
 #usProgressionUnlock .us-progression-unlock-place{gap:6px;margin-top:2px!important;padding:6px 12px;border:1px solid var(--us-color-line-strong);background:transparent;font-size:13px!important;color:var(--us-color-text-2)!important}
 #usProgressionUnlock .us-progression-unlock-place::before{width:7px;height:7px;background:var(--mc);box-shadow:none}
+#usProgressionUnlock .us-progression-unlock-scope{margin:0;font-size:13px;font-weight:600;color:var(--us-color-text-2)}
+#usProgressionUnlock .us-progression-unlock-scope[hidden]{display:none!important}
+#usProgressionUnlock .us-progression-unlock-keep{margin:2px 0 0;font-size:13px;line-height:1.4;color:var(--us-color-text-3)}
 #usProgressionUnlock .us-progression-unlock-extra{border-color:var(--us-color-line-strong);background:var(--us-color-surface)}
 #usProgressionUnlock .us-progression-unlock-extra-copy small{color:var(--mc)}
 #usProgressionUnlock .us-progression-unlock-actions{display:grid;grid-template-columns:1fr;gap:8px;width:100%;margin-top:14px}
@@ -461,7 +483,8 @@
 #usProgressionUnlock.open #usProgressionUnlockDescription{animation:dcg-fade-up 380ms 640ms var(--us-ease-standard) both}
 #usProgressionUnlock.open .us-progression-unlock-place{animation:dcg-fade-up 380ms 690ms var(--us-ease-standard) both}
 #usProgressionUnlock.open .us-progression-unlock-extra{animation:dcg-fade-up 380ms 730ms var(--us-ease-standard) both}
-#usProgressionUnlock.open .us-progression-unlock-actions{animation:dcg-fade-up 380ms 770ms var(--us-ease-standard) both}
+#usProgressionUnlock.open .us-progression-unlock-scope{animation:dcg-fade-up 380ms 710ms var(--us-ease-standard) both}
+#usProgressionUnlock.open .us-progression-unlock-actions,#usProgressionUnlock.open .us-progression-unlock-keep{animation:dcg-fade-up 380ms 770ms var(--us-ease-standard) both}
 @keyframes dcg-flood{from{clip-path:circle(0% at 50% 0%)}to{clip-path:circle(150% at 50% 0%)}}
 @keyframes dcg-card-drop{0%{opacity:0;transform:translateY(-60px) rotate(-8deg)}70%{opacity:1;transform:translateY(6px) rotate(2deg)}100%{opacity:1;transform:none}}
 @keyframes dcg-fade-up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -471,11 +494,14 @@
 .us-level-moment{position:fixed;inset:0;z-index:10125;display:grid;place-items:center;padding:max(24px,var(--us-safe-top)) max(24px,var(--us-safe-right)) max(24px,var(--us-safe-bottom)) max(24px,var(--us-safe-left));overflow-y:auto;background:radial-gradient(120% 70% at 50% 0%,color-mix(in srgb,var(--us-noi) 52%,var(--us-color-bg)),var(--us-color-bg) 64%);color:var(--us-color-text);text-align:center}
 .us-level-moment-body{display:grid;justify-items:center;gap:8px;width:100%;max-width:320px}
 .us-level-moment-kicker{font:700 11px/1.2 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-noi)}
-.us-level-moment h2{margin:0;font:400 40px/1.02 var(--us-font-display);letter-spacing:-.01em;color:var(--us-color-text);text-wrap:balance}
+.us-level-moment h2{margin:0;font:400 36px/1.06 var(--us-font-display);letter-spacing:-.01em;color:var(--us-color-text);text-wrap:balance}
 .us-level-moment h2 em{font-style:italic;color:var(--us-noi)}
 .us-level-moment p{margin:0;font-size:15px;line-height:1.45;color:var(--us-color-text-2)}
-.us-level-moment-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid var(--us-color-line-strong);font-size:13px;color:var(--us-color-text-2)}
-.us-level-moment-chip::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--us-noi)}
+.us-level-moment-gifts{display:grid;gap:6px;width:100%;margin:8px 0 0;padding:0;list-style:none}
+.us-level-moment-gifts li{display:flex;align-items:baseline;justify-content:center;flex-wrap:wrap;gap:4px 8px;padding:10px 14px;border-radius:18px;border:1px solid var(--us-color-line-strong);font-size:14px;line-height:1.3}
+.us-level-moment-gifts li::before{content:"";align-self:center;width:7px;height:7px;border-radius:50%;background:var(--us-noi)}
+.us-level-moment-gifts b{font-weight:650;color:var(--us-color-text)}
+.us-level-moment-gifts span{color:var(--us-color-text-3)}
 .us-level-moment-actions{display:grid;width:100%;margin-top:14px}
 .us-level-moment-actions .primary{min-height:52px;border-radius:999px;font-size:15px}
 .us-level-moment-actions .primary:focus-visible{outline:2px solid var(--us-latte);outline-offset:3px}
@@ -501,15 +527,6 @@
 .lvx.is-done .lvx-odo i{translate:0 -100%}
 :root[data-us-motion="reduced"] .us-level-moment{animation:dcg-fade 240ms ease-out both}
 @media (prefers-reduced-motion:reduce){.us-level-moment{animation:dcg-fade 240ms ease-out both}}
-
-/* ---------- XP pop: a Noi pill, "+35 XP · Sintonia" ---------- */
-#usXpCelebration.us-xp-celebration{top:36%;bottom:auto;display:grid;justify-items:center;min-width:0;max-width:min(300px,calc(100vw - 40px));padding:14px 24px;border-radius:26px;background:var(--us-noi);color:var(--us-inchiostro);box-shadow:0 20px 50px rgba(0,0,0,.45);backdrop-filter:none;-webkit-backdrop-filter:none;text-align:center;transform:translate3d(-50%,18px,0) scale(.92);transition:transform 420ms var(--us-ease-enter),opacity 220ms var(--us-ease-standard)}
-#usXpCelebration.us-xp-celebration.show{transform:translate3d(-50%,0,0) scale(1)}
-#usXpCelebration.us-xp-celebration.leave{transform:translate3d(-50%,-30px,0) scale(1)}
-#usXpCelebration.us-xp-celebration>i{display:none}
-#usXpCelebration.us-xp-celebration span{display:grid;justify-items:center;gap:2px}
-#usXpCelebration.us-xp-celebration b{font:500 36px/1 var(--us-font-display);color:inherit}
-#usXpCelebration.us-xp-celebration small{margin:0;font:700 12px/1.2 var(--us-font-ui);color:inherit}
 
 /* ---------- 360px and large text ---------- */
 @media (max-width:360px){
@@ -539,14 +556,10 @@
 :root[data-us-motion="reduced"] #quiz .us-gv2-choice:active{transform:none}
 :root[data-us-motion="reduced"] #usProgressionUnlock.open{animation:dcg-fade 240ms ease-out both}
 :root[data-us-motion="reduced"] #usProgressionUnlock.open *{animation:none!important}
-:root[data-us-motion="reduced"] #usXpCelebration.us-xp-celebration,
-:root[data-us-motion="reduced"] #usXpCelebration.us-xp-celebration.show,
-:root[data-us-motion="reduced"] #usXpCelebration.us-xp-celebration.leave{transform:translate3d(-50%,0,0);transition:opacity 200ms ease-out}
 @media (prefers-reduced-motion:reduce){
   #quiz .us-gioca-tabs::before,#quiz .us-gioca-tab,#quiz .us-gv2-choice,#quiz .us-gv2-choice-key,#quiz .us-gioca-sintonia .bond-xp-track>div{transition:none}
   #quiz .us-gv2-panel.us-content-enter::before,#quiz .us-gv2-panel.us-content-enter>article,#quiz .us-gioca-sintonia .us-reward-group.is-entering{animation:dcg-fade 200ms ease-out both}
   #quiz .us-gv2-choice:active{transform:none}
   #usProgressionUnlock.open{animation:dcg-fade 240ms ease-out both}
   #usProgressionUnlock.open *{animation:none!important}
-  #usXpCelebration.us-xp-celebration,#usXpCelebration.us-xp-celebration.show,#usXpCelebration.us-xp-celebration.leave{transform:translate3d(-50%,0,0);transition:opacity 200ms ease-out}
 }
