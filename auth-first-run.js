@@ -45,7 +45,7 @@
       installMode = 'prompt';
       n.root.hidden = false;
       n.title.textContent = 'Tieni US sul telefono';
-      n.copy.textContent = 'Si apre come un’app, senza barra del browser.';
+      n.copy.textContent = 'Dal browser, si apre come un’app.';
       n.button.textContent = 'Installa';
       if (n.help) n.help.hidden = true;
       return;
