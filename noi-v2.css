@@ -5,9 +5,7 @@
   height:auto!important;min-height:calc(100svh - var(--us-top-chrome-clearance) - var(--us-safe-top) - var(--us-nav-height) - 44px)!important;
   overflow:visible!important;gap:0!important;padding-bottom:calc(var(--us-safe-bottom) + 102px)!important;
 }
-#bond .noi-canonical-page[data-noi-view="hub"]>.noi-canonical-head,
-#bond .noi-canonical-page[data-noi-view="hub"]>.noi-week-board,
-#bond .noi-canonical-page[data-noi-view="hub"]>.noi-hub{display:none!important}
+#bond .noi-canonical-page[data-noi-view="hub"]>.noi-canonical-head{display:none!important}
 #bond .noi-canonical-page:not([data-noi-view="hub"])>.us-noi-v2{display:none!important}
 /* Distance stays computed and stored; it is only not shown in Noi for now. */
 #bond .noi-couple-link{display:none!important}

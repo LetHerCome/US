@@ -241,7 +241,9 @@ test('Noi distance: the existing capsule render also fills the couple row, and o
   assert.doesNotMatch(render, /sb\.|localStorage|upsert|insert|update\(/);
 });
 
-test('Noi: the couple row stays centered, the weekly board owns Calendar, and active destinations stay focused', () => {
+// US 1.0 (N3/N10): the old board and hidden hub are gone. "La nostra settimana",
+// Missioni and Eventi are the three links under the one Noi calendar.
+test('Noi: the couple row stays centered, "La nostra settimana" owns the week, and destinations stay focused', () => {
   const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
   const head = bond.match(/<header class="noi-canonical-head noi-couple-head">[\s\S]*?<\/header>/)?.[0] || '';
   assert.match(head, /id="pairAvatarFrancesco"><img alt="" hidden><span class="fallback"/);
@@ -252,38 +254,21 @@ test('Noi: the couple row stays centered, the weekly board owns Calendar, and ac
   assert.ok(head.indexOf('id="noiCoupleCard"') < head.indexOf('id="usSettingsEntry"'), 'Settings lives inside the couple card');
   assert.match(app, /if\(profile\.role==='francesco'\)setAvatarSlot\('pairAvatarFrancesco',url\);/);
   assert.match(app, /if\(profile\.role==='beatrice'\)setAvatarSlot\('pairAvatarBeatrice',url\);/);
-  const board = bond.match(/<section class="noi-week-board" id="noiWeekBoard"[\s\S]*?<\/section>/)?.[0] || '';
-  assert.match(board, /id="noiWeekBoardOpen" data-noi-week-board-open/);
-  assert.match(board, /id="noiWeekBoardBody"/);
-  assert.ok(bond.indexOf('id="noiWeekBoard"') < bond.indexOf('id="noiHub"'), 'weekly board sits before the Noi destinations');
-  const hub = bond.match(/<nav class="noi-hub" id="noiHub"[\s\S]*?<\/nav>/)?.[0] || '';
-  const targets = [...hub.matchAll(/class="noi-hub-card noi-hub-card--([a-z]+)" data-noi-open="([a-z-]+)"/g)].map((m) => [m[1], m[2]]);
-  assert.deepEqual(targets, [['resonance', 'resonance'], ['quest', 'quest'], ['events', 'eventi']]);
-  assert.doesNotMatch(hub, /id="usCalendarEntry"|noi-hub-card--calendar|data-noi-open="da-vivere"|noi-hub-card--ideas/);
-  for (const id of ['noiHubResonanceTitle', 'noiHubResonanceMeta', 'noiHubResonanceFill', 'noiHubQuestTitle', 'noiHubQuestMeta', 'noiHubEventsTitle', 'noiHubEventsMeta']) {
-    assert.equal((html.match(new RegExp(`id="${id}"`, 'g')) || []).length, 1, id);
-  }
+  assert.doesNotMatch(bond, /id="noiWeekBoard"|id="noiHub"|id="usCalendarEntry"|noi-hub-card/);
+  const targets = [...bond.matchAll(/data-noi-open-link="([a-z-]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(targets, ['lavagna', 'quest', 'eventi']);
+  assert.match(app, /document\.querySelector\(`#usNoiV2 \[data-noi-open-link="\$\{from\}"\]`\)\?\.focus\(\{preventScroll:true\}\)/, 'closing a section focuses its link again');
 });
 
 
 
-test('Noi density: Lavagna replaces the Calendar row while Risonanza remains the only hub hero', () => {
+test('Noi density: the one calendar comes first, then the three links; no second hero', () => {
   const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
-  const hub = bond.match(/<nav class="noi-hub" id="noiHub"[\s\S]*?<\/nav>/)?.[0] || '';
-  const group = hub.match(/<div class="noi-hub-destinations" role="group" aria-label="Voi">[\s\S]*?<\/div>/)?.[0] || '';
-  assert.match(bond, /class="noi-week-board"/);
-  assert.match(hub, /noi-hub-card--resonance/);
-  assert.doesNotMatch(
-    hub.slice(0, hub.indexOf('noi-hub-destinations')),
-    /noi-hub-card--calendar|noi-hub-card--quest|noi-hub-card--events/
-  );
-  for (const kind of ['quest', 'events']) assert.match(group, new RegExp(`noi-hub-card--${kind}`), kind);
-  assert.doesNotMatch(group, /noi-hub-card--calendar/);
-  const css = read('styles.css');
-  assert.match(css, /US-NOI-DENSITY-02/);
-  assert.match(css, /\.noi-hub-card--resonance\{min-height:108px;/);
-  assert.match(css, /\.noi-hub-destinations[\s\S]*?border-radius:20px/);
-  assert.match(css, /\.noi-week-board-shell\{[^}]*border-radius:22px/);
+  assert.ok(bond.indexOf('id="usNoiV2Content"') < bond.indexOf('data-noi-open-link="lavagna"'), 'the calendar sits above the links');
+  assert.match(bond, /<b>La nostra settimana<\/b><small>Sere libere<\/small>/);
+  assert.match(bond, /<b>Missioni<\/b>/);
+  assert.match(bond, /<b>Eventi<\/b>/);
+  assert.doesNotMatch(bond, /class="noi-week-board"|noi-hub-card--resonance/);
 });
 
 test('Quest: action paths are untouched (server-authoritative confirm / reroll)', () => {

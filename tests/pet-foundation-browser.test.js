@@ -214,13 +214,14 @@ test('PET stays through notices and the Ti penso arrival, steps aside for exclus
  }finally{await h.close();}
 });
 
+// US 1.0 (N10): the old calendar overlay is gone; its detail and form sheets are the calendar's sheets now.
 test('layer ladder: content < nav < notices < Ti penso < PET < every sheet < confirm, auth above sheets',async t=>{
  const h=await start();if(!h)return t.skip('Playwright unavailable');
  try{
   const {page,ctx,errors}=await pageFor(h,{});
   const z=await page.evaluate(()=>{const v=q=>Number(getComputedStyle(document.querySelector(q)).zIndex);
    return {nav:v('.nav'),toast:v('#toast'),nudge:v('#usDailyNudge'),status:v('#appStatusBar'),update:v('#appUpdateBar'),think:v('#thinkArrival'),pet:v('#usPetLayer'),
-    sheets:['#today','#usCountdownSheet','#usEventsOverlay','#leftForYouOverlay','#leftForYouComposerOverlay','#leftForYouCameraOverlay','#momentViewer','#usMomentComposeOverlay','#usSettingsOverlay','#usCalendarOverlay','#conservatiOverlay','#usAlbumOverlay'].map(q=>[q,v(q)]),
+    sheets:['#today','#usCountdownSheet','#usEventsOverlay','#leftForYouOverlay','#leftForYouComposerOverlay','#leftForYouCameraOverlay','#momentViewer','#usMomentComposeOverlay','#usSettingsOverlay','#usCalendarDetailSheet','#usCalendarFormSheet','#conservatiOverlay','#usAlbumOverlay'].map(q=>[q,v(q)]),
     unlock:v('#usProgressionUnlock'),auth:v('#authOverlay')};});
   assert.ok(z.nav<z.toast&&z.toast<=z.nudge&&z.nudge<=z.status&&z.status===z.update&&z.update<z.think&&z.think<z.pet,JSON.stringify(z));
   for(const [q,value] of z.sheets)assert.ok(value>z.pet,`${q} (${value}) sits above the PET (${z.pet})`);

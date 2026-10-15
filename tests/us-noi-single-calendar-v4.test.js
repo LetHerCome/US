@@ -8,7 +8,9 @@ const root=path.join(__dirname,'..');
 const read=name=>fs.readFileSync(path.join(root,name),'utf8');
 const html=read('index.html'),noi=read('noi-v2.js'),calendar=read('calendar.js'),css=read('noi-v2.css');
 test('Noi is the only user-facing calendar; legacy launchers delegate rather than opening old overlay',()=>{
-  assert.match(calendar,/if\(window\.USNoiV2\?\.openCalendar\)\{\s*window\.USNoiV2\.openCalendar\(\{date:targetDateISO,mode:arguments\[1\]\?\.mode\}\);\s*return;/);
+  // 1.0 (N10): the old overlay is gone, so the legacy launcher is only a router to Noi.
+  assert.match(calendar,/function openCalendarSurface\(targetDateISO, options = \{\}\) \{\s*window\.USNoiV2\?\.openCalendar\?\.\(\{ date: targetDateISO, mode: options\?\.mode === 'week' \? 'week' : 'calendar' \}\);\s*\}/);
+  assert.doesNotMatch(html,/id="usCalendarOverlay"/);
   assert.match(noi,/openCalendar:\(\{date,mode:requestedMode\}=\{\}\)=>openMainCalendar\(date,requestedMode\)/);
   assert.match(noi,/mode=requestedMode==='week'\?'week':'calendar'/);
   assert.match(noi,/window\.go\?\.\('bond',\{nav:true\}\)/);
@@ -24,15 +26,18 @@ test('Noi add uses existing date-aware editor directly, preserving all-day, star
   assert.match(calendar,/startCreateForDate\(dateISO\);\s*void prepareNoiEntryDate\(dateISO\)\.then/,'editor opens before waiting on reads');
   assert.match(calendar,/ensureNoiEditorSheets\(\)/);
   for(const id of ['usCalendarTitleInput','usCalendarAllDayInput','usCalendarStartTimeInput','usCalendarEndTimeInput','usCalendarFormSave','usCalendarDateInput'])assert.match(html,new RegExp('id="'+id+'"'));
-  assert.match(calendar,/await Promise\.all\(\[\s*fetchEntriesForRange\(coupleId,dateISO,shiftISODate\(dateISO,1\)\),\s*loadProfiles\(\),\s*loadEntryReminders\(\)/);
+  // 1.0 (N8): no "Ricordamelo" in the detail, so the editor no longer reads reminders.
+  assert.match(calendar,/await Promise\.all\(\[\s*fetchEntriesForRange\(coupleId,dateISO,shiftISODate\(dateISO,1\)\),\s*loadProfiles\(\)\s*\]\)/);
+  assert.doesNotMatch(calendar,/loadEntryReminders|Ricordamelo/);
   assert.match(calendar,/window\.USNoiV2\?\.refresh\?\.\(\)/);
   assert.match(calendar,/function closeCalendarFormSheet\(\)/);
   assert.match(calendar,/closeCalendarDetailSheet\(\);\s*closeCalendarFormSheet\(\);\s*clearIdeaPick\(\)/,'identity changes close independent editor sheets');
-  assert.match(calendar,/async function openCalendarEntry\(entryId\)/);
+  assert.match(calendar,/async function openCalendarEntry\(entryId, \{ inPlace = false \} = \{\}\)/);
 });
-test('Lavagna week is in Noi and restores month, linked-idea picker remains date-authoritative',()=>{
+test('La nostra settimana is in Noi and restores month, linked-idea picker remains date-authoritative',()=>{
   assert.match(noi,/function weekMarkup\(index\)/);
   assert.match(noi,/if\(link==='lavagna'\)\{mode='week';render\(\)/);
+  assert.match(html,/data-noi-open-link="lavagna"[\s\S]*?<b>La nostra settimana<\/b>/);
   assert.match(html,/id="usNoiV2WeekBack" hidden/);
   assert.match(noi,/window\.UsCalendarLinks\?\.createForIdeaDate/);
   assert.match(calendar,/async function createCalendarEntryForIdeaDate\(dateISO\)/);

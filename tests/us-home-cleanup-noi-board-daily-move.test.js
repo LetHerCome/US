@@ -24,25 +24,23 @@ test('Home cleanup: Oggi keeps photo/countdown dominant and retires the dashboar
   assert.doesNotMatch(home, /noi-week-board|us-gv2-daily/, 'new destinations do not leak back into Oggi');
 });
 
-test('Noi Lavagna: it replaces the Calendar tile and reads the existing calendar authority only', () => {
+// US 1.0 (N3/N10): the Lavagna board is now "La nostra settimana", the week
+// view of the Noi calendar; its free evenings read nothing new.
+test('Noi: "La nostra settimana" replaces Lavagna and reads the existing calendar authority only', () => {
   const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
-  assert.match(bond, /id="noiWeekBoard"/);
-  assert.match(bond, /id="noiWeekBoardOpen" data-noi-week-board-open/);
-  assert.match(bond, /id="noiWeekBoardBody"/);
-  assert.ok(bond.indexOf('id="noiWeekBoard"') < bond.indexOf('id="noiHub"'));
+  assert.match(bond, /data-noi-open-link="lavagna"[^>]*>[\s\S]*?<b>La nostra settimana<\/b>/);
+  assert.doesNotMatch(bond, /id="noiWeekBoard"|id="noiWeekBoardOpen"|id="noiWeekBoardBody"|id="noiHub"/);
   assert.doesNotMatch(bond, /id="usCalendarEntry"|noi-hub-card--calendar/);
+  assert.doesNotMatch(calendar, /US_NOI_WEEK_BOARD_LIMIT|refreshNoiWeekBoard/);
 
-  const start = calendar.indexOf('const US_NOI_WEEK_BOARD_LIMIT');
-  const end = calendar.indexOf('function ownerMarkOf', start);
+  const start = calendar.indexOf('function noiFreeEvenings(');
+  const end = calendar.indexOf('\n}', start);
   const source = calendar.slice(start, end);
-  assert.ok(start >= 0 && end > start, 'weekly board source exists');
-  assert.match(source, /fetchEntriesForRange\(coupleId, today, end\)/);
-  assert.match(source, /sb\.from\('profiles'\)\.select\('id,display_name'\)/);
-  assert.match(source, /window\.openCalendarSurface\?\.\(date\)/);
-  assert.doesNotMatch(source, /localStorage|sessionStorage|indexedDB|\.insert\(|\.update\(|\.upsert\(|sb\.rpc\(/);
-  assert.match(calendar, /if \(\$\('bond'\)\?\.classList\.contains\('active'\)\) window\.refreshNoiWeekBoard\?\.\(\);/);
-  assert.match(source, /keep the last resolved board visible while the canonical calendar refreshes/);
-  assert.doesNotMatch(source, /if \(body\) body\.innerHTML = '<span class="noi-week-board-loading">Carico gli impegni…<\/span>';/, 'same-couple refresh never replaces resolved Lavagna with a loader');
+  assert.ok(start >= 0 && end > start, 'free evenings source exists');
+  assert.match(source, /freeEveningFor\(appointments, dateISO, roleOf, eventTimesByDate\[dateISO\] \|\| \[\]\)/);
+  assert.doesNotMatch(source, /sb\.|localStorage|sessionStorage|indexedDB|\.insert\(|\.update\(|\.upsert\(/);
+  const noi = read('noi-v2.js');
+  assert.match(noi, /if\(data\)\{snapshot=data;refreshedAt=Date\.now\(\);\}/, 'the last resolved month stays until the new one arrives');
 });
 
 function dailyModel(state, reveal = null) {

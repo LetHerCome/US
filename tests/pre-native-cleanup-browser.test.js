@@ -25,7 +25,8 @@ test('pre-native browser: couple card stays compact, contained and opens Setting
           settings: box('#usSettingsEntry'),
           francesco: box('#pairAvatarFrancesco'),
           beatrice: box('#pairAvatarBeatrice'),
-          board: box('#noiWeekBoard'),
+          // US 1.0 (N10): the old Lavagna board is gone; the Noi calendar sits below the card.
+          board: box('#usNoiV2'),
           names: [...document.querySelectorAll('.noi-couple-name')].map((el) => el.textContent.trim())
         };
       });
@@ -35,7 +36,7 @@ test('pre-native browser: couple card stays compact, contained and opens Setting
       assert.ok(geometry.settings.left >= geometry.card.left && geometry.settings.right <= geometry.card.right, width + ': Settings inside card');
       assert.ok(geometry.settings.top >= geometry.card.top && geometry.settings.bottom <= geometry.card.bottom, width + ': Settings stays inside the bridge bounds');
       assert.ok(geometry.settings.left >= geometry.beatrice.right - 1, width + ': Settings does not cover Beatrice');
-      assert.ok(geometry.board.top > geometry.card.bottom, width + ': Lavagna stays below the card');
+      assert.ok(geometry.board.top > geometry.card.bottom, width + ': the calendar stays below the card');
       assert.deepEqual(geometry.names, ['Francesco', 'Beatrice']);
       assert.ok(geometry.viewport.scrollWidth <= geometry.viewport.width, width + ': no horizontal overflow');
 
@@ -51,26 +52,27 @@ test('pre-native browser: couple card stays compact, contained and opens Setting
 });
 
 
-test('Noi return: Lavagna keeps resolved content visible while it refreshes in the background', async (t) => {
+// US 1.0 (N10): the old Lavagna board is gone; the Noi calendar is what returns.
+test('Noi return: the calendar keeps resolved content visible while it refreshes in the background', async (t) => {
   const h = await start();
   if (!h) return t.skip('Playwright unavailable');
   try {
     const view = await pageFor(h, { width: 390, height: 844 });
     const { page } = view;
     await page.evaluate(() => window.go('bond', { nav: true }));
-    await page.waitForFunction(() => !document.querySelector('#noiWeekBoardBody .noi-week-board-loading'));
-    const before = await page.locator('#noiWeekBoardBody').innerHTML();
+    await page.waitForFunction(() => document.getElementById('usNoiV2Content')?.dataset.state === 'ready');
+    const before = await page.locator('#usNoiV2Content').innerHTML();
     await page.evaluate(() => window.go('home', { nav: true }));
     await page.waitForTimeout(80);
     await page.evaluate(() => window.go('bond', { nav: true }));
     const immediate = await page.evaluate(() => ({
-      loading: Boolean(document.querySelector('#noiWeekBoardBody .noi-week-board-loading')),
-      html: document.getElementById('noiWeekBoardBody').innerHTML
+      state: document.getElementById('usNoiV2Content').dataset.state,
+      html: document.getElementById('usNoiV2Content').innerHTML
     }));
-    assert.equal(immediate.loading, false, 'returning to Noi never flashes the loader');
-    assert.equal(immediate.html, before, 'the last resolved board stays painted during refresh');
+    assert.equal(immediate.state, 'ready', 'returning to Noi never flashes the loader');
+    assert.equal(immediate.html, before, 'the last resolved month stays painted during refresh');
     await page.waitForTimeout(500);
-    assert.equal(await page.locator('#noiWeekBoardBody .noi-week-board-loading').count(), 0);
+    assert.equal(await page.locator('#usNoiV2Content[data-state="loading"]').count(), 0);
     assert.deepEqual(view.errors, []);
     await view.ctx.close();
   } finally {

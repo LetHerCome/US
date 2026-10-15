@@ -13,7 +13,8 @@ const noiJs = read('noi-v2.js');
 const noiCss = read('noi-v2.css');
 const worker = read('service-worker.js');
 const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
-const noi = bond.match(/<section class="us-noi-v2"[\s\S]*?<\/section>\s*\n\s*<section class="noi-week-board"/)?.[0] || '';
+// 1.0: the old Lavagna that followed Noi V2 is gone; the Sintonia card comes next.
+const noi = bond.match(/<section class="us-noi-v2"[\s\S]*?<\/section>\s*\n\s*<article class="noi-resonance"/)?.[0] || '';
 
 // ------------------------------------------------------------------ icons
 test('Noi icons: well-formed markup, the approved settings icon, a real list icon', () => {
@@ -50,7 +51,8 @@ test('Noi links: Lavagna opens the existing Calendar in its Week view; + opens t
   assert.match(noiJs, /if\(link==='quest'\|\|link==='eventi'\)window\.openNoiSection\?\.\(link\)/);
   assert.match(noiJs, /window\.UsCalendarLinks\.createForDate\(selected\)/);
   const cal = read('calendar.js');
-  assert.match(cal, /const requestedMode = arguments\[1\]\?\.mode;/);
+  // The old full-screen calendar is gone: its entry point now opens Noi.
+  assert.match(cal, /function openCalendarSurface\(targetDateISO, options = \{\}\) \{\s*window\.USNoiV2\?\.openCalendar\?\.\(/);
   assert.match(cal, /async function createCalendarEntryForDate\(dateISO\)[\s\S]*?startCreateForDate\(dateISO\)/, 'the existing editor, no second one');
   assert.match(cal, /createForDate: createCalendarEntryForDate/);
   assert.doesNotMatch(noiJs, /\.insert\(|\.update\(|\.delete\(|sb\.rpc\(|sb\.from\(/, 'Noi stays read-only');
@@ -121,7 +123,8 @@ test('Noi calendar: only the weeks the month spans, today selected, one dot per 
   const detail = node('usNoiV2Detail').innerHTML;
   assert.match(detail, /<small>OGGI<\/small>/);
   const titles = [...detail.matchAll(/<b(?: translate="no")?>([^<]+)<\/b>/g)].map((m) => m[1]);
-  assert.deepEqual(titles, ['Il nostro giorno', 'Palestra', 'Cena'], 'anniversary first, then by time');
+  // 1.0 (N2): the yearly date is called Anniversario, as in Eventi.
+  assert.deepEqual(titles, ['Anniversario', 'Palestra', 'Cena'], 'anniversary first, then by time');
   assert.equal(node('usNoiV2Today').hidden, true, '"Torna a oggi" only when you are elsewhere');
 });
 

@@ -10,6 +10,7 @@ const cal = require('../calendar.js');
 const html = () => read('index.html');
 const js = () => read('calendar.js');
 const css = () => read('calendar.css');
+const noi = () => read('noi-v2.js');
 const form = () => html().match(/<form class="us-cal-form"[\s\S]*?<\/form>/)?.[0] || '';
 const localISO = (y, m, d, hh, mm) => new Date(y, m - 1, d, hh, mm, 0, 0).toISOString();
 
@@ -30,20 +31,24 @@ test('M9C/US 1.0: the quick form keeps one title flow and explicit keyboard Iniz
   assert.match(js(), /if \(dateField\) dateField\.hidden = mode !== 'edit';/);
 });
 
-test('M9C/M10.1C: month day selects, "Aggiungi impegno" and the week day create; tapping an event opens it', () => {
+// US 1.0 (N10): the old overlay is gone; the Noi calendar selects, its "+" creates.
+test('M9C/M10.1C: a Noi day selects, the "+" creates for that day; tapping an event opens it', () => {
   const src = js();
   assert.match(src, /function startCreateForDate\(dateISO\)/);
-  assert.match(src, /selectDay\(btn\.dataset\.date\)/, 'month cell selects the day');
-  assert.match(src, /\$\('usCalendarAddEntry'\)\?\.addEventListener\('click', \(\) => startCreateForDate\(selectedDate \|\| todayISO\(\)\)\)/, 'explicit create');
-  assert.match(src, /\.us-cal-week-day\[data-date\]'\)\.forEach\(\(day\) => day\.addEventListener\('click', \(event\) => \{\s*if \(event\.target\.closest\?\.\('\[data-entry-id\]'\)\) return;/, 'week day, but not when an event was tapped');
-  assert.match(src, /querySelectorAll\('\[data-entry-id\]'\)\.forEach\(\(btn\) => btn\.addEventListener\('click', \(\) => openDetail\(btn\.dataset\.entryId\)\)\)/);
+  assert.match(noi(), /const day=e\.target\.closest\('\[data-noi-day\]'\);if\(day\)\{chooseDay\(/, 'a day selects');
+  assert.match(noi(), /if\(window\.UsCalendarLinks\?\.createForDate\)window\.UsCalendarLinks\.createForDate\(selected\);/, 'the "+" creates for the selected day');
+  assert.match(src, /startCreateForDate\(dateISO\);\s*void prepareNoiEntryDate\(dateISO\)/, 'the form opens at once');
+  assert.match(noi(), /if\(kind==='entry'&&item\.dataset\.id\)\{window\.UsCalendarLinks\?\.openEntry\?\.\(item\.dataset\.id,\{inPlace:true\}\);return;\}/);
 });
 
-test('M9C: manual entries default to personal; Da vivere keeps creating shared entries', () => {
+// US 1.0 (N1): one "+" with three choices; a new entry starts as "Solo mio".
+test('M9C: manual entries default to personal ("Solo mio"); Da vivere keeps creating shared entries', () => {
   const src = js();
-  assert.match(src, /calendarKind = mode === 'edit' \? entry\.entry_type : 'personal';/);
+  assert.match(src, /setFormKind\(mode === 'edit' \? entry\.entry_type : 'personal'\);/);
   assert.match(src, /const kind = ideaLink \? 'shared' : calendarKind;/);
-  assert.match(src, /calendarKind = 'shared';/);
+  assert.match(src, /calendarKind = kind === 'shared' \? 'shared' : 'personal';/);
+  assert.match(src, /setFormKind\('shared'\);\s*const kindGroup = \$\('usCalendarKind'\);\s*if \(kindGroup\) kindGroup\.hidden = true;/, 'an idea is always Nostro, no choice shown');
+  assert.match(form(), /<span>Solo mio<\/span>[\s\S]*?<span>Nostro<\/span>[\s\S]*?<span>Data speciale<\/span>/);
 });
 
 test('M9C: create uses the 60-minute default, a single day, no hidden note or place', () => {
@@ -75,11 +80,14 @@ test('M9C: existing reminders are never deleted or re-synced by the quick form',
   assert.doesNotMatch(save, /calendar_reminders/);
 });
 
+// US 1.0: the day for an idea is picked on the Noi calendar, with a cancellable banner.
 test('M9C: Da vivere picks a day through a cancellable banner, then opens the shared form', () => {
   const src = js();
-  assert.match(html(), /id="usCalendarPickBanner"[^>]*hidden/);
-  assert.match(html(), /id="usCalendarPickCancel"/);
+  assert.match(html(), /id="usNoiV2IdeaPick"[^>]*hidden/);
+  assert.match(html(), /id="usNoiV2IdeaCancel"/);
+  assert.match(noi(), /\$\('usNoiV2IdeaCancel'\)\?\.addEventListener\('click',\(\)=>\{ideaPick=null;window\.UsCalendarLinks\?\.cancelIdeaPick\?\.\(\);render\(\);\}\)/);
   assert.match(src, /if \(pendingIdeaPick\) \{ openIdeaForm\(pendingIdeaPick, dateISO\); return; \}/);
   assert.match(src, /function clearIdeaPick\(\)/);
-  assert.match(src, /function closeCalendarSurface[\s\S]*?clearIdeaPick\(\)/);
+  assert.match(src, /openIdeaForm\(pick,dateISO\);\s*clearIdeaPick\(\);/);
+  assert.doesNotMatch(html(), /id="usCalendarPickBanner"/);
 });

@@ -9,7 +9,8 @@ test('Noi V2: calendar-first overview, full-size day detail, list toggle and ret
   const html=read('index.html');
   const bond=html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0]||'';
   assert.match(bond, /id="usNoiV2"/);
-  assert.ok(bond.indexOf('id="usNoiV2"')<bond.indexOf('id="noiWeekBoard"'));
+  // 1.0 (N10): the old invisible Lavagna and hub are gone; Noi V2 is the page.
+  assert.doesNotMatch(bond, /id="noiWeekBoard"|id="noiHub"/);
   for (const id of ['usNoiV2Month','usNoiV2ModeCalendar','usNoiV2ModeList','usNoiV2Content','usNoiV2Detail','usNoiV2First','usNoiV2Today']) {
     assert.match(bond,new RegExp(`id="${id}"`));
   }
@@ -39,12 +40,14 @@ test('Noi calendar: reads through current calendar authority, bounded to request
   assert.match(js,/async function readNoiMonth\(year, month\)/);
   assert.match(js,/fetchEntriesForRange\(viewer\.couple_id,start,end\)/);
   assert.match(js,/window\.usProfile!==viewer/);
-  assert.match(js,/window\.USNoiCalendarRead = Object\.freeze\(\{readMonth:readNoiMonth\}\)/);
+  assert.match(js,/window\.USNoiCalendarRead = Object\.freeze\(\{readMonth:readNoiMonth,freeEvenings:noiFreeEvenings\}\)/);
   assert.doesNotMatch(read('noi-v2.js'),/\.insert\(|\.update\(|\.delete\(|sb\.rpc\(/,'new calendar display never writes');
   const ui=read('noi-v2.js');
-  assert.match(ui,/window\.openCalendarSurface\?\.\(selected\)/);
+  // 1.0: "+" is the one create door; a tapped Eventi date opens that event (N6).
+  assert.match(ui,/window\.UsCalendarLinks\.createForDate\(selected\)/);
   assert.match(ui,/window\.UsCalendarLinks\?\.openEntry\?\./);
-  assert.match(ui,/window\.openEvents\?\.\(\)/);
+  assert.match(ui,/window\.openEventEditor\?\.\(item\.dataset\.id,item\.dataset\.day,\{from:'calendar'\}\)/);
+  assert.doesNotMatch(ui,/openCalendarSurface|usCalendarOverlay/,'the old full-screen calendar is gone');
   assert.match(ui,/new MutationObserver/,'existing Calendar/Events changes refresh Noi after closing');
 });
 

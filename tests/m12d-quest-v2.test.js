@@ -114,8 +114,10 @@ test('M12D: three Quest slots render with explicit states derived from persisted
   assert.doesNotMatch(c[1].confirm, /disabled/); assert.match(c[1].confirm, /Conferma anche tu/);
   assert.match(c[1].body, /Beatrice ha confermato · manca la tua conferma/);
   assert.match(c[0].body, /Hai confermato · aspettiamo Beatrice/);
-  assert.match(c[2].confirm, /disabled/); assert.match(c[2].confirm, /Completata · \+80 XP/);
-  assert.match(c[2].body, /Completata insieme · \+80 XP assegnati/);
+  // 1.0 (N4): no rarity and no "+XP" on the cards, neutral words.
+  assert.match(c[2].confirm, /disabled/); assert.match(c[2].confirm, />Completata<\/button>/);
+  assert.match(c[2].body, /<span>Completata insieme<\/span>/);
+  for (const card of c) assert.doesNotMatch(card.body, /XP|Comune|Non comune|Rara|Epica|rarity-/);
 });
 
 test('M12D: available state and the same rows seen from the partner phone swap actor and partner', async () => {
@@ -123,7 +125,7 @@ test('M12D: available state and the same rows seen from the partner phone swap a
   const f = harness({ quests });
   await f.t.hydrateBond();
   assert.deepEqual(f.cards().map((x) => x.state), ['you-confirmed', 'available', 'available']);
-  assert.match(f.cards()[1].body, /Si completa quando confermate entrambi/);
+  assert.match(f.cards()[1].body, /Si completa quando confermate tutti e due/);
   assert.match(f.cards()[1].confirm, /Ho completato questa missione/);
   const b = harness({ me: B, quests });
   await b.t.hydrateBond();
@@ -154,14 +156,24 @@ test('M12D: weekly header shows week identity, N / 3, rerolls left and a stable 
   assert.doesNotMatch(head, /setInterval|countdown/i);
 });
 
-test('M12D: completed Quest stays visible on the board with the XP stored on its row', async () => {
+test('M12D: completed Quest stays visible on the board and offers to keep it as a memory', async () => {
   const h = harness({ quests: three({ 2: { confirmed_by: [F, B], completed_at: '2026-09-30T10:00:00Z', xp: 55 } }) });
   await h.t.hydrateBond();
   const done = h.cards().find((x) => x.slot === 2);
   assert.equal(done.state, 'completed');
-  assert.match(done.body, /\+55 XP assegnati/);
+  assert.doesNotMatch(done.body, /XP/);
+  assert.match(done.body, /class="quest-memory" data-quest-action="memory" onclick="addQuestMemory\('q2'\)"[\s\S]*?Salvatelo come ricordo/);
+  assert.doesNotMatch(h.cards()[0].body, /quest-memory/, 'an open mission without a photo has no memory door yet');
   assert.equal(done.reroll, 'locked');
   assert.doesNotMatch(done.body, /class="quest-reroll/, 'a completed Quest offers no reroll at all');
+});
+
+test('1.0 (N4): a mission that asks for a photo opens "add a memory" with its title', async () => {
+  const h = harness({ quests: three({ 1: { template_key: 'any-week-photo', title: 'La foto della settimana' } }) });
+  await h.t.hydrateBond();
+  assert.match(h.cards()[0].body, /data-quest-action="photo" onclick="addQuestMemory\('q1'\)"[\s\S]*?Aggiungi la foto/);
+  assert.match(QUEST_BLOCK, /function addQuestMemory\(id\)\{[\s\S]*?openMemoryComposer\(quest\.title\|\|''\)/);
+  assert.match(app, /function openMemoryComposer\(caption\)\{\s*const composer=window\.UsMomentComposer\?\.open;\s*go\('moments',\{nav:true\}\);/, 'the existing add-memory door');
 });
 
 test('M12D: confirm calls only the existing RPC with the quest id, renders the server result and never writes XP', async () => {
@@ -178,7 +190,7 @@ test('M12D: confirm calls only the existing RPC with the quest id, renders the s
   assert.equal(confirmCalls[0].args.target_quest_id, 'q2');
   assert.deepEqual(h.db.log.writes, [], 'no client write: Quest state and XP are RPC-only');
   assert.equal(h.rows.couples[0].bond_xp, 340, 'bond_xp is only the server’s to change');
-  assert.ok(h.toasts.includes('Missione completata · +50 XP ♡'), 'XP shown is the server-returned award');
+  assert.ok(h.toasts.includes('Missione completata insieme ♡'), 'a quiet word, no XP');
   assert.deepEqual(h.pushes, [['quest_confirmed', 'q2']]);
   assert.equal(h.cards()[1].state, 'completed', 'rerendered from the persisted row');
 });
@@ -194,7 +206,7 @@ test('M12D: rapid double tap and a retry while in flight send exactly one confir
   assert.match(h.cards()[0].confirm, /Confermo…/); assert.match(h.cards()[0].confirm, /disabled/); assert.match(h.cards()[0].confirm, /aria-busy="true"/);
   release(); await first; await second;
   assert.equal(h.db.log.rpc.filter((r) => r.name === 'confirm_bond_quest').length, 1);
-  assert.ok(h.toasts.includes('Confermata. Ora tocca all’altra persona ♡'));
+  assert.ok(h.toasts.includes('Confermata. Ora tocca a Beatrice ♡'), 'the partner by name');
 });
 
 test('M12D: an already confirmed or completed Quest does not call the RPC again', async () => {
@@ -426,7 +438,8 @@ test('M12D: one weekly surface inside the existing Quest section; no new page or
   assert.match(section, /id="questWeekBoard" class="quest-week" hidden/);
   assert.ok(section.indexOf('questWeekBoard') < section.indexOf('bondQuestList'));
   assert.match(section, /id="questRecent" aria-labelledby="questRecentTitle" hidden/);
-  assert.match(app, /if\(view==='quest'&&window\.usProfile\)hydrateBond\(\);/);
+  // 1.0 (N9): Missioni also loads "Le vostre idee", which live inside it.
+  assert.match(app, /if\(view==='quest'&&window\.usProfile\)\{hydrateBond\(\);if\(!noiIdeaState\.loaded\)hydrateNoiIdeas\(\);\}/);
   assert.equal((html.match(/data-page="/g) || []).length, (read('index.html').match(/data-page="/g) || []).length);
 });
 

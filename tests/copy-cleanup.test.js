@@ -45,7 +45,9 @@ test('copy: text kept on purpose (destructive, reveal, privacy, irreversible) is
 test('copy: empty, loading and error states are a title, not a paragraph', () => {
   const html = read('index.html');
   assert.match(html, /<b>Carico…<\/b>/);
-  assert.match(html, /<div class="us-cal-empty" id="usCalendarEmpty" hidden>\s*<b>Nessun impegno<\/b>\s*<\/div>/);
+  // 1.0 (N10): the old full-screen calendar and its empty state are gone; Noi's
+  // month says it with a title (noi-v2.js).
+  assert.match(read('noi-v2.js'), /<b>Un mese ancora da scrivere<\/b>/);
   assert.match(html, /<h3>Non riesco ad aprirlo<\/h3><button/);
   assert.doesNotMatch(html, /Preparo i vostri Conservati|Preparo qualcosa per te|Preparo Gioca/);
   assert.match(read('app.js'), /<b>La vostra storia parte da qui<\/b><\/div>/);
@@ -57,7 +59,6 @@ test('copy: Noi and Settings rows carry a label, not a description', () => {
   assert.match(html, /<b>Notifiche<\/b><\/span>/);
   assert.match(html, /<b>Sincronizzazione<\/b><\/span>/);
   assert.match(html, /<b>Distanza<\/b><\/span>/);
-  assert.match(html, /<small>LA NOSTRA SETTIMANA<\/small><b>Lavagna<\/b>/);
-  assert.match(html, /Apri calendario ›/);
-  assert.match(read('app.js'), /questTitle\.textContent='Questa settimana';\s*questMeta\.textContent='';/);
+  // 1.0 (N3/N10): the old Lavagna and hub are gone; the week is a labelled tile.
+  assert.match(html, /<b>La nostra settimana<\/b><small>Sere libere<\/small>/);
 });
