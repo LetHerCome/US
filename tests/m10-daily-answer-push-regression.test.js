@@ -43,7 +43,8 @@ test('M10D: prima risposta → solo il partner riceve "<Nome> ha risposto. Ora t
   assert.deepEqual(response, { status: 200, body: { delivered: 1, failed: 0 } });
   assert.deepEqual(webpush.sent.map((s) => s.endpoint), ['https://push.example/s-bea']);
   assert.deepEqual(webpush.sent[0].payload, {
-    title: 'US. · Today', body: 'Francesco ha risposto. Ora tocca a te.', icon: '/icon-192.png', badge: '/icon-192.png',
+    // US 1.0: Italian title without "Today".
+    title: 'US. · La domanda di oggi', body: 'Francesco ha risposto. Ora tocca a te.', icon: '/icon-192.png', badge: '/icon-192.png',
     tag: `daily-answer-${Q.id}`, target: 'today', url: '/?open=today&from=push',
   });
   assert.deepEqual(webpush.sent[0].options, { TTL: 60 * 60 * 12, urgency: 'normal' });
@@ -57,17 +58,17 @@ test('M10D: simmetrico — Beatrice risponde per prima, avvisa solo Francesco', 
   assert.deepEqual(webpush.sent.map((s) => [s.endpoint, s.payload.body]), [['https://push.example/s-fra', 'Beatrice ha risposto. Ora tocca a te.']]);
 });
 
-test('M10D: seconda risposta → entrambi ricevono "Le vostre risposte sono pronte ♡"', async () => {
+test('M10D + US 1.0 (A6): seconda risposta → solo il partner riceve "Le vostre risposte sono pronte ♡"', async () => {
   const { admin, webpush, answered } = await setup({ answers: [answer(F, 'Mia-F')] });
   await answered('jwt-f');
   admin.db.daily_answers.push(answer(B, 'Mia-B'));
   const response = await answered('jwt-b');
-  assert.deepEqual(response.body, { delivered: 2, failed: 0 });
+  assert.deepEqual(response.body, { delivered: 1, failed: 0 });
   const reveal = webpush.sent.slice(1);
-  assert.deepEqual(reveal.map((s) => s.endpoint).sort(), ['https://push.example/s-bea', 'https://push.example/s-fra']);
+  assert.deepEqual(reveal.map((s) => s.endpoint), ['https://push.example/s-fra'], 'never to the person who just answered');
   for (const { payload } of reveal) {
     assert.equal(payload.body, 'Le vostre risposte sono pronte ♡');
-    assert.equal(payload.title, 'US. · Today');
+    assert.equal(payload.title, 'US. · La domanda di oggi');
     assert.equal(payload.tag, `daily-reveal-${Q.id}`);
     assert.equal(payload.target, 'today');
   }
@@ -82,7 +83,7 @@ test('M10D: dedupe — retry della prima risposta e doppio reveal non duplicano'
   await answered('jwt-b');
   assert.deepEqual((await answered('jwt-f')).body, { delivered: 0, deduplicated: true }, 'the reveal key is per couple+question');
   assert.deepEqual((await answered('jwt-b')).body, { delivered: 0, deduplicated: true });
-  assert.equal(webpush.sent.length, 3);
+  assert.equal(webpush.sent.length, 2, 'answer push to Beatrice, reveal push to Francesco');
 });
 
 test('M10D: preferenza today=false rispettata; senza riga = attiva', async () => {
@@ -91,9 +92,13 @@ test('M10D: preferenza today=false rispettata; senza riga = attiva', async () =>
   assert.equal(off.webpush.sent.length, 0);
   assert.equal(off.admin.db.push_event_log.length, 0);
 
+  // A6: the reveal goes to the partner only, so the partner's preference decides.
   const reveal = await setup({ answers: [answer(F, 'Mia-F'), answer(B, 'Mia-B')], preferences: [{ user_id: F, today: false }] });
-  await reveal.answered('jwt-b');
-  assert.deepEqual(reveal.webpush.sent.map((s) => s.endpoint), ['https://push.example/s-bea']);
+  assert.deepEqual((await reveal.answered('jwt-b')).body, { delivered: 0, reason: 'disabled-by-preference' });
+  assert.deepEqual(reveal.webpush.sent, []);
+  const senderOff = await setup({ answers: [answer(F, 'Mia-F'), answer(B, 'Mia-B')], preferences: [{ user_id: B, today: false }] });
+  await senderOff.answered('jwt-b');
+  assert.deepEqual(senderOff.webpush.sent.map((s) => s.endpoint), ['https://push.example/s-fra']);
 });
 
 test('M10D: privacy — né domanda né risposte nel payload; senza risposta salvata nessuna push', async () => {

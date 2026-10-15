@@ -29,6 +29,9 @@ test('M11B catalog: six families, stable unique ids, enough prompts per mode', a
     assert.ok(own.length >= 8, `${family} has at least 8 prompts (${own.length})`);
     assert.ok(own.some((r) => r.depth === 1), `${family} has a light opener`);
   }
+  // The M11B starter set stays pinned and bounded here. The US 1.0 prompts
+  // (founder decision 4, ~150 more) live in supabase/game-v2/content-1-0 and
+  // are bounded by tests/content-1-0-catalog.test.js.
   assert.ok(rows.length <= 120, 'a bounded reviewed starter set, not a giant bank');
 });
 

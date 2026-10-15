@@ -59,7 +59,10 @@ Deno.serve(async (request) => {
     // Solo esiti aggregati: niente testo della domanda, niente endpoint.
     const outcomes: Record<string, number> = {};
     for (const recipient of result.recipients) outcomes[recipient.outcome] = (outcomes[recipient.outcome] || 0) + 1;
-    return json({ ok: true, day: result.day, reason: result.reason || null, delivered: result.delivered, outcomes });
+    // US 1.0 (O3): il promemoria serale delle 20:30, stesso run.
+    for (const recipient of result.evening?.recipients || []) outcomes[`evening-${recipient.outcome}`] = (outcomes[`evening-${recipient.outcome}`] || 0) + 1;
+    const delivered = result.delivered + (result.evening?.delivered || 0);
+    return json({ ok: true, day: result.day, reason: result.reason || null, delivered, outcomes });
   } catch (error) {
     console.error("daily-question-push-worker fatal", error instanceof Error ? error.message : "unknown");
     return json({ error: "Daily Question push failed" }, 500);

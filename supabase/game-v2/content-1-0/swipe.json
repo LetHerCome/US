@@ -1,0 +1,898 @@
+{
+  "family": "swipe",
+  "new": [
+    {
+      "id": "swipe-033",
+      "version": 1,
+      "question_text": "Un mio vocale di cinque minuti: lo ascolti tutto o a velocità doppia?",
+      "options": [
+        "Tutto, con calma",
+        "A velocità doppia"
+      ],
+      "topic": "vocali_lunghi",
+      "question_text_en": "A five-minute voice note from me: every second or double speed?",
+      "options_en": [
+        "Every second",
+        "Double speed"
+      ]
+    },
+    {
+      "id": "swipe-034",
+      "version": 1,
+      "question_text": "Sul divano: sotto la stessa coperta o due coperte separate?",
+      "options": [
+        "Stessa coperta",
+        "Due coperte"
+      ],
+      "topic": "coperta_sul_divano",
+      "question_text_en": "On the couch: under the same blanket or two separate ones?",
+      "options_en": [
+        "Same blanket",
+        "Two blankets"
+      ]
+    },
+    {
+      "id": "swipe-035",
+      "version": 1,
+      "question_text": "I nostri messaggi: tante emoji o solo parole?",
+      "options": [
+        "Tante emoji",
+        "Solo parole"
+      ],
+      "topic": "emoji_nei_messaggi",
+      "question_text_en": "Our texts: lots of emoji or just words?",
+      "options_en": [
+        "Lots of emoji",
+        "Just words"
+      ]
+    },
+    {
+      "id": "swipe-036",
+      "version": 1,
+      "question_text": "In valigia: lo stretto necessario o tutto, perché non si sa mai?",
+      "options": [
+        "Lo stretto necessario",
+        "Tutto, non si sa mai"
+      ],
+      "topic": "valigia",
+      "question_text_en": "Packing: only the essentials or everything, just in case?",
+      "options_en": [
+        "Only the essentials",
+        "Everything, just in case"
+      ]
+    },
+    {
+      "id": "swipe-037",
+      "version": 1,
+      "question_text": "Quando mi racconti un problema: vuoi una soluzione o solo ascolto?",
+      "options": [
+        "Una soluzione",
+        "Solo ascolto"
+      ],
+      "topic": "consigli_o_ascolto",
+      "question_text_en": "When you tell me about a problem: want solutions or just an ear?",
+      "options_en": [
+        "Solutions",
+        "Just listen"
+      ]
+    },
+    {
+      "id": "swipe-038",
+      "version": 1,
+      "question_text": "Il dolce a fine cena: uno a testa o uno solo e due cucchiaini?",
+      "options": [
+        "Uno a testa",
+        "Due cucchiaini"
+      ],
+      "topic": "dolce_da_dividere",
+      "question_text_en": "Dessert after dinner: one each, or one to share with two spoons?",
+      "options_en": [
+        "One each",
+        "Two spoons"
+      ]
+    },
+    {
+      "id": "swipe-039",
+      "version": 1,
+      "question_text": "A fine telefonata: saluto veloce o il classico «chiudi tu», «no, chiudi tu»?",
+      "options": [
+        "Saluto veloce",
+        "No, chiudi tu!"
+      ],
+      "topic": "chiudere_la_chiamata",
+      "question_text_en": "Ending a call: quick goodbye or a round of “you hang up”, “no, you hang up”?",
+      "options_en": [
+        "Quick goodbye",
+        "“No, you hang up!”"
+      ]
+    },
+    {
+      "id": "swipe-040",
+      "version": 1,
+      "question_text": "Svegliarsi all’alba per vedere sorgere il sole insieme: ci stai?",
+      "options": [
+        "Ci sto",
+        "Svegliami a pranzo"
+      ],
+      "topic": "alba_insieme",
+      "question_text_en": "Getting up at dawn to watch the sunrise together: are you in?",
+      "options_en": [
+        "I’m in",
+        "Wake me at lunch"
+      ]
+    },
+    {
+      "id": "swipe-041",
+      "version": 1,
+      "question_text": "Fare la spesa insieme: passeggiata tra gli scaffali o missione lampo?",
+      "options": [
+        "Passeggiata",
+        "Missione lampo"
+      ],
+      "topic": "spesa_insieme",
+      "question_text_en": "Grocery shopping together: a leisurely stroll or a speed run?",
+      "options_en": [
+        "Leisurely stroll",
+        "Speed run"
+      ]
+    },
+    {
+      "id": "swipe-042",
+      "version": 1,
+      "question_text": "Un complimento da me: davanti a tutti o a tu per tu?",
+      "options": [
+        "Davanti a tutti",
+        "A tu per tu"
+      ],
+      "topic": "complimenti_in_pubblico",
+      "question_text_en": "A compliment from me: in front of everyone or just between us?",
+      "options_en": [
+        "In front of everyone",
+        "Just between us"
+      ]
+    },
+    {
+      "id": "swipe-043",
+      "version": 1,
+      "question_text": "In viaggio: una tenda sotto le stelle o un letto comodo?",
+      "options": [
+        "Tenda e stelle",
+        "Letto comodo"
+      ],
+      "topic": "dormire_in_viaggio",
+      "question_text_en": "On a trip: a tent under the stars or a comfy bed?",
+      "options_en": [
+        "Tent and stars",
+        "Comfy bed"
+      ]
+    },
+    {
+      "id": "swipe-044",
+      "version": 1,
+      "question_text": "Dopo una giornata intera insieme: ancora noi o un po’ di tempo per te?",
+      "options": [
+        "Ancora noi",
+        "Un po’ per me"
+      ],
+      "topic": "dopo_un_giorno_insieme",
+      "question_text_en": "After a whole day together: more of us or a little time for you?",
+      "options_en": [
+        "More of us",
+        "Some me-time"
+      ]
+    },
+    {
+      "id": "swipe-045",
+      "version": 1,
+      "question_text": "Un regalo da aprire: strappi la carta o lo scarti con calma?",
+      "options": [
+        "Strappo tutto",
+        "Con calma"
+      ],
+      "topic": "scartare_i_regali",
+      "question_text_en": "Opening a present: rip the paper off or unwrap it slowly?",
+      "options_en": [
+        "Rip it open",
+        "Nice and slow"
+      ]
+    },
+    {
+      "id": "swipe-046",
+      "version": 1,
+      "question_text": "Un mio messaggio a metà giornata: meglio dolce o scemo?",
+      "options": [
+        "Qualcosa di dolce",
+        "Qualcosa di scemo"
+      ],
+      "topic": "tono_dei_messaggi",
+      "question_text_en": "A text from me in the middle of your day: sweet or silly?",
+      "options_en": [
+        "Something sweet",
+        "Something silly"
+      ]
+    },
+    {
+      "id": "swipe-047",
+      "version": 1,
+      "question_text": "D’inverno in casa: meglio il fresco col maglione o il caldo in maglietta?",
+      "options": [
+        "Fresco e maglione",
+        "Caldo e maglietta"
+      ],
+      "topic": "temperatura_in_casa",
+      "question_text_en": "Home in winter: cool with a sweater on or toasty in a T-shirt?",
+      "options_en": [
+        "Cool, with a sweater",
+        "Toasty, in a T-shirt"
+      ]
+    },
+    {
+      "id": "swipe-048",
+      "version": 1,
+      "question_text": "A una festa: sempre insieme o ci si mescola e ci si ritrova dopo?",
+      "options": [
+        "Sempre insieme",
+        "Ci ritroviamo dopo"
+      ],
+      "topic": "feste_in_coppia",
+      "question_text_en": "At a party: stick together or mingle and find each other later?",
+      "options_en": [
+        "Stick together",
+        "Mingle, meet later"
+      ]
+    },
+    {
+      "id": "swipe-049",
+      "version": 1,
+      "question_text": "I sogni che faccio di notte: vuoi sentirli tutti o solo i più assurdi?",
+      "options": [
+        "Tutti, nei dettagli",
+        "Solo i più assurdi"
+      ],
+      "topic": "sogni_della_notte",
+      "question_text_en": "My dreams from last night: every detail or only the weird ones?",
+      "options_en": [
+        "Every detail",
+        "Only the weird ones"
+      ]
+    },
+    {
+      "id": "swipe-050",
+      "version": 1,
+      "question_text": "Un treno da prendere: in stazione con largo anticipo o di corsa all’ultimo?",
+      "options": [
+        "Largo anticipo",
+        "Di corsa all’ultimo"
+      ],
+      "topic": "treno_da_prendere",
+      "question_text_en": "Catching a train: at the station way early or a last-second sprint?",
+      "options_en": [
+        "Way early",
+        "Last-second sprint"
+      ]
+    },
+    {
+      "id": "swipe-051",
+      "version": 1,
+      "question_text": "Un pensierino a sorpresa per te: un fiore o qualcosa di buono da mangiare?",
+      "options": [
+        "Un fiore",
+        "Qualcosa di buono"
+      ],
+      "topic": "pensierino_a_sorpresa",
+      "question_text_en": "A little surprise for you: a flower or something tasty?",
+      "options_en": [
+        "A flower",
+        "Something tasty"
+      ]
+    },
+    {
+      "id": "swipe-052",
+      "version": 1,
+      "question_text": "Una serie da guardare insieme: un episodio a sera o tutta d’un fiato?",
+      "options": [
+        "Uno a sera",
+        "Tutta d’un fiato"
+      ],
+      "topic": "ritmo_delle_serie",
+      "question_text_en": "A show we’re watching together: one episode a night or all at once?",
+      "options_en": [
+        "One a night",
+        "All at once"
+      ]
+    },
+    {
+      "id": "swipe-053",
+      "version": 1,
+      "question_text": "Fare sport insieme: ci si motiva o ci si distrae?",
+      "options": [
+        "Ci si motiva",
+        "Ci si distrae"
+      ],
+      "topic": "sport_insieme",
+      "question_text_en": "Working out together: motivating or distracting?",
+      "options_en": [
+        "Motivating",
+        "Distracting"
+      ]
+    },
+    {
+      "id": "swipe-054",
+      "version": 1,
+      "question_text": "Gli auguri di compleanno: a mezzanotte in punto o al risveglio?",
+      "options": [
+        "A mezzanotte",
+        "Al risveglio"
+      ],
+      "topic": "auguri_a_mezzanotte",
+      "question_text_en": "Birthday wishes: right at midnight or when you wake up?",
+      "options_en": [
+        "At midnight",
+        "When I wake up"
+      ]
+    },
+    {
+      "id": "swipe-055",
+      "version": 1,
+      "question_text": "Le chiacchierate più belle: camminando o a tavola?",
+      "options": [
+        "Camminando",
+        "A tavola"
+      ],
+      "topic": "chiacchierate_migliori",
+      "question_text_en": "Our best talks: on a walk or around a table?",
+      "options_en": [
+        "On a walk",
+        "Around a table"
+      ]
+    },
+    {
+      "id": "swipe-056",
+      "version": 1,
+      "question_text": "In un posto nuovo: il piatto locale più strano o si va sul sicuro?",
+      "options": [
+        "Assaggio tutto",
+        "Vado sul sicuro"
+      ],
+      "topic": "assaggi_in_viaggio",
+      "question_text_en": "Somewhere new: the strangest local dish or something safe?",
+      "options_en": [
+        "Try everything",
+        "Play it safe"
+      ]
+    },
+    {
+      "id": "swipe-057",
+      "version": 1,
+      "question_text": "Il messaggio «Sono a casa» a fine serata: rito sacro o facoltativo?",
+      "options": [
+        "Rito sacro",
+        "Facoltativo"
+      ],
+      "topic": "messaggio_sono_a_casa",
+      "question_text_en": "The “I’m home” text at the end of the night: sacred ritual or optional?",
+      "options_en": [
+        "Sacred ritual",
+        "Optional"
+      ]
+    },
+    {
+      "id": "swipe-058",
+      "version": 1,
+      "question_text": "I piatti dopo cena: si lavano subito o domani è un altro giorno?",
+      "options": [
+        "Subito",
+        "Domani è un altro giorno"
+      ],
+      "topic": "piatti_dopo_cena",
+      "question_text_en": "Dishes after dinner: right away or tomorrow’s problem?",
+      "options_en": [
+        "Right away",
+        "Tomorrow’s problem"
+      ]
+    },
+    {
+      "id": "swipe-059",
+      "version": 1,
+      "question_text": "Un viaggio in macchina insieme: musica a tutto volume o chiacchiere?",
+      "options": [
+        "Musica a tutto volume",
+        "Chiacchiere"
+      ],
+      "topic": "viaggio_in_macchina",
+      "question_text_en": "A road trip together: music cranked up or nonstop talking?",
+      "options_en": [
+        "Music cranked up",
+        "Nonstop talking"
+      ]
+    },
+    {
+      "id": "swipe-060",
+      "version": 1,
+      "question_text": "Ballare insieme: in pista o solo in cucina?",
+      "options": [
+        "In pista",
+        "Solo in cucina"
+      ],
+      "topic": "ballare_insieme",
+      "question_text_en": "Dancing together: on a real dance floor or only in the kitchen?",
+      "options_en": [
+        "Dance floor",
+        "Kitchen only"
+      ]
+    },
+    {
+      "id": "swipe-061",
+      "version": 1,
+      "question_text": "Le parole dolci: le preferisci scritte a mano o dette a voce?",
+      "options": [
+        "Scritte a mano",
+        "Dette a voce"
+      ],
+      "topic": "parole_dolci",
+      "question_text_en": "Sweet words: do you like them handwritten or said out loud?",
+      "options_en": [
+        "Handwritten",
+        "Said out loud"
+      ]
+    },
+    {
+      "id": "swipe-062",
+      "version": 1,
+      "question_text": "Acquazzone mentre siamo fuori: corsa sotto la pioggia o riparo e attesa?",
+      "options": [
+        "Corsa sotto la pioggia",
+        "Riparo e attesa"
+      ],
+      "topic": "acquazzone",
+      "question_text_en": "Caught in a downpour together: run through it or shelter and wait?",
+      "options_en": [
+        "Run through it",
+        "Shelter and wait"
+      ]
+    },
+    {
+      "id": "swipe-063",
+      "version": 1,
+      "question_text": "Amici che suonano alla porta senza avvisare: che bello o che panico?",
+      "options": [
+        "Che bello",
+        "Che panico"
+      ],
+      "topic": "visite_improvvise",
+      "question_text_en": "Friends dropping by unannounced: how lovely or total panic?",
+      "options_en": [
+        "How lovely",
+        "Total panic"
+      ]
+    },
+    {
+      "id": "swipe-064",
+      "version": 1,
+      "question_text": "Il primo caffè o tè della giornata: momento da condividere o tutto tuo?",
+      "options": [
+        "Da condividere",
+        "Tutto mio"
+      ],
+      "topic": "primo_caffe",
+      "question_text_en": "The first coffee or tea of the day: a moment to share or all yours?",
+      "options_en": [
+        "To share",
+        "All mine"
+      ]
+    },
+    {
+      "id": "swipe-065",
+      "version": 1,
+      "question_text": "Un gioco da tavolo insieme: si gioca per vincere o per ridere?",
+      "options": [
+        "Per vincere",
+        "Per ridere"
+      ],
+      "topic": "spirito_di_gioco",
+      "question_text_en": "A board game together: play to win or play for laughs?",
+      "options_en": [
+        "To win",
+        "For laughs"
+      ]
+    },
+    {
+      "id": "swipe-066",
+      "version": 1,
+      "question_text": "A cena con amici: accanto a me o di fronte?",
+      "options": [
+        "Accanto",
+        "Di fronte"
+      ],
+      "topic": "posto_a_tavola",
+      "question_text_en": "Dinner with friends: next to me or across from me?",
+      "options_en": [
+        "Next to you",
+        "Across from you"
+      ]
+    },
+    {
+      "id": "swipe-067",
+      "version": 1,
+      "question_text": "In un museo: si legge ogni didascalia o si va a sensazione?",
+      "options": [
+        "Ogni didascalia",
+        "A sensazione"
+      ],
+      "topic": "ritmo_al_museo",
+      "question_text_en": "At a museum: read every caption or wander by instinct?",
+      "options_en": [
+        "Every caption",
+        "By instinct"
+      ]
+    },
+    {
+      "id": "swipe-068",
+      "version": 1,
+      "question_text": "Chiacchierare fino a notte fonda con la sveglia presto: ne vale la pena?",
+      "options": [
+        "Sì, sempre",
+        "Vince il sonno"
+      ],
+      "topic": "chiacchiere_notturne",
+      "question_text_en": "Talking late into the night with an early alarm: worth it?",
+      "options_en": [
+        "Always worth it",
+        "Sleep wins"
+      ]
+    },
+    {
+      "id": "swipe-069",
+      "version": 1,
+      "question_text": "Se cucino per te: il tuo piatto di sempre o una novità?",
+      "options": [
+        "Il piatto di sempre",
+        "Una novità"
+      ],
+      "topic": "piatto_per_te",
+      "question_text_en": "If I cook for you: your usual favorite or something new?",
+      "options_en": [
+        "My usual favorite",
+        "Something new"
+      ]
+    },
+    {
+      "id": "swipe-070",
+      "version": 1,
+      "question_text": "Un auricolare a testa per ascoltare la stessa canzone: romantico o scomodo?",
+      "options": [
+        "Che romantico",
+        "Un po’ scomodo"
+      ],
+      "topic": "auricolare_a_testa",
+      "question_text_en": "One earbud each, listening to the same song: romantic or awkward?",
+      "options_en": [
+        "How romantic",
+        "A bit awkward"
+      ]
+    },
+    {
+      "id": "swipe-071",
+      "version": 1,
+      "question_text": "Appena finisce un film: commenti a raffica o un attimo di silenzio?",
+      "options": [
+        "Commenti a raffica",
+        "Un attimo di silenzio"
+      ],
+      "topic": "fine_del_film",
+      "question_text_en": "When a movie ends: instant debrief or a moment of quiet?",
+      "options_en": [
+        "Instant debrief",
+        "A moment of quiet"
+      ]
+    },
+    {
+      "id": "swipe-072",
+      "version": 1,
+      "question_text": "Organizzare una sorpresa: ti piace di più prepararla o vedere la reazione?",
+      "options": [
+        "Prepararla in segreto",
+        "Vedere la reazione"
+      ],
+      "topic": "preparare_sorprese",
+      "question_text_en": "Planning a surprise: is the best part the secret prep or the reaction?",
+      "options_en": [
+        "The secret prep",
+        "The reaction"
+      ]
+    }
+  ],
+  "existing_en": [
+    {
+      "id": "swipe-001",
+      "question_text_en": "Our perfect evening: out on the town or curled up on the couch?",
+      "options_en": [
+        "Out on the town",
+        "On the couch"
+      ]
+    },
+    {
+      "id": "swipe-002",
+      "question_text_en": "If we left tomorrow with no plans at all, would you really enjoy it?",
+      "options_en": [
+        "Yes, let’s go",
+        "No, let’s plan"
+      ]
+    },
+    {
+      "id": "swipe-003",
+      "question_text_en": "When we’re low on energy, would you rather talk anyway or be quiet together?",
+      "options_en": [
+        "Talk",
+        "Quiet together"
+      ]
+    },
+    {
+      "id": "swipe-005",
+      "question_text_en": "Would you like us to have a fixed tradition of our own every month?",
+      "options_en": [
+        "Yes",
+        "No, let’s improvise"
+      ]
+    },
+    {
+      "id": "swipe-006",
+      "question_text_en": "On a free day, would you rather get up early or sleep with no alarm?",
+      "options_en": [
+        "Early",
+        "No alarm"
+      ]
+    },
+    {
+      "id": "swipe-007",
+      "question_text_en": "Does a surprise I plan for you thrill you or make you a little anxious?",
+      "options_en": [
+        "It thrills me",
+        "I’d rather know"
+      ]
+    },
+    {
+      "id": "swipe-008",
+      "question_text_en": "If we could choose right now: a fancy dinner or street food?",
+      "options_en": [
+        "Fancy dinner",
+        "Street food"
+      ]
+    },
+    {
+      "id": "swipe-009",
+      "question_text_en": "Would you like to spend an evening looking through all our photos together?",
+      "options_en": [
+        "Yes",
+        "Not my thing"
+      ]
+    },
+    {
+      "id": "swipe-010",
+      "question_text_en": "On a trip, would you rather see as much as possible or take it slow?",
+      "options_en": [
+        "See it all",
+        "Take it slow"
+      ]
+    },
+    {
+      "id": "swipe-011",
+      "question_text_en": "On down days: cuddles right away or a little space first?",
+      "options_en": [
+        "Cuddles right away",
+        "A little space"
+      ]
+    },
+    {
+      "id": "swipe-012",
+      "question_text_en": "Would it be fun to take turns picking an evening, with no vetoes allowed?",
+      "options_en": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "swipe-013",
+      "question_text_en": "Would you rather get a useful gift or something totally useless but romantic?",
+      "options_en": [
+        "Useful",
+        "Useless but romantic"
+      ]
+    },
+    {
+      "id": "swipe-014",
+      "question_text_en": "A vacation together: a city packed with things to do or somewhere remote?",
+      "options_en": [
+        "City",
+        "Somewhere remote"
+      ]
+    },
+    {
+      "id": "swipe-015",
+      "question_text_en": "Would you like more candid photos of us, even if they come out badly?",
+      "options_en": [
+        "Yes",
+        "No, fewer but better"
+      ]
+    },
+    {
+      "id": "swipe-017",
+      "question_text_en": "If we cook together, do you want an exact recipe or should we wing it?",
+      "options_en": [
+        "Exact recipe",
+        "Let’s wing it"
+      ]
+    },
+    {
+      "id": "swipe-018",
+      "question_text_en": "Would you like to make a list of places to see together and tick them off?",
+      "options_en": [
+        "Yes",
+        "No, play it by ear"
+      ]
+    },
+    {
+      "id": "swipe-020",
+      "question_text_en": "If we had a home together, would you want it minimal or full of our things?",
+      "options_en": [
+        "Minimal",
+        "Full of us"
+      ]
+    },
+    {
+      "id": "swipe-021",
+      "question_text_en": "Would you like to celebrate the little anniversaries too, not just the big ones?",
+      "options_en": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "swipe-022",
+      "question_text_en": "When we’re apart, would you rather have lots of short texts or one long call?",
+      "options_en": [
+        "More texts",
+        "One long call"
+      ]
+    },
+    {
+      "id": "swipe-023",
+      "question_text_en": "Picking a movie: something that makes us cry or something that makes us laugh?",
+      "options_en": [
+        "Cry",
+        "Laugh"
+      ]
+    },
+    {
+      "id": "swipe-024",
+      "question_text_en": "Would you like to try a hobby together that we don’t know how to do yet?",
+      "options_en": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "swipe-025",
+      "question_text_en": "For an anniversary, would you rather have an experience or a keepsake?",
+      "options_en": [
+        "Experience",
+        "Keepsake"
+      ]
+    },
+    {
+      "id": "swipe-026",
+      "question_text_en": "Faced with a wild plan suggested at the last minute, is the ideal answer yes?",
+      "options_en": [
+        "Yes",
+        "It really depends"
+      ]
+    },
+    {
+      "id": "swipe-027",
+      "question_text_en": "Should we tell each other everything right away, or each keep some things of our own?",
+      "options_en": [
+        "Share almost everything",
+        "Keep our own spaces"
+      ]
+    },
+    {
+      "id": "swipe-028",
+      "question_text_en": "Would you like a new song to become “ours” every year?",
+      "options_en": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "swipe-031",
+      "question_text_en": "Would you like more little gestures for no particular reason?",
+      "options_en": [
+        "Yes",
+        "I don’t need them"
+      ]
+    },
+    {
+      "id": "swipe-032",
+      "question_text_en": "If we only had two hours together, would you rather do something or absolutely nothing?",
+      "options_en": [
+        "Do something",
+        "Nothing, together"
+      ]
+    }
+  ],
+  "fixes": [
+    {
+      "id": "swipe-003",
+      "question_text": "Quando abbiamo poche energie, preferisci parlare comunque o stare in silenzio insieme?",
+      "reason": "«siamo stanchi» e «stare vicini» concordano al maschile con la coppia: riformulato senza aggettivi."
+    },
+    {
+      "id": "swipe-005",
+      "options": [
+        "Sì",
+        "No, meglio improvvisare"
+      ],
+      "reason": "L’opzione «No, meglio spontanei» concorda al maschile con la coppia."
+    },
+    {
+      "id": "swipe-007",
+      "question_text": "Una sorpresa organizzata da me ti entusiasma o ti mette un po’ in ansia?",
+      "reason": "«dall’altro» presuppone il genere del partner: uso la voce dell’app («da me»)."
+    },
+    {
+      "id": "swipe-010",
+      "options": [
+        "Vedere tutto",
+        "Andare piano"
+      ],
+      "reason": "L’opzione «Andare lenti» concorda al maschile con la coppia."
+    },
+    {
+      "id": "swipe-011",
+      "question_text": "Nei giorni giù di morale, meglio coccole subito o prima un po’ di spazio?",
+      "reason": "«uno dei due» è al maschile: la frase resta generica come l’originale."
+    },
+    {
+      "id": "swipe-022",
+      "question_text": "Quando siamo a distanza, preferisci più messaggi brevi o una chiamata lunga?",
+      "reason": "«siamo lontani» concorda al maschile con la coppia."
+    },
+    {
+      "id": "swipe-024",
+      "question_text": "Ti piacerebbe provare insieme un hobby che non sappiamo ancora fare?",
+      "reason": "«nessuno dei due» è al maschile."
+    },
+    {
+      "id": "swipe-026",
+      "question_text": "Davanti a un piano assurdo proposto all’ultimo minuto, la risposta ideale è sì?",
+      "reason": "«Se uno propone» usa il maschile generico per una persona della coppia."
+    },
+    {
+      "id": "swipe-027",
+      "question_text": "Preferisci che ci diciamo sempre tutto subito o che ci siano anche cose solo tue e solo mie?",
+      "reason": "«ognuno» è al maschile: riformulato con tu e io."
+    }
+  ],
+  "retire": [
+    {
+      "id": "swipe-004",
+      "reason": "Filler vietato: «mare o montagna»."
+    },
+    {
+      "id": "swipe-016",
+      "reason": "Doppione di confrontatevi-004: dopo una discussione, parlarne subito o prendersi tempo."
+    },
+    {
+      "id": "swipe-019",
+      "reason": "Doppione di confrontatevi-001: la domenica libera, restare in casa o uscire."
+    },
+    {
+      "id": "swipe-029",
+      "reason": "Il tema «vivere altrove» c’è già in confrontatevi-007, e_se-002 e nella domanda del giorno desideri-09."
+    },
+    {
+      "id": "swipe-030",
+      "reason": "Doppione di swipe-002: stessa preferenza tra programma e improvvisazione, in forma più astratta (il tema torna anche in swipe-017 e swipe-018)."
+    }
+  ]
+}
