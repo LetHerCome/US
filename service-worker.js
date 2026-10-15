@@ -1,4 +1,4 @@
-const BUILD_ID = "us-sintonia-event-points-20261015-1";
+const BUILD_ID = "us-content-1-0-20261015-3";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;

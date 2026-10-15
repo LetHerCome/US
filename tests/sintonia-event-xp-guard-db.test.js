@@ -389,7 +389,10 @@ test('events: the app inserts exactly the columns clients may still write', () =
 
 test('migration: newest, forward-only, idempotent, and leaves existing rows untouched', async () => {
   const files = fs.readdirSync(MIGRATIONS).filter((f) => f.endsWith('.sql')).sort();
-  assert.equal(files[files.length - 1], FILE, 'created after every existing migration');
+  // Created after every migration it was written against; only the later US 1.0
+  // content/language/server migrations (20261014220000 onward) may follow it.
+  assert.ok(files.includes(FILE));
+  assert.ok(files.filter((f) => f > FILE).every((f) => f >= '20261014220000'), 'created after every existing migration');
   assert.match(FILE, /^\d{14}_[a-z0-9_]+\.sql$/);
   const outside = GUARD.replace(/\$function\$[\s\S]*?\$function\$/g, '').replace(/--.*$/gm, '');
   assert.doesNotMatch(outside, /\b(delete|truncate|drop|alter|insert\s+into|update\s+public|create\s+(table|policy|trigger))\b/i, 'no data or shape change outside the two functions');
