@@ -386,6 +386,13 @@ body.us-keyboard-open :is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsO
 }
 .toast .us-icon{width:16px;height:16px;flex:none}
 .toast .us-toast-text{min-width:0}
+/* With an action (mockup "Guarda": toast(msg,{action:{label,onClick}})):
+   a small button inside the pill, which can be tapped while it shows. */
+.toast.has-act{padding:6px 6px 6px 16px;border-radius:24px}
+.toast.has-act.show{pointer-events:auto}
+.toast.has-act .us-toast-text{line-height:1.25;padding:4px 0}
+.toast .us-toast-act{flex:none;min-height:34px;padding:0 14px;border:0;border-radius:var(--us-radius-pill);background:var(--us-inchiostro);color:var(--us-latte);font-family:var(--us-font-ui);font-style:normal;font-size:13px;font-weight:700;line-height:1;letter-spacing:0;cursor:pointer}
+.toast.is-quiet .us-toast-act{background:var(--us-latte);color:var(--us-inchiostro)}
 /* Under an offline or update pill, the toast takes the next slot. */
 body:is(.us-status-visible,.us-update-visible) .toast{top:calc(var(--us-avviso-top) + var(--us-avviso-step))}
 body.us-status-visible.us-update-visible .toast{top:calc(var(--us-avviso-top) + var(--us-avviso-step) * 2)}

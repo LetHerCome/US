@@ -326,7 +326,9 @@ test('il foglio fondazionale espone token conservativi e target comuni da 44px',
   // Due colori (2026-10-14): sheets and cards enter on a soft spring.
   assert.match(css, /--us-ease-enter:cubic-bezier\(\.22,1\.15,\.36,1\)/);
   assert.match(css, /--us-ease-exit:cubic-bezier\(\.4,0,1,1\)/);
-  assert.match(css, /:where\(button:not\(:disabled\):not\(\[data-us-motion-tap="off"\]\)\):active\s*\{\s*transform:scale\(\.985\)/);
+  // Round 3: the press is the mockup's JS press only (ui-foundation.js); a
+  // CSS :active scale on buttons stacked with it and pressed twice.
+  assert.doesNotMatch(css, /:where\(button[^{]*\):active\s*\{\s*transform:scale/);
   assert.match(css, /:root\[data-us-motion="reduced"\]/);
   assert.match(css, /--us-text-meta:11px/);
   assert.match(css, /--us-text-secondary:12px/);
