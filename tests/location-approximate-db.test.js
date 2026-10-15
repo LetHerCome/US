@@ -112,7 +112,9 @@ test('couple_distance returns a rounded distance or "near", and never coordinate
     assert.ok(Number.isInteger(r.distance_km));
     assert.ok(r.distance_km > 450 && r.distance_km < 500, String(r.distance_km));
     assert.deepEqual(Object.keys(r).sort(), ['distance_km', 'my_updated_at', 'near', 'partner_sharing', 'partner_updated_at', 'sharing']);
-    assert.doesNotMatch(JSON.stringify(r), /latitude|longitude|45\.4|9\.19/);
+    // Timestamps can contain 45.4 (e.g. 23:17:45.406): look for coordinates outside them.
+    const { my_updated_at: _mine, partner_updated_at: _partner, ...rest } = r;
+    assert.doesNotMatch(JSON.stringify(rest), /latitude|longitude|45\.4|9\.19/);
     assert.equal((await distance(db, B)).distance_km, r.distance_km, 'same answer for both');
 
     await put(db, B, A, 41.9035, 12.4975);
