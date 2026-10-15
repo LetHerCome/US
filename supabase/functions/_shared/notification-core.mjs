@@ -95,7 +95,7 @@ const CATALOGUE = Object.freeze({
   // A11/N7: mesiversario / anniversario, no points in the text, opens Eventi.
   relationship: (a, en) => ({ ...relationshipCopy(a, en), target: a.kind ? 'events' : 'home', tag: a.tag, channel: 'reminders', urgency: 'normal', ttl: 60 * 60 * 24 }),
   // A2: the partner accepted the invite; sent once, to the creator.
-  partner_joined: (a, en) => ({ title: 'US.', body: pick(en, `${name(a.senderName)} è entrata: il vostro spazio è pronto`, `${name(a.senderName, true)} joined: your space is ready`), target: 'home', tag: 'us-partner-joined', channel: 'partner', urgency: 'normal' }),
+  partner_joined: (a, en) => ({ title: 'US.', body: pick(en, `${name(a.senderName)} ha accettato l’invito: il vostro spazio è pronto`, `${name(a.senderName, true)} joined: your space is ready`), target: 'home', tag: 'us-partner-joined', channel: 'partner', urgency: 'normal' }),
 });
 export const NOTIFICATION_TYPES = Object.freeze(Object.keys(CATALOGUE));
 

@@ -162,9 +162,9 @@ from (values
   ('calendar_upcoming-001', 'On your calendar', '[]'::jsonb),
   ('calendar_upcoming-002', 'On your calendar', '[]'::jsonb),
   ('conservati-001', 'From what you’ve kept', '[]'::jsonb),
-  ('da_vivere_idea-001', 'Bucket list', '[]'::jsonb),
-  ('da_vivere_idea-002', 'Bucket list', '["Plan it carefully", "Do it on a whim", "A bit of both"]'::jsonb),
-  ('da_vivere_idea-003', 'Bucket list', '[]'::jsonb),
+  ('da_vivere_idea-001', 'From your ideas', '[]'::jsonb),
+  ('da_vivere_idea-002', 'From your ideas', '["Plan it carefully", "Do it on a whim", "A bit of both"]'::jsonb),
+  ('da_vivere_idea-003', 'From your ideas', '[]'::jsonb),
   ('da_vivere_lived-001', 'Lived together', '[]'::jsonb),
   ('da_vivere_lived-002', 'Lived together', '["Nothing, I’d do it all the same way", "Just the pace: more time", "Everything: a brand-new experience"]'::jsonb),
   ('longitudinal-001', 'You already played this {when}', '[]'::jsonb),
@@ -173,6 +173,10 @@ from (values
 ) as v(id, kind_label_en, options_en)
 where r.id = v.id
   and (r.kind_label_en is distinct from v.kind_label_en or r.options_en is distinct from v.options_en);
+
+-- Da vivere is now "Le vostre idee" inside Missioni: the label follows it.
+update public.game_v2_recipes set kind_label = 'Dalle vostre idee'
+where adapter = 'da_vivere_idea' and kind_label = 'Da vivere';
 
 comment on column public.game_v2_recipes.kind_label_en is 'US 1.0 English of kind_label (same placeholders).';
 comment on column public.game_v2_recipes.options_en is 'US 1.0 English of options, same order and length.';

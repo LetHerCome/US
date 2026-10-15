@@ -16,7 +16,7 @@ select (select count(*) from cron.job where jobname = 'us-calendar-reminders-dis
 ```
 
 **2. Edge Functions, DOPO l'SQL** (Supabase › Edge Functions, o `supabase functions deploy <nome>`):
-- `send-web-push`: «Risposte pronte» solo al partner, reazione alla risposta del giorno, «Bea è entrata», missione con il titolo, reazione al Ti penso con il nome.
+- `send-web-push`: «Risposte pronte» solo al partner, reazione alla risposta del giorno, «Bea ha accettato l’invito», missione con il titolo, reazione al Ti penso con il nome.
 - `game-v2-push` e `game-v2-push-worker`: la notifica dice il nome del gioco.
 - `daily-question-push-worker`: il promemoria delle 20:30 a chi la sua persona sta aspettando.
 - `monthiversary-job`: mesiversario anche per chi ha iniziato il 29, 30 o 31, senza punti nel testo, apre Eventi.

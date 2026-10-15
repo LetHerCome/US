@@ -64,7 +64,7 @@ test('catalogue: reactions are named, never "angry"; the anniversary copy has no
   assert.equal(rel('monthiversary', 13).body, 'Oggi sono 13 mesi insieme');
   assert.deepEqual([rel('anniversary', 24).title, rel('anniversary', 24).body], ['US. · Anniversario ♡', 'Oggi sono 2 anni insieme']);
   assert.equal(rel('anniversary', 12, 'en').body, 'One year together today');
-  assert.equal(buildNotification('partner_joined', { senderName: 'Bea' }).body, 'Bea è entrata: il vostro spazio è pronto');
+  assert.equal(buildNotification('partner_joined', { senderName: 'Bea' }).body, 'Bea ha accettato l’invito: il vostro spazio è pronto');
 });
 
 test('recipientLocales: en only for locale en; missing column, row or a failed read = Italian', async () => {
@@ -183,7 +183,7 @@ test('A2 partner_joined: only the joiner of this couple, right after joining, no
   const ok = await post('jwt-b', { type: 'partner_joined', reference_id: COUPLE });
   assert.deepEqual(ok.body, { delivered: 1, failed: 0 });
   assert.deepEqual(world.webpush.sent.map((s) => [s.endpoint, s.payload.body, s.payload.target]),
-    [['https://push.example/s-fra', 'Bea è entrata: il vostro spazio è pronto', 'home']]);
+    [['https://push.example/s-fra', 'Bea ha accettato l’invito: il vostro spazio è pronto', 'home']]);
   assert.deepEqual((await post('jwt-b', { type: 'partner_joined', reference_id: COUPLE })).body, { delivered: 0, deduplicated: true });
   assert.ok(world.admin.db.push_event_log.some((row) => row.dedupe_key === `partner-joined:${COUPLE}`));
 
