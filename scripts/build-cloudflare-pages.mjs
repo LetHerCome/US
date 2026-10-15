@@ -49,6 +49,7 @@ const RUNTIME_FILES = [
   'pet.js',
   'settings.css',
   'settings.js',
+  'account-deletion.js',
   'identity.css',
   'top-chrome.css',
   'modal-center.css',
@@ -87,7 +88,10 @@ const RUNTIME_FILES = [
   'icon-512.png',
   'apple-touch-icon.png',
   'favicon-32.png',
-  'favicon.svg'
+  'favicon.svg',
+  // Public account deletion page (Google Play): standalone, outside the app shell.
+  'elimina-account.html',
+  'elimina-account.js'
 ];
 
 await rm(OUTPUT, { recursive: true, force: true });

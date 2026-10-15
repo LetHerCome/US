@@ -1,0 +1,186 @@
+name: US Store S3.2 safe lifecycle design gate
+
+on:
+  push:
+    branches:
+      - mission/us-store-s3-2-lifecycle-design-20261012
+  pull_request:
+    paths:
+      - 'docs/missions/us-store-s3-2-*'
+      - 'docs/missions/us-store-s3-3-*'
+      - 'tests/s3-2-lifecycle-design-gate.test.js'
+      - 'tests/s3-2-preservation-a-preview.test.js'
+      - 'tests/s3-2-export-core.test.mjs'
+      - 'tests/s3-2-export-paging.test.mjs'
+      - 'tests/s3-2-fk-coverage.test.mjs'
+      - 'tests/s3-2-account-exit-real-schema.test.js'
+      - 'tests/s3-2-exit-impact-db.test.js'
+      - 'tests/s3-2-preserved-message-vault-db.test.js'
+      - 'tests/s3-2-preserved-moments-calendar-db.test.js'
+      - 'tests/s3-2-partner-photo-reference-db.test.js'
+      - 'tests/s3-2-partner-photo-storage-ref-db.test.js'
+      - 'tests/s3-2-integrated-account-exit-db.test.js'
+      - 'tests/s3-2-media-inventory.test.js'
+      - 'tests/s3-2-media-copy-rehearsal.test.js'
+      - 'tests/s3-3-storage-jwt-readonly.test.cjs'
+      - 'tests/s3-3-staging-readonly-preflight.test.cjs'
+      - 'tests/s3-3-seed-and-verify-stage.test.cjs'
+      - 'tests/s3-3-storage-policy-audit.test.cjs'
+      - 'scripts/s3-3-storage-policy-audit.cjs'
+      - 'docs/missions/us-store-s3-3-storage-policy-baseline-20261012.json'
+      - 'scripts/s3-3-storage-jwt-readonly.cjs'
+      - 'scripts/s3-3-seed-and-verify-stage.cjs'
+      - 'scripts/s3-3-stage-qa-run.ps1'
+      - 's3-2-media-copy-rehearsal.cjs'
+      - 's3-2-media-inventory.cjs'
+      - 'supabase/functions/_shared/s3-2-export-core.mjs'
+      - 'supabase/functions/_shared/s3-2-export-paging.mjs'
+      - 'supabase/functions/export-my-data/index.ts'
+      - 's3-2-preservation-a-preview.cjs'
+      - '.github/workflows/s3-2-lifecycle-design.yml'
+      - 'supabase/migrations/*_s32_*.sql'
+      - 'supabase/functions/delete-account/**'
+      - 'supabase/functions/account-deletion-worker/**'
+      - 'supabase/functions/_shared/s32-account-deletion-core.mjs'
+      - 'supabase/functions/_shared/s32-leave-couple-core.mjs'
+      - 'supabase/functions/_shared/s32-data-export-core.mjs'
+      - 'supabase/functions/_shared/us-email.mjs'
+      - 'supabase/functions/leave-couple/**'
+      - 'supabase/functions/export-user-data/**'
+      - 'supabase/config.toml'
+      - 'account-deletion.js'
+      - 'index.html'
+      - 'tests/s32-*'
+      - 'tests/helpers/mc2-db.js'
+      - 'settings.js'
+      - 'elimina-account.*'
+
+permissions:
+  contents: read
+
+jobs:
+  no-destructive-account-lifecycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify S3.2 contract and syntax
+        run: |
+          node --check tests/s3-2-lifecycle-design-gate.test.js
+          node --check tests/s3-2-preservation-a-preview.test.js
+          node --check s3-2-preservation-a-preview.cjs
+          node --check supabase/functions/_shared/s3-2-export-core.mjs
+          node --check tests/s3-2-export-core.test.mjs
+          node --check tests/s3-2-export-paging.test.mjs
+          node --check tests/s3-2-fk-coverage.test.mjs
+          node --check tests/s3-2-media-inventory.test.js
+          node --check tests/s3-2-media-copy-rehearsal.test.js
+          node --check scripts/s3-3-storage-jwt-readonly.cjs
+          node --check tests/s3-3-storage-jwt-readonly.test.cjs
+          node --check tests/s3-3-staging-readonly-preflight.test.cjs
+          node --check scripts/s3-3-seed-and-verify-stage.cjs
+          node --check tests/s3-3-seed-and-verify-stage.test.cjs
+          node --check tests/s3-3-storage-policy-audit.test.cjs
+          node --check scripts/s3-3-storage-policy-audit.cjs
+          node --check s3-2-media-copy-rehearsal.cjs
+          node --check s3-2-media-inventory.cjs
+          node --check supabase/functions/_shared/s3-2-export-paging.mjs
+          node --check supabase/functions/_shared/s32-account-deletion-core.mjs
+          node --check supabase/functions/_shared/s32-leave-couple-core.mjs
+          node --check supabase/functions/_shared/s32-data-export-core.mjs
+          node --check supabase/functions/_shared/us-email.mjs
+          node --check account-deletion.js
+          node --test tests/s3-2-lifecycle-design-gate.test.js tests/s3-2-preservation-a-preview.test.js tests/s3-2-export-core.test.mjs tests/s3-2-export-paging.test.mjs tests/s3-2-fk-coverage.test.mjs tests/s3-2-media-inventory.test.js tests/s3-2-media-copy-rehearsal.test.js tests/s3-3-storage-jwt-readonly.test.cjs tests/s3-3-staging-readonly-preflight.test.cjs tests/s3-3-seed-and-verify-stage.test.cjs tests/s3-3-storage-policy-audit.test.cjs tests/mc3-onboarding.test.js tests/s32-account-deletion-core.test.mjs tests/s32-leave-export-core.test.mjs tests/s32-account-deletion-client.test.js tests/s32-leave-report-client.test.js
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Check Supabase Edge draft in Deno
+        run: |
+          deno check --node-modules-dir=auto supabase/functions/export-my-data/index.ts
+          deno check --node-modules-dir=auto supabase/functions/delete-account/index.ts
+          deno check --node-modules-dir=auto supabase/functions/account-deletion-worker/index.ts
+          deno check --node-modules-dir=auto supabase/functions/leave-couple/index.ts
+          deno check --node-modules-dir=auto supabase/functions/export-user-data/index.ts
+      - name: Ensure no unapproved deletion or deployment scripts
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const contract=JSON.parse(fs.readFileSync('docs/missions/us-store-s3-2-lifecycle-contract-20261012.json','utf8'));
+          if(contract.automatedDeletionAllowed!==false || contract.destructiveActionsEnabled!==false || contract.ownerChoice!=='A' || contract.decisions.retention!=='REQUIRES_PRIVACY_REVIEW') process.exit(1);
+          const files=['supabase/functions/account-delete/index.ts','supabase/functions/couple-unpair/index.ts'];
+          if(files.some(file=>fs.existsSync(file))) process.exit(1);
+          // S3.2 v1 deletion: inert unless explicitly enabled, password re-auth, service-role RPCs only.
+          const edge=fs.readFileSync('supabase/functions/_shared/s32-account-deletion-core.mjs','utf8');
+          if(!edge.includes("US_ACCOUNT_DELETION_ENABLED")||!edge.includes("assertRecentPasswordAuth")||!/method\s*===\s*'password'/.test(edge))process.exit(1);
+          const migration=fs.readdirSync('supabase/migrations').find(f=>/_s32_account_deletion_v1\.sql$/.test(f));
+          const m=fs.readFileSync('supabase/migrations/'+migration,'utf8');
+          if(/grant[^;]+to\s+(anon|authenticated)/i.test(m)||/delete\s+from\s+auth\.users/i.test(m))process.exit(1);
+          // 1.0 leave / reports / export: inert unless enabled, leave needs the
+          // same password re-auth, the only client grant is submit_user_report.
+          const leave=fs.readFileSync('supabase/functions/_shared/s32-leave-couple-core.mjs','utf8');
+          if(!leave.includes('US_LEAVE_COUPLE_ENABLED')||!leave.includes('assertRecentPasswordAuth(payload'))process.exit(1);
+          const exp=fs.readFileSync('supabase/functions/_shared/s32-data-export-core.mjs','utf8');
+          if(!exp.includes('US_DATA_EXPORT_ENABLED')||!exp.includes('get_internal_operator_key')||!exp.includes('isSafeMediaPath'))process.exit(1);
+          const m2=fs.readFileSync('supabase/migrations/'+fs.readdirSync('supabase/migrations').find(f=>/_s32_leave_couple_reports_export\.sql$/.test(f)),'utf8');
+          const clientGrants=[...m2.matchAll(/grant[^;]+to\s+(?:anon|authenticated)[^;]*;/gi)].map(x=>x[0]);
+          if(clientGrants.length!==1||!/submit_user_report\(text, text\) to authenticated;$/.test(clientGrants[0])||/delete\s+from\s+auth\.users/i.test(m2)||/create\s+policy/i.test(m2))process.exit(1);
+          const partnerRef=fs.readFileSync('docs/missions/us-store-s3-2-partner-photo-storage-ref-draft.sql','utf8');
+          const partnerRefSql=partnerRef.replace(/--[^\n]*/g,' ');
+          if(!partnerRef.includes('BLOCKED_PENDING_REAL_STORAGE_AUTH_AND_BYTES')
+             || !partnerRef.includes('FORCE ROW LEVEL SECURITY')
+             || !partnerRef.includes('REVOKE ALL ON TABLE private.s32_partner_photo_storage_refs')
+             || /\b(?:DELETE\s+FROM\s+auth\.users|ALTER\s+TABLE\s+public\.moment_photos|CREATE\s+POLICY[^;]+TO\s+authenticated)\b/i.test(partnerRefSql))process.exit(1);
+          const photoArchive=fs.readFileSync('docs/missions/us-store-s3-2-partner-photo-reference-vault-draft.sql','utf8');
+          const photoNoComments=photoArchive.replace(/--[^\n]*/g,' ');
+          if(!photoArchive.includes('BLOCKED_PENDING_RIGHTS_STORAGE_AND_PARENT_REBIND')
+             ||!photoArchive.includes('FORCE ROW LEVEL SECURITY')
+             ||/\b(?:DELETE\s+FROM\s+auth\.users|ALTER\s+TABLE\s+public\.(?:moments|moment_photos))\b/i.test(photoNoComments)
+             ||!/CREATE POLICY s32_preserved_partner_photos_survivor_only/.test(photoArchive))process.exit(1);
+          const archive=fs.readFileSync('docs/missions/us-store-s3-2-preserved-moments-calendar-draft.sql','utf8');
+          const withoutComments=archive.replace(/--[^\n]*/g,' ');
+          if(!archive.includes('BLOCKED_PENDING_STORAGE_TRANSFER')
+             || !archive.includes('FORCE ROW LEVEL SECURITY')
+             || /\bDELETE\s+FROM\s+auth\.users\b/i.test(withoutComments)
+             || /\bALTER\s+TABLE\s+public\.(?:moments|moment_photos|calendar_entries)\b/i.test(withoutComments))process.exit(1);
+          const media=fs.readFileSync('s3-2-media-inventory.cjs','utf8');
+          if(!media.includes('executable:false')
+             || /\b(?:createSignedUrl|download|upload)\s*\(/.test(media)
+             || /\.remove\s*\(/.test(media))process.exit(1);
+          const isolated=fs.readFileSync('s3-2-media-copy-rehearsal.cjs','utf8');
+          if(!isolated.includes('SyntheticObjectStore')||!isolated.includes('timingSafeEqual')
+             ||!isolated.includes('executable:false')
+             ||/createClient\s*\(|\.storage\.from\s*\(|https:\/\//.test(isolated)
+             ||/\.remove\s*\(|\.delete\s*\(|\.unlink\s*\(/.test(isolated))process.exit(1);
+          const fk=JSON.parse(fs.readFileSync('docs/missions/us-store-s3-2-fk-coverage-20261012.json','utf8'));
+          if(fk.destructiveChangesAuthorized!==false || fk.allConstraints.length!==78 || fk.allConstraints.some(x=>x.approvedResolution!==null||x.implemented!==false))process.exit(1);
+          const src=fs.readFileSync('supabase/functions/export-my-data/index.ts','utf8');
+          if(!src.includes('US_S32_EXPORT_ENABLED') || !src.includes('https://dugmhngrfkuieeletatb.supabase.co') || /supabaseSecretKey|SERVICE_ROLE_KEY/.test(src))process.exit(1);
+          const preflight=fs.readFileSync('docs/missions/us-store-s3-2-foreign-key-preflight-20261012.sql','utf8');
+          const noComments=preflight.replace(/--[^\n]*/g,' ');
+          if(!/BEGIN\s+READ\s+ONLY/i.test(noComments)||/\b(?:INSERT|DELETE|UPDATE|ALTER|DROP|TRUNCATE|GRANT|REVOKE|CREATE)\b/i.test(noComments)) process.exit(1);
+          NODE
+
+  full-schema-disposable-cascade-rehearsal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install pinned PGlite test dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Rehearse on disposable local database only
+        run: |
+          node --check tests/s3-2-account-exit-real-schema.test.js
+          node --check tests/s3-2-preserved-message-vault-db.test.js
+          node --check tests/s3-2-preserved-moments-calendar-db.test.js
+          node --check tests/s3-2-partner-photo-storage-ref-db.test.js
+          node --check tests/s3-2-integrated-account-exit-db.test.js
+          node --check tests/s3-2-partner-photo-reference-db.test.js
+          node --test tests/s32-account-deletion-db.test.js tests/s32-fk-resolution.test.js tests/s32-leave-couple-db.test.js
+          node --test tests/s3-2-account-exit-real-schema.test.js tests/s3-2-exit-impact-db.test.js tests/s3-2-preserved-message-vault-db.test.js tests/s3-2-preserved-moments-calendar-db.test.js tests/s3-2-partner-photo-reference-db.test.js tests/s3-2-partner-photo-storage-ref-db.test.js tests/s3-2-integrated-account-exit-db.test.js

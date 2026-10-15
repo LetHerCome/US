@@ -258,3 +258,14 @@ body:has(#settings.page.active) #thinkButton{
 .us-feedback-preview-grid button:focus-visible{outline:2px solid var(--us-color-accent-strong);outline-offset:2px}
 .us-feedback-preview-note{margin:13px 2px 0;color:var(--us-color-text-3);font-size:11px;line-height:1.45}
 .us-feedback-preview-grid button[data-feedback-preview="haptic-test"]{grid-column:1/-1;border-color:var(--us-color-accent-line)}
+
+/* S3.2 account deletion: reuses settings sheet primitives; only status + spacing. */
+.us-account-delete-status{margin:12px 0 0;color:var(--us-color-rose-2)}
+.us-account-delete-copy+form .us-settings2-field input{width:100%}
+
+/* 1.0 Segnala un problema: same sheet primitives; only the choice list. */
+.us-report-categories{margin:13px 0 0;padding:0;border:0}
+.us-report-categories legend{margin:0 0 7px 3px;padding:0;color:#aaa6b1;font-size:var(--us-text-meta);font-weight:680}
+.us-report-option{display:flex;align-items:center;gap:10px;min-height:44px;margin-top:6px;padding:8px 12px;border-radius:15px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.055);color:var(--us-color-text);font-size:var(--us-text-secondary)}
+.us-report-option input{width:18px;height:18px;padding:0;flex:0 0 auto;accent-color:var(--us-color-accent-strong)}
+#usReportForm textarea{width:100%;min-height:110px;resize:vertical}

@@ -112,3 +112,16 @@ Only durable decisions belong here. New missions should not reopen them without 
 **Fonte unica per lo Store 1.0:** [Carta](store/US_STORE_1_0_CHARTER.md) · [Baseline](store/US_STORE_1_0_BASELINE.md) · [Piano](store/US_STORE_1_0_EXECUTION.md) · [Release gates](store/US_STORE_1_0_QUALITY_GATES.md).
 
 **Governance:** la delibera approva la direzione di prodotto e la preparazione documentale; non autorizza per implicazione merge, produzione, modifica Supabase, acquisto account, pubblicazione o marketing a pagamento.
+
+## 2026-10-13 — Ciclo di vita dell'account (S3.2, PR #190)
+
+**Fonte:** delibere del fondatore pubblicate sulla PR #190 ([handoff](https://github.com/LetHerCome/US/pull/190#issuecomment-6148261382), [D-5](https://github.com/LetHerCome/US/pull/190#issuecomment-6149834067)). Le altre voci D-1…D-19 restano default tecnici da ratificare, elencati in [`docs/store/US_S3_2_ACCOUNT_DELETION_V1.md`](store/US_S3_2_ACCOUNT_DELETION_V1.md) §5.
+
+1. **Policy A APPROVATA:** quando un membro esce, il partner può conservare i ricordi condivisi idonei; i dati strettamente personali, la posizione, le credenziali e i token del membro che esce vengono cancellati. L'eliminazione unilaterale di un account non cancella la storia del partner. Restano necessarie la revisione dei diritti sui contenuti e l'informativa sulla conservazione.
+2. **D-5 APPROVATA:** «Se A elimina il proprio account, B conserva il diritto ad accedere ai ricordi condivisi legittimamente preservati della coppia precedente **e può creare un nuovo legame con un'altra persona senza dover eliminare il proprio account**. L'archivio precedente e il nuovo spazio di coppia sono rigorosamente separati.» La chiusura del legame precedente può restare irreversibile, ma non deve bloccare il riabbinamento futuro di B.
+3. **Tempi di D-5 (fondatore, 14/10):** il nuovo legame arriva **dopo la 1.0**, insieme alla schermata Archivio. Nella 1.0 chi resta tiene tutti i ricordi nell'app; la parte server è già sulla #190, eseguibile solo da `service_role`.
+
+4. **Esci dalla coppia nella 1.0 (fondatore, audit del 14/10, decisione 3):** chiude lo spazio di coppia come l'eliminazione, con le stesse regole di Policy A e D-5, ma tiene gli account. Insieme, "Segnala un problema o un contenuto" in Impostazioni con una procedura scritta per il team (requisito Play per le app 1:1). Dettagli: [`docs/store/US_1_0_LEAVE_REPORT_EXPORT.md`](store/US_1_0_LEAVE_REPORT_EXPORT.md).
+5. **Copia dei dati (fondatore, audit del 14/10, decisione 8):** su richiesta al supporto, inviata per email; il tasto in app viene dopo la 1.0. Finché non ci sono indirizzo e dominio, l'operatore manda il link a mano. Default tecnici da ratificare: link valido 7 giorni, segnalazioni conservate 12 mesi, massimo 5 segnalazioni al giorno per utente.
+
+**Governance:** approvazioni di prodotto. Non autorizzano merge, migrazioni su staging o produzione, cancellazione di utenti né deploy.

@@ -21,13 +21,22 @@ insert into public.couples(id,name,started_on) values ('${A}','US.','2026-04-21'
 insert into public.profiles(id,display_name,couple_id,role) values ('${F}','Francesco','${A}','francesco'),('${B}','Beatrice','${A}','beatrice');
 insert into public.couple_invites(couple_id,role,code_hash,used_by,used_at) values
 ('${A}','francesco',repeat('a',64),'${F}',now()),('${A}','beatrice',repeat('b',64),'${B}',now());`;
-async function database({mc2=true, seed=true}={}) {
+// s32:false rebuilds the schema as it was before account deletion v1, for
+// the historical #190 rehearsals (naive cascade, parked vault drafts).
+async function database({mc2=true, seed=true, s32=true}={}) {
   const db = await newDb();
   try {
     await db.exec(PLATFORM);
-    for (const f of fs.readdirSync(DIR).filter(f=>f.endsWith('.sql') && f!==FILE).sort()) await db.exec(fs.readFileSync(path.join(DIR,f),'utf8'));
+    const files=fs.readdirSync(DIR).filter(f=>f.endsWith('.sql') && f!==FILE).sort();
+    // Migrations that build on MC2 (S3.2 account deletion) run after it, in
+    // ledger order; older ones keep the historical pre-MC2 position.
+    const afterMc2=f=>f>FILE && /_s32_/.test(f);
+    for (const f of files.filter(f=>!afterMc2(f))) await db.exec(fs.readFileSync(path.join(DIR,f),'utf8'));
     if(seed) await db.exec(SEED);
-    if(mc2) await db.exec(MC2());
+    if(mc2) {
+      await db.exec(MC2());
+      if(s32) for (const f of files.filter(afterMc2)) await db.exec(fs.readFileSync(path.join(DIR,f),'utf8'));
+    }
     return db;
   } catch(e) { await db.close(); throw e; }
 }

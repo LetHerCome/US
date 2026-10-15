@@ -405,7 +405,12 @@ test('F2C VAPID_SUBJECT: every Web Push producer reads it through the one helper
   }
   // No subject literal anywhere in Edge code: a domain change needs no deploy.
   for (const [file, source] of Object.entries(sources)) {
-    assert.doesNotMatch(source, /usfinal|vercel\.app|pages\.dev/i, file);
+    // CORS allowlists (account lifecycle) may name web origins: they are not a
+    // push subject, and US_ALLOWED_ORIGINS adds a new domain without a deploy.
+    const withoutCors = source
+      .replace(/DEFAULT_ALLOWED_ORIGINS = Object\.freeze\(\[[^\]]*\]\)/, '')
+      .replace(/const STAGING_ORIGIN = "[^"]*";/, '');
+    assert.doesNotMatch(withoutCors, /usfinal|vercel\.app|pages\.dev/i, file);
     // The helper validates the scheme; no producer may carry its own subject.
     if (!file.endsWith('_shared/web-push-vapid.mjs')) assert.doesNotMatch(source, /mailto:/i, file);
   }

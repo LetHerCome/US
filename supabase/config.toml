@@ -56,6 +56,21 @@ verify_jwt = true
 [functions.delete-moment]
 verify_jwt = true
 
+[functions.delete-account]
+verify_jwt = true
+
+# Cron/operator only, authenticated by x-us-cron-key (Vault).
+[functions.account-deletion-worker]
+verify_jwt = false
+
+# Leave the couple (keeps the account); same password re-auth as deletion.
+[functions.leave-couple]
+verify_jwt = true
+
+# Operator only, authenticated by x-us-operator-key (Vault us_operator_key).
+[functions.export-user-data]
+verify_jwt = false
+
 # Recovered in F2A.1 from the deployed v4 (never deployed from the repo yet).
 # Called only by cron `us-monthiversary-hourly`, authenticated by x-us-cron-key.
 [functions.monthiversary-job]
