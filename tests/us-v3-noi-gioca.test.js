@@ -159,7 +159,7 @@ test('Gioca V4 → 1.0: daily first, weekly budget, pending actions, bento games
   assert.deepEqual([...positions].sort((a, b) => a - b), positions);
   assert.doesNotMatch(hub, /dayRail\(\)/);
   assert.match(read('app.js'), /const slot=hub\.querySelector\('\.us-gv2-daily-slot'\);/);
-  assert.match(games, /Scrivila, sigillala: \$\{partnerName\(\)\} la scopre giocando\./, 'write → seal → discover, in one line');
+  assert.match(games, /\$\{knownPartner\(\) \|\| 'La tua persona'\} la troverà in Gioca: risponderete tutti e due\./, 'write → discover, in one line (mockup wording)');
   const pet = read('pet.js');
   assert.match(pet, /selector:'#quizHub \.us-gv2-game\.is-swipe'/, 'the PET still finds its Gioca anchors');
   assert.match(pet, /selector:'#quizHub \.us-gv2-choose'/);

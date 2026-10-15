@@ -413,8 +413,10 @@ function showLevelMoment({ from, level, unlocks }) {
   const inEase = 'cubic-bezier(.5,0,.9,.45)';
   const q = (selector) => visual.querySelector(selector);
   root.animate([{ clipPath: 'circle(0% at 50% 0%)' }, { clipPath: 'circle(150% at 50% 0%)' }], { duration: 700, easing: io });
-  Array.from(root.querySelectorAll('.us-level-moment-body > :not(.lvx)')).forEach((el, i) => {
-    el.animate([{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 500, delay: HOLD + i * 80, easing: out, fill: 'backwards' });
+  // As the mockup's Momento: every child rises 14px in 500ms, the visual at
+  // 380ms, the words after the hold, 80ms apart (the visual counts as the first).
+  Array.from(root.querySelectorAll('.us-level-moment-body > *')).forEach((el, i) => {
+    el.animate([{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 500, delay: el === visual ? 380 : HOLD + i * 80, easing: out, fill: 'backwards' });
   });
   q('.lvx-ring').animate([{ strokeDashoffset: 100 - fromPct * 100 }, { strokeDashoffset: 0 }], { duration: R1 - 260, delay: 260, easing: io, ...fill });
   q('.lvx-orbit').animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(540deg)' }], { duration: 640, delay: R1, easing: inEase, ...fill });
@@ -514,11 +516,11 @@ function renderNext(next = state) {
   if (!root) return;
   const reward = nextPresentedReward(next);
   if (!reward) {
-    root.innerHTML = '<small>PROSSIMO SBLOCCO</small><b>Avete raggiunto tutti gli sblocchi di questa versione</b>';
+    root.innerHTML = '<small>Collezione completa</small><b>Avete raggiunto tutti gli sblocchi di questa versione</b>';
     return;
   }
   const shown = presentation(reward);
-  root.innerHTML = `<span class="us-progression-next-preview" aria-hidden="true">${previewMarkup(reward)}</span><span class="us-progression-next-copy"><small>PROSSIMO SBLOCCO</small><b>${esc(promiseLine(reward))}</b><span class="us-progression-next-meta"><span>${esc(presentedTitle(reward))}</span><span>${esc(scopeFor(shown?.kind).short)}</span></span></span>`;
+  root.innerHTML = `<span class="us-progression-next-preview" aria-hidden="true">${previewMarkup(reward)}</span><span class="us-progression-next-copy"><small>Prossimo sblocco</small><b>${esc(promiseLine(reward))}</b><span class="us-progression-next-meta"><span>${esc(presentedTitle(reward))}</span><span>${esc(scopeFor(shown?.kind).short)}</span></span></span>`;
 }
 
 function rewardTile(reward) {
@@ -613,6 +615,10 @@ function renderRewards(next = state) {
   const total = groups.reduce((sum, group) => sum + group.total, 0);
   const countdown = countdownGroup(next);
   if (countdown) groups.push(countdown);
+  // The mockup's chip order: the night of US first, then Noi, then Oggi.
+  const CHIP_ORDER = ['theme', 'accent', 'oggi_theme', 'oggi_effect', 'effect', 'countdown'];
+  const chipRank = (category) => { const i = CHIP_ORDER.indexOf(category); return i < 0 ? CHIP_ORDER.length : i; };
+  groups.sort((a, b) => chipRank(a.category) - chipRank(b.category));
   if (!groups.some((group) => group.category === rewardCategory)) rewardCategory = groups[0]?.category || null;
   const chips = groups.length > 1 ? `<div class="us-reward-cats" role="group" aria-label="Categorie della collezione">${groups.map((group) => `<button type="button" class="us-reward-cat" data-reward-cat="${group.category}" ${group.category === rewardCategory ? 'aria-current="true"' : ''}>${esc(group.label)}<em>${group.owned}/${group.total}</em></button>`).join('')}</div>` : '';
   root.innerHTML = chips + groups.map((group) => group.markup(group.category === rewardCategory)).join('');

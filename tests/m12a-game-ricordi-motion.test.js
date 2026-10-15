@@ -75,7 +75,7 @@ test('reveal: the FIRST reveal is staged, yet every answer is already in the DOM
   await tick();
   const panel = h.nodes.usGameV2Panel.innerHTML;
   assert.match(panel, /class="us-gv2-reveal us-gv5-reveal is-first-reveal"/);
-  assert.match(panel, /class="us-gv5-summary"/);
+  assert.match(panel, /class="us-gv5-reveal-list"/);
   assert.doesNotMatch(panel, /class="us-gv2-reveal-card"/, 'no long per-question cards');
   assert.match(panel, /<dd translate="no">Il mare<\/dd>/, 'a free answer is kept as written');
   assert.match(panel, /<dd translate="no">La montagna<\/dd>/);
