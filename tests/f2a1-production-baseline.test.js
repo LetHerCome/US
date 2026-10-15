@@ -51,7 +51,26 @@ const n2MonthiversaryEdit = (text) => text
   .replace(`${N2_MONTHIVERSARY.L28}\n`, '')
   .replace(`${N2_MONTHIVERSARY.L30}\n${N2_MONTHIVERSARY.L31}`, N2_MONTHIVERSARY.NEW);
 
-test('F2A.1 monthiversary-job: repo source is the deployed v4 bytes plus only the F2C VAPID edit and the N2 dispatcher edit', () => {
+// US 1.0 (A11/N7): starts on the 29th-31st fire on the last day of shorter
+// months (the client's rule, events.js addMonthsDay), the copy has no points
+// and opens Eventi, in each recipient's language. The award is unchanged.
+const US10_MONTHIVERSARY = [
+  ['import { buildNotification, deliverNotification } from "../_shared/notification-core.mjs";\n',
+    'import { buildNotification, deliverNotification, recipientLocales } from "../_shared/notification-core.mjs";\n'],
+  ['const today=iso(now.year,now.month,now.day);\n',
+    'const today=iso(now.year,now.month,now.day);const lastDay=new Date(Date.UTC(now.year,now.month,0)).getUTCDate();\n'],
+  ['if(!sy||!sm||!sd||sd!==now.day)continue;\n', 'if(!sy||!sm||!sd||Math.min(sd,lastDay)!==now.day)continue;\n'],
+  ['      let months=(now.year-sy)*12+(now.month-sm);if(now.day<sd)months-=1;if(months<=0)continue;\n',
+    '      const months=(now.year-sy)*12+(now.month-sm);if(months<=0)continue;\n'],
+  ['      const title=kind==="anniversary"?"US. · Anniversario ♡":"US. · Mesiversario ♡";const body=kind==="anniversary"?`${months/12} ${months/12===1?"anno":"anni"} insieme · +${xp} XP Bond`:`Oggi sono ${months} mesi insieme · +${xp} XP Bond`;\n' + N2_MONTHIVERSARY.NEW + '\n',
+    '      const locales=await recipientLocales(admin,ids);\n      for(const id of ids){const result=await deliverNotification(admin,{notification:buildNotification("relationship",{kind,months,tag:`relationship-${today}`,locale:locales.get(id)}),recipientIds:[id],coupleId:couple.id,eventType:kind,web:{send:(s:unknown,p:string,o:unknown)=>webpush.sendNotification(s as any,p,o as any)},native:nativeTransport()});delivered+=result.delivered||0;}\n'],
+];
+const us10MonthiversaryEdit = (text) => US10_MONTHIVERSARY.reduce((out, [from, to]) => {
+  assert.equal(out.split(from).length, 2, `US 1.0 edit applies exactly once: ${from.slice(0, 60)}`);
+  return out.replace(from, to);
+}, text);
+
+test('F2A.1 monthiversary-job: repo source is the deployed v4 bytes plus only the F2C VAPID edit, the N2 dispatcher edit and the US 1.0 date/copy edit', () => {
   const deployed = F2A.monthiversary_job;
   assert.equal(deployed.slug, 'monthiversary-job');
   assert.equal(deployed.version, 4);
@@ -60,12 +79,12 @@ test('F2A.1 monthiversary-job: repo source is the deployed v4 bytes plus only th
   assert.deepEqual(names, ['deno.json', 'index.ts']);
   for (const file of deployed.files) {
     const local = fs.readFileSync(path.join(ROOT, 'supabase/functions/monthiversary-job', file.name)).toString('utf8');
-    const expected = file.name === 'index.ts' ? n2MonthiversaryEdit(f2cMonthiversaryEdit(file.content)) : file.content;
+    const expected = file.name === 'index.ts' ? us10MonthiversaryEdit(n2MonthiversaryEdit(f2cMonthiversaryEdit(file.content))) : file.content;
     if (file.name === 'index.ts') {
       assert.notEqual(f2cMonthiversaryEdit(file.content), file.content, 'the F2C edit applies to the recovered bytes');
-      assert.notEqual(expected, f2cMonthiversaryEdit(file.content), 'the N2 edit applies on top of F2C');
+      assert.notEqual(n2MonthiversaryEdit(f2cMonthiversaryEdit(file.content)), f2cMonthiversaryEdit(file.content), 'the N2 edit applies on top of F2C');
     }
-    assert.equal(local, expected, `${file.name} differs from the deployed source beyond the F2C and N2 edits`);
+    assert.equal(local, expected, `${file.name} differs from the deployed source beyond the F2C, N2 and US 1.0 edits`);
   }
   const provenance = read('supabase/functions/monthiversary-job/PROVENANCE.md');
   assert.match(provenance, new RegExp(sha256(deployed.files.find((f) => f.name === 'index.ts').content)), 'the recovered v4 hash stays recorded');

@@ -21,32 +21,81 @@ export const NOTIFICATION_SCHEMA_VERSION = 1;
 
 // Allow-listed navigation targets. A payload can only name one of these; the
 // app maps each to a surface. There is no URL in the contract.
-export const NOTIFICATION_TARGETS = Object.freeze(['home', 'today', 'think', 'left_for_you', 'quiz', 'bond', 'calendar']);
+// US 1.0: 'events' opens Eventi (mesiversario / anniversario).
+export const NOTIFICATION_TARGETS = Object.freeze(['home', 'today', 'think', 'left_for_you', 'quiz', 'bond', 'calendar', 'events']);
 export const NOTIFICATION_CHANNELS = Object.freeze(['partner', 'reminders']);
 export const NOTIFICATION_CATEGORIES = Object.freeze(['think']);
+// US 1.0: the copy follows the RECIPIENT's profiles.locale; anything but 'en'
+// (null = not chosen yet, a missing column, a failed read) is Italian.
+export const NOTIFICATION_LOCALES = Object.freeze(['it', 'en']);
+export const normalizeLocale = (value) => (value === 'en' ? 'en' : 'it');
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const TAG = /^[a-z0-9:_-]{1,96}$/i;
 const HOURS_12 = 60 * 60 * 12;
-const name = (value) => value || 'La tua persona';
+const name = (value, en = false) => value || (en ? 'Your person' : 'La tua persona');
+const pick = (en, it, english) => (en ? english : it);
+const own = (map, key) => (typeof key === 'string' && Object.hasOwn(map, key) ? map[key] : null);
+
+// US 1.0 copy rules: Italian with no "Today", "Bond", "XP" or "quest"; US
+// English with the app glossary (Thinking of you, Left for you, Question of
+// the day, Missions, Sync, This or that). Android shows its own generic text
+// (FCM data-only, #187): this copy reaches Web Push and iOS only.
+const DAILY_TITLE = (en) => pick(en, 'US. · La domanda di oggi', 'US. · Question of the day');
+const THINK_REACTION_COPY = Object.freeze({
+  heart: (n, en) => pick(en, `${n} ti manda un cuore ♥`, `${n} sends you a heart ♥`),
+  hug: (n, en) => pick(en, `${n} ti manda un abbraccio`, `${n} sends you a hug`),
+  miss_you: (n, en) => pick(en, `${n}: mi manchi`, `${n}: I miss you`),
+});
+const DAILY_REACTION_COPY = Object.freeze({
+  heart: (n, en) => pick(en, `${n} ha messo ♥ alla tua risposta`, `${n} left a ♥ on your answer`),
+  cry: (n, en) => pick(en, `${n}: mi hai commosso`, `${n}: you moved me`),
+});
+function relationshipCopy(a, en) {
+  const months = Number(a.months);
+  if (a.kind === 'anniversary') {
+    const years = Math.round(months / 12);
+    return {
+      title: pick(en, 'US. · Anniversario ♡', 'US. · Anniversary ♡'),
+      body: years === 1 ? pick(en, 'Oggi è un anno insieme', 'One year together today') : pick(en, `Oggi sono ${years} anni insieme`, `${years} years together today`),
+    };
+  }
+  if (a.kind === 'monthiversary') {
+    return {
+      title: pick(en, 'US. · Mesiversario ♡', 'US. · Monthiversary ♡'),
+      body: months === 1 ? pick(en, 'Oggi è un mese insieme', 'One month together today') : pick(en, `Oggi sono ${months} mesi insieme`, `${months} months together today`),
+    };
+  }
+  return { title: a.title, body: a.body };
+}
 
 // The catalogue: for every logical event, ONE title/body/target/channel/urgency.
-// Copy is the copy Web Push already used (product decision, unchanged here).
+// Each entry receives (args, en): en is true when the recipient reads English.
 const CATALOGUE = Object.freeze({
-  test: (a) => ({ title: 'US.', body: 'Notifiche attive. US può raggiungerti anche quando è chiusa ♡', target: 'home', tag: 'us-push-test', channel: 'reminders', urgency: 'normal' }),
-  think: (a) => ({ title: 'US.', body: `${name(a.senderName)} ti sta pensando ♡`, target: 'think', ref: a.messageId, tag: `think-${a.messageId}`, channel: 'partner', urgency: 'high', category: 'think' }),
-  think_reaction: (a) => ({ title: 'US. · Ti penso', body: 'Ha reagito al tuo Ti penso.', target: 'home', ref: a.messageId, tag: `think-reaction-${a.messageId}`, channel: 'partner', urgency: 'normal' }),
-  daily_answer: (a) => ({ title: 'US. · Today', body: `${name(a.senderName)} ha risposto. Ora tocca a te.`, target: 'today', ref: a.questionId, tag: `daily-answer-${a.questionId}`, channel: 'partner', urgency: 'normal' }),
-  daily_reveal: (a) => ({ title: 'US. · Today', body: 'Le vostre risposte sono pronte ♡', target: 'today', ref: a.questionId, tag: `daily-reveal-${a.questionId}`, channel: 'partner', urgency: 'normal' }),
-  daily_question: (a) => ({ title: 'US. · Domanda del giorno', body: "C'è una nuova domanda per voi.", target: 'today', ref: a.questionId, tag: `daily-question-${a.questionId}`, channel: 'reminders', urgency: 'normal' }),
-  quest_confirmed: (a) => ({ title: 'US. · Bond', body: `${name(a.senderName)} ha confermato la quest.`, target: 'bond', ref: a.questId, tag: `quest-${a.questId}`, channel: 'partner', urgency: 'normal' }),
-  left_for_you: (a) => ({ title: 'US.', body: `${name(a.senderName)} ti ha lasciato qualcosa ♡`, target: 'left_for_you', ref: a.itemId, tag: `left-for-you:${a.itemId}`, channel: 'partner', urgency: 'high' }),
-  game_waiting: (a) => ({ title: 'US. · Gioca', body: `${name(a.senderName)} ha risposto. Ora tocca a te.`, target: 'quiz', ref: a.sessionId, tag: a.tag, channel: 'partner', urgency: 'normal' }),
-  game_reveal: (a) => ({ title: 'US. · Gioca', body: 'Le vostre risposte sono pronte ♡', target: 'quiz', ref: a.sessionId, tag: a.tag, channel: 'partner', urgency: 'normal' }),
-  game_weekly_created: (a) => ({ title: 'US. · Gioca', body: `${name(a.senderName)} ha lasciato la domanda della settimana ♡`, target: 'quiz', tag: a.tag, channel: 'partner', urgency: 'normal' }),
-  game_weekly_turn: (a) => ({ title: 'US. · Gioca', body: 'Questa settimana la domanda per voi la scegli tu.', target: 'quiz', tag: a.tag, channel: 'reminders', urgency: 'normal' }),
+  test: (a, en) => ({ title: 'US.', body: pick(en, 'Notifiche attive. US può raggiungerti anche quando è chiusa ♡', 'Notifications are on. US can reach you even when it is closed ♡'), target: 'home', tag: 'us-push-test', channel: 'reminders', urgency: 'normal' }),
+  think: (a, en) => ({ title: 'US.', body: pick(en, `${name(a.senderName)} ti sta pensando ♡`, `${name(a.senderName, true)} is thinking of you ♡`), target: 'think', ref: a.messageId, tag: `think-${a.messageId}`, channel: 'partner', urgency: 'high', category: 'think' }),
+  // O7: the reaction itself, with the name ("Bea ti manda un abbraccio").
+  think_reaction: (a, en) => ({ title: pick(en, 'US. · Ti penso', 'US. · Thinking of you'), body: own(THINK_REACTION_COPY, a.reaction)?.(name(a.senderName, en), en) || pick(en, `${name(a.senderName)} ha reagito al tuo Ti penso`, `${name(a.senderName, true)} reacted to your Thinking of you`), target: 'home', ref: a.messageId, tag: `think-reaction-${a.messageId}`, channel: 'partner', urgency: 'normal' }),
+  daily_answer: (a, en) => ({ title: DAILY_TITLE(en), body: pick(en, `${name(a.senderName)} ha risposto. Ora tocca a te.`, `${name(a.senderName, true)} answered. Your turn now.`), target: 'today', ref: a.questionId, tag: `daily-answer-${a.questionId}`, channel: 'partner', urgency: 'normal' }),
+  daily_reveal: (a, en) => ({ title: DAILY_TITLE(en), body: pick(en, 'Le vostre risposte sono pronte ♡', 'Your answers are ready ♡'), target: 'today', ref: a.questionId, tag: `daily-reveal-${a.questionId}`, channel: 'partner', urgency: 'normal' }),
+  // O2: the partner reacted to MY answer of the Question of the day.
+  daily_reaction: (a, en) => ({ title: pick(en, 'US. · Domanda del giorno', 'US. · Question of the day'), body: own(DAILY_REACTION_COPY, a.reaction)?.(name(a.senderName, en), en) || pick(en, `${name(a.senderName)} ha reagito alla tua risposta`, `${name(a.senderName, true)} reacted to your answer`), target: 'today', ref: a.questionId, tag: `daily-reaction-${a.questionId}`, channel: 'partner', urgency: 'normal' }),
+  // O3: one evening reminder when the partner already answered and you did not.
+  daily_evening: (a, en) => ({ title: DAILY_TITLE(en), body: pick(en, `${name(a.senderName)} ha già risposto alla domanda di oggi. Tocca a te ♡`, `${name(a.senderName, true)} already answered today's question. Your turn ♡`), target: 'today', ref: a.questionId, tag: `daily-evening-${a.questionId}`, channel: 'reminders', urgency: 'normal' }),
+  daily_question: (a, en) => ({ title: pick(en, 'US. · Domanda del giorno', 'US. · Question of the day'), body: pick(en, "C'è una nuova domanda per voi.", 'There is a new question for you two.'), target: 'today', ref: a.questionId, tag: `daily-question-${a.questionId}`, channel: 'reminders', urgency: 'normal' }),
+  // N5: "Bea ha fatto «titolo». Ora tocca a te", opens Missioni (target bond).
+  quest_confirmed: (a, en) => ({ title: pick(en, 'US. · Missioni', 'US. · Missions'), body: a.questTitle ? pick(en, `${name(a.senderName)} ha fatto «${a.questTitle}». Ora tocca a te`, `${name(a.senderName, true)} did “${a.questTitle}”. Your turn now`) : pick(en, `${name(a.senderName)} ha fatto una missione. Ora tocca a te`, `${name(a.senderName, true)} did a mission. Your turn now`), target: 'bond', ref: a.questId, tag: `quest-${a.questId}`, channel: 'partner', urgency: 'normal' }),
+  left_for_you: (a, en) => ({ title: 'US.', body: pick(en, `${name(a.senderName)} ti ha lasciato qualcosa ♡`, `${name(a.senderName, true)} left something for you ♡`), target: 'left_for_you', ref: a.itemId, tag: `left-for-you:${a.itemId}`, channel: 'partner', urgency: 'high' }),
+  // G11: game pushes name the game ("Bea ha finito Ridete: tocca a te").
+  game_waiting: (a, en) => ({ title: pick(en, 'US. · Gioca', 'US. · Play'), body: a.gameName ? pick(en, `${name(a.senderName)} ha finito ${a.gameName}: tocca a te`, `${name(a.senderName, true)} finished ${a.gameName}: your turn`) : pick(en, `${name(a.senderName)} ha giocato: tocca a te`, `${name(a.senderName, true)} played: your turn`), target: 'quiz', ref: a.sessionId, tag: a.tag, channel: 'partner', urgency: 'normal' }),
+  game_reveal: (a, en) => ({ title: pick(en, 'US. · Gioca', 'US. · Play'), body: a.gameName ? pick(en, `${a.gameName}: le vostre risposte sono pronte ♡`, `${a.gameName}: your answers are ready ♡`) : pick(en, 'Le vostre risposte sono pronte ♡', 'Your answers are ready ♡'), target: 'quiz', ref: a.sessionId, tag: a.tag, channel: 'partner', urgency: 'normal' }),
+  game_weekly_created: (a, en) => ({ title: pick(en, 'US. · Gioca', 'US. · Play'), body: pick(en, `${name(a.senderName)} ha lasciato la domanda della settimana ♡`, `${name(a.senderName, true)} left this week's question ♡`), target: 'quiz', tag: a.tag, channel: 'partner', urgency: 'normal' }),
+  game_weekly_turn: (a, en) => ({ title: pick(en, 'US. · Gioca', 'US. · Play'), body: pick(en, 'Questa settimana la domanda per voi la scegli tu.', 'This week you choose the question for you two.'), target: 'quiz', tag: a.tag, channel: 'reminders', urgency: 'normal' }),
   calendar_reminder: (a) => ({ title: 'US. · Calendar', body: a.body, target: 'calendar', ref: a.entryId, tag: `calendar-reminder-${a.reminderId}`, channel: 'reminders', urgency: 'high' }),
-  relationship: (a) => ({ title: a.title, body: a.body, target: 'home', tag: a.tag, channel: 'reminders', urgency: 'normal', ttl: 60 * 60 * 24 }),
+  // A11/N7: mesiversario / anniversario, no points in the text, opens Eventi.
+  relationship: (a, en) => ({ ...relationshipCopy(a, en), target: a.kind ? 'events' : 'home', tag: a.tag, channel: 'reminders', urgency: 'normal', ttl: 60 * 60 * 24 }),
+  // A2: the partner accepted the invite; sent once, to the creator.
+  partner_joined: (a, en) => ({ title: 'US.', body: pick(en, `${name(a.senderName)} è entrata: il vostro spazio è pronto`, `${name(a.senderName, true)} joined: your space is ready`), target: 'home', tag: 'us-partner-joined', channel: 'partner', urgency: 'normal' }),
 });
 export const NOTIFICATION_TYPES = Object.freeze(Object.keys(CATALOGUE));
 
@@ -56,7 +105,7 @@ const clean = (value, max) => (typeof value === 'string' ? value.replace(/[\u000
 export function buildNotification(type, args = {}) {
   const make = CATALOGUE[type];
   if (!make) throw new Error('notification_type_invalid');
-  const raw = make(args);
+  const raw = make(args, normalizeLocale(args?.locale) === 'en');
   const notification = {
     v: NOTIFICATION_SCHEMA_VERSION,
     type,
@@ -79,6 +128,30 @@ export function buildNotification(type, args = {}) {
   if (!NOTIFICATION_CHANNELS.includes(notification.channel)) throw new Error('notification_channel_invalid');
   if (notification.category && !NOTIFICATION_CATEGORIES.includes(notification.category)) throw new Error('notification_category_invalid');
   return Object.freeze(notification);
+}
+
+/**
+ * US 1.0: the language of each recipient (profiles.locale, added by
+ * 20261014230000). A missing row, a missing column (Edge deployed before the
+ * SQL) or a failed read means Italian: a push is never blocked by the language.
+ * @returns Map<userId, 'it'|'en'>
+ */
+export async function recipientLocales(admin, userIds) {
+  const ids = [...new Set((userIds || []).filter(Boolean))];
+  const locales = new Map(ids.map((id) => [id, 'it']));
+  if (!ids.length) return locales;
+  try {
+    const { data, error } = await admin.from('profiles').select('id,locale').in('id', ids);
+    if (error) return locales;
+    for (const row of data || []) if (locales.has(row?.id)) locales.set(row.id, normalizeLocale(row.locale));
+  } catch (_) {
+    // Italian.
+  }
+  return locales;
+}
+
+export async function recipientLocale(admin, userId) {
+  return (await recipientLocales(admin, [userId])).get(userId) || 'it';
 }
 
 /** Web Push wire format: exactly the keys service-worker.js has always read. */

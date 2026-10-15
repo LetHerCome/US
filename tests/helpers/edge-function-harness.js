@@ -67,6 +67,7 @@ function createFakeAdmin({ tables = {}, users = {}, rpc = {}, errors = {} } = {}
       const filters = [];
       let mode = 'select';
       let payload = null;
+      let returning = false; // .delete().select(): PostgREST returns the deleted rows
       const rows = () => (db[table] ||= []).filter((row) => filters.every((filter) => filter(row)));
       const run = () => {
         if (errors[table] && mode === 'select') return { data: null, error: errors[table] };
@@ -86,13 +87,13 @@ function createFakeAdmin({ tables = {}, users = {}, rpc = {}, errors = {} } = {}
           const doomed = rows();
           db[table] = db[table].filter((row) => !doomed.includes(row));
           log.deletes.push({ table, rows: doomed });
-          return { data: null, error: null };
+          return { data: returning ? doomed.map((row) => ({ ...row })) : null, error: null };
         }
         log.reads.push(table);
         return { data: rows().map((row) => ({ ...row })), error: null };
       };
       const builder = {
-        select() { return builder; },
+        select() { if (mode !== 'select') returning = true; return builder; },
         eq(column, value) { filters.push((row) => row[column] === value); return builder; },
         neq(column, value) { filters.push((row) => row[column] !== value); return builder; },
         in(column, values) { filters.push((row) => values.includes(row[column])); return builder; },

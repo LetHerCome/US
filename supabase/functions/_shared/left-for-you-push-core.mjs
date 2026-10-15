@@ -19,7 +19,7 @@
 //     (notification-core.mjs), quindi la stessa notifica logica raggiunge
 //     Web Push e le app native sotto UNA chiave.
 
-import { buildNotification, deliverNotification, webPushPayload } from './notification-core.mjs';
+import { buildNotification, deliverNotification, recipientLocale, webPushPayload } from './notification-core.mjs';
 
 export const LEFT_FOR_YOU_EVENT_TYPE = 'left_for_you';
 export const LEFT_FOR_YOU_PUSH_TTL_SECONDS = 60 * 60 * 12;
@@ -31,13 +31,14 @@ export function leftForYouDedupeKey(itemId) {
   return `left-for-you:${itemId}`;
 }
 
-export function leftForYouPushPayload({ itemId, senderName }) {
+export function leftForYouPushPayload({ itemId, senderName, locale = 'it' }) {
   // Mai il contenuto dell'item: solo chi l'ha lasciato.
-  return webPushPayload(leftForYouNotification({ itemId, senderName }));
+  return webPushPayload(leftForYouNotification({ itemId, senderName, locale }));
 }
 
-export function leftForYouNotification({ itemId, senderName }) {
-  return buildNotification('left_for_you', { itemId, senderName });
+// US 1.0: nella lingua di chi riceve (profiles.locale; assente = italiano).
+export function leftForYouNotification({ itemId, senderName, locale = 'it' }) {
+  return buildNotification('left_for_you', { itemId, senderName, locale });
 }
 
 /**
@@ -87,7 +88,7 @@ export async function dispatchLeftForYouPush(admin, options) {
   }
 
   return deliverNotification(admin, {
-    notification: leftForYouNotification({ itemId: row.id, senderName: sender.display_name }),
+    notification: leftForYouNotification({ itemId: row.id, senderName: sender.display_name, locale: await recipientLocale(admin, row.recipient_id) }),
     recipientIds: [row.recipient_id],
     coupleId: row.couple_id,
     senderId: row.sender_id,

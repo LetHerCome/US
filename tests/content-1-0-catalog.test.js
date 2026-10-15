@@ -49,8 +49,9 @@ test('content 1.0: the migration block is exactly the SQL generated from the app
 
 test('content 1.0: the migration comes after every other one and never deletes content', () => {
   const files = fs.readdirSync(path.join(ROOT, 'supabase/migrations')).filter((f) => f.endsWith('.sql')).sort();
-  // Only the US 1.0 language migration, which serves this English per caller, follows it.
-  assert.deepEqual(files.slice(files.indexOf(path.basename(MIGRATION_FILE)) + 1), ['20261014230000_us_1_0_locale_content_en.sql']);
+  // Only the US 1.0 language migration, which serves this English per caller,
+  // and the US 1.0 server fixes (cron job and table privileges, no content) follow it.
+  assert.deepEqual(files.slice(files.indexOf(path.basename(MIGRATION_FILE)) + 1), ['20261014230000_us_1_0_locale_content_en.sql', '20261015000000_us_1_0_server_fixes.sql']);
   const code = MIGRATION.replace(/--.*$/gm, '').replace(/'(?:[^']|'')*'/g, "''");
   assert.ok(!/\bdelete\s+from\b|\btruncate\b|\bdrop\s+(?:table|column|policy|schema)\b/i.test(code), 'nothing is deleted');
   assert.ok(!/\bgrant\b|\bpolicy\b|row level security/i.test(code), 'grants and RLS stay as they are');

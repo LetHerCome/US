@@ -1,11 +1,13 @@
 import webpush from "npm:web-push@3.6.7";
 import { vapidSubject } from "./web-push-vapid.mjs";
-import { buildNotification, deliverNotification } from "./notification-core.mjs";
+import { buildNotification, deliverNotification, recipientLocale } from "./notification-core.mjs";
 import { nativeTransport } from "./native-push-env.ts";
 
 // Ti penso and its reaction. The file name is historical: since Native
 // Notifications V1 both go through the shared dispatcher, so one logical event
 // reaches Web Push AND the native apps under one dedupe key.
+// US 1.0 (O7): the reaction push says which reaction ("Bea ti manda un
+// abbraccio"), in the recipient's language.
 
 const VAPID_PUBLIC_KEY = "BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss";
 
@@ -44,7 +46,7 @@ async function thinkPreferenceEnabled(admin: any, recipientId: string) {
 export async function dispatchThinkWebPush(admin: any, args: ThinkPushArgs) {
   if (!(await thinkPreferenceEnabled(admin, args.recipientId))) return { delivered: 0, failed: 0, reason: "disabled-by-preference" };
   return deliverNotification(admin, {
-    notification: buildNotification("think", { senderName: args.senderName, messageId: args.messageId }),
+    notification: buildNotification("think", { senderName: args.senderName, messageId: args.messageId, locale: await recipientLocale(admin, args.recipientId) }),
     recipientIds: [args.recipientId],
     coupleId: args.coupleId,
     senderId: args.senderId,
@@ -59,7 +61,7 @@ type ThinkReactionPushArgs = ThinkPushArgs & { reaction: "heart" | "hug" | "miss
 export async function dispatchThinkReactionWebPush(admin: any, args: ThinkReactionPushArgs) {
   if (!(await thinkPreferenceEnabled(admin, args.recipientId))) return { delivered: 0, failed: 0, reason: "disabled-by-preference" };
   return deliverNotification(admin, {
-    notification: buildNotification("think_reaction", { messageId: args.messageId }),
+    notification: buildNotification("think_reaction", { messageId: args.messageId, senderName: args.senderName, reaction: args.reaction, locale: await recipientLocale(admin, args.recipientId) }),
     recipientIds: [args.recipientId],
     coupleId: args.coupleId,
     senderId: args.senderId,
