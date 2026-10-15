@@ -37,7 +37,7 @@ test('Noi add uses existing date-aware editor directly, preserving all-day, star
 test('La nostra settimana is in Noi and restores month, linked-idea picker remains date-authoritative',()=>{
   assert.match(noi,/function weekMarkup\(index\)/);
   assert.match(noi,/if\(link==='lavagna'\)\{mode='week';render\(\)/);
-  assert.match(html,/data-noi-open-link="lavagna"[\s\S]*?<b>La nostra settimana<\/b>/);
+  assert.match(html,/data-noi-open-link="lavagna"[\s\S]*?<b>Lavagna<\/b>/);
   assert.match(html,/id="usNoiV2WeekBack" hidden/);
   assert.match(noi,/window\.UsCalendarLinks\?\.createForIdeaDate/);
   assert.match(calendar,/async function createCalendarEntryForIdeaDate\(dateISO\)/);

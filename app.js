@@ -4100,9 +4100,12 @@ function questDayLabel(date,options){return date.toLocaleDateString((globalThis.
 function nextWeekLabel(week=weekStartISO()){
   return questDayLabel(questWeekDate(week,7),{weekday:'long',day:'numeric',month:'short'});
 }
-function questWeekRangeLabel(week){
+// "12–18 ott" inside one month, "28 set – 4 ott" across two (the mockup's
+// kicker); month:'long' for the past weeks ("5–11 ottobre").
+function questWeekRangeLabel(week,month='short'){
   const from=questWeekDate(week),to=questWeekDate(week,6);
-  return `${questDayLabel(from,{day:'numeric',month:'short'})} – ${questDayLabel(to,{day:'numeric',month:'short'})}`;
+  if(from.getUTCMonth()===to.getUTCMonth())return `${from.getUTCDate()}–${questDayLabel(to,{day:'numeric',month})}`;
+  return `${questDayLabel(from,{day:'numeric',month})} – ${questDayLabel(to,{day:'numeric',month})}`;
 }
 function bondLevelInfo(totalXp=0){
   const total=Math.max(0,Number(totalXp)||0);
@@ -4369,10 +4372,11 @@ function questIcon(name){return `<span class="us-icon" data-us-icon="${name}" ar
 function questCountLabel(n,one,many){return `${n} ${n===1?one:many}`;}
 function renderQuestWeekHeader(summary,week,{stale=false}={}){
   const marks=Array.from({length:summary.total},(_,i)=>`<i class="${i<summary.completed?'is-done':''}"></i>`).join('');
-  const rerollText=summary.rerollsLeft>0?`${questCountLabel(summary.rerollsLeft,'cambio rimasto','cambi rimasti')}`:'Cambi finiti';
+  // The two numbers of the mockup: done this week, changes left.
+  const rerollText=summary.rerollsLeft>0?`<b>${summary.rerollsLeft}</b> ${summary.rerollsLeft===1?'cambio rimasto':'cambi rimasti'}`:'<b>0</b> Cambi finiti';
   return `<div class="quest-week-top"><div class="quest-week-id"><span class="tiny">Questa settimana</span><b>${escapeHtml(questWeekRangeLabel(week))}</b></div><div class="quest-week-count"><b>${summary.completed}</b><span>/ ${summary.total}</span><small>completate</small></div></div>
     <div class="quest-week-track" role="progressbar" aria-label="Missioni completate questa settimana" aria-valuemin="0" aria-valuemax="${summary.total}" aria-valuenow="${summary.completed}" aria-valuetext="${summary.completed} di ${summary.total} completate">${marks}</div>
-    <div class="quest-week-meta"><span class="quest-week-rerolls" data-quest-rerolls="${summary.rerollsLeft}">${questIcon('arrows-clockwise')}${rerollText}</span><span class="quest-week-reset">${questIcon('calendar-heart')}Nuove missioni ${escapeHtml(nextWeekLabel(week))}</span></div>
+    <div class="quest-week-meta"><span class="quest-week-rerolls" data-quest-rerolls="${summary.rerollsLeft}">${rerollText}</span><span class="quest-week-reset">${questIcon('calendar-heart')}Nuove missioni ${escapeHtml(nextWeekLabel(week))}</span></div>
     ${stale?`<div class="quest-week-stale" role="status"><span>Non aggiornato: controlla la connessione.</span><button type="button" class="quest-week-retry" data-quest-retry>Riprova</button></div>`:''}`;
 }
 function questStatusLine(view,partnerName){
@@ -4423,7 +4427,8 @@ function renderQuestRecent(weeks){
   const list=document.getElementById('questRecentList');
   if(!root||!list)return;
   if(!weeks?.length){root.hidden=true;list.innerHTML='';return;}
-  list.innerHTML=weeks.map(w=>`<li class="quest-recent-week" data-quest-week="${escapeHtml(w.week)}"><span class="quest-recent-head"><b>${escapeHtml(questWeekRangeLabel(w.week))}</b><span>${w.completed} / ${w.total}</span></span><span class="quest-recent-titles">${w.titles.length?w.titles.map(escapeHtml).join(' · '):'Nessuna completata'}</span></li>`).join('');
+  // The mockup's folder rows: the week, how many were done, which ones.
+  list.innerHTML=weeks.map(w=>`<li class="quest-recent-week" data-quest-week="${escapeHtml(w.week)}"><i class="quest-recent-icon" aria-hidden="true">${questIcon('flag-banner')}</i><span class="quest-recent-head"><b>${escapeHtml(questWeekRangeLabel(w.week,'long'))}</b><span>${w.completed} di ${w.total} completate</span><span class="quest-recent-titles">${w.titles.length?w.titles.map(escapeHtml).join(' · '):'Nessuna completata'}</span></span></li>`).join('');
   root.hidden=false;
 }
 function paintQuestBoard(){
@@ -4433,6 +4438,8 @@ function paintQuestBoard(){
   const summary=questBoardSummary(v.quests,v.state);
   const header=document.getElementById('questWeekBoard');
   if(header){header.innerHTML=renderQuestWeekHeader(summary,v.week,{stale:v.stale});header.hidden=false;}
+  const kicker=document.getElementById('noiQuestKicker');
+  if(kicker)kicker.textContent=`Questa settimana · ${questWeekRangeLabel(v.week)}`;
   const ctx={me:v.me,partner:questPartner(v.profiles,v.me),rerollsLeft:summary.rerollsLeft,myName:v.myName};
   const signature=JSON.stringify([v.week,summary.rerollsLeft,[...questActionsInFlight].sort(),v.quests.map(q=>[q.id,q.slot,q.template_key,q.title,q.category,q.rarity,q.xp,q.confirmed_by,q.completed_at]),(v.profiles||[]).map(p=>[p.id,p.display_name])]);
   if(list.dataset.loaded==='1'&&list.dataset.signature===signature)return;
@@ -4600,7 +4607,9 @@ function noiIdeaSnippet(note){
   if(!note)return '';
   return note.length>90?`${note.slice(0,90)}…`:note;
 }
-function noiIdeaCardHtml(item){
+function noiIdeaCardHtml(item,{lived=false}={}){
+  // A lived idea reads like the mockup's history row: the title and "Vissuta insieme".
+  if(lived)return `<button type="button" class="noi-idea-card is-lived" data-id="${escapeHtml(item.id)}"><span class="noi-idea-card-copy"><b translate="no">${escapeHtml(item.title)}</b><small>Vissuta insieme</small></span></button>`;
   const label=noiIdeaStateLabel(item);
   const noteHtml=item.note?`<small translate="no">${escapeHtml(noiIdeaSnippet(item.note))}</small>`:'';
   return `<button type="button" class="noi-idea-card" data-id="${escapeHtml(item.id)}"><span class="noi-idea-card-copy"><b translate="no">${escapeHtml(item.title)}</b>${noteHtml}</span>${label?`<span class="noi-idea-state">${escapeHtml(label)}</span>`:''}</button>`;
@@ -4625,9 +4634,12 @@ function renderNoiIdeaLivedList(){
   if(!toggle||!root)return;
   toggle.hidden=!noiIdeaState.livedItems.length;
   toggle.textContent=`Idee vissute (${noiIdeaState.livedItems.length})`;
+  // The mockup's fold: the count, then one quiet line under it.
+  const sub=document.createElement?.('small');
+  if(sub){sub.textContent='Quelle che avete già fatto';toggle.append?.(sub);}
   toggle.setAttribute('aria-expanded',String(noiIdeaState.showLived));
   root.hidden=!noiIdeaState.showLived;
-  root.innerHTML=noiIdeaState.showLived?noiIdeaState.livedItems.map(noiIdeaCardHtml).join(''):'';
+  root.innerHTML=noiIdeaState.showLived?noiIdeaState.livedItems.map(item=>noiIdeaCardHtml(item,{lived:true})).join(''):'';
 }
 async function hydrateNoiIdeas(){
   if(!window.usProfile)return;
@@ -5056,24 +5068,33 @@ window.openNoiIdeaDetail=openNoiIdeaDetail;
 window.closeNoiIdeaDetail=closeNoiIdeaDetail;
 
 // ===== M9D · Noi sections =====
-// Missioni (with "Le vostre idee" inside) and Eventi open in place over the
-// Noi calendar (no new tab). The way back is navigation.js's 'noi-section'
-// layer (the section bar is visible), so the system Back works too.
+// Missioni (with "Le vostre idee" inside) opens as a Foglio over the Noi
+// calendar (no new tab), Eventi as the "I nostri eventi" Foglio of events.js.
+// The way back is navigation.js's 'noi-section' layer (the section bar is
+// marked open), so the system Back works too.
 const NOI_SECTIONS=['resonance','da-vivere','quest','eventi'];
 function noiCanonicalPage(){return document.querySelector('#bond .noi-canonical-page');}
+function noiSectionSheet(view){return view==='quest'?document.getElementById('noiQuestSheet'):null;}
 function openNoiSection(view){
   const page=noiCanonicalPage();
   if(!page||!NOI_SECTIONS.includes(view))return;
   // Le vostre idee (once "Da vivere") is a part of Missioni.
   if(view==='da-vivere')view='quest';
+  if(view==='eventi'){window.openEvents?.();return;}
   if(page.dataset.noiView===view)return;
   page.dataset.noiView=view;
   const bar=document.getElementById('noiSectionBar');if(bar)bar.hidden=false;
-  scrollTo({top:0,behavior:'auto'});
+  const sheet=noiSectionSheet(view);
+  if(sheet){
+    window.UsUiFoundation?.cancelSurfaceExit?.(sheet);
+    sheet.classList?.add?.('open');sheet.setAttribute?.('aria-hidden','false');
+    const panel=sheet.querySelector?.('[data-us-modal-panel]');if(panel)panel.scrollTop=0;
+  }else{
+    scrollTo({top:0,behavior:'auto'});
+    document.getElementById('noiSectionBack')?.focus({preventScroll:true});
+  }
   if(view==='resonance'){window.hydrateResonanceHistory?.();window.USProgression?.hydrate?.({showUnlocks:true,force:true});}
-  if(view==='eventi')window.hydrateEvents?.();
   if(view==='quest'&&window.usProfile){hydrateBond();if(!noiIdeaState.loaded)hydrateNoiIdeas();}
-  document.getElementById('noiSectionBack')?.focus({preventScroll:true});
 }
 function closeNoiSection(){
   const page=noiCanonicalPage();
@@ -5082,6 +5103,13 @@ function closeNoiSection(){
   page.dataset.noiView='hub';
   if(from==='quest'){closeNoiIdeaDetail();toggleNoiIdeaQuickForm(false);}
   const bar=document.getElementById('noiSectionBar');if(bar)bar.hidden=true;
+  const sheet=noiSectionSheet(from);
+  if(sheet){
+    // The Foglio leaves with the shared sheet exit; focus returns to its tile.
+    const done=()=>{sheet.classList?.remove?.('open');sheet.setAttribute?.('aria-hidden','true');};
+    if(window.UsUiFoundation?.exitSurface)window.UsUiFoundation.exitSurface(sheet,done);else done();
+    return;
+  }
   if(document.getElementById('bond')?.classList.contains('active')){
     scrollTo({top:0,behavior:'auto'});
     document.querySelector(`#usNoiV2 [data-noi-open-link="${from}"]`)?.focus({preventScroll:true});
@@ -5090,6 +5118,14 @@ function closeNoiSection(){
 window.openNoiSection=openNoiSection;
 window.closeNoiSection=closeNoiSection;
 document.getElementById('noiSectionBack')?.addEventListener('click',closeNoiSection);
+document.getElementById('noiQuestSheet')?.addEventListener('click',(event)=>{if(event.target.closest('[data-noi-sheet-close]'))closeNoiSection();});
+// "Settimane passate" folds open and closed, like the mockup's .fold.
+document.getElementById('questRecentToggle')?.addEventListener('click',(event)=>{
+  const root=document.getElementById('questRecent');if(!root)return;
+  const open=root.dataset.open!=='true';
+  root.dataset.open=String(open);event.currentTarget.setAttribute('aria-expanded',String(open));
+});
+document.addEventListener?.('keydown',(event)=>{if(event.key==='Escape'&&document.getElementById('noiQuestSheet')?.classList.contains('open')&&!document.querySelector('.us-cal-sheet-overlay.open,#usEventsOverlay.open,.us-confirm.open'))closeNoiSection();});
 document.getElementById('noiIdeaAddToggle')?.addEventListener('click',()=>{
   toggleNoiIdeaQuickForm(Boolean(document.getElementById('noiIdeaQuickForm')?.hidden));
 });

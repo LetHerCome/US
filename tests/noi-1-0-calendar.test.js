@@ -119,9 +119,10 @@ test('N3: "La nostra settimana" across two months keeps events, mesiversari and 
   h.api.openCalendar({ date: '2026-10-29', mode: 'week' });
   await settle();
   assert.equal(h.$('usNoiV2').dataset.mode, 'week');
-  assert.equal(h.$('usNoiV2Month').textContent, 'Settimana del 26 ottobre');
+  // Parity: the week is the Lavagna Foglio; its title names the week.
+  assert.equal(h.$('usNoiLavagnaTitle').textContent, 'Questa settimana');
   assert.equal(h.$('usNoiV2WeekBack').hidden, false);
-  const week = h.$('usNoiV2Content').innerHTML;
+  const week = h.$('usNoiV2Week').innerHTML;
   assert.match(week, /data-noi-item="event" data-day="2026-11-01" data-id="ev1"/, 'a yearly event next month is in the week');
   assert.match(week, /data-noi-item="anniversary" data-day="2026-10-31" data-id="" data-months="19"/, 'the mesiversario on the 31st');
   assert.match(week, /3 sere libere per tutti e due/, 'Thu is taken from 19 to 21; Fri, Sat, Sun are free; past days never count');
@@ -144,14 +145,14 @@ test('N3: an evening Eventi date or a shared plan takes the evening; a past week
   });
   h.api.openCalendar({ date: '2026-10-26', mode: 'week' });
   await settle();
-  const week = h.$('usNoiV2Content').innerHTML;
+  const week = h.$('usNoiV2Week').innerHTML;
   const freeDays = week.split('<section').filter((row) => row.includes('Sera libera')).map((row) => row.match(/data-noi-day="([^"]+)"/)[1]);
   assert.deepEqual(freeDays, ['2026-10-26', '2026-10-29', '2026-10-30', '2026-10-31', '2026-11-01']);
   assert.match(week, /5 sere libere per tutti e due/);
 
   h.api.openCalendar({ date: '2026-10-12', mode: 'week' });
   await settle();
-  assert.doesNotMatch(h.$('usNoiV2Content').innerHTML, /sere libere|Sera libera|Nessuna sera libera/);
+  assert.doesNotMatch(h.$('usNoiV2Week').innerHTML, /sere libere|Sera libera|Nessuna sera libera/);
 });
 
 test('N6: tapping an event opens that event; a mesiversario opens Eventi; an entry opens its detail in place', async () => {

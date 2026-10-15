@@ -126,13 +126,16 @@ test('navigation: Back unwinds a three-deep stack one level at a time (Noi → L
       form: Boolean(document.getElementById('usCalendarFormSheet')?.classList.contains('open'))
     }));
     await page.click('.nav button[data-page="bond"]'); await settle(page);
+    // Parity: the Lavagna is a Foglio over the month (the "+" sits under it), so
+    // the stack is Noi → Lavagna, then Noi → form; Back unwinds each one level.
     await page.click('[data-noi-open-link="lavagna"]'); await settle(page);
+    assert.deepEqual(await state(), { page: 'bond', week: true, form: false });
+    await page.goBack(); await settle(page, 600);
+    assert.deepEqual(await state(), { page: 'bond', week: false, form: false }, 'Back closes only the Lavagna');
     await page.click('#usNoiV2AddTop'); await settle(page);
-    assert.deepEqual(await state(), { page: 'bond', week: true, form: true });
+    assert.deepEqual(await state(), { page: 'bond', week: false, form: true });
     await page.goBack(); await settle(page, 600);
-    assert.deepEqual(await state(), { page: 'bond', week: true, form: false }, 'Back closes only the form');
-    await page.goBack(); await settle(page, 600);
-    assert.deepEqual(await state(), { page: 'bond', week: false, form: false }, 'then the week returns to the month');
+    assert.deepEqual(await state(), { page: 'bond', week: false, form: false }, 'Back closes only the form');
     await page.goBack(); await settle(page, 600);
     assert.deepEqual(await state(), { page: 'home', week: false, form: false }, 'then Noi is left');
     assert.deepEqual(errors, []);

@@ -144,7 +144,8 @@ test('M10.1C: the month cell label says how many moments and marks the selected 
 test('M10.1C: the day already in the form shows title, time and owner of each commitment', () => {
   const out = dayList(load({ entries: [timed(BE.id, 'personal', 9, 'Università', { location: 'Aula 3' }), timed(FR.id, 'personal', 15, 'Lavoro'), timed(FR.id, 'shared', 21, 'Cena')] }));
   for (const needle of ['09:00 → 10:00', 'Università', '15:00 → 16:00', 'Lavoro', '21:00 → 22:00', 'Cena', 'Già quel giorno']) assert.ok(out.includes(needle), needle);
-  assert.match(noi, /<h3>\$\{esc\(dayLabel\(selected\)\)\}<\/h3>/, 'the Noi day detail names the day');
+  // Parity: the day title is the mockup's (with the year only outside the current one).
+  assert.match(noi, /<h3>\$\{esc\(dayTitle\(selected\)\)\}<\/h3>/, 'the Noi day detail names the day');
 });
 
 test('M10.1C: empty lanes are never fabricated; an empty day says so once', () => {
@@ -192,7 +193,7 @@ test('M10.1C/US 1.0: quick create collects presets/title, all-day and explicit s
 });
 
 test('M10.1C: Da vivere still picks the day on the calendar and opens the shared linked form', () => {
-  const choose = noi.match(/function chooseDay\(day,\{fromList=false\}=\{\}\) \{[\s\S]*?\n\}/)[0];
+  const choose = noi.match(/function chooseDay\(day,\{fromList=false[^}]*\}=\{\}\) \{[\s\S]*?\n\}/)[0];
   assert.match(choose, /if\(ideaPick\)\{\s*const picker=window\.UsCalendarLinks\?\.createForIdeaDate;/);
   assert.match(calSrc, /if \(pendingIdeaPick\) \{ openIdeaForm\(pendingIdeaPick, dateISO\); return; \}/);
   assert.match(calSrc, /setFormKind\('shared'\);/);

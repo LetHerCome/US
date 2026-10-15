@@ -75,7 +75,8 @@ test('Noi: Eventi is a real tile of Noi, using the existing link row and Phospho
 test('Noi: Eventi opens inside the Noi page through the shared section + history layer', () => {
   const app = read('app.js');
   assert.match(app, /const NOI_SECTIONS=\['resonance','da-vivere','quest','eventi'\]/);
-  assert.match(app, /if\(view==='eventi'\)window\.hydrateEvents\?\.\(\);/);
+  // Parity: Eventi opens the mockup's "I nostri eventi" Foglio (the events sheet), which loads its own data.
+  assert.match(app, /if\(view==='eventi'\)\{window\.openEvents\?\.\(\);return;\}/);
   assert.match(read('styles.css'), /#bond \.noi-canonical-page:not\(\[data-noi-view="eventi"\]\)>\.noi-events-section\{display:none!important\}/);
   assert.match(read('navigation.js'), /name:'noi-section',\s*find:\(\)=>document\.getElementById\('noiSectionBar'\),\s*open:el=>Boolean\(el&&!el\.hidden\),\s*close:\(\)=>window\.closeNoiSection\?\.\(\)/, 'Back closes the section');
   assert.match(bond, /<section class="noi-events-section" id="noiEventsSection"/);

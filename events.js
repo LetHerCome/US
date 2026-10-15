@@ -20,9 +20,23 @@ function parseISO(value){const [y,m,d]=String(value||'').split('-').map(Number);
 function daysBetween(a,b){const [ay,am,ad]=a.split('-').map(Number),[by,bm,bd]=b.split('-').map(Number);return Math.round((Date.UTC(by,bm-1,bd)-Date.UTC(ay,am-1,ad))/86400000);}
 function addMonthsDay(year,monthIndex,day){const last=new Date(year,monthIndex+1,0).getDate();const d=Math.min(day,last);return `${year}-${String(monthIndex+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
 function completionFor(eventId,date){return completions.find(c=>c.event_id===eventId&&c.occurrence_date===date)||null;}
-function formatDate(value,long=true){if(!value)return '';const d=parseISO(value),y=d.getFullYear();return d.toLocaleDateString('it-IT',long?{weekday:'long',day:'numeric',month:'long',year:y!==new Date().getFullYear()?'numeric':undefined}:{day:'numeric',month:'short'});}
+// Dates follow the app language (i18n.js sets UsI18n.tag); Italian otherwise.
+function dateTag(){return globalThis.UsI18n?.tag||'it-IT';}
+function formatDate(value,long=true){if(!value)return '';const d=parseISO(value),y=d.getFullYear();return d.toLocaleDateString(dateTag(),long?{weekday:'long',day:'numeric',month:'long',year:y!==new Date().getFullYear()?'numeric':undefined}:{day:'numeric',month:'short'});}
 function monthShort(value){return parseISO(value).toLocaleDateString('it-IT',{month:'short'}).replace('.','');}
 function countdown(days){if(days===0)return 'Oggi';if(days===1)return 'Domani';return `Tra ${days} giorni`;}
+// The mockup writes the countdown in lower case after a date: "sabato 31 ottobre · tra 18 giorni".
+function countdownLower(days){if(days===0)return 'oggi';if(days===1)return 'domani';return `tra ${days} giorni`;}
+// A list row shows day and month only; the countdown beside it says how far.
+function rowDay(value){return parseISO(value).toLocaleDateString(dateTag(),{day:'numeric',month:'long'});}
+function capFirst(text){const value=String(text||'');return value?value.charAt(0).toLocaleUpperCase(dateTag())+value.slice(1):value;}
+function listLine(row){const bits=[countdownLower(row.days_left)];if(row.event_time)bits.push(String(row.event_time).slice(0,5));if(row.recurs_yearly)bits.push('ogni anno');return bits.join(' · ');}
+// Step motion of the mockup's Foglio flow: 28px sideways and a fade, 340ms.
+const EASE_OUT='cubic-bezier(.2,.8,.2,1)';
+function reducedMotion(){return document.documentElement?.dataset?.usMotion==='reduced'||Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);}
+function stepIn(el,dir){if(!el||!dir||reducedMotion()||typeof el.animate!=='function')return;el.animate([{opacity:0,transform:`translateX(${dir*28}px)`},{opacity:1,transform:'none'}],{duration:340,easing:EASE_OUT});}
+function setHead(kicker,title){const k=$('usEventsKicker'),t=$('usEventsTitle');if(k)k.textContent=kicker;if(t)t.textContent=title;}
+function scrollSheetTop(){const panel=$('usEventsOverlay')?.querySelector?.('[data-us-modal-panel]');if(panel)panel.scrollTop=0;}
 function detailLine(row){const bits=[];if(row.event_time)bits.push(String(row.event_time).slice(0,5));if(row.location)bits.push(row.location);if(row.recurs_yearly)bits.push('ogni anno');return bits.length?bits.join(' · '):countdown(row.days_left);}
 function createdDate(row){return localISOFromDate(row.created_at)||row.event_date;}
 // "Da segnare" keeps only what happened in the last 30 days.
@@ -67,19 +81,19 @@ function dueRows(){
 function completedRows(){
   const byId=new Map(rows.map(r=>[r.id,r]));return completions.map(c=>{const row=byId.get(c.event_id);return row?{...row,effective_date:c.occurrence_date,completion:c}:null;}).filter(Boolean).sort((a,b)=>String(b.completion.completed_at).localeCompare(String(a.completion.completed_at))).slice(0,6);
 }
+// The mockup's .ev row: the day, the title with one quiet line, and a tag or a check.
 function eventButton(row,{due=false,done=false}={}){
-  const day=Number(row.effective_date.slice(-2));
+  const tail=done?'<i class="us-event-ok" aria-hidden="true"><span class="us-icon" data-us-icon="check"></span></i>':due?'<em class="us-event-tag">Da segnare</em>':'';
   return `<button type="button" class="us-event-item ${due?'is-due':''} ${done?'is-done':''}" data-id="${esc(row.id)}" data-occurrence="${esc(row.effective_date)}">
-    <span class="us-event-datebox"><small>${esc(monthShort(row.effective_date))}</small><b>${day}</b></span>
-    <span class="us-event-main"><b>${esc(row.title)}</b><small>${done?'Completato':due?'Da segnare':esc(detailLine(row))}</small></span>
-    <span class="us-event-chevron">${done?'<span class="us-icon" data-us-icon="check" aria-hidden="true"></span>':'<span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span>'}</span>
+    <time class="us-event-datebox" datetime="${esc(row.effective_date)}">${esc(rowDay(row.effective_date))}</time>
+    <span class="us-event-main"><b translate="no">${esc(row.title)}</b><small>${done?'Festeggiato':due?'Da segnare':esc(listLine(row))}</small></span>${tail}
   </button>`;
 }
 function monthsTogether(months){return months===1?'Un mese insieme':months%12===0?(months===12?'Un anno insieme':`${months/12} anni insieme`):`${months} mesi insieme`;}
 // Mesiversario and anniversario open the Noi calendar on their day.
 function relationshipButton(row){
   const subtitle=row.awarded?'Festeggiato':monthsTogether(row.months);
-  return `<button type="button" class="us-event-item us-event-system" data-relationship-date="${esc(row.effective_date)}"><span class="us-event-datebox us-event-heart-date"><small>${esc(monthShort(row.effective_date))}</small><b>♡</b></span><span class="us-event-main"><b>${esc(row.title)}</b><small>${esc(subtitle)}</small></span><span class="us-event-chevron"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></span></button>`;
+  return `<button type="button" class="us-event-item us-event-system" data-relationship-date="${esc(row.effective_date)}"><time class="us-event-datebox" datetime="${esc(row.effective_date)}">${esc(rowDay(row.effective_date))}</time><span class="us-event-main"><b>${esc(row.title)}</b><small>${esc(subtitle)} · ${esc(countdownLower(row.days_left))}</small></span></button>`;
 }
 function openRelationshipDay(date){
   if(!/^\d{4}-\d{2}-\d{2}$/.test(String(date||'')))return;
@@ -165,7 +179,7 @@ function render(){
   if(dot)dot.hidden=!(upcoming[0]&&upcoming[0].days_left<=7);
   if(!upcoming.length){if(card)card.hidden=true;if(list)list.innerHTML='<div class="us-events-empty"><b>Niente in programma</b></div>';}
   else{
-    const next=upcoming[0];if(card){card.hidden=false;card.classList.toggle('us-next-relationship',Boolean(next.system));card.dataset.id=next.system?'':next.id;card.onclick=next.system?null:()=>editEvent(next.id,next.effective_date);$('usNextEventTitle').textContent=next.title;$('usNextEventDate').textContent=formatDate(next.effective_date)+(next.event_time?` · ${String(next.event_time).slice(0,5)}`:'');$('usNextEventCountdown').textContent=next.system&&next.awarded?'Festeggiato':countdown(next.days_left);}
+    const next=upcoming[0];if(card){card.hidden=false;card.classList.toggle('us-next-relationship',Boolean(next.system));card.dataset.id=next.system?'':next.id;card.onclick=next.system?null:()=>editEvent(next.id,next.effective_date);$('usNextEventTitle').textContent=next.title;$('usNextEventDate').textContent=capFirst(formatDate(next.effective_date))+(next.event_time?` · ${String(next.event_time).slice(0,5)}`:'');$('usNextEventCountdown').textContent=next.system&&next.awarded?'Festeggiato':countdownLower(next.days_left);}
     if(list)list.innerHTML=upcoming.map(row=>row.system?relationshipButton(row):eventButton(row)).join('');
     list?.querySelectorAll('.us-event-item[data-id]').forEach(btn=>btn.addEventListener('click',()=>editEvent(btn.dataset.id,btn.dataset.occurrence)));
     list?.querySelectorAll('[data-relationship-date]').forEach(btn=>btn.addEventListener('click',()=>openRelationshipDay(btn.dataset.relationshipDate)));
@@ -205,18 +219,33 @@ async function getTodayEventPrioritySource({fresh=false}={}){
   await load;
   return upcomingRows().find(row=>row.days_left>=0&&row.days_left<=2)||null;
 }
-function showBrowse(){$('usEventsBrowse').hidden=false;$('usEventForm').hidden=true;editingId=null;editingOccurrenceDate=null;}
-function showForm(){$('usEventsBrowse').hidden=true;$('usEventForm').hidden=false;setTimeout(()=>$('usEventTitleInput')?.focus({preventScroll:true}),80);}
-function resetForm(){$('usEventForm')?.reset();$('usEventStatus').textContent='';$('usEventDeleteBtn').hidden=true;$('usEventCompleteBtn').hidden=true;$('usEventCompleteBtn').disabled=false;$('usEventSaveBtn').textContent='Salva evento';$('usEventFormKicker').textContent='EVENTO';$('usEventFormTitle').textContent='Nuovo evento';}
+function showBrowse(){const back=$('usEventForm')&&!$('usEventForm').hidden;$('usEventsBrowse').hidden=false;$('usEventForm').hidden=true;editingId=null;editingOccurrenceDate=null;setHead('Noi due','I nostri eventi');if(back){scrollSheetTop();stepIn($('usEventsBrowse'),-1);}}
+// The form shows one event's detail (mode "detail") or its fields (mode "edit").
+function setFormMode(mode){const form=$('usEventForm');if(form?.dataset)form.dataset.mode=mode;const edit=$('usEventEditBtn');if(edit)edit.hidden=mode!=='detail';}
+function showForm({focus=true}={}){const from=$('usEventForm')?.hidden===false?0:1;$('usEventsBrowse').hidden=true;$('usEventForm').hidden=false;setHead($('usEventFormKicker').textContent,$('usEventFormTitle').textContent);scrollSheetTop();stepIn($('usEventForm'),from||1);if(focus)setTimeout(()=>$('usEventTitleInput')?.focus({preventScroll:true}),80);}
+function resetForm(){$('usEventForm')?.reset();$('usEventStatus').textContent='';$('usEventDeleteBtn').hidden=true;$('usEventCompleteBtn').hidden=true;$('usEventCompleteBtn').disabled=false;$('usEventSaveBtn').textContent='Salva evento';$('usEventFormKicker').textContent='Noi due';$('usEventFormTitle').textContent='Nuovo evento';setFormMode('edit');}
 // A new event starts today, or on the day chosen in the Noi calendar with what
 // was already typed there.
-function beginAddEvent({date='',title='',time=''}={}){editingId=null;editingOccurrenceDate=null;resetForm();$('usEventDateInput').value=/^\d{4}-\d{2}-\d{2}$/.test(String(date||''))?date:localTodayISO();if(title)$('usEventTitleInput').value=title;if(/^\d{2}:\d{2}$/.test(String(time||'')))$('usEventTimeInput').value=time;showForm();}
+function beginAddEvent({date='',title='',time=''}={}){editingId=null;editingOccurrenceDate=null;resetForm();$('usEventDateInput').value=/^\d{4}-\d{2}-\d{2}$/.test(String(date||''))?date:localTodayISO();if(title)$('usEventTitleInput').value=title;if(/^\d{2}:\d{2}$/.test(String(time||'')))$('usEventTimeInput').value=time;setFormMode('edit');showForm();}
 function editEvent(id,occurrenceDate=null){
-  const row=rows.find(item=>item.id===id);if(!row)return;editingId=id;editingOccurrenceDate=occurrenceDate||previousOccurrence(row)||row.event_date;resetForm();$('usEventFormKicker').textContent='EVENTO';$('usEventFormTitle').textContent=row.title;$('usEventTitleInput').value=row.title||'';$('usEventDateInput').value=row.event_date||'';$('usEventTimeInput').value=row.event_time?String(row.event_time).slice(0,5):'';$('usEventLocationInput').value=row.location||'';$('usEventNoteInput').value=row.note||'';$('usEventRecurringInput').checked=Boolean(row.recurs_yearly);$('usEventSaveBtn').textContent='Salva modifiche';
+  const row=rows.find(item=>item.id===id);if(!row)return;editingId=id;editingOccurrenceDate=occurrenceDate||previousOccurrence(row)||row.event_date;resetForm();$('usEventTitleInput').value=row.title||'';$('usEventDateInput').value=row.event_date||'';$('usEventTimeInput').value=row.event_time?String(row.event_time).slice(0,5):'';$('usEventLocationInput').value=row.location||'';$('usEventNoteInput').value=row.note||'';$('usEventRecurringInput').checked=Boolean(row.recurs_yearly);$('usEventSaveBtn').textContent='Salva modifiche';
   const comp=completionFor(row.id,editingOccurrenceDate);const canComplete=editingOccurrenceDate&&editingOccurrenceDate<=localTodayISO();const completeBtn=$('usEventCompleteBtn');
-  if(comp){completeBtn.hidden=false;completeBtn.disabled=true;completeBtn.textContent='✓ Completato';}
-  else if(canComplete){completeBtn.hidden=false;completeBtn.disabled=false;completeBtn.textContent='✓ Segna come fatto';}
-  const hasAnyCompletion=completions.some(c=>c.event_id===row.id);$('usEventDeleteBtn').hidden=hasAnyCompletion?true:false;if(hasAnyCompletion)$('usEventStatus').textContent='Gli eventi già completati restano nello storico.';else $('usEventDeleteBtn').hidden=false;showForm();
+  // The mockup's detail: when and where, one line on what can be done, then the actions.
+  const state=comp?'done':canComplete?'due':'next';
+  $('usEventFormKicker').textContent=state==='done'?'Vissuto':state==='due'?'Da segnare':'In arrivo';$('usEventFormTitle').textContent=row.title;
+  const when=$('usEventDetailWhen');if(when)when.textContent=capFirst(formatDate(editingOccurrenceDate))+(row.event_time?` · ${String(row.event_time).slice(0,5)}`:'');
+  const where=$('usEventDetailWhere');if(where)where.textContent=[row.location||'Luogo da decidere',state==='next'?countdownLower(daysBetween(localTodayISO(),editingOccurrenceDate)):''].filter(Boolean).join(' · ');
+  const note=$('usEventDetailNote');if(note){note.textContent=row.note||'';note.hidden=!row.note;}
+  const lead=$('usEventDetailLead');if(lead)lead.textContent=state==='done'?'Festeggiato insieme ♡':state==='due'?"L'avete vissuto? Segnatelo: vale per la vostra Sintonia.":'Quando arriva il giorno potrete segnarlo come vissuto.';
+  if(!comp&&canComplete){completeBtn.hidden=false;completeBtn.disabled=false;completeBtn.innerHTML='<span class="us-icon" data-us-icon="check" aria-hidden="true"></span><span>Segna come fatto</span>';}
+  const hasAnyCompletion=completions.some(c=>c.event_id===row.id);$('usEventDeleteBtn').hidden=hasAnyCompletion?true:false;if(hasAnyCompletion)$('usEventStatus').textContent='Gli eventi già completati restano nello storico.';else $('usEventDeleteBtn').hidden=false;
+  setFormMode('detail');showForm({focus:false});
+}
+// Modifica: the same event, now as the form.
+function editEventFields(){
+  if(!editingId)return;const row=rows.find(item=>item.id===editingId);
+  $('usEventFormKicker').textContent='Modifica';if(row)$('usEventFormTitle').textContent=row.title;
+  setFormMode('edit');showForm();
 }
 // navigation.js pops one history entry per closed layer and, on each pop, closes
 // every open layer that is not the landing one. The surface -> sheet -> form
@@ -255,7 +284,7 @@ function closeEvents(){if(busy)return;const overlay=$('usEventsOverlay');if(!ove
 function captureDeepLink(){try{const url=new URL(location.href);deepLinkPending=url.searchParams.get('open')==='events';if(!deepLinkPending)return;url.searchParams.delete('open');history.replaceState(history.state||{},'',url.pathname+url.search+url.hash);}catch(_){}}
 function flushDeepLink(){if(deepLinkPending&&window.usProfile){deepLinkPending=false;openEvents();}}
 window.hydrateNoiEvents=hydrateNoiEvents;window.openEventEditor=openEventEditor;window.openEvents=openEvents;window.closeEvents=closeEvents;window.beginAddEvent=beginAddEvent;window.editEvent=editEvent;window.cancelEventEdit=cancelEventEdit;window.hydrateEvents=hydrateEvents;window.getTodayEventPrioritySource=getTodayEventPrioritySource;window.completeEvent=completeEvent;
-$('usEventForm')?.addEventListener('submit',saveEvent);$('usEventDeleteBtn')?.addEventListener('click',deleteEvent);$('usEventCompleteBtn')?.addEventListener('click',completeEvent);document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('usEventsOverlay')?.classList.contains('open'))closeEvents();});document.addEventListener('visibilitychange',()=>{if(!document.hidden&&$('usEventsOverlay')?.classList.contains('open'))hydrateEvents();});window.addEventListener('online',()=>{if($('usEventsOverlay')?.classList.contains('open'))hydrateEvents();});
+$('usEventForm')?.addEventListener('submit',saveEvent);$('usEventDeleteBtn')?.addEventListener('click',deleteEvent);$('usEventEditBtn')?.addEventListener('click',editEventFields);$('usEventCompleteBtn')?.addEventListener('click',completeEvent);document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('usEventsOverlay')?.classList.contains('open'))closeEvents();});document.addEventListener('visibilitychange',()=>{if(!document.hidden&&$('usEventsOverlay')?.classList.contains('open'))hydrateEvents();});window.addEventListener('online',()=>{if($('usEventsOverlay')?.classList.contains('open'))hydrateEvents();});
 bindSurface();captureDeepLink();const bootTimer=setInterval(()=>{flushDeepLink();if(window.usProfile)clearInterval(bootTimer);},300);setTimeout(()=>clearInterval(bootTimer),30000);setInterval(()=>{if(!document.hidden&&$('usEventsOverlay')?.classList.contains('open')&&window.usProfile)hydrateEvents();},60000);
 console.info('[US Events] eventi e ricorrenze attivi');
 })();

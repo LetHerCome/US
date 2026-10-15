@@ -106,13 +106,17 @@ test('labels say a completion is done, never its points', async () => {
   });
   await h.window.hydrateEvents();
   const done = h.node('usEventsDoneList').innerHTML;
-  assert.match(done, /<b>Evento zero<\/b><small>Completato<\/small>/);
-  assert.match(done, /<b>Evento paid<\/b><small>Completato<\/small>/);
+  // Parity: the mockup's rows say "Festeggiato"; titles are user content (translate="no").
+  assert.match(done, /<b translate="no">Evento zero<\/b><small>Festeggiato<\/small>/);
+  assert.match(done, /<b translate="no">Evento paid<\/b><small>Festeggiato<\/small>/);
   assert.doesNotMatch(done, /XP/);
-  h.window.editEvent('zero', isoDay(-2));
-  assert.equal(h.node('usEventCompleteBtn').textContent, '✓ Completato');
-  h.window.editEvent('paid', isoDay(-3));
-  assert.equal(h.node('usEventCompleteBtn').textContent, '✓ Completato');
+  // Parity: a lived event's detail says so in its lead line; there is nothing left to mark.
+  for (const [id, date] of [['zero', isoDay(-2)], ['paid', isoDay(-3)]]) {
+    h.window.editEvent(id, date);
+    assert.equal(h.node('usEventCompleteBtn').hidden, true, id);
+    assert.equal(h.node('usEventDetailLead').textContent, 'Festeggiato insieme ♡', id);
+    assert.doesNotMatch(h.node('usEventDetailLead').textContent, /XP/);
+  }
 });
 
 test('the complete button and the due list never promise points', async () => {
@@ -120,14 +124,15 @@ test('the complete button and the due list never promise points', async () => {
   await fresh.window.hydrateEvents();
   for (const id of ['today', 'yearly', 'planned']) {
     fresh.window.editEvent(id, TODAY);
-    assert.equal(fresh.node('usEventCompleteBtn').textContent, '✓ Segna come fatto', id);
+    assert.match(fresh.node('usEventCompleteBtn').innerHTML, /data-us-icon="check"[\s\S]*<span>Segna come fatto<\/span>$/, id);
+    assert.doesNotMatch(fresh.node('usEventCompleteBtn').innerHTML, /XP/, id);
   }
 
   const due = harness({ events: [event('late', { date: isoDay(-4) }), event('kept', { date: isoDay(-4), createdDaysAgo: 30 })] });
   await due.window.hydrateEvents();
   const list = due.node('usEventsDueList').innerHTML;
-  assert.match(list, /<b>Evento late<\/b><small>Da segnare<\/small>/);
-  assert.match(list, /<b>Evento kept<\/b><small>Da segnare<\/small>/);
+  assert.match(list, /<b translate="no">Evento late<\/b><small>Da segnare<\/small>/);
+  assert.match(list, /<b translate="no">Evento kept<\/b><small>Da segnare<\/small>/);
   assert.doesNotMatch(list, /XP/);
 });
 

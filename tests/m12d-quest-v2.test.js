@@ -153,7 +153,7 @@ test('M12D: weekly header shows week identity, N / 3, rerolls left and a stable 
   assert.match(head, /28 set – 4 ott/);
   assert.match(head, /<b>1<\/b><span>\/ 3<\/span><small>completate<\/small>/);
   assert.match(head, /aria-valuenow="1"[^>]*aria-valuetext="1 di 3 completate"|aria-valuemax="3" aria-valuenow="1"/);
-  assert.match(head, /data-quest-rerolls="2">[\s\S]*?2 cambi rimasti/);
+  assert.match(head, /data-quest-rerolls="2"><b>2<\/b> cambi rimasti/);
   assert.match(head, /Nuove missioni lunedì 5 ott/);
   assert.doesNotMatch(head, /setInterval|countdown/i);
 });
@@ -269,7 +269,7 @@ test('M12D: reroll is deterministic, mode-aware, one at a time, and rerenders fr
     assert.deepEqual(Object.keys(calls[0].args), ['target_quest_id', 'target_template_key']);
     assert.ok(['e', 'f'].includes(calls[0].args.target_template_key), 'near couple: any/near templates not already on the board');
     assert.ok(h.toasts.includes('Nuova missione · 1 cambio rimasto'));
-    assert.match(h.els.questWeekBoard.innerHTML, /1 cambio rimasto/);
+    assert.match(h.els.questWeekBoard.innerHTML, /<b>1<\/b> cambio rimasto/);
     return calls[0].args.target_template_key;
   };
   assert.equal(await run(F), await run(B), 'both phones propose the same replacement');
@@ -330,8 +330,8 @@ test('M12D: recent weeks are read-only context from previous weeks, never the cu
   await h.t.hydrateBond();
   const list = h.els.questRecentList.innerHTML;
   assert.equal(h.els.questRecent.hidden, false);
-  assert.match(list, /21 set – 27 set[\s\S]*?1 \/ 3[\s\S]*?Vecchia 1/);
-  assert.match(list, /14 set – 20 set[\s\S]*?0 \/ 3[\s\S]*?Nessuna completata/);
+  assert.match(list, /21–27 settembre[\s\S]*?1 di 3 completate[\s\S]*?Vecchia 1/);
+  assert.match(list, /14–20 settembre[\s\S]*?0 di 3 completate[\s\S]*?Nessuna completata/);
   assert.doesNotMatch(list, /Altra coppia|Quest 1/);
   assert.equal(h.cards().length, 3, 'old rows never enter the weekly board');
   const weeks = h.api.recentWeeks([{ week_start: '2026-09-28', title: 'now', completed_at: 'x' }], '2026-09-28');

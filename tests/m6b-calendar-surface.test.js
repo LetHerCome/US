@@ -25,7 +25,7 @@ const noi = () => read('noi-v2.js');
 // (1) US 1.0: "La nostra settimana" (the old Lavagna) is the week view of the one Noi calendar.
 test('M6B (1): "La nostra settimana" opens the one Noi calendar in its week view', () => {
   const bond = html().match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
-  assert.match(bond, /data-noi-open-link="lavagna"[^>]*>[\s\S]*?<b>La nostra settimana<\/b>/);
+  assert.match(bond, /data-noi-open-link="lavagna"[^>]*>[\s\S]*?<b>Lavagna<\/b>/);
   assert.doesNotMatch(bond, /id="noiWeekBoard"|id="noiHub"|id="usCalendarEntry"|noi-hub-card--calendar/);
   assert.match(noi(), /if\(link==='lavagna'\)\{mode='week';render\(\);/);
   assert.doesNotMatch(html(), /data-page="calendar"/, 'must not become a bottom-nav destination');
@@ -64,7 +64,7 @@ test('M6B (4): prev/next controls shift the visible month, wrapping across year 
 test('M6B (5): the Oggi control jumps to and selects the current day', () => {
   assert.match(html(), /id="usNoiV2Today"/);
   assert.match(noi(), /\$\('usNoiV2Today'\)\?\.addEventListener\('click',/);
-  assert.match(noi(), /if\(direction===0\)\{selected=today\(\);render\(\);return;\}/);
+  assert.match(noi(), /if\(direction===0\)\{[^}]*selected=today\(\);render\(\);/);
 });
 
 // (6) M10.1: ONE shared month grid, at every width.
