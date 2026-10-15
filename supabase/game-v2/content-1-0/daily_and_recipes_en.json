@@ -1,0 +1,853 @@
+{
+ "family": "daily",
+ "daily_en": [
+  {
+   "id": "desideri-01",
+   "question_en": "Where would you love to go with me at least once in your life?"
+  },
+  {
+   "id": "desideri-02",
+   "question_en": "What would you love for us to learn to do together?"
+  },
+  {
+   "id": "desideri-03",
+   "question_en": "How do you picture a perfect Sunday for us, five years from now?"
+  },
+  {
+   "id": "desideri-04",
+   "question_en": "What’s something a little wild you’d do with me without thinking twice?"
+  },
+  {
+   "id": "desideri-05",
+   "question_en": "With a free weekend and a tight budget, where would you go with me?"
+  },
+  {
+   "id": "desideri-06",
+   "question_en": "What concert, show or event would you love to go to with me?"
+  },
+  {
+   "id": "desideri-07",
+   "question_en": "What tradition of our very own would you love to start?"
+  },
+  {
+   "id": "desideri-08",
+   "question_en": "What’s a dream you haven’t said out loud yet?"
+  },
+  {
+   "id": "desideri-09",
+   "question_en": "If we could live in another city for a year, which would you pick?"
+  },
+  {
+   "id": "desideri-10",
+   "question_en": "What dish would you love to learn to cook for me?"
+  },
+  {
+   "id": "desideri-11",
+   "question_en": "What would you love to do before this year is over?"
+  },
+  {
+   "id": "desideri-12",
+   "question_en": "What’s one specific detail of our dream home?"
+  },
+  {
+   "id": "desideri-13",
+   "question_en": "What train ride or road trip would you love to take with me?"
+  },
+  {
+   "id": "desideri-14",
+   "question_en": "Is there an outdoor adventure you’d love to try together?"
+  },
+  {
+   "id": "desideri-15",
+   "question_en": "If you could give me any gift at all, no limits, what would it be?"
+  },
+  {
+   "id": "desideri-16",
+   "question_en": "What new habit would you like us to make our own next year?"
+  },
+  {
+   "id": "desideri-17",
+   "question_en": "What place near home, somewhere we’ve never been, makes you curious?"
+  },
+  {
+   "id": "desideri-18",
+   "question_en": "If you could book a special dinner for us tonight, where would it be?"
+  },
+  {
+   "id": "desideri-19",
+   "question_en": "Twenty years from now, what story about us would you love to tell your friends?"
+  },
+  {
+   "id": "desideri-20",
+   "question_en": "What language would you love to learn, and where would you go to use it?"
+  },
+  {
+   "id": "desideri-21",
+   "question_en": "What kind of party would you love to throw with me?"
+  },
+  {
+   "id": "desideri-22",
+   "question_en": "What trip would you take if we had a whole month free?"
+  },
+  {
+   "id": "desideri-23",
+   "question_en": "What would you love for us to do together for the very first time?"
+  },
+  {
+   "id": "desideri-24",
+   "question_en": "What would you love to build with your own hands one day?"
+  },
+  {
+   "id": "desideri-25",
+   "question_en": "What small wish could we make come true within a month?"
+  },
+  {
+   "id": "desideri-26",
+   "question_en": "Where would you love to be with me, exactly one year from now?"
+  },
+  {
+   "id": "gioco-01",
+   "question_en": "If we were the stars of a movie, which one would it be?"
+  },
+  {
+   "id": "gioco-02",
+   "question_en": "If you could have a superpower for just one day, which would you pick?"
+  },
+  {
+   "id": "gioco-03",
+   "question_en": "What animals would you and I be, and why?"
+  },
+  {
+   "id": "gioco-04",
+   "question_en": "If we were a band, what would we be called?"
+  },
+  {
+   "id": "gioco-05",
+   "question_en": "Pizza forever or pasta forever: which do you pick?"
+  },
+  {
+   "id": "gioco-06",
+   "question_en": "If we won a surprise trip tomorrow, where would you hope they’d send us?"
+  },
+  {
+   "id": "gioco-07",
+   "question_en": "Which object at home, if it could talk, would have the most to say about us?"
+  },
+  {
+   "id": "gioco-08",
+   "question_en": "If you had your own cooking show, what would it be called?"
+  },
+  {
+   "id": "gioco-09",
+   "question_en": "What would our shameless karaoke song be?"
+  },
+  {
+   "id": "gioco-10",
+   "question_en": "If you could live my life for a day, what’s the first thing you’d do?"
+  },
+  {
+   "id": "gioco-11",
+   "question_en": "Which period in history would you visit for a weekend?"
+  },
+  {
+   "id": "gioco-12",
+   "question_en": "If you were an ice cream flavor, which one would you be?"
+  },
+  {
+   "id": "gioco-13",
+   "question_en": "What’s the worst movie you’d happily watch with me?"
+  },
+  {
+   "id": "gioco-14",
+   "question_en": "If we opened a place together, what kind of spot would it be?"
+  },
+  {
+   "id": "gioco-15",
+   "question_en": "Which of us would last longer on a desert island, and why?"
+  },
+  {
+   "id": "gioco-16",
+   "question_en": "If our life were a TV show, what would this season be called?"
+  },
+  {
+   "id": "gioco-17",
+   "question_en": "Which emoji sums you up best today?"
+  },
+  {
+   "id": "gioco-18",
+   "question_en": "If you could get rid of one household chore forever, which would it be?"
+  },
+  {
+   "id": "gioco-19",
+   "question_en": "Which of us would manage to get lost even with the GPS on?"
+  },
+  {
+   "id": "gioco-20",
+   "question_en": "If we had a talking pet, what would it say about us?"
+  },
+  {
+   "id": "gioco-21",
+   "question_en": "What ridiculous house rule would you make us follow for a whole day?"
+  },
+  {
+   "id": "gioco-22",
+   "question_en": "Which famous person would you invite to dinner with us, and what would you ask them?"
+  },
+  {
+   "id": "gioco-23",
+   "question_en": "Which cartoon from your childhood would you happily watch again tonight?"
+  },
+  {
+   "id": "gioco-24",
+   "question_en": "If you had to describe me as a dish, what would I be?"
+  },
+  {
+   "id": "gioco-25",
+   "question_en": "If we could teleport anywhere just for dinner tonight, where would we go?"
+  },
+  {
+   "id": "gioco-26",
+   "question_en": "What would the book of our story be called?"
+  },
+  {
+   "id": "noi_adesso-01",
+   "question_en": "What would get your week off to a good start?"
+  },
+  {
+   "id": "noi_adesso-02",
+   "question_en": "Is there something this week you’d love to get off your mind soon?"
+  },
+  {
+   "id": "noi_adesso-03",
+   "question_en": "What’s one concrete thing I can help you with this week?"
+  },
+  {
+   "id": "noi_adesso-04",
+   "question_en": "What kind of evening would you love to spend with me in the next few days?"
+  },
+  {
+   "id": "noi_adesso-05",
+   "question_en": "How’s your mood today, in three words?"
+  },
+  {
+   "id": "noi_adesso-06",
+   "question_en": "What’s been giving you energy lately?"
+  },
+  {
+   "id": "noi_adesso-07",
+   "question_en": "If this week had a title, what would it be?"
+  },
+  {
+   "id": "noi_adesso-08",
+   "question_en": "What do you miss most when your days are packed?"
+  },
+  {
+   "id": "noi_adesso-09",
+   "question_en": "Is there something you’d love to hear this week?"
+  },
+  {
+   "id": "noi_adesso-10",
+   "question_en": "What’s your battery at today, from 1 to 10, and what would recharge it?"
+  },
+  {
+   "id": "noi_adesso-11",
+   "question_en": "What little habit would you like us to bring into this week?"
+  },
+  {
+   "id": "noi_adesso-12",
+   "question_en": "What task would you love to hand over to me for a few days?"
+  },
+  {
+   "id": "noi_adesso-13",
+   "question_en": "What are you looking forward to most in the next seven days?"
+  },
+  {
+   "id": "noi_adesso-14",
+   "question_en": "What time of day would you like to spend with me more often?"
+  },
+  {
+   "id": "noi_adesso-15",
+   "question_en": "What would make tonight a little lighter for you?"
+  },
+  {
+   "id": "noi_adesso-16",
+   "question_en": "What went well for you last week, even in a small way?"
+  },
+  {
+   "id": "noi_adesso-17",
+   "question_en": "Is there a little thing I do that’s been helping you lately, more than I’d guess?"
+  },
+  {
+   "id": "noi_adesso-18",
+   "question_en": "How would you like us to spend next Sunday?"
+  },
+  {
+   "id": "noi_adesso-19",
+   "question_en": "What have you been putting off that you’d love to wrap up by Friday?"
+  },
+  {
+   "id": "noi_adesso-20",
+   "question_en": "Which of this week’s plans are you most curious about?"
+  },
+  {
+   "id": "noi_adesso-21",
+   "question_en": "What are you craving most these days: calm, company or something new?"
+  },
+  {
+   "id": "noi_adesso-22",
+   "question_en": "What thought from this weekend is still with you?"
+  },
+  {
+   "id": "noi_adesso-23",
+   "question_en": "If you could change one thing about your current routine, what would it be?"
+  },
+  {
+   "id": "noi_adesso-24",
+   "question_en": "What would you like me to know about your week before it starts?"
+  },
+  {
+   "id": "noi_adesso-25",
+   "question_en": "What makes you feel at home on a rough day?"
+  },
+  {
+   "id": "noi_adesso-26",
+   "question_en": "What would you love to celebrate by Sunday, even in a small way?"
+  },
+  {
+   "id": "profonda-01",
+   "question_en": "What happened this week that made you think, even just to yourself, “lucky me”?"
+  },
+  {
+   "id": "profonda-02",
+   "question_en": "Of the things we’re building together, which matters most to you?"
+  },
+  {
+   "id": "profonda-03",
+   "question_en": "Where do you think we’ve grown most as a couple over the past year?"
+  },
+  {
+   "id": "profonda-04",
+   "question_en": "What have I taught you without meaning to?"
+  },
+  {
+   "id": "profonda-05",
+   "question_en": "What does “home” mean to you these days?"
+  },
+  {
+   "id": "profonda-06",
+   "question_en": "What’s one value that feels truly ours?"
+  },
+  {
+   "id": "profonda-07",
+   "question_en": "What moment this week felt small but important?"
+  },
+  {
+   "id": "profonda-08",
+   "question_en": "What do you like about who you are when you’re with me?"
+  },
+  {
+   "id": "profonda-09",
+   "question_en": "What do you hope never changes between us?"
+  },
+  {
+   "id": "profonda-10",
+   "question_en": "What have you learned about love since we’ve been together?"
+  },
+  {
+   "id": "profonda-11",
+   "question_en": "Who among your family and friends has taught you something about love?"
+  },
+  {
+   "id": "profonda-12",
+   "question_en": "What about me have you come to appreciate over time?"
+  },
+  {
+   "id": "profonda-13",
+   "question_en": "What would you like to thank me for, even if it was a while ago?"
+  },
+  {
+   "id": "profonda-14",
+   "question_en": "What precious thing do we have that money can’t buy?"
+  },
+  {
+   "id": "profonda-15",
+   "question_en": "What makes you feel like we’re a team?"
+  },
+  {
+   "id": "profonda-16",
+   "question_en": "Is there a dream of yours you feel better able to chase because of us?"
+  },
+  {
+   "id": "profonda-17",
+   "question_en": "How would you describe our relationship to someone who doesn’t know us?"
+  },
+  {
+   "id": "profonda-18",
+   "question_en": "What’s a small everyday thing in our life that you’d never take for granted?"
+  },
+  {
+   "id": "profonda-19",
+   "question_en": "What would you like us to remember about this time, ten years from now?"
+  },
+  {
+   "id": "profonda-20",
+   "question_en": "How are we different, and why do you like that?"
+  },
+  {
+   "id": "profonda-21",
+   "question_en": "What unspoken promise do you feel you keep with me every day?"
+  },
+  {
+   "id": "profonda-22",
+   "question_en": "What has surprised you most about the way we love each other?"
+  },
+  {
+   "id": "profonda-23",
+   "question_en": "What’s the simplest thing that makes our life together beautiful?"
+  },
+  {
+   "id": "profonda-24",
+   "question_en": "Looking at us, what makes you think, “it’s been worth it”?"
+  },
+  {
+   "id": "profonda-25",
+   "question_en": "What part of your life has changed most since I came along?"
+  },
+  {
+   "id": "profonda-26",
+   "question_en": "What words would you like to carry with us into the years ahead?"
+  },
+  {
+   "id": "ricordi-01",
+   "question_en": "What’s the first thing about me that stuck in your mind?"
+  },
+  {
+   "id": "ricordi-02",
+   "question_en": "What moment of ours would you relive exactly as it was, without changing a thing?"
+  },
+  {
+   "id": "ricordi-03",
+   "question_en": "Do you remember the first time you thought, “I really like being with this person”? Where were we?"
+  },
+  {
+   "id": "ricordi-04",
+   "question_en": "Which outing or trip together comes to mind most often?"
+  },
+  {
+   "id": "ricordi-05",
+   "question_en": "What’s the biggest laugh you remember having with me?"
+  },
+  {
+   "id": "ricordi-06",
+   "question_en": "Which message of mine do you still know almost by heart?"
+  },
+  {
+   "id": "ricordi-07",
+   "question_en": "What place feels like “ours” to you now?"
+  },
+  {
+   "id": "ricordi-08",
+   "question_en": "What gift from me, even a tiny one, has stayed in your heart?"
+  },
+  {
+   "id": "ricordi-09",
+   "question_en": "What little mishap we faced together makes you smile when you look back?"
+  },
+  {
+   "id": "ricordi-10",
+   "question_en": "Is there an ordinary evening with me that, for some reason, you remember perfectly?"
+  },
+  {
+   "id": "ricordi-11",
+   "question_en": "What’s the childhood memory you love going back to most?"
+  },
+  {
+   "id": "ricordi-12",
+   "question_en": "What song instantly takes you back to a moment of ours?"
+  },
+  {
+   "id": "ricordi-13",
+   "question_en": "Do you remember a moment that moved us both?"
+  },
+  {
+   "id": "ricordi-14",
+   "question_en": "What dish brings back a memory of us?"
+  },
+  {
+   "id": "ricordi-15",
+   "question_en": "Which photo of us best shows how we were at the start?"
+  },
+  {
+   "id": "ricordi-16",
+   "question_en": "Do you remember a day when my being there made a difference?"
+  },
+  {
+   "id": "ricordi-17",
+   "question_en": "What do you think was our first habit as a couple?"
+  },
+  {
+   "id": "ricordi-18",
+   "question_en": "What did we do at the beginning that you’d love to start doing again?"
+  },
+  {
+   "id": "ricordi-19",
+   "question_en": "Which summer of your life do you remember as the best?"
+  },
+  {
+   "id": "ricordi-20",
+   "question_en": "What detail of our first date do you remember best?"
+  },
+  {
+   "id": "ricordi-21",
+   "question_en": "What’s something I said to you that has stayed with you, in a good way?"
+  },
+  {
+   "id": "ricordi-22",
+   "question_en": "Which home or city you’ve lived in do you miss, and what about it?"
+  },
+  {
+   "id": "ricordi-23",
+   "question_en": "When did it hit you that you really knew me?"
+  },
+  {
+   "id": "ricordi-24",
+   "question_en": "Which celebration or special day together do you remember most fondly?"
+  },
+  {
+   "id": "ricordi-25",
+   "question_en": "What story from your teenage years haven’t you told me yet?"
+  },
+  {
+   "id": "ricordi-26",
+   "question_en": "If you could keep just one day from our past year, which would you choose?"
+  },
+  {
+   "id": "scoprirsi-01",
+   "question_en": "What’s your favorite way to spend a morning with nothing planned?"
+  },
+  {
+   "id": "scoprirsi-02",
+   "question_en": "What song almost always puts you in a good mood?"
+  },
+  {
+   "id": "scoprirsi-03",
+   "question_en": "Do you have a little quirk I might not have noticed yet?"
+  },
+  {
+   "id": "scoprirsi-04",
+   "question_en": "What scent takes you straight back to childhood?"
+  },
+  {
+   "id": "scoprirsi-05",
+   "question_en": "What job did you dream of having when you were little?"
+  },
+  {
+   "id": "scoprirsi-06",
+   "question_en": "What does your ideal breakfast look like, with no limits at all?"
+  },
+  {
+   "id": "scoprirsi-07",
+   "question_en": "What makes you laugh even when you shouldn’t?"
+  },
+  {
+   "id": "scoprirsi-08",
+   "question_en": "What movie could you watch over and over without ever getting tired of it?"
+  },
+  {
+   "id": "scoprirsi-09",
+   "question_en": "Is there something you always do the same way, almost like a ritual?"
+  },
+  {
+   "id": "scoprirsi-10",
+   "question_en": "What’s the compliment that stayed with you most, whoever it came from?"
+  },
+  {
+   "id": "scoprirsi-11",
+   "question_en": "Which season of the year feels most like you?"
+  },
+  {
+   "id": "scoprirsi-12",
+   "question_en": "What’s a small, slightly silly fear you have?"
+  },
+  {
+   "id": "scoprirsi-13",
+   "question_en": "What did you collect as a kid, or wish you had?"
+  },
+  {
+   "id": "scoprirsi-14",
+   "question_en": "What book, show or story changed the way you see things, even a little?"
+  },
+  {
+   "id": "scoprirsi-15",
+   "question_en": "On an off day, would you rather talk it through right away or let it settle?"
+  },
+  {
+   "id": "scoprirsi-16",
+   "question_en": "Which corner of your home do you feel best in, and why that one?"
+  },
+  {
+   "id": "scoprirsi-17",
+   "question_en": "What dish could you cook with your eyes closed?"
+  },
+  {
+   "id": "scoprirsi-18",
+   "question_en": "Is there a food you love but almost never order?"
+  },
+  {
+   "id": "scoprirsi-19",
+   "question_en": "What’s your favorite word in English?"
+  },
+  {
+   "id": "scoprirsi-20",
+   "question_en": "If someone gave you an hour all to yourself today, how would you spend it?"
+  },
+  {
+   "id": "scoprirsi-21",
+   "question_en": "Is there a talent you secretly wish you had?"
+  },
+  {
+   "id": "scoprirsi-22",
+   "question_en": "What sound relaxes you more than any other?"
+  },
+  {
+   "id": "scoprirsi-23",
+   "question_en": "What kind of gift really moves you: useful, handmade or unexpected?"
+  },
+  {
+   "id": "scoprirsi-24",
+   "question_en": "What could you talk about for hours without getting bored?"
+  },
+  {
+   "id": "scoprirsi-25",
+   "question_en": "What makes you more impatient than anything else?"
+  },
+  {
+   "id": "scoprirsi-26",
+   "question_en": "What habit from your family do you carry with you without even noticing?"
+  },
+  {
+   "id": "vicinanza-01",
+   "question_en": "What’s a little thing I do that goes straight to your heart?"
+  },
+  {
+   "id": "vicinanza-02",
+   "question_en": "What time of day do you miss me most?"
+  },
+  {
+   "id": "vicinanza-03",
+   "question_en": "What have I done for you, without you asking, that felt incredibly sweet?"
+  },
+  {
+   "id": "vicinanza-04",
+   "question_en": "What’s better: a long hug, a surprise message or coffee in bed?"
+  },
+  {
+   "id": "vicinanza-05",
+   "question_en": "What’s your favorite way for me to say good morning?"
+  },
+  {
+   "id": "vicinanza-06",
+   "question_en": "Is there a word or nickname that makes you melt when I say it?"
+  },
+  {
+   "id": "vicinanza-07",
+   "question_en": "What time of day do you feel we’re closest?"
+  },
+  {
+   "id": "vicinanza-08",
+   "question_en": "What do I do that makes you feel safe?"
+  },
+  {
+   "id": "vicinanza-09",
+   "question_en": "What would you like me to do for you more often?"
+  },
+  {
+   "id": "vicinanza-10",
+   "question_en": "Which of my flaws do you secretly find endearing?"
+  },
+  {
+   "id": "vicinanza-11",
+   "question_en": "What part of a day together stays with you long after?"
+  },
+  {
+   "id": "vicinanza-12",
+   "question_en": "What message would you love to get from me on a hard day?"
+  },
+  {
+   "id": "vicinanza-13",
+   "question_en": "What about me do you find yourself looking at when you think I won’t notice?"
+  },
+  {
+   "id": "vicinanza-14",
+   "question_en": "What simple thing can I do to make your day better?"
+  },
+  {
+   "id": "vicinanza-15",
+   "question_en": "When we’re apart, what makes you feel I’m with you?"
+  },
+  {
+   "id": "vicinanza-16",
+   "question_en": "What’s your favorite hug: waking up, coming home or right before sleep?"
+  },
+  {
+   "id": "vicinanza-17",
+   "question_en": "What tells you I’m really listening to you?"
+  },
+  {
+   "id": "vicinanza-18",
+   "question_en": "What do I often say that you love hearing?"
+  },
+  {
+   "id": "vicinanza-19",
+   "question_en": "What little surprise would make you happy this week?"
+  },
+  {
+   "id": "vicinanza-20",
+   "question_en": "When do you most like me to take your hand?"
+  },
+  {
+   "id": "vicinanza-21",
+   "question_en": "What’s a quality of mine you admire but have never told me about?"
+  },
+  {
+   "id": "vicinanza-22",
+   "question_en": "What would you like me to remind you of on days when you’re feeling down?"
+  },
+  {
+   "id": "vicinanza-23",
+   "question_en": "Where do you feel most at peace when we’re together?"
+  },
+  {
+   "id": "vicinanza-24",
+   "question_en": "How can you tell when I’m happy?"
+  },
+  {
+   "id": "vicinanza-25",
+   "question_en": "To you, what’s the most romantic thing about an ordinary day?"
+  },
+  {
+   "id": "vicinanza-26",
+   "question_en": "In everyday life, how can you tell that I still choose you?"
+  }
+ ],
+ "recipes_en": [
+  {
+   "id": "calendar_past-001",
+   "question_text_en": "What detail do you remember best from “{title}” {when}?"
+  },
+  {
+   "id": "calendar_past-002",
+   "question_text_en": "Looking back on “{title}” {when}, is there anything about that day you’ve never told me?"
+  },
+  {
+   "id": "calendar_upcoming-001",
+   "question_text_en": "What part of “{title}” on {date} are you looking forward to most?"
+  },
+  {
+   "id": "calendar_upcoming-002",
+   "question_text_en": "Imagine “{title}” went even better than expected. What happened?"
+  },
+  {
+   "id": "conservati-001",
+   "question_text_en": "Of everything we’ve kept, which would you reread tonight, and why that one?"
+  },
+  {
+   "id": "da_vivere_idea-001",
+   "question_text_en": "If we could do “{title}” this weekend without planning a thing, how do you picture the day?"
+  },
+  {
+   "id": "da_vivere_idea-002",
+   "question_text_en": "“{title}”: for you, is this something to plan carefully or to do on a whim?",
+   "options_en": [
+    "Plan it carefully",
+    "Do it on a whim",
+    "A bit of both"
+   ]
+  },
+  {
+   "id": "da_vivere_idea-003",
+   "question_text_en": "What do you hope “{title}” leaves you with, when the time comes?"
+  },
+  {
+   "id": "da_vivere_lived-001",
+   "question_text_en": "What moment from “{title}” has stayed with you?"
+  },
+  {
+   "id": "da_vivere_lived-002",
+   "question_text_en": "If we could relive “{title}” tomorrow, what would you change?",
+   "options_en": [
+    "Nothing, I’d do it exactly the same",
+    "Just the pace: more time",
+    "Everything: a brand-new experience"
+   ]
+  },
+  {
+   "id": "longitudinal-001",
+   "question_text_en": "{previous_question}"
+  },
+  {
+   "id": "moment-001",
+   "question_text_en": "Think back to the memory “{title}” {when}: what was on your mind right then?"
+  },
+  {
+   "id": "moment-002",
+   "question_text_en": "If the memory “{title}” had a soundtrack, what song would it be?"
+  }
+ ],
+ "fixes": [
+  {
+   "id": "desideri-17",
+   "question": "Quale posto vicino a casa, dove non abbiamo mai messo piede, ti incuriosisce?",
+   "question_en": "What place near home, somewhere we’ve never been, makes you curious?",
+   "reason": "«siamo stati» concorda al maschile: per due donne sarebbe «state»."
+  },
+  {
+   "id": "gioco-01",
+   "question": "Se fossimo la coppia protagonista di un film, quale film sarebbe?",
+   "question_en": "If we were the stars of a movie, which one would it be?",
+   "reason": "«i protagonisti» è maschile plurale."
+  },
+  {
+   "id": "gioco-15",
+   "question": "Chi di noi resisterebbe di più su un’isola deserta, e perché?",
+   "question_en": "Which of us would last longer on a desert island, and why?",
+   "reason": "«Chi dei due» è maschile."
+  },
+  {
+   "id": "gioco-19",
+   "question": "Chi di noi riuscirebbe a perdersi anche con il navigatore acceso?",
+   "question_en": "Which of us would manage to get lost even with the GPS on?",
+   "reason": "«Chi dei due» è maschile."
+  },
+  {
+   "id": "profonda-03",
+   "question": "In cosa pensi che la nostra coppia sia cresciuta di più nell’ultimo anno?",
+   "question_en": "Where do you think we’ve grown most as a couple over the past year?",
+   "reason": "«siamo cresciuti» concorda al maschile."
+  },
+  {
+   "id": "profonda-20",
+   "question": "In cosa siamo differenti, e perché ti piace?",
+   "question_en": "How are we different, and why do you like that?",
+   "reason": "«diversi» concorda al maschile; «differenti» è invariabile."
+  },
+  {
+   "id": "ricordi-13",
+   "question": "Ricordi un momento che ci ha fatto commuovere insieme?",
+   "question_en": "Do you remember a moment that moved us both?",
+   "reason": "«ci siamo commossi» concorda al maschile."
+  },
+  {
+   "id": "vicinanza-07",
+   "question": "In quale momento della giornata senti di più la nostra vicinanza?",
+   "question_en": "What time of day do you feel we’re closest?",
+   "reason": "«ci senti più vicini» concorda al maschile."
+  },
+  {
+   "id": "vicinanza-15",
+   "question": "Quando siamo a distanza, cosa ti fa sentire la mia presenza?",
+   "question_en": "When we’re apart, what makes you feel I’m with you?",
+   "reason": "«siamo lontani» concorda al maschile."
+  }
+ ]
+}

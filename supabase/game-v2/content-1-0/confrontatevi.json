@@ -1,0 +1,715 @@
+{
+  "family": "confrontatevi",
+  "new": [
+    {
+      "id": "confrontatevi-011",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "compleanno_ideale",
+      "cooldown_class": "light",
+      "question_text": "Arriva il tuo compleanno. Cosa speri davvero che succeda?",
+      "options": [
+        "Una festa con tutte le persone care",
+        "Una giornata intera, solo noi due",
+        "Un giorno normale, con una sorpresa dentro",
+        "Che passi senza troppo rumore"
+      ],
+      "question_text_en": "Your birthday is coming up. What are you really hoping for?",
+      "options_en": [
+        "A party with everyone I love",
+        "A whole day, just the two of us",
+        "An ordinary day with a surprise tucked inside",
+        "For it to slip by quietly"
+      ]
+    },
+    {
+      "id": "confrontatevi-012",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 3,
+      "topic": "lettera_dal_futuro",
+      "cooldown_class": "deep",
+      "question_text": "Ci consegnano una lettera che racconta come saremo tra vent’anni. Cosa ne fai?",
+      "options": [
+        "La apro subito, non resisto",
+        "Leggo solo l’ultima riga",
+        "La tengo chiusa per un giorno difficile",
+        "La strappo: voglio scoprirlo vivendo"
+      ],
+      "question_text_en": "Someone hands us a letter describing who we’ll be in twenty years. What do you do with it?",
+      "options_en": [
+        "Open it right away, I can’t resist",
+        "Read only the last line",
+        "Keep it sealed for a hard day",
+        "Tear it up: I want to find out by living it"
+      ]
+    },
+    {
+      "id": "confrontatevi-013",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "chiedere_una_mano",
+      "cooldown_class": "standard",
+      "question_text": "Quando ti serve una mano, quanto ci metti a chiedermela?",
+      "options": [
+        "Te la chiedo subito, senza problemi",
+        "Prima ci provo in tutti i modi",
+        "Aspetto che te ne accorga",
+        "Te lo faccio capire con un sospiro"
+      ],
+      "question_text_en": "When you need a hand, how long does it take you to ask me?",
+      "options_en": [
+        "I ask right away, no problem",
+        "First I try every other way",
+        "I wait for you to notice",
+        "I let a loud sigh do the asking"
+      ]
+    },
+    {
+      "id": "confrontatevi-014",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "capacita_in_prestito",
+      "cooldown_class": "light",
+      "question_text": "Per un mese possiamo scambiarci una capacità: tu prendi una delle mie, io una delle tue. Quale mi chiedi in prestito?",
+      "question_text_en": "For one month we can swap skills: you borrow one of mine, I borrow one of yours. Which one are you taking?"
+    },
+    {
+      "id": "confrontatevi-015",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 3,
+      "topic": "disaccordi_importanti",
+      "cooldown_class": "deep",
+      "question_text": "Quando non la pensiamo allo stesso modo su qualcosa di importante, cosa conta di più per te?",
+      "options": [
+        "Arrivare a una decisione comune",
+        "Che tu mi capisca, anche senza cambiare idea",
+        "Che nessuno ceda solo per stanchezza",
+        "Che restiamo gentili, anche nel pieno"
+      ],
+      "question_text_en": "When we see something important differently, what matters most to you?",
+      "options_en": [
+        "Reaching a decision together",
+        "That you understand me, even if you don’t change your mind",
+        "That nobody gives in just because they’re tired",
+        "That we stay kind, even in the thick of it"
+      ]
+    },
+    {
+      "id": "confrontatevi-016",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "citta_tutta_nostra",
+      "cooldown_class": "light",
+      "question_text": "Per un giorno abbiamo una città intera tutta per noi: niente code, niente orari, nessuno in giro. Cosa facciamo?",
+      "options": [
+        "Giriamo un museo senza nessuno davanti",
+        "Ceniamo in mezzo alla strada",
+        "Balliamo in piazza a tutto volume",
+        "Ci sdraiamo in mezzo a un viale a guardare il cielo"
+      ],
+      "question_text_en": "For one day we have a whole city to ourselves: no lines, no opening hours, nobody around. What do we do?",
+      "options_en": [
+        "Wander a museum with nobody in front of us",
+        "Have dinner in the middle of the street",
+        "Dance in the square with the music blasting",
+        "Lie in the middle of an avenue, watching the sky"
+      ]
+    },
+    {
+      "id": "confrontatevi-017",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "persone_della_mia_vita",
+      "cooldown_class": "standard",
+      "longitudinal": true,
+      "question_text": "Quale persona della mia vita ti piacerebbe conoscere meglio, e perché?",
+      "question_text_en": "Who in my life would you like to get to know better, and why?"
+    },
+    {
+      "id": "confrontatevi-018",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "partenza_stasera",
+      "cooldown_class": "standard",
+      "question_text": "Ci regalano un viaggio bellissimo, ma si parte stasera. Cosa fai?",
+      "options": [
+        "Valigia in dieci minuti, andiamo",
+        "Sì, ma prima avviso chi mi aspetta",
+        "Solo se torniamo in tempo per i miei impegni",
+        "Passo: per me metà del bello è aspettare"
+      ],
+      "question_text_en": "Someone gives us an amazing trip, but it leaves tonight. What do you do?",
+      "options_en": [
+        "Bag packed in ten minutes, let’s go",
+        "Yes, but first I tell the people expecting me",
+        "Only if we’re back in time for my plans",
+        "I’ll pass: half the fun is looking forward to it"
+      ]
+    },
+    {
+      "id": "confrontatevi-019",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "sorpresa_quanto_sapere",
+      "cooldown_class": "light",
+      "question_text": "Se ti preparo una sorpresa, quanto vuoi sapere prima?",
+      "options": [
+        "Niente, nemmeno che esiste",
+        "Solo cosa mettermi",
+        "Il giorno, per pregustarla",
+        "Qualche indizio, per provare a indovinare"
+      ],
+      "question_text_en": "If I plan a surprise for you, how much do you want to know beforehand?",
+      "options_en": [
+        "Nothing, not even that it exists",
+        "Just what to wear",
+        "The date, so I can look forward to it",
+        "A few clues, so I can try to guess"
+      ]
+    },
+    {
+      "id": "confrontatevi-020",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "meta_cose_doppio_tempo",
+      "cooldown_class": "standard",
+      "question_text": "Ci propongono un patto: per un anno avremo la metà delle cose che abbiamo, ma il doppio del tempo libero. Accetti?",
+      "options": [
+        "Subito: le cose mi pesano",
+        "Sì, ma tengo le mie cose del cuore",
+        "Proviamo un mese, poi decido",
+        "No, le mie cose mi fanno sentire a casa"
+      ],
+      "question_text_en": "We’re offered a deal: for one year we’d have half the stuff we own, but twice the free time. Do you take it?",
+      "options_en": [
+        "In a heartbeat: stuff weighs me down",
+        "Yes, but I’m keeping the things I love",
+        "Let’s try a month, then I’ll decide",
+        "No, my things make me feel at home"
+      ]
+    },
+    {
+      "id": "confrontatevi-021",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 3,
+      "topic": "aiutarsi_a_vicenda",
+      "cooldown_class": "deep",
+      "longitudinal": true,
+      "question_text": "In cosa ci aiutiamo già benissimo, e in cosa ti piacerebbe che ci aiutassimo di più?",
+      "question_text_en": "What do we already help each other with brilliantly, and where would you like us to help each other more?"
+    },
+    {
+      "id": "confrontatevi-022",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "amicizia_nuova",
+      "cooldown_class": "standard",
+      "question_text": "Nella nostra vita arriva un’amicizia nuova, in comune. Che tipo di persona speri che sia?",
+      "options": [
+        "Qualcuno che ci trascina in avventure",
+        "Qualcuno che ci invita sempre a cena",
+        "Qualcuno più grande, con mille storie",
+        "Qualcuno che ci prende in giro con affetto"
+      ],
+      "question_text_en": "A new friend comes into our lives, one we share. What kind of person do you hope they are?",
+      "options_en": [
+        "Someone who drags us into adventures",
+        "Someone who always has us over for dinner",
+        "Someone older, with a thousand stories",
+        "Someone who teases us, lovingly"
+      ]
+    },
+    {
+      "id": "confrontatevi-023",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "stare_insieme_davvero",
+      "cooldown_class": "standard",
+      "question_text": "Per te, cosa vuol dire davvero passare del tempo insieme?",
+      "options": [
+        "Fare la stessa cosa, fianco a fianco",
+        "Fare cose diverse nella stessa stanza",
+        "Parlare, anche di niente",
+        "Uscire a scoprire qualcosa di nuovo"
+      ],
+      "question_text_en": "To you, what does spending time together really mean?",
+      "options_en": [
+        "Doing the same thing, side by side",
+        "Doing different things in the same room",
+        "Talking, even about nothing",
+        "Going out to discover something new"
+      ]
+    },
+    {
+      "id": "confrontatevi-024",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "ottavo_giorno",
+      "cooldown_class": "light",
+      "question_text": "Ci regalano un ottavo giorno della settimana, solo per noi. Come lo chiamiamo, e cosa ci facciamo?",
+      "question_text_en": "We’re given an eighth day of the week, just for us. What do we call it, and what do we do with it?"
+    },
+    {
+      "id": "confrontatevi-025",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 3,
+      "topic": "frasi_difficili",
+      "cooldown_class": "deep",
+      "question_text": "Quale di queste frasi ti costa di più dirmi ad alta voce?",
+      "options": [
+        "«Scusa»",
+        "«Avevi ragione»",
+        "«Ho bisogno di te»",
+        "«Mi manchi»"
+      ],
+      "question_text_en": "Which of these is hardest for you to say to me out loud?",
+      "options_en": [
+        "“I’m sorry”",
+        "“You were right”",
+        "“I need you”",
+        "“I miss you”"
+      ]
+    },
+    {
+      "id": "confrontatevi-026",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "metodo_per_decidere",
+      "cooldown_class": "standard",
+      "question_text": "Per un mese, tutte le piccole scelte di coppia, da dove mangiare a cosa guardare, si decidono con un solo metodo. Quale scegli?",
+      "options": [
+        "Decide chi ci tiene di più",
+        "Rigorosamente a turno",
+        "Testa o croce, senza appello",
+        "Si discute finché non siamo d’accordo"
+      ],
+      "question_text_en": "For one month, every small couple decision, from where to eat to what to watch, gets settled one way only. Which do you pick?",
+      "options_en": [
+        "Whoever cares more decides",
+        "Strictly taking turns",
+        "Heads or tails, no appeals",
+        "We talk it out until we agree"
+      ]
+    },
+    {
+      "id": "confrontatevi-027",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "primo_minuto_insieme",
+      "cooldown_class": "light",
+      "question_text": "Quando ci rivediamo dopo qualche giorno, come vorresti che fosse il primo minuto?",
+      "options": [
+        "Un abbraccio lunghissimo, senza parlare",
+        "Raccontarci tutto, a raffica",
+        "Mangiare subito qualcosa insieme",
+        "Un saluto tranquillo, come se fosse ieri"
+      ],
+      "question_text_en": "When we see each other again after a few days, what should the first minute be like?",
+      "options_en": [
+        "A very long hug, no talking",
+        "Telling each other everything at once",
+        "Eating something together, right away",
+        "A calm hello, as if it were yesterday"
+      ]
+    },
+    {
+      "id": "confrontatevi-028",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "incontrarsi_oggi",
+      "cooldown_class": "standard",
+      "longitudinal": true,
+      "question_text": "Se ci incontrassimo per la prima volta oggi, cosa vorresti che notassi subito di te?",
+      "question_text_en": "If we met for the very first time today, what would you want me to notice about you right away?"
+    },
+    {
+      "id": "confrontatevi-029",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "disaccordo_affettuoso",
+      "cooldown_class": "standard",
+      "question_text": "C’è una piccola questione su cui non siamo mai d’accordo e su cui, in fondo, non vorresti mai vincere?",
+      "question_text_en": "Is there a small thing we never agree on that, deep down, you’d never actually want to win?"
+    },
+    {
+      "id": "confrontatevi-030",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "stanza_segreta",
+      "cooldown_class": "standard",
+      "question_text": "Ci regalano una stanza segreta che si apre da qualsiasi porta, ovunque siamo. Cosa diventa?",
+      "options": [
+        "Il posto dove ritrovarci ogni sera",
+        "Una biblioteca con due poltrone enormi",
+        "Un laboratorio per fare cose con le mani",
+        "Una stanza vuota, solo per ballare"
+      ],
+      "question_text_en": "We’re given a secret room that opens from any door, wherever we are. What does it become?",
+      "options_en": [
+        "The place where we meet up every evening",
+        "A library with two enormous armchairs",
+        "A workshop for making things by hand",
+        "An empty room, just for dancing"
+      ]
+    },
+    {
+      "id": "confrontatevi-031",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "chi_propone",
+      "cooldown_class": "light",
+      "question_text": "Chi di noi due se ne esce più spesso con un «e se provassimo…»?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Noi due, a turno"
+      ],
+      "question_text_en": "Which of us is more likely to come out with a “what if we tried…”?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "We take turns"
+      ]
+    },
+    {
+      "id": "confrontatevi-032",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 3,
+      "topic": "consiglio_saggio",
+      "cooldown_class": "deep",
+      "question_text": "Una persona molto saggia ci offre un solo consiglio sulla nostra coppia. Su cosa lo chiedi?",
+      "options": [
+        "Su come discutere meglio",
+        "Su come non perdere la leggerezza",
+        "Su come trovare più tempo per noi",
+        "Su come continuare a sorprenderci"
+      ],
+      "question_text_en": "A very wise person offers us one piece of advice about us as a couple. What do you ask about?",
+      "options_en": [
+        "How to argue better",
+        "How to keep things light",
+        "How to find more time for us",
+        "How to keep surprising each other"
+      ]
+    },
+    {
+      "id": "confrontatevi-033",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "noia_condivisa",
+      "cooldown_class": "light",
+      "question_text": "Qual è una cosa noiosa che, fatta con me, diventa quasi divertente?",
+      "question_text_en": "What’s something boring that turns almost fun when you do it with me?"
+    },
+    {
+      "id": "confrontatevi-034",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "un_solo_modo_di_sentirsi",
+      "cooldown_class": "light",
+      "question_text": "Per un anno, quando non siamo insieme, possiamo sentirci in un solo modo. Quale scegli?",
+      "options": [
+        "Lettere scritte a mano",
+        "Una chiamata ogni sera",
+        "Messaggi vocali a qualsiasi ora",
+        "Una foto al giorno, senza parole"
+      ],
+      "question_text_en": "For a whole year, whenever we’re not together, we can keep in touch only one way. Which do you pick?",
+      "options_en": [
+        "Handwritten letters",
+        "A call every evening",
+        "Voice notes at any hour",
+        "One photo a day, no words"
+      ]
+    },
+    {
+      "id": "confrontatevi-035",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "bisogno_della_settimana",
+      "cooldown_class": "standard",
+      "question_text": "In questo periodo, di cosa avrebbe più bisogno la tua settimana?",
+      "options": [
+        "Più tempo con te",
+        "Più tempo tutto per me",
+        "Più tempo con gli amici",
+        "Va bene così com’è"
+      ],
+      "question_text_en": "These days, what does your week need more of?",
+      "options_en": [
+        "More time with you",
+        "More time just for me",
+        "More time with friends",
+        "Nothing, it’s good as it is"
+      ]
+    },
+    {
+      "id": "confrontatevi-036",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 3,
+      "topic": "te_di_dieci_anni_fa",
+      "cooldown_class": "deep",
+      "question_text": "Una macchina del tempo porta a cena con noi la versione di te di dieci anni fa. Cosa speri che pensi di noi?",
+      "question_text_en": "A time machine brings the you of ten years ago to dinner with us. What do you hope they think of us?"
+    },
+    {
+      "id": "confrontatevi-037",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "rito_minuscolo",
+      "cooldown_class": "light",
+      "question_text": "Qual è il nostro rito più piccolo, così piccolo che da fuori nessuno lo noterebbe?",
+      "question_text_en": "What’s our smallest ritual, so small that nobody looking in would ever notice it?"
+    },
+    {
+      "id": "confrontatevi-038",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "cortometraggio_muto",
+      "cooldown_class": "standard",
+      "question_text": "Girano un cortometraggio su di noi: un minuto, senza dialoghi. Cosa speri che si veda?",
+      "options": [
+        "Quanto ridiamo, anche di niente",
+        "Come ci aiutiamo nelle cose piccole",
+        "Come facciamo pace dopo un battibecco",
+        "Come ci cerchiamo con lo sguardo"
+      ],
+      "question_text_en": "Someone makes a short film about us: one minute, no dialogue. What do you hope it shows?",
+      "options_en": [
+        "How much we laugh, even at nothing",
+        "How we help each other with the small stuff",
+        "How we make up after a squabble",
+        "How we look for each other across a room"
+      ]
+    },
+    {
+      "id": "confrontatevi-039",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 3,
+      "topic": "decisione_personale",
+      "cooldown_class": "deep",
+      "question_text": "Devi prendere una decisione importante che riguarda soprattutto te. Cosa vorresti da me?",
+      "options": [
+        "Il tuo parere sincero, subito",
+        "Domande che mi aiutino a vederci chiaro",
+        "Il tuo appoggio, qualunque cosa scelga",
+        "Un po’ di leggerezza mentre ci penso"
+      ],
+      "question_text_en": "You have to make an important decision that’s mostly about you. What would you want from me?",
+      "options_en": [
+        "Your honest opinion, right away",
+        "Questions that help me see clearly",
+        "Your support, whatever I choose",
+        "A bit of lightness while I think it over"
+      ]
+    },
+    {
+      "id": "confrontatevi-040",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "dovrei_e_vorrei",
+      "cooldown_class": "standard",
+      "longitudinal": true,
+      "question_text": "Se potessi togliere dalla tua settimana un «dovrei» per fare spazio a un «vorrei», quali sarebbero?",
+      "question_text_en": "If you could swap one “I should” in your week for one “I’d love to”, what would they be?"
+    }
+  ],
+  "existing_en": [
+    {
+      "id": "confrontatevi-001",
+      "question_text_en": "If we had a completely free Sunday with nothing planned, what would you really want us to do?",
+      "options_en": [
+        "Not leave the house until evening",
+        "Head off early somewhere new",
+        "Cook something long and complicated",
+        "See people and get home late"
+      ]
+    },
+    {
+      "id": "confrontatevi-002",
+      "question_text_en": "We have three completely free days: would you rather discover a place we don’t know yet, or go back to one that already means something to us?",
+      "options_en": [
+        "Somewhere new",
+        "A place that’s already ours"
+      ]
+    },
+    {
+      "id": "confrontatevi-003",
+      "question_text_en": "If we could protect just one of our habits, even through a really busy stretch, which one would you choose?"
+    },
+    {
+      "id": "confrontatevi-004",
+      "question_text_en": "After an argument, what really helps you feel close again?",
+      "options_en": [
+        "Talking it through right away, even if it’s uncomfortable",
+        "A bit of space, then talking",
+        "A gesture before any words",
+        "Laughing at something and starting over"
+      ]
+    },
+    {
+      "id": "confrontatevi-005",
+      "question_text_en": "Someone treats us to a surprise evening. What do you hope they’ve picked for us?",
+      "options_en": [
+        "Something we’ve never done",
+        "Our usual place",
+        "Something simple, done beautifully"
+      ]
+    },
+    {
+      "id": "confrontatevi-006",
+      "question_text_en": "What makes an ordinary day together special for you?"
+    },
+    {
+      "id": "confrontatevi-007",
+      "question_text_en": "If we could live in another city for a year, what would you look for first?",
+      "options_en": [
+        "Nature right on the doorstep",
+        "A city that stays up late",
+        "A slow place where you get to know everyone",
+        "Anywhere, as long as the pace changes"
+      ]
+    },
+    {
+      "id": "confrontatevi-008",
+      "question_text_en": "When you reach the evening with no energy left, what should I do?",
+      "options_en": [
+        "Take charge of the evening without asking",
+        "Ask what’s really needed",
+        "Leave room for space and quiet",
+        "Take us out somewhere for a change of scene"
+      ]
+    },
+    {
+      "id": "confrontatevi-009",
+      "question_text_en": "Which gift moves you more: the one you’ve wanted for ages, or the one you’d never have thought of?",
+      "options_en": [
+        "The one I’d wanted for ages",
+        "The one I’d never thought of"
+      ]
+    },
+    {
+      "id": "confrontatevi-010",
+      "question_text_en": "Ten years from now, what would you want to still be exactly the same between us?"
+    },
+    {
+      "id": "e_se-001",
+      "question_text_en": "We have a free weekend but can only pick one thing: finally do something we’ve been putting off for months, or leave with barely any plan. Which do you choose?",
+      "options_en": [
+        "The thing we’ve put off for months",
+        "Leave with no plan"
+      ]
+    },
+    {
+      "id": "e_se-002",
+      "question_text_en": "If we could live for six months somewhere we don’t know a soul, what do you hope we’d discover about ourselves?"
+    },
+    {
+      "id": "e_se-003",
+      "question_text_en": "If we looked back a year from now, what small thing would you want us to have started doing today?"
+    },
+    {
+      "id": "e_se-004",
+      "question_text_en": "A sum of money lands in our lap, enough for one big change. Which do you choose?",
+      "options_en": [
+        "A different home",
+        "A sabbatical year together",
+        "A project all our own",
+        "Put it aside and sleep easy"
+      ]
+    },
+    {
+      "id": "e_se-005",
+      "question_text_en": "If you could ask the two of us twenty years from now just one question, what would you ask?"
+    },
+    {
+      "id": "e_se-006",
+      "question_text_en": "For a whole month we can set ourselves just one new rule. Which do you pick?",
+      "options_en": [
+        "No phones when we’re together",
+        "One night a week, whoever’s turn it is decides",
+        "A good-morning message, always",
+        "Something new every weekend"
+      ]
+    },
+    {
+      "id": "e_se-007",
+      "question_text_en": "If we wrote down three things to do together before the end of the year, what’s the first one you’d put on the list?"
+    },
+    {
+      "id": "e_se-008",
+      "question_text_en": "We’re offered the chance to swap everyday lives for a week. How do you take it?",
+      "options_en": [
+        "I’m in, I want to see what it’s like",
+        "Only if I get to keep my own bed",
+        "I’m writing you an instruction manual",
+        "I’m out: your schedule scares me"
+      ]
+    },
+    {
+      "id": "e_se-009",
+      "question_text_en": "If you could give us one couple superpower, like reading each other’s minds or never arguing about dinner, which would you choose?"
+    },
+    {
+      "id": "e_se-010",
+      "question_text_en": "Is there a dream you’ve set aside that, if it were only up to the two of us, you’d want to pick back up?"
+    }
+  ],
+  "fixes": [
+    {
+      "id": "confrontatevi-002",
+      "question_text": "Abbiamo tre giorni completamente liberi: preferiresti scoprire un posto che non conosciamo ancora o tornare in un posto che per noi significa già qualcosa?",
+      "options": [
+        "Un posto nuovo",
+        "Un posto che è già nostro"
+      ],
+      "reason": "«nessuno dei due» ed «entrambi» presuppongono il maschile: «che non conosciamo ancora» tiene lo stesso senso."
+    },
+    {
+      "id": "confrontatevi-008",
+      "question_text": "Quando arrivi a sera senza energie, cosa dovrei fare io?",
+      "reason": "«uno dei due» e «l’altro» presuppongono il genere: passando a tu/io la domanda resta reciproca e le opzioni non cambiano."
+    },
+    {
+      "id": "e_se-006",
+      "options": [
+        "Niente telefoni quando siamo insieme",
+        "Una sera a settimana decide chi è di turno",
+        "Un messaggio di buongiorno, sempre",
+        "Una cosa nuova ogni weekend"
+      ],
+      "reason": "«uno dei due» presuppone il genere; «in casa» e «colazione insieme ogni giorno» danno per scontato che viviate insieme.",
+      "question_text": "Per un mese intero possiamo darci una sola regola nuova. Quale scegli?"
+    }
+  ]
+}

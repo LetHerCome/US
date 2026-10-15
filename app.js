@@ -728,7 +728,7 @@ window.disableWebPush=disableWebPush;
 // Native Notifications V1: one allow-listed target per notification (Web Push
 // and native alike), never a URL. `ref` (a UUID, native only) narrows the
 // surface; every surface re-reads its data through the normal RLS/RPC paths.
-const US_PUSH_TARGETS=Object.freeze(['home','today','think','left_for_you','quiz','bond','calendar']);
+const US_PUSH_TARGETS=Object.freeze(['home','today','think','left_for_you','quiz','bond','calendar','events']);
 async function performPushNavigation(target,intent={}){
   if(!US_PUSH_TARGETS.includes(target))return;
   if(!window.usProfile){usPendingPushTarget=target;return;}
@@ -754,6 +754,12 @@ async function performPushNavigation(target,intent={}){
   if(target==='calendar'){
     if(ref&&window.UsCalendarLinks?.openEntry)window.UsCalendarLinks.openEntry(ref);
     else window.openCalendarSurface?.();
+    return;
+  }
+  if(target==='events'){
+    // Mesiversario and anniversary pushes: the Eventi list on Noi.
+    if(document.querySelector('.page.active')?.id!=='bond')go('bond',{motionCommit:true});
+    setTimeout(()=>window.openEvents?.(),120);
     return;
   }
   if(pages.includes(target))go(target);

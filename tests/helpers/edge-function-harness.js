@@ -67,6 +67,8 @@ function createFakeAdmin({ tables = {}, users = {}, rpc = {}, errors = {} } = {}
       const filters = [];
       let mode = 'select';
       let payload = null;
+      let returning = false; // .delete().select(): PostgREST returns the deleted rows
+      let counted = null; // .select(columns, { count: 'exact', head }) answers a count
       const rows = () => (db[table] ||= []).filter((row) => filters.every((filter) => filter(row)));
       const run = () => {
         if (errors[table] && mode === 'select') return { data: null, error: errors[table] };
@@ -86,17 +88,19 @@ function createFakeAdmin({ tables = {}, users = {}, rpc = {}, errors = {} } = {}
           const doomed = rows();
           db[table] = db[table].filter((row) => !doomed.includes(row));
           log.deletes.push({ table, rows: doomed });
-          return { data: null, error: null };
+          return { data: returning ? doomed.map((row) => ({ ...row })) : null, error: null };
         }
         log.reads.push(table);
+        if (counted) return { data: counted.head ? null : rows().map((row) => ({ ...row })), count: rows().length, error: null };
         return { data: rows().map((row) => ({ ...row })), error: null };
       };
       const builder = {
-        select() { return builder; },
+        select(_columns, options) { if (mode !== 'select') returning = true; else if (options?.count) counted = { head: Boolean(options.head) }; return builder; },
         eq(column, value) { filters.push((row) => row[column] === value); return builder; },
         neq(column, value) { filters.push((row) => row[column] !== value); return builder; },
         in(column, values) { filters.push((row) => values.includes(row[column])); return builder; },
         is(column, value) { filters.push((row) => (row[column] ?? null) === value); return builder; },
+        gt(column, value) { filters.push((row) => row[column] > value); return builder; },
         gte(column, value) { filters.push((row) => row[column] >= value); return builder; },
         lte(column, value) { filters.push((row) => row[column] <= value); return builder; },
         order() { return builder; },

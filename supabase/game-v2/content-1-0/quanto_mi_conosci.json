@@ -1,0 +1,1090 @@
+{
+  "family": "quanto_mi_conosci",
+  "new": [
+    {
+      "id": "quanto_mi_conosci-013",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "cosa_mi_manca_di_casa",
+      "cooldown_class": "light",
+      "question_text": "Di casa, cosa ti manca di più quando stai via per qualche giorno?",
+      "predict_text": "Di casa, cosa manca di più a {subject} quando sta via per qualche giorno?",
+      "options": [
+        "Il mio letto",
+        "La doccia di casa",
+        "La cucina e le mie cose",
+        "Il silenzio di casa"
+      ],
+      "question_text_en": "What do you miss most about home when you’re away for a few days?",
+      "predict_text_en": "What does {subject} miss most about home when they’re away for a few days?",
+      "options_en": [
+        "My own bed",
+        "My own shower",
+        "The kitchen and my things",
+        "The quiet of home"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-014",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "cosa_mi_scarica",
+      "cooldown_class": "standard",
+      "question_text": "Cosa ti toglie energie più di quanto sembri da fuori?",
+      "predict_text": "Cosa toglie energie a {subject} più di quanto sembri da fuori?",
+      "options": [
+        "Le chiacchiere di circostanza",
+        "Il rumore di fondo, sempre acceso",
+        "Una giornata senza un minuto per me",
+        "Dover decidere troppe cose"
+      ],
+      "question_text_en": "What drains you more than anyone would guess?",
+      "predict_text_en": "What drains {subject} more than anyone would guess?",
+      "options_en": [
+        "Small talk",
+        "Constant background noise",
+        "A day without a minute to myself",
+        "Having to make too many decisions"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-015",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "sala_d_attesa",
+      "cooldown_class": "light",
+      "question_text": "Sei in una sala d’attesa, senza niente da fare per mezz’ora. Cosa fai davvero?",
+      "predict_text": "{subject} è in una sala d’attesa, senza niente da fare per mezz’ora. Cosa fa davvero?",
+      "options": [
+        "Guardo le persone e invento storie",
+        "Scorro il telefono senza leggere niente",
+        "Ripasso le cose da fare",
+        "Controllo l’ora ogni due minuti"
+      ],
+      "question_text_en": "You’re in a waiting room with nothing to do for half an hour. What do you actually do?",
+      "predict_text_en": "{subject} is in a waiting room with nothing to do for half an hour. What do they actually do?",
+      "options_en": [
+        "Watch people and make up their stories",
+        "Scroll my phone without reading a thing",
+        "Go over my to-do list",
+        "Check the time every two minutes"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-016",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "fermarsi_senza_fare_niente",
+      "cooldown_class": "standard",
+      "question_text": "Quando ti fermi e non fai proprio niente, cosa succede dentro di te?",
+      "predict_text": "Quando {subject} si ferma e non fa proprio niente, cosa succede dentro di sé?",
+      "options": [
+        "Sto benissimo, finalmente",
+        "Dopo dieci minuti mi sento in colpa",
+        "Trovo subito qualcosa da sistemare",
+        "Mi addormento, puntualmente"
+      ],
+      "question_text_en": "When you stop and do absolutely nothing, what goes on inside you?",
+      "predict_text_en": "When {subject} stops and does absolutely nothing, what goes on inside them?",
+      "options_en": [
+        "Bliss, finally",
+        "Ten minutes in, I feel guilty",
+        "I find something to sort out right away",
+        "I fall asleep, like clockwork"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-017",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 3,
+      "topic": "quando_dico_bene",
+      "cooldown_class": "deep",
+      "question_text": "Quando ti chiedo come stai e rispondi «bene», cosa vuol dire di solito?",
+      "predict_text": "Quando chiedi a {subject} come sta e risponde «bene», cosa vuol dire di solito?",
+      "options": [
+        "Che sto bene, davvero",
+        "Che ne parliamo più tardi",
+        "Che ho solo bisogno di dormire",
+        "Che aspetto una seconda domanda"
+      ],
+      "question_text_en": "When I ask how you are and you say “fine”, what does it usually mean?",
+      "predict_text_en": "When you ask {subject} how they are and they say “fine”, what does it usually mean?",
+      "options_en": [
+        "That I’m fine, really",
+        "That we’ll talk about it later",
+        "That I just need some sleep",
+        "That I’m waiting for a second question"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-018",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "faccenda_rilassante",
+      "cooldown_class": "light",
+      "question_text": "Quale di queste faccende, sotto sotto, ti rilassa?",
+      "predict_text": "Quale di queste faccende, sotto sotto, rilassa {subject}?",
+      "options": [
+        "Stirare, con calma",
+        "Stendere il bucato",
+        "Riordinare un cassetto",
+        "Nessuna: le odio tutte uguali"
+      ],
+      "question_text_en": "Which of these chores secretly relaxes you?",
+      "predict_text_en": "Which of these chores secretly relaxes {subject}?",
+      "options_en": [
+        "Ironing, slowly",
+        "Hanging out the laundry",
+        "Tidying a drawer",
+        "None: I hate them all equally"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-019",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "aiuto_nelle_cose_complicate",
+      "cooldown_class": "standard",
+      "question_text": "Sei alle prese con qualcosa di complicato, tipo un modulo infinito o un mobile da montare. Che aiuto vuoi da me?",
+      "predict_text": "{subject} è alle prese con qualcosa di complicato, tipo un modulo infinito o un mobile da montare. Che aiuto vuole da te?",
+      "options": [
+        "Nessuno: voglio farcela io",
+        "Compagnia, ma niente consigli",
+        "Una mano solo quando la chiedo",
+        "Che ci pensi tu, io guardo"
+      ],
+      "question_text_en": "You’re wrestling with something tricky, like an endless form or furniture to assemble. What help do you want from me?",
+      "predict_text_en": "{subject} is wrestling with something tricky, like an endless form or furniture to assemble. What help do they want from you?",
+      "options_en": [
+        "None: I want to crack it myself",
+        "Company, but no advice",
+        "A hand only when I ask",
+        "You take over, I’ll watch"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-020",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "figuraccia",
+      "cooldown_class": "light",
+      "question_text": "Fai una piccola figuraccia davanti a tutti. Come reagisci?",
+      "predict_text": "{subject} fa una piccola figuraccia davanti a tutti. Come reagisce?",
+      "options": [
+        "Ci rido sopra subito",
+        "Faccio finta di niente",
+        "Divento color peperone",
+        "Ci ripenso per anni"
+      ],
+      "question_text_en": "You make a small fool of yourself in front of everyone. How do you react?",
+      "predict_text_en": "{subject} makes a small fool of themselves in front of everyone. How do they react?",
+      "options_en": [
+        "Laugh it off right away",
+        "Act like nothing happened",
+        "Turn bright red",
+        "Replay it for years"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-021",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "favore_controvoglia",
+      "cooldown_class": "standard",
+      "question_text": "Qualcuno ti chiede un favore che non hai nessuna voglia di fare. Cosa succede?",
+      "predict_text": "Qualcuno chiede a {subject} un favore che non ha nessuna voglia di fare. Cosa succede?",
+      "options": [
+        "Dico di sì, e poi me ne pento",
+        "Dico di no, con garbo e chiarezza",
+        "Prendo tempo e spero che se ne dimentichi",
+        "Propongo un’altra cosa al posto di quella"
+      ],
+      "question_text_en": "Someone asks you a favor you really don’t feel like doing. What happens?",
+      "predict_text_en": "Someone asks {subject} a favor they really don’t feel like doing. What happens?",
+      "options_en": [
+        "I say yes, then regret it",
+        "I say no, kindly but clearly",
+        "I stall and hope they forget",
+        "I offer something else instead"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-022",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 3,
+      "topic": "cose_difficili_da_dire",
+      "cooldown_class": "deep",
+      "question_text": "Quando devo dirti una cosa che non ti farà piacere, come preferisci che lo faccia?",
+      "predict_text": "Quando devi dire a {subject} una cosa poco piacevole, come preferisce che lo faccia?",
+      "options": [
+        "Subito, dritto al punto",
+        "Con calma, nel momento giusto",
+        "Prima una cosa bella, poi il resto",
+        "Per iscritto, così ho tempo di pensarci"
+      ],
+      "question_text_en": "When I have to tell you something you won’t like, how do you want me to do it?",
+      "predict_text_en": "When you have to tell {subject} something they won’t like, how do they want you to do it?",
+      "options_en": [
+        "Right away, straight to the point",
+        "Calmly, at the right moment",
+        "Something nice first, then the rest",
+        "In writing, so I have time to think"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-023",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "non_so_la_risposta",
+      "cooldown_class": "light",
+      "question_text": "Ti fanno una domanda e non sai la risposta. Cosa fai?",
+      "predict_text": "Fanno a {subject} una domanda e non sa la risposta. Cosa fa?",
+      "options": [
+        "Lo ammetto subito",
+        "Improvviso, con grande sicurezza",
+        "Dico «bella domanda» e prendo tempo",
+        "Cerco subito sul telefono"
+      ],
+      "question_text_en": "Someone asks you something and you don’t know the answer. What do you do?",
+      "predict_text_en": "Someone asks {subject} something and they don’t know the answer. What do they do?",
+      "options_en": [
+        "Admit it right away",
+        "Improvise, with total confidence",
+        "Say “good question” and stall",
+        "Look it up on the spot"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-024",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "tanti_auguri",
+      "cooldown_class": "standard",
+      "question_text": "Tutti cantano «tanti auguri» e gli sguardi sono su di te. Cosa fai?",
+      "predict_text": "Tutti cantano «tanti auguri» e gli sguardi sono su {subject}. Cosa fa?",
+      "options": [
+        "Me lo godo fino in fondo",
+        "Non so dove guardare",
+        "Canto anche io, per confondermi",
+        "Una battuta, per spostare l’attenzione"
+      ],
+      "question_text_en": "Everyone’s singing “Happy Birthday” and all eyes are on you. What do you do?",
+      "predict_text_en": "Everyone’s singing “Happy Birthday” and all eyes are on {subject}. What do they do?",
+      "options_en": [
+        "Soak up every second",
+        "Don’t know where to look",
+        "Sing along to blend in",
+        "Crack a joke to shift the spotlight"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-025",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "rientro_a_casa",
+      "cooldown_class": "light",
+      "question_text": "Rientri a casa dopo una giornata fuori. Qual è la prima cosa che fai?",
+      "predict_text": "{subject} rientra a casa dopo una giornata fuori. Qual è la prima cosa che fa?",
+      "options": [
+        "Mi cambio e metto qualcosa di comodo",
+        "Svuoto le tasche e metto tutto a posto",
+        "Apro il frigo, anche senza fame",
+        "Mi siedo un attimo, ancora col cappotto"
+      ],
+      "question_text_en": "You get home after a day out. What’s the first thing you do?",
+      "predict_text_en": "{subject} gets home after a day out. What’s the first thing they do?",
+      "options_en": [
+        "Change into something comfy",
+        "Empty my pockets and put everything away",
+        "Open the fridge, even if I’m not hungry",
+        "Sit for a moment, coat still on"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-026",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "cosa_mi_commuove",
+      "cooldown_class": "standard",
+      "question_text": "Quale di queste cose ti commuove più facilmente?",
+      "predict_text": "Quale di queste cose commuove più facilmente {subject}?",
+      "options": [
+        "Due persone che si ritrovano dopo anni",
+        "Qualcuno che ce la fa contro ogni pronostico",
+        "Una gentilezza tra sconosciuti",
+        "La musica giusta al momento giusto"
+      ],
+      "question_text_en": "Which of these moves you most easily?",
+      "predict_text_en": "Which of these moves {subject} most easily?",
+      "options_en": [
+        "Two people reuniting after years",
+        "Someone making it against all odds",
+        "Kindness between strangers",
+        "The right music at the right moment"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-027",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 3,
+      "topic": "chiedere_senza_chiedere",
+      "cooldown_class": "deep",
+      "question_text": "Quando vorresti qualcosa da me ma non lo chiedi, come provi a farmelo capire?",
+      "predict_text": "Quando {subject} vorrebbe qualcosa da te ma non lo chiede, come prova a fartelo capire?",
+      "options": [
+        "Lo nomino per caso, più volte",
+        "Lo faccio io per te, sperando che ricambi",
+        "Lo chiedo scherzando, ma dico sul serio",
+        "Sospiro, e aspetto che ci arrivi"
+      ],
+      "question_text_en": "When you’d like something from me but don’t ask, how do you try to get it across?",
+      "predict_text_en": "When {subject} would like something from you but doesn’t ask, how do they try to get it across?",
+      "options_en": [
+        "Mention it casually, more than once",
+        "Do it for you, hoping you’ll do the same",
+        "Ask as a joke, but mean it",
+        "Sigh, and wait for you to get it"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-028",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "finale_svelato",
+      "cooldown_class": "light",
+      "question_text": "Qualcuno ti svela il finale di una storia che stai seguendo. Come la prendi?",
+      "predict_text": "Qualcuno svela a {subject} il finale di una storia che sta seguendo. Come la prende?",
+      "options": [
+        "Mi arrabbio sul serio",
+        "Mi va benissimo, anzi mi rilassa",
+        "Smetto di seguirla",
+        "Lo sapevo già: sbircio sempre la fine"
+      ],
+      "question_text_en": "Someone spoils the ending of a story you’re following. How do you take it?",
+      "predict_text_en": "Someone spoils the ending of a story {subject} is following. How do they take it?",
+      "options_en": [
+        "I’m genuinely annoyed",
+        "Fine by me, it actually relaxes me",
+        "I stop following it",
+        "I knew already: I always peek at the end"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-029",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "farmi_cambiare_idea",
+      "cooldown_class": "standard",
+      "question_text": "Qual è il modo migliore per farti cambiare idea?",
+      "predict_text": "Qual è il modo migliore per far cambiare idea a {subject}?",
+      "options": [
+        "Darmi dati e buoni argomenti",
+        "Lasciarmi tempo: ci arrivo da me",
+        "Farmi ridere, poi ci ripenso"
+      ],
+      "question_text_en": "What’s the best way to get you to change your mind?",
+      "predict_text_en": "What’s the best way to get {subject} to change their mind?",
+      "options_en": [
+        "Give me facts and good arguments",
+        "Give me time: I’ll get there myself",
+        "Make me laugh, then I’ll rethink it"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-030",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "piccole_soddisfazioni",
+      "cooldown_class": "light",
+      "question_text": "Quale di queste piccole cose ti dà più soddisfazione di quanto ammetteresti?",
+      "predict_text": "Quale di queste piccole cose dà a {subject} più soddisfazione di quanto ammetterebbe?",
+      "options": [
+        "Spuntare una voce da una lista",
+        "Togliere la pellicola a una cosa nuova",
+        "Il primo sorso di qualcosa di caldo",
+        "Le lenzuola pulite, la prima notte"
+      ],
+      "question_text_en": "Which of these little things satisfies you more than you’d admit?",
+      "predict_text_en": "Which of these little things satisfies {subject} more than they’d admit?",
+      "options_en": [
+        "Ticking something off a list",
+        "Peeling the plastic off something new",
+        "The first sip of something hot",
+        "Clean sheets, the first night"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-031",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "dopo_una_discussione",
+      "cooldown_class": "standard",
+      "question_text": "Dopo una discussione con qualcuno (non con me), cosa ti succede?",
+      "predict_text": "Dopo una discussione con qualcuno (non con te), cosa succede a {subject}?",
+      "options": [
+        "Riscrivo in testa la risposta perfetta",
+        "Mi passa nel giro di un’ora",
+        "Ne parlo con te, battuta per battuta"
+      ],
+      "question_text_en": "After an argument with someone (not me), how do you handle it?",
+      "predict_text_en": "After an argument with someone (not you), how does {subject} handle it?",
+      "options_en": [
+        "I rewrite the perfect comeback in my head",
+        "It’s gone within the hour",
+        "I tell you about it, line by line"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-032",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 3,
+      "topic": "conquistare_la_fiducia",
+      "cooldown_class": "deep",
+      "question_text": "Cosa serve a una persona appena conosciuta per conquistare la tua fiducia?",
+      "predict_text": "Cosa serve a una persona appena conosciuta per conquistare la fiducia di {subject}?",
+      "options": [
+        "Tempo, tanto tempo",
+        "Una piccola promessa mantenuta",
+        "Sincerità, anche quando costa",
+        "Niente: mi fido subito, poi vedo"
+      ],
+      "question_text_en": "What does someone new need to earn your trust?",
+      "predict_text_en": "What does someone new need to earn {subject}’s trust?",
+      "options_en": [
+        "Time, lots of time",
+        "One small promise kept",
+        "Honesty, even when it costs them",
+        "Nothing: I trust first, then see"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-033",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "regalo_da_aprire_dopo",
+      "cooldown_class": "light",
+      "question_text": "Ricevi un regalo con scritto sopra «da aprire tra una settimana». Cosa fai?",
+      "predict_text": "{subject} riceve un regalo con scritto sopra «da aprire tra una settimana». Cosa fa?",
+      "options": [
+        "Aspetto, con disciplina",
+        "Lo apro subito: non resisto",
+        "Lo scuoto e provo a indovinare",
+        "Lo apro e lo richiudo per bene"
+      ],
+      "question_text_en": "You get a present with a note saying “open in a week”. What do you do?",
+      "predict_text_en": "{subject} gets a present with a note saying “open in a week”. What do they do?",
+      "options_en": [
+        "Wait, with iron discipline",
+        "Open it now: I can’t resist",
+        "Shake it and try to guess",
+        "Open it and rewrap it perfectly"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-034",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "momento_da_difendere",
+      "cooldown_class": "standard",
+      "question_text": "Quale parte della giornata difendi da tutto e da tutti?",
+      "predict_text": "Quale parte della giornata {subject} difende da tutto e da tutti?",
+      "options": [
+        "La colazione, in silenzio",
+        "Il tragitto, con le cuffie",
+        "Una pausa a metà giornata",
+        "L’ultima mezz’ora prima di dormire"
+      ],
+      "question_text_en": "Which part of the day do you guard from everyone and everything?",
+      "predict_text_en": "Which part of the day does {subject} guard from everyone and everything?",
+      "options_en": [
+        "Breakfast, in silence",
+        "My commute, headphones on",
+        "A break in the middle of the day",
+        "The last half hour before sleep"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-035",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "barzelletta_che_non_fa_ridere",
+      "cooldown_class": "light",
+      "question_text": "Ti raccontano una barzelletta che non fa ridere per niente. Cosa fai?",
+      "predict_text": "Raccontano a {subject} una barzelletta che non fa ridere per niente. Cosa fa?",
+      "options": [
+        "Rido lo stesso, per gentilezza",
+        "Rido proprio perché non fa ridere",
+        "Rilancio con una ancora peggiore"
+      ],
+      "question_text_en": "Someone tells you a joke that isn’t funny at all. What do you do?",
+      "predict_text_en": "Someone tells {subject} a joke that isn’t funny at all. What do they do?",
+      "options_en": [
+        "Laugh anyway, to be kind",
+        "Laugh precisely because it’s so bad",
+        "Top it with an even worse one"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-036",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "messaggio_delicato",
+      "cooldown_class": "standard",
+      "question_text": "Devi scrivere un messaggio importante e delicato. Come va?",
+      "predict_text": "{subject} deve scrivere un messaggio importante e delicato. Come va?",
+      "options": [
+        "Lo scrivo di getto e lo mando",
+        "Lo riscrivo dieci volte",
+        "Lo faccio leggere prima a qualcuno",
+        "Lascio perdere e chiamo"
+      ],
+      "question_text_en": "You have to write an important, delicate message. How does it go?",
+      "predict_text_en": "{subject} has to write an important, delicate message. How does it go?",
+      "options_en": [
+        "I write it in one go and hit send",
+        "I rewrite it ten times",
+        "I get someone to read it first",
+        "I give up and call instead"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-037",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 3,
+      "topic": "quando_va_tutto_bene",
+      "cooldown_class": "deep",
+      "question_text": "Quando le cose vanno bene per un bel po’, cosa ti succede?",
+      "predict_text": "Quando le cose vanno bene per un bel po’, cosa succede a {subject}?",
+      "options": [
+        "Me lo godo, senza pensieri",
+        "Aspetto il colpo di scena",
+        "Mi viene voglia di cambiare qualcosa"
+      ],
+      "question_text_en": "When things have been going well for a while, what happens to you?",
+      "predict_text_en": "When things have been going well for a while, what happens to {subject}?",
+      "options_en": [
+        "I enjoy it, no second thoughts",
+        "I wait for the plot twist",
+        "I get the urge to shake something up"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-038",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "dove_mi_siedo",
+      "cooldown_class": "light",
+      "question_text": "Entri in un locale con tanti tavoli liberi. Dove ti siedi?",
+      "predict_text": "{subject} entra in un locale con tanti tavoli liberi. Dove si siede?",
+      "options": [
+        "Spalle al muro, con vista su tutto",
+        "Vicino alla finestra",
+        "Dove capita: decide il caso"
+      ],
+      "question_text_en": "You walk into a café with lots of free tables. Where do you sit?",
+      "predict_text_en": "{subject} walks into a café with lots of free tables. Where do they sit?",
+      "options_en": [
+        "Back to the wall, with a view of everything",
+        "By the window",
+        "Wherever: I let chance decide"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-039",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "parlarmi_mentre_faccio_altro",
+      "cooldown_class": "standard",
+      "question_text": "Quando ti parlo mentre stai facendo un’altra cosa, cosa succede davvero?",
+      "predict_text": "Quando parli a {subject} mentre sta facendo un’altra cosa, cosa succede davvero?",
+      "options": [
+        "Ti ascolto davvero",
+        "Annuisco, ma non sento niente",
+        "Ti chiedo di aspettare un attimo",
+        "Mollo tutto e mi giro verso di te"
+      ],
+      "question_text_en": "When I talk to you while you’re busy with something else, what really happens?",
+      "predict_text_en": "When you talk to {subject} while they’re busy with something else, what really happens?",
+      "options_en": [
+        "I really listen",
+        "I nod, but hear nothing",
+        "I ask you to give me a second",
+        "I drop everything and turn to you"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-040",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "sguardo_nel_vuoto",
+      "cooldown_class": "light",
+      "question_text": "Hai lo sguardo perso nel vuoto e ti chiedo «a cosa pensi?». Qual è la risposta vera?",
+      "predict_text": "{subject} ha lo sguardo perso nel vuoto e chiedi «a cosa pensi?». Qual è la risposta vera?",
+      "options": [
+        "Al cibo, quasi sempre",
+        "A una cosa che ho dimenticato di fare",
+        "A una cosa che hai detto tu",
+        "A niente, davvero niente"
+      ],
+      "question_text_en": "You’re staring into space and I ask what you’re thinking about. What’s the real answer?",
+      "predict_text_en": "{subject} is staring into space and you ask what they’re thinking about. What’s the real answer?",
+      "options_en": [
+        "Food, almost always",
+        "Something I forgot to do",
+        "Something you said",
+        "Nothing, honestly nothing"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-041",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "impegno_saltato",
+      "cooldown_class": "standard",
+      "question_text": "Un impegno salta all’ultimo minuto. Cosa provi, prima di tutto?",
+      "predict_text": "Un impegno di {subject} salta all’ultimo minuto. Cosa prova, prima di tutto?",
+      "options": [
+        "Un sollievo segreto",
+        "Un po’ di delusione",
+        "Voglia di riempire subito il buco",
+        "L’occasione per recuperare arretrati"
+      ],
+      "question_text_en": "Plans fall through at the last minute. What do you feel first?",
+      "predict_text_en": "{subject}’s plans fall through at the last minute. What do they feel first?",
+      "options_en": [
+        "A secret sense of relief",
+        "A little disappointment",
+        "An urge to fill the gap right away",
+        "A chance to catch up on things"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-042",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 3,
+      "topic": "chi_mi_conosce_davvero",
+      "cooldown_class": "deep",
+      "question_text": "Cosa ti fa pensare, più di tutto, «questa persona mi conosce davvero»?",
+      "predict_text": "Cosa fa pensare a {subject}, più di tutto, «questa persona mi conosce davvero»?",
+      "options": [
+        "Capisce cosa mi serve prima che lo chieda",
+        "Sa quando lasciarmi in pace",
+        "Si ricorda le piccole cose che dico",
+        "Ride delle mie battute prima della fine"
+      ],
+      "question_text_en": "What, above all, makes you think “this person really knows me”?",
+      "predict_text_en": "What, above all, makes {subject} think “this person really knows me”?",
+      "options_en": [
+        "Knowing what I need before I ask",
+        "Knowing when to leave me be",
+        "Remembering little things I’ve said",
+        "Laughing at my jokes before the punchline"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-043",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "quando_ho_fame",
+      "cooldown_class": "light",
+      "question_text": "Hai fame e si mangia più tardi del previsto. Cosa succede?",
+      "predict_text": "{subject} ha fame e si mangia più tardi del previsto. Cosa succede?",
+      "options": [
+        "Divento intrattabile",
+        "Smetto di parlare",
+        "Mangio la prima cosa che trovo",
+        "Non me ne accorgo neanche"
+      ],
+      "question_text_en": "You’re hungry and the meal is running late. What happens?",
+      "predict_text_en": "{subject} is hungry and the meal is running late. What happens?",
+      "options_en": [
+        "I become impossible to be around",
+        "I stop talking",
+        "I eat the first thing I find",
+        "I barely even notice"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-044",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "decidi_tu",
+      "cooldown_class": "standard",
+      "question_text": "C’è da scegliere una cosa piccola insieme, tipo dove mangiare. Cosa dici di solito?",
+      "predict_text": "C’è da scegliere una cosa piccola insieme, tipo dove mangiare. Cosa dice di solito {subject}?",
+      "options": [
+        "«Decidi tu», e lo penso davvero",
+        "«Decidi tu», ma ho già deciso",
+        "Tre proposte in dieci secondi",
+        "Propongo, boccio, ripropongo"
+      ],
+      "question_text_en": "We need to pick something small together, like where to eat. What do you usually say?",
+      "predict_text_en": "You two need to pick something small, like where to eat. What does {subject} usually say?",
+      "options_en": [
+        "“You decide”, and I mean it",
+        "“You decide”, but I’ve already decided",
+        "Three ideas in ten seconds",
+        "Suggest, veto, suggest again"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-045",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "buoni_propositi",
+      "cooldown_class": "light",
+      "question_text": "Ti fai una promessa, tipo andare a dormire prima. Come va a finire?",
+      "predict_text": "{subject} si fa una promessa, tipo andare a dormire prima. Come va a finire?",
+      "options": [
+        "La mantengo, quasi sempre",
+        "La rimando a domani, ogni giorno",
+        "Dura tre giorni, poi basta",
+        "Non me ne faccio più, per prudenza"
+      ],
+      "question_text_en": "You make yourself a promise, like going to bed earlier. How does that usually go?",
+      "predict_text_en": "{subject} makes themselves a promise, like going to bed earlier. How does that usually go?",
+      "options_en": [
+        "I keep it, almost always",
+        "I push it to tomorrow, every day",
+        "It lasts three days, then that’s it",
+        "I’ve stopped making them, just in case"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-046",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "prese_in_giro",
+      "cooldown_class": "standard",
+      "question_text": "Quando ti prendo in giro con affetto, come reagisci?",
+      "predict_text": "Quando prendi in giro {subject} con affetto, come reagisce?",
+      "options": [
+        "Rido più forte di te",
+        "Rispondo a tono, e di solito vinco",
+        "Faccio finta di offendermi",
+        "Arrossisco e cambio discorso"
+      ],
+      "question_text_en": "When I tease you affectionately, how do you react?",
+      "predict_text_en": "When you tease {subject} affectionately, how do they react?",
+      "options_en": [
+        "Laugh louder than you",
+        "Hit back, and usually win",
+        "Pretend to be offended",
+        "Blush and change the subject"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-047",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 3,
+      "topic": "ripartire_dopo_un_intoppo",
+      "cooldown_class": "deep",
+      "question_text": "Quando una cosa a cui tenevi va storta, cosa ti aiuta a ripartire?",
+      "predict_text": "Quando va storta una cosa a cui teneva, cosa aiuta {subject} a ripartire?",
+      "options": [
+        "Capire bene cosa non ha funzionato",
+        "Lasciarla andare, senza parlarne più",
+        "Riprovarci subito, per orgoglio",
+        "Che qualcuno mi ricordi cosa so fare"
+      ],
+      "question_text_en": "When something you cared about goes badly, what helps you bounce back?",
+      "predict_text_en": "When something {subject} cared about goes badly, what helps them bounce back?",
+      "options_en": [
+        "Understanding what didn’t work",
+        "Letting it go and never mentioning it",
+        "Trying again right away, out of pride",
+        "Someone reminding me what I’m good at"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-048",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "passeggiata_senza_fretta",
+      "cooldown_class": "light",
+      "question_text": "Cammini per strada senza fretta. Cosa guardi di più?",
+      "predict_text": "{subject} cammina per strada senza fretta. Cosa guarda di più?",
+      "options": [
+        "Le finestre illuminate delle case",
+        "Tutti i cani che passano",
+        "I palazzi, con il naso all’insù",
+        "Le vetrine, una per una"
+      ],
+      "question_text_en": "You’re walking down a street in no hurry. What do you look at most?",
+      "predict_text_en": "{subject} is walking down a street in no hurry. What do they look at most?",
+      "options_en": [
+        "Lit-up windows of people’s homes",
+        "Every dog that walks by",
+        "The buildings, looking up",
+        "Shop windows, one by one"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-049",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "avere_ragione",
+      "cooldown_class": "standard",
+      "question_text": "Si scopre che avevi ragione tu, su una piccola questione. Cosa fai?",
+      "predict_text": "Si scopre che {subject} aveva ragione, su una piccola questione. Cosa fa?",
+      "options": [
+        "Lo faccio notare, con eleganza",
+        "Sorrido tra me e me",
+        "Faccio il balletto della vittoria",
+        "Lascio perdere: conta poco"
+      ],
+      "question_text_en": "Turns out you were right about some small thing. What do you do?",
+      "predict_text_en": "Turns out {subject} was right about some small thing. What do they do?",
+      "options_en": [
+        "Point it out, elegantly",
+        "Smile quietly to myself",
+        "Do a victory dance",
+        "Let it go: it hardly matters"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-050",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "buona_idea_fuori_orario",
+      "cooldown_class": "light",
+      "question_text": "Ti viene una buona idea nel momento meno adatto. Cosa fai?",
+      "predict_text": "A {subject} viene una buona idea nel momento meno adatto. Cosa fa?",
+      "options": [
+        "La scrivo subito, ovunque",
+        "La racconto alla prima persona che trovo",
+        "Comincio subito, anche di notte",
+        "Me la ripeto finché svanisce"
+      ],
+      "question_text_en": "A good idea hits you at the worst possible moment. What do you do?",
+      "predict_text_en": "A good idea hits {subject} at the worst possible moment. What do they do?",
+      "options_en": [
+        "Write it down right away, anywhere",
+        "Tell the first person I see",
+        "Start right away, even at night",
+        "Repeat it to myself until it fades"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-051",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "casa_di_qualcuno",
+      "cooldown_class": "standard",
+      "question_text": "Entri per la prima volta a casa di qualcuno. Cosa noti subito?",
+      "predict_text": "{subject} entra per la prima volta a casa di qualcuno. Cosa nota subito?",
+      "options": [
+        "Il profumo, appena entro",
+        "Libri e oggetti sugli scaffali",
+        "Le foto appese alle pareti",
+        "Quanto è in ordine"
+      ],
+      "question_text_en": "You walk into someone’s home for the first time. What do you notice right away?",
+      "predict_text_en": "{subject} walks into someone’s home for the first time. What do they notice right away?",
+      "options_en": [
+        "The smell, the moment I walk in",
+        "The books and things on the shelves",
+        "The photos on the walls",
+        "How tidy it is"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-052",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 3,
+      "topic": "frase_che_mi_ripeto",
+      "cooldown_class": "deep",
+      "question_text": "Nella tua testa, qual è la frase che ti ripeti più spesso?",
+      "predict_text": "Qual è la frase che {subject} si ripete più spesso, nella sua testa?",
+      "options": [
+        "«Dai, ce la fai»",
+        "«Non pensarci troppo»",
+        "«Ci penso domani»",
+        "«Che bello, questo»"
+      ],
+      "question_text_en": "In your head, which line do you tell yourself most often?",
+      "predict_text_en": "Which line does {subject} tell themselves most often, in their head?",
+      "options_en": [
+        "“Come on, you’ve got this”",
+        "“Don’t overthink it”",
+        "“I’ll deal with it tomorrow”",
+        "“Oh, this is nice”"
+      ]
+    }
+  ],
+  "existing_en": [
+    {
+      "id": "quanto_mi_conosci-001",
+      "question_text_en": "After a rough day, what do you really want from me in the first ten minutes?",
+      "predict_text_en": "After a rough day, what does {subject} really want from you in the first ten minutes?",
+      "options_en": [
+        "A hug, no questions asked",
+        "To vent while you listen",
+        "A little silence and space",
+        "Something to take my mind off it"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-002",
+      "question_text_en": "If you had a free afternoon all to yourself, how would you really spend it?",
+      "predict_text_en": "If {subject} had a free afternoon all to themselves, how would they really spend it?",
+      "options_en": [
+        "Sleeping with no alarm",
+        "Walking with nowhere to go",
+        "Picking up a passion I set aside",
+        "Seeing someone I haven’t seen in ages"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-003",
+      "question_text_en": "What do you find hardest about receiving a gift?",
+      "predict_text_en": "What does {subject} find hardest about receiving a gift?",
+      "options_en": [
+        "Opening it in front of everyone",
+        "Not knowing how to return the favor",
+        "Showing how much I like it",
+        "Nothing, I love gifts"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-004",
+      "question_text_en": "On a trip, which part brings you the most joy?",
+      "predict_text_en": "On a trip, which part brings {subject} the most joy?",
+      "options_en": [
+        "Planning it down to the last detail",
+        "The moment of setting off",
+        "Getting lost with no plan",
+        "Telling the story once I’m back"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-005",
+      "question_text_en": "When something’s worrying you, what’s the first sign people can see?",
+      "predict_text_en": "When something’s worrying {subject}, what’s the first sign people can see?",
+      "options_en": [
+        "I sleep badly",
+        "I talk less than usual",
+        "I start tidying things up",
+        "I joke more than usual"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-006",
+      "question_text_en": "Which of these would you like to hear more often?",
+      "predict_text_en": "Which of these would {subject} like to hear more often?",
+      "options_en": [
+        "“I’ll take care of it”",
+        "“How did it really go?”",
+        "“I thought of you today”",
+        "“Shall we?”"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-007",
+      "question_text_en": "If you could learn one thing from scratch, effortlessly, what would you pick?",
+      "predict_text_en": "If {subject} could learn one thing from scratch, effortlessly, what would they pick?",
+      "options_en": [
+        "Playing an instrument",
+        "Speaking a new language",
+        "Cooking really well",
+        "Drawing or painting"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-008",
+      "question_text_en": "What recharges you most after a full week?",
+      "predict_text_en": "What recharges {subject} most after a full week?",
+      "options_en": [
+        "An evening with friends",
+        "A day with no plans",
+        "Something physical",
+        "A dinner just for the two of us"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-009",
+      "question_text_en": "When you’re angry with me, what would you like me to do first?",
+      "predict_text_en": "When {subject} is angry with you, what would they like you to do first?",
+      "options_en": [
+        "Ask me what happened",
+        "Give me a little time",
+        "Hug me, even if I resist",
+        "Make me laugh"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-010",
+      "question_text_en": "What’s your gut reaction when something unexpected happens?",
+      "predict_text_en": "What’s {subject}’s gut reaction when something unexpected happens?",
+      "options_en": [
+        "Come up with a plan B right away",
+        "Get annoyed, then get over it",
+        "Ask for help",
+        "Treat it like an adventure"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-011",
+      "question_text_en": "What do you need most when you’re about to face something important?",
+      "predict_text_en": "What does {subject} need most when they’re about to face something important?",
+      "options_en": [
+        "To hear that it’ll be fine",
+        "To prepare without distractions",
+        "To talk it through endlessly",
+        "Not to think about it until the last minute"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-012",
+      "question_text_en": "Which compliment do you most enjoy getting?",
+      "predict_text_en": "Which compliment does {subject} most enjoy getting?",
+      "options_en": [
+        "On what I’ve built",
+        "On how I treat people",
+        "On how I look",
+        "On my sense of humor"
+      ]
+    }
+  ],
+  "fixes": []
+}

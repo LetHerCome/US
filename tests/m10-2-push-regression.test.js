@@ -28,18 +28,18 @@ async function setup({ answers = [], preferences = [] } = {}) {
   return { admin, webpush, answered: (token) => call(token, 'daily_answer'), call };
 }
 
-test('M10.2A: prima risposta → solo il partner; seconda → entrambi con la copy privata su target today', async () => {
+test('M10.2A + US 1.0 (A6): prima risposta → solo il partner; seconda → solo il partner, copy privata su target today', async () => {
   const t = await setup({ answers: [answer(F, 'SEGRETO-F')] });
   await t.answered('jwt-f');
   assert.deepEqual(t.webpush.sent.map((s) => [s.endpoint, s.payload.body]), [['https://push.example/s-bea', 'Francesco ha risposto. Ora tocca a te.']]);
 
   t.admin.db.daily_answers.push(answer(B, 'SEGRETO-B'));
   const second = await t.answered('jwt-b');
-  assert.deepEqual(second.body, { delivered: 2, failed: 0 });
+  assert.deepEqual(second.body, { delivered: 1, failed: 0 });
   const reveal = t.webpush.sent.slice(1);
-  assert.deepEqual(reveal.map((s) => s.endpoint).sort(), ['https://push.example/s-bea', 'https://push.example/s-fra']);
+  assert.deepEqual(reveal.map((s) => s.endpoint), ['https://push.example/s-fra']);
   for (const { payload } of reveal) {
-    assert.equal(payload.title, 'US. · Today');
+    assert.equal(payload.title, 'US. · La domanda di oggi');
     assert.equal(payload.body, 'Le vostre risposte sono pronte ♡');
     assert.equal(payload.target, 'today');
     assert.equal(payload.url, '/?open=today&from=push');
@@ -61,12 +61,14 @@ test('M10.2A: retry non duplica il reveal; today=false rispettato', async () => 
   assert.equal(off.webpush.sent.length, 0);
 });
 
-test('M10.2: nessuna push per reazione, ricevuta o dismiss — nessun tipo evento li accetta', async () => {
+test('M10.2: nessuna push per ricevuta o dismiss; US 1.0 (O2) daily_reaction solo con una reazione salvata', async () => {
   const t = await setup({ answers: [answer(F, 'a'), answer(B, 'b')] });
-  for (const type of ['daily_reaction', 'daily_answer_reaction', 'reveal_seen', 'daily_reveal_dismiss']) {
+  for (const type of ['daily_answer_reaction', 'reveal_seen', 'daily_reveal_dismiss']) {
     const response = await t.call('jwt-f', type);
     assert.equal(response.status, 400, type);
   }
+  // No stored reaction of the caller (and here not even a valid question id): refused, nothing sent.
+  assert.ok((await t.call('jwt-f', 'daily_reaction')).status >= 400);
   assert.equal(t.webpush.sent.length, 0);
   assert.equal(t.admin.db.push_event_log.length, 0);
 });
