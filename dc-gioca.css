@@ -10,7 +10,7 @@
 /* ---------- Giochi / Sintonia segmented control ---------- */
 #quiz .us-gioca-tabs{margin:10px 0 18px;padding:4px;background:var(--us-color-surface);border:1px solid var(--us-color-line);transition:opacity 240ms var(--us-ease-standard)}
 #quiz .us-gioca-tabs::before{background:var(--us-menta);box-shadow:none;transition:transform 480ms var(--us-ease-spring)}
-#quiz .us-gioca-tab{min-height:44px;font-size:15px;font-weight:600;color:var(--us-color-text-3);transition:color 250ms var(--us-ease-standard)}
+#quiz .us-gioca-tab{min-height:44px;font-size:15px;font-weight:600;color:var(--us-color-text-3);transition:color 250ms ease}
 #quiz .us-gioca-tab[aria-selected="true"]{color:var(--us-inchiostro)}
 #quiz .us-gioca-tab:focus-visible{outline:2px solid var(--us-menta);outline-offset:3px}
 
@@ -21,170 +21,110 @@
 #quiz .us-gv2-icon[data-gv2-icon="images"]{-webkit-mask-image:url("/assets/icons/phosphor/images-regular.svg");mask-image:url("/assets/icons/phosphor/images-regular.svg")}
 #quiz .us-gv2-icon[data-gv2-icon="arrows-clockwise"]{-webkit-mask-image:url("/assets/icons/phosphor/arrows-clockwise-regular.svg");mask-image:url("/assets/icons/phosphor/arrows-clockwise-regular.svg")}
 
-/* ---------- Hub ---------- */
-#quiz .us-gv2-hub{gap:14px}
-#quiz .us-gv2-kicker{font:700 11px/1.2 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-menta)}
+/* ---------- Hub: the mockup's Giochi (gioca body.html + style.css .challenge/.week/.sec-h/.games/.game, style2.css .weekly) ---------- */
+/* Round 3: one block, mockup values literally. The page is the mockup's .view (padding 20px 18px, body 15px/1.5);
+   the panel is a plain column whose spacing comes from the blocks' own margins, as in the mockup. */
+#quiz>.us-gv2-page{padding-top:12px;padding-inline:2px;line-height:1.5}
+#quiz .us-gioca-tab{height:44px;min-height:44px;padding:0;line-height:1.5}
+#quiz #quizHub.us-gv2-hub{display:block;gap:0;font-size:15px;line-height:1.5}
+#quiz .us-gv2-kicker{font:700 11px/1.5 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-menta)}
 
-/* Sfida di oggi: the one mint card, dark ink */
+/* Sfida di oggi: .challenge — the one mint card, dark ink */
 #quiz .us-gv2-daily-slot{min-height:0}
 #quiz .us-gv2-daily-slot>.us-gv2-daily,#quiz .us-gv2-daily-slot>.us-gv4-daily-pending{min-height:0;height:auto}
 #quiz .us-gv2-daily,
-#quiz .us-gv2-daily[data-daily-state]{display:grid;gap:8px;padding:20px 18px 18px;border:0;border-radius:28px;background:var(--us-menta);color:var(--us-inchiostro);box-shadow:none}
+#quiz .us-gv2-daily[data-daily-state]{position:relative;isolation:isolate;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr);justify-items:stretch;gap:8px;width:100%;padding:20px 18px 18px;border:0;border-radius:28px;background:var(--us-menta);color:var(--us-inchiostro);box-shadow:none;text-align:left;font-weight:400;line-height:1.5}
 #quiz .us-gv2-daily::before,#quiz .us-gv2-daily::after{content:"";position:absolute;z-index:-1;border-radius:50%;pointer-events:none}
 #quiz .us-gv2-daily::before{right:30px;top:-30px;width:120px;height:120px;background:rgba(26,16,32,.07)}
 #quiz .us-gv2-daily::after{right:-50px;top:-60px;width:190px;height:190px;background:rgba(255,255,255,.22)}
 #quiz .us-gv4-daily-art{display:none}
-#quiz .us-gv2-daily-copy{gap:8px;max-width:none}
-#quiz .us-gv2-daily-copy small{font:700 11px/1.2 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-inchiostro);opacity:.7}
-#quiz .us-gv2-daily-copy b{display:block;-webkit-line-clamp:unset;max-width:15ch;overflow:visible;font:500 26px/1.1 var(--us-font-display);letter-spacing:-.01em;color:var(--us-inchiostro);text-wrap:balance;overflow-wrap:anywhere}
-#quiz .us-gv2-daily-state{margin:0;font-size:14px;font-weight:500;line-height:1.35;color:var(--us-inchiostro);opacity:.75}
-#quiz .us-gv4-daily-footer{margin-top:8px;gap:10px}
-#quiz .us-gv4-daily-footer>span:first-child{font-size:14px;font-weight:500;color:var(--us-inchiostro);opacity:.85}
-#quiz .us-gv2-daily-cta{min-height:44px;padding:0 18px;border-radius:999px;background:var(--us-inchiostro);color:var(--us-latte);font:700 15px/1 var(--us-font-ui);box-shadow:none}
+#quiz .us-gv2-daily-copy{display:grid;gap:8px;width:100%;max-width:none}
+#quiz .us-gv2-daily-copy small{font:700 11px/1.5 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-inchiostro);opacity:.7}
+#quiz .us-gv2-daily-copy b{display:block;-webkit-line-clamp:unset;max-width:15ch;overflow:visible;font:500 26px/1.1 var(--us-font-display);letter-spacing:0;color:var(--us-inchiostro);text-wrap:wrap;overflow-wrap:anywhere}
+#quiz .us-gv2-daily-state{margin:0;font-size:14px;font-weight:500;line-height:1.5;color:var(--us-inchiostro);opacity:.75}
+#quiz .us-gv4-daily-footer{display:flex;grid-column:1/-1;justify-self:stretch;width:100%;justify-content:space-between;align-items:center;gap:10px;margin-top:8px}
+#quiz .us-gv4-daily-footer>span:first-child{font-size:14px;font-weight:500;line-height:1.5;color:var(--us-inchiostro);opacity:.75}
+#quiz .us-gv2-daily-cta{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:999px;background:var(--us-inchiostro);color:var(--us-latte);font:700 15px/1.5 var(--us-font-ui);box-shadow:none;white-space:nowrap}
 #quiz .us-gv2-daily-cta>span[aria-hidden="true"]{display:none}
 #quiz .us-gv2-daily:focus-visible{outline:2px solid var(--us-latte);outline-offset:3px}
-#quiz .us-gv4-daily-pending{gap:8px;padding:20px 18px;border-radius:28px;border:1px solid var(--us-color-line);background:var(--us-color-surface)}
-#quiz .us-gv4-daily-pending-title{font:700 11px/1.2 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-menta)}
+#quiz .us-gv4-daily-pending{display:grid;gap:8px;padding:20px 18px;border-radius:28px;border:1px solid var(--us-color-line);background:var(--us-color-surface)}
+#quiz .us-gv4-daily-pending-title{font:700 11px/1.5 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-menta)}
 #quiz .us-gv4-daily-pending small{font-size:15px;color:var(--us-color-text-2)}
 
-/* the week: hairline days, today in milk */
-#quiz .us-gv4-week{gap:0}
-#quiz .us-gv4-week-head{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
-#quiz .us-gv4-days{gap:6px}
-#quiz .us-gv4-day{min-height:0;gap:2px;padding:8px 0 9px;border-radius:16px;border:1px solid var(--us-color-line);background:transparent;color:var(--us-color-text-3);box-shadow:none}
-#quiz .us-gv4-day small{font-size:11px;font-weight:600;color:var(--us-color-text-3)}
-#quiz .us-gv4-day b{font-size:17px;font-weight:600;color:var(--us-color-text)}
-#quiz .us-gv4-day.is-today{background:var(--us-latte);border-color:var(--us-latte);box-shadow:none}
-#quiz .us-gv4-day.is-today small,#quiz .us-gv4-day.is-today b{color:var(--us-inchiostro)}
-#quiz .us-gv4-day i{position:static;width:7px;height:7px;margin-top:1px;background:var(--us-noi)}
+/* the week: .week/.wd — hairline days, today in milk, a dot for who was there */
+#quiz .us-gv2-week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:14px 0 26px}
+#quiz .us-gv2-wd{display:grid;justify-items:center;gap:2px;padding:8px 0 9px;border-radius:16px;border:1px solid var(--us-color-line);font-size:11px;font-weight:600;line-height:1.5;color:var(--us-color-text-3)}
+#quiz .us-gv2-wd b{font-size:17px;font-weight:900;color:var(--us-color-text);font-variant-numeric:tabular-nums}
+#quiz .us-gv2-wd-pair{display:flex;height:7px;align-items:center}
+#quiz .us-gv2-wd-pair i{display:block;width:7px;height:7px;border-radius:50%;background:var(--us-noi)}
+#quiz .us-gv2-wd-pair i[data-who="tu"]{background:var(--us-tu)}
+#quiz .us-gv2-wd-pair i[data-who="partner"]{background:var(--us-partner)}
+#quiz .us-gv2-wd.is-today{background:var(--us-latte);border-color:var(--us-latte)}
+#quiz .us-gv2-wd.is-today,#quiz .us-gv2-wd.is-today b{color:var(--us-inchiostro)}
 
-/* how many rounds are left this week */
-#quiz .us-gv2-head{min-height:0;margin:0}
-#quiz .us-gv2-rhythm{display:flex;align-items:center;gap:10px}
-#quiz .us-gv2-rhythm-row{gap:8px;color:var(--us-color-text-2)}
-#quiz .us-gv2-rhythm-row b{font-size:13px;font-weight:600;color:var(--us-color-text-2)}
-#quiz .us-gv2-rhythm-dots{gap:4px}
-#quiz .us-gv2-rhythm-dots i{width:7px;height:7px;border-radius:50%;background:var(--us-menta);box-shadow:none}
-#quiz .us-gv2-rhythm-dots i[data-on="true"]{background:var(--us-color-elevated)}
+/* I vostri giochi: .sec-h */
+#quiz .us-gv2-choose{display:block;margin:0}
+#quiz .us-gv2-section-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 2px 12px}
+#quiz .us-gv2-section-title{margin:0;font:400 26px/1.5 var(--us-font-display);letter-spacing:0;color:var(--us-color-text)}
+#quiz .us-gv2-section-head small{font-size:13px;line-height:1.5;color:var(--us-color-text-3)}
 
-/* section titles */
-#quiz .us-gv2-section-head{align-items:baseline;margin:6px 2px 0}
-#quiz .us-gv2-section-title{margin:0;font:400 26px/1.15 var(--us-font-display);letter-spacing:-.01em;color:var(--us-color-text)}
-#quiz .us-gv2-section-head small{font-size:13px;color:var(--us-color-text-3)}
-/* room above the games: Maudit can sit on this rim (pet.js needs ~36px clear) */
-#quiz .us-gv2-choose{display:grid;gap:12px;margin-top:12px}
+/* .games/.game — flat night tiles, the mockup's art, Per voi tall with my colour washing in */
+#quiz #quizHub .us-gv2-game-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch}
+#quiz #quizHub .us-gv2-game,
+#quiz #quizHub .us-gv2-pervoi{position:relative;isolation:auto;overflow:visible;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:none;align-content:space-between;align-items:stretch;justify-items:stretch;gap:16px;min-height:132px;margin:0;padding:14px;border-radius:22px;border:1px solid var(--us-color-line);background:var(--us-color-surface);box-shadow:none;color:var(--us-color-text);text-align:left;font:400 15px/1.5 var(--us-font-ui);opacity:1}
+#quiz #quizHub .us-gv2-pervoi{grid-column:1;grid-row:span 2;background:linear-gradient(170deg,color-mix(in srgb,var(--us-tu) 16%,transparent),transparent 60%),var(--us-color-surface)}
+#quiz #quizHub .us-gv2-game.is-swipe{grid-column:2;grid-row:1}
+#quiz #quizHub .us-gv2-game[data-gv2-family="scopritevi"]{grid-column:2;grid-row:2}
+#quiz #quizHub .us-gv2-game[data-gv2-family]:not([data-gv2-family="scopritevi"]){grid-column:auto;grid-row:auto}
+#quiz #quizHub .us-gv2-game::after{display:none}
+#quiz #quizHub :is(.us-gv2-game,.us-gv2-pervoi) .us-gv2-glyph{display:block;position:static;width:44px;height:44px;margin:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none;color:inherit;opacity:1;animation:none}
+#quiz #quizHub :is(.us-gv2-game,.us-gv2-pervoi) .us-gv2-glyph::before,#quiz #quizHub :is(.us-gv2-game,.us-gv2-pervoi) .us-gv2-glyph::after{content:none;display:none}
+#quiz #quizHub .us-gv2-art{display:block;width:44px;height:44px;overflow:visible}
+#quiz #quizHub .us-gv2-art .f-rosa{fill:var(--us-rosa)}
+#quiz #quizHub .us-gv2-art .f-lilla{fill:var(--us-lilla)}
+#quiz #quizHub .us-gv2-art .f-ambra{fill:var(--us-ambra)}
+#quiz #quizHub .us-gv2-art .f-night{fill:var(--us-color-elevated)}
+#quiz #quizHub .us-gv2-art .f-ink{fill:var(--us-inchiostro)}
+#quiz #quizHub .us-gv2-art .s-menta{stroke:var(--us-menta)}
+#quiz #quizHub .us-gv2-art .s-noi{stroke:var(--us-noi)}
+#quiz #quizHub .us-gv2-art .s-rosa{stroke:var(--us-rosa)}
+#quiz #quizHub .us-gv2-art .s-ink{stroke:var(--us-inchiostro)}
+#quiz #quizHub .us-gv2-art .is-screen{mix-blend-mode:screen}
+#quiz #quizHub :is(.us-gv2-game-copy,.us-gv2-pervoi-copy){display:block;min-width:0;margin:0;align-self:auto}
+#quiz #quizHub :is(.us-gv2-game-copy,.us-gv2-pervoi-copy) b{display:block;margin:0;font:500 21px/1.1 var(--us-font-display);letter-spacing:0;color:var(--us-color-text);overflow-wrap:normal}
+#quiz #quizHub :is(.us-gv2-game-copy,.us-gv2-pervoi-copy) small{display:block;margin:3px 0 0;overflow:visible;-webkit-line-clamp:unset;font-size:13px;font-weight:400;line-height:1.5;color:var(--us-color-text-3)}
+#quiz #quizHub .us-gv2-pervoi-copy small.us-gv2-pervoi-note{font-weight:600;color:var(--us-partner)}
+#quiz #quizHub .us-gv2-pervoi-cta{display:inline-flex;align-items:center;justify-content:center;justify-self:start;gap:6px;min-height:44px;margin:0;padding:0 18px;border:0;border-radius:999px;background:var(--us-tu);color:var(--us-inchiostro);font:700 15px/1.5 var(--us-font-ui);white-space:nowrap;box-shadow:none}
+#quiz #quizHub .us-gv2-game[aria-disabled="true"] :is(.us-gv2-glyph,.us-gv2-game-copy){opacity:.45}
+#quiz #quizHub :is(.us-gv2-game,.us-gv2-pervoi):focus-visible,#quiz .us-gv2-row:focus-visible,#quiz .us-gv2-done>summary:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
+/* no loops in Gioca: "your turn" on Per voi is a still ring in my colour */
+#quiz #quizHub .us-gv2-pervoi.us-attention-orbit::after{content:"";position:absolute;inset:-1px;width:auto;height:auto;padding:0;border-radius:inherit;background:none;-webkit-mask:none;mask:none;box-shadow:inset 0 0 0 1.5px var(--us-tu);transform:none;animation:none;opacity:0;pointer-events:none}
+#quiz #quizHub .us-gv2-pervoi.us-attention-orbit[data-us-attention="on"]::after{opacity:1}
+#quiz #quizHub .us-gv2-pervoi [data-us-attention-icon]{animation:none}
 
-/* I vostri giochi */
-#quiz .us-gv2-game-grid{gap:8px}
-#quiz .us-gv2-game,
-#quiz .us-gv2-game.is-swipe,
-#quiz .us-gv2-game[data-gv2-family]{min-height:132px;gap:16px;padding:14px;border-radius:22px;background:var(--us-color-surface);border:1px solid var(--us-color-line);box-shadow:none;align-content:space-between}
-#quiz .us-gv2-game::after{display:none}
-#quiz .us-gv2-game .us-gv2-glyph,
-#quiz .us-gv2-game.is-swipe .us-gv2-glyph,
-#quiz .us-gv2-game[data-gv2-family="scopritevi"] .us-gv2-glyph{width:44px;height:44px;border-radius:0;background:transparent;box-shadow:none;place-items:center start;color:var(--gv2-tint)}
-#quiz .us-gv2-game .us-gv2-glyph .us-gv2-icon{width:30px;height:30px;max-width:none;max-height:none}
-#quiz .us-gv2-game.is-swipe{--gv2-tint:var(--us-ambra)}
-#quiz .us-gv2-game[data-gv2-family="scopritevi"]{--gv2-tint:var(--us-menta)}
-#quiz .us-gv2-game[data-gv2-family="confrontatevi"]{--gv2-tint:var(--us-noi)}
-#quiz .us-gv2-game[data-gv2-family="ridete"]{--gv2-tint:var(--us-ambra)}
-#quiz .us-gv2-game[data-gv2-family="quanto_mi_conosci"]{--gv2-tint:var(--us-rosa)}
-#quiz .us-gv2-game[data-gv2-family="rivivete"]{--gv2-tint:var(--us-ambra)}
-#quiz .us-gv2-game[data-gv2-family="e_se"]{--gv2-tint:var(--us-lilla)}
-#quiz .us-gv2-game-copy{gap:3px}
-#quiz .us-gv2-game-copy b,
-#quiz .us-gv2-game.is-swipe .us-gv2-game-copy b,
-#quiz .us-gv2-game[data-gv2-family="scopritevi"] .us-gv2-game-copy b{font:500 21px/1.1 var(--us-font-display);letter-spacing:-.01em;color:var(--us-color-text)}
-#quiz .us-gv2-game-copy small,
-#quiz .us-gv2-game.is-swipe .us-gv2-game-copy small,
-#quiz .us-gv2-game[data-gv2-family="scopritevi"] .us-gv2-game-copy small{display:block;font-size:13px;line-height:1.3;color:var(--us-color-text-3)}
-#quiz .us-gv2-game-state,
-#quiz .us-gv2-game.is-swipe .us-gv2-game-state,
-#quiz .us-gv2-game[data-gv2-family="scopritevi"] .us-gv2-game-state{gap:5px;margin:0;padding:5px 10px;border-radius:999px;background:var(--us-color-surface-2);color:var(--us-color-text-2);font:700 11px/1 var(--us-font-ui)}
-#quiz .us-gv2-game-state[data-state="open"]{background:var(--us-menta);color:var(--us-inchiostro)}
-#quiz .us-gv2-game-state[data-state="open"][data-tone="waiting"]{background:var(--us-color-surface-2);color:var(--us-color-text-2)}
-#quiz .us-gv2-game-state .us-gv2-icon{width:12px;height:12px}
-#quiz .us-gv2-game[aria-disabled="true"]{opacity:1}
-#quiz .us-gv2-game[aria-disabled="true"] .us-gv2-glyph,#quiz .us-gv2-game[data-gv2-mode-state="played"] .us-gv2-glyph{opacity:.45}
-#quiz .us-gv2-game[aria-disabled="true"] .us-gv2-game-copy b{color:var(--us-color-text-2)}
-#quiz .us-gv2-game:focus-visible,#quiz .us-gv2-pervoi:focus-visible,#quiz .us-gv2-row:focus-visible,#quiz .us-gv2-done>summary:focus-visible{outline:2px solid var(--us-menta);outline-offset:3px}
+/* La vostra domanda: .weekly — last, after the games */
+#quiz #quizHub .us-gv2-weekly{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:4px;margin:10px 0 0;padding:18px;border-radius:24px;background:radial-gradient(90% 120% at 100% 0%,color-mix(in srgb,var(--us-menta) 16%,transparent),transparent 70%),var(--us-color-surface);border:1px solid var(--us-color-line);box-shadow:none}
+#quiz #quizHub .us-gv2-weekly-head{display:block;gap:0}
+#quiz #quizHub .us-gv2-weekly-head .us-gv2-glyph{display:none}
+#quiz #quizHub .us-gv2-weekly-head>div{display:grid;gap:4px;min-width:0}
+#quiz #quizHub .us-gv2-weekly-head b{display:block;margin:0;font:400 24px/1.1 var(--us-font-display);color:var(--us-color-text)}
+#quiz #quizHub .us-gv2-weekly-head small{display:block;margin:0;font-size:13px;line-height:1.5;color:var(--us-color-text-3)}
+#quiz #quizHub .us-gv2-weekly .us-gv2-weekly-cta{display:inline-flex;align-items:center;justify-content:center;justify-self:start;width:auto;min-height:44px;margin:8px 0 0;padding:0 18px;border:0;border-radius:999px;background:var(--us-tu);color:var(--us-inchiostro);font:700 15px/1.5 var(--us-font-ui);box-shadow:none}
+#quiz #quizHub .us-gv2-weekly blockquote{margin:6px 0 0;padding:12px 14px;border-radius:16px;border:0;background:var(--us-color-surface-2);font:400 17px/1.3 var(--us-font-display);color:var(--us-color-text)}
+#quiz #quizHub .us-gv2-note{font-size:12px;line-height:1.5;color:var(--us-color-text-3)}
 
-/* Per voi: the tall tile, my colour washing in from the top, two colours as its mark */
-#quiz .us-gv2-pervoi,
-#quiz .us-gv2-pervoi[data-gv2-state="played"]{gap:16px;padding:14px;border-radius:22px;border:1px solid var(--us-color-line);background:linear-gradient(170deg,color-mix(in srgb,var(--us-tu) 16%,transparent),transparent 60%),var(--us-color-surface);box-shadow:none;color:var(--us-color-text)}
-#quiz .us-gv2-pervoi .us-gv2-glyph,
-#quiz .us-gv2-pervoi[data-gv2-state="played"] .us-gv2-glyph{position:relative;width:44px;height:44px;border-radius:0;background:transparent;box-shadow:none;animation:none}
-#quiz .us-gv2-pervoi .us-gv2-glyph .us-gv2-icon{display:none}
-#quiz .us-gv2-pervoi .us-gv2-glyph::before,#quiz .us-gv2-pervoi .us-gv2-glyph::after{content:"";position:absolute;top:10px;width:24px;height:24px;border-radius:50%}
-#quiz .us-gv2-pervoi .us-gv2-glyph::before{left:0;background:var(--us-rosa)}
-#quiz .us-gv2-pervoi .us-gv2-glyph::after{left:10px;background:var(--us-lilla);mix-blend-mode:screen}
-#quiz .us-gv2-pervoi-copy{gap:3px}
-#quiz .us-gv2-pervoi-copy .us-gv2-kicker{margin-bottom:4px;color:var(--us-tu)}
-#quiz .us-gv2-pervoi-copy b,
-#quiz .us-gv2-pervoi[data-gv2-state="played"] .us-gv2-pervoi-copy b{font:500 21px/1.1 var(--us-font-display);letter-spacing:-.01em;color:var(--us-color-text)}
-#quiz .us-gv2-pervoi-copy small{-webkit-line-clamp:4;font-size:13px;line-height:1.3;color:var(--us-color-text-3)}
-#quiz .us-gv2-pervoi-copy small.us-gv2-pervoi-note{margin-top:2px;font-weight:600;color:var(--us-partner)}
-#quiz .us-gv2-pervoi-cta,
-#quiz .us-gv2-pervoi[data-gv2-state="played"] .us-gv2-pervoi-cta{min-height:44px;padding:0 18px;border-radius:999px;background:var(--us-tu);color:var(--us-inchiostro);font:700 15px/1 var(--us-font-ui);box-shadow:none;border:0}
-#quiz .us-gv2-pervoi[data-gv2-state="waiting"] .us-gv2-pervoi-cta,
-#quiz .us-gv2-pervoi[data-gv2-state="played"] .us-gv2-pervoi-cta{background:transparent;color:var(--us-color-text-2);box-shadow:inset 0 0 0 1px var(--us-color-line-strong)}
-#quiz .us-gv2-pervoi[data-gv2-state="played"]{opacity:1}
-#quiz .us-gv2-pervoi[data-gv2-state="played"] .us-gv2-pervoi-copy,#quiz .us-gv2-pervoi[data-gv2-state="played"] .us-gv2-glyph{opacity:.7}
-/* no loops in Gioca: "your turn" is a still ring in my colour */
-#quiz .us-gv2-pervoi.us-attention-orbit::after{inset:-1px;top:-1px;right:-1px;bottom:-1px;left:-1px;width:auto;height:auto;padding:0;border-radius:inherit;background:none;-webkit-mask:none;mask:none;box-shadow:inset 0 0 0 1.5px var(--us-tu);transform:none;animation:none;opacity:0}
-#quiz .us-gv2-pervoi.us-attention-orbit[data-us-attention="on"]::after{opacity:1}
-#quiz .us-gv2-pervoi [data-us-attention-icon]{animation:none}
-
-/* rounds to continue, completed rounds */
-#quiz .us-gv2-rows{gap:8px}
-#quiz .us-gv2-row{min-height:60px;padding:10px 14px;border-radius:20px;background:var(--us-color-surface);border:1px solid var(--us-color-line);box-shadow:none}
+/* rounds no tile stands for, completed rounds: quiet rows at the end */
+#quiz #quizHub .us-gv2-continue,#quiz #quizHub .us-gv2-done{margin-top:26px}
+#quiz .us-gv2-continue>.us-gv2-section-title{margin:0 2px 12px}
+#quiz .us-gv2-rows{display:grid;gap:8px}
+#quiz .us-gv2-row{min-height:60px;margin:0;padding:10px 14px;border-radius:20px;background:var(--us-color-surface);border:1px solid var(--us-color-line);box-shadow:none}
 #quiz .us-gv2-row .us-gv2-glyph{width:36px;height:36px;border-radius:12px;background:var(--us-color-surface-2);box-shadow:none;color:var(--us-menta)}
 #quiz .us-gv2-row-copy b{font-size:15px;font-weight:600}
 #quiz .us-gv2-row-state{padding:5px 10px;border-radius:999px;background:var(--us-color-surface-2);color:var(--us-color-text-2);font:700 11px/1 var(--us-font-ui)}
 #quiz .us-gv2-row-state[data-tone="turn"],#quiz .us-gv2-row-state[data-tone="ready"]{background:var(--us-menta);color:var(--us-inchiostro)}
 #quiz .us-gv2-done{border-radius:22px;background:var(--us-color-surface);border:1px solid var(--us-color-line)}
 #quiz .us-gv2-done>summary{min-height:56px}
-
-/* La vostra domanda della settimana */
-#quiz .us-gv2-weekly,
-#quiz .us-gv2-weekly.is-open{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;padding:18px;border-radius:24px;background:radial-gradient(90% 120% at 100% 0%,color-mix(in srgb,var(--us-menta) 16%,transparent),transparent 70%),var(--us-color-surface);border:1px solid var(--us-color-line);box-shadow:none}
-#quiz .us-gv2-weekly-head{gap:0}
-#quiz .us-gv2-weekly-head .us-gv2-glyph{display:none}
-#quiz .us-gv2-weekly-head>div{gap:4px}
-#quiz .us-gv2-weekly-head b{font:400 24px/1.1 var(--us-font-display);color:var(--us-color-text)}
-#quiz .us-gv2-weekly-head small{font-size:13px;line-height:1.35;color:var(--us-color-text-3)}
-#quiz .us-gv2-weekly .us-gv2-weekly-cta,
-#quiz .us-gv2-weekly.is-open .us-gv2-weekly-cta{justify-self:start;width:auto;min-height:44px;margin-top:8px;padding:0 18px;border-radius:999px}
-#quiz .us-gv2-weekly blockquote{margin:6px 0 0;padding:12px 14px;border-radius:16px;border:0;background:var(--us-color-surface-2);font:400 17px/1.3 var(--us-font-display);color:var(--us-color-text)}
-#quiz .us-gv2-note{font-size:12px;line-height:1.4;color:var(--us-color-text-3)}
-
-/* ---------- Parity: the mockup's page box and type rhythm (view padding 20px 18px, body line-height 1.5) ---------- */
-#quiz>.us-gv2-page{padding-top:12px;padding-inline:2px;line-height:1.5}
-#quiz .us-gioca-tabs{margin:10px 0 18px}
-#quiz .us-gioca-tab{height:44px;min-height:44px;padding:0;line-height:1.5}
-#quiz .us-gv2-kicker,#quiz .us-gv2-daily-copy small,#quiz .us-gv4-daily-pending-title{line-height:1.5}
-#quiz .us-gv2-daily-state,#quiz .us-gv4-daily-footer>span:first-child{line-height:1.5}
-#quiz .us-gv2-daily-cta,#quiz .us-gv2-pervoi-cta{line-height:1.5}
-#quiz .us-gv2-section-head{margin:0 2px 0}
-#quiz .us-gv2-section-title{line-height:1.5}
-#quiz .us-gv2-section-head small{line-height:1.5}
-#quiz .us-gv2-choose{gap:12px;margin-top:26px}
-#quiz .us-gv2-game-copy small,#quiz .us-gv2-pervoi-copy small,
-#quiz .us-gv2-game.is-swipe .us-gv2-game-copy small,#quiz .us-gv2-game[data-gv2-family="scopritevi"] .us-gv2-game-copy small{display:block;margin-top:3px;font-weight:400;line-height:1.5;-webkit-line-clamp:unset}
-#quiz .us-gv2-game-copy,#quiz .us-gv2-pervoi-copy{gap:0}
-#quiz .us-gv2-game,#quiz .us-gv2-pervoi{font-weight:400;line-height:1.5}
-/* "Disponibile" stays for screen readers; the card itself is as quiet as the mockup's */
-#quiz .us-gv2-game-state[data-state="ready"]{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-#quiz .us-gv2-weekly-head small{line-height:1.5}
-#quiz .us-gv2-weekly .us-gv2-weekly-cta,#quiz .us-gv2-weekly.is-open .us-gv2-weekly-cta{margin:8px 0 0;padding:0 18px;font:700 15px/1.5 var(--us-font-ui);background:var(--us-tu);color:var(--us-inchiostro)}
-#quiz .us-gv2-weekly.is-open{grid-template-columns:minmax(0,1fr);align-items:start}
-#quiz .us-gv2-weekly-head{display:block}
-#quiz .us-gv2-weekly-head>div{display:grid;gap:4px}
-#quiz .us-gv2-weekly-head b,#quiz .us-gv2-weekly-head small{margin:0}
-#quiz .us-gv4-daily-footer{display:flex;width:100%;justify-content:space-between;align-items:center}
-#quiz .us-gv2-daily-copy{width:100%}
-#quiz .us-gv2-daily,#quiz .us-gv2-daily[data-daily-state]{grid-template-columns:minmax(0,1fr);justify-items:stretch;text-align:left}
-#quiz .us-gv4-daily-footer{justify-self:stretch;grid-column:1/-1}
+#quiz #quizHub .us-gv2-empty{margin:0}
 
 /* ---------- A round is the mockup's Foglio: over Gioca, a scrim, a tall sheet ---------- */
 /* games.js builds .us-gv2-scrim + .us-gv2-sheet (handle, head, flow) and drives its motion:
@@ -342,11 +282,33 @@ body.us-gv2-sheet-open{overflow:hidden}
 #quiz .us-gv2-author{gap:6px}
 #quiz .us-gv2-author .us-gv2-icon{width:14px;height:14px;flex:none}
 
+/* ---------- Round 3: sheet details the mockup sets (body letter-spacing normal, .btn-ghost 15px, disabled .45 with no filter) ---------- */
+#quiz>.us-gv2-page,#quiz .us-gv2-panel{letter-spacing:normal}
+#quiz .us-gv2-flow .us-gv2-actions button.ghost{font-size:15px;line-height:1.15}
+/* .opt is line-height 1.25 for two-line options too (games.css sets the span to 1.35) */
+#quiz .us-gv2-choice>span{line-height:inherit}
+/* the mockup's .field textarea:focus is the 2px outline only: no extra focus halo */
+#quiz .us-gv2-flow textarea:focus,#quiz .us-gv2-flow input:not([type="radio"]):not([type="checkbox"]):focus{box-shadow:none!important}
+#quiz .us-gv2-flow .us-gv2-actions button:disabled,#quiz .us-gv2-flow .us-gv2-submit:disabled,#quiz .us-gv2-swipe-actions button:disabled{opacity:.45!important;filter:none!important}
+/* waiting: your own answers, folded under the buttons */
+#quiz .us-gv2-mine-fold{margin:4px 0 0;border-radius:18px;background:var(--us-color-surface-2)}
+#quiz .us-gv2-mine-fold>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:48px;padding:0 16px;list-style:none;cursor:pointer;font-size:14px;font-weight:600;color:var(--us-color-text-2)}
+#quiz .us-gv2-mine-fold>summary::-webkit-details-marker{display:none}
+#quiz .us-gv2-mine-fold>summary b{font-size:12px;font-weight:700;color:var(--us-color-text-3)}
+#quiz .us-gv2-mine-fold>summary:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
+#quiz .us-gv2-mine-fold>ol{margin:0;padding:0 8px 8px}
+#quiz .us-gv2-mine-fold .us-gv2-mine li,#quiz .us-gv2-mine-fold .us-gv2-swipe-mine li{background:var(--us-color-elevated)}
+/* Le vostre scelte: .grp-l 18px 4px 8px; the "Diverse" tag has a 1px border, as .rv-tag.ne */
+#quiz .us-gv5-reveal-label{margin:18px 4px 8px}
+#quiz .us-gv5-reveal-tag[data-gv5-tag="different"]{border:1px solid var(--us-color-line-strong);box-shadow:none}
+/* the 1.0 move after a result sits after the mockup's list */
+#quiz .us-gv5-reveal>.us-gv5-move{margin-top:4px}
+
 /* ---------- La vostra domanda: create (the mockup's Foglio) ---------- */
 #quiz .us-gv2-weekly-form .us-gv2-lead{margin:0!important;font:400 15px/1.5 var(--us-font-ui)!important;color:var(--us-color-text-2)!important;text-align:left}
 #quiz .us-gv2-segment{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;margin:0;padding:4px;border-radius:999px;background:var(--us-color-surface-2);border:0;min-width:0}
 #quiz .us-gv2-segment legend{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-#quiz .us-gv2-segment label{position:relative;display:grid;place-items:center;min-height:40px;margin:0;padding:0 10px;border:0;border-radius:999px;background:transparent;color:var(--us-color-text-3);font:600 14px/1.2 var(--us-font-ui);text-align:center;cursor:pointer}
+#quiz .us-gv2-segment label{position:relative;display:grid;place-items:center;min-height:40px;margin:0;padding:0 10px;border:0;border-radius:999px;background:transparent;color:var(--us-color-text-3);font:600 14px/1.5 var(--us-font-ui);text-align:center;cursor:pointer}
 #quiz .us-gv2-segment label:has(input:checked){background:var(--us-latte);color:var(--us-inchiostro)}
 #quiz .us-gv2-segment input{position:absolute;width:1px;height:1px;opacity:0;margin:0;pointer-events:none}
 #quiz .us-gv2-segment label:has(input:focus-visible){outline:2px solid var(--us-noi);outline-offset:2px}
@@ -564,9 +526,6 @@ body.us-gv2-sheet-open{overflow:hidden}
 
 /* ---------- 360px and large text ---------- */
 @media (max-width:360px){
-  #quiz .us-gv2-daily-copy b{font-size:24px}
-  #quiz .us-gv4-days{gap:4px}
-  #quiz .us-gv4-day{border-radius:14px}
   #quiz .us-gv2-game,#quiz .us-gv2-game.is-swipe,#quiz .us-gv2-game[data-gv2-family]{padding:12px}
   #quiz .us-gv2-game-copy b,#quiz .us-gv2-pervoi-copy b{font-size:19px}
   #quiz .us-gioca-sintonia #bondRankTitle{font-size:29px}

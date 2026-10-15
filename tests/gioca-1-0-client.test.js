@@ -68,8 +68,10 @@ test('G2: a result shows every answer at once, then one move: talk tonight, leav
   const panel = h.nodes.usGameV2Panel.innerHTML;
   assert.doesNotMatch(panel, /<details|<summary/, 'nothing to unfold first');
   assert.match(panel, /<h3 id="usGv5MoveTitle">Ne parlate stasera\?<\/h3>/);
-  assert.ok(panel.indexOf('usGv5MoveTitle') < panel.indexOf('us-gv5-reveal-groups'), 'the move comes before the lists');
-  const move = panel.slice(panel.indexOf('us-gv5-move'), panel.indexOf('us-gv5-reveal-groups'));
+  // Round 3 parity (072-gioco-risposte): the mockup shows the answers first;
+  // the one move follows the lists.
+  assert.ok(panel.indexOf('us-gv5-reveal-groups') < panel.indexOf('usGv5MoveTitle'), 'the lists come first, then the move');
+  const move = panel.slice(panel.indexOf('class="us-gv5-move'), panel.indexOf('us-gv2-actions is-single'));
   assert.match(move, /Weekend ideale\?/, 'the move features one of the different answers');
   assert.doesNotMatch(move, /Colazione\?/);
   assert.match(move, /data-gv2-action="leave-something"[\s\S]*Lascia qualcosa a Beatrice/);
@@ -135,11 +137,13 @@ test('G7: E se…? is not offered, yet an old E se…? round still opens with it
   assert.match(h.nodes.usGameV2Panel.innerHTML, /aria-label="E se…\?"/, "the round keeps its name as the sheet label");
 });
 
-test('G9: La vostra domanda comes first when it is your turn, and is signed where it appears', async () => {
+test('G9: La vostra domanda closes the Giochi panel, as in the mockup, and is signed where it appears', async () => {
+  // Round 3 parity (062/074): the mockup has La vostra domanda at the end of
+  // Giochi, after the tiles, also when it is your turn.
   const h = harness({ homeState: home({ weekly: weekly({ my_turn: true }) }) });
   await tick();
   const hub = h.nodes.quizHub.innerHTML;
-  assert.ok(hub.indexOf('us-gv2-weekly') >= 0 && hub.indexOf('us-gv2-weekly') < hub.indexOf('us-gv2-choose'), 'weekly card above the games');
+  assert.ok(hub.indexOf('us-gv2-weekly') > hub.indexOf('us-gv2-choose'), 'weekly card after the games, also on your turn');
   const notMine = harness({ homeState: home({ weekly: weekly({ assigned_role: 'beatrice' }) }) });
   await tick();
   const other = notMine.nodes.quizHub.innerHTML;

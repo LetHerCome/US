@@ -343,7 +343,14 @@ test('M11B client: static contract — one Gioca surface, Phosphor icons, no leg
     assert.match(css, new RegExp(`/assets/icons/phosphor/${file}\\.svg`), `${file} is painted from the official file`);
     assert.ok(registry.some((i) => i.source === 'PHOSPHOR' && i.phosphorName === phosphor), `${phosphor} registered`);
   }
-  assert.doesNotMatch(games + read('games.css'), /<svg|<path/, 'no hand-drawn icons');
+  // Round 3 parity: the one exception is the mockup's own tile art (062),
+  // copied literally into GAME_ART; everything else stays Phosphor.
+  const artFrom = games.indexOf('const GAME_ART = Object.freeze({');
+  const artTo = games.indexOf('\n', games.indexOf('const gameArt = '));
+  assert.ok(artFrom > 0 && artTo > artFrom, 'the mockup art lives in one place');
+  const art = games.slice(artFrom, artTo);
+  assert.deepEqual([...art.matchAll(/^  ([a-z_]+): '/gm)].map((m) => m[1]).sort(), ['confrontatevi', 'per_voi', 'quanto_mi_conosci', 'ridete', 'rivivete', 'scopritevi', 'swipe']);
+  assert.doesNotMatch(games.slice(0, artFrom) + games.slice(artTo) + read('games.css'), /<svg|<path/, 'no other hand-drawn icons');
 });
 
 // ---------------------------------------------------------------- M11F weekly rhythm
@@ -351,26 +358,26 @@ test('M11B client: static contract — one Gioca surface, Phosphor icons, no leg
 const allowance = (over = {}) => ({ week_start: '2026-09-28', resets_on: '2026-10-05', per_voi_used: 0, per_voi_limit: 1, free_used: 0, free_limit: 2,
   used: 0, limit: 3, per_voi_available: true, free_available: true, open_count: 0, open_limit: 3, families: {}, ...over });
 
-test('M11F client: the weekly strip reads the server allowance, restrained, never a counter game', async () => {
+test('M11F client: the weekly limit reads the server allowance, on the tiles it locks, restrained, never a counter game', async () => {
+  // Round 3 parity (062): the budget strip gave way to the mockup's seven
+  // days; the limit is said in the confirm (below) and on the locked tiles.
   const fresh = harness({ homeState: home({ allowance: allowance() }) });
   await tick();
-  assert.match(fresh.nodes.quizHub.innerHTML, /QUESTA SETTIMANA/);
-  // G10 1.0 — one word for the weekly unit: giochi.
-  assert.match(fresh.nodes.quizHub.innerHTML, /data-gv2-rhythm="open"[\s\S]*<b>Ancora 3 giochi<\/b>/);
+  assert.match(fresh.nodes.quizHub.innerHTML, /id="usGv2Week"/);
+  assert.doesNotMatch(fresh.nodes.quizHub.innerHTML, /QUESTA SETTIMANA|data-gv2-rhythm|Ancora \d giochi/);
+  assert.doesNotMatch(fresh.nodes.quizHub.innerHTML, /data-gv2-mode-state="(?:locked|played)"/, 'a fresh week locks nothing');
   const mid = harness({ homeState: home({ allowance: allowance({ used: 2, per_voi_used: 1, free_used: 1, per_voi_available: false, families: { per_voi: { session_id: 'p', completed: true }, ridete: { session_id: 'r', completed: true } } }) }) });
   await tick();
   const html = mid.nodes.quizHub.innerHTML;
-  assert.match(html, /Questa settimana: ancora 1 gioco/);
-  assert.equal((html.match(/data-on="true"/g) || []).length, 2);
-  assert.match(html, /data-gv2-family="ridete" data-gv2-mode-state="played"/);
-  assert.match(html, /Completato<\/em>/, 'US V3: the card names the real state');
+  assert.match(html, /data-gv2-family="ridete" data-gv2-mode-state="played"[\s\S]*?<small>Giocato questa settimana<\/small>/, 'US V3: the card names the real state');
+  assert.doesNotMatch(html, /data-gv2-mode-state="locked"/, 'one game left: nothing locked yet');
   assert.doesNotMatch(html, /vite|energia|stamina|streak|serie/i, 'no game-energy language');
   const done = harness({ homeState: home({ per_voi: { state: 'played', session_id: 'p' }, allowance: allowance({ used: 3, per_voi_used: 1, free_used: 2, per_voi_available: false, free_available: false, families: { per_voi: { session_id: 'p', completed: true } } }) }) });
   await tick();
   const dh = done.nodes.quizHub.innerHTML;
-  assert.match(dh, /<b>Tutti giocati<\/b>/);
+  assert.doesNotMatch(dh, /Tutti giocati/);
   assert.match(dh, /Giocato questa settimana/, 'Per voi shows its played state without repeating the unlock day');
-  assert.match(dh, /data-gv2-family="scopritevi" data-gv2-mode-state="locked" aria-disabled="true"/, 'modes stay visible, locked');
+  assert.match(dh, /data-gv2-family="scopritevi" data-gv2-mode-state="locked" aria-disabled="true"[\s\S]*?<small>Da lunedì<\/small>/, 'modes stay visible, locked until Monday');
   assert.equal(done.nodes.usPerVoiTop.dataset.gv2State, 'played');
   assert.equal(done.nodes.usPerVoiTop.dataset.usAttention, 'off');
 });
@@ -427,7 +434,8 @@ test('M11F client: repeating a played mode asks once through the shared US confi
   assert.ok(h.calls.some(([n, a]) => n === 'start_game_round' && a.target_family === 'ridete'));
   assert.match(asked[0].title, /Avete già giocato a Ridete questa settimana/);
   // G10 1.0 — the confirm names the real number of games left this week.
-  assert.equal(asked[0].body, 'Userete 1 dei 2 giochi di questa settimana.', 'the same count as the strip');
+  // Round 3 parity (073): the mockup's line, then what it costs this week.
+  assert.equal(asked[0].body, 'Potete fare un’altra partita, con domande nuove. Userete 1 dei 2 giochi di questa settimana.', 'the mockup line and the real count');
   await h.api.chooseMode('e_se');
   assert.ok(h.calls.some(([n, a]) => n === 'get_game_session' && a.target_session_id === 'open-1'), 'an old E se…? round still opens');
   assert.equal(asked.length, 2, 'resuming never asks');

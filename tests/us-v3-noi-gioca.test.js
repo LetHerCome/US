@@ -149,11 +149,13 @@ test('Noi calendar: month change animates once and only without reduced motion',
 });
 
 // ------------------------------------------------------------------ Gioca + Sintonia
-// 1.0 (G1): no 7-day strip; the weekly budget stays; the daily slot is painted by app.js.
-test('Gioca V4 → 1.0: daily first, weekly budget, pending actions, bento games and weekly question', () => {
+// Round 3 parity (062): the mockup's order — Sfida di oggi, the 7-day strip,
+// the bento games, La vostra domanda; rounds no tile stands for and the
+// completed ones follow. The daily slot is painted by app.js.
+test('Gioca round 3: daily first, the week, bento games, weekly question, then the rest', () => {
   const games = read('games.js');
   const hub = games.slice(games.indexOf('function renderHub() {'), games.indexOf('function renderHubError() {'));
-  const order = ['us-gv2-daily-slot', 'us-gv2-head', 'continueSection(home)', 'us-gv2-choose', 'data-gv2-action="per-voi"', 'weeklyCard(home?.weekly)', 'doneSection(home)'];
+  const order = ['us-gv2-daily-slot', '${weekStrip()}', 'us-gv2-choose', 'data-gv2-action="per-voi"', 'weeklyCard(home?.weekly)', 'continueSection(home,onTiles)', 'doneSection(home)'];
   const positions = order.map((needle) => hub.indexOf(needle));
   assert.ok(positions.every((p) => p >= 0), JSON.stringify(positions));
   assert.deepEqual([...positions].sort((a, b) => a - b), positions);
@@ -163,7 +165,8 @@ test('Gioca V4 → 1.0: daily first, weekly budget, pending actions, bento games
 });
 
 test('Sintonia: one premium segmented control, keyboard-friendly, and a page that scrolls', () => {
-  assert.match(html, /<div class="us-gioca-tabs" id="usGiocaTabs" data-active="giochi" role="tablist" aria-label="Gioca e Sintonia">/);
+  // Round 3: [data-s] so the segmented control rises first, as the mockup's .seg.
+  assert.match(html, /<div class="us-gioca-tabs" id="usGiocaTabs" data-active="giochi" data-s role="tablist" aria-label="Gioca e Sintonia">/);
   assert.match(noiJs, /\$\('usGiocaTabs'\)\?\.setAttribute\('data-active',giocaTab\)/);
   assert.match(noiJs, /e\.key!=='ArrowLeft'&&e\.key!=='ArrowRight'/);
   assert.match(noiCss, /#quiz \.us-gioca-tabs\[data-active="sintonia"\]::before\{transform:translateX\(100%\)\}/);

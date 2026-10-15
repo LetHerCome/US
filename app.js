@@ -2766,18 +2766,18 @@ function dailyHubModel(){
   const partner=oggiPartnerName(),base={questionId:question.id,question:String(question.question)};
   if(state.both_answered){
     const seen=Boolean(window.todayRevealMeta?.my_reveal_seen_at);
-    return {...base,state:'reveal',meta:seen?'Risposte viste · puoi rileggerle':'Le vostre risposte sono pronte',cta:seen?'Rivedi':'Scopri'};
+    return {...base,state:'reveal',meta:seen?'Svelate · domani una nuova domanda':'Le vostre risposte sono pronte',cta:seen?'Rivedi':'Scopri'};
   }
   if(state.my_answer!=null)return {...base,state:'waiting',meta:`Hai risposto · aspettiamo ${partner}`,cta:'Apri'};
   if(state.partner_has_answer)return {...base,state:'answer',meta:`${partner} ha già risposto · tocca a te`,cta:'Rispondi'};
   return {...base,state:'answer',meta:'Una domanda per voi oggi',cta:'Rispondi'};
 }
 function dailyHubMarkup(model){
-  if(!model)return '<div class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">La domanda di oggi</span><small>La domanda di oggi non è ancora disponibile.</small></div>';
+  if(!model)return '<div class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">Sfida di oggi</span><small>La domanda di oggi non è ancora disponibile.</small></div>';
   // Never the hidden answers here: question, state and the way in.
   return `<button type="button" class="us-gv2-daily" data-us-daily-entry data-daily-state="${escapeHtml(model.state)}">
    <span class="us-gv4-daily-art" aria-hidden="true"><span class="us-gv4-art-ring"></span><span class="us-gv4-art-heart"></span></span>
-   <span class="us-gv2-daily-copy"><small>LA DOMANDA DI OGGI</small><b>${escapeHtml(model.question)}</b><span class="us-gv2-daily-state">${escapeHtml(model.meta)}</span></span>
+   <span class="us-gv2-daily-copy"><small>Sfida di oggi</small><b>${escapeHtml(model.question)}</b><span class="us-gv2-daily-state">${escapeHtml(model.meta)}</span></span>
    <span class="us-gv4-daily-footer"><span>Una domanda, due risposte</span><span class="us-gv2-daily-cta">${escapeHtml(model.cta)} <span aria-hidden="true">›</span></span></span>
   </button>`;
 }
@@ -2786,6 +2786,7 @@ function paintDailyInGioca(){
   if(!hub||hub.classList.contains('hidden'))return;
   const slot=hub.querySelector('.us-gv2-daily-slot');
   if(!slot)return;
+  window.USGameV2?.paintWeek?.();
   const model=dailyHubModel();
   const signature=model?`${model.questionId}:${model.state}:${model.cta}:${model.meta}`:'unavailable';
   if(slot.dataset.usDailySignature===signature)return;
@@ -2798,7 +2799,7 @@ let usOggiGameTurnTimer=0;
 function readGameTurnFromHub(){
   const hub=document.getElementById('quizHub');
   if(!hub||hub.classList.contains('hidden'))return;
-  const row=hub.querySelector('.us-gv2-continue .us-gv2-row[data-tone="turn"][data-gv2-session]');
+  const row=hub.querySelector('[data-gv2-session][data-tone="turn"]');
   const perVoi=hub.querySelector('[data-gv2-action="per-voi"][data-gv2-state="pending"]');
   const next=row?{game:row.querySelector('b')?.textContent?.trim()||'Gioca',session:row.dataset.gv2Session}:perVoi?{game:'Per voi',perVoi:true}:null;
   const key=turn=>turn?`${turn.session||''}:${turn.game}:${turn.perVoi?1:0}`:'';
@@ -3254,6 +3255,7 @@ async function hydrateToday(){
     if(!current())return;
     if(meta)window.todayRevealMeta=meta;
     renderTodayReveal();
+    window.UsDailyQuestionHub?.paint?.();
     await markDailyRevealSeenIfVisible(q.id,seq);
     if(!current())return;
     // M12B.4 — Conserva solo qui, dove lo scambio è legittimamente visibile.

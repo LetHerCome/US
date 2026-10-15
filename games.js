@@ -33,6 +33,19 @@ const partnerRole = () => (myRole() === 'francesco' ? 'beatrice' : 'francesco');
 const partnerName = () => window.UsIdentity?.current().partnerName || 'La tua persona';
 const familyName = (id) => (id === 'per_voi' ? PER_VOI.name : id === 'swipe' ? SWIPE.name : FAMILY[id]?.name || 'Gioca');
 const icon = (name) => `<span class="us-gv2-icon" data-gv2-icon="${esc(name)}" aria-hidden="true"></span>`;
+// Round 3 parity: each game's mark is the approved mockup art (gioca body.html,
+// copied shape for shape); colours come from the tokens through classes, so
+// Noi follows the Accenti like everywhere else.
+const GAME_ART = Object.freeze({
+  per_voi: '<circle class="f-rosa" cx="17" cy="22" r="12"/><circle class="f-lilla is-screen" cx="27" cy="22" r="12"/>',
+  swipe: '<rect class="f-night" x="10" y="9" width="20" height="27" rx="5"/><rect class="f-ambra" x="15" y="7" width="20" height="27" rx="5" transform="rotate(12 25 20)"/>',
+  scopritevi: '<circle class="s-menta" cx="15" cy="24" r="8" fill="none" stroke-width="4"/><circle class="s-menta" cx="30" cy="24" r="8" fill="none" stroke-width="4"/><path class="s-menta" d="M20 22h4" stroke-width="4"/>',
+  confrontatevi: '<path class="s-noi" d="M8 16h22l-5-5M36 28H14l5 5" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>',
+  ridete: '<circle class="f-ambra" cx="22" cy="22" r="14"/><circle class="f-ink" cx="17" cy="19" r="2"/><circle class="f-ink" cx="27" cy="19" r="2"/><path class="s-ink" d="M15 25c3 5 11 5 14 0" fill="none" stroke-width="2.4" stroke-linecap="round"/>',
+  quanto_mi_conosci: '<circle class="s-rosa" cx="22" cy="22" r="14" fill="none" stroke-width="4"/><path class="s-rosa" d="M18 18.5a4 4 0 1 1 5.6 3.7c-1 .4-1.6 1.2-1.6 2.3v1" fill="none" stroke-width="3.2" stroke-linecap="round"/><circle class="f-rosa" cx="22" cy="30" r="2"/>',
+  rivivete: '<rect class="f-night" x="8" y="12" width="22" height="22" rx="5"/><rect class="f-ambra" x="14" y="8" width="22" height="22" rx="5"/><path class="s-ink" d="M19 23l4-4 3 3 2-2 4 4" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
+});
+const gameArt = (id) => `<svg class="us-gv2-art" viewBox="0 0 44 44" focusable="false">${GAME_ART[id] || ''}</svg>`;
 const uuid = () => window.crypto.randomUUID();
 const romeDate = (iso, opts) => (iso ? new Date(`${iso}T12:00:00Z`).toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'), { timeZone: 'UTC', ...opts }) : '');
 const mondayLabel = (iso) => romeDate(iso, { weekday: 'long', day: 'numeric', month: 'long' });
@@ -112,7 +125,7 @@ function perVoiCopy() {
   const note = ['idle', 'pending', 'in_progress'].includes(state) && perVoiHasPartnerQuestion() ? `Dentro c’è la domanda ${ofPartner()}` : '';
   switch (state) {
     case 'reveal_ready': return { line: 'Risposte pronte ♡', cta: 'Scopri' };
-    case 'waiting': return { line: `Aspettiamo ${partnerName()}`, cta: 'Apri' };
+    case 'waiting': return { line: `Aspetti ${partnerName()}`, cta: 'Apri' };
     case 'pending': return { line: row?.partner_complete ? `${partnerName()} ha già risposto` : `${partnerName()} ha iniziato`, cta: 'Rispondi', note };
     case 'in_progress': return { line: 'A metà', cta: 'Continua', note };
     case 'played': return { line: 'Giocato questa settimana', cta: 'Rivedi' };
@@ -151,25 +164,99 @@ const freeLeft = () => { const a = allowance(); return a ? Math.max(0, a.free_li
 const playedThisWeek = (family) => allowance()?.families?.[family] || null;
 const EXHAUSTED = 'Nuovi giochi lunedì.';
 
-// Show what the couple can still play, not the inverse "used / limit" count.
-// "3 di 3" looked like three games were available even when the week was spent.
-function rhythmStrip() {
-  const a = allowance();
-  if (!a) return '';
-  const used = Math.min(a.used, a.limit);
-  const remaining = Math.max(0, a.limit - used);
-  const dots = Array.from({ length: a.limit }, (_, i) => `<i data-on="${i < used ? 'true' : 'false'}"></i>`).join('');
-  const done = remaining === 0;
-  // One word for the weekly unit: giochi.
-  const remainingLabel = done ? 'Tutti giocati' : remaining === 1 ? 'Ancora 1 gioco' : `Ancora ${remaining} giochi`;
-  return `<div class="us-gv2-rhythm" data-gv2-rhythm="${done ? 'done' : 'open'}" role="group" aria-label="${esc(`Questa settimana: ${remainingLabel.toLowerCase()}`)}">
-    <span class="us-gv2-kicker">QUESTA SETTIMANA</span>
-    <span class="us-gv2-rhythm-row"><span class="us-gv2-rhythm-dots" aria-hidden="true">${dots}</span><b>${remainingLabel}</b></span>
-  </div>`;
+// ---------------------------------------------------------------- the week
+
+// Round 3 parity: under the Sfida di oggi, the mockup's seven days of this
+// week (Monday first, the Europe/Rome day the daily question uses), today in
+// milk. A dot says who was there that day, only from what the app already
+// has: a round you both completed that day (get_game_v2_home), and for today
+// la domanda di oggi (the state Oggi loaded). Earlier days' daily answers are
+// not loaded by the app, so they never show a dot of their own.
+const WEEK_ZONE = 'Europe/Rome';
+// Intl formatters are slow to build: one of each, kept (per language for the labels).
+const weekFormats = new Map();
+function weekFormat(key, locale, options) {
+  const id = `${key}|${locale}`;
+  if (!weekFormats.has(id)) weekFormats.set(id, new Intl.DateTimeFormat(locale, options));
+  return weekFormats.get(id);
+}
+function zoneDay(at) {
+  try { return weekFormat('zone', 'en-CA', { timeZone: WEEK_ZONE, year: 'numeric', month: '2-digit', day: '2-digit' }).format(at); }
+  catch (_) { return null; }
+}
+function weekDays() {
+  const today = zoneDay(new Date());
+  if (!today) return [];
+  const base = new Date(`${today}T12:00:00Z`);
+  const back = (base.getUTCDay() + 6) % 7;
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(base.getTime());
+    d.setUTCDate(base.getUTCDate() - back + i);
+    return { iso: d.toISOString().slice(0, 10), today: i === back };
+  });
+}
+function weekMarks(days) {
+  const marks = {};
+  const inWeek = new Set(days.map((d) => d.iso));
+  for (const r of (home?.recent || []).concat(home?.open_rounds || [])) {
+    if (!r?.completed_at) continue;
+    const day = zoneDay(new Date(r.completed_at));
+    if (inWeek.has(day)) marks[day] = 'noi';
+  }
+  const today = days.find((d) => d.today)?.iso;
+  const q = window.todayQuestion;
+  const st = window.todayState;
+  if (today && q?.id && st && (!q.question_date || String(q.question_date) === today)) {
+    if (st.both_answered) marks[today] = 'noi';
+    else if (marks[today] !== 'noi') {
+      if (st.my_answer != null) marks[today] = 'tu';
+      else if (st.partner_has_answer) marks[today] = 'partner';
+    }
+  }
+  return marks;
+}
+function weekDayLabel(d, mark) {
+  const tag = globalThis.UsI18n?.tag || 'it-IT';
+  const date = weekFormat('label', tag, { timeZone: 'UTC', weekday: 'long', day: 'numeric' }).format(new Date(`${d.iso}T12:00:00Z`));
+  const who = mark === 'noi' ? 'tutti e due' : mark === 'tu' ? 'solo tu' : mark === 'partner' ? `solo ${partnerName()}` : '';
+  return [date, d.today ? 'oggi' : '', who].filter(Boolean).join(' · ');
+}
+function weekMarkup() {
+  const days = weekDays();
+  if (!days.length) return '';
+  const marks = weekMarks(days);
+  const tag = globalThis.UsI18n?.tag || 'it-IT';
+  return days.map((d) => {
+    const mark = marks[d.iso] || '';
+    const letter = weekFormat('letter', tag, { timeZone: 'UTC', weekday: 'narrow' }).format(new Date(`${d.iso}T12:00:00Z`));
+    return `<div class="us-gv2-wd${d.today ? ' is-today' : ''}" role="listitem"${d.today ? ' aria-current="date"' : ''} aria-label="${esc(weekDayLabel(d, mark))}"><span aria-hidden="true" translate="no">${esc(letter)}</span><b aria-hidden="true" translate="no">${Number(d.iso.slice(8))}</b><span class="us-gv2-wd-pair" aria-hidden="true">${mark ? `<i data-who="${mark}"></i>` : ''}</span></div>`;
+  }).join('');
+}
+let weekPainted = '';
+function weekStrip() {
+  weekPainted = weekMarkup();
+  return weekPainted ? `<div class="us-gv2-week" id="usGv2Week" data-s role="list" aria-label="Questa settimana">${weekPainted}</div>` : '';
+}
+// Oggi calls this when la domanda di oggi changes (UsDailyQuestionHub.paint):
+// only a real change touches the strip.
+function paintWeek() {
+  const el = byId('usGv2Week');
+  if (!el) return;
+  const next = weekMarkup();
+  if (next === weekPainted) return;
+  weekPainted = next;
+  el.innerHTML = next;
 }
 
+// The round a tile stands for: the family's open round, or its finished
+// round whose answers you have not opened yet.
+function tileRound(family) {
+  return (home?.open_rounds || []).find((r) => r.game_family === family)
+    || (home?.recent || []).find((r) => r.game_family === family && r.reveal_ready && !r.my_reveal_seen_at)
+    || null;
+}
 function modeStatus(f, open) {
-  if (open) return { ...roundStatus(open), state: 'open' };
+  if (open) return { ...roundStatus(open), state: 'open', session: open.id };
   if (playedThisWeek(f.id)) return { text: 'Giocato', tone: 'seen', state: 'played' };
   if (allowance() && !freeLeft()) return { text: 'Lunedì', tone: 'locked', state: 'locked' };
   return null;
@@ -186,35 +273,37 @@ let weeklyJustCreated = false;
 function weeklyCard(w) {
   if (!w) return '';
   const unlock = mondayLabel(w.next_unlock);
-  const head = (name, title, line) => `<div class="us-gv2-weekly-head" data-gv2-weekly-icon="${esc(name)}"><div><span class="us-gv2-kicker">LA VOSTRA DOMANDA</span><b>${esc(title)}</b>${line ? `<small>${esc(line)}</small>` : ''}</div></div>`;
+  // The mockup's card: eyebrow, title, one line, then the action.
+  const head = (name, title, line) => `<div class="us-gv2-weekly-head" data-gv2-weekly-icon="${esc(name)}"><div><span class="us-gv2-kicker">La vostra domanda</span><b>${esc(title)}</b>${line ? `<small>${esc(line)}</small>` : ''}</div></div>`;
   if (w.created_by_me) {
     const q = w.my_question;
     const settle = weeklyJustCreated === true ? ' is-just-created' : '';
     if (weeklyJustCreated === true) weeklyJustCreated = false;
-    return `<section class="us-gv2-weekly is-locked${settle}" aria-label="La domanda della settimana">
+    return `<section class="us-gv2-weekly is-locked${settle}" data-s aria-label="La domanda della settimana">
       ${head('lock-simple', 'Domanda creata', `Poi tocca a ${partnerName()}, ${unlock}.`)}
       ${q ? `<blockquote translate="no">${esc(q.question_text)}</blockquote><small class="us-gv2-note">${esc(partnerName())} la scoprirà giocando.</small>` : ''}
     </section>`;
   }
   if (w.partner_left_question) {
-    return `<section class="us-gv2-weekly is-sealed" aria-label="La domanda della settimana">
+    return `<section class="us-gv2-weekly is-sealed" data-s aria-label="La domanda della settimana">
       ${head('feather', `${partnerName()} ha lasciato una domanda`, 'La troverete giocando.')}
     </section>`;
   }
   if (w.my_turn) {
-    return `<section class="us-gv2-weekly is-open" aria-label="La domanda della settimana">
+    return `<section class="us-gv2-weekly is-open" data-s aria-label="La domanda della settimana">
       ${head('feather', 'Tocca a te', 'Una domanda scritta da voi, per questa settimana.')}
-      <button type="button" class="primary us-gv2-weekly-cta" data-gv2-action="weekly-create">Crea la domanda</button>
+      <button type="button" class="primary us-gv2-weekly-cta" data-us-feedback="tap" data-gv2-action="weekly-create">Crea la domanda</button>
     </section>`;
   }
-  return `<section class="us-gv2-weekly is-locked" aria-label="La domanda della settimana">
+  return `<section class="us-gv2-weekly is-locked" data-s aria-label="La domanda della settimana">
     ${head('lock-simple', `Questa settimana crea ${label(w.assigned_role)}`, w.next_role === myRole() ? `Tocca a te da ${unlock}` : `Cambia ${unlock}`)}
   </section>`;
 }
 
-// V3 — rounds that need you (or are about to) are shown directly, only
-// when they exist; completed rounds stay one tap away at the end. Every row is
-// a plain reading of the server's open_rounds / recent summaries.
+// V3 — rounds that need you are shown on their game's tile (as the mockup's
+// tiles say "Aspetti Beatrice"); only a round no tile stands for (a retired
+// family, a second round) keeps a row. Completed rounds stay one tap away at
+// the end. Every row is a plain reading of the server's open_rounds / recent.
 const continueRounds = (h) => (h?.open_rounds || []).concat((h?.recent || []).filter((r) => r.reveal_ready && !r.my_reveal_seen_at));
 const doneRounds = (h) => (h?.recent || []).filter((r) => r.reveal_ready && r.my_reveal_seen_at);
 const ROUND_ICON = (family) => (family === 'per_voi' ? PER_VOI.icon : family === 'swipe' ? SWIPE.icon : FAMILY[family]?.icon || 'sparkle');
@@ -225,9 +314,10 @@ function roundRow(r) {
   const when = r.completed_at ? romeDate(String(r.completed_at).slice(0, 10), { day: 'numeric', month: 'long' }) : '';
   return `<button type="button" class="us-gv2-row" data-gv2-session="${esc(r.id)}" data-tone="${esc(status?.tone || '')}">${glyph(ROUND_ICON(r.game_family))}<span class="us-gv2-row-copy"><b>${esc(familyName(r.game_family))}</b>${when ? `<small>${esc(when)}</small>` : ''}</span>${status ? `<small class="us-gv2-row-state" data-tone="${esc(status.tone)}">${esc(status.text)}</small>` : ''}</button>`;
 }
-function continueSection(h) {
+function continueSection(h, onTiles) {
   const rounds = continueRounds(h)
     .filter((r) => r.game_family !== 'per_voi' || r.id !== h?.per_voi?.session_id)
+    .filter((r) => !onTiles.has(r.id))
     .sort((a, b) => (TONE_ORDER[roundStatus(a)?.tone] ?? 9) - (TONE_ORDER[roundStatus(b)?.tone] ?? 9));
   if (!rounds.length) return '';
   return `<section class="us-gv2-continue" aria-labelledby="usGv2ContinueTitle">
@@ -241,53 +331,54 @@ function doneSection(h) {
   return `<details class="us-gv2-done"><summary><span>Partite completate</span><b>${rounds.length}</b></summary><div class="us-gv2-rows">${rounds.map(roundRow).join('')}</div></details>`;
 }
 
-// One status vocabulary for every game card: available, to continue,
-// completed this week, or locked until the weekly reset.
+// One status vocabulary for every game card, said where the mockup says it:
+// in the card's line, instead of the kind of moment.
 function cardState(status) {
-  if (!status) return { state: 'ready', text: 'Disponibile', mark: '' };
-  if (status.state === 'open') return { state: 'open', text: status.text, mark: '', tone: status.tone };
-  if (status.state === 'played') return { state: 'played', text: 'Completato', mark: icon('check') };
-  return { state: 'locked', text: 'Da lunedì', mark: icon('lock-simple') };
+  if (!status) return { state: 'ready', text: 'Disponibile' };
+  if (status.state === 'open') return { state: 'open', text: status.text, tone: status.tone, session: status.session };
+  if (status.state === 'played') return { state: 'played', text: 'Giocato questa settimana' };
+  return { state: 'locked', text: 'Da lunedì' };
 }
-function gameCard({ id, name, iconName, kind, action, extraClass = '', status }) {
+function gameCard({ id, name, kind, action, extraClass = '', status }) {
   const card = cardState(status);
   const locked = card.state === 'locked';
   const data = action === 'swipe' ? 'data-gv2-action="swipe"' : `data-gv2-family="${id}"`;
-  return `<button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-game${extraClass}" ${data} data-gv2-mode-state="${esc(card.state)}"${locked ? ' aria-disabled="true"' : ''} aria-label="${esc(name)}: ${esc(kind)}. ${esc(card.text)}">
-      ${glyph(iconName)}
-      <span class="us-gv2-game-copy"><b>${esc(name)}</b><small>${esc(kind)}</small></span>
-      <em class="us-gv2-game-state" data-state="${esc(card.state)}"${card.tone ? ` data-tone="${esc(card.tone)}"` : ''}>${card.mark}${esc(card.text)}</em>
+  const round = card.session ? ` data-gv2-session="${esc(card.session)}" data-tone="${esc(card.tone || '')}"` : '';
+  const line = card.state === 'ready' ? kind : card.text;
+  return `<button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-game${extraClass}" ${data} data-gv2-mode-state="${esc(card.state)}"${round}${locked ? ' aria-disabled="true"' : ''} aria-label="${esc(name)}: ${esc(kind)}. ${esc(card.text)}">
+      <span class="us-gv2-glyph" aria-hidden="true">${gameArt(id)}</span>
+      <span class="us-gv2-game-copy"><b>${esc(name)}</b><small>${esc(line)}</small></span>
     </button>`;
 }
 
-// Gioca V4: La domanda di oggi leads; the weekly games keep server authority.
+// Round 3 parity — the mockup's Giochi, in its order: Sfida di oggi, the
+// week, I vostri giochi (Per voi tall, then Questo o quello and the five
+// families), then La vostra domanda. The weekly limit stays the server's: it
+// is said in the confirm before a new round and on the tiles it locks.
 function renderHub() {
  const root=byId('quizHub');if(!root)return;
  const pv=perVoiCopy(),pvState=home?.per_voi?.state||'idle';
- const openByFamily=new Map((home?.open_rounds||[]).map(r=>[r.game_family,r]));
- const swipe=gameCard({id:'swipe',name:SWIPE.name,iconName:SWIPE.icon,kind:'8 carte · veloce e privato',action:'swipe',extraClass:' is-swipe',status:modeStatus(SWIPE,openByFamily.get('swipe'))});
- const families=OFFERED.map(f=>gameCard({id:f.id,name:f.name,iconName:f.icon,kind:f.kind,status:modeStatus(f,openByFamily.get(f.id))})).join('');
- const nothingYet=!continueRounds(home).length&&!doneRounds(home).length&&pvState==='idle';
- // 1.0 — when it is your turn to write La vostra domanda, it comes first.
- const weeklyFirst=Boolean(home?.weekly?.my_turn&&!home.weekly.created);
+ const onTiles=new Set();
+ const tileStatus=(f)=>{const r=tileRound(f.id);if(r)onTiles.add(r.id);return modeStatus(f,r);};
+ const swipe=gameCard({id:'swipe',name:SWIPE.name,kind:'8 carte · veloce e privato',action:'swipe',extraClass:' is-swipe',status:tileStatus(SWIPE)});
+ const families=OFFERED.map(f=>gameCard({id:f.id,name:f.name,kind:f.kind,status:tileStatus(f)})).join('');
  root.innerHTML=`
   <h2 class="us-gv2-sr">Gioca</h2>
-  <div class="us-gv2-daily-slot" data-gv4-daily-slot aria-live="polite"><div class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">La domanda di oggi</span><small>Preparo la domanda di oggi…</small></div></div>
-  <header class="us-gv2-head" aria-label="Disponibilità giochi settimanali">${rhythmStrip()}</header>
-  ${continueSection(home)}
-  ${weeklyFirst?weeklyCard(home.weekly):''}
+  <div class="us-gv2-daily-slot" data-gv4-daily-slot data-s aria-live="polite"><div class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">Sfida di oggi</span><small>Preparo la domanda di oggi…</small></div></div>
+  ${weekStrip()}
   <section class="us-gv2-choose" aria-labelledby="usGv2ChooseTitle">
-   <div class="us-gv2-section-head"><h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi</h3><small>Bastano pochi minuti</small></div>
-   <div class="us-gv2-game-grid">
+   <div class="us-gv2-section-head" data-s><h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi</h3><small>Bastano pochi minuti</small></div>
+   <div class="us-gv2-game-grid" data-s>
     <button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-pervoi us-attention-orbit" data-gv2-action="per-voi" data-gv2-state="${esc(pvState)}" data-us-attention="${pvState==='pending'||pvState==='reveal_ready'?'on':'off'}">
-     ${glyph('sparkle').replace('class="us-gv2-glyph"','class="us-gv2-glyph" data-us-attention-icon')}
+     <span class="us-gv2-glyph" aria-hidden="true" data-us-attention-icon>${gameArt('per_voi')}</span>
      <span class="us-gv2-pervoi-copy"><b>Per voi</b><small>${esc(pv.line)}</small>${pv.note?`<small class="us-gv2-pervoi-note">${esc(pv.note)}</small>`:''}</span>
      <span class="us-gv2-pervoi-cta">${esc(pv.cta)}</span>
     </button>
     ${swipe}${families}
    </div>
   </section>
-  ${weeklyFirst?'':weeklyCard(home?.weekly)}
+  ${weeklyCard(home?.weekly)}
+  ${continueSection(home,onTiles)}
   ${doneSection(home)}`;
  window.UsDailyQuestionHub?.paintCard?.();
 }
@@ -360,6 +451,8 @@ function showPanel(html, head = {}, { dir = 1 } = {}) {
   if (canAnimate(opened)) {
     root.querySelector('.us-gv2-scrim')?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260 });
     opened.animate([{ transform: 'translateY(100%)' }, { transform: 'none' }], { duration: 520, easing: EASE.soft });
+    // As the mockup's flow: the first step slides in too, while the sheet rises.
+    opened.querySelector('.us-gv2-flow')?.animate([{ opacity: 0, transform: `translateX(${dir * 28}px)` }, { opacity: 1, transform: 'none' }], { duration: 340, easing: EASE.out });
   }
   setTimeout(() => {
     const target = root.querySelector?.('.us-gv2-flow textarea, .us-gv2-flow input:not([type="radio"])') || root.querySelector?.('.us-gv2-sheet');
@@ -456,17 +549,19 @@ async function startSwipe() {
 // 1.0 — a new round spends one of the week's games for both of you: it is
 // always confirmed first, with the real number the server says is left
 // (the same count as the "Ancora N giochi" strip).
-async function confirmSpend({ family, played, title, confirmLabel }) {
+async function confirmSpend({ family, played, title, confirmLabel, again = '' }) {
   const a = allowance();
   if (!a) return true;
   const ask = window.UsUiFoundation?.confirm;
   if (typeof ask !== 'function') return true;
   const left = Math.max(1, a.limit - Math.min(a.used, a.limit));
   const name = familyName(family);
+  const spend = left === 1 ? 'Userete l’ultimo gioco di questa settimana.' : `Userete 1 dei ${left} giochi di questa settimana.`;
   return ask({
     kicker: played ? name.toUpperCase() : 'QUESTA SETTIMANA',
     title: played ? title : name,
-    body: left === 1 ? 'Userete l’ultimo gioco di questa settimana.' : `Userete 1 dei ${left} giochi di questa settimana.`,
+    // Played already: the mockup's line, then what it costs this week.
+    body: played && again ? `${again} ${spend}` : spend,
     confirmLabel: played ? confirmLabel : 'Inizia',
     cancelLabel: 'Non ora',
     icon: played ? 'arrows-clockwise' : 'info',
@@ -475,28 +570,28 @@ async function confirmSpend({ family, played, title, confirmLabel }) {
 
 async function chooseSwipe() {
   if (busy) return;
-  const open = (home?.open_rounds || []).find((r) => r.game_family === 'swipe');
+  const open = tileRound('swipe');
   if (open) return openSession(open.id);
   const played = playedThisWeek('swipe');
   if (allowance() && !freeLeft()) {
     if (played?.completed) return openSession(played.session_id);
     return toast(EXHAUSTED);
   }
-  const ok = await confirmSpend({ family: 'swipe', played, title: 'Avete già fatto Questo o quello questa settimana', confirmLabel: 'Altre 8' });
+  const ok = await confirmSpend({ family: 'swipe', played, title: 'Avete già fatto Questo o quello questa settimana', confirmLabel: 'Altre 8', again: 'Volete altre otto carte?' });
   if (!ok) return;
   return startSwipe();
 }
 
 async function chooseMode(family) {
   if (busy) return;
-  const open = (home?.open_rounds || []).find((r) => r.game_family === family);
+  const open = tileRound(family);
   if (open) return openSession(open.id);
   const played = playedThisWeek(family);
   if (allowance() && !freeLeft()) {
     if (played?.completed) return openSession(played.session_id);
     return toast(EXHAUSTED);
   }
-  const ok = await confirmSpend({ family, played, title: `Avete già giocato a ${familyName(family)} questa settimana`, confirmLabel: 'Gioca ancora' });
+  const ok = await confirmSpend({ family, played, title: `Avete già giocato a ${familyName(family)} questa settimana`, confirmLabel: 'Gioca ancora', again: 'Potete fare un’altra partita, con domande nuove.' });
   if (!ok) return;
   return startRound(family);
 }
@@ -600,7 +695,7 @@ function renderSwipePlay({ dir = 1 } = {}) {
       <button type="button" class="primary" data-gv2-swipe-choice="1" aria-label="${esc(right)}"><b>${esc(right)}</b>${icon('caret-right')}</button>
     </div>
     <p id="usGv2Error" class="us-gv2-error" role="alert" hidden></p>
-    <p class="us-gv2-swipe-note">Trascina la carta o tocca una scelta. ${esc(partnerName())} non vedrà le tue scelte finché non avrete finito entrambi.</p>
+    <p class="us-gv2-swipe-note">Trascina la carta o tocca una scelta</p>
   </article>`, { kicker: `${SWIPE.name} · scelta ${index + 1} di ${total}`, tone: 'ambra', label: SWIPE.name }, { dir });
   bindSwipeGesture(root);
 }
@@ -823,11 +918,13 @@ function waitArt(line) {
   return `<div class="us-gv2-wait">${VENN}<b>Aspettiamo ${esc(waitingName())}…</b><small>${esc(line)}</small></div>`;
 }
 const waitActions = () => `<div class="us-gv2-actions"><button type="button" class="ghost" data-gv2-action="back">Torna a Gioca</button><button type="button" class="primary" data-gv2-action="refresh">${icon('arrows-clockwise')}<span>Aggiorna</span></button></div>`;
+// Your own sealed answers stay one tap away, folded under the mockup's buttons.
+const mineFold = (list) => `<details class="us-gv2-mine-fold"><summary><span>Le tue risposte</span><b>${current.items.length}</b></summary>${list}</details>`;
 function renderSwipeWaiting({ dir = 1 } = {}) {
   showPanel(`<article class="us-gv2-waiting us-gv2-swipe-waiting">
     ${waitArt('Vedrete insieme dove la pensate allo stesso modo.')}
     ${waitActions()}
-    <ol class="us-gv2-swipe-mine">${current.items.map((item, i) => `<li><span>${i + 1}</span><small>${esc(item.question_text)}</small><b>${esc(myAnswerText(item))}</b></li>`).join('')}</ol>
+    ${mineFold(`<ol class="us-gv2-swipe-mine">${current.items.map((item, i) => `<li><span>${i + 1}</span><small>${esc(item.question_text)}</small><b>${esc(myAnswerText(item))}</b></li>`).join('')}</ol>`)}
   </article>`, { kicker: SWIPE.name, title: 'Le tue 8 scelte sono dentro.', tone: 'ambra', label: SWIPE.name }, { dir });
 }
 
@@ -836,7 +933,7 @@ function renderWaiting({ dir = 1 } = {}) {
   showPanel(`<article class="us-gv2-waiting">
     ${waitArt('Le risposte si scoprono quando avete risposto entrambi.')}
     ${waitActions()}
-    <ol class="us-gv2-mine">${current.items.map((i) => `<li><small${asWritten(coupleWritten(i))}>${esc(i.my_prompt || i.question_text)}</small><b${asWritten(i.answer_kind === 'open' || coupleWritten(i))}>${esc(myAnswerText(i))}</b></li>`).join('')}</ol>
+    ${mineFold(`<ol class="us-gv2-mine">${current.items.map((i) => `<li><small${asWritten(coupleWritten(i))}>${esc(i.my_prompt || i.question_text)}</small><b${asWritten(i.answer_kind === 'open' || coupleWritten(i))}>${esc(myAnswerText(i))}</b></li>`).join('')}</ol>`)}
   </article>`, { kicker: familyName(current.game_family), title: 'Hai risposto.', label: familyName(current.game_family) }, { dir });
 }
 
@@ -950,12 +1047,12 @@ function renderCompactReveal({first=false,swipe=false}={}){
   const reading=readingLine(current.items);
   const row=swipe?revealSwipeItem:revealCompactItem;
   const root=showPanel(`<article class="us-gv2-reveal us-gv5-reveal${swipe?' is-swipe':''}${first?' is-first-reveal':''}" data-gv5-reveal>
-    ${revealMove(groups)}
     <div class="us-gv5-reveal-groups">
-      <p class="us-gv5-reveal-label">Cosa avevate risposto</p>
+      ${swipe?'':'<p class="us-gv5-reveal-label">Cosa avevate risposto</p>'}
       <ol class="us-gv5-reveal-list">${ordered.map(({item,number,kind})=>row(item,number,kind)).join('')}</ol>
     </div>
     ${reading?`<p class="us-gv5-reading">${esc(reading)}</p>`:''}
+    ${revealMove(groups)}
     <div class="us-gv2-actions is-single"><button type="button" class="primary" data-gv2-action="back">Torna a Gioca</button></div>
   </article>`,{kicker:'LE VOSTRE SCELTE',title:revealHead(groups),label:familyName(current.game_family),tone:swipe?'ambra':'menta'});
   // The mockup's reveal: each answer rises in turn (first reveal only).
@@ -1155,7 +1252,7 @@ function boot() {
 }
 
 window.USGameV2 = {
-  load, refresh, showHub, openPerVoi, startRound, startSwipe, openSession, chooseMode, chooseSwipe,
+  load, refresh, showHub, openPerVoi, startRound, startSwipe, openSession, chooseMode, chooseSwipe, paintWeek,
   isOpen: () => view !== 'hub',
   close: showHub,
 };
