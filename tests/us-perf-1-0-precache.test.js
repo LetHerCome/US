@@ -78,5 +78,7 @@ test('perf 1.0 precache: no approved master is precached or loaded; the size bud
   // The founder-approved 1.0 audit fixes (first run, Lasciato per te, Ricordi,
   // Gioca families) and their English add ~40 KB: 2.4 -> 2.5 MB. Next trim: the
   // retired Noi hub / week board rules still in styles.css (~16 KB).
-  assert.ok(total <= 2.5 * 1024 * 1024, `precache is ${total} bytes: stays under 2.5 MB`);
+  // The founder asked for every screen and animation to match the approved
+  // mockup exactly (2026-10-15): ~125 KB of area CSS/JS, 2.5 -> 2.75 MB.
+  assert.ok(total <= 2.75 * 1024 * 1024, `precache is ${total} bytes: stays under 2.75 MB`);
 });
