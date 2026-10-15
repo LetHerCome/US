@@ -109,9 +109,9 @@
 :root[data-us-theme] .us-aurora::before{background:radial-gradient(36% 86% at 20% 50%,var(--us-aurora-a),transparent 74%),radial-gradient(34% 86% at 52% 44%,var(--us-aurora-b),transparent 74%),radial-gradient(32% 86% at 82% 56%,var(--us-aurora-c),transparent 74%)}
 
 /* ---------- ACCENTS · interactive ink only (declared after themes: accent wins) ---------- */
-:root[data-us-accent="cherry"],.us-cos-accent[data-accent="cherry"]{--us-color-rose:#e8364f;--us-color-rose-2:#ff7487;--us-color-violet:#b8295c;--us-color-accent-ink:#ffb4bf;--us-color-accent-soft:rgba(232,54,79,.15);--us-color-accent-line:rgba(255,116,135,.3);--us-color-accent-strong:#ff8a9a;--us-accent-gradient:linear-gradient(135deg,#d92745 0%,#e8364f 50%,#b8295c 125%);--us-accent-shadow:0 8px 22px rgba(217,39,69,.18);--us-color-text-on-accent:#fff}
-:root[data-us-accent="champagne"],.us-cos-accent[data-accent="champagne"]{--us-color-rose:#e2c38a;--us-color-rose-2:#f2dcae;--us-color-violet:#b99258;--us-color-accent-ink:#efd9ad;--us-color-accent-soft:rgba(226,195,138,.13);--us-color-accent-line:rgba(239,217,173,.28);--us-color-accent-strong:#e5c893;--us-accent-gradient:linear-gradient(135deg,#f1dcac 0%,#dcbc80 55%,#b99258 125%);--us-accent-shadow:0 8px 22px rgba(220,188,128,.16);--us-color-text-on-accent:#241a0c}
-:root[data-us-accent="ice"],.us-cos-accent[data-accent="ice"]{--us-color-rose:#9fd2ff;--us-color-rose-2:#cde8ff;--us-color-violet:#79a9e6;--us-color-accent-ink:#c9e5ff;--us-color-accent-soft:rgba(159,210,255,.13);--us-color-accent-line:rgba(201,229,255,.28);--us-color-accent-strong:#a9d6ff;--us-accent-gradient:linear-gradient(135deg,#d3ecff 0%,#a5d3fb 55%,#79a9e6 125%);--us-accent-shadow:0 8px 22px rgba(121,169,230,.16);--us-color-text-on-accent:#0b1826}
+:root[data-us-accent="cherry"],.us-cos-accent[data-accent="cherry"]{--us-noi:#f0566c}
+:root[data-us-accent="champagne"],.us-cos-accent[data-accent="champagne"]{--us-noi:#e6c78e}
+:root[data-us-accent="ice"],.us-cos-accent[data-accent="ice"]{--us-noi:#9fd2ff}
 :root[data-us-theme] .us-nav-premium button.active .us-nav-icon-on,:root[data-us-accent] .us-nav-premium button.active .us-nav-icon-on{color:var(--us-color-accent-strong)}
 :root[data-us-theme] .us-nav-indicator,:root[data-us-accent] .us-nav-indicator{background:linear-gradient(150deg,color-mix(in srgb,var(--us-color-rose) 22%,transparent),color-mix(in srgb,var(--us-color-violet) 17%,transparent))}
 

@@ -64,7 +64,8 @@ function makeFakeMedia(tagName) {
 function mountConservati({ contributions = [], sources = [], profiles = [], signError = null } = {}) {
   const ids = [
     'conservatiOverlay', 'conservatiLoading', 'conservatiEmpty', 'conservatiError',
-    'conservatiList', 'conservatiDetail', 'conservatiClose', 'conservatiBackdrop', 'conservatiRetry'
+    'conservatiList', 'conservatiDetail', 'conservatiClose', 'conservatiBackdrop', 'conservatiRetry',
+    'conservatiEntry', 'conservatiCount'
   ];
   const elements = new Map(ids.map(id => [id, new FakeElement(id)]));
   const coupleId = 'couple-current';
@@ -91,13 +92,17 @@ function mountConservati({ contributions = [], sources = [], profiles = [], sign
   };
   const client = {
     from(table) {
-      const query = { table, filters: [] };
+      const query = { table, filters: [], head: false };
       const chain = {
-        select() { return chain; },
+        select(_columns, options) { if (options?.head) query.head = true; return chain; },
         eq(column, value) { query.filters.push({ column, value }); return chain; },
         in(column, values) { query.filters.push({ column, values }); return chain; },
         order() { return chain; },
-        then(resolve, reject) { return Promise.resolve(responseFor(query)).then(resolve, reject); }
+        then(resolve, reject) {
+          const response = responseFor(query);
+          const answer = query.head ? { data: null, count: response.data?.length || 0, error: response.error } : response;
+          return Promise.resolve(answer).then(resolve, reject);
+        }
       };
       return chain;
     }
@@ -321,4 +326,28 @@ test('M5J Conservati back pauses and unloads focused audio or video before resto
     assert.equal(media.loadCalls, 1, `${kind} must reset after unloading`);
     assert.equal(list.hidden, false, 'the detail back action must restore the list');
   }
+});
+
+// US 1.0 R8 / L9: no door to an empty room, and a kept photo shows itself in the list.
+test('M5J R8: the Conservati entry stays hidden while nothing is kept, and kept photos show a thumbnail', async () => {
+  const empty = mountConservati();
+  await empty.window.UsConservati.refreshEntry();
+  assert.equal(empty.elements.get('conservatiEntry').hidden, true);
+  assert.equal(empty.elements.get('conservatiCount').textContent ?? '', '');
+
+  const fixtures = conservedFixtures();
+  const kept = mountConservati(fixtures);
+  await kept.window.UsConservati.refreshEntry();
+  assert.equal(kept.elements.get('conservatiEntry').hidden, false);
+  assert.equal(kept.elements.get('conservatiCount').textContent, String(fixtures.contributions.length));
+  assert.equal(kept.queries[0].filters.find(filter => filter.column === 'couple_id')?.value, kept.coupleId);
+
+  kept.window.openConservati();
+  await tick();
+  const list = kept.elements.get('conservatiList').innerHTML;
+  assert.match(list, /<span class="conservati-card-mark conservati-card-thumb" aria-hidden="true"><img src="https:\/\/signed\.example\/couple-current\/profile-sender\/left\/photo\.bin" alt=""/);
+  assert.equal((list.match(/conservati-card-thumb/g) || []).length, 1, 'only photos become thumbnails');
+  const html = read('index.html');
+  assert.match(html, /<button[^>]*id="conservatiEntry"[^>]*hidden>/);
+  assert.match(html, /Quello che non conservate in Lasciato per te sparisce dopo 30 giorni\./);
 });

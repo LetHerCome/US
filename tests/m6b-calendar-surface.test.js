@@ -15,45 +15,45 @@ const css = () => read('calendar.css');
 const nav = () => read('navigation.js');
 const worker = () => read('service-worker.js');
 const capacitorBuild = () => read('scripts/build-capacitor-web.mjs');
+const noi = () => read('noi-v2.js');
 
-// (1) the weekly board is the single Calendar entry point inside Noi.
-test('M6B (1): Lavagna is the single Calendario entry point inside Noi', () => {
+// US 1.0 (audit N10): the old full-screen calendar overlay is gone. Noi is the
+// one calendar (noi-v2.js); calendar.js keeps the pure rules, the shared read,
+// the entry detail and the quick form. Tests about the overlay now assert the
+// same promise on the Noi calendar.
+
+// (1) US 1.0: "La nostra settimana" (the old Lavagna) is the week view of the one Noi calendar.
+test('M6B (1): "La nostra settimana" opens the one Noi calendar in its week view', () => {
   const bond = html().match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
-  assert.match(bond, /id="noiWeekBoard"/);
-  assert.match(bond, /id="noiWeekBoardOpen" data-noi-week-board-open/);
-  assert.match(bond, /<small>LA NOSTRA SETTIMANA<\/small><b>Lavagna<\/b>/);
-  assert.doesNotMatch(bond, /id="usCalendarEntry"|noi-hub-card--calendar/);
-  assert.match(js(), /\$\('noiWeekBoardOpen'\)\?\.addEventListener\('click',[\s\S]*?window\.openCalendarSurface\?\.\(date\)/);
+  assert.match(bond, /data-noi-open-link="lavagna"[^>]*>[\s\S]*?<b>Lavagna<\/b>/);
+  assert.doesNotMatch(bond, /id="noiWeekBoard"|id="noiHub"|id="usCalendarEntry"|noi-hub-card--calendar/);
+  assert.match(noi(), /if\(link==='lavagna'\)\{mode='week';render\(\);/);
   assert.doesNotMatch(html(), /data-page="calendar"/, 'must not become a bottom-nav destination');
 });
 
-// (2) opens/closes as a registered navigation layer.
-test('M6B (2): the calendar surface opens and closes through the shared overlay idiom', () => {
-  assert.match(js(), /function openCalendarSurface\(\)/);
-  assert.match(js(), /function closeCalendarSurface\(\)/);
-  assert.match(js(), /overlay\.classList\.add\('open'\)/);
-  assert.match(js(), /window\.UsUiFoundation\?\.exitSurface/);
-  assert.match(nav(), /name:'calendar',[\s\S]*?close:\(\)=>window\.closeCalendarSurface\?\.\(\)/);
+// (2) US 1.0: no overlay any more; the old entry point opens the Noi calendar.
+test('M6B (2): openCalendarSurface opens the Noi calendar instead of an overlay', () => {
+  assert.doesNotMatch(html(), /id="usCalendarOverlay"/);
+  assert.match(js(), /function openCalendarSurface\(targetDateISO, options = \{\}\) \{\s*window\.USNoiV2\?\.openCalendar\?\.\(\{ date: targetDateISO, mode: options\?\.mode === 'week' \? 'week' : 'calendar' \}\);\s*\}/);
+  assert.doesNotMatch(js(), /function closeCalendarSurface\(|overlay\.classList\.add\('open'\)/);
+  assert.doesNotMatch(nav(), /name:'calendar',/);
 });
 
-// (3) current month renders in Italian.
-test('M6B (3): the visible month/year label renders in Italian and the grid is a fixed Monday-first 42-day span', () => {
-  assert.match(js(), /MONTHS_IT\[viewMonth\]/);
-  assert.match(js(), /Settembre/);
+// (3) the month label is Italian; the shared read covers a fixed Monday-first 42-day span.
+test('M6B (3): the visible month label renders in Italian and the read is a fixed Monday-first 42-day span', () => {
+  assert.match(noi(), /'settembre'/);
+  assert.match(js(), /const range=monthGridRange\(year,month\);/);
   const { gridStart, gridEnd } = cal.monthGridRange(2026, 8); // September 2026
   assert.equal(gridStart.getDay(), 1, 'grid must start on a Monday');
   assert.equal((gridEnd.getTime() - gridStart.getTime()) / 86400000, 42);
   assert.ok(gridStart <= new Date(2026, 8, 1) && gridEnd > new Date(2026, 8, 30));
 });
 
-// (4) prev/next navigation, including year rollover. Since M6C the buttons route
-// through stepView(delta): month mode still lands on shiftMonth(±1), week mode
-// steps the week instead — same month behavior, one control.
+// (4) prev/next move the Noi month (or the week, in week mode), across year boundaries.
 test('M6B (4): prev/next controls shift the visible month, wrapping across year boundaries', () => {
-  assert.match(js(), /function stepView\(delta\)/);
-  assert.match(js(), /else shiftMonth\(delta\)/, 'in month mode prev/next still call shiftMonth');
-  assert.match(js(), /\(\) => stepView\(-1\)\)/);
-  assert.match(js(), /\(\) => stepView\(1\)\)/);
+  assert.match(noi(), /\$\('usNoiV2Prev'\)\?\.addEventListener\('click',\(\)=>shiftMonth\(-1\)\)/);
+  assert.match(noi(), /\$\('usNoiV2Next'\)\?\.addEventListener\('click',\(\)=>shiftMonth\(1\)\)/);
+  assert.match(noi(), /const next=new Date\(year,month\+delta,1,12\);/, 'Date handles the year rollover');
   const decGrid = cal.monthGridRange(2026, 11);
   const janGrid = cal.monthGridRange(2027, 0);
   assert.ok(decGrid.gridEnd.getFullYear() >= 2026, 'December grid spills into January');
@@ -62,25 +62,22 @@ test('M6B (4): prev/next controls shift the visible month, wrapping across year 
 
 // (5) Today action.
 test('M6B (5): the Oggi control jumps to and selects the current day', () => {
-  assert.match(js(), /function goToToday\(\)/);
-  assert.match(js(), /usCalendarTodayBtn'\)\?\.addEventListener\('click', ?goToToday\)/);
-  assert.match(js(), /selectedDate = todayISO\(\)/);
+  assert.match(html(), /id="usNoiV2Today"/);
+  assert.match(noi(), /\$\('usNoiV2Today'\)\?\.addEventListener\('click',/);
+  assert.match(noi(), /if\(direction===0\)\{[^}]*selected=today\(\);render\(\);/);
 });
 
 // (6) M10.1: ONE shared month grid, at every width.
 test('M6B (6): exactly one shared month grid, at every width', () => {
-  assert.equal((html().match(/class="us-cal-grid"/g) || []).length, 1);
-  assert.match(html(), /id="usCalendarGrid"/);
-  assert.doesNotMatch(html(), /usCalendarGridMobile|usCalendarGridA|usCalendarGridB|usCalendarPaneWide|usCalendarWideHead/);
+  assert.equal((html().match(/id="usNoiV2Content"/g) || []).length, 1);
+  assert.equal((noi().match(/function calendarMarkup\(/g) || []).length, 1);
+  assert.doesNotMatch(html(), /id="usCalendarGrid"|usCalendarGridMobile|usCalendarGridA|usCalendarGridB|usCalendarPaneWide|usCalendarWideHead/);
 });
 
-// (7) M10.1: the wide breakpoint makes the ONE month roomier — it never splits it.
-test('M6B (7): a wide viewport enlarges the single month, it does not split it per partner', () => {
-  const wideBlock = css().match(/@media\(min-width:860px\)\{[\s\S]*?\n\}/)?.[0] || '';
-  assert.match(wideBlock, /\.us-cal-pane-month\{max-width:680px/);
-  assert.match(wideBlock, /\.us-cal-day\{min-height:64px/);
-  assert.doesNotMatch(css() + js(), /us-cal-pane-wide|pane-mobile|renderWideGrids|roleFilter/);
-  assert.equal((js().match(/function renderMonthGrid\(/g) || []).length, 1);
+// (7) M10.1: never one month per partner.
+test('M6B (7): the month is never split per partner', () => {
+  assert.doesNotMatch(css() + js() + noi(), /us-cal-pane-wide|pane-mobile|renderWideGrids|roleFilter/);
+  assert.doesNotMatch(js(), /function renderMonthGrid\(/, 'the old overlay grid is gone');
 });
 
 // (8) both partner identities shown, from live profile data, deterministically ordered.
@@ -118,21 +115,20 @@ test('M6B (11): shared create/read never duplicates a domain row per partner', (
   assert.equal(insertCalls.length, 1, 'exactly one insert call site — no per-partner duplication loop');
 });
 
-// (12) M10.1C: tapping a day SELECTS it; the detail sits under the grid and
-// creation is the explicit "Aggiungi impegno". The Oggi deep link selects the day.
+// (12) tapping a day SELECTS it; the detail sits under the month and the "+" creates.
 test('M6B (12): tapping a day selects it; the selected-day detail replaces the day sheet', () => {
-  assert.doesNotMatch(js(), /openDaySheet|closeCalendarDaySheet/);
+  assert.doesNotMatch(js() + noi(), /openDaySheet|closeCalendarDaySheet/);
   assert.doesNotMatch(html(), /usCalendarDaySheet/);
-  assert.match(js(), /\.us-cal-day\[data-date\]'\)\.forEach\(\(btn\) => btn\.addEventListener\('click', \(\) => selectDay\(btn\.dataset\.date\)\)\)/);
-  assert.match(js(), /selectedDate = targetDateISO;/);
-  assert.match(html(), /id="usCalendarAddEntry"[^>]*>Aggiungi impegno</);
+  assert.match(noi(), /const day=e\.target\.closest\('\[data-noi-day\]'\);if\(day\)\{chooseDay\(/);
+  assert.match(noi(), /selected=day;/);
+  assert.match(html(), /id="usNoiV2AddTop" data-noi-add/);
 });
 
-// (13) the selected day separates partner A / partner B / Insieme — real lanes only.
-test('M6B (13): the selected day renders one section per lane that has something: each partner and Insieme', () => {
-  assert.match(js(), /groupDayEntries\(dayEntries, entryLaneRole\)/);
-  assert.match(js(), /ownerNameFor\(lane,/);
-  assert.match(js(), /Niente in programma\./, 'an empty day says so once, without empty lane scaffolding');
+// (13) the selected day lists what it has, each with whose it is.
+test('M6B (13): the selected day lists its items with their owner; an empty day says so once', () => {
+  assert.match(noi(), /function detailMarkup\(index\)[\s\S]*?active\.map\(item=>itemMarkup\(selected,item\)\)/);
+  assert.match(noi(), /us-noi-v2-owner[^`]*\$\{esc\(ownerLabel\(item\)\)\}/);
+  assert.match(noi(), /Nessun momento in questo giorno\./, 'an empty day says so once, without empty lane scaffolding');
 });
 
 // (14) personal detail is read-only for the non-owner partner.
@@ -194,7 +190,7 @@ test('M6B (21): delete checks authority, asks a bounded confirmation, and calls 
 
 // (22) Supabase/RLS errors surface honestly, never thrown uncaught.
 test('M6B (22): load/save/delete failures are caught and surfaced, not silently swallowed or thrown', () => {
-  assert.match(js(), /catch \(error\) \{\s*console\.warn\('\[US Calendar\] load', error\);/);
+  assert.match(noi(), /console\.warn\('\[US Noi V2\] calendar read',e\)/, 'the Noi month read');
   assert.match(js(), /catch \(error\) \{\s*console\.warn\('\[US Calendar\] save', error\);/);
   assert.match(js(), /catch \(error\) \{\s*console\.warn\('\[US Calendar\] delete', error\);/);
   assert.match(js(), /Non riesco a salvarlo\. Riprova\./);
@@ -271,35 +267,30 @@ test('M6B (27): the interval read is bounded to the visible grid window, built v
   assert.doesNotMatch(js(), /\.select\(\s*['"]?\*/, 'no unscoped/full-history select');
 });
 
-// (28) loading state is restrained (skeleton opacity), not a blocking spinner.
+// (28) loading state is restrained, not a blocking spinner.
 test('M6B (28): a restrained loading state, not a blocking full-screen spinner', () => {
-  assert.match(js(), /usCalendarBody'\)\?\.classList\.toggle\('is-loading', ?loading\)/);
-  assert.match(css(), /\.us-cal-body\.is-loading\{opacity:/);
+  assert.match(noi(), /container\.dataset\.state=pending&&!snapshot\?'loading'/);
+  assert.match(read('noi-v2.css'), /\.us-noi-v2-content\[data-state="loading"\] \.us-noi-v2-day-marks\{opacity:0\}/);
 });
 
-// (29) empty calendar state keeps the copy; M9C: the day itself is the create action (no FAB).
-test('M6B (29): the empty calendar state has no duplicate CTA; tapping a day is the create action', () => {
-  assert.match(html(), /<b>Nessun impegno<\/b>/);
+// (29) an empty day has a short line, no duplicate CTA; the "+" is the create action.
+test('M6B (29): the empty calendar state has no duplicate CTA; the "+" is the create action', () => {
   assert.doesNotMatch(html(), /US vi aiuterà a vedere come si incastrano/, 'the empty state is a title, not a paragraph');
-  assert.doesNotMatch(html(), /usCalendarEmptyCta|class="us-cal-empty-cta"/);
-  assert.doesNotMatch(js(), /usCalendarEmptyCta/);
-  assert.doesNotMatch(html(), /usCalendarAddBtn|us-cal-fab/);
-  assert.doesNotMatch(js(), /usCalendarAddBtn/);
-  // M10.1C: the explanatory hint is gone — the selected day carries its own "Aggiungi impegno".
-  assert.doesNotMatch(html(), /us-cal-hint/);
+  assert.doesNotMatch(html() + js(), /usCalendarEmptyCta|class="us-cal-empty-cta"|usCalendarAddBtn|us-cal-fab|us-cal-hint/);
+  assert.equal((html().match(/data-noi-add/g) || []).length, 1, 'one "+" in the Noi header');
 });
 
-// (30) error/retry state keeps last good data visible.
+// (30) a failed refresh says so and keeps what was already shown.
 test('M6B (30): a failed refresh shows an error/retry banner and keeps existing entries visible', () => {
-  assert.match(js(), /Calendario non disponibile <button type="button" id="usCalendarRetry">Riprova<\/button>/);
-  assert.match(js(), /lastError\s*=\s*true;/);
-  assert.doesNotMatch(js(), /entries\s*=\s*\[\];?\s*\n\s*lastError/, 'entries must not be cleared on a failed refresh');
+  assert.match(noi(), /Calendario non raggiungibile\.<\/span><button type="button" data-noi-retry>Riprova<\/button>/);
+  assert.match(noi(), /error&&snapshot\?'Non aggiornato'/, 'with data on screen, only a quiet status');
+  assert.doesNotMatch(noi(), /catch\(e\)\{[^}]*snapshot=null/, 'entries must not be cleared on a failed refresh');
 });
 
-// (31) browser back closes detail -> day sheet -> calendar -> Noi, via the shared layer mechanism only.
+// (31) Back closes form/detail, then the week view, through navigation.js layers only.
 test('M6B (31): browser Back is wired exclusively through navigation.js layers, in nesting order', () => {
-  const layerNames = [...nav().matchAll(/name:'(calendar[\w-]*)'/g)].map((m) => m[1]);
-  assert.deepEqual(layerNames, ['calendar', 'calendar-detail', 'calendar-form']);
+  const layerNames = [...nav().matchAll(/name:'((?:calendar|noi)[\w-]*)'/g)].map((m) => m[1]);
+  assert.deepEqual(layerNames, ['noi-week', 'noi-section', 'noi-idea-detail', 'calendar-detail', 'calendar-form']);
   assert.doesNotMatch(js(), /history\.(push|replace)State|addEventListener\('popstate'/, 'no parallel history system inside calendar.js');
 });
 
@@ -390,11 +381,13 @@ test('M6B (42): Inizio/Fine visibility follows Tutto il giorno', () => {
   assert.match(js(), /usCalendarAllDayInput'\)\?\.addEventListener\('change', ?toggleAllDayFields\)/);
 });
 
-// (43) M9C: no Per me/Insieme control; a manual entry is always personal.
-test('M6B (43): manual quick entries are personal; Insieme is created from Da vivere', () => {
-  assert.doesNotMatch(html(), /usCalendarKindPicker|data-us-cal-kind/);
-  assert.match(js(), /calendarKind = mode === 'edit' \? entry\.entry_type : 'personal';/);
+// (43) US 1.0 (N1): one "+" with three choices; a new entry starts as "Solo mio".
+test('M6B (43): the "+" chooses Solo mio, Nostro or Data speciale; ideas still create Nostro', () => {
+  const formBlock = html().match(/<form class="us-cal-form" id="usCalendarForm">[\s\S]*?<\/form>/)?.[0] || '';
+  for (const kind of ['personal', 'shared', 'event']) assert.match(formBlock, new RegExp(`data-us-calendar-kind="${kind}"`));
+  assert.match(js(), /setFormKind\(mode === 'edit' \? entry\.entry_type : 'personal'\);/);
   assert.match(js(), /const kind = ideaLink \? 'shared' : calendarKind;/);
+  assert.match(js(), /const open = window\.USNoiV2\?\.addSpecialDate;/);
 });
 
 // (44) all-day create sets start_date == end_date == Giorno, timestamps null.
@@ -489,7 +482,7 @@ test('M6B (49): a single shared icon-centering rule is defined once and applied 
   const foundation = read('ui-foundation.css');
   assert.match(foundation, /\.us-icon-center\s*\{\s*display:inline-flex;\s*align-items:center;\s*justify-content:center;\s*\}/, 'the shared primitive must live in ui-foundation.css, the stated authority for cross-cutting UI primitives');
 
-  for (const id of ['usCalendarClose', 'usCalendarPrev', 'usCalendarNext', 'usCalendarDetailClose', 'usCalendarFormClose']) {
+  for (const id of ['usCalendarDetailClose', 'usCalendarFormClose']) {
     const tag = html().match(new RegExp(`<[^>]*id="${id}"[^>]*>`))?.[0] || '';
     assert.ok(tag, `${id} must exist in the markup`);
     assert.match(tag, /class="[^"]*\bus-icon-center\b[^"]*"/, `${id} must use the shared centering class`);

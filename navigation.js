@@ -55,6 +55,23 @@ if(originalGo){
 
 const layers=[
   {
+    // "La nostra settimana" is a view of the Noi calendar: Back returns to the
+    // month before it leaves Noi. First in the list, so anything opened over
+    // the week (a sheet, a section) is closed before it.
+    name:'noi-week',
+    find:()=>document.getElementById('usNoiV2WeekBack'),
+    open:el=>Boolean(el&&!el.hidden&&document.getElementById('bond')?.classList.contains('active')),
+    close:()=>window.USNoiV2?.closeWeek?.()
+  },
+  {
+    // M9D — a Noi section open in place (Missioni, Eventi): its bar is shown.
+    // Low in the list: an Eventi editor or an idea opened from it sits above.
+    name:'noi-section',
+    find:()=>document.getElementById('noiSectionBar'),
+    open:el=>Boolean(el&&!el.hidden),
+    close:()=>window.closeNoiSection?.()
+  },
+  {
     name:'countdown',
     find:()=>document.getElementById('usCountdownSheet'),
     open:el=>el?.classList.contains('open'),
@@ -111,13 +128,6 @@ const layers=[
     // tab must not swallow the native Back of the page the user is looking at.
     open:el=>Boolean(el?.classList.contains('active')&&window.USGameV2?.isOpen()),
     close:()=>window.USGameV2?.close()
-  },
-  {
-    // M9D — superficie interna del hub Noi (Risonanza, Da vivere, Quest).
-    name:'noi-section',
-    find:()=>document.getElementById('noiHub'),
-    open:el=>Boolean(el&&el.hidden),
-    close:()=>window.closeNoiSection?.()
   },
   {
     name:'noi-idea-detail',
@@ -190,12 +200,6 @@ const layers=[
     close:()=>window.closeConservati?.()
   },
   {
-    name:'calendar',
-    find:()=>document.getElementById('usCalendarOverlay'),
-    open:el=>el?.classList.contains('open'),
-    close:()=>window.closeCalendarSurface?.()
-  },
-  {
     name:'calendar-detail',
     find:()=>document.getElementById('usCalendarDetailSheet'),
     open:el=>el?.classList.contains('open'),
@@ -219,6 +223,20 @@ const layers=[
     find:()=>document.getElementById('usLookDetail'),
     open:el=>el?.classList.contains('open'),
     close:()=>window.USOggiLook?.back?.()
+  },
+  {
+    // Sintonia: the reward window and the level moment sit above everything.
+    // Back does what their own button does (Chiudi keeps the reward).
+    name:'progression-unlock',
+    find:()=>document.getElementById('usProgressionUnlock'),
+    open:el=>el?.getAttribute('aria-hidden')==='false',
+    close:()=>window.USProgression?.closeUnlock?.()
+  },
+  {
+    name:'level-moment',
+    find:()=>document.querySelector('.us-level-moment'),
+    open:el=>Boolean(el?.isConnected),
+    close:()=>window.USProgression?.closeLevelMoment?.()
   }
 ];
 
@@ -331,7 +349,10 @@ function applyHistoryState(state){
   closeLayersAbove(entryIndex(state),targetLayer);
 
   if(originalGo&&targetPage&&activePage()!==targetPage){
-    originalGo(targetPage,{history:false});
+    // Back from a sub-page (Settings over Noi) slides it away as the mockup's
+    // pop(); the history is not touched because applyingHistory is still on.
+    if(window.UsDueColori?.isSubPage?.(activePage(),targetPage)&&typeof window.go==='function')window.go(targetPage,{history:false});
+    else originalGo(targetPage,{history:false});
   }
 
   // If a state refers to an already-open underlying layer, leave it untouched.

@@ -8,7 +8,8 @@ const html=read('index.html'), js=read('progression.js'), css=read('progression.
 
 test('Progression V1: user-facing Risonanza becomes Sintonia and exposes Ritmo + full unlock catalog',()=>{
   const bond=html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0]||'';
-  assert.match(bond,/>Sintonia</);
+  // US 1.0: the hidden old hub tile (kicker "Sintonia") is gone; the visible label is the resonance title.
+  assert.match(bond,/>Sintonia</i);
   assert.match(bond,/aria-label="Sintonia attuale"/);
   assert.match(bond,/id="usProgressionRhythmValue"/);
   assert.match(bond,/id="usProgressionNext"/);
@@ -28,7 +29,9 @@ test('Progression V1: unlock authority stays server-side while cosmetic equip is
   assert.match(js,/window\.localStorage\.setItem/);
   assert.match(css,/@keyframes us-progression-swoosh/);
   assert.match(css,/prefers-reduced-motion:reduce/);
-  assert.match(js,/In uso · tocca per togliere/);
+  // Round 3 (mockup parity): a tile in use says so; the slot's free look (Notte, Orchidea, Fermo) is the way back.
+  assert.match(js,/`\$\{title\} è già in uso`/);
+  assert.match(js,/data-progression-default=/);
 });
 
 test('Progression UI: collection uses two large columns, no inner scroll and collapsible categories',()=>{

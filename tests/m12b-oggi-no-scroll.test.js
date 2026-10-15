@@ -5,10 +5,11 @@
 //    across Oggi states: the document is never taller than the viewport, no
 //    clipping rule is in effect while measuring, every visible Oggi control
 //    sits between the top bar and the bottom nav, Oggi surfaces never overlap,
-//    and M12A arbitration still shows at most 1 primary + 1 quiet item.
-//    Since US Home Cleanup the dashboard stack (#usOggiStack) is retired and
-//    stays mounted but invisible; what Oggi shows is the photo/countdown, the
-//    fixed priority notice and the transient Daily Question nudge.
+//    and the 1.0 arbitration shows at most 1 evidence item + the daily card.
+//    The dashboard stack (#usOggiStack) stays retired, mounted but invisible;
+//    what Oggi shows is the photo/countdown and the Oggi dock: the evidence
+//    (priority notice or notifications invite) and the daily question card,
+//    which stays until both have answered (1.0 O1).
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -16,7 +17,7 @@ const path = require('node:path');
 const { ROOT, loadChromium, startServer, FAKE_SUPABASE } = require('./helpers/oggi-browser');
 
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
-const css = () => ['styles.css', 'ui-foundation.css', 'identity.css', 'fix4.css', 'polish4.css', 'settings2.css', 'calendar.css', 'events.css', 'games.css', 'moments-albums.css', 'left-for-you.css', 'stories.css']
+const css = () => ['styles.css', 'ui-foundation.css', 'identity.css', 'fix4.css', 'settings2.css', 'calendar.css', 'events.css', 'games.css', 'moments-albums.css', 'left-for-you.css', 'stories.css']
   .map(read).join('\n');
 
 test('M12B.1 static: Oggi keeps no overflow clip on body, html or #home', () => {
@@ -63,15 +64,17 @@ function fixtures({ moments = true, event = true, eventTitle = 'Concerto di Elis
   };
 }
 
-// What each state must put on Oggi under the post-Home-Cleanup contract:
-// `nudge` is the transient Daily Question nudge (its copy), null means no nudge.
+// What each state must put on Oggi under the 1.0 contract: `dock` is the copy
+// the Oggi dock must carry. The daily card never leaves before both answered:
+// after my answer it waits (O1); when the answers are ready the priority
+// notice speaks for the day.
 const STATES = {
-  'busy: event + Daily Question (partner answered)': { fx: fixtures(), nudge: /ha già risposto · tocca a te/ },
-  'long texts: long event title + long question': { fx: fixtures({ eventTitle: 'La cena di compleanno a sorpresa con tutta la famiglia di Beatrice a Trastevere' }), nudge: /ha già risposto · tocca a te/ },
-  'answers ready notice (dismissable) + event': { fx: fixtures({ daily: 'ready' }), nudge: /Le vostre risposte sono pronte/ },
-  'empty: no Ricordo yet + Daily Question': { fx: fixtures({ moments: false, event: false, daily: 'answer' }), nudge: /Una domanda per voi oggi/ },
-  'quiet push opt-in wins the quiet slot': { fx: fixtures({ event: false, push: true, daily: 'answer' }), nudge: /Una domanda per voi oggi/ },
-  'calm: nothing to do': { fx: fixtures({ event: false, daily: 'answered' }), nudge: null }
+  'busy: event + Daily Question (partner answered)': { fx: fixtures(), dock: /ha già risposto · tocca a te/ },
+  'long texts: long event title + long question': { fx: fixtures({ eventTitle: 'La cena di compleanno a sorpresa con tutta la famiglia di Beatrice a Trastevere' }), dock: /ha già risposto · tocca a te/ },
+  'answers ready notice (dismissable) + event': { fx: fixtures({ daily: 'ready' }), dock: /Le vostre risposte sono pronte/ },
+  'empty: no Ricordo yet + Daily Question': { fx: fixtures({ moments: false, event: false, daily: 'answer' }), dock: /Una domanda, due risposte/ },
+  'notifications invite holds the evidence slot': { fx: fixtures({ event: false, push: true, daily: 'answer' }), dock: /Una domanda, due risposte/ },
+  'calm: I answered, waiting for the other': { fx: fixtures({ event: false, daily: 'answered' }), dock: /Hai risposto · aspettiamo Beatrice/ }
 };
 
 async function measure(page) {
@@ -81,23 +84,25 @@ async function measure(page) {
     const clip = (el) => /hidden|clip/.test(getComputedStyle(el).overflowY);
     const top = box(document.querySelector('.top.us-premium-top'));
     const nav = box(document.querySelector('.nav'));
-    // Oggi surfaces after Home Cleanup: the fixed priority notice, the
-    // transient Daily Question nudge, the empty state and the bottom row.
-    const surfaceIds = ['usTodayPriorityRegion', 'usDailyNudge', 'homeEmptyState', 'distanceWidget', 'pushOptInCard'];
+    // Oggi surfaces in 1.0: the dock (evidence + daily card), the countdown
+    // or its entry, the empty state and the bottom row.
+    const surfaceIds = ['usTodayPriorityRegion', 'usDailyRitual', 'homeEmptyState', 'distanceWidget', 'pushOptInCard', 'usCountdownDisplay', 'usCountdownEntry'];
     const surfaces = surfaceIds.map((id) => document.getElementById(id)).filter(visible).map((el) => ({ id: el.id, ...box(el) }));
-    const controls = [...document.querySelectorAll('#homeHero button, #homeHero a, #homeHero [role=button], #usDailyNudge')]
+    const controls = [...document.querySelectorAll('#homeHero button, #homeHero a, #homeHero [role=button]')]
       .filter((el) => el.id !== 'usOggiFocusToggle' && visible(el)).map((el) => ({ id: el.id || el.className, ...box(el) }));
     const stack = document.getElementById('usOggiStack');
     const stackStyle = getComputedStyle(stack);
     const retiredStack = { mounted: Boolean(stack), visibility: stackStyle.visibility, height: stack.getBoundingClientRect().height, pointerEvents: stackStyle.pointerEvents };
-    const nudge = document.getElementById('usDailyNudge');
-    const nudgeText = visible(nudge) ? nudge.textContent.replace(/\s+/g, ' ').trim() : null;
+    const dock = document.getElementById('usOggiDock');
+    const dockText = visible(dock) ? dock.textContent.replace(/\s+/g, ' ').trim() : null;
+    const daily = document.getElementById('usDailyRitual');
+    const dailyBox = visible(daily) ? box(daily) : null;
     const slots = [...document.querySelectorAll('#homeHero [data-us-oggi-slot]')].filter(visible).map((el) => el.getAttribute('data-us-oggi-slot'));
     return {
       innerHeight, innerWidth,
       scrollHeight: document.scrollingElement.scrollHeight, scrollWidth: document.scrollingElement.scrollWidth,
       clipped: { html: clip(document.documentElement), body: clip(document.body), home: clip(document.getElementById('home')) },
-      top, nav, surfaces, controls, slots, retiredStack, nudgeText
+      top, nav, surfaces, controls, slots, retiredStack, dockText, dailyBox
     };
   });
 }
@@ -109,11 +114,11 @@ test('M12B.1 geometry: Oggi fits every supported viewport without clipping', asy
   const base = `http://127.0.0.1:${server.address().port}`;
   const browser = await chromium.launch();
   try {
-    for (const [name, { fx, nudge }] of Object.entries(STATES)) {
+    for (const [name, { fx, dock }] of Object.entries(STATES)) {
       for (const vp of VIEWPORTS) {
         const label = `${name} @ ${vp.join('x')}`;
         const mobile = vp[0] < 800;
-        const ctx = await browser.newContext({ serviceWorkers: 'block', viewport: { width: vp[0], height: vp[1] }, isMobile: mobile, hasTouch: mobile });
+        const ctx = await browser.newContext({ locale: 'it-IT', serviceWorkers: 'block', viewport: { width: vp[0], height: vp[1] }, isMobile: mobile, hasTouch: mobile });
         const page = await ctx.newPage();
         await page.route('**/*', (route) => {
           const url = route.request().url();
@@ -135,8 +140,8 @@ test('M12B.1 geometry: Oggi fits every supported viewport without clipping', asy
         await page.waitForTimeout(2200);
         if (fx.push) {
           // The opt-in's own availability depends on the browser's push support;
-          // for geometry it is shown as the arbitration's quiet candidate.
-          // The calendar insight is hidden so the opt-in actually wins the quiet slot.
+          // for geometry it is shown as the arbitration's evidence candidate
+          // (nothing else waits on Oggi in this state).
           await page.evaluate(() => { document.getElementById('usOggiCalendarWidget').hidden = true; document.getElementById('pushOptInCard').hidden = false; });
           await page.waitForTimeout(100);
         }
@@ -160,17 +165,13 @@ test('M12B.1 geometry: Oggi fits every supported viewport without clipping', asy
         }
         // The retired dashboard stack stays mounted for its authorities but never shows.
         assert.deepEqual(m.retiredStack, { mounted: true, visibility: 'hidden', height: 0, pointerEvents: 'none' }, `${label}: the retired Oggi stack is visible`);
-        if (nudge) {
-          assert.match(m.nudgeText || '', nudge, `${label}: expected the Daily Question nudge`);
-          const n = m.surfaces.find((s) => s.id === 'usDailyNudge');
-          assert.ok(n.top >= m.top.bottom - 0.5 && n.bottom <= m.nav.top + 0.5, `${label}: the nudge is not between top bar and nav`);
-        } else {
-          assert.equal(m.nudgeText, null, `${label}: no Daily Question nudge when there is nothing to do`);
-        }
-        assert.ok(m.slots.filter((s) => s === 'primary').length <= 1, `${label}: more than one primary`);
-        assert.ok(m.slots.filter((s) => s === 'quiet').length <= 1, `${label}: more than one quiet`);
+        assert.match(m.dockText || '', dock, `${label}: expected the Oggi dock to say ${dock}`);
+        if (m.dailyBox) assert.ok(m.dailyBox.top >= m.top.bottom - 0.5 && m.dailyBox.bottom <= m.nav.top + 0.5, `${label}: the daily card is not between top bar and nav`);
+        if (fx.daily && !fx.daily.both_answered) assert.ok(m.dailyBox, `${label}: the daily card left Oggi before both answered`);
+        assert.ok(m.slots.filter((s) => s === 'evidence').length <= 1, `${label}: more than one evidence item`);
+        assert.ok(m.slots.filter((s) => s === 'daily').length <= 1, `${label}: more than one daily card`);
         assert.equal(m.slots.includes('suppressed'), false, `${label}: a suppressed surface is still visible`);
-        if (fx.push) assert.ok(m.surfaces.some((s) => s.id === 'pushOptInCard'), `${label}: the opt-in should hold the quiet slot`);
+        if (fx.push) assert.ok(m.surfaces.some((s) => s.id === 'pushOptInCard'), `${label}: the opt-in should hold the evidence slot`);
       }
     }
   } finally {

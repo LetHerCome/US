@@ -44,6 +44,7 @@ test('M3 non introduce persistence o authority Da vivere nuova', () => {
   const noi = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
   assert.doesNotMatch(app, /living_items|shared_experiences|proposals/);
   assert.doesNotMatch(html, /Una cosa semplice da aspettare insieme|Le idee contestuali arriveranno qui|IN PREPARAZIONE/);
-  assert.match(html, /<h3 id="noiIdeaTitle">Da vivere<\/h3>/);
+  // 1.0 (N9): Da vivere is "Le vostre idee", a part of Missioni.
+  assert.match(html, /<h3 id="noiIdeaTitle">Le vostre idee<\/h3>/);
   assert.doesNotMatch(noi.match(/<section class="noi-living-section"[\s\S]*?<\/section>/)?.[0]||'', /da vivere/i);
 });

@@ -81,14 +81,14 @@
           <button type="button" class="us-story-retry" id="usStoryRetry" hidden>Riprova</button>
         </div>
         <img class="us-story-media" id="usStoryMedia" alt="Story privata" hidden>
-        <div class="us-story-top"><div class="us-story-progress" id="usStoryProgress"></div><div class="us-story-author-row"><span class="us-story-author-text"><b id="usStoryAuthorName">US.</b><small id="usStoryTime"></small></span></div></div>
+        <div class="us-story-top"><div class="us-story-progress" id="usStoryProgress"></div><div class="us-story-author-row"><span class="us-story-author-text"><b id="usStoryAuthorName" translate="no">US.</b><small id="usStoryTime"></small></span></div></div>
         <button type="button" class="us-story-close us-modal-close is-on-media" id="usStoryClose" aria-label="Chiudi" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
         <button type="button" class="us-story-delete" id="usStoryDelete" aria-label="Elimina questa Story" hidden>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 9v8m4-8v8m4-8v8M5 6h14m-2 0-1 14H8L7 6m3-3h4l1 3H9z"/></svg>
         </button>
         <button type="button" class="us-story-zone prev" id="usStoryPrev" tabindex="-1" aria-label="Story precedente"></button>
         <button type="button" class="us-story-zone next" id="usStoryNext" tabindex="-1" aria-label="Story successiva"></button>
-        <div class="us-story-caption" id="usStoryCaption" hidden></div>
+        <div class="us-story-caption" id="usStoryCaption" translate="no" hidden></div>
       `;
       document.body.appendChild(viewer);
       document.getElementById('usStoryClose')?.addEventListener('click', closeStoryViewer);

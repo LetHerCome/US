@@ -80,75 +80,67 @@ test('a completion without points is never celebrated: a quiet line says why', a
   assert.deepEqual(bare.toasts, ['Evento vissuto ♡ La Sintonia cresce con gli eventi programmati in anticipo']);
 });
 
-test('already completed without points says so without "+0 XP"; with points it is unchanged', async () => {
+// US 1.0 (N7): Eventi never shows points. A completion that earned points gets the
+// same quiet toast; labels and the complete button never promise XP.
+test('already completed says so, never with points', async () => {
   const none = await completeWith({ completed: true, already_completed: true, xp_awarded: 0, completed_at: stamp(0) });
   assert.deepEqual(none.toasts, ['Già completato']);
   const some = await completeWith({ completed: true, already_completed: true, xp_awarded: 35, completed_at: stamp(0) });
-  assert.deepEqual(some.toasts, ['Già completato · +35 XP']);
+  assert.deepEqual(some.toasts, ['Già completato']);
   assert.deepEqual([...none.celebrations, ...some.celebrations], []);
 });
 
-test('a completion with points is celebrated exactly as before', async () => {
+// Round 3 (mockup parity, 078): a completion that earned points shows the mockup's
+// "+35 XP · Evento vissuto · Sintonia" (progression.js usCelebrateXp) instead of the toast.
+test('a completion with points gets the mockup\'s +XP, and the quiet toast without it', async () => {
   const h = await completeWith({ completed: true, already_completed: false, xp_awarded: 35, occurrence_date: TODAY, xp_reason: 'planned' });
   assert.deepEqual(h.celebrations, [[35, 'Evento vissuto']]);
   assert.deepEqual(h.toasts, []);
   const bare = await completeWith({ completed: true, already_completed: false, xp_awarded: 60 }, { celebrate: false });
-  assert.deepEqual(bare.toasts, ['+60 XP Bond ✦'], 'old server answers (no xp_reason) keep working');
+  assert.deepEqual(bare.toasts, ['Evento vissuto ♡'], 'old server answers (no xp_reason) keep working');
+  assert.doesNotMatch([...h.toasts, ...bare.toasts].join(' '), /XP|Bond/);
 });
 
-test('labels show the real points of a completion, and no "+0 XP"', async () => {
+test('labels say a completion is done, never its points', async () => {
   const h = harness({
     events: [event('zero', { date: isoDay(-2) }), event('paid', { date: isoDay(-3), createdDaysAgo: 10 })],
     completions: [completion('zero', 0, { date: isoDay(-2) }), completion('paid', 50, { date: isoDay(-3), at: stamp(-3) })]
   });
   await h.window.hydrateEvents();
   const done = h.node('usEventsDoneList').innerHTML;
-  assert.match(done, /<b>Evento zero<\/b><small>Completato<\/small>/, 'not the preview of a completion that earned nothing');
-  assert.match(done, /<b>Evento paid<\/b><small>Completato · \+50 XP<\/small>/);
-  assert.doesNotMatch(done, /\+0 XP/);
-  h.window.editEvent('zero', isoDay(-2));
-  assert.equal(h.node('usEventCompleteBtn').textContent, '✓ Completato');
-  h.window.editEvent('paid', isoDay(-3));
-  assert.equal(h.node('usEventCompleteBtn').textContent, '✓ Completato · +50 XP');
+  // Parity: the mockup's rows say "Festeggiato"; titles are user content (translate="no").
+  assert.match(done, /<b translate="no">Evento zero<\/b><small>Festeggiato<\/small>/);
+  assert.match(done, /<b translate="no">Evento paid<\/b><small>Festeggiato<\/small>/);
+  assert.doesNotMatch(done, /XP/);
+  // Parity: a lived event's detail says so in its lead line; there is nothing left to mark.
+  for (const [id, date] of [['zero', isoDay(-2)], ['paid', isoDay(-3)]]) {
+    h.window.editEvent(id, date);
+    assert.equal(h.node('usEventCompleteBtn').hidden, true, id);
+    assert.equal(h.node('usEventDetailLead').textContent, 'Festeggiato insieme ♡', id);
+    assert.doesNotMatch(h.node('usEventDetailLead').textContent, /XP/);
+  }
 });
 
-test('the preview follows the server rule: nothing for an event made the same day or a day already rewarded', async () => {
+test('the complete button and the due list never promise points', async () => {
   const fresh = harness({ events: [event('today'), event('planned', { createdDaysAgo: 3 }), event('yearly', { yearly: true })] });
   await fresh.window.hydrateEvents();
-  fresh.window.editEvent('today', TODAY);
-  assert.equal(fresh.node('usEventCompleteBtn').textContent, '✓ Segna come fatto', 'made today: no promise of points');
-  fresh.window.editEvent('yearly', TODAY);
-  assert.equal(fresh.node('usEventCompleteBtn').textContent, '✓ Segna come fatto', 'a yearly event made today does not earn 60');
-  fresh.window.editEvent('planned', TODAY);
-  assert.equal(fresh.node('usEventCompleteBtn').textContent, '✓ Segna come fatto · +35 XP', 'planned ahead: unchanged');
+  for (const id of ['today', 'yearly', 'planned']) {
+    fresh.window.editEvent(id, TODAY);
+    assert.match(fresh.node('usEventCompleteBtn').innerHTML, /data-us-icon="check"[\s\S]*<span>Segna come fatto<\/span>$/, id);
+    assert.doesNotMatch(fresh.node('usEventCompleteBtn').innerHTML, /XP/, id);
+  }
 
   const due = harness({ events: [event('late', { date: isoDay(-4) }), event('kept', { date: isoDay(-4), createdDaysAgo: 30 })] });
   await due.window.hydrateEvents();
   const list = due.node('usEventsDueList').innerHTML;
-  assert.match(list, /<b>Evento late<\/b><small>Da segnare<\/small>/, 'dated before it was created: no points');
-  assert.match(list, /<b>Evento kept<\/b><small>Da segnare · \+50 XP<\/small>/);
-
-  const rewarded = harness({
-    events: [event('first', { createdDaysAgo: 3 }), event('second', { createdDaysAgo: 3 })],
-    completions: [completion('first', 35)]
-  });
-  await rewarded.window.hydrateEvents();
-  rewarded.window.editEvent('second', TODAY);
-  assert.equal(rewarded.node('usEventCompleteBtn').textContent, '✓ Segna come fatto', 'one event with points a day');
+  assert.match(list, /<b translate="no">Evento late<\/b><small>Da segnare<\/small>/);
+  assert.match(list, /<b translate="no">Evento kept<\/b><small>Da segnare<\/small>/);
+  assert.doesNotMatch(list, /XP/);
 });
 
-test('Polish: the shared celebration refuses 0 and draws nothing', () => {
-  let created = 0;
-  const window = {};
-  const document = {
-    readyState: 'complete', getElementById: () => null, querySelectorAll: () => [],
-    createElement: () => { created += 1; return { classList: { add() {}, remove() {} }, querySelector: () => ({}), setAttribute() {} }; },
-    body: { appendChild() {}, querySelectorAll: () => [] }
-  };
-  vm.runInNewContext(read('polish4.js'), {
-    window, document, console: { info() {} }, requestAnimationFrame() {}, setTimeout: () => 1, clearTimeout() {},
-    MutationObserver: class { observe() {} }, Number, Math
-  }, { filename: 'polish4.js' });
-  assert.equal(window.usCelebrateXp(0, 'Evento vissuto'), false);
-  assert.equal(created, 0);
+test('T1 1.0 + round 3: the old polish4 party is gone; usCelebrateXp is the mockup\'s +XP', () => {
+  assert.equal(fs.existsSync(path.join(ROOT, 'polish4.js')), false);
+  const progression = read('progression.js');
+  assert.match(progression, /window\.usCelebrateXp = \(n, label\) => xpPop\(n, label\);/);
+  assert.match(progression, /\{ duration: 1550, easing: EASE\.out \}/);
 });

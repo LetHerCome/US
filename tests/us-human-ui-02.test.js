@@ -78,7 +78,10 @@ test('page labels: Ricordi and Gioca stay accessible without a visible top-left 
   assert.doesNotMatch(moments, /<h2>Ricordi<\/h2>/);
   const games = read('games.js');
   assert.match(games, /<h2 class="us-gv2-sr">Gioca<\/h2>/);
-  assert.match(games, /<header class="us-gv2-head" aria-label="Disponibilità giochi settimanali">\$\{rhythmStrip\(\)\}<\/header>/);
+  // Round 3 parity (062): Sfida di oggi leads the hub, then the mockup's week.
+  assert.match(games, /<span class="us-gv4-daily-pending-title">Sfida di oggi<\/span>/);
+  assert.match(games, /<div class="us-gv2-week" id="usGv2Week" data-s role="list" aria-label="Questa settimana">/);
+  assert.doesNotMatch(games, /rhythmStrip|us-gv2-head"/);
 });
 
 // ---------------------------------------------------------------- Gioca
@@ -122,12 +125,13 @@ const round = (id, family, over = {}) => ({ id, game_family: family, item_count:
 test('Gioca V4: six existing game IDs and hero are in one bento grid', async () => {
   const html = await gioca(homeOf()).hubHtml();
   const ids = [...html.matchAll(/data-gv2-family="([a-z_]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(ids, ['scopritevi', 'confrontatevi', 'ridete', 'quanto_mi_conosci', 'rivivete', 'e_se']);
+  // G7 1.0 — "E se…?" is no longer offered (old rounds still open by id).
+  assert.deepEqual(ids, ['scopritevi', 'confrontatevi', 'ridete', 'quanto_mi_conosci', 'rivivete']);
   assert.ok(html.indexOf('us-gv2-game-grid') < html.indexOf('data-gv2-action="per-voi"'), 'Per voi is the first bento tile inside the game grid');
   assert.ok(html.indexOf('data-gv2-action="per-voi"') < html.indexOf('data-gv2-action="swipe"'), 'Per voi precedes Swipe in visual and keyboard order');
   assert.equal((html.match(/data-gv2-action="per-voi"/g) || []).length, 1);
   assert.equal((html.match(/data-gv2-action="swipe"/g) || []).length, 1, 'Swipe has exactly one entry');
-  assert.match(html, /<section class="us-gv2-choose" aria-labelledby="usGv2ChooseTitle">[\s\S]*?<h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi<\/h3>[\s\S]*?<div class="us-gv2-game-grid">/);
+  assert.match(html, /<section class="us-gv2-choose" aria-labelledby="usGv2ChooseTitle">[\s\S]*?<h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi<\/h3>[\s\S]*?<div class="us-gv2-game-grid" data-s>/);
   assert.doesNotMatch(html, /us-gv2-deck|us-gv2-filters|data-gv2-filter/);
   assert.doesNotMatch(read('games.css'), /\.us-gv2-game-grid\{[^}]*overflow-x/, 'discovering games never needs a sideways scroll');
 });
@@ -137,7 +141,10 @@ test('Gioca: a fresh week shows no "Da continuare" and no completed list (nothin
   assert.doesNotMatch(html, /us-gv2-continue|us-gv2-done|data-gv2-session/);
 });
 
-test('Gioca: "Da continuare" rows are plain readings of open_rounds / recent, what needs you first', async () => {
+// Round 3 parity (062): a round of an offered family lives on its own tile
+// (the mockup has no list above the games); "Da continuare" keeps only rounds
+// no tile stands for (a retired family such as E se…?), after the games.
+test('Gioca: rounds are plain readings of open_rounds / recent, on their tiles; "Da continuare" holds the rest', async () => {
   const state = homeOf({
     open_rounds: [round('o1', 'ridete', { partner_complete: true }), round('o2', 'e_se', { my_answered_count: 2 }), round('o3', 'scopritevi', { my_complete: true })],
     recent: [round('r1', 'rivivete', { my_complete: true, partner_complete: true, reveal_ready: true, completed_at: '2026-09-30T10:00:00Z' }),
@@ -146,10 +153,11 @@ test('Gioca: "Da continuare" rows are plain readings of open_rounds / recent, wh
   const html = await gioca(state).hubHtml();
   const section = html.match(/<section class="us-gv2-continue"[\s\S]*?<\/section>/)?.[0] || '';
   const rows = [...section.matchAll(/data-gv2-session="([^"]+)" data-tone="([a-z]+)"/g)].map((m) => [m[1], m[2]]);
-  assert.deepEqual(rows, [['r1', 'ready'], ['o1', 'turn'], ['o2', 'progress'], ['o3', 'waiting']]);
-  assert.match(section, /<b>Ridete<\/b><\/span><small class="us-gv2-row-state" data-tone="turn">Tocca a te<\/small>/);
-  assert.match(section, /<small class="us-gv2-row-state" data-tone="waiting">Aspetti Beatrice<\/small>/);
-  assert.ok(html.indexOf('us-gv2-continue') < html.indexOf('us-gv2-choose'), 'what waits for you comes before choosing a new game');
+  assert.deepEqual(rows, [['o2', 'progress']]);
+  assert.match(section, /<b>E se…\?<\/b>/);
+  const tiles = [...html.matchAll(/data-gv2-family="([a-z_]+)" data-gv2-mode-state="open" data-gv2-session="([^"]+)" data-tone="([a-z]+)"[^>]*>[\s\S]*?<small>([^<]+)<\/small>/g)].map((m) => m.slice(1));
+  assert.deepEqual(tiles, [['scopritevi', 'o3', 'waiting', 'Aspetti Beatrice'], ['ridete', 'o1', 'turn', 'Tocca a te'], ['rivivete', 'r1', 'ready', 'Risposte pronte']]);
+  assert.ok(html.indexOf('us-gv2-continue') > html.indexOf('us-gv2-choose'), 'the rest comes after the games');
   const done = html.match(/<details class="us-gv2-done">[\s\S]*?<\/details>/)?.[0] || '';
   assert.match(done, /<summary><span>Partite completate<\/span><b>1<\/b><\/summary>/);
   assert.deepEqual([...done.matchAll(/data-gv2-session="([^"]+)"/g)].map((m) => m[1]), ['r2']);
@@ -241,7 +249,9 @@ test('Noi distance: the existing capsule render also fills the couple row, and o
   assert.doesNotMatch(render, /sb\.|localStorage|upsert|insert|update\(/);
 });
 
-test('Noi: the couple row stays centered, the weekly board owns Calendar, and active destinations stay focused', () => {
+// US 1.0 (N3/N10): the old board and hidden hub are gone. "La nostra settimana",
+// Missioni and Eventi are the three links under the one Noi calendar.
+test('Noi: the couple row stays centered, "La nostra settimana" owns the week, and destinations stay focused', () => {
   const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
   const head = bond.match(/<header class="noi-canonical-head noi-couple-head">[\s\S]*?<\/header>/)?.[0] || '';
   assert.match(head, /id="pairAvatarFrancesco"><img alt="" hidden><span class="fallback"/);
@@ -252,38 +262,21 @@ test('Noi: the couple row stays centered, the weekly board owns Calendar, and ac
   assert.ok(head.indexOf('id="noiCoupleCard"') < head.indexOf('id="usSettingsEntry"'), 'Settings lives inside the couple card');
   assert.match(app, /if\(profile\.role==='francesco'\)setAvatarSlot\('pairAvatarFrancesco',url\);/);
   assert.match(app, /if\(profile\.role==='beatrice'\)setAvatarSlot\('pairAvatarBeatrice',url\);/);
-  const board = bond.match(/<section class="noi-week-board" id="noiWeekBoard"[\s\S]*?<\/section>/)?.[0] || '';
-  assert.match(board, /id="noiWeekBoardOpen" data-noi-week-board-open/);
-  assert.match(board, /id="noiWeekBoardBody"/);
-  assert.ok(bond.indexOf('id="noiWeekBoard"') < bond.indexOf('id="noiHub"'), 'weekly board sits before the Noi destinations');
-  const hub = bond.match(/<nav class="noi-hub" id="noiHub"[\s\S]*?<\/nav>/)?.[0] || '';
-  const targets = [...hub.matchAll(/class="noi-hub-card noi-hub-card--([a-z]+)" data-noi-open="([a-z-]+)"/g)].map((m) => [m[1], m[2]]);
-  assert.deepEqual(targets, [['resonance', 'resonance'], ['quest', 'quest'], ['events', 'eventi']]);
-  assert.doesNotMatch(hub, /id="usCalendarEntry"|noi-hub-card--calendar|data-noi-open="da-vivere"|noi-hub-card--ideas/);
-  for (const id of ['noiHubResonanceTitle', 'noiHubResonanceMeta', 'noiHubResonanceFill', 'noiHubQuestTitle', 'noiHubQuestMeta', 'noiHubEventsTitle', 'noiHubEventsMeta']) {
-    assert.equal((html.match(new RegExp(`id="${id}"`, 'g')) || []).length, 1, id);
-  }
+  assert.doesNotMatch(bond, /id="noiWeekBoard"|id="noiHub"|id="usCalendarEntry"|noi-hub-card/);
+  const targets = [...bond.matchAll(/data-noi-open-link="([a-z-]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(targets, ['lavagna', 'quest', 'eventi']);
+  assert.match(app, /document\.querySelector\(`#usNoiV2 \[data-noi-open-link="\$\{from\}"\]`\)\?\.focus\(\{preventScroll:true\}\)/, 'closing a section focuses its link again');
 });
 
 
 
-test('Noi density: Lavagna replaces the Calendar row while Risonanza remains the only hub hero', () => {
+test('Noi density: the one calendar comes first, then the three links; no second hero', () => {
   const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
-  const hub = bond.match(/<nav class="noi-hub" id="noiHub"[\s\S]*?<\/nav>/)?.[0] || '';
-  const group = hub.match(/<div class="noi-hub-destinations" role="group" aria-label="Voi">[\s\S]*?<\/div>/)?.[0] || '';
-  assert.match(bond, /class="noi-week-board"/);
-  assert.match(hub, /noi-hub-card--resonance/);
-  assert.doesNotMatch(
-    hub.slice(0, hub.indexOf('noi-hub-destinations')),
-    /noi-hub-card--calendar|noi-hub-card--quest|noi-hub-card--events/
-  );
-  for (const kind of ['quest', 'events']) assert.match(group, new RegExp(`noi-hub-card--${kind}`), kind);
-  assert.doesNotMatch(group, /noi-hub-card--calendar/);
-  const css = read('styles.css');
-  assert.match(css, /US-NOI-DENSITY-02/);
-  assert.match(css, /\.noi-hub-card--resonance\{min-height:108px;/);
-  assert.match(css, /\.noi-hub-destinations[\s\S]*?border-radius:20px/);
-  assert.match(css, /\.noi-week-board-shell\{[^}]*border-radius:22px/);
+  assert.ok(bond.indexOf('id="usNoiV2Content"') < bond.indexOf('data-noi-open-link="lavagna"'), 'the calendar sits above the links');
+  assert.match(bond, /<b>Lavagna<\/b>/);
+  assert.match(bond, /<b>Missioni<\/b>/);
+  assert.match(bond, /<b>Eventi<\/b>/);
+  assert.doesNotMatch(bond, /class="noi-week-board"|noi-hub-card--resonance/);
 });
 
 test('Quest: action paths are untouched (server-authoritative confirm / reroll)', () => {
@@ -386,15 +379,19 @@ test('Settings density: utility rows, couple card and footer stay compact withou
 });
 
 
-test('Oggi density: arbitration stays authoritative while primary and quiet surfaces use compact geometry', () => {
-  const css = read('styles.css');
-  assert.match(css, /US-OGGI-DENSITY-01/);
-  assert.match(css, /#home \.us-daily-ritual\[data-us-oggi-slot="primary"\]\{[\s\S]*?min-height:70px/);
-  assert.match(css, /#home #usOggiCalendarWidget\[data-us-oggi-slot="quiet"\] \.us-oggi-card\{[\s\S]*?min-height:46px/);
-  assert.match(css, /#home #usTodayPriorityRegion\[data-us-oggi-slot="primary"\] \.us-today-priority-card\{[\s\S]*?min-height:58px/);
+// 1.0: the dock above the nav holds one evidence card and the Domanda di oggi;
+// arbitration stays authoritative, the cards keep the mockup geometry (dc-oggi.css).
+test('Oggi density: arbitration stays authoritative; the dock holds one evidence card and the daily card', () => {
+  const dcOggi = read('dc-oggi.css');
+  // Parity 2026-10 (mockup .og-bottom / .dq): a 12px column; the card is ring + kicker,
+  // the question across, then the status line and the button; short screens drop the question.
+  assert.match(dcOggi, /#home \.us-oggi-dock\{[\s\S]*?display:grid;\s*gap:12px;/);
+  assert.match(dcOggi, /#home #usDailyRitual\{[\s\S]*?grid-template-columns:auto minmax\(0,1fr\);[\s\S]*?padding:16px;[\s\S]*?border-radius:26px;/);
+  assert.match(dcOggi, /#home #usDailyRitual \.dq-foot\{grid-column:1\/-1;display:flex;/);
+  assert.match(dcOggi, /@media\(max-height:600px\)\{\n  #home #usDailyRitual \.us-daily-ritual-question\{display:none\}/);
   const app = read('app.js');
-  assert.match(app, /US_OGGI_SURFACES=Object\.freeze\(\['usTodayPriorityRegion','usOggiCalendarWidget','usDailyRitual','usDailyRevealLink','pushOptInCard'\]\)/);
-  assert.match(app, /winner\.primary===id\?'primary':winner\.quiet===id\?'quiet':'suppressed'/);
+  assert.match(app, /US_OGGI_SURFACES=Object\.freeze\(\['usTodayPriorityRegion','usDailyRitual','pushOptInCard','usOggiCalendarWidget','usDailyRevealLink'\]\)/);
+  assert.match(app, /winner\.evidence===id\?'evidence':winner\.daily===id\?'daily':'suppressed'/);
 });
 
 
@@ -405,7 +402,8 @@ test('shell: Ti penso lives in top chrome and Per voi stays inside Gioca', () =>
   assert.doesNotMatch(top, /usPerVoiTop/);
   assert.equal((html.match(/id="thinkButton"/g) || []).length, 1);
   assert.match(read('identity.css'), /US-SHELL-THINK-01/);
-  assert.match(read('polish4.css'), /Ti penso is global top chrome/);
+  // T1 1.0 — polish4.css is gone; the top-chrome rule lives in identity.css.
+  assert.equal(fs.existsSync(path.join(ROOT, 'polish4.css')), false);
   assert.match(read('games.js'), /data-gv2-action="per-voi"/);
 });
 
@@ -470,7 +468,7 @@ test('Auth first-run: private entry is compact, device-aware and keeps backend o
 
   assert.match(css, /US-AUTH-FIRST-RUN-01/);
   assert.match(auth, /US · SPAZIO PRIVATO/);
-  assert.match(auth, /Bentornato/);
+  assert.match(auth, /Eccoti <em>di nuovo<\/em>/);
   assert.match(auth, /Accedi con la tua email e password\./);
   assert.match(auth, /id="usAuthInstall"/);
   assert.doesNotMatch(auth, /authPair|pairBtn|pairCode|Magic Link/);

@@ -10,11 +10,14 @@ test('Swipe V1 client: Gioca exposes a dedicated sealed 8-card swipe flow', () =
   const js = read('games.js');
   const css = read('games.css');
 
-  assert.match(js, /const SWIPE = \{ id: 'swipe', name: 'Swipe'/);
+  assert.match(js, /const SWIPE = \{ id: 'swipe', name: 'Questo o quello'/);
   assert.match(js, /sb\.rpc\('start_swipe_round'/);
   assert.match(js, /data-gv2-action="swipe"/);
   assert.match(js, /Array\.from\(\{ length: total \}/);
-  assert.match(js, /partnerName\(\).*non vedrà le tue scelte|non vedrà le tue scelte[\s\S]*partnerName\(\)/);
+  // Round 3 parity (064): the mockup's one line under the card; "privato"
+  // is said on the tile, and the round stays sealed by the server.
+  assert.match(js, /<p class="us-gv2-swipe-note">Trascina la carta o tocca una scelta<\/p>/);
+  assert.match(js, /'8 carte · veloce e privato'/);
   assert.match(js, /pointerdown/);
   assert.match(js, /pointermove/);
   assert.match(js, /pointerup/);

@@ -183,7 +183,8 @@ test('M7C UI: a failed link deletes the just-created Calendar entry (no orphan d
   const fn = src.match(/async function linkCreatedEntryToIdea\([\s\S]*?\n\}/)?.[0] || '';
   assert.match(fn, /if \(outcome\?\.ok\) return \{ ok: true \};/);
   assert.match(fn, /sb\.from\('calendar_entries'\)\.delete\(\)\.eq\('id', entryId\)/);
-  assert.match(src, /error\?\.code === '23001' \|\| error\?\.code === '23503'\)\) \{ toast\('È collegato a Da vivere: resta nel calendario\.'\); return; \}/);
+  // US 1.0 (N9): "Da vivere" is now "Le vostre idee" inside Missioni.
+  assert.match(src, /error\?\.code === '23001' \|\| error\?\.code === '23503'\)\) \{ toast\('È collegato a una vostra idea: resta nel calendario\.'\); return; \}/);
   assert.match(src, /toast\('Impegno eliminato'\);\s*window\.hydrateNoiIdeas\?\.\(\);/);
 });
 

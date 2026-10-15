@@ -24,7 +24,7 @@ const qaFixture=({style,mode,unlocked,missing,started,active})=>{
   localStorage.clear();sessionStorage.clear();
  };
 async function pageFor(h,{width=390,height=844,reduced=false,style='editorial',mode='days',unlocked=true,missing=false,started='2022-06-23',active='custom'}={}){
- const ctx=await h.browser.newContext({viewport:{width,height},isMobile:width<800,hasTouch:true,timezoneId:'Europe/Rome',serviceWorkers:'block',reducedMotion:reduced?'reduce':'no-preference'});
+ const ctx=await h.browser.newContext({locale:'it-IT',viewport:{width,height},isMobile:width<800,hasTouch:true,timezoneId:'Europe/Rome',serviceWorkers:'block',reducedMotion:reduced?'reduce':'no-preference'});
  const page=await ctx.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/*',route=>{const u=route.request().url();if(u.startsWith(h.base))return route.continue();if(/supabase-js/.test(u))return route.fulfill({contentType:'text/javascript',body:FAKE_SUPABASE});return route.abort();});
  await page.addInitScript(qaFixture,{style,mode,unlocked,missing,started,active});

@@ -40,7 +40,7 @@ test('M6A precarica tutti gli asset shell premium e mantiene il contratto PWA', 
     assert.ok(fs.existsSync(path.join(ROOT, file.slice(1))), `${file} deve essere disponibile al runtime`);
     assert.ok(worker.includes(`"${file}"`), `${file} deve essere precachato`);
   }
-  ['Inter-Variable.woff2', 'Newsreader-Variable.woff2',
+  ['Fraunces-Soft-Roman.woff2', 'Fraunces-Soft-Italic.woff2', 'Figtree-Latin.woff2', 'Figtree-LatinExt.woff2',
     'house-regular.svg', 'house-fill.svg',
     'heart-straight-regular.svg', 'heart-straight-fill.svg',
     'images-regular.svg', 'images-fill.svg',

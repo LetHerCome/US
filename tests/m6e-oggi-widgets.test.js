@@ -13,6 +13,7 @@ const domain = require('../calendar-domain.js');
 const html = () => read('index.html');
 const js = () => read('calendar.js');
 const appJs = () => read('app.js');
+const noi = () => read('noi-v2.js');
 
 const day = (y, m, d, hh, mm) => new Date(y, m - 1, d, hh, mm, 0, 0).toISOString();
 const DAY = '2026-09-29'; // a Tuesday
@@ -128,16 +129,13 @@ test('M6E (5): the fact composer and forward-scan orchestration reuse computeFre
 // completely unaffected (structural — behavioral coverage lives in the M6B
 // suite already exercising the no-arg path).
 
+// US 1.0 (N10): the old overlay is gone; openCalendarSurface opens the Noi calendar on that day.
 test('M6E (6): openCalendarSurface accepts an optional target date and opens straight to that day, without breaking no-arg callers', () => {
-  const source = js().match(/async function openCalendarSurface\(\)[\s\S]*?\n\}/)?.[0] || '';
-  assert.match(source, /const targetDateISO = arguments\[0\]/);
-  assert.match(source, /if \(targetDateISO\)/);
-  assert.match(source, /weekStartISO = mondayOfISO\(targetDateISO\)/);
-  assert.match(source, /selectedDate = targetDateISO;/);
-  // The old Noi Calendar tile is intentionally gone; Lavagna now passes its
-  // first relevant date into the same Calendar surface. No second calendar exists.
-  assert.match(js(), /\$\('noiWeekBoardOpen'\)\?\.addEventListener\('click',[\s\S]*?window\.openCalendarSurface\?\.\(date\)/);
-  assert.doesNotMatch(html(), /id="usCalendarEntry"/);
+  assert.match(js(), /function openCalendarSurface\(targetDateISO, options = \{\}\) \{\s*window\.USNoiV2\?\.openCalendar\?\.\(\{ date: targetDateISO,/);
+  const open = noi().match(/function openMainCalendar\(dateISO,requestedMode='calendar'\)\{[\s\S]*?\n\}/)?.[0] || '';
+  assert.match(open, /if\(dateISO&&\/\^\\d\{4\}-\\d\{2\}-\\d\{2\}\$\/\.test\(dateISO\)\)\{/, 'no date: Noi keeps its month and day');
+  assert.match(open, /year=d\.getFullYear\(\);month=d\.getMonth\(\);selected=dateISO;/);
+  assert.doesNotMatch(html(), /id="usCalendarEntry"|id="noiWeekBoardOpen"/);
 });
 
 // ---------------------------------------------------------------------------
@@ -154,7 +152,8 @@ test('M6E (7): the Oggi hero gains exactly one new widget region, positioned ins
 
 test('M6E (8): the widget region is not a fourth bottom-nav destination and does not touch Calendar\'s own markup', () => {
   assert.doesNotMatch(html(), /data-page="oggi-widget"/);
-  assert.match(html(), /id="usCalendarOverlay"/, 'the existing calendar overlay markup is untouched');
+  assert.match(html(), /id="usCalendarDetailSheet"/, 'the calendar detail sheet is untouched');
+  assert.match(html(), /id="usCalendarFormSheet"/, 'the calendar form sheet is untouched');
 });
 
 // ---------------------------------------------------------------------------
@@ -413,11 +412,10 @@ test('M6E (19): getOggiCalendarInsightSource captures the couple id once and nev
 // cancellation-safe against a subsequent close or newer open.
 
 test('M6E (20): M10.1C — the date target is selected up-front; no stale day-sheet opener remains', () => {
-  const source = js();
-  assert.doesNotMatch(source, /calendarOpenToken|openDaySheet/);
-  const openSrc = source.match(/async function openCalendarSurface\(\)[\s\S]*?\n\}/)?.[0] || '';
-  assert.match(openSrc, /selectedDate = targetDateISO;/);
-  assert.doesNotMatch(openSrc, /await[^\n]*\n[^\n]*selectedDate = targetDateISO/, 'selection happens before any await');
+  assert.doesNotMatch(js() + noi(), /calendarOpenToken|openDaySheet/);
+  const open = noi().match(/function openMainCalendar\(dateISO,requestedMode='calendar'\)\{[\s\S]*?\n\}/)?.[0] || '';
+  assert.doesNotMatch(open, /await/, 'selection happens before any read');
+  assert.ok(open.indexOf('selected=dateISO') > 0 && open.indexOf('selected=dateISO') < open.indexOf('refresh()'));
 });
 
 // ---------------------------------------------------------------------------

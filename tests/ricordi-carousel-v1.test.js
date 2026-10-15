@@ -40,13 +40,15 @@ function renderer(rows=[],caption='Il nostro giorno'){
   return {ctx,el};
 }
 
+// US 1.0 R4: the cover's note is the album title and a single photo is signed by
+// the byline, so the per-photo note stays hidden there (it used to repeat both).
 test('single-photo memory keeps cover and caption with no carousel controls',()=>{
   const {ctx,el}=renderer();
   ctx.renderAlbum();
   assert.equal(el('usAlbumCover').src,'https://photos.example/cover');
   assert.equal(el('usAlbumCount').textContent,'1 foto');
-  assert.equal(el('usAlbumCoverCaption').textContent,'Il nostro giorno');
-  assert.equal(el('usAlbumCoverNote').hidden,false);
+  assert.equal(el('usAlbumCoverCaption').textContent,'');
+  assert.equal(el('usAlbumCoverNote').hidden,true);
   assert.equal(el('usAlbumPeek').hidden,true);
   assert.equal(el('usAlbumCarouselPrev').hidden,true);
   assert.equal(el('usAlbumCarouselCounter').hidden,true);
@@ -61,23 +63,30 @@ test('swipe navigation reveals the adjacent image and its OWN caption below',()=
   const {ctx,el}=renderer(rows);
   ctx.renderAlbum();
   assert.equal(el('usAlbumCount').textContent,'3 foto');
-  assert.equal(el('usAlbumPeek').src,rows[0].url);
-  assert.equal(el('usAlbumPeek').hidden,false);
-  assert.equal(el('usAlbumCarouselCounter').textContent,'1 / 3');
+  // US 1.0 R11: the next full photo is fetched only when it is shown (no peek prefetch).
+  assert.equal(el('usAlbumPeek').src,'');
+  assert.equal(el('usAlbumPeek').hidden,true);
+  assert.equal(el('usAlbumCarouselCounter').textContent,'1 di 3');
+  // US 1.0 R4: in an album even the cover says who added it.
+  assert.equal(el('usAlbumCoverAuthor').textContent,'Aggiunto da Beatrice');
+  assert.equal(el('usAlbumCoverNote').hidden,false);
   ctx.showAlbumPhoto(1,1);
   assert.equal(el('usAlbumCover').src,rows[0].url);
   assert.equal(el('usAlbumCoverCaption').textContent,'Sulla spiaggia');
   assert.equal(el('usAlbumCoverAuthor').textContent,'Aggiunto da Francesco');
   assert.equal(el('usAlbumCoverNote').hidden,false);
   assert.equal(el('usAlbumCurrentDelete').hidden,false);
-  assert.equal(el('usAlbumPeek').src,rows[1].url);
+  assert.equal(el('usAlbumPeek').src,'');
   ctx.showAlbumPhoto(2,1);
   assert.equal(el('usAlbumCover').src,rows[1].url);
-  assert.equal(el('usAlbumCoverNote').hidden,true);
+  // US 1.0 R4: a photo without a note still says who added it.
+  assert.equal(el('usAlbumCoverCaption').hidden,true);
+  assert.equal(el('usAlbumCoverAuthor').textContent,'Aggiunto da Beatrice');
+  assert.equal(el('usAlbumCoverNote').hidden,false);
   assert.equal(el('usAlbumCurrentDelete').hidden,true);
   ctx.showAlbumPhoto(3,1);
   assert.equal(el('usAlbumCover').src,'https://photos.example/cover');
-  assert.equal(el('usAlbumCarouselCounter').textContent,'1 / 3');
+  assert.equal(el('usAlbumCarouselCounter').textContent,'1 di 3');
 });
 
 test('after adding a photo the latest one is selected without duplicate grid images',()=>{
@@ -96,7 +105,9 @@ test('layout retains existing photo fullscreen, add, delete and lazy peek',()=>{
   assert.match(html,/openLightbox\(albumCarouselIndex\)/);
   assert.match(html,/deleteAlbumPhoto\(row\.id,row\.storage_path\)/);
   assert.match(html,/id="usAlbumPeek"[^>]*loading="lazy"/);
-  assert.match(html,/caption\)caption\.textContent=item\.caption\|\|''/);
+  // US 1.0 R4/R11: each photo's own note (never the cover's twice); the peek is never preloaded.
+  assert.match(html,/const ownNote=item\.cover\?'':\(item\.caption\|\|''\);/);
+  assert.match(html,/if\(peek\)\{peek\.hidden=true;peek\.removeAttribute\('src'\);\}/);
   assert.match(html,/id="usAlbumCarouselCounter"/);
   assert.match(css,/#usAlbumOverlay #usAlbumCarousel/);
   assert.match(css,/#moments \.ricordi-story/);

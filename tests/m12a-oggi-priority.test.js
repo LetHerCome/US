@@ -1,4 +1,4 @@
-// M12A — Oggi arbitration: at most one primary item and one quiet item, deterministically.
+// M12A → 1.0 — Oggi arbitration: at most one evidence card and the daily card, deterministically.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -32,72 +32,74 @@ function build(state) {
 const plain = (value) => JSON.parse(JSON.stringify(value));
 const slotOf = (elements) => Object.fromEntries(Object.entries(elements).map(([id, el]) => [id, el.attrs['data-us-oggi-slot'] || null]));
 
+// 1.0 — the dock above the nav: at most ONE evidence card (what waits for me,
+// otherwise the notifications invite until enabled) and the Domanda di oggi.
 test('arbitration: pure function picks the lowest rank per slot, ties broken by id', () => {
   const { api } = build({});
   assert.deepEqual(plain(api.arbitrateOggi([
-    { id: 'b', slot: 'primary', rank: 20 }, { id: 'a', slot: 'primary', rank: 20 }, { id: 'c', slot: 'primary', rank: 30 },
-    { id: 'q2', slot: 'quiet', rank: 30 }, { id: 'q1', slot: 'quiet', rank: 10 }
-  ])), { primary: 'a', quiet: 'q1' });
-  assert.deepEqual(plain(api.arbitrateOggi([])), { primary: null, quiet: null });
-  assert.deepEqual(plain(api.arbitrateOggi([{ id: 'x', slot: 'nonsense', rank: 1 }, { id: 'y', slot: 'primary', rank: NaN }, null])), { primary: null, quiet: null });
+    { id: 'b', slot: 'evidence', rank: 20 }, { id: 'a', slot: 'evidence', rank: 20 }, { id: 'c', slot: 'evidence', rank: 30 },
+    { id: 'd2', slot: 'daily', rank: 30 }, { id: 'd1', slot: 'daily', rank: 10 }
+  ])), { evidence: 'a', daily: 'd1' });
+  assert.deepEqual(plain(api.arbitrateOggi([])), { evidence: null, daily: null });
+  assert.deepEqual(plain(api.arbitrateOggi([{ id: 'x', slot: 'nonsense', rank: 1 }, { id: 'y', slot: 'evidence', rank: NaN }, null])), { evidence: null, daily: null });
 });
 
-test('arbitration: a Ti penso beats the Daily Question, which beats nothing; the event stays quiet', () => {
+test('arbitration: a Ti penso takes the evidence card, the Domanda di oggi stays, the invite waits', () => {
   const think = build({ priority: 'received_ready', daily: 'answer', calendar: true, push: true });
   think.api.applyOggiArbitration();
   assert.deepEqual(slotOf(think.elements), {
-    usTodayPriorityRegion: 'primary', usOggiCalendarWidget: 'quiet', usDailyRitual: 'suppressed', usDailyRevealLink: null, pushOptInCard: 'suppressed'
+    usTodayPriorityRegion: 'evidence', usOggiCalendarWidget: 'suppressed', usDailyRitual: 'daily', usDailyRevealLink: null, pushOptInCard: 'suppressed'
   });
 
   const dailyOnly = build({ daily: 'answer', push: true });
   dailyOnly.api.applyOggiArbitration();
-  assert.equal(slotOf(dailyOnly.elements).usDailyRitual, 'primary');
-  assert.equal(slotOf(dailyOnly.elements).pushOptInCard, 'quiet', 'push opt-in fills the quiet slot only when nothing else does');
+  assert.equal(slotOf(dailyOnly.elements).usDailyRitual, 'daily');
+  assert.equal(slotOf(dailyOnly.elements).pushOptInCard, 'evidence', 'O5: the notifications invite is prominent while nothing waits for me');
 });
 
-test('arbitration: an event is informational (quiet) and never displaces the Daily Question', () => {
-  const s = build({ priority: 'couple_context', daily: 'answer', calendar: true, revealLink: true, push: true });
+test('arbitration: the retired calendar widget and reveal link never take a slot', () => {
+  const s = build({ daily: 'waiting', calendar: true, revealLink: true });
   s.api.applyOggiArbitration();
   assert.deepEqual(slotOf(s.elements), {
-    usTodayPriorityRegion: 'quiet', usOggiCalendarWidget: 'suppressed', usDailyRitual: 'primary', usDailyRevealLink: 'suppressed', pushOptInCard: 'suppressed'
+    usTodayPriorityRegion: null, usOggiCalendarWidget: 'suppressed', usDailyRitual: 'daily', usDailyRevealLink: 'suppressed', pushOptInCard: null
   });
 });
 
-test('arbitration: partner already answered outranks a fresh question; errors rank last', () => {
-  const s = build({ daily: 'invited' });
-  assert.equal(s.api.collectOggiCandidates()[0].rank, 40);
-  assert.equal(build({ daily: 'answer' }).api.collectOggiCandidates()[0].rank, 50);
-  assert.equal(build({ daily: 'error' }).api.collectOggiCandidates()[0].rank, 60);
-  const reveal = build({ priority: 'answers_ready', daily: 'invited' });
-  reveal.api.applyOggiArbitration();
-  assert.equal(slotOf(reveal.elements).usTodayPriorityRegion, 'primary');
-  assert.equal(slotOf(reveal.elements).usDailyRitual, 'suppressed');
+test('arbitration: every priority outranks the notifications invite; Lasciato per te and the mesiversario included', () => {
+  for (const category of ['received_ready', 'left_ready', 'answers_ready', 'waiting_for_me', 'celebration']) {
+    const s = build({ priority: category, push: true });
+    const candidates = s.api.collectOggiCandidates();
+    assert.ok(candidates.find((c) => c.id === 'usTodayPriorityRegion').rank < candidates.find((c) => c.id === 'pushOptInCard').rank, category);
+    s.api.applyOggiArbitration();
+    assert.equal(slotOf(s.elements).pushOptInCard, 'suppressed', category);
+  }
 });
 
-test('arbitration: exhaustively, never more than one primary and one quiet surface', () => {
-  const priorities = [null, 'received_ready', 'answers_ready', 'waiting_for_me', 'couple_context'];
-  const dailies = [null, 'invited', 'answer', 'error'];
+test('arbitration: exhaustively, never more than one evidence card and one daily card', () => {
+  const priorities = [null, 'received_ready', 'left_ready', 'answers_ready', 'waiting_for_me', 'celebration', 'couple_context'];
+  const dailies = [null, 'invited', 'answer', 'waiting', 'revealed', 'error'];
   let cases = 0;
   for (const priority of priorities) for (const daily of dailies) for (let flags = 0; flags < 8; flags += 1) {
     const state = { priority, daily, calendar: Boolean(flags & 1), revealLink: Boolean(flags & 2), push: Boolean(flags & 4) };
     const s = build(state);
     const winner = s.api.applyOggiArbitration();
     const slots = slotOf(s.elements);
-    const visible = Object.entries(slots).filter(([, slot]) => slot === 'primary' || slot === 'quiet');
-    assert.ok(visible.filter(([, slot]) => slot === 'primary').length <= 1, JSON.stringify(state));
-    assert.ok(visible.filter(([, slot]) => slot === 'quiet').length <= 1, JSON.stringify(state));
+    const visible = Object.entries(slots).filter(([, slot]) => slot === 'evidence' || slot === 'daily');
+    assert.ok(visible.filter(([, slot]) => slot === 'evidence').length <= 1, JSON.stringify(state));
+    assert.ok(visible.filter(([, slot]) => slot === 'daily').length <= 1, JSON.stringify(state));
+    if (daily) assert.equal(slots.usDailyRitual, 'daily', `the Domanda di oggi is never pushed away ${JSON.stringify(state)}`);
     // Everything that exists is either shown in a slot or only suppressed, never lost.
     for (const [id, el] of Object.entries(s.elements)) assert.equal(slots[id] === null, el.hidden, `${id} ${JSON.stringify(state)}`);
     // Deterministic: a second pass gives the same answer.
     assert.deepEqual(plain(s.api.applyOggiArbitration()), plain(winner));
     cases += 1;
   }
-  assert.equal(cases, 5 * 4 * 8);
+  assert.equal(cases, 7 * 6 * 8);
 });
 
 test('arbitration is wired to the hero, suppressed surfaces are only hidden, distance does not count', () => {
   assert.match(app, /new MutationObserver\(schedule\)\.observe\(hero,\{subtree:true,childList:true,attributes:true,attributeFilter:\['hidden','data-state'\]\}\)/);
   assert.match(read('styles.css'), /\[data-us-oggi-slot="suppressed"\]\{display:none!important\}/);
   assert.doesNotMatch(source, /distanceWidget/);
-  assert.match(source, /US_OGGI_SURFACES=Object\.freeze\(\['usTodayPriorityRegion','usOggiCalendarWidget','usDailyRitual','usDailyRevealLink','pushOptInCard'\]\)/);
+  assert.match(source, /US_OGGI_SURFACES=Object\.freeze\(\['usTodayPriorityRegion','usDailyRitual','pushOptInCard','usOggiCalendarWidget','usDailyRevealLink'\]\)/);
 });

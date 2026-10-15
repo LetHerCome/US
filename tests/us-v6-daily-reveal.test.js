@@ -150,11 +150,13 @@ test('Daily: reopen starts at the question and close restores previous body scro
   assert.equal(t.document.body.style.overflow,'clip');
 });
 
-test('Daily: retired comments and reactions have no frontend mutation entry point',()=>{
+// 1.0 (O2): the one-tap reaction (♥ / mi hai commosso) is back, rendered by
+// renderTodayReveal; comments stay retired.
+test('Daily: retired comments have no frontend entry point; the reaction is the only one, from the reveal',()=>{
   const t=daily();
-  assert.equal(t.window.setDailyAnswerReaction,undefined);
+  assert.equal(typeof t.window.setDailyAnswerReaction,'function');
   const app=read('app.js'),today=read('index.html').match(/<main id="today"[\s\S]*?<\/main>/)[0];
-  assert.doesNotMatch(today,/todayOutcome|data-daily-reaction/);
+  assert.doesNotMatch(today,/todayOutcome|data-daily-reaction/,'no static reaction markup in the sheet');
   assert.doesNotMatch(app,/function dailyQuestionOutcomeRuntime|window\.saveDailyQuestionOutcome/);
   assert.doesNotMatch(read('stories.js'),/wireTodayAutoClose|scheduleTodayCloseIfNeeded/);
 });

@@ -50,6 +50,7 @@
 .left-for-you-composer-url{width:100%;padding:13px 15px;border:1px solid rgba(255,234,247,.12);border-radius:14px;background:rgba(255,255,255,.045);color:var(--us-color-text);font:400 14px/1.3 var(--us-font-ui)}
 .left-for-you-composer-pick{min-height:44px;padding:0 16px;border:1px dashed rgba(246,111,158,.30);border-radius:14px;background:rgba(246,111,158,.08);color:rgba(247,242,248,.86);font-size:13px;font-weight:600}
 .left-for-you-composer-file{min-height:16px;color:var(--us-muted);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.left-for-you-composer-hint{color:var(--us-color-text-3,var(--us-muted));font-size:12px;line-height:1.35}
 .left-for-you-recorder-controls{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}.left-for-you-record-control{display:grid;place-items:center;gap:4px;width:92px;height:92px;padding:0;border:1px solid rgba(246,111,158,.38);border-radius:50%;background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.16),transparent 34%),linear-gradient(145deg,rgba(246,111,158,.36),rgba(113,79,207,.34));color:var(--us-color-text);box-shadow:0 12px 28px rgba(10,5,18,.24),var(--us-glass-inner-highlight);font:600 11px/1 var(--us-font-ui);transition:transform var(--us-motion-micro) var(--us-ease-standard),box-shadow var(--us-motion-micro) var(--us-ease-standard),background var(--us-motion-micro) var(--us-ease-standard)}.left-for-you-record-control:active{transform:scale(.95)}.left-for-you-record-control.is-recording{background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.12),transparent 42%),linear-gradient(145deg,rgba(236,76,117,.78),rgba(142,47,89,.68));box-shadow:0 0 0 8px rgba(246,111,158,.12),0 14px 30px rgba(80,10,45,.34)}.left-for-you-record-icon{width:18px;height:18px;border-radius:50%;background:var(--us-color-text);box-shadow:0 0 0 4px rgba(255,255,255,.16)}.left-for-you-record-control.is-recording .left-for-you-record-icon{width:16px;height:16px;border-radius:4px}.left-for-you-record-label{display:block}.left-for-you-recorder-timer{font-variant-numeric:tabular-nums;color:var(--us-muted);font-size:13px}.left-for-you-recorder-preview{width:100%;min-height:42px}.left-for-you-recorder-actions{display:flex;align-items:center;justify-content:flex-start;gap:9px}.left-for-you-recorder-actions button{min-height:38px;padding-inline:13px}
 .left-for-you-composer-panel{display:grid;gap:9px}
 .left-for-you-composer-panel[hidden]{display:none!important}
@@ -547,3 +548,30 @@
   .left-for-you-vn-stop{animation:none!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--us-color-danger) 26%,transparent)}
   .left-for-you-spl-dot.is-wake{animation:none!important}
 }
+
+/* ===== US 1.0 · Lasciato per te: opening, reply, outcome, captions ===== */
+/* Viewer: "si apre una volta" is the quiet line under the actions. */
+.left-for-you-once{margin:2px 4px 0;color:var(--us-color-text-3,var(--us-muted));font-size:13px;line-height:1.4;text-align:center}
+.left-for-you-once[hidden]{display:none!important}
+#leftForYouOverlay .left-for-you-card>.left-for-you-once{order:4}
+/* Conserva beside Apri il prossimo while there is one (Rispondi under them); else Conserva beside Rispondi. */
+#leftForYouOverlay #leftForYouCard #leftForYouActions{grid-template-columns:1fr 1fr}
+#leftForYouOverlay #leftForYouActions [hidden]{display:none!important}
+#leftForYouOverlay #leftForYouActions #leftForYouReply{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;background:transparent;box-shadow:inset 0 0 0 1px var(--us-color-line-strong,rgba(255,255,255,.18));color:var(--us-color-text);font-weight:600}
+#leftForYouOverlay #leftForYouActions #leftForYouReply::before{content:"";width:18px;height:18px;flex:0 0 18px;background:currentColor;-webkit-mask:url("/assets/icons/phosphor/pencil-simple-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/pencil-simple-regular.svg") center/contain no-repeat}
+#leftForYouOverlay #leftForYouActions #leftForYouNext{min-height:52px;border:0;background:transparent;box-shadow:inset 0 0 0 1px var(--us-color-line-strong,rgba(255,255,255,.18));color:var(--us-color-text);font-size:16px;font-weight:600}
+
+/* Composer: what happened to the last thing you left. */
+.left-for-you-last{display:flex;align-items:flex-start;gap:8px;margin:0 2px 2px;color:var(--us-color-text-2,var(--us-muted));font-size:13px;line-height:1.4}
+.left-for-you-last::before{content:"";width:16px;height:16px;flex:0 0 16px;margin-top:1px;background:currentColor;opacity:.8;-webkit-mask:url("/assets/icons/phosphor/envelope-open-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/envelope-open-regular.svg") center/contain no-repeat}
+.left-for-you-last[hidden]{display:none!important}
+
+/* Photo: the chosen picture itself, with a way to change it. */
+.left-for-you-photo-preview{position:relative;overflow:hidden;border-radius:18px;background:#09070b;border:1px solid var(--us-color-line,rgba(255,255,255,.10))}
+.left-for-you-photo-preview img{display:block;width:100%;height:auto;max-height:min(34dvh,260px);object-fit:cover}
+.left-for-you-photo-change{position:absolute;right:10px;bottom:10px;min-height:40px;padding:0 14px;border:0;border-radius:999px;background:rgba(15,11,19,.62);box-shadow:inset 0 0 0 1px var(--us-color-line-strong,rgba(255,255,255,.2));color:var(--us-color-text);font:600 13px/1 var(--us-font-ui);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.left-for-you-composer-panel :is(.left-for-you-photo-preview,.left-for-you-photo-actions,.left-for-you-composer-file)[hidden]{display:none!important}
+#leftForYouComposerPhotoName:empty{display:none}
+/* Optional caption under a photo or a vocale: one quiet line. */
+#leftForYouComposerOverlay .left-for-you-composer-caption{min-height:48px;font-size:15px}
+.left-for-you-vn-frame + .left-for-you-composer-caption{margin-top:4px}

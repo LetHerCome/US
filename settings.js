@@ -68,12 +68,12 @@ function nextRelationshipLabel(startedOn){
   let target=new Date(now.getFullYear(),now.getMonth(),d,12);
   if(target<new Date(now.getFullYear(),now.getMonth(),now.getDate(),0))target=new Date(now.getFullYear(),now.getMonth()+1,d,12);
   const delta=Math.max(0,Math.ceil((target-new Date(now.getFullYear(),now.getMonth(),now.getDate(),0))/86400000));
-  return delta===0?'mesiversario oggi':delta===1?'mesiversario domani':`prossimo mesiversario tra ${delta} giorni`;
+  return delta===0?'mesiversario oggi':delta===1?'mesiversario domani':`mesiversario tra ${delta} giorni`;
 }
 function formatDate(value){
   if(!value)return '—';
   const [y,m,d]=value.split('-').map(Number);
-  return new Date(y,m-1,d,12).toLocaleDateString('it-IT',{day:'numeric',month:'short',year:'numeric'});
+  return new Date(y,m-1,d,12).toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'short',year:'numeric'});
 }
 async function locationState(){
   try{
@@ -126,16 +126,22 @@ async function hydrateUsSettings(){
   settingsSnapshot={couple,profiles,loc,push,prefs:prefsRes.data||{think:true,today:true,bond:true,relationship:true,left_for_you:true,games:true}};
 
   const names=profiles.map(p=>p.display_name).filter(Boolean);
-  $('usCoupleNames').textContent=window.UsIdentity?.current().pairLabel || 'Voi due';
+  // Mockup: "Francesco e Beatrice" — the names stay as written, "e" follows the language.
+  const identity=window.UsIdentity?.current();const pair=$('usCoupleNames');
+  if(identity&&identity.pairLabel!=='Voi due'){pair.innerHTML=`<span translate="no">${esc(identity.nameForRole('francesco'))}</span> e <span translate="no">${esc(identity.nameForRole('beatrice'))}</span>`;pair.translate=true;}
+  else pair.textContent=identity?.pairLabel || 'Voi due';
   const days=daysTogether(couple.started_on);
-  $('usTogetherLine').textContent=couple.started_on?`insieme da ${days.toLocaleString('it-IT')} giorni · ${nextRelationshipLabel(couple.started_on)}`:'Imposta la data della relazione';
+  $('usTogetherLine').textContent=couple.started_on?`Insieme da ${days===1?'1 giorno':`${days.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} giorni`} · ${nextRelationshipLabel(couple.started_on)}`:'Imposta la data della relazione';
   $('usRelationshipDateValue').textContent=formatDate(couple.started_on);
-  $('usSettingsBondLevel').textContent=`LV ${bondLevel(couple.bond_xp)}`;
-  $('usSettingsMomentsCount').textContent=Number(momentsRes.count||0).toLocaleString('it-IT');
-  $('usSettingsEventsCount').textContent=Number(eventsRes.count||0).toLocaleString('it-IT');
+  $('usSettingsBondLevel').textContent=String(bondLevel(couple.bond_xp));
+  $('usSettingsMomentsCount').textContent=Number(momentsRes.count||0).toLocaleString((globalThis.UsI18n?.tag||'it-IT'));
+  $('usSettingsEventsCount').textContent=Number(eventsRes.count||0).toLocaleString((globalThis.UsI18n?.tag||'it-IT'));
   const archiveValue=$('usStoryArchiveValue');if(archiveValue)archiveValue.textContent=Number(archiveRes.count||0)?String(archiveRes.count):'';
-  $('usDistanceUnitValue').textContent=unit==='mi'?'miglia':'km';
+  $('usDistanceUnitValue').textContent=unit==='mi'?'Miglia':'Chilometri';
+  const photoDetail=$('usProfilePhotoDetail');if(photoDetail)photoDetail.textContent=`La vede anche ${window.UsIdentity?.current().partnerName||'la tua persona'}`;
   const feedbackValue=$('usFeedbackValue');if(feedbackValue)feedbackValue.textContent=feedbackSummary();
+  // Mockup "1 attivo": the widgets already on this phone's Home (native only).
+  const widgetsValue=$('usWidgetsValue');if(widgetsValue&&window.UsWidgets?.isAvailable?.())Promise.resolve(window.UsWidgets.installed?.()).then(device=>{const n=Object.values(device?.installed||{}).reduce((sum,count)=>sum+(Number(count)||0),0);widgetsValue.textContent=n===1?'1 attivo':n?`${n} attivi`:'Nessuno';}).catch(()=>{});
   syncMauditSetting();
   syncAppLockSetting().catch(()=>{});
   syncRicordiOptimizationSetting().catch(()=>{});
@@ -144,9 +150,9 @@ async function hydrateUsSettings(){
   const locEl=$('usLocationState');
   locEl.className='us-setting-state';
   const sharing=Boolean(window.UsLocation?.isSharing?.());
-  if(sharing&&loc!=='denied'){locEl.textContent='✓';locEl.classList.add('ok');}
-  else if(loc==='denied'){locEl.textContent='×';locEl.classList.add('bad');}
-  else locEl.textContent='○';
+  if(sharing&&loc!=='denied'){locEl.textContent='Consentita';locEl.classList.add('ok');}
+  else if(loc==='denied'){locEl.textContent='Bloccata';locEl.classList.add('bad');}
+  else locEl.textContent='Non attiva';
 
   const pushEl=$('usNotificationsValue');
   pushEl.textContent=push.native?({active:'Attive',inactive:'Non attive',denied:'Permesso negato',settings:'Da attivare',unavailable:'Non disponibili'}[push.kind]||'Non disponibili'):push.active?'Attive':push.permission==='denied'?'Bloccate':'Non attive';
@@ -154,6 +160,7 @@ async function hydrateUsSettings(){
   const dot=$('usSettingsDeviceDot');
   dot.classList.toggle('ok',Boolean(navigator.onLine&&profiles.length>=2));
   dot.classList.toggle('bad',!navigator.onLine);
+  const syncLabel=$('usSettingsSyncLabel');if(syncLabel)syncLabel.textContent=navigator.onLine&&profiles.length>=2?'Sincronizzato':navigator.onLine?'Parziale':'Offline';
 
   const avatarPaths=profiles.map(p=>p.avatar_path).filter(Boolean);
   let urls=new Map();
@@ -168,10 +175,10 @@ function relationshipDateModal(valueOverride){
   const today=new Date();
   const max=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
   openModal('Data della relazione',`
-    <div class="us-settings2-modal-copy">Questa data regola giorni insieme, mesiversario, anniversario e relativi XP.</div>
+    <div class="us-settings2-modal-copy">Questa data regola giorni insieme, mesiversario, anniversario e i relativi punti Sintonia.</div>
     <label class="us-settings2-field"><span>Insieme dal</span><input id="usRelationshipDateInput" type="date" max="${max}" value="${esc(current)}"></label>
     <button type="button" class="primary us-settings-main-action" id="usSaveRelationshipDate">Salva data</button>
-  `,'NOI');
+  `,'VOI');
   $('usSaveRelationshipDate')?.addEventListener('click',()=>{
     const value=$('usRelationshipDateInput')?.value;
     if(!value)return;
@@ -187,7 +194,7 @@ function relationshipDateConfirmation(value){
       <button type="button" class="ghost" id="usCancelRelationshipDate">Indietro</button>
       <button type="button" class="primary" id="usConfirmRelationshipDate">Conferma data</button>
     </div>
-  `,'NOI');
+  `,'VOI');
   $('usCancelRelationshipDate')?.addEventListener('click',()=>relationshipDateModal(value));
   $('usConfirmRelationshipDate')?.addEventListener('click',async()=>{
     const btn=$('usConfirmRelationshipDate');btn.disabled=true;btn.textContent='Salvo…';
@@ -202,22 +209,28 @@ function relationshipDateConfirmation(value){
   $('usCancelRelationshipDate')?.focus({preventScroll:true});
 }
 
+// Mockup set-foto-home: the photo Oggi shows now, changed in place.
 function homePhotoModal(){
   openModal('Foto Home',`
-    <div class="us-settings2-modal-copy">La Home usa automaticamente le foto salvate nei vostri Moments e cambia ricordo nel tempo. Non serve mantenere una galleria separata.</div>
+    <div class="us-settings2-modal-copy">La foto di Oggi arriva dai vostri Ricordi.</div>
+    <div class="us-settings2-photo" id="usHomePhotoPreview" aria-hidden="true"></div>
     <div class="us-settings2-action-stack">
       <button type="button" class="primary" id="usChangeHomeNow">Cambia foto adesso</button>
-      <button type="button" class="ghost" id="usOpenMomentsFromSettings">Gestisci i Moments</button>
+      <button type="button" class="ghost" id="usOpenMomentsFromSettings">Apri i Ricordi</button>
     </div>
-  `,'HOME');
+  `,'OGGI');
+  const paint=()=>{const preview=$('usHomePhotoPreview');if(preview)preview.style.backgroundImage=document.querySelector('#homeHero .home-photo-layer.active')?.style.backgroundImage||'';};
+  paint();
   $('usChangeHomeNow')?.addEventListener('click',async()=>{
     const btn=$('usChangeHomeNow');btn.disabled=true;btn.textContent='Cambio…';
+    window.addEventListener('us:home-photo-changed',paint,{once:true});
     await window.hydrateHomePhoto?.(true);
-    btn.textContent='Fatto ✓';
-    setTimeout(()=>{closeModal();toast('Nuovo ricordo in Home');},250);
+    paint();
+    btn.innerHTML='<span class="us-icon" data-us-icon="check" aria-hidden="true"></span> Fatto';
+    setTimeout(()=>{btn.disabled=false;btn.textContent='Cambia foto adesso';},900);
   });
   $('usOpenMomentsFromSettings')?.addEventListener('click',()=>{
-    closeModal();window.go?.('moments');
+    closeModal();window.go?.('moments',{nav:true});
   });
 }
 
@@ -235,9 +248,9 @@ async function showStoryArchive(){
     const names=new Map((profiles||[]).map(p=>[p.id,p.display_name||'Noi']));
     const paths=stories.map(s=>s.media_path);
     const urls=await window.usGetSignedUrls?.(paths,21600)||new Map();
-    $('usSettingsModalBody').innerHTML=`<div class="us-story-archive">${stories.map(s=>{
+    $('usSettingsModalBody').innerHTML=`<div class="us-settings2-modal-copy">Le Stories che avete condiviso, solo per voi.</div><div class="us-story-archive">${stories.map(s=>{
       const url=urls.get(s.media_path);if(!url)return '';
-      const date=new Date(s.created_at).toLocaleDateString('it-IT',{day:'numeric',month:'short'});
+      const date=new Date(s.created_at).toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'short'});
       return `<article><img src="${esc(url)}" alt="Story archiviata" loading="lazy"><span><b>${esc(names.get(s.author_id)||'Noi')}</b><small>${esc(date)}</small></span>${s.caption?`<p>${esc(s.caption)}</p>`:''}</article>`;
     }).join('')}</div>`;
   }catch(error){
@@ -259,10 +272,38 @@ function distanceModal(){
 }
 
 // Location A: explanation before the permission, "Smetti e cancella" when shared.
+// Mockup set-posizione / set-posizione-bloccata: a status row, why it is
+// there, the way out; an amber banner when the phone blocks it.
+function locationAgeLabel(){
+  const at=typeof usLocationRuntime!=='undefined'?Date.parse(usLocationRuntime?.mineUpdatedAt||''):NaN;
+  if(!Number.isFinite(at))return 'Solo la distanza tra voi';
+  const minutes=Math.max(0,Math.floor((Date.now()-at)/60000));
+  if(minutes<1)return 'Aggiornata ora';
+  if(minutes<60)return minutes===1?'Aggiornata 1 minuto fa':`Aggiornata ${minutes} minuti fa`;
+  const hours=Math.floor(minutes/60);
+  if(hours<24)return hours===1?'Aggiornata 1 ora fa':`Aggiornata ${hours} ore fa`;
+  const days=Math.floor(hours/24);
+  return days===1?'Aggiornata 1 giorno fa':`Aggiornata ${days} giorni fa`;
+}
 async function locationAction(){
   const state=await locationState();
-  if(state==='denied'&&!window.UsLocation?.isSharing?.()){
-    openModal('Posizione','<div class="us-settings-copy"><p>La posizione è bloccata dalle impostazioni del telefono.</p></div>','PERMESSO');
+  const sharing=Boolean(window.UsLocation?.isSharing?.());
+  if(state==='denied'&&!sharing){
+    openModal('Posizione','<div class="us-settings2-push-master is-warn"><span><b>Bloccata</b><small>La posizione è bloccata dalle impostazioni del telefono.</small></span></div>','PERMESSO');
+    return;
+  }
+  if(sharing&&window.UsLocation?.stop){
+    openModal('Posizione',`
+      <div class="us-settings2-status-list"><div><span><b>Consentita</b><small>${esc(locationAgeLabel())}</small></span><i class="ok">✓</i></div></div>
+      <div class="us-settings2-modal-copy">Serve solo per mostrare la distanza tra voi in Oggi. Se smetti, la posizione salvata viene cancellata subito.</div>
+      <div class="us-settings2-action-stack"><button type="button" class="ghost is-danger" id="usStopLocationSharing">Smetti e cancella</button></div>
+    `,'PRIVACY');
+    $('usStopLocationSharing')?.addEventListener('click',async()=>{
+      const btn=$('usStopLocationSharing');if(btn)btn.disabled=true;
+      const stopped=await window.UsLocation.stop();
+      if(stopped)closeModal();else if(btn)btn.disabled=false;
+      setTimeout(hydrateUsSettings,450);
+    });
     return;
   }
   await window.UsLocation?.openSettings?.();
@@ -271,7 +312,7 @@ async function locationAction(){
 
 function preferenceToggle(key,label,checked){
   return `<button type="button" class="us-settings2-toggle-row" data-pref="${key}" aria-pressed="${checked?'true':'false'}">
-    <span><b>${label}</b><small>${key==='think'?'Segnali Ti penso':key==='today'?'Risposte e reveal di Today':key==='bond'?'Conferme delle quest Bond':key==='left_for_you'?'Quando la tua persona ti lascia qualcosa':key==='games'?'Tocca a te, risposte pronte, domanda della settimana':'Mesiversari e anniversari'}</small></span>
+    <span><b>${label}</b><small>${key==='think'?'Quando la tua persona ti pensa':key==='today'?'Quando arriva e quando le risposte sono pronte':key==='bond'?'Missioni, nuovi livelli e sblocchi':key==='left_for_you'?'Quando trovi qualcosa nella busta':key==='games'?'Quando tocca a te':'Mesiversario, anniversario ed eventi'}</small></span>
     <i class="${checked?'on':''}"><u></u></i>
   </button>`;
 }
@@ -291,10 +332,10 @@ function feedbackModal(){
   const prefs=window.UsFeedback?.getPreferences?.()||{sounds:true,haptics:true};
   openModal('Suoni e vibrazione',`<div class="us-settings2-toggle-list">
     ${feedbackToggle('sounds','Suoni','Solo per conferme, Ti penso e momenti importanti',prefs.sounds)}
-    ${feedbackToggle('haptics','Feedback aptico','Tocchi brevi e delicati sui gesti',prefs.haptics)}
+    ${feedbackToggle('haptics','Vibrazione','Tocchi brevi e delicati sui gesti',prefs.haptics)}
   </div>
   <section class="us-feedback-preview" aria-label="Prova i feedback">
-    <div class="us-feedback-preview-heading"><b>Prova i feedback</b><small>Ascolta e senti come risponde US</small></div>
+    <div class="us-feedback-preview-heading"><b>Prova i feedback</b></div>
     <div class="us-feedback-preview-grid">
       <button type="button" data-us-feedback="off" data-feedback-preview="action">Azione</button>
       <button type="button" data-us-feedback="off" data-feedback-preview="success">Completato</button>
@@ -303,7 +344,7 @@ function feedbackModal(){
       <button type="button" data-us-feedback="off" data-feedback-preview="haptic-test">Test vibrazione</button>
     </div>
   </section>
-  <p class="us-feedback-preview-note" id="usFeedbackPreviewStatus" role="status" aria-live="polite">${prefs.sounds || prefs.haptics ? "Ora anche i pulsanti hanno un piccolo suono. Controlla il volume multimediale." : "Attiva suoni o feedback aptico per provare."}</p>`,'QUESTO TELEFONO');
+  <p class="us-feedback-preview-note" id="usFeedbackPreviewStatus" role="status" aria-live="polite">${prefs.sounds || prefs.haptics ? "" : "Attiva suoni o vibrazione per provare."}</p>`,'QUESTO TELEFONO');
   $('usSettingsModalBody').querySelectorAll('[data-feedback]').forEach(btn=>btn.addEventListener('click',()=>{
     const next=btn.getAttribute('aria-pressed')!=='true';
     if(btn.dataset.feedback==='sounds')window.UsFeedback?.setSoundsEnabled?.(next);
@@ -313,16 +354,18 @@ function feedbackModal(){
     const value=$('usFeedbackValue');if(value)value.textContent=feedbackSummary();
     const previewStatus=$('usFeedbackPreviewStatus');
     const enabled=window.UsFeedback?.getPreferences?.();
-    if(previewStatus&&enabled)previewStatus.textContent=enabled.sounds||enabled.haptics?'Ora anche i pulsanti hanno un piccolo suono. Controlla il volume multimediale.':'Attiva suoni o feedback aptico per provare.';
+    if(previewStatus&&enabled)previewStatus.textContent=enabled.sounds||enabled.haptics?'':'Attiva suoni o vibrazione per provare.';
     if(next)window.UsFeedback?.[btn.dataset.feedback==='sounds'?'action':'selection']?.();
   }));
   $('usSettingsModalBody').querySelectorAll('[data-feedback-preview]').forEach(btn=>btn.addEventListener('click',()=>{
     const kind=btn.dataset.feedbackPreview;
+    // Mockup set-suoni: a ring in my colour leaves the button (600 ms, E.out).
+    if(!window.UsUiFoundation?.isReducedMotion?.())btn.animate?.([{boxShadow:`0 0 0 0 ${getComputedStyle(document.documentElement).getPropertyValue('--us-tu').trim()||'#ff7c96'}`},{boxShadow:'0 0 0 10px transparent'}],{duration:600,easing:'cubic-bezier(.2,.8,.2,1)'});
     const enabled=window.UsFeedback?.getPreferences?.();
     const status=$('usFeedbackPreviewStatus');
     if(kind==='haptic-test'){
       if(!enabled?.haptics){
-        if(status)status.textContent='Attiva Feedback aptico qui sopra per provare la vibrazione.';
+        if(status)status.textContent='Attiva Vibrazione qui sopra per provarla.';
         return;
       }
       window.UsFeedback?.testHaptic?.();
@@ -331,7 +374,7 @@ function feedbackModal(){
     }
     if(!['action','success','attention','reveal'].includes(kind))return;
     if(enabled && !enabled.sounds && !enabled.haptics){
-      if(status)status.textContent='Attiva suoni o feedback aptico per provare.';
+      if(status)status.textContent='Attiva suoni o vibrazione per provare.';
       return;
     }
     window.UsFeedback?.[kind]?.();
@@ -359,17 +402,17 @@ async function syncRicordiOptimizationSetting(){
 }
 function ricordiOptimizationModal(){
   if(!window.UsPlatform?.isNative||!window.UsRicordiThumbnails?.optimizeLegacy)return;
+  // Mockup set-ottimizza: lead, an amber progress bar with "n / total", two buttons.
   openModal('Ottimizza Ricordi',`
-    <div class="us-settings-copy">
-      <p>US creerà anteprime leggere dei Ricordi più vecchi per aprirli molto più velocemente.</p>
-      <p><b>Le foto originali restano intatte.</b> L'operazione scarica temporaneamente le foto: falla una volta quando sei sotto Wi-Fi.</p>
-    </div>
+    <div class="us-settings2-modal-copy">Creo anteprime leggere dei vostri ricordi, così si aprono prima e occupano meno spazio. Gli originali restano intatti.</div>
+    <div class="us-settings2-progress"><div class="us-settings2-bar-track"><i id="usOptimizeRicordiBar"></i></div><p id="usOptimizeRicordiProgress" role="status" aria-live="polite"></p></div>
     <div class="us-settings2-action-stack">
       <button type="button" class="primary" id="usOptimizeRicordiStart">Ottimizza adesso</button>
       <button type="button" class="ghost" id="usOptimizeRicordiCancel">Più tardi</button>
     </div>
-    <p class="us-settings2-modal-copy" id="usOptimizeRicordiProgress" role="status" aria-live="polite"></p>
+    <p class="us-settings2-note">L'operazione scarica temporaneamente le foto: falla una volta quando sei sotto Wi-Fi.</p>
   `,'QUESTO TELEFONO');
+  window.UsRicordiThumbnails.missingCount?.().then(count=>{const progress=$('usOptimizeRicordiProgress');if(progress&&!progress.textContent&&count>0)progress.textContent=`0 / ${count}`;}).catch(()=>{});
   $('usOptimizeRicordiCancel')?.addEventListener('click',closeModal);
   $('usOptimizeRicordiStart')?.addEventListener('click',async()=>{
     const btn=$('usOptimizeRicordiStart');
@@ -382,6 +425,7 @@ function ricordiOptimizationModal(){
         if(!progress)return;
         const processed=Math.min(state.total,state.done+state.failed);
         progress.textContent=state.total?`${processed} / ${state.total}${state.failed?` · ${state.failed} da riprovare`:''}`:'Niente da ottimizzare';
+        const bar=$('usOptimizeRicordiBar');if(bar)bar.style.width=state.total?`${Math.round(processed/state.total*100)}%`:'100%';
       }
     }).catch(error=>({ok:false,code:'error',error}));
     if(result.code==='offline'){
@@ -464,24 +508,35 @@ function toggleMaudit(){
 }
 
 // Native Notifications V1: what this phone can do, in the person's words.
+// Mockup set-notifiche / set-notifiche-negate: a banner in my colour with a
+// small button; when the phone blocks US, an amber banner, the way out and
+// one full-width button (only where the system settings can be opened).
 const US_NATIVE_PUSH_COPY=Object.freeze({
-  active:{title:'Attive su questo dispositivo',detail:'Anche a US chiusa.',action:'Disattiva su questo dispositivo',kind:'ghost'},
-  inactive:{title:'Non attive',detail:'Ti penso, risposte e promemoria, anche a US chiusa.',action:'Attiva',kind:'primary'},
-  denied:{title:'Permesso negato',detail:'Consentile a US nelle impostazioni del telefono.',action:'Apri impostazioni di sistema',kind:'primary'},
-  settings:{title:'Da attivare nelle impostazioni',detail:'Le notifiche di US sono spente nel telefono.',action:'Apri impostazioni di sistema',kind:'primary'},
-  unavailable:{title:'Configurazione non disponibile',detail:'Questa versione di US non può ancora ricevere notifiche.',action:'',kind:'ghost'}
+  active:{title:'Attive su questo telefono',detail:'Ricevi i Ti penso anche a US chiusa.',action:'Disattiva',kind:'ghost'},
+  inactive:{title:'Non attive',detail:'Non ricevi niente quando US è chiusa.',action:'Attiva',kind:'primary'},
+  denied:{title:'Permesso negato',detail:'Il telefono blocca le notifiche di US.',action:'Apri impostazioni di sistema',kind:'primary',warn:true},
+  settings:{title:'Da attivare nelle impostazioni',detail:'Le notifiche di US sono spente nel telefono.',action:'Apri impostazioni di sistema',kind:'primary',warn:true},
+  unavailable:{title:'Configurazione non disponibile',detail:'Questa versione di US non può ancora ricevere notifiche.',action:'',kind:'ghost',warn:true}
 });
+const US_PUSH_BLOCKED_LEAD='<div class="us-settings2-modal-copy">Per ricevere i Ti penso anche a US chiusa, consenti le notifiche dalle impostazioni del telefono.</div>';
 function pushMasterMarkup(state){
   if(state.native){
     const copy=US_NATIVE_PUSH_COPY[state.kind]||US_NATIVE_PUSH_COPY.unavailable;
+    if(copy.warn)return `<div class="us-settings2-push-master is-warn" data-push-state="${esc(state.kind||'unavailable')}">
+      <span><b>${copy.title}</b><small>${copy.detail}</small></span>
+    </div>${copy.action?`${US_PUSH_BLOCKED_LEAD}<div class="us-settings2-action-stack"><button type="button" class="${copy.kind}" id="usSettingsPushAction">${copy.action}</button></div>`:''}`;
     return `<div class="us-settings2-push-master" data-push-state="${esc(state.kind||'unavailable')}">
       <span><b>${copy.title}</b><small>${copy.detail}</small></span>
       ${copy.action?`<button type="button" class="${copy.kind}" id="usSettingsPushAction">${copy.action}</button>`:''}
     </div>`;
   }
+  if(state.permission==='denied')return `<div class="us-settings2-push-master is-warn" data-push-state="denied">
+      <span><b>${US_NATIVE_PUSH_COPY.denied.title}</b><small>${US_NATIVE_PUSH_COPY.denied.detail}</small></span>
+    </div>${US_PUSH_BLOCKED_LEAD}`;
+  const copy=state.active?US_NATIVE_PUSH_COPY.active:US_NATIVE_PUSH_COPY.inactive;
   return `<div class="us-settings2-push-master">
-      <span><b>${state.active?'Notifiche attive':'Notifiche non attive'}</b><small>${state.permission==='denied'?'Bloccate dal telefono':''}</small></span>
-      <button type="button" class="${state.active?'ghost':'primary'}" id="usSettingsPushAction" ${state.permission==='denied'?'disabled':''}>${state.active?'Disattiva':'Attiva'}</button>
+      <span><b>${copy.title}</b><small>${copy.detail}</small></span>
+      <button type="button" class="${copy.kind}" id="usSettingsPushAction">${copy.action}</button>
     </div>`;
 }
 async function nativePushAction(state){
@@ -501,15 +556,17 @@ async function notificationsModal(){
   const p=prefs||{think:true,today:true,bond:true,relationship:true,left_for_you:true,games:true};
   openModal('Notifiche',`
     ${pushMasterMarkup(state)}
+    <p class="us-settings2-group-label">Cosa ricevere</p>
     <div class="us-settings2-toggle-list">
       ${preferenceToggle('think','Ti penso',p.think!==false)}
-      ${preferenceToggle('today','Today',p.today!==false)}
-      ${preferenceToggle('bond','Bond',p.bond!==false)}
+      ${preferenceToggle('today','Domanda di oggi',p.today!==false)}
+      ${preferenceToggle('bond','Sintonia',p.bond!==false)}
       ${preferenceToggle('relationship','Ricorrenze',p.relationship!==false)}
       ${preferenceToggle('left_for_you','Lasciato per te',p.left_for_you!==false)}
       ${preferenceToggle('games','Gioca',p.games!==false)}
     </div>
-  `,'QUESTO TELEFONO');
+    <p class="us-settings2-note">Valgono per il tuo account, su ogni telefono.</p>
+  `,state.native?(state.kind==='denied'||state.kind==='settings'?'PERMESSO':'NOTIFICHE'):state.permission==='denied'?'PERMESSO':'NOTIFICHE');
 
   $('usSettingsPushAction')?.addEventListener('click',async()=>{
     const btn=$('usSettingsPushAction');btn.disabled=true;
@@ -539,15 +596,16 @@ async function syncStatusModal(){
     sb.from('profiles').select('id,display_name').eq('couple_id',window.usProfile.couple_id)
   ]);
   const profiles=profilesRes.data||[];
+  // Mockup set-stato: four checks and "Tutto aggiornato · US 1.0".
   const rows=[
     ['Rete',navigator.onLine?'Online':'Offline',navigator.onLine],
-    ['Coppia',profiles.length>=2?`${profiles.length}/2 profili collegati`:`${profiles.length}/2 profili`,profiles.length>=2],
-    ['Push',push.native?(US_NATIVE_PUSH_COPY[push.kind]||US_NATIVE_PUSH_COPY.unavailable).title:push.active?'Attive':push.permission==='denied'?'Bloccate':'Non attive',push.active],
-    ['Posizione',loc==='denied'?'Bloccata':window.UsLocation?.isSharing?.()?'Condivisa, solo la distanza':'Non condivisa',loc!=='denied'&&Boolean(window.UsLocation?.isSharing?.())]
+    ['Coppia',`${profiles.length} di 2 profili collegati`,profiles.length>=2],
+    ['Notifiche',push.native?({active:'Attive',inactive:'Non attive',denied:'Permesso negato',settings:'Da attivare',unavailable:'Non disponibili'}[push.kind]||'Non disponibili'):push.active?'Attive':push.permission==='denied'?'Bloccate':'Non attive',push.active],
+    ['Posizione',loc==='denied'?'Bloccata':window.UsLocation?.isSharing?.()?'Consentita':'Non attiva',loc!=='denied'&&Boolean(window.UsLocation?.isSharing?.())]
   ];
   $('usSettingsModalBody').innerHTML=`<div class="us-settings2-status-list">${rows.map(([label,value,ok])=>`
     <div><span><b>${label}</b><small>${value}</small></span><i class="${ok?'ok':''}">${ok?'✓':'○'}</i></div>
-  `).join('')}</div><div class="us-settings2-build-detail">US 1.0<br><small>${esc(currentBuild())}</small></div>`;
+  `).join('')}</div><p class="us-settings2-build-detail" title="${esc(currentBuild())}">${rows.every(row=>row[2])?'Tutto aggiornato · ':''}US 1.0</p>`;
 }
 
 async function privacyModal(){
@@ -556,10 +614,10 @@ async function privacyModal(){
   try{api=await loadAccountDeletion();}catch(_){}
   openModal('Privacy e dati',`
     <div class="us-settings-copy">
-      <p><b>Posizione</b> · solo approssimativa e solo se la attivi: la tua persona vede la distanza, mai dove sei. Puoi smettere e cancellarla da Posizione.</p>
-      <p><b>Foto</b> · restano nello spazio della coppia.</p>
-      <p><b>Notifiche</b> · scegli tu quali ricevere.</p>
-      <p><b>Questo telefono</b> · resta collegato finché non lo scolleghi.</p>
+      <p><b>Posizione</b><span>Solo approssimativa e solo se la attivi: la tua persona vede la distanza, mai dove sei. Puoi smettere e cancellarla da Posizione.</span></p>
+      <p><b>Foto</b><span>Restano nello spazio della coppia.</span></p>
+      <p><b>Notifiche</b><span>Scegli tu quali ricevere.</span></p>
+      <p><b>Questo telefono</b><span>Resta collegato finché non lo scolleghi.</span></p>
     </div>
     ${api?`<div class="us-settings-copy">
       <p><b>Una copia dei tuoi dati</b> · scrivi a <b>${esc(api.US_SUPPORT_EMAIL)}</b> dall’email del tuo account.</p>
@@ -904,6 +962,8 @@ async function logout(){
 }
 
 async function action(name){
+  // Which sheet is open: dc-settings.css gives each one the mockup's blocks.
+  const overlay=$('usSettingsOverlay');if(overlay?.dataset&&name!=='maudit'&&name!=='app-lock')overlay.dataset.usSettingsSheet=name;
   if(name==='relationship-date')return relationshipDateModal();
   if(name==='profile-photo'){closeModal();window.pickProfilePhoto?.();return;}
   if(name==='home-photo')return homePhotoModal();
@@ -953,6 +1013,8 @@ function boot(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&document.getElementById('settings')?.classList.contains('active'))hydrateUsSettings();});
 window.addEventListener('online',()=>{if(document.getElementById('settings')?.classList.contains('active'))hydrateUsSettings();});
+// A new profile photo (Foto profilo) shows on the couple card at once.
+window.addEventListener('us:noi-portraits-ready',()=>{if(document.getElementById('settings')?.classList.contains('active'))hydrateUsSettings();});
 window.addEventListener('offline',()=>{if(document.getElementById('settings')?.classList.contains('active'))hydrateUsSettings();});
 console.info('[US Settings] Settings 2 attive');
 })();
