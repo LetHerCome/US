@@ -160,14 +160,16 @@ test('M7C UI: Da vivere has no date/time editor of its own — "Metti in calenda
   assert.match(daVivereBlock(), /window\.UsCalendarLinks\?\.openEntry\?\.\(item\.calendar_entry_id\)/);
 });
 
-test('M7C UI: the entry created from an idea is always shared, and never touches shared_events', () => {
+test('M7C UI: the entry created from an idea is always shared, and never writes shared_events', () => {
   const src = calendar();
   assert.match(src, /const kind = ideaLink \? 'shared' : calendarKind;/);
   // M9C: the idea first becomes a pick (banner), then the tapped day opens the shared form.
   assert.match(src, /pendingIdeaPick = \{ bucketItemId: idea\.id, title: idea\.title \|\| '', note: idea\.note \|\| null, \.\.\.identity \};/);
   assert.match(src, /if \(pendingIdeaPick\) \{ openIdeaForm\(pendingIdeaPick, dateISO\); return; \}/);
-  assert.match(src, /pendingIdeaLink = \{ bucketItemId: pick\.bucketItemId, userId: pick\.userId, coupleId: pick\.coupleId, note: pick\.note \};\s*calendarKind = 'shared';/);
-  assert.doesNotMatch(src, /shared_events/);
+  assert.match(src, /pendingIdeaLink = \{ bucketItemId: pick\.bucketItemId, userId: pick\.userId, coupleId: pick\.coupleId, note: pick\.note \};\s*setFormKind\('shared'\);/);
+  assert.match(src, /function setFormKind\(kind\) \{\n  calendarKind = kind === 'shared' \? 'shared' : 'personal';/);
+  // Noi Calendar V4 reads shared_events for the month view; it never writes it.
+  assert.doesNotMatch(src, /from\('shared_events'\)\s*\.(insert|update|upsert|delete)\(/);
   assert.doesNotMatch(src, /from\('bucket_items'\)/, 'Calendar never writes bucket_items: Da vivere owns the link');
 });
 
@@ -193,7 +195,8 @@ test('M7C UI: "quando" in Da vivere is read from calendar_entries through the Ca
   const tables = [...block.matchAll(/sb\.from\('([a-z_]+)'\)/g)].map((m) => m[1]);
   assert.ok(tables.every((t) => t === 'bucket_items'));
   assert.match(block, /window\.UsCalendarLinks\?\.getEntriesByIds/);
-  assert.match(calendar(), /\.from\('calendar_entries'\)\s*\.select\('id,title,entry_type,is_all_day,starts_at,ends_at,start_date,end_date'\)\s*\.eq\('couple_id', window\.usProfile\.couple_id\)\s*\.in\('id', unique\)/);
+  // The column list grew (the linked entry now opens its full detail); the scope did not.
+  assert.match(calendar(), /\.from\('calendar_entries'\)\s*\.select\('id,[a-z_,]*title,[a-z_,]*starts_at,ends_at,start_date,end_date'\)\s*\.eq\('couple_id', window\.usProfile\.couple_id\)\s*\.in\('id', unique\)/);
 });
 
 test('M7C runtime: linkCalendarEntry updates local state on success and reports stale on 0 rows', async () => {

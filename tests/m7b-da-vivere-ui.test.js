@@ -241,7 +241,9 @@ test('M7B runtime: nessuna integrazione con Moments/Ricordi nel blocco Da vivere
 test('M7B runtime: hydrateNoiIdeas è collegato alla navigazione verso Noi senza toccare la logica del Calendario', () => {
   const goBlock = app().match(/function go\(id,options=\{\}\)\{[\s\S]*?\n\}/)?.[0] || '';
   assert.notEqual(goBlock, '');
-  assert.match(goBlock, /hydrateBond\(\);hydrateNoiIdeas\(\)/);
+  // go() schedules hydrateActivePage, which opens Noi with both hydrations.
+  assert.match(goBlock, /schedulePageHydration\(id\)/);
+  assert.match(app(), /if\(id==='bond'\)\{work\.push\(Promise\.resolve\(hydrateBond\(\)\)\);work\.push\(Promise\.resolve\(hydrateNoiIdeas\(\)\)\);\}/);
   assert.doesNotMatch(goBlock, /openCalendarSurface|closeCalendarSurface/);
 });
 

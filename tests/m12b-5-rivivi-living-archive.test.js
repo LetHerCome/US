@@ -304,7 +304,9 @@ test('M12B.5 wiring: Ricordi reads event history and provenance as optional, rea
 });
 
 test('M12B.5 media and icons: signed URLs only, private media cache untouched, Phosphor icons already in the shell', () => {
-  assert.match(CORE, /usGetSignedUrls\(\(rows\|\|\[\]\)\.map\(row=>row\.storage_path\),21600\)/);
+  // Ricordi thumbnails V1: photos and thumbnails are signed together.
+  assert.match(CORE, /const mediaPaths=\[\.\.\.new Set\(\(rows\|\|\[\]\)\.flatMap\(row=>\[row\.storage_path,row\.thumbnail_path\]\)\.filter\(Boolean\)\)\];/);
+  assert.match(CORE, /usGetSignedUrls\(mediaPaths,21600\)/);
   assert.doesNotMatch(ARCHIVE + CORE, /getPublicUrl|caches\.open/);
   const sw = read('service-worker.js');
   assert.match(sw, /const MEDIA_CACHE_NAME = "us-private-media-v1";/);

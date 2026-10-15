@@ -7,12 +7,13 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 const { webcrypto } = require('node:crypto');
 
 const ROOT = path.join(__dirname, '..');
 const SHARED = path.join(ROOT, 'supabase/functions/_shared');
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
-const load = (name) => import(path.join(SHARED, name));
+const load = (name) => import(pathToFileURL(path.join(SHARED, name)).href);
 
 const C1 = '11111111-1111-4111-8111-111111111111';
 const C2 = '22222222-2222-4222-8222-222222222222';

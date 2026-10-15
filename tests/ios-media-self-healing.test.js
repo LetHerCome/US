@@ -29,8 +29,11 @@ test('avatar e immagini private possono rinnovare il signed URL dopo un errore',
 test('foreground ripara Home avatar e Ricordi senza richiedere un nuovo login', async () => {
   const app = await src('app.js');
   assert.match(app, /if\(options\.foreground\)hydrateProfileAvatars\(\)\.catch\(\(\)=>\{\}\);[\s\S]*if\(options\.foreground\)hydrateHomePhoto\(false\)\.catch\(\(\)=>\{\}\)/);
-  assert.match(app, /hydrateMoments\(\{forceMedia:Boolean\(options\.foreground\)\}\)/);
-  assert.match(app, /if\(forceMedia\)mediaPaths\.forEach\(usInvalidateSignedUrl\);[\s\S]*usGetSignedUrls\(\(rows\|\|\[\]\)\.map\(row=>row\.storage_path\),21600\)/);
+  // Native Performance V1 (1f84c87): foregrounding keeps valid signed URLs; a
+  // failed image heals itself through usRecoverPrivateImage().
+  assert.match(app, /if\(active==='moments'\)\{await hydrateMoments\(\);return;\}/);
+  assert.match(app, /onerror="usRecoverPrivateImage\(this\)"/);
+  assert.match(app, /if\(forceMedia\)mediaPaths\.forEach\(usInvalidateSignedUrl\);\s*const signedUrlsPromise=usGetSignedUrls\(mediaPaths,21600\);/);
 });
 
 test('Stories Left for You e album hanno recovery media esplicita', async () => {
@@ -41,7 +44,9 @@ test('Stories Left for You e album hanno recovery media esplicita', async () => 
   ]);
   assert.match(stories, /usInvalidateSignedUrl\?\.\(story\.media_path\)[\s\S]*force:true/);
   assert.match(left, /data-us-media-path=.*onerror="usRecoverPrivateImage\(this\)"/);
-  assert.match(albums, /data-us-media-path=.*onerror="usRecoverPrivateImage\(this\)"/);
+  // The album cover is one <img> whose path is set when a photo is shown.
+  assert.match(albums, /<img id="usAlbumCover"[^>]*onerror="usRecoverPrivateImage\(this\)"/);
+  assert.match(albums, /cover\.setAttribute\('data-us-media-path',item\.storage_path\)/);
 });
 
 test('Home Memory dead path uses the actual signedUrl variable', async () => {
