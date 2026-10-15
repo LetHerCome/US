@@ -4389,6 +4389,14 @@ function renderBondBadges(level){
 }
 
 function renderBondProgress(totalXp){
+  // While Sintonia plays a gain (bar, circles, new level) it owns the card;
+  // it renders the latest total when the animation ends.
+  if(window.USProgression?.holdsCard?.(totalXp))return;
+  // The same total is never painted twice (Sintonia hydrates on every tab
+  // switch, while its entrance plays): no mutation, no relayout.
+  const painted=document.getElementById('bondLevelXp');
+  if(painted&&painted.__usTotal===totalXp)return;
+  if(painted)painted.__usTotal=totalXp;
   const info=bondLevelInfo(totalXp);
   const heroLevel=document.getElementById('heroBondLevel');
   const heroXp=document.getElementById('heroBondXp');
@@ -4399,8 +4407,9 @@ function renderBondProgress(totalXp){
   const levelEl=document.getElementById('bondLevelValue');if(levelEl)levelEl.textContent=info.level;
   const totalEl=document.getElementById('bondTotalXp');if(totalEl)totalEl.textContent=`${info.total.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} punti`;
   const rankEl=document.getElementById('bondRankTitle');if(rankEl)rankEl.textContent=bondRankTitle(info.level);
-  // 1.0 — the bar says where you are going, never a points count.
-  const nextEl=document.getElementById('bondNextXp');if(nextEl)nextEl.textContent=info.progress>=80?`Manca poco al livello ${info.level+1}`:`Verso il livello ${info.level+1}`;
+  // As the mockup: the points inside the level and the points to the next one.
+  const tag=(globalThis.UsI18n?.tag||'it-IT');
+  const nextEl=document.getElementById('bondNextXp');if(nextEl)nextEl.textContent=`${(info.needed-info.current).toLocaleString(tag)} XP al livello ${info.level+1}`;
   const pageFill=document.getElementById('bondPageFill');if(pageFill)pageFill.style.width=`${info.progress}%`;
   // M10.1D — la barra è il progresso REALE dentro il livello corrente (bondLevelInfo:
   // (XP totali - soglia del livello) / XP del livello), mai un valore decorativo.
@@ -4411,7 +4420,7 @@ function renderBondProgress(totalXp){
     track.setAttribute('aria-valuenow',String(info.current));
     track.setAttribute('aria-valuetext',`${info.current.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} di ${info.needed.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} punti nel livello ${info.level}`);
   }
-  const line=document.getElementById('bondLevelXp');if(line)line.textContent=`${info.current.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} / ${info.needed.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))}`;
+  const line=document.getElementById('bondLevelXp');if(line)line.textContent=`${info.current.toLocaleString(tag)} / ${info.needed.toLocaleString(tag)} XP`;
   // M9D — hub Noi e superficie Risonanza: stessi numeri di couples.bond_xp.
   const hubTitle=document.getElementById('noiHubResonanceTitle');if(hubTitle)hubTitle.textContent=bondRankTitle(info.level);
   const hubMeta=document.getElementById('noiHubResonanceMeta');if(hubMeta)hubMeta.textContent=`Livello ${info.level}`;
@@ -4431,8 +4440,8 @@ async function hydrateBondSummary(){
 window.hydrateBondSummary=hydrateBondSummary;
 
 // ===== M12C · Risonanza V2 — recent real growth, read-only =====
-// 1.0 — "Ultime crescite" is a short diary ("12 ott · Mesiversario, 16 mesi"):
-// missions, lived events and mesiversari, newest first, without points.
+// "Ultime crescite" (a fold under the collection, as in the mockup): missions,
+// lived events and mesiversari, newest first, each with the points it gave.
 const RESONANCE_HISTORY_LIMIT=6;
 const resonanceTime=at=>{const t=Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(String(at||''))?`${at}T12:00:00`:at);return Number.isFinite(t)?t:0;};
 function resonanceHistoryEntries(quests,eventCompletions,eventHistory,milestones=[]){
@@ -4467,34 +4476,37 @@ function resonanceHistoryDate(at){
   const t=resonanceTime(at);
   return t?new Date(t).toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'short'}):'';
 }
+// The mockup's row: an icon, what it was, "what · when", and its points.
 function resonanceHistoryWhat(entry){
   if(entry.kind==='milestone'){
-    if(entry.milestone==='anniversary'){const years=Math.max(1,Math.round(entry.months/12));return `<span>${years===1?'Anniversario, 1 anno':`Anniversario, ${years} anni`}</span>`;}
-    return `<span>${entry.months===1?'Mesiversario, 1 mese':`Mesiversario, ${entry.months} mesi`}</span>`;
+    if(entry.milestone==='anniversary'){const years=Math.max(1,Math.round(entry.months/12));return {title:'Anniversario',detail:years===1?'1 anno insieme':`${years} anni insieme`,own:false};}
+    return {title:'Mesiversario',detail:entry.months===1?'1 mese insieme':`${entry.months} mesi insieme`,own:false};
   }
-  const label=entry.kind==='quest'?'Missione:':'Evento:';
-  const liveNote=entry.kind==='event'&&entry.titleSource==='live'?' <small>(titolo attuale)</small>':'';
-  return `<span>${label}</span> <b${entry.kind==='event'&&entry.titleSource!=='missing'?' translate="no"':''}>${escapeHtml(entry.title)}</b>${liveNote}`;
+  return {title:entry.kind==='quest'?'Missione di coppia':'Evento vissuto',detail:entry.title,own:entry.kind==='event'&&entry.titleSource!=='missing',live:entry.kind==='event'&&entry.titleSource==='live'};
 }
 function renderResonanceHistory(entries){
   const root=document.getElementById('noiResonanceHistory');
   if(!root)return;
   root.setAttribute('aria-busy','false');
   placeResonanceHistory(root);
+  // The same rows are never rebuilt (Sintonia hydrates on every tab switch, while its entrance plays).
+  const paint=(html)=>{if(root.__usMarkup===html&&root.innerHTML)return;root.__usMarkup=html;root.innerHTML=html;};
   if(!entries?.length){
-    root.innerHTML='<div class="noi-resonance-history-empty"><b>La prossima crescita apparirà qui</b><span>Missioni, eventi vissuti e mesiversari: le cose che fate insieme.</span></div>';
+    paint('<div class="noi-resonance-history-empty"><b>La prossima crescita apparirà qui</b><span>Missioni, eventi vissuti e mesiversari: le cose che fate insieme.</span></div>');
     return;
   }
-  root.innerHTML=entries.map(entry=>{
+  paint(entries.map(entry=>{
     const date=resonanceHistoryDate(entry.at);
-    return `<article class="noi-resonance-history-row" data-resonance-source="${escapeHtml(entry.sourceKey)}" data-resonance-kind="${escapeHtml(entry.kind)}"><span class="noi-resonance-history-mark" aria-hidden="true"></span><p class="noi-resonance-history-copy">${date?`<time>${escapeHtml(date)}</time><span class="noi-resonance-history-sep" aria-hidden="true"> · </span>`:''}${resonanceHistoryWhat(entry)}</p></article>`;
-  }).join('');
+    const what=resonanceHistoryWhat(entry);
+    const detail=`<span${what.own?' translate="no"':''}>${escapeHtml(what.detail)}</span>${what.live?' <span>(titolo attuale)</span>':''}${date?` · <time>${escapeHtml(date)}</time>`:''}`;
+    return `<article class="noi-resonance-history-row" data-resonance-source="${escapeHtml(entry.sourceKey)}" data-resonance-kind="${escapeHtml(entry.kind)}"><span class="noi-resonance-history-mark" aria-hidden="true"></span><p class="noi-resonance-history-copy">${escapeHtml(what.title)}<small>${detail}</small></p>${entry.xp>0?`<b class="noi-resonance-history-xp">+${entry.xp} XP</b>`:''}</article>`;
+  }).join(''));
 }
-// The diary sits right under the Sintonia card, above the rewards.
+// The fold sits after the collection, as in the mockup.
 function placeResonanceHistory(root){
   const section=root?.closest?.('.noi-resonance-history');
-  const card=section?.parentElement?.querySelector?.(':scope > .noi-resonance');
-  if(card&&card.nextElementSibling!==section)card.after(section);
+  const rewards=section?.parentElement?.querySelector?.(':scope > .us-progression-rewards-section');
+  if(rewards&&rewards.nextElementSibling!==section)rewards.after(section);
 }
 async function hydrateResonanceHistory(){
   const profile=window.usProfile;
@@ -4516,6 +4528,7 @@ async function hydrateResonanceHistory(){
   if(milestoneError)console.warn(milestoneError);
   if(questError&&eventError&&milestoneError){
     root.setAttribute('aria-busy','false');
+    root.__usMarkup='';
     root.innerHTML='<div class="noi-resonance-history-empty"><b>Crescita non disponibile</b><span>Riprova tra un momento.</span></div>';
     return;
   }
@@ -4762,7 +4775,8 @@ async function confirmBondQuest(id){
     sendWebPushEvent('quest_confirmed',id).catch(()=>{});
     const awarded=Number(result.data?.xp_awarded)||0;
     const partnerName=questPartner(window.usBondProfiles,profile.id)?.display_name||'';
-    if(awarded>0){toast('Missione completata insieme ♡');window.UsFeedback?.success?.();}
+    // As the mockup: the card sparkles, the sheet closes and Sintonia shows the points growing.
+    if(awarded>0){if(!window.USProgression?.missionCompleted?.({xp:awarded,questId:id})){toast('Missione completata insieme ♡');window.UsFeedback?.success?.();}}
     else toast(partnerName?`Confermata. Ora tocca a ${partnerName} ♡`:'Confermata. Ora tocca alla tua persona ♡');
   }
   setQuestAction(key,false);

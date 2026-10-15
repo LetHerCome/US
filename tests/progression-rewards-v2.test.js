@@ -170,14 +170,18 @@ test('Rewards V2 client: equipped slots paint locally; re-tap unequips without a
   assert.equal(el('usHeroSticker').hidden, true);
   const tiles = el('usProgressionRewards').innerHTML;
   assert.equal((tiles.match(/data-progression-reward=/g) || []).length, 11, 'five atmospheres, three accents, three symbol effects');
-  assert.equal((tiles.match(/aria-pressed="true"/g) || []).length, 3);
+  // Round 3 (mockup parity): each slot also shows its free look (Notte, Orchidea, Fermo); here none is in use.
+  assert.equal((tiles.match(/data-progression-default=/g) || []).length, 3);
+  assert.equal((tiles.match(/<button type="button" class="us-progression-reward[^>]*aria-pressed="true"/g) || []).length, 3);
   assert.equal((tiles.match(/class="us-reward-group"/g) || []).length, 3);
   assert.doesNotMatch(tiles, /data-progression-reward="(?:frame|sticker|badge|ring)_/, 'retired rewards have no tile');
-  assert.match(tiles, /data-progression-reward="theme_graphite"[^>]*disabled/, 'locked rewards are disabled tiles');
+  // Round 3 (mockup .rw.is-locked): a locked reward is a real button that presses and says its level.
+  assert.match(tiles, /data-progression-reward="theme_graphite"[^>]*data-locked="true" data-level="14"[^>]*aria-label="Grafite, si sblocca al livello 14"/, 'locked rewards are marked locked');
 
-  const tap = (id) => el('usProgressionRewards').emit('click', { target: { closest: () => ({ disabled: false, dataset: { progressionReward: id } }) } });
-  await tap('accent_champagne');
-  assert.equal(root.dataset.usAccent, undefined, 'tapping the equipped accent clears only this phone accent');
+  const tap = (id) => el('usProgressionRewards').emit('click', { target: { closest: () => ({ disabled: false, dataset: { progressionReward: id }, getAttribute: () => null }) } });
+  // Round 3 (mockup parity): the free look "Orchidea" clears only this phone accent.
+  await el('usProgressionRewards').emit('click', { target: { closest: () => ({ disabled: false, dataset: { progressionDefault: 'accent' }, getAttribute: () => null }) } });
+  assert.equal(root.dataset.usAccent, undefined, 'choosing Orchidea clears only this phone accent');
   assert.equal(root.dataset.usTheme, 'film');
   await tap('badge_day_one');
   assert.equal(el('usCoupleBadge').hidden, true, 'a retired reward cannot be equipped any more');
@@ -236,7 +240,7 @@ test('Rewards V2 client: two phones can equip different cosmetics from the same 
   assert.equal(phoneA.root.dataset.usTheme, 'film');
   assert.equal(phoneB.root.dataset.usTheme, undefined, 'a fresh phone starts with the standard US look');
 
-  const tapA = (id) => phoneA.el('usProgressionRewards').emit('click', { target: { closest: () => ({ disabled: false, dataset: { progressionReward: id } }) } });
+  const tapA = (id) => phoneA.el('usProgressionRewards').emit('click', { target: { closest: () => ({ disabled: false, dataset: { progressionReward: id }, getAttribute: () => null }) } });
   await tapA('theme_blue_hour');
   assert.equal(phoneA.root.dataset.usTheme, 'blue_hour');
   assert.equal(phoneB.root.dataset.usTheme, undefined, 'phone B keeps its own standard local appearance');
@@ -264,11 +268,12 @@ test('Rewards V2 client: the unlock card previews the real cosmetic and "Usalo o
   await api.hydrate({ showUnlocks: true, force: true });
   assert.equal(el('usProgressionUnlockKicker').textContent, 'Nuova atmosfera');
   assert.equal(el('usProgressionUnlockCount').textContent, '1 di 2');
-  assert.match(el('usProgressionUnlockPreview').innerHTML, /us-cos-theme" data-theme="rose"/);
+  // Round 3 (mockup parity): the mockup's art — the night of Rosé with its light.
+  assert.match(el('usProgressionUnlockPreview').innerHTML, /swatch-pv atm" style="background:radial-gradient\(90% 60% at 50% 0%,rgba\(255,94,146,\.55\)/);
   await el('usProgressionUnlockUse').emit('click');
   assert.equal(JSON.parse(storage.get('us:cosmetics:v1:c:f')).preferences.theme_reward_id, 'theme_rose');
   assert.equal(el('usProgressionUnlockKicker').textContent, 'Nuovo colore di Noi');
-  assert.match(el('usProgressionUnlockPreview').innerHTML, /us-cos-accent" data-accent="cherry"/);
+  assert.match(el('usProgressionUnlockPreview').innerHTML, /fill="#F0566C"/);
   await el('usProgressionUnlockUse').emit('click');
   assert.equal(JSON.parse(storage.get('us:cosmetics:v1:c:f')).preferences.accent_reward_id, 'accent_cherry');
   assert.ok(seen.has('theme_rose') && seen.has('accent_cherry'));

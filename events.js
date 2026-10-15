@@ -268,7 +268,7 @@ async function completeEvent(){
   busy=true;const btn=$('usEventCompleteBtn');btn.disabled=true;btn.textContent='Segno…';
   try{const {data,error}=await sb.rpc('complete_shared_event',{target_event_id:editingId,target_occurrence_date:editingOccurrenceDate});if(error)throw error;await hydrateEvents();await window.hydrateBondSummary?.();cancelEventEdit();const xp=Math.max(0,Number(data?.xp_awarded)||0);if(data?.already_completed)toast('Già completato');
 else if(!xp)toast(NO_XP_COPY[data?.xp_reason]||'Evento vissuto ♡');
-else toast('Evento vissuto ♡');}catch(error){console.warn('[US Events] complete',error);$('usEventStatus').textContent='Non riesco a completarlo. Controlla la data e riprova.';}finally{busy=false;btn.disabled=false;}
+else if(!window.usCelebrateXp?.(xp,'Evento vissuto'))toast('Evento vissuto ♡');}catch(error){console.warn('[US Events] complete',error);$('usEventStatus').textContent='Non riesco a completarlo. Controlla la data e riprova.';}finally{busy=false;btn.disabled=false;}
 }
 async function saveEvent(event){
   event.preventDefault();if(busy||!window.usProfile)return;if(!navigator.onLine)return toast('Sei offline. Riprova quando torni online.');const title=$('usEventTitleInput').value.trim(),date=$('usEventDateInput').value;if(!title||!date)return;
