@@ -2110,7 +2110,15 @@
     'Prossimo sblocco': 'Next unlock',
     'Collezione completa': 'Collection complete',
     'La vostra domanda': 'Your question',
-    'Le vostre scelte': 'Your picks'
+    'Le vostre scelte': 'Your picks',
+
+    // ------------------------------------------------------------ Parity primo
+    'Dal browser, si apre come un’app.': 'From your browser, it opens like an app.',
+    'Usa l’impronta per entrare.': 'Use your fingerprint to get in.',
+    'Usa Face ID per entrare.': 'Use Face ID to get in.',
+    'Usa Touch ID per entrare.': 'Use Touch ID to get in.',
+    'Usa il volto per entrare.': 'Use your face to get in.',
+    'Usa la biometria per entrare.': 'Use biometrics to get in.'
   };
   if (typeof module === 'object' && module.exports) module.exports = EN;
   else window.UsI18n?.register('en', EN);
