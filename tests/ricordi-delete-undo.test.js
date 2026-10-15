@@ -30,7 +30,7 @@ function fakeEl(id, doc) {
   return el;
 }
 
-function harness({ owner = 'me', partnerPhotos = [], commitResult = true } = {}) {
+function harness({ owner = 'me', partnerPhotos = [], commitResult = true, confirmResult = true } = {}) {
   const doc = { activeElement: null, readyState: 'complete', hidden: false };
   const elements = new Map();
   let mounted = false;
@@ -51,6 +51,7 @@ function harness({ owner = 'me', partnerPhotos = [], commitResult = true } = {})
   let nextTimer = 1;
   const commits = [];
   const toasts = [];
+  const confirms = [];
   const query = (rows) => {
     const q = { select: () => q, eq: () => q, in: () => q, order: () => q, then: (res, rej) => Promise.resolve({ data: rows, error: null }).then(res, rej) };
     return q;
@@ -69,7 +70,8 @@ function harness({ owner = 'me', partnerPhotos = [], commitResult = true } = {})
   const context = {
     window, document: doc, sb, console,
     toast: (msg) => toasts.push(msg),
-    usConfirm: async () => { throw new Error('delete must not use a confirm modal'); },
+    // US 1.0 R2: whole-memory deletion asks first, saying it disappears for both.
+    usConfirm: async (options) => { confirms.push(options); return confirmResult; },
     requestAnimationFrame: (fn) => fn(),
     setTimeout: (fn, ms) => { const id = nextTimer++; timers.set(id, { fn, ms }); return id; },
     clearTimeout: (id) => timers.delete(id),
@@ -81,10 +83,12 @@ function harness({ owner = 'me', partnerPhotos = [], commitResult = true } = {})
     for (const [id, t] of [...timers]) if (t.ms === 4000) { timers.delete(id); await t.fn(); }
     await new Promise((r) => setImmediate(r));
   };
-  return { window, el, card, commits, toasts, timers, doc, fireGrace, open: () => window.openUsMomentAlbum(card) };
+  return { window, el, card, commits, toasts, confirms, timers, doc, fireGrace, open: () => window.openUsMomentAlbum(card) };
 }
 
-test('Ricordi delete: both partners can delete a shared Moment', async () => {
+// US 1.0 R2 replaces "both partners can delete": only who created a memory sees
+// Elimina, and a confirm says it disappears for both before the grace period.
+test('Ricordi delete: only the creator can delete a memory, after a confirm that says "per tutti e due"', async () => {
   const own = harness();
   await own.open();
   assert.equal(own.el('usAlbumDelete').hidden, false);
@@ -92,19 +96,33 @@ test('Ricordi delete: both partners can delete a shared Moment', async () => {
 
   const partner = harness({ owner: 'partner' });
   await partner.open();
-  assert.equal(partner.el('usAlbumDelete').hidden, false, 'shared Moments are deletable by either partner');
-  partner.el('usAlbumDeleteGo').click();
-  assert.equal(partner.window.USRicordiDelete.pending()?.id, 'm1');
+  assert.equal(partner.el('usAlbumDelete').hidden, true, 'the partner never sees Elimina on a memory they did not create');
+  await partner.el('usAlbumDeleteGo').click();
+  assert.equal(partner.window.USRicordiDelete.pending(), null);
+  assert.deepEqual(partner.confirms, []);
 
   const album = harness({ partnerPhotos: [{ id: 'p1', moment_id: 'm1', created_by: 'partner', storage_path: 'c/partner/x.webp', position: 1 }] });
   await album.open();
   assert.equal(album.el('usAlbumDelete').hidden, false, 'album photos do not hide whole-Moment deletion');
+
+  const said = harness();
+  await said.open();
+  await said.el('usAlbumDeleteGo').click();
+  assert.equal(said.confirms.length, 1);
+  assert.match(said.confirms[0].body, /per tutti e due/);
+  assert.equal(said.confirms[0].tone, 'danger');
+
+  const kept = harness({ confirmResult: false });
+  await kept.open();
+  await kept.el('usAlbumDeleteGo').click();
+  assert.equal(kept.window.USRicordiDelete.pending(), null, 'cancelling the confirm deletes nothing');
+  assert.equal(kept.card.classList.contains('is-pending-delete'), false);
 });
 
-test('Ricordi delete: Elimina only starts a grace period — nothing is deleted, no modal, no toast', async () => {
+test('Ricordi delete: Elimina (once confirmed) only starts a grace period — nothing is deleted, no toast', async () => {
   const h = harness();
   await h.open();
-  h.el('usAlbumDeleteGo').click();
+  await h.el('usAlbumDeleteGo').click();
   assert.deepEqual(h.commits, [], 'no permanent deletion on tap');
   assert.equal(h.el('usAlbumDelete').dataset.state, 'done');
   assert.equal(h.card.classList.contains('is-pending-delete'), true, 'photo leaves the collection immediately');
@@ -117,7 +135,7 @@ test('Ricordi delete: Elimina only starts a grace period — nothing is deleted,
 test('Ricordi delete: Annulla cancels the timer and restores the photo without any write', async () => {
   const h = harness();
   await h.open();
-  h.el('usAlbumDeleteGo').click();
+  await h.el('usAlbumDeleteGo').click();
   h.el('usAlbumDeleteUndo').click();
   assert.equal([...h.timers.values()].filter((t) => t.ms === 4000).length, 0, 'grace timer cancelled');
   await h.fireGrace();
@@ -131,8 +149,8 @@ test('Ricordi delete: grace expiry commits exactly once, then the viewer closes'
   const h = harness();
   await h.open();
   h.el('usAlbumOverlay').classList.add('show');
-  h.el('usAlbumDeleteGo').click();
-  h.el('usAlbumDeleteGo').click();
+  await Promise.all([h.el('usAlbumDeleteGo').click(), h.el('usAlbumDeleteGo').click()]);
+  assert.equal(h.confirms.length, 1, 'a double tap asks once');
   await h.fireGrace();
   assert.deepEqual(h.commits, [{ id: 'm1' }]);
   assert.equal(h.window.USRicordiDelete.pending(), null);
@@ -143,7 +161,7 @@ test('Ricordi delete: grace expiry commits exactly once, then the viewer closes'
 test('Ricordi delete: a failed commit restores the photo and the control', async () => {
   const h = harness({ commitResult: false });
   await h.open();
-  h.el('usAlbumDeleteGo').click();
+  await h.el('usAlbumDeleteGo').click();
   await h.fireGrace();
   assert.equal(h.commits.length, 1);
   assert.equal(h.card.classList.contains('is-pending-delete'), false);
@@ -193,8 +211,9 @@ test('Ricordi delete: visible action, no client secret, no SQL storage deletes, 
   assert.match(app, /sb\.functions\.invoke\('delete-moment'/);
   assert.match(styles, /\.moment-delete\{[^}]*min-width:72px[^}]*height:44px/);
   assert.match(albums, /const DELETE_GRACE_MS=4000/);
-  assert.match(albums, /window\.usProfile\?\.couple_id&&albumLoaded\)/);
-  assert.doesNotMatch(albums, /currentAlbum\.owner===window\.usProfile\.id|albumRows\.length===0/);
+  // US 1.0 R2: the creator only (the delete-moment Edge Function must check it too).
+  assert.match(albums, /window\.usProfile\?\.couple_id&&albumLoaded&&currentAlbum\.owner&&currentAlbum\.owner===window\.usProfile\.id\)/);
+  assert.doesNotMatch(albums, /albumRows\.length===0/);
   assert.match(albums, />Elimina</);
   assert.match(albums, />Eliminato</);
   assert.match(albums, />Annulla</);

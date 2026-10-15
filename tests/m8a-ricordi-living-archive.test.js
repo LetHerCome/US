@@ -84,7 +84,8 @@ test('M8A visual: no dominant beige paper in the story or the Moment detail, plu
 test('M8A Moment detail: long date, title, real authors and provenance; existing actions preserved', () => {
   const albums = read('moments-albums.js');
   for (const id of ['usAlbumProvenance', 'usAlbumTitle', 'usAlbumByline', 'usAlbumAddBtn', 'usAlbumLightbox']) assert.match(albums, new RegExp(`id="${id}"`));
-  assert.match(albums, /provenance\.textContent=`Moment · \$\{longDate\}`/);
+  // US 1.0 R12: no English in the Italian UI — "Moment" became "Ricordo".
+  assert.match(albums, /provenance\.textContent=`Ricordo · \$\{longDate\}`/);
   assert.match(albums, /Aggiunto da \$\{currentAlbum\.author\}\$\{others\.length\?` · con foto di/);
 });
 
