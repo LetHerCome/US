@@ -231,5 +231,13 @@
     return Boolean(state&&Date.now()<state.suppressUntil);
   }
 
-  window.UsRicordiInline=Object.freeze({decorate,select,shouldSuppressOpen});
+  // The photo a card is showing now, so the album opens on that same photo.
+  function current(card) {
+    const state=card&&states.get(card);
+    const photo=state?.photos?.[state.index];
+    if (!photo) return null;
+    return {index:state.index,id:photo.id||'',url:state.img.currentSrc||state.img.getAttribute('src')||photo.url||'',path:photo.path||'',caption:photo.caption||'',author:photo.author||''};
+  }
+
+  window.UsRicordiInline=Object.freeze({decorate,select,shouldSuppressOpen,current});
 })();

@@ -13,11 +13,11 @@
    ========================================================================== */
 /* The page sits on the design's 18px gutter, the title 30px from the top. */
 #moments>.section{margin-left:2px;margin-right:2px}
-#moments .us-moments-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:20px 0 18px}
+#moments .us-moments-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:22px 0 18px}
 #moments .us-moments-head h2{margin:0!important;font-family:var(--us-font-display)!important;font-style:italic;font-weight:400;font-size:46px!important;line-height:.95!important;letter-spacing:-.02em;color:var(--us-color-text)}
-#moments .us-moments-head-copy p{margin:6px 0 0!important;font-size:14px!important;line-height:1.4;color:var(--us-color-text-2)}
+#moments .us-moments-head-copy p{margin:6px 0 0!important;font-size:14px!important;line-height:1.5;color:var(--us-color-text-2)}
 #moments .us-moments-head-actions{display:flex;align-items:center;gap:8px;padding-bottom:0}
-#moments .us-moments-total{margin-right:4px;font-size:13px;font-weight:600;letter-spacing:0;color:var(--us-color-text-3);white-space:nowrap}
+#moments .us-moments-total{margin-right:4px;font-size:13px;font-weight:600;line-height:1.5;letter-spacing:0;color:var(--us-color-text-3);white-space:nowrap}
 #moments .us-moments-add{width:48px;height:48px;padding:0;border:0;border-radius:50%;display:grid;place-items:center;background:var(--us-ambra);color:var(--us-inchiostro);box-shadow:none;transition:transform .3s var(--us-ease-spring)}
 #moments .us-moments-add .us-icon{--us-icon-size:24px}
 #moments .us-moments-add:active{transform:scale(.95)}
@@ -85,7 +85,7 @@
 #moments #momentsGrid.ricordi-story .ricordi-period{grid-column:1/-1;display:flex;align-items:baseline;gap:6px;margin:20px 0 4px;padding:0;border:0}
 #moments #momentsGrid.ricordi-story .ricordi-period:first-child{margin-top:0}
 #moments #momentsGrid.ricordi-story .ricordi-period b{font-family:var(--us-font-display);font-style:italic;font-weight:400;font-size:30px;line-height:1.5;letter-spacing:0;color:var(--us-color-text)}
-#moments #momentsGrid.ricordi-story .ricordi-period span{font-family:var(--us-font-ui);font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--us-color-text-3)}
+#moments #momentsGrid.ricordi-story .ricordi-period span{margin-left:6px;font-family:var(--us-font-ui);font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--us-color-text-3)}
 
 /* A photo card: the image is the card, words sit on a soft shade at its foot. */
 #moments #momentsGrid.ricordi-story .moment-card.moment-postit{position:relative;display:block!important;grid-column:auto!important;height:auto!important;margin:0;padding:0!important;border:0!important;border-radius:20px!important;overflow:hidden!important;background:var(--us-color-surface-2)!important;box-shadow:none!important;transform:none!important;transition:transform .3s var(--us-ease-spring)!important;text-align:left}
@@ -94,18 +94,18 @@
 #moments #momentsGrid.ricordi-story .moment-card.moment-postit:focus-visible{outline:2px solid var(--us-ambra);outline-offset:3px}
 #moments #momentsGrid.ricordi-story .moment-card.moment-postit>img{display:block;width:100%!important;height:auto!important;aspect-ratio:3/4!important;margin:0!important;border-radius:0!important;object-fit:cover!important;background:var(--us-color-surface-2)!important}
 #moments #momentsGrid.ricordi-story .moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide)>img{aspect-ratio:4/3.4!important}
-#moments #momentsGrid.ricordi-story .moment-card.moment-postit>.moment-meta{position:absolute!important;z-index:3;left:0;right:0;bottom:0;display:grid!important;gap:3px;min-height:0!important;padding:32px 12px 11px!important;background:linear-gradient(180deg,transparent,rgba(15,11,19,.86))!important;pointer-events:none}
-#moments #momentsGrid.ricordi-story .moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide)>.moment-meta{padding:44px 14px 13px!important}
-#moments #momentsGrid.ricordi-story .moment-card.moment-postit .moment-meta p{display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;margin:0!important;font-family:var(--us-font-display)!important;font-weight:400;font-size:18px!important;line-height:1.15!important;letter-spacing:0;color:var(--us-latte)!important;white-space:normal}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit>.moment-meta{position:absolute!important;z-index:3;left:0;right:0;bottom:0;display:grid!important;gap:2px;min-height:0!important;padding:28px 12px 10px!important;background:linear-gradient(180deg,transparent,rgba(15,11,19,.86))!important;pointer-events:none}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide)>.moment-meta{padding:28px 12px 10px!important}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit .moment-meta p{display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;margin:0!important;font-family:var(--us-font-display)!important;font-weight:500;font-size:18px!important;line-height:1.1!important;letter-spacing:0;color:var(--us-latte)!important;white-space:normal}
 #moments #momentsGrid.ricordi-story .moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide) .moment-meta p{font-size:24px!important;line-height:1.1!important}
 #moments #momentsGrid.ricordi-story .moment-card.moment-postit .moment-meta p[hidden]{display:none!important}
 /* The carousel may append the caption late: it still reads first. */
 #moments #momentsGrid.ricordi-story .moment-card .moment-meta>p{order:-2}
 #moments #momentsGrid.ricordi-story .moment-card .moment-meta>.ricordi-moment-source{order:-1}
-#moments #momentsGrid.ricordi-story .moment-card .moment-line{display:flex;align-items:center;flex-wrap:wrap;gap:0 5px;font-size:12px;line-height:1.35;color:color-mix(in srgb,var(--us-latte) 78%,transparent)}
+#moments #momentsGrid.ricordi-story .moment-card .moment-line{display:flex;align-items:center;flex-wrap:wrap;gap:0 3px;font-size:12px;line-height:1.5;color:color-mix(in srgb,var(--us-latte) 78%,transparent)}
 #moments #momentsGrid.ricordi-story .moment-card.moment-postit .moment-line b{margin:0;font-family:var(--us-font-ui)!important;font-size:12px!important;font-weight:500!important;letter-spacing:0;color:inherit!important}
 #moments #momentsGrid.ricordi-story .moment-card.moment-postit .moment-line .moment-by{font-size:12px!important;font-weight:500!important;letter-spacing:0!important;text-transform:none;color:inherit!important}
-#moments #momentsGrid.ricordi-story .moment-dot{display:block;flex:none;width:7px;height:7px;margin-right:1px;border-radius:50%;background:var(--dc-who)}
+#moments #momentsGrid.ricordi-story .moment-dot{display:block;flex:none;width:9px;height:9px;margin-right:3px;border-radius:50%;background:var(--dc-who)}
 #moments #momentsGrid.ricordi-story .moment-card .ricordi-moment-source{margin:0;font-size:11px;font-weight:600;color:color-mix(in srgb,var(--us-latte) 70%,transparent)}
 /* R5: "Nuovo da <Nome>" on a memory this phone has not opened yet. */
 #moments #momentsGrid.ricordi-story .moment-card .ricordi-new-label{position:absolute;z-index:4;top:10px;left:10px;max-width:calc(100% - 90px);min-height:28px;display:inline-flex;align-items:center;padding:0 10px;border-radius:999px;background:var(--us-ambra);color:var(--us-inchiostro);font:700 12px/1 var(--us-font-ui);letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
@@ -129,6 +129,9 @@
 #moments .ricordi-inline-prev{left:8px}
 #moments .ricordi-inline-next{right:8px}
 #moments .ricordi-inline-control:focus-visible{outline:2px solid var(--us-ambra)}
+/* Parity: the design's photo cards carry no controls. On touch phones the card
+   is swiped; the arrows and the count stay for screen readers only. */
+@media (hover:none) and (pointer:coarse){#moments .ricordi-inline-stage :is(.ricordi-inline-control,.ricordi-inline-counter){position:absolute!important;width:1px!important;height:1px!important;min-width:0!important;min-height:0!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important}}
 
 /* Things lived together, kept answers and events: quiet rows in the timeline. */
 #moments #momentsGrid.ricordi-story .ricordi-experience,#moments #momentsGrid.ricordi-story .ricordi-daily{grid-column:1/-1;border-radius:20px;border:1px solid var(--us-color-line);background:var(--us-color-surface);box-shadow:none;color:var(--us-color-text)}
@@ -217,23 +220,23 @@
 #usAlbumOverlay[data-us-galleria] :is(.us-album-close,.us-album-save-photo) .us-icon{--us-icon-size:22px}
 #usAlbumOverlay[data-us-galleria] .us-album-save-photo[hidden]{display:none!important}
 #usAlbumOverlay[data-us-galleria] .us-album-save-photo[aria-busy="true"]{opacity:.6}
-#usAlbumOverlay[data-us-galleria] .us-album-carousel-hint{top:calc(var(--us-safe-top,0px) + 72px);bottom:auto;z-index:4;padding:6px 11px;background:rgba(15,11,19,.55);color:var(--us-latte);font-size:12px}
+#usAlbumOverlay[data-us-galleria] .us-album-carousel-hint{display:none!important;top:calc(var(--us-safe-top,0px) + 72px);bottom:auto;z-index:4;padding:6px 11px;background:rgba(15,11,19,.55);color:var(--us-latte);font-size:12px}
 
 /* Foot: title, byline, note — on the shade, 20px from the sides. */
 #usAlbumOverlay[data-us-galleria] :is(.us-album-title,.us-album-byline,.us-album-caption-postit,.us-album-ask,.us-album-carousel-status,.us-album-acts){grid-column:1;position:relative;z-index:4;margin-left:20px;margin-right:20px}
 #usAlbumOverlay[data-us-galleria] .us-album-provenance,#usAlbumOverlay[data-us-galleria] .us-album-meta-line{position:absolute!important;width:1px;height:1px;margin:0;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 #usAlbumOverlay[data-us-galleria] .us-album-title{grid-row:2;margin-top:0;margin-bottom:0;font-family:var(--us-font-display);font-weight:400;font-size:36px;line-height:1;letter-spacing:0;color:var(--us-latte);overflow-wrap:anywhere}
-#usAlbumOverlay[data-us-galleria] .us-album-byline{grid-row:3;display:flex;align-items:center;gap:8px;margin-top:4px;margin-bottom:0;font-size:13.3px;line-height:1.35;color:color-mix(in srgb,var(--us-latte) 72%,transparent)}
+#usAlbumOverlay[data-us-galleria] .us-album-byline{grid-row:3;display:flex;align-items:center;gap:8px;margin-top:4px;margin-bottom:0;font-size:12.5px;line-height:1.5;color:color-mix(in srgb,var(--us-latte) 72%,transparent)}
 #usAlbumOverlay[data-us-galleria] .us-album-byline::before{content:"";flex:none;width:9px;height:9px;border-radius:50%;background:var(--us-partner)}
 #usAlbumOverlay[data-us-galleria] .us-album-byline[data-owner="tu"]::before{background:var(--us-tu)}
 /* The note of the photo on screen: “in quotes”, then who added it. */
 #usAlbumOverlay[data-us-galleria] .us-album-caption-postit{grid-row:4}
 #usAlbumOverlay[data-us-galleria] .us-album-caption-postit:not([hidden]){display:grid!important;gap:2px;max-width:none;margin:10px 20px 0!important;padding:0!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;transform:none!important}
-#usAlbumOverlay[data-us-galleria] .us-album-caption-postit p{margin:0;font-family:var(--us-font-display)!important;font-style:italic;font-weight:400;font-size:18px!important;line-height:1.3!important;color:var(--us-latte)!important;overflow-wrap:anywhere}
+#usAlbumOverlay[data-us-galleria] .us-album-caption-postit p{margin:0;font-family:var(--us-font-display)!important;font-style:italic;font-weight:400;font-size:18px!important;line-height:1.5!important;color:var(--us-latte)!important;overflow-wrap:anywhere}
 #usAlbumOverlay[data-us-galleria] .us-album-caption-postit p::before{content:"“"}
 #usAlbumOverlay[data-us-galleria] .us-album-caption-postit p::after{content:"”"}
 #usAlbumOverlay[data-us-galleria] .us-album-caption-postit p[hidden]{display:none!important}
-#usAlbumOverlay[data-us-galleria] .us-album-caption-postit small{display:block;margin:0;font-size:12px!important;font-weight:400;letter-spacing:0!important;text-transform:none!important;color:color-mix(in srgb,var(--us-latte) 50%,transparent)!important}
+#usAlbumOverlay[data-us-galleria] .us-album-caption-postit small{display:block;margin:0;font-size:12px!important;line-height:1.5!important;font-weight:400;letter-spacing:0!important;text-transform:none!important;color:color-mix(in srgb,var(--us-latte) 50%,transparent)!important}
 /* R4: ask the other one for their photos — a quiet link, as the design's link-s. */
 #usAlbumOverlay[data-us-galleria] .us-album-ask{grid-row:5;justify-self:start;display:inline-flex;align-items:center;gap:6px;min-height:36px;margin-top:4px;padding:0;border:0;border-radius:0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;color:color-mix(in srgb,var(--us-latte) 72%,transparent);font:600 13px/1.2 var(--us-font-ui);text-align:left;text-decoration:underline;text-underline-offset:3px}
 #usAlbumOverlay[data-us-galleria] .us-album-ask .us-icon{display:none}
@@ -275,7 +278,10 @@
 #usAlbumOverlay[data-us-galleria] .us-album-save{border:0;background:var(--us-tu)!important;color:var(--us-inchiostro)}
 
 /* The flying copy of the tapped photo. */
-.us-galleria-ghost{position:fixed;z-index:10085;margin:0;padding:0;max-width:none;object-fit:cover;pointer-events:none;box-shadow:none}
+/* A clipping frame sized to the landing box, moved and scaled with transforms;
+   the photo inside is counter-scaled so it stays "cover" (moments-albums.js). */
+.us-galleria-ghost{position:fixed;z-index:10085;margin:0;padding:0;overflow:hidden;transform-origin:0 0;will-change:transform;pointer-events:none;box-shadow:none;background:none;contain:layout paint}
+.us-galleria-ghost img{position:absolute;display:block;max-width:none;max-height:none;margin:0;padding:0;border:0;border-radius:0;object-fit:fill;transform-origin:50% 50%;will-change:transform}
 /* Opening: the photo flies inside the Galleria (under the shade, the caption
    and the controls, which rise while it lands); only the night fades in. */
 #usAlbumOverlay>.us-galleria-ghost{z-index:2}
