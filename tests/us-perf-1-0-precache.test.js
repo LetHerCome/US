@@ -75,5 +75,8 @@ test('perf 1.0 precache: no approved master is precached or loaded; the size bud
   // pruning ~33 KB of retired cosmetics; the shell budget moves from 2.2 to 2.3 MB.
   // US 1.0 adds English (i18n-en.js, ~100 KB, needed offline too) and the
   // "Due colori" screens, after retiring the old fonts: 2.3 -> 2.4 MB.
-  assert.ok(total <= 2.4 * 1024 * 1024, `precache is ${total} bytes: stays under 2.4 MB`);
+  // The founder-approved 1.0 audit fixes (first run, Lasciato per te, Ricordi,
+  // Gioca families) and their English add ~40 KB: 2.4 -> 2.5 MB. Next trim: the
+  // retired Noi hub / week board rules still in styles.css (~16 KB).
+  assert.ok(total <= 2.5 * 1024 * 1024, `precache is ${total} bytes: stays under 2.5 MB`);
 });
