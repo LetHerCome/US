@@ -477,17 +477,28 @@ function renderAlbum(){
 // 1.0 parity (the design's Galleria): the photo on screen fades out in 160ms,
 // the next one fades in over 260ms. A still copy of the old photo fades on top
 // while the album already shows the new one, so state stays synchronous.
+// The old photo stays on top until the new one is decoded, so a photo that is
+// still downloading never shows as an empty frame.
+let albumFadeToken=0;
 function albumPhotoFade(cover,previousSrc){
   if(typeof cover.animate!=='function')return;
+  const token=++albumFadeToken;
   cover.getAnimations?.().forEach(a=>a.cancel());
   document.querySelectorAll('.us-album-fade-ghost').forEach(n=>n.remove());
+  let ghost=null;
   if(previousSrc&&cover.parentNode){
-    const ghost=document.createElement('img');
+    ghost=document.createElement('img');
     ghost.className='us-album-fade-ghost';ghost.alt='';ghost.setAttribute('aria-hidden','true');ghost.src=previousSrc;
     cover.parentNode.insertBefore(ghost,cover.nextSibling);
-    ghost.animate([{opacity:1},{opacity:0}],{duration:160,fill:'forwards'}).finished.then(()=>ghost.remove(),()=>ghost.remove());
   }
-  cover.animate([{opacity:0},{opacity:0,offset:.38},{opacity:1}],{duration:420});
+  const ready=typeof cover.decode==='function'
+    ?Promise.race([cover.decode().catch(()=>{}),new Promise(r=>setTimeout(r,2500))])
+    :Promise.resolve();
+  ready.then(()=>{
+    if(token!==albumFadeToken)return;
+    if(ghost)ghost.animate([{opacity:1},{opacity:0}],{duration:160,fill:'forwards'}).finished.then(()=>ghost.remove(),()=>ghost.remove());
+    cover.animate([{opacity:0},{opacity:0,offset:.38},{opacity:1}],{duration:420});
+  });
 }
 // Single-image viewer is unchanged; multi-photo Memories rotate inside the
 // existing album hero. Only this image and a lazy adjacent peek need decoding.
@@ -640,12 +651,21 @@ async function deleteAlbumPhoto(id,path){
 }
 
 // ===== Galleria: the photo opens from where you tapped it and returns there =====
-// Presentation only (Web Animations). A copy of the tapped thumbnail grows to
-// the album hero while the night fades in; closing flies it back to the card.
+// Presentation only (Web Animations), as the design's UP.galleria: the photo
+// grows from the tapped thumbnail to the whole screen in 560ms (io curve, 20px
+// corners to 0) while the night fades in over 420ms; the shade, the words and
+// the controls rise 18px over 420ms after 380ms. Closing: chrome out in 150ms,
+// the photo flies back in 480ms. The design animates left/top/width/height;
+// here the same geometry is sampled into transform keyframes (a clipping frame
+// scaled to the box, the photo counter-scaled so it stays "cover"), so the
+// flight runs on the compositor and never lays out the page.
 // Reduced motion, or a card that is no longer on screen: a plain fade.
 const GALLERIA_EASE='cubic-bezier(.7,0,.2,1)',GALLERIA_OUT='cubic-bezier(.2,.8,.2,1)';
+const GALLERIA_STEPS=30;
 let galleriaSource=null;
 let galleriaLeaving=null;
+let galleriaLanding=null;
+let galleriaBox=null;
 function galleriaReduced(){
   return Boolean(window.UsUiFoundation?.isReducedMotion?.()||window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
 }
@@ -658,66 +678,142 @@ function galleriaRect(el){
   const vw=window.innerWidth||document.documentElement.clientWidth||0;
   const vh=window.innerHeight||document.documentElement.clientHeight||0;
   if(!r.width||!r.height||r.bottom<=0||r.top>=vh||r.right<=0||r.left>=vw)return null;
-  return r;
+  return {left:r.left,top:r.top,width:r.width,height:r.height};
 }
-const galleriaFrame=(r,radius)=>({left:`${r.left}px`,top:`${r.top}px`,width:`${r.width}px`,height:`${r.height}px`,borderRadius:radius});
-function galleriaGhost(src,rect,radius,parent=document.body){
-  if(!src)return null;
-  const ghost=document.createElement('img');
-  ghost.className='us-galleria-ghost';
-  ghost.alt='';
-  ghost.setAttribute('aria-hidden','true');
-  ghost.src=src;
-  Object.assign(ghost.style,galleriaFrame(rect,radius));
-  parent.appendChild(ghost);
-  return ghost;
+// cubic-bezier(x1,y1,x2,y2) as a function of progress, for sampling keyframes.
+function galleriaCurve(x1,y1,x2,y2){
+  const cx=3*x1,bx=3*(x2-x1)-cx,ax=1-cx-bx,cy=3*y1,by=3*(y2-y1)-cy,ay=1-cy-by;
+  const X=t=>((ax*t+bx)*t+cx)*t,Y=t=>((ay*t+by)*t+cy)*t;
+  return x=>{
+    if(x<=0)return 0;if(x>=1)return 1;
+    let lo=0,hi=1,t=x;
+    for(let i=0;i<40;i++){const v=X(t);if(Math.abs(v-x)<1e-6)break;if(v<x)lo=t;else hi=t;t=(lo+hi)/2;}
+    return Y(t);
+  };
+}
+const galleriaIo=galleriaCurve(.7,0,.2,1);
+// The flying photo: a frame the size of the landing box, clipped with round
+// corners, holding the photo laid out as "cover" for that box.
+function galleriaFlight(src,natural,box,parent){
+  if(!src||!box?.width||!box?.height)return null;
+  const frame=document.createElement('div');
+  frame.className='us-galleria-ghost';
+  frame.setAttribute('aria-hidden','true');
+  const img=document.createElement('img');
+  img.alt='';img.decoding='sync';img.src=src;
+  const iw=natural?.width||box.width,ih=natural?.height||box.height;
+  const fit=Math.max(box.width/iw,box.height/ih);
+  const w=iw*fit,h=ih*fit;
+  Object.assign(frame.style,{left:`${box.left}px`,top:`${box.top}px`,width:`${box.width}px`,height:`${box.height}px`});
+  Object.assign(img.style,{left:`${(box.width-w)/2}px`,top:`${(box.height-h)/2}px`,width:`${w}px`,height:`${h}px`});
+  frame.appendChild(img);
+  parent.appendChild(frame);
+  return {frame,img,box,iw,ih,fit};
+}
+// Sampled keyframes from rect a (radius ra) to rect b (radius rb), eased.
+function galleriaFly(flight,a,b,ra,rb,duration){
+  const {frame,img,box,iw,ih,fit}=flight;
+  const move=[],zoom=[],round=[];
+  for(let k=0;k<=GALLERIA_STEPS;k++){
+    const offset=k/GALLERIA_STEPS,e=galleriaIo(offset);
+    const l=a.left+(b.left-a.left)*e,t=a.top+(b.top-a.top)*e;
+    const w=a.width+(b.width-a.width)*e,h=a.height+(b.height-a.height)*e;
+    const r=ra+(rb-ra)*e;
+    const sx=w/box.width,sy=h/box.height;
+    const c=Math.max(w/iw,h/ih)/fit;
+    move.push({offset,transform:`translate(${(l-box.left).toFixed(2)}px,${(t-box.top).toFixed(2)}px) scale(${sx.toFixed(5)},${sy.toFixed(5)})`});
+    zoom.push({offset,transform:`scale(${(c/sx).toFixed(5)},${(c/sy).toFixed(5)})`});
+    round.push({offset,borderRadius:`${(r/sx).toFixed(2)}px / ${(r/sy).toFixed(2)}px`});
+  }
+  const opts={duration,easing:'linear',fill:'forwards'};
+  const main=frame.animate(move,opts);
+  return [main,img.animate(zoom,opts),frame.animate(round,opts)];
+}
+function galleriaNatural(img){
+  return img?.naturalWidth&&img?.naturalHeight?{width:img.naturalWidth,height:img.naturalHeight}:null;
+}
+// Where the photo lands: the full-bleed stage at the top of the Galleria.
+function galleriaStageBox(){
+  const vw=window.innerWidth||document.documentElement.clientWidth||0;
+  const css=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--us-viewport-height'));
+  const vh=css>0?css:(window.innerHeight||document.documentElement.clientHeight||0);
+  return {left:0,top:0,width:vw,height:vh};
 }
 function galleriaChrome(overlay){
-  return [...overlay.querySelectorAll('.us-album-close,.us-album-story>*,.us-album-info,.us-album-carousel-counter,.us-album-carousel-hint,.us-album-acts')];
+  // Story, info and photo actions are display:contents in the Galleria: their
+  // children are what is drawn, so those are what rise and fade.
+  return [...overlay.querySelectorAll('.us-album-close,.us-album-save-photo,.us-album-story>*,.us-album-info>:not(.us-album-photo-actions),.us-album-carousel-counter,.us-album-acts')];
 }
-function galleriaEnter(overlay,card){
+function galleriaFade(overlay){
+  overlay.animate([{opacity:0},{opacity:1}],{duration:galleriaReduced()?180:260,easing:'linear'});
+}
+// from: the thumbnail's box, read before the Galleria was shown.
+function galleriaEnter(overlay,card,from,natural,box,onLand){
   galleriaSource=card||null;
-  if(!overlay||typeof overlay.animate!=='function')return;
-  const from=galleriaReduced()?null:galleriaRect(galleriaThumb(card));
-  const stage=document.getElementById('usAlbumCarousel');
+  galleriaLanding?.(true);
+  if(!overlay||typeof overlay.animate!=='function'){onLand?.();return;}
   const cover=document.getElementById('usAlbumCover');
-  const to=stage?.getBoundingClientRect?.();
+  const stage=document.getElementById('usAlbumCarousel');
   const thumb=galleriaThumb(card);
-  const src=thumb?.currentSrc||thumb?.src||cover?.getAttribute('src')||'';
-  if(!from||!to?.width||!to?.height||!src){
-    overlay.animate([{opacity:0},{opacity:1}],{duration:galleriaReduced()?180:260,easing:'linear'});
-    return;
-  }
-  // As in the design: the photo flies inside the Galleria, under its shade and
-  // caption; only the night fades in (420ms), and the shade, caption and
-  // controls rise 18px over 420ms after 380ms while the photo is still landing.
-  const ghost=galleriaGhost(src,from,'20px',overlay);
+  const src=thumb?.currentSrc||thumb?.src||'';
+  const to=from?(box||galleriaStageBox()):null;
+  galleriaBox=to;
+  if(!from||!to?.width||!to?.height||!src){galleriaFade(overlay);onLand?.();return;}
+  // The photo flies inside the Galleria, under its shade, words and controls.
+  const flight=galleriaFlight(src,natural,to,overlay);
+  if(!flight){galleriaFade(overlay);onLand?.();return;}
   if(cover)cover.style.visibility='hidden';
   overlay.classList.add('is-galleria-flying');
   const rise=[{opacity:0,transform:'translateY(18px)'},{opacity:1,transform:'none'}];
   for(const el of galleriaChrome(overlay))el.animate(rise,{duration:420,delay:380,easing:GALLERIA_OUT,fill:'backwards'});
   try{stage?.animate([{opacity:0},{opacity:1}],{duration:420,delay:380,easing:GALLERIA_OUT,fill:'backwards',pseudoElement:'::after'});}catch(_e){}
-  const grow=ghost?.animate([galleriaFrame(from,'20px'),galleriaFrame(to,'0px')],{duration:560,easing:GALLERIA_EASE,fill:'forwards'});
-  const land=()=>{if(cover)cover.style.visibility='';overlay.classList.remove('is-galleria-flying');ghost?.remove();};
-  if(grow?.finished)grow.finished.then(land,land);else land();
+  const started=performance.now();
+  const anims=galleriaFly(flight,from,to,20,0,560);
+  // The flown copy stays on screen until the full photo underneath is decoded,
+  // so the landing never shows an empty or half-loaded frame.
+  let done=false;
+  const land=(aborted=false)=>{
+    if(done)return;done=true;
+    if(galleriaLanding===land)galleriaLanding=null;
+    if(cover)cover.style.visibility='';
+    overlay.classList.remove('is-galleria-flying');
+    flight.frame.remove();
+    anims.forEach(a=>{try{a.cancel();}catch(_e){}});
+    // Bookkeeping after the words have risen too (380+420ms): the restyle
+    // then lands on a still screen.
+    if(aborted!==true&&onLand){
+      const wait=820-(performance.now()-started);
+      if(wait>0)setTimeout(onLand,wait);else onLand();
+    }
+  };
+  galleriaLanding=land;
+  const ready=cover&&typeof cover.decode==='function'
+    ?Promise.race([cover.decode().catch(()=>{}),new Promise(r=>setTimeout(r,6000))])
+    :Promise.resolve();
+  Promise.all([anims[0].finished.catch(()=>{}),ready]).then(()=>land(),()=>land());
 }
 // Returns true once it owns the close: finalize runs when the photo is back.
 function galleriaLeave(overlay,finalize){
   if(galleriaLeaving)return true;
-  if(!overlay.classList.contains('show')||typeof overlay.animate!=='function'){finalize();return true;}
+  if(!overlay.classList.contains('show')||typeof overlay.animate!=='function'){galleriaLanding?.(true);finalize();return true;}
   const reduced=galleriaReduced();
   const cover=document.getElementById('usAlbumCover');
-  const stage=document.getElementById('usAlbumCarousel');
+  const landing=Boolean(galleriaLanding);
+  const flying=overlay.querySelector(':scope>.us-galleria-ghost img');
   const target=reduced?null:galleriaRect(galleriaThumb(galleriaSource));
-  const from=stage?.getBoundingClientRect?.();
-  const src=cover?.currentSrc||cover?.getAttribute('src')||'';
+  // The landing box read at open (no style read here unless the screen turned).
+  const from=galleriaBox&&galleriaBox.width===(window.innerWidth||0)?galleriaBox:galleriaStageBox();
+  // Still landing (or the full photo not ready yet): the copy that flew in flies back.
+  const src=landing?(flying?.currentSrc||flying?.getAttribute('src')||''):(cover?.currentSrc||cover?.getAttribute('src')||'');
+  const natural=landing?galleriaNatural(flying):galleriaNatural(cover);
+  galleriaLanding?.(true);
   const anims=[];
-  let ghost=null,timer=null;
+  let flight=null,timer=null;
   const job={finish:()=>{
     if(galleriaLeaving!==job)return;
     galleriaLeaving=null;
     clearTimeout(timer);
-    ghost?.remove();
+    flight?.frame.remove();
     if(cover)cover.style.visibility='';
     overlay.style.pointerEvents='';
     finalize();
@@ -726,14 +822,18 @@ function galleriaLeave(overlay,finalize){
   }};
   galleriaLeaving=job;
   overlay.style.pointerEvents='none';
-  if(target&&from?.width&&src){
-    ghost=galleriaGhost(src,from,'0px');
-    if(cover)cover.style.visibility='hidden';
+  if(target&&from.width&&src)flight=galleriaFlight(src,natural,from,document.body);
+  if(flight){
+    // The copy flies above the Galleria; the photo under it is hidden only
+    // once the copy is painted, so the first frame never shows a hole.
+    const hideCover=()=>requestAnimationFrame(()=>{if(galleriaLeaving===job&&cover)cover.style.visibility='hidden';});
+    if(typeof flight.img.decode==='function')flight.img.decode().then(hideCover,hideCover);else hideCover();
     for(const el of galleriaChrome(overlay))anims.push(el.animate([{opacity:1},{opacity:0}],{duration:150,fill:'forwards'}));
     anims.push(overlay.animate([{opacity:1},{opacity:0}],{duration:420,easing:'linear',fill:'forwards'}));
-    const back=ghost?.animate([galleriaFrame(from,'0px'),galleriaFrame(target,'20px')],{duration:480,easing:GALLERIA_EASE,fill:'forwards'});
-    if(back){anims.push(back);back.finished.then(job.finish,job.finish);}
-    timer=setTimeout(job.finish,700);
+    const back=galleriaFly(flight,from,target,0,20,480);
+    anims.push(...back);
+    back[0].finished.then(job.finish,job.finish);
+    timer=setTimeout(job.finish,900);
   }else{
     const fade=overlay.animate([{opacity:1},{opacity:0}],{duration:reduced?180:240,easing:'linear',fill:'forwards'});
     anims.push(fade);
@@ -749,6 +849,16 @@ async function openAlbum(card,{focusDelete=false}={}){
   galleriaLeaving?.finish();
   const id=card?.dataset?.momentId;
   if(!id){legacyOpenMomentViewer?.(card);return;}
+  // Read the thumbnail before anything changes: no forced layout of the album.
+  galleriaLanding?.(true);
+  const thumb=galleriaThumb(card);
+  const from=galleriaReduced()?null:galleriaRect(thumb);
+  const natural=galleriaNatural(thumb);
+  const stageBox=from?galleriaStageBox():null;
+  // The photo the card is showing (its inline carousel may be past the cover).
+  const inline=window.UsRicordiInline?.current?.(card);
+  const startAt=inline&&inline.index>0&&inline.url?inline:null;
+  const scroll=document.getElementById('usAlbumScroll');if(scroll&&scroll.scrollTop)scroll.scrollTop=0;
   currentAlbum={
     id,
     url:card.dataset.url||'',
@@ -765,7 +875,7 @@ async function openAlbum(card,{focusDelete=false}={}){
   const addBtn=document.getElementById('usAlbumAddBtn');
   if(addBtn){addBtn.hidden=false;addBtn.disabled=false;}
   if(cover){
-    cover.src=currentAlbum.url;
+    cover.src=startAt?startAt.url:currentAlbum.url;
     cover.onclick=()=>{if(Date.now()>=albumCarouselSuppressClickUntil)openLightbox(albumCarouselIndex);};
     cover.onkeydown=event=>{
       if(event.key==='Enter'||event.key===' '){event.preventDefault();openLightbox(albumCarouselIndex);}
@@ -782,12 +892,21 @@ async function openAlbum(card,{focusDelete=false}={}){
   if(author)author.textContent=currentAlbum.caption?`Aggiunto da ${currentAlbum.author}`:currentAlbum.author;
   if(note)note.hidden=!currentAlbum.caption;
   renderAlbumStory();
-  overlay?.classList.add('show');overlay?.setAttribute('aria-hidden','false');
-  document.body.classList.add('us-album-open');
-  const scroll=document.getElementById('usAlbumScroll');if(scroll)scroll.scrollTop=0;
-  galleriaEnter(overlay,card);
-  lightboxItems=[{url:currentAlbum.url,author:currentAlbum.author,caption:currentAlbum.caption,cover:true,storage_path:currentAlbum.path}];
+  overlay?.classList.add('show');
+  // The modal bookkeeping (background inert, focus, page scroll lock) restyles
+  // the whole page: it waits until the photo has landed, so the first frame of
+  // the flight is not held back by it.
+  const settle=()=>{
+    if(!overlay?.classList.contains('show')||currentAlbum?.id!==id)return;
+    overlay.setAttribute('aria-hidden','false');
+    document.body.classList.add('us-album-open');
+  };
+  lightboxItems=startAt
+    ?[{id:startAt.id,url:startAt.url,author:startAt.author,caption:startAt.caption||'',storage_path:startAt.path||''}]
+    :[{url:currentAlbum.url,author:currentAlbum.author,caption:currentAlbum.caption,cover:true,storage_path:currentAlbum.path}];
   showAlbumPhoto(0);
+  if(startAt)albumCarouselIndex=startAt.index;
+  galleriaEnter(overlay,card,from,natural,stageBox,settle);
   window.UsRicordiNew?.markOpened?.(id);
   await loadAlbum(id);
   if(focusDelete&&currentAlbum?.id===id){
