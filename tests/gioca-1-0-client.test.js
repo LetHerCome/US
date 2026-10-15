@@ -202,5 +202,9 @@ test('S2/S8/S10/T1: level moment, reward scope, Back and the old party (sources)
   assert.match(progression, /\$\('usSintoniaGrow'\)\?\.addEventListener\('click'/);
   // T1 — polish4 is gone everywhere it was shipped.
   for (const file of ['index.html', 'service-worker.js', 'scripts/build-cloudflare-pages.mjs', 'scripts/build-capacitor-web.mjs']) assert.doesNotMatch(read(file), /polish4/, file);
-  assert.doesNotMatch(read('i18n-new-gioca.json'), /XP/);
+  // The English for these texts lives in i18n-en.js; the old Bond party key is gone.
+  const EN = require('../i18n-en.js');
+  assert.equal(EN['Ci siete arrivati insieme.'], 'You got here together.');
+  assert.equal(EN['NUOVO BOND LEVEL'], undefined);
+  for (const key of ['Livello {n} · {name}', 'Verso il livello {n}', 'Resta nella vostra collezione, in Sintonia.']) assert.doesNotMatch(EN[key], /XP|Bond/, key);
 });
