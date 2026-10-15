@@ -1,0 +1,189 @@
+{
+  "family": "quests",
+  "existing_en": [
+    {
+      "key": "any-intentional-memory",
+      "title_en": "Make an intentional memory: a photo, a note and something new."
+    },
+    {
+      "key": "any-mini-surprise",
+      "title_en": "Plan a little surprise for each other before Sunday."
+    },
+    {
+      "key": "far-next-meeting-note",
+      "title_en": "Write a note to be read only the next time you see each other."
+    },
+    {
+      "key": "any-absurd-question",
+      "title_en": "Take turns asking an absurd question and answering it with a completely straight face."
+    },
+    {
+      "key": "any-appreciate",
+      "title_en": "Tell each other one thing you appreciate and don’t say often enough."
+    },
+    {
+      "key": "any-couple-mood",
+      "title_en": "Write one sentence that sums up your mood as a couple this week."
+    },
+    {
+      "key": "any-wake-up-top3",
+      "title_en": "Make a top 3 of the places you’d love to wake up tomorrow."
+    },
+    {
+      "key": "any-week-photo",
+      "title_en": "Take a photo that captures this week of you two."
+    },
+    {
+      "key": "far-same-episode",
+      "title_en": "Watch the same episode or video at the same time."
+    },
+    {
+      "key": "far-song-sync",
+      "title_en": "Pick a song and listen to it at the same time."
+    },
+    {
+      "key": "far-thought-photo",
+      "title_en": "Send each other a photo of something that made you think of each other today."
+    },
+    {
+      "key": "near-breakfast",
+      "title_en": "Go out together for breakfast, a snack or a coffee."
+    },
+    {
+      "key": "near-movie-snack",
+      "title_en": "Split the jobs: whoever picks what to watch doesn’t pick the snack."
+    },
+    {
+      "key": "near-walk",
+      "title_en": "Take a walk of at least 30 minutes, no phones."
+    },
+    {
+      "key": "any-home-photo",
+      "title_en": "Choose a new Home photo for US together."
+    },
+    {
+      "key": "any-next-month",
+      "title_en": "Together, pick one thing you want to experience next month."
+    },
+    {
+      "key": "any-old-photo",
+      "title_en": "Pick an old photo and share what you remember about that moment."
+    },
+    {
+      "key": "any-private-meme",
+      "title_en": "Make a private meme about something that happened between you."
+    },
+    {
+      "key": "any-secret-detail",
+      "title_en": "Tell each other something about yourselves you’ve never shared before."
+    },
+    {
+      "key": "any-week-ritual",
+      "title_en": "Invent a little ritual to repeat at least twice this week."
+    },
+    {
+      "key": "far-dinner-call",
+      "title_en": "Have dinner together on a video call."
+    },
+    {
+      "key": "far-playlist",
+      "title_en": "Make each other a 5-song playlist."
+    },
+    {
+      "key": "far-ten-questions",
+      "title_en": "Take turns asking each other 10 questions on a call, without preparing them."
+    },
+    {
+      "key": "near-cook-new",
+      "title_en": "Cook something you’ve never made together."
+    },
+    {
+      "key": "near-five-euro",
+      "title_en": "Swap little surprises with a budget of €5 at most."
+    },
+    {
+      "key": "near-random-road",
+      "title_en": "Pick a random direction and follow it for 20 minutes."
+    },
+    {
+      "key": "any-grow-together",
+      "title_en": "Take turns choosing one small thing you’d like to get better at together."
+    },
+    {
+      "key": "any-no-phone",
+      "title_en": "45 minutes with no distractions: together or on a call."
+    },
+    {
+      "key": "far-comfort-food",
+      "title_en": "Pick the same kind of comfort food and eat it together on a call."
+    },
+    {
+      "key": "far-dream-date",
+      "title_en": "Plan an impossible date on a call, with no budget limits."
+    },
+    {
+      "key": "near-new-place",
+      "title_en": "Try a place neither of you has been to yet."
+    },
+    {
+      "key": "near-recreate-photo",
+      "title_en": "Recreate an old photo of you two."
+    },
+    {
+      "key": "near-sunset",
+      "title_en": "Find a nice spot and watch the sunset together."
+    }
+  ],
+  "fixes": [
+    {
+      "key": "any-mini-surprise",
+      "title": "Preparatevi a vicenda una mini sorpresa entro domenica.",
+      "reason": "«per l’altro» presuppone il genere."
+    },
+    {
+      "key": "any-absurd-question",
+      "title": "Fatevi a turno una domanda assurda e rispondete con la massima serietà.",
+      "reason": "«Uno» e «L’altro» presuppongono il genere."
+    },
+    {
+      "key": "any-appreciate",
+      "title": "Ditevi a vicenda una cosa che apprezzate e che vi dite troppo poco.",
+      "reason": "«dell’altro» presuppone il genere."
+    },
+    {
+      "key": "far-thought-photo",
+      "title": "Mandatevi la foto di qualcosa che oggi vi ha fatto pensare a chi la riceve.",
+      "reason": "«all’altro» presuppone il genere."
+    },
+    {
+      "key": "near-movie-snack",
+      "title": "Dividetevi i compiti: chi sceglie cosa guardare non sceglie lo snack.",
+      "reason": "«Uno» e «l’altro» presuppongono il genere."
+    },
+    {
+      "key": "any-secret-detail",
+      "title": "Raccontatevi a vicenda una cosa di voi che non avete ancora mai raccontato.",
+      "reason": "«l’altro» presuppone il genere."
+    },
+    {
+      "key": "far-playlist",
+      "title": "Createvi a vicenda una playlist di 5 canzoni.",
+      "reason": "«per l’altro» presuppone il genere."
+    },
+    {
+      "key": "any-grow-together",
+      "title": "Scegliete a turno una piccola cosa che vorreste migliorare insieme.",
+      "reason": "«Ognuno» presuppone il genere."
+    },
+    {
+      "key": "near-new-place",
+      "title": "Provate un posto che non conoscete ancora.",
+      "reason": "«nessuno dei due» ed «è mai stato» presuppongono il genere."
+    },
+    {
+      "key": "any-private-meme",
+      "title": "Create un meme privato su qualcosa che è successo tra voi.",
+      "reason": "Errore di grammatica: «qualcosa successa» va al maschile, «qualcosa che è successo»."
+    }
+  ]
+}
