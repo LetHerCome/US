@@ -63,24 +63,26 @@ test('PET production Maudit mounts without a preview query',async t=>{
   assert.deepEqual(errors,[]);await ctx.close();
  }finally{await h.close();}
 });
-test('PET preview lives on the nav rim, never covers or blocks a tab, at every base viewport',async t=>{
+test('PET preview sits in its home spot over the nav\'s right end, never covers or blocks a tab, at every base viewport',async t=>{
  const h=await start();if(!h)return t.skip('Playwright unavailable');
  try{for(const [width,height] of [[320,568],[390,844],[844,390]]){
   const {page,ctx,errors}=await preview(h,{width,height,style:'editorial'});
   const m=await geometry(page);
-  assert.ok(m.layer.bottom<=m.nav.y+3.5&&m.layer.bottom>=m.nav.y-1,`${width}×${height} pet stands on the nav rim ${JSON.stringify(m)}`);
+  // Mockup .maudit-home: its feet 4 px over the bar's top edge, 10 px in from its right end.
+  assert.ok(Math.abs(m.layer.bottom-(m.nav.y+4))<=1,`${width}×${height} pet sits on the nav rim ${JSON.stringify(m)}`);
+  assert.ok(Math.abs(m.layer.right-(m.nav.right-10))<=1,`${width}×${height} pet sits at the nav's right end`);
   assert.ok(m.layer.x>=m.nav.x-.5&&m.layer.right<=m.nav.right+.5,`${width}×${height} pet stays inside the nav width`);
   assert.ok(m.actor.x>=m.nav.x&&m.actor.right<=m.nav.right,`${width}×${height} actor inside track`);
   assert.deepEqual(m.tabs,[true,true,true,true],`${width}×${height} every tab still receives its tap`);
   assert.equal(m.petTakesInput,'hit','only Maudit\'s own hit target takes a touch');assert.equal(m.besideIsPet,false,'the layer around Maudit stays transparent');assert.ok(m.sw<=m.w);
   await page.evaluate(()=>window.USPet.react('reward'));
-  assert.equal(await page.evaluate(()=>document.getElementById('usPetLayer').dataset.petState),'react');
+  assert.equal(await page.evaluate(()=>document.getElementById('usPetLayer').dataset.petState),'happy');
   await shot(page,`pet-preview-${width}x${height}`);
   assert.deepEqual(errors,[]);await ctx.close();
  }}finally{await h.close();}
 });
 
-test('PET steps aside for the keyboard, sleeps in background and never walks with reduced motion',async t=>{
+test('PET steps aside for the keyboard, sleeps in background and stays still with reduced motion',async t=>{
  const h=await start();if(!h)return t.skip('Playwright unavailable');
  try{
   const {page,ctx,errors}=await preview(h,{});
@@ -96,8 +98,9 @@ test('PET steps aside for the keyboard, sleeps in background and never walks wit
   assert.equal(await page.evaluate(()=>window.USPet.snapshot().running),true);
   assert.deepEqual(errors,[]);await ctx.close();
   const reduced=await preview(h,{reduced:true});
-  const motion=await reduced.page.evaluate(()=>{const a=document.querySelector('.us-pet-actor');return {transition:getComputedStyle(a).transitionDuration,reduced:window.USPet.snapshot().reduced};});
-  assert.deepEqual(motion,{transition:'0s',reduced:true});
+  await reduced.page.evaluate(()=>window.USPet.react('think'));
+  const motion=await reduced.page.evaluate(()=>{const l=document.getElementById('usPetLayer');return {animations:l.getAnimations({subtree:true}).length,state:window.USPet.snapshot().state};});
+  assert.deepEqual(motion,{animations:0,state:'happy'},'happy without hop, heart or loops');
   const states=new Set();for(let i=0;i<6;i++){states.add(await reduced.page.evaluate(()=>window.USPet.snapshot().state));await reduced.page.waitForTimeout(250);}
   assert.equal(states.has('walk'),false);
   await reduced.ctx.close();
@@ -159,7 +162,7 @@ test('F4/F5 in a real DOM: failed renderer swap keeps the live placeholder; reac
   });
   assert.deepEqual(swap,{ok:false,children:1,sameHost:true,sameFigure:true,html:true,renderer:'placeholder',stray:false});
   // preview() ends on a reaction that lasts TIMING.react: start from a settled PET.
-  await page.waitForFunction(()=>window.USPet.snapshot().state!=='react');
+  await page.waitForFunction(()=>window.USPet.snapshot().state==='idle');
   const sync=await page.evaluate(()=>{
    // Same synchronous task: the MutationObserver cannot have delivered yet.
    document.body.classList.add('us-keyboard-open');
@@ -177,7 +180,7 @@ test('F4/F5 in a real DOM: failed renderer swap keeps the live placeholder; reac
  }finally{await h.close();}
 });
 
-test('PET stays through notices and the Ti penso arrival, steps aside for exclusive sheets and comes back after navigation',async t=>{
+test('PET stays through notices, the Ti penso arrival and sheets (their scrim covers it), and comes back after navigation',async t=>{
  const h=await start();if(!h)return t.skip('Playwright unavailable');
  try{
   const {page,ctx,errors}=await pageFor(h,{});
@@ -192,23 +195,24 @@ test('PET stays through notices and the Ti penso arrival, steps aside for exclus
   await page.evaluate(()=>{usIncomingThink={id:'qa-think',sender_id:'b1',created_at:new Date().toISOString()};window.openThinkArrival();});
   await page.waitForTimeout(300);assert.deepEqual(await pet(),alive,'Ti penso arrival');
   await page.evaluate(()=>window.closeThinkArrival());await page.waitForTimeout(400);
-  // Exclusive sheets: the PET steps aside, then returns.
+  // Sheets (mockup: .layer z 20 over .maudit-home z 11): the PET stays in its spot, under the sheet's scrim.
   for(const [name,open,close] of [
    ['countdown',()=>window.USCountdown.open(),()=>window.USCountdown.close()],
-   ['calendar',()=>window.openCalendarSurface(),()=>window.closeCalendarSurface()],
    ['left-for-you',()=>window.UsLeftForYou.openComposer(),()=>window.UsLeftForYou.closeComposer()]
   ]){
    await page.evaluate(open);await page.waitForTimeout(350);
-   const during=await pet();assert.deepEqual({vis:during.vis,blockers:during.blockers,running:during.running},{vis:'hidden',blockers:['surface'],running:false},name);
+   const during=await pet();assert.deepEqual({vis:during.vis,blockers:during.blockers,running:during.running},{vis:'visible',blockers:[],running:true},name);
+   assert.equal(await page.evaluate(()=>{const r=document.querySelector('.us-pet-hit').getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.classList.contains('us-pet-hit');}),false,`${name}: covered, not touchable`);
    await page.evaluate(close);await page.waitForTimeout(700);
    assert.deepEqual(await pet(),alive,`${name} closed`);
   }
   // Focus Photo is an Oggi state: leaving Oggi gives the PET (and Oggi's widgets) back.
   await page.evaluate(()=>window.toggleOggiFocusPhoto());await page.waitForTimeout(250);
   assert.deepEqual((await pet()).blockers,['focus']);
-  await page.click('.nav button[data-page="bond"]');await page.waitForTimeout(350);
+  // Focus Photo slides the bar away (mockup .is-focus .nav): navigate as the app would.
+  await page.evaluate(()=>window.go('bond',{nav:true}));await page.waitForFunction(()=>!window.UsDueColori?.isFlooding?.());await page.waitForTimeout(350);
   assert.deepEqual(await pet(),alive,'Focus Photo does not follow the user to Noi');
-  await page.click('.nav button[data-page="home"]');await page.waitForTimeout(350);
+  await page.click('.nav button[data-page="home"]');await page.waitForFunction(()=>!window.UsDueColori?.isFlooding?.());await page.waitForTimeout(350);
   assert.equal(await page.evaluate(()=>document.getElementById('usTodayPriorityRegion').hasAttribute('inert')),false,'Oggi widgets are usable again');
   assert.deepEqual(errors,[]);await ctx.close();
  }finally{await h.close();}

@@ -1,196 +1,85 @@
-/* US PET Foundation V1 — one small companion on safe UI rims.
-   Autonomous motion stays CSS-driven; Maudit Gravity V1 uses a short JS timer
-   only while the user has just released the cat and it is physically falling. */
-.us-pet-layer{position:fixed;z-index:var(--us-layer-ambient);left:50%;bottom:calc(max(8px,var(--us-safe-bottom)) + var(--us-pet-nav-h,68px) - 3px);width:var(--us-pet-track,min(456px,calc(100% - 18px)));height:40px;transform:translateX(-50%);pointer-events:none;contain:layout style size;transition:opacity 220ms var(--us-ease-standard),visibility 0s linear 0s}
+/* Maudit 1.0 — the approved mockup's .maudit-home and .m (style.css), exactly.
+   The cat sits still in one home spot: 10 px in from the right end of the
+   bottom bar, its feet 4 px over the bar's top edge, 54 × 48. It never walks
+   and is never carried; only its state changes (pet.js). The layer stays
+   pointer-transparent; only the hit target on the cat takes a tap. */
+.us-pet-layer{position:fixed;z-index:var(--us-layer-ambient);right:calc((100% - min(456px,calc(100% - 24px))) / 2 + 10px);bottom:calc(max(12px,var(--us-safe-bottom)) + 66px);width:54px;height:48px;pointer-events:none;transition:opacity .3s,translate .45s var(--us-ease-standard)}
 .us-pet-layer[hidden]{display:none!important}
 .us-pet-layer,.us-pet-layer *{pointer-events:none!important;user-select:none;-webkit-user-select:none}
-.us-pet-actor{position:absolute;left:14px;bottom:0;width:40px;height:40px;transform:translate3d(calc(var(--us-pet-x,6px) + var(--us-pet-dx,0px)),var(--us-pet-dy,0px),0);transition:transform var(--us-pet-move,0ms) linear;will-change:transform}
-/* Maudit V1 — the layer above stays pointer-transparent. Only this bounded
-   target on the cat itself takes a touch; it moves with the actor and it is
-   gone whenever Maudit is (hidden layer, visibility:hidden, inert, Off). Its
-   bottom stays clear of the nav so a tab never loses its tap. */
-.us-pet-layer .us-pet-hit{position:absolute;left:14px;bottom:4px;width:40px;height:34px;transform:translate3d(calc(var(--us-pet-x,6px) + var(--us-pet-dx,0px)),var(--us-pet-dy,0px),0);transition:transform var(--us-pet-move,0ms) linear;pointer-events:auto!important;touch-action:pan-y;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;cursor:grab}
-/* On a card plane the layer is a short segment of that card's rim, placed in
-   document coordinates so it scrolls with the card; off the safe band it hides. */
-.us-pet-layer[data-pet-plane]:not([data-pet-plane="nav"]){position:absolute;left:var(--us-pet-plane-left);top:var(--us-pet-plane-top);bottom:auto;width:var(--us-pet-plane-w);transform:none}
-.us-pet-layer[data-pet-offstage]{opacity:0;visibility:hidden;transition:opacity 120ms var(--us-ease-standard),visibility 0s linear 120ms}
-.us-pet-layer[data-pet-state="held"] .us-pet-actor,.us-pet-layer[data-pet-state="held"] .us-pet-hit{transition:transform 70ms cubic-bezier(.2,.7,.3,1);cursor:grabbing}
-.us-pet-layer[data-pet-state="fall"] .us-pet-actor,.us-pet-layer[data-pet-state="fall"] .us-pet-hit{transition:none!important}
-.us-pet-layer[data-pet-state="fall"] .us-pet-hit{pointer-events:none!important}
-.us-pet-layer[data-pet-state="snap"] .us-pet-actor,.us-pet-layer[data-pet-state="snap"] .us-pet-hit{transition:transform 120ms cubic-bezier(.3,.6,.35,1)}
-.us-pet-layer[data-pet-flip] .us-pet-actor,.us-pet-layer[data-pet-flip] .us-pet-hit{transition:none!important}
-.us-pet-layer[data-pet-arrive] .us-pet-actor{animation:us-pet-arrive 240ms var(--us-ease-standard) both}
+.us-pet-actor{position:absolute;inset:0;display:block;touch-action:manipulation}
+.us-pet-layer .us-pet-hit{position:absolute;inset:0;z-index:1;pointer-events:auto!important;touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;cursor:pointer}
 /* Each renderer owns one host inside the actor, so replacing a renderer is atomic. */
 .us-pet-renderer{position:absolute;inset:0;display:block}
-.us-pet-figure{position:absolute;inset:0;transform-origin:50% 100%;transition:transform 160ms var(--us-ease-standard)}
-.us-pet-layer[data-pet-facing="left"] .us-pet-figure{transform:scaleX(-1)}
-.us-pet-shadow{position:absolute;left:9px;right:9px;bottom:-1px;height:5px;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.45),transparent);transform-origin:50% 50%}
+.us-pet-figure{position:absolute;inset:0;display:block}
 
-/* Notices and the Ti penso arrival sit below this pointer-transparent layer.
-   Exclusive shell states still own the screen and make the PET step aside;
-   the list mirrors blockers() in pet.js. */
-/* Two rules on purpose: a browser without :has() must still honour the first. */
+/* Off its spot (mockup .maudit-home.is-off): the keyboard, an inert shell,
+   Focus Photo, the front door. It fades and sinks 30 px. Sheets and notices
+   do not move it: a sheet's scrim simply covers it.
+   Two rules on purpose: a browser without :has() must still honour the first. */
 body.us-keyboard-open .us-pet-layer,
-.us-pet-layer[inert],
-body[data-us-surface="open"] .us-pet-layer{opacity:0;visibility:hidden;transition:opacity 160ms var(--us-ease-standard),visibility 0s linear 160ms}
+.us-pet-layer[inert]{opacity:0;translate:0 30px;visibility:hidden;transition:opacity .3s,translate .45s var(--us-ease-standard),visibility 0s linear .3s}
 body:has(#homeHero.us-oggi-focus) .us-pet-layer,
-body:has(.auth-overlay:not(.hidden)) .us-pet-layer{opacity:0;visibility:hidden;transition:opacity 160ms var(--us-ease-standard),visibility 0s linear 160ms}
+body:has(.auth-overlay:not(.hidden)) .us-pet-layer{opacity:0;translate:0 30px;visibility:hidden;transition:opacity .3s,translate .45s var(--us-ease-standard),visibility 0s linear .3s}
 
-/* ---------- PREVIEW renderer: "kitten preview v0" (not the final asset) ----------
-   Follows the approved concept in docs/missions/us-pet-asset-spec-v1.md: small
-   white/gray kitten, blue eyes. Poses are static transforms per state (they
-   survive reduced motion); loops are short and paused in background. Part
-   names (k-tail, k-leg-*, k-body, k-head, k-ear-*, k-eyes-*) match the final
-   asset naming so the same poses can drive the approved SVG. */
-.us-pet-kitten{position:absolute;inset:0;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.35))}
+/* ---------- PRODUCTION renderer: Maudit 1.0 (mockup .m) ----------
+   The approved drawing (viewBox 0 -8 100 100) is placed so that it sits in
+   the 54 × 48 box exactly like the mockup's viewBox 0 0 100 92: scale
+   48 / 92, centred across, its y = 0 at the top of the box. */
+.us-pet-maudit{position:absolute;left:.913px;top:-4.174px;width:52.174px;height:52.174px;overflow:visible;display:block}
+.us-pet-maudit .m-collar{display:none}
+.us-pet-layer[data-pet-accessory="collar"] .us-pet-maudit .m-collar{display:inline}
+.us-pet-maudit :is(.m-eyes-happy,.m-eyes-closed,.m-zz,.m-purr,.m-heart){opacity:0}
+.us-pet-layer:is([data-pet-state="happy"],[data-pet-state="pet"],[data-pet-state="sleep"]) .m-eyes-open{opacity:0}
+.us-pet-layer:is([data-pet-state="happy"],[data-pet-state="pet"]) .m-eyes-happy{opacity:1}
+.us-pet-layer[data-pet-state="sleep"] :is(.m-eyes-closed,.m-zz){opacity:1}
+.us-pet-layer[data-pet-state="pet"] .m-purr{opacity:1}
+.us-pet-maudit :is(.m-head,.m-tail,.m-body,.m-ear-l,.m-ear-r,.m-pupils,.m-eyes-open){transform-box:fill-box}
+.us-pet-maudit .m-head{transform-origin:50% 90%;transition:rotate .45s var(--us-ease-spring),translate .45s var(--us-ease-standard)}
+.us-pet-maudit .m-tail{transform-origin:0% 100%}
+.us-pet-maudit .m-ear-l{transform-origin:80% 100%;transition:rotate .3s var(--us-ease-standard)}
+.us-pet-maudit .m-ear-r{transform-origin:20% 100%;transition:rotate .3s var(--us-ease-standard)}
+.us-pet-maudit .m-pupils{transition:translate .35s var(--us-ease-standard)}
+.us-pet-maudit .m-eyes-open{transform-origin:50% 50%}
+/* idle — sits; curious — head tilts, ears open; pet — ears back, head leans
+   into the hand; sleep — head down. happy adds the hop and the heart (pet.js). */
+.us-pet-layer[data-pet-state="curious"] .m-head{rotate:-9deg}
+.us-pet-layer[data-pet-state="curious"] .m-ear-l{rotate:-6deg}
+.us-pet-layer[data-pet-state="curious"] .m-ear-r{rotate:6deg}
+.us-pet-layer[data-pet-state="pet"] .m-ear-l{rotate:-14deg}
+.us-pet-layer[data-pet-state="pet"] .m-ear-r{rotate:14deg}
+.us-pet-layer[data-pet-state="sleep"] .m-head{translate:0 3px}
+.us-pet-layer[data-pet-state="pet"] .m-head{rotate:5deg}
+@media (prefers-reduced-motion:no-preference){
+  .us-pet-maudit .m-eyes-open{animation:us-maudit-blink 5.2s infinite}
+  .us-pet-maudit .m-tail{animation:us-maudit-tail 4.6s ease-in-out infinite alternate}
+  .us-pet-layer[data-pet-state="sleep"] .m-body{transform-origin:50% 100%;animation:us-maudit-breathe 3.4s ease-in-out infinite}
+  .us-pet-layer[data-pet-state="sleep"] .m-zz{animation:us-maudit-zz 2.8s ease-in-out infinite}
+  .us-pet-layer[data-pet-state="pet"] .m-purr{animation:us-maudit-purr .5s ease-in-out infinite alternate}
+}
+@keyframes us-maudit-blink{0%,94%,100%{scale:1 1}97%{scale:1 .1}}
+@keyframes us-maudit-tail{from{rotate:-6deg}to{rotate:10deg}}
+@keyframes us-maudit-breathe{50%{scale:1.025 1.045}}
+@keyframes us-maudit-zz{0%{translate:0 2px;opacity:0}30%{opacity:1}100%{translate:4px -8px;opacity:0}}
+@keyframes us-maudit-purr{to{translate:1px 0}}
+
+/* ---------- PREVIEW renderer: "kitten preview v0" (QA only, ?us-pet=preview) ----------
+   Same five states as static poses of the earlier articulated kitten. */
+.us-pet-shadow{position:absolute;left:9px;right:9px;bottom:-1px;height:5px;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.45),transparent)}
+.us-pet-kitten{position:absolute;left:7px;top:8px;width:40px;height:40px;overflow:visible}
 .us-pet-kitten g{transform-box:fill-box;transition:transform 220ms var(--us-ease-standard),opacity 160ms var(--us-ease-standard)}
 .us-pet-kitten .k-tail{transform-origin:100% 100%}
-.us-pet-kitten .k-leg{transform-origin:50% 0}
-.us-pet-kitten .k-body{transform-origin:50% 100%}
 .us-pet-kitten .k-head{transform-origin:35% 95%}
 .us-pet-kitten .k-ear{transform-origin:50% 100%}
-.us-pet-kitten .k-eyes-open{transform-origin:50% 50%}
 .us-pet-kitten .k-eyes-closed{opacity:0}
 .us-pet-kitten .k-collar{display:none}
 .us-pet-layer[data-pet-accessory="collar"] .us-pet-kitten .k-collar{display:inline}
-
-/* idle — sits tall, breathes, tail sways, blinks now and then. */
-.us-pet-layer[data-pet-state="idle"] .k-body{animation:us-kitten-breathe 3.2s ease-in-out infinite}
-.us-pet-layer[data-pet-state="idle"] .k-tail{animation:us-kitten-sway 3.8s ease-in-out infinite alternate}
-.us-pet-layer[data-pet-state="idle"] .k-eyes-open{animation:us-kitten-blink 5.4s ease-in-out infinite}
-/* walk — diagonal leg pairs, tail carried high, a soft head bob. */
-.us-pet-layer[data-pet-state="walk"] .k-tail{transform:rotate(16deg)}
-.us-pet-layer[data-pet-state="walk"] .k-leg-front-near,.us-pet-layer[data-pet-state="walk"] .k-leg-hind-far{animation:us-kitten-stride .42s ease-in-out infinite alternate}
-.us-pet-layer[data-pet-state="walk"] .k-leg-front-far,.us-pet-layer[data-pet-state="walk"] .k-leg-hind-near{animation:us-kitten-stride .42s ease-in-out infinite alternate-reverse}
-.us-pet-layer[data-pet-state="walk"] .k-head{animation:us-kitten-bob .42s ease-in-out infinite alternate}
-/* rest — a loaf: legs tucked, head lowered, eyes closed, tail laid down, slow breath. */
-.us-pet-layer[data-pet-state="rest"] .k-leg{opacity:0}
-.us-pet-layer[data-pet-state="rest"] .k-body{transform:translateY(3.4px) scale(1.06,.9);animation:us-kitten-sleep 4.6s ease-in-out infinite}
-.us-pet-layer[data-pet-state="rest"] .k-head{transform:translate(-1px,5px) rotate(-6deg)}
-.us-pet-layer[data-pet-state="rest"] .k-ear{transform:rotate(-8deg) scale(.94)}
-.us-pet-layer[data-pet-state="rest"] .k-tail{transform:translate(3px,4px) rotate(-74deg) scale(.72)}
-.us-pet-layer[data-pet-state="rest"] .k-eyes-open{opacity:0}
-.us-pet-layer[data-pet-state="rest"] .k-eyes-closed{opacity:1}
-/* react — ears perk, eyes open a touch wider, tail straight up, one small hop. */
-.us-pet-layer[data-pet-state="react"] .us-pet-figure>*{animation:us-pet-hop .8s cubic-bezier(.3,.7,.3,1) 2}
-.us-pet-layer[data-pet-state="react"] .us-pet-shadow{animation:us-pet-shadow .8s cubic-bezier(.3,.7,.3,1) 2}
-.us-pet-layer[data-pet-state="react"] .k-ear{transform:scale(1.14)}
-.us-pet-layer[data-pet-state="react"] .k-eyes-open{transform:scale(1.1)}
-.us-pet-layer[data-pet-state="react"] .k-tail{transform:rotate(34deg);animation:us-kitten-quiver .18s ease-in-out 4 alternate}
-/* pet — a stroke: head lifts into the hand, ears ease back, eyes soften shut,
-   the body settles and the tail answers once. No text, no hop, no heart. */
+.us-pet-layer[data-pet-state="sleep"] .k-eyes-open,.us-pet-layer[data-pet-state="pet"] .k-eyes-open{opacity:0}
+.us-pet-layer[data-pet-state="sleep"] .k-eyes-closed,.us-pet-layer[data-pet-state="pet"] .k-eyes-closed{opacity:1}
+.us-pet-layer[data-pet-state="sleep"] .k-head{transform:translate(-1px,3px) rotate(-6deg)}
+.us-pet-layer[data-pet-state="curious"] .k-head{transform:rotate(-9deg)}
 .us-pet-layer[data-pet-state="pet"] .k-head{transform:rotate(-9deg) translateY(-.3px)}
-.us-pet-layer[data-pet-state="pet"] .k-ear{transform:rotate(-12deg) scale(.94)}
-.us-pet-layer[data-pet-state="pet"] .k-eyes-open{opacity:0}
-.us-pet-layer[data-pet-state="pet"] .k-eyes-closed{opacity:1}
-.us-pet-layer[data-pet-state="pet"] .k-body{transform:scale(1.025,.97)}
-.us-pet-layer[data-pet-state="pet"] .k-tail{animation:us-kitten-pet-tail 1.3s ease-in-out 1}
-/* held — carried by the scruff: the whole kitten hangs from the back of the
-   neck, legs dangle loose, tail hangs relaxed, head stays calm and a little up. */
-.us-pet-kitten{transition:transform 200ms var(--us-ease-standard)}
-.us-pet-layer[data-pet-state="held"] .us-pet-shadow{opacity:0;transform:scale(.5)}
-.us-pet-layer[data-pet-state="held"] .us-pet-kitten{transform-origin:62% 38%;transform:rotate(-28deg);animation:us-kitten-dangle 1.9s ease-in-out .2s infinite alternate}
-.us-pet-layer[data-pet-state="held"] .k-head{transform:rotate(14deg)}
-.us-pet-layer[data-pet-state="held"] .k-ear{transform:rotate(-8deg)}
-.us-pet-layer[data-pet-state="held"] .k-eyes-open{transform:scaleY(.8)}
-.us-pet-layer[data-pet-state="held"] .k-body{transform:scale(.95,1.05)}
-.us-pet-layer[data-pet-state="held"] .k-leg-front-near,.us-pet-layer[data-pet-state="held"] .k-leg-front-far{transform:rotate(30deg) scaleY(1.08)}
-.us-pet-layer[data-pet-state="held"] .k-leg-hind-near,.us-pet-layer[data-pet-state="held"] .k-leg-hind-far{transform:rotate(30deg) scaleY(1.12)}
-.us-pet-layer[data-pet-state="held"] .k-tail{transform:rotate(-118deg) scale(.86)}
-/* fall — finger is gone: body straightens under gravity, legs and tail trail naturally. */
-.us-pet-layer[data-pet-state="fall"] .us-pet-shadow{opacity:0}
-.us-pet-layer[data-pet-state="fall"] .us-pet-kitten{transform-origin:50% 55%;transform:rotate(-4deg) scale(.98,1.04)}
-.us-pet-layer[data-pet-state="fall"] .k-leg{transform:rotate(8deg) scaleY(1.06)}
-.us-pet-layer[data-pet-state="fall"] .k-tail{transform:rotate(-92deg) scale(.9)}
-/* snap — gravity already reached the rim; only a tiny landing compression remains. */
-.us-pet-layer[data-pet-state="snap"] .us-pet-kitten{animation:us-pet-land 180ms ease-out 1}
-@keyframes us-kitten-breathe{0%,100%{transform:none}50%{transform:scale(1.02,1.035)}}
-@keyframes us-kitten-sway{from{transform:rotate(-6deg)}to{transform:rotate(9deg)}}
-@keyframes us-kitten-blink{0%,90%,96%,100%{transform:none}93%{transform:scaleY(.1)}}
-@keyframes us-kitten-stride{from{transform:rotate(14deg)}to{transform:rotate(-14deg)}}
-@keyframes us-kitten-bob{from{transform:none}to{transform:translateY(.7px)}}
-@keyframes us-kitten-sleep{0%,100%{transform:translateY(3.4px) scale(1.06,.9)}50%{transform:translateY(3.2px) scale(1.08,.93)}}
-@keyframes us-kitten-quiver{from{transform:rotate(30deg)}to{transform:rotate(38deg)}}
-@keyframes us-pet-hop{0%,100%{transform:none}35%{transform:translateY(-9px)}60%{transform:translateY(0) scale(1.05,.94)}}
-@keyframes us-kitten-pet-tail{0%,100%{transform:none}35%{transform:rotate(14deg)}70%{transform:rotate(-5deg)}}
-@keyframes us-kitten-dangle{from{transform:rotate(-31deg)}to{transform:rotate(-25deg)}}
-@keyframes us-pet-land{0%,100%{transform:none}45%{transform:scale(1.05,.93)}}
-@keyframes us-pet-arrive{from{opacity:0}to{opacity:1}}
-@keyframes us-pet-shadow{0%,100%{transform:none}35%{transform:scale(.6);opacity:.5}}
-
-/* ---------- PRODUCTION renderer: Maudit 1.0 (design "Due colori, un Noi") ----------
-   The grey loaf seen from the front, from the approved mockup. Same states and
-   timings as before; only the drawing and its poses change. Every state keeps a
-   static pose, so reduced motion still reads; loops are short and pause in
-   background. The tail trails the walk, so the drawing mirrors facing right. */
-.us-pet-maudit{position:absolute;inset:0;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.35));transform-origin:50% 100%;transition:transform 200ms var(--us-ease-standard)}
-.us-pet-maudit g{transform-box:fill-box;transition:transform 220ms var(--us-ease-standard),opacity 160ms var(--us-ease-standard)}
-.us-pet-figure[data-pet-production="maudit-v1"]{transform:scaleX(-1)}
-.us-pet-layer[data-pet-facing="left"] .us-pet-figure[data-pet-production="maudit-v1"]{transform:none}
-.us-pet-maudit .m-tail{transform-origin:0% 100%}
-.us-pet-maudit .m-body{transform-origin:50% 100%}
-.us-pet-maudit .m-paw{transform-origin:50% 0}
-.us-pet-maudit .m-head{transform-origin:50% 90%;transition:transform 450ms var(--us-ease-spring),opacity 160ms var(--us-ease-standard)}
-.us-pet-maudit .m-ear-l{transform-origin:80% 100%}
-.us-pet-maudit .m-ear-r{transform-origin:20% 100%}
-.us-pet-maudit .m-eyes-open{transform-origin:50% 50%}
-.us-pet-maudit .m-eyes-happy,.us-pet-maudit .m-eyes-closed,.us-pet-maudit .m-zz,.us-pet-maudit .m-purr,.us-pet-maudit .m-heart{opacity:0}
-.us-pet-maudit .m-collar{display:none}
-.us-pet-layer[data-pet-accessory="collar"] .us-pet-maudit .m-collar{display:inline}
-
-/* idle — sits, blinks now and then, the tail sways. */
-.us-pet-layer[data-pet-state="idle"] .m-eyes-open{animation:us-maudit-blink 5.2s ease-in-out infinite}
-.us-pet-layer[data-pet-state="idle"] .m-tail{animation:us-maudit-tail 4.6s ease-in-out infinite alternate}
-/* walk — a small waddle from paw to paw, tail carried up. */
-.us-pet-layer[data-pet-state="walk"] .us-pet-maudit{animation:us-maudit-waddle .42s ease-in-out infinite alternate}
-.us-pet-layer[data-pet-state="walk"] .m-paw-l{animation:us-maudit-step .42s ease-in-out infinite alternate}
-.us-pet-layer[data-pet-state="walk"] .m-paw-r{animation:us-maudit-step .42s ease-in-out infinite alternate-reverse}
-.us-pet-layer[data-pet-state="walk"] .m-tail{transform:rotate(-14deg)}
-/* rest — asleep: eyes shut, head down, slow breath, two small z. */
-.us-pet-layer[data-pet-state="rest"] .m-eyes-open{opacity:0}
-.us-pet-layer[data-pet-state="rest"] .m-eyes-closed{opacity:1}
-.us-pet-layer[data-pet-state="rest"] .m-head{transform:translateY(3px)}
-.us-pet-layer[data-pet-state="rest"] .m-ear{transform:rotate(0) scale(.94)}
-.us-pet-layer[data-pet-state="rest"] .m-tail{transform:rotate(8deg)}
-.us-pet-layer[data-pet-state="rest"] .m-body{animation:us-maudit-breathe 3.4s ease-in-out infinite}
-.us-pet-layer[data-pet-state="rest"] .m-zz{opacity:1;animation:us-maudit-zz 2.8s ease-in-out infinite}
-/* react — happy (a reward landed): one small hop, happy eyes, ears up, a heart. */
-.us-pet-layer[data-pet-state="react"] .m-eyes-open{opacity:0}
-.us-pet-layer[data-pet-state="react"] .m-eyes-happy{opacity:1}
-.us-pet-layer[data-pet-state="react"] .m-ear{transform:scale(1.08)}
-.us-pet-layer[data-pet-state="react"] .m-tail{transform:rotate(-18deg)}
-.us-pet-layer[data-pet-state="react"] .m-heart{animation:us-maudit-heart 1.1s var(--us-ease-standard) 1}
-/* pet — a stroke: happy eyes, ears back, head leans into the hand, a short purr. No heart. */
-.us-pet-layer[data-pet-state="pet"] .m-eyes-open{opacity:0}
-.us-pet-layer[data-pet-state="pet"] .m-eyes-happy{opacity:1}
-.us-pet-layer[data-pet-state="pet"] .m-head{transform:rotate(5deg)}
-.us-pet-layer[data-pet-state="pet"] .m-ear-l{transform:rotate(-14deg)}
-.us-pet-layer[data-pet-state="pet"] .m-ear-r{transform:rotate(14deg)}
-.us-pet-layer[data-pet-state="pet"] .m-purr{opacity:1;animation:us-maudit-purr .5s ease-in-out infinite alternate}
-/* held — picked up by the scruff: hangs from the neck, paws and tail loose. */
-.us-pet-layer[data-pet-state="held"] .us-pet-maudit{transform-origin:50% 22%;transform:rotate(-5deg);animation:us-maudit-dangle 1.9s ease-in-out .2s infinite alternate}
-.us-pet-layer[data-pet-state="held"] .m-body{transform:scale(.94,1.06)}
-.us-pet-layer[data-pet-state="held"] .m-paw{transform:translateY(3px) scaleY(1.1)}
-.us-pet-layer[data-pet-state="held"] .m-tail{transform:rotate(42deg) scale(.9)}
-.us-pet-layer[data-pet-state="held"] .m-ear-l{transform:rotate(8deg)}
-.us-pet-layer[data-pet-state="held"] .m-ear-r{transform:rotate(-8deg)}
-.us-pet-layer[data-pet-state="held"] .m-eyes-open{transform:scale(1.08)}
-/* fall — the finger is gone: stretched by gravity, ears up, tail trailing. */
-.us-pet-layer[data-pet-state="fall"] .us-pet-maudit{transform-origin:50% 55%;transform:scale(.97,1.05)}
-.us-pet-layer[data-pet-state="fall"] .m-paw{transform:translateY(2px)}
-.us-pet-layer[data-pet-state="fall"] .m-tail{transform:rotate(30deg)}
-.us-pet-layer[data-pet-state="fall"] .m-ear{transform:scale(1.08)}
-/* snap — landed: one small squash. */
-.us-pet-layer[data-pet-state="snap"] .us-pet-maudit{animation:us-pet-land 180ms ease-out 1}
-@keyframes us-maudit-blink{0%,94%,100%{transform:none}97%{transform:scaleY(.1)}}
-@keyframes us-maudit-tail{from{transform:rotate(-6deg)}to{transform:rotate(10deg)}}
-@keyframes us-maudit-waddle{from{transform:rotate(-4deg)}to{transform:rotate(4deg) translateY(-1px)}}
-@keyframes us-maudit-step{from{transform:none}to{transform:translateY(-2.5px)}}
-@keyframes us-maudit-breathe{0%,100%{transform:none}50%{transform:scale(1.025,1.045)}}
-@keyframes us-maudit-zz{0%{transform:translate(0,2px);opacity:0}30%{opacity:1}100%{transform:translate(4px,-8px);opacity:0}}
-@keyframes us-maudit-purr{to{transform:translateX(1px)}}
-@keyframes us-maudit-heart{0%{opacity:0;transform:translateY(4px) scale(.5)}40%{opacity:1;transform:translateY(-10px)}100%{opacity:0;transform:translateY(-22px) scale(.9)}}
-@keyframes us-maudit-dangle{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
+.us-pet-layer[data-pet-state="happy"] .k-ear{transform:scale(1.14)}
+.us-pet-layer[data-pet-state="happy"] .k-tail{transform:rotate(34deg)}
 
 /* Background, reduced motion: same poses, no movement at all. */
 html[data-us-visibility="hidden"] .us-pet-layer *{animation-play-state:paused!important}

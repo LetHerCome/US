@@ -83,13 +83,13 @@ function usApplyPersonColor(profile){
   if(role==='francesco'||role==='beatrice')root.dataset.usMe=role;
   else delete root.dataset.usMe;
 }
-// One timer for the one toast (the Avviso pill at the top): a second message
+// One timer for the one toast (the Avviso pill at the top, 2.3 s as in the mockup): a second message
 // restarts the ~2 s window instead of being cut short by the first message's
 // pending hide. Optional {icon, quiet}: a shared Phosphor icon name and the
 // quiet (night) look. Without quiet, a message that ends with ♡ ✦ ✓ is a
 // good moment (warm latte pill); anything else is quiet.
 let usToastTimer=null;
-function toast(msg,options){const t=document.getElementById('toast');if(!t)return;const opts=options&&typeof options==='object'?options:{};const text=String(msg??'');const quiet=typeof opts.quiet==='boolean'?opts.quiet:!/[♡✦✓]\s*$/.test(text);t.classList.toggle('is-quiet',quiet);t.textContent='';if(opts.icon){const icon=document.createElement('span');icon.className='us-icon';icon.setAttribute('data-us-icon',String(opts.icon));icon.setAttribute('aria-hidden','true');t.appendChild(icon);}const label=document.createElement('span');label.className='us-toast-text';label.textContent=text;t.appendChild(label);t.classList.add('show');clearTimeout(usToastTimer);usToastTimer=setTimeout(()=>t.classList.remove('show'),2200)}
+function toast(msg,options){const t=document.getElementById('toast');if(!t)return;const opts=options&&typeof options==='object'?options:{};const text=String(msg??'');const quiet=typeof opts.quiet==='boolean'?opts.quiet:!/[♡✦✓]\s*$/.test(text);t.classList.toggle('is-quiet',quiet);t.textContent='';if(opts.icon){const icon=document.createElement('span');icon.className='us-icon';icon.setAttribute('data-us-icon',String(opts.icon));icon.setAttribute('aria-hidden','true');t.appendChild(icon);}const label=document.createElement('span');label.className='us-toast-text';label.textContent=text;t.appendChild(label);t.classList.add('show');clearTimeout(usToastTimer);usToastTimer=setTimeout(()=>t.classList.remove('show'),2300)}
 // The one US confirmation sheet (ui-foundation); the platform dialog only as a fallback.
 function usConfirm(options){const ui=window.UsUiFoundation;return ui&&typeof ui.confirm==='function'?ui.confirm(options):Promise.resolve(window.confirm(options.title));}
 // Game V2 — Gioca is owned by games.js (window.USGameV2); the legacy weekly quiz UI is retired.
@@ -2011,6 +2011,15 @@ function toggleOggiFocusPhoto(){setOggiFocusPhoto(!usOggiFocusPhotoActive);}
 window.toggleOggiFocusPhoto=toggleOggiFocusPhoto;
 document.getElementById('homeHero')?.addEventListener('click',event=>{
   if(oggiIsWidgetTarget(event.target))return;
+  toggleOggiFocusPhoto();
+});
+// The US mark at the top of Oggi is not a control: as in the approved mockup
+// (where the header lies on the photo) a tap on it, or on the bar around it,
+// is a tap on the photo: Focus Photo, the screen with nothing but you two.
+// Ti penso and the envelope keep their own taps.
+document.querySelector?.('.app>.top')?.addEventListener?.('click',event=>{
+  if(document.querySelector('.page.active')?.id!=='home')return;
+  if(event.target?.closest?.('button,a[href],input,label,[role="button"],.online-badge'))return;
   toggleOggiFocusPhoto();
 });
 

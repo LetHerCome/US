@@ -19,6 +19,8 @@
   --us-pop-scrim-in:260ms;
   --us-pop-scrim-out:240ms;
   --us-pop-fade:160ms;
+  --us-pop-toast-in:360ms;
+  --us-pop-toast-out:220ms;
   /* The Avviso slot: just under the top bar, never on the bottom actions. */
   --us-avviso-top:calc(var(--us-safe-top) + 62px);
   --us-avviso-step:52px;
@@ -189,7 +191,7 @@ body.us-keyboard-open :is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsO
   transition:transform var(--us-pop-sheet-in) var(--us-ease-enter);
 }
 [data-us-motion-surface]:is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show,[aria-hidden="false"]) .us-modal-backdrop{
-  transition:opacity var(--us-pop-scrim-in) var(--us-ease-standard);
+  transition:opacity var(--us-pop-scrim-in) linear;
 }
 @starting-style{
   [data-us-motion-surface]:is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio):is(.open,.show,[aria-hidden="false"]) [data-us-modal-panel]{transform:translate3d(0,100%,0)}
@@ -202,7 +204,7 @@ body.us-keyboard-open :is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsO
 }
 [data-us-motion-surface]:is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsOverlay,#usWidgetHub,#leftForYouOverlay,#leftForYouComposerOverlay,#conservatiOverlay,#usCalendarOverlay,#usCalendarDetailSheet,#usCalendarFormSheet,.us-moment-compose-overlay,.us-foglio)[data-us-motion-exiting] .us-modal-backdrop{
   opacity:0;
-  transition:opacity var(--us-pop-scrim-out) var(--us-ease-standard);
+  transition:opacity var(--us-pop-scrim-out) linear;
 }
 
 /* ==========================================================================
@@ -307,10 +309,10 @@ body.us-keyboard-open :is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsO
 .us-confirm.open [data-us-modal-panel]{
   opacity:1;
   transform:none;
-  transition:transform var(--us-pop-confirm-in) var(--us-ease-enter),opacity calc(var(--us-pop-confirm-in) * .5) var(--us-ease-standard)!important;
+  transition:transform var(--us-pop-confirm-in) var(--us-ease-enter),opacity var(--us-pop-confirm-in) var(--us-ease-enter)!important;
 }
 .us-confirm.open .us-modal-backdrop{
-  transition:opacity var(--us-pop-scrim-in) var(--us-ease-standard);
+  transition:opacity var(--us-pop-scrim-in) linear;
 }
 .us-confirm[data-us-motion-exiting] [data-us-modal-panel]{
   opacity:0!important;
@@ -319,7 +321,7 @@ body.us-keyboard-open :is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsO
 }
 .us-confirm[data-us-motion-exiting] .us-modal-backdrop{
   opacity:0;
-  transition:opacity var(--us-pop-confirm-out) var(--us-ease-standard);
+  transition:opacity var(--us-pop-scrim-out) linear;
 }
 
 /* ==========================================================================
@@ -352,10 +354,11 @@ body.us-keyboard-open :is(#usCountdownSheet,#today,#usEventsOverlay,#usSettingsO
   text-align:center;
   opacity:0;
   transform:translateX(-50%) translateY(-14px);
-  transition:opacity var(--us-pop-scrim-out) var(--us-ease-standard),transform var(--us-pop-confirm-in) var(--us-ease-enter);
+  /* Out (mockup): a 220 ms fade in place; the pill moves only on the way in. */
+  transition:opacity var(--us-pop-toast-out) linear,transform 0s linear var(--us-pop-toast-out);
   pointer-events:none;
 }
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);transition:opacity var(--us-pop-toast-in) var(--us-ease-enter),transform var(--us-pop-toast-in) var(--us-ease-enter)}
 .toast.is-quiet{
   background:var(--us-color-elevated)!important;
   color:var(--us-color-text)!important;

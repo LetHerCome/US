@@ -187,6 +187,76 @@
     };
     activePlayOnce = playOnce;
 
+    // Every tap answers (the mockup's core.js press/release, literally): on
+    // pointerdown the control goes to scale .95 in 110 ms (ease out) and
+    // stays there; on release it springs back from .95 in 420 ms. It runs on
+    // the independent `scale` property, so a control's own transform (a
+    // centring translate, a carousel offset) is untouched. A feature :active
+    // rule that also scales (an older pressed state) is held at its resting
+    // value while the press plays, so nothing presses twice. A drag (more
+    // than 8 px) releases at once. Never under reduced motion.
+    const PRESS_SELECTOR = 'button, [role="button"], [role="tab"], [role="switch"], a[href], summary, label[for], [data-us-tile], .tap';
+    const PRESS_DOWN = [{ scale: 1 }, { scale: 0.95 }];
+    const PRESS_UP = [{ scale: 0.95 }, { scale: 1 }];
+    const pressed = new Map();
+    const pureScale = (value) => /^matrix\(([-\d.e]+), 0, 0, \1, 0, 0\)$/.test(String(value || '').trim());
+    const pressTarget = (event) => {
+      const target = event.target?.closest?.(PRESS_SELECTOR);
+      if (!target || target.disabled || target.getAttribute('aria-disabled') === 'true') return null;
+      if (target.closest('[data-us-motion-tap="off"]')) return null;
+      return typeof target.animate === 'function' ? target : null;
+    };
+    const press = (target, event) => {
+      if (reducedMotion) return;
+      const previous = pressed.get(target);
+      previous?.down?.cancel();
+      previous?.hold?.cancel();
+      const state = { down: null, hold: null, x: event?.clientX ?? 0, y: event?.clientY ?? 0, id: event?.pointerId };
+      // Now and one frame later (when :active surely applies): if it scales
+      // the control, keep the resting transform while our press plays.
+      const raf = environment.requestAnimationFrame || ((fn) => schedule(fn, 16));
+      const holdActive = () => {
+        if (state.hold || (pressed.get(target) !== state && !state.released)) return;
+        try {
+          const view = target.ownerDocument?.defaultView || environment;
+          const current = view.getComputedStyle?.(target)?.transform;
+          if (current && current !== 'none' && pureScale(current)) {
+            state.hold = target.animate([{ transform: 'none' }, { transform: 'none' }], { duration: Infinity });
+            if (state.released) schedule(() => state.hold?.cancel(), 420);
+          }
+        } catch (_) { /* a press is never essential */ }
+      };
+      state.down = target.animate(PRESS_DOWN, { duration: 110, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'forwards' });
+      pressed.set(target, state);
+      holdActive();
+      raf(holdActive);
+    };
+    const release = (target) => {
+      const state = pressed.get(target);
+      if (!state) return;
+      pressed.delete(target);
+      state.released = true;
+      if (!reducedMotion) target.animate(PRESS_UP, { duration: 420, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+      state.down.cancel();
+      if (state.hold) schedule(() => state.hold?.cancel(), 420);
+    };
+    const releaseAll = () => Array.from(pressed.keys()).forEach(release);
+    const onPressDown = (event) => {
+      if (event.isPrimary === false || (event.pointerType === 'mouse' && event.button !== 0)) return;
+      const target = pressTarget(event);
+      if (target) press(target, event);
+    };
+    const onPressMove = (event) => {
+      pressed.forEach((state, target) => {
+        if (state.id !== undefined && event.pointerId !== state.id) return;
+        if (Math.hypot((event.clientX ?? 0) - state.x, (event.clientY ?? 0) - state.y) > 8) release(target);
+      });
+    };
+    documentRef.addEventListener('pointerdown', onPressDown, { capture: true, passive: true });
+    documentRef.addEventListener('pointermove', onPressMove, { capture: true, passive: true });
+    ['pointerup', 'pointercancel'].forEach((type) => documentRef.addEventListener(type, releaseAll, { capture: true, passive: true }));
+    environment.addEventListener?.('blur', releaseAll);
+
     const modalState = new Map();
     const inertState = new Map();
     let order = 0;
@@ -304,6 +374,11 @@
       destroy() {
         observer?.disconnect();
         documentRef.removeEventListener('keydown', onKeydown);
+        documentRef.removeEventListener('pointerdown', onPressDown, { capture: true });
+        documentRef.removeEventListener('pointermove', onPressMove, { capture: true });
+        ['pointerup', 'pointercancel'].forEach((type) => documentRef.removeEventListener(type, releaseAll, { capture: true }));
+        environment.removeEventListener?.('blur', releaseAll);
+        releaseAll();
         if (motionQuery?.removeEventListener) motionQuery.removeEventListener('change', onMotionChange);
         else motionQuery?.removeListener?.(onMotionChange);
         motionSubscribers.clear();

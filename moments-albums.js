@@ -661,7 +661,8 @@ function galleriaEnter(overlay,card){
   const ghost=galleriaGhost(src,from,'20px');
   if(cover)cover.style.visibility='hidden';
   overlay.animate([{opacity:0},{opacity:1}],{duration:420,easing:'linear'});
-  for(const el of galleriaChrome(overlay))el.animate([{opacity:0,transform:'translateY(18px)'},{opacity:1,transform:'none'}],{duration:320,delay:480,easing:GALLERIA_OUT,fill:'backwards'});
+  // Mockup galleria(): the caption and the controls rise in 420 ms, 380 ms after the tap.
+  for(const el of galleriaChrome(overlay))el.animate([{opacity:0,translate:'0 18px'},{opacity:1,translate:'0 0'}],{duration:420,delay:380,easing:GALLERIA_OUT,fill:'backwards'});
   const grow=ghost?.animate([galleriaFrame(from,'20px'),galleriaFrame(to,'0px')],{duration:560,easing:GALLERIA_EASE,fill:'forwards'});
   const land=()=>{if(cover)cover.style.visibility='';ghost?.remove();};
   if(grow?.finished)grow.finished.then(land,land);else land();

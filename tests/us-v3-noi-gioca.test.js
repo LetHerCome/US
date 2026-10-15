@@ -160,9 +160,6 @@ test('Gioca V4 → 1.0: daily first, weekly budget, pending actions, bento games
   assert.doesNotMatch(hub, /dayRail\(\)/);
   assert.match(read('app.js'), /const slot=hub\.querySelector\('\.us-gv2-daily-slot'\);/);
   assert.match(games, /Scrivila, sigillala: \$\{partnerName\(\)\} la scopre giocando\./, 'write → seal → discover, in one line');
-  const pet = read('pet.js');
-  assert.match(pet, /selector:'#quizHub \.us-gv2-game\.is-swipe'/, 'the PET still finds its Gioca anchors');
-  assert.match(pet, /selector:'#quizHub \.us-gv2-choose'/);
 });
 
 test('Sintonia: one premium segmented control, keyboard-friendly, and a page that scrolls', () => {

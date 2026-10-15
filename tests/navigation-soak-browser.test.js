@@ -51,7 +51,8 @@ test('navigation soak: repeated cycles through every primary surface leave one c
     const { page, ctx, errors } = await pageFor(h, {});
     const consoleErrors = [];
     page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
-    const tab = async (name) => { await page.click(`.nav button[data-page="${name}"]`); await settle(page); };
+    // A tab tap plays the mockup's colour flood (~1 s, a second tap meanwhile is ignored): wait for it to land.
+    const tab = async (name) => { await page.click(`.nav button[data-page="${name}"]`); await page.waitForFunction(() => !window.UsDueColori?.isFlooding?.()); await settle(page); };
     const back = async () => { await page.goBack(); await settle(page, 600); };
     const expectPage = async (label, id) => {
       const state = await page.evaluate(shellState);
@@ -125,7 +126,7 @@ test('navigation: Back unwinds a three-deep stack one level at a time (Noi → L
       week: document.getElementById('usNoiV2')?.dataset.mode === 'week',
       form: Boolean(document.getElementById('usCalendarFormSheet')?.classList.contains('open'))
     }));
-    await page.click('.nav button[data-page="bond"]'); await settle(page);
+    await page.click('.nav button[data-page="bond"]'); await page.waitForFunction(() => !window.UsDueColori?.isFlooding?.()); await settle(page);
     await page.click('[data-noi-open-link="lavagna"]'); await settle(page);
     await page.click('#usNoiV2AddTop'); await settle(page);
     assert.deepEqual(await state(), { page: 'bond', week: true, form: true });

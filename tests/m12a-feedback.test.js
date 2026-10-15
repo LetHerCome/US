@@ -273,7 +273,7 @@ test('native grammar: error and Maudit landing are explicit haptic-only events',
   feedback.landing();
   assert.deepEqual(calls.map(([kind]) => kind), ['error', 'light']);
   assert.equal(audio.log.oscillators, 0, 'error e landing non aggiungono suoni sintetici');
-  assert.match(read('pet.js'), /UsFeedback\?\.landing\?\.\(\)/);
+  // Maudit 1.0 no longer falls or lands (it sits still, as in the mockup): landing stays available.
   assert.match(read('countdown.js'), /UsFeedback\?\.error\?\.\(\)/);
   assert.ok((read('app.js').match(/UsFeedback\?\.error\?\.\(\)/g) || []).length >= 2);
 });
