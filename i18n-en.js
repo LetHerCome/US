@@ -1926,7 +1926,39 @@
     'Al livello {n} Oggi si veste di «{name}»': 'At level {n} Today wears “{name}”',
     'Al livello {n} arriva l’effetto «{name}» su Oggi': 'At level {n} the “{name}” effect comes to Today',
     'Al livello {n} arriva «{name}»': 'At level {n} “{name}” arrives',
-    'Resta nella vostra collezione, in Sintonia.': 'It stays in your collection, in Sync.'
+    'Resta nella vostra collezione, in Sintonia.': 'It stays in your collection, in Sync.',
+
+    // ------------------------------------------------------------ Us 1.0
+    'Sere libere': 'Free evenings',
+    'Aggiungi un\'idea': 'Add an idea',
+    'Le vostre date speciali.': 'Your special dates.',
+    'Che cosa aggiungi': 'What are you adding',
+    'Solo mio': 'Just mine',
+    Nostro: 'Ours',
+    'Data speciale': 'Special date',
+    'Le vostre idee · per entrambi': 'Your ideas · for both of you',
+    Mesiversario: 'Monthiversary',
+    'Un mese insieme': 'One month together',
+    '{n} mesi insieme': '{n} months together',
+    'Un anno insieme': 'One year together',
+    '{n} anni insieme': '{n} years together',
+    'Sera libera': 'Free evening',
+    'Nessuna sera libera per tutti e due': 'No free evening for both of you',
+    'Una sera libera per tutti e due': 'One free evening for both of you',
+    '{n} sere libere per tutti e due': '{n} free evenings for both of you',
+    'È collegato a una vostra idea: resta nel calendario.': 'It’s linked to one of your ideas: it stays in the calendar.',
+    Festeggiato: 'Celebrated',
+    '✓ Completato': '✓ Completed',
+    '✓ Segna come fatto': '✓ Mark as done',
+    'Già completato': 'Already completed',
+    'Evento vissuto ♡': 'Event done together ♡',
+    'Completata insieme': 'Done together',
+    'Si completa quando confermate tutti e due': 'It’s done when you both confirm',
+    Completata: 'Done',
+    'Salvatelo come ricordo': 'Keep it as a memory',
+    'Missione completata insieme ♡': 'Mission done together ♡',
+    'Confermata. Ora tocca a {name} ♡': 'Confirmed. Now it’s {name}’s turn ♡',
+    'Confermata. Ora tocca alla tua persona ♡': 'Confirmed. Now it’s your person’s turn ♡'
   };
   if (typeof module === 'object' && module.exports) module.exports = EN;
   else window.UsI18n?.register('en', EN);
