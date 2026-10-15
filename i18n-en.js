@@ -2268,7 +2268,10 @@
     'Una risposta condivisa o una partita completata conta davvero.': 'A shared answer or a finished game really counts.',
     'Il primo gesto significativo del giorno dà progresso, uno al giorno.': 'The first meaningful gesture of the day earns progress, once a day.',
     '1 mese insieme': '1 month together',
-    '1 anno insieme': '1 year together'
+    '1 anno insieme': '1 year together',
+
+    // ------------------------------------------------------------ Sintonia (round 3)
+    Cambia: 'Swap'
   };
   if (typeof module === 'object' && module.exports) module.exports = EN;
   else window.UsI18n?.register('en', EN);
