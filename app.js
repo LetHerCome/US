@@ -2215,6 +2215,10 @@ async function loginAccount(){
   if(!password){setAuthStatus('loginStatus','Inserisci la password.','error');return;}
   btn.disabled=true;
   setAuthStatus('loginStatus','Accesso…');
+  // As in the design the button says it too, and the sign-in stays on screen
+  // (html.us-auth-signing-in, dc-primo.css) until the next step takes its place.
+  btn.textContent='Accesso…';
+  document.documentElement.classList.add('us-auth-signing-in');
   try{
     const {data,error}=await sb.auth.signInWithPassword({email,password});
     if(error) throw error;
@@ -2227,6 +2231,8 @@ async function loginAccount(){
   }finally{
     btn.disabled=false;
   }
+  btn.textContent='Accedi';
+  document.documentElement.classList.remove('us-auth-signing-in');
 }
 window.loginAccount=loginAccount;
 // The extra Auth UI is compiled but only mounted when the Supabase backend

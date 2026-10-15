@@ -359,6 +359,8 @@
     mode = 'locked';
     render();
     shakeIcon();
+    // Not recognised: the design's short error pulse with the shake (no sound).
+    if (code === 'failed') window.UsFeedback?.error?.();
   }
 
   async function unlock() {
