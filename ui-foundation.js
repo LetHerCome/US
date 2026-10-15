@@ -494,12 +494,35 @@
       try { context = new AudioContextClass(); } catch (_) { context = null; }
       return context;
     }
+    // Building the AudioContext costs a long frame (~40 ms on a phone), so the
+    // first tap does not pay for it: it is built in the next idle moment after
+    // the first gesture (or by the first meaningful sound), and every later
+    // gesture only resumes it, which is cheap and is what iOS needs.
+    let warming = false;
+    function warmUp() {
+      if (warming || context || !preferences.sounds) return;
+      warming = true;
+      const build = () => { warming = false; if (preferences.sounds && !context) audioContext(); };
+      const idle = environment.requestIdleCallback;
+      if (typeof idle === 'function') {
+        const started = now();
+        const wait = (deadline) => {
+          if (deadline?.didTimeout || (deadline?.timeRemaining?.() ?? 50) >= 40 || now() - started > 4000) build();
+          else idle.call(environment, wait, { timeout: 4000 });
+        };
+        idle.call(environment, wait, { timeout: 4000 });
+      } else {
+        timers.set(build, 0);
+      }
+    }
+    function resumeInGesture() {
+      if (!unlocked || !preferences.sounds || !context || context.state === 'running') return;
+      try { context.resume?.()?.catch?.(() => {}); } catch (_) { /* stays suspended */ }
+    }
     function unlock() {
       if (unlocked) return;
       unlocked = true;
-      if (!preferences.sounds) return; // avoid allocating an audio session when muted
-      const ctx = audioContext();
-      try { ctx?.resume?.()?.catch?.(() => {}); } catch (_) { /* stays suspended */ }
+      warmUp(); // nothing is allocated while muted
     }
     function playTones(ctx, tones) {
       const now = ctx.currentTime || 0;
@@ -521,6 +544,9 @@
       if (!preferences.sounds || !visible() || !unlocked) return false;
       const tones = SOUND_PROFILES[kind];
       if (!tones) return false; // errors and Maudit landing stay haptic-only
+      // A routine tick never builds the audio session in the middle of a
+      // transition: until the idle build, it stays silent.
+      if (!context && (kind === 'tap' || kind === 'selection')) { warmUp(); return false; }
       const ctx = audioContext();
       if (!ctx) return false;
       try {
@@ -600,6 +626,7 @@
     // gives declarative feedback: [data-us-feedback="tap|action|..."].
     if (documentRef?.addEventListener) {
       ['pointerdown', 'keydown', 'touchend'].forEach((type) => documentRef.addEventListener(type, unlock, { capture: true, passive: true, once: true }));
+      ['pointerdown', 'keydown', 'touchend', 'click'].forEach((type) => documentRef.addEventListener(type, resumeInGesture, { capture: true, passive: true }));
       documentRef.addEventListener('click', (event) => {
         if (event.isTrusted === false) return; // programmatic click(): not a user gesture
         const target = event.target;

@@ -42,12 +42,16 @@ async function hydrateActivePage(id,{force=false}={}){
 }
 function schedulePageHydration(id,{force=false}={}){
   const ticket=++usPageHydrationTicket;
-  // Let the tab become visible first. Heavy Supabase/DOM work starts after the
-  // browser has had one frame to commit the navigation.
-  requestAnimationFrame(()=>setTimeout(()=>{
+  const run=()=>{
     if(ticket!==usPageHydrationTicket)return;
     hydrateActivePage(id,{force}).catch(()=>{});
-  },0));
+  };
+  // Under the colour between tabs (due-colori.js) the page is out of sight:
+  // it is filled now, so it opens complete and the reveal stays smooth.
+  if(window.UsDueColori?.switching?.()){run();return;}
+  // Otherwise let the tab become visible first. Heavy Supabase/DOM work
+  // starts after the browser has had one frame to commit the navigation.
+  requestAnimationFrame(()=>setTimeout(run,0));
 }
 function go(id,options={}){
   const current=document.querySelector('.page.active')?.id;

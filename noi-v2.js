@@ -382,6 +382,9 @@ async function refresh({force=false}={}){
     if(token===requestSeq){pending=false;render();}
   }
 }
+// A repaint of a month already on screen waits for the colour between tabs
+// to finish (at once otherwise).
+function afterMotion(fn){if(window.UsDueColori?.afterMotion)window.UsDueColori.afterMotion(fn);else fn();}
 function goToMonth(y,m,day,direction){
   flushLeaving();
   const apply=()=>{
@@ -552,7 +555,13 @@ function boot(){
   });
   const bond=$('bond');
   if(bond){
-    const observer=new MutationObserver(()=>{if(bond.classList.contains('active'))refresh();else closeWeek();});
+    // Noi opens under the colour between tabs (due-colori.js): a first read
+    // starts at once, under the colour; a month already read (same content)
+    // only re-renders once the page is fully open.
+    const observer=new MutationObserver(()=>{
+      if(!bond.classList.contains('active')){closeWeek();return;}
+      if(!snapshot)refresh();else afterMotion(()=>{if(bond.classList.contains('active'))refresh();});
+    });
     observer.observe(bond,{attributes:true,attributeFilter:['class']});
   }
   // A tap on the Noi tab while already in Noi also returns to the month.
