@@ -75,7 +75,8 @@ const MATRIX = [
   ['public.get_weekly_question_state()', '-AS-', '-AS-', 'COMPATIBILITY'],
   ['public.get_weekly_quiz_sets()', 'aASP', '--S-', 'LEGACY_CANDIDATE'],
   ['public.keep_daily_question(uuid)', '-AS-', '-AS-', 'CLIENT_REQUIRED'],
-  ['public.link_moment_to_source(uuid,text,uuid)', '-AS-', '-AS-', 'COMPATIBILITY'],
+  // US 1.0 R6: "Aggiungi la foto" on something lived links the new memory to it from the app.
+  ['public.link_moment_to_source(uuid,text,uuid)', '-AS-', '-AS-', 'CLIENT_REQUIRED'],
   ['public.list_couple_questions()', '-AS-', '--S-', 'LEGACY_CANDIDATE'],
   ['public.list_game_sessions()', '-AS-', '--S-', 'LEGACY_CANDIDATE'],
   ['public.mark_daily_reveal_seen(uuid)', '-AS-', '-AS-', 'CLIENT_REQUIRED'],
