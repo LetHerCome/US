@@ -2118,7 +2118,23 @@
     'Usa Face ID per entrare.': 'Use Face ID to get in.',
     'Usa Touch ID per entrare.': 'Use Touch ID to get in.',
     'Usa il volto per entrare.': 'Use your face to get in.',
-    'Usa la biometria per entrare.': 'Use biometrics to get in.'
+    'Usa la biometria per entrare.': 'Use biometrics to get in.',
+
+    // ------------------------------------------------------------ Parity final
+    Atmosfera: 'Mood',
+    'Colore di Noi': 'Us color',
+    'Nuova atmosfera': 'New mood',
+    'Nuovo colore di Noi': 'New Us color',
+    'Selezioni e progressi, in tutta US': 'Selections and progress, all across US',
+    'Nuovo tema di Oggi': 'New Today theme',
+    'Oggi, attorno alla vostra foto': 'Today, around your photo',
+    'Nuovo effetto di Oggi': 'New Today effect',
+    'Oggi, sopra la vostra foto': 'Today, over your photo',
+    'Nuovo effetto del simbolo': 'New symbol effect',
+    'Il simbolo in alto su Oggi': 'The symbol at the top of Today',
+    'Nuovo stile countdown': 'New countdown style',
+    'Il countdown di Oggi': 'The Today countdown',
+    'Hai sbloccato': 'You unlocked'
   };
   if (typeof module === 'object' && module.exports) module.exports = EN;
   else window.UsI18n?.register('en', EN);

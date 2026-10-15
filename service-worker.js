@@ -406,10 +406,41 @@ async function usFetchAppDocument(request, options = {}) {
 
 function usNavigationUnavailableResponse() {
   // Last resort only (no network and no usable cached shell). It is still a
-  // real US page: it retries by itself when the connection comes back and
-  // offers one explicit retry, instead of leaving the browser error page.
+  // real US page, drawn like the approved mockup "non raggiungibile": a
+  // standalone response, so fonts and styles are inline. It retries by itself
+  // when the connection comes back and offers one explicit retry.
+  const css =
+    '@font-face{font-family:"Fraunces";src:url("/assets/fonts/Fraunces-Soft-Roman.woff2") format("woff2");font-weight:100 900;font-display:swap}' +
+    '@font-face{font-family:"Figtree";src:url("/assets/fonts/Figtree-Latin.woff2") format("woff2");font-weight:300 900;font-display:swap}' +
+    '*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#0f0b13;color:#f7efe9}' +
+    'body{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:28px;padding:max(28px,env(safe-area-inset-top)) max(28px,env(safe-area-inset-right)) max(28px,env(safe-area-inset-bottom)) max(28px,env(safe-area-inset-left));text-align:center;font:15px/1.5 Figtree,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}' +
+    'main{display:grid;justify-items:center;gap:12px;width:100%;max-width:300px;animation:us-in 260ms ease both}' +
+    '.ic{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;background:#17111c;border:1px solid rgba(247,239,233,.17);color:rgba(247,239,233,.72)}' +
+    '.ic svg{width:40px;height:40px}' +
+    'h1{margin:0;font-family:Fraunces,Georgia,serif;font-weight:400;font-size:28px;line-height:1.12;text-wrap:balance}' +
+    'p{margin:0;color:rgba(247,239,233,.72);font-size:15px}' +
+    '.btns{display:grid;gap:8px;margin-top:4px;width:100%}' +
+    'button{display:inline-flex;align-items:center;justify-content:center;width:100%;min-height:52px;padding:0 18px;border:0;border-radius:999px;background:#ff7c96;color:#1a1020;font:700 16px Figtree,system-ui,sans-serif;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .2s cubic-bezier(.34,1.56,.64,1)}' +
+    'button:active{transform:scale(.95);transition-duration:.08s}' +
+    'button:focus-visible{outline:2px solid #d98be0;outline-offset:3px}' +
+    '@keyframes us-in{from{opacity:0}to{opacity:1}}' +
+    '@media (prefers-reduced-motion:reduce){main{animation:none}button{transition:none}}';
+  const icon = '<svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M213.92,210.62a8,8,0,1,1-11.84,10.76l-52-57.15a60,60,0,0,0-57.41,7.24,8,8,0,1,1-9.42-12.93A75.43,75.43,0,0,1,128,144c1.28,0,2.55,0,3.82.1L104.9,114.49A108,108,0,0,0,61,135.31,8,8,0,0,1,49.73,134,8,8,0,0,1,51,122.77a124.27,124.27,0,0,1,41.71-21.66L69.37,75.4a155.43,155.43,0,0,0-40.29,24A8,8,0,0,1,18.92,87,171.87,171.87,0,0,1,58,62.86L42.08,45.38A8,8,0,1,1,53.92,34.62ZM128,192a12,12,0,1,0,12,12A12,12,0,0,0,128,192ZM237.08,87A172.3,172.3,0,0,0,106,49.4a8,8,0,1,0,2,15.87A158.33,158.33,0,0,1,128,64a156.25,156.25,0,0,1,98.92,35.37A8,8,0,0,0,237.08,87ZM195,135.31a8,8,0,0,0,11.24-1.3,8,8,0,0,0-1.3-11.24,124.25,124.25,0,0,0-51.73-24.2A8,8,0,1,0,150,114.24,108.12,108.12,0,0,1,195,135.31Z"/></svg>';
+  const script =
+    '(function(){var b=document.getElementById("usRetry"),again="Riprovo\u2026";' +
+    'var go=function(){b.textContent=again;b.disabled=true;location.reload();};' +
+    'try{var l=localStorage.getItem("us:lang:v1")||((navigator.languages||[])[0]||navigator.language||"it").slice(0,2).toLowerCase();' +
+    'if(l!=="it"){document.documentElement.lang="en";document.title="US";document.querySelector("main").setAttribute("aria-label","US can\u2019t be reached");' +
+    'document.querySelector("h1").textContent="US can\u2019t be reached right now.";' +
+    'document.querySelector("p").textContent="Check your connection: US will reopen as soon as it\u2019s back.";' +
+    'b.textContent="Try again";again="Trying again\u2026";}}catch(_){}' +
+    'b.addEventListener("click",go);addEventListener("online",go,{once:true});})();';
   return new Response(
-    '<!doctype html><html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>US</title><style>@font-face{font-family:"Fraunces";src:url("/assets/fonts/Fraunces-Soft-Roman.woff2") format("woff2");font-weight:100 900}</style><body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#0f0b13;color:#f7efe9;font:16px/1.45 system-ui"><main style="padding:24px;text-align:center;max-width:340px"><strong style="display:block;font:400 26px/1.15 Fraunces,Georgia,serif">US non è raggiungibile in questo momento.</strong><p style="opacity:.72">Controlla la connessione: riapro US appena torna.</p><button type="button" id="usRetry" style="min-height:48px;padding:0 26px;border-radius:24px;border:0;background:#ff7c96;color:#1a1020;font:700 16px system-ui">Riprova</button></main><script>(function(){var go=function(){location.reload();};try{var l=localStorage.getItem("us:lang:v1")||((navigator.languages||[])[0]||navigator.language||"it").slice(0,2).toLowerCase();if(l!=="it"){document.documentElement.lang="en";document.querySelector("strong").textContent="US can\u2019t be reached right now.";document.querySelector("p").textContent="Check your connection: US will reopen as soon as it\u2019s back.";document.getElementById("usRetry").textContent="Try again";}}catch(_){}document.getElementById("usRetry").addEventListener("click",go);addEventListener("online",go,{once:true});})();</script></body></html>',
+    '<!doctype html><html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="dark"><meta name="theme-color" content="#0f0b13"><title>US</title>' +
+    '<style>' + css + '</style><body><main role="alert" aria-label="US non è raggiungibile">' +
+    '<span class="ic">' + icon + '</span><h1>US non è raggiungibile in questo momento.</h1><p>Controlla la connessione: riapro US appena torna.</p>' +
+    '<div class="btns"><button type="button" id="usRetry">Riprova</button></div></main>' +
+    '<script>' + script + '</script></body></html>',
     {
       status: 503,
       headers: {

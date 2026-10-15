@@ -27,11 +27,11 @@ let unlockBusy = false;
 // with Noi V2: those `retired` slots are kept only so stored choices and
 // unlock history stay readable; they are never painted nor offered again.
 const SLOTS = Object.freeze({
-  oggi_theme: { pref: 'oggi_theme', look: 'theme', label: 'Temi di Oggi', place: 'atmosfera, foto e countdown', unlock: 'NUOVO TEMA DI OGGI', where: 'Su Oggi, attorno alla vostra foto' },
-  oggi_effect: { pref: 'oggi_effect', look: 'effect', label: 'Effetti di Oggi', place: 'sopra la vostra foto', unlock: 'NUOVO EFFETTO DI OGGI', where: 'Su Oggi, sopra la foto' },
-  theme: { pref: 'theme_reward_id', label: 'Atmosfera US', place: 'lo sfondo di tutta US', unlock: 'NUOVA ATMOSFERA', where: 'In tutta US' },
-  accent: { pref: 'accent_reward_id', label: 'Accenti', place: 'controlli, progressi, navigazione', unlock: 'NUOVO ACCENTO', where: 'Su controlli, progressi e navigazione' },
-  effect: { pref: 'effect_reward_id', label: 'Simbolo US', place: 'il simbolo in alto', unlock: 'NUOVO EFFETTO DEL SIMBOLO', where: 'Sul simbolo US, in alto' },
+  oggi_theme: { pref: 'oggi_theme', look: 'theme', label: 'Temi di Oggi', place: 'atmosfera, foto e countdown', unlock: 'Nuovo tema di Oggi', where: 'Oggi, attorno alla vostra foto' },
+  oggi_effect: { pref: 'oggi_effect', look: 'effect', label: 'Effetti di Oggi', place: 'sopra la vostra foto', unlock: 'Nuovo effetto di Oggi', where: 'Oggi, sopra la vostra foto' },
+  theme: { pref: 'theme_reward_id', label: 'Atmosfera', place: 'lo sfondo di tutta US', unlock: 'Nuova atmosfera', where: 'In tutta US' },
+  accent: { pref: 'accent_reward_id', label: 'Colore di Noi', place: 'controlli, progressi, navigazione', unlock: 'Nuovo colore di Noi', where: 'Selezioni e progressi, in tutta US' },
+  effect: { pref: 'effect_reward_id', label: 'Simbolo US', place: 'il simbolo in alto', unlock: 'Nuovo effetto del simbolo', where: 'Il simbolo in alto su Oggi' },
   frame: { pref: 'frame_reward_id', retired: true, label: 'Cornici', place: 'sulla foto di Oggi', unlock: 'NUOVA CORNICE', where: 'Sulla foto di Oggi' },
   sticker: { pref: 'sticker_reward_id', retired: true, label: 'Adesivi', place: 'su Oggi e sull’ultimo ricordo', unlock: 'NUOVO ADESIVO', where: 'Su Oggi e sull’ultimo ricordo' },
   badge: { pref: 'badge_reward_id', retired: true, label: 'Spille', place: 'tra voi due, in Noi', unlock: 'NUOVA SPILLA', where: 'In Noi, tra i vostri ritratti' },
@@ -40,7 +40,7 @@ const SLOTS = Object.freeze({
 const SLOT_ORDER = Object.keys(SLOTS);
 const VISIBLE_SLOTS = SLOT_ORDER.filter((category) => !SLOTS[category].retired);
 const LOOK_SLOT = Object.freeze({ theme: 'oggi_theme', effect: 'oggi_effect' });
-const COUNTDOWN_PRESENTATION = Object.freeze({ label: 'Stili Countdown', unlock: 'NUOVO STILE COUNTDOWN', where: 'Sul countdown di Oggi' });
+const COUNTDOWN_PRESENTATION = Object.freeze({ label: 'Countdown', unlock: 'Nuovo stile countdown', where: 'Il countdown di Oggi' });
 const DEVICE_PREFS_VERSION = 2;
 const DEVICE_PREFS_PREFIX = 'us:cosmetics:v1:';
 
@@ -563,9 +563,9 @@ function countdownGroup(next, expanded = false) {
   if (!styles.length || !window.USCountdown?.previewMarkup) return null;
   const owned = styles.filter((style) => !style.reward || next?.rewards?.some((r) => r.id === style.reward && r.unlocked)).length;
   return {
-    category: 'countdown', label: 'Stili Countdown', owned, total: styles.length,
-    markup: (open) => `<details class="us-reward-group" data-category="countdown" aria-label="Stili Countdown"${open ? " open" : ""}>
-      <summary class="us-reward-group-head"><b>Stili Countdown</b><span>Il vostro tempo su Oggi</span><em>${owned}/${styles.length}</em></summary>
+    category: 'countdown', label: COUNTDOWN_PRESENTATION.label, owned, total: styles.length,
+    markup: (open) => `<details class="us-reward-group" data-category="countdown" aria-label="${COUNTDOWN_PRESENTATION.label}"${open ? " open" : ""}>
+      <summary class="us-reward-group-head"><b>${COUNTDOWN_PRESENTATION.label}</b><span>Il vostro tempo su Oggi</span><em>${owned}/${styles.length}</em></summary>
       ${scopeLine('countdown')}
       <div class="us-reward-grid">${styles.map((style) => countdownTile(style, next)).join('')}</div>
     </details>`
@@ -581,7 +581,7 @@ function renderRewards(next = state) {
   if (!root) return;
   const rewards = Array.isArray(next?.rewards) ? next.rewards : [];
   // Only rewards with a real, visible destination; countdown-entitling rewards
-  // live in the Stili Countdown group, Oggi looks in their own groups.
+  // live in the Countdown group, Oggi looks in their own groups.
   const known = rewards.filter((reward) => SLOTS[reward.category] && presented(reward) && presentation(reward).kind === reward.category && !SLOTS[reward.category].look);
   const groups = VISIBLE_SLOTS.map((category) => {
     const slot = SLOTS[category];
@@ -654,7 +654,7 @@ function paintUnlock() {
   $('usProgressionUnlockTitle').textContent = presentedTitle(reward);
   $('usProgressionUnlockDescription').textContent = presentedDescription(reward);
   const kicker = $('usProgressionUnlockKicker');
-  if (kicker) kicker.textContent = shown?.unlock || 'HAI SBLOCCATO';
+  if (kicker) kicker.textContent = shown?.unlock || 'Hai sbloccato';
   root.dataset.category = shown?.kind || reward.category || '';
   root.dataset.rewardToken = reward.token || '';
   const place = $('usProgressionUnlockPlace');

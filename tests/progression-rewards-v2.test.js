@@ -262,12 +262,12 @@ test('Rewards V2 client: the unlock card previews the real cosmetic and "Usalo o
     return state();
   });
   await api.hydrate({ showUnlocks: true, force: true });
-  assert.equal(el('usProgressionUnlockKicker').textContent, 'NUOVA ATMOSFERA');
+  assert.equal(el('usProgressionUnlockKicker').textContent, 'Nuova atmosfera');
   assert.equal(el('usProgressionUnlockCount').textContent, '1 di 2');
   assert.match(el('usProgressionUnlockPreview').innerHTML, /us-cos-theme" data-theme="rose"/);
   await el('usProgressionUnlockUse').emit('click');
   assert.equal(JSON.parse(storage.get('us:cosmetics:v1:c:f')).preferences.theme_reward_id, 'theme_rose');
-  assert.equal(el('usProgressionUnlockKicker').textContent, 'NUOVO ACCENTO');
+  assert.equal(el('usProgressionUnlockKicker').textContent, 'Nuovo colore di Noi');
   assert.match(el('usProgressionUnlockPreview').innerHTML, /us-cos-accent" data-accent="cherry"/);
   await el('usProgressionUnlockUse').emit('click');
   assert.equal(JSON.parse(storage.get('us:cosmetics:v1:c:f')).preferences.accent_reward_id, 'accent_cherry');

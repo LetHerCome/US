@@ -195,6 +195,12 @@ if (typeof original === 'function') {
 
 window.UsDueColori = Object.freeze({
   // Tests and other surfaces can ask whether a flood is on screen.
-  isFlooding: () => Boolean(layer && !layer.hidden)
+  isFlooding: () => Boolean(layer && !layer.hidden),
+  // The blocks of a page rise in (mockup UP.stagger), e.g. Oggi right after
+  // the intro of "Entra in US". Nothing under reduced motion.
+  stagger(id, delay = 0) {
+    if (reducedMotion()) return;
+    stagger(doc.getElementById(id) || doc.querySelector('.page.active'), delay);
+  }
 });
 })();

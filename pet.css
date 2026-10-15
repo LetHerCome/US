@@ -20,6 +20,11 @@ body.us-keyboard-open .us-pet-layer,
 .us-pet-layer[inert]{opacity:0;translate:0 30px;visibility:hidden;transition:opacity .3s,translate .45s var(--us-ease-standard),visibility 0s linear .3s}
 body:has(#homeHero.us-oggi-focus) .us-pet-layer,
 body:has(.auth-overlay:not(.hidden)) .us-pet-layer{opacity:0;translate:0 30px;visibility:hidden;transition:opacity .3s,translate .45s var(--us-ease-standard),visibility 0s linear .3s}
+/* Ti penso arrival Momento: in the mockup the Momento (z 30) covers Maudit
+   (z 11) while it keeps reacting underneath. Here the PET layer sits above
+   transient surfaces, so it is covered by hand: it fades with the Momento and
+   comes back when it closes. Not a blocker: the "think" reaction still runs. */
+body:has(#thinkArrival.open) .us-pet-layer{opacity:0;visibility:hidden;transition:opacity .26s,visibility 0s linear .26s}
 
 /* ---------- PRODUCTION renderer: Maudit 1.0 (mockup .m) ----------
    The approved drawing (viewBox 0 -8 100 100) is placed so that it sits in

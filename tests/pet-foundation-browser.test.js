@@ -28,7 +28,9 @@ async function preview(h,options){
      react:window.USPet.react('reward')
    };
  });
- assert.equal(overlay.visibility,'visible');
+ // Parity (mockup .moment z 30 over .maudit-home z 11): the Ti penso Momento covers
+ // Maudit, which keeps living underneath (not a blocker, reactions still run).
+ assert.equal(overlay.visibility,'hidden');
  assert.ok(overlay.petZ>overlay.nudgeZ&&overlay.petZ>overlay.toastZ&&overlay.petZ>overlay.thinkZ,JSON.stringify(overlay));
  assert.deepEqual({blockers:overlay.blockers,running:overlay.running,react:overlay.react},{blockers:[],running:true,react:true});
  await view.page.evaluate(()=>{
@@ -38,6 +40,7 @@ async function preview(h,options){
    document.documentElement.style.setProperty('--us-safe-bottom','20px');
    window.dispatchEvent(new Event('resize'));
  });
+ await view.page.waitForFunction(()=>!document.getElementById('thinkArrival').classList.contains('open'));
  await view.page.waitForTimeout(400);
  assert.equal(await view.page.evaluate(()=>window.USPet.snapshot().running),true);
  return view;
@@ -191,10 +194,12 @@ test('PET stays through notices, the Ti penso arrival and sheets (their scrim co
   await page.evaluate(()=>{const s=document.getElementById('appStatusBar'),u=document.getElementById('appUpdateBar');s.textContent='Sei offline. Riprendo appena torni online.';s.hidden=false;u.hidden=false;document.body.classList.add('us-status-visible','us-update-visible');});
   await page.waitForTimeout(250);assert.deepEqual(await pet(),alive,'status + update bars');
   await page.evaluate(()=>{document.getElementById('appStatusBar').hidden=true;document.getElementById('appUpdateBar').hidden=true;document.body.classList.remove('us-status-visible','us-update-visible');});
-  // Ti penso arrival is transient: the PET stays above it.
+  // Ti penso arrival is transient, not a blocker: as in the mockup its Momento covers
+  // the PET (hidden, still running) and gives it back when it closes.
   await page.evaluate(()=>{usIncomingThink={id:'qa-think',sender_id:'b1',created_at:new Date().toISOString()};window.openThinkArrival();});
-  await page.waitForTimeout(300);assert.deepEqual(await pet(),alive,'Ti penso arrival');
+  await page.waitForTimeout(300);assert.deepEqual(await pet(),{...alive,vis:'hidden'},'Ti penso arrival');
   await page.evaluate(()=>window.closeThinkArrival());await page.waitForTimeout(400);
+  assert.deepEqual(await pet(),alive,'Ti penso arrival closed');
   // Sheets (mockup: .layer z 20 over .maudit-home z 11): the PET stays in its spot, under the sheet's scrim.
   for(const [name,open,close] of [
    ['countdown',()=>window.USCountdown.open(),()=>window.USCountdown.close()],

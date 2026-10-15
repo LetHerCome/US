@@ -130,9 +130,9 @@ test('Unlock moment: tells where the piece lives; retired pieces are never annou
   await api.hydrate({ showUnlocks: true, force: true });
   assert.equal(el('usProgressionUnlock').dataset.category, 'countdown', 'the badge is skipped, Aurora comes first');
   assert.equal(el('usProgressionUnlockCount').textContent, '', 'a single real unlock, not "1 di 2"');
-  assert.equal(el('usProgressionUnlockKicker').textContent, 'NUOVO STILE COUNTDOWN');
+  assert.equal(el('usProgressionUnlockKicker').textContent, 'Nuovo stile countdown');
   assert.equal(el('usProgressionUnlockTitle').textContent, 'Countdown «Aurora»');
-  assert.equal(el('usProgressionUnlockPlace').textContent, 'Sul countdown di Oggi');
+  assert.equal(el('usProgressionUnlockPlace').textContent, 'Il countdown di Oggi');
   assert.equal(el('usProgressionUnlockPlace').hidden, false);
   assert.equal(el('usProgressionUnlockExtra').hidden, true, 'the style is the reward itself, not an extra');
   assert.match(el('usProgressionUnlockPreview').innerHTML, /data-countdown-style="aurora"/);
@@ -147,7 +147,7 @@ test('Collection: Countdown styles are a visible group whose locks follow the ex
   const { api, el, applied } = runProgression({ level: 9 });
   await api.hydrate({ showUnlocks: false, force: true });
   let markup = el('usProgressionRewards').innerHTML;
-  assert.match(markup, /data-category="countdown" aria-label="Stili Countdown"/);
+  assert.match(markup, /data-category="countdown" aria-label="Countdown"/);
   assert.match(markup, /<em>5\/6<\/em>/, 'three free + Aurora (L4) + Orbita (L9); Cromo still locked');
   assert.match(markup, /data-countdown-style-select="chrome" disabled/);
   assert.match(markup, /Con Cromo · livello 12/);
@@ -166,7 +166,7 @@ test('Collection: Countdown styles are a visible group whose locks follow the ex
 test('Collection: without the Countdown runtime the collection is unchanged', async () => {
   const { api, el } = runProgression({ level: 9, withCountdown: false });
   await api.hydrate({ showUnlocks: false, force: true });
-  assert.doesNotMatch(el('usProgressionRewards').innerHTML, /Stili Countdown|us-progression-reward-plus/);
+  assert.doesNotMatch(el('usProgressionRewards').innerHTML, /data-category="countdown"|us-progression-reward-plus/);
 });
 
 test('Unlock moment markup: staged, tinted per category and fully static under reduced motion', () => {

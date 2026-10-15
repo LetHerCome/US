@@ -936,6 +936,8 @@
       if(storeGet(sessionStorage,FIRST_RUN_KEYS.passwordSignIn)===id)storeRemove(sessionStorage,FIRST_RUN_KEYS.passwordSignIn);
       if(!silent){setBusy(true);if(!await playIntro(ticket)&&ticket!==run)return;}
       close();
+      // Mockup UP.intro: once the circle has closed on the app, Oggi's blocks rise in.
+      if(!silent&&!reducedMotion()){try{window.UsDueColori?.stagger?.(document.querySelector('.page.active')?.id||'home',0);}catch(_e){}}
     }
     function close(){
       run++;
