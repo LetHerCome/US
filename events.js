@@ -25,7 +25,13 @@ function monthShort(value){return parseISO(value).toLocaleDateString('it-IT',{mo
 function countdown(days){if(days===0)return 'Oggi';if(days===1)return 'Domani';return `Tra ${days} giorni`;}
 function detailLine(row){const bits=[];if(row.event_time)bits.push(String(row.event_time).slice(0,5));if(row.location)bits.push(row.location);if(row.recurs_yearly)bits.push('ogni anno');return bits.length?bits.join(' · '):countdown(row.days_left);}
 function createdDate(row){return localISOFromDate(row.created_at)||row.event_date;}
-function previewXp(row,occurrenceDate){if(row.recurs_yearly)return 60;const lead=Math.max(0,daysBetween(createdDate(row),occurrenceDate));return lead>=7?50:lead>=2?35:25;}
+// Preview of complete_shared_event, which decides: points only for an occurrence
+// after the day the event was created, and for one event a day per couple.
+function eventXpToday(){const today=localTodayISO();return completions.some(c=>Number(c.xp_awarded)>0&&localISOFromDate(c.completed_at)===today);}
+function previewXp(row,occurrenceDate){const lead=daysBetween(createdDate(row),occurrenceDate);if(lead<=0||eventXpToday())return 0;if(row.recurs_yearly)return 60;return lead>=7?50:lead>=2?35:25;}
+function xpSuffix(xp){return xp>0?` · +${xp} XP`:'';}
+// Why a lived event brought no points (xp_reason of complete_shared_event).
+const NO_XP_COPY={same_day:'Evento vissuto ♡ La Sintonia cresce con gli eventi programmati in anticipo',before_creation:'Evento vissuto ♡ La Sintonia cresce con gli eventi programmati in anticipo',daily_limit:'Evento vissuto ♡ Oggi un evento ha già fatto crescere la Sintonia'};
 
 function occurrence(row){
   const today=localTodayISO(),raw=row.event_date;if(!raw)return null;
@@ -65,10 +71,10 @@ function completedRows(){
   const byId=new Map(rows.map(r=>[r.id,r]));return completions.map(c=>{const row=byId.get(c.event_id);return row?{...row,effective_date:c.occurrence_date,completion:c}:null;}).filter(Boolean).sort((a,b)=>String(b.completion.completed_at).localeCompare(String(a.completion.completed_at))).slice(0,6);
 }
 function eventButton(row,{due=false,done=false}={}){
-  const day=Number(row.effective_date.slice(-2));const comp=row.completion||completionFor(row.id,row.effective_date);const xp=comp?.xp_awarded||previewXp(row,row.effective_date);
+  const day=Number(row.effective_date.slice(-2));const comp=row.completion||completionFor(row.id,row.effective_date);const xp=comp?Math.max(0,Number(comp.xp_awarded)||0):previewXp(row,row.effective_date);
   return `<button type="button" class="us-event-item ${due?'is-due':''} ${done?'is-done':''}" data-id="${esc(row.id)}" data-occurrence="${esc(row.effective_date)}">
     <span class="us-event-datebox"><small>${esc(monthShort(row.effective_date))}</small><b>${day}</b></span>
-    <span class="us-event-main"><b>${esc(row.title)}</b><small>${done?`Completato · +${xp} XP`:due?`Da segnare · +${xp} XP`:esc(detailLine(row))}</small></span>
+    <span class="us-event-main"><b>${esc(row.title)}</b><small>${done?`Completato${xpSuffix(xp)}`:due?`Da segnare${xpSuffix(xp)}`:esc(detailLine(row))}</small></span>
     <span class="us-event-chevron">${done?'<span class="us-icon" data-us-icon="check" aria-hidden="true"></span>':'<span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span>'}</span>
   </button>`;
 }
@@ -199,8 +205,8 @@ function beginAddEvent(){editingId=null;editingOccurrenceDate=null;resetForm();$
 function editEvent(id,occurrenceDate=null){
   const row=rows.find(item=>item.id===id);if(!row)return;editingId=id;editingOccurrenceDate=occurrenceDate||previousOccurrence(row)||row.event_date;resetForm();$('usEventFormKicker').textContent='EVENTO';$('usEventFormTitle').textContent=row.title;$('usEventTitleInput').value=row.title||'';$('usEventDateInput').value=row.event_date||'';$('usEventTimeInput').value=row.event_time?String(row.event_time).slice(0,5):'';$('usEventLocationInput').value=row.location||'';$('usEventNoteInput').value=row.note||'';$('usEventRecurringInput').checked=Boolean(row.recurs_yearly);$('usEventSaveBtn').textContent='Salva modifiche';
   const comp=completionFor(row.id,editingOccurrenceDate);const canComplete=editingOccurrenceDate&&editingOccurrenceDate<=localTodayISO();const completeBtn=$('usEventCompleteBtn');
-  if(comp){completeBtn.hidden=false;completeBtn.disabled=true;completeBtn.textContent=`✓ Completato · +${comp.xp_awarded} XP`;}
-  else if(canComplete){completeBtn.hidden=false;completeBtn.disabled=false;completeBtn.textContent=`✓ Segna come fatto · +${previewXp(row,editingOccurrenceDate)} XP`;}
+  if(comp){completeBtn.hidden=false;completeBtn.disabled=true;completeBtn.textContent=`✓ Completato${xpSuffix(Number(comp.xp_awarded)||0)}`;}
+  else if(canComplete){completeBtn.hidden=false;completeBtn.disabled=false;completeBtn.textContent=`✓ Segna come fatto${xpSuffix(previewXp(row,editingOccurrenceDate))}`;}
   const hasAnyCompletion=completions.some(c=>c.event_id===row.id);$('usEventDeleteBtn').hidden=hasAnyCompletion?true:false;if(hasAnyCompletion)$('usEventStatus').textContent='Gli eventi già completati restano nello storico.';else $('usEventDeleteBtn').hidden=false;showForm();
 }
 // navigation.js pops one history entry per closed layer and, on each pop, closes
@@ -222,9 +228,10 @@ function cancelEventEdit(){resetForm();showBrowse();if(editorFromSurface)closeEd
 async function completeEvent(){
   if(!editingId||!editingOccurrenceDate||busy||!window.usProfile)return;if(!navigator.onLine)return toast('Sei offline. Riprova quando torni online.');
   busy=true;const btn=$('usEventCompleteBtn');btn.disabled=true;btn.textContent='Segno…';
-  try{const {data,error}=await sb.rpc('complete_shared_event',{target_event_id:editingId,target_occurrence_date:editingOccurrenceDate});if(error)throw error;await hydrateEvents();await window.hydrateBondSummary?.();cancelEventEdit();if(data?.already_completed)toast(`Già completato · +${data.xp_awarded||0} XP`);
-else if(window.usCelebrateXp)window.usCelebrateXp(Number(data?.xp_awarded||0),'Evento vissuto');
-else toast(`+${data?.xp_awarded||0} XP Bond ✦`);}catch(error){console.warn('[US Events] complete',error);$('usEventStatus').textContent='Non riesco a completarlo. Controlla la data e riprova.';}finally{busy=false;btn.disabled=false;}
+  try{const {data,error}=await sb.rpc('complete_shared_event',{target_event_id:editingId,target_occurrence_date:editingOccurrenceDate});if(error)throw error;await hydrateEvents();await window.hydrateBondSummary?.();cancelEventEdit();const xp=Math.max(0,Number(data?.xp_awarded)||0);if(data?.already_completed)toast(`Già completato${xpSuffix(xp)}`);
+else if(!xp)toast(NO_XP_COPY[data?.xp_reason]||'Evento vissuto ♡');
+else if(window.usCelebrateXp)window.usCelebrateXp(xp,'Evento vissuto');
+else toast(`+${xp} XP Bond ✦`);}catch(error){console.warn('[US Events] complete',error);$('usEventStatus').textContent='Non riesco a completarlo. Controlla la data e riprova.';}finally{busy=false;btn.disabled=false;}
 }
 async function saveEvent(event){
   event.preventDefault();if(busy||!window.usProfile)return;if(!navigator.onLine)return toast('Sei offline. Riprova quando torni online.');const title=$('usEventTitleInput').value.trim(),date=$('usEventDateInput').value;if(!title||!date)return;
