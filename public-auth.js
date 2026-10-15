@@ -198,8 +198,11 @@
       if (s.mode !== 'login') openStep(ids[s.mode]);
       const status = node(statuses[s.mode]);
       if (status) {
+        const again = status.textContent !== s.message || status.dataset.kind !== s.kind;
         status.textContent = s.message;
         status.dataset.kind = s.kind;
+        // A wrong answer shakes the line, as in the design (260 ms).
+        if (again && s.message && s.kind === 'error') globalThis.UsOnboarding?.shake?.(status);
       }
       for (const id of ['usSignupSubmit','usVerifyResend','usForgotSubmit','usRecoverySubmit']) {
         if (node(id)) node(id).disabled = s.pending || (id === 'usSignupSubmit' && !accepted());

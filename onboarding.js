@@ -333,12 +333,163 @@
     el.textContent=plain;
     if(accent){const em=document.createElement('em');em.textContent=accent;el.append(em);}
   }
-  // New content slides in, one block after the other. Reduced motion: nothing moves.
-  function enter(container){
-    if(!container||reducedMotion())return;
-    [...container.children]
-      .filter(el=>!el.hidden&&!el.classList.contains('us-no-enter')&&el.getClientRects().length)
-      .forEach((el,i)=>animate(el,[{opacity:0,transform:'translateX(24px)'},{opacity:1,transform:'none'}],{duration:380,delay:i*30,easing:EASE.out,fill:'backwards'}));
+  // ---------- DOM: one screen gives way to the next (the mockup's show()) ----------
+  // The old screen leaves first: 180 ms, 24 px towards where you came from,
+  // ease-in. Then the new one arrives block by block: 380 ms, 24 px, 30 ms
+  // apart (260 ms + 40 ms apart when the door first opens, after a 620 ms
+  // circle reveal). The page itself switches at once (ids, focus, screen
+  // readers); what leaves is a still copy without ids, painted in its place.
+  const EASE_IN='cubic-bezier(.4,0,1,1)',LEAVE_MS=180;
+  const SCREEN_ORDER={tour:0,authLogin:1,usSignup:2,usVerifyEmail:3,usForgotPassword:4,usRecovery:5,me:6,error:6,choice:7,create:8,join:9,color:10,noi:10,waiting:11,push:12,place:13,ready:14};
+  const HEADER='.tiny,.us-ob-progress';
+  const FREEZE=['display','position','top','right','bottom','left','width','height','min-width','max-width','min-height','box-sizing',
+    'margin-top','margin-right','margin-bottom','margin-left','padding-top','padding-right','padding-bottom','padding-left',
+    'order','flex-grow','flex-shrink','flex-basis','align-self','justify-self','flex-direction','flex-wrap','align-items','justify-content','align-content','justify-items',
+    'row-gap','column-gap','grid-template-columns','grid-template-rows','grid-column-start','grid-column-end','grid-row-start','grid-row-end',
+    'font-family','font-size','font-weight','font-style','font-variant-numeric','line-height','letter-spacing','word-spacing','text-transform','text-align',
+    'text-decoration-line','text-decoration-color','text-underline-offset','white-space','overflow-wrap','color','background-color','background-image',
+    'background-size','background-position','background-repeat','border-top-width','border-right-width','border-bottom-width','border-left-width',
+    'border-top-style','border-right-style','border-bottom-style','border-left-style','border-top-color','border-right-color','border-bottom-color','border-left-color',
+    'border-top-left-radius','border-top-right-radius','border-bottom-right-radius','border-bottom-left-radius','box-shadow','opacity','visibility',
+    'transform','translate','scale','rotate','object-fit','overflow-x','overflow-y','clip-path','appearance','outline-style'];
+  const isShown=el=>Boolean(el&&el.isConnected&&el.getClientRects().length);
+  // A still copy of what is on screen: computed styles written in, ids moved
+  // to data-us-gid (nothing can find it), inert and hidden from screen readers.
+  function stillCopy(src,{root=false}={}){
+    const copy=src.cloneNode(true);
+    const from=[src,...src.querySelectorAll('*')],to=[copy,...copy.querySelectorAll('*')];
+    from.forEach((el,i)=>{
+      const out=to[i];
+      if(out.id){out.dataset.usGid=out.id;out.removeAttribute('id');}
+      if(out.hasAttribute?.('for'))out.removeAttribute('for');
+      if(out.hasAttribute?.('name'))out.removeAttribute('name');
+      if(!(el instanceof HTMLElement))return;
+      const cs=getComputedStyle(el);
+      for(const prop of FREEZE){
+        if(i===0&&root&&['opacity','transform','translate','position','top','left','right','bottom'].includes(prop))continue;
+        const value=cs.getPropertyValue(prop);if(value)out.style.setProperty(prop,value,'important');
+      }
+      // Fields keep what was typed (cloneNode keeps values; selects need help).
+      if(el instanceof HTMLSelectElement)out.selectedIndex=el.selectedIndex;
+    });
+    copy.inert=true;copy.setAttribute('aria-hidden','true');
+    return copy;
+  }
+  function placeCopy(src,host,copy){
+    const r=src.getBoundingClientRect(),h=host.getBoundingClientRect();
+    const s=copy.style;
+    s.setProperty('position','absolute','important');
+    s.setProperty('left',`${r.left-h.left+host.scrollLeft-host.clientLeft}px`,'important');
+    s.setProperty('top',`${r.top-h.top+host.scrollTop-host.clientTop}px`,'important');
+    s.setProperty('width',`${r.width}px`,'important');s.setProperty('height',`${r.height}px`,'important');
+    s.setProperty('margin','0','important');s.setProperty('pointer-events','none','important');
+    host.append(copy);
+    // Scrolled things (the tour track) stay where they were.
+    const from=[src,...src.querySelectorAll('*')],to=[copy,...copy.querySelectorAll('*')];
+    from.forEach((el,i)=>{if(el.scrollLeft||el.scrollTop){to[i].scrollLeft=el.scrollLeft;to[i].scrollTop=el.scrollTop;}});
+    return copy;
+  }
+  let swapPending=null,revealedAt=-1e9;
+  // Starts a change of screen: the copy of `from` leaves, the header holds.
+  function beginSwap({from,host,dir=1,header=[]}={}){
+    if(swapPending)return swapPending;
+    const swap={dir,after:0,first:false,gone:[]};
+    if(reducedMotion()||!from||!isShown(from)||performance.now()-revealedAt<120){
+      // Nothing on screen yet (or the door is just opening): the new screen arrives as the first one.
+      if(!reducedMotion()&&from&&performance.now()-revealedAt<120){swap.first=true;stopEnter(from);}
+      swapPending=swap;return swap;
+    }
+    host=host||from.parentElement;
+    const held=[...header,...from.querySelectorAll(':scope>'+HEADER.split(',').join(',:scope>'))].filter(isShown);
+    const copy=stillCopy(from,{root:true});
+    copy.querySelectorAll(':scope>'+HEADER.split(',').join(',:scope>')).forEach(el=>el.remove());
+    copy.classList.remove('active');copy.classList.add('us-step-ghost');
+    placeCopy(from,host,copy);swap.gone.push(copy);
+    held.forEach(el=>{const still=stillCopy(el);placeCopy(el,host,still);still.style.setProperty('z-index','4','important');swap.gone.push(still);});
+    const out=animate(copy,[{opacity:1,translate:'0 0'},{opacity:0,translate:`${-dir*24}px 0`}],{duration:LEAVE_MS,easing:EASE_IN,fill:'forwards'});
+    const drop=()=>swap.gone.forEach(el=>el.remove());
+    if(out)out.finished.then(drop,drop);else drop();
+    setTimeout(drop,LEAVE_MS+120);
+    swap.after=LEAVE_MS;
+    swapPending=swap;setTimeout(()=>{if(swapPending===swap)swapPending=null;},LEAVE_MS);
+    return swap;
+  }
+  function stopEnter(el){try{el.getAnimations({subtree:true}).forEach(a=>{if(a.effect?.getTiming?.().fill==='backwards')a.cancel();});}catch(_e){}}
+  // What arrives, in the order it is seen: forms join the column, a pair of
+  // buttons or a split card moves as one block (data-us-enter="with-prev").
+  function enterItems(container){
+    const out=[];
+    const walk=parent=>{
+      const kids=[...parent.children].filter(el=>!el.hidden&&!el.matches(HEADER)&&!el.classList.contains('us-sr-only')&&!el.classList.contains('us-step-ghost'));
+      kids.map((el,i)=>({el,i,order:Number(getComputedStyle(el).order)||0})).sort((a,b)=>a.order-b.order||a.i-b.i).forEach(({el})=>{
+        const cs=getComputedStyle(el);
+        if(cs.display==='contents'||el.dataset.usEnter==='flat'){walk(el);return;}
+        if(cs.position==='absolute'&&!el.classList.contains('auth-status'))return;
+        if(cs.display==='none'&&!el.classList.contains('auth-status'))return;
+        out.push(el);
+      });
+    };
+    walk(container);
+    return out;
+  }
+  // The new screen comes in. `still` holds things that do not slide (the two circles).
+  function arriveSwap(container,{extra=[],header=[],swap=swapPending}={}){
+    swapPending=null;
+    if(!container||!swap||reducedMotion())return swap?.after||0;
+    const items=[...enterItems(container),...extra.filter(isShown)];
+    let n=-1;
+    items.forEach(el=>{
+      if(!(el.dataset.usEnter==='with-prev'&&n>=0))n++;
+      if(el.classList.contains('us-ob-venn')||el.dataset.usEnter==='still'){
+        if(swap.after)animate(el,[{opacity:0},{opacity:0}],{duration:swap.after,fill:'none'});
+        return;
+      }
+      const delay=swap.after+(swap.first?260+n*40:n*30);
+      animate(el,[{opacity:0,translate:`${swap.dir*24}px 0`},{opacity:1,translate:'0 0'}],{duration:380,delay,easing:EASE.out,fill:'backwards'});
+    });
+    const heads=[...header,...container.querySelectorAll(':scope>'+HEADER.split(',').join(',:scope>'))].filter(isShown);
+    if(swap.after)heads.forEach(el=>animate(el,[{opacity:0},{opacity:0}],{duration:swap.after,fill:'none'}));
+    return swap.after;
+  }
+  // The door opens: a circle from the middle, 620 ms.
+  // A wrong answer: the status line shakes (−4, 4, 260 ms).
+  function shake(el,px=4,ms=260){
+    if(!el||reducedMotion())return;
+    animate(el,[{translate:'0 0'},{translate:`-${px}px 0`},{translate:`${px}px 0`},{translate:'0 0'}],{duration:ms,fill:'none',composite:'add'});
+  }
+  function revealDoor(el){
+    revealedAt=performance.now();
+    if(!el||reducedMotion())return;
+    animate(el,[{clipPath:'circle(0% at 50% 50%)'},{clipPath:'circle(150% at 50% 50%)'}],{duration:620,easing:EASE.io,fill:'none'});
+  }
+  // The auth door (app.js showAuthStep): from what is on screen to `id`.
+  function authSwap(id){
+    const overlay=document.getElementById('authOverlay');
+    if(!overlay||overlay.classList.contains('hidden')||!isShown(overlay))return null;
+    const tour=document.getElementById('usTour');
+    const tourOn=tour&&!tour.hidden;
+    const from=tourOn?tour:overlay.querySelector('.auth-step.active');
+    const fromKey=tourOn?'tour':from?.id||'';
+    const target=document.getElementById(id);
+    if(!target)return null;
+    const firstTime=overlay.dataset.usShown!=='1';
+    if(firstTime){overlay.dataset.usShown='1';revealDoor(overlay);swapPending=null;const swap={dir:1,after:0,first:true,gone:[]};swapPending=swap;return swap;}
+    if(from===target&&!swapPending)return null;
+    const dir=(SCREEN_ORDER[id]??1)<(SCREEN_ORDER[fromKey]??0)?-1:1;
+    return beginSwap({from,host:overlay.querySelector('.auth-card'),dir});
+  }
+  function authArrive(id){
+    const target=document.getElementById(id),install=document.getElementById('usAuthInstall');
+    if(!swapPending)return;
+    arriveSwap(target,{extra:id==='authLogin'&&install?[install]:[]});
+  }
+  if(typeof document==='object'&&typeof MutationObserver==='function'){
+    // Once the door closes (signed in), the next opening is a first one again.
+    const watchDoor=()=>{
+      const overlay=document.getElementById('authOverlay');if(!overlay)return;
+      new MutationObserver(()=>{if(overlay.classList.contains('hidden'))delete overlay.dataset.usShown;}).observe(overlay,{attributes:true,attributeFilter:['class']});
+    };
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',watchDoor,{once:true});else watchDoor();
   }
 
   // The two circles: my colour, the other person's, and the Noi where they meet.
@@ -412,11 +563,45 @@
       slide.querySelectorAll('.t2-l').forEach(line=>an(line,[{opacity:0,transform:'translateY(4px)'},{opacity:1,transform:'none'}],{duration:380,delay:1760,easing:EASE.out}));
     }
     if(i===2){
+      an(q('.t3-pl'),[{transform:'translate(0px,24px) rotate(0deg) scale(.8)',opacity:0},{transform:'translate(-82px,14px) rotate(-12deg)',opacity:1}],{duration:700,delay:250,easing:EASE.out});
+      an(q('.t3-pr'),[{transform:'translate(0px,24px) rotate(0deg) scale(.8)',opacity:0},{transform:'translate(82px,8px) rotate(10deg)',opacity:1}],{duration:700,delay:330,easing:EASE.out});
       an(q('.t3-r'),[{strokeDashoffset:72},{strokeDashoffset:22}],{duration:1100,delay:500,easing:EASE.io});
       an(q('.t3-x'),[{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'translateY(-4px)',offset:.3},{opacity:1,transform:'translateY(-8px)',offset:.7},{opacity:0,transform:'translateY(-14px)'}],{duration:1300,delay:700,easing:EASE.out});
-      an(q('.t3-c'),[{opacity:0,transform:'translate(-50%,8px) scale(.9)'},{opacity:1,transform:'translate(-50%,0)'}],{duration:460,delay:1450,easing:EASE.spring});
+      an(q('.t3-c'),[{opacity:0,transform:'translateY(8px) scale(.9)'},{opacity:1,transform:'none'}],{duration:460,delay:1450,easing:EASE.spring});
     }
     return list;
+  }
+  // The two photos of the third card: painted here (sea at sunset, flowers),
+  // as in the design; no network, no real photos before the account.
+  function tourRng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+  function paintTourPhoto(kind){
+    const w=540,h=720,c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');if(!g)return '';
+    const r=tourRng(kind.length*97+7);
+    const lg=(y0,y1,stops)=>{const l=g.createLinearGradient(0,y0,0,y1);stops.forEach(([o,col])=>l.addColorStop(o,col));return l;};
+    if(kind==='mare'){
+      g.fillStyle=lg(0,430,[[0,'#2a1838'],[.45,'#7c3a5c'],[.8,'#ee8a6c'],[1,'#ffc98f']]);g.fillRect(0,0,w,430);
+      const sun=g.createRadialGradient(330,420,10,330,420,190);sun.addColorStop(0,'rgba(255,224,170,.95)');sun.addColorStop(.25,'rgba(255,190,140,.5)');sun.addColorStop(1,'rgba(255,150,120,0)');g.fillStyle=sun;g.fillRect(0,200,w,240);
+      g.fillStyle='#ffe2b0';g.beginPath();g.arc(330,430,46,Math.PI,0);g.fill();
+      g.fillStyle=lg(430,h,[[0,'#5a2e4a'],[.3,'#2e1a33'],[1,'#120c18']]);g.fillRect(0,430,w,h-430);
+      for(let i=0;i<34;i++){const y=436+i*i*.32,ww=(120-i*3)*(.6+r()*.6);g.fillStyle=`rgba(255,${200-i*2},150,${.5-i*.013})`;g.fillRect(330-ww/2+(r()-.5)*20,y,ww,2);}
+      g.fillStyle='#0c0810';g.fillRect(0,640,w,80);g.beginPath();g.moveTo(0,640);g.quadraticCurveTo(270,612,540,640);g.fill();
+      [[118,0],[140,4]].forEach(([x,o])=>{g.beginPath();g.arc(x,566+o,11,0,7);g.fill();g.beginPath();if(g.roundRect)g.roundRect(x-12,578+o,24,50,10);else g.rect(x-12,578+o,24,50);g.fill();});
+    }else{
+      g.fillStyle='#24182c';g.fillRect(0,0,w,h);
+      for(let i=0;i<46;i++){const x=r()*w,y=r()*h,R=20+r()*46;g.fillStyle=['#ff7c96','#ffb3a1','#f3b76e','#d98be0','#fff1e6'][i%5];for(let p=0;p<5;p++){const a=p/5*6.283+r();g.beginPath();g.ellipse(x+Math.cos(a)*R*.45,y+Math.sin(a)*R*.45,R*.42,R*.26,a,0,7);g.fill();}g.fillStyle='#5a3a1c';g.beginPath();g.arc(x,y,R*.16,0,7);g.fill();}
+    }
+    // Film grain, as on every photo of the design.
+    const t=document.createElement('canvas');t.width=t.height=96;const x=t.getContext('2d'),d=x.createImageData(96,96);
+    for(let i=0;i<d.data.length;i+=4){const v=r()*255;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=26;}
+    x.putImageData(d,0,0);g.save();g.globalCompositeOperation='overlay';g.fillStyle=g.createPattern(t,'repeat');g.fillRect(0,0,w,h);g.restore();
+    return c.toDataURL('image/jpeg',.86);
+  }
+  function paintTourPhotos(root){
+    for(const [selector,kind] of [['.t3-pl','mare'],['.t3-pr','fiori']]){
+      const img=root.querySelector(selector);
+      if(!img||img.getAttribute('src'))continue;
+      try{const url=paintTourPhoto(kind);if(url)img.src=url;}catch(_e){}
+    }
   }
   function mountTour({openStep}){
     const root=document.getElementById('usTour'),overlay=document.getElementById('authOverlay');
@@ -457,6 +642,8 @@
       heading.focus({preventScroll:true});
     }
     function leave(target){
+      // The tour leaves like any step (to the right, 180 ms).
+      beginSwap({from:root,host:overlay.querySelector('.auth-card'),dir:1});
       close();
       if(target==='signup'&&window.usS31Auth?.go){window.usS31Auth.go('signup');focusHeading('usSignup');return;}
       openStep?.('authLogin');focusHeading('authLogin');
@@ -468,9 +655,14 @@
       if(isOpen)return true;
       if(returningDevice||!tourWanted(localStorage))return false;
       isOpen=true;current=-1;
+      // Opened over the sign-in: the tour arrives in its place.
+      const login=overlay.querySelector('.auth-step.active');
+      const swap=beginSwap({from:login,host:overlay.querySelector('.auth-card'),dir:-1});
       overlay.classList.add('us-tour-active');root.hidden=false;track.scrollLeft=0;
+      paintTourPhotos(root);
       runs=reducedMotion()?[]:slides.map((slide,i)=>{const list=tourAnimations(i,slide);list.forEach(run=>run.pause());return list;});
       select(0);
+      arriveSwap(root,{swap});
       window.dispatchEvent(new CustomEvent('us-onboarding-view-change'));
       return true;
     }
@@ -508,6 +700,7 @@
     function status(text,kind){
       const node=$('usSetupStatus');node.textContent=text||'';
       if(text&&kind)node.dataset.kind=kind;else node.removeAttribute('data-kind');
+      if(text&&kind==='error')shake(node);
     }
     function setBusy(on){busy=on;primary.disabled=on;secondary.disabled=on;}
     function sharingNow(){try{return Boolean(window.UsLocation?.isSharing?.());}catch(_e){return false;}}
@@ -587,7 +780,7 @@
         if(had)primary.focus({preventScroll:true});
       }
     }
-    function drawReady(play){
+    function drawReady(play,after=0){
       const list=$('usSetupReady');list.replaceChildren();
       for(const row of readyRows()){
         const li=document.createElement('li'),icon=document.createElement('span'),text=document.createElement('span'),title=document.createElement('b'),detail=document.createElement('small'),mark=document.createElement('i');
@@ -596,7 +789,10 @@
         if(row.key){li.dataset.row=row.key;detail.setAttribute('aria-live','polite');}
         li.append(icon,text,mark);paintRow(li,row);list.append(li);
       }
-      if(play&&!reducedMotion())[...list.children].forEach((li,i)=>{if(li.classList.contains('is-ok'))animate(li.lastElementChild,[{transform:'scale(0)'},{transform:'scale(1.25)',offset:.6},{transform:'none'}],{duration:420,delay:520+i*150,easing:EASE.out});});
+      if(play&&!reducedMotion()){
+        [...list.children].forEach((li,i)=>{if(li.classList.contains('is-ok'))animate(li.lastElementChild,[{transform:'scale(0)'},{transform:'scale(1.25)',offset:.6},{transform:'none'}],{duration:420,delay:after+520+i*150,easing:EASE.out});});
+        const ticket=run;setTimeout(()=>{if(ticket===run&&isOpen)window.UsFeedback?.success?.();},after+700);
+      }
     }
     function paintWidget(){
       const li=$('usSetupReady').querySelector('[data-row="widget"]');
@@ -633,20 +829,30 @@
     }
     $('usSetupReady').addEventListener('click',event=>{if(event.target.closest('[data-us-setup-widget]'))addWidget();});
     window.addEventListener('us:widget-pinned',event=>{if(isOpen&&widget.offer&&event.detail?.kind==='think'&&widget.state!=='placed')placedWidget();});
-    function playVisual(step){
+    function playVisual(step,after=0){
       if(reducedMotion())return;
-      if(step==='push')$('usSetupPushVis').querySelectorAll('.us-setup-note').forEach((note,i)=>animate(note,[{opacity:0,transform:'translateY(-20px)'},{opacity:1,transform:'none'}],{duration:520,delay:320+i*170,easing:EASE.soft,fill:'backwards'}));
+      if(step==='push')$('usSetupPushVis').querySelectorAll('.us-setup-note').forEach((note,i)=>animate(note,[{opacity:0,translate:'0 -20px',offset:0}],{duration:520,delay:after+320+i*170,easing:EASE.soft,fill:'backwards'}));
       if(step==='place'){
         const vis=$('usSetupPlaceVis');
-        vis.querySelectorAll('.pl-d').forEach((dot,i)=>animate(dot,[{transform:'scale(0)'},{transform:'none'}],{duration:460,delay:260+i*120,easing:EASE.spring}));
-        vis.querySelectorAll('.pl-h').forEach((halo,i)=>animate(halo,[{transform:'scale(.3)',opacity:0},{transform:'none',opacity:1}],{duration:700,delay:420+i*120,easing:EASE.out}));
-        animate(vis.querySelector('.pl-ln'),[{transform:'scaleX(0)'},{transform:'none'}],{duration:640,delay:640,easing:EASE.io});
-        animate(vis.querySelector('.pl-chip'),[{opacity:0,transform:'translate(-50%,-50%) scale(.85)'},{opacity:1,transform:'translate(-50%,-50%)'}],{duration:420,delay:1000,easing:EASE.spring});
+        vis.querySelectorAll('.pl-d').forEach((dot,i)=>animate(dot,[{transform:'scale(0)'},{transform:'none'}],{duration:460,delay:after+260+i*120,easing:EASE.spring}));
+        vis.querySelectorAll('.pl-h').forEach((halo,i)=>animate(halo,[{transform:'scale(.3)',opacity:0},{transform:'none',opacity:1}],{duration:700,delay:after+420+i*120,easing:EASE.out}));
+        animate(vis.querySelector('.pl-ln'),[{transform:'scaleX(0)'},{transform:'none'}],{duration:640,delay:after+640,easing:EASE.io});
+        animate(vis.querySelector('.pl-chip'),[{opacity:0,scale:.85},{opacity:1,scale:1}],{duration:420,delay:after+1000,easing:EASE.spring});
       }
     }
+    // What leaves when the setup opens: the invite (or the sign-in) under it.
+    let openSwap=null,shownStep='';
+    const card=overlay.querySelector('.us-setup-card'),head=()=>[$('usSetupKicker'),$('usSetupProgress')];
     function show(i){
+      const step=steps[i],prevStep=shownStep;
+      // Same screen engine as the sign-in: the old step leaves, the new one comes in.
+      let swap;
+      if(prevStep&&prevStep!==step&&!overlay.classList.contains('is-pending'))swap=beginSwap({from:body,host:card,dir:(SCREEN_ORDER[step]??12)<(SCREEN_ORDER[prevStep]??12)?-1:1,header:head()});
+      else if(openSwap){swap={dir:1,first:false,gone:[],after:Math.max(0,Math.round(LEAVE_MS-(performance.now()-openSwap.t0)))};swapPending=swap;}
+      else{revealDoor(overlay);swap={dir:1,first:true,gone:[],after:0};swapPending=swap;}
+      openSwap=null;shownStep=step;
       index=i;setBusy(false);status('');
-      const step=steps[i],role=profile?.role,kicker=kickerFor(step);
+      const role=profile?.role,kicker=kickerFor(step);
       overlay.classList.remove('is-pending');
       overlay.dataset.step=step;
       $('usSetupKicker').textContent=kicker.text;
@@ -663,15 +869,16 @@
       if(step==='color'){setTitle(title,'Il tuo colore è ',colourName(role));drawVenn(venn,{kind:'join',role,partner:partnerName()});primary.textContent='Continua';}
       if(step==='push'){setTitle(title,'Non perderti ','un Ti penso');primary.textContent='Attiva le notifiche';}
       if(step==='place'){setTitle(title,'Anche da ','lontano');primary.textContent='Attiva la posizione';}
-      if(step==='ready'){if(mode==='device')setTitle(title,'Eccoti ','di nuovo');else setTitle(title,'Il vostro US ','è pronto');primary.textContent='Entra in US';drawReady(true);}
+      if(step==='ready'){if(mode==='device')setTitle(title,'Eccoti ','di nuovo');else setTitle(title,'Il vostro US ','è pronto');primary.textContent='Entra in US';drawReady(false);}
       refreshPartner(false);
       overlay.scrollTop=0;
       title.focus({preventScroll:true});
       // While the shell reveals itself the overlay can be one frame from visible.
       if(document.activeElement!==title)requestAnimationFrame(()=>{if(isOpen&&steps[index]===step&&!overlay.contains(document.activeElement))title.focus({preventScroll:true});});
-      enter(body);
-      if(step==='noi'||step==='color')requestAnimationFrame(()=>{if(isOpen&&steps[index]===step)playColour(overlay,venn);});
-      playVisual(step);
+      const after=arriveSwap(body,{swap,header:head()});
+      if(step==='noi'||step==='color'){const ticket=run;setTimeout(()=>requestAnimationFrame(()=>{if(ticket===run&&isOpen&&steps[index]===step)playColour(overlay,venn);}),after);}
+      if(step==='ready')drawReady(true,after);
+      playVisual(step,after);
     }
     function advance(){if(!isOpen)return;if(index<steps.length-1)show(index+1);else finish();}
     function later(fn,ms){const ticket=run;setTimeout(()=>{if(ticket===run&&isOpen)fn();},reducedMotion()?Math.min(ms,600):ms);}
@@ -694,20 +901,32 @@
       if(ok){status('Distanza attiva ♡','success');later(advance,900);return;}
       setBusy(false);status('Non riesco ad attivare la posizione','error');
     }
-    async function playIntro(){
-      const intro=$('usSetupIntro');intro.hidden=false;
+    // "Entra in US": the setup fades (260 ms), then the two circles meet and
+    // become the logo, the words come, and a circle closes on the app.
+    const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+    async function playIntro(ticket){
+      const intro=$('usSetupIntro');
       const [a,b]=intro.querySelectorAll('.c'),logo=intro.querySelector('.logo'),word=intro.querySelector('.word');
-      animate(intro,[{opacity:0},{opacity:1}],{duration:200});
-      const meet=animate(a,[{transform:'translateX(-110px) scale(.6)',opacity:0},{transform:'translateX(-34px) scale(1)',opacity:1,offset:.5},{transform:'translateX(0) scale(1.05)',opacity:1}],{duration:760,easing:EASE.io});
-      animate(b,[{transform:'translateX(110px) scale(.6)',opacity:0},{transform:'translateX(34px) scale(1)',opacity:1,offset:.5},{transform:'translateX(0) scale(1.05)',opacity:1}],{duration:760,easing:EASE.io});
-      try{await meet?.finished;}catch(_e){return;}
-      [a,b].forEach(circle=>animate(circle,[{transform:'scale(1.05)',opacity:1},{transform:'scale(.2)',opacity:0}],{duration:360,easing:EASE.io}));
-      animate(logo,[{opacity:0,transform:'scale(.6)'},{opacity:1,transform:'scale(1.06)',offset:.7},{opacity:1,transform:'none'}],{duration:440,delay:100,easing:'ease-out'});
-      const words=animate(word,[{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:360,delay:300,easing:EASE.out});
-      try{await words?.finished;}catch(_e){return;}
-      await new Promise(resolve=>setTimeout(resolve,260));
-      const out=animate(overlay,[{clipPath:'circle(150% at 50% 46%)'},{clipPath:'circle(0% at 50% 46%)'}],{duration:520,easing:EASE.io,fill:'forwards'});
-      try{await out?.finished;}catch(_e){}
+      const live=()=>ticket===run;
+      if(reducedMotion()){
+        overlay.classList.add('is-intro');intro.hidden=false;logo.style.opacity='1';
+        await wait(700);logo.style.opacity='';return live();
+      }
+      try{await animate(overlay,[{opacity:1},{opacity:0}],{duration:260,fill:'forwards'})?.finished;}catch(_e){return false;}
+      if(!live())return false;
+      overlay.classList.add('is-intro');intro.hidden=false;
+      overlay.getAnimations().forEach(x=>x.cancel());
+      const fill={fill:'forwards'};
+      const meet=animate(a,[{translate:'-120px 0',scale:.6,opacity:0},{translate:'-38px 0',scale:1,opacity:1,offset:.5},{translate:'0 0',scale:1.05,opacity:1}],{duration:1100,easing:EASE.io,...fill});
+      animate(b,[{translate:'120px 0',scale:.6,opacity:0},{translate:'38px 0',scale:1,opacity:1,offset:.5},{translate:'0 0',scale:1.05,opacity:1}],{duration:1100,easing:EASE.io,...fill});
+      try{await meet?.finished;}catch(_e){return false;}
+      if(!live())return false;
+      [a,b].forEach(circle=>animate(circle,[{scale:1.05,opacity:1},{scale:.2,opacity:0}],{duration:420,easing:EASE.io,...fill}));
+      animate(logo,[{opacity:0,scale:.6},{opacity:1,scale:1.06,offset:.7},{opacity:1,scale:1}],{duration:520,delay:140,easing:'ease-out',...fill});
+      try{await animate(word,[{opacity:0,translate:'0 8px'},{opacity:1,translate:'0 0'}],{duration:420,delay:420,easing:EASE.out,...fill})?.finished;}catch(_e){return false;}
+      await wait(450);if(!live())return false;
+      try{await animate(intro,[{clipPath:'circle(150% at 50% 46%)'},{clipPath:'circle(0% at 50% 46%)'}],{duration:620,easing:EASE.io,...fill})?.finished;}catch(_e){return false;}
+      return live();
     }
     async function finish({silent=false}={}){
       if(!isOpen)return;
@@ -715,13 +934,14 @@
       storeSet(localStorage,FIRST_RUN_KEYS.setupDone(id),'1');
       storeRemove(localStorage,FIRST_RUN_KEYS.setupPending(id));
       if(storeGet(sessionStorage,FIRST_RUN_KEYS.passwordSignIn)===id)storeRemove(sessionStorage,FIRST_RUN_KEYS.passwordSignIn);
-      if(!silent&&!reducedMotion()){setBusy(true);await playIntro();if(ticket!==run)return;}
+      if(!silent){setBusy(true);if(!await playIntro(ticket)&&ticket!==run)return;}
       close();
     }
     function close(){
       run++;
       const hadFocus=overlay.contains(document.activeElement);
-      isOpen=false;busy=false;userId='';mode=null;profile=null;steps=[];index=0;
+      isOpen=false;busy=false;userId='';mode=null;profile=null;steps=[];index=0;shownStep='';openSwap=null;
+      overlay.classList.remove('is-intro');
       clearTimeout(widgetTimer);widget={offer:false,state:'idle',at:0};
       overlay.hidden=true;overlay.classList.remove('is-pending');delete overlay.dataset.step;delete overlay.dataset.mode;
       $('usSetupIntro').hidden=true;
@@ -758,8 +978,17 @@
       if(isOpen)close();
       const ticket=++run;
       isOpen=true;userId=id;mode=nextMode;profile=nextProfile;steps=[];index=0;results={push:null,place:null};pushKind='unknown';
+      // The invite (or the sign-in) still on screen leaves into the setup.
+      const auth=document.getElementById('authOverlay'),onb=document.getElementById('usOnboarding');
+      const from=auth&&!auth.classList.contains('hidden')?(onb?.classList.contains('active')?onb:auth.querySelector('.auth-step.active')):null;
       overlay.dataset.mode=nextMode;overlay.classList.add('is-pending');overlay.hidden=false;
       overlay.scrollTop=0;isolate(true);
+      openSwap=null;
+      if(from&&isShown(from)&&!reducedMotion()){
+        swapPending=null;
+        const swap=beginSwap({from,host:card,dir:1});
+        if(swap?.gone.length){openSwap={t0:performance.now()};swapPending=null;}
+      }
       const [push,offer]=await Promise.all([pushStepState(window.UsNotifications),widgetOfferWanted(window.UsWidgets)]);
       if(ticket!==run||!isOpen)return false;
       widget={offer,state:'idle',at:0};
@@ -776,7 +1005,7 @@
   function mount({readProfile,rpc,resume,signOut,openStep,insertEvent}){
     const root=document.getElementById('usOnboarding');
     const node=id=>document.getElementById(id);
-    let mode='me',lastKind='',lastView='',hiddenPrivate=[],me={name:'',birthday:null},meFor='',justCreated=false,note={text:'',kind:''},dismissed='';
+    let mode='me',lastKind='',lastView='',lastInvite='',hiddenPrivate=[],me={name:'',birthday:null},meFor='',justCreated=false,note={text:'',kind:''},dismissed='';
     const clearForms=()=>root.querySelectorAll('input,textarea').forEach(el=>{el.value='';});
     function protect(active){
       document.documentElement.classList.toggle('us-onboarding-active',active);
@@ -810,6 +1039,23 @@
       const uid=controller.userId;
       if(uid&&uid!==meFor){me={name:'',birthday:null};justCreated=false;meFor=uid;}
       const active=!['SIGNED_OUT','PAIRED'].includes(state.kind);
+      const changed=state.kind!==lastKind;
+      if(changed){
+        note={text:'',kind:''};dismissed='';
+        if(state.kind==='SIGNED_OUT'){me={name:'',birthday:null};justCreated=false;}
+        mode=state.kind==='MEMBER_WAITING_PARTNER'&&justCreated?'color':me.name?'choice':'me';
+      }
+      const view=viewFor(state),waiting=state.kind==='MEMBER_WAITING_PARTNER',role=state.profile?.role;
+      // A new screen (or, on the invite, a new code): what is on screen leaves first.
+      const inviteKey=waiting?`${state.membership?.invite?.status}|${state.code}`:'';
+      let swap=null;
+      if(active&&(view!==lastView||(view==='waiting'&&inviteKey!==lastInvite))){
+        const overlay=node('authOverlay'),tourRoot=node('usTour');
+        const from=lastView?root:tourRoot&&!tourRoot.hidden?tourRoot:overlay.querySelector('.auth-step.active');
+        const dir=view===lastView?0:(SCREEN_ORDER[view]??6)<(SCREEN_ORDER[lastView||from?.id]??1)?-1:1;
+        swap=beginSwap({from,host:overlay.querySelector('.auth-card'),dir});
+      }
+      lastInvite=inviteKey;
       protect(active);
       root.classList.toggle('active',active);
       if(active){
@@ -817,14 +1063,11 @@
         document.documentElement.classList.remove('us-auth-pending','us-returning-device','us-auth-ready');
         tour.close();
       }
-      const changed=state.kind!==lastKind;
       if(changed){
-        clearForms();note={text:'',kind:''};dismissed='';
-        if(state.kind==='SIGNED_OUT'){me={name:'',birthday:null};justCreated=false;}
-        mode=state.kind==='MEMBER_WAITING_PARTNER'&&justCreated?'color':me.name?'choice':'me';
+        clearForms();
         if(state.kind==='AUTHENTICATED_NO_PROFILE')fillMe();else{daySelect.value='';monthSelect.value='';}
       }
-      const view=viewFor(state),waiting=state.kind==='MEMBER_WAITING_PARTNER',role=state.profile?.role;
+      root.dataset.view=active?view:'';
       if(waiting&&role==='beatrice')node('authOverlay').dataset.usTone='beatrice';else delete node('authOverlay').dataset.usTone;
       node('mc3Kicker').textContent=view==='me'?'Tu · 1 di 4':view==='error'?'US · Spazio privato':'Voi · 2 di 4';
       node('mc3Progress').hidden=view==='error';
@@ -850,22 +1093,25 @@
       // An error stays with the screen it belongs to: moving to another step dismisses it.
       if(!state.message)dismissed='';
       const message=state.message&&state.message!==dismissed?state.message:'';
+      const said=`${status.textContent}|${status.dataset.kind||''}`;
       status.textContent=message||note.text||(state.busy?'Verifica in corso…':'');
       if(message)status.dataset.kind='error';else if(note.text)status.dataset.kind=note.kind||'neutral';else status.removeAttribute('data-kind');
+      if(status.dataset.kind==='error'&&status.textContent&&said!==`${status.textContent}|error`)shake(status);
       const labels={none:'Nessun invito attivo',pending:'Invito in attesa',expired:'Invito scaduto',revoked:'Invito revocato',used:'Invito utilizzato'};
       const invite=state.membership?.invite;
       node('mc3InviteStatus').textContent=waiting?(labels[invite.status]||'')+(invite.status==='pending'&&invite.expires_at&&inviteExpiry(invite.expires_at)?' · '+inviteExpiry(invite.expires_at):''):'';
       node('mc3InviteStatus').dataset.status=waiting?invite.status:'';
       node('mc3Code').value=waiting?state.code:'';node('mc3CodeArea').hidden=!waiting||!state.code;
+      node('mc3CodeShown').textContent=waiting&&state.code?state.code.replace(/(.{5})/g,'$1 ').trim():'';
       node('mc3Waiting').classList.toggle('has-code',Boolean(waiting&&state.code));
       node('mc3Generate').textContent=invite?.status==='none'?'Crea invito':'Genera nuovo codice';
       node('mc3Revoke').hidden=!waiting||invite?.status!=='pending';
       root.querySelectorAll('button,input,select').forEach(el=>{el.disabled=state.busy&&el.id!=='mc3Exit';});
       if(view==='color'&&lastView!=='color')drawVenn(node('mc3Venn'),{kind:'wait',role,partner:''});
       if(active&&changed){node('mc3Title').focus({preventScroll:true});node('authOverlay').scrollTop=0;}
-      if(active&&view!==lastView){
-        enter(root);
-        if(view==='color')requestAnimationFrame(()=>{if(lastView==='color')playColour(node('authOverlay'),node('mc3Venn'));});
+      if(swap){
+        const after=arriveSwap(root,{swap});
+        if(view==='color')setTimeout(()=>requestAnimationFrame(()=>{if(lastView==='color')playColour(node('authOverlay'),node('mc3Venn'));}),after);
       }
       lastKind=state.kind;lastView=active?view:'';
       if(state.profile?.couple_id)saveBirthday({profile:state.profile,local:localStorage,session:sessionStorage,insertEvent}).catch(()=>{});
@@ -898,6 +1144,8 @@
       if(result?.kind==='PAIRED')resume();
     };
     const goTo=(next,focusId)=>{
+      // What is on screen leaves with what was typed in it.
+      if(next!==lastView&&lastView)beginSwap({from:root,host:node('authOverlay').querySelector('.auth-card'),dir:(SCREEN_ORDER[next]??6)<(SCREEN_ORDER[lastView]??6)?-1:1});
       clearForms();mode=next;note={text:'',kind:''};
       if(controller.state.kind==='AUTHENTICATED_NO_PROFILE')dismissed=controller.state.message||'';
       if(next==='me')fillMe();
@@ -918,6 +1166,8 @@
     node('mc3ColorNext').addEventListener('click',()=>{justCreated=false;goTo('waiting','mc3Title');});
     node('mc3Date').max=romeToday();
     node('mc3Create').addEventListener('submit',event=>{event.preventDefault();justCreated=true;run(()=>controller.create({name:node('mc3CreateName').value,date:node('mc3Date').value,coupleName:node('mc3CoupleName').value}),'create');});
+    // The code box is a textarea (two lines, as in the design): Enter still sends.
+    node('mc3JoinCode').addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();node('mc3Join').requestSubmit?.();}});
     node('mc3Join').addEventListener('submit',event=>{event.preventDefault();const fields={name:node('mc3JoinName').value,code:node('mc3JoinCode').value};node('mc3JoinCode').value='';run(()=>controller.join(fields),'join');});
     node('mc3Generate').addEventListener('click',()=>run(()=>controller.generate()));
     node('mc3Revoke').addEventListener('click',()=>run(()=>controller.revoke()));
@@ -952,5 +1202,5 @@
   }
   return Object.freeze({route,validName,validDate,normalizeCode,validCode,romeToday,errorMessage,createController,mount,
     FIRST_RUN_KEYS,tourWanted,birthdayCheck,nextBirthday,birthdayEvent,rememberBirthday,saveBirthday,setupMode,setupSteps,pushStepState,placeStepWanted,daysTogether,inviteExpiry,
-    inviteMessage,shareInvite,widgetOfferWanted,CHECK_MS});
+    inviteMessage,shareInvite,widgetOfferWanted,CHECK_MS,authSwap,authArrive,shake});
 });

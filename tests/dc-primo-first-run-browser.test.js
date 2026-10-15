@@ -61,7 +61,9 @@ async function pageFor(h,b,{user='u1',signedOut=false,deviceProfile=null,reduced
   await page.goto(h.base+'/?us-dev=1',{waitUntil:'load'});
   return {page,ctx,errors,outside};
 }
-const visible=(page,id)=>page.waitForFunction(id=>{const el=document.getElementById(id);return el&&!el.hidden&&el.getClientRects().length>0;},id);
+// Design parity: the onboarding forms join the column (display:contents), so a
+// form is on screen when one of its children is.
+const visible=(page,id)=>page.waitForFunction(id=>{const el=document.getElementById(id);const shown=n=>n.getClientRects().length>0||(getComputedStyle(n).display==='contents'&&[...n.children].some(shown));return el&&!el.hidden&&shown(el);},id);
 // The waiting screen checks by itself every 10 s: a manual refresh only when it is still there.
 const refreshIfWaiting=page=>page.evaluate(()=>{const b=document.getElementById('mc3Refresh');if(b&&b.getClientRects().length&&!b.disabled)b.click();});
 const text=(page,selector)=>page.locator(selector).evaluate(el=>el.textContent.replace(/\s+/g,' ').trim());
@@ -80,7 +82,7 @@ test('first run tour: only on a phone where nobody signed in, three cards, no ne
     await page.click('#usTourNext');await page.waitForFunction(()=>document.querySelectorAll('[data-us-tour-dot]')[2].getAttribute('aria-current')==='true');
     assert.equal(await text(page,'#usTourNext'),'Iniziamo');
     await page.click('[data-us-tour-dot]:nth-of-type(1)');await page.waitForFunction(()=>document.querySelectorAll('[data-us-tour-dot]')[0].getAttribute('aria-current')==='true');
-    for(const button of await page.locator('#usTour button').all()){const box=await button.boundingBox();assert.ok(box.height>=44&&box.width>=44,'44px targets');}
+    for(const button of await page.locator('#usTour button').all()){const box=await button.boundingBox();assert.ok(box.height>=44&&box.width>=44,`44px targets: ${await button.evaluate(el=>el.id||el.outerHTML.slice(0,80))} ${box.width}x${box.height}`);}
     assert.equal(b.calls.length,before,'no backend call during the tour');assert.equal(outside.length,outsideBefore,'no network during the tour');
     await page.click('#usTourSkip');
     await visible(page,'authLogin');assert.equal(await page.locator('#usTour').isHidden(),true);

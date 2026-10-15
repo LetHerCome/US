@@ -1070,7 +1070,8 @@ async function initCloud(){
                   ? 'Accedi di nuovo con email e password per continuare.'
                   : 'Accedi con email e password per entrare in US.'))
           : 'Sei offline. Riconnettiti per accedere.',
-        navigator.onLine?'neutral':'error'
+        // The plain welcome line is for screen readers; the design shows no box.
+        navigator.onLine?(authBootstrapIssue?'neutral':'hint'):'error'
       );
       usOnboarding.tour?.maybeOpen?.({returningDevice});
       window.dispatchEvent(new CustomEvent('us-auth-resolved',{detail:{paired:false,returningDevice}}));
@@ -1146,17 +1147,22 @@ async function initCloud(){
 function setAuthStatus(id,message='',kind='neutral'){
   const node=document.getElementById(id);
   if(!node)return;
+  const again=node.textContent!==message||node.dataset.kind!==kind;
   node.textContent=message;
   if(message)node.dataset.kind=kind;
   else node.removeAttribute('data-kind');
+  if(message&&kind==='error'&&again)window.UsOnboarding?.shake?.(node);
 }
 window.setAuthStatus=setAuthStatus;
 
 function showAuthStep(id){
+  // The step on screen leaves as in the design; the page itself switches now.
+  window.UsOnboarding?.authSwap?.(id);
   if(id!=='authLogin')usOnboarding.tour?.close?.();
   document.querySelectorAll('.auth-step').forEach(x=>x.classList.remove('active'));
   const next=document.getElementById(id);
   if(next)next.classList.add('active');
+  window.UsOnboarding?.authArrive?.(id);
   window.dispatchEvent(new CustomEvent('us-onboarding-view-change'));
 }
 
