@@ -17,7 +17,7 @@ test('M9D / 1.0: Noi opens on its calendar with three destinations, no old hub, 
   assert.doesNotMatch(read('calendar.js'), /noiWeekBoard|refreshNoiWeekBoard/);
   const links = page.match(/<nav class="us-noi-v2-links"[\s\S]*?<\/nav>/)?.[0] || '';
   assert.deepEqual([...links.matchAll(/data-noi-open-link="([^"]+)"/g)].map((m) => m[1]), ['lavagna', 'quest', 'eventi']);
-  assert.deepEqual([...links.matchAll(/<b>([^<]+)<\/b>/g)].map((m) => m[1]), ['La nostra settimana', 'Missioni', 'Eventi']);
+  assert.deepEqual([...links.matchAll(/<b>([^<]+)<\/b>/g)].map((m) => m[1]), ['Lavagna', 'Missioni', 'Eventi']);
   assert.match(bond(), /data-noi-view="hub"/);
   assert.match(bond(), /id="noiSectionBar" hidden/);
   const nav = read('index.html').match(/<nav class="nav[^"]*"[\s\S]*?<\/nav>/)?.[0] || '';

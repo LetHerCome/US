@@ -268,7 +268,7 @@ test('Noi: the couple row stays centered, "La nostra settimana" owns the week, a
 test('Noi density: the one calendar comes first, then the three links; no second hero', () => {
   const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
   assert.ok(bond.indexOf('id="usNoiV2Content"') < bond.indexOf('data-noi-open-link="lavagna"'), 'the calendar sits above the links');
-  assert.match(bond, /<b>La nostra settimana<\/b><small>Sere libere<\/small>/);
+  assert.match(bond, /<b>Lavagna<\/b>/);
   assert.match(bond, /<b>Missioni<\/b>/);
   assert.match(bond, /<b>Eventi<\/b>/);
   assert.doesNotMatch(bond, /class="noi-week-board"|noi-hub-card--resonance/);

@@ -28,7 +28,7 @@ test('Home cleanup: Oggi keeps photo/countdown dominant and retires the dashboar
 // view of the Noi calendar; its free evenings read nothing new.
 test('Noi: "La nostra settimana" replaces Lavagna and reads the existing calendar authority only', () => {
   const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
-  assert.match(bond, /data-noi-open-link="lavagna"[^>]*>[\s\S]*?<b>La nostra settimana<\/b>/);
+  assert.match(bond, /data-noi-open-link="lavagna"[^>]*>[\s\S]*?<b>Lavagna<\/b>/);
   assert.doesNotMatch(bond, /id="noiWeekBoard"|id="noiWeekBoardOpen"|id="noiWeekBoardBody"|id="noiHub"/);
   assert.doesNotMatch(bond, /id="usCalendarEntry"|noi-hub-card--calendar/);
   assert.doesNotMatch(calendar, /US_NOI_WEEK_BOARD_LIMIT|refreshNoiWeekBoard/);

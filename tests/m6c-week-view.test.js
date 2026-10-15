@@ -43,7 +43,8 @@ const roleOf = (e) => e.role; // tests pass the role directly on the entry
 
 // (1) the week opens from "La nostra settimana" and "Torna al mese" leaves it; no new tab.
 test('M6C (1): "La nostra settimana" opens the week, "Torna al mese" leaves it; never a bottom-nav destination', () => {
-  assert.match(html(), /id="usNoiV2WeekBack" hidden>[\s\S]*?<span>Torna al mese<\/span>/);
+  // Parity: the week is the mockup's Lavagna Foglio; its close button leaves it.
+  assert.match(html(), /id="usNoiV2WeekBack" hidden data-us-modal-close aria-label="Chiudi la lavagna">/);
   assert.match(noi(), /\$\('usNoiV2WeekBack'\)\?\.addEventListener\('click',closeWeek\)/);
   assert.match(noi(), /function closeWeek\(\)\{\s*if\(mode!=='week'\)return;\s*mode='calendar';render\(\);\s*\}/);
   assert.doesNotMatch(html(), /data-page="calendar"/);
@@ -74,7 +75,7 @@ test('M6C (3): prev/next shift the week by ±7 days and the week starts on Monda
 // (4) each week day shows every commitment as a chip in the colour of whose it is.
 test('M6C (4): week days show each commitment with its owner colour, from live profiles', () => {
   assert.match(noi(), /function chipMarkup\(day,item\)[\s\S]*?data-owner="\$\{ownerOf\(item\)\}"/);
-  assert.match(noi(), /const lane=items\.length\|\|evening\?items\.map\(item=>chipMarkup\(day,item\)\)/);
+  assert.match(noi(), /const lane=items\.length\|\|evening\?sortedForBoard\(items\)\.map\(item=>chipMarkup\(day,item\)\)/);
   assert.match(noi(), /function ownerOf\(item\)\{[\s\S]*?item\.ownerId===viewer\?\.id\?'tu':'partner'/);
   assert.doesNotMatch(noi(), /['"]Francesco['"]|['"]Beatrice['"]/);
 });
@@ -194,7 +195,9 @@ test('M6C (11): window labels read like 13:00 – 16:00 / dopo le 19:00 — neve
 // (12) one week list everywhere; the month view stays the month view.
 test('M6C (12): the week view is a single vertical list at every width; the month view is untouched', () => {
   assert.match(noi(), /<div class="us-noi-v2-week-list" role="group" aria-label="La nostra settimana">/);
-  assert.match(noi(), /mode==='calendar'\?calendarMarkup\(index\):mode==='week'\?weekMarkup\(index\):listMarkup\(index\)/);
+  // Parity: the week renders in the Lavagna sheet (#usNoiV2Week); the page keeps the month or the list.
+  assert.match(noi(), /mode==='list'\?listMarkup\(index\):calendarMarkup\(index\)/);
+  assert.match(noi(), /body\.innerHTML=weekMarkup\(index\)/);
   assert.doesNotMatch(html(), /id="usCalendarWeekList"|id="usCalendarAddBtn"|class="us-cal-fab/);
   assert.doesNotMatch(css(), /\.us-cal-fab\{/);
 });
@@ -222,7 +225,7 @@ test('M6C (14): the Noi read reuses buildRangeOverlapFilter + filterEntriesInWin
 
 // (15) the header follows the mode.
 test('M6C (15): in week mode the header names the week and "Torna al mese" shows', () => {
-  assert.match(noi(), /label\.textContent=`Settimana del \$\{monday\.getDate\(\)\} \$\{months\[monday\.getMonth\(\)\]\}`/);
+  assert.match(noi(), /return `Settimana del \$\{monday\.getDate\(\)\} \$\{months\[monday\.getMonth\(\)\]\}`/);
   assert.match(noi(), /if\(weekBack\)weekBack\.hidden=mode!=='week';/);
   assert.match(noi(), /root\.dataset\.mode=mode;/);
 });

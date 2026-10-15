@@ -60,5 +60,5 @@ test('copy: Noi and Settings rows carry a label, not a description', () => {
   assert.match(html, /<b>Sincronizzazione<\/b><\/span>/);
   assert.match(html, /<b>Distanza<\/b><\/span>/);
   // 1.0 (N3/N10): the old Lavagna and hub are gone; the week is a labelled tile.
-  assert.match(html, /<b>La nostra settimana<\/b><small>Sere libere<\/small>/);
+  assert.match(html, /<b>Lavagna<\/b>/);
 });

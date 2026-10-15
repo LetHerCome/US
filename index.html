@@ -558,7 +558,6 @@ html.us-returning-device .auth-overlay{
           <button type="button" id="usNoiV2IdeaCancel" aria-label="Annulla collegamento">Annulla</button>
         </div>
         <div class="us-noi-v2-shortcuts">
-          <button type="button" id="usNoiV2WeekBack" hidden><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span><span>Torna al mese</span></button>
           <button type="button" id="usNoiV2First"><span class="us-icon" data-us-icon="heart" aria-hidden="true"></span><span>Il nostro giorno</span></button>
           <button type="button" class="us-noi-v2-today" id="usNoiV2Today"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span><span>Torna a oggi</span></button>
           <span class="us-noi-v2-sync" id="usNoiV2Sync" role="status" aria-live="polite"></span>
@@ -566,9 +565,9 @@ html.us-returning-device .auth-overlay{
         <div id="usNoiV2Content" class="us-noi-v2-content"><p class="us-noi-v2-empty">Carico il calendario…</p></div>
         <section id="usNoiV2Detail" class="us-noi-v2-detail" aria-label="Giorno selezionato" aria-live="polite"></section>
         <nav class="us-noi-v2-links" aria-label="Altre sezioni di Noi">
-          <button type="button" data-noi-open-link="lavagna"><span class="us-noi-v2-link-icon" aria-hidden="true"><span class="us-icon" data-us-icon="chalkboard-simple"></span></span><span class="us-noi-v2-link-copy"><b>La nostra settimana</b><small>Sere libere</small></span></button>
-          <button type="button" data-noi-open-link="quest"><span class="us-noi-v2-link-icon" aria-hidden="true"><span class="us-icon" data-us-icon="flag-banner"></span></span><span class="us-noi-v2-link-copy"><b>Missioni</b><small>Di coppia</small></span></button>
-          <button type="button" data-noi-open-link="eventi"><span class="us-noi-v2-link-icon" aria-hidden="true"><span class="us-icon" data-us-icon="calendar-heart"></span></span><span class="us-noi-v2-link-copy"><b>Eventi</b><small>Date speciali</small></span></button>
+          <button type="button" data-noi-open-link="lavagna"><span class="us-noi-v2-link-icon" aria-hidden="true"><span class="us-icon" data-us-icon="chalkboard-simple"></span></span><span class="us-noi-v2-link-copy"><b>Lavagna</b></span></button>
+          <button type="button" data-noi-open-link="quest"><span class="us-noi-v2-link-icon" aria-hidden="true"><span class="us-icon" data-us-icon="flag-banner"></span></span><span class="us-noi-v2-link-copy"><b>Missioni</b></span></button>
+          <button type="button" data-noi-open-link="eventi"><span class="us-noi-v2-link-icon" aria-hidden="true"><span class="us-icon" data-us-icon="calendar-heart"></span></span><span class="us-noi-v2-link-copy"><b>Eventi</b></span></button>
         </nav>
       </section>
 
@@ -600,10 +599,17 @@ html.us-returning-device .auth-overlay{
         <div class="us-progression-rewards" id="usProgressionRewards" aria-live="polite"></div>
       </section>
 
-      <section class="noi-living-section" aria-labelledby="noiLivingTitle">
-        <div class="noi-section-title-row"><div><h3 id="noiLivingTitle">Missioni di coppia</h3></div><span class="noi-section-symbol" aria-hidden="true">↗</span></div>
+      <!-- Missioni (with Le vostre idee) opens as a Foglio over the Noi calendar. -->
+      <div class="noi-sheet us-foglio" id="noiQuestSheet" aria-hidden="true" data-us-modal data-us-motion-surface>
+      <div class="noi-sheet-scrim us-modal-backdrop" data-noi-sheet-close></div>
+      <section class="noi-living-section" role="dialog" aria-modal="true" aria-labelledby="noiLivingTitle" data-us-modal-panel>
+        <header class="noi-sheet-head"><div><span class="tiny" id="noiQuestKicker">Questa settimana</span><h3 id="noiLivingTitle">Missioni di coppia</h3></div><button type="button" class="us-modal-close noi-sheet-x" id="noiQuestClose" data-us-modal-close data-noi-sheet-close aria-label="Chiudi le missioni"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
         <div id="questWeekBoard" class="quest-week" hidden></div>
         <div id="bondQuestList" class="bond-quest-list noi-living-list" aria-live="polite"><div class="noi-quiet-state"><b>La prossima missione</b></div></div>
+        <section class="quest-recent" id="questRecent" aria-labelledby="questRecentTitle" hidden data-open="false">
+          <button type="button" class="quest-recent-toggle" id="questRecentToggle" aria-expanded="false" aria-controls="questRecentList"><span class="quest-recent-mark" aria-hidden="true"><span class="us-icon" data-us-icon="clock-counter-clockwise"></span></span><b id="questRecentTitle">Settimane passate<small>Le missioni che avete fatto</small></b><span class="us-icon quest-recent-caret" data-us-icon="caret-right" aria-hidden="true"></span></button>
+          <ul class="quest-recent-list" id="questRecentList"></ul>
+        </section>
         <div class="bond-week-note" aria-hidden="true"><span id="bondWeekReset"></span><span></span></div>
         <section class="noi-idea-section" aria-labelledby="noiIdeaTitle" hidden>
           <div class="noi-idea-browse" id="noiIdeaBrowse">
@@ -660,11 +666,8 @@ html.us-returning-device .auth-overlay{
             </form>
           </div>
         </section>
-        <section class="quest-recent" id="questRecent" aria-labelledby="questRecentTitle" hidden>
-          <div class="noi-section-kicker" id="questRecentTitle">Settimane passate</div>
-          <ul class="quest-recent-list" id="questRecentList"></ul>
-        </section>
       </section>
+      </div>
 
       <section class="noi-events-section" id="noiEventsSection" aria-labelledby="noiEventsTitle">
         <div class="noi-section-title-row">
@@ -848,54 +851,62 @@ html.us-returning-device .auth-overlay{
   <div class="us-events-backdrop us-modal-backdrop" onclick="closeEvents()"></div>
   <section class="us-events-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="usEventsTitle" data-us-modal-panel>
     <header class="us-events-head">
-      <div><div class="tiny">NOI DUE</div><h2 id="usEventsTitle">I nostri eventi</h2></div>
+      <div><div class="tiny" id="usEventsKicker">Noi due</div><h2 id="usEventsTitle">I nostri eventi</h2></div>
       <button type="button" class="us-events-close us-modal-close" onclick="closeEvents()" aria-label="Chiudi eventi" data-us-modal-close><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
     </header>
 
     <div id="usEventsBrowse">
       <button type="button" class="us-next-event" id="usNextEventCard" hidden>
-        <span class="us-next-event-kicker">PROSSIMO</span>
+        <span class="us-next-event-kicker">Prossimo</span>
         <strong id="usNextEventTitle">Il prossimo evento</strong>
-        <span class="us-next-event-date" id="usNextEventDate"></span>
-        <b id="usNextEventCountdown"></b>
+        <span class="us-next-event-date"><span id="usNextEventDate"></span><span class="us-next-event-sep" aria-hidden="true"> · </span><span id="usNextEventCountdown"></span></span>
+        <svg class="us-next-event-venn" viewBox="0 0 58 36" width="70" height="42" aria-hidden="true" focusable="false"><circle cx="20" cy="18" r="15" style="fill:var(--us-rosa)"/><circle cx="38" cy="18" r="15" style="fill:var(--us-lilla)"/><path d="M29 6a15 15 0 0 1 0 24 15 15 0 0 1 0-24z" style="fill:var(--us-noi)"/></svg>
       </button>
-
-      <div class="us-events-list-head"><b>In arrivo</b><small id="usEventsCount"></small></div>
-      <div class="us-events-list" id="usEventsList" aria-live="polite">
-        <div class="us-events-empty">Carico i vostri eventi…</div>
-      </div>
 
       <section class="us-events-subsection" id="usEventsDueSection" hidden>
         <div class="us-events-list-head"><b>Da segnare</b></div>
         <div class="us-events-list" id="usEventsDueList"></div>
       </section>
 
+      <div class="us-events-list-head"><b>In arrivo</b><small id="usEventsCount"></small></div>
+      <div class="us-events-list" id="usEventsList" aria-live="polite">
+        <div class="us-events-empty">Carico i vostri eventi…</div>
+      </div>
+
       <section class="us-events-subsection" id="usEventsDoneSection" hidden>
-        <div class="us-events-list-head"><b>Completati</b></div>
+        <div class="us-events-list-head"><b>Vissuti</b></div>
         <div class="us-events-list us-events-done-list" id="usEventsDoneList"></div>
       </section>
 
       <button type="button" class="us-event-add" onclick="beginAddEvent()"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span>Aggiungi evento</button>
     </div>
 
-    <form class="us-event-form" id="usEventForm" hidden>
-      <div class="us-event-form-title"><button type="button" class="us-event-back us-icon-button" onclick="cancelEventEdit()" aria-label="Torna agli eventi"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span></button><div><div class="tiny" id="usEventFormKicker">EVENTO</div><h3 id="usEventFormTitle">Nuovo evento</h3></div></div>
+    <!-- One event: its detail (mockup "evento"), or the form to add or change it. -->
+    <form class="us-event-form" id="usEventForm" data-mode="edit" hidden>
+      <button type="button" class="us-event-back" onclick="cancelEventEdit()"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span><span>I nostri eventi</span></button>
+      <div class="us-event-form-title" hidden><div class="tiny" id="usEventFormKicker">Noi due</div><h3 id="usEventFormTitle">Nuovo evento</h3></div>
 
-      <label class="us-event-field"><span>Che cosa?</span><input id="usEventTitleInput" type="text" maxlength="120" placeholder="Es. Atene, concerto" required></label>
-
-      <div class="us-event-row">
-        <label class="us-event-field"><span>Quando?</span><input id="usEventDateInput" type="date" required></label>
-        <label class="us-event-field"><span>Ora <i>opzionale</i></span><input id="usEventTimeInput" type="time"></label>
+      <div class="us-event-detail" id="usEventDetail">
+        <div class="us-event-meta"><span class="us-event-meta-dot" aria-hidden="true"></span><span><b id="usEventDetailWhen"></b><small id="usEventDetailWhere"></small></span></div>
+        <p class="us-event-detail-note" id="usEventDetailNote" translate="no" hidden></p>
+        <p class="us-event-lead" id="usEventDetailLead"></p>
       </div>
 
-      <label class="us-event-field"><span>Dove? <i>opzionale</i></span><input id="usEventLocationInput" type="text" maxlength="160" placeholder="Es. Roma"></label>
-      <label class="us-event-field"><span>Una nota <i>opzionale</i></span><textarea id="usEventNoteInput" rows="3" maxlength="500" placeholder="Nota"></textarea></label>
-
-      <label class="us-event-repeat"><input id="usEventRecurringInput" type="checkbox"><span><b>Ogni anno</b></span></label>
+      <div class="us-event-fields">
+        <label class="us-event-field"><span>Che cosa?</span><input id="usEventTitleInput" type="text" maxlength="120" placeholder="Il nostro primo concerto" required></label>
+        <label class="us-event-field"><span>Quando?</span><input id="usEventDateInput" type="date" required></label>
+        <div class="us-event-row">
+          <label class="us-event-field"><span>Ora <i>· facoltativa</i></span><input id="usEventTimeInput" type="time"></label>
+          <label class="us-event-field"><span>Dove? <i>· facoltativo</i></span><input id="usEventLocationInput" type="text" maxlength="160" placeholder="Milano"></label>
+        </div>
+        <label class="us-event-field"><span>Una nota <i>· facoltativa</i></span><textarea id="usEventNoteInput" rows="3" maxlength="500" placeholder="Biglietti nella mail"></textarea></label>
+        <label class="us-event-repeat"><input id="usEventRecurringInput" type="checkbox" role="switch"><span><b>Ogni anno</b><small>Per compleanni e ricorrenze</small></span></label>
+      </div>
 
       <div class="us-event-status" id="usEventStatus" role="status" aria-live="polite"></div>
       <button type="button" class="us-event-complete" id="usEventCompleteBtn" hidden></button>
       <div class="us-event-actions">
+        <button type="button" class="us-event-edit" id="usEventEditBtn">Modifica</button>
         <button type="button" class="us-event-delete" id="usEventDeleteBtn" hidden>Elimina</button>
         <button type="submit" class="primary us-event-save" id="usEventSaveBtn">Salva evento</button>
       </div>
@@ -1080,6 +1091,18 @@ html.us-returning-device .auth-overlay{
   </section>
 </div>
 
+<!-- Lavagna: the week of both of you, a Foglio over the Noi calendar (noi-v2.js fills it). -->
+<div class="us-cal-sheet-overlay us-foglio us-noi-lavagna" id="usNoiLavagna" aria-hidden="true" data-us-modal data-us-motion-surface>
+  <div class="us-cal-sheet-backdrop us-modal-backdrop" data-noi-week-close></div>
+  <section class="us-cal-sheet us-sheet is-bottom us-noi-lavagna-sheet" role="dialog" aria-modal="true" aria-labelledby="usNoiLavagnaTitle" data-us-modal-panel>
+    <header class="us-cal-sheet-head">
+      <div class="us-cal-sheet-titles"><small class="tiny us-cal-sheet-kicker">Lavagna</small><h3 id="usNoiLavagnaTitle">Questa settimana</h3></div>
+      <button type="button" class="us-cal-sheet-close us-modal-close us-icon-center" id="usNoiV2WeekBack" hidden data-us-modal-close aria-label="Chiudi la lavagna"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button>
+    </header>
+    <div class="us-noi-lavagna-body" id="usNoiV2Week" aria-live="polite"></div>
+  </section>
+</div>
+
 <!-- Noi calendar editors: the day detail and the "+" form open over Noi. -->
 <div class="us-cal-sheet-overlay" id="usCalendarDetailSheet" aria-hidden="true" data-us-modal data-us-motion-surface>
   <div class="us-cal-sheet-backdrop us-modal-backdrop" id="usCalendarDetailBackdrop"></div>
@@ -1117,7 +1140,7 @@ html.us-returning-device .auth-overlay{
         <button type="button" id="usCalendarPresetUniversity" data-us-calendar-preset="Università" aria-pressed="false">Università</button>
         <button type="button" id="usCalendarPresetOut" data-us-calendar-preset="Uscita" aria-pressed="false">Uscita</button>
       </div>
-      <label class="us-cal-field"><span>Titolo <i>opzionale se scegli sopra</i></span><input id="usCalendarTitleInput" type="text" maxlength="200" required autocomplete="off" placeholder="Che cosa fai?"></label>
+      <label class="us-cal-field"><span>Che cosa fai?</span><input id="usCalendarTitleInput" type="text" maxlength="200" required autocomplete="off" placeholder="Che cosa fai?"></label>
       <label class="us-cal-field" id="usCalendarDateField" hidden><span>Giorno</span><input id="usCalendarDateInput" type="date"></label>
       <label class="us-cal-field us-cal-allday-field"><input id="usCalendarAllDayInput" type="checkbox"><span>Tutto il giorno</span></label>
       <div class="us-cal-time-fields" id="usCalendarTimeFields">

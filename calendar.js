@@ -792,17 +792,28 @@ function openDetail(entryId) {
   const title = $('usCalendarDetailTitle');
   if (title) title.textContent = entry.title;
   const isShared = entry.entry_type === 'shared';
+  const owner = isShared ? 'noi' : entry.owner_id === window.usProfile?.id ? 'tu' : 'partner';
   const identityLabel = isShared ? `Insieme · creato da ${profileName(entry.created_by)}` : `Personale di ${profileName(entry.owner_id)}`;
+  // The mockup's .ev-meta: "Mercoledì 14 ottobre · 21:00–23:30", then place and whose.
+  const startDay = entry.is_all_day ? entry.start_date : localDateFromInstant(entry.starts_at);
+  const endDay = entry.is_all_day ? entry.end_date : localDateFromInstant(entry.ends_at);
+  const oneDay = startDay === endDay;
+  const hhmm = (value) => { const d = new Date(value); return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
   const dateLabel = entry.is_all_day
-    ? formatDateRangeLabel(entry.start_date, entry.end_date)
-    : `${formatDateRangeLabel(localDateFromInstant(entry.starts_at), localDateFromInstant(entry.ends_at))} · ${entryTimeLabel(entry)}`;
-  const rows = [`<p class="us-cal-detail-kind">${esc(identityLabel)}</p>`, `<p class="us-cal-detail-date">${esc(dateLabel)}</p>`];
-  if (entry.location) rows.push(`<p class="us-cal-detail-location" translate="no">${esc(entry.location)}</p>`);
+    ? (oneDay ? `${longDayLabel(startDay)} · Tutto il giorno` : formatDateRangeLabel(startDay, endDay))
+    : oneDay ? `${longDayLabel(startDay)} · ${hhmm(entry.starts_at)}–${hhmm(entry.ends_at)}`
+      : `${formatDateRangeLabel(startDay, endDay)} · ${entryTimeLabel(entry)}`;
+  const place = entry.location ? `<span class="us-cal-detail-location" translate="no">${esc(entry.location)}</span> · ` : '';
+  const rows = [`<div class="us-cal-detail-meta"><span class="us-cal-detail-dot" aria-hidden="true"></span><span><b class="us-cal-detail-date">${esc(dateLabel)}</b><small class="us-cal-detail-kind">${place}${esc(identityLabel)}</small></span></div>`];
   if (entry.description) rows.push(`<p class="us-cal-detail-note" translate="no">${esc(entry.description)}</p>`);
   const body = $('usCalendarDetailBody');
   if (body) body.innerHTML = rows.join('');
   // Due colori: the detail card carries whose it is (mine, theirs, ours).
-  if (body?.dataset) body.dataset.owner = isShared ? 'noi' : entry.owner_id === window.usProfile?.id ? 'tu' : 'partner';
+  if (body?.dataset) body.dataset.owner = owner;
+  const sheetEl = $('usCalendarDetailSheet');
+  if (sheetEl?.dataset) sheetEl.dataset.owner = owner;
+  const kicker = sheetEl?.querySelector?.('.us-cal-sheet-kicker');
+  if (kicker) kicker.textContent = isShared ? 'Insieme' : 'Impegno';
   const canEdit = window.usProfile ? canEditEntry(entry, window.usProfile.id) : false;
   const actions = $('usCalendarDetailActions');
   if (actions) actions.hidden = !canEdit;
