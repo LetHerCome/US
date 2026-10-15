@@ -374,7 +374,7 @@
     // ------------------------------------------------------------ Oggi: question of the day
     'Domanda del giorno': 'Question of the day',
     'Domanda del giorno: {question}. {action}': 'Question of the day: {question}. {action}',
-    'La domanda di oggi': 'Today’s question',
+    'La domanda di oggi': 'Question of the day',
     'Chiudi domanda del giorno': 'Close question of the day',
     'Scrivi…': 'Write…',
     Rispondi: 'Answer',
@@ -404,7 +404,7 @@
     'Rivedi ›': 'See again ›',
     'Apri ›': 'Open ›',
     'La domanda di oggi non è ancora disponibile.': 'Today’s question isn’t ready yet.',
-    'DOMANDA DI OGGI': 'TODAY’S QUESTION',
+    'DOMANDA DI OGGI': 'QUESTION OF THE DAY',
     'LA SFIDA DI OGGI': 'TODAY’S CHALLENGE',
     'Daily Challenge': 'Today’s challenge',
     Daily: 'Today’s',
@@ -1960,7 +1960,44 @@
     'Confermata. Ora tocca alla tua persona ♡': 'Confirmed. Now it’s your person’s turn ♡',
 
     // ------------------------------------------------------------ Lead glue 1.0
-    '{date} · {what}': '{date} · {what}'
+    '{date} · {what}': '{date} · {what}',
+
+    // ------------------------------------------------------------ Today 1.0
+    'LA DOMANDA DI OGGI': 'QUESTION OF THE DAY',
+    'Chiudi la domanda di oggi': 'Close the question of the day',
+    'Svelate · domani una nuova domanda': 'Revealed · a new question tomorrow',
+    'Preparo la domanda di oggi…': 'Getting today’s question ready…',
+    '{name} ha messo ♥ alla tua risposta': '{name} gave your answer a ♥',
+    '{name}: mi hai commosso': '{name}: you moved me',
+    'Mi hai commosso': 'You moved me',
+    'Metti un cuore alla risposta': 'Give the answer a heart',
+    'La tua reazione': 'Your reaction',
+    'Reazione non salvata. Riprova.': 'Reaction not saved. Try again.',
+    'Proprio ora': 'Just now',
+    '{name} ti ha lasciato un messaggio': '{name} left you a message',
+    '{name} ti ha lasciato una foto': '{name} left you a photo',
+    '{name} ti ha lasciato un vocale': '{name} left you a voice message',
+    '{name} ti ha lasciato un video': '{name} left you a video',
+    '{name} ti ha lasciato una canzone': '{name} left you a song',
+    '{name} ti ha lasciato {n} cose': '{name} left you {n} things',
+    'Oggi, tocca a te': 'Today, your turn',
+    '{name} ti aspetta': '{name} is waiting for you',
+    'Manca solo la tua conferma': 'Only your confirmation is missing',
+    'Oggi è un mese ♡': 'One month today ♡',
+    'Oggi sono {n} mesi ♡': '{n} months today ♡',
+    'Oggi è un anno ♡': 'One year today ♡',
+    'Oggi sono {n} anni ♡': '{n} years today ♡',
+    'Il vostro mesiversario': 'Your monthiversary',
+    'Ti penso, risposte e missioni, anche a US chiusa.': 'Thinking of you, answers and missions, even when US is closed.',
+    Countdown: 'Countdown',
+    Originale: 'Original',
+    Romantico: 'Romantic',
+    'Sogno pastello': 'Pastel dream',
+    Cinema: 'Cinema',
+    'Chiaro di luna': 'Moonlight',
+    'Ambra, foglie e una luce bassa e calda.': 'Amber, leaves and a low, warm light.',
+    'Luci sfocate': 'Soft lights',
+    'Come le luci di una sera in città.': 'Like the lights of an evening in town.'
   };
   if (typeof module === 'object' && module.exports) module.exports = EN;
   else window.UsI18n?.register('en', EN);
