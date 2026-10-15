@@ -453,9 +453,9 @@ test('M5F envelope uses the canonical Phosphor pair and a restrained trace, not 
 test('M5F top chrome: question icon for the daily question, no legacy avatar control', () => {
   const html = read('index.html');
   const css = read('styles.css');
-  // M10.1B: l'icona domanda vive solo nella card di Oggi; il controllo top-left è rimosso.
-  assert.match(read('app.js'), /us-daily-ritual-mark us-phosphor-question/);
-  assert.match(css, /us-daily-ritual-mark::before\{[^}]*mask:url\("\/assets\/icons\/phosphor\/question-regular\.svg"\)/);
+  // 1.0: la card di Oggi porta i due cerchi del mockup (mio, tuo, Noi con il cuore Phosphor); il controllo top-left è rimosso.
+  assert.match(read('app.js'), /<span class="us-daily-ritual-ring" data-glyph="\$\{escapeHtml\(model\.glyph\|\|'none'\)\}" data-us-attention-icon aria-hidden="true"><i class="us-daily-ritual-me"><\/i><i class="us-daily-ritual-you"><\/i><i class="us-daily-ritual-noi"><\/i><\/span>/);
+  assert.match(read('dc-oggi.css'), /#home #usDailyRitual \.us-daily-ritual-noi::after\{[^}]*mask:url\("\/assets\/icons\/phosphor\/heart-straight-fill\.svg"\)/);
   assert.doesNotMatch(html, /id="todayOrb"/);
   assert.doesNotMatch(html, /id="profileAvatarBtn"/);
   assert.doesNotMatch(html, /onclick="pickProfilePhoto\(\)"/);

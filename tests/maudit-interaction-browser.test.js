@@ -363,9 +363,10 @@ test('layering: transient notices keep Maudit touchable; exclusive blockers stil
     const alive = () => page.evaluate(() => { const hit = document.querySelector('.us-pet-hit').getBoundingClientRect();
       const el = document.elementFromPoint(hit.x + hit.width / 2, hit.y + hit.height / 2);
       return { blockers: window.USPet.blockers(), running: window.USPet.snapshot().running, vis: getComputedStyle(document.getElementById('usPetLayer')).visibility, touchable: Boolean(el?.classList.contains('us-pet-hit')) }; });
-    await page.evaluate(() => { document.getElementById('usDailyNudge').hidden = false; document.getElementById('toast').classList.add('show'); });
+    // 1.0: the Domanda di oggi is a card in the Oggi dock (the transient nudge is gone).
+    await page.evaluate(() => { document.getElementById('usDailyRitual').hidden = false; document.getElementById('toast').classList.add('show'); });
     await settle(page, 250);
-    assert.deepEqual(await alive(), { blockers: [], running: true, vis: 'visible', touchable: true }, 'Daily nudge + toast');
+    assert.deepEqual(await alive(), { blockers: [], running: true, vis: 'visible', touchable: true }, 'Daily card + toast');
     await page.evaluate(() => { usIncomingThink = { id: 'qa-think', sender_id: 'b1', created_at: new Date().toISOString() }; window.openThinkArrival(); });
     await settle(page, 300);
     assert.deepEqual(await alive(), { blockers: [], running: true, vis: 'visible', touchable: true }, 'Ti penso arrival');

@@ -22,15 +22,18 @@ test('game reveal: exact revealed choices are equal/different, never free-text g
  assert.match(games,/mark_game_session_reveal_seen/);
  assert.doesNotMatch(games.slice(games.indexOf('function renderCompactReveal'),games.indexOf('const WEEKLY_MORPH_MS')),/us-gv2-reveal-card|us-gv2-swipe-reveal-card/);
 });
-test('daily reveal: question and two answers only; no comments/reactions or duplicate input', async()=>{
+// 1.0 (O2): the two answers plus one tap on the other's (♥ / mi hai commosso); still no comments or duplicate input.
+test('daily reveal: question and two answers, one reaction on theirs; no comments or duplicate input', async()=>{
  const {installToday}=require('./helpers/m10-2-harness.js');
  const text=app.slice(app.indexOf('function renderTodayReveal(){'),app.indexOf('// "Visto" = il reveal'));
  assert.match(text,/data-us-daily-answer="mine"/);
  assert.match(text,/data-us-daily-answer="partner"/);
- assert.doesNotMatch(text,/data-daily-reaction|today-reactions|today-outcome/);
+ assert.doesNotMatch(text,/today-outcome/);
  const t=installToday();await t.hydrate();
- assert.match(t.nodes.todayReveal.innerHTML,/data-us-daily-answer="partner"/);
- assert.doesNotMatch(t.nodes.todayReveal.innerHTML,/data-daily-reaction|ha reagito|Parlatene insieme/);
+ const html=t.nodes.todayReveal.innerHTML;
+ assert.match(html,/data-us-daily-answer="partner"/);
+ assert.deepEqual([...html.matchAll(/data-daily-reaction="([a-z]+)"/g)].map(m=>m[1]),['heart','cry']);
+ assert.doesNotMatch(html,/ha reagito|Parlatene insieme/);
  assert.equal(t.nodes.answer.hidden,true);
  assert.equal(t.nodes.todaySaveBtn.hidden,true);
  assert.equal(t.nodes.locked.hidden,true);

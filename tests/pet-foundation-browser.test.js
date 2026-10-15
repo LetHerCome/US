@@ -7,16 +7,16 @@ async function preview(h,options){
  const view=await pageFor(h,options);
  await view.page.goto(h.base+'/?us-dev=1&us-pet=preview',{waitUntil:'load'});
  await view.page.waitForFunction(()=>window.USPet?.enabled&&document.getElementById('usPetLayer').dataset.petState);
- // Daily Question and Ti penso are transient: the PET must stay alive above both.
+ // The Domanda di oggi card (1.0: in the Oggi dock, no transient nudge) and Ti penso: the PET must stay alive above both.
  await view.page.evaluate(()=>{
-   document.getElementById('usDailyNudge').hidden=false;
+   document.getElementById('usDailyRitual').hidden=false;
    document.getElementById('toast').classList.add('show');
    // The real arrival path: openThinkArrival() makes it an (aria) modal.
    usIncomingThink={id:'qa-think',sender_id:'b1',created_at:new Date().toISOString()};window.openThinkArrival();
  });
  await view.page.waitForTimeout(300);
  const overlay=await view.page.evaluate(()=>{
-   const pet=document.getElementById('usPetLayer'),nudge=document.getElementById('usDailyNudge'),toast=document.getElementById('toast'),think=document.querySelector('.think-arrival-overlay');
+   const pet=document.getElementById('usPetLayer'),nudge=document.getElementById('usOggiDock'),toast=document.getElementById('toast'),think=document.querySelector('.think-arrival-overlay');
    return {
      visibility:getComputedStyle(pet).visibility,
      petZ:Number(getComputedStyle(pet).zIndex),
@@ -32,7 +32,7 @@ async function preview(h,options){
  assert.ok(overlay.petZ>overlay.nudgeZ&&overlay.petZ>overlay.toastZ&&overlay.petZ>overlay.thinkZ,JSON.stringify(overlay));
  assert.deepEqual({blockers:overlay.blockers,running:overlay.running,react:overlay.react},{blockers:[],running:true,react:true});
  await view.page.evaluate(()=>{
-   document.getElementById('usDailyNudge').hidden=true;
+   document.getElementById('usDailyRitual').hidden=true;
    document.getElementById('toast').classList.remove('show');
    window.closeThinkArrival();
    document.documentElement.style.setProperty('--us-safe-bottom','20px');
@@ -219,17 +219,18 @@ test('layer ladder: content < nav < notices < Ti penso < PET < every sheet < con
  try{
   const {page,ctx,errors}=await pageFor(h,{});
   const z=await page.evaluate(()=>{const v=q=>Number(getComputedStyle(document.querySelector(q)).zIndex);
-   return {nav:v('.nav'),toast:v('#toast'),nudge:v('#usDailyNudge'),status:v('#appStatusBar'),update:v('#appUpdateBar'),think:v('#thinkArrival'),pet:v('#usPetLayer'),
+   return {nav:v('.nav'),toast:v('#toast'),dock:v('#usOggiDock'),status:v('#appStatusBar'),update:v('#appUpdateBar'),think:v('#thinkArrival'),pet:v('#usPetLayer'),
     sheets:['#today','#usCountdownSheet','#usEventsOverlay','#leftForYouOverlay','#leftForYouComposerOverlay','#leftForYouCameraOverlay','#momentViewer','#usMomentComposeOverlay','#usSettingsOverlay','#usCalendarOverlay','#conservatiOverlay','#usAlbumOverlay'].map(q=>[q,v(q)]),
     unlock:v('#usProgressionUnlock'),auth:v('#authOverlay')};});
-  assert.ok(z.nav<z.toast&&z.toast<=z.nudge&&z.nudge<=z.status&&z.status===z.update&&z.update<z.think&&z.think<z.pet,JSON.stringify(z));
+  // 1.0: the Oggi dock (what waits for me + the Domanda di oggi) is content, under the nav; the transient nudge is gone.
+  assert.ok(z.dock<z.nav&&z.nav<z.toast&&z.toast<=z.status&&z.status===z.update&&z.update<z.think&&z.think<z.pet,JSON.stringify(z));
   for(const [q,value] of z.sheets)assert.ok(value>z.pet,`${q} (${value}) sits above the PET (${z.pet})`);
   assert.ok(z.unlock>z.pet);
   assert.ok(z.sheets.every(([,value])=>z.auth>value),'auth covers any sheet it interrupts');
   const confirmZ=await page.evaluate(()=>{const answer=window.UsUiFoundation.confirm({title:'QA',confirmLabel:'Ok'});const value=Number(getComputedStyle(document.querySelector('.us-confirm')).zIndex);document.querySelector('[data-us-confirm="cancel"]')?.click();return answer.then(()=>value);});
   assert.ok(z.sheets.every(([,value])=>confirmZ>value)&&confirmZ>z.pet,`confirm ${confirmZ}`);
   // No accidental stacking context traps a fixed surface below its rung.
-  const trapped=await page.evaluate(()=>['#thinkArrival','#usPetLayer','#today','#usCountdownSheet','#authOverlay','#toast','#usDailyNudge'].filter(q=>{
+  const trapped=await page.evaluate(()=>['#thinkArrival','#usPetLayer','#today','#usCountdownSheet','#authOverlay','#toast'].filter(q=>{
    for(let p=document.querySelector(q).parentElement;p&&p!==document.body;p=p.parentElement){const s=getComputedStyle(p);if(s.transform!=='none'||s.filter!=='none'||s.isolation==='isolate'||(s.position!=='static'&&s.zIndex!=='auto')||Number(s.opacity)<1)return true;}return false;}));
   assert.deepEqual(trapped,[]);
   assert.deepEqual(errors,[]);await ctx.close();

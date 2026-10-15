@@ -10,13 +10,14 @@
 'use strict';
 if (window.USOggiLook) return;
 
+// O11 (1.0) — Italian names; the seasonal theme speaks of no month.
 const THEMES = Object.freeze([
-  { id: 'original', name: 'US Original', note: 'Il vostro Oggi di sempre, senza aggiunte.', reward: null },
-  { id: 'romantic', name: 'Romantic', note: 'Rosa delicato e luce morbida sulla vostra foto.', reward: null },
-  { id: 'pastel', name: 'Pastel Dream', note: 'Colori chiari e leggeri, come un acquerello.', reward: null },
-  { id: 'cinematic', name: 'Cinematic', note: 'Bande nere, grana e il tempo come titoli di testa.', reward: 'oggi_theme_cinematic', level: 4 },
-  { id: 'moonlight', name: 'Moonlight', note: 'Notte blu, stelle e un riflesso di luna.', reward: 'oggi_theme_moonlight', level: 7 },
-  { id: 'seasonal', name: 'Autunno', kicker: 'Stagioni', note: 'Ambra, foglie e la luce bassa di ottobre.', reward: 'oggi_theme_seasonal', level: 12 }
+  { id: 'original', name: 'Originale', note: 'Il vostro Oggi di sempre, senza aggiunte.', reward: null },
+  { id: 'romantic', name: 'Romantico', note: 'Rosa delicato e luce morbida sulla vostra foto.', reward: null },
+  { id: 'pastel', name: 'Sogno pastello', note: 'Colori chiari e leggeri, come un acquerello.', reward: null },
+  { id: 'cinematic', name: 'Cinema', note: 'Bande nere, grana e il tempo come titoli di testa.', reward: 'oggi_theme_cinematic', level: 4 },
+  { id: 'moonlight', name: 'Chiaro di luna', note: 'Notte blu, stelle e un riflesso di luna.', reward: 'oggi_theme_moonlight', level: 7 },
+  { id: 'seasonal', name: 'Autunno', kicker: 'Stagioni', note: 'Ambra, foglie e una luce bassa e calda.', reward: 'oggi_theme_seasonal', level: 12 }
 ]);
 const EFFECTS = Object.freeze([
   { id: 'none', name: 'Nessuno', note: 'Solo la vostra foto.', reward: null, count: 0 },
@@ -24,7 +25,7 @@ const EFFECTS = Object.freeze([
   { id: 'stars', name: 'Stelle luminose', note: 'Stelle che brillano a turno.', reward: null, count: 12 },
   { id: 'petals', name: 'Petali fluttuanti', note: 'Petali rosa scendono nel vento.', reward: 'oggi_effect_petals', level: 2, count: 10 },
   { id: 'fireflies', name: 'Lucciole', note: 'Punti di luce calda vagano lenti.', reward: 'oggi_effect_fireflies', level: 6, count: 10 },
-  { id: 'bokeh', name: 'Bokeh romantico', note: 'Luci sfocate, come una sera in città.', reward: 'oggi_effect_bokeh', level: 10, count: 7 },
+  { id: 'bokeh', name: 'Luci sfocate', note: 'Come le luci di una sera in città.', reward: 'oggi_effect_bokeh', level: 10, count: 7 },
   { id: 'snow', name: 'Neve', note: 'Fiocchi leggeri, mai una bufera.', reward: 'oggi_effect_snow', level: 13, count: 16 }
 ]);
 const CATALOG = { theme: THEMES, effect: EFFECTS };
@@ -132,7 +133,7 @@ function apply(next = {}) {
 }
 function paintSettings() {
   const theme = $('usOggiThemeValue');
-  if (theme) theme.textContent = find('theme', applied.theme)?.name || 'US Original';
+  if (theme) theme.textContent = find('theme', applied.theme)?.name || 'Originale';
   const effect = $('usOggiEffectValue');
   if (effect) effect.textContent = find('effect', applied.effect)?.name || 'Nessuno';
 }

@@ -129,32 +129,6 @@ function modeStatus(f, open) {
   return null;
 }
 
-// Gioca V4: visual day rail, without a fabricated streak.
-function romeDayISO(){
- const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
- const p=name=>parts.find(x=>x.type===name)?.value;
- return `${p('year')}-${p('month')}-${p('day')}`;
-}
-function dayRail(){
- const currentISO=romeDayISO(),[y,m,d]=currentISO.split('-').map(Number);
- const today=new Date(Date.UTC(y,m-1,d,12));
- const monday=new Date(today);
- monday.setUTCDate(today.getUTCDate()-((today.getUTCDay()+6)%7));
- const tag=globalThis.UsI18n?.tag||'it-IT';
- const labels=tag==='it-IT'?['L','M','M','G','V','S','D']:Array.from({length:7},(_,i)=>new Date(Date.UTC(2024,0,1+i,12)).toLocaleDateString(tag,{weekday:'narrow',timeZone:'UTC'}));
- const days=labels.map((label,i)=>{
-  const date=new Date(monday);date.setUTCDate(monday.getUTCDate()+i);
-  const stamp=`${date.getUTCFullYear()}-${String(date.getUTCMonth()+1).padStart(2,'0')}-${String(date.getUTCDate()).padStart(2,'0')}`;
-  const active=stamp===currentISO;
-  const full=date.toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'});
-  return `<span class="us-gv4-day${active?' is-today':''}" ${active?'aria-current="date"':''} aria-label="${esc(full)}${active?', oggi':''}"><small>${label}</small><b>${date.getUTCDate()}</b>${active?'<i aria-hidden="true"></i>':''}</span>`;
- }).join('');
- return `<section class="us-gv4-week" aria-label="Giorni della settimana">
-   <div class="us-gv4-week-head"><h3>La vostra settimana</h3><span>Una sfida ogni giorno</span></div>
-   <div class="us-gv4-days" role="group" aria-label="Sette giorni, solo oggi evidenziato">${days}</div>
- </section>`;
-}
-
 // ---------------------------------------------------------------- hub
 
 const glyph = (name) => `<span class="us-gv2-glyph" aria-hidden="true">${icon(name)}</span>`;
@@ -240,7 +214,7 @@ function gameCard({ id, name, iconName, kind, action, extraClass = '', status })
     </button>`;
 }
 
-// Gioca V4: the Sfida di oggi leads; the weekly games keep server authority.
+// Gioca V4: La domanda di oggi leads; the weekly games keep server authority.
 function renderHub() {
  const root=byId('quizHub');if(!root)return;
  const pv=perVoiCopy(),pvState=home?.per_voi?.state||'idle';
@@ -250,8 +224,7 @@ function renderHub() {
  const nothingYet=!continueRounds(home).length&&!doneRounds(home).length&&pvState==='idle';
  root.innerHTML=`
   <h2 class="us-gv2-sr">Gioca</h2>
-  <div class="us-gv2-daily-slot" data-gv4-daily-slot aria-live="polite"><div class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">Sfida di oggi</span><small>Preparo la sfida di oggi…</small></div></div>
-  ${dayRail()}
+  <div class="us-gv2-daily-slot" data-gv4-daily-slot aria-live="polite"><div class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">La domanda di oggi</span><small>Preparo la domanda di oggi…</small></div></div>
   <header class="us-gv2-head" aria-label="Disponibilità giochi settimanali">${rhythmStrip()}</header>
   ${continueSection(home)}
   <section class="us-gv2-choose" aria-labelledby="usGv2ChooseTitle">

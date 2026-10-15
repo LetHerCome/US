@@ -260,7 +260,6 @@ const GESTURE=Object.freeze({
 // page. Geometry is always read from the live DOM, never from fixed pixels.
 const PLANES=Object.freeze([
   {id:'nav',page:'',selector:'.nav'},
-  {id:'oggi-daily-top',page:'home',selector:'#usDailyRitual'},
   {id:'oggi-priority-top',page:'home',selector:'#usTodayPriorityRegion'},
   {id:'noi-week-board-top',page:'bond',selector:'#noiWeekBoardOpen'},
   {id:'noi-sintonia-top',page:'bond',selector:'#noiHub .noi-hub-card--resonance'},
@@ -268,7 +267,6 @@ const PLANES=Object.freeze([
   {id:'ricordi-conservati-top',page:'moments',selector:'#conservatiEntry'},
   {id:'ricordi-month-top',page:'moments',selector:'#momentsGrid .ricordi-feature'},
   {id:'ricordi-chapters-top',page:'moments',selector:'#ricordiChapters .ricordi-chapter-row'},
-  {id:'gioca-daily-top',page:'quiz',selector:'#quizHub .us-gv2-daily'},
   {id:'gioca-pervoi-top',page:'quiz',selector:'#quizHub .us-gv2-pervoi'},
   {id:'gioca-swipe-top',page:'quiz',selector:'#quizHub .us-gv2-game.is-swipe'},
   {id:'gioca-modes-top',page:'quiz',selector:'#quizHub .us-gv2-choose'}

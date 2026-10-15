@@ -36,6 +36,16 @@ function display(item,now=new Date()){
   const pad=n=>String(n).padStart(2,'0');const clock=`${pad(Math.floor(seconds/3600)%24)}:${pad(Math.floor(seconds/60)%60)}:${pad(seconds%60)}`;
   return days?{value:String(days),unit:days===1?'giorno':'giorni',label:clock}:{value:clock,unit:'',label:delta<=0?'Ci siamo':''};
 }
+// O9 — a countdown lives until its day ("Ci siamo"); from the next day (Rome)
+// Oggi goes back to "Insieme da" by itself. The stored choice is not touched.
+function civilDay(at){const p=civil.formatToParts(at);const v=t=>p.find(e=>e.type===t).value;return dayNumber(`${v('year')}-${v('month')}-${v('day')}`);}
+function passed(item,now=new Date()){
+  if(!item)return false;
+  if(item.mode==='days'){const day=dayNumber(item.target);return Number.isFinite(day)&&day<todayNumber(now);}
+  if(item.mode!=='clock'||typeof item.target!=='string'||!item.target)return false;
+  const at=new Date(item.target);
+  return Number.isFinite(+at)&&civilDay(at)<todayNumber(now);
+}
 function available(id,progression){const s=STYLES.find(s=>s.id===id);return Boolean(s&&(!s.reward||progression?.rewards?.some(r=>r.id===s.reward&&r.unlocked)));}
 
 function install(w){
@@ -55,10 +65,16 @@ function install(w){
   const copy=()=>({items:(state?.items||[]).map(e=>({...e})),active_id:state?.active_id??null,together_style:state?.together_style||'editorial'});
   function restoreControls(){pendingControls?.forEach((disabled,control)=>control.disabled=disabled);pendingControls=null;}
   function clear(suspend=false){generation++;restoreControls();owner=key();suspendedOwner=suspend?owner:'';state=null;loading=null;busy=false;draft=null;lastAttempt=0;root.removeAttribute('aria-busy');close();paint();}
+  function together(){
+    const view=relationship(state?.started_on);
+    return view?{id:'together',title:'Insieme da',style:state.together_style,view,together:true}:null;
+  }
   function selected(){
     if(!state)return null;
-    if(state.active_id==='together')return relationship(state.started_on)?{title:'Insieme da',style:state.together_style,view:relationship(state.started_on)}:null;
-    const e=state.items?.find(e=>e.id===state.active_id);return e?{...e,view:display(e)}:null;
+    if(state.active_id==='together')return together();
+    const e=state.items?.find(e=>e.id===state.active_id);
+    if(!e)return null;
+    return passed(e)?together():{...e,view:display(e)};
   }
   // Insieme da reads "430 giorni insieme" in the Oggi type (the tail only shows where the style asks for it).
   // own: the title is the one you wrote (not "Insieme da" or the editor's placeholder), kept as written.
@@ -69,12 +85,15 @@ function install(w){
   function tick(){
     if(key()!==owner){clear();if(key())hydrate();return;}
     const e=selected(),view=e?.view;
-    const shown=Boolean(view&&available(e.style,progression())&&!hero.classList.contains('is-empty'));
+    // O9 — the time stays on Oggi with or without a photo.
+    const shown=Boolean(view&&available(e.style,progression()));
     surface.hidden=!shown;hero.toggleAttribute('data-us-countdown',shown);
+    // Nothing on Oggi ("Nessuno in Oggi", or not ready yet): one quiet way back.
+    const entry=$('usCountdownEntry');if(entry)entry.hidden=shown||!state;
     if(!shown)return;
     surface.setAttribute('aria-label',`${e.title}, ${view.value} ${view.unit} ${view.label}. Modifica countdown`);
-    const signature=`${state.active_id}:${e.style}:${view.value.length}:${e.title}`;
-    if(surface.dataset.signature!==signature){surface.innerHTML=markup(view,e.title,e.style,state.active_id==='together');surface.dataset.signature=signature;}
+    const signature=`${e.together?'together':state.active_id}:${e.style}:${view.value.length}:${e.title}`;
+    if(surface.dataset.signature!==signature){surface.innerHTML=markup(view,e.title,e.style,Boolean(e.together));surface.dataset.signature=signature;}
     else{
       const digits=surface.querySelectorAll('.us-countdown-digit');
       [...view.value].forEach((c,i)=>{if(digits[i].textContent!==c){digits[i].textContent=c;w.UsUiFoundation?.playOnce?.(digits[i],'is-changing',380);}});
@@ -204,7 +223,7 @@ function install(w){
     const premium=STYLES.find(s=>s.id===e.style)?.reward;
     if(premium&&!progression())return null;
     if(!available(e.style,progression()))return {active:false,style:e.style};
-    if(state.active_id==='together')return {active:true,kind:'together',title:'Insieme da',target:state.started_on||'',style:e.style||'editorial'};
+    if(e.together)return {active:true,kind:'together',title:'Insieme da',target:state.started_on||'',style:e.style||'editorial'};
     return {active:true,kind:e.mode==='clock'?'clock':'days',title:e.title||'Il nostro momento',target:e.target||'',style:e.style||'editorial'};
   }
   function activeStyle(){return selected()?.style||'';}
@@ -215,7 +234,7 @@ function install(w){
     if(!state)await hydrate();
     if(busy||!state||!state.active_id||!available(styleId,progression()))return false;
     const next=copy();
-    if(next.active_id==='together')next.together_style=styleId;
+    if(next.active_id==='together'||selected()?.together)next.together_style=styleId;
     else{
       const index=next.items.findIndex(item=>item.id===next.active_id);
       if(index<0)return false;
@@ -281,5 +300,5 @@ function install(w){
   if(typeof sb!=='undefined')sb.auth.onAuthStateChange(event=>{if(event==='SIGNED_OUT')clear(true);});
   if(key())hydrate();
 }
-return {STYLES,display,relationship,available,install};
+return {STYLES,display,relationship,available,passed,install};
 });

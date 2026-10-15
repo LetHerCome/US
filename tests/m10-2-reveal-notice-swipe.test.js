@@ -44,11 +44,14 @@ async function oggi(daily, opts) {
 }
 const source = (me, other, m) => ({ question: QUESTION, state: state(me, other), reveal: m, partnerName: 'Bea' });
 
-test('M10.2 matrice Oggi: nessuno / uno solo ha risposto → nessun avviso, card Daily solo a chi non ha risposto', async () => {
+// 1.0 (O1): the Daily card stays until both answered (waiting state after mine),
+// and after the reveal it offers "Rivedi" until tomorrow.
+test('M10.2 matrice Oggi: nessuno / uno solo ha risposto → nessun avviso, card Daily per entrambi (in attesa dopo la mia risposta)', async () => {
   const neither = await oggi(source(null, null));
   assert.deepEqual([neither.dailyCardVisible, neither.noticeVisible, neither.linkVisible], [true, false, false]);
   const meAnswered = await oggi(source('Mia', null));           // Francesco ha risposto
-  assert.deepEqual([meAnswered.dailyCardVisible, meAnswered.noticeVisible, meAnswered.linkVisible], [false, false, false]);
+  assert.deepEqual([meAnswered.dailyCardVisible, meAnswered.noticeVisible, meAnswered.linkVisible], [true, false, false]);
+  assert.equal(meAnswered.nodes.usDailyRitual.dataset.state, 'waiting');
   const partnerPending = await oggi(source(null, 'Sua'));        // Beatrice non ha ancora risposto
   assert.deepEqual([partnerPending.dailyCardVisible, partnerPending.noticeVisible, partnerPending.linkVisible], [true, false, false]);
   // Un meta arrivato in ritardo non può accendere l'avviso prima del reveal.
@@ -70,14 +73,18 @@ test('M10.2 matrice Oggi: entrambi hanno risposto, nessuno ha aperto → avviso 
   }
 });
 
-test('M10.2 matrice Oggi: aperto → avviso OFF + link passivo; nascosto → avviso OFF + link passivo; il partner non cambia', async () => {
+test('M10.2 matrice Oggi: aperto → avviso OFF + card "Rivedi"; nascosto → avviso OFF + card "Rivedi"; il partner non cambia', async () => {
   const opened = await oggi(source('Mia', 'Sua', meta({ my_reveal_seen_at: '2026-10-05T09:00:00Z' })));
-  assert.deepEqual([opened.dailyCardVisible, opened.noticeVisible, opened.linkVisible], [false, false, true]);
+  assert.deepEqual([opened.dailyCardVisible, opened.noticeVisible, opened.linkVisible], [true, false, true]);
+  assert.equal(opened.nodes.usDailyRitual.dataset.state, 'revealed');
+  assert.match(opened.nodes.usDailyRitual.innerHTML, /Svelate · domani una nuova domanda/);
+  assert.match(opened.nodes.usDailyRitual.innerHTML, /Rivedi/);
+  assert.doesNotMatch(opened.nodes.usDailyRitual.innerHTML, /Mia|Sua/, 'never the answers on Oggi');
   assert.equal(opened.nodes.usDailyRevealLink.textContent, 'Rivedi le risposte di oggi');
   assert.equal(opened.nodes.usDailyRevealLink.dataset.usQuestionId, 'q-1');
 
   const dismissed = await oggi(source('Mia', 'Sua', meta({ my_notice_dismissed_at: '2026-10-05T09:00:00Z' })));
-  assert.deepEqual([dismissed.dailyCardVisible, dismissed.noticeVisible, dismissed.linkVisible], [false, false, true]);
+  assert.deepEqual([dismissed.dailyCardVisible, dismissed.noticeVisible, dismissed.linkVisible], [true, false, true]);
   assert.equal(dismissed.priorities.length, 0);
 
   // Il partner riceve il proprio meta: il MIO seen/dismiss non lo tocca.

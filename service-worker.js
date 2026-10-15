@@ -55,7 +55,6 @@ const APP_SHELL = [
   versioned("/countdown.js"),
   versioned("/pet.css"),
   versioned("/pet.js"),
-  versioned("/home-cleanup.js"),
   versioned("/settings.css"),
   versioned("/settings.js"),
   versioned("/identity.css"),
