@@ -57,7 +57,7 @@ windowsTest('P1 recupera gli artefatti di verifica interrotti senza copiarli neg
 
   execFileSync(process.execPath, ['scripts/build-web-brand-assets.mjs'], {
     cwd: ROOT,
-    timeout: 10_000
+    timeout: 60_000 // the image build alone takes ~10 s on Windows; under full-suite load 10 s timed out
   });
 
   assert.equal(fs.existsSync(lockPath), false, 'il lock legacy deve essere recuperato');

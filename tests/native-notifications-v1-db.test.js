@@ -77,7 +77,9 @@ test.afterEach(async () => { await db?.close(); });
 
 test('N2 migration: forward-only, after every earlier migration, fails closed', () => {
   const files = fs.readdirSync(MIGRATIONS).filter((f) => f.endsWith('.sql')).sort();
-  assert.equal(files.at(-1), N2_FILE, 'newest migration');
+  // Newest when it shipped; later missions add migrations after it, never before.
+  assert.ok(files.includes(N2_FILE), 'N2 migration present');
+  for (const earlier of files.slice(0, files.indexOf(N2_FILE))) assert.ok(earlier.slice(0, 14) < N2_FILE.slice(0, 14), `${earlier} predates N2`);
   const cutoff = JSON.parse(read(path.join(ROOT, 'supabase/baseline/MIGRATION_CUTOFF.json')));
   assert.ok(cutoff.forward_migrations.includes(N2_FILE));
   assert.match(N2, /security definer\s+set search_path = ''/g);
