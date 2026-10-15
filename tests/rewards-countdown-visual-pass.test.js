@@ -32,11 +32,12 @@ test('Countdown visual pass: every style owns typography, composition and its ow
   // One motion signature each (orbit is driven by real seconds, not a keyframe).
   assert.match(block('editorial'), /us-countdown-rise/);
   assert.match(block('signal'), /us-countdown-flap/);
-  assert.match(block('glass'), /us-countdown-glint/);
+  // Parity 2026-10: in the mockup Vetro and Cromo are still (no glint, no sheen loop).
+  assert.doesNotMatch(block('glass'), /animation:/);
   assert.match(block('aurora'), /us-countdown-aurora/);
   assert.match(block('orbit'), /transform:rotate\(var\(--us-cd-sweep,0deg\)\);transition:transform 1s linear/);
   assert.match(block('orbit'), /\[data-sweep-jump\]::after\{transition:none;\}/);
-  assert.match(block('chrome'), /us-countdown-chrome/);
+  assert.doesNotMatch(block('chrome'), /animation:/);
   assert.match(countdownCss, /\.us-countdown-art \.us-countdown-title:empty\{display:none!important\}/);
 });
 
@@ -47,7 +48,7 @@ test('Countdown visual pass: reduced motion freezes everything, background and i
   assert.match(countdownCss, /html\[data-us-visibility="hidden"\] \.us-countdown-art \*/);
   assert.match(countdownCss, /#home:not\(\.active\) \.us-countdown-art \*/);
   // Only compositor-friendly properties are animated by the new keyframes.
-  for (const name of ['rise', 'flap', 'glint', 'chrome']) {
+  for (const name of ['rise', 'flap']) {
     const frames = countdownCss.match(new RegExp(`@keyframes us-countdown-${name}\\{(.*)\\}`))[1];
     assert.doesNotMatch(frames, /\b(width|height|top|left|margin|padding|font-size)\s*:/, name);
   }
@@ -129,12 +130,12 @@ test('Unlock moment: tells where the piece lives; retired pieces are never annou
   await api.hydrate({ showUnlocks: true, force: true });
   assert.equal(el('usProgressionUnlock').dataset.category, 'countdown', 'the badge is skipped, Aurora comes first');
   assert.equal(el('usProgressionUnlockCount').textContent, '', 'a single real unlock, not "1 di 2"');
-  assert.equal(el('usProgressionUnlockKicker').textContent, 'NUOVO STILE COUNTDOWN');
-  assert.equal(el('usProgressionUnlockTitle').textContent, 'Countdown «Aurora»');
-  assert.equal(el('usProgressionUnlockPlace').textContent, 'Sul countdown di Oggi');
+  assert.equal(el('usProgressionUnlockKicker').textContent, 'Nuovo stile countdown');
+  assert.equal(el('usProgressionUnlockTitle').textContent, 'Aurora', 'the mockup names the style itself');
+  assert.equal(el('usProgressionUnlockPlace').textContent, 'Il countdown di Oggi');
   assert.equal(el('usProgressionUnlockPlace').hidden, false);
   assert.equal(el('usProgressionUnlockExtra').hidden, true, 'the style is the reward itself, not an extra');
-  assert.match(el('usProgressionUnlockPreview').innerHTML, /data-countdown-style="aurora"/);
+  assert.match(el('usProgressionUnlockPreview').innerHTML, /class="cd" data-style="aurora"/);
   assert.equal(el('usProgressionUnlockUse').textContent, 'Usalo nel countdown');
   assert.deepEqual(reactions, [], 'the PET waits until the moment is over');
   await el('usProgressionUnlockUse').emit('click');
@@ -146,16 +147,17 @@ test('Collection: Countdown styles are a visible group whose locks follow the ex
   const { api, el, applied } = runProgression({ level: 9 });
   await api.hydrate({ showUnlocks: false, force: true });
   let markup = el('usProgressionRewards').innerHTML;
-  assert.match(markup, /data-category="countdown" aria-label="Stili Countdown"/);
+  assert.match(markup, /data-category="countdown" aria-label="Countdown"/);
   assert.match(markup, /<em>5\/6<\/em>/, 'three free + Aurora (L4) + Orbita (L9); Cromo still locked');
-  assert.match(markup, /data-countdown-style-select="chrome" disabled/);
-  assert.match(markup, /Con Cromo · livello 12/);
-  assert.doesNotMatch(markup, /data-countdown-style-select="orbit" disabled/);
+  // Round 3 (mockup parity): a locked tile still answers a tap ("Si sblocca al livello 12 di Sintonia").
+  assert.match(markup, /data-countdown-style-select="chrome" data-locked="true" data-level="12"/);
+  assert.match(markup, />Cromo<\/b><small>Livello 12<\/small>/);
+  assert.doesNotMatch(markup, /data-countdown-style-select="orbit" data-locked/);
   assert.match(markup, /class="[^"]*us-progression-countdown-style[^"]*is-equipped[^"]*"[^>]*data-countdown-style-select="editorial"[^>]*aria-pressed="true"/);
   assert.equal((markup.match(/us-progression-reward-plus/g) || []).length, 0, 'US V3: Aurora, Orbita and Cromo are presented as the styles themselves, not as frames/rings');
   assert.doesNotMatch(markup, /data-progression-reward="(?:badge|frame|ring)_/, 'retired categories have no tile');
-  assert.equal(el('usProgressionRewardsCount').textContent, '0 di 0', 'the count covers only rewards with a visible destination');
-  await el('usProgressionRewards').emit('click', { target: { closest: () => ({ disabled: false, dataset: { countdownStyleSelect: 'orbit' } }) } });
+  assert.equal(el('usProgressionRewardsCount').textContent, '5 di 6', 'the count covers every piece with a visible destination, the styles included (the mockup\'s 18 di 33)');
+  await el('usProgressionRewards').emit('click', { target: { closest: () => ({ disabled: false, dataset: { countdownStyleSelect: 'orbit' }, getAttribute: () => null }) } });
   assert.deepEqual(applied, ['orbit']);
   markup = el('usProgressionRewards').innerHTML;
   assert.match(markup, /class="[^"]*us-progression-countdown-style[^"]*is-equipped[^"]*"[^>]*data-countdown-style-select="orbit"[^>]*aria-pressed="true"/);
@@ -165,7 +167,7 @@ test('Collection: Countdown styles are a visible group whose locks follow the ex
 test('Collection: without the Countdown runtime the collection is unchanged', async () => {
   const { api, el } = runProgression({ level: 9, withCountdown: false });
   await api.hydrate({ showUnlocks: false, force: true });
-  assert.doesNotMatch(el('usProgressionRewards').innerHTML, /Stili Countdown|us-progression-reward-plus/);
+  assert.doesNotMatch(el('usProgressionRewards').innerHTML, /data-category="countdown"|us-progression-reward-plus/);
 });
 
 test('Unlock moment markup: staged, tinted per category and fully static under reduced motion', () => {

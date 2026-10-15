@@ -92,8 +92,11 @@ test('no sound on cold launch: nothing plays before the first user gesture', () 
   assert.equal(audio.log.contexts, 0, 'no AudioContext is even created without a gesture');
   assert.equal(audio.log.oscillators, 0);
   doc.fire('pointerdown');
-  assert.equal(audio.log.contexts, 1, 'the context is created once, inside the gesture');
+  // The first tap does not pay for the audio session: it is built in the next
+  // idle moment, or by the first meaningful sound, whichever comes first.
+  assert.equal(audio.log.contexts, 0, 'the context is not built inside the first gesture');
   feedback.action();
+  assert.equal(audio.log.contexts, 1, 'the first meaningful sound builds it');
   assert.ok(audio.log.oscillators >= 1);
   doc.fire('keydown');
   feedback.action();
@@ -104,7 +107,7 @@ test('a suspended AudioContext is handled: resumed, never throws, never queues s
   const audio = fakeAudio({ state: 'suspended' });
   const { feedback, doc } = setup({ audio });
   doc.fire('pointerdown');
-  assert.doesNotThrow(() => feedback.tap());
+  assert.doesNotThrow(() => feedback.action());
   assert.equal(audio.log.oscillators, 0);
   assert.ok(audio.log.resumes >= 1);
 
@@ -138,9 +141,10 @@ test('native haptics go through the platform bridge when present', () => {
 });
 
 
-test('Apple-inspired sound grammar: audible taps, soft chimes, no piercing waveforms', () => {
+test('Apple-inspired sound grammar: audible taps, soft chimes, no piercing waveforms', async () => {
   const h = setup();
   h.doc.fire('pointerdown');
+  await new Promise((resolve) => setTimeout(resolve, 0)); // the idle build after the first gesture
   h.feedback.tap();
   h.feedback.selection();
   assert.equal(h.audio.log.oscillators, 2, 'tap and selection have one short audible click each');
@@ -273,7 +277,7 @@ test('native grammar: error and Maudit landing are explicit haptic-only events',
   feedback.landing();
   assert.deepEqual(calls.map(([kind]) => kind), ['error', 'light']);
   assert.equal(audio.log.oscillators, 0, 'error e landing non aggiungono suoni sintetici');
-  assert.match(read('pet.js'), /UsFeedback\?\.landing\?\.\(\)/);
+  // Maudit 1.0 no longer falls or lands (it sits still, as in the mockup): landing stays available.
   assert.match(read('countdown.js'), /UsFeedback\?\.error\?\.\(\)/);
   assert.ok((read('app.js').match(/UsFeedback\?\.error\?\.\(\)/g) || []).length >= 2);
 });

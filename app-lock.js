@@ -113,6 +113,58 @@
     return 'Sblocca';
   }
 
+  // The lead under the title while locked, by the phone's biometry.
+  function lockLead(kind = status?.biometry?.kind) {
+    if (kind === 'faceId') return 'Usa Face ID per entrare.';
+    if (kind === 'touchId') return 'Usa Touch ID per entrare.';
+    if (kind === 'fingerprint') return 'Usa l’impronta per entrare.';
+    if (kind === 'face') return 'Usa il volto per entrare.';
+    return 'Usa la biometria per entrare.';
+  }
+
+  // ---- Motion (the design's lock screen) -----------------------------------
+  // In: the card fades (260 ms). Not recognised: the icon shakes (±6 px, 300 ms).
+  // Unlocked: the icon swells (360 ms, spring), then a circle closes on the
+  // lock (560 ms) while the app is already open underneath.
+  let leaving = false;
+  function motionOff() {
+    try {
+      return root.dataset.usMotion === 'reduced' || window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === true;
+    } catch (_) { return false; }
+  }
+  function play(el, frames, options) {
+    if (!el || typeof el.animate !== 'function' || motionOff()) return null;
+    try { return el.animate(frames, options); } catch (_) { return null; }
+  }
+  const lockIcon = () => $('usAppLock')?.querySelector?.('.us-app-lock-icon');
+  function shakeIcon() {
+    play(lockIcon(), [{ translate: '0 0' }, { translate: '-6px 0' }, { translate: '6px 0' }, { translate: '0 0' }], { duration: 300 });
+  }
+  function leaveLock() {
+    const shell = $('usAppLock');
+    if (!shell || motionOff() || typeof shell.animate !== 'function') return;
+    leaving = true;
+    root.classList.add('us-app-lock-leaving');
+    play(lockIcon(), [{ scale: 1 }, { scale: 1.15 }, { scale: 1 }], { duration: 360, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+    const out = play(shell, [{ clipPath: 'circle(150% at 50% 40%)' }, { clipPath: 'circle(0% at 50% 40%)' }],
+      { duration: 560, delay: 260, easing: 'cubic-bezier(.7,0,.2,1)', fill: 'forwards' });
+    const done = () => {
+      if (!leaving) return;
+      leaving = false;
+      root.classList.remove('us-app-lock-leaving');
+      try { shell.getAnimations().forEach((a) => a.cancel()); } catch (_) {}
+      render();
+    };
+    if (out) out.finished.then(done, done); else done();
+    setTimeout(done, 1200);
+  }
+  function stopLeaving() {
+    if (!leaving) return;
+    leaving = false;
+    root.classList.remove('us-app-lock-leaving');
+    try { $('usAppLock')?.getAnimations().forEach((a) => a.cancel()); } catch (_) {}
+  }
+
   function settingLabel(kind = status?.biometry?.kind) {
     if (kind === 'faceId') return 'Proteggi US con Face ID';
     if (kind === 'touchId') return 'Proteggi US con Touch ID';
@@ -124,7 +176,9 @@
   function render() {
     const shell = $('usAppLock');
     if (!shell) return;
-    shell.dataset.mode = mode;
+    // While it closes, the lock keeps what it showed.
+    const view = leaving ? 'locked' : mode;
+    shell.dataset.mode = view;
     shell.setAttribute('aria-hidden', phase === 'locked' ? 'false' : 'true');
     const title = $('usAppLockTitle');
     const copy = $('usAppLockCopy');
@@ -132,25 +186,31 @@
     const secondary = $('usAppLockSecondary');
     const note = $('usAppLockStatus');
     if (title) title.textContent = COPY.title;
-    let copyText = '';
-    let primaryText = unlockLabel();
+    let copyText = view === 'locked' ? lockLead() : '';
+    // "Sblocca" on screen; the full name of the gesture for screen readers.
+    let primaryText = view === 'locked' ? 'Sblocca' : unlockLabel();
     let secondaryText = COPY.account;
-    if (mode === 'account') {
+    if (view === 'account') {
       copyText = message;
       primaryText = COPY.accountPrimary;
       secondaryText = '';
-    } else if (mode === 'confirm') {
+    } else if (view === 'confirm') {
       copyText = COPY.confirm;
       primaryText = COPY.confirmGo;
       secondaryText = COPY.confirmBack;
-    } else if (mode === 'error') {
+    } else if (view === 'error') {
       copyText = COPY.statusError;
       primaryText = COPY.retry;
     }
     if (copy) { copy.textContent = copyText; copy.hidden = !copyText; }
-    if (primary) { primary.textContent = primaryText; primary.disabled = working || (promptBusy && mode === 'locked'); }
+    if (primary) {
+      primary.textContent = primaryText;
+      if (view === 'locked' && primaryText !== unlockLabel()) primary.setAttribute('aria-label', unlockLabel());
+      else primary.removeAttribute('aria-label');
+      primary.disabled = working || (promptBusy && mode === 'locked');
+    }
     if (secondary) { secondary.textContent = secondaryText; secondary.hidden = !secondaryText; secondary.disabled = working; }
-    if (note) note.textContent = mode === 'locked' ? message : '';
+    if (note) note.textContent = view === 'locked' && !leaving ? message : '';
   }
 
   function setInert(on) {
@@ -184,6 +244,8 @@
   }
 
   function showLock(nextMode, nextMessage = '') {
+    const arriving = phase !== 'locked';
+    stopLeaving();
     phase = 'locked';
     window.dispatchEvent(new CustomEvent('us-app-lock-change', { detail: { locked: true } }));
     mode = nextMode;
@@ -192,6 +254,7 @@
     root.classList.remove(PENDING);
     setInert(true);
     render();
+    if (arriving) play($('usAppLock')?.querySelector?.('.us-app-lock-card'), [{ opacity: 0 }, { opacity: 1 }], { duration: 260 });
     releaseCover();
     if (nextMode === 'locked' || nextMode === 'error') $('usAppLockPrimary')?.focus?.({ preventScroll: true });
   }
@@ -278,8 +341,10 @@
 
   // ---- Actions ------------------------------------------------------------
 
+  // The system sheet is not page text: it gets the app's language here.
   function promptOptions(title) {
-    return { title, cancel: 'Annulla', fallback: "Usa l’account" };
+    const t = (text) => (typeof window.usT === 'function' ? window.usT(text) : text);
+    return { title: t(title), cancel: t('Annulla'), fallback: t("Usa l’account") };
   }
 
   function handleUnlockError(code) {
@@ -293,6 +358,9 @@
     else message = COPY.error;
     mode = 'locked';
     render();
+    shakeIcon();
+    // Not recognised: the design's short error pulse with the shake (no sound).
+    if (code === 'failed') window.UsFeedback?.error?.();
   }
 
   async function unlock() {
@@ -313,6 +381,7 @@
         return false;
       }
       window.UsFeedback?.success?.();
+      leaveLock();
       openApp();
       return true;
     } catch (error) {

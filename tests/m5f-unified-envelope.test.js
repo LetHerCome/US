@@ -453,9 +453,12 @@ test('M5F envelope uses the canonical Phosphor pair and a restrained trace, not 
 test('M5F top chrome: question icon for the daily question, no legacy avatar control', () => {
   const html = read('index.html');
   const css = read('styles.css');
-  // M10.1B: l'icona domanda vive solo nella card di Oggi; il controllo top-left è rimosso.
-  assert.match(read('app.js'), /us-daily-ritual-mark us-phosphor-question/);
-  assert.match(css, /us-daily-ritual-mark::before\{[^}]*mask:url\("\/assets\/icons\/phosphor\/question-regular\.svg"\)/);
+  // 1.0: la card di Oggi porta i due cerchi del mockup (mio, tuo, Noi con il cuore Phosphor); il controllo top-left è rimosso.
+  // Parity 2026-10: the mockup's two circles are one SVG ring (same glyph hook, decorative).
+  assert.match(read('app.js'), /<svg class="ring us-daily-ritual-ring" viewBox="0 0 48 30" data-st="\$\{st\}" data-glyph="\$\{escapeHtml\(model\.glyph\|\|'none'\)\}" data-us-attention-icon aria-hidden="true" focusable="false">/);
+  // The Noi heart stays the Phosphor heart-straight-fill (its path, drawn inside the ring).
+  const heart = read('assets/icons/phosphor/heart-straight-fill.svg').match(/ d="([^"]+)"/)[1];
+  assert.ok(read('app.js').includes(`d="${heart}"`));
   assert.doesNotMatch(html, /id="todayOrb"/);
   assert.doesNotMatch(html, /id="profileAvatarBtn"/);
   assert.doesNotMatch(html, /onclick="pickProfilePhoto\(\)"/);
@@ -499,7 +502,8 @@ test('M5F composer surface: title, send language, five kinds, reduced-motion com
     assert.match(html, new RegExp(`data-us-composer-panel="${kind}"`));
   }
   assert.match(html, /id="leftForYouComposerPhotoFile" accept="image\/jpeg,image\/png,image\/webp"/);
-  assert.match(html, /id="leftForYouComposerVideoFile" accept="video\/\*"/);
+  assert.match(html, /id="leftForYouComposerVideoFile" accept="video\/mp4,video\/webm,video\/quicktime"/);
+  assert.match(html, /id="leftForYouComposerVideoHint">Fino a 30 secondi e 20 MB\.</);
   assert.match(html, /id="leftForYouComposerAudioRecord"/);
   assert.match(css, /#leftForYouOverlay,#leftForYouComposerOverlay(?:,#leftForYouCameraOverlay)?\{position:fixed/);
   assert.match(css, /#leftForYouOverlay\.open,#leftForYouComposerOverlay\.open(?:,#leftForYouCameraOverlay\.open)?\{opacity:1/);
@@ -744,24 +748,39 @@ test('M5G2 voice control uses the Bencho mic idle state and a red live-recording
   assert.match(css, /\.left-for-you-vn-stop\{[^}]*background:var\(--us-color-danger\)/);
 });
 
-test('M5G2 client media limits keep photo/audio at 25 MB and allow video up to 40 MB', async () => {
+test('1.0 client media limits: photo/audio 25 MB, video 20 MB and 30 seconds in a format the bucket accepts', async () => {
   const harness = createHarness();
   const { api, el, log } = harness;
   await api.load();
   const mb = 1024 * 1024;
 
   api.setComposerKind('video');
-  el('leftForYouComposerVideoFile').files = [{ name: 'ok.mp4', type: 'video/mp4', size: 40 * mb }];
+  el('leftForYouComposerVideoFile').files = [{ name: 'ok.mp4', type: 'video/mp4', size: 20 * mb }];
   await api.send();
   assert.equal(log.uploads.length, 1);
-  el('leftForYouComposerVideoFile').files = [{ name: 'too-large.mp4', type: 'video/mp4', size: 40 * mb + 1 }];
+  el('leftForYouComposerVideoFile').files = [{ name: 'too-large.mp4', type: 'video/mp4', size: 20 * mb + 1 }];
   await api.send();
   assert.equal(log.uploads.length, 1);
+  assert.equal(el('leftForYouComposerStatus').textContent, 'Il video è troppo grande (massimo 20 MB).');
+  el('leftForYouComposerVideoFile').files = [{ name: 'clip.avi', type: 'video/x-msvideo', size: mb }];
+  await api.send();
+  assert.equal(log.uploads.length, 1);
+  assert.equal(el('leftForYouComposerStatus').textContent, 'Questo video non si può inviare. Scegli un video MP4 o MOV.');
 
   api.setComposerKind('photo');
   el('leftForYouComposerPhotoFile').files = [{ name: 'too-large.jpg', type: 'image/jpeg', size: 25 * mb + 1 }];
   await api.send();
   assert.equal(log.uploads.length, 1);
+});
+
+test('1.0 video duration: longer than 30 seconds is refused before upload, unknown length falls back to the size limit', () => {
+  const js = read('left-for-you.js');
+  assert.match(js, /const VIDEO_MAX_BYTES = 20 \* 1024 \* 1024;/);
+  assert.match(js, /const VIDEO_MAX_SECONDS = 30;/);
+  assert.match(js, /probe\.preload = 'metadata';/);
+  assert.match(js, /if \(seconds !== null && seconds > VIDEO_MAX_SECONDS \+ 0\.5\) return 'Il video è troppo lungo \(massimo 30 secondi\)\.';/);
+  assert.match(js, /if \(fileId === 'leftForYouComposerVideoFile'\) checkChosenVideo\(file\);/);
+  assert.doesNotMatch(js, /40 \* 1024 \* 1024|40 MB/);
 });
 
 test('M5G3 left_for_you insert returns its id to Push and Push failure remains non-fatal', async () => {

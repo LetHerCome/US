@@ -27,3 +27,22 @@ test('MC3 controller consumes real MC2 SQL: four users, two isolated couples, no
   for(const user of [h.ANON,h.UNCONFIRMED,h.BANNED]){const c=queued(user);await c.load({user:{id:user}});await c.create({name:'Beta',date:'2024-01-01'});assert.equal(c.state.kind,'ERROR_OR_INELIGIBLE');assert.match(c.state.message,/Questo account/);}
  }finally{await db.close();}
 });
+test('1.0 A2: with the real MC2 SQL the code stays through a refresh while pending and goes once used',async()=>{
+ const db=await h.database();
+ try{
+  let tail=Promise.resolve();
+  const queued=user=>{
+   const enqueue=fn=>{const p=tail.then(fn);tail=p.catch(()=>{});return p;};
+   const rpcFns={get_couple_membership:()=>h.membership(db,user),create_couple:a=>h.create(db,user,a.p_display_name,a.p_started_on,a.p_couple_name),accept_partner_invite:a=>h.accept(db,user,a.p_code,a.p_display_name),create_partner_invite:()=>h.invite(db,user),revoke_partner_invite:()=>h.revoke(db,user)};
+   return MC3.createController({readProfile:id=>enqueue(async()=>({data:(await h.as(db,user,'select id,display_name,role,couple_id from public.profiles where id=$1',[id]))[0]||null})),rpc:(name,args)=>enqueue(async()=>{try{return {data:await rpcFns[name](args)};}catch(error){return {error};}})});
+  };
+  const creator=queued(h.U1),joiner=queued(h.U2);
+  await creator.load({user:{id:h.U1}});await joiner.load({user:{id:h.U2}});
+  await creator.create({name:'Mira',date:'2024-02-29'});await creator.generate();const code=creator.state.code;assert.ok(code);
+  // create_partner_invite and get_couple_membership name the same expiry.
+  await creator.refresh();assert.equal(creator.state.membership.invite.status,'pending');assert.equal(creator.state.code,code);
+  assert.equal((await creator.check()).code,code);
+  await joiner.join({name:'Nico',code});assert.equal(joiner.state.kind,'PAIRED');
+  assert.equal((await creator.check()).kind,'PAIRED');assert.equal(creator.state.code,'');
+ }finally{await db.close();}
+});

@@ -45,8 +45,10 @@ test('whole-Moment privileged cleanup never exposes server credentials to the PW
   assert.doesNotMatch(app, /SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET_KEYS|supabaseSecretKey/);
   assert.match(app, /sb\.functions\.invoke\('delete-moment'/);
 });
-test('Ricordi grid exposes Elimina on every shared Moment card', () => {
-  assert.match(app, /ricordiMomentCard\(row,signedUrls,author,true,/);
+// US 1.0 R2 replaces "Elimina on every shared card": only who created a memory sees it.
+test('Ricordi grid exposes Elimina only on the memories this person created', () => {
+  assert.match(app, /const own=row\.created_by===profile\.id;/);
+  assert.match(app, /ricordiMomentCard\(row,displayUrls,author,own,/);
   assert.match(app, /aria-label="Elimina ricordo"/);
 });
 

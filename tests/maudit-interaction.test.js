@@ -1,4 +1,4 @@
-// Maudit Interaction V1 — pure rules, machine states, lifecycle and contracts.
+// Maudit 1.0 interaction — machine states, lifecycle and contracts (a still cat).
 // Real pointer/geometry behaviour is covered by maudit-interaction-browser.test.js.
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -17,7 +17,6 @@ const settingsCss = read('settings2.css');
 function clock() {
   let now = 0; let seq = 0; const timers = new Map();
   return {
-    now: () => now,
     schedule: (fn, ms) => { const id = ++seq; timers.set(id, { fn, at: now + ms }); return id; },
     cancel: (id) => timers.delete(id),
     pending: () => timers.size,
@@ -34,155 +33,55 @@ function clock() {
 }
 function machine() {
   const c = clock(); const frames = [];
-  const pet = Pet.createPet({ schedule: c.schedule, cancel: c.cancel, now: c.now, random: () => 0.9, render: (f) => frames.push(f) });
-  pet.setTrack(300);
+  const pet = Pet.createPet({ schedule: c.schedule, cancel: c.cancel, render: (f) => frames.push(f) });
   return { c, pet, frames, states: () => frames.map((f) => f.state) };
 }
 
-test('gesture rules: short still press pets, a long still press or a sideways pull picks up, vertical is a scroll', () => {
-  const G = Pet.GESTURE;
-  assert.equal(Pet.classifyPress({ type: 'touch', elapsed: 120, up: true }), 'pet');
-  assert.equal(Pet.classifyPress({ type: 'touch', dx: 3, dy: 4, elapsed: G.hold - 1, up: true }), 'pet', 'jitter under the slop is still a tap');
-  assert.equal(Pet.classifyPress({ type: 'touch', elapsed: 100 }), 'pending');
-  assert.equal(Pet.classifyPress({ type: 'touch', elapsed: G.hold }), 'pickup', 'hold threshold');
-  assert.equal(Pet.classifyPress({ type: 'touch', elapsed: G.hold + 400, up: true }), 'pickup', 'a long press is never a pet');
-  assert.equal(Pet.classifyPress({ type: 'touch', dx: 18, dy: 4, elapsed: 60 }), 'pickup', 'sideways pull');
-  assert.equal(Pet.classifyPress({ type: 'touch', dx: 4, dy: -18, elapsed: 60 }), 'scroll', 'vertical intent scrolls the page');
-  assert.equal(Pet.classifyPress({ type: 'pen', dx: 10, dy: 10, elapsed: 60 }), 'scroll', 'diagonal is not an intentional pull');
-  assert.equal(Pet.classifyPress({ type: 'mouse', dx: 0, dy: -12, elapsed: 60 }), 'pickup', 'a mouse cannot scroll by dragging');
-  assert.ok(G.slop >= 8 && G.hold >= 200 && G.hold <= 400, 'mobile-friendly thresholds');
+// Maudit sits still in its home spot (the approved mockup): no gestures,
+// no placement, no planes, no gravity, no drag. Only its state changes.
+test('Maudit is never carried: no pickup, drag, placement, plane or gravity API', () => {
+  for (const retired of ['classifyPress', 'encodePlacement', 'decodePlacement', 'PLANES', 'freeSegments', 'choosePlane', 'chooseFallPlane', 'GESTURE', 'GRAVITY']) {
+    assert.equal(Pet[retired], undefined, retired);
+  }
+  const { pet } = machine();
+  for (const retired of ['hold', 'release', 'fall', 'land', 'place', 'setTrack']) assert.equal(pet[retired], undefined, retired);
+  for (const state of ['held', 'fall', 'snap', 'walk']) assert.ok(!Pet.STATES.includes(state), state);
+  assert.doesNotMatch(petCss, /data-pet-state="(held|fall|snap|walk)"/);
 });
 
-test('placement is semantic (plane id + 0..1), clamped, and corrupt values fall back to nothing', () => {
-  const raw = Pet.encodePlacement('noi-sintonia-top', 0.72);
-  assert.deepEqual(JSON.parse(raw), { v: 1, plane: 'noi-sintonia-top', x: 0.72 });
-  assert.deepEqual(Pet.decodePlacement(raw), { plane: 'noi-sintonia-top', x: 0.72 });
-  assert.deepEqual(Pet.decodePlacement(Pet.encodePlacement('nav', 4)), { plane: 'nav', x: 1 });
-  assert.equal(Pet.encodePlacement('made-up-plane', 0.5), null);
-  assert.equal(Pet.decodePlacement('{"v":1,"plane":"gone","x":0.4}'), null, 'a plane no longer registered is ignored');
-  assert.equal(Pet.decodePlacement('{"v":1,"plane":"nav","x":"0.4"}'), null);
-  assert.equal(Pet.decodePlacement('not json'), null);
-  assert.equal(Pet.decodePlacement(null), null);
-  assert.doesNotMatch(raw, /px|"y"|clientX|"top"/, 'never raw viewport coordinates');
-});
-
-test('plane registry is explicit, small, selector-based and covers the four primary pages', () => {
-  const ids = Pet.PLANES.map((p) => p.id);
-  assert.equal(new Set(ids).size, ids.length);
-  assert.deepEqual(Pet.PLANES[0], { id: 'nav', page: '', selector: '.nav' }, 'the nav rim is the default plane');
-  for (const page of ['home', 'bond', 'moments', 'quiz']) assert.ok(Pet.PLANES.some((p) => p.page === page), page);
-  assert.ok(Pet.PLANES.length <= 16, 'a registry, not every DOM rectangle');
-  for (const plane of Pet.PLANES) assert.doesNotMatch(plane.selector, /\d+px|\[style/, `${plane.id}: no device pixels`);
-});
-
-test('free segments: the cat body needs clear columns; blocked spans split a rim; tiny runs are dropped', () => {
-  const blocked = (x) => !(x >= 150 && x <= 170);
-  const segments = Pet.freeSegments({ left: 20, right: 360, step: 2, free: blocked });
-  assert.equal(segments.length, 2);
-  const [[a1, b1], [a2, b2]] = segments;
-  assert.ok(a1 >= 20 && b1 + 38 < 150, `left run clears the block ${b1}`);
-  assert.ok(a2 + 2 > 170 && b2 <= 320, `right run starts after the block ${a2}`);
-  assert.deepEqual(Pet.freeSegments({ left: 0, right: 45, step: 2, free: () => true }), [], 'no room to stand');
-  assert.deepEqual(Pet.freeSegments({ left: 0, right: 300, free: () => false }), []);
-});
-
-test('nearest plane is predictable; too far means no plane (caller returns to the previous spot)', () => {
-  const candidates = [
-    { id: 'nav', rim: 780, segments: [[30, 300]] },
-    { id: 'noi-sintonia-top', rim: 246, segments: [[232, 322]] },
-    { id: 'noi-week-board-top', rim: 130, segments: [[124, 238]] }
-  ];
-  assert.equal(Pet.choosePlane({ x: 280, y: 250 }, candidates).id, 'noi-sintonia-top');
-  assert.equal(Pet.choosePlane({ x: 100, y: 760 }, candidates).id, 'nav');
-  const clamped = Pet.choosePlane({ x: 60, y: 240 }, candidates);
-  assert.deepEqual([clamped.id, clamped.left], ['noi-sintonia-top', 232], 'x is clamped into the segment');
-  assert.equal(Pet.choosePlane({ x: 200, y: 520 }, candidates), null, 'mid-screen, far from every rim');
-});
-
-test('gravity chooses the first safe plane below the feet and keeps nav as the final floor', () => {
-  const candidates = [
-    { id: 'nav', rim: 780, segments: [[30, 300]] },
-    { id: 'upper', rim: 220, segments: [[80, 200]] },
-    { id: 'lower', rim: 410, segments: [[80, 200]] }
-  ];
-  assert.equal(Pet.chooseFallPlane({ x: 140, y: 250 }, candidates).id, 'lower');
-  assert.equal(Pet.chooseFallPlane({ x: 140, y: 100 }, candidates).id, 'upper');
-  const nav = Pet.chooseFallPlane({ x: 350, y: 250 }, candidates);
-  assert.deepEqual([nav.id, nav.left], ['nav', 300]);
-  assert.ok(Pet.GRAVITY.acceleration > 0 && Pet.GRAVITY.frame <= 20);
-});
-
-test('machine: held → fall has no scheduler timer; land resumes exactly one and queued reactions wait', () => {
-  const { c, pet, states } = machine();
-  pet.start(); pet.hold();
-  assert.equal(c.pending(), 0);
-  assert.equal(pet.react('think'), true);
-  assert.equal(pet.fall(), true);
-  assert.deepEqual([pet.snapshot().state, c.pending()], ['fall', 0]);
-  assert.equal(pet.caress(), false);
-  assert.equal(pet.land({ x: 120 }), true);
-  assert.deepEqual([pet.snapshot().state, pet.snapshot().x, c.pending()], ['snap', 120, 1]);
-  c.advance(Pet.TIMING.snap);
-  assert.equal(pet.snapshot().state, 'react');
-  c.advance(Pet.TIMING.react);
-  assert.equal(pet.snapshot().state, 'idle');
-  assert.ok(states().includes('held') && states().includes('fall') && states().includes('snap'));
-});
-
-test('machine: held stops every autonomous timer; release resumes exactly one; reactions wait for the landing', () => {
+test('machine: a tap pets, every third tap is happy, each settles back to idle with one state timer', () => {
   const { c, pet, states } = machine();
   pet.start();
-  assert.equal(c.pending(), 1);
-  assert.equal(pet.hold(), true);
-  assert.equal(pet.snapshot().state, 'held');
-  assert.equal(c.pending(), 0, 'no walk/idle timer while held');
-  c.advance(60000);
-  assert.equal(pet.snapshot().state, 'held', 'nothing moves a held cat');
-  assert.equal(pet.caress(), false, 'a held cat is not petted');
-  assert.equal(pet.hold(), false, 'no double pickup');
-  assert.equal(pet.react('reward'), true, 'reaction queued');
-  assert.equal(pet.react('think'), true);
-  assert.equal(pet.snapshot().pending, 'think', 'at most one queued reaction');
-  assert.equal(pet.release({ x: 120 }), true);
-  assert.deepEqual([pet.snapshot().state, pet.snapshot().x, c.pending()], ['snap', 120, 1]);
-  assert.equal(pet.release({ x: 10 }), false, 'release only from held');
-  c.advance(Pet.TIMING.snap);
-  assert.equal(pet.snapshot().state, 'react', 'the queued reaction plays once it has landed');
-  assert.equal(c.pending(), 1);
-  c.advance(Pet.TIMING.react);
-  assert.equal(pet.snapshot().state, 'idle');
-  assert.equal(c.pending(), 1, 'one scheduler, never two');
-  assert.ok(states().includes('held') && states().includes('snap'));
-});
-
-test('machine: caress is one short pet reaction that settles to idle; stop during held leaves no timer', () => {
-  const { c, pet } = machine();
-  pet.start();
+  assert.equal(c.pending(), 1, 'only the sleep timer while idle');
   assert.equal(pet.caress(), true);
   assert.equal(pet.snapshot().state, 'pet');
-  assert.equal(c.pending(), 1);
+  assert.equal(c.pending(), 2, 'state timer + sleep timer, never more');
   c.advance(Pet.TIMING.pet);
   assert.equal(pet.snapshot().state, 'idle');
-  pet.hold();
-  pet.stop();
-  assert.deepEqual([pet.snapshot().running, pet.snapshot().state, c.pending()], [false, 'idle', 0]);
-  assert.equal(pet.hold(), false, 'a stopped (blocked) cat cannot be picked up');
-  assert.equal(pet.caress(), false);
-  pet.start();
-  assert.equal(c.pending(), 1);
+  pet.caress(); pet.caress();
+  assert.equal(pet.snapshot().state, 'happy', 'the third tap');
+  c.advance(Pet.TIMING.happy);
+  assert.equal(pet.snapshot().state, 'idle');
+  assert.deepEqual(states().filter((s, i, a) => s !== a[i - 1]), ['idle', 'pet', 'idle', 'pet', 'happy', 'idle']);
 });
 
-test('machine: place() stands at x without strolling; a narrower track never steals a held cat', () => {
+test('machine: sleeps after 30 s without a touch; a touch wakes it curious; stop leaves no timer', () => {
   const { c, pet } = machine();
   pet.start();
-  pet.place(90);
-  assert.equal(pet.snapshot().x, 90);
-  pet.hold();
-  pet.setTrack(80);
-  assert.equal(pet.snapshot().state, 'held', 'track change during a drag keeps the gesture');
-  assert.equal(c.pending(), 0);
-  pet.release({ x: 500 });
-  assert.equal(pet.snapshot().x, 80 - Pet.TIMING.size - Pet.TIMING.edge, 'release is clamped into the new track');
+  c.advance(Pet.TIMING.sleep - 1);
+  assert.equal(pet.touch(), false, 'a touch only postpones the sleep');
+  c.advance(Pet.TIMING.sleep - 1);
+  assert.equal(pet.snapshot().state, 'idle');
+  c.advance(1);
+  assert.equal(pet.snapshot().state, 'sleep');
+  assert.equal(c.pending(), 0, 'nothing ticks while it sleeps');
+  assert.equal(pet.touch(), true);
+  assert.equal(pet.snapshot().state, 'curious');
+  c.advance(Pet.TIMING.curious);
+  assert.equal(pet.snapshot().state, 'idle');
+  pet.stop();
+  assert.deepEqual([pet.snapshot().running, c.pending()], [false, 0]);
+  assert.equal(pet.caress(), false, 'a stopped (blocked) cat is not petted');
 });
 
 // ---- lifecycle with a browser-shaped fake window ----
@@ -253,33 +152,34 @@ test('Off persists across reloads: zero cost at boot, nothing painted', () => {
   assert.equal(blocked.w.USPet.enabled, true, 'blocked storage keeps the default (on)');
 });
 
-test('pointer contract: the layer stays transparent; only the bounded hit target takes input', () => {
+test('pointer contract: the layer stays transparent; only the hit target over the cat takes a tap', () => {
   assert.match(petCss, /\.us-pet-layer,\.us-pet-layer \*\{pointer-events:none!important/);
   const autos = petCss.replace(/\/\*[\s\S]*?\*\//g, '').match(/[^{}]+\{[^}]*pointer-events:auto[^}]*\}/g) || [];
   assert.equal(autos.length, 1, 'exactly one rule re-enables input');
   assert.match(autos[0].trim(), /^\.us-pet-layer \.us-pet-hit\{/);
-  assert.match(autos[0], /width:40px;height:34px/, 'bounded to the cat');
-  assert.match(autos[0], /bottom:4px/, 'its bottom stays clear of the nav tabs');
-  assert.match(autos[0], /touch-action:pan-y/, 'vertical scroll still starts on Maudit');
-  assert.match(petJs, /on\(hit,'touchstart',event=>event\.stopPropagation\(\),\{passive:true\}\)/, 'page swipe never sees a Maudit gesture');
-  assert.match(petJs, /on\(hit,'touchmove',event=>\{event\.stopPropagation\(\);if\(press\?\.picked&&event\.cancelable\)event\.preventDefault\(\);\},\{passive:false\}\)/, 'no page scroll only while held');
-  assert.doesNotMatch(petJs, /(window|w|d|document)\.addEventListener\('pointer(move|up)'/, 'no global pointer listeners: pointer capture on the hit target');
+  assert.match(autos[0], /inset:0/, 'bounded to the 54 x 48 cat box');
+  assert.match(autos[0], /touch-action:manipulation/, 'a tap, never a drag');
+  assert.match(petJs, /on\(hit,'click',/, 'a tap is a click: no gesture recogniser');
+  assert.doesNotMatch(petJs, /pointermove|pointerup|touchstart|touchmove|setPointerCapture/, 'no drag handling at all');
   assert.doesNotMatch(petJs, /requestAnimationFrame|setInterval/, 'no loops');
   assert.doesNotMatch(petJs, /subtree:true|childList:true/, 'no broad MutationObservers');
 });
 
-test('poses: pet / held / fall / snap are CSS transforms of the approved articulated kitten, with reduced-motion static poses', () => {
-  for (const state of ['pet', 'held', 'fall', 'snap']) assert.ok(Pet.STATES.includes(state), state);
-  assert.match(petCss, /\[data-pet-state="pet"\] \.k-eyes-closed\{opacity:1\}/, 'eyes soften');
-  assert.match(petCss, /\[data-pet-state="pet"\] \.k-head\{transform:rotate\(-9deg\)/, 'head leans into the hand');
-  assert.match(petCss, /\[data-pet-state="held"\] \.us-pet-kitten\{transform-origin:62% 38%;transform:rotate\(-28deg\)/, 'hangs from the scruff');
-  assert.match(petCss, /\[data-pet-state="held"\] \.k-tail\{transform:rotate\(-118deg\)/, 'tail hangs relaxed');
-  assert.match(petCss, /\[data-pet-state="held"\] \.k-leg-hind-near,[^{]+\{transform:rotate\(30deg\) scaleY\(1\.12\)\}/, 'legs dangle');
-  assert.match(petCss, /\[data-pet-state="fall"\] \.us-pet-kitten\{[^}]*scale\(\.98,1\.04\)/, 'airborne pose');
+test('poses: curious / pet / sleep / happy are CSS poses of the approved drawings, with reduced-motion static poses', () => {
+  for (const state of ['idle', 'sleep', 'curious', 'pet', 'happy']) assert.ok(Pet.STATES.includes(state), state);
+  assert.match(petCss, /\[data-pet-state="pet"\] \.k-eyes-closed\{opacity:1\}/, 'kitten preview: eyes soften');
+  assert.match(petCss, /\[data-pet-state="pet"\] \.k-head\{transform:rotate\(-9deg\)/, 'kitten preview: head leans into the hand');
   assert.match(petCss, /:root\[data-us-motion="reduced"\] \.us-pet-layer \*\{animation:none!important;transition:none!important\}/);
-  // Same approved drawing: no new production asset was introduced.
+  // Maudit 1.0 (production), the mockup's .m poses.
+  assert.match(petCss, /\.us-pet-layer:is\(\[data-pet-state="happy"\],\[data-pet-state="pet"\]\) \.m-eyes-happy\{opacity:1\}/, 'Maudit: happy eyes under the hand');
+  assert.match(petCss, /\[data-pet-state="pet"\] \.m-head\{rotate:5deg\}/, 'Maudit: head leans into the hand');
+  assert.match(petCss, /\[data-pet-state="curious"\] \.m-head\{rotate:-9deg\}/, 'Maudit: curious head tilt');
+  assert.match(petCss, /\[data-pet-state="sleep"\] :is\(\.m-eyes-closed,\.m-zz\)\{opacity:1\}/, 'Maudit: asleep');
+  assert.match(petJs, /\.us-pet-figure/, 'happy hop runs on the figure');
+  assert.match(petJs, /\.m-heart/, 'happy shows the heart');
+  // Two approved drawings: kitten v0 (QA preview) and Maudit 1.0 (production).
   const manifest = JSON.parse(read('assets/ASSET_MANIFEST.json'));
-  assert.equal(manifest.assets.filter((a) => /\/pet\//.test(a.path)).length, 1);
+  assert.deepEqual(manifest.assets.filter((a) => /\/pet\//.test(a.path)).map((a) => a.usedBy[0]).sort(), ['pet-preview', 'pet-production']);
   assert.doesNotMatch(petJs + petCss, /[\u{1F300}-\u{1FAFF}❤♥]/u, 'no emoji, no heart glyph');
 });
 

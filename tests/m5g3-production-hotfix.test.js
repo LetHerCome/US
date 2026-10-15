@@ -84,5 +84,5 @@ test('M5G3 left_for_you Edge Function preserves think_reaction and suppresses di
   assert.match(edge, /disabled-by-preference/);
   assert.match(settings, /left_for_you:true/);
   assert.match(settings, /preferenceToggle\('left_for_you','Lasciato per te'/);
-  assert.match(settings, /Quando la tua persona ti lascia qualcosa/);
+  assert.match(settings, /key==='left_for_you'\?'Quando trovi qualcosa nella busta'/);
 });

@@ -4,7 +4,6 @@ on:
     paths:
       - 'app.js'
       - 'styles.css'
-      - 'polish4.css'
       - 'modal-center.css'
       - 'tests/premium-motion-v1.test.js'
       - '.github/workflows/premium-motion-ci.yml'
@@ -13,7 +12,6 @@ on:
     paths:
       - 'app.js'
       - 'styles.css'
-      - 'polish4.css'
       - 'modal-center.css'
       - 'tests/premium-motion-v1.test.js'
       - '.github/workflows/premium-motion-ci.yml'

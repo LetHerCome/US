@@ -69,7 +69,7 @@ async function setup(t, options) {
   const { server, state } = await cloudflareLikeServer(options);
   const browser = await chromium.launch();
   const base = `http://127.0.0.1:${server.address().port}`;
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, timezoneId: 'Europe/Rome' });
+  const ctx = await browser.newContext({ locale: 'it-IT', viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, timezoneId: 'Europe/Rome' });
   await ctx.route(/cdn\.jsdelivr\.net/, (route) => route.fulfill({ contentType: 'text/javascript', body: FAKE_SUPABASE }));
   await ctx.addInitScript(qaFixture, { style: 'editorial', mode: 'days', unlocked: true, missing: false, started: '2022-06-23', active: 'custom' });
   const page = await ctx.newPage();

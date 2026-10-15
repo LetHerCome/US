@@ -347,6 +347,8 @@ test('F1C client contract: the shipped client writes only the columns F1C keeps'
   assert.deepEqual(writes.sort(), [
     'profiles.update({avatar_path:path})',
     'shared_events.delete()',
+    // Due colori first run (app.js insertEvent): the optional birthday from the "Tu" step.
+    'shared_events.insert(row)',
     'shared_events.insert({...payload,couple_id:window.usProfile.couple_id,created_by:window.usProfile.id})',
     'shared_events.update(payload)',
   ]);
@@ -356,4 +358,9 @@ test('F1C client contract: the shipped client writes only the columns F1C keeps'
   const keys = payload.split(/,(?![^(]*\))/).map((p) => p.trim().match(/^(\w+)/)[1]).sort();
   assert.deepEqual(keys, ['event_date', 'event_time', 'location', 'note', 'recurs_yearly', 'title'],
     'shared_events editor payload must stay inside the F1C column grant');
+  // The birthday row writes the editor's columns plus couple and author, as events.js does.
+  const { birthdayEvent } = require(path.join(ROOT, 'onboarding.js'));
+  const birthday = birthdayEvent({ name: 'Mira', day: 12, month: 3, profile: { id: 'u', couple_id: 'c' }, today: '2026-10-14' });
+  assert.deepEqual(Object.keys(birthday).sort(), [...keys, 'couple_id', 'created_by'].sort(),
+    'the first-run birthday must stay inside the F1C column grant');
 });

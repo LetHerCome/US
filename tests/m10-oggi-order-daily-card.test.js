@@ -36,12 +36,20 @@ test('M10A follow-up: Oggi keeps only the actionable notice outside the retired 
   assert.equal(stack.indexOf('id="usTodayPriorityRegion"'), -1, 'personal notice no longer lives in the retired stack');
   assert.ok(hero.indexOf('id="usTodayPriorityRegion"') >= 0, 'personal notice remains inside the Home hero');
   assert.ok(hero.indexOf('id="usTodayPriorityRegion"') < hero.indexOf('id="usOggiStack"'), 'notice is structurally separate from the retired stack');
-  for (const legacy of ['id="usOggiCalendarWidget"', 'id="usDailyRitual"']) assert.ok(stack.indexOf(legacy) >= 0, `${legacy} remains mounted for its authority`);
-  for (const passive of ['id="distanceWidget"', 'id="pushOptInCard"', 'id="homeEmptyState"']) {
+  for (const legacy of ['id="usOggiCalendarWidget"', 'id="usDailyRevealLink"']) assert.ok(stack.indexOf(legacy) >= 0, `${legacy} remains mounted for its authority`);
+  for (const passive of ['id="distanceWidget"', 'id="pushOptInCard"', 'id="homeEmptyState"', 'id="usDailyRitual"']) {
     assert.equal(stack.indexOf(passive), -1, `${passive} is not in the retired stack`);
   }
   assert.match(css, /#home #usOggiStack\{height:0!important;[^}]*visibility:hidden!important;[^}]*pointer-events:none!important\}/);
-  assert.match(css, /#home #usTodayPriorityRegion\{[\s\S]*?position:fixed!important;[\s\S]*?bottom:calc\(10px \+ var\(--us-safe-bottom\) \+ var\(--us-nav-height\) \+ 12px\)!important;/);
+  // 1.0: one dock above the nav — what waits for me (or the notifications invite), then the Domanda di oggi.
+  const dock = hero.match(/<div class="us-oggi-dock[^"]*" id="usOggiDock">[\s\S]*?\n {6}<\/div>/)?.[0] || '';
+  const order = ['id="usTodayPriorityRegion"', 'id="pushOptInCard"', 'id="usDailyRitual"'].map((id) => dock.indexOf(id));
+  assert.ok(order.every((at, i) => at >= 0 && (i === 0 || at > order[i - 1])), `dock order ${order}`);
+  assert.ok(hero.indexOf('id="usOggiDock"') < hero.indexOf('id="usOggiStack"'));
+  const dcOggi = read('dc-oggi.css');
+  // Parity 2026-10: the mockup's .og-bottom sits 130px from the bottom edge (nav + Maudit's band).
+  assert.match(dcOggi, /#home \.us-oggi-dock\{[\s\S]*?position:fixed;[\s\S]*?bottom:calc\(var\(--us-safe-bottom\) \+ 130px\);/, 'a band above the nav stays free for Maudit');
+  assert.match(dcOggi, /#home #usOggiDock #usTodayPriorityRegion\{[\s\S]*?position:static!important;/);
   assert.equal((html.match(/id="usOggiCalendarWidget"/g) || []).length, 1);
   assert.match(app, /const fact=await window\.getOggiCalendarInsightSource\?\.\(\);/);
   assert.match(app, /target\.closest\('#usTodayPriorityRegion,/);
@@ -54,20 +62,24 @@ test('M10A: gli impegni del Calendario sono informazione, mai attenzione animata
   assert.doesNotMatch(hero.match(/id="usOggiCalendarWidget"[^>]*>/)[0], /us-attention-orbit|data-us-attention/);
 });
 
-test('M10B/M10.1A: stati compatti della card — A da rispondere, D errore; risposto/entrambi nessuna card', () => {
+// 1.0 (O1): one name, "La domanda di oggi"; "Aspetta te" when the other already
+// answered; after my answer the card waits; both answered without the reveal
+// state loaded → no card (the "Risposte pronte" notice speaks for the day).
+test('1.0 O1: stati della card — da rispondere, Aspetta te, in attesa, errore; entrambi senza meta nessuna card', () => {
   const { api } = installCard();
   const m = (state) => api.viewModel({ question, state, partnerName: 'Beatrice' });
   const a = m({ my_answer: null, partner_has_answer: false, both_answered: false });
-  assert.deepEqual({ state: a.state, kicker: a.kicker, cta: a.cta, status: a.status }, { state: 'answer', kicker: 'Domanda del giorno', cta: 'Rispondi', status: '' });
+  assert.deepEqual({ state: a.state, kicker: a.kicker, cta: a.cta, meta: a.meta }, { state: 'answer', kicker: 'La domanda di oggi', cta: 'Rispondi', meta: 'Una domanda, due risposte' });
   const a2 = m({ my_answer: null, partner_has_answer: true, both_answered: false });
-  assert.deepEqual({ cta: a2.cta, status: a2.status }, { cta: 'Rispondi', status: '' }, 'partner answered first: same compact copy');
-  assert.equal(m({ my_answer: 'Mia', partner_has_answer: false, both_answered: false }), null);
+  assert.deepEqual({ state: a2.state, kicker: a2.kicker, cta: a2.cta, meta: a2.meta }, { state: 'invited', kicker: 'Aspetta te', cta: 'Rispondi', meta: 'Beatrice ha già risposto · tocca a te' });
+  const w = m({ my_answer: 'Mia', partner_has_answer: false, both_answered: false });
+  assert.deepEqual({ state: w.state, kicker: w.kicker, cta: w.cta, meta: w.meta, attention: w.attention }, { state: 'waiting', kicker: 'La domanda di oggi', cta: 'Apri', meta: 'Hai risposto · aspettiamo Beatrice', attention: false });
   assert.equal(m({ my_answer: 'Mia', partner_has_answer: true, both_answered: true, partner_answer: 'Sua' }), null);
   const d = api.viewModel({ status: 'error' });
   assert.deepEqual({ state: d.state, cta: d.cta }, { state: 'error', cta: 'Riprova' });
 });
 
-test('M10B: la card contiene solo kicker, domanda e un segnale — niente testo esplicativo, niente risposte', () => {
+test('1.0: la card contiene kicker, domanda, una riga di stato e il bottone — niente risposte', () => {
   const { api, card } = installCard();
   const secret = 'RISPOSTA-PARTNER';
   for (const state of [
@@ -76,9 +88,10 @@ test('M10B: la card contiene solo kicker, domanda e un segnale — niente testo 
   ]) {
     api.render(api.viewModel({ question, state, partnerName: 'Beatrice' }));
     const text = card.innerHTML.replace(/<[^>]+>/g, '|').split('|').filter(Boolean);
-    assert.equal(text.length, 3, `kicker + question + one signal: ${text.join(' / ')}`);
-    assert.equal(text[0], 'Domanda del giorno');
+    assert.equal(text.length, 4, `kicker + question + state + CTA: ${text.join(' / ')}`);
+    assert.equal(text[0], state.partner_has_answer ? 'Aspetta te' : 'La domanda di oggi');
     assert.equal(text[1], question.question);
+    assert.equal(text[3], 'Rispondi');
     assert.doesNotMatch(card.innerHTML + JSON.stringify(card.attrs), new RegExp(secret));
   }
   assert.doesNotMatch(app, /Rispondete entrambi, poi scopritevi|Aspettiamo \$\{name\}|ti aspetta`,cta/);
@@ -94,10 +107,12 @@ test('M10B: un errore non mostra mai una risposta finta o modificabile', () => {
 });
 
 test('M10A: invito empty-state e opt-in notifiche non si sovrappongono alla colonna Oggi', () => {
-  // The empty state is placed in the free band under the stack and sheds its secondary lines when short.
+  // The empty state is placed in the free band under the countdown (1.0: visible without a photo)
+  // and above the dock, and sheds its secondary lines when short.
   const layout = app.slice(app.indexOf('function layoutOggiEmptyState'), app.indexOf("if(typeof ResizeObserver==='function')"));
-  assert.match(layout, /stack\.getBoundingClientRect\(\)\.bottom/);
-  assert.match(layout, /\['distanceWidget','pushOptInCard'\]/);
+  assert.match(layout, /stack\.getBoundingClientRect\(\)/);
+  assert.match(layout, /\['usCountdownDisplay','usCountdownEntry'\]/);
+  assert.match(layout, /\['distanceWidget','usOggiDock'\]/);
   assert.match(layout, /classList\.add\('is-compact'\)/);
   assert.match(app, /new ResizeObserver\(\(\)=>layoutOggiEmptyState\(\)\)/);
   assert.match(css, /\.home-empty-state\.is-compact \.home-empty-mark,\.home-empty-state\.is-compact \.home-empty-copy small\{display:none\}/);

@@ -75,10 +75,10 @@ test('reveal: the FIRST reveal is staged, yet every answer is already in the DOM
   await tick();
   const panel = h.nodes.usGameV2Panel.innerHTML;
   assert.match(panel, /class="us-gv2-reveal us-gv5-reveal is-first-reveal"/);
-  assert.match(panel, /class="us-gv5-summary"/);
+  assert.match(panel, /class="us-gv5-reveal-list"/);
   assert.doesNotMatch(panel, /class="us-gv2-reveal-card"/, 'no long per-question cards');
-  assert.match(panel, /<dd>Il mare<\/dd>/);
-  assert.match(panel, /<dd>La montagna<\/dd>/);
+  assert.match(panel, /<dd translate="no">Il mare<\/dd>/, 'a free answer is kept as written');
+  assert.match(panel, /<dd translate="no">La montagna<\/dd>/);
   assert.deepEqual(h.feedback, ['reveal']);
   // Domain unchanged: the receipt is still recorded exactly once.
   assert.equal(h.calls.filter(([n]) => n === 'mark_game_session_reveal_seen').length, 1);
@@ -91,7 +91,7 @@ test('reveal: an already-seen reveal is not delayed, decorated or announced agai
   await tick();
   const panel = h.nodes.usGameV2Panel.innerHTML;
   assert.doesNotMatch(panel, /is-first-reveal/);
-  assert.match(panel, /<dd>Il mare<\/dd>[\s\S]*<dd>La montagna<\/dd>/);
+  assert.match(panel, /<dd translate="no">Il mare<\/dd>[\s\S]*<dd translate="no">La montagna<\/dd>/);
   assert.deepEqual(h.feedback, []);
   assert.equal(h.calls.filter(([n]) => n === 'mark_game_session_reveal_seen').length, 0);
 });
@@ -114,7 +114,9 @@ test('reveal: prediction keeps prediction → actual answer → outcome order an
 
 test('reveal: reduced motion removes the staging (instant reveal)', () => {
   const css = read('games.css');
-  assert.match(css, /@media\(prefers-reduced-motion:reduce\)\{#quiz \.us-gv5-reveal-chevron\{transition:none\}\}/, 'collapsible comparison respects reduced motion');
+  // G2 1.0 — answers are visible at once: no collapsible comparison, so no chevron to animate.
+  assert.doesNotMatch(css, /us-gv5-reveal-chevron|\.us-gv5-reveal details/);
+  assert.match(css, /@media\(prefers-reduced-motion:reduce\)\{\.us-gv2-reveal\.is-first-reveal \.us-gv2-lightsplit\{display:none\}/);
 });
 
 async function submitWeekly(h, fields) {

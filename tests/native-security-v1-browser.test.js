@@ -66,7 +66,7 @@ async function harness(t) {
     .replace('<html lang="it">', '<html lang="it" class="us-app-lock-pending">');
   return {
     async page({ enabled, width = 390, height = 844 }) {
-      const ctx = await browser.newContext({ viewport: { width, height }, isMobile: width < 800, hasTouch: true, timezoneId: 'Europe/Rome', serviceWorkers: 'block' });
+      const ctx = await browser.newContext({ locale: 'it-IT', viewport: { width, height }, isMobile: width < 800, hasTouch: true, timezoneId: 'Europe/Rome', serviceWorkers: 'block' });
       const page = await ctx.newPage();
       const errors = [];
       page.on('pageerror', (error) => errors.push(error.message));

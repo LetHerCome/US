@@ -1,4 +1,4 @@
-const BUILD_ID = "us-content-1-0-20261015-3";
+const BUILD_ID = "us-premium-redesign-20261015-6";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -55,7 +55,6 @@ const APP_SHELL = [
   versioned("/countdown.js"),
   versioned("/pet.css"),
   versioned("/pet.js"),
-  versioned("/home-cleanup.js"),
   versioned("/settings.css"),
   versioned("/settings.js"),
   versioned("/identity.css"),
@@ -66,13 +65,24 @@ const APP_SHELL = [
   versioned("/ricordi-inline-carousel.js"),
   versioned("/identity.js"),
   versioned("/settings2.css"),
-  versioned("/polish4.css"),
-  versioned("/polish4.js"),
+  versioned("/due-colori.css"),
+  versioned("/dc-oggi.css"),
+  versioned("/dc-noi.css"),
+  versioned("/dc-ricordi.css"),
+  versioned("/dc-gioca.css"),
+  versioned("/dc-popup.css"),
+  versioned("/dc-primo.css"),
+  versioned("/dc-settings.css"),
+  versioned("/due-colori.js"),
+  versioned("/i18n.js"),
+  versioned("/i18n-en.js"),
   "/assets/derived/runtime/us-symbol-256-v1.png",
   "/assets/derived/runtime/us-icon-settings-128-v1.png",
   "/assets/derived/runtime/us-icon-stories-128-v1.png",
-  "/assets/fonts/Inter-Variable.woff2",
-  "/assets/fonts/Newsreader-Variable.woff2",
+  "/assets/fonts/Fraunces-Soft-Roman.woff2",
+  "/assets/fonts/Fraunces-Soft-Italic.woff2",
+  "/assets/fonts/Figtree-Latin.woff2",
+  "/assets/fonts/Figtree-LatinExt.woff2",
   "/assets/icons/phosphor/house-regular.svg",
   "/assets/icons/phosphor/house-fill.svg",
   "/assets/icons/phosphor/heart-straight-regular.svg",
@@ -101,6 +111,23 @@ const APP_SHELL = [
   "/assets/icons/phosphor/clock-counter-clockwise-regular.svg",
   "/assets/icons/phosphor/signpost-regular.svg",
   "/assets/icons/phosphor/x-regular.svg",
+  "/assets/icons/phosphor/key-regular.svg",
+  "/assets/icons/phosphor/fingerprint-regular.svg",
+  "/assets/icons/phosphor/device-mobile-regular.svg",
+  "/assets/icons/phosphor/user-regular.svg",
+  "/assets/icons/phosphor/heart-regular.svg",
+  "/assets/icons/phosphor/shield-regular.svg",
+  "/assets/icons/phosphor/cloud-regular.svg",
+  "/assets/icons/phosphor/check-bold.svg",
+  "/assets/icons/phosphor/camera-regular.svg",
+  "/assets/icons/phosphor/video-camera-regular.svg",
+  "/assets/icons/phosphor/microphone-regular.svg",
+  "/assets/icons/phosphor/camera-rotate-regular.svg",
+  "/assets/icons/phosphor/monitor-regular.svg",
+  "/assets/icons/phosphor/flag-regular.svg",
+  "/assets/icons/phosphor/calendar-blank-regular.svg",
+  "/assets/icons/phosphor/play-regular.svg",
+  "/assets/icons/phosphor/stop-regular.svg",
   "/assets/icons/phosphor/caret-right-regular.svg",
   "/assets/icons/phosphor/caret-down-regular.svg",
   "/assets/icons/phosphor/plus-regular.svg",
@@ -117,6 +144,18 @@ const APP_SHELL = [
   "/assets/icons/phosphor/list-bullets-regular.svg",
   "/assets/icons/phosphor/chalkboard-simple-regular.svg",
   "/assets/icons/phosphor/palette-regular.svg",
+  "/assets/icons/phosphor/trash-regular.svg",
+  "/assets/icons/phosphor/info-regular.svg",
+  "/assets/icons/phosphor/sign-out-regular.svg",
+  "/assets/icons/phosphor/wifi-slash-regular.svg",
+  "/assets/icons/phosphor/download-simple-regular.svg",
+  "/assets/icons/phosphor/cat-regular.svg",
+  "/assets/icons/phosphor/book-regular.svg",
+  "/assets/icons/phosphor/waveform-regular.svg",
+  "/assets/icons/phosphor/arrows-horizontal-regular.svg",
+  "/assets/icons/phosphor/arrow-clockwise-regular.svg",
+  "/assets/icons/phosphor/star-four-regular.svg",
+  "/assets/icons/phosphor/star-regular.svg",
   "/assets/icons/profile-off.svg",
   "/assets/icons/profile-on.svg",
   "/assets/icons/think-off.svg",
@@ -188,14 +227,20 @@ const US_PUSH_TARGETS = ["home", "today", "think", "left_for_you", "quiz", "bond
 const usPushTarget = (value) => (US_PUSH_TARGETS.includes(value) ? value : "home");
 const usPushUrl = (target) => `/?open=${encodeURIComponent(usPushTarget(target))}&from=push`;
 
+// Only for a push that arrives without its own text; the worker cannot read
+// the app's saved language, so it follows the phone like the app does.
+const usPushFallback = String(self.navigator?.language || "it").toLowerCase().startsWith("it")
+  ? "Hai qualcosa di nuovo su US. ♡"
+  : "There's something new for you on US. ♡";
+
 self.addEventListener("push", (event) => {
   let data = {};
   try { data = event.data ? event.data.json() : {}; } catch (_) {
-    try { data = { body: event.data?.text?.() || "Hai qualcosa di nuovo su US. ♡" }; } catch (_e) {}
+    try { data = { body: event.data?.text?.() || usPushFallback }; } catch (_e) {}
   }
   const title = data.title || "US.";
   const options = {
-    body: data.body || "Hai qualcosa di nuovo su US. ♡",
+    body: data.body || usPushFallback,
     icon: data.icon || "/icon-192.png",
     badge: data.badge || "/icon-192.png",
     tag: data.tag || "us-notification",
@@ -369,10 +414,41 @@ async function usFetchAppDocument(request, options = {}) {
 
 function usNavigationUnavailableResponse() {
   // Last resort only (no network and no usable cached shell). It is still a
-  // real US page: it retries by itself when the connection comes back and
-  // offers one explicit retry, instead of leaving the browser error page.
+  // real US page, drawn like the approved mockup "non raggiungibile": a
+  // standalone response, so fonts and styles are inline. It retries by itself
+  // when the connection comes back and offers one explicit retry.
+  const css =
+    '@font-face{font-family:"Fraunces";src:url("/assets/fonts/Fraunces-Soft-Roman.woff2") format("woff2");font-weight:100 900;font-display:swap}' +
+    '@font-face{font-family:"Figtree";src:url("/assets/fonts/Figtree-Latin.woff2") format("woff2");font-weight:300 900;font-display:swap}' +
+    '*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#0f0b13;color:#f7efe9}' +
+    'body{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:28px;padding:max(28px,env(safe-area-inset-top)) max(28px,env(safe-area-inset-right)) max(28px,env(safe-area-inset-bottom)) max(28px,env(safe-area-inset-left));text-align:center;font:15px/1.5 Figtree,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}' +
+    'main{display:grid;justify-items:center;gap:12px;width:100%;max-width:300px;animation:us-in 260ms ease both}' +
+    '.ic{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;background:#17111c;border:1px solid rgba(247,239,233,.17);color:rgba(247,239,233,.72)}' +
+    '.ic svg{width:40px;height:40px}' +
+    'h1{margin:0;font-family:Fraunces,Georgia,serif;font-weight:400;font-size:28px;line-height:1.12;text-wrap:balance}' +
+    'p{margin:0;color:rgba(247,239,233,.72);font-size:15px}' +
+    '.btns{display:grid;gap:8px;margin-top:4px;width:100%}' +
+    'button{display:inline-flex;align-items:center;justify-content:center;width:100%;min-height:52px;padding:0 18px;border:0;border-radius:999px;background:#ff7c96;color:#1a1020;font:700 16px Figtree,system-ui,sans-serif;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .2s cubic-bezier(.34,1.56,.64,1)}' +
+    'button:active{transform:scale(.95);transition-duration:.08s}' +
+    'button:focus-visible{outline:2px solid #d98be0;outline-offset:3px}' +
+    '@keyframes us-in{from{opacity:0}to{opacity:1}}' +
+    '@media (prefers-reduced-motion:reduce){main{animation:none}button{transition:none}}';
+  const icon = '<svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M213.92,210.62a8,8,0,1,1-11.84,10.76l-52-57.15a60,60,0,0,0-57.41,7.24,8,8,0,1,1-9.42-12.93A75.43,75.43,0,0,1,128,144c1.28,0,2.55,0,3.82.1L104.9,114.49A108,108,0,0,0,61,135.31,8,8,0,0,1,49.73,134,8,8,0,0,1,51,122.77a124.27,124.27,0,0,1,41.71-21.66L69.37,75.4a155.43,155.43,0,0,0-40.29,24A8,8,0,0,1,18.92,87,171.87,171.87,0,0,1,58,62.86L42.08,45.38A8,8,0,1,1,53.92,34.62ZM128,192a12,12,0,1,0,12,12A12,12,0,0,0,128,192ZM237.08,87A172.3,172.3,0,0,0,106,49.4a8,8,0,1,0,2,15.87A158.33,158.33,0,0,1,128,64a156.25,156.25,0,0,1,98.92,35.37A8,8,0,0,0,237.08,87ZM195,135.31a8,8,0,0,0,11.24-1.3,8,8,0,0,0-1.3-11.24,124.25,124.25,0,0,0-51.73-24.2A8,8,0,1,0,150,114.24,108.12,108.12,0,0,1,195,135.31Z"/></svg>';
+  const script =
+    '(function(){var b=document.getElementById("usRetry"),again="Riprovo\u2026";' +
+    'var go=function(){b.textContent=again;b.disabled=true;location.reload();};' +
+    'try{var l=localStorage.getItem("us:lang:v1")||((navigator.languages||[])[0]||navigator.language||"it").slice(0,2).toLowerCase();' +
+    'if(l!=="it"){document.documentElement.lang="en";document.title="US";document.querySelector("main").setAttribute("aria-label","US can\u2019t be reached");' +
+    'document.querySelector("h1").textContent="US can\u2019t be reached right now.";' +
+    'document.querySelector("p").textContent="Check your connection: US will reopen as soon as it\u2019s back.";' +
+    'b.textContent="Try again";again="Trying again\u2026";}}catch(_){}' +
+    'b.addEventListener("click",go);addEventListener("online",go,{once:true});})();';
   return new Response(
-    '<!doctype html><html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>US</title><body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#08040e;color:#fff;font:16px system-ui"><main style="padding:24px;text-align:center"><strong>US non è raggiungibile in questo momento.</strong><p style="opacity:.72">Controlla la connessione: riapro US appena torna.</p><button type="button" id="usRetry" style="min-height:44px;padding:0 22px;border-radius:22px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font:inherit">Riprova</button></main><script>(function(){var go=function(){location.reload();};document.getElementById("usRetry").addEventListener("click",go);addEventListener("online",go,{once:true});})();</script></body></html>',
+    '<!doctype html><html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="dark"><meta name="theme-color" content="#0f0b13"><title>US</title>' +
+    '<style>' + css + '</style><body><main role="alert" aria-label="US non è raggiungibile">' +
+    '<span class="ic">' + icon + '</span><h1>US non è raggiungibile in questo momento.</h1><p>Controlla la connessione: riapro US appena torna.</p>' +
+    '<div class="btns"><button type="button" id="usRetry">Riprova</button></div></main>' +
+    '<script>' + script + '</script></body></html>',
     {
       status: 503,
       headers: {

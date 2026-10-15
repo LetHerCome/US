@@ -93,7 +93,7 @@ test('M12B.4 UI: loading, then a double tap sends ONE request; success shows the
   assert.equal(JSON.stringify(h.calls.find((c) => c[0] === 'rpc')), JSON.stringify(['rpc', 'keep_daily_question', { target_question_id: QID }]));
   release(); await flush();
   assert.match(h.node.innerHTML, /Conservato nei Ricordi/);
-  assert.deepEqual(h.toasts, ['Conservato nei Ricordi ♡']);
+  assert.deepEqual(h.toasts, ['Conservato nei Ricordi']); // parity 2026-10: mockup toast, sparkle icon instead of ♡
 });
 
 test('M12B.4 UI: the partner kept it first ("existing") — same kept state, no duplicate celebration', async () => {
@@ -191,22 +191,22 @@ test('M12B.4 archive: the card says "Domanda del giorno · <date>", keeps the so
   const html = w.ricordiDailyCard(kept('d1', '2026-10-12'));
   assert.match(html, /^<details class="ricordi-daily" data-ricordi-daily="d1" data-source-key="daily_question:d1">/);
   assert.match(html, /<small>Domanda del giorno · 12 ottobre<\/small>/);
-  assert.match(html, /<b>Francesco<\/b><p>Il lago<\/p>/);
-  assert.match(html, /<b>Beatrice<\/b><p>La terrazza &#60;b&#62;<\/p>/, 'escaped');
+  assert.match(html, /<b translate="no">Francesco<\/b><p translate="no">Il lago<\/p>/, 'names and answers are kept as written');
+  assert.match(html, /<b translate="no">Beatrice<\/b><p translate="no">La terrazza &#60;b&#62;<\/p>/, 'escaped');
   assert.doesNotMatch(html, /<img|storage_path/, 'not a fake Moment');
 });
 
 test('M12B.4 archive wiring: Ricordi reads the keepsakes as an optional enrichment and renders them in the story', () => {
   const core = between('async function hydrateMomentsCore(){', 'let momentsHydrateInFlight');
-  assert.match(core, /sb\.from\('daily_question_keepsakes'\)\.select\('id,source_key,question_text,question_date,francesco_answer,beatrice_answer,revealed_at'\)/);
-  assert.match(core, /const keptRows=keptError\?\[\]:\(kept\|\|\[\]\);/, 'an unreadable keepsake table never breaks Ricordi');
+  // US 1.0: English readers also get question_text_localized; without it the plain read stays.
+  assert.match(core, /usReadLocalized\(columns=>sb\.from\('daily_question_keepsakes'\)\.select\(columns\)\.order\('question_date',\{ascending:false\}\),'id,source_key,question_text,question_date,francesco_answer,beatrice_answer,revealed_at','question_text_localized'\)/);
+  assert.match(core, /const keptRows=keptError\?\[\]:\(kept\|\|\[\]\)\.map\(row=>row\.question_text_localized\?\{\.\.\.row,question_text:row\.question_text_localized\}:row\);/, 'an unreadable keepsake table never breaks Ricordi');
   assert.match(core, /ricordiTimeline\([^;]*livedRows,keptRows,eventRows,provenanceRows\)/);
   assert.match(core, /if\(item\.kind==='daily'\)\{closeRow\(\);html\.push\(ricordiDailyCard\(item\.row\)\);continue;\}/);
   assert.match(core, /keptRows\.map\(r=>\[r\.id,r\.question_date\]\)/, 'a new keepsake re-renders the story');
   assert.match(core, /if\(!rows\?\.length&&!livedRows\.length&&!keptRows\.length&&!eventRows\.length\)/);
-  // The archive selector still sees kept Dailies; US 1.0 paints the card only for a real anniversary.
-  assert.match(core, /const riviviPick=ricordiPickRivivi\(timeline,today\);/);
-  assert.match(core, /renderRicordiRivivi\(riviviPick\?\.reason==='anniversary'\?riviviPick:null,signedUrls,names\);/);
+  // The archive selector still sees kept Dailies; US 1.0 R7 paints Rivivi for anniversaries and "X mesi fa".
+  assert.match(core, /renderRicordiRivivi\(ricordiPickRivivi\(timeline,today\),displayUrls,names\);/);
   const css = read('moments-albums.css');
   assert.match(css, /#moments \.ricordi-daily-mark::before\{[^}]*mask-image:url\("\/assets\/icons\/phosphor\/question-regular\.svg"\)/, 'approved Phosphor icon already in the shell');
   assert.match(read('service-worker.js'), /"\/assets\/icons\/phosphor\/question-regular\.svg"/);

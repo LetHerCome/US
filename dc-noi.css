@@ -1,0 +1,570 @@
+/* ==========================================================================
+   Due colori, un Noi — NOI (#bond) and everything that opens from it.
+   Approved mockup v3 (2026-10-14). Loaded after due-colori.css; overrides
+   noi-v2.css, calendar.css, events.css and the legacy layers by scope.
+   Whose is it: mine --us-tu, theirs --us-partner, ours --us-noi.
+   Generic sheet chrome (surface, handle, scrim, enter) lives in dc-popup.css:
+   this file styles only what is inside Noi's sheets.
+   ========================================================================== */
+
+/* ---------- Whose colour: one variable, read by dots, chips and cards ---------- */
+#bond [data-owner],.us-cal-sheet [data-owner]{--dc-who:var(--us-noi)}
+#bond [data-owner="tu"],.us-cal-sheet [data-owner="tu"]{--dc-who:var(--us-tu)}
+#bond [data-owner="partner"],.us-cal-sheet [data-owner="partner"]{--dc-who:var(--us-partner)}
+
+/* ---------- The page, measured on the mockup (noi.js / style.css) ----------
+   One column 354px wide at 390px (18px sides), spacing by margins only:
+   head 30px from the top, 18px under it; month line, 12px; the chip, 14px;
+   the month (L…D, 46px days, 2px apart, key 10px under); the day 22px under
+   a hairline; the three tiles 18px under the day. */
+#bond .noi-canonical-page[data-noi-view="hub"],#bond .noi-canonical-page[data-noi-view="quest"]{gap:0!important}
+#bond .noi-canonical-page[data-noi-view="quest"]>.us-noi-v2{display:flex!important}
+#bond .noi-canonical-page[data-noi-view="quest"]{height:auto!important;min-height:calc(100svh - var(--us-top-chrome-clearance) - var(--us-safe-top) - var(--us-nav-height) - 44px)!important;overflow:visible!important;padding-bottom:calc(var(--us-safe-bottom) + 102px)!important}
+#bond #noiSectionBar{display:none!important}
+#bond .us-noi-v2{--noi-gap:0px;--noi-control:44px;--noi-line:var(--us-color-line);--noi-day-h:46px;gap:0;padding:0 2px}
+#bond .us-noi-v2-top{align-items:flex-end;min-height:0;margin:22px 0 18px}
+#bond .us-noi-v2-top h2{font-family:var(--us-font-display);font-weight:400;font-size:46px;line-height:.95;letter-spacing:-.02em;color:var(--us-color-text)}
+#bond .us-noi-v2-tools{gap:8px}
+#bond .us-noi-v2-toggle{gap:0;padding:3px;border-radius:999px;background:var(--us-color-surface);border:1px solid var(--us-color-line)}
+#bond .us-noi-v2 .us-noi-v2-toggle button{width:44px;height:38px;min-width:44px;min-height:38px;border-radius:999px;color:var(--us-color-text-3);background:transparent}
+#bond .us-noi-v2 .us-noi-v2-toggle button.is-active{background:var(--us-color-elevated);color:var(--us-color-text)}
+#bond .us-noi-v2-toggle .us-icon{--us-icon-size:20px}
+#bond .us-noi-v2 .us-noi-v2-settings{width:44px;height:44px;border-radius:50%;background:var(--us-color-surface);border:1px solid var(--us-color-line)}
+/* The approved settings glyph, drawn in the ink of the other icons. */
+#bond .us-noi-v2 .us-noi-v2-settings img{width:22px;height:22px;filter:brightness(0) invert(.95) sepia(.12)}
+
+/* ---------- Month line: "Ottobre 2026", arrows, the + in our colour ---------- */
+#bond .us-noi-v2-monthbar{gap:8px;margin:0 0 12px}
+#bond .us-noi-v2-monthbar h3{flex:1 1 auto;min-width:0;font-family:var(--us-font-display);font-weight:400;font-size:24px;line-height:1.5;letter-spacing:0;color:var(--us-color-text)}
+#bond .us-noi-v2-year{font-size:.72em;color:var(--us-color-text-3);letter-spacing:0}
+#bond .us-noi-v2-month-nav{gap:8px}
+#bond .us-noi-v2 .us-noi-v2-nav{width:44px;height:44px;border-radius:50%;background:var(--us-color-surface);border:1px solid var(--us-color-line);color:var(--us-color-text)}
+#bond .us-noi-v2 .us-noi-v2-nav .us-icon{--us-icon-size:22px}
+#bond .us-noi-v2 .us-noi-v2-add{width:48px;height:48px;border-radius:50%;background:var(--us-noi);color:var(--us-inchiostro);box-shadow:none}
+#bond .us-noi-v2 .us-noi-v2-add .us-icon{--us-icon-size:22px}
+
+/* ---------- The chip: "Il nostro giorno" here, "Torna a oggi" elsewhere ---------- */
+#bond .us-noi-v2-shortcuts{flex-wrap:wrap;gap:8px;margin:0 0 14px;min-height:40px}
+#bond .us-noi-v2 .us-noi-v2-shortcuts button{position:relative;gap:8px;min-height:40px;padding:0 14px 0 12px;border-radius:999px;border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text);font-size:14px;font-weight:500}
+#bond .us-noi-v2 .us-noi-v2-shortcuts button::after{content:"";position:absolute;inset:-2px 0}
+#bond .us-noi-v2-shortcuts .us-icon{--us-icon-size:18px;color:var(--us-noi)}
+#bond .us-noi-v2-sync{font-size:12px;color:var(--us-color-text-3)}
+#bond .us-noi-v2-sync:empty{display:none}
+
+/* ---------- Picking a day for an idea (the mockup's pick banner) ---------- */
+#bond .us-noi-v2 .us-noi-v2-picker{gap:12px;margin:0 0 14px;padding:12px 12px 12px 16px;border-radius:20px;background:color-mix(in srgb,var(--us-noi) 16%,var(--us-color-surface));border:1px solid color-mix(in srgb,var(--us-noi) 45%,transparent);font-size:13px;color:var(--us-color-text-2)}
+#bond .us-noi-v2 .us-noi-v2-picker>.us-icon{display:none}
+#bond .us-noi-v2 .us-noi-v2-picker-copy b{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--us-noi)}
+#bond .us-noi-v2 .us-noi-v2-picker-copy small{font-size:13px;color:var(--us-color-text-2)}
+#bond .us-noi-v2 .us-noi-v2-picker-copy #usNoiV2IdeaTitle{font-family:var(--us-font-display);font-size:20px;line-height:1.15;color:var(--us-color-text)}
+#bond .us-noi-v2 .us-noi-v2-picker>button{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text-2);font-size:14px;font-weight:700}
+
+/* ---------- The month ---------- */
+#bond .us-noi-v2-content{min-height:0}
+#bond .us-noi-v2-weekdays{margin:0}
+#bond .us-noi-v2-weekday{padding:6px 0;font-size:11px;font-weight:700;letter-spacing:.1em;line-height:17px;color:var(--us-color-text-3)}
+#bond .us-noi-v2-weekday:nth-child(n+6){color:var(--us-color-text-3)}
+#bond .us-noi-v2-grid{position:relative;row-gap:2px}
+#bond .us-noi-v2-day,#bond .us-noi-v2-blank{height:46px}
+#bond .us-noi-v2 .us-noi-v2-day{position:relative;z-index:1;display:grid;place-items:center;justify-content:stretch;align-content:stretch;gap:0;padding:0;color:var(--us-color-text);transition:color .2s}
+#bond .us-noi-v2-day.is-past{color:var(--us-color-text-3)}
+#bond .us-noi-v2-day-number{width:38px;height:38px;font-size:15px;font-weight:500;letter-spacing:0;background:transparent!important;box-shadow:none;transition:none}
+#bond .us-noi-v2-day:active .us-noi-v2-day-number{transform:none}
+/* Today: a thin ring in my colour. The chosen day: the disc of ours, which
+   moves from day to day (.us-noi-v2-sel), with dark ink on it. */
+#bond .us-noi-v2-day.is-today .us-noi-v2-day-number{box-shadow:inset 0 0 0 1.5px var(--us-tu);color:inherit;font-weight:500}
+#bond .us-noi-v2-day.is-selected{color:var(--us-inchiostro)}
+#bond .us-noi-v2-day.is-selected .us-noi-v2-day-number{color:var(--us-inchiostro);font-weight:700}
+#bond .us-noi-v2-sel{position:absolute;left:0;top:0;z-index:0;width:40px;height:40px;border-radius:50%;background:var(--us-noi);pointer-events:none}
+#bond .us-noi-v2-sel[hidden]{display:none}
+#bond .us-noi-v2-day-marks{position:absolute;left:50%;bottom:3px;transform:translateX(-50%);gap:3px;height:5px}
+#bond .us-noi-v2-day-marks i{width:5px;height:5px;border-radius:50%;background:var(--dc-who);-webkit-mask:none;mask:none}
+#bond .us-noi-v2-legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:10px 2px 0;font-size:12px;line-height:1.5;color:var(--us-color-text-3)}
+#bond .us-noi-v2-legend span{display:inline-flex;align-items:center;gap:6px}
+#bond .us-noi-v2-legend i{width:9px;height:9px;border-radius:50%;background:var(--dc-who)}
+#bond .us-noi-v2-content[data-state="loading"] .us-noi-v2-legend{opacity:.5}
+#bond .us-noi-v2-notice{border-radius:18px;background:color-mix(in srgb,var(--us-ambra) 10%,var(--us-color-surface));border-color:color-mix(in srgb,var(--us-ambra) 30%,transparent);font-size:13px}
+#bond .us-noi-v2-notice .us-icon{color:var(--us-ambra)}
+#bond .us-noi-v2 .us-noi-v2-notice button,#bond .us-noi-v2 .us-noi-v2-text-action{min-height:44px;padding:0 12px;color:var(--us-noi);font-size:14px;font-weight:700}
+
+/* ---------- The chosen day ---------- */
+#bond .us-noi-v2-detail{margin-top:22px;padding-top:18px;border-top:1px solid var(--us-color-line)}
+#bond .us-noi-v2-detail-head small{display:block;font-size:11px;font-weight:700;line-height:16px;letter-spacing:.14em;text-transform:uppercase;color:var(--us-noi)}
+#bond .us-noi-v2-detail-head h3{margin:4px 0 12px;font-family:var(--us-font-display);font-weight:400;font-size:26px;line-height:1.5;letter-spacing:0;text-transform:none}
+#bond .us-noi-v2-detail-head h3::first-letter{text-transform:uppercase}
+#bond .us-noi-v2-empty-day{margin:0}
+#bond .us-noi-v2-empty{margin:0 0 4px}
+#bond .us-noi-v2-empty-day,#bond .us-noi-v2-empty{font-size:16px;line-height:1.4;color:var(--us-color-text-2)}
+#bond .us-noi-v2-day-items{gap:8px;margin-top:0}
+
+/* A moment of the day: time · what · whose dot. */
+#bond .us-noi-v2 .us-noi-v2-item{display:grid;grid-template-columns:52px minmax(0,1fr) auto;align-items:center;gap:12px;min-height:0;padding:12px 14px;border-radius:18px;background:var(--us-color-surface);border:1px solid var(--us-color-line);color:var(--us-color-text);text-align:left}
+#bond .us-noi-v2 .us-noi-v2-item:active{background:var(--us-color-surface-2)}
+#bond .us-noi-v2-item-time{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;line-height:21px;color:var(--us-color-text)}
+#bond .us-noi-v2-item-copy{gap:0}
+#bond .us-noi-v2-item-copy b{font-size:15px;font-weight:600;line-height:22.5px;white-space:normal;overflow-wrap:anywhere}
+#bond .us-noi-v2-item-copy .us-noi-v2-item-meta{display:block;font-size:13px;line-height:1.5;color:var(--us-color-text-3)}
+#bond .us-noi-v2-item-meta>span{font-weight:400}
+#bond .us-noi-v2-item-meta>span+span::before{content:"·";margin:0 5px}
+#bond .us-noi-v2-item-meta>span[hidden]{display:none}
+#bond .us-noi-v2-owner,#bond .us-noi-v2-owner[data-owner-type]{display:inline;min-height:0;padding:0;border:0;border-radius:0;background:none;color:inherit;font-size:inherit;font-weight:400}
+#bond .us-noi-v2-item-dot{width:9px;height:9px;border-radius:50%;background:var(--dc-who)}
+
+/* Il nostro giorno: the couple mark, our colour. */
+#bond .us-noi-v2 .us-noi-v2-ourday{display:flex;align-items:center;gap:14px;padding:14px;border-radius:20px;background:radial-gradient(90% 120% at 0% 0%,color-mix(in srgb,var(--us-noi) 22%,transparent),transparent 70%),var(--us-color-surface);border:1px solid color-mix(in srgb,var(--us-noi) 40%,transparent)}
+#bond .us-noi-v2-venn{display:block;width:58px;height:36px;flex:none}
+#bond .us-noi-v2-venn.is-big{width:92px;height:56px}
+#bond .us-noi-v2-ourday .us-noi-v2-item-copy b{font-family:var(--us-font-display);font-weight:400;font-size:21px;line-height:1.5}
+#bond .us-noi-v2-ourday .us-noi-v2-item-meta{color:var(--us-color-text-2)}
+
+/* ---------- Elenco: the month as a list ---------- */
+#bond .us-noi-v2-month-list{display:grid;gap:16px;padding-top:4px}
+#bond .us-noi-v2-month-day{display:grid;gap:6px}
+#bond .us-noi-v2 .us-noi-v2-list-date{justify-content:flex-start;min-height:0;margin:0 2px;padding:0;gap:8px;font-size:11px;font-weight:700;line-height:16.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--us-noi);background:none;border:0}
+#bond .us-noi-v2 .us-noi-v2-list-date::after{content:"";position:absolute;inset:-14px 0}
+#bond .us-noi-v2 .us-noi-v2-list-date{position:relative}
+#bond .us-noi-v2-list-date em{display:none}
+#bond .us-noi-v2-empty-month{display:grid;justify-items:center;gap:6px;padding:18px 10px;border:0;border-radius:0;background:none;text-align:center}
+#bond .us-noi-v2-empty-month b{font-family:var(--us-font-display);font-weight:400;font-size:21px}
+#bond .us-noi-v2 .us-noi-v2-empty-month .us-noi-v2-text-action{min-height:44px;padding:0 12px;font-size:14px;font-weight:500;color:var(--us-color-text-3)}
+
+/* ---------- Lavagna (the mockup's Foglio "Questa settimana") ---------- */
+#usNoiLavagna{--us-sheet-k:var(--us-noi)}
+#usNoiLavagna [data-owner]{--dc-who:var(--us-noi)}
+#usNoiLavagna [data-owner="tu"]{--dc-who:var(--us-tu)}
+#usNoiLavagna [data-owner="partner"]{--dc-who:var(--us-partner)}
+#usNoiLavagna.us-foglio>.us-noi-lavagna-sheet{display:grid;align-content:start;gap:12px;min-height:min(calc(var(--us-viewport-height,100dvh) * .86),calc(var(--us-viewport-height,100dvh) - var(--us-safe-top) - 8px));padding:0 20px calc(24px + var(--us-safe-bottom))}
+#usNoiLavagna .us-noi-lavagna-body{display:grid;gap:12px;min-width:0;touch-action:pan-y}
+#usNoiLavagna .us-noi-v2-legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0;font-size:12px;line-height:1.5;color:var(--us-color-text-3)}
+#usNoiLavagna .us-noi-v2-legend span{display:inline-flex;align-items:center;gap:6px}
+#usNoiLavagna .us-noi-v2-legend i{width:9px;height:9px;border-radius:50%;background:var(--dc-who)}
+#usNoiLavagna .us-noi-v2-week-list{display:grid;gap:6px}
+#usNoiLavagna .us-noi-v2-week-row{display:grid;grid-template-columns:48px minmax(0,1fr);align-items:center;gap:10px;min-height:54px;padding:8px 12px;border:0;border-radius:16px;background:var(--us-color-surface-2)}
+#usNoiLavagna .us-noi-v2-week-row.is-today{box-shadow:inset 0 0 0 1.5px var(--us-tu)}
+#usNoiLavagna .us-noi-v2-list-date{position:relative;display:block;min-height:0;margin:0;padding:0;border:0;background:none;text-align:left;font-family:var(--us-font-ui);font-size:10px;font-weight:700;line-height:1.5;letter-spacing:.1em;text-transform:uppercase;color:var(--us-color-text-3);cursor:pointer}
+#usNoiLavagna .us-noi-v2-list-date::after{content:"";position:absolute;inset:-8px -12px}
+#usNoiLavagna .us-noi-v2-list-date b{display:block;font-family:var(--us-font-display);font-weight:400;font-size:22px;line-height:1;letter-spacing:0;color:var(--us-color-text)}
+#usNoiLavagna .us-noi-v2-list-date small{font:inherit}
+#usNoiLavagna .us-noi-v2-week-lane{display:flex;flex-wrap:wrap;align-items:center;gap:5px;min-width:0}
+#usNoiLavagna .us-noi-v2-chip{position:relative;min-height:0;max-width:100%;padding:5px 10px;border-radius:999px;border:0;background:var(--dc-who);color:var(--us-inchiostro);font-family:var(--us-font-ui);font-size:12px;font-weight:600;line-height:1.5;text-align:left;overflow-wrap:anywhere;cursor:pointer}
+#usNoiLavagna .us-noi-v2-chip::after{content:"";position:absolute;inset:-6px -2px}
+#usNoiLavagna .us-noi-v2-chip:focus-visible{outline:2px solid var(--us-color-text);outline-offset:2px}
+#usNoiLavagna .us-noi-v2-free{cursor:default}
+#usNoiLavagna .us-noi-v2-free::after{content:none}
+#usNoiLavagna .us-noi-v2-week-empty{padding:0;font-size:12px;line-height:1.5;color:var(--us-color-text-3)}
+/* The free evenings of both of you, then the mockup's hint, in its small note. */
+#usNoiLavagna .us-noi-v2-week-summary{display:flex;align-items:center;justify-content:center;gap:6px;margin:0;font-size:12px;font-weight:600;line-height:1.5;color:var(--us-color-text-2)}
+#usNoiLavagna .us-noi-v2-week-summary .us-icon{--us-icon-size:14px;width:14px;height:14px;color:var(--us-noi)}
+#usNoiLavagna .us-noi-v2-week-note{margin:0;font-size:12px;line-height:1.5;color:var(--us-color-text-3);text-align:center}
+#usNoiLavagna .us-noi-v2-week-summary+.us-noi-v2-week-note{margin-top:-10px}
+
+/* ---------- Lavagna · Missioni · Eventi tiles ---------- */
+#bond .us-noi-v2 .us-noi-v2-links{gap:8px;margin-top:18px;padding:0}
+#bond .us-noi-v2 .us-noi-v2-links button{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;justify-content:stretch;justify-items:start;align-items:start;gap:10px;min-height:0;padding:14px 12px;border-radius:20px;background:var(--us-color-surface);border:1px solid var(--us-color-line);color:var(--us-color-text);text-align:left}
+#bond .us-noi-v2 .us-noi-v2-links button:active{background:var(--us-color-surface)}
+#bond .us-noi-v2 .us-noi-v2-link-icon{width:38px;height:38px;border-radius:12px;background:color-mix(in srgb,var(--us-noi) 16%,transparent);color:var(--us-noi)}
+#bond .us-noi-v2 .us-noi-v2-link-icon .us-icon{--us-icon-size:20px}
+#bond .us-noi-v2 .us-noi-v2-links .us-icon{margin:0}
+#bond .us-noi-v2 .us-noi-v2-link-copy{display:block;text-align:left}
+#bond .us-noi-v2 .us-noi-v2-link-copy b{display:block;font-size:14px;font-weight:600;line-height:1.5}
+
+/* ==========================================================================
+   Missioni (with Le vostre idee) — a Foglio over the month (mockup 049/053).
+   Chrome (rise, handle, scrim, header type, close) from dc-popup.css.
+   ========================================================================== */
+#bond .noi-sheet{position:fixed;inset:0;z-index:10140;display:none;--us-sheet-k:var(--us-noi)}
+#bond .noi-sheet.open{display:flex}
+#bond .noi-sheet-scrim{position:absolute;inset:0}
+#noiQuestSheet.noi-sheet>[data-us-modal-panel]{display:flex;flex-direction:column;gap:12px;order:0;min-height:min(calc(var(--us-viewport-height,100dvh) * .86),calc(var(--us-viewport-height,100dvh) - var(--us-safe-top) - 8px));padding:29px 20px calc(24px + var(--us-safe-bottom))!important;overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain}
+#noiQuestSheet.noi-sheet>[data-us-modal-panel]>*{flex:0 0 auto;margin:0}
+#bond .noi-sheet-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+#bond .noi-sheet-head>div{min-width:0}
+
+/* ==========================================================================
+   Noi sections that open in place: Missioni, Eventi, Da vivere
+   ========================================================================== */
+#bond .noi-section-back{min-height:44px;padding:0 16px 0 10px;gap:4px;border-radius:999px;background:transparent;border:0;color:var(--us-color-text-2);font-size:15px;font-weight:600;margin-left:-6px}
+#bond .noi-section-back-icon{width:20px;height:20px}
+#bond .noi-canonical-page:not([data-noi-view="hub"]) .noi-section-title-row{align-items:flex-end;gap:12px;margin:2px 0 4px}
+#bond .noi-canonical-page:not([data-noi-view="hub"]) .noi-section-title-row h3{margin:0;font-family:var(--us-font-display);font-weight:400;font-size:30px;line-height:1.08;letter-spacing:-.01em;color:var(--us-color-text)}
+#bond .noi-events-sub{margin:4px 0 0;font-size:14px;color:var(--us-color-text-2)}
+#bond .noi-section-symbol{display:none}
+#bond .noi-idea-add-btn{width:48px;height:48px;min-width:48px;border-radius:50%;display:grid;place-items:center;background:var(--us-noi);color:var(--us-inchiostro);border:0;box-shadow:none}
+#bond .noi-idea-add-btn .us-icon{--us-icon-size:22px}
+
+/* ---------- Missioni: the weekly board ---------- */
+#bond .quest-week{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:6px;padding:0;border:0;border-radius:0;background:none;box-shadow:none}
+#bond .quest-week-top,#bond .quest-week-meta{display:contents}
+#bond .quest-week-id{grid-column:1/-1;order:-2;display:flex;flex-wrap:wrap;align-items:baseline;gap:0 6px}
+#bond .quest-week-id .tiny{display:inline;font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--us-noi);opacity:1}
+#bond .quest-week-id b{display:inline;margin:0;font-family:var(--us-font-ui);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--us-noi)}
+#bond .quest-week-id b::before{content:"·";margin-right:6px}
+#bond .quest-week-count{display:block;padding:12px 14px;border-radius:16px;background:var(--us-color-surface-2);text-align:left}
+#bond .quest-week-count b,#bond .quest-week-count span{font-family:var(--us-font-display);font-weight:400;font-size:24px;line-height:1.1;color:var(--us-color-text)}
+#bond .quest-week-count span{margin-left:4px}
+#bond .quest-week-count small{display:block;font-size:12px;font-weight:600;color:var(--us-color-text-3)}
+#bond .quest-week-rerolls{display:flex!important;flex-direction:column;align-items:flex-start!important;justify-content:center;gap:2px!important;padding:12px 14px;border-radius:16px;background:var(--us-color-surface-2);font-size:12px;font-weight:600;color:var(--us-color-text-3)}
+#bond .quest-week-rerolls .us-icon{--us-icon-size:18px;color:var(--us-noi)}
+#bond .quest-week-reset{grid-column:1/-1;order:3;font-size:12px;color:var(--us-color-text-3)}
+#bond .quest-week-reset .us-icon{--us-icon-size:14px;color:var(--us-color-text-3)}
+#bond .quest-week-track{grid-column:1/-1;order:2;gap:6px}
+#bond .quest-week-track i{height:4px;background:var(--us-color-elevated)}
+#bond .quest-week-track i.is-done{background:var(--us-noi)}
+#bond .quest-week-stale{grid-column:1/-1;order:4}
+#bond .quest-week-retry{border-radius:999px;border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text)}
+
+#bond .noi-living-list{gap:8px;margin-top:10px}
+#bond .noi-living-list .bond-quest.quest-v2{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"top top" "who reroll" "confirm confirm";align-items:center;gap:10px;padding:16px;border-radius:22px;border:0;background:var(--us-color-surface-2);box-shadow:none;overflow:visible}
+#bond .noi-living-list .bond-quest.quest-v2::before,#bond .noi-living-list .bond-quest.quest-v2::after{content:none}
+#bond .noi-living-list .bond-quest.quest-v2.completed{background:color-mix(in srgb,var(--us-verde) 7%,var(--us-color-surface-2))}
+#bond .bond-quest.quest-v2 .quest-top{grid-area:top;align-items:flex-start;margin:0}
+#bond .bond-quest.quest-v2 .quest-category{display:block;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--us-noi)}
+#bond .noi-living-list .bond-quest.quest-v2 h4{margin:0;font-family:var(--us-font-display);font-weight:400;font-size:20px;line-height:1.2;letter-spacing:0;color:var(--us-color-text);-webkit-line-clamp:unset;display:block;overflow:visible}
+/* The mockup says the state with the dots and the button; the sentence stays for screen readers. */
+#bond .bond-quest.quest-v2 .quest-status{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+#bond .bond-quest.quest-v2[data-quest-state="completed"] .quest-status{color:var(--us-verde)}
+#bond .bond-quest.quest-v2 .quest-status .us-icon{--us-icon-size:16px}
+#bond .noi-living-list .bond-quest.quest-v2 .quest-confirmers{grid-area:who;display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0}
+#bond .bond-quest.quest-v2 .quest-person{gap:6px;min-height:0;padding:0;border:0;background:none;font-size:12px;font-weight:600;color:var(--us-color-text-3)}
+#bond .bond-quest.quest-v2 .quest-person-initial{width:14px;height:14px;font-size:0;color:transparent;background:transparent;border:1.5px solid var(--dc-who,var(--us-tu))}
+#bond .bond-quest.quest-v2 .quest-person:first-child{--dc-who:var(--us-tu)}
+#bond .bond-quest.quest-v2 .quest-person:nth-child(2){--dc-who:var(--us-partner)}
+#bond .bond-quest.quest-v2 .quest-person.checked{border:0;background:none}
+#bond .bond-quest.quest-v2 .quest-person.checked .quest-person-initial{background:var(--dc-who);border-color:transparent}
+#bond .bond-quest.quest-v2 .quest-person-name{font-weight:600;color:var(--us-color-text-3)}
+/* noi.js .who: dot, name, dot, name, 6px apart; the state words stay for screen readers. */
+#bond .bond-quest.quest-v2 .quest-person-state{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+#bond .bond-quest.quest-v2 .quest-person.checked .quest-person-state{color:var(--us-color-text-2)}
+#bond .bond-quest.quest-v2 .quest-actions{display:contents}
+#bond .bond-quest.quest-v2 .quest-confirm{grid-area:confirm;width:100%;min-height:48px;border-radius:999px;border:0;background:var(--us-tu);color:var(--us-inchiostro);font-size:15px;font-weight:700;box-shadow:none}
+#bond .bond-quest.quest-v2 .quest-confirm:disabled{background:var(--us-color-elevated);color:var(--us-color-text-2);opacity:1}
+#bond .bond-quest.quest-v2 .quest-confirm.confirmed{background:var(--us-color-elevated);color:var(--us-color-text-2)}
+#bond .bond-quest.quest-v2[data-quest-state="completed"] .quest-confirm{background:color-mix(in srgb,var(--us-verde) 16%,transparent);color:var(--us-verde)}
+/* A finished mission reads as done, not as greyed out. */
+#bond .bond-quest.quest-v2 .quest-confirm.confirmed:disabled,#bond .bond-quest.quest-v2 .quest-reroll.is-locked:disabled{opacity:1!important;filter:none}
+#bond .bond-quest.quest-v2 .quest-reroll{grid-area:reroll;width:auto;min-width:44px;height:44px;padding:0 14px;gap:6px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text-2);font-size:14px;font-weight:700}
+#bond .bond-quest.quest-v2 .quest-reroll .us-icon{--us-icon-size:16px}
+#bond .bond-quest.quest-v2 .quest-reroll.is-locked{padding:0;width:44px;color:var(--us-color-text-3);background:transparent;border-color:transparent;opacity:1}
+/* A mission done together (or one that asks for a photo) can become a memory. */
+#bond .bond-quest.quest-v2 .quest-memory{grid-column:1/-1;display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text);font-size:14px;font-weight:700}
+#bond .bond-quest.quest-v2 .quest-memory .us-icon{--us-icon-size:18px;color:var(--us-noi)}
+/* The board, as the mockup's two stat boxes: the week sits in the sheet kicker. */
+#noiQuestSheet .quest-week-id,#noiQuestSheet .quest-week-track,#noiQuestSheet .quest-week-reset,#noiQuestSheet .bond-week-note{display:none!important}
+#bond .quest-week-rerolls b{display:block;font-family:var(--us-font-display);font-weight:400;font-size:24px;line-height:1.1;color:var(--us-color-text)}
+#bond .noi-living-list{margin-top:0}
+#noiQuestSheet.noi-sheet>[data-us-modal-panel]>header .tiny{line-height:16.5px;margin-bottom:1.5px}
+#bond .quest-week-count{display:flex!important;flex-wrap:wrap;align-items:baseline;line-height:18px}
+#bond .quest-week-count small{flex:0 0 100%}
+#bond .quest-week-count b,#bond .quest-week-count span{line-height:26.4px;vertical-align:top}
+#bond .quest-week-rerolls{line-height:18px;gap:0!important}
+#bond .quest-week-rerolls b{line-height:26.4px}
+#bond .bond-quest.quest-v2 .quest-category{line-height:15px;padding-bottom:1.5px}
+#bond .noi-living-list .bond-quest.quest-v2 h4{line-height:24px!important;margin-top:2px}
+#bond .bond-quest.quest-v2 .quest-person{line-height:18px}
+#bond .bond-quest.quest-v2 .quest-reroll{position:relative;height:40px;min-height:40px!important}
+#bond .bond-quest.quest-v2 .quest-reroll::after{content:"";position:absolute;inset:-2px}
+#bond .noi-idea-section .noi-idea-quick-form>input{height:48px;box-sizing:border-box}
+#bond .noi-idea-section .noi-idea-quick-more{margin-top:12px}
+#bond .noi-idea-browse .noi-idea-list{margin-top:12px}
+#bond .bond-quest.quest-v2 .quest-person-state .us-icon{display:none}
+#bond .bond-quest.quest-v2:not([data-quest-state="available"]) .quest-reroll.is-locked{display:none}
+/* noi.js .qt: "Scoperta · Non comune" and the title, "+40 XP" on the right. */
+#bond .bond-quest.quest-v2 .quest-top{display:flex;justify-content:space-between;gap:10px}
+#bond .bond-quest.quest-v2 .quest-head{min-width:0}
+#bond .bond-quest.quest-v2 .quest-xp{flex:none;font-size:13px;font-weight:700;line-height:19.5px;color:var(--us-noi);white-space:nowrap}
+#bond .bond-quest.quest-v2 .quest-confirm{display:inline-flex;align-items:center;justify-content:center;gap:6px}
+#bond .bond-quest.quest-v2 .quest-confirm .us-icon{--us-icon-size:18px}
+/* Done together: the mockup's mini-btn p "Aggiungi un ricordo", beside the dots. */
+#bond .bond-quest.quest-v2 .quest-memory.is-mini{grid-area:reroll;width:auto;min-height:40px;height:40px;padding:0 14px;border:0;background:var(--us-tu);color:var(--us-inchiostro);font-size:14px;font-weight:700;white-space:nowrap}
+/* Settimane passate: the mockup's .fold with .hist rows. */
+#bond .quest-recent{display:block;margin-top:10px;border-radius:22px;background:var(--us-color-surface);border:1px solid var(--us-color-line);padding:0}
+#bond .quest-recent[hidden]{display:none}
+#bond .quest-recent-toggle{display:flex;align-items:center;gap:10px;width:100%;min-height:60px;padding:0 16px;border:0;border-radius:22px;background:transparent;color:var(--us-color-text);font:inherit;text-align:left}
+#bond .quest-recent-mark{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:var(--us-color-surface-2);flex:none}
+#bond .quest-recent-mark .us-icon{--us-icon-size:16px;color:var(--us-noi)}
+#bond .quest-recent-toggle b{flex:1;min-width:0;font-size:15px;font-weight:600;line-height:1.35;color:var(--us-color-text)}
+#bond .quest-recent-toggle b small{display:block;font-size:12px;font-weight:500;color:var(--us-color-text-3)}
+#bond .quest-recent-caret{--us-icon-size:20px;color:var(--us-color-text-3);transition:rotate .3s cubic-bezier(.2,.8,.2,1)}
+#bond .quest-recent[data-open="true"] .quest-recent-caret{rotate:90deg}
+#bond .quest-recent .quest-recent-list{display:grid;gap:8px;margin:0;padding:0 16px 14px;list-style:none}
+#bond .quest-recent[data-open="false"] .quest-recent-list{display:none}
+#bond .quest-recent-week{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;margin:0;padding:0;border:0;border-radius:0;background:none;font-size:14px;color:var(--us-color-text)}
+#bond .quest-recent-icon{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:color-mix(in srgb,var(--us-noi) 16%,transparent);color:var(--us-noi);font-style:normal}
+#bond .quest-recent-icon .us-icon{--us-icon-size:16px}
+#bond .quest-recent-head{display:block;min-width:0}
+#bond .quest-recent-head b{display:block;font-size:14px;font-weight:400;color:var(--us-color-text)}
+#bond .quest-recent-head>span{display:block;font-size:12px;color:var(--us-color-text-3)}
+#bond .quest-recent-head .quest-recent-titles{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#bond .noi-section-kicker{font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--us-color-text-3)}
+
+/* ---------- Eventi, in Noi (events.js renders; CSS only here) ---------- */
+#bond .noi-events-body{display:grid;gap:18px}
+#bond .noi-ev-group{display:grid;gap:8px}
+#bond .noi-ev-label{padding:0 4px;font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--us-color-text-3);opacity:1}
+#bond .noi-ev-cards{gap:8px}
+#bond .noi-ev-card{grid-template-columns:44px minmax(0,1fr) auto;gap:12px;min-height:68px;padding:12px 14px;border-radius:18px;background:var(--us-color-surface);border:1px solid var(--us-color-line);box-shadow:none}
+#bond .noi-ev-card:first-child{grid-template-columns:minmax(0,1fr) auto;min-height:92px;padding:16px;border-radius:22px;background:radial-gradient(100% 120% at 100% 0%,color-mix(in srgb,var(--us-noi) 24%,transparent),transparent 70%),var(--us-color-surface-2);border-color:color-mix(in srgb,var(--us-noi) 35%,transparent)}
+#bond .noi-ev-card:first-child .noi-ev-icon{display:none}
+#bond .noi-events-body .noi-ev-card:first-child .noi-ev-main b{font-family:var(--us-font-display);font-weight:400;font-size:24px;line-height:1.1}
+#bond .noi-ev-card:first-child .noi-ev-main::before{content:"";display:none}
+#bond .noi-ev-icon{width:44px;height:44px;border-radius:14px;background:color-mix(in srgb,var(--us-noi) 14%,transparent);box-shadow:none;color:var(--us-noi)}
+#bond .noi-events-body .noi-ev-main b{font-family:var(--us-font-ui);font-size:15px;font-weight:600;line-height:1.3;letter-spacing:0;color:var(--us-color-text);white-space:normal;overflow-wrap:anywhere}
+#bond .noi-events-body .noi-ev-row.is-lived .noi-ev-main b{color:var(--us-color-text-2)}
+#bond .noi-ev-main small{font-size:13px;color:var(--us-color-text-3)}
+#bond .noi-ev-count{padding:5px 10px;border-radius:999px;background:var(--us-color-elevated);color:var(--us-color-text-2);font-size:12px;font-weight:700}
+#bond .noi-ev-row{grid-template-columns:52px minmax(0,1fr) auto;gap:12px;min-height:64px;padding:12px 14px;border-radius:18px;background:var(--us-color-surface);border:1px solid var(--us-color-line)}
+#bond .noi-ev-when{height:auto;align-items:flex-start;gap:0;border:0;border-radius:0;background:none;flex-direction:column-reverse}
+#bond .noi-ev-when b{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--us-color-text)}
+#bond .noi-ev-when small{font-size:12px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--us-color-text-2)}
+#bond .noi-ev-row.is-system .noi-ev-when b{color:var(--us-noi)}
+#bond .noi-ev-chip{padding:4px 8px;border-radius:999px;background:var(--us-ambra);color:var(--us-inchiostro);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+#bond .noi-ev-row.is-lived{background:transparent;border-style:solid;border-color:var(--us-color-line)}
+#bond .noi-ev-row.is-lived>.us-icon{--us-icon-size:14px;width:24px;height:24px;padding:5px;border-radius:50%;box-sizing:border-box;background:color-mix(in srgb,var(--us-verde) 20%,transparent);color:var(--us-verde);-webkit-mask:none;mask:none}
+#bond .noi-ev-row.is-lived>.us-icon::before{content:"";display:block;width:100%;height:100%;background:currentColor;-webkit-mask:url("/assets/icons/phosphor/check-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/check-regular.svg") center/contain no-repeat}
+#bond .noi-ev-row.is-lived>.us-icon{background-color:color-mix(in srgb,var(--us-verde) 20%,transparent)}
+#bond :is(.noi-ev-card,.noi-ev-row).is-system{font:inherit;text-align:left;color:inherit;cursor:pointer}
+#bond .us-events-empty{padding:28px 16px;border-radius:22px;border:1px dashed var(--us-color-line-strong);text-align:center;color:var(--us-color-text-2)}
+#bond .us-events-empty b{font-family:var(--us-font-display);font-weight:400;font-size:21px;color:var(--us-color-text)}
+
+/* ---------- Le vostre idee, inside Missioni ---------- */
+#bond .noi-living-section>.noi-idea-section{display:flex;order:0;flex:0 0 auto;min-height:0;overflow:visible;margin-top:26px}
+#bond .noi-living-section>.noi-idea-section[hidden]{display:none}
+/* Now that the ideas are on screen, the hidden attribute must win over the
+   display rules below (quick form, lived ideas, detail rows). */
+#bond .noi-idea-section [hidden]{display:none!important}
+#bond .noi-living-section>.noi-idea-section .noi-idea-browse{overflow:visible}
+#bond .noi-living-section>.noi-idea-section .noi-idea-list{overflow:visible;max-height:none}
+#bond .noi-living-section .noi-idea-section .noi-section-title-row h3{font-size:24px}
+/* An open idea is the whole Missioni screen until Back. */
+#bond .noi-living-section[data-idea-detail="open"]>:not(.noi-idea-section){display:none!important}
+#bond .noi-living-section[data-idea-detail="open"]>.noi-idea-section{margin-top:0}
+#bond .noi-idea-quick-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:8px;padding:0;border:0;background:none}
+#bond .noi-idea-quick-form>input,#bond .noi-idea-quick-extra input,#bond .noi-idea-quick-extra textarea,#bond .noi-idea-detail input,#bond .noi-idea-detail textarea{width:100%;min-height:48px;padding:0 14px;border-radius:16px;background:var(--us-color-bg);border:1px solid var(--us-color-line-strong);color:var(--us-color-text);font:inherit;font-size:16px}
+#bond .noi-idea-quick-extra textarea,#bond .noi-idea-detail textarea{min-height:96px;padding:14px;resize:none}
+#bond .noi-idea-quick-form>input{grid-column:1/-1}
+#bond .noi-idea-quick-more{grid-column:1;grid-row:2;align-self:center;justify-self:start;min-height:36px;padding:0;background:none;border:0;font-size:13px;font-weight:600;color:var(--us-color-text-2);text-decoration:underline;text-underline-offset:3px}
+#bond .noi-idea-quick-extra{grid-column:1/-1;grid-row:3;display:grid;gap:8px}
+#bond .noi-idea-quick-extra[hidden]{display:none}
+#bond .noi-idea-quick-actions{grid-column:2;grid-row:2;display:flex;justify-content:flex-end;gap:8px}
+#bond .noi-idea-quick-form:has(#noiIdeaQuickExtra:not([hidden])) .noi-idea-quick-actions{grid-column:1/-1;grid-row:4}
+#bond .noi-idea-quick-form .noi-idea-form-status{grid-column:1/-1}
+#bond .noi-idea-quick-actions button,#bond .noi-idea-detail-actions button{min-height:44px;padding:0 18px;border-radius:999px;font-size:15px;font-weight:700}
+#bond .noi-idea-quick-actions .ghost,#bond #noiIdeaDetailArchive{background:transparent;border:1px solid var(--us-color-line-strong);color:var(--us-color-text)}
+#bond .noi-idea-quick-actions .primary,#bond .noi-idea-detail-actions .primary{background:var(--us-tu);color:var(--us-inchiostro);border:0;box-shadow:none}
+#bond .noi-idea-browse .noi-idea-list{display:grid;gap:0;margin-top:12px;border-radius:20px;background:var(--us-color-surface-2);overflow-x:hidden;overflow-y:auto;padding-bottom:0;-webkit-mask-image:none;mask-image:none}
+#bond .noi-idea-browse .noi-idea-list:empty{display:none}
+#bond .noi-idea-browse .noi-idea-list>.noi-quiet-state,#bond .noi-idea-browse .noi-idea-list>.empty-state{padding:22px 16px;text-align:center}
+#bond .noi-idea-browse .noi-idea-card{position:relative;display:flex;align-items:center;gap:12px;width:100%;min-height:56px;margin:0;padding:10px 40px 10px 14px;border:0;border-radius:0;background:transparent;box-shadow:none;text-align:left;color:var(--us-color-text)}
+#bond .noi-idea-browse .noi-idea-card+.noi-idea-card{border-top:1px solid var(--us-color-line)}
+#bond .noi-idea-browse .noi-idea-card::before{content:"";flex:none;width:30px;height:30px;border-radius:10px;background:var(--us-color-elevated) no-repeat center/16px;background-image:none;-webkit-mask:none;mask:none}
+#bond .noi-idea-browse .noi-idea-card::after{content:"";position:absolute;right:14px;top:50%;width:16px;height:16px;margin-top:-8px;background:var(--us-color-text-3);-webkit-mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat}
+#bond .noi-idea-browse .noi-idea-card-copy{position:relative;display:grid;gap:1px;min-width:0;flex:1}
+#bond .noi-idea-browse .noi-idea-card-copy::before{content:"";position:absolute;left:-35px;top:50%;width:16px;height:16px;margin-top:-8px;background:var(--us-noi);-webkit-mask:url("/assets/icons/phosphor/sparkle-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/sparkle-regular.svg") center/contain no-repeat}
+#bond .noi-idea-card-copy b{font-size:15px;font-weight:600;color:var(--us-color-text)}
+#bond .noi-idea-card-copy small{font-size:12px;color:var(--us-color-text-3)}
+#bond .noi-idea-state{flex:none;padding:3px 8px;border-radius:999px;background:color-mix(in srgb,var(--us-noi) 16%,transparent);color:var(--us-noi);font-size:11px;font-weight:700}
+#bond .noi-idea-lived-toggle{position:relative;display:flex;align-items:center;gap:12px;width:100%;min-height:60px;margin-top:16px;padding:10px 40px 10px 46px;border-radius:20px;border:1px solid var(--us-color-line);background:transparent;color:var(--us-color-text);font-size:15px;font-weight:600;text-align:left}
+#bond .noi-idea-lived-toggle::before{content:"";position:absolute;left:16px;top:50%;width:18px;height:18px;margin-top:-9px;background:var(--us-noi);-webkit-mask:url("/assets/icons/phosphor/heart-straight-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/heart-straight-regular.svg") center/contain no-repeat}
+#bond .noi-idea-lived-toggle::after{content:"";position:absolute;right:16px;top:50%;width:16px;height:16px;margin-top:-8px;background:var(--us-color-text-3);-webkit-mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/caret-right-regular.svg") center/contain no-repeat;transition:transform .2s var(--us-ease-standard)}
+#bond .noi-idea-lived-toggle[aria-expanded="true"]::after{transform:rotate(90deg)}
+#bond .noi-idea-lived-list{margin-top:8px}
+/* Mockup 053 (.quick, .list .row, .fold): the add field is always on screen. */
+#bond .noi-idea-section #noiIdeaQuickForm[hidden]{display:grid!important}
+#bond .noi-idea-section #noiIdeaAddToggle,#bond .noi-idea-section #noiIdeaQuickCancel{display:none!important}
+#bond .noi-living-section .noi-idea-section .noi-section-title-row{margin:0 0 12px}
+#bond .noi-living-section .noi-idea-section .noi-section-title-row h3{margin:0;font-family:var(--us-font-display);font-weight:400;font-size:26px;line-height:1.15;color:var(--us-color-text)}
+#bond .noi-idea-section .noi-idea-quick-form{grid-template-columns:minmax(0,1fr) auto;gap:0 8px;margin:0}
+#bond .noi-idea-section .noi-idea-quick-form>input{grid-column:1;grid-row:1;min-height:48px;border-radius:16px;background:var(--us-color-bg);border:1px solid var(--us-color-line-strong)}
+#bond .noi-idea-section .noi-idea-quick-actions,#bond .noi-idea-section .noi-idea-quick-form:has(#noiIdeaQuickExtra:not([hidden])) .noi-idea-quick-actions{grid-column:2;grid-row:1;align-self:stretch}
+#bond .noi-idea-section .noi-idea-quick-actions .primary{min-height:48px;padding:0 14px;font-size:14px;font-weight:700;border-radius:999px;background:var(--us-tu);color:var(--us-inchiostro)}
+#bond .noi-idea-section .noi-idea-quick-more{grid-column:1/-1;grid-row:2;min-height:36px;margin-top:10px;font-size:13px;font-weight:600;color:var(--us-color-text-2)}
+#bond .noi-idea-section .noi-idea-quick-extra{grid-row:3;margin-top:8px}
+#bond .noi-idea-section .noi-idea-quick-form .noi-idea-form-status{grid-row:4}
+#bond .noi-idea-section .noi-idea-quick-form .noi-idea-form-status:empty{display:none}
+#bond .noi-idea-browse .noi-idea-list{margin-top:10px;border-radius:20px;background:var(--us-color-surface-2)}
+#bond .noi-idea-browse .noi-idea-card{min-height:56px;padding:8px 46px 8px 14px;gap:12px}
+#bond .noi-idea-browse .noi-idea-card::before{width:34px;height:34px;border-radius:11px;background:var(--us-color-elevated)}
+#bond .noi-idea-browse .noi-idea-card-copy::before{left:-38.5px;width:19px;height:19px;margin-top:-9.5px;background:var(--us-color-text-2)}
+#bond .noi-idea-browse .noi-idea-card::after{right:14px;width:18px;height:18px;margin-top:-9px}
+#bond .noi-idea-card-copy small{line-height:1.3}
+/* Idee vissute: toggle and list read as one .fold card. */
+#bond .noi-idea-browse .noi-idea-lived-toggle{min-height:60px;margin-top:22px;padding:11px 46px 11px 46px;gap:10px;border-radius:22px;background:var(--us-color-surface);border:1px solid var(--us-color-line)}
+#bond .noi-idea-browse .noi-idea-lived-toggle::before{width:20px;height:20px;margin-top:-10px}
+#bond .noi-idea-browse .noi-idea-lived-toggle::after{width:20px;height:20px;margin-top:-10px;transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+#bond .noi-idea-browse .noi-idea-lived-toggle:not([hidden]){display:block;font-size:15px;font-weight:600;line-height:1.35}
+#bond .noi-idea-lived-toggle small{display:block;font-size:12px;font-weight:500;color:var(--us-color-text-3)}
+#bond .noi-idea-browse .noi-idea-lived-toggle[aria-expanded="true"]{border-bottom-color:transparent;border-radius:22px 22px 0 0}
+#bond .noi-idea-browse .noi-idea-lived-list{display:grid;gap:8px;margin-top:-1px;padding:0 16px 14px;border-radius:0 0 22px 22px;background:var(--us-color-surface);border:1px solid var(--us-color-line);border-top:0}
+#bond .noi-idea-browse .noi-idea-lived-list .noi-idea-card.is-lived{min-height:0;padding:0;gap:10px;border:0}
+#bond .noi-idea-browse .noi-idea-lived-list .noi-idea-card.is-lived::before{width:30px;height:30px;border-radius:10px;background:color-mix(in srgb,var(--us-noi) 16%,transparent)}
+#bond .noi-idea-browse .noi-idea-lived-list .noi-idea-card.is-lived::after{content:none}
+#bond .noi-idea-browse .noi-idea-lived-list .noi-idea-card.is-lived .noi-idea-card-copy::before{left:-32px;width:16px;height:16px;margin-top:-8px;background:var(--us-noi);-webkit-mask-image:url("/assets/icons/phosphor/check-regular.svg");mask-image:url("/assets/icons/phosphor/check-regular.svg")}
+#bond .noi-idea-lived-list .noi-idea-card.is-lived b{font-size:14px;font-weight:400}
+#bond .noi-idea-detail-back{display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 14px 0 6px;border:0;border-radius:999px;background:transparent;color:var(--us-color-text-2);font-size:15px;font-weight:600}
+#bond .noi-idea-detail form{display:grid;gap:10px}
+#bond .noi-idea-detail #noiIdeaDetailTitle{font-family:var(--us-font-display);font-size:22px}
+#bond .noi-idea-detail-calendar,#bond .noi-idea-memory{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:16px;background:var(--us-color-surface-2);border:0}
+#bond .noi-idea-detail-when small,#bond .noi-idea-memory small{font-size:12px;color:var(--us-color-text-3)}
+#bond .noi-idea-quiet-action{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text);font-size:14px;font-weight:700}
+#bond .noi-idea-lived-action{min-height:48px;border-radius:999px;border:0;background:var(--us-noi);color:var(--us-inchiostro);font-size:15px;font-weight:700;box-shadow:none}
+#bond .noi-idea-detail-actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+
+/* ==========================================================================
+   Calendar sheets: an impegno, a new impegno (calendar.js)
+   ========================================================================== */
+.us-cal-sheet .us-cal-sheet-head{align-items:flex-start;padding:16px 20px 10px}
+.us-cal-sheet-titles{display:grid;gap:2px;min-width:0}
+.us-cal-sheet .us-cal-sheet-kicker{display:block;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--us-tu);opacity:1}
+#usCalendarFormSheet .us-cal-sheet-kicker{color:var(--us-noi)}
+.us-cal-sheet .us-cal-sheet-head h3{margin:0;font-family:var(--us-font-display);font-weight:400;font-size:26px;line-height:1.12;letter-spacing:-.01em;text-wrap:balance}
+
+/* Impegno: when, where and whose, in the mockup's .ev-meta card. */
+.us-cal-sheet .us-cal-detail-body{display:grid;gap:12px;margin:12px 20px 0;padding:0;border-radius:0;background:none}
+.us-cal-sheet .us-cal-detail-body::before{content:none}
+.us-cal-sheet .us-cal-detail-body[data-owner="tu"]{--dc-who:var(--us-tu)}
+.us-cal-sheet .us-cal-detail-body[data-owner="partner"]{--dc-who:var(--us-partner)}
+.us-cal-sheet .us-cal-detail-body[data-owner="noi"]{--dc-who:var(--us-noi)}
+.us-cal-sheet .us-cal-detail-meta{display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:18px;background:var(--us-color-surface-2)}
+.us-cal-sheet .us-cal-detail-dot{flex:none;width:9px;height:9px;margin-top:6px;border-radius:50%;background:var(--dc-who,var(--us-noi))}
+.us-cal-sheet .us-cal-detail-meta b{display:block;font-size:15px;font-weight:600;line-height:22.5px;color:var(--us-color-text)}
+.us-cal-sheet .us-cal-detail-meta small{display:block;font-size:13px;line-height:19.5px;font-weight:400;color:var(--us-color-text-3)}
+.us-cal-sheet .us-cal-detail-note{margin:0;font-size:15px;line-height:22.5px;color:var(--us-color-text-2)}
+/* The Foglio head of the mockup: no sticky bar, no divider; the kicker in the owner's colour. */
+:is(#usCalendarDetailSheet,#usCalendarFormSheet,#usNoiLavagna)>[data-us-modal-panel]>.us-cal-sheet-head{position:static!important;margin:0;padding:30px 20px 0!important;border:0!important;background:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;box-shadow:none!important}
+:is(#usCalendarDetailSheet,#usCalendarFormSheet,#usNoiLavagna)>[data-us-modal-panel]>.us-cal-sheet-head .tiny{line-height:16.5px!important;margin:0 0 1.5px!important}
+:is(#usCalendarDetailSheet,#usCalendarFormSheet,#usNoiLavagna) .us-cal-sheet-titles{gap:0}
+#usCalendarDetailSheet{--us-sheet-k:var(--us-tu)}
+#usCalendarDetailSheet[data-owner="partner"]{--us-sheet-k:var(--us-partner)}
+#usCalendarDetailSheet[data-owner="noi"]{--us-sheet-k:var(--us-noi)}
+#usCalendarDetailSheet .us-cal-sheet-kicker{color:var(--us-sheet-k)!important}
+.us-cal-sheet .us-cal-detail-meta small,.us-cal-sheet .us-cal-detail-meta small *{color:var(--us-color-text-3)!important}
+#usCalendarFormSheet>[data-us-modal-panel]{min-height:min(calc(var(--us-viewport-height,100dvh) * .86),calc(var(--us-viewport-height,100dvh) - var(--us-safe-top) - 8px))}
+.us-cal-sheet .us-cal-detail-actions{display:grid;gap:8px;padding:16px 20px 4px}
+.us-cal-sheet .us-cal-detail-actions button{min-height:52px;border-radius:999px;font-size:16px;font-weight:700}
+.us-cal-sheet .us-cal-detail-edit{background:var(--us-tu);border:0;color:var(--us-inchiostro)}
+.us-cal-sheet .us-cal-detail-delete{background:transparent;border:1px solid color-mix(in srgb,var(--us-rosso) 40%,transparent);color:var(--us-rosso)}
+
+/* Nuovo impegno: quick titles, fields with small caps labels, a real switch. */
+.us-cal-sheet .us-cal-form{display:grid;gap:12px;padding:4px 20px 6px}
+/* One "+", three choices: Solo mio · Nostro · Data speciale, each in its colour. */
+.us-cal-sheet .us-cal-kind{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0}
+.us-cal-sheet .us-cal-kind[hidden]{display:none}
+.us-cal-sheet .us-cal-kind button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:64px;padding:8px 4px;border-radius:16px;border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text-2);font-size:13px;font-weight:600;line-height:1.2;text-align:center;overflow-wrap:anywhere}
+.us-cal-sheet .us-cal-kind button .us-icon{--us-icon-size:20px;color:var(--dc-who)}
+.us-cal-sheet .us-cal-kind button[aria-pressed="true"]{border-color:var(--dc-who);background:color-mix(in srgb,var(--dc-who) 14%,transparent);color:var(--us-color-text)}
+.us-cal-sheet .us-cal-kind button:focus-visible{outline:2px solid var(--us-color-text);outline-offset:2px}
+#usCalendarFormSheet[data-kind="shared"] .us-cal-form-save{background:var(--us-noi)}
+.us-cal-sheet .us-cal-form-context{margin:0;font-size:13px;color:var(--us-color-text-2)}
+.us-cal-sheet .us-cal-form-day{margin:0;font-family:var(--us-font-display);font-weight:400;font-size:20px;color:var(--us-color-text)}
+.us-cal-sheet .us-cal-form-day-entries{margin:0;gap:6px}
+.us-cal-sheet .us-cal-form-day-kicker{font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--us-color-text-3)}
+.us-cal-sheet .us-cal-form-day-entry{min-height:44px;padding:0 13px;border-radius:999px;border:1px solid var(--us-color-line-strong);background:transparent}
+.us-cal-sheet .us-cal-presets{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+.us-cal-sheet .us-cal-presets button{min-height:40px;padding:0 13px;border-radius:999px;border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text-2);font-size:13px;font-weight:600;letter-spacing:0;text-transform:none}
+.us-cal-sheet .us-cal-presets button[aria-pressed="true"]{background:var(--us-color-text);border-color:var(--us-color-text);color:var(--us-inchiostro)}
+.us-cal-sheet .us-cal-field{display:grid;gap:6px;margin:0}
+.us-cal-sheet .us-cal-field>span{margin:0;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--us-color-text-3)}
+.us-cal-sheet .us-cal-field>span i{text-transform:none;letter-spacing:0;font-weight:500}
+.us-cal-sheet .us-cal-field input:not([type="checkbox"]),.us-cal-sheet .us-cal-field textarea{min-height:52px;padding:0 14px;border-radius:16px;background:var(--us-color-bg);border:1px solid var(--us-color-line-strong);color:var(--us-color-text);font-size:16px;box-shadow:none}
+.us-cal-sheet .us-cal-field input:focus-visible{outline:none;border-color:var(--us-noi);box-shadow:0 0 0 3px color-mix(in srgb,var(--us-noi) 26%,transparent)}
+.us-cal-sheet .us-cal-allday-field{display:flex;flex-direction:row-reverse;align-items:center;justify-content:space-between;gap:12px;min-height:56px;padding:0 14px 0 16px;border-radius:16px;border:0;background:var(--us-color-surface-2);cursor:pointer}
+.us-cal-sheet .us-cal-allday-field>span{margin:0;font-size:15px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--us-color-text)}
+.us-cal-sheet .us-cal-allday-field input{-webkit-appearance:none;appearance:none;position:relative;width:50px;height:30px;min-height:0;margin:0;padding:0;flex:none;border:0;border-radius:30px;background:var(--us-color-elevated);cursor:pointer;transition:background .25s var(--us-ease-standard)}
+.us-cal-sheet .us-cal-allday-field input::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--us-latte);box-shadow:0 2px 6px rgba(0,0,0,.35);transition:transform .38s var(--us-ease-spring)}
+.us-cal-sheet .us-cal-form .us-cal-allday-field input[type="checkbox"]{background:var(--us-color-elevated)!important;box-shadow:inset 0 0 0 1px var(--us-color-line-strong)}
+.us-cal-sheet .us-cal-form .us-cal-allday-field input[type="checkbox"]:checked{background:var(--us-tu)!important;box-shadow:none}
+.us-cal-sheet .us-cal-allday-field input:checked::after{transform:translateX(20px)}
+.us-cal-sheet .us-cal-allday-field input:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
+.us-cal-sheet .us-cal-time-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:end}
+.us-cal-sheet .us-cal-time-arrow{display:none}
+.us-cal-sheet .us-cal-field .us-cal-time-input{text-align:left;letter-spacing:.02em}
+.us-cal-sheet .us-cal-form-status:empty{display:none}
+.us-cal-sheet .us-cal-form-status{font-size:13px;font-weight:600;color:var(--us-rosso)}
+.us-cal-sheet .us-cal-form-save{width:100%;min-height:52px;margin-top:4px;border-radius:999px;border:0;background:var(--us-tu);color:var(--us-inchiostro);font-size:16px;font-weight:700;box-shadow:none}
+
+/* ==========================================================================
+   Eventi sheet (events.js): mockup 050 list, 051 new event, 052 one event
+   ========================================================================== */
+#usEventsOverlay.us-events-overlay>[data-us-modal-panel]{display:grid;gap:12px;align-content:start;min-height:min(calc(var(--us-viewport-height,100dvh) * .86),calc(var(--us-viewport-height,100dvh) - var(--us-safe-top) - 8px));padding:29px 20px calc(24px + var(--us-safe-bottom))!important}
+#usEventForm .us-event-form-title{display:none!important}
+#usEventsOverlay.us-events-overlay>[data-us-modal-panel]>*{min-width:0}
+#usEventsOverlay .us-events-head{align-items:flex-start;gap:12px;margin:0;padding:0}
+#usEventsOverlay.us-events-overlay>[data-us-modal-panel]>header .tiny{line-height:16.5px;margin-bottom:1.5px;color:var(--us-noi)}
+#usEventsOverlay.us-events-overlay>[data-us-modal-panel]>header h2{margin:0;font-family:var(--us-font-display);font-weight:400;font-size:26px;line-height:1.12;letter-spacing:-.01em}
+/* The list: one grid with the mockup's 12px rhythm (.flow), group labels like .grp-l. */
+#usEventsBrowse:not([hidden]){display:grid;gap:12px}
+#usEventsBrowse .us-events-subsection:not([hidden]),#usEventsBrowse .us-events-list{display:contents}
+#usEventsBrowse .us-events-list-head{display:block;margin:18px 4px 8px;padding:0}
+#usEventsBrowse .us-events-list-head b{display:block;font-size:11px;font-weight:700;line-height:16.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--us-color-text-3)}
+#usEventsBrowse .us-events-list-head small{display:none}
+#usEventsOverlay .us-next-event:not([hidden]){display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:center;width:100%;min-height:0;padding:16px!important;border-radius:22px;background:radial-gradient(100% 120% at 100% 0%,color-mix(in srgb,var(--us-noi) 24%,transparent),transparent 70%),var(--us-color-surface-2);border:1px solid color-mix(in srgb,var(--us-noi) 35%,transparent);box-shadow:none;text-align:left;color:var(--us-color-text)}
+#usEventsOverlay .us-next-event-kicker{grid-column:1;font-size:11px;font-weight:700;line-height:16.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--us-noi)}
+#usEventsOverlay .us-next-event strong{grid-column:1;margin:0;font-family:var(--us-font-display);font-variation-settings:"SOFT" 100,"WONK" 1;font-weight:400;font-size:24px;line-height:1.1;letter-spacing:0;color:var(--us-color-text)}
+#usEventsOverlay .us-next-event-date{grid-column:1;display:block;margin:0;font-size:13px;font-weight:400;line-height:19.5px;color:var(--us-color-text-2)}
+#usEventsOverlay .us-next-event-date>span{display:inline;margin:0;padding:0;background:none;font:inherit;color:inherit;letter-spacing:0}
+#usEventsOverlay .us-next-event-venn{grid-column:2;grid-row:1/4;width:70px;height:42px}
+#usEventsOverlay .us-event-item{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;min-height:0;margin:0 0 8px;padding:12px 14px;border-radius:18px;background:var(--us-color-surface);border:1px solid var(--us-color-line);box-shadow:none;text-align:left;color:var(--us-color-text);opacity:1}
+#usEventsOverlay .us-event-datebox{display:block;width:auto;height:auto;border:0;border-radius:0;background:none;font-size:14px;font-weight:600;line-height:21px;font-variant-numeric:tabular-nums;color:var(--us-color-text)}
+#usEventsOverlay .us-event-main b{display:block;font-size:15px;font-weight:600;line-height:22.5px;white-space:normal;overflow:visible;color:var(--us-color-text)}
+#usEventsOverlay .us-event-main small{display:block;margin:0;font-size:13px;line-height:19.5px;color:var(--us-color-text-3)}
+#usEventsOverlay .us-event-tag{font-style:normal;font-size:10px;font-weight:700;line-height:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--us-inchiostro);background:var(--us-ambra);padding:4px 8px;border-radius:999px;white-space:nowrap}
+#usEventsOverlay .us-event-ok{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--us-verde) 20%,transparent);color:var(--us-verde);font-style:normal}
+#usEventsOverlay .us-event-ok .us-icon{--us-icon-size:14px}
+#usEventsOverlay .us-event-add{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:52px;margin:4px 0 0;border-radius:999px;border:0;background:var(--us-tu);color:var(--us-inchiostro);font-size:16px;font-weight:700;box-shadow:none}
+#usEventsOverlay .us-event-add .us-icon{--us-icon-size:18px;color:inherit}
+#usEventsOverlay .us-events-empty{padding:22px 16px;border-radius:18px;border:1px dashed var(--us-color-line-strong);background:none;text-align:center;font-size:14px;color:var(--us-color-text-2)}
+/* One event: the detail (mode="detail") or its fields (mode="edit"). */
+#usEventForm:not([hidden]){display:grid;gap:12px;padding:0}
+#usEventForm[data-mode="detail"] .us-event-fields,#usEventForm[data-mode="detail"] #usEventSaveBtn,#usEventForm[data-mode="edit"] .us-event-detail,#usEventForm[data-mode="edit"] #usEventEditBtn,#usEventForm[data-mode="edit"] #usEventCompleteBtn,#usEventForm[data-mode="edit"] #usEventDeleteBtn{display:none!important}
+#usEventsOverlay .us-event-back{justify-self:start;display:inline-flex;align-items:center;gap:4px;width:auto;height:auto;min-height:44px;padding:0 14px 0 8px;margin-left:-6px;border:0;border-radius:999px;background:transparent;box-shadow:none;color:var(--us-color-text-2);font-size:15px;font-weight:600}
+#usEventsOverlay .us-event-back .us-icon{--us-icon-size:22px}
+#usEventForm .us-event-detail,#usEventForm .us-event-fields{display:grid;gap:12px}
+#usEventForm .us-event-meta{display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:18px;background:var(--us-color-surface-2)}
+#usEventForm .us-event-meta-dot{flex:none;width:9px;height:9px;margin-top:6px;border-radius:50%;background:var(--us-noi)}
+#usEventForm .us-event-meta b{display:block;font-size:15px;font-weight:600;line-height:22.5px}
+#usEventForm .us-event-meta small{display:block;font-size:13px;line-height:19.5px;color:var(--us-color-text-3)}
+#usEventForm .us-event-lead,#usEventForm .us-event-detail-note{margin:0;font-size:15px;line-height:22.5px;color:var(--us-color-text-2)}
+#usEventForm .us-event-field{display:grid;gap:6px;margin:0}
+#usEventForm .us-event-field>span{margin:0;font-size:12px;font-weight:700;line-height:18px;letter-spacing:.1em;text-transform:uppercase;color:var(--us-color-text-3)}
+#usEventForm .us-event-field>span i{font-style:normal;font-weight:700;letter-spacing:.1em;color:var(--us-color-text-3)}
+#usEventForm .us-event-field input,#usEventForm .us-event-field textarea{width:100%;box-sizing:border-box;min-height:52px;padding:0 14px;border-radius:16px!important;background:var(--us-color-bg)!important;border:1px solid var(--us-color-line-strong)!important;color:var(--us-color-text);font:inherit;font-size:16px;box-shadow:none}
+#usEventForm .us-event-field textarea{min-height:96px;padding:14px;resize:none}
+#usEventForm .us-event-field input:focus-visible,#usEventForm .us-event-field textarea:focus-visible{outline:none;border-color:var(--us-noi);box-shadow:0 0 0 3px color-mix(in srgb,var(--us-noi) 26%,transparent)}
+#usEventForm .us-event-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+#usEventForm .us-event-repeat{display:flex;flex-direction:row-reverse;align-items:center;justify-content:space-between;gap:12px;min-height:56px;margin:0;padding:8px 14px;border-radius:20px;border:0;background:var(--us-color-surface-2);cursor:pointer}
+#usEventForm .us-event-repeat b{display:block;font-size:15px;font-weight:600;line-height:22.5px;color:var(--us-color-text)}
+#usEventForm .us-event-repeat small{display:block;margin:0;font-size:12px;line-height:1.3;color:var(--us-color-text-3)}
+#usEventForm .us-event-repeat input[type="checkbox"]{-webkit-appearance:none;appearance:none;position:relative;width:50px;height:30px;margin:0;flex:none;border:0;border-radius:30px;background:var(--us-color-elevated)!important;box-shadow:none;cursor:pointer;transition:background .25s}
+#usEventForm .us-event-repeat input::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--us-latte);box-shadow:0 2px 6px rgba(0,0,0,.35);transition:translate .38s cubic-bezier(.34,1.56,.64,1)}
+#usEventForm .us-event-repeat input[type="checkbox"]:checked{background:var(--us-tu)!important}
+#usEventForm .us-event-repeat input:checked::after{translate:20px 0}
+#usEventForm .us-event-repeat input:focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
+#usEventForm .us-event-status{min-height:0;margin:0;font-size:13px;font-weight:600;color:var(--us-color-text-2)}
+#usEventForm .us-event-status:empty{display:none}
+#usEventForm .us-event-complete{display:inline-flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:52px;margin:4px 0 0;border-radius:999px;border:0;background:var(--us-tu);color:var(--us-inchiostro);font-size:16px;font-weight:700;letter-spacing:0;box-shadow:none}
+#usEventForm .us-event-complete[hidden]{display:none}
+#usEventForm .us-event-complete .us-icon{--us-icon-size:18px}
+#usEventForm .us-event-actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin:4px 0 0}
+#usEventForm[data-mode="edit"] .us-event-actions,#usEventForm .us-event-actions:has(#usEventDeleteBtn[hidden]){grid-template-columns:minmax(0,1fr)}
+#usEventForm .us-event-actions button{min-height:48px;border-radius:999px;font-size:15px;box-shadow:none}
+#usEventForm #usEventSaveBtn{min-height:52px;border:0;background:var(--us-tu);color:var(--us-inchiostro);font-size:16px;font-weight:700}
+#usEventForm .us-event-edit{background:transparent;border:1px solid var(--us-color-line-strong);color:var(--us-color-text);font-weight:600}
+#usEventForm .us-event-delete{background:transparent;border:1px solid color-mix(in srgb,var(--us-rosso) 40%,transparent);color:var(--us-rosso);font-weight:600}
+
+/* ---------- Motion: one light slide on month change; reduced = none ---------- */
+:root[data-us-motion="reduced"] #bond .us-noi-v2 *{transition:none!important;animation:none!important}
+:root[data-us-motion="reduced"] .us-cal-sheet .us-cal-allday-field input::after,:root[data-us-motion="reduced"] #usEventForm .us-event-repeat input::after{transition:none}
+@media (prefers-reduced-motion:reduce){
+  .us-cal-sheet .us-cal-allday-field input::after,#usEventForm .us-event-repeat input::after,#bond .noi-idea-lived-toggle::after{transition:none}
+}
+
+/* ---------- Small phones and large text ---------- */
+@media (max-width:370px){
+  #bond .us-noi-v2-top h2{font-size:40px}
+  #bond .us-noi-v2-monthbar h3{font-size:22px}
+  #bond .us-noi-v2 .us-noi-v2-nav{width:42px;height:42px}
+  #bond .us-noi-v2-day-number{width:36px;height:36px;font-size:14px}
+  #bond .us-noi-v2 .us-noi-v2-item{grid-template-columns:46px minmax(0,1fr) auto;gap:10px;padding:12px}
+  #bond .us-noi-v2 .us-noi-v2-links button{min-height:84px;padding:12px 10px}
+  #bond .us-noi-v2 .us-noi-v2-link-copy b{font-size:13px}
+}

@@ -34,85 +34,72 @@ function clock() {
     }
   };
 }
-const sequence = (...values) => { let i = 0; return () => values[Math.min(i++, values.length - 1)]; };
 
-test('PET brain: idle walks along the nav axis inside the track, never a jitter step', () => {
-  const walk = Pet.decide('idle', { x: 6, width: 300, random: sequence(0.1, 0.9) });
-  assert.equal(walk.state, 'walk');
-  assert.ok(walk.x >= Pet.TIMING.edge && walk.x <= 300 - Pet.TIMING.size - Pet.TIMING.edge);
-  assert.ok(Math.abs(walk.x - 6) >= Pet.TIMING.minStep);
-  assert.equal(walk.facing, 'right');
-  assert.ok(walk.duration >= Pet.TIMING.walkMin && walk.duration <= Pet.TIMING.walkMax);
-  assert.equal(Pet.decide('idle', { x: 6, width: 300, random: () => 0.7 }).state, 'rest');
-  assert.equal(Pet.decide('idle', { x: 6, width: 300, random: () => 0.9 }).state, 'idle');
-  for (const state of ['walk', 'rest', 'react']) assert.equal(Pet.decide(state, { x: 10, width: 300 }).state, 'idle');
+// Maudit 1.0 parity (founder 2026-10-15: «maudit non si dovrebbe muovere»):
+// the cat sits still in its home spot, as in the mockup (core.js). The old
+// walking brain (decide / walk / setTrack / setReduced) is gone on purpose.
+test('Maudit machine: no walking at all; only the mockup states', () => {
+  assert.deepEqual([...Pet.STATES], ['idle', 'sleep', 'curious', 'pet', 'happy']);
+  assert.equal(Pet.decide, undefined, 'no autonomous walking brain');
+  const code = petJs.replace(/\/\/[^\n]*/g, '');
+  assert.doesNotMatch(code, /walk|setTrack|--us-pet-x|gravity|pickup|PLANES/i, 'no roaming, no drag, no planes');
+  const c = clock();
+  const pet = Pet.createPet({ ...c });
+  assert.equal(pet.start(), true);
+  for (let i = 0; i < 20; i++) { c.advance(1000); assert.notEqual(pet.snapshot().state, 'walk'); }
 });
 
-test('PET brain: reduced motion and a track too short never produce a walk', () => {
-  for (let i = 0; i < 50; i++) {
-    const r = i / 50;
-    assert.notEqual(Pet.decide('idle', { x: 6, width: 300, reduced: true, random: () => r }).state, 'walk');
-    assert.notEqual(Pet.decide('idle', { x: 6, width: 60, random: () => r }).state, 'walk');
-  }
-});
-
-test('PET machine: idle → walk → idle with pauses, linear position, stop cancels every timer', () => {
+test('Maudit machine: sleeps after 30 s without a touch; a touch postpones it; a touch while asleep makes it curious', () => {
   const c = clock();
   const frames = [];
-  const pet = Pet.createPet({ ...c, random: sequence(0, 0.1, 0.99, 0.5), render: (f) => frames.push(f) });
-  pet.setTrack(400);
-  assert.equal(pet.start(), true);
+  const pet = Pet.createPet({ ...c, render: (f) => frames.push(f.state) });
+  pet.start();
   assert.equal(pet.snapshot().state, 'idle');
-  c.advance(Pet.TIMING.idle[0]);
-  const walking = pet.snapshot();
-  assert.equal(walking.state, 'walk');
-  const walkFrame = frames.find((f) => f.state === 'walk');
-  assert.ok(walkFrame.duration > 0);
-  c.advance(walkFrame.duration / 2);
-  const mid = pet.snapshot().x;
-  assert.ok(mid > Pet.TIMING.edge && mid < walkFrame.x, 'mid-walk position is interpolated');
-  c.advance(walkFrame.duration);
+  c.advance(29000);
+  assert.equal(pet.touch(), false, 'awake: a touch only re-arms the sleep');
+  c.advance(29000);
   assert.equal(pet.snapshot().state, 'idle');
-  assert.ok(c.pending() > 0);
+  c.advance(1000);
+  assert.equal(pet.snapshot().state, 'sleep');
+  assert.equal(pet.touch(), true);
+  assert.equal(pet.snapshot().state, 'curious');
+  c.advance(Pet.TIMING.curious);
+  assert.equal(pet.snapshot().state, 'idle');
   assert.equal(pet.stop(), true);
   assert.equal(c.pending(), 0, 'no timer survives a stop (document hidden / pagehide)');
   assert.equal(pet.react('reward'), false, 'a stopped pet ignores reactions');
 });
 
-test('PET machine: react interrupts a walk where it is, queues at most one, rejects unknown reasons', () => {
+test('Maudit machine: taps pet it, every third tap is happy; asleep, a tap only wakes it', () => {
   const c = clock();
-  const pet = Pet.createPet({ ...c, random: sequence(0, 0.1, 0.99) });
-  pet.setTrack(400);
+  const pet = Pet.createPet({ ...c });
   pet.start();
-  c.advance(Pet.TIMING.idle[0]);
-  assert.equal(pet.snapshot().state, 'walk');
-  c.advance(600);
-  const before = pet.snapshot().x;
+  assert.equal(pet.caress(), true);
+  assert.equal(pet.snapshot().state, 'pet');
+  c.advance(Pet.TIMING.pet);
+  assert.equal(pet.snapshot().state, 'idle');
+  pet.caress(); pet.caress();
+  assert.equal(pet.snapshot().state, 'happy', 'the third tap');
+  c.advance(Pet.TIMING.sleep);
+  assert.equal(pet.snapshot().state, 'sleep');
+  pet.caress();
+  assert.equal(pet.snapshot().state, 'curious');
+});
+
+test('Maudit machine: an arrival makes it happy (hop + heart beat), unknown reasons are refused', () => {
+  const c = clock();
+  const frames = [];
+  const pet = Pet.createPet({ ...c, render: (f) => frames.push(f) });
+  pet.start();
   assert.equal(pet.react('think'), true);
-  assert.deepEqual([pet.snapshot().state, pet.snapshot().x, pet.snapshot().reason], ['react', before, 'think']);
-  assert.equal(pet.react('reward'), true);
-  assert.equal(pet.react('daily-question'), true);
-  assert.equal(pet.snapshot().pending, 'daily-question', 'only the latest single reaction is queued');
+  assert.deepEqual([pet.snapshot().state, pet.snapshot().reason], ['happy', 'think']);
+  const beat = pet.snapshot().beat;
+  assert.equal(pet.react('left-for-you'), true);
+  assert.equal(pet.snapshot().beat, beat + 1, 'each arrival hops again');
   assert.equal(pet.react('confetti'), false);
-  c.advance(Pet.TIMING.react);
-  assert.equal(pet.snapshot().reason, 'daily-question');
   c.advance(Pet.TIMING.react);
   assert.equal(pet.snapshot().state, 'idle');
   assert.deepEqual([...Pet.REASONS], ['think', 'left-for-you', 'reward', 'streak', 'daily-question']);
-});
-
-test('PET machine: switching to reduced motion stops a walk in place; a narrower nav clamps the pet', () => {
-  const c = clock();
-  const pet = Pet.createPet({ ...c, random: sequence(0, 0.1, 0.99) });
-  pet.setTrack(400);
-  pet.start();
-  c.advance(Pet.TIMING.idle[0]);
-  c.advance(400);
-  const x = pet.snapshot().x;
-  pet.setReduced(true);
-  assert.deepEqual([pet.snapshot().state, pet.snapshot().x], ['idle', x]);
-  pet.setTrack(80);
-  assert.ok(pet.snapshot().x <= 80 - Pet.TIMING.size - Pet.TIMING.edge);
 });
 
 function classes(initial = []) {
@@ -179,14 +166,14 @@ function fakeWindow(href, storage = new Map()) {
   return { w, layer, actor, attrs, listeners, storage, body, nudge, toast, hero, auth, observed, mutate, tick, timers: () => scheduled, active: () => pending.size };
 }
 
-test('PET production gate: approved kitten v0 mounts by default', () => {
+test('PET production gate: approved Maudit 1.0 mounts by default', () => {
   assert.equal(Pet.PET_ASSET_STATUS, 'APPROVED');
   const f = fakeWindow('https://us.example/');
   Pet.install(f.w);
   assert.equal(f.w.USPet.enabled, true);
   assert.equal(f.layer.hidden, false);
   assert.equal(f.layer.dataset.petRenderer, 'sprite');
-  assert.match(f.actor.innerHTML, /data-pet-production="kitten-v0"/);
+  assert.match(f.actor.innerHTML, /data-pet-production="maudit-v1"/);
   assert.equal(f.active(), 1, 'one scheduler timer while the production PET is alive');
   assert.ok(f.listeners['d:visibilitychange'] && f.listeners['w:pagehide'] && f.listeners['w:us:pet']);
 });
@@ -198,8 +185,6 @@ test('PET gate: ?us-pet=preview mounts the placeholder on this device; ?us-pet=o
   assert.equal(on.layer.hidden, false);
   assert.equal(on.layer.dataset.petRenderer, 'placeholder');
   assert.match(on.actor.innerHTML, /data-pet-placeholder/);
-  assert.equal(on.attrs['--us-pet-track'], '360px');
-  assert.equal(on.attrs['--us-pet-nav-h'], '68px');
   assert.equal(on.layer.dataset.petState, 'idle');
   assert.equal(storage.get('us:pet:v1:preview'), '1');
   assert.ok(on.listeners['d:visibilitychange'] && on.listeners['w:pagehide'] && on.listeners['w:us:pet']);
@@ -232,8 +217,10 @@ test('PET layer: never takes input, never covers the nav, steps aside and respec
   assert.match(petCss, /\.us-pet-layer,\.us-pet-layer \*\{pointer-events:none!important/);
   assert.match(petCss, /\.us-pet-layer\{position:fixed;z-index:var\(--us-layer-ambient\);/, 'the PET takes the ambient rung of the layer ladder');
   assert.doesNotMatch(petCss, /#usDailyNudge:not\(\[hidden\]\)\) \.us-pet-layer|#toast\.show\) \.us-pet-layer/, 'Daily/Ti penso never hide the PET');
-  assert.match(petCss, /\.us-pet-layer\{position:fixed;z-index:var\(--us-layer-ambient\);[^}]*bottom:calc\(max\(8px,var\(--us-safe-bottom\)\) \+ var\(--us-pet-nav-h,68px\) - 3px\)/);
-  for (const guard of ['body.us-keyboard-open .us-pet-layer', '.us-pet-layer[inert]', 'body[data-us-surface="open"] .us-pet-layer', 'body:has(#homeHero.us-oggi-focus) .us-pet-layer']) {
+  // Its home spot (mockup .maudit-home): 10 px in from the bar's right end, feet 4 px over its top, 54 × 48.
+  assert.match(petCss, /\.us-pet-layer\{position:fixed;z-index:var\(--us-layer-ambient\);right:calc\(\(100% - min\(456px,calc\(100% - 24px\)\)\) \/ 2 \+ 10px\);bottom:calc\(max\(12px,var\(--us-safe-bottom\)\) \+ 66px\);width:54px;height:48px;/);
+  assert.ok(!petCss.includes('body[data-us-surface="open"] .us-pet-layer'), 'as in the mockup, a sheet\'s scrim covers Maudit, it does not leave');
+  for (const guard of ['body.us-keyboard-open .us-pet-layer', '.us-pet-layer[inert]', 'body:has(#homeHero.us-oggi-focus) .us-pet-layer']) {
     assert.ok(petCss.includes(guard), guard);
   }
   for (const notice of ['body.us-status-visible .us-pet-layer', 'body.us-update-visible .us-pet-layer']) {
@@ -242,7 +229,8 @@ test('PET layer: never takes input, never covers the nav, steps aside and respec
   assert.match(petCss, /html\[data-us-visibility="hidden"\] \.us-pet-layer \*\{animation-play-state:paused!important\}/);
   assert.match(petCss, /:root\[data-us-motion="reduced"\] \.us-pet-layer \*\{animation:none!important;transition:none!important\}/);
   assert.match(petCss, /@media\(prefers-reduced-motion:reduce\)\{\.us-pet-layer \*\{animation:none!important;transition:none!important\}\}/);
-  for (const state of Pet.STATES) assert.match(petCss, new RegExp(`\\[data-pet-state="${state}"\\]`), state);
+  // idle is the resting pose itself; every other state has its own rule.
+  for (const state of Pet.STATES.filter((name) => name !== 'idle')) assert.match(petCss, new RegExp(`\\[data-pet-state="${state}"\\]`), state);
 });
 
 test('PET ships in the atomic PWA shell and both web builds; reward unlocks are its first reaction', () => {
@@ -282,7 +270,6 @@ test('F1 occlusion: keyboard stops the PET with zero pending timers, ignores rea
   assert.equal(f.active(), 1, 'restarted exactly once');
   f.mutate(() => {}); // a second unrelated mutation must not stack another scheduler
   assert.equal(f.active(), 1);
-  assert.equal(f.w.USPet.snapshot().pending, null);
   assert.equal(f.layer.dataset.petState, 'idle');
 });
 
@@ -290,8 +277,7 @@ test('F1 occlusion: exclusive UI guards stop the PET and resume it cleanly, drop
   const guards = [
     ['inert', (f) => f.layer.setAttribute('inert'), (f) => f.layer.removeAttribute('inert')],
     ['focus', (f) => f.hero.classList.add('us-oggi-focus'), (f) => f.hero.classList.remove('us-oggi-focus')],
-    ['auth', (f) => f.auth.classList.remove('hidden'), (f) => f.auth.classList.add('hidden')],
-    ['surface', (f) => f.body.setAttribute('data-us-surface', 'open'), (f) => f.body.removeAttribute('data-us-surface')]
+    ['auth', (f) => f.auth.classList.remove('hidden'), (f) => f.auth.classList.add('hidden')]
   ];
   for (const [name, block, unblock] of guards) {
     const f = fakeWindow('http://127.0.0.1/?us-pet=preview');
@@ -304,8 +290,14 @@ test('F1 occlusion: exclusive UI guards stop the PET and resume it cleanly, drop
     unblock(f); f.mutate(() => {});
     assert.equal(f.w.USPet.snapshot().running, true, `${name}: resumed`);
     assert.equal(f.active(), 1, `${name}: one scheduler timer`);
-    assert.equal(f.w.USPet.snapshot().pending, null, `${name}: queued reaction dropped`);
+    assert.equal(f.w.USPet.snapshot().state, 'idle', `${name}: back to idle, the reaction is not replayed`);
   }
+  // A sheet (body[data-us-surface]) is not one of them: Maudit stays under its scrim and keeps reacting.
+  const f = fakeWindow('http://127.0.0.1/?us-pet=preview');
+  Pet.install(f.w);
+  f.mutate(() => f.body.setAttribute('data-us-surface', 'open'));
+  assert.deepEqual(f.w.USPet.blockers(), []);
+  assert.equal(f.w.USPet.react('left-for-you'), true);
 });
 
 test('Transient Daily/Ti-penso surfaces never block or stop the PET', () => {
@@ -322,7 +314,7 @@ test('Transient Daily/Ti-penso surfaces never block or stop the PET', () => {
   assert.equal(f.w.USPet.react('think'), true);
   f.mutate(() => {});
   assert.equal(f.w.USPet.snapshot().running, true, 'observer delivery does not stop for transient notifications');
-  assert.equal(f.active(), 1);
+  assert.equal(f.active(), 2, 'the happy pose timer and the sleep timer, nothing else');
 });
 test('F1 occlusion: observation is bounded to blocker nodes/attributes; hidden and pagehide still stop', () => {
   const f = fakeWindow('http://127.0.0.1/?us-pet=preview');
@@ -370,7 +362,7 @@ test('F2 renderers fail closed: placeholder is preview-only, unknown ids keep th
   assert.doesNotMatch(petJs, /renderers\.get\(id\)\|\|renderers\.get\('placeholder'\)/, 'no placeholder fallback');
 });
 
-test('F3 renderer contract: setFacing(facing) is its own call, setState carries state and reason only', () => {
+test('F3 renderer contract: setState carries state and reason; Maudit never turns or walks, so no facing', () => {
   const calls = [];
   Pet.registerRenderer({
     id: 'test-recorder',
@@ -387,19 +379,13 @@ test('F3 renderer contract: setFacing(facing) is its own call, setState carries 
   Pet.install(f.w);
   assert.equal(f.w.USPet.useRenderer('test-recorder'), true);
   assert.equal(f.layer.dataset.petRenderer, 'test-recorder');
-  assert.deepEqual(calls.slice(0, 2), [['facing', 'right'], ['state', 'idle', { reason: '' }]]);
+  assert.deepEqual(calls.slice(0, 1), [['state', 'idle', { reason: '' }]]);
   calls.length = 0;
   f.w.USPet.react('think');
-  assert.deepEqual(calls, [['state', 'react', { reason: 'think' }]], 'no facing inside setState, no redundant setFacing');
-  calls.length = 0;
-  // Drive the scheduler until the pet turns, to prove setFacing fires on change.
-  for (let i = 0; i < 400 && !calls.some((c) => c[0] === 'facing'); i++) f.tick();
-  const turns = calls.filter((c) => c[0] === 'facing');
-  assert.equal(turns.length, 1);
-  assert.equal(turns[0][1], 'left');
-  assert.ok(calls.every((c) => c[0] !== 'state' || !('facing' in c[2])));
+  assert.deepEqual(calls, [['state', 'happy', { reason: 'think' }]]);
+  for (let i = 0; i < 20; i++) f.tick();
+  assert.ok(calls.every((c) => c[0] !== 'facing'), 'never a facing change');
   const spec = read('docs/missions/us-pet-asset-spec-v1.md');
-  assert.match(spec, /setFacing\(facing\)/);
   assert.match(spec, /setState\(state, \{ reason \}\)/);
 });
 
@@ -441,7 +427,7 @@ test('F4 atomic renderer swap: a candidate that mutates its host and throws leav
   assert.equal(f.layer.dataset.petRenderer, 'test-live');
   assert.deepEqual(log, [], 'the current view was not destroyed');
   f.w.USPet.react('think');
-  assert.deepEqual(log, [['state', 'react']], 'the current view is still the one being driven');
+  assert.deepEqual(log, [['state', 'happy']], 'the current view is still the one being driven');
   // A successful swap destroys the old view first, then promotes the new host.
   assert.equal(f.w.USPet.useRenderer('placeholder'), true);
   assert.deepEqual(log.at(-1), ['destroy']);
@@ -491,17 +477,17 @@ test('F5 reactions honour blockers synchronously, before the MutationObserver de
     assert.equal(busy.w.USPet.react('streak'), false);
     busy.listeners['w:us:pet'][0]({ detail: { type: 'react', reason: 'daily-question' } });
     const snap = busy.w.USPet.snapshot();
-    assert.deepEqual([snap.state, snap.reason, snap.pending], ['react', 'think', null], `${name}: no queued reaction`);
+    assert.deepEqual([snap.state, snap.reason], ['happy', 'think'], `${name}: no replaced reaction`);
     // The observer still owns scheduler stop/resume once it delivers.
     busy.mutate(() => {});
     assert.equal(busy.active(), 0);
   }
 });
 
-test('Kitten production v0 matches its approved source and keeps preview isolated', () => {
+test('Kitten v0 matches its approved source and stays the isolated QA preview', () => {
   const spec = read('docs/missions/us-pet-asset-spec-v1.md');
   assert.match(spec, /\*\*Concept approvato:\*\* un piccolo gattino, pelo bianco e grigio, occhi azzurri\./);
-  assert.match(spec, /PRODUCTION V0 APPROVATO/);
+  assert.match(spec, /PRODUCTION 1\.0 APPROVATO/);
   // Same part names as the final asset contract, in the documented draw order.
   const parts = ['k-tail', 'k-leg-hind-far', 'k-leg-front-far', 'k-body', 'k-leg-hind-near', 'k-leg-front-near', 'k-head', 'k-ear-far', 'k-ear-near', 'k-face', 'k-eyes-open', 'k-eyes-closed', 'k-nose', 'k-mouth', 'k-collar'];
   let last = -1;
@@ -515,7 +501,7 @@ test('Kitten production v0 matches its approved source and keeps preview isolate
   for (const hex of ['#fbf8f4', '#a7acb5', '#7c818b', '#b4dcff', '#5e9ce0', '#3a6cab']) assert.ok(petJs.includes(hex), hex);
   assert.equal((petJs.match(/var\(--us-color-accent-strong/g) || []).length, 1, 'only the collar accessory takes the theme accent');
   assert.match(petJs, /data-pet-placeholder data-pet-preview="kitten-v0"/);
-  assert.match(petJs, /data-pet-production="kitten-v0"/);
+  assert.doesNotMatch(petJs, /data-pet-production="kitten-v0"/, 'kitten v0 is no longer the production drawing');
   assert.match(petJs, /id:'sprite'/);
   assert.equal(Pet.canMount('placeholder'), false, 'placeholder still requires explicit preview');
   assert.equal(Pet.canMount('sprite'), true, 'approved production renderer is mountable');
@@ -528,10 +514,53 @@ test('Kitten production v0 matches its approved source and keeps preview isolate
   assert.equal(asset?.status, 'APPROVED');
   assert.equal(asset?.sha256, crypto.createHash('sha256').update(source).digest('hex'));
   // Every state has a static pose (survives reduced motion) and only the collar accessory exists.
-  for (const [state, rule] of [['rest', /\[data-pet-state="rest"\] \.k-eyes-closed\{opacity:1\}/], ['rest', /\[data-pet-state="rest"\] \.k-leg\{opacity:0\}/], ['react', /\[data-pet-state="react"\] \.k-ear\{transform:scale\(1\.14\)\}/], ['walk', /\[data-pet-state="walk"\] \.k-tail\{transform:rotate\(16deg\)\}/]]) {
+  for (const [state, rule] of [['sleep', /\[data-pet-state="sleep"\] \.k-eyes-closed/], ['curious', /\[data-pet-state="curious"\] \.k-head\{transform:rotate\(-9deg\)\}/], ['happy', /\[data-pet-state="happy"\] \.k-ear\{transform:scale\(1\.14\)\}/]]) {
     assert.match(petCss, rule, state);
   }
   assert.match(petCss, /\.us-pet-layer\[data-pet-accessory="collar"\] \.us-pet-kitten \.k-collar\{display:inline\}/);
   assert.doesNotMatch(petCss, /data-pet-placeholder\]\{outline/, 'no dashed debug slot around the kitten');
   assert.doesNotMatch(petJs + petCss, /[\u{1F300}-\u{1FAFF}❤♥]/u, 'no emoji or heart glyphs');
+});
+
+test('Maudit 1.0 production drawing matches its approved source and has a pose for every state', () => {
+  const spec = read('docs/missions/us-pet-asset-spec-v1.md');
+  assert.match(spec, /## Maudit 1\.0 \(produzione dal design "Due colori, un Noi"\)/);
+  const sourcePath = 'assets/source/pet/us-pet-maudit-v1.svg';
+  const source = read(sourcePath);
+  const inline = petJs.match(/const MAUDIT_V1_SVG='([^']+)'/)?.[1];
+  assert.equal(inline, source.trimEnd(), 'runtime drawing is identical to the approved source asset');
+  const manifest = JSON.parse(read('assets/ASSET_MANIFEST.json'));
+  const asset = manifest.assets.find((row) => row.path === sourcePath);
+  assert.equal(asset?.status, 'APPROVED');
+  assert.deepEqual(asset?.usedBy, ['pet-production']);
+  assert.equal(asset?.sha256, crypto.createHash('sha256').update(source).digest('hex'));
+  assert.deepEqual(manifest.assets.find((row) => row.path === 'assets/source/pet/us-pet-kitten-base-v0.svg')?.usedBy, ['pet-preview']);
+  assert.match(petJs, /id:'sprite',\s*mount\(host\)\{return mountMauditV1\(host\);\}/);
+  assert.match(petJs, /data-pet-production="maudit-v1"/);
+  // Every part the poses drive exists in the drawing, in draw order.
+  const parts = ['m-tail', 'm-body', 'm-paw-l', 'm-paw-r', 'm-head', 'm-ear-l', 'm-ear-r', 'm-eyes-open', 'm-eyes-happy', 'm-eyes-closed', 'm-nose', 'm-collar', 'm-zz', 'm-purr', 'm-heart'];
+  let last = -1;
+  for (const part of parts) {
+    const at = source.search(new RegExp(`class="(?:[a-z-]+ )*${part}[ "]`));
+    assert.ok(at > last, `${part} drawn in order`);
+    last = at;
+  }
+  // Fur grey, latte muzzle, rosa cheeks; only the collar takes a theme colour (the couple's Noi).
+  for (const hex of ['#A7A2B2', '#F7F0EA', '#FFB3C2', '#FF7C96', '#1A1020']) assert.ok(source.includes(hex), hex);
+  assert.equal((source.match(/var\(--/g) || []).length, 1, 'only the collar follows a theme token');
+  assert.match(source, /class="m-collar"><path[^>]+stroke="var\(--us-noi,#d98be0\)"/);
+  // The mockup's .m poses (style.css), a static pose per state so reduced motion still reads.
+  for (const rule of [
+    /\.us-pet-maudit \.m-eyes-open\{animation:us-maudit-blink 5\.2s infinite\}/,
+    /\.us-pet-maudit \.m-tail\{animation:us-maudit-tail 4\.6s ease-in-out infinite alternate\}/,
+    /\[data-pet-state="sleep"\] :is\(\.m-eyes-closed,\.m-zz\)\{opacity:1\}/,
+    /:is\(\[data-pet-state="happy"\],\[data-pet-state="pet"\]\) \.m-eyes-happy\{opacity:1\}/,
+    /\[data-pet-state="curious"\] \.m-head\{rotate:-9deg\}/,
+    /\[data-pet-state="pet"\] \.m-head\{rotate:5deg\}/,
+    /\[data-pet-state="pet"\] \.m-purr\{opacity:1\}/,
+    /\[data-pet-state="sleep"\] \.m-head\{translate:0 3px\}/
+  ]) assert.match(petCss, rule);
+  assert.match(petCss, /\.us-pet-layer\[data-pet-accessory="collar"\] \.us-pet-maudit \.m-collar\{display:inline\}/);
+  assert.doesNotMatch(petCss, /m-heart\{[^}]*animation/, 'the heart pops only with the happy hop (pet.js), never on a stroke');
+  assert.doesNotMatch(source, /[\u{1F300}-\u{1FAFF}❤♥]/u, 'no emoji or heart glyphs');
 });

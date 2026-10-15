@@ -187,6 +187,76 @@
     };
     activePlayOnce = playOnce;
 
+    // Every tap answers (the mockup's core.js press/release, literally): on
+    // pointerdown the control goes to scale .95 in 110 ms (ease out) and
+    // stays there; on release it springs back from .95 in 420 ms. It runs on
+    // the independent `scale` property, so a control's own transform (a
+    // centring translate, a carousel offset) is untouched. A feature :active
+    // rule that also scales (an older pressed state) is held at its resting
+    // value while the press plays, so nothing presses twice. A drag (more
+    // than 8 px) releases at once. Never under reduced motion.
+    const PRESS_SELECTOR = 'button, [role="button"], [role="tab"], [role="switch"], a[href], summary, label[for], [data-us-tile], .tap';
+    const PRESS_DOWN = [{ scale: 1 }, { scale: 0.95 }];
+    const PRESS_UP = [{ scale: 0.95 }, { scale: 1 }];
+    const pressed = new Map();
+    const pureScale = (value) => /^matrix\(([-\d.e]+), 0, 0, \1, 0, 0\)$/.test(String(value || '').trim());
+    const pressTarget = (event) => {
+      const target = event.target?.closest?.(PRESS_SELECTOR);
+      if (!target || target.disabled || target.getAttribute('aria-disabled') === 'true') return null;
+      if (target.closest('[data-us-motion-tap="off"]')) return null;
+      return typeof target.animate === 'function' ? target : null;
+    };
+    const press = (target, event) => {
+      if (reducedMotion) return;
+      const previous = pressed.get(target);
+      previous?.down?.cancel();
+      previous?.hold?.cancel();
+      const state = { down: null, hold: null, x: event?.clientX ?? 0, y: event?.clientY ?? 0, id: event?.pointerId };
+      // Now and one frame later (when :active surely applies): if it scales
+      // the control, keep the resting transform while our press plays.
+      const raf = environment.requestAnimationFrame || ((fn) => schedule(fn, 16));
+      const holdActive = () => {
+        if (state.hold || (pressed.get(target) !== state && !state.released)) return;
+        try {
+          const view = target.ownerDocument?.defaultView || environment;
+          const current = view.getComputedStyle?.(target)?.transform;
+          if (current && current !== 'none' && pureScale(current)) {
+            state.hold = target.animate([{ transform: 'none' }, { transform: 'none' }], { duration: Infinity });
+            if (state.released) schedule(() => state.hold?.cancel(), 420);
+          }
+        } catch (_) { /* a press is never essential */ }
+      };
+      state.down = target.animate(PRESS_DOWN, { duration: 110, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'forwards' });
+      pressed.set(target, state);
+      holdActive();
+      raf(holdActive);
+    };
+    const release = (target) => {
+      const state = pressed.get(target);
+      if (!state) return;
+      pressed.delete(target);
+      state.released = true;
+      if (!reducedMotion) target.animate(PRESS_UP, { duration: 420, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+      state.down.cancel();
+      if (state.hold) schedule(() => state.hold?.cancel(), 420);
+    };
+    const releaseAll = () => Array.from(pressed.keys()).forEach(release);
+    const onPressDown = (event) => {
+      if (event.isPrimary === false || (event.pointerType === 'mouse' && event.button !== 0)) return;
+      const target = pressTarget(event);
+      if (target) press(target, event);
+    };
+    const onPressMove = (event) => {
+      pressed.forEach((state, target) => {
+        if (state.id !== undefined && event.pointerId !== state.id) return;
+        if (Math.hypot((event.clientX ?? 0) - state.x, (event.clientY ?? 0) - state.y) > 8) release(target);
+      });
+    };
+    documentRef.addEventListener('pointerdown', onPressDown, { capture: true, passive: true });
+    documentRef.addEventListener('pointermove', onPressMove, { capture: true, passive: true });
+    ['pointerup', 'pointercancel'].forEach((type) => documentRef.addEventListener(type, releaseAll, { capture: true, passive: true }));
+    environment.addEventListener?.('blur', releaseAll);
+
     const modalState = new Map();
     const inertState = new Map();
     let order = 0;
@@ -304,6 +374,11 @@
       destroy() {
         observer?.disconnect();
         documentRef.removeEventListener('keydown', onKeydown);
+        documentRef.removeEventListener('pointerdown', onPressDown, { capture: true });
+        documentRef.removeEventListener('pointermove', onPressMove, { capture: true });
+        ['pointerup', 'pointercancel'].forEach((type) => documentRef.removeEventListener(type, releaseAll, { capture: true }));
+        environment.removeEventListener?.('blur', releaseAll);
+        releaseAll();
         if (motionQuery?.removeEventListener) motionQuery.removeEventListener('change', onMotionChange);
         else motionQuery?.removeListener?.(onMotionChange);
         motionSubscribers.clear();
@@ -419,12 +494,35 @@
       try { context = new AudioContextClass(); } catch (_) { context = null; }
       return context;
     }
+    // Building the AudioContext costs a long frame (~40 ms on a phone), so the
+    // first tap does not pay for it: it is built in the next idle moment after
+    // the first gesture (or by the first meaningful sound), and every later
+    // gesture only resumes it, which is cheap and is what iOS needs.
+    let warming = false;
+    function warmUp() {
+      if (warming || context || !preferences.sounds) return;
+      warming = true;
+      const build = () => { warming = false; if (preferences.sounds && !context) audioContext(); };
+      const idle = environment.requestIdleCallback;
+      if (typeof idle === 'function') {
+        const started = now();
+        const wait = (deadline) => {
+          if (deadline?.didTimeout || (deadline?.timeRemaining?.() ?? 50) >= 40 || now() - started > 4000) build();
+          else idle.call(environment, wait, { timeout: 4000 });
+        };
+        idle.call(environment, wait, { timeout: 4000 });
+      } else {
+        timers.set(build, 0);
+      }
+    }
+    function resumeInGesture() {
+      if (!unlocked || !preferences.sounds || !context || context.state === 'running') return;
+      try { context.resume?.()?.catch?.(() => {}); } catch (_) { /* stays suspended */ }
+    }
     function unlock() {
       if (unlocked) return;
       unlocked = true;
-      if (!preferences.sounds) return; // avoid allocating an audio session when muted
-      const ctx = audioContext();
-      try { ctx?.resume?.()?.catch?.(() => {}); } catch (_) { /* stays suspended */ }
+      warmUp(); // nothing is allocated while muted
     }
     function playTones(ctx, tones) {
       const now = ctx.currentTime || 0;
@@ -446,6 +544,9 @@
       if (!preferences.sounds || !visible() || !unlocked) return false;
       const tones = SOUND_PROFILES[kind];
       if (!tones) return false; // errors and Maudit landing stay haptic-only
+      // A routine tick never builds the audio session in the middle of a
+      // transition: until the idle build, it stays silent.
+      if (!context && (kind === 'tap' || kind === 'selection')) { warmUp(); return false; }
       const ctx = audioContext();
       if (!ctx) return false;
       try {
@@ -525,6 +626,7 @@
     // gives declarative feedback: [data-us-feedback="tap|action|..."].
     if (documentRef?.addEventListener) {
       ['pointerdown', 'keydown', 'touchend'].forEach((type) => documentRef.addEventListener(type, unlock, { capture: true, passive: true, once: true }));
+      ['pointerdown', 'keydown', 'touchend', 'click'].forEach((type) => documentRef.addEventListener(type, resumeInGesture, { capture: true, passive: true }));
       documentRef.addEventListener('click', (event) => {
         if (event.isTrusted === false) return; // programmatic click(): not a user gesture
         const target = event.target;
@@ -546,8 +648,12 @@
     return api;
   }
 
-  // The one US confirmation: a small floating sheet on the shared scrim and
-  // material, focus on the safe choice, Escape / backdrop / Annulla cancel.
+  // The one US confirmation (the Conferma form): a small sheet docked at the
+  // bottom on the shared scrim and material, the choice first and the safe
+  // choice under it, focus on the safe choice, Escape / backdrop / Annulla
+  // cancel. tone:'danger' is only for what cannot be undone (red). `icon`
+  // names one of the shared Phosphor icons (data-us-icon); the default is
+  // trash for tone:'danger' and info otherwise.
   // Resolves true only for the explicit confirm button. Without a DOM (or if
   // building it fails) it degrades to the platform confirm.
   let openConfirm = null;
@@ -560,16 +666,25 @@
     return new Promise((resolve) => {
       const id = `usConfirm${Date.now().toString(36)}`;
       const root = documentRef.createElement('div');
-      root.className = 'us-confirm';
+      const danger = options.tone === 'danger';
+      root.className = danger ? 'us-confirm is-danger' : 'us-confirm';
       root.setAttribute('data-us-modal', '');
       root.setAttribute('data-us-motion-surface', '');
       root.setAttribute('aria-hidden', 'false');
-      const tone = options.tone === 'danger' ? 'us-btn-danger' : options.single ? 'ghost' : 'primary';
+      const tone = danger ? 'us-btn-danger' : 'primary';
       root.innerHTML = `<div class="us-modal-backdrop" data-us-confirm="cancel"></div>
         <section class="us-sheet us-confirm-sheet" role="alertdialog" aria-modal="true" aria-labelledby="${id}T" aria-describedby="${id}B" data-us-modal-panel>
-          <span class="us-eyebrow"></span><h3 id="${id}T"></h3><p id="${id}B"></p>
-          <div class="us-confirm-actions"><button type="button" class="ghost" data-us-confirm="cancel" data-us-modal-close></button><button type="button" class="${tone}" data-us-confirm="ok"></button></div>
+          <span class="us-confirm-icon" aria-hidden="true" hidden><span class="us-icon"></span></span><span class="us-eyebrow"></span><h3 id="${id}T"></h3><p id="${id}B"></p>
+          <div class="us-confirm-actions"><button type="button" class="${tone}" data-us-confirm="ok"></button><button type="button" class="ghost" data-us-confirm="cancel" data-us-modal-close></button></div>
         </section>`;
+      // As in the mockup every Conferma carries an icon: trash when it cannot
+      // be undone, info otherwise, unless the caller names one (icon:'' = none).
+      const iconName = options.icon === undefined ? (danger ? 'trash' : 'info') : text(options.icon);
+      if (iconName) {
+        const icon = root.querySelector('.us-confirm-icon');
+        icon.firstElementChild.setAttribute('data-us-icon', iconName);
+        icon.hidden = false;
+      }
       root.querySelector('.us-eyebrow').textContent = text(options.kicker || 'US');
       root.querySelector('h3').textContent = text(options.title);
       const body = root.querySelector('p');
