@@ -48,7 +48,7 @@ test('Ricordi cards download thumbnail previews but retain full originals for vi
 test('native legacy optimization is manual, bounded to derivatives and never removes originals', () => {
   assert.match(html, /id="usOptimizeRicordiSetting" hidden/);
   assert.match(settings, /falla una volta quando sei sotto Wi-Fi/);
-  assert.match(settings, /Le foto originali restano intatte/);
+  assert.match(settings, /Gli originali restano intatti/);
   assert.match(app, /if\(!window\.UsPlatform\?\.isNative\)return \{ok:false,code:'native_only'\}/);
   assert.match(app, /if\(connection\?\.saveData\)return \{ok:false,code:'data_saver'\}/);
   assert.match(app, /\.is\('thumbnail_path',null\)/);

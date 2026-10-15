@@ -1744,7 +1744,7 @@ async function uploadProfilePhoto(file){
     if(updateError){await sb.storage.from('us-media').remove([path]);throw updateError;}
     window.usProfile.avatar_path=path;
     if(oldPath && oldPath!==path)await sb.storage.from('us-media').remove([oldPath]);
-    toast('Foto profilo aggiornata ♡');
+    toast('Foto profilo aggiornata ♡',{icon:'user'});
     await hydrateProfileAvatars();
   }catch(err){console.warn(err);toast(err?.message==='SOURCE_TOO_LARGE'?'Foto troppo grande: massimo 20 MB':'Non riesco ad aggiornare la foto');}
   finally{if(btn)btn.disabled=false;document.getElementById('profileAvatarFile').value='';}

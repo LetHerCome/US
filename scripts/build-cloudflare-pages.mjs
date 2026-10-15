@@ -64,6 +64,7 @@ const RUNTIME_FILES = [
   'dc-gioca.css',
   'dc-popup.css',
   'dc-primo.css',
+  'dc-settings.css',
   'due-colori.js',
   'i18n.js',
   'i18n-en.js',

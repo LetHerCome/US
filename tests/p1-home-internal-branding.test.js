@@ -72,7 +72,8 @@ windowsTest('P1 recupera gli artefatti di verifica interrotti senza copiarli neg
 test('P1 integra il monogramma US netto in auth, header e mini-branding', () => {
   const html = read('index.html');
   // Design parity (021-blocco): the lock screen shows the fingerprint in a circle, not the logo.
-  assert.equal((html.match(/assets\/derived\/runtime\/us-symbol-256-v1\.png/g) || []).length, 4, 'icon link, auth logo, top bar (M12A.1) and settings mini-branding');
+  // Design parity (081-impostazioni): the Settings footer is the plain "US 1.0" line, without the mini-branding.
+  assert.equal((html.match(/assets\/derived\/runtime\/us-symbol-256-v1\.png/g) || []).length, 3, 'icon link, auth logo and top bar (M12A.1)');
   assert.match(html, /<span class="us-app-lock-icon" aria-hidden="true"><\/span>/, 'native app-lock screen: the fingerprint circle');
   assert.doesNotMatch(html, /us-symbol-apk-foreground-v1/, 'the 1254 px master is never loaded by the app shell');
   assert.doesNotMatch(html, /assets\/derived\/brand\/us-symbol-ui-transparent-v1\.png/);

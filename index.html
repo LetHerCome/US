@@ -52,6 +52,7 @@
 <link rel="stylesheet" href="/dc-gioca.css?v=us-premium-redesign-20261015-5"/>
 <link rel="stylesheet" href="/dc-popup.css?v=us-premium-redesign-20261015-5"/>
 <link rel="stylesheet" href="/dc-primo.css?v=us-premium-redesign-20261015-5"/>
+<link rel="stylesheet" href="/dc-settings.css?v=us-premium-redesign-20261015-5"/>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://iiakdfsxpywdkxravqjh.supabase.co" crossorigin>
 <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
@@ -686,22 +687,23 @@ html.us-returning-device .auth-overlay{
   <main id="settings" class="page">
     <section class="section us-settings-page us-settings2-page">
       <div class="us-settings2-head">
-        <h2>Impostazioni</h2>
-        <div class="us-settings2-device-dot" id="usSettingsDeviceDot" aria-label="Stato sincronizzazione">•</div>
+        <div class="us-settings2-bar" data-s><button type="button" class="us-settings2-back" onclick="go('bond',{nav:true})"><span class="us-icon" data-us-icon="caret-left" aria-hidden="true"></span>Noi</button>
+        <div class="us-settings2-device-dot" id="usSettingsDeviceDot" role="status" aria-label="Stato sincronizzazione"><i aria-hidden="true"></i><span id="usSettingsSyncLabel">Sincronizzato</span></div></div>
+        <h2 data-s>Impostazioni</h2>
       </div>
 
       <!-- US-SETTINGS-ORGANIZE-01: same action hooks, grouped by intent. -->
       <section class="us-settings2-section" data-us-settings-scope="tu" aria-labelledby="usSettingsTuTitle">
-        <div class="us-settings2-section-head"><h3 id="usSettingsTuTitle">Tu</h3><small>Le tue preferenze</small></div>
-        <div class="us-settings2-label">PROFILO</div>
-        <div class="us-settings2-group">
+        <div class="us-settings2-section-head" data-s><h3 id="usSettingsTuTitle">Tu</h3><small>Le tue preferenze</small></div>
+        <div class="us-settings2-label" data-s>PROFILO</div>
+        <div class="us-settings2-group" data-s>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="profile-photo">
           <span class="us-settings2-icon us-settings2-photo-icon" aria-hidden="true"><span class="us-icon" data-us-icon="user-circle"></span></span>
-          <span class="us-setting-main"><b>Cambia foto profilo</b></span><span class="us-setting-value">Modifica</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+          <span class="us-setting-main"><b>Foto profilo</b><small id="usProfilePhotoDetail">La vede anche la tua persona</small></span><span class="us-setting-value">Modifica</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         </div>
-        <div class="us-settings2-label">PERSONALIZZA OGGI</div>
-        <div class="us-settings2-group">
+        <div class="us-settings2-label" data-s>PERSONALIZZA OGGI</div>
+        <div class="us-settings2-group" data-s>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="oggi-theme">
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="palette"></span></span>
           <span class="us-setting-main"><b>Tema</b><small>Solo su questo telefono</small></span>
@@ -713,8 +715,8 @@ html.us-returning-device .auth-overlay{
           <span class="us-setting-value" id="usOggiEffectValue">Nessuno</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         </div>
-        <div class="us-settings2-label">NOTIFICHE E PRIVACY</div>
-        <div class="us-settings2-group">
+        <div class="us-settings2-label" data-s>NOTIFICHE E PRIVACY</div>
+        <div class="us-settings2-group" data-s>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="notifications">
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="bell"></span></span>
           <span class="us-setting-main"><b>Notifiche</b></span>
@@ -722,21 +724,21 @@ html.us-returning-device .auth-overlay{
         </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="location">
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="map-pin"></span></span>
-          <span class="us-setting-main"><b>Posizione</b><small>Approssimativa: solo la distanza tra voi</small></span>
+          <span class="us-setting-main"><b>Posizione</b><small>Solo per la distanza tra voi</small></span>
           <span class="us-setting-state" id="usLocationState">…</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         <button type="button" class="us-setting-row us-settings2-row us-settings2-switch-row" data-us-setting="app-lock" id="usAppLockSetting" role="switch" aria-checked="false" hidden>
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="lock"></span></span>
-          <span class="us-setting-main"><b id="usAppLockSettingLabel">Proteggi US</b><small id="usAppLockSettingDetail">Solo su questo telefono</small></span>
+          <span class="us-setting-main"><b id="usAppLockSettingLabel">Proteggi US con l’impronta</b><small id="usAppLockSettingDetail">Solo su questo telefono</small></span>
           <span class="us-settings2-switch" aria-hidden="true"><u></u></span>
         </button>
         </div>
-        <div class="us-settings2-label">PERSONALIZZAZIONE</div>
-        <div class="us-settings2-group">
+        <div class="us-settings2-label" data-s>PERSONALIZZAZIONE</div>
+        <div class="us-settings2-group" data-s>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="distance">
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="arrows-left-right"></span></span>
           <span class="us-setting-main"><b>Distanza</b></span>
-          <span class="us-setting-value" id="usDistanceUnitValue">km</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+          <span class="us-setting-value" id="usDistanceUnitValue">Chilometri</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="feedback">
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="sparkle"></span></span>
@@ -745,13 +747,13 @@ html.us-returning-device .auth-overlay{
         </button>
         <button type="button" class="us-setting-row us-settings2-row us-settings2-switch-row" data-us-setting="maudit" id="usMauditSetting" role="switch" aria-checked="true">
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="heart"></span></span>
-          <span class="us-setting-main"><b>Maudit</b></span>
+          <span class="us-setting-main"><b>Maudit</b><small>Il gattino sopra la barra</small></span>
           <span class="us-settings2-switch" aria-hidden="true"><u></u></span>
         </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="widgets" hidden>
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="squares-four"></span></span>
-          <span class="us-setting-main"><b>Widget</b></span>
-          <span class="us-setting-value">Home</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+          <span class="us-setting-main"><b>Widget</b><small>Sulla schermata Home</small></span>
+          <span class="us-setting-value" id="usWidgetsValue">Home</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="optimize-ricordi" id="usOptimizeRicordiSetting" hidden>
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="arrows-clockwise"></span></span>
@@ -760,12 +762,12 @@ html.us-returning-device .auth-overlay{
         </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="home-photo">
           <span class="us-settings2-icon us-settings2-photo-icon" aria-hidden="true"><span class="us-icon" data-us-icon="image"></span></span>
-          <span class="us-setting-main"><b>Foto Home</b></span>
+          <span class="us-setting-main"><b>Foto Home</b><small>La foto di Oggi</small></span>
           <span class="us-setting-value">Gestisci</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         </div>
-        <div class="us-settings2-label">APP E SUPPORTO</div>
-        <div class="us-settings2-group">
+        <div class="us-settings2-label" data-s>APP E SUPPORTO</div>
+        <div class="us-settings2-group" data-s>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="sync-status">
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="arrows-clockwise"></span></span>
           <span class="us-setting-main"><b>Sincronizzazione</b></span>
@@ -775,8 +777,8 @@ html.us-returning-device .auth-overlay{
       </section>
 
       <section class="us-settings2-section" data-us-settings-scope="voi" aria-labelledby="usSettingsVoiTitle">
-        <div class="us-settings2-section-head"><h3 id="usSettingsVoiTitle">Voi</h3><small>Condiviso tra voi</small></div>
-      <article class="us-couple-id-card" id="usCoupleIdCard" aria-live="polite">
+        <div class="us-settings2-section-head" data-s><h3 id="usSettingsVoiTitle">Voi</h3><small>Condiviso tra voi</small></div>
+      <article class="us-couple-id-card" id="usCoupleIdCard" aria-live="polite" data-s>
         <div class="us-couple-id-top">
           <div class="us-couple-avatars" id="usCoupleAvatars">
             <span>·</span><span>·</span>
@@ -788,39 +790,39 @@ html.us-returning-device .auth-overlay{
           </div>
         </div>
         <div class="us-couple-stats">
-          <span><b id="usSettingsBondLevel">—</b><small>Bond</small></span>
-          <span><b id="usSettingsMomentsCount">—</b><small>Moments</small></span>
-          <span><b id="usSettingsEventsCount">—</b><small>vissuti</small></span>
+          <span><b id="usSettingsBondLevel">—</b><small>Sintonia</small></span>
+          <span><b id="usSettingsMomentsCount">—</b><small>Ricordi</small></span>
+          <span><b id="usSettingsEventsCount">—</b><small>Vissuti</small></span>
         </div>
       </article>
-        <div class="us-settings2-group">
+        <div class="us-settings2-group" data-s>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="relationship-date">
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="calendar-heart"></span></span>
-          <span class="us-setting-main"><b>Data della relazione</b></span>
+          <span class="us-setting-main"><b>Data della relazione</b><small>Giorni insieme, mesiversario, anniversario</small></span>
           <span class="us-setting-value" id="usRelationshipDateValue">…</span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         <button type="button" class="us-setting-row us-settings2-row" data-us-setting="story-archive">
           <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon" data-us-icon="clock-counter-clockwise"></span></span>
-          <span class="us-setting-main"><b>Archivio Stories</b></span>
+          <span class="us-setting-main"><b>Archivio Stories</b><small>Solo nella versione web</small></span>
           <span class="us-setting-value" id="usStoryArchiveValue"></span><i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
         </button>
         </div>
       </section>
 
-      <div class="us-settings2-group us-settings2-about">
-        <div class="us-settings2-version-row">
-          <span class="us-settings2-icon us-settings2-brand-mini" aria-hidden="true"><img class="us-brand-symbol-art" src="/assets/derived/runtime/us-symbol-256-v1.png" alt=""></span>
-          <span><b>US 1.0</b><small id="usSettingsBuild">Build corrente</small></span>
-        </div>
+      <div class="us-settings2-label" data-s>ACCOUNT E DATI</div>
+      <div class="us-settings2-group us-settings2-account" data-s>
+        <button type="button" class="us-setting-row us-settings2-row" data-us-setting="privacy">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon"></span></span>
+          <span class="us-setting-main"><b>Privacy e dati</b><small>Cosa salviamo, eliminazione account</small></span>
+          <i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
+        <button type="button" class="us-setting-row us-settings2-row is-danger" data-us-setting="logout">
+          <span class="us-settings2-icon" aria-hidden="true"><span class="us-icon"></span></span>
+          <span class="us-setting-main"><b>Scollega questo telefono</b></span>
+          <i class="us-setting-chevron" aria-hidden="true"><span class="us-icon" data-us-icon="caret-right" aria-hidden="true"></span></i>
+        </button>
       </div>
-
-      <button type="button" class="us-settings2-disconnect" data-us-setting="logout">
-        Scollega questo telefono
-      </button>
-
-      <div class="us-settings2-footer">
-        <button type="button" data-us-setting="privacy">Privacy e dati</button>
-      </div>
+      <p class="us-settings2-version" data-s>US 1.0<small id="usSettingsBuild" hidden>Build corrente</small></p>
     </section>
   </main>
 
@@ -932,6 +934,7 @@ html.us-returning-device .auth-overlay{
   <section class="us-settings-sheet us-widget-hub-sheet us-sheet is-bottom" role="dialog" aria-modal="true" aria-labelledby="usWidgetHubTitle" data-us-modal-panel>
     <div class="us-settings-sheet-grabber"></div>
     <header><div><div class="tiny">QUESTO TELEFONO</div><h3 id="usWidgetHubTitle">Widget</h3></div><button type="button" class="us-settings-close us-modal-close" data-us-widget-hub-close data-us-modal-close aria-label="Chiudi"><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></header>
+    <p class="us-widget-hub-lead">Mettete US sulla schermata Home del telefono.</p>
     <div class="us-widget-hub-list" id="usWidgetHubList"></div>
   </section>
 </div>
