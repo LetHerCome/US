@@ -35,7 +35,7 @@
     if(error?.code==='P0001')return 'Codice non valido, scaduto o già utilizzato. Verifica con la tua persona.';
     return unavailable;
   }
-  function createController({readProfile,rpc,onChange=()=>{}}){
+  function createController({readProfile,rpc,onChange=()=>{},onJoined=()=>{}}){
     let state={kind:'SIGNED_OUT',code:'',busy:false},session=null,epoch=0,flight=null,quiet=0;
     // Suspension invalidates results, not the transaction already sent. Keep a
     // per-account mutation guard until the actual transport promise settles.
@@ -126,6 +126,8 @@
           if(!statuses.includes(result?.data?.status)||!result?.data?.couple_id)return publish({kind:ERROR,message:unavailable});
           const verified=await read(ticket);
           if(current(ticket)&&verified?.profile?.couple_id!==result.data.couple_id)return publish({kind:ERROR,message:unavailable});
+          // A first join tells both phones the space is ready (the server checks it).
+          if(name==='accept_partner_invite'&&result.data.status==='joined'){try{onJoined(result.data.couple_id);}catch(_e){}}
           return verified;
         }
         return read(ticket);
@@ -887,7 +889,7 @@
         if(!result&&!checkTimer)scheduleCheck(controller.state);
       },CHECK_MS);
     }
-    const controller=createController({readProfile,rpc,onChange:render});
+    const controller=createController({readProfile,rpc,onChange:render,onJoined:coupleId=>{window.sendWebPushEvent?.('partner_joined',coupleId);}});
     const run=async(action,kind)=>{
       const result=await action();
       const joined=result?.profile?.couple_id&&(result.kind==='PAIRED'||result.kind==='MEMBER_WAITING_PARTNER');
