@@ -66,3 +66,19 @@ test('MC3 foreground and repeated boot cannot release an unsettled invite mutati
  finish({data:{code:'A'.repeat(26),expires_at:'2026-10-10T00:00:00Z'}});await pending;
  assert.equal(h.c.state.busy,false);assert.equal(h.c.state.code,'');
 });
+test('US 1.0 A2: a first join (and only a first join) reports the couple for the join push',async()=>{
+ const seen=[];let p=null,m={member:false};
+ const rpc=async(n)=>{if(n==='accept_partner_invite'){p=profile('u','c9');m=member(true,'c9');return {data:{status:next,couple_id:'c9'},error:null};}return {data:m,error:null};};
+ let next='joined';
+ const c=MC3.createController({readProfile:async()=>({data:p,error:null}),rpc,onJoined:id=>seen.push(id)});
+ await c.load(session('u'));
+ await c.join({name:'Mira',code:'A'.repeat(26)});
+ assert.equal(c.state.kind,'PAIRED');
+ assert.deepEqual(seen,['c9']);
+ next='already_joined';p=null;m={member:false};
+ const c2=MC3.createController({readProfile:async()=>({data:p,error:null}),rpc,onJoined:id=>seen.push(id)});
+ await c2.load(session('u'));await c2.join({name:'Mira',code:'A'.repeat(26)});
+ assert.deepEqual(seen,['c9']);
+ const app=require('node:fs').readFileSync(require('node:path').join(__dirname,'..','onboarding.js'),'utf8');
+ assert.match(app,/onJoined:coupleId=>\{window\.sendWebPushEvent\?\.\('partner_joined',coupleId\);\}/);
+});

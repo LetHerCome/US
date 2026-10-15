@@ -1,0 +1,151 @@
+{
+  "family": "rivivete",
+  "new": [
+    {
+      "id": "rivivete-009", "mechanic": "reciprocal", "answer_kind": "open", "depth": 1,
+      "topic": "nome_in_rubrica", "cooldown_class": "light",
+      "question_text": "Con quale nome comparivo nel tuo telefono all’inizio, e con quale compaio adesso?",
+      "question_text_en": "What was I saved as in your phone at the start, and what am I saved as now?"
+    },
+    {
+      "id": "rivivete-010", "mechanic": "reciprocal", "answer_kind": "open", "depth": 1,
+      "topic": "ridarella_fuori_luogo", "cooldown_class": "light",
+      "question_text": "Qual è il posto meno adatto in cui abbiamo avuto la ridarella? E chi ha cominciato?",
+      "question_text_en": "What’s the worst possible place we’ve ever had a fit of the giggles? And who started it?"
+    },
+    {
+      "id": "rivivete-011", "mechanic": "reciprocal", "answer_kind": "open", "depth": 1,
+      "topic": "primo_messaggio", "cooldown_class": "light",
+      "question_text": "Il primo messaggio tra noi: chi l’ha mandato, e cosa diceva? Riscrivilo come lo ricordi, errori compresi.",
+      "question_text_en": "The first message between us: who sent it, and what did it say? Write it out as you remember it, typos and all."
+    },
+    {
+      "id": "rivivete-012", "mechanic": "reciprocal", "answer_kind": "choice", "depth": 1,
+      "topic": "meteo_primo_incontro", "cooldown_class": "light",
+      "question_text": "Che tempo faceva il giorno del nostro primo incontro, secondo te?",
+      "options": ["Un sole da cartolina", "Pioggia, ovviamente", "Un freddo cane", "Non ricordo: guardavo te"],
+      "question_text_en": "What was the weather like on the day we first met, as you remember it?",
+      "options_en": ["Postcard-perfect sunshine", "Rain, obviously", "Freezing cold", "No idea: I was looking at you"]
+    },
+    {
+      "id": "rivivete-013", "mechanic": "reciprocal", "answer_kind": "choice", "depth": 1,
+      "topic": "origine_nomignolo", "cooldown_class": "light",
+      "question_text": "Da dove viene il nomignolo, o la parola buffa, che usiamo più spesso tra noi?",
+      "options": ["Da una battuta", "Da un errore di battitura", "Da un momento tenero", "Chissà: c’è da sempre"],
+      "question_text_en": "Where does the nickname, or silly word, we use most with each other come from?",
+      "options_en": ["A joke", "A typo", "A tender moment", "Who knows: it’s always been there"]
+    },
+    {
+      "id": "rivivete-014", "mechanic": "reciprocal", "answer_kind": "choice", "depth": 1,
+      "topic": "racconto_a_due_voci", "cooldown_class": "light",
+      "question_text": "Quando raccontiamo insieme un nostro ricordo, tu che parte fai?",
+      "options": ["Racconto io, con gli effetti speciali", "Lascio parlare te e correggo i dettagli", "Aggiungo ogni volta un particolare nuovo", "Mi godo la tua versione"],
+      "question_text_en": "When we tell one of our stories together, what part do you play?",
+      "options_en": ["I tell it, with special effects", "I let you talk and fix the details", "I add a new detail every time", "I sit back and enjoy your version"]
+    },
+    {
+      "id": "rivivete-015", "mechanic": "reciprocal", "answer_kind": "choice", "depth": 1,
+      "topic": "saluti_infiniti", "cooldown_class": "light",
+      "question_text": "All’inizio, chi di noi allungava di più i saluti?",
+      "options": ["{francesco}", "{beatrice}", "Pari: i nostri saluti non finivano mai"],
+      "question_text_en": "Back at the start, which of us dragged out our goodbyes the most?",
+      "options_en": ["{francesco}", "{beatrice}", "A tie: our goodbyes never ended"]
+    },
+    {
+      "id": "rivivete-016", "mechanic": "reciprocal", "answer_kind": "open", "depth": 2,
+      "topic": "versione_ufficiale", "cooldown_class": "standard", "longitudinal": true,
+      "question_text": "Racconta in tre righe l’inizio della nostra storia, nella tua versione ufficiale.",
+      "question_text_en": "In three lines, tell how our story began: your official version."
+    },
+    {
+      "id": "rivivete-017", "mechanic": "reciprocal", "answer_kind": "open", "depth": 2,
+      "topic": "equivoco_nostro", "cooldown_class": "standard",
+      "question_text": "Ricordi una volta in cui abbiamo capito due cose diverse dalla stessa frase? Cosa avevi capito tu?",
+      "question_text_en": "Remember a time the same sentence meant two different things to us? What did you think it meant?"
+    },
+    {
+      "id": "rivivete-018", "mechanic": "reciprocal", "answer_kind": "open", "depth": 2,
+      "topic": "abitudine_per_caso", "cooldown_class": "standard",
+      "question_text": "C’è una nostra abitudine cominciata per puro caso? Racconta la prima volta: dove eravamo e chi ha fatto cosa.",
+      "question_text_en": "Is there a habit of ours that started by pure chance? Tell the story of the first time: where we were and who did what."
+    },
+    {
+      "id": "rivivete-019", "mechanic": "reciprocal", "answer_kind": "open", "depth": 2,
+      "topic": "piccolo_salvataggio", "cooldown_class": "standard",
+      "question_text": "Qual è un piccolo salvataggio tra noi che ricordi bene? Chi ha salvato chi, e da cosa?",
+      "question_text_en": "What’s a small rescue between us that you remember well? Who saved who, and from what?"
+    },
+    {
+      "id": "rivivete-020", "mechanic": "reciprocal", "answer_kind": "open", "depth": 2,
+      "topic": "dopo_il_saluto", "cooldown_class": "standard",
+      "question_text": "Pensa a un nostro saluto che ricordi bene, alla fine di una serata o su un binario. Cosa hai fatto nei cinque minuti dopo?",
+      "question_text_en": "Think of a goodbye between us that you remember well, at the end of an evening or on a train platform. What did you do in the five minutes after?"
+    },
+    {
+      "id": "rivivete-021", "mechanic": "reciprocal", "answer_kind": "open", "depth": 2,
+      "topic": "ultima_prima_volta", "cooldown_class": "standard", "longitudinal": true,
+      "question_text": "Qual è l’ultima «prima volta» che abbiamo vissuto insieme, anche piccolissima?",
+      "question_text_en": "What’s the most recent “first time” we’ve shared, even a tiny one?"
+    },
+    {
+      "id": "rivivete-022", "mechanic": "reciprocal", "answer_kind": "open", "depth": 2,
+      "topic": "un_ora_prima", "cooldown_class": "standard",
+      "question_text": "Cosa stavi facendo un’ora prima del nostro primo incontro? Se non lo ricordi, inventa: basta che sia credibile.",
+      "question_text_en": "What were you doing an hour before we first met? If you don’t remember, make it up, as long as it’s believable."
+    },
+    {
+      "id": "rivivete-023", "mechanic": "reciprocal", "answer_kind": "open", "depth": 2,
+      "topic": "attesa_memorabile", "cooldown_class": "standard",
+      "question_text": "Qual è un’attesa tra noi rimasta negli annali, un ritardo o una risposta che non arrivava? Racconta quei minuti come li hai vissuti tu.",
+      "question_text_en": "What’s a wait between us that went down in history, someone running late or a reply that wouldn’t come? Tell me about those minutes from your side."
+    },
+    {
+      "id": "rivivete-024", "mechanic": "reciprocal", "answer_kind": "choice", "depth": 2,
+      "topic": "come_ricordi", "cooldown_class": "standard",
+      "question_text": "Quando ripensi a un momento nostro, cosa ti torna in mente per prima cosa?",
+      "options": ["Le frasi esatte", "Il posto e la luce", "Odori e suoni", "Quello che provavo"],
+      "question_text_en": "When you think back to a moment of ours, what comes back to you first?",
+      "options_en": ["The exact words", "The place and the light", "Smells and sounds", "What I was feeling"]
+    },
+    {
+      "id": "rivivete-025", "mechanic": "reciprocal", "answer_kind": "open", "depth": 3,
+      "topic": "prima_fiducia", "cooldown_class": "deep",
+      "question_text": "In quale momento hai sentito per la prima volta di poterti fidare di me fino in fondo? Cosa avevo fatto o detto?",
+      "question_text_en": "When did you first feel you could trust me all the way? What had I done or said?"
+    },
+    {
+      "id": "rivivete-026", "mechanic": "reciprocal", "answer_kind": "open", "depth": 3,
+      "topic": "orgoglio_per_te", "cooldown_class": "deep",
+      "question_text": "Ricordi un momento in cui hai provato orgoglio per me? Cosa stavo facendo?",
+      "question_text_en": "Remember a moment when you felt proud of me? What was I doing?"
+    },
+    {
+      "id": "rivivete-027", "mechanic": "reciprocal", "answer_kind": "open", "depth": 3,
+      "topic": "ricordo_coraggio", "cooldown_class": "deep", "longitudinal": true,
+      "question_text": "Quale ricordo nostro ti dà coraggio quando ne hai bisogno?",
+      "question_text_en": "Which memory of ours gives you courage when you need it?"
+    },
+    {
+      "id": "rivivete-028", "mechanic": "reciprocal", "answer_kind": "open", "depth": 3,
+      "topic": "vissuto_diverso", "cooldown_class": "deep",
+      "question_text": "C’è un momento nostro che, secondo te, io ho vissuto in modo molto diverso da te?",
+      "question_text_en": "Is there a moment of ours that you think I experienced very differently from you?"
+    }
+  ],
+  "existing_en": [
+    { "id": "rivivete-001", "question_text_en": "What’s an ordinary day of ours that you’d happily live again, precisely because there was nothing special about it?" },
+    { "id": "rivivete-002", "question_text_en": "What’s the first thing about me that stuck with you, before you even really knew me?" },
+    { "id": "rivivete-003", "question_text_en": "Was there a moment when you realized things between us were getting serious? What were we doing?" },
+    { "id": "rivivete-004", "question_text_en": "Which of our phrases, inside jokes or made-up words would you use to explain the two of us to someone?" },
+    { "id": "rivivete-005", "question_text_en": "If you could relive just one evening we’ve spent together, which would you pick, and would you change anything?" },
+    { "id": "rivivete-006", "question_text_en": "What’s a time I did something you never saw coming from me?" },
+    { "id": "rivivete-007", "question_text_en": "Thinking back to our beginning, what do you miss most about that time?",
+      "options_en": ["The thrill of every message", "Not knowing everything about you yet", "Time that seemed endless", "Nothing: I like us better now"] },
+    { "id": "rivivete-008", "question_text_en": "What’s a place you can no longer see without thinking of us?" }
+  ],
+  "fixes": [
+    { "id": "rivivete-007",
+      "options": ["L’emozione di ogni messaggio", "Non sapere ancora tutto di te", "Il tempo che sembrava infinito", "Niente: preferisco noi adesso"],
+      "reason": "«dell’altro» è maschile e indica la persona partner, quindi viola la regola del linguaggio inclusivo (il validatore non lo intercetta per via dell’elisione «dell’»). Cambia solo la seconda opzione." }
+  ]
+}

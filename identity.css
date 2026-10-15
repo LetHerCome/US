@@ -253,11 +253,7 @@ textarea,input{background:var(--us-field-bg)!important;border-color:rgba(255,255
 }
 
 /* --- Selection / focus ----------------------------------------- */
-button:focus-visible,
-[role="button"]:focus-visible{
-  outline:2px solid rgba(232,138,162,.62)!important;
-  outline-offset:2px;
-}
+/* The focus ring is the mockup's one, in ui-foundation.css. */
 
 /* M1.6 Home-only full-bleed fill. M12B.1 — Oggi is one frame exactly as tall
    as the viewport: the hero already runs under the floating nav, so the
@@ -369,7 +365,7 @@ body:has(#home.page.active) .app{padding-bottom:0!important}
   background:rgba(246,111,158,.14);
   border-color:rgba(246,111,158,.26);
 }
-#thinkButton.us-top-think:disabled{opacity:.58!important}
+#thinkButton.us-top-think:disabled{opacity:.45!important}
 #thinkButton.us-top-think.sent{animation:usThinkSent var(--us-motion-base) var(--us-ease-standard)}
 #thinkButton.us-top-think.received{animation:usThinkReceived var(--us-motion-surface) var(--us-ease-standard)}
 @media(max-width:360px){

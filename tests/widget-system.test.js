@@ -447,7 +447,9 @@ test('Noi 2x1 is a light photo-distance widget with one action only', () => {
   assert.doesNotMatch(provider, /HttpURLConnection|supabase|fetch\(/i);
 });
 
-test('Ti penso clears sent display promptly and counts confirmed local sends in last 24h', () => {
+// 1.0 (O12): the widget no longer shows an "N inviati · 24h" counter; the
+// store keeps its confirmed-send history (dedupe), the provider hides the line.
+test('Ti penso clears sent display promptly; no sent counter on the widget', () => {
   const model = read(`${JAVA}/UsWidgetModels.java`);
   const store = read(`${JAVA}/UsWidgetStore.java`);
   const receiver = read(`${JAVA}/UsThinkWidgetActionReceiver.java`);
@@ -459,8 +461,8 @@ test('Ti penso clears sent display promptly and counts confirmed local sends in 
   assert.match(store, /actionId\.equals\(/);
   assert.match(store, /thinkHistoryFile\.delete\(\)/);
   assert.match(receiver, /UsWidgetActionClient\.SENT\.equals\(result\)/);
-  assert.match(provider, /countThinkSent24h/);
-  assert.match(provider, /nextThinkExpiry/);
+  assert.doesNotMatch(provider, /countThinkSent24h|inviati/);
+  assert.match(provider, /views\.setViewVisibility\(R\.id\.us_widget_count_24h, View\.GONE\);/);
   assert.match(read(`${PLUGIN}/res/layout/us_widget_think.xml`), /us_widget_count_24h/);
 });
 

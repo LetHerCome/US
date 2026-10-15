@@ -75,7 +75,8 @@ const MATRIX = [
   ['public.get_weekly_question_state()', '-AS-', '-AS-', 'COMPATIBILITY'],
   ['public.get_weekly_quiz_sets()', 'aASP', '--S-', 'LEGACY_CANDIDATE'],
   ['public.keep_daily_question(uuid)', '-AS-', '-AS-', 'CLIENT_REQUIRED'],
-  ['public.link_moment_to_source(uuid,text,uuid)', '-AS-', '-AS-', 'COMPATIBILITY'],
+  // US 1.0 R6: "Aggiungi la foto" on something lived links the new memory to it from the app.
+  ['public.link_moment_to_source(uuid,text,uuid)', '-AS-', '-AS-', 'CLIENT_REQUIRED'],
   ['public.list_couple_questions()', '-AS-', '--S-', 'LEGACY_CANDIDATE'],
   ['public.list_game_sessions()', '-AS-', '--S-', 'LEGACY_CANDIDATE'],
   ['public.mark_daily_reveal_seen(uuid)', '-AS-', '-AS-', 'CLIENT_REQUIRED'],
@@ -106,7 +107,9 @@ const CLASSES = new Set(['CLIENT_REQUIRED', 'SERVER_REQUIRED', 'INTERNAL_HELPER'
 const ROLES = [['a', 'anon'], ['A', 'authenticated'], ['S', 'service_role'], ['P', 'f1b_public_probe']];
 const byName = new Map(MATRIX.map((row) => [row.name, row]));
 // V6 removes the unused frontend actions, not their historical server ACLs.
-const RETIRED_DAILY_UI = new Set(['save_daily_question_outcome', 'delete_daily_question_outcome', 'set_daily_answer_reaction']);
+// 1.0 O2 brings the one-tap reaction back, so set_daily_answer_reaction is
+// called again by the client (it never lost its authenticated grant).
+const RETIRED_DAILY_UI = new Set(['save_daily_question_outcome', 'delete_daily_question_outcome']);
 
 function rpcNames(files) {
   const names = new Set();

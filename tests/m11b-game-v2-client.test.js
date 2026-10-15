@@ -92,7 +92,8 @@ test('M11B client: hub shows Per voi, the six modes and the weekly turn, with no
   await tick();
   const html = h.nodes.quizHub.innerHTML;
   assert.match(html, /<b>Per voi<\/b><small>5 domande scelte per voi<\/small>/);
-  for (const name of ['Scopritevi', 'Confrontatevi', 'Ridete', 'Quanto mi conosci\\?', 'Rivivete', 'E se…\\?']) assert.match(html, new RegExp(name));
+  for (const name of ['Scopritevi', 'Confrontatevi', 'Ridete', 'Quanto mi conosci\\?', 'Rivivete']) assert.match(html, new RegExp(name));
+  assert.doesNotMatch(html, /E se…\?|data-gv2-family="e_se"/, 'G7 1.0: E se…? is no longer offered');
   assert.match(html, /<b>Tocca a te<\/b>/);
   assert.match(html, /Crea la domanda/);
   assert.doesNotMatch(html, NO_SCORE);
@@ -169,7 +170,7 @@ test('M11B client: reveal copy — neutral prediction outcomes, Uguale / Una sor
   assert.match(html, /Una sorpresa per la tua persona/);
   assert.match(html, /data-gv5-group="same"/, 'matching choice/prediction answers are grouped');
   assert.match(html, /data-gv5-group="different"/, 'different choice/prediction answers are grouped');
-  assert.match(html, /<strong>3<\/strong>/, 'three matches and three differences, without tall cards');
+  assert.match(html, /3 su 6 <em>uguali<\/em>/, 'three matches and three differences, without tall cards');
   assert.match(html, /Tu pensavi/);
   assert.match(html, /Beatrice ha scelto/);
   assert.doesNotMatch(html, /Facciamone un altro/, 'M11F: no immediate replay invitation after a reveal');
@@ -287,7 +288,8 @@ test('M11B client: weekly question form sends only content, retries idempotently
   h.nodes.usGameV2Panel.query['#usGv2WeeklyForm'] = form;
   h.nodes.quizHub.fire('click', { target: { closest: () => ({ dataset: { gv2Action: 'weekly-create' } }) } });
   assert.match(h.nodes.usGameV2Panel.innerHTML, /Crea la domanda/);
-  assert.match(h.nodes.usGameV2Panel.innerHTML, /value="quanto_mi_conosci"  disabled/, 'Quanto mi conosci? needs choices');
+  // G9 1.0 — no technical "Nei giochi" choice: the question always goes to Scopritevi (and so Per voi).
+  assert.doesNotMatch(h.nodes.usGameV2Panel.innerHTML, /Nei giochi|name="families"/);
   form.fields = { question_text: '', answer_kind: 'open', families: ['scopritevi'] };
   form.query['button[type="submit"]'] = { disabled: false };
   h.nodes.usGameV2Panel.fire('submit', { target: form, preventDefault() {} });
@@ -307,6 +309,7 @@ test('M11B client: weekly question form sends only content, retries idempotently
   assert.equal(sends[0].request_id, sends[1].request_id, 'the retry replays the same request id');
   assert.deepEqual(Object.keys(sends[1]).sort(), ['answer_kind', 'families', 'options', 'question_text', 'request_id']);
   assert.deepEqual(sends[1].options, ['Io', 'Tu']);
+  assert.deepEqual(sends[1].families, ['scopritevi']);
   assert.equal(sends[1].question_text, 'Cosa ti ha fatto ridere?');
   assert.deepEqual(h.pushes, [['game_weekly', 'q7']], 'push carries an id, never the sealed text');
   assert.deepEqual(h.notices, ['Domanda salvata ♡']);
@@ -340,7 +343,14 @@ test('M11B client: static contract — one Gioca surface, Phosphor icons, no leg
     assert.match(css, new RegExp(`/assets/icons/phosphor/${file}\\.svg`), `${file} is painted from the official file`);
     assert.ok(registry.some((i) => i.source === 'PHOSPHOR' && i.phosphorName === phosphor), `${phosphor} registered`);
   }
-  assert.doesNotMatch(games + read('games.css'), /<svg|<path/, 'no hand-drawn icons');
+  // Round 3 parity: the one exception is the mockup's own tile art (062),
+  // copied literally into GAME_ART; everything else stays Phosphor.
+  const artFrom = games.indexOf('const GAME_ART = Object.freeze({');
+  const artTo = games.indexOf('\n', games.indexOf('const gameArt = '));
+  assert.ok(artFrom > 0 && artTo > artFrom, 'the mockup art lives in one place');
+  const art = games.slice(artFrom, artTo);
+  assert.deepEqual([...art.matchAll(/^  ([a-z_]+): '/gm)].map((m) => m[1]).sort(), ['confrontatevi', 'per_voi', 'quanto_mi_conosci', 'ridete', 'rivivete', 'scopritevi', 'swipe']);
+  assert.doesNotMatch(games.slice(0, artFrom) + games.slice(artTo) + read('games.css'), /<svg|<path/, 'no other hand-drawn icons');
 });
 
 // ---------------------------------------------------------------- M11F weekly rhythm
@@ -348,25 +358,26 @@ test('M11B client: static contract — one Gioca surface, Phosphor icons, no leg
 const allowance = (over = {}) => ({ week_start: '2026-09-28', resets_on: '2026-10-05', per_voi_used: 0, per_voi_limit: 1, free_used: 0, free_limit: 2,
   used: 0, limit: 3, per_voi_available: true, free_available: true, open_count: 0, open_limit: 3, families: {}, ...over });
 
-test('M11F client: the weekly strip reads the server allowance, restrained, never a counter game', async () => {
+test('M11F client: the weekly limit reads the server allowance, on the tiles it locks, restrained, never a counter game', async () => {
+  // Round 3 parity (062): the budget strip gave way to the mockup's seven
+  // days; the limit is said in the confirm (below) and on the locked tiles.
   const fresh = harness({ homeState: home({ allowance: allowance() }) });
   await tick();
-  assert.match(fresh.nodes.quizHub.innerHTML, /QUESTA SETTIMANA/);
-  assert.match(fresh.nodes.quizHub.innerHTML, /data-gv2-rhythm="open"[\s\S]*<b>3 rimasti<\/b>/);
+  assert.match(fresh.nodes.quizHub.innerHTML, /id="usGv2Week"/);
+  assert.doesNotMatch(fresh.nodes.quizHub.innerHTML, /QUESTA SETTIMANA|data-gv2-rhythm|Ancora \d giochi/);
+  assert.doesNotMatch(fresh.nodes.quizHub.innerHTML, /data-gv2-mode-state="(?:locked|played)"/, 'a fresh week locks nothing');
   const mid = harness({ homeState: home({ allowance: allowance({ used: 2, per_voi_used: 1, free_used: 1, per_voi_available: false, families: { per_voi: { session_id: 'p', completed: true }, ridete: { session_id: 'r', completed: true } } }) }) });
   await tick();
   const html = mid.nodes.quizHub.innerHTML;
-  assert.match(html, /1 rimasto da giocare/);
-  assert.equal((html.match(/data-on="true"/g) || []).length, 2);
-  assert.match(html, /data-gv2-family="ridete" data-gv2-mode-state="played"/);
-  assert.match(html, /Completato<\/em>/, 'US V3: the card names the real state');
+  assert.match(html, /data-gv2-family="ridete" data-gv2-mode-state="played"[\s\S]*?<small>Giocato questa settimana<\/small>/, 'US V3: the card names the real state');
+  assert.doesNotMatch(html, /data-gv2-mode-state="locked"/, 'one game left: nothing locked yet');
   assert.doesNotMatch(html, /vite|energia|stamina|streak|serie/i, 'no game-energy language');
   const done = harness({ homeState: home({ per_voi: { state: 'played', session_id: 'p' }, allowance: allowance({ used: 3, per_voi_used: 1, free_used: 2, per_voi_available: false, free_available: false, families: { per_voi: { session_id: 'p', completed: true } } }) }) });
   await tick();
   const dh = done.nodes.quizHub.innerHTML;
-  assert.match(dh, /<b>0 rimasti<\/b>/);
+  assert.doesNotMatch(dh, /Tutti giocati/);
   assert.match(dh, /Giocato questa settimana/, 'Per voi shows its played state without repeating the unlock day');
-  assert.match(dh, /data-gv2-family="scopritevi" data-gv2-mode-state="locked" aria-disabled="true"/, 'modes stay visible, locked');
+  assert.match(dh, /data-gv2-family="scopritevi" data-gv2-mode-state="locked" aria-disabled="true"[\s\S]*?<small>Da lunedì<\/small>/, 'modes stay visible, locked until Monday');
   assert.equal(done.nodes.usPerVoiTop.dataset.gv2State, 'played');
   assert.equal(done.nodes.usPerVoiTop.dataset.usAttention, 'off');
 });
@@ -388,7 +399,27 @@ test('M11F client: an exhausted week starts nothing; played modes open their rev
   const pile = harness({ handlers: { start_game_round: () => { throw new Error('too many open rounds'); } } });
   await tick();
   await pile.api.startRound('e_se');
-  assert.match(pile.notices.join('|'), /Prima finite una delle partite in corso/);
+  assert.match(pile.notices.join('|'), /Prima finite uno dei giochi in corso/);
+});
+
+test('G10 1.0: a first round of a mode also asks, with the real number of games left', async () => {
+  const asked = [];
+  const h = harness({ homeState: home({ allowance: allowance() }) });
+  h.window.UsUiFoundation = { confirm: async (opts) => { asked.push(opts); return false; } };
+  await tick();
+  await h.api.chooseMode('scopritevi');
+  await h.api.chooseSwipe();
+  assert.equal(h.calls.some(([n]) => n === 'start_game_round' || n === 'start_swipe_round'), false, 'declined: nothing started');
+  assert.equal(asked.length, 2);
+  assert.equal(asked[0].title, 'Scopritevi');
+  assert.equal(asked[0].body, 'Userete 1 dei 3 giochi di questa settimana.');
+  assert.equal(asked[0].confirmLabel, 'Inizia');
+  assert.equal(asked[1].title, 'Questo o quello');
+  const last = harness({ homeState: home({ allowance: allowance({ used: 2, per_voi_used: 1, free_used: 1, per_voi_available: false }) }) });
+  last.window.UsUiFoundation = { confirm: async (opts) => { asked.push(opts); return false; } };
+  await tick();
+  await last.api.chooseMode('rivivete');
+  assert.equal(asked[2].body, 'Userete l’ultimo gioco di questa settimana.');
 });
 
 test('M11F client: repeating a played mode asks once through the shared US confirm; an open round just resumes', async () => {
@@ -402,8 +433,10 @@ test('M11F client: repeating a played mode asks once through the shared US confi
   await h.api.chooseMode('ridete');
   assert.ok(h.calls.some(([n, a]) => n === 'start_game_round' && a.target_family === 'ridete'));
   assert.match(asked[0].title, /Avete già giocato a Ridete questa settimana/);
-  assert.match(asked[0].body, /un momento/);
+  // G10 1.0 — the confirm names the real number of games left this week.
+  // Round 3 parity (073): the mockup's line, then what it costs this week.
+  assert.equal(asked[0].body, 'Potete fare un’altra partita, con domande nuove. Userete 1 dei 2 giochi di questa settimana.', 'the mockup line and the real count');
   await h.api.chooseMode('e_se');
-  assert.ok(h.calls.some(([n, a]) => n === 'get_game_session' && a.target_session_id === 'open-1'));
+  assert.ok(h.calls.some(([n, a]) => n === 'get_game_session' && a.target_session_id === 'open-1'), 'an old E se…? round still opens');
   assert.equal(asked.length, 2, 'resuming never asks');
 });

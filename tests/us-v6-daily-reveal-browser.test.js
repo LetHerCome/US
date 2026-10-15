@@ -5,7 +5,7 @@ const path=require('node:path');
 const {start,pageFor}=require('./helpers/countdown-browser');
 const shots=process.env.US_V6_QA_SHOTS;
 
-test('Daily mobile: centred safe panel, two distinct answers, long text scroll and reopen',async t=>{
+test('Daily mobile: Foglio docked in the safe area, two distinct answers, long text scroll and reopen',async t=>{
  const h=await start();if(!h)return t.skip('Playwright unavailable');
  try{
   for(const [width,height] of [[320,568],[390,844],[844,390]]){
@@ -25,16 +25,21 @@ test('Daily mobile: centred safe panel, two distinct answers, long text scroll a
      window.go('quiz',{nav:true});window.openToday();
     });
     await page.waitForSelector('[data-us-daily-answer="partner"]');await page.waitForTimeout(350);
+    // The Foglio rises with a spring: measure once it has settled.
+    await page.waitForFunction(()=>document.querySelector('#today [data-us-modal-panel]').getAnimations().length===0);
     if(shots){fs.mkdirSync(shots,{recursive:true});await page.screenshot({path:path.join(shots,`daily-${width}x${height}.png`)});}
     const g=await page.evaluate(()=>{
      const panel=document.querySelector('#today [data-us-modal-panel]'),r=panel.getBoundingClientRect(),s=getComputedStyle(panel);
      return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,height:r.height,scroll:panel.scrollHeight>panel.clientHeight,overflow:getComputedStyle(document.getElementById('today')).overflowY,view:innerHeight,scrollWidth:panel.scrollWidth,clientWidth:panel.clientWidth,
       inputs:[...document.querySelectorAll('#today textarea')].filter(e=>e.getBoundingClientRect().height>0).length,
       reactions:document.querySelectorAll('#today [data-daily-reaction]').length,answers:document.querySelectorAll('[data-us-daily-answer]').length,
-      safeHeight:s.maxHeight};
+      safeHeight:s.maxHeight,padBottom:parseFloat(s.paddingBottom)};
     });
-    assert.equal(g.answers,2);assert.equal(g.inputs,0);assert.equal(g.reactions,0);
-    assert.ok(g.left>=0&&g.right<=width+.5);assert.ok(g.top>=24&&g.bottom<=height-20,JSON.stringify(g));
+    // 1.0 (O2): one tap on the other's answer, ♥ or "Mi hai commosso".
+    assert.equal(g.answers,2);assert.equal(g.inputs,0);assert.equal(g.reactions,2);
+    assert.ok(g.left>=0&&g.right<=width+.5);// Popup system 1.0: the Daily sheet is a Foglio, docked to the bottom edge;
+    // the top stays under the safe area and the home-indicator inset is inside the panel.
+    assert.ok(g.top>=24&&Math.abs(g.bottom-height)<=1&&g.padBottom>=20,JSON.stringify(g));
     assert.ok(g.scroll,'long answers scroll inside panel');assert.ok(g.scrollWidth<=g.clientWidth+1,'no horizontal overflow');
     assert.equal(g.overflow,'hidden','only the panel scrolls');
     await page.locator('#today [data-us-modal-panel]').evaluate(el=>{el.scrollTop=el.scrollHeight;});

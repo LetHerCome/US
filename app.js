@@ -35,19 +35,23 @@ async function hydrateActivePage(id,{force=false}={}){
   if(id==='moments')work.push(Promise.resolve(hydrateMoments()));
   if(id==='bond'){work.push(Promise.resolve(hydrateBond()));work.push(Promise.resolve(hydrateNoiIdeas()));}
   if(id==='settings')work.push(Promise.resolve(window.hydrateUsSettings?.()));
-  if(id==='home')work.push(Promise.resolve(window.refreshOggiCalendarWidget?.()));
+  if(id==='home'){work.push(Promise.resolve(window.refreshOggiCalendarWidget?.()));work.push(Promise.resolve(window.UsOggiNext?.refresh?.({event:'read',calendar:'read'})));}
   if(!work.length)return;
   await Promise.allSettled(work);
   if(heavy&&document.querySelector('.page.active')?.id===id)usPageHydratedAt.set(id,Date.now());
 }
 function schedulePageHydration(id,{force=false}={}){
   const ticket=++usPageHydrationTicket;
-  // Let the tab become visible first. Heavy Supabase/DOM work starts after the
-  // browser has had one frame to commit the navigation.
-  requestAnimationFrame(()=>setTimeout(()=>{
+  const run=()=>{
     if(ticket!==usPageHydrationTicket)return;
     hydrateActivePage(id,{force}).catch(()=>{});
-  },0));
+  };
+  // Under the colour between tabs (due-colori.js) the page is out of sight:
+  // it is filled now, so it opens complete and the reveal stays smooth.
+  if(window.UsDueColori?.switching?.()){run();return;}
+  // Otherwise let the tab become visible first. Heavy Supabase/DOM work
+  // starts after the browser has had one frame to commit the navigation.
+  requestAnimationFrame(()=>setTimeout(run,0));
 }
 function go(id,options={}){
   const current=document.querySelector('.page.active')?.id;
@@ -75,10 +79,21 @@ function go(id,options={}){
   scrollTo({top:0,behavior:(options.swipe||options.motionCommit)?'auto':'smooth'});
   schedulePageHydration(id);
 }
-// One timer for the one toast: a second message restarts the 1.7 s window
-// instead of being cut short by the first message's pending hide.
+// Due colori: my colour follows my place in the couple, the same on both
+// phones. Whoever created the couple (role francesco) is rosa, whoever joined
+// with the code (role beatrice) is lilla. Presentation only, never authorization.
+function usApplyPersonColor(profile){
+  const root=document.documentElement,role=profile?.role;
+  if(role==='francesco'||role==='beatrice')root.dataset.usMe=role;
+  else delete root.dataset.usMe;
+}
+// One timer for the one toast (the Avviso pill at the top, 2.3 s as in the mockup): a second message
+// restarts the ~2 s window instead of being cut short by the first message's
+// pending hide. Optional {icon, quiet}: a shared Phosphor icon name and the
+// quiet (night) look. Without quiet, a message that ends with ♡ ✦ ✓ is a
+// good moment (warm latte pill); anything else is quiet.
 let usToastTimer=null;
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(usToastTimer);usToastTimer=setTimeout(()=>t.classList.remove('show'),1700)}
+function toast(msg,options){const t=document.getElementById('toast');if(!t)return;const opts=options&&typeof options==='object'?options:{};const text=String(msg??'');const quiet=typeof opts.quiet==='boolean'?opts.quiet:!/[♡✦✓]\s*$/.test(text);t.classList.toggle('is-quiet',quiet);t.textContent='';if(opts.icon){const icon=document.createElement('span');icon.className='us-icon';icon.setAttribute('data-us-icon',String(opts.icon));icon.setAttribute('aria-hidden','true');t.appendChild(icon);}const label=document.createElement('span');label.className='us-toast-text';label.textContent=text;t.appendChild(label);const action=opts.action&&typeof opts.action==='object'&&opts.action.label?opts.action:null;t.classList.toggle('has-act',Boolean(action));if(action){const act=document.createElement('button');act.type='button';act.className='us-toast-act';act.textContent=String(action.label);act.addEventListener('click',()=>{clearTimeout(usToastTimer);t.classList.remove('show');if(typeof action.onClick==='function')action.onClick();});t.appendChild(act);}t.classList.add('show');clearTimeout(usToastTimer);usToastTimer=setTimeout(()=>t.classList.remove('show'),action?4200:2300)}
 // The one US confirmation sheet (ui-foundation); the platform dialog only as a fallback.
 function usConfirm(options){const ui=window.UsUiFoundation;return ui&&typeof ui.confirm==='function'?ui.confirm(options):Promise.resolve(window.confirm(options.title));}
 // Game V2 — Gioca is owned by games.js (window.USGameV2); the legacy weekly quiz UI is retired.
@@ -97,7 +112,7 @@ function updateTogetherDays(startedOn){
   const now=new Date();
   const today=Date.UTC(now.getFullYear(),now.getMonth(),now.getDate());
   const diff=Math.max(0,Math.floor((today-start)/86400000));
-  el.textContent=diff.toLocaleString('it-IT');
+  el.textContent=diff.toLocaleString((globalThis.UsI18n?.tag||'it-IT'));
 }
 
 
@@ -137,15 +152,16 @@ function usIdentity(){
 window.UsIdentity=Object.freeze({resolve:resolveUsIdentity,current:usIdentity});
 function refreshUsIdentityLabels(){
   const identity=usIdentity();
+  // A real name stays as written (translate="no"); only the Tu / La tua persona / Voi due placeholders follow the language.
   for(const role of ['francesco','beatrice']){
     const label=document.querySelector(`[data-noi-couple-name="${role}"]`);
-    if(label)label.textContent=identity.nameForRole(role);
+    if(label){const name=identity.nameForRole(role);label.textContent=name;label.translate=name==='Tu'||name==='La tua persona';}
     const root=document.getElementById(role==='francesco'?'pairAvatarFrancesco':'pairAvatarBeatrice');
     const fallback=root?.querySelector('.fallback');
     if(fallback)fallback.textContent=identity.initialForRole(role);
   }
   for(const id of ['noiCoupleCard','noiCouple'])document.getElementById(id)?.setAttribute('aria-label',identity.pairLabel);
-  const pair=document.getElementById('usCoupleNames');if(pair)pair.textContent=identity.pairLabel;
+  const pair=document.getElementById('usCoupleNames');if(pair){pair.textContent=identity.pairLabel;pair.translate=identity.pairLabel==='Voi due';}
   const ownInitial=document.getElementById('profileAvatarFallback');if(ownInitial)ownInitial.textContent=identity.initialForRole(window.usProfile?.role);
   const title=document.getElementById('thinkArrivalTitle');if(title)title.textContent=`${identity.partnerName} ti pensa`;
   window.dispatchEvent(new CustomEvent('us-identity-change',{detail:{identityKey:usCoupleContextState.identityKey}}));
@@ -555,6 +571,29 @@ async function sendWebPushEvent(type,referenceId=null,extra={}){
   }catch(error){console.warn('[US Push] send unavailable',error);return null;}
 }
 window.sendWebPushEvent=sendWebPushEvent;
+// US 1.0: questions, games and pushes come in this person's language. The
+// server keeps it on the profile (set_my_locale); this phone sends it once per
+// person and language. A database without the function yet just stays Italian.
+async function usSyncContentLocale(profile){
+  const locale=window.UsI18n?.locale;
+  if(!profile?.id||!['it','en'].includes(locale))return;
+  const key=`us:lang:v1:synced:${profile.id}`;
+  try{if(localStorage.getItem(key)===locale)return;}catch(_e){}
+  try{
+    const {error}=await sb.rpc('set_my_locale',{p_locale:locale});
+    if(error)return;
+    if(window.usProfile?.id===profile.id){try{localStorage.setItem(key,locale);}catch(_e){}}
+  }catch(_e){}
+}
+// English readers also ask for the computed English column (question or
+// mission title); a database without it answers the plain Italian read.
+async function usReadLocalized(query,columns,localized){
+  if(window.UsI18n?.locale!=='en')return query(columns);
+  const result=await query(`${columns},${localized}`);
+  return result?.error?query(columns):result;
+}
+// Missions: show the English title where the server gave one.
+const usLocalizedTitles=result=>Array.isArray(result?.data)?{...result,data:result.data.map(row=>row?.title_localized?{...row,title:row.title_localized}:row)}:result;
 
 function setPushSettingsState(kind,title,detail,actionLabel=''){
   const row=document.getElementById('pushSettingsRow'),status=document.getElementById('pushSettingsStatus'),info=document.getElementById('pushSettingsDetail'),button=document.getElementById('pushDisableBtn');
@@ -587,7 +626,7 @@ async function refreshWebPushUi(){
     if(state.kind!=='inactive'){card.hidden=true;return;}
     card.hidden=false;
     if(title)title.textContent='Attiva le notifiche';
-    if(text)text.textContent='Ti penso, risposte e promemoria, anche a US chiusa.';
+    if(text)text.textContent='Ti penso, risposte e missioni, anche a US chiusa.';
     if(button){button.hidden=false;button.disabled=false;button.textContent='Attiva';}
     return;
   }
@@ -619,7 +658,7 @@ async function refreshWebPushUi(){
   }
   card.hidden=false;
   if(title)title.textContent='Attiva le notifiche';
-  if(text)text.textContent='Ti penso, risposte e quest, anche a US chiusa.';
+  if(text)text.textContent='Ti penso, risposte e missioni, anche a US chiusa.';
   if(button){button.hidden=false;button.disabled=false;button.textContent=Notification.permission==='granted'?'Completa attivazione':'Attiva';}
   setPushSettingsState('inactive','Notifiche non attive','','Attiva');
 }
@@ -728,7 +767,7 @@ window.disableWebPush=disableWebPush;
 // Native Notifications V1: one allow-listed target per notification (Web Push
 // and native alike), never a URL. `ref` (a UUID, native only) narrows the
 // surface; every surface re-reads its data through the normal RLS/RPC paths.
-const US_PUSH_TARGETS=Object.freeze(['home','today','think','left_for_you','quiz','bond','calendar']);
+const US_PUSH_TARGETS=Object.freeze(['home','today','think','left_for_you','quiz','bond','calendar','events']);
 async function performPushNavigation(target,intent={}){
   if(!US_PUSH_TARGETS.includes(target))return;
   if(!window.usProfile){usPendingPushTarget=target;return;}
@@ -754,6 +793,18 @@ async function performPushNavigation(target,intent={}){
   if(target==='calendar'){
     if(ref&&window.UsCalendarLinks?.openEntry)window.UsCalendarLinks.openEntry(ref);
     else window.openCalendarSurface?.();
+    return;
+  }
+  // A mission push opens Missioni itself, not only the Noi page.
+  if(target==='bond'){
+    if(document.querySelector('.page.active')?.id!=='bond')go('bond',{motionCommit:true});
+    setTimeout(()=>window.openNoiSection?.('quest'),120);
+    return;
+  }
+  // Mesiversario and anniversary pushes: Eventi on Noi.
+  if(target==='events'){
+    if(document.querySelector('.page.active')?.id!=='bond')go('bond',{motionCommit:true});
+    setTimeout(()=>window.openNoiSection?.('eventi'),120);
     return;
   }
   if(pages.includes(target))go(target);
@@ -855,6 +906,10 @@ const usOnboarding=window.UsOnboarding.mount({
     return name==='get_couple_membership'?usWithDeadline(request,5000):request;
   },
   resume:()=>{setTimeout(initCloud,0);},
+  // First run: the tour hands over to these steps; the optional birthday from
+  // the "Tu" step is one yearly event, through the same insert as events.js.
+  openStep:id=>showAuthStep(id),
+  insertEvent:row=>sb.from('shared_events').insert(row),
   signOut:async()=>{
     const revocation=revokeCurrentDevice();
     usInvalidateAuth({revokePush:false});
@@ -877,15 +932,17 @@ function usInvalidateAuth({revokePush=true}={}){
     usPushCleanup=usPushCleanup.then(()=>disableWebPush({silent:true,refreshUi:false,profileId:previousId,localOnly:true,waitForOperation:priorOperation})).catch(()=>{});
   }
   homePhotoRequestId++;
-  homePhotoPath='';homePhotoHourKey='';homePhotoHasPainted=false;
+  homePhotoPath='';homePhotoHourKey='';homePhotoHasPainted=false;if(typeof usHomePhotoMeta!=='undefined')usHomePhotoMeta=null;if(typeof renderOggiCaption==='function')renderOggiCaption(null);if(typeof renderOggiNext==='function')renderOggiNext(null);
   document.body.classList.remove('us-fastboot-photo');
   clearPrivateDeviceState(previousId).catch(()=>{});
   for(const id of ['homePhotoLayerA','homePhotoLayerB']){
     const layer=document.getElementById(id);if(layer)layer.style.backgroundImage='';
   }
   usOnboarding.reset();
+  usOnboarding.setup?.close?.();
   resetNoiIdeasForIdentityChange();
   window.usProfile=null;
+  if(typeof usApplyPersonColor==='function')usApplyPersonColor(null);
   window.UsCoupleContext?.clear?.();
   window.UsWidgets?.clear?.().catch(()=>{});
   window.UsNotifications?.signedOut?.();
@@ -945,7 +1002,7 @@ async function initCloud(){
     let cachedDeviceProfile=null;
     try{
       const cached=JSON.parse(localStorage.getItem('us:fix4:last-profile')||'null');
-      if(cached?.id&&cached?.couple_id)cachedDeviceProfile=cached;
+      if(cached?.id&&cached?.couple_id){cachedDeviceProfile=cached;usApplyPersonColor(cached);}
     }catch(_e){}
 
     let session=null;
@@ -993,6 +1050,7 @@ async function initCloud(){
     }
 
     usAuthUserId=session?.user?.id||'';
+    if(session)usOnboarding.tour?.markSeen?.();
     if(!session){
       usOnboarding.reset();
       // No session on this phone: nothing left to protect, the login is the way in.
@@ -1016,8 +1074,10 @@ async function initCloud(){
                   ? 'Accedi di nuovo con email e password per continuare.'
                   : 'Accedi con email e password per entrare in US.'))
           : 'Sei offline. Riconnettiti per accedere.',
-        navigator.onLine?'neutral':'error'
+        // The plain welcome line is for screen readers; the design shows no box.
+        navigator.onLine?(authBootstrapIssue?'neutral':'hint'):'error'
       );
+      usOnboarding.tour?.maybeOpen?.({returningDevice});
       window.dispatchEvent(new CustomEvent('us-auth-resolved',{detail:{paired:false,returningDevice}}));
       return;
     }
@@ -1042,12 +1102,16 @@ async function initCloud(){
     resetNoiIdeasForIdentityChange();
     clearUsCoupleContext();
     window.usProfile = profile;
+    usApplyPersonColor(profile);
     window.UsWidgets?.authReady?.(profile).catch(error=>console.warn('[US Widget] auth ready',error));
     // Native push: pending notification taps run now (after the lock gate above),
     // then this installation's registration is refreshed if it was activated here.
     window.UsNotifications?.authReady?.(profile)?.catch?.(error=>console.warn('[US Notifications] auth ready',error));
     selectedRole = profile.role;
     try{localStorage.setItem('us:fix4:last-profile',JSON.stringify(profile));}catch(_e){}
+    // First run: once per user on this phone, after onboarding here or a
+    // password sign-in in this tab. Never for a session restored at launch.
+    usOnboarding.setup?.maybeOpen?.(profile)?.catch?.(error=>console.warn('[US Setup] open',error));
     document.getElementById('authOverlay').classList.add('hidden');
     document.documentElement.classList.remove('us-auth-pending');
     document.documentElement.classList.add('us-auth-ready','us-returning-device');
@@ -1070,6 +1134,7 @@ async function initCloud(){
     // Native has no service-worker image cache. Prewarm only the first few
     // Ricordi after Home is usable so opening the archive feels immediate.
     usRunWhenIdle(()=>usPrewarmNativeMomentMedia(),2200);
+    usRunWhenIdle(()=>usSyncContentLocale(profile),1600);
 
     // Push navigation itself is user intent, so keep it immediate.
     flushPendingPushTarget();
@@ -1086,16 +1151,22 @@ async function initCloud(){
 function setAuthStatus(id,message='',kind='neutral'){
   const node=document.getElementById(id);
   if(!node)return;
+  const again=node.textContent!==message||node.dataset.kind!==kind;
   node.textContent=message;
   if(message)node.dataset.kind=kind;
   else node.removeAttribute('data-kind');
+  if(message&&kind==='error'&&again)window.UsOnboarding?.shake?.(node);
 }
 window.setAuthStatus=setAuthStatus;
 
 function showAuthStep(id){
+  // The step on screen leaves as in the design; the page itself switches now.
+  window.UsOnboarding?.authSwap?.(id);
+  if(id!=='authLogin')usOnboarding.tour?.close?.();
   document.querySelectorAll('.auth-step').forEach(x=>x.classList.remove('active'));
   const next=document.getElementById(id);
   if(next)next.classList.add('active');
+  window.UsOnboarding?.authArrive?.(id);
   window.dispatchEvent(new CustomEvent('us-onboarding-view-change'));
 }
 
@@ -1185,8 +1256,8 @@ function validCoordinate(value,min,max){
 // The server already rounds to whole kilometres (3 km or more).
 function formatDistance(km){
   const unit=localStorage.getItem('us:settings:distance-unit')||'km';
-  if(unit==='mi')return `${Math.max(2,Math.round(km*0.621371)).toLocaleString('it-IT')} mi`;
-  return `${Math.max(3,Math.round(km)).toLocaleString('it-IT')} km`;
+  if(unit==='mi')return `${Math.max(2,Math.round(km*0.621371)).toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} mi`;
+  return `${Math.max(3,Math.round(km)).toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} km`;
 }
 
 // Pure: should an automatic geolocation read happen right now?
@@ -1250,6 +1321,7 @@ function renderDistanceCapsule(model){
   root.dataset.usDistanceState=model.state;
   value.textContent=model.text||'';
   root.setAttribute('aria-label',model.visible?(model.near?'Siete vicini':`Distanza tra voi: ${model.text}`):'Distanza tra voi');
+  if(typeof syncOggiRow==='function')syncOggiRow();
   if (typeof Event === 'function' && typeof window.dispatchEvent === 'function') {
     window.dispatchEvent(new Event('us:distance-changed'));
   }
@@ -1408,18 +1480,24 @@ async function openLocationDisclosure(){
   const partner=usIdentity().partnerName||'La tua persona';
   const ok=await window.UsUiFoundation?.confirm?.({
     kicker:'POSIZIONE',
-    title:'Distanza tra voi',
+    icon:'map-pin',
+    title:'Attiva la posizione',
     body:`US usa la posizione approssimativa di questo telefono, solo ad app aperta, per calcolare la distanza tra voi. ${partner} vede solo la distanza, mai dove sei. Puoi smettere quando vuoi.`,
     confirmLabel:'Attiva',
     cancelLabel:'Non ora'
   });
   if(!ok)return false;
+  return startLocationSharing();
+}
+window.openLocationDisclosure=openLocationDisclosure;
+// What "Attiva" does once the person has read the explanation (here, or in
+// the first-run Posizione step, which shows the same facts).
+function startLocationSharing(){
   setLocationConsent(true);
   usLocationRuntime.lastFailureAt=0;
   refreshMyLocation({});
   return true;
 }
-window.openLocationDisclosure=openLocationDisclosure;
 
 // "Smetti e cancella": consent off on this phone, saved reading deleted.
 async function stopSharingLocation(){
@@ -1465,6 +1543,7 @@ async function openLocationSettings(){
 window.UsLocation=Object.freeze({
   openSettings:openLocationSettings,
   isSharing:locationSharingActive,
+  start:startLocationSharing,
   stop:stopSharingLocation
 });
 
@@ -1479,7 +1558,7 @@ async function openDistanceDetail(){
     return;
   }
   const age=model.age?`Aggiornata ${relativeLocationAge(model.age)}. `:'';
-  await ui?.notice?.({kicker:'DISTANZA',title:model.detail||'Posizione non disponibile',body:`${age}Puoi smettere di condividerla da Impostazioni › Posizione.`});
+  await ui?.notice?.({kicker:'DISTANZA',icon:'map-pin',title:model.detail||'Posizione non disponibile',body:`${age}Puoi smettere di condividerla da Impostazioni › Posizione.`});
 }
 window.openDistanceDetail=openDistanceDetail;
 
@@ -1669,7 +1748,7 @@ async function uploadProfilePhoto(file){
     if(updateError){await sb.storage.from('us-media').remove([path]);throw updateError;}
     window.usProfile.avatar_path=path;
     if(oldPath && oldPath!==path)await sb.storage.from('us-media').remove([oldPath]);
-    toast('Foto profilo aggiornata ♡');
+    toast('Foto profilo aggiornata ♡',{icon:'user'});
     await hydrateProfileAvatars();
   }catch(err){console.warn(err);toast(err?.message==='SOURCE_TOO_LARGE'?'Foto troppo grande: massimo 20 MB':'Non riesco ad aggiornare la foto');}
   finally{if(btn)btn.disabled=false;document.getElementById('profileAvatarFile').value='';}
@@ -1724,7 +1803,7 @@ async function getHomeRotationPath(){
   if(!window.usProfile)return null;
   const viewer=window.usProfile,epoch=usAuthEpoch;
   const {data:rows,error}=await sb.from('moments')
-    .select('id,storage_path,moment_date,created_at')
+    .select('id,storage_path,moment_date,created_at,caption,created_by')
     .eq('couple_id',window.usProfile.couple_id)
     .order('moment_date',{ascending:false})
     .order('created_at',{ascending:false})
@@ -1735,6 +1814,7 @@ async function getHomeRotationPath(){
     const key=homeRotationKey();
     let idx=homeStableIndex(`${window.usProfile.couple_id}|${key}|home`,rows.length);
     if(rows.length>1&&rows[idx]?.storage_path===homePhotoPath)idx=(idx+1)%rows.length;
+    usHomePhotoMeta=rows[idx]?.storage_path?{path:rows[idx].storage_path,caption:rows[idx].caption||'',date:rows[idx].moment_date||'',author:rows[idx].created_by||''}:null;
     return rows[idx]?.storage_path||null;
   }
   const {data:couple,error:coupleError}=await sb.from('couples').select('home_photo_path').eq('id',window.usProfile.couple_id).maybeSingle();
@@ -1776,6 +1856,7 @@ function crossfadeHomePhoto(url,{path='',hourKey='',allowRetry=true}={}){
         homePhotoHasPainted=false;
         homePhotoPath='';
       }
+      if(typeof renderOggiCaption==='function')renderOggiCaption(url&&path&&typeof usHomePhotoMeta!=='undefined'&&usHomePhotoMeta?.path===path?usHomePhotoMeta:null);
       // Native Foto & Noi follows the image actually displayed by Oggi.
       // The event carries no private path or signed URL.
       window.dispatchEvent(new Event('us:home-photo-changed'));
@@ -1863,6 +1944,133 @@ function startHomePhotoRotation(){
 }
 startHomePhotoRotation();
 
+// Parity with the approved mockup: under the time, the photo speaks — its
+// caption in Fraunces italic, then the day and who took it, with that
+// person's colour. Then one row: the next thing you'll do together and the
+// distance (they step aside while a card waits for me).
+let usHomePhotoMeta=null;
+function oggiLocaleTag(){return globalThis.UsI18n?.tag||'it-IT';}
+function oggiCaptionViewModel(meta,{viewerId=window.usProfile?.id,identity=usIdentity(),today=oggiTodayISO()}={}){
+  if(!meta?.path)return null;
+  const text=String(meta.caption||'').trim();
+  const day=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(meta.date||''));
+  let date='';
+  if(day){
+    const at=new Date(Date.UTC(+day[1],+day[2]-1,+day[3],12));
+    const sameYear=String(today||'').slice(0,4)===day[1];
+    try{date=at.toLocaleDateString(oggiLocaleTag(),{day:'numeric',month:'long',...(sameYear?{}:{year:'numeric'}),timeZone:'UTC'});}catch(_){date='';}
+  }
+  const mine=Boolean(meta.author&&meta.author===viewerId);
+  const name=meta.author?(mine?identity.ownName:identity.partnerName):'';
+  if(!text&&!date)return null;
+  return {text,date,name,who:meta.author?(mine?'tu':'partner'):'noi',meta:date&&name?`${date} · di ${name}`:date};
+}
+function renderOggiCaption(meta){
+  const root=document.getElementById('usOggiCaption');
+  if(!root)return;
+  const model=oggiCaptionViewModel(meta);
+  if(!model){root.hidden=true;return;}
+  const em=document.getElementById('usOggiCaptionText'),dot=document.getElementById('usOggiCaptionDot'),line=document.getElementById('usOggiCaptionMeta');
+  if(em){em.textContent=model.text;em.hidden=!model.text;}
+  if(dot)dot.dataset.who=model.who;
+  // One text: "3 settembre · di Francesco" (English through its {date}/{name} pattern).
+  if(line)line.textContent=model.meta;
+  root.hidden=false;
+}
+window.UsOggiCaption=Object.freeze({viewModel:oggiCaptionViewModel,render:renderOggiCaption});
+function oggiNextEventViewModel(source){
+  if(!source?.id||!source?.title||source.days_left===null||source.days_left===undefined||!source.effective_date)return null;
+  const days=Number(source.days_left);
+  if(!Number.isFinite(days)||days<0||days>2)return null;
+  const time=source.event_time?String(source.event_time).slice(0,5):'';
+  let day=days===0?'Oggi':days===1?'Domani':'';
+  if(!day){
+    const d=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(source.effective_date));
+    try{day=d?new Date(Date.UTC(+d[1],+d[2]-1,+d[3],12)).toLocaleDateString(oggiLocaleTag(),{weekday:'long',timeZone:'UTC'}):'';}catch(_){day='';}
+    day=day?day.charAt(0).toLocaleUpperCase(oggiLocaleTag())+day.slice(1):'';
+  }
+  if(!day)return null;
+  const kind=source.kind==='calendar'?'calendar':source.system?'relationship':'event';
+  return {id:String(source.id),kind,date:String(source.effective_date),day,time,when:time?`${day}, ${time}`:day,title:String(source.title)};
+}
+// The nearest of the candidates (a shared event, a Noi calendar commitment):
+// what has not started yet comes first, by day and time; one already started
+// today (an event at 9:00 seen at 15:00, a commitment in progress) only when
+// nothing else is coming. Same rule as the Events list: no time = end of day.
+function oggiNearestNext(...sources){
+  const d=new Date(),now=`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  const started=s=>s.kind==='calendar'?Boolean(s.started):Number(s.days_left)===0&&Boolean(s.event_time)&&String(s.event_time).slice(0,5)<=now;
+  const list=sources.filter(s=>s&&oggiNextEventViewModel(s));
+  list.sort((a,b)=>Number(started(a))-Number(started(b))
+    ||String(a.effective_date).localeCompare(String(b.effective_date))
+    ||String(a.event_time||'23:59:59').slice(0,8).padEnd(8,':00').localeCompare(String(b.event_time||'23:59:59').slice(0,8).padEnd(8,':00'))
+    ||String(a.title).localeCompare(String(b.title)));
+  return list[0]||null;
+}
+function syncOggiRow(){
+  const row=document.getElementById('usOggiRow');
+  if(!row)return;
+  const next=document.getElementById('usOggiNext'),pill=document.getElementById('distanceWidget');
+  row.hidden=Boolean((!next||next.hidden)&&(!pill||pill.hidden));
+}
+function renderOggiNext(model){
+  const button=document.getElementById('usOggiNext');
+  if(!button)return;
+  if(!model){button.hidden=true;button.removeAttribute('aria-label');syncOggiRow();return;}
+  document.getElementById('usOggiNextWhen').textContent=model.when;
+  document.getElementById('usOggiNextTitle').textContent=model.title;
+  button.dataset.usEventId=model.id;
+  button.dataset.usNextKind=model.kind||'event';
+  button.dataset.usNextDate=model.date||'';
+  // Mockup aria-label: "Prossimo impegno: domani alle 21, cena da Marco. Apri Noi".
+  button.setAttribute('aria-label',model.time?`Prossimo impegno: ${model.day} alle ${model.time}, ${model.title}. Apri Noi`:`Prossimo impegno: ${model.day}, ${model.title}. Apri Noi`);
+  button.hidden=false;
+  syncOggiRow();
+}
+// Each source is kept per identity and day, so a calendar save re-reads only
+// the calendar and an event save only passes its rows. Every value carries the
+// order it was asked in: a slow older read never replaces a newer one, and the
+// pill always shows the newest of both. A source that fails keeps what the pill
+// shows rather than hiding a real commitment.
+const US_OGGI_NEXT_FAILED=Object.freeze({failed:true});
+const usOggiNextCache={key:'',event:undefined,eventSeq:0,calendar:undefined,calendarSeq:0,calendarAt:0};
+let usOggiNextSeq=0;
+function oggiNextKey(){const p=window.usProfile;return p?`${p.id}:${p.couple_id}:${localDateISO()}`:'';}
+// event: a row already read (or null), 'read', 'failed' (the caller's read failed), or omitted (reuse).
+// calendar: 'fresh' (after a save), 'read', or omitted (reuse for 30 s).
+async function refreshOggiNext({event,calendar}={}){
+  const c=usOggiNextCache,key=oggiNextKey();
+  if(!key){Object.assign(c,{key:'',event:undefined,calendar:undefined,calendarAt:0});renderOggiNext(null);return null;}
+  if(c.key!==key)Object.assign(c,{key,event:undefined,eventSeq:0,calendar:undefined,calendarSeq:0,calendarAt:0});
+  let failed=event==='failed';
+  const take=(slot,seq,value)=>{
+    if(value===US_OGGI_NEXT_FAILED){failed=true;return;}
+    if(c.key!==key||oggiNextKey()!==key||seq<c[`${slot}Seq`])return;
+    c[slot]=value??null;c[`${slot}Seq`]=seq;if(slot==='calendar')c.calendarAt=Date.now();
+  };
+  const read=(slot,fn,opts)=>{const seq=++usOggiNextSeq;return Promise.resolve().then(()=>typeof fn==='function'?fn(opts):null).catch(error=>{console.warn('[US Oggi] next',error);return US_OGGI_NEXT_FAILED;}).then(value=>take(slot,seq,value));};
+  const work=[];
+  if(event==='read'||(event===undefined&&c.event===undefined))work.push(read('event',window.getTodayEventPrioritySource));
+  else if(event!==undefined&&event!=='failed')take('event',++usOggiNextSeq,event);
+  if(calendar==='fresh'||calendar==='read'||c.calendar===undefined||Date.now()-c.calendarAt>30000)work.push(read('calendar',window.getOggiNextCommitmentSource,{fresh:calendar==='fresh'}));
+  await Promise.all(work);
+  if(oggiNextKey()!==key)return null;
+  const next=oggiNearestNext(c.event,c.calendar);
+  if(!next&&failed)return null;
+  renderOggiNext(oggiNextEventViewModel(next));
+  return next;
+}
+// Tapping opens the place it comes from: the commitment in the Noi calendar,
+// the event, or the Noi calendar on the mesiversario's day.
+document.getElementById('usOggiNext')?.addEventListener('click',event=>{
+  const data=event.currentTarget?.dataset||{};
+  if(data.usNextKind==='calendar'&&data.usEventId&&window.UsCalendarLinks?.openEntry){window.UsCalendarLinks.openEntry(data.usEventId);return;}
+  if(data.usNextKind==='event'&&data.usEventId&&typeof window.openEventEditor==='function'){window.go?.('bond',{nav:true});window.openEventEditor(data.usEventId,data.usNextDate||null);return;}
+  if(data.usNextKind==='relationship'&&data.usNextDate&&window.openCalendarSurface){window.openCalendarSurface(data.usNextDate);return;}
+  window.go?.('bond',{nav:true});
+});
+window.UsOggiNext=Object.freeze({viewModel:oggiNextEventViewModel,render:renderOggiNext,nearest:oggiNearestNext,refresh:refreshOggiNext});
+
 // M6E — Oggi calendar widget + Focus Photo. A single small glass card, fed by
 // calendar.js's window.getOggiCalendarInsightSource() (which itself reuses
 // UsCalendarDomain.computeFreeTogether — no algorithm is duplicated here).
@@ -1882,7 +2090,7 @@ function renderOggiCalendarWidget(fact){
   container.hidden=false;
   const rows=Array.isArray(fact.rows)?fact.rows.filter(row=>row&&row.label&&row.value):[];
   const rowsHtml=rows.length
-    ? `<span class="us-oggi-card-lines">${rows.map(row=>`<span class="us-oggi-card-line" data-kind="${escapeHtml(row.kind||'person')}"><span class="us-oggi-card-line-label">${escapeHtml(row.label)}</span><span class="us-oggi-card-line-value">${escapeHtml(row.value)}</span></span>`).join('')}</span>`
+    ? `<span class="us-oggi-card-lines">${rows.map(row=>`<span class="us-oggi-card-line" data-kind="${escapeHtml(row.kind||'person')}"><span class="us-oggi-card-line-label"${row.kind==='person'?' translate="no"':''}>${escapeHtml(row.label)}</span><span class="us-oggi-card-line-value"${row.kind==='person'&&row.value!=='Nessun impegno'?' translate="no"':''}>${escapeHtml(row.value)}</span></span>`).join('')}</span>`
     : `<small>${escapeHtml(fact.detail)}</small>`;
   const ariaDetail=rows.length?rows.map(row=>`${row.label} ${row.value}`).join('. '):fact.detail;
   container.innerHTML=`<button type="button" class="us-oggi-card" data-us-oggi-date="${escapeHtml(fact.dateISO)}" aria-label="${escapeHtml(fact.title)}: ${escapeHtml(ariaDetail)}"><span class="us-oggi-card-mark" aria-hidden="true">♡</span><span class="us-oggi-card-copy"><b>${escapeHtml(fact.title)}</b>${rowsHtml}</span></button>`;
@@ -1926,7 +2134,7 @@ window.UsOggiCalendarWidget=Object.freeze({render:renderOggiCalendarWidget,refre
 // widget itself, the distance pill, the push card or the empty-state CTA
 // never does (they keep their own taps).
 function oggiIsWidgetTarget(target){
-  return Boolean(target&&typeof target.closest==='function'&&target.closest('#usTodayPriorityRegion,.us-oggi-stack,.us-oggi-widgets,.home-distance-pill,.push-optin-card,.home-empty-state,.us-countdown-display,.us-countdown-entry'));
+  return Boolean(target&&typeof target.closest==='function'&&target.closest('#usTodayPriorityRegion,.us-oggi-dock,.us-oggi-stack,.us-oggi-widgets,.home-distance-pill,.push-optin-card,.home-empty-state,.us-countdown-display,.us-countdown-entry'));
 }
 let usOggiFocusPhotoActive=false;
 function setOggiFocusPhoto(active){
@@ -1934,31 +2142,56 @@ function setOggiFocusPhoto(active){
   const hero=document.getElementById('homeHero');
   hero?.classList.toggle('us-oggi-focus',active);
   document.getElementById('usOggiFocusToggle')?.setAttribute('aria-pressed',String(active));
-  const fadeTargets=[document.getElementById('usTodayPriorityRegion'),document.getElementById('usOggiCalendarWidget'),document.getElementById('usDailyRitual'),document.getElementById('distanceWidget'),document.getElementById('pushOptInCard'),document.getElementById('usCountdownDisplay'),document.getElementById('usCountdownEntry')];
+  const fadeTargets=[document.getElementById('usTodayPriorityRegion'),document.getElementById('usOggiCalendarWidget'),document.getElementById('usDailyRitual'),document.getElementById('distanceWidget'),document.getElementById('pushOptInCard'),document.getElementById('usCountdownDisplay'),document.getElementById('usCountdownEntry'),document.getElementById('usOggiNext')];
   for(const el of fadeTargets){
     if(!el)continue;
     if(active)el.setAttribute('inert','');else el.removeAttribute('inert');
   }
 }
-function toggleOggiFocusPhoto(){setOggiFocusPhoto(!usOggiFocusPhotoActive);}
+// The first time the photo takes the screen, a quiet line says how to come back (mockup).
+let usOggiFocusTipShown=false;
+function toggleOggiFocusPhoto(){
+  setOggiFocusPhoto(!usOggiFocusPhotoActive);
+  if(usOggiFocusPhotoActive&&!usOggiFocusTipShown){usOggiFocusTipShown=true;setTimeout(()=>{if(usOggiFocusPhotoActive)toast('Tocca di nuovo per tornare',{quiet:true});},300);}
+}
 window.toggleOggiFocusPhoto=toggleOggiFocusPhoto;
 document.getElementById('homeHero')?.addEventListener('click',event=>{
+  // A card that re-rendered under the tap (e.g. a notice that opened its sheet) is no photo tap.
+  if(event.target&&event.target.isConnected===false)return;
   if(oggiIsWidgetTarget(event.target))return;
+  toggleOggiFocusPhoto();
+});
+// The US mark at the top of Oggi is not a control: as in the approved mockup
+// (where the header lies on the photo) a tap on it, or on the bar around it,
+// is a tap on the photo: Focus Photo, the screen with nothing but you two.
+// Ti penso and the envelope keep their own taps.
+document.querySelector?.('.app>.top')?.addEventListener?.('click',event=>{
+  if(document.querySelector('.page.active')?.id!=='home')return;
+  if(event.target?.closest?.('button,a[href],input,label,[role="button"],.online-badge'))return;
   toggleOggiFocusPhoto();
 });
 
 // M10A — the empty-state invitation is a passive widget: it sits in the free
-// band between the Oggi stack and the bottom row, and drops its secondary lines
-// when that band is short, so it never slides under the stack.
+// band between the countdown (1.0: visible without a photo too) and the dock
+// above the nav, and drops its secondary lines when that band is short, so it
+// never slides under either.
 function layoutOggiEmptyState(){
   const hero=document.getElementById('homeHero'),empty=document.getElementById('homeEmptyState'),stack=document.getElementById('usOggiStack');
   if(!hero||!empty||!stack||empty.hidden)return;
   const box=hero.getBoundingClientRect();
   if(!box.height)return;
   const gap=12;
-  const top=stack.getBoundingClientRect().bottom-box.top+gap;
+  // The legacy stack is retired (height 0): it bounds the band only if it shows.
+  const stackBox=stack.getBoundingClientRect();
+  const chrome=document.querySelector('.app>.top')?.getBoundingClientRect();
+  let top=stackBox.height?stackBox.bottom-box.top+gap:Math.max(gap,(chrome?.bottom||0)-box.top+gap);
+  for(const id of ['usCountdownDisplay','usCountdownEntry']){
+    const el=document.getElementById(id);
+    const rect=el&&!el.hidden?el.getBoundingClientRect():null;
+    if(rect?.height)top=Math.max(top,rect.bottom-box.top+gap);
+  }
   let bottom=box.height-gap;
-  for(const id of ['distanceWidget','pushOptInCard']){
+  for(const id of ['distanceWidget','usOggiDock']){
     const el=document.getElementById(id);
     const rect=el&&!el.hidden?el.getBoundingClientRect():null;
     if(rect?.height)bottom=Math.min(bottom,rect.top-box.top-gap);
@@ -1971,7 +2204,7 @@ function layoutOggiEmptyState(){
 }
 if(typeof ResizeObserver==='function'){
   const oggiLayoutObserver=new ResizeObserver(()=>layoutOggiEmptyState());
-  for(const id of ['homeHero','usOggiStack','distanceWidget','pushOptInCard']){
+  for(const id of ['homeHero','usOggiStack','distanceWidget','usOggiDock','usCountdownDisplay']){
     const el=document.getElementById(id);
     if(el)oggiLayoutObserver.observe(el);
   }
@@ -1986,9 +2219,14 @@ async function loginAccount(){
   if(!password){setAuthStatus('loginStatus','Inserisci la password.','error');return;}
   btn.disabled=true;
   setAuthStatus('loginStatus','Accesso…');
+  // As in the design the button says it too, and the sign-in stays on screen
+  // (html.us-auth-signing-in, dc-primo.css) until the next step takes its place.
+  btn.textContent='Accesso…';
+  document.documentElement.classList.add('us-auth-signing-in');
   try{
-    const {error}=await sb.auth.signInWithPassword({email,password});
+    const {data,error}=await sb.auth.signInWithPassword({email,password});
     if(error) throw error;
+    usOnboarding.setup?.markPasswordSignIn?.(data?.user?.id||data?.session?.user?.id||'');
     document.getElementById('loginPassword').value='';
     await initCloud();
   }catch(err){
@@ -1997,6 +2235,8 @@ async function loginAccount(){
   }finally{
     btn.disabled=false;
   }
+  btn.textContent='Accedi';
+  document.documentElement.classList.remove('us-auth-signing-in');
 }
 window.loginAccount=loginAccount;
 // The extra Auth UI is compiled but only mounted when the Supabase backend
@@ -2011,13 +2251,20 @@ let usThinkReactionFinal=null;
 let usThinkReactionInFlight=false;
 let usThinkKnownReactionSignature='';
 
-const US_TODAY_PRIORITY_ORDER=Object.freeze({received_ready:1,answers_ready:2,waiting_for_me:3,couple_context:4});
+// 1.0 — what Oggi may put in its one priority card, in this order: something
+// that arrived for me (Ti penso, Lasciato per te), the answers ready, where
+// the other is waiting for me ("Tocca a te": a game round, a mission to
+// confirm), today's mesiversario, and (never shown on Oggi) passive events.
+const US_TODAY_PRIORITY_ORDER=Object.freeze({received_ready:1,left_ready:2,answers_ready:3,waiting_for_me:4,celebration:5,couple_context:6});
 const US_TODAY_PRIORITY_LABELS=Object.freeze({
-  received_ready:'Pronto per voi',
+  received_ready:'Aspetta te',
+  left_ready:'Lasciato per te',
   answers_ready:'Risposte pronte',
-  waiting_for_me:'Aspetta te',
+  waiting_for_me:'Tocca a te',
+  celebration:'Tra voi oggi',
   couple_context:'Tra voi oggi'
 });
+const US_TODAY_PRIORITY_LIMIT=5;
 let usTodayPriorityRefreshId=0;
 let usTodayPriorityQueue=[];
 const usTodayConsumedFacts=new Set();
@@ -2040,7 +2287,7 @@ function composeTodayPriorities(candidates=[]){
     const factKey=String(item.factKey||item.id);
     if(categories.has(item.category)||facts.has(factKey))continue;
     categories.add(item.category);facts.add(factKey);result.push(item);
-    if(result.length===3)break;
+    if(result.length===US_TODAY_PRIORITY_LIMIT)break;
   }
   return result;
 }
@@ -2121,10 +2368,22 @@ function renderTodayPriorities(priorities=[]){
   usTodayPriorityQueue=(Array.isArray(priorities)?priorities:[]).filter(item=>item?.attention).slice();
   renderTodayPriorityItem(usTodayPriorityQueue[0],usTodayPriorityQueue.length);
 }
-function thinkTodayPriorityViewModel(){
+// The partner's name for Oggi copy. Defensive: the Oggi runtime is also
+// exercised on its own, without the identity resolver.
+function oggiPartnerName(){
+  try{return (typeof usIdentity==='function'?usIdentity().partnerName:'')||'La tua persona';}catch(_){return 'La tua persona';}
+}
+// O6 — a Ti penso is a moment: the card says when it arrived ("2 ore fa") and
+// leaves Oggi 24 hours later (the heart keeps its history).
+const US_THINK_CARD_TTL_MS=24*60*60*1000;
+function thinkTodayPriorityViewModel(now=Date.now()){
   const signal=typeof usIncomingThink!=='undefined'?usIncomingThink:null;
   const finalReaction=typeof usThinkReactionFinal!=='undefined'?usThinkReactionFinal:null;
   if(!signal?.id||finalReaction)return null;
+  const at=Date.parse(signal.created_at||'');
+  if(Number.isFinite(at)&&now-at>US_THINK_CARD_TTL_MS)return null;
+  const ago=Number.isFinite(at)&&typeof relativeSignalAge==='function'?relativeSignalAge(signal.created_at):'';
+  const age=ago?ago.charAt(0).toUpperCase()+ago.slice(1):'';
   const partner=partnerFromProfiles(window.usBondProfiles||[]);
   return {
     id:`think-received:${signal.id}`,
@@ -2135,41 +2394,199 @@ function thinkTodayPriorityViewModel(){
     // finale) è un'azione reale per CHI lo riceve.
     attention:true,
     title:`${partner?.display_name||'La tua persona'} ti pensa`,
-    detail:'Ha lasciato un segnale per te.',
+    detail:age||'Ha lasciato un segnale per te.',
+    recency:Number.isFinite(at)?at:0,
     action:'think',
     actionLabel:'Apri'
   };
 }
-// ===== M9B — Domanda del giorno: il rituale quotidiano su Oggi =====
+// L4 — something new in Lasciato per te. The envelope (left-for-you.js) is the
+// authority on "is there anything unseen"; Oggi only names who and what, from
+// the same unseen rows (oldest first, the one that opens first).
+const US_LEFT_KIND_COPY=Object.freeze({text:'un messaggio',photo:'una foto',audio:'un vocale',video:'un video',music:'una canzone'});
+const usOggiLeft={items:[]};
+function leftTodayPriorityViewModel(items=usOggiLeft.items){
+  const list=(Array.isArray(items)?items:[]).filter(item=>item?.id);
+  if(!list.length)return null;
+  const first=list[0],name=oggiPartnerName();
+  const title=list.length>1?`${name} ti ha lasciato ${list.length} cose`:`${name} ti ha lasciato ${US_LEFT_KIND_COPY[first.kind]||'qualcosa'}`;
+  const at=Date.parse(first.created_at||'');
+  return {
+    id:`left:${first.id}`,factKey:`left:${list.map(item=>item.id).join(',')}`,
+    arrivalType:'left-for-you',category:'left_ready',attention:true,
+    title,detail:'',recency:Number.isFinite(at)?at:0,action:'left',actionLabel:'Apri'
+  };
+}
+// F2 — "Tocca a te": a game round where the other is waiting for me (read
+// from the Gioca hub that games.js renders) and, from Friday, a mission the
+// other already confirmed.
+let usOggiGameTurn=null;
+function gameTurnTodayPriorityViewModel(turn=usOggiGameTurn){
+  if(!turn?.game)return null;
+  const key=turn.session||turn.game;
+  return {
+    id:`game-turn:${key}`,factKey:`game:${key}`,arrivalType:'game-turn',category:'waiting_for_me',attention:true,
+    title:`${oggiPartnerName()} ti aspetta`,detail:turn.game,action:'game',actionLabel:'Gioca',
+    session:turn.session||'',perVoi:Boolean(turn.perVoi)
+  };
+}
+function missionTodayPriorityViewModel(mission){
+  if(!mission?.id)return null;
+  return {
+    id:`mission:${mission.id}`,factKey:`mission:${mission.id}`,arrivalType:'mission-confirm',category:'waiting_for_me',attention:true,
+    title:'Manca solo la tua conferma',detail:String(mission.title||''),action:'mission',actionLabel:'Apri'
+  };
+}
+// O10 — the mesiversario, on the day. A start on the 29th, 30th or 31st counts
+// on the last day of shorter months (same rule as Eventi).
+function oggiMonthiversary(startedOn,todayISO){
+  const s=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(startedOn||'')),t=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(todayISO||''));
+  if(!s||!t)return null;
+  const [sy,sm,sd]=s.slice(1).map(Number),[ty,tm,td]=t.slice(1).map(Number);
+  const months=(ty-sy)*12+(tm-sm);
+  if(months<=0)return null;
+  const last=new Date(Date.UTC(ty,tm,0)).getUTCDate();
+  if(Math.min(sd,last)!==td)return null;
+  return {months,years:months%12===0?months/12:0};
+}
+function celebrationTodayPriorityViewModel(startedOn,todayISO){
+  const day=oggiMonthiversary(startedOn,todayISO);
+  if(!day)return null;
+  const title=day.years
+    ?(day.years===1?'Oggi è un anno ♡':`Oggi sono ${day.years} anni ♡`)
+    :(day.months===1?'Oggi è un mese ♡':`Oggi sono ${day.months} mesi ♡`);
+  return {
+    id:`celebration:${todayISO}`,factKey:`celebration:${todayISO}`,arrivalType:'monthiversary',category:'celebration',attention:true,
+    title,detail:day.years?'Il vostro anniversario':'Il vostro mesiversario',action:'events',actionLabel:'Apri'
+  };
+}
+function oggiStartedOn(){
+  try{return window.UsCoupleContext?.snapshot?.()?.couple?.started_on||null;}catch(_){return null;}
+}
+function oggiTodayISO(){
+  return typeof usDailyQuestionDay==='function'?usDailyQuestionDay():new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome'}).format(new Date());
+}
+// F2 — a dot on the Oggi tab while the other is waiting for me: the Domanda di
+// oggi they already answered, a game round, a mission to confirm (from Friday).
+function renderToccaATe({daily=false,game=false,mission=false}={}){
+  const tab=document.querySelector?.('.nav button[data-page="home"]');
+  if(!tab)return false;
+  const on=Boolean(daily||game||mission);
+  if(on)tab.setAttribute('data-us-tocca','on');else tab.removeAttribute('data-us-tocca');
+  tab.setAttribute('aria-label',on?'Oggi, tocca a te':'Oggi');
+  return on;
+}
+// S12 — Maudit hops once when something arrives for me (Ti penso, Lasciato
+// per te) and when the answers of the day are revealed. A blocked or switched
+// off Maudit does not hop, and the hop is tried again at the next refresh.
+const usOggiPetHops=new Set();
+function oggiPetHop(reason,key){
+  if(!key||usOggiPetHops.has(key))return false;
+  let hopped=false;
+  try{hopped=Boolean(window.USPet?.react?.(reason));}catch(_){hopped=false;}
+  if(hopped)usOggiPetHops.add(key);
+  return hopped;
+}
+// ===== M9B — Domanda di oggi: il rituale quotidiano su Oggi =====
 // Legge SOLO lo stato canonico di get_daily_state (window.todayState via
 // hydrateToday): nessuna copia locale delle risposte, nessun reveal anticipato.
-// La card apre il foglio esistente (openToday), che resta l'unico flusso.
+// La card apre il foglio esistente (openToday) dove sei, senza cambiare tab.
 function dailyRitualPartnerName(){
   return usIdentity().partnerName;
 }
 function dailyRitualViewModel(source){
-  // M10.1A — la card su Oggi dice a CHI guarda "hai ancora qualcosa da fare":
-  // esiste SOLO finché manca la MIA risposta (get_daily_state().my_answer ==
-  // null). Dopo la mia risposta sparisce del tutto (niente "Risposto", attesa,
-  // reveal): il foglio Today resta il flusso completo. Mai both_answered.
-  const kicker='Domanda del giorno';
+  // O1 (1.0) — the card stays on Oggi until BOTH answered: "Aspetta te" when
+  // the other already answered, a quiet waiting state after my answer. Its
+  // attention is personal: on only while MY answer is missing. Never the
+  // answer text: that lives in the sheet, after the reveal. (Mockup look:
+  // the two circles tell each state.)
+  const kicker='La domanda di oggi';
   // M9E: errore reale del backend → stato onesto con Riprova (apre il foglio,
   // che ritenta get_or_create_daily_question). Mai una domanda inventata.
-  if(source?.status==='error')return {questionId:null,question:'La domanda di oggi non è arrivata.',state:'error',kicker,status:'',cta:'Riprova',attention:false};
+  if(source?.status==='error')return {questionId:null,question:'La domanda di oggi non è arrivata.',state:'error',kicker,meta:'',glyph:'none',cta:'Riprova',attention:false};
   const question=source?.question,state=source?.state;
   if(!question?.id||!question.question||!state)return null;
-  if(state.my_answer!=null)return null;
-  return {questionId:question.id,question:String(question.question),kicker,state:state.partner_has_answer?'invited':'answer',status:'',cta:'Rispondi',attention:true};
+  const partner=source.partnerName||oggiPartnerName();
+  const base={questionId:question.id,question:String(question.question),kicker};
+  if(state.my_answer==null){
+    if(state.partner_has_answer)return {...base,kicker:'Aspetta te',state:'invited',meta:`${partner} ha già risposto · tocca a te`,glyph:'partner',cta:'Rispondi',attention:true};
+    return {...base,state:'answer',meta:'Una domanda, due risposte',glyph:'none',cta:'Rispondi',attention:true};
+  }
+  if(!state.both_answered)return {...base,state:'waiting',meta:`Hai risposto · aspettiamo ${partner}`,glyph:'mine',cta:'Apri',attention:false};
+  // Both answered: while "Risposte pronte" waits in the priority card, that
+  // card speaks for the day (never two cards for one fact). Once seen or
+  // hidden, the card offers to read them again until tomorrow.
+  const access=dailyRevealAccess(source);
+  if(!access||access.unread)return null;
+  const felt=typeof dailyPartnerReactionLine==='function'?dailyPartnerReactionLine(source.reveal,partner):'';
+  return {...base,state:'revealed',meta:felt||'Svelate · domani una nuova domanda',glyph:'noi',cta:'Rivedi',attention:false};
 }
+// The two circles of the mockup (Oggi card): theirs on the right, mine on the
+// left, dashed until I answer and filled from below when I do; together they
+// become one circle of Noi with a heart (Phosphor heart-straight-fill, its own path).
+const US_DAILY_RING_STATE=Object.freeze({answer:'vuoto',invited:'tocca',waiting:'attesa',ready:'pronte',revealed:'svelate',error:'vuoto'});
+function dailyRitualRingMarkup(model){
+  const st=US_DAILY_RING_STATE[model.state]||'vuoto';
+  return `<svg class="ring us-daily-ritual-ring" viewBox="0 0 48 30" data-st="${st}" data-glyph="${escapeHtml(model.glyph||'none')}" data-us-attention-icon aria-hidden="true" focusable="false"><defs><clipPath id="usDailyRingMe"><circle cx="17" cy="15" r="11"/></clipPath></defs><circle class="r-bloom" cx="24" cy="15" r="13" fill="none" stroke-width="1.5"/><g class="r-you"><circle class="r-you-full" cx="31" cy="15" r="11"/><circle class="r-you-wait" cx="31" cy="15" r="10.2" stroke-width="1.6" stroke-dasharray="3 2.6"/></g><g class="r-me"><circle class="r-me-ring" cx="17" cy="15" r="10.2" stroke-width="1.6" stroke-dasharray="3 2.6"/><g clip-path="url(#usDailyRingMe)"><rect class="r-fill" x="4" y="2" width="26" height="26"/></g></g><g class="r-noi"><circle cx="24" cy="15" r="13"/><path transform="translate(18.4 10.3) scale(.044)" d="M240,98a57.63,57.63,0,0,1-17,41L133.7,229.62a8,8,0,0,1-11.4,0L33,139a58,58,0,0,1,82-82.1L128,69.05l13.09-12.19A58,58,0,0,1,240,98Z"/></g></svg>`;
+}
+// Mockup motion (oggi.js setDQ after "Invia"): my circle fills from below,
+// the two circles meet, one circle of Noi blooms and the card breathes once.
+// Only when I just answered, on Oggi, with motion allowed.
+const US_DAILY_EASE={out:'cubic-bezier(.2,.8,.2,1)',io:'cubic-bezier(.7,0,.2,1)'};
+function dailyRitualReducedMotion(){
+  try{return Boolean(window.UsUiFoundation?.isReducedMotion?.())||Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);}catch(_){return false;}
+}
+async function playDailyRitualAnswered(card,merge){
+  const ring=card?.querySelector?.('.ring');
+  if(!ring||typeof ring.animate!=='function')return false;
+  const me=ring.querySelector('.r-me'),you=ring.querySelector('.r-you'),fill=ring.querySelector('.r-fill'),noi=ring.querySelector('.r-noi'),bloom=ring.querySelector('.r-bloom');
+  const final=ring.dataset.st;
+  // Start from "tocca": my circle still empty, the two apart.
+  ring.dataset.st=merge?'tocca':'vuoto';
+  // The sheet goes away first, then the circles move (one thing at a time).
+  const sheet=document.getElementById('today');
+  for(let waited=0;sheet?.classList.contains('open')&&waited<900;waited+=50)await new Promise(r=>setTimeout(r,50));
+  if(!card.isConnected||card.querySelector('.ring')!==ring)return false;
+  try{
+    await fill.animate([{transform:'translateY(26px)'},{transform:'translateY(0)'}],{duration:560,easing:US_DAILY_EASE.out,fill:'forwards'}).finished;
+    if(merge){
+      await Promise.all([
+        me.animate([{transform:'translateX(0)'},{transform:'translateX(7px)'}],{duration:420,easing:US_DAILY_EASE.io,fill:'forwards'}).finished,
+        you.animate([{transform:'translateX(0)'},{transform:'translateX(-7px)'}],{duration:420,easing:US_DAILY_EASE.io,fill:'forwards'}).finished
+      ]);
+    }
+  }catch(_){/* cancelled by a newer render */}
+  if(!card.isConnected||card.querySelector('.ring')!==ring){return false;}
+  ring.dataset.st=final;
+  if(merge){
+    noi.animate([{opacity:0,transform:'scale(.7)'},{opacity:1,transform:'scale(1.12)',offset:.6},{opacity:1,transform:'scale(1)'}],{duration:520,easing:'ease-out'});
+    bloom.animate([{opacity:.9,transform:'scale(1)'},{opacity:0,transform:'scale(2.2)'}],{duration:800,easing:US_DAILY_EASE.out});
+    card.animate([{scale:1},{scale:1.02,offset:.4},{scale:1}],{duration:500,easing:'ease-out'});
+  }
+  [me,you,fill].forEach(el=>el.getAnimations?.().forEach(a=>a.cancel()));
+  return true;
+}
+let usDailyRitualAnswerPending=false;
 function renderDailyRitual(model){
   const card=document.getElementById('usDailyRitual');
   if(!card)return;
-  if(!model){card.hidden=true;card.innerHTML='';card.removeAttribute('data-state');card.dataset.usAttention='off';return;}
+  const before=card.dataset.state||'';
+  if(!model){card.hidden=true;card.innerHTML='';card.usDailyHtml='';card.removeAttribute('data-state');card.dataset.usAttention='off';return;}
   card.dataset.state=model.state;
   card.dataset.usAttention=model.attention?'on':'off';
-  card.setAttribute('aria-label',`${model.kicker}: ${model.question}. ${model.cta}`);
-  card.innerHTML=`<span class="us-daily-ritual-head"><span class="us-daily-ritual-mark us-phosphor-question" data-us-attention-icon aria-hidden="true"></span><span class="us-daily-ritual-kicker">${escapeHtml(model.kicker)}</span></span><span class="us-daily-ritual-question">${escapeHtml(model.question)}</span><span class="us-daily-ritual-cta">${escapeHtml(model.cta)}</span>`;
+  // The visible words are the accessible name (and the English translation).
+  card.removeAttribute('aria-label');
+  const html=`${dailyRitualRingMarkup(model)}<span class="eyebrow us-daily-ritual-kicker">${escapeHtml(model.kicker)}</span><span class="dq-q us-daily-ritual-question">${escapeHtml(model.question)}</span><span class="dq-foot">${model.meta?`<span class="dq-sub us-daily-ritual-meta">${escapeHtml(model.meta)}</span>`:''}<span class="btn-primary us-daily-ritual-cta">${escapeHtml(model.cta)}<span class="us-daily-ritual-arrow" aria-hidden="true"></span></span></span>`;
+  // Same words, same circles: leave the card (and a running animation) alone.
+  if(card.hidden||card.usDailyHtml!==html){card.innerHTML=html;card.usDailyHtml=html;}
   card.hidden=false;
+  // I just sent my answer: the circles tell it (mockup), once.
+  const answered=usDailyRitualAnswerPending&&before==='answer'&&model.state==='waiting';
+  if(answered){
+    usDailyRitualAnswerPending=false;
+    const onOggi=document.getElementById('home')?.classList?.contains?.('active');
+    if(onOggi&&!dailyRitualReducedMotion())playDailyRitualAnswered(card,false);
+  }
 }
 window.UsDailyRitual=Object.freeze({viewModel:dailyRitualViewModel,render:renderDailyRitual});
 async function refreshTodayPriorities({daily,freshEvents=false}={}){
@@ -2178,27 +2595,49 @@ async function refreshTodayPriorities({daily,freshEvents=false}={}){
     question:window.todayQuestion,
     state:window.todayState,
     reveal:window.todayRevealMeta,
-    partnerName:dailyRitualPartnerName()
+    partnerName:oggiPartnerName()
   }:daily;
   const candidates=[];
   const thinkPriority=thinkTodayPriorityViewModel();
   if(thinkPriority)candidates.push(thinkPriority);
-  // M9B: la Domanda del giorno ha la sua card su Oggi (renderDailyRitual):
-  // non entra più nella coda priority, così non compare due volte.
+  const leftPriority=leftTodayPriorityViewModel();
+  if(leftPriority)candidates.push(leftPriority);
+  // M9B: la Domanda di oggi ha la sua card su Oggi (renderDailyRitual):
+  // non entra nella coda priority, così non compare due volte.
   renderDailyRitual(dailyRitualViewModel(dailySource));
   // M10.2 — "Risposte pronte": piccolo avviso personale, mai la card Daily.
   const revealNotice=dailyTodayPriorityViewModel(dailySource);
   if(revealNotice)candidates.push(revealNotice);
+  const gameTurn=gameTurnTodayPriorityViewModel();
+  if(gameTurn)candidates.push(gameTurn);
+  const celebration=celebrationTodayPriorityViewModel(oggiStartedOn(),oggiTodayISO());
+  if(celebration)candidates.push(celebration);
+  let mission=null;
   try{
     const eventSource=await window.getTodayEventPrioritySource?.({fresh:freshEvents});
     const eventPriority=eventTodayPriorityViewModel(eventSource);
     if(eventPriority)candidates.push(eventPriority);
-  }catch(error){console.warn('[US Oggi] Events priority',error);}
+    // The pill above the Daily card (mockup og-next): this event and the Noi calendar's next
+    // commitment (re-read at most every 30 s here; a calendar save or the way back to Oggi reads at once).
+    if(refreshId===usTodayPriorityRefreshId&&typeof refreshOggiNext==='function')refreshOggiNext({event:eventSource??null});
+  }catch(error){
+    console.warn('[US Oggi] Events priority',error);
+    // The calendar's next commitment still reaches the pill when Events fails.
+    if(refreshId===usTodayPriorityRefreshId&&typeof refreshOggiNext==='function')refreshOggiNext({event:'failed'});
+  }
+  try{mission=missionTodayPriorityViewModel(await window.oggiMissionToConfirm?.());}catch(_){mission=null;}
+  if(mission)candidates.push(mission);
   if(refreshId!==usTodayPriorityRefreshId)return [];
   const priorities=composeTodayPriorities(candidates);
   renderTodayPriorities(priorities);
+  if(thinkPriority)oggiPetHop('think',thinkPriority.factKey);
+  if(leftPriority)oggiPetHop('left-for-you',leftPriority.factKey);
+  if(revealNotice)oggiPetHop('daily-question',revealNotice.factKey);
   // Un solo ingresso: il link passivo compare solo quando l'avviso non è in coda.
   renderDailyRevealLink(priorities.some(item=>item.category==='answers_ready')?null:dailyRevealLinkViewModel(dailySource));
+  const dailyState=dailySource?.state;
+  renderToccaATe({daily:Boolean(dailyState&&dailyState.my_answer==null&&dailyState.partner_has_answer),game:Boolean(gameTurn),mission:Boolean(mission)});
+  window.UsDailyQuestionHub?.paint?.();
   return priorities;
 }
 document.getElementById('usTodayPriorityRegion')?.addEventListener('click',event=>{
@@ -2223,6 +2662,14 @@ document.getElementById('usTodayPriorityRegion')?.addEventListener('click',event
   if(action==='today')window.openToday?.();
   if(action==='events')window.openEvents?.();
   if(action==='think')window.openThinkArrival?.();
+  if(action==='left')window.openLeftForYou?.();
+  if(action==='game'){
+    // The round itself lives in Gioca: open the hub, then that round.
+    window.openQuizHub?.({nav:true});
+    if(current?.session)window.USGameV2?.openSession?.(current.session);
+    else if(current?.perVoi)window.USGameV2?.openPerVoi?.();
+  }
+  if(action==='mission')window.openOggiMission?.();
 });
 // M10.2 — nascondere l'avviso "Risposte pronte" = "non lo voglio più su Oggi",
 // MAI "ho visto le risposte". L'autorità è window.dismissDailyRevealNotice
@@ -2292,24 +2739,27 @@ window.UsTodayPriority=Object.freeze({
   refresh:refreshTodayPriorities
 });
 
-// ===== M12A — Oggi arbitration =====
-// The photo stays the dominant surface: at any moment Oggi shows AT MOST ONE
-// primary attention item and AT MOST ONE quiet informational item. The
-// choice is deterministic (slot, then rank, then id); surfaces that lose are
-// only suppressed (display), never destroyed, so they return the moment the
+// ===== M12A → 1.0 — Oggi arbitration =====
+// The photo stays the dominant surface. Above the nav (#usOggiDock) Oggi shows
+// AT MOST ONE evidence card and the Domanda di oggi card. The choice is
+// deterministic (slot, then rank, then id); surfaces that lose are only
+// suppressed (display), never destroyed, so they return the moment the
 // winner is resolved. Distance is a tiny ambient capsule and does not count.
 //
-//   PRIMARY (something for ME to do / see)        QUIET (information)
-//   10 Ti penso received                          10 today's / tomorrow's event
-//   20 "Risposte pronte" (reveal ready)           20 calendar insight
-//   30 waiting for me (priority queue)            30 "Rivedi le risposte di oggi"
-//   40 Daily Question, partner already answered   40 push opt-in / install hint
-//   50 Daily Question available
-//   60 Daily Question error (Riprova)
-const US_OGGI_PRIMARY_RANK=Object.freeze({received_ready:10,answers_ready:20,waiting_for_me:30});
-const US_OGGI_DAILY_RANK=Object.freeze({invited:40,answer:50,error:60});
+//   EVIDENCE (one at a time)                       DAILY
+//   10 Ti penso received                           the Domanda di oggi, until
+//   15 Lasciato per te                             both answered (O1), then
+//   20 "Risposte pronte" (reveal ready)            "Rivedi" until tomorrow
+//   30 Tocca a te (game round, mission)
+//   35 Mesiversario / anniversario
+//   90 notifications invite, until enabled (O5)
+//
+// The legacy calendar widget and reveal link stay mounted in the hidden
+// stack: they never take a slot.
+const US_OGGI_PRIMARY_RANK=Object.freeze({received_ready:10,left_ready:15,answers_ready:20,waiting_for_me:30,celebration:35});
+const US_OGGI_PUSH_RANK=90;
 function arbitrateOggi(candidates=[]){
-  const best={primary:null,quiet:null};
+  const best={evidence:null,daily:null};
   for(const item of Array.isArray(candidates)?candidates:[]){
     if(!item||!item.id||!(item.slot in best))continue;
     const current=best[item.slot];
@@ -2317,22 +2767,18 @@ function arbitrateOggi(candidates=[]){
     if(!Number.isFinite(rank))continue;
     if(!current||rank<current.rank||(rank===current.rank&&String(item.id)<String(current.id)))best[item.slot]={id:String(item.id),rank};
   }
-  return {primary:best.primary?.id||null,quiet:best.quiet?.id||null};
+  return {evidence:best.evidence?.id||null,daily:best.daily?.id||null};
 }
-const US_OGGI_SURFACES=Object.freeze(['usTodayPriorityRegion','usOggiCalendarWidget','usDailyRitual','usDailyRevealLink','pushOptInCard']);
+const US_OGGI_SURFACES=Object.freeze(['usTodayPriorityRegion','usDailyRitual','pushOptInCard','usOggiCalendarWidget','usDailyRevealLink']);
 function collectOggiCandidates(){
   const live=id=>{const el=document.getElementById(id);return el&&!el.hidden?el:null;};
   const candidates=[];
   if(live('usTodayPriorityRegion')){
     const head=usTodayPriorityQueue[0];
-    if(US_OGGI_PRIMARY_RANK[head?.category])candidates.push({id:'usTodayPriorityRegion',slot:'primary',rank:US_OGGI_PRIMARY_RANK[head.category]});
-    else candidates.push({id:'usTodayPriorityRegion',slot:'quiet',rank:10});
+    candidates.push({id:'usTodayPriorityRegion',slot:'evidence',rank:US_OGGI_PRIMARY_RANK[head?.category]||US_OGGI_PUSH_RANK-1});
   }
-  const daily=live('usDailyRitual');
-  if(daily)candidates.push({id:'usDailyRitual',slot:'primary',rank:US_OGGI_DAILY_RANK[daily.dataset.state]||US_OGGI_DAILY_RANK.answer});
-  if(live('usOggiCalendarWidget'))candidates.push({id:'usOggiCalendarWidget',slot:'quiet',rank:20});
-  if(live('usDailyRevealLink'))candidates.push({id:'usDailyRevealLink',slot:'quiet',rank:30});
-  if(live('pushOptInCard'))candidates.push({id:'pushOptInCard',slot:'quiet',rank:40});
+  if(live('pushOptInCard'))candidates.push({id:'pushOptInCard',slot:'evidence',rank:US_OGGI_PUSH_RANK});
+  if(live('usDailyRitual'))candidates.push({id:'usDailyRitual',slot:'daily',rank:0});
   return candidates;
 }
 function applyOggiArbitration(){
@@ -2341,7 +2787,7 @@ function applyOggiArbitration(){
     const el=document.getElementById(id);
     if(!el)continue;
     if(el.hidden){el.removeAttribute('data-us-oggi-slot');continue;}
-    el.setAttribute('data-us-oggi-slot',winner.primary===id?'primary':winner.quiet===id?'quiet':'suppressed');
+    el.setAttribute('data-us-oggi-slot',winner.evidence===id?'evidence':winner.daily===id?'daily':'suppressed');
   }
   return winner;
 }
@@ -2386,7 +2832,132 @@ function closeToday(){
 }
 window.closeToday=closeToday;
 
-function thinkReactionLabel(reaction){return ({heart:'❤️',hug:'🫂',miss_you:'miss_you'})[reaction]||reaction||'';}
+// ===== 1.0 — La domanda di oggi in Gioca (was home-cleanup.js) =====
+// Same question, same sheet: the Gioca card opens it where you are, like the
+// Oggi card. It only reads the canonical state hydrateToday already loaded.
+function dailyHubModel(){
+  const question=window.todayQuestion,state=window.todayState;
+  if(!question?.id||!question.question||!state)return null;
+  const partner=oggiPartnerName(),base={questionId:question.id,question:String(question.question)};
+  if(state.both_answered){
+    const seen=Boolean(window.todayRevealMeta?.my_reveal_seen_at);
+    return {...base,state:'reveal',meta:seen?'Svelate · domani una nuova domanda':'Le vostre risposte sono pronte',cta:seen?'Rivedi':'Scopri'};
+  }
+  if(state.my_answer!=null)return {...base,state:'waiting',meta:`Hai risposto · aspettiamo ${partner}`,cta:'Apri'};
+  if(state.partner_has_answer)return {...base,state:'answer',meta:`${partner} ha già risposto · tocca a te`,cta:'Rispondi'};
+  return {...base,state:'answer',meta:'Una domanda per voi oggi',cta:'Rispondi'};
+}
+function dailyHubMarkup(model){
+  if(!model)return '<div class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">Sfida di oggi</span><small>La domanda di oggi non è ancora disponibile.</small></div>';
+  // Never the hidden answers here: question, state and the way in.
+  return `<button type="button" class="us-gv2-daily" data-us-daily-entry data-daily-state="${escapeHtml(model.state)}">
+   <span class="us-gv4-daily-art" aria-hidden="true"><span class="us-gv4-art-ring"></span><span class="us-gv4-art-heart"></span></span>
+   <span class="us-gv2-daily-copy"><small>Sfida di oggi</small><b>${escapeHtml(model.question)}</b><span class="us-gv2-daily-state">${escapeHtml(model.meta)}</span></span>
+   <span class="us-gv4-daily-footer"><span>Una domanda, due risposte</span><span class="us-gv2-daily-cta">${escapeHtml(model.cta)} <span aria-hidden="true">›</span></span></span>
+  </button>`;
+}
+function paintDailyInGioca(){
+  const hub=document.getElementById('quizHub');
+  if(!hub||hub.classList.contains('hidden'))return;
+  const slot=hub.querySelector('.us-gv2-daily-slot');
+  if(!slot)return;
+  window.USGameV2?.paintWeek?.();
+  const model=dailyHubModel();
+  const signature=model?`${model.questionId}:${model.state}:${model.cta}:${model.meta}`:'unavailable';
+  if(slot.dataset.usDailySignature===signature)return;
+  slot.dataset.usDailySignature=signature;
+  slot.innerHTML=dailyHubMarkup(model);
+}
+// F2 — Gioca has no turn API: Oggi reads "Tocca a te" from the hub games.js
+// just rendered (a round where the other is waiting, or Per voi pending).
+let usOggiGameTurnTimer=0;
+function readGameTurnFromHub(){
+  const hub=document.getElementById('quizHub');
+  if(!hub||hub.classList.contains('hidden'))return;
+  const row=hub.querySelector('[data-gv2-session][data-tone="turn"]');
+  const perVoi=hub.querySelector('[data-gv2-action="per-voi"][data-gv2-state="pending"]');
+  const next=row?{game:row.querySelector('b')?.textContent?.trim()||'Gioca',session:row.dataset.gv2Session}:perVoi?{game:'Per voi',perVoi:true}:null;
+  const key=turn=>turn?`${turn.session||''}:${turn.game}:${turn.perVoi?1:0}`:'';
+  if(key(next)===key(usOggiGameTurn))return;
+  usOggiGameTurn=next;
+  clearTimeout(usOggiGameTurnTimer);
+  usOggiGameTurnTimer=setTimeout(()=>{if(window.usProfile)refreshTodayPriorities();},120);
+}
+function paintDailyCardAndTurn(){paintDailyInGioca();readGameTurnFromHub();}
+document.getElementById('quizHub')?.addEventListener('click',event=>{
+  if(!event.target.closest?.('[data-us-daily-entry]'))return;
+  event.preventDefault();
+  openToday();
+});
+window.addEventListener('us-identity-change',()=>paintDailyInGioca());
+window.UsDailyQuestionHub=Object.freeze({model:dailyHubModel,paint:paintDailyInGioca,paintCard:paintDailyCardAndTurn,open:openToday});
+
+// L4 — who left what in Lasciato per te. left-for-you.js owns the envelope and
+// its unseen count; Oggi follows the envelope and reads only the unseen rows
+// (oldest first: the one that opens first) to name the kind.
+let usOggiLeftTimer=0,usOggiLeftSeq=0;
+async function loadOggiLeftItems(){
+  const seq=++usOggiLeftSeq,me=window.usProfile;
+  const envelope=document.getElementById('leftForYouPartnerEntry');
+  const before=usOggiLeft.items.map(item=>item.id).join(',');
+  if(!me?.id||!envelope?.classList.contains('is-closed')){usOggiLeft.items=[];}
+  else{
+    try{
+      const {data,error}=await sb.from('left_for_you').select('id,kind,created_at').eq('recipient_id',me.id).is('seen_at',null).order('created_at',{ascending:true}).limit(20);
+      if(error)throw error;
+      if(seq!==usOggiLeftSeq||window.usProfile?.id!==me.id)return;
+      usOggiLeft.items=(data||[]).filter(item=>item?.id);
+    }catch(error){console.warn('[US Oggi] Lasciato per te',error);return;}
+  }
+  if(before!==usOggiLeft.items.map(item=>item.id).join(','))refreshTodayPriorities();
+}
+(()=>{
+  const envelope=document.getElementById('leftForYouPartnerEntry');
+  if(!envelope||typeof MutationObserver!=='function')return;
+  new MutationObserver(()=>{
+    clearTimeout(usOggiLeftTimer);
+    usOggiLeftTimer=setTimeout(()=>{loadOggiLeftItems();},250);
+  }).observe(envelope,{attributes:true,attributeFilter:['class','aria-label','data-us-attention']});
+})();
+
+// F2/N5 — from Friday (Rome), a mission the other already confirmed and I did
+// not: "Manca solo la tua conferma" on Oggi. Read-only, cached for a minute.
+function oggiRomeWeekday(at=new Date()){
+  try{return new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Rome',weekday:'short'}).format(at);}catch(_){return '';}
+}
+const usOggiMission={key:'',at:0,item:null,loading:null};
+async function oggiMissionToConfirm(){
+  const me=window.usProfile;
+  if(!me?.id||!me.couple_id||typeof sb==='undefined'||typeof weekStartISO!=='function')return null;
+  if(!['Fri','Sat','Sun'].includes(oggiRomeWeekday()))return null;
+  const week=weekStartISO(),key=`${me.id}:${me.couple_id}:${week}`;
+  if(usOggiMission.key===key&&Date.now()-usOggiMission.at<60000)return usOggiMission.item;
+  if(usOggiMission.key===key&&usOggiMission.loading)return usOggiMission.loading;
+  if(usOggiMission.key!==key){usOggiMission.key=key;usOggiMission.item=null;usOggiMission.at=0;}
+  const task=(async()=>{
+    try{
+      const {data,error}=await sb.from('bond_weekly_quests').select('id,title,confirmed_by,completed_at').eq('couple_id',me.couple_id).eq('week_start',week).order('slot');
+      if(error)throw error;
+      const item=(data||[]).find(row=>{
+        const confirmed=(Array.isArray(row?.confirmed_by)?row.confirmed_by:[]).map(String);
+        return !row.completed_at&&confirmed.length>0&&!confirmed.includes(String(me.id));
+      })||null;
+      if(usOggiMission.key===key){usOggiMission.item=item?{id:item.id,title:item.title}:null;usOggiMission.at=Date.now();}
+    }catch(error){console.warn('[US Oggi] Missioni',error);}
+    return usOggiMission.key===key?usOggiMission.item:null;
+  })();
+  usOggiMission.loading=task;
+  try{return await task;}finally{if(usOggiMission.loading===task)usOggiMission.loading=null;}
+}
+window.oggiMissionToConfirm=oggiMissionToConfirm;
+// The Oggi card opens Missioni in Noi.
+function openOggiMission(){
+  go('bond',{nav:true});
+  openNoiSection('quest');
+}
+window.openOggiMission=openOggiMission;
+
+function thinkReactionLabel(reaction){return ({heart:'con un cuore',hug:'con un abbraccio',miss_you:'con un pensiero'})[reaction]||reaction||'';}
 function renderThinkReactionUi(){
   const root=document.getElementById('thinkArrival');
   if(!root)return;
@@ -2395,8 +2966,10 @@ function renderThinkReactionUi(){
   const status=document.getElementById('thinkArrivalStatus');
   const buttons=root.querySelectorAll('[data-think-reaction]');
   const partner=partnerFromProfiles(window.usBondProfiles||[]);
-  if(title)title.textContent=`${partner?.display_name||'La tua persona'} ti pensa`;
-  if(copy)copy.hidden=true;
+  // Momento: the name on one line, "ti pensa" in italic in their colour (same words).
+  if(title)title.innerHTML=`<span class="think-arrival-name"${partner?.display_name?' translate="no"':''}>${escapeHtml(partner?.display_name||'La tua persona')}</span> <em>ti pensa</em>`;
+  // Mockup: when it arrived, in plain words ("adesso", "5 min fa").
+  if(copy){const at=usIncomingThink?.created_at;const fresh=at&&Date.now()-Date.parse(at)<60000;copy.textContent=at?(fresh?'adesso':relativeSignalAge(at)):'';copy.hidden=!copy.textContent;}
   buttons.forEach(button=>{
     const reaction=button.dataset.thinkReaction;
     button.classList.toggle('selected',reaction===usThinkReactionFinal);
@@ -2452,8 +3025,8 @@ async function sendThinkReaction(reaction){
     renderThinkReactionUi();
     sendWebPushEvent('think_reaction',usIncomingThink.id,{reaction:usThinkReactionFinal}).catch(()=>{});
     window.UsTodayPriority?.refresh?.();
-    toast('Reazione inviata');
-    setTimeout(()=>closeThinkArrival(),620);
+    toast('Reazione inviata',{icon:'check',quiet:false});
+    setTimeout(()=>closeThinkArrival(),1300);
     return true;
   }
   usThinkReactionInFlight=false;renderThinkReactionUi();return false;
@@ -2475,10 +3048,14 @@ function dailyKeepsakeRuntime(){
   const identity=()=>`${window.usProfile?.id}:${window.usProfile?.couple_id}`;
   const unavailable=(error)=>['42P01','PGRST205','PGRST202','42883'].includes(error?.code)||/daily_question_keepsake|keep_daily_question/.test(String(error?.message||''))&&/does not exist|could not find|schema cache/i.test(String(error?.message||''));
   const active=()=>Boolean(state.owner===identity()&&state.questionId&&state.questionId===window.todayQuestion?.id&&window.todayState?.both_answered);
+  // Mockup #sheetReveal: Conserva (sparkle) → Conservo… → ✓ Conservato nei
+  // Ricordi, with one line under it that says where it goes.
+  const note='<p class="today-keep-note">Conservata, la domanda di oggi resta nei vostri Ricordi.</p>';
+  let fresh=false;
   const view=()=>{
-    if(state.status==='kept')return '<p class="today-keep-done" role="status"><span class="us-icon" data-us-icon="check" aria-hidden="true"></span>Conservato nei Ricordi</p>';
+    if(state.status==='kept'){const html=`<p class="today-keep-done${fresh?' is-fresh':''}" role="status"><span class="us-icon" data-us-icon="check" aria-hidden="true"></span>Conservato nei Ricordi</p>${note}`;fresh=false;return html;}
     const saving=state.status==='saving',failed=state.status==='error';
-    return `<button type="button" class="today-keep-button" data-us-daily-keep ${saving?'disabled aria-busy="true"':''}>${saving?'Conservo…':failed?'Riprova':'Conserva'}</button>${failed?'<p class="today-keep-status" role="status">Non conservata. Riprova quando torni online.</p>':''}`;
+    return `<button type="button" class="today-keep-button" data-us-daily-keep ${saving?'disabled aria-busy="true"':''}>${saving?'Conservo…':failed?'Riprova':'Conserva'}</button>${failed?'<p class="today-keep-status" role="status">Non conservata. Riprova quando torni online.</p>':note}`;
   };
   const render=()=>{
     const root=document.getElementById('todayKeep');
@@ -2518,8 +3095,8 @@ function dailyKeepsakeRuntime(){
       if(error)throw error;
       if(!['kept','existing'].includes(data?.status)||data.question_id!==questionId)throw new Error('daily_keepsake_invalid');
       if(!current())return {status:'stale'};
-      state={questionId,owner,status:'kept'};render();
-      if(data.status==='kept')toast('Conservato nei Ricordi ♡');
+      fresh=true;state={questionId,owner,status:'kept'};render();
+      if(data.status==='kept')toast('Conservato nei Ricordi',{icon:'sparkle',quiet:false});
       if(document.getElementById('momentsGrid')?.dataset.loaded==='1')Promise.resolve(window.hydrateMoments?.()).catch(()=>{});
       return data;
     }catch(error){
@@ -2583,16 +3160,63 @@ async function loadDailyRevealMeta(questionId){
   }catch(error){console.warn('[US Today] Reveal meta',error);return null;}
 }
 function dailyRevealPartnerLabel(){return usIdentity().partnerName;}
-// Reveal V5: the two real answers, without reactions or comments.
-// Keep receipt/notice and keepsake authorities untouched.
+// Reveal: the two real answers. O2 (1.0) — one tap on the other's answer,
+// only ♥ or "mi hai commosso" (never "arrabbiato"); under my answer, what the
+// other felt. Receipt/notice and keepsake authorities stay untouched.
+const US_DAILY_REACTIONS=Object.freeze({
+  heart:{label:'Metti un cuore alla risposta'},
+  cry:{label:'Mi hai commosso'}
+});
+// What the other felt about my answer (also the Oggi card's line). Never "angry".
+function dailyPartnerReactionLine(meta,partner){
+  if(meta?.partner_reaction==='heart')return `${partner} ha messo ♥ alla tua risposta`;
+  if(meta?.partner_reaction==='cry')return `${partner}: mi hai commosso`;
+  return '';
+}
 function renderTodayReveal(){
   const reveal=document.getElementById('todayReveal'),state=window.todayState;
   if(!reveal||!state?.both_answered)return;
-  const partner=dailyRevealPartnerLabel();
+  const partner=dailyRevealPartnerLabel(),meta=window.todayRevealMeta;
+  const mine=US_DAILY_REACTIONS[meta?.my_reaction]?meta.my_reaction:null;
+  const felt=dailyPartnerReactionLine(meta,partner);
+  const note=felt?`<p class="today-reaction-note" data-us-daily-partner-reaction="${escapeHtml(meta.partner_reaction)}">${escapeHtml(felt)}</p>`:'';
+  // Without the personal meta (offline) there is nothing to react on.
+  const controls=meta?`<div class="today-reactions" role="group" aria-label="La tua reazione"><button type="button" class="today-reaction" data-daily-reaction="heart" aria-label="${escapeHtml(US_DAILY_REACTIONS.heart.label)}" aria-pressed="${mine==='heart'}"><span class="us-icon" data-us-icon="${mine==='heart'?'heart-fill':'heart'}" aria-hidden="true"></span></button><button type="button" class="today-reaction today-reaction--words" data-daily-reaction="cry" aria-pressed="${mine==='cry'}">${escapeHtml(US_DAILY_REACTIONS.cry.label)}</button></div>`:'';
   reveal.className='today-reveal today-reveal--simple';
-  reveal.innerHTML='<div class="today-answer" data-us-daily-answer="mine"><b>La tua risposta</b><p>'+escapeHtml(state.my_answer||'')+'</p></div>'+
-    '<div class="today-answer" data-us-daily-answer="partner"><b>'+escapeHtml(partner)+'</b><p>'+escapeHtml(state.partner_answer||'')+'</p></div>';
+  reveal.innerHTML='<div class="today-answer" data-us-daily-answer="mine"><b>Tu</b><p translate="no">'+escapeHtml(state.my_answer||'')+'</p>'+note+'</div>'+
+    '<div class="today-answer" data-us-daily-answer="partner"><b translate="no">'+escapeHtml(partner)+'</b><p translate="no">'+escapeHtml(state.partner_answer||'')+'</p>'+controls+'</div>';
 }
+// One tap = my reaction; the same tap again takes it back. The server
+// (set_daily_answer_reaction) decides; on error everything goes back.
+let usDailyReactionInFlight=false;
+async function setDailyAnswerReaction(reaction){
+  const questionId=window.todayQuestion?.id,meta=window.todayRevealMeta;
+  if(!questionId||!meta||meta.question_id!==questionId||!window.todayState?.both_answered||usDailyReactionInFlight)return {status:'noop'};
+  if(!US_DAILY_REACTIONS[reaction])return {status:'noop'};
+  const previous=meta,next=meta.my_reaction===reaction?null:reaction;
+  usDailyReactionInFlight=true;
+  window.todayRevealMeta={...meta,my_reaction:next};renderTodayReveal();
+  try{
+    const {data,error}=await sb.rpc('set_daily_answer_reaction',{target_question_id:questionId,target_reaction:next});
+    if(error||!data||data.question_id!==questionId)throw error||new Error('daily_reaction_invalid');
+    if(window.todayQuestion?.id===questionId)window.todayRevealMeta=data;
+    renderTodayReveal();
+    // O2: the other phone hears about a ♥ or "mi hai commosso" (the server reads it back).
+    if(next)sendWebPushEvent('daily_reaction',questionId);
+    return {status:'saved'};
+  }catch(error){
+    console.warn('[US Today] Reazione',error);
+    if(window.todayQuestion?.id===questionId)window.todayRevealMeta=previous;
+    renderTodayReveal();
+    toast('Reazione non salvata. Riprova.');
+    return {status:'error'};
+  }finally{usDailyReactionInFlight=false;}
+}
+window.setDailyAnswerReaction=setDailyAnswerReaction;
+document.getElementById('todayReveal')?.addEventListener?.('click',event=>{
+  const button=event.target.closest?.('[data-daily-reaction]');
+  if(button)setDailyAnswerReaction(button.dataset.dailyReaction);
+});
 
 // "Visto" = il reveal è davvero mostrato in un foglio Today aperto: non il push,
 // non l'hydrate della Home, non il solo both_answered.
@@ -2689,8 +3313,11 @@ async function hydrateToday(){
     document.getElementById('answer').value=state.my_answer;
     btn.textContent='Aggiorna risposta';
   }else{
-    btn.textContent='Rispondi';
+    btn.textContent='Invia la mia risposta';
   }
+  // The sheet's eyebrow names what it shows (mockup): the question, then the two answers.
+  const head=document.querySelector('#today .today-sheet-head h2');
+  if(head)head.textContent=state?.both_answered?'Le vostre risposte':'La domanda di oggi';
   if(state?.both_answered){
     // Reveal is strictly question + two answers. Do not leave a duplicate,
     // disabled composer or "Risposte sbloccate" banner above the real answers.
@@ -2703,6 +3330,7 @@ async function hydrateToday(){
     if(!current())return;
     if(meta)window.todayRevealMeta=meta;
     renderTodayReveal();
+    window.UsDailyQuestionHub?.paint?.();
     await markDailyRevealSeenIfVisible(q.id,seq);
     if(!current())return;
     // M12B.4 — Conserva solo qui, dove lo scambio è legittimamente visibile.
@@ -2711,17 +3339,18 @@ async function hydrateToday(){
   }else{
     locked.hidden=false;
     answerEl.hidden=false;answerEl.disabled=false;btn.hidden=false;btn.disabled=todayAnswerIsSaving();
-    btn.textContent=todayAnswerIsSaving()?'Salvo…':state.my_answer?'Aggiorna risposta':'Rispondi';
+    btn.textContent=todayAnswerIsSaving()?'Salvo…':state.my_answer?'Aggiorna risposta':'Invia la mia risposta';
     window.todayRevealMeta=null;
     reveal.classList.add('hidden');reveal.innerHTML='';
     window.UsDailyKeepsake?.hide?.();
+    // Mockup: a dot in the colour of whoever the line is about, then plain words.
+    const partner=usIdentity().partnerName;
     if(state?.my_answer){
-      const partner=usIdentity().partnerName;
-      locked.innerHTML='✓ Hai risposto. <b>In attesa di '+escapeHtml(partner)+'…</b>';
+      locked.innerHTML='<span class="dot" data-who="tu" aria-hidden="true"></span><span>'+escapeHtml(`Hai risposto. In attesa di ${partner}…`)+'</span>';
     }else if(state?.partner_has_answer){
-      locked.innerHTML='🔒 L’altra risposta è già arrivata. <b>Rispondi per sbloccarla.</b>';
+      locked.innerHTML='<span class="dot" data-who="partner" aria-hidden="true"></span><span>'+escapeHtml(`${partner} ha già risposto. Vedrete le risposte insieme appena invii la tua.`)+'</span>';
     }else{
-      locked.innerHTML='🔒 Le risposte si sbloccano quando avete risposto entrambi.';
+      locked.innerHTML='<span class="dot" data-who="noi" aria-hidden="true"></span><span>Le risposte si sbloccano quando avete risposto entrambi.</span>';
     }
   }
   updateHomeStatus();
@@ -2747,11 +3376,23 @@ async function updateHomeStatus(){
 }
 
 let pendingMomentFile=null;
+// R1 — several photos at once: the first is the cover, the others go into the
+// memory's album (moment_photos, the same path as the album's "Aggiungi foto").
+let pendingMomentExtras=[];
+let pendingMomentExtraUrls=[];
 let pendingMomentPreviewUrl=null;
 let pendingMomentDate=localDateISO();
+// R6 — "Aggiungi la foto" on something lived: the new memory becomes its photo.
+let pendingMomentSource=null;
+// The source asked for by the tap that opened the gallery; it applies only once
+// photos are actually picked (undefined: keep the current one, e.g. "Cambia foto").
+let pendingMomentSourceNext;
+let pendingMomentPickToken=0;
+const US_MOMENT_MAX_PHOTOS=10;
+const US_MOMENT_TYPES=['image/jpeg','image/png','image/webp'];
 
 function formatMomentDetectedDate(value){
-  try{return new Date(value+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'});}catch(_){return value;}
+  try{return new Date(value+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'long',year:'numeric'});}catch(_){return value;}
 }
 
 function parseExifDateString(value){
@@ -2815,9 +3456,42 @@ async function detectMomentDate(file){
   return localDateISO();
 }
 
+// R1 — the date is read from the photo (EXIF, then the file) and stays editable.
+function validMomentDate(value){
+  const iso=String(value||'');
+  return /^\d{4}-\d{2}-\d{2}$/.test(iso)&&iso<=localDateISO()?iso:'';
+}
+// 1.0 parity: the label says the day, as in the design ("Data foto · 12 ottobre").
+function updateMomentDateWhen(){
+  const out=document.getElementById('momentDateWhen');
+  const iso=validMomentDate(document.getElementById('momentDate')?.value);
+  if(out)out.textContent=iso?` · ${new Date(iso+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'long'})}`:'';
+}
 function updateDetectedMomentDate(){
-  const el=document.getElementById('momentDetectedDate');
-  if(el)el.textContent=`Data foto · ${formatMomentDetectedDate(pendingMomentDate)}`;
+  const input=document.getElementById('momentDate');
+  if(!input)return;
+  input.max=localDateISO();
+  input.value=validMomentDate(pendingMomentDate)||localDateISO();
+  updateMomentDateWhen();
+}
+document.getElementById('momentDate')?.addEventListener('change',event=>{
+  const iso=validMomentDate(event.target.value);
+  if(iso)pendingMomentDate=iso;
+  else event.target.value=validMomentDate(pendingMomentDate)||localDateISO();
+  updateMomentDateWhen();
+});
+// The note is one line of meaning: Enter does not start a new line.
+document.getElementById('momentCaption')?.addEventListener('keydown',event=>{if(event.key==='Enter')event.preventDefault();});
+// 1.0 parity: the design's amber upload bar (to 45% while optimising, then to the end).
+function momentUpBar(stage){
+  const bar=document.getElementById('momentUpBar');
+  const fill=bar?.firstElementChild;
+  if(!bar||!fill)return;
+  if(stage==='done'){bar.hidden=true;fill.getAnimations?.().forEach(a=>a.cancel());fill.style.width='0%';return;}
+  bar.hidden=false;
+  const [from,to,duration]=stage==='optimize'?['0%','45%',700]:['45%','100%',800];
+  fill.style.width=to;
+  if(typeof fill.animate==='function'&&!window.UsUiFoundation?.isReducedMotion?.())fill.animate([{width:from},{width:to}],{duration,easing:'cubic-bezier(.2,.8,.2,1)'});
 }
 
 function pickMomentPhoto(){
@@ -2825,37 +3499,77 @@ function pickMomentPhoto(){
 }
 window.pickMomentPhoto=pickMomentPhoto;
 
+// The source of "Aggiungi la foto" (a lived Da vivere or Event): its day is the
+// memory's day, and once saved the photo is linked to it (link_moment_to_source).
+function setMomentComposerSource(source){
+  const kind=source?.kind==='da_vivere'||source?.kind==='shared_event_completion'?source.kind:'';
+  pendingMomentSourceNext=kind&&source?.ref?{kind,ref:String(source.ref),date:validMomentDate(source.date)}:null;
+}
+window.UsRicordiCompose=Object.freeze({setSource:setMomentComposerSource});
+
+function renderMomentExtras(){
+  const box=document.getElementById('momentExtra');
+  const row=document.getElementById('momentExtraRow');
+  const count=document.getElementById('momentExtraCount');
+  pendingMomentExtraUrls.forEach(url=>URL.revokeObjectURL(url));
+  pendingMomentExtraUrls=[];
+  if(!box||!row)return;
+  if(!pendingMomentExtras.length){box.hidden=true;row.replaceChildren();if(count)count.textContent='';return;}
+  // Only a few small previews are decoded; the count says the rest.
+  pendingMomentExtraUrls=pendingMomentExtras.slice(0,3).map(file=>URL.createObjectURL(file));
+  const more=pendingMomentExtras.length-pendingMomentExtraUrls.length;
+  row.innerHTML=pendingMomentExtraUrls.map(url=>`<img src="${escapeHtml(url)}" alt="" decoding="async">`).join('')+(more>0?`<span class="moment-extra-more">+${more}</span>`:'');
+  if(count)count.textContent=pendingMomentExtras.length===1?'La prima è la copertina, l’altra va nell’album.':`La prima è la copertina, le altre ${pendingMomentExtras.length} vanno nell’album.`;
+  box.hidden=false;
+}
+
 function resetMomentComposer(){
   pendingMomentFile=null;
+  pendingMomentExtras=[];
+  pendingMomentSource=null;
+  pendingMomentSourceNext=undefined;
+  pendingMomentPickToken++;
   pendingMomentDate=localDateISO();
   if(pendingMomentPreviewUrl){URL.revokeObjectURL(pendingMomentPreviewUrl);pendingMomentPreviewUrl=null;}
+  renderMomentExtras();
   const fileInput=document.getElementById('momentFile');if(fileInput)fileInput.value='';
   const caption=document.getElementById('momentCaption');if(caption)caption.value='';
   const img=document.getElementById('momentPreviewImg');if(img)img.removeAttribute('src');
   document.getElementById('momentCompose')?.classList.remove('has-photo');
-  const detected=document.getElementById('momentDetectedDate');if(detected)detected.textContent='';
+  const date=document.getElementById('momentDate');if(date)date.value='';
+  updateMomentDateWhen();
 }
 
 document.getElementById('momentFile')?.addEventListener('change',async(event)=>{
-  const file=event.target.files?.[0]||null;
+  const picked=[...(event.target.files||[])];
   const compose=document.getElementById('momentCompose');
   const img=document.getElementById('momentPreviewImg');
-  if(!file)return;
-  if(!['image/jpeg','image/png','image/webp'].includes(file.type)){
-    event.target.value='';
-    return toast('Per ora usa JPG, PNG o WebP');
-  }
-  if(file.size>20*1024*1024){
-    event.target.value='';
-    return toast('Foto troppo grande: massimo 20 MB');
-  }
-  pendingMomentFile=file;
-  pendingMomentDate=await detectMomentDate(file);
-  updateDetectedMomentDate();
+  event.target.value='';
+  if(!picked.length)return;
+  const valid=picked.filter(file=>US_MOMENT_TYPES.includes(file.type)&&file.size<=20*1024*1024);
+  if(!valid.length)return toast(picked.some(file=>US_MOMENT_TYPES.includes(file.type))?'Foto troppo grande: massimo 20 MB':'Per ora usa JPG, PNG o WebP');
+  const skipped=picked.length-valid.length;
+  if(valid.length>US_MOMENT_MAX_PHOTOS)toast('Al massimo 10 foto alla volta: tengo le prime 10');
+  else if(skipped)toast(skipped===1?'Una foto saltata: usa JPG, PNG o WebP fino a 20 MB':`${skipped} foto saltate: usa JPG, PNG o WebP fino a 20 MB`);
+  const files=valid.slice(0,US_MOMENT_MAX_PHOTOS);
+  const token=++pendingMomentPickToken;
+  if(pendingMomentSourceNext!==undefined){pendingMomentSource=pendingMomentSourceNext;pendingMomentSourceNext=undefined;}
+  if(pendingMomentSource?.date)pendingMomentDate=pendingMomentSource.date;
+  pendingMomentFile=files[0];
+  pendingMomentExtras=files.slice(1);
   if(pendingMomentPreviewUrl)URL.revokeObjectURL(pendingMomentPreviewUrl);
-  pendingMomentPreviewUrl=URL.createObjectURL(file);
+  pendingMomentPreviewUrl=URL.createObjectURL(files[0]);
   img.src=pendingMomentPreviewUrl;
   compose?.classList.add('has-photo');
+  renderMomentExtras();
+  updateDetectedMomentDate();
+  window.UsMomentComposer?.show?.();
+  // A lived source already knows its day; otherwise the first photo says it.
+  if(pendingMomentSource?.date)return;
+  const detected=await detectMomentDate(files[0]);
+  if(token!==pendingMomentPickToken)return;
+  pendingMomentDate=detected;
+  updateDetectedMomentDate();
 });
 
 // M12A — a newly created Ricordo settles in and catches the light ONCE. The id
@@ -2879,17 +3593,21 @@ async function uploadMoment(){
   if(!window.usProfile)return toast('Connessione non pronta');
   if(!pendingMomentFile)return toast('Scegli prima una foto');
   const btn=document.getElementById('momentUploadBtn');
+  if(btn.disabled)return;
   const caption=document.getElementById('momentCaption').value.trim();
-  const momentDate=pendingMomentDate||localDateISO();
+  const momentDate=validMomentDate(document.getElementById('momentDate')?.value)||validMomentDate(pendingMomentDate)||localDateISO();
   const file=pendingMomentFile;
-  btn.disabled=true;btn.textContent='Ottimizzo…';
+  const extras=[...pendingMomentExtras];
+  const source=pendingMomentSource;
+  const total=1+extras.length;
+  btn.disabled=true;btn.textContent='Ottimizzo…';momentUpBar('optimize');
   try{
     const compressed=await compressImageFile(file,{maxDimension:1920,quality:.82});
     const thumbnail=await compressImageFile(file,{maxDimension:720,quality:.72});
     const safeName=`${Date.now()}-${crypto.randomUUID()}.webp`;
     const path=`${window.usProfile.couple_id}/${window.usProfile.id}/${safeName}`;
     const thumbnailPath=`${window.usProfile.couple_id}/${window.usProfile.id}/derived-thumbnails/${crypto.randomUUID()}.webp`;
-    btn.textContent='Carico…';
+    btn.textContent=total>1?`Carico 1 di ${total}…`:'Carico…';momentUpBar('upload');
     const {error:uploadError}=await sb.storage.from('us-media').upload(path,compressed,{contentType:'image/webp',upsert:false,cacheControl:'31536000'});
     if(uploadError)throw uploadError;
     let uploadedThumbnail=false;
@@ -2915,16 +3633,179 @@ async function uploadMoment(){
     }
     // M12A — only THIS creation earns the one-shot light catch (see consumeFreshRicordo).
     if(created?.id)markFreshRicordo(created.id);
+    // R6 — the photo of something lived: one card "L'avete fatto". If the link
+    // is refused the memory still exists, as a memory of its own.
+    if(created?.id&&source){
+      try{
+        const {error:linkError}=await sb.rpc('link_moment_to_source',{target_moment_id:created.id,source_kind:source.kind,source_ref:source.ref});
+        if(linkError)throw linkError;
+      }catch(error){console.warn('[US Ricordi] link source',error);}
+    }
+    // R1 — the other photos join the memory's album, in the order they were picked.
+    let failed=0;
+    for(let i=0;i<extras.length;i++){
+      btn.textContent=`Carico ${i+2} di ${total}…`;
+      let ok=false;
+      try{ok=Boolean(created?.id)&&await window.UsMomentAlbums?.uploadPhoto?.(created.id,extras[i],{position:i+1})===true;}
+      catch(error){console.warn('[US Ricordi] album photo',error);}
+      if(!ok)failed++;
+    }
     window.UsFeedback?.success?.();
     resetMomentComposer();
-    toast('Ricordo aggiunto ♡');
+    toast(failed?`Ricordo aggiunto. ${failed} foto non sono entrate: riprova dall’album`:total>1?`Ricordo aggiunto con ${total} foto ♡`:'Ricordo aggiunto ♡');
     await hydrateMoments();
     await hydrateHomeMemory();
     if(!homePhotoPath)await hydrateHomePhoto(true);
-  }catch(err){console.warn(err);window.UsFeedback?.error?.();toast(err?.message==='SOURCE_TOO_LARGE'?'Foto troppo grande: massimo 20 MB':'Upload non riuscito');}
-  finally{btn.disabled=false;btn.textContent='Salva ricordo';}
+  }catch(err){console.warn(err);window.UsFeedback?.error?.();toast(err?.message==='SOURCE_TOO_LARGE'?'Foto troppo grande: massimo 20 MB':'Caricamento non riuscito');}
+  finally{btn.disabled=false;btn.textContent='Salva ricordo';momentUpBar('done');}
 }
 window.uploadMoment=uploadMoment;
+
+// R11 — Android: on the web the service worker keeps private photos in the
+// "us-private-media-v1" cache, keyed by storage path. The app has no service
+// worker, so Ricordi keeps its thumbnails in that same cache with the same key
+// (logout already clears it): a thumbnail is downloaded once, not again every
+// time its signed link changes. Web and iOS are unchanged.
+const US_RICORDI_MEDIA_CACHE='us-private-media-v1';
+const US_RICORDI_MEDIA_CACHE_MAX=240;
+const usRicordiMediaBlobs=new Map();
+function usRicordiMediaCacheOn(){
+  const runtime=window.UsCapacitorRuntime||window.Capacitor;
+  return Boolean(window.UsPlatform?.isNative&&runtime?.getPlatform?.()==='android'&&typeof caches!=='undefined'&&window.isSecureContext);
+}
+function usRicordiMediaKey(path){return new Request(`${location.origin}/__us_media_cache__?path=${encodeURIComponent(path)}`);}
+// The paths already on this phone, as local URLs; the others keep their signed URL.
+async function usRicordiCachedMedia(paths){
+  const found=new Map();
+  if(!usRicordiMediaCacheOn())return found;
+  try{
+    const cache=await caches.open(US_RICORDI_MEDIA_CACHE);
+    await Promise.all([...new Set((paths||[]).filter(Boolean))].map(async path=>{
+      if(usRicordiMediaBlobs.has(path)){found.set(path,usRicordiMediaBlobs.get(path));return;}
+      const hit=await cache.match(usRicordiMediaKey(path));
+      if(!hit)return;
+      const blob=await hit.blob();
+      if(!String(blob.type||'').startsWith('image/'))return;
+      const url=URL.createObjectURL(blob);
+      usRicordiMediaBlobs.set(path,url);
+      found.set(path,url);
+    }));
+  }catch(error){console.warn('[US Ricordi] media cache',error);}
+  return found;
+}
+// Once the page is painted, keep the thumbnails it just showed (the WebView
+// normally still has them, so this is not a second download).
+function usRicordiKeepMedia(entries){
+  if(!usRicordiMediaCacheOn()||!entries?.length)return;
+  usRunWhenIdle(async()=>{
+    try{
+      const cache=await caches.open(US_RICORDI_MEDIA_CACHE);
+      for(const [path,url] of entries){
+        if(!path||!url||usRicordiMediaBlobs.has(path)||await cache.match(usRicordiMediaKey(path)))continue;
+        const response=await fetch(url,{credentials:'omit'});
+        if(!response.ok||!String(response.headers.get('content-type')||'').startsWith('image/'))continue;
+        await cache.put(usRicordiMediaKey(path),response);
+      }
+      const keys=await cache.keys();
+      if(keys.length>US_RICORDI_MEDIA_CACHE_MAX)await Promise.all(keys.slice(0,keys.length-US_RICORDI_MEDIA_CACHE_MAX).map(key=>cache.delete(key)));
+    }catch(error){console.warn('[US Ricordi] media cache keep',error);}
+  },2400);
+}
+
+// R5 — "Nuovo da <Nome>": worked out on this phone only, per person. It keeps
+// when this phone started counting, when Ricordi was last looked at and which
+// memories were opened. Nothing is written to the server.
+const US_RICORDI_NEW_DAYS=30;
+function ricordiNewKey(){return window.usProfile?.id?`us:ricordi:new:v1:${window.usProfile.id}`:'';}
+function ricordiNewWrite(state){
+  const key=ricordiNewKey();
+  if(!key||!state)return;
+  try{localStorage.setItem(key,JSON.stringify({since:state.since,tab:state.tab||state.since,opened:(state.opened||[]).slice(-200)}));}catch(_e){}
+}
+function ricordiNewRead(){
+  const key=ricordiNewKey();
+  if(!key)return null;
+  let state=null;
+  try{state=JSON.parse(localStorage.getItem(key)||'null');}catch(_e){}
+  if(!state||typeof state!=='object'||!Date.parse(state.since)){
+    // First time on this phone: what is already there is not "new".
+    const now=new Date().toISOString();
+    state={since:now,tab:now,opened:[]};
+    ricordiNewWrite(state);
+  }
+  if(!Array.isArray(state.opened))state.opened=[];
+  return state;
+}
+function ricordiNewRows(rows,state){
+  const me=window.usProfile?.id;
+  const since=Date.parse(state.since)||Date.now();
+  const cutoff=Date.now()-US_RICORDI_NEW_DAYS*86400000;
+  const opened=new Set(state.opened.map(String));
+  return (rows||[]).filter(row=>{
+    const at=Date.parse(row?.created_at);
+    return row?.id&&row.created_by&&row.created_by!==me&&!opened.has(String(row.id))&&at>since&&at>cutoff;
+  });
+}
+function ricordiPaintTabDot(on){
+  const tab=document.querySelector('.nav button[data-page="moments"]');
+  if(!tab)return;
+  tab.toggleAttribute('data-ricordi-new',Boolean(on));
+  tab.setAttribute('aria-label',on?'Ricordi, c’è qualcosa di nuovo':'Ricordi');
+}
+function ricordiOnPage(){return Boolean(document.getElementById('moments')?.classList.contains('active'))&&!document.hidden;}
+function ricordiNewSeen(){
+  const state=ricordiNewRead();
+  if(!state)return;
+  state.tab=new Date().toISOString();
+  ricordiNewWrite(state);
+  ricordiPaintTabDot(false);
+}
+// rows: moments with id, created_by, created_at. Returns the ids still new.
+function ricordiNewSync(rows){
+  const state=ricordiNewRead();
+  if(!state)return new Set();
+  const fresh=ricordiNewRows(rows,state);
+  if(ricordiOnPage())ricordiNewSeen();
+  else{
+    const tabSince=Date.parse(state.tab)||0;
+    ricordiPaintTabDot(fresh.some(row=>Date.parse(row.created_at)>tabSince));
+  }
+  return new Set(fresh.map(row=>String(row.id)));
+}
+// Away from Ricordi: one light read, only to light the dot on the tab.
+async function ricordiCheckNew(){
+  const profile=window.usProfile;
+  if(!profile?.couple_id||document.hidden||ricordiOnPage())return;
+  const {data,error}=await sb.from('moments').select('id,created_by,created_at').eq('couple_id',profile.couple_id).neq('created_by',profile.id).order('created_at',{ascending:false}).limit(30);
+  if(error){console.warn('[US Ricordi] new',error);return;}
+  if(window.usProfile!==profile||ricordiOnPage())return;
+  ricordiNewSync(data||[]);
+}
+function ricordiMarkOpened(id){
+  const key=String(id||'');
+  const state=ricordiNewRead();
+  if(!state||!key)return;
+  if(!state.opened.map(String).includes(key)){state.opened.push(key);ricordiNewWrite(state);}
+  for(const card of document.querySelectorAll('#momentsGrid .moment-card[data-ricordi-new]')){
+    if(card.dataset.momentId!==key)continue;
+    card.removeAttribute('data-ricordi-new');
+    card.querySelector('.ricordi-new-label')?.remove();
+  }
+}
+window.UsRicordiNew=Object.freeze({markOpened:ricordiMarkOpened,check:()=>ricordiCheckNew().catch(()=>{})});
+window.addEventListener('us-auth-resolved',()=>usRunWhenIdle(()=>ricordiCheckNew().catch(()=>{}),1800));
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&window.usProfile)ricordiCheckNew().catch(()=>{});});
+// Opening Ricordi clears the dot at once, even when the page does not reload.
+(()=>{
+  const page=document.getElementById('moments');
+  if(!page||typeof MutationObserver!=='function')return;
+  let shown=page.classList.contains('active');
+  new MutationObserver(()=>{
+    const now=page.classList.contains('active');
+    if(now&&!shown&&window.usProfile){ricordiNewSeen();window.dispatchEvent(new CustomEvent('us:ricordi-shown'));}
+    shown=now;
+  }).observe(page,{attributes:true,attributeFilter:['class']});
+})();
 
 // ===== M8A — Ricordi living archive =====
 // Ricordi da album a storia viva, SOLO da dati reali e dalle loro fonti:
@@ -2954,7 +3835,7 @@ function ricordiLocalISO(instant){
 // Un Moment collegato da living_provenance (M12B.3) NON è una seconda
 // esperienza: prende la chiave della sua fonte e ne diventa la foto. La
 // deduplica è solo per chiave canonica, mai per titolo.
-const RICORDI_SOURCE_LABEL=Object.freeze({experience:'Da vivere',event:'Evento vissuto',daily:'Domanda del giorno'});
+const RICORDI_SOURCE_LABEL=Object.freeze({experience:'Le vostre idee',event:'Evento vissuto',daily:'Domanda del giorno'});
 function ricordiTimeline(moments,lived,kept,events,provenance){
   const byKey=new Map();
   const add=entry=>{if(!byKey.has(entry.sourceKey))byKey.set(entry.sourceKey,entry);return byKey.get(entry.sourceKey);};
@@ -3029,9 +3910,10 @@ function ricordiChapters(timeline){
   const byYear=new Map();
   for(const item of timeline){
     const year=item.date.slice(0,4);
-    if(!byYear.has(year))byYear.set(year,{year,count:0,moments:0,experiences:0,dailies:0,cover:null});
+    if(!byYear.has(year))byYear.set(year,{year,count:0,moments:0,experiences:0,dailies:0,cover:null,first:item.date});
     const ch=byYear.get(year);
     ch.count++;
+    if(item.date<ch.first)ch.first=item.date;
     if(item.kind==='moment')ch.moments++;else if(item.kind==='daily')ch.dailies++;else ch.experiences++;
     if(!ch.cover&&item.moment)ch.cover=item.moment;
   }
@@ -3041,28 +3923,42 @@ window.UsRicordiArchive=Object.freeze({timeline:ricordiTimeline,pickRivivi:ricor
 
 function ricordiPreviewPath(row){return row?.thumbnail_path||row?.storage_path||'';}
 function ricordiPreviewUrl(row,signedUrls){return signedUrls.get(ricordiPreviewPath(row))||signedUrls.get(row?.storage_path)||null;}
-function ricordiMomentCard(row,signedUrls,author,canDelete,feature,source,priority=false){
+// R6 — a memory that is the photo of something lived (a Da vivere or an Event)
+// is one card, "L'avete fatto", with the photo. R5 — a memory the partner added
+// and this phone has not opened yet says "Nuovo da <Nome>".
+function ricordiNewLabel(name){
+  const who=String(name||'').trim();
+  return who&&who!=='La tua persona'&&who!=='Noi'?`Nuovo da ${who}`:'Nuovo dalla tua persona';
+}
+function ricordiMomentCard(row,signedUrls,author,canDelete,feature,source,priority=false,fresh=false){
   const displayISO=/^\d{4}-\d{2}-\d{2}$/.test(String(source?.date||''))?String(source.date):row.moment_date;
-  const dateLabel=new Date(displayISO+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
+  const dateLabel=new Date(displayISO+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'2-digit',month:'short',year:'numeric'});
+  // The month and year already head the group: the card says only the day.
+  const shortLabel=new Date(displayISO+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'short'});
   const fullUrl=signedUrls.get(row.storage_path);
   const previewPath=ricordiPreviewPath(row);
   const previewUrl=ricordiPreviewUrl(row,signedUrls);
   if(!fullUrl||!previewUrl)return '';
-  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(fullUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(row.caption||'')}" onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(previewUrl)}" data-us-media-path="${escapeHtml(previewPath)}" onerror="usRecoverPrivateImage(this)" alt="Ricordo condiviso" loading="${priority?'eager':'lazy'}" decoding="async"${priority?' fetchpriority="high"':''}>${canDelete?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}')">Elimina</button>`:''}<div class="moment-meta"><div class="moment-by">${escapeHtml(author||'Noi')}</div><b>${dateLabel}</b>${source?`<small class="ricordi-moment-source" data-source-key="${escapeHtml(source.sourceKey)}">${escapeHtml(RICORDI_SOURCE_LABEL[source.kind]||'')}${source.title?` · ${escapeHtml(source.title)}`:''}</small>`:''}${row.caption?`<p>${escapeHtml(row.caption)}</p>`:''}</div></article>`;
+  const done=Boolean(source);
+  const sourceTitle=source?.title||'';
+  const title=row.caption||sourceTitle;
+  const kicker=done?`<small class="ricordi-moment-source ricordi-done-kicker" data-source-key="${escapeHtml(source.sourceKey)}">L’avete fatto${row.caption&&sourceTitle&&sourceTitle!==row.caption?`<span translate="no"> · ${escapeHtml(sourceTitle)}</span>`:''}</small>`:'';
+  const freshLabel=fresh?`<span class="ricordi-new-label">${escapeHtml(ricordiNewLabel(author))}</span>`:'';
+  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}${done?' ricordi-done ricordi-wide':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}" data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(fullUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(title)}"${fresh?' data-ricordi-new':''} onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(previewUrl)}" data-us-media-path="${escapeHtml(previewPath)}" onerror="usRecoverPrivateImage(this)" alt="Ricordo condiviso" loading="${priority?'eager':'lazy'}" decoding="async"${priority?' fetchpriority="high"':''}>${freshLabel}${canDelete?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}')">Elimina</button>`:''}<div class="moment-meta">${kicker}${title?`<p translate="no">${escapeHtml(title)}</p>`:''}<span class="moment-line"><i class="moment-dot" data-owner="${row.created_by===window.usProfile?.id?'tu':'partner'}" aria-hidden="true"></i><b>${escapeHtml(shortLabel)}</b><span aria-hidden="true">·</span><span class="moment-by" translate="no">${escapeHtml(author||'Noi')}</span></span></div></article>`;
 }
 function ricordiExperienceCard(row,sourceDate){
   const date=/^\d{4}-\d{2}-\d{2}$/.test(String(sourceDate||''))?String(sourceDate):ricordiLocalISO(row.completed_at);
-  const day=new Date(date+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long'});
-  return `<button type="button" class="ricordi-experience" data-ricordi-experience="${escapeHtml(row.id)}"><span class="ricordi-experience-mark" aria-hidden="true"></span><span class="ricordi-experience-copy"><small>Vissuta insieme · ${escapeHtml(day)}</small><b>${escapeHtml(row.title)}</b></span><span class="ricordi-experience-source">Da vivere</span></button>`;
+  const day=new Date(date+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'long'});
+  return `<button type="button" class="ricordi-experience" data-ricordi-experience="${escapeHtml(row.id)}"><span class="ricordi-experience-mark" aria-hidden="true"></span><span class="ricordi-experience-copy"><small>Vissuta insieme · ${escapeHtml(day)}</small><b translate="no">${escapeHtml(row.title)}</b></span><span class="ricordi-experience-source">Le vostre idee</span></button>`;
 }
 // M12B.4 — una Domanda del giorno conservata: provenienza esplicita e le due
 // risposte come erano al reveal (snapshot del server), apribile sul posto.
 function ricordiDailyCard(row){
-  const day=new Date(String(row.question_date)+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long'});
+  const day=new Date(String(row.question_date)+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'long'});
   return `<details class="ricordi-daily" data-ricordi-daily="${escapeHtml(row.id)}" data-source-key="${escapeHtml(row.source_key||'')}"><summary><span class="ricordi-experience-mark ricordi-daily-mark" aria-hidden="true"></span><span class="ricordi-experience-copy"><small>Domanda del giorno · ${escapeHtml(day)}</small><b>${escapeHtml(row.question_text)}</b></span><span class="ricordi-experience-source">Conservata</span></summary>${ricordiDailyAnswers(row)}</details>`;
 }
 function ricordiDailyAnswers(row){
-  const answer=(label,text)=>`<div class="ricordi-daily-answer"><b>${escapeHtml(label)}</b><p>${escapeHtml(text||'')}</p></div>`;
+  const answer=(label,text)=>`<div class="ricordi-daily-answer"><b translate="no">${escapeHtml(label)}</b><p translate="no">${escapeHtml(text||'')}</p></div>`;
   return `<div class="ricordi-daily-answers">${answer(usIdentity().nameForRole('francesco'),row.francesco_answer)}${answer(usIdentity().nameForRole('beatrice'),row.beatrice_answer)}</div>`;
 }
 // M12B.5 — un Evento vissuto senza foto resta un record evento (D3=A): titolo
@@ -3070,18 +3966,50 @@ function ricordiDailyAnswers(row){
 // come tale), data dell'occorrenza, nessuna azione sull'evento mutabile.
 function ricordiEventTitle(row){return row?.title||'Evento';}
 function ricordiEventCard(row){
-  const day=new Date(String(row.occurrence_date)+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long'});
-  return `<article class="ricordi-experience ricordi-event" data-source-key="shared_event_completion:${escapeHtml(row.source_ref)}" data-title-source="${escapeHtml(row.title_source||'')}"><span class="ricordi-experience-mark ricordi-event-mark" aria-hidden="true"></span><span class="ricordi-experience-copy"><small>Vissuto insieme · ${escapeHtml(day)}</small><b>${escapeHtml(ricordiEventTitle(row))}</b></span><span class="ricordi-experience-source">Evento</span></article>`;
+  const day=new Date(String(row.occurrence_date)+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'long'});
+  return `<article class="ricordi-experience ricordi-event" data-source-key="shared_event_completion:${escapeHtml(row.source_ref)}" data-title-source="${escapeHtml(row.title_source||'')}"><span class="ricordi-experience-mark ricordi-event-mark" aria-hidden="true"></span><span class="ricordi-experience-copy"><small>Vissuto insieme · ${escapeHtml(day)}</small><b${row?.title?' translate="no"':''}>${escapeHtml(ricordiEventTitle(row))}</b></span><span class="ricordi-experience-source">Evento</span></article>`;
+}
+// R6 — something lived without its photo yet: "Aggiungi la foto" picks it from
+// the gallery; once saved, the photo is linked to it and the two become one card.
+function ricordiAddPhotoAction(item){
+  const kind=item?.kind==='experience'?'da_vivere':item?.kind==='event'?'shared_event_completion':'';
+  const ref=item?.kind==='experience'?item.row?.id:item?.row?.source_ref;
+  if(!kind||!ref||item.orphan||item.moment)return '';
+  const label=item.title?`Aggiungi la foto di «${item.title}»`:'Aggiungi la foto';
+  return `<button type="button" class="ricordi-add-photo" data-ricordi-add-photo="${escapeHtml(kind)}" data-source-ref="${escapeHtml(ref)}" data-source-date="${escapeHtml(item.date||'')}" aria-label="${escapeHtml(label)}"><span class="us-icon" data-us-icon="plus" aria-hidden="true"></span><span>Aggiungi la foto</span></button>`;
+}
+function ricordiLivedCard(cardHtml,item){
+  const action=ricordiAddPhotoAction(item);
+  return action?`<div class="ricordi-lived" data-source-key="${escapeHtml(item.sourceKey)}">${cardHtml}${action}</div>`:cardHtml;
 }
 // M12B.5 — Rivivi parla la lingua della fonte, in un solo linguaggio visivo:
 // con foto apre il Moment viewer esistente (anche quando la foto è l'immagine
 // di un'esperienza o di un Evento vissuto); senza foto si apre sul posto in
 // sola lettura con i valori storici (risposte conservate, data vissuta).
-function ricordiRiviviDate(iso){return new Date(String(iso)+'T12:00:00').toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'});}
+function ricordiRiviviDate(iso){return new Date(String(iso)+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'long',year:'numeric'});}
 function ricordiRiviviTitle(entry){
   if(entry.kind==='moment')return entry.row.caption||'';
   if(entry.kind==='event')return entry.orphan?(entry.title||'Evento'):ricordiEventTitle(entry.row);
   return entry.title||'';
+}
+// R7 — "Mandalo a <Nome>": the memory becomes a thought in Lasciato per te,
+// "Ti ricordi? …", written by the sender before it leaves.
+function ricordiPartnerName(){
+  const name=typeof usIdentity==='function'?usIdentity().partnerName:'';
+  return name&&name!=='La tua persona'?name:'';
+}
+function ricordiSendButton(title,date){
+  const name=ricordiPartnerName();
+  if(!name||typeof window.UsLeftForYou?.openComposer!=='function')return '';
+  return `<button type="button" class="ricordi-rivivi-send" data-ricordi-send data-send-title="${escapeHtml(title||'')}" data-send-date="${escapeHtml(date)}"><span class="us-icon" data-us-icon="envelope" aria-hidden="true"></span><span>Mandalo a ${escapeHtml(name)}</span></button>`;
+}
+function ricordiT(text,vars){
+  if(typeof window.usT==='function')return window.usT(text,vars);
+  return String(text).replace(/\{([a-z]+)\}/gi,(all,key)=>vars?.[key]??all);
+}
+function ricordiSendToPartner(title,date){
+  const what=title?`${title} · ${date}`:date;
+  window.UsLeftForYou?.openComposer?.({kind:'text',text:ricordiT('Ti ricordi? {what} ♡',{what})});
 }
 function renderRicordiRivivi(pick,signedUrls,names){
   const root=document.getElementById('ricordiRivivi');
@@ -3098,8 +4026,8 @@ function renderRicordiRivivi(pick,signedUrls,names){
     const author=names.get(m.created_by)||'Noi';
     const meta=entry.kind==='moment'?author:RICORDI_SOURCE_LABEL[entry.kind];
     const viewerISO=entry.kind==='moment'?m.moment_date:entry.date;
-    const viewerDate=new Date(viewerISO+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'});
-    root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><button type="button" class="ricordi-rivivi-card" data-ricordi-open="${escapeHtml(m.id)}" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}" data-url="${escapeHtml(fullUrl)}" data-author="${escapeHtml(author)}" data-date="${escapeHtml(viewerDate)}" data-caption="${escapeHtml(m.caption||title)}" aria-label="Rivivi: ${escapeHtml(title||date)}"><img src="${escapeHtml(previewUrl)}" data-us-media-path="${escapeHtml(previewPath)}" onerror="usRecoverPrivateImage(this)" alt="" loading="eager" decoding="async" fetchpriority="high"><span class="ricordi-rivivi-copy"><small>${escapeHtml(pick.label)}</small><b>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(meta)}</span></span></button>`;
+    const viewerDate=new Date(viewerISO+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'2-digit',month:'short',year:'numeric'});
+    root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><button type="button" class="ricordi-rivivi-card" data-ricordi-open="${escapeHtml(m.id)}" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}" data-url="${escapeHtml(fullUrl)}" data-author="${escapeHtml(author)}" data-date="${escapeHtml(viewerDate)}" data-caption="${escapeHtml(m.caption||title)}" data-moment-id="${escapeHtml(m.id)}" data-moment-owner="${escapeHtml(m.created_by||'')}" data-storage-path="${escapeHtml(m.storage_path)}" data-moment-iso="${escapeHtml(viewerISO)}" aria-label="Rivivi: ${escapeHtml(title||date)}"><img src="${escapeHtml(previewUrl)}" data-us-media-path="${escapeHtml(previewPath)}" onerror="usRecoverPrivateImage(this)" alt="" loading="eager" decoding="async" fetchpriority="high"><span class="ricordi-rivivi-copy"><small>${escapeHtml(pick.label)}</small><b${entry.kind==='daily'?'':' translate="no"'}>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(meta)}</span></span></button>${ricordiSendButton(title,date)}`;
     root.hidden=false;
     return;
   }
@@ -3107,14 +4035,21 @@ function renderRicordiRivivi(pick,signedUrls,names){
   let body='';
   if(entry.kind==='daily')body=ricordiDailyAnswers(entry.row);
   else if(entry.kind==='event')body=`<p class="ricordi-rivivi-detail">Vissuto insieme il ${escapeHtml(date)}.${entry.row.title_source==='live'?' Il titolo è quello di oggi: quello di allora non era registrato.':''}</p>`;
-  else body=`<p class="ricordi-rivivi-detail">Vissuta insieme il ${escapeHtml(date)}.</p>${entry.orphan?'':`<button type="button" class="ricordi-rivivi-link" data-ricordi-experience="${escapeHtml(entry.row.id)}">Apri in Da vivere</button>`}`;
-  root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><details class="ricordi-rivivi-card ricordi-rivivi-note" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}"><summary aria-label="Rivivi: ${escapeHtml(title||date)}"><span class="ricordi-rivivi-mark ricordi-rivivi-mark-${escapeHtml(entry.kind)}" aria-hidden="true"></span><span class="ricordi-rivivi-text"><small>${escapeHtml(pick.label)}</small><b>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(RICORDI_SOURCE_LABEL[entry.kind])}</span></span></summary><div class="ricordi-rivivi-body">${body}</div></details>`;
+  else body=`<p class="ricordi-rivivi-detail">Vissuta insieme il ${escapeHtml(date)}.</p>${entry.orphan?'':`<button type="button" class="ricordi-rivivi-link" data-ricordi-experience="${escapeHtml(entry.row.id)}">Apri nelle vostre idee</button>`}`;
+  root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><details class="ricordi-rivivi-card ricordi-rivivi-note" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}"><summary aria-label="Rivivi: ${escapeHtml(title||date)}"><span class="ricordi-rivivi-mark ricordi-rivivi-mark-${escapeHtml(entry.kind)}" aria-hidden="true"></span><span class="ricordi-rivivi-text"><small>${escapeHtml(pick.label)}</small><b${entry.kind==='daily'?'':' translate="no"'}>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(RICORDI_SOURCE_LABEL[entry.kind])}</span></span></summary><div class="ricordi-rivivi-body">${body}</div></details>${ricordiSendButton(title,date)}`;
   root.hidden=false;
 }
-function renderRicordiChapters(chapters,signedUrls){
+// R9 — Capitoli wait for two years of history: before that the story is short
+// enough to read month by month.
+const RICORDI_CHAPTERS_MIN_DAYS=730;
+function ricordiChaptersReady(chapters,todayISO){
+  const oldest=chapters.map(ch=>ch.first).filter(Boolean).sort()[0];
+  return Boolean(oldest&&todayISO)&&ricordiDayDiff(todayISO,oldest)>=RICORDI_CHAPTERS_MIN_DAYS;
+}
+function renderRicordiChapters(chapters,signedUrls,todayISO){
   const root=document.getElementById('ricordiChapters');
   if(!root)return;
-  if(!chapters.length){root.hidden=true;root.innerHTML='';return;}
+  if(!chapters.length||!ricordiChaptersReady(chapters,todayISO)){root.hidden=true;root.innerHTML='';return;}
   root.innerHTML=`<div class="ricordi-section-head"><div class="ricordi-kicker">CAPITOLI</div><h3>Per anno</h3></div><div class="ricordi-chapter-row">${chapters.map(ch=>{
     const previewPath=ch.cover?ricordiPreviewPath(ch.cover):'';
     const url=ch.cover?ricordiPreviewUrl(ch.cover,signedUrls):null;
@@ -3123,20 +4058,81 @@ function renderRicordiChapters(chapters,signedUrls){
   }).join('')}</div>`;
   root.hidden=false;
 }
+// Capitoli (1.0 parity): a year opens as a sheet of its photos, as in the
+// design; each photo opens its own album (Galleria) from where it was tapped.
+let ricordiArchiveState=null;
+function ricordiChapterRange(items,year){
+  const dates=items.map(item=>item.date).filter(Boolean).sort();
+  if(!dates.length)return '';
+  const tag=globalThis.UsI18n?.tag||'it-IT';
+  const at=iso=>new Date(iso+'T12:00:00');
+  const firstDay=at(dates[0]).getDate();
+  const first=at(dates[0]).toLocaleDateString(tag,{day:'numeric',month:'long'});
+  const from=firstDay===8||firstDay===11?`dall’${first}`:`dal ${first}`;
+  if(dates.length===1)return `, il ${first}.`;
+  if(String(year)===localDateISO().slice(0,4))return `, ${from} a oggi.`;
+  const month=at(dates[dates.length-1]).toLocaleDateString(tag,{month:'long'});
+  const lastMonth=Number(dates[dates.length-1].slice(5,7));
+  return `, ${from} ${[4,8,10].includes(lastMonth)?'ad':'a'} ${month}.`;
+}
+function openRicordiChapter(year){
+  const overlay=document.getElementById('ricordiChapterOverlay');
+  const state=ricordiArchiveState;
+  if(!overlay||!state)return;
+  const items=state.timeline.filter(item=>item.date.slice(0,4)===String(year));
+  const chapter=ricordiChapters(items)[0];
+  if(!chapter)return;
+  const parts=[chapter.moments?`${chapter.moments} ${chapter.moments===1?'ricordo':'ricordi'}`:'',chapter.experiences?`${chapter.experiences} ${chapter.experiences===1?'esperienza':'esperienze'}`:'',chapter.dailies?`${chapter.dailies} ${chapter.dailies===1?'domanda':'domande'}`:''].filter(Boolean).join(' · ');
+  document.getElementById('ricordiChapterTitle').textContent=String(year);
+  document.getElementById('ricordiChapterLead').innerHTML=`<span>${escapeHtml(parts)}</span><span>${escapeHtml(ricordiChapterRange(items,year))}</span>`;
+  const tag=globalThis.UsI18n?.tag||'it-IT';
+  document.getElementById('ricordiChapterThumbs').innerHTML=items.filter(item=>item.moment).map(item=>{
+    const row=item.moment;
+    const fullUrl=state.urls.get(row.storage_path);
+    const previewUrl=ricordiPreviewUrl(row,state.urls)||fullUrl;
+    if(!fullUrl)return '';
+    const author=state.names.get(row.created_by)||'Noi';
+    const iso=item.kind==='moment'?row.moment_date:item.date;
+    const date=new Date(iso+'T12:00:00').toLocaleDateString(tag,{day:'2-digit',month:'short',year:'numeric'});
+    const caption=row.caption||(item.kind==='moment'?'':ricordiRiviviTitle(item));
+    return `<button type="button" class="ricordi-chapter-thumb" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by||'')}" data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(iso)}" data-url="${escapeHtml(fullUrl)}" data-author="${escapeHtml(author)}" data-date="${escapeHtml(date)}" data-caption="${escapeHtml(caption)}" aria-label="Apri il ricordo"><img src="${escapeHtml(previewUrl)}" data-us-media-path="${escapeHtml(ricordiPreviewPath(row))}" onerror="usRecoverPrivateImage(this)" alt="" loading="lazy" decoding="async"></button>`;
+  }).join('');
+  window.UsUiFoundation?.cancelSurfaceExit?.(overlay);
+  overlay.classList.add('show');
+  overlay.setAttribute('aria-hidden','false');
+  overlay.querySelector('[data-us-modal-panel]')?.scrollTo?.(0,0);
+}
+function closeRicordiChapter(){
+  const overlay=document.getElementById('ricordiChapterOverlay');
+  if(!overlay?.classList.contains('show'))return;
+  const finalize=()=>{overlay.classList.remove('show');overlay.setAttribute('aria-hidden','true');};
+  if(window.UsUiFoundation?.exitSurface)window.UsUiFoundation.exitSurface(overlay,finalize);else finalize();
+}
+window.openRicordiChapter=openRicordiChapter;
+window.closeRicordiChapter=closeRicordiChapter;
+document.getElementById('ricordiChapterOverlay')?.addEventListener('click',event=>{
+  if(event.target.closest('#ricordiChapterClose,#ricordiChapterBackdrop')){closeRicordiChapter();return;}
+  const thumb=event.target.closest('.ricordi-chapter-thumb[data-moment-id]');
+  if(thumb)openMomentViewer(thumb);
+});
+document.addEventListener?.('keydown',event=>{
+  if(event.key==='Escape'&&document.getElementById('ricordiChapterOverlay')?.classList.contains('show')&&!document.getElementById('usAlbumOverlay')?.classList.contains('show'))closeRicordiChapter();
+});
 function openRicordiExperience(id){
   go('bond',{nav:true});
   Promise.resolve(window.hydrateNoiIdeas?.()).then(()=>window.openNoiIdeaDetail?.(id)).catch(()=>{});
 }
 document.getElementById('moments')?.addEventListener('click',event=>{
+  const send=event.target.closest('[data-ricordi-send]');
+  if(send){ricordiSendToPartner(send.dataset.sendTitle,send.dataset.sendDate);return;}
+  const addPhoto=event.target.closest('[data-ricordi-add-photo]');
+  if(addPhoto){window.UsMomentComposer?.pick?.({source:{kind:addPhoto.dataset.ricordiAddPhoto,ref:addPhoto.dataset.sourceRef,date:addPhoto.dataset.sourceDate}});return;}
   const rivivi=event.target.closest('[data-ricordi-open]');
   if(rivivi){openMomentViewer(rivivi);return;}
   const experience=event.target.closest('[data-ricordi-experience]');
   if(experience){openRicordiExperience(experience.dataset.ricordiExperience);return;}
   const chapter=event.target.closest('[data-ricordi-year]');
-  if(chapter){
-    const target=document.querySelector(`#momentsGrid .ricordi-period[data-year="${chapter.dataset.ricordiYear}"]`);
-    target?.scrollIntoView({behavior:window.UsUiFoundation?.isReducedMotion?.()?'auto':'smooth',block:'start'});
-  }
+  if(chapter)openRicordiChapter(chapter.dataset.ricordiYear);
 });
 
 let usForceMomentsMediaRefresh=false;
@@ -3155,7 +4151,7 @@ async function hydrateMomentsCore(){
   const momentsPromise=sb.from('moments').select('id,created_by,storage_path,thumbnail_path,caption,moment_date,created_at').order('moment_date',{ascending:false}).order('created_at',{ascending:false});
   const profilesPromise=sb.from('profiles').select('id,display_name').eq('couple_id',profile.couple_id);
   const livedPromise=sb.from('bucket_items').select('id,title,completed_at').eq('couple_id',profile.couple_id).eq('status','lived');
-  const keptPromise=sb.from('daily_question_keepsakes').select('id,source_key,question_text,question_date,francesco_answer,beatrice_answer,revealed_at').order('question_date',{ascending:false});
+  const keptPromise=usReadLocalized(columns=>sb.from('daily_question_keepsakes').select(columns).order('question_date',{ascending:false}),'id,source_key,question_text,question_date,francesco_answer,beatrice_answer,revealed_at','question_text_localized');
   const eventsPromise=sb.from('relationship_event_history').select('source_ref,occurrence_date,completed_at,title,title_source,moment_id');
   const provenancePromise=sb.from('living_provenance').select('source_kind,source_ref,source_title,source_date,target_moment_id');
   const {data:rows,error}=await momentsPromise;
@@ -3179,7 +4175,7 @@ async function hydrateMomentsCore(){
   if(livedError)console.warn(livedError);
   const livedRows=livedError?[]:(lived||[]);
   if(keptError)console.warn(keptError);
-  const keptRows=keptError?[]:(kept||[]);
+  const keptRows=keptError?[]:(kept||[]).map(row=>row.question_text_localized?{...row,question_text:row.question_text_localized}:row);
   // M12B.5: Eventi vissuti e provenienza sono arricchimenti come i precedenti.
   // Senza provenienza un Moment collegato e la sua fonte restano due voci
   // finché la lettura non torna: mai inventate, mai unite per titolo.
@@ -3187,18 +4183,25 @@ async function hydrateMomentsCore(){
   const eventRows=eventsError?[]:(events||[]);
   if(provenanceError)console.warn(provenanceError);
   const provenanceRows=provenanceError?[]:(provenance||[]);
-  if(pill)pill.textContent='📸 Moments · '+(rows?.length||0);
+  if(pill)pill.textContent=`Ricordi · ${rows?.length||0}`;
   const today=localDateISO();
+  // R5 — before the "nothing changed" shortcut: the dot follows the visit.
+  const freshIds=ricordiNewSync(rows||[]);
   const signature=JSON.stringify([today,(rows||[]).map(r=>[r.id,r.created_by,r.storage_path,r.thumbnail_path||'',r.caption||'',r.moment_date,r.created_at]),livedRows.map(r=>[r.id,r.title,r.completed_at]),keptRows.map(r=>[r.id,r.question_date]),eventRows.map(r=>[r.source_ref,r.occurrence_date,r.title,r.title_source,r.moment_id]),provenanceRows.map(r=>[r.source_kind,r.source_ref,r.target_moment_id])]);
   if(grid.dataset.loaded==='1'&&grid.dataset.signature===signature&&!forceMedia)return;
   if(!rows?.length&&!livedRows.length&&!keptRows.length&&!eventRows.length){
     grid.innerHTML='<div class="empty-state moment-loading ricordi-empty"><b>La vostra storia parte da qui</b></div>';
     renderRicordiRivivi(null,new Map(),new Map());
-    renderRicordiChapters([],new Map());
+    renderRicordiChapters([],new Map(),today);
     grid.dataset.loaded='1';grid.dataset.signature=signature;window.dispatchEvent(new CustomEvent('us:moments-updated'));return;
   }
   const names=new Map((profiles||[]).map(p=>[p.id,p.display_name||'Noi']));
   const timeline=ricordiTimeline((rows||[]).filter(r=>signedUrls.get(r.storage_path)),livedRows,keptRows,eventRows,provenanceRows);
+  // R11 — on Android the small images already kept on the phone are shown from there.
+  const thumbPaths=(rows||[]).map(r=>r.thumbnail_path).filter(Boolean);
+  const localMedia=await usRicordiCachedMedia(thumbPaths);
+  if(window.usProfile!==profile)return;
+  const displayUrls=localMedia.size?new Map([...signedUrls,...localMedia]):signedUrls;
   const html=[];
   let period='';
   // Ritmo editoriale: la prima foto del mese è a tutta larghezza, le altre in
@@ -3215,26 +4218,31 @@ async function hydrateMomentsCore(){
       const {month,year}=ricordiPeriodLabel(item.date);
       html.push(`<div class="ricordi-period" data-period="${key}" data-year="${year}"><b>${month}</b><span>${year}</span></div>`);
     }
-    if(item.kind==='experience'&&!item.moment){closeRow();html.push(ricordiExperienceCard(item.row,item.date));continue;}
-    if(item.kind==='event'&&!item.moment){closeRow();html.push(ricordiEventCard(item.row));continue;}
+    if(item.kind==='experience'&&!item.moment){closeRow();html.push(ricordiLivedCard(ricordiExperienceCard(item.row,item.date),item));continue;}
+    if(item.kind==='event'&&!item.moment){closeRow();html.push(ricordiLivedCard(ricordiEventCard(item.row),item));continue;}
     if(item.kind==='daily'){closeRow();html.push(ricordiDailyCard(item.row));continue;}
     // Un Moment, o la foto di un'esperienza/Evento vissuto: una sola voce.
     const row=item.moment;
     const own=row.created_by===profile.id;
     const author=names.get(row.created_by)||(own?profile.display_name:'Noi');
-    // Every Moment returned here already belongs to the signed-in user's couple.
-    // Deletion is a couple-level action; the Edge Function re-validates membership.
-    html.push(ricordiMomentCard(row,signedUrls,author,true,opensPeriod,item.kind==='moment'?null:{kind:item.kind,sourceKey:item.sourceKey,title:ricordiRiviviTitle(item),date:item.date},visiblePhotoIndex++<2));
-    if(!opensPeriod)loneHalf=loneHalf>=0?-1:html.length-1;
+    // R2 — only who created a memory can delete it (the album asks first,
+    // "per tutti e due"); the partner never sees Elimina on it.
+    const source=item.kind==='moment'?null:{kind:item.kind,sourceKey:item.sourceKey,title:ricordiRiviviTitle(item),date:item.date};
+    // R6 — "L'avete fatto" always takes the whole row.
+    if(source)closeRow();
+    html.push(ricordiMomentCard(row,displayUrls,author,own,opensPeriod,source,visiblePhotoIndex++<2,freshIds.has(String(row.id))));
+    if(!opensPeriod&&!source)loneHalf=loneHalf>=0?-1:html.length-1;
   }
   closeRow();
   if(timeline.length){
     grid.innerHTML=html.join('');grid.dataset.loaded='1';grid.dataset.signature=signature;
     consumeFreshRicordo(grid);
     window.dispatchEvent(new CustomEvent('us:moments-updated'));
-    const riviviPick=ricordiPickRivivi(timeline,today);
-    renderRicordiRivivi(riviviPick?.reason==='anniversary'?riviviPick:null,signedUrls,names);
-    renderRicordiChapters(ricordiChapters(timeline),signedUrls);
+    // R7 — Rivivi also brings back "X mesi fa", not only anniversaries.
+    renderRicordiRivivi(ricordiPickRivivi(timeline,today),displayUrls,names);
+    ricordiArchiveState={timeline,urls:displayUrls,names};
+    renderRicordiChapters(ricordiChapters(timeline),displayUrls,today);
+    usRicordiKeepMedia(thumbPaths.filter(path=>!localMedia.has(path)).map(path=>[path,signedUrls.get(path)]));
   }
   else if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">!</div><b>Foto non disponibili</b><p>Riprova tra un momento.</p></div>';
 }
@@ -3269,7 +4277,7 @@ async function hydrateHomeMemory(forceNext=false){
   const signedUrl=urls.get(row.storage_path);
   const previewUrl=urls.get(row.thumbnail_path)||signedUrl;
   if(!signedUrl||!previewUrl){section.hidden=true;return;}
-  const dateLabel=new Date(row.moment_date+'T12:00:00').toLocaleDateString('it-IT',{day:'2-digit',month:'long',year:'numeric'});
+  const dateLabel=new Date(row.moment_date+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'2-digit',month:'long',year:'numeric'});
   const author=names.get(row.created_by)||'Noi';
   document.getElementById('homeMemoryImg').src=previewUrl;
   document.getElementById('homeMemoryAuthor').textContent=author;
@@ -3406,13 +4414,16 @@ function questWeekDate(week,days=0){
   const [y,m,d]=String(week).split('-').map(Number);
   return new Date(Date.UTC(y,m-1,d+days));
 }
-function questDayLabel(date,options){return date.toLocaleDateString('it-IT',{timeZone:'UTC',...options});}
+function questDayLabel(date,options){return date.toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{timeZone:'UTC',...options});}
 function nextWeekLabel(week=weekStartISO()){
   return questDayLabel(questWeekDate(week,7),{weekday:'long',day:'numeric',month:'short'});
 }
-function questWeekRangeLabel(week){
+// "12–18 ott" inside one month, "28 set – 4 ott" across two (the mockup's
+// kicker); month:'long' for the past weeks ("5–11 ottobre").
+function questWeekRangeLabel(week,month='short'){
   const from=questWeekDate(week),to=questWeekDate(week,6);
-  return `${questDayLabel(from,{day:'numeric',month:'short'})} – ${questDayLabel(to,{day:'numeric',month:'short'})}`;
+  if(from.getUTCMonth()===to.getUTCMonth())return `${from.getUTCDate()}–${questDayLabel(to,{day:'numeric',month})}`;
+  return `${questDayLabel(from,{day:'numeric',month})} – ${questDayLabel(to,{day:'numeric',month})}`;
 }
 function bondLevelInfo(totalXp=0){
   const total=Math.max(0,Number(totalXp)||0);
@@ -3455,17 +4466,27 @@ function renderBondBadges(level){
 }
 
 function renderBondProgress(totalXp){
+  // While Sintonia plays a gain (bar, circles, new level) it owns the card;
+  // it renders the latest total when the animation ends.
+  if(window.USProgression?.holdsCard?.(totalXp))return;
+  // The same total is never painted twice (Sintonia hydrates on every tab
+  // switch, while its entrance plays): no mutation, no relayout.
+  const painted=document.getElementById('bondLevelXp');
+  if(painted&&painted.__usTotal===totalXp)return;
+  if(painted)painted.__usTotal=totalXp;
   const info=bondLevelInfo(totalXp);
   const heroLevel=document.getElementById('heroBondLevel');
   const heroXp=document.getElementById('heroBondXp');
   const heroFill=document.getElementById('bondFill');
-  if(heroLevel)heroLevel.textContent=`BOND LV. ${info.level}`;
-  if(heroXp)heroXp.textContent=`${info.current.toLocaleString('it-IT')} / ${info.needed.toLocaleString('it-IT')} XP`;
+  if(heroLevel)heroLevel.textContent=`Livello ${info.level}`;
+  if(heroXp)heroXp.textContent=`${info.current.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} / ${info.needed.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))}`;
   if(heroFill)heroFill.style.width=`${info.progress}%`;
   const levelEl=document.getElementById('bondLevelValue');if(levelEl)levelEl.textContent=info.level;
-  const totalEl=document.getElementById('bondTotalXp');if(totalEl)totalEl.textContent=`${info.total.toLocaleString('it-IT')} XP totali`;
+  const totalEl=document.getElementById('bondTotalXp');if(totalEl)totalEl.textContent=`${info.total.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} punti`;
   const rankEl=document.getElementById('bondRankTitle');if(rankEl)rankEl.textContent=bondRankTitle(info.level);
-  const nextEl=document.getElementById('bondNextXp');if(nextEl)nextEl.textContent=`${(info.needed-info.current).toLocaleString('it-IT')} XP al prossimo livello`;
+  // As the mockup: the points inside the level and the points to the next one.
+  const tag=(globalThis.UsI18n?.tag||'it-IT');
+  const nextEl=document.getElementById('bondNextXp');if(nextEl)nextEl.textContent=`${(info.needed-info.current).toLocaleString(tag)} XP al livello ${info.level+1}`;
   const pageFill=document.getElementById('bondPageFill');if(pageFill)pageFill.style.width=`${info.progress}%`;
   // M10.1D — la barra è il progresso REALE dentro il livello corrente (bondLevelInfo:
   // (XP totali - soglia del livello) / XP del livello), mai un valore decorativo.
@@ -3474,14 +4495,14 @@ function renderBondProgress(totalXp){
   if(track){
     track.setAttribute('aria-valuemax',String(info.needed));
     track.setAttribute('aria-valuenow',String(info.current));
-    track.setAttribute('aria-valuetext',`${info.current.toLocaleString('it-IT')} di ${info.needed.toLocaleString('it-IT')} XP nel livello ${info.level}`);
+    track.setAttribute('aria-valuetext',`${info.current.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} di ${info.needed.toLocaleString((globalThis.UsI18n?.tag||'it-IT'))} punti nel livello ${info.level}`);
   }
-  const line=document.getElementById('bondLevelXp');if(line)line.textContent=`${info.current.toLocaleString('it-IT')} / ${info.needed.toLocaleString('it-IT')} XP`;
+  const line=document.getElementById('bondLevelXp');if(line)line.textContent=`${info.current.toLocaleString(tag)} / ${info.needed.toLocaleString(tag)} XP`;
   // M9D — hub Noi e superficie Risonanza: stessi numeri di couples.bond_xp.
   const hubTitle=document.getElementById('noiHubResonanceTitle');if(hubTitle)hubTitle.textContent=bondRankTitle(info.level);
   const hubMeta=document.getElementById('noiHubResonanceMeta');if(hubMeta)hubMeta.textContent=`Livello ${info.level}`;
   const hubFill=document.getElementById('noiHubResonanceFill');if(hubFill)hubFill.style.width=`${info.progress}%`;
-  const resTotal=document.getElementById('noiResonanceTotal');if(resTotal)resTotal.textContent=info.total.toLocaleString('it-IT');
+  const resTotal=document.getElementById('noiResonanceTotal');if(resTotal)resTotal.textContent=info.total.toLocaleString((globalThis.UsI18n?.tag||'it-IT'));
   window.usBondXp=info.total;
   renderBondBadges(info.level);
 }
@@ -3496,15 +4517,18 @@ async function hydrateBondSummary(){
 window.hydrateBondSummary=hydrateBondSummary;
 
 // ===== M12C · Risonanza V2 — recent real growth, read-only =====
+// "Ultime crescite" (a fold under the collection, as in the mockup): missions,
+// lived events and mesiversari, newest first, each with the points it gave.
 const RESONANCE_HISTORY_LIMIT=6;
-function resonanceHistoryEntries(quests,eventCompletions,eventHistory){
+const resonanceTime=at=>{const t=Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(String(at||''))?`${at}T12:00:00`:at);return Number.isFinite(t)?t:0;};
+function resonanceHistoryEntries(quests,eventCompletions,eventHistory,milestones=[]){
   const historyByRef=new Map((eventHistory||[]).filter(row=>row?.source_ref).map(row=>[String(row.source_ref),row]));
   const byKey=new Map();
   for(const row of quests||[]){
     const xp=Math.max(0,Number(row?.xp)||0);
     if(!row?.id||!row.completed_at||xp<=0)continue;
     const sourceKey=`quest:${row.id}`;
-    if(!byKey.has(sourceKey))byKey.set(sourceKey,{kind:'quest',sourceKey,title:row.title||'Quest di coppia',xp,at:row.completed_at,titleSource:'snapshot'});
+    if(!byKey.has(sourceKey))byKey.set(sourceKey,{kind:'quest',sourceKey,title:row.title||'Missione di coppia',xp,at:row.completed_at,titleSource:'snapshot'});
   }
   for(const row of eventCompletions||[]){
     const xp=Math.max(0,Number(row?.xp_awarded)||0);
@@ -3514,50 +4538,78 @@ function resonanceHistoryEntries(quests,eventCompletions,eventHistory){
     const title=history?.title||row.event_title_snapshot||'Evento vissuto';
     if(!byKey.has(sourceKey))byKey.set(sourceKey,{kind:'event',sourceKey,title,xp,at:row.completed_at,titleSource:history?.title_source||(row.event_title_snapshot?'snapshot':'missing')});
   }
+  for(const row of milestones||[]){
+    const months=Math.max(0,Math.floor(Number(row?.months_together)||0));
+    if(!row?.milestone_date||!months)continue;
+    const kind=row.kind==='anniversary'?'anniversary':'monthiversary';
+    const sourceKey=`milestone:${row.milestone_date}:${kind}`;
+    if(!byKey.has(sourceKey))byKey.set(sourceKey,{kind:'milestone',milestone:kind,months,sourceKey,title:'',xp:Math.max(0,Number(row.xp_awarded)||0),at:row.milestone_date});
+  }
   return [...byKey.values()]
-    .sort((a,b)=>a.at<b.at?1:a.at>b.at?-1:(a.sourceKey<b.sourceKey?-1:a.sourceKey>b.sourceKey?1:0))
+    .sort((a,b)=>resonanceTime(b.at)-resonanceTime(a.at)||(a.sourceKey<b.sourceKey?-1:a.sourceKey>b.sourceKey?1:0))
     .slice(0,RESONANCE_HISTORY_LIMIT);
 }
 function resonanceHistoryDate(at){
-  const d=new Date(at);
-  return Number.isNaN(d.getTime())?'':d.toLocaleDateString('it-IT',{day:'numeric',month:'short'});
+  const t=resonanceTime(at);
+  return t?new Date(t).toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'short'}):'';
+}
+// The mockup's row: an icon, what it was, "what · when", and its points.
+function resonanceHistoryWhat(entry){
+  if(entry.kind==='milestone'){
+    if(entry.milestone==='anniversary'){const years=Math.max(1,Math.round(entry.months/12));return {title:'Anniversario',detail:years===1?'1 anno insieme':`${years} anni insieme`,own:false};}
+    return {title:'Mesiversario',detail:entry.months===1?'1 mese insieme':`${entry.months} mesi insieme`,own:false};
+  }
+  return {title:entry.kind==='quest'?'Missione di coppia':'Evento vissuto',detail:entry.title,own:entry.kind==='event'&&entry.titleSource!=='missing',live:entry.kind==='event'&&entry.titleSource==='live'};
 }
 function renderResonanceHistory(entries){
   const root=document.getElementById('noiResonanceHistory');
   if(!root)return;
   root.setAttribute('aria-busy','false');
+  placeResonanceHistory(root);
+  // The same rows are never rebuilt (Sintonia hydrates on every tab switch, while its entrance plays).
+  const paint=(html)=>{if(root.__usMarkup===html&&root.innerHTML)return;root.__usMarkup=html;root.innerHTML=html;};
   if(!entries?.length){
-    root.innerHTML='<div class="noi-resonance-history-empty"><b>La prossima crescita apparirà qui</b><span>Quest ed eventi completati aggiungono punti reali alla vostra Sintonia.</span></div>';
+    paint('<div class="noi-resonance-history-empty"><b>La prossima crescita apparirà qui</b><span>Missioni, eventi vissuti e mesiversari: le cose che fate insieme.</span></div>');
     return;
   }
-  root.innerHTML=entries.map(entry=>{
-    const kindLabel=entry.kind==='quest'?'Quest di coppia':'Evento vissuto';
-    const liveNote=entry.kind==='event'&&entry.titleSource==='live'?' · titolo attuale':'';
+  paint(entries.map(entry=>{
     const date=resonanceHistoryDate(entry.at);
-    return `<article class="noi-resonance-history-row" data-resonance-source="${escapeHtml(entry.sourceKey)}" data-resonance-kind="${escapeHtml(entry.kind)}"><span class="noi-resonance-history-mark" aria-hidden="true"></span><span class="noi-resonance-history-copy"><small>${escapeHtml(kindLabel)}${date?` · ${escapeHtml(date)}`:''}${liveNote}</small><b>${escapeHtml(entry.title)}</b></span><strong>+${entry.xp.toLocaleString('it-IT')} XP</strong></article>`;
-  }).join('');
+    const what=resonanceHistoryWhat(entry);
+    const detail=`<span${what.own?' translate="no"':''}>${escapeHtml(what.detail)}</span>${what.live?' <span>(titolo attuale)</span>':''}${date?` · <time>${escapeHtml(date)}</time>`:''}`;
+    return `<article class="noi-resonance-history-row" data-resonance-source="${escapeHtml(entry.sourceKey)}" data-resonance-kind="${escapeHtml(entry.kind)}"><span class="noi-resonance-history-mark" aria-hidden="true"></span><p class="noi-resonance-history-copy">${escapeHtml(what.title)}<small>${detail}</small></p>${entry.xp>0?`<b class="noi-resonance-history-xp">+${entry.xp} XP</b>`:''}</article>`;
+  }).join(''));
+}
+// The fold sits after the collection, as in the mockup.
+function placeResonanceHistory(root){
+  const section=root?.closest?.('.noi-resonance-history');
+  const rewards=section?.parentElement?.querySelector?.(':scope > .us-progression-rewards-section');
+  if(rewards&&rewards.nextElementSibling!==section)rewards.after(section);
 }
 async function hydrateResonanceHistory(){
   const profile=window.usProfile;
   const root=document.getElementById('noiResonanceHistory');
   if(!profile||!root)return;
+  placeResonanceHistory(root);
   root.setAttribute('aria-busy','true');
   const coupleId=profile.couple_id;
-  const [{data:quests,error:questError},{data:events,error:eventError},{data:history,error:historyError}]=await Promise.all([
-    sb.from('bond_weekly_quests').select('id,title,xp,completed_at').eq('couple_id',coupleId).not('completed_at','is',null).order('completed_at',{ascending:false}).limit(8),
+  const [{data:quests,error:questError},{data:events,error:eventError},{data:history,error:historyError},{data:milestones,error:milestoneError}]=await Promise.all([
+    usReadLocalized(columns=>sb.from('bond_weekly_quests').select(columns).eq('couple_id',coupleId).not('completed_at','is',null).order('completed_at',{ascending:false}).limit(8),'id,title,xp,completed_at','title_localized').then(usLocalizedTitles),
     sb.from('shared_event_completions').select('id,xp_awarded,completed_at,event_title_snapshot').eq('couple_id',coupleId).order('completed_at',{ascending:false}).limit(8),
-    sb.from('relationship_event_history').select('source_ref,title,title_source,completed_at').order('completed_at',{ascending:false}).limit(8)
+    sb.from('relationship_event_history').select('source_ref,title,title_source,completed_at').order('completed_at',{ascending:false}).limit(8),
+    sb.from('relationship_milestones').select('milestone_date,kind,months_together,xp_awarded').eq('couple_id',coupleId).order('milestone_date',{ascending:false}).limit(6)
   ]);
   if(window.usProfile!==profile)return;
   if(questError)console.warn(questError);
   if(eventError)console.warn(eventError);
   if(historyError)console.warn(historyError);
-  if(questError&&eventError){
+  if(milestoneError)console.warn(milestoneError);
+  if(questError&&eventError&&milestoneError){
     root.setAttribute('aria-busy','false');
+    root.__usMarkup='';
     root.innerHTML='<div class="noi-resonance-history-empty"><b>Crescita non disponibile</b><span>Riprova tra un momento.</span></div>';
     return;
   }
-  renderResonanceHistory(resonanceHistoryEntries(questError?[]:(quests||[]),eventError?[]:(events||[]),historyError?[]:(history||[])));
+  renderResonanceHistory(resonanceHistoryEntries(questError?[]:(quests||[]),eventError?[]:(events||[]),historyError?[]:(history||[]),milestoneError?[]:(milestones||[])));
 }
 window.hydrateResonanceHistory=hydrateResonanceHistory;
 window.UsResonance=Object.freeze({historyEntries:resonanceHistoryEntries,renderHistory:renderResonanceHistory});
@@ -3611,15 +4663,16 @@ async function ensureBondWeek(profile=window.usProfile){
 const QUEST_SLOTS=3,QUEST_WEEKLY_REROLLS=3,QUEST_RECENT_WEEKS=3;
 const questActionsInFlight=new Set();
 let questBoardSeq=0,questBoardView=null;
-function questCategoryIcon(category){
-  return ({connection:'♡',fun:'✦',adventure:'⌁',discover:'?',memory:'▧',surprise:'✧',chill:'☕'})[category]||'✦';
-}
 function questCategoryLabel(category){
-  return ({connection:'Connessione',fun:'Divertimento',adventure:'Avventura',discover:'Scoperta',memory:'Ricordo',surprise:'Sorpresa',chill:'Relax'})[category]||category||'Quest';
+  return ({connection:'Connessione',fun:'Divertimento',adventure:'Avventura',discover:'Scoperta',memory:'Ricordo',surprise:'Sorpresa',chill:'Relax'})[category]||category||'Missione';
 }
+// The mockup's card says how rare a mission is ("Scoperta · Non comune").
 function questRarityLabel(rarity){
-  return ({common:'Comune',uncommon:'Non comune',rare:'Rara',epic:'Epica'})[rarity]||rarity||'';
+  return ({common:'Comune',uncommon:'Non comune',rare:'Rara',epic:'Epica'})[rarity]||'';
 }
+// Missions that ask for a photo open "add a memory" (the Ricordi composer).
+const QUEST_PHOTO_KEYS=new Set(['any-week-photo','any-intentional-memory','any-old-photo','far-thought-photo','near-recreate-photo']);
+function questAsksPhoto(q){return QUEST_PHOTO_KEYS.has(String(q?.template_key||''));}
 function questRerollsLeft(state){
   return Math.max(0,QUEST_WEEKLY_REROLLS-Math.max(0,Number(state?.rerolls_used)||0));
 }
@@ -3647,56 +4700,74 @@ function questRecentWeeks(rows,currentWeek,limit=QUEST_RECENT_WEEKS){
   }
   return [...byWeek.entries()].sort((a,b)=>a[0]<b[0]?1:-1).slice(0,limit).map(([week,list])=>{
     const done=list.filter(q=>q.completed_at).sort((a,b)=>(a.slot||0)-(b.slot||0));
-    return {week,completed:done.length,total:Math.max(QUEST_SLOTS,list.length),titles:done.map(q=>q.title||'Quest di coppia')};
+    return {week,completed:done.length,total:Math.max(QUEST_SLOTS,list.length),titles:done.map(q=>q.title||'Missione di coppia')};
   });
 }
 function questIcon(name){return `<span class="us-icon" data-us-icon="${name}" aria-hidden="true"></span>`;}
 function questCountLabel(n,one,many){return `${n} ${n===1?one:many}`;}
 function renderQuestWeekHeader(summary,week,{stale=false}={}){
   const marks=Array.from({length:summary.total},(_,i)=>`<i class="${i<summary.completed?'is-done':''}"></i>`).join('');
-  const rerollText=summary.rerollsLeft>0?`${questCountLabel(summary.rerollsLeft,'cambio rimasto','cambi rimasti')}`:'Cambi finiti';
+  // The two numbers of the mockup: done this week, changes left.
+  const rerollText=summary.rerollsLeft>0?`<b>${summary.rerollsLeft}</b> ${summary.rerollsLeft===1?'cambio rimasto':'cambi rimasti'}`:'<b>0</b> Cambi finiti';
   return `<div class="quest-week-top"><div class="quest-week-id"><span class="tiny">Questa settimana</span><b>${escapeHtml(questWeekRangeLabel(week))}</b></div><div class="quest-week-count"><b>${summary.completed}</b><span>/ ${summary.total}</span><small>completate</small></div></div>
-    <div class="quest-week-track" role="progressbar" aria-label="Quest completate questa settimana" aria-valuemin="0" aria-valuemax="${summary.total}" aria-valuenow="${summary.completed}" aria-valuetext="${summary.completed} di ${summary.total} completate">${marks}</div>
-    <div class="quest-week-meta"><span class="quest-week-rerolls" data-quest-rerolls="${summary.rerollsLeft}">${questIcon('arrows-clockwise')}${rerollText}</span><span class="quest-week-reset">${questIcon('calendar-heart')}Nuove quest ${escapeHtml(nextWeekLabel(week))}</span></div>
+    <div class="quest-week-track" role="progressbar" aria-label="Missioni completate questa settimana" aria-valuemin="0" aria-valuemax="${summary.total}" aria-valuenow="${summary.completed}" aria-valuetext="${summary.completed} di ${summary.total} completate">${marks}</div>
+    <div class="quest-week-meta"><span class="quest-week-rerolls" data-quest-rerolls="${summary.rerollsLeft}">${rerollText}</span><span class="quest-week-reset">${questIcon('calendar-heart')}Nuove missioni ${escapeHtml(nextWeekLabel(week))}</span></div>
     ${stale?`<div class="quest-week-stale" role="status"><span>Non aggiornato: controlla la connessione.</span><button type="button" class="quest-week-retry" data-quest-retry>Riprova</button></div>`:''}`;
 }
-function questStatusLine(view,partnerName,xp){
-  if(view.status==='completed')return `${questIcon('check')}<span>Completata insieme · +${xp} XP assegnati</span>`;
+function questStatusLine(view,partnerName){
+  if(view.status==='completed')return `${questIcon('check')}<span>Completata insieme</span>`;
   if(view.status==='you-confirmed')return `<span>Hai confermato · aspettiamo ${escapeHtml(partnerName)}</span>`;
   if(view.status==='partner-confirmed')return `<span>${escapeHtml(partnerName)} ha confermato · manca la tua conferma</span>`;
-  return '<span>Si completa quando confermate entrambi</span>';
+  return '<span>Si completa quando confermate tutti e due</span>';
 }
 function renderBondQuest(q,ctx){
   const me=ctx.me,partner=ctx.partner;
   const view=questViewState(q,{me,partnerId:partner?.id,rerollsLeft:ctx.rerollsLeft});
-  const xp=Math.max(0,Number(q.xp)||0);
-  const partnerName=partner?.display_name||'l’altra persona';
+  const partnerName=partner?.display_name||'la tua persona';
   const confirmBusy=questActionsInFlight.has(`confirm:${q.id}`);
   const rerollBusy=questActionsInFlight.has(`reroll:${q.id}`);
-  const confirmText=confirmBusy?'Confermo…':view.completed?`Completata · +${xp} XP`:view.mine?'Confermata da te':view.partner?'Conferma anche tu':'Ho completato questa quest';
+  const xp=Math.max(0,Math.round(Number(q.xp)||0));
+  // noi.js questHTML: "✓ Completata · +40 XP", "✓ Confermata da te".
+  const confirmText=confirmBusy?'Confermo…':view.completed?`${questIcon('check')}${xp?`Completata · +${xp} XP`:'Completata'}`:view.mine?`${questIcon('check')}Confermata da te`:view.partner?'Conferma anche tu':'Ho completato questa missione';
   const confirmDisabled=view.completed||view.mine||confirmBusy;
-  const person=(name,done,label)=>`<li class="quest-person ${done?'checked':''}"><span class="quest-person-initial" aria-hidden="true">${escapeHtml((name||'?').slice(0,1).toUpperCase())}</span><span class="quest-person-name">${escapeHtml(label)}</span><span class="quest-person-state">${done?`${questIcon('check')}<span class="sr-only">confermato</span>`:'in attesa'}</span></li>`;
+  const rarity=questRarityLabel(q.rarity);
+  const person=(name,done,label,own=false)=>`<li class="quest-person ${done?'checked':''}"><span class="quest-person-initial" aria-hidden="true">${escapeHtml((name||'?').slice(0,1).toUpperCase())}</span><span class="quest-person-name"${own?' translate="no"':''}>${escapeHtml(label)}</span><span class="quest-person-state">${done?`${questIcon('check')}<span class="sr-only">confermato</span>`:'in attesa'}</span></li>`;
   const lockText=view.lockReason==='confirmed'?'Già confermata: non si può più cambiare':'Cambi finiti per questa settimana';
   const reroll=view.completed?'':view.rerollable
-    ?`<button type="button" class="quest-reroll" data-quest-action="reroll" ${rerollBusy?'disabled aria-busy="true"':''} onclick="rerollBondQuest('${escapeHtml(q.id)}')" aria-label="Cambia questa quest (${questCountLabel(ctx.rerollsLeft,'cambio rimasto','cambi rimasti')})">${questIcon('arrows-clockwise')}</button>`
+    ?`<button type="button" class="quest-reroll" data-quest-action="reroll" ${rerollBusy?'disabled aria-busy="true"':''} onclick="rerollBondQuest('${escapeHtml(q.id)}')" aria-label="Cambia questa missione (${questCountLabel(ctx.rerollsLeft,'cambio rimasto','cambi rimasti')})">${questIcon('arrows-clockwise')}<span class="quest-reroll-label" aria-hidden="true">Cambia</span></button>`
     :`<button type="button" class="quest-reroll is-locked" data-quest-action="reroll" disabled aria-label="${lockText}" title="${lockText}">${questIcon('lock')}</button>`;
-  return `<article class="bond-quest quest-v2 rarity-${escapeHtml(q.rarity)} ${view.completed?'completed':''}" data-quest-id="${escapeHtml(q.id)}" data-quest-slot="${escapeHtml(q.slot)}" data-quest-state="${view.status}" data-quest-reroll="${view.rerollable?'rerollable':'locked'}">
-    <div class="quest-top"><span class="quest-category"><i aria-hidden="true">${questCategoryIcon(q.category)}</i>${escapeHtml(questCategoryLabel(q.category))}</span><span class="quest-rarity">${escapeHtml(questRarityLabel(q.rarity))} · +${xp} XP</span></div>
-    <h4>${escapeHtml(q.title)}</h4>
-    <p class="quest-status">${questStatusLine(view,partnerName,xp)}</p>
-    <ul class="quest-confirmers" aria-label="Conferme">${person(ctx.myName,view.mine,'Tu')}${person(partnerName,view.partner,partnerName)}</ul>
+  // Done together: keep it as a memory. The mockup's own door for this
+  // (noi.js, an idea lived together: mini-btn p "Aggiungi un ricordo"),
+  // set in the row where its cards keep their small action ("Cambia").
+  // A photo mission opens the same door before, so the photo can be added.
+  const memory=view.completed
+    ?`<button type="button" class="quest-memory is-mini" data-quest-action="memory" onclick="addQuestMemory('${escapeHtml(q.id)}')">Aggiungi un ricordo</button>`
+    :questAsksPhoto(q)?`<button type="button" class="quest-memory" data-quest-action="photo" onclick="addQuestMemory('${escapeHtml(q.id)}')">${questIcon('image')}<span>Aggiungi la foto</span></button>`:'';
+  return `<article class="bond-quest quest-v2 ${view.completed?'completed':''}" data-quest-id="${escapeHtml(q.id)}" data-quest-slot="${escapeHtml(q.slot)}" data-quest-state="${view.status}" data-quest-reroll="${view.rerollable?'rerollable':'locked'}">
+    <div class="quest-top"><div class="quest-head"><span class="quest-category"><span>${escapeHtml(questCategoryLabel(q.category))}</span>${rarity?` · <span>${rarity}</span>`:''}</span><h4>${escapeHtml(q.title)}</h4></div>${xp?`<span class="quest-xp">+${xp} XP</span>`:''}</div>
+    <p class="quest-status">${questStatusLine(view,partnerName)}</p>
+    <ul class="quest-confirmers" aria-label="Conferme">${person(ctx.myName,view.mine,'Tu')}${person(partnerName,view.partner,partnerName,Boolean(partner?.display_name))}</ul>
     <div class="quest-actions">
       <button type="button" class="quest-confirm ${confirmDisabled?'confirmed':''}" data-quest-action="confirm" ${confirmDisabled?'disabled':''} ${confirmBusy?'aria-busy="true"':''} onclick="confirmBondQuest('${escapeHtml(q.id)}')">${confirmText}</button>
       ${reroll}
     </div>
+    ${memory}
   </article>`;
 }
+// The existing "add a memory" door, with the mission as its suggested note.
+// The couple still picks the photo; nothing is created on their behalf.
+function addQuestMemory(id){
+  const quest=(window.usBondQuests||[]).find(q=>q.id===id);
+  if(quest)openMemoryComposer(quest.title||'');
+}
+window.addQuestMemory=addQuestMemory;
 function renderQuestRecent(weeks){
   const root=document.getElementById('questRecent');
   const list=document.getElementById('questRecentList');
   if(!root||!list)return;
   if(!weeks?.length){root.hidden=true;list.innerHTML='';return;}
-  list.innerHTML=weeks.map(w=>`<li class="quest-recent-week" data-quest-week="${escapeHtml(w.week)}"><span class="quest-recent-head"><b>${escapeHtml(questWeekRangeLabel(w.week))}</b><span>${w.completed} / ${w.total}</span></span><span class="quest-recent-titles">${w.titles.length?w.titles.map(escapeHtml).join(' · '):'Nessuna completata'}</span></li>`).join('');
+  // The mockup's folder rows: the week, how many were done, which ones.
+  list.innerHTML=weeks.map(w=>`<li class="quest-recent-week" data-quest-week="${escapeHtml(w.week)}"><i class="quest-recent-icon" aria-hidden="true">${questIcon('flag-banner')}</i><span class="quest-recent-head"><b>${escapeHtml(questWeekRangeLabel(w.week,'long'))}</b><span>${w.completed} di ${w.total} completate</span><span class="quest-recent-titles">${w.titles.length?w.titles.map(escapeHtml).join(' · '):'Nessuna completata'}</span></span></li>`).join('');
   root.hidden=false;
 }
 function paintQuestBoard(){
@@ -3706,10 +4777,12 @@ function paintQuestBoard(){
   const summary=questBoardSummary(v.quests,v.state);
   const header=document.getElementById('questWeekBoard');
   if(header){header.innerHTML=renderQuestWeekHeader(summary,v.week,{stale:v.stale});header.hidden=false;}
+  const kicker=document.getElementById('noiQuestKicker');
+  if(kicker)kicker.textContent=`Questa settimana · ${questWeekRangeLabel(v.week)}`;
   const ctx={me:v.me,partner:questPartner(v.profiles,v.me),rerollsLeft:summary.rerollsLeft,myName:v.myName};
-  const signature=JSON.stringify([v.week,summary.rerollsLeft,[...questActionsInFlight].sort(),v.quests.map(q=>[q.id,q.slot,q.template_key,q.title,q.category,q.rarity,q.xp,q.confirmed_by,q.completed_at]),(v.profiles||[]).map(p=>[p.id,p.display_name])]);
+  const signature=JSON.stringify([v.week,summary.rerollsLeft,[...questActionsInFlight].sort(),v.quests.map(q=>[q.id,q.slot,q.template_key,q.title,q.category,q.rarity,q.xp,q.confirmed_by,Boolean(q.completed_at)]),(v.profiles||[]).map(p=>[p.id,p.display_name])]);
   if(list.dataset.loaded==='1'&&list.dataset.signature===signature)return;
-  list.innerHTML=v.quests.map(q=>renderBondQuest(q,ctx)).join('')||'<div class="empty-state quest-empty"><b>Le quest della settimana stanno arrivando</b><p>Riprova tra un momento.</p><button type="button" class="ghost quest-week-retry" data-quest-retry>Riprova</button></div>';
+  list.innerHTML=v.quests.map(q=>renderBondQuest(q,ctx)).join('')||'<div class="empty-state quest-empty"><b>Le missioni della settimana stanno arrivando</b><p>Riprova tra un momento.</p><button type="button" class="ghost quest-week-retry" data-quest-retry>Riprova</button></div>';
   list.dataset.loaded='1';list.dataset.signature=signature;
 }
 function resetQuestBoard(list,owner){
@@ -3735,17 +4808,17 @@ async function hydrateBond(){
   if(!current())return;
   const [{data:state,error:stateError},{data:quests,error:questError},{data:profiles,error:profilesError},{data:couple,error:coupleError},{count:completedCount,error:countError},{data:recent,error:recentError}]=await Promise.all([
     sb.from('bond_weekly_state').select('rerolls_used').eq('couple_id',coupleId).eq('week_start',week).maybeSingle(),
-    sb.from('bond_weekly_quests').select('id,slot,template_key,title,category,rarity,xp,confirmed_by,completed_at').eq('couple_id',coupleId).eq('week_start',week).order('slot'),
+    usReadLocalized(columns=>sb.from('bond_weekly_quests').select(columns).eq('couple_id',coupleId).eq('week_start',week).order('slot'),'id,slot,template_key,title,category,rarity,xp,confirmed_by,completed_at','title_localized').then(usLocalizedTitles),
     sb.from('profiles').select('id,display_name,role,couple_id').eq('couple_id',coupleId),
     sb.from('couples').select('bond_xp').eq('id',coupleId).maybeSingle(),
     sb.from('bond_weekly_quests').select('id',{count:'exact',head:true}).eq('couple_id',coupleId).not('completed_at','is',null),
-    sb.from('bond_weekly_quests').select('id,week_start,slot,title,completed_at').eq('couple_id',coupleId).lt('week_start',week).order('week_start',{ascending:false}).order('slot').limit(QUEST_SLOTS*QUEST_RECENT_WEEKS)
+    usReadLocalized(columns=>sb.from('bond_weekly_quests').select(columns).eq('couple_id',coupleId).lt('week_start',week).order('week_start',{ascending:false}).order('slot').limit(QUEST_SLOTS*QUEST_RECENT_WEEKS),'id,week_start,slot,title,completed_at','title_localized').then(usLocalizedTitles)
   ]);
   if(!current())return;
   if(stateError||questError||profilesError||coupleError){
     console.warn(stateError||questError||profilesError||coupleError);
     if(list.dataset.loaded==='1'&&questBoardView){questBoardView.stale=true;list.dataset.signature='';paintQuestBoard();}
-    else list.innerHTML='<div class="empty-state quest-error" role="status"><div class="emoji">!</div><b>Quest non disponibili</b><p>Controlla la connessione e riprova.</p><button type="button" class="ghost quest-week-retry" data-quest-retry>Riprova</button></div>';
+    else list.innerHTML='<div class="empty-state quest-error" role="status"><div class="emoji">!</div><b>Missioni non disponibili</b><p>Controlla la connessione e riprova.</p><button type="button" class="ghost quest-week-retry" data-quest-retry>Riprova</button></div>';
     return;
   }
   if(countError)console.warn(countError);
@@ -3753,17 +4826,47 @@ async function hydrateBond(){
   window.usBondProfiles=profiles||[];
   window.usBondState=state||{rerolls_used:0};
   window.usBondQuests=quests||[];
-  renderNoiHubSummary();
   renderBondProgress(couple?.bond_xp||0);
-  const countEl=document.getElementById('bondCompletedCount');if(countEl)countEl.textContent=`${Number(completedCount||0)} quest completate`;
+  const countEl=document.getElementById('bondCompletedCount');if(countEl)countEl.textContent=`${Number(completedCount||0)} missioni completate`;
   const rerollEl=document.getElementById('bondRerollsLeft');if(rerollEl)rerollEl.textContent=questRerollsLeft(state);
-  const resetEl=document.getElementById('bondWeekReset');if(resetEl)resetEl.textContent=`Nuove quest ${nextWeekLabel(week)}`;
+  const resetEl=document.getElementById('bondWeekReset');if(resetEl)resetEl.textContent=`Nuove missioni ${nextWeekLabel(week)}`;
   const me=profile.id;
   questBoardView={owner,week,me,myName:profile.display_name||'Tu',profiles:profiles||[],state:state||{rerolls_used:0},quests:quests||[],stale:false};
   paintQuestBoard();
   renderQuestRecent(recentError?[]:questRecentWeeks(recent,week));
 }
 window.hydrateBond=hydrateBond;
+// The answer of confirm_bond_quest (its own confirmed_by and completed) is
+// shown at once; the board reads the persisted rows again right after.
+function applyQuestConfirm(id,data){
+  const row=(window.usBondQuests||[]).find(q=>q.id===id);
+  if(!row||!data)return;
+  if(Array.isArray(data.confirmed_by))row.confirmed_by=data.confirmed_by.map(String);
+  if(data.completed===true&&!row.completed_at)row.completed_at=new Date().toISOString();
+}
+const QUEST_EASE={out:'cubic-bezier(.2,.8,.2,1)',in:'cubic-bezier(.4,0,1,1)'};
+function questReducedMotion(){
+  try{return Boolean(window.UsUiFoundation?.isReducedMotion?.())||Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);}catch(_){return false;}
+}
+// noi.js reroll: the card turns away (200ms, E.in) and the new one turns in (320ms, E.out).
+function flipQuestCard(id,dir){
+  const card=document.querySelector?.(`#bondQuestList [data-quest-id="${String(id).replace(/["\\]/g,'')}"]`);
+  if(!card||typeof card.animate!=='function'||questReducedMotion())return null;
+  return dir<0
+    ?card.animate([{transform:'rotateX(0)',opacity:1},{transform:'rotateX(90deg)',opacity:.3}],{duration:200,easing:QUEST_EASE.in,fill:'forwards'})
+    :card.animate([{transform:'rotateX(-90deg)',opacity:.3},{transform:'rotateX(0)',opacity:1}],{duration:320,easing:QUEST_EASE.out});
+}
+// noi.js F.show('m',0): the sheet is drawn again from its top and fades in (340ms).
+function redrawQuestSheet(){
+  const list=document.getElementById('bondQuestList');if(list)list.dataset.signature='';
+  paintQuestBoard();
+  const panel=document.querySelector?.('#noiQuestSheet [data-us-modal-panel]');if(panel)panel.scrollTop=0;
+  if(questReducedMotion())return;
+  for(const name of ['questWeekBoard','bondQuestList','questRecent']){
+    const el=document.getElementById(name);
+    if(el&&!el.hidden&&typeof el.animate==='function')el.animate([{opacity:0},{opacity:1}],{duration:340,easing:QUEST_EASE.out});
+  }
+}
 function setQuestAction(key,busy){
   if(busy)questActionsInFlight.add(key);else questActionsInFlight.delete(key);
   const list=document.getElementById('bondQuestList');if(list)list.dataset.signature='';
@@ -3783,14 +4886,24 @@ async function confirmBondQuest(id){
   catch(error){result={data:null,error};}
   finally{questActionsInFlight.delete(key);}
   if(questOwnerKey(window.usProfile)!==owner)return;
+  let redrawn=false;
   if(result.error){console.warn(result.error);toast('Conferma non riuscita. Riprova.');}
   else{
     sendWebPushEvent('quest_confirmed',id).catch(()=>{});
     const awarded=Number(result.data?.xp_awarded)||0;
-    if(awarded>0){toast(`Quest completata · +${awarded} XP ♡`);window.UsFeedback?.success?.();}
-    else toast('Confermata. Ora tocca all’altra persona ♡');
+    const partnerName=questPartner(window.usBondProfiles,profile.id)?.display_name||'';
+    // As the mockup (noi.js F.on): the server's answer is drawn at once, the
+    // sheet fades in again from the top, the card sparkles; a completed
+    // mission then closes the sheet and Sintonia shows the points growing.
+    applyQuestConfirm(id,result.data);
+    redrawQuestSheet();redrawn=true;
+    if(awarded>0){if(!window.USProgression?.missionCompleted?.({xp:awarded,questId:id})){toast('Missione completata insieme ♡');window.UsFeedback?.success?.();}}
+    else{
+      window.USProgression?.burst?.(document.querySelector?.(`#bondQuestList [data-quest-id="${String(id).replace(/["\\]/g,'')}"]`),5);
+      toast(partnerName?`Confermata. Ora tocca a ${partnerName} ♡`:'Confermata. Ora tocca alla tua persona ♡',{icon:'check'});
+    }
   }
-  setQuestAction(key,false);
+  if(!redrawn)setQuestAction(key,false);
   await hydrateBond();
   await hydrateBondSummary();
 }
@@ -3807,9 +4920,10 @@ async function rerollBondQuest(id){
   const current=(window.usBondQuests||[]).find(q=>q.id===id);
   if(!current)return;
   const view=questViewState(current,{me:profile.id,partnerId:questPartner(window.usBondProfiles,profile.id)?.id,rerollsLeft});
-  if(!view.rerollable)return toast(view.completed?'Questa quest è già completata':'Questa quest è già stata confermata');
+  if(!view.rerollable)return toast(view.completed?'Questa missione è già completata':'Questa missione è già stata confermata');
   const owner=questOwnerKey(profile);
   setQuestAction(key,true);
+  const away=flipQuestCard(id,-1);
   let result=null;
   try{
     const week=weekStartISO();
@@ -3817,7 +4931,7 @@ async function rerollBondQuest(id){
       currentQuestMode(),
       sb.from('bond_quest_templates').select('key,title,category,rarity,xp,mode').eq('active',true)
     ]);
-    if(error||!templates?.length){console.warn(error);result={skip:'Nessuna quest disponibile'};}
+    if(error||!templates?.length){console.warn(error);result={skip:'Nessuna missione disponibile'};}
     else{
       const used=new Set((window.usBondQuests||[]).map(q=>q.template_key));
       const pick=pickRerollQuestTemplate(templates,mode,used,`${profile.couple_id}|${week}|${current.slot}|reroll|${Number(state?.rerolls_used)||0}|${current.template_key}`);
@@ -3826,14 +4940,21 @@ async function rerollBondQuest(id){
   }catch(error){result={error};}
   finally{questActionsInFlight.delete(key);}
   if(questOwnerKey(window.usProfile)!==owner)return;
-  if(result?.skip)toast(result.skip);
-  else if(result?.error){console.warn(result.error);toast(String(result.error.message||'').includes('No rerolls')?'Avete finito i cambi di questa settimana':'Cambio non riuscito. Riprova.');}
-  else{
-    const used=Number(result?.data?.rerolls_used);
-    toast(Number.isFinite(used)?`Nuova quest · ${questCountLabel(Math.max(0,QUEST_WEEKLY_REROLLS-used),'cambio rimasto','cambi rimasti')}`:'Nuova quest');
+  if(result?.skip||result?.error){
+    if(result.skip)toast(result.skip);
+    else{console.warn(result.error);toast(String(result.error.message||'').includes('No rerolls')?'Avete finito i cambi di questa settimana':'Cambio non riuscito. Riprova.');}
+    away?.cancel?.();
+    setQuestAction(key,false);
+    await hydrateBond();
+    return;
   }
-  setQuestAction(key,false);
+  // noi.js reroll: the new mission is drawn (the sheet fades in again, from
+  // its top) and turns in; the stats say how many changes are left.
+  await away?.finished?.catch?.(()=>{});
   await hydrateBond();
+  if(questOwnerKey(window.usProfile)!==owner)return;
+  redrawQuestSheet();
+  flipQuestCard(id,1);
 }
 window.rerollBondQuest=rerollBondQuest;
 document.addEventListener('click',event=>{
@@ -3873,10 +4994,12 @@ function noiIdeaSnippet(note){
   if(!note)return '';
   return note.length>90?`${note.slice(0,90)}…`:note;
 }
-function noiIdeaCardHtml(item){
+function noiIdeaCardHtml(item,{lived=false}={}){
+  // A lived idea reads like the mockup's history row: the title and "Vissuta insieme".
+  if(lived)return `<button type="button" class="noi-idea-card is-lived" data-id="${escapeHtml(item.id)}"><span class="noi-idea-card-copy"><b translate="no">${escapeHtml(item.title)}</b><small>Vissuta insieme</small></span></button>`;
   const label=noiIdeaStateLabel(item);
-  const noteHtml=item.note?`<small>${escapeHtml(noiIdeaSnippet(item.note))}</small>`:'';
-  return `<button type="button" class="noi-idea-card" data-id="${escapeHtml(item.id)}"><span class="noi-idea-card-copy"><b>${escapeHtml(item.title)}</b>${noteHtml}</span>${label?`<span class="noi-idea-state">${escapeHtml(label)}</span>`:''}</button>`;
+  const noteHtml=item.note?`<small translate="no">${escapeHtml(noiIdeaSnippet(item.note))}</small>`:'';
+  return `<button type="button" class="noi-idea-card" data-id="${escapeHtml(item.id)}"><span class="noi-idea-card-copy"><b translate="no">${escapeHtml(item.title)}</b>${noteHtml}</span>${label?`<span class="noi-idea-state">${escapeHtml(label)}</span>`:''}</button>`;
 }
 function renderNoiIdeaActiveList(){
   const root=document.getElementById('noiIdeaList');
@@ -3886,41 +5009,11 @@ function renderNoiIdeaActiveList(){
     root.innerHTML='<div class="empty-state noi-idea-error"><div class="emoji">!</div><b>Non riesco a caricare le idee.</b><p>Riprova tra un momento.</p><button type="button" onclick="hydrateNoiIdeas()">Riprova</button></div>';
     return;
   }
-  renderNoiHubSummary();
   if(!noiIdeaState.activeItems.length){
     root.innerHTML='<div class="noi-quiet-state"><b>Niente in lista</b><span>Aggiungete la prima.</span></div>';
     return;
   }
   root.innerHTML=noiIdeaState.activeItems.map(noiIdeaCardHtml).join('');
-}
-// M9D — riepilogo delle card del hub Noi, solo da dati già caricati.
-function renderNoiHubSummary(){
-  const ideasTitle=document.getElementById('noiHubIdeasTitle');
-  const ideasMeta=document.getElementById('noiHubIdeasMeta');
-  if(ideasTitle&&ideasMeta){
-    if(noiIdeaState.loaded&&!noiIdeaState.error){
-      const count=noiIdeaState.activeItems.length;
-      const scheduled=noiIdeaState.activeItems.filter(i=>i.status==='scheduled').length;
-      ideasTitle.textContent=count?`${count} ${count===1?'idea':'idee'} da vivere`:'Nessuna idea';
-      ideasMeta.textContent=scheduled?`${scheduled} in calendario`:'';
-    }else{
-      ideasTitle.textContent='Le vostre idee';
-      ideasMeta.textContent='';
-    }
-  }
-  const questTitle=document.getElementById('noiHubQuestTitle');
-  const questMeta=document.getElementById('noiHubQuestMeta');
-  const quests=Array.isArray(window.usBondQuests)?window.usBondQuests:[];
-  if(questTitle&&questMeta){
-    if(quests.length){
-      const done=quests.filter(q=>q.completed_at).length;
-      questTitle.textContent=done===quests.length?'Tutte completate':`${done} di ${quests.length} completate`;
-      questMeta.textContent='';
-    }else{
-      questTitle.textContent='Questa settimana';
-      questMeta.textContent='';
-    }
-  }
 }
 function renderNoiIdeaLivedList(){
   const toggle=document.getElementById('noiIdeaLivedToggle');
@@ -3928,9 +5021,12 @@ function renderNoiIdeaLivedList(){
   if(!toggle||!root)return;
   toggle.hidden=!noiIdeaState.livedItems.length;
   toggle.textContent=`Idee vissute (${noiIdeaState.livedItems.length})`;
+  // The mockup's fold: the count, then one quiet line under it.
+  const sub=document.createElement?.('small');
+  if(sub){sub.textContent='Quelle che avete già fatto';toggle.append?.(sub);}
   toggle.setAttribute('aria-expanded',String(noiIdeaState.showLived));
   root.hidden=!noiIdeaState.showLived;
-  root.innerHTML=noiIdeaState.showLived?noiIdeaState.livedItems.map(noiIdeaCardHtml).join(''):'';
+  root.innerHTML=noiIdeaState.showLived?noiIdeaState.livedItems.map(item=>noiIdeaCardHtml(item,{lived:true})).join(''):'';
 }
 async function hydrateNoiIdeas(){
   if(!window.usProfile)return;
@@ -3998,7 +5094,6 @@ function resetNoiIdeasForIdentityChange(){
   const section=document.querySelector('.noi-idea-section');
   if(section)section.hidden=true;
   closeNoiSection();
-  renderNoiHubSummary();
   closeNoiIdeaDetail();
   toggleNoiIdeaQuickForm(false);
   const save=document.getElementById('noiIdeaQuickSave');if(save)save.disabled=false;
@@ -4040,7 +5135,7 @@ function noiIdeaDetailHint(_item){
 function noiIdeaLivedOnLabel(item){
   const d=item?.completed_at?new Date(item.completed_at):null;
   if(!d||Number.isNaN(d.getTime()))return '';
-  return d.toLocaleDateString('it-IT',{day:'numeric',month:'long',year:'numeric'});
+  return d.toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'long',year:'numeric'});
 }
 function noiIdeaPartnerName(){
   return usIdentity().partnerName;
@@ -4090,7 +5185,7 @@ function renderNoiIdeaDetailState(item){
 function openNoiIdeaDetail(id){
   const item=noiIdeaFindItem(id);
   if(!item)return;
-  openNoiSection('da-vivere');
+  openNoiSection('quest');
   noiIdeaState.selectedId=id;
   const titleEl=document.getElementById('noiIdeaDetailTitle');
   const noteEl=document.getElementById('noiIdeaDetailNote');
@@ -4108,7 +5203,11 @@ function openNoiIdeaDetail(id){
   const detail=document.getElementById('noiIdeaDetail');
   if(browse)browse.hidden=true;
   if(detail)detail.hidden=false;
-  titleEl?.focus();
+  // Inside Missioni, an open idea is the whole screen until Back.
+  const living=document.querySelector('#bond .noi-living-section');
+  if(living?.dataset)living.dataset.ideaDetail='open';
+  window.scrollTo?.({top:0,behavior:'auto'});
+  titleEl?.focus({preventScroll:true});
 }
 function closeNoiIdeaDetail(){
   noiIdeaState.selectedId=null;
@@ -4116,6 +5215,8 @@ function closeNoiIdeaDetail(){
   const detail=document.getElementById('noiIdeaDetail');
   if(detail)detail.hidden=true;
   if(browse)browse.hidden=false;
+  const living=document.querySelector('#bond .noi-living-section');
+  if(living?.dataset)delete living.dataset.ideaDetail;
 }
 async function submitNoiIdeaQuickAdd(event){
   event.preventDefault();
@@ -4328,15 +5429,24 @@ async function markNoiIdeaLived(){
     if(btn)btn.disabled=false;
   }
 }
-// Il ponte verso Ricordi: apre il composer esistente dei Moments con il
-// titolo come nota suggerita. Nessun Moment nasce senza una foto scelta.
+// Il ponte verso Ricordi: the gallery opens right away (R1) with the title as
+// a suggested note, and the photo becomes this idea's memory (R6). Nothing is
+// created until a photo is chosen.
 function addNoiIdeaMemory(){
   const item=noiIdeaState.selectedId?noiIdeaFindItem(noiIdeaState.selectedId):null;
   if(!item||item.status!=='lived')return;
-  const composer=window.UsMomentComposer?.open;
-  go('moments',{nav:true});
-  if(typeof composer==='function')setTimeout(()=>composer({caption:item.title}),60);
+  const date=ricordiLocalISO(item.completed_at)||undefined;
+  openMemoryComposer(item.title,{kind:'da_vivere',ref:item.id,date});
 }
+// The Ricordi composer over Ricordi with a suggested note (ideas, missions).
+// pick() runs inside the tap so the phone lets it open the gallery.
+function openMemoryComposer(caption,source=null){
+  const composer=window.UsMomentComposer;
+  go('moments',{nav:true});
+  if(typeof composer?.pick==='function'){composer.pick(source?{caption,source}:{caption});return;}
+  if(typeof composer?.open==='function')setTimeout(()=>composer.open({caption}),60);
+}
+window.openMemoryComposer=openMemoryComposer;
 document.getElementById('noiIdeaDetailLived')?.addEventListener('click',markNoiIdeaLived);
 document.getElementById('noiIdeaDetailMemoryAdd')?.addEventListener('click',addNoiIdeaMemory);
 document.getElementById('noiIdeaDetailSchedule')?.addEventListener('click',scheduleNoiIdea);
@@ -4344,47 +5454,65 @@ document.getElementById('noiIdeaDetailOpenCalendar')?.addEventListener('click',o
 window.openNoiIdeaDetail=openNoiIdeaDetail;
 window.closeNoiIdeaDetail=closeNoiIdeaDetail;
 
-// ===== M9D · Noi hub =====
-// Noi è un hub: quattro card aprono superfici interne della stessa pagina
-// (nessun nuovo tab). Risonanza, Da vivere e Quest riusano i blocchi M3/M7
-// già presenti; Calendario apre l'overlay esistente. Il ritorno al hub passa
-// dal layer di navigation.js ('noi-section'), quindi anche il Back di sistema.
+// ===== M9D · Noi sections =====
+// Missioni (with "Le vostre idee" inside) opens as a Foglio over the Noi
+// calendar (no new tab), Eventi as the "I nostri eventi" Foglio of events.js.
+// The way back is navigation.js's 'noi-section' layer (the section bar is
+// marked open), so the system Back works too.
 const NOI_SECTIONS=['resonance','da-vivere','quest','eventi'];
 function noiCanonicalPage(){return document.querySelector('#bond .noi-canonical-page');}
+function noiSectionSheet(view){return view==='quest'?document.getElementById('noiQuestSheet'):null;}
 function openNoiSection(view){
   const page=noiCanonicalPage();
   if(!page||!NOI_SECTIONS.includes(view))return;
+  // Le vostre idee (once "Da vivere") is a part of Missioni.
+  if(view==='da-vivere')view='quest';
+  if(view==='eventi'){window.openEvents?.();return;}
   if(page.dataset.noiView===view)return;
   page.dataset.noiView=view;
   const bar=document.getElementById('noiSectionBar');if(bar)bar.hidden=false;
-  const hub=document.getElementById('noiHub');if(hub)hub.hidden=true;
-  scrollTo({top:0,behavior:'auto'});
+  const sheet=noiSectionSheet(view);
+  if(sheet){
+    window.UsUiFoundation?.cancelSurfaceExit?.(sheet);
+    sheet.classList?.add?.('open');sheet.setAttribute?.('aria-hidden','false');
+    const panel=sheet.querySelector?.('[data-us-modal-panel]');if(panel)panel.scrollTop=0;
+  }else{
+    scrollTo({top:0,behavior:'auto'});
+    document.getElementById('noiSectionBack')?.focus({preventScroll:true});
+  }
   if(view==='resonance'){window.hydrateResonanceHistory?.();window.USProgression?.hydrate?.({showUnlocks:true,force:true});}
-  if(view==='da-vivere'&&window.usProfile&&!noiIdeaState.loaded)hydrateNoiIdeas();
-  if(view==='eventi')window.hydrateEvents?.();
-  if(view==='quest'&&window.usProfile)hydrateBond();
-  document.getElementById('noiSectionBack')?.focus({preventScroll:true});
+  if(view==='quest'&&window.usProfile){hydrateBond();if(!noiIdeaState.loaded)hydrateNoiIdeas();}
 }
 function closeNoiSection(){
   const page=noiCanonicalPage();
   if(!page||!page.dataset.noiView||page.dataset.noiView==='hub')return;
   const from=page.dataset.noiView;
   page.dataset.noiView='hub';
-  if(from==='da-vivere'){closeNoiIdeaDetail();toggleNoiIdeaQuickForm(false);}
+  if(from==='quest'){closeNoiIdeaDetail();toggleNoiIdeaQuickForm(false);}
   const bar=document.getElementById('noiSectionBar');if(bar)bar.hidden=true;
-  const hub=document.getElementById('noiHub');if(hub)hub.hidden=false;
+  const sheet=noiSectionSheet(from);
+  if(sheet){
+    // The Foglio leaves with the shared sheet exit; focus returns to its tile.
+    const done=()=>{sheet.classList?.remove?.('open');sheet.setAttribute?.('aria-hidden','true');};
+    if(window.UsUiFoundation?.exitSurface)window.UsUiFoundation.exitSurface(sheet,done);else done();
+    return;
+  }
   if(document.getElementById('bond')?.classList.contains('active')){
     scrollTo({top:0,behavior:'auto'});
-    hub?.querySelector(`[data-noi-open="${from}"]`)?.focus({preventScroll:true});
+    document.querySelector(`#usNoiV2 [data-noi-open-link="${from}"]`)?.focus({preventScroll:true});
   }
 }
 window.openNoiSection=openNoiSection;
 window.closeNoiSection=closeNoiSection;
-document.getElementById('noiHub')?.addEventListener('click',(event)=>{
-  const card=event.target.closest('[data-noi-open]');
-  if(card)openNoiSection(card.dataset.noiOpen);
-});
 document.getElementById('noiSectionBack')?.addEventListener('click',closeNoiSection);
+document.getElementById('noiQuestSheet')?.addEventListener('click',(event)=>{if(event.target.closest('[data-noi-sheet-close]'))closeNoiSection();});
+// "Settimane passate" folds open and closed, like the mockup's .fold.
+document.getElementById('questRecentToggle')?.addEventListener('click',(event)=>{
+  const root=document.getElementById('questRecent');if(!root)return;
+  const open=root.dataset.open!=='true';
+  root.dataset.open=String(open);event.currentTarget.setAttribute('aria-expanded',String(open));
+});
+document.addEventListener?.('keydown',(event)=>{if(event.key==='Escape'&&document.getElementById('noiQuestSheet')?.classList.contains('open')&&!document.querySelector('.us-cal-sheet-overlay.open,#usEventsOverlay.open,.us-confirm.open'))closeNoiSection();});
 document.getElementById('noiIdeaAddToggle')?.addEventListener('click',()=>{
   toggleNoiIdeaQuickForm(Boolean(document.getElementById('noiIdeaQuickForm')?.hidden));
 });
@@ -4462,7 +5590,7 @@ async function hydrateThink(){
   else if(!received||receivedReaction){usIncomingThink=null;usThinkReactionFinal=receivedReaction?.reaction||null;}
   const receivedEl=document.getElementById('thinkLastReceived');if(receivedEl)receivedEl.textContent=received?(receivedReaction?`${partnerName} ha reagito al tuo Ti penso`:`${partnerName} ti ha pensato ${relativeSignalAge(received.created_at)}`):'Ancora nessun segnale';
   const sentEl=document.getElementById('thinkLastSent');if(sentEl)sentEl.textContent=sent?(sentReaction?`${partnerName} ha reagito ${thinkReactionLabel(sentReaction.reaction)}`:`Hai pensato a ${partnerName} ${relativeSignalAge(sent.created_at)}`):'Non ne hai ancora inviati';
-  const monthEl=document.getElementById('thinkMonthCount');if(monthEl)monthEl.textContent=Number(count||0).toLocaleString('it-IT');
+  const monthEl=document.getElementById('thinkMonthCount');if(monthEl)monthEl.textContent=Number(count||0).toLocaleString((globalThis.UsI18n?.tag||'it-IT'));
   const live=document.getElementById('thinkLiveText');if(live&&received)live.textContent=`Ultimo segnale da ${partnerName} · ${relativeSignalAge(received.created_at)}`;
   if(sentReaction){
     const signature=`${sent.id}:${sentReaction.reaction}:${sentReaction.updated_at||''}`;
@@ -4486,14 +5614,30 @@ async function sendThinkSignal(){
   const messageId=result?.message_id;
   usThinkOperationId=null;
   if(messageId)sendWebPushEvent('think',messageId).catch(()=>{});
-  btn?.classList.add('sent');setTimeout(()=>btn?.classList.remove('sent'),700);
+  // Mockup: the heart takes my colour for a moment and two sparks, mine and
+  // theirs, fly out of it; then "Ti penso inviato a …".
+  btn?.classList.add('sent');setTimeout(()=>btn?.classList.remove('sent'),2400);
+  if(btn&&!result?.duplicate)thinkSparks(btn);
   window.UsFeedback?.action?.();
-  toast(result?.duplicate?'Già inviato':'Inviato');
+  if(result?.duplicate)toast('Già inviato',{quiet:true});
+  else toast(`Ti penso inviato a ${partner.display_name||usIdentity().partnerName}`,{icon:'heart',quiet:false});
   await hydrateThink();
   setTimeout(()=>{if(btn)btn.disabled=false;},1800);
   return true;
 }
 window.sendThinkSignal=sendThinkSignal;
+function thinkSparks(btn){
+  if(dailyRitualReducedMotion()||typeof document.createElement!=='function')return;
+  const r=btn.getBoundingClientRect?.();if(!r)return;
+  const root=getComputedStyle(document.documentElement);
+  [[root.getPropertyValue('--us-tu').trim()||'#ff7c96',-1],[root.getPropertyValue('--us-partner').trim()||'#a98bff',1]].forEach(([color,side],i)=>{
+    const d=document.createElement('span');d.className='dc-oggi-spark';d.setAttribute('aria-hidden','true');
+    d.style.background=color;d.style.left=`${r.left+r.width/2-6}px`;d.style.top=`${r.top+r.height/2-6}px`;
+    document.body.appendChild(d);
+    const a=d.animate?.([{translate:'0 0',opacity:1,scale:1},{translate:`${side*18}px 26px`,opacity:1,scale:1.1,offset:.35},{translate:`${130+side*8}px 8px`,opacity:0,scale:.5}],{duration:950,delay:i*70,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'});
+    if(a)a.onfinish=()=>d.remove();else d.remove();
+  });
+}
 function handleIncomingThink(row){
   if(!row||row.kind!=='think'||row.recipient_id!==window.usProfile?.id)return;
   usIncomingThink={...row};usThinkReactionFinal=null;usThinkReactionInFlight=false;
@@ -4524,6 +5668,7 @@ function scheduleUsRealtimeRefresh(kind){
     if(kind==='location'){if(active==='home')hydrateDistance();return;}
     if(kind==='moments'){
       if(active==='moments')hydrateMoments();
+      else ricordiCheckNew().catch(()=>{});
       window.refreshOpenMomentAlbum?.();
       return;
     }
@@ -4607,8 +5752,17 @@ saveAnswer = async function(){
   if(window.usProfile?.id!==viewerId||window.usProfile?.couple_id!==coupleId||window.todayQuestion?.id!==questionId)return;
   btn.disabled=false;
   if(error){console.warn(error);btn.textContent='Riprova';return toast('Errore sync Today');}
-  toast('Salvato online ♡');
   sendWebPushEvent('daily_answer',window.todayQuestion.id).catch(()=>{});
+  // As in the approved mockup: while the other has not answered yet, the sheet
+  // closes and, on Oggi, my circle of the card fills; elsewhere, or with
+  // reduced motion, a short notice says it. If the other already answered,
+  // the sheet stays and the two answers appear in it.
+  const firstAnswer=!window.todayState?.my_answer;
+  const theyAnswered=Boolean(window.todayState?.partner_has_answer);
+  const onOggi=Boolean(document.getElementById('home')?.classList.contains('active'));
+  usDailyRitualAnswerPending=firstAnswer&&!theyAnswered&&onOggi&&typeof dailyRitualReducedMotion==='function'&&!dailyRitualReducedMotion();
+  if(!theyAnswered&&typeof closeToday==='function')closeToday();
+  if(!usDailyRitualAnswerPending&&!(firstAnswer&&theyAnswered))toast('Risposta inviata',{icon:'check',quiet:false});
   await hydrateToday();
 }
 window.saveAnswer=saveAnswer;

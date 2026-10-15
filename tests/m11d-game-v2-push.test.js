@@ -87,13 +87,14 @@ test('M11D waiting then reveal: partner only, once each, role-based dedupe', asy
   await playSide(w.db, w.f, s.id);
   const first = await dispatchGameSessionPush(w.admin, { sessionId: s.id, actorId: w.f, ...w.options });
   assert.deepEqual([first.kind, first.outcome], ['game_waiting', 'delivered']);
-  assert.deepEqual(w.webpush.sent.map((x) => [x.endpoint, x.payload.body]), [['https://push.example/bea', 'Francesco ha risposto. Ora tocca a te.']]);
+  // US 1.0 (G11): the push names the game (game_sessions.game_family of the round).
+  assert.deepEqual(w.webpush.sent.map((x) => [x.endpoint, x.payload.body]), [['https://push.example/bea', 'Francesco ha finito Per voi: tocca a te']]);
   assert.equal((await dispatchGameSessionPush(w.admin, { sessionId: s.id, actorId: w.f, ...w.options })).outcome, 'deduplicated');
   await playSide(w.db, w.b, s.id);
   const reveal = await dispatchGameSessionPush(w.admin, { sessionId: s.id, actorId: w.b, ...w.options });
   assert.deepEqual([reveal.kind, reveal.outcome], ['game_reveal', 'delivered']);
   assert.deepEqual(w.webpush.sent.at(-1).endpoint, 'https://push.example/fra', 'the first finisher learns the reveal is ready');
-  assert.equal(w.webpush.sent.at(-1).payload.body, 'Le vostre risposte sono pronte ♡');
+  assert.equal(w.webpush.sent.at(-1).payload.body, 'Per voi: le vostre risposte sono pronte ♡');
   assert.equal((await dispatchGameSessionPush(w.admin, { sessionId: s.id, actorId: w.f, ...w.options })).outcome, 'nothing-to-send', 'the first finisher never notifies the second of a reveal they just caused');
   assert.deepEqual((await log(w.db)).map((r) => [r.dedupe_key, r.event_type]), [
     [`game-reveal:${s.id}:francesco`, 'game_reveal'], [`game-waiting:${s.id}:beatrice`, 'game_waiting']]);
@@ -247,7 +248,7 @@ test('M11D migration: dedicated vault key, idempotent cron, service-role grants 
   assert.doesNotMatch(read('supabase/functions/send-web-push/index.ts'), /game/, 'send-web-push untouched');
   const settings = read('settings.js');
   assert.match(settings, /preferenceToggle\('games','Gioca',p\.games!==false\)/, 'the preference is reachable in Impostazioni > Notifiche');
-  assert.match(settings, /key==='games'\?'Tocca a te, risposte pronte, domanda della settimana'/);
+  assert.match(settings, /key==='games'\?'Quando tocca a te'/);
 });
 
 test('M11D game-v2-push: game events carry only the reference; actor comes from the JWT', async () => {
@@ -258,6 +259,7 @@ test('M11D game-v2-push: game events carry only the reference; actor comes from 
     tables: {
       profiles: [{ id: 'fra', couple_id: COUPLE, role: 'francesco', display_name: 'Francesco' }, { id: 'bea', couple_id: COUPLE, role: 'beatrice', display_name: 'Beatrice' }],
       notification_preferences: [], push_subscriptions: [{ id: 's1', user_id: 'bea', endpoint: 'https://push.example/bea', p256dh: 'p', auth_key: 'a' }], push_event_log: [],
+      game_sessions: [{ id: '11111111-2222-3333-4444-555555555555', couple_id: '00000000-0000-0000-0000-0000000000c1', game_family: 'ridete' }],
     },
     rpc: {
       get_internal_vapid_private_key: 'vapid-private',
@@ -277,7 +279,7 @@ test('M11D game-v2-push: game events carry only the reference; actor comes from 
   assert.equal(ok.status, 200);
   assert.deepEqual(ok.body, { kind: 'game_waiting', outcome: 'delivered', delivered: 1, failed: 0 });
   assert.deepEqual(calls, [{ target_session_id: sid, actor_id: 'fra' }], 'actor from the verified session, extra fields ignored');
-  assert.deepEqual(webpush.sent.map((s) => [s.endpoint, s.payload.body]), [['https://push.example/bea', 'Francesco ha risposto. Ora tocca a te.']]);
+  assert.deepEqual(webpush.sent.map((s) => [s.endpoint, s.payload.body]), [['https://push.example/bea', 'Francesco ha finito Ridete: tocca a te']]);
   assert.equal((await post({ type: 'think', reference_id: sid })).status, 400, 'only game events');
   assert.equal((await fn.call(new Request('https://x/functions/v1/game-v2-push', { method: 'POST', body: '{}' }))).status, 401);
   const weekly = await post({ type: 'game_weekly', reference_id: sid });

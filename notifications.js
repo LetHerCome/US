@@ -22,7 +22,7 @@
   const push = pluginFor('PushNotifications');
   const support = pluginFor('UsPushSupport');
 
-  const TARGETS = Object.freeze(['home', 'today', 'think', 'left_for_you', 'quiz', 'bond', 'calendar']);
+  const TARGETS = Object.freeze(['home', 'today', 'think', 'left_for_you', 'quiz', 'bond', 'calendar', 'events']);
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const TYPE = /^[a-z_]{1,40}$/;
   const FCM_TOKEN = /^[A-Za-z0-9_:-]+$/;

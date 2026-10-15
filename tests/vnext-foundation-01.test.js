@@ -39,16 +39,17 @@ test('partner apre solo Lasciato per te e il profilo resta un controllo foto', (
   assert.match(html, /id="leftForYouPartnerEntry"[\s\S]{0,180}onclick="usEnvelopeTap\(\)"/);
   assert.doesNotMatch(html, /id="profileAvatarBtn"/, 'nessun avatar/foto legacy nel top chrome');
   assert.match(html, /id="profileAvatarFile"/, 'il flusso foto profilo resta vivo tramite Impostazioni');
-  assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,220}Cambia foto profilo/);
+  assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,220}<b>Foto profilo<\/b>/);
   assert.doesNotMatch(html, /onclick="openOwnStories\(\)"/);
   assert.match(stories, /__US_LEFT_FOR_YOU_ACTIVE__/);
   assert.match(html, /id="usSettingsEntry"[\s\S]{0,160}onclick="go\('settings',\{nav:true\}\)"/);
   assert.match(read('identity.css'), /\.us-calendar-btn\{width:44px;min-width:44px;height:44px;min-height:44px/);
   assert.doesNotMatch(html, /id="usCalendarBtn"/);
-  // M12A: il centro è il marchio US; "I nostri eventi" resta raggiungibile dal Calendario.
+  // M12A: il centro è il marchio US; "I nostri eventi" resta raggiungibile da Noi
+  // (US 1.0: il vecchio calendario a schermo intero non c'è più, Eventi è il link sotto il calendario di Noi).
   assert.doesNotMatch(html, /id="usEventsTopEntry"/);
   assert.match(html, /class="us-top-brand"[^>]*role="img" aria-label="US"/);
-  assert.match(html, /id="usCalendarEventsLink"[\s\S]{0,200}Eventi/);
-  assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,220}Cambia foto profilo/);
+  assert.match(html, /data-noi-open-link="eventi"[\s\S]{0,200}Eventi/);
+  assert.match(html, /data-us-setting="profile-photo"[\s\S]{0,220}<b>Foto profilo<\/b>/);
   assert.match(read('settings.js'), /window\.pickProfilePhoto\?\.\(\)/);
 });

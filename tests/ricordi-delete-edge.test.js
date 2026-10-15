@@ -24,7 +24,8 @@ test('delete-moment accepts only a moment id and derives couple membership and m
   assert.match(source, /\.from\("profiles"\)[\s\S]*\.eq\("id", authData\.user\.id\)/);
   assert.match(source, /\.from\("moments"\)[\s\S]*\.eq\("id", momentId\)/);
   assert.match(source, /moment\.couple_id !== profile\.couple_id/);
-  assert.doesNotMatch(source, /moment\.created_by !== authData\.user\.id/);
+  // US 1.0 (R2): the partner can no longer delete the other's memory.
+  assert.match(source, /if \(moment\.created_by !== profile\.id\) \{\n\s+return json\(\{ error: "Only the creator can delete this memory" \}, 403\);/);
   assert.match(source, /\.from\("moment_photos"\)[\s\S]*\.eq\("moment_id", momentId\)/);
   assert.match(source, /path\.startsWith\(prefix\)/);
 });
@@ -35,7 +36,7 @@ test('delete-moment removes the authorized row then cleans cover, thumbnail and 
   assert.ok(rowDelete >= 0, 'authorized Moment delete is present');
   assert.ok(storageDelete > rowDelete, 'Storage cleanup happens after the row deletion is proven');
   assert.match(source, /\.eq\("couple_id", profile\.couple_id\)[\s\S]*\.select\("id"\)/);
-  assert.doesNotMatch(source, /\.eq\("created_by", authData\.user\.id\)/);
+  assert.match(source, /\.eq\("couple_id", profile\.couple_id\)\n\s+\.eq\("created_by", profile\.id\)\n\s+\.select\("id"\)/);
   assert.match(source, /moment\.thumbnail_path/);
   assert.match(source, /return json\(\{ deleted: true, storage_cleanup: storageCleanup/);
 });
@@ -44,8 +45,10 @@ test('whole-Moment privileged cleanup never exposes server credentials to the PW
   assert.doesNotMatch(app, /SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET_KEYS|supabaseSecretKey/);
   assert.match(app, /sb\.functions\.invoke\('delete-moment'/);
 });
-test('Ricordi grid exposes Elimina on every shared Moment card', () => {
-  assert.match(app, /ricordiMomentCard\(row,signedUrls,author,true,/);
+// US 1.0 R2 replaces "Elimina on every shared card": only who created a memory sees it.
+test('Ricordi grid exposes Elimina only on the memories this person created', () => {
+  assert.match(app, /const own=row\.created_by===profile\.id;/);
+  assert.match(app, /ricordiMomentCard\(row,displayUrls,author,own,/);
   assert.match(app, /aria-label="Elimina ricordo"/);
 });
 

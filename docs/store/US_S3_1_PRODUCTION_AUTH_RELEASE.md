@@ -45,7 +45,7 @@ Supabase's default mailer only sends to project team members and has a very low 
 ## 4. Release gates (all must be true before §1 is flipped)
 
 1. **Account deletion is live** (PR #190 / issue #183). Google Play requires in-app account deletion **and** a public web deletion request page for any app that lets users create accounts.
-2. Privacy policy and support contact are published, and their URLs are in the Play listing.
+2. Privacy policy and support contact are published, and their URLs are in the Play listing. The published Terms and Privacy URLs are set in `LEGAL_URLS` in `public-auth.js`: the sign-up box "Ho almeno 18 anni e accetto i Termini e la Privacy" links to them (the S3.1 test refuses a release without both).
 3. On US-STAGING, with real email delivery:
    - signup → email → confirm → login;
    - an unconfirmed login is refused;

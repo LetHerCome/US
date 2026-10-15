@@ -58,7 +58,7 @@ test('M9E client: hydrateToday usa get_or_create_daily_question, poi get_daily_s
   assert.deepEqual({ ...t.calls[1][1] }, { target_question_id: 'q-today' });
   assert.equal(t.nodes.qtext.textContent, Q().question);
   assert.equal(t.nodes.answer.hidden, false); assert.equal(t.nodes.answer.disabled, false);
-  assert.equal(t.nodes.todaySaveBtn.hidden, false); assert.equal(t.nodes.todaySaveBtn.textContent, 'Rispondi');
+  assert.equal(t.nodes.todaySaveBtn.hidden, false); assert.equal(t.nodes.todaySaveBtn.textContent, 'Invia la mia risposta'); // parity 2026-10 (mockup sheet button)
   assert.equal(t.window.todayQuestion.id, 'q-today');
   assert.equal(t.refreshes.at(-1).daily.question.id, 'q-today', 'M9B card is fed by the new authority');
 });
@@ -149,7 +149,7 @@ test('M9E client: una risposta lenta superata da una più recente viene ignorata
 test('M9E client: reveal e partner nascosto restano quelli di get_daily_state', async () => {
   const waiting = install({ rpc: ok(Q(), { my_answer: null, partner_has_answer: true, both_answered: false, partner_answer: null }) });
   await waiting.hydrate();
-  assert.match(waiting.nodes.locked.innerHTML, /Rispondi per sbloccarla/);
+  assert.match(waiting.nodes.locked.innerHTML, /Vedrete le risposte insieme appena invii la tua\./); // parity 2026-10 (mockup locked line)
   assert.equal(waiting.nodes.todayReveal.innerHTML, '');
   const reveal = install({ rpc: ok(Q(), { my_answer: 'Mia', partner_has_answer: true, both_answered: true, partner_answer: 'Sua' }) });
   await reveal.hydrate();

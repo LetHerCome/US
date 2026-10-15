@@ -13,7 +13,8 @@ const noiJs = read('noi-v2.js');
 const noiCss = read('noi-v2.css');
 const worker = read('service-worker.js');
 const bond = html.match(/<main id="bond"[\s\S]*?<\/main>/)?.[0] || '';
-const noi = bond.match(/<section class="us-noi-v2"[\s\S]*?<\/section>\s*\n\s*<section class="noi-week-board"/)?.[0] || '';
+// 1.0: the old Lavagna that followed Noi V2 is gone; the Sintonia card comes next.
+const noi = bond.match(/<section class="us-noi-v2"[\s\S]*?<\/section>\s*\n\s*<article class="noi-resonance"/)?.[0] || '';
 
 // ------------------------------------------------------------------ icons
 test('Noi icons: well-formed markup, the approved settings icon, a real list icon', () => {
@@ -21,7 +22,7 @@ test('Noi icons: well-formed markup, the approved settings icon, a real list ico
   assert.doesNotMatch(html, /<span class="us-icon"\s+<img/, 'no half-open icon tag (the old grey square)');
   assert.match(noi, /class="us-noi-v2-settings"[^>]*><img class="us-approved-custom-icon" src="\/assets\/derived\/runtime\/us-icon-settings-128-v1\.png"/);
   assert.match(noi, /id="usNoiV2ModeList"[^>]*><span class="us-icon" data-us-icon="list-bullets"/, 'Elenco is a list, not a grid');
-  assert.match(noi, /data-noi-open-link="lavagna"[\s\S]*?data-us-icon="chalkboard-simple"/);
+  assert.match(noi, /data-noi-open-link="lavagna"[\s\S]*?data-us-icon="monitor"/);
 });
 
 test('Icons: every data-us-icon used by the shell is mapped to an official Phosphor SVG that is precached', () => {
@@ -50,7 +51,8 @@ test('Noi links: Lavagna opens the existing Calendar in its Week view; + opens t
   assert.match(noiJs, /if\(link==='quest'\|\|link==='eventi'\)window\.openNoiSection\?\.\(link\)/);
   assert.match(noiJs, /window\.UsCalendarLinks\.createForDate\(selected\)/);
   const cal = read('calendar.js');
-  assert.match(cal, /const requestedMode = arguments\[1\]\?\.mode;/);
+  // The old full-screen calendar is gone: its entry point now opens Noi.
+  assert.match(cal, /function openCalendarSurface\(targetDateISO, options = \{\}\) \{\s*window\.USNoiV2\?\.openCalendar\?\.\(/);
   assert.match(cal, /async function createCalendarEntryForDate\(dateISO\)[\s\S]*?startCreateForDate\(dateISO\)/, 'the existing editor, no second one');
   assert.match(cal, /createForDate: createCalendarEntryForDate/);
   assert.doesNotMatch(noiJs, /\.insert\(|\.update\(|\.delete\(|sb\.rpc\(|sb\.from\(/, 'Noi stays read-only');
@@ -92,14 +94,14 @@ const now = new Date();
 const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const todayIso = ymd(now);
 
-test('Noi calendar: only the weeks the month spans, today selected, one dot per kind, items in time order', async () => {
+test('Noi calendar: only the weeks the month spans, today selected, one dot per owner colour, items in time order', async () => {
   const later = new Date(now.getFullYear(), now.getMonth(), Math.min(now.getDate() + 1, 28), 12);
   const snapshot = {
     startedOn: `2022-${pad(now.getMonth() + 1)}-${pad(Math.min(now.getDate(), 28))}`,
     events: [{ id: 'e1', title: 'Cena', event_date: todayIso, event_time: '20:30:00' }],
     appointments: [
-      { id: 'a2', title: 'Palestra', is_all_day: false, starts_at: `${todayIso}T18:00:00`, dates: [todayIso] },
-      { id: 'a3', title: 'Lago', is_all_day: true, dates: [ymd(later)] }
+      { id: 'a2', title: 'Palestra', entry_type: 'personal', owner_id: 'f', is_all_day: false, starts_at: `${todayIso}T18:00:00`, dates: [todayIso] },
+      { id: 'a3', title: 'Lago', entry_type: 'personal', owner_id: 'b', is_all_day: true, dates: [ymd(later)] }
     ]
   };
   const { node } = await noiRender({ snapshot });
@@ -111,11 +113,18 @@ test('Noi calendar: only the weeks the month spans, today selected, one dot per 
   const today = grid.match(new RegExp(`<button[^>]*data-noi-day="${todayIso}"[\\s\\S]*?<\\/button>`))?.[0] || '';
   assert.match(today, /is-selected/);
   assert.match(today, /aria-current="date"/);
-  assert.match(today, /<i data-kind="relationship"><\/i><i data-kind="event"><\/i><i data-kind="calendar"><\/i>/, 'one mark per kind, in a stable order');
+  // Due colori: dots say whose it is (mine, theirs, ours), in a stable order.
+  assert.match(today, /<span class="us-noi-v2-day-marks" aria-hidden="true"><i data-owner="tu"><\/i><i data-owner="noi"><\/i><\/span>/, 'one mark per owner colour');
+  if (ymd(later) !== todayIso) {
+    const next = grid.match(new RegExp(`<button[^>]*data-noi-day="${ymd(later)}"[\\s\\S]*?<\\/button>`))?.[0] || '';
+    assert.match(next, /<i data-owner="partner"><\/i>/, 'the other person\'s commitment takes their colour');
+  }
+  assert.match(grid, /class="us-noi-v2-legend"/, 'a small legend names who is who');
   const detail = node('usNoiV2Detail').innerHTML;
   assert.match(detail, /<small>OGGI<\/small>/);
-  const titles = [...detail.matchAll(/<b>([^<]+)<\/b>/g)].map((m) => m[1]);
-  assert.deepEqual(titles, ['Il nostro giorno', 'Palestra', 'Cena'], 'anniversary first, then by time');
+  const titles = [...detail.matchAll(/<b(?: translate="no")?>([^<]+)<\/b>/g)].map((m) => m[1]);
+  // 1.0 (N2): the yearly date is called Anniversario, as in Eventi.
+  assert.deepEqual(titles, ['Anniversario', 'Palestra', 'Cena'], 'anniversary first, then by time');
   assert.equal(node('usNoiV2Today').hidden, true, '"Torna a oggi" only when you are elsewhere');
 });
 
@@ -140,22 +149,24 @@ test('Noi calendar: month change animates once and only without reduced motion',
 });
 
 // ------------------------------------------------------------------ Gioca + Sintonia
-test('Gioca V4: daily first, week rail, pending actions, bento games and weekly question', () => {
+// Round 3 parity (062): the mockup's order — Sfida di oggi, the 7-day strip,
+// the bento games, La vostra domanda; rounds no tile stands for and the
+// completed ones follow. The daily slot is painted by app.js.
+test('Gioca round 3: daily first, the week, bento games, weekly question, then the rest', () => {
   const games = read('games.js');
   const hub = games.slice(games.indexOf('function renderHub() {'), games.indexOf('function renderHubError() {'));
-  const order = ['us-gv2-daily-slot', 'dayRail()', 'us-gv2-head', 'continueSection(home)', 'us-gv2-choose', 'data-gv2-action="per-voi"', 'weeklyCard(home?.weekly)', 'doneSection(home)'];
+  const order = ['us-gv2-daily-slot', '${weekStrip()}', 'us-gv2-choose', 'data-gv2-action="per-voi"', 'weeklyCard(home?.weekly)', 'continueSection(home,onTiles)', 'doneSection(home)'];
   const positions = order.map((needle) => hub.indexOf(needle));
   assert.ok(positions.every((p) => p >= 0), JSON.stringify(positions));
   assert.deepEqual([...positions].sort((a, b) => a - b), positions);
-  assert.match(read('home-cleanup.js'), /hub\.querySelector\?\.\('\.us-gv2-daily-slot'\)/);
-  assert.match(games, /Scrivila, sigillala: \$\{partnerName\(\)\} la scopre giocando\./, 'write → seal → discover, in one line');
-  const pet = read('pet.js');
-  assert.match(pet, /selector:'#quizHub \.us-gv2-game\.is-swipe'/, 'the PET still finds its Gioca anchors');
-  assert.match(pet, /selector:'#quizHub \.us-gv2-choose'/);
+  assert.doesNotMatch(hub, /dayRail\(\)/);
+  assert.match(read('app.js'), /const slot=hub\.querySelector\('\.us-gv2-daily-slot'\);/);
+  assert.match(games, /\$\{knownPartner\(\) \|\| 'La tua persona'\} la troverà in Gioca: risponderete tutti e due\./, 'write → discover, in one line (mockup wording)');
 });
 
 test('Sintonia: one premium segmented control, keyboard-friendly, and a page that scrolls', () => {
-  assert.match(html, /<div class="us-gioca-tabs" id="usGiocaTabs" data-active="giochi" role="tablist" aria-label="Gioca e Sintonia">/);
+  // Round 3: [data-s] so the segmented control rises first, as the mockup's .seg.
+  assert.match(html, /<div class="us-gioca-tabs" id="usGiocaTabs" data-active="giochi" data-s role="tablist" aria-label="Gioca e Sintonia">/);
   assert.match(noiJs, /\$\('usGiocaTabs'\)\?\.setAttribute\('data-active',giocaTab\)/);
   assert.match(noiJs, /e\.key!=='ArrowLeft'&&e\.key!=='ArrowRight'/);
   assert.match(noiCss, /#quiz \.us-gioca-tabs\[data-active="sintonia"\]::before\{transform:translateX\(100%\)\}/);

@@ -36,8 +36,8 @@ function load() {
     console,
   });
   require('./helpers/identity-fixture').install(context);
-  vm.runInContext(`${ARCHIVE}\nwindow.render=renderRicordiRivivi;window.eventCard=ricordiEventCard;window.momentCard=ricordiMomentCard;`, context);
-  return { api: window.UsRicordiArchive, render: window.render, eventCard: window.eventCard, momentCard: window.momentCard, root: el('ricordiRivivi') };
+  vm.runInContext(`${ARCHIVE}\nwindow.render=renderRicordiRivivi;window.eventCard=ricordiEventCard;window.momentCard=ricordiMomentCard;window.renderChapters=renderRicordiChapters;`, context);
+  return { api: window.UsRicordiArchive, render: window.render, eventCard: window.eventCard, momentCard: window.momentCard, renderChapters: window.renderChapters, root: el('ricordiRivivi'), el };
 }
 
 const TODAY = '2026-10-01';
@@ -168,8 +168,10 @@ test('M12B.5 selection: consecutive days rotate (also across a month boundary), 
   }
 });
 
-test('US 1.0 presentation: Ricordi paints Rivivi only for a true anniversary', () => {
-  assert.match(CORE, /const riviviPick=ricordiPickRivivi\(timeline,today\);\s*renderRicordiRivivi\(riviviPick\?\.reason==='anniversary'\?riviviPick:null,signedUrls,names\);/);
+// US 1.0 R7 replaces the anniversary-only gate: Rivivi also brings back "X mesi fa".
+test('US 1.0 R7: Ricordi paints Rivivi for anniversaries and for "X mesi fa"', () => {
+  assert.match(CORE, /renderRicordiRivivi\(ricordiPickRivivi\(timeline,today\),displayUrls,names\);/);
+  assert.doesNotMatch(CORE, /reason==='anniversary'\?/);
 });
 
 test('M12B.5 selection: only recent history, or nothing, gives no Rivivi (never filler)', () => {
@@ -197,7 +199,7 @@ test('M12B.5 card: a plain Moment keeps the photo card and opens the existing Mo
   render(api.pickRivivi(t, TODAY), new Map([['p/m1', 'https://signed/m1']]), new Map([['u1', 'Bea']]));
   assert.equal(root.hidden, false);
   assert.match(root.innerHTML, /<button type="button" class="ricordi-rivivi-card" data-ricordi-open="m1" data-source-key="moment:m1" data-rivivi-kind="moment" data-url="https:\/\/signed\/m1" data-author="Bea"/);
-  assert.match(root.innerHTML, /<b>Al mare<\/b><span>1 marzo 2026 · Bea<\/span>/);
+  assert.match(root.innerHTML, /<b translate="no">Al mare<\/b><span>1 marzo 2026 · Bea<\/span>/);
 });
 
 test('M12B.5 card: missing media — a plain Moment without a signed URL hides Rivivi; a linked source falls back to its record', () => {
@@ -221,13 +223,13 @@ test('M12B.5 card: a lived source with its photo shows source snapshot date/titl
   assert.match(root.innerHTML, /data-ricordi-open="m1" data-source-key="da_vivere:b1" data-rivivi-kind="experience"/);
   assert.match(root.innerHTML, /data-date="10 mag 2026"/);
   assert.match(root.innerHTML, /data-caption="Concerto al Circo Massimo"/);
-  assert.match(root.innerHTML, /<b>Concerto al Circo Massimo<\/b><span>10 maggio 2026 · Da vivere<\/span>/);
+  assert.match(root.innerHTML, /<b translate="no">Concerto al Circo Massimo<\/b><span>10 maggio 2026 · Le vostre idee<\/span>/);
 });
 
 test('M12B.5 card: Event without photo uses the historical snapshot title, says "Evento vissuto" and never opens the mutable event', () => {
   const { api, render, root } = load();
   render(api.pickRivivi(api.timeline([], [], [], [ev('c1', '2026-03-07', { title: 'Cena a Roma', current_title: 'Rinominato' })], []), TODAY), new Map(), new Map());
-  assert.match(root.innerHTML, /<b>Cena a Roma<\/b><span>7 marzo 2026 · Evento vissuto<\/span>/);
+  assert.match(root.innerHTML, /<b translate="no">Cena a Roma<\/b><span>7 marzo 2026 · Evento vissuto<\/span>/);
   assert.match(root.innerHTML, /Vissuto insieme il 7 marzo 2026\.<\/p>/);
   assert.doesNotMatch(root.innerHTML, /Rinominato|editEvent|openEventEditor|data-ricordi-experience/);
 });
@@ -235,15 +237,15 @@ test('M12B.5 card: Event without photo uses the historical snapshot title, says 
 test('M12B.5 card: a legacy completion (title_source live) is shown with the declared live fallback, nothing backfilled', () => {
   const { api, render, root } = load();
   render(api.pickRivivi(api.timeline([], [], [], [ev('c1', '2026-03-07', { title: 'Anniversario', title_source: 'live' })], []), TODAY), new Map(), new Map());
-  assert.match(root.innerHTML, /<b>Anniversario<\/b>/);
+  assert.match(root.innerHTML, /<b translate="no">Anniversario<\/b>/);
   assert.match(root.innerHTML, /Il titolo è quello di oggi: quello di allora non era registrato\./);
 });
 
 test('M12B.5 card: a lived Da vivere without photo opens the existing Da vivere detail', () => {
   const { api, render, root } = load();
   render(api.pickRivivi(api.timeline([], [lived('b1', 'Mostra di Frida', '2026-04-10T18:00:00Z')], [], [], []), TODAY), new Map(), new Map());
-  assert.match(root.innerHTML, /<b>Mostra di Frida<\/b><span>10 aprile 2026 · Da vivere<\/span>/);
-  assert.match(root.innerHTML, /<button type="button" class="ricordi-rivivi-link" data-ricordi-experience="b1">Apri in Da vivere<\/button>/);
+  assert.match(root.innerHTML, /<b translate="no">Mostra di Frida<\/b><span>10 aprile 2026 · Le vostre idee<\/span>/);
+  assert.match(root.innerHTML, /<button type="button" class="ricordi-rivivi-link" data-ricordi-experience="b1">Apri nelle vostre idee<\/button>/);
 });
 
 test('M12B.5 card: a kept Daily shows the question, its date and opens on the frozen answer pair (escaped)', () => {
@@ -252,21 +254,39 @@ test('M12B.5 card: a kept Daily shows the question, its date and opens on the fr
   render(api.pickRivivi(api.timeline([], [], [kept('q1', '2026-06-01', { question_text: long })], [], []), TODAY), new Map(), new Map());
   assert.match(root.innerHTML, /data-source-key="daily_question:q1" data-rivivi-kind="daily"/);
   assert.ok(root.innerHTML.includes(`<b>${long}</b><span>1 giugno 2026 · Domanda del giorno</span>`));
-  assert.match(root.innerHTML, /<b>Francesco<\/b><p>Il lago<\/p>/);
-  assert.match(root.innerHTML, /<b>Beatrice<\/b><p>La terrazza &#60;b&#62;<\/p>/);
+  assert.match(root.innerHTML, /<b translate="no">Francesco<\/b><p translate="no">Il lago<\/p>/);
+  assert.match(root.innerHTML, /<b translate="no">Beatrice<\/b><p translate="no">La terrazza &#60;b&#62;<\/p>/);
 });
 
-test('M12B.5 story: a Moment that is the photo of a lived source says so; an Event without photo is a read-only record', () => {
+// US 1.0 R6 replaces the "Evento vissuto" kicker: the photo of something lived is one
+// wide card, "L’avete fatto", titled by the source when the photo has no note.
+test('M12B.5 story + US 1.0 R6: a Moment that is the photo of a lived source is one "L’avete fatto" card; an Event without photo is a read-only record', () => {
   const { eventCard, momentCard } = load();
-  const html = momentCard(m('m1', '2026-02-15'), 'https://signed/m1', 'Bea', false, false, { kind: 'event', sourceKey: 'shared_event_completion:c1', title: 'Cena a Roma', date: '2026-02-14' });
+  const signed = new Map([['p/m1', 'https://signed/m1']]);
+  const html = momentCard(m('m1', '2026-02-15'), signed, 'Bea', false, false, { kind: 'event', sourceKey: 'shared_event_completion:c1', title: 'Cena a Roma', date: '2026-02-14' });
   assert.match(html, /data-moment-iso="2026-02-14"/);
   assert.match(html, /data-date="14 feb 2026"/);
-  assert.match(html, /<small class="ricordi-moment-source" data-source-key="shared_event_completion:c1">Evento vissuto · Cena a Roma<\/small>/);
-  assert.match(html, /^<article class="moment-card moment-postit"/, 'editorial rhythm hook unchanged');
+  assert.match(html, /<small class="ricordi-moment-source ricordi-done-kicker" data-source-key="shared_event_completion:c1">L’avete fatto<\/small><p translate="no">Cena a Roma<\/p>/);
+  assert.match(html, /^<article class="moment-card moment-postit ricordi-done ricordi-wide"/, 'editorial rhythm hook kept, the card takes the whole row');
+  const noted = momentCard(m('m1', '2026-02-15', { caption: 'che sera' }), signed, 'Bea', false, false, { kind: 'event', sourceKey: 'shared_event_completion:c1', title: 'Cena a Roma', date: '2026-02-14' });
+  assert.match(noted, />L’avete fatto<span translate="no"> · Cena a Roma<\/span><\/small><p translate="no">che sera<\/p>/);
+  assert.doesNotMatch(html, /moment-delete/, 'R2: no Elimina when this phone did not create it');
+  assert.match(momentCard(m('m1', '2026-02-15'), signed, 'Bea', true, false, null), /class="moment-delete"/);
+  assert.match(momentCard(m('m1', '2026-02-15'), signed, 'Bea', false, false, null, false, true), / data-ricordi-new [^>]*><img[^>]*><span class="ricordi-new-label">Nuovo da Bea<\/span>/, 'R5 label');
   const card = eventCard(ev('c1', '2026-02-14'));
   assert.match(card, /^<article class="ricordi-experience ricordi-event" data-source-key="shared_event_completion:c1" data-title-source="snapshot">/);
-  assert.match(card, /<small>Vissuto insieme · 14 febbraio<\/small><b>Cena a Roma<\/b>/);
+  assert.match(card, /<small>Vissuto insieme · 14 febbraio<\/small><b translate="no">Cena a Roma<\/b>/);
   assert.doesNotMatch(card, /<img|onclick|data-ricordi-experience/);
+});
+
+test('US 1.0 R9: Capitoli stay hidden until the story spans two years', () => {
+  const { api, renderChapters, el } = load();
+  const t = api.timeline([m('m1', '2025-03-01'), m('m2', '2026-02-01')]);
+  renderChapters(api.chapters(t), new Map(), '2026-10-01');
+  assert.equal(el('ricordiChapters').hidden, true, 'a year and a half is still read month by month');
+  renderChapters(api.chapters(t), new Map(), '2027-03-01');
+  assert.equal(el('ricordiChapters').hidden, false);
+  assert.match(el('ricordiChapters').innerHTML, /data-ricordi-year="2025"/);
 });
 
 // ---------------------------------------------------------------- wiring
@@ -275,9 +295,9 @@ test('M12B.5 wiring: Ricordi reads event history and provenance as optional, rea
   assert.match(CORE, /sb\.from\('living_provenance'\)\.select\('source_kind,source_ref,source_title,source_date,target_moment_id'\)/);
   assert.match(CORE, /const eventRows=eventsError\?\[\]:\(events\|\|\[\]\);/);
   assert.match(CORE, /const provenanceRows=provenanceError\?\[\]:\(provenance\|\|\[\]\);/);
-  assert.match(CORE, /const riviviPick=ricordiPickRivivi\(timeline,today\);/);
-  assert.match(CORE, /renderRicordiRivivi\(riviviPick\?\.reason==='anniversary'\?riviviPick:null,signedUrls,names\);/);
-  assert.match(CORE, /renderRicordiChapters\(ricordiChapters\(timeline\),signedUrls\);/);
+  // US 1.0 R7/R9/R11: every surface reads the same display URLs (local thumbnails on Android).
+  assert.match(CORE, /renderRicordiRivivi\(ricordiPickRivivi\(timeline,today\),displayUrls,names\);/);
+  assert.match(CORE, /renderRicordiChapters\(ricordiChapters\(timeline\),displayUrls,today\);/);
   assert.doesNotMatch(CORE + ARCHIVE, /\.insert\(|\.update\(|\.delete\(|\.upsert\(|\.rpc\(|link_moment_to_source|conserva_contributions|left_for_you/);
   assert.doesNotMatch(ARCHIVE, /Math\.random|crypto\.|localStorage|sessionStorage/, 'deterministic, no new storage');
   assert.match(ARCHIVE, /if\(rivivi\)\{openMomentViewer\(rivivi\);return;\}/);

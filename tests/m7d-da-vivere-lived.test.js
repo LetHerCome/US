@@ -34,7 +34,9 @@ test('M7D runtime: no fake Moment — the bridge only opens the existing compose
   assert.doesNotMatch(b, /from\('moments'\)|from\('moment_photos'\)|uploadMoment\(|storage\.from/);
   const fn = b.match(/function addNoiIdeaMemory\([\s\S]*?\n\}/)?.[0] || '';
   assert.match(fn, /item\.status!=='lived'/);
-  assert.match(fn, /window\.UsMomentComposer\?\.open/);
+  // US 1.0 (R1/R6): the gallery opens right away and the photo is linked to the idea.
+  assert.match(fn, /openMemoryComposer\(item\.title,\{kind:'da_vivere',ref:item\.id,date\}\)/);
+  assert.match(read('app.js'), /function openMemoryComposer\(caption,source=null\)\{\s*const composer=window\.UsMomentComposer;[\s\S]*?composer\.pick\(source\?\{caption,source\}:\{caption\}\)[\s\S]*?composer\.open\(\{caption\}\)/);
   const albums = read('moments-albums.js');
   assert.match(albums, /window\.UsMomentComposer = Object\.freeze\(\{\s*open\(\{ caption \} = \{\}\) \{[\s\S]*?if \(input && caption && !input\.value\.trim\(\)\)[\s\S]*?openComposer\(\);/);
 });
@@ -54,7 +56,9 @@ test('M7D runtime: A proposes and waits, B confirms, only then lived with the Ca
   window.window = window;
   const toasts = [];
   const sb = { from: () => builder(), rpc: (name, args) => { calls.push([name, args]); return Promise.resolve(responses.shift()); } };
-  const context = { window, document: { getElementById: el, querySelector: () => ({ hidden: false, dataset: {} }) }, sb, toast: (m) => toasts.push(m), escapeHtml: (s) => String(s), console, setTimeout: () => 0, scrollTo() {}, go() {} };
+  const context = { window, document: { getElementById: el, querySelector: () => ({ hidden: false, dataset: {} }) }, sb, toast: (m) => toasts.push(m), escapeHtml: (s) => String(s), console, setTimeout: () => 0, scrollTo() {}, go() {},
+    // US 1.0 (N9): an idea opens inside Missioni, which also loads the weekly missions.
+    hydrateBond() {} };
   vm.createContext(context);
   require('./helpers/identity-fixture').install(context);
   vm.runInContext(block(), context);

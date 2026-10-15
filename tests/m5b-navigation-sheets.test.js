@@ -8,7 +8,8 @@ const read = (name) => fs.readFileSync(path.join(ROOT, name), 'utf8');
 
 test('la navigazione usa un ingresso direzionale M5B senza riattivare il fade legacy', () => {
   const app = read('app.js');
-  const css = read('polish4.css');
+  // T1 1.0 — the page-entry rules moved from polish4.css to styles.css.
+  const css = read('styles.css');
   const index = read('index.html');
 
   assert.match(index, /onclick="go\('home',\{nav:true\}\)"/);
@@ -19,8 +20,7 @@ test('la navigazione usa un ingresso direzionale M5B senza riattivare il fade le
   assert.match(app, /isReducedMotion/);
   assert.match(css, /\.page\.active\.us-motion5-enter-next/);
   assert.match(css, /\.page\.active\.us-motion5-enter-prev/);
-  assert.match(css, /animation:usMotion5PageEnter var\(--us-motion-fast\) var\(--us-ease-enter\) both/);
-  assert.match(css, /html\.us-motion31-promoting \.page\.active\.us-motion5-enter-next/);
+  assert.match(css, /animation:usMotion5PageEnter 240ms var\(--us-ease-enter\) both/);
 });
 
 test('le superfici concordate adottano l opt-in motion', () => {
@@ -40,13 +40,10 @@ test('le superfici concordate adottano l opt-in motion', () => {
 
 test('la foundation governa le sheet opt-in e swipe usa i token M5A', () => {
   const foundation = read('ui-foundation.css');
-  const polish = read('polish4.css');
   const app = read('app.js');
 
   assert.match(foundation, /transition:transform var\(--us-motion-surface\) var\(--us-ease-enter\),opacity var\(--us-motion-micro\) var\(--us-ease-standard\)/);
   assert.match(foundation, /\[data-us-motion-surface\] \[data-us-modal-panel\][\s\S]*animation:none/);
-  assert.match(polish, /transition:transform var\(--us-motion-surface\) var\(--us-ease-standard\)!important/);
-  assert.match(polish, /transition:transform var\(--us-motion-base\) var\(--us-ease-standard\)!important/);
   assert.match(app, /US_MOTION_SURFACE_MS=260/);
   assert.match(app, /US_MOTION_BASE_MS=220/);
 });

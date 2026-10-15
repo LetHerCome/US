@@ -100,7 +100,7 @@ test('perf 1.0: a launch inside the same build serves the precached shell withou
   await sw.extendable('install');
   await sw.extendable('activate');
   sw.network.length = 0;
-  for (const asset of [...localRuntime(), '/assets/fonts/Inter-Variable.woff2', '/assets/derived/runtime/us-icon-settings-128-v1.png', '/assets/derived/runtime/us-symbol-256-v1.png', '/assets/icons/phosphor/house-fill.svg']) {
+  for (const asset of [...localRuntime(), '/assets/fonts/Figtree-Latin.woff2', '/assets/derived/runtime/us-icon-settings-128-v1.png', '/assets/derived/runtime/us-symbol-256-v1.png', '/assets/icons/phosphor/house-fill.svg']) {
     const response = await sw.fetchEvent(asset);
     assert.equal(await response.text(), `asset:${asset.split('?')[0]}`, asset);
   }
@@ -118,8 +118,8 @@ test('perf 1.0: navigation, version.json and non-shell assets keep their network
   await sw.fetchEvent('/assets/icons/phosphor/not-in-shell.svg');
   assert.deepEqual(sw.network, ['/home', '/version.json?ts=1', '/assets/icons/phosphor/not-in-shell.svg']);
   sw.setOnline(false);
-  const offline = await sw.fetchEvent('/assets/fonts/Newsreader-Variable.woff2');
-  assert.equal(await offline.text(), 'asset:/assets/fonts/Newsreader-Variable.woff2', 'offline launch still boots from the shell cache');
+  const offline = await sw.fetchEvent('/assets/fonts/Fraunces-Soft-Roman.woff2');
+  assert.equal(await offline.text(), 'asset:/assets/fonts/Fraunces-Soft-Roman.woff2', 'offline launch still boots from the shell cache');
 });
 
 test('perf 1.0: Settings pre-fills after Home settles, but hydrates at once when it is the launch page', () => {

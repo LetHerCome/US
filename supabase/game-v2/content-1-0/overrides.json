@@ -1,0 +1,11 @@
+{
+  "recipe_fixes": [
+    {
+      "id": "calendar_past-002",
+      "label": "Domanda dal calendario · n. 2",
+      "question": "Ripensando a «{title}», {when}, c’è qualcosa di quella giornata che non mi hai mai raccontato?",
+      "question_en": "Looking back on “{title}” {when}, is there anything about that day you’ve never told me?",
+      "reason": "Oggi dice «che non ti ho mai raccontato»: chiede a chi legge un segreto dell’altra persona, e non si può rispondere."
+    }
+  ]
+}
