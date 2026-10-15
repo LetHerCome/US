@@ -212,7 +212,8 @@ test('Ricordi delete: visible action, no client secret, no SQL storage deletes, 
   assert.match(styles, /\.moment-delete\{[^}]*min-width:72px[^}]*height:44px/);
   assert.match(albums, /const DELETE_GRACE_MS=4000/);
   // US 1.0 R2: the creator only (the delete-moment Edge Function must check it too).
-  assert.match(albums, /window\.usProfile\?\.couple_id&&albumLoaded&&currentAlbum\.owner&&currentAlbum\.owner===window\.usProfile\.id\)/);
+  // S3.2 Policy A: also a memory whose author left (orphan), for the member still here.
+  assert.match(albums, /window\.usProfile\?\.couple_id&&albumLoaded&&\(currentAlbum\.orphan\|\|\(currentAlbum\.owner&&currentAlbum\.owner===window\.usProfile\.id\)\)\)/);
   assert.doesNotMatch(albums, /albumRows\.length===0/);
   assert.match(albums, />Elimina</);
   assert.match(albums, />Eliminato</);
