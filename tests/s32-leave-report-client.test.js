@@ -138,3 +138,13 @@ test('reports never reach the partner: no client read path exists', () => {
     assert.doesNotMatch(read(file), /from\(['"]user_reports['"]\)/, file);
   }
 });
+
+// Staging QA 16/10: the redesign's full-width text-field rule turned the
+// Segnala radios into 52px circles and pushed the reasons off the sheet.
+test('Segnala reasons: the settings text-field rule skips radios; each reason is a row with a small radio', () => {
+  const css = read('dc-settings.css');
+  assert.match(css, /#usSettingsModalBody \.us-settings2-field :is\(input:not\(\[type="radio"\]\):not\(\[type="checkbox"\]\),textarea\)\{/);
+  assert.doesNotMatch(css, /#usSettingsModalBody \.us-settings2-field :is\(input,textarea\)\{/);
+  assert.match(css, /#usSettingsModalBody \.us-report-option\{\s*display:flex;/);
+  assert.match(css, /#usSettingsModalBody \.us-report-option input\{flex:0 0 auto;width:20px;height:20px;min-height:0;/);
+});
