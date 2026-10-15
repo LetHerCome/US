@@ -2969,7 +2969,7 @@ async function setDailyAnswerReaction(reaction){
     if(window.todayQuestion?.id===questionId)window.todayRevealMeta=data;
     renderTodayReveal();
     // O2: the other phone hears about a ♥ or "mi hai commosso" (the server reads it back).
-    if(next)window.sendWebPushEvent?.('daily_reaction',questionId);
+    if(next)sendWebPushEvent('daily_reaction',questionId);
     return {status:'saved'};
   }catch(error){
     console.warn('[US Today] Reazione',error);

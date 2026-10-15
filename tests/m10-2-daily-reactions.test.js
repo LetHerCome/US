@@ -31,7 +31,7 @@ test('1.0 O2: reaction controls only on the partner answer, ♥ and "Mi hai comm
   assert.doesNotMatch(angry.nodes.todayReveal.innerHTML,/data-us-daily-partner-reaction|angry/,'an old "angry" is never shown');
 });
 
-test('1.0 O2: one tap sends set_daily_answer_reaction, the same tap takes it back; no push from the client', async () => {
+test('1.0 O2: one tap sends set_daily_answer_reaction, the same tap takes it back; only a saved ♥ or cry asks for the push', async () => {
   const t = installToday();await t.hydrate();
   assert.equal(typeof t.window.setDailyAnswerReaction,'function');
   assert.equal(t.listeners.has('click'),true);
@@ -42,7 +42,8 @@ test('1.0 O2: one tap sends set_daily_answer_reaction, the same tap takes it bac
   click('heart');await flush();await flush();
   assert.deepEqual(t.calls.filter(([name])=>name==='set_daily_answer_reaction').at(-1),['set_daily_answer_reaction',{target_question_id:'q-1',target_reaction:null}]);
   assert.equal(await t.window.setDailyAnswerReaction('angry').then((r)=>r.status),'noop','never "arrabbiato"');
-  assert.deepEqual(t.pushes,[]);
+  // The server reads the reaction back; taking it back sends nothing.
+  assert.deepEqual(t.pushes,[['daily_reaction','q-1']]);
 });
 
 test('1.0 O2: a refused reaction goes back to what the server had, with an honest toast', async () => {
