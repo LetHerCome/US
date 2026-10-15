@@ -48,6 +48,11 @@ Deno.serve(async (request) => {
     if (moment.couple_id !== profile.couple_id) {
       return json({ error: "Forbidden" }, 403);
     }
+    // US 1.0 (R2): only the person who created a memory can delete it, the same
+    // rule as the moments_delete_own RLS policy this service-role path bypasses.
+    if (moment.created_by !== profile.id) {
+      return json({ error: "Only the creator can delete this memory" }, 403);
+    }
 
     const { data: albumRows, error: albumError } = await admin
       .from("moment_photos")
@@ -68,6 +73,7 @@ Deno.serve(async (request) => {
       .delete()
       .eq("id", momentId)
       .eq("couple_id", profile.couple_id)
+      .eq("created_by", profile.id)
       .select("id");
     if (deleteError) throw deleteError;
     if (!deleted?.length) return json({ error: "Moment not deleted" }, 409);

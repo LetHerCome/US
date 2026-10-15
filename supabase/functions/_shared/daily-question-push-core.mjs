@@ -19,8 +19,14 @@
 //   * 404/410 → subscription rimossa.
 //   * Native Notifications V1: consegna dal dispatcher condiviso
 //     (notification-core.mjs): Web Push + app native sotto la stessa chiave.
+//   * US 1.0 (O3): promemoria serale, UNO al giorno, dalle 20:30 Europe/Rome
+//     (stesso cron ogni 10 minuti, finestra fino alle 22), solo a chi non ha
+//     ancora risposto mentre la sua persona ha già risposto prima delle 20:30.
+//     Preferenza today; dedupe `daily-evening:<giorno>:<user id>`. Chi riceve
+//     il promemoria serale non riceve anche "nuova domanda" nello stesso run.
+//   * US 1.0: testo nella lingua di chi riceve (profiles.locale).
 
-import { buildNotification, deliverNotification, webPushPayload } from './notification-core.mjs';
+import { buildNotification, deliverNotification, recipientLocales, webPushPayload } from './notification-core.mjs';
 
 export const DAILY_QUESTION_EVENT_TYPE = 'daily_question';
 export const DAILY_QUESTION_PUSH_TTL_SECONDS = 60 * 60 * 12;
@@ -33,13 +39,23 @@ export const DAILY_QUESTION_TIMEZONE = 'Europe/Rome';
 export const DAILY_QUESTION_SEND_START_HOUR = 9;
 export const DAILY_QUESTION_SEND_END_HOUR = 22;
 
+export const DAILY_EVENING_EVENT_TYPE = 'daily_evening';
+// O3: il promemoria serale parte alle 20:30 Europe/Rome.
+export const DAILY_EVENING_START_HOUR = 20;
+export const DAILY_EVENING_START_MINUTE = 30;
+const EVENING_START = DAILY_EVENING_START_HOUR * 60 + DAILY_EVENING_START_MINUTE;
+
 export function dailyQuestionDedupeKey(questionId, userId) {
   return `daily-question:${questionId}:${userId}`;
 }
 
-export function dailyQuestionPushPayload({ questionId }) {
+export function dailyEveningDedupeKey(day, userId) {
+  return `daily-evening:${day}:${userId}`;
+}
+
+export function dailyQuestionPushPayload({ questionId, locale = 'it' }) {
   // Mai il testo della domanda: solo l'invito.
-  return webPushPayload(buildNotification('daily_question', { questionId }));
+  return webPushPayload(buildNotification('daily_question', { questionId, locale }));
 }
 
 // Giorno e ora correnti in Europe/Rome (stessa autorità di
@@ -52,9 +68,33 @@ export function romeClock(now = new Date()) {
   return { day: `${parts.year}-${parts.month}-${parts.day}`, hour: Number(parts.hour) };
 }
 
-async function deliverToUser(admin, { question, user, ensureVapid, sendNotification, native }) {
+// Minuti dalla mezzanotte, Europe/Rome.
+export function romeMinutes(now = new Date()) {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-GB', {
+    timeZone: DAILY_QUESTION_TIMEZONE, hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  }).formatToParts(now).map((part) => [part.type, part.value]));
+  return Number(parts.hour) * 60 + Number(parts.minute);
+}
+
+export function inDailyEveningWindow(now = new Date()) {
+  const minutes = romeMinutes(now);
+  return minutes >= EVENING_START && minutes < DAILY_QUESTION_SEND_END_HOUR * 60;
+}
+
+// La risposta della persona è arrivata prima delle 20:30 di oggi (Rome)? Chi
+// risponde dopo ha già fatto partire la push immediata "ora tocca a te": niente
+// promemoria subito dopo. Una data illeggibile non blocca il promemoria.
+function answeredBeforeEvening(createdAt, day) {
+  const at = new Date(createdAt);
+  if (!createdAt || Number.isNaN(at.getTime())) return true;
+  const answeredDay = romeClock(at).day;
+  if (answeredDay !== day) return answeredDay < day;
+  return romeMinutes(at) < EVENING_START;
+}
+
+async function deliverToUser(admin, { question, user, locale = 'it', ensureVapid, sendNotification, native }) {
   const result = await deliverNotification(admin, {
-    notification: buildNotification('daily_question', { questionId: question.id }),
+    notification: buildNotification('daily_question', { questionId: question.id, locale }),
     recipientIds: [user.id],
     coupleId: user.couple_id,
     senderId: null,
@@ -63,6 +103,24 @@ async function deliverToUser(admin, { question, user, ensureVapid, sendNotificat
     web: typeof sendNotification === 'function' ? { ensure: ensureVapid, send: sendNotification } : null,
     native,
   });
+  return outcomeOf(result);
+}
+
+async function deliverEveningToUser(admin, { question, day, user, partner, locale = 'it', ensureVapid, sendNotification, native }) {
+  const result = await deliverNotification(admin, {
+    notification: buildNotification('daily_evening', { questionId: question.id, senderName: partner.display_name, locale }),
+    recipientIds: [user.id],
+    coupleId: user.couple_id,
+    senderId: null,
+    dedupeKey: dailyEveningDedupeKey(day, user.id),
+    eventType: DAILY_EVENING_EVENT_TYPE,
+    web: typeof sendNotification === 'function' ? { ensure: ensureVapid, send: sendNotification } : null,
+    native,
+  });
+  return outcomeOf(result);
+}
+
+function outcomeOf(result) {
   if (result.deduplicated) return { outcome: 'deduplicated', delivered: 0, failed: 0 };
   if (result.reason === 'recipient-not-subscribed') return { outcome: 'not-subscribed', delivered: 0, failed: 0 };
   if (result.reason) return { outcome: result.reason, delivered: 0, failed: 0 };
@@ -97,7 +155,7 @@ export async function dispatchDailyQuestionPush(admin, options) {
   if (questionError) throw questionError;
   if (!question?.id) return { day: clock.day, reason: 'question-not-ready', delivered: 0, recipients: [] };
 
-  const { data: profiles, error: profilesError } = await admin.from('profiles').select('id,couple_id');
+  const { data: profiles, error: profilesError } = await admin.from('profiles').select('id,couple_id,display_name');
   if (profilesError) throw profilesError;
   const members = (profiles || []).filter((profile) => profile.id && profile.couple_id);
   if (!members.length) return { day: clock.day, questionId: question.id, reason: 'no-members', delivered: 0, recipients: [] };
@@ -112,10 +170,29 @@ export async function dispatchDailyQuestionPush(admin, options) {
     .map((preference) => preference.user_id));
 
   const { data: answers, error: answersError } = await admin.from('daily_answers')
-    .select('user_id')
+    .select('user_id,created_at')
     .eq('question_id', question.id);
   if (answersError) throw answersError;
   const answered = new Set((answers || []).map((answer) => answer.user_id));
+  const answeredAt = new Map((answers || []).map((answer) => [answer.user_id, answer.created_at]));
+  const locales = await recipientLocales(admin, memberIds);
+
+  // O3: chi aspetta stasera. Stessa coppia, due membri, la persona ha
+  // risposto prima delle 20:30, io no, preferenza today attiva.
+  const evening = inDailyEveningWindow(now);
+  const eveningPartner = new Map();
+  if (evening) {
+    const byCouple = new Map();
+    for (const member of members) byCouple.set(member.couple_id, [...(byCouple.get(member.couple_id) || []), member]);
+    for (const couple of byCouple.values()) {
+      if (couple.length !== 2) continue;
+      for (const [user, partner] of [[couple[0], couple[1]], [couple[1], couple[0]]]) {
+        if (disabled.has(user.id) || answered.has(user.id) || !answered.has(partner.id)) continue;
+        if (!answeredBeforeEvening(answeredAt.get(partner.id), clock.day)) continue;
+        eveningPartner.set(user.id, partner);
+      }
+    }
+  }
 
   const { data: logged, error: loggedError } = await admin.from('push_event_log')
     .select('dedupe_key')
@@ -128,17 +205,41 @@ export async function dispatchDailyQuestionPush(admin, options) {
   for (const user of members) {
     if (disabled.has(user.id)) { recipients.push({ userId: user.id, outcome: 'disabled-by-preference' }); continue; }
     if (answered.has(user.id)) { recipients.push({ userId: user.id, outcome: 'already-answered' }); continue; }
+    if (eveningPartner.has(user.id)) { recipients.push({ userId: user.id, outcome: 'evening-reminder' }); continue; }
     if (alreadyNotified.has(dailyQuestionDedupeKey(question.id, user.id))) { recipients.push({ userId: user.id, outcome: 'deduplicated' }); continue; }
     // Un errore su un utente non blocca l'altro; nessuna chiave resta consumata
     // senza consegna, quindi il run successivo riprova.
     let result;
     try {
-      result = await deliverToUser(admin, { question, user, ensureVapid, sendNotification, native });
+      result = await deliverToUser(admin, { question, user, locale: locales.get(user.id), ensureVapid, sendNotification, native });
     } catch (error) {
       result = { outcome: 'error', delivered: 0, failed: 0, error: error instanceof Error ? error.message : 'unknown' };
     }
     if (result.outcome === 'delivered') delivered += 1;
     recipients.push({ userId: user.id, ...result });
   }
-  return { day: clock.day, questionId: question.id, delivered, recipients };
+  if (!evening) return { day: clock.day, questionId: question.id, delivered, recipients };
+
+  const eveningRecipients = [];
+  let eveningDelivered = 0;
+  if (eveningPartner.size) {
+    const { data: eveningLogged, error: eveningLoggedError } = await admin.from('push_event_log')
+      .select('dedupe_key')
+      .in('dedupe_key', [...eveningPartner.keys()].map((id) => dailyEveningDedupeKey(clock.day, id)));
+    if (eveningLoggedError) throw eveningLoggedError;
+    const eveningDone = new Set((eveningLogged || []).map((row) => row.dedupe_key));
+    for (const [userId, partner] of eveningPartner) {
+      const user = members.find((member) => member.id === userId);
+      if (eveningDone.has(dailyEveningDedupeKey(clock.day, userId))) { eveningRecipients.push({ userId, outcome: 'deduplicated' }); continue; }
+      let result;
+      try {
+        result = await deliverEveningToUser(admin, { question, day: clock.day, user, partner, locale: locales.get(userId), ensureVapid, sendNotification, native });
+      } catch (error) {
+        result = { outcome: 'error', delivered: 0, failed: 0, error: error instanceof Error ? error.message : 'unknown' };
+      }
+      if (result.outcome === 'delivered') eveningDelivered += 1;
+      eveningRecipients.push({ userId, ...result });
+    }
+  }
+  return { day: clock.day, questionId: question.id, delivered, recipients, evening: { delivered: eveningDelivered, recipients: eveningRecipients } };
 }

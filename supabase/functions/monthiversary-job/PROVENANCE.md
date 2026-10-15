@@ -54,3 +54,14 @@ are unchanged; tests/f2a1-production-baseline.test.js applies the F2C edit
 and then this N2 edit to the recovered bytes.
 N2_INDEX_TS_SHA256:
 39500d8fe52f2043c267f32f43eb561009b7c464c5a66c65c61183d240bff0b5
+
+US 1.0 (A11/N7, not deployed) changed index.ts in exactly one more way: a
+start on the 29th, 30th or 31st fires on the last day of shorter months (the
+client's rule, events.js addMonthsDay), months count without the old
+day-of-month decrement, and the notification is built by the shared catalogue
+(`relationship` with kind + months: no points in the text, target `events`,
+each recipient in their profiles.locale, one delivery per recipient). The
+award call (kind, months, XP 60/200, milestone date = today) is unchanged;
+tests/f2a1-production-baseline.test.js applies this edit after F2C and N2.
+US10_INDEX_TS_SHA256:
+6ba3d93f088a54c2583069f4ce7323a00200ab3cd3c82b03034181260b415a5f

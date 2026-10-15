@@ -4,15 +4,17 @@ const {createFakeAdmin,createFakeWebPush}=require('./helpers/edge-function-harne
 test('D5 Game push uses same-tenant display name and preserves dedupe',async()=>{
   const {deliverGamePush}=await import('../supabase/functions/_shared/game-v2-push-core.mjs');
   const event={kind:'game_waiting',couple_id:'b',sender_role:'beatrice',recipient_role:'francesco',dedupe_key:'game-waiting:00000000-0000-4000-8000-000000000001:francesco'};
-  const admin=createFakeAdmin({tables:{profiles:[{id:'sam',couple_id:'b',role:'francesco',display_name:'Sam'},{id:'alex',couple_id:'b',role:'beatrice',display_name:'Alex'},{id:'secret',couple_id:'a',role:'beatrice',display_name:'Beatrice'}],push_subscriptions:[{id:'sub',user_id:'sam',endpoint:'https://push.example/sam',p256dh:'test',auth_key:'test'}]}});
+  const admin=createFakeAdmin({tables:{profiles:[{id:'sam',couple_id:'b',role:'francesco',display_name:'Sam'},{id:'alex',couple_id:'b',role:'beatrice',display_name:'Alex'},{id:'secret',couple_id:'a',role:'beatrice',display_name:'Beatrice'}],game_sessions:[{id:'00000000-0000-4000-8000-000000000001',couple_id:'b',game_family:'ridete'}],push_subscriptions:[{id:'sub',user_id:'sam',endpoint:'https://push.example/sam',p256dh:'test',auth_key:'test'}]}});
   const web=createFakeWebPush();
   const options={ensureVapid(){},sendNotification:web.sendNotification};
   assert.equal((await deliverGamePush(admin,event,options)).delivered,1);
-  assert.equal(web.sent[0].payload.body,'Alex ha risposto. Ora tocca a te.');
+  // US 1.0 (G11): the push names the game of the round.
+  assert.equal(web.sent[0].payload.body,'Alex ha finito Ridete: tocca a te');
   assert.equal((await deliverGamePush(admin,event,options)).outcome,'deduplicated');
   assert.equal(web.sent.length,1);
 });
-for(const [name,expected] of [['Sam','Sam ha risposto. Ora tocca a te.'],['\u0000<>','La tua persona ha risposto. Ora tocca a te.']]){
+// No game_sessions row readable: the push still goes, without the game name.
+for(const [name,expected] of [['Sam','Sam ha giocato: tocca a te'],['\u0000<>','La tua persona ha giocato: tocca a te']]){
   test(`D5 native Game push validates sender ${JSON.stringify(name)} and tenant`,async()=>{
     const {deliverGamePush}=await import('../supabase/functions/_shared/game-v2-push-core.mjs');
     const event={kind:'game_waiting',couple_id:'b',sender_role:'francesco',recipient_role:'beatrice',dedupe_key:'game-waiting:00000000-0000-4000-8000-000000000001:beatrice'};

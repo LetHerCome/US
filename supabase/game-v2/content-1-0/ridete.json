@@ -1,0 +1,589 @@
+{
+  "family": "ridete",
+  "new": [
+    {
+      "id": "ridete-011",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "fare_colpo",
+      "cooldown_class": "standard",
+      "question_text": "Qual è la cosa più ridicola che hai fatto per fare colpo su di me, e che forse non ho nemmeno notato?",
+      "question_text_en": "What’s the most ridiculous thing you did to impress me that I may not have even noticed?"
+    },
+    {
+      "id": "ridete-012",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "pane_e_giocoleria",
+      "cooldown_class": "light",
+      "question_text": "Chi di noi esce a comprare il pane e torna con l’iscrizione a un corso di giocoleria?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Noi due: ci vediamo a lezione"
+      ],
+      "question_text_en": "Which of us heads out for bread and comes back signed up for juggling classes?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "Both of us: see you in class"
+      ]
+    },
+    {
+      "id": "ridete-013",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "raccontare_storie",
+      "cooldown_class": "light",
+      "question_text": "Quando racconti una storia, qual è il tuo stile inconfondibile?",
+      "options": [
+        "Parto dalla fine e torno indietro",
+        "Aggiungo dettagli inutili ma bellissimi",
+        "Faccio tutte le voci dei personaggi",
+        "Rido prima di arrivare al punto"
+      ],
+      "question_text_en": "When you tell a story, what’s your signature style?",
+      "options_en": [
+        "I start at the end and work backwards",
+        "I add useless but beautiful details",
+        "I do all the characters’ voices",
+        "I laugh before I get to the point"
+      ]
+    },
+    {
+      "id": "ridete-014",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "copia_perfetta",
+      "cooldown_class": "light",
+      "question_text": "Una mia copia perfetta prende il mio posto per un giorno. Da quale dettaglio capisci subito che non sono io?",
+      "question_text_en": "A perfect double of me takes my place for a day. What detail instantly tells you it’s not me?"
+    },
+    {
+      "id": "ridete-015",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "grazie_altrettanto",
+      "cooldown_class": "light",
+      "question_text": "Al ristorante ci portano i piatti e ci augurano «Buon appetito». Chi di noi risponde «Grazie, altrettanto!»?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Noi due, in coro"
+      ],
+      "question_text_en": "The server brings our food and says “Enjoy your meal.” Which of us replies “Thanks, you too!”?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "Both of us, in unison"
+      ]
+    },
+    {
+      "id": "ridete-016",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "prima_pagina",
+      "cooldown_class": "light",
+      "question_text": "Un quotidiano ci dedica la prima pagina per una cosa minuscola che abbiamo fatto, raccontata come un evento storico. Qual è il titolo?",
+      "question_text_en": "A newspaper puts us on the front page for something tiny we did, reported like a historic event. What’s the headline?"
+    },
+    {
+      "id": "ridete-017",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "segnale_segreto",
+      "cooldown_class": "light",
+      "question_text": "Ci serve un segnale segreto per dirci «Andiamo via» a una festa. Quale proponi?",
+      "options": [
+        "Una parola in codice, tipo «carciofo»",
+        "Uno sguardo che capisci solo tu",
+        "Uno sbadiglio molto teatrale",
+        "Annuncio che andiamo, poi saluto tutti per un’ora"
+      ],
+      "question_text_en": "We need a secret signal that means “let’s go” at a party. What do you suggest?",
+      "options_en": [
+        "A code word, like “artichoke”",
+        "A look only you understand",
+        "A very theatrical yawn",
+        "I announce we’re leaving, then say goodbye for an hour"
+      ]
+    },
+    {
+      "id": "ridete-018",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "ultimo_pezzo",
+      "cooldown_class": "light",
+      "question_text": "Medaglia d’oro nella disciplina «ultimo pezzo lasciato nel piatto per educazione»: chi di noi la vince?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Pari: il pezzo è ancora lì"
+      ],
+      "question_text_en": "Gold medal in the event “last bite left on the plate out of politeness”: which of us takes it home?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "A tie: the last bite is still there"
+      ]
+    },
+    {
+      "id": "ridete-019",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "record_mondiale",
+      "cooldown_class": "light",
+      "question_text": "Quale record mondiale potremmo battere insieme senza nemmeno allenarci?",
+      "question_text_en": "What world record could we break together without even training?"
+    },
+    {
+      "id": "ridete-020",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "numero_sconosciuto",
+      "cooldown_class": "light",
+      "question_text": "Ti chiama un numero sconosciuto. Cosa fai?",
+      "options": [
+        "Lo guardo squillare, immobile",
+        "Rispondo con la mia voce più ufficiale",
+        "Lo cerco su internet prima di decidere",
+        "Rispondo e finisco a chiacchierare mezz’ora"
+      ],
+      "question_text_en": "An unknown number is calling you. What do you do?",
+      "options_en": [
+        "I watch it ring, frozen",
+        "I answer in my most official voice",
+        "I look it up online before deciding",
+        "I answer and end up chatting for half an hour"
+      ]
+    },
+    {
+      "id": "ridete-021",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "trattative_con_la_sveglia",
+      "cooldown_class": "light",
+      "question_text": "Quando suona la sveglia, chi di noi avvia trattative degne di un vertice internazionale?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Pari: la sveglia ormai si arrende"
+      ],
+      "question_text_en": "When the alarm goes off, which of us opens negotiations worthy of an international summit?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "A tie: the alarm has given up on us"
+      ]
+    },
+    {
+      "id": "ridete-022",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "festa_in_maschera",
+      "cooldown_class": "light",
+      "question_text": "C’è una festa in maschera e ce ne ricordiamo un’ora prima. Da cosa ci travestiamo, con quello che abbiamo sotto mano?",
+      "question_text_en": "There’s a costume party and we only remember an hour before. What do we go as, using whatever we have on hand?"
+    },
+    {
+      "id": "ridete-023",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "archeologi_della_chat",
+      "cooldown_class": "light",
+      "question_text": "Tra mille anni degli archeologi trovano la nostra chat. Quale messaggio cercano di decifrare per decenni?",
+      "question_text_en": "A thousand years from now, archaeologists find our chat. Which message do they spend decades trying to decipher?"
+    },
+    {
+      "id": "ridete-024",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "saluto_frainteso",
+      "cooldown_class": "light",
+      "question_text": "Chi di noi risponderebbe con entusiasmo a un saluto che in realtà era per qualcun altro?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Insieme, e con grande convinzione"
+      ],
+      "question_text_en": "Which of us would enthusiastically wave back at someone who was actually waving at someone else?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "Together, with total conviction"
+      ]
+    },
+    {
+      "id": "ridete-025",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "canzone_nel_negozio",
+      "cooldown_class": "light",
+      "question_text": "In un negozio parte una canzone che conosci a memoria. Cosa fai?",
+      "options": [
+        "Canto sottovoce, ma non troppo",
+        "Ballo con le spalle e faccio finta di niente",
+        "Lo annuncio: «Questa la conosco!»",
+        "Niente, ma poi la canto per tre giorni"
+      ],
+      "question_text_en": "A song you know by heart comes on in a store. What do you do?",
+      "options_en": [
+        "I sing under my breath, just not very quietly",
+        "I dance with my shoulders and act natural",
+        "I announce it: “I know this one!”",
+        "Nothing, then I sing it for three days straight"
+      ]
+    },
+    {
+      "id": "ridete-026",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "pupazzetti_di_noi",
+      "cooldown_class": "light",
+      "question_text": "Diventiamo due pupazzetti da collezione, venduti in coppia. Quale accessorio inutile ma indispensabile c’è nella confezione?",
+      "question_text_en": "We become a pair of collectible figurines, sold as a set. What useless but essential accessory comes in the box?"
+    },
+    {
+      "id": "ridete-027",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "sasso_troppo_bello",
+      "cooldown_class": "light",
+      "question_text": "Chi di noi tornerebbe da una passeggiata con un sasso «troppo bello per lasciarlo lì»?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Noi due: ormai è una collezione"
+      ],
+      "question_text_en": "Which of us would come back from a walk with a rock that was “too nice to leave there”?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "Both of us: it’s a collection now"
+      ]
+    },
+    {
+      "id": "ridete-028",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "gara_di_ballo",
+      "cooldown_class": "light",
+      "question_text": "Ci iscrivono per sbaglio a una gara di ballo di coppia e non possiamo ritirarci. Qual è la nostra strategia?",
+      "question_text_en": "We get signed up for a couples dance competition by mistake, and we can’t back out. What’s our strategy?"
+    },
+    {
+      "id": "ridete-029",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "oggetti_ribelli",
+      "cooldown_class": "light",
+      "question_text": "Quando un oggetto si rifiuta di funzionare, qual è la tua tecnica?",
+      "options": [
+        "Gli parlo con dolcezza",
+        "Spengo e riaccendo, con fiducia",
+        "Leggo le istruzioni, per la prima volta",
+        "Lo passo a te e mi allontano piano"
+      ],
+      "question_text_en": "When something refuses to work, what’s your technique?",
+      "options_en": [
+        "I sweet-talk it",
+        "Off and on again, full of hope",
+        "I read the manual, for the very first time",
+        "I hand it to you and slowly back away"
+      ]
+    },
+    {
+      "id": "ridete-030",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "cane_degli_amici",
+      "cooldown_class": "light",
+      "question_text": "In visita a casa di amici, chi di noi passerebbe tutto il tempo a chiacchierare con il loro cane?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Insieme, ovviamente"
+      ],
+      "question_text_en": "When we visit friends, which of us spends the whole time chatting with their dog?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "Together, obviously"
+      ]
+    },
+    {
+      "id": "ridete-031",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "pubblicita_noiosa",
+      "cooldown_class": "light",
+      "question_text": "Ci scelgono come testimonial di un prodotto noiosissimo. Quale prodotto, e qual è il nostro slogan?",
+      "question_text_en": "We get picked to star in an ad for an incredibly boring product. What’s the product, and what’s our slogan?"
+    },
+    {
+      "id": "ridete-032",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "oggetti_smarriti",
+      "cooldown_class": "light",
+      "question_text": "Se avessimo un ufficio oggetti smarriti tutto nostro, cosa ci sarebbe sullo scaffale più pieno?",
+      "question_text_en": "If we had a lost and found all our own, what would be on the most crowded shelf?"
+    },
+    {
+      "id": "ridete-033",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "viaggio_nel_tempo",
+      "cooldown_class": "light",
+      "question_text": "Facciamo un viaggio nel tempo. Chi di noi cambierebbe la storia in cinque minuti, toccando l’unica cosa da non toccare?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Noi due: la storia non ha scampo"
+      ],
+      "question_text_en": "We travel back in time. Which of us changes history within five minutes by touching the one thing nobody should touch?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "Both of us: history doesn’t stand a chance"
+      ]
+    },
+    {
+      "id": "ridete-034",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "arrivo_tra_poco",
+      "cooldown_class": "light",
+      "question_text": "Quando mi scrivi «Arrivo!», cosa significa davvero?",
+      "options": [
+        "Sto davvero arrivando",
+        "Sto per uscire, più o meno",
+        "Sono in pigiama, ma col pensiero sono già lì",
+        "Arrivo, nel senso di tra venti minuti"
+      ],
+      "question_text_en": "When you text me “On my way!”, what does it really mean?",
+      "options_en": [
+        "I’m genuinely on my way",
+        "I’m about to leave, more or less",
+        "I’m in pajamas, but there in spirit",
+        "On my way, as in twenty minutes from now"
+      ]
+    },
+    {
+      "id": "ridete-035",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "parlare_in_rima",
+      "cooldown_class": "light",
+      "question_text": "Per un giorno intero possiamo parlarci solo in rima. Come mi dai la buonanotte?",
+      "question_text_en": "For one whole day we can only talk to each other in rhyme. How do you say goodnight to me?"
+    },
+    {
+      "id": "ridete-036",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "gioco_da_tavolo",
+      "cooldown_class": "light",
+      "question_text": "A metà di un gioco da tavolo, chi di noi tirerebbe fuori una regola nuova giurando che c’era da sempre?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Ce la giochiamo"
+      ],
+      "question_text_en": "Halfway through a board game, which of us would pull out a brand-new rule and swear it was always there?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "We’d have to roll for it"
+      ]
+    },
+    {
+      "id": "ridete-037",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "pacchetto_di_lusso",
+      "cooldown_class": "light",
+      "question_text": "Un’agenzia di viaggi vende una nostra serata qualunque come pacchetto di lusso. Cosa c’è scritto nella descrizione?",
+      "question_text_en": "A travel agency is selling one of our ordinary evenings as a luxury package. What does the description say?"
+    },
+    {
+      "id": "ridete-038",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "verso_sul_divano",
+      "cooldown_class": "light",
+      "question_text": "Che verso fai quando ti lasci cadere sul divano dopo una giornata piena?",
+      "options": [
+        "Un sospiro da film",
+        "Un «aaah» da pubblicità",
+        "Un lamento da porta che cigola",
+        "Silenzio assoluto: mi spengo e basta"
+      ],
+      "question_text_en": "What noise do you make when you flop onto the couch after a busy day?",
+      "options_en": [
+        "A movie-worthy sigh",
+        "A commercial-style “aaah”",
+        "A creaky-door groan",
+        "Total silence: I just power down"
+      ]
+    },
+    {
+      "id": "ridete-039",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "pisolino_davanti_al_film",
+      "cooldown_class": "light",
+      "question_text": "Chi di noi si addormenterebbe a metà del film che ha tanto insistito per vedere?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Noi due, prima dei titoli di testa"
+      ],
+      "question_text_en": "Which of us would fall asleep halfway through the movie they begged to watch?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "Both of us, before the opening credits"
+      ]
+    },
+    {
+      "id": "ridete-040",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "tartaruga_centenaria",
+      "cooldown_class": "light",
+      "question_text": "Ci chiedono di organizzare la festa per i cento anni di una tartaruga. Qual è il tema, e cosa c’è sulla torta?",
+      "question_text_en": "We’re asked to throw a hundredth birthday party for a tortoise. What’s the theme, and what’s on the cake?"
+    }
+  ],
+  "existing_en": [
+    {
+      "id": "ridete-001",
+      "question_text_en": "We have to open a restaurant together. Which of us would get fired first, and why?"
+    },
+    {
+      "id": "ridete-002",
+      "question_text_en": "We have to go on a reality show together. What would our first on-camera argument be about?"
+    },
+    {
+      "id": "ridete-003",
+      "question_text_en": "We’re in an escape room with two minutes left. Which of us is already blaming the rest of the team?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "Both of us, taking turns"
+      ]
+    },
+    {
+      "id": "ridete-004",
+      "question_text_en": "If our story became a movie, what would the tagline on the poster be?"
+    },
+    {
+      "id": "ridete-005",
+      "question_text_en": "We’re shipwrecked on a desert island. Which of us survives the longest, purely out of stubbornness?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "A tie: we’re fighting over the only coconut"
+      ]
+    },
+    {
+      "id": "ridete-006",
+      "question_text_en": "What’s the smallest, most absurd thing you’ve ever seen me take way too seriously?"
+    },
+    {
+      "id": "ridete-007",
+      "question_text_en": "We’re starting a band. What’s it called, and what’s the title of our first album?"
+    },
+    {
+      "id": "ridete-008",
+      "question_text_en": "If we had to throw each other a surprise party, which of us would get caught first?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "Impossible: we’re perfect spies"
+      ]
+    },
+    {
+      "id": "ridete-009",
+      "question_text_en": "A wildlife documentary narrates my morning routine. What does the narrator say?"
+    },
+    {
+      "id": "ridete-010",
+      "question_text_en": "We end up in a city we don’t know, with no phone and no money. What’s your first instinct?",
+      "options_en": [
+        "Ask the first friendly face for help",
+        "Walk until something looks familiar",
+        "Turn it into an adventure right away",
+        "Sit down and wait for you to sort it out"
+      ]
+    }
+  ],
+  "fixes": [
+    {
+      "id": "ridete-001",
+      "question_text": "Dobbiamo aprire un ristorante insieme. Chi di noi si farebbe licenziare prima, e perché?",
+      "reason": "«Chi dei due», «verrebbe licenziato» e «per primo» presuppongono il genere: «si farebbe licenziare prima» tiene la stessa battuta."
+    },
+    {
+      "id": "ridete-003",
+      "question_text": "Siamo in una stanza della fuga e mancano due minuti. Chi di noi sta già dando la colpa al resto della squadra?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Noi due, a turno"
+      ],
+      "reason": "«Siamo chiusi», «Chi dei due», «all’altro» e «Tutti e due» presuppongono il genere; «il resto della squadra» (che è una persona sola) tiene la battuta."
+    },
+    {
+      "id": "ridete-005",
+      "question_text": "Naufraghiamo su un’isola deserta. Chi di noi sopravvive più a lungo, e solo per testardaggine?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Pari: litighiamo per l’unica noce di cocco"
+      ],
+      "reason": "«Chi dei due» presuppone il genere, e «Nessuno» come risposta su noi due vale «nessuno di noi»: «Pari» tiene la noce di cocco."
+    },
+    {
+      "id": "ridete-008",
+      "question_text": "Se dovessimo organizzarci a vicenda una festa a sorpresa, chi di noi si farebbe scoprire prima?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Impossibile: siamo spie perfette"
+      ],
+      "reason": "«Chi dei due», «per primo», «per l’altro» e «Nessuno» presuppongono il genere; «a vicenda» e «Impossibile» tengono la stessa battuta."
+    }
+  ]
+}

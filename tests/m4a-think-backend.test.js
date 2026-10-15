@@ -41,7 +41,9 @@ test('M4A push reaction valida l oggetto e usa dedupe stabile', () => {
   // Native Notifications V1: the copy lives once, in the shared catalogue.
   const catalogue = read('supabase/functions/_shared/notification-core.mjs');
   assert.match(shared, /buildNotification\("think_reaction"/);
-  assert.match(catalogue, /Ha reagito al tuo Ti penso/);
+  // US 1.0 (O7): the push says which reaction, with the name.
+  assert.match(shared, /reaction: args\.reaction/);
+  assert.match(catalogue, /ti manda un abbraccio/);
   assert.doesNotMatch(shared + catalogue, /ha risposto con/);
   assert.match(edge, /think_reaction/);
   assert.match(edge, /think_reactions/);

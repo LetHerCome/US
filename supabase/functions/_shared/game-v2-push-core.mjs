@@ -20,8 +20,10 @@
 //   * 404/410 remove the subscription.
 //   * Native Notifications V1: delivery goes through the shared dispatcher
 //     (notification-core.mjs): Web Push and the native apps under one key.
+//   * US 1.0 (G11): waiting / reveal name the game (game_sessions.game_family
+//     of the round in the key), in the recipient's language (profiles.locale).
 
-import { buildNotification, deliverNotification, webPushPayload } from './notification-core.mjs';
+import { buildNotification, deliverNotification, normalizeLocale, recipientLocale, webPushPayload } from './notification-core.mjs';
 
 export const GAME_PUSH_KINDS = ['game_waiting', 'game_reveal', 'game_weekly_created', 'game_weekly_turn'];
 export const GAME_PUSH_TTL_SECONDS = 60 * 60 * 12;
@@ -40,14 +42,48 @@ const DEDUPE = {
   game_weekly_turn: /^game-weekly-turn:[0-9a-f-]{36}:\d{4}-\d{2}-\d{2}$/,
 };
 
-export function gameNotification(event, { senderName } = {}) {
-  // waiting / reveal keys carry the round id: the app can open that exact round.
-  const sessionId = /^game-(waiting|reveal):([0-9a-f-]{36}):/.exec(String(event.dedupe_key || ''))?.[2] || null;
-  return buildNotification(event.kind, { senderName, sessionId, tag: event.dedupe_key });
+// The app names of the game families (games.js; E se…? now lives inside
+// Confrontatevi, Swipe is "Questo o quello"). Unknown family = no name.
+export const GAME_NAMES = Object.freeze({
+  quanto_mi_conosci: Object.freeze({ it: 'Quanto mi conosci?', en: 'How well do you know me?' }),
+  scopritevi: Object.freeze({ it: 'Scopritevi', en: 'Discover each other' }),
+  ridete: Object.freeze({ it: 'Ridete', en: 'Laugh together' }),
+  confrontatevi: Object.freeze({ it: 'Confrontatevi', en: 'Compare notes' }),
+  e_se: Object.freeze({ it: 'Confrontatevi', en: 'Compare notes' }),
+  rivivete: Object.freeze({ it: 'Rivivete', en: 'Relive' }),
+  per_voi: Object.freeze({ it: 'Per voi', en: 'For you two' }),
+  swipe: Object.freeze({ it: 'Questo o quello', en: 'This or that' }),
+});
+
+export function gameName(family, locale) {
+  if (typeof family !== 'string' || !Object.hasOwn(GAME_NAMES, family)) return null;
+  return GAME_NAMES[family][normalizeLocale(locale)];
 }
 
-export function gamePushPayload(event, { senderName } = {}) {
-  return webPushPayload(gameNotification(event, { senderName }));
+const sessionIdOf = (event) => /^game-(waiting|reveal):([0-9a-f-]{36}):/.exec(String(event?.dedupe_key || ''))?.[2] || null;
+
+export function gameNotification(event, { senderName, family = null, locale = 'it' } = {}) {
+  // waiting / reveal keys carry the round id: the app can open that exact round.
+  const sessionId = sessionIdOf(event);
+  return buildNotification(event.kind, { senderName, sessionId, tag: event.dedupe_key, gameName: gameName(family, locale), locale });
+}
+
+export function gamePushPayload(event, { senderName, family = null, locale = 'it' } = {}) {
+  return webPushPayload(gameNotification(event, { senderName, family, locale }));
+}
+
+// The family of the round named by the key, read server-side within the
+// event's couple. A failed read only drops the name, never the push.
+async function sessionFamily(admin, event) {
+  const sessionId = sessionIdOf(event);
+  if (!sessionId) return null;
+  try {
+    const { data, error } = await admin.from('game_sessions').select('id,couple_id,game_family').eq('id', sessionId).maybeSingle();
+    if (error || !data || data.couple_id !== event.couple_id) return null;
+    return typeof data.game_family === 'string' ? data.game_family : null;
+  } catch (_) {
+    return null;
+  }
 }
 
 export function romeHour(now = new Date()) {
@@ -78,8 +114,9 @@ export async function deliverGamePush(admin, event, { ensureVapid, sendNotificat
     .maybeSingle();
   if (!preferenceError && preference?.games === false) return { outcome: 'disabled-by-preference', delivered: 0, failed: 0 };
 
+  const [family, locale] = await Promise.all([sessionFamily(admin, event), recipientLocale(admin, recipient.id)]);
   const result = await deliverNotification(admin, {
-    notification: gameNotification(event, { senderName: sender ? senderLabel(sender.display_name) : null }),
+    notification: gameNotification(event, { senderName: sender ? senderLabel(sender.display_name) : null, family, locale }),
     recipientIds: [recipient.id],
     coupleId: event.couple_id,
     senderId: sender?.id || null,

@@ -198,7 +198,7 @@ self.addEventListener("activate", (event) => {
 
 // Native Notifications V1: a notification can only name an allow-listed US
 // surface. Its URL is always rebuilt here, same-origin; a payload URL is never opened.
-const US_PUSH_TARGETS = ["home", "today", "think", "left_for_you", "quiz", "bond", "calendar"];
+const US_PUSH_TARGETS = ["home", "today", "think", "left_for_you", "quiz", "bond", "calendar", "events"];
 const usPushTarget = (value) => (US_PUSH_TARGETS.includes(value) ? value : "home");
 const usPushUrl = (target) => `/?open=${encodeURIComponent(usPushTarget(target))}&from=push`;
 

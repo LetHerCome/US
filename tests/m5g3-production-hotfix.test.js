@@ -51,8 +51,9 @@ test('M5G3 Edge Function validates sender-owned left_for_you references and hide
   const catalogue = read('supabase/functions/_shared/notification-core.mjs');
   assert.match(edge, /dispatchLeftForYouPush/);
   assert.match(core, /left-for-you:/);
-  assert.match(catalogue, /left_for_you: \(a\) => \(\{[^\n]*ti ha lasciato qualcosa/);
-  assert.doesNotMatch(catalogue, /left_for_you: \(a\) => \(\{[^\n]*a\.body/);
+  // US 1.0: each catalogue entry also receives the recipient's language (en).
+  assert.match(catalogue, /left_for_you: \(a(?:, en)?\) => \(\{[^\n]*ti ha lasciato qualcosa/);
+  assert.doesNotMatch(catalogue, /left_for_you: \(a(?:, en)?\) => \(\{[^\n]*a\.body/);
   assert.doesNotMatch(edge, /notificationBody\s*=\s*.*body\./);
   assert.doesNotMatch(core, /body:\s*`[^`]*row\.body/);
 });
@@ -73,7 +74,8 @@ test('M5G3 keeps the dedicated notification preference migration prepared but un
 test('M5G3 left_for_you Edge Function preserves think_reaction and suppresses disabled preference', () => {
   const edge = read('supabase/functions/send-web-push/index.ts');
   const settings = read('settings.js');
-  assert.match(edge, /\[\"test\", \"think\", \"think_reaction\", \"daily_answer\", \"quest_confirmed\", \"left_for_you\"\]/);
+  // US 1.0 adds daily_reaction (O2) and partner_joined (A2); every earlier type stays.
+  assert.match(edge, /\[\"test\", \"think\", \"think_reaction\", \"daily_answer\", \"daily_reaction\", \"quest_confirmed\", \"left_for_you\", \"partner_joined\"\]/);
   // M9A: la preferenza left_for_you è applicata dal core condiviso.
   const core = read('supabase/functions/_shared/left-for-you-push-core.mjs');
   assert.match(core, /\.select\('left_for_you'\)/);

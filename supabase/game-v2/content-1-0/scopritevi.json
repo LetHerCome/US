@@ -1,0 +1,472 @@
+{
+  "family": "scopritevi",
+  "new": [
+    {
+      "id": "scopritevi-013",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "voce_interiore",
+      "cooldown_class": "light",
+      "question_text": "Quando parli tra te e te per farti coraggio o per sgridarti, come ti chiami: per nome, per cognome, con un soprannome?",
+      "question_text_en": "When you talk to yourself, to cheer yourself on or to tell yourself off, what do you call yourself: your first name, your last name, a nickname?"
+    },
+    {
+      "id": "scopritevi-014",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "prima_di_addormentarsi",
+      "cooldown_class": "light",
+      "question_text": "Negli ultimi minuti prima di addormentarti, dove va di solito la tua testa?",
+      "options": [
+        "Ripasso la giornata appena finita",
+        "Organizzo già il giorno dopo",
+        "Invento storie che non racconto a nessuno",
+        "Da nessuna parte: mi spengo come una lampadina"
+      ],
+      "question_text_en": "In the last few minutes before you fall asleep, where does your mind usually go?",
+      "options_en": [
+        "Replaying the day I just had",
+        "Planning the next day already",
+        "Making up stories I never tell anyone",
+        "Nowhere: I go out like a light"
+      ]
+    },
+    {
+      "id": "scopritevi-015",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "libretto_istruzioni",
+      "cooldown_class": "standard",
+      "question_text": "Se avessi un libretto d’istruzioni, cosa troverei scritto alla voce «Avvertenze»? E alla voce «Manutenzione»?",
+      "question_text_en": "If you came with an instruction manual, what would I find under “Warnings”? And under “Care and maintenance”?"
+    },
+    {
+      "id": "scopritevi-016",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 3,
+      "topic": "coraggio_invisibile",
+      "cooldown_class": "deep",
+      "question_text": "Qual è la cosa più coraggiosa che tu abbia mai fatto e che, vista da fuori, sembrerebbe una sciocchezza?",
+      "question_text_en": "What’s the bravest thing you’ve ever done that would look like nothing from the outside?"
+    },
+    {
+      "id": "scopritevi-017",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "finta_di_capire",
+      "cooldown_class": "light",
+      "question_text": "Cosa fai finta di capire da anni, pur di non ammettere che non ci hai mai capito niente?",
+      "question_text_en": "What have you been pretending to understand for years, just so you don’t have to admit you’ve never had a clue?"
+    },
+    {
+      "id": "scopritevi-018",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "decidere",
+      "cooldown_class": "standard",
+      "question_text": "Quando devi prendere una decisione importante, come la prendi davvero?",
+      "options": [
+        "Pro e contro, rigorosamente per iscritto",
+        "Chiedo consigli, poi faccio di testa mia",
+        "Lancio una moneta e scopro cosa speravo",
+        "Di pancia: le ragioni arrivano dopo"
+      ],
+      "question_text_en": "When you have a big decision to make, how do you really make it?",
+      "options_en": [
+        "Pros and cons, strictly in writing",
+        "Ask for advice, then do my own thing",
+        "Flip a coin and see what I was hoping for",
+        "Gut first, reasons later"
+      ]
+    },
+    {
+      "id": "scopritevi-019",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "contraddizioni",
+      "cooldown_class": "standard",
+      "question_text": "Qual è la tua contraddizione preferita, tipo odiare il freddo ma adorare l’inverno?",
+      "question_text_en": "What’s your favorite contradiction about yourself, like hating the cold but loving winter?"
+    },
+    {
+      "id": "scopritevi-020",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 3,
+      "topic": "affetto_senza_parole",
+      "cooldown_class": "deep",
+      "longitudinal": true,
+      "question_text": "Qual è il tuo modo di dire «ti voglio bene» senza parole, quello che magari passa inosservato?",
+      "question_text_en": "What’s your way of saying “I love you” without words, the one that might go unnoticed?"
+    },
+    {
+      "id": "scopritevi-021",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "ruolo_nel_gruppo",
+      "cooldown_class": "light",
+      "question_text": "A quindici anni, che ruolo avevi nel tuo gruppo di amici?",
+      "options": [
+        "Organizzavo tutto io",
+        "Facevo ridere tutti",
+        "Ascoltavo i problemi di tutti",
+        "Osservavo, un po’ in disparte"
+      ],
+      "question_text_en": "At fifteen, what was your role in your group of friends?",
+      "options_en": [
+        "I organized everything",
+        "I made everyone laugh",
+        "I listened to everyone’s problems",
+        "I watched from the sidelines"
+      ]
+    },
+    {
+      "id": "scopritevi-022",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "museo_personale",
+      "cooldown_class": "standard",
+      "longitudinal": true,
+      "question_text": "Se aprissero un piccolo museo dedicato a te, quali tre oggetti metteresti nella prima sala?",
+      "question_text_en": "If someone opened a tiny museum all about you, which three objects would go in the first room?"
+    },
+    {
+      "id": "scopritevi-023",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "essere_grandi",
+      "cooldown_class": "standard",
+      "longitudinal": true,
+      "question_text": "In cosa ti senti una persona adulta a tutti gli effetti, e in cosa per niente?",
+      "question_text_en": "In what ways do you feel like a proper grown-up, and in what ways not at all?"
+    },
+    {
+      "id": "scopritevi-024",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 3,
+      "topic": "scelta_decisiva",
+      "cooldown_class": "deep",
+      "question_text": "Qual è una decisione piccola, presa anni fa quasi per caso, senza la quale oggi la tua vita non sarebbe la stessa?",
+      "question_text_en": "What’s a small decision you made years ago, almost by chance, without which your life wouldn’t be the same today?"
+    },
+    {
+      "id": "scopritevi-025",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "pigrizia_apparente",
+      "cooldown_class": "light",
+      "question_text": "Quale tua abitudine sembra pigrizia, ma in realtà è un sistema perfetto?",
+      "question_text_en": "Which of your habits looks like laziness but is actually a flawless system?"
+    },
+    {
+      "id": "scopritevi-026",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "chiedere_attenzioni",
+      "cooldown_class": "standard",
+      "question_text": "Quando vorresti un po’ di attenzione ma non ti va di chiederla, cosa fai?",
+      "options": [
+        "Sospiro un po’ più forte del solito",
+        "Ronzo nei paraggi facendo finta di niente",
+        "Mando messaggi o cose da guardare",
+        "Alla fine lo dico e basta"
+      ],
+      "question_text_en": "When you want some attention but don’t feel like asking for it, what do you do?",
+      "options_en": [
+        "Sigh a little louder than usual",
+        "Hover nearby, acting casual",
+        "Send random messages and things to look at",
+        "Eventually just say it"
+      ]
+    },
+    {
+      "id": "scopritevi-027",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "occhi_lucidi",
+      "cooldown_class": "standard",
+      "question_text": "Cosa ti fa venire gli occhi lucidi ogni volta, anche se non lo ammetteresti volentieri?",
+      "question_text_en": "What makes your eyes well up every single time, even if you’d rather not admit it?"
+    },
+    {
+      "id": "scopritevi-028",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 3,
+      "topic": "asticella_alta",
+      "cooldown_class": "deep",
+      "longitudinal": true,
+      "question_text": "In cosa pretendi da te più di quanto pretenderesti da chiunque altro?",
+      "question_text_en": "Where do you expect more of yourself than you’d ever expect of anyone else?"
+    },
+    {
+      "id": "scopritevi-029",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "note_del_telefono",
+      "cooldown_class": "light",
+      "question_text": "Qual è la cosa più strana che c’è nelle note del tuo telefono o nei tuoi quaderni?",
+      "question_text_en": "What’s the weirdest thing in the notes on your phone or in your notebooks?"
+    },
+    {
+      "id": "scopritevi-030",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "nostalgia",
+      "cooldown_class": "standard",
+      "question_text": "Che tipo di nostalgia ti prende più spesso?",
+      "options": [
+        "Per i posti in cui ho vissuto",
+        "Per persone che vedo meno di prima",
+        "Per una vecchia versione di me",
+        "Per epoche che non ho mai vissuto"
+      ],
+      "question_text_en": "What kind of nostalgia hits you most often?",
+      "options_en": [
+        "For places I’ve lived",
+        "For people I see less than I used to",
+        "For an older version of me",
+        "For eras I never even lived through"
+      ]
+    },
+    {
+      "id": "scopritevi-031",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "vita_prima_di_noi",
+      "cooldown_class": "standard",
+      "question_text": "Qual è un pezzo della tua vita prima di noi che vorresti farmi vedere almeno una volta: un posto, una persona, un’abitudine?",
+      "question_text_en": "What’s a piece of your life from before us that you’d love me to see at least once: a place, a person, a habit?"
+    },
+    {
+      "id": "scopritevi-032",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 3,
+      "topic": "piacersi",
+      "cooldown_class": "deep",
+      "longitudinal": true,
+      "question_text": "Qual è una cosa di te che ti piace davvero, ma che fai fatica a dire ad alta voce?",
+      "question_text_en": "What’s something you really like about yourself but find hard to say out loud?"
+    },
+    {
+      "id": "scopritevi-033",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "marachella",
+      "cooldown_class": "light",
+      "question_text": "Qual è una tua marachella di anni fa che non hai mai confessato a nessuno?",
+      "question_text_en": "What’s a bit of mischief from years ago that you’ve never confessed to a soul?"
+    },
+    {
+      "id": "scopritevi-034",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "lato_nascosto",
+      "cooldown_class": "standard",
+      "question_text": "Con le persone nuove, quale lato di te tieni nascosto più a lungo?",
+      "options": [
+        "Quello buffo e un po’ assurdo",
+        "Quello che si commuove facilmente",
+        "Quello competitivo",
+        "Quello che ha bisogno di conferme"
+      ],
+      "question_text_en": "With new people, which side of you do you keep hidden the longest?",
+      "options_en": [
+        "The goofy, slightly absurd side",
+        "The side that gets emotional easily",
+        "The competitive side",
+        "The side that needs reassurance"
+      ]
+    },
+    {
+      "id": "scopritevi-035",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "premiazione_personale",
+      "cooldown_class": "standard",
+      "longitudinal": true,
+      "question_text": "Se ci fosse una premiazione per i tuoi ultimi dodici mesi, in quale categoria vinceresti?",
+      "question_text_en": "If there were an awards night for your last twelve months, which category would you win?"
+    },
+    {
+      "id": "scopritevi-036",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 3,
+      "topic": "liberta",
+      "cooldown_class": "deep",
+      "longitudinal": true,
+      "question_text": "Quand’è stata l’ultima volta in cui hai provato una libertà totale, anche solo per un’ora? Cosa stavi facendo?",
+      "question_text_en": "When was the last time you felt completely free, even just for an hour? What were you doing?"
+    },
+    {
+      "id": "scopritevi-037",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "torto_mai_digerito",
+      "cooldown_class": "light",
+      "question_text": "Qual è un torto piccolissimo che ancora oggi non hai digerito? Tipo l’ultimo biscotto mangiato da qualcun altro o un libro prestato e mai tornato.",
+      "question_text_en": "What’s a tiny injustice you still haven’t gotten over? Like someone else eating the last cookie, or a book you lent that never came back."
+    },
+    {
+      "id": "scopritevi-038",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "cose_che_ami",
+      "cooldown_class": "standard",
+      "question_text": "Quando scopri qualcosa che ti piace tantissimo, una canzone, un libro, un posto, cosa ne fai?",
+      "options": [
+        "Lo consumo fino alla nausea",
+        "Lo centellino per farlo durare",
+        "Lo faccio scoprire a tutti",
+        "Me lo tengo stretto, come un segreto"
+      ],
+      "question_text_en": "When you discover something you absolutely love, a song, a book, a place, what do you do with it?",
+      "options_en": [
+        "Wear it out until I’m sick of it",
+        "Ration it so it lasts",
+        "Get everyone else hooked on it",
+        "Keep it close, like a secret"
+      ]
+    },
+    {
+      "id": "scopritevi-039",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "consiglio_rivalutato",
+      "cooldown_class": "standard",
+      "question_text": "C’è un consiglio che ti hanno dato anni fa, che allora ti sembrava assurdo e che oggi invece capisci?",
+      "question_text_en": "Is there a piece of advice you got years ago that sounded absurd back then but makes sense to you now?"
+    },
+    {
+      "id": "scopritevi-040",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 3,
+      "topic": "difficile_da_chiedere",
+      "cooldown_class": "deep",
+      "question_text": "Tra queste cose, quale ti costa più fatica chiedere, anche a chi ti vuole bene?",
+      "options": [
+        "Una mano, anche quando mi serve davvero",
+        "Del tempo tutto per me",
+        "Una conferma, quando dubito di me",
+        "Qualcuno che mi ascolti, senza consigli"
+      ],
+      "question_text_en": "Which of these do you find hardest to ask for, even from people who love you?",
+      "options_en": [
+        "Help, even when I really need it",
+        "Time just for me",
+        "Reassurance, when I doubt myself",
+        "Someone to just listen, no advice"
+      ]
+    },
+    {
+      "id": "scopritevi-041",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "nuovi_inizi",
+      "cooldown_class": "standard",
+      "question_text": "Che rito hai per i nuovi inizi, tipo un quaderno nuovo, una pulizia generale o una lista di propositi?",
+      "question_text_en": "What’s your ritual for fresh starts, like a new notebook, a big clear-out or a list of resolutions?"
+    },
+    {
+      "id": "scopritevi-042",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 3,
+      "topic": "te_a_diciotto_anni",
+      "cooldown_class": "deep",
+      "longitudinal": true,
+      "question_text": "Se la persona che eri a diciott’anni ti vedesse oggi, cosa la stupirebbe di più?",
+      "question_text_en": "If the person you were at eighteen could see you today, what would surprise them most?"
+    }
+  ],
+  "existing_en": [
+    {
+      "id": "scopritevi-001",
+      "question_text_en": "Is there something I do for you that I probably think is no big deal, but that means far more to you than I realize?"
+    },
+    {
+      "id": "scopritevi-002",
+      "question_text_en": "What’s a part of you that you think I’ve only half understood?"
+    },
+    {
+      "id": "scopritevi-003",
+      "question_text_en": "Is there something you’ve changed your mind about in the last year, where I might still be going by the old version of you?"
+    },
+    {
+      "id": "scopritevi-004",
+      "question_text_en": "What’s something you’re good at that you feel nobody really notices?"
+    },
+    {
+      "id": "scopritevi-005",
+      "question_text_en": "Which childhood fear makes you smile now, and which one never quite went away?"
+    },
+    {
+      "id": "scopritevi-006",
+      "question_text_en": "When you feel truly at home, what’s around you: people, sounds, smells, light?"
+    },
+    {
+      "id": "scopritevi-007",
+      "question_text_en": "What’s a compliment that stuck with you for years, and who gave it to you?"
+    },
+    {
+      "id": "scopritevi-008",
+      "question_text_en": "What’s a little habit you have when no one’s watching that you’ve never told me about?"
+    },
+    {
+      "id": "scopritevi-009",
+      "question_text_en": "At what point in the week do you feel most like yourself, and when do you feel a bit out of place?"
+    },
+    {
+      "id": "scopritevi-010",
+      "question_text_en": "What’s a question you wish I asked you more often?"
+    },
+    {
+      "id": "scopritevi-011",
+      "question_text_en": "When you get good news, what’s the first thing you feel like doing?",
+      "options_en": [
+        "Tell someone right away",
+        "Keep it to myself for a while",
+        "Celebrate it with something tangible",
+        "Start thinking about what comes next"
+      ]
+    },
+    {
+      "id": "scopritevi-012",
+      "question_text_en": "Which of these gestures goes straight to your heart?",
+      "options_en": [
+        "The right word at the right moment",
+        "A practical gesture that lightens my day",
+        "Phone-free time, just for us",
+        "A small but thoughtful surprise"
+      ]
+    }
+  ],
+  "fixes": []
+}
