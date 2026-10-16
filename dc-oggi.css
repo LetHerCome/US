@@ -1039,3 +1039,14 @@ body:has(#usCountdownSheet.open) .toast{z-index:calc(var(--us-layer-sheet) + 2)}
   #home .home-photo-shade{transition:none}
 }
 @keyframes dc-oggi-fade{from{opacity:0}to{opacity:1}}
+
+/* ---------- Oggi photo: whole when filling would cut it (founder 16/10) ----------
+   fastboot2.js marks a layer data-us-photo-whole when cover would crop more
+   than a fifth of the picture. The photo then shows whole, centred, and the
+   same picture fills the screen behind it, blurred and dimmed (a sibling
+   backdrop that crossfades with its layer). Vertical photos keep filling. */
+#homeHero .home-photo-layer[data-us-photo-whole]{background-size:contain;background-repeat:no-repeat}
+#homeHero .home-photo-backdrop{position:absolute!important;inset:-32px;z-index:0!important;background-size:cover;background-position:center;filter:blur(28px) brightness(.72) saturate(1.15);opacity:0;transition:opacity var(--us-motion-photo,420ms) var(--us-ease-standard,ease);pointer-events:none}
+#homeHero .home-photo-backdrop.active{opacity:1}
+#homeHero[data-us-home-photo-instant] .home-photo-backdrop{transition:none}
+@media (prefers-reduced-motion:reduce){#homeHero .home-photo-backdrop{transition:none}}

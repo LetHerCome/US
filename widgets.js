@@ -278,7 +278,8 @@
   // Android refreshes the cached photo on launch and while US is active;
   // RemoteViews cannot download a new private image while US is closed.
   async function encodePhoto(url) {
-    const response = await fetch(url, { cache: 'no-store', credentials: 'omit' });
+    // The same signed URL Oggi just painted: the HTTP cache answers, no second download.
+    const response = await fetch(url, { credentials: 'omit' });
     if (!response.ok) throw new Error(`photo_http_${response.status}`);
     const blob = await response.blob();
     if (!/^image\//.test(blob.type || 'image/')) throw new Error('photo_not_image');
