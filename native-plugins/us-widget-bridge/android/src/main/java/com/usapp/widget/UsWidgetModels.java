@@ -21,7 +21,8 @@ final class UsWidgetModels {
     static final ZoneId ROME = ZoneId.of("Europe/Rome");
     static final long DAY_MS = 86_400_000L;
     /** "Sent" stays visible this long; taps inside the first part are ignored. */
-    static final long SENT_VISIBLE_MS = 1_800L;
+    /** "Inviato a …" stays long enough to be read (it is the only success feedback). */
+    static final long SENT_VISIBLE_MS = 5_000L;
     static final long SEND_COOLDOWN_MS = 1_800L;
     static final long FAILED_VISIBLE_MS = 10 * 60_000L;
     /** A "sending" older than this was interrupted (process killed). */

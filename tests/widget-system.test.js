@@ -449,12 +449,14 @@ test('Noi 2x1 is a light photo-distance widget with one action only', () => {
 
 // 1.0 (O12): the widget no longer shows an "N inviati · 24h" counter; the
 // store keeps its confirmed-send history (dedupe), the provider hides the line.
-test('Ti penso clears sent display promptly; no sent counter on the widget', () => {
+test('Ti penso shows "Inviato" for a readable moment; no sent counter on the widget', () => {
   const model = read(`${JAVA}/UsWidgetModels.java`);
   const store = read(`${JAVA}/UsWidgetStore.java`);
   const receiver = read(`${JAVA}/UsThinkWidgetActionReceiver.java`);
   const provider = read(`${JAVA}/UsThinkWidgetProvider.java`);
-  assert.match(model, /SENT_VISIBLE_MS = 1_800L/);
+  // 16/10: without the counter, "Inviato a …" is the only success feedback.
+  assert.match(model, /SENT_VISIBLE_MS = 5_000L/);
+  assert.doesNotMatch(receiver, /store.writeAction("idle", actionId)/);
   assert.match(model, /SEND_COOLDOWN_MS = 1_800L/);
   assert.match(store, /recentThinkEvents/);
   assert.match(store, /now\.minusSeconds\(86400\)/);
