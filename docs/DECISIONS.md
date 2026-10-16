@@ -112,3 +112,14 @@ Only durable decisions belong here. New missions should not reopen them without 
 **Fonte unica per lo Store 1.0:** [Carta](store/US_STORE_1_0_CHARTER.md) · [Baseline](store/US_STORE_1_0_BASELINE.md) · [Piano](store/US_STORE_1_0_EXECUTION.md) · [Release gates](store/US_STORE_1_0_QUALITY_GATES.md).
 
 **Governance:** la delibera approva la direzione di prodotto e la preparazione documentale; non autorizza per implicazione merge, produzione, modifica Supabase, acquisto account, pubblicazione o marketing a pagamento.
+
+## 2026-10-16 — Notifiche Android che dicono cosa è successo
+
+**Fonte:** decisione esplicita del founder del 16/10/2026 («tipo dal server, testo scritto dal telefono dopo il controllo dell'account»). Modifica la scelta di Native Notifications S3 (#187), per cui il pacchetto FCM non doveva rivelare nemmeno la categoria dell'evento.
+
+- Il pacchetto FCM v2 resta solo dati, con un unico banner (`us-private-notice`), e aggiunge **un solo campo `k`**: il tipo di evento, preso da un elenco chiuso (`ANDROID_NOTICE_KINDS` in `native-push-transport.mjs`, per esempio `think`, `daily_ready`, `game_turn`). **Mai** testi, nomi, id, ref, tag o destinazioni.
+- **Compromesso accettato:** Google, che trasporta le notifiche, vede la categoria dell'evento (per esempio «Ti penso»), mai il contenuto.
+- Il telefono scrive la frase (`UsPushNotices.java`), nella lingua del telefono, **solo dopo** il controllo dell'account (`UsPushOwnerGate`). Il nome dell'altra persona viene dal telefono stesso: l'app lo salva nel controllo per l'account proprietario, viene letto sotto lo stesso blocco che pubblica la notifica e si cancella al logout o al cambio di account. Senza nome: «La tua persona». Tipo assente o sconosciuto: «Apri US per vedere le novità».
+- Toccando la notifica si apre una delle quattro schede pubbliche (`com.usapp.us://open/<oggi|noi|ricordi|gioca>`): mai un'azione, un ref o dati privati.
+- Visibilità sulla schermata di blocco: `VISIBILITY_PRIVATE`, invariata.
+- iOS/APNs non cambia.

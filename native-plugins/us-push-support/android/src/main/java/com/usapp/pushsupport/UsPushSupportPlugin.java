@@ -124,6 +124,20 @@ public class UsPushSupportPlugin extends Plugin {
     }
 
     /**
+     * The other person's name for this owner's notices (16/10/2026). Accepted
+     * only for the account currently bound in the owner gate.
+     */
+    @PluginMethod
+    public void setPushPartnerName(PluginCall call) {
+        final boolean saved = UsPushOwnerGate.setPartnerName(
+            getContext(),
+            call.getString("ownerId"),
+            call.getString("partnerName", "")
+        );
+        call.resolve(new JSObject().put("saved", saved));
+    }
+
+    /**
      * Synchronous SharedPreferences commit before resolving to JS.
      * All app notifications are canceled as defense in depth.
      */

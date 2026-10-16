@@ -57,14 +57,15 @@ test('FCM v2 sender cannot request automatic Android notification rendering', as
   assert.deepEqual(Object.keys(payload.message).sort(), ['android','data','token']);
   assert.equal(Object.hasOwn(payload.message, 'notification'), false);
   assert.equal(Object.hasOwn(payload.message.android, 'notification'), false);
-  assert.deepEqual(payload.message.data, { v: '2', installation: uuid });
+  // 16/10/2026: one allow-listed kind; the private copy above never travels.
+  assert.deepEqual(payload.message.data, { v: '2', installation: uuid, k: 'think' });
   assert.doesNotMatch(JSON.stringify(payload), /NEVER_EXPOSE_PRIVATE_SENDER_OR_EVENT/);
   assert.equal(payload.message.android.collapse_key, 'us-private-notice');
 });
 
 test('native delivery cannot silently restore legacy Firebase notification payloads', () => {
   const transport = read(SHARED_TRANSPORT);
-  assert.match(transport, /data:\s*\{\s*v:\s*'2',\s*installation\s*\}/);
+  assert.match(transport, /data: kind \? \{ v: '2', installation, k: kind \} : \{ v: '2', installation \},/);
   assert.doesNotMatch(transport, /message:\s*\{\s*token[^]*?notification:\s*\{/,
     'A message.notification causes Android OS to auto-display before the owner gate');
   const ownerGate = read('android/app/src/main/java/com/usapp/us/UsGuardedMessagingService.java');
