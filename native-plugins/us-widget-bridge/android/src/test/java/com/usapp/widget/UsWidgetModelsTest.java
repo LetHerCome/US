@@ -183,7 +183,11 @@ public class UsWidgetModelsTest {
         UsWidgetModels.Think sent = UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:04Z"), true, now);
         assertTrue(sent.busy);
         assertEquals("Inviato a Beatrice", sent.message);
-        UsWidgetModels.Think later = UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:04Z"), true, Instant.parse("2026-10-06T10:00:07Z"));
+        // Past the cooldown the heart sends again, while "Inviato a …" is still readable.
+        UsWidgetModels.Think readable = UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:04Z"), true, Instant.parse("2026-10-06T10:00:07Z"));
+        assertFalse(readable.busy);
+        assertEquals("Inviato a Beatrice", readable.message);
+        UsWidgetModels.Think later = UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:04Z"), true, Instant.parse("2026-10-06T10:00:10Z"));
         assertFalse(later.busy);
         assertEquals("Ti penso", later.cta);
         assertEquals("Pensa a Beatrice", later.message);
