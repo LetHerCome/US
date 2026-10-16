@@ -939,9 +939,8 @@ function usInvalidateAuth({revokePush=true}={}){
   homePhotoPath='';homePhotoHourKey='';homePhotoHasPainted=false;if(typeof usHomePhotoMeta!=='undefined')usHomePhotoMeta=null;if(typeof renderOggiCaption==='function')renderOggiCaption(null);if(typeof renderOggiNext==='function')renderOggiNext(null);
   document.body.classList.remove('us-fastboot-photo');
   clearPrivateDeviceState(previousId).catch(()=>{});
-  for(const key of ['A','B']){
-    if(window.UsHomePhotoFit){window.UsHomePhotoFit.set(key,'',null);continue;}
-    const layer=document.getElementById(`homePhotoLayer${key}`);if(layer)layer.style.backgroundImage='';
+  for(const id of ['homePhotoLayerA','homePhotoLayerB']){
+    const layer=document.getElementById(id);if(layer)layer.style.backgroundImage='';
   }
   usOnboarding.reset();
   usOnboarding.setup?.close?.();
@@ -1844,16 +1843,12 @@ function crossfadeHomePhoto(url,{path='',hourKey='',allowRetry=true}={}){
     hero.classList.toggle('is-empty',!url);
     if(empty)empty.hidden=Boolean(url);
     if(!url&&typeof layoutOggiEmptyState==='function')requestAnimationFrame(layoutOggiEmptyState);
-    // Whole on a blurred copy when filling would cut too much (fastboot2.js).
-    // preload is only read when url is set, i.e. after it loaded.
-    if(window.UsHomePhotoFit)window.UsHomePhotoFit.set(nextKey,url,url?preload:null);
-    else next.style.backgroundImage=url?`url("${url}")`:'';
+    next.style.backgroundImage=url?`url("${url}")`:'';
     const paint=()=>{
       if(!currentViewer())return;
       next.classList.add('active');
       current.classList.remove('active');
       homePhotoActiveLayer=nextKey;
-      window.UsHomePhotoFit?.sync();
       if(url){
         homePhotoHasPainted=true;
         if(path){
