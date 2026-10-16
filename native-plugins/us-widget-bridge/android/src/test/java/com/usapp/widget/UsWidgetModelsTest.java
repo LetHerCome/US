@@ -197,6 +197,22 @@ public class UsWidgetModelsTest {
     }
 
     @Test
+    public void thinkToneSaysWhoseMoveItIs() throws Exception {
+        // "Due colori": rosa for the other person's thought, lilla for mine, quiet otherwise.
+        Instant now = Instant.parse("2026-10-06T12:00:00Z");
+        JSONObject s = snapshot(null);
+        assertEquals(UsWidgetModels.TONE_QUIET, UsWidgetModels.think(s, null, true, now).tone);
+        assertEquals("Beatrice", UsWidgetModels.think(s, null, true, now).partner);
+        s.getJSONObject("think").put("lastReceivedAt", "2026-10-06T11:30:00Z");
+        assertEquals(UsWidgetModels.TONE_PARTNER, UsWidgetModels.think(s, null, true, now).tone);
+        Instant sentNow = Instant.parse("2026-10-06T10:00:05Z");
+        assertEquals(UsWidgetModels.TONE_ME, UsWidgetModels.think(snapshot(null), action("sending", "2026-10-06T10:00:00Z"), true, sentNow).tone);
+        assertEquals(UsWidgetModels.TONE_ME, UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:04Z"), true, sentNow).tone);
+        assertEquals(UsWidgetModels.TONE_QUIET, UsWidgetModels.think(snapshot(null), action("sending", "2026-10-06T10:00:00Z"), true, Instant.parse("2026-10-06T10:01:00Z")).tone);
+        assertEquals(UsWidgetModels.TONE_QUIET, UsWidgetModels.think(null, null, false, now).tone);
+    }
+
+    @Test
     public void ricambiaOnlyWhileThePartnerThoughtIsUnanswered() throws Exception {
         Instant now = Instant.parse("2026-10-06T12:00:00Z");
         JSONObject s = snapshot(null);

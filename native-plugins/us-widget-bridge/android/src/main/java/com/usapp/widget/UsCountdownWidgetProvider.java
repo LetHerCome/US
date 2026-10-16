@@ -14,9 +14,9 @@ import android.widget.RemoteViews;
  * (together / days / clock + style) and ticks natively in the final day.
  */
 public final class UsCountdownWidgetProvider extends AppWidgetProvider {
-    private static final int[] VALUES = { R.id.us_cd_value_light, R.id.us_cd_value_serif, R.id.us_cd_value_bold };
-    private static final int[] CLOCKS = { R.id.us_cd_clock_light, R.id.us_cd_clock_serif, R.id.us_cd_clock_bold };
-    private static final int LIGHT = 0, SERIF = 1, BOLD = 2;
+    private static final int[] VALUES = { R.id.us_cd_value_light, R.id.us_cd_value_serif, R.id.us_cd_value_bold, R.id.us_cd_value_display };
+    private static final int[] CLOCKS = { R.id.us_cd_clock_light, R.id.us_cd_clock_serif, R.id.us_cd_clock_bold, R.id.us_cd_clock_display };
+    private static final int LIGHT = 0, SERIF = 1, BOLD = 2, DISPLAY = 3;
 
     @Override
     public void onUpdate(Context context, AppWidgetManager manager, int[] appWidgetIds) {
@@ -38,12 +38,14 @@ public final class UsCountdownWidgetProvider extends AppWidgetProvider {
         int background = R.drawable.us_widget_background;
         int deco = 0;
         int titleBackground = 0;
-        int titleColor = 0xE6FFF8FD;
-        int face = LIGHT;
-        int valueColor = 0xFFFFF8FD;
+        // US 1.0 base ("Due colori"): the label in Oggi's coral, the number in
+        // upright serif latte, the unit and the extra line in italic latte 72%.
+        int titleColor = 0xFFFF8B7B;
+        int face = DISPLAY;
+        int valueColor = 0xFFF7EFE9;
         boolean unitCaps = false;
-        int unitColor = 0xF0FFF8FD;
-        int subColor = 0xFFFF8EAD;
+        int unitColor = 0xB8F7EFE9;
+        int subColor = 0xB8F7EFE9;
     }
 
     static Look look(String style) {
@@ -61,6 +63,7 @@ public final class UsCountdownWidgetProvider extends AppWidgetProvider {
                 break;
             case "glass":
                 look.background = R.drawable.us_widget_cd_glass_bg;
+                rewardBase(look);
                 look.unitColor = 0xE6FFFFFF;
                 look.subColor = 0xE6FFFFFF;
                 break;
@@ -76,6 +79,7 @@ public final class UsCountdownWidgetProvider extends AppWidgetProvider {
                 break;
             case "orbit":
                 look.deco = R.drawable.us_widget_cd_orbit_ring;
+                rewardBase(look);
                 look.titleColor = 0xD9FFEBDC;
                 look.subColor = 0xFFFFD5AA;
                 break;
@@ -92,6 +96,15 @@ public final class UsCountdownWidgetProvider extends AppWidgetProvider {
                 break;
         }
         return look;
+    }
+
+    /** The pre-1.0 base that the glass and orbit reward styles were designed on: they keep it. */
+    private static void rewardBase(Look look) {
+        look.titleColor = 0xE6FFF8FD;
+        look.face = LIGHT;
+        look.valueColor = 0xFFFFF8FD;
+        look.unitColor = 0xF0FFF8FD;
+        look.subColor = 0xFFFF8EAD;
     }
 
     static RemoteViews render(Context context, UsWidgets.State state) {
