@@ -23,10 +23,11 @@ public final class UsNoiWidgetProvider extends AppWidgetProvider {
         UsWidgetModels.Couple couple = UsWidgetModels.couple(state.snapshot, state.now);
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.us_widget_noi);
         views.setOnClickPendingIntent(R.id.us_noi_root, UsWidgets.open(context, "noi", 4401));
-        String distance = couple.distanceText.isEmpty() ? "Distanza non nota" : couple.distanceText;
+        String distance = couple.distanceText.isEmpty() ? context.getString(R.string.us_widget_noi_unknown) : couple.distanceText;
         views.setTextViewText(R.id.us_noi_distance, distance);
-        views.setTextViewText(R.id.us_noi_caption, couple.distanceText.isEmpty() ? "APRI NOI" :
-            (couple.distanceStale ? "ULTIMA DISTANZA" : "TRA VOI"));
+        // One italic line under the distance, as in the app (no tiny capitals).
+        views.setTextViewText(R.id.us_noi_caption, context.getString(couple.distanceText.isEmpty() ? R.string.us_widget_noi_open :
+            (couple.distanceStale ? R.string.us_widget_noi_last : R.string.us_widget_noi_between)));
         byte[] raw = state.store.readNoiPortrait();
         Bitmap portrait = null;
         if (raw != null) {

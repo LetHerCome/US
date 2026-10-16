@@ -13,9 +13,23 @@
     <string name="us_widget_countdown_empty">Scegli un Countdown su Oggi</string>
 
     <string name="us_widget_noi_name">Noi</string>
+    <string name="us_widget_noi_unknown">Distanza non nota</string>
+    <string name="us_widget_noi_open">apri Noi</string>
+    <string name="us_widget_noi_between">tra voi</string>
+    <string name="us_widget_noi_last">ultima nota</string>
     <string name="us_widget_noi_description">Le vostre foto profilo e la distanza mostrata in Noi.</string>
 
     <string name="us_widget_photo_name">Foto &amp; Noi</string>
     <string name="us_widget_photo_description">La foto di Oggi e i giorni insieme</string>
     <string name="us_widget_photo_empty">La foto di Oggi apparirà qui</string>
+
+    <!-- Widget picker previews: the same for every user, never a real name or photo. -->
+    <string name="us_widget_preview_think">Ti sta pensando</string>
+    <string name="us_widget_preview_think_cta">Ricambia</string>
+    <string name="us_widget_preview_noi">12 km</string>
+    <string name="us_widget_preview_days">365</string>
+    <string name="us_widget_preview_days_unit">giorni insieme</string>
+    <string name="us_widget_preview_countdown">Il prossimo viaggio</string>
+    <string name="us_widget_preview_countdown_value">12</string>
+    <string name="us_widget_preview_countdown_unit">giorni</string>
 </resources>
