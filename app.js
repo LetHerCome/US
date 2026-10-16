@@ -939,9 +939,8 @@ function usInvalidateAuth({revokePush=true}={}){
   homePhotoPath='';homePhotoHourKey='';homePhotoHasPainted=false;if(typeof usHomePhotoMeta!=='undefined')usHomePhotoMeta=null;if(typeof renderOggiCaption==='function')renderOggiCaption(null);if(typeof renderOggiNext==='function')renderOggiNext(null);
   document.body.classList.remove('us-fastboot-photo');
   clearPrivateDeviceState(previousId).catch(()=>{});
-  for(const key of ['A','B']){
-    if(window.UsHomePhotoFit){window.UsHomePhotoFit.set(key,'',null);continue;}
-    const layer=document.getElementById(`homePhotoLayer${key}`);if(layer)layer.style.backgroundImage='';
+  for(const id of ['homePhotoLayerA','homePhotoLayerB']){
+    const layer=document.getElementById(id);if(layer)layer.style.backgroundImage='';
   }
   usOnboarding.reset();
   usOnboarding.setup?.close?.();
@@ -1844,16 +1843,12 @@ function crossfadeHomePhoto(url,{path='',hourKey='',allowRetry=true}={}){
     hero.classList.toggle('is-empty',!url);
     if(empty)empty.hidden=Boolean(url);
     if(!url&&typeof layoutOggiEmptyState==='function')requestAnimationFrame(layoutOggiEmptyState);
-    // Whole on a blurred copy when filling would cut too much (fastboot2.js).
-    // preload is only read when url is set, i.e. after it loaded.
-    if(window.UsHomePhotoFit)window.UsHomePhotoFit.set(nextKey,url,url?preload:null);
-    else next.style.backgroundImage=url?`url("${url}")`:'';
+    next.style.backgroundImage=url?`url("${url}")`:'';
     const paint=()=>{
       if(!currentViewer())return;
       next.classList.add('active');
       current.classList.remove('active');
       homePhotoActiveLayer=nextKey;
-      window.UsHomePhotoFit?.sync();
       if(url){
         homePhotoHasPainted=true;
         if(path){
@@ -2579,6 +2574,12 @@ async function playDailyRitualAnswered(card,merge){
   return true;
 }
 let usDailyRitualAnswerPending=false;
+// Long questions step down in size instead of leaving the card (or the
+// screen): CSS reads data-length (dc-oggi.css, "Domanda di oggi").
+function dailyQuestionLengthAttr(text){
+  const n=String(text||'').trim().length;
+  return n>100?' data-length="xlong"':n>60?' data-length="long"':'';
+}
 // What stood above the card falls into its place, bounces on the bar and settles (FLIP, transform only).
 function dailyRitualDropAbove(card){
   const dock=card?.parentElement;
@@ -2663,7 +2664,7 @@ function renderDailyRitual(model){
   card.dataset.usAttention=model.attention?'on':'off';
   // The visible words are the accessible name (and the English translation).
   card.removeAttribute('aria-label');
-  const html=`${dailyRitualRingMarkup(model)}<span class="eyebrow us-daily-ritual-kicker">${escapeHtml(model.kicker)}</span><span class="dq-q us-daily-ritual-question">${escapeHtml(model.question)}</span><span class="dq-foot">${model.meta?`<span class="dq-sub us-daily-ritual-meta">${escapeHtml(model.meta)}</span>`:''}<span class="btn-primary us-daily-ritual-cta">${escapeHtml(model.cta)}<span class="us-daily-ritual-arrow" aria-hidden="true"></span></span></span>${model.state==='revealed'?`<span class="us-daily-ritual-swipe">${escapeHtml('Scorri di lato per toglierla')}</span>`:''}`;
+  const html=`${dailyRitualRingMarkup(model)}<span class="eyebrow us-daily-ritual-kicker">${escapeHtml(model.kicker)}</span><span class="dq-q us-daily-ritual-question"${dailyQuestionLengthAttr(model.question)}>${escapeHtml(model.question)}</span><span class="dq-foot">${model.meta?`<span class="dq-sub us-daily-ritual-meta">${escapeHtml(model.meta)}</span>`:''}<span class="btn-primary us-daily-ritual-cta">${escapeHtml(model.cta)}<span class="us-daily-ritual-arrow" aria-hidden="true"></span></span></span>${model.state==='revealed'?`<span class="us-daily-ritual-swipe">${escapeHtml('Scorri di lato per toglierla')}</span>`:''}`;
   // Same words, same circles: leave the card (and a running animation) alone.
   if(card.hidden||card.usDailyHtml!==html){card.innerHTML=html;card.usDailyHtml=html;}
   card.hidden=false;

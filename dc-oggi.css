@@ -251,6 +251,10 @@ body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-sa
   overflow:hidden;
 }
 #home #usDailyRitual[data-state="error"] .us-daily-ritual-question{font-size:17px;color:var(--us-color-text-2)}
+/* Long questions step down instead of leaving the card: more lines, smaller type. */
+#home #usDailyRitual .us-daily-ritual-question{overflow-wrap:anywhere}
+#home #usDailyRitual .us-daily-ritual-question[data-length="long"]{font-size:18px;line-height:1.22;-webkit-line-clamp:3}
+#home #usDailyRitual .us-daily-ritual-question[data-length="xlong"]{font-size:16px;line-height:1.25;-webkit-line-clamp:4}
 #home #usDailyRitual .dq-foot{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
 #home #usDailyRitual[data-state="revealed"]{touch-action:pan-y;user-select:none;-webkit-user-select:none}
 #home #usDailyRitual .us-daily-ritual-swipe{display:block;grid-column:1/-1;margin-top:-2px;font:400 11px/1.4 var(--us-font-ui);letter-spacing:.02em;color:var(--us-color-text-3,var(--us-color-text-2));opacity:.8}
@@ -291,6 +295,7 @@ body:has(#usPetLayer[hidden]) #home .us-oggi-dock{bottom:calc(10px + var(--us-sa
 @media(max-height:700px){
   #home #usDailyRitual{gap:8px 12px;padding:13px 14px}
   #home #usDailyRitual .us-daily-ritual-question{font-size:18px;-webkit-line-clamp:1}
+  #home #usDailyRitual .us-daily-ritual-question:is([data-length="long"],[data-length="xlong"]){font-size:15px;line-height:1.25;-webkit-line-clamp:2}
   #home .us-oggi-dock{gap:8px}
   #home #usOggiCaption.og-cap{font-size:24px}
 }
@@ -1039,14 +1044,3 @@ body:has(#usCountdownSheet.open) .toast{z-index:calc(var(--us-layer-sheet) + 2)}
   #home .home-photo-shade{transition:none}
 }
 @keyframes dc-oggi-fade{from{opacity:0}to{opacity:1}}
-
-/* ---------- Oggi photo: whole when filling would cut it (founder 16/10) ----------
-   fastboot2.js marks a layer data-us-photo-whole when cover would crop more
-   than a fifth of the picture. The photo then shows whole, centred, and the
-   same picture fills the screen behind it, blurred and dimmed (a sibling
-   backdrop that crossfades with its layer). Vertical photos keep filling. */
-#homeHero .home-photo-layer[data-us-photo-whole]{background-size:contain;background-repeat:no-repeat}
-#homeHero .home-photo-backdrop{position:absolute!important;inset:-32px;z-index:0!important;background-size:cover;background-position:center;filter:blur(28px) brightness(.72) saturate(1.15);opacity:0;transition:opacity var(--us-motion-photo,420ms) var(--us-ease-standard,ease);pointer-events:none}
-#homeHero .home-photo-backdrop.active{opacity:1}
-#homeHero[data-us-home-photo-instant] .home-photo-backdrop{transition:none}
-@media (prefers-reduced-motion:reduce){#homeHero .home-photo-backdrop{transition:none}}
