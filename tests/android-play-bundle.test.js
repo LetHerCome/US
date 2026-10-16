@@ -332,3 +332,17 @@ test('precise location is forbidden: US 1.0 ships approximate location only', as
   const clean = await check({});
   assert.doesNotMatch(clean.results.filter((r) => r.level === 'fail').map((r) => r.detail || '').join('\n'), /ACCESS_FINE_LOCATION/);
 });
+
+// Play Console, 16/10: epoch-second codes were "significantly higher" and
+// would reach the 2,100,000,000 cap in 2036. Play builds count minutes since
+// 2026-01-01 UTC; internal APKs keep epoch seconds (separate install).
+test('Play versionCode counts minutes since 2026-01-01, far from the cap', () => {
+  const workflow = fs.readFileSync(path.join(ROOT, '.github/workflows/android-play-bundle.yml'), 'utf8');
+  assert.match(workflow, /code="\$\(\( \( \$\(date -u \+%s\) - 1767225600 \) \/ 60 \)\)"/);
+  assert.doesNotMatch(workflow, /code="\$\(date -u \+%s\)"/);
+  assert.equal(Date.UTC(2026, 0, 1) / 1000, 1767225600);
+  const october = Math.floor((Date.UTC(2026, 9, 16, 12) / 1000 - 1767225600) / 60);
+  assert.ok(october > 400000 && october < 500000, String(october));
+  const yearsToCap = (2100000000 - october) / (60 * 24 * 365);
+  assert.ok(yearsToCap > 3000, String(yearsToCap));
+});
