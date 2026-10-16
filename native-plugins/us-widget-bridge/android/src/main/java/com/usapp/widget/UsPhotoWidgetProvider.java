@@ -77,6 +77,33 @@ public final class UsPhotoWidgetProvider extends AppWidgetProvider {
         return views;
     }
 
+    /** Oggi's rule (fastboot2.js HOME_PHOTO_CROP_LIMIT): filling must not cut more than a fifth of the photo. */
+    static final float CROP_LIMIT = 0.2f;
+
+    static boolean cropsTooMuch(int photoW, int photoH, int boxW, int boxH) {
+        if (photoW <= 0 || photoH <= 0 || boxW <= 0 || boxH <= 0) return false;
+        float photo = photoW / (float) photoH, box = boxW / (float) boxH;
+        return 1f - Math.min(photo / box, box / photo) > CROP_LIMIT;
+    }
+
+    /** A soft blur without RenderScript: shrink to a few dozen pixels; the shader scales it back up filtered. */
+    private static Bitmap blurred(Bitmap source) {
+        int w = Math.max(8, source.getWidth() / 24), h = Math.max(8, source.getHeight() / 24);
+        return Bitmap.createScaledBitmap(source, w, h, true);
+    }
+
+    private static BitmapShader shaderFor(Bitmap bitmap, int outW, int outH, boolean cover) {
+        float s = cover
+            ? Math.max(outW / (float) bitmap.getWidth(), outH / (float) bitmap.getHeight())
+            : Math.min(outW / (float) bitmap.getWidth(), outH / (float) bitmap.getHeight());
+        Matrix matrix = new Matrix();
+        matrix.setScale(s, s);
+        matrix.postTranslate((outW - bitmap.getWidth() * s) / 2f, (outH - bitmap.getHeight() * s) / 2f);
+        BitmapShader shader = new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
+        shader.setLocalMatrix(matrix);
+        return shader;
+    }
+
     /** Decodes downsampled, crops to the widget's shape and rounds the corners like the US cards. */
     static Bitmap framed(byte[] bytes, Bundle options, float density) {
         try {
@@ -102,15 +129,34 @@ public final class UsPhotoWidgetProvider extends AppWidgetProvider {
             Bitmap out = Bitmap.createBitmap(outW, outH, Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(out);
             float cover = Math.max(outW / (float) source.getWidth(), outH / (float) source.getHeight());
-            Matrix matrix = new Matrix();
-            matrix.setScale(cover, cover);
-            matrix.postTranslate((outW - source.getWidth() * cover) / 2f, (outH - source.getHeight() * cover) / 2f);
-            BitmapShader shader = new BitmapShader(source, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
-            shader.setLocalMatrix(matrix);
-            Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
-            paint.setShader(shader);
             float radius = 24 * density * scale;
-            canvas.drawRoundRect(new RectF(0, 0, outW, outH), radius, radius, paint);
+            RectF frame = new RectF(0, 0, outW, outH);
+            Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
+            if (cropsTooMuch(source.getWidth(), source.getHeight(), outW, outH)) {
+                // Same rule as Oggi: the photo whole, on a blurred and dimmed copy of itself.
+                paint.setShader(shaderFor(blurred(source), outW, outH, true));
+                paint.setColorFilter(new android.graphics.LightingColorFilter(0xFFB8B8B8, 0));
+                canvas.drawRoundRect(frame, radius, radius, paint);
+                paint.setColorFilter(null);
+                float contain = Math.min(outW / (float) source.getWidth(), outH / (float) source.getHeight());
+                float w = source.getWidth() * contain, h = source.getHeight() * contain;
+                RectF inner = new RectF((outW - w) / 2f, (outH - h) / 2f, (outW + w) / 2f, (outH + h) / 2f);
+                Paint sharp = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
+                canvas.save();
+                android.graphics.Path clip = new android.graphics.Path();
+                clip.addRoundRect(frame, radius, radius, android.graphics.Path.Direction.CW);
+                canvas.clipPath(clip);
+                canvas.drawBitmap(source, null, inner, sharp);
+                canvas.restore();
+            } else {
+                Matrix matrix = new Matrix();
+                matrix.setScale(cover, cover);
+                matrix.postTranslate((outW - source.getWidth() * cover) / 2f, (outH - source.getHeight() * cover) / 2f);
+                BitmapShader shader = new BitmapShader(source, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
+                shader.setLocalMatrix(matrix);
+                paint.setShader(shader);
+                canvas.drawRoundRect(frame, radius, radius, paint);
+            }
             source.recycle();
             return out;
         } catch (Throwable ignored) {
