@@ -2574,6 +2574,12 @@ async function playDailyRitualAnswered(card,merge){
   return true;
 }
 let usDailyRitualAnswerPending=false;
+// Long questions step down in size instead of leaving the card (or the
+// screen): CSS reads data-length (dc-oggi.css, "Domanda di oggi").
+function dailyQuestionLengthAttr(text){
+  const n=String(text||'').trim().length;
+  return n>100?' data-length="xlong"':n>60?' data-length="long"':'';
+}
 // What stood above the card falls into its place, bounces on the bar and settles (FLIP, transform only).
 function dailyRitualDropAbove(card){
   const dock=card?.parentElement;
@@ -2658,7 +2664,7 @@ function renderDailyRitual(model){
   card.dataset.usAttention=model.attention?'on':'off';
   // The visible words are the accessible name (and the English translation).
   card.removeAttribute('aria-label');
-  const html=`${dailyRitualRingMarkup(model)}<span class="eyebrow us-daily-ritual-kicker">${escapeHtml(model.kicker)}</span><span class="dq-q us-daily-ritual-question">${escapeHtml(model.question)}</span><span class="dq-foot">${model.meta?`<span class="dq-sub us-daily-ritual-meta">${escapeHtml(model.meta)}</span>`:''}<span class="btn-primary us-daily-ritual-cta">${escapeHtml(model.cta)}<span class="us-daily-ritual-arrow" aria-hidden="true"></span></span></span>${model.state==='revealed'?`<span class="us-daily-ritual-swipe">${escapeHtml('Scorri di lato per toglierla')}</span>`:''}`;
+  const html=`${dailyRitualRingMarkup(model)}<span class="eyebrow us-daily-ritual-kicker">${escapeHtml(model.kicker)}</span><span class="dq-q us-daily-ritual-question"${dailyQuestionLengthAttr(model.question)}>${escapeHtml(model.question)}</span><span class="dq-foot">${model.meta?`<span class="dq-sub us-daily-ritual-meta">${escapeHtml(model.meta)}</span>`:''}<span class="btn-primary us-daily-ritual-cta">${escapeHtml(model.cta)}<span class="us-daily-ritual-arrow" aria-hidden="true"></span></span></span>${model.state==='revealed'?`<span class="us-daily-ritual-swipe">${escapeHtml('Scorri di lato per toglierla')}</span>`:''}`;
   // Same words, same circles: leave the card (and a running animation) alone.
   if(card.hidden||card.usDailyHtml!==html){card.innerHTML=html;card.usDailyHtml=html;}
   card.hidden=false;
