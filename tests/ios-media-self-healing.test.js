@@ -14,7 +14,7 @@ async function src(file) {
 test('Home photo commits cache state only after a successful image load and retries once fresh', async () => {
   const app = await src('app.js');
   assert.match(app, /function crossfadeHomePhoto\([\s\S]*writeHomeBootCache\([\s\S]*preload\.onload=async\(\)=>\{[\s\S]*apply\(\)/);
-  assert.match(app, /preload\.onerror=async\(\)=>\{[\s\S]*usInvalidateSignedUrl\(path\)[\s\S]*usGetSignedUrl\(path,21600,\{force:true\}\)/);
+  assert.match(app, /preload\.onerror=async\(\)=>\{[\s\S]*usInvalidateSignedUrl\(path\)[\s\S]*usGetSignedUrl\(path,US_MEDIA_URL_TTL_S,\{force:true\}\)/);
   assert.match(app, /homePhotoPath=''[\s\S]*homePhotoHasPainted=false/);
 });
 
@@ -33,7 +33,7 @@ test('foreground ripara Home avatar e Ricordi senza richiedere un nuovo login', 
   // failed image heals itself through usRecoverPrivateImage().
   assert.match(app, /if\(active==='moments'\)\{await hydrateMoments\(\);return;\}/);
   assert.match(app, /onerror="usRecoverPrivateImage\(this\)"/);
-  assert.match(app, /if\(forceMedia\)mediaPaths\.forEach\(usInvalidateSignedUrl\);\s*const signedUrlsPromise=usGetSignedUrls\(mediaPaths,21600\);/);
+  assert.match(app, /if\(forceMedia\)mediaPaths\.forEach\(usInvalidateSignedUrl\);\s*const signedUrlsPromise=usGetSignedUrls\(mediaPaths,US_MEDIA_URL_TTL_S\);/);
 });
 
 test('Stories Left for You e album hanno recovery media esplicita', async () => {
