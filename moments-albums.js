@@ -314,10 +314,10 @@ async function loadAlbum(momentId){
   const names=new Map((profiles||[]).map(p=>[p.id,p.display_name||'Noi']));
   const paths=(rows||[]).map(row=>row.storage_path);
   let signedUrls=new Map();
-  if(typeof window.usGetSignedUrls==='function')signedUrls=await window.usGetSignedUrls(paths,21600);
+  if(typeof window.usGetSignedUrls==='function')signedUrls=await window.usGetSignedUrls(paths,window.US_MEDIA_URL_TTL_S);
   else{
     const fallback=await Promise.all(paths.map(async path=>{
-      const {data,error}=await sb.storage.from('us-media').createSignedUrl(path,21600);
+      const {data,error}=await sb.storage.from('us-media').createSignedUrl(path,window.US_MEDIA_URL_TTL_S||86400);
       return [path,error?null:data?.signedUrl||null];
     }));
     signedUrls=new Map(fallback.filter(([,url])=>url));
@@ -1491,7 +1491,7 @@ console.info('[US] Moments Albums attivo');
     let signedUrls = new Map();
     if (mediaPaths.length) {
       if (typeof window.usGetSignedUrls !== 'function') throw new Error('conservati_signed_media_unavailable');
-      signedUrls = await window.usGetSignedUrls(mediaPaths, 21600);
+      signedUrls = await window.usGetSignedUrls(mediaPaths, window.US_MEDIA_URL_TTL_S);
       if (!(signedUrls instanceof Map)) throw new Error('conservati_signed_media_unavailable');
     }
     if (requestId !== conservatiRequestId || !root()?.classList.contains('show')) return;

@@ -1,4 +1,4 @@
-const BUILD_ID = "us-daily-swipe-20261015-1";
+const BUILD_ID = "us-egress-media-20261016-1";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;

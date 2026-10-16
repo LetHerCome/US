@@ -20,7 +20,7 @@ test('N3.5 Ricordi foreground keeps valid media cache and overlaps signing with 
   const app = read('app.js');
   assert.match(app, /if\(active==='moments'\)\{await hydrateMoments\(\);return;\}/);
   assert.doesNotMatch(app, /hydrateMoments\(\{forceMedia:Boolean\(options\.foreground\)\}\)/);
-  assert.match(app, /const signedUrlsPromise=usGetSignedUrls\(mediaPaths,21600\)/);
+  assert.match(app, /const signedUrlsPromise=usGetSignedUrls\(mediaPaths,US_MEDIA_URL_TTL_S\)/);
   assert.match(app, /Promise\.all\(\[profilesPromise,livedPromise,keptPromise,eventsPromise,provenancePromise,signedUrlsPromise\]\)/);
 });
 
