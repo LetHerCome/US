@@ -60,11 +60,17 @@ test('only the shared transport talks to FCM; native senders are an explicit inv
   }
 });
 
-test('every notification type becomes the same opaque v2 packet; nothing private reaches FCM', async () => {
-  const { fcmMessage, ANDROID_SAFE_COPY } = await load(TRANSPORT);
+// Founder decision 16/10/2026 (DECISIONS.md): Android notifications say what
+// happened. The packet now carries ONE allow-listed kind, the event class;
+// it still carries no text, names, ids, refs, tags or targets, and every kind
+// shares one collapse key. The phone writes the sentence (UsPushNotices).
+test('every notification type becomes a v2 packet with one allow-listed kind; nothing private reaches FCM', async () => {
+  const { fcmMessage, ANDROID_SAFE_COPY, ANDROID_NOTICE_KINDS } = await load(TRANSPORT);
   const { buildNotification, NOTIFICATION_TYPES } = await load(CORE);
   const secrets = ['PRIVATE_SENDER_NAME', 'PRIVATE_TITLE', 'PRIVATE_BODY', 'private-tag', 'private-reminder', REF];
   const seen = new Set();
+  const kinds = new Set(Object.values(ANDROID_NOTICE_KINDS));
+  assert.deepEqual(Object.keys(ANDROID_NOTICE_KINDS).sort(), [...NOTIFICATION_TYPES].sort(), 'every type has exactly one kind');
   for (const type of NOTIFICATION_TYPES) {
     const notification = buildNotification(type, {
       senderName: 'PRIVATE_SENDER_NAME', messageId: REF, questionId: REF, questId: REF, itemId: REF, sessionId: REF,
@@ -73,18 +79,20 @@ test('every notification type becomes the same opaque v2 packet; nothing private
     for (const urgency of ['high', 'normal']) {
       const { message } = fcmMessage({ ...notification, urgency }, { token: 'fcm:' + 'Z'.repeat(80), installation_id: INSTALL_A });
       assert.deepEqual(Object.keys(message).sort(), ['android', 'data', 'token'], type);
-      assert.deepEqual(message.data, { v: '2', installation: INSTALL_A }, type);
+      assert.deepEqual(message.data, { v: '2', installation: INSTALL_A, k: ANDROID_NOTICE_KINDS[type] }, type);
+      assert.ok(kinds.has(message.data.k), `${type}: kind outside the allow-list`);
       assert.deepEqual(Object.keys(message.android).sort(), ['collapse_key', 'priority', 'ttl'], type);
       const wire = JSON.stringify(message);
       for (const secret of secrets) assert.equal(wire.includes(secret), false, `${type}: ${secret} leaked`);
       assert.doesNotMatch(wire, /"(?:notification|title|body|type|target|ref|tag|click_action|image|channel_id|user|couple|sender)"/i, type);
-      seen.add(JSON.stringify({ ...message.data, collapse: message.android.collapse_key }));
+      seen.add(message.android.collapse_key);
     }
   }
-  // data and collapse key never reveal the event class. android.priority
-  // and ttl still vary by urgency (HIGH/NORMAL, 12-24 h): coarse metadata
-  // accepted for delivery; changing it is a product decision.
-  assert.equal(seen.size, 1, 'the event class must not be readable from data or collapse key');
+  // One banner slot for every kind; the kind is the only event metadata.
+  assert.deepEqual([...seen], ['us-private-notice']);
+  // An unknown type (e.g. a newer server) travels without kind: generic copy.
+  const unknown = fcmMessage({ type: 'not_a_type', urgency: 'normal', ttl: 60 }, { token: 'fcm:' + 'Z'.repeat(80), installation_id: INSTALL_A }).message;
+  assert.deepEqual(unknown.data, { v: '2', installation: INSTALL_A });
   assert.deepEqual(ANDROID_SAFE_COPY, { title: 'US.', body: 'Apri US per vedere le novità.' });
 });
 
@@ -158,4 +166,53 @@ test('web layer: a v2 packet only counts for THIS installation and never becomes
   assert.equal(intentFromAction({ actionId: 'tap', notification: { data: { v: '2', installation: INSTALL_A } } }), null);
   const { api: fresh } = loadClient();
   assert.equal(fresh._test.isCurrentNotice({ v: '2', installation: INSTALL_A }), false, 'no installation on this phone');
+});
+
+// ---------- 16/10/2026: the phone writes what happened ----------
+const NOTICES = 'native-plugins/us-push-support/android/src/main/java/com/usapp/pushsupport/UsPushNotices.java';
+const GATE = 'native-plugins/us-push-support/android/src/main/java/com/usapp/pushsupport/UsPushOwnerGate.java';
+const PLUGIN = 'native-plugins/us-push-support/android/src/main/java/com/usapp/pushsupport/UsPushSupportPlugin.java';
+
+test('notices: the phone knows exactly the kinds the server sends, and writes each one', async () => {
+  const { ANDROID_NOTICE_KINDS, ANDROID_SAFE_COPY } = await load(TRANSPORT);
+  const notices = read(NOTICES);
+  const javaKinds = [...notices.match(/KINDS = \{([^}]*)\}/)[1].matchAll(/"([a-z_]+)"/g)].map((m) => m[1]);
+  assert.deepEqual([...javaKinds].sort(), [...new Set(Object.values(ANDROID_NOTICE_KINDS))].sort());
+  for (const kind of javaKinds) assert.match(notices, new RegExp(`case "${kind}":`), `${kind} has its sentence`);
+  assert.equal(javaString(notices, 'FALLBACK_TITLE'), ANDROID_SAFE_COPY.title);
+  assert.equal(javaString(notices, 'FALLBACK_BODY'), ANDROID_SAFE_COPY.body);
+  // Every page is one of the four public app-link pages: a tab, never an action.
+  const { APP_LINK_PAGES } = await load('app-links.mjs');
+  for (const [, page] of notices.matchAll(/, "(oggi|noi|ricordi|gioca|[a-z_]+)"\);/g)) {
+    assert.ok(Object.prototype.hasOwnProperty.call(APP_LINK_PAGES, page), `page ${page}`);
+  }
+});
+
+test('notices: the kind only picks a sentence; the name is read inside the owner lock', () => {
+  const service = read(SERVICE);
+  assert.match(service, /postPrivateSafeNotice\(data\.get\("installation"\), data\.get\("k"\)\)/);
+  assert.doesNotMatch(service, /data\.get\("(?:title|body|type|target|ref|sender|name|partner)"\)/);
+  const post = service.slice(service.indexOf('UsPushOwnerGate.postIfCurrent(this, installation, (String partnerName) ->'));
+  assert.ok(post.length > 0, 'notice built inside the owner-gate critical section');
+  assert.match(post, /UsPushNotices\.forKind\(kind, partnerName, Locale\.getDefault\(\)\)/);
+  assert.ok(post.indexOf('UsPushNotices.forKind') < post.indexOf('manager.notify('));
+  assert.match(service, /Uri\.parse\("com\.usapp\.us:\/\/open\/" \+ notice\.page\)/);
+  assert.match(service, /setVisibility\(NotificationCompat\.VISIBILITY_PRIVATE\)/);
+  const gate = read(GATE);
+  assert.match(gate, /post\.post\(prefs\(context\)\.getString\(PARTNER, ""\)\)/);
+  assert.match(gate, /public static boolean postIfCurrent\(Context context, String installation, NoticePost post\) \{\s*synchronized \(LOCK\) \{\s*if \(!isCurrent\(context, installation\)/);
+});
+
+test('notices: the name belongs to one owner and disappears at logout or account switch', () => {
+  const gate = read(GATE);
+  assert.match(gate, /remove\(OWNER\)\.remove\(INSTALLATION\)\.remove\(PARTNER\)\s*\.putString\(EPOCH/);
+  assert.match(gate, /remove\(OWNER\)\.remove\(INSTALLATION\)\.remove\(PARTNER\)\.putString\(EPOCH, value\)/);
+  assert.match(gate, /if \(!next\.equals\(store\.getString\(OWNER, null\)\)\) edit\.remove\(PARTNER\);/);
+  const set = gate.slice(gate.indexOf('public static boolean setPartnerName('));
+  assert.match(set, /if \(!owner\.toLowerCase\(java\.util\.Locale\.ROOT\)\.equals\(store\.getString\(OWNER, null\)\)\) return false;/);
+  assert.match(set, /UsPushNotices\.cleanName\(partnerName\)/);
+  assert.match(read(PLUGIN), /UsPushOwnerGate\.setPartnerName\(\s*getContext\(\),\s*call\.getString\("ownerId"\),/);
+  const client = read('notifications.js');
+  assert.match(client, /if \(result\?\.bound !== true\) throw new Error\('native_owner_gate_stale'\);\s*syncNativePartnerName\(owner\.userId\);/);
+  assert.match(client, /const real = name && name !== 'La tua persona' \? name : '';/, 'the placeholder is never stored as a name');
 });
