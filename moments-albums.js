@@ -126,7 +126,7 @@ function ensureUi(){
   document.getElementById('usAlbumCarouselNext')?.addEventListener('click',()=>showAlbumPhoto(albumCarouselIndex+1,1));
   document.getElementById('usAlbumCurrentDelete')?.addEventListener('click',()=>{
     const row=lightboxItems[albumCarouselIndex];
-    if(row?.id&&row?.own)deleteAlbumPhoto(row.id,row.storage_path);
+    if(row?.id&&(row?.own||row?.orphan))deleteAlbumPhoto(row.id,row.storage_path,{orphan:!row.own});
   });
   document.getElementById('usAlbumSavePhoto')?.addEventListener('click',()=>savePhotoToPhone(albumCarouselIndex));
   document.getElementById('usAlbumLightboxSave')?.addEventListener('click',event=>{event.stopPropagation();savePhotoToPhone(lightboxIndex);});
@@ -327,7 +327,7 @@ async function loadAlbum(momentId){
   for(const row of rows||[]){
     const signedUrl=signedUrls.get(row.storage_path);
     if(!signedUrl)continue;
-    hydrated.push({...row,url:signedUrl,author:names.get(row.created_by)||'Noi',own:row.created_by===window.usProfile.id});
+    hydrated.push({...row,url:signedUrl,author:names.get(row.created_by)||'Noi',own:row.created_by===window.usProfile.id,orphan:row.created_by==null});
   }
   albumRows=hydrated;
   albumLoaded=(rows||[]).length===hydrated.length;
@@ -540,7 +540,7 @@ function showAlbumPhoto(index,direction=0){
   if(author)author.textContent=`Aggiunto da ${item.author||'Noi'}`;
   if(note)note.hidden=!(multiple||ownNote);
   const del=document.getElementById('usAlbumCurrentDelete');
-  if(del)del.hidden=!(albumCarouselIndex>0&&item.own&&item.id);
+  if(del)del.hidden=!(albumCarouselIndex>0&&(item.own||item.orphan)&&item.id);
   const save=document.getElementById('usAlbumSavePhoto');
   if(save)save.hidden=!item.storage_path;
 }
@@ -551,7 +551,7 @@ function showAlbumPhoto(index,direction=0){
 // in-place grace period (Annulla) still applies. Whole-memory deletion is done
 // by the authenticated delete-moment Edge Function, which also cleans the media.
 function canDeleteCurrentAlbum(){
-  return Boolean(currentAlbum&&window.usProfile?.couple_id&&albumLoaded&&currentAlbum.owner&&currentAlbum.owner===window.usProfile.id);
+  return Boolean(currentAlbum&&window.usProfile?.couple_id&&albumLoaded&&(currentAlbum.orphan||(currentAlbum.owner&&currentAlbum.owner===window.usProfile.id)));
 }
 function momentCardById(id){
   return [...document.querySelectorAll('#momentsGrid .moment-card[data-moment-id]')].find(card=>card.dataset.momentId===id)||null;
@@ -638,13 +638,20 @@ async function handleGridClick(event){
   const card=event.target.closest('.us-album-photo-card[data-album-index]');
   if(card)openLightbox(Number(card.dataset.albumIndex)||1);
 }
-async function deleteAlbumPhoto(id,path){
+async function deleteAlbumPhoto(id,path,{orphan=false}={}){
   if(!id||!window.usProfile)return;
   if(!(await usConfirm({title:'Eliminare questa foto dal ricordo?',body:'Sparirà per entrambi.',confirmLabel:'Elimina',tone:'danger',icon:'trash'})))return;
-  const {error:rowError}=await sb.from('moment_photos').delete().eq('id',id).eq('created_by',window.usProfile.id);
-  if(rowError){console.warn('[US Albums] delete row',rowError);toast('Non riesco a eliminare la foto');return;}
-  const {error:storageError}=await sb.storage.from('us-media').remove([path]);
-  if(storageError)console.warn('[US Albums] storage cleanup',storageError);
+  if(orphan){
+    // S3.2 Policy A: the author left and Storage lets only the uploader remove a
+    // file, so the server deletes the row and the file together.
+    const {data,error}=await sb.functions.invoke('delete-moment',{body:{photo_id:id}});
+    if(error||!data?.deleted){console.warn('[US Albums] delete departed photo',error||data);toast('Non riesco a eliminare la foto');return;}
+  }else{
+    const {error:rowError}=await sb.from('moment_photos').delete().eq('id',id).eq('created_by',window.usProfile.id);
+    if(rowError){console.warn('[US Albums] delete row',rowError);toast('Non riesco a eliminare la foto');return;}
+    const {error:storageError}=await sb.storage.from('us-media').remove([path]);
+    if(storageError)console.warn('[US Albums] storage cleanup',storageError);
+  }
   toast('Foto eliminata');
   await loadAlbum(currentAlbum.id);
   await decorateMomentCards();
@@ -866,6 +873,7 @@ async function openAlbum(card,{focusDelete=false}={}){
     date:card.dataset.date||'',
     iso:card.dataset.momentIso||'',
     owner:card.dataset.momentOwner||'',
+    orphan:card.dataset.momentOrphan==='1',
     path:card.dataset.storagePath||'',
     caption:card.dataset.caption||''
   };

@@ -1,4 +1,4 @@
-const BUILD_ID = "us-push-kinds-20261016-1";
+const BUILD_ID = "us-account-lifecycle-20261017-13";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -180,6 +180,7 @@ const BUILD_SHELL_ASSETS = new Set(
 // then shows its own "Impossibile raggiungere il sito" page (ERR_FAILED) and
 // Safari reports "Response served by service worker has redirections".
 const APP_DOCUMENTS = new Set(["/", "/index.html"]);
+const US_STANDALONE_DOCUMENTS = new Set(["/elimina-account", "/elimina-account.html"]);
 
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
@@ -551,6 +552,10 @@ self.addEventListener("fetch", (event) => {
     })());
     return;
   }
+
+  // The public account deletion page is a standalone document, never the app
+  // shell: let the network serve it (Cloudflare may also 308 the .html form).
+  if (request.mode === "navigate" && US_STANDALONE_DOCUMENTS.has(url.pathname)) return;
 
   // Normal cold launch remains cache-first for speed.
   if (request.mode === "navigate") {

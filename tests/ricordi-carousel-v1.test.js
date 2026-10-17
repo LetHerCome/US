@@ -103,7 +103,7 @@ test('layout retains existing photo fullscreen, add, delete and lazy peek',()=>{
   const css=read('ricordi-carousel.css');
   assert.match(html,/showAlbumPhoto\(albumCarouselIndex\+\(dx<0\?1:-1\)/);
   assert.match(html,/openLightbox\(albumCarouselIndex\)/);
-  assert.match(html,/deleteAlbumPhoto\(row\.id,row\.storage_path\)/);
+  assert.match(html,/deleteAlbumPhoto\(row\.id,row\.storage_path,\{orphan:!row\.own\}\)/);
   assert.match(html,/id="usAlbumPeek"[^>]*loading="lazy"/);
   // US 1.0 R4/R11: each photo's own note (never the cover's twice); the peek is never preloaded.
   assert.match(html,/const ownNote=item\.cover\?'':\(item\.caption\|\|''\);/);

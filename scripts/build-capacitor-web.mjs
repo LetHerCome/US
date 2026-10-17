@@ -49,6 +49,7 @@ const RUNTIME_FILES = [
   'pet.js',
   'settings.css',
   'settings.js',
+  'account-deletion.js',
   'identity.css',
   'top-chrome.css',
   'modal-center.css',

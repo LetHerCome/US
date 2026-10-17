@@ -39,7 +39,10 @@ async function chain() {
   const db = await newDb();
   try {
     await db.exec(PLATFORM);
-    for (const file of fs.readdirSync(DIR).filter((f) => f.endsWith('.sql') && f < FILE).sort()) await db.exec(read(file));
+    // The account lifecycle (_s32_) redefines get_couple_membership on purpose, so
+    // MC2's drift check cannot re-run after it; its own tests chain it after MC2
+    // (tests/helpers/mc2-db.js).
+    for (const file of fs.readdirSync(DIR).filter((f) => f.endsWith('.sql') && f < FILE && !/_s32_/.test(f)).sort()) await db.exec(read(file));
     await db.exec(SEED);
     return db;
   } catch (error) { await db.close(); throw error; }

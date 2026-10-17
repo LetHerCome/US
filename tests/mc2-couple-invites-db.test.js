@@ -100,6 +100,8 @@ test('DB-18: legacy preconditions abort atomically without adding columns or API
   }
 });
 test('DB-19: exact target reruns are no-ops; partial schema/body/signature/ACL drift aborts',async()=>{
+  // MC2 rerun drift checks describe MC2's own target; S3.2 v1 later replaces get_couple_membership.
+  await db.close(); db=await h.database({s32:false});
   await h.create(db); await h.invite(db);
   const snapshot=async()=> (await db.query("select (select jsonb_agg(i order by id) from public.couple_invites i) invites,(select jsonb_agg(p order by id) from public.profiles p) profiles,(select jsonb_agg(p order by oid) from pg_proc p where proname like 'mc2\\_%' or proname in('create_couple','create_partner_invite','revoke_partner_invite','accept_partner_invite','get_couple_membership')) funcs")).rows;
   const before=await snapshot(); await db.exec(h.MC2()); assert.deepEqual(await snapshot(),before);

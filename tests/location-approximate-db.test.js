@@ -170,11 +170,13 @@ test('the SQL Editor script runs the migration verbatim, records it once and ref
   try {
     // Production as it is before this PR: every other migration, no ledger row for this one.
     await db.exec(PLATFORM);
-    for (const f of fs.readdirSync(DIR).filter((f) => f.endsWith('.sql') && f !== FILE && !f.startsWith('20261014180000')).sort()) {
-      await db.exec(fs.readFileSync(path.join(DIR, f), 'utf8'));
-    }
+    // Same order as tests/helpers/mc2-db.js: S3.2 migrations build on MC2.
+    const files = fs.readdirSync(DIR).filter((f) => f.endsWith('.sql') && f !== FILE && !f.startsWith('20261014180000')).sort();
+    const afterMc2 = (f) => f > FILE && /_s32_/.test(f);
+    for (const f of files.filter((f) => !afterMc2(f))) await db.exec(fs.readFileSync(path.join(DIR, f), 'utf8'));
     await db.exec(SEED);
     await db.exec(MC2());
+    for (const f of files.filter(afterMc2)) await db.exec(fs.readFileSync(path.join(DIR, f), 'utf8'));
     await db.exec('create schema if not exists supabase_migrations; create table if not exists supabase_migrations.schema_migrations (version text primary key, statements text[], name text)');
     await db.query('insert into public.couple_locations(user_id,couple_id,latitude,longitude,accuracy_m,updated_at) values ($1,$2,41.902783,12.496366,7,now())', [F, A]);
 
