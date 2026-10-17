@@ -188,45 +188,60 @@
     return scheduleWrite();
   }
 
+  // "Due colori": the creator's portrait ringed in rosa, the partner's in
+  // lilla, overlapping like the US mark, on a transparent PNG so it sits on
+  // the widget's night card. 64x44dp at 4.5x; rings 2.5dp; the second
+  // portrait is cut out of the first by a ring of the card colour.
   async function composeNoiPortrait(urls) {
+    const S = 4.5, W = Math.round(64 * S), H = Math.round(44 * S);
+    const ring = 2.5 * S, gap = 2.5 * S, cy = H / 2, radius = cy - ring;
+    const centers = [radius + ring, W - radius - ring];
+    const colours = ['#ff7c96', '#a98bff'];
     const canvas = document.createElement('canvas');
-    canvas.width = 320; canvas.height = 160;
+    canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('noi_portrait_canvas');
-    ctx.fillStyle = '#f9eaf1'; ctx.fillRect(0, 0, 320, 160);
+    ctx.clearRect(0, 0, W, H);
     for (let i = 0; i < 2; i++) {
-      const cx = i === 0 ? 85 : 235, cy = 80, radius = 66;
+      const cx = centers[i];
+      if (i === 1) {
+        // Cut the first portrait where the second overlaps it.
+        ctx.save();
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath(); ctx.arc(cx, cy, radius + ring + gap, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
       ctx.save();
       ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.clip();
-      ctx.fillStyle = i === 0 ? '#f5cddd' : '#e9c3d6';
-      ctx.fillRect(cx-radius,cy-radius,radius*2,radius*2);
+      ctx.fillStyle = '#2a2232';
+      ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
       if (urls[i]) {
         let bitmap;
         try {
-          const response = await fetch(urls[i], { cache: 'no-store', credentials: 'omit' });
+          const response = await fetch(urls[i], { credentials: 'omit' });
           if (!response.ok) throw new Error('avatar_download');
           const blob = await response.blob();
           if (!/^image\//.test(blob.type || 'image/')) throw new Error('avatar_type');
           bitmap = await createImageBitmap(blob, { imageOrientation: 'from-image' });
           const scale = Math.max(radius * 2 / bitmap.width, radius * 2 / bitmap.height);
           const w = bitmap.width * scale, h = bitmap.height * scale;
-          ctx.drawImage(bitmap, cx-w/2,cy-h/2,w,h);
+          ctx.drawImage(bitmap, cx - w / 2, cy - h / 2, w, h);
         } catch (error) { console.warn('[US Widget] avatar paint', error); }
         finally { bitmap?.close?.(); }
       }
       ctx.restore();
-      ctx.beginPath(); ctx.arc(cx,cy,radius,0,Math.PI*2);
-      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 6; ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx, cy, radius + ring / 2, 0, Math.PI * 2);
+      ctx.strokeStyle = colours[i]; ctx.lineWidth = ring; ctx.stroke();
     }
-    const jpeg = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
-    if (!jpeg) throw new Error('noi_portrait_encode');
+    const png = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    if (!png) throw new Error('noi_portrait_encode');
     const base64 = await new Promise((resolve,reject)=>{
       const reader=new FileReader();
       reader.onload=()=>resolve(String(reader.result||'').split(',')[1]||'');
       reader.onerror=reject;
-      reader.readAsDataURL(jpeg);
+      reader.readAsDataURL(png);
     });
-    return {base64, preview: URL.createObjectURL(jpeg)};
+    return {base64, preview: URL.createObjectURL(png)};
   }
 
   function syncNoiPortrait({ force = false } = {}) {
@@ -263,7 +278,8 @@
   // Android refreshes the cached photo on launch and while US is active;
   // RemoteViews cannot download a new private image while US is closed.
   async function encodePhoto(url) {
-    const response = await fetch(url, { cache: 'no-store', credentials: 'omit' });
+    // The same signed URL Oggi just painted: the HTTP cache answers, no second download.
+    const response = await fetch(url, { credentials: 'omit' });
     if (!response.ok) throw new Error(`photo_http_${response.status}`);
     const blob = await response.blob();
     if (!/^image\//.test(blob.type || 'image/')) throw new Error('photo_not_image');

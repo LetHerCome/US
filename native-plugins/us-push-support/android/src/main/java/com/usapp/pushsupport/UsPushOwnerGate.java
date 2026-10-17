@@ -19,6 +19,8 @@ public final class UsPushOwnerGate {
     private static final String OWNER = "owner";
     private static final String INSTALLATION = "installation";
     private static final String EPOCH = "epoch";
+    /** The other person's display name for this owner's notices (16/10/2026). */
+    private static final String PARTNER = "partner";
     private static final Object LOCK = new Object();
     private static final Pattern UUID_PATTERN = Pattern.compile(
         "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
@@ -40,7 +42,7 @@ public final class UsPushOwnerGate {
             String value = store.getString(EPOCH, null);
             if (validUuid(value)) return value;
             value = UUID.randomUUID().toString();
-            if (!store.edit().remove(OWNER).remove(INSTALLATION).putString(EPOCH, value).commit()) return "";
+            if (!store.edit().remove(OWNER).remove(INSTALLATION).remove(PARTNER).putString(EPOCH, value).commit()) return "";
             return value;
         }
     }
@@ -50,14 +52,18 @@ public final class UsPushOwnerGate {
             if (!validUuid(owner) || !validUuid(installation) || !validUuid(expectedEpoch)) return false;
             final SharedPreferences store = prefs(context);
             if (!expectedEpoch.equals(store.getString(EPOCH, null))) return false;
-            return store.edit().putString(OWNER, owner.toLowerCase(java.util.Locale.ROOT))
+            final String next = owner.toLowerCase(java.util.Locale.ROOT);
+            final SharedPreferences.Editor edit = store.edit();
+            // A name belongs to one owner: binding another account drops it.
+            if (!next.equals(store.getString(OWNER, null))) edit.remove(PARTNER);
+            return edit.putString(OWNER, next)
                 .putString(INSTALLATION, installation.toLowerCase(java.util.Locale.ROOT)).commit();
         }
     }
 
     public static boolean clear(Context context) {
         synchronized (LOCK) {
-            return prefs(context).edit().remove(OWNER).remove(INSTALLATION)
+            return prefs(context).edit().remove(OWNER).remove(INSTALLATION).remove(PARTNER)
                 .putString(EPOCH, UUID.randomUUID().toString()).commit();
         }
     }
@@ -74,6 +80,37 @@ public final class UsPushOwnerGate {
         synchronized (LOCK) {
             final SharedPreferences store = prefs(context);
             return validUuid(store.getString(OWNER, null));
+        }
+    }
+
+    /**
+     * Stores the other person's name for notices, only for the account that
+     * currently owns the gate (a late call from a previous account is ignored).
+     * Empty or invalid: the name is removed and notices say "La tua persona".
+     */
+    public static boolean setPartnerName(Context context, String owner, String partnerName) {
+        synchronized (LOCK) {
+            if (!validUuid(owner)) return false;
+            final SharedPreferences store = prefs(context);
+            if (!owner.toLowerCase(java.util.Locale.ROOT).equals(store.getString(OWNER, null))) return false;
+            final String name = UsPushNotices.cleanName(partnerName);
+            final SharedPreferences.Editor edit = store.edit();
+            if (name.isEmpty()) edit.remove(PARTNER); else edit.putString(PARTNER, name);
+            return edit.commit();
+        }
+    }
+
+    public interface NoticePost { void post(String partnerName); }
+
+    /**
+     * Same critical section as postIfCurrent, and the partner name is read
+     * inside it: a notice can never show the name of another account.
+     */
+    public static boolean postIfCurrent(Context context, String installation, NoticePost post) {
+        synchronized (LOCK) {
+            if (!isCurrent(context, installation) || post == null) return false;
+            post.post(prefs(context).getString(PARTNER, ""));
+            return true;
         }
     }
 

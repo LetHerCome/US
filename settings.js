@@ -164,7 +164,7 @@ async function hydrateUsSettings(){
 
   const avatarPaths=profiles.map(p=>p.avatar_path).filter(Boolean);
   let urls=new Map();
-  if(avatarPaths.length&&window.usGetSignedUrls)urls=await window.usGetSignedUrls(avatarPaths,21600);
+  if(avatarPaths.length&&window.usGetSignedUrls)urls=await window.usGetSignedUrls(avatarPaths,window.US_MEDIA_URL_TTL_S);
   if(window.usProfile!==identityProfile||window.usProfile?.couple_id!==cid)return;
   $('usCoupleAvatars').innerHTML=profiles.map(p=>avatarMarkup(p,p.avatar_path?urls.get(p.avatar_path):null)).join('')||'<span class="us-couple-avatar"><b>US</b></span>';
 }
@@ -247,7 +247,7 @@ async function showStoryArchive(){
     }
     const names=new Map((profiles||[]).map(p=>[p.id,p.display_name||'Noi']));
     const paths=stories.map(s=>s.media_path);
-    const urls=await window.usGetSignedUrls?.(paths,21600)||new Map();
+    const urls=await window.usGetSignedUrls?.(paths,window.US_MEDIA_URL_TTL_S)||new Map();
     $('usSettingsModalBody').innerHTML=`<div class="us-settings2-modal-copy">Le Stories che avete condiviso, solo per voi.</div><div class="us-story-archive">${stories.map(s=>{
       const url=urls.get(s.media_path);if(!url)return '';
       const date=new Date(s.created_at).toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'short'});

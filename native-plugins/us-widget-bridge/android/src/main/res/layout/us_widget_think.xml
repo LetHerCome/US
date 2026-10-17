@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Ti penso: label, one sentence in serif, the heart, one pill. The colour
+     says whose move it is (UsThinkWidgetProvider.toneColor): rosa when the
+     other person thought of you, lilla once you sent, latte when it is quiet. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/us_widget_root"
     android:layout_width="match_parent"
@@ -6,31 +9,47 @@
     android:background="@drawable/us_widget_background"
     android:gravity="center_horizontal"
     android:orientation="vertical"
-    android:padding="10dp">
+    android:paddingStart="12dp"
+    android:paddingTop="14dp"
+    android:paddingEnd="12dp"
+    android:paddingBottom="12dp">
+
+    <TextView
+        android:id="@+id/us_widget_kicker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-medium"
+        android:includeFontPadding="false"
+        android:letterSpacing="0.14"
+        android:maxLines="1"
+        android:text="@string/us_widget_cta"
+        android:textAllCaps="true"
+        android:textColor="@color/us_widget_muted"
+        android:textSize="11sp"
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/us_widget_message"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:ellipsize="end"
+        android:fontFamily="serif"
         android:gravity="center"
         android:includeFontPadding="false"
-        android:lineSpacingExtra="1dp"
+        android:lineSpacingMultiplier="1.05"
         android:maxLines="2"
         android:textColor="@color/us_widget_text"
-        android:textSize="15sp"
-        android:textStyle="bold" />
+        android:textSize="18sp" />
 
     <FrameLayout
-        android:layout_width="72dp"
-        android:layout_height="72dp"
-        android:layout_marginTop="2dp"
-        android:foregroundGravity="center">
+        android:layout_width="62dp"
+        android:layout_height="58dp">
 
         <ImageView
             android:id="@+id/us_widget_heart"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="54dp"
+            android:layout_height="54dp"
             android:layout_gravity="center"
             android:contentDescription="@string/us_widget_send"
             android:scaleType="centerInside"
@@ -38,8 +57,8 @@
 
         <ImageView
             android:id="@+id/us_widget_heart_pulse"
-            android:layout_width="72dp"
-            android:layout_height="72dp"
+            android:layout_width="62dp"
+            android:layout_height="58dp"
             android:layout_gravity="center"
             android:contentDescription="@string/us_widget_send"
             android:scaleType="centerInside"
@@ -50,23 +69,31 @@
     <TextView
         android:id="@+id/us_widget_cta"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="1dp"
+        android:layout_height="30dp"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/us_widget_pill_dim"
+        android:fontFamily="sans-serif-medium"
+        android:gravity="center"
         android:includeFontPadding="false"
-        android:letterSpacing="0.08"
+        android:letterSpacing="0.12"
+        android:maxLines="1"
+        android:minWidth="88dp"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
         android:text="@string/us_widget_cta"
         android:textAllCaps="true"
-        android:textColor="@color/us_widget_accent"
+        android:textColor="@color/us_widget_text_2"
         android:textSize="11sp"
         android:textStyle="bold" />
+
+    <!-- 1.0: never shown (a Ti penso is a gesture, not a score); kept for the provider contract. -->
     <TextView
         android:id="@+id/us_widget_count_24h"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="3dp"
-        android:gravity="center"
         android:includeFontPadding="false"
         android:maxLines="1"
         android:textColor="@color/us_widget_muted"
-        android:textSize="10sp" />
+        android:textSize="11sp"
+        android:visibility="gone" />
 </LinearLayout>

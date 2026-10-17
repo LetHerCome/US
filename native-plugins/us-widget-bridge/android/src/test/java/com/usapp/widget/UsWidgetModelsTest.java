@@ -183,7 +183,11 @@ public class UsWidgetModelsTest {
         UsWidgetModels.Think sent = UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:04Z"), true, now);
         assertTrue(sent.busy);
         assertEquals("Inviato a Beatrice", sent.message);
-        UsWidgetModels.Think later = UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:04Z"), true, Instant.parse("2026-10-06T10:00:07Z"));
+        // Past the cooldown the heart sends again, while "Inviato a …" is still readable.
+        UsWidgetModels.Think readable = UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:04Z"), true, Instant.parse("2026-10-06T10:00:07Z"));
+        assertFalse(readable.busy);
+        assertEquals("Inviato a Beatrice", readable.message);
+        UsWidgetModels.Think later = UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:04Z"), true, Instant.parse("2026-10-06T10:00:10Z"));
         assertFalse(later.busy);
         assertEquals("Ti penso", later.cta);
         assertEquals("Pensa a Beatrice", later.message);
@@ -194,6 +198,22 @@ public class UsWidgetModelsTest {
         UsWidgetModels.Think stale = UsWidgetModels.think(snapshot(null), action("sending", "2026-10-06T10:00:00Z"), true, Instant.parse("2026-10-06T10:01:00Z"));
         assertFalse(stale.busy);
         assertEquals("Riprova", stale.cta);
+    }
+
+    @Test
+    public void thinkToneSaysWhoseMoveItIs() throws Exception {
+        // "Due colori": rosa for the other person's thought, lilla for mine, quiet otherwise.
+        Instant now = Instant.parse("2026-10-06T12:00:00Z");
+        JSONObject s = snapshot(null);
+        assertEquals(UsWidgetModels.TONE_QUIET, UsWidgetModels.think(s, null, true, now).tone);
+        assertEquals("Beatrice", UsWidgetModels.think(s, null, true, now).partner);
+        s.getJSONObject("think").put("lastReceivedAt", "2026-10-06T11:30:00Z");
+        assertEquals(UsWidgetModels.TONE_PARTNER, UsWidgetModels.think(s, null, true, now).tone);
+        Instant sentNow = Instant.parse("2026-10-06T10:00:05Z");
+        assertEquals(UsWidgetModels.TONE_ME, UsWidgetModels.think(snapshot(null), action("sending", "2026-10-06T10:00:00Z"), true, sentNow).tone);
+        assertEquals(UsWidgetModels.TONE_ME, UsWidgetModels.think(snapshot(null), action("sent", "2026-10-06T10:00:04Z"), true, sentNow).tone);
+        assertEquals(UsWidgetModels.TONE_QUIET, UsWidgetModels.think(snapshot(null), action("sending", "2026-10-06T10:00:00Z"), true, Instant.parse("2026-10-06T10:01:00Z")).tone);
+        assertEquals(UsWidgetModels.TONE_QUIET, UsWidgetModels.think(null, null, false, now).tone);
     }
 
     @Test

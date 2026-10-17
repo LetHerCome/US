@@ -14,7 +14,7 @@ const REF = 'eb72e072-728c-476d-83fd-d902b74b3660';
 const device = installation_id => ({ token: TOKEN, installation_id });
 
 test('FCM for every US event is data-only, owner-routed, no private text, no deep link',async()=>{
- const { fcmMessage }=await load('native-push-transport.mjs');
+ const { fcmMessage, ANDROID_NOTICE_KINDS }=await load('native-push-transport.mjs');
  const { buildNotification, NOTIFICATION_TYPES }=await load('notification-core.mjs');
  for(const type of NOTIFICATION_TYPES){
   const n=buildNotification(type,{
@@ -27,7 +27,9 @@ test('FCM for every US event is data-only, owner-routed, no private text, no dee
   const wire=JSON.stringify(msg);
   assert.equal(Object.hasOwn(msg,'notification'),false,type);
   assert.equal(Object.hasOwn(msg.android,'notification'),false,type);
-  assert.deepEqual(msg.data,{v:'2',installation:INSTALL_A},type);
+  // 16/10/2026 (founder): plus ONE allow-listed kind, never text, names, ids or targets.
+ assert.deepEqual(msg.data,{v:'2',installation:INSTALL_A,k:ANDROID_NOTICE_KINDS[type]},type);
+ assert.match(msg.data.k,/^[a-z_]{2,20}$/,type);
   assert.equal(msg.android.collapse_key,'us-private-notice',type);
   assert.doesNotMatch(wire,/PRIVATE_SENDER_BEATRICE|PRIVATE_TITLE|PRIVATE_CALENDAR_TITLE|private-event-tag|private-reminder|eb72e072|"target"|"ref"|"type"|click_action/i,type);
  }
@@ -38,8 +40,8 @@ test('A and B differ ONLY by routing installation, never by private event copy',
  const { buildNotification }=await load('notification-core.mjs');
  const a=fcmMessage(buildNotification('calendar_reminder',{reminderId:'a',entryId:REF,body:'A private event'}),device(INSTALL_A)).message;
  const b=fcmMessage(buildNotification('think',{senderName:'B private sender',messageId:REF}),device(INSTALL_B)).message;
- assert.deepEqual(a.data,{v:'2',installation:INSTALL_A});
- assert.deepEqual(b.data,{v:'2',installation:INSTALL_B});
+ assert.deepEqual(a.data,{v:'2',installation:INSTALL_A,k:'calendar'});
+ assert.deepEqual(b.data,{v:'2',installation:INSTALL_B,k:'think'});
  assert.equal(Object.hasOwn(a,'notification'),false);
  assert.equal(Object.hasOwn(b,'notification'),false);
  assert.equal(JSON.stringify(a).includes('A private event'),false);
