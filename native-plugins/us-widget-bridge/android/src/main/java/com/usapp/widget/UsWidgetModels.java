@@ -21,7 +21,8 @@ final class UsWidgetModels {
     static final ZoneId ROME = ZoneId.of("Europe/Rome");
     static final long DAY_MS = 86_400_000L;
     /** "Sent" stays visible this long; taps inside the first part are ignored. */
-    static final long SENT_VISIBLE_MS = 1_800L;
+    /** "Inviato a …" stays long enough to be read (it is the only success feedback). */
+    static final long SENT_VISIBLE_MS = 5_000L;
     static final long SEND_COOLDOWN_MS = 1_800L;
     static final long FAILED_VISIBLE_MS = 10 * 60_000L;
     /** A "sending" older than this was interrupted (process killed). */
@@ -184,8 +185,16 @@ final class UsWidgetModels {
         /** A tap right now would be ignored (in flight or just sent). */
         boolean busy = false;
         boolean pulse = false;
+        /** Whose move the widget shows: partner (rosa), me (lilla), quiet (latte). */
+        String tone = TONE_QUIET;
+        /** The other person's name, styled in the message when it appears there. */
+        String partner = "";
         Instant nextChange = null;
     }
+
+    static final String TONE_QUIET = "quiet";
+    static final String TONE_PARTNER = "partner";
+    static final String TONE_ME = "me";
 
     /**
      * @param action native action state: status (idle|sending|sent|failed|unauthorized|rate_limited), at, sentAt
@@ -200,6 +209,7 @@ final class UsWidgetModels {
         }
         JSONObject t = UsWidgetContract.optObject(snapshot, "think");
         String partner = t.optString("partnerName", "").trim();
+        out.partner = partner;
         String status = action == null ? "idle" : action.optString("status", "idle");
         Instant actionAt = action == null ? null : UsWidgetContract.instant(action.optString("at", ""));
         long sinceAction = actionAt == null ? Long.MAX_VALUE : Math.max(0, now.toEpochMilli() - actionAt.toEpochMilli());
@@ -215,12 +225,14 @@ final class UsWidgetModels {
             out.cta = "Invio…";
             out.busy = true;
             out.pulse = true;
+            out.tone = TONE_ME;
             out.nextChange = actionAt.plusMillis(SENDING_STALE_MS);
             return out;
         }
         if (status.equals("sent") && sinceAction < SENT_VISIBLE_MS) {
             out.message = partner.isEmpty() ? "Pensiero inviato" : "Inviato a " + partner;
             out.cta = "Inviato";
+            out.tone = TONE_ME;
             out.busy = sinceAction < SEND_COOLDOWN_MS;
             out.nextChange = actionAt.plusMillis(out.busy ? SEND_COOLDOWN_MS : SENT_VISIBLE_MS);
             return out;
@@ -254,6 +266,7 @@ final class UsWidgetModels {
             long minutes = Math.max(0, Duration.between(received, now).toMinutes());
             out.message = minutes < 60 ? who + " ti sta pensando" : who + " ti ha pensato\n" + ago(minutes);
             out.cta = "Ricambia";
+            out.tone = TONE_PARTNER;
             out.nextChange = nextAgoChange(received, now);
             return out;
         }

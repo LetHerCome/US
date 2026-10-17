@@ -24,7 +24,7 @@ In modalità `upload` il job fallisce se manca un segreto, se Firebase non è co
 
 ## Versioni
 
-- `versionCode` = secondi Unix al momento della build (stesso schema degli APK interni). Resta sopra a ogni APK interno già installato e raggiunge il limite Play di 2.100.000.000 solo a luglio 2036. Una volta caricato su Play non si può più scendere: lo schema va considerato definitivo.
+- `versionCode` = **minuti trascorsi dal 1° gennaio 2026 (UTC)** al momento della build: circa 420.000 a ottobre 2026, il limite Play di 2.100.000.000 solo fra migliaia di anni. Deciso il 16/10/2026 dopo il primo caricamento su Play Console: lo schema precedente (secondi Unix, come gli APK interni) era «significativamente superiore» e avrebbe raggiunto il limite nel 2036, bloccando gli aggiornamenti. Gli APK interni restano sui secondi Unix: sono un'installazione separata (altra chiave di firma), quindi i due schemi non si confrontano. Una volta pubblicato su Play non si può più scendere: lo schema va considerato definitivo.
 - `versionName` = input manuale `x.y.z`, predefinito `1.0.0`.
 - Gradle rifiuta qualsiasi versionCode fuori da 1..2.100.000.000 per ogni build e un versionName non `x.y.z` per le build Play.
 - `targetSdk` 36, `compileSdk` 36, `minSdk` 26 (`android/variables.gradle`).

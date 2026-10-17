@@ -322,6 +322,13 @@ window.UsWidgetDataApi=Object.freeze({
 });
 
 const US_SIGNED_URL_CACHE=new Map();
+// Egress: a photo is downloaded again whenever its signed URL changes (the
+// native WebView caches by full URL; it has no path-keyed service worker).
+// One URL per photo for a day, and up to US_SIGNED_URL_PERSIST_MAX of them
+// kept across restarts (newest first), so a cold start reuses what is on disk.
+const US_MEDIA_URL_TTL_S=24*60*60;
+window.US_MEDIA_URL_TTL_S=US_MEDIA_URL_TTL_S;
+const US_SIGNED_URL_PERSIST_MAX=400;
 const US_SIGNED_URL_SKEW_MS=5*60*1000;
 const US_SIGNED_URL_STORAGE_KEY='us:signed-url-cache:v2';
 
@@ -340,12 +347,9 @@ function usPersistSignedUrlCache(){
   try{
     const now=Date.now();
     const out={};
-    let count=0;
-    for(const [path,hit] of US_SIGNED_URL_CACHE){
-      if(hit?.url&&hit.expiresAt-now>US_SIGNED_URL_SKEW_MS&&count<80){
-        out[path]=hit;count++;
-      }
-    }
+    const live=[...US_SIGNED_URL_CACHE].filter(([,hit])=>hit?.url&&hit.expiresAt-now>US_SIGNED_URL_SKEW_MS);
+    live.sort((a,b)=>b[1].expiresAt-a[1].expiresAt);
+    for(const [path,hit] of live.slice(0,US_SIGNED_URL_PERSIST_MAX))out[path]=hit;
     localStorage.setItem(US_SIGNED_URL_STORAGE_KEY,JSON.stringify(out));
   }catch(_e){}
 }
@@ -378,7 +382,7 @@ function usWriteSignedUrlCache(path,url,expiresIn){
   return url||null;
 }
 usLoadSignedUrlCache();
-async function usGetSignedUrl(path,expiresIn=21600,options={}){
+async function usGetSignedUrl(path,expiresIn=US_MEDIA_URL_TTL_S,options={}){
   if(!path)return null;
   if(options.force)usInvalidateSignedUrl(path);
   const cached=usReadSignedUrlCache(path);if(cached)return cached;
@@ -386,7 +390,7 @@ async function usGetSignedUrl(path,expiresIn=21600,options={}){
   if(error||!data?.signedUrl){if(error)console.warn('[US Media] signed url',error);return null;}
   return usWriteSignedUrlCache(path,data.signedUrl,expiresIn);
 }
-async function usGetSignedUrls(paths,expiresIn=21600,options={}){
+async function usGetSignedUrls(paths,expiresIn=US_MEDIA_URL_TTL_S,options={}){
   const unique=[...new Set((paths||[]).filter(Boolean))];
   const result=new Map(),missing=[];
   for(const path of unique){
@@ -419,7 +423,7 @@ async function usRecoverPrivateImage(img,path=''){
   if(!storagePath||img.dataset?.usMediaRetry==='1')return false;
   img.dataset.usMediaRetry='1';
   usInvalidateSignedUrl(storagePath);
-  const fresh=await usGetSignedUrl(storagePath,21600,{force:true});
+  const fresh=await usGetSignedUrl(storagePath,US_MEDIA_URL_TTL_S,{force:true});
   if(!fresh)return false;
   img.src=fresh;
   return true;
@@ -444,7 +448,7 @@ async function usPrewarmNativeMomentMedia(limit=4){
       .order('created_at',{ascending:false})
       .limit(limit);
     if(error||window.usProfile!==profile){if(error)throw error;return;}
-    const urls=await usGetSignedUrls((rows||[]).map(row=>row.thumbnail_path||row.storage_path),21600);
+    const urls=await usGetSignedUrls((rows||[]).map(row=>row.thumbnail_path||row.storage_path),US_MEDIA_URL_TTL_S);
     await Promise.allSettled([...urls.values()].slice(0,limit).map(url=>new Promise(resolve=>{
       const img=new Image();
       img.decoding='async';
@@ -1572,7 +1576,7 @@ function setAvatarImage(img,fallback,path,signedUrl){
     if(!retryPath||img.dataset.usMediaRetry==='1')return;
     img.dataset.usMediaRetry='1';
     usInvalidateSignedUrl(retryPath);
-    const fresh=await usGetSignedUrl(retryPath,21600,{force:true});
+    const fresh=await usGetSignedUrl(retryPath,US_MEDIA_URL_TTL_S,{force:true});
     if(fresh)img.src=fresh;
   };
   if(!signedUrl){img.removeAttribute('src');showFallback();return;}
@@ -1586,7 +1590,7 @@ function setAvatarSlot(containerId,signedUrl,path=''){
 }
 
 async function signedAvatarUrl(path){
-  return usGetSignedUrl(path,21600);
+  return usGetSignedUrl(path,US_MEDIA_URL_TTL_S);
 }
 
 async function hydrateProfileAvatars(){
@@ -1685,7 +1689,7 @@ async function usOptimizeLegacyRicordiThumbnails({onProgress}={}){
       let thumbnailPath='';
       try{
         onProgress?.({done,total,failed,current:row.id});
-        const signedUrl=await usGetSignedUrl(row.storage_path,21600);
+        const signedUrl=await usGetSignedUrl(row.storage_path,US_MEDIA_URL_TTL_S);
         if(!signedUrl)throw new Error('source_url_unavailable');
         const response=await fetch(signedUrl,{cache:'force-cache'});
         if(!response.ok)throw new Error('source_download_failed');
@@ -1880,7 +1884,7 @@ function crossfadeHomePhoto(url,{path='',hourKey='',allowRetry=true}={}){
     console.warn('[US Home] preload foto fallito');
     if(path&&allowRetry){
       usInvalidateSignedUrl(path);
-      const fresh=await usGetSignedUrl(path,21600,{force:true});
+      const fresh=await usGetSignedUrl(path,US_MEDIA_URL_TTL_S,{force:true});
       if(!currentViewer())return;
       if(fresh&&fresh!==url){
         crossfadeHomePhoto(fresh,{path,hourKey,allowRetry:false});
@@ -1927,7 +1931,10 @@ async function hydrateHomePhoto(force=false){
     homePhotoHourKey=hourKey;
     return;
   }
-  const signedUrl=await usGetSignedUrl(path,21600,{force});
+  // force re-picks the hourly photo; it never re-signs: a new URL for a photo
+  // already on this phone would download it again. A broken URL heals in
+  // crossfadeHomePhoto's retry.
+  const signedUrl=await usGetSignedUrl(path,US_MEDIA_URL_TTL_S);
   if(window.usProfile!==viewer||epoch!==usAuthEpoch)return;
   if(!signedUrl)return;
   crossfadeHomePhoto(signedUrl,{path,hourKey});
@@ -2567,6 +2574,12 @@ async function playDailyRitualAnswered(card,merge){
   return true;
 }
 let usDailyRitualAnswerPending=false;
+// Long questions step down in size instead of leaving the card (or the
+// screen): CSS reads data-length (dc-oggi.css, "Domanda di oggi").
+function dailyQuestionLengthAttr(text){
+  const n=String(text||'').trim().length;
+  return n>100?' data-length="xlong"':n>60?' data-length="long"':'';
+}
 // What stood above the card falls into its place, bounces on the bar and settles (FLIP, transform only).
 function dailyRitualDropAbove(card){
   const dock=card?.parentElement;
@@ -2651,7 +2664,7 @@ function renderDailyRitual(model){
   card.dataset.usAttention=model.attention?'on':'off';
   // The visible words are the accessible name (and the English translation).
   card.removeAttribute('aria-label');
-  const html=`${dailyRitualRingMarkup(model)}<span class="eyebrow us-daily-ritual-kicker">${escapeHtml(model.kicker)}</span><span class="dq-q us-daily-ritual-question">${escapeHtml(model.question)}</span><span class="dq-foot">${model.meta?`<span class="dq-sub us-daily-ritual-meta">${escapeHtml(model.meta)}</span>`:''}<span class="btn-primary us-daily-ritual-cta">${escapeHtml(model.cta)}<span class="us-daily-ritual-arrow" aria-hidden="true"></span></span></span>${model.state==='revealed'?`<span class="us-daily-ritual-swipe">${escapeHtml('Scorri di lato per toglierla')}</span>`:''}`;
+  const html=`${dailyRitualRingMarkup(model)}<span class="eyebrow us-daily-ritual-kicker">${escapeHtml(model.kicker)}</span><span class="dq-q us-daily-ritual-question"${dailyQuestionLengthAttr(model.question)}>${escapeHtml(model.question)}</span><span class="dq-foot">${model.meta?`<span class="dq-sub us-daily-ritual-meta">${escapeHtml(model.meta)}</span>`:''}<span class="btn-primary us-daily-ritual-cta">${escapeHtml(model.cta)}<span class="us-daily-ritual-arrow" aria-hidden="true"></span></span></span>${model.state==='revealed'?`<span class="us-daily-ritual-swipe">${escapeHtml('Scorri di lato per toglierla')}</span>`:''}`;
   // Same words, same circles: leave the card (and a running animation) alone.
   if(card.hidden||card.usDailyHtml!==html){card.innerHTML=html;card.usDailyHtml=html;}
   card.hidden=false;
@@ -4244,7 +4257,7 @@ async function hydrateMomentsCore(){
   if(error){console.warn(error);if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji">!</div><b>Ricordi non disponibili</b><p>Riprova tra un momento.</p></div>';return;}
   const mediaPaths=[...new Set((rows||[]).flatMap(row=>[row.storage_path,row.thumbnail_path]).filter(Boolean))];
   if(forceMedia)mediaPaths.forEach(usInvalidateSignedUrl);
-  const signedUrlsPromise=usGetSignedUrls(mediaPaths,21600);
+  const signedUrlsPromise=usGetSignedUrls(mediaPaths,US_MEDIA_URL_TTL_S);
   const [
     {data:profiles,error:profilesError},
     {data:lived,error:livedError},
@@ -4360,7 +4373,7 @@ async function hydrateHomeMemory(forceNext=false){
   const row=rows[(daySeed+homeMemoryOffset)%rows.length];
   const names=new Map((profiles||[]).map(profile=>[profile.id,profile.display_name||'Noi']));
   const paths=[row.storage_path,row.thumbnail_path].filter(Boolean);
-  const urls=await usGetSignedUrls(paths,21600);
+  const urls=await usGetSignedUrls(paths,US_MEDIA_URL_TTL_S);
   const signedUrl=urls.get(row.storage_path);
   const previewUrl=urls.get(row.thumbnail_path)||signedUrl;
   if(!signedUrl||!previewUrl){section.hidden=true;return;}

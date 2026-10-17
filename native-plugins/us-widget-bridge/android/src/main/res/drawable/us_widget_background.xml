@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- The app's night card: surface to canvas, a hairline of latte, 24dp corners. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
     <gradient
         android:angle="270"
-        android:endColor="#F20A0710"
-        android:startColor="#F2110B18" />
+        android:endColor="#FF0F0B13"
+        android:startColor="#FF17111C" />
+    <stroke android:width="1dp" android:color="#17F7EFE9" />
     <corners android:radius="24dp" />
 </shape>

@@ -55,9 +55,11 @@ public final class UsThinkWidgetActionReceiver extends BroadcastReceiver {
                 store.writeAction(result, actionId);
                 if (UsWidgetActionClient.SENT.equals(result)) {
                     store.recordThinkSent(actionId, Instant.now());
-                    // The new rolling counter is the success feedback. Return the
-                    // heart to "Ti penso" immediately, not after a launcher alarm.
-                    store.writeAction("idle", actionId);
+                    // 1.0 has no sent counter, so "Inviato a …" in lilla is the
+                    // only success feedback: keep the "sent" state; the model
+                    // shows it for SENT_VISIBLE_MS and schedules the return.
+                    // (16/10: going idle at once made a real send look like
+                    // nothing happened.)
                 }
             } finally {
                 IN_FLIGHT.set(false);
