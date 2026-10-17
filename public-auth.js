@@ -19,10 +19,12 @@
   // matching assertion in tests/s3-1-public-auth.test.js to change.
   const PRODUCTION_SIGNUP_RELEASED = false;
   const PASSWORD_MIN = 10, PASSWORD_MAX = 72;
-  // The published Terms and Privacy pages (https). Empty until the public
-  // pages exist (docs/store/play/PLAY_DECLARATIONS_DRAFT.md §2.2): the sign-up
-  // sentence then names them without a link. A release needs both.
-  const LEGAL_URLS = Object.freeze({ terms: '', privacy: '' });
+  // The published Terms and Privacy pages (https, termini.html / privacy.html;
+  // each links its English version). A release needs both.
+  const LEGAL_URLS = Object.freeze({
+    terms: 'https://us-a33.pages.dev/termini',
+    privacy: 'https://us-a33.pages.dev/privacy'
+  });
   const legalUrl = value => {
     try { const url = new URL(value); return url.protocol === 'https:' ? url.href : ''; } catch (_) { return ''; }
   };
