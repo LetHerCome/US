@@ -101,24 +101,53 @@ async function timedFetch(fetchImpl, url, init) {
 }
 
 // S3: data-only FCM. Android must verify the account-bound installation
-// before displaying a local generic notification. FCM carries no private copy,
-// content id, account id, event type or action. The installation UUID is a
-// random routing value, not an authorization secret or hardware identifier.
+// before displaying a local notification. FCM carries no private copy,
+// content id, account id, target or action; since 16/10/2026 it carries the
+// allow-listed event kind below (founder decision), so the phone can say what
+// happened. The installation UUID is a random routing value, not an
+// authorization secret or hardware identifier.
 export const ANDROID_SAFE_COPY = Object.freeze({
   title: 'US.',
   body: 'Apri US per vedere le novità.',
 });
 const ANDROID_SAFE_TAG = 'us-private-notice';
+
+// Founder decision 16/10/2026: Android notifications say what happened. FCM
+// carries ONE allow-listed kind (the event class, never text, names, ids or
+// targets); the phone writes the sentence itself, in its language, and only
+// after the owner gate accepts the installation. Unknown or missing kind: the
+// generic ANDROID_SAFE_COPY. Keep in sync with UsPushNotices.java (tested).
+export const ANDROID_NOTICE_KINDS = Object.freeze({
+  test: 'test',
+  think: 'think',
+  think_reaction: 'think_reply',
+  daily_answer: 'daily_turn',
+  daily_evening: 'daily_turn',
+  daily_reveal: 'daily_ready',
+  daily_reaction: 'daily_reaction',
+  daily_question: 'daily_new',
+  quest_confirmed: 'quest',
+  left_for_you: 'left_for_you',
+  game_waiting: 'game_turn',
+  game_reveal: 'game_ready',
+  game_weekly_created: 'game_weekly',
+  game_weekly_turn: 'game_weekly_turn',
+  calendar_reminder: 'calendar',
+  relationship: 'anniversary',
+  partner_joined: 'partner_joined',
+});
 const INSTALLATION_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Strict data-only FCM v2; device is the authenticated dispatcher DB row. */
 export function fcmMessage(notification, device) {
   const installation = String(device?.installation_id || '').toLowerCase();
   if (!INSTALLATION_ID.test(installation)) throw new Error('native_installation_missing');
+  const kind = Object.prototype.hasOwnProperty.call(ANDROID_NOTICE_KINDS, notification?.type)
+    ? ANDROID_NOTICE_KINDS[notification.type] : '';
   return {
     message: {
       token: device.token,
-      data: { v: '2', installation },
+      data: kind ? { v: '2', installation, k: kind } : { v: '2', installation },
       android: {
         priority: notification.urgency === 'high' ? 'HIGH' : 'NORMAL',
         ttl: `${notification.ttl}s`,

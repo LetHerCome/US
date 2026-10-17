@@ -308,7 +308,8 @@ test('transport FCM: signed RS256 assertion, HTTP v1 message, channel and data c
   const message = JSON.parse(send.init.body).message;
   assert.equal(Object.hasOwn(message, 'notification'), false, 'FCM must not auto-render before owner validation');
   assert.equal(Object.hasOwn(message.android, 'notification'), false);
-  assert.deepEqual(message.data, { v: '2', installation: INSTALLATION });
+  // 16/10/2026: the allow-listed kind only (the phone writes the sentence).
+  assert.deepEqual(message.data, { v: '2', installation: INSTALLATION, k: 'calendar' });
   assert.equal(message.android.collapse_key, 'us-private-notice');
   assert.doesNotMatch(send.init.body, /Cena alle 20|calendar_reminder|calendar-reminder-r1|33333333-3333-4333-8333-333333333333/);
   assert.equal(message.android.priority, 'HIGH');

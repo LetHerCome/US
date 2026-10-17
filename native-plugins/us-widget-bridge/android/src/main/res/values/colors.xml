@@ -1,7 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- "Due colori, un Noi" (US 1.0): the app's tokens from ui-foundation.css.
+     Notte canvas, latte text, rosa and lilla for the two people, the tab
+     colour for each widget's label. -->
 <resources>
-    <color name="us_widget_text">#FFF8FD</color>
-    <color name="us_widget_muted">#B9ADB9</color>
-    <color name="us_widget_accent">#FF8EAD</color>
-    <color name="us_widget_heart">#FF5F87</color>
+    <color name="us_widget_bg">#FF0F0B13</color>
+    <color name="us_widget_surface">#FF17111C</color>
+    <color name="us_widget_line">#17F7EFE9</color>
+    <color name="us_widget_line_strong">#2BF7EFE9</color>
+    <color name="us_widget_text">#FFF7EFE9</color>
+    <color name="us_widget_text_2">#B8F7EFE9</color>
+    <color name="us_widget_muted">#80F7EFE9</color>
+    <color name="us_widget_rosa">#FFFF7C96</color>
+    <color name="us_widget_lilla">#FFA98BFF</color>
+    <color name="us_widget_orchidea">#FFD98BE0</color>
+    <color name="us_widget_corallo">#FFFF8B7B</color>
+    <!-- Kept for the Countdown reward styles and older references. -->
+    <color name="us_widget_accent">#FFFF7C96</color>
+    <color name="us_widget_heart">#FFFF7C96</color>
 </resources>

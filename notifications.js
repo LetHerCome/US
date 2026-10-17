@@ -169,7 +169,21 @@
     }), CALL_TIMEOUT_MS);
     assertOwner(owner);
     if (result?.bound !== true) throw new Error('native_owner_gate_stale');
+    syncNativePartnerName(owner.userId);
   }
+  // 16/10/2026: Android notices say who ("Bea ti sta pensando"). The phone
+  // writes the sentence; it only needs the other person's display name, kept
+  // in the native owner gate for this owner and dropped at logout. A late call
+  // for another account is refused natively. Never blocks registration.
+  function syncNativePartnerName(userId) {
+    if (!support?.setPushPartnerName || !userId || session.userId !== userId) return;
+    const name = String(globalThis.UsIdentity?.current?.()?.partnerName || '').trim();
+    const real = name && name !== 'La tua persona' ? name : '';
+    Promise.resolve(support.setPushPartnerName({ ownerId: userId, partnerName: real })).catch(() => {});
+  }
+  globalThis.addEventListener?.('us-identity-change', () => {
+    if (session.ready && read(STORE.owner) === session.userId) syncNativePartnerName(session.userId);
+  });
   const assertOwner = (owner) => { if (!session.ready || session !== owner) throw new Error('stale_session'); };
   function retireInstallation() {
     const id = installationId({ create: false });

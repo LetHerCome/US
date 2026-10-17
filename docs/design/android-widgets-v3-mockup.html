@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Widget Android · Due colori</title>
+<style>
+/* Mockup of the four Android widgets in the "Due colori, un Noi" style.
+   Only what RemoteViews can draw: solid/gradient rounded shapes, 1dp
+   strokes, system sans-serif and serif (no web fonts on a widget), bitmaps
+   made by the app (photo, portraits), tinted vector icons. 1px here = 1dp. */
+:root{
+  --bg:#0f0b13;--surface:#17111c;--surface2:#211a28;
+  --latte:#f7efe9;--t2:rgba(247,239,233,.72);--t3:rgba(247,239,233,.5);
+  --line:rgba(247,239,233,.09);--line2:rgba(247,239,233,.17);
+  --rosa:#ff7c96;--lilla:#a98bff;--orchidea:#d98be0;--corallo:#ff8b7b;--ambra:#f3b76e;
+  --sans:Roboto,"Noto Sans",system-ui,sans-serif;--serif:"Noto Serif",Georgia,serif;
+}
+*{box-sizing:border-box}
+body{margin:0;padding:24px 16px 48px;background:#1b1622;color:var(--latte);font-family:var(--sans)}
+h1{font:600 18px/1.3 var(--sans);margin:0 0 4px}
+p.note{margin:0 0 20px;color:var(--t2);font-size:13px;line-height:1.5;max-width:720px}
+h2{font:700 11px/1.4 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin:28px 0 12px}
+.home{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;padding:22px;border-radius:28px;
+  background:radial-gradient(120% 90% at 20% 0%,#3a2a4a,transparent 60%),radial-gradient(120% 90% at 90% 100%,#4a2a35,transparent 55%),#121018}
+.cell{flex:none;display:flex;flex-direction:column;align-items:center;gap:8px}
+.cap{font-size:11px;color:var(--t2)}
+.w{position:relative;overflow:hidden;border-radius:24px;background:linear-gradient(180deg,var(--surface),var(--bg));
+  box-shadow:inset 0 0 0 1px var(--line)}
+.w22{width:170px;height:170px}.w21{width:170px;height:82px}
+.kick{font:700 11px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase}
+.serif{font-family:var(--serif)}
+
+/* Ti penso */
+.think{display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:16px 14px 14px;text-align:center}
+.think .msg{font:400 18px/1.2 var(--serif);color:var(--latte)}
+.think .msg em{color:var(--rosa)}
+.heart{width:58px;height:58px}
+.pill{display:inline-flex;align-items:center;height:30px;padding:0 14px;border-radius:15px;font:700 11px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase}
+.pill.rosa{color:var(--rosa);background:rgba(255,124,150,.14);box-shadow:inset 0 0 0 1px rgba(255,124,150,.4)}
+.pill.lilla{color:var(--lilla);background:rgba(169,139,255,.14);box-shadow:inset 0 0 0 1px rgba(169,139,255,.4)}
+.pill.dim{color:var(--t2);background:rgba(247,239,233,.06);box-shadow:inset 0 0 0 1px var(--line2)}
+
+/* Noi 2x1 */
+.noi{display:flex;align-items:center;gap:8px;padding:10px 12px 10px 10px}
+.pair{position:relative;width:64px;height:44px;flex:none}
+.pair i{position:absolute;top:2px;width:40px;height:40px;border-radius:50%;background:#2a2232 center/cover}
+.pair i:first-child{left:0;box-shadow:0 0 0 2.5px var(--rosa);background-image:linear-gradient(135deg,#6b4a5a,#3a2a35)}
+.pair i:last-child{left:24px;box-shadow:0 0 0 2.5px var(--lilla),0 0 0 5px var(--surface);background-image:linear-gradient(135deg,#4a4470,#2a2440)}
+.noi .txt{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.noi .kick{color:var(--orchidea)}
+.noi .big{font:400 21px/1.05 var(--serif);color:var(--latte);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.noi .sub{font:italic 400 12px/1.2 var(--serif);color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Foto & Noi */
+.photo .img{position:absolute;inset:0;background:center/cover}
+.photo .scrim{position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(15,11,19,.85))}
+.photo .days{position:absolute;left:14px;right:14px;bottom:12px;display:flex;align-items:baseline;gap:6px}
+.photo .days b{font:400 34px/1 var(--serif);color:var(--latte)}
+.photo .days span{font:italic 400 14px/1.05 var(--serif);color:var(--latte);max-width:5.5em}
+.photo .empty{position:absolute;inset:0 0 54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:14px 16px 0;text-align:center}
+.dots{position:relative;width:44px;height:28px}
+.dots i{position:absolute;top:0;width:28px;height:28px;border-radius:50%}
+.dots i:first-child{left:0;background:var(--rosa)}.dots i:last-child{left:16px;background:var(--lilla);mix-blend-mode:screen}
+.photo .empty p{margin:0;font:400 14px/1.35 var(--sans);color:var(--t2)}
+
+/* Countdown (default style; the six reward styles keep their own skins) */
+.cd{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:14px;text-align:center}
+.cd .kick{color:var(--corallo);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cd .num{font:400 60px/1 var(--serif);color:var(--latte);margin-top:4px}
+.cd .unit{font:italic 400 16px/1 var(--serif);color:var(--t2)}
+.cd .date{margin-top:8px;font:500 12px/1 var(--sans);color:var(--t3)}
+
+.before{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+.before img{border-radius:22px;width:170px;height:auto}
+.before img.wide{width:200px}
+</style>
+</head>
+<body>
+<h1>Widget Android · proposta «Due colori, un Noi»</h1>
+<p class="note">Stessa notte dell'app, testo latte, numeri in serif con l'unità in corsivo, il rosa e il lilla delle due persone, il colore della scheda per l'etichetta (Noi orchidea, Countdown corallo come Oggi). Le dimensioni sono quelle reali (1 px = 1 dp). Un widget Android non può usare i caratteri dell'app (Fraunces, Figtree): usa il serif e il sans del telefono.</p>
+
+<h2>Sul telefono · stati principali</h2>
+<div class="home">
+  <div class="cell">
+    <div class="w w22 think">
+      <div class="kick" style="color:var(--rosa)">Ti penso</div>
+      <div class="msg"><em>Bea</em> ti sta pensando</div>
+      <svg class="heart" viewBox="0 0 24 24"><path fill="#ff7c96" d="M12 21s-7.5-4.6-9.6-9.2C1 8.6 3 5 6.5 5c2 0 3.6 1.1 4.5 2.6C11.9 6.1 13.5 5 15.5 5 19 5 21 8.6 21.6 11.8 19.5 16.4 12 21 12 21z"/></svg>
+      <div class="pill rosa">Ricambia</div>
+    </div>
+    <div class="cap">Ti penso · ricevuto</div>
+  </div>
+  <div class="cell">
+    <div class="w w22 think">
+      <div class="kick" style="color:var(--t3)">Ti penso</div>
+      <div class="msg">Pensala con un tocco</div>
+      <svg class="heart" viewBox="0 0 24 24"><path fill="none" stroke="#f7efe9" stroke-opacity=".8" stroke-width="1.6" d="M12 21s-7.5-4.6-9.6-9.2C1 8.6 3 5 6.5 5c2 0 3.6 1.1 4.5 2.6C11.9 6.1 13.5 5 15.5 5 19 5 21 8.6 21.6 11.8 19.5 16.4 12 21 12 21z"/></svg>
+      <div class="pill dim">Ti penso</div>
+    </div>
+    <div class="cap">Ti penso · pronto</div>
+  </div>
+  <div class="cell">
+    <div class="w w22 think">
+      <div class="kick" style="color:var(--lilla)">Ti penso</div>
+      <div class="msg">Inviato a <em style="color:var(--lilla)">Bea</em></div>
+      <svg class="heart" viewBox="0 0 24 24"><path fill="#a98bff" d="M12 21s-7.5-4.6-9.6-9.2C1 8.6 3 5 6.5 5c2 0 3.6 1.1 4.5 2.6C11.9 6.1 13.5 5 15.5 5 19 5 21 8.6 21.6 11.8 19.5 16.4 12 21 12 21z"/></svg>
+      <div class="pill lilla">Inviato</div>
+    </div>
+    <div class="cap">Ti penso · inviato</div>
+  </div>
+  <div class="cell">
+    <div class="w w21 noi">
+      <div class="pair"><i></i><i></i></div>
+      <div class="txt"><div class="kick">Noi</div><div class="big">12 km</div><div class="sub">tra voi</div></div>
+    </div>
+    <div class="cap">Noi 2×1 · con distanza</div>
+    <div class="w w21 noi">
+      <div class="pair"><i></i><i></i></div>
+      <div class="txt"><div class="kick">Noi</div><div class="big">Vicini</div><div class="sub">ultima nota</div></div>
+    </div>
+    <div class="cap">Noi 2×1 · vicini / ultima nota</div>
+  </div>
+  <div class="cell">
+    <div class="w w22 photo">
+      <div class="img" style="background-image:linear-gradient(160deg,#f3b76e 0%,#ff8b7b 38%,#7a4d6e 75%,#2a1f35 100%)"></div>
+      <div class="scrim"></div>
+      <div class="days"><b>168</b><span>giorni insieme</span></div>
+    </div>
+    <div class="cap">Foto &amp; Noi · con foto (qui un segnaposto)</div>
+  </div>
+  <div class="cell">
+    <div class="w w22 photo">
+      <div class="empty"><div class="dots"><i></i><i></i></div><p>La foto di Oggi apparirà qui</p></div>
+      <div class="days"><b>168</b><span>giorni insieme</span></div>
+    </div>
+    <div class="cap">Foto &amp; Noi · senza foto</div>
+  </div>
+  <div class="cell">
+    <div class="w w22 cd">
+      <div class="kick">Il nostro viaggio</div>
+      <div class="num serif">12</div>
+      <div class="unit">giorni</div>
+      <div class="date">ven 28 ott</div>
+    </div>
+    <div class="cap">Countdown · stile base</div>
+  </div>
+</div>
+
+<h2>Anteprime nel selettore widget · per tutti, senza nomi veri</h2>
+<div class="home">
+  <div class="cell"><div class="w w22 think"><div class="kick" style="color:var(--rosa)">Ti penso</div><div class="msg">Ti sta <em>pensando</em></div><svg class="heart" viewBox="0 0 24 24"><path fill="#ff7c96" d="M12 21s-7.5-4.6-9.6-9.2C1 8.6 3 5 6.5 5c2 0 3.6 1.1 4.5 2.6C11.9 6.1 13.5 5 15.5 5 19 5 21 8.6 21.6 11.8 19.5 16.4 12 21 12 21z"/></svg><div class="pill rosa">Ricambia</div></div><div class="cap">Ti penso</div></div>
+  <div class="cell"><div class="w w21 noi"><div class="pair"><i></i><i></i></div><div class="txt"><div class="kick">Noi</div><div class="big">12 km</div><div class="sub">tra voi</div></div></div><div class="cap">Noi</div></div>
+  <div class="cell"><div class="w w22 photo"><div class="img" style="background-image:linear-gradient(160deg,#f3b76e 0%,#ff8b7b 38%,#7a4d6e 75%,#2a1f35 100%)"></div><div class="scrim"></div><div class="days"><b>365</b><span>giorni insieme</span></div></div><div class="cap">Foto &amp; Noi</div></div>
+  <div class="cell"><div class="w w22 cd"><div class="kick">Il prossimo viaggio</div><div class="num serif">12</div><div class="unit">giorni</div></div><div class="cap">Countdown</div></div>
+</div>
+
+<h2>Le anteprime PNG (Android 11 e launcher che non leggono i layout di anteprima)</h2>
+<div class="before">
+  <img src="../../native-plugins/us-widget-bridge/android/src/main/res/drawable-nodpi/us_widget_preview_think.png" alt="Ti penso attuale">
+  <img class="wide" src="../../native-plugins/us-widget-bridge/android/src/main/res/drawable-nodpi/us_widget_preview_noi.png" alt="Noi attuale">
+  <img src="../../native-plugins/us-widget-bridge/android/src/main/res/drawable-nodpi/us_widget_preview_photo.png" alt="Foto e Noi attuale">
+  <img src="../../native-plugins/us-widget-bridge/android/src/main/res/drawable-nodpi/us_widget_preview_countdown.png" alt="Countdown attuale">
+</div>
+</body>
+</html>

@@ -76,9 +76,13 @@ jobs:
             echo "::error::version_name deve essere nel formato x.y.z"
             exit 1
           fi
-          # Epoch seconds: always above every internal APK already installed
-          # (same scheme), Play limit 2,100,000,000 reached only in July 2036.
-          code="$(date -u +%s)"
+          # Minutes since 2026-01-01 UTC (Play Console, 16/10: epoch seconds were
+          # "significantly higher" and would hit the 2,100,000,000 cap in 2036,
+          # after which US could never update). One per minute: ~420,000 in
+          # October 2026, the cap only in about 6,000 years. Play builds are a
+          # separate install from the sideloaded internal APKs (different
+          # signing key), so their codes need not be above those.
+          code="$(( ( $(date -u +%s) - 1767225600 ) / 60 ))"
           {
             echo "US_BUILD_MODE=$mode"
             echo "US_ANDROID_PLAY_UPLOAD=true"

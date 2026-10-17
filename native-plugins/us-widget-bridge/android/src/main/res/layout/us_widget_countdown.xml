@@ -32,11 +32,12 @@
             android:fontFamily="sans-serif-medium"
             android:gravity="center"
             android:includeFontPadding="false"
-            android:letterSpacing="0.22"
+            android:letterSpacing="0.14"
             android:maxLines="1"
             android:textAllCaps="true"
             android:textColor="@color/us_widget_text"
-            android:textSize="9sp" />
+            android:textSize="11sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/us_cd_value_light"
@@ -77,6 +78,22 @@
             android:autoSizeMinTextSize="14sp"
             android:autoSizeTextType="uniform"
             android:fontFamily="sans-serif-black"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:textColor="@color/us_widget_text"
+            android:textStyle="normal"
+            android:visibility="gone" />
+        <!-- US 1.0 base style: the upright serif number of Oggi. -->
+        <TextView
+            android:id="@+id/us_cd_value_display"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:autoSizeMaxTextSize="58sp"
+            android:autoSizeMinTextSize="16sp"
+            android:autoSizeTextType="uniform"
+            android:fontFamily="serif"
             android:gravity="center"
             android:includeFontPadding="false"
             android:maxLines="1"
@@ -129,6 +146,22 @@
             android:textStyle="normal"
             android:visibility="gone" />
 
+        <Chronometer
+            android:id="@+id/us_cd_clock_display"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:autoSizeMaxTextSize="32sp"
+            android:autoSizeMinTextSize="14sp"
+            android:autoSizeTextType="uniform"
+            android:fontFamily="serif"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:textColor="@color/us_widget_text"
+            android:textStyle="normal"
+            android:visibility="gone" />
+
         <TextView
             android:id="@+id/us_cd_unit_serif"
             android:layout_width="wrap_content"
@@ -136,7 +169,7 @@
             android:fontFamily="serif"
             android:includeFontPadding="false"
             android:textColor="@color/us_widget_text"
-            android:textSize="14sp"
+            android:textSize="16sp"
             android:textStyle="italic" />
 
         <TextView
@@ -172,8 +205,8 @@
             android:includeFontPadding="false"
             android:maxLines="3"
             android:text="@string/us_widget_countdown_empty"
-            android:textColor="@color/us_widget_muted"
-            android:textSize="13sp"
+            android:textColor="@color/us_widget_text_2"
+            android:textSize="14sp"
             android:visibility="gone" />
     </LinearLayout>
 </FrameLayout>
