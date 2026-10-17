@@ -3,8 +3,7 @@
 Stato: **bozza** del 13/10/2026, aggiornata il 14/10 con le decisioni di Francesco sull'audit di prodotto, ricavata dal codice del repository e dall'audit `audit-2026-10-13/03-security-privacy.md`. Non è stata inviata a Play Console. Nessun comportamento non ancora implementato è dichiarato come esistente.
 
 Marcatori:
-- **[DIPENDE #190]**: vale solo dopo il merge dell'eliminazione account (PR #190). Prima di allora Play Console non accetta la scheda, perché un'app con account deve offrire l'eliminazione in app e via web.
-- **[DIPENDE #196]**: vale solo dopo il merge di Esci dalla coppia, Segnala e copia dei dati (PR #196, sopra la #190).
+- Eliminazione account (PR #190) ed Esci dalla coppia, Segnala e copia dei dati (PR #196) sono su `main` dal 17/10/2026. Le risposte che li citano valgono solo quando i loro interruttori sono accesi in produzione (passo 4 della guida della #190).
 - La posizione approssimativa (variante A, sezione 2.3) è su `main` dal 14/10 con la PR #195; la migrazione è applicata in produzione.
 - **[DA DECIDERE: Francesco]**: dato che solo il fondatore può fornire.
 
@@ -18,7 +17,7 @@ Documenti collegati: `PRIVACY_POLICY_DRAFT.md` e `TERMS_DRAFT.md` con le version
 |---|---|---|
 | L'app raccoglie o condivide dati utente? | Sì | Supabase Auth, tabelle di coppia, bucket `us-media` |
 | Tutti i dati sono cifrati in transito? | Sì | solo HTTPS verso Supabase, FCM, Spotify; il gate AAB vieta il cleartext |
-| Offrite un modo per chiedere l'eliminazione dei dati? | Sì **[DIPENDE #190]** | oggi assente; la #190 aggiunge eliminazione in app, pagina web `/elimina-account` ed email |
+| Offrite un modo per chiedere l'eliminazione dei dati? | Sì | la #190 (su `main` dal 17/10) aggiunge eliminazione in app, pagina web `/elimina-account` ed email |
 | Dati raccolti solo per uso effimero? | No | i contenuti restano salvati per la coppia |
 
 Nessun SDK di analisi, pubblicità o crash reporting. Nessun permesso AD_ID (verificato dal gate AAB). Nessuna vendita di dati.
@@ -37,7 +36,7 @@ Nessun SDK di analisi, pubblicità o crash reporting. Nessun permesso AD_ID (ver
 | Foto e video › Video | video di "Lasciato per te", fino a 30 secondi o 20 MB (i Momenti accettano solo foto) | Sì | No | No |
 | File audio › Registrazioni vocali | note vocali | Sì | No | No |
 | Messaggi › Altri messaggi in-app | messaggi "Lasciato per te", pensieri | Sì | No | No |
-| Contenuti generati dall'utente | risposte alle domande, umori, calendario, liste, giochi, quest; segnalazioni inviate dall'app: motivo e testo, lette solo dal team, cancellate 12 mesi dopo l'invio **[DIPENDE #196]** | Sì | No | No |
+| Contenuti generati dall'utente | risposte alle domande, umori, calendario, liste, giochi, quest; segnalazioni inviate dall'app: motivo e testo, lette solo dal team, cancellate 12 mesi dopo l'invio | Sì | No | No |
 | Attività nelle app › Interazioni | progressi, giochi giocati, streak | Sì | No | Sì |
 | Attività nelle app › Cronologia ricerche in-app | testo cercato nel pannello musica | Sì | **Vedi nota Spotify** | No |
 | ID dispositivo o altri ID | token FCM, ID installazione, sottoscrizione Web Push | Sì | No | No (solo se si attivano le notifiche) |
@@ -50,9 +49,9 @@ Note:
 - **Fornitori.** Supabase (database, autenticazione, file), Google Firebase Cloud Messaging (notifiche), Cloudflare (distribuzione della web app) trattano dati per nostro conto: per Play sono fornitori di servizi, non condivisione.
 - **Spotify.** La ricerca brani passa dalla funzione server `spotify-search`, che invia a Spotify solo il testo cercato, senza identificativi dell'utente. Il brano scelto viene mostrato con il player incorporato di `open.spotify.com`, che il telefono carica direttamente da Spotify. Proposta: dichiarare "Cronologia ricerche in-app" come **raccolta, non condivisa** (inviata a un fornitore per eseguire la funzione richiesta). Se il consulente legale preferisce la lettura prudente, va segnata anche come condivisa. **[DA DECIDERE: Francesco, con D-10]**
 
-### 1.3 Eliminazione **[DIPENDE #190]**
+### 1.3 Eliminazione
 
-Testi allineati all'implementazione della #190 (`docs/store/US_S3_2_ACCOUNT_DELETION_V1.md` §8 sul suo branch). Se la #190 cambia prima del merge, la scheda segue la #190, non questo documento.
+Testi allineati all'implementazione della #190 (`docs/store/US_S3_2_ACCOUNT_DELETION_V1.md` §8). Se l'app cambia, la scheda segue l'app, non questo documento.
 - Gli utenti possono chiedere l'eliminazione: Sì, in app (Impostazioni › Privacy e dati › Elimina account), via web (`https://[DOMINIO]/elimina-account`, raggiungibile senza login) e via email.
 - Nessun periodo per annullare: eliminazione immediata dopo password e conferma, completamento entro 30 giorni.
 - Dati che restano e perché: con la Policy A i contenuti condivisi con il partner restano a lui, senza nome dell'autore, perché fanno parte della sua storia; una ricevuta tecnica senza contenuti resta per 12 mesi, per dimostrare l'avvenuta eliminazione.
@@ -65,7 +64,7 @@ URL per Play Console (campo "Link per eliminare l'account"): `https://[DOMINIO]/
 ## 2. Problemi da risolvere prima di inviare la scheda
 
 ### 2.1 Eliminazione account
-Bloccante: senza la #190 su `main` e nell'AAB, la risposta "Sì" alla domanda sull'eliminazione sarebbe falsa.
+Bloccante: la risposta "Sì" alla domanda sull'eliminazione è vera solo se l'AAB caricato contiene la #190 (su `main` dal 17/10) e l'interruttore dell'eliminazione è acceso in produzione.
 
 ### 2.2 Dominio pubblico
 Nel repository non c'è un dominio di produzione. Privacy policy, termini e pagina di eliminazione devono stare su un URL pubblico raggiungibile senza login. **[DA DECIDERE: Francesco]**
@@ -143,8 +142,8 @@ Esito atteso: classificazione bassa con descrittore "Gli utenti interagiscono". 
 ### 5.1 Contenuti generati dagli utenti
 Per prudenza Play tratta come contenuti degli utenti anche uno spazio a due. Le regole chiedono, e la 1.0 prevede:
 - accettazione dei termini prima di pubblicare (spunta alla registrazione);
-- "Segnala un problema o un contenuto" in Impostazioni › App e supporto, con quattro motivi e un testo libero, e una procedura scritta per il team (`docs/store/US_MODERATION_PROCEDURE.md` nella #196) per rimuovere un contenuto o sospendere un account **[DIPENDE #196]**;
-- "Esci dalla coppia" in Impostazioni › Voi, che chiude subito lo spazio a due e ferma ogni condivisione tenendo l'account: è il blocco richiesto nelle conversazioni a due **[DIPENDE #196]**;
+- "Segnala un problema o un contenuto" in Impostazioni › App e supporto, con quattro motivi e un testo libero, e una procedura scritta per il team (`docs/store/US_MODERATION_PROCEDURE.md`) per rimuovere un contenuto o sospendere un account;
+- "Esci dalla coppia" in Impostazioni › Voi, che chiude subito lo spazio a due e ferma ogni condivisione tenendo l'account: è il blocco richiesto nelle conversazioni a due;
 - nei termini, l'elenco di cosa è vietato (contenuti illegali, con minori, intimi condivisi senza consenso).
 
 ## 6. Cosa deve fare Francesco
@@ -157,4 +156,4 @@ Per prudenza Play tratta come contenuti degli utenti anche uno spazio a due. Le 
 | 4 | Regione Supabase (D-8). Piano: per ora gratuito e senza backup, Pro qualche settimana prima del lancio (decisione 6); allora si aggiorna la privacy sui backup | privacy (trasferimenti e conservazione) |
 | 5 | Revisione legale dei testi (D-10) | pubblicazione |
 | 6 | Due account demo in produzione per i revisori Google (D-12) | accesso all'app |
-| 7 | Compilare i moduli in Play Console con queste risposte, dopo il merge della #190 | pubblicazione |
+| 7 | Compilare i moduli in Play Console con queste risposte | pubblicazione |
