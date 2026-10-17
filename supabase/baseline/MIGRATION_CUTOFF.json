@@ -22,7 +22,8 @@
     "20261014210000_sintonia_event_xp_guard.sql",
     "20261014220000_content_1_0.sql",
     "20261014230000_us_1_0_locale_content_en.sql",
-    "20261015000000_us_1_0_server_fixes.sql"
+    "20261015000000_us_1_0_server_fixes.sql",
+    "20261017120000_s32_account_deletion_worker_cron.sql"
   ],
   "forward_migrations": [
     "20261004110718_f2c_edge_cron_source_of_truth.sql",
@@ -40,7 +41,8 @@
     "20261014210000_sintonia_event_xp_guard.sql",
     "20261014220000_content_1_0.sql",
     "20261014230000_us_1_0_locale_content_en.sql",
-    "20261015000000_us_1_0_server_fixes.sql"
+    "20261015000000_us_1_0_server_fixes.sql",
+    "20261017120000_s32_account_deletion_worker_cron.sql"
   ],
   "counts": {
     "repo_files": 47,
