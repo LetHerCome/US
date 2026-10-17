@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   assertRecentPasswordAuth, cleanupStoragePrefix, decodeJwtPayload, finishAccountDeletion,
   handleDeleteAccount, isOriginAllowed, isSafeObjectName, parseDeletionBody, runDeletionWorker,
-  DeletionError, REMOVE_BATCH_SIZE, STORAGE_BUCKET,
+  DeletionError, EXPORTS_BUCKET, REMOVE_BATCH_SIZE, STORAGE_BUCKET,
 } from '../supabase/functions/_shared/s32-account-deletion-core.mjs';
 
 const UID = 'e8c90d50-81e9-4a0d-beeb-5886c63c4963';
@@ -50,7 +50,7 @@ function makeStorage(initial, { failRemove = false, failList = false, ignoreRemo
   };
 }
 
-function makeClient({ storage, dbResult, dbError = null, plan = null, deleteUserError = null, user = { id: UID } } = {}) {
+function makeClient({ storage, exportsStorage = makeStorage([]), dbResult, dbError = null, plan = null, deleteUserError = null, user = { id: UID } } = {}) {
   const calls = { rpc: [], signOut: 0, deleteUser: 0, ban: 0, getUser: 0, storageFrom: [] };
   const client = {
     calls,
@@ -69,7 +69,7 @@ function makeClient({ storage, dbResult, dbError = null, plan = null, deleteUser
       if (fn === 's32_mark_account_deletion') return { data: { ok: true }, error: null };
       throw new Error(`unexpected rpc ${fn}`);
     },
-    storage: { from(bucket) { calls.storageFrom.push(bucket); return storage; } },
+    storage: { from(bucket) { calls.storageFrom.push(bucket); return bucket === EXPORTS_BUCKET ? exportsStorage : storage; } },
   };
   return client;
 }
@@ -112,7 +112,7 @@ test('happy path departed: own files removed, keep_paths and partner files untou
     `${COUPLE}/${PARTNER}/partner.jpg`, `${ownPrefix}shared/kept-for-partner.jpg`, `${OTHER_COUPLE}/${UID}/foreign.jpg`,
   ].sort());
   assert.ok(!storage.calls.remove.flat().includes(`${ownPrefix}shared/kept-for-partner.jpg`));
-  assert.deepEqual(client.calls.storageFrom, [STORAGE_BUCKET]);
+  assert.deepEqual(client.calls.storageFrom, [STORAGE_BUCKET, EXPORTS_BUCKET]);
   assert.equal(client.calls.signOut, 1);
   assert.equal(client.calls.deleteUser, 1);
   assert.deepEqual(client.calls.rpc[0], ['s32_delete_account_data', { p_user: UID, p_channel: 'app' }]);
@@ -129,7 +129,7 @@ test('couple_erased: whole couple prefix cleaned, other couples untouched', asyn
   assert.deepEqual([...storage.objects], [`${OTHER_COUPLE}/${UID}/foreign.jpg`]);
 });
 
-test('no_couple: no storage calls at all', async () => {
+test('no_couple: no media storage calls at all', async () => {
   const storage = makeStorage(departedFiles);
   const client = makeClient({ storage, dbResult: { status: 'db_done', mode: 'no_couple', storage_prefix: null, keep_paths: [] } });
   const res = await request(client);
@@ -446,4 +446,32 @@ test('D-5 archives: every archived couple prefix is erased whole; malformed arch
     assert.equal(st.calls.remove.length, 0);
     assert.equal(c.calls.deleteUser, 0);
   }
+});
+
+test('deletion also removes the data exports prepared for the user, and only theirs', async () => {
+  const storage = makeStorage(departedFiles);
+  const exportsStorage = makeStorage([`${UID}/20261014T120000Z.json`, `${PARTNER}/20261014T120000Z.json`]);
+  const client = makeClient({ storage, exportsStorage, dbResult: { status: 'db_done', mode: 'departed', storage_prefix: ownPrefix, keep_paths: [] } });
+  const res = await request(client);
+  assert.equal(res.status, 200);
+  assert.deepEqual([...exportsStorage.objects], [`${PARTNER}/20261014T120000Z.json`]);
+});
+
+test('worker afterPurge runs with the authenticated client and is merged into the body', async () => {
+  const client = makeClient({ storage: makeStorage([]) });
+  client.rpc = async (fn) => {
+    if (fn === 'get_internal_account_deletion_cron_key') return { data: 'k'.repeat(32), error: null };
+    if (fn === 's32_claim_pending_account_deletions') return { data: [], error: null };
+    if (fn === 's32_purge_account_deletion_receipts') return { data: 0, error: null };
+    throw new Error(fn);
+  };
+  let seen = null;
+  const res = await runDeletionWorker({ method: 'POST', cronKey: 'k'.repeat(32), readBody: async () => ({}), env: ENV,
+    createClient: () => client, afterPurge: async (ctx) => { seen = ctx.client; return { departures: { left: 1 } }; } });
+  assert.equal(res.status, 200);
+  assert.equal(seen, client);
+  assert.deepEqual(res.body.departures, { left: 1 });
+  const denied = await runDeletionWorker({ method: 'POST', cronKey: 'wrong', readBody: async () => ({}), env: ENV,
+    createClient: () => client, afterPurge: async () => { throw new Error('must not run'); } });
+  assert.equal(denied.status, 401);
 });

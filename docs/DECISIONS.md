@@ -121,6 +121,9 @@ Only durable decisions belong here. New missions should not reopen them without 
 2. **D-5 APPROVATA:** «Se A elimina il proprio account, B conserva il diritto ad accedere ai ricordi condivisi legittimamente preservati della coppia precedente **e può creare un nuovo legame con un'altra persona senza dover eliminare il proprio account**. L'archivio precedente e il nuovo spazio di coppia sono rigorosamente separati.» La chiusura del legame precedente può restare irreversibile, ma non deve bloccare il riabbinamento futuro di B.
 3. **Tempi di D-5 (fondatore, 14/10):** il nuovo legame arriva **dopo la 1.0**, insieme alla schermata Archivio. Nella 1.0 chi resta tiene tutti i ricordi nell'app; la parte server è già sulla #190, eseguibile solo da `service_role`.
 
+4. **Esci dalla coppia nella 1.0 (fondatore, audit del 14/10, decisione 3):** chiude lo spazio di coppia come l'eliminazione, con le stesse regole di Policy A e D-5, ma tiene gli account. Insieme, "Segnala un problema o un contenuto" in Impostazioni con una procedura scritta per il team (requisito Play per le app 1:1). Dettagli: [`docs/store/US_1_0_LEAVE_REPORT_EXPORT.md`](store/US_1_0_LEAVE_REPORT_EXPORT.md).
+5. **Copia dei dati (fondatore, audit del 14/10, decisione 8):** su richiesta al supporto, inviata per email; il tasto in app viene dopo la 1.0. Finché non ci sono indirizzo e dominio, l'operatore manda il link a mano. Default tecnici da ratificare: link valido 7 giorni, segnalazioni conservate 12 mesi, massimo 5 segnalazioni al giorno per utente.
+
 **Governance:** approvazioni di prodotto. Non autorizzano merge, migrazioni su staging o produzione, cancellazione di utenti né deploy.
 
 ## 2026-10-16 — Notifiche Android che dicono cosa è successo

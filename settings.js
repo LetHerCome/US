@@ -608,7 +608,10 @@ async function syncStatusModal(){
   `).join('')}</div><p class="us-settings2-build-detail" title="${esc(currentBuild())}">${rows.every(row=>row[2])?'Tutto aggiornato · ':''}US 1.0</p>`;
 }
 
-function privacyModal(){
+async function privacyModal(){
+  // The support address lives in account-deletion.js (loaded on demand).
+  let api=null;
+  try{api=await loadAccountDeletion();}catch(_){}
   openModal('Privacy e dati',`
     <div class="us-settings-copy">
       <p><b>Posizione</b><span>Solo approssimativa e solo se la attivi: la tua persona vede la distanza, mai dove sei. Puoi smettere e cancellarla da Posizione.</span></p>
@@ -616,8 +619,15 @@ function privacyModal(){
       <p><b>Notifiche</b><span>Scegli tu quali ricevere.</span></p>
       <p><b>Questo telefono</b><span>Resta collegato finché non lo scolleghi.</span></p>
     </div>
-    <button type="button" class="us-settings2-disconnect" id="usOpenAccountDeletion">Elimina account</button>
+    ${api?`<div class="us-settings-copy">
+      <p><b>Una copia dei tuoi dati</b> · scrivi a <b>${esc(api.US_SUPPORT_EMAIL)}</b> dall’email del tuo account.</p>
+    </div>`:''}
+    <div class="us-settings2-action-stack">
+      <button type="button" class="ghost" id="usOpenLeaveCouple">Esci dalla coppia</button>
+      <button type="button" class="us-settings2-disconnect" id="usOpenAccountDeletion">Elimina account</button>
+    </div>
   `,'DATI');
+  $('usOpenLeaveCouple')?.addEventListener('click',leaveCoupleModal);
   $('usOpenAccountDeletion')?.addEventListener('click',accountDeletionModal);
 }
 
@@ -761,6 +771,169 @@ function accountDeletedScreen(api,kind,cleanup){
   setTimeout(finish,8000);
 }
 
+// Esci dalla coppia (1.0, founder decision 3): closes the couple space like a
+// deletion (the partner keeps the shared memories, without your name) but
+// keeps the account; after it the app reopens on onboarding. Same password
+// rules as the deletion: never logged or stored, field cleared at once.
+let leaveCoupleInFlight=false;
+async function leaveCoupleModal(){
+  let api=null;
+  try{api=await loadAccountDeletion();}catch(_){}
+  if(!api){
+    openModal('Esci dalla coppia','<div class="us-settings2-modal-copy">Non riesco ad aprire questa schermata adesso. Controlla la connessione e riprova.</div>','COPPIA');
+    return;
+  }
+  openModal('Esci dalla coppia',`
+    <div class="us-settings-copy us-account-delete-copy">
+      <p><b>Lo spazio di coppia si chiude.</b> Dopo la conferma non si può annullare. Il tuo account resta: potrai creare un nuovo spazio o accettare un invito.</p>
+      <p><b>Cosa viene eliminato</b> · il tuo profilo in questa coppia e la foto profilo, le tue risposte di Oggi, l’umore e le risposte ai giochi, la posizione, i dispositivi collegati, le Stories, i tuoi impegni personali, i Lasciato per te che la tua persona non ha conservato e i messaggi programmati non ancora consegnati.</p>
+      <p><b>Cosa resta alla tua persona</b> · i ricordi condivisi che hai creato: Momenti e foto, messaggi già consegnati, impegni ed eventi condivisi, desideri e ciò che ha scelto di conservare. Restano senza il tuo nome. Nessun altro potrà entrare in questo spazio.</p>
+      <p>Se nella coppia ci sei solo tu, viene eliminato tutto lo spazio di coppia, foto comprese.</p>
+      <p><b>Vuoi una copia dei tuoi dati?</b> Prima di uscire scrivi a <b>${esc(api.US_SUPPORT_EMAIL)}</b>.</p>
+    </div>
+    <form id="usLeaveCoupleForm" novalidate>
+      <label class="us-settings2-field"><span>Password del tuo account</span><input id="usLeaveCouplePassword" type="password" autocomplete="current-password" required></label>
+      <label class="us-settings2-field"><span>Scrivi ${esc(api.LEAVE_WORD)} per confermare</span><input id="usLeaveCoupleConfirm" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" required></label>
+      <p class="us-settings2-modal-copy us-account-delete-status" id="usLeaveCoupleStatus" role="status" aria-live="polite" hidden></p>
+      <div class="us-settings2-action-stack">
+        <button type="button" class="ghost" id="usLeaveCoupleCancel">Annulla</button>
+        <button type="submit" class="us-settings2-disconnect" id="usLeaveCoupleSubmit" disabled>Esci dalla coppia</button>
+      </div>
+    </form>
+  `,'COPPIA');
+  const password=$('usLeaveCouplePassword');
+  const confirm=$('usLeaveCoupleConfirm');
+  const submit=$('usLeaveCoupleSubmit');
+  const sync=()=>{if(submit&&!leaveCoupleInFlight)submit.disabled=!api.canLeave({password:password?.value,confirm:confirm?.value});};
+  password?.addEventListener('input',sync);
+  confirm?.addEventListener('input',sync);
+  $('usLeaveCoupleCancel')?.addEventListener('click',()=>{if(password)password.value='';closeModal();});
+  $('usLeaveCoupleForm')?.addEventListener('submit',event=>{event.preventDefault();submitLeaveCouple(api);});
+  password?.focus({preventScroll:true});
+}
+
+function leaveCoupleStatus(text){
+  const status=$('usLeaveCoupleStatus');
+  if(!status)return;
+  status.hidden=!text;
+  status.textContent=text||'';
+}
+
+async function submitLeaveCouple(api){
+  if(leaveCoupleInFlight)return;
+  const passwordInput=$('usLeaveCouplePassword');
+  const confirmInput=$('usLeaveCoupleConfirm');
+  const submit=$('usLeaveCoupleSubmit');
+  const cancel=$('usLeaveCoupleCancel');
+  const password=passwordInput?.value||'';
+  if(!api.canLeave({password,confirm:confirmInput?.value}))return;
+  leaveCoupleInFlight=true;
+  if(passwordInput)passwordInput.value='';
+  if(submit){submit.disabled=true;submit.textContent='Esco…';}
+  if(cancel)cancel.disabled=true;
+  leaveCoupleStatus('Chiudo lo spazio di coppia…');
+  let result;
+  try{
+    let email='';
+    try{const {data}=await sb.auth.getSession();email=data?.session?.user?.email||'';}catch(_){}
+    result=await api.reauthenticateAndLeave({
+      client:sb,
+      email,
+      password,
+      supabaseUrl:typeof SB_URL==='string'?SB_URL:'',
+      apiKey:typeof SB_KEY==='string'?SB_KEY:''
+    });
+  }catch(_){
+    result={kind:'leave_failed',done:false};
+  }
+  if(result.done){
+    // Server side the profile, devices and push tokens are gone; this phone
+    // drops its copies (push, widgets, cached couple data) and keeps the session.
+    leftCoupleScreen(api,result.kind,usBounded(window.revokeCurrentDevice?.(),6000));
+    return;
+  }
+  leaveCoupleInFlight=false;
+  if(submit){submit.textContent='Esci dalla coppia';submit.disabled=true;}
+  if(cancel)cancel.disabled=false;
+  leaveCoupleStatus(api.leaveMessage(result.kind,api.US_SUPPORT_EMAIL));
+  passwordInput?.focus({preventScroll:true});
+}
+
+function leftCoupleScreen(api,kind,cleanup){
+  openModal('Spazio di coppia chiuso',`
+    <div class="us-settings2-modal-copy" role="status" aria-live="polite">${esc(api.leaveMessage(kind,api.US_SUPPORT_EMAIL))}</div>
+    <div class="us-settings2-action-stack">
+      <button type="button" class="primary" id="usLeftCoupleDone">Continua</button>
+    </div>
+  `,'COPPIA');
+  let finishing=null;
+  const finish=()=>finishing||(finishing=(async()=>{
+    const btn=$('usLeftCoupleDone');if(btn)btn.disabled=true;
+    try{await cleanup;}catch(_){}
+    location.reload();
+  })());
+  $('usLeftCoupleDone')?.addEventListener('click',finish);
+  $('usLeftCoupleDone')?.focus({preventScroll:true});
+  setTimeout(finish,8000);
+}
+
+// Segnala un problema o un contenuto (1.0, Play UGC): goes to the US team
+// only, never to the partner. Moderation: docs/store/US_MODERATION_PROCEDURE.md.
+let reportInFlight=false;
+async function reportModal(){
+  let api=null;
+  try{api=await loadAccountDeletion();}catch(_){}
+  if(!api){
+    openModal('Segnala','<div class="us-settings2-modal-copy">Non riesco ad aprire le segnalazioni adesso. Controlla la connessione e riprova.</div>','SUPPORTO');
+    return;
+  }
+  openModal('Segnala un problema o un contenuto',`
+    <div class="us-settings-copy">
+      <p>La segnalazione arriva solo al team di US: la tua persona non la vede. Se qualcuno è in pericolo chiama subito il 112.</p>
+    </div>
+    <form id="usReportForm" novalidate>
+      <fieldset class="us-settings2-field us-report-categories">
+        <legend>Cosa vuoi segnalare?</legend>
+        ${api.REPORT_CATEGORIES.map(c=>`<label class="us-report-option"><input type="radio" name="usReportCategory" value="${esc(c.key)}"> <span>${esc(c.label)}</span></label>`).join('')}
+      </fieldset>
+      <label class="us-settings2-field"><span>Cosa è successo?</span><textarea id="usReportDetails" rows="5" maxlength="${api.REPORT_MAX_LENGTH}" placeholder="Scrivi dove lo hai visto e quando, così lo troviamo subito."></textarea></label>
+      <p class="us-settings2-modal-copy us-account-delete-status" id="usReportStatus" role="status" aria-live="polite" hidden></p>
+      <div class="us-settings2-action-stack">
+        <button type="button" class="ghost" id="usReportCancel">Annulla</button>
+        <button type="submit" class="primary" id="usReportSubmit" disabled>Invia segnalazione</button>
+      </div>
+    </form>
+  `,'SUPPORTO');
+  const details=$('usReportDetails');
+  const submit=$('usReportSubmit');
+  const category=()=>$('usReportForm')?.querySelector('input[name="usReportCategory"]:checked')?.value||'';
+  const sync=()=>{if(submit&&!reportInFlight)submit.disabled=!api.canReport({category:category(),details:details?.value});};
+  details?.addEventListener('input',sync);
+  $('usReportForm')?.querySelectorAll('input[name="usReportCategory"]').forEach(input=>input.addEventListener('change',sync));
+  $('usReportCancel')?.addEventListener('click',closeModal);
+  $('usReportForm')?.addEventListener('submit',async event=>{
+    event.preventDefault();
+    if(reportInFlight||!api.canReport({category:category(),details:details?.value}))return;
+    reportInFlight=true;
+    if(submit){submit.disabled=true;submit.textContent='Invio…';}
+    let result;
+    try{result=await api.submitReport({client:sb,category:category(),details:details?.value});}
+    catch(_){result={kind:'failed',done:false};}
+    reportInFlight=false;
+    if(result.done){
+      openModal('Segnalazione inviata',`
+        <div class="us-settings2-modal-copy" role="status" aria-live="polite">${esc(api.reportMessage('received',api.US_SUPPORT_EMAIL))}</div>
+        <div class="us-settings2-action-stack"><button type="button" class="primary" id="usReportDone">Chiudi</button></div>
+      `,'SUPPORTO');
+      $('usReportDone')?.addEventListener('click',closeModal);
+      return;
+    }
+    if(submit){submit.textContent='Invia segnalazione';sync();}
+    const status=$('usReportStatus');
+    if(status){status.hidden=false;status.textContent=api.reportMessage(result.kind,api.US_SUPPORT_EMAIL);}
+  });
+}
+
 function logoutConfirmationModal(){
   openModal('Scollega questo telefono',`
     <div class="us-settings2-modal-copy">Dovrai inserire di nuovo il codice privato per rientrare in US.</div>
@@ -807,6 +980,8 @@ async function action(name){
   if(name==='oggi-effect')return window.USOggiLook?.openGallery?.({tab:'effect'});
   if(name==='sync-status')return syncStatusModal();
   if(name==='privacy')return privacyModal();
+  if(name==='leave-couple')return leaveCoupleModal();
+  if(name==='report')return reportModal();
   if(name==='logout')return logoutConfirmationModal();
 }
 
