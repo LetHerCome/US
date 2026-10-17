@@ -9,10 +9,10 @@
 'use strict';
 
 // Support/privacy contact (founder, 14/10: Gmail until the US domain exists).
-// TODO founder: developer name as in the Play listing.
+// Developer name as in the Play listing (founder, 17/10).
 // This is the only place where they are defined (app + public page read them here).
 const US_SUPPORT_EMAIL='moonee.team@gmail.com';
-const US_DEVELOPER_NAME='[TODO founder: nome sviluppatore]';
+const US_DEVELOPER_NAME='Moonee Lab';
 
 const CONFIRM_WORD='ELIMINA';
 const CHANNELS=Object.freeze(['app','web']);

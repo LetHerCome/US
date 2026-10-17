@@ -612,12 +612,16 @@ async function privacyModal(){
   // The support address lives in account-deletion.js (loaded on demand).
   let api=null;
   try{api=await loadAccountDeletion();}catch(_){}
+  // Public legal pages (privacy.html, termini.html), in the app's language.
+  const en=/^en/i.test(document.documentElement.lang||'');
+  const legal=page=>`https://us-a33.pages.dev/${page}${en?'-en':''}`;
   openModal('Privacy e dati',`
     <div class="us-settings-copy">
       <p><b>Posizione</b><span>Solo approssimativa e solo se la attivi: la tua persona vede la distanza, mai dove sei. Puoi smettere e cancellarla da Posizione.</span></p>
       <p><b>Foto</b><span>Restano nello spazio della coppia.</span></p>
       <p><b>Notifiche</b><span>Scegli tu quali ricevere.</span></p>
       <p><b>Questo telefono</b><span>Resta collegato finché non lo scolleghi.</span></p>
+      <p class="us-settings-legal"><a href="${legal('privacy')}" target="_blank" rel="noopener noreferrer">Privacy</a> · <a href="${legal('termini')}" target="_blank" rel="noopener noreferrer">Termini</a></p>
     </div>
     ${api?`<div class="us-settings-copy">
       <p><b>Una copia dei tuoi dati</b> · scrivi a <b>${esc(api.US_SUPPORT_EMAIL)}</b> dall’email del tuo account.</p>

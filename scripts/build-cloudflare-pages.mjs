@@ -91,7 +91,13 @@ const RUNTIME_FILES = [
   'favicon.svg',
   // Public account deletion page (Google Play): standalone, outside the app shell.
   'elimina-account.html',
-  'elimina-account.js'
+  'elimina-account.js',
+  // Public legal pages (Play listing, sign-up box, Settings › Privacy e dati).
+  'legal.css',
+  'privacy.html',
+  'privacy-en.html',
+  'termini.html',
+  'termini-en.html'
 ];
 
 await rm(OUTPUT, { recursive: true, force: true });

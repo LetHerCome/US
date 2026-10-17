@@ -1,0 +1,44 @@
+/* US — public legal pages (privacy*.html, termini*.html). Standalone: no app
+   shell, no scripts. Same palette as elimina-account.html. */
+:root{
+  --bg:#0a0a0e;--surface:#15141b;--line:rgba(255,255,255,.09);
+  --text:#f1efeb;--text-2:#b9b5c0;--text-3:#8d8996;
+  --rose:#ff8fab;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:720px;margin:0 auto;padding:max(24px,env(safe-area-inset-top)) 16px max(40px,env(safe-area-inset-bottom))}
+nav{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:14px;margin-bottom:8px}
+.kicker{color:var(--text-3);font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin:12px 0 0}
+h1{font-size:28px;line-height:1.2;margin:6px 0 4px}
+h2{font-size:19px;margin:28px 0 8px}
+p,li,td{color:var(--text-2)}
+b,strong,th{color:var(--text)}
+a{color:var(--rose)}
+a:focus-visible{outline:2px solid var(--rose);outline-offset:2px}
+ul,ol{padding-left:20px}
+li+li{margin-top:6px}
+.updated{color:var(--text-3);font-size:14px}
+.table-wrap{overflow-x:auto;margin:12px 0;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:15px}
+th,td{padding:10px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+th{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--text-3)}
+footer{margin-top:36px;padding-top:16px;border-top:1px solid var(--line);font-size:14px;color:var(--text-3)}
+/* Phones: each table row becomes a card, with the column name above each cell. */
+@media (max-width:560px){
+  table,tbody,tr,td{display:block}
+  table{min-width:0}
+  thead{display:none}
+  tr{padding:12px 14px;border-bottom:1px solid var(--line)}
+  tr:last-child{border-bottom:0}
+  td{padding:0;border:0}
+  td+td{margin-top:8px}
+  td:first-child{color:var(--text)}
+  td:not(:first-child)::before{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3)}
+  :lang(it) td:nth-child(2)::before{content:"Perché"}
+  :lang(it) td:nth-child(3)::before{content:"Base giuridica"}
+  :lang(en) td:nth-child(2)::before{content:"Why"}
+  :lang(en) td:nth-child(3)::before{content:"Legal basis"}
+}

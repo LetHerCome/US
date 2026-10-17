@@ -1,4 +1,4 @@
-const BUILD_ID = "us-leave-report-export-20261017-14";
+const BUILD_ID = "us-legal-pages-20261017-15";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -180,7 +180,12 @@ const BUILD_SHELL_ASSETS = new Set(
 // then shows its own "Impossibile raggiungere il sito" page (ERR_FAILED) and
 // Safari reports "Response served by service worker has redirections".
 const APP_DOCUMENTS = new Set(["/", "/index.html"]);
-const US_STANDALONE_DOCUMENTS = new Set(["/elimina-account", "/elimina-account.html"]);
+// Public pages outside the app shell: account deletion and the legal pages.
+const US_STANDALONE_DOCUMENTS = new Set([
+  "/elimina-account", "/elimina-account.html",
+  "/privacy", "/privacy.html", "/privacy-en", "/privacy-en.html",
+  "/termini", "/termini.html", "/termini-en", "/termini-en.html"
+]);
 
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {

@@ -103,10 +103,11 @@ test('every server response maps to one outcome and message', async () => {
   assert.deepEqual(network, { kind: 'network', done: false });
 });
 
-test('support email is the founder address, developer name a TODO, both defined once', () => {
+test('support email is the founder address, developer name the Play one, both defined once', () => {
   assert.equal(deletion.US_SUPPORT_EMAIL, 'moonee.team@gmail.com');
+  assert.equal(deletion.US_DEVELOPER_NAME, 'Moonee Lab');
   const shared = read('account-deletion.js');
-  assert.match(shared, /TODO founder/);
+  assert.doesNotMatch(shared, /TODO founder/);
   for (const file of ['settings.js', 'elimina-account.html', 'elimina-account.js', 'app.js', 'index.html']) {
     assert.doesNotMatch(read(file), /moonee\.team@gmail\.com|@us-app/, file);
   }
@@ -196,7 +197,7 @@ test('build and service worker: page is published and never replaced by the app 
   }
   assert.ok(read('scripts/build-capacitor-web.mjs').includes("'account-deletion.js'"));
   const sw = read('service-worker.js');
-  assert.match(sw, /US_STANDALONE_DOCUMENTS = new Set\(\["\/elimina-account", "\/elimina-account\.html"\]\)/);
+  assert.match(sw, /US_STANDALONE_DOCUMENTS = new Set\(\[\s*"\/elimina-account", "\/elimina-account\.html",/);
   const exclusion = sw.indexOf('US_STANDALONE_DOCUMENTS.has(url.pathname)) return;');
   assert.ok(exclusion > 0);
   assert.ok(exclusion < sw.indexOf('// Normal cold launch remains cache-first for speed.'));

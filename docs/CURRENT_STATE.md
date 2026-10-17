@@ -59,7 +59,7 @@ Fino al 15/10: #187 FCM con owner gate, #189 registrazione solo STAGING, #195 po
 ## Gate Store ancora aperti ([Quality Gates](store/US_STORE_1_0_QUALITY_GATES.md))
 
 - Registrazione pubblica **spenta** (`PRODUCTION_SIGNUP_RELEASED = false`, `enable_signup = false`); niente SMTP.
-- Nessun dominio personalizzato; URL Privacy/Termini (`LEGAL_URLS`) vuoti.
+- Nessun dominio personalizzato. Privacy e Termini pubblicati su `us-a33.pages.dev/privacy` e `/termini` (IT ed EN), da far rivedere a un consulente (D-10).
 - #190/#196: finire i test su staging, poi merge, SQL ed Edge in produzione.
 - Piano Free oltre quota di egress, nessun backup di produzione.
 - Play: Data Safety, test chiuso. iOS/APNs non provato.

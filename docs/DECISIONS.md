@@ -136,3 +136,12 @@ Only durable decisions belong here. New missions should not reopen them without 
 - Toccando la notifica si apre una delle quattro schede pubbliche (`com.usapp.us://open/<oggi|noi|ricordi|gioca>`): mai un'azione, un ref o dati privati.
 - Visibilità sulla schermata di blocco: `VISIBILITY_PRIVATE`, invariata.
 - iOS/APNs non cambia.
+
+## 2026-10-17 — Privacy e Termini pubblicati
+
+**Fonte:** decisione esplicita del founder del 17/10/2026 (titolare «Moonee Lab (Francesco Monti)», solo email, niente indirizzo postale).
+
+- Le pagine pubbliche sono `/privacy` e `/termini` su `us-a33.pages.dev`, con le versioni inglesi `/privacy-en` e `/termini-en`. Sono statiche, senza script, fuori dall'app shell e fuori dal Service Worker.
+- Il testo viene dalle bozze `docs/store/play/*_DRAFT*.md` aggiornate al 17/10 (#213), con i campi compilati: titolare, data, regione Supabase (UE, Parigi), backup assenti, pagina di eliminazione.
+- `LEGAL_URLS` punta a `/termini` e `/privacy`; Impostazioni › Privacy e dati apre le pagine nella lingua dell'app. Il nome sviluppatore della pagina di eliminazione è **Moonee Lab**, come su Play.
+- La revisione di un consulente legale (D-10) resta da fare. Quando cambia il testo, si aggiornano insieme bozza, pagina e data «Ultimo aggiornamento».

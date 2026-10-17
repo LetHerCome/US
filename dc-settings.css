@@ -791,3 +791,7 @@ body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .nlabel
 @media (prefers-reduced-motion:reduce){
   :is(#settings .us-settings2-switch,#settings .us-settings2-switch u,#usSettingsModalBody .us-settings2-toggle-row>i,#usSettingsModalBody .us-settings2-toggle-row>i u){transition:none!important}
 }
+
+/* Privacy e dati: links to the public Privacy and Terms pages. */
+#usSettingsModalBody .us-settings-copy p.us-settings-legal{background:none;border:0;padding:6px 2px 0;text-align:center}
+#usSettingsModalBody .us-settings-legal a{display:inline-block;min-height:44px;line-height:44px;padding:0 8px;color:var(--us-noi);font-weight:650;text-decoration:none}
