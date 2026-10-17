@@ -201,3 +201,23 @@ test('build and service worker: page is published and never replaced by the app 
   assert.ok(exclusion > 0);
   assert.ok(exclusion < sw.indexOf('// Normal cold launch remains cache-first for speed.'));
 });
+
+// Staging QA (17/10): the public page only configures itself on the
+// production host; the US-STAGING preview build rewrites it for the staging
+// project and host, with the key from the Cloudflare env.
+test('staging preview: the deletion page talks only to US-STAGING, on the staging host', async () => {
+  const { isolateStagingDeletionPage, STAGING_PAGES_HOST } = await import('../scripts/build-s31-staging-preview.mjs');
+  const fakeKey = 'sb_publishable_' + 'TESTONLY'.repeat(4);
+  const staged = isolateStagingDeletionPage(read('elimina-account.js'), fakeKey);
+  assert.doesNotMatch(staged, /iiakdfsxpywdkxravqjh|us-a33\.pages\.dev/);
+  const mod = { exports: {} };
+  new Function('module', staged)(mod);
+  const config = mod.exports.configForHost(`claude-qa-store-lifecycle.${STAGING_PAGES_HOST}`);
+  assert.equal(config.supabaseUrl, 'https://dugmhngrfkuieeletatb.supabase.co');
+  assert.equal(config.apiKey, fakeKey);
+  assert.equal(mod.exports.configForHost('us-a33.pages.dev'), null, 'the staging build never serves production');
+  assert.throws(() => isolateStagingDeletionPage(staged, fakeKey), /input mismatch/, 'never rewrite twice');
+  assert.throws(() => isolateStagingDeletionPage(read('elimina-account.js'), 'not-a-key'), /publishable key/);
+  // The committed page itself still only knows production.
+  assert.match(read('elimina-account.js'), /const PRODUCTION_HOST='us-a33\.pages\.dev';/);
+});
