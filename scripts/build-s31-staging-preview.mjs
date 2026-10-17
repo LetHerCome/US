@@ -46,6 +46,27 @@ export function isolateStagingPublicAuth(src) {
   return src.replace(search, "const STAGING_ORIGIN = 'https://"+STAGE+".supabase.co';");
 }
 
+// The public deletion page (elimina-account.js) only configures itself on the
+// production host. The preview names the US-STAGING project and the
+// us-staging-s31 Pages host instead, with the publishable key from the
+// Cloudflare env (never committed), so #190 can be tested end to end.
+export const STAGING_PAGES_HOST = 'us-staging-s31.pages.dev';
+export function isolateStagingDeletionPage(src, publishableKey) {
+  if (!/^sb_publishable_[A-Za-z0-9_-]{20,}$/.test(publishableKey||'')) {
+    throw Error('S3.2 staging deletion page requires valid staging publishable key');
+  }
+  const replaceOne = (text, search, next) => {
+    if (text.split(search).length !== 2) throw Error('S3.2 staging deletion page input mismatch');
+    return text.replace(search, next);
+  };
+  let out = replaceOne(src, "const PRODUCTION_HOST='us-a33.pages.dev';", "const PRODUCTION_HOST='"+STAGING_PAGES_HOST+"';");
+  out = replaceOne(out, "supabaseUrl:'https://"+PROD+".supabase.co',", "supabaseUrl:'https://"+STAGE+".supabase.co',");
+  out = out.replace(/apiKey:'sb_publishable_[A-Za-z0-9_-]+'/, "apiKey:'"+publishableKey+"'");
+  if (!out.includes("apiKey:'"+publishableKey+"'")) throw Error('S3.2 staging deletion key substitution failed');
+  if (out.includes(PROD)) throw Error('Production backend reference in staging deletion page');
+  return out;
+}
+
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   if (process.env.US_S31_STAGING_PREVIEW !== 'true') throw Error('S3.1 staging preview disabled by default');
   // Dedicated Cloudflare Pages project must target this specific STAGING branch.
@@ -71,6 +92,12 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     writeFile(path.join(OUT,'index.html'),isolated.index,'utf8'),
     writeFile(path.join(OUT,'public-auth.js'),publicAuth,'utf8')
   ]);
+  // Optional: the deletion page ships with #190 and later.
+  const deletionPage = path.join(SOURCE,'elimina-account.js');
+  const hasDeletionPage = await readFile(deletionPage,'utf8').then(text=>text,()=>null);
+  if (hasDeletionPage !== null) {
+    await writeFile(path.join(OUT,'elimina-account.js'),isolateStagingDeletionPage(hasDeletionPage,key),'utf8');
+  }
   const output=await readdir(OUT);
   if (!output.includes('public-auth.js')||!output.includes('public-auth.css'))throw Error('S3.1 Auth runtime missing');
   // The build output remains in Actions artifacts: NO automatic Pages publish.
