@@ -1,17 +1,16 @@
 # US Store 1.0 — Remote staging status
-**Checked:** 2026-10-10 (database) · **Docs update:** 2026-10-15 (from PR records, no new database read)
-**State:** SOURCE SCHEMA PARITY PASS AT 10/10 / S2 ON STAGING / SYNTHETIC DB SMOKE PASS / FCM DEVICE QA FOUNDER-REPORTED PASS (#187) / 9 CRONS OFF
+**Checked:** 2026-10-10 (full database gate) · **Docs update:** 2026-10-17 (from the 16/10 work sessions; `US_STAGING_S2_GATE.sql` not re-run)
+**State:** S2 ON STAGING / #190 + #196 APPLIED ON STAGING, LIFECYCLE QA IN PROGRESS / 9 CRONS OFF
 
-## Update 2026-10-15 — what changed since the 10/10 check
+## Update 2026-10-17
 
-Nobody re-ran `US_STAGING_S2_GATE.sql` after 10/10. The lines below come from PR descriptions and comments; anything not stated there is **unknown**, not assumed.
-
-- **Edge:** STAGING `send-web-push` is v4, built from #187 (owner-gated data-only FCM). Production stays v14.
-- **Physical FCM QA (#187):** Xiaomi with the staging APK; T0 T2 T3 T4 T6 T7 T9 PASS, founder-reported. Open follow-ups: an A packet already in flight after B signs in; FCM registration on mobile data (`service_unavailable` once).
-- **Auth (#189):** staging-only signup / verify / recovery code is merged. Staging Auth settings and real email delivery are **not certified** from CI.
-- **Web preview:** Cloudflare Pages `us-staging-s31` builds an approved branch against US-STAGING. The founder gave «staging ok» on the redesign (#200) on 15/10. The temporary preview commits of #200–#202 were reverted before merge.
-- **Migrations merged on `main` after 10/10, NOT recorded as applied to staging** (#195 and #197 say explicitly "not applied anywhere"; #199 gives a staging-then-production guide but no applied record): `20261009100419_us_v3_oggi_looks_rewards`, `20261014180000_location_approximate_v1`, `20261014210000_sintonia_event_xp_guard`, `20261014220000_content_1_0`, `20261014230000_us_1_0_locale_content_en`, `20261015000000_us_1_0_server_fixes`. The founder must confirm their state on staging and production.
-- **#190 / #196** (account deletion, leave couple, report, export): not applied to staging. They need 4 throwaway synthetic accounts, never the push-QA accounts.
+- **#190 + #196 on US-STAGING:** migrations and Edge functions applied (manually, never `db push`). Not in production.
+- **Tested on staging:** account deletion (the partner keeps the authorless content); the partner can delete authorless memories/photos (fix on the #190 branch); Segnala layout (fix on #196).
+- **Not yet confirmed:** report rate limit, data export.
+- **Still to run:** test 5 (the last member deletes their account), 9 (public deletion page), 6 (leave couple). Use throwaway synthetic accounts, never the push-QA accounts.
+- **Web preview:** temporary QA branch `claude/qa-store-lifecycle` builds the Cloudflare Pages preview `us-staging-s31` against US-STAGING. **Never merge it.**
+- **Production, for contrast (16/10):** the six migrations of V3/#195/#197/#199 are applied and the #199 Edge functions are deployed from `main` 21a7992 ([current state](../CURRENT_STATE.md)). Their state on US-STAGING was not re-checked; do not assume it.
+- **Earlier (#187, #189):** FCM owner gate tested on a Xiaomi with the staging APK (founder-reported); staging-only signup code merged, staging Auth settings and real email delivery not certified.
 - The staging ledger still uses staging-specific versions: apply by hand in the SQL Editor or through reviewed migration calls, never `db push`.
 
 ## Environment
