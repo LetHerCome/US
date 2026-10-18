@@ -1,4 +1,4 @@
-const BUILD_ID = "us-polish-ricordi-splash-20261018-16";
+const BUILD_ID = "us-ricordi-resume-20261018-17";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;

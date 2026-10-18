@@ -247,6 +247,9 @@ window.addEventListener('us-identity-change',event=>{
     return;
   }
   window.UsTodayPriority?.refresh?.();
+  // The couple is back after being cleared: Ricordi, if it is on screen and
+  // was emptied meanwhile, loads again instead of staying "Nessun ricordo".
+  if(window.usProfile&&document.getElementById('moments')?.classList.contains('active')&&document.getElementById('momentsGrid')?.dataset.loaded!=='1')Promise.resolve(hydrateMoments()).catch(()=>{});
   if(window.usProfile&&usLocationRuntime.server)applyServerDistance(usLocationRuntime.server);
   renderTodayReveal();
   if(window.todayState?.my_answer!=null&&!window.todayState?.both_answered){
@@ -4350,7 +4353,12 @@ async function hydrateMomentsCore(){
 let momentsHydrateInFlight=null;
 async function hydrateMoments(options={}){
   if(options.forceMedia)usForceMomentsMediaRefresh=true;
-  if(momentsHydrateInFlight)return momentsHydrateInFlight;
+  if(momentsHydrateInFlight){
+    // A run that started before the grid was cleared will not draw it again
+    // (its data did not change): queue one more after it.
+    if(document.getElementById('momentsGrid')?.dataset.loaded!=='1')return momentsHydrateInFlight.then(()=>hydrateMoments());
+    return momentsHydrateInFlight;
+  }
   momentsHydrateInFlight=hydrateMomentsCore().finally(()=>{momentsHydrateInFlight=null;});
   return momentsHydrateInFlight;
 }
@@ -5904,6 +5912,11 @@ sb.auth.onAuthStateChange((event,_session)=>{
   }
   if(event==='SIGNED_OUT')window.usS31Auth?.reset?.();
   if(event==='INITIAL_SESSION'||event==='TOKEN_REFRESHED')return;
+  // 18/10/2026: supabase-js re-announces SIGNED_IN when the app comes back to
+  // the foreground. For the account already open that is not a new sign-in:
+  // re-running the boot cleared the couple and emptied Ricordi (founder's
+  // video). The foreground refresh (refreshVisibleState) already covers it.
+  if(event==='SIGNED_IN'&&window.usProfile&&usAuthUserId&&(_session?.user?.id||'')===usAuthUserId)return;
   if(event==='SIGNED_OUT'||(_session?.user?.id||'')!==usAuthUserId)usInvalidateAuth();
   setTimeout(initCloud,0);
 });
