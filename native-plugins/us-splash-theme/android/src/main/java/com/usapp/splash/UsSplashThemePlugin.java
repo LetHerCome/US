@@ -2,6 +2,7 @@ package com.usapp.splash;
 
 import android.app.Activity;
 import android.os.Build;
+import androidx.annotation.RequiresApi;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -18,7 +19,7 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 public class UsSplashThemePlugin extends Plugin {
     static final String DEFAULT_STYLE = "AppTheme.NoActionBarLaunch";
 
-    /** Theme id → style of the app (android/app/src/main/res/values*/styles.xml). */
+    /** Theme id → style of the app (styles.xml in res/values and res/values-v31). */
     static String styleFor(String theme) {
         if (theme == null) return DEFAULT_STYLE;
         switch (theme) {
@@ -44,15 +45,16 @@ public class UsSplashThemePlugin extends Plugin {
             call.resolve(new JSObject().put("applied", false));
             return;
         }
-        activity.runOnUiThread(() -> {
-            boolean applied;
-            try {
-                activity.getSplashScreen().setSplashScreenTheme(style);
-                applied = true;
-            } catch (RuntimeException error) {
-                applied = false;
-            }
-            call.resolve(new JSObject().put("applied", applied));
-        });
+        activity.runOnUiThread(() -> call.resolve(new JSObject().put("applied", apply(activity, style))));
+    }
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private static boolean apply(Activity activity, int style) {
+        try {
+            activity.getSplashScreen().setSplashScreenTheme(style);
+            return true;
+        } catch (RuntimeException error) {
+            return false;
+        }
     }
 }
