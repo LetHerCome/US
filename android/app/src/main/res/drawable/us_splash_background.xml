@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Android 8–11 launch window: the default splash colour with the transparent symbol. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/us_splash_background" />
     <item>
         <bitmap
             android:gravity="center"
-            android:src="@drawable/us_splash_master_v1" />
+            android:src="@drawable/us_splash_symbol" />
     </item>
 </layer-list>

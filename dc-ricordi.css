@@ -260,6 +260,8 @@
 #usAlbumOverlay[data-us-galleria] .us-album-acts .us-undo-delete:is([data-state="done"],[data-state="committing"]){width:206px;border-radius:23px;background:rgba(15,11,19,.62);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--us-latte) 17%,transparent);overflow:hidden}
 #usAlbumOverlay[data-us-galleria] .us-album-acts .us-undo-delete-go{position:absolute;inset:0}
 #usAlbumOverlay[data-us-galleria] .us-undo-delete-go-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* "Eliminato · Annulla": the bin steps out of the way (the rule above keeps it visible otherwise). */
+#usAlbumOverlay[data-us-galleria] .us-album-acts .us-undo-delete:is([data-state="done"],[data-state="committing"]) .us-undo-delete-go{opacity:0;transform:translateX(-12px);pointer-events:none}
 #usAlbumOverlay[data-us-galleria] .us-undo-delete-undo{background:var(--us-latte);color:var(--us-inchiostro)}
 #usAlbumOverlay[data-us-galleria] .us-undo-delete-fuse{background:var(--us-rosso)}
 /* One bin at a time: on her own extra photo it removes that photo, elsewhere the memory. */
@@ -268,7 +270,10 @@
 
 /* Below the photo: the in-place composer when adding a piece of that day. */
 #usAlbumOverlay[data-us-galleria] .us-album-section{grid-column:1;grid-row:9}
-#usAlbumOverlay[data-us-galleria] .us-album-section:not(:has(#usAlbumComposer[hidden])){padding:18px 20px calc(24px + var(--us-safe-bottom,0px))!important}
+/* The photo fills the screen, so the grid has no room below it: the composer
+   rises from the bottom as a sheet over the photo instead of landing under it. */
+#usAlbumOverlay[data-us-galleria] .us-album-section:not(:has(#usAlbumComposer[hidden])){position:fixed;left:0;right:0;bottom:0;z-index:7;max-height:calc(var(--us-viewport-height,100dvh) - var(--us-safe-top,0px) - 72px);overflow-y:auto;overscroll-behavior:contain;padding:22px 20px calc(24px + var(--us-safe-bottom,0px))!important;border-radius:28px 28px 0 0;background:var(--us-color-bg);box-shadow:0 -1px 0 color-mix(in srgb,var(--us-latte) 12%,transparent),0 -24px 60px rgba(0,0,0,.55)}
+#usAlbumOverlay[data-us-galleria]:has(#usAlbumComposer:not([hidden])) .us-album-acts{visibility:hidden}
 #usAlbumOverlay[data-us-galleria] .us-album-composer{padding:0;border:0;background:none;box-shadow:none}
 #usAlbumOverlay[data-us-galleria] .us-album-composer-preview{height:220px!important;border-radius:22px!important;object-fit:cover}
 #usAlbumOverlay[data-us-galleria] .us-album-composer input{min-height:52px;margin-top:10px;padding:0 14px;border-radius:16px!important;font-size:16px!important}

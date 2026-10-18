@@ -5,4 +5,26 @@
         <item name="windowSplashScreenAnimatedIcon">@drawable/us_splash_symbol</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
     </style>
+
+    <!-- Android 12+: the platform reads android:windowSplashScreenBackground too. -->
+    <style name="AppTheme.NoActionBarLaunch.Rose">
+        <item name="windowSplashScreenBackground">@color/us_splash_background_rose</item>
+        <item name="android:windowSplashScreenBackground">@color/us_splash_background_rose</item>
+    </style>
+    <style name="AppTheme.NoActionBarLaunch.Midnight">
+        <item name="windowSplashScreenBackground">@color/us_splash_background_midnight</item>
+        <item name="android:windowSplashScreenBackground">@color/us_splash_background_midnight</item>
+    </style>
+    <style name="AppTheme.NoActionBarLaunch.Film">
+        <item name="windowSplashScreenBackground">@color/us_splash_background_film</item>
+        <item name="android:windowSplashScreenBackground">@color/us_splash_background_film</item>
+    </style>
+    <style name="AppTheme.NoActionBarLaunch.BlueHour">
+        <item name="windowSplashScreenBackground">@color/us_splash_background_blue_hour</item>
+        <item name="android:windowSplashScreenBackground">@color/us_splash_background_blue_hour</item>
+    </style>
+    <style name="AppTheme.NoActionBarLaunch.Graphite">
+        <item name="windowSplashScreenBackground">@color/us_splash_background_graphite</item>
+        <item name="android:windowSplashScreenBackground">@color/us_splash_background_graphite</item>
+    </style>
 </resources>

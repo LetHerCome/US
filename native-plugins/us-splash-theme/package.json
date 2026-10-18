@@ -1,0 +1,14 @@
+{
+  "name": "@us/splash-theme",
+  "version": "1.0.0",
+  "private": true,
+  "description": "US: the Android launch splash takes the colour of the app theme on the next start (SplashScreen.setSplashScreenTheme, Android 13+).",
+  "capacitor": {
+    "android": {
+      "src": "android"
+    }
+  },
+  "peerDependencies": {
+    "@capacitor/core": "8.5.0"
+  }
+}

@@ -27,6 +27,7 @@
     "@supabase/supabase-js": "2.112.4",
     "@us/app-lock": "file:native-plugins/us-app-lock",
     "@us/push-support": "file:native-plugins/us-push-support",
+    "@us/splash-theme": "file:native-plugins/us-splash-theme",
     "@us/widget-bridge": "file:native-plugins/us-widget-bridge"
   },
   "devDependencies": {

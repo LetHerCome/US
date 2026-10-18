@@ -22,4 +22,12 @@
         <item name="windowSplashScreenAnimatedIcon">@drawable/us_splash_symbol</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
     </style>
+
+    <!-- One splash per app theme ("Atmosfera"), coloured in values-v31: Android 13+
+         uses the one the app chose last time (native-plugins/us-splash-theme). -->
+    <style name="AppTheme.NoActionBarLaunch.Rose" />
+    <style name="AppTheme.NoActionBarLaunch.Midnight" />
+    <style name="AppTheme.NoActionBarLaunch.Film" />
+    <style name="AppTheme.NoActionBarLaunch.BlueHour" />
+    <style name="AppTheme.NoActionBarLaunch.Graphite" />
 </resources>

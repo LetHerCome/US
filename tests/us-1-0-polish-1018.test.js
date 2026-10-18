@@ -1,0 +1,77 @@
+// US 1.0 polish, 18/10/2026 (founder QA on a phone): album composer and bin,
+// the full-screen photo without a second view, notifications on mobile data,
+// and the Android splash that follows the app theme.
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const ROOT = path.resolve(__dirname, '..');
+const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
+
+test('album: the add-photo composer rises over the full-screen photo instead of under it', () => {
+  const css = read('dc-ricordi.css');
+  assert.match(css, /\.us-album-section:not\(:has\(#usAlbumComposer\[hidden\]\)\)\{position:fixed;left:0;right:0;bottom:0;z-index:7;/);
+  assert.match(css, /:has\(#usAlbumComposer:not\(\[hidden\]\)\) \.us-album-acts\{visibility:hidden\}/);
+});
+
+test('album: once "Eliminato" shows, the bin steps aside instead of covering it', () => {
+  const css = read('dc-ricordi.css');
+  assert.match(css, /\.us-album-acts \.us-undo-delete:is\(\[data-state="done"\],\[data-state="committing"\]\) \.us-undo-delete-go\{opacity:0;transform:translateX\(-12px\);pointer-events:none\}/);
+  // It must come after the Galleria rule that forces the bin visible.
+  assert.ok(css.indexOf('.us-undo-delete-go{opacity:0') > css.indexOf('.us-album-acts :is(.us-album-carousel-arrow,.us-album-floating-add,.us-album-current-delete,.us-undo-delete-go){position:static'));
+});
+
+test('album: a tap on the full-screen photo opens nothing else', () => {
+  const js = read('moments-albums.js');
+  assert.match(js, /cover\.onclick=null;\n    cover\.onkeydown=null;/);
+  assert.doesNotMatch(js, /cover\.onclick=\(\)=>/);
+});
+
+test('notifications: "Attiva" waits longer on mobile data and retries a slow network once', () => {
+  const js = read('notifications.js');
+  assert.match(js, /const REGISTRATION_TIMEOUT_MS = 30000;/);
+  assert.match(js, /const REGISTER_CALL_TIMEOUT_MS = 15000;/);
+  assert.match(js, /const ENABLE_ATTEMPTS = 2;/);
+  assert.match(js, /withTimeout\(request, REGISTER_CALL_TIMEOUT_MS\)/);
+  assert.match(js, /if \(attempt >= ENABLE_ATTEMPTS \|\| !isRetryable\(error\)\) throw error;/);
+  assert.match(js, /kind: isRetryable\(error\) \? 'network' : 'error'/);
+  // Background calls keep the short limit.
+  assert.match(js, /const CALL_TIMEOUT_MS = 6000;/);
+  const message = 'Rete lenta: riprova tra poco, oppure con il Wi-Fi';
+  assert.ok(read('app.js').includes(`result.kind==='network')toast('${message}')`));
+  assert.ok(read('onboarding.js').includes(`result?.kind==='network'?'${message}'`));
+  assert.ok(read('i18n-en.js').includes(`'${message}': 'Slow connection: try again in a moment, or on Wi-Fi'`));
+});
+
+test('splash: one colour per app theme, a transparent symbol, and the app tells Android which one', () => {
+  const colors = read('android/app/src/main/res/values/colors.xml');
+  assert.match(colors, /<color name="us_splash_background">#26142E<\/color>/);
+  const themes = { Rose: 'rose', Midnight: 'midnight', Film: 'film', BlueHour: 'blue_hour', Graphite: 'graphite' };
+  const v31 = read('android/app/src/main/res/values-v31/styles.xml');
+  const base = read('android/app/src/main/res/values/styles.xml');
+  for (const [style, id] of Object.entries(themes)) {
+    assert.match(colors, new RegExp(`<color name="us_splash_background_${id}">#[0-9A-F]{6}</color>`));
+    assert.match(base, new RegExp(`<style name="AppTheme\\.NoActionBarLaunch\\.${style}" />`));
+    assert.match(v31, new RegExp(`<style name="AppTheme\\.NoActionBarLaunch\\.${style}">[\\s\\S]*?android:windowSplashScreenBackground">@color/us_splash_background_${id}<`));
+  }
+  // Android 8–11: the default colour with the transparent symbol, never the dark master.
+  const legacy = read('android/app/src/main/res/drawable/us_splash_background.xml');
+  assert.match(legacy, /@drawable\/us_splash_symbol/);
+  assert.doesNotMatch(legacy, /us_splash_master_v1/);
+  const brand = JSON.parse(read('android/brand-assets-manifest.json'));
+  assert.equal(brand.derivatives.find((d) => d.path.endsWith('/us_splash_symbol.png'))?.operation, 'FIT_CIRCLE_SAFE_TRANSPARENT');
+
+  const plugin = read('native-plugins/us-splash-theme/android/src/main/java/com/usapp/splash/UsSplashThemePlugin.java');
+  assert.match(plugin, /@CapacitorPlugin\(name = "UsSplashTheme"\)/);
+  assert.match(plugin, /Build\.VERSION_CODES\.TIRAMISU/);
+  assert.match(plugin, /setSplashScreenTheme\(style\)/);
+  for (const [style, id] of Object.entries(themes)) assert.ok(plugin.includes(`case "${id}": return DEFAULT_STYLE + ".${style}";`), id);
+  assert.equal(JSON.parse(read('package.json')).dependencies['@us/splash-theme'], 'file:native-plugins/us-splash-theme');
+  assert.match(read('android/capacitor.settings.gradle'), /include ':us-splash-theme'/);
+  assert.match(read('android/app/capacitor.build.gradle'), /implementation project\(':us-splash-theme'\)/);
+
+  const progression = read('progression.js');
+  assert.match(progression, /root\.dataset\.usTheme = theme; else delete root\.dataset\.usTheme; \}\n  syncSplashTheme\(theme\);/);
+  assert.match(progression, /delete root\.dataset\[name\];\n    syncSplashTheme\(''\);/);
+});

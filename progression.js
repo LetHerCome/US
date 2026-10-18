@@ -552,6 +552,18 @@ function clearRetiredCosmetics(root, hero) {
   const badge = $('usCoupleBadge');
   if (badge && (!badge.hidden || badge.innerHTML)) { badge.hidden = true; badge.innerHTML = ''; badge.removeAttribute('aria-label'); }
 }
+// 18/10/2026: the Android launch splash takes the theme colour on the next
+// start (native UsSplashTheme, Android 13+). Sent only when it changes.
+let splashThemeSent;
+function syncSplashTheme(theme) {
+  const name = theme || '';
+  if (splashThemeSent === name) return;
+  const plugin = window.Capacitor?.Plugins?.UsSplashTheme;
+  if (!plugin?.set) return;
+  splashThemeSent = name;
+  Promise.resolve(plugin.set({ theme: name })).catch(() => { splashThemeSent = undefined; });
+}
+window.UsSplashThemeSync = syncSplashTheme;
 function applyPreferences(next = state) {
   const root = document.documentElement;
   const hero = $('homeHero');
@@ -562,6 +574,7 @@ function applyPreferences(next = state) {
   const effect = value('effect');
   // A data attribute on <html> restyles the whole page: written only when it changes.
   if (root.dataset.usTheme !== (theme || undefined)) { if (theme) root.dataset.usTheme = theme; else delete root.dataset.usTheme; }
+  syncSplashTheme(theme);
   if (root.dataset.usAccent !== (accent || undefined)) { if (accent) root.dataset.usAccent = accent; else delete root.dataset.usAccent; }
   if (root.dataset.usEffect !== (effect || undefined)) { if (effect) root.dataset.usEffect = effect; else delete root.dataset.usEffect; }
   clearRetiredCosmetics(root, hero);
@@ -1451,6 +1464,7 @@ function syncIdentityLook() {
     state = null;
     const root = document.documentElement;
     for (const name of ['usTheme', 'usAccent', 'usEffect', 'usRing', 'usSticker']) delete root.dataset[name];
+    syncSplashTheme('');
     applyLook(null);
     return;
   }

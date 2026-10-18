@@ -884,12 +884,12 @@ async function openAlbum(card,{focusDelete=false}={}){
   if(addBtn){addBtn.hidden=false;addBtn.disabled=false;}
   if(cover){
     cover.src=startAt?startAt.url:currentAlbum.url;
-    cover.onclick=()=>{if(Date.now()>=albumCarouselSuppressClickUntil)openLightbox(albumCarouselIndex);};
-    cover.onkeydown=event=>{
-      if(event.key==='Enter'||event.key===' '){event.preventDefault();openLightbox(albumCarouselIndex);}
-    };
-    cover.setAttribute('role','button');
-    cover.setAttribute('tabindex','0');
+    // 18/10/2026: the Galleria is already full screen; a second tap no longer
+    // opens the smaller lightbox on top of it (founder: "quella va tolta").
+    cover.onclick=null;
+    cover.onkeydown=null;
+    cover.removeAttribute('role');
+    cover.removeAttribute('tabindex');
   }
   document.getElementById('usAlbumDate').textContent=currentAlbum.date;
   document.getElementById('usAlbumCount').textContent='1 foto';

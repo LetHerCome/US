@@ -37,8 +37,14 @@
     synced: (userId) => `us:notifications:v1:synced:${userId}`
   });
   const PENDING_MAX_AGE_MS = 30 * 60 * 1000;
-  const REGISTRATION_TIMEOUT_MS = 15000;
+  // 18/10/2026: on mobile data (5G) the first FCM token and the first call to
+  // the server can take far longer than on Wi-Fi; "Attiva" failed there while
+  // the same phone succeeded on Wi-Fi. The user-initiated path waits longer and
+  // retries once; background calls keep the short limit.
+  const REGISTRATION_TIMEOUT_MS = 30000;
   const CALL_TIMEOUT_MS = 6000;
+  const REGISTER_CALL_TIMEOUT_MS = 15000;
+  const ENABLE_ATTEMPTS = 2;
 
   // ---- Pure helpers (also exercised by tests) -----------------------------
 
@@ -76,6 +82,11 @@
 
   // ---- Small utilities ----------------------------------------------------
 
+  // Timeouts and network drops are worth a second try; refusals and stale sessions are not.
+  function isRetryable(error) {
+    const message = String(error?.message || error || '');
+    return message === 'timeout' || /network|fetch|load failed|connection/i.test(message);
+  }
   function withTimeout(promise, ms) {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error('timeout')), ms);
@@ -286,7 +297,7 @@
       target_retired_installation_id: pendingRetired
     });
     registrationInFlight = Promise.resolve(request).catch(() => {});
-    const { error } = await withTimeout(request, CALL_TIMEOUT_MS);
+    const { error } = await withTimeout(request, REGISTER_CALL_TIMEOUT_MS);
     if (error) throw error;
     assertOwner(owner);
     await bindNativeOwner(status, installation, owner);
@@ -426,13 +437,22 @@
       }
       if (perm !== 'granted') return { ok: false, kind: 'denied' };
       assertOwner(owner);
-      const token = await requestToken();
-      await registerToken(token, status, owner);
+      // A slow network (timeout) gets a second try; a refusal does not.
+      for (let attempt = 1; ; attempt++) {
+        try {
+          const token = await requestToken();
+          await registerToken(token, status, owner);
+          break;
+        } catch (error) {
+          if (attempt >= ENABLE_ATTEMPTS || !isRetryable(error)) throw error;
+          assertOwner(owner);
+        }
+      }
       assertOwner(owner);
       write(STORE.enabled(session.userId), '1');
       return { ok: true, kind: 'active' };
-    } catch (_) {
-      return { ok: false, kind: 'error' };
+    } catch (error) {
+      return { ok: false, kind: isRetryable(error) ? 'network' : 'error' };
     } finally {
       busy = false;
     }

@@ -14,6 +14,7 @@ dependencies {
     implementation project(':capacitor-push-notifications')
     implementation project(':us-app-lock')
     implementation project(':us-push-support')
+    implementation project(':us-splash-theme')
     implementation project(':us-widget-bridge')
 
 }

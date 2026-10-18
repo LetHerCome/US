@@ -145,3 +145,13 @@ Only durable decisions belong here. New missions should not reopen them without 
 - Il testo viene dalle bozze `docs/store/play/*_DRAFT*.md` aggiornate al 17/10 (#213), con i campi compilati: titolare, data, regione Supabase (UE, Parigi), backup assenti, pagina di eliminazione.
 - `LEGAL_URLS` punta a `/termini` e `/privacy`; Impostazioni › Privacy e dati apre le pagine nella lingua dell'app. Il nome sviluppatore della pagina di eliminazione è **Moonee Lab**, come su Play.
 - La revisione di un consulente legale (D-10) resta da fare. Quando cambia il testo, si aggiornano insieme bozza, pagina e data «Ultimo aggiornamento».
+
+## 2026-10-18 — Rifiniture dopo le prove sul telefono
+
+**Fonte:** prove del founder del 18/10/2026.
+
+- **Album:** il riquadro per aggiungere una foto sale dal basso sopra la foto a tutto schermo (prima finiva sotto la foto). Con «Eliminato · Annulla» il cestino si sposta e non copre più la barra.
+- **Foto a tutto schermo:** toccare la foto non apre più la seconda visualizzazione ridotta («quella va tolta»).
+- **Notifiche su rete mobile:** «Attiva» aspetta fino a 30 s il token e 15 s la registrazione, con un secondo tentativo se la rete è lenta; se fallisce ancora, il messaggio dice «Rete lenta: riprova tra poco, oppure con il Wi-Fi». Le chiamate in background mantengono il limite di 6 s.
+- **Splash Android:** il colore segue il tema dell'app («Atmosfera»): Originale prugna `#26142E`, Rosa, Mezzanotte, Pellicola, Ora blu, Grafite. Il simbolo è trasparente e sta nel cerchio della splash. Su Android 13+ il plugin locale `us-splash-theme` (`SplashScreen.setSplashScreenTheme`) fa valere il tema dalla prossima apertura; su Android 8–12 resta la prugna.
+- **Ancora aperto:** il nero di qualche secondo rientrando in Ricordi dopo aver messo l'app in background non è stato riprodotto. Il velo del blocco app non lo spiega (compare solo con il blocco attivo e dura al massimo 1,5 s).
