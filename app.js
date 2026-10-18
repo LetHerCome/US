@@ -676,6 +676,7 @@ async function enableNativePush(){
   if(result.ok){toast('Notifiche attive ♡');setTimeout(()=>sendWebPushEvent('test'),350);}
   else if(result.kind==='denied')toast('Permesso negato: puoi consentirle dalle impostazioni del telefono');
   else if(result.kind==='unavailable')toast('Notifiche non disponibili in questa versione di US');
+  else if(result.kind==='network')toast('Rete lenta: riprova tra poco, oppure con il Wi-Fi');
   else if(result.kind!=='busy')toast('Non riesco ad attivare le notifiche');
   if(button)button.disabled=false;
   try{await refreshWebPushUi();}catch(_e){}

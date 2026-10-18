@@ -17,5 +17,8 @@ project(':us-app-lock').projectDir = new File('../native-plugins/us-app-lock/and
 include ':us-push-support'
 project(':us-push-support').projectDir = new File('../native-plugins/us-push-support/android')
 
+include ':us-splash-theme'
+project(':us-splash-theme').projectDir = new File('../native-plugins/us-splash-theme/android')
+
 include ':us-widget-bridge'
 project(':us-widget-bridge').projectDir = new File('../native-plugins/us-widget-bridge/android')

@@ -34,8 +34,8 @@
                         },
                         {
                             "path":  "android/app/src/main/res/drawable-nodpi/us_splash_symbol.png",
-                            "sha256":  "41e3ab5ad42f4d4317469fa5023395e22377a4881c3404df1f41d0345e0041e0",
-                            "operation":  "FIT_CENTER_PAD_DARK",
+                            "sha256":  "27131207364a0641df614e62d15c5648edb5016c023d525ddd80408eaff0449b",
+                            "operation":  "FIT_CIRCLE_SAFE_TRANSPARENT",
                             "sources":  [
                                             "assets/source/brand/us-symbol-master-v1.png"
                                         ]

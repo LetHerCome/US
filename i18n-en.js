@@ -356,6 +356,7 @@
     'Permesso negato: puoi consentirle dalle impostazioni del telefono': 'Permission denied: you can allow them in your phone’s settings',
     'Notifiche non disponibili in questa versione di US': 'Notifications aren’t available in this version of US',
     'Non riesco ad attivare le notifiche': 'Couldn’t turn on notifications',
+    'Rete lenta: riprova tra poco, oppure con il Wi-Fi': 'Slow connection: try again in a moment, or on Wi-Fi',
     'Notifiche non supportate su questo browser': 'This browser doesn’t support notifications',
     'Non riesco a disattivare le notifiche': 'Couldn’t turn off notifications',
 

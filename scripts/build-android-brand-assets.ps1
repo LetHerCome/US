@@ -130,12 +130,16 @@ try {
 
 $symbol = [System.Drawing.Image]::FromFile($sourceFiles['assets/source/brand/us-symbol-master-v1.png'])
 try {
-  $size = 512
+  # 18/10/2026: the splash background follows the app theme (values/styles.xml,
+  # UsSplashThemePlugin), so the symbol is transparent. Android 12+ shows the
+  # icon in a circle of 2/3 of its box: the master (with its own margin) is drawn at
+  # 79% so the framed logo spans about 46% and its corners stay inside the circle.
+  $size = 768
   $bitmap = New-Object System.Drawing.Bitmap $size, $size
   $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
   try {
-    $graphics.Clear([System.Drawing.Color]::FromArgb(255, 8, 4, 14))
-    $scale = [Math]::Min($size / $symbol.Width, $size / $symbol.Height)
+    $graphics.Clear([System.Drawing.Color]::Transparent)
+    $scale = [Math]::Min($size * 0.79 / $symbol.Width, $size * 0.79 / $symbol.Height)
     $width = [int][Math]::Round($symbol.Width * $scale)
     $height = [int][Math]::Round($symbol.Height * $scale)
     $x = [int](($size - $width) / 2)
@@ -144,7 +148,7 @@ try {
     $graphics.DrawImage($symbol, (New-Object System.Drawing.Rectangle $x, $y, $width, $height))
     $relative = 'android/app/src/main/res/drawable-nodpi/us_splash_symbol.png'
     Write-Png $bitmap (Join-Path $root $relative)
-    Add-Derivative $relative 'FIT_CENTER_PAD_DARK' @('assets/source/brand/us-symbol-master-v1.png')
+    Add-Derivative $relative 'FIT_CIRCLE_SAFE_TRANSPARENT' @('assets/source/brand/us-symbol-master-v1.png')
   } finally {
     $graphics.Dispose()
     $bitmap.Dispose()

@@ -102,7 +102,9 @@ test('layout retains existing photo fullscreen, add, delete and lazy peek',()=>{
   const html=script;
   const css=read('ricordi-carousel.css');
   assert.match(html,/showAlbumPhoto\(albumCarouselIndex\+\(dx<0\?1:-1\)/);
-  assert.match(html,/openLightbox\(albumCarouselIndex\)/);
+  // 18/10/2026: the full-screen Galleria no longer opens the smaller lightbox on a tap.
+  assert.doesNotMatch(html,/openLightbox\(albumCarouselIndex\)/);
+  assert.match(html,/cover\.onclick=null;/);
   assert.match(html,/deleteAlbumPhoto\(row\.id,row\.storage_path,\{orphan:!row\.own\}\)/);
   assert.match(html,/id="usAlbumPeek"[^>]*loading="lazy"/);
   // US 1.0 R4/R11: each photo's own note (never the cover's twice); the peek is never preloaded.
