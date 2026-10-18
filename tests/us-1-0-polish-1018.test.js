@@ -75,3 +75,14 @@ test('splash: one colour per app theme, a transparent symbol, and the app tells 
   assert.match(progression, /root\.dataset\.usTheme = theme; else delete root\.dataset\.usTheme; \}\n  syncSplashTheme\(theme\);/);
   assert.match(progression, /delete root\.dataset\[name\];\n    syncSplashTheme\(''\);/);
 });
+
+test('Ricordi: coming back to the app never leaves it empty ("Nessun ricordo")', () => {
+  const app = read('app.js');
+  // supabase-js re-announces SIGNED_IN on resume: for the account already open the boot does not run again.
+  assert.match(app, /if\(event==='SIGNED_IN'&&window\.usProfile&&usAuthUserId&&\(_session\?\.user\?\.id\|\|''\)===usAuthUserId\)return;/);
+  assert.ok(app.indexOf("event==='SIGNED_IN'&&window.usProfile") < app.lastIndexOf("setTimeout(initCloud,0);"));
+  // A load already running when the grid was cleared queues one more.
+  assert.match(app, /if\(document\.getElementById\('momentsGrid'\)\?\.dataset\.loaded!=='1'\)return momentsHydrateInFlight\.then\(\(\)=>hydrateMoments\(\)\);/);
+  // When the couple comes back, an emptied Ricordi on screen loads again.
+  assert.match(app, /classList\.contains\('active'\)&&document\.getElementById\('momentsGrid'\)\?\.dataset\.loaded!=='1'\)Promise\.resolve\(hydrateMoments\(\)\)/);
+});
