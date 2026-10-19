@@ -39,7 +39,7 @@ test('notifications: "Attiva" waits longer on mobile data and retries a slow net
   // Background calls keep the short limit.
   assert.match(js, /const CALL_TIMEOUT_MS = 6000;/);
   const message = 'Rete lenta: riprova tra poco, oppure con il Wi-Fi';
-  assert.ok(read('app.js').includes(`result.kind==='network')toast('${message}')`));
+  assert.ok(read('app.js').includes("result.kind==='network')toast(`"+message));
   assert.ok(read('onboarding.js').includes(`result?.kind==='network'?'${message}'`));
   assert.ok(read('i18n-en.js').includes(`'${message}': 'Slow connection: try again in a moment, or on Wi-Fi'`));
 });
@@ -85,4 +85,31 @@ test('Ricordi: coming back to the app never leaves it empty ("Nessun ricordo")',
   assert.match(app, /if\(document\.getElementById\('momentsGrid'\)\?\.dataset\.loaded!=='1'\)return momentsHydrateInFlight\.then\(\(\)=>hydrateMoments\(\)\);/);
   // When the couple comes back, an emptied Ricordi on screen loads again.
   assert.match(app, /classList\.contains\('active'\)&&document\.getElementById\('momentsGrid'\)\?\.dataset\.loaded!=='1'\)Promise\.resolve\(hydrateMoments\(\)\)/);
+});
+
+test('notifications: a failed "Attiva" says at which step and why (19/10, still failing on 5G)', () => {
+  const js = read('notifications.js');
+  const has = (text) => assert.ok(js.includes(text), text);
+  // FCM's own reason is kept (only letters and underscores, never the token) and is retryable.
+  has("listen('registrationError', (event) => settleToken(new Error('registration_failed:' + String(event?.error || '').replace(/[^A-Za-z_]/g, '').slice(0, 40))));");
+  has('SERVICE_NOT_AVAILABLE|INTERNAL_SERVER_ERROR|TIMEOUT');
+  for (const stage of ['N', 'T', 'S', 'O']) has(`enableStage = '${stage}';`);
+  has("kind: isRetryable(error) ? 'network' : 'error', code: failureCode(error)");
+  has('await new Promise((resolve) => setTimeout(resolve, 2000));');
+  assert.ok(read('app.js').includes("toast(`Non riesco ad attivare le notifiche${result.code?` · ${result.code}`:''}`)"));
+});
+
+test('opening animation: installed app only, at load (never on resume), from the splash colour, under a second', () => {
+  const html = read('index.html');
+  const has = (text) => assert.ok(html.includes(text), text);
+  has('<div class="us-launch-intro" id="usLaunchIntro" aria-hidden="true">');
+  has("if (!intro || (!native && !standalone) || reduced) { intro?.remove(); return; }");
+  has("localStorage.getItem('us:splash-theme:v1')");
+  has('setTimeout(done, 1600);');
+  has('@media (prefers-reduced-motion:reduce){html.us-launch-play .us-launch-intro{display:none}}');
+  // It lives in the page markup: a resume does not reload the page, so it never replays.
+  assert.ok(html.indexOf('id="usLaunchIntro"') < html.indexOf('id="usAppLock"'));
+  assert.doesNotMatch(read('app.js') + read('notifications.js'), /usLaunchIntro|us-launch-play/);
+  // The colour matches what Android really showed (theme on 13+, default otherwise).
+  assert.ok(read('progression.js').includes("window.localStorage.setItem('us:splash-theme:v1', result?.applied ? name : '')"));
 });

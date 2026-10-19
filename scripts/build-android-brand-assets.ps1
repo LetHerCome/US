@@ -107,7 +107,8 @@ try {
       $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
       $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
       $rect = New-Object System.Drawing.Rectangle 0, 0, $size, $size
-      $graphics.Clear([System.Drawing.Color]::FromArgb(255, 8, 4, 14))
+      # 19/10/2026 (founder): the launcher icon keeps the logo on white, not black.
+      $graphics.Clear([System.Drawing.Color]::White)
       $scale = [Math]::Min($size / $symbol.Width, $size / $symbol.Height)
       $width = [int][Math]::Round($symbol.Width * $scale)
       $height = [int][Math]::Round($symbol.Height * $scale)
@@ -117,7 +118,7 @@ try {
       foreach ($name in @('ic_launcher.png', 'ic_launcher_round.png')) {
         $relative = "android/app/src/main/res/$density/$name"
         Write-Png $bitmap (Join-Path $root $relative)
-        Add-Derivative $relative 'FIT_CENTER_DARK_08040E' @('assets/source/brand/us-symbol-master-v1.png')
+        Add-Derivative $relative 'FIT_CENTER_WHITE' @('assets/source/brand/us-symbol-master-v1.png')
       }
     } finally {
       $graphics.Dispose()

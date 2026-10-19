@@ -10,24 +10,24 @@
     "derivatives":  [
                         {
                             "path":  "android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png",
-                            "sha256":  "a2cfe86a76888efa11c14991b49de4bcf64815bb92a9646eb05677df70704854",
-                            "operation":  "FIT_CENTER_DARK_08040E",
+                            "sha256":  "03df41c4b89aa3e67824f5942d811a8b497f774af938cd547a210c732c597a37",
+                            "operation":  "FIT_CENTER_WHITE",
                             "sources":  [
                                             "assets/source/brand/us-symbol-master-v1.png"
                                         ]
                         },
                         {
                             "path":  "android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png",
-                            "sha256":  "a2cfe86a76888efa11c14991b49de4bcf64815bb92a9646eb05677df70704854",
-                            "operation":  "FIT_CENTER_DARK_08040E",
+                            "sha256":  "03df41c4b89aa3e67824f5942d811a8b497f774af938cd547a210c732c597a37",
+                            "operation":  "FIT_CENTER_WHITE",
                             "sources":  [
                                             "assets/source/brand/us-symbol-master-v1.png"
                                         ]
                         },
                         {
                             "path":  "android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png",
-                            "sha256":  "b57d5b091dce89344d602a4d856352fb922cf72b8acbfc9b9b78580fcef63ef5",
-                            "operation":  "FIT_CENTER_DARK_08040E",
+                            "sha256":  "2ab5b91b0feb5af2a443a58ef202956c1b9365cb71461a2b7aff9f479b0e5560",
+                            "operation":  "FIT_CENTER_WHITE",
                             "sources":  [
                                             "assets/source/brand/us-symbol-master-v1.png"
                                         ]
@@ -42,32 +42,32 @@
                         },
                         {
                             "path":  "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png",
-                            "sha256":  "f66b17c715189319016dd67e860b013e359231407d552a4dbcc422d719b101f7",
-                            "operation":  "FIT_CENTER_DARK_08040E",
+                            "sha256":  "947eaa2dd98b667ac07e03b7272874ba2f17dc0cfc742bd8645f38d57f5374ea",
+                            "operation":  "FIT_CENTER_WHITE",
                             "sources":  [
                                             "assets/source/brand/us-symbol-master-v1.png"
                                         ]
                         },
                         {
                             "path":  "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
-                            "sha256":  "f66b17c715189319016dd67e860b013e359231407d552a4dbcc422d719b101f7",
-                            "operation":  "FIT_CENTER_DARK_08040E",
+                            "sha256":  "947eaa2dd98b667ac07e03b7272874ba2f17dc0cfc742bd8645f38d57f5374ea",
+                            "operation":  "FIT_CENTER_WHITE",
                             "sources":  [
                                             "assets/source/brand/us-symbol-master-v1.png"
                                         ]
                         },
                         {
                             "path":  "android/app/src/main/res/mipmap-xhdpi/ic_launcher.png",
-                            "sha256":  "b57d5b091dce89344d602a4d856352fb922cf72b8acbfc9b9b78580fcef63ef5",
-                            "operation":  "FIT_CENTER_DARK_08040E",
+                            "sha256":  "2ab5b91b0feb5af2a443a58ef202956c1b9365cb71461a2b7aff9f479b0e5560",
+                            "operation":  "FIT_CENTER_WHITE",
                             "sources":  [
                                             "assets/source/brand/us-symbol-master-v1.png"
                                         ]
                         },
                         {
                             "path":  "android/app/src/main/res/mipmap-mdpi/ic_launcher.png",
-                            "sha256":  "26ab1147e080840580bea84a5dceda8282327dc951d4a1029039a88b4c504bd7",
-                            "operation":  "FIT_CENTER_DARK_08040E",
+                            "sha256":  "6f4e81820cf97a35e1349fc53f3c76feec8d46aa160de5d0665c444c918b3158",
+                            "operation":  "FIT_CENTER_WHITE",
                             "sources":  [
                                             "assets/source/brand/us-symbol-master-v1.png"
                                         ]
@@ -90,24 +90,24 @@
                         },
                         {
                             "path":  "android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png",
-                            "sha256":  "236b97e12d5cd8ba2e392eb2b9823b657de05352c00202ac4f3f31353954163f",
-                            "operation":  "FIT_CENTER_DARK_08040E",
+                            "sha256":  "38ceb1a57f6b257d4893ab9fa69e0beab8b023486c82472a2f281a2ef6c361cb",
+                            "operation":  "FIT_CENTER_WHITE",
                             "sources":  [
                                             "assets/source/brand/us-symbol-master-v1.png"
                                         ]
                         },
                         {
                             "path":  "android/app/src/main/res/mipmap-hdpi/ic_launcher.png",
-                            "sha256":  "236b97e12d5cd8ba2e392eb2b9823b657de05352c00202ac4f3f31353954163f",
-                            "operation":  "FIT_CENTER_DARK_08040E",
+                            "sha256":  "38ceb1a57f6b257d4893ab9fa69e0beab8b023486c82472a2f281a2ef6c361cb",
+                            "operation":  "FIT_CENTER_WHITE",
                             "sources":  [
                                             "assets/source/brand/us-symbol-master-v1.png"
                                         ]
                         },
                         {
                             "path":  "android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png",
-                            "sha256":  "26ab1147e080840580bea84a5dceda8282327dc951d4a1029039a88b4c504bd7",
-                            "operation":  "FIT_CENTER_DARK_08040E",
+                            "sha256":  "6f4e81820cf97a35e1349fc53f3c76feec8d46aa160de5d0665c444c918b3158",
+                            "operation":  "FIT_CENTER_WHITE",
                             "sources":  [
                                             "assets/source/brand/us-symbol-master-v1.png"
                                         ]

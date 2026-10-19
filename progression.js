@@ -561,7 +561,11 @@ function syncSplashTheme(theme) {
   const plugin = window.Capacitor?.Plugins?.UsSplashTheme;
   if (!plugin?.set) return;
   splashThemeSent = name;
-  Promise.resolve(plugin.set({ theme: name })).catch(() => { splashThemeSent = undefined; });
+  Promise.resolve(plugin.set({ theme: name })).then((result) => {
+    // The opening animation (index.html) starts from the colour Android will
+    // really show next time: the theme on Android 13+, the default otherwise.
+    try { window.localStorage.setItem('us:splash-theme:v1', result?.applied ? name : ''); } catch (_) {}
+  }).catch(() => { splashThemeSent = undefined; });
 }
 window.UsSplashThemeSync = syncSplashTheme;
 function applyPreferences(next = state) {

@@ -80,5 +80,8 @@ test('perf 1.0 precache: no approved master is precached or loaded; the size bud
   // retired Noi hub / week board rules still in styles.css (~16 KB).
   // The founder asked for every screen and animation to match the approved
   // mockup exactly (2026-10-15): ~125 KB of area CSS/JS, 2.5 -> 2.75 MB.
-  assert.ok(total <= 2.75 * 1024 * 1024, `precache is ${total} bytes: stays under 2.75 MB`);
+  // 18–19/10 founder QA fixes (album, notifications diagnostics, Ricordi on
+  // resume) and the cold-start opening animation inlined in index.html add a
+  // few KB: 2.75 -> 2.8 MB. The styles.css trim above is still the next one.
+  assert.ok(total <= 2.8 * 1024 * 1024, `precache is ${total} bytes: stays under 2.8 MB`);
 });

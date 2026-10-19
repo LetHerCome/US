@@ -85,7 +85,17 @@
   // Timeouts and network drops are worth a second try; refusals and stale sessions are not.
   function isRetryable(error) {
     const message = String(error?.message || error || '');
-    return message === 'timeout' || /network|fetch|load failed|connection/i.test(message);
+    return message === 'timeout' || /network|fetch|load failed|connection|SERVICE_NOT_AVAILABLE|INTERNAL_SERVER_ERROR|TIMEOUT/i.test(message);
+  }
+  // 19/10/2026: "Attiva" still failed on 5G. The step and a short reason travel
+  // with the failure (shown as a code in the message) so the next test says
+  // where it stops: N native status, T Google token, S server, O phone gate.
+  let enableStage = '';
+  function failureCode(error) {
+    const message = String(error?.message || error || '');
+    const reason = message === 'timeout' ? 'timeout'
+      : (message.match(/[A-Z][A-Z_]{5,}/)?.[0] || message.replace(/[^a-z_]/gi, '').slice(0, 24) || 'errore');
+    return `${enableStage || '?'}-${reason}`;
   }
   function withTimeout(promise, ms) {
     return new Promise((resolve, reject) => {
@@ -288,6 +298,7 @@
       await bindNativeOwner(status, installation, owner);
       return true;
     }
+    enableStage = 'S';
     const request = db.rpc('register_native_push_device', {
       target_installation_id: installation,
       target_platform: status.platform,
@@ -300,6 +311,7 @@
     const { error } = await withTimeout(request, REGISTER_CALL_TIMEOUT_MS);
     if (error) throw error;
     assertOwner(owner);
+    enableStage = 'O';
     await bindNativeOwner(status, installation, owner);
     if (pendingRetired) setRetired(retired().filter((id) => id !== pendingRetired));
     write(STORE.synced(session.userId), signature);
@@ -428,6 +440,7 @@
     const owner = session;
     try {
       await cleanup; assertOwner(owner);
+      enableStage = 'N';
       const status = await nativeStatus();
       if (!status.available || !status.configured) return { ok: false, kind: 'unavailable' };
       let perm = await permission();
@@ -440,11 +453,13 @@
       // A slow network (timeout) gets a second try; a refusal does not.
       for (let attempt = 1; ; attempt++) {
         try {
+          enableStage = 'T';
           const token = await requestToken();
           await registerToken(token, status, owner);
           break;
         } catch (error) {
           if (attempt >= ENABLE_ATTEMPTS || !isRetryable(error)) throw error;
+          await new Promise((resolve) => setTimeout(resolve, 2000));
           assertOwner(owner);
         }
       }
@@ -452,7 +467,7 @@
       write(STORE.enabled(session.userId), '1');
       return { ok: true, kind: 'active' };
     } catch (error) {
-      return { ok: false, kind: isRetryable(error) ? 'network' : 'error' };
+      return { ok: false, kind: isRetryable(error) ? 'network' : 'error', code: failureCode(error) };
     } finally {
       busy = false;
     }
@@ -653,7 +668,8 @@
   if (push && typeof push.addListener === 'function') {
     const listen = (name, fn) => Promise.resolve(push.addListener(name, fn)).catch(() => {});
     listen('registration', onRegistration);
-    listen('registrationError', () => settleToken(new Error('registration_failed')));
+    // FCM says why (e.g. SERVICE_NOT_AVAILABLE): keep the reason, never the token.
+    listen('registrationError', (event) => settleToken(new Error('registration_failed:' + String(event?.error || '').replace(/[^A-Za-z_]/g, '').slice(0, 40))));
     listen('pushNotificationReceived', onForeground);
     // Retained by the native plugin until this listener exists: covers cold start.
     listen('pushNotificationActionPerformed', onAction);

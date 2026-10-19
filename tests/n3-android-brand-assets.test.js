@@ -87,7 +87,8 @@ windowsTest('launcher e splash Android usano soltanto il nuovo set brand', () =>
   assert.match(v31Styles, /postSplashScreenTheme/);
 });
 
-windowsTest('foreground Android deriva dal master trasparente e il launcher non espone sfondo chiaro', () => {
+// 19/10/2026: il founder ha scelto il logo di sempre su sfondo bianco (prima era nero #08040E).
+windowsTest('foreground Android deriva dal master trasparente e il launcher ha lo sfondo bianco', () => {
   runBrandBuild();
   const brand = JSON.parse(fs.readFileSync(BRAND_MANIFEST, 'utf8'));
   const foreground = brand.derivatives.find((entry) => entry.path.endsWith('/us_adaptive_foreground_v1.png'));
@@ -96,13 +97,13 @@ windowsTest('foreground Android deriva dal master trasparente e il launcher non 
   assert.match(foreground.operation, /FIT_CENTER.*TRANSPARENT/i);
 
   const colors = fs.readFileSync(path.join(ROOT, 'android/app/src/main/res/values/colors.xml'), 'utf8');
-  assert.match(colors, /<color name="ic_launcher_background">#08040E<\/color>/);
+  assert.match(colors, /<color name="ic_launcher_background">#FFFFFF<\/color>/);
 
   const legacy = brand.derivatives.filter((entry) => /mipmap-[^/]+\/ic_launcher(?:_round)?\.png$/.test(entry.path));
   assert.equal(legacy.length, 10);
   legacy.forEach((entry) => {
     assert.deepEqual(entry.sources, ['assets/source/brand/us-symbol-master-v1.png']);
-    assert.match(entry.operation, /DARK_08040E/);
+    assert.match(entry.operation, /FIT_CENTER_WHITE/);
   });
 });
 
