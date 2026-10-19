@@ -758,7 +758,7 @@ async function signOutLocallyAfterAccountDeletion(){
 
 function accountDeletedScreen(api,kind,cleanup){
   openModal('Account eliminato',`
-    <div class="us-settings2-modal-copy" role="status" aria-live="polite">${esc(api.message(kind,api.US_SUPPORT_EMAIL))} Grazie per aver usato US.</div>
+    <div class="us-settings2-modal-copy" role="status" aria-live="polite">${esc(api.message(kind,api.US_SUPPORT_EMAIL))} <span>Grazie per aver usato US.</span></div>
     <div class="us-settings2-action-stack">
       <button type="button" class="primary" id="usAccountDeletedDone">Chiudi</button>
     </div>
