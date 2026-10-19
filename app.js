@@ -2222,6 +2222,17 @@ if(typeof ResizeObserver==='function'){
   }
 }
 
+// Supabase answers in English and in technical words ("Invalid login
+// credentials"): people read one plain sentence in their language instead.
+function loginErrorMessage(err){
+  const text=String(err?.message||'');
+  const status=Number(err?.status||0);
+  if(/invalid login credentials|invalid_credentials/i.test(text)||err?.code==='invalid_credentials')return 'Email o password non corrette. Riprova.';
+  if(/email not confirmed/i.test(text)||err?.code==='email_not_confirmed')return 'Prima conferma la tua email con il link che ti abbiamo mandato.';
+  if(status===429||/rate limit|too many/i.test(text))return 'Troppi tentativi. Aspetta qualche minuto e riprova.';
+  if(err?.name==='AuthRetryableFetchError'||/fetch|network|load failed/i.test(text)||(err&&status===0&&!text))return 'Non riesco a raggiungere US. Controlla la connessione e riprova.';
+  return 'Accesso non riuscito. Riprova tra poco.';
+}
 async function loginAccount(){
   const email=document.getElementById('loginEmail').value.trim();
   const password=document.getElementById('loginPassword').value;
@@ -2242,8 +2253,7 @@ async function loginAccount(){
     document.getElementById('loginPassword').value='';
     await initCloud();
   }catch(err){
-    const msg=String(err?.message||'invio non riuscito');
-    setAuthStatus('loginStatus','Accesso non riuscito: '+msg,'error');
+    setAuthStatus('loginStatus',loginErrorMessage(err),'error');
   }finally{
     btn.disabled=false;
   }

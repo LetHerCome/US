@@ -1,4 +1,4 @@
-const BUILD_ID = "us-intro-domande-20261019-18";
+const BUILD_ID = "us-english-account-20261019-19";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
