@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#08040E</color>
+    <color name="ic_launcher_background">#FFFFFF</color>
     <!-- Splash (18/10/2026): the colour of the app theme ("Atmosfera"), a little
          lighter than its night background. Originale is the default. -->
     <color name="us_splash_background">#26142E</color>
