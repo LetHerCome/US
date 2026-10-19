@@ -1,0 +1,116 @@
+name: Supabase SQL (manual)
+
+# Applies ONE reviewed migration file from supabase/migrations to staging or
+# production, without the SQL Editor: Actions -> "Supabase SQL (manual)" ->
+# Run workflow. Same guards as "Supabase Edge deploy (manual)": only runs when
+# someone presses the button (never on push or pull request), every run waits
+# for approval in the GitHub environment `supabase-deploy` (required reviewer:
+# the founder), production also needs the word PRODUZIONE, and the Supabase
+# account token lives only in that environment as SUPABASE_ACCESS_TOKEN.
+#
+# * The file must already be on the chosen ref (reviewed and merged); free SQL
+#   is never accepted.
+# * The optional check is one SELECT on content and cron tables only, so the
+#   log never shows a couple's private data.
+# * Nothing is written to the migration ledger: production has always been
+#   applied by hand, file by file, and stays that way.
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Dove: staging o production'
+        required: true
+        type: choice
+        options: [staging, production]
+      ref:
+        description: 'Branch o commit da cui prendere il file'
+        required: true
+        default: main
+      migration:
+        description: 'Nome del file in supabase/migrations (es. 20261019120000_nome.sql)'
+        required: true
+      check:
+        description: 'Facoltativo: una SELECT di controllo su tabelle di contenuto o cron'
+        required: false
+      confirm:
+        description: 'Per production scrivi PRODUZIONE'
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-sql-${{ inputs.target }}
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: supabase-deploy
+    env:
+      TARGET: ${{ inputs.target }}
+      MIGRATION: ${{ inputs.migration }}
+      CHECK_SQL: ${{ inputs.check }}
+      CONFIRM: ${{ inputs.confirm }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - name: Check request
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_ACCESS_TOKEN}" ]; then echo "::error::Manca il secret SUPABASE_ACCESS_TOKEN nell'environment supabase-deploy"; exit 1; fi
+          echo "::add-mask::${SUPABASE_ACCESS_TOKEN}"
+          case "$TARGET" in
+            staging) echo "PROJECT_REF=dugmhngrfkuieeletatb" >> "$GITHUB_ENV" ;;
+            production)
+              if [ "$CONFIRM" != "PRODUZIONE" ]; then echo "::error::Per production scrivi PRODUZIONE nel campo di conferma"; exit 1; fi
+              echo "PROJECT_REF=iiakdfsxpywdkxravqjh" >> "$GITHUB_ENV" ;;
+            *) echo "::error::Destinazione non valida"; exit 1 ;;
+          esac
+          if ! [[ "$MIGRATION" =~ ^[0-9]{14}_[a-z0-9_]+\.sql$ ]] || [ ! -f "supabase/migrations/$MIGRATION" ]; then
+            echo "::error::File di migrazione sconosciuto: $MIGRATION"; exit 1
+          fi
+          size=$(wc -c < "supabase/migrations/$MIGRATION")
+          if [ "$size" -gt 300000 ]; then echo "::error::File troppo grande per questa via ($size byte): usa il SQL Editor"; exit 1; fi
+          if [ -n "$CHECK_SQL" ]; then
+            node -e '
+              const sql = String(process.env.CHECK_SQL).trim().replace(/;\s*$/, "");
+              const allowed = new Set(["public.daily_question_templates", "public.daily_questions", "public.game_v2_catalog", "private.game_swipe_v1_catalog", "public.bond_quest_templates", "public.game_v2_recipes", "cron.job"]);
+              if (!/^select\s/i.test(sql) || /;|--|\/\*/.test(sql)) { console.error("::error::Il controllo deve essere una sola SELECT"); process.exit(1); }
+              // Comma joins would hide a second table from the list below.
+              if (/\b(?:from|join)\s+[\w.]+(?:\s+(?:as\s+)?\w+)?\s*,/i.test(sql)) { console.error("::error::Niente join con la virgola: usa JOIN"); process.exit(1); }
+              const tables = [...sql.matchAll(/\b(?:from|join)\s+([a-z_][\w.]*)/gi)].map((m) => m[1].toLowerCase());
+              const bad = tables.filter((t) => !allowed.has(t.includes(".") ? t : "public." + t));
+              if (!tables.length || bad.length) { console.error("::error::Il controllo può leggere solo tabelle di contenuto o cron: " + bad.join(", ")); process.exit(1); }
+            '
+          fi
+          echo "Commit: $(git rev-parse HEAD) -> $TARGET · $MIGRATION ($size byte)"
+      - name: Apply
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          set -euo pipefail
+          node -e 'process.stdout.write(JSON.stringify({ query: require("fs").readFileSync("supabase/migrations/" + process.env.MIGRATION, "utf8") }))' > body.json
+          status=$(curl -sS -o response.json -w '%{http_code}' -X POST "https://api.supabase.com/v1/projects/${PROJECT_REF}/database/query" \
+            -H "Authorization: Bearer ${SUPABASE_ACCESS_TOKEN}" -H "Content-Type: application/json" --data-binary @body.json)
+          echo "HTTP $status"
+          head -c 2000 response.json; echo
+          if [ "$status" -lt 200 ] || [ "$status" -ge 300 ]; then echo "::error::La migrazione non è stata applicata"; exit 1; fi
+      - name: Check
+        if: ${{ inputs.check != '' }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          set -euo pipefail
+          node -e 'process.stdout.write(JSON.stringify({ query: String(process.env.CHECK_SQL) }))' > check.json
+          status=$(curl -sS -o result.json -w '%{http_code}' -X POST "https://api.supabase.com/v1/projects/${PROJECT_REF}/database/query" \
+            -H "Authorization: Bearer ${SUPABASE_ACCESS_TOKEN}" -H "Content-Type: application/json" --data-binary @check.json)
+          echo "HTTP $status"
+          head -c 6000 result.json; echo
+          if [ "$status" -lt 200 ] || [ "$status" -ge 300 ]; then echo "::error::Controllo non riuscito"; exit 1; fi
