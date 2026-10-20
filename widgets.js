@@ -585,12 +585,17 @@
     window.addEventListener('us:noi-portraits-ready', () => { syncNoiPortrait().catch(() => {}); });
     document.addEventListener('visibilitychange', () => {
       if (document.hidden || !ownerHash) return;
-      ensureCredential().catch(() => {});
-      syncCountdown().catch(() => {});
-      syncCouple().catch(() => {});
-      syncNoiDistance().catch(() => {});
-      syncNoiPortrait().catch(() => {});
-      syncPhoto().catch(() => {});
+      // The phone's widgets are not on screen while US is: they refresh just
+      // after the page in front of the person (app.js usAfterForeground).
+      (window.usAfterForeground || ((task) => task()))(() => {
+        if (document.hidden || !ownerHash) return;
+        ensureCredential().catch(() => {});
+        syncCountdown().catch(() => {});
+        syncCouple().catch(() => {});
+        syncNoiDistance().catch(() => {});
+        syncNoiPortrait().catch(() => {});
+        syncPhoto().catch(() => {});
+      }, 2000);
     });
   }
 })();

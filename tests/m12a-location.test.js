@@ -280,7 +280,8 @@ test('policy windows are documented in code: fresh 10 min, stale-display 60 min'
 
 test('triggers are event driven: launch, foreground and one slow visible-only check', () => {
   assert.match(app, /maybeAutoRefreshLocation\('launch'\)/);
-  assert.match(app, /if\(options\.foreground\)maybeAutoRefreshLocation\('resume'\)/);
+  // 20/10: just after the page on screen has refreshed (usAfterForeground).
+  assert.match(app, /if\(options\.foreground\)usAfterForeground\(\(\)=>maybeAutoRefreshLocation\('resume'\),\d+\)/);
   assert.match(app, /document\.addEventListener\('visibilitychange',\(\)=>\{if\(!document\.hidden&&window\.usProfile\)refreshVisibleState\(\{foreground:true\}\);\}\);/);
   assert.match(app, /if\(document\.hidden\|\|!window\.usProfile\)return;\s*maybeAutoRefreshLocation\('check'\)/);
   assert.doesNotMatch(app, /watchPosition/, 'no continuous geolocation watch');

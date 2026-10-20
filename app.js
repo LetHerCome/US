@@ -969,6 +969,13 @@ function usRunWhenIdle(task,timeout=1000){
   }
   setTimeout(run,Math.min(120,timeout));
 }
+// Back in the foreground: the page on screen refreshes first; what is not on
+// screen (phone widgets, Gioca outside Gioca, Ricordi dot, update check)
+// waits a moment so it does not compete with it for the network.
+function usAfterForeground(task,delay=1200){
+  setTimeout(()=>usRunWhenIdle(task,800),delay);
+}
+window.usAfterForeground=usAfterForeground;
 
 const US_AUTH_SESSION_TIMEOUT_MS=3200;
 function usWithDeadline(promise,ms,label='operation timeout'){
@@ -3907,7 +3914,11 @@ function ricordiMarkOpened(id){
 }
 window.UsRicordiNew=Object.freeze({markOpened:ricordiMarkOpened,check:()=>ricordiCheckNew().catch(()=>{})});
 window.addEventListener('us-auth-resolved',()=>usRunWhenIdle(()=>ricordiCheckNew().catch(()=>{}),1800));
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&window.usProfile)ricordiCheckNew().catch(()=>{});});
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden||!window.usProfile)return;
+  if(document.getElementById('moments')?.classList.contains('active'))ricordiCheckNew().catch(()=>{});
+  else usAfterForeground(()=>ricordiCheckNew(),1800);
+});
 // Opening Ricordi clears the dot at once, even when the page does not reload.
 (()=>{
   const page=document.getElementById('moments');
@@ -5833,13 +5844,15 @@ async function hydrateCloud(){
     if(active==='bond'){critical.push(hydrateBond());critical.push(hydrateNoiIdeas());}
     if(active==='settings')critical.push(Promise.resolve(window.hydrateUsSettings?.()));
 
+    // Today starts with the Home image, not after it: its two small reads
+    // would otherwise wait for the whole photo before the question shows.
+    usRunWhenIdle(()=>hydrateToday(),120);
+
     const results=await Promise.allSettled(critical);
     results.forEach(result=>{
       if(result.status==='rejected')console.warn('[US Boot] hydrate task',result.reason);
     });
 
-    // Today is important but does not need to compete with the Home image.
-    usRunWhenIdle(()=>hydrateToday(),320);
     // M6E — Oggi calendar widget: small, secondary, only relevant on Home.
     if(active==='home')usRunWhenIdle(()=>window.refreshOggiCalendarWidget?.(),260);
   }catch(e){console.warn(e)}
@@ -5898,8 +5911,8 @@ async function refreshVisibleState(options={}){
   const active=document.querySelector('.page.active')?.id;
   const todayOpen=document.getElementById('today')?.classList.contains('open');
   // M12A — returning to the foreground re-checks the location wherever the user lands.
-  if(options.foreground)maybeAutoRefreshLocation('resume').catch(()=>{});
-  if(options.foreground)hydrateProfileAvatars().catch(()=>{});
+  if(options.foreground)usAfterForeground(()=>maybeAutoRefreshLocation('resume'),900);
+  if(options.foreground)usAfterForeground(()=>hydrateProfileAvatars(),1500);
   if(active==='home'||todayOpen){
     if(options.foreground)hydrateHomePhoto(false).catch(()=>{});
     await hydrateToday();

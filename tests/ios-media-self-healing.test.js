@@ -28,7 +28,8 @@ test('avatar e immagini private possono rinnovare il signed URL dopo un errore',
 
 test('foreground ripara Home avatar e Ricordi senza richiedere un nuovo login', async () => {
   const app = await src('app.js');
-  assert.match(app, /if\(options\.foreground\)hydrateProfileAvatars\(\)\.catch\(\(\)=>\{\}\);[\s\S]*if\(options\.foreground\)hydrateHomePhoto\(false\)\.catch\(\(\)=>\{\}\)/);
+  // 20/10: avatars refresh just after the page on screen (usAfterForeground).
+  assert.match(app, /if\(options\.foreground\)usAfterForeground\(\(\)=>hydrateProfileAvatars\(\),\d+\);[\s\S]*if\(options\.foreground\)hydrateHomePhoto\(false\)\.catch\(\(\)=>\{\}\)/);
   // Native Performance V1 (1f84c87): foregrounding keeps valid signed URLs; a
   // failed image heals itself through usRecoverPrivateImage().
   assert.match(app, /if\(active==='moments'\)\{await hydrateMoments\(\);return;\}/);
