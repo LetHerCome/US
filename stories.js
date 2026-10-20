@@ -210,6 +210,13 @@
     if (partner) await setStoryAvatar('usStoryPartnerImg','usStoryPartnerFallback',partner);
   }
 
+  let lastReturnRefresh = 0;
+  function refreshOnReturn() {
+    if (Date.now() - lastReturnRefresh < 2000) return;
+    lastReturnRefresh = Date.now();
+    refreshStories({ refreshProfiles: true });
+  }
+
   async function refreshStories(options = {}) {
     if (!window.usProfile || document.hidden) return;
     const now = new Date().toISOString();
@@ -975,10 +982,11 @@
       if (!document.hidden) {
         if (storyPlaybackBackgroundPaused) { storyPlaybackBackgroundPaused = false;resumeStoryPlayback(); }
         startForCurrentProfile();
-        refreshStories({ refreshProfiles: true });
+        refreshOnReturn();
       }
     });
-    window.addEventListener('focus', () => refreshStories({ refreshProfiles: true }));
+    // A return to the app fires both visibilitychange and focus: one refresh.
+    window.addEventListener('focus', refreshOnReturn);
     document.addEventListener('keydown', handleStoryKeydown);
     sb.auth.onAuthStateChange(() => setTimeout(() => {
       initializedForUserId = null;

@@ -164,3 +164,12 @@ Only durable decisions belong here. New missions should not reopen them without 
 - **Animazione d'apertura:** solo all'avvio dell'app installata (non al rientro dal background, non nel browser, non con «riduci animazioni»). Parte dal colore e dal logo della splash Android e dura meno di un secondo.
 - **Notifiche in 5G:** il motivo di FCM non viene più perso (es. `SERVICE_NOT_AVAILABLE`, ora ritentato) e il messaggio d'errore mostra un codice: N stato nativo, T token Google, S server, O collegamento al telefono. Serve per capire, alla prossima prova, dove si ferma.
 - **Icona Android (stesso giorno):** il founder tiene il logo di sempre ma su **sfondo bianco** invece che nero: `ic_launcher_background` `#FFFFFF` e icone legacy `FIT_CENTER_WHITE` (script `build-android-brand-assets.ps1`). Anche l'icona 512 e l'immagine in primo piano del Play Store hanno l'icona bianca. iOS non è ancora pubblicata e resta com'è.
+
+## 2026-10-20 — Avvio e rientro più reattivi
+
+**Fonte:** richiesta del founder prima della 1.0.6 («rendere l’app più reattiva al primo avvio e a tutti gli altri riavvii»).
+
+- **Avvio:** la domanda del giorno parte insieme alla foto di Oggi, non dopo che la foto è caricata. Nessun cambio all’accesso: la coppia viene sempre verificata dal server prima di mostrare l’app.
+- **Rientro dal background:** si aggiorna per prima la pagina sullo schermo; widget del telefono, Gioca fuori da Gioca, pallino di Ricordi, posizione, avatar e controllo aggiornamenti partono un attimo dopo (`usAfterForeground`, 0,9–2,5 s, poi quando il telefono è libero).
+- **Doppioni tolti:** al rientro le Stories si ricaricavano due volte (visibilitychange + focus) e Gioca due volte quando era la pagina aperta.
+- Da provare su un AAB firmato prima del merge (regola Boot/Auth del 07/10).
