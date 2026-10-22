@@ -11,6 +11,9 @@ const OUT = path.join(ROOT, 'dist', 's31-staging-preview');
 const PROD = 'iiakdfsxpywdkxravqjh';
 const STAGE = 'dugmhngrfkuieeletatb';
 export const APPROVED_BRANCH = 'mission/us-store-s3-1-public-auth-staging-20261011';
+// Branches whose us-staging-s31 build is the real US-STAGING browser preview.
+// The weekly check-in branch (22/10) is tried there before production.
+export const STAGING_PREVIEW_BRANCHES = Object.freeze([APPROVED_BRANCH, 'claude/payred-app-comparison-b2594e']);
 export const PLACEHOLDER_HTML = '<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex">'
   + '<title>US staging: no preview</title><p>This branch is not a US-STAGING preview.</p>\n';
 
@@ -69,7 +72,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   // The project also builds a preview for EVERY other branch: those get a
   // static "not a staging preview" page (no app, no Supabase key, no backend
   // URL) instead of a failed build, so the check stops blocking unrelated PRs.
-  if (process.env.CF_PAGES === '1' && process.env.CF_PAGES_BRANCH !== APPROVED_BRANCH) {
+  if (process.env.CF_PAGES === '1' && !STAGING_PREVIEW_BRANCHES.includes(process.env.CF_PAGES_BRANCH)) {
     await rm(OUT, { recursive: true, force: true });
     await mkdir(OUT, { recursive: true });
     await writeFile(path.join(OUT, 'index.html'), PLACEHOLDER_HTML, 'utf8');
