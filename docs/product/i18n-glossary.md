@@ -27,6 +27,7 @@ everywhere: on screen, in aria labels, in notifications and in docs.
 | Calendario | Calendar |
 | Da vivere | To do together |
 | Missioni | This week’s missions |
+| Il punto della settimana | Weekly check-in |
 | Quest, Quest di coppia (current UI wording) | quests, Couple quests |
 | Il nostro giorno | Our day |
 | Mese per mese | Month by month |

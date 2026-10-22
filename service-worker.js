@@ -1,4 +1,4 @@
-const BUILD_ID = "us-avvio-rapido-20261020-20";
+const BUILD_ID = "us-punto-settimana-20261022-21";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -53,6 +53,8 @@ const APP_SHELL = [
   versioned("/progression.js"),
   versioned("/countdown.css"),
   versioned("/countdown.js"),
+  versioned("/weekly-checkin.css"),
+  versioned("/weekly-checkin.js"),
   versioned("/pet.css"),
   versioned("/pet.js"),
   versioned("/settings.css"),

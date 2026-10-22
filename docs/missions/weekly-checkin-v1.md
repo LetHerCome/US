@@ -187,8 +187,13 @@ public.weekly_checkin_keepsakes       -- modello M12B.4, immutabile, scritto sol
    - [`20261022141913_weekly_checkin_v1.sql`](../../supabase/migrations/20261022141913_weekly_checkin_v1.sql), con i test in [`tests/weekly-checkin-v1-db.test.js`](../../tests/weekly-checkin-v1-db.test.js): 12/12 passano, partiti tutti RED.
    - Applicata **solo su staging**.
    - Diverso dall'audit: uscita dalla coppia ed eliminazione account **non** vengono ridefinite. Le righe hanno una FK verso `profiles` con cancellazione in cascata, come le Stories. Si ridefinisce solo l'export, con una preflight sull'md5.
-3. **Client:** foglio a passi, stati, risultati, andamento, IT/EN.
-4. **Integrazione:** Oggi, Noi, notifiche (web, FCM e frasi Android), Ricordi.
+3. ~~**Client**~~ e 4. ~~**Integrazione**~~ (senza notifiche) **fatti il 22/10/2026:**
+   - [`weekly-checkin.js`](../../weekly-checkin.js) e [`weekly-checkin.css`](../../weekly-checkin.css): foglio a 4 passi, attesa, risultati con andamento, reazione, Conserva, IT/EN.
+   - Agganci: la card priority di Oggi, la riga in Noi sopra il calendario, il tipo `weekly_checkin:` in Ricordi, il back nativo, il reset al logout, la precache.
+   - Test: [`tests/weekly-checkin-v1-client.test.js`](../../tests/weekly-checkin-v1-client.test.js), 12/12, partiti RED.
+   - Diverso dalla spec: la domanda sulla vicinanza è neutra rispetto al genere («Quanta vicinanza hai sentito con {name}…»).
+   - Il limite della precache passa da 2,8 a 2,85 MB (circa 45 KB in più).
+   - **Restano le notifiche (fase 3):** il client chiama già `send-web-push` con `weekly_checkin_answer`, ma l'Edge non conosce ancora quel tipo e lo rifiuta senza effetti.
 5. **Verifica:** browser con fixture, suite completa, build, review indipendente, prova su staging.
 6. **Report** con il formato di `AGENTS.md`. Nessun merge, nessuna produzione.
 

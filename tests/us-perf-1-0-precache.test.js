@@ -83,5 +83,7 @@ test('perf 1.0 precache: no approved master is precached or loaded; the size bud
   // 18–19/10 founder QA fixes (album, notifications diagnostics, Ricordi on
   // resume) and the cold-start opening animation inlined in index.html add a
   // few KB: 2.75 -> 2.8 MB. The styles.css trim above is still the next one.
-  assert.ok(total <= 2.8 * 1024 * 1024, `precache is ${total} bytes: stays under 2.8 MB`);
+  // The weekly check-in (founder D5 exception, 22/10: weekly-checkin.js/css and
+  // its English, ~45 KB) is needed offline like the rest: 2.8 -> 2.85 MB.
+  assert.ok(total <= 2.85 * 1024 * 1024, `precache is ${total} bytes: stays under 2.85 MB`);
 });

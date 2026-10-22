@@ -72,6 +72,12 @@ const layers=[
     close:()=>window.closeNoiSection?.()
   },
   {
+    name:'weekly-checkin',
+    find:()=>document.getElementById('usCheckinSheet'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsWeeklyCheckin?.close?.()
+  },
+  {
     name:'countdown',
     find:()=>document.getElementById('usCountdownSheet'),
     open:el=>el?.classList.contains('open'),
