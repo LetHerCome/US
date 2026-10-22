@@ -32,6 +32,11 @@ Auth settings, Edge secrets and data are intentionally different: no copied prod
 
 **Not yet in production.**
 
+**Staging QA app (22/10):** run `39803123201` built the signed staging APK from `85363f1`, with the weekly check-in and sign-up open on US-STAGING only.
+- Package `com.usapp.us.staging`, Firebase `us-staging-45e0f`, version `1.0-s3staging.1792682238`.
+- The APK is encrypted in the artifact (7z with `ANDROID_INTERNAL_ARTIFACT_PASSWORD`).
+- Built without the 10/10 S3 diagnostics panel, which no longer matches `notifications.js`.
+
 **Edge ahead of production, staging only (22/10):** `send-web-push` v11 with the `weekly_checkin_answer` event (phase 3 of the check-in), deployed from the mission worktree. The 8 functions ported earlier in the day are therefore no longer all identical to production: `send-web-push` differs by this event only.
 
 ## Update 2026-10-17
