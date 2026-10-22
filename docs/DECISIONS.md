@@ -181,3 +181,11 @@ Only durable decisions belong here. New missions should not reopen them without 
 - Il check-in settimanale di coppia (vicinanza, energia, apprezzamento, supporto) può essere implementato **prima della 1.0 Store**, in deroga al freeze D5. L'eccezione vale **solo** per questa missione e non riapre gli altri moduli congelati da D5.
 - Restano validi D4 (gratis, nessun paywall) e la product restraint del 04/10 (nessuna nuova tab, niente XP, streak o valute).
 - **Governance:** l'eccezione autorizza il lavoro sul branch e le prove su staging. Non autorizza merge, SQL o Edge in produzione, né la pubblicazione: ognuno di questi passi richiede un'approvazione separata.
+
+## 2026-10-22 — Il check-in resta su staging
+
+**Fonte:** prova del founder sull'APK di staging, 22/10/2026 («al momento non mi fa impazzire, lasciamola su staging»).
+
+- Il check-in settimanale resta **solo su US-STAGING** (SQL, `send-web-push` v11, APK QA e anteprima web) per un periodo di prova. **Non va in produzione**: niente SQL, Edge, merge su `main` né AAB su Play finché il founder non decide diversamente.
+- Il branch `claude/payred-app-comparison-b2594e` resta aperto, senza PR verso `main`.
+- **Direzione di prodotto:** da Paired si prende ispirazione, senza copiarne le funzioni. US non è terapia di coppia. L'obiettivo è un'esperienza più fluida e più ricca di contenuti, coerente con il core di US; tra le idee, compagni oltre il gatto (Maudit).
