@@ -32,6 +32,14 @@ Auth settings, Edge secrets and data are intentionally different: no copied prod
 
 **Not yet in production.**
 
+**Content 1.1 on staging only (22/10):** `20261022160549_content_1_1.sql`, insert only. Counts before → after, re-applied with no change:
+- Daily Question templates 182 → 364;
+- Game V2 prompts 212 → 296;
+- active Swipe cards 67 → 97;
+- couple missions 33 → 49.
+
+The web preview of the branch serves the new content right away: it is read from the server. **Not in production.**
+
 **Staging QA app (22/10):** run `39803123201` built the signed staging APK from `85363f1`, with the weekly check-in and sign-up open on US-STAGING only.
 - Package `com.usapp.us.staging`, Firebase `us-staging-45e0f`, version `1.0-s3staging.1792682238`.
 - The APK is encrypted in the artifact (7z with `ANDROID_INTERNAL_ARTIFACT_PASSWORD`).
