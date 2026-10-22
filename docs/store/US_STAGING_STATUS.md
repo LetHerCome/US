@@ -23,6 +23,15 @@
 
 Auth settings, Edge secrets and data are intentionally different: no copied production data.
 
+**Ahead of production, staging only (22/10):** `20261022141913_weekly_checkin_v1.sql`, the weekly check-in mission. Its postflight is read-only:
+- `s32_export_user_data` has the new body (md5 `cf2559e2…`);
+- both tables have RLS on and forced;
+- clients cannot read `weekly_checkins`; `authenticated` can only read `weekly_checkin_keepsakes`, through the same-couple policy;
+- the 5 RPCs are executable by `authenticated` and not by `anon`; the private helpers by neither;
+- `supabase db advisors` adds only the usual SECURITY DEFINER warning on the 5 client RPCs, the same as the 48 existing ones.
+
+**Not yet in production.**
+
 ## Update 2026-10-17
 
 - **#190 + #196 on US-STAGING:** migrations and Edge functions applied (manually, never `db push`). Not in production.

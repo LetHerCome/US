@@ -17,6 +17,8 @@ async function seedTenant(db,cid,u,v,n){
     insert into public.daily_question_keepsakes(couple_id,question_id,question_text,question_date,francesco_answer,beatrice_answer,revealed_at,kept_by_role)
       values('${cid}','${qid}','Private kept ${n}','2026-01-01','Private one','Private two',now(),'francesco');
     insert into public.daily_question_outcomes(couple_id,question_id,author_role,body,last_operation_id) values('${cid}','${qid}','francesco','Private outcome ${n}','${id(3)}');
+    insert into public.weekly_checkin_keepsakes(couple_id,checkin_id,week_start,author_role,appreciation,revealed_at,kept_by_role)
+      values('${cid}','${id(10)}','2026-01-05','beatrice','Private appreciation ${n}',now(),'francesco');
     insert into public.left_for_you(id,couple_id,sender_id,recipient_id,kind,body) values('${id(4)}','${cid}','${u}','${v}','text','Private gift ${n}');
     insert into public.conserva_contributions(couple_id,source_item_id,source_sender_id,conserved_by) values('${cid}','${id(4)}','${u}','${v}');
     insert into public.moments(id,couple_id,created_by,storage_path,moment_date) values('${id(5)}','${cid}','${u}','${cid}/${u}/moment.jpg','2026-01-01');

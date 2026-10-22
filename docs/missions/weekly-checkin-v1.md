@@ -183,7 +183,10 @@ public.weekly_checkin_keepsakes       -- modello M12B.4, immutabile, scritto sol
 ## Piano di lavoro
 
 1. ~~**Audit**, in sola lettura~~ **Fatto il 22/10/2026:** [report](weekly-checkin-v1-audit.md), con le correzioni già riportate in questa spec.
-2. **SQL in TDD:** prima i test RED (autorizzazione, sigillo, versione, settimana, lifecycle), poi la migrazione; applicazione solo su staging.
+2. ~~**SQL in TDD**~~ **Fatto il 22/10/2026:**
+   - [`20261022141913_weekly_checkin_v1.sql`](../../supabase/migrations/20261022141913_weekly_checkin_v1.sql), con i test in [`tests/weekly-checkin-v1-db.test.js`](../../tests/weekly-checkin-v1-db.test.js): 12/12 passano, partiti tutti RED.
+   - Applicata **solo su staging**.
+   - Diverso dall'audit: uscita dalla coppia ed eliminazione account **non** vengono ridefinite. Le righe hanno una FK verso `profiles` con cancellazione in cascata, come le Stories. Si ridefinisce solo l'export, con una preflight sull'md5.
 3. **Client:** foglio a passi, stati, risultati, andamento, IT/EN.
 4. **Integrazione:** Oggi, Noi, notifiche (web, FCM e frasi Android), Ricordi.
 5. **Verifica:** browser con fixture, suite completa, build, review indipendente, prova su staging.

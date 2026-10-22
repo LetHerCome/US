@@ -162,7 +162,7 @@ test('stop_sharing_location deletes only your own reading and is safe to repeat'
 
 test('the SQL Editor script runs the migration verbatim, records it once and refuses a second run', async () => {
   const { newDb } = require('../scripts/supabase-baseline/rebuild.cjs');
-  const { DIR, FILE, PLATFORM, SEED, MC2 } = require('./helpers/mc2-db');
+  const { DIR, FILE, PLATFORM, SEED, MC2, afterMc2 } = require('./helpers/mc2-db');
   const script = fs.readFileSync(path.join(ROOT, 'docs/store/US_1_0_LOCATION_A_SQL_EDITOR.sql'), 'utf8');
   assert.equal(script.split(MIGRATION).length - 1, 2, 'the migration appears verbatim twice: executed and recorded');
 
@@ -172,7 +172,6 @@ test('the SQL Editor script runs the migration verbatim, records it once and ref
     await db.exec(PLATFORM);
     // Same order as tests/helpers/mc2-db.js: S3.2 migrations build on MC2.
     const files = fs.readdirSync(DIR).filter((f) => f.endsWith('.sql') && f !== FILE && !f.startsWith('20261014180000')).sort();
-    const afterMc2 = (f) => f > FILE && /_s32_/.test(f);
     for (const f of files.filter((f) => !afterMc2(f))) await db.exec(fs.readFileSync(path.join(DIR, f), 'utf8'));
     await db.exec(SEED);
     await db.exec(MC2());
