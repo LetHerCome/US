@@ -189,3 +189,11 @@ Only durable decisions belong here. New missions should not reopen them without 
 - Il check-in settimanale resta **solo su US-STAGING** (SQL, `send-web-push` v11, APK QA e anteprima web) per un periodo di prova. **Non va in produzione**: niente SQL, Edge, merge su `main` né AAB su Play finché il founder non decide diversamente.
 - Il branch `claude/payred-app-comparison-b2594e` resta aperto, senza PR verso `main`.
 - **Direzione di prodotto:** da Paired si prende ispirazione, senza copiarne le funzioni. US non è terapia di coppia. L'obiettivo è un'esperienza più fluida e più ricca di contenuti, coerente con il core di US; tra le idee, compagni oltre il gatto (Maudit).
+
+## 2026-10-22 — Eccezione a D5: Il vostro anno (riepilogo dell'anniversario)
+
+**Fonte:** richiesta esplicita del founder del 22/10/2026 («vai facciamo riepilogo anniversario»), dopo il confronto con Paired.
+
+- Il riepilogo dell'anniversario «Il vostro anno» ([spec](missions/year-recap-v1.md)) si fa adesso, in deroga al freeze D5, **solo** per questa missione.
+- È fatto con i dati veri della coppia, è privato (niente condivisione esterna nella V1) e non contiene punteggi né classifiche.
+- **Governance:** il lavoro va sul branch e su staging. Merge, SQL ed Edge in produzione e pubblicazione hanno ciascuno un'approvazione separata.
