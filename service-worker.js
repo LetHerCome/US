@@ -1,4 +1,4 @@
-const BUILD_ID = "us-fluidita-20261022-23";
+const BUILD_ID = "us-il-vostro-anno-20261022-24";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -55,6 +55,8 @@ const APP_SHELL = [
   versioned("/countdown.js"),
   versioned("/weekly-checkin.css"),
   versioned("/weekly-checkin.js"),
+  versioned("/year-recap.css"),
+  versioned("/year-recap.js"),
   versioned("/pet.css"),
   versioned("/pet.js"),
   versioned("/settings.css"),

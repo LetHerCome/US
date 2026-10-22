@@ -836,6 +836,7 @@ async function clearPrivateDeviceState(profileId=window.usProfile?.id||''){
   window.UsCoupleContext?.clear?.();
   window.USCountdown?.reset?.();
   window.UsWeeklyCheckin?.reset?.();
+  window.UsYearRecap?.reset?.();
   try{US_SIGNED_URL_CACHE.clear();}catch(_e){}
   const storageKeys=[
     'us:fix4:last-profile',
@@ -2487,7 +2488,9 @@ function celebrationTodayPriorityViewModel(startedOn,todayISO){
     :(day.months===1?'Oggi è un mese ♡':`Oggi sono ${day.months} mesi ♡`);
   return {
     id:`celebration:${todayISO}`,factKey:`celebration:${todayISO}`,arrivalType:'monthiversary',category:'celebration',attention:true,
-    title,detail:day.years?'Il vostro anniversario':'Il vostro mesiversario',action:'events',actionLabel:'Apri'
+    title,detail:day.years?'Il vostro anniversario':'Il vostro mesiversario',
+    // The anniversary opens Il vostro anno (year-recap.js); a monthiversary, Eventi.
+    action:day.years?'recap':'events',actionLabel:day.years?'Guarda il vostro anno':'Apri'
   };
 }
 function oggiStartedOn(){
@@ -2785,6 +2788,7 @@ document.getElementById('usTodayPriorityRegion')?.addEventListener('click',event
   }
   if(action==='mission')window.openOggiMission?.();
   if(action==='checkin')window.UsWeeklyCheckin?.open?.();
+  if(action==='recap')window.UsYearRecap?.open?.();
 });
 // M10.2 — nascondere l'avviso "Risposte pronte" = "non lo voglio più su Oggi",
 // MAI "ho visto le risposte". L'autorità è window.dismissDailyRevealNotice

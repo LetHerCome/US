@@ -72,6 +72,12 @@ const layers=[
     close:()=>window.closeNoiSection?.()
   },
   {
+    name:'year-recap',
+    find:()=>document.getElementById('usRecapSheet'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsYearRecap?.close?.()
+  },
+  {
     name:'weekly-checkin',
     find:()=>document.getElementById('usCheckinSheet'),
     open:el=>el?.classList.contains('open'),
