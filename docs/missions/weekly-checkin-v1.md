@@ -200,6 +200,13 @@ public.weekly_checkin_keepsakes       -- modello M12B.4, immutabile, scritto sol
      - Test: [`tests/weekly-checkin-v1-push.test.js`](../../tests/weekly-checkin-v1-push.test.js), 8/8 partiti RED, e il JUnit delle frasi Android, 6/6.
      - Pubblicata solo su staging (v11).
 5. **Verifica:** browser con fixture, suite completa, build, review indipendente, prova su staging.
+   - **Prova su staging del 22/10/2026: QA_PASS, 11 passi su 11** ([script](weekly-checkin-v1-staging-qa.sql)). È un solo blocco annullato alla fine: due utenti sintetici e una coppia esistono solo dentro la transazione. Usa le RPC vere, come ciascun utente, e copre:
+     - coppia MC2, stato vuoto, sigillo, modifica e conflitto;
+     - reveal per entrambi, chiusura dopo il reveal, reazione;
+     - Conserva idempotente e protetto, nessuna lettura diretta della tabella;
+     - andamento, rifiuto di `anon`, export, uscita dalla coppia (il ricordo conservato resta).
+   - Dopo la prova staging è rimasto com'era: 3 utenti, 3 profili, 3 coppie, 0 check-in, 0 utenti QA.
+   - **Non coperte:** la notifica reale (serve una sessione vera, quindi la copre il test sull'Edge) e il giro dalle schermate con due account veri.
 6. **Report** con il formato di `AGENTS.md`. Nessun merge, nessuna produzione.
 
 ## Decisioni del founder
