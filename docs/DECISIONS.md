@@ -173,3 +173,11 @@ Only durable decisions belong here. New missions should not reopen them without 
 - **Rientro dal background:** si aggiorna per prima la pagina sullo schermo; widget del telefono, Gioca fuori da Gioca, pallino di Ricordi, posizione, avatar e controllo aggiornamenti partono un attimo dopo (`usAfterForeground`, 0,9–2,5 s, poi quando il telefono è libero).
 - **Doppioni tolti:** al rientro le Stories si ricaricavano due volte (visibilitychange + focus) e Gioca due volte quando era la pagina aperta.
 - Da provare su un AAB firmato prima del merge (regola Boot/Auth del 07/10).
+
+## 2026-10-22 — Eccezione a D5: check-in settimanale di coppia
+
+**Fonte:** risposta esplicita del founder del 22/10/2026 alla spec [`weekly-checkin-v1`](missions/weekly-checkin-v1.md) («1. adesso»).
+
+- Il check-in settimanale di coppia (vicinanza, energia, apprezzamento, supporto) può essere implementato **prima della 1.0 Store**, in deroga al freeze D5. L'eccezione vale **solo** per questa missione e non riapre gli altri moduli congelati da D5.
+- Restano validi D4 (gratis, nessun paywall) e la product restraint del 04/10 (nessuna nuova tab, niente XP, streak o valute).
+- **Governance:** l'eccezione autorizza il lavoro sul branch e le prove su staging. Non autorizza merge, SQL o Edge in produzione, né la pubblicazione: ognuno di questi passi richiede un'approvazione separata.
