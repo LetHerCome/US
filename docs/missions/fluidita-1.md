@@ -29,7 +29,7 @@ L'app vera è stata aperta nel browser, a 390×844, con il backend finto della s
    - Usata nei primi caricamenti di Noi (calendario, eventi, momenti del giorno) e di Ricordi.
    - Nessun cambio di dati né di logica: cambia solo cosa si vede mentre si aspetta.
 2. **C — Testi inclusivi:** «entrambi» diventa «voi due», o una frase equivalente, nelle stringhe dell'interfaccia, con l'inglese allineato.
-3. **A — Transizione tra schede: decisione del founder.** È copiata dal mockup approvato «Due colori», quindi non si cambia senza un tuo sì. Le opzioni:
+3. **A — Transizione tra schede: decisa dal founder il 22/10/2026.** Scelta: accorciarla, con copertura 260 ms e rivelazione 340 ms (`due-colori.js`), stesso disegno e stessa curva. Misura nell'app vera, a pannello visibile: il contenuto compare dopo **300–320 ms** invece di ~490, e la transizione intera finisce in ~670 ms invece di ~1 s. Le opzioni che erano sul tavolo:
    - **Lasciarla com'è** (~490 ms).
    - **Accorciarla, consigliato:** copertura 440 → 260 ms e rivelazione 560 → 340 ms. Il contenuto compare dopo ~280 ms; stesso disegno e stessa onda di colore, solo più svelta.
    - **Toglierla:** cambio istantaneo con una dissolvenza breve, come già succede con «riduci animazioni».

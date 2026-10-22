@@ -51,3 +51,11 @@ test('the interface says «voi due», never «entrambi»', () => {
     assert.ok(en.includes(`'${key}'`), `English for «${key}»`);
   }
 });
+
+test('tab change: the Due colori tide is quicker (founder, 22/10), same shape and easing', () => {
+  const js = read('due-colori.js');
+  assert.match(js, /const COVER_MS = 260;/);
+  assert.match(js, /const REVEAL_MS = 340;/);
+  assert.match(js, /const IO = 'cubic-bezier\(\.7,0,\.2,1\)';/, 'same easing as the mockup');
+  assert.match(js, /const FADE_MS = 180;/, 'reduced motion keeps its short fade');
+});
