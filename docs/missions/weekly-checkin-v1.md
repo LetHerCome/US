@@ -193,7 +193,12 @@ public.weekly_checkin_keepsakes       -- modello M12B.4, immutabile, scritto sol
    - Test: [`tests/weekly-checkin-v1-client.test.js`](../../tests/weekly-checkin-v1-client.test.js), 12/12, partiti RED.
    - Diverso dalla spec: la domanda sulla vicinanza è neutra rispetto al genere («Quanta vicinanza hai sentito con {name}…»).
    - Il limite della precache passa da 2,8 a 2,85 MB (circa 45 KB in più).
-   - **Restano le notifiche (fase 3):** il client chiama già `send-web-push` con `weekly_checkin_answer`, ma l'Edge non conosce ancora quel tipo e lo rifiuta senza effetti.
+   - **Notifiche (fase 3), fatte il 22/10/2026:**
+     - `send-web-push` accetta `weekly_checkin_answer`, rilegge il giro dal database e avvisa **solo l'altra persona**: «{nome} ha fatto il punto della settimana. Ora tocca a te.», oppure «Il vostro punto della settimana è pronto ♡». Come la Daily, chi fa scattare il reveal lo vede già nell'app.
+     - Deduplica per settimana; rispetta l'interruttore notifiche di Oggi; mai testi scritti nel pacchetto.
+     - Android: `checkin_turn` e `checkin_ready` con le frasi IT/EN in `UsPushNotices.java`. Arrivano con il prossimo AAB; fino ad allora compare la frase generica.
+     - Test: [`tests/weekly-checkin-v1-push.test.js`](../../tests/weekly-checkin-v1-push.test.js), 8/8 partiti RED, e il JUnit delle frasi Android, 6/6.
+     - Pubblicata solo su staging (v11).
 5. **Verifica:** browser con fixture, suite completa, build, review indipendente, prova su staging.
 6. **Report** con il formato di `AGENTS.md`. Nessun merge, nessuna produzione.
 

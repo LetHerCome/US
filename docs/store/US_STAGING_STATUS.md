@@ -32,6 +32,8 @@ Auth settings, Edge secrets and data are intentionally different: no copied prod
 
 **Not yet in production.**
 
+**Edge ahead of production, staging only (22/10):** `send-web-push` v11 with the `weekly_checkin_answer` event (phase 3 of the check-in), deployed from the mission worktree. The 8 functions ported earlier in the day are therefore no longer all identical to production: `send-web-push` differs by this event only.
+
 ## Update 2026-10-17
 
 - **#190 + #196 on US-STAGING:** migrations and Edge functions applied (manually, never `db push`). Not in production.

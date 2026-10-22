@@ -96,6 +96,9 @@ const CATALOGUE = Object.freeze({
   calendar_reminder: (a) => ({ title: 'US. · Calendar', body: a.body, target: 'calendar', ref: a.entryId, tag: `calendar-reminder-${a.reminderId}`, channel: 'reminders', urgency: 'high' }),
   // A11/N7: mesiversario / anniversario, no points in the text, opens Eventi.
   relationship: (a, en) => ({ ...relationshipCopy(a, en), target: a.kind ? 'events' : 'home', tag: a.tag, channel: 'reminders', urgency: 'normal', ttl: 60 * 60 * 24 }),
+  // Weekly check-in V1 (Il punto della settimana): who answered, never what.
+  weekly_checkin_turn: (a, en) => ({ title: pick(en, 'US. · Il punto della settimana', 'US. · Weekly check-in'), body: pick(en, `${name(a.senderName)} ha fatto il punto della settimana. Ora tocca a te.`, `${name(a.senderName, true)} did the weekly check-in. Your turn now.`), target: 'today', tag: `weekly-checkin-turn-${a.week}`, channel: 'partner', urgency: 'normal' }),
+  weekly_checkin_reveal: (a, en) => ({ title: pick(en, 'US. · Il punto della settimana', 'US. · Weekly check-in'), body: pick(en, 'Il vostro punto della settimana è pronto ♡', 'Your weekly check-in is ready ♡'), target: 'today', tag: `weekly-checkin-reveal-${a.week}`, channel: 'partner', urgency: 'normal' }),
   // A2: the partner accepted the invite; sent once, to the creator.
   partner_joined: (a, en) => ({ title: 'US.', body: pick(en, `${name(a.senderName)} ha accettato l’invito: il vostro spazio è pronto`, `${name(a.senderName, true)} joined: your space is ready`), target: 'home', tag: 'us-partner-joined', channel: 'partner', urgency: 'normal' }),
 });

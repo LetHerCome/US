@@ -36,7 +36,7 @@ public final class UsPushNotices {
     public static final String[] KINDS = {
         "test", "think", "think_reply", "daily_turn", "daily_ready", "daily_reaction", "daily_new",
         "quest", "left_for_you", "game_turn", "game_ready", "game_weekly", "game_weekly_turn",
-        "calendar", "anniversary", "partner_joined",
+        "calendar", "anniversary", "partner_joined", "checkin_turn", "checkin_ready",
     };
 
     /** A display name: no control characters, trimmed, at most 40 characters. */
@@ -102,6 +102,12 @@ public final class UsPushNotices {
             case "partner_joined":
                 return notice(en, "US.", "US.",
                     who + " ha accettato l'invito: il vostro spazio è pronto", who + " joined: your space is ready", "oggi");
+            case "checkin_turn":
+                return notice(en, "US. · Il punto della settimana", "US. · Weekly check-in",
+                    who + " ha fatto il punto della settimana. Ora tocca a te.", who + " did the weekly check-in. Your turn now.", "oggi");
+            case "checkin_ready":
+                return notice(en, "US. · Il punto della settimana", "US. · Weekly check-in",
+                    "Il vostro punto della settimana è pronto ♡", "Your weekly check-in is ready ♡", "oggi");
             default:
                 return new Notice(FALLBACK_TITLE, FALLBACK_BODY, "oggi");
         }

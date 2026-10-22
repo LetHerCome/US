@@ -11,8 +11,14 @@ import { nativeTransport } from "../_shared/native-push-env.ts";
 const VAPID_PUBLIC_KEY = "BChjUsr-rF5fq-qgLrbsFn76z9GQaWJ7-a-_UX0gzU6hkSRC4r4GLwmQLtkuad_ntDBE6Fhr76jr_r7OBQdfuss";
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization,x-client-info,apikey,content-type", "Access-Control-Allow-Methods": "POST,OPTIONS", "Content-Type": "application/json" };
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: cors });
-type EventType = "test" | "think" | "think_reaction" | "daily_answer" | "daily_reaction" | "quest_confirmed" | "left_for_you" | "partner_joined";
-const EVENT_TYPES: EventType[] = ["test", "think", "think_reaction", "daily_answer", "daily_reaction", "quest_confirmed", "left_for_you", "partner_joined"];
+type EventType = "test" | "think" | "think_reaction" | "daily_answer" | "daily_reaction" | "quest_confirmed" | "left_for_you" | "partner_joined" | "weekly_checkin_answer";
+const EVENT_TYPES: EventType[] = ["test", "think", "think_reaction", "daily_answer", "daily_reaction", "quest_confirmed", "left_for_you", "partner_joined", "weekly_checkin_answer"];
+// A week of Il punto della settimana: its Monday (Europe/Rome), as stored.
+const isMonday = (value: unknown) => {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const day = new Date(`${value}T12:00:00Z`);
+  return Number.isFinite(+day) && day.toISOString().slice(0, 10) === value && day.getUTCDay() === 1;
+};
 // US 1.0 (A2): a join older than this is not "just joined" (legacy couples, stale retries).
 const PARTNER_JOINED_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -130,6 +136,27 @@ Deno.serve(async (request) => {
       } else {
         compose = async (locale) => buildNotification("daily_answer", { questionId, senderName: sender.display_name, locale });
         dedupeKey = `daily-answer:${questionId}:${sender.id}`;
+      }
+    }
+    if (type === "weekly_checkin_answer") {
+      // Weekly check-in V1: reference_id = the week (its Monday) the caller
+      // just answered (submit_weekly_checkin). The round is read back here;
+      // like the Daily, the other is told, never the one who just answered,
+      // and nothing written ever travels in the notification.
+      if (!partner || !isMonday(body.reference_id)) return json({ error: "Missing weekly check-in reference" }, 400);
+      const week = body.reference_id as string;
+      const { data: rows, error } = await admin.from("weekly_checkins").select("user_id").eq("couple_id", sender.couple_id).eq("week_start", week);
+      if (error) throw error;
+      const answered = new Set((rows || []).map((row: { user_id: string }) => row.user_id));
+      if (!answered.has(sender.id)) return json({ error: "Check-in not saved" }, 409);
+      prefKey = "today";
+      recipientIds = [partner.id];
+      if (answered.has(partner.id)) {
+        compose = async (locale) => buildNotification("weekly_checkin_reveal", { week, locale });
+        dedupeKey = `weekly-checkin-reveal:${sender.couple_id}:${week}`;
+      } else {
+        compose = async (locale) => buildNotification("weekly_checkin_turn", { week, senderName: sender.display_name, locale });
+        dedupeKey = `weekly-checkin-turn:${sender.couple_id}:${week}:${sender.id}`;
       }
     }
     if (type === "daily_reaction") {

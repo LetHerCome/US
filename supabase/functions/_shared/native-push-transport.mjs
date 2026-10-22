@@ -135,6 +135,8 @@ export const ANDROID_NOTICE_KINDS = Object.freeze({
   calendar_reminder: 'calendar',
   relationship: 'anniversary',
   partner_joined: 'partner_joined',
+  weekly_checkin_turn: 'checkin_turn',
+  weekly_checkin_reveal: 'checkin_ready',
 });
 const INSTALLATION_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

@@ -70,9 +70,11 @@ test('M10.2 nessuna notifica per reazioni/receipt: send-web-push invariato, ness
   // dispatcher (86c82fe29cf56725d64a161169700c9ff4ce6c1ded21d4da2a40570c3a01f39a).
   // US 1.0 (founder decisions A2, A6, N5, O2, O7) changed it on purpose:
   // daily_reaction and partner_joined events, the reveal only to the partner,
-  // copy in the recipient's language. Pinned again:
-  assert.equal(crypto.createHash('sha256').update(beforeF2C, 'utf8').digest('hex'), '6a4bffaeb2f98f3609f0b217e4a80de22ea8b2804664db8d4f53d32f66e24ee5', 'send-web-push content is the US 1.0 source plus only the F2C VAPID edit');
-  assert.match(edge, /const EVENT_TYPES: EventType\[\] = \["test", "think", "think_reaction", "daily_answer", "daily_reaction", "quest_confirmed", "left_for_you", "partner_joined"\];/, 'the US 1.0 event types, no other');
+  // copy in the recipient's language (6a4bffaeb2f98f3609f0b217e4a80de22ea8b2804664db8d4f53d32f66e24ee5).
+  // The weekly check-in (22/10, D5 exception) adds weekly_checkin_answer and
+  // nothing else; tests/weekly-checkin-v1-push.test.js covers it. Pinned again:
+  assert.equal(crypto.createHash('sha256').update(beforeF2C, 'utf8').digest('hex'), '26b24c63212d8a03159d5ac6bf4d67d9424db32b8915005ec231f7674589410f', 'send-web-push content is the US 1.0 source plus the weekly check-in and the F2C VAPID edit');
+  assert.match(edge, /const EVENT_TYPES: EventType\[\] = \["test", "think", "think_reaction", "daily_answer", "daily_reaction", "quest_confirmed", "left_for_you", "partner_joined", "weekly_checkin_answer"\];/, 'the US 1.0 event types and the weekly check-in, no other');
   const newPaths = [slice('// M10.2 — reveal Daily', 'let usTodayHydrateSeq=0;'), slice('installTodayNoticeSwipe(', 'window.UsTodayPriority=Object.freeze')].join('\n');
   // US 1.0 (O2): the reveal may ask for the one reaction push, nothing else.
   assert.doesNotMatch(newPaths.replace(/sendWebPushEvent\('daily_reaction',[^)]*\)/g, ''), /sendWebPushEvent|push_event_log|sendNotification/);
