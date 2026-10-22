@@ -1,0 +1,149 @@
+{
+  "family": "quests",
+  "new": [
+    {
+      "key": "any-hug-twenty",
+      "mode": "any",
+      "category": "connection",
+      "rarity": "common",
+      "xp": 25,
+      "title": "Abbracciatevi per almeno venti secondi: vince chi molla per ultimo.",
+      "title_en": "Hug for at least twenty seconds: whoever lets go last wins."
+    },
+    {
+      "key": "any-compliment-swap",
+      "mode": "any",
+      "category": "connection",
+      "rarity": "common",
+      "xp": 25,
+      "title": "Fatevi tre complimenti a testa, uno serio, uno buffo e uno inaspettato.",
+      "title_en": "Give each other three compliments each: one serious, one silly, one unexpected."
+    },
+    {
+      "key": "any-childhood-song",
+      "mode": "any",
+      "category": "discover",
+      "rarity": "common",
+      "xp": 25,
+      "title": "Fatevi ascoltare a vicenda una canzone della vostra infanzia.",
+      "title_en": "Play each other a song from your childhood."
+    },
+    {
+      "key": "any-hidden-note",
+      "mode": "any",
+      "category": "surprise",
+      "rarity": "common",
+      "xp": 25,
+      "title": "Nascondete un piccolo messaggio in un posto dove verrà trovato per caso.",
+      "title_en": "Hide a little message somewhere it will be found by chance."
+    },
+    {
+      "key": "far-same-dinner",
+      "mode": "far",
+      "category": "fun",
+      "rarity": "common",
+      "xp": 25,
+      "title": "Cucinate la stessa ricetta nello stesso momento e confrontate il risultato in foto.",
+      "title_en": "Cook the same recipe at the same time and compare the results in photos."
+    },
+    {
+      "key": "near-no-plan-hour",
+      "mode": "near",
+      "category": "adventure",
+      "rarity": "common",
+      "xp": 25,
+      "title": "Uscite per un’ora senza meta: a ogni incrocio decidete a turno.",
+      "title_en": "Go out for an hour with no destination: take turns deciding at every crossing."
+    },
+    {
+      "key": "any-secret-favour",
+      "mode": "any",
+      "category": "surprise",
+      "rarity": "uncommon",
+      "xp": 40,
+      "title": "Fatevi a vicenda un piccolo favore segreto, senza dirlo, e vedete chi se ne accorge.",
+      "title_en": "Do each other a small secret favour, without saying so, and see who notices."
+    },
+    {
+      "key": "any-top-five-memories",
+      "mode": "any",
+      "category": "memory",
+      "rarity": "uncommon",
+      "xp": 40,
+      "title": "Scrivete a testa la vostra top 5 dei momenti insieme, poi confrontatele.",
+      "title_en": "Each write your top 5 moments together, then compare them."
+    },
+    {
+      "key": "any-new-word",
+      "mode": "any",
+      "category": "fun",
+      "rarity": "uncommon",
+      "xp": 40,
+      "title": "Inventate una parola tutta vostra e usatela almeno tre volte questa settimana.",
+      "title_en": "Invent a word all your own and use it at least three times this week."
+    },
+    {
+      "key": "far-postcard",
+      "mode": "far",
+      "category": "surprise",
+      "rarity": "uncommon",
+      "xp": 40,
+      "title": "Speditevi a vicenda una cartolina vera, anche dalla vostra città.",
+      "title_en": "Send each other a real postcard, even from your own town."
+    },
+    {
+      "key": "near-dance-kitchen",
+      "mode": "near",
+      "category": "fun",
+      "rarity": "uncommon",
+      "xp": 40,
+      "title": "Ballate insieme una canzone intera, dove capita, anche in cucina.",
+      "title_en": "Dance a whole song together, wherever you are, even in the kitchen."
+    },
+    {
+      "key": "near-tourists-at-home",
+      "mode": "near",
+      "category": "adventure",
+      "rarity": "uncommon",
+      "xp": 40,
+      "title": "Fate i turisti nella vostra città per un pomeriggio, foto ricordo comprese.",
+      "title_en": "Play tourists in your own city for an afternoon, souvenir photos included."
+    },
+    {
+      "key": "any-future-letter",
+      "mode": "any",
+      "category": "memory",
+      "rarity": "rare",
+      "xp": 60,
+      "title": "Scrivetevi una lettera da aprire tra un anno e salvatela in un posto sicuro.",
+      "title_en": "Write each other a letter to open in a year and keep it somewhere safe."
+    },
+    {
+      "key": "far-guided-walk",
+      "mode": "far",
+      "category": "connection",
+      "rarity": "rare",
+      "xp": 60,
+      "title": "Fate una passeggiata in chiamata, raccontandovi a vicenda cosa vedete.",
+      "title_en": "Take a walk together on a call, describing to each other what you see."
+    },
+    {
+      "key": "near-blind-tasting",
+      "mode": "near",
+      "category": "fun",
+      "rarity": "rare",
+      "xp": 60,
+      "title": "Preparatevi una degustazione alla cieca di tre cose da indovinare.",
+      "title_en": "Set up a blind tasting of three things for each other to guess."
+    },
+    {
+      "key": "any-perfect-day-plan",
+      "mode": "any",
+      "category": "adventure",
+      "rarity": "epic",
+      "xp": 100,
+      "title": "Organizzate a turno metà di una giornata perfetta, senza svelare il programma.",
+      "title_en": "Each plan half of a perfect day, without revealing the plan."
+    }
+  ]
+}

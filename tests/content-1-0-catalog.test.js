@@ -53,8 +53,9 @@ test('content 1.0: the migration comes after every other one and never deletes c
   // the US 1.0 server fixes (cron job and table privileges, no content) and the
   // S3.2 account deletion worker cron (a job, no content) and the time-neutral
   // wording of three questions (19/10, content only) and the weekly check-in
-  // (22/10, its own tables, no content) follow it.
-  assert.deepEqual(files.slice(files.indexOf(path.basename(MIGRATION_FILE)) + 1), ['20261014230000_us_1_0_locale_content_en.sql', '20261015000000_us_1_0_server_fixes.sql', '20261017120000_s32_account_deletion_worker_cron.sql', '20261019120000_us_1_0_content_time_neutral.sql', '20261022141913_weekly_checkin_v1.sql']);
+  // (22/10, its own tables, no content) and content 1.1 (22/10, new rows
+  // only, its own block and test) follow it.
+  assert.deepEqual(files.slice(files.indexOf(path.basename(MIGRATION_FILE)) + 1), ['20261014230000_us_1_0_locale_content_en.sql', '20261015000000_us_1_0_server_fixes.sql', '20261017120000_s32_account_deletion_worker_cron.sql', '20261019120000_us_1_0_content_time_neutral.sql', '20261022141913_weekly_checkin_v1.sql', '20261022160549_content_1_1.sql']);
   const code = MIGRATION.replace(/--.*$/gm, '').replace(/'(?:[^']|'')*'/g, "''");
   assert.ok(!/\bdelete\s+from\b|\btruncate\b|\bdrop\s+(?:table|column|policy|schema)\b/i.test(code), 'nothing is deleted');
   assert.ok(!/\bgrant\b|\bpolicy\b|row level security/i.test(code), 'grants and RLS stay as they are');

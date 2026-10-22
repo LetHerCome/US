@@ -1,0 +1,1499 @@
+{
+  "family": "games",
+  "new": [
+    {
+      "id": "quanto_mi_conosci-053",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "serata_libera_improvvisa",
+      "cooldown_class": "light",
+      "question_text": "Ti si libera la serata all’improvviso. Cosa fai davvero?",
+      "predict_text": "Quando a {subject} si libera la serata all’improvviso, cosa fa davvero?",
+      "options": [
+        "Divano e coperta, senza discussioni",
+        "Chiamo qualcuno per uscire",
+        "Recupero una cosa lasciata a metà",
+        "Cucino qualcosa di buono"
+      ],
+      "question_text_en": "Your evening suddenly frees up. What do you really do?",
+      "predict_text_en": "When {subject}’s evening suddenly frees up, what do they really do?",
+      "options_en": [
+        "Couch and blanket, no debate",
+        "Call someone to go out",
+        "Finish something I left halfway",
+        "Cook something good"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-054",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "ordinare_al_ristorante",
+      "cooldown_class": "light",
+      "question_text": "Al ristorante, come scegli cosa ordinare?",
+      "predict_text": "Al ristorante, come sceglie {subject} cosa ordinare?",
+      "options": [
+        "Sempre lo stesso piatto",
+        "Il più strano del menù",
+        "Quello che prende chi è al tavolo",
+        "Chiedo al cameriere"
+      ],
+      "question_text_en": "At a restaurant, how do you choose what to order?",
+      "predict_text_en": "At a restaurant, how does {subject} choose what to order?",
+      "options_en": [
+        "Always the same dish",
+        "The strangest thing on the menu",
+        "Whatever someone at the table gets",
+        "I ask the waiter"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-055",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "superpotere_quotidiano",
+      "cooldown_class": "light",
+      "question_text": "Quale di questi poteri ti cambierebbe di più la vita di tutti i giorni?",
+      "predict_text": "Quale di questi poteri cambierebbe di più la vita di tutti i giorni di {subject}?",
+      "options": [
+        "Non avere mai sonno",
+        "Teletrasportarmi ovunque",
+        "Capire tutte le lingue",
+        "Fermare il tempo per dieci minuti"
+      ],
+      "question_text_en": "Which of these powers would change your everyday life the most?",
+      "predict_text_en": "Which of these powers would change {subject}’s everyday life the most?",
+      "options_en": [
+        "Never feeling sleepy",
+        "Teleporting anywhere",
+        "Understanding every language",
+        "Stopping time for ten minutes"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-056",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "colazione_perfetta",
+      "cooldown_class": "light",
+      "question_text": "Qual è la tua colazione perfetta, senza pensare alle calorie?",
+      "predict_text": "Qual è la colazione perfetta di {subject}, senza pensare alle calorie?",
+      "options": [
+        "Dolce: cornetto e cappuccino",
+        "Salata: uova e pane tostato",
+        "Frutta e yogurt",
+        "Solo caffè, il resto dopo"
+      ],
+      "question_text_en": "What’s your perfect breakfast, calories aside?",
+      "predict_text_en": "What’s {subject}’s perfect breakfast, calories aside?",
+      "options_en": [
+        "Sweet: pastry and cappuccino",
+        "Savoury: eggs and toast",
+        "Fruit and yogurt",
+        "Just coffee, the rest later"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-057",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "vacanza_ideale",
+      "cooldown_class": "light",
+      "question_text": "Che tipo di vacanza ti ricarica davvero?",
+      "predict_text": "Che tipo di vacanza ricarica davvero {subject}?",
+      "options": [
+        "Mare e niente programmi",
+        "Città d’arte da girare a piedi",
+        "Montagna e sentieri",
+        "Un posto nuovo ogni giorno"
+      ],
+      "question_text_en": "What kind of holiday really recharges you?",
+      "predict_text_en": "What kind of holiday really recharges {subject}?",
+      "options_en": [
+        "Sea and no plans",
+        "An art city to explore on foot",
+        "Mountains and trails",
+        "A new place every day"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-058",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "film_scelta",
+      "cooldown_class": "light",
+      "question_text": "Stasera scegli tu il film. Che genere esce?",
+      "predict_text": "Stasera il film lo sceglie {subject}. Che genere esce?",
+      "options": [
+        "Commedia, per ridere",
+        "Thriller, per stare sul divano col fiato sospeso",
+        "Una storia d’amore",
+        "Un documentario su qualcosa di strano"
+      ],
+      "question_text_en": "Tonight you pick the film. What genre is it?",
+      "predict_text_en": "Tonight {subject} picks the film. What genre is it?",
+      "options_en": [
+        "A comedy, to laugh",
+        "A thriller, on the edge of the couch",
+        "A love story",
+        "A documentary about something odd"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-059",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "regalo_con_cento_euro",
+      "cooldown_class": "light",
+      "question_text": "Trovi cento euro dimenticati in una giacca. Come li spendi?",
+      "predict_text": "{subject} trova cento euro dimenticati in una giacca. Come li spende?",
+      "options": [
+        "Una cena fuori",
+        "Un regalo per qualcuno",
+        "Li metto da parte",
+        "Una cosa che volevo da tempo"
+      ],
+      "question_text_en": "You find a hundred euros forgotten in a jacket. How do you spend it?",
+      "predict_text_en": "{subject} finds a hundred euros forgotten in a jacket. How do they spend it?",
+      "options_en": [
+        "A dinner out",
+        "A gift for someone",
+        "I save it",
+        "Something I’ve wanted for ages"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-060",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "mattina_di_festa",
+      "cooldown_class": "light",
+      "question_text": "È un giorno di festa e la sveglia è spenta. A che ora ti alzi?",
+      "predict_text": "È un giorno di festa e la sveglia è spenta. A che ora si alza {subject}?",
+      "options": [
+        "Presto lo stesso, come sempre",
+        "Verso le nove, con calma",
+        "A mezzogiorno, senza rimorsi",
+        "Dipende da chi mi sveglia"
+      ],
+      "question_text_en": "It’s a holiday and the alarm is off. What time do you get up?",
+      "predict_text_en": "It’s a holiday and the alarm is off. What time does {subject} get up?",
+      "options_en": [
+        "Early anyway, as always",
+        "Around nine, slowly",
+        "At noon, no regrets",
+        "Depends who wakes me"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-061",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "gesto_che_mi_piace",
+      "cooldown_class": "standard",
+      "question_text": "Quale gesto ti fa sentire più amore, in una giornata qualunque?",
+      "predict_text": "Quale gesto fa sentire più amore a {subject}, in una giornata qualunque?",
+      "options": [
+        "Un messaggio a sorpresa",
+        "Un abbraccio senza motivo",
+        "Una cosa fatta al posto mio",
+        "Tempo insieme, senza telefono"
+      ],
+      "question_text_en": "Which gesture makes you feel most loved, on an ordinary day?",
+      "predict_text_en": "Which gesture makes {subject} feel most loved, on an ordinary day?",
+      "options_en": [
+        "A surprise message",
+        "A hug for no reason",
+        "Something done for me",
+        "Time together, phones away"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-062",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "festa_dove_sto",
+      "cooldown_class": "standard",
+      "question_text": "A una festa dove conosci poche persone, dove ti trovo dopo un’ora?",
+      "predict_text": "A una festa dove conosce poche persone, dove trovi {subject} dopo un’ora?",
+      "options": [
+        "Al centro di un gruppo nuovo",
+        "Vicino al cibo",
+        "In cucina con una sola persona",
+        "Accanto a te, per tutto il tempo"
+      ],
+      "question_text_en": "At a party where you know few people, where do I find you after an hour?",
+      "predict_text_en": "At a party where they know few people, where do you find {subject} after an hour?",
+      "options_en": [
+        "In the middle of a new group",
+        "Near the food",
+        "In the kitchen with one person",
+        "Next to you, the whole time"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-063",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "messaggio_non_letto",
+      "cooldown_class": "standard",
+      "question_text": "Hai trenta messaggi non letti. Cosa fai?",
+      "predict_text": "{subject} ha trenta messaggi non letti. Cosa fa?",
+      "options": [
+        "Li leggo tutti, subito",
+        "Rispondo solo a quelli importanti",
+        "Li ignoro con grande serenità",
+        "Li segno come letti e non ci penso più"
+      ],
+      "question_text_en": "You have thirty unread messages. What do you do?",
+      "predict_text_en": "{subject} has thirty unread messages. What do they do?",
+      "options_en": [
+        "Read them all, right away",
+        "Answer only the important ones",
+        "Ignore them with great calm",
+        "Mark them as read and forget them"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-064",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "parte_preferita_di_un_viaggio",
+      "cooldown_class": "standard",
+      "question_text": "Di un viaggio insieme, cosa ti resta più impresso?",
+      "predict_text": "Di un viaggio insieme, cosa resta più impresso a {subject}?",
+      "options": [
+        "Il cibo",
+        "I posti visti",
+        "Le risate tra noi",
+        "Gli imprevisti"
+      ],
+      "question_text_en": "From a trip together, what stays with you most?",
+      "predict_text_en": "From a trip together, what stays with {subject} most?",
+      "options_en": [
+        "The food",
+        "The places we saw",
+        "Our laughs",
+        "The mishaps"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-065",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "modo_di_scusarsi",
+      "cooldown_class": "standard",
+      "question_text": "Quando ti accorgi di avere torto, come lo fai capire?",
+      "predict_text": "Quando {subject} si accorge di avere torto, come lo fa capire?",
+      "options": [
+        "Lo dico subito",
+        "Con un gesto gentile",
+        "Con una battuta",
+        "Ci metto un po’, ma arrivo"
+      ],
+      "question_text_en": "When you realise you’re in the wrong, how do you show it?",
+      "predict_text_en": "When {subject} realises they’re in the wrong, how do they show it?",
+      "options_en": [
+        "I say it right away",
+        "With a kind gesture",
+        "With a joke",
+        "It takes me a while, but I get there"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-066",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "lunedi_mattina",
+      "cooldown_class": "standard",
+      "question_text": "Lunedì mattina: com’è il tuo umore, onestamente?",
+      "predict_text": "Lunedì mattina: com’è l’umore di {subject}, onestamente?",
+      "options": [
+        "Carico, si riparte",
+        "Neutro, è un giorno come un altro",
+        "Lento, non parlatemi",
+        "Dipende da com’è andata la domenica"
+      ],
+      "question_text_en": "Monday morning: what’s your mood, honestly?",
+      "predict_text_en": "Monday morning: what’s {subject}’s mood, honestly?",
+      "options_en": [
+        "Fired up, here we go",
+        "Neutral, just another day",
+        "Slow, don’t talk to me",
+        "Depends on how Sunday went"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-067",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "cosa_mi_da_orgoglio",
+      "cooldown_class": "standard",
+      "question_text": "Quale di queste cose ti dà più orgoglio?",
+      "predict_text": "Quale di queste cose dà più orgoglio a {subject}?",
+      "options": [
+        "Come tratto le persone",
+        "Quello che ho imparato per conto mio",
+        "La mia testardaggine",
+        "Il mio gusto per le cose belle"
+      ],
+      "question_text_en": "Which of these are you proudest of?",
+      "predict_text_en": "Which of these is {subject} proudest of?",
+      "options_en": [
+        "How I treat people",
+        "What I taught myself",
+        "My stubbornness",
+        "My taste for beautiful things"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-068",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "giornata_storta_rimedio",
+      "cooldown_class": "standard",
+      "question_text": "La giornata è partita storta. Cosa la può ancora salvare?",
+      "predict_text": "La giornata di {subject} è partita storta. Cosa la può ancora salvare?",
+      "options": [
+        "Un buon pranzo",
+        "Una bella notizia",
+        "Sentire te",
+        "Una camminata per conto mio"
+      ],
+      "question_text_en": "The day got off on the wrong foot. What can still save it?",
+      "predict_text_en": "{subject}’s day got off on the wrong foot. What can still save it?",
+      "options_en": [
+        "A good lunch",
+        "Some good news",
+        "Hearing from you",
+        "A walk on my own"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-069",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "posto_in_macchina",
+      "cooldown_class": "standard",
+      "question_text": "In un viaggio in macchina, che ruolo ti prendi?",
+      "predict_text": "In un viaggio in macchina, che ruolo si prende {subject}?",
+      "options": [
+        "Guido io, sempre",
+        "Il DJ ufficiale",
+        "Navigatore e snack",
+        "Dormo dopo dieci minuti"
+      ],
+      "question_text_en": "On a road trip, what role do you take?",
+      "predict_text_en": "On a road trip, what role does {subject} take?",
+      "options_en": [
+        "I drive, always",
+        "The official DJ",
+        "Navigator and snacks",
+        "Asleep after ten minutes"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-070",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "segreto_custodito",
+      "cooldown_class": "standard",
+      "question_text": "Un’amicizia ti confida un segreto. Quanto resiste?",
+      "predict_text": "Qualcuno confida un segreto a {subject}. Quanto resiste?",
+      "options": [
+        "Per sempre, sono una tomba",
+        "Lo racconto solo a te",
+        "Finché non me lo scordo",
+        "Si capisce dalla mia faccia"
+      ],
+      "question_text_en": "A friend tells you a secret. How long does it last?",
+      "predict_text_en": "Someone tells {subject} a secret. How long does it last?",
+      "options_en": [
+        "Forever, my lips are sealed",
+        "I tell only you",
+        "Until I forget it",
+        "My face gives it away"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-071",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 3,
+      "topic": "cosa_mi_fa_sentire_a_casa",
+      "cooldown_class": "deep",
+      "question_text": "Cosa ti fa sentire a casa, ovunque tu sia?",
+      "predict_text": "Cosa fa sentire a casa {subject}, ovunque sia?",
+      "options": [
+        "Una persona accanto",
+        "Le mie cose intorno",
+        "Una routine conosciuta",
+        "Un buon pasto"
+      ],
+      "question_text_en": "What makes you feel at home, wherever you are?",
+      "predict_text_en": "What makes {subject} feel at home, wherever they are?",
+      "options_en": [
+        "Someone beside me",
+        "My things around me",
+        "A familiar routine",
+        "A good meal"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-072",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 3,
+      "topic": "sogno_nel_cassetto",
+      "cooldown_class": "deep",
+      "question_text": "Quale di questi sogni ti assomiglia di più?",
+      "predict_text": "Quale di questi sogni assomiglia di più a {subject}?",
+      "options": [
+        "Una casa piena di persone care",
+        "Girare il mondo",
+        "Creare qualcosa di mio",
+        "Una vita tranquilla, senza fretta"
+      ],
+      "question_text_en": "Which of these dreams is most like you?",
+      "predict_text_en": "Which of these dreams is most like {subject}?",
+      "options_en": [
+        "A home full of loved ones",
+        "Travelling the world",
+        "Creating something of my own",
+        "A quiet life, unhurried"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-073",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 3,
+      "topic": "quando_ti_penso",
+      "cooldown_class": "deep",
+      "question_text": "In quale momento della giornata mi pensi di più?",
+      "predict_text": "In quale momento della giornata {subject} ti pensa di più?",
+      "options": [
+        "Appena apro gli occhi",
+        "In pausa, a metà giornata",
+        "Tornando a casa",
+        "Prima di dormire"
+      ],
+      "question_text_en": "At what time of day do you think of me most?",
+      "predict_text_en": "At what time of day does {subject} think of you most?",
+      "options_en": [
+        "Right after waking up",
+        "On a midday break",
+        "On the way home",
+        "Before falling asleep"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-074",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 3,
+      "topic": "ricordo_preferito_di_noi",
+      "cooldown_class": "deep",
+      "question_text": "Che tipo di ricordo nostro ti porti dietro più volentieri?",
+      "predict_text": "Che tipo di ricordo vostro si porta dietro più volentieri {subject}?",
+      "options": [
+        "Un viaggio",
+        "Una serata qualunque",
+        "Una risata infinita",
+        "Una volta in cui ci siamo aiutati"
+      ],
+      "question_text_en": "What kind of memory of ours do you carry with you most happily?",
+      "predict_text_en": "What kind of memory of yours does {subject} carry most happily?",
+      "options_en": [
+        "A trip",
+        "An ordinary evening",
+        "An endless laugh",
+        "A time we helped each other"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-075",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 3,
+      "topic": "cosa_mi_emoziona_di_noi",
+      "cooldown_class": "deep",
+      "question_text": "Cosa ti emoziona di più, pensando a noi due?",
+      "predict_text": "Cosa emoziona di più {subject}, pensando a voi due?",
+      "options": [
+        "Quanto ridiamo",
+        "Quanto ci capiamo",
+        "Le cose che faremo",
+        "Le cose che abbiamo già fatto"
+      ],
+      "question_text_en": "What moves you most when you think of the two of us?",
+      "predict_text_en": "What moves {subject} most when they think of the two of you?",
+      "options_en": [
+        "How much we laugh",
+        "How well we understand each other",
+        "The things we’ll do",
+        "The things we’ve already done"
+      ]
+    },
+    {
+      "id": "quanto_mi_conosci-076",
+      "mechanic": "prediction",
+      "answer_kind": "choice",
+      "depth": 3,
+      "topic": "complimento_che_vorrei",
+      "cooldown_class": "deep",
+      "question_text": "Quale complimento da me ti farebbe più piacere sentire oggi?",
+      "predict_text": "Quale complimento da te farebbe più piacere a {subject} oggi?",
+      "options": [
+        "Che ti piaccio così come sono",
+        "Che sono una persona forte",
+        "Che mi trovi divertente",
+        "Che con me stai bene"
+      ],
+      "question_text_en": "Which compliment from me would you most love to hear today?",
+      "predict_text_en": "Which compliment from you would {subject} most love to hear today?",
+      "options_en": [
+        "That you like me just as I am",
+        "That I’m a strong person",
+        "That you find me funny",
+        "That you feel good with me"
+      ]
+    },
+    {
+      "id": "ridete-041",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "chi_piange_ai_cartoni",
+      "cooldown_class": "light",
+      "question_text": "Chi di noi due si commuove prima davanti a un film d’animazione?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Insieme, al primo minuto"
+      ],
+      "question_text_en": "Which of us gets teary first at an animated film?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "Both of us, in the first minute"
+      ]
+    },
+    {
+      "id": "ridete-042",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "chi_perde_le_chiavi",
+      "cooldown_class": "light",
+      "question_text": "Chi di noi due cerca le chiavi mentre le ha già in mano?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Pari: le chiavi ci odiano"
+      ],
+      "question_text_en": "Which of us looks for the keys while already holding them?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "A tie: keys hate us"
+      ]
+    },
+    {
+      "id": "ridete-043",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "chi_parla_con_le_piante",
+      "cooldown_class": "light",
+      "question_text": "Chi di noi due parla con piante, animali e oggetti come se rispondessero?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Noi due: e a volte rispondono"
+      ],
+      "question_text_en": "Which of us talks to plants, animals and objects as if they answer back?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "Both of us: and sometimes they do"
+      ]
+    },
+    {
+      "id": "ridete-044",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "chi_ordina_troppo",
+      "cooldown_class": "light",
+      "question_text": "Chi di noi due ordina sempre troppo cibo, «tanto avanza»?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Insieme: e non avanza mai"
+      ],
+      "question_text_en": "Which of us always orders too much food, “we’ll have leftovers”?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "Both of us: and there are never leftovers"
+      ]
+    },
+    {
+      "id": "ridete-045",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "chi_sbaglia_il_testo",
+      "cooldown_class": "light",
+      "question_text": "Chi di noi due canta le canzoni con parole completamente inventate?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Noi due, a squarciagola"
+      ],
+      "question_text_en": "Which of us sings songs with completely made-up lyrics?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "Both of us, at full volume"
+      ]
+    },
+    {
+      "id": "ridete-046",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "chi_vince_a_carte",
+      "cooldown_class": "light",
+      "question_text": "Chi di noi due chiede la rivincita finché non vince?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Pari: siamo ancora alla partita di ieri"
+      ],
+      "question_text_en": "Which of us asks for a rematch until they win?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "A tie: we’re still on yesterday’s game"
+      ]
+    },
+    {
+      "id": "ridete-047",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "chi_si_addormenta_in_viaggio",
+      "cooldown_class": "light",
+      "question_text": "Chi di noi due si addormenta in qualsiasi mezzo di trasporto, in qualsiasi posizione?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Noi due: ci svegliamo al capolinea"
+      ],
+      "question_text_en": "Which of us falls asleep on any kind of transport, in any position?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "Both of us: we wake up at the last stop"
+      ]
+    },
+    {
+      "id": "ridete-048",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "chi_fa_foto_al_cibo",
+      "cooldown_class": "light",
+      "question_text": "Chi di noi due non può toccare il piatto finché non ha fatto la foto?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Insieme: il cibo si raffredda sempre"
+      ],
+      "question_text_en": "Which of us can’t touch the plate until they’ve taken a photo?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "Both of us: the food always goes cold"
+      ]
+    },
+    {
+      "id": "ridete-049",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "chi_sbaglia_strada",
+      "cooldown_class": "light",
+      "question_text": "Chi di noi due dice «so io la strada» e poi non la sa?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Noi due: e ci perdiamo felici"
+      ],
+      "question_text_en": "Which of us says “I know the way” and then doesn’t?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "Both of us: and we get happily lost"
+      ]
+    },
+    {
+      "id": "ridete-050",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "chi_ride_alle_proprie_battute",
+      "cooldown_class": "light",
+      "question_text": "Chi di noi due ride delle proprie battute prima di finirle?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Pari: le finiamo raramente"
+      ],
+      "question_text_en": "Which of us laughs at their own jokes before finishing them?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "A tie: we rarely finish them"
+      ]
+    },
+    {
+      "id": "ridete-051",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "chi_ruba_la_coperta",
+      "cooldown_class": "light",
+      "question_text": "Chi di noi due conquista tutta la coperta durante un pisolino sul divano?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "La coperta si divide equamente, per legge"
+      ],
+      "question_text_en": "Which of us takes over the whole blanket during a nap on the couch?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "The blanket is split fairly, by law"
+      ]
+    },
+    {
+      "id": "ridete-052",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "chi_compra_cose_inutili",
+      "cooldown_class": "light",
+      "question_text": "Chi di noi due compra un oggetto inutile solo perché «era in offerta»?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Noi due: abbiamo un cassetto pieno"
+      ],
+      "question_text_en": "Which of us buys something useless just because “it was on sale”?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "Both of us: we have a drawer full"
+      ]
+    },
+    {
+      "id": "ridete-053",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "chi_spoilera",
+      "cooldown_class": "light",
+      "question_text": "Chi di noi due non resiste e svela come va a finire?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Nessuno: siamo una cassaforte"
+      ],
+      "question_text_en": "Which of us can’t help giving away the ending?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "Neither: we’re a vault"
+      ]
+    },
+    {
+      "id": "ridete-054",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "chi_balla_in_cucina",
+      "cooldown_class": "light",
+      "question_text": "Chi di noi due inizia a ballare in cucina senza motivo?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Noi due: la cucina è una pista"
+      ],
+      "question_text_en": "Which of us starts dancing in the kitchen for no reason?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "Both of us: the kitchen is a dance floor"
+      ]
+    },
+    {
+      "id": "ridete-055",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "nome_della_nostra_squadra",
+      "cooldown_class": "light",
+      "question_text": "Partecipiamo a una gara di coppie in TV. Come si chiama la nostra squadra, e qual è il nostro grido?",
+      "question_text_en": "We’re on a TV couples’ contest. What’s our team called, and what’s our battle cry?"
+    },
+    {
+      "id": "ridete-056",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "recensione_di_noi",
+      "cooldown_class": "light",
+      "question_text": "Scrivi una recensione a cinque stelle della nostra ultima serata, come su un sito di ristoranti.",
+      "question_text_en": "Write a five-star review of our last evening, restaurant-site style."
+    },
+    {
+      "id": "ridete-057",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "istruzioni_per_il_mio_umore",
+      "cooldown_class": "light",
+      "question_text": "Se il mio umore avesse un manuale d’uso, quale sarebbe la prima voce delle «Domande frequenti»?",
+      "question_text_en": "If my mood came with a user manual, what would be the first entry in the FAQ?"
+    },
+    {
+      "id": "ridete-058",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "mascotte_della_coppia",
+      "cooldown_class": "light",
+      "question_text": "Se la nostra coppia avesse una mascotte ufficiale, che animale sarebbe e come si chiamerebbe?",
+      "question_text_en": "If our couple had an official mascot, what animal would it be and what would it be called?"
+    },
+    {
+      "id": "ridete-059",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "titolo_della_nostra_giornata",
+      "cooldown_class": "light",
+      "question_text": "Racconta la nostra ultima domenica come il trailer di un film d’azione, in tre frasi.",
+      "question_text_en": "Tell the story of our last Sunday as an action-movie trailer, in three sentences."
+    },
+    {
+      "id": "ridete-060",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "premio_assurdo",
+      "cooldown_class": "light",
+      "question_text": "Mi consegnano un premio per un mio talento assurdo. Quale talento, e cosa dico nel discorso di ringraziamento?",
+      "question_text_en": "I’m handed an award for one of my absurd talents. Which talent, and what do I say in my thank-you speech?"
+    },
+    {
+      "id": "scopritevi-043",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "canzone_della_vita",
+      "cooldown_class": "light",
+      "question_text": "Se la tua vita avesse una colonna sonora, quale canzone partirebbe nei titoli di apertura?",
+      "question_text_en": "If your life had a soundtrack, which song would play over the opening credits?"
+    },
+    {
+      "id": "scopritevi-044",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "domenica_sera",
+      "cooldown_class": "light",
+      "question_text": "La domenica sera, cosa fai per prepararti alla settimana?",
+      "options": [
+        "Preparo tutto per il lunedì",
+        "Mi godo l’ultima serata",
+        "Doccia lunga e a letto presto",
+        "Faccio finta che non arrivi"
+      ],
+      "question_text_en": "On Sunday evening, what do you do to get ready for the week?",
+      "options_en": [
+        "Get everything ready for Monday",
+        "Enjoy the last evening",
+        "Long shower, early to bed",
+        "Pretend it isn’t coming"
+      ]
+    },
+    {
+      "id": "scopritevi-045",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "oggetto_senza_valore",
+      "cooldown_class": "light",
+      "question_text": "Quale oggetto senza valore conservi da anni, e che non butteresti mai?",
+      "question_text_en": "Which worthless object have you kept for years and would never throw away?"
+    },
+    {
+      "id": "scopritevi-046",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "imbattibile_da_piccoli",
+      "cooldown_class": "light",
+      "question_text": "In cosa ti sentivi imbattibile, durante l’infanzia?",
+      "question_text_en": "What did you feel unbeatable at when you were little?"
+    },
+    {
+      "id": "scopritevi-047",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "tipo_da_vacanza",
+      "cooldown_class": "light",
+      "question_text": "In vacanza, come passi davvero le giornate?",
+      "options": [
+        "Programma ogni ora",
+        "Si decide a colazione",
+        "Ozio totale",
+        "Voglio vedere tutto, anche a pezzi"
+      ],
+      "question_text_en": "On holiday, how do you really spend your days?",
+      "options_en": [
+        "Every hour planned",
+        "We decide at breakfast",
+        "Total idleness",
+        "I want to see everything, even exhausted"
+      ]
+    },
+    {
+      "id": "scopritevi-048",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "imparato_da_grande",
+      "cooldown_class": "standard",
+      "question_text": "Qual è una cosa che hai imparato a fare da grande e che ancora ti dà soddisfazione?",
+      "question_text_en": "What’s something you learned to do as a grown-up that still feels good?"
+    },
+    {
+      "id": "scopritevi-049",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "persona_che_mi_ha_cambiato",
+      "cooldown_class": "standard",
+      "question_text": "Chi, oltre alla tua famiglia, ha cambiato il tuo modo di vedere le cose?",
+      "question_text_en": "Who, besides your family, changed the way you see things?"
+    },
+    {
+      "id": "scopritevi-050",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "cosa_mi_rilassa_davvero",
+      "cooldown_class": "standard",
+      "question_text": "Quando sei sotto pressione, cosa ti rimette in piedi più in fretta?",
+      "options": [
+        "Una lista e un piano",
+        "Sfogarmi con qualcuno",
+        "Staccare del tutto per un po’",
+        "Fare qualcosa con le mani"
+      ],
+      "question_text_en": "When you’re under pressure, what gets you back on your feet fastest?",
+      "options_en": [
+        "A list and a plan",
+        "Venting to someone",
+        "Switching off completely for a while",
+        "Doing something with my hands"
+      ]
+    },
+    {
+      "id": "scopritevi-051",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "giornata_perfetta_da_soli",
+      "cooldown_class": "standard",
+      "question_text": "Descrivi una giornata perfetta tutta per te, dalla sveglia alla buonanotte.",
+      "question_text_en": "Describe a perfect day just for you, from waking up to goodnight."
+    },
+    {
+      "id": "scopritevi-052",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "lezione_di_tre_ore",
+      "cooldown_class": "standard",
+      "question_text": "Su quale argomento potresti seguire una lezione di tre ore senza annoiarti?",
+      "question_text_en": "What topic could you listen to a three-hour lecture on without getting bored?"
+    },
+    {
+      "id": "scopritevi-053",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "festeggiare_una_bella_notizia",
+      "cooldown_class": "standard",
+      "question_text": "Quando ti succede una cosa bella, come ti piace festeggiarla?",
+      "options": [
+        "Con tutti, a gran voce",
+        "Con poche persone care",
+        "Solo noi due",
+        "Me la godo in silenzio"
+      ],
+      "question_text_en": "When something good happens to you, how do you like to celebrate it?",
+      "options_en": [
+        "With everyone, loudly",
+        "With a few dear people",
+        "Just the two of us",
+        "I enjoy it quietly"
+      ]
+    },
+    {
+      "id": "scopritevi-054",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "abitudine_che_vorrei",
+      "cooldown_class": "standard",
+      "question_text": "Quale abitudine ammiri negli altri e ti piacerebbe avere anche tu?",
+      "question_text_en": "Which habit do you admire in others and wish you had too?"
+    },
+    {
+      "id": "scopritevi-055",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 3,
+      "topic": "cosa_mi_emoziona_in_segreto",
+      "cooldown_class": "deep",
+      "question_text": "Qual è una cosa piccola che ti emoziona sempre, anche se non lo dai a vedere?",
+      "question_text_en": "What’s a small thing that always moves you, even if you don’t let it show?"
+    },
+    {
+      "id": "scopritevi-056",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 3,
+      "topic": "versione_migliore",
+      "cooldown_class": "deep",
+      "question_text": "In quali momenti ti piaci di più, e cosa stai facendo?",
+      "question_text_en": "In which moments do you like yourself most, and what are you doing?"
+    },
+    {
+      "id": "scopritevi-057",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 3,
+      "topic": "cosa_cerco_in_un_amico",
+      "cooldown_class": "deep",
+      "question_text": "Cosa conta di più per te in un’amicizia che dura?",
+      "options": [
+        "Esserci nei momenti difficili",
+        "Ridere delle stesse cose",
+        "Potersi dire tutto",
+        "Rivedersi e sembrare che sia ieri"
+      ],
+      "question_text_en": "What matters most to you in a lasting friendship?",
+      "options_en": [
+        "Being there in hard times",
+        "Laughing at the same things",
+        "Being able to say anything",
+        "Meeting again as if it were yesterday"
+      ]
+    },
+    {
+      "id": "scopritevi-058",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 3,
+      "topic": "messaggio_al_passato",
+      "cooldown_class": "deep",
+      "question_text": "Se potessi mandare un messaggio di una riga alla persona che eri dieci anni fa, cosa scriveresti?",
+      "question_text_en": "If you could send a one-line message to yourself ten years ago, what would you write?"
+    },
+    {
+      "id": "confrontatevi-041",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "appuntamento_da_sogno",
+      "cooldown_class": "light",
+      "question_text": "Preferiresti un appuntamento a sorpresa organizzato da me o sceglierlo insieme?",
+      "options": [
+        "A sorpresa, fidati",
+        "Insieme, nei dettagli"
+      ],
+      "question_text_en": "Would you rather have a surprise date planned by me or plan it together?",
+      "options_en": [
+        "A surprise, I trust you",
+        "Together, every detail"
+      ]
+    },
+    {
+      "id": "confrontatevi-042",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "superpotere_di_coppia_scelta",
+      "cooldown_class": "light",
+      "question_text": "Preferiresti leggermi nel pensiero per un giorno o poter rivivere un giorno nostro?",
+      "options": [
+        "Leggerti nel pensiero",
+        "Rivivere un giorno nostro"
+      ],
+      "question_text_en": "Would you rather read my mind for a day or relive one of our days?",
+      "options_en": [
+        "Read your mind",
+        "Relive one of our days"
+      ]
+    },
+    {
+      "id": "confrontatevi-043",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "viaggio_o_casa_nuova",
+      "cooldown_class": "light",
+      "question_text": "Preferiresti un viaggio lungo un mese o una stanza in più tutta per noi?",
+      "options": [
+        "Un mese in viaggio",
+        "Una stanza tutta nostra"
+      ],
+      "question_text_en": "Would you rather have a month-long trip or an extra room all our own?",
+      "options_en": [
+        "A month travelling",
+        "A room all our own"
+      ]
+    },
+    {
+      "id": "confrontatevi-044",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "cena_cucinata_o_fuori",
+      "cooldown_class": "light",
+      "question_text": "Preferiresti cucinare insieme una cena complicata o mangiare nel posto più buono della città?",
+      "options": [
+        "Cucinare insieme",
+        "Il posto più buono"
+      ],
+      "question_text_en": "Would you rather cook a complicated dinner together or eat at the best place in town?",
+      "options_en": [
+        "Cook together",
+        "The best place"
+      ]
+    },
+    {
+      "id": "confrontatevi-045",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "sapere_il_futuro",
+      "cooldown_class": "standard",
+      "question_text": "Preferiresti sapere dove saremo tra dieci anni o lasciarti sorprendere?",
+      "options": [
+        "Saperlo subito",
+        "Lasciarmi sorprendere"
+      ],
+      "question_text_en": "Would you rather know where we’ll be in ten years or be surprised?",
+      "options_en": [
+        "Know right now",
+        "Be surprised"
+      ]
+    },
+    {
+      "id": "confrontatevi-046",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "amici_o_nuove_persone",
+      "cooldown_class": "standard",
+      "question_text": "Una sera libera: i soliti amici di sempre o persone nuove da conoscere?",
+      "options": [
+        "Gli amici di sempre",
+        "Persone nuove",
+        "Nessuno: solo noi due"
+      ],
+      "question_text_en": "A free evening: the same old friends or new people to meet?",
+      "options_en": [
+        "Our old friends",
+        "New people",
+        "No one: just the two of us"
+      ]
+    },
+    {
+      "id": "confrontatevi-047",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "foto_o_ricordo",
+      "cooldown_class": "standard",
+      "question_text": "Di un momento bellissimo, preferisci avere una foto perfetta o viverlo senza telefono?",
+      "options": [
+        "Una foto perfetta",
+        "Viverlo senza telefono"
+      ],
+      "question_text_en": "For a beautiful moment, would you rather have a perfect photo or live it with no phone?",
+      "options_en": [
+        "A perfect photo",
+        "Live it, no phone"
+      ]
+    },
+    {
+      "id": "confrontatevi-048",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "rituale_settimanale",
+      "cooldown_class": "standard",
+      "question_text": "Se potessimo avere un solo rito fisso a settimana, quale sceglieresti?",
+      "options": [
+        "La colazione lunga della domenica",
+        "Una cena fuori",
+        "Una passeggiata senza meta",
+        "Un film sotto la coperta"
+      ],
+      "question_text_en": "If we could have just one fixed weekly ritual, which would you choose?",
+      "options_en": [
+        "Long Sunday breakfast",
+        "A dinner out",
+        "An aimless walk",
+        "A film under the blanket"
+      ]
+    },
+    {
+      "id": "confrontatevi-049",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "ingrediente_segreto_della_coppia",
+      "cooldown_class": "standard",
+      "question_text": "Se la nostra coppia fosse una ricetta, qual sarebbe l’ingrediente segreto?",
+      "question_text_en": "If our couple were a recipe, what would the secret ingredient be?"
+    },
+    {
+      "id": "confrontatevi-050",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "regola_della_casa_ideale",
+      "cooldown_class": "standard",
+      "question_text": "Quale regola scriveresti in cima al regolamento ufficiale di noi due?",
+      "question_text_en": "Which rule would you write at the top of the official rulebook of us two?"
+    },
+    {
+      "id": "confrontatevi-051",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 3,
+      "topic": "cosa_vorrei_di_piu",
+      "cooldown_class": "deep",
+      "question_text": "Nei prossimi mesi, di cosa ti piacerebbe che ci fosse di più tra noi?",
+      "options": [
+        "Avventure",
+        "Calma",
+        "Risate",
+        "Progetti"
+      ],
+      "question_text_en": "In the coming months, what would you love more of between us?",
+      "options_en": [
+        "Adventures",
+        "Calm",
+        "Laughter",
+        "Plans"
+      ]
+    },
+    {
+      "id": "confrontatevi-052",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 3,
+      "topic": "promessa_leggera",
+      "cooldown_class": "deep",
+      "question_text": "Quale piccola promessa, facile da mantenere, ti piacerebbe che ci facessimo oggi?",
+      "question_text_en": "What small, easy-to-keep promise would you love us to make each other today?"
+    },
+    {
+      "id": "rivivete-029",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "foto_preferita_nostra",
+      "cooldown_class": "light",
+      "question_text": "Qual è la tua foto preferita di noi due, e cosa era appena successo?",
+      "question_text_en": "What’s your favourite photo of the two of us, and what had just happened?"
+    },
+    {
+      "id": "rivivete-030",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "primo_regalo",
+      "cooldown_class": "light",
+      "question_text": "Il primo regalo tra noi: chi l’ha fatto?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Ci siamo scambiati qualcosa insieme",
+        "Non lo ricordo proprio"
+      ],
+      "question_text_en": "The first gift between us: who gave it?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "We swapped something together",
+        "I honestly don’t remember"
+      ]
+    },
+    {
+      "id": "rivivete-031",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "piatto_dei_nostri_inizi",
+      "cooldown_class": "light",
+      "question_text": "Quale cibo ti fa pensare subito ai nostri primi tempi?",
+      "question_text_en": "Which food instantly reminds you of our early days?"
+    },
+    {
+      "id": "rivivete-032",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 1,
+      "topic": "chi_ha_scritto_per_primo",
+      "cooldown_class": "light",
+      "question_text": "Dopo il nostro primo incontro, chi ha scritto prima?",
+      "options": [
+        "{francesco}",
+        "{beatrice}",
+        "Ci siamo scritti nello stesso momento",
+        "Ancora ne discutiamo"
+      ],
+      "question_text_en": "After we first met, who texted first?",
+      "options_en": [
+        "{francesco}",
+        "{beatrice}",
+        "We texted at the same moment",
+        "We still argue about it"
+      ]
+    },
+    {
+      "id": "rivivete-033",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 1,
+      "topic": "canzone_di_un_viaggio",
+      "cooldown_class": "light",
+      "question_text": "Quale canzone associ a un nostro viaggio o a un nostro tragitto?",
+      "question_text_en": "Which song do you link to one of our trips or journeys?"
+    },
+    {
+      "id": "rivivete-034",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "serata_dove_ho_capito",
+      "cooldown_class": "standard",
+      "question_text": "Racconta una nostra serata in cui ci siamo divertiti come non succedeva da tempo.",
+      "question_text_en": "Tell me about an evening of ours when we had more fun than we’d had in ages."
+    },
+    {
+      "id": "rivivete-035",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "posto_che_ci_ha_cambiati",
+      "cooldown_class": "standard",
+      "question_text": "C’è un posto in cui siamo stati che, secondo te, ci ha avvicinati? Cosa è successo lì?",
+      "question_text_en": "Is there a place we went that you think brought us closer? What happened there?"
+    },
+    {
+      "id": "rivivete-036",
+      "mechanic": "reciprocal",
+      "answer_kind": "choice",
+      "depth": 2,
+      "topic": "stagione_dei_ricordi",
+      "cooldown_class": "standard",
+      "question_text": "In quale stagione abbiamo i ricordi più belli, secondo te?",
+      "options": [
+        "Primavera",
+        "Estate",
+        "Autunno",
+        "Inverno"
+      ],
+      "question_text_en": "Which season holds our best memories, in your view?",
+      "options_en": [
+        "Spring",
+        "Summer",
+        "Autumn",
+        "Winter"
+      ]
+    },
+    {
+      "id": "rivivete-037",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "festa_ricordata",
+      "cooldown_class": "standard",
+      "question_text": "Qual è la festa, il compleanno o la ricorrenza passata insieme che ricordi con più allegria?",
+      "question_text_en": "Which party, birthday or celebration we spent together do you remember most cheerfully?"
+    },
+    {
+      "id": "rivivete-038",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 2,
+      "topic": "gesto_che_mi_ha_conquistato",
+      "cooldown_class": "standard",
+      "question_text": "Quale mio gesto, all’inizio, ti ha fatto pensare «questa persona mi piace davvero»?",
+      "question_text_en": "Which thing I did early on made you think “I really like this person”?"
+    },
+    {
+      "id": "rivivete-039",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 3,
+      "topic": "ricordo_da_custodire",
+      "cooldown_class": "deep",
+      "question_text": "Se potessimo chiudere un solo ricordo nostro in una scatola del tempo, quale sceglieresti?",
+      "question_text_en": "If we could seal just one memory of ours in a time capsule, which would you choose?"
+    },
+    {
+      "id": "rivivete-040",
+      "mechanic": "reciprocal",
+      "answer_kind": "open",
+      "depth": 3,
+      "topic": "sentirsi_scelti",
+      "cooldown_class": "deep",
+      "question_text": "C’è un momento in cui hai sentito che ti stavo scegliendo davvero? Cosa stava succedendo?",
+      "question_text_en": "Is there a moment when you felt I was truly choosing you? What was happening?"
+    }
+  ]
+}
