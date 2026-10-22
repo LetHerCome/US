@@ -3475,7 +3475,7 @@ async function hydrateToday(){
     }else if(state?.partner_has_answer){
       locked.innerHTML='<span class="dot" data-who="partner" aria-hidden="true"></span><span>'+escapeHtml(`${partner} ha già risposto. Vedrete le risposte insieme appena invii la tua.`)+'</span>';
     }else{
-      locked.innerHTML='<span class="dot" data-who="noi" aria-hidden="true"></span><span>Le risposte si sbloccano quando avete risposto entrambi.</span>';
+      locked.innerHTML='<span class="dot" data-who="noi" aria-hidden="true"></span><span>Le risposte si sbloccano quando avete risposto voi due.</span>';
     }
   }
   updateHomeStatus();
@@ -4284,7 +4284,7 @@ async function hydrateMomentsCore(){
   const pill=document.getElementById('momentsStatusPill');
   if(!grid)return;
   const profile=window.usProfile;
-  if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></div><b>Carico…</b></div>';
+  if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="us-skeleton-tiles" role="status"><span class="us-sr">Carico i ricordi…</span><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i></div>';
   // Start all archive reads together, but as soon as Moments arrive start
   // resolving their signed media URLs too. Previously media resolution waited
   // for every enrichment query, adding a full network round-trip to first paint.

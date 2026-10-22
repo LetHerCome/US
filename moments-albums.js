@@ -64,7 +64,7 @@ function ensureUi(){
             <span class="us-album-acts-space" aria-hidden="true"></span>
             <button type="button" class="us-album-current-delete" id="usAlbumCurrentDelete" aria-label="Elimina questa foto" hidden><span class="us-icon" data-us-icon="trash" aria-hidden="true"></span></button>
             <div class="us-undo-delete" id="usAlbumDelete" data-state="idle" style="--us-undo-grace:${DELETE_GRACE_MS}ms" hidden>
-              <button type="button" class="us-undo-delete-go" id="usAlbumDeleteGo" aria-label="Elimina questo ricordo per entrambi"><span class="us-icon" data-us-icon="trash" aria-hidden="true"></span><span class="us-undo-delete-go-label">Elimina</span></button>
+              <button type="button" class="us-undo-delete-go" id="usAlbumDeleteGo" aria-label="Elimina questo ricordo per voi due"><span class="us-icon" data-us-icon="trash" aria-hidden="true"></span><span class="us-undo-delete-go-label">Elimina</span></button>
               <span class="us-undo-delete-done" role="status" aria-live="polite"><span class="us-undo-delete-label">Eliminato</span><button type="button" class="us-undo-delete-undo" id="usAlbumDeleteUndo" tabindex="-1">Annulla</button></span>
               <i class="us-undo-delete-fuse" aria-hidden="true"></i>
             </div>
@@ -640,7 +640,7 @@ async function handleGridClick(event){
 }
 async function deleteAlbumPhoto(id,path,{orphan=false}={}){
   if(!id||!window.usProfile)return;
-  if(!(await usConfirm({title:'Eliminare questa foto dal ricordo?',body:'Sparirà per entrambi.',confirmLabel:'Elimina',tone:'danger',icon:'trash'})))return;
+  if(!(await usConfirm({title:'Eliminare questa foto dal ricordo?',body:'Sparirà per voi due.',confirmLabel:'Elimina',tone:'danger',icon:'trash'})))return;
   if(orphan){
     // S3.2 Policy A: the author left and Storage lets only the uploader remove a
     // file, so the server deletes the row and the file together.
