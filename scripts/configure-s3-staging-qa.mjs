@@ -17,7 +17,15 @@ function replaceExactlyOnce(source, search, replacement, label) {
   return parts.join(replacement);
 }
 
-export function isolateStagingBuild({ appJs, indexHtml, capacitorJson, publishableKey }) {
+// Sign-up and recovery screens (public-auth.js) open only on the endpoint they
+// name; the staging QA app names US-STAGING, so two fresh test accounts can be
+// made on the phone. Production sign-up (PRODUCTION_SIGNUP_RELEASED) is untouched.
+function isolateStagingPublicAuth(src) {
+  return replaceExactlyOnce(src, "const STAGING_ORIGIN = '';",
+    "const STAGING_ORIGIN = 'https://" + STAGING_HOST + "';", 'public-auth staging origin');
+}
+
+export function isolateStagingBuild({ appJs, indexHtml, capacitorJson, publicAuthJs, publishableKey }) {
   if (!/^sb_publishable_[A-Za-z0-9_-]{20,}$/.test(publishableKey || '')) {
     throw new Error('S3 staging QA requires an actual staging publishable key, never a service-role key');
   }
@@ -55,7 +63,9 @@ export function isolateStagingBuild({ appJs, indexHtml, capacitorJson, publishab
   if ([stagedApp, stagedIndex2, stagedConfig].some(text => text.includes(PRODUCTION_PROJECT_REF))) {
     throw new Error('S3 staging QA: production Supabase project reference leaked into native build inputs');
   }
-  return { appJs: stagedApp, indexHtml: stagedIndex2, capacitorJson: stagedConfig };
+  const out = { appJs: stagedApp, indexHtml: stagedIndex2, capacitorJson: stagedConfig };
+  if (publicAuthJs !== undefined) out.publicAuthJs = isolateStagingPublicAuth(publicAuthJs);
+  return out;
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
@@ -63,13 +73,14 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     throw new Error('S3 staging QA mutation is disabled unless US_STAGING_QA=true');
   }
   const key = process.env.US_STAGING_SUPABASE_PUBLISHABLE_KEY;
-  const paths = ['app.js', 'index.html', 'capacitor.config.json'];
-  const [appJs, indexHtml, capacitorJson] = await Promise.all(paths.map(p => readFile(p, 'utf8')));
-  const out = isolateStagingBuild({ appJs, indexHtml, capacitorJson, publishableKey: key });
+  const paths = ['app.js', 'index.html', 'capacitor.config.json', 'public-auth.js'];
+  const [appJs, indexHtml, capacitorJson, publicAuthJs] = await Promise.all(paths.map(p => readFile(p, 'utf8')));
+  const out = isolateStagingBuild({ appJs, indexHtml, capacitorJson, publicAuthJs, publishableKey: key });
   await Promise.all([
     writeFile(paths[0], out.appJs),
     writeFile(paths[1], out.indexHtml),
-    writeFile(paths[2], out.capacitorJson)
+    writeFile(paths[2], out.capacitorJson),
+    writeFile(paths[3], out.publicAuthJs)
   ]);
   process.stdout.write('S3 staging inputs isolated: com.usapp.us.staging -> US-STAGING (no production Supabase host)\n');
 }

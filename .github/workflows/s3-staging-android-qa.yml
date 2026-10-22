@@ -4,7 +4,9 @@ name: US S3 isolated staging signed QA APK
 
 on:
   push:
-    branches: [mission/us-store-s3-native-push-owner-gate-20261010]
+    # Also the weekly check-in branch (22/10): its QA app is how the feature
+    # is tried on two phones against US-STAGING before production.
+    branches: [mission/us-store-s3-native-push-owner-gate-20261010, claude/payred-app-comparison-b2594e]
   workflow_dispatch:
 
 permissions:
@@ -16,7 +18,7 @@ concurrency:
 
 jobs:
   signed-apk:
-    if: github.ref == 'refs/heads/mission/us-store-s3-native-push-owner-gate-20261010'
+    if: github.ref == 'refs/heads/mission/us-store-s3-native-push-owner-gate-20261010' || github.ref == 'refs/heads/claude/payred-app-comparison-b2594e'
     runs-on: windows-latest
     timeout-minutes: 70
     env:
