@@ -10,7 +10,13 @@ name: Android Play bundle (AAB)
 # - upload (manual, main only): signs with the Play upload key from
 #   ANDROID_PLAY_UPLOAD_BUNDLE_B64, requires Firebase and the guarded FCM
 #   service, and uploads the .aab only inside an AES-256 encrypted archive.
-#   It never talks to Google Play: the founder uploads the file by hand.
+#   By default it never talks to Google Play: the founder uploads the file.
+#
+# play_track = internal (with upload only): a second job, in the GitHub
+# environment `play-deploy` (required reviewer: the founder), decrypts that
+# archive and puts the bundle on the Play INTERNAL testing track with the
+# service-account key PLAY_SERVICE_ACCOUNT_JSON, which lives only in that
+# environment. Closed testing and production stay manual in Play Console.
 
 on:
   workflow_dispatch:
@@ -24,6 +30,15 @@ on:
         description: 'versionName visibile nello Store (formato x.y.z)'
         type: string
         default: '1.0.0'
+      play_track:
+        description: 'none = solo il file cifrato; internal = dopo la tua approvazione lo carica nel test interno di Play (solo con upload)'
+        type: choice
+        options: [none, internal]
+        default: none
+      release_notes:
+        description: 'Facoltativo: note della versione per i tester (italiano, max 500 caratteri)'
+        type: string
+        required: false
   push:
     branches-ignore: [main]
     paths:
@@ -65,9 +80,14 @@ jobs:
         env:
           REQUESTED_SIGNING: ${{ github.event_name == 'workflow_dispatch' && inputs.signing || 'test' }}
           REQUESTED_VERSION_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.version_name || '1.0.0' }}
+          REQUESTED_TRACK: ${{ github.event_name == 'workflow_dispatch' && inputs.play_track || 'none' }}
         run: |
           set -euo pipefail
           mode="$REQUESTED_SIGNING"
+          if [ "$REQUESTED_TRACK" = "internal" ] && [ "$mode" != "upload" ]; then
+            echo "::error::Il caricamento nel test interno richiede signing=upload."
+            exit 1
+          fi
           if [ "$mode" = "upload" ] && [ "$GITHUB_REF" != "refs/heads/main" ]; then
             echo "::error::La firma di upload Play è permessa solo da main (ref attuale: $GITHUB_REF)."
             exit 1
@@ -331,3 +351,37 @@ jobs:
           path: out/US-Play-candidate.7z
           if-no-files-found: error
           retention-days: 7
+
+  publish-internal:
+    needs: bundle
+    if: github.event_name == 'workflow_dispatch' && inputs.signing == 'upload' && inputs.play_track == 'internal' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: play-deploy
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: US-Play-candidate-encrypted
+          path: candidate
+      - name: Upload to the internal testing track
+        env:
+          ARTIFACT_PASSWORD: ${{ secrets.ANDROID_PLAY_ARTIFACT_PASSWORD }}
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          US_ANDROID_VERSION_NAME: ${{ inputs.version_name }}
+          US_RELEASE_NOTES: ${{ inputs.release_notes }}
+        run: |
+          set -euo pipefail
+          if [ -z "$PLAY_SERVICE_ACCOUNT_JSON" ]; then echo "::error::Manca il secret PLAY_SERVICE_ACCOUNT_JSON nell'environment play-deploy"; exit 1; fi
+          mkdir -p "$RUNNER_TEMP/aab"
+          7z x -p"$ARTIFACT_PASSWORD" -o"$RUNNER_TEMP/aab" candidate/US-Play-candidate.7z > /dev/null
+          aab="$(find "$RUNNER_TEMP/aab" -name '*.aab' | head -n 1)"
+          node scripts/play-upload-internal.mjs "$aab"
+      - name: Remove the bundle
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/aab" candidate
