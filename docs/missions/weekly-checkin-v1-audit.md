@@ -45,7 +45,7 @@ Nessuno di questi punti blocca la missione.
 - **Policy A:** come i keepsake della Daily, un apprezzamento conservato è un ricordo condiviso e resta al partner. Va aggiunto al contratto di lifecycle insieme a `daily-keepsakes`, che è già marcato `requiresReview`.
 
 ### 6. Ciclo di vita: già su `main`, va esteso
-- **`docs/CURRENT_STATE.md` è indietro:** #190, #196, #194, #214 e #220 sono già su `main`, mentre il documento li indica ancora come DRAFT. Se le migrazioni S3.2 siano applicate in produzione **non è verificato** da questo audit.
+- **`docs/CURRENT_STATE.md` è indietro:** #190, #196, #194, #214 e #220 sono già su `main`, mentre il documento li indica ancora come DRAFT. **Aggiornamento 22/10:** il confronto dello schema in sola lettura conferma che S3.2 è già in produzione ([stato staging](../store/US_STAGING_STATUS.md)).
 - `s32_account_deletion_v1` e `s32_close_membership` (leave) cancellano a mano le tabelle personali, una per una. `s32_export_user_data` le esporta una per una.
 - **Correzione alla spec:**
   - FK `couple_id → couples ON DELETE CASCADE`, come per gli altri dati di coppia: copre il caso «ultimo membro, si cancella tutta la coppia»;
