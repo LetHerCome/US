@@ -120,8 +120,11 @@ jobs:
           npm run build:capacitor-web
           node -e "const f=require('fs');for(const name of ['app.js','dist/capacitor/app.js']){const s=f.readFileSync(name,'utf8');const prod=s.includes('iiakdfsxpywdkxravqjh');const staging=s.includes('dugmhngrfkuieeletatb');console.log('S3 hosting isolation',name,'production=',prod,'staging=',staging,'bytes=',s.length);if(prod||!staging)throw Error('QA app bundle uses incorrect Supabase host in '+name)};"
 
+      # The S3 FCM diagnostics patch notifications.js by exact text from 10/10;
+      # later builds carry the app's own diagnostics (N/T/S/O codes), so the
+      # weekly check-in QA app is built without this panel.
       - name: Install isolated QA diagnostic panel
-        if: steps.signing.outputs.ready == 'true'
+        if: steps.signing.outputs.ready == 'true' && github.ref == 'refs/heads/mission/us-store-s3-native-push-owner-gate-20261010'
         run: |
           node --check scripts/s3-staging-push-diagnostics.mjs
           node scripts/s3-staging-push-diagnostics.mjs bundle
@@ -131,7 +134,7 @@ jobs:
         run: npx cap sync android
 
       - name: Instrument FCM receiver in staging build ONLY
-        if: steps.signing.outputs.ready == 'true'
+        if: steps.signing.outputs.ready == 'true' && github.ref == 'refs/heads/mission/us-store-s3-native-push-owner-gate-20261010'
         run: node scripts/s3-staging-push-diagnostics.mjs android
 
       - name: Test and assemble signed release
