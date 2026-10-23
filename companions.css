@@ -1,38 +1,9 @@
-/* Compagni V1: the collection, a bottom sheet with four cards. A locked
-   companion is its dark silhouette and one line on what brings it. */
-.us-companions-overlay [hidden]{display:none!important}
-.us-companions-overlay{position:fixed;inset:0;z-index:var(--us-layer-sheet);display:none;align-items:end;justify-content:center}
-.us-companions-overlay[aria-hidden="false"]{display:flex}
-.us-companions-sheet{position:relative;width:min(100%,540px);max-height:calc(var(--us-viewport-height,100dvh) - var(--us-safe-top) - 16px);overflow-y:auto;overscroll-behavior:contain;padding:22px 20px calc(20px + var(--us-safe-bottom));border-radius:30px 30px 0 0;background:var(--us-color-surface);color:var(--us-color-text)}
-.us-companions-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
-.us-companions-head h2{margin:0;font:500 28px/1.1 var(--us-font-editorial)}
-.us-companions-head .us-modal-close{min-width:44px;min-height:44px}
-.us-companions-lead{margin:0 0 16px;color:var(--us-color-text-2);font-size:15px;line-height:1.5}
-.us-companions-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0;padding:0;list-style:none}
-.us-companion{min-width:0}
-.us-companion>button,.us-companion.is-locked{display:grid;grid-template-rows:auto auto;justify-items:center;gap:8px;width:100%;min-height:172px;padding:14px 12px;border:1px solid var(--us-color-line);border-radius:22px;background:rgba(247,239,233,.04);color:var(--us-color-text);text-align:center;position:relative}
-.us-companion>button{cursor:pointer;font:inherit}
-.us-companion.is-on>button{border-color:color-mix(in srgb,var(--us-noi,#d98be0) 70%,transparent);background:color-mix(in srgb,var(--us-noi,#d98be0) 12%,transparent)}
-.us-companion-art{display:block;height:92px;aspect-ratio:1.1}
-.us-companion-art img{display:block;width:100%;height:100%;object-fit:contain;-webkit-user-drag:none}
-.us-companion.is-locked .us-companion-art img{filter:brightness(0);opacity:.32}
-.us-companion-copy{display:grid;gap:3px;min-width:0}
-.us-companion-copy b{font:400 17px/1.2 var(--us-font-display)}
-.us-companion-copy small{color:var(--us-color-text-2);font-size:12px;line-height:1.35}
-.us-companion.is-locked .us-companion-copy b{color:var(--us-color-text-2)}
-.us-companion-mark{position:absolute;top:10px;right:10px}
-.us-companion-mark .us-icon{--us-icon-size:16px;color:var(--us-color-text-2)}
-.us-companion.is-on .us-companion-mark .us-icon{color:var(--us-color-text)}
-
-/* Noi: one quiet line, under Il vostro anno. */
-.noi-companions-row{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;margin:0 0 12px;padding:12px 14px;border:1px solid var(--us-color-line);border-radius:18px;background:var(--us-color-surface);color:var(--us-color-text);text-align:left;cursor:pointer}
-#bond .noi-canonical-page:not([data-noi-view="hub"]) .noi-companions-row{display:none}
-.noi-companions-row[hidden]{display:none!important}
-.noi-companions-mark{display:grid;place-items:center;flex:0 0 36px;height:36px;border-radius:50%;background:rgba(247,239,233,.08)}
-.noi-companions-mark .us-icon{--us-icon-size:18px}
-.noi-companions-copy{display:grid;gap:2px;flex:1;min-width:0}
-.noi-companions-copy b{font:400 16px/1.25 var(--us-font-display)}
-.noi-companions-copy small{color:var(--us-color-text-2);font-size:13px}
-.noi-companions-go .us-icon{--us-icon-size:16px;color:var(--us-color-text-3)}
-
-@media (prefers-reduced-motion:reduce){.us-companions-overlay *{animation:none!important;transition:none!important}}
+/* Compagni V1: the companions among the unlockables of Sintonia
+   (progression.js, I vostri sblocchi and Prossimo sblocco). The owner's
+   awake pose on the card; a locked companion is its dark silhouette. */
+#quiz .us-gioca-sintonia .us-progression-companion .us-progression-reward-preview,
+.us-progression-next-preview:has(.us-progression-companion-art){display:grid;place-items:end center;background:radial-gradient(90% 70% at 50% 100%,rgba(247,239,233,.10),transparent 70%),rgba(247,239,233,.04)}
+.us-progression-companion-art{display:block;width:86%;height:86%;margin-bottom:6%;object-fit:contain;object-position:50% 100%;-webkit-user-drag:none}
+#quiz .us-gioca-sintonia .us-progression-reward.us-progression-companion.is-locked .us-progression-reward-preview{filter:none}
+#quiz .us-gioca-sintonia .us-progression-reward.us-progression-companion.is-locked .us-progression-reward-preview>.us-progression-companion-art{filter:brightness(0);opacity:.34}
+.us-progression-reward.us-progression-companion.is-locked .us-progression-companion-art{filter:brightness(0);opacity:.34}

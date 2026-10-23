@@ -43,10 +43,11 @@ I nomi propri dei compagni li sceglie il founder; fino ad allora valgono quelli 
 
 ## Esperienza
 
-- **Noi:** una riga «I vostri compagni» apre la collezione, nella stessa famiglia della riga «Il vostro anno».
-- **Collezione:** quattro riquadri.
-  - Sbloccato: il compagno vero, tocco per sceglierlo; quello scelto ha il segno.
-  - Ancora chiuso: la sagoma scura e il livello che lo porta («Arriva al livello 11 di Sintonia»). Niente barre e niente conteggi.
+- **In Sintonia, tra gli sbloccabili** (founder, 23/10: «deve rientrare dentro a Sintonia come sbloccabili»): in Gioca › Sintonia, «I vostri sblocchi» ha la categoria **Compagni** accanto a temi, effetti e countdown, con le stesse schede.
+  - Sbloccato: il compagno vero, «Sbloccato» o «In uso»; un tocco lo mette sopra la barra («Il gufetto · con te sopra la barra»).
+  - Ancora chiuso: la sagoma scura e «Livello 11»; un tocco dice «Si sblocca al livello 11 di Sintonia».
+  - **Prossimo sblocco** nomina il compagno quando il suo livello viene prima del prossimo premio.
+- In Noi non c'è più una riga a parte; l'avviso di Oggi («Guardalo») apre Sintonia sulla categoria Compagni.
 - **Testi** in italiano inclusivo, come il resto dell'app; inglese in `i18n-en.js`.
 
 ## Server (solo staging)
@@ -59,7 +60,7 @@ I nomi propri dei compagni li sceglie il founder; fino ad allora valgono quelli 
 ## Client
 
 - `pet.js` diventa multi-compagno: la stessa macchina a stati, un renderer per compagno. Il volo del draghetto è del suo renderer: parte quando è felice e, da sveglio, ogni 25–45 secondi; la macchina a stati non cambia. Restano `?us-pet=off` e `?us-pet=preview`.
-- Un file `companions.js` per la collezione, la scelta e l'annuncio; agganci in Noi, Oggi (`refreshTodayPriorities`), back nativo, reset al logout, precache, build.
+- Un file `companions.js` per gli sblocchi, la scelta e l'annuncio; `progression.js` disegna il gruppo Compagni e il prossimo sblocco; agganci in Oggi (`refreshTodayPriorities`), reset al logout, precache, build.
 - **Disegni:** le immagini del founder (22/10/2026), Maudit 2.0 compreso, in `assets/source/pet/`. I pezzi ritagliati (corpo, parti che si muovono, pose dorme e felice) stanno in `assets/derived/pet/`, tutti nello stesso riquadro da 192 px per compagno, registrati in `ASSET_MANIFEST.json` con la loro origine. Maudit 1.0 (SVG) resta su disco, ritirato.
 - **Animazione a pezzi**, senza librerie: respiro e battito di ciglia per tutti; coda di Maudit, orecchie della capretta, ali del gufetto e del draghetto; il draghetto vola il suo giro (Web Animations) e torna al suo posto. Con riduci animazioni niente movimento, restano le pose.
 
