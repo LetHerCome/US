@@ -4,10 +4,10 @@
   global.USPet=api;api.install(global);
 })(typeof window!=='undefined'?window:globalThis,function(){
 'use strict';
-// Maudit 1.0 — exactly the approved mockup (design "Due colori, un Noi",
-// core.js "Maudit"): the cat sits still in one home spot, just above the
-// right end of the bottom bar, on every tab. It never walks, is never picked
-// up or dragged. It only changes state:
+// The companion (Maudit, or the goat, the owl, the dragon of Compagni V1)
+// sits in one home spot, just above the right end of the bottom bar, on every
+// tab. It never walks, is never picked up or dragged; only the dragon flies a
+// short loop and always lands back on the same spot. It only changes state:
 //   idle    → sits, blinks, the tail sways;
 //   sleep   → after 30 s without a touch anywhere: eyes shut, slow breath, z z;
 //   curious → a touch anywhere (or on it) while it sleeps: head tilts, 1.2 s;
@@ -15,7 +15,8 @@
 //   happy   → every third tap, and when something arrives for me (Ti penso,
 //             Lasciato per te, a reward, the answers of the day): one small
 //             hop and a heart, 1.7 s.
-// It owns no data and only reacts to facts other authorities announce.
+// It owns no data and only reacts to facts other authorities announce; which
+// companion shows is a device-local choice (companions.js checks the unlocks).
 // ?us-pet=preview keeps the explicit QA renderer (the earlier kitten v0);
 // ?us-pet=off is a one-load emergency kill switch.
 const PET_ASSET_STATUS='APPROVED';
@@ -32,6 +33,8 @@ const TIMING=Object.freeze({
   glance:1400,   // pupils follow a tab tap
   hop:620,
   heart:1100,
+  flight:6200,   // the dragon's loop over the bar
+  flightEvery:Object.freeze([25000,45000]), // and how often it takes off alone
   width:54,      // .maudit-home box
   height:48
 });
@@ -104,23 +107,88 @@ function mountKittenV0(host){
   host.innerHTML='<span class="us-pet-shadow"></span><span class="us-pet-figure" data-pet-placeholder data-pet-preview="kitten-v0">'+KITTEN_V0_SVG+'</span>';
   return {destroy(){host.innerHTML='';}};
 }
-// OWNER-APPROVED PRODUCTION 1.0 — Maudit, the grey loaf seen from the front,
-// with cream muzzle and paws. Approved with the design mockup on 2026-10-14.
-// Source authority: assets/source/pet/us-pet-maudit-v1.svg. Poses in pet.css.
-const MAUDIT_V1_SVG='<svg class="us-pet-maudit" viewBox="0 -8 100 100" width="40" height="40" aria-hidden="true" focusable="false"><g class="m-tail"><path d="M76 80C92 78 98 63 92 51C89 45 84 45 83 49" fill="none" stroke="#A7A2B2" stroke-width="8" stroke-linecap="round"/></g><g class="m-body"><path d="M14 80C12 60 26 46 50 46C74 46 88 60 86 80C86 86 82 88 76 88H24C18 88 14 86 14 80Z" fill="#A7A2B2"/><ellipse cx="50" cy="78" rx="17" ry="9" fill="#F7F0EA"/><g class="m-paw m-paw-l"><ellipse cx="37" cy="88" rx="8" ry="4" fill="#F7F0EA"/></g><g class="m-paw m-paw-r"><ellipse cx="63" cy="88" rx="8" ry="4" fill="#F7F0EA"/></g></g><g class="m-head"><g class="m-ear m-ear-l"><path d="M24 36L22 13Q23 9 26.5 11.5L44 24Z" fill="#A7A2B2" stroke="#A7A2B2" stroke-width="3" stroke-linejoin="round"/><path d="M27.5 30L26.5 17.5L37 25Z" fill="#FFB3C2"/></g><g class="m-ear m-ear-r"><path d="M76 36L78 13Q77 9 73.5 11.5L56 24Z" fill="#A7A2B2" stroke="#A7A2B2" stroke-width="3" stroke-linejoin="round"/><path d="M72.5 30L73.5 17.5L63 25Z" fill="#FFB3C2"/></g><path d="M20 44C20 27 34 19 50 19C66 19 80 27 80 44C80 60 67 68 50 68C33 68 20 60 20 44Z" fill="#A7A2B2"/><path class="m-face" d="M50 26C45 33 35 42 34 52C36 63 64 63 66 52C65 42 55 33 50 26Z" fill="#F7F0EA"/><g class="m-blush"><circle cx="32" cy="54" r="4.5" fill="#FF7C96" opacity=".35"/><circle cx="68" cy="54" r="4.5" fill="#FF7C96" opacity=".35"/></g><g class="m-eyes-open"><g class="m-pupils"><ellipse cx="38" cy="44" rx="4.8" ry="5.8" fill="#1A1020"/><ellipse cx="62" cy="44" rx="4.8" ry="5.8" fill="#1A1020"/><circle cx="39.7" cy="41.8" r="1.8" fill="#fff"/><circle cx="63.7" cy="41.8" r="1.8" fill="#fff"/></g></g><g class="m-eyes-happy" fill="none" stroke="#1A1020" stroke-width="2.6" stroke-linecap="round"><path d="M33.5 45.5Q38 39.5 42.5 45.5"/><path d="M57.5 45.5Q62 39.5 66.5 45.5"/></g><g class="m-eyes-closed" fill="none" stroke="#1A1020" stroke-width="2.4" stroke-linecap="round"><path d="M33.5 44Q38 48 42.5 44"/><path d="M57.5 44Q62 48 66.5 44"/></g><path class="m-nose" d="M50 55.6C46.6 53.4 46.8 50.6 48.6 50.6C49.5 50.6 50 51.3 50 51.8C50 51.3 50.5 50.6 51.4 50.6C53.2 50.6 53.4 53.4 50 55.6Z" fill="#FF7C96"/><path class="m-mouth" d="M46.5 58Q48.3 60 50 58Q51.7 60 53.5 58" fill="none" stroke="#1A1020" stroke-width="1.3" stroke-linecap="round" opacity=".7"/><g class="m-whiskers" stroke="#F7F0EA" stroke-width="1" opacity=".5" stroke-linecap="round"><path d="M30 55L18 53M30 58L19 60M70 55L82 53M70 58L81 60"/></g><g class="m-collar"><path d="M33 64.5Q50 72 67 64.5" fill="none" stroke="var(--us-noi,#d98be0)" stroke-width="3.6" stroke-linecap="round"/><circle cx="50" cy="70" r="2.6" fill="#F3D28B"/></g></g><g class="m-zz" fill="#F7EFE9" font-family="Figtree,system-ui,sans-serif" font-weight="700"><text x="80" y="22" font-size="12">z</text><text x="89" y="12" font-size="9">z</text></g><g class="m-purr" stroke="#FF7C96" stroke-width="2.2" stroke-linecap="round" fill="none"><path d="M9 50Q5 56 9 62"/><path d="M91 50Q95 56 91 62"/></g><g class="m-heart"><path d="M50 12C43 7.5 43 1 47.5 1C49 1 50 2 50 3C50 2 51 1 52.5 1C57 1 57 7.5 50 12Z" fill="#FF7C96"/></g></svg>';
-function mountMauditV1(host){
-  // As in the mockup: no shadow under the cat, the drawing alone.
-  host.innerHTML='<span class="us-pet-figure" data-pet-production="maudit-v1">'+MAUDIT_V1_SVG+'</span>';
-  return {destroy(){host.innerHTML='';}};
+// OWNER-PROVIDED ART (2026-10-22) — Maudit 2.0 and the three companions,
+// cut from the owner's sheets into a shared 192 px frame per companion: the
+// awake body, the parts that move (tail, ears, wings), the asleep and happy
+// poses. Source authority: assets/source/pet/us-pet-*-sheet-*.webp; the cut
+// pieces are the derived assets in assets/derived/pet/. Poses in pet.css.
+// Frame geometry (px of the 192 px frame): parts pivot where they join the
+// body; eyes are covered by a lid in the fur colour for the blink. Maudit
+// blinks with its own asleep pose, the same body with the eyes closed.
+const PET_ART='/assets/derived/pet/';
+const COMPANIONS=Object.freeze({
+  maudit:{v:'v2',size:[200,192],parts:{tail:[162.7,166.9]},behind:true,blink:'pose',eyes:[]},
+  goat:{v:'v1',size:[211,192],parts:{'ear-l':[48.7,88.7],'ear-r':[162.3,88.7]},behind:false,eyes:[[64.6,70.7,88.9,99.1,'#fdeeda'],[125.6,68.6,150.6,97,'#fcf1e0']]},
+  owl:{v:'v1',size:[228,192],parts:{'wing-l':[49.5,83.5],'wing-r':[183.1,83.5]},behind:true,eyes:[[60.9,49.3,99.6,91.8,'#fce1c1'],[125.4,48.6,164.8,91.8,'#fceace']]},
+  dragon:{v:'v1',size:[222,192],parts:{'wing-l':[62.5,122.8],'wing-r':[153.4,132.3]},behind:true,flies:true,eyes:[[68.6,67.8,91.7,97.7,'#73dbc3'],[133,70.6,156.1,100.4,'#76dcc5']]}
+});
+const COMPANION_IDS=Object.freeze(Object.keys(COMPANIONS));
+// Before the couple has unlocked any companion, nothing sits above the bar.
+const NO_COMPANION='none';
+const art=(id,name)=>PET_ART+'us-pet-'+id+'-'+name+'-'+COMPANIONS[id].v+'.webp';
+function companionMarkup(id){
+  const c=COMPANIONS[id],[W,H]=c.size;
+  const img=(cls,name,style='')=>'<img class="'+cls+'" src="'+art(id,name)+'" alt="" draggable="false" decoding="async"'+style+'>';
+  const parts=Object.entries(c.parts).map(([name,[x,y]])=>img('us-pet-part us-pet-'+name,name,' style="transform-origin:'+(x/W*100).toFixed(2)+'% '+(y/H*100).toFixed(2)+'%"')).join('');
+  const body=img('us-pet-body','body');
+  const lids=c.eyes.map(([x0,y0,x1,y1,fur])=>{
+    const cx=(x0+x1)/2,cy=(y0+y1)/2,rx=(x1-x0)/2+1.8,ry=(y1-y0)/2+1.8,r=n=>n.toFixed(1);
+    return '<ellipse cx="'+r(cx)+'" cy="'+r(cy)+'" rx="'+r(rx)+'" ry="'+r(ry)+'" fill="'+fur+'"/><path d="M'+r(cx-rx*.8)+' '+r(cy+ry*.1)+'Q'+r(cx)+' '+r(cy+ry*.65)+' '+r(cx+rx*.8)+' '+r(cy+ry*.1)+'" fill="none" stroke="#1A1020" stroke-width="'+r(Math.max(2.6,rx*.24))+'" stroke-linecap="round"/>';
+  }).join('');
+  const blink=c.blink==='pose'?img('us-pet-blink','sleep'):'<svg class="us-pet-lids" viewBox="0 0 '+W+' '+H+'" aria-hidden="true" focusable="false">'+lids+'</svg>';
+  return '<span class="us-pet-rig us-pet-'+id+'" style="aspect-ratio:'+W+'/'+H+'">'
+    +'<span class="us-pet-awake">'+(c.behind?parts+body:body+parts)+blink+'</span>'
+    +img('us-pet-pose us-pet-pose-sleep','sleep')+img('us-pet-pose us-pet-pose-happy','happy')
+    +'<span class="us-pet-zz"><i>z</i><i>z</i></span><span class="us-pet-heart"></span></span>';
+}
+// The dragon's flight: a short loop over the bar, back to its spot.
+const FLIGHT=Object.freeze([
+  {translate:'0 0',rotate:'0deg'},{translate:'-10px -34px',rotate:'-6deg',offset:.06},{translate:'-60px -72px',rotate:'-8deg',offset:.18},
+  {translate:'-120px -86px',rotate:'-2deg',offset:.34},{translate:'-160px -54px',rotate:'5deg',offset:.5},{translate:'-120px -22px',rotate:'9deg',offset:.66},
+  {translate:'-40px -42px',rotate:'5deg',offset:.84},{translate:'0 -10px',rotate:'0deg',offset:.96},{translate:'0 0',rotate:'0deg'}
+]);
+function mountCompanion(host,id){
+  host.innerHTML='<span class="us-pet-figure" data-pet-production="'+id+'">'+companionMarkup(id)+'</span>';
+  const figure=host.querySelector?.('.us-pet-figure'),w=host.ownerDocument?.defaultView;
+  let state='idle',timer=null,flight=null;
+  const reduced=()=>{try{return Boolean(w?.UsUiFoundation?.isReducedMotion?.()||w?.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);}catch(_){return false;}};
+  const clear=()=>{if(timer!==null)w?.clearTimeout(timer);timer=null;};
+  function land(){flight=null;if(figure?.dataset)delete figure.dataset.petFlying;arm();}
+  function fly(){
+    if(!COMPANIONS[id].flies||flight||reduced()||!figure?.animate||!figure.dataset)return false;
+    clear();figure.dataset.petFlying='';
+    flight=figure.animate(FLIGHT,{duration:TIMING.flight,easing:'ease-in-out'});
+    flight.onfinish=land;flight.oncancel=land;
+    return true;
+  }
+  // Now and then, awake, the dragon takes off on its own.
+  function arm(){
+    clear();
+    if(!COMPANIONS[id].flies||state!=='idle'||!w)return;
+    const [min,max]=TIMING.flightEvery;
+    timer=w.setTimeout(()=>{timer=null;if(state==='idle')fly();},min+Math.random()*(max-min));
+  }
+  return {
+    fly,
+    setState(next){
+      state=next;
+      if(next==='sleep'&&flight)flight.cancel();
+      if(next==='idle')arm();else clear();
+    },
+    destroy(){clear();if(flight)flight.cancel();host.innerHTML='';}
+  };
 }
 registerRenderer({
   id:'placeholder',
   mount(host){return mountKittenV0(host);}
 });
+// 'sprite' is the production renderer: Maudit. Each companion has its own.
 registerRenderer({
   id:'sprite',
-  mount(host){return mountMauditV1(host);}
+  mount(host){return mountCompanion(host,'maudit');}
 });
+for(const id of COMPANION_IDS.filter(name=>name!=='maudit'))registerRenderer({id,mount(host){return mountCompanion(host,id);}});
+const rendererOf=id=>id==='maudit'?'sprite':id;
 
 function previewRequested(w){
   try{
@@ -158,7 +226,7 @@ function blockers(d,layer,{pageHidden=false}={}){
   return list;
 }
 
-const MAUDIT_KEYS=Object.freeze({enabled:'us:maudit:v1:enabled'});
+const MAUDIT_KEYS=Object.freeze({enabled:'us:maudit:v1:enabled',companion:'us:pet:v1:companion'});
 // Removed with the walking Maudit: the remembered spot on a card rim.
 const RETIRED_KEYS=Object.freeze(['us:maudit:v1:placement']);
 const OUT='cubic-bezier(.2,.8,.2,1)';
@@ -191,19 +259,24 @@ function install(w){
     if(appearance.accessory)layer.dataset.petAccessory=appearance.accessory;else delete layer.dataset.petAccessory;
   }
 
+  // The companion stored on this phone: one of COMPANION_IDS, 'none', or Maudit by default.
+  const stored=()=>{const id=store.get(MAUDIT_KEYS.companion);return id===NO_COMPANION||COMPANION_IDS.includes(id)?id:'maudit';};
   function mount(){
     if(runtime||!available)return Boolean(runtime);
+    if(stored()===NO_COMPANION&&!preview)return false;
     const cleanups=[],timers=new Map();
     const on=(target,type,fn,options)=>{if(!target?.addEventListener)return;target.addEventListener(type,fn,options);cleanups.push(()=>target.removeEventListener?.(type,fn,options));};
     const later=(key,fn,ms)=>{if(timers.has(key))w.clearTimeout(timers.get(key));timers.set(key,w.setTimeout(()=>{timers.delete(key);fn();},ms));};
     const reduced=()=>{try{return Boolean(w.UsUiFoundation?.isReducedMotion?.());}catch(_){return false;}};
     let view=null,host=null,pageHidden=false,lastBeat=0;
-    // The mockup's hop (on the whole cat) and heartPop (the small heart).
+    // The mockup's hop (on the whole figure) and heartPop (the small heart).
+    // The dragon flies its loop instead.
     function hop(){
       if(reduced()||!host)return;
+      if(view?.fly?.())return;
       const figure=host.querySelector?.('.us-pet-figure');
       figure?.animate?.([{translate:'0 0',scale:'1 1'},{translate:'0 1px',scale:'1.08 .9',offset:.15},{translate:'0 -12px',scale:'.95 1.06',offset:.45},{translate:'0 0',scale:'1.06 .94',offset:.75},{translate:'0 0',scale:'1 1'}],{duration:TIMING.hop,easing:'ease-out'});
-      const heart=host.querySelector?.('.m-heart');
+      const heart=host.querySelector?.('.us-pet-heart');
       heart?.animate?.([{opacity:0,translate:'0 4px',scale:.5},{opacity:1,translate:'0 -10px',scale:1,offset:.4},{opacity:0,translate:'0 -22px',scale:.9}],{duration:TIMING.heart,easing:OUT});
     }
     const pet=createPet({
@@ -237,7 +310,7 @@ function install(w){
       view.setAppearance?.(appearance);
       return true;
     }
-    if(!useRenderer(preview?'placeholder':approved?'sprite':'placeholder'))return false;
+    if(!useRenderer(preview?'placeholder':approved?rendererOf(stored()):'placeholder'))return false;
 
     // ---------- touch: a tap pets it, a touch elsewhere wakes it ----------
     // The layer stays pointer-transparent; this one target on the cat takes the
@@ -291,8 +364,16 @@ function install(w){
       return pet.react(reason);
     }
     on(w,'us:pet',event=>{if(event?.detail?.type==='react')react(event.detail.reason);});
+    // The companion on this phone. companions.js only offers the unlocked ones.
+    function setCompanion(id){
+      if(id===NO_COMPANION){store.set(MAUDIT_KEYS.companion,id);if(!preview)unmount();return true;}
+      if(!COMPANION_IDS.includes(id))return false;
+      store.set(MAUDIT_KEYS.companion,id);
+      if(preview)return true;
+      return useRenderer(rendererOf(id));
+    }
     runtime={
-      pet,react,useRenderer,glance,
+      pet,react,useRenderer,glance,setCompanion,
       blockers:()=>blockers(d,layer,{pageHidden}),
       setAppearance(next={}){applyAppearance(next);view?.setAppearance?.(appearance);},
       snapshot:()=>pet.snapshot(),
@@ -328,6 +409,13 @@ function install(w){
     api.useRenderer=live.useRenderer;
     api.blockers=live.blockers;
     api.glance=live.glance;
+    api.setCompanion=runtime?runtime.setCompanion:(id=>{
+      if(id!==NO_COMPANION&&!COMPANION_IDS.includes(id))return false;
+      store.set(MAUDIT_KEYS.companion,id);
+      // The first companion arrives: it appears, unless Maudit is switched off in Settings.
+      if(id!==NO_COMPANION&&preferred())mount();
+      return true;
+    });
     api.setAppearance=runtime?runtime.setAppearance:applyAppearance;
     api.snapshot=runtime?runtime.snapshot:()=>({state:'disabled',running:false});
     api.inspect=runtime?runtime.inspect:()=>({mounted:false,listeners:0,observers:0,timers:0,hit:Boolean(layer?.querySelector?.('.us-pet-hit'))});
@@ -335,6 +423,7 @@ function install(w){
   // Settings → Maudit. Off unmounts everything: renderer, hit target, timers,
   // observers and listeners. On mounts it again in its home spot.
   api.isEnabled=preferred;
+  api.companion=stored;
   api.setEnabled=next=>{
     store.set(MAUDIT_KEYS.enabled,next?'1':'0');
     if(next)mount();else unmount();
@@ -347,12 +436,14 @@ function install(w){
 
 // Before install (or when disabled) every entry point is a safe no-op.
 return {
-  PET_ASSET_STATUS,STATES,REASONS,TIMING,createPet,registerRenderer,canMount,computeBlockers:blockers,install,MAUDIT_KEYS,
+  PET_ASSET_STATUS,STATES,REASONS,TIMING,COMPANIONS,COMPANION_IDS,NO_COMPANION,createPet,registerRenderer,canMount,computeBlockers:blockers,install,MAUDIT_KEYS,
   enabled:false,
   react:()=>false,
   useRenderer:()=>false,
   blockers:()=>[],
   glance:()=>false,
+  setCompanion:()=>false,
+  companion:()=>'maudit',
   setAppearance:()=>{},
   snapshot:()=>null
 };

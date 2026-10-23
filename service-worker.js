@@ -1,4 +1,4 @@
-const BUILD_ID = "us-il-vostro-anno-20261022-24";
+const BUILD_ID = "us-compagni-20261022-25";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -57,6 +57,8 @@ const APP_SHELL = [
   versioned("/weekly-checkin.js"),
   versioned("/year-recap.css"),
   versioned("/year-recap.js"),
+  versioned("/companions.css"),
+  versioned("/companions.js"),
   versioned("/pet.css"),
   versioned("/pet.js"),
   versioned("/settings.css"),

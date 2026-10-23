@@ -603,6 +603,7 @@ h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
 .us-icon[data-us-icon="sparkle-fill"]{--us-icon-src:url("/assets/icons/phosphor/sparkle-fill.svg")}
 .us-icon[data-us-icon="heart-fill"]{--us-icon-src:url("/assets/icons/phosphor/heart-straight-fill.svg")}
 .us-icon[data-us-icon="lock-simple"]{--us-icon-src:url("/assets/icons/phosphor/lock-simple-regular.svg")}
+.us-icon[data-us-icon="cat"]{--us-icon-src:url("/assets/icons/phosphor/cat-regular.svg")}
 
 /* Eyebrow: the small uppercase label above a title, one voice everywhere. */
 .tiny,

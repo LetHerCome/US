@@ -197,3 +197,13 @@ Only durable decisions belong here. New missions should not reopen them without 
 - Il riepilogo dell'anniversario «Il vostro anno» ([spec](missions/year-recap-v1.md)) si fa adesso, in deroga al freeze D5, **solo** per questa missione.
 - È fatto con i dati veri della coppia, è privato (niente condivisione esterna nella V1) e non contiene punteggi né classifiche.
 - **Governance:** il lavoro va sul branch e su staging. Merge, SQL ed Edge in produzione e pubblicazione hanno ciascuno un'approvazione separata.
+
+## 2026-10-22 — Eccezione a D5: Compagni V1
+
+**Fonte:** richiesta esplicita del founder del 22/10/2026 («io voglio sicuro un draghetto che svolazza e si ripoggia sempre dove sta Maudit… un sistema di sblocco dei pet, non di crescita»; poi «Maudit, una capretta, un gufetto e il draghetto»).
+
+- I «Compagni oltre Maudit» congelati da D5 si fanno adesso, **solo** per tre compagni: la capretta, il gufetto e il draghetto ([spec](missions/companions-v1.md)).
+- I compagni **si sbloccano** con il livello Sintonia della coppia e non crescono: niente evoluzioni o barre proprie. All'inizio nessun compagno; Maudit al livello 3, il gufetto al 5, la capretta all'8, il draghetto all'11 (decisione del founder, 22/10 sera). Hanno una tabella loro, non il catalogo dei premi di Sintonia.
+- **Disegni:** i nuovi compagni diventano asset approvati solo dopo l'OK del founder sulle bozze.
+- **Governance:** il lavoro va sul branch e su staging. Merge, SQL in produzione e pubblicazione hanno ciascuno un'approvazione separata.
+- **22/10, sera:** il founder fornisce i disegni dei compagni e un **Maudit 2.0** nello stesso stile («li voglio così»; «usa la mia nuova immagine anche per Maudit»). Sostituiscono le bozze SVG e Maudit 1.0, che resta su disco ritirato. Niente video generati a pagamento per ora: l'animazione è fatta a pezzi dalle immagini.

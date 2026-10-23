@@ -40,6 +40,8 @@ Auth settings, Edge secrets and data are intentionally different: no copied prod
 
 The web preview of the branch serves the new content right away: it is read from the server. **Not in production.**
 
+**Compagni V1 on staging only (22/10):** `20261022213000_companions_v1.sql`, one new table `couple_companion_unlocks` (RPC-only, RLS on, no grant to `anon`/`authenticated`) and `get_companions_v1()` (execute for `authenticated` only, `SECURITY DEFINER`); `private.companion_sync` callable by nobody. Read-only ACL postflight confirmed after the apply. Unlocks follow the Sintonia level (Maudit 3, owl 5, goat 8, dragon 11; nobody below 3). The app side (Maudit 2.0, the owl, the goat, the dragon; the collection in Noi) ships with the branch build. **Not in production.**
+
 **Staging QA app (22/10):** run `39803123201` built the signed staging APK from `85363f1`, with the weekly check-in and sign-up open on US-STAGING only.
 - Package `com.usapp.us.staging`, Firebase `us-staging-45e0f`, version `1.0-s3staging.1792682238`.
 - The APK is encrypted in the artifact (7z with `ANDROID_INTERNAL_ARTIFACT_PASSWORD`).

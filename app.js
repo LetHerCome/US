@@ -837,6 +837,7 @@ async function clearPrivateDeviceState(profileId=window.usProfile?.id||''){
   window.USCountdown?.reset?.();
   window.UsWeeklyCheckin?.reset?.();
   window.UsYearRecap?.reset?.();
+  window.UsCompanions?.reset?.();
   try{US_SIGNED_URL_CACHE.clear();}catch(_e){}
   const storageKeys=[
     'us:fix4:last-profile',
@@ -2727,6 +2728,9 @@ async function refreshTodayPriorities({daily,freshEvents=false}={}){
   // Il punto della settimana (weekly-checkin.js): "Tocca a te" or "pronto".
   const checkin=window.UsWeeklyCheckin?.todayPriority?.();
   if(checkin)candidates.push(checkin);
+  // Compagni V1 (companions.js): a new companion, told once.
+  const companion=window.UsCompanions?.todayPriority?.();
+  if(companion)candidates.push(companion);
   const celebration=celebrationTodayPriorityViewModel(oggiStartedOn(),oggiTodayISO());
   if(celebration)candidates.push(celebration);
   let mission=null;
@@ -2789,6 +2793,7 @@ document.getElementById('usTodayPriorityRegion')?.addEventListener('click',event
   if(action==='mission')window.openOggiMission?.();
   if(action==='checkin')window.UsWeeklyCheckin?.open?.();
   if(action==='recap')window.UsYearRecap?.open?.();
+  if(action==='companion')window.UsCompanions?.open?.();
 });
 // M10.2 — nascondere l'avviso "Risposte pronte" = "non lo voglio più su Oggi",
 // MAI "ho visto le risposte". L'autorità è window.dismissDailyRevealNotice

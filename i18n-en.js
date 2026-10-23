@@ -2381,6 +2381,27 @@
     'Ricordi, Ti penso e tutto il resto, in poche schede': 'Memories, Thinking of you and everything else, in a few cards',
     'Guarda il vostro anno': 'See your year',
 
+    // ------------------------------------------------ Compagni V1
+    'I vostri compagni': 'Your companions',
+    'Chiudi i vostri compagni': 'Close your companions',
+    'Scegli chi sta con te sopra la barra': 'Choose who sits with you above the bar',
+    'Arrivano con le cose che fate insieme e restano per sempre. Scegli chi sta con te sopra la barra.': 'They arrive with the things you do together and stay forever. Choose who sits with you above the bar.',
+    'La capretta': 'The little goat',
+    'Il gufetto': 'The little owl',
+    'Il draghetto': 'The little dragon',
+    'È arrivata la capretta': 'The little goat is here',
+    'È arrivato il gufetto': 'The little owl is here',
+    'È arrivato il draghetto': 'The little dragon is here',
+    'Un nuovo compagno per voi': 'A new companion for you two',
+    'Guardalo': 'See it',
+    'È con te': 'With you',
+    'Tocca per sceglierlo': 'Tap to choose',
+    'È arrivato Maudit': 'Maudit is here',
+    'Arriva al livello 3 di Sintonia': 'Arrives at Sync level 3',
+    'Arriva al livello 5 di Sintonia': 'Arrives at Sync level 5',
+    'Arriva al livello 8 di Sintonia': 'Arrives at Sync level 8',
+    'Arriva al livello 11 di Sintonia': 'Arrives at Sync level 11',
+
     // ------------------------------------------------ Il punto della settimana
     'Il punto della settimana': 'Weekly check-in',
     'Chiudi il punto della settimana': 'Close the weekly check-in',

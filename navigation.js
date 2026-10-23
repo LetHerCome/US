@@ -72,6 +72,12 @@ const layers=[
     close:()=>window.closeNoiSection?.()
   },
   {
+    name:'companions',
+    find:()=>document.getElementById('usCompanionsSheet'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsCompanions?.close?.()
+  },
+  {
     name:'year-recap',
     find:()=>document.getElementById('usRecapSheet'),
     open:el=>el?.classList.contains('open'),

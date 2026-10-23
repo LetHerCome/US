@@ -49,6 +49,8 @@ const RUNTIME_FILES = [
   'weekly-checkin.css',
   'year-recap.js',
   'year-recap.css',
+  'companions.js',
+  'companions.css',
   'pet.css',
   'pet.js',
   'settings.css',

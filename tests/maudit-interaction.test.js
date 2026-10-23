@@ -170,16 +170,16 @@ test('poses: curious / pet / sleep / happy are CSS poses of the approved drawing
   assert.match(petCss, /\[data-pet-state="pet"\] \.k-eyes-closed\{opacity:1\}/, 'kitten preview: eyes soften');
   assert.match(petCss, /\[data-pet-state="pet"\] \.k-head\{transform:rotate\(-9deg\)/, 'kitten preview: head leans into the hand');
   assert.match(petCss, /:root\[data-us-motion="reduced"\] \.us-pet-layer \*\{animation:none!important;transition:none!important\}/);
-  // Maudit 1.0 (production), the mockup's .m poses.
-  assert.match(petCss, /\.us-pet-layer:is\(\[data-pet-state="happy"\],\[data-pet-state="pet"\]\) \.m-eyes-happy\{opacity:1\}/, 'Maudit: happy eyes under the hand');
-  assert.match(petCss, /\[data-pet-state="pet"\] \.m-head\{rotate:5deg\}/, 'Maudit: head leans into the hand');
-  assert.match(petCss, /\[data-pet-state="curious"\] \.m-head\{rotate:-9deg\}/, 'Maudit: curious head tilt');
-  assert.match(petCss, /\[data-pet-state="sleep"\] :is\(\.m-eyes-closed,\.m-zz\)\{opacity:1\}/, 'Maudit: asleep');
+  // Maudit 2.0 and the companions (production): poses of the owner's art.
+  assert.match(petCss, /\[data-pet-state="pet"\] :is\(\.us-pet-lids,\.us-pet-blink\)\{opacity:1\}/, 'eyes closed under the hand');
+  assert.match(petCss, /\[data-pet-state="pet"\] \.us-pet-awake\{rotate:5deg\}/, 'leans into the hand');
+  assert.match(petCss, /\[data-pet-state="curious"\] \.us-pet-awake\{rotate:-7deg\}/, 'curious tilt');
+  assert.match(petCss, /\[data-pet-state="sleep"\] \.us-pet-pose-sleep\{opacity:1\}/, 'asleep');
   assert.match(petJs, /\.us-pet-figure/, 'happy hop runs on the figure');
-  assert.match(petJs, /\.m-heart/, 'happy shows the heart');
-  // Two approved drawings: kitten v0 (QA preview) and Maudit 1.0 (production).
+  assert.match(petJs, /\.us-pet-heart/, 'happy shows the heart');
+  // In use: kitten v0 (QA preview) and the companions' pieces (production).
   const manifest = JSON.parse(read('assets/ASSET_MANIFEST.json'));
-  assert.deepEqual(manifest.assets.filter((a) => /\/pet\//.test(a.path)).map((a) => a.usedBy[0]).sort(), ['pet-preview', 'pet-production']);
+  assert.deepEqual([...new Set(manifest.assets.filter((a) => /\/pet\//.test(a.path) && a.usedBy.length).map((a) => a.usedBy[0]))].sort(), ['pet-preview', 'pet-production']);
   assert.doesNotMatch(petJs + petCss, /[\u{1F300}-\u{1FAFF}❤♥]/u, 'no emoji, no heart glyph');
 });
 

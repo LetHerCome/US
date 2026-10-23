@@ -26,46 +26,59 @@ body:has(.auth-overlay:not(.hidden)) .us-pet-layer{opacity:0;translate:0 30px;vi
    comes back when it closes. Not a blocker: the "think" reaction still runs. */
 body:has(#thinkArrival.open) .us-pet-layer{opacity:0;visibility:hidden;transition:opacity .26s,visibility 0s linear .26s}
 
-/* ---------- PRODUCTION renderer: Maudit 1.0 (mockup .m) ----------
-   The approved drawing (viewBox 0 -8 100 100) is placed so that it sits in
-   the 54 × 48 box exactly like the mockup's viewBox 0 0 100 92: scale
-   48 / 92, centred across, its y = 0 at the top of the box. */
-.us-pet-maudit{position:absolute;left:.913px;top:-4.174px;width:52.174px;height:52.174px;overflow:visible;display:block}
-.us-pet-maudit .m-collar{display:none}
-.us-pet-layer[data-pet-accessory="collar"] .us-pet-maudit .m-collar{display:inline}
-.us-pet-maudit :is(.m-eyes-happy,.m-eyes-closed,.m-zz,.m-purr,.m-heart){opacity:0}
-.us-pet-layer:is([data-pet-state="happy"],[data-pet-state="pet"],[data-pet-state="sleep"]) .m-eyes-open{opacity:0}
-.us-pet-layer:is([data-pet-state="happy"],[data-pet-state="pet"]) .m-eyes-happy{opacity:1}
-.us-pet-layer[data-pet-state="sleep"] :is(.m-eyes-closed,.m-zz){opacity:1}
-.us-pet-layer[data-pet-state="pet"] .m-purr{opacity:1}
-.us-pet-maudit :is(.m-head,.m-tail,.m-body,.m-ear-l,.m-ear-r,.m-pupils,.m-eyes-open){transform-box:fill-box}
-.us-pet-maudit .m-head{transform-origin:50% 90%;transition:rotate .45s var(--us-ease-spring),translate .45s var(--us-ease-standard)}
-.us-pet-maudit .m-tail{transform-origin:0% 100%}
-.us-pet-maudit .m-ear-l{transform-origin:80% 100%;transition:rotate .3s var(--us-ease-standard)}
-.us-pet-maudit .m-ear-r{transform-origin:20% 100%;transition:rotate .3s var(--us-ease-standard)}
-.us-pet-maudit .m-pupils{transition:translate .35s var(--us-ease-standard)}
-.us-pet-maudit .m-eyes-open{transform-origin:50% 50%}
-/* idle — sits; curious — head tilts, ears open; pet — ears back, head leans
-   into the hand; sleep — head down. happy adds the hop and the heart (pet.js). */
-.us-pet-layer[data-pet-state="curious"] .m-head{rotate:-9deg}
-.us-pet-layer[data-pet-state="curious"] .m-ear-l{rotate:-6deg}
-.us-pet-layer[data-pet-state="curious"] .m-ear-r{rotate:6deg}
-.us-pet-layer[data-pet-state="pet"] .m-ear-l{rotate:-14deg}
-.us-pet-layer[data-pet-state="pet"] .m-ear-r{rotate:14deg}
-.us-pet-layer[data-pet-state="sleep"] .m-head{translate:0 3px}
-.us-pet-layer[data-pet-state="pet"] .m-head{rotate:5deg}
+/* ---------- PRODUCTION renderers: Maudit 2.0 and the companions ----------
+   The owner's art in pieces (pet.js COMPANIONS), every piece in one shared
+   frame: 48 px tall, centred on the home spot, feet on the box bottom.
+   idle — awake body, breathes, blinks, its parts move; curious — leans back;
+   pet — eyes closed, leans into the hand; sleep and happy — their own pose.
+   The dragon flies its loop with the wings beating (pet.js, Web Animations). */
+.us-pet-rig{position:absolute;left:50%;bottom:0;height:48px;translate:-50% 0;display:block}
+.us-pet-rig img,.us-pet-rig svg{position:absolute;inset:0;width:100%;height:100%;display:block;-webkit-user-drag:none}
+.us-pet-awake{position:absolute;inset:0;transform-origin:50% 100%;transition:opacity .18s,rotate .45s var(--us-ease-spring)}
+.us-pet-pose{opacity:0;transition:opacity .18s}
+.us-pet-lids,.us-pet-blink{opacity:0}
+.us-pet-layer:is([data-pet-state="sleep"],[data-pet-state="happy"]) .us-pet-awake{opacity:0}
+.us-pet-layer[data-pet-state="sleep"] .us-pet-pose-sleep{opacity:1}
+.us-pet-layer[data-pet-state="happy"] .us-pet-pose-happy{opacity:1}
+.us-pet-figure[data-pet-flying] .us-pet-awake{opacity:1}
+.us-pet-figure[data-pet-flying] .us-pet-pose{opacity:0}
+.us-pet-layer[data-pet-state="curious"] .us-pet-awake{rotate:-7deg}
+.us-pet-layer[data-pet-state="pet"] .us-pet-awake{rotate:5deg}
+.us-pet-layer[data-pet-state="pet"] :is(.us-pet-lids,.us-pet-blink){opacity:1}
+.us-pet-zz{position:absolute;right:-6px;top:-8px;opacity:0;color:#F7EFE9;font:700 9px/1 Figtree,system-ui,sans-serif}
+.us-pet-zz i{position:absolute;font-style:normal}
+.us-pet-zz i:last-child{left:7px;top:-7px;font-size:7px}
+.us-pet-layer[data-pet-state="sleep"] .us-pet-zz{opacity:1}
+.us-pet-heart{position:absolute;left:50%;top:-12px;width:12px;height:12px;margin-left:-6px;opacity:0;background:#FF7C96;-webkit-mask:url(/assets/icons/phosphor/heart-straight-fill.svg) center/contain no-repeat;mask:url(/assets/icons/phosphor/heart-straight-fill.svg) center/contain no-repeat}
 @media (prefers-reduced-motion:no-preference){
-  .us-pet-maudit .m-eyes-open{animation:us-maudit-blink 5.2s infinite}
-  .us-pet-maudit .m-tail{animation:us-maudit-tail 4.6s ease-in-out infinite alternate}
-  .us-pet-layer[data-pet-state="sleep"] .m-body{transform-origin:50% 100%;animation:us-maudit-breathe 3.4s ease-in-out infinite}
-  .us-pet-layer[data-pet-state="sleep"] .m-zz{animation:us-maudit-zz 2.8s ease-in-out infinite}
-  .us-pet-layer[data-pet-state="pet"] .m-purr{animation:us-maudit-purr .5s ease-in-out infinite alternate}
+  .us-pet-awake{animation:us-pet-breathe 3.4s ease-in-out infinite}
+  .us-pet-layer[data-pet-state="sleep"] .us-pet-pose-sleep{transform-origin:50% 100%;animation:us-pet-breathe 4.6s ease-in-out infinite}
+  .us-pet-lids,.us-pet-blink{animation:us-pet-blink 4.6s infinite}
+  .us-pet-layer[data-pet-state="pet"] :is(.us-pet-lids,.us-pet-blink){animation:none}
+  .us-pet-layer[data-pet-state="sleep"] .us-pet-zz{animation:us-maudit-zz 2.8s ease-in-out infinite}
+  .us-pet-maudit .us-pet-tail{animation:us-pet-tail 2.8s ease-in-out infinite alternate}
+  .us-pet-goat .us-pet-ear-l{animation:us-pet-ear-l 2.6s ease-in-out infinite alternate}
+  .us-pet-goat .us-pet-ear-r{animation:us-pet-ear-r 2.6s ease-in-out infinite alternate}
+  .us-pet-owl .us-pet-wing-l{animation:us-pet-tuck-l 3s ease-in-out infinite alternate}
+  .us-pet-owl .us-pet-wing-r{animation:us-pet-tuck-r 3s ease-in-out infinite alternate}
+  .us-pet-dragon .us-pet-wing-l{animation:us-pet-rest-l 3.2s ease-in-out infinite alternate}
+  .us-pet-dragon .us-pet-wing-r{animation:us-pet-rest-r 3.2s ease-in-out infinite alternate}
+  .us-pet-layer[data-pet-state="pet"] .us-pet-part{animation-duration:.5s}
+  .us-pet-figure[data-pet-flying] .us-pet-dragon .us-pet-wing-l{animation:us-pet-flap-l .2s ease-in-out infinite alternate}
+  .us-pet-figure[data-pet-flying] .us-pet-dragon .us-pet-wing-r{animation:us-pet-flap-r .2s ease-in-out infinite alternate}
 }
-@keyframes us-maudit-blink{0%,94%,100%{scale:1 1}97%{scale:1 .1}}
-@keyframes us-maudit-tail{from{rotate:-6deg}to{rotate:10deg}}
-@keyframes us-maudit-breathe{50%{scale:1.025 1.045}}
+@keyframes us-pet-breathe{50%{scale:1.02 1.04}}
+@keyframes us-pet-blink{0%,95%,100%{opacity:0}96.5%,98.5%{opacity:1}}
 @keyframes us-maudit-zz{0%{translate:0 2px;opacity:0}30%{opacity:1}100%{translate:4px -8px;opacity:0}}
-@keyframes us-maudit-purr{to{translate:1px 0}}
+@keyframes us-pet-tail{from{rotate:-5deg}to{rotate:7deg}}
+@keyframes us-pet-ear-l{from{rotate:-4deg}to{rotate:8deg}}
+@keyframes us-pet-ear-r{from{rotate:4deg}to{rotate:-8deg}}
+@keyframes us-pet-tuck-l{from{rotate:1deg}to{rotate:-6deg}}
+@keyframes us-pet-tuck-r{from{rotate:-1deg}to{rotate:6deg}}
+@keyframes us-pet-rest-l{from{rotate:0deg}to{rotate:7deg}}
+@keyframes us-pet-rest-r{from{rotate:0deg}to{rotate:-7deg}}
+@keyframes us-pet-flap-l{from{rotate:-28deg}to{rotate:14deg}}
+@keyframes us-pet-flap-r{from{rotate:28deg}to{rotate:-14deg}}
 
 /* ---------- PREVIEW renderer: "kitten preview v0" (QA only, ?us-pet=preview) ----------
    Same five states as static poses of the earlier articulated kitten. */
