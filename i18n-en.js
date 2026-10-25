@@ -393,7 +393,7 @@
     '💬 Today · in attesa di {name}': '💬 Today · waiting for {name}',
     '💬 Today · risposta in attesa': '💬 Today · answer waiting',
     '💬 Today · da fare': '💬 Today · to do',
-    'Errore sync Today': 'Today sync error',
+    'Non riesco a inviare la risposta. Riprova.': 'I can’t send your answer. Try again.',
     'Salvato online ♡': 'Saved online ♡',
     'Scrivi qualcosa prima': 'Write something first',
     'Risposte viste · puoi rileggerle': 'Answers seen · you can read them again',
