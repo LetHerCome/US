@@ -334,14 +334,16 @@ test('index carica Supabase, auth storage, public auth, app e Stories in questo 
   const onboardingIndex = sources.findIndex((src) => src.startsWith('/onboarding.js'));
   // S3.1: app.js mounts window.UsPublicAuthS31 at load, so it comes first.
   const publicAuthIndex = sources.findIndex((src) => src.startsWith('/public-auth.js'));
+  // Accesso con Google: app.js creates window.usGoogleAuth at load as well.
+  const googleAuthIndex = sources.findIndex((src) => src.startsWith('/google-auth.js'));
   const progressionIndex = sources.findIndex((src) => src.startsWith('/progression.js'));
   const storiesIndex = sources.findIndex((src) => src.startsWith('/stories.js'));
   const firstExistingScriptIndex = sources.findIndex((src) => src.startsWith('/fix4.js'));
 
   assert.ok(supabaseIndex >= 0, 'script Supabase non trovato');
   assert.deepEqual(
-    [authIndex, onboardingIndex, publicAuthIndex, appIndex, progressionIndex, storiesIndex, firstExistingScriptIndex],
-    [supabaseIndex + 1, supabaseIndex + 2, supabaseIndex + 3, supabaseIndex + 4, supabaseIndex + 5, supabaseIndex + 6, supabaseIndex + 7]
+    [authIndex, onboardingIndex, publicAuthIndex, googleAuthIndex, appIndex, progressionIndex, storiesIndex, firstExistingScriptIndex],
+    [supabaseIndex + 1, supabaseIndex + 2, supabaseIndex + 3, supabaseIndex + 4, supabaseIndex + 5, supabaseIndex + 6, supabaseIndex + 7, supabaseIndex + 8]
   );
 });
 

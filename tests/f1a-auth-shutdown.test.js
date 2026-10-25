@@ -53,6 +53,13 @@ test('F1A: the shipped runtime never invokes a legacy auth entry point', () => {
     const src = read(file);
     for (const [pattern, label] of forbidden) {
       if (file === SIGNUP_MODULE && label === 'self signup') continue;
+      // Accesso con Google (25/10/2026): only google-auth.js, only Google's ID token
+      // and redirect; never identity linking or SSO.
+      if (file === 'google-auth.js' && label === 'other providers / identity linking') {
+        assert.doesNotMatch(src, /linkIdentity|signInWithSSO/);
+        assert.ok(src.includes("signInWithIdToken({ provider: 'google'"));
+        continue;
+      }
       assert.doesNotMatch(src, pattern, `${file}: ${label}`);
     }
   }
@@ -66,7 +73,7 @@ test('F1A: the login overlay is exactly email + password', () => {
   const html = read('index.html');
   const overlay = html.match(/<div class="auth-overlay" id="authOverlay">[\s\S]*?\n<\/div>\n/)[0];
   const steps = [...overlay.matchAll(/class="auth-step[^"]*" id="([^"]+)"/g)].map((m) => m[1]);
-  const S31_STEPS = ['usSignup','usVerifyEmail','usForgotPassword','usRecovery'];
+  const S31_STEPS = ['usSignup','usVerifyEmail','usForgotPassword','usGoogleTerms','usRecovery'];
   assert.deepEqual(steps, ['authLogin', ...S31_STEPS, 'usOnboarding'],
     'password login, the gated S3.1 steps, then private MC3 onboarding');
   // The S3.1 steps are the public-auth forms only, and the links that open them

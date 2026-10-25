@@ -1,0 +1,14 @@
+{
+  "name": "@us/google-signin",
+  "version": "1.0.0",
+  "private": true,
+  "description": "US Accesso con Google (Android): Credential Manager «Accedi con Google» returns a Google ID token bound to a nonce; the app exchanges it with Supabase (signInWithIdToken).",
+  "capacitor": {
+    "android": {
+      "src": "android"
+    }
+  },
+  "peerDependencies": {
+    "@capacitor/core": "8.5.0"
+  }
+}

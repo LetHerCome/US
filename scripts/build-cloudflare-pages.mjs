@@ -15,6 +15,7 @@ const RUNTIME_FILES = [
   'index.html',
   'auth-storage.js',
   'public-auth.js',
+  'google-auth.js',
   'public-auth.css',
   'app.js',
   'onboarding.js',

@@ -114,7 +114,9 @@ test('settings: rows, routes and guarded flows', () => {
   assert.match(privacy, /id="usOpenLeaveCouple">Esci dalla coppia</);
   assert.match(privacy, /Una copia dei tuoi dati/);
   const leave = settings.slice(settings.indexOf('async function leaveCoupleModal'), settings.indexOf('// Segnala un problema'));
-  assert.match(leave, /type="password" autocomplete="current-password"/);
+  // The password field, or for a Google account the Google confirmation (25/10/2026).
+  assert.ok(leave.includes("${reauthField(mode,'usLeaveCouplePassword',"));
+  assert.match(settings.slice(settings.indexOf('function reauthField('), settings.indexOf('async function accountDeletionModal')), /type="password" autocomplete="current-password"/);
   assert.match(leave, /id="usLeaveCoupleSubmit" disabled>/);
   assert.match(leave, /api\.canLeave\(/);
   assert.match(leave, /api\.reauthenticateAndLeave\(/);

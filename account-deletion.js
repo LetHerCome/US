@@ -18,8 +18,11 @@ const CONFIRM_WORD='ELIMINA';
 const CHANNELS=Object.freeze(['app','web']);
 
 function isConfirmWord(value){return String(value??'').trim()===CONFIRM_WORD;}
-function canSubmit({password,confirm}={}){
-  return typeof password==='string'&&password.length>0&&isConfirmWord(confirm);
+// Accesso con Google (25/10/2026): an account without a password confirms with
+// Google again instead (google-auth.js reauthenticate; Edge amr "oauth").
+const hasSecret=(password,google)=>google===true||(typeof password==='string'&&password.length>0);
+function canSubmit({password,confirm,google=false}={}){
+  return hasSecret(password,google)&&isConfirmWord(confirm);
 }
 
 // Server contract → one outcome per response. Only `deleted` and
@@ -46,6 +49,9 @@ function message(kind,supportEmail=US_SUPPORT_EMAIL,channel='web'){
     case 'network':return 'Non riesco a raggiungere US. Controlla la connessione e riprova.';
     case 'no_email':return `Non trovo l'email del tuo account. Scrivi a ${supportEmail}.`;
     case 'unavailable':return `Servizio non disponibile. Scrivi a ${supportEmail}.`;
+    case 'google_cancelled':return 'Conferma con Google annullata. Non è cambiato nulla.';
+    case 'google_other_account':return 'Hai scelto un altro account Google: scegli quello con cui accedi a US.';
+    case 'google_failed':return 'Non riesco a confermare con Google. Riprova tra poco.';
     default:return 'Eliminazione non riuscita: non è stato eliminato nulla. Riprova tra poco.';
   }
 }
@@ -100,8 +106,19 @@ async function freshAccessToken({client,email,password}={}){
   return {accessToken};
 }
 
-async function reauthenticateAndDelete({client,email,password,channel,supabaseUrl,apiKey,fetchImpl}={}){
-  const fresh=await freshAccessToken({client,email,password});
+// The Google path: Google's sheet again, the same account (google-auth.js).
+async function freshGoogleToken({google,user}={}){
+  if(typeof google?.reauthenticate!=='function'||!user)return {kind:'unavailable',done:false};
+  let result;
+  try{result=await google.reauthenticate(user);}catch(_){return {kind:'google_failed',done:false};}
+  if(result?.ok&&result.accessToken)return {accessToken:result.accessToken};
+  const kinds={cancelled:'google_cancelled',other_account:'google_other_account'};
+  return {kind:kinds[result?.kind]||'google_failed',done:false};
+}
+const freshToken=({client,email,password,google,user})=>google?freshGoogleToken({google,user}):freshAccessToken({client,email,password});
+
+async function reauthenticateAndDelete({client,email,password,google,user,channel,supabaseUrl,apiKey,fetchImpl}={}){
+  const fresh=await freshToken({client,email,password,google,user});
   if(!fresh.accessToken)return fresh;
   return requestDeletion({supabaseUrl,apiKey,accessToken:fresh.accessToken,channel,fetchImpl});
 }
@@ -112,8 +129,8 @@ async function reauthenticateAndDelete({client,email,password,channel,supabaseUr
 // Only from the app; the server (Edge `leave-couple`) owns every rule.
 const LEAVE_WORD='ESCI';
 function isLeaveWord(value){return String(value??'').trim()===LEAVE_WORD;}
-function canLeave({password,confirm}={}){
-  return typeof password==='string'&&password.length>0&&isLeaveWord(confirm);
+function canLeave({password,confirm,google=false}={}){
+  return hasSecret(password,google)&&isLeaveWord(confirm);
 }
 function leaveOutcome(status,body){
   const error=body&&typeof body.error==='string'?body.error:'';
@@ -140,8 +157,8 @@ function leaveMessage(kind,supportEmail=US_SUPPORT_EMAIL){
 async function requestLeave({supabaseUrl,apiKey,accessToken,fetchImpl}={}){
   return callEdge({fn:'leave-couple',payload:{confirm:LEAVE_WORD,channel:'app'},supabaseUrl,apiKey,accessToken,fetchImpl,toOutcome:leaveOutcome});
 }
-async function reauthenticateAndLeave({client,email,password,supabaseUrl,apiKey,fetchImpl}={}){
-  const fresh=await freshAccessToken({client,email,password});
+async function reauthenticateAndLeave({client,email,password,google,user,supabaseUrl,apiKey,fetchImpl}={}){
+  const fresh=await freshToken({client,email,password,google,user});
   if(!fresh.accessToken)return fresh;
   return requestLeave({supabaseUrl,apiKey,accessToken:fresh.accessToken,fetchImpl});
 }

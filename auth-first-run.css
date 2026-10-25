@@ -288,3 +288,9 @@ html.us-returning-device .auth-overlay{
 @media(prefers-reduced-motion:reduce){
   .auth-card,.role-btn{transition:none!important}
 }
+
+/* Accesso con Google (25/10/2026): the design's secondary button (dc-primo.css)
+   under «Accedi», with the Phosphor GoogleLogo mark in the text colour. */
+html .auth-overlay #usGoogleSignIn{gap:8px;margin-top:10px}
+html .auth-overlay #usGoogleSignIn[hidden]{display:none}
+.us-auth-google-mark{width:18px;height:18px;flex:0 0 18px;background-color:currentColor;-webkit-mask:url("/assets/icons/phosphor/google-logo-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/google-logo-regular.svg") center/contain no-repeat}

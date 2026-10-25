@@ -233,9 +233,13 @@ test('assertRecentPasswordAuth', () => {
   const ok = { amr: [{ method: 'otp', timestamp: NOW }, { method: 'password', timestamp: NOW - 599 }] };
   assert.equal(assertRecentPasswordAuth(ok, NOW), true);
   assert.equal(assertRecentPasswordAuth({ amr: [{ method: 'password', timestamp: NOW + 59 }] }, NOW), true);
+  // 25/10/2026: an account that signs in with Google confirms with Google again
+  // (Supabase records the id_token grant as amr "oauth"), within the same 10 minutes.
+  assert.equal(assertRecentPasswordAuth({ amr: [{ method: 'oauth', timestamp: NOW - 599 }] }, NOW), true);
   const rejects = [
     {}, { amr: null }, { amr: [] },
-    { amr: [{ method: 'oauth', timestamp: NOW }] },
+    { amr: [{ method: 'oauth', timestamp: NOW - 601 }] },
+    { amr: [{ method: 'token_refresh', timestamp: NOW }] },
     { amr: [{ method: 'otp', timestamp: NOW }] },
     { amr: [{ method: 'password', timestamp: NOW - 601 }] },
     { amr: [{ method: 'password', timestamp: NOW + 61 }] },

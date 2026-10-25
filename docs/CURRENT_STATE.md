@@ -6,6 +6,19 @@
 
 Stati: PROGETTATO / IN BRANCH / MERGED / SQL o Edge APPLICATO (staging? produzione?) / TESTATO SU DEVICE. Non confonderli. Ogni merge su `main` pubblica il web di produzione (Cloudflare Pages), ma non applica SQL né Edge. Merge, SQL di produzione, deploy Edge e pubblicazione Store richiedono ciascuno un'autorizzazione separata del founder.
 
+## Aggiornamento 26/10 — 1.2.x, Supabase Pro, verso il test chiuso
+
+- **Su `main`:**
+  - #224 Fluidità 2;
+  - #225 accoglienza, widget «La domanda di oggi» e styles.css snellito;
+  - #226–#228 notifiche: lettura fallita, avvio a freddo, codice di Google e «Attiva» in 5G completato da solo.
+- **Google Play, test interno:** 1.2.0 (428759), 1.2.1 (428838), 1.2.2 (428862), 1.2.3 (428905).
+- **Supabase:**
+  - produzione nell'organizzazione Pro, con compute Micro e backup giornalieri;
+  - staging spostato in un'organizzazione gratuita («US Staging»).
+- **In branch:** Accesso V1, cioè registrazione con email aperta in produzione e accesso con Google ([spec](missions/accesso-v1.md)). Serve al test chiuso su Play, per cui la Console è in preparazione.
+- **Notifiche in 5G:** sul telefono del founder il token di Google arriva con il Wi-Fi e non in 5G. Con la 1.2.3 il messaggio mostra il codice vero e US completa l'attivazione da solo appena la rete risponde. La causa del rifiuto in 5G non è ancora nota.
+
 ## Aggiornamento 25/10 — rilascio 1.1.0
 
 - **Su `main`:** #223 (`d3e5c8f`): Contenuti 1.1, Fluidità 1, Il vostro anno, Compagni. Web di produzione pubblicato con la build `us-anno-compagni-20261025-28`.
