@@ -2382,12 +2382,9 @@
     'Guarda il vostro anno': 'See your year',
 
     // ------------------------------------------------ Compagni V1
-    'La capretta': 'The little goat',
-    'Il gufetto': 'The little owl',
-    'Il draghetto': 'The little dragon',
-    'È arrivata la capretta': 'The little goat is here',
-    'È arrivato il gufetto': 'The little owl is here',
-    'È arrivato il draghetto': 'The little dragon is here',
+    'È arrivata Bea': 'Bea is here',
+    'È arrivato Milo': 'Milo is here',
+    'È arrivato Firix': 'Firix is here',
     'Un nuovo compagno, in Sintonia': 'A new companion, in Sync',
     Compagni: 'Companions',
     'sopra la barra': 'above the bar',

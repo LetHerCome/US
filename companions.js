@@ -12,9 +12,9 @@
 'use strict';
 const CATALOG=Object.freeze([
   {id:'maudit',name:'Maudit',arrived:'È arrivato Maudit',level:3},
-  {id:'owl',name:'Il gufetto',arrived:'È arrivato il gufetto',level:5},
-  {id:'goat',name:'La capretta',arrived:'È arrivata la capretta',level:8},
-  {id:'dragon',name:'Il draghetto',arrived:'È arrivato il draghetto',level:11}
+  {id:'owl',name:'Milo',arrived:'È arrivato Milo',level:5},
+  {id:'goat',name:'Bea',arrived:'È arrivata Bea',level:8},
+  {id:'dragon',name:'Firix',arrived:'È arrivato Firix',level:11}
 ]);
 const byId=id=>CATALOG.find(c=>c.id===id);
 const awake=id=>{const v=id==='maudit'?'v2':'v1';return `/assets/derived/pet/us-pet-${id}-awake-${v}.webp`;};

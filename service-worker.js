@@ -1,4 +1,4 @@
-const BUILD_ID = "us-compagni-sintonia-20261023-26";
+const BUILD_ID = "us-compagni-nomi-20261025-27";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;

@@ -15,13 +15,13 @@ Tutti stanno nel posto di Maudit (sopra l'estremità destra della barra in basso
 | Compagno | Gesto suo | Si sblocca quando |
 |---|---|---|
 | **Maudit** (2.0) | Respira, sbatte le palpebre, muove la coda | **Livello 3** di Sintonia |
-| **Il gufetto** | Stringe e rilassa le ali; da curioso si piega | **Livello 5** |
-| **La capretta** | Dondola le orecchie a pendaglio; da felice fa un saltello | **Livello 8** |
-| **Il draghetto** | Vola e torna sempre al suo posto | **Livello 11** |
+| **Milo**, il gufetto | Stringe e rilassa le ali; da curioso si piega | **Livello 5** |
+| **Bea**, la capretta | Dondola le orecchie a pendaglio; da felice fa un saltello | **Livello 8** |
+| **Firix**, il draghetto | Vola e torna sempre al suo posto | **Livello 11** |
 
 I livelli 2, 4, 6, 7, 10, 12 e 13 danno già un tema o un effetto di Oggi: i compagni stanno nei livelli liberi, così ogni livello porta una sola sorpresa.
 
-I nomi propri dei compagni li sceglie il founder; fino ad allora valgono quelli descrittivi.
+Nomi scelti dal founder (25/10): Milo il gufetto, Bea la capretta, Firix il draghetto. Nell'app compare il nome proprio («È arrivato Firix»).
 
 ### Il volo del draghetto
 

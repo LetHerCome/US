@@ -42,10 +42,10 @@ test('Oggi: one arrival at a time, the oldest first, Maudit included, never twic
   assert.equal(first.detail, 'Un nuovo compagno, in Sintonia');
   assert.equal(first.category, 'celebration', 'a small celebration; on a monthiversary it waits a day');
   assert.equal(first.action, 'companion');
-  assert.equal(C.todayPriority(list, new Set(['maudit'])).title, 'È arrivato il gufetto');
+  assert.equal(C.todayPriority(list, new Set(['maudit'])).title, 'È arrivato Milo');
   assert.equal(C.todayPriority(list, new Set(['maudit', 'owl'])), null);
   assert.equal(C.todayPriority(C.normalize(null), new Set()), null, 'nobody yet, nothing to tell');
-  assert.equal(C.todayPriority(C.normalize({ companions: [{ id: 'goat', unlocked: true }] }), new Set()).title, 'È arrivata la capretta');
+  assert.equal(C.todayPriority(C.normalize({ companions: [{ id: 'goat', unlocked: true }] }), new Set()).title, 'È arrivata Bea');
   assert.match(js, /w\.USNoiV2\?\.openSintonia\?\.\(\);/);
   assert.match(js, /w\.USProgression\?\.showCategory\?\.\('companion'\)/);
 });
@@ -95,7 +95,7 @@ test('copy: inclusive Italian, no therapy or growth words', () => {
     assert.doesNotMatch(copy, banned, String(banned));
   }
   const en = read('i18n-en.js');
-  for (const key of ['È arrivato Maudit', 'È arrivato il draghetto', 'Un nuovo compagno, in Sintonia', 'Compagni', '{name} · con te sopra la barra', 'Un compagno sopra la barra · mancano {n} XP']) {
+  for (const key of ['È arrivato Maudit', 'È arrivato Firix', 'Un nuovo compagno, in Sintonia', 'Compagni', '{name} · con te sopra la barra', 'Un compagno sopra la barra · mancano {n} XP']) {
     assert.ok(en.includes(`'${key}':`) || en.includes(`${key}:`), key);
   }
 });
