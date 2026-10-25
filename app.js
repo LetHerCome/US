@@ -934,7 +934,9 @@ const usOnboarding=window.UsOnboarding.mount({
     }catch(_error){await initCloud();}
   }
 });
-function usInvalidateAuth({revokePush=true}={}){
+// keepDevice: the same phone restarting its boot (the cold-start SIGNED_IN):
+// its notifications, widgets and boot caches stay. Bug 25/10/2026.
+function usInvalidateAuth({revokePush=true,keepDevice=false}={}){
   usAuthEpoch++;
   for(const cancel of usPushWaiters)cancel();
   const previousId=window.usProfile?.id||usAuthUserId;
@@ -946,7 +948,7 @@ function usInvalidateAuth({revokePush=true}={}){
   homePhotoRequestId++;
   homePhotoPath='';homePhotoHourKey='';homePhotoHasPainted=false;if(typeof usHomePhotoMeta!=='undefined')usHomePhotoMeta=null;if(typeof renderOggiCaption==='function')renderOggiCaption(null);if(typeof renderOggiNext==='function')renderOggiNext(null);
   document.body.classList.remove('us-fastboot-photo');
-  clearPrivateDeviceState(previousId).catch(()=>{});
+  if(!keepDevice)clearPrivateDeviceState(previousId).catch(()=>{});
   for(const id of ['homePhotoLayerA','homePhotoLayerB']){
     const layer=document.getElementById(id);if(layer)layer.style.backgroundImage='';
   }
@@ -956,8 +958,10 @@ function usInvalidateAuth({revokePush=true}={}){
   window.usProfile=null;
   if(typeof usApplyPersonColor==='function')usApplyPersonColor(null);
   window.UsCoupleContext?.clear?.();
-  window.UsWidgets?.clear?.().catch(()=>{});
-  window.UsNotifications?.signedOut?.();
+  if(!keepDevice){
+    window.UsWidgets?.clear?.().catch(()=>{});
+    window.UsNotifications?.signedOut?.();
+  }
   if(usRealtimeChannel){sb.removeChannel(usRealtimeChannel);usRealtimeChannel=null;}
   document.documentElement.classList.remove('us-auth-ready','us-returning-device');
   document.documentElement.classList.add('us-auth-pending');
@@ -5970,6 +5974,10 @@ sb.auth.onAuthStateChange((event,_session)=>{
   // re-running the boot cleared the couple and emptied Ricordi (founder's
   // video). The foreground refresh (refreshVisibleState) already covers it.
   if(event==='SIGNED_IN'&&window.usProfile&&usAuthUserId&&(_session?.user?.id||'')===usAuthUserId)return;
+  // Cold start (bug 25/10/2026): supabase-js announces the stored session with
+  // SIGNED_IN before the boot knows who is signed in. Nobody was signed in on
+  // this run yet: restart the boot, keep this phone's notifications and widgets.
+  if(event==='SIGNED_IN'&&!usAuthUserId&&!window.usProfile){usInvalidateAuth({keepDevice:true});setTimeout(initCloud,0);return;}
   if(event==='SIGNED_OUT'||(_session?.user?.id||'')!==usAuthUserId)usInvalidateAuth();
   setTimeout(initCloud,0);
 });
