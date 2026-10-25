@@ -96,7 +96,8 @@ test('M9B: una sola autorità — get_daily_state, foglio esistente, niente dupl
 
 test('M9B: stile premium con icona Phosphor approvata e rispetto di focus/reduced motion', () => {
   const css = read('styles.css');
-  assert.match(css, /\.us-daily-ritual-mark::before\{[^}]*mask:url\("\/assets\/icons\/phosphor\/question-regular\.svg"\)/);
+  // The "Due colori" card replaced the old question mark (us-daily-ritual-mark): its icon rule left with it (25/10 trim).
+  assert.doesNotMatch(css, /\.us-daily-ritual-mark::before\{[^}]*question-regular/);
   assert.match(css, /\.us-daily-ritual-question\{[^}]*font-family:var\(--us-font-editorial/);
   assert.match(css, /\.us-daily-ritual\[data-state="invited"\]/);
   for (const state of ['waiting', 'reveal']) assert.doesNotMatch(css, new RegExp(`\\.us-daily-ritual\\[data-state="${state}"\\]`));

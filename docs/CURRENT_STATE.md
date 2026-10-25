@@ -6,6 +6,14 @@
 
 Stati: PROGETTATO / IN BRANCH / MERGED / SQL o Edge APPLICATO (staging? produzione?) / TESTATO SU DEVICE. Non confonderli. Ogni merge su `main` pubblica il web di produzione (Cloudflare Pages), ma non applica SQL né Edge. Merge, SQL di produzione, deploy Edge e pubblicazione Store richiedono ciascuno un'autorizzazione separata del founder.
 
+## Aggiornamento 25/10 — rilascio 1.1.0
+
+- **Su `main`:** #223 (`d3e5c8f`): Contenuti 1.1, Fluidità 1, Il vostro anno, Compagni. Web di produzione pubblicato con la build `us-anno-compagni-20261025-28`.
+- **Produzione Supabase, SQL applicato il 25/10** (Claude, con l'OK del founder): `20261022160549_content_1_1`, `20261022170733_year_recap_v1`, `20261022213000_companions_v1`. Controllo in sola lettura dopo: domande del giorno 182 → 364; Maudit tenuto per 2 coppie su 2; `get_companions_v1` e `get_couple_year_recap` solo per `authenticated`; `couple_companion_unlocks` chiusa con RLS; nessuna tabella del check-in.
+- **Google Play:** 1.1.0 (428615) nel test interno, run 40207625190, caricata dal workflow dopo l'approvazione del founder sull'ambiente `play-deploy`.
+- **Il punto della settimana:** congelato, solo su staging, sul branch `claude/payred-app-comparison-b2594e` (allineato a `main` il 25/10, build `us-staging-checkin-20261025-29`).
+- **Prossima missione:** Fluidità 2 ([spec](missions/fluidita-2.md)).
+
 ## Aggiornamento 22/10 (le sezioni più sotto sono rimaste al 17/10)
 
 - **Su `main` dal 17/10:** #190 eliminazione account, #196 Esci dalla coppia / Segnala / export, #194, #214–#222. Le righe più sotto che le danno come DRAFT sono superate.

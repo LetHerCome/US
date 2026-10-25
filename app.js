@@ -838,6 +838,7 @@ async function clearPrivateDeviceState(profileId=window.usProfile?.id||''){
   window.UsWeeklyCheckin?.reset?.();
   window.UsYearRecap?.reset?.();
   window.UsCompanions?.reset?.();
+  window.UsDistance?.reset?.();
   try{US_SIGNED_URL_CACHE.clear();}catch(_e){}
   const storageKeys=[
     'us:fix4:last-profile',
@@ -2706,6 +2707,8 @@ function renderDailyRitual(model){
 window.UsDailyRitual=Object.freeze({viewModel:dailyRitualViewModel,render:renderDailyRitual});
 async function refreshTodayPriorities({daily,freshEvents=false}={}){
   const refreshId=++usTodayPriorityRefreshId;
+  // La domanda di oggi widget (widgets.js): the question and whose turn it is.
+  window.UsWidgets?.syncDaily?.().catch?.(()=>{});
   const dailySource=daily===undefined&&window.todayQuestion?{
     question:window.todayQuestion,
     state:window.todayState,
@@ -2731,6 +2734,9 @@ async function refreshTodayPriorities({daily,freshEvents=false}={}){
   // Compagni V1 (companions.js): a new companion, told once.
   const companion=window.UsCompanions?.todayPriority?.();
   if(companion)candidates.push(companion);
+  // Accoglienza V1 (distance.js): one question for the couple, asked once.
+  const distance=window.UsDistance?.todayPriority?.();
+  if(distance)candidates.push(distance);
   const celebration=celebrationTodayPriorityViewModel(oggiStartedOn(),oggiTodayISO());
   if(celebration)candidates.push(celebration);
   let mission=null;
@@ -2794,6 +2800,7 @@ document.getElementById('usTodayPriorityRegion')?.addEventListener('click',event
   if(action==='checkin')window.UsWeeklyCheckin?.open?.();
   if(action==='recap')window.UsYearRecap?.open?.();
   if(action==='companion')window.UsCompanions?.open?.();
+  if(action==='distance')window.UsDistance?.open?.();
 });
 // M10.2 — nascondere l'avviso "Risposte pronte" = "non lo voglio più su Oggi",
 // MAI "ho visto le risposte". L'autorità è window.dismissDailyRevealNotice
@@ -3159,6 +3166,8 @@ async function sendThinkReaction(reaction){
     renderThinkReactionUi();
     sendWebPushEvent('think_reaction',usIncomingThink.id,{reaction:usThinkReactionFinal}).catch(()=>{});
     window.UsTodayPriority?.refresh?.();
+    // Fluidità 2: the chosen reaction answers the tap.
+    window.UsUiFoundation?.done?.(document.querySelector(`[data-think-reaction="${usThinkReactionFinal}"]`),{feel:'action'});
     toast('Reazione inviata',{icon:'check',quiet:false});
     setTimeout(()=>closeThinkArrival(),1300);
     return true;
@@ -3230,7 +3239,7 @@ function dailyKeepsakeRuntime(){
       if(!['kept','existing'].includes(data?.status)||data.question_id!==questionId)throw new Error('daily_keepsake_invalid');
       if(!current())return {status:'stale'};
       fresh=true;state={questionId,owner,status:'kept'};render();
-      if(data.status==='kept')toast('Conservato nei Ricordi',{icon:'sparkle',quiet:false});
+      if(data.status==='kept'){window.UsFeedback?.success?.();toast('Conservato nei Ricordi',{icon:'sparkle',quiet:false});}
       if(document.getElementById('momentsGrid')?.dataset.loaded==='1')Promise.resolve(window.hydrateMoments?.()).catch(()=>{});
       return data;
     }catch(error){
@@ -3335,6 +3344,7 @@ async function setDailyAnswerReaction(reaction){
     if(error||!data||data.question_id!==questionId)throw error||new Error('daily_reaction_invalid');
     if(window.todayQuestion?.id===questionId)window.todayRevealMeta=data;
     renderTodayReveal();
+    if(next)window.UsUiFoundation?.done?.(document.querySelector(`#todayReveal [data-daily-reaction="${next}"]`),{feel:'action'});
     // O2: the other phone hears about a ♥ or "mi hai commosso" (the server reads it back).
     if(next)sendWebPushEvent('daily_reaction',questionId);
     return {status:'saved'};
@@ -5413,6 +5423,9 @@ async function submitNoiIdeaQuickAdd(event){
     if(row&&!noiIdeaFindItem(row.id))noiIdeaState.activeItems.unshift(row);
     renderNoiIdeaActiveList();
     toggleNoiIdeaQuickForm(false);
+    // Fluidità 2: the new row arrives once, with the cue.
+    window.UsFeedback?.action?.();
+    if(row?.id)window.UsUiFoundation?.enter?.(document.querySelector(`#noiIdeaList [data-id="${CSS.escape(String(row.id))}"]`));
     toast('Idea aggiunta');
   }catch(e){
     if(!noiIdeaOperationIsCurrent(userId,coupleId,identityGen))return;
@@ -5917,7 +5930,7 @@ saveAnswer = async function(){
   usTodayAnswerSave=null;
   if(window.usProfile?.id!==viewerId||window.usProfile?.couple_id!==coupleId||window.todayQuestion?.id!==questionId)return;
   btn.disabled=false;
-  if(error){console.warn(error);btn.textContent='Riprova';return toast('Errore sync Today');}
+  if(error){console.warn(error);btn.textContent='Riprova';window.UsFeedback?.error?.();return toast('Non riesco a inviare la risposta. Riprova.');}
   sendWebPushEvent('daily_answer',window.todayQuestion.id).catch(()=>{});
   // As in the approved mockup: while the other has not answered yet, the sheet
   // closes and, on Oggi, my circle of the card fills; elsewhere, or with
@@ -5927,6 +5940,8 @@ saveAnswer = async function(){
   const theyAnswered=Boolean(window.todayState?.partner_has_answer);
   const onOggi=Boolean(document.getElementById('home')?.classList.contains('active'));
   usDailyRitualAnswerPending=firstAnswer&&!theyAnswered&&onOggi&&typeof dailyRitualReducedMotion==='function'&&!dailyRitualReducedMotion();
+  // Fluidità 2: the «fatto!» of the answer. The sheet that stays gets the pop and the sparks.
+  if(theyAnswered&&window.UsUiFoundation?.done)window.UsUiFoundation.done(btn);else window.UsFeedback?.success?.();
   if(!theyAnswered&&typeof closeToday==='function')closeToday();
   if(!usDailyRitualAnswerPending&&!(firstAnswer&&theyAnswered))toast('Risposta inviata',{icon:'check',quiet:false});
   await hydrateToday();

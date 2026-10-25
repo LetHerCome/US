@@ -1,4 +1,4 @@
-const BUILD_ID = "us-staging-checkin-20261025-29";
+const BUILD_ID = "us-staging-accoglienza-20261025-32";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -59,6 +59,8 @@ const APP_SHELL = [
   versioned("/year-recap.js"),
   versioned("/companions.css"),
   versioned("/companions.js"),
+  versioned("/distance.css"),
+  versioned("/distance.js"),
   versioned("/pet.css"),
   versioned("/pet.js"),
   versioned("/settings.css"),
@@ -100,8 +102,6 @@ const APP_SHELL = [
   "/assets/icons/phosphor/game-controller-fill.svg",
   "/assets/icons/phosphor/calendar-dots-regular.svg",
   "/assets/icons/phosphor/question-regular.svg",
-  "/assets/icons/phosphor/infinity-regular.svg",
-  "/assets/icons/phosphor/compass-regular.svg",
   "/assets/icons/phosphor/flag-banner-regular.svg",
   "/assets/icons/phosphor/caret-left-regular.svg",
   "/assets/icons/phosphor/envelope-simple-regular.svg",

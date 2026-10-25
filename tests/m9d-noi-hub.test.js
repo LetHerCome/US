@@ -26,11 +26,9 @@ test('M9D / 1.0: Noi opens on its calendar with three destinations, no old hub, 
 
 test('M9D + HUMAN-UI-02: Sintonia keeps the one-hero geometry, other destinations stay compact', () => {
   const s = css();
-  assert.match(s, /\.noi-hub\{display:grid;grid-template-columns:minmax\(0,1fr\);/);
-  assert.match(s, /\.noi-hub-card--resonance\{min-height:150px;/);
-  assert.match(s, /\.noi-hub-card:not\(\.noi-hub-card--resonance\)\{flex-direction:row;[^}]*min-height:64px/);
+  // 1.0 (N10) retired the old hub markup; its rules left with it (25/10 trim).
+  assert.doesNotMatch(s, /\.noi-hub\{|\.noi-hub-card/);
   for (const icon of ['infinity-regular', 'compass-regular', 'calendar-dots-regular', 'flag-banner-regular', 'caret-left-regular']) {
-    assert.match(s, new RegExp(`/assets/icons/phosphor/${icon}\\.svg`));
     const svg = read(`assets/icons/phosphor/${icon}.svg`);
     assert.match(svg, /^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" viewBox="0 0 256 256" fill="currentColor">/, `${icon} is an unmodified Phosphor asset`);
   }
