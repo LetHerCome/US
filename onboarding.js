@@ -957,7 +957,7 @@
       setBusy(false);
       if(result?.kind==='busy'){status('');return;}
       status(result?.kind==='denied'?'Permesso negato: puoi consentirle dalle impostazioni del telefono'
-        :result?.kind==='unavailable'?'Notifiche non disponibili in questa versione di US':`${result?.kind==='network'?'Rete lenta: riprova tra poco, oppure con il Wi-Fi':'Non riesco ad attivare le notifiche'}${result?.code?` · ${result.code}`:''}`,'error');
+        :result?.kind==='unavailable'?'Notifiche non disponibili in questa versione di US':`${result?.kind==='network'&&result?.pending?'La rete non risponde: le attivo da solo appena può':result?.kind==='network'?'Rete lenta: riprova tra poco, oppure con il Wi-Fi':'Non riesco ad attivare le notifiche'}${result?.code?` · ${result.code}`:''}`,'error');
     }
     function activatePlace(){
       setBusy(true);

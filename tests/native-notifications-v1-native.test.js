@@ -141,7 +141,9 @@ test('N2 client source: no permission at boot, no URL navigation, only push owne
   assert.match(enable, /push\.requestPermissions\(\)/);
   assert.equal(client.split('requestPermissions(').length - 1, 1);
   const stored = [...client.matchAll(/'us:notifications:v1:[^']*'|`us:notifications:v1:[^`]*`/g)].map((m) => m[0]);
-  assert.deepEqual(stored, ["'us:notifications:v1:installation'", "'us:notifications:v1:owner'", "'us:notifications:v1:token'", "'us:notifications:v1:transport-pending'", "'us:notifications:v1:retired'", '`us:notifications:v1:enabled:${userId}`', '`us:notifications:v1:synced:${userId}`']);
+  assert.deepEqual(stored, ["'us:notifications:v1:installation'", "'us:notifications:v1:owner'", "'us:notifications:v1:token'", "'us:notifications:v1:transport-pending'", "'us:notifications:v1:retired'", '`us:notifications:v1:enabled:${userId}`', '`us:notifications:v1:wanted:${userId}`', '`us:notifications:v1:synced:${userId}`']);
+  // The pending «Attiva» (wanted) resumes only with the permission already granted: never a prompt at boot.
+  assert.ok(client.includes("if ((await permission()) !== 'granted') { remove(STORE.wanted(owner.userId)); return; }\n    const result = await enable();"));
   assert.doesNotMatch(client, /access_token|refresh_token|service_role/, 'push tokens never replace Auth credentials');
   // Android: gate retirement precedes a completion-aware Firebase stop.
   assert.match(client, /if \(!status\?\.available \|\| !status\.configured\) return false/);

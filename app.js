@@ -633,8 +633,9 @@ async function refreshWebPushUi(){
     if(state.kind!=='inactive'){card.hidden=true;return;}
     card.hidden=false;
     if(title)title.textContent='Attiva le notifiche';
-    if(text)text.textContent='Ti penso, risposte e missioni, anche a US chiusa.';
-    if(button){button.hidden=false;button.disabled=false;button.textContent='Attiva';}
+    // 25/10/2026: «Attiva» tapped but Google's token did not come (5G): US finishes by itself.
+    if(text)text.textContent=state.pending?'Le attivo da solo appena la rete risponde. Con il Wi-Fi è subito.':'Ti penso, risposte e missioni, anche a US chiusa.';
+    if(button){button.hidden=false;button.disabled=false;button.textContent=state.pending?'Riprova':'Attiva';}
     return;
   }
   if(!isWebPushSupported()){
@@ -670,6 +671,8 @@ async function refreshWebPushUi(){
   setPushSettingsState('inactive','Notifiche non attive','','Attiva');
 }
 window.refreshWebPushUi=refreshWebPushUi;
+// A pending «Attiva» finished in the background (notifications.js finishWish).
+window.addEventListener('us-notifications-changed',()=>{refreshWebPushUi().catch(()=>{});toast('Notifiche attive ♡');});
 
 async function enableNativePush(){
   const button=document.getElementById('pushEnableBtn');
@@ -680,6 +683,7 @@ async function enableNativePush(){
   else if(result.kind==='denied')toast('Permesso negato: puoi consentirle dalle impostazioni del telefono');
   else if(result.kind==='unavailable')toast('Notifiche non disponibili in questa versione di US');
   // 19/10/2026: the code says where it stopped (notifications.js failureCode).
+  else if(result.kind==='network'&&result.pending)toast(`La rete non risponde: le attivo da solo appena può${result.code?` · ${result.code}`:''}`);
   else if(result.kind==='network')toast(`Rete lenta: riprova tra poco, oppure con il Wi-Fi${result.code?` · ${result.code}`:''}`);
   else if(result.kind!=='busy')toast(`Non riesco ad attivare le notifiche${result.code?` · ${result.code}`:''}`);
   if(button)button.disabled=false;
