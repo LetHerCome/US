@@ -669,7 +669,13 @@
     const listen = (name, fn) => Promise.resolve(push.addListener(name, fn)).catch(() => {});
     listen('registration', onRegistration);
     // FCM says why (e.g. SERVICE_NOT_AVAILABLE): keep the reason, never the token.
-    listen('registrationError', (event) => settleToken(new Error('registration_failed:' + String(event?.error || '').replace(/[^A-Za-z_]/g, '').slice(0, 40))));
+    // Android wraps it in the Java message ("java.util.concurrent.ExecutionException:
+    // java.io.IOException: SERVICE_NOT_AVAILABLE"): the code is the last upper-case word.
+    listen('registrationError', (event) => {
+      const message = String(event?.error || '');
+      const reason = message.match(/[A-Z][A-Z_]{3,}/g)?.pop() || message.replace(/[^A-Za-z_]/g, '').slice(0, 40);
+      settleToken(new Error('registration_failed:' + reason));
+    });
     listen('pushNotificationReceived', onForeground);
     // Retained by the native plugin until this listener exists: covers cold start.
     listen('pushNotificationActionPerformed', onAction);
