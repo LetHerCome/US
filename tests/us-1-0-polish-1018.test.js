@@ -35,7 +35,9 @@ test('notifications: "Attiva" waits longer on mobile data and retries a slow net
   assert.match(js, /const ENABLE_ATTEMPTS = 2;/);
   assert.match(js, /withTimeout\(request, REGISTER_CALL_TIMEOUT_MS\)/);
   assert.match(js, /if \(attempt >= ENABLE_ATTEMPTS \|\| !isRetryable\(error\)\) throw error;/);
-  assert.match(js, /kind: isRetryable\(error\) \? 'network' : 'error'/);
+  // 25/10: a refused Google token counts as the network too (it works on Wi-Fi).
+  assert.ok(js.includes("const network = isRetryable(error) || /^registration_failed/.test(String(error?.message || ''));"));
+  assert.match(js, /kind: network \? 'network' : 'error'/);
   // Background calls keep the short limit.
   assert.match(js, /const CALL_TIMEOUT_MS = 6000;/);
   const message = 'Rete lenta: riprova tra poco, oppure con il Wi-Fi';
@@ -95,7 +97,7 @@ test('notifications: a failed "Attiva" says at which step and why (19/10, still 
   has("settleToken(new Error('registration_failed:' + reason));");
   has('SERVICE_NOT_AVAILABLE|INTERNAL_SERVER_ERROR|TIMEOUT');
   for (const stage of ['N', 'T', 'S', 'O']) has(`enableStage = '${stage}';`);
-  has("kind: isRetryable(error) ? 'network' : 'error', code: failureCode(error)");
+  has("kind: network ? 'network' : 'error', code: failureCode(error)");
   has('await new Promise((resolve) => setTimeout(resolve, 2000));');
   assert.ok(read('app.js').includes("toast(`Non riesco ad attivare le notifiche${result.code?` · ${result.code}`:''}`)"));
 });

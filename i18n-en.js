@@ -357,6 +357,9 @@
     'Notifiche non disponibili in questa versione di US': 'Notifications aren’t available in this version of US',
     'Non riesco ad attivare le notifiche': 'Couldn’t turn on notifications',
     'Rete lenta: riprova tra poco, oppure con il Wi-Fi': 'Slow connection: try again in a moment, or on Wi-Fi',
+    'La rete non risponde: le attivo da solo appena può': 'The network isn’t answering: US will turn them on by itself as soon as it can',
+    'Le attivo da solo appena la rete risponde. Con il Wi-Fi è subito.': 'US turns them on by itself as soon as the network answers. On Wi-Fi it’s instant.',
+    'Riprova': 'Try again',
     'Notifiche non supportate su questo browser': 'This browser doesn’t support notifications',
     'Non riesco a disattivare le notifiche': 'Couldn’t turn off notifications',
 
