@@ -44,9 +44,10 @@ test('stage gate rejects production, lookalike origins and non-Supabase URL',asy
   ])assert.equal(staged.isStagingEndpoint(host),false);
   const {isolateStagingPublicAuth}=await import('../scripts/build-s31-staging-preview.mjs');
   assert.throws(()=>isolateStagingPublicAuth(isolateStagingPublicAuth(read('public-auth.js'))),'never apply stage rewrite twice');
-  const mounted=S31.mount({auth:fakeAuth(),endpoint:'https://iiakdfsxpywdkxravqjh.supabase.co',
-    openStep:()=>{throw Error('production must never mount signup UI');},document:{}});
-  assert.equal(mounted,null);
+  // Since the 25/10/2026 release production mounts signup; any other backend never does.
+  for(const endpoint of ['https://evil.tld','https://iiakdfsxpywdkxravqjh.supabase.co.evil.tld',''])
+    assert.equal(S31.mount({auth:fakeAuth(),endpoint,
+      openStep:()=>{throw Error('an unknown backend must never mount signup UI');},document:{}}),null);
   const app=read('app.js');
   assert.match(app,/UsPublicAuthS31\?\.mount\(/);
   assert.match(app,/endpoint: SB_URL/);
@@ -212,13 +213,14 @@ test('both target build bundles include every new source asset and staged inputs
   assert.doesNotMatch(read('public-auth.js'), /service.role|secret.key|localStorage|sessionStorage/i);
 });
 
-test('production signup is a single explicit release switch, OFF in committed source',async()=>{
+test('production signup is a single explicit release switch, released by the founder on 25/10/2026',async()=>{
   // Flipping PRODUCTION_SIGNUP_RELEASED is a founder release decision: it must
   // change this assertion together with docs/store/US_S3_1_PRODUCTION_AUTH_RELEASE.md.
-  assert.equal(S31.PRODUCTION_SIGNUP_RELEASED,false);
+  assert.equal(S31.PRODUCTION_SIGNUP_RELEASED,true);
   const prod='https://iiakdfsxpywdkxravqjh.supabase.co',stage='https://dugmhngrfkuieeletatb.supabase.co';
-  assert.equal(S31.publicAuthEnabled(prod),false);
-  assert.equal(S31.publicAuthEnabled(stage),false,'committed source shows signup nowhere');
+  assert.equal(S31.publicAuthEnabled(prod),true,'production shows signup');
+  assert.equal(S31.publicAuthEnabled(stage),false,'committed source names no staging origin');
+  assert.equal(S31.publicAuthEnabled(prod,false),false,'the switch still gates it');
   assert.equal((await stagedModule()).publicAuthEnabled(stage),true,'the US-STAGING preview shows it');
   assert.equal(S31.publicAuthEnabled(prod,true),true,'released build shows signup on production');
   for(const host of ['https://iiakdfsxpywdkxravqjh.supabase.co.evil.tld','http://iiakdfsxpywdkxravqjh.supabase.co','https://evil.tld',''])

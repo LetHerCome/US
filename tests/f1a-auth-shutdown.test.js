@@ -57,7 +57,8 @@ test('F1A: the shipped runtime never invokes a legacy auth entry point', () => {
     }
   }
   const signup = read(SIGNUP_MODULE);
-  assert.match(signup, /const PRODUCTION_SIGNUP_RELEASED = false;/, 'production signup stays unreleased');
+  // Released on 25/10/2026 (founder, Play closed test).
+  assert.match(signup, /const PRODUCTION_SIGNUP_RELEASED = true;/, 'production signup released by the founder');
   assert.match(signup, /if \(!publicAuthEnabled\(endpoint\)[^)]*\) return null;/, 'signup UI mounts only where enabled');
 });
 
@@ -112,7 +113,8 @@ function authConfig() {
 
 test('F1A: Auth config declares signup, anonymous, manual linking and phone sign-in off', () => {
   const { toml, auth, sms } = authConfig();
-  assert.match(auth, /^enable_signup = false$/m);
+  assert.match(auth, /^enable_signup = true$/m, 'self signup released on 25/10/2026');
+  assert.ok(toml.includes('[auth.email]\nenable_signup = true\nenable_confirmations = true\n'), 'only with a confirmed email');
   assert.match(auth, /^enable_anonymous_sign_ins = false$/m);
   assert.match(auth, /^enable_manual_linking = false$/m);
   assert.match(sms, /^enable_signup = false$/m);

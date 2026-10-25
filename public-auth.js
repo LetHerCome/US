@@ -17,7 +17,9 @@
   const PRODUCTION_ORIGIN = 'https://iiakdfsxpywdkxravqjh.supabase.co';
   // Founder-approved release decision only. Flipping it also requires the
   // matching assertion in tests/s3-1-public-auth.test.js to change.
-  const PRODUCTION_SIGNUP_RELEASED = false;
+  // Released on 25/10/2026 for the Play closed test (founder): confirmation and
+  // recovery emails go out through the Moonee Lab Gmail SMTP.
+  const PRODUCTION_SIGNUP_RELEASED = true;
   const PASSWORD_MIN = 10, PASSWORD_MAX = 72;
   // The published Terms and Privacy pages (https, termini.html / privacy.html;
   // each links its English version). A release needs both.

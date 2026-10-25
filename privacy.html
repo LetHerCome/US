@@ -20,7 +20,7 @@
   </nav>
   <p class="kicker">US · Privacy</p>
   <h1>Informativa sulla privacy</h1>
-  <p class="updated">Ultimo aggiornamento: 17 ottobre 2026</p>
+  <p class="updated">Ultimo aggiornamento: 25 ottobre 2026</p>
 
   <h2>1. Chi siamo</h2>
   <p>US è un’app per coppie. Titolare del trattamento: Moonee Lab (Francesco Monti), email <a href="mailto:moonee.team@gmail.com">moonee.team@gmail.com</a>.</p>
@@ -30,6 +30,7 @@
     <thead><tr><th>Dati</th><th>Perché</th><th>Base giuridica</th></tr></thead>
     <tbody>
       <tr><td>Email e password (la password non viene mai conservata in chiaro: il fornitore di autenticazione ne salva solo un hash)</td><td>creare e proteggere il tuo account</td><td>esecuzione del contratto</td></tr>
+      <tr><td>Se accedi con Google: l’email, il nome, l’immagine del profilo e l’identificativo del tuo account Google, che Google ci comunica quando lo scegli</td><td>creare il tuo account e farti accedere senza password</td><td>esecuzione del contratto</td></tr>
       <tr><td>Nome, nome della coppia, data di inizio della relazione</td><td>far funzionare lo spazio di coppia</td><td>esecuzione del contratto</td></tr>
       <tr><td>Foto, note vocali, messaggi, risposte, umori, eventi del calendario, liste, partite; video solo in “Lasciato per te”, fino a 30 secondi o 20 MB</td><td>mostrarli al tuo partner, che è lo scopo dell’app</td><td>esecuzione del contratto</td></tr>
       <tr><td>Posizione approssimativa di questo telefono, solo se attivi la funzione e solo mentre l’app è aperta</td><td>calcolare la distanza tra voi</td><td>consenso, revocabile in qualsiasi momento dall’app (Impostazioni › Posizione › Smetti e cancella) o dalle impostazioni del telefono</td></tr>
@@ -49,6 +50,7 @@
       <ul>
         <li>Supabase (database, autenticazione, archiviazione file), con i dati in un centro dati dell’Unione europea (Parigi, Francia);</li>
         <li>Google Firebase Cloud Messaging (notifiche);</li>
+        <li>Google, per l’accesso con Google se lo scegli e per l’invio delle email dell’account (conferma dell’indirizzo e recupero della password) dal nostro indirizzo Gmail;</li>
         <li>Cloudflare (distribuzione dell’app web).</li>
       </ul>
     </li>
@@ -68,8 +70,8 @@
     <li>le segnalazioni vengono cancellate 12 mesi dopo l’invio;</li>
     <li>la copia dei tuoi dati che ti mandiamo su richiesta viene cancellata dopo 7 giorni.</li>
   </ul>
-  <p>Quando chiedi l’eliminazione, dopo aver confermato la password, il tuo account viene eliminato subito e non può essere recuperato. La rimozione dei file si completa entro 30 giorni. Conserviamo per 12 mesi solo una ricevuta tecnica dell’eliminazione (identificativo dell’account e della coppia, date, esito), senza contenuti.</p>
-  <p>Oggi non teniamo copie di backup del database. Se le attiveremo, questa informativa indicherà per quanto tempo vengono conservate prima di essere sovrascritte.</p>
+  <p>Quando chiedi l’eliminazione, dopo aver confermato la password (o di nuovo con Google, se accedi con Google), il tuo account viene eliminato subito e non può essere recuperato. La rimozione dei file si completa entro 30 giorni. Conserviamo per 12 mesi solo una ricevuta tecnica dell’eliminazione (identificativo dell’account e della coppia, date, esito), senza contenuti.</p>
+  <p>Il database viene copiato ogni giorno in un backup gestito da Supabase, nello stesso centro dati dell’Unione europea. Ogni copia viene conservata 7 giorni e poi sovrascritta: un dato che elimini può quindi restare in un backup al massimo per 7 giorni, senza essere usato.</p>
 
   <h2>6. Eliminare l’account</h2>
   <p>Puoi chiedere l’eliminazione dall’app (Impostazioni › Privacy e dati › Elimina account), dalla pagina <a href="/elimina-account">us-a33.pages.dev/elimina-account</a> o scrivendo a <a href="mailto:moonee.team@gmail.com">moonee.team@gmail.com</a>.</p>
