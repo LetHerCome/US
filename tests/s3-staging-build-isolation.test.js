@@ -33,20 +33,6 @@ test('S3 native staging asset rewrite changes ALL Supabase origins and uses a se
   assert.equal(JSON.parse(v.capacitorJson).appId, 'com.usapp.us', 'ordinary app unchanged');
 });
 
-test('staging QA app turns on sign-up and recovery for US-STAGING only (the committed app keeps them off)', async () => {
-  const v = await inputs();
-  const publicAuthJs = fs.readFileSync(path.join(ROOT, 'public-auth.js'), 'utf8');
-  assert.ok(publicAuthJs.includes("const STAGING_ORIGIN = '';"), 'committed app: no staging origin');
-  const staged = v.isolateStagingBuild({ ...v, publicAuthJs, publishableKey: syntheticPublicKey });
-  assert.ok(staged.publicAuthJs.includes("const STAGING_ORIGIN = 'https://" + v.STAGING_HOST + "';"));
-  assert.equal(staged.publicAuthJs.includes('iiakdfsxpywdkxravqjh.supabase.co\';\n  const STAGING'), false);
-  assert.match(staged.publicAuthJs, /const PRODUCTION_SIGNUP_RELEASED = false;/, 'production sign-up stays closed');
-  const workflow = fs.readFileSync(path.join(ROOT, '.github/workflows/s3-staging-android-qa.yml'), 'utf8');
-  assert.match(workflow, /claude\/payred-app-comparison-b2594e/, 'the weekly check-in branch can build the staging QA app');
-  const cli = fs.readFileSync(path.join(ROOT, 'scripts/configure-s3-staging-qa.mjs'), 'utf8');
-  assert.match(cli, /'public-auth\.js'/, 'the CLI rewrites public-auth.js too');
-});
-
 test('fail closed for absent service_role/unknown keys and unexpected product IDs', async () => {
   const v = await inputs();
   for (const publishableKey of [undefined, '', 'sb_secret_bad', 'service_role_jwt', 'sb_publishable_too-short']) {

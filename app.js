@@ -835,7 +835,6 @@ let selectedRole = null;
 async function clearPrivateDeviceState(profileId=window.usProfile?.id||''){
   window.UsCoupleContext?.clear?.();
   window.USCountdown?.reset?.();
-  window.UsWeeklyCheckin?.reset?.();
   window.UsYearRecap?.reset?.();
   window.UsCompanions?.reset?.();
   try{US_SIGNED_URL_CACHE.clear();}catch(_e){}
@@ -2725,9 +2724,6 @@ async function refreshTodayPriorities({daily,freshEvents=false}={}){
   if(revealNotice)candidates.push(revealNotice);
   const gameTurn=gameTurnTodayPriorityViewModel();
   if(gameTurn)candidates.push(gameTurn);
-  // Il punto della settimana (weekly-checkin.js): "Tocca a te" or "pronto".
-  const checkin=window.UsWeeklyCheckin?.todayPriority?.();
-  if(checkin)candidates.push(checkin);
   // Compagni V1 (companions.js): a new companion, told once.
   const companion=window.UsCompanions?.todayPriority?.();
   if(companion)candidates.push(companion);
@@ -2791,7 +2787,6 @@ document.getElementById('usTodayPriorityRegion')?.addEventListener('click',event
     else if(current?.perVoi)window.USGameV2?.openPerVoi?.();
   }
   if(action==='mission')window.openOggiMission?.();
-  if(action==='checkin')window.UsWeeklyCheckin?.open?.();
   if(action==='recap')window.UsYearRecap?.open?.();
   if(action==='companion')window.UsCompanions?.open?.();
 });
@@ -3973,7 +3968,7 @@ function ricordiLocalISO(instant){
 // Un Moment collegato da living_provenance (M12B.3) NON è una seconda
 // esperienza: prende la chiave della sua fonte e ne diventa la foto. La
 // deduplica è solo per chiave canonica, mai per titolo.
-const RICORDI_SOURCE_LABEL=Object.freeze({experience:'Le vostre idee',event:'Evento vissuto',daily:'Domanda del giorno',checkin:'Il punto della settimana'});
+const RICORDI_SOURCE_LABEL=Object.freeze({experience:'Le vostre idee',event:'Evento vissuto',daily:'Domanda del giorno'});
 function ricordiTimeline(moments,lived,kept,events,provenance){
   const byKey=new Map();
   const add=entry=>{if(!byKey.has(entry.sourceKey))byKey.set(entry.sourceKey,entry);return byKey.get(entry.sourceKey);};
@@ -3983,8 +3978,6 @@ function ricordiTimeline(moments,lived,kept,events,provenance){
     add({kind:'event',sourceKey:`shared_event_completion:${row.source_ref}`,date:String(row.occurrence_date),at:row.completed_at||'',row,title:row.title||'',moment:null});
   }
   for(const row of kept||[])if(row?.id&&/^daily_question:/.test(String(row.source_key||''))&&/^\d{4}-\d{2}-\d{2}$/.test(String(row.question_date||''))&&row.question_text)add({kind:'daily',sourceKey:String(row.source_key),date:String(row.question_date),at:row.revealed_at||'',row,title:row.question_text,moment:null});
-  // Il punto della settimana: an appreciation kept by the one it was written for.
-  for(const row of kept||[])if(row?.id&&/^weekly_checkin:/.test(String(row.source_key||''))&&/^\d{4}-\d{2}-\d{2}$/.test(String(row.week_start||''))&&row.appreciation)add({kind:'checkin',sourceKey:String(row.source_key),date:String(row.week_start),at:row.revealed_at||'',row,title:'Il punto della settimana',moment:null});
   // Moment → fonte: dalla tabella di provenienza e, per gli Eventi, dalla vista storica.
   const sourceOf=new Map();
   for(const p of provenance||[]){
@@ -4050,11 +4043,11 @@ function ricordiChapters(timeline){
   const byYear=new Map();
   for(const item of timeline){
     const year=item.date.slice(0,4);
-    if(!byYear.has(year))byYear.set(year,{year,count:0,moments:0,experiences:0,dailies:0,checkins:0,cover:null,first:item.date});
+    if(!byYear.has(year))byYear.set(year,{year,count:0,moments:0,experiences:0,dailies:0,cover:null,first:item.date});
     const ch=byYear.get(year);
     ch.count++;
     if(item.date<ch.first)ch.first=item.date;
-    if(item.kind==='moment')ch.moments++;else if(item.kind==='daily')ch.dailies++;else if(item.kind==='checkin')ch.checkins++;else ch.experiences++;
+    if(item.kind==='moment')ch.moments++;else if(item.kind==='daily')ch.dailies++;else ch.experiences++;
     if(!ch.cover&&item.moment)ch.cover=item.moment;
   }
   return [...byYear.values()];
@@ -4100,14 +4093,6 @@ function ricordiDailyCard(row){
 function ricordiDailyAnswers(row){
   const answer=(label,text)=>`<div class="ricordi-daily-answer"><b translate="no">${escapeHtml(label)}</b><p translate="no">${escapeHtml(text||'')}</p></div>`;
   return `<div class="ricordi-daily-answers">${answer(usIdentity().nameForRole('francesco'),row.francesco_answer)}${answer(usIdentity().nameForRole('beatrice'),row.beatrice_answer)}</div>`;
-}
-// Il punto della settimana conservato: chi l'ha scritto e la settimana.
-function ricordiCheckinBody(row){
-  return `<div class="ricordi-daily-answers"><div class="ricordi-daily-answer"><b translate="no">${escapeHtml(usIdentity().nameForRole(row.author_role))}</b><p translate="no">${escapeHtml(row.appreciation||'')}</p></div></div>`;
-}
-function ricordiCheckinCard(row){
-  const day=new Date(String(row.week_start)+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'numeric',month:'long'});
-  return `<details class="ricordi-daily ricordi-checkin" data-source-key="${escapeHtml(row.source_key||'')}"><summary><span class="ricordi-experience-mark ricordi-daily-mark" aria-hidden="true"></span><span class="ricordi-experience-copy"><small>Il punto della settimana · ${escapeHtml(day)}</small><b>Cosa ha apprezzato <span translate="no">${escapeHtml(usIdentity().nameForRole(row.author_role))}</span></b></span></summary>${ricordiCheckinBody(row)}</details>`;
 }
 // M12B.5 — un Evento vissuto senza foto resta un record evento (D3=A): titolo
 // storico (snapshot al completamento, altrimenti il titolo attuale dichiarato
@@ -4182,7 +4167,6 @@ function renderRicordiRivivi(pick,signedUrls,names){
   if(entry.kind==='moment'){root.hidden=true;root.innerHTML='';return;}
   let body='';
   if(entry.kind==='daily')body=ricordiDailyAnswers(entry.row);
-  else if(entry.kind==='checkin')body=ricordiCheckinBody(entry.row);
   else if(entry.kind==='event')body=`<p class="ricordi-rivivi-detail">Vissuto insieme il ${escapeHtml(date)}.${entry.row.title_source==='live'?' Il titolo è quello di oggi: quello di allora non era registrato.':''}</p>`;
   else body=`<p class="ricordi-rivivi-detail">Vissuta insieme il ${escapeHtml(date)}.</p>${entry.orphan?'':`<button type="button" class="ricordi-rivivi-link" data-ricordi-experience="${escapeHtml(entry.row.id)}">Apri nelle vostre idee</button>`}`;
   root.innerHTML=`<div class="ricordi-kicker">RIVIVI</div><details class="ricordi-rivivi-card ricordi-rivivi-note" data-source-key="${escapeHtml(entry.sourceKey)}" data-rivivi-kind="${escapeHtml(entry.kind)}"><summary aria-label="Rivivi: ${escapeHtml(title||date)}"><span class="ricordi-rivivi-mark ricordi-rivivi-mark-${escapeHtml(entry.kind)}" aria-hidden="true"></span><span class="ricordi-rivivi-text"><small>${escapeHtml(pick.label)}</small><b${entry.kind==='daily'?'':' translate="no"'}>${escapeHtml(title||date)}</b><span>${escapeHtml(date)} · ${escapeHtml(RICORDI_SOURCE_LABEL[entry.kind])}</span></span></summary><div class="ricordi-rivivi-body">${body}</div></details>${ricordiSendButton(title,date)}`;
@@ -4202,7 +4186,7 @@ function renderRicordiChapters(chapters,signedUrls,todayISO){
   root.innerHTML=`<div class="ricordi-section-head"><div class="ricordi-kicker">CAPITOLI</div><h3>Per anno</h3></div><div class="ricordi-chapter-row">${chapters.map(ch=>{
     const previewPath=ch.cover?ricordiPreviewPath(ch.cover):'';
     const url=ch.cover?ricordiPreviewUrl(ch.cover,signedUrls):null;
-    const parts=[ch.moments?`${ch.moments} ${ch.moments===1?'ricordo':'ricordi'}`:'',ch.experiences?`${ch.experiences} ${ch.experiences===1?'esperienza':'esperienze'}`:'',ch.dailies?`${ch.dailies} ${ch.dailies===1?'domanda':'domande'}`:'',ch.checkins?`${ch.checkins} ${ch.checkins===1?'apprezzamento':'apprezzamenti'}`:''].filter(Boolean).join(' · ');
+    const parts=[ch.moments?`${ch.moments} ${ch.moments===1?'ricordo':'ricordi'}`:'',ch.experiences?`${ch.experiences} ${ch.experiences===1?'esperienza':'esperienze'}`:'',ch.dailies?`${ch.dailies} ${ch.dailies===1?'domanda':'domande'}`:''].filter(Boolean).join(' · ');
     return `<button type="button" class="ricordi-chapter" data-ricordi-year="${escapeHtml(ch.year)}">${url?`<img src="${escapeHtml(url)}" data-us-media-path="${escapeHtml(previewPath)}" onerror="usRecoverPrivateImage(this)" alt="" loading="lazy" decoding="async">`:''}<span><b>${escapeHtml(ch.year)}</b><small>${escapeHtml(parts)}</small></span></button>`;
   }).join('')}</div>`;
   root.hidden=false;
@@ -4301,7 +4285,6 @@ async function hydrateMomentsCore(){
   const profilesPromise=sb.from('profiles').select('id,display_name').eq('couple_id',profile.couple_id);
   const livedPromise=sb.from('bucket_items').select('id,title,completed_at').eq('couple_id',profile.couple_id).eq('status','lived');
   const keptPromise=usReadLocalized(columns=>sb.from('daily_question_keepsakes').select(columns).order('question_date',{ascending:false}),'id,source_key,question_text,question_date,francesco_answer,beatrice_answer,revealed_at','question_text_localized');
-  const checkinKeptPromise=sb.from('weekly_checkin_keepsakes').select('id,source_key,week_start,author_role,appreciation,revealed_at').order('week_start',{ascending:false});
   const eventsPromise=sb.from('relationship_event_history').select('source_ref,occurrence_date,completed_at,title,title_source,moment_id');
   const provenancePromise=sb.from('living_provenance').select('source_kind,source_ref,source_title,source_date,target_moment_id');
   const {data:rows,error}=await momentsPromise;
@@ -4318,8 +4301,6 @@ async function hydrateMomentsCore(){
     {data:provenance,error:provenanceError},
     signedUrls
   ]=await Promise.all([profilesPromise,livedPromise,keptPromise,eventsPromise,provenancePromise,signedUrlsPromise]);
-  // Started with the others above, so this costs no extra round trip.
-  const {data:checkinKept,error:checkinKeptError}=await checkinKeptPromise;
   if(window.usProfile!==profile)return;
   if(profilesError)console.warn(profilesError);
   // Le esperienze vissute sono un arricchimento: se non si leggono, la storia
@@ -4328,10 +4309,6 @@ async function hydrateMomentsCore(){
   const livedRows=livedError?[]:(lived||[]);
   if(keptError)console.warn(keptError);
   const keptRows=keptError?[]:(kept||[]).map(row=>row.question_text_localized?{...row,question_text:row.question_text_localized}:row);
-  // A kept appreciation (Il punto della settimana) is an enrichment too: before the migration the table does not exist.
-  if(checkinKeptError)console.warn(checkinKeptError);
-  // They join the kept Dailies: the archive tells them apart by source key.
-  if(!checkinKeptError)keptRows.push(...(checkinKept||[]));
   // M12B.5: Eventi vissuti e provenienza sono arricchimenti come i precedenti.
   // Senza provenienza un Moment collegato e la sua fonte restano due voci
   // finché la lettura non torna: mai inventate, mai unite per titolo.
@@ -4377,7 +4354,6 @@ async function hydrateMomentsCore(){
     if(item.kind==='experience'&&!item.moment){closeRow();html.push(ricordiLivedCard(ricordiExperienceCard(item.row,item.date),item));continue;}
     if(item.kind==='event'&&!item.moment){closeRow();html.push(ricordiLivedCard(ricordiEventCard(item.row),item));continue;}
     if(item.kind==='daily'){closeRow();html.push(ricordiDailyCard(item.row));continue;}
-    if(item.kind==='checkin'){closeRow();html.push(ricordiCheckinCard(item.row));continue;}
     // Un Moment, o la foto di un'esperienza/Evento vissuto: una sola voce.
     const row=item.moment;
     const own=row.created_by===profile.id;

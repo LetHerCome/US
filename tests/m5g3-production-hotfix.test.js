@@ -74,9 +74,8 @@ test('M5G3 keeps the dedicated notification preference migration prepared but un
 test('M5G3 left_for_you Edge Function preserves think_reaction and suppresses disabled preference', () => {
   const edge = read('supabase/functions/send-web-push/index.ts');
   const settings = read('settings.js');
-  // US 1.0 adds daily_reaction (O2) and partner_joined (A2), the weekly
-  // check-in (22/10) weekly_checkin_answer; every earlier type stays.
-  assert.match(edge, /\[\"test\", \"think\", \"think_reaction\", \"daily_answer\", \"daily_reaction\", \"quest_confirmed\", \"left_for_you\", \"partner_joined\", \"weekly_checkin_answer\"\]/);
+  // US 1.0 adds daily_reaction (O2) and partner_joined (A2); every earlier type stays.
+  assert.match(edge, /\[\"test\", \"think\", \"think_reaction\", \"daily_answer\", \"daily_reaction\", \"quest_confirmed\", \"left_for_you\", \"partner_joined\"\]/);
   // M9A: la preferenza left_for_you è applicata dal core condiviso.
   const core = read('supabase/functions/_shared/left-for-you-push-core.mjs');
   assert.match(core, /\.select\('left_for_you'\)/);

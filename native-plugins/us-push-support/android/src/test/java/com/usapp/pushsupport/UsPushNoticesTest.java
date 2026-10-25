@@ -54,17 +54,6 @@ public class UsPushNoticesTest {
     }
 
     @Test
-    public void weeklyCheckInSaysWhoNeverWhat() {
-        UsPushNotices.Notice turn = UsPushNotices.forKind("checkin_turn", "Bea", IT);
-        assertEquals("US. · Il punto della settimana", turn.title);
-        assertEquals("Bea ha fatto il punto della settimana. Ora tocca a te.", turn.body);
-        assertEquals("oggi", turn.page);
-        assertEquals("Bea did the weekly check-in. Your turn now.", UsPushNotices.forKind("checkin_turn", "Bea", EN).body);
-        assertEquals("Il vostro punto della settimana è pronto ♡", UsPushNotices.forKind("checkin_ready", "Bea", IT).body);
-        assertEquals("Your weekly check-in is ready ♡", UsPushNotices.forKind("checkin_ready", "Bea", EN).body);
-    }
-
-    @Test
     public void namesAreCleanedAndBounded() {
         assertEquals("Bea trice", UsPushNotices.cleanName("Bea\ntrice"));
         StringBuilder longName = new StringBuilder();

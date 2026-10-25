@@ -247,12 +247,5 @@ test('us-staging-s31 Cloudflare builds of other branches publish only a static p
   const {APPROVED_BRANCH,PLACEHOLDER_HTML}=await import('../scripts/build-s31-staging-preview.mjs');
   assert.equal(APPROVED_BRANCH,'mission/us-store-s3-1-public-auth-staging-20261011');
   assert.doesNotMatch(PLACEHOLDER_HTML,/supabase|sb_publishable|<script/i);
-  // The gate itself (which branches get the real preview) is the next test.
-});
-
-test('the weekly check-in branch may publish the US-STAGING browser preview; every other branch still gets the placeholder',async()=>{
-  const {STAGING_PREVIEW_BRANCHES}=await import('../scripts/build-s31-staging-preview.mjs');
-  assert.deepEqual([...STAGING_PREVIEW_BRANCHES],['mission/us-store-s3-1-public-auth-staging-20261011','claude/payred-app-comparison-b2594e']);
-  assert.ok(Object.isFrozen(STAGING_PREVIEW_BRANCHES));
-  assert.match(read('scripts/build-s31-staging-preview.mjs'),/!STAGING_PREVIEW_BRANCHES\.includes\(process\.env\.CF_PAGES_BRANCH\)/);
+  assert.match(read('scripts/build-s31-staging-preview.mjs'),/CF_PAGES_BRANCH !== APPROVED_BRANCH/);
 });

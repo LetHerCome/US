@@ -183,30 +183,10 @@ public.weekly_checkin_keepsakes       -- modello M12B.4, immutabile, scritto sol
 ## Piano di lavoro
 
 1. ~~**Audit**, in sola lettura~~ **Fatto il 22/10/2026:** [report](weekly-checkin-v1-audit.md), con le correzioni già riportate in questa spec.
-2. ~~**SQL in TDD**~~ **Fatto il 22/10/2026:**
-   - [`20261022141913_weekly_checkin_v1.sql`](../../supabase/migrations/20261022141913_weekly_checkin_v1.sql), con i test in [`tests/weekly-checkin-v1-db.test.js`](../../tests/weekly-checkin-v1-db.test.js): 12/12 passano, partiti tutti RED.
-   - Applicata **solo su staging**.
-   - Diverso dall'audit: uscita dalla coppia ed eliminazione account **non** vengono ridefinite. Le righe hanno una FK verso `profiles` con cancellazione in cascata, come le Stories. Si ridefinisce solo l'export, con una preflight sull'md5.
-3. ~~**Client**~~ e 4. ~~**Integrazione**~~ (senza notifiche) **fatti il 22/10/2026:**
-   - [`weekly-checkin.js`](../../weekly-checkin.js) e [`weekly-checkin.css`](../../weekly-checkin.css): foglio a 4 passi, attesa, risultati con andamento, reazione, Conserva, IT/EN.
-   - Agganci: la card priority di Oggi, la riga in Noi sopra il calendario, il tipo `weekly_checkin:` in Ricordi, il back nativo, il reset al logout, la precache.
-   - Test: [`tests/weekly-checkin-v1-client.test.js`](../../tests/weekly-checkin-v1-client.test.js), 12/12, partiti RED.
-   - Diverso dalla spec: la domanda sulla vicinanza è neutra rispetto al genere («Quanta vicinanza hai sentito con {name}…»).
-   - Il limite della precache passa da 2,8 a 2,85 MB (circa 45 KB in più).
-   - **Notifiche (fase 3), fatte il 22/10/2026:**
-     - `send-web-push` accetta `weekly_checkin_answer`, rilegge il giro dal database e avvisa **solo l'altra persona**: «{nome} ha fatto il punto della settimana. Ora tocca a te.», oppure «Il vostro punto della settimana è pronto ♡». Come la Daily, chi fa scattare il reveal lo vede già nell'app.
-     - Deduplica per settimana; rispetta l'interruttore notifiche di Oggi; mai testi scritti nel pacchetto.
-     - Android: `checkin_turn` e `checkin_ready` con le frasi IT/EN in `UsPushNotices.java`. Arrivano con il prossimo AAB; fino ad allora compare la frase generica.
-     - Test: [`tests/weekly-checkin-v1-push.test.js`](../../tests/weekly-checkin-v1-push.test.js), 8/8 partiti RED, e il JUnit delle frasi Android, 6/6.
-     - Pubblicata solo su staging (v11).
+2. **SQL in TDD:** prima i test RED (autorizzazione, sigillo, versione, settimana, lifecycle), poi la migrazione; applicazione solo su staging.
+3. **Client:** foglio a passi, stati, risultati, andamento, IT/EN.
+4. **Integrazione:** Oggi, Noi, notifiche (web, FCM e frasi Android), Ricordi.
 5. **Verifica:** browser con fixture, suite completa, build, review indipendente, prova su staging.
-   - **Prova su staging del 22/10/2026: QA_PASS, 11 passi su 11** ([script](weekly-checkin-v1-staging-qa.sql)). È un solo blocco annullato alla fine: due utenti sintetici e una coppia esistono solo dentro la transazione. Usa le RPC vere, come ciascun utente, e copre:
-     - coppia MC2, stato vuoto, sigillo, modifica e conflitto;
-     - reveal per entrambi, chiusura dopo il reveal, reazione;
-     - Conserva idempotente e protetto, nessuna lettura diretta della tabella;
-     - andamento, rifiuto di `anon`, export, uscita dalla coppia (il ricordo conservato resta).
-   - Dopo la prova staging è rimasto com'era: 3 utenti, 3 profili, 3 coppie, 0 check-in, 0 utenti QA.
-   - **Non coperte:** la notifica reale (serve una sessione vera, quindi la copre il test sull'Edge) e il giro dalle schermate con due account veri.
 6. **Report** con il formato di `AGENTS.md`. Nessun merge, nessuna produzione.
 
 ## Decisioni del founder

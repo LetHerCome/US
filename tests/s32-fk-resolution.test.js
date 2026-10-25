@@ -16,7 +16,7 @@ const PERSONAL_CASCADE=new Set([
   'profiles>notification_preferences.user_id','profiles>partner_knowledge_attempts.user_id','profiles>progression_reward_views.profile_id',
   'profiles>push_event_log.sender_id','profiles>push_subscriptions.user_id','profiles>stories.author_id','profiles>story_views.viewer_id',
   'profiles>widget_action_tokens.profile_id','profiles>widget_scriptable_installations.profile_id',
-  'profiles>widget_scriptable_setup_codes.profile_id','profiles>widget_tokens.profile_id','profiles>weekly_checkins.user_id',
+  'profiles>widget_scriptable_setup_codes.profile_id','profiles>widget_tokens.profile_id',
 ]);
 const OPERATIONAL_SET_NULL=new Set([
   'auth.users>activity.actor_id','auth.users>couple_invites.used_by','auth.users>user_reports.reporter_id','profiles>couple_invites.created_by',
@@ -51,7 +51,7 @@ test('every user reference is classified, and shared content fails closed',async
       else assert.fail('unclassified user reference: '+key+' — decide what account deletion does with it');
     }
     for(const key of [...PERSONAL_CASCADE,...OPERATIONAL_SET_NULL,...SHARED_FAIL_CLOSED])assert.ok(seen.has(key),'stale classification '+key);
-    assert.equal(seen.size,39);
+    assert.equal(seen.size,38);
   }finally{await db.close();}
 });
 
