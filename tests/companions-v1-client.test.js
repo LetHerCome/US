@@ -114,3 +114,8 @@ test('shell: no Noi row or sheet; Oggi arrival, reset on logout, precache and bo
   assert.match(read('service-worker.js'), /versioned\("\/companions\.css"\),\n  versioned\("\/companions\.js"\),/);
   for (const file of ['scripts/build-cloudflare-pages.mjs', 'scripts/build-capacitor-web.mjs']) assert.match(read(file), /'companions\.js',\n\s*'companions\.css',/, file);
 });
+
+test('those who already had Maudit are not told it arrived', () => {
+  assert.match(js, /fresh=w\.localStorage\.getItem\('us:pet:v1:companion'\)===null/);
+  assert.match(js, /if\(fresh&&list\.some\(c=>c\.id==='maudit'&&c\.unlocked\)\)markSeen\(\['maudit'\]\);\n      enforce\(\);/, 'decided before the choice is first stored');
+});

@@ -30,6 +30,22 @@ alter table public.couple_companion_unlocks enable row level security;
 revoke all on table public.couple_companion_unlocks from public, anon, authenticated, service_role;
 grant select on table public.couple_companion_unlocks to service_role;
 
+-- Couples that exist when Compagni ships keep Maudit (founder, 25/10), below
+-- level 3 too. The release moment is recorded once, so a re-apply keeps the
+-- same couples; Maudit is dated at the couple's start, so it is never
+-- announced as a new arrival.
+create table if not exists private.companion_release (
+  one boolean primary key default true check (one),
+  released_at timestamptz not null default pg_catalog.now()
+);
+revoke all on table private.companion_release from public, anon, authenticated, service_role;
+insert into private.companion_release(one) values (true) on conflict do nothing;
+insert into public.couple_companion_unlocks(couple_id, companion_id, unlocked_at)
+select c.id, 'maudit', c.created_at
+  from public.couples c, private.companion_release r
+ where c.created_at < r.released_at
+on conflict do nothing;
+
 -- Records the companions the couple's level has reached. Idempotent.
 create or replace function private.companion_sync(p_couple uuid) returns void
 language plpgsql security definer set search_path = ''

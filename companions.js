@@ -62,7 +62,11 @@ function install(w){
       if(mine!==token||key()!==owner)return;
       // Only a real answer may send the chosen companion back.
       if(error||!Array.isArray(data?.companions))throw error||new Error('invalid_companions');
-      list=normalize(data);ready=true;enforce();announce();
+      list=normalize(data);ready=true;
+      // A phone that never stored a choice already showed Maudit: it is not news there.
+      let fresh=false;try{fresh=w.localStorage.getItem('us:pet:v1:companion')===null;}catch(_){}
+      if(fresh&&list.some(c=>c.id==='maudit'&&c.unlocked))markSeen(['maudit']);
+      enforce();announce();
       w.UsTodayPriority?.refresh?.();
     }catch(err){if(mine===token)console.warn('[US Compagni]',err);}
   }

@@ -36,7 +36,7 @@ Nomi scelti dal founder (25/10): Milo il gufetto, Bea la capretta, Firix il drag
 
 - **Collezione di coppia:** gli sblocchi appartengono alla coppia. Quando arriva un compagno, lo trovate tutti e due.
 - **Fonte:** il livello Sintonia della coppia (`private.progression_level` di `couples.bond_xp`), letto ogni volta che l'app chiede i compagni (apertura e ritorno in primo piano).
-- **Coppie che ci sono già:** chi ha già il livello trova subito i compagni. Chi è sotto il livello 3, da questa versione **non vede più Maudit** finché non ci arriva.
+- **Coppie che ci sono già** (founder, 25/10: «lo tengono»): chi ha già una coppia quando i compagni escono **tiene Maudit**, anche sotto il livello 3. La migrazione registra il momento dell'uscita una volta sola (`private.companion_release`) e dà Maudit alle coppie create prima, datato all'inizio della coppia; sul telefono che lo mostrava già non compare «È arrivato Maudit». Chi ha già il livello trova subito anche gli altri compagni, e quelli sì vengono annunciati. Le coppie nuove partono senza compagno.
 - **Mai persi:** uno sblocco non si toglie.
 - **Annuncio, una volta sola per persona:** su Oggi compare «È arrivato Maudit», poi «È arrivato il gufetto», e così via, con «Guardalo».
 - **Scelta personale, su questo telefono:** ognuno sceglie quale compagno sbloccato sta sul proprio schermo, come oggi l'interruttore di Maudit nelle impostazioni. Quando arriva il primo, compare Maudit da solo. Se il compagno scelto non è sbloccato per la coppia (per esempio dopo una separazione), si torna a Maudit, o a nessuno se la coppia è sotto il livello 3.

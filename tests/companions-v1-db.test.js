@@ -41,6 +41,20 @@ test('migration exists, is listed in the cutoff, the table is RPC-only and the g
   await assert.rejects(h.as(db, h.F, 'select count(*) r from public.couple_companion_unlocks'), /permission denied/);
 });
 
+test('couples that existed when Compagni shipped keep Maudit, dated at their start; later couples start with nobody', async () => {
+  // h.A comes from the seed, before the migration: an existing couple.
+  const started = (await q('select created_at from public.couples where id = $1', [h.A]))[0].created_at;
+  const maudit = (await get(h.F)).companions.find((c) => c.id === 'maudit');
+  assert.equal(maudit.unlocked, true, 'kept, below level 3 too');
+  assert.equal(new Date(maudit.unlocked_at).toISOString(), new Date(started).toISOString(), 'dated at the couple start, so never announced as new');
+  assert.deepEqual(await unlocked(h.F), ['maudit']);
+  // C2 is created after the release: nobody.
+  assert.deepEqual(await unlocked(h.U1), [], 'a couple created after the release is not kept');
+  await db.exec(fs.readFileSync(path.join(DIR, FILE), 'utf8'));
+  assert.deepEqual(await unlocked(h.U2), [], 're-applying keeps the same couples');
+  assert.equal((await q("select count(*)::int n from public.couple_companion_unlocks where companion_id = 'maudit'"))[0].n, 1);
+});
+
 test('the curve the test uses is the server one', async () => {
   for (const level of [2, 3, 5, 8, 11]) {
     assert.equal((await q('select private.progression_level($1) l', [xpFor(level)]))[0].l, level);
@@ -48,41 +62,39 @@ test('the curve the test uses is the server one', async () => {
   }
 });
 
-test('at the start there is no companion; the answer carries only id, unlocked and unlocked_at', async () => {
-  const r = await get(h.F);
+test('a new couple has no companion; the answer carries only id, unlocked and unlocked_at', async () => {
+  const r = await get(h.U1);
   assert.deepEqual(r.companions.map((c) => c.id), ['maudit', 'owl', 'goat', 'dragon'], 'the order they arrive in');
-  assert.deepEqual(await unlocked(h.F), []);
+  assert.deepEqual(await unlocked(h.U1), []);
   for (const c of r.companions) assert.deepEqual(Object.keys(c).sort(), ['id', 'unlocked', 'unlocked_at']);
-  await setXp(h.A, xpFor(2));
-  assert.deepEqual(await unlocked(h.F), [], 'level 2 is still nobody');
+  await setXp(C2, xpFor(2));
+  assert.deepEqual(await unlocked(h.U2), [], 'level 2 is still nobody');
 });
 
 test('Maudit at level 3, the owl at 5, the goat at 8, the dragon at 11', async () => {
   for (const [level, expected] of [[3, ['maudit']], [5, ['maudit', 'owl']], [8, ['maudit', 'owl', 'goat']], [11, ['maudit', 'owl', 'goat', 'dragon']]]) {
-    await setXp(h.A, xpFor(level) - 1);
-    assert.deepEqual(await unlocked(h.F), expected.slice(0, -1), `just under level ${level}`);
-    await setXp(h.A, xpFor(level));
-    assert.deepEqual(await unlocked(h.B), expected, `level ${level}`);
+    await setXp(C2, xpFor(level) - 1);
+    assert.deepEqual(await unlocked(h.U1), expected.slice(0, -1), `just under level ${level}`);
+    await setXp(C2, xpFor(level));
+    assert.deepEqual(await unlocked(h.U2), expected, `level ${level}`);
   }
 });
 
 test('a couple that jumps levels gets everything up to its level at once', async () => {
-  await setXp(h.A, xpFor(9));
-  assert.deepEqual(await unlocked(h.F), ['maudit', 'owl', 'goat']);
-  const r = await get(h.F);
+  await setXp(C2, xpFor(9));
+  assert.deepEqual(await unlocked(h.U1), ['maudit', 'owl', 'goat']);
+  const r = await get(h.U1);
   assert.ok(r.companions.filter((c) => c.unlocked).every((c) => c.unlocked_at), 'each with its date');
 });
 
 test('an unlock is recorded once and never lost, and stays with this couple only', async () => {
-  await setXp(h.A, xpFor(5));
-  const first = (await get(h.F)).companions.find((c) => c.id === 'owl').unlocked_at;
-  await setXp(h.A, 0);
-  const again = (await get(h.B)).companions.find((c) => c.id === 'owl');
+  await setXp(C2, xpFor(5));
+  const first = (await get(h.U1)).companions.find((c) => c.id === 'owl').unlocked_at;
+  await setXp(C2, 0);
+  const again = (await get(h.U2)).companions.find((c) => c.id === 'owl');
   assert.deepEqual([again.unlocked, again.unlocked_at], [true, first]);
-  assert.equal((await q('select count(*)::int n from public.couple_companion_unlocks where couple_id = $1', [h.A]))[0].n, 2);
-  assert.deepEqual(await unlocked(h.U1), [], 'the other couple has nothing of ours');
-  await setXp(C2, xpFor(3));
-  assert.deepEqual(await unlocked(h.U2), ['maudit']);
+  assert.equal((await q('select count(*)::int n from public.couple_companion_unlocks where couple_id = $1', [C2]))[0].n, 2);
+  assert.deepEqual(await unlocked(h.F), ['maudit'], 'the other couple has nothing of ours');
 });
 
 test('the unlocks go with the couple', async () => {
