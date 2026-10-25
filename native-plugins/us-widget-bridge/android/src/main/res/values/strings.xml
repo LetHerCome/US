@@ -17,6 +17,17 @@
     <string name="us_widget_noi_open">apri Noi</string>
     <string name="us_widget_noi_between">tra voi</string>
     <string name="us_widget_noi_last">ultima nota</string>
+    <string name="us_widget_daily_name">La domanda di oggi</string>
+    <string name="us_widget_daily_description">La domanda di oggi e a chi tocca rispondere. Mai le risposte.</string>
+    <string name="us_widget_daily_open">La domanda di oggi vi aspetta in US</string>
+    <string name="us_widget_daily_new">Apri US per la domanda nuova</string>
+    <string name="us_widget_daily_todo">Rispondi quando vuoi</string>
+    <string name="us_widget_daily_your_turn">%1$s ha risposto. Tocca a te</string>
+    <string name="us_widget_daily_your_turn_plain">Ha già risposto. Tocca a te</string>
+    <string name="us_widget_daily_waiting">Hai risposto. Aspettiamo %1$s</string>
+    <string name="us_widget_daily_waiting_plain">Hai risposto. Aspettiamo la sua risposta</string>
+    <string name="us_widget_daily_ready">Le vostre risposte sono pronte</string>
+    <string name="us_widget_daily_preview_question">Quale piccolo momento vorresti rivivere insieme?</string>
     <string name="us_widget_noi_description">Le vostre foto profilo e la distanza mostrata in Noi.</string>
 
     <string name="us_widget_photo_name">Foto &amp; Noi</string>

@@ -137,6 +137,27 @@ final class UsWidgetModels {
 
     // ---------- Noi / Foto & Noi ----------
 
+    static final class Daily {
+        static final String NONE = "none";
+        static final String STALE = "stale";
+        final String question;
+        final String state;
+        Daily(String question, String state) { this.question = question; this.state = state; }
+        boolean shown() { return !question.isEmpty(); }
+    }
+
+    /** The question of the day while it is still the same day in Rome. */
+    static Daily daily(JSONObject snapshot, Instant now) {
+        JSONObject in = snapshot == null ? null : snapshot.optJSONObject("daily");
+        if (in == null) return new Daily("", Daily.NONE);
+        String state = in.optString("state", Daily.NONE);
+        String date = in.optString("date", "");
+        String question = in.optString("question", "");
+        if (Daily.NONE.equals(state) || date.isEmpty() || question.isEmpty()) return new Daily("", Daily.NONE);
+        if (!date.equals(romeToday(now).toString())) return new Daily("", Daily.STALE);
+        return new Daily(question, state);
+    }
+
     static final class Couple {
         String names = "";
         long days = -1;

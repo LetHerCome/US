@@ -297,4 +297,35 @@ public class UsWidgetModelsTest {
         assertEquals("", UsWidgetContract.normalize(snap).getJSONObject("couple").getString("distanceText"));
     }
 
+    // ---------- La domanda di oggi ----------
+
+    @Test
+    public void dailyCarriesOnlyTheQuestionAndWhoseTurnItIs() throws Exception {
+        JSONObject snap = snapshot(null);
+        snap.put("daily", new JSONObject().put("date", "2026-10-25").put("question", "Quale momento vorresti rivivere?")
+            .put("state", "your_turn").put("answer", "SEGRETO").put("partnerAnswer", "SEGRETO"));
+        JSONObject clean = UsWidgetContract.normalize(snap);
+        assertEquals("your_turn", clean.getJSONObject("daily").getString("state"));
+        assertFalse("never an answer", clean.toString().contains("SEGRETO"));
+        UsWidgetModels.Daily daily = UsWidgetModels.daily(clean, Instant.parse("2026-10-25T10:00:00Z"));
+        assertTrue(daily.shown());
+        assertEquals("Quale momento vorresti rivivere?", daily.question);
+        assertEquals("your_turn", daily.state);
+    }
+
+    @Test
+    public void dailyTurnsStaleAtMidnightInRomeAndRejectsUnknownStates() throws Exception {
+        JSONObject snap = snapshot(null);
+        snap.put("daily", new JSONObject().put("date", "2026-10-25").put("question", "Una domanda").put("state", "todo"));
+        JSONObject clean = UsWidgetContract.normalize(snap);
+        // 23:30 UTC on the 25th is already the 26th in Rome (UTC+1 after the clocks change).
+        UsWidgetModels.Daily late = UsWidgetModels.daily(clean, Instant.parse("2026-10-25T23:30:00Z"));
+        assertFalse(late.shown());
+        assertEquals(UsWidgetModels.Daily.STALE, late.state);
+        snap.getJSONObject("daily").put("state", "hacked");
+        assertEquals("none", UsWidgetContract.normalize(snap).getJSONObject("daily").getString("state"));
+        assertEquals("", UsWidgetContract.normalize(snap).getJSONObject("daily").getString("question"));
+        assertEquals(UsWidgetModels.Daily.NONE, UsWidgetModels.daily(snapshot(null), Instant.parse("2026-10-25T10:00:00Z")).state);
+    }
+
 }

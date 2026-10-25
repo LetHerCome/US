@@ -22,6 +22,7 @@ final class UsWidgetContract {
     private static final Pattern FRAME = Pattern.compile("^[a-z0-9_]{1,24}$");
     private static final Pattern DISTANCE = Pattern.compile("^[0-9., ]{1,16} ?(km|m|mi|ft)$");
     private static final Pattern CIVIL_DATE = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
+    private static final Pattern DAILY_STATE = Pattern.compile("^(todo|your_turn|waiting|ready)$");
 
     private UsWidgetContract() {}
 
@@ -91,6 +92,20 @@ final class UsWidgetContract {
                 .put("key", key)
                 .put("takenOn", photoState.equals("ready") ? civilDate(photoIn.optString("takenOn", "")) : "");
 
+            // La domanda di oggi: the day, the question (shared content, never an
+            // answer) and whose turn it is. Absent or malformed: no question.
+            JSONObject dailyIn = optObject(input, "daily");
+            String dailyDate = civilDate(dailyIn.optString("date", ""));
+            String dailyState = dailyIn.optString("state", "");
+            String question = text(dailyIn.optString("question", ""), 240);
+            if (!DAILY_STATE.matcher(dailyState).matches() || dailyDate.isEmpty() || question.isEmpty()) {
+                dailyState = "none"; dailyDate = ""; question = "";
+            }
+            JSONObject daily = new JSONObject()
+                .put("date", dailyDate)
+                .put("question", question)
+                .put("state", dailyState);
+
             return new JSONObject()
                 .put("schemaVersion", SCHEMA_VERSION)
                 .put("ownerHash", ownerHash)
@@ -98,7 +113,8 @@ final class UsWidgetContract {
                 .put("think", think)
                 .put("couple", couple)
                 .put("countdown", countdown)
-                .put("photo", photo);
+                .put("photo", photo)
+                .put("daily", daily);
         } catch (Exception ignored) {
             return null;
         }

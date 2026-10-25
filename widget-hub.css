@@ -97,3 +97,9 @@
 .us-wp-noi-light .us-wp-noi-info small{color:#a16e82;font-size:6px;font-weight:700;letter-spacing:.04em}
 .us-wp-noi-light .us-wp-noi-info b{color:#43303d;font-size:10px;font-weight:700;
   line-height:1.15;margin:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* La domanda di oggi (widgets.js daily): the label, the question in serif, whose turn it is. */
+.us-wp-daily{display:grid;gap:6px;align-content:center;height:100%;padding:12px 14px;text-align:left}
+.us-wp-daily small{color:#d98be0;font-size:9px;font-weight:700;letter-spacing:.14em}
+.us-wp-daily b{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font:400 15px/1.2 var(--us-font-display,Georgia,serif);color:#f7efe9}
+.us-wp-daily i{color:rgba(247,239,233,.55);font:italic 400 11px/1.2 var(--us-font-display,Georgia,serif)}
