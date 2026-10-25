@@ -1,4 +1,4 @@
-const BUILD_ID = "us-staging-accoglienza-20261025-32";
+const BUILD_ID = "us-staging-notifiche-20261025-34";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
