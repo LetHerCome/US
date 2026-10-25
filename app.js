@@ -1107,10 +1107,15 @@ async function initCloud(){
     if(bootEpoch!==usAuthEpoch||window.UsAppLock?.isLocked?.()||!result)return;
     if(result.kind!=='PAIRED'){
       resetNoiIdeasForIdentityChange();
-      window.UsNotifications?.signedOut?.();
+      // A failed read (onboarding.js transient) is the same account on the same
+      // phone: its notifications and widgets stay. Only a real answer (no couple,
+      // an account that may not enter) retires them.
+      if(!result.transient){
+        window.UsNotifications?.signedOut?.();
+        window.UsWidgets?.clear?.().catch(()=>{});
+      }
       window.usProfile = null;
       window.UsCoupleContext?.clear?.();
-      window.UsWidgets?.clear?.().catch(()=>{});
       if(usRealtimeChannel){sb.removeChannel(usRealtimeChannel);usRealtimeChannel=null;}
       setCloudBadge(false,'da collegare');
       window.dispatchEvent(new CustomEvent('us-auth-resolved',{detail:{paired:false}}));
