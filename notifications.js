@@ -34,6 +34,8 @@
     transportPending: 'us:notifications:v1:transport-pending',
     retired: 'us:notifications:v1:retired',
     enabled: (userId) => `us:notifications:v1:enabled:${userId}`,
+    // «Attiva» was tapped and allowed, but Google's token did not come (5G, 25/10/2026).
+    wanted: (userId) => `us:notifications:v1:wanted:${userId}`,
     synced: (userId) => `us:notifications:v1:synced:${userId}`
   });
   const PENDING_MAX_AGE_MS = 30 * 60 * 1000;
@@ -429,7 +431,8 @@
       return { supported: true, kind: 'settings', platform: status.platform, enabled };
     }
     if (enabled && perm === 'granted') return { supported: true, kind: 'active', platform: status.platform, enabled };
-    return { supported: true, kind: 'inactive', platform: status.platform, enabled: false, permission: perm };
+    const pendingWish = perm === 'granted' && read(STORE.wanted(session.userId)) === '1';
+    return { supported: true, kind: 'inactive', platform: status.platform, enabled: false, permission: perm, pending: pendingWish };
   }
 
   /** User-initiated only ("Attiva"): permission → token → registration. */
@@ -438,6 +441,7 @@
     if (busy) return { ok: false, kind: 'busy' };
     busy = true;
     const owner = session;
+    let granted = false;
     try {
       await cleanup; assertOwner(owner);
       enableStage = 'N';
@@ -448,8 +452,9 @@
         const result = await push.requestPermissions();
         perm = result?.receive || 'denied';
       }
-      if (perm !== 'granted') return { ok: false, kind: 'denied' };
+      if (perm !== 'granted') { remove(STORE.wanted(owner.userId)); return { ok: false, kind: 'denied' }; }
       assertOwner(owner);
+      granted = true;
       // A slow network (timeout) gets a second try; a refusal does not.
       for (let attempt = 1; ; attempt++) {
         try {
@@ -465,9 +470,14 @@
       }
       assertOwner(owner);
       write(STORE.enabled(session.userId), '1');
+      remove(STORE.wanted(session.userId));
       return { ok: true, kind: 'active' };
     } catch (error) {
-      return { ok: false, kind: isRetryable(error) ? 'network' : 'error', code: failureCode(error) };
+      // On some mobile networks Google refuses the token while Wi-Fi works: the
+      // wish stays and resume() finishes it later, without a new tap.
+      const network = isRetryable(error) || /^registration_failed/.test(String(error?.message || ''));
+      if (granted && network && session === owner) write(STORE.wanted(owner.userId), '1');
+      return { ok: false, kind: network ? 'network' : 'error', code: failureCode(error), pending: granted && network };
     } finally {
       busy = false;
     }
@@ -511,6 +521,7 @@
       // cannot accidentally rebind A while an unregister is unresolved.
       remove(STORE.enabled(session.userId));
       remove(STORE.synced(session.userId));
+      remove(STORE.wanted(session.userId));
       await retireNativeOwner();
       if (installation) {
         let revoked = false;
@@ -600,6 +611,15 @@
     } catch (_) { /* retry on the next foreground/cold start */ }
   }
 
+  // A pending «Attiva» (see STORE.wanted) completes silently once Google answers;
+  // app.js refreshes the card on us-notifications-changed.
+  async function finishWish(owner) {
+    if (busy || session !== owner || read(STORE.wanted(owner.userId)) !== '1') return;
+    if ((await permission()) !== 'granted') { remove(STORE.wanted(owner.userId)); return; }
+    const result = await enable();
+    if (result.ok && typeof CustomEvent === 'function') window.dispatchEvent?.(new CustomEvent('us-notifications-changed'));
+  }
+
   /**
    * Native foreground recovery. Safe to call repeatedly:
    * - retries retired installation cleanup;
@@ -616,7 +636,7 @@
       if (session !== owner) return;
       await retryRetired();
       if (session !== owner) return;
-      if (!isEnabledFor(session.userId)) return;
+      if (!isEnabledFor(session.userId)) { await finishWish(owner); return; }
       await clearSeenNotifications();
       await syncEnabledInstallation();
     })().finally(() => { resumeInFlight = null; });
@@ -669,7 +689,13 @@
     const listen = (name, fn) => Promise.resolve(push.addListener(name, fn)).catch(() => {});
     listen('registration', onRegistration);
     // FCM says why (e.g. SERVICE_NOT_AVAILABLE): keep the reason, never the token.
-    listen('registrationError', (event) => settleToken(new Error('registration_failed:' + String(event?.error || '').replace(/[^A-Za-z_]/g, '').slice(0, 40))));
+    // Android wraps it in the Java message ("java.util.concurrent.ExecutionException:
+    // java.io.IOException: SERVICE_NOT_AVAILABLE"): the code is the last upper-case word.
+    listen('registrationError', (event) => {
+      const message = String(event?.error || '');
+      const reason = message.match(/[A-Z][A-Z_]{3,}/g)?.pop() || message.replace(/[^A-Za-z_]/g, '').slice(0, 40);
+      settleToken(new Error('registration_failed:' + reason));
+    });
     listen('pushNotificationReceived', onForeground);
     // Retained by the native plugin until this listener exists: covers cold start.
     listen('pushNotificationActionPerformed', onAction);
@@ -678,6 +704,8 @@
   document.addEventListener?.('visibilitychange', () => {
     if (!document.hidden) resume().catch(() => {});
   });
+  // Back on Wi-Fi or a working network: a pending wish can finish right away.
+  window.addEventListener?.('online', () => resume().catch(() => {}));
 
   window.UsNotifications = Object.freeze({
     supported: () => Boolean(push),
