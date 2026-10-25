@@ -1,9 +1,9 @@
 /* Due colori, un Noi — shell motion, the approved mockup's "marea" (core.js go()).
    A tap on the bottom bar: the tab is marked at once (the indicator slides
    with the spring, the icon gives one small bounce, Maudit glances at it),
-   the tab colour covers the screen from the tapped button (440 ms), the page
+   the tab colour covers the screen from the tapped button (260 ms), the page
    changes under the colour, then the new page opens from the same point
-   (560 ms) while its blocks rise in, 50 ms apart. The colour sits under the
+   (340 ms) while its blocks rise in, 50 ms apart. The colour sits under the
    bottom bar and Maudit, as in the mockup. Only taps on the bottom bar
    flood: swipes, back and in-page links keep the instant switch. A second
    tab tap while the colour moves is ignored (mockup: busy). Reduced motion:
@@ -17,9 +17,11 @@ window.__usDueColoriInstalled = true;
 const doc = document;
 const root = doc.documentElement;
 const original = window.go;
-// Copied from the mockup (core.js): E.io, E.out, durations in ms.
-const COVER_MS = 440;
-const REVEAL_MS = 560;
+// Copied from the mockup (core.js): E.io, E.out, durations in ms. The tide
+// itself is quicker than the mockup (founder, 22/10, Fluidità 1): the new
+// page shows after ~280 ms instead of ~490 ms, same shape and easing.
+const COVER_MS = 260;
+const REVEAL_MS = 340;
 const STAGGER_DELAY = 160;
 const STAGGER_STEP = 50;
 const STAGGER_MS = 460;

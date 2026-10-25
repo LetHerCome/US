@@ -790,7 +790,7 @@ function renderRhythm(next = state) {
 
 // The mockup's category order (sintonia.js CATS): the chips, the next
 // unlock's "e …" and the collection all follow it.
-const CHIP_ORDER = Object.freeze(['theme', 'accent', 'oggi_theme', 'oggi_effect', 'effect', 'countdown']);
+const CHIP_ORDER = Object.freeze(['theme', 'accent', 'oggi_theme', 'oggi_effect', 'effect', 'countdown', 'companion']);
 const chipRank = (category) => { const i = CHIP_ORDER.indexOf(category); return i < 0 ? CHIP_ORDER.length : i; };
 // The server's next_reward may be a retired category: the next unlock is
 // read from the same server rows, every presented reward of the next level.
@@ -841,10 +841,25 @@ function paintHTML(root, markup) {
   return true;
 }
 // "Prossimo sblocco · Livello 6 / Lucciole / e Respiro · mancano 40 XP".
+// The next companion still locked (companions.js), with its level.
+function nextCompanion() {
+  const list = window.UsCompanions?.list?.() || [];
+  return list.find((c) => !c.unlocked) || null;
+}
+const companionArt = (c) => `<img class="us-progression-companion-art" src="${esc(c.art)}" alt="" draggable="false" decoding="async">`;
 function renderNext(next = state) {
   const root = $('usProgressionNext');
   if (!root) return;
   const { level, rewards } = nextPresentedRewards(next);
+  const companion = nextCompanion();
+  if (companion && (!rewards.length || companion.level < level)) {
+    if (root.dataset.rewardCat !== 'companion') root.dataset.rewardCat = 'companion';
+    // Level already reached: the companion is on its way (the next read of get_companions_v1).
+    const xp = xpToLevel(Number(next?.total_xp) || 0, companion.level);
+    const line = xp > 0 ? `Un compagno sopra la barra · mancano ${fmt(xp)} XP` : 'Un compagno sopra la barra';
+    paintHTML(root, `<span class="us-progression-next-preview" aria-hidden="true">${companionArt(companion)}</span><span class="us-progression-next-copy"><small>Prossimo sblocco · Livello ${companion.level}</small><b>${esc(companion.name)}</b><span>${esc(line)}</span></span><span class="us-progression-next-chev" aria-hidden="true"></span>`);
+    return;
+  }
   const first = rewards[0];
   const cat = first ? artItem(first).cat : '';
   if (root.dataset.rewardCat !== cat) root.dataset.rewardCat = cat;
@@ -914,6 +929,24 @@ function countdownGroup(next) {
   };
 }
 
+// Compagni V1 (companions.js): Maudit, the owl, the goat and the dragon arrive
+// with the levels; a tap chooses who sits above the bar on this phone.
+function companionGroup() {
+  const list = window.UsCompanions?.list?.();
+  if (!Array.isArray(list) || !list.length) return null;
+  const current = window.UsCompanions?.current?.() || 'none';
+  const owned = list.filter((c) => c.unlocked).length;
+  const tiles = list.map((c) => tileMarkup({
+    attrs: `data-companion-pick="${esc(c.id)}"`, cls: 'us-progression-companion',
+    on: c.unlocked && c.id === current, locked: !c.unlocked, level: c.level,
+    title: c.name, art: companionArt(c)
+  })).join('');
+  return {
+    category: 'companion', label: 'Compagni', owned, total: list.length,
+    markup: groupMarkup({ category: 'companion', label: 'Compagni', place: 'sopra la barra', owned, total: list.length, tiles })
+  };
+}
+
 // I vostri sblocchi (sintonia.js renderColl): a row of chips (name and
 // owned/total) chooses the one category shown; the groups stay the same
 // native <details>, so nothing is lost without the chips.
@@ -921,7 +954,8 @@ let rewardCategory = null;
 const COLLECTION_SUB = Object.freeze({
   device: 'Tocca un premio per usarlo. Vale solo su questo telefono.',
   // The countdown style is saved for the couple (save_countdown_oggi_v1).
-  couple: 'Tocca uno stile per usarlo. Vale per tutti e due.'
+  couple: 'Tocca uno stile per usarlo. Vale per tutti e due.',
+  companion: 'Tocca un compagno per tenerlo sopra la barra. Vale solo su questo telefono.'
 });
 function renderRewards(next = state) {
   const root = $('usProgressionRewards');
@@ -954,6 +988,8 @@ function renderRewards(next = state) {
   }).filter(Boolean);
   const countdown = countdownGroup(next);
   if (countdown) groups.push(countdown);
+  const companions = companionGroup();
+  if (companions) groups.push(companions);
   groups.sort((a, b) => chipRank(a.category) - chipRank(b.category));
   const owned = groups.reduce((sum, group) => sum + group.owned, 0);
   const total = groups.reduce((sum, group) => sum + group.total, 0);
@@ -972,7 +1008,7 @@ function renderRewards(next = state) {
   const count = $('usProgressionRewardsCount');
   setText(count, `${owned} di ${total}`);
   const sub = $('usProgressionRewardsSub');
-  setText(sub, rewardCategory === 'countdown' ? COLLECTION_SUB.couple : COLLECTION_SUB.device);
+  setText(sub, rewardCategory === 'countdown' ? COLLECTION_SUB.couple : rewardCategory === 'companion' ? COLLECTION_SUB.companion : COLLECTION_SUB.device);
 }
 
 // Painting waits while the card plays a gain; the gain paints at its end.
@@ -984,7 +1020,8 @@ function renderKey(next) {
     return JSON.stringify([
       window.usProfile?.id || '', next.total_xp, next.level, next.rhythm_days, next.rhythm_today,
       (next.rewards || []).map((reward) => [reward.id, reward.token, reward.unlocked ? 1 : 0, reward.equipped ? 1 : 0, reward.active === false ? 0 : 1]),
-      next.preferences || null, window.USOggiLook?.current?.() || null, window.USCountdown?.activeStyle?.() || null, rewardCategory
+      next.preferences || null, window.USOggiLook?.current?.() || null, window.USCountdown?.activeStyle?.() || null, rewardCategory,
+      (window.UsCompanions?.list?.() || []).map((c) => [c.id, c.unlocked ? 1 : 0]), window.UsCompanions?.current?.() || ''
     ]);
   } catch (_) { return ''; }
 }
@@ -1326,6 +1363,7 @@ function tileTitle(tile) {
   if (data.progressionReward) return rewardById(data.progressionReward)?.title || '';
   if (data.progressionDefault) return SLOT_DEFAULT[data.progressionDefault]?.title || '';
   if (data.countdownStyleSelect) return countdownStyles().find((style) => style.id === data.countdownStyleSelect)?.name || '';
+  if (data.companionPick) return (window.UsCompanions?.list?.() || []).find((c) => c.id === data.companionPick)?.name || '';
   if (data.lookSlot) return window.USOggiLook?.find?.(data.lookSlot, data.lookId)?.name || '';
   return '';
 }
@@ -1335,6 +1373,7 @@ const tileSelector = (tile) => {
   if (data.progressionDefault) return `[data-progression-default="${data.progressionDefault}"]`;
   if (data.countdownStyleSelect) return `[data-countdown-style-select="${data.countdownStyleSelect}"]`;
   if (data.lookSlot) return `[data-look-slot="${data.lookSlot}"][data-look-id="${data.lookId}"]`;
+  if (data.companionPick) return `[data-companion-pick="${data.companionPick}"]`;
   return '';
 };
 $('usProgressionRewards')?.addEventListener('click', async (event) => {
@@ -1344,7 +1383,7 @@ $('usProgressionRewards')?.addEventListener('click', async (event) => {
     window.UsFeedback?.selection?.();
     return;
   }
-  const tile = event.target.closest?.('[data-progression-reward],[data-progression-default],[data-countdown-style-select],[data-look-slot]');
+  const tile = event.target.closest?.('[data-progression-reward],[data-progression-default],[data-countdown-style-select],[data-look-slot],[data-companion-pick]');
   if (!tile || tile.disabled) return;
   const data = tile.dataset || {};
   const title = tileTitle(tile);
@@ -1378,6 +1417,10 @@ $('usProgressionRewards')?.addEventListener('click', async (event) => {
   } else if (data.progressionReward) {
     category = rewardById(data.progressionReward)?.category || '';
     ok = await equipReward(data.progressionReward);
+  } else if (data.companionPick) {
+    category = 'companion';
+    ok = Boolean(window.UsCompanions?.choose?.(data.companionPick));
+    if (ok) renderRewards(state);
   }
   if (!ok) {
     window.toast?.('Non riesco ad applicarlo ora. Riprova.');
@@ -1386,10 +1429,11 @@ $('usProgressionRewards')?.addEventListener('click', async (event) => {
   const selector = tileSelector(tile);
   burst(selector ? $('usProgressionRewards')?.querySelector?.(selector) : null, 6);
   window.UsFeedback?.action?.();
-  if (title) window.toast?.(ON_OGGI.includes(category) ? `${title} · in uso su Oggi` : `${title} · in uso`, { icon: 'check', quiet: false });
+  if (title) window.toast?.(category === 'companion' ? `${title} · con te sopra la barra` : ON_OGGI.includes(category) ? `${title} · in uso su Oggi` : `${title} · in uso`, { icon: 'check', quiet: false });
   if (data.progressionReward) await hydrate({ showUnlocks: false, force: true });
 });
 window.addEventListener?.('us:countdown-updated', () => renderRewards(state));
+window.addEventListener?.('us:companions-updated', () => { renderNext(state); renderRewards(state); });
 $('usProgressionUnlockUse')?.addEventListener('click', useUnlock);
 $('usProgressionUnlockLater')?.addEventListener('click', dismissUnlock);
 // The next unlock opens its category in the collection.
@@ -1452,6 +1496,7 @@ window.USProgression = Object.freeze({
   previewMarkup,
   holdsCard,
   missionCompleted,
+  showCategory,
   celebrateXp: xpPop,
   burst
 });

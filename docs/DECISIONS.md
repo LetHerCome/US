@@ -173,3 +173,37 @@ Only durable decisions belong here. New missions should not reopen them without 
 - **Rientro dal background:** si aggiorna per prima la pagina sullo schermo; widget del telefono, Gioca fuori da Gioca, pallino di Ricordi, posizione, avatar e controllo aggiornamenti partono un attimo dopo (`usAfterForeground`, 0,9–2,5 s, poi quando il telefono è libero).
 - **Doppioni tolti:** al rientro le Stories si ricaricavano due volte (visibilitychange + focus) e Gioca due volte quando era la pagina aperta.
 - Da provare su un AAB firmato prima del merge (regola Boot/Auth del 07/10).
+
+## 2026-10-22 — Eccezione a D5: check-in settimanale di coppia
+
+**Fonte:** risposta esplicita del founder del 22/10/2026 alla spec [`weekly-checkin-v1`](missions/weekly-checkin-v1.md) («1. adesso»).
+
+- Il check-in settimanale di coppia (vicinanza, energia, apprezzamento, supporto) può essere implementato **prima della 1.0 Store**, in deroga al freeze D5. L'eccezione vale **solo** per questa missione e non riapre gli altri moduli congelati da D5.
+- Restano validi D4 (gratis, nessun paywall) e la product restraint del 04/10 (nessuna nuova tab, niente XP, streak o valute).
+- **Governance:** l'eccezione autorizza il lavoro sul branch e le prove su staging. Non autorizza merge, SQL o Edge in produzione, né la pubblicazione: ognuno di questi passi richiede un'approvazione separata.
+
+## 2026-10-22 — Il check-in resta su staging
+
+**Fonte:** prova del founder sull'APK di staging, 22/10/2026 («al momento non mi fa impazzire, lasciamola su staging»).
+
+- Il check-in settimanale resta **solo su US-STAGING** (SQL, `send-web-push` v11, APK QA e anteprima web) per un periodo di prova. **Non va in produzione**: niente SQL, Edge, merge su `main` né AAB su Play finché il founder non decide diversamente.
+- Il branch `claude/payred-app-comparison-b2594e` resta aperto, senza PR verso `main`.
+- **Direzione di prodotto:** da Paired si prende ispirazione, senza copiarne le funzioni. US non è terapia di coppia. L'obiettivo è un'esperienza più fluida e più ricca di contenuti, coerente con il core di US; tra le idee, compagni oltre il gatto (Maudit).
+
+## 2026-10-22 — Eccezione a D5: Il vostro anno (riepilogo dell'anniversario)
+
+**Fonte:** richiesta esplicita del founder del 22/10/2026 («vai facciamo riepilogo anniversario»), dopo il confronto con Paired.
+
+- Il riepilogo dell'anniversario «Il vostro anno» ([spec](missions/year-recap-v1.md)) si fa adesso, in deroga al freeze D5, **solo** per questa missione.
+- È fatto con i dati veri della coppia, è privato (niente condivisione esterna nella V1) e non contiene punteggi né classifiche.
+- **Governance:** il lavoro va sul branch e su staging. Merge, SQL ed Edge in produzione e pubblicazione hanno ciascuno un'approvazione separata.
+
+## 2026-10-22 — Eccezione a D5: Compagni V1
+
+**Fonte:** richiesta esplicita del founder del 22/10/2026 («io voglio sicuro un draghetto che svolazza e si ripoggia sempre dove sta Maudit… un sistema di sblocco dei pet, non di crescita»; poi «Maudit, una capretta, un gufetto e il draghetto»).
+
+- I «Compagni oltre Maudit» congelati da D5 si fanno adesso, **solo** per tre compagni: la capretta, il gufetto e il draghetto ([spec](missions/companions-v1.md)).
+- I compagni **si sbloccano** con il livello Sintonia della coppia e non crescono: niente evoluzioni o barre proprie. All'inizio nessun compagno; Maudit al livello 3, il gufetto al 5, la capretta all'8, il draghetto all'11 (decisione del founder, 22/10 sera). Hanno una tabella loro, non il catalogo dei premi di Sintonia.
+- **Disegni:** i nuovi compagni diventano asset approvati solo dopo l'OK del founder sulle bozze.
+- **Governance:** il lavoro va sul branch e su staging. Merge, SQL in produzione e pubblicazione hanno ciascuno un'approvazione separata.
+- **22/10, sera:** il founder fornisce i disegni dei compagni e un **Maudit 2.0** nello stesso stile («li voglio così»; «usa la mia nuova immagine anche per Maudit»). Sostituiscono le bozze SVG e Maudit 1.0, che resta su disco ritirato. Niente video generati a pagamento per ora: l'animazione è fatta a pezzi dalle immagini.

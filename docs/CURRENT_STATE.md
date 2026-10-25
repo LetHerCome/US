@@ -6,6 +6,14 @@
 
 Stati: PROGETTATO / IN BRANCH / MERGED / SQL o Edge APPLICATO (staging? produzione?) / TESTATO SU DEVICE. Non confonderli. Ogni merge su `main` pubblica il web di produzione (Cloudflare Pages), ma non applica SQL né Edge. Merge, SQL di produzione, deploy Edge e pubblicazione Store richiedono ciascuno un'autorizzazione separata del founder.
 
+## Aggiornamento 22/10 (le sezioni più sotto sono rimaste al 17/10)
+
+- **Su `main` dal 17/10:** #190 eliminazione account, #196 Esci dalla coppia / Segnala / export, #194, #214–#222. Le righe più sotto che le danno come DRAFT sono superate.
+- **Produzione:** il confronto in sola lettura del 22/10 mostra che lo schema S3.2 e le Edge `delete-account`, `account-deletion-worker`, `leave-couple`, `export-user-data` e `delete-moment` sono già in produzione, con `us-account-deletion-worker` attivo.
+- **Staging (US-STAGING):** riportato al livello della produzione il 22/10, con le differenze documentate ([stato staging](store/US_STAGING_STATUS.md)). È l'ambiente di prova per le nuove funzioni.
+- **Missione in corso:** check-in settimanale «Il punto della settimana» ([spec](missions/weekly-checkin-v1.md)), con l'eccezione D5 del 22/10.
+- **Ruoli:** dal 22/10 Claude fa architettura, review e implementazione; Codex per ora non si usa.
+
 ## Governance (invariata)
 
 - D1/D2/D3/D5 approvati; D4 (monetizzazione) da rivedere: niente prezzi, paywall o billing.

@@ -166,14 +166,14 @@ function fakeWindow(href, storage = new Map()) {
   return { w, layer, actor, attrs, listeners, storage, body, nudge, toast, hero, auth, observed, mutate, tick, timers: () => scheduled, active: () => pending.size };
 }
 
-test('PET production gate: approved Maudit 1.0 mounts by default', () => {
+test('PET production gate: approved Maudit 2.0 mounts by default', () => {
   assert.equal(Pet.PET_ASSET_STATUS, 'APPROVED');
   const f = fakeWindow('https://us.example/');
   Pet.install(f.w);
   assert.equal(f.w.USPet.enabled, true);
   assert.equal(f.layer.hidden, false);
   assert.equal(f.layer.dataset.petRenderer, 'sprite');
-  assert.match(f.actor.innerHTML, /data-pet-production="maudit-v1"/);
+  assert.match(f.actor.innerHTML, /data-pet-production="maudit"/);
   assert.equal(f.active(), 1, 'one scheduler timer while the production PET is alive');
   assert.ok(f.listeners['d:visibilitychange'] && f.listeners['w:pagehide'] && f.listeners['w:us:pet']);
 });
@@ -358,7 +358,7 @@ test('F2 renderers fail closed: placeholder is preview-only, unknown ids keep th
   try { assert.equal(f.w.USPet.useRenderer('test-throws'), false); } finally { console.warn = warn; }
   assert.equal(f.layer.dataset.petRenderer, 'placeholder');
   assert.equal(f.actor.innerHTML, before);
-  assert.match(petJs, /if\(!useRenderer\(preview\?'placeholder':approved\?'sprite':'placeholder'\)\)return false;/, 'nothing mounts if the chosen renderer cannot');
+  assert.match(petJs, /if\(!useRenderer\(preview\?'placeholder':approved\?rendererOf\(stored\(\)\):'placeholder'\)\)return false;/, 'nothing mounts if the chosen renderer cannot');
   assert.doesNotMatch(petJs, /renderers\.get\(id\)\|\|renderers\.get\('placeholder'\)/, 'no placeholder fallback');
 });
 
@@ -522,45 +522,88 @@ test('Kitten v0 matches its approved source and stays the isolated QA preview', 
   assert.doesNotMatch(petJs + petCss, /[\u{1F300}-\u{1FAFF}❤♥]/u, 'no emoji or heart glyphs');
 });
 
-test('Maudit 1.0 production drawing matches its approved source and has a pose for every state', () => {
-  const spec = read('docs/missions/us-pet-asset-spec-v1.md');
-  assert.match(spec, /## Maudit 1\.0 \(produzione dal design "Due colori, un Noi"\)/);
-  const sourcePath = 'assets/source/pet/us-pet-maudit-v1.svg';
-  const source = read(sourcePath);
-  const inline = petJs.match(/const MAUDIT_V1_SVG='([^']+)'/)?.[1];
-  assert.equal(inline, source.trimEnd(), 'runtime drawing is identical to the approved source asset');
+test('Maudit 2.0 and the companions: every piece is an approved derived asset and every state has a pose', () => {
   const manifest = JSON.parse(read('assets/ASSET_MANIFEST.json'));
-  const asset = manifest.assets.find((row) => row.path === sourcePath);
-  assert.equal(asset?.status, 'APPROVED');
-  assert.deepEqual(asset?.usedBy, ['pet-production']);
-  assert.equal(asset?.sha256, crypto.createHash('sha256').update(source).digest('hex'));
-  assert.deepEqual(manifest.assets.find((row) => row.path === 'assets/source/pet/us-pet-kitten-base-v0.svg')?.usedBy, ['pet-preview']);
-  assert.match(petJs, /id:'sprite',\s*mount\(host\)\{return mountMauditV1\(host\);\}/);
-  assert.match(petJs, /data-pet-production="maudit-v1"/);
-  // Every part the poses drive exists in the drawing, in draw order.
-  const parts = ['m-tail', 'm-body', 'm-paw-l', 'm-paw-r', 'm-head', 'm-ear-l', 'm-ear-r', 'm-eyes-open', 'm-eyes-happy', 'm-eyes-closed', 'm-nose', 'm-collar', 'm-zz', 'm-purr', 'm-heart'];
-  let last = -1;
-  for (const part of parts) {
-    const at = source.search(new RegExp(`class="(?:[a-z-]+ )*${part}[ "]`));
-    assert.ok(at > last, `${part} drawn in order`);
-    last = at;
+  const byPath = new Map(manifest.assets.map((row) => [row.path, row]));
+  // The retired Maudit 1.0 drawing stays on disk, no longer in use.
+  assert.equal(byPath.get('assets/source/pet/us-pet-maudit-v1.svg')?.status, 'DEPRECATED');
+  assert.deepEqual(byPath.get('assets/source/pet/us-pet-maudit-v1.svg')?.usedBy, []);
+  assert.doesNotMatch(petJs, /MAUDIT_V1_SVG|data-pet-production="maudit-v1"/);
+  assert.deepEqual(Pet.COMPANION_IDS, ['maudit', 'goat', 'owl', 'dragon']);
+  assert.match(petJs, /id:'sprite',\s*mount\(host\)\{return mountCompanion\(host,'maudit'\);\}/);
+  for (const id of Pet.COMPANION_IDS) {
+    const c = Pet.COMPANIONS[id];
+    const pieces = ['awake', 'sleep', 'happy', 'body', ...Object.keys(c.parts)];
+    for (const piece of pieces) {
+      const file = `assets/derived/pet/us-pet-${id}-${piece}-${c.v}.webp`;
+      const row = byPath.get(file);
+      assert.equal(row?.status, 'APPROVED', file);
+      assert.deepEqual(row.usedBy, ['pet-production'], file);
+      assert.equal(row.sha256, crypto.createHash('sha256').update(fs.readFileSync(path.join(__dirname, '..', file))).digest('hex'), file);
+      assert.equal(byPath.get(row.source)?.status, 'APPROVED', `${file}: its source sheet is approved`);
+    }
+    assert.equal(c.blink === 'pose' || c.eyes.length === 2, true, `${id}: blinks`);
   }
-  // Fur grey, latte muzzle, rosa cheeks; only the collar takes a theme colour (the couple's Noi).
-  for (const hex of ['#A7A2B2', '#F7F0EA', '#FFB3C2', '#FF7C96', '#1A1020']) assert.ok(source.includes(hex), hex);
-  assert.equal((source.match(/var\(--/g) || []).length, 1, 'only the collar follows a theme token');
-  assert.match(source, /class="m-collar"><path[^>]+stroke="var\(--us-noi,#d98be0\)"/);
-  // The mockup's .m poses (style.css), a static pose per state so reduced motion still reads.
+  assert.equal(Pet.COMPANIONS.dragon.flies, true);
+  assert.equal(Object.values(Pet.COMPANIONS).filter((c) => c.flies).length, 1, 'only the dragon flies');
+  // A pose for every state; a static one survives reduced motion.
   for (const rule of [
-    /\.us-pet-maudit \.m-eyes-open\{animation:us-maudit-blink 5\.2s infinite\}/,
-    /\.us-pet-maudit \.m-tail\{animation:us-maudit-tail 4\.6s ease-in-out infinite alternate\}/,
-    /\[data-pet-state="sleep"\] :is\(\.m-eyes-closed,\.m-zz\)\{opacity:1\}/,
-    /:is\(\[data-pet-state="happy"\],\[data-pet-state="pet"\]\) \.m-eyes-happy\{opacity:1\}/,
-    /\[data-pet-state="curious"\] \.m-head\{rotate:-9deg\}/,
-    /\[data-pet-state="pet"\] \.m-head\{rotate:5deg\}/,
-    /\[data-pet-state="pet"\] \.m-purr\{opacity:1\}/,
-    /\[data-pet-state="sleep"\] \.m-head\{translate:0 3px\}/
+    /\.us-pet-layer:is\(\[data-pet-state="sleep"\],\[data-pet-state="happy"\]\) \.us-pet-awake\{opacity:0\}/,
+    /\[data-pet-state="sleep"\] \.us-pet-pose-sleep\{opacity:1\}/,
+    /\[data-pet-state="happy"\] \.us-pet-pose-happy\{opacity:1\}/,
+    /\[data-pet-state="curious"\] \.us-pet-awake\{rotate:-7deg\}/,
+    /\[data-pet-state="pet"\] \.us-pet-awake\{rotate:5deg\}/,
+    /\[data-pet-state="pet"\] :is\(\.us-pet-lids,\.us-pet-blink\)\{opacity:1\}/,
+    /\[data-pet-state="sleep"\] \.us-pet-zz\{opacity:1\}/
   ]) assert.match(petCss, rule);
-  assert.match(petCss, /\.us-pet-layer\[data-pet-accessory="collar"\] \.us-pet-maudit \.m-collar\{display:inline\}/);
-  assert.doesNotMatch(petCss, /m-heart\{[^}]*animation/, 'the heart pops only with the happy hop (pet.js), never on a stroke');
-  assert.doesNotMatch(source, /[\u{1F300}-\u{1FAFF}❤♥]/u, 'no emoji or heart glyphs');
+  const moving = petCss.slice(petCss.indexOf('@media (prefers-reduced-motion:no-preference){\n  .us-pet-awake'));
+  assert.ok(moving.length > 0, 'every movement lives under prefers-reduced-motion:no-preference');
+  assert.match(petCss, /\.us-pet-figure\[data-pet-flying\] \.us-pet-dragon \.us-pet-wing-l\{animation:us-pet-flap-l/);
+  assert.match(petCss, /mask:url\(\/assets\/icons\/phosphor\/heart-straight-fill\.svg\)/, 'the heart is the Phosphor icon');
+  assert.doesNotMatch(petJs + petCss, /[\u{1F300}-\u{1FAFF}❤♥]/u, 'no emoji or heart glyphs');
+});
+
+test('Compagni V1: the dragon flies its loop and lands on its spot; never with reduced motion; the choice is device-local', () => {
+  assert.match(petJs, /if\(view\?\.fly\?\.\(\)\)return;/, 'the happy hop becomes the flight');
+  assert.match(petJs, /flight=figure\.animate\(FLIGHT,\{duration:TIMING\.flight/);
+  assert.match(petJs, /if\(!COMPANIONS\[id\]\.flies\|\|flight\|\|reduced\(\)/, 'no flight with reduced motion');
+  const FLIGHT = petJs.match(/const FLIGHT=Object\.freeze\(\[([\s\S]*?)\]\);/)[1];
+  assert.match(FLIGHT, /^\s*\{translate:'0 0',rotate:'0deg'\}/, 'takes off from its spot');
+  assert.match(FLIGHT, /\{translate:'0 0',rotate:'0deg'\}\s*$/, 'and lands on it');
+  const storage = new Map([['us:pet:v1:companion', 'dragon']]);
+  const f = fakeWindow('https://us.example/', storage);
+  Pet.install(f.w);
+  assert.equal(f.layer.dataset.petRenderer, 'dragon');
+  assert.match(f.actor.innerHTML, /data-pet-production="dragon"/);
+  assert.equal(f.w.USPet.companion(), 'dragon');
+  assert.equal(f.w.USPet.setCompanion('unicorn'), false);
+  assert.equal(f.w.USPet.setCompanion('goat'), true);
+  assert.equal(storage.get('us:pet:v1:companion'), 'goat');
+  assert.equal(f.layer.dataset.petRenderer, 'goat');
+  const bad = fakeWindow('https://us.example/', new Map([['us:pet:v1:companion', 'x"><img']]));
+  Pet.install(bad.w);
+  assert.equal(bad.layer.dataset.petRenderer, 'sprite', 'an unknown stored id falls back to Maudit');
+  assert.doesNotMatch(petJs, /\bsb\.|supabase|\.rpc\(/i, 'pet.js never reads the unlocks itself');
+});
+
+test('Compagni V1: before the first unlock nothing sits above the bar; the first arrival appears unless Settings switched it off', () => {
+  const storage = new Map([['us:pet:v1:companion', 'none']]);
+  const f = fakeWindow('https://us.example/', storage);
+  Pet.install(f.w);
+  assert.equal(f.w.USPet.enabled, false, 'no companion yet: nothing mounted');
+  assert.equal(f.layer.hidden, true);
+  assert.equal(f.active(), 0, 'no timers');
+  assert.equal(f.w.USPet.companion(), 'none');
+  assert.equal(f.w.USPet.setCompanion('maudit'), true);
+  assert.equal(f.w.USPet.enabled, true, 'Maudit arrives and sits on its spot');
+  assert.equal(f.layer.dataset.petRenderer, 'sprite');
+  assert.equal(f.w.USPet.setCompanion('none'), true);
+  assert.equal(f.w.USPet.enabled, false, 'a new couple starts again with nobody');
+  const off = new Map([['us:pet:v1:companion', 'none'], ['us:maudit:v1:enabled', '0']]);
+  const g = fakeWindow('https://us.example/', off);
+  Pet.install(g.w);
+  g.w.USPet.setCompanion('owl');
+  assert.equal(g.w.USPet.enabled, false, 'switched off in Settings stays off');
+  assert.equal(off.get('us:pet:v1:companion'), 'owl');
+  assert.equal(Pet.NO_COMPANION, 'none');
 });

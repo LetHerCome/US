@@ -21,6 +21,10 @@ insert into public.couples(id,name,started_on) values ('${A}','US.','2026-04-21'
 insert into public.profiles(id,display_name,couple_id,role) values ('${F}','Francesco','${A}','francesco'),('${B}','Beatrice','${A}','beatrice');
 insert into public.couple_invites(couple_id,role,code_hash,used_by,used_at) values
 ('${A}','francesco',repeat('a',64),'${F}',now()),('${A}','beatrice',repeat('b',64),'${B}',now());`;
+// Migrations that build on MC2 (S3.2 account deletion) run after it, in
+// ledger order; older ones keep the historical pre-MC2 position. From 22/10
+// on every migration may build on S3.2, so it runs after it too.
+const afterMc2=f=>f>FILE && (/_s32_/.test(f) || f>='20261022');
 // s32:false rebuilds the schema as it was before account deletion v1, for
 // the historical #190 rehearsals (naive cascade, parked vault drafts).
 async function database({mc2=true, seed=true, s32=true}={}) {
@@ -28,9 +32,6 @@ async function database({mc2=true, seed=true, s32=true}={}) {
   try {
     await db.exec(PLATFORM);
     const files=fs.readdirSync(DIR).filter(f=>f.endsWith('.sql') && f!==FILE).sort();
-    // Migrations that build on MC2 (S3.2 account deletion) run after it, in
-    // ledger order; older ones keep the historical pre-MC2 position.
-    const afterMc2=f=>f>FILE && /_s32_/.test(f);
     for (const f of files.filter(f=>!afterMc2(f))) await db.exec(fs.readFileSync(path.join(DIR,f),'utf8'));
     if(seed) await db.exec(SEED);
     if(mc2) {
@@ -53,4 +54,4 @@ const invite=(db,u=U1)=>as(db,u,'select public.create_partner_invite() r');
 const accept=(db,u,code,name='Sam')=>as(db,u,'select public.accept_partner_invite($1,$2) r',[code,name]);
 const membership=(db,u)=>as(db,u,'select public.get_couple_membership() r');
 const revoke=(db,u=U1)=>as(db,u,'select public.revoke_partner_invite() r');
-module.exports={ROOT,DIR,FILE,MC2,PLATFORM,SEED,A,F,B,U1,U2,U3,U4,ANON,UNCONFIRMED,BANNED,database,as,create,invite,accept,membership,revoke,uid};
+module.exports={ROOT,DIR,FILE,MC2,afterMc2,PLATFORM,SEED,A,F,B,U1,U2,U3,U4,ANON,UNCONFIRMED,BANNED,database,as,create,invite,accept,membership,revoke,uid};

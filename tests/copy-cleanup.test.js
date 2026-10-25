@@ -34,8 +34,9 @@ test('copy: explanatory and duplicate lines removed in this pass stay removed', 
 test('copy: text kept on purpose (destructive, reveal, privacy, irreversible) is still there', () => {
   const text = all();
   for (const phrase of [
-    'Eliminare questo impegno?', 'Sparirà dal calendario di entrambi.', 'Elimina questo ricordo per entrambi', '>Eliminato<', '>Annulla<',
-    'Sparirà per entrambi.', 'Dopo la conferma le risposte non si cambiano più.', 'Le risposte si sbloccano quando avete risposto entrambi.',
+    // Fluidità 1 (22/10): «entrambi» about the two people became «voi due».
+    'Eliminare questo impegno?', 'Sparirà dal vostro calendario.', 'Elimina questo ricordo per voi due', '>Eliminato<', '>Annulla<',
+    'Sparirà per voi due.', 'Dopo la conferma le risposte non si cambiano più.', 'Le risposte si sbloccano quando avete risposto voi due.',
     'Scollega questo telefono', 'Dovrai inserire di nuovo il codice privato per rientrare in US.',
     'Sei offline.', 'Su di te · ',
   ]) assert.ok(text.includes(phrase), `"${phrase}" kept`);

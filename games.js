@@ -931,7 +931,7 @@ function renderSwipeWaiting({ dir = 1 } = {}) {
 function renderWaiting({ dir = 1 } = {}) {
   if (current?.game_family === 'swipe') return renderSwipeWaiting({ dir });
   showPanel(`<article class="us-gv2-waiting">
-    ${waitArt('Le risposte si scoprono quando avete risposto entrambi.')}
+    ${waitArt('Le risposte si scoprono quando avete risposto voi due.')}
     ${waitActions()}
     ${mineFold(`<ol class="us-gv2-mine">${current.items.map((i) => `<li><small${asWritten(coupleWritten(i))}>${esc(i.my_prompt || i.question_text)}</small><b${asWritten(i.answer_kind === 'open' || coupleWritten(i))}>${esc(myAnswerText(i))}</b></li>`).join('')}</ol>`)}
   </article>`, { kicker: familyName(current.game_family), title: 'Hai risposto.', label: familyName(current.game_family) }, { dir });

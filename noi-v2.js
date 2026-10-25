@@ -264,8 +264,8 @@ function detailMarkup(index) {
   const active=index.get(selected)||[];
   const head=`<div class="us-noi-v2-detail-head"><div><small>${relativeLabel(selected,active)}</small><h3>${esc(dayTitle(selected))}</h3></div></div>`;
   if(active.length)return `${head}<div class="us-noi-v2-day-items">${active.map(item=>itemMarkup(selected,item)).join('')}</div>`;
-  const copy=pending&&!snapshot?'Carico i vostri momenti…':'Nessun momento in questo giorno. Lo spazio è vostro.';
-  return `${head}<p class="us-noi-v2-empty-day">${copy}</p>`;
+  if(pending&&!snapshot)return `${head}<div class="us-skeleton-rows" role="status"><span class="us-sr">Carico i vostri momenti…</span><i class="us-skeleton"></i><i class="us-skeleton"></i></div>`;
+  return `${head}<p class="us-noi-v2-empty-day">Nessun momento in questo giorno. Lo spazio è vostro.</p>`;
 }
 function syncStatus(){
   const status=$('usNoiV2Sync');

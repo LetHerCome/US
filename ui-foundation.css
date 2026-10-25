@@ -515,6 +515,23 @@ h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
 :root[data-us-motion="reduced"] .us-content-enter{animation:none}
 @media (prefers-reduced-motion:reduce){[data-us-tile]:active{transform:none}.us-content-enter{animation:none}}
 
+/* Fluidità 1 — first loads show the shape of what is coming instead of a
+   «Carico…» line. The words stay for screen readers (.us-sr, inside a
+   role="status"); the slow sheen stops with reduced motion. */
+.us-sr{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.us-skeleton{position:relative;display:block;overflow:hidden;border-radius:var(--us-skeleton-radius,14px);background:var(--us-color-surface-2)}
+.us-skeleton::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(247,239,233,.07),transparent);animation:us-skeleton-sweep 1.4s cubic-bezier(.4,0,.2,1) infinite}
+@keyframes us-skeleton-sweep{to{transform:translateX(100%)}}
+:root[data-us-motion="reduced"] .us-skeleton::after{animation:none;opacity:0}
+@media (prefers-reduced-motion:reduce){.us-skeleton::after{animation:none;opacity:0}}
+.us-skeleton-calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;padding:8px 2px}
+.us-skeleton-calendar>.us-skeleton{aspect-ratio:1;--us-skeleton-radius:50%}
+.us-skeleton-rows{display:grid;gap:10px;padding:4px 0}
+.us-skeleton-rows>.us-skeleton{height:64px;--us-skeleton-radius:18px}
+.us-skeleton-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;grid-column:1/-1}
+.us-skeleton-tiles>.us-skeleton{aspect-ratio:4/5;--us-skeleton-radius:20px}
+.us-skeleton-tiles>.us-skeleton:first-of-type{grid-column:1/-1;aspect-ratio:16/10}
+
 /* M12A — Bottom navigation: ONE sliding indicator. It sits behind the labels
    and moves between the four slots; the position is derived from the existing
    .active class (no navigation logic involved). Browsers without :has() keep
@@ -586,6 +603,7 @@ h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
 .us-icon[data-us-icon="sparkle-fill"]{--us-icon-src:url("/assets/icons/phosphor/sparkle-fill.svg")}
 .us-icon[data-us-icon="heart-fill"]{--us-icon-src:url("/assets/icons/phosphor/heart-straight-fill.svg")}
 .us-icon[data-us-icon="lock-simple"]{--us-icon-src:url("/assets/icons/phosphor/lock-simple-regular.svg")}
+.us-icon[data-us-icon="cat"]{--us-icon-src:url("/assets/icons/phosphor/cat-regular.svg")}
 
 /* Eyebrow: the small uppercase label above a title, one voice everywhere. */
 .tiny,

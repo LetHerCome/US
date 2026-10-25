@@ -835,6 +835,8 @@ let selectedRole = null;
 async function clearPrivateDeviceState(profileId=window.usProfile?.id||''){
   window.UsCoupleContext?.clear?.();
   window.USCountdown?.reset?.();
+  window.UsYearRecap?.reset?.();
+  window.UsCompanions?.reset?.();
   try{US_SIGNED_URL_CACHE.clear();}catch(_e){}
   const storageKeys=[
     'us:fix4:last-profile',
@@ -2486,7 +2488,9 @@ function celebrationTodayPriorityViewModel(startedOn,todayISO){
     :(day.months===1?'Oggi è un mese ♡':`Oggi sono ${day.months} mesi ♡`);
   return {
     id:`celebration:${todayISO}`,factKey:`celebration:${todayISO}`,arrivalType:'monthiversary',category:'celebration',attention:true,
-    title,detail:day.years?'Il vostro anniversario':'Il vostro mesiversario',action:'events',actionLabel:'Apri'
+    title,detail:day.years?'Il vostro anniversario':'Il vostro mesiversario',
+    // The anniversary opens Il vostro anno (year-recap.js); a monthiversary, Eventi.
+    action:day.years?'recap':'events',actionLabel:day.years?'Guarda il vostro anno':'Apri'
   };
 }
 function oggiStartedOn(){
@@ -2720,6 +2724,9 @@ async function refreshTodayPriorities({daily,freshEvents=false}={}){
   if(revealNotice)candidates.push(revealNotice);
   const gameTurn=gameTurnTodayPriorityViewModel();
   if(gameTurn)candidates.push(gameTurn);
+  // Compagni V1 (companions.js): a new companion, told once.
+  const companion=window.UsCompanions?.todayPriority?.();
+  if(companion)candidates.push(companion);
   const celebration=celebrationTodayPriorityViewModel(oggiStartedOn(),oggiTodayISO());
   if(celebration)candidates.push(celebration);
   let mission=null;
@@ -2780,6 +2787,8 @@ document.getElementById('usTodayPriorityRegion')?.addEventListener('click',event
     else if(current?.perVoi)window.USGameV2?.openPerVoi?.();
   }
   if(action==='mission')window.openOggiMission?.();
+  if(action==='recap')window.UsYearRecap?.open?.();
+  if(action==='companion')window.UsCompanions?.open?.();
 });
 // M10.2 — nascondere l'avviso "Risposte pronte" = "non lo voglio più su Oggi",
 // MAI "ho visto le risposte". L'autorità è window.dismissDailyRevealNotice
@@ -3470,7 +3479,7 @@ async function hydrateToday(){
     }else if(state?.partner_has_answer){
       locked.innerHTML='<span class="dot" data-who="partner" aria-hidden="true"></span><span>'+escapeHtml(`${partner} ha già risposto. Vedrete le risposte insieme appena invii la tua.`)+'</span>';
     }else{
-      locked.innerHTML='<span class="dot" data-who="noi" aria-hidden="true"></span><span>Le risposte si sbloccano quando avete risposto entrambi.</span>';
+      locked.innerHTML='<span class="dot" data-who="noi" aria-hidden="true"></span><span>Le risposte si sbloccano quando avete risposto voi due.</span>';
     }
   }
   updateHomeStatus();
@@ -4268,7 +4277,7 @@ async function hydrateMomentsCore(){
   const pill=document.getElementById('momentsStatusPill');
   if(!grid)return;
   const profile=window.usProfile;
-  if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="empty-state moment-loading"><div class="emoji"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></div><b>Carico…</b></div>';
+  if(grid.dataset.loaded!=='1')grid.innerHTML='<div class="us-skeleton-tiles" role="status"><span class="us-sr">Carico i ricordi…</span><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i><i class="us-skeleton"></i></div>';
   // Start all archive reads together, but as soon as Moments arrive start
   // resolving their signed media URLs too. Previously media resolution waited
   // for every enrichment query, adding a full network round-trip to first paint.

@@ -1,4 +1,4 @@
-const BUILD_ID = "us-avvio-rapido-20261020-20";
+const BUILD_ID = "us-anno-compagni-20261025-28";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -53,6 +53,10 @@ const APP_SHELL = [
   versioned("/progression.js"),
   versioned("/countdown.css"),
   versioned("/countdown.js"),
+  versioned("/year-recap.css"),
+  versioned("/year-recap.js"),
+  versioned("/companions.css"),
+  versioned("/companions.js"),
   versioned("/pet.css"),
   versioned("/pet.js"),
   versioned("/settings.css"),

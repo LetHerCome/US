@@ -1,0 +1,425 @@
+{
+  "family": "swipe",
+  "new": [
+    {
+      "id": "swipe-073",
+      "question_text": "Una serata da noi: pizza ordinata o pizza fatta con le nostre mani?",
+      "options": [
+        "Ordinata",
+        "Fatta da noi"
+      ],
+      "topic": "pizza_da_noi",
+      "question_text_en": "A night in: delivery pizza or pizza we make ourselves?",
+      "options_en": [
+        "Delivery",
+        "Homemade"
+      ]
+    },
+    {
+      "id": "swipe-074",
+      "question_text": "Un weekend fuori: tutto prenotato o si decide sul posto?",
+      "options": [
+        "Tutto prenotato",
+        "Sul posto"
+      ],
+      "topic": "weekend_prenotato",
+      "question_text_en": "A weekend away: everything booked or decided on the spot?",
+      "options_en": [
+        "All booked",
+        "On the spot"
+      ]
+    },
+    {
+      "id": "swipe-075",
+      "question_text": "La musica in macchina: la decidi tu o la lasci a me?",
+      "options": [
+        "Decido io",
+        "La lascio a te"
+      ],
+      "topic": "musica_in_macchina",
+      "question_text_en": "Music in the car: your pick or mine?",
+      "options_en": [
+        "My pick",
+        "Your pick"
+      ]
+    },
+    {
+      "id": "swipe-076",
+      "question_text": "Un picnic al parco o un aperitivo in centro?",
+      "options": [
+        "Picnic al parco",
+        "Aperitivo in centro"
+      ],
+      "topic": "picnic_o_aperitivo",
+      "question_text_en": "A picnic in the park or drinks in town?",
+      "options_en": [
+        "Park picnic",
+        "Drinks in town"
+      ]
+    },
+    {
+      "id": "swipe-077",
+      "question_text": "Il giorno del tuo compleanno: festa a sorpresa o giornata come vuoi tu?",
+      "options": [
+        "Festa a sorpresa",
+        "Come voglio io"
+      ],
+      "topic": "compleanno_sorpresa",
+      "question_text_en": "On your birthday: a surprise party or a day exactly your way?",
+      "options_en": [
+        "Surprise party",
+        "My way"
+      ]
+    },
+    {
+      "id": "swipe-078",
+      "question_text": "Un mio messaggio della buonanotte: lungo e dolce o breve con un cuore?",
+      "options": [
+        "Lungo e dolce",
+        "Breve con un cuore"
+      ],
+      "topic": "messaggio_buonanotte",
+      "question_text_en": "My goodnight message: long and sweet or short with a heart?",
+      "options_en": [
+        "Long and sweet",
+        "Short with a heart"
+      ]
+    },
+    {
+      "id": "swipe-079",
+      "question_text": "Montagne russe insieme: in prima fila o a guardarle da terra?",
+      "options": [
+        "Prima fila",
+        "Da terra"
+      ],
+      "topic": "montagne_russe",
+      "question_text_en": "Roller coaster together: front row or watching from the ground?",
+      "options_en": [
+        "Front row",
+        "From the ground"
+      ]
+    },
+    {
+      "id": "swipe-080",
+      "question_text": "Una gita in bicicletta o una passeggiata lenta?",
+      "options": [
+        "In bicicletta",
+        "Passeggiata lenta"
+      ],
+      "topic": "bici_o_passeggiata",
+      "question_text_en": "A bike ride or a slow walk?",
+      "options_en": [
+        "Bike ride",
+        "Slow walk"
+      ]
+    },
+    {
+      "id": "swipe-081",
+      "question_text": "Una cena a lume di candela o una cena davanti a un film?",
+      "options": [
+        "Lume di candela",
+        "Davanti a un film"
+      ],
+      "topic": "cena_candela_o_film",
+      "question_text_en": "Candlelit dinner or dinner in front of a film?",
+      "options_en": [
+        "Candlelit",
+        "In front of a film"
+      ]
+    },
+    {
+      "id": "swipe-082",
+      "question_text": "Un viaggio in treno o in aereo, a parità di tempo?",
+      "options": [
+        "Treno",
+        "Aereo"
+      ],
+      "topic": "treno_o_aereo",
+      "question_text_en": "A trip by train or by plane, if it took the same time?",
+      "options_en": [
+        "Train",
+        "Plane"
+      ]
+    },
+    {
+      "id": "swipe-083",
+      "question_text": "Un giro al mercato la mattina presto o un brunch che dura fino al pomeriggio?",
+      "options": [
+        "Mercato presto",
+        "Brunch infinito"
+      ],
+      "topic": "mercato_o_brunch",
+      "question_text_en": "An early market stroll or a brunch that lasts until afternoon?",
+      "options_en": [
+        "Early market",
+        "Endless brunch"
+      ]
+    },
+    {
+      "id": "swipe-084",
+      "question_text": "Un foglietto d’amore nascosto in tasca o un messaggio a sorpresa?",
+      "options": [
+        "Foglietto in tasca",
+        "Messaggio a sorpresa"
+      ],
+      "topic": "foglietto_o_messaggio",
+      "question_text_en": "A love note hidden in a pocket or a surprise message?",
+      "options_en": [
+        "Note in a pocket",
+        "Surprise message"
+      ]
+    },
+    {
+      "id": "swipe-085",
+      "question_text": "A una cena con amici: racconti tu le nostre storie o le lasci raccontare a me?",
+      "options": [
+        "Racconto io",
+        "Racconti tu"
+      ],
+      "topic": "chi_racconta",
+      "question_text_en": "At dinner with friends: do you tell our stories or let me tell them?",
+      "options_en": [
+        "I tell them",
+        "You tell them"
+      ]
+    },
+    {
+      "id": "swipe-086",
+      "question_text": "Un film horror insieme: ci stai o ci vuole un cuscino davanti agli occhi?",
+      "options": [
+        "Ci sto",
+        "Serve un cuscino"
+      ],
+      "topic": "film_horror",
+      "question_text_en": "A horror film together: you’re in, or do you need a cushion over your eyes?",
+      "options_en": [
+        "I’m in",
+        "Cushion needed"
+      ]
+    },
+    {
+      "id": "swipe-087",
+      "question_text": "Il caffè: al bar in piedi o a casa con calma?",
+      "options": [
+        "Al bar in piedi",
+        "A casa con calma"
+      ],
+      "topic": "caffe_bar_o_casa",
+      "question_text_en": "Coffee: standing at the bar or slowly at home?",
+      "options_en": [
+        "At the bar",
+        "Slowly at home"
+      ]
+    },
+    {
+      "id": "swipe-088",
+      "question_text": "Le foto dei viaggi: in un album stampato o nel telefono?",
+      "options": [
+        "Album stampato",
+        "Nel telefono"
+      ],
+      "topic": "foto_viaggi",
+      "question_text_en": "Travel photos: a printed album or on the phone?",
+      "options_en": [
+        "Printed album",
+        "On the phone"
+      ]
+    },
+    {
+      "id": "swipe-089",
+      "question_text": "Una serata di giochi da tavolo o una serata di karaoke?",
+      "options": [
+        "Giochi da tavolo",
+        "Karaoke"
+      ],
+      "topic": "giochi_o_karaoke",
+      "question_text_en": "A board game night or a karaoke night?",
+      "options_en": [
+        "Board games",
+        "Karaoke"
+      ]
+    },
+    {
+      "id": "swipe-090",
+      "question_text": "Un regalo: lo scegli con calma per settimane o lo trovi all’ultimo, ed è perfetto?",
+      "options": [
+        "Per settimane",
+        "All’ultimo, ed è perfetto"
+      ],
+      "topic": "scegliere_un_regalo",
+      "question_text_en": "A gift: you choose it slowly for weeks or find it last minute, and it’s perfect?",
+      "options_en": [
+        "For weeks",
+        "Last minute, and perfect"
+      ]
+    },
+    {
+      "id": "swipe-091",
+      "question_text": "Il mare d’inverno o la montagna d’estate?",
+      "options": [
+        "Mare d’inverno",
+        "Montagna d’estate"
+      ],
+      "topic": "mare_inverno_montagna_estate",
+      "question_text_en": "The sea in winter or the mountains in summer?",
+      "options_en": [
+        "Sea in winter",
+        "Mountains in summer"
+      ]
+    },
+    {
+      "id": "swipe-092",
+      "question_text": "Un buongiorno con la colazione pronta o con un abbraccio in più a letto?",
+      "options": [
+        "Colazione pronta",
+        "Abbraccio in più"
+      ],
+      "topic": "buongiorno_ideale",
+      "question_text_en": "Good morning with breakfast ready or with an extra hug in bed?",
+      "options_en": [
+        "Breakfast ready",
+        "Extra hug"
+      ]
+    },
+    {
+      "id": "swipe-093",
+      "question_text": "Una gita in un borgo vicino o una giornata in una grande città?",
+      "options": [
+        "Borgo vicino",
+        "Grande città"
+      ],
+      "topic": "borgo_o_citta",
+      "question_text_en": "A trip to a nearby village or a day in a big city?",
+      "options_en": [
+        "Nearby village",
+        "Big city"
+      ]
+    },
+    {
+      "id": "swipe-094",
+      "question_text": "Il nostro anniversario: lo stesso posto ogni anno o un posto nuovo ogni volta?",
+      "options": [
+        "Lo stesso posto",
+        "Un posto nuovo"
+      ],
+      "topic": "anniversario_posto",
+      "question_text_en": "Our anniversary: the same place every year or somewhere new each time?",
+      "options_en": [
+        "Same place",
+        "Somewhere new"
+      ]
+    },
+    {
+      "id": "swipe-095",
+      "question_text": "Un vocale o un messaggio scritto, quando mi racconti la giornata?",
+      "options": [
+        "Vocale",
+        "Scritto"
+      ],
+      "topic": "vocale_o_scritto",
+      "question_text_en": "Voice note or text, when you tell me about your day?",
+      "options_en": [
+        "Voice note",
+        "Text"
+      ]
+    },
+    {
+      "id": "swipe-096",
+      "question_text": "Un concerto in uno stadio o in un locale piccolissimo?",
+      "options": [
+        "Stadio",
+        "Locale piccolissimo"
+      ],
+      "topic": "concerto_stadio_o_locale",
+      "question_text_en": "A concert in a stadium or in a tiny venue?",
+      "options_en": [
+        "Stadium",
+        "Tiny venue"
+      ]
+    },
+    {
+      "id": "swipe-097",
+      "question_text": "Cucinare insieme: tu ai fornelli e io a tagliare, o il contrario?",
+      "options": [
+        "Io ai fornelli",
+        "Tu ai fornelli"
+      ],
+      "topic": "ruoli_in_cucina",
+      "question_text_en": "Cooking together: you at the stove and me chopping, or the other way round?",
+      "options_en": [
+        "Me at the stove",
+        "You at the stove"
+      ]
+    },
+    {
+      "id": "swipe-098",
+      "question_text": "Una giornata alle terme o una giornata al luna park?",
+      "options": [
+        "Terme",
+        "Luna park"
+      ],
+      "topic": "terme_o_luna_park",
+      "question_text_en": "A day at the spa or a day at the funfair?",
+      "options_en": [
+        "Spa",
+        "Funfair"
+      ]
+    },
+    {
+      "id": "swipe-099",
+      "question_text": "Una serata stellata: la guardiamo sdraiati su un prato o da una terrazza?",
+      "options": [
+        "Su un prato",
+        "Da una terrazza"
+      ],
+      "topic": "notte_stellata",
+      "question_text_en": "A starry night: we watch it lying on the grass or from a terrace?",
+      "options_en": [
+        "On the grass",
+        "From a terrace"
+      ]
+    },
+    {
+      "id": "swipe-100",
+      "question_text": "Le sorprese: piccole e frequenti o grandi e rare?",
+      "options": [
+        "Piccole e frequenti",
+        "Grandi e rare"
+      ],
+      "topic": "sorprese_frequenza",
+      "question_text_en": "Surprises: small and frequent or big and rare?",
+      "options_en": [
+        "Small and frequent",
+        "Big and rare"
+      ]
+    },
+    {
+      "id": "swipe-101",
+      "question_text": "Un libro letto insieme, un capitolo a testa, o un libro a testa?",
+      "options": [
+        "Lo stesso libro",
+        "Un libro a testa"
+      ],
+      "topic": "libro_insieme",
+      "question_text_en": "One book read together, a chapter each, or a book each?",
+      "options_en": [
+        "Same book",
+        "A book each"
+      ]
+    },
+    {
+      "id": "swipe-102",
+      "question_text": "Fine serata: a casa a mezzanotte o fino all’alba, se si sta bene?",
+      "options": [
+        "A mezzanotte",
+        "Fino all’alba"
+      ],
+      "topic": "fine_serata",
+      "question_text_en": "End of the night: home by midnight or until dawn, if it’s fun?",
+      "options_en": [
+        "By midnight",
+        "Until dawn"
+      ]
+    }
+  ]
+}

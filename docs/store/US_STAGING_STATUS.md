@@ -1,6 +1,53 @@
 # US Store 1.0 — Remote staging status
-**Checked:** 2026-10-10 (full database gate) · **Docs update:** 2026-10-17 (from the 16/10 work sessions; `US_STAGING_S2_GATE.sql` not re-run)
-**State:** S2 ON STAGING / #190 + #196 APPLIED ON STAGING, LIFECYCLE QA IN PROGRESS / 9 CRONS OFF
+**Checked:** 2026-10-22 (read-only schema and Edge comparison with production) · earlier full database gate 2026-10-10
+**State:** AT PRODUCTION LEVEL except the documented differences below / S2 ON STAGING ONLY / ALL CRONS OFF
+
+## Update 2026-10-22 — parity with production
+
+**How it was checked:** a read-only fingerprint of the catalog on both projects, via `supabase db query --linked --project-ref …`: functions (body, `search_path`, SECURITY DEFINER), function and table ACLs, columns, RLS, policies (storage included), indexes, triggers, constraints, cron jobs, extensions and buckets, about 1,790 objects. It read no table rows. Edge functions were compared through the bundle hash (`ezbr_sha256`) from `supabase functions list`.
+
+**Applied to US-STAGING on 22/10** (never to production):
+- **SQL:** `20261017120000_s32_account_deletion_worker_cron.sql`. As designed it schedules nothing here, because there is no `us_project_url` in the staging Vault.
+- **Edge**, from `main` 542b986, whose code for these functions is unchanged since the production deploy from 21a7992: `send-web-push`, `game-v2-push`, `game-v2-push-worker`, `daily-question-push-worker`, `monthiversary-job`, `left-for-you-push-worker`, `widget-think-send`, `calendar-reminders-worker`. **`send-web-push` is now the real function**, no longer the QA-only `s3-staging-send-web-push` from #187. Redeploy that source as slug `send-web-push` only for another FCM isolation QA.
+
+**Result:** schema identical to production except the items below. 13 Edge functions have the same bundle as production.
+
+| Difference | Why | Action |
+|---|---|---|
+| S2 week participation (#180): `get_couple_week_participation_v1`, its two private helpers, the `daily_answers.server_answered_at` receipt and trigger, two indexes, and the tighter grants on `daily_answers` (no client DELETE) and `daily_questions` (client read only) | candidate installed on staging only (10/10) | kept: it is additive and needed to test #180. Production grants on those two tables are broader than staging's; see the S2 notes. |
+| All US cron jobs `active=false`; `us-account-deletion-worker` absent | staging keeps every cron off on purpose (no `us_project_url`) | none |
+| `couple_questions_families_check` | same condition, different parentheses | none |
+| `register_native_push_device`, `save_countdown_oggi_v1` | comments only: production was applied by hand without comments | none |
+| Edge `monthiversary-job` | same source (unchanged since 002e5b2), different bundle hash: probably packaging differences between the CI and local deploy | none: worth checking if a monthiversary test behaves differently |
+| Edge only in production: `cleanup-left-for-you`, `spotify-search`, `us-widget-state`, `widget-device-token`, `widget-scriptable-setup` | legacy functions deployed from sources outside the current repo layout (`widget-scriptable-setup` is not in the repo) | not ported; not needed to test the app flows |
+
+Auth settings, Edge secrets and data are intentionally different: no copied production data.
+
+**Ahead of production, staging only (22/10):** `20261022141913_weekly_checkin_v1.sql`, the weekly check-in mission. Its postflight is read-only:
+- `s32_export_user_data` has the new body (md5 `cf2559e2…`);
+- both tables have RLS on and forced;
+- clients cannot read `weekly_checkins`; `authenticated` can only read `weekly_checkin_keepsakes`, through the same-couple policy;
+- the 5 RPCs are executable by `authenticated` and not by `anon`; the private helpers by neither;
+- `supabase db advisors` adds only the usual SECURITY DEFINER warning on the 5 client RPCs, the same as the 48 existing ones.
+
+**Not yet in production.**
+
+**Content 1.1 on staging only (22/10):** `20261022160549_content_1_1.sql`, insert only. Counts before → after, re-applied with no change:
+- Daily Question templates 182 → 364;
+- Game V2 prompts 212 → 296;
+- active Swipe cards 67 → 97;
+- couple missions 33 → 49.
+
+The web preview of the branch serves the new content right away: it is read from the server. **Not in production.**
+
+**Compagni V1 on staging only (22/10):** `20261022213000_companions_v1.sql`, one new table `couple_companion_unlocks` (RPC-only, RLS on, no grant to `anon`/`authenticated`) and `get_companions_v1()` (execute for `authenticated` only, `SECURITY DEFINER`); `private.companion_sync` callable by nobody. Read-only ACL postflight confirmed after the apply. Unlocks follow the Sintonia level (Maudit 3, owl 5, goat 8, dragon 11; nobody below 3). The app side (Maudit 2.0, the owl, the goat, the dragon; the collection in Noi) ships with the branch build. **Not in production.**
+
+**Staging QA app (22/10):** run `39803123201` built the signed staging APK from `85363f1`, with the weekly check-in and sign-up open on US-STAGING only.
+- Package `com.usapp.us.staging`, Firebase `us-staging-45e0f`, version `1.0-s3staging.1792682238`.
+- The APK is encrypted in the artifact (7z with `ANDROID_INTERNAL_ARTIFACT_PASSWORD`).
+- Built without the 10/10 S3 diagnostics panel, which no longer matches `notifications.js`.
+
+**Edge ahead of production, staging only (22/10):** `send-web-push` v11 with the `weekly_checkin_answer` event (phase 3 of the check-in), deployed from the mission worktree. The 8 functions ported earlier in the day are therefore no longer all identical to production: `send-web-push` differs by this event only.
 
 ## Update 2026-10-17
 

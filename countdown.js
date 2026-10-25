@@ -377,7 +377,7 @@ function install(w){
   $('usCountdownDelete').addEventListener('click',async()=>{
     if(!draft||busy)return;
     const token=generation,id=draft.id;
-    const confirmed=await w.UsUiFoundation.confirm({title:'Eliminare questo countdown?',body:'Sparirà per entrambi.',confirmLabel:'Elimina',tone:'danger'});
+    const confirmed=await w.UsUiFoundation.confirm({title:'Eliminare questo countdown?',body:'Sparirà per voi due.',confirmLabel:'Elimina',tone:'danger'});
     if(!confirmed||token!==generation||key()!==owner||!state)return;
     const next=copy();next.items=next.items.filter(e=>e.id!==id);if(next.active_id===id)next.active_id=null;
     if(await persist(next)){collection(-1);w.toast?.('Countdown eliminato',{quiet:true});}

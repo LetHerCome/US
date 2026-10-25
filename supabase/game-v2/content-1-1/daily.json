@@ -1,0 +1,915 @@
+{
+  "family": "daily",
+  "new": [
+    {
+      "id": "desideri-27",
+      "question": "Quale esperienza vorresti regalarci per il prossimo compleanno, il tuo o il mio?",
+      "question_en": "What experience would you love to give us for the next birthday, yours or mine?"
+    },
+    {
+      "id": "desideri-28",
+      "question": "Se potessimo dedicare un anno a un progetto insieme, quale sceglieresti?",
+      "question_en": "If we could give a whole year to one project together, which would you pick?"
+    },
+    {
+      "id": "desideri-29",
+      "question": "Quale spettacolo della natura vorresti vedere con me almeno una volta?",
+      "question_en": "Which wonder of nature would you love to see with me at least once?"
+    },
+    {
+      "id": "desideri-30",
+      "question": "C’è un corso, anche strano, a cui ti iscriveresti con me domani?",
+      "question_en": "Is there a class, even a strange one, you’d sign up for with me tomorrow?"
+    },
+    {
+      "id": "desideri-31",
+      "question": "Quale weekend a tema ti piacerebbe organizzare per noi due?",
+      "question_en": "What themed weekend would you love to plan for the two of us?"
+    },
+    {
+      "id": "desideri-32",
+      "question": "Se avessimo una barca per una settimana, dove ci porteresti?",
+      "question_en": "If we had a boat for a week, where would you take us?"
+    },
+    {
+      "id": "desideri-33",
+      "question": "Quale piccolo lusso ti piacerebbe concederci una volta all’anno?",
+      "question_en": "What little luxury would you love us to treat ourselves to once a year?"
+    },
+    {
+      "id": "desideri-34",
+      "question": "Quale città vorresti vedere con me sotto la neve?",
+      "question_en": "Which city would you love to see with me under the snow?"
+    },
+    {
+      "id": "desideri-35",
+      "question": "Cosa ti piacerebbe fare con me per la prima volta la prossima estate?",
+      "question_en": "What would you love to do with me for the first time next summer?"
+    },
+    {
+      "id": "desideri-36",
+      "question": "Quale evento sportivo ti piacerebbe vedere dal vivo con me?",
+      "question_en": "Which sports event would you love to watch live with me?"
+    },
+    {
+      "id": "desideri-37",
+      "question": "Quale festa di paese o sagra ti piacerebbe vivere insieme?",
+      "question_en": "Which local festival or food fair would you love to go to together?"
+    },
+    {
+      "id": "desideri-38",
+      "question": "Se potessimo passare una notte in un posto insolito, dove dormiremmo?",
+      "question_en": "If we could spend one night somewhere unusual, where would we sleep?"
+    },
+    {
+      "id": "desideri-39",
+      "question": "Quale vecchia passione vorresti riprendere, magari con me accanto?",
+      "question_en": "Which old passion would you love to pick up again, maybe with me beside you?"
+    },
+    {
+      "id": "desideri-40",
+      "question": "Cosa vorresti imparare da me, se te lo insegnassi?",
+      "question_en": "What would you like to learn from me, if I taught you?"
+    },
+    {
+      "id": "desideri-41",
+      "question": "Quale montagna, lago o bosco vorresti esplorare con me?",
+      "question_en": "Which mountain, lake or forest would you love to explore with me?"
+    },
+    {
+      "id": "desideri-42",
+      "question": "Quale serata con i nostri amici ti piacerebbe inventare?",
+      "question_en": "What evening with our friends would you love to dream up?"
+    },
+    {
+      "id": "desideri-43",
+      "question": "Quale mercatino, negozio o quartiere vorresti girare con me senza fretta?",
+      "question_en": "Which market, shop or neighbourhood would you love to wander with me, no rush?"
+    },
+    {
+      "id": "desideri-44",
+      "question": "Se potessimo dedicare un giorno a una buona causa, insieme, cosa sceglieresti?",
+      "question_en": "If we could give one day to a good cause together, what would you choose?"
+    },
+    {
+      "id": "desideri-45",
+      "question": "Quale ricetta della tua famiglia vorresti insegnarmi?",
+      "question_en": "Which recipe from your family would you love to teach me?"
+    },
+    {
+      "id": "desideri-46",
+      "question": "Quale regalo vorresti fare a noi due tra dieci anni?",
+      "question_en": "What gift would you love to give the two of us ten years from now?"
+    },
+    {
+      "id": "desideri-47",
+      "question": "Quale viaggio vorresti fare con me solo per mangiare?",
+      "question_en": "Which trip would you love to take with me just for the food?"
+    },
+    {
+      "id": "desideri-48",
+      "question": "Se potessimo cambiare lavoro insieme per un mese, che lavoro proveremmo?",
+      "question_en": "If we could both switch jobs for a month, which job would we try?"
+    },
+    {
+      "id": "desideri-49",
+      "question": "Quale serata fuori ti piacerebbe vivere vestendoci eleganti?",
+      "question_en": "What night out would you love for us, all dressed up?"
+    },
+    {
+      "id": "desideri-50",
+      "question": "Quale angolo d’Italia che non conosci ancora vorresti scoprire con me?",
+      "question_en": "Which corner of Italy you don’t know yet would you love to discover with me?"
+    },
+    {
+      "id": "desideri-51",
+      "question": "Quale alba o tramonto vorresti guardare con me, e da dove?",
+      "question_en": "Which sunrise or sunset would you love to watch with me, and from where?"
+    },
+    {
+      "id": "desideri-52",
+      "question": "Nella nostra lista di cose da fare prima dei cento anni, cosa metteresti in cima?",
+      "question_en": "On our list of things to do before we’re a hundred, what would you put at the top?"
+    },
+    {
+      "id": "gioco-27",
+      "question": "Se fossimo due personaggi di un videogioco, quali sarebbero i nostri poteri speciali?",
+      "question_en": "If we were two video game characters, what would our special powers be?"
+    },
+    {
+      "id": "gioco-28",
+      "question": "Quale piatto cucineresti in una gara di cucina contro di me?",
+      "question_en": "What dish would you cook in a cooking contest against me?"
+    },
+    {
+      "id": "gioco-29",
+      "question": "Se avessimo un robot tuttofare, cosa gli faresti fare come prima cosa?",
+      "question_en": "If we had a do-it-all robot, what would you make it do first?"
+    },
+    {
+      "id": "gioco-30",
+      "question": "Quale canzone sceglieresti per il nostro ingresso trionfale a una festa?",
+      "question_en": "Which song would you pick for our grand entrance at a party?"
+    },
+    {
+      "id": "gioco-31",
+      "question": "Se diventassimo famosi per una sciocchezza, quale sarebbe?",
+      "question_en": "If we became famous for something silly, what would it be?"
+    },
+    {
+      "id": "gioco-32",
+      "question": "Quale personaggio dei cartoni ti somiglia di più, e perché?",
+      "question_en": "Which cartoon character is most like you, and why?"
+    },
+    {
+      "id": "gioco-33",
+      "question": "Se fossimo una coppia di supereroi, come si chiamerebbe il nostro covo segreto?",
+      "question_en": "If we were a superhero duo, what would our secret hideout be called?"
+    },
+    {
+      "id": "gioco-34",
+      "question": "Quale gesto di tutti i giorni faresti diventare uno sport olimpico?",
+      "question_en": "Which everyday move would you turn into an Olympic sport?"
+    },
+    {
+      "id": "gioco-35",
+      "question": "Se potessi parlare con un animale per un’ora, quale sceglieresti?",
+      "question_en": "If you could talk with an animal for an hour, which would you pick?"
+    },
+    {
+      "id": "gioco-36",
+      "question": "Una vita senza musica o una vita senza film: cosa scegli?",
+      "question_en": "A life without music or a life without films: which do you pick?"
+    },
+    {
+      "id": "gioco-37",
+      "question": "Se avessimo un podcast di coppia, di cosa parlerebbe la prima puntata?",
+      "question_en": "If we had a couple’s podcast, what would the first episode be about?"
+    },
+    {
+      "id": "gioco-38",
+      "question": "Quale oggetto porteresti su Marte, oltre a me?",
+      "question_en": "What would you take to Mars, besides me?"
+    },
+    {
+      "id": "gioco-39",
+      "question": "Se potessi ridipingere la tua città di un solo colore, quale sceglieresti?",
+      "question_en": "If you could repaint your city in a single colour, which would you choose?"
+    },
+    {
+      "id": "gioco-40",
+      "question": "Come si chiamerebbe la nostra squadra a una serata quiz al pub?",
+      "question_en": "What would our team be called at a pub quiz night?"
+    },
+    {
+      "id": "gioco-41",
+      "question": "Se fossimo due piante, quali piante saremmo?",
+      "question_en": "If we were two plants, which plants would we be?"
+    },
+    {
+      "id": "gioco-42",
+      "question": "Qual è il talento più inutile che ti piacerebbe avere?",
+      "question_en": "What’s the most useless talent you’d love to have?"
+    },
+    {
+      "id": "gioco-43",
+      "question": "Con un giorno da miliardari, qual è la prima cosa assurda che compreremmo?",
+      "question_en": "With one day as billionaires, what’s the first absurd thing we’d buy?"
+    },
+    {
+      "id": "gioco-44",
+      "question": "Quale invenzione manca al mondo per rendere perfette le nostre serate?",
+      "question_en": "What invention is the world missing to make our evenings perfect?"
+    },
+    {
+      "id": "gioco-45",
+      "question": "Se potessimo cambiare nome per un giorno, come ci chiameremmo?",
+      "question_en": "If we could change our names for a day, what would we be called?"
+    },
+    {
+      "id": "gioco-46",
+      "question": "Quale sarebbe il piatto ufficiale della nostra coppia?",
+      "question_en": "What would be our couple’s official dish?"
+    },
+    {
+      "id": "gioco-47",
+      "question": "Se dovessimo inventare un balletto tutto nostro, su quale canzone sarebbe?",
+      "question_en": "If we invented a little dance of our own, which song would it be to?"
+    },
+    {
+      "id": "gioco-48",
+      "question": "Quale frase scriveresti sulla nostra maglietta di coppia?",
+      "question_en": "What would you write on our matching couple T-shirt?"
+    },
+    {
+      "id": "gioco-49",
+      "question": "Se potessi vivere per un giorno dentro un quadro famoso, quale sceglieresti?",
+      "question_en": "If you could live inside a famous painting for a day, which would you pick?"
+    },
+    {
+      "id": "gioco-50",
+      "question": "Quale gioco dell’infanzia rifaresti stasera con me?",
+      "question_en": "Which childhood game would you play again with me tonight?"
+    },
+    {
+      "id": "gioco-51",
+      "question": "Se fossimo un cocktail, quali ingredienti ci metteresti?",
+      "question_en": "If we were a cocktail, what ingredients would you put in it?"
+    },
+    {
+      "id": "gioco-52",
+      "question": "Quale oggetto di casa sarebbe il cattivo nel film della nostra vita?",
+      "question_en": "Which household object would be the villain in the movie of our life?"
+    },
+    {
+      "id": "noi_adesso-27",
+      "question": "Cosa ti ha fatto sorridere oggi, anche solo per un attimo?",
+      "question_en": "What made you smile today, even just for a moment?"
+    },
+    {
+      "id": "noi_adesso-28",
+      "question": "Quale canzone sta accompagnando le tue giornate in questo periodo?",
+      "question_en": "Which song has been keeping you company these days?"
+    },
+    {
+      "id": "noi_adesso-29",
+      "question": "C’è qualcosa che ti va di raccontarmi e per cui non hai ancora trovato il momento?",
+      "question_en": "Is there something you’d like to tell me and haven’t found the moment for yet?"
+    },
+    {
+      "id": "noi_adesso-30",
+      "question": "Cosa ti piacerebbe mangiare questa settimana, se potessi scegliere tu?",
+      "question_en": "What would you love to eat this week, if it were your call?"
+    },
+    {
+      "id": "noi_adesso-31",
+      "question": "Quale piccola cosa potremmo sistemare insieme questo weekend?",
+      "question_en": "What little thing could we sort out together this weekend?"
+    },
+    {
+      "id": "noi_adesso-32",
+      "question": "Che tempo fa dentro di te oggi: sole, nuvole o temporale?",
+      "question_en": "What’s the weather inside you today: sunshine, clouds or a storm?"
+    },
+    {
+      "id": "noi_adesso-33",
+      "question": "Cosa stai leggendo, guardando o ascoltando in questi giorni?",
+      "question_en": "What are you reading, watching or listening to these days?"
+    },
+    {
+      "id": "noi_adesso-34",
+      "question": "Quale sera di questa settimana ti piacerebbe tenere tutta per noi?",
+      "question_en": "Which evening this week would you love to keep just for us?"
+    },
+    {
+      "id": "noi_adesso-35",
+      "question": "Cosa ti incuriosisce di più in questo periodo?",
+      "question_en": "What’s making you most curious lately?"
+    },
+    {
+      "id": "noi_adesso-36",
+      "question": "Quale piccola vittoria di oggi vuoi raccontarmi?",
+      "question_en": "What small win from today do you want to tell me about?"
+    },
+    {
+      "id": "noi_adesso-37",
+      "question": "Quale posto vorresti vedere con me entro la fine del mese?",
+      "question_en": "Which place would you love to see with me before the end of the month?"
+    },
+    {
+      "id": "noi_adesso-38",
+      "question": "C’è una cosa piccola che ti sta pesando un po’ in questi giorni?",
+      "question_en": "Is there a small thing weighing on you a little these days?"
+    },
+    {
+      "id": "noi_adesso-39",
+      "question": "Quale pausa ti meriti questa settimana?",
+      "question_en": "What break do you deserve this week?"
+    },
+    {
+      "id": "noi_adesso-40",
+      "question": "Se domani fosse una giornata libera, cosa faremmo?",
+      "question_en": "If tomorrow were a day off, what would we do?"
+    },
+    {
+      "id": "noi_adesso-41",
+      "question": "Cosa ti ha fatto pensare a me oggi?",
+      "question_en": "What made you think of me today?"
+    },
+    {
+      "id": "noi_adesso-42",
+      "question": "Che colazione ti piacerebbe trovare domani mattina?",
+      "question_en": "What breakfast would you love to find tomorrow morning?"
+    },
+    {
+      "id": "noi_adesso-43",
+      "question": "Quale impegno della settimana salteresti volentieri, e cosa faresti al suo posto?",
+      "question_en": "Which commitment this week would you happily skip, and what would you do instead?"
+    },
+    {
+      "id": "noi_adesso-44",
+      "question": "Cosa ti piacerebbe imparare questo mese?",
+      "question_en": "What would you like to learn this month?"
+    },
+    {
+      "id": "noi_adesso-45",
+      "question": "C’è una persona che ti va di vedere presto, insieme a me?",
+      "question_en": "Is there someone you’d like to see soon, together with me?"
+    },
+    {
+      "id": "noi_adesso-46",
+      "question": "Quale piccolo piacere vorresti concederti oggi?",
+      "question_en": "What small pleasure would you like to treat yourself to today?"
+    },
+    {
+      "id": "noi_adesso-47",
+      "question": "Cosa ti fa venire voglia di uscire, in questo periodo?",
+      "question_en": "What makes you want to go out, these days?"
+    },
+    {
+      "id": "noi_adesso-48",
+      "question": "Qual è la parte della giornata che ti sta piacendo di più ultimamente?",
+      "question_en": "Which part of the day have you been enjoying most lately?"
+    },
+    {
+      "id": "noi_adesso-49",
+      "question": "Cosa potremmo fare questa settimana per renderla un po’ più nostra?",
+      "question_en": "What could we do this week to make it feel a little more ours?"
+    },
+    {
+      "id": "noi_adesso-50",
+      "question": "Quale bella notizia ti piacerebbe ricevere entro venerdì?",
+      "question_en": "What good news would you love to get by Friday?"
+    },
+    {
+      "id": "noi_adesso-51",
+      "question": "Cosa vorresti fare stasera, se non ci fosse niente da fare?",
+      "question_en": "What would you do tonight, if there were nothing to do?"
+    },
+    {
+      "id": "noi_adesso-52",
+      "question": "Che voto daresti alla tua settimana finora, e cosa la farebbe salire di un punto?",
+      "question_en": "What score would you give your week so far, and what would push it up a point?"
+    },
+    {
+      "id": "profonda-27",
+      "question": "Per quale cosa semplice dici grazie alla vita, in questo periodo?",
+      "question_en": "What simple thing are you thankful to life for, these days?"
+    },
+    {
+      "id": "profonda-28",
+      "question": "Qual è la lezione più bella che ti ha dato un’amicizia?",
+      "question_en": "What’s the most beautiful lesson a friendship has taught you?"
+    },
+    {
+      "id": "profonda-29",
+      "question": "Cosa ti piacerebbe che gli altri dicessero di noi due?",
+      "question_en": "What would you love other people to say about the two of us?"
+    },
+    {
+      "id": "profonda-30",
+      "question": "Quale sogno della tua infanzia si è avverato in un modo inaspettato?",
+      "question_en": "Which of your childhood dreams came true in an unexpected way?"
+    },
+    {
+      "id": "profonda-31",
+      "question": "Quale parte del nostro futuro ti emoziona di più, oggi?",
+      "question_en": "Which part of our future excites you most, today?"
+    },
+    {
+      "id": "profonda-32",
+      "question": "Cosa vorresti insegnare, un giorno, a qualcuno più giovane?",
+      "question_en": "What would you like to teach someone younger, one day?"
+    },
+    {
+      "id": "profonda-33",
+      "question": "Quale gesto gentile ricevuto non hai mai dimenticato?",
+      "question_en": "What kind gesture someone made for you have you never forgotten?"
+    },
+    {
+      "id": "profonda-34",
+      "question": "Cosa significa per te prendersi cura di qualcuno?",
+      "question_en": "What does taking care of someone mean to you?"
+    },
+    {
+      "id": "profonda-35",
+      "question": "Che cosa ti fa sentire in pace con il mondo?",
+      "question_en": "What makes you feel at peace with the world?"
+    },
+    {
+      "id": "profonda-36",
+      "question": "Quale tua qualità speri che io abbia preso un po’ da te?",
+      "question_en": "Which of your qualities do you hope has rubbed off on me a little?"
+    },
+    {
+      "id": "profonda-37",
+      "question": "Se potessi lasciarci un messaggio da leggere tra dieci anni, cosa scriveresti?",
+      "question_en": "If you could leave us a message to read in ten years, what would you write?"
+    },
+    {
+      "id": "profonda-38",
+      "question": "Quale scelta della tua vita rifaresti mille volte?",
+      "question_en": "Which choice in your life would you make a thousand times over?"
+    },
+    {
+      "id": "profonda-39",
+      "question": "Cosa ti piacerebbe scoprire ancora di me?",
+      "question_en": "What would you still like to discover about me?"
+    },
+    {
+      "id": "profonda-40",
+      "question": "Quale persona ammiri per come vive, e perché?",
+      "question_en": "Who do you admire for the way they live, and why?"
+    },
+    {
+      "id": "profonda-41",
+      "question": "Cosa rende una giornata davvero riuscita, per te?",
+      "question_en": "What makes a day truly well spent, for you?"
+    },
+    {
+      "id": "profonda-42",
+      "question": "Quale canzone racconta bene come stai al mondo, oggi?",
+      "question_en": "Which song captures how you feel about the world, today?"
+    },
+    {
+      "id": "profonda-43",
+      "question": "Qual è la cosa più bella che hai fatto per qualcuno senza che lo sapesse?",
+      "question_en": "What’s the loveliest thing you’ve done for someone without them knowing?"
+    },
+    {
+      "id": "profonda-44",
+      "question": "Cosa vorresti fare di più, preoccupandoti di meno?",
+      "question_en": "What would you like to do more of, while worrying less?"
+    },
+    {
+      "id": "profonda-45",
+      "question": "In cosa ci assomigliamo più di quanto pensassi all’inizio?",
+      "question_en": "How are we more alike than you thought at the start?"
+    },
+    {
+      "id": "profonda-46",
+      "question": "Quale tua passione vorresti che conoscessi meglio?",
+      "question_en": "Which of your passions would you like me to know better?"
+    },
+    {
+      "id": "profonda-47",
+      "question": "Quando ti senti più te, senza nessuno sforzo?",
+      "question_en": "When do you feel most like yourself, without any effort?"
+    },
+    {
+      "id": "profonda-48",
+      "question": "Quale piccolo coraggio ti piacerebbe trovare quest’anno?",
+      "question_en": "What small bit of courage would you like to find this year?"
+    },
+    {
+      "id": "profonda-49",
+      "question": "Cosa ti ha emozionato di più nell’ultimo mese?",
+      "question_en": "What moved you most in the last month?"
+    },
+    {
+      "id": "profonda-50",
+      "question": "Cosa ti piacerebbe che ricordassero di te le persone a cui vuoi bene?",
+      "question_en": "What would you like the people you love to remember about you?"
+    },
+    {
+      "id": "profonda-51",
+      "question": "Quale gioia semplice vorresti avere ogni giorno?",
+      "question_en": "What simple joy would you love to have every day?"
+    },
+    {
+      "id": "profonda-52",
+      "question": "Cosa vorresti dirmi più spesso, e invece non dici quasi mai?",
+      "question_en": "What would you like to tell me more often, but hardly ever do?"
+    },
+    {
+      "id": "ricordi-27",
+      "question": "Qual è la prima foto che abbiamo fatto insieme, e cosa succedeva fuori dall’inquadratura?",
+      "question_en": "What’s the first photo we took together, and what was happening outside the frame?"
+    },
+    {
+      "id": "ricordi-28",
+      "question": "Quale nostra gita ha avuto il momento più buffo?",
+      "question_en": "Which of our outings had the funniest moment?"
+    },
+    {
+      "id": "ricordi-29",
+      "question": "Ricordi la prima cosa che abbiamo mangiato insieme?",
+      "question_en": "Do you remember the first thing we ate together?"
+    },
+    {
+      "id": "ricordi-30",
+      "question": "Quale regalo che mi hai fatto ti è piaciuto di più preparare?",
+      "question_en": "Which gift you gave me did you enjoy preparing the most?"
+    },
+    {
+      "id": "ricordi-31",
+      "question": "Qual è il primo film che abbiamo visto insieme?",
+      "question_en": "What’s the first film we watched together?"
+    },
+    {
+      "id": "ricordi-32",
+      "question": "Quale tua vecchia foto ti piacerebbe mostrarmi, e perché?",
+      "question_en": "Which old photo of yours would you like to show me, and why?"
+    },
+    {
+      "id": "ricordi-33",
+      "question": "Quale insegnante ti è rimasto nel cuore, e per cosa?",
+      "question_en": "Which teacher stayed in your heart, and why?"
+    },
+    {
+      "id": "ricordi-34",
+      "question": "Qual è il giorno più caldo, o più freddo, che abbiamo passato insieme?",
+      "question_en": "What’s the hottest, or coldest, day we’ve spent together?"
+    },
+    {
+      "id": "ricordi-35",
+      "question": "Quale giocattolo della tua infanzia ti piacerebbe ritrovare?",
+      "question_en": "Which toy from your childhood would you love to find again?"
+    },
+    {
+      "id": "ricordi-36",
+      "question": "Quale nostra serata improvvisata è diventata indimenticabile?",
+      "question_en": "Which last-minute evening of ours became unforgettable?"
+    },
+    {
+      "id": "ricordi-37",
+      "question": "Quale viaggio della tua infanzia ricordi meglio?",
+      "question_en": "Which trip from your childhood do you remember best?"
+    },
+    {
+      "id": "ricordi-38",
+      "question": "Qual è stata la nostra cena più disastrosa, e come è andata a finire?",
+      "question_en": "What was our most disastrous dinner, and how did it end?"
+    },
+    {
+      "id": "ricordi-39",
+      "question": "Quale nostra telefonata ricordi ancora bene?",
+      "question_en": "Which phone call of ours do you still remember well?"
+    },
+    {
+      "id": "ricordi-40",
+      "question": "Ricordi una volta in cui ci siamo persi insieme? Dov’eravamo?",
+      "question_en": "Do you remember a time we got lost together? Where were we?"
+    },
+    {
+      "id": "ricordi-41",
+      "question": "Qual è stato il primo concerto della tua vita?",
+      "question_en": "What was the first concert of your life?"
+    },
+    {
+      "id": "ricordi-42",
+      "question": "Quale amicizia d’infanzia vorresti rivedere, anche solo per un caffè?",
+      "question_en": "Which childhood friend would you love to see again, even just for a coffee?"
+    },
+    {
+      "id": "ricordi-43",
+      "question": "Come passavi le domeniche pomeriggio, durante l’infanzia?",
+      "question_en": "How did you spend Sunday afternoons as a child?"
+    },
+    {
+      "id": "ricordi-44",
+      "question": "Quale nostra gaffe ti fa ancora ridere?",
+      "question_en": "Which of our blunders still makes you laugh?"
+    },
+    {
+      "id": "ricordi-45",
+      "question": "Ricordi il primo complimento che ti ho fatto?",
+      "question_en": "Do you remember the first compliment I ever gave you?"
+    },
+    {
+      "id": "ricordi-46",
+      "question": "Quale libro o fumetto hai consumato a forza di rileggerlo?",
+      "question_en": "Which book or comic did you wear out from rereading it?"
+    },
+    {
+      "id": "ricordi-47",
+      "question": "Quale profumo, sentito per strada, ti fa pensare subito a me?",
+      "question_en": "Which scent, caught on the street, makes you think of me right away?"
+    },
+    {
+      "id": "ricordi-48",
+      "question": "Qual è stato il compleanno più bello della tua vita?",
+      "question_en": "What was the best birthday of your life?"
+    },
+    {
+      "id": "ricordi-49",
+      "question": "Quale nostro momento avresti voluto filmare?",
+      "question_en": "Which moment of ours do you wish you’d filmed?"
+    },
+    {
+      "id": "ricordi-50",
+      "question": "Quale nostra giornata di pioggia ricordi con piacere?",
+      "question_en": "Which rainy day of ours do you remember fondly?"
+    },
+    {
+      "id": "ricordi-51",
+      "question": "Quale canzone ascoltavi a ripetizione a sedici anni?",
+      "question_en": "Which song did you play on repeat at sixteen?"
+    },
+    {
+      "id": "ricordi-52",
+      "question": "Quale piccola cosa di me hai notato all’inizio, prima di chiunque altro?",
+      "question_en": "What little thing about me did you notice early on, before anyone else?"
+    },
+    {
+      "id": "scoprirsi-27",
+      "question": "Qual è il tuo spuntino di mezzanotte preferito?",
+      "question_en": "What’s your favourite midnight snack?"
+    },
+    {
+      "id": "scoprirsi-28",
+      "question": "Cosa guardi sul telefono più di quanto ammetteresti?",
+      "question_en": "What do you look at on your phone more than you’d admit?"
+    },
+    {
+      "id": "scoprirsi-29",
+      "question": "Qual è il tuo posto preferito per pensare?",
+      "question_en": "What’s your favourite place to think?"
+    },
+    {
+      "id": "scoprirsi-30",
+      "question": "Alba o tramonto: quale ti somiglia di più?",
+      "question_en": "Sunrise or sunset: which is more like you?"
+    },
+    {
+      "id": "scoprirsi-31",
+      "question": "Qual è la tua bevanda preferita per una serata sul divano?",
+      "question_en": "What’s your favourite drink for a night on the couch?"
+    },
+    {
+      "id": "scoprirsi-32",
+      "question": "Quale cibo odiavi nell’infanzia e oggi adori?",
+      "question_en": "Which food did you hate as a child and love today?"
+    },
+    {
+      "id": "scoprirsi-33",
+      "question": "Qual è la cosa più spontanea che hai mai fatto?",
+      "question_en": "What’s the most spontaneous thing you’ve ever done?"
+    },
+    {
+      "id": "scoprirsi-34",
+      "question": "Che musica ascolti quando nessuno ti sente?",
+      "question_en": "What music do you play when no one can hear?"
+    },
+    {
+      "id": "scoprirsi-35",
+      "question": "Quale lavoro faresti per un anno, solo per curiosità?",
+      "question_en": "Which job would you do for a year, just out of curiosity?"
+    },
+    {
+      "id": "scoprirsi-36",
+      "question": "Qual è il tuo rituale della buonanotte?",
+      "question_en": "What’s your bedtime ritual?"
+    },
+    {
+      "id": "scoprirsi-37",
+      "question": "Cosa ti mette di buon umore appena apri gli occhi?",
+      "question_en": "What puts you in a good mood the moment you wake up?"
+    },
+    {
+      "id": "scoprirsi-38",
+      "question": "Quale personaggio storico ti sarebbe piaciuto incontrare?",
+      "question_en": "Which historical figure would you have loved to meet?"
+    },
+    {
+      "id": "scoprirsi-39",
+      "question": "Cosa porti sempre con te, in tasca o in borsa?",
+      "question_en": "What do you always carry with you, in a pocket or a bag?"
+    },
+    {
+      "id": "scoprirsi-40",
+      "question": "Quale oggetto di casa tua racconta meglio chi sei?",
+      "question_en": "Which object in your home says the most about who you are?"
+    },
+    {
+      "id": "scoprirsi-41",
+      "question": "Quale materia ti piaceva di più a scuola?",
+      "question_en": "Which school subject did you like best?"
+    },
+    {
+      "id": "scoprirsi-42",
+      "question": "Quale piccolo vizio ti concedi volentieri?",
+      "question_en": "What little indulgence do you happily allow yourself?"
+    },
+    {
+      "id": "scoprirsi-43",
+      "question": "Qual è la cosa più strana che ti piace mangiare?",
+      "question_en": "What’s the strangest thing you like to eat?"
+    },
+    {
+      "id": "scoprirsi-44",
+      "question": "In viaggio, prepari la valigia giorni prima o all’ultimo minuto?",
+      "question_en": "For a trip, do you pack days ahead or at the last minute?"
+    },
+    {
+      "id": "scoprirsi-45",
+      "question": "Qual è il tuo film di Natale preferito?",
+      "question_en": "What’s your favourite Christmas film?"
+    },
+    {
+      "id": "scoprirsi-46",
+      "question": "Quale gioco di società tira fuori il tuo lato più competitivo?",
+      "question_en": "Which board game brings out your most competitive side?"
+    },
+    {
+      "id": "scoprirsi-47",
+      "question": "Cosa ti piace fare quando piove?",
+      "question_en": "What do you like doing when it rains?"
+    },
+    {
+      "id": "scoprirsi-48",
+      "question": "Qual è il tuo piatto della domenica?",
+      "question_en": "What’s your Sunday dish?"
+    },
+    {
+      "id": "scoprirsi-49",
+      "question": "Hai una superstizione, anche se dici di non crederci?",
+      "question_en": "Do you have a superstition, even if you say you don’t believe in it?"
+    },
+    {
+      "id": "scoprirsi-50",
+      "question": "Quale sport ti piace guardare, e quale ti piace fare?",
+      "question_en": "Which sport do you like watching, and which do you like playing?"
+    },
+    {
+      "id": "scoprirsi-51",
+      "question": "Qual è la cosa che sai fare meglio con le mani?",
+      "question_en": "What’s the thing you’re best at doing with your hands?"
+    },
+    {
+      "id": "scoprirsi-52",
+      "question": "Quale parola usi così tanto che ormai è un tuo marchio di fabbrica?",
+      "question_en": "Which word do you use so much it’s become your trademark?"
+    },
+    {
+      "id": "vicinanza-27",
+      "question": "Quale mio profumo riconosceresti tra mille?",
+      "question_en": "Which scent of mine would you recognise among a thousand?"
+    },
+    {
+      "id": "vicinanza-28",
+      "question": "Qual è il bacio tra noi che ricordi di più?",
+      "question_en": "Which of our kisses do you remember most?"
+    },
+    {
+      "id": "vicinanza-29",
+      "question": "Cosa ti piacerebbe che ti scrivessi in un biglietto nascosto?",
+      "question_en": "What would you love me to write you in a hidden note?"
+    },
+    {
+      "id": "vicinanza-30",
+      "question": "Quale mia espressione del viso ti fa sciogliere?",
+      "question_en": "Which of my facial expressions melts you?"
+    },
+    {
+      "id": "vicinanza-31",
+      "question": "Quando ti sembra di avermi accanto anche se non ci sono?",
+      "question_en": "When does it feel like I’m beside you even when I’m not there?"
+    },
+    {
+      "id": "vicinanza-32",
+      "question": "Cosa ti piace del modo in cui ti guardo?",
+      "question_en": "What do you like about the way I look at you?"
+    },
+    {
+      "id": "vicinanza-33",
+      "question": "Quale coccola chiederesti stasera, se potessi sceglierla?",
+      "question_en": "What kind of cuddle would you ask for tonight, if you could choose?"
+    },
+    {
+      "id": "vicinanza-34",
+      "question": "Su quale canzone vorresti ballare con me, lentamente?",
+      "question_en": "Which song would you love to slow dance with me to?"
+    },
+    {
+      "id": "vicinanza-35",
+      "question": "Cosa ti fa sentire speciale ai miei occhi?",
+      "question_en": "What makes you feel special in my eyes?"
+    },
+    {
+      "id": "vicinanza-36",
+      "question": "Quale mia piccola abitudine ti mette di buon umore?",
+      "question_en": "Which little habit of mine puts you in a good mood?"
+    },
+    {
+      "id": "vicinanza-37",
+      "question": "Qual è il complimento mio che ti è piaciuto di più?",
+      "question_en": "Which compliment from me did you like the most?"
+    },
+    {
+      "id": "vicinanza-38",
+      "question": "Quale parte della mia voce ti piace di più: quando rido, quando sussurro o quando racconto?",
+      "question_en": "What do you like most about my voice: when I laugh, when I whisper or when I tell a story?"
+    },
+    {
+      "id": "vicinanza-39",
+      "question": "Cosa ti viene voglia di dirmi quando non ci vediamo da qualche giorno?",
+      "question_en": "What do you feel like telling me when we haven’t seen each other for a few days?"
+    },
+    {
+      "id": "vicinanza-40",
+      "question": "Qual è il posto più bello in cui ci siamo abbracciati?",
+      "question_en": "What’s the most beautiful place we’ve ever hugged?"
+    },
+    {
+      "id": "vicinanza-41",
+      "question": "Quale piccola attenzione ti dice «mi hai pensato»?",
+      "question_en": "What little gesture tells you “you thought of me”?"
+    },
+    {
+      "id": "vicinanza-42",
+      "question": "Cosa faresti per farmi una sorpresa dolce domani?",
+      "question_en": "What would you do to give me a sweet surprise tomorrow?"
+    },
+    {
+      "id": "vicinanza-43",
+      "question": "Quale mia frase ti piacerebbe sentire prima di dormire?",
+      "question_en": "Which words of mine would you love to hear before you fall asleep?"
+    },
+    {
+      "id": "vicinanza-44",
+      "question": "Qual è il gesto più romantico che ricordi di me?",
+      "question_en": "What’s the most romantic thing you remember me doing?"
+    },
+    {
+      "id": "vicinanza-45",
+      "question": "Cosa ti piace fare con me in silenzio?",
+      "question_en": "What do you like doing with me in silence?"
+    },
+    {
+      "id": "vicinanza-46",
+      "question": "Quale piccola carezza ti fa stare bene?",
+      "question_en": "What little caress makes you feel good?"
+    },
+    {
+      "id": "vicinanza-47",
+      "question": "Cosa ti fa venire voglia di abbracciarmi all’improvviso?",
+      "question_en": "What makes you suddenly want to hug me?"
+    },
+    {
+      "id": "vicinanza-48",
+      "question": "Quale ricordo nostro ti scalda quando fa freddo?",
+      "question_en": "Which memory of ours warms you up when it’s cold?"
+    },
+    {
+      "id": "vicinanza-49",
+      "question": "Qual è la coccola perfetta dopo una giornata lunga?",
+      "question_en": "What’s the perfect cuddle after a long day?"
+    },
+    {
+      "id": "vicinanza-50",
+      "question": "Cosa ti fa sentire a tuo agio con me più che con chiunque altro?",
+      "question_en": "What makes you feel more at ease with me than with anyone else?"
+    },
+    {
+      "id": "vicinanza-51",
+      "question": "Qual è il mio modo di salutarti che ti piace di più quando vado via?",
+      "question_en": "Which way of saying goodbye do you like best when I leave?"
+    },
+    {
+      "id": "vicinanza-52",
+      "question": "Quale momento di tenerezza vorresti che ci concedessimo più spesso?",
+      "question_en": "What tender moment would you love us to give ourselves more often?"
+    }
+  ]
+}
