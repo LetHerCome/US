@@ -91,7 +91,8 @@ test('notifications: a failed "Attiva" says at which step and why (19/10, still 
   const js = read('notifications.js');
   const has = (text) => assert.ok(js.includes(text), text);
   // FCM's own reason is kept (only letters and underscores, never the token) and is retryable.
-  has("listen('registrationError', (event) => settleToken(new Error('registration_failed:' + String(event?.error || '').replace(/[^A-Za-z_]/g, '').slice(0, 40))));");
+  has("const reason = message.match(/[A-Z][A-Z_]{3,}/g)?.pop() || message.replace(/[^A-Za-z_]/g, '').slice(0, 40);");
+  has("settleToken(new Error('registration_failed:' + reason));");
   has('SERVICE_NOT_AVAILABLE|INTERNAL_SERVER_ERROR|TIMEOUT');
   for (const stage of ['N', 'T', 'S', 'O']) has(`enableStage = '${stage}';`);
   has("kind: isRetryable(error) ? 'network' : 'error', code: failureCode(error)");

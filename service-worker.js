@@ -1,4 +1,4 @@
-const BUILD_ID = "us-notifiche-avvio-20261025-35";
+const BUILD_ID = "us-notifiche-fcm-20261025-37";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
