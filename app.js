@@ -837,6 +837,7 @@ async function clearPrivateDeviceState(profileId=window.usProfile?.id||''){
   window.USCountdown?.reset?.();
   window.UsYearRecap?.reset?.();
   window.UsCompanions?.reset?.();
+  window.UsDistance?.reset?.();
   try{US_SIGNED_URL_CACHE.clear();}catch(_e){}
   const storageKeys=[
     'us:fix4:last-profile',
@@ -2705,6 +2706,8 @@ function renderDailyRitual(model){
 window.UsDailyRitual=Object.freeze({viewModel:dailyRitualViewModel,render:renderDailyRitual});
 async function refreshTodayPriorities({daily,freshEvents=false}={}){
   const refreshId=++usTodayPriorityRefreshId;
+  // La domanda di oggi widget (widgets.js): the question and whose turn it is.
+  window.UsWidgets?.syncDaily?.().catch?.(()=>{});
   const dailySource=daily===undefined&&window.todayQuestion?{
     question:window.todayQuestion,
     state:window.todayState,
@@ -2727,6 +2730,9 @@ async function refreshTodayPriorities({daily,freshEvents=false}={}){
   // Compagni V1 (companions.js): a new companion, told once.
   const companion=window.UsCompanions?.todayPriority?.();
   if(companion)candidates.push(companion);
+  // Accoglienza V1 (distance.js): one question for the couple, asked once.
+  const distance=window.UsDistance?.todayPriority?.();
+  if(distance)candidates.push(distance);
   const celebration=celebrationTodayPriorityViewModel(oggiStartedOn(),oggiTodayISO());
   if(celebration)candidates.push(celebration);
   let mission=null;
@@ -2789,6 +2795,7 @@ document.getElementById('usTodayPriorityRegion')?.addEventListener('click',event
   if(action==='mission')window.openOggiMission?.();
   if(action==='recap')window.UsYearRecap?.open?.();
   if(action==='companion')window.UsCompanions?.open?.();
+  if(action==='distance')window.UsDistance?.open?.();
 });
 // M10.2 — nascondere l'avviso "Risposte pronte" = "non lo voglio più su Oggi",
 // MAI "ho visto le risposte". L'autorità è window.dismissDailyRevealNotice

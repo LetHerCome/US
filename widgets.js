@@ -13,8 +13,8 @@
 
   const platform = window.UsPlatform;
   const nativeEnabled = Boolean(platform?.isNative && platform?.hasWidgetBridge?.() !== false);
-  const KINDS = Object.freeze(['think', 'countdown', 'noi', 'photo']);
-  const DESTINATIONS = Object.freeze({ think: 'home', countdown: 'home', noi: 'bond', 'noi-play': 'quiz', photo: 'home' });
+  const KINDS = Object.freeze(['think', 'countdown', 'noi', 'photo', 'daily']);
+  const DESTINATIONS = Object.freeze({ think: 'home', countdown: 'home', noi: 'bond', 'noi-play': 'quiz', photo: 'home', daily: 'home' });
   const COUPLE_TTL_MS = 30 * 60 * 1000;
   const PHOTO_TTL_MS = 10 * 60 * 1000;
   const PHOTO_MAX_EDGE = 720;
@@ -38,15 +38,19 @@
   let noiPortraitSync = null;
   let lastLink = { url: '', at: 0 };
   let pendingDestination = '';
+  let pendingKind = '';
 
   const emptyThink = () => ({ partnerName: '', lastReceivedAt: '', lastSentAt: '', lastAnsweredAt: '' });
   const emptyCouple = () => ({ names: [], startedOn: '', frame: '', distanceText: '', distanceState: 'ready' });
   const emptyCountdown = () => ({ active: false, kind: '', title: '', target: '', style: 'editorial' });
   const emptyPhoto = () => ({ state: 'none', key: '', takenOn: '' });
+  // La domanda di oggi: the day, the shared question and whose turn it is. Never an answer.
+  const emptyDaily = () => ({ date: '', question: '', state: 'none' });
   let think = emptyThink();
   let couple = emptyCouple();
   let countdown = emptyCountdown();
   let photo = emptyPhoto();
+  let daily = emptyDaily();
 
   async function sha256Hex(value) {
     const bytes = new TextEncoder().encode(String(value || ''));
@@ -71,7 +75,8 @@
       think: { ...think },
       couple: { ...couple, names: [...couple.names] },
       countdown: { ...countdown },
-      photo: { ...photo }
+      photo: { ...photo },
+      daily: { ...daily }
     };
   }
 
@@ -110,6 +115,25 @@
   }
 
   // ---------- domain → semantic state ----------
+
+  // From Oggi's own state of the question (app.js hydrateToday); null while unknown.
+  function dailyFromToday() {
+    const question = window.todayQuestion, state = window.todayState;
+    if (!question?.id || !state) return null;
+    const date = civilDate(question.question_date);
+    const text = cleanText(question.question, 240);
+    if (!date || !text) return emptyDaily();
+    const turn = state.both_answered ? 'ready' : state.my_answer != null ? 'waiting' : state.partner_has_answer ? 'your_turn' : 'todo';
+    return { date, question: text, state: turn };
+  }
+
+  function syncDaily() {
+    if (!ownerHash) return Promise.resolve(false);
+    const next = dailyFromToday();
+    if (!next || JSON.stringify(next) === JSON.stringify(daily)) return Promise.resolve(false);
+    daily = next;
+    return scheduleWrite();
+  }
 
   async function publishThink(next = {}) {
     think = {
@@ -415,6 +439,7 @@
       think = { ...emptyThink(), ...native.think, partnerName: '' };
       couple = { ...emptyCouple(), ...native.couple, names: [] };
       countdown = { ...emptyCountdown(), ...native.countdown };
+      daily = { ...emptyDaily(), ...native.daily };
       photo = native.photo?.state === 'ready' && native.photo.key === seed.photoKey ? { ...native.photo } : emptyPhoto();
       return true;
     } catch (_) {
@@ -433,6 +458,7 @@
       couple = emptyCouple();
       countdown = emptyCountdown();
       photo = emptyPhoto();
+      daily = emptyDaily();
       coupleSyncedAt = 0;
       photoSyncedAt = 0;
       photoResyncRequested = false;
@@ -472,7 +498,7 @@
     noiPortraitSignature = '';
     if (noiPortraitPreviewUrl) URL.revokeObjectURL(noiPortraitPreviewUrl);
     noiPortraitPreviewUrl = '';
-    think = emptyThink();couple = emptyCouple();countdown = emptyCountdown();photo = emptyPhoto();
+    think = emptyThink();couple = emptyCouple();countdown = emptyCountdown();photo = emptyPhoto();daily = emptyDaily();
     setPreview('');
     const provisioning = credentialProvisionInFlight;
     if (provisioning) try { await provisioning; } catch (_) {}
@@ -521,7 +547,10 @@
     lastLink = { url: link.url, at: now };
     const page = DESTINATIONS[link.kind];
     pendingDestination = window.usProfile ? '' : page;
+    pendingKind = window.usProfile ? '' : link.kind;
     openDestination(page);
+    // La domanda di oggi opens the question itself.
+    if (link.kind === 'daily' && window.usProfile) setTimeout(() => window.openToday?.(), 120);
     return Promise.resolve(true);
   }
 
@@ -553,6 +582,7 @@
     authReady,
     publishThink,
     syncCountdown,
+    syncDaily,
     syncCouple,
     syncNoiDistance,
     syncNoiPortrait,
@@ -573,8 +603,13 @@
     });
     window.addEventListener('us-auth-resolved', (event) => {
       // A widget opened US on a cold start: land there once the shell is ready.
-      if (pendingDestination && event?.detail?.paired) setTimeout(() => openDestination(pendingDestination), 60);
+      if (pendingDestination && event?.detail?.paired) {
+        const kind = pendingKind;
+        const page = pendingDestination;
+        setTimeout(() => { openDestination(page); if (kind === 'daily') setTimeout(() => window.openToday?.(), 400); }, 60);
+      }
       pendingDestination = '';
+      pendingKind = '';
     });
     window.addEventListener('us:countdown-updated', () => { syncCountdown().catch(() => {}); });
     window.addEventListener('us:progression-updated', () => { syncCountdown().catch(() => {}); syncCouple().catch(() => {}); });
@@ -591,6 +626,7 @@
         if (document.hidden || !ownerHash) return;
         ensureCredential().catch(() => {});
         syncCountdown().catch(() => {});
+        syncDaily().catch(() => {});
         syncCouple().catch(() => {});
         syncNoiDistance().catch(() => {});
         syncNoiPortrait().catch(() => {});

@@ -72,6 +72,12 @@ const layers=[
     close:()=>window.closeNoiSection?.()
   },
   {
+    name:'distance',
+    find:()=>document.getElementById('usDistanceSheet'),
+    open:el=>el?.classList.contains('open'),
+    close:()=>window.UsDistance?.close?.()
+  },
+  {
     name:'year-recap',
     find:()=>document.getElementById('usRecapSheet'),
     open:el=>el?.classList.contains('open'),

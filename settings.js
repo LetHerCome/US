@@ -969,6 +969,7 @@ async function action(name){
   // Which sheet is open: dc-settings.css gives each one the mockup's blocks.
   const overlay=$('usSettingsOverlay');if(overlay?.dataset&&name!=='maudit'&&name!=='app-lock')overlay.dataset.usSettingsSheet=name;
   if(name==='relationship-date')return relationshipDateModal();
+  if(name==='together-mode')return window.UsDistance?.open?.();
   if(name==='profile-photo'){closeModal();window.pickProfilePhoto?.();return;}
   if(name==='home-photo')return homePhotoModal();
   if(name==='story-archive')return showStoryArchive();
