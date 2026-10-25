@@ -61,9 +61,12 @@
       try{
         const [p,m]=await Promise.all([readProfile(id),rpc('get_couple_membership')]);
         if(!current(ticket)||session.user.id!==id)return null;
-        if(p?.error||m?.error)return publish({kind:ERROR,message:unavailable});
+        // A failed read (offline, a slow network, the server restarting) says
+        // nothing about the couple: transient, so the shell keeps this phone's
+        // notifications and widgets (bug 25/10/2026).
+        if(p?.error||m?.error)return publish({kind:ERROR,message:unavailable,transient:true});
         return publish(withKept(route(session,p?.data,m?.data)));
-      }catch(_error){if(current(ticket))return publish({kind:ERROR,message:unavailable});return null;}
+      }catch(_error){if(current(ticket))return publish({kind:ERROR,message:unavailable,transient:true});return null;}
     }
     async function load(nextSession){
       if(!nextSession?.user?.id){reset();return state;}
