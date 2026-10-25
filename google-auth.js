@@ -11,7 +11,8 @@
   'use strict';
   // The OAuth "Web application" client of the US Google Cloud project (public,
   // not a secret: it is the ID token's audience). Empty: the button stays hidden.
-  const WEB_CLIENT_ID = '';
+  // Project «US Play», client «US Supabase» (founder, 26/10/2026).
+  const WEB_CLIENT_ID = '792714579837-8o18fn4ovo6fbp63htcu94rag54uv4q0.apps.googleusercontent.com';
   const PLUGIN = 'UsGoogleSignIn';
   const CODES = ['cancelled', 'no_account', 'interrupted', 'not_configured', 'unavailable'];
 
