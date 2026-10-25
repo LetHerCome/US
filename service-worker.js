@@ -1,4 +1,4 @@
-const BUILD_ID = "us-anno-compagni-20261025-28";
+const BUILD_ID = "us-fluidita-2-20261025-30";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;

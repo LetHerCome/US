@@ -1,6 +1,6 @@
 # Mission — Fluidità 2: i momenti «fatto!»
 
-**Status:** SPEC
+**Status:** IN BRANCH
 **Branch:** `claude/fluidita-2` (da `main` dopo #223)
 **Origine:** confronto con Paired del 22/10/2026 (ogni passo ha un piccolo premio visivo) e richiesta del founder del 25/10/2026 («andiamo», dopo la proposta: prima Fluidità 2, poi l'accoglienza personalizzata).
 
@@ -23,8 +23,8 @@ Ogni azione che fate insieme finisce con un piccolo «fatto!»: una vibrazione l
 |---|---|---|---|
 | A | Risposta del giorno inviata | Messaggio «Risposta inviata»; nessuna vibrazione. In errore: «Errore sync Today» | La vibrazione `success`; un testo d'errore umano («Non riesco a inviare la risposta. Riprova.») |
 | B | Reazione inviata (Ti penso e domanda del giorno) | Solo il messaggio | Vibrazione `action` e un piccolo «pop» sulla reazione scelta |
-| C | «Conserva in Ricordi» | Solo il messaggio | Vibrazione `success` e la scintilla sul pulsante |
-| D | Ricordo aggiunto | Vibrazione e messaggio; il ricordo nuovo compare nella griglia senza niente che lo indichi | Il ricordo nuovo entra con una breve comparsa (scala e dissolvenza), una volta sola |
+| C | «Conserva in Ricordi» | Messaggio e la riga «Conservato» che si assesta (`is-fresh`) | Solo la vibrazione `success` |
+| D | Ricordo aggiunto | Vibrazione, messaggio e il ricordo nuovo che si illumina una volta (`ricordi-new`, M12A) | Niente: c'era già, verificato nel codice |
 | E | Idea aggiunta (Le vostre idee) | Solo il messaggio | Vibrazione `action` e la comparsa della riga nuova |
 
 ## Come

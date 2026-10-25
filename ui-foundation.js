@@ -717,9 +717,51 @@
     });
   }
 
+  // Fluidità 2 — the «fatto!» of a small shared action (docs/missions/fluidita-2.md):
+  // the cue, a short pop of what was touched and the Sintonia sparks around it.
+  // With reduced motion only the cue stays (if the cues are on in Settings).
+  const DONE_EASE = 'cubic-bezier(.2,.8,.2,1)';
+  const SPARK_COLORS = ['var(--us-rosa)', 'var(--us-lilla)', 'var(--us-noi)'];
+  function done(element, { feel = 'success', sparks = 6 } = {}) {
+    const scope = typeof window !== 'undefined' ? window : globalThis;
+    scope.UsFeedback?.[feel]?.();
+    const d = element?.ownerDocument;
+    if (!element?.getBoundingClientRect || !d?.body || activeMotion.isReducedMotion()) return false;
+    if (typeof element.animate === 'function') element.animate([{ scale: 1 }, { scale: 1.06, offset: 0.4 }, { scale: 1 }], { duration: 260, easing: DONE_EASE });
+    const r = element.getBoundingClientRect();
+    if (!r.width && !r.height) return true;
+    for (let i = 0; i < sparks; i++) {
+      const s = d.createElement('span');
+      s.className = 'us-spark';
+      s.setAttribute('aria-hidden', 'true');
+      s.style.background = SPARK_COLORS[i % 3];
+      s.style.left = `${r.left + r.width / 2 - 6}px`;
+      s.style.top = `${r.top + r.height / 2 - 6}px`;
+      d.body.appendChild(s);
+      if (typeof s.animate !== 'function') { s.remove(); continue; }
+      const a = (i / sparks) * 6.283 - 1.57;
+      const dist = 30 + Math.random() * 16;
+      const anim = s.animate([
+        { transform: 'translate(0px,0px) scale(1)', opacity: 1 },
+        { transform: `translate(${(Math.cos(a) * dist).toFixed(1)}px,${(Math.sin(a) * dist).toFixed(1)}px) scale(.3)`, opacity: 0 }
+      ], { duration: 520, easing: DONE_EASE });
+      anim.onfinish = () => s.remove();
+      anim.oncancel = () => s.remove();
+    }
+    return true;
+  }
+  // A new item (a memory, an idea) arrives in its list once: a short fade and rise.
+  function enter(element) {
+    if (!element || typeof element.animate !== 'function' || activeMotion.isReducedMotion()) return false;
+    element.animate([{ opacity: 0, transform: 'translateY(8px) scale(.96)' }, { opacity: 1, transform: 'none' }], { duration: 320, easing: DONE_EASE });
+    return true;
+  }
+
   return {
     install,
     createFeedback,
+    done,
+    enter,
     auroraPulse: () => activeAurora(),
     playOnce: (element, className, duration) => activePlayOnce(element, className, duration),
     confirm: (options) => confirmSurface(options),
