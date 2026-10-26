@@ -1,4 +1,4 @@
-const BUILD_ID = "us-notifiche-5g-20261025-38";
+const BUILD_ID = "us-accesso-google-20261025-40";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -10,6 +10,7 @@ const APP_SHELL = [
   "/index.html",
   versioned("/auth-storage.js"),
   versioned("/public-auth.js"),
+  versioned("/google-auth.js"),
   versioned("/public-auth.css"),
   versioned("/platform.js"),
   versioned("/app-lock.js"),
@@ -115,6 +116,7 @@ const APP_SHELL = [
   "/assets/icons/phosphor/clock-counter-clockwise-regular.svg",
   "/assets/icons/phosphor/signpost-regular.svg",
   "/assets/icons/phosphor/x-regular.svg",
+  "/assets/icons/phosphor/google-logo-regular.svg",
   "/assets/icons/phosphor/key-regular.svg",
   "/assets/icons/phosphor/fingerprint-regular.svg",
   "/assets/icons/phosphor/device-mobile-regular.svg",

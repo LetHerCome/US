@@ -43,6 +43,7 @@
     { "id": "relationship-date", "label": "Data della relazione", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "CalendarHeart", "customAssetPath": null, "status": "APPROVED", "usedBy": ["settings"] },
     { "id": "done", "label": "Fatto", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "Check", "customAssetPath": null, "status": "APPROVED", "usedBy": ["events"] },
     { "id": "music", "label": "Musica", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "MusicNote", "customAssetPath": null, "status": "APPROVED", "usedBy": ["conservati"] },
-    { "id": "note", "label": "Nota scritta", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "PencilSimple", "customAssetPath": null, "status": "APPROVED", "usedBy": ["conservati"] }
+    { "id": "note", "label": "Nota scritta", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "PencilSimple", "customAssetPath": null, "status": "APPROVED", "usedBy": ["conservati"] },
+    { "id": "google", "label": "Continua con Google", "source": "PHOSPHOR", "authority": "SEMANTIC_LIBRARY", "phosphorName": "GoogleLogo", "customAssetPath": null, "status": "APPROVED", "usedBy": ["auth-login"] }
   ]
 }

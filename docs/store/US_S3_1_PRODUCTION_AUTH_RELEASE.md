@@ -36,6 +36,8 @@ Read each value before changing it, and record before/after in the release PR.
 
 Supabase's default mailer only sends to project team members and has a very low hourly limit, so a real signup would never receive its email. Production needs a custom SMTP provider.
 
+**Decided 25/10/2026 (founder), until the US domain exists:** the Moonee Lab Gmail. Host `smtp.gmail.com`, port 587, user `moonee.team@gmail.com`, password = a Google *app password* (2-Step Verification required on that account), sender name `US`, sender `moonee.team@gmail.com`. No DNS records needed. About 500 emails a day. The founder enters it in Supabase › Authentication › SMTP Settings, on US-STAGING first. The "Sending domain" bullet below applies once the domain exists. Released in code by the Accesso V1 mission ([docs/missions/accesso-v1.md](../missions/accesso-v1.md)).
+
 - **Provider:** any transactional provider with SMTP (for example Resend, Postmark, Brevo or Amazon SES). This is a founder choice, and it may have a cost.
 - **Sending domain:** one the founder controls, such as `mail.<dominio US>`. It needs SPF, DKIM and DMARC records in DNS. A free `pages.dev` address cannot send mail.
 - **Sender:** for example `US <noreply@<dominio>>`, plus a reply/support address. The support address also goes in the Play listing and the privacy policy.

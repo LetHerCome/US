@@ -48,7 +48,9 @@ jobs:
             const js=fs.readFileSync(dest+'/app.js','utf8');
             const mod=require('./public-auth.js');
             if(mod.isStagingEndpoint('https://iiakdfsxpywdkxravqjh.supabase.co')) process.exit(1);
-            if(mod.PRODUCTION_SIGNUP_RELEASED!==false || mod.publicAuthEnabled('https://iiakdfsxpywdkxravqjh.supabase.co')) process.exit(1);
+            // Released by the founder on 25/10/2026 (Play closed test): production signs up.
+            if(mod.PRODUCTION_SIGNUP_RELEASED!==true || !mod.publicAuthEnabled('https://iiakdfsxpywdkxravqjh.supabase.co')) process.exit(1);
+            if(mod.publicAuthEnabled('https://evil.tld')) process.exit(1);
             if(!js.includes("const SB_URL = 'https://iiakdfsxpywdkxravqjh.supabase.co';")) process.exit(1);
             for (const name of ['public-auth.js','public-auth.css']) {
               if (!fs.existsSync(dest+'/'+name)) process.exit(1);

@@ -41,7 +41,7 @@ test('legal pages: standalone, complete and linked to their other language', () 
     assert.match(html, /href="\/elimina-account"/, `${file} links the deletion page`);
     assert.match(html, /Moonee Lab \(Francesco Monti\)/, `${file} names the controller`);
     assert.match(html, /mailto:moonee\.team@gmail\.com/, `${file} gives the contact`);
-    assert.match(html, /(Ultimo aggiornamento|Last updated): 17 (ottobre|October) 2026/, file);
+    assert.match(html, /(Ultimo aggiornamento|Last updated): (17|25) (ottobre|October) 2026/, file);
   }
 });
 

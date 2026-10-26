@@ -257,6 +257,7 @@ html .auth-overlay #usOnboarding[data-us-busy] :is(button,input,select,textarea)
 html .auth-overlay #mc3BackCreate,
 html .auth-overlay #mc3BackJoin,
 html .auth-overlay #mc3CopyCode,
+html .auth-overlay #usGoogleSignIn,
 html .auth-overlay #usVerifyResend,
 html .auth-overlay #mc3Waiting.has-code #mc3Generate,
 .us-setup .us-setup-secondary{

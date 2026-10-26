@@ -108,11 +108,14 @@ export function decodeJwtPayload(jwt) {
   }
 }
 
-// Requires a password authentication performed within maxAgeSeconds.
+// Requires a password authentication performed within maxAgeSeconds, or for an
+// account that signs in with Google a new Google sign-in (Supabase records the
+// id_token grant as amr "oauth"; Google is the only OAuth provider enabled).
+const REAUTH_METHODS = Object.freeze(['password', 'oauth']);
 export function assertRecentPasswordAuth(payload, nowSeconds, maxAgeSeconds = REAUTH_MAX_AGE_SECONDS) {
   const amr = payload?.amr;
   if (!Array.isArray(amr) || !Number.isFinite(nowSeconds)) throw new DeletionError('reauth_required', 401);
-  const ok = amr.some((entry) => entry && entry.method === 'password'
+  const ok = amr.some((entry) => entry && REAUTH_METHODS.includes(entry.method)
     && Number.isFinite(entry.timestamp)
     && entry.timestamp - nowSeconds <= REAUTH_FUTURE_SKEW_SECONDS
     && nowSeconds - entry.timestamp <= maxAgeSeconds);

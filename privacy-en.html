@@ -20,7 +20,7 @@
   </nav>
   <p class="kicker">US · Privacy</p>
   <h1>Privacy Policy</h1>
-  <p class="updated">Last updated: 17 October 2026</p>
+  <p class="updated">Last updated: 25 October 2026</p>
 
   <h2>1. Who we are</h2>
   <p>US is an app for couples. Data controller: Moonee Lab (Francesco Monti), email <a href="mailto:moonee.team@gmail.com">moonee.team@gmail.com</a>.</p>
@@ -30,6 +30,7 @@
     <thead><tr><th>Data</th><th>Why</th><th>Legal basis</th></tr></thead>
     <tbody>
       <tr><td>Email and password (the password is never stored in plain text: the authentication provider only stores a hash)</td><td>creating and protecting your account</td><td>performance of a contract</td></tr>
+      <tr><td>If you sign in with Google: the email, name, profile picture and identifier of your Google account, which Google shares with us when you choose it</td><td>creating your account and letting you sign in without a password</td><td>performance of a contract</td></tr>
       <tr><td>Name, couple name, date your relationship started</td><td>running your shared space</td><td>performance of a contract</td></tr>
       <tr><td>Photos, voice notes, messages, answers, moods, calendar events, lists, games; videos only in “Left for you”, up to 30 seconds or 20 MB</td><td>showing them to your partner, which is what the app is for</td><td>performance of a contract</td></tr>
       <tr><td>Approximate location of this phone, only if you turn the feature on and only while the app is open</td><td>working out the distance between you</td><td>consent, which you can withdraw at any time in the app (Settings › Location › Stop and delete) or in your phone settings</td></tr>
@@ -49,6 +50,7 @@
       <ul>
         <li>Supabase (database, authentication, file storage), with data in a European Union data centre (Paris, France);</li>
         <li>Google Firebase Cloud Messaging (notifications);</li>
+        <li>Google, for Sign in with Google if you choose it, and for sending account emails (address confirmation and password recovery) from our Gmail address;</li>
         <li>Cloudflare (delivery of the web app).</li>
       </ul>
     </li>
@@ -68,8 +70,8 @@
     <li>reports are deleted 12 months after they are sent;</li>
     <li>the copy of your data we send you on request is deleted after 7 days.</li>
   </ul>
-  <p>When you ask to delete your account, once you confirm your password, the account is deleted straight away and cannot be recovered. File removal is completed within 30 days. For 12 months we keep only a technical deletion receipt (account and couple identifiers, dates, outcome), with no content.</p>
-  <p>We do not currently keep database backups. If we turn them on, this policy will say how long backups are kept before being overwritten.</p>
+  <p>When you ask to delete your account, once you confirm your password (or confirm with Google again, if you sign in with Google), the account is deleted straight away and cannot be recovered. File removal is completed within 30 days. For 12 months we keep only a technical deletion receipt (account and couple identifiers, dates, outcome), with no content.</p>
+  <p>The database is copied every day into a backup managed by Supabase, in the same European Union data centre. Each copy is kept for 7 days and then overwritten: data you delete can therefore remain in a backup for up to 7 days, without being used.</p>
 
   <h2>6. Deleting your account</h2>
   <p>You can ask for deletion in the app (Settings › Privacy and data › Delete account), on the page <a href="/elimina-account">us-a33.pages.dev/elimina-account</a>, or by writing to <a href="mailto:moonee.team@gmail.com">moonee.team@gmail.com</a>.</p>

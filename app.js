@@ -1109,6 +1109,17 @@ async function initCloud(){
       return;
     }
 
+    // Accesso con Google: 18+ and the Terms, once, before anything private.
+    if(window.UsGoogleAuth?.needsTerms?.(session.user)){
+      window.usProfile=null;
+      document.documentElement.classList.remove('us-returning-device','us-auth-pending','us-auth-ready');
+      setCloudBadge(false,'accesso richiesto');
+      document.getElementById('authOverlay').classList.remove('hidden');
+      showAuthStep('usGoogleTerms');
+      window.dispatchEvent(new CustomEvent('us-auth-resolved',{detail:{paired:false}}));
+      return;
+    }
+
     // Cached profiles never authorize membership. These reads run in parallel,
     // after the native lock, and must both succeed before revealing the shell.
     const result=await usOnboarding.load(session);
@@ -2286,9 +2297,72 @@ async function loginAccount(){
 window.loginAccount=loginAccount;
 // The extra Auth UI is compiled but only mounted when the Supabase backend
 // is exactly US-STAGING. Production remains login-only, without a signup path.
-window.usS31Auth = window.UsPublicAuthS31?.mount({
-  auth: sb.auth, endpoint: SB_URL, openStep: showAuthStep
-}) || null;
+// Since the 25/10/2026 release it mounts on production too: a failure here
+// (an Auth client without the sign-up contract) leaves the login working.
+window.usS31Auth = (()=>{
+  try{return window.UsPublicAuthS31?.mount({
+    auth: sb.auth, endpoint: SB_URL, openStep: showAuthStep
+  }) || null;}
+  catch(error){console.warn('[US Auth] sign-up unavailable',error);return null;}
+})();
+// Accesso con Google (google-auth.js, 25/10/2026): it creates accounts, so it
+// appears only where sign-up is open and the Google client is configured.
+window.usGoogleAuth = window.usS31Auth && window.UsGoogleAuth?.create?.({auth:sb.auth}) || null;
+const US_GOOGLE_SIGN_IN_ERRORS=Object.freeze({
+  no_account:'Aggiungi un account Google al telefono e riprova.',
+  not_configured:'Accesso con Google non disponibile su questo telefono.',
+  unavailable:'Accesso con Google non disponibile su questo telefono.'
+});
+(function mountGoogleSignIn(){
+  const button=document.getElementById('usGoogleSignIn');
+  if(!button||!window.usGoogleAuth?.supported?.())return;
+  button.hidden=false;
+  const label=button.querySelector('.us-auth-google-label');
+  button.addEventListener('click',async()=>{
+    if(button.disabled)return;
+    button.disabled=true;
+    if(label)label.textContent='Accesso…';
+    setAuthStatus('loginStatus','');
+    const result=await window.usGoogleAuth.signIn();
+    if(label)label.textContent='Continua con Google';
+    button.disabled=false;
+    if(result.ok&&result.kind==='signed_in'){
+      usOnboarding.setup?.markPasswordSignIn?.(result.userId);
+      await initCloud();
+      return;
+    }
+    // Closing Google's sheet is a choice, not an error.
+    if(result.ok||result.kind==='cancelled')return;
+    setAuthStatus('loginStatus',US_GOOGLE_SIGN_IN_ERRORS[result.kind]||'Non riesco ad accedere con Google. Riprova.','error');
+  });
+})();
+(function mountGoogleTerms(){
+  const form=document.getElementById('usGoogleTerms');
+  const box=document.getElementById('usGoogleTermsBox'),submit=document.getElementById('usGoogleTermsSubmit');
+  if(!form||!box||!submit)return;
+  const sync=()=>{submit.disabled=box.checked!==true;};
+  box.addEventListener('change',sync);
+  sync();
+  form.addEventListener('submit',async ev=>{
+    ev.preventDefault();
+    if(submit.disabled)return;
+    submit.disabled=true;
+    submit.textContent='Un attimo…';
+    const result=await window.UsPublicAuthS31.acceptTerms(sb.auth,{terms:box.checked===true,locale:window.UsI18n?.locale});
+    submit.textContent='Continua';
+    if(!result.ok){setAuthStatus('usGoogleTermsStatus',result.message,'error');sync();return;}
+    box.checked=false;
+    sync();
+    setAuthStatus('usGoogleTermsStatus','');
+    await initCloud();
+  });
+  document.getElementById('usGoogleTermsCancel')?.addEventListener('click',()=>{
+    box.checked=false;
+    sync();
+    // SIGNED_OUT brings the login back (onAuthStateChange → initCloud).
+    sb.auth.signOut({scope:'local'}).catch(()=>initCloud());
+  });
+})();
 
 let usIncomingThink=null;
 let usThinkOperationId=null;

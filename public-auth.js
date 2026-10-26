@@ -17,7 +17,9 @@
   const PRODUCTION_ORIGIN = 'https://iiakdfsxpywdkxravqjh.supabase.co';
   // Founder-approved release decision only. Flipping it also requires the
   // matching assertion in tests/s3-1-public-auth.test.js to change.
-  const PRODUCTION_SIGNUP_RELEASED = false;
+  // Released on 25/10/2026 for the Play closed test (founder): confirmation and
+  // recovery emails go out through the Moonee Lab Gmail SMTP.
+  const PRODUCTION_SIGNUP_RELEASED = true;
   const PASSWORD_MIN = 10, PASSWORD_MAX = 72;
   // The published Terms and Privacy pages (https, termini.html / privacy.html;
   // each links its English version). A release needs both.
@@ -180,6 +182,18 @@
     return Object.freeze({ get state() { return state(); }, navigate, register, resend, forgot,
       onRecoverySession, completeRecovery, reset });
   }
+  // A Google account (google-auth.js needsTerms) ticks the same 18+ and Terms
+  // box once; it is recorded on the account exactly as the sign-up records it.
+  async function acceptTerms(auth, { terms, locale } = {}) {
+    if (terms !== true) return { ok: false, kind: 'terms', message: TERMS_REQUIRED };
+    if (typeof auth?.updateUser !== 'function') return { ok: false, kind: 'unavailable', message: TRY_AGAIN };
+    try {
+      const { error } = await auth.updateUser({ data: { terms_accepted_at: new Date().toISOString(), locale: LOCALES.includes(locale) ? locale : 'it' } });
+      return error ? { ok: false, kind: 'provider', message: TRY_AGAIN } : { ok: true };
+    } catch (_) {
+      return { ok: false, kind: 'transport', message: TRY_AGAIN };
+    }
+  }
   function mount({ auth, endpoint, openStep, document: doc = globalThis.document }) {
     if (!publicAuthEnabled(endpoint) || !doc || typeof openStep !== 'function') return null;
     const node = id => doc.getElementById(id);
@@ -287,5 +301,5 @@
   }
   return Object.freeze({ isStagingEndpoint, isProductionEndpoint, publicAuthEnabled,
     PRODUCTION_SIGNUP_RELEASED, PASSWORD_MIN, PASSWORD_MAX, LEGAL_URLS, legalUrl,
-    cleanEmail, emailValid, passwordValid, createController, mount });
+    cleanEmail, emailValid, passwordValid, createController, acceptTerms, mount });
 });

@@ -112,9 +112,10 @@ jobs:
           if(contract.automatedDeletionAllowed!==false || contract.destructiveActionsEnabled!==false || contract.ownerChoice!=='A' || contract.decisions.retention!=='REQUIRES_PRIVACY_REVIEW') process.exit(1);
           const files=['supabase/functions/account-delete/index.ts','supabase/functions/couple-unpair/index.ts'];
           if(files.some(file=>fs.existsSync(file))) process.exit(1);
-          // S3.2 v1 deletion: inert unless explicitly enabled, password re-auth, service-role RPCs only.
+          // S3.2 v1 deletion: inert unless explicitly enabled, fresh re-auth (password, or
+          // Google again since Accesso V1 on 25/10/2026: amr "oauth"), service-role RPCs only.
           const edge=fs.readFileSync('supabase/functions/_shared/s32-account-deletion-core.mjs','utf8');
-          if(!edge.includes("US_ACCOUNT_DELETION_ENABLED")||!edge.includes("assertRecentPasswordAuth")||!/method\s*===\s*'password'/.test(edge))process.exit(1);
+          if(!edge.includes("US_ACCOUNT_DELETION_ENABLED")||!edge.includes("assertRecentPasswordAuth")||!edge.includes("const REAUTH_METHODS = Object.freeze(['password', 'oauth']);")||!edge.includes('REAUTH_METHODS.includes(entry.method)'))process.exit(1);
           const migration=fs.readdirSync('supabase/migrations').find(f=>/_s32_account_deletion_v1\.sql$/.test(f));
           const m=fs.readFileSync('supabase/migrations/'+migration,'utf8');
           if(/grant[^;]+to\s+(anon|authenticated)/i.test(m)||/delete\s+from\s+auth\.users/i.test(m))process.exit(1);

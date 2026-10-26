@@ -207,3 +207,12 @@ Only durable decisions belong here. New missions should not reopen them without 
 - **Disegni:** i nuovi compagni diventano asset approvati solo dopo l'OK del founder sulle bozze.
 - **Governance:** il lavoro va sul branch e su staging. Merge, SQL in produzione e pubblicazione hanno ciascuno un'approvazione separata.
 - **22/10, sera:** il founder fornisce i disegni dei compagni e un **Maudit 2.0** nello stesso stile («li voglio così»; «usa la mia nuova immagine anche per Maudit»). Sostituiscono le bozze SVG e Maudit 1.0, che resta su disco ritirato. Niente video generati a pagamento per ora: l'animazione è fatta a pezzi dalle immagini.
+
+## 2026-10-25 — Registrazione aperta e accesso con Google per il test chiuso
+
+**Fonte:** founder, 25/10/2026: «non possiamo sbloccare la registrazione in produzione prima di darla ai test? o collegare l'accesso con google»; poi «facciamo sia mail con gmail che accesso con google».
+
+- In produzione la registrazione con email si apre (`PRODUCTION_SIGNUP_RELEASED = true`), con la conferma dell'indirizzo obbligatoria. Le email partono dal Gmail di Moonee Lab via SMTP finché non c'è un dominio ([missione](missions/accesso-v1.md)).
+- Si aggiunge l'accesso con Google. Su Android passa da un plugin nostro su Credential Manager, senza pacchetti di terze parti che portino l'ID pubblicità. Un account Google conferma 18+ e Termini una volta, prima di qualsiasi dato di coppia. Per eliminare l'account o uscire dalla coppia conferma con lo stesso account Google.
+- Facebook no: richiede la verifica di Meta e non aggiunge niente su Android.
+- **Governance:** il lavoro va sul branch e su staging. Impostazioni Supabase e Google Cloud, Edge in produzione, merge e pubblicazione hanno ciascuno un'approvazione separata.

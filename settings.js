@@ -642,6 +642,7 @@ async function privacyModal(){
 // Shared logic + support placeholder live in account-deletion.js (loaded on demand).
 let accountDeletionLoader=null;
 let accountDeletionInFlight=false;
+let accountDeletionMode=null;
 function loadAccountDeletion(){
   if(window.UsAccountDeletion)return Promise.resolve(window.UsAccountDeletion);
   if(!accountDeletionLoader)accountDeletionLoader=new Promise((resolve,reject)=>{
@@ -655,6 +656,22 @@ function loadAccountDeletion(){
   return accountDeletionLoader;
 }
 
+// Accesso con Google (25/10/2026): an account without a password confirms
+// deletion and leaving with Google again (google-auth.js, Android only).
+async function accountReauthMode(){
+  let user=null;
+  try{const {data}=await sb.auth.getSession();user=data?.session?.user||null;}catch(_){}
+  const google=Boolean(user&&window.UsGoogleAuth?.usesGoogle?.(user)&&!window.UsGoogleAuth?.hasPassword?.(user));
+  const available=!google||Boolean(window.usGoogleAuth?.native&&window.usGoogleAuth?.supported?.());
+  return {user,google,available,client:google&&available?window.usGoogleAuth:null};
+}
+function reauthField(mode,id,support){
+  if(!mode.google)return `<label class="us-settings2-field"><span>Password del tuo account</span><input id="${id}" type="password" autocomplete="current-password" required></label>`;
+  return mode.available
+    ?'<p class="us-settings2-modal-copy">Accedi con Google: per confermare ti chiederemo di scegliere di nuovo il tuo account Google.</p>'
+    :`<p class="us-settings2-modal-copy">Accedi con Google: per confermare usa US sul telefono Android, oppure scrivi a <b>${support}</b>.</p>`;
+}
+
 async function accountDeletionModal(){
   let api=null;
   try{api=await loadAccountDeletion();}catch(_){}
@@ -663,6 +680,8 @@ async function accountDeletionModal(){
     return;
   }
   const support=esc(api.US_SUPPORT_EMAIL);
+  const mode=await accountReauthMode();
+  accountDeletionMode=mode;
   openModal('Elimina account',`
     <div class="us-settings-copy us-account-delete-copy">
       <p><b>È definitivo.</b> Dopo la conferma non si può annullare: l’eliminazione parte subito e si completa entro 30 giorni.</p>
@@ -672,7 +691,7 @@ async function accountDeletionModal(){
       <p><b>Vuoi una copia dei tuoi dati?</b> Prima di eliminare scrivi a <b>${support}</b>: la ricevi entro 30 giorni.</p>
     </div>
     <form id="usAccountDeleteForm" novalidate>
-      <label class="us-settings2-field"><span>Password del tuo account</span><input id="usAccountDeletePassword" type="password" autocomplete="current-password" required></label>
+      ${reauthField(mode,'usAccountDeletePassword',support)}
       <label class="us-settings2-field"><span>Scrivi ${esc(api.CONFIRM_WORD)} per confermare</span><input id="usAccountDeleteConfirm" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" required></label>
       <p class="us-settings2-modal-copy us-account-delete-status" id="usAccountDeleteStatus" role="status" aria-live="polite" hidden></p>
       <div class="us-settings2-action-stack">
@@ -684,12 +703,12 @@ async function accountDeletionModal(){
   const password=$('usAccountDeletePassword');
   const confirm=$('usAccountDeleteConfirm');
   const submit=$('usAccountDeleteSubmit');
-  const sync=()=>{if(submit&&!accountDeletionInFlight)submit.disabled=!api.canSubmit({password:password?.value,confirm:confirm?.value});};
+  const sync=()=>{if(submit&&!accountDeletionInFlight)submit.disabled=!(mode.available&&api.canSubmit({password:password?.value,confirm:confirm?.value,google:Boolean(mode.client)}));};
   password?.addEventListener('input',sync);
   confirm?.addEventListener('input',sync);
   $('usAccountDeleteCancel')?.addEventListener('click',()=>{if(password)password.value='';closeModal();});
   $('usAccountDeleteForm')?.addEventListener('submit',event=>{event.preventDefault();submitAccountDeletion(api);});
-  password?.focus({preventScroll:true});
+  (password||confirm)?.focus({preventScroll:true});
 }
 
 function accountDeletionStatus(text){
@@ -706,7 +725,8 @@ async function submitAccountDeletion(api){
   const submit=$('usAccountDeleteSubmit');
   const cancel=$('usAccountDeleteCancel');
   const password=passwordInput?.value||'';
-  if(!api.canSubmit({password,confirm:confirmInput?.value}))return;
+  const mode=accountDeletionMode||{};
+  if(!api.canSubmit({password,confirm:confirmInput?.value,google:Boolean(mode.client)}))return;
   accountDeletionInFlight=true;
   if(passwordInput)passwordInput.value='';
   if(submit){submit.disabled=true;submit.textContent='Elimino…';}
@@ -721,6 +741,8 @@ async function submitAccountDeletion(api){
       client:sb,
       email,
       password,
+      google:mode.client,
+      user:mode.user,
       channel:'app',
       supabaseUrl:typeof SB_URL==='string'?SB_URL:'',
       apiKey:typeof SB_KEY==='string'?SB_KEY:''
@@ -737,7 +759,7 @@ async function submitAccountDeletion(api){
   if(submit){submit.textContent='Elimina definitivamente';submit.disabled=true;}
   if(cancel)cancel.disabled=false;
   accountDeletionStatus(api.message(result.kind,api.US_SUPPORT_EMAIL,'app'));
-  passwordInput?.focus({preventScroll:true});
+  (passwordInput||confirmInput)?.focus({preventScroll:true});
 }
 
 // The server already removed sessions, devices and push/widget tokens: this is
@@ -780,6 +802,7 @@ function accountDeletedScreen(api,kind,cleanup){
 // keeps the account; after it the app reopens on onboarding. Same password
 // rules as the deletion: never logged or stored, field cleared at once.
 let leaveCoupleInFlight=false;
+let leaveCoupleMode=null;
 async function leaveCoupleModal(){
   let api=null;
   try{api=await loadAccountDeletion();}catch(_){}
@@ -787,6 +810,8 @@ async function leaveCoupleModal(){
     openModal('Esci dalla coppia','<div class="us-settings2-modal-copy">Non riesco ad aprire questa schermata adesso. Controlla la connessione e riprova.</div>','COPPIA');
     return;
   }
+  const mode=await accountReauthMode();
+  leaveCoupleMode=mode;
   openModal('Esci dalla coppia',`
     <div class="us-settings-copy us-account-delete-copy">
       <p><b>Lo spazio di coppia si chiude.</b> Dopo la conferma non si può annullare. Il tuo account resta: potrai creare un nuovo spazio o accettare un invito.</p>
@@ -796,7 +821,7 @@ async function leaveCoupleModal(){
       <p><b>Vuoi una copia dei tuoi dati?</b> Prima di uscire scrivi a <b>${esc(api.US_SUPPORT_EMAIL)}</b>.</p>
     </div>
     <form id="usLeaveCoupleForm" novalidate>
-      <label class="us-settings2-field"><span>Password del tuo account</span><input id="usLeaveCouplePassword" type="password" autocomplete="current-password" required></label>
+      ${reauthField(mode,'usLeaveCouplePassword',esc(api.US_SUPPORT_EMAIL))}
       <label class="us-settings2-field"><span>Scrivi ${esc(api.LEAVE_WORD)} per confermare</span><input id="usLeaveCoupleConfirm" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" required></label>
       <p class="us-settings2-modal-copy us-account-delete-status" id="usLeaveCoupleStatus" role="status" aria-live="polite" hidden></p>
       <div class="us-settings2-action-stack">
@@ -808,12 +833,12 @@ async function leaveCoupleModal(){
   const password=$('usLeaveCouplePassword');
   const confirm=$('usLeaveCoupleConfirm');
   const submit=$('usLeaveCoupleSubmit');
-  const sync=()=>{if(submit&&!leaveCoupleInFlight)submit.disabled=!api.canLeave({password:password?.value,confirm:confirm?.value});};
+  const sync=()=>{if(submit&&!leaveCoupleInFlight)submit.disabled=!(mode.available&&api.canLeave({password:password?.value,confirm:confirm?.value,google:Boolean(mode.client)}));};
   password?.addEventListener('input',sync);
   confirm?.addEventListener('input',sync);
   $('usLeaveCoupleCancel')?.addEventListener('click',()=>{if(password)password.value='';closeModal();});
   $('usLeaveCoupleForm')?.addEventListener('submit',event=>{event.preventDefault();submitLeaveCouple(api);});
-  password?.focus({preventScroll:true});
+  (password||confirm)?.focus({preventScroll:true});
 }
 
 function leaveCoupleStatus(text){
@@ -830,7 +855,8 @@ async function submitLeaveCouple(api){
   const submit=$('usLeaveCoupleSubmit');
   const cancel=$('usLeaveCoupleCancel');
   const password=passwordInput?.value||'';
-  if(!api.canLeave({password,confirm:confirmInput?.value}))return;
+  const mode=leaveCoupleMode||{};
+  if(!api.canLeave({password,confirm:confirmInput?.value,google:Boolean(mode.client)}))return;
   leaveCoupleInFlight=true;
   if(passwordInput)passwordInput.value='';
   if(submit){submit.disabled=true;submit.textContent='Esco…';}
@@ -844,6 +870,8 @@ async function submitLeaveCouple(api){
       client:sb,
       email,
       password,
+      google:mode.client,
+      user:mode.user,
       supabaseUrl:typeof SB_URL==='string'?SB_URL:'',
       apiKey:typeof SB_KEY==='string'?SB_KEY:''
     });
@@ -860,7 +888,7 @@ async function submitLeaveCouple(api){
   if(submit){submit.textContent='Esci dalla coppia';submit.disabled=true;}
   if(cancel)cancel.disabled=false;
   leaveCoupleStatus(api.leaveMessage(result.kind,api.US_SUPPORT_EMAIL));
-  passwordInput?.focus({preventScroll:true});
+  (passwordInput||confirmInput)?.focus({preventScroll:true});
 }
 
 function leftCoupleScreen(api,kind,cleanup){
