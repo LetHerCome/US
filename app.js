@@ -2297,9 +2297,14 @@ async function loginAccount(){
 window.loginAccount=loginAccount;
 // The extra Auth UI is compiled but only mounted when the Supabase backend
 // is exactly US-STAGING. Production remains login-only, without a signup path.
-window.usS31Auth = window.UsPublicAuthS31?.mount({
-  auth: sb.auth, endpoint: SB_URL, openStep: showAuthStep
-}) || null;
+// Since the 25/10/2026 release it mounts on production too: a failure here
+// (an Auth client without the sign-up contract) leaves the login working.
+window.usS31Auth = (()=>{
+  try{return window.UsPublicAuthS31?.mount({
+    auth: sb.auth, endpoint: SB_URL, openStep: showAuthStep
+  }) || null;}
+  catch(error){console.warn('[US Auth] sign-up unavailable',error);return null;}
+})();
 // Accesso con Google (google-auth.js, 25/10/2026): it creates accounts, so it
 // appears only where sign-up is open and the Google client is configured.
 window.usGoogleAuth = window.usS31Auth && window.UsGoogleAuth?.create?.({auth:sb.auth}) || null;

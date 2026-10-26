@@ -26,6 +26,8 @@ repositories {
 
 dependencies {
     implementation project(':capacitor-android')
+    // Plugin.getActivity() is an AppCompatActivity (as in us-app-lock).
+    implementation "androidx.appcompat:appcompat:${project.hasProperty('androidxAppCompatVersion') ? rootProject.ext.androidxAppCompatVersion : '1.7.1'}"
     // Android Credential Manager with the Google ID provider: no Play Services
     // Auth API surface of its own, no extra permissions, no advertising ID.
     implementation "androidx.credentials:credentials:1.5.0"

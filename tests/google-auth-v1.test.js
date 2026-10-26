@@ -102,6 +102,8 @@ test('app.js: the gate comes before any couple read; the button only where sign-
   const gate = app.indexOf('if(window.UsGoogleAuth?.needsTerms?.(session.user)){');
   assert.ok(gate > 0 && gate < app.indexOf('const result=await usOnboarding.load(session);'));
   assert.match(app, /window\.usGoogleAuth = window\.usS31Auth && window\.UsGoogleAuth\?\.create\?\.\(\{auth:sb\.auth\}\) \|\| null;/);
+  // The boot never depends on the sign-up screens (25/10: the browser harness's Auth has no signUp).
+  assert.ok(app.includes("catch(error){console.warn('[US Auth] sign-up unavailable',error);return null;}"));
   const html = read('index.html');
   assert.match(html, /<button type="button" class="us-auth-google" id="usGoogleSignIn" hidden>/);
   assert.match(html, /id="usGoogleTermsSubmit" type="submit" disabled>Continua<\/button>/);
