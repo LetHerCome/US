@@ -29,7 +29,8 @@
     "20261022170733_year_recap_v1.sql",
     "20261022213000_companions_v1.sql",
     "20261025190000_couple_distance_v1.sql",
-    "20261028201759_gioca_daily_limit_v1.sql"
+    "20261028201759_gioca_daily_limit_v1.sql",
+    "20261028232743_days_together_milestones_v1.sql"
   ],
   "forward_migrations": [
     "20261004110718_f2c_edge_cron_source_of_truth.sql",
@@ -54,7 +55,8 @@
     "20261022170733_year_recap_v1.sql",
     "20261022213000_companions_v1.sql",
     "20261025190000_couple_distance_v1.sql",
-    "20261028201759_gioca_daily_limit_v1.sql"
+    "20261028201759_gioca_daily_limit_v1.sql",
+    "20261028232743_days_together_milestones_v1.sql"
   ],
   "counts": {
     "repo_files": 47,

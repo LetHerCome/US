@@ -379,8 +379,9 @@ test('A11/N7 monthiversary: a start on the 31st fires on the last day of shorter
   const plain = monthiversaryWorld('2026-01-04');
   assert.equal((await runMonthiversary(plain, '2026-10-04T07:30:00Z')).body.awarded, 1);
   assert.equal(plain.awards[0].target_months, 9);
+  // 30 October, not 31: day 300 since 4 January is a days milestone (days-together-milestones-job.test.js).
   const plainOther = monthiversaryWorld('2026-01-04');
-  assert.equal((await runMonthiversary(plainOther, '2026-10-31T08:30:00Z')).body.awarded, 0);
+  assert.equal((await runMonthiversary(plainOther, '2026-10-30T08:30:00Z')).body.awarded, 0);
 });
 
 // ------------------------------------------------------------ delete-moment (R2)

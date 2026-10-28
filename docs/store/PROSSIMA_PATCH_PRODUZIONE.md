@@ -1,8 +1,8 @@
 # Prossima patch in produzione
 
 **Stato:** in prova su staging (https://us-staging-s31.pages.dev). Niente è in produzione. Ogni passo qui sotto ha il via separato del founder (regola «prove solo su staging», `docs/DECISIONS.md`, 28/10/2026).
-**Build:** `us-beta-fix-20261028-43`.
-**Branch:** `claude/gioca-una-al-giorno` (PR #232) e, sopra, `claude/fix-amici-beta`.
+**Build:** `us-traguardi-20261029-44`.
+**Branch:** `claude/gioca-una-al-giorno` (PR #232), sopra `claude/fix-amici-beta` (PR #233) e sopra ancora `claude/traguardi-giorni`.
 
 ## Testo «Novità» per Google Play
 
@@ -10,9 +10,10 @@ Italiano (massimo 500 caratteri):
 
 > Gioca: una partita al giorno, e vedi quante ne restano oggi.
 > Invito più semplice: condividi un link, il codice si copia da solo.
-> Registrazione: puoi vedere la password, entrare con Google anche da «Crea un account» e, dopo la mail di verifica, entri senza riscrivere nulla.
+> Registrazione: puoi vedere la password, c'è Google anche in «Crea un account» e dopo la mail di verifica l'accesso è automatico.
 > «Insieme dal»: giorno, mese e anno, anche per chi sta insieme da tanti anni.
 > Dopo l'accesso con Google, la configurazione non si sovrappone più all'accesso.
+> Traguardi: ogni 100 giorni insieme si festeggia, e i 1000 valgono di più.
 
 English (500 characters max):
 
@@ -21,6 +22,7 @@ English (500 characters max):
 > Sign-up: show your password, continue with Google from “Create an account” too, and after the verification email you're signed in without typing again.
 > “Together since”: day, month and year, even for long-time couples.
 > After signing in with Google, setup no longer overlaps the sign-in screen.
+> Milestones: every 100 days together is celebrated, and 1000 is worth the most.
 
 ## Cosa cambia
 
@@ -47,9 +49,26 @@ English (500 characters max):
   - la password resta solo in memoria, mai salvata, e si dimentica appena si lascia quella schermata;
   - il testo ora dice «Poi torna qui: l'accesso è automatico.».
 
+### Traguardi dei giorni insieme (founder, 29/10)
+
+- **Quando:** ogni 100 giorni da «Insieme dal», contati in giorni di calendario come il contatore di Oggi. Il giorno di «Insieme dal» non conta.
+- **Punti Sintonia:** 80 per ogni centinaio; 300 per 1000, 2000, … (più dei 200 dell'anniversario).
+- **Server:**
+  - la migrazione `20261028232743_days_together_milestones_v1.sql` aggiunge il tipo `days` e la colonna `days_together` a `relationship_milestones`;
+  - `award_relationship_days_milestone` è solo per service_role e ricontrolla che i giorni corrispondano a «Insieme dal».
+- **Funzione oraria** `monthiversary-job`, alle 9 di Roma:
+  - assegna il traguardo dei giorni accanto al mesiversario, e se cadono lo stesso giorno contano tutti e due;
+  - manda una sola notifica a testa, sul traguardo dei giorni: «US. · 100 giorni ♡ / Oggi sono 100 giorni insieme»; per i 1000, «US. · Mille giorni ♡».
+- **App:**
+  - in Oggi, il giorno stesso, «Oggi sono mille giorni ♡ · Un traguardo tutto vostro» (per gli altri centinaia, «Oggi sono 300 giorni ♡ · Un traguardo insieme»), al posto del mesiversario;
+  - in Eventi e nel calendario di Noi, il prossimo traguardo con il conto alla rovescia;
+  - in Rivivi, il traguardo festeggiato.
+- **Nessun arretrato:** chi ha già passato un traguardo vede il prossimo.
+
 ## Ordine in produzione (ognuno con il suo via)
 
-1. **SQL di Gioca** con il workflow «Supabase SQL (manual)», target `production` e conferma `PRODUZIONE`. Prima serve un token Supabase che includa il progetto di produzione: quello attuale vale solo per staging.
+1. **SQL** con il workflow «Supabase SQL (manual)», target `production` e conferma `PRODUZIONE`, nell'ordine: Gioca (`20261028201759_gioca_daily_limit_v1.sql`), poi traguardi (`20261028232743_days_together_milestones_v1.sql`). Prima serve un token Supabase che includa il progetto di produzione: quello attuale vale solo per staging.
+1b. **Edge Function** `monthiversary-job` con il workflow «Supabase Edge deploy», target `production`, dopo l'SQL dei traguardi: usa la nuova funzione del database.
 2. **Sito web** (Cloudflare Pages `us-a33`): porta `/invito` e l'app web nuova. Va pubblicato prima dell'AAB, perché il link condiviso dall'app punta a `us-a33.pages.dev/invito`.
 3. **AAB** sul test chiuso «Alpha» di Play, con il testo «Novità» qui sopra.
 

@@ -60,6 +60,14 @@ function relationshipCopy(a, en) {
       body: years === 1 ? pick(en, 'Oggi è un anno insieme', 'One year together today') : pick(en, `Oggi sono ${years} anni insieme`, `${years} years together today`),
     };
   }
+  // Every 100 days together (29/10/2026); 1000 has its own name.
+  if (a.kind === 'days') {
+    const days = Number(a.days);
+    return {
+      title: days === 1000 ? pick(en, 'US. · Mille giorni ♡', 'US. · A thousand days ♡') : pick(en, `US. · ${days} giorni ♡`, `US. · ${days} days ♡`),
+      body: pick(en, `Oggi sono ${days} giorni insieme`, `${days} days together today`),
+    };
+  }
   if (a.kind === 'monthiversary') {
     return {
       title: pick(en, 'US. · Mesiversario ♡', 'US. · Monthiversary ♡'),

@@ -65,11 +65,20 @@ function nextRelationshipMilestone(){
   if(date<today){m++;if(m>11){m=0;y++;}date=addMonthsDay(y,m,sd);}
   const [cy,cm]=date.split('-').map(Number);const months=(cy-sy)*12+(cm-sm);if(months<=0)return null;
   const kind=months%12===0?'anniversary':'monthiversary';
-  const awarded=milestones.find(item=>item.milestone_date===date);
+  const awarded=milestones.find(item=>item.milestone_date===date&&item.kind!=='days');
   return {system:true,id:`relationship-${date}`,title:kind==='anniversary'?'Anniversario ♡':'Mesiversario ♡',effective_date:date,days_left:daysBetween(today,date),months,kind,awarded};
+}
+// Traguardi dei giorni (29/10/2026): the next 100 days together (1000: Mille
+// giorni), one at a time, celebrated on the day like a mesiversario.
+function nextDaysMilestoneRow(){
+  const next=coupleStartedOn&&window.UsCalendarDomain?.nextDaysMilestone?.(coupleStartedOn,localTodayISO());
+  if(!next)return null;
+  const awarded=milestones.find(item=>item.milestone_date===next.date&&item.kind==='days');
+  return {system:true,id:`days-${next.date}`,title:window.UsCalendarDomain.daysMilestoneTitle(next.days),effective_date:next.date,days_left:next.days_left,months:0,days:next.days,kind:'days',awarded};
 }
 function upcomingRows(){
   const eventRows=rows.map(occurrence).filter(Boolean);const relationship=nextRelationshipMilestone();if(relationship)eventRows.push(relationship);
+  const days=nextDaysMilestoneRow();if(days)eventRows.push(days);
   return eventRows.sort((a,b)=>a.effective_date.localeCompare(b.effective_date)
     ||String(a.event_time||'23:59:59').localeCompare(String(b.event_time||'23:59:59'))
     ||String(b.updated_at||b.created_at||'').localeCompare(String(a.updated_at||a.created_at||''))
@@ -90,9 +99,10 @@ function eventButton(row,{due=false,done=false}={}){
   </button>`;
 }
 function monthsTogether(months){return months===1?'Un mese insieme':months%12===0?(months===12?'Un anno insieme':`${months/12} anni insieme`):`${months} mesi insieme`;}
+const togetherLine=row=>row.kind==='days'?window.UsCalendarDomain.daysMilestoneLine(row.days):monthsTogether(row.months);
 // Mesiversario and anniversario open the Noi calendar on their day.
 function relationshipButton(row){
-  const subtitle=row.awarded?'Festeggiato':monthsTogether(row.months);
+  const subtitle=row.awarded?'Festeggiato':togetherLine(row);
   return `<button type="button" class="us-event-item us-event-system" data-relationship-date="${esc(row.effective_date)}"><time class="us-event-datebox" datetime="${esc(row.effective_date)}">${esc(rowDay(row.effective_date))}</time><span class="us-event-main"><b>${esc(row.title)}</b><small>${esc(subtitle)} · ${esc(countdownLower(row.days_left))}</small></span></button>`;
 }
 function openRelationshipDay(date){
@@ -113,7 +123,7 @@ function evDay(value){const d=parseISO(value);return d.toLocaleDateString('it-IT
 function evDateLine(row){const bits=[evDay(row.effective_date)];if(row.event_time)bits.push(String(row.event_time).slice(0,5));return bits.join(' · ');}
 function evIconChip(row){return `<span class="noi-ev-icon" aria-hidden="true"><span class="us-icon" data-us-icon="${evIcon(row)}"></span></span>`;}
 function evCard(row,i){
-  const main=`<span class="noi-ev-main"><b>${esc(row.title)}</b><small>${row.system?`<span>${esc(evDateLine(row))}</span> · <span>${esc(monthsTogether(row.months))}</span>`:esc(evDateLine(row))}</small></span><span class="noi-ev-count">${esc(countdown(row.days_left))}</span>`;
+  const main=`<span class="noi-ev-main"><b>${esc(row.title)}</b><small>${row.system?`<span>${esc(evDateLine(row))}</span> · <span>${esc(togetherLine(row))}</span>`:esc(evDateLine(row))}</small></span><span class="noi-ev-count">${esc(countdown(row.days_left))}</span>`;
   if(row.system)return `<button type="button" class="noi-ev-card is-system" style="--i:${i}" data-relationship-date="${esc(row.effective_date)}">${evIconChip(row)}${main}</button>`;
   return `<button type="button" class="noi-ev-card" style="--i:${i}" data-id="${esc(row.id)}" data-occurrence="${esc(row.effective_date)}">${evIconChip(row)}${main}</button>`;
 }
@@ -194,7 +204,7 @@ async function loadEventsData(){
     sb.from('shared_events').select('id,couple_id,created_by,title,event_date,event_time,location,note,recurs_yearly,created_at,updated_at').eq('couple_id',window.usProfile.couple_id).order('event_date',{ascending:true}),
     sb.from('shared_event_completions').select('id,event_id,occurrence_date,completed_by,xp_awarded,completed_at').eq('couple_id',window.usProfile.couple_id).order('completed_at',{ascending:false}),
     sb.from('couples').select('started_on').eq('id',window.usProfile.couple_id).maybeSingle(),
-    sb.from('relationship_milestones').select('milestone_date,kind,months_together,xp_awarded,awarded_at').eq('couple_id',window.usProfile.couple_id).order('milestone_date',{ascending:false}).limit(24)
+    sb.from('relationship_milestones').select('milestone_date,kind,months_together,days_together,xp_awarded,awarded_at').eq('couple_id',window.usProfile.couple_id).order('milestone_date',{ascending:false}).limit(24)
   ]);
   if(eventsRes.error)throw eventsRes.error;if(completionRes.error)throw completionRes.error;if(coupleRes.error)throw coupleRes.error;if(milestoneRes.error)throw milestoneRes.error;
   rows=eventsRes.data||[];loadedAt=Date.now();completions=completionRes.data||[];coupleStartedOn=coupleRes.data?.started_on||null;milestones=milestoneRes.data||[];

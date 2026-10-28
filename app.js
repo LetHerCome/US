@@ -2572,6 +2572,15 @@ function oggiMonthiversary(startedOn,todayISO){
   return {months,years:months%12===0?months/12:0};
 }
 function celebrationTodayPriorityViewModel(startedOn,todayISO){
+  // Traguardi dei giorni (29/10/2026): every 100 days together, 1000 its own
+  // name. On a mesiversario too it takes the slot (the bigger day).
+  const daysMilestone=window.UsCalendarDomain?.daysMilestoneOn?.(startedOn,todayISO)||0;
+  if(daysMilestone)return {
+    id:`celebration:${todayISO}`,factKey:`celebration:${todayISO}`,arrivalType:'monthiversary',category:'celebration',attention:true,
+    title:daysMilestone===1000?'Oggi sono mille giorni ♡':`Oggi sono ${daysMilestone} giorni ♡`,
+    detail:daysMilestone===1000?'Un traguardo tutto vostro':'Un traguardo insieme',
+    action:'events',actionLabel:'Apri'
+  };
   const day=oggiMonthiversary(startedOn,todayISO);
   if(!day)return null;
   const title=day.years
@@ -4779,6 +4788,13 @@ function resonanceHistoryEntries(quests,eventCompletions,eventHistory,milestones
     if(!byKey.has(sourceKey))byKey.set(sourceKey,{kind:'event',sourceKey,title,xp,at:row.completed_at,titleSource:history?.title_source||(row.event_title_snapshot?'snapshot':'missing')});
   }
   for(const row of milestones||[]){
+    // Traguardi dei giorni (29/10/2026): every 100 days together.
+    if(row.kind==='days'){
+      const days=Math.max(0,Math.floor(Number(row?.days_together)||0));
+      const sourceKey=`milestone:${row.milestone_date}:days`;
+      if(row?.milestone_date&&days&&!byKey.has(sourceKey))byKey.set(sourceKey,{kind:'milestone',milestone:'days',days,months:0,sourceKey,title:'',xp:Math.max(0,Number(row.xp_awarded)||0),at:row.milestone_date});
+      continue;
+    }
     const months=Math.max(0,Math.floor(Number(row?.months_together)||0));
     if(!row?.milestone_date||!months)continue;
     const kind=row.kind==='anniversary'?'anniversary':'monthiversary';
@@ -4796,6 +4812,7 @@ function resonanceHistoryDate(at){
 // The mockup's row: an icon, what it was, "what · when", and its points.
 function resonanceHistoryWhat(entry){
   if(entry.kind==='milestone'){
+    if(entry.milestone==='days')return {title:window.UsCalendarDomain?.daysMilestoneTitle?.(entry.days)||`${entry.days} giorni ♡`,detail:window.UsCalendarDomain?.daysMilestoneLine?.(entry.days)||`${entry.days} giorni insieme`,own:false};
     if(entry.milestone==='anniversary'){const years=Math.max(1,Math.round(entry.months/12));return {title:'Anniversario',detail:years===1?'1 anno insieme':`${years} anni insieme`,own:false};}
     return {title:'Mesiversario',detail:entry.months===1?'1 mese insieme':`${entry.months} mesi insieme`,own:false};
   }
@@ -4836,7 +4853,7 @@ async function hydrateResonanceHistory(){
     usReadLocalized(columns=>sb.from('bond_weekly_quests').select(columns).eq('couple_id',coupleId).not('completed_at','is',null).order('completed_at',{ascending:false}).limit(8),'id,title,xp,completed_at','title_localized').then(usLocalizedTitles),
     sb.from('shared_event_completions').select('id,xp_awarded,completed_at,event_title_snapshot').eq('couple_id',coupleId).order('completed_at',{ascending:false}).limit(8),
     sb.from('relationship_event_history').select('source_ref,title,title_source,completed_at').order('completed_at',{ascending:false}).limit(8),
-    sb.from('relationship_milestones').select('milestone_date,kind,months_together,xp_awarded').eq('couple_id',coupleId).order('milestone_date',{ascending:false}).limit(6)
+    sb.from('relationship_milestones').select('milestone_date,kind,months_together,days_together,xp_awarded').eq('couple_id',coupleId).order('milestone_date',{ascending:false}).limit(6)
   ]);
   if(window.usProfile!==profile)return;
   if(questError)console.warn(questError);
