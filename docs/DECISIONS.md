@@ -104,10 +104,10 @@ Only durable decisions belong here. New missions should not reopen them without 
 1. **D1 APPROVATO — Identità:** US è lo spazio privato e reciproco di una coppia. Il core loop è lasciare → ricevere → rispondere → esito condiviso → eventuale Ricordo. Niente piattaforma social generalista.
 2. **D2 APPROVATO — Contenuto V1:** la release commerciale mantiene quattro tab Oggi / Noi / Ricordi / Gioca. Il focus è consolidare, non inventare un nuovo prodotto. Sintonia resta una scheda dentro Gioca; Calendario unico in Noi; top bar completa solo su Oggi; Maudit esistente preservato.
 3. **D3 APPROVATO — Ordine Store:** Google Play Android prima, Apple App Store successivamente. La base iOS continua a compilare, ma la mancanza di QA iPhone non blocca la V1 Android.
-4. **D4 DA RIVEDERE — Modello economico:** **nessun** prezzo, US Plus, abbonamento, paywall, billing, freemium o promozione commerciale sono approvati. La monetizzazione richiede successiva analisi e nuova delibera. Non implementare sistema commerciale sulla base di una proposta passata.
+4. **D4 DA RIVEDERE — Modello economico:** **nessun** prezzo, US Plus, abbonamento, paywall, billing, freemium o promozione commerciale sono approvati. La monetizzazione richiede successiva analisi e nuova delibera. Non implementare sistema commerciale sulla base di una proposta passata. **Superato il 28/10/2026** dalla nuova D4 (sotto).
 5. **D5 APPROVATO — Freeze di nuove feature:** stop fino alla V1 per nuovi Arcade (Pulse, Stack Together, Relay, Duo Maze), Diario/Scrapbook esteso, Compagni oltre Maudit, nuovi moduli e redesign generali. Restano **necessari e permessi come release scope**: registrazione/onboarding, account recovery, deletion/export, policy di separazione, privacy, sicurezza, bugfix, performance, accessibilità, compliance e release packaging.
 
-**N.B.:** Il piano del 4 ottobre che prospettava aumento da 3 a 5 sessioni settimanali Game V2 è una proposta futura sospesa; nessun cambio quota V1 autorizzato. Eventuali reward DB o feature branch in sospeso richiedono SQL/client rollout separato e approvato.
+**N.B.:** Il piano del 4 ottobre che prospettava aumento da 3 a 5 sessioni settimanali Game V2 è una proposta futura sospesa; nessun cambio quota V1 autorizzato. **Superata il 28/10/2026:** la nuova D4 porta Gioca a una partita al giorno. Eventuali reward DB o feature branch in sospeso richiedono SQL/client rollout separato e approvato.
 
 **Fonte unica per lo Store 1.0:** [Carta](store/US_STORE_1_0_CHARTER.md) · [Baseline](store/US_STORE_1_0_BASELINE.md) · [Piano](store/US_STORE_1_0_EXECUTION.md) · [Release gates](store/US_STORE_1_0_QUALITY_GATES.md).
 
@@ -216,3 +216,37 @@ Only durable decisions belong here. New missions should not reopen them without 
 - Si aggiunge l'accesso con Google. Su Android passa da un plugin nostro su Credential Manager, senza pacchetti di terze parti che portino l'ID pubblicità. Un account Google conferma 18+ e Termini una volta, prima di qualsiasi dato di coppia. Per eliminare l'account o uscire dalla coppia conferma con lo stesso account Google.
 - Facebook no: richiede la verifica di Meta e non aggiunge niente su Android.
 - **Governance:** il lavoro va sul branch e su staging. Impostazioni Supabase e Google Cloud, Edge in produzione, merge e pubblicazione hanno ciascuno un'approvazione separata.
+
+## 2026-10-28 — Nuova D4: modello a pagamento «US Plus»
+
+**Fonte:** founder, 28/10/2026, dopo la ricerca in [`lancio-marketing-monetizzazione.md`](product/lancio-marketing-monetizzazione.md) e un giro di domande: «concordo con tutto», con una modifica su Gioca («le 3 sessioni a settimana sono troppo poche»), poi «concordo» sul riepilogo. Sostituisce il punto 4 della delibera del 10/10 («D4 da rivedere») e la sua N.B. sulla quota di Game V2.
+
+1. **Modello:** freemium con un abbonamento, per ora chiamato «Plus». L'uso di tutti i giorni è gratis; si paga per avere di più.
+2. **Per coppia:** un abbonamento per coppia. Paga uno, sbloccano tutti e due.
+3. **Gratis per sempre:** il gesto verso l'altro, cioè Ti penso, Lasciato per te, la domanda di oggi, il widget e il calendario. **Niente ostaggi:** chi smette di pagare non perde niente di quello che ha creato, che resta visibile; si blocca solo il «di più».
+4. **Tempi:** il lancio in produzione su Play è gratis, con «Plus in arrivo». Plus arriva nel primo aggiornamento, 4–6 settimane dopo. Il lavoro su staging parte subito.
+5. **Cosa sblocca Plus:**
+   - partite illimitate in Gioca;
+   - Ricordi oltre un limite gratuito, da fissare con i dati d'uso;
+   - «Il vostro anno» completo (gratis resta una versione breve);
+   - contenuti nuovi: l'archivio delle domande passate e pacchetti a tema.
+
+   Per i soli contenuti di Plus vale un'eccezione a D5. Gli stili del widget restano fuori per ora. I Compagni restano gratis.
+6. **Gioca gratis:** una partita al giorno, cioè 7 a settimana, già dal lancio e non solo con Plus. Sostituisce la quota V1 (1 «Per voi» + 2 libere a settimana). Con Plus le partite sono illimitate.
+7. **Tecnica:** RevenueCat sopra Google Play Billing (Billing Library 8 o successiva). Supabase resta l'unica autorità su chi vede cosa: l'ID utente di RevenueCat è l'ID Supabase dell'utente; scrive solo la Edge Function del webhook, il client legge tramite RPC. Stripe solo sul web, mai mostrato né linkato nell'app Android. Prima della vendita vanno aggiornate l'informativa privacy e la sezione Sicurezza dei dati di Play (RevenueCat è un nuovo fornitore).
+8. **Casi limite:**
+   - se la coppia si chiude, l'abbonamento resta a chi paga e il partner perde l'accesso subito;
+   - prima di eliminare l'account si avvisa che l'abbonamento su Play non si disdice da solo, con il link alla gestione degli abbonamenti;
+   - il partner di chi paga vede «Plus attivo, grazie a [nome]» al posto del pulsante d'acquisto, così nessuno paga due volte; il pulsante torna quando l'abbonamento sta per scadere.
+9. **Coppie fondatrici:** le coppie del test chiuso ricevono 6 mesi di Plus in regalo dal lancio di Plus (fonte `beta`, con scadenza), dichiarati come tali fin dall'inizio. Durante il test chiuso nessuno vede pagamenti.
+10. **Prezzo da provare:** 3,99 €/mese o 24,99 €/anno, con 7 giorni di prova sull'annuale. Il prezzo finale si fissa dopo il questionario alle coppie della beta.
+11. **Fisco:** il commercialista (partita IVA, dati pubblici del venditore su Play) si sente in parallelo. La vendita in produzione resta bloccata finché non risponde.
+
+**Governance:** la delibera approva la direzione e il lavoro su staging. Ogni passo resta da approvare uno per uno: app di staging su Play Console, account RevenueCat, prodotti di prova, SQL ed Edge su staging, merge, patch in produzione, prezzo finale e pubblicazione.
+
+## 2026-10-28 — Prove solo su staging
+
+**Fonte:** founder, 28/10/2026: «da oggi le prove le faremo tutte su staging perche produzione lo hanno in mano utenti veri e quando la roba su staging funziona faremo delle patch mirate su produzione».
+
+- Ogni prova (SQL, Edge, interruttori, build di prova, dati di test) si fa su US-STAGING (`com.usapp.us.staging`). La produzione è in mano ai tester del test chiuso e poi agli utenti.
+- In produzione arrivano solo **patch mirate** di cose già funzionanti su staging, ciascuna con il via del founder. Le letture in produzione restano ammesse; le scritture di prova no.

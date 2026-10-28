@@ -1,8 +1,8 @@
 # US — Lancio pubblico: marketing e monetizzazione
 
-**Tipo:** ricerca e proposta. **Non è una decisione.**
+**Tipo:** ricerca e proposta. **Le decisioni sono nella nuova D4** del 28/10/2026 in [`docs/DECISIONS.md`](../DECISIONS.md); dove questo documento e la delibera non coincidono, vale la delibera.
 **Data della ricerca:** 28/10/2026. Prezzi e pagine lette in quella data.
-**Governance:** D4 in [`docs/DECISIONS.md`](../DECISIONS.md) resta «da rivedere»: nessun prezzo, paywall o billing è approvato. Il capitolo 4 è una proposta per la nuova delibera. Questo documento non autorizza codice, prodotti su Play Console, modifiche a staging o produzione, né la pubblicazione di video.
+**Governance:** la nuova D4 approva la direzione e il lavoro su staging ([missione](../missions/plus-v1-staging.md)). Ogni passo resta da approvare uno per uno: prodotti su Play Console, account RevenueCat, SQL ed Edge su staging, merge, patch in produzione, prezzo finale, pubblicazione dei video.
 
 **Legenda.** Ogni affermazione importante ha un'etichetta:
 
@@ -230,7 +230,16 @@ C'è poi il resto: con Stripe il venditore è Francesco, quindi IVA (anche OSS p
 
 ---
 
-## 4. Proposta per la nuova delibera D4 (bozza da discutere)
+## 4. Proposta per la nuova delibera D4
+
+> **Decisa il 28/10/2026.** Cosa cambia rispetto alla proposta qui sotto:
+> - Gioca gratis passa a **una partita al giorno** già dal lancio, non «una al giorno per tipo»;
+> - gli stili del widget restano fuori da Plus per ora;
+> - Plus aggiunge pacchetti a tema;
+> - se la coppia si chiude, il partner perde l'accesso **subito**;
+> - il partner di chi paga vede «Plus attivo, grazie a [nome]» al posto del pulsante d'acquisto.
+>
+> Il lancio in produzione è gratis; Plus arriva 4–6 settimane dopo.
 
 ### 4.1 Principi proposti
 
@@ -311,7 +320,7 @@ Da mandare a ciascuna persona separatamente (non alla coppia insieme), dopo alme
 13. Come descriveresti US a un'amica o a un amico in una frase?
 14. Ci saremmo potuti trovare su TikTok? Che tipo di video ti avrebbe convinto?
 
-### 4.7 Cosa deve decidere Francesco per chiudere D4
+### 4.7 Cosa doveva decidere Francesco per chiudere D4 (deciso il 28/10)
 
 1. Freemium per coppia sì o no.
 2. Elenco gratis / a pagamento (§4.2), anche solo come direzione.
