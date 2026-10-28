@@ -100,6 +100,24 @@ test('Gioca CSS: tiles use the canonical tokens and the Noi chip recipe, never a
 });
 
 
+// D4 (28/10/2026): one round a day. The hub says how many are left today,
+// under I vostri giochi, from the server's allowance.
+const titleHint = (html) => html.match(/id="usGv2ChooseTitle">I vostri giochi<\/h3><small>([^<]*)<\/small>/)?.[1];
+const day = (over = {}) => allowance({ period: 'day', resets_on: '2026-10-29', limit: 1, free_limit: 1, ...over });
+
+test('Gioca hub: the title says one round is left today', async () => {
+  assert.equal(titleHint(await hub(homeOf({ allowance: day() })).html()), '1 partita da giocare oggi');
+});
+
+test('Gioca hub: once the day is spent, the title says the next round is tomorrow', async () => {
+  const spent = day({ used: 1, free_used: 1, per_voi_used: 1, free_available: false, per_voi_available: false });
+  assert.equal(titleHint(await hub(homeOf({ allowance: spent })).html()), 'Domani un’altra partita');
+});
+
+test('Gioca hub: a larger daily allowance is counted', async () => {
+  assert.equal(titleHint(await hub(homeOf({ allowance: day({ free_limit: 3, free_used: 1 }) })).html()), '2 partite da giocare oggi');
+});
+
 test('Gioca V4 hub: bento title keeps the low-friction hint', async () => {
   const html = await hub(homeOf()).html();
   assert.match(html, /<h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi<\/h3><small>Bastano pochi minuti<\/small>/);

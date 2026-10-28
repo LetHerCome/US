@@ -165,6 +165,13 @@ const allowance = () => home?.allowance || null;
 const freeLeft = () => { const a = allowance(); return a ? Math.max(0, a.free_limit - a.free_used) : 1; };
 const playedThisWeek = (family) => allowance()?.families?.[family] || null;
 const EXHAUSTED = 'Nuovi giochi domani.';
+// Under I vostri giochi: how many rounds are left today, once the server said.
+function dayHint() {
+  if (!allowance()) return 'Bastano pochi minuti';
+  const left = freeLeft();
+  if (!left) return 'Domani un’altra partita';
+  return left === 1 ? '1 partita da giocare oggi' : `${left} partite da giocare oggi`;
+}
 
 // ---------------------------------------------------------------- the week
 
@@ -369,7 +376,7 @@ function renderHub() {
   <div class="us-gv2-daily-slot" data-gv4-daily-slot data-s aria-live="polite"><div class="us-gv4-daily-pending" role="status"><span class="us-gv4-daily-pending-title">Sfida di oggi</span><small>Preparo la domanda di oggi…</small></div></div>
   ${weekStrip()}
   <section class="us-gv2-choose" aria-labelledby="usGv2ChooseTitle">
-   <div class="us-gv2-section-head" data-s><h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi</h3><small>Bastano pochi minuti</small></div>
+   <div class="us-gv2-section-head" data-s><h3 class="us-gv2-section-title" id="usGv2ChooseTitle">I vostri giochi</h3><small>${esc(dayHint())}</small></div>
    <div class="us-gv2-game-grid" data-s>
     <button type="button" data-us-tile data-us-feedback="tap" class="us-gv2-pervoi us-attention-orbit" data-gv2-action="per-voi" data-gv2-state="${esc(pvState)}" data-us-attention="${pvState==='pending'||pvState==='reveal_ready'?'on':'off'}">
      <span class="us-gv2-glyph" aria-hidden="true" data-us-attention-icon>${gameArt('per_voi')}</span>
