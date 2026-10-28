@@ -159,8 +159,14 @@
 
 .us-auth-field{
   display:block;
+  position:relative;
   margin-top:9px;
 }
+.auth-card input[data-us-pass-toggle]{padding-right:50px}
+.us-pass-toggle{position:absolute;right:5px;bottom:5px;display:grid;place-items:center;width:38px;height:38px;margin:0;padding:0;border:0;border-radius:12px;background:transparent;color:var(--us-color-text-3);cursor:pointer}
+.us-pass-toggle::before{content:"";width:20px;height:20px;background-color:currentColor;-webkit-mask:url("/assets/icons/phosphor/eye-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/eye-regular.svg") center/contain no-repeat}
+.us-pass-toggle[data-shown="true"]::before{-webkit-mask-image:url("/assets/icons/phosphor/eye-slash-regular.svg");mask-image:url("/assets/icons/phosphor/eye-slash-regular.svg")}
+.us-pass-toggle:focus-visible{outline:2px solid rgba(201,154,224,.6);outline-offset:1px}
 .us-auth-field>span{
   display:block;
   margin:0 0 5px 3px;

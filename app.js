@@ -2301,7 +2301,9 @@ window.loginAccount=loginAccount;
 // (an Auth client without the sign-up contract) leaves the login working.
 window.usS31Auth = (()=>{
   try{return window.UsPublicAuthS31?.mount({
-    auth: sb.auth, endpoint: SB_URL, openStep: showAuthStep
+    auth: sb.auth, endpoint: SB_URL, openStep: showAuthStep,
+    // Back from the verification email: in, as a password sign-in (loginAccount).
+    onSignedIn: async id=>{usOnboarding.setup?.markPasswordSignIn?.(id);await initCloud();}
   }) || null;}
   catch(error){console.warn('[US Auth] sign-up unavailable',error);return null;}
 })();
@@ -2313,8 +2315,9 @@ const US_GOOGLE_SIGN_IN_ERRORS=Object.freeze({
   not_configured:'Accesso con Google non disponibile su questo telefono.',
   unavailable:'Accesso con Google non disponibile su questo telefono.'
 });
-(function mountGoogleSignIn(){
-  const button=document.getElementById('usGoogleSignIn');
+// The same Google button on the login and, since the beta (28/10), on sign-up.
+for(const [id,statusId] of [['usGoogleSignIn','loginStatus'],['usGoogleSignUp','usSignupStatus']])(function mountGoogleSignIn(){
+  const button=document.getElementById(id);
   if(!button||!window.usGoogleAuth?.supported?.())return;
   button.hidden=false;
   const label=button.querySelector('.us-auth-google-label');
@@ -2322,7 +2325,7 @@ const US_GOOGLE_SIGN_IN_ERRORS=Object.freeze({
     if(button.disabled)return;
     button.disabled=true;
     if(label)label.textContent='Accesso…';
-    setAuthStatus('loginStatus','');
+    setAuthStatus(statusId,'');
     const result=await window.usGoogleAuth.signIn();
     if(label)label.textContent='Continua con Google';
     button.disabled=false;
@@ -2333,7 +2336,7 @@ const US_GOOGLE_SIGN_IN_ERRORS=Object.freeze({
     }
     // Closing Google's sheet is a choice, not an error.
     if(result.ok||result.kind==='cancelled')return;
-    setAuthStatus('loginStatus',US_GOOGLE_SIGN_IN_ERRORS[result.kind]||'Non riesco ad accedere con Google. Riprova.','error');
+    setAuthStatus(statusId,US_GOOGLE_SIGN_IN_ERRORS[result.kind]||'Non riesco ad accedere con Google. Riprova.','error');
   });
 })();
 (function mountGoogleTerms(){

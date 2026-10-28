@@ -99,6 +99,9 @@ const RUNTIME_FILES = [
   // Public account deletion page (Google Play): standalone, outside the app shell.
   'elimina-account.html',
   'elimina-account.js',
+  // Public invite page: the link a partner shares (onboarding.js inviteLink).
+  'invito.html',
+  'invito.js',
   // Public legal pages (Play listing, sign-up box, Settings › Privacy e dati).
   'legal.css',
   'privacy.html',

@@ -607,6 +607,8 @@ html #authOverlay.auth-overlay #usOnboarding :is(#mc3BackMe,#mc3Exit).mc3-back.u
 /* A floated legend is a plain grid item: the 6px under it, as under every label. */
 #usOnboarding .us-ob-bday legend{float:left;width:100%}
 .us-ob-bday-row{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr);gap:8px}
+/* Insieme dal (beta fix 28/10): day, month, year in the same selects. */
+.us-ob-date-row{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr) minmax(0,1fr);gap:8px}
 .us-ob-select{position:relative;display:block;min-width:0}
 .us-ob-select::after{
   content:"";

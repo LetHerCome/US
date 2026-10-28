@@ -1,4 +1,4 @@
-const BUILD_ID = "us-accesso-google-20261025-40";
+const BUILD_ID = "us-beta-fix-20261028-41";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -113,6 +113,7 @@ const APP_SHELL = [
   "/assets/icons/phosphor/arrows-left-right-regular.svg",
   "/assets/icons/phosphor/smiley-regular.svg",
   "/assets/icons/phosphor/eye-regular.svg",
+  "/assets/icons/phosphor/eye-slash-regular.svg",
   "/assets/icons/phosphor/clock-counter-clockwise-regular.svg",
   "/assets/icons/phosphor/signpost-regular.svg",
   "/assets/icons/phosphor/x-regular.svg",
@@ -189,6 +190,7 @@ const APP_DOCUMENTS = new Set(["/", "/index.html"]);
 // Public pages outside the app shell: account deletion and the legal pages.
 const US_STANDALONE_DOCUMENTS = new Set([
   "/elimina-account", "/elimina-account.html",
+  "/invito", "/invito.html",
   "/privacy", "/privacy.html", "/privacy-en", "/privacy-en.html",
   "/termini", "/termini.html", "/termini-en", "/termini-en.html"
 ]);

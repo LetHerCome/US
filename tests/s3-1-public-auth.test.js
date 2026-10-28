@@ -251,3 +251,39 @@ test('us-staging-s31 Cloudflare builds of other branches publish only a static p
   assert.doesNotMatch(PLACEHOLDER_HTML,/supabase|sb_publishable|<script/i);
   assert.match(read('scripts/build-s31-staging-preview.mjs'),/CF_PAGES_BRANCH !== APPROVED_BRANCH/);
 });
+
+test('beta fix 28/10: back from the email link, the verify step signs in by itself', async () => {
+  let verified = false;
+  const auth = fakeAuth();
+  auth.signInWithPassword = async (x) => {
+    auth.calls.push(['signInWithPassword', x]);
+    return verified
+      ? { data: { user: { id: 'u1' }, session: { user: { id: 'u1' } } }, error: null }
+      : { data: { user: null, session: null }, error: { code: 'email_not_confirmed' } };
+  };
+  const ctrl = S31.createController({ auth });
+  assert.equal((await ctrl.enterIfVerified()).kind, 'mode', 'nothing to try before a sign-up');
+  ctrl.navigate('signup');
+  await ctrl.register({ email: USER_EMAIL, password: SAMPLE_PASSWORD, confirm: SAMPLE_PASSWORD, terms: true });
+  assert.equal(ctrl.state.mode, 'verify');
+  const early = await ctrl.enterIfVerified();
+  assert.deepEqual([early.ok, early.kind], [false, 'not_yet']);
+  assert.equal(ctrl.state.mode, 'verify', 'not verified yet: stays, says nothing new');
+  assert.equal(ctrl.state.kind, 'success');
+  verified = true;
+  assert.deepEqual(await ctrl.enterIfVerified(), { ok: true, kind: 'signed_in', userId: 'u1' });
+  assert.deepEqual(auth.calls.filter(([n]) => n === 'signInWithPassword').at(-1)[1], { email: USER_EMAIL, password: SAMPLE_PASSWORD });
+  assert.equal((await ctrl.enterIfVerified()).kind, 'mode', 'the password is forgotten once used');
+});
+
+test('beta fix 28/10: leaving the verify step forgets the password', async () => {
+  const auth = fakeAuth();
+  auth.signInWithPassword = async (x) => { auth.calls.push(['signInWithPassword', x]); return { data: { session: { user: { id: 'u1' } } }, error: null }; };
+  const ctrl = S31.createController({ auth });
+  ctrl.navigate('signup');
+  await ctrl.register({ email: USER_EMAIL, password: SAMPLE_PASSWORD, confirm: SAMPLE_PASSWORD, terms: true });
+  ctrl.navigate('login');
+  ctrl.navigate('verify');
+  assert.equal((await ctrl.enterIfVerified()).kind, 'mode');
+  assert.equal(auth.calls.some(([n]) => n === 'signInWithPassword'), false);
+});

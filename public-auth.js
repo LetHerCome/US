@@ -55,6 +55,9 @@
       .every(method => typeof auth[method] === 'function')) throw Error('auth_contract_missing');
     let epoch = 0, pending = false, mode = 'login', message = '', kind = 'neutral';
     let verificationEmail = ''; // volatile; never persisted, printed or placed into URLs
+    // Beta fix (28/10/2026): the password just chosen, in memory only while the
+    // verify step is open, so that step signs in by itself once the link is opened.
+    let verificationPassword = '', checking = false;
     let recoveryActive = false;
     const state = () => Object.freeze({ mode, message, kind, pending, recoveryActive });
     const notify = () => { onChange(state()); return state(); };
@@ -64,6 +67,7 @@
       if (pending || (recoveryActive && next !== 'new-password')) return state();
       epoch++;
       mode = next;
+      verificationPassword = '';
       if (next === 'login') verificationEmail = '';
       return publish('');
     }
@@ -101,6 +105,7 @@
             return { ok: false, kind: 'provider' };
           }
           verificationEmail = e;
+          verificationPassword = password;
           mode = 'verify';
           publish(GENERIC_MAIL, 'success');
           return { ok: true };
@@ -109,6 +114,27 @@
           return { ok: false, kind: 'transport' };
         }
       });
+    }
+    // Back from the email link (another tab, the browser): try the account the
+    // verify step is waiting for. Not verified yet: nothing changes on screen.
+    async function enterIfVerified() {
+      if (mode !== 'verify' || !verificationEmail || !verificationPassword || pending || checking
+        || typeof auth.signInWithPassword !== 'function') return { ok: false, kind: 'mode' };
+      const ticket = epoch;
+      checking = true;
+      try {
+        const { data, error } = await auth.signInWithPassword({ email: verificationEmail, password: verificationPassword });
+        const session = !error && data?.session;
+        if (!alive(ticket)) {
+          if (session) await auth.signOut({ scope: 'local' });
+          return { ok: false, kind: 'stale' };
+        }
+        if (!session) return { ok: false, kind: 'not_yet' };
+        verificationEmail = ''; verificationPassword = '';
+        return { ok: true, kind: 'signed_in', userId: data.user?.id || session.user?.id || '' };
+      } catch (_) {
+        return { ok: false, kind: 'transport' };
+      } finally { checking = false; }
     }
     async function resend() {
       if (mode !== 'verify' || !verificationEmail) return { ok: false, kind: 'mode' };
@@ -147,7 +173,7 @@
     function onRecoverySession() {
       epoch++;
       pending = false;
-      verificationEmail = '';
+      verificationEmail = ''; verificationPassword = '';
       recoveryActive = true;
       mode = 'new-password';
       return publish('');
@@ -176,10 +202,10 @@
     }
     function reset() {
       epoch++; pending = false; mode = 'login';
-      verificationEmail = ''; recoveryActive = false;
+      verificationEmail = ''; verificationPassword = ''; recoveryActive = false;
       return publish('');
     }
-    return Object.freeze({ get state() { return state(); }, navigate, register, resend, forgot,
+    return Object.freeze({ get state() { return state(); }, navigate, register, resend, enterIfVerified, forgot,
       onRecoverySession, completeRecovery, reset });
   }
   // A Google account (google-auth.js needsTerms) ticks the same 18+ and Terms
@@ -194,7 +220,7 @@
       return { ok: false, kind: 'transport', message: TRY_AGAIN };
     }
   }
-  function mount({ auth, endpoint, openStep, document: doc = globalThis.document }) {
+  function mount({ auth, endpoint, openStep, onSignedIn, document: doc = globalThis.document }) {
     if (!publicAuthEnabled(endpoint) || !doc || typeof openStep !== 'function') return null;
     const node = id => doc.getElementById(id);
     const actions = node('usPublicAuthActions');
@@ -273,6 +299,19 @@
       if (result?.ok && terms) { terms.checked = false; syncSignup(); }
     });
     node('usVerifyResend')?.addEventListener('click', () => ctrl.resend());
+    // Beta fix (28/10/2026): the link in the email opens the browser, not US.
+    // Coming back (or every few seconds while the step is on screen), the
+    // verify step tries to sign in and, once verified, goes on by itself.
+    const tryEnter = async () => {
+      if (ctrl.state.mode !== 'verify' || doc.visibilityState === 'hidden') return;
+      const result = await ctrl.enterIfVerified();
+      if (!result.ok) return;
+      ctrl.reset();
+      if (typeof onSignedIn === 'function') await onSignedIn(result.userId);
+    };
+    doc.addEventListener?.('visibilitychange', tryEnter);
+    globalThis.addEventListener?.('focus', tryEnter);
+    if (typeof globalThis.setInterval === 'function') globalThis.setInterval(tryEnter, 5000);
     node('usForgotPassword')?.addEventListener('submit', ev => {
       ev.preventDefault();
       const email = node('usForgotEmail').value;
