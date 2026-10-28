@@ -128,7 +128,8 @@ function perVoiCopy() {
     case 'waiting': return { line: `Aspetti ${partnerName()}`, cta: 'Apri' };
     case 'pending': return { line: row?.partner_complete ? `${partnerName()} ha già risposto` : `${partnerName()} ha iniziato`, cta: 'Rispondi', note };
     case 'in_progress': return { line: 'A metà', cta: 'Continua', note };
-    case 'played': return { line: 'Giocato questa settimana', cta: 'Rivedi' };
+    // The day's one game is spent (Per voi or any other mode).
+    case 'played': return { line: 'Per oggi avete giocato', cta: home?.per_voi?.session_id ? 'Rivedi' : 'Domani' };
     default: return { line: '5 domande scelte per voi', cta: 'Inizia', note };
   }
 }
@@ -148,21 +149,22 @@ function renderTop() {
     pending: 'Per voi: tocca a te',
     waiting: `Per voi: aspettiamo ${partnerName()}`,
     reveal_ready: 'Per voi: le vostre risposte sono pronte',
-    played: 'Per voi: giocato questa settimana, il prossimo arriva lunedì',
+    played: 'Per voi: per oggi avete giocato, il prossimo arriva domani',
   };
   button.setAttribute('aria-label', labels[state] || labels.idle);
   button.classList.remove('is-loading');
   button.removeAttribute('aria-busy');
 }
 
-// ---------------------------------------------------------------- weekly rhythm
+// ---------------------------------------------------------------- daily rhythm
 
-// M11F: the server counts the week's rounds (1 Per voi + 2 free choice) and
-// refuses a fourth; the client only reads that state and never decides it.
+// D4 (28/10/2026): the server allows one new round per Europe/Rome day, of
+// any mode, and refuses a second; the client only reads that state and never
+// decides it. 'families' still names what was played this week.
 const allowance = () => home?.allowance || null;
-const freeLeft = () => { const a = allowance(); return a ? Math.max(0, a.free_limit - a.free_used) : 2; };
+const freeLeft = () => { const a = allowance(); return a ? Math.max(0, a.free_limit - a.free_used) : 1; };
 const playedThisWeek = (family) => allowance()?.families?.[family] || null;
-const EXHAUSTED = 'Nuovi giochi lunedì.';
+const EXHAUSTED = 'Nuovi giochi domani.';
 
 // ---------------------------------------------------------------- the week
 
@@ -258,7 +260,7 @@ function tileRound(family) {
 function modeStatus(f, open) {
   if (open) return { ...roundStatus(open), state: 'open', session: open.id };
   if (playedThisWeek(f.id)) return { text: 'Giocato', tone: 'seen', state: 'played' };
-  if (allowance() && !freeLeft()) return { text: 'Lunedì', tone: 'locked', state: 'locked' };
+  if (allowance() && !freeLeft()) return { text: 'Domani', tone: 'locked', state: 'locked' };
   return null;
 }
 
@@ -337,7 +339,7 @@ function cardState(status) {
   if (!status) return { state: 'ready', text: 'Disponibile' };
   if (status.state === 'open') return { state: 'open', text: status.text, tone: status.tone, session: status.session };
   if (status.state === 'played') return { state: 'played', text: 'Giocato questa settimana' };
-  return { state: 'locked', text: 'Da lunedì' };
+  return { state: 'locked', text: 'Da domani' };
 }
 function gameCard({ id, name, kind, action, extraClass = '', status }) {
   const card = cardState(status);
@@ -510,8 +512,10 @@ async function startRound(family) {
     console.warn('[US Gioca] start', error);
     const msg = error?.message || '';
     if (/weekly per voi played|weekly allowance exhausted|too many open rounds/.test(msg)) startRequestIds.delete(family);
+    // The server keeps the old "weekly" error names for installed clients;
+    // the budget they speak of is the day's one game.
     toast(/not enough content/.test(msg) ? 'Non ci sono ancora abbastanza domande per questo gioco.'
-      : /weekly per voi played/.test(msg) ? 'Per voi è già giocato. Il prossimo lunedì.'
+      : /weekly per voi played/.test(msg) ? 'Per oggi avete giocato. Domani un’altra partita.'
       : /weekly allowance exhausted/.test(msg) ? EXHAUSTED
       : /too many open rounds/.test(msg) ? 'Prima finite uno dei giochi in corso.'
       : 'Non riesco ad aprire la partita. Riprova.');
@@ -520,8 +524,8 @@ async function startRound(family) {
 }
 
 // A mode tile: resume its open round; a mode already played this week asks
-// once before spending a second moment on it; nothing starts once the
-// week's free moments are spent (history stays one tap away).
+// once before spending today's game on it; nothing starts once the day's
+// game is spent (history stays one tap away).
 async function startSwipe() {
   const sameIdentity=gameIdentityGuard();
   if (busy) return;
@@ -546,9 +550,8 @@ async function startSwipe() {
   } finally { busy = false; }
 }
 
-// 1.0 — a new round spends one of the week's games for both of you: it is
-// always confirmed first, with the real number the server says is left
-// (the same count as the "Ancora N giochi" strip).
+// 1.0 — a new round spends today's game for both of you: it is always
+// confirmed first, with the real number the server says is left.
 async function confirmSpend({ family, played, title, confirmLabel, again = '' }) {
   const a = allowance();
   if (!a) return true;
@@ -556,11 +559,11 @@ async function confirmSpend({ family, played, title, confirmLabel, again = '' })
   if (typeof ask !== 'function') return true;
   const left = Math.max(1, a.limit - Math.min(a.used, a.limit));
   const name = familyName(family);
-  const spend = left === 1 ? 'Userete l’ultimo gioco di questa settimana.' : `Userete 1 dei ${left} giochi di questa settimana.`;
+  const spend = left === 1 ? 'Userete il gioco di oggi.' : `Userete 1 dei ${left} giochi di oggi.`;
   return ask({
-    kicker: played ? name.toUpperCase() : 'QUESTA SETTIMANA',
+    kicker: played ? name.toUpperCase() : 'OGGI',
     title: played ? title : name,
-    // Played already: the mockup's line, then what it costs this week.
+    // Played already: the mockup's line, then what it costs today.
     body: played && again ? `${again} ${spend}` : spend,
     confirmLabel: played ? confirmLabel : 'Inizia',
     cancelLabel: 'Non ora',
