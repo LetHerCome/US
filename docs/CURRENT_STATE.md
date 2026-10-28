@@ -1,10 +1,20 @@
 # US — Current State
 
 **Status:** OPERATIONAL STATUS AUTHORITY
-**Verified snapshot:** 2026-10-17
-**Verified main SHA:** 21a7992 (PR #211 merged)
+**Verified snapshot:** 2026-10-28 (la sezione del 28/10; le sezioni più vecchie restano alle loro date)
+**Verified main SHA:** 1d52d47 (PR #229 merged)
 
 Stati: PROGETTATO / IN BRANCH / MERGED / SQL o Edge APPLICATO (staging? produzione?) / TESTATO SU DEVICE. Non confonderli. Ogni merge su `main` pubblica il web di produzione (Cloudflare Pages), ma non applica SQL né Edge. Merge, SQL di produzione, deploy Edge e pubblicazione Store richiedono ciascuno un'autorizzazione separata del founder.
+
+## Aggiornamento 28/10 — test chiuso su Google Play attivo
+
+- **Su `main`:** #229 Accesso V1 (`1d52d47`, 26/10): registrazione con email e accesso con Google ([spec](missions/accesso-v1.md)).
+- **Google Play:** 1.2.4 (429593), AAB dal run 40288520676 del 26/10.
+  - test interno: disponibile dal 26/10, 08:57;
+  - **test chiuso «Alpha»: disponibile per i tester dal 26/10, 13:51**, implementazione completa, 1 paese su 178. Release creata a mano dal founder nella Console.
+- **Prossimo passo Store:** almeno 12 tester iscritti al test chiuso per 14 giorni di fila; solo dopo si può chiedere l'accesso alla produzione. Se i 12 tester ci sono dal 26/10, la richiesta è possibile dal 9/11 circa. Il numero dei tester iscritti non è verificato da qui.
+- **Non verificato da qui:** il provider Google e la registrazione aperta nel progetto Supabase di produzione.
+- **Pulizia del 28/10:** tolti 13 worktree già uniti a `main` e 91 branch locali uniti (il punto di arrivo di ognuno è in `main` o nella sua PR chiusa con merge). Restano i worktree con modifiche non salvate e i branch con lavoro non unito, tra cui `claude/payred-app-comparison-b2594e` («Il punto della settimana», congelato).
 
 ## Aggiornamento 26/10 — 1.2.x, Supabase Pro, verso il test chiuso
 
@@ -46,7 +56,7 @@ Stati: PROGETTATO / IN BRANCH / MERGED / SQL o Edge APPLICATO (staging? produzio
 - Account sviluppatore «Moonee Lab» (personale); app `com.usapp.us` sul canale **test interno**. Firma app generata da Google + chiave di upload dedicata (secret `ANDROID_PLAY_UPLOAD_BUNDLE_B64`).
 - Release: 1.0.0 (415497), 1.0.1 (415614), 1.0.2 (415655). Il `versionCode` Play è in minuti dal 2026-01-01 UTC (#209); gli APK interni installati a mano restano in secondi epoch.
 - Il founder e Bea installano da Play. Il founder conferma che le notifiche reali funzionano sulla build Play.
-- Nessun test chiuso né release di produzione su Play.
+- Nessuna release di produzione su Play. Test chiuso «Alpha» attivo dal 26/10 (vedi l'aggiornamento del 28/10).
 
 ## Produzione Supabase — applicato il 16/10
 

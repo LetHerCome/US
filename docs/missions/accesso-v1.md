@@ -1,6 +1,6 @@
 # Mission — Accesso V1: registrazione con email e accesso con Google
 
-**Status:** IN BRANCH
+**Status:** MERGED (#229, `1d52d47`, 26/10/2026); nell'AAB 1.2.4 (429593), test interno e test chiuso «Alpha»
 **Branch:** `claude/accesso-email-google` (da `main` dopo #228)
 **Origine:** test chiuso su Play (12+ tester per 14 giorni). Il founder il 25/10/2026: «non possiamo sbloccare la registrazione in produzione prima di darla ai test? o collegare l'accesso con google»; poi «facciamo sia mail con gmail che accesso con google».
 
