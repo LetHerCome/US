@@ -1,4 +1,4 @@
-const BUILD_ID = "us-beta-fix-20261028-41";
+const BUILD_ID = "us-beta-fix-20261028-42";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
