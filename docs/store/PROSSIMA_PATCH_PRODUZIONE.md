@@ -118,3 +118,14 @@ Tra il passo 1 e il passo 3 l'app vecchia dice ancora «lunedì» per una partit
 - **Staging:** i cron sono spenti, quindi i traguardi non arrivano da soli alle 9. Plus si dà a tutti gli account con `docs/store/US_STAGING_PLUS_PER_TUTTI.sql`, e tutta la Sintonia si sblocca con `docs/store/US_STAGING_SINTONIA_TUTTA.sql`. Sono dati di prova: **non fanno parte della patch** e non vanno mai eseguiti in produzione.
 - **Mail di verifica nello spam:** si risolve con un mittente email nostro (SMTP personalizzato in Supabase). È una decisione a parte.
 - **App di staging:** dall'APK di staging il link d'invito punta comunque al sito di produzione. Sul web di staging punta a staging.
+
+## Dopo la patch unica: Premi Sintonia V2 (non incluso)
+
+Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missione `docs/missions/sintonia-premi-v2.md`). Va in una patch successiva, in due fasi, ognuna con il via del founder.
+
+- **Fase 1, server** (branch `claude/sintonia-premi-v2`):
+  - la migrazione `20261029031726_sintonia_rewards_v2_phase1.sql` sposta i 21 premi di oggi ai livelli 2–12, segna i premi principali e aggiunge Ti penso animato (5), Tema delle stagioni (10, l'ex «Autunno»), Il vostro cielo (20) e Aurora (4, extra Plus);
+  - i premi Plus si sbloccano con il livello e Plus, e restano;
+  - `get_progression_v1` dà anche il prossimo premio principale con i punti che mancano e i punti delle ultime 2 settimane;
+  - chi è già a un livello riceve i premi nuovi, già segnati come visti.
+- **Fase 1, app:** in corso.

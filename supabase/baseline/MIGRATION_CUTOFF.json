@@ -32,7 +32,8 @@
     "20261028201759_gioca_daily_limit_v1.sql",
     "20261028232743_days_together_milestones_v1.sql",
     "20261029012149_app_min_version_v1.sql",
-    "20261029014653_person_colors_plus_v1.sql"
+    "20261029014653_person_colors_plus_v1.sql",
+    "20261029031726_sintonia_rewards_v2_phase1.sql"
   ],
   "forward_migrations": [
     "20261004110718_f2c_edge_cron_source_of_truth.sql",
@@ -60,7 +61,8 @@
     "20261028201759_gioca_daily_limit_v1.sql",
     "20261028232743_days_together_milestones_v1.sql",
     "20261029012149_app_min_version_v1.sql",
-    "20261029014653_person_colors_plus_v1.sql"
+    "20261029014653_person_colors_plus_v1.sql",
+    "20261029031726_sintonia_rewards_v2_phase1.sql"
   ],
   "counts": {
     "repo_files": 47,
