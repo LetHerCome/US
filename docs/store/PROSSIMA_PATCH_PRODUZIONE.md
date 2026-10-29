@@ -1,8 +1,8 @@
 # Prossima patch in produzione
 
 **Stato:** in prova su staging (https://us-staging-s31.pages.dev). Niente è in produzione. Ogni passo qui sotto ha il via separato del founder (regola «prove solo su staging», `docs/DECISIONS.md`, 28/10/2026).
-**Build:** `us-emoji-20261029-56`.
-**Branch:** `claude/gioca-una-al-giorno` (PR #232), sopra `claude/fix-amici-beta` (PR #233) poi `claude/traguardi-giorni` (PR #234) poi `claude/invito-app-links` (PR #235) poi `claude/aggiornamento-app` (PR #236) poi `claude/colori-plus` (PR #237) e infine `claude/emoji-tastiera`.
+**Build:** `us-ariosa-20261029-58`.
+**Branch:** `claude/gioca-una-al-giorno` (PR #232), sopra `claude/fix-amici-beta` (PR #233) poi `claude/traguardi-giorni` (PR #234) poi `claude/invito-app-links` (PR #235) poi `claude/aggiornamento-app` (PR #236) poi `claude/colori-plus` (PR #237) poi `claude/emoji-tastiera` (PR #238) e infine `claude/app-ariosa`.
 **Patch unica (founder, 29/10):** tutte queste PR più i fix dei tester che arrivano nel frattempo, in produzione insieme e solo con il via del founder.
 
 ## Testo «Novità» per Google Play
@@ -114,6 +114,20 @@ English (500 characters max):
 - **Resta** dove le emoji non servono: codice d'invito, parole di conferma («ELIMINA», uscita dalla coppia), orari del calendario, ricerca del brano e nomi dell'iscrizione.
 - **Test:** `tests/keyboard-emoji.test.js` tiene l'elenco dei soli campi che possono avere il segno.
 - **Da provare sull'APK:** serve un APK nuovo, perché le schermate sono dentro l'app.
+
+### App più ariosa (founder, 29/10)
+
+- **Perché:** confrontata con Couple Joy, US sembrava «tutto più grande». Il testo normale era già uguale; erano i titoli e le parti in evidenza a riempire lo schermo. Misure prese dagli screenshot del founder (Couple Joy: titoli di pagina 19–21, di scheda circa 17).
+- **Cosa cambia** (nei file di design `dc-*.css`, `countdown.css`, `due-colori.css`; niente regole aggiunte sopra):
+  - titoli di pagina («Noi», «Ricordi», «Impostazioni»): da 40–46 a 26–28;
+  - titoli di sezione (mesi, «I vostri giochi», «I vostri sblocchi», «Tu», il giorno in Noi): circa 20;
+  - titoli delle schede: giochi 17, Sfida di oggi 20, didascalie dei Ricordi 15–18, nomi della coppia 18;
+  - Oggi: numero dei giorni da 92 a 64, titolo del ricordo da 30 a 22, domanda di oggi 18 / 16 / 15 secondo la lunghezza, pulsanti in alto da 46 a 40;
+  - Noi: righe del calendario da 46 a 40, pulsanti del mese un po' più piccoli;
+  - barra in basso da 70 a 58, icone 21, etichette 11.
+- **La mascotte** segue l'altezza della barra (`--us-nav-height`), quindi resta appoggiata sul bordo.
+- **Restano uguali:** testo normale, bersagli da toccare (almeno 40), illustrazioni approvate.
+- **Test:** due test aggiornati alle misure nuove. I test nel browser che di solito vengono saltati (Playwright) danno gli stessi 16 errori di prima, con gli stessi messaggi: non dipendono da questo cambio.
 
 ## Ordine in produzione (ognuno con il suo via)
 

@@ -301,3 +301,12 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 8. **«Il vostro cielo»:** le stelle della sera di «Insieme dal», sopra la città scelta da una lista quando si sblocca. Niente GPS.
 9. **Immagini:** prompt scritti da Claude, immagini generate e approvate dal founder (ChatGPT), stile identico al foglio dei Compagni; le icone partono dal logo approvato.
 10. **Rilascio:** non nella patch unica (#232–#237), ma in una patch successiva in due fasi. Missione: `docs/missions/sintonia-premi-v2.md`.
+
+## 2026-10-29 — App più ariosa: titoli più piccoli
+
+**Fonte:** founder, 29/10/2026: «la grandezza di tutto all'interno della nostra app la stavo confrontando con couple joy e lì sembra tutto più arioso»; scelto il «dopo» del prima/dopo di sette schermate.
+
+- Il testo normale resta com'è (14–15). Si rimpiccioliscono titoli e parti in evidenza: titoli di pagina 26–28, di sezione circa 20, di scheda circa 17; barra in basso 58.
+- I bersagli da toccare restano almeno 40 px; le illustrazioni approvate non cambiano.
+- La mascotte segue l'altezza della barra (`--us-nav-height`).
+- Le misure si cambiano nei file di design che già decidono (`dc-*.css`, `countdown.css`, `due-colori.css`), non con regole aggiunte sopra.

@@ -10,7 +10,7 @@
 /* ---------- Giochi / Sintonia segmented control ---------- */
 #quiz .us-gioca-tabs{margin:10px 0 18px;padding:4px;background:var(--us-color-surface);border:1px solid var(--us-color-line);transition:opacity 240ms var(--us-ease-standard)}
 #quiz .us-gioca-tabs::before{background:var(--us-menta);box-shadow:none;transition:transform 480ms var(--us-ease-spring)}
-#quiz .us-gioca-tab{min-height:44px;font-size:15px;font-weight:600;color:var(--us-color-text-3);transition:color 250ms ease}
+#quiz .us-gioca-tab{min-height:40px;font-size:14px;font-weight:600;color:var(--us-color-text-3);transition:color 250ms ease}
 #quiz .us-gioca-tab[aria-selected="true"]{color:var(--us-inchiostro)}
 #quiz .us-gioca-tab:focus-visible{outline:2px solid var(--us-menta);outline-offset:3px}
 
@@ -25,7 +25,7 @@
 /* Round 3: one block, mockup values literally. The page is the mockup's .view (padding 20px 18px, body 15px/1.5);
    the panel is a plain column whose spacing comes from the blocks' own margins, as in the mockup. */
 #quiz>.us-gv2-page{padding-top:12px;padding-inline:2px;line-height:1.5}
-#quiz .us-gioca-tab{height:44px;min-height:44px;padding:0;line-height:1.5}
+#quiz .us-gioca-tab{height:40px;min-height:40px;padding:0;line-height:1.5}
 #quiz #quizHub.us-gv2-hub{display:block;gap:0;font-size:15px;line-height:1.5}
 #quiz .us-gv2-kicker{font:700 11px/1.5 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-menta)}
 
@@ -33,14 +33,14 @@
 #quiz .us-gv2-daily-slot{min-height:0}
 #quiz .us-gv2-daily-slot>.us-gv2-daily,#quiz .us-gv2-daily-slot>.us-gv4-daily-pending{min-height:0;height:auto}
 #quiz .us-gv2-daily,
-#quiz .us-gv2-daily[data-daily-state]{position:relative;isolation:isolate;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr);justify-items:stretch;gap:8px;width:100%;padding:20px 18px 18px;border:0;border-radius:28px;background:var(--us-menta);color:var(--us-inchiostro);box-shadow:none;text-align:left;font-weight:400;line-height:1.5}
+#quiz .us-gv2-daily[data-daily-state]{position:relative;isolation:isolate;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr);justify-items:stretch;gap:8px;width:100%;padding:16px 16px 14px;border:0;border-radius:28px;background:var(--us-menta);color:var(--us-inchiostro);box-shadow:none;text-align:left;font-weight:400;line-height:1.5}
 #quiz .us-gv2-daily::before,#quiz .us-gv2-daily::after{content:"";position:absolute;z-index:-1;border-radius:50%;pointer-events:none}
 #quiz .us-gv2-daily::before{right:30px;top:-30px;width:120px;height:120px;background:rgba(26,16,32,.07)}
 #quiz .us-gv2-daily::after{right:-50px;top:-60px;width:190px;height:190px;background:rgba(255,255,255,.22)}
 #quiz .us-gv4-daily-art{display:none}
 #quiz .us-gv2-daily-copy{display:grid;gap:8px;width:100%;max-width:none}
 #quiz .us-gv2-daily-copy small{font:700 11px/1.5 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-inchiostro);opacity:.7}
-#quiz .us-gv2-daily-copy b{display:block;-webkit-line-clamp:unset;max-width:15ch;overflow:visible;font:500 26px/1.1 var(--us-font-display);letter-spacing:0;color:var(--us-inchiostro);text-wrap:wrap;overflow-wrap:anywhere}
+#quiz .us-gv2-daily-copy b{display:block;-webkit-line-clamp:unset;max-width:15ch;overflow:visible;font:500 20px/1.2 var(--us-font-display);letter-spacing:0;color:var(--us-inchiostro);text-wrap:wrap;overflow-wrap:anywhere}
 #quiz .us-gv2-daily-state{margin:0;font-size:14px;font-weight:500;line-height:1.5;color:var(--us-inchiostro);opacity:.75}
 #quiz .us-gv4-daily-footer{display:flex;grid-column:1/-1;justify-self:stretch;width:100%;justify-content:space-between;align-items:center;gap:10px;margin-top:8px}
 #quiz .us-gv4-daily-footer>span:first-child{font-size:14px;font-weight:500;line-height:1.5;color:var(--us-inchiostro);opacity:.75}
@@ -53,8 +53,8 @@
 
 /* the week: .week/.wd — hairline days, today in milk, a dot for who was there */
 #quiz .us-gv2-week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:14px 0 26px}
-#quiz .us-gv2-wd{display:grid;justify-items:center;gap:2px;padding:8px 0 9px;border-radius:16px;border:1px solid var(--us-color-line);font-size:11px;font-weight:600;line-height:1.5;color:var(--us-color-text-3)}
-#quiz .us-gv2-wd b{font-size:17px;font-weight:900;color:var(--us-color-text);font-variant-numeric:tabular-nums}
+#quiz .us-gv2-wd{display:grid;justify-items:center;gap:2px;padding:6px 0 7px;border-radius:16px;border:1px solid var(--us-color-line);font-size:11px;font-weight:600;line-height:1.5;color:var(--us-color-text-3)}
+#quiz .us-gv2-wd b{font-size:15px;font-weight:900;color:var(--us-color-text);font-variant-numeric:tabular-nums}
 #quiz .us-gv2-wd-pair{display:flex;height:7px;align-items:center}
 #quiz .us-gv2-wd-pair i{display:block;width:7px;height:7px;border-radius:50%;background:var(--us-noi)}
 #quiz .us-gv2-wd-pair i[data-who="tu"]{background:var(--us-tu)}
@@ -65,7 +65,7 @@
 /* I vostri giochi: .sec-h */
 #quiz .us-gv2-choose{display:block;margin:0}
 #quiz .us-gv2-section-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 2px 12px}
-#quiz .us-gv2-section-title{margin:0;font:400 26px/1.5 var(--us-font-display);letter-spacing:0;color:var(--us-color-text)}
+#quiz .us-gv2-section-title{margin:0;font:400 20px/1.5 var(--us-font-display);letter-spacing:0;color:var(--us-color-text)}
 #quiz .us-gv2-section-head small{font-size:13px;line-height:1.5;color:var(--us-color-text-3)}
 
 /* .games/.game — flat night tiles, the mockup's art, Per voi tall with my colour washing in */
@@ -91,7 +91,7 @@
 #quiz #quizHub .us-gv2-art .s-ink{stroke:var(--us-inchiostro)}
 #quiz #quizHub .us-gv2-art .is-screen{mix-blend-mode:screen}
 #quiz #quizHub :is(.us-gv2-game-copy,.us-gv2-pervoi-copy){display:block;min-width:0;margin:0;align-self:auto}
-#quiz #quizHub :is(.us-gv2-game-copy,.us-gv2-pervoi-copy) b{display:block;margin:0;font:500 21px/1.1 var(--us-font-display);letter-spacing:0;color:var(--us-color-text);overflow-wrap:normal}
+#quiz #quizHub :is(.us-gv2-game-copy,.us-gv2-pervoi-copy) b{display:block;margin:0;font:500 17px/1.15 var(--us-font-display);letter-spacing:0;color:var(--us-color-text);overflow-wrap:normal}
 #quiz #quizHub :is(.us-gv2-game-copy,.us-gv2-pervoi-copy) small{display:block;margin:3px 0 0;overflow:visible;-webkit-line-clamp:unset;font-size:13px;font-weight:400;line-height:1.5;color:var(--us-color-text-3)}
 #quiz #quizHub .us-gv2-pervoi-copy small.us-gv2-pervoi-note{font-weight:600;color:var(--us-partner)}
 #quiz #quizHub .us-gv2-pervoi-cta{display:inline-flex;align-items:center;justify-content:center;justify-self:start;gap:6px;min-height:44px;margin:0;padding:0 18px;border:0;border-radius:999px;background:var(--us-tu);color:var(--us-inchiostro);font:700 15px/1.5 var(--us-font-ui);white-space:nowrap;box-shadow:none}
@@ -107,7 +107,7 @@
 #quiz #quizHub .us-gv2-weekly-head{display:block;gap:0}
 #quiz #quizHub .us-gv2-weekly-head .us-gv2-glyph{display:none}
 #quiz #quizHub .us-gv2-weekly-head>div{display:grid;gap:4px;min-width:0}
-#quiz #quizHub .us-gv2-weekly-head b{display:block;margin:0;font:400 24px/1.1 var(--us-font-display);color:var(--us-color-text)}
+#quiz #quizHub .us-gv2-weekly-head b{display:block;margin:0;font:400 19px/1.15 var(--us-font-display);color:var(--us-color-text)}
 #quiz #quizHub .us-gv2-weekly-head small{display:block;margin:0;font-size:13px;line-height:1.5;color:var(--us-color-text-3)}
 #quiz #quizHub .us-gv2-weekly .us-gv2-weekly-cta{display:inline-flex;align-items:center;justify-content:center;justify-self:start;width:auto;min-height:44px;margin:8px 0 0;padding:0 18px;border:0;border-radius:999px;background:var(--us-tu);color:var(--us-inchiostro);font:700 15px/1.5 var(--us-font-ui);box-shadow:none}
 #quiz #quizHub .us-gv2-weekly blockquote{margin:6px 0 0;padding:12px 14px;border-radius:16px;border:0;background:var(--us-color-surface-2);font:400 17px/1.3 var(--us-font-display);color:var(--us-color-text)}
@@ -328,7 +328,7 @@ body.us-gv2-sheet-open{overflow:hidden}
 #quiz .us-gioca-sintonia .us-sintonia-venn .is-bloom{fill:none;stroke:var(--us-noi);stroke-width:2;opacity:0;transform-box:fill-box;transform-origin:center}
 #quiz .us-gioca-sintonia #bondResonanceLevel{display:block;font:700 13px/1.5 var(--us-font-ui);letter-spacing:.06em;color:var(--us-color-text-2)}
 #quiz .us-gioca-sintonia .noi-resonance-dot,#quiz .us-gioca-sintonia .noi-resonance-mark,#quiz .us-gioca-sintonia #bondCompletedCount,#quiz .us-gioca-sintonia .noi-resonance-legacy{display:none}
-#quiz .us-gioca-sintonia #bondRankTitle{display:block;margin:0;font:italic 400 32px/1.05 var(--us-font-display);font-variation-settings:"SOFT" 100,"WONK" 1;letter-spacing:0;color:var(--us-color-text)}
+#quiz .us-gioca-sintonia #bondRankTitle{display:block;margin:0;font:italic 400 24px/1.05 var(--us-font-display);font-variation-settings:"SOFT" 100,"WONK" 1;letter-spacing:0;color:var(--us-color-text)}
 /* .bar: the fill slides inside the rounded track while it grows (transform only) */
 #quiz .us-gioca-sintonia .noi-resonance .bond-xp-track{width:100%;height:8px;margin:12px 0 0;border-radius:9px;background:var(--us-color-elevated);box-shadow:none;overflow:hidden}
 #quiz .us-gioca-sintonia .bond-xp-track>div{display:block;height:100%;border-radius:9px;background:var(--us-noi)!important;box-shadow:none;transition:none;will-change:auto}
@@ -338,7 +338,7 @@ body.us-gv2-sheet-open{overflow:hidden}
 #quiz .us-gioca-sintonia .us-progression-rhythm{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 12px;margin:0;padding:14px 16px;border-radius:22px;background:var(--us-color-surface);border:1px solid var(--us-color-line);box-shadow:none}
 #quiz .us-gioca-sintonia .us-progression-rhythm-kicker{grid-column:1;font:700 11px/1.5 var(--us-font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--us-ambra)}
 #quiz .us-gioca-sintonia .us-progression-rhythm p{grid-column:1;margin:0;font:400 14px/1.5 var(--us-font-ui);color:var(--us-color-text-2)}
-#quiz .us-gioca-sintonia .us-progression-rhythm strong{grid-row:1/3;grid-column:2;align-self:center;font:400 28px/1.5 var(--us-font-display);font-variation-settings:"SOFT" 100;white-space:nowrap;color:var(--us-color-text)}
+#quiz .us-gioca-sintonia .us-progression-rhythm strong{grid-row:1/3;grid-column:2;align-self:center;font:400 22px/1.5 var(--us-font-display);font-variation-settings:"SOFT" 100;white-space:nowrap;color:var(--us-color-text)}
 #quiz .us-gioca-sintonia .us-progression-rhythm-days{grid-column:1/-1;display:flex;gap:6px;margin-top:4px}
 #quiz .us-gioca-sintonia .us-progression-rhythm-days i{flex:1;height:6px;border-radius:6px;background:var(--us-color-elevated)}
 #quiz .us-gioca-sintonia .us-progression-rhythm-days i.on{background:var(--us-noi)}
@@ -356,7 +356,7 @@ body.us-gv2-sheet-open{overflow:hidden}
 /* .coll — I vostri sblocchi 18 di 33, the line under it, the chips, three tiles a row */
 #quiz .us-gioca-sintonia .us-progression-rewards-section{display:block;margin:16px 0 0;padding:0;border:0;border-radius:0;background:none;box-shadow:none;overflow:visible}
 #quiz .us-gioca-sintonia .us-progression-rewards-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 2px 12px}
-#quiz .us-gioca-sintonia .us-progression-rewards-head h3{margin:0;font:400 26px/1.5 var(--us-font-display);font-variation-settings:"SOFT" 100;color:var(--us-color-text)}
+#quiz .us-gioca-sintonia .us-progression-rewards-head h3{margin:0;font:400 20px/1.5 var(--us-font-display);font-variation-settings:"SOFT" 100;color:var(--us-color-text)}
 #quiz .us-gioca-sintonia .us-progression-rewards-head b{font:400 13px/1.5 var(--us-font-ui);color:var(--us-color-text-3)}
 #quiz .us-gioca-sintonia .us-progression-rewards-sub{margin:-4px 2px 12px;font:400 13px/1.5 var(--us-font-ui);color:var(--us-color-text-3)}
 #quiz .us-gioca-sintonia .us-progression-rewards{display:block;max-height:none;overflow:visible;padding:0;gap:0}
@@ -570,7 +570,7 @@ body.us-gv2-sheet-open{overflow:hidden}
 /* ---------- 360px and large text ---------- */
 @media (max-width:360px){
   #quiz .us-gv2-game,#quiz .us-gv2-game.is-swipe,#quiz .us-gv2-game[data-gv2-family]{padding:12px}
-  #quiz .us-gv2-game-copy b,#quiz .us-gv2-pervoi-copy b{font-size:19px}
+  #quiz .us-gv2-game-copy b,#quiz .us-gv2-pervoi-copy b{font-size:16px}
   #usProgressionUnlock h2,.us-level-moment h2{font-size:34px}
 }
 @media (max-height:640px){

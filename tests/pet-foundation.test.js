@@ -218,7 +218,8 @@ test('PET layer: never takes input, never covers the nav, steps aside and respec
   assert.match(petCss, /\.us-pet-layer\{position:fixed;z-index:var\(--us-layer-ambient\);/, 'the PET takes the ambient rung of the layer ladder');
   assert.doesNotMatch(petCss, /#usDailyNudge:not\(\[hidden\]\)\) \.us-pet-layer|#toast\.show\) \.us-pet-layer/, 'Daily/Ti penso never hide the PET');
   // Its home spot (mockup .maudit-home): 10 px in from the bar's right end, feet 4 px over its top, 54 × 48.
-  assert.match(petCss, /\.us-pet-layer\{position:fixed;z-index:var\(--us-layer-ambient\);right:calc\(\(100% - min\(456px,calc\(100% - 24px\)\)\) \/ 2 \+ 10px\);bottom:calc\(max\(12px,var\(--us-safe-bottom\)\) \+ 66px\);width:54px;height:48px;/);
+  // The bar's height is the token, so the feet follow it (app più ariosa, 29/10/2026: 70 → 58).
+  assert.match(petCss, /\.us-pet-layer\{position:fixed;z-index:var\(--us-layer-ambient\);right:calc\(\(100% - min\(456px,calc\(100% - 24px\)\)\) \/ 2 \+ 10px\);bottom:calc\(max\(12px,var\(--us-safe-bottom\)\) \+ var\(--us-nav-height\) - 4px\);width:54px;height:48px;/);
   assert.ok(!petCss.includes('body[data-us-surface="open"] .us-pet-layer'), 'as in the mockup, a sheet\'s scrim covers Maudit, it does not leave');
   for (const guard of ['body.us-keyboard-open .us-pet-layer', '.us-pet-layer[inert]', 'body:has(#homeHero.us-oggi-focus) .us-pet-layer']) {
     assert.ok(petCss.includes(guard), guard);

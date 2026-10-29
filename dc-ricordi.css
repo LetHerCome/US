@@ -14,11 +14,11 @@
 /* The page sits on the design's 18px gutter, the title 30px from the top. */
 #moments>.section{margin-left:2px;margin-right:2px}
 #moments .us-moments-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:22px 0 18px}
-#moments .us-moments-head h2{margin:0!important;font-family:var(--us-font-display)!important;font-style:italic;font-weight:400;font-size:46px!important;line-height:.95!important;letter-spacing:-.02em;color:var(--us-color-text)}
+#moments .us-moments-head h2{margin:0!important;font-family:var(--us-font-display)!important;font-style:italic;font-weight:400;font-size:28px!important;line-height:.95!important;letter-spacing:-.02em;color:var(--us-color-text)}
 #moments .us-moments-head-copy p{margin:6px 0 0!important;font-size:14px!important;line-height:1.5;color:var(--us-color-text-2)}
 #moments .us-moments-head-actions{display:flex;align-items:center;gap:8px;padding-bottom:0}
 #moments .us-moments-total{margin-right:4px;font-size:13px;font-weight:600;line-height:1.5;letter-spacing:0;color:var(--us-color-text-3);white-space:nowrap}
-#moments .us-moments-add{width:48px;height:48px;padding:0;border:0;border-radius:50%;display:grid;place-items:center;background:var(--us-ambra);color:var(--us-inchiostro);box-shadow:none;transition:transform .3s var(--us-ease-spring)}
+#moments .us-moments-add{width:44px;height:44px;padding:0;border:0;border-radius:50%;display:grid;place-items:center;background:var(--us-ambra);color:var(--us-inchiostro);box-shadow:none;transition:transform .3s var(--us-ease-spring)}
 #moments .us-moments-add .us-icon{--us-icon-size:24px}
 #moments .us-moments-add:active{transform:scale(.95)}
 #moments .us-moments-add:focus-visible{outline:2px solid var(--us-ambra);outline-offset:3px}
@@ -38,7 +38,7 @@
 #moments .ricordi-rivivi-card:not(.ricordi-rivivi-note) .ricordi-rivivi-copy{position:static;display:block;align-self:start;min-width:0;padding:17px 0 0;color:var(--us-color-text)}
 #moments .ricordi-rivivi:has(>.ricordi-rivivi-send) .ricordi-rivivi-card:not(.ricordi-rivivi-note) .ricordi-rivivi-copy{padding-bottom:38px}
 #moments .ricordi-rivivi:has(>.ricordi-rivivi-card:not(.ricordi-rivivi-note)) .ricordi-kicker{position:absolute;z-index:1;top:17px;left:111px;margin:0;pointer-events:none}
-#moments .ricordi-rivivi-card:not(.ricordi-rivivi-note) .ricordi-rivivi-copy small{display:block;margin:0 0 2px;font-family:var(--us-font-display);font-size:20px;font-weight:400;line-height:1.15;letter-spacing:0;color:var(--us-color-text)}
+#moments .ricordi-rivivi-card:not(.ricordi-rivivi-note) .ricordi-rivivi-copy small{display:block;margin:0 0 2px;font-family:var(--us-font-display);font-size:17px;font-weight:400;line-height:1.15;letter-spacing:0;color:var(--us-color-text)}
 #moments .ricordi-rivivi-card:not(.ricordi-rivivi-note) .ricordi-rivivi-copy :is(b,span){display:inline;font:400 12px/1.5 var(--us-font-ui);letter-spacing:0;color:var(--us-color-text-3);-webkit-line-clamp:unset}
 #moments .ricordi-rivivi-card:not(.ricordi-rivivi-note) .ricordi-rivivi-copy b::after{content:" · "}
 #moments .ricordi-rivivi-card:active{transform:scale(.98)}
@@ -84,7 +84,7 @@
 #moments #momentsGrid.moment-grid.ricordi-story{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;align-items:start!important;padding:0}
 #moments #momentsGrid.ricordi-story .ricordi-period{grid-column:1/-1;display:flex;align-items:baseline;gap:6px;margin:20px 0 4px;padding:0;border:0}
 #moments #momentsGrid.ricordi-story .ricordi-period:first-child{margin-top:0}
-#moments #momentsGrid.ricordi-story .ricordi-period b{font-family:var(--us-font-display);font-style:italic;font-weight:400;font-size:30px;line-height:1.5;letter-spacing:0;color:var(--us-color-text)}
+#moments #momentsGrid.ricordi-story .ricordi-period b{font-family:var(--us-font-display);font-style:italic;font-weight:400;font-size:21px;line-height:1.5;letter-spacing:0;color:var(--us-color-text)}
 #moments #momentsGrid.ricordi-story .ricordi-period span{margin-left:6px;font-family:var(--us-font-ui);font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--us-color-text-3)}
 
 /* A photo card: the image is the card, words sit on a soft shade at its foot. */
@@ -96,8 +96,8 @@
 #moments #momentsGrid.ricordi-story .moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide)>img{aspect-ratio:4/3.4!important}
 #moments #momentsGrid.ricordi-story .moment-card.moment-postit>.moment-meta{position:absolute!important;z-index:3;left:0;right:0;bottom:0;display:grid!important;gap:2px;min-height:0!important;padding:28px 12px 10px!important;background:linear-gradient(180deg,transparent,rgba(15,11,19,.86))!important;pointer-events:none}
 #moments #momentsGrid.ricordi-story .moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide)>.moment-meta{padding:28px 12px 10px!important}
-#moments #momentsGrid.ricordi-story .moment-card.moment-postit .moment-meta p{display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;margin:0!important;font-family:var(--us-font-display)!important;font-weight:500;font-size:18px!important;line-height:1.1!important;letter-spacing:0;color:var(--us-latte)!important;white-space:normal}
-#moments #momentsGrid.ricordi-story .moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide) .moment-meta p{font-size:24px!important;line-height:1.1!important}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit .moment-meta p{display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;margin:0!important;font-family:var(--us-font-display)!important;font-weight:500;font-size:15px!important;line-height:1.1!important;letter-spacing:0;color:var(--us-latte)!important;white-space:normal}
+#moments #momentsGrid.ricordi-story .moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide) .moment-meta p{font-size:18px!important;line-height:1.1!important}
 #moments #momentsGrid.ricordi-story .moment-card.moment-postit .moment-meta p[hidden]{display:none!important}
 /* The carousel may append the caption late: it still reads first. */
 #moments #momentsGrid.ricordi-story .moment-card .moment-meta>p{order:-2}
@@ -574,10 +574,10 @@
    Small phones (360px)
    ========================================================================== */
 @media (max-width:370px){
-  #moments .us-moments-head h2{font-size:40px!important}
+  #moments .us-moments-head h2{font-size:26px!important}
   #moments .us-moments-head-actions{gap:8px}
-  #moments #momentsGrid.ricordi-story .moment-card.moment-postit .moment-meta p{font-size:16px!important}
-  #moments #momentsGrid.ricordi-story .moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide) .moment-meta p{font-size:22px!important}
+  #moments #momentsGrid.ricordi-story .moment-card.moment-postit .moment-meta p{font-size:15px!important}
+  #moments #momentsGrid.ricordi-story .moment-card.moment-postit:is(.ricordi-feature,.ricordi-wide) .moment-meta p{font-size:17px!important}
   #moments .ricordi-chapter b{font-size:30px}
   #usAlbumOverlay[data-us-galleria] .us-album-title{font-size:32px}
   #usAlbumOverlay[data-us-galleria] .us-album-floating-add b{display:inline}
