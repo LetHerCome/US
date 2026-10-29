@@ -2446,6 +2446,14 @@
     'Tocca un compagno per tenerlo sopra la barra. Vale solo su questo telefono.': 'Tap a companion to keep it above the bar. It only applies on this phone.',
     '{name} · con te sopra la barra': '{name} · with you above the bar',
     'Un compagno sopra la barra · mancano {n} XP': 'A companion above the bar · {n} XP to go',
+    // Premi Sintonia V2 (29/10/2026): the estimate in days and the Plus extras.
+    'mancano {n} XP · circa {d} giorni': '{n} XP to go · about {d} days',
+    'mancano {n} XP · circa 1 giorno': '{n} XP to go · about 1 day',
+    'e {name} · mancano {n} XP · circa {d} giorni': 'and {name} · {n} XP to go · about {d} days',
+    'e {name} · mancano {n} XP · circa 1 giorno': 'and {name} · {n} XP to go · about 1 day',
+    'Un compagno sopra la barra · mancano {n} XP · circa {d} giorni': 'A companion above the bar · {n} XP to go · about {d} days',
+    'Un compagno sopra la barra · mancano {n} XP · circa 1 giorno': 'A companion above the bar · {n} XP to go · about 1 day',
+    'Livello {n} · US Plus': 'Level {n} · US Plus',
     'Guardalo': 'See it',
     'È arrivato Maudit': 'Maudit is here',
 

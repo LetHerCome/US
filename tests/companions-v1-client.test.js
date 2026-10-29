@@ -66,7 +66,8 @@ test('Sintonia: a Compagni group among I vostri sblocchi, with the level on lock
 
 test('Sintonia: Prossimo sblocco names the companion when its level comes first', () => {
   const renderNext = progression.slice(progression.indexOf('function renderNext('), progression.indexOf('// One tile of the collection'));
-  assert.match(renderNext, /if \(companion && \(!rewards\.length \|\| companion\.level < level\)\)/);
+  // Sintonia V2 (29/10/2026): with a headline reward next, the companion comes first when its level is not later.
+  assert.match(renderNext, /if \(companion && \(headline \? companion\.level <= headlineLevel : \(!rewards\.length \|\| companion\.level < level\)\)\)/);
   assert.match(renderNext, /Prossimo sblocco · Livello \$\{companion\.level\}/);
   assert.match(renderNext, /root\.dataset\.rewardCat = 'companion'/, 'a tap opens the Compagni group');
 });

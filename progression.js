@@ -847,43 +847,68 @@ function nextCompanion() {
   return list.find((c) => !c.unlocked) || null;
 }
 const companionArt = (c) => `<img class="us-progression-companion-art" src="${esc(c.art)}" alt="" draggable="false" decoding="async">`;
+// Premi Sintonia V2 (29/10/2026): the next HEADLINE reward the server names
+// (next_headline), when this version can show it.
+function headlineReward(next){
+  const id = next?.next_headline?.id;
+  const reward = id ? (next.rewards || []).find((r) => r.id === id) : null;
+  return reward && presented(reward) && artItem(reward) ? reward : null;
+}
 function renderNext(next = state) {
   const root = $('usProgressionNext');
   if (!root) return;
   const { level, rewards } = nextPresentedRewards(next);
   const companion = nextCompanion();
-  if (companion && (!rewards.length || companion.level < level)) {
+  // One headline per level: the next one in big, or the companion if it comes first.
+  const headline=headlineReward(next);
+  const headlineLevel = headline ? Number(headline.level_required) || 0 : 0;
+  const total = Number(next?.total_xp) || 0;
+  if (companion && (headline ? companion.level <= headlineLevel : (!rewards.length || companion.level < level))) {
     if (root.dataset.rewardCat !== 'companion') root.dataset.rewardCat = 'companion';
     // Level already reached: the companion is on its way (the next read of get_companions_v1).
-    const xp = xpToLevel(Number(next?.total_xp) || 0, companion.level);
-    const line = xp > 0 ? `Un compagno sopra la barra · mancano ${fmt(xp)} XP` : 'Un compagno sopra la barra';
+    const xp = xpToLevel(total, companion.level);
+    const soon = daysEstimate(xp, next);
+    const line = xp > 0 ? `Un compagno sopra la barra · mancano ${fmt(xp)} XP${soon ? ` · ${soon}` : ''}` : 'Un compagno sopra la barra';
     paintHTML(root, `<span class="us-progression-next-preview" aria-hidden="true">${companionArt(companion)}</span><span class="us-progression-next-copy"><small>Prossimo sblocco · Livello ${companion.level}</small><b>${esc(companion.name)}</b><span>${esc(line)}</span></span><span class="us-progression-next-chev" aria-hidden="true"></span>`);
     return;
   }
-  const first = rewards[0];
+  const first = headline || rewards[0];
+  const target = headline ? headlineLevel : level;
   const cat = first ? artItem(first).cat : '';
   if (root.dataset.rewardCat !== cat) root.dataset.rewardCat = cat;
   if (!first) {
     paintHTML(root, '<span class="us-progression-next-copy"><small>Collezione completa</small><b>Avete raggiunto tutti gli sblocchi di questa versione</b></span>');
     return;
   }
-  const missing = fmt(xpToLevel(Number(next?.total_xp) || 0, level));
-  const second = rewards[1] ? presentedTitle(rewards[1]) : '';
-  const line = second ? `e ${second} · mancano ${missing} XP` : `mancano ${missing} XP`;
-  if (paintHTML(root, `<span class="us-progression-next-preview" aria-hidden="true">${artMarkup(artItem(first))}</span><span class="us-progression-next-copy"><small>Prossimo sblocco · Livello ${level}</small><b>${esc(presentedTitle(first))}</b><span>${esc(line)}</span></span><span class="us-progression-next-chev" aria-hidden="true"></span>`)) startCanvases(root);
+  const xp = xpToLevel(total, target);
+  const missing = fmt(xp);
+  const estimate=daysEstimate(xp, next);
+  const second = !headline && rewards[1] ? presentedTitle(rewards[1]) : '';
+  const line = `${second ? `e ${second} · ` : ''}mancano ${missing} XP${estimate ? ` · ${estimate}` : ''}`;
+  if (paintHTML(root, `<span class="us-progression-next-preview" aria-hidden="true">${artMarkup(artItem(first))}</span><span class="us-progression-next-copy"><small>Prossimo sblocco · Livello ${target}</small><b>${esc(presentedTitle(first))}</b><span>${esc(line)}</span></span><span class="us-progression-next-chev" aria-hidden="true"></span>`)) startCanvases(root);
+}
+// «circa N giorni» on the couple's own pace (points of the last 14 days);
+// nothing without a pace, nor beyond a year.
+function daysEstimate(xp, next) {
+  const pace = (Number(next?.xp_last_14_days) || 0) / 14;
+  if (!(xp > 0) || !(pace > 0)) return '';
+  const days = Math.ceil(xp / pace);
+  if (days > 365) return '';
+  return days === 1 ? 'circa 1 giorno' : `circa ${days} giorni`;
 }
 
 // One tile of the collection (sintonia.js tile): the art, the name and
 // "In uso" / "Livello 6" / "Sbloccato" / "Incluso".
-function tileMarkup({ attrs, cls = '', on, locked, level, free, title, art }) {
-  const status = on ? 'In uso' : locked ? `Livello ${level}` : free ? 'Incluso' : 'Sbloccato';
-  const label = `${title}${locked ? `, si sblocca al livello ${level}` : on ? ', in uso' : ''}`;
+function tileMarkup({ attrs, cls = '', on, locked, level, free, title, art, plus = false }) {
+  // V2: a Plus extra needs the level and US Plus (nothing to buy yet).
+  const status = on ? 'In uso' : locked ? (plus ? `Livello ${level} · US Plus` : `Livello ${level}`) : free ? 'Incluso' : 'Sbloccato';
+  const label = `${title}${locked ? `, si sblocca al livello ${level}${plus ? ' con US Plus' : ''}` : on ? ', in uso' : ''}`;
   return `<button type="button" class="us-progression-reward${cls ? ` ${cls}` : ''} ${locked ? 'is-locked' : 'is-unlocked'}${on ? ' is-equipped' : ''}" ${attrs}${locked ? ` data-locked="true" data-level="${esc(level)}"` : ''} aria-pressed="${on ? 'true' : 'false'}" aria-label="${esc(label)}"><span class="us-progression-reward-preview" aria-hidden="true">${art}</span><span class="us-progression-reward-copy"><b>${esc(title)}</b><small>${esc(status)}</small></span></button>`;
 }
 function rewardTile(reward) {
   return tileMarkup({
     attrs: `data-progression-reward="${esc(reward.id)}" data-category="${esc(reward.category)}"`,
-    on: Boolean(reward.equipped), locked: !reward.unlocked, level: reward.level_required,
+    on: Boolean(reward.equipped), locked: !reward.unlocked, level: reward.level_required, plus: Boolean(reward.requires_plus),
     title: reward.title, art: artMarkup(artItem(reward))
   });
 }
