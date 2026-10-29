@@ -513,6 +513,192 @@
       "usedBy": [
         "android-launcher"
       ]
+    },
+    {
+      "path": "assets/source/rewards/us-acc-scarf-v1.png",
+      "status": "APPROVED",
+      "sha256": "e9776eb0e5f2b912abca7b24749b56b442f0a57b01ec670fee31fda6b91379e3",
+      "immutable": true,
+      "purpose": "Sintonia V2 accessory I: knitted scarf, worn by every companion (founder, ChatGPT, approved 29/10/2026)",
+      "usedBy": []
+    },
+    {
+      "path": "assets/source/rewards/us-acc-flowers-v1.png",
+      "status": "APPROVED",
+      "sha256": "3f2cf70987f5ae5907dc10f16f315bf1ce8c649b2ac2e4a81cc11f73ad8cff78",
+      "immutable": true,
+      "purpose": "Sintonia V2 accessory II: flower crown, worn by every companion (founder, ChatGPT, approved 29/10/2026)",
+      "usedBy": []
+    },
+    {
+      "path": "assets/source/rewards/us-acc-crown-v1.png",
+      "status": "APPROVED",
+      "sha256": "7df9d63e0b6136431048978ec810a66bba9bb1e68b5547e4acc210db6070b20e",
+      "immutable": true,
+      "purpose": "Sintonia V2 level 19: golden crown for the companions (founder, ChatGPT, approved 29/10/2026)",
+      "usedBy": []
+    },
+    {
+      "path": "assets/source/rewards/us-acc-gala-v1.png",
+      "status": "APPROVED",
+      "sha256": "0ec980ac2b018c25bf50bf3984be1469309dd9b1b2e19a95c46aa97113c4f404",
+      "immutable": true,
+      "purpose": "Sintonia V2 US Plus extra: Gala collar with bow tie (founder, ChatGPT, approved 29/10/2026)",
+      "usedBy": []
+    },
+    {
+      "path": "assets/source/rewards/us-think-letter-closed-v1.png",
+      "status": "APPROVED",
+      "sha256": "0fa21743b672eff39b4f6b3705f91974634446445bae5976a131a7985841037a",
+      "immutable": true,
+      "purpose": "Sintonia V2 Ti penso letter, closed (founder, ChatGPT, approved 29/10/2026)",
+      "usedBy": []
+    },
+    {
+      "path": "assets/source/rewards/us-think-letter-open-v1.png",
+      "status": "APPROVED",
+      "sha256": "968d4322afbed5248e9b6e627cdb3659e68b963f9acde6c175474c8cb65907cc",
+      "immutable": true,
+      "purpose": "Sintonia V2 Ti penso letter, open (founder, ChatGPT, approved 29/10/2026)",
+      "usedBy": []
+    },
+    {
+      "path": "assets/derived/rewards/us-acc-scarf-v1.webp",
+      "status": "APPROVED",
+      "sha256": "221967605bfc6533057e7f716bb1f38976be3df09ce75f4d344e52bae1060474",
+      "immutable": true,
+      "purpose": "scarf on the companions (320 px)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/rewards/us-acc-scarf-v1.png",
+      "sourceSha256": "e9776eb0e5f2b912abca7b24749b56b442f0a57b01ec670fee31fda6b91379e3",
+      "operation": "CROP_CONTENT_3PCT_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/rewards/us-acc-flowers-v1.webp",
+      "status": "APPROVED",
+      "sha256": "89065453ba7280d90a7b89c6b7dae56012dd9757d78bb82286f5bd4b60e1e541",
+      "immutable": true,
+      "purpose": "flower crown on the companions (320 px)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/rewards/us-acc-flowers-v1.png",
+      "sourceSha256": "3f2cf70987f5ae5907dc10f16f315bf1ce8c649b2ac2e4a81cc11f73ad8cff78",
+      "operation": "CROP_CONTENT_3PCT_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/rewards/us-acc-crown-v1.webp",
+      "status": "APPROVED",
+      "sha256": "c33c9d009c03552509fcb531ac1bac5d1fb48e423a810a9d654e1ed4c0f324ab",
+      "immutable": true,
+      "purpose": "crown on the companions (320 px)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/rewards/us-acc-crown-v1.png",
+      "sourceSha256": "7df9d63e0b6136431048978ec810a66bba9bb1e68b5547e4acc210db6070b20e",
+      "operation": "CROP_CONTENT_3PCT_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/rewards/us-acc-gala-v1.webp",
+      "status": "APPROVED",
+      "sha256": "16d150d23f83db0b92c7def4523d2d06d1522eb806f1f591e6859388f371f3bc",
+      "immutable": true,
+      "purpose": "Gala collar on the companions (320 px)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/rewards/us-acc-gala-v1.png",
+      "sourceSha256": "0ec980ac2b018c25bf50bf3984be1469309dd9b1b2e19a95c46aa97113c4f404",
+      "operation": "CROP_CONTENT_3PCT_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/rewards/us-think-letter-closed-v1.webp",
+      "status": "APPROVED",
+      "sha256": "58855e9415871d637b2711d72ef49b2230e1d8084233808b1423c884dcf9540e",
+      "immutable": true,
+      "purpose": "Ti penso letter, closed (480 px)",
+      "usedBy": [
+        "think-letter"
+      ],
+      "source": "assets/source/rewards/us-think-letter-closed-v1.png",
+      "sourceSha256": "0fa21743b672eff39b4f6b3705f91974634446445bae5976a131a7985841037a",
+      "operation": "CROP_CONTENT_3PCT_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/rewards/us-think-letter-open-v1.webp",
+      "status": "APPROVED",
+      "sha256": "4d72cb2b31a09ec5f021b123f09f52eb6a5469a1a2af62532323272581f3c21d",
+      "immutable": true,
+      "purpose": "Ti penso letter, open (480 px)",
+      "usedBy": [
+        "think-letter"
+      ],
+      "source": "assets/source/rewards/us-think-letter-open-v1.png",
+      "sourceSha256": "968d4322afbed5248e9b6e627cdb3659e68b963f9acde6c175474c8cb65907cc",
+      "operation": "CROP_CONTENT_3PCT_WEBP_Q90"
+    },
+    {
+      "path": "assets/source/brand/app-icon/us-launcher-symbol-notte-v1.png",
+      "status": "APPROVED",
+      "sha256": "34155dd3a70e7be420e317097f2a5ccd3319cd245bede40cd9e8eda78d0aeb1f",
+      "immutable": true,
+      "purpose": "App icon Notte: silver logo, fitted to the adaptive safe circle (founder, ChatGPT, approved 29/10/2026)",
+      "usedBy": [
+        "android-launcher-alias"
+      ]
+    },
+    {
+      "path": "assets/source/brand/app-icon/us-launcher-background-notte-v1.png",
+      "status": "APPROVED",
+      "sha256": "ef84127d9e7c457d42884548e569fa413d68b2dfe99ca3713fa5a521d96ab0b0",
+      "immutable": true,
+      "purpose": "App icon Notte: night blue background (founder, ChatGPT, approved 29/10/2026)",
+      "usedBy": [
+        "android-launcher-alias"
+      ]
+    },
+    {
+      "path": "assets/source/brand/app-icon/us-launcher-symbol-oro-v1.png",
+      "status": "APPROVED",
+      "sha256": "756a401bfeb30122374318bcef78972374baf79595bc42fce6f6bf33489dab68",
+      "immutable": true,
+      "purpose": "App icon Oro: gold logo, fitted to the adaptive safe circle (founder, ChatGPT, approved 29/10/2026)",
+      "usedBy": [
+        "android-launcher-alias"
+      ]
+    },
+    {
+      "path": "assets/source/brand/app-icon/us-launcher-background-oro-v1.png",
+      "status": "APPROVED",
+      "sha256": "c36718277795114bf409d714afac50a84a694aae8f408126464d0db41cc68662",
+      "immutable": true,
+      "purpose": "App icon Oro: dark plum background with a gold glow (founder, ChatGPT, approved 29/10/2026)",
+      "usedBy": [
+        "android-launcher-alias"
+      ]
+    },
+    {
+      "path": "assets/source/brand/app-icon/us-launcher-symbol-neon-v1.png",
+      "status": "APPROVED",
+      "sha256": "67a986fd9b13047a2c9c2cf1419c75050815117a402fffdf3b231276f110e804",
+      "immutable": true,
+      "purpose": "App icon Neon (US Plus): neon logo, fitted to the adaptive safe circle (founder, ChatGPT, approved 29/10/2026)",
+      "usedBy": [
+        "android-launcher-alias"
+      ]
+    },
+    {
+      "path": "assets/source/brand/app-icon/us-launcher-background-neon-v1.png",
+      "status": "APPROVED",
+      "sha256": "7b842aecf5efac1d65b050a53fd967aff7f709e903d4dcb7bc05b668fbb74719",
+      "immutable": true,
+      "purpose": "App icon Neon (US Plus): dark background with a pink and lilac glow (founder, ChatGPT, approved 29/10/2026)",
+      "usedBy": [
+        "android-launcher-alias"
+      ]
     }
   ]
 }
