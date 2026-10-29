@@ -132,3 +132,31 @@ Quando le immagini ci sono:
 3. Le segno `APPROVED` nel manifest solo dopo il tuo ok.
 
 La Fase 2 parte su staging come la Fase 1 e va in produzione nella patch dopo la patch unica.
+
+## A bis. Accessori indossati (founder, 29/10: gli adesivi sopra i Compagni «messi malissimo»)
+
+Gli accessori singoli (A1–A4) incollati sopra i Compagni non funzionano: sembrano adesivi. Ogni accessorio va invece **disegnato addosso** al Compagno, su un foglio identico all'originale, poi tagliato nelle pose come i fogli di ottobre. Il primo foglio (Gala su capra, gufo e drago) è approvato.
+
+**Riferimenti:** il foglio dei Compagni `assets/source/pet/us-pet-companions-sheet-v1.webp` oppure quello di Maudit `assets/source/pet/us-pet-maudit-sheet-v2.webp`, più l'immagine dell'accessorio (`assets/source/rewards/us-acc-*-v1.png`).
+
+Prompt, uguale per tutti cambiando solo l'accessorio e il foglio:
+
+```
+Rifai ESATTAMENTE il foglio allegato con i personaggi nelle stesse tre pose (sveglio, dorme, felice), stesse posizioni, stesse dimensioni, stesso stile, stessi colori, stesso sfondo bianco.
+L'unica differenza: ogni personaggio indossa [ACCESSORIO] dell'altra immagine allegata, disegnato come se lo indossasse davvero ([DOVE]), che segue la forma del corpo e si piega con la posa.
+Quando il personaggio dorme sdraiato, l'accessorio si vede solo in parte, coperto dal corpo, oppure resta appoggiato in modo naturale.
+Non cambiare nient'altro: né le facce, né le pose, né le proporzioni, né la posizione delle orecchie, delle corna e delle ali. Togli le scritte sotto i personaggi.
+```
+
+| File | Foglio | [ACCESSORIO] | [DOVE] |
+|---|---|---|---|
+| `foglio-gala-compagni.png` (fatto) | Compagni | il colletto da smoking con il papillon | al collo |
+| `foglio-sciarpina-compagni.png` | Compagni | la sciarpina di lana rosa con la riga lilla | annodata al collo |
+| `foglio-fiori-compagni.png` | Compagni | la coroncina di fiori | in cima alla testa, tra le orecchie o le corna |
+| `foglio-corona-compagni.png` | Compagni | la piccola corona d'oro | in cima alla testa, un po' inclinata |
+| `foglio-gala-maudit.png` | Maudit | il colletto da smoking con il papillon | al collo |
+| `foglio-sciarpina-maudit.png` | Maudit | la sciarpina di lana rosa con la riga lilla | annodata al collo |
+| `foglio-fiori-maudit.png` | Maudit | la coroncina di fiori | in cima alla testa, tra le orecchie |
+| `foglio-corona-maudit.png` | Maudit | la piccola corona d'oro | in cima alla testa, tra le orecchie |
+
+Salva tutto in PNG nella stessa cartella delle altre immagini.
