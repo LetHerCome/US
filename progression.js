@@ -307,11 +307,19 @@ function miniCount() {
 }
 // Premi Sintonia V2, Fase 2: pictures fetched only when a tile shows them.
 const REWARD_ART = '/assets/derived/rewards/';
+// An accessory tile shows this phone's companion wearing it; one not drawn on
+// the companions yet shows the accessory alone.
+function accessoryArt(id) {
+  const pet = window.USPet;
+  const who = pet?.companion?.();
+  if (id === 'none' || pet?.WORN?.includes(id)) return pet?.wornArt?.(who, id === 'none' ? '' : id) || '/assets/derived/pet/us-pet-maudit-awake-v2.webp';
+  return `${REWARD_ART}us-acc-${id}-v1.webp`;
+}
 function artMarkup(item, big = false) {
   if (!item) return '<span class="us-cos-stage"></span>';
   const { cat, id } = item;
   if (cat === 'ti_penso') return `<span class="us-cos-think" data-think="${esc(id)}"${id === 'letter' ? ` style="--art:url('${REWARD_ART}us-think-letter-closed-v1.webp')"` : ''}><i></i><i></i><i></i></span>`;
-  if (cat === 'pet_accessory') return `<span class="us-cos-acc" data-acc="${esc(id)}" style="--art:url('${id === 'none' ? '/assets/derived/pet/us-pet-maudit-awake-v2.webp' : `${REWARD_ART}us-acc-${esc(id)}-v1.webp`}')"></span>`;
+  if (cat === 'pet_accessory') return `<span class="us-cos-acc" data-acc="${esc(id)}" style="--art:url('${esc(accessoryArt(id))}')"></span>`;
   if (cat === 'oggi_theme') return `<span class="mini" data-theme="${esc(id)}">${miniCount()}</span>`;
   if (cat === 'oggi_effect') return `<span class="mini">${id !== 'none' && FX.has(id) ? `<canvas data-fx="${esc(id)}"></canvas>` : ''}${miniCount()}</span>`;
   if (cat === 'theme') {

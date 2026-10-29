@@ -1,6 +1,9 @@
 // Premi Sintonia V2, Fase 2 (founder, 29/10/2026): the companions wear an
-// accessory chosen on this phone. One approved picture per accessory, placed
-// per companion and pose; neck pieces hide when the companion lies down.
+// accessory chosen on this phone. Stickers placed on top looked «messi
+// malissimo»: each accessory is now drawn on each companion (the founder's
+// ChatGPT sheets), cut into the approved frames. Maudit and the dragon get the
+// boys' versions (blue scarf, laurel instead of flowers, bow tie instead of
+// pearls). The moving parts (ears, wings, tail) stay the approved ones.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -8,37 +11,29 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const read = (name) => fs.readFileSync(path.join(ROOT, name), 'utf8');
-const ACCESSORIES = ['scarf', 'gala', 'flowers', 'crown'];
+const PET = require('../pet.js');
+const WORN = ['scarf', 'gala', 'flowers'];
+const POSES = ['awake', 'body', 'sleep', 'happy'];
 
-test('the pictures are the approved ones, light, and fetched only when worn', () => {
-  const manifest = JSON.parse(read('assets/ASSET_MANIFEST.json'));
-  for (const acc of ACCESSORIES) {
-    const file = `assets/derived/rewards/us-acc-${acc}-v1.webp`;
-    const entry = manifest.assets.find((a) => a.path === file);
-    assert.equal(entry?.status, 'APPROVED', file);
-    assert.equal(entry.source, `assets/source/rewards/us-acc-${acc}-v1.png`);
-    assert.ok(fs.statSync(path.join(ROOT, file)).size < 40 * 1024, `${file} stays light`);
+test('every companion has every drawn accessory in every pose, light', () => {
+  assert.deepEqual([...PET.WORN], WORN);
+  for (const id of PET.COMPANION_IDS) for (const acc of WORN) for (const pose of POSES) {
+    const file = path.join(ROOT, `assets/derived/pet/us-pet-${id}-${acc}-${pose}-v1.webp`);
+    assert.ok(fs.existsSync(file), `${id} ${acc} ${pose}`);
+    assert.ok(fs.statSync(file).size < 24 * 1024, `${id} ${acc} ${pose} stays light`);
   }
-  assert.doesNotMatch(read('pet.css'), /us-acc-[a-z]+-v1\.webp/, 'never a first-paint stylesheet asset');
-  assert.match(read('pet.js'), /layer\.style\.setProperty\('--acc-img','url\("\/assets\/derived\/rewards\/us-acc-'\+appearance\.accessory\+'-v1\.webp"\)'\)/);
 });
 
-test('every pose carries the accessory, so it moves with the companion', () => {
+test('the accessory swaps the pictures of the poses, never the moving parts', () => {
+  assert.equal(PET.wornArt('goat', 'scarf'), '/assets/derived/pet/us-pet-goat-scarf-awake-v1.webp');
+  assert.equal(PET.wornArt('maudit', ''), '/assets/derived/pet/us-pet-maudit-awake-v2.webp');
+  assert.equal(PET.wornArt('atlantide', 'gala'), '/assets/derived/pet/us-pet-maudit-gala-awake-v1.webp', 'unknown companion: Maudit');
   const pet = read('pet.js');
-  assert.match(pet, /const acc=pose=>'<span class="us-pet-acc-pose us-pet-acc-'\+pose\+'" aria-hidden="true"><i class="us-pet-acc"><\/i><\/span>';/);
-  assert.match(pet, /blink\+acc\('awake'\)\+'<\/span>'/, 'inside the awake pose: it breathes and tilts with it');
-  assert.match(pet, /img\('us-pet-pose us-pet-pose-sleep','sleep'\)\+acc\('sleep'\)\+img\('us-pet-pose us-pet-pose-happy','happy'\)\+acc\('happy'\)/);
-});
-
-test('each companion has a place for head and neck pieces in each pose; lying down hides the neck', () => {
-  const css = read('pet.css');
-  for (const acc of ACCESSORIES) assert.match(css, new RegExp(`\\.us-pet-layer\\[data-pet-accessory="${acc}"\\] \\.us-pet-acc\\{--acc-w:[^}]+;--acc-ratio:\\d+/\\d+\\}`), acc);
-  assert.match(css, /\.us-pet-maudit \.us-pet-acc-pose\{--hx:[^}]*--nx:/, 'Maudit sleeps sitting up: one place for every pose');
-  for (const pet of ['goat', 'owl', 'dragon']) {
-    for (const pose of ['awake', 'happy']) assert.match(css, new RegExp(`\\.us-pet-${pet} \\.us-pet-acc-${pose}\\{--hx:[^}]*--nx:[^}]*--ny:[^}]*--nw:`), `${pet} ${pose}`);
-    assert.match(css, new RegExp(`\\.us-pet-${pet} \\.us-pet-acc-sleep\\{[^}]*--nshow:none\\}`), `${pet} lying down`);
-  }
-  assert.match(css, /\.us-pet-layer\[data-pet-state="sleep"\] :is\(\.us-pet-pose-sleep,\.us-pet-acc-sleep\)\{transform-origin:50% 100%;animation:us-pet-breathe/);
+  assert.match(pet, /const WORN_POSES=Object\.freeze\(\['awake','body','sleep','happy'\]\);/);
+  assert.match(pet, /WORN\.includes\(worn\)&&WORN_POSES\.includes\(name\)\?worn\+'-'\+name\+'-v1':name\+'-'\+COMPANIONS\[id\]\.v/);
+  assert.match(pet, /worn=want;figure\.innerHTML=companionMarkup\(id,worn\);/, 'the figure stays, so the dragon keeps flying');
+  assert.doesNotMatch(pet, /us-pet-acc-pose|--acc-img/, 'no sticker on top any more');
+  assert.doesNotMatch(read('pet.css'), /us-pet-acc|us-acc-[a-z]+-v1\.webp/);
 });
 
 test('in the collection: a group of its own, chosen on this phone, Niente by default', () => {
@@ -48,4 +43,5 @@ test('in the collection: a group of its own, chosen on this phone, Niente by def
   assert.match(p, /'ti_penso', 'pet_accessory', 'countdown', 'companion'/);
   assert.match(p, /const accessory = value\('pet_accessory'\);/);
   assert.match(p, /window\.USPet\?\.setAppearance\?\.\(\{ accessory: accessory \|\| '' \}\);/);
+  assert.match(p, /if \(id === 'none' \|\| pet\?\.WORN\?\.includes\(id\)\) return pet\?\.wornArt\?\.\(who, id === 'none' \? '' : id\)/, 'the tile shows this phone\'s companion wearing it');
 });

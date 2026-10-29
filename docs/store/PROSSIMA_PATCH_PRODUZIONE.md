@@ -196,7 +196,10 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - chi ha già passato quei livelli li riceve già visti;
   - la Fase 1 accetta anche le due categorie nuove, così le due migrazioni si possono rieseguire in qualsiasi ordine.
 - **Fase 2, app:**
-  - **Accessori** (nuovo gruppo nella collezione, scelto su questo telefono, «Niente» di partenza): un'immagine sola per accessorio, messa sulla testa o sotto il mento di ognuno dei quattro Compagni, nelle tre pose. Sciarpina e «Gala» spariscono quando il Compagno dorme sdraiato.
+  - **Accessori** (nuovo gruppo nella collezione, scelto su questo telefono, «Niente» di partenza): ogni accessorio è **disegnato addosso** a ognuno dei quattro Compagni, nelle tre pose, dai fogli che il founder ha generato con ChatGPT (gli adesivi sopra il disegno erano «messi malissimo», 29/10). Le parti che si muovono (orecchie, ali, coda) restano quelle di sempre, così il Compagno continua a muoverle e il drago a volare.
+    - Maudit e il drago sono maschi: sciarpina blu notte, coroncina d'alloro, colletto con papillon; la capra e il gufo: sciarpina rosa, coroncina di fiori, collana di perle.
+    - La corona (da re e da regina) aspetta il suo foglio; fino ad allora nella collezione si vede la corona da sola e il Compagno non la indossa.
+    - 48 immagini, 540 KB in tutto, scaricate solo quando un Compagno le indossa.
   - **Ti penso «lettera»:** chi l'ha scelta, quando riceve un Ti penso, vede una busta che sale al centro e si apre sul sigillo a cuore. Niente animazione con «riduci animazioni».
   - Le immagini (`assets/derived/rewards`, 17–27 KB l'una) si scaricano solo quando servono: non pesano sull'avvio.
   - **Icone dell'app:** il premio c'è nel catalogo; il cambio dell'icona sul telefono è nativo Android e arriva in un passo successivo.

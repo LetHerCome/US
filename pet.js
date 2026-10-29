@@ -125,10 +125,14 @@ const COMPANIONS=Object.freeze({
 const COMPANION_IDS=Object.freeze(Object.keys(COMPANIONS));
 // Before the couple has unlocked any companion, nothing sits above the bar.
 const NO_COMPANION='none';
-const art=(id,name)=>PET_ART+'us-pet-'+id+'-'+name+'-'+COMPANIONS[id].v+'.webp';
-function companionMarkup(id){
+// Premi Sintonia V2: accessories drawn on each companion (the founder's sheets,
+// cut into the same frames). The moving parts stay the approved ones.
+const WORN=Object.freeze(['scarf','gala','flowers']);
+const WORN_POSES=Object.freeze(['awake','body','sleep','happy']);
+const art=(id,name,worn='')=>PET_ART+'us-pet-'+id+'-'+(WORN.includes(worn)&&WORN_POSES.includes(name)?worn+'-'+name+'-v1':name+'-'+COMPANIONS[id].v)+'.webp';
+function companionMarkup(id,worn=''){
   const c=COMPANIONS[id],[W,H]=c.size;
-  const img=(cls,name,style='')=>'<img class="'+cls+'" src="'+art(id,name)+'" alt="" draggable="false" decoding="async"'+style+'>';
+  const img=(cls,name,style='')=>'<img class="'+cls+'" src="'+art(id,name,worn)+'" alt="" draggable="false" decoding="async"'+style+'>';
   const parts=Object.entries(c.parts).map(([name,[x,y]])=>img('us-pet-part us-pet-'+name,name,' style="transform-origin:'+(x/W*100).toFixed(2)+'% '+(y/H*100).toFixed(2)+'%"')).join('');
   const body=img('us-pet-body','body');
   const lids=c.eyes.map(([x0,y0,x1,y1,fur])=>{
@@ -136,11 +140,9 @@ function companionMarkup(id){
     return '<ellipse cx="'+r(cx)+'" cy="'+r(cy)+'" rx="'+r(rx)+'" ry="'+r(ry)+'" fill="'+fur+'"/><path d="M'+r(cx-rx*.8)+' '+r(cy+ry*.1)+'Q'+r(cx)+' '+r(cy+ry*.65)+' '+r(cx+rx*.8)+' '+r(cy+ry*.1)+'" fill="none" stroke="#1A1020" stroke-width="'+r(Math.max(2.6,rx*.24))+'" stroke-linecap="round"/>';
   }).join('');
   const blink=c.blink==='pose'?img('us-pet-blink','sleep'):'<svg class="us-pet-lids" viewBox="0 0 '+W+' '+H+'" aria-hidden="true" focusable="false">'+lids+'</svg>';
-  // Premi Sintonia V2: the accessory rides on each pose (pet.css places it).
-  const acc=pose=>'<span class="us-pet-acc-pose us-pet-acc-'+pose+'" aria-hidden="true"><i class="us-pet-acc"></i></span>';
   return '<span class="us-pet-rig us-pet-'+id+'" style="aspect-ratio:'+W+'/'+H+'">'
-    +'<span class="us-pet-awake">'+(c.behind?parts+body:body+parts)+blink+acc('awake')+'</span>'
-    +img('us-pet-pose us-pet-pose-sleep','sleep')+acc('sleep')+img('us-pet-pose us-pet-pose-happy','happy')+acc('happy')
+    +'<span class="us-pet-awake">'+(c.behind?parts+body:body+parts)+blink+'</span>'
+    +img('us-pet-pose us-pet-pose-sleep','sleep')+img('us-pet-pose us-pet-pose-happy','happy')
     +'<span class="us-pet-zz"><i>z</i><i>z</i></span><span class="us-pet-heart"></span></span>';
 }
 // The dragon's flight: a short loop over the bar, back to its spot.
@@ -151,6 +153,7 @@ const FLIGHT=Object.freeze([
 ]);
 function mountCompanion(host,id){
   host.innerHTML='<span class="us-pet-figure" data-pet-production="'+id+'">'+companionMarkup(id)+'</span>';
+  let worn='';
   const figure=host.querySelector?.('.us-pet-figure'),w=host.ownerDocument?.defaultView;
   let state='idle',timer=null,flight=null;
   const reduced=()=>{try{return Boolean(w?.UsUiFoundation?.isReducedMotion?.()||w?.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);}catch(_){return false;}};
@@ -176,6 +179,12 @@ function mountCompanion(host,id){
       state=next;
       if(next==='sleep'&&flight)flight.cancel();
       if(next==='idle')arm();else clear();
+    },
+    // The accessory changes the pictures, not the rig: the figure stays (and its flight).
+    setAppearance(next={}){
+      const want=WORN.includes(next.accessory)?next.accessory:'';
+      if(want===worn||!figure)return;
+      worn=want;figure.innerHTML=companionMarkup(id,worn);
     },
     destroy(){clear();if(flight)flight.cancel();host.innerHTML='';}
   };
@@ -259,8 +268,6 @@ function install(w){
     if(!layer)return;
     if(appearance.skin)layer.dataset.petSkin=appearance.skin;else delete layer.dataset.petSkin;
     if(appearance.accessory)layer.dataset.petAccessory=appearance.accessory;else delete layer.dataset.petAccessory;
-    // Premi Sintonia V2: the accessory picture, fetched only when worn (pet.css places it).
-    if(appearance.accessory)layer.style.setProperty('--acc-img','url("/assets/derived/rewards/us-acc-'+appearance.accessory+'-v1.webp")');else layer.style.removeProperty('--acc-img');
   }
 
   // The companion stored on this phone: one of COMPANION_IDS, 'none', or Maudit by default.
@@ -440,7 +447,9 @@ function install(w){
 
 // Before install (or when disabled) every entry point is a safe no-op.
 return {
-  PET_ASSET_STATUS,STATES,REASONS,TIMING,COMPANIONS,COMPANION_IDS,NO_COMPANION,createPet,registerRenderer,canMount,computeBlockers:blockers,install,MAUDIT_KEYS,
+  PET_ASSET_STATUS,STATES,REASONS,TIMING,COMPANIONS,COMPANION_IDS,NO_COMPANION,createPet,registerRenderer,canMount,computeBlockers:blockers,install,MAUDIT_KEYS,WORN,
+  // The awake picture of a companion, wearing an accessory or not (the collection tiles).
+  wornArt:(id,worn='')=>art(COMPANION_IDS.includes(id)?id:'maudit','awake',worn),
   enabled:false,
   react:()=>false,
   useRenderer:()=>false,

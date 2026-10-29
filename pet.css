@@ -45,34 +45,6 @@ body:has(#thinkArrival.open) .us-pet-layer{opacity:0;visibility:hidden;transitio
 .us-pet-layer[data-pet-state="curious"] .us-pet-awake{rotate:-7deg}
 .us-pet-layer[data-pet-state="pet"] .us-pet-awake{rotate:5deg}
 .us-pet-layer[data-pet-state="pet"] :is(.us-pet-lids,.us-pet-blink){opacity:1}
-/* Premi Sintonia V2 — accessories (assets/derived/rewards): one picture for
-   every companion, placed per companion and pose with --hx/--hy/--hw (head:
-   centre, top of the head, width) and --nx/--ny/--nw (under the chin). Head
-   pieces stand on the head; neck pieces hide when the companion lies down.
-   The picture comes from pet.js (--acc-img), fetched only when worn. */
-.us-pet-acc-pose{position:absolute;inset:0;display:none;pointer-events:none}
-.us-pet-layer:is([data-pet-accessory="scarf"],[data-pet-accessory="flowers"],[data-pet-accessory="crown"],[data-pet-accessory="gala"]) .us-pet-acc-pose{display:block}
-.us-pet-acc-sleep,.us-pet-acc-happy{opacity:0;transition:opacity .18s}
-.us-pet-layer[data-pet-state="sleep"] .us-pet-acc-sleep{opacity:1}
-.us-pet-layer[data-pet-state="happy"] .us-pet-acc-happy{opacity:1}
-.us-pet-figure[data-pet-flying] :is(.us-pet-acc-sleep,.us-pet-acc-happy){opacity:0}
-.us-pet-acc{position:absolute;display:block;aspect-ratio:var(--acc-ratio);background:var(--acc-img) center/contain no-repeat}
-.us-pet-layer:is([data-pet-accessory="flowers"],[data-pet-accessory="crown"]) .us-pet-acc{left:calc(var(--hx) - var(--acc-w) / 2);bottom:calc(100% - var(--hy));width:var(--acc-w);rotate:var(--hr,0deg)}
-.us-pet-layer:is([data-pet-accessory="scarf"],[data-pet-accessory="gala"]) .us-pet-acc{display:var(--nshow,block);left:calc(var(--nx) - var(--acc-w) / 2);top:var(--ny);width:var(--acc-w)}
-.us-pet-layer[data-pet-accessory="crown"] .us-pet-acc{--acc-w:var(--hw);--acc-ratio:320/210}
-.us-pet-layer[data-pet-accessory="flowers"] .us-pet-acc{--acc-w:calc(var(--hw) * 1.45);--acc-ratio:320/143}
-.us-pet-layer[data-pet-accessory="scarf"] .us-pet-acc{--acc-w:var(--nw);--acc-ratio:320/266}
-.us-pet-layer[data-pet-accessory="gala"] .us-pet-acc{--acc-w:calc(var(--nw) * .9);--acc-ratio:320/182}
-.us-pet-maudit .us-pet-acc-pose{--hx:41%;--hy:15%;--hw:30%;--nx:41%;--ny:64%;--nw:46%}
-.us-pet-goat .us-pet-acc-awake{--hx:50%;--hy:21%;--hw:24%;--nx:50%;--ny:59%;--nw:38%}
-.us-pet-goat .us-pet-acc-sleep{--hx:52%;--hy:40%;--hw:22%;--hr:-12deg;--nshow:none}
-.us-pet-goat .us-pet-acc-happy{--hx:52%;--hy:20%;--hw:24%;--nx:52%;--ny:62%;--nw:38%}
-.us-pet-owl .us-pet-acc-awake{--hx:50%;--hy:15%;--hw:24%;--nx:50%;--ny:56%;--nw:44%}
-.us-pet-owl .us-pet-acc-sleep{--hx:50%;--hy:30%;--hw:24%;--nshow:none}
-.us-pet-owl .us-pet-acc-happy{--hx:50%;--hy:10%;--hw:24%;--nx:50%;--ny:52%;--nw:44%}
-.us-pet-dragon .us-pet-acc-awake{--hx:50%;--hy:21%;--hw:22%;--nx:50%;--ny:58%;--nw:36%}
-.us-pet-dragon .us-pet-acc-sleep{--hx:33%;--hy:47%;--hw:20%;--hr:-14deg;--nshow:none}
-.us-pet-dragon .us-pet-acc-happy{--hx:57%;--hy:17%;--hw:22%;--nx:57%;--ny:56%;--nw:36%}
 .us-pet-zz{position:absolute;right:-6px;top:-8px;opacity:0;color:#F7EFE9;font:700 9px/1 Figtree,system-ui,sans-serif}
 .us-pet-zz i{position:absolute;font-style:normal}
 .us-pet-zz i:last-child{left:7px;top:-7px;font-size:7px}
@@ -80,7 +52,7 @@ body:has(#thinkArrival.open) .us-pet-layer{opacity:0;visibility:hidden;transitio
 .us-pet-heart{position:absolute;left:50%;top:-12px;width:12px;height:12px;margin-left:-6px;opacity:0;background:#FF7C96;-webkit-mask:url(/assets/icons/phosphor/heart-straight-fill.svg) center/contain no-repeat;mask:url(/assets/icons/phosphor/heart-straight-fill.svg) center/contain no-repeat}
 @media (prefers-reduced-motion:no-preference){
   .us-pet-awake{animation:us-pet-breathe 3.4s ease-in-out infinite}
-  .us-pet-layer[data-pet-state="sleep"] :is(.us-pet-pose-sleep,.us-pet-acc-sleep){transform-origin:50% 100%;animation:us-pet-breathe 4.6s ease-in-out infinite}
+  .us-pet-layer[data-pet-state="sleep"] .us-pet-pose-sleep{transform-origin:50% 100%;animation:us-pet-breathe 4.6s ease-in-out infinite}
   .us-pet-lids,.us-pet-blink{animation:us-pet-blink 4.6s infinite}
   .us-pet-layer[data-pet-state="pet"] :is(.us-pet-lids,.us-pet-blink){animation:none}
   .us-pet-layer[data-pet-state="sleep"] .us-pet-zz{animation:us-maudit-zz 2.8s ease-in-out infinite}

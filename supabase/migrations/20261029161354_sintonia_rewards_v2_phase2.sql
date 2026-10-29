@@ -22,12 +22,12 @@ insert into public.progression_reward_catalog
 values
   ('app_icon_neon', 7, 'app_icon', 'Icona «Neon»', 'L''icona di US come un''insegna al neon, rosa e lilla.', 'app_icon_neon', 72, true, true, false, true),
   ('pet_accessory_scarf', 9, 'pet_accessory', 'Sciarpina', 'Una sciarpa di lana per il vostro Compagno.', 'pet_accessory_scarf', 89, true, true, true, false),
-  ('pet_accessory_gala', 10, 'pet_accessory', 'Gala', 'Colletto e papillon da sera per il vostro Compagno.', 'pet_accessory_gala', 103, true, true, false, true),
-  ('pet_accessory_flowers', 12, 'pet_accessory', 'Coroncina di fiori', 'Margherite e roselline sulla testa del vostro Compagno.', 'pet_accessory_flowers', 119, true, true, true, false),
+  ('pet_accessory_gala', 10, 'pet_accessory', 'Gala', 'Papillon o collana di perle, per le sere speciali del vostro Compagno.', 'pet_accessory_gala', 103, true, true, false, true),
+  ('pet_accessory_flowers', 12, 'pet_accessory', 'Coroncina', 'Fiori o alloro sulla testa del vostro Compagno.', 'pet_accessory_flowers', 119, true, true, true, false),
   ('app_icon_night', 13, 'app_icon', 'Icona «Notte»', 'L''icona di US in argento lunare, sul blu della notte.', 'app_icon_night', 130, true, true, true, false),
   ('ti_penso_letter', 15, 'ti_penso', 'Ti penso «lettera»', 'Quando ricevi un Ti penso, si apre una letterina con il sigillo a cuore.', 'ti_penso_letter', 150, true, true, true, false),
   ('app_icon_gold', 18, 'app_icon', 'Icona d''oro', 'L''icona di US in oro, su un fondo prugna.', 'app_icon_gold', 180, true, true, true, false),
-  ('pet_accessory_crown', 19, 'pet_accessory', 'Corona', 'Una piccola corona d''oro per il vostro Compagno.', 'pet_accessory_crown', 190, true, true, true, false)
+  ('pet_accessory_crown', 19, 'pet_accessory', 'Corona', 'Una corona da re o da regina per il vostro Compagno.', 'pet_accessory_crown', 190, true, true, true, false)
 on conflict (id) do update set
   level_required = excluded.level_required, category = excluded.category, title = excluded.title,
   description = excluded.description, token = excluded.token, sort_order = excluded.sort_order,

@@ -318,3 +318,11 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - L'icona del telefono è solo «US» con la stellina, sullo sfondo bianco di sempre: la forma del telefono fa da cornice.
 - Il logo con la cornice resta dove non c'è una forma attorno: splash d'apertura, logo in alto nell'app, icona web e notifiche.
 - Le icone premio «Notte», «Oro» e «Neon» (Sintonia V2) partono dallo stesso logo senza cornice.
+
+## 2026-10-29 — Accessori dei Compagni disegnati addosso, versioni da maschio e da femmina
+
+**Fonte:** founder, 29/10/2026: gli accessori incollati sopra i Compagni sono «messi malissimo»; «Maudit e il drago sono maschi, quindi la sciarpa sì ma un altro colore e la coroncina evitiamola»; «corona da re e corona da regina»; per il Gala «la gonna su un gufo stona».
+
+- Ogni accessorio è disegnato addosso a ogni Compagno su un foglio ChatGPT identico all'originale, poi tagliato nelle pose approvate. Mai più adesivi sopra il disegno.
+- Maschi (Maudit, drago): sciarpina blu notte, coroncina d'alloro, papillon, corona da re. Femmine (capra, gufo): sciarpina rosa, coroncina di fiori, collana di perle, corona da regina.
+- Il premio resta uno («Sciarpina», «Coroncina», «Gala», «Corona»): ognuno lo vede nella versione del suo Compagno.
