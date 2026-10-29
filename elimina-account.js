@@ -5,9 +5,10 @@
 'use strict';
 
 // Production Supabase project (same public values as app.js). Only the
-// production Pages host and its preview subdomains may use them; any other
-// host gets no configuration and the form stays disabled.
-const PRODUCTION_HOST='us-a33.pages.dev';
+// production addresses (the Pages host and its preview subdomains, and the
+// US domain with www) may use them; any other host gets no configuration and
+// the form stays disabled.
+const PRODUCTION_HOSTS=['us-a33.pages.dev','uscouple.app'];
 const PRODUCTION_CONFIG=Object.freeze({
   supabaseUrl:'https://iiakdfsxpywdkxravqjh.supabase.co',
   apiKey:'sb_publishable_JAB6USqhccAUg8_0ujgQ1A_NkRJRv_A'
@@ -15,12 +16,12 @@ const PRODUCTION_CONFIG=Object.freeze({
 
 function configForHost(hostname){
   const host=String(hostname||'').toLowerCase();
-  if(host===PRODUCTION_HOST||host.endsWith(`.${PRODUCTION_HOST}`))return PRODUCTION_CONFIG;
+  if(PRODUCTION_HOSTS.some(h=>host===h||host.endsWith(`.${h}`)))return PRODUCTION_CONFIG;
   return null;
 }
 
 if(typeof module!=='undefined'&&module.exports){
-  module.exports={configForHost,PRODUCTION_HOST};
+  module.exports={configForHost,PRODUCTION_HOSTS};
   return;
 }
 

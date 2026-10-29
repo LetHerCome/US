@@ -56,10 +56,11 @@ test('the platform hands every opened link to every listener (widgets and invite
 
 test('Android opens /invito on the US site in the app, verified (App Links)', () => {
   const manifest = read('android/app/src/main/AndroidManifest.xml');
-  assert.match(manifest, /<intent-filter android:autoVerify="true">\s*<action android:name="android\.intent\.action\.VIEW" \/>\s*<category android:name="android\.intent\.category\.DEFAULT" \/>\s*<category android:name="android\.intent\.category\.BROWSABLE" \/>\s*<data android:scheme="https" android:host="\$\{usInviteHost\}" android:path="\/invito" \/>\s*<\/intent-filter>/);
+  assert.match(manifest, /<intent-filter android:autoVerify="true">\s*<action android:name="android\.intent\.action\.VIEW" \/>\s*<category android:name="android\.intent\.category\.DEFAULT" \/>\s*<category android:name="android\.intent\.category\.BROWSABLE" \/>\s*<data android:scheme="https" android:host="\$\{usInviteHost\}" android:path="\/invito" \/>\s*<data android:scheme="https" android:host="\$\{usInviteHostOld\}" android:path="\/invito" \/>\s*<\/intent-filter>/);
   const gradle = read('android/app/build.gradle');
-  assert.match(gradle, /manifestPlaceholders = \[usInviteHost: "us-a33\.pages\.dev"\]/);
-  assert.match(gradle, /manifestPlaceholders = \[usInviteHost: "us-staging-s31\.pages\.dev"\]/);
+  // www.uscouple.app since 30/10/2026; the old address still opens the app.
+  assert.match(gradle, /manifestPlaceholders = \[usInviteHost: "www\.uscouple\.app", usInviteHostOld: "us-a33\.pages\.dev"\]/);
+  assert.match(gradle, /manifestPlaceholders = \[usInviteHost: "us-staging-s31\.pages\.dev", usInviteHostOld: "us-staging-s31\.pages\.dev"\]/);
 });
 
 test('the site proves the app is ours: /.well-known/assetlinks.json, published as is', () => {

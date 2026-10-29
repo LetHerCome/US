@@ -18,14 +18,14 @@
   // Founder-approved release decision only. Flipping it also requires the
   // matching assertion in tests/s3-1-public-auth.test.js to change.
   // Released on 25/10/2026 for the Play closed test (founder): confirmation and
-  // recovery emails go out through the Moonee Lab Gmail SMTP.
+  // recovery emails go out from noreply@uscouple.app through Resend (30/10/2026).
   const PRODUCTION_SIGNUP_RELEASED = true;
   const PASSWORD_MIN = 10, PASSWORD_MAX = 72;
   // The published Terms and Privacy pages (https, termini.html / privacy.html;
   // each links its English version). A release needs both.
   const LEGAL_URLS = Object.freeze({
-    terms: 'https://us-a33.pages.dev/termini',
-    privacy: 'https://us-a33.pages.dev/privacy'
+    terms: 'https://www.uscouple.app/termini',
+    privacy: 'https://www.uscouple.app/privacy'
   });
   const legalUrl = value => {
     try { const url = new URL(value); return url.protocol === 'https:' ? url.href : ''; } catch (_) { return ''; }

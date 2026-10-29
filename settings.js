@@ -652,7 +652,7 @@ async function privacyModal(){
   try{api=await loadAccountDeletion();}catch(_){}
   // Public legal pages (privacy.html, termini.html), in the app's language.
   const en=/^en/i.test(document.documentElement.lang||'');
-  const legal=page=>`https://us-a33.pages.dev/${page}${en?'-en':''}`;
+  const legal=page=>`https://www.uscouple.app/${page}${en?'-en':''}`;
   openModal('Privacy e dati',`
     <div class="us-settings-copy">
       <p><b>Posizione</b><span>Solo approssimativa e solo se la attivi: la tua persona vede la distanza, mai dove sei. Puoi smettere e cancellarla da Posizione.</span></p>

@@ -159,7 +159,7 @@ English (500 characters max):
 
 0. **Mail di conferma** (founder, in Supabase produzione: Authentication › Emails › Templates › Confirm signup): la riga «Poi torna in US e accedi con email e password.» diventa «Poi torna in US: l'accesso è automatico.».
 1. **SQL** con il workflow «Supabase SQL (manual)», target `production` e conferma `PRODUZIONE`, nell'ordine: Gioca (`20261028201759_gioca_daily_limit_v1.sql`), traguardi (`20261028232743_days_together_milestones_v1.sql`), versione minima (`20261029012149_app_min_version_v1.sql`), colori e Plus (`20261029014653_person_colors_plus_v1.sql`), colori gratis in beta (`20261029203000_colors_free_in_beta.sql`). Prima serve un token Supabase che includa il progetto di produzione: quello attuale vale solo per staging.
-1b. **Edge Function** `monthiversary-job` con il workflow «Supabase Edge deploy», target `production`, dopo l'SQL dei traguardi: usa la nuova funzione del database.
+1b. **Edge Function** `monthiversary-job` con il workflow «Supabase Edge deploy», target `production`, dopo l'SQL dei traguardi: usa la nuova funzione del database. Con lo stesso workflow `delete-account`, `leave-couple` e `account-deletion-worker`, perché accettino anche `www.uscouple.app`.
 2. **Sito web** (Cloudflare Pages `us-a33`): porta `/invito`, `/.well-known/assetlinks.json` e l'app web nuova. Va pubblicato prima dell'AAB: il link condiviso dall'app punta a `us-a33.pages.dev/invito`, e Android verifica il file quando installa l'app.
 3. **AAB** sul test chiuso «Alpha» di Play, con il testo «Novità» qui sopra.
 
@@ -170,7 +170,16 @@ Tra il passo 1 e il passo 3 l'app vecchia dice ancora «lunedì» per una partit
 - **App Links e build installate a mano:** il file dichiara solo la chiave di firma di Play. Un APK installato a mano (staging o interno) apre il link nel browser.
 - **Google Play dalla pagina d'invito:** durante il test chiuso la scheda dello store si apre solo per i tester.
 - **Staging:** i cron sono spenti, quindi i traguardi non arrivano da soli alle 9. Plus si dà a tutti gli account con `docs/store/US_STAGING_PLUS_PER_TUTTI.sql`, e tutta la Sintonia si sblocca con `docs/store/US_STAGING_SINTONIA_TUTTA.sql`. Sono dati di prova: **non fanno parte della patch** e non vanno mai eseguiti in produzione.
-- **Mail di verifica nello spam:** si risolve con un mittente email nostro (SMTP personalizzato in Supabase). È una decisione a parte.
+- **Dominio e mail (già fatti dal founder in produzione, 29–30/10):**
+  - dominio `uscouple.app` (Cloudflare): `uscouple.app` e `www.uscouple.app` servono già il sito di produzione (progetto Pages `us`, alias `us-a33.pages.dev`). Indirizzo principale scelto: **www.uscouple.app**;
+  - Resend: dominio `uscouple.app` verificato (DKIM, SPF) e DMARC `v=DMARC1; p=none;`;
+  - Supabase produzione: SMTP personalizzato attivo con Resend, mittente «US <noreply@uscouple.app>», provato dal founder (mail arrivata). Per tornare indietro: spegnere «Enable custom SMTP». Limite iniziale circa 30 mail/ora (Authentication › Rate Limits). Staging resta con la mail di Supabase (scelta del founder);
+  - nella patch (codice, 30/10): l'indirizzo principale è `www.uscouple.app`:
+    - il link d'invito è `https://www.uscouple.app/invito#CODICE`, anche dall'app e dal vecchio indirizzo; i link vecchi `us-a33.pages.dev/invito` funzionano ancora;
+    - App Links: l'app Android si apre da `www.uscouple.app/invito` e da `us-a33.pages.dev/invito` (due host nello stesso intent-filter; lo stesso `assetlinks.json` vale per tutti gli indirizzi del progetto Pages);
+    - privacy, termini (nel box di registrazione e in Impostazioni) e il link a «elimina account» nelle pagine privacy puntano a `www.uscouple.app`;
+    - la pagina «elimina account» funziona anche su `uscouple.app` e `www`; le Edge Function `delete-account`, `leave-couple` e `account-deletion-worker` accettano anche le origini `https://www.uscouple.app` e `https://uscouple.app`;
+  - ancora da fare a mano: Redirect URLs di produzione con `https://uscouple.app/**` e `https://www.uscouple.app/**` (prima della patch); dopo la patch Site URL di Supabase `https://www.uscouple.app` e URL privacy in Play Console `https://www.uscouple.app/privacy`.
 - **App di staging:** dall'APK di staging il link d'invito punta comunque al sito di produzione. Sul web di staging punta a staging.
 
 ## Dopo la patch unica: Premi Sintonia V2 (non incluso)

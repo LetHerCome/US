@@ -55,7 +55,7 @@ export function isolateStagingDeletionPage(src, publishableKey) {
     if (text.split(search).length !== 2) throw Error('S3.2 staging deletion page input mismatch');
     return text.replace(search, next);
   };
-  let out = replaceOne(src, "const PRODUCTION_HOST='us-a33.pages.dev';", "const PRODUCTION_HOST='"+STAGING_PAGES_HOST+"';");
+  let out = replaceOne(src, "const PRODUCTION_HOSTS=['us-a33.pages.dev','uscouple.app'];", "const PRODUCTION_HOSTS=['"+STAGING_PAGES_HOST+"'];");
   out = replaceOne(out, "supabaseUrl:'https://"+PROD+".supabase.co',", "supabaseUrl:'https://"+STAGE+".supabase.co',");
   out = out.replace(/apiKey:'sb_publishable_[A-Za-z0-9_-]+'/, "apiKey:'"+publishableKey+"'");
   if (!out.includes("apiKey:'"+publishableKey+"'")) throw Error('S3.2 staging deletion key substitution failed');

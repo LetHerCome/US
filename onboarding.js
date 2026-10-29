@@ -199,8 +199,9 @@
   // leaves the address bar and waits in this tab until the join step uses it.
   const PENDING_INVITE='us:onboarding:v1:pending-invite';
   // App Links (29/10/2026): the shared link opens the Android app with its URL
-  // (https://<US site>/invito#CODE). Only the US sites' invite page counts.
-  const INVITE_HOSTS=['us-a33.pages.dev','us-staging-s31.pages.dev'];
+  // (https://<US site>/invito#CODE). Only the US sites' invite page counts:
+  // www.uscouple.app (30/10/2026), and the old address for links already shared.
+  const INVITE_HOSTS=['www.uscouple.app','uscouple.app','us-a33.pages.dev','us-staging-s31.pages.dev'];
   function inviteFromLink(value){
     try{
       const url=new URL(String((typeof value==='object'?value?.url:value)||''));
@@ -345,11 +346,14 @@
       return `scade il ${part('day')} ${part('month')} alle ${part('hour')}:${part('minute')}`;
     }catch(_e){return '';}
   }
-  // The invite page (invito.html) on this site; from the Android app, on the
-  // production site. The code rides in the fragment: it never reaches a server log.
-  const INVITE_SITE='https://us-a33.pages.dev';
+  // The invite page (invito.html) on this site; from the Android app and from
+  // any address of production, on www.uscouple.app. The code rides in the
+  // fragment: it never reaches a server log.
+  const INVITE_SITE='https://www.uscouple.app';
+  const PRODUCTION_SITES=['https://www.uscouple.app','https://uscouple.app','https://us-a33.pages.dev'];
   function inviteLink(code,origin=globalThis.location?.origin){
-    const site=/^https:\/\/(?!localhost\b)[a-z0-9.-]+$/i.test(String(origin||''))?origin:INVITE_SITE;
+    const own=/^https:\/\/(?!localhost\b)[a-z0-9.-]+$/i.test(String(origin||''))&&!PRODUCTION_SITES.includes(origin);
+    const site=own?origin:INVITE_SITE;
     return `${site}/invito#${encodeURIComponent(String(code||''))}`;
   }
   // What "Condividi" sends: in the sender's language, the link on its own line,
