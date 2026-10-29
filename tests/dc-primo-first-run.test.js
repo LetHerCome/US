@@ -234,15 +234,15 @@ test('invite (1.0 A2): the automatic check is quiet, never blocks a tap and neve
 
 test('invite (beta fix 28/10): the message is a link to the invite, without the expiry',async()=>{
   const code='01JBX4Z7Q8M2N5P6R9S3T4V7W8';
-  const text=OB.inviteMessage(code,undefined,'https://us-a33.pages.dev');
-  assert.equal(text,`Ti aspetto su US ♡\nApri il mio invito:\nhttps://us-a33.pages.dev/invito#${code}`);
+  const text=OB.inviteMessage(code,undefined,'https://www.uscouple.app');
+  assert.equal(text,`Ti aspetto su US ♡\nApri il mio invito:\nhttps://www.uscouple.app/invito#${code}`);
   assert.doesNotMatch(text,/[Ss]cade/,'the partner says when it expires, not the message');
-  const english=OB.inviteMessage(code,t=>`<${t}>`,'https://us-a33.pages.dev');
-  assert.equal(english.split('\n')[2],`https://us-a33.pages.dev/invito#${code}`,'the link is never translated');
+  const english=OB.inviteMessage(code,t=>`<${t}>`,'https://www.uscouple.app');
+  assert.equal(english.split('\n')[2],`https://www.uscouple.app/invito#${code}`,'the link is never translated');
   assert.equal(english.split('\n')[0],'<Ti aspetto su US ♡>');
   // The page that opens the link: this site on the web, production from the Android app.
   assert.equal(OB.inviteLink(code,'https://us-staging-s31.pages.dev'),`https://us-staging-s31.pages.dev/invito#${code}`);
-  for(const origin of ['https://localhost','capacitor://localhost','http://127.0.0.1:8080',undefined])assert.equal(OB.inviteLink(code,origin),`https://us-a33.pages.dev/invito#${code}`,String(origin));
+  for(const origin of ['https://localhost','capacitor://localhost','http://127.0.0.1:8080',undefined])assert.equal(OB.inviteLink(code,origin),`https://www.uscouple.app/invito#${code}`,String(origin));
 });
 
 test('invite (beta fix 28/10): the code is found in whatever was pasted',()=>{

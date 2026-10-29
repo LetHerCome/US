@@ -293,3 +293,11 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - «Il vostro anno su US» (founder, 29/10: «è rimasto il vostro anno..»): in Noi compare solo quando la coppia compie un anno su US (`couples.created_at`, giorno di Roma; il 29 febbraio vale il 28), per 30 giorni, ogni anno. L'anniversario della relazione in Oggi apre Eventi.
 - Il cuore (founder, 29/10: «cambierei anche l'animazione del mi piace … e ogni 3 mi piace una più grande»): i cuori di Oggi (risposta del partner), della risposta a un Ti penso e del Ti penso in alto a sinistra («la stessa cosa anche al Ti penso») hanno la stessa animazione, contati insieme, rosa→lilla, reattiva e senza coriandoli (founder: «più reattivo e satisfied … senza coriandoli»): il cuore scatta al tocco e un'onda si apre attorno; ogni terzo cuore di una persona è quello grande, con lo scatto più alto e una seconda onda. Il conto sta sul telefono di ciascuno.
 - Rimandati, ognuno con la sua decisione: Sintonia più semplice (prima un prima/dopo), il mega recap di «Il vostro anno su US» e i recap dei mesiversari, foto senza posizione (selettore nativo).
+
+## 2026-10-30 — Dominio www.uscouple.app
+
+**Fonte:** founder, 29–30/10/2026: dominio `uscouple.app` comprato su Cloudflare, «io volevo www», «il dominio deve stare in produzione»; Resend verificato su `uscouple.app` e SMTP di Supabase produzione attivo («funziona»).
+
+- L'indirizzo principale di US è `https://www.uscouple.app`. `uscouple.app` e `us-a33.pages.dev` restano lo stesso sito, e i link già condivisi continuano a funzionare.
+- Inviti, App Links, privacy e termini usano `www.uscouple.app`; l'app Android accetta anche il vecchio indirizzo.
+- Le mail di US partono da «US <noreply@uscouple.app>» via Resend, solo in produzione; lo staging resta con la mail di Supabase (scelta del founder).
