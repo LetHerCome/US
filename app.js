@@ -5891,8 +5891,8 @@ async function sendThinkSignal(){
   // Mockup: the heart takes my colour for a moment and two sparks, mine and
   // theirs, fly out of it; then "Ti penso inviato a …".
   btn?.classList.add('sent');setTimeout(()=>btn?.classList.remove('sent'),2400);
-  if(btn&&!result?.duplicate)thinkSparks(btn);
-  window.UsFeedback?.action?.();
+  // Il cuore (founder, 29/10/2026): the same heart as the others, counted with them.
+  if(btn&&!result?.duplicate)usHeartLike(btn);else window.UsFeedback?.action?.();
   if(result?.duplicate)toast('Già inviato',{quiet:true});
   else toast(`Ti penso inviato a ${partner.display_name||usIdentity().partnerName}`,{icon:'heart',quiet:false});
   await hydrateThink();
@@ -5900,18 +5900,6 @@ async function sendThinkSignal(){
   return true;
 }
 window.sendThinkSignal=sendThinkSignal;
-function thinkSparks(btn){
-  if(dailyRitualReducedMotion()||typeof document.createElement!=='function')return;
-  const r=btn.getBoundingClientRect?.();if(!r)return;
-  const root=getComputedStyle(document.documentElement);
-  [[root.getPropertyValue('--us-tu').trim()||'#ff7c96',-1],[root.getPropertyValue('--us-partner').trim()||'#a98bff',1]].forEach(([color,side],i)=>{
-    const d=document.createElement('span');d.className='dc-oggi-spark';d.setAttribute('aria-hidden','true');
-    d.style.background=color;d.style.left=`${r.left+r.width/2-6}px`;d.style.top=`${r.top+r.height/2-6}px`;
-    document.body.appendChild(d);
-    const a=d.animate?.([{translate:'0 0',opacity:1,scale:1},{translate:`${side*18}px 26px`,opacity:1,scale:1.1,offset:.35},{translate:`${130+side*8}px 8px`,opacity:0,scale:.5}],{duration:950,delay:i*70,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'});
-    if(a)a.onfinish=()=>d.remove();else d.remove();
-  });
-}
 function handleIncomingThink(row){
   if(!row||row.kind!=='think'||row.recipient_id!==window.usProfile?.id)return;
   usIncomingThink={...row};usThinkReactionFinal=null;usThinkReactionInFlight=false;

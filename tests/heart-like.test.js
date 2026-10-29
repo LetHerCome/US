@@ -102,3 +102,11 @@ test('wired: Oggi and Ti penso play it when a heart is given, never when taken b
   assert.match(app, /if\(reaction==='heart'\)usHeartLike\(document\.querySelector\('#thinkArrival \[data-think-reaction="heart"\]'\)\);/);
   assert.match(app, /if\(usThinkReactionFinal!=='heart'\)window\.UsUiFoundation\?\.done\?\.\(/);
 });
+
+test('the Ti penso at the top left plays the same heart when it is sent, not when it was already sent', () => {
+  const app = read('app.js');
+  const send = app.slice(app.indexOf('async function sendThinkSignal('), app.indexOf('window.sendThinkSignal=sendThinkSignal;'));
+  assert.match(send, /if\(btn&&!result\?\.duplicate\)usHeartLike\(btn\);else window\.UsFeedback\?\.action\?\.\(\);/);
+  assert.doesNotMatch(app, /thinkSparks/, 'the two old sparks are gone');
+  assert.match(read('ui-foundation.js'), /element\.querySelector\?\.\('\.us-icon, \.think-reaction-glyph, \.us-shell-icon'\)/, 'its heart is the one that springs back');
+});

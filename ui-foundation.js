@@ -783,7 +783,7 @@
     scope.UsFeedback?.[big ? 'success' : 'action']?.();
     const d = element?.ownerDocument;
     if (!element?.getBoundingClientRect || !d?.body || activeMotion.isReducedMotion()) return false;
-    const glyph = element.querySelector?.('.us-icon, .think-reaction-glyph') || element;
+    const glyph = element.querySelector?.('.us-icon, .think-reaction-glyph, .us-shell-icon') || element;
     const r = (glyph.getBoundingClientRect ? glyph : element).getBoundingClientRect();
     if (!r.width && !r.height) return true;
     const k = Math.max(1, r.width / 20) * (big ? 1.45 : 1);
