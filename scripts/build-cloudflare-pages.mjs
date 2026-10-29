@@ -102,6 +102,8 @@ const RUNTIME_FILES = [
   // Public invite page: the link a partner shares (onboarding.js inviteLink).
   'invito.html',
   'invito.js',
+  // App Links: the site vouches for the Android app that opens /invito.
+  '.well-known/assetlinks.json',
   // Public legal pages (Play listing, sign-up box, Settings › Privacy e dati).
   'legal.css',
   'privacy.html',

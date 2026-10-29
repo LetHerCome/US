@@ -1,8 +1,8 @@
 # Prossima patch in produzione
 
 **Stato:** in prova su staging (https://us-staging-s31.pages.dev). Niente è in produzione. Ogni passo qui sotto ha il via separato del founder (regola «prove solo su staging», `docs/DECISIONS.md`, 28/10/2026).
-**Build:** `us-traguardi-20261029-45`.
-**Branch:** `claude/gioca-una-al-giorno` (PR #232), sopra `claude/fix-amici-beta` (PR #233) e sopra ancora `claude/traguardi-giorni`.
+**Build:** `us-invito-android-20261029-46`.
+**Branch:** `claude/gioca-una-al-giorno` (PR #232), sopra `claude/fix-amici-beta` (PR #233) poi `claude/traguardi-giorni` (PR #234) e infine `claude/invito-app-links`.
 
 ## Testo «Novità» per Google Play
 
@@ -42,6 +42,11 @@ English (500 characters max):
   - La pagina `/invito` mostra il codice da solo, con «Copia codice», «Usa US dal browser» e «Scarica US da Google Play».
   - Il codice sta dopo `#`, quindi non arriva nei log del server.
 - **Codice incollato:** nel campo del codice si può incollare tutto il messaggio di WhatsApp, anche quello vecchio, oppure il link. US trova da solo il codice.
+- **Il link apre l'app Android (App Links, 29/10):**
+  - con US installata, `https://us-a33.pages.dev/invito#CODICE` apre l'app e non il browser;
+  - il codice resta pronto per «Ho un codice d'invito»: se sei su «Voi», US ci va da sola;
+  - il sito lo dimostra ad Android con `/.well-known/assetlinks.json` (pacchetto `com.usapp.us` e impronta SHA-256 della chiave di firma di Play);
+  - nel manifest c'è un intent-filter `autoVerify` su `/invito`; l'app di staging usa `us-staging-s31.pages.dev`.
 - **App web aperta dal link:** se l'invito apre US dal browser, il codice è già compilato in «Ho un codice d'invito».
 - **«Insieme dal»:** tre tendine, giorno, mese e anno (dal più recente al 1900), al posto del calendario.
 - **Dopo la mail di verifica:**
@@ -69,14 +74,14 @@ English (500 characters max):
 
 1. **SQL** con il workflow «Supabase SQL (manual)», target `production` e conferma `PRODUZIONE`, nell'ordine: Gioca (`20261028201759_gioca_daily_limit_v1.sql`), poi traguardi (`20261028232743_days_together_milestones_v1.sql`). Prima serve un token Supabase che includa il progetto di produzione: quello attuale vale solo per staging.
 1b. **Edge Function** `monthiversary-job` con il workflow «Supabase Edge deploy», target `production`, dopo l'SQL dei traguardi: usa la nuova funzione del database.
-2. **Sito web** (Cloudflare Pages `us-a33`): porta `/invito` e l'app web nuova. Va pubblicato prima dell'AAB, perché il link condiviso dall'app punta a `us-a33.pages.dev/invito`.
+2. **Sito web** (Cloudflare Pages `us-a33`): porta `/invito`, `/.well-known/assetlinks.json` e l'app web nuova. Va pubblicato prima dell'AAB: il link condiviso dall'app punta a `us-a33.pages.dev/invito`, e Android verifica il file quando installa l'app.
 3. **AAB** sul test chiuso «Alpha» di Play, con il testo «Novità» qui sopra.
 
 Tra il passo 1 e il passo 3 l'app vecchia dice ancora «lunedì» per una partita che torna domani: sono sbagliate solo le scritte, i limiti funzionano.
 
 ## Da sapere
 
-- **Link d'invito e app Android:** il link si apre nel browser, non nell'app installata. Per aprire l'app serve Android App Links: `assetlinks.json` con l'impronta SHA-256 della chiave di firma di Play (Play Console › Integrità dell'app) e un intent-filter. È un passo successivo.
+- **App Links e build installate a mano:** il file dichiara solo la chiave di firma di Play. Un APK installato a mano (staging o interno) apre il link nel browser.
 - **Google Play dalla pagina d'invito:** durante il test chiuso la scheda dello store si apre solo per i tester.
 - **Mail di verifica nello spam:** si risolve con un mittente email nostro (SMTP personalizzato in Supabase). È una decisione a parte.
 - **App di staging:** dall'APK di staging il link d'invito punta comunque al sito di produzione. Sul web di staging punta a staging.

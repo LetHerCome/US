@@ -289,12 +289,17 @@
     catch (_) { return null; }
   }
 
+  // One native listener; every opened link goes to every handler (the widgets'
+  // us://widget links, the invite's https://…/invito links since 29/10/2026).
+  const appUrlHandlers = new Set();
   function listenForNativeAppUrl(handler) {
     if (!isNative || typeof handler !== 'function') return Promise.resolve(null);
+    appUrlHandlers.add(handler);
     if (nativeAppUrlListener) return nativeAppUrlListener;
     const app = getNativeApp();
     if (!app || typeof app.addListener !== 'function') return Promise.resolve(null);
-    nativeAppUrlListener = Promise.resolve(app.addListener('appUrlOpen', handler)).catch(() => {
+    const fanOut = (event) => { for (const each of appUrlHandlers) { try { each(event); } catch (_) {} } };
+    nativeAppUrlListener = Promise.resolve(app.addListener('appUrlOpen', fanOut)).catch(() => {
       nativeAppUrlListener = null;
       return null;
     });

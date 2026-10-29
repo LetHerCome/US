@@ -61,11 +61,14 @@ android {
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "com.usapp.us"
+        // App Links (29/10/2026): the invite page opens the app on its own site.
+        manifestPlaceholders = [usInviteHost: "us-a33.pages.dev"]
         // Staging-only Android QA lives in a separate Android sandbox, without
         // shared storage, notifications or Google Play identity with real US.
         // The normal production/internal applicationId is NEVER changed.
         if (System.getenv('US_STAGING_QA') == 'true') {
             applicationId "com.usapp.us.staging"
+            manifestPlaceholders = [usInviteHost: "us-staging-s31.pages.dev"]
         }
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion

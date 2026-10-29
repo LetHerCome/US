@@ -198,8 +198,20 @@
   // The invite page (invito.html) opens the web app on /#invito=CODE: the code
   // leaves the address bar and waits in this tab until the join step uses it.
   const PENDING_INVITE='us:onboarding:v1:pending-invite';
-  function takeInvite({location,history,session,used=false}={}){
+  // App Links (29/10/2026): the shared link opens the Android app with its URL
+  // (https://<US site>/invito#CODE). Only the US sites' invite page counts.
+  const INVITE_HOSTS=['us-a33.pages.dev','us-staging-s31.pages.dev'];
+  function inviteFromLink(value){
+    try{
+      const url=new URL(String((typeof value==='object'?value?.url:value)||''));
+      if(url.protocol!=='https:'||!INVITE_HOSTS.includes(url.hostname)||!/^\/invito(\.html)?$/.test(url.pathname))return '';
+      return inviteCodeIn(decodeURIComponent(url.hash.slice(1)));
+    }catch(_e){return '';}
+  }
+  function takeInvite({location,history,session,url,used=false}={}){
     if(used){storeRemove(session,PENDING_INVITE);return '';}
+    const linked=url?inviteFromLink(url):'';
+    if(linked)storeSet(session,PENDING_INVITE,linked);
     const hit=/^#invito=([0-9A-Za-z-]+)$/.exec(String(location?.hash||''));
     const code=hit?inviteCodeIn(decodeURIComponent(hit[1])):'';
     if(hit){
@@ -1362,6 +1374,17 @@
       goTo('choice','mc3Title');
     });
     for(const [id,next,focusId] of [['mc3ChooseCreate','create','mc3DateDay'],['mc3ChooseJoin','join','mc3JoinCode'],['mc3BackCreate','choice','mc3Title'],['mc3BackJoin','choice','mc3Title'],['mc3BackMe','me','mc3Title']])node(id).addEventListener('click',()=>goTo(next,focusId));
+    // App Links: an invite link opened the app (or the app was already open).
+    // The code waits for «Ho un codice d’invito»; from «Voi» it goes straight there.
+    const acceptInviteLink=value=>{
+      const code=takeInvite({url:value,session:sessionStorage});
+      if(!code||!inviteFromLink(value))return false;
+      if(mode==='join'&&root.dataset.view==='join')node('mc3JoinCode').value=code;
+      else if(mode==='choice'&&root.dataset.view==='choice')goTo('join','mc3JoinCode');
+      return true;
+    };
+    window.UsPlatform?.listenForNativeAppUrl?.(acceptInviteLink);
+    Promise.resolve(window.UsPlatform?.getNativeLaunchUrl?.()).then(acceptInviteLink).catch(()=>{});
     node('mc3ColorNext').addEventListener('click',()=>{justCreated=false;goTo('waiting','mc3Title');});
     const press=(button,label,text='')=>{if(button&&!controller.state.busy)pressed={button,label,text};};
     node('mc3Create').addEventListener('submit',event=>{event.preventDefault();justCreated=true;press(event.submitter||node('mc3Create').querySelector('[type=submit]'),'Creo…','Crea il nostro spazio');run(()=>controller.create({name:node('mc3CreateName').value,date:togetherDate(dateDay.value,dateMonth.value,dateYear.value),coupleName:node('mc3CoupleName').value}),'create');});
@@ -1402,7 +1425,7 @@
     controller.tour=tour;controller.setup=setup;
     return controller;
   }
-  return Object.freeze({route,validName,validDate,normalizeCode,validCode,inviteCodeIn,inviteLink,takeInvite,togetherDate,togetherYears,romeToday,errorMessage,createController,mount,
+  return Object.freeze({route,validName,validDate,normalizeCode,validCode,inviteCodeIn,inviteLink,inviteFromLink,takeInvite,togetherDate,togetherYears,romeToday,errorMessage,createController,mount,
     FIRST_RUN_KEYS,tourWanted,birthdayCheck,nextBirthday,birthdayEvent,rememberBirthday,saveBirthday,setupMode,setupSteps,pushStepState,placeStepWanted,daysTogether,inviteExpiry,
     inviteMessage,shareInvite,widgetOfferWanted,CHECK_MS,authSwap,authArrive,shake});
 });
