@@ -3,7 +3,7 @@
    bottom bar, its feet 4 px over the bar's top edge, 54 × 48. It never walks
    and is never carried; only its state changes (pet.js). The layer stays
    pointer-transparent; only the hit target on the cat takes a tap. */
-.us-pet-layer{position:fixed;z-index:var(--us-layer-ambient);right:calc((100% - min(456px,calc(100% - 24px))) / 2 + 10px);bottom:calc(max(12px,var(--us-safe-bottom)) + 66px);width:54px;height:48px;pointer-events:none;transition:opacity .3s,translate .45s var(--us-ease-standard)}
+.us-pet-layer{position:fixed;z-index:var(--us-layer-ambient);right:calc((100% - min(456px,calc(100% - 24px))) / 2 + 10px);bottom:calc(max(12px,var(--us-safe-bottom)) + var(--us-nav-height) - 4px);width:54px;height:48px;pointer-events:none;transition:opacity .3s,translate .45s var(--us-ease-standard)}
 .us-pet-layer[hidden]{display:none!important}
 .us-pet-layer,.us-pet-layer *{pointer-events:none!important;user-select:none;-webkit-user-select:none}
 .us-pet-actor{position:absolute;inset:0;display:block;touch-action:manipulation}

@@ -263,3 +263,12 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **Senza Plus la voce si vede, bloccata** (founder, 29/10: «facciamo vedere che si sblocca solo con plus, c'è il pulsante bloccato»): lucchetto e «US Plus»; toccandola si vedono gli 8 colori bloccati e «Si sblocca con US Plus». Nessun pulsante d'acquisto, prezzo o abbonamento finché Plus non è in vendita: per il test chiuso vale ancora D4, «chi è nel test chiuso non vede pagamenti».
 - Restano come sono: logo US, icona dell'app, splash e animazione d'apertura (asset approvati).
 - Per farlo serve la base dell'accesso Plus su Supabase (missione `plus-v1-staging.md` §2, solo la lettura). Gli acquisti e il webhook di RevenueCat restano ai passi successivi.
+
+## 2026-10-29 — App più ariosa: titoli più piccoli
+
+**Fonte:** founder, 29/10/2026: «la grandezza di tutto all'interno della nostra app la stavo confrontando con couple joy e lì sembra tutto più arioso»; scelto il «dopo» del prima/dopo di sette schermate.
+
+- Il testo normale resta com'è (14–15). Si rimpiccioliscono titoli e parti in evidenza: titoli di pagina 26–28, di sezione circa 20, di scheda circa 17; barra in basso 58.
+- I bersagli da toccare restano almeno 40 px; le illustrazioni approvate non cambiano.
+- La mascotte segue l'altezza della barra (`--us-nav-height`).
+- Le misure si cambiano nei file di design che già decidono (`dc-*.css`, `countdown.css`, `due-colori.css`), non con regole aggiunte sopra.

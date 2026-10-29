@@ -25,8 +25,9 @@ test('daily question: the length decides the size class', () => {
 test('daily question: long and very long questions get smaller type and more lines, never wider than the card', () => {
   const css = read('dc-oggi.css');
   assert.match(css, /#home #usDailyRitual \.us-daily-ritual-question\{overflow-wrap:anywhere\}/);
-  assert.match(css, /\[data-length="long"\]\{font-size:18px;line-height:1\.22;-webkit-line-clamp:3\}/);
-  assert.match(css, /\[data-length="xlong"\]\{font-size:16px;line-height:1\.25;-webkit-line-clamp:4\}/);
+  // App più ariosa (founder, 29/10/2026): 18 for a short question, 16 long, 15 very long.
+  assert.match(css, /\[data-length="long"\]\{font-size:16px;line-height:1\.22;-webkit-line-clamp:3\}/);
+  assert.match(css, /\[data-length="xlong"\]\{font-size:15px;line-height:1\.25;-webkit-line-clamp:4\}/);
   assert.match(css, /@media\(max-height:700px\)\{[\s\S]*?:is\(\[data-length="long"\],\[data-length="xlong"\]\)\{font-size:15px;line-height:1\.25;-webkit-line-clamp:2\}/);
 });
 

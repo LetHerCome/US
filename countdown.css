@@ -9,7 +9,7 @@
 /* The art is the mockup's button (.cd button): a centred column, number then label. */
 .us-countdown-art{position:relative;isolation:isolate;display:flex;flex-flow:row wrap;align-items:baseline;justify-content:center;column-gap:.26em;padding:6px 18px;border-radius:24px;color:var(--us-latte,#f7efe9);line-height:1;min-width:0;text-shadow:none}
 .us-countdown-title{order:3;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.us-countdown-number{order:1;flex:0 0 100%;display:flex;justify-content:center;font:300 92px/.9 var(--us-font-display);letter-spacing:-.03em;font-variant-numeric:lining-nums tabular-nums;text-shadow:0 6px 40px rgba(0,0,0,.35)}
+.us-countdown-number{order:1;flex:0 0 100%;display:flex;justify-content:center;font:300 64px/.9 var(--us-font-display);letter-spacing:-.03em;font-variant-numeric:lining-nums tabular-nums;text-shadow:0 6px 40px rgba(0,0,0,.35)}
 .us-countdown-art[data-countdown-clock="true"] .us-countdown-number{font-size:52px;letter-spacing:-.02em}
 .us-countdown-unit,.us-countdown-tail,.us-countdown-title{order:2;font:italic 400 19px/1.5 var(--us-font-display);letter-spacing:0;color:var(--us-color-text-2,rgba(247,239,233,.72))}
 .us-countdown-title{order:3}
@@ -25,7 +25,7 @@
 .us-countdown-deco>i{display:none;}
 .us-countdown-digit.is-sep{opacity:.82;}
 /* Editoriale (mockup default): Fraunces 300, 92px; the words in italic under it. */
-[data-countdown-style="editorial"] .us-countdown-number{font:300 92px/.9 var(--us-font-display);letter-spacing:-.03em}
+[data-countdown-style="editorial"] .us-countdown-number{font:300 64px/.9 var(--us-font-display);letter-spacing:-.03em}
 [data-countdown-style="editorial"] .us-countdown-unit{font:italic 400 19px/1.5 var(--us-font-display)}
 [data-countdown-style="editorial"] .us-countdown-digit.is-changing{animation:us-countdown-rise .46s cubic-bezier(.2,.75,.2,1);}
 @keyframes us-countdown-rise{0%{opacity:0;transform:translateY(.16em);clip-path:inset(0 0 40% 0)}100%{opacity:1;transform:none;clip-path:inset(0)}}
@@ -47,7 +47,7 @@
 [data-countdown-style="glass"][data-countdown-clock="true"] .us-countdown-number{font-size:34px}
 [data-countdown-style="glass"] .us-countdown-unit{font:italic 400 19px/1.5 var(--us-font-display)}
 /* Aurora (mockup aurora): the light moves slowly inside the figures. */
-[data-countdown-style="aurora"] .us-countdown-number{font:500 92px/.9 var(--us-font-display);letter-spacing:-.03em;background:linear-gradient(100deg,var(--us-rosa),var(--us-ambra),var(--us-lilla),var(--us-rosa));background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;animation:us-countdown-aurora 9s ease-in-out infinite alternate}
+[data-countdown-style="aurora"] .us-countdown-number{font:500 64px/.9 var(--us-font-display);letter-spacing:-.03em;background:linear-gradient(100deg,var(--us-rosa),var(--us-ambra),var(--us-lilla),var(--us-rosa));background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;animation:us-countdown-aurora 9s ease-in-out infinite alternate}
 [data-countdown-style="aurora"] .us-countdown-unit{font:italic 400 19px/1.5 var(--us-font-display)}
 @keyframes us-countdown-aurora{to{background-position:100% 0}}
 /* Orbita (mockup orbit): a ring and one point of light that goes round once a minute. */
@@ -58,7 +58,7 @@
 [data-countdown-style="orbit"][data-countdown-clock="true"] .us-countdown-number{font-size:34px}
 [data-countdown-style="orbit"] .us-countdown-unit{font:italic 400 19px/1.5 var(--us-font-display)}
 /* Cromo (mockup chrome): the figures in polished metal. */
-[data-countdown-style="chrome"] .us-countdown-number{font:600 92px/.9 var(--us-font-display);letter-spacing:-.03em;background:linear-gradient(180deg,#fff 0%,#c9c3d4 38%,#6e6878 52%,#e8e2f0 64%,#a59fb0 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
+[data-countdown-style="chrome"] .us-countdown-number{font:600 64px/.9 var(--us-font-display);letter-spacing:-.03em;background:linear-gradient(180deg,#fff 0%,#c9c3d4 38%,#6e6878 52%,#e8e2f0 64%,#a59fb0 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
 [data-countdown-style="chrome"] .us-countdown-unit{font:italic 400 19px/1.5 var(--us-font-display)}
 /* Oggi theme Cinematic (mockup): lighter, wider figures; the words in spaced small caps. */
 html[data-us-oggi-theme="cinematic"] #home .us-countdown-display .us-countdown-number{font-weight:400;letter-spacing:.06em;font-size:64px}

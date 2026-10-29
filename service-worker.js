@@ -1,4 +1,4 @@
-const BUILD_ID = "us-emoji-20261029-56";
+const BUILD_ID = "us-ariosa-20261029-58";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;

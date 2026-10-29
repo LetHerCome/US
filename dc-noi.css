@@ -23,7 +23,7 @@
 #bond #noiSectionBar{display:none!important}
 #bond .us-noi-v2{--noi-gap:0px;--noi-control:44px;--noi-line:var(--us-color-line);--noi-day-h:46px;gap:0;padding:0 2px}
 #bond .us-noi-v2-top{align-items:flex-end;min-height:0;margin:22px 0 18px}
-#bond .us-noi-v2-top h2{font-family:var(--us-font-display);font-weight:400;font-size:46px;line-height:.95;letter-spacing:-.02em;color:var(--us-color-text)}
+#bond .us-noi-v2-top h2{font-family:var(--us-font-display);font-weight:400;font-size:28px;line-height:.95;letter-spacing:-.02em;color:var(--us-color-text)}
 #bond .us-noi-v2-tools{gap:8px}
 #bond .us-noi-v2-toggle{gap:0;padding:3px;border-radius:999px;background:var(--us-color-surface);border:1px solid var(--us-color-line)}
 #bond .us-noi-v2 .us-noi-v2-toggle button{width:44px;height:38px;min-width:44px;min-height:38px;border-radius:999px;color:var(--us-color-text-3);background:transparent}
@@ -35,17 +35,17 @@
 
 /* ---------- Month line: "Ottobre 2026", arrows, the + in our colour ---------- */
 #bond .us-noi-v2-monthbar{gap:8px;margin:0 0 12px}
-#bond .us-noi-v2-monthbar h3{flex:1 1 auto;min-width:0;font-family:var(--us-font-display);font-weight:400;font-size:24px;line-height:1.5;letter-spacing:0;color:var(--us-color-text)}
+#bond .us-noi-v2-monthbar h3{flex:1 1 auto;min-width:0;font-family:var(--us-font-display);font-weight:400;font-size:19px;line-height:1.5;letter-spacing:0;color:var(--us-color-text)}
 #bond .us-noi-v2-year{font-size:.72em;color:var(--us-color-text-3);letter-spacing:0}
 #bond .us-noi-v2-month-nav{gap:8px}
-#bond .us-noi-v2 .us-noi-v2-nav{width:44px;height:44px;border-radius:50%;background:var(--us-color-surface);border:1px solid var(--us-color-line);color:var(--us-color-text)}
+#bond .us-noi-v2 .us-noi-v2-nav{width:40px;height:40px;border-radius:50%;background:var(--us-color-surface);border:1px solid var(--us-color-line);color:var(--us-color-text)}
 #bond .us-noi-v2 .us-noi-v2-nav .us-icon{--us-icon-size:22px}
-#bond .us-noi-v2 .us-noi-v2-add{width:48px;height:48px;border-radius:50%;background:var(--us-noi);color:var(--us-inchiostro);box-shadow:none}
+#bond .us-noi-v2 .us-noi-v2-add{width:44px;height:44px;border-radius:50%;background:var(--us-noi);color:var(--us-inchiostro);box-shadow:none}
 #bond .us-noi-v2 .us-noi-v2-add .us-icon{--us-icon-size:22px}
 
 /* ---------- The chip: "Il nostro giorno" here, "Torna a oggi" elsewhere ---------- */
 #bond .us-noi-v2-shortcuts{flex-wrap:wrap;gap:8px;margin:0 0 14px;min-height:40px}
-#bond .us-noi-v2 .us-noi-v2-shortcuts button{position:relative;gap:8px;min-height:40px;padding:0 14px 0 12px;border-radius:999px;border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text);font-size:14px;font-weight:500}
+#bond .us-noi-v2 .us-noi-v2-shortcuts button{position:relative;gap:8px;min-height:34px;padding:0 14px 0 12px;border-radius:999px;border:1px solid var(--us-color-line-strong);background:transparent;color:var(--us-color-text);font-size:13px;font-weight:500}
 #bond .us-noi-v2 .us-noi-v2-shortcuts button::after{content:"";position:absolute;inset:-2px 0}
 #bond .us-noi-v2-shortcuts .us-icon{--us-icon-size:18px;color:var(--us-noi)}
 #bond .us-noi-v2-sync{font-size:12px;color:var(--us-color-text-3)}
@@ -65,7 +65,7 @@
 #bond .us-noi-v2-weekday{padding:6px 0;font-size:11px;font-weight:700;letter-spacing:.1em;line-height:17px;color:var(--us-color-text-3)}
 #bond .us-noi-v2-weekday:nth-child(n+6){color:var(--us-color-text-3)}
 #bond .us-noi-v2-grid{position:relative;row-gap:2px}
-#bond .us-noi-v2-day,#bond .us-noi-v2-blank{height:46px}
+#bond .us-noi-v2-day,#bond .us-noi-v2-blank{height:40px}
 #bond .us-noi-v2 .us-noi-v2-day{position:relative;z-index:1;display:grid;place-items:center;justify-content:stretch;align-content:stretch;gap:0;padding:0;color:var(--us-color-text);transition:color .2s}
 #bond .us-noi-v2-day.is-past{color:var(--us-color-text-3)}
 #bond .us-noi-v2-day-number{width:38px;height:38px;font-size:15px;font-weight:500;letter-spacing:0;background:transparent!important;box-shadow:none;transition:none}
@@ -90,7 +90,7 @@
 /* ---------- The chosen day ---------- */
 #bond .us-noi-v2-detail{margin-top:22px;padding-top:18px;border-top:1px solid var(--us-color-line)}
 #bond .us-noi-v2-detail-head small{display:block;font-size:11px;font-weight:700;line-height:16px;letter-spacing:.14em;text-transform:uppercase;color:var(--us-noi)}
-#bond .us-noi-v2-detail-head h3{margin:4px 0 12px;font-family:var(--us-font-display);font-weight:400;font-size:26px;line-height:1.5;letter-spacing:0;text-transform:none}
+#bond .us-noi-v2-detail-head h3{margin:4px 0 12px;font-family:var(--us-font-display);font-weight:400;font-size:20px;line-height:1.5;letter-spacing:0;text-transform:none}
 #bond .us-noi-v2-detail-head h3::first-letter{text-transform:uppercase}
 #bond .us-noi-v2-empty-day{margin:0}
 #bond .us-noi-v2-empty{margin:0 0 4px}
@@ -560,9 +560,9 @@
 
 /* ---------- Small phones and large text ---------- */
 @media (max-width:370px){
-  #bond .us-noi-v2-top h2{font-size:40px}
-  #bond .us-noi-v2-monthbar h3{font-size:22px}
-  #bond .us-noi-v2 .us-noi-v2-nav{width:42px;height:42px}
+  #bond .us-noi-v2-top h2{font-size:26px}
+  #bond .us-noi-v2-monthbar h3{font-size:18px}
+  #bond .us-noi-v2 .us-noi-v2-nav{width:38px;height:38px}
   #bond .us-noi-v2-day-number{width:36px;height:36px;font-size:14px}
   #bond .us-noi-v2 .us-noi-v2-item{grid-template-columns:46px minmax(0,1fr) auto;gap:10px;padding:12px}
   #bond .us-noi-v2 .us-noi-v2-links button{min-height:84px;padding:12px 10px}

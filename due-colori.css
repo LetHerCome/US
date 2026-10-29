@@ -111,15 +111,15 @@ input,textarea,select,button{font-family:inherit}
    shadow. The blob (indicator) is the tab colour at 16%, it slides with the
    spring in 560 ms and takes the new colour at once. Active: the icon in
    the tab colour with a 28% fill, the label in latte; labels 12/600. */
-:root{--us-nav-height:70px}
+:root{--us-nav-height:58px}
 .us-nav.us-nav-premium{
   left:50%!important;
   right:auto!important;
   bottom:max(12px,var(--us-safe-bottom))!important;
   width:min(456px,calc(100% - 24px))!important;
   max-width:none!important;
-  height:70px!important;
-  min-height:70px!important;
+  height:var(--us-nav-height)!important;
+  min-height:var(--us-nav-height)!important;
   margin:0!important;
   padding:5px!important;
   display:grid!important;
@@ -155,10 +155,10 @@ input,textarea,select,button{font-family:inherit}
   font-weight:600;
   transition:color .3s!important;
 }
-.us-nav-premium button .nicon{width:24px!important;height:24px!important;min-width:24px!important;min-height:24px!important;margin:0!important;transform:none!important;transition:none!important}
-.us-nav-premium .us-nav-icon{width:24px;height:24px}
+.us-nav-premium button .nicon{width:21px!important;height:21px!important;min-width:21px!important;min-height:21px!important;margin:0!important;transform:none!important;transition:none!important}
+.us-nav-premium .us-nav-icon{width:21px;height:21px}
 .us-nav-icon,.us-nav-icon-off{color:var(--us-color-text-3)}
-.us-nav-premium .nlabel{font-size:12px;font-weight:600;line-height:1.2;letter-spacing:0;color:var(--us-color-text-3)}
+.us-nav-premium .nlabel{font-size:11px;font-weight:600;line-height:1.2;letter-spacing:0;color:var(--us-color-text-3)}
 .us-nav-premium button[data-page="home"]{--us-nav-c:var(--us-corallo)}
 .us-nav-premium button[data-page="bond"]{--us-nav-c:var(--us-noi)}
 .us-nav-premium button[data-page="moments"]{--us-nav-c:var(--us-ambra)}

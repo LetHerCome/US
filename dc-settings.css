@@ -86,7 +86,7 @@
   margin:0!important;
   font-family:var(--us-font-display)!important;
   font-weight:400!important;
-  font-size:46px!important;
+  font-size:28px!important;
   line-height:.95!important;
   letter-spacing:-.02em!important;
   color:var(--us-color-text);
@@ -131,7 +131,7 @@
   margin:0;
   font-family:var(--us-font-display);
   font-weight:400;
-  font-size:22px;
+  font-size:18px;
   line-height:1.1;
   letter-spacing:0;
   white-space:normal;
@@ -142,7 +142,7 @@
 #settings .us-couple-id-card .us-couple-id-copy>span{margin:0;font-size:13px;line-height:1.5;color:var(--us-color-text-2)}
 #settings .us-couple-id-card .us-couple-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0 0;padding:0;border:0}
 #settings .us-couple-id-card .us-couple-stats>span{padding:10px 12px;border:0;border-radius:16px;background:var(--us-color-surface-2);text-align:left}
-#settings .us-couple-id-card .us-couple-stats b{display:block;font-family:var(--us-font-display);font-weight:400;font-size:22px;line-height:1.1}
+#settings .us-couple-id-card .us-couple-stats b{display:block;font-family:var(--us-font-display);font-weight:400;font-size:18px;line-height:1.1}
 #settings .us-couple-id-card .us-couple-stats small{display:block;margin:0;font-size:11px;font-weight:600;line-height:1.5;color:var(--us-color-text-3)}
 
 /* .part: "Tu" and "Voi", each with its colour dot. */
@@ -166,7 +166,7 @@
   margin:0;
   font-family:var(--us-font-display);
   font-weight:400;
-  font-size:32px;
+  font-size:20px;
   line-height:1;
   letter-spacing:-.01em;
   color:var(--us-color-text);
