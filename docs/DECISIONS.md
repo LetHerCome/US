@@ -263,3 +263,41 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **Senza Plus la voce si vede, bloccata** (founder, 29/10: «facciamo vedere che si sblocca solo con plus, c'è il pulsante bloccato»): lucchetto e «US Plus»; toccandola si vedono gli 8 colori bloccati e «Si sblocca con US Plus». Nessun pulsante d'acquisto, prezzo o abbonamento finché Plus non è in vendita: per il test chiuso vale ancora D4, «chi è nel test chiuso non vede pagamenti».
 - Restano come sono: logo US, icona dell'app, splash e animazione d'apertura (asset approvati).
 - Per farlo serve la base dell'accesso Plus su Supabase (missione `plus-v1-staging.md` §2, solo la lettura). Gli acquisti e il webhook di RevenueCat restano ai passi successivi.
+
+## 2026-10-29 — Nuova scala dei premi Sintonia
+
+**Fonte:** founder, 29/10/2026, sessione /grill-me: «devono essere veramente fighe le cose e ovviamente a scalare, quello di livello più alto è più figo del livello basso»; «quelli grandi che ci si arriva piano piano li teniamo [gratis], ne mettiamo giusto un po' a livelli più bassi che possono far venire gola, ovviamente più curati, quelli con il Plus».
+
+1. **Niente si toglie mai.** Chi ha un premio lo tiene. Chi è già a un livello riceve subito, senza annunci a raffica, i premi nuovi che gli spettano.
+2. **La scala arriva al livello 20.** Oltre il 20, una stella in più nel vostro cielo a ogni livello. La curva dei punti non cambia (200 per il livello 2, poi +150 a livello); si rivede solo se i dati di produzione la smentiscono.
+3. **Un premio principale per livello**, e i 21 premi piccoli di oggi come contorno nei livelli bassi. Dei 14 premi mai usciti tornano solo Istantanea e Filo d'oro; gli altri 12 escono dal catalogo.
+4. **Scala gratuita:**
+
+   | Livello | Premio principale |
+   |---|---|
+   | 2 | Petali |
+   | 3 | Maudit |
+   | 4 | Cinematic |
+   | 5 | Ti penso animato, gufo |
+   | 6 | Widget «Notte» |
+   | 7 | Istantanea |
+   | 8 | Capra |
+   | 9 | Accessori I |
+   | 10 | Tema delle stagioni |
+   | 11 | Drago |
+   | 12 | Accessori II |
+   | 13 | Icona «Notte» |
+   | 14 | Filo d'oro |
+   | 15 | Ti penso «lettera» |
+   | 16 | Drago che vola |
+   | 17 | Widget «Oro» |
+   | 18 | Icona d'oro |
+   | 19 | Corona per i Compagni |
+   | 20 | «Il vostro cielo» |
+
+5. **Extra US Plus** ai livelli 4, 7 e 10, molto curati, accanto al premio gratuito senza mai sostituirlo: Aurora sulla foto di Oggi (livello 4), icona «Neon» dell'app (livello 7), abiti «Gala» per i Compagni (livello 10). Servono il livello e Plus (di uno dei due). Senza Plus si vedono con il lucchetto e «Si sblocca con US Plus», senza acquisti finché Plus non è in vendita. Una volta presi restano anche dopo la fine di Plus.
+6. **Regola fissa:** premi Plus solo tra il livello 2 e il 12; mai tra i premi principali gratuiti, mai in cima.
+7. **In Noi** si vede in grande il prossimo premio principale, con un'anteprima e la stima «tra circa N giorni» sul ritmo della coppia.
+8. **«Il vostro cielo»:** le stelle della sera di «Insieme dal», sopra la città scelta da una lista quando si sblocca. Niente GPS.
+9. **Immagini:** prompt scritti da Claude, immagini generate e approvate dal founder (ChatGPT), stile identico al foglio dei Compagni; le icone partono dal logo approvato.
+10. **Rilascio:** non nella patch unica (#232–#237), ma in una patch successiva in due fasi. Missione: `docs/missions/sintonia-premi-v2.md`.
