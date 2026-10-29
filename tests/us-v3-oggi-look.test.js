@@ -13,7 +13,8 @@ const lookCss = read('oggi-look.css');
 const progressionJs = read('progression.js');
 const html = read('index.html');
 
-const THEMES = ['original', 'romantic', 'pastel', 'cinematic', 'moonlight', 'seasonal'];
+// Premi Sintonia V2 (29/10/2026): Il vostro cielo, the headline of level 20.
+const THEMES = ['original', 'romantic', 'pastel', 'cinematic', 'moonlight', 'sky', 'seasonal'];
 // Premi Sintonia V2 (29/10/2026): Aurora, the Plus extra of level 4.
 const EFFECTS = ['none', 'hearts', 'stars', 'petals', 'fireflies', 'bokeh', 'snow', 'aurora'];
 
@@ -104,7 +105,7 @@ test('Oggi looks: every theme is ONE token block shared by the real Oggi and its
 
 test('Oggi looks: themes never restyle global US — only --oggi-* tokens consumed by Oggi selectors', () => {
   const blocks = [...lookCss.matchAll(/html\[data-us-oggi-theme="[a-z]+"\],[^{]*\{([^}]*)\}/g)].map((m) => m[1]);
-  assert.equal(blocks.length, 5);
+  assert.equal(blocks.length, 6);
   for (const body of blocks) {
     const props = [...body.matchAll(/(--[a-z0-9-]+):/g)].map((m) => m[1]);
     assert.ok(props.length > 8);

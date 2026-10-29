@@ -91,5 +91,8 @@ test('perf 1.0 precache: no approved master is precached or loaded; the size bud
   // 28/10 closed-test fixes (invite link, password toggle, Google on sign-up,
   // «Insieme dal» selects, sign-in after the verification email) and the Gioca
   // daily count cross it by ~8 KB: 2.8 -> 2.85 MB.
-  assert.ok(total <= 2.85 * 1024 * 1024, `precache is ${total} bytes: stays under 2.85 MB`);
+  // Premi Sintonia V2 (29/10/2026): Il vostro cielo (sky.js, ~9 KB; the star
+  // catalogue itself is fetched only when the sky is shown), Aurora, the
+  // seasons and Ti penso animato: 2.85 -> 2.9 MB.
+  assert.ok(total <= 2.9 * 1024 * 1024, `precache is ${total} bytes: stays under 2.9 MB`);
 });

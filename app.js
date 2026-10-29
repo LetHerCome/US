@@ -195,7 +195,7 @@ async function hydrateUsCoupleContext(){
   let coupleResult,profilesResult;
   try{
     [coupleResult,profilesResult]=await Promise.all([
-      sb.from('couples').select('id,name,started_on').eq('id',coupleId).maybeSingle(),
+      sb.from('couples').select('id,name,started_on,sky_city').eq('id',coupleId).maybeSingle(),
       sb.from('profiles').select('id,display_name,role,couple_id,person_color').eq('couple_id',coupleId).order('created_at',{ascending:true})
     ]);
   }catch(error){
@@ -5917,6 +5917,8 @@ function handleIncomingThink(row){
   // attention tone — only because US is active right now.
   window.UsFeedback?.attention?.();
   window.UsUiFoundation?.auroraPulse?.();
+  // Ti penso animato (Sintonia V2, livello 5): hearts in your two colours, if this phone chose them.
+  if(document.documentElement.dataset.usThinkFx==='hearts')window.UsUiFoundation?.heartBurst?.();
   Promise.resolve(window.UsTodayPriority?.refresh?.()).then(()=>{
     const card=document.querySelector('#usTodayPriorityRegion [data-us-arrival-type="think-received"]');
     window.UsUiFoundation?.playOnce?.(card,'us-attention-pulse',900);

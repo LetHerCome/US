@@ -134,4 +134,18 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - **Aurora** (extra Plus, livello 4): bande di luce verdi, azzurre e viola che si muovono sopra la foto di Oggi;
   - **Stagioni** (livello 10, ex «Autunno»): Oggi cambia da solo con la stagione di Roma, con fiori in primavera, sole d'estate, foglie d'autunno e neve d'inverno;
   - i livelli di riserva di temi ed effetti nell'app seguono la scala nuova;
-  - mancano Ti penso animato e «Il vostro cielo».
+  - **Ti penso animato** (livello 5):
+    - nella collezione della Sintonia c'è il gruppo «Ti penso», con «Classico» gratis e «Cuori»;
+    - chi ha scelto «Cuori» sul suo telefono, quando riceve un Ti penso, vede salire una pioggia di cuori nei colori della coppia;
+    - niente animazione con «riduci animazioni».
+  - **«Il vostro cielo»** (livello 20, un tema di Oggi):
+    - le stelle vere delle 22 di «Insieme dal», sopra la città della coppia, scelta da una lista di 45 città italiane («Dove eravate quella sera?»);
+    - le stelle più luminose hanno un alone;
+    - dopo il livello 20, una stella d'oro in più a ogni livello;
+    - «Salva l'immagine» crea un PNG con titolo, data e città.
+    - **Dati:** le 904 stelle fino alla magnitudine 4,5 del catalogo Yale Bright Star (NASA ADC / CDS V/50), in `assets/data/stars-bsc5-v1.json`, 24 KB, caricate solo quando il cielo si vede.
+    - **Server:** colonna `couples.sky_city` e `set_sky_city()` nella stessa migrazione della Fase 1, che si può rieseguire.
+  - **Peso dell'app:** il limite sale da 2,85 a 2,9 MB.
+  - **Da provare sul telefono:**
+    - «Salva l'immagine» nell'app Android installata: il WebView potrebbe non scaricare il file;
+    - i cuori quando arriva un Ti penso vero.

@@ -35,6 +35,8 @@ const SLOTS = Object.freeze({
   theme: { pref: 'theme_reward_id', label: 'Atmosfera', place: 'lo sfondo di tutta US', unlock: 'Nuova atmosfera', where: 'In tutta US' },
   accent: { pref: 'accent_reward_id', label: 'Colore di Noi', place: 'controlli, progressi, navigazione', unlock: 'Nuovo colore di Noi', where: 'Selezioni e progressi, in tutta US' },
   effect: { pref: 'effect_reward_id', label: 'Simbolo US', place: 'il simbolo in alto', unlock: 'Nuovo effetto del simbolo', where: 'Il simbolo in alto su Oggi' },
+  // Premi Sintonia V2: how this phone receives a Ti penso.
+  ti_penso: { pref: 'ti_penso', label: 'Ti penso', place: 'quando ne ricevi uno', unlock: 'Nuovo Ti penso', where: 'Quando ricevi un Ti penso' },
   frame: { pref: 'frame_reward_id', retired: true, label: 'Cornici', place: 'sulla foto di Oggi', unlock: 'NUOVA CORNICE', where: 'Sulla foto di Oggi' },
   sticker: { pref: 'sticker_reward_id', retired: true, label: 'Adesivi', place: 'su Oggi e sull’ultimo ricordo', unlock: 'NUOVO ADESIVO', where: 'Su Oggi e sull’ultimo ricordo' },
   badge: { pref: 'badge_reward_id', retired: true, label: 'Spille', place: 'tra voi due, in Noi', unlock: 'NUOVA SPILLA', where: 'In Noi, tra i vostri ritratti' },
@@ -270,7 +272,8 @@ const ITEM_COLOR = Object.freeze({
 const SLOT_DEFAULT = Object.freeze({
   theme: { id: 'us', title: 'Notte', description: 'La notte di US, com’è adesso.' },
   accent: { id: 'orchidea', title: 'Orchidea', description: 'Il colore di Noi, dove i vostri due colori si incontrano.' },
-  effect: { id: 'none', title: 'Fermo', description: 'Il simbolo US, senza movimento.' }
+  effect: { id: 'none', title: 'Fermo', description: 'Il simbolo US, senza movimento.' },
+  ti_penso: { id: 'classic', title: 'Classico', description: 'Il Ti penso di sempre: un cuore e il vostro nome.' }
 });
 function itemColor(cat, id) { return ITEM_COLOR[cat]?.[id] || ''; }
 // The mockup's item for a reward row: { cat, id } in the preview's terms.
@@ -302,6 +305,7 @@ function miniCount() {
 function artMarkup(item, big = false) {
   if (!item) return '<span class="us-cos-stage"></span>';
   const { cat, id } = item;
+  if (cat === 'ti_penso') return `<span class="us-cos-think" data-think="${esc(id)}"><i></i><i></i><i></i></span>`;
   if (cat === 'oggi_theme') return `<span class="mini" data-theme="${esc(id)}">${miniCount()}</span>`;
   if (cat === 'oggi_effect') return `<span class="mini">${id !== 'none' && FX.has(id) ? `<canvas data-fx="${esc(id)}"></canvas>` : ''}${miniCount()}</span>`;
   if (cat === 'theme') {
@@ -576,9 +580,11 @@ function applyPreferences(next = state) {
   const theme = value('theme');
   const accent = value('accent');
   const effect = value('effect');
+  const think = value('ti_penso');
   // A data attribute on <html> restyles the whole page: written only when it changes.
   if (root.dataset.usTheme !== (theme || undefined)) { if (theme) root.dataset.usTheme = theme; else delete root.dataset.usTheme; }
   syncSplashTheme(theme);
+  if (root.dataset.usThinkFx !== (think || undefined)) { if (think) root.dataset.usThinkFx = think; else delete root.dataset.usThinkFx; }
   if (root.dataset.usAccent !== (accent || undefined)) { if (accent) root.dataset.usAccent = accent; else delete root.dataset.usAccent; }
   if (root.dataset.usEffect !== (effect || undefined)) { if (effect) root.dataset.usEffect = effect; else delete root.dataset.usEffect; }
   clearRetiredCosmetics(root, hero);
@@ -790,7 +796,7 @@ function renderRhythm(next = state) {
 
 // The mockup's category order (sintonia.js CATS): the chips, the next
 // unlock's "e …" and the collection all follow it.
-const CHIP_ORDER = Object.freeze(['theme', 'accent', 'oggi_theme', 'oggi_effect', 'effect', 'countdown', 'companion']);
+const CHIP_ORDER = Object.freeze(['theme', 'accent', 'oggi_theme', 'oggi_effect', 'effect', 'ti_penso', 'countdown', 'companion']);
 const chipRank = (category) => { const i = CHIP_ORDER.indexOf(category); return i < 0 ? CHIP_ORDER.length : i; };
 // The server's next_reward may be a retired category: the next unlock is
 // read from the same server rows, every presented reward of the next level.

@@ -750,6 +750,38 @@
     }
     return true;
   }
+  // Ti penso animato (Premi Sintonia V2, livello 5): hearts in the couple's two
+  // colours burst up from the bottom of the screen. Nothing with reduced motion.
+  const HEART_COLORS = ['var(--us-rosa)', 'var(--us-lilla)'];
+  function heartBurst({ doc = typeof document !== 'undefined' ? document : null, count = 18 } = {}) {
+    const d = doc;
+    if (!d?.body || activeMotion.isReducedMotion()) return false;
+    const width = d.documentElement?.clientWidth || 400;
+    const height = d.documentElement?.clientHeight || 800;
+    for (let i = 0; i < count; i++) {
+      const h = d.createElement('span');
+      h.className = 'us-heart-burst';
+      h.setAttribute('aria-hidden', 'true');
+      h.style.background = HEART_COLORS[i % 2];
+      const size = `${(16 + Math.random() * 22).toFixed(0)}px`;
+      h.style.width = size;
+      h.style.height = size;
+      h.style.left = `${(width * (0.35 + Math.random() * 0.3)).toFixed(0)}px`;
+      h.style.top = `${height}px`;
+      d.body.appendChild(h);
+      if (typeof h.animate !== 'function') { h.remove(); continue; }
+      const dx = (Math.random() - 0.5) * width * 0.9;
+      const dy = -height * (0.55 + Math.random() * 0.4);
+      const anim = h.animate([
+        { transform: 'translate(0px,0px) scale(.4)', opacity: 0 },
+        { transform: `translate(${(dx * 0.3).toFixed(0)}px,${(dy * 0.3).toFixed(0)}px) scale(1) rotate(${(Math.random() * 30 - 15).toFixed(0)}deg)`, opacity: 1, offset: 0.25 },
+        { transform: `translate(${dx.toFixed(0)}px,${dy.toFixed(0)}px) scale(.8) rotate(${(Math.random() * 40 - 20).toFixed(0)}deg)`, opacity: 0 }
+      ], { duration: 1300 + Math.random() * 800, delay: i * 40, easing: DONE_EASE, fill: 'backwards' });
+      anim.onfinish = () => h.remove();
+      anim.oncancel = () => h.remove();
+    }
+    return true;
+  }
   // A new item (a memory, an idea) arrives in its list once: a short fade and rise.
   function enter(element) {
     if (!element || typeof element.animate !== 'function' || activeMotion.isReducedMotion()) return false;
@@ -762,6 +794,7 @@
     createFeedback,
     done,
     enter,
+    heartBurst,
     auroraPulse: () => activeAurora(),
     playOnce: (element, className, duration) => activePlayOnce(element, className, duration),
     confirm: (options) => confirmSurface(options),

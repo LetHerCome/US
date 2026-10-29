@@ -18,6 +18,8 @@ const THEMES = Object.freeze([
   { id: 'cinematic', name: 'Cinema', note: 'Bande nere, grana e il tempo come titoli di testa.', reward: 'oggi_theme_cinematic', level: 4 },
   { id: 'moonlight', name: 'Chiaro di luna', note: 'Notte blu, stelle e un riflesso di luna.', reward: 'oggi_theme_moonlight', level: 6 },
   // Premi Sintonia V2 (29/10/2026): the seasonal theme follows the season by itself.
+  // Premi Sintonia V2: the headline of level 20, the couple's own sky.
+  { id: 'sky', name: 'Il vostro cielo', kicker: 'Leggenda', note: 'Le stelle della sera in cui vi siete messi insieme, sopra la vostra città.', reward: 'sky_ours', level: 20 },
   { id: 'seasonal', name: 'Stagioni', kicker: 'Stagioni', note: 'Cambia da solo: fiori in primavera, sole d’estate, foglie d’autunno, neve d’inverno.', reward: 'oggi_theme_seasonal', level: 10 }
 ]);
 const EFFECTS = Object.freeze([
@@ -71,6 +73,59 @@ function seasonFor(day) {
   if (!iso) { try { iso = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(new Date()); } catch (_) { iso = new Date().toISOString().slice(0, 10); } }
   const month = Number(String(iso).slice(5, 7));
   return month >= 3 && month <= 5 ? 'spring' : month >= 6 && month <= 8 ? 'summer' : month >= 9 && month <= 11 ? 'autumn' : 'winter';
+}
+
+// ---------- Il vostro cielo (Premi Sintonia V2, livello 20) ----------
+// The stars of 22:00 on «Insieme dal» over the couple's city (sky.js), as the
+// decoration of the theme. The catalogue is fetched only when the sky is shown.
+let skyStars = null;
+let skyLoading = null;
+let skyKey = '';
+let skyMap = '';
+let skyCityChosen = '';
+function skyContext() {
+  const couple = window.UsCoupleContext?.snapshot?.()?.couple || {};
+  const level = Number(window.USProgression?.getState?.()?.level) || 20;
+  return { day: couple.started_on || '', cityId: skyCityChosen || couple.sky_city || '', level };
+}
+function loadStars() {
+  if (skyStars || skyLoading || !window.UsSky?.loadStars) return skyLoading;
+  skyLoading = window.UsSky.loadStars().then((stars) => {
+    skyLoading = null;
+    skyStars = stars;
+    if (skyStars) { apply(applied); refreshOpenSheet(); }
+  });
+  return skyLoading;
+}
+// A CSS url() of the map, or '' while the stars load or without a date.
+function skyMapUrl() {
+  const { day, cityId, level } = skyContext();
+  const city = window.UsSky?.cityById?.(cityId) || window.UsSky?.cityById?.('roma');
+  if (!window.UsSky || !day || !city) return '';
+  if (!skyStars) { loadStars(); return ''; }
+  const key = `${day}|${city.id}|${level}`;
+  if (key !== skyKey) {
+    const stars = skyStars;
+    const svg = window.UsSky.skySvg({ stars, day, city, level });
+    skyMap = svg ? `url("data:image/svg+xml,${encodeURIComponent(svg)}")` : '';
+    skyKey = key;
+  }
+  return skyMap;
+}
+async function setSkyCity(id) {
+  if (!id || !window.UsSky?.saveCity) return;
+  if (!(await window.UsSky.saveCity(id))) { $('usLookStatus').textContent = 'Non riesco a salvare la città. Riprova.'; return; }
+  skyCityChosen = id;
+  skyKey = '';
+  apply(applied);
+  renderDetail();
+}
+// «Salva l'immagine»: the map with its title, date and city (sky.js).
+function saveSky() {
+  const { day, cityId, level } = skyContext();
+  const city = window.UsSky?.cityById?.(cityId);
+  if (!skyStars || !city || !day) return Promise.resolve(false);
+  return window.UsSky.savePicture({ stars: skyStars, day, city, level });
 }
 
 // ---------- particles: deterministic per effect, so a preview matches Oggi ----------
@@ -134,6 +189,8 @@ function apply(next = {}) {
   const root = document.documentElement;
   if (theme === DEFAULTS.theme) delete root.dataset.usOggiTheme; else root.dataset.usOggiTheme = theme;
   if (theme === 'seasonal') root.dataset.usOggiSeason = seasonFor(); else delete root.dataset.usOggiSeason;
+  const map = theme === 'sky' ? skyMapUrl() : '';
+  if (map) root.style.setProperty('--oggi-sky-map', map); else root.style?.removeProperty?.('--oggi-sky-map');
   if (effect === DEFAULTS.effect) delete root.dataset.usOggiEffect; else root.dataset.usOggiEffect = effect;
   const layers = ensureLayers();
   if (layers?.fx && (layers.fx.dataset.fx || DEFAULTS.effect) !== effect) {
@@ -172,7 +229,8 @@ function heroSnapshot() {
   };
 }
 function phoneMarkup(theme, effect, snapshot, { compact = false } = {}) {
-  const photo = snapshot.photo ? ` style="--look-photo:${esc(snapshot.photo)}"` : '';
+  const vars = [snapshot.photo ? `--look-photo:${snapshot.photo}` : '', theme === 'sky' && skyMapUrl() ? `--oggi-sky-map:${skyMapUrl()}` : ''].filter(Boolean).join(';');
+  const photo = vars ? ` style="${esc(vars)}"` : '';
   return `<span class="us-look-phone${compact ? ' is-compact' : ''}" data-oggi-theme="${esc(theme)}"${theme === 'seasonal' ? ` data-oggi-season="${esc(seasonFor())}"` : ''}${photo}>
     <span class="us-look-photo"></span><span class="us-look-shade"></span><span class="us-oggi-tint"></span><span class="us-oggi-deco"></span>
     <span class="us-oggi-fx" data-fx="${esc(effect)}">${effect === 'none' ? '' : fxMarkup(effect, { scale: compact ? 0.6 : 1 })}</span>
@@ -223,7 +281,14 @@ function detailMarkup() {
   const theme = tab === 'theme' ? look.id : applied.theme;
   const effect = tab === 'effect' ? look.id : applied.effect;
   const current = applied[tab] === look.id;
-  const action = s.state === 'locked'
+  // Il vostro cielo: the city first («Dove eravate quella sera?»), then the picture to keep.
+  const sky = tab === 'theme' && look.id === 'sky' && s.state !== 'locked';
+  const { cityId } = sky ? skyContext() : { cityId: '' };
+  const cities = sky && window.UsSky ? `<label class="us-look-sky-city"><span>Dove eravate quella sera?</span><select id="usSkyCity">${cityId ? '' : '<option value="">Scegli la città</option>'}${window.UsSky.CITIES.map((c) => `<option value="${esc(c.id)}"${c.id === cityId ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>` : '';
+  const save = sky && cityId && skyStars ? '<button type="button" class="us-look-save" data-look-save-sky>Salva l’immagine</button>' : '';
+  const action = sky && !cityId
+    ? `<button type="button" class="us-look-apply" disabled>Scegli prima la città</button>`
+    : s.state === 'locked'
     ? `<button type="button" class="us-look-apply" disabled>${icon('lock-simple')}Si sblocca al livello ${s.level} di Sintonia${s.plus ? ' con US Plus' : ''}</button>`
     : current
       ? `<button type="button" class="us-look-apply is-current" disabled>${icon('check')}In uso su Oggi</button>`
@@ -232,7 +297,7 @@ function detailMarkup() {
     <div class="us-look-detail-copy">
       <small>${esc(look.kicker || (tab === 'theme' ? 'TEMA DI OGGI' : 'EFFETTO DI OGGI'))}</small>
       <h3>${esc(look.name)}</h3><p>${esc(look.note)}</p>
-      ${action}
+      ${cities}${action}${save}
     </div>`;
 }
 function build() {
@@ -263,6 +328,7 @@ function build() {
     </section>`;
   document.body.appendChild(sheet);
   sheet.addEventListener('click', onClick);
+  sheet.addEventListener('change', (event) => { if (event.target?.id === 'usSkyCity') setSkyCity(event.target.value); });
   sheet.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') { event.preventDefault(); back(); }
   });
@@ -351,6 +417,7 @@ async function onClick(event) {
     return;
   }
   if (target.dataset.lookOpen) return openDetail(target.dataset.lookOpen);
+  if (target.hasAttribute('data-look-save-sky')) return saveSky().catch(() => { $('usLookStatus').textContent = 'Non riesco a salvare l’immagine. Riprova.'; });
   if (target.dataset.lookApply) {
     const ok = await choose(tab, target.dataset.lookApply);
     if (ok) { renderDetail(); $('usLookStatus').textContent = `${find(tab, applied[tab])?.name || ''} è su Oggi.`; }

@@ -142,6 +142,28 @@ html[data-us-oggi-theme="romantic"] #homeHero [data-countdown-style="editorial"]
 /* Daily card and the top chrome while Oggi is the page on screen. */
 html[data-us-oggi-theme] #home .us-daily-ritual,.us-look-phone .us-look-card{background:var(--oggi-card-bg)!important;border-color:var(--oggi-card-line)!important;border-radius:var(--oggi-card-radius)!important}
 html[data-us-oggi-theme] #home .us-daily-ritual .us-daily-ritual-kicker{color:var(--oggi-card-kicker)}
+/* Il vostro cielo (Premi Sintonia V2, livello 20): the night over the photo
+   and the couple's star map (--oggi-sky-map, set by oggi-look.js). */
+html[data-us-oggi-theme="sky"],
+.us-look-phone[data-oggi-theme="sky"]{
+  --oggi-photo-filter:brightness(.42) saturate(.7) contrast(1.05);
+  --oggi-tint:linear-gradient(180deg,rgba(7,10,28,.55) 0%,rgba(10,16,44,.35) 50%,rgba(5,7,20,.82) 100%);
+  --oggi-deco:var(--oggi-sky-map,linear-gradient(transparent,transparent)) center top 14%/min(88%,400px) auto no-repeat;
+  --oggi-deco-2:radial-gradient(60% 40% at 50% 30%,rgba(120,140,255,.18),transparent 70%);
+  --oggi-ink:#f4f1ff;
+  --oggi-ink-soft:#c9cdf5;
+  --oggi-glow:0 0 20px rgba(140,160,255,.45),0 2px 14px rgba(0,0,20,.7);
+  --oggi-hairline:rgba(200,206,255,.7);
+  --oggi-card-bg:rgba(10,14,40,.55);
+  --oggi-card-line:rgba(170,180,255,.28);
+  --oggi-card-kicker:#c3c9ff;
+  --oggi-chrome-tint:rgba(80,100,220,.12);
+}
+.us-look-sky-city{display:grid;gap:6px;margin:12px 0 4px}
+.us-look-sky-city span{font-size:13px;color:var(--us-color-text-2,#cfc8d6)}
+.us-look-sky-city select{min-height:44px;padding:0 12px;border-radius:14px;border:1px solid var(--us-color-line,rgba(255,255,255,.12));background:var(--us-color-surface-2,#1d1622);color:inherit;font:inherit}
+.us-look-save{margin-top:10px;width:100%;min-height:44px;border-radius:999px;border:1px solid var(--us-color-line-strong,rgba(255,255,255,.2));background:transparent;color:inherit;font:inherit;font-weight:600}
+
 /* Tema delle stagioni (Premi Sintonia V2, 29/10/2026): the block above is
    autumn; spring, summer and winter change only what differs. The season is
    the Rome month (oggi-look.js seasonFor). */

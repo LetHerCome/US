@@ -86,3 +86,22 @@ test('nobody loses a reward, and the migration announces nothing by itself', asy
   assert.match(sql, /insert into public\.progression_reward_views/, 'rewards a couple gets from the new levels are marked as seen');
   assert.doesNotMatch(sql, /delete from public\.couple_reward_unlocks/i, 'nothing is ever taken back');
 });
+
+test('Il vostro cielo: the couple picks its city once level 20 is reached; both read it', async () => {
+  const setCity = (user, city) => h.as(db, user, 'select public.set_sky_city($1) r', [city]);
+  await assert.rejects(setCity(h.F, 'roma'), /sky locked/, 'before level 20');
+  await setLevel(20);
+  assert.equal(reward(await progression(), 'sky_ours').unlocked, true);
+  assert.deepEqual(await setCity(h.F, 'milano'), { city: 'milano' });
+  assert.deepEqual(await setCity(h.B, 'roma'), { city: 'roma' }, 'either of the two can change it');
+  assert.equal((await h.as(db, h.F, 'select sky_city from public.couples'))[0].sky_city, 'roma');
+  for (const bad of ['Roma', 'r', 'roma; drop', '', null]) await assert.rejects(setCity(h.F, bad), /invalid city/, String(bad));
+  await assert.rejects(h.as(db, h.F, `update public.couples set sky_city = 'napoli'`), /permission denied/);
+});
+
+test('the Phase 1 migration can run twice on the same database (staging re-apply)', async () => {
+  await db.exec(fs.readFileSync(path.join(DIR, FILE), 'utf8'));
+  const rows = (await db.query(`select count(*)::int n from public.progression_reward_catalog where active`)).rows[0].n;
+  assert.equal(rows, 24);
+  assert.equal((await db.query(`select category from public.progression_reward_catalog where id = 'sky_ours'`)).rows[0].category, 'oggi_theme', 'the sky is a theme of Oggi');
+});

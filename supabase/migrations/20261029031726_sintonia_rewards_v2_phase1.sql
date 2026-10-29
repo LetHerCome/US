@@ -51,7 +51,7 @@ insert into public.progression_reward_catalog
 values
   ('oggi_effect_aurora', 4, 'oggi_effect', 'Aurora', 'Una luce che danza sopra la vostra foto di Oggi, come un''aurora boreale.', 'oggi_effect_aurora', 43, true, true, false, true),
   ('ti_penso_hearts', 5, 'ti_penso', 'Ti penso animato', 'Quando mandi un Ti penso, all''altro arriva un''esplosione di cuori nei vostri colori.', 'ti_penso_hearts', 50, true, true, true, false),
-  ('sky_ours', 20, 'sky', 'Il vostro cielo', 'Le stelle della sera in cui vi siete messi insieme, sopra la vostra città.', 'sky_ours', 200, true, true, true, false)
+  ('sky_ours', 20, 'oggi_theme', 'Il vostro cielo', 'Le stelle della sera in cui vi siete messi insieme, sopra la vostra città.', 'sky_ours', 200, true, true, true, false)
 on conflict (id) do update set
   level_required = excluded.level_required, category = excluded.category, title = excluded.title,
   description = excluded.description, token = excluded.token, sort_order = excluded.sort_order,
@@ -268,3 +268,32 @@ select u.couple_id, u.reward_id, p.id, now()
   join public.profiles p on p.couple_id = u.couple_id
  where not exists (select 1 from sintonia_v2_before b where b.couple_id = u.couple_id and b.reward_id = u.reward_id)
 on conflict (couple_id, reward_id, profile_id) do nothing;
+
+-- 5. Il vostro cielo: the couple's city (an id of sky.js CITIES), set by
+--    either partner once the couple has the reward. The stars are computed
+--    in the app from «Insieme dal» and the city; nothing else is stored.
+alter table public.couples add column if not exists sky_city text;
+alter table public.couples drop constraint if exists couples_sky_city_check;
+alter table public.couples add constraint couples_sky_city_check check (sky_city is null or sky_city ~ '^[a-z_]{2,40}$');
+
+create or replace function public.set_sky_city(p_city text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  cid uuid;
+begin
+  select p.couple_id into cid from public.profiles p where p.id = auth.uid();
+  if cid is null then raise exception 'not a couple member'; end if;
+  if p_city is null or p_city !~ '^[a-z_]{2,40}$' then raise exception 'invalid city'; end if;
+  if not exists (select 1 from public.couple_reward_unlocks u where u.couple_id = cid and u.reward_id = 'sky_ours') then
+    raise exception 'sky locked';
+  end if;
+  update public.couples set sky_city = p_city where id = cid;
+  return jsonb_build_object('city', p_city);
+end;
+$$;
+revoke all on function public.set_sky_city(text) from public, anon, authenticated, service_role;
+grant execute on function public.set_sky_city(text) to authenticated;
