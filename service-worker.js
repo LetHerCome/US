@@ -1,4 +1,4 @@
-const BUILD_ID = "us-ariosa-20261029-58";
+const BUILD_ID = "us-icona-20261029-60";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;

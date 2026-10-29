@@ -13,19 +13,19 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/icon-192.png?v=us-ariosa-20261029-58",
+      "src": "/icon-192.png?v=us-icona-20261029-60",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-512.png?v=us-ariosa-20261029-58",
+      "src": "/icon-512.png?v=us-icona-20261029-60",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/assets/derived/brand/us-symbol-apk-foreground-v1.png?v=us-ariosa-20261029-58",
+      "src": "/assets/derived/brand/us-symbol-apk-foreground-v1.png?v=us-icona-20261029-60",
       "sizes": "1254x1254",
       "type": "image/png",
       "purpose": "any"
