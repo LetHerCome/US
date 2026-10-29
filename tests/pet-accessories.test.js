@@ -15,12 +15,20 @@ const PET = require('../pet.js');
 const WORN = ['scarf', 'gala', 'flowers'];
 const POSES = ['awake', 'body', 'sleep', 'happy'];
 
-test('every companion has every drawn accessory in every pose, light', () => {
+test('every companion has every drawn accessory in every pose, light and approved', () => {
   assert.deepEqual([...PET.WORN], WORN);
+  const manifest = JSON.parse(read('assets/ASSET_MANIFEST.json'));
+  const boys = ['maudit', 'dragon'];
   for (const id of PET.COMPANION_IDS) for (const acc of WORN) for (const pose of POSES) {
-    const file = path.join(ROOT, `assets/derived/pet/us-pet-${id}-${acc}-${pose}-v1.webp`);
+    const rel = `assets/derived/pet/us-pet-${id}-${acc}-${pose}-v1.webp`;
+    const file = path.join(ROOT, rel);
     assert.ok(fs.existsSync(file), `${id} ${acc} ${pose}`);
     assert.ok(fs.statSync(file).size < 24 * 1024, `${id} ${acc} ${pose} stays light`);
+    const entry = manifest.assets.find((a) => a.path === rel);
+    assert.equal(entry?.status, 'APPROVED', rel);
+    // Maudit and the dragon wear the laurel where the goat and the owl wear flowers.
+    const sheet = acc === 'flowers' && boys.includes(id) ? 'laurel' : acc;
+    assert.equal(entry.source, `assets/source/pet/us-pet-worn-${sheet}-sheet-v1.png`, rel);
   }
 });
 

@@ -699,6 +699,670 @@
       "usedBy": [
         "android-launcher-alias"
       ]
+    },
+    {
+      "path": "assets/source/pet/us-pet-all-companions-sheet-v1.png",
+      "status": "APPROVED",
+      "sha256": "cface62bb946ee93aaaeadc5c5047b62022b40eb132d43df33a82ae79bd0251d",
+      "immutable": true,
+      "purpose": "All four companions on one sheet (Maudit sheet v2 + companions sheet v1, scaled, no labels): the reference for the accessory sheets",
+      "usedBy": []
+    },
+    {
+      "path": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "status": "APPROVED",
+      "sha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "immutable": true,
+      "purpose": "Founder ChatGPT sheet, approved 29/10/2026: the four companions wearing the scarf (blue for Maudit and the dragon, pink for the goat and the owl)",
+      "usedBy": []
+    },
+    {
+      "path": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "status": "APPROVED",
+      "sha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "immutable": true,
+      "purpose": "Founder ChatGPT sheet, approved 29/10/2026: bow tie for Maudit and the dragon, pearls for the goat and the owl",
+      "usedBy": []
+    },
+    {
+      "path": "assets/source/pet/us-pet-worn-flowers-sheet-v1.png",
+      "status": "APPROVED",
+      "sha256": "60bb947ae31d6cf3ee449d3a2cd41c0beda138ce9b2b2d2619b0623e4b3ff6e7",
+      "immutable": true,
+      "purpose": "Founder ChatGPT sheet, approved 29/10/2026: flower wreath (used for the goat and the owl)",
+      "usedBy": []
+    },
+    {
+      "path": "assets/source/pet/us-pet-worn-laurel-sheet-v1.png",
+      "status": "APPROVED",
+      "sha256": "402d06e1ee42a999db7c43ab7e1b005d5653e8796d27b663eff813f0e2d20a40",
+      "immutable": true,
+      "purpose": "Founder ChatGPT sheet, approved 29/10/2026: laurel wreath for Maudit and the dragon",
+      "usedBy": []
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-scarf-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "68d2abe74969e35237193549ea1c05952a47a793604f56117e09e821d9f61c0c",
+      "immutable": true,
+      "purpose": "the maudit wearing the scarf, awake pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-scarf-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "de773cd4007ba26ae4062c5bbad35eaa14f36dd6c0a59600f5cfedfc9feb884f",
+      "immutable": true,
+      "purpose": "the maudit wearing the scarf (awake, without its moving parts)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-scarf-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "7227cba595df99aceedc1feb8301ba8545e4bdb38bb5eabffdf28761faa5407d",
+      "immutable": true,
+      "purpose": "the maudit wearing the scarf, sleep pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-scarf-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "85e96ef2907626ce2ae2a3d71f65058f747335c48dc124a927cc9747187882ea",
+      "immutable": true,
+      "purpose": "the maudit wearing the scarf, happy pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-gala-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "dc0427277db0a09e70bef9b883cad38de8b977fabc13f55951ba61d9ec7f9506",
+      "immutable": true,
+      "purpose": "the maudit wearing the gala, awake pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-gala-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "0a94bb866b03d39dd20ac6b76c664036d25322e37394368fca3d3125291f4241",
+      "immutable": true,
+      "purpose": "the maudit wearing the gala (awake, without its moving parts)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-gala-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "a4a1cc01e54317ddd17d1e96c3792640f6470c2bc6362d72a52b1657c73a8408",
+      "immutable": true,
+      "purpose": "the maudit wearing the gala, sleep pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-gala-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "20bcdfcf2c2632fd919539c7616faf054778628412b6d1e1a9b9dc62814205a0",
+      "immutable": true,
+      "purpose": "the maudit wearing the gala, happy pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-flowers-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "851728df0423dda2a8b8a079343abfd835d564769a3c27b967d5b467dd3fa2c1",
+      "immutable": true,
+      "purpose": "the maudit wearing the flowers, awake pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-laurel-sheet-v1.png",
+      "sourceSha256": "402d06e1ee42a999db7c43ab7e1b005d5653e8796d27b663eff813f0e2d20a40",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-flowers-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "ae6dbf2b2f52a035b77fb59842bd504774b266ff17cc95bd254892a0eb234c98",
+      "immutable": true,
+      "purpose": "the maudit wearing the flowers (awake, without its moving parts)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-laurel-sheet-v1.png",
+      "sourceSha256": "402d06e1ee42a999db7c43ab7e1b005d5653e8796d27b663eff813f0e2d20a40",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-flowers-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "a10abf5cb2b6816becece6f34bb9003d76823d5a9f0094003647c5af16ea0038",
+      "immutable": true,
+      "purpose": "the maudit wearing the flowers, sleep pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-laurel-sheet-v1.png",
+      "sourceSha256": "402d06e1ee42a999db7c43ab7e1b005d5653e8796d27b663eff813f0e2d20a40",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-flowers-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "439978f546b34d92ac34164c2bc0462bbe1cabb888912e0467992a2e6378dfca",
+      "immutable": true,
+      "purpose": "the maudit wearing the flowers, happy pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-laurel-sheet-v1.png",
+      "sourceSha256": "402d06e1ee42a999db7c43ab7e1b005d5653e8796d27b663eff813f0e2d20a40",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-scarf-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "234a8f223416d227d7de69dc87dba8ac8b759244f9764d72bd99b068de078a6a",
+      "immutable": true,
+      "purpose": "the goat wearing the scarf, awake pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-scarf-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "3de0a35051173fb5993f682f6887ce10db091766cf677212dc5a77888a6f622f",
+      "immutable": true,
+      "purpose": "the goat wearing the scarf (awake, without its moving parts)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-scarf-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "07b25deb25e44bc55b53a15b7abdc95b6bf3c1d09f99d51db0b437a43b2fa13d",
+      "immutable": true,
+      "purpose": "the goat wearing the scarf, sleep pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-scarf-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "540b025530d0695e052314864d6502feb7109764daf68953055dcd4ce35395c4",
+      "immutable": true,
+      "purpose": "the goat wearing the scarf, happy pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-gala-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "1ac4634b7eb6f523fc2dd68656905fe5f02e36bff6c074042d82ee0f7f6d5a28",
+      "immutable": true,
+      "purpose": "the goat wearing the gala, awake pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-gala-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "52d1c1208fd59513122038241ad72514615a29ffff3285fc5292f070ca4d87e0",
+      "immutable": true,
+      "purpose": "the goat wearing the gala (awake, without its moving parts)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-gala-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "23fb749e5adc70d38489c904ceae87af3855dcdf12c52250034db00aa9a41df1",
+      "immutable": true,
+      "purpose": "the goat wearing the gala, sleep pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-gala-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "febc709e58ceef8b4ea88e23730bb68e1ca6783ebf68914fb187aac6ab208b9c",
+      "immutable": true,
+      "purpose": "the goat wearing the gala, happy pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-flowers-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "1cca44f094aff907f5d2a886a6751e68225a96f0981d6e6b1b03116597ce1213",
+      "immutable": true,
+      "purpose": "the goat wearing the flowers, awake pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-flowers-sheet-v1.png",
+      "sourceSha256": "60bb947ae31d6cf3ee449d3a2cd41c0beda138ce9b2b2d2619b0623e4b3ff6e7",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-flowers-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "a64fcc609b732b611cc27bd960efa37e339914aa27de5c831f79e66a4a1c28a4",
+      "immutable": true,
+      "purpose": "the goat wearing the flowers (awake, without its moving parts)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-flowers-sheet-v1.png",
+      "sourceSha256": "60bb947ae31d6cf3ee449d3a2cd41c0beda138ce9b2b2d2619b0623e4b3ff6e7",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-flowers-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "5394fedc2acc99eacb81897961a2158509362f257f862f59089fabe6bdf14532",
+      "immutable": true,
+      "purpose": "the goat wearing the flowers, sleep pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-flowers-sheet-v1.png",
+      "sourceSha256": "60bb947ae31d6cf3ee449d3a2cd41c0beda138ce9b2b2d2619b0623e4b3ff6e7",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-flowers-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "eef8ef23dd67886d8f9323ab5752bfeae49a01d438f418ac8bf74a85caac7e86",
+      "immutable": true,
+      "purpose": "the goat wearing the flowers, happy pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-flowers-sheet-v1.png",
+      "sourceSha256": "60bb947ae31d6cf3ee449d3a2cd41c0beda138ce9b2b2d2619b0623e4b3ff6e7",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-scarf-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "221160243cdeb8d9a0a45933e98484fb4ab1d8f2845a741f71fed516e35bab1c",
+      "immutable": true,
+      "purpose": "the owl wearing the scarf, awake pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-scarf-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "9897a0d5548ff23917a77037683f7e9e88d16453fe4044b3239175be388a6c83",
+      "immutable": true,
+      "purpose": "the owl wearing the scarf (awake, without its moving parts)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-scarf-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "4e8acaa1a1795d782c88a4181814d154fd1f7811c677d4c7d32c6c84b4f4b41c",
+      "immutable": true,
+      "purpose": "the owl wearing the scarf, sleep pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-scarf-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "a09cf1dbefef1ff5acf77d45665834dd766d602b9deb3ad8c0ce3d4d40cb5890",
+      "immutable": true,
+      "purpose": "the owl wearing the scarf, happy pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-gala-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "c00960f93a5a0404d79dcbc781ddf96dcd94d20da31454e4b373d7d755248b06",
+      "immutable": true,
+      "purpose": "the owl wearing the gala, awake pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-gala-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "2ea322794ee7e26aca834fe7de50d679462b7b0c47fa03caa30117a656e30f29",
+      "immutable": true,
+      "purpose": "the owl wearing the gala (awake, without its moving parts)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-gala-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "942be487244f7b12357dba03d7bf10e706f168cc6827b4c852b191d151622e4f",
+      "immutable": true,
+      "purpose": "the owl wearing the gala, sleep pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-gala-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "bfab4d47a088ce84611065eb6625ea52f2bca01238761bfe79806efd3b0a73a7",
+      "immutable": true,
+      "purpose": "the owl wearing the gala, happy pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-flowers-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "a0ccb20bacc18dd235dea577d34f806544a04e823748af1372d61441064a3b67",
+      "immutable": true,
+      "purpose": "the owl wearing the flowers, awake pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-flowers-sheet-v1.png",
+      "sourceSha256": "60bb947ae31d6cf3ee449d3a2cd41c0beda138ce9b2b2d2619b0623e4b3ff6e7",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-flowers-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "0f0ce4cdb2f96a3725cc4c4476075a6867d0019cf46ba22e1a0e90b9a10ead24",
+      "immutable": true,
+      "purpose": "the owl wearing the flowers (awake, without its moving parts)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-flowers-sheet-v1.png",
+      "sourceSha256": "60bb947ae31d6cf3ee449d3a2cd41c0beda138ce9b2b2d2619b0623e4b3ff6e7",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-flowers-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "9913ccc6f81c29bc2708d2aec2081c3a965e4a1c46b3fcbb4724237837b20db0",
+      "immutable": true,
+      "purpose": "the owl wearing the flowers, sleep pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-flowers-sheet-v1.png",
+      "sourceSha256": "60bb947ae31d6cf3ee449d3a2cd41c0beda138ce9b2b2d2619b0623e4b3ff6e7",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-flowers-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "cb884cedbfd76a8c1dcf394983e044bf40ed7da9f089ed1cbae2a77604b20dbf",
+      "immutable": true,
+      "purpose": "the owl wearing the flowers, happy pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-flowers-sheet-v1.png",
+      "sourceSha256": "60bb947ae31d6cf3ee449d3a2cd41c0beda138ce9b2b2d2619b0623e4b3ff6e7",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-scarf-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "c1ee02c5cf82c31327c45d9a61e7dcc25a7ce81c0d77289458a03d35ef7185a9",
+      "immutable": true,
+      "purpose": "the dragon wearing the scarf, awake pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-scarf-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "a3e96e66d11a18018c438e0eb65ad70d99df0fed81e5bf9bc94ac1e541d076ad",
+      "immutable": true,
+      "purpose": "the dragon wearing the scarf (awake, without its moving parts)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-scarf-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "63325d46cd43121ad028c2b8ae11d11802bc8c6f54985c18c1f32545eaaaa79a",
+      "immutable": true,
+      "purpose": "the dragon wearing the scarf, sleep pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-scarf-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "051bd6e01be12a6184929a7f142749c9bee7921b370378411223bcf6b0b7a8b8",
+      "immutable": true,
+      "purpose": "the dragon wearing the scarf, happy pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-scarf-sheet-v1.png",
+      "sourceSha256": "c414cc1239152ddf62c61c7d583b17d7dea4472206e2b1b8dcab1f17f57ebd18",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-gala-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "3dbf439ac5c0e066aa01cc6ce02593e10b81fa9a310d8361b112884c9973c8cb",
+      "immutable": true,
+      "purpose": "the dragon wearing the gala, awake pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-gala-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "e14f9dff69c1f5375da0ce328b5648e10095b9adc8ba7bf45d9afb2bfc5d0713",
+      "immutable": true,
+      "purpose": "the dragon wearing the gala (awake, without its moving parts)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-gala-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "2b88e79917344459bace36f6e7704de8a0403b4cc2f461c287b386a5ea9536cb",
+      "immutable": true,
+      "purpose": "the dragon wearing the gala, sleep pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-gala-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "79ba7479aeced2970ebb69daa9ac37628ec8e5d131674cbcff999879eba630b0",
+      "immutable": true,
+      "purpose": "the dragon wearing the gala, happy pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-gala-sheet-v1.png",
+      "sourceSha256": "ab0eb5100803cc6de7eec171fc13fc587307b4775cc2faabc6a5085ad3834710",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-flowers-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "41a9cfa9394a74090fca4dcd4e2d70dc57bb9cc33f2d8a9aca69bef292756158",
+      "immutable": true,
+      "purpose": "the dragon wearing the flowers, awake pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-laurel-sheet-v1.png",
+      "sourceSha256": "402d06e1ee42a999db7c43ab7e1b005d5653e8796d27b663eff813f0e2d20a40",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-flowers-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "4657273dea9e261693d3f098ffebe816ef2d14c15a99bc4b46773d3d1276d79d",
+      "immutable": true,
+      "purpose": "the dragon wearing the flowers (awake, without its moving parts)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-laurel-sheet-v1.png",
+      "sourceSha256": "402d06e1ee42a999db7c43ab7e1b005d5653e8796d27b663eff813f0e2d20a40",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-flowers-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "ae63f9ba667fbeb5afd489714c7bbc4c8ef2928d68c06564c06dc64347d1ffb2",
+      "immutable": true,
+      "purpose": "the dragon wearing the flowers, sleep pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-laurel-sheet-v1.png",
+      "sourceSha256": "402d06e1ee42a999db7c43ab7e1b005d5653e8796d27b663eff813f0e2d20a40",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-flowers-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "e6516ebdf50ded7112c8653d5fd4b137fdd560d66feb8ad4d360404871f663fd",
+      "immutable": true,
+      "purpose": "the dragon wearing the flowers, happy pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-worn-laurel-sheet-v1.png",
+      "sourceSha256": "402d06e1ee42a999db7c43ab7e1b005d5653e8796d27b663eff813f0e2d20a40",
+      "operation": "CUTOUT_ALIGNED_TO_APPROVED_FRAME_WEBP_Q90"
     }
   ]
 }
