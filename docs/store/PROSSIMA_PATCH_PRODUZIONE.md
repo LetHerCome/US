@@ -198,9 +198,15 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
 - **Fase 2, app:**
   - **Accessori** (nuovo gruppo nella collezione, scelto su questo telefono, «Niente» di partenza): ogni accessorio è **disegnato addosso** a ognuno dei quattro Compagni, nelle tre pose, dai fogli che il founder ha generato con ChatGPT (gli adesivi sopra il disegno erano «messi malissimo», 29/10). Le parti che si muovono (orecchie, ali, coda) restano quelle di sempre, così il Compagno continua a muoverle e il drago a volare.
     - Maudit e il drago sono maschi: sciarpina blu notte, coroncina d'alloro, colletto con papillon; la capra e il gufo: sciarpina rosa, coroncina di fiori, collana di perle.
-    - La corona (da re e da regina) aspetta il suo foglio; fino ad allora nella collezione si vede la corona da sola e il Compagno non la indossa.
-    - 48 immagini, 540 KB in tutto, scaricate solo quando un Compagno le indossa.
+    - Corona da re per Maudit e il drago, da regina per la capra e il gufo.
+    - Le immagini indossate sono 24 px più alte del riquadro (una corona sta sopra la testa): l'app le alza della stessa misura, così le parti che si muovono restano allineate.
+    - 64 immagini, scaricate solo quando un Compagno le indossa.
   - **Ti penso «lettera»:** chi l'ha scelta, quando riceve un Ti penso, vede una busta che sale al centro e si apre sul sigillo a cuore. Niente animazione con «riduci animazioni».
   - Le immagini (`assets/derived/rewards`, 17–27 KB l'una) si scaricano solo quando servono: non pesano sull'avvio.
-  - **Icone dell'app:** il premio c'è nel catalogo; il cambio dell'icona sul telefono è nativo Android e arriva in un passo successivo.
+  - **Icone dell'app** (nuovo gruppo «Icona dell'app», scelto su questo telefono): US, Notte, Oro, Neon.
+    - Android: ogni icona è un ingresso del launcher (`activity-alias`), uno solo acceso; il plugin `native-plugins/us-app-icon` accende il nuovo prima di spegnere gli altri. L'app cambia icona solo quando cambia davvero.
+    - La schermata vera si chiama ora `UsActivity`; l'ingresso di sempre tiene il nome `.MainActivity`, così l'icona già sulla schermata home resta dopo l'aggiornamento.
+    - Quando si cambia icona, molti telefoni tolgono quella vecchia dalla schermata home e mettono la nuova nell'elenco delle app: va detto nell'app.
+    - Il controllo del bundle per Play accetta solo la schermata di US e i quattro ingressi delle icone.
+  - **Prova tecnica della Mappa dei Ricordi (solo staging):** scegliendo una foto per un Ricordo, l'app di staging dice se la foto ha ancora la sua posizione GPS (arrotondata a circa 100 m, non salvata). In produzione non compare.
   - **Da provare sul telefono:** gli accessori sul Compagno sopra la barra e la lettera quando arriva un Ti penso vero.

@@ -3691,6 +3691,47 @@ async function readJpegExifDate(file){
   return null;
 }
 
+// Mappa dei Ricordi, prova tecnica (founder, 29/10/2026, D8): does Android hand
+// the web view a photo with its GPS position? Read from the JPEG (EXIF GPS IFD),
+// rounded to about 100 m, never stored. Only staging builds say what they found.
+async function readJpegExifGps(file){
+  if(file?.type!=='image/jpeg')return null;
+  try{
+    const view=new DataView(await file.slice(0,Math.min(file.size,512*1024)).arrayBuffer());
+    if(view.byteLength<4||view.getUint16(0,false)!==0xFFD8)return null;
+    let offset=2;
+    while(offset+4<view.byteLength){
+      if(view.getUint8(offset)!==0xFF){offset++;continue;}
+      const marker=view.getUint8(offset+1);offset+=2;
+      if(marker===0xDA||marker===0xD9)break;
+      const size=view.getUint16(offset,false);
+      if(size<2||offset+size>view.byteLength)break;
+      if(marker===0xE1&&String.fromCharCode(...[0,1,2,3].map(i=>view.getUint8(offset+2+i)))==='Exif'){
+        const tiff=offset+8,little=view.getUint16(tiff,false)===0x4949;
+        const u16=p=>view.getUint16(p,little),u32=p=>view.getUint32(p,little);
+        const ifd=pos=>{const out={};const n=u16(pos);for(let i=0;i<n;i++){const e=pos+2+i*12;if(e+12>view.byteLength)break;out[u16(e)]={type:u16(e+2),count:u32(e+4),at:e+8};}return out;};
+        const gpsAt=ifd(tiff+u32(tiff+4))[0x8825];
+        if(!gpsAt)return null;
+        const gps=ifd(tiff+u32(gpsAt.at));
+        const dms=t=>{if(!t||t.type!==5||t.count<3)return null;const p=tiff+u32(t.at);const r=k=>u32(p+k*8)/(u32(p+k*8+4)||1);return r(0)+r(1)/60+r(2)/3600;};
+        const ref=t=>t?String.fromCharCode(view.getUint8(t.at)):'';
+        let lat=dms(gps[2]),lon=dms(gps[4]);
+        if(lat===null||lon===null||(!lat&&!lon))return null;
+        if(ref(gps[1])==='S')lat=-lat;
+        if(ref(gps[3])==='W')lon=-lon;
+        return {lat:Math.round(lat*1000)/1000,lon:Math.round(lon*1000)/1000};
+      }
+      offset+=size;
+    }
+  }catch(error){console.warn('[US Moments] EXIF GPS',error);}
+  return null;
+}
+// Staging only: the preview site or the staging APK (com.usapp.us.staging).
+async function usIsStagingRuntime(){
+  if(/^us-staging/.test(location.hostname))return true;
+  try{return /\.staging$/.test((await window.Capacitor?.Plugins?.App?.getInfo?.())?.id||'');}catch(_){return false;}
+}
+
 async function detectMomentDate(file){
   const exif=await readJpegExifDate(file);
   if(exif)return exif;
@@ -3809,6 +3850,12 @@ document.getElementById('momentFile')?.addEventListener('change',async(event)=>{
   renderMomentExtras();
   updateDetectedMomentDate();
   window.UsMomentComposer?.show?.();
+  // Mappa dei Ricordi, prova tecnica (staging only): did the photo keep its place?
+  usIsStagingRuntime().then(async staging=>{
+    if(!staging||token!==pendingMomentPickToken)return;
+    const gps=await readJpegExifGps(files[0]);
+    toast(gps?`Prova mappa: posizione trovata (${gps.lat}, ${gps.lon})`:`Prova mappa: nessuna posizione nella foto (${files[0]?.type||'tipo sconosciuto'})`);
+  });
   // A lived source already knows its day; otherwise the first photo says it.
   if(pendingMomentSource?.date)return;
   const detected=await detectMomentDate(files[0]);

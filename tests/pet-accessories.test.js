@@ -12,7 +12,7 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const read = (name) => fs.readFileSync(path.join(ROOT, name), 'utf8');
 const PET = require('../pet.js');
-const WORN = ['scarf', 'gala', 'flowers'];
+const WORN = ['scarf', 'gala', 'flowers', 'crown'];
 const POSES = ['awake', 'body', 'sleep', 'happy'];
 
 test('every companion has every drawn accessory in every pose, light and approved', () => {
@@ -40,6 +40,9 @@ test('the accessory swaps the pictures of the poses, never the moving parts', ()
   assert.match(pet, /const WORN_POSES=Object\.freeze\(\['awake','body','sleep','happy'\]\);/);
   assert.match(pet, /WORN\.includes\(worn\)&&WORN_POSES\.includes\(name\)\?worn\+'-'\+name\+'-v1':name\+'-'\+COMPANIONS\[id\]\.v/);
   assert.match(pet, /worn=want;figure\.innerHTML=companionMarkup\(id,worn\);/, 'the figure stays, so the dragon keeps flying');
+  // A crown stands above the frame: worn pictures are 24 px taller and grow upwards.
+  assert.match(pet, /\(WORN\.includes\(worn\)&&WORN_POSES\.includes\(name\)\?' us-pet-worn':''\)/);
+  assert.match(read('pet.css'), /\.us-pet-rig img\.us-pet-worn\{top:auto;bottom:0;height:112\.5%\}/);
   assert.doesNotMatch(pet, /us-pet-acc-pose|--acc-img/, 'no sticker on top any more');
   assert.doesNotMatch(read('pet.css'), /us-pet-acc|us-acc-[a-z]+-v1\.webp/);
 });
@@ -48,7 +51,7 @@ test('in the collection: a group of its own, chosen on this phone, Niente by def
   const p = read('progression.js');
   assert.match(p, /pet_accessory: \{ pref: 'pet_accessory', label: 'Accessori', place: 'sul vostro Compagno'/);
   assert.match(p, /pet_accessory: \{ id: 'none', title: 'Niente', description: 'Il vostro Compagno com’è\.' \}/);
-  assert.match(p, /'ti_penso', 'pet_accessory', 'countdown', 'companion'/);
+  assert.match(p, /'ti_penso', 'pet_accessory', 'app_icon', 'countdown', 'companion'/);
   assert.match(p, /const accessory = value\('pet_accessory'\);/);
   assert.match(p, /window\.USPet\?\.setAppearance\?\.\(\{ accessory: accessory \|\| '' \}\);/);
   assert.match(p, /if \(id === 'none' \|\| pet\?\.WORN\?\.includes\(id\)\) return pet\?\.wornArt\?\.\(who, id === 'none' \? '' : id\)/, 'the tile shows this phone\'s companion wearing it');

@@ -14,6 +14,9 @@ project(':capacitor-push-notifications').projectDir = new File('../node_modules/
 include ':capawesome-capacitor-app-update'
 project(':capawesome-capacitor-app-update').projectDir = new File('../node_modules/@capawesome/capacitor-app-update/android')
 
+include ':us-app-icon'
+project(':us-app-icon').projectDir = new File('../native-plugins/us-app-icon/android')
+
 include ':us-app-lock'
 project(':us-app-lock').projectDir = new File('../native-plugins/us-app-lock/android')
 

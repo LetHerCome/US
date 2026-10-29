@@ -9,16 +9,16 @@ function read(relativePath) {
   return fs.readFileSync(path.join(ROOT, relativePath), 'utf8');
 }
 
-test('lo scaffold Android mantiene identità US e MainActivity priva di feature logic', () => {
+test('lo scaffold Android mantiene identità US e UsActivity (ex MainActivity) priva di feature logic', () => {
   const appGradle = read('android/app/build.gradle');
   const strings = read('android/app/src/main/res/values/strings.xml');
-  const activity = read('android/app/src/main/java/com/usapp/us/MainActivity.java');
+  const activity = read('android/app/src/main/java/com/usapp/us/UsActivity.java');
   const config = JSON.parse(read('capacitor.config.json'));
 
   assert.match(appGradle, /namespace\s*=\s*["']com\.usapp\.us["']/);
   assert.match(appGradle, /applicationId\s+["']com\.usapp\.us["']/);
   assert.match(strings, /<string name="app_name">US<\/string>/);
-  assert.match(activity, /public class MainActivity extends BridgeActivity \{/);
+  assert.match(activity, /public class UsActivity extends BridgeActivity \{/);
   assert.match(activity, /super\.onCreate\(savedInstanceState\);/);
   assert.match(activity, /EdgeToEdge\.enable\(this\)/);
   assert.doesNotMatch(activity, /registerPlugin|addJavascriptInterface|loadUrl|Supabase|Push|Widget/);

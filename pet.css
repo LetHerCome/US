@@ -34,6 +34,9 @@ body:has(#thinkArrival.open) .us-pet-layer{opacity:0;visibility:hidden;transitio
    The dragon flies its loop with the wings beating (pet.js, Web Animations). */
 .us-pet-rig{position:absolute;left:50%;bottom:0;height:48px;translate:-50% 0;display:block}
 .us-pet-rig img,.us-pet-rig svg{position:absolute;inset:0;width:100%;height:100%;display:block;-webkit-user-drag:none}
+/* Premi Sintonia V2: a companion wearing an accessory is drawn 24 px taller
+   than its 192 px frame (room for a crown): the picture grows upwards. */
+.us-pet-rig img.us-pet-worn{top:auto;bottom:0;height:112.5%}
 .us-pet-awake{position:absolute;inset:0;transform-origin:50% 100%;transition:opacity .18s,rotate .45s var(--us-ease-spring)}
 .us-pet-pose{opacity:0;transition:opacity .18s}
 .us-pet-lids,.us-pet-blink{opacity:0}

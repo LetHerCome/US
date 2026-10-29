@@ -39,6 +39,8 @@ const SLOTS = Object.freeze({
   ti_penso: { pref: 'ti_penso', label: 'Ti penso', place: 'quando ne ricevi uno', unlock: 'Nuovo Ti penso', where: 'Quando ricevi un Ti penso' },
   // Premi Sintonia V2, Fase 2: what the companion wears on this phone (pet.css).
   pet_accessory: { pref: 'pet_accessory', label: 'Accessori', place: 'sul vostro Compagno', unlock: 'Nuovo accessorio', where: 'Sul vostro Compagno, sopra la barra' },
+  // and the icon of US on this phone (native-plugins/us-app-icon, the Android app).
+  app_icon: { pref: 'app_icon', label: 'Icona dell’app', place: 'sul tuo telefono', unlock: 'Nuova icona', where: 'L’icona di US sul tuo telefono, nell’app Android' },
   frame: { pref: 'frame_reward_id', retired: true, label: 'Cornici', place: 'sulla foto di Oggi', unlock: 'NUOVA CORNICE', where: 'Sulla foto di Oggi' },
   sticker: { pref: 'sticker_reward_id', retired: true, label: 'Adesivi', place: 'su Oggi e sull’ultimo ricordo', unlock: 'NUOVO ADESIVO', where: 'Su Oggi e sull’ultimo ricordo' },
   badge: { pref: 'badge_reward_id', retired: true, label: 'Spille', place: 'tra voi due, in Noi', unlock: 'NUOVA SPILLA', where: 'In Noi, tra i vostri ritratti' },
@@ -276,7 +278,8 @@ const SLOT_DEFAULT = Object.freeze({
   accent: { id: 'orchidea', title: 'Orchidea', description: 'Il colore di Noi, dove i vostri due colori si incontrano.' },
   effect: { id: 'none', title: 'Fermo', description: 'Il simbolo US, senza movimento.' },
   ti_penso: { id: 'classic', title: 'Classico', description: 'Il Ti penso di sempre: un cuore e il vostro nome.' },
-  pet_accessory: { id: 'none', title: 'Niente', description: 'Il vostro Compagno com’è.' }
+  pet_accessory: { id: 'none', title: 'Niente', description: 'Il vostro Compagno com’è.' },
+  app_icon: { id: 'us', title: 'US', description: 'L’icona di sempre.' }
 });
 function itemColor(cat, id) { return ITEM_COLOR[cat]?.[id] || ''; }
 // The mockup's item for a reward row: { cat, id } in the preview's terms.
@@ -319,6 +322,7 @@ function artMarkup(item, big = false) {
   if (!item) return '<span class="us-cos-stage"></span>';
   const { cat, id } = item;
   if (cat === 'ti_penso') return `<span class="us-cos-think" data-think="${esc(id)}"${id === 'letter' ? ` style="--art:url('${REWARD_ART}us-think-letter-closed-v1.webp')"` : ''}><i></i><i></i><i></i></span>`;
+  if (cat === 'app_icon') return `<span class="us-cos-acc us-cos-icon" data-icon="${esc(id)}" style="--art:url('${REWARD_ART}us-app-icon-${esc(id)}-v1.webp')"></span>`;
   if (cat === 'pet_accessory') return `<span class="us-cos-acc" data-acc="${esc(id)}" style="--art:url('${esc(accessoryArt(id))}')"></span>`;
   if (cat === 'oggi_theme') return `<span class="mini" data-theme="${esc(id)}">${miniCount()}</span>`;
   if (cat === 'oggi_effect') return `<span class="mini">${id !== 'none' && FX.has(id) ? `<canvas data-fx="${esc(id)}"></canvas>` : ''}${miniCount()}</span>`;
@@ -586,6 +590,19 @@ function syncSplashTheme(theme) {
   }).catch(() => { splashThemeSent = undefined; });
 }
 window.UsSplashThemeSync = syncSplashTheme;
+// Premi Sintonia V2: the app icon of this phone. Android swaps the launcher entry
+// only when the icon really changes (it is read first): a swap redraws the home screen.
+let appIconSent;
+function syncAppIcon(icon) {
+  const name = icon || 'us';
+  if (appIconSent === name) return;
+  const plugin = window.Capacitor?.Plugins?.UsAppIcon;
+  if (!plugin?.get || !plugin?.set) return;
+  appIconSent = name;
+  Promise.resolve(plugin.get())
+    .then((current) => (current?.icon === name ? null : plugin.set({ icon: name })))
+    .catch(() => { appIconSent = undefined; });
+}
 function applyPreferences(next = state) {
   const root = document.documentElement;
   const hero = $('homeHero');
@@ -596,6 +613,7 @@ function applyPreferences(next = state) {
   const effect = value('effect');
   const think = value('ti_penso');
   const accessory = value('pet_accessory');
+  syncAppIcon(value('app_icon'));
   // A data attribute on <html> restyles the whole page: written only when it changes.
   if (root.dataset.usTheme !== (theme || undefined)) { if (theme) root.dataset.usTheme = theme; else delete root.dataset.usTheme; }
   syncSplashTheme(theme);
@@ -812,7 +830,7 @@ function renderRhythm(next = state) {
 
 // The mockup's category order (sintonia.js CATS): the chips, the next
 // unlock's "e …" and the collection all follow it.
-const CHIP_ORDER = Object.freeze(['theme', 'accent', 'oggi_theme', 'oggi_effect', 'effect', 'ti_penso', 'pet_accessory', 'countdown', 'companion']);
+const CHIP_ORDER = Object.freeze(['theme', 'accent', 'oggi_theme', 'oggi_effect', 'effect', 'ti_penso', 'pet_accessory', 'app_icon', 'countdown', 'companion']);
 const chipRank = (category) => { const i = CHIP_ORDER.indexOf(category); return i < 0 ? CHIP_ORDER.length : i; };
 // The server's next_reward may be a retired category: the next unlock is
 // read from the same server rows, every presented reward of the next level.

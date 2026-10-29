@@ -127,12 +127,13 @@ const COMPANION_IDS=Object.freeze(Object.keys(COMPANIONS));
 const NO_COMPANION='none';
 // Premi Sintonia V2: accessories drawn on each companion (the founder's sheets,
 // cut into the same frames). The moving parts stay the approved ones.
-const WORN=Object.freeze(['scarf','gala','flowers']);
+// Their pictures are 24 px taller than the frame (a crown stands above it): pet.css lifts them.
+const WORN=Object.freeze(['scarf','gala','flowers','crown']);
 const WORN_POSES=Object.freeze(['awake','body','sleep','happy']);
 const art=(id,name,worn='')=>PET_ART+'us-pet-'+id+'-'+(WORN.includes(worn)&&WORN_POSES.includes(name)?worn+'-'+name+'-v1':name+'-'+COMPANIONS[id].v)+'.webp';
 function companionMarkup(id,worn=''){
   const c=COMPANIONS[id],[W,H]=c.size;
-  const img=(cls,name,style='')=>'<img class="'+cls+'" src="'+art(id,name,worn)+'" alt="" draggable="false" decoding="async"'+style+'>';
+  const img=(cls,name,style='')=>'<img class="'+cls+(WORN.includes(worn)&&WORN_POSES.includes(name)?' us-pet-worn':'')+'" src="'+art(id,name,worn)+'" alt="" draggable="false" decoding="async"'+style+'>';
   const parts=Object.entries(c.parts).map(([name,[x,y]])=>img('us-pet-part us-pet-'+name,name,' style="transform-origin:'+(x/W*100).toFixed(2)+'% '+(y/H*100).toFixed(2)+'%"')).join('');
   const body=img('us-pet-body','body');
   const lids=c.eyes.map(([x0,y0,x1,y1,fur])=>{

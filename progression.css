@@ -59,6 +59,7 @@
 .us-cos-think[data-think="letter"]{background:var(--art) center/58% no-repeat,radial-gradient(100% 70% at 50% 0%,rgba(255,255,255,.05),transparent 62%),#141018}
 /* Their pictures come from progression.js (--art), fetched only when the collection shows them. */
 .us-cos-acc{position:absolute;inset:0;display:block;background:var(--art,none) center/58% no-repeat,radial-gradient(100% 70% at 50% 0%,rgba(255,255,255,.05),transparent 62%),#141018}
+.us-cos-icon{background-size:46%,auto}
 
 
 .us-cos-stage{display:grid;place-items:center;background:radial-gradient(110% 80% at 50% 0%,rgba(255,255,255,.06),transparent 64%),#141018}

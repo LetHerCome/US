@@ -9,7 +9,7 @@ const ROOT = path.join(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8');
 
 test('Android: BridgeActivity enables edge-to-edge without hiding status or navigation', () => {
-  const activity = read('android/app/src/main/java/com/usapp/us/MainActivity.java');
+  const activity = read('android/app/src/main/java/com/usapp/us/UsActivity.java');
   assert.match(activity, /extends BridgeActivity/);
   assert.match(activity, /EdgeToEdge\.enable\(this\)/);
   assert.doesNotMatch(activity, /SYSTEM_UI_FLAG_FULLSCREEN|FLAG_FULLSCREEN|SYSTEM_UI_FLAG_HIDE_NAVIGATION/);
