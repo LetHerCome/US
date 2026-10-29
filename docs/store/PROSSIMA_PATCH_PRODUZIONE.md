@@ -230,7 +230,9 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
 
 ## 2026-10-29 — Mappa dei Ricordi
 
-**Fonte:** founder, 29/10/2026: grill «Mappa dei Ricordi» (D1–D7) e risposte del giro successivo («concordo con tutto»). Decisione in `docs/DECISIONS.md`. **Branch:** `claude/mappa-ricordi`, sopra `claude/sintonia-premi-v2`.
+**Fonte:** founder, 29/10/2026: grill «Mappa dei Ricordi» (D1–D7) e risposte del giro successivo («concordo con tutto»).
+
+**Su staging (30/10/2026, con il via del founder):** SQL `20261029222210_ricordi_place_v1.sql` applicato con il workflow «Supabase SQL (manual)» (run 40968815705, HTTP 201); web `us-mappa-ricordi-20261029-71` su us-staging-s31; APK di staging dal run 40968819284 (plugin `us-photo-place` compilato). Non ancora provato sul telefono. Decisione in `docs/DECISIONS.md`. **Branch:** `claude/mappa-ricordi`, sopra `claude/sintonia-premi-v2`.
 
 - **Server:** la migrazione `20261029222210_ricordi_place_v1.sql` aggiunge ai Ricordi `place_lat`, `place_lon` (tre decimali, circa 100 m, li arrotonda la colonna stessa), `place_label` (nome breve, 1–120 caratteri) e `place_source` (`photo` o `search`), più `set_moment_place()` per tutti e due i membri della coppia. Il posto lo legge solo la coppia (RLS dei Ricordi) ed entra nell'export dei dati.
   - **Ordine:** prima l'SQL, poi il web. Senza le colonne Ricordi si legge come prima, ma **salvare un Ricordo con un posto fallisce**.
