@@ -603,6 +603,41 @@
     }
     host.append(legend);
   }
+  // Founder, 29/10/2026: at the first opening each person picks their colour
+  // (free in beta, colors_free on the server). The partner's colour, chosen or
+  // by default, is taken; the circles take the choice at once.
+  // The read and the write come from app.js through mount(), as the rest of onboarding.
+  let colourIO=null;
+  async function mountColourPicker(host,{profile}){
+    const colors=globalThis.UsPersonColors;
+    if(!host)return;
+    if(!colors||!profile?.id||!profile?.couple_id||!colourIO){host.hidden=true;return;}
+    const ticket=host.dataset.ticket=String(Date.now()+Math.random());
+    let profiles=[{id:profile.id,role:profile.role,person_color:profile.person_color||null}];
+    try{
+      const {data}=await colourIO.readCouple(profile.couple_id);
+      if(host.dataset.ticket!==ticket)return;
+      if(Array.isArray(data)&&data.length)profiles=data;
+    }catch(_){/* only me: the partner's default below */}
+    // Before the partner joins, their default colour is theirs already.
+    if(!profiles.some(p=>p.id!==profile.id))profiles.push({id:'~partner',role:profile.role==='beatrice'?'francesco':'beatrice',person_color:null});
+    const paint=()=>{
+      host.innerHTML=colors.choices(profiles,profile.id).map(c=>`<button type="button" class="us-ob-swatch${c.mine?' is-on':''}" data-colour="${c.id}" aria-pressed="${c.mine}" aria-label="${c.name}"${c.taken?' disabled':''}><i style="background:${c.hex}"></i></button>`).join('');
+      host.hidden=false;
+    };
+    host.onclick=async event=>{
+      const btn=event.target.closest?.('[data-colour]');
+      if(!btn||btn.disabled||btn.classList.contains('is-on'))return;
+      const colour=btn.dataset.colour;
+      const {error}=await colourIO.rpc('set_my_color',{p_color:colour});
+      if(error){globalThis.toast?.('Non riesco a salvare il colore. Riprova.');return;}
+      const me=profiles.find(p=>p.id===profile.id);if(me)me.person_color=colour;
+      profile.person_color=colour;
+      colors.applyCoupleColors(profiles.filter(p=>p.id!=='~partner'));
+      paint();
+    };
+    paint();
+  }
   // The colour fills the screen, then shrinks into your circle (or theirs, when they arrive).
   // `wait`: it starts with the new step (after the old one has gone), as colorOn() in the design.
   function playColour(overlay,host,wait=0){
@@ -816,7 +851,7 @@
     function copyFor(step){
       const partner=partnerName(),role=profile?.role;
       if(step==='noi')return `${partner} ha accettato l’invito ed è ${partnerColourName(role)}, tu ${colourName(role)}. Dove vi incontrate nasce il vostro colore.`;
-      if(step==='color')return `${partner} è ${partnerColourName(role)}. Ognuno ha il suo colore, uguale su entrambi i telefoni: dove vi incontrate nasce il Noi.`;
+      if(step==='color')return 'Scegli il tuo: lo vedete uguale tutti e due, e quello della tua persona resta suo. Dove vi incontrate nasce il Noi.';
       if(step==='push')return 'Solo per le cose vostre, anche a US chiusa. Cosa ricevere lo scegli tu.';
       if(step==='place')return 'Se la attivi, in Oggi vedete la distanza tra voi.';
       return mode==='device'?'Su questo telefono è tutto a posto.':'';
@@ -981,7 +1016,8 @@
       secondary.hidden=!(step==='push'||step==='place');
       const title=$('usSetupTitle');
       if(step==='noi'){setTitle(title,'Ora siete ','un Noi');drawVenn(venn,{kind:'joined',role,partner:partnerName()});primary.textContent='Continua';}
-      if(step==='color'){setTitle(title,'Il tuo colore è ',colourName(role));drawVenn(venn,{kind:'join',role,partner:partnerName()});primary.textContent='Continua';}
+      if(step==='color'){setTitle(title,'Scegli ','il tuo colore');drawVenn(venn,{kind:'join',role,partner:partnerName()});primary.textContent='Continua';mountColourPicker($('usSetupColors'),{profile});}
+      if(step!=='color')$('usSetupColors').hidden=true;
       if(step==='push'){setTitle(title,'Non perderti ','un Ti penso');primary.textContent='Attiva le notifiche';}
       if(step==='place'){setTitle(title,'Anche da ','lontano');primary.textContent='Attiva la posizione';}
       if(step==='ready'){if(mode==='device')setTitle(title,'Eccoti ','di nuovo');else setTitle(title,'Il vostro US ','è pronto');primary.textContent='Entra in US';drawReady(false);}
@@ -1126,7 +1162,8 @@
     return Object.freeze({maybeOpen,close,markPasswordSignIn,get open(){return isOpen;}});
   }
 
-  function mount({readProfile,rpc,resume,signOut,openStep,insertEvent}){
+  function mount({readProfile,readCouple,rpc,resume,signOut,openStep,insertEvent}){
+    colourIO=typeof readCouple==='function'&&typeof rpc==='function'?{readCouple,rpc}:null;
     const root=document.getElementById('usOnboarding');
     const node=id=>document.getElementById(id);
     let mode='me',lastKind='',lastView='',lastInvite='',hiddenPrivate=[],me={name:'',birthday:null},meFor='',justCreated=false,note={text:'',kind:''},dismissed='';
@@ -1248,7 +1285,7 @@
       // The bar moves once the old step has gone (a copied step leaves for 180 ms).
       node('mc3Progress').style.setProperty('--us-ob-delay',`${Math.max(0,swap?.after||0)}ms`);
       node('mc3Progress').style.setProperty('--us-progress',view==='me'?'.25':'.5');
-      const titles={me:['Iniziamo da ','te'],choice:['Il vostro US, ','da qui'],create:['Crea il ','vostro spazio'],join:['Entra nel ','vostro US'],color:['Il tuo colore è ',colourName(role)],waiting:['Il tuo spazio ','è pronto'],error:['Verifichiamo il tuo accesso','']};
+      const titles={me:['Iniziamo da ','te'],choice:['Il vostro US, ','da qui'],create:['Crea il ','vostro spazio'],join:['Entra nel ','vostro US'],color:['Scegli ','il tuo colore'],waiting:['Il tuo spazio ','è pronto'],error:['Verifichiamo il tuo accesso','']};
       setTitle(node('mc3Title'),...titles[view]);
       const ownName=waiting?state.profile.display_name.trim():me.name;
       const copy={
@@ -1256,7 +1293,7 @@
         choice:me.name?`${me.name}, ora crea il vostro spazio o raggiungi la tua persona.`:'Ora crea il vostro spazio o raggiungi la tua persona.',
         create:'Da questa data partono i giorni insieme, il mesiversario e l’anniversario.',
         join:'Scrivi il codice che ti ha mandato la tua persona.',
-        color:`Ognuno ha il suo colore, uguale su entrambi i telefoni. La tua persona sarà ${partnerColourName(role)}: dove vi incontrate nasce il Noi.`,
+        color:'Scegli il tuo: lo vedete uguale tutti e due, e potrai cambiarlo in Impostazioni. Dove vi incontrate nasce il Noi.',
         waiting:state.code?`${ownName}, invita la tua persona: mandale questo codice.`:`${ownName}, invita la tua persona. Quando entrerà, troverete qui il vostro spazio.`,
         error:'La sessione è conservata. Puoi riprovare o uscire.'
       }[view];
@@ -1296,7 +1333,7 @@
         if(pressed){delete pressed.button.dataset.usBusy;if(pressed.text)pressed.button.textContent=pressed.text;pressed=null;}
         delete root.dataset.usBusy;
       }
-      if(view==='color'&&lastView!=='color')drawVenn(node('mc3Venn'),{kind:'wait',role,partner:''});
+      if(view==='color'&&lastView!=='color'){drawVenn(node('mc3Venn'),{kind:'wait',role,partner:''});mountColourPicker(node('mc3Colors'),{profile:state.profile});}
       if(active&&changed){node('mc3Title').focus({preventScroll:true});node('authOverlay').scrollTop=0;}
       if(swap){
         const after=arriveSwap(root,{swap});

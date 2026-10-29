@@ -1,4 +1,4 @@
-const BUILD_ID = "us-icona-20261029-60";
+const BUILD_ID = "us-fix-apk-20261029-66";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;

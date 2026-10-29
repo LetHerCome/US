@@ -52,7 +52,7 @@ test('wired: profiles carry the colour, the page applies it, Settings changes it
   assert.match(app, /sb\.from\('profiles'\)\.select\('id,display_name,role,couple_id,person_color'\)\.eq\('couple_id',coupleId\)\.order\('created_at',\{ascending:true\}\)/);
   assert.match(app, /window\.UsPersonColors\?\.applyCoupleColors\?\.\(usCoupleContextState\.profiles\)/);
   const settings = read('settings.js');
-  assert.match(settings, /if\(name==='person-color'\)\{if\(!settingsSnapshot\?\.plusActive\)return personColorLockedModal\(\);return personColorModal\(\);\}/);
+  assert.match(settings, /if\(name==='person-color'\)\{if\(!settingsSnapshot\?\.colorsOpen\)return personColorLockedModal\(\);return personColorModal\(\);\}/);
   assert.match(settings, /sb\.rpc\('get_couple_plus'\)/);
   assert.match(settings, /sb\.rpc\('set_my_color',\{p_color:/);
   const html = read('index.html');
@@ -62,12 +62,18 @@ test('wired: profiles carry the colour, the page applies it, Settings changes it
   assert.match(read('service-worker.js'), /versioned\("\/person-colors\.js"\)/);
 });
 
+// In beta (US Plus not on sale) the server says the colours are free (colors_free):
+// open for everyone (founder, 29/10/2026). The lock below is for when Plus is on sale.
+test('in beta the colour is open for everyone: Plus or colors_free', () => {
+  assert.match(read('settings.js'), /const colorsOpen=plusActive\|\|plusRes\?\.data\?\.colors_free===true;/);
+});
+
 test('without Plus the row is there, locked: it shows that Plus unlocks it, with nothing to buy yet', () => {
   const settings = read('settings.js');
   // Shown once Plus can be read; hidden only when it cannot (server not ready).
-  assert.match(settings, /if\(colorRow\)\{colorRow\.hidden=Boolean\(plusRes\?\.error\)\|\|!plusRes\?\.data;colorRow\.dataset\.locked=plusActive\?'false':'true';\}/);
-  assert.match(settings, /if\(colorValue\)colorValue\.textContent=plusActive\?\(window\.UsPersonColors\?\.nameOf\?\.\(profiles,identityProfile\.id\)\|\|''\):'US Plus';/);
-  assert.match(settings, /if\(!settingsSnapshot\?\.plusActive\)return personColorLockedModal\(\);/);
+  assert.match(settings, /if\(colorRow\)\{colorRow\.hidden=Boolean\(plusRes\?\.error\)\|\|!plusRes\?\.data;colorRow\.dataset\.locked=colorsOpen\?'false':'true';\}/);
+  assert.match(settings, /if\(colorValue\)colorValue\.textContent=colorsOpen\?\(window\.UsPersonColors\?\.nameOf\?\.\(profiles,identityProfile\.id\)\|\|''\):'US Plus';/);
+  assert.match(settings, /if\(!settingsSnapshot\?\.colorsOpen\)return personColorLockedModal\(\);/);
   const locked = settings.slice(settings.indexOf('function personColorLockedModal'), settings.indexOf('function personColorModal'));
   assert.match(locked, /Si sblocca con US Plus/);
   assert.doesNotMatch(locked, /acquist|compra|prezzo|€|abbonati/i, 'no purchase while Plus is not on sale');

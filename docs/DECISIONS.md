@@ -280,3 +280,14 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - L'icona del telefono è solo «US» con la stellina, sullo sfondo bianco di sempre: la forma del telefono fa da cornice.
 - Il logo con la cornice resta dove non c'è una forma attorno: splash d'apertura, logo in alto nell'app, icona web e notifiche.
 - Le icone premio «Notte», «Oro» e «Neon» (Sintonia V2) partono dallo stesso logo senza cornice.
+
+## 2026-10-29 — Fix dalla prova dell'APK di staging
+
+**Fonte:** founder, 29/10/2026, provando l'APK di staging: «in impostazioni la scritta maudit cambiamola con ''compagni''», «il tuo colore facciamolo scegliere anche quando aprono per la prima volta l'app», «tema e effetto perchè sono li in impostazioni se poi sono anche in ''sintonia''», «esce rivivi solo quando è il giorno stesso di quel ricordo»; sul colore: «per la beta però lo lasciamo gratis perchè ancora non inseriamo il plus».
+
+- In Impostazioni la voce dei compagni si chiama «Compagni» (acceso o spento).
+- Tema ed Effetto si scelgono solo in Sintonia, dove c'è anche la galleria con le anteprime. Impostazioni non li ripete.
+- Ognuno sceglie il proprio colore già alla prima apertura (creazione della coppia o ingresso con il codice). Il colore del partner non si può prendere.
+- Finché US Plus non è in vendita i colori sono gratis per tutti. Lo decide il server con l'interruttore `app_flags.plus_on_sale`, che accende solo il founder; da quel giorno cambiare colore richiede Plus e il colore già scelto resta. Modifica la decisione «Colori a scelta con US Plus» del 29/10.
+- «Rivivi» compare solo nel giorno esatto di un ricordo passato: stesso giorno e mese («Un anno fa, oggi»), altrimenti stesso giorno del mese («N mesi fa, oggi»). Gli anni vincono sui mesi; negli altri giorni non c'è.
+- Rimandati, ognuno con la sua decisione: Sintonia più semplice (prima un prima/dopo), «Il vostro anno su US» al primo anno nell'app con i recap dei mesiversari, foto senza posizione (selettore nativo).

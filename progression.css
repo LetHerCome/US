@@ -255,3 +255,6 @@
    the first screen away from the next milestone and the collection. */
 
 #bond details:not([open]) > :not(summary){display:none!important}
+
+/* Founder, 29/10/2026: the Oggi gallery opens from its Sintonia groups. */
+.us-reward-group-gallery{display:block;width:100%;min-height:44px;margin:10px 0 2px;border:1px solid var(--us-color-line,rgba(255,255,255,.12));border-radius:999px;background:transparent;color:var(--us-color-text);font:600 14px/1.2 var(--us-font-ui);cursor:pointer}

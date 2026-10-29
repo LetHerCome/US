@@ -913,10 +913,14 @@ function countdownTile(style, next) {
     title: style.name, art: artMarkup({ cat: 'countdown', id: style.id })
   });
 }
+// Founder, 29/10/2026: themes and effects of Oggi live here, not in Settings:
+// their groups open the full gallery (previews, the sky's city and hour).
+const LOOK_GALLERY = Object.freeze({ oggi_theme: 'theme', oggi_effect: 'effect' });
 function groupMarkup({ category, label, place, owned, total, tiles }) {
+  const gallery = LOOK_GALLERY[category] ? `<button type="button" class="us-reward-group-gallery" data-look-gallery="${LOOK_GALLERY[category]}">Apri la galleria con le anteprime</button>` : '';
   return (open) => `<details class="us-reward-group" data-category="${category}" aria-label="${esc(label)}"${open ? ' open' : ''}>
       <summary class="us-reward-group-head"><b>${esc(label)}</b><span>${esc(place)}</span><em>${owned}/${total}</em></summary>
-      <div class="us-reward-grid">${tiles}</div>
+      <div class="us-reward-grid">${tiles}</div>${gallery}
     </details>`;
 }
 function countdownGroup(next) {
@@ -1383,6 +1387,8 @@ $('usProgressionRewards')?.addEventListener('click', async (event) => {
     window.UsFeedback?.selection?.();
     return;
   }
+  const gallery = event.target.closest?.('[data-look-gallery]');
+  if (gallery?.dataset?.lookGallery) { window.USOggiLook?.openGallery?.({ tab: gallery.dataset.lookGallery }); return; }
   const tile = event.target.closest?.('[data-progression-reward],[data-progression-default],[data-countdown-style-select],[data-look-slot],[data-companion-pick]');
   if (!tile || tile.disabled) return;
   const data = tile.dataset || {};
@@ -1409,6 +1415,8 @@ $('usProgressionRewards')?.addEventListener('click', async (event) => {
     ok = await window.USCountdown?.setStyle?.(data.countdownStyleSelect);
     if (ok) renderRewards(state);
   } else if (data.lookSlot) {
+    // Il vostro cielo needs its city and hour: it opens its own page first.
+    if (data.lookSlot === 'theme' && data.lookId === 'sky') { window.USOggiLook?.openGallery?.({ tab: 'theme', look: 'sky' }); return; }
     category = LOOK_SLOT[data.lookSlot] || '';
     ok = setDeviceLook(data.lookSlot, data.lookId);
   } else if (data.progressionDefault) {

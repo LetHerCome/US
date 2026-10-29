@@ -130,10 +130,13 @@ async function hydrateUsSettings(){
   // row stays, locked, to show that Plus unlocks it.
   const plusActive=plusRes?.data?.active===true;
   settingsSnapshot.plusActive=plusActive;
+  // In beta (US Plus not on sale) the colour is free for everyone (founder, 29/10/2026).
+  const colorsOpen=plusActive||plusRes?.data?.colors_free===true;
+  settingsSnapshot.colorsOpen=colorsOpen;
   const colorRow=$('usPersonColorSetting');
-  if(colorRow){colorRow.hidden=Boolean(plusRes?.error)||!plusRes?.data;colorRow.dataset.locked=plusActive?'false':'true';}
+  if(colorRow){colorRow.hidden=Boolean(plusRes?.error)||!plusRes?.data;colorRow.dataset.locked=colorsOpen?'false':'true';}
   const colorValue=$('usPersonColorValue');
-  if(colorValue)colorValue.textContent=plusActive?(window.UsPersonColors?.nameOf?.(profiles,identityProfile.id)||''):'US Plus';
+  if(colorValue)colorValue.textContent=colorsOpen?(window.UsPersonColors?.nameOf?.(profiles,identityProfile.id)||''):'US Plus';
 
   const names=profiles.map(p=>p.display_name).filter(Boolean);
   // Mockup: "Francesco e Beatrice" — the names stay as written, "e" follows the language.
@@ -1033,7 +1036,7 @@ async function action(name){
   const overlay=$('usSettingsOverlay');if(overlay?.dataset&&name!=='maudit'&&name!=='app-lock')overlay.dataset.usSettingsSheet=name;
   if(name==='relationship-date')return relationshipDateModal();
   if(name==='together-mode')return window.UsDistance?.open?.();
-  if(name==='person-color'){if(!settingsSnapshot?.plusActive)return personColorLockedModal();return personColorModal();}
+  if(name==='person-color'){if(!settingsSnapshot?.colorsOpen)return personColorLockedModal();return personColorModal();}
   if(name==='profile-photo'){closeModal();window.pickProfilePhoto?.();return;}
   if(name==='home-photo')return homePhotoModal();
   if(name==='story-archive')return showStoryArchive();
@@ -1045,8 +1048,6 @@ async function action(name){
   if(name==='maudit')return toggleMaudit();
   if(name==='app-lock')return toggleAppLock();
   if(name==='widgets')return window.UsWidgetHub?.open?.();
-  if(name==='oggi-theme')return window.USOggiLook?.openGallery?.({tab:'theme'});
-  if(name==='oggi-effect')return window.USOggiLook?.openGallery?.({tab:'effect'});
   if(name==='sync-status')return syncStatusModal();
   if(name==='privacy')return privacyModal();
   if(name==='leave-couple')return leaveCoupleModal();

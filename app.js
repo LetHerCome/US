@@ -918,6 +918,8 @@ let usAuthUserId='';
 let usInitCloudAgain=false;
 const usOnboarding=window.UsOnboarding.mount({
   readProfile:id=>usWithDeadline(sb.from('profiles').select('id,display_name,role,couple_id,avatar_path').eq('id',id).maybeSingle(),5000),
+  // The first-run colour picker reads both of you, to leave the partner's colour taken.
+  readCouple:coupleId=>usWithDeadline(sb.from('profiles').select('id,role,person_color').eq('couple_id',coupleId),5000),
   // A mutation retains its guard until the real request settles: a local timer
   // cannot cancel a database transaction or safely authorize another rotation.
   rpc:(name,args)=>{
@@ -4131,27 +4133,25 @@ function ricordiPeriodLabel(dateISO){const [y,m]=dateISO.split('-');return {mont
 // Rivivi selector: keeps the archive's deterministic historical selection
 // contract. The 1.0 surface applies a stricter presentation gate in hydrate:
 // only a true anniversary is shown to the couple.
+// Founder, 29/10/2026: Rivivi only on the very day of a memory — the same date
+// in a past year ("Un anno fa, oggi") or the same day of the month in a past
+// month ("3 mesi fa, oggi") — never at random. A year wins over months, then
+// the oldest; no memory of this day, no Rivivi.
 function ricordiPickRivivi(entries,todayISO){
   const rows=(entries||[]).filter(e=>e?.sourceKey&&/^\d{4}-\d{2}-\d{2}$/.test(String(e.date||''))&&e.date<todayISO);
-  if(!rows.length)return null;
-  const [ty]=todayISO.split('-').map(Number);
+  const [ty,tm,td]=String(todayISO).split('-').map(Number);
   let best=null;
   for(const e of rows){
-    const years=ty-Number(e.date.slice(0,4));
-    if(years<1)continue;
-    const sameYearDay=`${ty}${e.date.slice(4)}`;
-    const off=Math.abs(ricordiDayDiff(sameYearDay,todayISO));
-    if(off<=3&&(!best||off<best.off||(off===best.off&&(years<best.years||(years===best.years&&e.sourceKey<best.entry.sourceKey)))))best={entry:e,off,years};
+    const [y,mo,d]=e.date.split('-').map(Number);
+    const months=(ty-y)*12+(tm-mo);
+    if(d!==td||months<1)continue;
+    const yearly=months%12===0;
+    if(!best||yearly>best.yearly||(yearly===best.yearly&&(months>best.months||(months===best.months&&e.sourceKey<best.entry.sourceKey))))best={entry:e,months,yearly};
   }
-  if(best)return {entry:best.entry,row:best.entry.row,reason:'anniversary',label:best.years===1?'Un anno fa, in questi giorni':`${best.years} anni fa, in questi giorni`};
-  const older=rows.filter(e=>ricordiDayDiff(todayISO,e.date)>=30).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:(a.sourceKey<b.sourceKey?-1:1));
-  if(!older.length)return null;
-  const dayIndex=Math.max(0,ricordiDayDiff(todayISO,'1970-01-01'));
-  const entry=older[dayIndex%older.length];
-  const days=ricordiDayDiff(todayISO,entry.date);
-  const months=Math.floor(days/30.44);
-  const label=days>=365?(Math.floor(days/365)===1?'Un anno fa':`${Math.floor(days/365)} anni fa`):(months<=1?'Un mese fa':`${months} mesi fa`);
-  return {entry,row:entry.row,reason:'resurface',label};
+  if(!best)return null;
+  const years=best.months/12;
+  const label=best.yearly?(years===1?'Un anno fa, oggi':`${years} anni fa, oggi`):(best.months===1?'Un mese fa, oggi':`${best.months} mesi fa, oggi`);
+  return {entry:best.entry,row:best.entry.row,reason:best.yearly?'anniversary':'monthsary',label};
 }
 // Capitoli: raccolte secondarie per anno, contate sulle stesse voci (una
 // esperienza con la sua foto conta una volta), copertina = foto più recente.
