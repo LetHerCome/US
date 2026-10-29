@@ -4,10 +4,11 @@
 
 ## Update 2026-10-29 — patch unica in prova (PR #232–#237)
 
-- **SQL applicato su staging** (workflow «Supabase SQL (manual)», approvato dal founder): , , , .
-- **Edge:**  con i traguardi dei giorni. **I cron restano spenti**: il job delle 9 non gira su staging, quindi punti e notifiche dei traguardi qui non arrivano da soli.
+- **SQL applicato su staging** (workflow «Supabase SQL (manual)», approvato dal founder): `20261028201759_gioca_daily_limit_v1`, `20261028232743_days_together_milestones_v1`, `20261029012149_app_min_version_v1`, `20261029014653_person_colors_plus_v1`.
+- **Edge:** `monthiversary-job` con i traguardi dei giorni. **I cron restano spenti**: il job delle 9 non gira su staging, quindi punti e notifiche dei traguardi qui non arrivano da soli.
 - **Accesso Google** acceso dal founder su questo progetto (29/10).
-- **US Plus per tutti** (dati, non schema): il founder esegue  nell'SQL Editor di staging. Si può rieseguire per gli account nuovi. Mai in produzione.
+- **US Plus per tutti** (dati, non schema): il founder esegue `docs/store/US_STAGING_PLUS_PER_TUTTI.sql` nell'SQL Editor di staging. Si può rieseguire per gli account nuovi. Mai in produzione.
+- **Sintonia tutta sbloccata** (dati, non schema, founder 29/10): `docs/store/US_STAGING_SINTONIA_TUTTA.sql` porta ogni coppia al livello 15 e sblocca tutti i premi e i Compagni, già segnati come visti. Rieseguibile. Mai in produzione.
 
 ## Update 2026-10-22 — parity with production
 
