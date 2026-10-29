@@ -52,6 +52,16 @@ test('the map: only stars above the horizon, brighter means bigger, one more gol
   assert.ok(SKY.starRadius(-1.46) > SKY.starRadius(1) && SKY.starRadius(1) > SKY.starRadius(4.5));
 });
 
+test('on Oggi the stars lie over the photo: no night disc, no N E S O, a portrait frame covered edge to edge', () => {
+  const over = SKY.skySvg({ stars: DATA.stars, day: '2024-01-15', city: ROMA, level: 22, overlay: true });
+  assert.match(over, /^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" viewBox="0 0 600 1300" preserveAspectRatio="xMidYMid slice">/);
+  assert.doesNotMatch(over, /fill="url\(#n\)"|<text /, 'nothing that hides the photo');
+  assert.ok((over.match(/<circle class="s"/g) || []).length > 80, 'the stars of the upper sky');
+  assert.equal((over.match(/class="ours"/g) || []).length, 2);
+  const css = fs.readFileSync(path.join(__dirname, '..', 'oggi-look.css'), 'utf8');
+  assert.match(css, /--oggi-deco:var\(--oggi-sky-map,linear-gradient\(transparent,transparent\)\) center\/cover no-repeat;/);
+});
+
 test('the cities: Italian, on the Rome clock, each with its place', () => {
   assert.ok(SKY.CITIES.length >= 30);
   for (const c of SKY.CITIES) {
@@ -68,7 +78,7 @@ test('in the app: a theme of Oggi, drawn from «Insieme dal», the city and the 
   const look = read('oggi-look.js');
   assert.match(look, /\{ id: 'sky', name: 'Il vostro cielo', kicker: 'Leggenda', note: '[^']+', reward: 'sky_ours', level: 20 \}/);
   assert.match(read('sky.js'), /fetch\('\/assets\/data\/stars-bsc5-v1\.json'\)/, 'the catalogue is fetched by sky.js, never by oggi-look.js');
-  assert.match(look, /window\.UsSky\.skySvg\(\{ stars, day, city, level \}\)/);
+  assert.match(look, /window\.UsSky\.skySvg\(\{ stars, day, city, level, overlay: true \}\)/, 'over the photo, never a disc that hides it');
   assert.match(look, /root\.style\.setProperty\('--oggi-sky-map', map\)/);
   assert.match(read('app.js'), /sb\.from\('couples'\)\.select\('id,name,started_on,sky_city'\)/);
   const css = read('oggi-look.css');

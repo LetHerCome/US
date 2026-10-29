@@ -140,12 +140,14 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
     - niente animazione con «riduci animazioni».
   - **«Il vostro cielo»** (livello 20, un tema di Oggi):
     - le stelle vere delle 22 di «Insieme dal», sopra la città della coppia, scelta da una lista di 45 città italiane («Dove eravate quella sera?»);
+    - su Oggi le stelle stanno **sopra la foto**, che resta visibile e solo più scura in alto (founder, 29/10: niente disco che la copre); il disco con N, E, S, O resta solo nell'immagine da salvare;
     - le stelle più luminose hanno un alone;
     - dopo il livello 20, una stella d'oro in più a ogni livello;
     - «Salva l'immagine» crea un PNG con titolo, data e città.
     - **Dati:** le 904 stelle fino alla magnitudine 4,5 del catalogo Yale Bright Star (NASA ADC / CDS V/50), in `assets/data/stars-bsc5-v1.json`, 24 KB, caricate solo quando il cielo si vede.
     - **Server:** colonna `couples.sky_city` e `set_sky_city()` nella stessa migrazione della Fase 1, che si può rieseguire.
   - **Peso dell'app:** il limite sale da 2,85 a 2,9 MB.
+  - **Galleria di Oggi, anteprima nel dettaglio:** era vuota per tutti i temi e gli effetti (altezza in percentuale risolta a 0, dal 9/10); ora ha un'altezza esplicita.
   - **Da provare sul telefono:**
     - «Salva l'immagine» nell'app Android installata: il WebView potrebbe non scaricare il file;
     - i cuori quando arriva un Ti penso vero.

@@ -146,10 +146,10 @@ html[data-us-oggi-theme] #home .us-daily-ritual .us-daily-ritual-kicker{color:va
    and the couple's star map (--oggi-sky-map, set by oggi-look.js). */
 html[data-us-oggi-theme="sky"],
 .us-look-phone[data-oggi-theme="sky"]{
-  --oggi-photo-filter:brightness(.42) saturate(.7) contrast(1.05);
-  --oggi-tint:linear-gradient(180deg,rgba(7,10,28,.55) 0%,rgba(10,16,44,.35) 50%,rgba(5,7,20,.82) 100%);
-  --oggi-deco:var(--oggi-sky-map,linear-gradient(transparent,transparent)) center top 14%/min(88%,400px) auto no-repeat;
-  --oggi-deco-2:radial-gradient(60% 40% at 50% 30%,rgba(120,140,255,.18),transparent 70%);
+  --oggi-photo-filter:brightness(.74) saturate(.88) contrast(1.04);
+  --oggi-tint:linear-gradient(180deg,rgba(8,12,40,.62) 0%,rgba(12,18,52,.32) 34%,rgba(10,14,40,.08) 58%,rgba(5,7,20,.66) 100%);
+  --oggi-deco:var(--oggi-sky-map,linear-gradient(transparent,transparent)) center/cover no-repeat;
+  --oggi-deco-2:radial-gradient(70% 34% at 50% 0%,rgba(110,130,255,.16),transparent 70%);
   --oggi-ink:#f4f1ff;
   --oggi-ink-soft:#c9cdf5;
   --oggi-glow:0 0 20px rgba(140,160,255,.45),0 2px 14px rgba(0,0,20,.7);
@@ -326,7 +326,8 @@ body.us-look-open{overflow:hidden}
 .us-look-status:empty{display:none}
 .us-look-detail-body{flex:1;display:flex;flex-direction:column;align-items:center;gap:16px;min-height:0;padding-bottom:calc(var(--us-safe-bottom,0px) + 18px)}
 .us-look-detail-stage{flex:1 1 auto;min-height:0;display:flex;justify-content:center;width:100%}
-.us-look-detail-stage .us-look-phone{height:100%;width:auto;max-width:100%;max-height:min(560px,62svh);border-radius:26px}
+/* An explicit height: a % of the flexible stage resolved to 0 and the preview vanished (29/10). */
+.us-look-detail-stage .us-look-phone{height:min(560px,62svh);width:auto;aspect-ratio:9/18.5;max-width:100%;max-height:100%;border-radius:26px}
 .us-look-detail-copy{width:100%;max-width:420px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
 .us-look-detail-copy small{font:750 10px/1.2 var(--us-font-ui,inherit);letter-spacing:.14em;text-transform:uppercase;color:var(--us-color-accent-ink)}
 .us-look-detail-copy h3{margin:0;font:560 26px/1.1 var(--us-font-editorial,Georgia,serif)}

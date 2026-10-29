@@ -106,7 +106,8 @@ function skyMapUrl() {
   const key = `${day}|${city.id}|${level}`;
   if (key !== skyKey) {
     const stars = skyStars;
-    const svg = window.UsSky.skySvg({ stars, day, city, level });
+    // Over the photo, never instead of it (founder, 29/10): the overlay variant.
+    const svg = window.UsSky.skySvg({ stars, day, city, level, overlay: true });
     skyMap = svg ? `url("data:image/svg+xml,${encodeURIComponent(svg)}")` : '';
     skyKey = key;
   }

@@ -78,33 +78,41 @@
     return () => { h += 0x6D2B79F5; let t = h; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   }
 
-  // The sky as a disc seen from below: zenith in the middle, north up, east left.
-  function skySvg({ stars, day, city, level = 20 }) {
+  // The sky seen from below: zenith in the middle, north up, east left.
+  // chart (the picture to keep): the whole sky as a night disc with N E S O.
+  // overlay (Oggi): the same stars spread over a portrait photo, transparent,
+  // the disc larger than the frame so the photo stays the picture.
+  function skySvg({ stars, day, city, level = 20, overlay = false }) {
     const at = eveningUtc(day);
     if (!at || !city || !Array.isArray(stars)) return '';
-    const R = 470, C = 500;
+    const W = overlay ? 600 : 1000, H = overlay ? 1300 : 1000;
+    const R = overlay ? 900 : 470, CX = W / 2, CY = overlay ? 560 : 500;
+    const size = (v) => (overlay ? Math.max(1.5, starRadius(v) * 0.85) : starRadius(v));
     const parts = [];
     for (const star of stars) {
       const { alt, az } = horizontal(star, at, city);
       if (alt <= 0) continue;
       const r = ((90 - alt) / 90) * R;
-      const x = C - r * Math.sin(az * RAD), y = C - r * Math.cos(az * RAD);
+      const x = CX - r * Math.sin(az * RAD), y = CY - r * Math.cos(az * RAD);
+      if (overlay && (x < -10 || x > W + 10 || y < -10 || y > H + 10)) continue;
       // The brightest ones glow, so the constellations read at a glance.
-      if (star[2] < 2.5) parts.push(`<circle class="g" cx="${fixed(x)}" cy="${fixed(y)}" r="${fixed(starRadius(star[2]) * 3.2)}" fill="${starColor(star[3])}" opacity="${fixed(0.22 + (2.5 - star[2]) * 0.06)}" filter="url(#b)"/>`);
-      parts.push(`<circle class="s" cx="${fixed(x)}" cy="${fixed(y)}" r="${fixed(starRadius(star[2]))}" fill="${starColor(star[3])}"/>`);
+      if (star[2] < 2.5) parts.push(`<circle class="g" cx="${fixed(x)}" cy="${fixed(y)}" r="${fixed(size(star[2]) * 3.2)}" fill="${starColor(star[3])}" opacity="${fixed(0.22 + (2.5 - star[2]) * 0.06)}" filter="url(#b)"/>`);
+      parts.push(`<circle class="s" cx="${fixed(x)}" cy="${fixed(y)}" r="${fixed(size(star[2]))}" fill="${starColor(star[3])}"/>`);
     }
     const rand = seeded(`${day}|${city.id}`);
     for (let i = 0; i < Math.max(0, Math.floor(level) - 20); i += 1) {
-      const a = rand() * 2 * Math.PI, r = Math.sqrt(rand()) * R * 0.86;
-      const x = fixed(C + r * Math.cos(a)), y = fixed(C + r * Math.sin(a));
+      let x, y;
+      if (overlay) { x = fixed(W * (0.1 + rand() * 0.8)); y = fixed(H * (0.06 + rand() * 0.5)); }
+      else { const a = rand() * 2 * Math.PI, r = Math.sqrt(rand()) * R * 0.86; x = fixed(CX + r * Math.cos(a)); y = fixed(CY + r * Math.sin(a)); }
       parts.push(`<path class="ours" d="M${x} ${fixed(y - 14)}L${fixed(x + 3.5)} ${fixed(y - 3.5)}L${fixed(x + 14)} ${y}L${fixed(x + 3.5)} ${fixed(y + 3.5)}L${x} ${fixed(y + 14)}L${fixed(x - 3.5)} ${fixed(y + 3.5)}L${fixed(x - 14)} ${y}L${fixed(x - 3.5)} ${fixed(y - 3.5)}Z" fill="#ffd36e"/>`);
     }
+    const defs = '<defs><radialGradient id="n" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#1b2450"/><stop offset="1" stop-color="#070a1c"/></radialGradient><filter id="b" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter></defs>';
+    if (overlay) return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice">${defs}${parts.join('')}</svg>`;
     const label = (text, x, y) => `<text x="${x}" y="${y}" fill="rgba(255,255,255,.55)" font-family="system-ui,sans-serif" font-size="22" text-anchor="middle">${text}</text>`;
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">`
-      + '<defs><radialGradient id="n" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#1b2450"/><stop offset="1" stop-color="#070a1c"/></radialGradient><filter id="b" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter></defs>'
-      + `<circle cx="${C}" cy="${C}" r="${R}" fill="url(#n)"/>${parts.join('')}`
-      + `<circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2"/>`
-      + label('N', C, 22) + label('S', C, 994) + label('E', 12, C + 8) + label('O', 988, C + 8)
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">${defs}`
+      + `<circle cx="${CX}" cy="${CY}" r="${R}" fill="url(#n)"/>${parts.join('')}`
+      + `<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2"/>`
+      + label('N', CX, 22) + label('S', CX, 994) + label('E', 12, CY + 8) + label('O', 988, CY + 8)
       + '</svg>';
   }
 
