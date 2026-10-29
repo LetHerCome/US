@@ -861,3 +861,9 @@ h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
     --us-type-page:23px;
   }
 }
+
+/* Il cuore (ui-foundation.js heart()): the bloom, the dots and, every third
+   heart, the fireworks, in one layer over the page. */
+.us-heart-fx{position:fixed;z-index:10320;width:0;height:0;pointer-events:none}
+.us-heart-fx>i{position:absolute;left:0;top:0;box-sizing:border-box;border-radius:50%}
+.us-heart-fx>.us-heart-bloom{background:none}

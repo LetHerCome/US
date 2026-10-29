@@ -3242,6 +3242,7 @@ async function sendThinkReaction(reaction){
   if(!usIncomingThink?.id||usThinkReactionFinal||usThinkReactionInFlight)return false;
   if(!['heart','hug','miss_you'].includes(reaction))return false;
   usThinkReactionInFlight=true;renderThinkReactionUi();
+  if(reaction==='heart')usHeartLike(document.querySelector('#thinkArrival [data-think-reaction="heart"]'));
   const {data,error}=await sb.rpc('set_think_reaction',{target_message_id:usIncomingThink.id,target_reaction:reaction});
   if(error){
     const terminal=error.code==='23505'&&String(error.message||'').includes('already_reacted');
@@ -3269,8 +3270,8 @@ async function sendThinkReaction(reaction){
     renderThinkReactionUi();
     sendWebPushEvent('think_reaction',usIncomingThink.id,{reaction:usThinkReactionFinal}).catch(()=>{});
     window.UsTodayPriority?.refresh?.();
-    // Fluidità 2: the chosen reaction answers the tap.
-    window.UsUiFoundation?.done?.(document.querySelector(`[data-think-reaction="${usThinkReactionFinal}"]`),{feel:'action'});
+    // Fluidità 2: the chosen reaction answers the tap (the heart already has its own animation).
+    if(usThinkReactionFinal!=='heart')window.UsUiFoundation?.done?.(document.querySelector(`[data-think-reaction="${usThinkReactionFinal}"]`),{feel:'action'});
     toast('Reazione inviata',{icon:'check',quiet:false});
     setTimeout(()=>closeThinkArrival(),1300);
     return true;
@@ -3419,6 +3420,7 @@ function dailyPartnerReactionLine(meta,partner){
   if(meta?.partner_reaction==='cry')return `${partner}: mi hai commosso`;
   return '';
 }
+let usTodayRevealDrawn='';
 function renderTodayReveal(){
   const reveal=document.getElementById('todayReveal'),state=window.todayState;
   if(!reveal||!state?.both_answered)return;
@@ -3429,9 +3431,13 @@ function renderTodayReveal(){
   // Without the personal meta (offline) there is nothing to react on.
   const controls=meta?`<div class="today-reactions" role="group" aria-label="La tua reazione"><button type="button" class="today-reaction" data-daily-reaction="heart" aria-label="${escapeHtml(US_DAILY_REACTIONS.heart.label)}" aria-pressed="${mine==='heart'}"><span class="us-icon" data-us-icon="${mine==='heart'?'heart-fill':'heart'}" aria-hidden="true"></span></button><button type="button" class="today-reaction today-reaction--words" data-daily-reaction="cry" aria-pressed="${mine==='cry'}">${escapeHtml(US_DAILY_REACTIONS.cry.label)}</button></div>`:'';
   reveal.className='today-reveal today-reveal--simple';
-  reveal.innerHTML='<div class="today-answer" data-us-daily-answer="mine"><b>Tu</b><p translate="no">'+escapeHtml(state.my_answer||'')+'</p>'+note+'</div>'+
+  const html='<div class="today-answer" data-us-daily-answer="mine"><b>Tu</b><p translate="no">'+escapeHtml(state.my_answer||'')+'</p>'+note+'</div>'+
     '<div class="today-answer" data-us-daily-answer="partner"><b translate="no">'+escapeHtml(partner)+'</b><p translate="no">'+escapeHtml(state.partner_answer||'')+'</p>'+controls+'</div>';
+  // The same drawing stays: the heart animating on the button is not cut by the server's reply.
+  if(usTodayRevealDrawn===html&&reveal.firstElementChild)return;usTodayRevealDrawn=html;reveal.innerHTML=html;
 }
+// Il cuore (founder, 29/10/2026): one animation for every heart given; every third is the big one.
+function usHeartLike(button){const turn=window.UsUiFoundation?.heartTurn?.(window.usProfile?.id);window.UsUiFoundation?.heart?.(button,{big:Boolean(turn?.big)});}
 // One tap = my reaction; the same tap again takes it back. The server
 // (set_daily_answer_reaction) decides; on error everything goes back.
 let usDailyReactionInFlight=false;
@@ -3442,12 +3448,13 @@ async function setDailyAnswerReaction(reaction){
   const previous=meta,next=meta.my_reaction===reaction?null:reaction;
   usDailyReactionInFlight=true;
   window.todayRevealMeta={...meta,my_reaction:next};renderTodayReveal();
+  if(next==='heart')usHeartLike(document.querySelector('#todayReveal [data-daily-reaction="heart"]'));
   try{
     const {data,error}=await sb.rpc('set_daily_answer_reaction',{target_question_id:questionId,target_reaction:next});
     if(error||!data||data.question_id!==questionId)throw error||new Error('daily_reaction_invalid');
     if(window.todayQuestion?.id===questionId)window.todayRevealMeta=data;
     renderTodayReveal();
-    if(next)window.UsUiFoundation?.done?.(document.querySelector(`#todayReveal [data-daily-reaction="${next}"]`),{feel:'action'});
+    if(next&&next!=='heart')window.UsUiFoundation?.done?.(document.querySelector(`#todayReveal [data-daily-reaction="${next}"]`),{feel:'action'});
     // O2: the other phone hears about a ♥ or "mi hai commosso" (the server reads it back).
     if(next)sendWebPushEvent('daily_reaction',questionId);
     return {status:'saved'};

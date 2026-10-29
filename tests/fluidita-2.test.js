@@ -62,8 +62,9 @@ test('A: the answer sent has its cue, and a human error', () => {
 });
 
 test('B: a reaction answers the tap (Ti penso and the daily answers)', () => {
-  assert.match(app, /window\.UsUiFoundation\?\.done\?\.\(document\.querySelector\(`\[data-think-reaction="\$\{usThinkReactionFinal\}"\]`\),\{feel:'action'\}\);/);
-  assert.match(app, /if\(next\)window\.UsUiFoundation\?\.done\?\.\(document\.querySelector\(`#todayReveal \[data-daily-reaction="\$\{next\}"\]`\),\{feel:'action'\}\);/, 'not when the reaction is taken back');
+  // The heart has its own animation (tests/heart-like.test.js); the other reactions keep this.
+  assert.match(app, /if\(usThinkReactionFinal!=='heart'\)window\.UsUiFoundation\?\.done\?\.\(document\.querySelector\(`\[data-think-reaction="\$\{usThinkReactionFinal\}"\]`\),\{feel:'action'\}\);/);
+  assert.match(app, /if\(next&&next!=='heart'\)window\.UsUiFoundation\?\.done\?\.\(document\.querySelector\(`#todayReveal \[data-daily-reaction="\$\{next\}"\]`\),\{feel:'action'\}\);/, 'not when the reaction is taken back');
 });
 
 test('C and D: kept in Ricordi gets the cue; a new memory keeps its own arrival', () => {

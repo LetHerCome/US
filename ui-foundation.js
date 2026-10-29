@@ -757,11 +757,118 @@
     return true;
   }
 
+  // Il cuore (founder, 29/10/2026): the heart goes, a disc opens into a ring
+  // from rosa to lilla and thins away, seven pairs of dots fly out, the heart
+  // springs back past its size. The big one (every third heart) is wider and
+  // throws fireworks that rise and fall. One layer over the page, so a redraw
+  // of the button does not cut it.
+  const HEART_COLORS = ['--us-rosa', '--us-lilla', '--us-ambra', '--us-noi'];
+  const HEART_FALLBACK = { '--us-rosa': '#ff7c96', '--us-lilla': '#a98bff', '--us-ambra': '#f3b76e', '--us-noi': '#d98bd8' };
+  function heartColor(d, name) {
+    try { return d.defaultView.getComputedStyle(d.documentElement).getPropertyValue(name).trim() || HEART_FALLBACK[name]; } catch (_) { return HEART_FALLBACK[name]; }
+  }
+  // Each person counts the hearts they give, on their phone: the 3rd, 6th, … is big.
+  function heartTurn(owner, storage) {
+    const scope = typeof window !== 'undefined' ? window : globalThis;
+    const key = `us:hearts:${owner || 'me'}`;
+    try {
+      const store = storage || scope.localStorage;
+      const count = (Number(store.getItem(key)) || 0) + 1;
+      store.setItem(key, String(count));
+      return { count, big: count % 3 === 0 };
+    } catch (_) { return { count: 0, big: false }; }
+  }
+  function heart(element, { big = false } = {}) {
+    const scope = typeof window !== 'undefined' ? window : globalThis;
+    scope.UsFeedback?.[big ? 'success' : 'action']?.();
+    const d = element?.ownerDocument;
+    if (!element?.getBoundingClientRect || !d?.body || activeMotion.isReducedMotion()) return false;
+    const glyph = element.querySelector?.('.us-icon, .think-reaction-glyph') || element;
+    const r = (glyph.getBoundingClientRect ? glyph : element).getBoundingClientRect();
+    if (!r.width && !r.height) return true;
+    const k = Math.max(1, r.width / 20) * (big ? 1.45 : 1);
+    const radius = Math.round(17 * k);
+    const color = (i) => heartColor(d, HEART_COLORS[i % HEART_COLORS.length]);
+    const layer = d.createElement('span');
+    layer.className = 'us-heart-fx';
+    layer.setAttribute('aria-hidden', 'true');
+    layer.style.left = `${Math.round(r.left + r.width / 2)}px`;
+    layer.style.top = `${Math.round(r.top + r.height / 2)}px`;
+    let pending = 0;
+    const settle = () => { if (--pending <= 0) layer.remove(); };
+    const piece = (kind, size, background) => {
+      const p = d.createElement('i');
+      p.className = kind;
+      p.style.width = p.style.height = `${size}px`;
+      p.style.margin = `${-size / 2}px 0 0 ${-size / 2}px`;
+      if (background) p.style.background = background;
+      return layer.appendChild(p);
+    };
+    const play = (el, keyframes, options) => {
+      if (typeof el.animate !== 'function') return;
+      pending++;
+      const anim = el.animate(keyframes, { fill: 'both', ...options });
+      anim.onfinish = settle;
+      anim.oncancel = settle;
+    };
+    // The disc: an inner ring as wide as the radius is full; going to 0 it hollows out.
+    const bloom = piece('us-heart-bloom', radius * 2);
+    const rosa = color(0), lilla = color(1);
+    const ring = (width, c) => `inset 0 0 0 ${width}px ${c}`;
+    // Easings go on each step, as in a CSS animation (an option would bend the whole run).
+    const out = 'cubic-bezier(.25,.8,.35,1)';
+    play(bloom, [
+      { scale: 0.15, boxShadow: ring(radius, rosa), opacity: 1, easing: out },
+      { scale: 1, boxShadow: ring(radius, lilla), opacity: 1, offset: 0.4, easing: out },
+      { scale: 1.08, boxShadow: ring(2, lilla), opacity: 1, offset: 0.75, easing: out },
+      { scale: 1.12, boxShadow: ring(0, lilla), opacity: 0 }
+    ], { duration: big ? 680 : 560 });
+    // Seven spokes (ten in the big one), each a pair of dots, one a little behind.
+    const spokes = big ? 10 : 7;
+    for (let i = 0; i < spokes; i++) {
+      const turn = (360 / spokes) * i - 90;
+      const fly = ((i * 7) % 10) / 10;
+      [[-4, 0, 5], [4, -5, 4]].forEach(([side, far, size], j) => {
+        const dot = piece('us-heart-dot', Math.round(size * Math.min(k, 1.3)), color(i + j));
+        // The way out eases; the dot shows up in the first eighth.
+        play(dot, [
+          { transform: `rotate(${turn}deg) translate(${12 * k}px, ${side}px) scale(1)`, easing: 'cubic-bezier(.2,.8,.3,1)' },
+          { transform: `rotate(${turn}deg) translate(${(18 + fly * 14) * k + far}px, ${side * 1.6}px) scale(0)` }
+        ], { duration: 620, delay: 200 });
+        play(dot, [{ opacity: 0 }, { opacity: 1, offset: 0.12 }, { opacity: 1 }], { duration: 620, delay: 200 });
+      });
+    }
+    // The big one: fireworks, up and out, then they fall.
+    if (big) {
+      for (let i = 0; i < 18; i++) {
+        const x = Math.round(Math.cos((i / 18) * 6.283) * (34 + (i % 4) * 12));
+        const y = -Math.round(46 + ((i * 5) % 9) * 6);
+        const spark = piece('us-heart-spark', 4 + (i % 2), color(i));
+        play(spark, [
+          { transform: 'translate(0px, 0px)', opacity: 1, easing: 'cubic-bezier(.2,.7,.4,1)' },
+          { transform: `translate(${Math.round(x * 0.7)}px, ${y}px)`, opacity: 1, offset: 0.45, easing: 'cubic-bezier(.5,0,.8,.5)' },
+          { transform: `translate(${x}px, ${y + 30}px)`, opacity: 0 }
+        ], { duration: 1000, delay: 240 + (i % 6) * 25 });
+      }
+    }
+    // The heart: gone while the disc opens, then springs in past its size.
+    if (typeof glyph.animate === 'function') {
+      const spring = 'cubic-bezier(.3,1.6,.4,1)';
+      glyph.animate([{ scale: 0 }, { scale: 0, offset: 0.28, easing: spring }, { scale: big ? 1.45 : 1.25, offset: 0.62, easing: spring }, { scale: 1 }],
+        { duration: big ? 900 : 760 });
+    }
+    d.body.appendChild(layer);
+    if (!pending) layer.remove();
+    return true;
+  }
+
   return {
     install,
     createFeedback,
     done,
     enter,
+    heart,
+    heartTurn,
     auroraPulse: () => activeAurora(),
     playOnce: (element, className, duration) => activePlayOnce(element, className, duration),
     confirm: (options) => confirmSurface(options),
