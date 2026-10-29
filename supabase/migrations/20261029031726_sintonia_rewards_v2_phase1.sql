@@ -21,7 +21,9 @@ alter table public.progression_reward_catalog drop constraint if exists progress
 alter table public.progression_reward_catalog add constraint progression_reward_catalog_category_check
   check (category = any (array[
     'frame', 'theme', 'accent', 'effect', 'badge', 'sticker', 'ring',
-    'oggi_theme', 'oggi_effect', 'countdown', 'ti_penso', 'sky'
+    'oggi_theme', 'oggi_effect', 'countdown', 'ti_penso', 'sky',
+    -- Phase 2 kinds too, so either migration can run again in any order.
+    'pet_accessory', 'app_icon'
   ]));
 
 update public.progression_reward_catalog r

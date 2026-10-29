@@ -34,9 +34,11 @@ test('the ladder: today\'s rewards move down, headlines are marked, the top is l
     ring_orbit: 8, oggi_effect_bokeh: 8, theme_blue_hour: 9, accent_ice: 9, oggi_theme_seasonal: 10, frame_chrome: 10, effect_shimmer: 10,
     oggi_effect_snow: 11, theme_graphite: 12, sky_ours: 20 };
   assert.deepEqual(Object.fromEntries(Object.keys(expect).map((id) => [id, at[id]?.l])), expect);
-  assert.equal(rows.length, Object.keys(expect).length, 'only these are active');
-  assert.deepEqual(rows.filter((r) => r.headline).map((r) => r.id), ['oggi_effect_petals', 'oggi_theme_cinematic', 'ti_penso_hearts', 'oggi_theme_seasonal', 'sky_ours']);
-  assert.deepEqual(rows.filter((r) => r.p).map((r) => r.id), ['oggi_effect_aurora'], 'Phase 1 has one Plus extra');
+  // Phase 2 (sintonia-rewards-v2-phase2-db.test.js) adds accessories, icons and the letter.
+  const phase1 = rows.filter((r) => !/^(pet_accessory_|app_icon_)|^ti_penso_letter$/.test(r.id));
+  assert.equal(phase1.length, Object.keys(expect).length, 'only these are active from Phase 1');
+  assert.deepEqual(phase1.filter((r) => r.headline).map((r) => r.id), ['oggi_effect_petals', 'oggi_theme_cinematic', 'ti_penso_hearts', 'oggi_theme_seasonal', 'sky_ours']);
+  assert.deepEqual(phase1.filter((r) => r.p).map((r) => r.id), ['oggi_effect_aurora'], 'Phase 1 has one Plus extra');
   assert.equal(at.oggi_theme_seasonal.title, 'Tema delle stagioni');
   assert.ok(rows.filter((r) => r.p).every((r) => r.l >= 2 && r.l <= 12 && !r.headline), 'Plus only on levels 2–12, never a free headline');
 });
@@ -63,9 +65,10 @@ test('Plus alone is not enough: the level comes first', async () => {
 test('Noi gets the next headline, how many points it needs, and the pace of the last 14 days', async () => {
   await setLevel(5);
   let p = await progression();
-  assert.equal(p.next_headline.id, 'oggi_theme_seasonal');
-  assert.equal(p.next_headline.level_required, 10);
-  assert.equal(p.next_headline.xp_needed, xpFor(10) - xpFor(5));
+  // With Phase 2, the scarf for the companions (level 9) is the next headline after 5.
+  assert.equal(p.next_headline.id, 'pet_accessory_scarf');
+  assert.equal(p.next_headline.level_required, 9);
+  assert.equal(p.next_headline.xp_needed, xpFor(9) - xpFor(5));
   const day = (n) => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10);
   for (const [n, xp] of [[1, 30], [5, 40], [13, 20], [20, 999]]) {
     await db.query(`insert into public.progression_events(id, couple_id, source_kind, source_key, xp_awarded, counts_rhythm, action_day, created_at)
@@ -104,6 +107,6 @@ test('Il vostro cielo: the couple picks its city and hour once level 20 is reach
 test('the Phase 1 migration can run twice on the same database (staging re-apply)', async () => {
   await db.exec(fs.readFileSync(path.join(DIR, FILE), 'utf8'));
   const rows = (await db.query(`select count(*)::int n from public.progression_reward_catalog where active`)).rows[0].n;
-  assert.equal(rows, 24);
+  assert.equal(rows, 32, "24 of Phase 1 and 8 of Phase 2");
   assert.equal((await db.query(`select category from public.progression_reward_catalog where id = 'sky_ours'`)).rows[0].category, 'oggi_theme', 'the sky is a theme of Oggi');
 });
