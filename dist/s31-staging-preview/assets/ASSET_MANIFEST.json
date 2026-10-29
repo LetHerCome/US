@@ -1,0 +1,508 @@
+{
+  "schemaVersion": 1,
+  "assets": [
+    {
+      "path": "assets/source/brand/us-symbol-master-v1.png",
+      "status": "APPROVED",
+      "sha256": "bcbb3f3060edd5cf7218f245e1b56053de2c011ea5244e49f9e5f325269d28fd",
+      "immutable": true,
+      "purpose": "Official US master brand symbol",
+      "usedBy": []
+    },
+    {
+      "path": "assets/derived/brand/us-symbol-ui-crisp-v1.png",
+      "status": "APPROVED",
+      "sha256": "a4efb5ab73eec83dcdcd4c2cedb450e78f0282fe0a720896891260c25985ef24",
+      "immutable": true,
+      "purpose": "Deterministic crisp transparent web derivative of the approved isolated US symbol",
+      "usedBy": [
+        "auth-branding",
+        "home-header-branding",
+        "settings-branding"
+      ],
+      "source": "assets/source/brand/us-wordmark-v1.png",
+      "sourceSha256": "e8e3007c9ada499e4fc68aa68179d6e4046d21df14351e6c7144bca5d8b28f97",
+      "operation": "REMOVE_LOW_ALPHA_GLOW_PRESERVE_US_GEOMETRY"
+    },
+    {
+      "path": "assets/derived/brand/us-symbol-apk-foreground-v1.png",
+      "status": "APPROVED",
+      "sha256": "f71c0cf6cbca172b7833754f6eaa2b4addfab6381a696bdccf070d83ea690868",
+      "immutable": true,
+      "purpose": "Byte-identical Web/PWA derivative of the official Android adaptive foreground",
+      "usedBy": [
+        "pwa-install-branding"
+      ],
+      "source": "android/app/src/main/res/drawable-nodpi/us_adaptive_foreground_v1.png",
+      "sourceSha256": "f71c0cf6cbca172b7833754f6eaa2b4addfab6381a696bdccf070d83ea690868",
+      "operation": "BYTE_COPY_OFFICIAL_ANDROID_FOREGROUND"
+    },
+    {
+      "path": "assets/source/brand/app-icon/us-adaptive-foreground-v1.png",
+      "status": "APPROVED",
+      "sha256": "fb91f1008154887f8ec114b85f5c84e88360e18ccc6d0ee838ecd7b003ad8621",
+      "immutable": true,
+      "purpose": "Official US Android adaptive icon foreground",
+      "usedBy": []
+    },
+    {
+      "path": "assets/source/brand/app-icon/us-adaptive-background-v1.png",
+      "status": "APPROVED",
+      "sha256": "9dbe74d482bbbf6a43d9ccabae3e5599c7d43b5a79b350765175443ac686515a",
+      "immutable": true,
+      "purpose": "Official US Android adaptive icon background",
+      "usedBy": []
+    },
+    {
+      "path": "assets/source/brand/splash/us-splash-master-v1.png",
+      "status": "APPROVED",
+      "sha256": "cc142ef2f60734aee10f918511ddac5a54c80d792225b0415fa1f81247c0c405",
+      "immutable": true,
+      "purpose": "Official US splash master",
+      "usedBy": []
+    },
+    {
+      "path": "assets/source/brand/us-wordmark-v1.png",
+      "status": "APPROVED",
+      "sha256": "e8e3007c9ada499e4fc68aa68179d6e4046d21df14351e6c7144bca5d8b28f97",
+      "immutable": true,
+      "purpose": "Official US supporting wordmark",
+      "usedBy": [
+        "android-ti-penso-widget",
+        "web-internal-brand-derivative"
+      ]
+    },
+    {
+      "path": "assets/source/ui/us-icon-bond-v1.png",
+      "status": "APPROVED",
+      "sha256": "b61fcd1be9380d572fc23c1561e21910b3270c7f33d7ce8f140aa6998d47e80d",
+      "immutable": true,
+      "purpose": "Official US Bond custom icon",
+      "usedBy": [
+        "bottom-navigation",
+        "bond"
+      ]
+    },
+    {
+      "path": "assets/source/ui/us-icon-stories-v1.png",
+      "status": "APPROVED",
+      "sha256": "455422f08fe0334bfc6d780ace5f1881d84f878e4c41b676c7daa7ef6858bc06",
+      "immutable": true,
+      "purpose": "Official US Stories custom icon",
+      "usedBy": []
+    },
+    {
+      "path": "assets/source/ui/us-icon-moments-v1.png",
+      "status": "APPROVED",
+      "sha256": "319a98637ec62445f6329f3d8ea2fb7cccd2602fc2b97c8737e089f80c812627",
+      "immutable": true,
+      "purpose": "Official US Moments custom icon",
+      "usedBy": [
+        "bottom-navigation",
+        "moments"
+      ]
+    },
+    {
+      "path": "assets/source/ui/us-icon-daily-question-v1.png",
+      "status": "APPROVED",
+      "sha256": "a74741e415df001e11b83493b65c9aa80acb3619af3652a26e82bb07a047ffa3",
+      "immutable": true,
+      "purpose": "Official US Daily Question custom icon",
+      "usedBy": [
+        "quiz-daily-question"
+      ]
+    },
+    {
+      "path": "assets/source/ui/us-icon-ti-penso-v1.png",
+      "status": "APPROVED",
+      "sha256": "f1910a3aaf8267de807df476e35ac893a34092cbbeb3917c8f3ff15edc307e8e",
+      "immutable": true,
+      "purpose": "Official US Ti Penso custom icon",
+      "usedBy": [
+        "android-ti-penso-widget"
+      ]
+    },
+    {
+      "path": "assets/source/ui/us-icon-settings-v1.png",
+      "status": "APPROVED",
+      "sha256": "c939f83506dc0bf323f194d4c88c6ccd5530d7f78954b43e3f4ef297b7876e88",
+      "immutable": true,
+      "purpose": "Official US Settings custom icon",
+      "usedBy": []
+    },
+    {
+      "path": "assets/derived/runtime/us-symbol-256-v1.png",
+      "status": "APPROVED",
+      "sha256": "689be0ce9847fd3760b96cdb98cd5344acd2135f892ad4adc1da4f92898f3df0",
+      "immutable": true,
+      "purpose": "Runtime-sized (256 px) derivative of the canonical US symbol for in-app display; the master stays the PWA install icon",
+      "usedBy": [
+        "auth-branding",
+        "home-header-branding",
+        "settings-branding"
+      ],
+      "source": "assets/derived/brand/us-symbol-apk-foreground-v1.png",
+      "sourceSha256": "f71c0cf6cbca172b7833754f6eaa2b4addfab6381a696bdccf070d83ea690868",
+      "operation": "AREA_AVERAGE_DOWNSCALE_256_PRESERVE_ASPECT"
+    },
+    {
+      "path": "assets/derived/runtime/us-icon-settings-128-v1.png",
+      "status": "APPROVED",
+      "sha256": "7ee4d47099a990a40e6a0609c926e2478576dc2d4d2fd4f547042237025113ef",
+      "immutable": true,
+      "purpose": "Runtime-sized (128 px wide) derivative of the approved Settings custom icon",
+      "usedBy": [
+        "settings"
+      ],
+      "source": "assets/source/ui/us-icon-settings-v1.png",
+      "sourceSha256": "c939f83506dc0bf323f194d4c88c6ccd5530d7f78954b43e3f4ef297b7876e88",
+      "operation": "AREA_AVERAGE_DOWNSCALE_128_PRESERVE_ASPECT"
+    },
+    {
+      "path": "assets/derived/runtime/us-icon-stories-128-v1.png",
+      "status": "APPROVED",
+      "sha256": "95261e63a4c3342d1882f5dca6d0eaf547cf5f039d58fccf2df2b05f03660ff8",
+      "immutable": true,
+      "purpose": "Runtime-sized (128 px wide) derivative of the approved Stories custom icon",
+      "usedBy": [
+        "header-stories-trigger"
+      ],
+      "source": "assets/source/ui/us-icon-stories-v1.png",
+      "sourceSha256": "455422f08fe0334bfc6d780ace5f1881d84f878e4c41b676c7daa7ef6858bc06",
+      "operation": "AREA_AVERAGE_DOWNSCALE_128_PRESERVE_ASPECT"
+    },
+    {
+      "path": "assets/source/pet/us-pet-kitten-base-v0.svg",
+      "status": "APPROVED",
+      "sha256": "a86b0cf1e8d7e30e3655c218e0bd288d65c43c1694767b72b317f330001705d9",
+      "immutable": true,
+      "purpose": "Owner-approved PET v0: white/gray kitten with blue eyes. Production until the 1.0 design; now the explicit QA preview renderer only",
+      "usedBy": [
+        "pet-preview"
+      ]
+    },
+    {
+      "path": "assets/source/pet/us-pet-maudit-v1.svg",
+      "status": "DEPRECATED",
+      "sha256": "ff01e42489a96d4d258b85e96966daf390925c0e05f07b69b98989f0ad96b6cb",
+      "immutable": true,
+      "purpose": "Retired 2026-10-22: Maudit 1.0 (grey loaf SVG), replaced in production by Maudit 2.0 from the owner-provided art",
+      "usedBy": []
+    },
+    {
+      "path": "assets/source/pet/us-pet-companions-sheet-v1.webp",
+      "status": "APPROVED",
+      "sha256": "36e5dfab4f4f89a093372badff4f7e07533f8d405a51dec7573b727eaeb5403c",
+      "immutable": true,
+      "purpose": "Owner-provided art (2026-10-22): the goat, the owl and the dragon, awake / asleep / happy",
+      "usedBy": []
+    },
+    {
+      "path": "assets/source/pet/us-pet-maudit-sheet-v2.webp",
+      "status": "APPROVED",
+      "sha256": "0a70cea3c62c80682e4b01e7715f2d41279e46ae88c8c7a90cdfe977e0636071",
+      "immutable": true,
+      "purpose": "Owner-provided art (2026-10-22): Maudit 2.0, awake / asleep / happy",
+      "usedBy": []
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-awake-v2.webp",
+      "status": "APPROVED",
+      "sha256": "164c40ad9c0c4855afbf8c9f324a96f1b4e2cde567a1515e3e24556b16cbe8ca",
+      "immutable": true,
+      "purpose": "Maudit 2.0, awake pose (collection card)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-maudit-sheet-v2.webp",
+      "sourceSha256": "0a70cea3c62c80682e4b01e7715f2d41279e46ae88c8c7a90cdfe977e0636071",
+      "operation": "CUTOUT_TRANSPARENT_SHARED_FRAME_192PX"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-sleep-v2.webp",
+      "status": "APPROVED",
+      "sha256": "ce090c74d3702e74424d7ccef225517b32ef808555cf07f5a2c64e453e5c56ea",
+      "immutable": true,
+      "purpose": "Maudit 2.0, asleep pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-maudit-sheet-v2.webp",
+      "sourceSha256": "0a70cea3c62c80682e4b01e7715f2d41279e46ae88c8c7a90cdfe977e0636071",
+      "operation": "CUTOUT_TRANSPARENT_SHARED_FRAME_192PX"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-happy-v2.webp",
+      "status": "APPROVED",
+      "sha256": "116680a251970bf07eb0973e800772e6a202dbdb3e9159b52f1919facb2cb033",
+      "immutable": true,
+      "purpose": "Maudit 2.0, happy pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-maudit-sheet-v2.webp",
+      "sourceSha256": "0a70cea3c62c80682e4b01e7715f2d41279e46ae88c8c7a90cdfe977e0636071",
+      "operation": "CUTOUT_TRANSPARENT_SHARED_FRAME_192PX"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-body-v2.webp",
+      "status": "APPROVED",
+      "sha256": "1db447bf06beea80f1c5c875a629b725ac0b7bc9599caa138e756a509e10eec9",
+      "immutable": true,
+      "purpose": "Maudit 2.0, awake body without its moving parts (rig)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-maudit-sheet-v2.webp",
+      "sourceSha256": "0a70cea3c62c80682e4b01e7715f2d41279e46ae88c8c7a90cdfe977e0636071",
+      "operation": "CUTOUT_TRANSPARENT_SHARED_FRAME_192PX"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-maudit-tail-v2.webp",
+      "status": "APPROVED",
+      "sha256": "d0892bb270495fcb9bfd8d3083185f8bc8d3ec903a152798ec581b16b75678e6",
+      "immutable": true,
+      "purpose": "Maudit 2.0, moving part tail (rig)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-maudit-sheet-v2.webp",
+      "sourceSha256": "0a70cea3c62c80682e4b01e7715f2d41279e46ae88c8c7a90cdfe977e0636071",
+      "operation": "CUTOUT_TRANSPARENT_SHARED_FRAME_192PX"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "0c3ff4f21e80aa131218428e1d1727af0307c0411edccd71e0cc7b3d0fd48132",
+      "immutable": true,
+      "purpose": "the goat, awake pose (collection card)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-companions-sheet-v1.webp",
+      "sourceSha256": "36e5dfab4f4f89a093372badff4f7e07533f8d405a51dec7573b727eaeb5403c",
+      "operation": "CUTOUT_TRANSPARENT_SHARED_FRAME_192PX"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "bfed495a0ee65a48ea505f5d38cf3f77e3c56625268a5e4d098d88e7effe43bd",
+      "immutable": true,
+      "purpose": "the goat, asleep pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-companions-sheet-v1.webp",
+      "sourceSha256": "36e5dfab4f4f89a093372badff4f7e07533f8d405a51dec7573b727eaeb5403c",
+      "operation": "CUTOUT_TRANSPARENT_SHARED_FRAME_192PX"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "ef7e91e65657d6dffac1e4f4c62bea071a8668ce15619503f78dea2e3e976b76",
+      "immutable": true,
+      "purpose": "the goat, happy pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-companions-sheet-v1.webp",
+      "sourceSha256": "36e5dfab4f4f89a093372badff4f7e07533f8d405a51dec7573b727eaeb5403c",
+      "operation": "CUTOUT_TRANSPARENT_SHARED_FRAME_192PX"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "6807f86abee6be746995986bbc00df70b6e1b2be55b7eb414694023fb0e31342",
+      "immutable": true,
+      "purpose": "the goat, awake body without its moving parts (rig)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-companions-sheet-v1.webp",
+      "sourceSha256": "36e5dfab4f4f89a093372badff4f7e07533f8d405a51dec7573b727eaeb5403c",
+      "operation": "CUTOUT_TRANSPARENT_SHARED_FRAME_192PX"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-ear-l-v1.webp",
+      "status": "APPROVED",
+      "sha256": "a81c7188cb724cd7ae6132d397ead5a0cdf70d9e472a5b66b65811eebc117442",
+      "immutable": true,
+      "purpose": "the goat, moving part ear-l (rig)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-companions-sheet-v1.webp",
+      "sourceSha256": "36e5dfab4f4f89a093372badff4f7e07533f8d405a51dec7573b727eaeb5403c",
+      "operation": "CUTOUT_TRANSPARENT_SHARED_FRAME_192PX"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-goat-ear-r-v1.webp",
+      "status": "APPROVED",
+      "sha256": "31b779483913089421aafa4ffc56c506f508c5e22526464103a71ba1002b1391",
+      "immutable": true,
+      "purpose": "the goat, moving part ear-r (rig)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-companions-sheet-v1.webp",
+      "sourceSha256": "36e5dfab4f4f89a093372badff4f7e07533f8d405a51dec7573b727eaeb5403c",
+      "operation": "CUTOUT_TRANSPARENT_SHARED_FRAME_192PX"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "b02fa64f44b1c3f36055c4eafeaf50ab90d4be75a0116680110745c2283cfe8f",
+      "immutable": true,
+      "purpose": "the owl, awake pose (collection card)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-companions-sheet-v1.webp",
+      "sourceSha256": "36e5dfab4f4f89a093372badff4f7e07533f8d405a51dec7573b727eaeb5403c",
+      "operation": "CUTOUT_TRANSPARENT_SHARED_FRAME_192PX"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "ef680933c77bcfa2e5cdcbc7daf79b6554e4c8e5220b67d8405422400c88f3e8",
+      "immutable": true,
+      "purpose": "the owl, asleep pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-companions-sheet-v1.webp",
+      "sourceSha256": "36e5dfab4f4f89a093372badff4f7e07533f8d405a51dec7573b727eaeb5403c",
+      "operation": "CUTOUT_TRANSPARENT_SHARED_FRAME_192PX"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "2987d77a9cb5e7a600f54fdfafb735ee353615b0c5abea914909d7ebbd04befd",
+      "immutable": true,
+      "purpose": "the owl, happy pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-companions-sheet-v1.webp",
+      "sourceSha256": "36e5dfab4f4f89a093372badff4f7e07533f8d405a51dec7573b727eaeb5403c",
+      "operation": "CUTOUT_TRANSPARENT_SHARED_FRAME_192PX"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "72bbfc1b769c0217ca8ffe95a1e626ddaf638c34c275ac96665c24f41e30217a",
+      "immutable": true,
+      "purpose": "the owl, awake body without its moving parts (rig)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-companions-sheet-v1.webp",
+      "sourceSha256": "36e5dfab4f4f89a093372badff4f7e07533f8d405a51dec7573b727eaeb5403c",
+      "operation": "CUTOUT_TRANSPARENT_SHARED_FRAME_192PX"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-wing-l-v1.webp",
+      "status": "APPROVED",
+      "sha256": "f766a1a32e2f66358e302f942830c48e745cb6babde78f98bf06aa7655b118d6",
+      "immutable": true,
+      "purpose": "the owl, moving part wing-l (rig)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-companions-sheet-v1.webp",
+      "sourceSha256": "36e5dfab4f4f89a093372badff4f7e07533f8d405a51dec7573b727eaeb5403c",
+      "operation": "CUTOUT_TRANSPARENT_SHARED_FRAME_192PX"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-owl-wing-r-v1.webp",
+      "status": "APPROVED",
+      "sha256": "43da328de1206282fbafb2fd5b0c35eaa2de2d94f9a8f9aa60ae7f67662ad36a",
+      "immutable": true,
+      "purpose": "the owl, moving part wing-r (rig)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-companions-sheet-v1.webp",
+      "sourceSha256": "36e5dfab4f4f89a093372badff4f7e07533f8d405a51dec7573b727eaeb5403c",
+      "operation": "CUTOUT_TRANSPARENT_SHARED_FRAME_192PX"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-awake-v1.webp",
+      "status": "APPROVED",
+      "sha256": "cd01db5dd537b4a092e13cf1ea7a52bbf50270d5d2bee55e4b37a86e3b514b2e",
+      "immutable": true,
+      "purpose": "the dragon, awake pose (collection card)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-companions-sheet-v1.webp",
+      "sourceSha256": "36e5dfab4f4f89a093372badff4f7e07533f8d405a51dec7573b727eaeb5403c",
+      "operation": "CUTOUT_TRANSPARENT_SHARED_FRAME_192PX"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-sleep-v1.webp",
+      "status": "APPROVED",
+      "sha256": "ce24605dea267c82d3a9b23a6ff7c4115a14442b473d4459298cb5315588f87a",
+      "immutable": true,
+      "purpose": "the dragon, asleep pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-companions-sheet-v1.webp",
+      "sourceSha256": "36e5dfab4f4f89a093372badff4f7e07533f8d405a51dec7573b727eaeb5403c",
+      "operation": "CUTOUT_TRANSPARENT_SHARED_FRAME_192PX"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-happy-v1.webp",
+      "status": "APPROVED",
+      "sha256": "b1c7e48e66979ef985d13e869893f2ed285045901ee00c333db588fde3615cd1",
+      "immutable": true,
+      "purpose": "the dragon, happy pose",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-companions-sheet-v1.webp",
+      "sourceSha256": "36e5dfab4f4f89a093372badff4f7e07533f8d405a51dec7573b727eaeb5403c",
+      "operation": "CUTOUT_TRANSPARENT_SHARED_FRAME_192PX"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-body-v1.webp",
+      "status": "APPROVED",
+      "sha256": "715ccfa82abca030fcea99c43f42976a7845f45f9b7c4903f468f532a6d31605",
+      "immutable": true,
+      "purpose": "the dragon, awake body without its moving parts (rig)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-companions-sheet-v1.webp",
+      "sourceSha256": "36e5dfab4f4f89a093372badff4f7e07533f8d405a51dec7573b727eaeb5403c",
+      "operation": "CUTOUT_TRANSPARENT_SHARED_FRAME_192PX"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-wing-l-v1.webp",
+      "status": "APPROVED",
+      "sha256": "8c7a1d3e4768a6b52b8c8f8503ed09cd5d491533e9099f226002b370c2f1ac8e",
+      "immutable": true,
+      "purpose": "the dragon, moving part wing-l (rig)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-companions-sheet-v1.webp",
+      "sourceSha256": "36e5dfab4f4f89a093372badff4f7e07533f8d405a51dec7573b727eaeb5403c",
+      "operation": "CUTOUT_TRANSPARENT_SHARED_FRAME_192PX"
+    },
+    {
+      "path": "assets/derived/pet/us-pet-dragon-wing-r-v1.webp",
+      "status": "APPROVED",
+      "sha256": "158821a05f753d76ab0c2224f396baf41b1964c472326711d94877879428520f",
+      "immutable": true,
+      "purpose": "the dragon, moving part wing-r (rig)",
+      "usedBy": [
+        "pet-production"
+      ],
+      "source": "assets/source/pet/us-pet-companions-sheet-v1.webp",
+      "sourceSha256": "36e5dfab4f4f89a093372badff4f7e07533f8d405a51dec7573b727eaeb5403c",
+      "operation": "CUTOUT_TRANSPARENT_SHARED_FRAME_192PX"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+/* Il vostro anno V1: full-screen cards over the night, the couple's own
+   photos behind the first and last one. Foundation tokens, no new assets. */
+.us-recap-overlay [hidden]{display:none!important}
+.us-recap-overlay{position:fixed;inset:0;z-index:var(--us-layer-sheet);display:none;background:var(--us-color-bg,#0e0a12)}
+.us-recap-overlay[aria-hidden="false"]{display:block}
+.us-recap-shell{position:absolute;inset:0;display:flex;flex-direction:column;padding:calc(var(--us-safe-top) + 12px) 16px calc(var(--us-safe-bottom) + 16px)}
+.us-recap-top{position:relative;z-index:3;display:flex;align-items:center;gap:12px}
+.us-recap-bars{flex:1;display:flex;gap:4px}
+.us-recap-bars i{flex:1;height:3px;border-radius:2px;background:rgba(247,239,233,.22)}
+.us-recap-bars i.is-done,.us-recap-bars i.is-on{background:var(--us-color-text)}
+.us-recap-top .us-modal-close{min-width:44px;min-height:44px}
+.us-recap-stage{position:relative;flex:1;display:flex;margin-top:12px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.us-recap-card{position:relative;flex:1;display:flex;align-items:flex-end;overflow:hidden;border-radius:28px;background:radial-gradient(120% 90% at 20% 0%,color-mix(in srgb,var(--us-tu) 34%,transparent),transparent 60%),radial-gradient(120% 90% at 90% 100%,color-mix(in srgb,var(--us-partner) 34%,transparent),transparent 60%),var(--us-color-surface)}
+.us-recap-photo{position:absolute;inset:0;background-size:cover;background-position:center}
+.us-recap-card.has-photo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(10,6,14,.82))}
+.us-recap-copy{position:relative;z-index:2;display:grid;gap:8px;padding:28px 24px 32px;width:100%}
+.us-recap-kicker{color:var(--us-color-text-2);font-size:12px;letter-spacing:.14em;text-transform:uppercase}
+.us-recap-title{margin:0;font:400 40px/1.08 var(--us-font-display);color:var(--us-color-text)}
+.us-recap-number{font:300 96px/.92 var(--us-font-display);letter-spacing:-.03em;color:var(--us-color-text)}
+.us-recap-label{font:italic 400 22px/1.3 var(--us-font-display);color:var(--us-color-text)}
+.us-recap-sub{color:var(--us-color-text-2);font-size:15px;line-height:1.45}
+.us-recap-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:6px 0 0;padding:0;list-style:none}
+.us-recap-grid li{display:grid;gap:2px;padding:14px;border-radius:18px;background:rgba(247,239,233,.06)}
+.us-recap-grid b{font:300 40px/1 var(--us-font-display);color:var(--us-color-text)}
+.us-recap-grid span{color:var(--us-color-text-2);font-size:13px}
+.us-recap-done{margin-top:12px;min-height:48px}
+
+/* Noi: one quiet line, under Il punto della settimana. */
+.noi-recap-row{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;margin:0 0 12px;padding:12px 14px;border:1px solid var(--us-color-line);border-radius:18px;background:var(--us-color-surface);color:var(--us-color-text);text-align:left;cursor:pointer}
+#bond .noi-canonical-page:not([data-noi-view="hub"]) .noi-recap-row{display:none}
+.noi-recap-row[hidden]{display:none!important}
+.noi-recap-mark{display:grid;place-items:center;flex:0 0 36px;height:36px;border-radius:50%;background:linear-gradient(135deg,color-mix(in srgb,var(--us-tu) 45%,transparent),color-mix(in srgb,var(--us-partner) 45%,transparent))}
+.noi-recap-mark .us-icon{--us-icon-size:18px}
+.noi-recap-copy{display:grid;gap:2px;flex:1;min-width:0}
+.noi-recap-copy b{font:400 16px/1.25 var(--us-font-display)}
+.noi-recap-copy small{color:var(--us-color-text-2);font-size:13px}
+.noi-recap-go .us-icon{--us-icon-size:16px;color:var(--us-color-text-3)}
+
+@media (prefers-reduced-motion:reduce){.us-recap-overlay *{animation:none!important;transition:none!important}}

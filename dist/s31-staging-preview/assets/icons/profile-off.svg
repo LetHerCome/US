@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+<defs>
+  <linearGradient id="usg" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#FFD7EA"/>
+    <stop offset=".36" stop-color="#FF8FC5"/>
+    <stop offset=".68" stop-color="#E27BE2"/>
+    <stop offset="1" stop-color="#A978FF"/>
+  </linearGradient>
+  <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+    <feGaussianBlur stdDeviation="1.45" result="b"/>
+    <feColorMatrix in="b" values="1 0 0 0 0.99  0 1 0 0 0.40  0 0 1 0 0.74  0 0 0 0.62 0" result="c"/>
+    <feMerge><feMergeNode in="c"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+
+</defs>
+
+<circle cx="9.2" cy="9" r="3.1" stroke="#8E8A9A" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M3.8 18.8c.6-3.3 2.85-5.15 5.4-5.15s4.8 1.85 5.4 5.15" stroke="#8E8A9A" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="16.8" cy="10.1" r="2.25" stroke="#6F6B79" stroke-width="1.35"/>
+<path d="M14.8 18.2c.45-2.3 1.95-3.65 4-3.65.65 0 1.2.12 1.7.35" stroke="#6F6B79" stroke-width="1.35" stroke-linecap="round"/>
+
+</svg>

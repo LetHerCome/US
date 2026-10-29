@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+<defs>
+  <linearGradient id="usg" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#FFD7EA"/>
+    <stop offset=".36" stop-color="#FF8FC5"/>
+    <stop offset=".68" stop-color="#E27BE2"/>
+    <stop offset="1" stop-color="#A978FF"/>
+  </linearGradient>
+  <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+    <feGaussianBlur stdDeviation="1.45" result="b"/>
+    <feColorMatrix in="b" values="1 0 0 0 0.99  0 1 0 0 0.40  0 0 1 0 0.74  0 0 0 0.62 0" result="c"/>
+    <feMerge><feMergeNode in="c"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+
+</defs>
+
+<rect x="4.1" y="5.1" width="11.2" height="12.1" rx="2.3" stroke="#8E8A9A" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M8.2 17.15 6.55 19.2v-2.05" stroke="#8E8A9A" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="9.1" y="7.75" width="10.8" height="10.2" rx="2.2" stroke="#6F6B79" stroke-width="1.35" opacity=".82"/>
+<path d="M12 10.2c-1.25-1.5-3.5-.56-3.12 1.23.26 1.22 1.7 2.32 3.12 3.28 1.42-.96 2.86-2.06 3.12-3.28.38-1.79-1.87-2.73-3.12-1.23Z" stroke="#8E8A9A" stroke-width="1.1"/>
+
+</svg>

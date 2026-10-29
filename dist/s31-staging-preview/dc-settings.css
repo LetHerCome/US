@@ -1,0 +1,807 @@
+/* Due colori, un Noi — Impostazioni, identical to the approved mockup
+   (v2 settings.js + style.css .set-hd/.couple/.part/.grp-l/.grp/.row/.sw and
+   the Foglio blocks .banner/.list/.choice/.stat-row/.field/.btns/.grid2/
+   .warn-list/.opt-prog/.nr-photo/.thumbs/.wg). Written against the generic
+   Settings classes (.us-settings2-section-head, -label, -group, -row,
+   .us-setting-main/-value/-chevron, the sheet body blocks), so a row or a
+   sheet added later picks the same look up. Loaded after settings.css and
+   settings2.css; their !important density rules are matched here with a
+   higher specificity. Presentation only: ids, data hooks and handlers are
+   settings.js's. */
+
+/* The "Foto profilo aggiornata" Avviso carries the mockup's user drawing. */
+.us-icon[data-us-icon="user"]{--us-icon-src:url("/assets/icons/phosphor/user-regular.svg")}
+
+/* ==========================================================================
+   Page (081): .view padding 20px 18px (.app already gives 16px a side, so
+   2px here, as Noi does), blocks in the mockup order.
+   The couple card stays in the "Voi" section in the markup (it is shared
+   state); the sections become transparent boxes so it can sit under the
+   title, as in the mockup.
+   ========================================================================== */
+#settings{padding-top:0;letter-spacing:0}
+#usSettingsOverlay,#usWidgetHub{letter-spacing:0}
+#settings>.us-settings2-page.section{
+  display:flex!important;
+  flex-direction:column;
+  margin:0!important;
+  padding:20px 2px calc(var(--us-nav-height,68px) + var(--us-safe-bottom,0px) + 82px)!important;
+  text-align:left;
+}
+#settings>.us-settings2-page>.us-settings2-section{display:contents}
+#settings .us-settings2-page>.us-settings2-head{order:0}
+#settings .us-settings2-page .us-couple-id-card{order:1}
+#settings .us-settings2-page>[data-us-settings-scope="tu"]>*{order:2}
+#settings .us-settings2-page>[data-us-settings-scope="voi"]>*:not(.us-couple-id-card){order:3}
+#settings .us-settings2-page>:not(.us-settings2-section):not(.us-settings2-head){order:4}
+
+/* .set-hd: back to Noi on the left, the sync pill on the right; title under. */
+#settings .us-settings2-page>.us-settings2-head{
+  display:block;
+  margin:0!important;
+  gap:0;
+}
+#settings .us-settings2-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+#settings .us-settings2-back{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  min-height:44px;
+  margin-left:-6px;
+  padding:0 14px 0 8px;
+  border:0;
+  border-radius:999px;
+  background:none;
+  box-shadow:none;
+  color:var(--us-color-text-2);
+  font:600 15px/1.5 var(--us-font-ui);
+}
+#settings .us-settings2-back .us-icon{--us-icon-size:22px}
+#settings .us-settings2-head .us-settings2-device-dot{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  width:auto;
+  height:auto;
+  min-height:34px;
+  padding:0 12px;
+  border-radius:999px;
+  background:var(--us-color-surface);
+  border:1px solid var(--us-color-line);
+  box-shadow:none;
+  color:var(--us-color-text-2);
+  font:600 12px/1.5 var(--us-font-ui);
+}
+#settings .us-settings2-device-dot>i{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:var(--us-color-text-3);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--us-color-text-3) 22%,transparent);
+}
+#settings .us-settings2-device-dot.ok>i{background:var(--us-verde);box-shadow:0 0 0 3px color-mix(in srgb,var(--us-verde) 22%,transparent)}
+#settings .us-settings2-device-dot.bad>i{background:var(--us-rosso);box-shadow:0 0 0 3px color-mix(in srgb,var(--us-rosso) 22%,transparent)}
+/* .pg-title */
+#settings .us-settings2-page>.us-settings2-head>h2{
+  margin:0!important;
+  font-family:var(--us-font-display)!important;
+  font-weight:400!important;
+  font-size:46px!important;
+  line-height:.95!important;
+  letter-spacing:-.02em!important;
+  color:var(--us-color-text);
+}
+
+/* .couple: the two of you, days together, three numbers. */
+#settings .us-settings2-page .us-couple-id-card{
+  margin:14px 0 0;
+  padding:18px;
+  border-radius:28px;
+  background:radial-gradient(80% 90% at 0% 0%,color-mix(in srgb,var(--us-noi) 18%,transparent),transparent 70%),var(--us-color-surface);
+  border:1px solid var(--us-color-line);
+  box-shadow:none;
+}
+#settings .us-couple-id-card .us-couple-id-top{display:flex;align-items:center;gap:16px}
+#settings .us-couple-id-card .us-couple-avatars{position:relative;flex:none;width:92px;min-width:92px;height:56px;display:block}
+#settings .us-couple-id-card .us-couple-avatar{
+  position:absolute;
+  top:0;
+  left:0;
+  width:56px;
+  height:56px;
+  margin:0;
+  border:0;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:var(--us-rosa);
+  color:var(--us-inchiostro);
+  font-family:var(--us-font-display);
+  font-size:24px;
+  font-weight:400;
+  overflow:hidden;
+}
+#settings .us-couple-id-card .us-couple-avatar:first-child{padding-right:12px}
+#settings .us-couple-id-card .us-couple-avatar+.us-couple-avatar{left:36px;margin:0;padding:0;background:var(--us-lilla);box-shadow:-4px 0 0 var(--us-color-surface)}
+#settings .us-couple-id-card .us-couple-avatar:only-child{padding:0}
+#settings .us-couple-id-card .us-couple-avatar b{font:inherit;color:inherit}
+#settings .us-couple-id-card .us-couple-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#settings .us-couple-id-card .us-couple-id-copy>small{display:none}
+#settings .us-couple-id-card .us-couple-id-copy>b{
+  margin:0;
+  font-family:var(--us-font-display);
+  font-weight:400;
+  font-size:22px;
+  line-height:1.1;
+  letter-spacing:0;
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+  color:var(--us-color-text);
+}
+#settings .us-couple-id-card .us-couple-id-copy>span{margin:0;font-size:13px;line-height:1.5;color:var(--us-color-text-2)}
+#settings .us-couple-id-card .us-couple-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0 0;padding:0;border:0}
+#settings .us-couple-id-card .us-couple-stats>span{padding:10px 12px;border:0;border-radius:16px;background:var(--us-color-surface-2);text-align:left}
+#settings .us-couple-id-card .us-couple-stats b{display:block;font-family:var(--us-font-display);font-weight:400;font-size:22px;line-height:1.1}
+#settings .us-couple-id-card .us-couple-stats small{display:block;margin:0;font-size:11px;font-weight:600;line-height:1.5;color:var(--us-color-text-3)}
+
+/* .part: "Tu" and "Voi", each with its colour dot. */
+#settings .us-settings2-page .us-settings2-section-head{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+  margin:26px 2px 6px;
+}
+#settings .us-settings2-page .us-settings2-section-head::before{
+  content:"";
+  flex:none;
+  align-self:center;
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:var(--us-tu);
+}
+#settings [data-us-settings-scope="voi"]>.us-settings2-section-head::before{background:var(--us-noi)}
+#settings .us-settings2-page .us-settings2-section-head h3{
+  margin:0;
+  font-family:var(--us-font-display);
+  font-weight:400;
+  font-size:32px;
+  line-height:1;
+  letter-spacing:-.01em;
+  color:var(--us-color-text);
+}
+#settings .us-settings2-page .us-settings2-section-head small{font-size:13px;line-height:1.5;color:var(--us-color-text-3)}
+
+/* .grp-l / .grp */
+#settings .us-settings2-page .us-settings2-label{
+  margin:18px 4px 8px;
+  font-family:var(--us-font-ui);
+  font-size:11px;
+  font-weight:700;
+  line-height:1.5;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--us-color-text-3);
+}
+#settings .us-settings2-page .us-settings2-section-head+.us-settings2-label{margin-top:12px}
+#settings .us-settings2-page .us-settings2-group{
+  margin:0;
+  overflow:hidden;
+  border-radius:22px;
+  background:var(--us-color-surface);
+  border:1px solid var(--us-color-line);
+  box-shadow:none;
+}
+
+/* .row: 34px icon tile, title + line, value, chevron; 60px tall.
+   (.us-settings2-group raises it over settings2.css's :has(small) 56px.) */
+#settings .us-settings2-page .us-settings2-group .us-settings2-row{
+  display:flex!important;
+  align-items:center;
+  gap:12px!important;
+  width:100%;
+  min-height:60px!important;
+  padding:8px 14px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:var(--us-color-text);
+  font-weight:400;
+  line-height:1.5;
+  text-align:left;
+}
+#settings .us-settings2-page .us-settings2-row+.us-settings2-row{border-top:1px solid var(--us-color-line)!important}
+#settings .us-settings2-page .us-settings2-row[hidden]{display:none!important}
+#settings .us-settings2-page .us-settings2-row[hidden]:first-child+.us-settings2-row{border-top:0!important}
+#settings .us-settings2-page .us-settings2-row:active{background:transparent!important}
+#settings .us-settings2-page .us-settings2-icon{
+  width:34px;
+  height:34px;
+  flex:none;
+  border:0;
+  border-radius:11px;
+  display:grid;
+  place-items:center;
+  background:var(--us-color-surface-2);
+  color:var(--us-color-text-2);
+  font-size:inherit;
+  --us-icon-size:19px;
+}
+#settings .us-settings2-page .us-setting-main{flex:1;min-width:0;display:block}
+#settings .us-settings2-page .us-settings2-row .us-setting-main b{
+  display:block;
+  margin:0;
+  font-size:15px!important;
+  font-weight:600!important;
+  line-height:1.5!important;
+  letter-spacing:0;
+  color:var(--us-color-text);
+}
+#settings .us-settings2-page .us-settings2-row .us-setting-main small{
+  display:block;
+  margin:0!important;
+  font-weight:400;
+  font-size:12px!important;
+  line-height:1.3!important;
+  color:var(--us-color-text-3)!important;
+}
+#settings .us-settings2-page .us-settings2-row :is(.us-setting-value,.us-setting-state){
+  flex:none;
+  width:auto;
+  height:auto;
+  min-width:0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:none;
+  box-shadow:none;
+  font-size:13px!important;
+  font-weight:600;
+  line-height:1.5;
+  color:var(--us-color-text-3)!important;
+  white-space:nowrap;
+}
+#settings .us-settings2-page .us-settings2-row .us-setting-value:empty{display:none}
+#settings .us-settings2-page .us-setting-chevron{flex:none;display:grid;place-items:center;width:18px;height:18px;color:var(--us-color-text-3);--us-icon-size:18px!important}
+#settings .us-settings2-page .us-setting-chevron .us-icon{width:18px;height:18px}
+/* .row.danger */
+#settings .us-settings2-page .us-settings2-row.is-danger .us-setting-main b{color:var(--us-rosso)}
+#settings .us-settings2-page .us-settings2-row.is-danger .us-settings2-icon{color:var(--us-rosso);background:color-mix(in srgb,var(--us-rosso) 12%,transparent)}
+
+/* The mockup's drawings for each row (core.js IC), Phosphor files. */
+#settings [data-us-setting="profile-photo"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/user-regular.svg")}
+#settings [data-us-setting="oggi-effect"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/star-four-regular.svg")}
+#settings [data-us-setting="distance"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/arrows-horizontal-regular.svg")}
+#settings [data-us-setting="app-lock"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/fingerprint-regular.svg")}
+#settings [data-us-setting="feedback"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/waveform-regular.svg")}
+#settings [data-us-setting="maudit"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/cat-regular.svg")}
+#settings [data-us-setting="optimize-ricordi"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/image-regular.svg")}
+#settings [data-us-setting="home-photo"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/arrow-clockwise-regular.svg")}
+#settings [data-us-setting="sync-status"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/cloud-regular.svg")}
+#settings [data-us-setting="relationship-date"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/calendar-blank-regular.svg")}
+#settings [data-us-setting="story-archive"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/book-regular.svg")}
+#settings [data-us-setting="privacy"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/shield-regular.svg")}
+#settings [data-us-setting="logout"] .us-settings2-icon .us-icon{--us-icon-src:url("/assets/icons/phosphor/sign-out-regular.svg")}
+/* The mockup's "scollega" arrow leaves the door towards the left: the same
+   Phosphor sign-out, drawn mirrored. */
+#settings [data-us-setting="logout"] .us-settings2-icon .us-icon{transform:scaleX(-1)}
+
+/* .sw: 50×30 track, 24px knob, the spring on the knob. */
+#settings .us-settings2-page .us-settings2-switch{
+  position:relative;
+  display:block;
+  flex:none;
+  width:50px;
+  height:30px;
+  border-radius:30px;
+  background:var(--us-color-elevated);
+  transition:background .25s;
+}
+#settings .us-settings2-page .us-settings2-switch u{
+  position:absolute;
+  top:3px;
+  left:3px;
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  background:var(--us-latte);
+  box-shadow:0 2px 6px rgba(0,0,0,.35);
+  transform:none;
+  translate:0 0;
+  transition:translate .38s var(--us-ease-spring),width .2s;
+}
+#settings .us-settings2-page .us-settings2-switch-row[aria-checked="true"] .us-settings2-switch{background:var(--us-tu)}
+#settings .us-settings2-page .us-settings2-switch-row[aria-checked="true"] .us-settings2-switch u{transform:none;translate:20px 0;background:var(--us-latte)}
+#settings .us-settings2-page .us-settings2-switch-row:active .us-settings2-switch u{width:28px}
+#settings .us-settings2-page .us-settings2-switch-row[aria-checked="true"]:active .us-settings2-switch u{translate:16px 0}
+
+/* .ver */
+#settings .us-settings2-page .us-settings2-version{margin:20px 0 0;text-align:center;font-size:12px;line-height:1.5;color:var(--us-color-text-3)}
+
+/* ==========================================================================
+   Sheets (082–095): the mockup's Foglio body. Header chrome, scrim and the
+   rise belong to dc-popup.css; here only the 20px sides, the 12px rhythm
+   between blocks and the blocks themselves.
+   ========================================================================== */
+/* .sheet: 10px + handle 5px + 2px + 12px gap = the header 29px under the
+   top edge; 20px sides; 24px at the bottom. */
+:is(#usSettingsOverlay,#usWidgetHub)>.us-settings-sheet{padding:29px 20px calc(24px + var(--us-safe-bottom,0px))!important}
+/* .sh-head: eyebrow 16.5px + 2px + title, then the 12px gap of .sheet. */
+:is(#usSettingsOverlay,#usWidgetHub)>.us-settings-sheet>header{padding:0 0 12px!important;margin:0}
+:is(#usSettingsOverlay,#usWidgetHub)>.us-settings-sheet[data-us-modal-panel]>header .tiny{line-height:1.5}
+/* .sheet.tall: 86% of the screen. */
+#usSettingsOverlay[data-us-settings-sheet="notifications"]>.us-settings-sheet,
+#usSettingsOverlay[data-us-settings-sheet="story-archive"]>.us-settings-sheet,
+#usWidgetHub>.us-settings-sheet{min-height:calc(var(--us-viewport-height,100dvh) * .86)}
+/* The eyebrow takes the colour of what the sheet is about (mockup k:). */
+#usSettingsOverlay[data-us-settings-sheet="relationship-date"]{--us-sheet-k:var(--us-noi)}
+#usSettingsOverlay[data-us-settings-sheet="story-archive"]{--us-sheet-k:var(--us-ambra)}
+#usSettingsModalBody{display:grid;gap:12px;align-content:start}
+#usSettingsModalBody>*{margin:0}
+/* .lead and .note-s */
+#usSettingsModalBody :is(.us-settings2-modal-copy,.us-settings2-lead){
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:none;
+  font-size:15px;
+  line-height:1.5;
+  color:var(--us-color-text-2);
+}
+#usSettingsModalBody .us-settings2-note{margin:0;font-size:12px;line-height:1.5;text-align:center;color:var(--us-color-text-3)}
+#usSettingsModalBody .us-settings2-note:empty{display:none}
+#usSettingsModalBody .us-settings2-group-label{margin:6px 2px 0;font-size:11px;font-weight:700;line-height:1.5;letter-spacing:.14em;text-transform:uppercase;color:var(--us-color-text-3)}
+
+/* .banner: tinted with my colour; .banner.warn with amber. */
+#usSettingsModalBody .us-settings2-push-master{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:14px;
+  border:1px solid color-mix(in srgb,var(--us-tu) 30%,transparent);
+  border-radius:20px;
+  background:color-mix(in srgb,var(--us-tu) 12%,var(--us-color-surface-2));
+}
+#usSettingsModalBody .us-settings2-push-master.is-warn{
+  background:color-mix(in srgb,var(--us-ambra) 12%,var(--us-color-surface-2));
+  border-color:color-mix(in srgb,var(--us-ambra) 35%,transparent);
+}
+#usSettingsModalBody .us-settings2-push-master>span{flex:1;min-width:0}
+#usSettingsModalBody .us-settings2-push-master b{display:block;font-size:15px;font-weight:600;line-height:1.5;color:var(--us-color-text)}
+#usSettingsModalBody .us-settings2-push-master small{display:block;margin:0;font-size:13px;line-height:1.5;color:var(--us-color-text-2)}
+#usSettingsModalBody .us-settings2-push-master small:empty{display:none}
+/* .mini-btn */
+#usSettingsModalBody .us-settings2-push-master>button{
+  flex:none;
+  min-width:0;
+  min-height:40px;
+  padding:0 14px;
+  border:0;
+  border-radius:999px;
+  font-size:14px;
+  font-weight:700;
+  line-height:1;
+  white-space:nowrap;
+}
+#usSettingsModalBody .us-settings2-push-master>button.primary{background:var(--us-tu);color:var(--us-inchiostro);box-shadow:none}
+#usSettingsModalBody .us-settings2-push-master>button.ghost{background:transparent;color:var(--us-color-text-2);box-shadow:inset 0 0 0 1px var(--us-color-line-strong)}
+
+/* .list of .row with .sw (toggles) */
+#usSettingsModalBody .us-settings2-toggle-list{display:block;margin:0;border-radius:20px;background:var(--us-color-surface-2);overflow:hidden}
+#usSettingsModalBody .us-settings2-toggle-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  width:100%;
+  min-height:56px;
+  padding:8px 14px;
+  border:0;
+  border-radius:0;
+  background:none;
+  box-shadow:none;
+  color:var(--us-color-text);
+  font-weight:400;
+  line-height:1.5;
+  text-align:left;
+}
+#usSettingsModalBody .us-settings2-toggle-row+.us-settings2-toggle-row{border-top:1px solid var(--us-color-line)}
+#usSettingsModalBody .us-settings2-toggle-row>span{flex:1;min-width:0}
+#usSettingsModalBody .us-settings2-toggle-row span b{display:block;font-size:15px;font-weight:600;line-height:1.5}
+#usSettingsModalBody .us-settings2-toggle-row span small{display:block;margin:0;font-size:12px;line-height:1.3;color:var(--us-color-text-3)}
+#usSettingsModalBody .us-settings2-toggle-row>i{
+  position:relative;
+  flex:none;
+  width:50px;
+  height:30px;
+  border-radius:30px;
+  background:var(--us-color-elevated);
+  transition:background .25s;
+}
+#usSettingsModalBody .us-settings2-toggle-row>i u{
+  position:absolute;
+  top:3px;
+  left:3px;
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  background:var(--us-latte);
+  box-shadow:0 2px 6px rgba(0,0,0,.35);
+  transform:none;
+  translate:0 0;
+  transition:translate .38s var(--us-ease-spring),width .2s;
+}
+#usSettingsModalBody .us-settings2-toggle-row>i.on{background:var(--us-tu)}
+#usSettingsModalBody .us-settings2-toggle-row>i.on u{transform:none;translate:20px 0;background:var(--us-latte)}
+#usSettingsModalBody .us-settings2-toggle-row:active>i u{width:28px}
+#usSettingsModalBody .us-settings2-toggle-row:active>i.on u{translate:16px 0}
+#usSettingsModalBody .us-settings2-toggle-row:disabled{opacity:1}
+
+/* .choice (radio list) */
+#usSettingsModalBody .us-setting-choice{display:block;gap:0;border-radius:20px;background:var(--us-color-surface-2);overflow:hidden}
+#usSettingsModalBody .us-setting-choice button{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  width:100%;
+  min-height:56px;
+  padding:0 16px;
+  border:0;
+  border-radius:0;
+  background:none;
+  box-shadow:none;
+  color:var(--us-color-text);
+  font-size:15px;
+  font-weight:400;
+  line-height:1.5;
+  text-align:left;
+}
+#usSettingsModalBody .us-setting-choice button+button{border-top:1px solid var(--us-color-line)}
+#usSettingsModalBody .us-setting-choice button::before{
+  content:"";
+  flex:none;
+  width:22px;
+  height:22px;
+  box-sizing:border-box;
+  border-radius:50%;
+  border:2px solid var(--us-color-line-strong);
+  background:radial-gradient(circle,transparent 0 0,transparent 0);
+}
+#usSettingsModalBody .us-setting-choice button.active::before{border-color:var(--us-tu);background:radial-gradient(circle,var(--us-tu) 0 4.5px,transparent 5px)}
+#usSettingsModalBody .us-setting-choice button span{flex:1;font-weight:600;color:var(--us-color-text)}
+#usSettingsModalBody .us-setting-choice button b{font-weight:600;color:var(--us-color-text-3)}
+
+/* .stat-row list (Stato US, Posizione) */
+#usSettingsModalBody .us-settings2-status-list{display:block;border-radius:20px;background:var(--us-color-surface-2);overflow:hidden}
+#usSettingsModalBody .us-settings2-status-list>div{display:flex;align-items:center;gap:12px;min-height:54px;padding:0 16px;border:0}
+#usSettingsModalBody .us-settings2-status-list>div+div{border-top:1px solid var(--us-color-line)}
+#usSettingsModalBody .us-settings2-status-list>div>span{flex:1;min-width:0}
+#usSettingsModalBody .us-settings2-status-list b{display:block;font-size:15px;font-weight:600;line-height:1.5;color:var(--us-color-text)}
+#usSettingsModalBody .us-settings2-status-list small{display:block;margin:0;font-size:12px;line-height:1.5;color:var(--us-color-text-3)}
+#usSettingsModalBody .us-settings2-status-list>div>i{
+  flex:none;
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  font-size:0;
+  font-style:normal;
+  color:transparent;
+  border:1.5px solid var(--us-color-line-strong);
+  background:none;
+}
+#usSettingsModalBody .us-settings2-status-list>div>i.ok{border:0;background:color-mix(in srgb,var(--us-verde) 20%,transparent);color:var(--us-verde)}
+#usSettingsModalBody .us-settings2-status-list>div>i.ok::before{
+  content:"";
+  width:14px;
+  height:14px;
+  background:currentColor;
+  -webkit-mask:url("/assets/icons/phosphor/check-regular.svg") center/contain no-repeat;
+  mask:url("/assets/icons/phosphor/check-regular.svg") center/contain no-repeat;
+}
+#usSettingsModalBody .us-settings2-build-detail{margin:0;padding:0;border-radius:0;background:none;font-size:12px;line-height:1.5;text-align:center;color:var(--us-color-text-3)}
+
+/* .field */
+#usSettingsModalBody .us-settings2-field{display:grid;gap:6px;margin:0}
+#usSettingsModalBody .us-settings2-field>span,#usSettingsModalBody .us-settings2-field>legend{
+  margin:0;
+  font-size:12px;
+  font-weight:700;
+  line-height:1.5;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--us-color-text-3);
+}
+/* Text fields only: a radio or checkbox inside a field keeps its own size. */
+#usSettingsModalBody .us-settings2-field :is(input:not([type="radio"]):not([type="checkbox"]),textarea){
+  width:100%;
+  min-height:52px;
+  padding:0 14px;
+  border-radius:16px;
+  background:var(--us-color-bg);
+  border:1px solid var(--us-color-line-strong);
+  box-shadow:none;
+  color:var(--us-color-text);
+  font:inherit;
+  font-size:16px;
+}
+#usSettingsModalBody .us-settings2-field textarea{min-height:96px;padding:14px;resize:none}
+#usSettingsModalBody .us-settings2-field :is(input,textarea):focus-visible{outline:2px solid var(--us-noi);outline-offset:3px}
+
+/* Segnala: the reasons are rows of the field recipe, a 20px radio and the words. */
+#usSettingsModalBody .us-report-categories{gap:8px;margin:0 0 16px;padding:0;border:0}
+#usSettingsModalBody .us-report-option{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-height:52px;
+  margin:0;
+  padding:12px 14px;
+  border-radius:16px;
+  background:var(--us-color-bg);
+  border:1px solid var(--us-color-line-strong);
+  color:var(--us-color-text);
+  font-size:15px;
+  line-height:1.35;
+  cursor:pointer;
+}
+#usSettingsModalBody .us-report-option:has(input:checked){border-color:var(--us-noi)}
+#usSettingsModalBody .us-report-option input{flex:0 0 auto;width:20px;height:20px;min-height:0;margin:0;padding:0;accent-color:var(--us-noi)}
+#usSettingsModalBody .us-report-option span{flex:1 1 auto;min-width:0}
+
+/* .btns: primary/danger 52px, ghost 48px, full width, ghost always last. */
+#usSettingsModalBody .us-settings2-action-stack{display:grid;gap:8px;margin:4px 0 0}
+#usSettingsModalBody .us-settings2-action-stack>.ghost{order:2}
+#usSettingsModalBody :is(.us-settings2-action-stack button,.us-settings-main-action){
+  width:100%;
+  min-height:52px;
+  margin:0;
+  padding:0 18px;
+  border:0;
+  border-radius:999px;
+  font-size:16px;
+  font-weight:700;
+  line-height:1.2;
+}
+#usSettingsModalBody :is(.us-settings2-action-stack,#usSettingsModalBody) .ghost{
+  min-height:48px;
+  font-size:15px;
+  font-weight:600;
+  background:transparent;
+  color:var(--us-color-text);
+  box-shadow:inset 0 0 0 1px var(--us-color-line-strong);
+}
+#usSettingsModalBody :is(.us-settings2-action-stack,#usSettingsModalBody) .ghost.is-danger{color:var(--us-rosso);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--us-rosso) 40%,transparent)}
+/* A lone main button keeps the .btns 4px above it. */
+#usSettingsModalBody>button.us-settings-main-action{margin-top:4px}
+#usSettingsModalBody .us-settings2-disconnect{
+  width:100%;
+  min-height:52px;
+  margin:0;
+  border:0;
+  border-radius:999px;
+  background:var(--us-rosso);
+  color:var(--us-inchiostro);
+  font-size:16px;
+  font-weight:700;
+}
+#usSettingsModalBody .us-settings2-disconnect:disabled{opacity:.45}
+
+/* .grid2.fb (Prova i feedback) */
+#usSettingsModalBody .us-feedback-preview{display:grid;gap:12px;margin:0;padding:0;border:0}
+#usSettingsModalBody .us-feedback-preview-heading{display:block;padding:0}
+#usSettingsModalBody .us-feedback-preview-heading b{display:block;margin:6px 2px 0;font-size:11px;font-weight:700;line-height:1.5;letter-spacing:.14em;text-transform:uppercase;color:var(--us-color-text-3)}
+#usSettingsModalBody .us-feedback-preview-heading small{display:none}
+#usSettingsModalBody .us-feedback-preview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#usSettingsModalBody .us-feedback-preview-grid button{
+  min-height:48px;
+  padding:0 10px;
+  border-radius:16px;
+  background:var(--us-color-surface-2);
+  border:1px solid var(--us-color-line);
+  box-shadow:none;
+  color:var(--us-color-text);
+  font-size:15px;
+  font-weight:600;
+  text-align:center;
+}
+#usSettingsModalBody .us-feedback-preview-grid button:last-child,
+#usSettingsModalBody .us-feedback-preview-grid button[data-feedback-preview="haptic-test"]{grid-column:1/-1;border-color:var(--us-color-line)}
+#usSettingsModalBody .us-feedback-preview-grid button:active{background:var(--us-color-surface-2)}
+#usSettingsModalBody .us-feedback-preview-note{margin:0;font-size:12px;line-height:1.5;text-align:center;color:var(--us-color-text-3)}
+#usSettingsModalBody .us-feedback-preview-note:empty{display:none}
+
+/* .opt-prog */
+#usSettingsModalBody .us-settings2-progress{display:grid;gap:6px}
+#usSettingsModalBody .us-settings2-progress .us-settings2-bar-track{height:8px;border-radius:9px;background:var(--us-color-elevated);overflow:hidden}
+#usSettingsModalBody .us-settings2-progress .us-settings2-bar-track>i{display:block;height:100%;width:0;border-radius:9px;background:var(--us-ambra);transition:width .12s linear}
+#usSettingsModalBody .us-settings2-progress small,#usSettingsModalBody #usOptimizeRicordiProgress{margin:0;padding:0;border:0;background:none;font-size:12px;font-weight:600;line-height:1.5;font-variant-numeric:tabular-nums;color:var(--us-color-text-3)}
+
+/* .nr-photo.sm (Foto Home) */
+#usSettingsModalBody .us-settings2-photo{height:170px;border-radius:22px;background:var(--us-color-surface-2) center/cover no-repeat;overflow:hidden}
+
+/* .thumbs (Archivio Stories) */
+#usSettingsModalBody .us-story-archive{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+#usSettingsModalBody .us-story-archive article{position:relative;display:block;aspect-ratio:1;margin:0;padding:0;border:0;border-radius:14px;overflow:hidden;background:var(--us-color-surface-2)}
+#usSettingsModalBody .us-story-archive img{display:block;width:100%;height:100%;object-fit:cover;border-radius:0;aspect-ratio:auto}
+#usSettingsModalBody .us-story-archive article>span{position:absolute;left:6px;bottom:6px;display:block;margin:0;padding:2px 8px;border-radius:999px;background:rgba(15,11,19,.6);font-size:11px;font-weight:700;line-height:1.5;color:var(--us-color-text)}
+#usSettingsModalBody .us-story-archive article>span b,
+#usSettingsModalBody .us-story-archive article>p{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#usSettingsModalBody .us-story-archive article>span small{display:inline;margin:0;font-size:inherit;color:inherit}
+
+/* .warn-list (Privacy e dati): the first copy block of the sheet. */
+#usSettingsModalBody .us-settings-copy{display:grid;gap:8px;margin:0;padding:0}
+#usSettingsModalBody .us-settings-copy p{
+  margin:0;
+  padding:12px 14px;
+  border:0;
+  border-radius:16px;
+  background:var(--us-color-surface-2);
+  font-size:14px!important;
+  line-height:1.5;
+  color:var(--us-color-text-2);
+}
+#usSettingsModalBody .us-settings-copy p b{color:var(--us-color-text);font-weight:600}
+#usSettingsOverlay[data-us-settings-sheet="privacy"] #usSettingsModalBody>.us-settings-copy:first-child:not(.us-account-delete-copy) p{
+  position:relative;
+  display:grid;
+  grid-template-columns:28px 1fr;
+  gap:0 10px;
+  align-items:start;
+}
+/* li i: a 28px tile with the 16px drawing in the text colour. */
+#usSettingsOverlay[data-us-settings-sheet="privacy"] #usSettingsModalBody>.us-settings-copy:first-child:not(.us-account-delete-copy) p::before{
+  content:"";
+  grid-row:1/span 2;
+  width:28px;
+  height:28px;
+  border-radius:9px;
+  background:var(--us-color-elevated);
+}
+#usSettingsOverlay[data-us-settings-sheet="privacy"] #usSettingsModalBody>.us-settings-copy:first-child:not(.us-account-delete-copy) p::after{
+  content:"";
+  position:absolute;
+  left:20px;
+  top:18px;
+  width:16px;
+  height:16px;
+  background:currentColor;
+  -webkit-mask:var(--dcs-privacy-icon) center/contain no-repeat;
+  mask:var(--dcs-privacy-icon) center/contain no-repeat;
+}
+#usSettingsOverlay[data-us-settings-sheet="privacy"] #usSettingsModalBody>.us-settings-copy:first-child:not(.us-account-delete-copy) p>*{grid-column:2}
+#usSettingsOverlay[data-us-settings-sheet="privacy"] #usSettingsModalBody>.us-settings-copy:first-child:not(.us-account-delete-copy) p>b{display:block}
+#usSettingsOverlay[data-us-settings-sheet="privacy"] #usSettingsModalBody>.us-settings-copy:first-child:not(.us-account-delete-copy) p>span{display:block}
+#usSettingsOverlay[data-us-settings-sheet="privacy"] #usSettingsModalBody>.us-settings-copy:first-child:not(.us-account-delete-copy) p:nth-child(1){--dcs-privacy-icon:url("/assets/icons/phosphor/map-pin-regular.svg")}
+#usSettingsOverlay[data-us-settings-sheet="privacy"] #usSettingsModalBody>.us-settings-copy:first-child:not(.us-account-delete-copy) p:nth-child(2){--dcs-privacy-icon:url("/assets/icons/phosphor/image-regular.svg")}
+#usSettingsOverlay[data-us-settings-sheet="privacy"] #usSettingsModalBody>.us-settings-copy:first-child:not(.us-account-delete-copy) p:nth-child(3){--dcs-privacy-icon:url("/assets/icons/phosphor/bell-regular.svg")}
+#usSettingsOverlay[data-us-settings-sheet="privacy"] #usSettingsModalBody>.us-settings-copy:first-child:not(.us-account-delete-copy) p:nth-child(4){--dcs-privacy-icon:url("/assets/icons/phosphor/device-mobile-regular.svg")}
+#usSettingsModalBody .us-settings-loading,#usSettingsModalBody .us-settings-empty{margin:0;padding:20px 14px;border-radius:20px;background:var(--us-color-surface-2);text-align:center;color:var(--us-color-text-2)}
+
+/* ==========================================================================
+   Widget (089): .wg cards — 66px preview, title + line, the add button
+   across the card.
+   ========================================================================== */
+#usWidgetHub .us-widget-hub-lead{margin:0 0 12px;font-size:15px;line-height:1.5;color:var(--us-color-text-2)}
+#usWidgetHub .us-widget-hub-list{display:grid;gap:8px}
+#usWidgetHub .us-widget-hub-card{
+  display:grid;
+  /* Tile on the left; name, line and "Sulla Home" centred beside it; the
+     button across the card (.wg). The 1fr rows centre the text block. */
+  grid-template-columns:66px minmax(0,1fr);
+  grid-template-rows:1fr auto auto auto 1fr auto auto;
+  column-gap:12px;
+  row-gap:0;
+  align-items:center;
+  margin:0;
+  padding:12px;
+  border:0;
+  border-radius:20px;
+  background:var(--us-color-surface-2);
+  box-shadow:none;
+}
+#usWidgetHub .us-widget-hub-copy,#usWidgetHub .us-widget-hub-title{display:contents}
+#usWidgetHub .us-widget-hub-preview{
+  grid-column:1;
+  grid-row:1/6;
+  width:66px;
+  height:66px;
+  min-height:0;
+  aspect-ratio:auto;
+  margin:0;
+  padding:0;
+  border-radius:18px;
+  overflow:hidden;
+  background:var(--us-color-elevated);
+  box-shadow:none;
+  display:grid;
+  place-items:center;
+}
+#usWidgetHub .us-widget-hub-title>b{grid-column:2;grid-row:2;display:block;margin:0;font-size:15px;font-weight:600;line-height:1.5;letter-spacing:0;color:var(--us-color-text)}
+#usWidgetHub .us-widget-hub-copy>p{grid-column:2;grid-row:3;margin:0;font-size:12px;line-height:1.5;color:var(--us-color-text-3)}
+#usWidgetHub .us-widget-hub-chip{grid-column:2;grid-row:4;display:block;margin:3px 0 0;padding:0;border:0;border-radius:0;background:none;font-size:11px;font-weight:700;line-height:1.5;letter-spacing:0;text-transform:none;color:var(--us-verde)}
+#usWidgetHub .us-widget-hub-add{
+  grid-column:1/-1;
+  grid-row:6;
+  width:100%;
+  min-height:40px;
+  margin:12px 0 0;
+  padding:0 14px;
+  border:0;
+  border-radius:999px;
+  background:var(--us-tu);
+  color:var(--us-inchiostro);
+  box-shadow:none;
+  font-size:14px;
+  font-weight:700;
+}
+#usWidgetHub .us-widget-hub-add:disabled{opacity:.45}
+#usWidgetHub .us-widget-hub-status{grid-column:1/-1;grid-row:7;margin:8px 0 0;font-size:12px;line-height:1.5;text-align:center;color:var(--us-color-text-3)}
+#usWidgetHub .us-widget-hub-status:empty{display:none}
+/* The live previews, reduced to the mockup's tiles. */
+#usWidgetHub .us-widget-hub-preview>*{width:100%;height:100%;margin:0;padding:0;border:0;border-radius:0;box-shadow:none;min-height:0;aspect-ratio:auto}
+#usWidgetHub .us-wp-think{display:grid;place-items:center;background:var(--us-tu);color:var(--us-inchiostro)}
+#usWidgetHub .us-wp-think>:not(i){display:none}
+#usWidgetHub .us-wp-think i{display:grid;place-items:center;width:30px;height:30px;margin:0}
+#usWidgetHub .us-wp-think svg{width:30px;height:30px;fill:currentColor}
+#usWidgetHub .us-wp-countdown{display:grid;place-content:center;gap:1px;text-align:center;background:var(--us-color-elevated)}
+#usWidgetHub .us-wp-countdown>:not(b):not(.us-wp-cd-unit):not(p){display:none}
+#usWidgetHub .us-wp-countdown b{font-family:var(--us-font-display);font-weight:400;font-size:24px;line-height:1;color:var(--us-color-text)}
+#usWidgetHub .us-wp-countdown b.is-clock{font-size:15px}
+#usWidgetHub .us-wp-countdown :is(.us-wp-cd-unit,p){margin:0;padding:0 4px;font:normal 700 7px/1.3 var(--us-font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--us-color-text-3)}
+#usWidgetHub .us-widget-hub-preview>.us-wp-noi{display:grid!important;align-content:center;justify-content:center!important;justify-items:center;align-items:center!important;gap:2px;width:100%;height:100%;padding:0!important;border:0;text-align:center;background:var(--us-color-elevated)!important;color:var(--us-color-text)!important}
+#usWidgetHub .us-wp-noi .us-wp-noi-portrait{display:flex;gap:0;width:auto;height:auto;margin:0;border-radius:0;background:none;font-size:0!important;color:transparent}
+#usWidgetHub .us-wp-noi .us-wp-noi-portrait::before,#usWidgetHub .us-wp-noi .us-wp-noi-portrait::after{content:"";width:14px;height:14px;border-radius:50%;background:var(--us-rosa)}
+#usWidgetHub .us-wp-noi .us-wp-noi-portrait::after{margin-left:-5px;background:var(--us-lilla)}
+#usWidgetHub .us-wp-noi .us-wp-noi-portrait img{display:none}
+#usWidgetHub .us-wp-noi .us-wp-noi-info{display:grid;flex:none;gap:0;padding:0 4px;align-items:center!important;white-space:normal!important}
+#usWidgetHub .us-wp-noi .us-wp-noi-info small{display:none}
+#usWidgetHub .us-wp-noi .us-wp-noi-info b{display:block;margin:0;font-size:7px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;line-height:1.3;color:var(--us-color-text-3)}
+#usWidgetHub .us-wp-photo{position:relative;display:grid;place-items:center;background:var(--us-color-elevated)}
+#usWidgetHub .us-wp-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#usWidgetHub .us-wp-photo>p{display:none}
+#usWidgetHub .us-wp-photo .us-wp-photo-days{position:relative;display:block;margin:0;padding:0;background:none}
+#usWidgetHub .us-wp-photo .us-wp-photo-days b{font-family:var(--us-font-display);font-weight:400;font-size:24px;line-height:1;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.5)}
+#usWidgetHub .us-wp-photo .us-wp-photo-days small{display:none}
+
+/* ==========================================================================
+   While Settings is open the Noi tab stays marked (mockup PARENT:
+   impostazioni → noi). Presentation only: navigation is still go().
+   ========================================================================== */
+body:has(#settings.page.active) .us-nav{--us-nav-index:1;--us-nav-blob:var(--us-noi)}
+body:has(#settings.page.active) .us-nav .us-nav-indicator{opacity:.16!important}
+body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .nicon{color:var(--us-nav-c)!important}
+body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .us-nav-icon-off{display:block!important;color:var(--us-nav-c)!important}
+body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .us-nav-icon-on{display:block!important;color:color-mix(in srgb,var(--us-nav-c) 28%,transparent)!important}
+body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .nlabel{font-weight:600;color:var(--us-color-text)}
+
+/* ==========================================================================
+   360px and large text: the rows keep their 44px+ targets, nothing clips.
+   ========================================================================== */
+@media (max-width:360px){
+  #settings .us-settings2-page .us-settings2-group .us-settings2-row{padding-left:12px!important;padding-right:12px!important;gap:10px!important}
+  #settings .us-couple-id-card .us-couple-id-top{gap:12px}
+}
+
+/* Reduced motion: the knob and the track change at once. */
+:root[data-us-motion="reduced"] :is(#settings .us-settings2-switch,#settings .us-settings2-switch u,#usSettingsModalBody .us-settings2-toggle-row>i,#usSettingsModalBody .us-settings2-toggle-row>i u){transition:none!important}
+@media (prefers-reduced-motion:reduce){
+  :is(#settings .us-settings2-switch,#settings .us-settings2-switch u,#usSettingsModalBody .us-settings2-toggle-row>i,#usSettingsModalBody .us-settings2-toggle-row>i u){transition:none!important}
+}
+
+/* Privacy e dati: links to the public Privacy and Terms pages. */
+#usSettingsModalBody .us-settings-copy p.us-settings-legal{background:none;border:0;padding:6px 2px 0;text-align:center}
+#usSettingsModalBody .us-settings-legal a{display:inline-block;min-height:44px;line-height:44px;padding:0 8px;color:var(--us-noi);font-weight:650;text-decoration:none}
+
+/* Colori a scelta (US Plus, 29/10/2026): each choice shows its colour. */
+.us-person-colors .us-person-swatch{display:inline-block;width:14px;height:14px;margin-right:10px;border-radius:50%;vertical-align:-2px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+.us-person-colors button:disabled{opacity:.5}
+.us-person-color-reset{display:block;margin:14px auto 0}
+#usPersonColorSetting:not([data-locked="true"]) .us-person-color-lock{display:none}
+#usPersonColorSetting .us-person-color-lock{width:14px;height:14px;margin-left:6px;opacity:.7}
+.us-person-color-locked{margin:0 0 12px;color:var(--us-color-text-2);line-height:1.45}
+#usSettingsModalBody .us-person-colors.is-locked button::before{display:none}
+#usSettingsModalBody .us-person-colors.is-locked button{opacity:.6}

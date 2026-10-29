@@ -1,0 +1,377 @@
+/* =========================================================
+   US · Identity 1
+   A shared private space, not a generic "couple app".
+   ========================================================= */
+
+:root{
+  /* Palette: ui-foundation.css is the only authority (US-UI-UNIFICATION-01). */
+  --us-brand-icon-home:url("/assets/brand/us-icon-home.svg");
+  --us-brand-icon-moments:url("/assets/brand/us-icon-moments.svg");
+  --us-brand-icon-quiz:url("/assets/brand/us-icon-quiz.svg");
+  --us-brand-icon-bond:url("/assets/brand/us-icon-bond.svg");
+  --us-brand-icon-settings:url("/assets/brand/us-icon-settings.svg");
+  --us-brand-icon-stories:url("/assets/brand/us-icon-stories.svg");
+}
+
+html,body{
+  background:
+    radial-gradient(circle at 18% -6%,rgba(232,138,162,.075),transparent 31%),
+    radial-gradient(circle at 92% 5%,rgba(143,134,200,.06),transparent 26%),
+    var(--us-bg)!important;
+  color:var(--us-ink)!important;
+  font-family:var(--us-sans)!important;
+  letter-spacing:-.006em;
+}
+
+/* --- Internal brand symbol ------------------------------------- */
+.us-brand-symbol{
+  display:inline-flex!important;
+  align-items:center;
+  width:auto!important;
+  line-height:1;
+}
+.us-brand-symbol-art{display:block;width:58px;height:39px;object-fit:contain}
+.top .us-brand-symbol-art{width:52px;height:34px}
+.auth-logo.us-brand-symbol{margin-bottom:11px}
+.auth-logo .us-brand-symbol-art{width:132px;height:88px}
+.us-settings2-brand-mini .us-brand-symbol-art{width:36px;height:24px}
+
+/* --- Core palette cleanup -------------------------------------- */
+.card,
+.sync-card,
+.auth-card{
+  background:linear-gradient(180deg,var(--us-surface-2),var(--us-surface))!important;
+  border-color:var(--us-line)!important;
+}
+.primary,
+.answer-btn.selected{
+  background:var(--us-accent-gradient)!important;
+  color:var(--us-color-text-on-accent)!important;
+}
+.fill,
+.progress>div,
+.bond-xp-track>div{
+  background:var(--us-accent-gradient)!important;
+}
+.heart,.coming-tag{color:var(--us-color-rose)!important}
+textarea,input{background:var(--us-field-bg)!important;border-color:rgba(255,255,255,.10)!important}
+
+/* Main titles share one hierarchy. Moments keeps its journal voice. */
+.section>h2,
+.bond-page-head h2,
+.us-settings-head h2{
+  letter-spacing:-.42px!important;
+  font-weight:690!important;
+}
+.us-moments-head h2,
+.us-album-section-head h3,
+.us-album-caption-postit p{
+  font-family:var(--us-serif)!important;
+}
+
+/* --- Top chrome ------------------------------------------------- */
+.top.us-premium-top{border-bottom:0}
+.us-premium-top .top-actions{gap:8px}
+.online-badge{
+  letter-spacing:.015em;
+}
+.us-calendar-btn{
+  background:rgba(31,27,37,.72)!important;
+  border-color:rgba(255,235,247,.10)!important;
+}
+.us-calendar-btn{width:44px;min-width:44px;height:44px;min-height:44px;padding:0;display:grid;place-items:center;border-radius:50%}
+.us-approved-custom-icon{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  background:transparent;
+  border:0;
+  box-shadow:none;
+}
+.us-calendar-btn i{
+  background:#ff8fc5!important;
+}
+.us-shell-icon{position:relative;display:grid;place-items:center;width:22px;height:22px}
+.us-shell-icon img{position:absolute;inset:0;width:100%;height:100%;display:block}
+.us-shell-icon-on{display:none!important}
+.us-calendar-btn:active .us-shell-icon-off,
+.profile-avatar:active .camera-dot .us-shell-icon-off,
+.us-floating-think:active .us-shell-icon-off{display:none!important}
+.us-calendar-btn:active .us-shell-icon-on,
+.profile-avatar:active .camera-dot .us-shell-icon-on,
+.us-floating-think:active .us-shell-icon-on{display:block!important}
+.profile-avatar{background:rgba(31,27,37,.72)!important;border-color:rgba(255,235,247,.10)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 10px 28px rgba(0,0,0,.20)!important}
+.profile-avatar .fallback{font-size:0!important}
+.profile-avatar .fallback::before{content:"";width:22px;height:22px;background:url("/assets/icons/profile-off.svg") center/contain no-repeat}
+.profile-avatar:active .fallback::before{background-image:url("/assets/icons/profile-on.svg")}
+.profile-avatar .camera-dot{right:-3px;bottom:-3px;width:19px;height:19px;padding:2px;background:#17131e!important;border-color:var(--us-color-bg)!important}
+.profile-avatar .camera-dot .us-shell-icon{width:100%;height:100%}
+
+/* --- M1 APK shell navigation ---------------------------------- */
+.us-nav.us-nav-premium{
+  bottom:max(7px,var(--us-safe-bottom))!important;
+  width:min(456px,calc(100% - max(24px,calc(var(--us-safe-left) + var(--us-safe-right) + 24px))))!important;
+  /* HUMAN-UI-02 — ~56px before the safe area: 46px targets + 4px padding. */
+  min-height:0!important;
+  padding:4px 6px!important;
+  border:1px solid rgba(255,255,255,.18)!important;
+  border-radius:26px!important;
+  background:linear-gradient(150deg,rgba(255,255,255,.07),transparent 42%),linear-gradient(150deg,rgba(26,19,29,.62),rgba(13,10,16,.72))!important;
+  box-shadow:0 12px 30px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.10)!important;
+  backdrop-filter:blur(25px) saturate(132%) contrast(104%)!important;
+  -webkit-backdrop-filter:blur(25px) saturate(132%) contrast(104%)!important;
+  overflow:hidden!important;
+  isolation:isolate;
+}
+.us-nav.us-nav-premium::before{content:"";position:absolute;z-index:-1;inset:0;border-radius:inherit;background:radial-gradient(ellipse at 18% -35%,rgba(255,255,255,.24),transparent 42%),radial-gradient(ellipse at 80% 135%,rgba(128,102,255,.10),transparent 42%);opacity:.68;pointer-events:none}
+.us-nav-premium button{
+  position:relative;
+  z-index:1;
+  display:flex!important;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:1px;
+  min-width:44px!important;
+  min-height:46px!important;
+  padding:2px 2px 3px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:rgba(220,209,222,.58)!important;
+  transition:color var(--us-motion-fast) var(--us-ease-standard),transform var(--us-motion-fast) var(--us-ease-standard)!important;
+}
+.us-nav-premium button:active{transform:scale(.97)}
+.us-nav-premium button .nicon{
+  position:relative;
+  width:32px!important;
+  height:28px!important;
+  min-height:28px!important;
+  margin:0 auto!important;
+  border-radius:50%!important;
+  display:grid!important;
+  place-items:center;
+  background:transparent!important;
+  box-shadow:none!important;
+  transition:transform var(--us-motion-fast) var(--us-ease-standard),background var(--us-motion-fast) var(--us-ease-standard),box-shadow var(--us-motion-fast) var(--us-ease-standard)!important;
+}
+.us-nav-icon{position:relative;display:block;width:24px;height:24px;color:rgba(220,209,222,.72)}
+.us-nav-icon [data-icon]{position:absolute;inset:0;width:100%;height:100%;display:block;background-color:currentColor;-webkit-mask-position:center;mask-position:center;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-size:contain;mask-size:contain}
+.us-nav-icon-off{color:rgba(220,209,222,.72)}
+.us-nav-icon-on{display:none!important}
+.us-nav-icon [data-icon$="house-regular.svg"]{-webkit-mask-image:url("/assets/icons/phosphor/house-regular.svg");mask-image:url("/assets/icons/phosphor/house-regular.svg")}
+.us-nav-icon [data-icon$="house-fill.svg"]{-webkit-mask-image:url("/assets/icons/phosphor/house-fill.svg");mask-image:url("/assets/icons/phosphor/house-fill.svg")}
+.us-nav-icon [data-icon$="heart-straight-regular.svg"]{-webkit-mask-image:url("/assets/icons/phosphor/heart-straight-regular.svg");mask-image:url("/assets/icons/phosphor/heart-straight-regular.svg")}
+.us-nav-icon [data-icon$="heart-straight-fill.svg"]{-webkit-mask-image:url("/assets/icons/phosphor/heart-straight-fill.svg");mask-image:url("/assets/icons/phosphor/heart-straight-fill.svg")}
+.us-nav-icon [data-icon$="images-regular.svg"]{-webkit-mask-image:url("/assets/icons/phosphor/images-regular.svg");mask-image:url("/assets/icons/phosphor/images-regular.svg")}
+.us-nav-icon [data-icon$="images-fill.svg"]{-webkit-mask-image:url("/assets/icons/phosphor/images-fill.svg");mask-image:url("/assets/icons/phosphor/images-fill.svg")}
+.us-nav-icon [data-icon$="game-controller-regular.svg"]{-webkit-mask-image:url("/assets/icons/phosphor/game-controller-regular.svg");mask-image:url("/assets/icons/phosphor/game-controller-regular.svg")}
+.us-nav-icon [data-icon$="game-controller-fill.svg"]{-webkit-mask-image:url("/assets/icons/phosphor/game-controller-fill.svg");mask-image:url("/assets/icons/phosphor/game-controller-fill.svg")}
+/* Optical alignment: the controller drawing has more visual mass below center. Keep the tab box/label untouched. */
+.us-nav-icon--quiz{transform:translateY(-2px)}
+.us-nav-premium .nlabel{display:block;font-size:10px;font-weight:400;letter-spacing:.01em;line-height:1.1;white-space:nowrap;color:rgba(220,209,222,.62)}
+.us-nav-premium button.active{color:var(--us-color-text)!important;background:transparent!important}
+.us-nav-premium button.active .nicon{background:transparent!important;color:#ee91ff;transform:none}
+/* HUMAN-UI-02 — active = filled icon + the sliding indicator + a bolder label.
+   The former looping conic "orbit" ring and the dot under the label are gone. */
+.us-nav-premium button.active .us-nav-icon-off{display:none!important}
+.us-nav-premium button.active .us-nav-icon-on{display:block!important}
+.us-nav-premium button.active .us-nav-icon-on{color:#ee91ff}
+.us-nav-premium button.active .nlabel{font-weight:600;color:var(--us-color-text)}
+
+/* M1 top chrome: APK shell treatment only; Home layout remains Web-owned. */
+.top.us-premium-top{position:absolute;z-index:10;top:max(0px,calc(var(--us-safe-top) - 3px));left:10px;right:10px;height:var(--us-top-chrome-height);padding:4px 16px!important;display:flex;align-items:center;justify-content:space-between;background:transparent!important;border:1px solid rgba(255,247,251,.12);border-radius:28px;box-sizing:border-box;overflow:hidden;box-shadow:0 10px 28px rgba(0,0,0,.18);isolation:isolate}
+.top.us-premium-top::before{content:"";position:absolute;z-index:0;top:0;left:0;right:0;height:var(--us-top-chrome-clearance);border-radius:inherit;background:linear-gradient(180deg,rgba(12,9,15,.48),rgba(12,9,15,.14) 72%,transparent);backdrop-filter:blur(18px) saturate(120%);-webkit-backdrop-filter:blur(18px) saturate(120%);pointer-events:none}
+.top.us-premium-top>*{position:relative;z-index:1}
+.top.us-premium-top .top-actions{gap:10px}
+.top.us-premium-top .online-badge{display:none!important}
+.top.us-premium-top .profile-avatar,.top.us-premium-top .us-calendar-btn{width:44px!important;height:44px!important;min-width:44px!important;min-height:44px!important}
+.top.us-premium-top .us-calendar-btn{background:rgba(12,9,15,.48)!important;border:1px solid rgba(255,247,251,.14)!important;backdrop-filter:blur(18px) saturate(120%);-webkit-backdrop-filter:blur(18px) saturate(120%)}
+.top.us-premium-top .profile-avatar{background:linear-gradient(145deg,rgba(242,85,101,.42),rgba(82,149,255,.3))!important;border:1px solid rgba(255,247,251,.14)!important;box-shadow:none!important}
+#home #usTodayPriorityRegion[hidden]{display:none!important}
+#bond,#moments,#quiz{padding-top:calc(var(--us-top-chrome-clearance) + var(--us-space-2));box-sizing:border-box}
+#bond>.section,#moments>.section,#quiz>.section{margin-top:0!important}
+
+
+.us-story-add-only .us-brand-icon{position:relative;display:grid;width:22px;height:22px;place-items:center}
+.us-story-add-only .us-brand-icon img{position:absolute;inset:0;width:100%;height:100%;display:block}
+.us-brand-icon-on{display:none!important}
+.us-story-add-only:active .us-brand-icon-off{display:none!important}
+.us-story-add-only:active .us-brand-icon-on{display:block!important}
+
+/* --- Signature loading mark ------------------------------------ */
+.us-id-loader{
+  position:relative;
+  width:34px;height:20px;
+  display:inline-block;
+  margin:0 auto 9px;
+}
+.us-id-loader i{
+  position:absolute;
+  top:3px;
+  width:14px;height:14px;
+  border:1.7px solid;
+  border-radius:50%;
+  animation:usLoopMeet 1.18s cubic-bezier(.55,.05,.35,1) infinite;
+}
+.us-id-loader i:first-child{
+  left:3px;border-color:var(--us-pink);
+}
+.us-id-loader i:nth-child(2){
+  right:3px;border-color:var(--us-violet);
+  animation-delay:-.59s;
+}
+.us-id-loader b{
+  position:absolute;
+  right:0;bottom:0;
+  width:3px;height:3px;border-radius:50%;
+  background:#f3f1ed;
+  opacity:.72;
+}
+@keyframes usLoopMeet{
+  0%,100%{transform:translateX(0) scale(.92);opacity:.48}
+  50%{transform:translateX(3px) scale(1.03);opacity:1}
+}
+.empty-state[aria-busy="true"]>.emoji{display:none!important}
+.empty-state[aria-busy="true"]>.us-id-loader{
+  display:block;
+}
+
+/* --- Common emotional feedback --------------------------------- */
+.toast{
+  background:#f1eee8!important;
+  color:var(--us-color-surface)!important;
+  box-shadow:0 12px 32px rgba(0,0,0,.24)!important;
+}
+
+/* Photo journal retains the warm-paper signature. */
+#moments .moment-card.moment-postit,
+.us-album-photo-card,
+.us-album-caption-postit{
+  background-color:var(--us-paper)!important;
+}
+
+/* --- Selection / focus ----------------------------------------- */
+/* The focus ring is the mockup's one, in ui-foundation.css. */
+
+/* M1.6 Home-only full-bleed fill. M12B.1 — Oggi is one frame exactly as tall
+   as the viewport: the hero already runs under the floating nav, so the
+   shared nav clearance of .app is dropped here instead of clipping it. */
+body:has(#home.page.active) .app{padding-bottom:0!important}
+#home.page.active{padding-bottom:0!important}
+#home .home-hero-only{height:calc(var(--us-viewport-height) - var(--us-safe-top))!important;min-height:0!important}
+#home .home-distance-pill{bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 18px)!important}
+/* The opt-in stays above the ambient distance capsule; Ti penso now lives in the top shell. */
+#home .push-optin-card{bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 70px)!important}
+
+/* M1 topbar refinement: three balanced zones inside the approved pill. */
+.top.us-premium-top{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);column-gap:6px;justify-content:initial}
+.top.us-premium-top .top-actions{grid-column:3;justify-self:end;min-width:0;gap:6px}
+/* M12A — the centre of the shell is the product: the approved US mark, never a feature. */
+.top.us-premium-top .us-top-brand{grid-column:2;justify-self:center;align-self:center;position:relative;width:48px;height:38px;overflow:hidden;pointer-events:none;user-select:none;-webkit-user-select:none}
+.us-top-brand-art{position:absolute;left:50%;top:50%;height:58px;width:58px;max-width:none;transform:translate(-50%,-50%);-webkit-user-drag:none}
+.top.us-premium-top .us-top-left{grid-column:1;justify-self:start;display:flex;align-items:center;min-width:0}
+/* Game V2 — Per voi top control: the sparkle mirrors the envelope control;
+   its personal state rides the shared attention orbit, never a counter. */
+#usPerVoiTop.us-pervoi-top{--us-attention-inset:-3px;position:relative;width:38px;height:38px;padding:0;border:1px solid rgba(255,234,247,.10);border-radius:50%;background:rgba(255,255,255,.05);color:rgba(247,242,248,.84);display:grid;place-items:center;overflow:visible;box-shadow:none;transition:transform var(--us-motion-press) var(--us-ease-standard),background var(--us-motion-press) var(--us-ease-standard),color var(--us-motion-press) var(--us-ease-standard)}
+#usPerVoiTop:active{transform:scale(.94);background:rgba(246,111,158,.14);color:var(--us-color-text)}
+#usPerVoiTop.is-loading{opacity:.52;pointer-events:none}
+#usPerVoiTop .us-pervoi-icon{width:19px;height:19px;display:block;background-color:currentColor;-webkit-mask:url("/assets/icons/phosphor/sparkle-regular.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/sparkle-regular.svg") center/contain no-repeat}
+#usPerVoiTop[data-gv2-state="pending"] .us-pervoi-icon,#usPerVoiTop[data-gv2-state="reveal_ready"] .us-pervoi-icon{-webkit-mask-image:url("/assets/icons/phosphor/sparkle-fill.svg");mask-image:url("/assets/icons/phosphor/sparkle-fill.svg");color:#ffd3e3}
+#usPerVoiTop[data-gv2-state="waiting"]{color:rgba(247,242,248,.62)}
+@media(prefers-reduced-motion:reduce){#usPerVoiTop{transition:none}#usPerVoiTop:active{transform:none}}
+.top.us-premium-top .us-brand-symbol-art{width:58px;height:39px}
+.top.us-premium-top .profile-avatar,.top.us-premium-top .us-calendar-btn{min-width:44px;min-height:44px}
+.top.us-premium-top .us-shell-icon{width:20px;height:20px}
+.top.us-premium-top .profile-avatar .fallback::before{width:20px;height:20px}
+.top.us-premium-top .profile-avatar .camera-dot{width:17px;height:17px}
+
+@media(max-width:360px){
+  .top.us-premium-top .us-brand-symbol-art{width:52px;height:34px}
+  .top.us-premium-top{column-gap:2px}
+  .top.us-premium-top .top-actions{gap:4px}
+  .top .us-brand-symbol-art{width:48px;height:32px}
+  .top{gap:8px}
+  .top-actions{gap:4px}
+  .us-nav.us-nav-premium .us-nav-icon{width:23px;height:23px}
+}
+@media(orientation:landscape) and (max-height:560px){
+  .us-nav.us-nav-premium{padding:3px 6px!important}
+  .us-nav.us-nav-premium button{min-height:44px!important;padding:1px 3px 2px!important}
+  .us-nav.us-nav-premium button .nicon{height:26px!important;min-height:26px!important}
+  .us-nav.us-nav-premium .us-nav-icon{width:22px;height:22px}
+}
+@media(max-width:420px){.top .online-badge{display:none!important}}
+@media(prefers-reduced-motion:reduce){
+  .us-id-loader i{animation:none!important}
+}
+
+/* ===== MOBILE POLISH 20260922 ===== */
+/* HUMAN-UI-02 — the pill is only as tall as its 44px controls. */
+.top.us-premium-top{top:calc(var(--us-safe-top) + 6px);left:max(34px,var(--us-safe-left));right:max(34px,var(--us-safe-right));padding:0 1px!important;border-radius:999px;background:linear-gradient(145deg,rgba(255,255,255,.085),rgba(255,255,255,.025)),rgba(17,20,27,.68)!important;border-color:rgba(255,255,255,.14);box-shadow:0 18px 44px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08);backdrop-filter:blur(25px) saturate(155%);-webkit-backdrop-filter:blur(25px) saturate(155%);overflow:visible}
+.top.us-premium-top::before{background:linear-gradient(180deg,rgba(255,255,255,.10),transparent 70%);backdrop-filter:none;-webkit-backdrop-filter:none}
+.top.us-premium-top .top-actions{width:auto;min-width:88px;justify-content:flex-end;gap:4px}
+.top.us-premium-top .us-top-profiles{width:44px;justify-content:flex-end;margin-left:0}
+#settings{height:calc(var(--us-viewport-height) - var(--us-safe-top));overflow-y:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;padding-top:calc(var(--us-top-chrome-clearance) + 10px);box-sizing:border-box}
+#settings .us-settings2-page{padding-top:4px!important;padding-bottom:calc(var(--us-nav-height) + var(--us-safe-bottom) + 28px)!important}
+.noi-canonical-page{height:auto!important;min-height:calc(var(--us-viewport-height) - var(--us-top-chrome-clearance) - var(--us-safe-top) - var(--us-safe-bottom) - 12px);overflow:visible!important}
+.noi-living-section{overflow:visible!important}
+.noi-living-list{height:clamp(230px,35vh,300px)!important;overflow:visible!important}
+.noi-living-list .bond-quest{overflow:visible!important;justify-content:flex-start!important}
+.noi-living-list .bond-quest h4{display:block!important;-webkit-line-clamp:unset!important;overflow:visible!important;line-height:1.18!important}
+
+
+/* ===== US-SHELL-THINK-01 · global gestures belong in the shell ===== */
+.top.us-premium-top{
+  left:max(46px,var(--us-safe-left));
+  right:max(46px,var(--us-safe-right));
+  --us-aurora-ambient:.42;
+  --us-aurora-react:.78;
+  background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.018)),rgba(17,20,27,.62)!important;
+  border-color:rgba(255,255,255,.12);
+  box-shadow:0 11px 30px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.065);
+  backdrop-filter:blur(21px) saturate(138%);
+  -webkit-backdrop-filter:blur(21px) saturate(138%);
+}
+.top.us-premium-top .us-top-left{
+  min-width:38px;
+}
+#thinkButton.us-top-think{
+  position:relative;
+  width:38px;
+  height:38px;
+  min-width:38px;
+  min-height:38px;
+  padding:0;
+  border:1px solid rgba(255,234,247,.10);
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:rgba(255,255,255,.05);
+  color:rgba(247,242,248,.88);
+  box-shadow:none;
+  overflow:visible;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+  transition:transform var(--us-motion-press) var(--us-ease-standard),background var(--us-motion-press) var(--us-ease-standard),border-color var(--us-motion-press) var(--us-ease-standard);
+}
+#thinkButton.us-top-think .us-shell-icon{
+  width:20px;
+  height:20px;
+}
+#thinkButton.us-top-think:active{
+  transform:scale(.94);
+  background:rgba(246,111,158,.14);
+  border-color:rgba(246,111,158,.26);
+}
+#thinkButton.us-top-think:disabled{opacity:.45!important}
+#thinkButton.us-top-think.sent{animation:usThinkSent var(--us-motion-base) var(--us-ease-standard)}
+#thinkButton.us-top-think.received{animation:usThinkReceived var(--us-motion-surface) var(--us-ease-standard)}
+@media(max-width:360px){
+  .top.us-premium-top{left:max(34px,var(--us-safe-left));right:max(34px,var(--us-safe-right))}
+}
+
+
+/* ===== US-1.0 HOME SEMANTICS · distance lives in Noi, not over the daily photo ===== */
+#home .home-distance-pill{display:none!important}

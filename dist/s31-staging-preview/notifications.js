@@ -1,0 +1,723 @@
+(() => {
+  'use strict';
+  if (window.UsNotifications) return;
+
+  // US Native Notifications V1 — the native app's side of the US notification
+  // domain (docs/native/NATIVE_NOTIFICATIONS_V1.md).
+  //
+  // The PWA never uses this module: Web Push stays in app.js + the service
+  // worker. In the Capacitor app this module owns:
+  //   * the OS permission, asked only from an explicit "Attiva";
+  //   * the FCM (Android) / APNs (iOS) token of THIS installation, registered
+  //     through register_native_push_device (identity from the session only);
+  //   * logout / account recovery: only this installation is removed, with a
+  //     retry if the phone is offline, and a new installation id afterwards;
+  //   * taps: the payload is parsed against an allow-list (never a URL) and
+  //     becomes ONE pending navigation, executed only after a paired session
+  //     exists AND the app lock is open (UsAppLock.whenOpen).
+
+  const platform = window.UsPlatform || null;
+  const isNative = Boolean(platform?.isNative);
+  const pluginFor = (name) => (isNative && platform.isPluginAvailable?.(name) ? platform.getNativePlugin(name) : null);
+  const push = pluginFor('PushNotifications');
+  const support = pluginFor('UsPushSupport');
+
+  const TARGETS = Object.freeze(['home', 'today', 'think', 'left_for_you', 'quiz', 'bond', 'calendar', 'events']);
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const TYPE = /^[a-z_]{1,40}$/;
+  const FCM_TOKEN = /^[A-Za-z0-9_:-]+$/;
+  const APNS_TOKEN = /^[0-9a-f]+$/;
+  const STORE = Object.freeze({
+    installation: 'us:notifications:v1:installation',
+    owner: 'us:notifications:v1:owner',
+    token: 'us:notifications:v1:token',
+    transportPending: 'us:notifications:v1:transport-pending',
+    retired: 'us:notifications:v1:retired',
+    enabled: (userId) => `us:notifications:v1:enabled:${userId}`,
+    // «Attiva» was tapped and allowed, but Google's token did not come (5G, 25/10/2026).
+    wanted: (userId) => `us:notifications:v1:wanted:${userId}`,
+    synced: (userId) => `us:notifications:v1:synced:${userId}`
+  });
+  const PENDING_MAX_AGE_MS = 30 * 60 * 1000;
+  // 18/10/2026: on mobile data (5G) the first FCM token and the first call to
+  // the server can take far longer than on Wi-Fi; "Attiva" failed there while
+  // the same phone succeeded on Wi-Fi. The user-initiated path waits longer and
+  // retries once; background calls keep the short limit.
+  const REGISTRATION_TIMEOUT_MS = 30000;
+  const CALL_TIMEOUT_MS = 6000;
+  const REGISTER_CALL_TIMEOUT_MS = 15000;
+  const ENABLE_ATTEMPTS = 2;
+
+  // ---- Pure helpers (also exercised by tests) -----------------------------
+
+  /** Payload → { type, target, ref } or null. Android: data keys; iOS: userInfo.us. */
+  function parsePayload(data) {
+    if (!data || typeof data !== 'object') return null;
+    const source = data.us && typeof data.us === 'object' ? data.us : data;
+    if (String(source.v ?? '') !== '1') return null;
+    const target = typeof source.target === 'string' ? source.target : '';
+    if (!TARGETS.includes(target)) return null;
+    const type = typeof source.type === 'string' && TYPE.test(source.type) ? source.type : 'unknown';
+    const ref = typeof source.ref === 'string' && UUID.test(source.ref) ? source.ref.toLowerCase() : null;
+    return Object.freeze({ type, target, ref });
+  }
+
+  /** Native action event → navigation intent, or null (dismiss, malformed, unknown action). */
+  function intentFromAction(event) {
+    const actionId = typeof event?.actionId === 'string' ? event.actionId : 'tap';
+    if (actionId !== 'tap' && actionId !== 'ricambia') return null;
+    const payload = parsePayload(event?.notification?.data);
+    if (!payload) return null;
+    // "Ricambia" only exists on Ti penso: it opens the one-tap reaction sheet, it never reacts by itself.
+    const action = actionId === 'ricambia' && payload.type === 'think' ? 'ricambia' : 'open';
+    return Object.freeze({ ...payload, action });
+  }
+
+  function normalizeToken(platformName, raw) {
+    const value = typeof raw === 'string' ? raw.trim() : '';
+    if (platformName === 'ios') {
+      const hex = value.toLowerCase();
+      return hex.length >= 64 && hex.length <= 200 && APNS_TOKEN.test(hex) ? hex : '';
+    }
+    return value.length >= 32 && value.length <= 4096 && FCM_TOKEN.test(value) ? value : '';
+  }
+
+  // ---- Small utilities ----------------------------------------------------
+
+  // Timeouts and network drops are worth a second try; refusals and stale sessions are not.
+  function isRetryable(error) {
+    const message = String(error?.message || error || '');
+    return message === 'timeout' || /network|fetch|load failed|connection|SERVICE_NOT_AVAILABLE|INTERNAL_SERVER_ERROR|TIMEOUT/i.test(message);
+  }
+  // 19/10/2026: "Attiva" still failed on 5G. The step and a short reason travel
+  // with the failure (shown as a code in the message) so the next test says
+  // where it stops: N native status, T Google token, S server, O phone gate.
+  let enableStage = '';
+  function failureCode(error) {
+    const message = String(error?.message || error || '');
+    const reason = message === 'timeout' ? 'timeout'
+      : (message.match(/[A-Z][A-Z_]{5,}/)?.[0] || message.replace(/[^a-z_]/gi, '').slice(0, 24) || 'errore');
+    return `${enableStage || '?'}-${reason}`;
+  }
+  function withTimeout(promise, ms) {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('timeout')), ms);
+      Promise.resolve(promise).then(
+        (value) => { clearTimeout(timer); resolve(value); },
+        (error) => { clearTimeout(timer); reject(error); }
+      );
+    });
+  }
+  const read = (key) => { try { return localStorage.getItem(key); } catch (_) { return null; } };
+  const write = (key, value) => { try { localStorage.setItem(key, value); } catch (_) {} };
+  const remove = (key) => { try { localStorage.removeItem(key); } catch (_) {} };
+  function client() {
+    // eslint-disable-next-line no-undef
+    try { return sb; } catch (_) { return window.sb || null; }
+  }
+  function newUuid() {
+    if (typeof crypto?.randomUUID === 'function') return crypto.randomUUID();
+    const bytes = crypto.getRandomValues(new Uint8Array(16));
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    const hex = [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+  }
+  function installationId({ create = true } = {}) {
+    const current = read(STORE.installation);
+    if (current && UUID.test(current)) return current;
+    if (!create) return '';
+    const fresh = newUuid();
+    write(STORE.installation, fresh);
+    return fresh;
+  }
+  function retired() {
+    try {
+      const list = JSON.parse(read(STORE.retired) || '[]');
+      return Array.isArray(list) ? list.filter((entry) => typeof entry === 'string' ? UUID.test(entry) : entry && UUID.test(entry.id)) : [];
+    } catch (_) { return []; }
+  }
+  const RETIRED_MAX = 16;
+  function setRetired(list) {
+    // Newest first; the oldest entries are dropped beyond the cap. Only an
+    // entry whose FCM token was confirmed deleted can be dropped safely, so
+    // unconfirmed ones are always kept.
+    const all = list.filter((entry, index) => list.findIndex((other) => JSON.stringify(other) === JSON.stringify(entry)) === index);
+    const open = all.filter((entry) => typeof entry === 'string' || entry.transportStopped !== true);
+    const stopped = all.filter((entry) => typeof entry !== 'string' && entry.transportStopped === true);
+    const unique = [...open, ...stopped.slice(0, Math.max(0, RETIRED_MAX - open.length))];
+    if (unique.length) write(STORE.retired, JSON.stringify(unique));
+    else remove(STORE.retired);
+  }
+  const isEnabledFor = (userId) => Boolean(userId) && read(STORE.enabled(userId)) === '1';
+
+  // ---- Session --------------------------------------------------------------
+
+  let session = { ready: false, userId: '' };
+  let busy = false;
+  let lastToken = '';
+  let tokenWaiters = [];
+  let resumeInFlight = null;
+  let serverConfirmedFor = '';
+  let cleanup = Promise.resolve();
+  let authGeneration = 0;
+  let registrationInFlight = Promise.resolve();
+  // Serialize native owner retirement. A delayed A registration cannot
+  // reactivate A after B logs in and the native epoch rotates.
+  let nativeOwnerClear = Promise.resolve();
+  // A failed clear leaves the previous owner bound in the native gate: the
+  // next sign-in and every resume retry it before anything else.
+  let nativeClearFailed = false;
+  function retireNativeOwner() {
+    if (!support?.clearPushOwner) return Promise.resolve();
+    const work = nativeOwnerClear.catch(() => {}).then(async () => {
+      let result = null;
+      try { result = await withTimeout(support.clearPushOwner(), CALL_TIMEOUT_MS); }
+      catch (_) { result = null; }
+      nativeClearFailed = result?.cleared !== true;
+      if (nativeClearFailed) throw new Error('native_owner_clear_failed');
+    });
+    nativeOwnerClear = work;
+    return work;
+  }
+  async function bindNativeOwner(status, installation, owner) {
+    if (status.platform !== 'android') return;
+    await nativeOwnerClear;
+    assertOwner(owner);
+    if (!UUID.test(status.bindingEpoch || '') || !support?.bindPushOwner) throw new Error('native_owner_gate_unavailable');
+    const result = await withTimeout(support.bindPushOwner({
+      ownerId: owner.userId,
+      installationId: installation,
+      expectedEpoch: status.bindingEpoch
+    }), CALL_TIMEOUT_MS);
+    assertOwner(owner);
+    if (result?.bound !== true) throw new Error('native_owner_gate_stale');
+    syncNativePartnerName(owner.userId);
+  }
+  // 16/10/2026: Android notices say who ("Bea ti sta pensando"). The phone
+  // writes the sentence; it only needs the other person's display name, kept
+  // in the native owner gate for this owner and dropped at logout. A late call
+  // for another account is refused natively. Never blocks registration.
+  function syncNativePartnerName(userId) {
+    if (!support?.setPushPartnerName || !userId || session.userId !== userId) return;
+    const name = String(globalThis.UsIdentity?.current?.()?.partnerName || '').trim();
+    const real = name && name !== 'La tua persona' ? name : '';
+    Promise.resolve(support.setPushPartnerName({ ownerId: userId, partnerName: real })).catch(() => {});
+  }
+  globalThis.addEventListener?.('us-identity-change', () => {
+    if (session.ready && read(STORE.owner) === session.userId) syncNativePartnerName(session.userId);
+  });
+  const assertOwner = (owner) => { if (!session.ready || session !== owner) throw new Error('stale_session'); };
+  function retireInstallation() {
+    const id = installationId({ create: false });
+    const userId = read(STORE.owner) || session.userId;
+    if (id) setRetired([{ id, userId, token: read(STORE.token) || lastToken }, ...retired()]);
+    remove(STORE.installation); remove(STORE.owner); remove(STORE.token);
+    if (userId) { remove(STORE.enabled(userId)); remove(STORE.synced(userId)); }
+    lastToken = '';
+  }
+
+  // ---- Native status ------------------------------------------------------
+
+  async function nativeStatus() {
+    if (!push || !support) return { available: false };
+    try {
+      const raw = await withTimeout(support.getStatus(), 2500);
+      const platformName = raw?.platform === 'ios' ? 'ios' : 'android';
+      return {
+        available: true,
+        platform: platformName,
+        provider: platformName === 'ios' ? 'apns' : 'fcm',
+        bindingEpoch: platformName === 'android' ? raw?.bindingEpoch : null,
+        configured: raw?.configured === true,
+        environment: platformName === 'ios' ? (raw?.environment === 'development' ? 'development' : 'production') : null,
+        notificationsEnabled: raw?.notificationsEnabled !== false,
+        channelBlocked: raw?.partnerBlocked === true || raw?.remindersBlocked === true
+      };
+    } catch (_) {
+      return { available: false };
+    }
+  }
+
+  async function permission() {
+    try {
+      const result = await withTimeout(push.checkPermissions(), 2500);
+      return ['granted', 'denied', 'prompt', 'prompt-with-rationale'].includes(result?.receive) ? result.receive : 'prompt';
+    } catch (_) { return 'prompt'; }
+  }
+
+  // ---- Token ----------------------------------------------------------------
+
+  function settleToken(error, value) {
+    const waiters = tokenWaiters;
+    tokenWaiters = [];
+    waiters.forEach((w) => (error ? w.reject(error) : w.resolve(value)));
+  }
+
+  async function requestToken() {
+    // If Android deleteToken failed or timed out on a previous logout, do not
+    // race a new getToken() against that unfinished provider shutdown.
+    if (read(STORE.transportPending) === '1') {
+      const status = await nativeStatus();
+      if (!await stopNativeDelivery(status)) throw new Error('previous_transport_cleanup_pending');
+    }
+    // Obtaining a token also reactivates provider delivery (notably APNs).
+    // Do not reactivate while a previous account still owns an unresolved row,
+    // unless Android confirmed that row's FCM token was deleted afterwards:
+    // that row can no longer deliver (FCM answers UNREGISTERED and the server
+    // prunes it), and a new token is a different UNIQUE key.
+    if (retired().some(entry => typeof entry === 'string' || (entry.userId !== session.userId && entry.transportStopped !== true))) throw new Error('previous_account_retirement_pending');
+    const waiter = {};
+    const waiting = new Promise((resolve, reject) => { waiter.resolve = resolve; waiter.reject = reject; });
+    waiting.catch(() => {}); // logout can reject while the plugin call is pending
+    tokenWaiters.push(waiter);
+    try {
+      await push.register();
+      return await withTimeout(waiting, REGISTRATION_TIMEOUT_MS);
+    } finally {
+      // A timed-out request must not swallow a later, unrelated rotation event.
+      tokenWaiters = tokenWaiters.filter((entry) => entry !== waiter);
+    }
+  }
+
+  async function registerToken(token, status, owner = session) {
+    assertOwner(owner);
+    const db = client();
+    if (!db || !session.ready) throw new Error('no_session');
+    const normalized = normalizeToken(status.platform, token);
+    if (!normalized) throw new Error('token_invalid');
+    const installation = installationId();
+    if (retired().some((entry) => typeof entry === 'string' || (!entry.token && entry.transportStopped !== true) || entry.token === normalized)) throw new Error('retired_token');
+    write(STORE.owner, owner.userId);
+    write(STORE.token, normalized);
+    const pendingRetired = null;
+    const signature = JSON.stringify([installation, normalized, status.environment, new Date().toISOString().slice(0, 10)]);
+    // On every cold app process, confirm the row with the server at least once.
+    // This repairs a token row that may have been pruned remotely while the
+    // device still has a valid provider token. Later resumes in the same
+    // process stay cheap and use the local signature.
+    if (!pendingRetired && serverConfirmedFor === session.userId && read(STORE.synced(session.userId)) === signature) {
+      await bindNativeOwner(status, installation, owner);
+      return true;
+    }
+    enableStage = 'S';
+    const request = db.rpc('register_native_push_device', {
+      target_installation_id: installation,
+      target_platform: status.platform,
+      target_provider: status.provider,
+      target_token: normalized,
+      target_environment: status.environment,
+      target_retired_installation_id: pendingRetired
+    });
+    registrationInFlight = Promise.resolve(request).catch(() => {});
+    const { error } = await withTimeout(request, REGISTER_CALL_TIMEOUT_MS);
+    if (error) throw error;
+    assertOwner(owner);
+    enableStage = 'O';
+    await bindNativeOwner(status, installation, owner);
+    if (pendingRetired) setRetired(retired().filter((id) => id !== pendingRetired));
+    write(STORE.synced(session.userId), signature);
+    serverConfirmedFor = session.userId;
+    return true;
+  }
+
+  async function onRegistration(event) {
+    lastToken = typeof event?.value === 'string' ? event.value : '';
+    // The answer to our own requestToken(): that caller registers it. Only an
+    // unsolicited event (provider rotation) registers from here, so a resume
+    // or cold start sends one RPC and one owner bind, not two racing ones.
+    const requested = tokenWaiters.length > 0;
+    settleToken(null, lastToken);
+    if (requested) return;
+    // Token rotation while signed in and enabled on this installation.
+    if (!session.ready || !isEnabledFor(session.userId) || busy) return;
+    const owner = session;
+    try {
+      const status = await nativeStatus();
+      if (status.available && status.configured) await registerToken(lastToken, status, owner);
+    } catch (_) { /* retried at the next start */ }
+  }
+
+  // ---- Navigation queue -------------------------------------------------------
+
+  let pending = null;
+  let navigate = null;
+  let flushing = null;
+
+  function whenVisible() {
+    if (!document.hidden) return Promise.resolve();
+    return new Promise((resolve) => {
+      const onVisible = () => {
+        if (document.hidden) return;
+        document.removeEventListener('visibilitychange', onVisible);
+        resolve();
+      };
+      document.addEventListener('visibilitychange', onVisible);
+    });
+  }
+
+  async function lockOpen() {
+    const lock = window.UsAppLock;
+    if (!lock) return true;
+    if (typeof lock.whenOpen === 'function') return lock.whenOpen();
+    return !lock.isLocked?.();
+  }
+
+  function flush() {
+    if (flushing) return flushing;
+    flushing = (async () => {
+      while (pending && session.ready && typeof navigate === 'function') {
+        await whenVisible();
+        // Let the native resume events of the same tap (lockRequired) arrive first.
+        await new Promise((resolve) => setTimeout(resolve, 120));
+        const open = await lockOpen();
+        if (!open) { pending = null; return; } // the lock ended in the account login
+        if (!session.ready || !pending) return; // signed out meanwhile: dropped by signedOut()
+        const intent = pending;
+        pending = null;
+        if (Date.now() - intent.at > PENDING_MAX_AGE_MS) continue;
+        try { await navigate(intent); } catch (_) { /* a navigation error never breaks the queue */ }
+      }
+    })().finally(() => { flushing = null; });
+    return flushing;
+  }
+
+  function queue(intent) {
+    if (!intent) return;
+    pending = { ...intent, at: Date.now() }; // the latest tap wins
+    flush();
+  }
+
+  function onAction(event) {
+    queue(intentFromAction(event));
+  }
+
+  /**
+   * Android FCM v2 (data-only, S3): { v:'2', installation }. No type, target
+   * or ref ever reaches FCM, so it can only signal "something new" for THIS
+   * installation. The native service already dropped other installations;
+   * the web layer checks again before reacting.
+   */
+  function isCurrentNotice(data) {
+    if (!data || typeof data !== 'object' || String(data.v ?? '') !== '2') return false;
+    const target = typeof data.installation === 'string' ? data.installation.toLowerCase() : '';
+    const current = installationId({ create: false }).toLowerCase();
+    return Boolean(current) && UUID.test(target) && target === current;
+  }
+
+  function onForeground(notification) {
+    const data = notification?.data;
+    const payload = parsePayload(data)
+      || (isCurrentNotice(data) && isEnabledFor(session.userId) ? Object.freeze({ type: 'notice', target: null, ref: null }) : null);
+    if (!payload || !session.ready) return;
+    // Nothing is shown on top of the lock screen.
+    if (window.UsAppLock?.isLocked?.()) return;
+    window.dispatchEvent(new CustomEvent('us-notification-received', { detail: payload }));
+    window.UsFeedback?.attention?.();
+  }
+
+  // ---- Public API ---------------------------------------------------------------
+
+  /** Settings / Oggi card state for THIS installation. */
+  async function getState() {
+    if (!push) return { supported: false };
+    const status = await nativeStatus();
+    if (!status.available) return { supported: true, kind: 'unavailable' };
+    if (!status.configured) return { supported: true, kind: 'unavailable', platform: status.platform };
+    const perm = await permission();
+    const enabled = isEnabledFor(session.userId);
+    if (perm === 'denied') return { supported: true, kind: 'denied', platform: status.platform, enabled };
+    if (enabled && perm === 'granted' && (!status.notificationsEnabled || status.channelBlocked)) {
+      return { supported: true, kind: 'settings', platform: status.platform, enabled };
+    }
+    if (enabled && perm === 'granted') return { supported: true, kind: 'active', platform: status.platform, enabled };
+    const pendingWish = perm === 'granted' && read(STORE.wanted(session.userId)) === '1';
+    return { supported: true, kind: 'inactive', platform: status.platform, enabled: false, permission: perm, pending: pendingWish };
+  }
+
+  /** User-initiated only ("Attiva"): permission → token → registration. */
+  async function enable() {
+    if (!push || !session.ready) return { ok: false, kind: 'unavailable' };
+    if (busy) return { ok: false, kind: 'busy' };
+    busy = true;
+    const owner = session;
+    let granted = false;
+    try {
+      await cleanup; assertOwner(owner);
+      enableStage = 'N';
+      const status = await nativeStatus();
+      if (!status.available || !status.configured) return { ok: false, kind: 'unavailable' };
+      let perm = await permission();
+      if (perm === 'prompt' || perm === 'prompt-with-rationale') {
+        const result = await push.requestPermissions();
+        perm = result?.receive || 'denied';
+      }
+      if (perm !== 'granted') { remove(STORE.wanted(owner.userId)); return { ok: false, kind: 'denied' }; }
+      assertOwner(owner);
+      granted = true;
+      // A slow network (timeout) gets a second try; a refusal does not.
+      for (let attempt = 1; ; attempt++) {
+        try {
+          enableStage = 'T';
+          const token = await requestToken();
+          await registerToken(token, status, owner);
+          break;
+        } catch (error) {
+          if (attempt >= ENABLE_ATTEMPTS || !isRetryable(error)) throw error;
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+          assertOwner(owner);
+        }
+      }
+      assertOwner(owner);
+      write(STORE.enabled(session.userId), '1');
+      remove(STORE.wanted(session.userId));
+      return { ok: true, kind: 'active' };
+    } catch (error) {
+      // On some mobile networks Google refuses the token while Wi-Fi works: the
+      // wish stays and resume() finishes it later, without a new tap.
+      const network = isRetryable(error) || /^registration_failed/.test(String(error?.message || ''));
+      if (granted && network && session === owner) write(STORE.wanted(owner.userId), '1');
+      return { ok: false, kind: network ? 'network' : 'error', code: failureCode(error), pending: granted && network };
+    } finally {
+      busy = false;
+    }
+  }
+
+  async function stopNativeDelivery(status) {
+    if (!status?.available || !status.configured) return false;
+    if (status.platform === 'android') {
+      // The official Capacitor unregister() immediately resolves while its
+      // Firebase deleteToken() task is still running. Use our owner-gated
+      // native method instead, which resolves ONLY after Firebase completes.
+      // Missing bridge / provider failures must never silently count as success.
+      write(STORE.transportPending, '1');
+      if (!support?.stopPushTransport) return false;
+      try {
+        const result = await withTimeout(support.stopPushTransport(), 12000);
+        if (result?.stopped !== true) return false;
+        remove(STORE.transportPending);
+        // deleteToken() completed: every token retired before now is dead.
+        const list = retired();
+        if (list.length) setRetired(list.map((entry) => typeof entry === 'string' ? entry : { ...entry, transportStopped: true }));
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+    // iOS APNs behavior unchanged.
+    try { await withTimeout(push.unregister(), CALL_TIMEOUT_MS); return true; }
+    catch (_) { return false; }
+  }
+
+  /** Settings "Disattiva su questo dispositivo": only this installation, account untouched. */
+  async function disable() {
+    if (!push || !session.ready) return { ok: false };
+    if (busy) return { ok: false, kind: 'busy' };
+    busy = true;
+    try {
+      const installation = installationId({ create: false });
+      // The owner gate must be retired BEFORE any potentially offline RPC.
+      // Disable locally even if the network fails, so onRegistration/resume
+      // cannot accidentally rebind A while an unregister is unresolved.
+      remove(STORE.enabled(session.userId));
+      remove(STORE.synced(session.userId));
+      remove(STORE.wanted(session.userId));
+      await retireNativeOwner();
+      if (installation) {
+        let revoked = false;
+        try {
+          const { error } = await withTimeout(client().rpc('unregister_native_push_device', { target_installation_id: installation }), CALL_TIMEOUT_MS);
+          revoked = !error;
+        } catch (_) { /* offline: keep the server row quarantined */ }
+        if (!revoked) {
+          retireInstallation(); // persist A's ID/token for owner-only retry
+          await stopNativeDelivery(await nativeStatus());
+          return { ok: false, kind: 'pending' };
+        }
+      }
+      await stopNativeDelivery(await nativeStatus());
+      return { ok: true };
+    } catch (_) {
+      return { ok: false };
+    } finally {
+      busy = false;
+    }
+  }
+
+  /**
+   * Logout and app-lock account recovery, BEFORE signOut. Never throws, never
+   * blocks the logout: if the server cannot be reached the installation id is
+   * kept as "retired" and removed at the next authenticated start.
+   */
+  async function revokeDevice() {
+    pending = null;
+    if (!push) return;
+    const userId = session.userId;
+    // Native OS gate is retired before slow or offline server revoke.
+    try { await retireNativeOwner(); } catch (_) { /* logout still proceeds */ }
+    retireInstallation();
+    session = { ready: false, userId };
+    cleanup = (async () => {
+      let settled = true;
+      try { await withTimeout(registrationInFlight, CALL_TIMEOUT_MS); } catch (_) { settled = false; }
+      // A timed-out registration may still commit later. Keep its token blocked.
+      if (settled) await retryRetired(userId);
+      await stopNativeDelivery(await nativeStatus());
+      try { await withTimeout(push.removeAllDeliveredNotifications(), 2500); } catch (_) {}
+      try { await withTimeout(support?.setBadge?.({ count: 0 }), 2500); } catch (_) {}
+    })();
+    await cleanup;
+  }
+
+  async function retryRetired(userId = session.userId) {
+    const db = client();
+    if (!db) return;
+    try { await withTimeout(registrationInFlight, CALL_TIMEOUT_MS); } catch (_) { return; }
+    const ownsSession = async () => {
+      if (!db.auth?.getSession) return true;
+      try { const result = await withTimeout(db.auth.getSession(), CALL_TIMEOUT_MS); return result?.data?.session?.user?.id === userId; } catch (_) { return false; }
+    };
+    for (const entry of retired()) {
+      // UUID-only legacy entries have no provable owner and stay quarantined.
+      if (typeof entry === 'string' || entry.userId !== userId) continue;
+      try {
+        if (!await ownsSession()) return;
+        const { error } = await withTimeout(db.rpc('unregister_native_push_device', { target_installation_id: entry.id }), CALL_TIMEOUT_MS);
+        if (!error && await ownsSession()) setRetired(retired().filter((x) => typeof x === 'string' || x.id !== entry.id));
+      } catch (_) { return; }
+    }
+  }
+
+  async function clearSeenNotifications() {
+    if (!push || document.hidden) return;
+    const open = await lockOpen();
+    if (!open || document.hidden) return;
+    // Android launchers derive their dot/count from delivered notifications;
+    // iOS also has an explicit badge. Clearing both only after the private app
+    // is actually open keeps lock-screen privacy intact.
+    try { await withTimeout(push.removeAllDeliveredNotifications(), 2500); } catch (_) {}
+    try { await withTimeout(support?.setBadge?.({ count: 0 }), 2500); } catch (_) {}
+  }
+
+  async function syncEnabledInstallation() {
+    if (!push || !session.ready || !isEnabledFor(session.userId)) return;
+    const owner = session;
+    const status = await nativeStatus();
+    if (!status.available || !status.configured || (await permission()) !== 'granted') return;
+    if (session !== owner) return;
+    try {
+      const token = await requestToken();
+      await registerToken(token, status, owner);
+    } catch (_) { /* retry on the next foreground/cold start */ }
+  }
+
+  // A pending «Attiva» (see STORE.wanted) completes silently once Google answers;
+  // app.js refreshes the card on us-notifications-changed.
+  async function finishWish(owner) {
+    if (busy || session !== owner || read(STORE.wanted(owner.userId)) !== '1') return;
+    if ((await permission()) !== 'granted') { remove(STORE.wanted(owner.userId)); return; }
+    const result = await enable();
+    if (result.ok && typeof CustomEvent === 'function') window.dispatchEvent?.(new CustomEvent('us-notifications-changed'));
+  }
+
+  /**
+   * Native foreground recovery. Safe to call repeatedly:
+   * - retries retired installation cleanup;
+   * - clears notifications/badge only once the app lock is open;
+   * - asks the provider for the current token without re-prompting permission;
+   * - re-confirms the server row once per cold process, then only on rotation/day change.
+   */
+  function resume() {
+    if (resumeInFlight) return resumeInFlight;
+    resumeInFlight = (async () => {
+      if (!push || !session.ready || document.hidden) return;
+      const owner = session;
+      if (nativeClearFailed) { try { await retireNativeOwner(); } catch (_) { return; } }
+      if (session !== owner) return;
+      await retryRetired();
+      if (session !== owner) return;
+      if (!isEnabledFor(session.userId)) { await finishWish(owner); return; }
+      await clearSeenNotifications();
+      await syncEnabledInstallation();
+    })().finally(() => { resumeInFlight = null; });
+    return resumeInFlight;
+  }
+
+  /** app.js: a paired profile is ready (after the app lock gate). */
+  async function authReady(profile) {
+    if (!profile?.id) return;
+    if ((session.userId && session.userId !== profile.id) || (read(STORE.owner) && read(STORE.owner) !== profile.id)) signedOut();
+    const generation = ++authGeneration;
+    await cleanup;
+    try { await nativeOwnerClear; } catch (_) { /* registration fails closed */ }
+    if (nativeClearFailed) { try { await retireNativeOwner(); } catch (_) { /* retried at resume */ } }
+    if (generation !== authGeneration) return;
+    session = { ready: true, userId: profile.id };
+    flush();
+    await resume();
+  }
+
+  /** app.js: no session on this phone. */
+  function signedOut() {
+    authGeneration++;
+    // Forced account recovery must also invalidate the private OS gate.
+    if (push) retireNativeOwner().catch(() => {});
+    if (push && installationId({ create: false })) {
+      retireInstallation();
+      cleanup = cleanup.then(async () => {
+        await stopNativeDelivery(await nativeStatus());
+        try { await withTimeout(push.removeAllDeliveredNotifications(), 2500); } catch (_) {}
+        try { await withTimeout(support?.setBadge?.({ count: 0 }), 2500); } catch (_) {}
+      });
+    }
+    settleToken(new Error('signed_out'));
+    session = { ready: false, userId: '' };
+    serverConfirmedFor = '';
+    pending = null;
+  }
+
+  function onNavigate(handler) {
+    navigate = typeof handler === 'function' ? handler : null;
+    flush();
+  }
+
+  async function openSettings() {
+    try { return (await support?.openSettings?.())?.opened === true; } catch (_) { return false; }
+  }
+
+  if (push && typeof push.addListener === 'function') {
+    const listen = (name, fn) => Promise.resolve(push.addListener(name, fn)).catch(() => {});
+    listen('registration', onRegistration);
+    // FCM says why (e.g. SERVICE_NOT_AVAILABLE): keep the reason, never the token.
+    // Android wraps it in the Java message ("java.util.concurrent.ExecutionException:
+    // java.io.IOException: SERVICE_NOT_AVAILABLE"): the code is the last upper-case word.
+    listen('registrationError', (event) => {
+      const message = String(event?.error || '');
+      const reason = message.match(/[A-Z][A-Z_]{3,}/g)?.pop() || message.replace(/[^A-Za-z_]/g, '').slice(0, 40);
+      settleToken(new Error('registration_failed:' + reason));
+    });
+    listen('pushNotificationReceived', onForeground);
+    // Retained by the native plugin until this listener exists: covers cold start.
+    listen('pushNotificationActionPerformed', onAction);
+  }
+
+  document.addEventListener?.('visibilitychange', () => {
+    if (!document.hidden) resume().catch(() => {});
+  });
+  // Back on Wi-Fi or a working network: a pending wish can finish right away.
+  window.addEventListener?.('online', () => resume().catch(() => {}));
+
+  window.UsNotifications = Object.freeze({
+    supported: () => Boolean(push),
+    getState,
+    enable,
+    disable,
+    revokeDevice,
+    authReady,
+    signedOut,
+    resume,
+    onNavigate,
+    openSettings,
+    _test: Object.freeze({ parsePayload, intentFromAction, normalizeToken, isCurrentNotice, pending: () => pending })
+  });
+})();
