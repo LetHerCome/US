@@ -170,5 +170,9 @@ Tra il passo 1 e il passo 3 l'app vecchia dice ancora «lunedì» per una partit
 - **App Links e build installate a mano:** il file dichiara solo la chiave di firma di Play. Un APK installato a mano (staging o interno) apre il link nel browser.
 - **Google Play dalla pagina d'invito:** durante il test chiuso la scheda dello store si apre solo per i tester.
 - **Staging:** i cron sono spenti, quindi i traguardi non arrivano da soli alle 9. Plus si dà a tutti gli account con `docs/store/US_STAGING_PLUS_PER_TUTTI.sql`, e tutta la Sintonia si sblocca con `docs/store/US_STAGING_SINTONIA_TUTTA.sql`. Sono dati di prova: **non fanno parte della patch** e non vanno mai eseguiti in produzione.
-- **Mail di verifica nello spam:** si risolve con un mittente email nostro (SMTP personalizzato in Supabase). È una decisione a parte.
+- **Dominio e mail (già fatti dal founder in produzione, 29–30/10):**
+  - dominio `uscouple.app` (Cloudflare): `uscouple.app` e `www.uscouple.app` servono già il sito di produzione (progetto Pages `us`, alias `us-a33.pages.dev`). Indirizzo principale scelto: **www.uscouple.app**;
+  - Resend: dominio `uscouple.app` verificato (DKIM, SPF) e DMARC `v=DMARC1; p=none;`;
+  - Supabase produzione: SMTP personalizzato attivo con Resend, mittente «US <noreply@uscouple.app>», provato dal founder (mail arrivata). Per tornare indietro: spegnere «Enable custom SMTP». Limite iniziale circa 30 mail/ora (Authentication › Rate Limits). Staging resta con la mail di Supabase (scelta del founder);
+  - ancora da fare: Redirect URLs di produzione con `https://uscouple.app/**` e `https://www.uscouple.app/**`; il codice della patch che usa `www.uscouple.app` per inviti, App Links, privacy e termini (vecchi indirizzi validi); dopo la patch Site URL di Supabase e URL privacy in Play Console.
 - **App di staging:** dall'APK di staging il link d'invito punta comunque al sito di produzione. Sul web di staging punta a staging.
