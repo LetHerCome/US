@@ -2,6 +2,13 @@
 **Checked:** 2026-10-22 (read-only schema and Edge comparison with production) · earlier full database gate 2026-10-10
 **State:** AT PRODUCTION LEVEL except the documented differences below / S2 ON STAGING ONLY / ALL CRONS OFF
 
+## Update 2026-10-29 — patch unica in prova (PR #232–#237)
+
+- **SQL applicato su staging** (workflow «Supabase SQL (manual)», approvato dal founder): , , , .
+- **Edge:**  con i traguardi dei giorni. **I cron restano spenti**: il job delle 9 non gira su staging, quindi punti e notifiche dei traguardi qui non arrivano da soli.
+- **Accesso Google** acceso dal founder su questo progetto (29/10).
+- **US Plus per tutti** (dati, non schema): il founder esegue  nell'SQL Editor di staging. Si può rieseguire per gli account nuovi. Mai in produzione.
+
 ## Update 2026-10-22 — parity with production
 
 **How it was checked:** a read-only fingerprint of the catalog on both projects, via `supabase db query --linked --project-ref …`: functions (body, `search_path`, SECURITY DEFINER), function and table ACLs, columns, RLS, policies (storage included), indexes, triggers, constraints, cron jobs, extensions and buckets, about 1,790 objects. It read no table rows. Edge functions were compared through the bundle hash (`ezbr_sha256`) from `supabase functions list`.

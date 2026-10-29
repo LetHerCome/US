@@ -803,3 +803,5 @@ body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .nlabel
 #usPersonColorSetting:not([data-locked="true"]) .us-person-color-lock{display:none}
 #usPersonColorSetting .us-person-color-lock{width:14px;height:14px;margin-left:6px;opacity:.7}
 .us-person-color-locked{margin:0 0 12px;color:var(--us-color-text-2);line-height:1.45}
+#usSettingsModalBody .us-person-colors.is-locked button::before{display:none}
+#usSettingsModalBody .us-person-colors.is-locked button{opacity:.6}

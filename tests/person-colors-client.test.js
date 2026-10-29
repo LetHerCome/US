@@ -74,3 +74,12 @@ test('without Plus the row is there, locked: it shows that Plus unlocks it, with
   assert.match(read('index.html'), /<span class="us-setting-value" id="usPersonColorValue"><\/span><span class="us-icon us-person-color-lock" data-us-icon="lock" aria-hidden="true"><\/span>/);
   assert.match(read('dc-settings.css'), /#usPersonColorSetting:not\(\[data-locked="true"\]\) \.us-person-color-lock\{display:none\}/);
 });
+
+test('locked colours look locked, and a tap says why', () => {
+  const settings = read('settings.js');
+  const locked = settings.slice(settings.indexOf('function personColorLockedModal'), settings.indexOf('function personColorModal'));
+  assert.match(locked, /<div class="us-setting-choice us-person-colors is-locked">/);
+  assert.match(locked, /<button type="button" aria-disabled="true" data-person-color-locked>/);
+  assert.match(locked, /querySelectorAll\('\[data-person-color-locked\]'\)\.forEach\(btn=>btn\.addEventListener\('click',\(\)=>toast\('Si sblocca con US Plus'\)\)\)/);
+  assert.match(read('dc-settings.css'), /#usSettingsModalBody \.us-person-colors\.is-locked button::before\{display:none\}/);
+});
