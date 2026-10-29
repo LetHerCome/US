@@ -35,13 +35,32 @@ test('Photon results become places, without doubles', () => {
   assert.deepEqual(P.placesFrom(json), [{ lat: 45.464, lon: 9.189, label: 'Duomo, Milano', source: 'search', detail: 'Lombardia, Italia' }]);
 });
 
-test('the map takes the placed Ricordi from their cards', () => {
-  const card = (data, src) => ({ dataset: data, querySelector: () => (src ? { src } : null) });
+test('the map takes the placed Ricordi from their cards: the real photo and the note', () => {
+  // A card with an album: the inline carousel puts an empty "peek" image first.
+  const card = (data, imgs) => ({ dataset: data, querySelector: (sel) => imgs.find((i) => (sel === '.ricordi-inline-current' ? i.cls === 'ricordi-inline-current' : i.src && i.cls !== 'ricordi-inline-peek')) || null });
+  const img = (cls, src) => ({ cls, src, currentSrc: '', getAttribute: (k) => (k === 'src' ? src : null) });
   const points = P.pointsFrom([
-    card({ momentId: 'a', placeLat: '44.495', placeLon: '11.343', placeLabel: 'Bologna', placeSource: 'photo' }, 'blob:a'),
-    card({ momentId: 'b' }),
+    card({ momentId: 'a', placeLat: '44.495', placeLon: '11.343', placeLabel: 'Bologna', placeSource: 'photo', caption: ' La prima  cena ' }, [img('ricordi-inline-peek', ''), img('ricordi-inline-current', 'https://x/a.webp')]),
+    card({ momentId: 'c', placeLat: '45.464', placeLon: '9.19', placeLabel: 'Duomo, Milano', caption: '' }, [img('', 'https://x/c.webp')]),
+    card({ momentId: 'b' }, []),
   ]);
-  assert.deepEqual(points, [{ id: 'a', lat: 44.495, lon: 11.343, label: 'Bologna', thumb: 'blob:a' }]);
+  assert.deepEqual(points, [
+    { id: 'a', lat: 44.495, lon: 11.343, label: 'Bologna', caption: 'La prima cena', thumb: 'https://x/a.webp' },
+    { id: 'c', lat: 45.464, lon: 9.19, label: 'Duomo, Milano', caption: '', thumb: 'https://x/c.webp' },
+  ]);
+});
+
+test('a pin is the photo; close up, the note (or the place) is written small under it', () => {
+  const src = read('ricordi-place.js');
+  const css = read('ricordi-place.css');
+  for (const piece of [
+    "const text = props.caption || props.label || '';",
+    '<span class="ricordi-map-label" translate="no">',
+    "box.classList.toggle('is-near', map.getZoom() >= NEAR_ZOOM)",
+    'getClusterLeaves(props.cluster_id, 1, 0)',
+  ]) assert.ok(src.includes(piece), piece);
+  assert.ok(/\.ricordi-map-label\{[^}]*display:none/.test(css), 'the note is hidden from afar');
+  assert.ok(css.includes('.ricordi-map.is-near .ricordi-map-label{display:block}'), 'and shown close up');
 });
 
 test('search waits for 3 letters and never asks without them', async () => {

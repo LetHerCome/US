@@ -25,6 +25,7 @@
   const SEARCH_MIN = 3;
   const SEARCH_DELAY_MS = 400;
   const CONSENT_KEY = 'us:ricordi-place-consent:v1';
+  const NEAR_ZOOM = 11;
 
   const round3 = (value) => Math.round(Number(value) * 1000) / 1000;
   const validCoord = (lat, lon) => Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180 && !(lat === 0 && lon === 0);
@@ -283,8 +284,11 @@
     for (const card of cards || []) {
       const place = fromCard(card);
       if (!place) continue;
-      const img = card.querySelector?.('img');
-      out.push({ id: card.dataset.momentId, lat: place.lat, lon: place.lon, label: place.label, thumb: img?.currentSrc || img?.src || '' });
+      // The photo on the card. With an album the inline carousel puts an empty
+      // "peek" image first: never that one.
+      const img = card.querySelector?.('.ricordi-inline-current') || card.querySelector?.('img[src]:not(.ricordi-inline-peek)');
+      const caption = String(card.dataset.caption || '').replace(/\s+/g, ' ').trim();
+      out.push({ id: card.dataset.momentId, lat: place.lat, lon: place.lon, label: place.label, caption, thumb: img?.currentSrc || img?.getAttribute?.('src') || '' });
     }
     return out;
   }
@@ -296,14 +300,21 @@
     const el = w.document.createElement('button');
     el.type = 'button';
     const props = feature.properties || {};
+    const photo = (thumb) => (thumb ? `<img src="${esc(thumb)}" alt="" decoding="async">` : '<span class="us-icon" data-us-icon="map-pin" aria-hidden="true"></span>');
     if (props.cluster) {
+      // A group shows one of its photos with the count; the photo arrives a moment later.
       el.className = 'ricordi-map-pin is-cluster';
       el.setAttribute('aria-label', `${props.point_count} ricordi qui`);
-      el.innerHTML = `<b>${Number(props.point_count) || ''}</b>`;
+      el.innerHTML = `<span class="ricordi-map-photo"></span><b class="ricordi-map-count">${Number(props.point_count) || ''}</b>`;
+      Promise.resolve(map.getSource('ricordi').getClusterLeaves(props.cluster_id, 1, 0))
+        .then((leaves) => { const thumb = leaves?.[0]?.properties?.thumb; if (thumb) el.firstElementChild.innerHTML = photo(thumb); })
+        .catch(() => {});
     } else {
+      // The photo of the Ricordo; close up (is-near) its note, or the place, written small under it.
+      const text = props.caption || props.label || '';
       el.className = 'ricordi-map-pin';
-      el.setAttribute('aria-label', props.label || 'Ricordo');
-      el.innerHTML = props.thumb ? `<img src="${esc(props.thumb)}" alt="" decoding="async">` : '<span class="us-icon" data-us-icon="map-pin" aria-hidden="true"></span>';
+      el.setAttribute('aria-label', props.caption ? `${props.caption}, ${props.label}` : (props.label || 'Ricordo'));
+      el.innerHTML = `<span class="ricordi-map-photo">${photo(props.thumb)}</span>${text ? `<span class="ricordi-map-label" translate="no">${esc(text)}</span>` : ''}`;
     }
     el.addEventListener('click', (event) => {
       event.stopPropagation();
@@ -337,7 +348,7 @@
   function geojson(points) {
     return {
       type: 'FeatureCollection',
-      features: points.map((p) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [p.lon, p.lat] }, properties: { id: p.id, label: p.label, thumb: p.thumb } })),
+      features: points.map((p) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [p.lon, p.lat] }, properties: { id: p.id, label: p.label, caption: p.caption, thumb: p.thumb } })),
     };
   }
 
@@ -364,6 +375,9 @@
     if (box.dataset.error) { box.querySelectorAll('.ricordi-map-empty').forEach((note) => note.remove()); delete box.dataset.error; }
     renderEmpty(box, !mapPoints.length);
     if (map) {
+      // New photos, notes or places: the pins are drawn again from the new data.
+      for (const marker of markers.values()) marker.remove();
+      markers = new Map();
       map.getSource('ricordi')?.setData(geojson(mapPoints));
       map.resize();
       return;
@@ -390,7 +404,11 @@
       // An invisible layer keeps the source's tiles alive for querySourceFeatures.
       map.addLayer({ id: 'ricordi-hit', type: 'circle', source: 'ricordi', paint: { 'circle-radius': 1, 'circle-opacity': 0 } });
       fit(mapPoints, false);
+      near();
     });
+    // Close up, the note of each Ricordo appears under its photo.
+    const near = () => box.classList.toggle('is-near', map.getZoom() >= NEAR_ZOOM);
+    map.on('zoom', near);
     map.on('render', refreshMarkers);
   }
 
