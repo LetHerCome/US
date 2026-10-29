@@ -142,6 +142,54 @@ html[data-us-oggi-theme="romantic"] #homeHero [data-countdown-style="editorial"]
 /* Daily card and the top chrome while Oggi is the page on screen. */
 html[data-us-oggi-theme] #home .us-daily-ritual,.us-look-phone .us-look-card{background:var(--oggi-card-bg)!important;border-color:var(--oggi-card-line)!important;border-radius:var(--oggi-card-radius)!important}
 html[data-us-oggi-theme] #home .us-daily-ritual .us-daily-ritual-kicker{color:var(--oggi-card-kicker)}
+/* Tema delle stagioni (Premi Sintonia V2, 29/10/2026): the block above is
+   autumn; spring, summer and winter change only what differs. The season is
+   the Rome month (oggi-look.js seasonFor). */
+html[data-us-oggi-theme="seasonal"][data-us-oggi-season="spring"],
+.us-look-phone[data-oggi-theme="seasonal"][data-oggi-season="spring"]{
+  --oggi-photo-filter:saturate(1.08) brightness(1.03) contrast(1.02);
+  --oggi-tint:linear-gradient(180deg,rgba(255,190,214,.20) 0%,rgba(255,214,228,.05) 44%,rgba(110,150,90,.10) 70%,rgba(40,30,40,.58) 100%);
+  --oggi-deco:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 120'%3E%3Cdefs%3E%3Cg id='f'%3E%3Ccircle cx='0' cy='-6' r='5'/%3E%3Ccircle cx='5.7' cy='-1.9' r='5'/%3E%3Ccircle cx='3.5' cy='4.9' r='5'/%3E%3Ccircle cx='-3.5' cy='4.9' r='5'/%3E%3Ccircle cx='-5.7' cy='-1.9' r='5'/%3E%3C/g%3E%3C/defs%3E%3Cg opacity='.92'%3E%3Cuse href='%23f' transform='translate(170 20)' fill='%23ffc2d4'/%3E%3Cuse href='%23f' transform='translate(150 44) scale(.7)' fill='%23ff9fbb'/%3E%3Cuse href='%23f' transform='translate(186 60) scale(.6)' fill='%23ffd9e4'/%3E%3Cuse href='%23f' transform='translate(20 92) scale(.55)' fill='%23ffb3c8'/%3E%3C/g%3E%3Cg fill='%23fff1a8'%3E%3Ccircle cx='170' cy='20' r='2.2'/%3E%3Ccircle cx='150' cy='44' r='1.5'/%3E%3Ccircle cx='186' cy='60' r='1.3'/%3E%3C/g%3E%3C/svg%3E") right 0 top 10%/min(58%,280px) auto no-repeat;
+  --oggi-deco-2:radial-gradient(70% 34% at 100% 0%,rgba(255,196,220,.30),transparent 70%);
+  --oggi-ink:#fff6f9;
+  --oggi-ink-soft:#ffd6e4;
+  --oggi-glow:0 0 22px rgba(255,160,200,.40),0 2px 14px rgba(40,10,24,.6);
+  --oggi-hairline:rgba(255,200,222,.8);
+  --oggi-card-bg:rgba(60,26,44,.46);
+  --oggi-card-line:rgba(255,190,214,.30);
+  --oggi-card-kicker:#ffb8d0;
+  --oggi-chrome-tint:rgba(255,170,200,.12);
+}
+html[data-us-oggi-theme="seasonal"][data-us-oggi-season="summer"],
+.us-look-phone[data-oggi-theme="seasonal"][data-oggi-season="summer"]{
+  --oggi-photo-filter:saturate(1.14) brightness(1.04) contrast(1.04);
+  --oggi-tint:linear-gradient(180deg,rgba(255,214,120,.22) 0%,rgba(255,190,90,.06) 44%,rgba(40,120,150,.10) 70%,rgba(20,30,46,.56) 100%);
+  --oggi-deco:radial-gradient(42% 30% at 92% 4%,rgba(255,236,170,.75),rgba(255,206,110,.28) 42%,transparent 72%);
+  --oggi-deco-2:radial-gradient(80% 40% at 100% 0%,rgba(255,220,140,.30),transparent 70%);
+  --oggi-ink:#fffaf0;
+  --oggi-ink-soft:#ffe6b0;
+  --oggi-glow:0 0 24px rgba(255,200,90,.45),0 2px 14px rgba(30,20,0,.55);
+  --oggi-hairline:rgba(255,226,160,.85);
+  --oggi-card-bg:rgba(40,40,52,.46);
+  --oggi-card-line:rgba(255,220,150,.30);
+  --oggi-card-kicker:#ffd479;
+  --oggi-chrome-tint:rgba(255,200,100,.12);
+}
+html[data-us-oggi-theme="seasonal"][data-us-oggi-season="winter"],
+.us-look-phone[data-oggi-theme="seasonal"][data-oggi-season="winter"]{
+  --oggi-photo-filter:saturate(.9) brightness(1.02) contrast(1.03) hue-rotate(-6deg);
+  --oggi-tint:linear-gradient(180deg,rgba(190,220,255,.20) 0%,rgba(170,200,240,.06) 44%,rgba(60,80,130,.14) 70%,rgba(12,18,38,.62) 100%);
+  --oggi-deco:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 120'%3E%3Cdefs%3E%3Cpath id='s' d='M0-9V9M-7.8-4.5L7.8 4.5M-7.8 4.5L7.8-4.5'/%3E%3C/defs%3E%3Cg stroke='%23eaf4ff' stroke-width='1.4' stroke-linecap='round' fill='none' opacity='.9'%3E%3Cuse href='%23s' transform='translate(170 20)'/%3E%3Cuse href='%23s' transform='translate(150 44) scale(.7)'/%3E%3Cuse href='%23s' transform='translate(186 60) scale(.6)'/%3E%3Cuse href='%23s' transform='translate(20 92) scale(.55)'/%3E%3C/g%3E%3C/svg%3E") right 0 top 10%/min(58%,280px) auto no-repeat;
+  --oggi-deco-2:radial-gradient(70% 34% at 100% 0%,rgba(200,226,255,.30),transparent 70%);
+  --oggi-ink:#f4f9ff;
+  --oggi-ink-soft:#cfe2ff;
+  --oggi-glow:0 0 22px rgba(160,200,255,.42),0 2px 14px rgba(0,10,30,.6);
+  --oggi-hairline:rgba(200,224,255,.8);
+  --oggi-card-bg:rgba(18,28,52,.50);
+  --oggi-card-line:rgba(190,214,255,.30);
+  --oggi-card-kicker:#b8d4ff;
+  --oggi-chrome-tint:rgba(160,200,255,.12);
+}
 html[data-us-oggi-theme] body:has(#home.page.active) .us-premium-top{box-shadow:inset 0 0 0 999px var(--oggi-chrome-tint)}
 html[data-us-oggi-theme="cinematic"] #homeHero[data-us-countdown]{padding-top:calc(var(--us-top-chrome-height) + 22px + var(--oggi-bars) * .4)}
 
@@ -175,6 +223,10 @@ html.us-oggi-fx-paused #homeHero .us-oggi-fx>i{animation-play-state:paused}
 .us-oggi-fx[data-fx="bokeh"]>i{margin:calc(var(--s) * -.5) 0 0 calc(var(--s) * -.5);border-radius:50%;background:radial-gradient(circle,rgba(255,206,220,.34) 0,rgba(255,180,200,.16) 48%,rgba(255,180,200,0) 70%);animation-name:us-fx-breathe;animation-timing-function:ease-in-out;animation-direction:alternate}
 .us-oggi-fx[data-fx="bokeh"]>i:nth-child(3n){background:radial-gradient(circle,rgba(255,226,170,.30) 0,rgba(255,206,140,.12) 48%,rgba(255,206,140,0) 70%)}
 @keyframes us-fx-breathe{0%{opacity:calc(var(--o) * .4);transform:translate3d(0,0,0) scale(.86)}100%{opacity:var(--o);transform:translate3d(var(--drift),calc(var(--drift) * -.6),0) scale(1.12)}}
+
+/* Aurora (Premi Sintonia V2, extra US Plus): wide ribbons of light swaying slowly. */
+.us-oggi-fx[data-fx="aurora"]>i{left:calc(var(--x) - var(--s) * .6);width:calc(var(--s) * 1.5);height:calc(var(--s) * .7);border-radius:46% 54% 50% 50% / 60% 60% 40% 40%;background:linear-gradient(100deg,transparent 2%,rgba(80,255,170,.85) 28%,rgba(70,210,255,.7) 54%,rgba(170,110,255,.7) 78%,transparent 98%);filter:blur(10px) saturate(1.3);mix-blend-mode:screen;animation-name:us-fx-aurora;animation-timing-function:ease-in-out;animation-direction:alternate}
+@keyframes us-fx-aurora{0%{opacity:calc(var(--o) * .35);transform:translate3d(0,0,0) skewX(-12deg) scaleY(.8)}50%{opacity:var(--o)}100%{opacity:calc(var(--o) * .7);transform:translate3d(var(--drift),calc(var(--drift) * .3),0) skewX(14deg) scaleY(1.15)}}
 
 /* Reduced motion: the same composition, perfectly still. */
 @media(prefers-reduced-motion:reduce){

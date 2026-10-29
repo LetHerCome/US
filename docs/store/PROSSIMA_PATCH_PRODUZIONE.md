@@ -128,4 +128,10 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - i premi Plus si sbloccano con il livello e Plus, e restano;
   - `get_progression_v1` dà anche il prossimo premio principale con i punti che mancano e i punti delle ultime 2 settimane;
   - chi è già a un livello riceve i premi nuovi, già segnati come visti.
-- **Fase 1, app:** in corso.
+- **Fase 1, app:**
+  - in Noi, «Prossimo sblocco» mostra il prossimo premio principale (o il Compagno se arriva prima), con «mancano X XP · circa N giorni» sul ritmo delle ultime 2 settimane;
+  - gli extra Plus bloccati dicono «Livello N · US Plus», nella collezione e nella galleria di Oggi;
+  - **Aurora** (extra Plus, livello 4): bande di luce verdi, azzurre e viola che si muovono sopra la foto di Oggi;
+  - **Stagioni** (livello 10, ex «Autunno»): Oggi cambia da solo con la stagione di Roma, con fiori in primavera, sole d'estate, foglie d'autunno e neve d'inverno;
+  - i livelli di riserva di temi ed effetti nell'app seguono la scala nuova;
+  - mancano Ti penso animato e «Il vostro cielo».

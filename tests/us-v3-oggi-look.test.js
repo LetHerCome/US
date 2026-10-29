@@ -14,7 +14,8 @@ const progressionJs = read('progression.js');
 const html = read('index.html');
 
 const THEMES = ['original', 'romantic', 'pastel', 'cinematic', 'moonlight', 'seasonal'];
-const EFFECTS = ['none', 'hearts', 'stars', 'petals', 'fireflies', 'bokeh', 'snow'];
+// Premi Sintonia V2 (29/10/2026): Aurora, the Plus extra of level 4.
+const EFFECTS = ['none', 'hearts', 'stars', 'petals', 'fireflies', 'bokeh', 'snow', 'aurora'];
 
 // ------------------------------------------------------------------ fake DOM
 function fakeNode(id = '') {
@@ -83,7 +84,7 @@ const v3Rewards = (level) => [
 ];
 
 // ------------------------------------------------------------------ catalog + CSS
-test('Oggi looks: six curated themes and seven effects, with a free starter set and no fake currency', () => {
+test('Oggi looks: six curated themes and eight effects (Aurora since Sintonia V2), with a free starter set and no fake currency', () => {
   const { look } = boot();
   assert.deepEqual(plain(look.THEMES.map((t) => t.id)), THEMES);
   assert.deepEqual(plain(look.EFFECTS.map((e) => e.id)), EFFECTS);
@@ -109,7 +110,8 @@ test('Oggi looks: themes never restyle global US — only --oggi-* tokens consum
     assert.ok(props.length > 8);
     assert.ok(props.every((p) => p.startsWith('--oggi-')), `only Oggi tokens: ${props.filter((p) => !p.startsWith('--oggi-'))}`);
   }
-  const consumers = [...lookCss.matchAll(/^(html\[data-us-oggi-theme[^{]*)\{/gm)].map((m) => m[1]).filter((sel) => !/^html\[data-us-oggi-theme="[a-z]+"\],/.test(sel));
+  // Token blocks: one per theme, and the seasons of Stagioni (Sintonia V2) on top of theirs.
+  const consumers = [...lookCss.matchAll(/^(html\[data-us-oggi-theme[^{]*)\{/gm)].map((m) => m[1]).filter((sel) => !/^html\[data-us-oggi-theme="[a-z]+"\](\[data-us-oggi-season="[a-z]+"\])?,/.test(sel));
   assert.ok(consumers.length > 6);
   for (const sel of consumers) assert.match(sel, /#home|#homeHero|body:has\(#home\.page\.active\)/, `scoped to Oggi: ${sel}`);
   assert.doesNotMatch(lookCss, /data-us-theme=/, 'the global Atmosfera US stays progression.css territory');
@@ -161,7 +163,7 @@ test('Oggi looks: locked looks preview but cannot be applied; looks the server d
 
   const after = boot({ rewards: v3Rewards(6), level: 6 });
   await after.progression.hydrate({ force: true, showUnlocks: false });
-  assert.deepEqual(plain(after.look.status('theme', 'moonlight')), { state: 'locked', level: 7 });
+  assert.deepEqual(plain(after.look.status('theme', 'moonlight')), { state: 'locked', level: 7, plus: false });
   assert.equal(after.look.status('theme', 'cinematic').state, 'unlocked');
   assert.equal(await after.progression.setLook('theme', 'moonlight'), false, 'locked');
   assert.equal(await after.progression.setLook('theme', 'cinematic'), true);

@@ -2046,6 +2046,12 @@
     Cinema: 'Cinema',
     'Chiaro di luna': 'Moonlight',
     'Ambra, foglie e una luce bassa e calda.': 'Amber, leaves and a low, warm light.',
+    // Premi Sintonia V2 (29/10/2026): Stagioni, Aurora and the Plus extras of Oggi.
+    'Cambia da solo: fiori in primavera, sole d’estate, foglie d’autunno, neve d’inverno.': 'Changes by itself: flowers in spring, sun in summer, leaves in autumn, snow in winter.',
+    Aurora: 'Aurora',
+    'Una luce che danza sopra la vostra foto, come un’aurora boreale.': 'A light dancing over your photo, like the northern lights.',
+    'Livello {n} · US Plus': 'Level {n} · US Plus',
+    'Si sblocca al livello {n} di Sintonia con US Plus': 'Unlocks at Sync level {n} with US Plus',
     'Luci sfocate': 'Soft lights',
     'Come le luci di una sera in città.': 'Like the lights of an evening in town.',
 
@@ -2453,7 +2459,6 @@
     'e {name} · mancano {n} XP · circa 1 giorno': 'and {name} · {n} XP to go · about 1 day',
     'Un compagno sopra la barra · mancano {n} XP · circa {d} giorni': 'A companion above the bar · {n} XP to go · about {d} days',
     'Un compagno sopra la barra · mancano {n} XP · circa 1 giorno': 'A companion above the bar · {n} XP to go · about 1 day',
-    'Livello {n} · US Plus': 'Level {n} · US Plus',
     'Guardalo': 'See it',
     'È arrivato Maudit': 'Maudit is here',
 

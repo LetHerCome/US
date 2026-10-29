@@ -16,17 +16,20 @@ const THEMES = Object.freeze([
   { id: 'romantic', name: 'Romantico', note: 'Rosa delicato e luce morbida sulla vostra foto.', reward: null },
   { id: 'pastel', name: 'Sogno pastello', note: 'Colori chiari e leggeri, come un acquerello.', reward: null },
   { id: 'cinematic', name: 'Cinema', note: 'Bande nere, grana e il tempo come titoli di testa.', reward: 'oggi_theme_cinematic', level: 4 },
-  { id: 'moonlight', name: 'Chiaro di luna', note: 'Notte blu, stelle e un riflesso di luna.', reward: 'oggi_theme_moonlight', level: 7 },
-  { id: 'seasonal', name: 'Autunno', kicker: 'Stagioni', note: 'Ambra, foglie e una luce bassa e calda.', reward: 'oggi_theme_seasonal', level: 12 }
+  { id: 'moonlight', name: 'Chiaro di luna', note: 'Notte blu, stelle e un riflesso di luna.', reward: 'oggi_theme_moonlight', level: 6 },
+  // Premi Sintonia V2 (29/10/2026): the seasonal theme follows the season by itself.
+  { id: 'seasonal', name: 'Stagioni', kicker: 'Stagioni', note: 'Cambia da solo: fiori in primavera, sole d’estate, foglie d’autunno, neve d’inverno.', reward: 'oggi_theme_seasonal', level: 10 }
 ]);
 const EFFECTS = Object.freeze([
   { id: 'none', name: 'Nessuno', note: 'Solo la vostra foto.', reward: null, count: 0 },
   { id: 'hearts', name: 'Cuori delicati', note: 'Piccoli cuori salgono piano.', reward: null, count: 9 },
   { id: 'stars', name: 'Stelle luminose', note: 'Stelle che brillano a turno.', reward: null, count: 12 },
   { id: 'petals', name: 'Petali fluttuanti', note: 'Petali rosa scendono nel vento.', reward: 'oggi_effect_petals', level: 2, count: 10 },
-  { id: 'fireflies', name: 'Lucciole', note: 'Punti di luce calda vagano lenti.', reward: 'oggi_effect_fireflies', level: 6, count: 10 },
-  { id: 'bokeh', name: 'Luci sfocate', note: 'Come le luci di una sera in città.', reward: 'oggi_effect_bokeh', level: 10, count: 7 },
-  { id: 'snow', name: 'Neve', note: 'Fiocchi leggeri, mai una bufera.', reward: 'oggi_effect_snow', level: 13, count: 16 }
+  { id: 'fireflies', name: 'Lucciole', note: 'Punti di luce calda vagano lenti.', reward: 'oggi_effect_fireflies', level: 4, count: 10 },
+  { id: 'bokeh', name: 'Luci sfocate', note: 'Come le luci di una sera in città.', reward: 'oggi_effect_bokeh', level: 8, count: 7 },
+  { id: 'snow', name: 'Neve', note: 'Fiocchi leggeri, mai una bufera.', reward: 'oggi_effect_snow', level: 11, count: 16 },
+  // Premi Sintonia V2: the Plus extra of level 4 (the server says it needs Plus).
+  { id: 'aurora', name: 'Aurora', note: 'Una luce che danza sopra la vostra foto, come un’aurora boreale.', reward: 'oggi_effect_aurora', level: 4, count: 4 }
 ]);
 const CATALOG = { theme: THEMES, effect: EFFECTS };
 const DEFAULTS = { theme: 'original', effect: 'none' };
@@ -55,11 +58,19 @@ function status(slot, id) {
   const reward = rewardFor(look);
   if (!reward) return { state: 'unavailable' };
   if (reward.unlocked) return { state: 'unlocked' };
-  return { state: 'locked', level: Number(reward.level_required) || look.level || 0 };
+  return { state: 'locked', level: Number(reward.level_required) || look.level || 0, plus: Boolean(reward.requires_plus) };
 }
 const usable = (slot, id) => ['included', 'unlocked'].includes(status(slot, id).state);
 function visibleLooks(slot) {
   return (CATALOG[slot] || []).filter((look) => status(slot, look.id).state !== 'unavailable');
+}
+
+// The season of a Rome day (YYYY-MM-DD, today by default): Tema delle stagioni.
+function seasonFor(day) {
+  let iso = day;
+  if (!iso) { try { iso = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(new Date()); } catch (_) { iso = new Date().toISOString().slice(0, 10); } }
+  const month = Number(String(iso).slice(5, 7));
+  return month >= 3 && month <= 5 ? 'spring' : month >= 6 && month <= 8 ? 'summer' : month >= 9 && month <= 11 ? 'autumn' : 'winter';
 }
 
 // ---------- particles: deterministic per effect, so a preview matches Oggi ----------
@@ -74,7 +85,8 @@ const RANGES = {
   petals: { s: [9, 15], d: [11, 18], o: [0.6, 0.9], drift: [-60, 40] },
   fireflies: { s: [3, 5], d: [7, 12], o: [0.55, 0.95], drift: [-30, 30], y: [38, 92] },
   bokeh: { s: [44, 110], d: [16, 26], o: [0.35, 0.7], drift: [-24, 24] },
-  snow: { s: [3, 6.5], d: [9, 17], o: [0.5, 0.95], drift: [-28, 28] }
+  snow: { s: [3, 6.5], d: [9, 17], o: [0.5, 0.95], drift: [-28, 28] },
+  aurora: { s: [170, 240], d: [10, 16], o: [0.75, 1], drift: [-40, 40], y: [-8, 18] }
 };
 function fxMarkup(effect, { scale = 1 } = {}) {
   const look = find('effect', effect);
@@ -121,6 +133,7 @@ function apply(next = {}) {
   const effect = find('effect', next.effect) ? next.effect : DEFAULTS.effect;
   const root = document.documentElement;
   if (theme === DEFAULTS.theme) delete root.dataset.usOggiTheme; else root.dataset.usOggiTheme = theme;
+  if (theme === 'seasonal') root.dataset.usOggiSeason = seasonFor(); else delete root.dataset.usOggiSeason;
   if (effect === DEFAULTS.effect) delete root.dataset.usOggiEffect; else root.dataset.usOggiEffect = effect;
   const layers = ensureLayers();
   if (layers?.fx && (layers.fx.dataset.fx || DEFAULTS.effect) !== effect) {
@@ -160,7 +173,7 @@ function heroSnapshot() {
 }
 function phoneMarkup(theme, effect, snapshot, { compact = false } = {}) {
   const photo = snapshot.photo ? ` style="--look-photo:${esc(snapshot.photo)}"` : '';
-  return `<span class="us-look-phone${compact ? ' is-compact' : ''}" data-oggi-theme="${esc(theme)}"${photo}>
+  return `<span class="us-look-phone${compact ? ' is-compact' : ''}" data-oggi-theme="${esc(theme)}"${theme === 'seasonal' ? ` data-oggi-season="${esc(seasonFor())}"` : ''}${photo}>
     <span class="us-look-photo"></span><span class="us-look-shade"></span><span class="us-oggi-tint"></span><span class="us-oggi-deco"></span>
     <span class="us-oggi-fx" data-fx="${esc(effect)}">${effect === 'none' ? '' : fxMarkup(effect, { scale: compact ? 0.6 : 1 })}</span>
     <span class="us-look-chrome"><i></i><b></b><i></i></span>
@@ -179,7 +192,7 @@ function chip(slot, look) {
   const current = applied[slot] === look.id;
   const s = status(slot, look.id);
   if (current) return `<em class="us-look-chip is-current">${icon('check')}In uso</em>`;
-  if (s.state === 'locked') return `<em class="us-look-chip is-locked">${icon('lock-simple')}Livello ${s.level}</em>`;
+  if (s.state === 'locked') return `<em class="us-look-chip is-locked">${icon('lock-simple')}Livello ${s.level}${s.plus ? ' · US Plus' : ''}</em>`;
   if (s.state === 'included') return '<em class="us-look-chip">Incluso</em>';
   return '<em class="us-look-chip">Sbloccato</em>';
 }
@@ -211,7 +224,7 @@ function detailMarkup() {
   const effect = tab === 'effect' ? look.id : applied.effect;
   const current = applied[tab] === look.id;
   const action = s.state === 'locked'
-    ? `<button type="button" class="us-look-apply" disabled>${icon('lock-simple')}Si sblocca al livello ${s.level} di Sintonia</button>`
+    ? `<button type="button" class="us-look-apply" disabled>${icon('lock-simple')}Si sblocca al livello ${s.level} di Sintonia${s.plus ? ' con US Plus' : ''}</button>`
     : current
       ? `<button type="button" class="us-look-apply is-current" disabled>${icon('check')}In uso su Oggi</button>`
       : `<button type="button" class="us-look-apply primary" data-look-apply="${esc(look.id)}">Usa su Oggi</button>`;
