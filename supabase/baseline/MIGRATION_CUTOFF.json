@@ -35,7 +35,8 @@
     "20261029014653_person_colors_plus_v1.sql",
     "20261029031726_sintonia_rewards_v2_phase1.sql",
     "20261029161354_sintonia_rewards_v2_phase2.sql",
-    "20261029203000_colors_free_in_beta.sql"
+    "20261029203000_colors_free_in_beta.sql",
+    "20261029222210_ricordi_place_v1.sql"
   ],
   "forward_migrations": [
     "20261004110718_f2c_edge_cron_source_of_truth.sql",
@@ -66,7 +67,8 @@
     "20261029014653_person_colors_plus_v1.sql",
     "20261029031726_sintonia_rewards_v2_phase1.sql",
     "20261029161354_sintonia_rewards_v2_phase2.sql",
-    "20261029203000_colors_free_in_beta.sql"
+    "20261029203000_colors_free_in_beta.sql",
+    "20261029222210_ricordi_place_v1.sql"
   ],
   "counts": {
     "repo_files": 47,
