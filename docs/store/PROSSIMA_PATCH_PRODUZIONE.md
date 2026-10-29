@@ -189,3 +189,15 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
   - **Da provare sul telefono:**
     - «Salva l'immagine» nell'app Android installata: il WebView potrebbe non scaricare il file;
     - i cuori quando arriva un Ti penso vero.
+- **Fase 2, server:** la migrazione `20261029161354_sintonia_rewards_v2_phase2.sql` aggiunge i premi con le immagini approvate dal founder il 29/10:
+  - accessori dei Compagni: sciarpina (9), «Gala» (Plus, 10), coroncina di fiori (12), corona (19);
+  - Ti penso «lettera» (15);
+  - icone dell'app «Notte» (13), d'oro (18), «Neon» (Plus, 7);
+  - chi ha già passato quei livelli li riceve già visti;
+  - la Fase 1 accetta anche le due categorie nuove, così le due migrazioni si possono rieseguire in qualsiasi ordine.
+- **Fase 2, app:**
+  - **Accessori** (nuovo gruppo nella collezione, scelto su questo telefono, «Niente» di partenza): un'immagine sola per accessorio, messa sulla testa o sotto il mento di ognuno dei quattro Compagni, nelle tre pose. Sciarpina e «Gala» spariscono quando il Compagno dorme sdraiato.
+  - **Ti penso «lettera»:** chi l'ha scelta, quando riceve un Ti penso, vede una busta che sale al centro e si apre sul sigillo a cuore. Niente animazione con «riduci animazioni».
+  - Le immagini (`assets/derived/rewards`, 17–27 KB l'una) si scaricano solo quando servono: non pesano sull'avvio.
+  - **Icone dell'app:** il premio c'è nel catalogo; il cambio dell'icona sul telefono è nativo Android e arriva in un passo successivo.
+  - **Da provare sul telefono:** gli accessori sul Compagno sopra la barra e la lettera quando arriva un Ti penso vero.

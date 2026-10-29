@@ -5917,8 +5917,11 @@ function handleIncomingThink(row){
   // attention tone — only because US is active right now.
   window.UsFeedback?.attention?.();
   window.UsUiFoundation?.auroraPulse?.();
-  // Ti penso animato (Sintonia V2, livello 5): hearts in your two colours, if this phone chose them.
-  if(document.documentElement.dataset.usThinkFx==='hearts')window.UsUiFoundation?.heartBurst?.();
+  // Ti penso animato (Sintonia V2, livello 5): hearts in your two colours, if this phone chose them;
+  // the letter (livello 15) opens on its heart.
+  const thinkFx=document.documentElement.dataset.usThinkFx;
+  if(thinkFx==='hearts')window.UsUiFoundation?.heartBurst?.();
+  else if(thinkFx==='letter')window.UsUiFoundation?.letterOpen?.();
   Promise.resolve(window.UsTodayPriority?.refresh?.()).then(()=>{
     const card=document.querySelector('#usTodayPriorityRegion [data-us-arrival-type="think-received"]');
     window.UsUiFoundation?.playOnce?.(card,'us-attention-pulse',900);

@@ -52,5 +52,19 @@ test('the reward: a Ti penso group in the collection, Classico free, Cuori from 
 test('a Ti penso that arrives bursts into hearts when this phone chose them', () => {
   const app = read('app.js');
   const handler = app.slice(app.indexOf('function handleIncomingThink('), app.indexOf('const usRealtimeRefreshTimers'));
-  assert.match(handler, /if\(document\.documentElement\.dataset\.usThinkFx==='hearts'\)window\.UsUiFoundation\?\.heartBurst\?\.\(\);/);
+  assert.match(handler, /const thinkFx=document\.documentElement\.dataset\.usThinkFx;/);
+  assert.match(handler, /if\(thinkFx==='hearts'\)window\.UsUiFoundation\?\.heartBurst\?\.\(\);/);
+  // Fase 2 (livello 15): the letter opens on its heart seal.
+  assert.match(handler, /else if\(thinkFx==='letter'\)window\.UsUiFoundation\?\.letterOpen\?\.\(\);/);
+});
+
+test('the letter opens in the middle of the screen, not with reduced motion, and cleans up after itself', () => {
+  const ui = read('ui-foundation.js');
+  const fn = ui.slice(ui.indexOf('function letterOpen('), ui.indexOf('// A new item (a memory, an idea)'));
+  assert.match(fn, /if \(!d\?\.body \|\| activeMotion\.isReducedMotion\(\)\) return false;/);
+  assert.match(ui, /const LETTER_ART = '\/assets\/derived\/rewards\/us-think-letter-';/);
+  assert.match(fn, /\$\{LETTER_ART\}closed-v1\.webp[\s\S]*\$\{LETTER_ART\}open-v1\.webp/);
+  assert.match(fn, /anim\.onfinish = \(\) => box\.remove\(\);/);
+  assert.match(ui, /\n    letterOpen,\n/);
+  assert.match(read('dc-gioca.css'), /\.us-think-letter\{position:fixed;z-index:10320;/);
 });

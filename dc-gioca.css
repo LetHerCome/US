@@ -488,6 +488,9 @@ body.us-gv2-sheet-open{overflow:hidden}
 .us-spark{position:fixed;z-index:10320;width:12px;height:12px;border-radius:50%;pointer-events:none}
 /* Ti penso animato (Premi Sintonia V2, livello 5): the hearts of heartBurst(). */
 .us-heart-burst{position:fixed;z-index:10320;margin:-14px 0 0 -14px;-webkit-mask:url("/assets/icons/phosphor/heart-straight-fill.svg") center/contain no-repeat;mask:url("/assets/icons/phosphor/heart-straight-fill.svg") center/contain no-repeat;pointer-events:none}
+/* Ti penso «lettera» (Sintonia V2, livello 15), ui-foundation.js letterOpen. */
+.us-think-letter{position:fixed;z-index:10320;left:50%;top:46%;width:min(62vw,260px);aspect-ratio:480/454;pointer-events:none}
+.us-think-letter img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 12px 28px rgba(0,0,0,.45))}
 
 /* ---------- Reward previews: Atmosfere change the night, Accenti change Noi, the two people never change ---------- */
 .us-cos-theme{background:radial-gradient(110% 70% at 50% 0%,var(--us-theme-glow-a,color-mix(in srgb,var(--us-noi) 22%,transparent)),transparent 72%),var(--us-color-bg)}

@@ -136,9 +136,11 @@ function companionMarkup(id){
     return '<ellipse cx="'+r(cx)+'" cy="'+r(cy)+'" rx="'+r(rx)+'" ry="'+r(ry)+'" fill="'+fur+'"/><path d="M'+r(cx-rx*.8)+' '+r(cy+ry*.1)+'Q'+r(cx)+' '+r(cy+ry*.65)+' '+r(cx+rx*.8)+' '+r(cy+ry*.1)+'" fill="none" stroke="#1A1020" stroke-width="'+r(Math.max(2.6,rx*.24))+'" stroke-linecap="round"/>';
   }).join('');
   const blink=c.blink==='pose'?img('us-pet-blink','sleep'):'<svg class="us-pet-lids" viewBox="0 0 '+W+' '+H+'" aria-hidden="true" focusable="false">'+lids+'</svg>';
+  // Premi Sintonia V2: the accessory rides on each pose (pet.css places it).
+  const acc=pose=>'<span class="us-pet-acc-pose us-pet-acc-'+pose+'" aria-hidden="true"><i class="us-pet-acc"></i></span>';
   return '<span class="us-pet-rig us-pet-'+id+'" style="aspect-ratio:'+W+'/'+H+'">'
-    +'<span class="us-pet-awake">'+(c.behind?parts+body:body+parts)+blink+'</span>'
-    +img('us-pet-pose us-pet-pose-sleep','sleep')+img('us-pet-pose us-pet-pose-happy','happy')
+    +'<span class="us-pet-awake">'+(c.behind?parts+body:body+parts)+blink+acc('awake')+'</span>'
+    +img('us-pet-pose us-pet-pose-sleep','sleep')+acc('sleep')+img('us-pet-pose us-pet-pose-happy','happy')+acc('happy')
     +'<span class="us-pet-zz"><i>z</i><i>z</i></span><span class="us-pet-heart"></span></span>';
 }
 // The dragon's flight: a short loop over the bar, back to its spot.
@@ -257,6 +259,8 @@ function install(w){
     if(!layer)return;
     if(appearance.skin)layer.dataset.petSkin=appearance.skin;else delete layer.dataset.petSkin;
     if(appearance.accessory)layer.dataset.petAccessory=appearance.accessory;else delete layer.dataset.petAccessory;
+    // Premi Sintonia V2: the accessory picture, fetched only when worn (pet.css places it).
+    if(appearance.accessory)layer.style.setProperty('--acc-img','url("/assets/derived/rewards/us-acc-'+appearance.accessory+'-v1.webp")');else layer.style.removeProperty('--acc-img');
   }
 
   // The companion stored on this phone: one of COMPANION_IDS, 'none', or Maudit by default.

@@ -782,6 +782,31 @@
     }
     return true;
   }
+  // Ti penso «lettera» (Sintonia V2, livello 15): a sealed envelope rises in the
+  // middle of the screen, opens on its heart and fades away.
+  const LETTER_ART = '/assets/derived/rewards/us-think-letter-';
+  function letterOpen({ doc = typeof document !== 'undefined' ? document : null } = {}) {
+    const d = doc;
+    if (!d?.body || activeMotion.isReducedMotion()) return false;
+    const box = d.createElement('span');
+    box.className = 'us-think-letter';
+    box.setAttribute('aria-hidden', 'true');
+    box.innerHTML = `<img class="is-closed" src="${LETTER_ART}closed-v1.webp" alt="" draggable="false"><img class="is-open" src="${LETTER_ART}open-v1.webp" alt="" draggable="false">`;
+    d.body.appendChild(box);
+    if (typeof box.animate !== 'function') { box.remove(); return false; }
+    const [closed, open] = box.querySelectorAll('img');
+    const anim = box.animate([
+      { transform: 'translate(-50%,-30%) scale(.6) rotate(-6deg)', opacity: 0, easing: DONE_EASE },
+      { transform: 'translate(-50%,-50%) scale(1) rotate(0deg)', opacity: 1, offset: 0.18 },
+      { transform: 'translate(-50%,-50%) scale(1) rotate(0deg)', opacity: 1, offset: 0.8, easing: 'ease-in' },
+      { transform: 'translate(-50%,-62%) scale(.96) rotate(0deg)', opacity: 0 }
+    ], { duration: 2600, fill: 'forwards' });
+    closed.animate([{ opacity: 1 }, { opacity: 1, offset: 0.3 }, { opacity: 0, offset: 0.42 }, { opacity: 0 }], { duration: 2600, fill: 'forwards' });
+    open.animate([{ opacity: 0 }, { opacity: 0, offset: 0.3 }, { opacity: 1, offset: 0.42 }, { opacity: 1 }], { duration: 2600, fill: 'forwards' });
+    anim.onfinish = () => box.remove();
+    anim.oncancel = () => box.remove();
+    return true;
+  }
   // A new item (a memory, an idea) arrives in its list once: a short fade and rise.
   function enter(element) {
     if (!element || typeof element.animate !== 'function' || activeMotion.isReducedMotion()) return false;
@@ -795,6 +820,7 @@
     done,
     enter,
     heartBurst,
+    letterOpen,
     auroraPulse: () => activeAurora(),
     playOnce: (element, className, duration) => activePlayOnce(element, className, duration),
     confirm: (options) => confirmSurface(options),

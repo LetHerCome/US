@@ -37,6 +37,8 @@ const SLOTS = Object.freeze({
   effect: { pref: 'effect_reward_id', label: 'Simbolo US', place: 'il simbolo in alto', unlock: 'Nuovo effetto del simbolo', where: 'Il simbolo in alto su Oggi' },
   // Premi Sintonia V2: how this phone receives a Ti penso.
   ti_penso: { pref: 'ti_penso', label: 'Ti penso', place: 'quando ne ricevi uno', unlock: 'Nuovo Ti penso', where: 'Quando ricevi un Ti penso' },
+  // Premi Sintonia V2, Fase 2: what the companion wears on this phone (pet.css).
+  pet_accessory: { pref: 'pet_accessory', label: 'Accessori', place: 'sul vostro Compagno', unlock: 'Nuovo accessorio', where: 'Sul vostro Compagno, sopra la barra' },
   frame: { pref: 'frame_reward_id', retired: true, label: 'Cornici', place: 'sulla foto di Oggi', unlock: 'NUOVA CORNICE', where: 'Sulla foto di Oggi' },
   sticker: { pref: 'sticker_reward_id', retired: true, label: 'Adesivi', place: 'su Oggi e sull’ultimo ricordo', unlock: 'NUOVO ADESIVO', where: 'Su Oggi e sull’ultimo ricordo' },
   badge: { pref: 'badge_reward_id', retired: true, label: 'Spille', place: 'tra voi due, in Noi', unlock: 'NUOVA SPILLA', where: 'In Noi, tra i vostri ritratti' },
@@ -273,7 +275,8 @@ const SLOT_DEFAULT = Object.freeze({
   theme: { id: 'us', title: 'Notte', description: 'La notte di US, com’è adesso.' },
   accent: { id: 'orchidea', title: 'Orchidea', description: 'Il colore di Noi, dove i vostri due colori si incontrano.' },
   effect: { id: 'none', title: 'Fermo', description: 'Il simbolo US, senza movimento.' },
-  ti_penso: { id: 'classic', title: 'Classico', description: 'Il Ti penso di sempre: un cuore e il vostro nome.' }
+  ti_penso: { id: 'classic', title: 'Classico', description: 'Il Ti penso di sempre: un cuore e il vostro nome.' },
+  pet_accessory: { id: 'none', title: 'Niente', description: 'Il vostro Compagno com’è.' }
 });
 function itemColor(cat, id) { return ITEM_COLOR[cat]?.[id] || ''; }
 // The mockup's item for a reward row: { cat, id } in the preview's terms.
@@ -302,10 +305,13 @@ function miniCount() {
   const days = daysTogether();
   return days ? `<span class="n">${esc(days)}</span><span class="u">giorni</span>` : '';
 }
+// Premi Sintonia V2, Fase 2: pictures fetched only when a tile shows them.
+const REWARD_ART = '/assets/derived/rewards/';
 function artMarkup(item, big = false) {
   if (!item) return '<span class="us-cos-stage"></span>';
   const { cat, id } = item;
-  if (cat === 'ti_penso') return `<span class="us-cos-think" data-think="${esc(id)}"><i></i><i></i><i></i></span>`;
+  if (cat === 'ti_penso') return `<span class="us-cos-think" data-think="${esc(id)}"${id === 'letter' ? ` style="--art:url('${REWARD_ART}us-think-letter-closed-v1.webp')"` : ''}><i></i><i></i><i></i></span>`;
+  if (cat === 'pet_accessory') return `<span class="us-cos-acc" data-acc="${esc(id)}" style="--art:url('${id === 'none' ? '/assets/derived/pet/us-pet-maudit-awake-v2.webp' : `${REWARD_ART}us-acc-${esc(id)}-v1.webp`}')"></span>`;
   if (cat === 'oggi_theme') return `<span class="mini" data-theme="${esc(id)}">${miniCount()}</span>`;
   if (cat === 'oggi_effect') return `<span class="mini">${id !== 'none' && FX.has(id) ? `<canvas data-fx="${esc(id)}"></canvas>` : ''}${miniCount()}</span>`;
   if (cat === 'theme') {
@@ -581,10 +587,12 @@ function applyPreferences(next = state) {
   const accent = value('accent');
   const effect = value('effect');
   const think = value('ti_penso');
+  const accessory = value('pet_accessory');
   // A data attribute on <html> restyles the whole page: written only when it changes.
   if (root.dataset.usTheme !== (theme || undefined)) { if (theme) root.dataset.usTheme = theme; else delete root.dataset.usTheme; }
   syncSplashTheme(theme);
   if (root.dataset.usThinkFx !== (think || undefined)) { if (think) root.dataset.usThinkFx = think; else delete root.dataset.usThinkFx; }
+  window.USPet?.setAppearance?.({ accessory: accessory || '' });
   if (root.dataset.usAccent !== (accent || undefined)) { if (accent) root.dataset.usAccent = accent; else delete root.dataset.usAccent; }
   if (root.dataset.usEffect !== (effect || undefined)) { if (effect) root.dataset.usEffect = effect; else delete root.dataset.usEffect; }
   clearRetiredCosmetics(root, hero);
@@ -796,7 +804,7 @@ function renderRhythm(next = state) {
 
 // The mockup's category order (sintonia.js CATS): the chips, the next
 // unlock's "e …" and the collection all follow it.
-const CHIP_ORDER = Object.freeze(['theme', 'accent', 'oggi_theme', 'oggi_effect', 'effect', 'ti_penso', 'countdown', 'companion']);
+const CHIP_ORDER = Object.freeze(['theme', 'accent', 'oggi_theme', 'oggi_effect', 'effect', 'ti_penso', 'pet_accessory', 'countdown', 'companion']);
 const chipRank = (category) => { const i = CHIP_ORDER.indexOf(category); return i < 0 ? CHIP_ORDER.length : i; };
 // The server's next_reward may be a retired category: the next unlock is
 // read from the same server rows, every presented reward of the next level.
