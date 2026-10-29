@@ -1,7 +1,7 @@
 # Prossima patch in produzione
 
 **Stato:** in prova su staging (https://us-staging-s31.pages.dev). Niente è in produzione. Ogni passo qui sotto ha il via separato del founder (regola «prove solo su staging», `docs/DECISIONS.md`, 28/10/2026).
-**Build:** `us-traguardi-20261029-44`.
+**Build:** `us-traguardi-20261029-45`.
 **Branch:** `claude/gioca-una-al-giorno` (PR #232), sopra `claude/fix-amici-beta` (PR #233) e sopra ancora `claude/traguardi-giorni`.
 
 ## Testo «Novità» per Google Play

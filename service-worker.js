@@ -1,4 +1,4 @@
-const BUILD_ID = "us-traguardi-20261029-44";
+const BUILD_ID = "us-traguardi-20261029-45";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
