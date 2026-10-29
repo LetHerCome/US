@@ -2014,6 +2014,11 @@
     'Mille giorni ♡': 'A thousand days ♡',
     '{n} giorni ♡': '{n} days ♡',
     'Mille giorni insieme': 'A thousand days together',
+    // Aggiornamento dell'app (29/10/2026).
+    'Aggiorna US': 'Update US',
+    'Questa versione di US non funziona più. Aggiorna per continuare: i vostri ricordi restano dove sono.': 'This version of US no longer works. Update to continue: your memories stay where they are.',
+    'Aggiornamento pronto': 'Update ready',
+    Riavvia: 'Restart',
     'Il vostro mesiversario': 'Your monthiversary',
     'Ti penso, risposte e missioni, anche a US chiusa.': 'Thinking of you, answers and missions, even when US is closed.',
     Countdown: 'Countdown',

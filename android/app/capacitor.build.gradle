@@ -12,6 +12,7 @@ dependencies {
     implementation project(':capacitor-app')
     implementation project(':capacitor-haptics')
     implementation project(':capacitor-push-notifications')
+    implementation project(':capawesome-capacitor-app-update')
     implementation project(':us-app-lock')
     implementation project(':us-google-signin')
     implementation project(':us-push-support')

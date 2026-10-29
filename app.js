@@ -2310,6 +2310,8 @@ window.usS31Auth = (()=>{
 // Accesso con Google (google-auth.js, 25/10/2026): it creates accounts, so it
 // appears only where sign-up is open and the Google client is configured.
 window.usGoogleAuth = window.usS31Auth && window.UsGoogleAuth?.create?.({auth:sb.auth}) || null;
+// Aggiornamento dell'app (29/10/2026): Play in-app updates and the server's minimum version (app-update.js).
+window.UsAppUpdate?.start?.({readMin:platform=>sb.rpc('get_app_min_version',{p_platform:platform}).then(({data,error})=>{if(error)throw error;return data;})});
 const US_GOOGLE_SIGN_IN_ERRORS=Object.freeze({
   no_account:'Aggiungi un account Google al telefono e riprova.',
   not_configured:'Accesso con Google non disponibile su questo telefono.',

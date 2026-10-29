@@ -1,28 +1,31 @@
 # Prossima patch in produzione
 
 **Stato:** in prova su staging (https://us-staging-s31.pages.dev). Niente è in produzione. Ogni passo qui sotto ha il via separato del founder (regola «prove solo su staging», `docs/DECISIONS.md`, 28/10/2026).
-**Build:** `us-invito-android-20261029-46`.
-**Branch:** `claude/gioca-una-al-giorno` (PR #232), sopra `claude/fix-amici-beta` (PR #233) poi `claude/traguardi-giorni` (PR #234) e infine `claude/invito-app-links`.
+**Build:** `us-aggiornamento-20261029-47`.
+**Branch:** `claude/gioca-una-al-giorno` (PR #232), sopra `claude/fix-amici-beta` (PR #233) poi `claude/traguardi-giorni` (PR #234) poi `claude/invito-app-links` (PR #235) e infine `claude/aggiornamento-app`.
+**Patch unica (founder, 29/10):** tutte queste PR più i fix dei tester che arrivano nel frattempo, in produzione insieme e solo con il via del founder.
 
 ## Testo «Novità» per Google Play
 
 Italiano (massimo 500 caratteri):
 
-> Gioca: una partita al giorno, e vedi quante ne restano oggi.
-> Invito più semplice: condividi un link, il codice si copia da solo.
-> Registrazione: puoi vedere la password, c'è Google anche in «Crea un account» e dopo la mail di verifica l'accesso è automatico.
-> «Insieme dal»: giorno, mese e anno, anche per chi sta insieme da tanti anni.
-> Dopo l'accesso con Google, la configurazione non si sovrappone più all'accesso.
-> Traguardi: ogni 100 giorni insieme si festeggia, e i 1000 valgono di più.
+> Gioca: una partita al giorno, con il conto di quelle rimaste.
+> Invito: un link che apre US con il codice già pronto.
+> Registrazione: password visibile, Google anche in «Crea un account», accesso automatico dopo la mail di verifica.
+> «Insieme dal» con giorno, mese e anno.
+> Google: niente più schermate sovrapposte.
+> Traguardi ogni 100 giorni insieme: i 1000 valgono di più.
+> D'ora in poi US si aggiorna da sola.
 
 English (500 characters max):
 
-> Play: one game a day, and you can see how many are left today.
-> Easier invites: share a link, and the code copies on its own.
-> Sign-up: show your password, continue with Google from “Create an account” too, and after the verification email you're signed in without typing again.
-> “Together since”: day, month and year, even for long-time couples.
-> After signing in with Google, setup no longer overlaps the sign-in screen.
-> Milestones: every 100 days together is celebrated, and 1000 is worth the most.
+> Play: one game a day, with a count of what is left.
+> Invites: a link that opens US with the code ready.
+> Sign-up: show your password, Google in “Create an account” too, automatic sign-in after the verification email.
+> “Together since” with day, month and year.
+> Google: no more overlapping screens.
+> Milestones every 100 days together: 1000 is worth the most.
+> From now on US updates itself.
 
 ## Cosa cambia
 
@@ -70,9 +73,23 @@ English (500 characters max):
   - in Rivivi, il traguardo festeggiato.
 - **Nessun arretrato:** chi ha già passato un traguardo vede il prossimo.
 
+### Aggiornamento dell'app (founder, 29/10)
+
+- **Dentro l'app (Google Play In-app updates):** plugin `@capawesome/capacitor-app-update` 8.1.0 (MIT), nuovo modulo `app-update.js`. All'avvio e a ogni ritorno nell'app, al massimo ogni 6 ore, US chiede a Play se c'è una versione nuova:
+  - **normale** (priorità 0–3): Play la scarica in sottofondo, poi compare «Aggiornamento pronto · Riavvia». La richiesta di Play di scaricarla compare al massimo una volta al giorno per versione;
+  - **urgente** (priorità 4–5): la schermata di aggiornamento di Play a tutto schermo, che si può rimandare.
+- **Versione minima dal server:**
+  - la migrazione `20261029012149_app_min_version_v1.sql` crea la tabella `app_min_version` (android e ios, partono da 0) e la funzione `get_app_min_version`, leggibile solo dopo l'accesso (regola F1B: nessuna funzione per `anon`); se non si legge, l'app riprova al ritorno successivo;
+  - sotto la versione minima, US mostra «Aggiorna US» e non si apre finché non è aggiornata: con l'aggiornamento di Play se Play ha la versione nuova, altrimenti apre la pagina dello Store.
+- **Workflow «Android Play bundle»:** nuova scelta `update_priority` (0–5) quando carica l'AAB.
+- **Come si usa:**
+  - di norma non si fa niente: con priorità 0 l'aggiornamento arriva da solo;
+  - per un rilascio che rompe le versioni vecchie, **dopo** che il nuovo AAB è su Play, una SQL approvata: `update public.app_min_version set min_version_code = <versionCode>, updated_at = now() where platform = 'android';`
+- **Attenzione:** funziona dalla versione che contiene il plugin. Chi ha la 1.2.4 deve aggiornare a mano un'ultima volta.
+
 ## Ordine in produzione (ognuno con il suo via)
 
-1. **SQL** con il workflow «Supabase SQL (manual)», target `production` e conferma `PRODUZIONE`, nell'ordine: Gioca (`20261028201759_gioca_daily_limit_v1.sql`), poi traguardi (`20261028232743_days_together_milestones_v1.sql`). Prima serve un token Supabase che includa il progetto di produzione: quello attuale vale solo per staging.
+1. **SQL** con il workflow «Supabase SQL (manual)», target `production` e conferma `PRODUZIONE`, nell'ordine: Gioca (`20261028201759_gioca_daily_limit_v1.sql`), traguardi (`20261028232743_days_together_milestones_v1.sql`), versione minima (`20261029012149_app_min_version_v1.sql`). Prima serve un token Supabase che includa il progetto di produzione: quello attuale vale solo per staging.
 1b. **Edge Function** `monthiversary-job` con il workflow «Supabase Edge deploy», target `production`, dopo l'SQL dei traguardi: usa la nuova funzione del database.
 2. **Sito web** (Cloudflare Pages `us-a33`): porta `/invito`, `/.well-known/assetlinks.json` e l'app web nuova. Va pubblicato prima dell'AAB: il link condiviso dall'app punta a `us-a33.pages.dev/invito`, e Android verifica il file quando installa l'app.
 3. **AAB** sul test chiuso «Alpha» di Play, con il testo «Novità» qui sopra.

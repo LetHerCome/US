@@ -47,8 +47,11 @@ async function call(fetchImpl, url, options, step) {
   return body;
 }
 
-export async function uploadToInternal({ account, aab, versionName, releaseNotes = '', fetchImpl = fetch, log = console.log }) {
+export async function uploadToInternal({ account, aab, versionName, releaseNotes = '', updatePriority = 0, fetchImpl = fetch, log = console.log }) {
   if (!(aab instanceof Uint8Array) || aab.length < 1024) throw new Error('AAB mancante o vuoto');
+  // Play in-app updates (app-update.js): 0 ordinary, 4–5 urgent (full screen).
+  const priority = Number(updatePriority);
+  if (!Number.isInteger(priority) || priority < 0 || priority > 5) throw new Error('La priorità dell’aggiornamento va da 0 a 5');
   if (!/^\d+\.\d+\.\d+$/.test(String(versionName))) throw new Error('versionName deve essere nel formato x.y.z');
 
   const token = await call(fetchImpl, account.tokenUri, {
@@ -69,6 +72,7 @@ export async function uploadToInternal({ account, aab, versionName, releaseNotes
 
   const release = { name: versionName, versionCodes: [versionCode], status: 'completed' };
   if (releaseNotes.trim()) release.releaseNotes = [{ language: 'it-IT', text: releaseNotes.trim().slice(0, 500) }];
+  if (priority > 0) release.inAppUpdatePriority = priority;
   await call(fetchImpl, `${API}/${PACKAGE_NAME}/edits/${edit.id}/tracks/${TRACK}`, {
     method: 'PUT', headers: { ...auth, 'Content-Type': 'application/json' }, body: JSON.stringify({ track: TRACK, releases: [release] })
   }, 'Test interno');
@@ -82,7 +86,7 @@ if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
   try {
     const account = parseServiceAccount(process.env.PLAY_SERVICE_ACCOUNT_JSON);
     const aab = new Uint8Array(await readFile(process.argv[2]));
-    await uploadToInternal({ account, aab, versionName: process.env.US_ANDROID_VERSION_NAME, releaseNotes: process.env.US_RELEASE_NOTES || '' });
+    await uploadToInternal({ account, aab, versionName: process.env.US_ANDROID_VERSION_NAME, releaseNotes: process.env.US_RELEASE_NOTES || '', updatePriority: process.env.US_UPDATE_PRIORITY || 0 });
   } catch (error) {
     console.error(`::error::${error.message}`);
     process.exit(1);

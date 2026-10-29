@@ -127,3 +127,10 @@
     .conservati-loading,.left-for-you-loading,.left-for-you-loading-inline,.moment-loading
   )::after{animation:none!important;display:none}
 }
+
+/* Aggiorna US (app-update.js, 29/10/2026): below the server's minimum version
+   the app waits behind this, until Play has updated it. Existing tokens only. */
+.us-update-gate{position:fixed;inset:0;z-index:2147482000;display:grid;place-items:center;padding:max(24px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom));background:var(--us-color-bg)}
+.us-update-gate-card{width:min(100%,420px);padding:28px 22px;border:1px solid var(--us-color-line);border-radius:var(--us-radius-card);background:var(--us-color-surface);text-align:center}
+.us-update-gate-card h2{margin:0 0 10px;color:var(--us-color-text)}
+.us-update-gate-card p{margin:0 0 18px;color:var(--us-color-text-2);line-height:1.5}

@@ -308,6 +308,7 @@
 
   window.UsPlatform = Object.freeze({
     isNative,
+    platformName,
     canUseServiceWorker: !isNative,
     canUseWebPush: !isNative,
     canUsePwaUpdates: !isNative,

@@ -83,3 +83,19 @@ test('play upload: the workflow job is manual, main only, approved and internal 
   assert.match(wf, /options: \[none, internal\]\n        default: none/);
   assert.doesNotMatch(fs.readFileSync(path.join(ROOT, 'scripts/play-upload-internal.mjs'), 'utf8'), /'(production|alpha|beta)'/, 'closed testing and production stay manual');
 });
+
+test('play upload: the in-app update priority (0–5) rides on the release; 0 is Play\'s default', async () => {
+  const { uploadToInternal } = await load();
+  const urgent = fakeFetch();
+  await uploadToInternal({ account, aab: new Uint8Array(4096), versionName: '1.3.0', updatePriority: 5, fetchImpl: urgent.fetchImpl, log: () => {} });
+  assert.equal(JSON.parse(urgent.calls[3].body).releases[0].inAppUpdatePriority, 5);
+  const plain = fakeFetch();
+  await uploadToInternal({ account, aab: new Uint8Array(4096), versionName: '1.3.0', updatePriority: '0', fetchImpl: plain.fetchImpl, log: () => {} });
+  assert.equal('inAppUpdatePriority' in JSON.parse(plain.calls[3].body).releases[0], false);
+  for (const wrong of [6, -1, 2.5, 'alta']) {
+    await assert.rejects(uploadToInternal({ account, aab: new Uint8Array(4096), versionName: '1.3.0', updatePriority: wrong, fetchImpl: fakeFetch().fetchImpl, log: () => {} }), /priorità/);
+  }
+  const workflow = fs.readFileSync(path.join(__dirname, '../.github/workflows/android-play-bundle.yml'), 'utf8');
+  assert.match(workflow, /update_priority:\n\s+description: '[^']+'\n\s+type: choice\n\s+default: '0'\n\s+options: \['0', '1', '2', '3', '4', '5'\]/);
+  assert.match(workflow, /US_UPDATE_PRIORITY: \$\{\{ inputs\.update_priority \}\}/);
+});
