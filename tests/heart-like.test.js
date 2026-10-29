@@ -1,9 +1,10 @@
-// Il cuore (founder, 29/10/2026): the heart on the partner's answer in Oggi and
-// the heart that answers a Ti penso play one animation: the heart goes, a disc
-// opens into a ring from rosa to lilla, seven pairs of dots fly out, the heart
-// springs back. Every third heart of a person is the big one: wider, with
-// fireworks that rise and fall. Taking a heart back plays nothing; with
-// reduced motion only the cue stays.
+// Il cuore (founder, 29/10/2026): every heart given (on the partner's answer in
+// Oggi, answering a Ti penso, the Ti penso at the top left) plays one animation:
+// at the touch the heart squeezes and snaps past its size, one wave from rosa to
+// lilla opens and fades; no confetti («più reattivo e satisfied, senza
+// coriandoli»). Every third heart of a person is the big one: higher, with a
+// second, wider wave. Taking a heart back plays nothing; with reduced motion
+// only the cue stays.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -32,7 +33,7 @@ function fakeButton() {
 }
 const pieces = (layer, kind) => layer.children.filter((c) => c.className === kind);
 
-test('a heart: the cue, the heart springs back, the bloom and seven pairs of dots', () => {
+test('a heart: the cue, the heart reacts at once and snaps, one wave, no confetti', () => {
   const F = require('../ui-foundation.js');
   const calls = [];
   globalThis.UsFeedback = { action: () => calls.push('action'), success: () => calls.push('success') };
@@ -45,16 +46,18 @@ test('a heart: the cue, the heart springs back, the bloom and seven pairs of dot
     assert.equal(layer.className, 'us-heart-fx');
     assert.equal(layer.style.left, '110px', 'centred on the heart');
     assert.equal(layer.style.top, '210px');
-    assert.equal(pieces(layer, 'us-heart-bloom').length, 1);
-    assert.equal(pieces(layer, 'us-heart-dot').length, 14);
-    assert.equal(pieces(layer, 'us-heart-spark').length, 0, 'no fireworks');
+    assert.equal(pieces(layer, 'us-heart-wave').length, 1);
+    assert.equal(layer.children.length, 1, 'no confetti');
     const pop = anims.find((a) => a.el === glyph);
-    assert.equal(pop.o.duration, 760);
-    assert.equal(pop.k[0].scale, 0, 'the heart is gone while the bloom opens');
+    assert.ok(pop.o.duration <= 450, 'quick');
+    assert.equal(pop.k[0].scale, 1, 'the heart stays: it reacts from the first frame');
+    assert.ok(pop.k[1].scale < 1 && pop.k[1].offset <= 0.15, 'squeezed at the touch');
+    assert.ok(Math.max(...pop.k.map((f) => f.scale)) >= 1.3, 'then it snaps past its size');
+    assert.ok(anims.find((a) => a.el !== glyph).o.delay <= 40, 'the wave starts with it');
   } finally { delete globalThis.UsFeedback; }
 });
 
-test('the big one: a stronger cue, a wider bloom and the fireworks', () => {
+test('the big one: a stronger cue, a higher snap and a second, wider wave', () => {
   const F = require('../ui-foundation.js');
   const calls = [];
   globalThis.UsFeedback = { action: () => calls.push('action'), success: () => calls.push('success') };
@@ -65,10 +68,12 @@ test('the big one: a stronger cue, a wider bloom and the fireworks', () => {
     assert.equal(F.heart(big.button, { big: true }), true);
     assert.deepEqual(calls, ['action', 'success']);
     const layer = big.appended[0];
-    assert.ok(pieces(layer, 'us-heart-spark').length >= 16, 'fireworks');
-    const width = (l) => parseFloat(pieces(l, 'us-heart-bloom')[0].style.width);
-    assert.ok(width(layer) > width(small.appended[0]), 'wider');
-    assert.ok(big.anims.find((a) => a.el === big.glyph).o.duration > 760);
+    assert.equal(pieces(layer, 'us-heart-wave').length, 2, 'two waves');
+    assert.equal(layer.children.length, 2, 'still no confetti');
+    const peak = (b) => Math.max(...b.anims.find((a) => a.el === b.glyph).k.map((f) => f.scale));
+    assert.ok(peak(big) > peak(small), 'higher');
+    const reach = (b) => Math.max(...b.anims.filter((a) => a.el !== b.glyph).map((a) => a.k.at(-1).scale));
+    assert.ok(reach(big) > reach(small), 'wider');
   } finally { delete globalThis.UsFeedback; }
 });
 
