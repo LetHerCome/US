@@ -45,6 +45,23 @@ function cards(r){
   out.push({kind:'outro',photo:m.last||m.first});
   return out.map(c=>({...c,recap:r}));
 }
+// Founder, 29/10/2026: «Il vostro anno su US» shows only when the couple
+// completes a year on US (couples.created_at, the day in Rome), for 30 days.
+// Returns which year (1, 2, …) or 0 outside the window.
+const romeDay=at=>{try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome'}).format(new Date(at));}catch(_){return '';}};
+function usYear(createdAt,todayISO){
+  const from=romeDay(createdAt);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(from)||!/^\d{4}-\d{2}-\d{2}$/.test(String(todayISO||'')))return 0;
+  const [y,m,d]=from.split('-').map(Number),[ty]=todayISO.split('-').map(Number);
+  const today=Date.parse(`${todayISO}T00:00:00Z`);
+  for(const year of [ty,ty-1]){
+    const n=year-y;if(n<1)continue;
+    // 29 February has its anniversary on the 28th in the other years.
+    const start=Date.UTC(year,m-1,Math.min(d,new Date(Date.UTC(year,m,0)).getUTCDate()));
+    if(today>=start&&today<start+30*864e5)return n;
+  }
+  return 0;
+}
 const tag=()=>(globalThis.UsI18n?.tag)||'it-IT';
 function day(iso,withYear=true){
   try{return new Date(`${iso}T12:00:00Z`).toLocaleDateString(tag(),{day:'numeric',month:'long',...(withYear?{year:'numeric'}:{}),timeZone:'UTC'});}catch(_){return iso;}
@@ -146,9 +163,10 @@ function install(w){
     if(event.key==='ArrowLeft'){event.preventDefault();go(-1);}
   });
   row?.addEventListener('click',open);
-  const showRow=()=>{if(row)row.hidden=!key();};
+  const createdAt=()=>{try{return w.UsCoupleContext?.snapshot?.()?.couple?.created_at||null;}catch(_){return null;}};
+  const showRow=()=>{if(row)row.hidden=!key()||!usYear(createdAt(),romeDay(Date.now()));};
   showRow();w.setInterval(()=>{if(key()!==owner&&opened())reset();showRow();},2000);
   const api=w.UsYearRecap;api.open=open;api.close=close;api.reset=reset;
 }
-return {title,thinkLine,cards,count,renderCard,install};
+return {title,thinkLine,cards,count,renderCard,usYear,install};
 });

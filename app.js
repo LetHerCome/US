@@ -195,7 +195,7 @@ async function hydrateUsCoupleContext(){
   let coupleResult,profilesResult;
   try{
     [coupleResult,profilesResult]=await Promise.all([
-      sb.from('couples').select('id,name,started_on').eq('id',coupleId).maybeSingle(),
+      sb.from('couples').select('id,name,started_on,created_at').eq('id',coupleId).maybeSingle(),
       sb.from('profiles').select('id,display_name,role,couple_id,person_color').eq('couple_id',coupleId).order('created_at',{ascending:true})
     ]);
   }catch(error){
@@ -2598,8 +2598,8 @@ function celebrationTodayPriorityViewModel(startedOn,todayISO){
   return {
     id:`celebration:${todayISO}`,factKey:`celebration:${todayISO}`,arrivalType:'monthiversary',category:'celebration',attention:true,
     title,detail:day.years?'Il vostro anniversario':'Il vostro mesiversario',
-    // The anniversary opens Il vostro anno (year-recap.js); a monthiversary, Eventi.
-    action:day.years?'recap':'events',actionLabel:day.years?'Guarda il vostro anno':'Apri'
+    // Both open Eventi: Il vostro anno su US has its own day (year-recap.js usYear).
+    action:'events',actionLabel:'Apri'
   };
 }
 function oggiStartedOn(){

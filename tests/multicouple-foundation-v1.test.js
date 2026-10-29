@@ -10,7 +10,7 @@ test('multi-couple V1: couple_id is the runtime tenant selector',()=>{
   const app=read('app.js');
   assert.match(app,/const usCoupleContextState=/);
   assert.match(app,/const coupleId=profile\?\.couple_id/);
-  assert.match(app,/sb\.from\('couples'\)\.select\('id,name,started_on'\)\.eq\('id',coupleId\)\.maybeSingle\(\)/);
+  assert.match(app,/sb\.from\('couples'\)\.select\('id,name,started_on,created_at'\)\.eq\('id',coupleId\)\.maybeSingle\(\)/);
   assert.match(app,/sb\.from\('profiles'\)\.select\('id,display_name,role,couple_id'\)\.eq\('couple_id',coupleId\)/);
   assert.match(app,/row\.couple_id===coupleId/);
 });
