@@ -73,7 +73,8 @@ test('shell: loaded, precached, built, back-closable, reset; Oggi and Noi open i
   const app = read('app.js');
   assert.match(app, /UsYearRecap\?\.reset\?\.\(\)/);
   assert.match(app, /action==='recap'\)window\.UsYearRecap\?\.open\?\.\(\)/);
-  assert.match(app, /action:day\.years\?'recap':'events'/, 'the anniversary card opens the recap');
+  // Founder, 29/10/2026: the recap has its own day (a year on US), not the relationship anniversary.
+  assert.match(app, /title,detail:day\.years\?'Il vostro anniversario':'Il vostro mesiversario',[\s\S]{0,140}action:'events',actionLabel:'Apri'/);
   const js = read('year-recap.js');
   assert.ok(js.includes("'get_couple_year_recap'"));
   assert.doesNotMatch(js, /\.from\(/, 'one RPC, no direct table read');

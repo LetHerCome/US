@@ -2473,6 +2473,7 @@
 
     // ------------------------------------------------------- Il vostro anno
     'Il vostro anno': 'Your year',
+    'Il vostro anno su US': 'Your year on US',
     'Il vostro anno, finora': 'Your year, so far',
     'Il vostro primo anno': 'Your first year',
     'I vostri primi {n} mesi': 'Your first {n} months',

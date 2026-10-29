@@ -11,7 +11,7 @@ test('multi-couple V1: couple_id is the runtime tenant selector',()=>{
   assert.match(app,/const usCoupleContextState=/);
   assert.match(app,/const coupleId=profile\?\.couple_id/);
   // Premi Sintonia V2 (29/10/2026): the couple's sky city and hour ride along.
-  assert.match(app,/sb\.from\('couples'\)\.select\('id,name,started_on,sky_city,sky_minutes'\)\.eq\('id',coupleId\)\.maybeSingle\(\)/);
+  assert.match(app,/sb\.from\('couples'\)\.select\('id,name,started_on,sky_city,sky_minutes,created_at'\)\.eq\('id',coupleId\)\.maybeSingle\(\)/);
   assert.match(app,/sb\.from\('profiles'\)\.select\('id,display_name,role,couple_id'\)\.eq\('couple_id',coupleId\)/);
   assert.match(app,/row\.couple_id===coupleId/);
 });
