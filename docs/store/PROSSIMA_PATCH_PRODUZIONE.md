@@ -1,8 +1,8 @@
 # Prossima patch in produzione
 
 **Stato:** in prova su staging (https://us-staging-s31.pages.dev). Niente è in produzione. Ogni passo qui sotto ha il via separato del founder (regola «prove solo su staging», `docs/DECISIONS.md`, 28/10/2026).
-**Build:** `us-icona-20261029-60`.
-**Branch:** `claude/gioca-una-al-giorno` (PR #232), sopra `claude/fix-amici-beta` (PR #233) poi `claude/traguardi-giorni` (PR #234) poi `claude/invito-app-links` (PR #235) poi `claude/aggiornamento-app` (PR #236) poi `claude/colori-plus` (PR #237) poi `claude/emoji-tastiera` (PR #238) poi `claude/app-ariosa` (PR #239) e infine `claude/icona-senza-cornice`.
+**Build:** `us-fix-apk-20261029-66`.
+**Branch:** `claude/gioca-una-al-giorno` (PR #232), sopra `claude/fix-amici-beta` (PR #233) poi `claude/traguardi-giorni` (PR #234) poi `claude/invito-app-links` (PR #235) poi `claude/aggiornamento-app` (PR #236) poi `claude/colori-plus` (PR #237) poi `claude/emoji-tastiera` (PR #238) poi `claude/app-ariosa` (PR #239) poi `claude/icona-senza-cornice` (PR #240) e infine `claude/fix-prova-apk`.
 **Patch unica (founder, 29/10):** tutte queste PR più i fix dei tester che arrivano nel frattempo, in produzione insieme e solo con il via del founder.
 
 ## Testo «Novità» per Google Play
@@ -10,26 +10,28 @@
 Italiano (massimo 500 caratteri):
 
 > Gioca: una partita al giorno, con il conto di quelle rimaste.
-> Invito: un link che apre US con il codice già pronto.
-> Registrazione: password visibile, Google anche in «Crea un account», accesso automatico dopo la mail di verifica.
+> Invito: un link che apre US con il codice pronto.
+> Registrazione: password visibile, Google anche in «Crea un account», accesso automatico dopo la verifica.
 > «Insieme dal» con giorno, mese e anno.
 > Google: niente più schermate sovrapposte.
-> Traguardi ogni 100 giorni insieme: i 1000 valgono di più.
-> D'ora in poi US si aggiorna da sola.
-> Emoji: la tastiera le propone in ogni campo dove scrivete.
-> Nuova icona, app più ariosa.
+> Traguardi ogni 100 giorni insieme.
+> US si aggiorna da sola.
+> Emoji in ogni campo dove scrivete.
+> Nuova icona, app più ariosa, il tuo colore già all'inizio.
+> Rivivi nel giorno esatto di un ricordo.
 
 English (500 characters max):
 
 > Play: one game a day, with a count of what is left.
 > Invites: a link that opens US with the code ready.
-> Sign-up: show your password, Google in “Create an account” too, automatic sign-in after the verification email.
+> Sign-up: show your password, Google in “Create an account” too, automatic sign-in after verification.
 > “Together since” with day, month and year.
 > Google: no more overlapping screens.
 > Milestones every 100 days together: 1000 is worth the most.
-> From now on US updates itself.
-> Emoji: the keyboard offers them in every field where you write.
-> A new icon and airier screens.
+> US now updates itself.
+> Emoji in every field where you write.
+> A new icon, airier screens, your colour from the start.
+> Relive on the exact day of a memory.
 
 ## Cosa cambia
 
@@ -103,7 +105,7 @@ English (500 characters max):
   - colonna `profiles.person_color` e `set_my_color()`, che ricontrolla Plus, gli 8 colori e il colore del partner.
 - **App:** nuovo `person-colors.js`. I colori arrivano dal profilo all'avvio e al ritorno nell'app; tutta l'interfaccia legge `--us-rosa` e `--us-lilla`, quindi cambia insieme.
 - **Restano uguali:** logo, icona, splash, animazione d'apertura e, per ora, **i widget Android** (oggi «io» è sempre lilla e il partner rosa). Collegarli ai colori scelti è un passo a parte, nativo.
-- **In produzione tutti vedranno la voce bloccata** finché Plus non c'è. Per sbloccarla a una coppia serve una riga in `plus_entitlements` (fonte `manuale` o `beta`).
+- **In beta i colori sono gratis per tutti** (fix dalla prova dell'APK, sotto): la voce bloccata si vedrà solo il giorno in cui Plus va in vendita.
 
 ### Emoji sulla tastiera (founder, 29/10)
 
@@ -139,10 +141,22 @@ English (500 characters max):
 - **Restano uguali:** lo splash d'apertura, il logo in alto nell'app, l'icona web e quella delle notifiche (logo con la cornice).
 - **Si vede** solo con l'aggiornamento dell'app (AAB).
 
+### Fix dalla prova dell'APK (founder, 29/10)
+
+- **«Compagni»:** in Impostazioni la voce «Maudit» diventa «Compagni» (acceso o spento), con «Il vostro Compagno sopra la barra».
+- **Tema ed Effetto solo in Sintonia:** via da Impostazioni il blocco «Personalizza Oggi». In Sintonia i gruppi Tema ed Effetto hanno «Apri la galleria con le anteprime»; il cielo della vostra prima sera apre la sua pagina.
+- **Il tuo colore alla prima apertura:**
+  - chi crea la coppia lo sceglie nel passo del colore, chi entra con il codice nel passo «Scegli il tuo colore» della configurazione;
+  - 8 cerchi, quello del partner (scelto o di sempre) non si può prendere; la scelta colora subito i cerchi.
+- **Colori gratis in beta:** finché US Plus non è in vendita il colore si sceglie e si cambia senza Plus, anche in Impostazioni.
+  - Server: migrazione `20261029203000_colors_free_in_beta.sql`. Nuova tabella `app_flags` (solo il server la legge), con `plus_on_sale` spento; `set_my_color()` chiede Plus solo quando è acceso; `get_couple_plus()` dice all'app `colors_free`.
+  - Il giorno in cui Plus va in vendita, il founder la accende nell'SQL Editor: `update public.app_flags set enabled = true, updated_at = now() where key = 'plus_on_sale';`. Da lì cambiare colore richiede Plus; il colore già scelto resta.
+- **Rivivi solo nel giorno giusto:** in Ricordi «Rivivi» compare solo se oggi è lo stesso giorno di un ricordo passato: «Un anno fa, oggi» (o «N anni fa») nello stesso giorno e mese, altrimenti «N mesi fa, oggi» nello stesso giorno del mese. Gli anni vincono sui mesi. Negli altri giorni non c'è.
+
 ## Ordine in produzione (ognuno con il suo via)
 
 0. **Mail di conferma** (founder, in Supabase produzione: Authentication › Emails › Templates › Confirm signup): la riga «Poi torna in US e accedi con email e password.» diventa «Poi torna in US: l'accesso è automatico.».
-1. **SQL** con il workflow «Supabase SQL (manual)», target `production` e conferma `PRODUZIONE`, nell'ordine: Gioca (`20261028201759_gioca_daily_limit_v1.sql`), traguardi (`20261028232743_days_together_milestones_v1.sql`), versione minima (`20261029012149_app_min_version_v1.sql`), colori e Plus (`20261029014653_person_colors_plus_v1.sql`). Prima serve un token Supabase che includa il progetto di produzione: quello attuale vale solo per staging.
+1. **SQL** con il workflow «Supabase SQL (manual)», target `production` e conferma `PRODUZIONE`, nell'ordine: Gioca (`20261028201759_gioca_daily_limit_v1.sql`), traguardi (`20261028232743_days_together_milestones_v1.sql`), versione minima (`20261029012149_app_min_version_v1.sql`), colori e Plus (`20261029014653_person_colors_plus_v1.sql`), colori gratis in beta (`20261029203000_colors_free_in_beta.sql`). Prima serve un token Supabase che includa il progetto di produzione: quello attuale vale solo per staging.
 1b. **Edge Function** `monthiversary-job` con il workflow «Supabase Edge deploy», target `production`, dopo l'SQL dei traguardi: usa la nuova funzione del database.
 2. **Sito web** (Cloudflare Pages `us-a33`): porta `/invito`, `/.well-known/assetlinks.json` e l'app web nuova. Va pubblicato prima dell'AAB: il link condiviso dall'app punta a `us-a33.pages.dev/invito`, e Android verifica il file quando installa l'app.
 3. **AAB** sul test chiuso «Alpha» di Play, con il testo «Novità» qui sopra.

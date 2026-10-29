@@ -20,25 +20,21 @@ function loadArchive() {
 }
 const m = (id, date, extra = {}) => ({ id, moment_date: date, created_at: `${date}T10:00:00Z`, storage_path: `p/${id}`, created_by: 'u', ...extra });
 
-test('M8A Rivivi: an anniversary within ±3 days of a past year wins, closest first', () => {
+// Founder, 29/10/2026: Rivivi only on the very day of a memory (see m12b-5).
+test('M8A Rivivi: the same date of a past year wins, the oldest first; otherwise the same day of a past month', () => {
   const api = loadArchive();
-  // M12B.5: Rivivi consumes the archive entries (same truth as the story).
-  const pick = api.pickRivivi(api.timeline([m('a', '2026-09-20'), m('b', '2025-10-01'), m('c', '2024-09-29'), m('d', '2025-06-01')]), '2026-09-29');
+  const pick = api.pickRivivi(api.timeline([m('a', '2026-09-20'), m('b', '2025-09-29'), m('c', '2024-09-29'), m('d', '2026-06-29')]), '2026-09-29');
   assert.equal(pick.row.id, 'c');
   assert.equal(pick.reason, 'anniversary');
-  assert.equal(pick.label, '2 anni fa, in questi giorni');
+  assert.equal(pick.label, '2 anni fa, oggi');
+  const month = api.pickRivivi(api.timeline([m('d', '2026-06-29'), m('e', '2026-06-01')]), '2026-09-29');
+  assert.equal(month.row.id, 'd');
+  assert.equal(month.label, '3 mesi fa, oggi');
 });
 
-test('M8A Rivivi: otherwise a real memory at least 30 days old, stable for the day; never a recent one, never filler', () => {
+test('M8A Rivivi: never a random memory, never a recent one, never filler', () => {
   const api = loadArchive();
-  const rows = api.timeline([m('recent', '2026-09-20'), m('old1', '2026-06-01'), m('old2', '2026-03-10')]);
-  const a = api.pickRivivi(rows, '2026-09-29');
-  const b = api.pickRivivi(rows, '2026-09-29');
-  assert.equal(a.row.id, b.row.id);
-  assert.notEqual(a.row.id, 'recent');
-  assert.equal(a.reason, 'resurface');
-  assert.match(a.label, /mesi fa|mese fa/);
-  assert.equal(api.pickRivivi(api.timeline([m('recent', '2026-09-20')]), '2026-09-29'), null);
+  assert.equal(api.pickRivivi(api.timeline([m('recent', '2026-09-20'), m('old1', '2026-06-01'), m('old2', '2026-03-10')]), '2026-09-29'), null);
   assert.equal(api.pickRivivi([], '2026-09-29'), null);
 });
 

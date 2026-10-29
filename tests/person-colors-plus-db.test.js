@@ -19,7 +19,9 @@ const grant = (user, over = {}) => db.query(
 const colorOf = async (id) => (await db.query('select person_color from public.profiles where id=$1', [id])).rows[0].person_color;
 
 let db;
-test.beforeEach(async () => { db = await h.database(); });
+// These tests describe US with Plus on sale; in beta the colour is free for
+// everyone (person-colors-beta-db.test.js, founder 29/10/2026).
+test.beforeEach(async () => { db = await h.database(); await db.query(`update public.app_flags set enabled = true where key = 'plus_on_sale'`); });
 test.afterEach(async () => { await db?.close(); db = null; });
 
 test('migration exists and is listed in the cutoff', () => {
@@ -29,14 +31,14 @@ test('migration exists and is listed in the cutoff', () => {
 });
 
 test('without Plus: nobody has it, and the colour cannot be changed', async () => {
-  assert.deepEqual(await plus(h.F), { active: false, by: null });
+  assert.deepEqual(await plus(h.F), { active: false, by: null, colors_free: false });
   await assert.rejects(setColor(h.F, 'cielo'), /plus required/);
   assert.equal(await colorOf(h.F), null, 'the usual rosa / lilla');
 });
 
 test('Plus of either partner opens it for both, and names who has it', async () => {
   await grant(h.B);
-  assert.deepEqual(await plus(h.F), { active: true, by: 'Beatrice' });
+  assert.deepEqual(await plus(h.F), { active: true, by: 'Beatrice', colors_free: false });
   assert.deepEqual(await setColor(h.F, 'cielo'), { color: 'cielo' });
   assert.deepEqual(await setColor(h.B, 'oro'), { color: 'oro' });
   const both = await h.as(db, h.B, 'select id, person_color from public.profiles order by display_name');

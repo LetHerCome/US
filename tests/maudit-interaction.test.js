@@ -183,12 +183,13 @@ test('poses: curious / pet / sleep / happy are CSS poses of the approved drawing
   assert.doesNotMatch(petJs + petCss, /[\u{1F300}-\u{1FAFF}❤♥]/u, 'no emoji, no heart glyph');
 });
 
-test('Settings: one "Maudit" switch row, device-local, correct accessible state, one short line of copy', () => {
+// Founder, 29/10/2026: the switch is called «Compagni», it turns off whichever companion is shown.
+test('Settings: one "Compagni" switch row, device-local, correct accessible state, one short line of copy', () => {
   const row = html.match(/<button[^>]*data-us-setting="maudit"[^>]*>[\s\S]*?<\/button>/)?.[0];
   assert.ok(row, 'row exists');
   assert.match(row, /role="switch" aria-checked="true"/);
   // US 1.0 Settings mockup (#200): the label plus one short line, never a paragraph.
-  assert.match(row, /<b>Maudit<\/b>(<small>[^<]{1,40}<\/small>)?<\/span>/);
+  assert.match(row, /<b>Compagni<\/b>(<small>[^<]{1,40}<\/small>)?<\/span>/);
   const deviceGroup = html.slice(html.indexOf('data-us-settings-scope="tu"'), html.indexOf('data-us-settings-scope="voi"'));
   assert.ok(deviceGroup.includes('data-us-setting="maudit"'), 'lives with the other on-this-phone settings');
   assert.match(settingsJs, /if\(name==='maudit'\)return toggleMaudit\(\);/);

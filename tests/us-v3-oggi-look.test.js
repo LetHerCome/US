@@ -215,14 +215,15 @@ test('Oggi effects: fewer particles on modest phones, the same deterministic com
 });
 
 // ------------------------------------------------------------------ wiring
-test('Oggi looks: reachable from Settings and Sintonia, Back-aware, shipped to PWA and native', () => {
-  assert.match(html, /data-us-setting="oggi-theme"[\s\S]{0,400}id="usOggiThemeValue"/);
-  assert.match(html, /data-us-setting="oggi-effect"[\s\S]{0,400}id="usOggiEffectValue"/);
-  const settings = read('settings.js');
-  assert.match(settings, /if\(name==='oggi-theme'\)return window\.USOggiLook\?\.openGallery\?\.\(\{tab:'theme'\}\)/);
-  assert.match(settings, /if\(name==='oggi-effect'\)return window\.USOggiLook\?\.openGallery\?\.\(\{tab:'effect'\}\)/);
+test('Oggi looks: reachable from Sintonia (not Settings), Back-aware, shipped to PWA and native', () => {
+  // Founder, 29/10/2026: themes and effects live in Sintonia, where they are
+  // unlocked; Settings no longer lists them. Their groups open the full gallery.
+  assert.doesNotMatch(html, /data-us-setting="oggi-(theme|effect)"|PERSONALIZZA OGGI/);
+  assert.match(progressionJs, /const LOOK_GALLERY = Object\.freeze\(\{ oggi_theme: 'theme', oggi_effect: 'effect' \}\);/);
+  assert.match(progressionJs, /if \(gallery\?\.dataset\?\.lookGallery\) \{ window\.USOggiLook\?\.openGallery\?\.\(\{ tab: gallery\.dataset\.lookGallery \}\); return; \}/);
   // Round 3 (mockup 076): a look tile in the Sintonia collection applies the look directly, like
-  // every other tile; the full gallery stays reachable from Settings (above).
+  // every other tile; Il vostro cielo first opens its page (city and hour).
+  assert.match(progressionJs, /if \(data\.lookSlot === 'theme' && data\.lookId === 'sky'\) \{ window\.USOggiLook\?\.openGallery\?\.\(\{ tab: 'theme', look: 'sky' \}\); return; \}/);
   assert.match(progressionJs, /ok = setDeviceLook\(data\.lookSlot, data\.lookId\)/);
   const nav = read('navigation.js');
   assert.match(nav, /name:'oggi-look',\s*find:\(\)=>document\.getElementById\('usLookSheet'\)/);
