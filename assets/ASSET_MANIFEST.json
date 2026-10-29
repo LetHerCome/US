@@ -503,6 +503,16 @@
       "source": "assets/source/pet/us-pet-companions-sheet-v1.webp",
       "sourceSha256": "36e5dfab4f4f89a093372badff4f7e07533f8d405a51dec7573b727eaeb5403c",
       "operation": "CUTOUT_TRANSPARENT_SHARED_FRAME_192PX"
+    },
+    {
+      "path": "assets/source/brand/app-icon/us-launcher-symbol-v2.png",
+      "status": "APPROVED",
+      "sha256": "a75c69e23a4e5cf94a6ad06f4b2ae126d8499b281e0a7010f511077427715e4a",
+      "immutable": true,
+      "purpose": "US launcher icon without frame (founder, 29/10/2026), fitted to the Android adaptive safe circle",
+      "usedBy": [
+        "android-launcher"
+      ]
     }
   ]
 }

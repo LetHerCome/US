@@ -1,8 +1,8 @@
 # Prossima patch in produzione
 
 **Stato:** in prova su staging (https://us-staging-s31.pages.dev). Niente è in produzione. Ogni passo qui sotto ha il via separato del founder (regola «prove solo su staging», `docs/DECISIONS.md`, 28/10/2026).
-**Build:** `us-ariosa-20261029-58`.
-**Branch:** `claude/gioca-una-al-giorno` (PR #232), sopra `claude/fix-amici-beta` (PR #233) poi `claude/traguardi-giorni` (PR #234) poi `claude/invito-app-links` (PR #235) poi `claude/aggiornamento-app` (PR #236) poi `claude/colori-plus` (PR #237) poi `claude/emoji-tastiera` (PR #238) e infine `claude/app-ariosa`.
+**Build:** `us-icona-20261029-60`.
+**Branch:** `claude/gioca-una-al-giorno` (PR #232), sopra `claude/fix-amici-beta` (PR #233) poi `claude/traguardi-giorni` (PR #234) poi `claude/invito-app-links` (PR #235) poi `claude/aggiornamento-app` (PR #236) poi `claude/colori-plus` (PR #237) poi `claude/emoji-tastiera` (PR #238) poi `claude/app-ariosa` (PR #239) e infine `claude/icona-senza-cornice`.
 **Patch unica (founder, 29/10):** tutte queste PR più i fix dei tester che arrivano nel frattempo, in produzione insieme e solo con il via del founder.
 
 ## Testo «Novità» per Google Play
@@ -17,6 +17,7 @@ Italiano (massimo 500 caratteri):
 > Traguardi ogni 100 giorni insieme: i 1000 valgono di più.
 > D'ora in poi US si aggiorna da sola.
 > Emoji: la tastiera le propone in ogni campo dove scrivete.
+> Nuova icona, app più ariosa.
 
 English (500 characters max):
 
@@ -28,6 +29,7 @@ English (500 characters max):
 > Milestones every 100 days together: 1000 is worth the most.
 > From now on US updates itself.
 > Emoji: the keyboard offers them in every field where you write.
+> A new icon and airier screens.
 
 ## Cosa cambia
 
@@ -128,6 +130,14 @@ English (500 characters max):
 - **La mascotte** segue l'altezza della barra (`--us-nav-height`), quindi resta appoggiata sul bordo.
 - **Restano uguali:** testo normale, bersagli da toccare (almeno 40), illustrazioni approvate.
 - **Test:** due test aggiornati alle misure nuove. I test nel browser che di solito vengono saltati (Playwright) danno gli stessi 16 errori di prima, con gli stessi messaggi: non dipendono da questo cambio.
+
+### Icona senza cornice (founder, 29/10)
+
+- **Perché:** il telefono disegna già la sua forma attorno all'icona (cerchio, goccia, quadrato arrotondato); la cornice faceva «una scatola nella scatola».
+- **Cosa:** sullo sfondo bianco di sempre, solo «US» con la stellina. Logo nuovo generato e approvato dal founder: `assets/source/brand/app-icon/us-launcher-symbol-v2.png` (APPROVED nel manifest), centrato e misurato perché il punto più lontano stia nel cerchio che Android non taglia mai.
+- **Android:** icona adattiva `us_adaptive_foreground_v2` e icone legacy `mipmap-*/ic_launcher*.png` rigenerate con `scripts/build-android-brand-assets.mjs`.
+- **Restano uguali:** lo splash d'apertura, il logo in alto nell'app, l'icona web e quella delle notifiche (logo con la cornice).
+- **Si vede** solo con l'aggiornamento dell'app (AAB).
 
 ## Ordine in produzione (ognuno con il suo via)
 

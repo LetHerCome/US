@@ -310,3 +310,11 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - I bersagli da toccare restano almeno 40 px; le illustrazioni approvate non cambiano.
 - La mascotte segue l'altezza della barra (`--us-nav-height`).
 - Le misure si cambiano nei file di design che già decidono (`dc-*.css`, `countdown.css`, `due-colori.css`), non con regole aggiunte sopra.
+
+## 2026-10-29 — Icona dell'app senza cornice
+
+**Fonte:** founder, 29/10/2026: il bordo attorno al logo «forse potrebbe dare problemi a telefoni con le icone a cerchio»; logo nuovo generato e approvato dal founder («Approvate»).
+
+- L'icona del telefono è solo «US» con la stellina, sullo sfondo bianco di sempre: la forma del telefono fa da cornice.
+- Il logo con la cornice resta dove non c'è una forma attorno: splash d'apertura, logo in alto nell'app, icona web e notifiche.
+- Le icone premio «Notte», «Oro» e «Neon» (Sintonia V2) partono dallo stesso logo senza cornice.
