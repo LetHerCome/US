@@ -43,7 +43,7 @@ English (500 characters max):
 - **App web aperta dal link:** se l'invito apre US dal browser, il codice è già compilato in «Ho un codice d'invito».
 - **«Insieme dal»:** tre tendine, giorno, mese e anno (dal più recente al 1900), al posto del calendario.
 - **Dopo la mail di verifica:**
-  - tornando in US, la schermata «Verifica la tua email» prova da sola ad accedere, e ogni 5 secondi finché resta a schermo;
+  - tornando in US, la schermata «Verifica la tua email» prova da sola ad accedere, al massimo una volta ogni 15 secondi e 12 volte in tutto, per restare lontani dal limite di Supabase (circa 30 accessi ogni 5 minuti);
   - la password resta solo in memoria, mai salvata, e si dimentica appena si lascia quella schermata;
   - il testo ora dice «Poi torna qui: l'accesso è automatico.».
 

@@ -58,6 +58,10 @@
     // Beta fix (28/10/2026): the password just chosen, in memory only while the
     // verify step is open, so that step signs in by itself once the link is opened.
     let verificationPassword = '', checking = false;
+    // Supabase allows about 30 sign-ins per 5 minutes per IP: one try per 15 s
+    // at most, 12 in all (3 minutes and more); then «Torna all’accesso».
+    const VERIFY_GAP_MS = 15000, VERIFY_TRIES = 12;
+    let verifyTries = 0, lastVerifyTry = -Infinity;
     let recoveryActive = false;
     const state = () => Object.freeze({ mode, message, kind, pending, recoveryActive });
     const notify = () => { onChange(state()); return state(); };
@@ -106,6 +110,7 @@
           }
           verificationEmail = e;
           verificationPassword = password;
+          verifyTries = 0; lastVerifyTry = -Infinity;
           mode = 'verify';
           publish(GENERIC_MAIL, 'success');
           return { ok: true };
@@ -117,9 +122,11 @@
     }
     // Back from the email link (another tab, the browser): try the account the
     // verify step is waiting for. Not verified yet: nothing changes on screen.
-    async function enterIfVerified() {
+    async function enterIfVerified(now = Date.now()) {
       if (mode !== 'verify' || !verificationEmail || !verificationPassword || pending || checking
         || typeof auth.signInWithPassword !== 'function') return { ok: false, kind: 'mode' };
+      if (verifyTries >= VERIFY_TRIES || now - lastVerifyTry < VERIFY_GAP_MS) return { ok: false, kind: 'wait' };
+      verifyTries++; lastVerifyTry = now;
       const ticket = epoch;
       checking = true;
       try {
@@ -311,7 +318,7 @@
     };
     doc.addEventListener?.('visibilitychange', tryEnter);
     globalThis.addEventListener?.('focus', tryEnter);
-    if (typeof globalThis.setInterval === 'function') globalThis.setInterval(tryEnter, 5000);
+    if (typeof globalThis.setInterval === 'function') globalThis.setInterval(tryEnter, 15000);
     node('usForgotPassword')?.addEventListener('submit', ev => {
       ev.preventDefault();
       const email = node('usForgotEmail').value;
