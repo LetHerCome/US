@@ -9,7 +9,7 @@
 - **Accesso Google** acceso dal founder su questo progetto (29/10).
 - **US Plus per tutti** (dati, non schema): il founder esegue `docs/store/US_STAGING_PLUS_PER_TUTTI.sql` nell'SQL Editor di staging. Si può rieseguire per gli account nuovi. Mai in produzione.
 - **Premi Sintonia V2, Fase 1** (29/10, dopo la patch unica): SQL `20261029031726_sintonia_rewards_v2_phase1` applicato due volte (la seconda con `couples.sky_city` e `set_sky_city`); anteprima dal branch `claude/sintonia-premi-v2`.
-- **Sintonia tutta sbloccata** (dati, non schema, founder 29/10): `docs/store/US_STAGING_SINTONIA_TUTTA.sql` porta ogni coppia al livello 15 e sblocca tutti i premi e i Compagni, già segnati come visti. Rieseguibile. Mai in produzione.
+- **Sintonia tutta sbloccata** (dati, non schema, founder 29/10): `docs/store/US_STAGING_SINTONIA_TUTTA.sql` porta ogni coppia al livello dopo il premio più alto (con la scala V2, il 21) e sblocca tutti i premi e i Compagni, già segnati come visti. Rieseguibile. Mai in produzione.
 
 ## Update 2026-10-22 — parity with production
 
