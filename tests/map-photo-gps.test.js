@@ -1,14 +1,13 @@
-// Mappa dei Ricordi, prova tecnica (founder, 29/10/2026, decision D8): before
-// building the map, the staging app says whether Android hands the web view a
-// photo with its GPS position. The reader is checked here on JPEGs built by
-// hand with a known place; nothing is stored, and only staging builds speak.
+// Mappa dei Ricordi (founder, 29/10/2026): the GPS reader of a picked JPEG,
+// checked on JPEGs built by hand with a known place. The prova tecnica (D8)
+// that only spoke on staging is gone: the place now fills "Dove".
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
 const app = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
-const source = app.slice(app.indexOf('async function readJpegExifGps('), app.indexOf('// Staging only: the preview site'));
+const source = app.slice(app.indexOf('async function readJpegExifGps('), app.indexOf('async function detectMomentDate('));
 const readJpegExifGps = new Function(`${source}; return readJpegExifGps;`)();
 
 // A JPEG with an EXIF block (little endian): IFD0 → GPS IFD with lat/lon refs and DMS rationals.
@@ -46,10 +45,10 @@ test('no position, no answer: not a JPEG, no EXIF, or a photo without GPS', asyn
   assert.equal(await readJpegExifGps(new Blob([Uint8Array.from([0xFF, 0xD8, 0xFF, 0xD9])], { type: 'image/jpeg' })), null);
 });
 
-test('only staging builds say what they found; nothing is saved', () => {
-  assert.match(app, /if\(\/\^us-staging\/\.test\(location\.hostname\)\)return true;/);
-  assert.match(app, /\/\\\.staging\$\/\.test\(\(await window\.Capacitor\?\.Plugins\?\.App\?\.getInfo\?\.\(\)\)\?\.id\|\|''\)/);
-  const pick = app.slice(app.indexOf('// Mappa dei Ricordi, prova tecnica (staging only)'), app.indexOf('// A lived source already knows its day'));
-  assert.match(pick, /if\(!staging\|\|token!==pendingMomentPickToken\)return;/);
-  assert.doesNotMatch(pick, /sb\.|insert|update|localStorage/, 'the place is only shown');
+test('a browser reads the place only after the consent, and never replaces a place searched by hand', () => {
+  const find = app.slice(app.indexOf('async function findMomentPlace('), app.indexOf('async function acceptMomentFiles('));
+  assert.ok(find.includes("if(pendingMomentPlace?.source==='search')return;"));
+  assert.ok(find.includes('coords=places?places.get(file)||null:await readJpegExifGps(file);'));
+  assert.ok(find.indexOf('photoConsent') < find.indexOf('fromCoords'), 'consent before the name is asked to Photon');
+  assert.doesNotMatch(app, /Prova mappa/);
 });

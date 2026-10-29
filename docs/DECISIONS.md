@@ -339,3 +339,19 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - «Il vostro anno su US» (founder, 29/10: «è rimasto il vostro anno..»): in Noi compare solo quando la coppia compie un anno su US (`couples.created_at`, giorno di Roma; il 29 febbraio vale il 28), per 30 giorni, ogni anno. L'anniversario della relazione in Oggi apre Eventi.
 - Il cuore (founder, 29/10: «cambierei anche l'animazione del mi piace … e ogni 3 mi piace una più grande»): i cuori di Oggi (risposta del partner), della risposta a un Ti penso e del Ti penso in alto a sinistra («la stessa cosa anche al Ti penso») hanno la stessa animazione, contati insieme, rosa→lilla, reattiva e senza coriandoli (founder: «più reattivo e satisfied … senza coriandoli»): il cuore scatta al tocco e un'onda si apre attorno; ogni terzo cuore di una persona è quello grande, con lo scatto più alto e una seconda onda. Il conto sta sul telefono di ciascuno.
 - Rimandati, ognuno con la sua decisione: Sintonia più semplice (prima un prima/dopo), il mega recap di «Il vostro anno su US» e i recap dei mesiversari, foto senza posizione (selettore nativo).
+
+## 2026-10-29 — Mappa dei Ricordi
+
+**Fonte:** founder, 29/10/2026: grill «Mappa dei Ricordi» (D1–D8, con la prova tecnica D8 sull'APK di staging: la foto della galleria dello Xiaomi è arrivata senza posizione), poi il giro sulla posizione automatica, il fornitore e il posto nell'interfaccia («concordo con tutto»). Patch: [`PROSSIMA_PATCH_PRODUZIONE.md`](store/PROSSIMA_PATCH_PRODUZIONE.md).
+
+- **D1:** un posto per Ricordo.
+- **D2:** il posto viene dal GPS della foto **e** dalla ricerca a mano di un posto o di un indirizzo.
+- **D3:** serve il consenso. Il posto è arrotondato a circa 100 m (tre decimali, li tiene la colonna stessa) e lo vede solo la coppia (RLS dei Ricordi). Il nome salvato è breve: il posto o la via **senza numero civico**, poi la città.
+- **D4:** MapLibre, con le tile di **OpenFreeMap** e la ricerca di **Photon** (komoot): niente chiavi, account o costi. MapTiler no: chiederebbe un account e una chiave del founder. Se l'uso cresce, Photon va ospitato da noi o sostituito: il servizio pubblico è «fair use», senza garanzie.
+- **D5:** gratis, niente Plus.
+- **D6:** i Ricordi vecchi si collocano solo a mano. **Tutti e due** possono aggiungere, cambiare o togliere il posto di qualsiasi Ricordo della coppia (`set_moment_place`), anche di quelli caricati dall'altra persona.
+- **D7:** i traguardi (città e paesi visitati) vengono dopo.
+- **Android, posizione automatica:** Android toglie il GPS alle foto che arrivano dal Photo Picker o dal file input del WebView. Il plugin nativo `us-photo-place` apre il **selettore documenti di sistema** (`ACTION_OPEN_DOCUMENT`) e, con `ACCESS_MEDIA_LOCATION`, legge il GPS dell'originale. Niente `READ_MEDIA_IMAGES`: Play lo riserva alle app di sole foto. La prima volta US spiega a cosa serve il posto («Continua» / «Non ora»), poi Android chiede il permesso; nel browser vale la stessa spiegazione prima di leggere il posto dal file.
+- **Interfaccia:** «Dove · facoltativo» nel composer, sotto la data; la riga «Dove» nell'album del Ricordo; in Ricordi l'interruttore «Mappa» accanto a «Mese per mese», con i Ricordi come foto rotonde, raggruppati quando sono vicini.
+- **Couple Joy (analisi dell'APK 4.29.0 del 29/10, solo per confronto):** usa Google Maps e la ricerca di Google passando dal proprio server (`/v1/places/search`, `/v1/maps/reverse-geocode`, `/v1/map/pins`). Non dichiara `ACCESS_MEDIA_LOCATION`, quindi su Android non legge il posto dalle foto. Conta anche città e paesi visitati, cioè il nostro D7.
+- **Governance:** il lavoro va sul branch e su staging. SQL, Edge dell'export, merge e pubblicazione in produzione hanno ciascuno un'approvazione separata; prima vanno aggiornate l'informativa privacy (Photon e OpenFreeMap) e la Sicurezza dei dati su Play.

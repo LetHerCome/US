@@ -224,5 +224,35 @@ Decisa il 29/10 (`docs/DECISIONS.md`, «Nuova scala dei premi Sintonia»; missio
     - La schermata vera si chiama ora `UsActivity`; l'ingresso di sempre tiene il nome `.MainActivity`, così l'icona già sulla schermata home resta dopo l'aggiornamento.
     - Quando si cambia icona, molti telefoni tolgono quella vecchia dalla schermata home e mettono la nuova nell'elenco delle app: va detto nell'app.
     - Il controllo del bundle per Play accetta solo la schermata di US e i quattro ingressi delle icone.
-  - **Prova tecnica della Mappa dei Ricordi (solo staging):** scegliendo una foto per un Ricordo, l'app di staging dice se la foto ha ancora la sua posizione GPS (arrotondata a circa 100 m, non salvata). In produzione non compare.
+  - **Prova tecnica della Mappa dei Ricordi:** sostituita dalla Mappa dei Ricordi vera (sezione qui sotto); il toast di staging non c'è più.
   - **Da provare sul telefono:** gli accessori sul Compagno sopra la barra e la lettera quando arriva un Ti penso vero.
+
+## 2026-10-29 — Mappa dei Ricordi
+
+**Fonte:** founder, 29/10/2026: grill «Mappa dei Ricordi» (D1–D7) e risposte del giro successivo («concordo con tutto»). Decisione in `docs/DECISIONS.md`. **Branch:** `claude/mappa-ricordi`, sopra `claude/sintonia-premi-v2`.
+
+- **Server:** la migrazione `20261029222210_ricordi_place_v1.sql` aggiunge ai Ricordi `place_lat`, `place_lon` (tre decimali, circa 100 m, li arrotonda la colonna stessa), `place_label` (nome breve, 1–120 caratteri) e `place_source` (`photo` o `search`), più `set_moment_place()` per tutti e due i membri della coppia. Il posto lo legge solo la coppia (RLS dei Ricordi) ed entra nell'export dei dati.
+  - **Ordine:** prima l'SQL, poi il web. Senza le colonne Ricordi si legge come prima, ma **salvare un Ricordo con un posto fallisce**.
+- **App:**
+  - **«Dove · facoltativo»** nel composer, sotto la data: il posto della foto compare da solo con la ✕ per toglierlo, oppure «Aggiungi il posto» apre la ricerca. Il nome è il posto o la via senza numero civico, poi la città.
+  - **Nell'album del Ricordo** la riga «Dove» aggiunge, cambia o toglie il posto, anche sui Ricordi vecchi e su quelli caricati dall'altra persona.
+  - **Mappa:** in Ricordi l'interruttore «Mappa» accanto a «Mese per mese». Ogni Ricordo è un cerchio con la sua foto, i vicini si raggruppano con il numero, un tocco apre il Ricordo.
+  - **Consenso:** la prima volta US spiega a cosa serve il posto delle foto («Continua» / «Non ora»), poi Android chiede il permesso.
+- **Android, posizione dalla foto:** nuovo plugin `native-plugins/us-photo-place`. «Aggiungi un ricordo» apre il **selettore documenti di sistema** (`ACTION_OPEN_DOCUMENT`) al posto della galleria; con `ACCESS_MEDIA_LOCATION` legge il GPS dell'originale (`MediaStore.getMediaUri` + `setRequireOriginal`) e lo arrotonda prima di passarlo all'app. Niente `READ_MEDIA_IMAGES`. Se qualcosa non va, il posto resta vuoto e la foto entra lo stesso.
+- **Servizi esterni nuovi (senza chiave né account):**
+  - **Photon** (komoot, Germania) per la ricerca e per il nome del posto delle foto: riceve il testo cercato e le coordinate già arrotondate. Fair use, nessuna garanzia di servizio.
+  - **OpenFreeMap** per le tile della mappa (stile «dark»): riceve la zona guardata.
+  - **MapLibre GL JS 5.24.0** da jsdelivr, caricata solo quando si apre la mappa.
+- **Peso dell'app:** il limite sale da 2,9 a 2,95 MB (`ricordi-place.js` e `.css`, circa 28 KB).
+- **Export dei dati:** il posto entra nell'export (`s3-2-export-core.mjs`). La Edge function dell'export va pubblicata **dopo** l'SQL, altrimenti chiede colonne che non esistono.
+- **Prima della produzione:**
+  - aggiornare l'informativa privacy (Photon e OpenFreeMap come destinatari; posizione delle foto);
+  - Sicurezza dei dati su Play: «Posizione approssimativa» anche per le foto (`ACCESS_MEDIA_LOCATION`), condivisa con nessuno, facoltativa;
+  - Play Console: controllare che `ACCESS_MEDIA_LOCATION` non chieda una dichiarazione (dalle pagine di Play non risulta tra i permessi limitati);
+  - testo «Novità»: aggiungere la Mappa dei Ricordi (va accorciato il resto per stare nei 500 caratteri).
+- **Da provare sul telefono (APK di staging):**
+  - il selettore documenti mostra le foto della fotocamera e ne fa scegliere più di una;
+  - la spiegazione di US e poi la richiesta di Android;
+  - una foto nuova con «Salva posizione» attivo nella fotocamera dello Xiaomi: «Dove» si riempie da solo;
+  - una foto senza posizione: «Dove» resta vuoto e si cerca a mano;
+  - la mappa: segnaposti, gruppi, tocco che apre il Ricordo, ritorno a «Mese per mese».

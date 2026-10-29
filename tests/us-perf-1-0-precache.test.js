@@ -94,5 +94,8 @@ test('perf 1.0 precache: no approved master is precached or loaded; the size bud
   // Premi Sintonia V2 (29/10/2026): Il vostro cielo (sky.js, ~9 KB; the star
   // catalogue itself is fetched only when the sky is shown), Aurora, the
   // seasons and Ti penso animato: 2.85 -> 2.9 MB.
-  assert.ok(total <= 2.9 * 1024 * 1024, `precache is ${total} bytes: stays under 2.9 MB`);
+  // Mappa dei Ricordi (29/10/2026): «Dove», the place search and the map view
+  // (ricordi-place.js/css, ~28 KB; MapLibre itself is fetched only when the
+  // map opens): 2.9 -> 2.95 MB.
+  assert.ok(total <= 2.95 * 1024 * 1024, `precache is ${total} bytes: stays under 2.95 MB`);
 });
