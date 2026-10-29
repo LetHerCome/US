@@ -2035,6 +2035,7 @@
     Pesca: 'Peach',
     Rubino: 'Ruby',
     Perla: 'Pearl',
+    'Si sblocca con US Plus: ognuno di voi sceglie il suo colore tra 8, e lo vedete tutti e due.': 'Unlocks with US Plus: each of you picks your colour out of 8, and you both see it.',
     'Il vostro mesiversario': 'Your monthiversary',
     'Ti penso, risposte e missioni, anche a US chiusa.': 'Thinking of you, answers and missions, even when US is closed.',
     Countdown: 'Countdown',

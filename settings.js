@@ -126,10 +126,14 @@ async function hydrateUsSettings(){
   const couple=coupleRes.data||{};
   const profiles=profilesRes.data||[];
   settingsSnapshot={couple,profiles,loc,push,prefs:prefsRes.data||{think:true,today:true,bond:true,relationship:true,left_for_you:true,games:true}};
+  // Colori a scelta (founder, 29/10): with Plus the colour; without it the
+  // row stays, locked, to show that Plus unlocks it.
+  const plusActive=plusRes?.data?.active===true;
+  settingsSnapshot.plusActive=plusActive;
   const colorRow=$('usPersonColorSetting');
-  if(colorRow)colorRow.hidden=!(plusRes?.data?.active===true);
+  if(colorRow){colorRow.hidden=Boolean(plusRes?.error)||!plusRes?.data;colorRow.dataset.locked=plusActive?'false':'true';}
   const colorValue=$('usPersonColorValue');
-  if(colorValue)colorValue.textContent=window.UsPersonColors?.nameOf?.(profiles,identityProfile.id)||'';
+  if(colorValue)colorValue.textContent=plusActive?(window.UsPersonColors?.nameOf?.(profiles,identityProfile.id)||''):'US Plus';
 
   const names=profiles.map(p=>p.display_name).filter(Boolean);
   // Mockup: "Francesco e Beatrice" — the names stay as written, "e" follows the language.
@@ -279,6 +283,12 @@ function distanceModal(){
 
 // Colori a scelta (US Plus, 29/10/2026): one of 8, never the other person's;
 // the server checks Plus and the colour again (set_my_color).
+// Without Plus: the 8 colours, locked. Nothing to buy while Plus is not on
+// sale (D4: the closed test sees no payments).
+function personColorLockedModal(){
+  const list=window.UsPersonColors?.choices?.(settingsSnapshot?.profiles||[],window.usProfile?.id)||[];
+  openModal('Il tuo colore',`<p class="us-person-color-locked">Si sblocca con US Plus: ognuno di voi sceglie il suo colore tra 8, e lo vedete tutti e due.</p><div class="us-setting-choice us-person-colors">${list.map(c=>`<button disabled><span><i class="us-person-swatch" style="background:${esc(c.hex)}" aria-hidden="true"></i>${esc(c.name)}</span><b>${c.mine?'Il tuo':''}</b></button>`).join('')}</div>`,'US PLUS');
+}
 function personColorModal(){
   const profiles=settingsSnapshot?.profiles||[],meId=window.usProfile?.id;
   const me=profiles.find(p=>p.id===meId),partner=profiles.find(p=>p.id!==meId)?.display_name||'la tua persona';
@@ -1022,7 +1032,7 @@ async function action(name){
   const overlay=$('usSettingsOverlay');if(overlay?.dataset&&name!=='maudit'&&name!=='app-lock')overlay.dataset.usSettingsSheet=name;
   if(name==='relationship-date')return relationshipDateModal();
   if(name==='together-mode')return window.UsDistance?.open?.();
-  if(name==='person-color')return personColorModal();
+  if(name==='person-color'){if(!settingsSnapshot?.plusActive)return personColorLockedModal();return personColorModal();}
   if(name==='profile-photo'){closeModal();window.pickProfilePhoto?.();return;}
   if(name==='home-photo')return homePhotoModal();
   if(name==='story-archive')return showStoryArchive();

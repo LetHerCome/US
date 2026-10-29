@@ -47,12 +47,12 @@ test('the picker: mine marked, the partner\'s (or their usual one) taken', () =>
   assert.equal(C.nameOf([F, B], 'b'), 'Lilla');
 });
 
-test('wired: profiles carry the colour, the page applies it, Settings shows it only with Plus', () => {
+test('wired: profiles carry the colour, the page applies it, Settings changes it with Plus', () => {
   const app = read('app.js');
   assert.match(app, /sb\.from\('profiles'\)\.select\('id,display_name,role,couple_id,person_color'\)\.eq\('couple_id',coupleId\)\.order\('created_at',\{ascending:true\}\)/);
   assert.match(app, /window\.UsPersonColors\?\.applyCoupleColors\?\.\(usCoupleContextState\.profiles\)/);
   const settings = read('settings.js');
-  assert.match(settings, /if\(name==='person-color'\)return personColorModal\(\);/);
+  assert.match(settings, /if\(name==='person-color'\)\{if\(!settingsSnapshot\?\.plusActive\)return personColorLockedModal\(\);return personColorModal\(\);\}/);
   assert.match(settings, /sb\.rpc\('get_couple_plus'\)/);
   assert.match(settings, /sb\.rpc\('set_my_color',\{p_color:/);
   const html = read('index.html');
@@ -60,4 +60,17 @@ test('wired: profiles carry the colour, the page applies it, Settings shows it o
   assert.ok(html.indexOf('/person-colors.js?v=') < html.indexOf('<script defer src="/app.js?v='));
   for (const list of ['scripts/build-cloudflare-pages.mjs', 'scripts/build-capacitor-web.mjs']) assert.match(read(list), /'person-colors\.js',/, list);
   assert.match(read('service-worker.js'), /versioned\("\/person-colors\.js"\)/);
+});
+
+test('without Plus the row is there, locked: it shows that Plus unlocks it, with nothing to buy yet', () => {
+  const settings = read('settings.js');
+  // Shown once Plus can be read; hidden only when it cannot (server not ready).
+  assert.match(settings, /if\(colorRow\)\{colorRow\.hidden=Boolean\(plusRes\?\.error\)\|\|!plusRes\?\.data;colorRow\.dataset\.locked=plusActive\?'false':'true';\}/);
+  assert.match(settings, /if\(colorValue\)colorValue\.textContent=plusActive\?\(window\.UsPersonColors\?\.nameOf\?\.\(profiles,identityProfile\.id\)\|\|''\):'US Plus';/);
+  assert.match(settings, /if\(!settingsSnapshot\?\.plusActive\)return personColorLockedModal\(\);/);
+  const locked = settings.slice(settings.indexOf('function personColorLockedModal'), settings.indexOf('function personColorModal'));
+  assert.match(locked, /Si sblocca con US Plus/);
+  assert.doesNotMatch(locked, /acquist|compra|prezzo|€|abbonati/i, 'no purchase while Plus is not on sale');
+  assert.match(read('index.html'), /<span class="us-setting-value" id="usPersonColorValue"><\/span><span class="us-icon us-person-color-lock" data-us-icon="lock" aria-hidden="true"><\/span>/);
+  assert.match(read('dc-settings.css'), /#usPersonColorSetting:not\(\[data-locked="true"\]\) \.us-person-color-lock\{display:none\}/);
 });

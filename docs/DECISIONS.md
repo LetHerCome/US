@@ -259,6 +259,7 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - Ognuno può scegliere il proprio colore da una tavolozza di 8: rosa, lilla, cielo, salvia, oro, pesca, rubino, perla. Tutti e due lo vedete uguale sui due telefoni. I due colori della coppia devono essere diversi.
 - Senza scelta valgono quelli di sempre: rosa per chi ha creato lo spazio, lilla per chi è entrato con il codice.
 - Il colore di Noi non cambia: resta l'orchidea o l'accento sbloccato.
-- **Solo con US Plus**, cioè quando almeno uno dei due ha Plus (D4). Senza Plus la scelta non compare: nessun richiamo a pagamenti finché l'interruttore di Plus è spento. Il colore già scelto resta anche dopo la fine di Plus, come tutto ciò che la coppia ha creato.
+- **Solo con US Plus**, cioè quando almeno uno dei due ha Plus (D4). Il colore già scelto resta anche dopo la fine di Plus, come tutto ciò che la coppia ha creato.
+- **Senza Plus la voce si vede, bloccata** (founder, 29/10: «facciamo vedere che si sblocca solo con plus, c'è il pulsante bloccato»): lucchetto e «US Plus»; toccandola si vedono gli 8 colori bloccati e «Si sblocca con US Plus». Nessun pulsante d'acquisto, prezzo o abbonamento finché Plus non è in vendita: per il test chiuso vale ancora D4, «chi è nel test chiuso non vede pagamenti».
 - Restano come sono: logo US, icona dell'app, splash e animazione d'apertura (asset approvati).
 - Per farlo serve la base dell'accesso Plus su Supabase (missione `plus-v1-staging.md` §2, solo la lettura). Gli acquisti e il webhook di RevenueCat restano ai passi successivi.
