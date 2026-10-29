@@ -24,6 +24,8 @@
 
 ## 2. L'accesso della coppia su Supabase staging
 
+- **Fatto in parte (29/10, per i colori a scelta):** `plus_entitlements` (lettura propria, scrittura solo dal server), `private.couple_has_plus` e `get_couple_plus()` nella migrazione `20261029014653_person_colors_plus_v1.sql`. Restano il webhook di RevenueCat e i suoi test.
+
 - Tabella degli abbonamenti per utente:
   - colonne: utente, fonte (`play`, `beta`, `manuale`), prodotto, stato, scadenza, ultimo evento;
   - RLS: ognuno vede solo la propria riga.

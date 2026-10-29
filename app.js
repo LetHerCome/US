@@ -182,6 +182,7 @@ function clearUsCoupleContext(){
   const profileImage=document.getElementById('profileAvatarImg');
   if(profileImage){profileImage.hidden=true;profileImage.removeAttribute('src');}
   const profileInitial=document.getElementById('profileAvatarFallback');if(profileInitial)profileInitial.textContent='·';
+  window.UsPersonColors?.applyCoupleColors?.([]);
   refreshUsIdentityLabels();
 }
 async function hydrateUsCoupleContext(){
@@ -195,7 +196,7 @@ async function hydrateUsCoupleContext(){
   try{
     [coupleResult,profilesResult]=await Promise.all([
       sb.from('couples').select('id,name,started_on').eq('id',coupleId).maybeSingle(),
-      sb.from('profiles').select('id,display_name,role,couple_id').eq('couple_id',coupleId).order('created_at',{ascending:true})
+      sb.from('profiles').select('id,display_name,role,couple_id,person_color').eq('couple_id',coupleId).order('created_at',{ascending:true})
     ]);
   }catch(error){
     if(window.usProfile===profile&&window.usProfile?.couple_id===coupleId&&generation===usCoupleContextState.generation)clearUsCoupleContext();
@@ -210,6 +211,8 @@ async function hydrateUsCoupleContext(){
   }
   usCoupleContextState.couple=coupleResult.data||null;
   usCoupleContextState.profiles=(profilesResult.data||[]).filter(row=>row.couple_id===coupleId);
+  // Colori a scelta (US Plus, 29/10/2026): each person in their colour, on both phones.
+  window.UsPersonColors?.applyCoupleColors?.(usCoupleContextState.profiles);
   usCoupleContextState.identityKey=identityKey;
   updateTogetherDays(usCoupleContextState.couple?.started_on);
   refreshUsIdentityLabels();
@@ -1637,9 +1640,11 @@ async function hydrateProfileAvatars(){
   if(!viewer)return;
   const fallback=document.getElementById('profileAvatarFallback');
   if(fallback)fallback.textContent=usIdentity().initialForRole(viewer.role);
-  const {data:profiles,error}=await sb.from('profiles').select('id,display_name,role,avatar_path,couple_id').eq('couple_id',coupleId);
+  const {data:profiles,error}=await sb.from('profiles').select('id,display_name,role,avatar_path,couple_id,person_color').eq('couple_id',coupleId);
   if(window.usProfile!==viewer||window.usProfile?.couple_id!==coupleId)return;
   if(error){console.warn(error);return;}
+  // Back in the app: a colour the other person changed meanwhile shows here.
+  window.UsPersonColors?.applyCoupleColors?.((profiles||[]).filter(p=>p.couple_id===coupleId));
   for(const profile of (profiles||[]).filter(p=>p.couple_id===coupleId)){
     const url=await signedAvatarUrl(profile.avatar_path);
     if(window.usProfile!==viewer||window.usProfile?.couple_id!==coupleId)return;

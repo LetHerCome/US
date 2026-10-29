@@ -1,4 +1,4 @@
-const BUILD_ID = "us-aggiornamento-20261029-47";
+const BUILD_ID = "us-colori-20261029-48";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;
@@ -61,6 +61,7 @@ const APP_SHELL = [
   versioned("/distance.css"),
   versioned("/distance.js"),
   versioned("/app-update.js"),
+  versioned("/person-colors.js"),
   versioned("/pet.css"),
   versioned("/pet.js"),
   versioned("/settings.css"),

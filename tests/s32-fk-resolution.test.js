@@ -11,6 +11,8 @@ const h=require('./helpers/mc2-db');
 
 const PERSONAL_CASCADE=new Set([
   'auth.users>profiles.id','auth.users>daily_answers.user_id','auth.users>moods.user_id','auth.users>quiz_responses.user_id',
+  // US Plus (29/10/2026): the entitlement goes with the account (Play's subscription is warned about before deletion, D4).
+  'auth.users>plus_entitlements.user_id',
   'profiles>calendar_entries.owner_id','profiles>calendar_reminders.recipient_id','profiles>calendar_reminders.requested_by',
   'profiles>conserva_contributions.conserved_by','profiles>couple_locations.user_id','profiles>device_push_tokens.user_id',
   'profiles>notification_preferences.user_id','profiles>partner_knowledge_attempts.user_id','profiles>progression_reward_views.profile_id',
@@ -51,7 +53,7 @@ test('every user reference is classified, and shared content fails closed',async
       else assert.fail('unclassified user reference: '+key+' — decide what account deletion does with it');
     }
     for(const key of [...PERSONAL_CASCADE,...OPERATIONAL_SET_NULL,...SHARED_FAIL_CLOSED])assert.ok(seen.has(key),'stale classification '+key);
-    assert.equal(seen.size,38);
+    assert.equal(seen.size,39);
   }finally{await db.close();}
 });
 

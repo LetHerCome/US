@@ -795,3 +795,8 @@ body:has(#settings.page.active) .us-nav-premium>button[data-page="bond"] .nlabel
 /* Privacy e dati: links to the public Privacy and Terms pages. */
 #usSettingsModalBody .us-settings-copy p.us-settings-legal{background:none;border:0;padding:6px 2px 0;text-align:center}
 #usSettingsModalBody .us-settings-legal a{display:inline-block;min-height:44px;line-height:44px;padding:0 8px;color:var(--us-noi);font-weight:650;text-decoration:none}
+
+/* Colori a scelta (US Plus, 29/10/2026): each choice shows its colour. */
+.us-person-colors .us-person-swatch{display:inline-block;width:14px;height:14px;margin-right:10px;border-radius:50%;vertical-align:-2px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+.us-person-colors button:disabled{opacity:.5}
+.us-person-color-reset{display:block;margin:14px auto 0}

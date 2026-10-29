@@ -108,22 +108,28 @@ async function hydrateUsSettings(){
   const identityProfile=window.usProfile;
   const cid=identityProfile.couple_id;
   const unit=localStorage.getItem('us:settings:distance-unit')||'km';
-  const [coupleRes,profilesRes,momentsRes,eventsRes,archiveRes,loc,push,prefsRes]=await Promise.all([
+  const [coupleRes,profilesRes,momentsRes,eventsRes,archiveRes,loc,push,prefsRes,plusRes]=await Promise.all([
     sb.from('couples').select('started_on,bond_xp').eq('id',cid).maybeSingle(),
-    sb.from('profiles').select('id,display_name,role,avatar_path').eq('couple_id',cid).order('created_at',{ascending:true}),
+    sb.from('profiles').select('id,display_name,role,avatar_path,person_color').eq('couple_id',cid).order('created_at',{ascending:true}),
     sb.from('moments').select('id',{count:'exact',head:true}).eq('couple_id',cid),
     sb.from('shared_event_completions').select('event_id',{count:'exact',head:true}).eq('couple_id',cid),
     // Stories are retired on native (the archive row is stripped from the APK web bundle).
     window.UsPlatform?.isNative?Promise.resolve({count:0}):sb.from('stories').select('id',{count:'exact',head:true}).eq('couple_id',cid).lt('expires_at',new Date().toISOString()),
     locationState(),
     pushState(),
-    sb.rpc('get_notification_preferences')
+    sb.rpc('get_notification_preferences'),
+    // Colori a scelta: only while the couple has US Plus (D4); unreadable = hidden.
+    sb.rpc('get_couple_plus')
   ]);
 
   if(window.usProfile!==identityProfile||window.usProfile?.couple_id!==cid)return;
   const couple=coupleRes.data||{};
   const profiles=profilesRes.data||[];
   settingsSnapshot={couple,profiles,loc,push,prefs:prefsRes.data||{think:true,today:true,bond:true,relationship:true,left_for_you:true,games:true}};
+  const colorRow=$('usPersonColorSetting');
+  if(colorRow)colorRow.hidden=!(plusRes?.data?.active===true);
+  const colorValue=$('usPersonColorValue');
+  if(colorValue)colorValue.textContent=window.UsPersonColors?.nameOf?.(profiles,identityProfile.id)||'';
 
   const names=profiles.map(p=>p.display_name).filter(Boolean);
   // Mockup: "Francesco e Beatrice" — the names stay as written, "e" follows the language.
@@ -268,6 +274,24 @@ function distanceModal(){
   $('usSettingsModalBody').querySelectorAll('[data-distance]').forEach(btn=>btn.addEventListener('click',()=>{
     localStorage.setItem('us:settings:distance-unit',btn.dataset.distance);
     window.hydrateDistance?.();hydrateUsSettings();closeModal();toast('Unità aggiornata');
+  }));
+}
+
+// Colori a scelta (US Plus, 29/10/2026): one of 8, never the other person's;
+// the server checks Plus and the colour again (set_my_color).
+function personColorModal(){
+  const profiles=settingsSnapshot?.profiles||[],meId=window.usProfile?.id;
+  const me=profiles.find(p=>p.id===meId),partner=profiles.find(p=>p.id!==meId)?.display_name||'la tua persona';
+  const list=window.UsPersonColors?.choices?.(profiles,meId)||[];
+  openModal('Il tuo colore',`<div class="us-setting-choice us-person-colors">${list.map(c=>`<button data-person-color="${esc(c.id)}" class="${c.mine?'active':''}"${c.taken?' disabled':''}><span><i class="us-person-swatch" style="background:${esc(c.hex)}" aria-hidden="true"></i>${esc(c.name)}</span><b>${c.mine?'Il tuo':c.taken?esc(partner):''}</b></button>`).join('')}</div>${me?.person_color?'<button type="button" class="us-ob-link us-person-color-reset" data-person-color="">Torna al colore di sempre</button>':''}`,'US PLUS');
+  $('usSettingsModalBody').querySelectorAll('[data-person-color]').forEach(btn=>btn.addEventListener('click',async()=>{
+    if(btn.disabled)return;
+    const color=btn.dataset.personColor||null;
+    const {error}=await sb.rpc('set_my_color',{p_color:color});
+    if(error){toast(/partner color/.test(error.message||'')?`È il colore di ${partner}`:'Non riesco a cambiare il colore. Riprova.');return;}
+    if(me)me.person_color=color;
+    window.UsPersonColors?.applyCoupleColors?.(profiles);
+    closeModal();hydrateUsSettings();toast('Colore aggiornato ♡');
   }));
 }
 
@@ -998,6 +1022,7 @@ async function action(name){
   const overlay=$('usSettingsOverlay');if(overlay?.dataset&&name!=='maudit'&&name!=='app-lock')overlay.dataset.usSettingsSheet=name;
   if(name==='relationship-date')return relationshipDateModal();
   if(name==='together-mode')return window.UsDistance?.open?.();
+  if(name==='person-color')return personColorModal();
   if(name==='profile-photo'){closeModal();window.pickProfilePhoto?.();return;}
   if(name==='home-photo')return homePhotoModal();
   if(name==='story-archive')return showStoryArchive();

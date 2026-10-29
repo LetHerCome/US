@@ -55,7 +55,7 @@ test('content 1.0: the migration comes after every other one and never deletes c
   // wording of three questions (19/10, content only) and the weekly check-in
   // (22/10, its own tables, no content) and content 1.1 (22/10, new rows
   // only, its own block and test) follow it.
-  assert.deepEqual(files.slice(files.indexOf(path.basename(MIGRATION_FILE)) + 1), ['20261014230000_us_1_0_locale_content_en.sql', '20261015000000_us_1_0_server_fixes.sql', '20261017120000_s32_account_deletion_worker_cron.sql', '20261019120000_us_1_0_content_time_neutral.sql', '20261022160549_content_1_1.sql', '20261022170733_year_recap_v1.sql', '20261022213000_companions_v1.sql', '20261025190000_couple_distance_v1.sql', '20261028201759_gioca_daily_limit_v1.sql', '20261028232743_days_together_milestones_v1.sql', '20261029012149_app_min_version_v1.sql']);
+  assert.deepEqual(files.slice(files.indexOf(path.basename(MIGRATION_FILE)) + 1), ['20261014230000_us_1_0_locale_content_en.sql', '20261015000000_us_1_0_server_fixes.sql', '20261017120000_s32_account_deletion_worker_cron.sql', '20261019120000_us_1_0_content_time_neutral.sql', '20261022160549_content_1_1.sql', '20261022170733_year_recap_v1.sql', '20261022213000_companions_v1.sql', '20261025190000_couple_distance_v1.sql', '20261028201759_gioca_daily_limit_v1.sql', '20261028232743_days_together_milestones_v1.sql', '20261029012149_app_min_version_v1.sql', '20261029014653_person_colors_plus_v1.sql']);
   const code = MIGRATION.replace(/--.*$/gm, '').replace(/'(?:[^']|'')*'/g, "''");
   assert.ok(!/\bdelete\s+from\b|\btruncate\b|\bdrop\s+(?:table|column|policy|schema)\b/i.test(code), 'nothing is deleted');
   assert.ok(!/\bgrant\b|\bpolicy\b|row level security/i.test(code), 'grants and RLS stay as they are');

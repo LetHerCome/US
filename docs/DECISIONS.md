@@ -250,3 +250,15 @@ Only durable decisions belong here. New missions should not reopen them without 
 
 - Ogni prova (SQL, Edge, interruttori, build di prova, dati di test) si fa su US-STAGING (`com.usapp.us.staging`). La produzione è in mano ai tester del test chiuso e poi agli utenti.
 - In produzione arrivano solo **patch mirate** di cose già funzionanti su staging, ciascuna con il via del founder. Le letture in produzione restano ammesse; le scritture di prova no.
+
+## 2026-10-29 — Colori delle persone a scelta, con US Plus
+
+**Fonte:** founder, 29/10/2026: «dare la possibilità di cambiare il colore dei cerchi con altre variazioni di colore» e «metterei il cambio colore per la versione premium».
+
+Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori delle persone»):
+- Ognuno può scegliere il proprio colore da una tavolozza di 8: rosa, lilla, cielo, salvia, oro, pesca, rubino, perla. Tutti e due lo vedete uguale sui due telefoni. I due colori della coppia devono essere diversi.
+- Senza scelta valgono quelli di sempre: rosa per chi ha creato lo spazio, lilla per chi è entrato con il codice.
+- Il colore di Noi non cambia: resta l'orchidea o l'accento sbloccato.
+- **Solo con US Plus**, cioè quando almeno uno dei due ha Plus (D4). Senza Plus la scelta non compare: nessun richiamo a pagamenti finché l'interruttore di Plus è spento. Il colore già scelto resta anche dopo la fine di Plus, come tutto ciò che la coppia ha creato.
+- Restano come sono: logo US, icona dell'app, splash e animazione d'apertura (asset approvati).
+- Per farlo serve la base dell'accesso Plus su Supabase (missione `plus-v1-staging.md` §2, solo la lettura). Gli acquisti e il webhook di RevenueCat restano ai passi successivi.
