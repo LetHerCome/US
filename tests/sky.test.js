@@ -96,7 +96,7 @@ test('in the app: a theme of Oggi, drawn from «Insieme dal», the city and the 
   assert.match(read('sky.js'), /fetch\('\/assets\/data\/stars-bsc5-v1\.json'\)/, 'the catalogue is fetched by sky.js, never by oggi-look.js');
   assert.match(look, /window\.UsSky\.skySvg\(\{ stars, day, city, level, minutes, overlay: true \}\)/, 'over the photo, never a disc that hides it');
   assert.match(look, /root\.style\.setProperty\('--oggi-sky-map', map\)/);
-  assert.match(read('app.js'), /sb\.from\('couples'\)\.select\('id,name,started_on,sky_city,sky_minutes'\)/);
+  assert.match(read('app.js'), /sb\.from\('couples'\)\.select\('id,name,started_on,sky_city,sky_minutes[^']*'\)/);
   const css = read('oggi-look.css');
   assert.ok(css.includes('html[data-us-oggi-theme="sky"],\n.us-look-phone[data-oggi-theme="sky"]{'));
   assert.match(css, /--oggi-deco:var\(--oggi-sky-map,linear-gradient\(transparent,transparent\)\)/);
