@@ -93,8 +93,6 @@ body:has(#home.active #homeHero.us-oggi-focus) .nav.us-nav{translate:0 120px}
 #thinkButton.us-top-think.sent:disabled{opacity:1!important;filter:none!important}
 #thinkButton.sent .us-shell-icon--think{animation:dc-oggi-heart .7s ease-out}
 @keyframes dc-oggi-heart{0%{scale:1}25%{scale:1.3}50%{scale:.92}70%{scale:1.12}100%{scale:1}}
-/* The two sparks that fly from the heart (mockup .spark). */
-.dc-oggi-spark{position:fixed;z-index:65;width:12px;height:12px;border-radius:50%;pointer-events:none}
 
 /* Envelope: the icon stays still; "there is something for you" is two small
    dots, rosa and lilla, that beat (mockup .beat). Same hook (data-us-attention). */
@@ -1035,13 +1033,11 @@ body:has(#usCountdownSheet.open) .toast{z-index:calc(var(--us-layer-sheet) + 2)}
 /* ---------- 13 · Reduced motion: movement becomes a fade or nothing ---------- */
 :root[data-us-motion="reduced"] :is(#thinkButton .us-shell-icon--think,#leftForYouPartnerEntry .beat,#home #usDailyRitual,#home .us-daily-ritual-ring *,#today .today-answer,#today .today-keep-done,#thinkArrival .think-arrival-sheet,#thinkArrival .think-arrival-sheet>*,#thinkArrival .think-arrival-head>div>*,#thinkArrival .think-reaction-grid,#thinkArrival .think-reaction-glyph,#thinkArrival .think-arrival-visual i,.us-look-overlay .us-look-sheet,#leftForYouOverlay .left-for-you-text,#leftForYouOverlay .left-for-you-kind){animation:none!important}
 :root[data-us-motion="reduced"] #home .us-daily-ritual-ring *{transition:none!important}
-:root[data-us-motion="reduced"] .dc-oggi-spark{display:none!important}
 :root[data-us-motion="reduced"] #thinkArrival.open>.think-arrival-sheet[data-us-modal-panel]{animation:dc-oggi-fade .2s linear both!important}
 :root[data-us-motion="reduced"] #home #usOggiDock>:is(#usTodayPriorityRegion,#pushOptInCard):not([hidden]){animation:dc-oggi-fade .2s linear both!important}
 @media (prefers-reduced-motion:reduce){
   #thinkButton .us-shell-icon--think,#leftForYouPartnerEntry .beat,#home #usDailyRitual,#home .us-daily-ritual-ring *,#today .today-answer,#today .today-keep-done,#thinkArrival .think-arrival-sheet,#thinkArrival .think-arrival-sheet>*,#thinkArrival .think-arrival-head>div>*,#thinkArrival .think-reaction-grid,#thinkArrival .think-reaction-glyph,#thinkArrival .think-arrival-visual i,.us-look-overlay .us-look-sheet,#leftForYouOverlay .left-for-you-text,#leftForYouOverlay .left-for-you-kind{animation:none!important}
   #home .us-daily-ritual-ring *{transition:none!important}
-  .dc-oggi-spark{display:none!important}
   #thinkArrival.open>.think-arrival-sheet[data-us-modal-panel]{animation:dc-oggi-fade .2s linear both!important}
   #home #usOggiDock>:is(#usTodayPriorityRegion,#pushOptInCard):not([hidden]){animation:dc-oggi-fade .2s linear both!important}
   #leftForYouPartnerEntry.us-attention-orbit[data-us-attention="on"]::after{animation:none;transition:none}
