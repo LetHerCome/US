@@ -1,8 +1,8 @@
 # Prossima patch in produzione
 
 **Stato:** in prova su staging (https://us-staging-s31.pages.dev). Niente è in produzione. Ogni passo qui sotto ha il via separato del founder (regola «prove solo su staging», `docs/DECISIONS.md`, 28/10/2026).
-**Build:** `us-colori-20261029-50`.
-**Branch:** `claude/gioca-una-al-giorno` (PR #232), sopra `claude/fix-amici-beta` (PR #233) poi `claude/traguardi-giorni` (PR #234) poi `claude/invito-app-links` (PR #235) poi `claude/aggiornamento-app` (PR #236) e infine `claude/colori-plus`.
+**Build:** `us-emoji-20261029-56`.
+**Branch:** `claude/gioca-una-al-giorno` (PR #232), sopra `claude/fix-amici-beta` (PR #233) poi `claude/traguardi-giorni` (PR #234) poi `claude/invito-app-links` (PR #235) poi `claude/aggiornamento-app` (PR #236) poi `claude/colori-plus` (PR #237) e infine `claude/emoji-tastiera`.
 **Patch unica (founder, 29/10):** tutte queste PR più i fix dei tester che arrivano nel frattempo, in produzione insieme e solo con il via del founder.
 
 ## Testo «Novità» per Google Play
@@ -16,6 +16,7 @@ Italiano (massimo 500 caratteri):
 > Google: niente più schermate sovrapposte.
 > Traguardi ogni 100 giorni insieme: i 1000 valgono di più.
 > D'ora in poi US si aggiorna da sola.
+> Emoji: la tastiera le propone in ogni campo dove scrivete.
 
 English (500 characters max):
 
@@ -26,6 +27,7 @@ English (500 characters max):
 > Google: no more overlapping screens.
 > Milestones every 100 days together: 1000 is worth the most.
 > From now on US updates itself.
+> Emoji: the keyboard offers them in every field where you write.
 
 ## Cosa cambia
 
@@ -100,6 +102,18 @@ English (500 characters max):
 - **App:** nuovo `person-colors.js`. I colori arrivano dal profilo all'avvio e al ritorno nell'app; tutta l'interfaccia legge `--us-rosa` e `--us-lilla`, quindi cambia insieme.
 - **Restano uguali:** logo, icona, splash, animazione d'apertura e, per ora, **i widget Android** (oggi «io» è sempre lilla e il partner rosa). Collegarli ai colori scelti è un passo a parte, nativo.
 - **In produzione tutti vedranno la voce bloccata** finché Plus non c'è. Per sbloccarla a una coppia serve una riga in `plus_entitlements` (fonte `manuale` o `beta`).
+
+### Emoji sulla tastiera (founder, 29/10)
+
+- **Problema:** nell'APK la tastiera a volte offriva le emoji e a volte no.
+- **Causa:** alcuni campi avevano `autocomplete="off"`. Il WebView di Android lo passa alla tastiera come «niente suggerimenti», e lì Gboard toglie le emoji. Il founder ha confermato sul telefono: le emoji mancavano proprio in quei campi.
+- **Correzione:** il segno è tolto dai campi dove si scrive:
+  - titolo del calendario («Che cosa fai?»);
+  - nome del conto alla rovescia («Il nostro viaggio»);
+  - didascalie di foto e vocali in Lasciato per te.
+- **Resta** dove le emoji non servono: codice d'invito, parole di conferma («ELIMINA», uscita dalla coppia), orari del calendario, ricerca del brano e nomi dell'iscrizione.
+- **Test:** `tests/keyboard-emoji.test.js` tiene l'elenco dei soli campi che possono avere il segno.
+- **Da provare sull'APK:** serve un APK nuovo, perché le schermate sono dentro l'app.
 
 ## Ordine in produzione (ognuno con il suo via)
 
