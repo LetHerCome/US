@@ -3642,6 +3642,11 @@ let pendingMomentSource=null;
 // photos are actually picked (undefined: keep the current one, e.g. "Cambia foto").
 let pendingMomentSourceNext;
 let pendingMomentPickToken=0;
+// Mappa dei Ricordi — the place of the new memory ({lat,lon,label,source},
+// rounded), shown in "Dove" before saving: saved only if it is still there.
+let pendingMomentPlace=null;
+const US_MOMENT_COLUMNS='id,created_by,storage_path,thumbnail_path,caption,moment_date,created_at';
+const US_MOMENT_PLACE_COLUMNS='place_lat,place_lon,place_label,place_source';
 const US_MOMENT_MAX_PHOTOS=10;
 const US_MOMENT_TYPES=['image/jpeg','image/png','image/webp'];
 
@@ -3700,9 +3705,9 @@ async function readJpegExifDate(file){
   return null;
 }
 
-// Mappa dei Ricordi, prova tecnica (founder, 29/10/2026, D8): does Android hand
-// the web view a photo with its GPS position? Read from the JPEG (EXIF GPS IFD),
-// rounded to about 100 m, never stored. Only staging builds say what they found.
+// Mappa dei Ricordi (founder, 29/10/2026): the GPS position of a JPEG (EXIF GPS
+// IFD), rounded to about 100 m. On Android the web view gets the photo without
+// it (the native UsPhotoPlace plugin reads it there); a browser may keep it.
 async function readJpegExifGps(file){
   if(file?.type!=='image/jpeg')return null;
   try{
@@ -3734,11 +3739,6 @@ async function readJpegExifGps(file){
     }
   }catch(error){console.warn('[US Moments] EXIF GPS',error);}
   return null;
-}
-// Staging only: the preview site or the staging APK (com.usapp.us.staging).
-async function usIsStagingRuntime(){
-  if(/^us-staging/.test(location.hostname))return true;
-  try{return /\.staging$/.test((await window.Capacitor?.Plugins?.App?.getInfo?.())?.id||'');}catch(_){return false;}
 }
 
 async function detectMomentDate(file){
@@ -3789,9 +3789,33 @@ function momentUpBar(stage){
   if(typeof fill.animate==='function'&&!window.UsUiFoundation?.isReducedMotion?.())fill.animate([{width:from},{width:to}],{duration,easing:'cubic-bezier(.2,.8,.2,1)'});
 }
 
-function pickMomentPhoto(){
-  document.getElementById('momentFile').click();
+// Android: the native picker brings the photos with their place; anywhere else
+// (or if it fails) the file input of always.
+async function pickMomentPhoto(){
+  let picked=null;
+  try{picked=await window.UsRicordiPlace?.pickWithPlaces?.();}
+  catch(error){console.warn('[US Mappa] scelta foto',error);picked=null;}
+  if(!picked){document.getElementById('momentFile').click();return;}
+  if(picked.files.length)await acceptMomentFiles(picked.files,picked.places,picked.skipped);
 }
+// "Dove": the place of the memory being written.
+function renderMomentPlace(){
+  const label=document.getElementById('momentPlaceLabel');
+  const clear=document.getElementById('momentPlaceClear');
+  const field=document.getElementById('momentPlaceField');
+  if(label)label.textContent=pendingMomentPlace?.label||'Aggiungi il posto';
+  if(clear)clear.hidden=!pendingMomentPlace;
+  field?.classList.toggle('has-place',Boolean(pendingMomentPlace));
+}
+async function editMomentPlace(){
+  const place=await window.UsRicordiPlace?.choose?.({current:pendingMomentPlace,near:pendingMomentPlace});
+  if(place===undefined)return;
+  pendingMomentPlace=place;
+  renderMomentPlace();
+}
+window.editMomentPlace=editMomentPlace;
+function clearMomentPlace(){pendingMomentPlace=null;renderMomentPlace();}
+window.clearMomentPlace=clearMomentPlace;
 window.pickMomentPhoto=pickMomentPhoto;
 
 // The source of "Aggiungi la foto" (a lived Da vivere or Event): its day is the
@@ -3825,6 +3849,8 @@ function resetMomentComposer(){
   pendingMomentSourceNext=undefined;
   pendingMomentPickToken++;
   pendingMomentDate=localDateISO();
+  pendingMomentPlace=null;
+  renderMomentPlace();
   if(pendingMomentPreviewUrl){URL.revokeObjectURL(pendingMomentPreviewUrl);pendingMomentPreviewUrl=null;}
   renderMomentExtras();
   const fileInput=document.getElementById('momentFile');if(fileInput)fileInput.value='';
@@ -3835,15 +3861,37 @@ function resetMomentComposer(){
   updateMomentDateWhen();
 }
 
-document.getElementById('momentFile')?.addEventListener('change',async(event)=>{
+document.getElementById('momentFile')?.addEventListener('change',event=>{
   const picked=[...(event.target.files||[])];
+  event.target.value='';
+  if(picked.length)acceptMomentFiles(picked,null,0);
+});
+
+// The place of the photos just picked: the first that has one. Android hands it
+// over from the native picker (places); a browser may keep it in the file,
+// read only after the same consent. A place searched by hand is never replaced.
+async function findMomentPlace(files,places,token){
+  if(pendingMomentPlace?.source==='search')return;
+  pendingMomentPlace=null;renderMomentPlace();
+  let coords=null;
+  for(const file of files){
+    coords=places?places.get(file)||null:await readJpegExifGps(file);
+    if(coords)break;
+  }
+  if(!coords||token!==pendingMomentPickToken)return;
+  if(!places&&!(await window.UsRicordiPlace?.photoConsent?.()))return;
+  const place=await window.UsRicordiPlace?.fromCoords?.(coords.lat,coords.lon);
+  if(!place||token!==pendingMomentPickToken||pendingMomentPlace?.source==='search')return;
+  pendingMomentPlace=place;
+  renderMomentPlace();
+}
+
+async function acceptMomentFiles(picked,places,skippedBefore){
   const compose=document.getElementById('momentCompose');
   const img=document.getElementById('momentPreviewImg');
-  event.target.value='';
-  if(!picked.length)return;
   const valid=picked.filter(file=>US_MOMENT_TYPES.includes(file.type)&&file.size<=20*1024*1024);
   if(!valid.length)return toast(picked.some(file=>US_MOMENT_TYPES.includes(file.type))?'Foto troppo grande: massimo 20 MB':'Per ora usa JPG, PNG o WebP');
-  const skipped=picked.length-valid.length;
+  const skipped=picked.length-valid.length+(Number(skippedBefore)||0);
   if(valid.length>US_MOMENT_MAX_PHOTOS)toast('Al massimo 10 foto alla volta: tengo le prime 10');
   else if(skipped)toast(skipped===1?'Una foto saltata: usa JPG, PNG o WebP fino a 20 MB':`${skipped} foto saltate: usa JPG, PNG o WebP fino a 20 MB`);
   const files=valid.slice(0,US_MOMENT_MAX_PHOTOS);
@@ -3859,19 +3907,14 @@ document.getElementById('momentFile')?.addEventListener('change',async(event)=>{
   renderMomentExtras();
   updateDetectedMomentDate();
   window.UsMomentComposer?.show?.();
-  // Mappa dei Ricordi, prova tecnica (staging only): did the photo keep its place?
-  usIsStagingRuntime().then(async staging=>{
-    if(!staging||token!==pendingMomentPickToken)return;
-    const gps=await readJpegExifGps(files[0]);
-    toast(gps?`Prova mappa: posizione trovata (${gps.lat}, ${gps.lon})`:`Prova mappa: nessuna posizione nella foto (${files[0]?.type||'tipo sconosciuto'})`);
-  });
+  findMomentPlace(files,places,token).catch(error=>console.warn('[US Mappa] posto della foto',error));
   // A lived source already knows its day; otherwise the first photo says it.
   if(pendingMomentSource?.date)return;
   const detected=await detectMomentDate(files[0]);
   if(token!==pendingMomentPickToken)return;
   pendingMomentDate=detected;
   updateDetectedMomentDate();
-});
+}
 
 // M12A — a newly created Ricordo settles in and catches the light ONCE. The id
 // is remembered until its card is first rendered (a concurrent refresh may
@@ -3900,6 +3943,7 @@ async function uploadMoment(){
   const file=pendingMomentFile;
   const extras=[...pendingMomentExtras];
   const source=pendingMomentSource;
+  const place=window.UsRicordiPlace?.normalize?.(pendingMomentPlace)||null;
   const total=1+extras.length;
   btn.disabled=true;btn.textContent='Ottimizzo…';momentUpBar('optimize');
   try{
@@ -3925,7 +3969,8 @@ async function uploadMoment(){
       storage_path:path,
       thumbnail_path:uploadedThumbnail?thumbnailPath:null,
       caption:caption||null,
-      moment_date:momentDate
+      moment_date:momentDate,
+      ...(place?{place_lat:place.lat,place_lon:place.lon,place_label:place.label,place_source:place.source}:{})
     }).select('id').single();
     if(rowError){
       const cleanup=[path];if(uploadedThumbnail)cleanup.push(thumbnailPath);
@@ -4233,6 +4278,11 @@ function ricordiNewLabel(name){
   const who=String(name||'').trim();
   return who&&who!=='La tua persona'&&who!=='Noi'?`Nuovo da ${who}`:'Nuovo dalla tua persona';
 }
+// Mappa dei Ricordi: the card carries its place, for the album's "Dove" and the map.
+function ricordiPlaceAttrs(row){
+  if(row?.place_lat==null||row?.place_lon==null||!row?.place_label)return '';
+  return ` data-place-lat="${escapeHtml(row.place_lat)}" data-place-lon="${escapeHtml(row.place_lon)}" data-place-label="${escapeHtml(row.place_label)}" data-place-source="${escapeHtml(row.place_source||'search')}"`;
+}
 function ricordiMomentCard(row,signedUrls,author,canDelete,feature,source,priority=false,fresh=false){
   const displayISO=/^\d{4}-\d{2}-\d{2}$/.test(String(source?.date||''))?String(source.date):row.moment_date;
   const dateLabel=new Date(displayISO+'T12:00:00').toLocaleDateString((globalThis.UsI18n?.tag||'it-IT'),{day:'2-digit',month:'short',year:'numeric'});
@@ -4247,7 +4297,7 @@ function ricordiMomentCard(row,signedUrls,author,canDelete,feature,source,priori
   const title=row.caption||sourceTitle;
   const kicker=done?`<small class="ricordi-moment-source ricordi-done-kicker" data-source-key="${escapeHtml(source.sourceKey)}">L’avete fatto${row.caption&&sourceTitle&&sourceTitle!==row.caption?`<span translate="no"> · ${escapeHtml(sourceTitle)}</span>`:''}</small>`:'';
   const freshLabel=fresh?`<span class="ricordi-new-label">${escapeHtml(ricordiNewLabel(author))}</span>`:'';
-  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}${done?' ricordi-done ricordi-wide':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}"${row.created_by==null?' data-moment-orphan="1"':''} data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(fullUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(title)}"${fresh?' data-ricordi-new':''} onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(previewUrl)}" data-us-media-path="${escapeHtml(previewPath)}" onerror="usRecoverPrivateImage(this)" alt="Ricordo condiviso" loading="${priority?'eager':'lazy'}" decoding="async"${priority?' fetchpriority="high"':''}>${freshLabel}${canDelete?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}')">Elimina</button>`:''}<div class="moment-meta">${kicker}${title?`<p translate="no">${escapeHtml(title)}</p>`:''}<span class="moment-line"><i class="moment-dot" data-owner="${row.created_by===window.usProfile?.id?'tu':'partner'}" aria-hidden="true"></i><b>${escapeHtml(shortLabel)}</b><span aria-hidden="true">·</span><span class="moment-by" translate="no">${escapeHtml(author||'Noi')}</span></span></div></article>`;
+  return `<article class="moment-card moment-postit${feature?' ricordi-feature':''}${done?' ricordi-done ricordi-wide':''}" role="button" tabindex="0" data-moment-id="${escapeHtml(row.id)}" data-moment-owner="${escapeHtml(row.created_by)}"${row.created_by==null?' data-moment-orphan="1"':''} data-storage-path="${escapeHtml(row.storage_path)}" data-moment-iso="${escapeHtml(displayISO)}" data-url="${escapeHtml(fullUrl)}" data-author="${escapeHtml(author||'Noi')}" data-date="${escapeHtml(dateLabel)}" data-caption="${escapeHtml(title)}"${ricordiPlaceAttrs(row)}${fresh?' data-ricordi-new':''} onclick="openMomentViewer(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMomentViewer(this)}"><img src="${escapeHtml(previewUrl)}" data-us-media-path="${escapeHtml(previewPath)}" onerror="usRecoverPrivateImage(this)" alt="Ricordo condiviso" loading="${priority?'eager':'lazy'}" decoding="async"${priority?' fetchpriority="high"':''}>${freshLabel}${canDelete?`<button class="moment-delete" type="button" aria-label="Elimina ricordo" onclick="event.stopPropagation();deleteMoment('${row.id}')">Elimina</button>`:''}<div class="moment-meta">${kicker}${title?`<p translate="no">${escapeHtml(title)}</p>`:''}<span class="moment-line"><i class="moment-dot" data-owner="${row.created_by===window.usProfile?.id?'tu':'partner'}" aria-hidden="true"></i><b>${escapeHtml(shortLabel)}</b><span aria-hidden="true">·</span><span class="moment-by" translate="no">${escapeHtml(author||'Noi')}</span></span></div></article>`;
 }
 function ricordiExperienceCard(row,sourceDate){
   const date=/^\d{4}-\d{2}-\d{2}$/.test(String(sourceDate||''))?String(sourceDate):ricordiLocalISO(row.completed_at);
@@ -4451,7 +4501,9 @@ async function hydrateMomentsCore(){
   // Start all archive reads together, but as soon as Moments arrive start
   // resolving their signed media URLs too. Previously media resolution waited
   // for every enrichment query, adding a full network round-trip to first paint.
-  const momentsPromise=sb.from('moments').select('id,created_by,storage_path,thumbnail_path,caption,moment_date,created_at').order('moment_date',{ascending:false}).order('created_at',{ascending:false});
+  // Mappa dei Ricordi: the place comes with the memory; a database without it yet reads as before.
+  const momentsQuery=columns=>sb.from('moments').select(columns).order('moment_date',{ascending:false}).order('created_at',{ascending:false});
+  const momentsPromise=momentsQuery(`${US_MOMENT_COLUMNS},${US_MOMENT_PLACE_COLUMNS}`).then(result=>result?.error?momentsQuery(US_MOMENT_COLUMNS):result);
   const profilesPromise=sb.from('profiles').select('id,display_name').eq('couple_id',profile.couple_id);
   const livedPromise=sb.from('bucket_items').select('id,title,completed_at').eq('couple_id',profile.couple_id).eq('status','lived');
   const keptPromise=usReadLocalized(columns=>sb.from('daily_question_keepsakes').select(columns).order('question_date',{ascending:false}),'id,source_key,question_text,question_date,francesco_answer,beatrice_answer,revealed_at','question_text_localized');
@@ -4490,7 +4542,7 @@ async function hydrateMomentsCore(){
   const today=localDateISO();
   // R5 — before the "nothing changed" shortcut: the dot follows the visit.
   const freshIds=ricordiNewSync(rows||[]);
-  const signature=JSON.stringify([today,(rows||[]).map(r=>[r.id,r.created_by,r.storage_path,r.thumbnail_path||'',r.caption||'',r.moment_date,r.created_at]),livedRows.map(r=>[r.id,r.title,r.completed_at]),keptRows.map(r=>[r.id,r.question_date]),eventRows.map(r=>[r.source_ref,r.occurrence_date,r.title,r.title_source,r.moment_id]),provenanceRows.map(r=>[r.source_kind,r.source_ref,r.target_moment_id])]);
+  const signature=JSON.stringify([today,(rows||[]).map(r=>[r.id,r.created_by,r.storage_path,r.thumbnail_path||'',r.caption||'',r.moment_date,r.created_at,r.place_lat??'',r.place_lon??'',r.place_label||'']),livedRows.map(r=>[r.id,r.title,r.completed_at]),keptRows.map(r=>[r.id,r.question_date]),eventRows.map(r=>[r.source_ref,r.occurrence_date,r.title,r.title_source,r.moment_id]),provenanceRows.map(r=>[r.source_kind,r.source_ref,r.target_moment_id])]);
   if(grid.dataset.loaded==='1'&&grid.dataset.signature===signature&&!forceMedia)return;
   if(!rows?.length&&!livedRows.length&&!keptRows.length&&!eventRows.length){
     grid.innerHTML='<div class="empty-state moment-loading ricordi-empty"><b>La vostra storia parte da qui</b></div>';

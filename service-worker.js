@@ -48,6 +48,8 @@ const APP_SHELL = [
   versioned("/events.js"),
   versioned("/moments-albums.css"),
   versioned("/moments-albums.js"),
+  versioned("/ricordi-place.css"),
+  versioned("/ricordi-place.js"),
   versioned("/navigation.js"),
   versioned("/games.css"),
   versioned("/games.js"),

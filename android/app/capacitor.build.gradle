@@ -16,6 +16,7 @@ dependencies {
     implementation project(':us-app-icon')
     implementation project(':us-app-lock')
     implementation project(':us-google-signin')
+    implementation project(':us-photo-place')
     implementation project(':us-push-support')
     implementation project(':us-splash-theme')
     implementation project(':us-widget-bridge')

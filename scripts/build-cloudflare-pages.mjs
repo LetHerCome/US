@@ -41,6 +41,8 @@ const RUNTIME_FILES = [
   'events.js',
   'moments-albums.css',
   'moments-albums.js',
+  'ricordi-place.css',
+  'ricordi-place.js',
   'navigation.js',
   'games.css',
   'games.js',

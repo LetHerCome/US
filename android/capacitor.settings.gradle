@@ -23,6 +23,9 @@ project(':us-app-lock').projectDir = new File('../native-plugins/us-app-lock/and
 include ':us-google-signin'
 project(':us-google-signin').projectDir = new File('../native-plugins/us-google-signin/android')
 
+include ':us-photo-place'
+project(':us-photo-place').projectDir = new File('../native-plugins/us-photo-place/android')
+
 include ':us-push-support'
 project(':us-push-support').projectDir = new File('../native-plugins/us-push-support/android')
 

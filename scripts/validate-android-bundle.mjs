@@ -63,6 +63,7 @@ export const FORBIDDEN_PERMISSIONS = [
 export const DATA_SAFETY_PERMISSIONS = {
   'android.permission.CAMERA': 'Foto e video (fotocamera)',
   'android.permission.ACCESS_COARSE_LOCATION': 'Posizione approssimativa',
+  'android.permission.ACCESS_MEDIA_LOCATION': 'Posizione delle foto (Mappa dei Ricordi)',
   'android.permission.RECORD_AUDIO': 'Audio (note vocali)',
   'android.permission.POST_NOTIFICATIONS': 'Notifiche',
   'com.google.android.gms.permission.AD_ID': 'ID pubblicità'

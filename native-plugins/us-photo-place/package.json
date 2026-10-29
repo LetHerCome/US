@@ -1,0 +1,14 @@
+{
+  "name": "@us/photo-place",
+  "version": "1.0.0",
+  "private": true,
+  "description": "US: Mappa dei Ricordi. Picks photos with the Android document picker and reads where they were taken (EXIF GPS of the original, with ACCESS_MEDIA_LOCATION), rounded to about 100 m.",
+  "capacitor": {
+    "android": {
+      "src": "android"
+    }
+  },
+  "peerDependencies": {
+    "@capacitor/core": "8.5.0"
+  }
+}

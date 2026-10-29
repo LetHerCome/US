@@ -46,6 +46,7 @@ function ensureUi(){
           </div>
           <div class="us-album-info">
             <div class="us-album-meta-line"><b id="usAlbumDate"></b><span id="usAlbumCount">1 foto</span></div>
+            <button type="button" class="us-album-place" id="usAlbumPlace"><span class="us-icon" data-us-icon="map-pin" aria-hidden="true"></span><span id="usAlbumPlaceLabel" translate="no">Aggiungi il posto</span></button>
             <div class="us-album-caption-postit" id="usAlbumCoverNote" hidden><p id="usAlbumCoverCaption" translate="no"></p><small id="usAlbumCoverAuthor"></small></div>
             <div class="us-album-photo-actions">
               <button type="button" class="us-album-save-photo" id="usAlbumSavePhoto"><span class="us-icon" data-us-icon="download-simple" aria-hidden="true"></span><span>Salva sul telefono</span></button>
@@ -101,6 +102,7 @@ function ensureUi(){
   `);
 
   document.getElementById('usAlbumClose')?.addEventListener('click',closeAlbum);
+  document.getElementById('usAlbumPlace')?.addEventListener('click',editAlbumPlace);
   document.getElementById('usAlbumDeleteGo')?.addEventListener('click',startMomentDelete);
   document.getElementById('usAlbumDeleteUndo')?.addEventListener('click',undoMomentDelete);
   document.getElementById('usAlbumAddBtn')?.addEventListener('click',()=>document.getElementById('usAlbumFile')?.click());
@@ -850,6 +852,40 @@ function galleriaLeave(overlay,finalize){
   return true;
 }
 
+// Mappa dei Ricordi: "Dove". Either of the two places, moves or removes the
+// Ricordo (set_moment_place); the card and the map follow.
+function paintAlbumPlace(){
+  const button=document.getElementById('usAlbumPlace');
+  const label=document.getElementById('usAlbumPlaceLabel');
+  if(!button||!label)return;
+  button.hidden=!window.UsRicordiPlace;
+  button.classList.toggle('has-place',Boolean(currentAlbum?.place));
+  label.textContent=currentAlbum?.place?.label||'Aggiungi il posto';
+  button.setAttribute('aria-label',currentAlbum?.place?`Dove: ${currentAlbum.place.label}. Cambia il posto`:'Aggiungi il posto');
+}
+async function editAlbumPlace(){
+  const album=currentAlbum;
+  if(!album?.id||!window.UsRicordiPlace)return;
+  const place=await window.UsRicordiPlace.choose({current:album.place,near:album.place});
+  if(place===undefined||currentAlbum!==album)return;
+  const button=document.getElementById('usAlbumPlace');
+  if(button)button.disabled=true;
+  try{
+    await window.UsRicordiPlace.save(album.id,place);
+    album.place=place;
+    const card=album.card;
+    if(card?.dataset){
+      if(place){Object.assign(card.dataset,{placeLat:String(place.lat),placeLon:String(place.lon),placeLabel:place.label,placeSource:place.source});}
+      else{delete card.dataset.placeLat;delete card.dataset.placeLon;delete card.dataset.placeLabel;delete card.dataset.placeSource;}
+    }
+    if(currentAlbum===album)paintAlbumPlace();
+    window.toast?.(place?'Posto salvato':'Posto tolto');
+    window.hydrateMoments?.();
+  }catch(error){
+    console.warn('[US Mappa] salva posto',error);
+    window.toast?.('Posto non salvato: riprova');
+  }finally{if(button)button.disabled=false;}
+}
 async function openAlbum(card,{focusDelete=false}={}){
   ensureUi();
   // A tap during the way back lands the previous close at once.
@@ -875,7 +911,9 @@ async function openAlbum(card,{focusDelete=false}={}){
     owner:card.dataset.momentOwner||'',
     orphan:card.dataset.momentOrphan==='1',
     path:card.dataset.storagePath||'',
-    caption:card.dataset.caption||''
+    caption:card.dataset.caption||'',
+    place:window.UsRicordiPlace?.fromCard?.(card)||null,
+    card
   };
   albumRows=[];albumLoaded=false;albumCarouselIndex=0;selectNewestAlbumPhoto=false;albumCarouselTouch=null;resetComposer();
   const overlay=document.getElementById('usAlbumOverlay');
@@ -893,6 +931,7 @@ async function openAlbum(card,{focusDelete=false}={}){
   }
   document.getElementById('usAlbumDate').textContent=currentAlbum.date;
   document.getElementById('usAlbumCount').textContent='1 foto';
+  paintAlbumPlace();
   const note=document.getElementById('usAlbumCoverNote');
   const caption=document.getElementById('usAlbumCoverCaption');
   const author=document.getElementById('usAlbumCoverAuthor');

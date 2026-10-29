@@ -23,6 +23,7 @@
 <link rel="stylesheet" href="/fix4.css?v=us-sintonia-v2-20261029-70"/>
 <link rel="stylesheet" href="/events.css?v=us-sintonia-v2-20261029-70" media="print" onload="this.media='all'"/>
 <link rel="stylesheet" href="/moments-albums.css?v=us-sintonia-v2-20261029-70" media="print" onload="this.media='all'"/>
+<link rel="stylesheet" href="/ricordi-place.css?v=us-sintonia-v2-20261029-70" media="print" onload="this.media='all'"/>
 <link rel="stylesheet" href="/games.css?v=us-sintonia-v2-20261029-70" media="print" onload="this.media='all'"/>
 <link rel="stylesheet" href="/progression.css?v=us-sintonia-v2-20261029-70"/>
 <link rel="stylesheet" href="/countdown.css?v=us-sintonia-v2-20261029-70"/>
@@ -583,11 +584,13 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
           <label class="moment-field-label" for="momentCaption">Nota · facoltativa</label>
           <textarea id="momentCaption" maxlength="180" rows="3" placeholder="Che cosa volete ricordare?"></textarea>
           <label class="moment-auto-date moment-date-field" id="momentDetectedDate" for="momentDate"><span>Data foto<span id="momentDateWhen"></span></span><input id="momentDate" type="date" required></label>
+          <div class="moment-place-field" id="momentPlaceField"><span class="moment-field-label">Dove · facoltativo</span><span class="moment-place-row"><button type="button" class="moment-place-btn" id="momentPlaceBtn" onclick="editMomentPlace()"><span class="us-icon" data-us-icon="map-pin" aria-hidden="true"></span><span id="momentPlaceLabel" translate="no">Aggiungi il posto</span></button><button type="button" class="moment-place-clear" id="momentPlaceClear" aria-label="Togli il posto" onclick="clearMomentPlace()" hidden><span class="us-icon" data-us-icon="x" aria-hidden="true"></span></button></span></div>
           <div class="moment-up-bar" id="momentUpBar" hidden><i></i></div>
           <div class="moment-compose-footer"><button id="momentUploadBtn" type="button" class="primary moment-save" onclick="uploadMoment()">Salva ricordo</button></div>
         </div>
       </div>
-      <div class="ricordi-section-head ricordi-story-head"><h3>Mese per mese</h3></div>
+      <div class="ricordi-section-head ricordi-story-head"><h3 id="ricordiStoryTitle">Mese per mese</h3><button type="button" class="ricordi-map-switch" id="ricordiMapSwitch" aria-pressed="false" onclick="UsRicordiPlace.toggleMap()"><span class="us-icon" data-us-icon="map-pin" aria-hidden="true"></span><span data-switch-label>Mappa</span></button></div>
+      <div class="ricordi-map" id="ricordiMap" aria-label="Mappa dei Ricordi" hidden></div>
       <div id="momentsGrid" class="moment-grid ricordi-story" aria-live="polite"><div class="empty-state moment-loading" aria-busy="true"><div class="emoji"><span class="us-icon" data-us-icon="arrows-clockwise" aria-hidden="true"></span></div><b>Carico…</b></div></div>
       <section class="ricordi-chapters" id="ricordiChapters" aria-label="Capitoli" hidden></section>
     </section>
@@ -1298,6 +1301,7 @@ html.us-launch-play .us-launch-intro{display:grid;animation:usLaunchOut .34s cub
 <script defer src="/widget-hub.js?v=us-sintonia-v2-20261029-70"></script>
 <script defer src="/identity.js?v=us-sintonia-v2-20261029-70"></script>
 <script defer src="/moments-albums.js?v=us-sintonia-v2-20261029-70"></script>
+<script defer src="/ricordi-place.js?v=us-sintonia-v2-20261029-70"></script>
 <script defer src="/ricordi-inline-carousel.js?v=us-sintonia-v2-20261029-70"></script>
 <script defer src="/calendar-domain.js?v=us-sintonia-v2-20261029-70"></script>
 <script defer src="/calendar.js?v=us-sintonia-v2-20261029-70"></script>
