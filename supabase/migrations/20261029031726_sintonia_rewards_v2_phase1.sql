@@ -269,14 +269,21 @@ select u.couple_id, u.reward_id, p.id, now()
  where not exists (select 1 from sintonia_v2_before b where b.couple_id = u.couple_id and b.reward_id = u.reward_id)
 on conflict (couple_id, reward_id, profile_id) do nothing;
 
--- 5. Il vostro cielo: the couple's city (an id of sky.js CITIES), set by
---    either partner once the couple has the reward. The stars are computed
---    in the app from «Insieme dal» and the city; nothing else is stored.
+-- 5. Il vostro cielo: the couple's city (an id of sky.js CITIES) and hour
+--    (minutes after midnight in Rome; null is the usual 22:00), set by either
+--    partner once the couple has the reward. The stars are computed in the
+--    app from «Insieme dal», the city and the hour; nothing else is stored.
 alter table public.couples add column if not exists sky_city text;
 alter table public.couples drop constraint if exists couples_sky_city_check;
 alter table public.couples add constraint couples_sky_city_check check (sky_city is null or sky_city ~ '^[a-z_]{2,40}$');
+alter table public.couples add column if not exists sky_minutes smallint;
+alter table public.couples drop constraint if exists couples_sky_minutes_check;
+alter table public.couples add constraint couples_sky_minutes_check check (sky_minutes is null or sky_minutes between 0 and 1439);
 
-create or replace function public.set_sky_city(p_city text)
+-- The first version (staging only, 29/10) took the city alone.
+drop function if exists public.set_sky_city(text);
+
+create or replace function public.set_sky(p_city text, p_minutes integer)
 returns jsonb
 language plpgsql
 security definer
@@ -288,12 +295,13 @@ begin
   select p.couple_id into cid from public.profiles p where p.id = auth.uid();
   if cid is null then raise exception 'not a couple member'; end if;
   if p_city is null or p_city !~ '^[a-z_]{2,40}$' then raise exception 'invalid city'; end if;
+  if p_minutes is not null and (p_minutes < 0 or p_minutes > 1439) then raise exception 'invalid hour'; end if;
   if not exists (select 1 from public.couple_reward_unlocks u where u.couple_id = cid and u.reward_id = 'sky_ours') then
     raise exception 'sky locked';
   end if;
-  update public.couples set sky_city = p_city where id = cid;
-  return jsonb_build_object('city', p_city);
+  update public.couples set sky_city = p_city, sky_minutes = p_minutes where id = cid;
+  return jsonb_build_object('city', p_city, 'minutes', p_minutes);
 end;
 $$;
-revoke all on function public.set_sky_city(text) from public, anon, authenticated, service_role;
-grant execute on function public.set_sky_city(text) to authenticated;
+revoke all on function public.set_sky(text, integer) from public, anon, authenticated, service_role;
+grant execute on function public.set_sky(text, integer) to authenticated;

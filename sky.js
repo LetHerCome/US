@@ -33,22 +33,26 @@
   const RAD = Math.PI / 180;
   const norm = (deg) => ((deg % 360) + 360) % 360;
 
-  // 22:00 in Rome on a YYYY-MM-DD day, as a UTC instant (CET or CEST).
-  function eveningUtc(day) {
+  // A Rome clock time (minutes after midnight, 22:00 by default) on a
+  // YYYY-MM-DD day, as a UTC instant: CET (+1) or CEST (+2).
+  const EVENING = 22 * 60;
+  const validMinutes = (minutes) => Number.isInteger(minutes) && minutes >= 0 && minutes < 1440;
+  function momentUtc(day, minutes = EVENING) {
     const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(day || ''));
     if (!m) return null;
     const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
-    for (const utcHour of [21, 20]) {
-      const at = new Date(Date.UTC(y, mo - 1, d, utcHour));
-      let hour = utcHour + 1;
+    const local = validMinutes(minutes) ? minutes : EVENING;
+    for (const offset of [1, 2]) {
+      const at = new Date(Date.UTC(y, mo - 1, d, 0, local) - offset * 3600000);
       try {
-        const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', hour: '2-digit', hourCycle: 'h23' }).formatToParts(at);
-        hour = Number(parts.find((p) => p.type === 'hour')?.value);
-      } catch (_) { /* no time zone data: winter time */ }
-      if (hour === 22) return at;
+        const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(at);
+        const get = (type) => Number(parts.find((p) => p.type === type)?.value);
+        if (get('day') === d && get('hour') * 60 + get('minute') === local) return at;
+      } catch (_) { return at; /* no time zone data: winter time */ }
     }
-    return new Date(Date.UTC(y, mo - 1, d, 21));
+    return new Date(Date.UTC(y, mo - 1, d, 0, local) - 3600000);
   }
+  const eveningUtc = (day) => momentUtc(day, EVENING);
 
   // Greenwich mean sidereal time, degrees (Meeus 12.4).
   function gmstDegrees(ms) {
@@ -82,8 +86,8 @@
   // chart (the picture to keep): the whole sky as a night disc with N E S O.
   // overlay (Oggi): the same stars spread over a portrait photo, transparent,
   // the disc larger than the frame so the photo stays the picture.
-  function skySvg({ stars, day, city, level = 20, overlay = false }) {
-    const at = eveningUtc(day);
+  function skySvg({ stars, day, city, level = 20, overlay = false, minutes }) {
+    const at = momentUtc(day, minutes);
     if (!at || !city || !Array.isArray(stars)) return '';
     const W = overlay ? 600 : 1000, H = overlay ? 1300 : 1000;
     const R = overlay ? 900 : 470, CX = W / 2, CY = overlay ? 560 : 500;
@@ -125,16 +129,23 @@
       .then((doc) => (Array.isArray(doc?.stars) ? doc.stars : null))
       .catch(() => null);
   }
-  // «Dove eravate quella sera?»: the couple's city, on the server (either partner).
-  async function saveCity(id) {
-    if (typeof sb === 'undefined' || !cityById(id)) return false;
-    const { error } = await sb.rpc('set_sky_city', { p_city: id });
+  // «23:30» for the caption and the time field; no hour is the usual 22:00.
+  function clock(minutes) {
+    const m = validMinutes(minutes) ? minutes : EVENING;
+    return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+  }
+  // «Dove eravate quella sera?» and «A che ora?»: the couple's city and hour,
+  // on the server (either partner).
+  async function saveSky(city, hour) {
+    if (typeof sb === 'undefined' || !cityById(city)) return false;
+    const minutes = validMinutes(hour) ? hour : null;
+    const { error } = await sb.rpc('set_sky', { p_city: city, p_minutes: minutes });
     return !error;
   }
-  // «Salva l'immagine»: the map with its title, date and city as a PNG, shared
-  // where the phone can, downloaded otherwise.
-  async function savePicture({ stars, day, city, level }) {
-    const svg = skySvg({ stars, day, city, level });
+  // «Salva l'immagine»: the map with its title, date, city and hour as a PNG,
+  // shared where the phone can, downloaded otherwise.
+  async function savePicture({ stars, day, city, level, minutes }) {
+    const svg = skySvg({ stars, day, city, level, minutes });
     if (!svg) return false;
     const image = new Image();
     image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
@@ -154,7 +165,7 @@
     try { date = new Intl.DateTimeFormat(globalThis.UsI18n?.tag || 'it-IT', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${day}T12:00:00Z`)); } catch (_) { /* the ISO day */ }
     ctx.fillStyle = 'rgba(244,241,255,.75)';
     ctx.font = '34px system-ui, sans-serif';
-    ctx.fillText(`${date} · ${city.name} · ore 22`, 540, 1240);
+    ctx.fillText(`${date} · ${city.name} · ore ${clock(minutes)}`, 540, 1240);
     const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
     if (!blob) return false;
     const file = typeof File === 'function' ? new File([blob], 'il-vostro-cielo.png', { type: 'image/png' }) : null;
@@ -172,5 +183,5 @@
     return true;
   }
 
-  return Object.freeze({ CITIES, cityById, eveningUtc, gmstDegrees, horizontal, starRadius, skySvg, loadStars, saveCity, savePicture });
+  return Object.freeze({ CITIES, cityById, momentUtc, eveningUtc, gmstDegrees, horizontal, starRadius, skySvg, loadStars, clock, saveSky, savePicture });
 });

@@ -195,7 +195,7 @@ async function hydrateUsCoupleContext(){
   let coupleResult,profilesResult;
   try{
     [coupleResult,profilesResult]=await Promise.all([
-      sb.from('couples').select('id,name,started_on,sky_city').eq('id',coupleId).maybeSingle(),
+      sb.from('couples').select('id,name,started_on,sky_city,sky_minutes').eq('id',coupleId).maybeSingle(),
       sb.from('profiles').select('id,display_name,role,couple_id,person_color').eq('couple_id',coupleId).order('created_at',{ascending:true})
     ]);
   }catch(error){

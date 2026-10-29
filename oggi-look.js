@@ -76,17 +76,21 @@ function seasonFor(day) {
 }
 
 // ---------- Il vostro cielo (Premi Sintonia V2, livello 20) ----------
-// The stars of 22:00 on «Insieme dal» over the couple's city (sky.js), as the
-// decoration of the theme. The catalogue is fetched only when the sky is shown.
+// The stars of «Insieme dal» at their hour (22:00 unless they say) over the
+// couple's city (sky.js), as the decoration of the theme. The catalogue is
+// fetched only when the sky is shown.
 let skyStars = null;
 let skyLoading = null;
 let skyKey = '';
 let skyMap = '';
-let skyCityChosen = '';
+// City and hour chosen on this phone, ahead of the next couple reload.
+let skyChosen = null;
 function skyContext() {
   const couple = window.UsCoupleContext?.snapshot?.()?.couple || {};
   const level = Number(window.USProgression?.getState?.()?.level) || 20;
-  return { day: couple.started_on || '', cityId: skyCityChosen || couple.sky_city || '', level };
+  const cityId = skyChosen?.city || couple.sky_city || '';
+  const minutes = skyChosen ? skyChosen.minutes : (couple.sky_minutes ?? null);
+  return { day: couple.started_on || '', cityId, minutes, level };
 }
 function loadStars() {
   if (skyStars || skyLoading || !window.UsSky?.loadStars) return skyLoading;
@@ -99,34 +103,35 @@ function loadStars() {
 }
 // A CSS url() of the map, or '' while the stars load or without a date.
 function skyMapUrl() {
-  const { day, cityId, level } = skyContext();
+  const { day, cityId, minutes, level } = skyContext();
   const city = window.UsSky?.cityById?.(cityId) || window.UsSky?.cityById?.('roma');
   if (!window.UsSky || !day || !city) return '';
   if (!skyStars) { loadStars(); return ''; }
-  const key = `${day}|${city.id}|${level}`;
+  const key = `${day}|${city.id}|${minutes}|${level}`;
   if (key !== skyKey) {
     const stars = skyStars;
     // Over the photo, never instead of it (founder, 29/10): the overlay variant.
-    const svg = window.UsSky.skySvg({ stars, day, city, level, overlay: true });
+    const svg = window.UsSky.skySvg({ stars, day, city, level, minutes, overlay: true });
     skyMap = svg ? `url("data:image/svg+xml,${encodeURIComponent(svg)}")` : '';
     skyKey = key;
   }
   return skyMap;
 }
-async function setSkyCity(id) {
-  if (!id || !window.UsSky?.saveCity) return;
-  if (!(await window.UsSky.saveCity(id))) { $('usLookStatus').textContent = 'Non riesco a salvare la città. Riprova.'; return; }
-  skyCityChosen = id;
+// The hour can come before the city: it is kept here and saved with the city.
+async function setSky(cityId, minutes) {
+  if (!window.UsSky?.saveSky) return;
+  if (cityId && !(await window.UsSky.saveSky(cityId, minutes))) { $('usLookStatus').textContent = 'Non riesco a salvare il vostro cielo. Riprova.'; return; }
+  skyChosen = { city: cityId, minutes };
   skyKey = '';
   apply(applied);
   renderDetail();
 }
-// «Salva l'immagine»: the map with its title, date and city (sky.js).
-function saveSky() {
-  const { day, cityId, level } = skyContext();
+// «Salva l'immagine»: the map with its title, date, city and hour (sky.js).
+function saveSkyPicture() {
+  const { day, cityId, minutes, level } = skyContext();
   const city = window.UsSky?.cityById?.(cityId);
   if (!skyStars || !city || !day) return Promise.resolve(false);
-  return window.UsSky.savePicture({ stars: skyStars, day, city, level });
+  return window.UsSky.savePicture({ stars: skyStars, day, city, level, minutes });
 }
 
 // ---------- particles: deterministic per effect, so a preview matches Oggi ----------
@@ -282,10 +287,12 @@ function detailMarkup() {
   const theme = tab === 'theme' ? look.id : applied.theme;
   const effect = tab === 'effect' ? look.id : applied.effect;
   const current = applied[tab] === look.id;
-  // Il vostro cielo: the city first («Dove eravate quella sera?»), then the picture to keep.
+  // Il vostro cielo: the city and the hour first («Dove eravate quella sera?»,
+  // «A che ora vi siete messi insieme?», 22:00 unless they say), then the picture to keep.
   const sky = tab === 'theme' && look.id === 'sky' && s.state !== 'locked';
-  const { cityId } = sky ? skyContext() : { cityId: '' };
-  const cities = sky && window.UsSky ? `<label class="us-look-sky-city"><span>Dove eravate quella sera?</span><select id="usSkyCity">${cityId ? '' : '<option value="">Scegli la città</option>'}${window.UsSky.CITIES.map((c) => `<option value="${esc(c.id)}"${c.id === cityId ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>` : '';
+  const { cityId, minutes } = sky ? skyContext() : { cityId: '', minutes: null };
+  const cities = sky && window.UsSky ? `<label class="us-look-sky-city"><span>Dove eravate quella sera?</span><select id="usSkyCity">${cityId ? '' : '<option value="">Scegli la città</option>'}${window.UsSky.CITIES.map((c) => `<option value="${esc(c.id)}"${c.id === cityId ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
+      <label class="us-look-sky-city"><span>A che ora vi siete messi insieme?</span><input type="time" id="usSkyTime" value="${window.UsSky.clock(minutes)}"></label>` : '';
   const save = sky && cityId && skyStars ? '<button type="button" class="us-look-save" data-look-save-sky>Salva l’immagine</button>' : '';
   const action = sky && !cityId
     ? `<button type="button" class="us-look-apply" disabled>Scegli prima la città</button>`
@@ -329,7 +336,11 @@ function build() {
     </section>`;
   document.body.appendChild(sheet);
   sheet.addEventListener('click', onClick);
-  sheet.addEventListener('change', (event) => { if (event.target?.id === 'usSkyCity') setSkyCity(event.target.value); });
+  sheet.addEventListener('change', (event) => {
+    if (event.target?.id !== 'usSkyCity' && event.target?.id !== 'usSkyTime') return;
+    const time = /^(\d{2}):(\d{2})/.exec($('usSkyTime')?.value || '');
+    setSky($('usSkyCity')?.value || '', time ? Number(time[1]) * 60 + Number(time[2]) : null);
+  });
   sheet.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') { event.preventDefault(); back(); }
   });
@@ -418,7 +429,7 @@ async function onClick(event) {
     return;
   }
   if (target.dataset.lookOpen) return openDetail(target.dataset.lookOpen);
-  if (target.hasAttribute('data-look-save-sky')) return saveSky().catch(() => { $('usLookStatus').textContent = 'Non riesco a salvare l’immagine. Riprova.'; });
+  if (target.hasAttribute('data-look-save-sky')) return saveSkyPicture().catch(() => { $('usLookStatus').textContent = 'Non riesco a salvare l’immagine. Riprova.'; });
   if (target.dataset.lookApply) {
     const ok = await choose(tab, target.dataset.lookApply);
     if (ok) { renderDetail(); $('usLookStatus').textContent = `${find(tab, applied[tab])?.name || ''} è su Oggi.`; }

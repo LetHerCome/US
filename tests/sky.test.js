@@ -27,6 +27,22 @@ test('the moment: 22:00 in Rome on that day, summer time included', () => {
   assert.equal(SKY.eveningUtc('nope'), null);
 });
 
+test('any hour in Rome: the hour they chose, across midnight and summer time', () => {
+  assert.equal(SKY.momentUtc('2024-01-15', 23 * 60 + 30).toISOString(), '2024-01-15T22:30:00.000Z');
+  assert.equal(SKY.momentUtc('2024-07-15', 30).toISOString(), '2024-07-14T22:30:00.000Z', '00:30 in summer is 22:30 UTC the day before');
+  assert.equal(SKY.momentUtc('2024-01-15').toISOString(), SKY.eveningUtc('2024-01-15').toISOString(), 'no hour: 22:00');
+  // The hour moves the sky more than the city: Sirius, Rome, 14 February.
+  const roma = SKY.cityById('roma');
+  const sirius = (minutes) => SKY.horizontal(SIRIUS, SKY.momentUtc('2015-02-14', minutes), roma).alt;
+  assert.ok(sirius(22 * 60) > 30 && sirius(22 * 60) < 32, 'near its highest (31.4° in Rome) around 22:00 in mid-February');
+  assert.ok(sirius(18 * 60) < sirius(22 * 60) - 10, 'lower at 18:00');
+  assert.ok(sirius(3 * 60) < 0, 'set by 03:00');
+  const at = (minutes) => SKY.skySvg({ stars: DATA.stars, day: '2015-02-14', city: roma, level: 20, minutes });
+  assert.notEqual(at(20 * 60), at(23 * 60));
+  assert.equal(at(undefined), at(22 * 60));
+  assert.deepEqual([SKY.clock(23 * 60 + 30), SKY.clock(5), SKY.clock(null), SKY.clock(1440)], ['23:30', '00:05', '22:00', '22:00']);
+});
+
 test('sidereal time at the J2000 epoch is the textbook 280.46°', () => {
   assert.ok(Math.abs(SKY.gmstDegrees(Date.UTC(2000, 0, 1, 12)) - 280.4606) < 0.01);
 });
@@ -78,18 +94,22 @@ test('in the app: a theme of Oggi, drawn from «Insieme dal», the city and the 
   const look = read('oggi-look.js');
   assert.match(look, /\{ id: 'sky', name: 'Il vostro cielo', kicker: 'Leggenda', note: '[^']+', reward: 'sky_ours', level: 20 \}/);
   assert.match(read('sky.js'), /fetch\('\/assets\/data\/stars-bsc5-v1\.json'\)/, 'the catalogue is fetched by sky.js, never by oggi-look.js');
-  assert.match(look, /window\.UsSky\.skySvg\(\{ stars, day, city, level, overlay: true \}\)/, 'over the photo, never a disc that hides it');
+  assert.match(look, /window\.UsSky\.skySvg\(\{ stars, day, city, level, minutes, overlay: true \}\)/, 'over the photo, never a disc that hides it');
   assert.match(look, /root\.style\.setProperty\('--oggi-sky-map', map\)/);
-  assert.match(read('app.js'), /sb\.from\('couples'\)\.select\('id,name,started_on,sky_city'\)/);
+  assert.match(read('app.js'), /sb\.from\('couples'\)\.select\('id,name,started_on,sky_city,sky_minutes'\)/);
   const css = read('oggi-look.css');
   assert.ok(css.includes('html[data-us-oggi-theme="sky"],\n.us-look-phone[data-oggi-theme="sky"]{'));
   assert.match(css, /--oggi-deco:var\(--oggi-sky-map,linear-gradient\(transparent,transparent\)\)/);
 });
 
-test('the city is asked when the sky is first used, and the picture can be saved', () => {
+test('the city and the hour are asked when the sky is first used, and the picture can be saved', () => {
   const look = read('oggi-look.js');
   assert.match(look, /Dove eravate quella sera\?/);
-  assert.match(read('sky.js'), /sb\.rpc\('set_sky_city', \{ p_city: id \}\)/);
+  assert.match(look, /A che ora vi siete messi insieme\?/);
+  assert.match(look, /<input type="time" id="usSkyTime"/);
+  assert.match(read('sky.js'), /sb\.rpc\('set_sky', \{ p_city: city, p_minutes: minutes \}\)/);
+  assert.doesNotMatch(read('sky.js'), /set_sky_city/);
+  assert.match(look, /window\.UsSky\.saveSky\(/);
   assert.match(look, /Salva l’immagine/);
   assert.match(read('sky.js'), /canvas\.toBlob\(/);
 });

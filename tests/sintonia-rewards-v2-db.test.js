@@ -87,16 +87,18 @@ test('nobody loses a reward, and the migration announces nothing by itself', asy
   assert.doesNotMatch(sql, /delete from public\.couple_reward_unlocks/i, 'nothing is ever taken back');
 });
 
-test('Il vostro cielo: the couple picks its city once level 20 is reached; both read it', async () => {
-  const setCity = (user, city) => h.as(db, user, 'select public.set_sky_city($1) r', [city]);
-  await assert.rejects(setCity(h.F, 'roma'), /sky locked/, 'before level 20');
+test('Il vostro cielo: the couple picks its city and hour once level 20 is reached; both read them', async () => {
+  const setSky = (user, city, minutes) => h.as(db, user, 'select public.set_sky($1, $2) r', [city, minutes]);
+  await assert.rejects(setSky(h.F, 'roma', 1320), /sky locked/, 'before level 20');
   await setLevel(20);
   assert.equal(reward(await progression(), 'sky_ours').unlocked, true);
-  assert.deepEqual(await setCity(h.F, 'milano'), { city: 'milano' });
-  assert.deepEqual(await setCity(h.B, 'roma'), { city: 'roma' }, 'either of the two can change it');
-  assert.equal((await h.as(db, h.F, 'select sky_city from public.couples'))[0].sky_city, 'roma');
-  for (const bad of ['Roma', 'r', 'roma; drop', '', null]) await assert.rejects(setCity(h.F, bad), /invalid city/, String(bad));
+  assert.deepEqual(await setSky(h.F, 'milano', null), { city: 'milano', minutes: null }, 'no hour: the usual 22:00');
+  assert.deepEqual(await setSky(h.B, 'roma', 23 * 60 + 30), { city: 'roma', minutes: 1410 }, 'either of the two can change it');
+  assert.deepEqual((await h.as(db, h.F, 'select sky_city, sky_minutes from public.couples'))[0], { sky_city: 'roma', sky_minutes: 1410 });
+  for (const bad of ['Roma', 'r', 'roma; drop', '', null]) await assert.rejects(setSky(h.F, bad, 1320), /invalid city/, String(bad));
+  for (const bad of [-1, 1440, 99999]) await assert.rejects(setSky(h.F, 'roma', bad), /invalid hour/, String(bad));
   await assert.rejects(h.as(db, h.F, `update public.couples set sky_city = 'napoli'`), /permission denied/);
+  assert.equal((await db.query(`select count(*)::int n from pg_proc where proname = 'set_sky_city'`)).rows[0].n, 0, 'the first version is gone');
 });
 
 test('the Phase 1 migration can run twice on the same database (staging re-apply)', async () => {
