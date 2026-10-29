@@ -814,13 +814,13 @@
     return true;
   }
 
-  // Il cuore (founder, 29/10/2026): the heart goes, a disc opens into a ring
-  // from rosa to lilla and thins away, seven pairs of dots fly out, the heart
-  // springs back past its size. The big one (every third heart) is wider and
-  // throws fireworks that rise and fall. One layer over the page, so a redraw
-  // of the button does not cut it.
-  const LIKE_COLORS = ['--us-rosa', '--us-lilla', '--us-ambra', '--us-noi'];
-  const LIKE_FALLBACK = { '--us-rosa': '#ff7c96', '--us-lilla': '#a98bff', '--us-ambra': '#f3b76e', '--us-noi': '#d98bd8' };
+  // Il cuore (founder, 29/10/2026, «più reattivo e satisfied, senza coriandoli»):
+  // at the touch the heart squeezes and snaps past its size, and one soft wave
+  // from rosa to lilla opens around it and fades. The big one (every third
+  // heart) snaps higher, with a stronger cue and a second, wider wave. One layer
+  // over the page, so a redraw of the button does not cut it.
+  const LIKE_COLORS = ['--us-rosa', '--us-lilla'];
+  const LIKE_FALLBACK = { '--us-rosa': '#ff7c96', '--us-lilla': '#a98bff' };
   function heartColor(d, name) {
     try { return d.defaultView.getComputedStyle(d.documentElement).getPropertyValue(name).trim() || LIKE_FALLBACK[name]; } catch (_) { return LIKE_FALLBACK[name]; }
   }
@@ -843,9 +843,8 @@
     const glyph = element.querySelector?.('.us-icon, .think-reaction-glyph, .us-shell-icon') || element;
     const r = (glyph.getBoundingClientRect ? glyph : element).getBoundingClientRect();
     if (!r.width && !r.height) return true;
-    const k = Math.max(1, r.width / 20) * (big ? 1.45 : 1);
-    const radius = Math.round(17 * k);
-    const color = (i) => heartColor(d, LIKE_COLORS[i % LIKE_COLORS.length]);
+    const size = Math.round(Math.max(20, r.width) * 1.6);
+    const rosa = heartColor(d, LIKE_COLORS[0]), lilla = heartColor(d, LIKE_COLORS[1]);
     const layer = d.createElement('span');
     layer.className = 'us-heart-fx';
     layer.setAttribute('aria-hidden', 'true');
@@ -853,66 +852,36 @@
     layer.style.top = `${Math.round(r.top + r.height / 2)}px`;
     let pending = 0;
     const settle = () => { if (--pending <= 0) layer.remove(); };
-    const piece = (kind, size, background) => {
-      const p = d.createElement('i');
-      p.className = kind;
-      p.style.width = p.style.height = `${size}px`;
-      p.style.margin = `${-size / 2}px 0 0 ${-size / 2}px`;
-      if (background) p.style.background = background;
-      return layer.appendChild(p);
-    };
-    const play = (el, keyframes, options) => {
-      if (typeof el.animate !== 'function') return;
+    // Easings go on each step, as in a CSS animation (an option would bend the whole run).
+    const out = 'cubic-bezier(.16,1,.3,1)';
+    const ring = (width, c) => `inset 0 0 0 ${width}px ${c}`;
+    // A wave: a thick rosa ring that opens out, turns lilla and thins away.
+    const wave = (reach, delay) => {
+      const w = d.createElement('i');
+      w.className = 'us-heart-wave';
+      w.style.width = w.style.height = `${size}px`;
+      w.style.margin = `${-size / 2}px 0 0 ${-size / 2}px`;
+      layer.appendChild(w);
+      if (typeof w.animate !== 'function') return;
       pending++;
-      const anim = el.animate(keyframes, { fill: 'both', ...options });
+      const anim = w.animate([
+        { scale: 0.8, boxShadow: ring(size / 7, rosa), opacity: 0.85, easing: out },
+        { scale: reach, boxShadow: ring(0, lilla), opacity: 0 }
+      ], { duration: big ? 520 : 420, delay, fill: 'both' });
       anim.onfinish = settle;
       anim.oncancel = settle;
     };
-    // The disc: an inner ring as wide as the radius is full; going to 0 it hollows out.
-    const bloom = piece('us-heart-bloom', radius * 2);
-    const rosa = color(0), lilla = color(1);
-    const ring = (width, c) => `inset 0 0 0 ${width}px ${c}`;
-    // Easings go on each step, as in a CSS animation (an option would bend the whole run).
-    const out = 'cubic-bezier(.25,.8,.35,1)';
-    play(bloom, [
-      { scale: 0.15, boxShadow: ring(radius, rosa), opacity: 1, easing: out },
-      { scale: 1, boxShadow: ring(radius, lilla), opacity: 1, offset: 0.4, easing: out },
-      { scale: 1.08, boxShadow: ring(2, lilla), opacity: 1, offset: 0.75, easing: out },
-      { scale: 1.12, boxShadow: ring(0, lilla), opacity: 0 }
-    ], { duration: big ? 680 : 560 });
-    // Seven spokes (ten in the big one), each a pair of dots, one a little behind.
-    const spokes = big ? 10 : 7;
-    for (let i = 0; i < spokes; i++) {
-      const turn = (360 / spokes) * i - 90;
-      const fly = ((i * 7) % 10) / 10;
-      [[-4, 0, 5], [4, -5, 4]].forEach(([side, far, size], j) => {
-        const dot = piece('us-heart-dot', Math.round(size * Math.min(k, 1.3)), color(i + j));
-        // The way out eases; the dot shows up in the first eighth.
-        play(dot, [
-          { transform: `rotate(${turn}deg) translate(${12 * k}px, ${side}px) scale(1)`, easing: 'cubic-bezier(.2,.8,.3,1)' },
-          { transform: `rotate(${turn}deg) translate(${(18 + fly * 14) * k + far}px, ${side * 1.6}px) scale(0)` }
-        ], { duration: 620, delay: 200 });
-        play(dot, [{ opacity: 0 }, { opacity: 1, offset: 0.12 }, { opacity: 1 }], { duration: 620, delay: 200 });
-      });
-    }
-    // The big one: fireworks, up and out, then they fall.
-    if (big) {
-      for (let i = 0; i < 18; i++) {
-        const x = Math.round(Math.cos((i / 18) * 6.283) * (34 + (i % 4) * 12));
-        const y = -Math.round(46 + ((i * 5) % 9) * 6);
-        const spark = piece('us-heart-spark', 4 + (i % 2), color(i));
-        play(spark, [
-          { transform: 'translate(0px, 0px)', opacity: 1, easing: 'cubic-bezier(.2,.7,.4,1)' },
-          { transform: `translate(${Math.round(x * 0.7)}px, ${y}px)`, opacity: 1, offset: 0.45, easing: 'cubic-bezier(.5,0,.8,.5)' },
-          { transform: `translate(${x}px, ${y + 30}px)`, opacity: 0 }
-        ], { duration: 1000, delay: 240 + (i % 6) * 25 });
-      }
-    }
-    // The heart: gone while the disc opens, then springs in past its size.
+    wave(big ? 1.9 : 1.55, 30);
+    if (big) wave(2.6, 150);
+    // The heart: squeezed at the touch, snaps past its size, settles.
     if (typeof glyph.animate === 'function') {
-      const spring = 'cubic-bezier(.3,1.6,.4,1)';
-      glyph.animate([{ scale: 0 }, { scale: 0, offset: 0.28, easing: spring }, { scale: big ? 1.45 : 1.25, offset: 0.62, easing: spring }, { scale: 1 }],
-        { duration: big ? 900 : 760 });
+      glyph.animate([
+        { scale: 1, easing: 'cubic-bezier(.4,0,1,1)' },
+        { scale: 0.72, offset: 0.14, easing: 'cubic-bezier(.2,1.4,.4,1)' },
+        { scale: big ? 1.5 : 1.3, offset: 0.48, easing: 'ease-in-out' },
+        { scale: big ? 0.94 : 0.96, offset: 0.74, easing: 'ease-out' },
+        { scale: 1 }
+      ], { duration: big ? 620 : 440 });
     }
     d.body.appendChild(layer);
     if (!pending) layer.remove();
