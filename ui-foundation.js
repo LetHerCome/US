@@ -762,10 +762,10 @@
   // springs back past its size. The big one (every third heart) is wider and
   // throws fireworks that rise and fall. One layer over the page, so a redraw
   // of the button does not cut it.
-  const HEART_COLORS = ['--us-rosa', '--us-lilla', '--us-ambra', '--us-noi'];
-  const HEART_FALLBACK = { '--us-rosa': '#ff7c96', '--us-lilla': '#a98bff', '--us-ambra': '#f3b76e', '--us-noi': '#d98bd8' };
+  const LIKE_COLORS = ['--us-rosa', '--us-lilla', '--us-ambra', '--us-noi'];
+  const LIKE_FALLBACK = { '--us-rosa': '#ff7c96', '--us-lilla': '#a98bff', '--us-ambra': '#f3b76e', '--us-noi': '#d98bd8' };
   function heartColor(d, name) {
-    try { return d.defaultView.getComputedStyle(d.documentElement).getPropertyValue(name).trim() || HEART_FALLBACK[name]; } catch (_) { return HEART_FALLBACK[name]; }
+    try { return d.defaultView.getComputedStyle(d.documentElement).getPropertyValue(name).trim() || LIKE_FALLBACK[name]; } catch (_) { return LIKE_FALLBACK[name]; }
   }
   // Each person counts the hearts they give, on their phone: the 3rd, 6th, … is big.
   function heartTurn(owner, storage) {
@@ -788,7 +788,7 @@
     if (!r.width && !r.height) return true;
     const k = Math.max(1, r.width / 20) * (big ? 1.45 : 1);
     const radius = Math.round(17 * k);
-    const color = (i) => heartColor(d, HEART_COLORS[i % HEART_COLORS.length]);
+    const color = (i) => heartColor(d, LIKE_COLORS[i % LIKE_COLORS.length]);
     const layer = d.createElement('span');
     layer.className = 'us-heart-fx';
     layer.setAttribute('aria-hidden', 'true');

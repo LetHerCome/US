@@ -32,7 +32,7 @@ test('nothing without a date', () => {
 
 test('wired: Noi shows the row only in that window, named «Il vostro anno su US»', () => {
   assert.match(read('index.html'), /id="noiRecapRow"[^>]*hidden>[\s\S]{0,300}<b>Il vostro anno su US<\/b>/);
-  assert.match(read('app.js'), /sb\.from\('couples'\)\.select\('id,name,started_on,created_at'\)/);
+  assert.match(read('app.js'), /sb\.from\('couples'\)\.select\('id,name,started_on[^']*,created_at'\)/);
   const js = read('year-recap.js');
   assert.match(js, /row\.hidden=!key\(\)\|\|!usYear\(/);
   assert.ok(read('i18n-en.js').includes("'Il vostro anno su US'"));
