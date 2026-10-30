@@ -3,42 +3,33 @@
     "generator":  "scripts/build-android-brand-assets.mjs + scripts/build-android-brand-assets.ps1",
     "sources":  {
                     "assets/source/brand/us-symbol-master-v1.png":  "bcbb3f3060edd5cf7218f245e1b56053de2c011ea5244e49f9e5f325269d28fd",
-                    "assets/source/brand/app-icon/us-launcher-symbol-v2.png":  "a75c69e23a4e5cf94a6ad06f4b2ae126d8499b281e0a7010f511077427715e4a",
                     "assets/source/brand/app-icon/us-adaptive-foreground-v1.png":  "fb91f1008154887f8ec114b85f5c84e88360e18ccc6d0ee838ecd7b003ad8621",
                     "assets/source/brand/app-icon/us-adaptive-background-v1.png":  "9dbe74d482bbbf6a43d9ccabae3e5599c7d43b5a79b350765175443ac686515a",
                     "assets/source/brand/splash/us-splash-master-v1.png":  "cc142ef2f60734aee10f918511ddac5a54c80d792225b0415fa1f81247c0c405"
                 },
     "derivatives":  [
                         {
-                            "path":  "android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png",
-                            "sha256":  "e71c3545e13b5a4fedfe9992ff2875011b12ce579b09aa85d5a0f4c07df35ada",
+                            "path":  "android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png",
+                            "sha256":  "03df41c4b89aa3e67824f5942d811a8b497f774af938cd547a210c732c597a37",
                             "operation":  "FIT_CENTER_WHITE",
                             "sources":  [
-                                            "assets/source/brand/app-icon/us-launcher-symbol-v2.png"
+                                            "assets/source/brand/us-symbol-master-v1.png"
+                                        ]
+                        },
+                        {
+                            "path":  "android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png",
+                            "sha256":  "03df41c4b89aa3e67824f5942d811a8b497f774af938cd547a210c732c597a37",
+                            "operation":  "FIT_CENTER_WHITE",
+                            "sources":  [
+                                            "assets/source/brand/us-symbol-master-v1.png"
                                         ]
                         },
                         {
                             "path":  "android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png",
-                            "sha256":  "5c55717bc901522c3f72c038f769c869290b503066267f8980e8cbd9d5a7a371",
+                            "sha256":  "2ab5b91b0feb5af2a443a58ef202956c1b9365cb71461a2b7aff9f479b0e5560",
                             "operation":  "FIT_CENTER_WHITE",
                             "sources":  [
-                                            "assets/source/brand/app-icon/us-launcher-symbol-v2.png"
-                                        ]
-                        },
-                        {
-                            "path":  "android/app/src/main/res/mipmap-xhdpi/ic_launcher.png",
-                            "sha256":  "5c55717bc901522c3f72c038f769c869290b503066267f8980e8cbd9d5a7a371",
-                            "operation":  "FIT_CENTER_WHITE",
-                            "sources":  [
-                                            "assets/source/brand/app-icon/us-launcher-symbol-v2.png"
-                                        ]
-                        },
-                        {
-                            "path":  "android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png",
-                            "sha256":  "e71c3545e13b5a4fedfe9992ff2875011b12ce579b09aa85d5a0f4c07df35ada",
-                            "operation":  "FIT_CENTER_WHITE",
-                            "sources":  [
-                                            "assets/source/brand/app-icon/us-launcher-symbol-v2.png"
+                                            "assets/source/brand/us-symbol-master-v1.png"
                                         ]
                         },
                         {
@@ -51,26 +42,34 @@
                         },
                         {
                             "path":  "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png",
-                            "sha256":  "4010a980dbe88f872d88cc4970a9f0398f0a37c3a7c5607200c612818bd991d8",
+                            "sha256":  "947eaa2dd98b667ac07e03b7272874ba2f17dc0cfc742bd8645f38d57f5374ea",
                             "operation":  "FIT_CENTER_WHITE",
                             "sources":  [
-                                            "assets/source/brand/app-icon/us-launcher-symbol-v2.png"
+                                            "assets/source/brand/us-symbol-master-v1.png"
                                         ]
                         },
                         {
                             "path":  "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
-                            "sha256":  "4010a980dbe88f872d88cc4970a9f0398f0a37c3a7c5607200c612818bd991d8",
+                            "sha256":  "947eaa2dd98b667ac07e03b7272874ba2f17dc0cfc742bd8645f38d57f5374ea",
                             "operation":  "FIT_CENTER_WHITE",
                             "sources":  [
-                                            "assets/source/brand/app-icon/us-launcher-symbol-v2.png"
+                                            "assets/source/brand/us-symbol-master-v1.png"
                                         ]
                         },
                         {
-                            "path":  "android/app/src/main/res/drawable-nodpi/us_adaptive_foreground_v2.png",
-                            "sha256":  "109273cecfbfaa283e11052ff7fb6794ecd0bf66e15ec02dd1d88e261473db46",
-                            "operation":  "FIT_CENTER_TRANSPARENT",
+                            "path":  "android/app/src/main/res/mipmap-xhdpi/ic_launcher.png",
+                            "sha256":  "2ab5b91b0feb5af2a443a58ef202956c1b9365cb71461a2b7aff9f479b0e5560",
+                            "operation":  "FIT_CENTER_WHITE",
                             "sources":  [
-                                            "assets/source/brand/app-icon/us-launcher-symbol-v2.png"
+                                            "assets/source/brand/us-symbol-master-v1.png"
+                                        ]
+                        },
+                        {
+                            "path":  "android/app/src/main/res/mipmap-mdpi/ic_launcher.png",
+                            "sha256":  "6f4e81820cf97a35e1349fc53f3c76feec8d46aa160de5d0665c444c918b3158",
+                            "operation":  "FIT_CENTER_WHITE",
+                            "sources":  [
+                                            "assets/source/brand/us-symbol-master-v1.png"
                                         ]
                         },
                         {
@@ -90,35 +89,27 @@
                                         ]
                         },
                         {
-                            "path":  "android/app/src/main/res/mipmap-mdpi/ic_launcher.png",
-                            "sha256":  "6ac514535a44114f9918c6990181d5eb4019ad9635c867d422dcab456d5cc70f",
-                            "operation":  "FIT_CENTER_WHITE",
-                            "sources":  [
-                                            "assets/source/brand/app-icon/us-launcher-symbol-v2.png"
-                                        ]
-                        },
-                        {
                             "path":  "android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png",
-                            "sha256":  "b318b418d06c031fdc3356925a0d6bef0c46441a77ea2a1d58e50f6717737d9c",
+                            "sha256":  "38ceb1a57f6b257d4893ab9fa69e0beab8b023486c82472a2f281a2ef6c361cb",
                             "operation":  "FIT_CENTER_WHITE",
                             "sources":  [
-                                            "assets/source/brand/app-icon/us-launcher-symbol-v2.png"
+                                            "assets/source/brand/us-symbol-master-v1.png"
                                         ]
                         },
                         {
                             "path":  "android/app/src/main/res/mipmap-hdpi/ic_launcher.png",
-                            "sha256":  "b318b418d06c031fdc3356925a0d6bef0c46441a77ea2a1d58e50f6717737d9c",
+                            "sha256":  "38ceb1a57f6b257d4893ab9fa69e0beab8b023486c82472a2f281a2ef6c361cb",
                             "operation":  "FIT_CENTER_WHITE",
                             "sources":  [
-                                            "assets/source/brand/app-icon/us-launcher-symbol-v2.png"
+                                            "assets/source/brand/us-symbol-master-v1.png"
                                         ]
                         },
                         {
                             "path":  "android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png",
-                            "sha256":  "6ac514535a44114f9918c6990181d5eb4019ad9635c867d422dcab456d5cc70f",
+                            "sha256":  "6f4e81820cf97a35e1349fc53f3c76feec8d46aa160de5d0665c444c918b3158",
                             "operation":  "FIT_CENTER_WHITE",
                             "sources":  [
-                                            "assets/source/brand/app-icon/us-launcher-symbol-v2.png"
+                                            "assets/source/brand/us-symbol-master-v1.png"
                                         ]
                         }
                     ]

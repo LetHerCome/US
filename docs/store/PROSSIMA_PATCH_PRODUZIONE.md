@@ -17,7 +17,7 @@ Italiano (massimo 500 caratteri):
 > Traguardi ogni 100 giorni insieme.
 > US si aggiorna da sola.
 > Emoji in ogni campo dove scrivete.
-> Nuova icona, app più ariosa, il tuo colore già all'inizio.
+> App più ariosa, il tuo colore già all'inizio.
 > Rivivi nel giorno esatto di un ricordo.
 
 English (500 characters max):
@@ -30,7 +30,7 @@ English (500 characters max):
 > Milestones every 100 days together: 1000 is worth the most.
 > US now updates itself.
 > Emoji in every field where you write.
-> A new icon, airier screens, your colour from the start.
+> Airier screens, your colour from the start.
 > Relive on the exact day of a memory.
 
 ## Cosa cambia
@@ -133,13 +133,10 @@ English (500 characters max):
 - **Restano uguali:** testo normale, bersagli da toccare (almeno 40), illustrazioni approvate.
 - **Test:** due test aggiornati alle misure nuove. I test nel browser che di solito vengono saltati (Playwright) danno gli stessi 16 errori di prima, con gli stessi messaggi: non dipendono da questo cambio.
 
-### Icona senza cornice (founder, 29/10)
+### Icona dell'app: resta quella di sempre (founder, 30/10)
 
-- **Perché:** il telefono disegna già la sua forma attorno all'icona (cerchio, goccia, quadrato arrotondato); la cornice faceva «una scatola nella scatola».
-- **Cosa:** sullo sfondo bianco di sempre, solo «US» con la stellina. Logo nuovo generato e approvato dal founder: `assets/source/brand/app-icon/us-launcher-symbol-v2.png` (APPROVED nel manifest), centrato e misurato perché il punto più lontano stia nel cerchio che Android non taglia mai.
-- **Android:** icona adattiva `us_adaptive_foreground_v2` e icone legacy `mipmap-*/ic_launcher*.png` rigenerate con `scripts/build-android-brand-assets.mjs`.
-- **Restano uguali:** lo splash d'apertura, il logo in alto nell'app, l'icona web e quella delle notifiche (logo con la cornice).
-- **Si vede** solo con l'aggiornamento dell'app (AAB).
+- **Decisione:** l'icona senza cornice (PR #240) **non** entra nella patch: in produzione resta l'icona di sempre, con la cornice. Chi vuole un'altra icona la sblocca in Sintonia (US, Notte, Oro, Neon).
+- **Codice:** `ic_launcher*.xml`, `mipmap-*/ic_launcher*.png`, `scripts/build-android-brand-assets.ps1`, `android/brand-assets-manifest.json` e il loro test tornano come in produzione (byte per byte); via `us_adaptive_foreground_v2`. Il logo senza cornice (`us-launcher-symbol-v2`) resta solo come base delle icone premio.
 
 ### Fix dalla prova dell'APK (founder, 29/10)
 
