@@ -1,10 +1,26 @@
 # US — Current State
 
 **Status:** OPERATIONAL STATUS AUTHORITY
-**Verified snapshot:** 2026-10-28 (la sezione del 28/10; le sezioni più vecchie restano alle loro date)
-**Verified main SHA:** 1d52d47 (PR #229 merged)
+**Verified snapshot:** 2026-10-30 (la sezione del 30/10; le sezioni più vecchie restano alle loro date)
+**Verified main SHA:** 3f36c58 (PR #243 merged)
 
 Stati: PROGETTATO / IN BRANCH / MERGED / SQL o Edge APPLICATO (staging? produzione?) / TESTATO SU DEVICE. Non confonderli. Ogni merge su `main` pubblica il web di produzione (Cloudflare Pages), ma non applica SQL né Edge. Merge, SQL di produzione, deploy Edge e pubblicazione Store richiedono ciascuno un'autorizzazione separata del founder.
+
+## Aggiornamento 30/10 — rilascio 1.3.0 (patch unica)
+
+- **Su `main`:** #243 (`3f36c58`), la patch unica provata su staging dal 28 al 30/10: fix dei beta tester, Gioca una partita al giorno, traguardi ogni 100 giorni, inviti con App Links, aggiornamenti in-app e versione minima, colori a scelta (gratis in beta), emoji, app più ariosa, cuore nuovo, Rivivi nel giorno esatto, «Il vostro anno su US», premi Sintonia V2, Mappa dei Ricordi, dominio `www.uscouple.app`, schermata «Novità». Dettagli nella [nota della patch](store/PROSSIMA_PATCH_PRODUZIONE.md).
+- **Produzione Supabase (30/10, con il via del founder):**
+  - 8 migrazioni SQL applicate, da `20261028201759_gioca_daily_limit_v1` a `20261029222210_ricordi_place_v1`, tutte HTTP 201;
+  - 7 Edge Function pubblicate: `monthiversary-job`, `account-deletion-worker`, `calendar-reminders-worker`, `delete-account`, `export-my-data`, `leave-couple`, `send-web-push`;
+  - Site URL `https://www.uscouple.app`; mail dell'account da Resend (`noreply@uscouple.app`).
+- **Web di produzione:** `www.uscouple.app` (e `us-a33.pages.dev`) con la build `us-rilascio-20261030-74`; `/invito`, `/.well-known/assetlinks.json` e privacy del 30/10 verificati.
+- **Google Play:** 1.3.0 (434957) nel test interno (run 40984943639); promossa dal founder al test chiuso «Alpha», in revisione da Google insieme alla Sicurezza dei dati (posizione esatta per la mappa).
+- **Token:** `SUPABASE_ACCESS_TOKEN` (environment `supabase-deploy`) rifatto il 30/10 per produzione e staging; scade dopo 90 giorni, circa il 28/01/2027.
+- **Pulizia del 30/10:**
+  - chiuse le PR #233–#242, già in `main` con #243;
+  - archiviate 7 sessioni finite;
+  - tolti 4 worktree puliti e 53 branch `claude/` già uniti (26 contenuti in `main`, 27 con la PR unita in squash e senza commit in più);
+  - restano i worktree con modifiche non salvate e 8 branch `claude/` con PR aperta o lavoro non unito.
 
 ## Aggiornamento 28/10 — test chiuso su Google Play attivo
 
