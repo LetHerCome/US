@@ -220,5 +220,5 @@ test('staging preview: the deletion page talks only to US-STAGING, on the stagin
   assert.throws(() => isolateStagingDeletionPage(staged, fakeKey), /input mismatch/, 'never rewrite twice');
   assert.throws(() => isolateStagingDeletionPage(read('elimina-account.js'), 'not-a-key'), /publishable key/);
   // The committed page itself still only knows production.
-  assert.match(read('elimina-account.js'), /const PRODUCTION_HOST='us-a33\.pages\.dev';/);
+  assert.match(read('elimina-account.js'), /const PRODUCTION_HOSTS=\['us-a33\.pages\.dev','uscouple\.app'\];/);
 });

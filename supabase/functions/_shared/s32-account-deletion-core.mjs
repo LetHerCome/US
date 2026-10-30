@@ -30,6 +30,8 @@ export const REMOVE_BATCH_SIZE = 100;
 export const MAX_LISTED_OBJECTS = 50000;
 export const BAN_DURATION = '876000h';
 export const DEFAULT_ALLOWED_ORIGINS = Object.freeze([
+  'https://www.uscouple.app', // production site (30/10/2026)
+  'https://uscouple.app',
   'https://us-a33.pages.dev', // production Cloudflare Pages
   'https://localhost',        // Capacitor Android (default androidScheme https)
   'capacitor://localhost',    // Capacitor iOS

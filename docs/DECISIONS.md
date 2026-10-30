@@ -355,3 +355,11 @@ Modifica «Due colori, un Noi» del 14/10 («i premi non toccano mai i colori de
 - **Interfaccia:** «Dove · facoltativo» nel composer, sotto la data; la riga «Dove» nell'album del Ricordo; in Ricordi l'interruttore «Mappa» accanto a «Mese per mese», con i Ricordi come foto rotonde, raggruppati quando sono vicini.
 - **Couple Joy (analisi dell'APK 4.29.0 del 29/10, solo per confronto):** usa Google Maps e la ricerca di Google passando dal proprio server (`/v1/places/search`, `/v1/maps/reverse-geocode`, `/v1/map/pins`). Non dichiara `ACCESS_MEDIA_LOCATION`, quindi su Android non legge il posto dalle foto. Conta anche città e paesi visitati, cioè il nostro D7.
 - **Governance:** il lavoro va sul branch e su staging. SQL, Edge dell'export, merge e pubblicazione in produzione hanno ciascuno un'approvazione separata; prima vanno aggiornate l'informativa privacy (Photon e OpenFreeMap) e la Sicurezza dei dati su Play.
+
+## 2026-10-30 — Dominio www.uscouple.app
+
+**Fonte:** founder, 29–30/10/2026: dominio `uscouple.app` comprato su Cloudflare, «io volevo www», «il dominio deve stare in produzione»; Resend verificato su `uscouple.app` e SMTP di Supabase produzione attivo («funziona»).
+
+- L'indirizzo principale di US è `https://www.uscouple.app`. `uscouple.app` e `us-a33.pages.dev` restano lo stesso sito, e i link già condivisi continuano a funzionare.
+- Inviti, App Links, privacy e termini usano `www.uscouple.app`; l'app Android accetta anche il vecchio indirizzo.
+- Le mail di US partono da «US <noreply@uscouple.app>» via Resend, solo in produzione; lo staging resta con la mail di Supabase (scelta del founder).
