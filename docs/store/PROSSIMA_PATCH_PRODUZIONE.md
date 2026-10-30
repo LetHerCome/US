@@ -1,5 +1,16 @@
 # Prossima patch in produzione
 
+## Dopo la 1.3.0 (fix dalle prove in produzione, 30/10/2026)
+
+**Stato:** su staging, non ancora in produzione. **Branch:** `claude/fix-prod-1-3-1`. **Build:** `us-fix-20261030-75`.
+
+- **Mappa dei Ricordi:** «Aggiungi il posto» ora sta nella foto a schermo intero, sotto la nota. Prima, sui ricordi caricati prima della 1.3, finiva sotto lo schermo e non si poteva toccare (`dc-ricordi.css`, test in `tests/ricordi-place-client.test.js`).
+- **Emoji di Gboard nella risposta alla domanda del giorno:** ancora aperto. Il campo non ha `autocomplete="off"` (la causa trovata il 29/10 per gli altri campi), quindi la causa è un'altra.
+
+## Patch 1.3.0 (in produzione dal 30/10/2026)
+
+Quello che segue è la storia della patch 1.3.0, già in produzione.
+
 **Stato:** in prova su staging (https://us-staging-s31.pages.dev). Niente è in produzione. Ogni passo qui sotto ha il via separato del founder (regola «prove solo su staging», `docs/DECISIONS.md`, 28/10/2026).
 **Build:** `us-fix-apk-20261029-66`.
 **Build della Mappa dei Ricordi:** `us-mappa-ricordi-20261030-73` (con il dominio www.uscouple.app da `claude/sintonia-premi-v2`; branch `claude/mappa-ricordi`, PR #242).
