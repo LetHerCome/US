@@ -153,6 +153,11 @@ English (500 characters max):
 - **«Il vostro anno su US»:** in Noi la riga compare solo quando la coppia compie un anno su US (dal giorno in cui l'ha creata nell'app, ora di Roma), per 30 giorni, ogni anno. Negli altri giorni non c'è. La scheda di Oggi per l'anniversario della relazione apre Eventi, come i mesiversari. Il contenuto del recap resta quello di oggi: il mega recap e i recap dei mesiversari sono un passo a parte.
 - **Il cuore nuovo:** il cuore sulla risposta del partner in Oggi, quello per rispondere a un Ti penso e il Ti penso in alto a sinistra (al posto delle due scintille) hanno un'animazione sola, veloce e senza coriandoli: al tocco il cuore si schiaccia e scatta oltre la sua misura, mentre un'onda dal rosa al lilla (i vostri colori, anche quelli scelti) si apre attorno e sfuma (circa 0,4 s). **Ogni 3 cuori** che una persona mette, quello grande: scatto più alto, vibrazione più forte e una seconda onda più ampia. Il conto è di ciascuno, sul suo telefono. Togliere il cuore non anima; con «riduci movimento» resta solo la vibrazione. Codice nostro (`ui-foundation.js` `heart()`).
 
+### Novità alla prima apertura (founder, 30/10)
+
+- Dopo l'aggiornamento, alla prima apertura, chi usava già US su quel telefono vede una volta il foglio «Novità · US si è aggiornata» con 8 righe su cosa è cambiato, e «Ho capito». Chi installa per la prima volta non lo vede.
+- Codice: `US_WHATS_NEW` e `usShowWhatsNew()` in `app.js` (id `1.3`: per il prossimo rilascio basta cambiare id e righe); `releaseNotesDue()` e l'elenco nel foglio informativo in `ui-foundation.js`.
+
 ## Ordine in produzione (ognuno con il suo via)
 
 0. **Mail di conferma** (founder, in Supabase produzione: Authentication › Emails › Templates › Confirm signup): la riga «Poi torna in US e accedi con email e password.» diventa «Poi torna in US: l'accesso è automatico.».

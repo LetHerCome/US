@@ -834,6 +834,10 @@ h1,h2,h3,.us-editorial{font-family:var(--us-font-editorial)}
   color:var(--us-color-text);
   overflow-wrap:anywhere;
 }
+/* Novità: the list of what changed, one short line each. */
+.us-confirm-list{margin:12px 0 0;padding:0 0 0 18px;max-height:46vh;overflow:auto;text-align:left;color:var(--us-color-text-2);font-size:13px;line-height:1.45}
+.us-confirm-list li{margin:0 0 7px}
+.us-confirm-list li::marker{color:var(--us-rosa)}
 .us-confirm-sheet p {
   margin:8px 0 0;
   color:var(--us-color-text-2);

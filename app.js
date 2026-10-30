@@ -1156,6 +1156,8 @@ async function initCloud(){
     // then this installation's registration is refreshed if it was activated here.
     window.UsNotifications?.authReady?.(profile)?.catch?.(error=>console.warn('[US Notifications] auth ready',error));
     selectedRole = profile.role;
+    // Novità: a phone that already knew US sees once what changed in this release.
+    try{const usReturningDevice=Boolean(localStorage.getItem('us:fix4:last-profile'));usShowWhatsNew(usReturningDevice);}catch(_e){}
     try{localStorage.setItem('us:fix4:last-profile',JSON.stringify(profile));}catch(_e){}
     // First run: once per user on this phone, after onboarding here or a
     // password sign-in in this tab. Never for a session restored at launch.
@@ -3438,6 +3440,27 @@ function renderTodayReveal(){
 }
 // Il cuore (founder, 29/10/2026): one animation for every heart given; every third is the big one.
 function usHeartLike(button){const turn=window.UsUiFoundation?.heartTurn?.(window.usProfile?.id);window.UsUiFoundation?.heart?.(button,{big:Boolean(turn?.big)});}
+// Novità (founder, 30/10/2026): the beta testers see once, after the update,
+// what changed. One id per release; a new install does not see it.
+const US_WHATS_NEW=Object.freeze({
+  id:'1.3',
+  title:'US si è aggiornata',
+  items:[
+    'Il tuo colore: scegline uno tra 8, anche da Impostazioni (gratis nella beta).',
+    'Il cuore nuovo, sulle risposte e sui Ti penso: ogni 3 cuori, uno più grande.',
+    'Mappa dei Ricordi: metti il posto ai Ricordi e ritrovateli sulla mappa.',
+    'Sintonia: nuovi premi, tra cui Il vostro cielo, Aurora, Stagioni, accessori per i Compagni e icone dell\'app.',
+    'Gioca: una partita al giorno, con il conto di quelle rimaste.',
+    'Traguardi ogni 100 giorni insieme, e Rivivi nel giorno esatto di un ricordo.',
+    'Inviti con un link che apre US, emoji in ogni campo e schermate più ariose.',
+    'Da ora US si aggiorna da sola.'
+  ]
+});
+function usShowWhatsNew(returning){
+  if(!window.UsUiFoundation?.releaseNotesDue?.(US_WHATS_NEW.id,{returning}))return;
+  // After the first paint of Oggi, not over it.
+  setTimeout(()=>{window.UsUiFoundation?.notice?.({kicker:'Novità',title:US_WHATS_NEW.title,items:US_WHATS_NEW.items,confirmLabel:'Ho capito',icon:'sparkle'});},1400);
+}
 // One tap = my reaction; the same tap again takes it back. The server
 // (set_daily_answer_reaction) decides; on error everything goes back.
 let usDailyReactionInFlight=false;

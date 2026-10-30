@@ -1,4 +1,4 @@
-const BUILD_ID = "us-mappa-ricordi-20261030-73";
+const BUILD_ID = "us-rilascio-20261030-74";
 const SHELL_CACHE_PREFIX = "us-shell-";
 const LEGACY_SHELL_CACHE_PREFIX = "us-shell-static-runtime-";
 const CACHE_NAME = `${SHELL_CACHE_PREFIX}${BUILD_ID}`;

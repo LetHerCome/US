@@ -2498,6 +2498,18 @@
     // ------------------------------------------------------- Il vostro anno
     'Il vostro anno': 'Your year',
     'Il vostro anno su US': 'Your year on US',
+    // ------------------------------------------------------- Novità (30/10/2026)
+    'Novità': 'What’s new',
+    'US si è aggiornata': 'US has been updated',
+    'Ho capito': 'Got it',
+    'Il tuo colore: scegline uno tra 8, anche da Impostazioni (gratis nella beta).': 'Your colour: pick one of 8, also in Settings (free during the beta).',
+    'Il cuore nuovo, sulle risposte e sui Ti penso: ogni 3 cuori, uno più grande.': 'A new heart on answers and Thinking of you: every 3 hearts, a bigger one.',
+    'Mappa dei Ricordi: metti il posto ai Ricordi e ritrovateli sulla mappa.': 'Memory Map: add the place to your Memories and find them on the map.',
+    'Sintonia: nuovi premi, tra cui Il vostro cielo, Aurora, Stagioni, accessori per i Compagni e icone dell\'app.': 'Sintonia: new rewards, including Your sky, Aurora, Seasons, accessories for the Companions and app icons.',
+    'Gioca: una partita al giorno, con il conto di quelle rimaste.': 'Play: one game a day, with a count of what is left.',
+    'Traguardi ogni 100 giorni insieme, e Rivivi nel giorno esatto di un ricordo.': 'Milestones every 100 days together, and Relive on the exact day of a memory.',
+    'Inviti con un link che apre US, emoji in ogni campo e schermate più ariose.': 'Invites with a link that opens US, emoji in every field and airier screens.',
+    'Da ora US si aggiorna da sola.': 'From now on US updates itself.',
     'Il vostro anno, finora': 'Your year, so far',
     'Il vostro primo anno': 'Your first year',
     'I vostri primi {n} mesi': 'Your first {n} months',

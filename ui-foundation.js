@@ -689,6 +689,13 @@
       root.querySelector('h3').textContent = text(options.title);
       const body = root.querySelector('p');
       if (options.body) body.textContent = text(options.body); else body.remove();
+      // A list (the Novità after an update), each line as plain text.
+      if (Array.isArray(options.items) && options.items.length) {
+        const list = documentRef.createElement('ul');
+        list.className = 'us-confirm-list';
+        options.items.forEach((item) => { const li = documentRef.createElement('li'); li.textContent = text(item); list.appendChild(li); });
+        root.querySelector('h3').after(list);
+      }
       const cancelButton = root.querySelector('[data-us-confirm="cancel"].ghost');
       if (options.single) cancelButton.remove(); else cancelButton.textContent = text(options.cancelLabel || 'Annulla');
       root.querySelector('[data-us-confirm="ok"]').textContent = text(options.confirmLabel || (options.single ? 'Chiudi' : 'Conferma'));
@@ -824,6 +831,18 @@
   function heartColor(d, name) {
     try { return d.defaultView.getComputedStyle(d.documentElement).getPropertyValue(name).trim() || LIKE_FALLBACK[name]; } catch (_) { return LIKE_FALLBACK[name]; }
   }
+  // Novità (founder, 30/10/2026): what changed, once per release, only on a
+  // phone that already knew US (a new install has nothing to compare).
+  function releaseNotesDue(id, { storage, returning = false } = {}) {
+    const scope = typeof window !== 'undefined' ? window : globalThis;
+    try {
+      const store = storage || scope.localStorage;
+      const seen = store.getItem('us:whats-new');
+      if (seen === String(id)) return false;
+      store.setItem('us:whats-new', String(id));
+      return Boolean(returning);
+    } catch (_) { return false; }
+  }
   // Each person counts the hearts they give, on their phone: the 3rd, 6th, … is big.
   function heartTurn(owner, storage) {
     const scope = typeof window !== 'undefined' ? window : globalThis;
@@ -897,6 +916,7 @@
     letterOpen,
     heart,
     heartTurn,
+    releaseNotesDue,
     auroraPulse: () => activeAurora(),
     playOnce: (element, className, duration) => activePlayOnce(element, className, duration),
     confirm: (options) => confirmSurface(options),
