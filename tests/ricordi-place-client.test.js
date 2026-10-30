@@ -121,3 +121,16 @@ test('Android: native picker with ACCESS_MEDIA_LOCATION, never READ_MEDIA_IMAGES
   assert.match(read('android/app/capacitor.build.gradle'), /implementation project\(':us-photo-place'\)/);
   assert.match(read('scripts/validate-android-bundle.mjs'), /'android\.permission\.ACCESS_MEDIA_LOCATION': 'Posizione delle foto/);
 });
+
+// Founder, 30/10/2026 (production): on a memory added before 1.3 «Aggiungi il
+// posto» fell below the full-screen photo, so it could not be tapped.
+test('in the full-screen photo «Dove» has its own row in the foot', () => {
+  const css = read('dc-ricordi.css');
+  const row = (cls) => Number(css.match(new RegExp(`\\[data-us-galleria\\] \\.${cls}\\{[^}]*?grid-row:(\\d+)`))?.[1]);
+  const place = row('us-album-place');
+  assert.ok(place > 1 && place < 10, 'the place button sits in the foot of the photo');
+  assert.match(css, /#usAlbumCarousel\.us-album-cover-stage\{grid-column:1;grid-row:1\/10;/);
+  assert.match(css, /grid-template-rows:minmax\(0,1fr\) repeat\(6,auto\) auto calc/);
+  for (const other of ['us-album-title', 'us-album-byline', 'us-album-caption-postit', 'us-album-ask', 'us-album-carousel-status', 'us-album-acts', 'us-album-section'])
+    assert.notEqual(row(other), place, other);
+});

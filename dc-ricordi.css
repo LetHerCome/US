@@ -200,12 +200,12 @@
 /* 1.0 parity — the design's Galleria: the photo fills the screen; on top the
    count and close; at the foot the title, "3 settembre · di Francesco", the
    photo's note and one row of round actions (‹ › · Aggiungi · bin).
-   Rows: photo · title · byline · note · ask · status · actions · bottom 28px · album. */
-#usAlbumOverlay[data-us-galleria] .us-album-scroll{position:relative;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) repeat(5,auto) auto calc(var(--us-safe-bottom,0px) + 28px) auto;padding-bottom:0}
+   Rows: photo · title · byline · note · place · ask · status · actions · bottom 28px · album. */
+#usAlbumOverlay[data-us-galleria] .us-album-scroll{position:relative;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) repeat(6,auto) auto calc(var(--us-safe-bottom,0px) + 28px) auto;padding-bottom:0}
 #usAlbumOverlay[data-us-galleria] :is(.us-album-story,.us-album-info,.us-album-photo-actions){display:contents}
 
 /* The stage: the photo edge to edge, the design's shade top and bottom. */
-#usAlbumOverlay[data-us-galleria] #usAlbumCarousel.us-album-cover-stage{grid-column:1;grid-row:1/9;height:var(--us-viewport-height,100dvh)!important;min-height:0!important;max-height:none!important;padding:0!important;background:var(--us-color-bg)!important}
+#usAlbumOverlay[data-us-galleria] #usAlbumCarousel.us-album-cover-stage{grid-column:1;grid-row:1/10;height:var(--us-viewport-height,100dvh)!important;min-height:0!important;max-height:none!important;padding:0!important;background:var(--us-color-bg)!important}
 #usAlbumOverlay[data-us-galleria] .us-album-cover-stage .us-album-cover-blur,#usAlbumOverlay[data-us-galleria] #usAlbumCarousel img.us-album-peek{display:none!important}
 #usAlbumOverlay[data-us-galleria] #usAlbumCarousel img#usAlbumCover,#usAlbumOverlay[data-us-galleria] #usAlbumCarousel[data-multiple] img#usAlbumCover,#usAlbumOverlay[data-us-galleria] #usAlbumCarousel img.us-album-fade-ghost{position:absolute!important;inset:0;z-index:1!important;width:100%!important;height:100%!important;padding:0;border-radius:0!important;object-fit:cover!important;transform:none;box-shadow:none;background:transparent!important;animation:none!important}
 #usAlbumOverlay[data-us-galleria] #usAlbumCarousel img.us-album-fade-ghost{z-index:2!important;pointer-events:none}
@@ -237,15 +237,20 @@
 #usAlbumOverlay[data-us-galleria] .us-album-caption-postit p::after{content:"”"}
 #usAlbumOverlay[data-us-galleria] .us-album-caption-postit p[hidden]{display:none!important}
 #usAlbumOverlay[data-us-galleria] .us-album-caption-postit small{display:block;margin:0;font-size:12px!important;line-height:1.5!important;font-weight:400;letter-spacing:0!important;text-transform:none!important;color:color-mix(in srgb,var(--us-latte) 50%,transparent)!important}
+/* "Dove": its own row under the note, so older memories can get a place too
+   (without a row it fell below the full-screen photo). */
+#usAlbumOverlay[data-us-galleria] .us-album-place{grid-column:1;grid-row:5;justify-self:start;position:relative;z-index:4;max-width:calc(100% - 40px);margin:8px 20px 0;border-color:color-mix(in srgb,var(--us-latte) 34%,transparent);background:rgba(15,11,19,.42);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:color-mix(in srgb,var(--us-latte) 86%,transparent)}
+#usAlbumOverlay[data-us-galleria] .us-album-place.has-place{border-style:solid;color:var(--us-latte)}
+#usAlbumOverlay[data-us-galleria] .us-album-place[hidden]{display:none}
 /* R4: ask the other one for their photos — a quiet link, as the design's link-s. */
-#usAlbumOverlay[data-us-galleria] .us-album-ask{grid-row:5;justify-self:start;display:inline-flex;align-items:center;gap:6px;min-height:36px;margin-top:4px;padding:0;border:0;border-radius:0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;color:color-mix(in srgb,var(--us-latte) 72%,transparent);font:600 13px/1.2 var(--us-font-ui);text-align:left;text-decoration:underline;text-underline-offset:3px}
+#usAlbumOverlay[data-us-galleria] .us-album-ask{grid-row:6;justify-self:start;display:inline-flex;align-items:center;gap:6px;min-height:36px;margin-top:4px;padding:0;border:0;border-radius:0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;color:color-mix(in srgb,var(--us-latte) 72%,transparent);font:600 13px/1.2 var(--us-font-ui);text-align:left;text-decoration:underline;text-underline-offset:3px}
 #usAlbumOverlay[data-us-galleria] .us-album-ask .us-icon{display:none}
 #usAlbumOverlay[data-us-galleria] .us-album-ask[hidden]{display:none!important}
 #usAlbumOverlay[data-us-galleria] .us-album-ask:focus-visible{outline:2px solid var(--us-ambra);outline-offset:3px}
-#usAlbumOverlay[data-us-galleria] .us-album-carousel-status{grid-row:6;margin-top:6px;margin-bottom:0;font-size:13px;color:color-mix(in srgb,var(--us-latte) 78%,transparent)}
+#usAlbumOverlay[data-us-galleria] .us-album-carousel-status{grid-row:7;margin-top:6px;margin-bottom:0;font-size:13px;color:color-mix(in srgb,var(--us-latte) 78%,transparent)}
 
 /* The action row: ‹ › on the left, Aggiungi and the bin on the right. */
-#usAlbumOverlay[data-us-galleria] .us-album-acts{grid-row:7;display:flex;align-items:center;gap:8px;margin-top:12px}
+#usAlbumOverlay[data-us-galleria] .us-album-acts{grid-row:8;display:flex;align-items:center;gap:8px;margin-top:12px}
 #usAlbumOverlay[data-us-galleria] .us-album-acts-space{flex:1}
 #usAlbumOverlay[data-us-galleria] .us-album-acts :is(.us-album-carousel-arrow,.us-album-floating-add,.us-album-current-delete,.us-undo-delete-go){position:static;inset:auto;transform:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:none;min-width:46px;width:auto;height:46px;min-height:46px;margin:0;padding:0 12px;border-radius:999px;border:1px solid color-mix(in srgb,var(--us-latte) 17%,transparent);background:rgba(247,239,233,.12);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:none;color:var(--us-latte);font:600 14px/1 var(--us-font-ui);opacity:1}
 #usAlbumOverlay[data-us-galleria] .us-album-acts :is(.us-album-carousel-arrow,.us-album-current-delete,.us-undo-delete-go){width:46px;padding:0}
@@ -269,7 +274,7 @@
 #usAlbumOverlay[data-us-galleria].is-pending-delete .us-album-floating-add{display:none}
 
 /* Below the photo: the in-place composer when adding a piece of that day. */
-#usAlbumOverlay[data-us-galleria] .us-album-section{grid-column:1;grid-row:9}
+#usAlbumOverlay[data-us-galleria] .us-album-section{grid-column:1;grid-row:10}
 /* The photo fills the screen, so the grid has no room below it: the composer
    rises from the bottom as a sheet over the photo instead of landing under it. */
 #usAlbumOverlay[data-us-galleria] .us-album-section:not(:has(#usAlbumComposer[hidden])){position:fixed;left:0;right:0;bottom:0;z-index:7;max-height:calc(var(--us-viewport-height,100dvh) - var(--us-safe-top,0px) - 72px);overflow-y:auto;overscroll-behavior:contain;padding:22px 20px calc(24px + var(--us-safe-bottom,0px))!important;border-radius:28px 28px 0 0;background:var(--us-color-bg);box-shadow:0 -1px 0 color-mix(in srgb,var(--us-latte) 12%,transparent),0 -24px 60px rgba(0,0,0,.55)}
