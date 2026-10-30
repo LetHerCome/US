@@ -2,7 +2,7 @@
 
 **Stato:** in prova su staging (https://us-staging-s31.pages.dev). Niente è in produzione. Ogni passo qui sotto ha il via separato del founder (regola «prove solo su staging», `docs/DECISIONS.md`, 28/10/2026).
 **Build:** `us-fix-apk-20261029-66`.
-**Build della Mappa dei Ricordi:** `us-mappa-ricordi-20261030-72` (branch `claude/mappa-ricordi`, PR #242).
+**Build della Mappa dei Ricordi:** `us-mappa-ricordi-20261030-73` (con il dominio www.uscouple.app da `claude/sintonia-premi-v2`; branch `claude/mappa-ricordi`, PR #242).
 **Branch:** `claude/gioca-una-al-giorno` (PR #232), sopra `claude/fix-amici-beta` (PR #233) poi `claude/traguardi-giorni` (PR #234) poi `claude/invito-app-links` (PR #235) poi `claude/aggiornamento-app` (PR #236) poi `claude/colori-plus` (PR #237) poi `claude/emoji-tastiera` (PR #238) poi `claude/app-ariosa` (PR #239) poi `claude/icona-senza-cornice` (PR #240) e infine `claude/fix-prova-apk`.
 **Patch unica (founder, 29/10):** tutte queste PR più i fix dei tester che arrivano nel frattempo, in produzione insieme e solo con il via del founder.
 
