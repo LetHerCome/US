@@ -6,7 +6,6 @@ $manifest = Get-Content -Raw (Join-Path $root 'assets/ASSET_MANIFEST.json') | Co
 $res = Join-Path $root 'android/app/src/main/res'
 $sources = [ordered]@{
   'assets/source/brand/us-symbol-master-v1.png' = 'us-symbol-master-v1.png'
-  'assets/source/brand/app-icon/us-launcher-symbol-v2.png' = 'us-launcher-symbol-v2.png'
   'assets/source/brand/app-icon/us-adaptive-foreground-v1.png' = 'us-adaptive-foreground-v1.png'
   'assets/source/brand/app-icon/us-adaptive-background-v1.png' = 'us-adaptive-background-v1.png'
   'assets/source/brand/splash/us-splash-master-v1.png' = 'us-splash-master-v1.png'
@@ -70,8 +69,9 @@ foreach ($copy in $copies) {
 
 $deprecatedBackground = Join-Path $root 'android/app/src/main/res/drawable-nodpi/us_adaptive_background_v1.png'
 if (Test-Path -LiteralPath $deprecatedBackground) { Remove-Item -LiteralPath $deprecatedBackground -Force }
-function Write-AdaptiveForeground([string]$SourceRelative, [string]$Relative) {
-  $image = [System.Drawing.Image]::FromFile($sourceFiles[$SourceRelative])
+
+$symbol = [System.Drawing.Image]::FromFile($sourceFiles['assets/source/brand/us-symbol-master-v1.png'])
+try {
   $adaptiveSize = 1254
   $adaptive = New-Object System.Drawing.Bitmap $adaptiveSize, $adaptiveSize
   $adaptiveGraphics = [System.Drawing.Graphics]::FromImage($adaptive)
@@ -81,30 +81,19 @@ function Write-AdaptiveForeground([string]$SourceRelative, [string]$Relative) {
     $adaptiveGraphics.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
     $adaptiveGraphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
     $adaptiveGraphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
-    $adaptiveScale = [Math]::Min($adaptiveSize / $image.Width, $adaptiveSize / $image.Height)
-    $adaptiveWidth = [int][Math]::Round($image.Width * $adaptiveScale)
-    $adaptiveHeight = [int][Math]::Round($image.Height * $adaptiveScale)
+    $adaptiveScale = [Math]::Min($adaptiveSize / $symbol.Width, $adaptiveSize / $symbol.Height)
+    $adaptiveWidth = [int][Math]::Round($symbol.Width * $adaptiveScale)
+    $adaptiveHeight = [int][Math]::Round($symbol.Height * $adaptiveScale)
     $adaptiveX = [int](($adaptiveSize - $adaptiveWidth) / 2)
     $adaptiveY = [int](($adaptiveSize - $adaptiveHeight) / 2)
-    $adaptiveGraphics.DrawImage($image, (New-Object System.Drawing.Rectangle $adaptiveX, $adaptiveY, $adaptiveWidth, $adaptiveHeight))
-    Write-Png $adaptive (Join-Path $root $Relative)
-    Add-Derivative $Relative 'FIT_CENTER_TRANSPARENT' @($SourceRelative)
+    $adaptiveGraphics.DrawImage($symbol, (New-Object System.Drawing.Rectangle $adaptiveX, $adaptiveY, $adaptiveWidth, $adaptiveHeight))
+    $relative = 'android/app/src/main/res/drawable-nodpi/us_adaptive_foreground_v1.png'
+    Write-Png $adaptive (Join-Path $root $relative)
+    Add-Derivative $relative 'FIT_CENTER_TRANSPARENT' @('assets/source/brand/us-symbol-master-v1.png')
   } finally {
     $adaptiveGraphics.Dispose()
     $adaptive.Dispose()
-    $image.Dispose()
   }
-}
-
-# The framed symbol stays for the notification icon and the web brand copy.
-Write-AdaptiveForeground 'assets/source/brand/us-symbol-master-v1.png' 'android/app/src/main/res/drawable-nodpi/us_adaptive_foreground_v1.png'
-# 29/10/2026 (founder): the launcher icon drops the frame, the phone's own shape
-# frames it. The master is already fitted to the adaptive safe circle; the
-# splash keeps the framed symbol below.
-Write-AdaptiveForeground 'assets/source/brand/app-icon/us-launcher-symbol-v2.png' 'android/app/src/main/res/drawable-nodpi/us_adaptive_foreground_v2.png'
-
-$symbol = [System.Drawing.Image]::FromFile($sourceFiles['assets/source/brand/app-icon/us-launcher-symbol-v2.png'])
-try {
 
   $sizes = [ordered]@{ 'mipmap-mdpi' = 48; 'mipmap-hdpi' = 72; 'mipmap-xhdpi' = 96; 'mipmap-xxhdpi' = 144; 'mipmap-xxxhdpi' = 192 }
   foreach ($density in $sizes.Keys) {
@@ -129,7 +118,7 @@ try {
       foreach ($name in @('ic_launcher.png', 'ic_launcher_round.png')) {
         $relative = "android/app/src/main/res/$density/$name"
         Write-Png $bitmap (Join-Path $root $relative)
-        Add-Derivative $relative 'FIT_CENTER_WHITE' @('assets/source/brand/app-icon/us-launcher-symbol-v2.png')
+        Add-Derivative $relative 'FIT_CENTER_WHITE' @('assets/source/brand/us-symbol-master-v1.png')
       }
     } finally {
       $graphics.Dispose()
